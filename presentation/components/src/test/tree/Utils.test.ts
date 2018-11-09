@@ -4,9 +4,9 @@
 *--------------------------------------------------------------------------------------------*/
 import { expect } from "chai";
 import * as faker from "faker";
-import { createRandomECInstanceNode } from "@bentley/presentation-common/tests/_helpers/random";
+import { createRandomECInstanceNode } from "@bentley/presentation-common/lib/test/_helpers/random";
 import { PageOptions } from "@bentley/ui-components";
-import { createTreeNodeItem, createTreeNodeItems, pageOptionsUiToPresentation } from "../../lib/tree/Utils";
+import { createTreeNodeItem, createTreeNodeItems, pageOptionsUiToPresentation } from "../../tree/Utils";
 
 describe("Utils", () => {
 

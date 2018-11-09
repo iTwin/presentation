@@ -3,16 +3,16 @@
 * Licensed under the MIT License. See LICENSE.md in the project root for license terms.
 *--------------------------------------------------------------------------------------------*/
 import { expect } from "chai";
-import * as moq from "@bentley/presentation-common/tests/_helpers/Mocks";
+import * as moq from "@bentley/presentation-common/lib/test/_helpers/Mocks";
 import * as faker from "faker";
 import { createRandomTreeNodeItem } from "../_helpers/UiComponents";
-import { createRandomECInstanceNodeKey, createRandomNodePathElement } from "@bentley/presentation-common/tests/_helpers/random";
+import { createRandomECInstanceNodeKey, createRandomNodePathElement } from "@bentley/presentation-common/lib/test/_helpers/random";
 import { NodePathElement } from "@bentley/presentation-common";
 import { PageOptions } from "@bentley/ui-components";
 import { IModelConnection } from "@bentley/imodeljs-frontend";
-import FilteredPresentationTreeDataProvider from "../../lib/tree/FilteredDataProvider";
-import IPresentationTreeDataProvider from "../../lib/tree/IPresentationTreeDataProvider";
-import { createTreeNodeItem } from "../../lib/tree/Utils";
+import FilteredPresentationTreeDataProvider from "../../tree/FilteredDataProvider";
+import IPresentationTreeDataProvider from "../../tree/IPresentationTreeDataProvider";
+import { createTreeNodeItem } from "../../tree/Utils";
 
 describe("FilteredTreeDataProvider", () => {
 

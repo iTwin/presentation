@@ -2,13 +2,13 @@
 * Copyright (c) 2018 Bentley Systems, Incorporated. All rights reserved.
 * Licensed under the MIT License. See LICENSE.md in the project root for license terms.
 *--------------------------------------------------------------------------------------------*/
-import "@bentley/presentation-frontend/tests/_helpers/MockFrontendEnvironment";
+import "@bentley/presentation-frontend/lib/test/_helpers/MockFrontendEnvironment";
 import * as React from "react";
 import { expect, spy } from "chai";
 import { mount, shallow } from "enzyme";
 import * as faker from "faker";
-import * as moq from "@bentley/presentation-common/tests/_helpers/Mocks";
-import { createRandomECInstanceKey } from "@bentley/presentation-common/tests/_helpers/random";
+import * as moq from "@bentley/presentation-common/lib/test/_helpers/Mocks";
+import { createRandomECInstanceKey } from "@bentley/presentation-common/lib/test/_helpers/random";
 import { IModelConnection } from "@bentley/imodeljs-frontend";
 import { KeySet, Keys, InstanceKey } from "@bentley/presentation-common";
 import {
@@ -17,8 +17,8 @@ import {
 } from "@bentley/presentation-frontend";
 import PresentationManager from "@bentley/presentation-frontend/lib/PresentationManager";
 import { Table, TableProps, ColumnDescription, RowItem, TableDataChangeEvent } from "@bentley/ui-components";
-import IUnifiedSelectionComponent from "../../lib/common/IUnifiedSelectionComponent";
-import { PresentationTableDataProvider, withUnifiedSelection } from "../../lib/table";
+import IUnifiedSelectionComponent from "../../common/IUnifiedSelectionComponent";
+import { PresentationTableDataProvider, withUnifiedSelection } from "../../table";
 
 // tslint:disable-next-line:variable-name naming-convention
 const PresentationTable = withUnifiedSelection(Table);

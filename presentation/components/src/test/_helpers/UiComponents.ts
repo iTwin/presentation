@@ -3,7 +3,7 @@
 * Licensed under the MIT License. See LICENSE.md in the project root for license terms.
 *--------------------------------------------------------------------------------------------*/
 import * as faker from "faker";
-import { createRandomECInstanceNodeKey } from "@bentley/presentation-common/tests/_helpers/random";
+import { createRandomECInstanceNodeKey } from "@bentley/presentation-common/lib/test/_helpers/random";
 import { DelayLoadedTreeNodeItem } from "@bentley/ui-components";
 import * as h from "@bentley/presentation-common/lib/hierarchy";
 

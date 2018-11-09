@@ -7,10 +7,10 @@ import * as faker from "faker";
 import {
   createRandomPrimitiveField, createRandomCategory, createRandomPrimitiveTypeDescription,
   createRandomECClassInfo, createRandomECInstanceKey, createRandomRelationshipPath,
-} from "@bentley/presentation-common/tests/_helpers/random";
+} from "@bentley/presentation-common/lib/test/_helpers/random";
 import { PresentationError } from "@bentley/presentation-common";
 import * as content from "@bentley/presentation-common/lib/content";
-import ContentBuilder from "../../lib/common/ContentBuilder";
+import ContentBuilder from "../../common/ContentBuilder";
 import { PrimitiveValue } from "@bentley/ui-components";
 
 describe("ContentBuilder", () => {

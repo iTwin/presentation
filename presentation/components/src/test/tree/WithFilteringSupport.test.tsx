@@ -6,13 +6,13 @@ import * as React from "react";
 import { expect } from "chai";
 import { shallow, ShallowWrapper } from "enzyme";
 import * as faker from "faker";
-import * as moq from "@bentley/presentation-common/tests/_helpers/Mocks";
+import * as moq from "@bentley/presentation-common/lib/test/_helpers/Mocks";
 import { IModelConnection } from "@bentley/imodeljs-frontend";
 import { Tree } from "@bentley/ui-components";
 import { ActiveResultNode } from "@bentley/ui-components/lib/tree/HighlightingEngine";
-import withFilteringSupport, { Props } from "../../lib/tree/WithFilteringSupport";
-import FilteredPresentationTreeDataProvider from "../../lib/tree/FilteredDataProvider";
-import IPresentationTreeDataProvider from "../../lib/tree/IPresentationTreeDataProvider";
+import withFilteringSupport, { Props } from "../../tree/WithFilteringSupport";
+import FilteredPresentationTreeDataProvider from "../../tree/FilteredDataProvider";
+import IPresentationTreeDataProvider from "../../tree/IPresentationTreeDataProvider";
 
 // tslint:disable-next-line:variable-name naming-convention
 const PresentationTree = withFilteringSupport(Tree);

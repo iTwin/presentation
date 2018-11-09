@@ -2,19 +2,19 @@
 * Copyright (c) 2018 Bentley Systems, Incorporated. All rights reserved.
 * Licensed under the MIT License. See LICENSE.md in the project root for license terms.
 *--------------------------------------------------------------------------------------------*/
-import "@bentley/presentation-frontend/tests/_helpers/MockFrontendEnvironment";
+import "@bentley/presentation-frontend/lib/test/_helpers/MockFrontendEnvironment";
 import * as React from "react";
 import { expect, spy } from "chai";
 import { mount, shallow } from "enzyme";
 import * as faker from "faker";
-import * as moq from "@bentley/presentation-common/tests/_helpers/Mocks";
+import * as moq from "@bentley/presentation-common/lib/test/_helpers/Mocks";
 import {
   createRandomId,
   createRandomECInstanceKey,
   createRandomECInstanceNodeKey,
   createRandomDescriptor,
-} from "@bentley/presentation-common/tests/_helpers/random";
-import { PromiseContainer } from "@bentley/presentation-common/tests/_helpers/Promises";
+} from "@bentley/presentation-common/lib/test/_helpers/random";
+import { PromiseContainer } from "@bentley/presentation-common/lib/test/_helpers/Promises";
 import { Id64String, Id64, Id64Arg } from "@bentley/bentleyjs-core";
 import { ElementProps, Code } from "@bentley/imodeljs-common";
 import { IModelConnection, SelectionSet, ViewState3d, NoRenderApp, SelectEventType } from "@bentley/imodeljs-frontend";
@@ -25,8 +25,8 @@ import {
 } from "@bentley/presentation-frontend";
 import PresentationManager from "@bentley/presentation-frontend/lib/PresentationManager";
 import { ViewportComponent } from "@bentley/ui-components";
-import IUnifiedSelectionComponent from "../../lib/common/IUnifiedSelectionComponent";
-import { default as withUnifiedSelection, ViewportSelectionHandler } from "../../lib/viewport/WithUnifiedSelection";
+import IUnifiedSelectionComponent from "../../common/IUnifiedSelectionComponent";
+import { default as withUnifiedSelection, ViewportSelectionHandler } from "../../viewport/WithUnifiedSelection";
 
 // tslint:disable-next-line:variable-name naming-convention
 const PresentationViewport = withUnifiedSelection(ViewportComponent);

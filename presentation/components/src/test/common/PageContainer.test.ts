@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 import { expect } from "chai";
 import * as faker from "faker";
-import PageContainer from "../../lib/common/PageContainer";
+import PageContainer from "../../common/PageContainer";
 
 describe("PageContainer", () => {
 

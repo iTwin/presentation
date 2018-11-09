@@ -2,15 +2,15 @@
 * Copyright (c) 2018 Bentley Systems, Incorporated. All rights reserved.
 * Licensed under the MIT License. See LICENSE.md in the project root for license terms.
 *--------------------------------------------------------------------------------------------*/
-import "@bentley/presentation-frontend/tests/_helpers/MockFrontendEnvironment";
+import "@bentley/presentation-frontend/lib/test/_helpers/MockFrontendEnvironment";
 import * as path from "path";
 import { expect, spy } from "chai";
 import * as faker from "faker";
-import * as moq from "@bentley/presentation-common/tests/_helpers/Mocks";
+import * as moq from "@bentley/presentation-common/lib/test/_helpers/Mocks";
 import {
   createRandomDescriptor, createRandomPrimitiveField, createRandomCategory, createRandomPrimitiveTypeDescription,
   createRandomECInstanceKey, createRandomECClassInfo, createRandomRelationshipPath,
-} from "@bentley/presentation-common/tests/_helpers/random";
+} from "@bentley/presentation-common/lib/test/_helpers/random";
 import { I18N } from "@bentley/imodeljs-i18n";
 import { PropertyRecord } from "@bentley/ui-components";
 import { IModelConnection } from "@bentley/imodeljs-frontend";
@@ -18,8 +18,8 @@ import { ValuesDictionary } from "@bentley/presentation-common";
 import * as content from "@bentley/presentation-common/lib/content";
 import { Presentation } from "@bentley/presentation-frontend";
 import PresentationManager from "@bentley/presentation-frontend/lib/PresentationManager";
-import PresentationPropertyDataProvider from "../../lib/propertygrid/DataProvider";
-import { CacheInvalidationProps } from "../../lib/common/ContentDataProvider";
+import PresentationPropertyDataProvider from "../../propertygrid/DataProvider";
+import { CacheInvalidationProps } from "../../common/ContentDataProvider";
 
 const favoritesCategoryName = "Favorite";
 

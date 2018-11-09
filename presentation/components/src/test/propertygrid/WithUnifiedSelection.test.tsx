@@ -2,13 +2,13 @@
 * Copyright (c) 2018 Bentley Systems, Incorporated. All rights reserved.
 * Licensed under the MIT License. See LICENSE.md in the project root for license terms.
 *--------------------------------------------------------------------------------------------*/
-import "@bentley/presentation-frontend/tests/_helpers/MockFrontendEnvironment";
+import "@bentley/presentation-frontend/lib/test/_helpers/MockFrontendEnvironment";
 import * as React from "react";
 import { expect } from "chai";
 import { mount, shallow } from "enzyme";
 import * as faker from "faker";
-import * as moq from "@bentley/presentation-common/tests/_helpers/Mocks";
-import { createRandomECInstanceKey } from "@bentley/presentation-common/tests/_helpers/random";
+import * as moq from "@bentley/presentation-common/lib/test/_helpers/Mocks";
+import { createRandomECInstanceKey } from "@bentley/presentation-common/lib/test/_helpers/random";
 import { IModelConnection } from "@bentley/imodeljs-frontend";
 import { KeySet } from "@bentley/presentation-common";
 import {
@@ -17,8 +17,8 @@ import {
 } from "@bentley/presentation-frontend";
 import { Orientation } from "@bentley/ui-core";
 import { PropertyGrid, PropertyGridProps, PropertyData, PropertyDataChangeEvent } from "@bentley/ui-components";
-import IUnifiedSelectionComponent from "../../lib/common/IUnifiedSelectionComponent";
-import { PresentationPropertyDataProvider, withUnifiedSelection } from "../../lib/propertygrid";
+import IUnifiedSelectionComponent from "../../common/IUnifiedSelectionComponent";
+import { PresentationPropertyDataProvider, withUnifiedSelection } from "../../propertygrid";
 
 // tslint:disable-next-line:variable-name naming-convention
 const PresentationPropertyGrid = withUnifiedSelection(PropertyGrid);

@@ -2,13 +2,13 @@
 * Copyright (c) 2018 Bentley Systems, Incorporated. All rights reserved.
 * Licensed under the MIT License. See LICENSE.md in the project root for license terms.
 *--------------------------------------------------------------------------------------------*/
-import "@bentley/presentation-frontend/tests/_helpers/MockFrontendEnvironment";
+import "@bentley/presentation-frontend/lib/test/_helpers/MockFrontendEnvironment";
 import * as React from "react";
 import { expect, spy } from "chai";
 import { mount, shallow } from "enzyme";
 import * as faker from "faker";
-import * as moq from "@bentley/presentation-common/tests/_helpers/Mocks";
-import { createRandomECInstanceNodeKey } from "@bentley/presentation-common/tests/_helpers/random";
+import * as moq from "@bentley/presentation-common/lib/test/_helpers/Mocks";
+import { createRandomECInstanceNodeKey } from "@bentley/presentation-common/lib/test/_helpers/random";
 import { createRandomTreeNodeItem } from "../_helpers/UiComponents";
 import { IModelConnection } from "@bentley/imodeljs-frontend";
 import { KeySet, BaseNodeKey, ECInstanceNodeKey } from "@bentley/presentation-common";
@@ -19,8 +19,8 @@ import {
 import { Tree, TreeNodeItem, UiComponents } from "@bentley/ui-components";
 import { I18N } from "@bentley/imodeljs-i18n";
 import { TreeProps as TreeProps } from "@bentley/ui-components/lib/tree/component/Tree";
-import IUnifiedSelectionComponent from "../../lib/common/IUnifiedSelectionComponent";
-import { IPresentationTreeDataProvider, withUnifiedSelection, SelectionTarget } from "../../lib/tree";
+import IUnifiedSelectionComponent from "../../common/IUnifiedSelectionComponent";
+import { IPresentationTreeDataProvider, withUnifiedSelection, SelectionTarget } from "../../tree";
 
 // tslint:disable-next-line:variable-name naming-convention
 const PresentationTree = withUnifiedSelection(Tree);
