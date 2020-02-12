@@ -14,7 +14,7 @@ import { SelectionHandler, Presentation, SelectionChangeEventArgs, ISelectionPro
 import { ViewportProps } from "@bentley/ui-components";
 import { getDisplayName } from "../common/Utils";
 import { IUnifiedSelectionComponent } from "../common/IUnifiedSelectionComponent";
-import { HILITE_RULESET } from "@bentley/presentation-frontend/lib/selection/HiliteSetProvider"; // tslint:disable-line: no-direct-imports
+import { HILITE_RULESET } from "@bentley/presentation-frontend/lib/presentation-frontend/selection/HiliteSetProvider"; // tslint:disable-line: no-direct-imports
 
 /**
  * Props that are injected to the ViewWithUnifiedSelection HOC component.
