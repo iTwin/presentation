@@ -1,0 +1,22 @@
+{
+  "name": "@test-app/common",
+  "author": {
+    "name": "Bentley Systems, Inc.",
+    "url": "http://www.bentley.com"
+  },
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint ./src/**/*.{ts,tsx}"
+  },
+  "dependencies": {
+    "@itwin/core-bentley": "^3.5.0-dev.52",
+    "@itwin/core-geometry": "^3.5.0-dev.52",
+    "@itwin/core-common": "^3.5.0-dev.52",
+    "@itwin/core-quantity": "^3.5.0-dev.52",
+    "@itwin/presentation-common": "^3.5.0-dev.52",
+    "typescript": "^4.8.4"
+  }
+}
