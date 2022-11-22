@@ -8,7 +8,6 @@
   "private": true,
   "scripts": {
     "start": "webpack serve",
-    "build": "tsc",
     "lint": "eslint ./src/**/*.{ts,tsx}"
   },
   "dependencies": {
