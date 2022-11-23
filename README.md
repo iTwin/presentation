@@ -62,7 +62,7 @@ For local development it is recommended to setup [`CoSpace`](https://www.npmjs.c
     * [presentation](https://github.com/iTwin/presentation)
     * [itwinjs-core](https://github.com/iTwin/itwinjs-core)
     * [appui](https://github.com/iTwin/appui)
-    * [imodel-native](https://github.com/iTwin/imodel-native)
+    * [imodel-native](https://dev.azure.com/bentleycs/iModelTechnologies/_wiki/wikis/iModelTechnologies.wiki/308/Get-and-Build-Native-imodel02-Code?anchor=bootstrap-the-source)
 
 3. Update the `pnpm-workspace.yaml` file with all the packages you want to add to your `CoSpace`. By default all packages under the `repos` sub directory will be added. Recommended configuration for linking presentation test-app with itwinjs-core
 
