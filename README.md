@@ -93,11 +93,13 @@ For local development it is recommended to setup [`CoSpace`](https://www.npmjs.c
     - 'repos/itwinjs-core/tools/certa'
     ```
 
-4. Run `pnpm exec cospace override` to automatically update the `pnpm.overrides` section of the `CoSpace`'s `package.json`, to link all the dependencies together with the copy found in the workspace.
+4. Update the `cospace.code-workspace` file with all the repos you want to add to your [vscode multi-root workspace](https://code.visualstudio.com/docs/editor/multi-root-workspaces).
 
-5. Run `pnpm install` to install all dependencies in your workspace and link all the packages you've added to your `CoSpace`.
+5. Run `pnpm exec cospace override` to automatically update the `pnpm.overrides` section of the `CoSpace`'s `package.json`, to link all the dependencies together with the copy found in the workspace.
 
-6. Run `pnpm build` to build all the packages you've added to your `CoSpace` using your monorepo task runner.
+6. Run `pnpm install` to install all dependencies in your workspace and link all the packages you've added to your `CoSpace`.
+
+7. Run `pnpm build` to build all the packages you've added to your `CoSpace` using your monorepo task runner.
 
 #### Debugging code from linked repos
 
