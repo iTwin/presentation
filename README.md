@@ -66,30 +66,30 @@ For local development it is recommended to setup [`CoSpace`](https://www.npmjs.c
 3. Update the `pnpm-workspace.yaml` file with all the packages you want to add to your `CoSpace`. By default all packages under the `repos` sub directory will be added. Recommended configuration for linking presentation test-app with itwinjs-core
 
     ```yaml
-        packages:
-        - 'repos/presentation/apps/**'
-        - 'repos/itwinjs-core/presentation/*'
-        - 'repos/itwinjs-core/core/bentley'
-        - 'repos/itwinjs-core/core/backend'
-        - 'repos/itwinjs-core/core/common'
-        - 'repos/itwinjs-core/core/frontend'
-        - 'repos/itwinjs-core/core/geometry'
-        - 'repos/itwinjs-core/core/quantity'
-        - 'repos/itwinjs-core/core/telemetry'
-        - 'repos/itwinjs-core/core/i18n'
-        - 'repos/itwinjs-core/core/orbitgt'
-        - 'repos/itwinjs-core/core/electron'
-        - 'repos/itwinjs-core/core/express-server'
-        - 'repos/itwinjs-core/core/webgl-compatibility'
-        - 'repos/itwinjs-core/ui/appui-abstract'
-        - 'repos/itwinjs-core/ui/core-react'
-        - 'repos/itwinjs-core/ui/components-react'
-        - 'repos/itwinjs-core/ui/imodel-components-react'
-        - 'repos/itwinjs-core/tools/build'
-        - 'repos/itwinjs-core/tools/eslint-plugin'
-        - 'repos/itwinjs-core/tools/webpack-core'
-        - 'repos/itwinjs-core/tools/internal'
-        - 'repos/itwinjs-core/tools/certa'
+    packages:
+    - 'repos/presentation/apps/**'
+    - 'repos/itwinjs-core/presentation/*'
+    - 'repos/itwinjs-core/core/bentley'
+    - 'repos/itwinjs-core/core/backend'
+    - 'repos/itwinjs-core/core/common'
+    - 'repos/itwinjs-core/core/frontend'
+    - 'repos/itwinjs-core/core/geometry'
+    - 'repos/itwinjs-core/core/quantity'
+    - 'repos/itwinjs-core/core/telemetry'
+    - 'repos/itwinjs-core/core/i18n'
+    - 'repos/itwinjs-core/core/orbitgt'
+    - 'repos/itwinjs-core/core/electron'
+    - 'repos/itwinjs-core/core/express-server'
+    - 'repos/itwinjs-core/core/webgl-compatibility'
+    - 'repos/itwinjs-core/ui/appui-abstract'
+    - 'repos/itwinjs-core/ui/core-react'
+    - 'repos/itwinjs-core/ui/components-react'
+    - 'repos/itwinjs-core/ui/imodel-components-react'
+    - 'repos/itwinjs-core/tools/build'
+    - 'repos/itwinjs-core/tools/eslint-plugin'
+    - 'repos/itwinjs-core/tools/webpack-core'
+    - 'repos/itwinjs-core/tools/internal'
+    - 'repos/itwinjs-core/tools/certa'
     ```
 
 4. Run `pnpm exec cospace override` to automatically update the `pnpm.overrides` section of the `CoSpace`'s `package.json`, to link all the dependencies together with the copy found in the workspace.
@@ -100,7 +100,7 @@ For local development it is recommended to setup [`CoSpace`](https://www.npmjs.c
 
 #### Debugging code from linked repos
 
-In order to debug packages from different repos using [`Visual Studio Code`](https://code.visualstudio.com/docs/editor/debugging) you will need launch configuration at your `CoSpace` root. Example configuration for debugging presentation test-app and locally built presentation packages from itwinjs-core (you may need to adjust paths according your `CoSpace` setup):
+In order to debug packages from different repos using [`Visual Studio Code`](https://code.visualstudio.com/docs/editor/debugging) you will need launch configuration at your `CoSpace` root. Example configuration for debugging presentation test-app and locally built presentation packages from [itwinjs-core](https://github.com/iTwin/itwinjs-core) (you may need to adjust paths according your `CoSpace` setup):
 
 ```json
 {
