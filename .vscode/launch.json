@@ -11,10 +11,10 @@
       "skipFiles": [
         "<node_internals>/**"
       ],
-      "cwd": "${workspaceFolder}/packages/test-app/backend",
-      "program": "${workspaceFolder}/packages/test-app/backend/lib/main.js",
+      "cwd": "${workspaceFolder}/apps/test-app/backend",
+      "program": "${workspaceFolder}/apps/test-app/backend/lib/main.js",
       "outFiles": [
-        "${workspaceFolder}/packages/test-app/{backend, common}/**/*.js"
+        "${workspaceFolder}/apps/test-app/{backend, common}/**/*.js"
       ],
       "cascadeTerminateToConfigurations": [
         "[test-app] Launch Web Frontend"
@@ -25,26 +25,26 @@
       "request": "launch",
       "name": "[test-app] Launch Web Frontend",
       "url": "http://localhost:3000/",
-      "webRoot": "${workspaceFolder}/packages/test-app/frontend/",
+      "webRoot": "${workspaceFolder}/apps/test-app/frontend/",
       "cascadeTerminateToConfigurations": [
         "[test-app] Start Web Backend"
       ]
     },
     {
       "name": "[test-app] Start Electron Backend",
-      "cwd": "${workspaceFolder}/packages/test-app/backend",
+      "cwd": "${workspaceFolder}/apps/test-app/backend",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "${workspaceFolder}/packages/test-app/backend/node_modules/.bin/electron",
+      "runtimeExecutable": "${workspaceFolder}/apps/test-app/backend/node_modules/.bin/electron",
       "runtimeArgs": [
-        "${workspaceFolder}/packages/test-app/backend/lib/main.js",
+        "${workspaceFolder}/apps/test-app/backend/lib/main.js",
         "--remote-debugging-port=9223"
       ],
       "env": {
         "NODE_ENV": "development"
       },
       "outFiles": [
-        "${workspaceFolder}/packages/test-app/{backend, common}/**/*.js"
+        "${workspaceFolder}/apps/test-app/{backend, common}/**/*.js"
       ],
       "cascadeTerminateToConfigurations": [
         "[test-app] Attach To Electron Frontend"
@@ -55,7 +55,7 @@
       "type": "chrome",
       "request": "attach",
       "port": 9223,
-      "webRoot": "${workspaceFolder}/packages/test-app/frontend/",
+      "webRoot": "${workspaceFolder}/apps/test-app/frontend/",
       "cascadeTerminateToConfigurations": [
         "[test-app] Start Electron Backend"
       ]

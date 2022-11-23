@@ -66,8 +66,8 @@ For local development it is recommended to setup [`CoSpace`](https://www.npmjs.c
 3. Update the `pnpm-workspace.yaml` file with all the packages you want to add to your `CoSpace`. By default all packages under the `repos` sub directory will be added. Recommended configuration for linking presentation test-app with itwinjs-core
 
     ```yaml
-            packages:
-        - 'repos/presentation/packages/**'
+        packages:
+        - 'repos/presentation/apps/**'
         - 'repos/itwinjs-core/presentation/*'
         - 'repos/itwinjs-core/core/bentley'
         - 'repos/itwinjs-core/core/backend'
@@ -113,10 +113,10 @@ In order to debug packages from different repos using [`Visual Studio Code`](htt
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "cwd": "${workspaceFolder}/repos/presentation/packages/test-app/backend",
-            "program": "${workspaceFolder}/repos/presentation/packages/test-app/backend/lib/main.js",
+            "cwd": "${workspaceFolder}/repos/presentation/apps/test-app/backend",
+            "program": "${workspaceFolder}/repos/presentation/apps/test-app/backend/lib/main.js",
             "outFiles": [
-                "${workspaceFolder}/repos/presentation/packages/test-app/{backend, common}/**/*.js",
+                "${workspaceFolder}/repos/presentation/apps/test-app/{backend, common}/**/*.js",
                 "${workspaceFolder}/repos/itwinjs-core/presentation/{backend, common}/**/*.js",
                 "${workspaceFolder}/repos/itwinjs-core/core/{backend, common}/**/*.js",
                 "!**/node_modules/**"
@@ -127,9 +127,9 @@ In order to debug packages from different repos using [`Visual Studio Code`](htt
             "request": "launch",
             "name": "[presentation-test-app] Launch Web Frontend",
             "url": "http://localhost:3000/",
-            "webRoot": "${workspaceFolder}/repos/presentation/packages/test-app/frontend",
+            "webRoot": "${workspaceFolder}/repos/presentation/apps/test-app/frontend",
             "sourceMapPathOverrides": {
-                "webpack://@test-app/frontend/*": "${workspaceFolder}/repos/presentation/packages/test-app/frontend/*",
+                "webpack://@test-app/frontend/*": "${workspaceFolder}/repos/presentation/apps/test-app/frontend/*",
                 "webpack://@test-app/frontend/../../../../itwinjs-core/presentation/frontend/lib/cjs/*.js": "${workspaceFolder}/repos/itwinjs-core/presentation/frontend/src/*.ts",
                 "webpack://@test-app/frontend/../../../../itwinjs-core/presentation/common/lib/cjs/*.js": "${workspaceFolder}/repos/itwinjs-core/presentation/common/src/*.ts",
                 "webpack://@test-app/frontend/../../../../itwinjs-core/presentation/components/lib/cjs/*.js": "${workspaceFolder}/repos/itwinjs-core/presentation/components/src/*.ts",
