@@ -31,7 +31,7 @@ jobs:
         cache: 'pnpm'
         
     - name: Install dependencies
-      run: pnpm ci
+      run: pnpm install
       
     - name: Run typecheck
       run: pnpm run typecheck
