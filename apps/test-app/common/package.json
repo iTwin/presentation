@@ -4,9 +4,10 @@
     "name": "Bentley Systems, Inc.",
     "url": "http://www.bentley.com"
   },
+  "version": "0.0.0",
+  "private": true,
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
-  "private": true,
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
