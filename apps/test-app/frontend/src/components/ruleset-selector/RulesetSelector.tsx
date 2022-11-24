@@ -25,7 +25,7 @@ export class RulesetSelector extends Component<RulesetSelectorProps, RulesetSele
   }
   private async initAvailableRulesets() {
     const rulesetIds = await MyAppFrontend.getAvailableRulesets();
-    this.setState({ availableRulesets: rulesetIds.map((id) => ({value: id, label:id})) });
+    this.setState({ availableRulesets: rulesetIds.map((id) => ({ value: id, label:id })) });
   }
   public override render() {
     if (!this.state.availableRulesets)
