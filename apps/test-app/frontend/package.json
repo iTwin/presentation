@@ -9,6 +9,7 @@
   "scripts": {
     "start": "webpack serve",
     "webpack": "webpack",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint ./src/**/*.{ts,tsx}"
   },
   "dependencies": {
