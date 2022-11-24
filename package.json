@@ -15,8 +15,8 @@
     "typecheck:apps:test-app-backend": "npm run typecheck --prefix ./apps/test-app/backend",
     "typecheck:apps:test-app-common": "npm run typecheck --prefix ./apps/test-app/common",
     "typecheck:apps:test-app-frontend": "npm run typecheck --prefix ./apps/test-app/frontend",
-    "lint": "run-p lint:apps",
-    "lint:apps": "run-p --silent lint:apps:*",
+    "lint": "run-p --continue-on-error lint:apps",
+    "lint:apps": "run-p --silent --continue-on-error lint:apps:*",
     "lint:apps:test-app-backend": "npm run lint --prefix ./apps/test-app/backend",
     "lint:apps:test-app-common": "npm run lint --prefix ./apps/test-app/common",
     "lint:apps:test-app-frontend": "npm run lint --prefix ./apps/test-app/frontend"
