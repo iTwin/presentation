@@ -10,7 +10,7 @@
     "start": "node --inspect --max-http-header-size=16000 ./lib/main.js",
     "start:electron": "cross-env NODE_ENV=development electron ./lib/main.js",
     "build": "tsc",
-    "lint": "eslint ./src/**/*.{ts,tsx}"
+    "lint": "eslint ./src/**/*.ts"
   },
   "dependencies": {
     "@test-app/common": "workspace:*",

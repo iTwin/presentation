@@ -12,10 +12,10 @@ A monorepo for [Presentation](https://www.itwinjs.org/presentation/) packages.
     pnpm install
     ```
 
-2. Build packages.
+2. Build test-app.
 
     ```shell
-    pnpm build
+    pnpm build:apps
     ```
 
 3. Start test-app.
@@ -70,7 +70,11 @@ For local development it is recommended to setup [`CoSpace`](https://www.npmjs.c
 
     ```yaml
     packages:
+    # presentation
     - 'repos/presentation/apps/**'
+    - 'repos/presentation'
+
+    # itwinjs-core
     - 'repos/itwinjs-core/presentation/*'
     - 'repos/itwinjs-core/core/bentley'
     - 'repos/itwinjs-core/core/backend'
@@ -81,6 +85,7 @@ For local development it is recommended to setup [`CoSpace`](https://www.npmjs.c
     - 'repos/itwinjs-core/core/telemetry'
     - 'repos/itwinjs-core/core/i18n'
     - 'repos/itwinjs-core/core/orbitgt'
+    - 'repos/itwinjs-core/core/ecschema-metadata'
     - 'repos/itwinjs-core/core/electron'
     - 'repos/itwinjs-core/core/express-server'
     - 'repos/itwinjs-core/core/webgl-compatibility'
@@ -93,6 +98,11 @@ For local development it is recommended to setup [`CoSpace`](https://www.npmjs.c
     - 'repos/itwinjs-core/tools/webpack-core'
     - 'repos/itwinjs-core/tools/internal'
     - 'repos/itwinjs-core/tools/certa'
+    - 'repos/itwinjs-core/common/autoinstallers/rush-lintstaged'
+
+    # imodel-native
+    # - "repos/imodel-native/src/imodel-native/iModelJsNodeAddon/api_package/ts"
+    # - "repos/imodel-native/out/Winx64/imodeljsnodeaddon_pkgs/imodeljs-native"
     ```
 
 4. Update the `cospace.code-workspace` file with all the repos you want to add to your [vscode multi-root workspace](https://code.visualstudio.com/docs/editor/multi-root-workspaces).
