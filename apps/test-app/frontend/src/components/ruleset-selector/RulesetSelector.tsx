@@ -1,0 +1,47 @@
+/*---------------------------------------------------------------------------------------------
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
+
+import { Component } from "react";
+import { IModelApp } from "@itwin/core-frontend";
+import { Select, SelectOption } from "@itwin/itwinui-react";
+import { MyAppFrontend } from "../../api/MyAppFrontend";
+
+export interface RulesetSelectorProps {
+  onRulesetSelected: (rulesetId?: string) => void;
+  activeRulesetId?: string;
+}
+export interface RulesetSelectorState {
+  availableRulesets?: SelectOption<string>[];
+}
+export class RulesetSelector extends Component<RulesetSelectorProps, RulesetSelectorState> {
+  constructor(props: RulesetSelectorProps) {
+    super(props);
+    this.state = {};
+  }
+  public override componentDidMount() {
+    void this.initAvailableRulesets();
+  }
+  private async initAvailableRulesets() {
+    const rulesetIds = await MyAppFrontend.getAvailableRulesets();
+    this.setState({ availableRulesets: rulesetIds.map((id) => ({value: id, label:id})) });
+  }
+  public override render() {
+    if (!this.state.availableRulesets)
+      return (<div className="RulesetSelector">{IModelApp.localization.getLocalizedString("Sample:controls.notifications.loading")}</div>);
+    if (0 === this.state.availableRulesets.length)
+      return (<div className="RulesetSelector">{IModelApp.localization.getLocalizedString("Sample:controls.notifications.no-available-rulesets")}</div>);
+    return (
+      <div className="RulesetSelector">
+        <Select
+          options={this.state.availableRulesets}
+          value={this.props.activeRulesetId}
+          placeholder={IModelApp.localization.getLocalizedString("Sample:controls.notifications.select-ruleset")}
+          onChange={this.props.onRulesetSelected}
+          size="small"
+        />
+      </div>
+    );
+  }
+}

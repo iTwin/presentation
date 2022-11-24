@@ -1,0 +1,80 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "[test-app] Start Web Backend",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "cwd": "${workspaceFolder}/apps/test-app/backend",
+      "program": "${workspaceFolder}/apps/test-app/backend/lib/main.js",
+      "outFiles": [
+        "${workspaceFolder}/apps/test-app/{backend, common}/**/*.js"
+      ],
+      "cascadeTerminateToConfigurations": [
+        "[test-app] Launch Web Frontend"
+      ]
+    },
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "[test-app] Launch Web Frontend",
+      "url": "http://localhost:3000/",
+      "webRoot": "${workspaceFolder}/apps/test-app/frontend/",
+      "cascadeTerminateToConfigurations": [
+        "[test-app] Start Web Backend"
+      ]
+    },
+    {
+      "name": "[test-app] Start Electron Backend",
+      "cwd": "${workspaceFolder}/apps/test-app/backend",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "${workspaceFolder}/apps/test-app/backend/node_modules/.bin/electron",
+      "runtimeArgs": [
+        "${workspaceFolder}/apps/test-app/backend/lib/main.js",
+        "--remote-debugging-port=9223"
+      ],
+      "env": {
+        "NODE_ENV": "development"
+      },
+      "outFiles": [
+        "${workspaceFolder}/apps/test-app/{backend, common}/**/*.js"
+      ],
+      "cascadeTerminateToConfigurations": [
+        "[test-app] Attach To Electron Frontend"
+      ]
+    },
+    {
+      "name": "[test-app] Attach To Electron Frontend",
+      "type": "chrome",
+      "request": "attach",
+      "port": 9223,
+      "webRoot": "${workspaceFolder}/apps/test-app/frontend/",
+      "cascadeTerminateToConfigurations": [
+        "[test-app] Start Electron Backend"
+      ]
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Test App (web)",
+      "configurations": [
+        "[test-app] Start Web Backend",
+        "[test-app] Launch Web Frontend"
+      ]
+    },
+    {
+      "name": "Test App (electron)",
+      "configurations": [
+        "[test-app] Start Electron Backend",
+        "[test-app] Attach To Electron Frontend"
+      ]
+    }
+  ]
+}

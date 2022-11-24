@@ -1,0 +1,6 @@
+{
+"extends": [
+    "plugin:@itwin/itwinjs-recommended",
+    "../../../eslintrc.base.json"
+  ]
+}
