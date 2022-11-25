@@ -2,14 +2,14 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
+
 import { expect } from "chai";
-import * as faker from "faker";
 import * as moq from "typemoq";
 import { IModelConnection } from "@itwin/core-frontend";
 import { DEFAULT_KEYS_BATCH_SIZE } from "@itwin/presentation-common";
-import { createRandomECInstanceKey } from "@itwin/presentation-common/lib/cjs/test";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { PresentationLabelsProvider } from "../../presentation-components/labels/LabelsProvider";
+import { createTestECInstanceKey } from "../_helpers/Common";
 
 describe("PresentationLabelsProvider", () => {
 
@@ -33,8 +33,8 @@ describe("PresentationLabelsProvider", () => {
   describe("getLabel", () => {
 
     it("calls manager to get result and returns it", async () => {
-      const key = createRandomECInstanceKey();
-      const result = faker.random.word();
+      const key = createTestECInstanceKey();
+      const result = "Label";
       presentationManagerMock
         .setup(async (x) => x.getDisplayLabelDefinition(moq.It.isObjectWith({ imodel: imodelMock.object, key })))
         .returns(async () => ({ displayValue: result, rawValue: result, typeName: "string" }))
@@ -44,8 +44,8 @@ describe("PresentationLabelsProvider", () => {
     });
 
     it("calls manager only once for the same key", async () => {
-      const key = createRandomECInstanceKey();
-      const result = faker.random.word();
+      const key = createTestECInstanceKey();
+      const result = "Label";
       presentationManagerMock
         .setup(async (x) => x.getDisplayLabelDefinition(moq.It.isObjectWith({ imodel: imodelMock.object, key })))
         .returns(async () => ({ displayValue: result, rawValue: result, typeName: "string" }))
@@ -56,10 +56,10 @@ describe("PresentationLabelsProvider", () => {
     });
 
     it("calls manager for every different key", async () => {
-      const key1 = createRandomECInstanceKey();
-      const key2 = createRandomECInstanceKey();
-      const result1 = faker.random.word();
-      const result2 = faker.random.word();
+      const key1 = createTestECInstanceKey({ id: "0x1" });
+      const key2 = createTestECInstanceKey({ id: "0x2" });
+      const result1 = "Label 1";
+      const result2 = "Label 2";
       presentationManagerMock
         .setup(async (x) => x.getDisplayLabelDefinition(moq.It.isObjectWith({ imodel: imodelMock.object, key: key1 })))
         .returns(async () => ({ displayValue: result1, rawValue: result1, typeName: "string" }))
@@ -78,8 +78,8 @@ describe("PresentationLabelsProvider", () => {
   describe("getLabels", () => {
 
     it("calls manager to get result and returns it", async () => {
-      const keys = [createRandomECInstanceKey(), createRandomECInstanceKey()];
-      const result = [faker.random.word(), faker.random.word()];
+      const keys = [createTestECInstanceKey({ id: "0x1" }), createTestECInstanceKey({ id: "0x2" })];
+      const result = ["Label 1", "Label 2"];
       presentationManagerMock
         .setup(async (x) => x.getDisplayLabelDefinitions(moq.It.isObjectWith({ imodel: imodelMock.object, keys })))
         .returns(async () => result.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" })))
@@ -89,8 +89,8 @@ describe("PresentationLabelsProvider", () => {
     });
 
     it("calls manager only once for the same key", async () => {
-      const keys = [createRandomECInstanceKey(), createRandomECInstanceKey()];
-      const result = [faker.random.word(), faker.random.word()];
+      const keys = [createTestECInstanceKey({ id: "0x1" }), createTestECInstanceKey({ id: "0x2" })];
+      const result = ["Label 1", "Label 2"];
       presentationManagerMock
         .setup(async (x) => x.getDisplayLabelDefinitions(moq.It.isObjectWith({ imodel: imodelMock.object, keys })))
         .returns(async () => result.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" })))
@@ -101,10 +101,10 @@ describe("PresentationLabelsProvider", () => {
     });
 
     it("calls manager for every different list of keys", async () => {
-      const keys1 = [createRandomECInstanceKey(), createRandomECInstanceKey()];
-      const keys2 = [createRandomECInstanceKey(), createRandomECInstanceKey()];
-      const result1 = [faker.random.word(), faker.random.word()];
-      const result2 = [faker.random.word(), faker.random.word()];
+      const keys1 = [createTestECInstanceKey({id:"0x1"}), createTestECInstanceKey({ id: "0x2" })];
+      const keys2 = [createTestECInstanceKey({id:"0x3"}), createTestECInstanceKey({id:"0x4"})];
+      const result1 = ["Label 1", "Label 2"];
+      const result2 = ["Label 3", "Label 4"];
       presentationManagerMock
         .setup(async (x) => x.getDisplayLabelDefinitions(moq.It.isObjectWith({ imodel: imodelMock.object, keys: keys1 })))
         .returns(async () => result1.map((value) => ({ rawValue: value, displayValue: value, typeName: "string" })))
@@ -123,8 +123,8 @@ describe("PresentationLabelsProvider", () => {
       const results = [];
       // create a key set of such size that we need 3 content requests
       for (let i = 0; i < (2 * DEFAULT_KEYS_BATCH_SIZE + 1); ++i) {
-        inputKeys.push(createRandomECInstanceKey());
-        results.push(faker.random.word());
+        inputKeys.push(createTestECInstanceKey({id: `0x${i}`}));
+        results.push(`Label_${i}`);
       }
 
       const keys1 = inputKeys.slice(0, DEFAULT_KEYS_BATCH_SIZE);

@@ -2,17 +2,18 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
+
 import * as React from "react";
 import { expect } from "chai";
 import sinon from "sinon";
-import { IModelApp, IModelConnection, NoRenderApp } from "@itwin/core-frontend";
-import { Presentation, SelectionManager } from "@itwin/presentation-frontend";
 import { Primitives, PrimitiveValue, PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { TypeConverter, TypeConverterManager } from "@itwin/components-react";
+import { EmptyLocalization } from "@itwin/core-common";
+import { IModelApp, IModelConnection, NoRenderApp } from "@itwin/core-frontend";
+import { Presentation, SelectionManager } from "@itwin/presentation-frontend";
 import { act, cleanup, render } from "@testing-library/react";
 import { InstanceKeyValueRenderer } from "../../presentation-components/properties/InstanceKeyValueRenderer";
 import { UnifiedSelectionContextProvider } from "../../presentation-components/unified-selection/UnifiedSelectionContext";
-import { EmptyLocalization } from "@itwin/core-common";
 
 describe("InstanceKeyValueRenderer", () => {
   const renderer = new InstanceKeyValueRenderer();

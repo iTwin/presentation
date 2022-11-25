@@ -2,6 +2,7 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
+
 import { expect } from "chai";
 import * as faker from "faker";
 import * as sinon from "sinon";
@@ -11,14 +12,26 @@ import { BeEvent, Logger } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { CheckBoxState } from "@itwin/core-react";
 import { Node, RegisteredRuleset } from "@itwin/presentation-common";
-import {
-  createRandomECInstancesNode, createRandomECInstancesNodeKey, createRandomLabelDefinition, createRandomNodePathElement, createRandomRuleset,
-  PromiseContainer, ResolvablePromise,
-} from "@itwin/presentation-common/lib/cjs/test";
 import { Presentation, PresentationManager, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
 import { PresentationTreeDataProvider } from "../../presentation-components/tree/DataProvider";
 import { pageOptionsUiToPresentation } from "../../presentation-components/tree/Utils";
 import { createRandomTreeNodeItem } from "../_helpers/UiComponents";
+import { PromiseContainer, ResolvablePromise } from "../_helpers/Promises";
+import { createTestECInstanceKey, createTestRuleset } from "../_helpers/Common";
+import { createRandomNodePathElement, createTestECInstancesNode, createTestECInstancesNodeKey } from "../_helpers/Hierarchy";
+import { createTestLabelDefinition } from "../_helpers/LabelDefinition";
+
+function createTestECInstancesNodeKeyWithId(id?: string) {
+  return createTestECInstancesNodeKey({
+    instanceKeys: [createTestECInstanceKey({id})]
+  });
+}
+
+function createTestECInstancesNodeWithId(id?: string) {
+  return createTestECInstancesNode({
+    key: createTestECInstancesNodeKeyWithId(id)
+  })
+}
 
 describe("TreeDataProvider", () => {
 
@@ -59,7 +72,7 @@ describe("TreeDataProvider", () => {
       rulesetsManagerMock.setup(async (x) => x.add(moq.It.isAny())).returns(async () => registerPromise);
       presentationManagerMock.setup((x) => x.rulesets()).returns(() => rulesetsManagerMock.object);
 
-      const ruleset = await createRandomRuleset();
+      const ruleset = createTestRuleset();
       const p = new PresentationTreeDataProvider({ imodel: imodelMock.object, ruleset });
       const rulesetDisposeSpy = sinon.spy();
       await registerPromise.resolve(new RegisteredRuleset(ruleset, "test", rulesetDisposeSpy));
@@ -90,7 +103,7 @@ describe("TreeDataProvider", () => {
   describe("getNodesCount", () => {
 
     it("returns presentation manager result through `getNodesCount` when page options not set", async () => {
-      const parentKey = createRandomECInstancesNodeKey();
+      const parentKey = createTestECInstancesNodeKey();
       const parentNode = createRandomTreeNodeItem(parentKey);
       presentationManagerMock
         .setup(async (x) => x.getNodesCount({ imodel: imodelMock.object, rulesetOrId: rulesetId, parentKey }))
@@ -102,8 +115,8 @@ describe("TreeDataProvider", () => {
     });
 
     it("returns presentation manager result through `getNodesAndCount` when page options are set", async () => {
-      const resultNodes = [createRandomECInstancesNode(), createRandomECInstancesNode()];
-      const parentKey = createRandomECInstancesNodeKey();
+      const resultNodes = [ createTestECInstancesNodeWithId("0x1"), createTestECInstancesNodeWithId("0x2") ];
+      const parentKey = createTestECInstancesNodeKeyWithId("0x3");
       const parentNode = createRandomTreeNodeItem(parentKey);
       presentationManagerMock
         .setup(async (x) => x.getNodesAndCount({ imodel: imodelMock.object, rulesetOrId: rulesetId, paging: { start: 0, size: 123 }, parentKey }))
@@ -116,7 +129,7 @@ describe("TreeDataProvider", () => {
     });
 
     it("memoizes result", async () => {
-      const parentKeys = [createRandomECInstancesNodeKey(), createRandomECInstancesNodeKey()];
+      const parentKeys = [createTestECInstancesNodeKeyWithId("0x1"), createTestECInstancesNodeKeyWithId("0x2")];
       const parentNodes = parentKeys.map((key) => createRandomTreeNodeItem(key));
       const resultContainers = [new PromiseContainer<{ nodes: Node[], count: number }>(), new PromiseContainer<{ nodes: Node[], count: number }>()];
 
@@ -135,7 +148,7 @@ describe("TreeDataProvider", () => {
         provider.getNodesCount(parentNodes[0]),
         provider.getNodesCount(parentNodes[1]),
       ];
-      resultContainers.forEach((c, index) => c.resolve({ nodes: [createRandomECInstancesNode(), createRandomECInstancesNode()], count: index }));
+      resultContainers.forEach((c, index) => c.resolve({ nodes: [createTestECInstancesNode(), createTestECInstancesNode()], count: index }));
       const results = await Promise.all(promises);
       expect(results[0]).to.eq(results[1]).to.eq(0);
       expect(results[2]).to.eq(1);
@@ -144,11 +157,11 @@ describe("TreeDataProvider", () => {
     });
 
     it("clears memoized result when ruleset variables changes", async () => {
-      const parentKey = createRandomECInstancesNodeKey();
+      const parentKey = createTestECInstancesNodeKey();
       const parentNode = createRandomTreeNodeItem(parentKey);
       presentationManagerMock
         .setup(async (x) => x.getNodesAndCount({ imodel: imodelMock.object, rulesetOrId: rulesetId, paging: { start: 0, size: 10 }, parentKey }))
-        .returns(async () => ({ nodes: [createRandomECInstancesNode(), createRandomECInstancesNode()], count: 2 }))
+        .returns(async () => ({ nodes: [createTestECInstancesNode(), createTestECInstancesNode()], count: 2 }))
         .verifiable(moq.Times.exactly(2));
 
       provider.pagingSize = 10;
@@ -172,12 +185,12 @@ describe("TreeDataProvider", () => {
   describe("getNodes", () => {
 
     it("returns presentation manager result", async () => {
-      const parentKey = createRandomECInstancesNodeKey();
+      const parentKey = createTestECInstancesNodeKey();
       const parentNode = createRandomTreeNodeItem(parentKey);
       const pageOptions: PageOptions = { start: 0, size: faker.random.number() };
       presentationManagerMock
         .setup(async (x) => x.getNodesAndCount({ imodel: imodelMock.object, rulesetOrId: rulesetId, paging: pageOptionsUiToPresentation(pageOptions), parentKey }))
-        .returns(async () => ({ nodes: [createRandomECInstancesNode(), createRandomECInstancesNode()], count: 2 }))
+        .returns(async () => ({ nodes: [createTestECInstancesNode(), createTestECInstancesNode()], count: 2 }))
         .verifiable();
       const actualResult = await provider.getNodes(parentNode, pageOptions);
       expect(actualResult).to.matchSnapshot();
@@ -185,7 +198,7 @@ describe("TreeDataProvider", () => {
     });
 
     it("memoizes result", async () => {
-      const parentKeys = [createRandomECInstancesNodeKey(), createRandomECInstancesNodeKey()];
+      const parentKeys = [createTestECInstancesNodeKeyWithId("0x1"), createTestECInstancesNodeKeyWithId("0x2")];
       const parentNodes = parentKeys.map((key) => createRandomTreeNodeItem(key));
       const resultNodesFirstPageContainer0 = new PromiseContainer<{ nodes: Node[], count: number }>();
       const resultNodesFirstPageContainer1 = new PromiseContainer<{ nodes: Node[], count: number }>();
@@ -213,9 +226,9 @@ describe("TreeDataProvider", () => {
         provider.getNodes(parentNodes[0], { start: 1, size: 0 }), provider.getNodes(parentNodes[0], { start: 1, size: 0 }),
         provider.getNodes(parentNodes[1], { start: 0, size: 1 }), provider.getNodes(parentNodes[1], { start: 0, size: 1 }),
       ];
-      resultNodesFirstPageContainer0.resolve({ nodes: [createRandomECInstancesNode()], count: 1 });
-      resultNodesFirstPageContainer1.resolve({ nodes: [createRandomECInstancesNode()], count: 1 });
-      resultNodesNonFirstPageContainer.resolve({ nodes: [createRandomECInstancesNode()], count: 1 });
+      resultNodesFirstPageContainer0.resolve({ nodes: [createTestECInstancesNode()], count: 1 });
+      resultNodesFirstPageContainer1.resolve({ nodes: [createTestECInstancesNode()], count: 1 });
+      resultNodesNonFirstPageContainer.resolve({ nodes: [createTestECInstancesNode()], count: 1 });
       const results = await Promise.all(promises);
 
       expect(results[0]).to.eq(results[1], "results[0] should eq results[1]");
@@ -239,7 +252,7 @@ describe("TreeDataProvider", () => {
     it("logs a warning when requesting nodes and pagingSize is not the same as passed pageOptions", async () => {
       const pageOptions: PageOptions = { start: 0, size: 10 };
       const loggerSpy = sinon.spy(Logger, "logWarning");
-      const result = { nodes: [createRandomECInstancesNode(), createRandomECInstancesNode()], count: 2 };
+      const result = { nodes: [createTestECInstancesNode(), createTestECInstancesNode()], count: 2 };
       presentationManagerMock.setup(async (x) => x.getNodesAndCount(moq.It.isAny())).returns(async () => result);
 
       // Paging size is not set and pageOptions are passed
@@ -334,8 +347,8 @@ describe("TreeDataProvider", () => {
 
     function mockPresentationManager(extendedData: { [key: string]: any }) {
       const node: Node = {
-        key: createRandomECInstancesNodeKey(),
-        label: createRandomLabelDefinition(),
+        key: createTestECInstancesNodeKey(),
+        label: createTestLabelDefinition(),
         extendedData,
       };
 

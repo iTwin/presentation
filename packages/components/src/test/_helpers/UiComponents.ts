@@ -5,18 +5,17 @@
 
 import * as faker from "faker";
 import * as moq from "typemoq";
-import { BeEvent } from "@itwin/core-bentley";
-import { NodeKey, RegisteredRuleset, Ruleset, VariableValue } from "@itwin/presentation-common";
-import { createRandomECInstancesNodeKey } from "@itwin/presentation-common/lib/cjs/test";
-import { IModelContentChangeEventArgs, IModelHierarchyChangeEventArgs, PresentationManager, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
 import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { DelayLoadedTreeNodeItem } from "@itwin/components-react";
+import { BeEvent } from "@itwin/core-bentley";
+import { NodeKey, RegisteredRuleset, Ruleset, VariableValue } from "@itwin/presentation-common";
+import {
+  IModelContentChangeEventArgs, IModelHierarchyChangeEventArgs, PresentationManager, RulesetManager, RulesetVariablesManager,
+} from "@itwin/presentation-frontend";
 import { PRESENTATION_TREE_NODE_KEY } from "../../presentation-components/tree/Utils";
+import { createTestECInstancesNodeKey } from "./Hierarchy";
 
-/**
- * @internal Used for testing only.
- */
-export const createRandomTreeNodeItem = (key?: NodeKey, parentId?: string): DelayLoadedTreeNodeItem => {
+export function createRandomTreeNodeItem(key?: NodeKey, parentId?: string): DelayLoadedTreeNodeItem {
   const node = {
     id: faker.random.uuid(),
     parentId,
@@ -24,14 +23,11 @@ export const createRandomTreeNodeItem = (key?: NodeKey, parentId?: string): Dela
     description: faker.random.words(),
     hasChildren: faker.random.boolean(),
   };
-  (node as any)[PRESENTATION_TREE_NODE_KEY] = key ? key : createRandomECInstancesNodeKey();
+  (node as any)[PRESENTATION_TREE_NODE_KEY] = key ? key : createTestECInstancesNodeKey();
   return node;
 };
 
-/**
- * @internal Used for testing only.
- */
-export const createRandomPropertyRecord = (): PropertyRecord => {
+export function createRandomPropertyRecord(): PropertyRecord {
   const value: PrimitiveValue = {
     valueFormat: PropertyValueFormat.Primitive,
     value: faker.random.word(),
@@ -45,10 +41,7 @@ export const createRandomPropertyRecord = (): PropertyRecord => {
   return new PropertyRecord(value, descr);
 };
 
-/**
- * @internal Used for testing only.
- */
-export const mockPresentationManager = () => {
+export function mockPresentationManager() {
   const onRulesetModified = new BeEvent<(curr: RegisteredRuleset, prev: Ruleset) => void>();
   const rulesetManagerMock = moq.Mock.ofType<RulesetManager>();
   rulesetManagerMock.setup((x) => x.onRulesetModified).returns(() => onRulesetModified);

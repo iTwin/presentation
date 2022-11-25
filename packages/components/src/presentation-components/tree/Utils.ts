@@ -108,6 +108,7 @@ function assignOptionalTreeNodeItemFields(
  * @public
  * @deprecated
  */
+// istanbul ignore next
 export function customizeTreeNodeItem(item: Partial<DelayLoadedTreeNodeItem>, node: Partial<Node>) {
   if (node.imageId) { // eslint-disable-line deprecation/deprecation
     item.icon = node.imageId; // eslint-disable-line deprecation/deprecation
@@ -130,6 +131,7 @@ export function customizeTreeNodeItem(item: Partial<DelayLoadedTreeNodeItem>, no
   }
 }
 
+// istanbul ignore next
 function createTreeNodeItemStyle(node: Partial<Node>): ItemStyle {
   const style: ItemStyle = {};
   if (StyleHelper.isBold(node)) {

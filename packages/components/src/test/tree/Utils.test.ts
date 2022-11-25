@@ -5,47 +5,50 @@
 
 import { expect } from "chai";
 import * as faker from "faker";
-import { GroupingNodeKey, LabelDefinition, Node } from "@itwin/presentation-common";
-import { createRandomECInstancesNode, createRandomGroupingNodeKey } from "@itwin/presentation-common/lib/cjs/test";
+import { LabelDefinition, Node } from "@itwin/presentation-common";
 import { PageOptions } from "@itwin/components-react";
 import {
   createPartialTreeNodeItem, createTreeNodeItem, createTreeNodeItems, pageOptionsUiToPresentation, PRESENTATION_TREE_NODE_KEY,
 } from "../../presentation-components/tree/Utils";
+import { createTestECClassGroupingNodeKey, createTestECInstancesNode } from "../_helpers/Hierarchy";
 
 describe("Utils", () => {
   describe("createTreeNodeItem", () => {
     it("creates tree node", () => {
-      const node = createRandomECInstancesNode();
+      const node = createTestECInstancesNode();
       const treeNode = createTreeNodeItem(node);
       expect(treeNode).to.matchSnapshot();
     });
 
     it("creates tree node with extended data", () => {
-      const node = { ...createRandomECInstancesNode(), extendedData: { test: "value" } };
+      const node = { ...createTestECInstancesNode(), extendedData: { test: "value" } };
       const treeNode = createTreeNodeItem(node);
       expect(treeNode.extendedData!.test).to.eq("value");
     });
 
     it("creates tree node with parent id", () => {
-      const node = createRandomECInstancesNode();
+      const node = createTestECInstancesNode();
       const parentId = faker.random.word();
       const treeNode = createTreeNodeItem(node, parentId);
       expect(treeNode).to.matchSnapshot();
     });
 
     it("creates tree node with custom label styles", () => {
-      const node = createRandomECInstancesNode();
+      const node = createTestECInstancesNode();
       node.fontStyle = "Bold Italic"; // eslint-disable-line deprecation/deprecation
+      const treeNode = createTreeNodeItem(node);
+      expect(treeNode).to.matchSnapshot();
+    });
+
+    it("creates auto expanded tree node", () => {
+      const node = createTestECInstancesNode({ isExpanded: true});
       const treeNode = createTreeNodeItem(node);
       expect(treeNode).to.matchSnapshot();
     });
 
     it("appends grouped nodes count if requested", () => {
       const node: Node = {
-        key: {
-          ...createRandomGroupingNodeKey(),
-          groupedInstancesCount: 999,
-        } as GroupingNodeKey,
+        key: createTestECClassGroupingNodeKey({groupedInstancesCount: 999}),
         label: LabelDefinition.fromLabelString("test"),
       };
       const treeNode = createTreeNodeItem(node, undefined, { appendChildrenCountForGroupingNodes: true });
@@ -53,7 +56,7 @@ describe("Utils", () => {
     });
 
     it("uses provided callback to customize tree node", () => {
-      const node = createRandomECInstancesNode();
+      const node = createTestECInstancesNode();
       const treeNode = createTreeNodeItem(node, undefined, {
         customizeTreeNodeItem: (item) => {
           item.icon = "custom-icon";
@@ -103,13 +106,13 @@ describe("Utils", () => {
 
   describe("createTreeNodeItems", () => {
     it("creates tree nodes", () => {
-      const nodes = [createRandomECInstancesNode(), createRandomECInstancesNode()];
+      const nodes = [createTestECInstancesNode(), createTestECInstancesNode()];
       const treeNode = createTreeNodeItems(nodes);
       expect(treeNode).to.matchSnapshot();
     });
 
     it("creates tree nodes with parentId", () => {
-      const nodes = [createRandomECInstancesNode(), createRandomECInstancesNode()];
+      const nodes = [createTestECInstancesNode(), createTestECInstancesNode()];
       const parentId = faker.random.word();
       const treeNode = createTreeNodeItems(nodes, parentId);
       expect(treeNode).to.matchSnapshot();

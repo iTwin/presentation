@@ -6,15 +6,16 @@
 import { expect } from "chai";
 import * as sinon from "sinon";
 import * as moq from "typemoq";
+import { TreeModelNodeInput, TreeModelSource, TreeNodeItem, UiComponents } from "@itwin/components-react";
+import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { NodeKey } from "@itwin/presentation-common";
-import { createRandomECInstancesNodeKey } from "@itwin/presentation-common/lib/cjs/test";
 import { Presentation, StateTracker } from "@itwin/presentation-frontend";
-import { TreeModelNodeInput, TreeModelSource, TreeNodeItem } from "@itwin/components-react";
 import { cleanup, renderHook } from "@testing-library/react-hooks";
 import { IPresentationTreeDataProvider } from "../../../presentation-components";
 import { createLabelRecord } from "../../../presentation-components/common/Utils";
 import { useExpandedNodesTracking, UseExpandedNodesTrackingProps } from "../../../presentation-components/tree/controlled/UseExpandedNodesTracking";
+import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy";
 import { mockPresentationManager } from "../../_helpers/UiComponents";
 
 interface TestTreeNodeItem extends TreeNodeItem {
@@ -22,7 +23,7 @@ interface TestTreeNodeItem extends TreeNodeItem {
 }
 
 function createNodeItem(nodeId: string): TestTreeNodeItem {
-  return { id: nodeId, label: createLabelRecord({ displayValue: nodeId, typeName: "string", rawValue: nodeId }, nodeId), key: createRandomECInstancesNodeKey() };
+  return { id: nodeId, label: createLabelRecord({ displayValue: nodeId, typeName: "string", rawValue: nodeId }, nodeId), key: createTestECInstancesNodeKey() };
 }
 
 function createTreeModelInput(node: TestTreeNodeItem, isExpanded?: boolean): TreeModelNodeInput {
@@ -43,6 +44,14 @@ describe("UseExpandedNodesTracking", () => {
   const rulesetId = "ruleset-id";
   let modelSource: TreeModelSource;
   let initialProps: UseExpandedNodesTrackingProps;
+
+  before(async () => {
+    await UiComponents.initialize(new EmptyLocalization());
+  });
+
+  after(() => {
+    UiComponents.terminate();
+  });
 
   beforeEach(() => {
     stateTrackerMock.reset();

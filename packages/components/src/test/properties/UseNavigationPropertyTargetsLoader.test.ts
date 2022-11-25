@@ -9,12 +9,12 @@ import { PropertyDescription } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection, NoRenderApp } from "@itwin/core-frontend";
 import { Content, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
-import { createTestContentDescriptor, createTestContentItem } from "@itwin/presentation-common/lib/cjs/test";
 import { Presentation } from "@itwin/presentation-frontend";
 import { renderHook } from "@testing-library/react-hooks";
 import {
   NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE, NavigationPropertyTarget, useNavigationPropertyTargetsLoader, useNavigationPropertyTargetsRuleset,
 } from "../../presentation-components/properties/UseNavigationPropertyTargetsLoader";
+import { createTestContentDescriptor, createTestContentItem } from "../_helpers/Content";
 
 describe("UseNavigationPropertyTargetsLoader", () => {
   const testImodel = {} as IModelConnection;

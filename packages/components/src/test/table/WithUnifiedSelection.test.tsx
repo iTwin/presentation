@@ -2,22 +2,23 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
+
+import * as React from "react";
 import { expect } from "chai";
 import { mount, shallow } from "enzyme";
 import * as faker from "faker";
-import * as React from "react";
 import * as sinon from "sinon";
 import * as moq from "typemoq";
 import { ColumnDescription, RowItem, Table, TableDataChangeEvent, TableProps } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { InstanceKey, KeySet } from "@itwin/presentation-common";
-import { createRandomECInstanceKey, isKeySet } from "@itwin/presentation-common/lib/cjs/test";
 import {
   ISelectionProvider, Presentation, PresentationManager, SelectionChangeEvent, SelectionChangeEventArgs, SelectionChangeType, SelectionHandler,
   SelectionManager,
 } from "@itwin/presentation-frontend";
 import { IUnifiedSelectionComponent, PresentationTableDataProvider, tableWithUnifiedSelection } from "../../presentation-components";
 import { PresentationTableDataProviderProps } from "../../presentation-components/table/DataProvider";
+import { createTestECInstanceKey, isKeySet } from "../_helpers/Common";
 
 // eslint-disable-next-line deprecation/deprecation
 const PresentationTable = tableWithUnifiedSelection(Table);
@@ -79,8 +80,8 @@ describe("Table withUnifiedSelection", () => {
   };
 
   // eslint-disable-next-line deprecation/deprecation
-  const createRandomRowItem = (): RowItem & { _key: InstanceKey } => {
-    const k = createRandomECInstanceKey();
+  const createRandomRowItem = (): RowItem & { _key: InstanceKey; } => {
+    const k = createTestECInstanceKey();
     return {
       _key: k,
       key: JSON.stringify(k),
@@ -193,7 +194,7 @@ describe("Table withUnifiedSelection", () => {
   describe("selection handling", () => {
 
     it("sets data provider keys to selection when mounts and highest selection level is lower than boundary", () => {
-      const keysOverall = new KeySet([createRandomECInstanceKey(), createRandomECInstanceKey()]);
+      const keysOverall = new KeySet([createTestECInstanceKey(), createTestECInstanceKey()]);
       selectionHandlerMock.reset();
       selectionHandlerMock.setup((x) => x.getSelectionLevels()).returns(() => [1]);
       selectionHandlerMock.setup((x) => x.getSelection(1)).returns(() => keysOverall);
@@ -207,12 +208,12 @@ describe("Table withUnifiedSelection", () => {
     });
 
     it("sets data provider keys to selection when mounts and highest selection level is equal to boundary", () => {
-      const keysOverall = new KeySet([createRandomECInstanceKey(), createRandomECInstanceKey()]);
+      const keysOverall = new KeySet([createTestECInstanceKey(), createTestECInstanceKey()]);
       selectionHandlerMock.reset();
       selectionHandlerMock.setup((x) => x.getSelectionLevels()).returns(() => [1, 3]);
       selectionHandlerMock.setup((x) => x.getSelection(1)).returns(() => keysOverall);
       selectionHandlerMock.setup((x) => x.getSelection(2)).returns(() => new KeySet());
-      selectionHandlerMock.setup((x) => x.getSelection(3)).returns(() => new KeySet([createRandomECInstanceKey()]));
+      selectionHandlerMock.setup((x) => x.getSelection(3)).returns(() => new KeySet([createTestECInstanceKey()]));
       shallow(<PresentationTable
         dataProvider={dataProviderMock.object}
         selectionHandler={selectionHandlerMock.object}
@@ -222,10 +223,10 @@ describe("Table withUnifiedSelection", () => {
     });
 
     it("sets data provider keys to selection when mounts and data provider already has keys", () => {
-      const keysOld = new KeySet([createRandomECInstanceKey()]);
+      const keysOld = new KeySet([createTestECInstanceKey()]);
       dataProviderMock.reset();
       dataProviderMock.setup((x) => x.keys).returns(() => keysOld);
-      const keysNew = new KeySet([createRandomECInstanceKey(), createRandomECInstanceKey()]);
+      const keysNew = new KeySet([createTestECInstanceKey(), createTestECInstanceKey()]);
       selectionHandlerMock.reset();
       selectionHandlerMock.setup((x) => x.getSelectionLevels()).returns(() => [0]);
       selectionHandlerMock.setup((x) => x.getSelection(0)).returns(() => keysNew);
@@ -237,7 +238,7 @@ describe("Table withUnifiedSelection", () => {
     });
 
     it("does nothing when mounts and data provider already has keys and there are no available selection levels", () => {
-      const keysOld = new KeySet([createRandomECInstanceKey()]);
+      const keysOld = new KeySet([createTestECInstanceKey()]);
       dataProviderMock.reset();
       dataProviderMock.setup((x) => x.keys).returns(() => keysOld);
       selectionHandlerMock.reset();
@@ -474,7 +475,7 @@ describe("Table withUnifiedSelection", () => {
       };
 
       it("sets data provider keys to overall selection on selection changes with lower selection level", () => {
-        const keys = new KeySet([createRandomECInstanceKey(), createRandomECInstanceKey()]);
+        const keys = new KeySet([createTestECInstanceKey(), createTestECInstanceKey()]);
         shallow(<PresentationTable
           dataProvider={dataProviderMock.object}
           selectionHandler={selectionHandlerMock.object}

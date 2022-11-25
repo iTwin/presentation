@@ -2,6 +2,7 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
+
 import { expect } from "chai";
 import * as faker from "faker";
 import * as sinon from "sinon";
@@ -11,16 +12,15 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { HorizontalAlignment, SortDirection } from "@itwin/core-react";
 import {
-  Content, DefaultContentDisplayTypes, Descriptor, FieldDescriptorType, Item, KeySet, NestedContentValue, PresentationError,
-  SortDirection as PresentationSortDirection, RelationshipMeaning, ValuesDictionary,
+  Content, DefaultContentDisplayTypes, Descriptor, FieldDescriptorType, Item, KeySet, NestedContentValue, PresentationError, RelationshipMeaning,
+  SortDirection as PresentationSortDirection, ValuesDictionary,
 } from "@itwin/presentation-common";
-import {
-  createRandomECInstanceKey, createTestContentDescriptor, createTestContentItem, createTestNestedContentField, createTestSimpleContentField,
-  PromiseContainer,
-} from "@itwin/presentation-common/lib/cjs/test";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { CacheInvalidationProps } from "../../presentation-components/common/ContentDataProvider";
 import { PresentationTableDataProvider, TABLE_DATA_PROVIDER_DEFAULT_PAGE_SIZE } from "../../presentation-components/table/DataProvider";
+import { createTestECInstanceKey } from "../_helpers/Common";
+import { createTestContentDescriptor, createTestContentItem, createTestNestedContentField, createTestSimpleContentField } from "../_helpers/Content";
+import { PromiseContainer } from "../_helpers/Promises";
 import { mockPresentationManager } from "../_helpers/UiComponents";
 
 /**
@@ -51,7 +51,7 @@ describe("TableDataProvider", () => {
     Presentation.setLocalization(new EmptyLocalization());
 
     provider = new Provider({ imodel: imodelMock.object, ruleset: rulesetId });
-    provider.keys = new KeySet([createRandomECInstanceKey()]);
+    provider.keys = new KeySet([createTestECInstanceKey()]);
     invalidateCacheSpy = sinon.spy(provider, "invalidateCache");
   });
 
@@ -60,7 +60,7 @@ describe("TableDataProvider", () => {
   });
 
   const createEmptyContentItem = (): Item => {
-    return new Item([createRandomECInstanceKey()], faker.random.words(),
+    return new Item([createTestECInstanceKey()], faker.random.words(),
       "", undefined, {}, {}, []);
   };
   const createContent = (recordsCount: number, itemsGenerator: () => Item = createEmptyContentItem): Content => {
@@ -93,7 +93,7 @@ describe("TableDataProvider", () => {
   describe("getRowKey", () => {
 
     it("returns valid deserialized InstanceKey", () => {
-      const key = createRandomECInstanceKey();
+      const key = createTestECInstanceKey();
       // eslint-disable-next-line deprecation/deprecation
       const row: RowItem = {
         key: JSON.stringify(key),
@@ -426,7 +426,7 @@ describe("TableDataProvider", () => {
         values[field.name] = faker.random.word();
         displayValues[field.name] = faker.random.words();
       });
-      const record = new Item([createRandomECInstanceKey()],
+      const record = new Item([createTestECInstanceKey()],
         faker.random.words(), faker.random.word(), undefined, values, displayValues, []);
       (provider as any).getContent = async () => new Content(descriptor, [record]);
       const row = await provider.getRow(0);
@@ -442,7 +442,7 @@ describe("TableDataProvider", () => {
       const descriptor = createTestContentDescriptor({ fields: [nestedContentField] });
       const values = {
         [nestedContentField.name]: [{
-          primaryKeys: [createRandomECInstanceKey()],
+          primaryKeys: [createTestECInstanceKey()],
           values: {
             [childFields[0].name]: "a1",
             [childFields[1].name]: "b1",
@@ -453,7 +453,7 @@ describe("TableDataProvider", () => {
           },
           mergedFieldNames: [],
         }, {
-          primaryKeys: [createRandomECInstanceKey()],
+          primaryKeys: [createTestECInstanceKey()],
           values: {
             [childFields[0].name]: "a2",
             [childFields[1].name]: "b2",
@@ -499,12 +499,12 @@ describe("TableDataProvider", () => {
 
       const values = {
         [nestedContentField.name]: [{
-          primaryKeys: [createRandomECInstanceKey()],
+          primaryKeys: [createTestECInstanceKey()],
           values: {
             [nestedChildFields[0].name]: "c",
             [nestedChildFields[1].name]: "d",
             [childNestedContentField.name]: [{
-              primaryKeys: [createRandomECInstanceKey()],
+              primaryKeys: [createTestECInstanceKey()],
               values: {
                 [deeplyNestedChildFields[0].name]: "a",
                 [deeplyNestedChildFields[1].name]: "b",
@@ -590,7 +590,7 @@ describe("TableDataProvider", () => {
       const descriptor = createTestContentDescriptor({ displayType: DefaultContentDisplayTypes.List, fields: [] });
       const values: ValuesDictionary<any> = {};
       const displayValues: ValuesDictionary<any> = {};
-      const record = new Item([createRandomECInstanceKey()],
+      const record = new Item([createTestECInstanceKey()],
         faker.random.words(), faker.random.word(), undefined, values, displayValues, []);
       (provider as any).getContent = async () => new Content(descriptor, [record]);
       const row = await provider.getRow(0);

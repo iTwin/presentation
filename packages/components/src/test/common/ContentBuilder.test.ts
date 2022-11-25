@@ -2,16 +2,19 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
+
 import { expect } from "chai";
-import { EnumerationInfo, FieldHierarchy, traverseContentItem } from "@itwin/presentation-common";
-import {
-  createTestCategoryDescription, createTestContentDescriptor, createTestContentItem, createTestECInstanceKey, createTestNestedContentField, createTestPropertiesContentField, createTestPropertyInfo, createTestSimpleContentField,
-} from "@itwin/presentation-common/lib/cjs/test";
 import { ArrayValue, PropertyRecord, StructValue } from "@itwin/appui-abstract";
+import { EnumerationInfo, FieldHierarchy, traverseContentItem } from "@itwin/presentation-common";
 import { FieldHierarchyRecord, IPropertiesAppender, PropertyRecordsBuilder } from "../../presentation-components/common/ContentBuilder";
+import { createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
+import {
+  createTestCategoryDescription, createTestContentDescriptor, createTestContentItem, createTestNestedContentField, createTestPropertiesContentField,
+  createTestSimpleContentField,
+} from "../_helpers/Content";
 
 class TestPropertyRecordsBuilder extends PropertyRecordsBuilder {
-  public entries: Array<{ record: PropertyRecord, fieldHierarchy: FieldHierarchy }> = [];
+  public entries: Array<{ record: PropertyRecord, fieldHierarchy: FieldHierarchy; }> = [];
   protected createRootPropertiesAppender(): IPropertiesAppender {
     return {
       append: (record: FieldHierarchyRecord) => { this.entries.push(record); },

@@ -3,19 +3,19 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import * as React from "react";
+import { expect } from "chai";
 import sinon from "sinon";
 import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection, NoRenderApp } from "@itwin/core-frontend";
 import { Content, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
-import { createTestContentDescriptor, createTestContentItem } from "@itwin/presentation-common/lib/cjs/test";
 import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import {
   NavigationPropertyTargetSelector, NavigationPropertyTargetSelectorAttributes, NavigationPropertyTargetSelectorProps,
 } from "../../presentation-components/properties/NavigationPropertyTargetSelector";
+import { createTestContentDescriptor, createTestContentItem } from "../_helpers/Content";
 
 function createNavigationPropertyDescription(): PropertyDescription {
   return {

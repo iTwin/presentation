@@ -2,17 +2,18 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
+
 import { expect } from "chai";
 import * as faker from "faker";
 import sinon from "sinon";
 import * as moq from "typemoq";
+import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Field } from "@itwin/presentation-common";
-import { createTestSimpleContentField } from "@itwin/presentation-common/lib/cjs/test";
 import { FavoritePropertiesManager, FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
-import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IPresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider";
 import { FavoritePropertiesDataFilterer } from "../../presentation-components/propertygrid/FavoritePropertiesDataFilterer";
+import { createTestSimpleContentField } from "../_helpers/Content";
 import { createArrayProperty, createPrimitiveStringProperty, createStructProperty } from "../_helpers/Properties";
 
 describe("FavoritePropertiesDataFilterer", () => {

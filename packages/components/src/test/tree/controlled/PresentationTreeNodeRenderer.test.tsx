@@ -2,6 +2,7 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
+
 import * as React from "react";
 import { expect } from "chai";
 import sinon from "sinon";
@@ -65,7 +66,7 @@ describe("PresentationTreeRenderer", () => {
     HTMLElement.prototype.scrollIntoView = () => { };
   });
 
-  after(async () =>{
+  after(async () => {
     UiComponents.terminate();
     Presentation.terminate();
     await IModelApp.shutdown();
@@ -123,7 +124,7 @@ describe("TreeNodeRenderer", () => {
     HTMLElement.prototype.scrollIntoView = () => { };
   });
 
-  after(async () =>{
+  after(async () => {
     UiComponents.terminate();
     Presentation.terminate();
     await IModelApp.shutdown();

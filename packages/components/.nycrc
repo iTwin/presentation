@@ -10,9 +10,24 @@
     "ignore-styles",
     "jsdom-global/register"
   ],
+  "include": [
+    "src/**/*",
+    "lib/cjs/**/*"
+  ],
   "exclude": [
     "src/presentation-components.ts",
     "src/test/**",
     "lib/cjs/test/**"
+  ],
+  "extension": [
+    ".ts",
+    ".tsx"
+  ],
+  "temp-dir": "./lib/cjs/test/coverage/.nyc_output",
+  "report-dir": "./lib/cjs/test/coverage",
+  "reporter": [
+    "text-summary",
+    "lcov",
+    "cobertura"
   ]
 }

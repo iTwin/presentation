@@ -8,12 +8,13 @@ import * as sinon from "sinon";
 import * as moq from "typemoq";
 import { TypeConverter, TypeConverterManager } from "@itwin/components-react";
 import { Content, Item, RulesetsFactory } from "@itwin/presentation-common";
-import { createRandomRuleset, createTestContentDescriptor, createTestSimpleContentField } from "@itwin/presentation-common/lib/cjs/test";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import {
   DataProvidersFactory, DataProvidersFactoryProps, IPresentationPropertyDataProvider, PresentationTableDataProvider,
 } from "../presentation-components";
 import { createRandomPropertyRecord, mockPresentationManager } from "./_helpers/UiComponents";
+import { createTestContentDescriptor, createTestSimpleContentField } from "./_helpers/Content";
+import { createTestRuleset } from "./_helpers/Common";
 
 describe("DataProvidersFactory", () => {
 
@@ -63,7 +64,7 @@ describe("DataProvidersFactory", () => {
     });
 
     it("creates a provider with similar instances ruleset", async () => {
-      const ruleset = await createRandomRuleset();
+      const ruleset = createTestRuleset();
 
       const field = createTestSimpleContentField();
       const descriptor = createTestContentDescriptor({ fields: [] });
@@ -94,7 +95,7 @@ describe("DataProvidersFactory", () => {
     });
 
     it("uses record's display value for navigation properties", async () => {
-      const ruleset = await createRandomRuleset();
+      const ruleset = createTestRuleset();
 
       const field = createTestSimpleContentField();
       const descriptor = createTestContentDescriptor({ fields: [] });
@@ -119,7 +120,7 @@ describe("DataProvidersFactory", () => {
     });
 
     it("uses record's display value for double properties", async () => {
-      const ruleset = await createRandomRuleset();
+      const ruleset = createTestRuleset();
       const rawValue = 1.123;
       const displayValue = "1.12 m2";
 

@@ -6,14 +6,14 @@
 import { expect } from "chai";
 import * as faker from "faker";
 import { LabelDefinition, Node } from "@itwin/presentation-common";
-import { createRandomECInstancesNodeKey } from "@itwin/presentation-common/lib/cjs/test";
 import { StyleHelper } from "../../presentation-components/common/StyleHelper";
+import { createTestECInstancesNodeKey } from "../_helpers/Hierarchy";
 
 describe("StyleHelper", () => {
 
   const createNodeBase = (): Node => ({
     label: LabelDefinition.fromLabelString(faker.random.word()),
-    key: createRandomECInstancesNodeKey(),
+    key: createTestECInstancesNodeKey(),
   });
 
   describe("isBold", () => {

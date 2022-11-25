@@ -7,15 +7,16 @@ import { expect } from "chai";
 import * as faker from "faker";
 import * as React from "react";
 import * as moq from "typemoq";
+import { Primitives, PrimitiveValue } from "@itwin/appui-abstract";
 import { ITwinLocalization } from "@itwin/core-i18n";
 import { applyOptionalPrefix, LabelCompositeValue, LabelDefinition } from "@itwin/presentation-common";
-import {
-  createRandomLabelCompositeValue, createRandomLabelDefinition, createTestContentDescriptor, createTestNestedContentField, createTestPropertiesContentField,
-  createTestPropertyInfo, createTestSimpleContentField,
-} from "@itwin/presentation-common/lib/cjs/test";
 import { Presentation } from "@itwin/presentation-frontend";
-import { Primitives, PrimitiveValue } from "@itwin/appui-abstract";
 import * as utils from "../../presentation-components/common/Utils";
+import { createTestPropertyInfo } from "../_helpers/Common";
+import {
+  createTestContentDescriptor, createTestNestedContentField, createTestPropertiesContentField, createTestSimpleContentField,
+} from "../_helpers/Content";
+import { createTestLabelCompositeValue, createTestLabelDefinition } from "../_helpers/LabelDefinition";
 
 class TestComponent extends React.Component {
 }
@@ -119,7 +120,7 @@ describe("Utils", () => {
     };
 
     it("creates PropertyRecord for label with simple value", () => {
-      const definition = createRandomLabelDefinition();
+      const definition = createTestLabelDefinition();
       const record = utils.createLabelRecord(definition, "test");
       const primitiveValue = record.value as PrimitiveValue;
       expect(primitiveValue.value).to.be.eq(definition.rawValue);
@@ -128,11 +129,10 @@ describe("Utils", () => {
     });
 
     it("creates PropertyRecord for label with composite value", () => {
-      const compositeValue = createRandomLabelCompositeValue();
-      const definition = { ...createRandomLabelDefinition(), rawValue: compositeValue, typeName: LabelDefinition.COMPOSITE_DEFINITION_TYPENAME };
+      const definition = createTestLabelDefinition({ rawValue: createTestLabelCompositeValue(), typeName: LabelDefinition.COMPOSITE_DEFINITION_TYPENAME });
       const record = utils.createLabelRecord(definition, "test");
       const primitiveValue = record.value as PrimitiveValue;
-      validateCompositeValue(primitiveValue.value as Primitives.Composite, definition.rawValue);
+      validateCompositeValue(primitiveValue.value as Primitives.Composite, definition.rawValue as LabelCompositeValue);
       expect(primitiveValue.displayValue).to.be.eq(definition.displayValue);
       expect(record.property.typename).to.be.eq(definition.typeName);
     });

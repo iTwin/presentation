@@ -201,6 +201,7 @@ export class StyleHelper {
     return (node.fontStyle?.indexOf("Italic") ?? -1) !== -1; // eslint-disable-line deprecation/deprecation
   }
 
+  // istanbul ignore next
   public static getForeColor(node: Partial<Node>): number | undefined {
     return node.foreColor ? StyleHelper.getColor(node.foreColor) : undefined; // eslint-disable-line deprecation/deprecation
   }

@@ -2,25 +2,26 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
+
+import * as React from "react";
 import { expect } from "chai";
 import { mount, shallow } from "enzyme";
 import * as faker from "faker";
 import * as sinon from "sinon";
-import * as React from "react";
 import * as moq from "typemoq";
 import { Id64, Id64Arg, Id64String } from "@itwin/core-bentley";
 import { Code, ElementProps, EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection, HiliteSet as IModelHiliteSet, NoRenderApp, SelectionSet, ViewState3d } from "@itwin/core-frontend";
 import { ViewportComponent } from "@itwin/imodel-components-react";
 import { KeySet } from "@itwin/presentation-common";
-import { createRandomECInstanceKey, createRandomId, ResolvablePromise, waitForAllAsyncs } from "@itwin/presentation-common/lib/cjs/test";
 import {
   HiliteSet, Presentation, SelectionChangeEvent, SelectionChangeEventArgs, SelectionChangeType, SelectionManager, SelectionScopesManager,
 } from "@itwin/presentation-frontend";
 import { IUnifiedSelectionComponent, viewWithUnifiedSelection } from "../../presentation-components";
 import { ViewportSelectionHandler } from "../../presentation-components/viewport/WithUnifiedSelection";
+import { createTestECInstanceKey, waitForAllAsyncs } from "../_helpers/Common";
+import { ResolvablePromise } from "../_helpers/Promises";
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 const PresentationViewport = viewWithUnifiedSelection(ViewportComponent);
 
 describe("Viewport withUnifiedSelection", () => {
@@ -41,7 +42,7 @@ describe("Viewport withUnifiedSelection", () => {
   const selectionHandlerMock = moq.Mock.ofType<ViewportSelectionHandler>();
 
   beforeEach(() => {
-    viewDefinitionId = createRandomId();
+    viewDefinitionId = "0x1";
 
     selectionHandlerMock.reset();
     imodelMock.reset();
@@ -231,7 +232,7 @@ describe("ViewportSelectionHandler", () => {
 
     beforeEach(() => {
       // ensure there's something in the selection set
-      imodelMock.target.selectionSet.replace(createRandomId());
+      imodelMock.target.selectionSet.replace("0x1");
       spies = createIModelSpies(imodelMock);
     });
 
@@ -248,7 +249,7 @@ describe("ViewportSelectionHandler", () => {
     };
 
     it("applies hilite on current selection", async () => {
-      const instanceKey = createRandomECInstanceKey();
+      const instanceKey = createTestECInstanceKey();
       Presentation.selection.addToSelection("test", imodelMock.object, new KeySet([instanceKey]));
       await waitForAllAsyncs([handler]);
       spies.hilite.resetHistory();
@@ -285,7 +286,7 @@ describe("ViewportSelectionHandler", () => {
     it("applies hilite on current selection after changing target imodel", async () => {
       const otherIModelMock = moq.Mock.ofType<IModelConnection>();
       mockIModel(otherIModelMock);
-      const instanceKey = createRandomECInstanceKey();
+      const instanceKey = createTestECInstanceKey();
       Presentation.selection.addToSelection("test", otherIModelMock.object, new KeySet([instanceKey]));
 
       getHiliteSet.resetBehavior();
@@ -331,7 +332,7 @@ describe("ViewportSelectionHandler", () => {
     });
 
     it("sets elements hilite", async () => {
-      const id = createRandomId();
+      const id = "0x2";
       getHiliteSet.resetBehavior();
       getHiliteSet.resolves({
         elements: [id],
@@ -352,7 +353,7 @@ describe("ViewportSelectionHandler", () => {
     });
 
     it("sets models hilite", async () => {
-      const id = createRandomId();
+      const id = "0x1";
       getHiliteSet.resetBehavior();
       getHiliteSet.resolves({
         models: [id],
@@ -372,7 +373,7 @@ describe("ViewportSelectionHandler", () => {
     });
 
     it("sets subcategories hilite", async () => {
-      const id = createRandomId();
+      const id = "0x1";
       getHiliteSet.resetBehavior();
       getHiliteSet.resolves({
         subCategories: [id],
@@ -392,9 +393,9 @@ describe("ViewportSelectionHandler", () => {
     });
 
     it("sets combined hilite", async () => {
-      const modelId = createRandomId();
-      const subCategoryId = createRandomId();
-      const elementId = createRandomId();
+      const modelId = "0x1";
+      const subCategoryId = "0x2";
+      const elementId = "0x3";
       getHiliteSet.resetBehavior();
       getHiliteSet.resolves({
         models: [modelId],
@@ -445,7 +446,7 @@ describe("ViewportSelectionHandler", () => {
       expect(getHiliteSet).to.be.calledOnce;
 
       // now resolve the first hilite set request
-      await hiliteSetRequests[0].resolve({ elements: [createRandomId()] });
+      await hiliteSetRequests[0].resolve({ elements: ["0x1"] });
 
       // ensure viewport selection change was made
       expect(spies.hilite.clear).to.be.calledOnce;
@@ -454,7 +455,7 @@ describe("ViewportSelectionHandler", () => {
 
       // ensure a new content request was made for the last selection change
       expect(getHiliteSet).to.be.calledTwice;
-      await hiliteSetRequests[1].resolve({ models: [createRandomId()] });
+      await hiliteSetRequests[1].resolve({ models: ["0x2"] });
       await waitForAllAsyncs([handler]);
       expect(spies.hilite.clear).to.be.calledOnce;
       expect(spies.hilite.models).to.be.calledOnce;

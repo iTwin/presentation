@@ -2,12 +2,13 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
+
 import * as moq from "typemoq";
 import { RegisteredRuleset, Ruleset } from "@itwin/presentation-common";
-import { ResolvablePromise } from "@itwin/presentation-common/lib/cjs/test";
 import { Presentation, PresentationManager, RulesetManager } from "@itwin/presentation-frontend";
 import { renderHook } from "@testing-library/react-hooks";
 import { useRulesetRegistration } from "../../presentation-components/hooks/UseRulesetRegistration";
+import { ResolvablePromise } from "../_helpers/Promises";
 
 describe("useRulesetRegistration", () => {
   interface HookProps {

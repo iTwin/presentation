@@ -3,17 +3,14 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import * as React from "react";
+import { expect } from "chai";
 import sinon from "sinon";
 import { PropertyDescription } from "@itwin/appui-abstract";
 import { EditorContainer, PropertyValueRendererManager } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection, NoRenderApp } from "@itwin/core-frontend";
 import { Content, KeySet, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
-import {
-  createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField, createTestSimpleContentField,
-} from "@itwin/presentation-common/lib/cjs/test";
 import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render as renderRTL, waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
@@ -21,6 +18,9 @@ import { IContentDataProvider } from "../../presentation-components/common/Conte
 import {
   NavigationPropertyEditorContext, navigationPropertyEditorContext, NavigationPropertyTargetEditor, useNavigationPropertyEditingContext,
 } from "../../presentation-components/properties/NavigationPropertyEditor";
+import {
+  createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField, createTestSimpleContentField,
+} from "../_helpers/Content";
 import { createRandomPropertyRecord } from "../_helpers/UiComponents";
 
 function createNavigationPropertyInfo(): NavigationPropertyInfo {

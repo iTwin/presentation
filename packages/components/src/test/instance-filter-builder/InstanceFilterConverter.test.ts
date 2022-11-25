@@ -11,12 +11,13 @@ import { PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator } from "@it
 import { BeEvent } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo, RelationshipPath } from "@itwin/presentation-common";
-import { createTestNestedContentField, createTestPropertiesContentField, createTestPropertyInfo } from "@itwin/presentation-common/lib/cjs/test";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import { convertToInstanceFilterDefinition } from "../../presentation-components/instance-filter-builder/InstanceFilterConverter";
 import {
   PresentationInstanceFilterCondition, PresentationInstanceFilterConditionGroup,
 } from "../../presentation-components/instance-filter-builder/Types";
+import { createTestPropertyInfo } from "../_helpers/Common";
+import { createTestNestedContentField, createTestPropertiesContentField } from "../_helpers/Content";
 
 describe("convertToInstanceFilterDefinition", () => {
   describe("converts single condition with", () => {

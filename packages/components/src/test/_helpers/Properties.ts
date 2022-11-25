@@ -2,13 +2,11 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
+
 import {
   ArrayValue, PrimitiveValue, PropertyDescription, PropertyEditorInfo, PropertyRecord, PropertyValueFormat, StandardTypeNames, StructValue,
 } from "@itwin/appui-abstract";
 
-/**
- * @internal Used for testing only.
- */
 export function createPrimitiveStringProperty(
   name: string,
   rawValue: string,
@@ -40,9 +38,6 @@ export function createPrimitiveStringProperty(
   return property;
 }
 
-/**
- * @internal Used for testing only.
- */
 export function createArrayProperty(name: string, items?: PropertyRecord[], autoExpand?: boolean): PropertyRecord {
   if (!items)
     items = [];
@@ -64,9 +59,6 @@ export function createArrayProperty(name: string, items?: PropertyRecord[], auto
   return property;
 }
 
-/**
- * @internal Used for testing only.
- */
 export function createStructProperty(
   name: string,
   members?: {

@@ -5,7 +5,7 @@ exports[`TableDataProvider getColumns returns valid column descriptions 1`] = `A
 exports[`TableDataProvider getRow returns valid row item 1`] = `
 Object {
   "cells": Array [],
-  "key": "{\\"className\\":\\"compress\\",\\"id\\":\\"0x60650000003e2c\\"}",
+  "key": "{\\"className\\":\\"TestSchema:TestClass\\",\\"id\\":\\"0x1\\"}",
 }
 `;
 
@@ -21,13 +21,13 @@ Object {
           "typename": "string",
         },
         "value": Object {
-          "displayValue": "Shoes Regional",
-          "value": "Shoes Regional",
+          "displayValue": "hierarchy",
+          "value": "hierarchy",
           "valueFormat": 0,
         },
       },
     },
   ],
-  "key": "{\\"className\\":\\"Liaison\\",\\"id\\":\\"0x766f000000c697\\"}",
+  "key": "{\\"className\\":\\"TestSchema:TestClass\\",\\"id\\":\\"0x1\\"}",
 }
 `;

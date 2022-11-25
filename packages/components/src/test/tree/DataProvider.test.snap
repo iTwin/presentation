@@ -4,85 +4,72 @@ exports[`TreeDataProvider getFilteredNodes returns presentation manager result 1
 Array [
   Object {
     "children": Array [],
-    "index": 644,
-    "isMarked": true,
+    "filteringData": undefined,
+    "index": 0,
+    "isMarked": undefined,
     "node": Object {
-      "backColor": "rgb(
-    215,
-    125,
-    116
-  )",
-      "description": "Rerum laborum ipsa.",
-      "foreColor": "#6EE32D",
-      "hasChildren": true,
-      "imageId": "Soft",
-      "isCheckboxEnabled": false,
-      "isCheckboxVisible": true,
-      "isChecked": true,
-      "isEditable": true,
-      "isExpanded": false,
-      "isSelectionDisabled": false,
-      "key": Object {
-        "instanceKeys": Array [
-          Object {
-            "className": "SQL",
-            "id": "0x42e20000015b9b",
-          },
-          Object {
-            "className": "viral",
-            "id": "0x1b78000000b915",
-          },
-        ],
-        "pathFromRoot": Array [
-          "05b9034c-bb1b-47e5-a34b-ee893267e90a",
-          "8528b854-ec02-4dd8-bfe4-a098a1d96013",
-        ],
-        "type": "ECInstancesNode",
-        "version": 2,
-      },
-      "label": Object {
-        "displayValue": "Auto Loan Account",
-        "rawValue": "Awesome",
-        "typeName": "string",
-      },
-    },
-  },
-  Object {
-    "children": Array [],
-    "index": 668,
-    "node": Object {
-      "backColor": undefined,
-      "description": "Autem ipsa vel voluptatem quia recusandae.",
-      "foreColor": "#2F04EF",
+      "description": "testDescription",
       "hasChildren": false,
-      "imageId": "Chips",
-      "isCheckboxEnabled": true,
-      "isCheckboxVisible": false,
-      "isChecked": false,
       "isEditable": false,
       "isExpanded": false,
       "isSelectionDisabled": false,
       "key": Object {
         "instanceKeys": Array [
           Object {
-            "className": "Applications",
-            "id": "0x6b0b000000b7ad",
+            "className": "TestSchema:TestClass",
+            "id": "0x1",
           },
           Object {
-            "className": "EXE",
-            "id": "0xc6b4000001712e",
+            "className": "TestSchema:TestClass",
+            "id": "0x1",
           },
         ],
         "pathFromRoot": Array [
-          "a3944426-64d1-4202-bc22-44b3f7075dc2",
-          "845797cd-fdf3-4462-ba83-b9a1ecd911f2",
+          "parentHash",
+          "childHash",
         ],
         "type": "ECInstancesNode",
         "version": 2,
       },
       "label": Object {
-        "displayValue": "Cordoba Oro",
-        "rawValue": "purple",
+        "displayValue": "test label",
+        "rawValue": "test_label",
+        "typeName": "string",
+      },
+    },
+  },
+  Object {
+    "children": Array [],
+    "filteringData": undefined,
+    "index": 0,
+    "isMarked": undefined,
+    "node": Object {
+      "description": "testDescription",
+      "hasChildren": false,
+      "isEditable": false,
+      "isExpanded": false,
+      "isSelectionDisabled": false,
+      "key": Object {
+        "instanceKeys": Array [
+          Object {
+            "className": "TestSchema:TestClass",
+            "id": "0x1",
+          },
+          Object {
+            "className": "TestSchema:TestClass",
+            "id": "0x1",
+          },
+        ],
+        "pathFromRoot": Array [
+          "parentHash",
+          "childHash",
+        ],
+        "type": "ECInstancesNode",
+        "version": 2,
+      },
+      "label": Object {
+        "displayValue": "test label",
+        "rawValue": "test_label",
         "typeName": "string",
       },
     },
@@ -96,25 +83,23 @@ Array [
     "__presentation-components/key": Object {
       "instanceKeys": Array [
         Object {
-          "className": "payment",
-          "id": "0x16be80000004405",
+          "className": "TestSchema:TestClass",
+          "id": "0x1",
         },
         Object {
-          "className": "Sleek Granite Soap",
-          "id": "0x91bb0000011198",
+          "className": "TestSchema:TestClass",
+          "id": "0x1",
         },
       ],
       "pathFromRoot": Array [
-        "4a55713b-f10a-423a-a6e0-c54b1b677e78",
-        "d1ea9e80-e8b1-4710-a1b1-7fa1c654a1f8",
+        "parentHash",
+        "childHash",
       ],
       "type": "ECInstancesNode",
       "version": 2,
     },
-    "description": "Aut et tempore voluptatum rerum unde autem nulla.",
-    "hasChildren": true,
-    "icon": "Dobra",
-    "id": "d1ea9e80-e8b1-4710-a1b1-7fa1c654a1f8/4a55713b-f10a-423a-a6e0-c54b1b677e78",
+    "description": "testDescription",
+    "id": "childHash/parentHash",
     "label": PropertyRecord {
       "property": Object {
         "displayLabel": "Label",
@@ -122,38 +107,34 @@ Array [
         "typename": "string",
       },
       "value": Object {
-        "displayValue": "Turkish Lira",
-        "value": "Handcrafted Granite Chicken",
+        "displayValue": "test label",
+        "value": "test_label",
         "valueFormat": 0,
       },
     },
-    "parentId": "62a2f68d-cb37-4531-995a-ac9b559e9ef8",
+    "parentId": "9e7164b4-6a85-47e4-b28a-58df26ce9acb",
   },
   Object {
     "__presentation-components/key": Object {
       "instanceKeys": Array [
         Object {
-          "className": "optical",
-          "id": "0x5a610000016c10",
+          "className": "TestSchema:TestClass",
+          "id": "0x1",
         },
         Object {
-          "className": "Senegal",
-          "id": "0xb5ae0000000db4",
+          "className": "TestSchema:TestClass",
+          "id": "0x1",
         },
       ],
       "pathFromRoot": Array [
-        "ea29ec34-9504-448a-93b5-6ec63a5c5450",
-        "b8a8c076-222c-4b3c-9c60-4ee0adecf300",
+        "parentHash",
+        "childHash",
       ],
       "type": "ECInstancesNode",
       "version": 2,
     },
-    "autoExpand": true,
-    "description": "Quia nihil molestias delectus necessitatibus reiciendis consequatur.",
-    "hasChildren": true,
-    "id": "b8a8c076-222c-4b3c-9c60-4ee0adecf300/ea29ec34-9504-448a-93b5-6ec63a5c5450",
-    "isCheckboxDisabled": true,
-    "isCheckboxVisible": true,
+    "description": "testDescription",
+    "id": "childHash/parentHash",
     "label": PropertyRecord {
       "property": Object {
         "displayLabel": "Label",
@@ -161,17 +142,12 @@ Array [
         "typename": "string",
       },
       "value": Object {
-        "displayValue": "heuristic",
-        "value": "Avon",
+        "displayValue": "test label",
+        "value": "test_label",
         "valueFormat": 0,
       },
     },
-    "parentId": "62a2f68d-cb37-4531-995a-ac9b559e9ef8",
-    "style": Object {
-      "colorOverrides": Object {
-        "color": 2186652,
-      },
-    },
+    "parentId": "9e7164b4-6a85-47e4-b28a-58df26ce9acb",
   },
 ]
 `;

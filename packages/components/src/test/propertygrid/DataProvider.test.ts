@@ -2,6 +2,7 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
+
 import { expect } from "chai";
 import * as sinon from "sinon";
 import * as moq from "typemoq";
@@ -14,14 +15,15 @@ import {
   applyOptionalPrefix, ArrayTypeDescription, CategoryDescription, Content, ContentFlags, DisplayValue, Field, Item, Property, PropertyValueFormat,
   RelationshipMeaning, StructFieldMemberDescription, StructTypeDescription, TypeDescription, Value, ValuesDictionary,
 } from "@itwin/presentation-common";
-import {
-  createRandomId, createTestCategoryDescription, createTestContentDescriptor, createTestContentItem, createTestECClassInfo, createTestECInstanceKey,
-  createTestNestedContentField, createTestPropertiesContentField, createTestPropertyInfo, createTestSimpleContentField,
-} from "@itwin/presentation-common/lib/cjs/test";
 import { FavoritePropertiesManager, FavoritePropertiesScope, Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { CacheInvalidationProps } from "../../presentation-components/common/ContentDataProvider";
 import { FAVORITES_CATEGORY_NAME } from "../../presentation-components/favorite-properties/DataProvider";
 import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider";
+import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
+import {
+  createTestCategoryDescription, createTestContentDescriptor, createTestContentItem, createTestNestedContentField, createTestPropertiesContentField,
+  createTestSimpleContentField,
+} from "../_helpers/Content";
 import { mockPresentationManager } from "../_helpers/UiComponents";
 
 /**
@@ -32,8 +34,6 @@ class Provider extends PresentationPropertyDataProvider {
   public override invalidateCache(props: CacheInvalidationProps) { super.invalidateCache(props); }
   public override async getDescriptorOverrides() { return super.getDescriptorOverrides(); }
   public override sortCategories(categories: CategoryDescription[]) { return super.sortCategories(categories); }
-  public override sortFields!: (category: CategoryDescription, fields: Field[]) => void;
-  public override isFieldFavorite!: (field: Field) => boolean;
   public override isFieldHidden(field: Field) { return super.isFieldHidden(field); }
 }
 
@@ -184,7 +184,7 @@ describe("PropertyDataProvider", () => {
       provider = new Provider({ imodel: imodelMock.object, ruleset: rulesetId });
 
       const field = createTestSimpleContentField();
-      provider.isFieldFavorite(field);
+      (provider as any).isFieldFavorite(field);
       favoritePropertiesManagerMock.verify((x) => x.has(field, imodelMock.object, FavoritePropertiesScope.IModel), moq.Times.once());
     });
 
@@ -212,7 +212,7 @@ describe("PropertyDataProvider", () => {
       fields[0].priority = 2;
       fields[1].priority = 3;
       fields[2].priority = 1;
-      provider.sortFields(createTestCategoryDescription(), fields);
+      (provider as any).sortFields(createTestCategoryDescription(), fields);
       expect(fields[0].priority).to.eq(3);
       expect(fields[1].priority).to.eq(2);
       expect(fields[2].priority).to.eq(1);
@@ -224,7 +224,7 @@ describe("PropertyDataProvider", () => {
 
     const createPrimitiveField = createTestSimpleContentField;
 
-    const createArrayField = (props?: { name?: string, itemsType?: TypeDescription }) => {
+    const createArrayField = (props?: { name?: string, itemsType?: TypeDescription; }) => {
       const property: Property = {
         property: createTestPropertyInfo(),
       };
@@ -240,7 +240,7 @@ describe("PropertyDataProvider", () => {
       });
     };
 
-    const createStructField = (props?: { name?: string, members?: StructFieldMemberDescription[] }) => {
+    const createStructField = (props?: { name?: string, members?: StructFieldMemberDescription[]; }) => {
       const property: Property = {
         property: createTestPropertyInfo(),
       };
@@ -1142,7 +1142,7 @@ describe("PropertyDataProvider", () => {
         describe("favorite properties handling", () => {
 
           it("makes records favorite according to isFieldFavorite callback", async () => {
-            provider.isFieldFavorite = (_field: Field) => true;
+            (provider as any).isFieldFavorite = (_field: Field) => true;
             const descriptor = createTestContentDescriptor({
               fields: [
                 createTestSimpleContentField({ name: "field1", category: createTestCategoryDescription({ name: "category1" }) }),
@@ -1483,7 +1483,7 @@ describe("PropertyDataProvider", () => {
         });
 
         it("sorts records according to sortFields callback", async () => {
-          provider.sortFields = (_cat: CategoryDescription, fields: Field[]) => {
+          (provider as any).sortFields = (_cat: CategoryDescription, fields: Field[]) => {
             fields.sort((lhs: Field, rhs: Field): number => {
               if (lhs.label < rhs.label)
                 return -1;
@@ -1561,8 +1561,8 @@ describe("PropertyDataProvider", () => {
 
     it("returns root level field instance keys", async () => {
       const instanceKeys = [
-        createTestECInstanceKey({ id: createRandomId() }),
-        createTestECInstanceKey({ id: createRandomId() }),
+        createTestECInstanceKey({ id: "0x1" }),
+        createTestECInstanceKey({ id: "0x2" }),
       ];
       (provider as any).getContent = async () => new Content(createTestContentDescriptor({
         fields: [
@@ -1577,9 +1577,9 @@ describe("PropertyDataProvider", () => {
 
     it("returns nested field instance keys", async () => {
       const instanceKeys = [
-        createTestECInstanceKey({ id: createRandomId() }),
-        createTestECInstanceKey({ id: createRandomId() }),
-        createTestECInstanceKey({ id: createRandomId() }),
+        createTestECInstanceKey({ id: "0x1" }),
+        createTestECInstanceKey({ id: "0x2" }),
+        createTestECInstanceKey({ id: "0x3" }),
       ];
       (provider as any).getContent = async () => new Content(createTestContentDescriptor({
         fields: [
