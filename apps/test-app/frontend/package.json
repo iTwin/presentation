@@ -32,7 +32,7 @@
     "@itwin/itwinui-css": "0.x",
     "@itwin/itwinui-react": "~1.42.0",
     "@itwin/presentation-common": "^3.5.0-dev.59",
-    "@itwin/presentation-components": "^3.5.0-dev.59",
+    "@itwin/presentation-components": "workspace:*",
     "@itwin/presentation-frontend": "^3.5.0-dev.59",
     "@itwin/webgl-compatibility": "^3.5.0-dev.59",
     "@types/node": "^16.0.0",
