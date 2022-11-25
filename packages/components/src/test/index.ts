@@ -42,7 +42,7 @@ beforeEach(function () {
 
   // set up snapshot name
   const sourceFilePath = currentTest.file?.replace("lib\\cjs\\test", "src\\test").replace(/\.(jsx?|tsx?)$/, "");
-  const snapPath = `${sourceFilePath  }.snap`;
+  const snapPath = `${sourceFilePath}.snap`;
   chaiJestSnapshot.setFilename(snapPath);
   chaiJestSnapshot.setTestName(currentTest.fullTitle());
 });
