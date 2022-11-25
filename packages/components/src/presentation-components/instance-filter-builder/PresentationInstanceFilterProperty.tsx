@@ -6,11 +6,10 @@
  * @module InstancesFilter
  */
 
-import * as React from "react";
+import "./PresentationInstanceFilterProperty.scss";
 import { Badge, Tooltip } from "@itwin/itwinui-react";
 import { translate } from "../common/Utils";
 import { InstanceFilterPropertyInfo } from "./Types";
-import "./PresentationInstanceFilterProperty.scss";
 
 /** @alpha */
 export interface PresentationInstanceFilterPropertyProps {

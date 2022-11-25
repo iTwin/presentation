@@ -7,7 +7,6 @@
  * @module Properties
  */
 
-import * as React from "react";
 import { Primitives, PrimitiveValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IPropertyValueRenderer, PropertyValueRendererContext, TypeConverterManager, useAsyncValue } from "@itwin/components-react";
 import { UnderlinedButton } from "@itwin/core-react";

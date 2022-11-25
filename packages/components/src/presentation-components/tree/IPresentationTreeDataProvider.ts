@@ -6,8 +6,8 @@
  * @module Tree
  */
 
-import { NodeKey, NodePathElement } from "@itwin/presentation-common";
 import { ITreeDataProvider, TreeNodeItem } from "@itwin/components-react";
+import { NodeKey, NodePathElement } from "@itwin/presentation-common";
 import { IPresentationDataProvider } from "../common/IPresentationDataProvider";
 
 /**

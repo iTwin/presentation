@@ -2,6 +2,7 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
+
 import { Observable } from "rxjs/internal/Observable";
 import { concat } from "rxjs/internal/observable/concat";
 import { EMPTY } from "rxjs/internal/observable/empty";
@@ -15,11 +16,10 @@ import { ignoreElements } from "rxjs/internal/operators/ignoreElements";
 import { map } from "rxjs/internal/operators/map";
 import { take } from "rxjs/internal/operators/take";
 import { tap } from "rxjs/internal/operators/tap";
-import { assert } from "@itwin/core-bentley";
 import {
-  isTreeModelNode, PagedTreeNodeLoader, toRxjsObservable, TreeModel, TreeModelNode, TreeModelRootNode, TreeModelSource,
-  TreeNodeLoadResult,
+  isTreeModelNode, PagedTreeNodeLoader, toRxjsObservable, TreeModel, TreeModelNode, TreeModelRootNode, TreeModelSource, TreeNodeLoadResult,
 } from "@itwin/components-react";
+import { assert } from "@itwin/core-bentley";
 import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
 
 /**

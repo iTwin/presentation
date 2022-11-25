@@ -6,14 +6,14 @@
  * @module Tree
  */
 
-import * as React from "react";
+import "./PresentationTreeNodeRenderer.scss";
 import classnames from "classnames";
 import { TreeNodeItem, TreeNodeRenderer, TreeNodeRendererProps, TreeRenderer, TreeRendererProps } from "@itwin/components-react";
 import { TreeNode } from "@itwin/core-react";
 import { SvgFilterHollow } from "@itwin/itwinui-icons-react";
 import { IconButton } from "@itwin/itwinui-react";
 import { translate } from "../../common/Utils";
-import "./PresentationTreeNodeRenderer.scss";
+
 /**
  * @alpha
  */

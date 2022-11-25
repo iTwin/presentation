@@ -6,7 +6,8 @@
  * @module InstancesFilter
  */
 
-import * as React from "react";
+import "./InstanceFilterBuilder.scss";
+import { useCallback } from "react";
 import { ActionMeta } from "react-select";
 import { PropertyDescription } from "@itwin/appui-abstract";
 import { PropertyFilter, PropertyFilterBuilder } from "@itwin/components-react";
@@ -14,7 +15,6 @@ import { Label } from "@itwin/itwinui-react";
 import { ClassInfo } from "@itwin/presentation-common";
 import { translate } from "../common/Utils";
 import { MultiTagSelect } from "./MultiTagSelect";
-import "./InstanceFilterBuilder.scss";
 
 /** @alpha */
 export interface InstanceFilterBuilderProps {
@@ -35,7 +35,7 @@ export interface InstanceFilterBuilderProps {
 export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
   const { selectedClasses, classes, properties, ruleGroupDepthLimit, onFilterChanged, onPropertySelected, onClassSelected, onClassDeselected, onClearClasses, isDisabled } = props;
 
-  const onSelectChange = React.useCallback((_, action: ActionMeta<ClassInfo>) => {
+  const onSelectChange = useCallback((_, action: ActionMeta<ClassInfo>) => {
     switch (action.action) {
       case "select-option":
         action.option && onClassSelected(action.option);

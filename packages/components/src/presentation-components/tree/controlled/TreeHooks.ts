@@ -6,11 +6,12 @@
  * @module Tree
  */
 
-import * as React from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Subscription } from "rxjs/internal/Subscription";
 import {
   computeVisibleNodes, DelayLoadedTreeNodeItem, isTreeModelNode, isTreeModelNodePlaceholder, MutableTreeModel, MutableTreeModelNode,
-  PagedTreeNodeLoader, RenderedItemsRange, TreeModel, TreeModelNode, TreeModelNodeInput, TreeModelSource, TreeNodeItem, usePagedTreeNodeLoader, VisibleTreeNodes,
+  PagedTreeNodeLoader, RenderedItemsRange, TreeModel, TreeModelNode, TreeModelNodeInput, TreeModelSource, TreeNodeItem, usePagedTreeNodeLoader,
+  VisibleTreeNodes,
 } from "@itwin/components-react";
 import { HierarchyUpdateRecord, PageOptions, UPDATE_FULL } from "@itwin/presentation-common";
 import { IModelHierarchyChangeEventArgs, Presentation } from "@itwin/presentation-frontend";
@@ -74,7 +75,7 @@ export interface PresentationTreeNodeLoaderResult {
 export function usePresentationTreeNodeLoader(
   props: PresentationTreeNodeLoaderProps,
 ): PresentationTreeNodeLoaderResult {
-  const dataProviderProps: PresentationTreeDataProviderProps = React.useMemo(
+  const dataProviderProps: PresentationTreeDataProviderProps = useMemo(
     () => ({
       imodel: props.imodel,
       ruleset: props.ruleset,
@@ -97,7 +98,7 @@ export function usePresentationTreeNodeLoader(
     ],
   );
 
-  const firstRenderRef = React.useRef(true);
+  const firstRenderRef = useRef(true);
   const [
     { modelSource, rulesetRegistration, dataProvider },
     setTreeNodeLoaderState,
@@ -114,8 +115,8 @@ export function usePresentationTreeNodeLoader(
     }),
     [dataProviderProps],
   );
-  React.useEffect(() => { return () => rulesetRegistration.dispose(); }, [rulesetRegistration]);
-  React.useEffect(() => { return () => dataProvider.dispose(); }, [dataProvider]);
+  useEffect(() => { return () => rulesetRegistration.dispose(); }, [rulesetRegistration]);
+  useEffect(() => { return () => dataProvider.dispose(); }, [dataProvider]);
 
   const nodeLoader = usePagedTreeNodeLoader(dataProvider, props.pagingSize, modelSource);
 
@@ -149,12 +150,12 @@ interface TreeNodeLoaderState {
  * for use in poorly designed custom hooks.
  */
 function useResettableState<T>(initialValue: () => T, dependencies: unknown[]): [T, React.Dispatch<React.SetStateAction<T>>] {
-  const stateRef = React.useRef<T>() as React.MutableRefObject<T>;
+  const stateRef = useRef<T>() as React.MutableRefObject<T>;
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  React.useMemo(() => stateRef.current = initialValue(), dependencies);
+  useMemo(() => stateRef.current = initialValue(), dependencies);
 
-  const [_, setState] = React.useState({});
-  const setNewStateRef = React.useRef((action: T | ((previousState: T) => T)) => {
+  const [_, setState] = useState({});
+  const setNewStateRef = useRef((action: T | ((previousState: T) => T)) => {
     const newState = action instanceof Function ? action(stateRef.current) : /* istanbul ignore next */ action;
     // istanbul ignore else
     if (newState !== stateRef.current) {
@@ -185,10 +186,10 @@ function useModelSourceUpdateOnIModelHierarchyUpdate(params: {
   } = params;
 
   useExpandedNodesTracking({ modelSource, dataProvider, enableNodesTracking: enable });
-  const renderedItems = React.useRef<RenderedItemsRange | undefined>(undefined);
-  const onItemsRendered = React.useCallback((items: RenderedItemsRange) => { renderedItems.current = items; }, []);
+  const renderedItems = useRef<RenderedItemsRange | undefined>(undefined);
+  const onItemsRendered = useCallback((items: RenderedItemsRange) => { renderedItems.current = items; }, []);
 
-  React.useEffect(
+  useEffect(
     () => {
       if (!enable) {
         return;
@@ -247,7 +248,7 @@ function useModelSourceUpdateOnRulesetModification(params: {
 }): void {
   const { enable, dataProviderProps, pageSize, modelSource, setTreeNodeLoaderState } = params;
 
-  React.useEffect(
+  useEffect(
     () => {
       if (!enable) {
         return;
@@ -284,7 +285,7 @@ function useModelSourceUpdateOnRulesetVariablesChange(params: {
 }): void {
   const { enable, dataProviderProps, pageSize, rulesetId, modelSource, setTreeNodeLoaderState } = params;
 
-  React.useEffect(
+  useEffect(
     () => {
       if (!enable) {
         return;

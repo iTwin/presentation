@@ -6,10 +6,10 @@
  * @module PropertyGrid
  */
 
-import * as React from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useDisposable } from "@itwin/core-react";
 import { KeySet } from "@itwin/presentation-common";
 import { Presentation, SelectionChangeEventArgs, SelectionHandler } from "@itwin/presentation-frontend";
-import { useDisposable } from "@itwin/core-react";
 import { IPresentationPropertyDataProvider } from "./DataProvider";
 
 const DEFAULT_REQUESTED_CONTENT_INSTANCES_LIMIT = 100;
@@ -59,9 +59,9 @@ export function usePropertyDataProviderWithUnifiedSelection(
   const name = `PropertyGrid`;
   const requestedContentInstancesLimit = props.requestedContentInstancesLimit ?? DEFAULT_REQUESTED_CONTENT_INSTANCES_LIMIT;
 
-  const [numSelectedElements, setNumSelectedElements] = React.useState(0);
+  const [numSelectedElements, setNumSelectedElements] = useState(0);
 
-  const updateDataProviderSelection = React.useCallback((handler: SelectionHandler, selectionLevel?: number) => {
+  const updateDataProviderSelection = useCallback((handler: SelectionHandler, selectionLevel?: number) => {
     const selection = getSelectedKeys(handler, selectionLevel);
     if (selection) {
       setNumSelectedElements(selection.size);
@@ -69,7 +69,7 @@ export function usePropertyDataProviderWithUnifiedSelection(
     }
   }, [requestedContentInstancesLimit, dataProvider]);
 
-  const selectionHandler = useDisposable(React.useCallback(() => {
+  const selectionHandler = useDisposable(useCallback(() => {
     // istanbul ignore next
     const handler = props.selectionHandler ??
       new SelectionHandler({ manager: Presentation.selection, name, imodel, rulesetId });
@@ -79,7 +79,7 @@ export function usePropertyDataProviderWithUnifiedSelection(
     return handler;
   }, [imodel, rulesetId, name, updateDataProviderSelection, props.selectionHandler]));
 
-  React.useEffect(() => updateDataProviderSelection(selectionHandler), [updateDataProviderSelection, selectionHandler]);
+  useEffect(() => updateDataProviderSelection(selectionHandler), [updateDataProviderSelection, selectionHandler]);
 
   return { isOverLimit: isOverLimit(numSelectedElements, requestedContentInstancesLimit), numSelectedElements };
 }

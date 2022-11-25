@@ -8,7 +8,7 @@
  */
 
 import memoize from "micro-memoize";
-import * as React from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { assert } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Keys, KeySet } from "@itwin/presentation-common";
@@ -79,13 +79,13 @@ export interface UnifiedSelectionContextProviderProps {
 export function UnifiedSelectionContextProvider(props: UnifiedSelectionContextProviderProps): React.ReactElement {
   const selectionLevel = props.selectionLevel ?? 0;
 
-  const contextRef = React.useRef<UnifiedSelectionContext>();
+  const contextRef = useRef<UnifiedSelectionContext>();
   if (contextRef.current?.imodel !== props.imodel || contextRef.current.selectionLevel !== selectionLevel) {
-    contextRef.current = createContext(props.imodel, selectionLevel);
+    contextRef.current = createSelectionContext(props.imodel, selectionLevel);
   }
 
-  const [_, setState] = React.useState({});
-  React.useEffect(
+  const [_, setState] = useState({});
+  useEffect(
     () => {
       const currentContext = contextRef.current;
       assert(currentContext !== undefined);
@@ -112,7 +112,7 @@ export function UnifiedSelectionContextProvider(props: UnifiedSelectionContextPr
   );
 }
 
-function createContext(imodel: IModelConnection, selectionLevel: number): UnifiedSelectionContext {
+function createSelectionContext(imodel: IModelConnection, selectionLevel: number): UnifiedSelectionContext {
   return {
     imodel,
     selectionLevel,
@@ -150,12 +150,12 @@ function createGetSelection(imodel: IModelConnection, selectionLevel: number): U
   );
 }
 
-const unifiedSelectionContext = React.createContext<UnifiedSelectionContext | undefined>(undefined);
+const unifiedSelectionContext = createContext<UnifiedSelectionContext | undefined>(undefined);
 
 /**
  * Returns Unified Selection context provided by [[UnifiedSelectionContextProvider]].
  * @beta
  */
 export function useUnifiedSelectionContext(): UnifiedSelectionContext | undefined {
-  return React.useContext(unifiedSelectionContext);
+  return useContext(unifiedSelectionContext);
 }

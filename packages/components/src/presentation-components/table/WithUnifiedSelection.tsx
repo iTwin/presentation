@@ -6,10 +6,10 @@
  * @module Table
  */
 
-import * as React from "react";
+import { Component, createRef } from "react";
+import { Table as BaseTable, RowItem, TableProps } from "@itwin/components-react";
 import { InstanceKey, KeySet } from "@itwin/presentation-common";
 import { Presentation, SelectionChangeEventArgs, SelectionHandler } from "@itwin/presentation-frontend";
-import { Table as BaseTable, RowItem, TableProps } from "@itwin/components-react";
 import { IUnifiedSelectionComponent } from "../common/IUnifiedSelectionComponent";
 import { getDisplayName } from "../common/Utils";
 import { IPresentationTableDataProvider } from "./DataProvider";
@@ -60,7 +60,7 @@ export function tableWithUnifiedSelection<P extends TableProps>(TableComponent: 
 
   type CombinedProps = P & TableWithUnifiedSelectionProps;
 
-  return class WithUnifiedSelection extends React.Component<CombinedProps> implements IUnifiedSelectionComponent {
+  return class WithUnifiedSelection extends Component<CombinedProps> implements IUnifiedSelectionComponent {
 
     // eslint-disable-next-line deprecation/deprecation
     private _base: React.RefObject<BaseTable>;
@@ -70,7 +70,7 @@ export function tableWithUnifiedSelection<P extends TableProps>(TableComponent: 
     constructor(props: CombinedProps) {
       super(props);
       // eslint-disable-next-line deprecation/deprecation
-      this._base = React.createRef<BaseTable>();
+      this._base = createRef<BaseTable>();
       this._boundarySelectionLevel = getBoundarySelectionLevelFromProps(props);
     }
 

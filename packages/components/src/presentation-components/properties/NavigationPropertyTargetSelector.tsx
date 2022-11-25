@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import classnames from "classnames";
-import * as React from "react";
+import { Children, forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import {
   components, ControlProps, IndicatorContainerProps, IndicatorProps, MenuProps, OptionProps, OptionTypeBase, ValueContainerProps,
 } from "react-select";
@@ -33,20 +33,20 @@ export interface NavigationPropertyTargetSelectorProps extends PropertyEditorPro
 }
 
 /** @internal */
-export const NavigationPropertyTargetSelector = React.forwardRef<NavigationPropertyTargetSelectorAttributes, NavigationPropertyTargetSelectorProps>((props, ref) => {
+export const NavigationPropertyTargetSelector = forwardRef<NavigationPropertyTargetSelectorAttributes, NavigationPropertyTargetSelectorProps>((props, ref) => {
   const { imodel, getNavigationPropertyInfo, propertyRecord, onCommit, setFocus } = props;
-  const divRef = React.useRef<HTMLDivElement>(null);
+  const divRef = useRef<HTMLDivElement>(null);
   const targetsRuleset = useNavigationPropertyTargetsRuleset(getNavigationPropertyInfo, propertyRecord.property);
   const loadTargets = useNavigationPropertyTargetsLoader({ imodel, ruleset: targetsRuleset });
 
-  const [selectedTarget, setSelectedTarget] = React.useState(() => getNavigationTargetFromPropertyRecord(propertyRecord));
+  const [selectedTarget, setSelectedTarget] = useState(() => getNavigationTargetFromPropertyRecord(propertyRecord));
 
-  const onChange = React.useCallback((target?: NavigationPropertyTarget) => {
+  const onChange = useCallback((target?: NavigationPropertyTarget) => {
     setSelectedTarget(target);
     target && onCommit && onCommit({ propertyRecord, newValue: getPropertyValue(target) });
   }, [propertyRecord, onCommit]);
 
-  React.useImperativeHandle(ref,
+  useImperativeHandle(ref,
     () => ({
       getValue: () => getPropertyValue(selectedTarget),
       divElement: divRef.current,
@@ -54,7 +54,7 @@ export const NavigationPropertyTargetSelector = React.forwardRef<NavigationPrope
     [selectedTarget]
   );
 
-  React.useEffect(() => {
+  useEffect(() => {
     setSelectedTarget(getNavigationTargetFromPropertyRecord(propertyRecord));
   }, [propertyRecord]);
 
@@ -148,7 +148,7 @@ function TargetSelectOption<TOption extends OptionTypeBase>({ children: _, ...pr
 }
 
 function TargetSelectIndicatorsContainer<TOption extends OptionTypeBase>({ children }: IndicatorContainerProps<TOption>) {
-  return React.Children.toArray(children).pop();
+  return Children.toArray(children).pop();
 }
 
 function TargetSelectDropdownIndicator<TOption extends OptionTypeBase>(_: IndicatorProps<TOption>) {

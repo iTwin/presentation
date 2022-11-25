@@ -6,12 +6,12 @@
  * @module Viewport
  */
 
-import * as React from "react";
+import { PureComponent } from "react";
 import { IDisposable, using } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
+import { ViewportProps } from "@itwin/imodel-components-react";
 import { AsyncTasksTracker, KeySet, SelectionInfo } from "@itwin/presentation-common";
 import { ISelectionProvider, Presentation, SelectionChangeEventArgs, SelectionHandler } from "@itwin/presentation-frontend";
-import { ViewportProps } from "@itwin/imodel-components-react";
 import { IUnifiedSelectionComponent } from "../common/IUnifiedSelectionComponent";
 import { getDisplayName } from "../common/Utils";
 
@@ -35,7 +35,7 @@ export function viewWithUnifiedSelection<P extends ViewportProps>(ViewportCompon
 
   type CombinedProps = P & ViewWithUnifiedSelectionProps;
 
-  return class WithUnifiedSelection extends React.PureComponent<CombinedProps> implements IUnifiedSelectionComponent {
+  return class WithUnifiedSelection extends PureComponent<CombinedProps> implements IUnifiedSelectionComponent {
 
     /** @internal */
     public viewportSelectionHandler?: ViewportSelectionHandler;

@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
-import * as React from "react";
+import { useCallback, useEffect, useState } from "react";
 import { PropertyDescription } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
@@ -35,7 +35,7 @@ export interface UseNavigationPropertyTargetsLoaderProps {
 /** @internal */
 export function useNavigationPropertyTargetsLoader(props: UseNavigationPropertyTargetsLoaderProps) {
   const { imodel, ruleset } = props;
-  const loadTargets = React.useCallback(async (filter: string, loadedOptions: NavigationPropertyTarget[]): Promise<NavigationPropertyTargetsResult> => {
+  const loadTargets = useCallback(async (filter: string, loadedOptions: NavigationPropertyTarget[]): Promise<NavigationPropertyTargetsResult> => {
     if (!ruleset) {
       return { options: [], hasMore: false };
     }
@@ -68,9 +68,9 @@ export function useNavigationPropertyTargetsRuleset(
   getNavigationPropertyInfo: (property: PropertyDescription) => Promise<NavigationPropertyInfo | undefined>,
   property: PropertyDescription,
 ) {
-  const [ruleset, setRuleset] = React.useState<Ruleset>();
+  const [ruleset, setRuleset] = useState<Ruleset>();
 
-  React.useEffect(() => {
+  useEffect(() => {
     let disposed = false;
     void (async () => {
       const propertyInfo = await getNavigationPropertyInfo(property);

@@ -7,7 +7,7 @@
  * @module Properties
  */
 
-import * as React from "react";
+import { createContext, createRef, forwardRef, PureComponent, useContext, useMemo } from "react";
 import { PropertyDescription, PropertyRecord, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import { PropertyEditorBase, PropertyEditorManager, PropertyEditorProps, TypeEditor } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -43,11 +43,11 @@ export interface NavigationPropertyEditorContext {
 }
 
 /** @alpha */
-export const navigationPropertyEditorContext = React.createContext<NavigationPropertyEditorContext | undefined>(undefined);
+export const navigationPropertyEditorContext = createContext<NavigationPropertyEditorContext | undefined>(undefined);
 
 /** @alpha */
 export function useNavigationPropertyEditingContext(imodel: IModelConnection, dataProvider: IContentDataProvider): NavigationPropertyEditorContext {
-  return React.useMemo<NavigationPropertyEditorContext>(() => ({
+  return useMemo<NavigationPropertyEditorContext>(() => ({
     imodel,
     getNavigationPropertyInfo: async (property) => {
       const field = await dataProvider.getFieldByPropertyRecord(new PropertyRecord({ valueFormat: PropertyValueFormat.Primitive }, property));
@@ -59,8 +59,8 @@ export function useNavigationPropertyEditingContext(imodel: IModelConnection, da
 }
 
 /** @alpha */
-export class NavigationPropertyTargetEditor extends React.PureComponent<PropertyEditorProps> implements TypeEditor {
-  private _ref = React.createRef<NavigationPropertyTargetSelectorAttributes>();
+export class NavigationPropertyTargetEditor extends PureComponent<PropertyEditorProps> implements TypeEditor {
+  private _ref = createRef<NavigationPropertyTargetSelectorAttributes>();
 
   // istanbul ignore next
   public async getPropertyValue() {
@@ -85,8 +85,8 @@ export class NavigationPropertyTargetEditor extends React.PureComponent<Property
   }
 }
 
-const NavigationPropertyTargetEditorInner = React.forwardRef<NavigationPropertyTargetSelectorAttributes, PropertyEditorProps>((props, ref) => {
-  const context = React.useContext(navigationPropertyEditorContext);
+const NavigationPropertyTargetEditorInner = forwardRef<NavigationPropertyTargetSelectorAttributes, PropertyEditorProps>((props, ref) => {
+  const context = useContext(navigationPropertyEditorContext);
   if (!props.propertyRecord)
     return null;
 
