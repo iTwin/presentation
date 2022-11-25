@@ -10,7 +10,6 @@
   "types": "lib/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "typecheck": "tsc --noEmit",
     "lint": "eslint ./src/**/*.ts"
   },
   "dependencies": {

@@ -3,11 +3,15 @@
   "compilerOptions": {
     "jsx": "react",
     "esModuleInterop": true,
+    "inlineSources": true,
+    "declaration": true,
+    "declarationMap": true,
+    "allowSyntheticDefaultImports": true,
     "lib": [
       "dom",
       "dom.iterable",
       "esnext"
-    ],
+    ]
   },
   "include": ["src"]
 }

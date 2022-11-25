@@ -118,7 +118,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
   /** Destructor. Must be called to clean up.  */
   public dispose() {
     this._rulesetRegistration.dispose();
-    this._disposeVariablesChangeListener && this._disposeVariablesChangeListener();
+    this._disposeVariablesChangeListener();
   }
 
   /** Id of the ruleset used by this data provider */
