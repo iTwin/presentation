@@ -15,7 +15,7 @@ A monorepo for [Presentation](https://www.itwinjs.org/presentation/) packages.
 2. Build test-app.
 
     ```shell
-    pnpm build:apps
+    pnpm build:test-app
     ```
 
 3. Start test-app.
@@ -71,11 +71,19 @@ For local development it is recommended to setup [`CoSpace`](https://www.npmjs.c
     ```yaml
     packages:
     # presentation
-    - 'repos/presentation/apps/**'
     - 'repos/presentation'
+    - 'repos/presentation/apps/**'
+    # uncomment this and comment 'itwinjs-core/presentation/components' to use 'presentation-components' package
+    # from this repo instead of 'itwinjs-core'
+    # - 'repos/presentation/packages/components'
 
     # itwinjs-core
-    - 'repos/itwinjs-core/presentation/*'
+    - 'repos/itwinjs-core/presentation/backend'
+    - 'repos/itwinjs-core/presentation/common'
+    - 'repos/itwinjs-core/presentation/components'
+    - 'repos/itwinjs-core/presentation/frontend'
+    - 'repos/itwinjs-core/presentation/testing'
+    - 'repos/itwinjs-core/presentation/opentelemetry'
     - 'repos/itwinjs-core/core/bentley'
     - 'repos/itwinjs-core/core/backend'
     - 'repos/itwinjs-core/core/common'
