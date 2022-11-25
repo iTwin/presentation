@@ -41,14 +41,14 @@ describe("Utils", () => {
     });
 
     it("creates auto expanded tree node", () => {
-      const node = createTestECInstancesNode({ isExpanded: true});
+      const node = createTestECInstancesNode({ isExpanded: true });
       const treeNode = createTreeNodeItem(node);
       expect(treeNode).to.matchSnapshot();
     });
 
     it("appends grouped nodes count if requested", () => {
       const node: Node = {
-        key: createTestECClassGroupingNodeKey({groupedInstancesCount: 999}),
+        key: createTestECClassGroupingNodeKey({ groupedInstancesCount: 999 }),
         label: LabelDefinition.fromLabelString("test"),
       };
       const treeNode = createTreeNodeItem(node, undefined, { appendChildrenCountForGroupingNodes: true });

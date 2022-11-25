@@ -25,7 +25,7 @@ export function createRandomTreeNodeItem(key?: NodeKey, parentId?: string): Dela
   };
   (node as any)[PRESENTATION_TREE_NODE_KEY] = key ? key : createTestECInstancesNodeKey();
   return node;
-};
+}
 
 export function createRandomPropertyRecord(): PropertyRecord {
   const value: PrimitiveValue = {
@@ -39,7 +39,7 @@ export function createRandomPropertyRecord(): PropertyRecord {
     displayLabel: faker.random.word(),
   };
   return new PropertyRecord(value, descr);
-};
+}
 
 export function mockPresentationManager() {
   const onRulesetModified = new BeEvent<(curr: RegisteredRuleset, prev: Ruleset) => void>();
@@ -63,4 +63,4 @@ export function mockPresentationManager() {
     rulesetVariablesManager: rulesetVariablesManagerMock,
     presentationManager: presentationManagerMock,
   };
-};
+}

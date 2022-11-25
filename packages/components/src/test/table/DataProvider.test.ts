@@ -12,8 +12,8 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { HorizontalAlignment, SortDirection } from "@itwin/core-react";
 import {
-  Content, DefaultContentDisplayTypes, Descriptor, FieldDescriptorType, Item, KeySet, NestedContentValue, PresentationError, RelationshipMeaning,
-  SortDirection as PresentationSortDirection, ValuesDictionary,
+  Content, DefaultContentDisplayTypes, Descriptor, FieldDescriptorType, Item, KeySet, NestedContentValue, PresentationError, SortDirection as PresentationSortDirection,
+  RelationshipMeaning, ValuesDictionary,
 } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { CacheInvalidationProps } from "../../presentation-components/common/ContentDataProvider";

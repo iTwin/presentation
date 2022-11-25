@@ -21,11 +21,11 @@ describe("FilteredTreeDataProvider", () => {
     return createRandomNodePathElement({
       node: createTestECInstancesNode({
         key: createTestECInstancesNodeKey({
-          instanceKeys: [createTestECInstanceKey({id})],
-          pathFromRoot: [id]
-        })
-      })
-    })
+          instanceKeys: [createTestECInstanceKey({ id })],
+          pathFromRoot: [id],
+        }),
+      }),
+    });
   }
 
   function createPaths() {

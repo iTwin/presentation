@@ -80,7 +80,7 @@ describe("Table withUnifiedSelection", () => {
   };
 
   // eslint-disable-next-line deprecation/deprecation
-  const createRandomRowItem = (): RowItem & { _key: InstanceKey; } => {
+  const createRandomRowItem = (): RowItem & { _key: InstanceKey } => {
     const k = createTestECInstanceKey();
     return {
       _key: k,

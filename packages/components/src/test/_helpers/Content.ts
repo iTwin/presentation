@@ -114,7 +114,7 @@ export function createTestNestedContentField(props: {
   return field;
 }
 
-export function createTestContentDescriptor(props: Partial<DescriptorSource> & { fields: Field[]; }) {
+export function createTestContentDescriptor(props: Partial<DescriptorSource> & { fields: Field[] }) {
   return new Descriptor({
     connectionId: "",
     displayType: "",
@@ -133,7 +133,7 @@ export function createTestContentItem(props: {
   values: ValuesMap;
   displayValues: DisplayValuesMap;
   mergedFieldNames?: string[];
-  extendedData?: { [key: string]: any; };
+  extendedData?: { [key: string]: any };
 }) {
   return new Item(
     props.primaryKeys ?? [createTestECInstanceKey()],

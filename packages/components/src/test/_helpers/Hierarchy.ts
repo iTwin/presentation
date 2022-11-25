@@ -14,7 +14,7 @@ export function createTestECInstancesNodeKey(key?: Partial<ECInstancesNodeKey>):
     pathFromRoot: key?.pathFromRoot ?? ["parentHash", "childHash"],
     instanceKeys: key?.instanceKeys ?? [createTestECInstanceKey(), createTestECInstanceKey()],
   };
-};
+}
 
 export function createTestECClassGroupingNodeKey(key?: Partial<ECClassGroupingNodeKey>): ECClassGroupingNodeKey {
   return {
@@ -36,7 +36,7 @@ export function createTestECInstancesNode(props?: Partial<Node>): Node {
     isEditable: props?.isEditable ?? false,
     isExpanded: props?.isExpanded ?? false,
   };
-};
+}
 
 export function createRandomNodePathElement(element?: Partial<NodePathElement>): NodePathElement {
   return {
@@ -46,4 +46,4 @@ export function createRandomNodePathElement(element?: Partial<NodePathElement>):
     isMarked: element?.isMarked,
     filteringData: element?.filteringData,
   };
-};
+}

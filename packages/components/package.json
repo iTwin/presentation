@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-components",
-  "version": "4.0.1-dev.1",
+  "version": "4.0.0-dev.1",
   "description": "React components based on iTwin.js Presentation library",
   "main": "lib/cjs/presentation-components.js",
   "module": "lib/esm/presentation-components.js",

@@ -101,8 +101,8 @@ describe("PresentationLabelsProvider", () => {
     });
 
     it("calls manager for every different list of keys", async () => {
-      const keys1 = [createTestECInstanceKey({id:"0x1"}), createTestECInstanceKey({ id: "0x2" })];
-      const keys2 = [createTestECInstanceKey({id:"0x3"}), createTestECInstanceKey({id:"0x4"})];
+      const keys1 = [createTestECInstanceKey({ id:"0x1" }), createTestECInstanceKey({ id: "0x2" })];
+      const keys2 = [createTestECInstanceKey({ id:"0x3" }), createTestECInstanceKey({ id:"0x4" })];
       const result1 = ["Label 1", "Label 2"];
       const result2 = ["Label 3", "Label 4"];
       presentationManagerMock
@@ -123,7 +123,7 @@ describe("PresentationLabelsProvider", () => {
       const results = [];
       // create a key set of such size that we need 3 content requests
       for (let i = 0; i < (2 * DEFAULT_KEYS_BATCH_SIZE + 1); ++i) {
-        inputKeys.push(createTestECInstanceKey({id: `0x${i}`}));
+        inputKeys.push(createTestECInstanceKey({ id: `0x${i}` }));
         results.push(`Label_${i}`);
       }
 

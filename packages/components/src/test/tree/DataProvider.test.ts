@@ -23,14 +23,14 @@ import { createTestLabelDefinition } from "../_helpers/LabelDefinition";
 
 function createTestECInstancesNodeKeyWithId(id?: string) {
   return createTestECInstancesNodeKey({
-    instanceKeys: [createTestECInstanceKey({id})]
+    instanceKeys: [createTestECInstanceKey({ id })],
   });
 }
 
 function createTestECInstancesNodeWithId(id?: string) {
   return createTestECInstancesNode({
-    key: createTestECInstancesNodeKeyWithId(id)
-  })
+    key: createTestECInstancesNodeKeyWithId(id),
+  });
 }
 
 describe("TreeDataProvider", () => {

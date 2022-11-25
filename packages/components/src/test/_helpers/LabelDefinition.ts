@@ -11,7 +11,7 @@ export function createTestLabelDefinition(label?: Partial<LabelDefinition>): Lab
     rawValue: label?.rawValue ?? "test_label",
     typeName: label?.typeName ?? "string",
   };
-};
+}
 
 export function createTestLabelDefinitionJSON(label?: Partial<LabelDefinitionJSON>): LabelDefinitionJSON {
   return {
@@ -19,18 +19,18 @@ export function createTestLabelDefinitionJSON(label?: Partial<LabelDefinitionJSO
     rawValue: label?.rawValue ?? "test_label",
     typeName: "string",
   };
-};
+}
 
 export function createTestLabelCompositeValue(value?: Partial<LabelCompositeValue>): LabelCompositeValue {
   return {
     separator: value?.separator ?? "-",
     values: value?.values ?? [createTestLabelDefinition(), createTestLabelDefinition()],
   };
-};
+}
 
 export function createTestLabelCompositeValueJSON(value?: Partial<LabelCompositeValueJSON>): LabelCompositeValueJSON {
   return {
     separator: value?.separator ?? "-",
     values: value?.values ?? [createTestLabelDefinitionJSON(), createTestLabelDefinitionJSON()],
   };
-};
+}

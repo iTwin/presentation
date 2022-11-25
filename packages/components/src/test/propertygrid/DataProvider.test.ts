@@ -224,7 +224,7 @@ describe("PropertyDataProvider", () => {
 
     const createPrimitiveField = createTestSimpleContentField;
 
-    const createArrayField = (props?: { name?: string, itemsType?: TypeDescription; }) => {
+    const createArrayField = (props?: { name?: string, itemsType?: TypeDescription }) => {
       const property: Property = {
         property: createTestPropertyInfo(),
       };
@@ -240,7 +240,7 @@ describe("PropertyDataProvider", () => {
       });
     };
 
-    const createStructField = (props?: { name?: string, members?: StructFieldMemberDescription[]; }) => {
+    const createStructField = (props?: { name?: string, members?: StructFieldMemberDescription[] }) => {
       const property: Property = {
         property: createTestPropertyInfo(),
       };
