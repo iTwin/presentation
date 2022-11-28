@@ -1,0 +1,407 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Utils createPartialTreeNodeItem uses provided callback to customize tree node 1`] = `
+Object {
+  "__presentation-components/key": Object {
+    "pathFromRoot": Array [],
+    "type": "",
+    "version": 0,
+  },
+  "description": "custom-description",
+  "icon": "custom-icon",
+  "id": "",
+  "label": PropertyRecord {
+    "property": Object {
+      "displayLabel": "Label",
+      "name": "node_label",
+      "typename": "string",
+    },
+    "value": Object {
+      "displayValue": "test",
+      "value": "test",
+      "valueFormat": 0,
+    },
+  },
+}
+`;
+
+exports[`Utils createTreeNodeItem appends grouped nodes count if requested 1`] = `
+Object {
+  "__presentation-components/key": Object {
+    "className": "TestSchema:GroupedClass",
+    "groupedInstancesCount": 999,
+    "pathFromRoot": Array [
+      "hash",
+    ],
+    "type": "ECClassGroupingNode",
+    "version": 2,
+  },
+  "id": "hash",
+  "label": PropertyRecord {
+    "property": Object {
+      "displayLabel": "Label",
+      "name": "node_label",
+      "typename": "composite",
+    },
+    "value": Object {
+      "displayValue": "test (999)",
+      "value": Object {
+        "parts": Array [
+          Object {
+            "displayValue": "test",
+            "rawValue": "test",
+            "typeName": "string",
+          },
+          Object {
+            "displayValue": "(999)",
+            "rawValue": "(999)",
+            "typeName": "string",
+          },
+        ],
+        "separator": " ",
+      },
+      "valueFormat": 0,
+    },
+  },
+}
+`;
+
+exports[`Utils createTreeNodeItem creates auto expanded tree node 1`] = `
+Object {
+  "__presentation-components/key": Object {
+    "instanceKeys": Array [
+      Object {
+        "className": "TestSchema:TestClass",
+        "id": "0x1",
+      },
+      Object {
+        "className": "TestSchema:TestClass",
+        "id": "0x1",
+      },
+    ],
+    "pathFromRoot": Array [
+      "parentHash",
+      "childHash",
+    ],
+    "type": "ECInstancesNode",
+    "version": 2,
+  },
+  "autoExpand": true,
+  "description": "testDescription",
+  "id": "childHash/parentHash",
+  "label": PropertyRecord {
+    "property": Object {
+      "displayLabel": "Label",
+      "name": "node_label",
+      "typename": "string",
+    },
+    "value": Object {
+      "displayValue": "test label",
+      "value": "test_label",
+      "valueFormat": 0,
+    },
+  },
+}
+`;
+
+exports[`Utils createTreeNodeItem creates tree node 1`] = `
+Object {
+  "__presentation-components/key": Object {
+    "instanceKeys": Array [
+      Object {
+        "className": "TestSchema:TestClass",
+        "id": "0x1",
+      },
+      Object {
+        "className": "TestSchema:TestClass",
+        "id": "0x1",
+      },
+    ],
+    "pathFromRoot": Array [
+      "parentHash",
+      "childHash",
+    ],
+    "type": "ECInstancesNode",
+    "version": 2,
+  },
+  "description": "testDescription",
+  "id": "childHash/parentHash",
+  "label": PropertyRecord {
+    "property": Object {
+      "displayLabel": "Label",
+      "name": "node_label",
+      "typename": "string",
+    },
+    "value": Object {
+      "displayValue": "test label",
+      "value": "test_label",
+      "valueFormat": 0,
+    },
+  },
+}
+`;
+
+exports[`Utils createTreeNodeItem creates tree node with custom label styles 1`] = `
+Object {
+  "__presentation-components/key": Object {
+    "instanceKeys": Array [
+      Object {
+        "className": "TestSchema:TestClass",
+        "id": "0x1",
+      },
+      Object {
+        "className": "TestSchema:TestClass",
+        "id": "0x1",
+      },
+    ],
+    "pathFromRoot": Array [
+      "parentHash",
+      "childHash",
+    ],
+    "type": "ECInstancesNode",
+    "version": 2,
+  },
+  "description": "testDescription",
+  "id": "childHash/parentHash",
+  "label": PropertyRecord {
+    "property": Object {
+      "displayLabel": "Label",
+      "name": "node_label",
+      "typename": "string",
+    },
+    "value": Object {
+      "displayValue": "test label",
+      "value": "test_label",
+      "valueFormat": 0,
+    },
+  },
+  "style": Object {
+    "isBold": true,
+    "isItalic": true,
+  },
+}
+`;
+
+exports[`Utils createTreeNodeItem creates tree node with parent id 1`] = `
+Object {
+  "__presentation-components/key": Object {
+    "instanceKeys": Array [
+      Object {
+        "className": "TestSchema:TestClass",
+        "id": "0x1",
+      },
+      Object {
+        "className": "TestSchema:TestClass",
+        "id": "0x1",
+      },
+    ],
+    "pathFromRoot": Array [
+      "parentHash",
+      "childHash",
+    ],
+    "type": "ECInstancesNode",
+    "version": 2,
+  },
+  "description": "testDescription",
+  "id": "childHash/parentHash",
+  "label": PropertyRecord {
+    "property": Object {
+      "displayLabel": "Label",
+      "name": "node_label",
+      "typename": "string",
+    },
+    "value": Object {
+      "displayValue": "test label",
+      "value": "test_label",
+      "valueFormat": 0,
+    },
+  },
+  "parentId": "JBOD",
+}
+`;
+
+exports[`Utils createTreeNodeItem uses provided callback to customize tree node 1`] = `
+Object {
+  "__presentation-components/key": Object {
+    "instanceKeys": Array [
+      Object {
+        "className": "TestSchema:TestClass",
+        "id": "0x1",
+      },
+      Object {
+        "className": "TestSchema:TestClass",
+        "id": "0x1",
+      },
+    ],
+    "pathFromRoot": Array [
+      "parentHash",
+      "childHash",
+    ],
+    "type": "ECInstancesNode",
+    "version": 2,
+  },
+  "description": "custom-description",
+  "icon": "custom-icon",
+  "id": "childHash/parentHash",
+  "label": PropertyRecord {
+    "property": Object {
+      "displayLabel": "Label",
+      "name": "node_label",
+      "typename": "string",
+    },
+    "value": Object {
+      "displayValue": "test label",
+      "value": "test_label",
+      "valueFormat": 0,
+    },
+  },
+}
+`;
+
+exports[`Utils createTreeNodeItems creates tree nodes 1`] = `
+Array [
+  Object {
+    "__presentation-components/key": Object {
+      "instanceKeys": Array [
+        Object {
+          "className": "TestSchema:TestClass",
+          "id": "0x1",
+        },
+        Object {
+          "className": "TestSchema:TestClass",
+          "id": "0x1",
+        },
+      ],
+      "pathFromRoot": Array [
+        "parentHash",
+        "childHash",
+      ],
+      "type": "ECInstancesNode",
+      "version": 2,
+    },
+    "description": "testDescription",
+    "id": "childHash/parentHash",
+    "label": PropertyRecord {
+      "property": Object {
+        "displayLabel": "Label",
+        "name": "node_label",
+        "typename": "string",
+      },
+      "value": Object {
+        "displayValue": "test label",
+        "value": "test_label",
+        "valueFormat": 0,
+      },
+    },
+  },
+  Object {
+    "__presentation-components/key": Object {
+      "instanceKeys": Array [
+        Object {
+          "className": "TestSchema:TestClass",
+          "id": "0x1",
+        },
+        Object {
+          "className": "TestSchema:TestClass",
+          "id": "0x1",
+        },
+      ],
+      "pathFromRoot": Array [
+        "parentHash",
+        "childHash",
+      ],
+      "type": "ECInstancesNode",
+      "version": 2,
+    },
+    "description": "testDescription",
+    "id": "childHash/parentHash",
+    "label": PropertyRecord {
+      "property": Object {
+        "displayLabel": "Label",
+        "name": "node_label",
+        "typename": "string",
+      },
+      "value": Object {
+        "displayValue": "test label",
+        "value": "test_label",
+        "valueFormat": 0,
+      },
+    },
+  },
+]
+`;
+
+exports[`Utils createTreeNodeItems creates tree nodes with parentId 1`] = `
+Array [
+  Object {
+    "__presentation-components/key": Object {
+      "instanceKeys": Array [
+        Object {
+          "className": "TestSchema:TestClass",
+          "id": "0x1",
+        },
+        Object {
+          "className": "TestSchema:TestClass",
+          "id": "0x1",
+        },
+      ],
+      "pathFromRoot": Array [
+        "parentHash",
+        "childHash",
+      ],
+      "type": "ECInstancesNode",
+      "version": 2,
+    },
+    "description": "testDescription",
+    "id": "childHash/parentHash",
+    "label": PropertyRecord {
+      "property": Object {
+        "displayLabel": "Label",
+        "name": "node_label",
+        "typename": "string",
+      },
+      "value": Object {
+        "displayValue": "test label",
+        "value": "test_label",
+        "valueFormat": 0,
+      },
+    },
+    "parentId": "Harbors",
+  },
+  Object {
+    "__presentation-components/key": Object {
+      "instanceKeys": Array [
+        Object {
+          "className": "TestSchema:TestClass",
+          "id": "0x1",
+        },
+        Object {
+          "className": "TestSchema:TestClass",
+          "id": "0x1",
+        },
+      ],
+      "pathFromRoot": Array [
+        "parentHash",
+        "childHash",
+      ],
+      "type": "ECInstancesNode",
+      "version": 2,
+    },
+    "description": "testDescription",
+    "id": "childHash/parentHash",
+    "label": PropertyRecord {
+      "property": Object {
+        "displayLabel": "Label",
+        "name": "node_label",
+        "typename": "string",
+      },
+      "value": Object {
+        "displayValue": "test label",
+        "value": "test_label",
+        "valueFormat": 0,
+      },
+    },
+    "parentId": "Harbors",
+  },
+]
+`;

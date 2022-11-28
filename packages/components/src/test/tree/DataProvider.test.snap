@@ -1,0 +1,153 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TreeDataProvider getFilteredNodes returns presentation manager result 1`] = `
+Array [
+  Object {
+    "children": Array [],
+    "filteringData": undefined,
+    "index": 0,
+    "isMarked": undefined,
+    "node": Object {
+      "description": "testDescription",
+      "hasChildren": false,
+      "isEditable": false,
+      "isExpanded": false,
+      "isSelectionDisabled": false,
+      "key": Object {
+        "instanceKeys": Array [
+          Object {
+            "className": "TestSchema:TestClass",
+            "id": "0x1",
+          },
+          Object {
+            "className": "TestSchema:TestClass",
+            "id": "0x1",
+          },
+        ],
+        "pathFromRoot": Array [
+          "parentHash",
+          "childHash",
+        ],
+        "type": "ECInstancesNode",
+        "version": 2,
+      },
+      "label": Object {
+        "displayValue": "test label",
+        "rawValue": "test_label",
+        "typeName": "string",
+      },
+    },
+  },
+  Object {
+    "children": Array [],
+    "filteringData": undefined,
+    "index": 0,
+    "isMarked": undefined,
+    "node": Object {
+      "description": "testDescription",
+      "hasChildren": false,
+      "isEditable": false,
+      "isExpanded": false,
+      "isSelectionDisabled": false,
+      "key": Object {
+        "instanceKeys": Array [
+          Object {
+            "className": "TestSchema:TestClass",
+            "id": "0x1",
+          },
+          Object {
+            "className": "TestSchema:TestClass",
+            "id": "0x1",
+          },
+        ],
+        "pathFromRoot": Array [
+          "parentHash",
+          "childHash",
+        ],
+        "type": "ECInstancesNode",
+        "version": 2,
+      },
+      "label": Object {
+        "displayValue": "test label",
+        "rawValue": "test_label",
+        "typeName": "string",
+      },
+    },
+  },
+]
+`;
+
+exports[`TreeDataProvider getNodes returns presentation manager result 1`] = `
+Array [
+  Object {
+    "__presentation-components/key": Object {
+      "instanceKeys": Array [
+        Object {
+          "className": "TestSchema:TestClass",
+          "id": "0x1",
+        },
+        Object {
+          "className": "TestSchema:TestClass",
+          "id": "0x1",
+        },
+      ],
+      "pathFromRoot": Array [
+        "parentHash",
+        "childHash",
+      ],
+      "type": "ECInstancesNode",
+      "version": 2,
+    },
+    "description": "testDescription",
+    "id": "childHash/parentHash",
+    "label": PropertyRecord {
+      "property": Object {
+        "displayLabel": "Label",
+        "name": "node_label",
+        "typename": "string",
+      },
+      "value": Object {
+        "displayValue": "test label",
+        "value": "test_label",
+        "valueFormat": 0,
+      },
+    },
+    "parentId": "9e7164b4-6a85-47e4-b28a-58df26ce9acb",
+  },
+  Object {
+    "__presentation-components/key": Object {
+      "instanceKeys": Array [
+        Object {
+          "className": "TestSchema:TestClass",
+          "id": "0x1",
+        },
+        Object {
+          "className": "TestSchema:TestClass",
+          "id": "0x1",
+        },
+      ],
+      "pathFromRoot": Array [
+        "parentHash",
+        "childHash",
+      ],
+      "type": "ECInstancesNode",
+      "version": 2,
+    },
+    "description": "testDescription",
+    "id": "childHash/parentHash",
+    "label": PropertyRecord {
+      "property": Object {
+        "displayLabel": "Label",
+        "name": "node_label",
+        "typename": "string",
+      },
+      "value": Object {
+        "displayValue": "test label",
+        "value": "test_label",
+        "valueFormat": 0,
+      },
+    },
+    "parentId": "9e7164b4-6a85-47e4-b28a-58df26ce9acb",
+  },
+]
+`;

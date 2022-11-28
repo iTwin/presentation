@@ -2,15 +2,10 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "jsx": "react-jsx",
-    "allowJs": true,
+    "sourceMap": true,
     "esModuleInterop": true,
-    "resolveJsonModule": true,
     "isolatedModules": true,
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom"],
     "outDir": "./lib"
   },
   "include": [ "src", "webpack.config.ts" ],

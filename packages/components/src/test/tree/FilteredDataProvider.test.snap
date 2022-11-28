@@ -1,0 +1,135 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FilteredTreeDataProvider getNodes returns child nodes 1`] = `
+Array [
+  Object {
+    "__presentation-components/key": Object {
+      "instanceKeys": Array [
+        Object {
+          "className": "TestSchema:TestClass",
+          "id": "0x4",
+        },
+      ],
+      "pathFromRoot": Array [
+        "0x4",
+      ],
+      "type": "ECInstancesNode",
+      "version": 2,
+    },
+    "description": "testDescription",
+    "id": "0x4",
+    "label": PropertyRecord {
+      "property": Object {
+        "displayLabel": "Label",
+        "name": "node_label",
+        "typename": "string",
+      },
+      "value": Object {
+        "displayValue": "A-2-1",
+        "value": "A-2-1",
+        "valueFormat": 0,
+      },
+    },
+    "parentId": "0x2",
+  },
+  Object {
+    "__presentation-components/key": Object {
+      "instanceKeys": Array [
+        Object {
+          "className": "TestSchema:TestClass",
+          "id": "0x5",
+        },
+      ],
+      "pathFromRoot": Array [
+        "0x5",
+      ],
+      "type": "ECInstancesNode",
+      "version": 2,
+    },
+    "autoExpand": true,
+    "description": "testDescription",
+    "hasChildren": true,
+    "id": "0x5",
+    "label": PropertyRecord {
+      "property": Object {
+        "displayLabel": "Label",
+        "name": "node_label",
+        "typename": "string",
+      },
+      "value": Object {
+        "displayValue": "A-2-2",
+        "value": "A-2-2",
+        "valueFormat": 0,
+      },
+    },
+    "parentId": "0x2",
+  },
+]
+`;
+
+exports[`FilteredTreeDataProvider getNodes returns root nodes 1`] = `
+Array [
+  Object {
+    "__presentation-components/key": Object {
+      "instanceKeys": Array [
+        Object {
+          "className": "TestSchema:TestClass",
+          "id": "0x1",
+        },
+      ],
+      "pathFromRoot": Array [
+        "0x1",
+      ],
+      "type": "ECInstancesNode",
+      "version": 2,
+    },
+    "autoExpand": true,
+    "description": "testDescription",
+    "hasChildren": true,
+    "id": "0x1",
+    "label": PropertyRecord {
+      "property": Object {
+        "displayLabel": "Label",
+        "name": "node_label",
+        "typename": "string",
+      },
+      "value": Object {
+        "displayValue": "A-1",
+        "value": "A-1",
+        "valueFormat": 0,
+      },
+    },
+  },
+  Object {
+    "__presentation-components/key": Object {
+      "instanceKeys": Array [
+        Object {
+          "className": "TestSchema:TestClass",
+          "id": "0x2",
+        },
+      ],
+      "pathFromRoot": Array [
+        "0x2",
+      ],
+      "type": "ECInstancesNode",
+      "version": 2,
+    },
+    "autoExpand": true,
+    "description": "testDescription",
+    "hasChildren": true,
+    "id": "0x2",
+    "label": PropertyRecord {
+      "property": Object {
+        "displayLabel": "Label",
+        "name": "node_label",
+        "typename": "string",
+      },
+      "value": Object {
+        "displayValue": "A-2",
+        "value": "A-2",
+        "valueFormat": 0,
+      },
+    },
+  },
+]
+`;
