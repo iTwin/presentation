@@ -16,7 +16,6 @@ export * from "./presentation-components/common/IPresentationDataProvider";
 export * from "./presentation-components/common/IUnifiedSelectionComponent";
 export * from "./presentation-components/common/ContentBuilder";
 export * from "./presentation-components/common/ContentDataProvider";
-export * from "./presentation-components/DataProvidersFactory";
 export * from "./presentation-components/hooks/UseRulesetRegistration";
 export * from "./presentation-components/common/Diagnostics";
 
@@ -54,15 +53,6 @@ export * from "./presentation-components/propertygrid/UseUnifiedSelection";
  * Presentation features for [Favorite properties]($components-react:Favorite).
  */
 export * from "./presentation-components/favorite-properties/DataProvider";
-
-/**
- * @module Table
- *
- * @docs-group-description Table
- * Presentation features for [Table]($components-react) component.
- */
-export * from "./presentation-components/table/DataProvider";
-export * from "./presentation-components/table/WithUnifiedSelection";
 
 /**
  * @module Tree
