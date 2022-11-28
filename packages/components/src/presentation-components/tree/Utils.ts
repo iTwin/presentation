@@ -7,10 +7,8 @@
  */
 
 import { PropertyRecord } from "@itwin/appui-abstract";
-import { DelayLoadedTreeNodeItem, ItemColorOverrides, ItemStyle, PageOptions as UiPageOptions } from "@itwin/components-react";
-import { CheckBoxState } from "@itwin/core-react";
+import { DelayLoadedTreeNodeItem, PageOptions as UiPageOptions } from "@itwin/components-react";
 import { LabelDefinition, Node, NodeKey, PartialNode, PageOptions as PresentationPageOptions } from "@itwin/presentation-common";
-import { StyleHelper } from "../common/StyleHelper";
 import { createLabelRecord } from "../common/Utils";
 
 /** @internal */
@@ -45,8 +43,8 @@ export function createTreeNodeItem(
     label: createNodeLabelRecord(node, !!props?.appendChildrenCountForGroupingNodes),
   };
   assignOptionalTreeNodeItemFields(item, node, parentId);
-  const customizeItemCallback = props?.customizeTreeNodeItem ?? customizeTreeNodeItem; // eslint-disable-line deprecation/deprecation
-  customizeItemCallback(item, node);
+  if (props && props.customizeTreeNodeItem)
+    props.customizeTreeNodeItem(item, node);
   return item;
 }
 
@@ -63,8 +61,8 @@ export function createPartialTreeNodeItem(
   }
 
   assignOptionalTreeNodeItemFields(item, node, parentId);
-  const customizeItemCallback = props.customizeTreeNodeItem ?? customizeTreeNodeItem; // eslint-disable-line deprecation/deprecation
-  customizeItemCallback(item, node);
+  if (props.customizeTreeNodeItem)
+    props.customizeTreeNodeItem(item, node);
   return item;
 }
 
@@ -101,63 +99,6 @@ function assignOptionalTreeNodeItemFields(
   if (node.extendedData) {
     item.extendedData = node.extendedData;
   }
-}
-
-/**
- * Applies customization from [[Node]] to [[TreeNodeItem]].
- * @public
- * @deprecated
- */
-// istanbul ignore next
-export function customizeTreeNodeItem(item: Partial<DelayLoadedTreeNodeItem>, node: Partial<Node>) {
-  if (node.imageId) { // eslint-disable-line deprecation/deprecation
-    item.icon = node.imageId; // eslint-disable-line deprecation/deprecation
-  }
-
-  if (node.isCheckboxVisible) { // eslint-disable-line deprecation/deprecation
-    item.isCheckboxVisible = true;
-    if (node.isChecked) { // eslint-disable-line deprecation/deprecation
-      item.checkBoxState = CheckBoxState.On;
-    }
-
-    if (!node.isCheckboxEnabled) { // eslint-disable-line deprecation/deprecation
-      item.isCheckboxDisabled = true;
-    }
-  }
-
-  const style = createTreeNodeItemStyle(node);
-  if (Object.keys(style).length > 0) {
-    item.style = style;
-  }
-}
-
-// istanbul ignore next
-function createTreeNodeItemStyle(node: Partial<Node>): ItemStyle {
-  const style: ItemStyle = {};
-  if (StyleHelper.isBold(node)) {
-    style.isBold = true;
-  }
-
-  if (StyleHelper.isItalic(node)) {
-    style.isItalic = true;
-  }
-
-  const colorOverrides: ItemColorOverrides = {};
-  const foreColor = StyleHelper.getForeColor(node);
-  if (foreColor) {
-    colorOverrides.color = foreColor;
-  }
-
-  const backColor = StyleHelper.getBackColor(node);
-  if (backColor) {
-    colorOverrides.backgroundColor = backColor;
-  }
-
-  if (Object.keys(colorOverrides).length > 0) {
-    style.colorOverrides = colorOverrides;
-  }
-
-  return style;
 }
 
 /** @internal */

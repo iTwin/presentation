@@ -141,47 +141,6 @@ Object {
 }
 `;
 
-exports[`Utils createTreeNodeItem creates tree node with custom label styles 1`] = `
-Object {
-  "__presentation-components/key": Object {
-    "instanceKeys": Array [
-      Object {
-        "className": "TestSchema:TestClass",
-        "id": "0x1",
-      },
-      Object {
-        "className": "TestSchema:TestClass",
-        "id": "0x1",
-      },
-    ],
-    "pathFromRoot": Array [
-      "parentHash",
-      "childHash",
-    ],
-    "type": "ECInstancesNode",
-    "version": 2,
-  },
-  "description": "testDescription",
-  "id": "childHash/parentHash",
-  "label": PropertyRecord {
-    "property": Object {
-      "displayLabel": "Label",
-      "name": "node_label",
-      "typename": "string",
-    },
-    "value": Object {
-      "displayValue": "test label",
-      "value": "test_label",
-      "valueFormat": 0,
-    },
-  },
-  "style": Object {
-    "isBold": true,
-    "isItalic": true,
-  },
-}
-`;
-
 exports[`Utils createTreeNodeItem creates tree node with parent id 1`] = `
 Object {
   "__presentation-components/key": Object {

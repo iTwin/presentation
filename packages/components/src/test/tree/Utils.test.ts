@@ -33,13 +33,6 @@ describe("Utils", () => {
       expect(treeNode).to.matchSnapshot();
     });
 
-    it("creates tree node with custom label styles", () => {
-      const node = createTestECInstancesNode();
-      node.fontStyle = "Bold Italic"; // eslint-disable-line deprecation/deprecation
-      const treeNode = createTreeNodeItem(node);
-      expect(treeNode).to.matchSnapshot();
-    });
-
     it("creates auto expanded tree node", () => {
       const node = createTestECInstancesNode({ isExpanded: true });
       const treeNode = createTreeNodeItem(node);
