@@ -17,6 +17,7 @@ import chaiSubset from "chai-subset";
 import faker from "faker";
 import sinon from "sinon";
 import sinonChai from "sinon-chai";
+import path from "path";
 import * as enzyme from "enzyme";
 
 // setup chai
@@ -45,7 +46,7 @@ beforeEach(function () {
   faker.seed(seed);
 
   // set up snapshot name
-  const sourceFilePath = currentTest.file?.replace("lib\\cjs\\test", "src\\test").replace(/\.(jsx?|tsx?)$/, "");
+  const sourceFilePath = currentTest.file?.replace(`lib${path.sep}cjs${path.sep}test`, `src${path.sep}test`).replace(/\.(jsx?|tsx?)$/, "");
   const snapPath = `${sourceFilePath}.snap`;
   chaiJestSnapshot.setFilename(snapPath);
   chaiJestSnapshot.setTestName(currentTest.fullTitle());
