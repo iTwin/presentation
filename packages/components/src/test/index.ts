@@ -25,6 +25,10 @@ chai.use(chaiJestSnapshot);
 chai.use(sinonChai);
 chai.use(chaiSubset);
 
+// configure enzyme (testing utils for React)
+enzyme.configure({ adapter: new (require("@wojtekmaj/enzyme-adapter-react-17/build"))() }); // eslint-disable-line @typescript-eslint/no-var-requires
+chaiJestSnapshot.addSerializer(require("enzyme-to-json/serializer")); // eslint-disable-line @typescript-eslint/no-var-requires
+
 before(function () {
   chaiJestSnapshot.resetSnapshotRegistry();
 });
@@ -49,7 +53,3 @@ beforeEach(function () {
 beforeEach(() => {
   sinon.restore();
 });
-
-// configure enzyme (testing utils for React)
-enzyme.configure({ adapter: new (require("@wojtekmaj/enzyme-adapter-react-17/build"))() }); // eslint-disable-line @typescript-eslint/no-var-requires
-chaiJestSnapshot.addSerializer(require("enzyme-to-json/serializer")); // eslint-disable-line @typescript-eslint/no-var-requires

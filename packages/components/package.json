@@ -37,7 +37,7 @@
     "cover": "nyc npm -s test",
     "lint": "eslint ./src/**/*.{ts,tsx}",
     "pseudolocalize": "betools pseudolocalize --englishDir ./lib/public/locales/en --out ./lib/public/locales/en-PSEUDO",
-    "test": "mocha --config ./.mocharc.json lib/cjs/test/**/*.test.js",
+    "test": "mocha --config ./.mocharc.json \"./lib/cjs/test/**/*.test.js\"",
     "test:watch": "npm -s test -- --reporter min --watch-extensions ts,tsx --watch"
   },
   "dependencies": {

@@ -10,7 +10,7 @@
     "./lib/cjs/test/index.js"
   ],
   "exclude": [
-    "lib/cjs/test/coverage/**/*"
+    "./lib/cjs/test/coverage/**/*"
   ],
   "reporter": [
     "node_modules/@itwin/build-tools/mocha-reporter"
