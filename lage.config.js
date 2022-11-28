@@ -5,4 +5,5 @@ module.exports = {
     cover: ["build"],
     lint: [],
   },
+  cache: true,
 };
