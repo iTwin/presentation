@@ -4,7 +4,6 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import * as faker from "faker";
 import { LabelDefinition, Node } from "@itwin/presentation-common";
 import { StyleHelper } from "../../presentation-components/common/StyleHelper";
 import { createTestECInstancesNodeKey } from "../_helpers/Hierarchy";
@@ -12,7 +11,7 @@ import { createTestECInstancesNodeKey } from "../_helpers/Hierarchy";
 describe("StyleHelper", () => {
 
   const createNodeBase = (): Node => ({
-    label: LabelDefinition.fromLabelString(faker.random.word()),
+    label: LabelDefinition.fromLabelString("Test Label"),
     key: createTestECInstancesNodeKey(),
   });
 
@@ -67,10 +66,10 @@ describe("StyleHelper", () => {
     describe("from color name", () => {
 
       it("returns valid color", () => {
-        const colorName = faker.random.arrayElement(Object.keys(StyleHelper.availableColors));
+        const colorName = "DarkRed";
         const color = StyleHelper.availableColors[colorName];
         const node = { ...createNodeBase(), backColor: colorName };
-        expect(StyleHelper.getBackColor(node)).to.eq(color >> 8);
+        expect(StyleHelper.getBackColor(node)).to.eq(color >>> 8);
       });
 
       it("throws on invalid color", () => {

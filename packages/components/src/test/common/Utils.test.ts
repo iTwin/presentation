@@ -4,7 +4,6 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import * as faker from "faker";
 import * as React from "react";
 import * as moq from "typemoq";
 import { Primitives, PrimitiveValue } from "@itwin/appui-abstract";
@@ -31,13 +30,13 @@ describe("Utils", () => {
     });
 
     it("returns displayName property value, if set", () => {
-      const displayName = faker.random.word();
+      const displayName = "Test Display Name";
       (TestComponent as any).displayName = displayName;
       expect(utils.getDisplayName(TestComponent)).to.eq(displayName);
     });
 
     it("returns name property value, if set", () => {
-      const displayName = faker.random.word();
+      const displayName = "Test Display Name";
       Object.defineProperty(TestComponent, "name", { value: displayName });
       expect(utils.getDisplayName(TestComponent)).to.eq(displayName);
     });

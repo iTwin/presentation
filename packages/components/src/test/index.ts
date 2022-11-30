@@ -14,7 +14,6 @@ import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import chaiJestSnapshot from "chai-jest-snapshot";
 import chaiSubset from "chai-subset";
-import faker from "faker";
 import sinon from "sinon";
 import sinonChai from "sinon-chai";
 import path from "path";
@@ -38,12 +37,6 @@ after(function () {
 });
 beforeEach(function () {
   const currentTest = this.currentTest!;
-
-  // we want snapshot tests to use the same random data between runs
-  let seed = 0;
-  for (let i = 0; i < currentTest.fullTitle().length; ++i)
-    seed += currentTest.fullTitle().charCodeAt(i);
-  faker.seed(seed);
 
   // set up snapshot name
   const sourceFilePath = currentTest.file?.replace(`lib${path.sep}cjs${path.sep}test`, `src${path.sep}test`).replace(/\.(jsx?|tsx?)$/, "");

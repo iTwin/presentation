@@ -4,7 +4,6 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import * as faker from "faker";
 import * as moq from "typemoq";
 import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyData } from "@itwin/components-react";
@@ -31,7 +30,7 @@ describe("FavoritePropertiesDataProvider", () => {
   const factoryMock = moq.Mock.ofType<(imodel: IModelConnection, ruleset?: Ruleset | string) => PresentationPropertyDataProvider>();
 
   before(async () => {
-    elementId = faker.random.uuid();
+    elementId = "0x11";
     Presentation.setPresentationManager(presentationManagerMock.object);
     Presentation.setSelectionManager(selectionManagerMock.object);
     Presentation.setFavoritePropertiesManager(favoritePropertiesManagerMock.object);
@@ -76,12 +75,12 @@ describe("FavoritePropertiesDataProvider", () => {
 
     it("passes `customRulesetId` to PropertyDataProvider if set", async () => {
       presentationPropertyDataProviderMock.setup(async (x) => x.getData()).returns(async () => ({
-        label: PropertyRecord.fromString(faker.random.word()),
+        label: PropertyRecord.fromString("Test Item"),
         categories: [],
         records: {},
       }));
 
-      const customRulesetId = faker.random.word();
+      const customRulesetId = "custom_ruleset_id";
       provider = new FavoritePropertiesDataProvider({ propertyDataProviderFactory: factoryMock.object, ruleset: customRulesetId });
 
       await provider.getData(imodelMock.object, elementId);
@@ -90,13 +89,13 @@ describe("FavoritePropertiesDataProvider", () => {
 
     it("returns empty property data when there is no favorite category", async () => {
       const dataToReturn: PropertyData = {
-        label: PropertyRecord.fromString(faker.random.word()),
-        categories: [{ label: faker.random.word(), name: "test", expand: true }],
+        label: PropertyRecord.fromString("Test Item"),
+        categories: [{ label: "Test Category", name: "test", expand: true }],
         records: {
           test: [
             new PropertyRecord(
-              { valueFormat: PropertyValueFormat.Primitive, displayValue: faker.random.word() },
-              { typename: faker.database.type(), name: faker.random.word(), displayLabel: faker.random.word() }),
+              { valueFormat: PropertyValueFormat.Primitive, displayValue: "Test Value" },
+              { typename: "string", name: "test_prop", displayLabel: "Test Property" }),
           ],
         },
       };
@@ -109,22 +108,22 @@ describe("FavoritePropertiesDataProvider", () => {
 
     it("filters out only favorite category", async () => {
       const favoritesCategory = getFavoritesCategory();
-      const favoritePropertyName = faker.random.word();
-      const regularPropertyName = faker.random.word();
+      const favoritePropertyName = "favoriteProp";
+      const regularPropertyName = "regularProp";
 
       const dataToReturn: PropertyData = {
-        label: PropertyRecord.fromString(faker.random.word()),
-        categories: [favoritesCategory, { label: faker.random.word(), name: "test", expand: true }],
+        label: PropertyRecord.fromString("Test Item"),
+        categories: [favoritesCategory, { label: "Test Category", name: "test", expand: true }],
         records: {
           [favoritesCategory.name]: [
             new PropertyRecord(
-              { valueFormat: PropertyValueFormat.Primitive, displayValue: faker.random.word() },
-              { typename: faker.database.type(), name: favoritePropertyName, displayLabel: faker.random.word() }),
+              { valueFormat: PropertyValueFormat.Primitive, displayValue: "SomeString" },
+              { typename: "string", name: favoritePropertyName, displayLabel: "Favorite Property" }),
           ],
           test: [
             new PropertyRecord(
-              { valueFormat: PropertyValueFormat.Primitive, displayValue: faker.random.word() },
-              { typename: faker.database.type(), name: regularPropertyName, displayLabel: faker.random.word() }),
+              { valueFormat: PropertyValueFormat.Primitive, displayValue: "1" },
+              { typename: "int", name: regularPropertyName, displayLabel: "Regular Property" }),
           ],
         },
       };

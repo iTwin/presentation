@@ -4,7 +4,6 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import * as faker from "faker";
 import * as sinon from "sinon";
 import * as moq from "typemoq";
 import { PrimitiveValue, PropertyDescription, PropertyRecord } from "@itwin/appui-abstract";
@@ -47,8 +46,8 @@ describe("ContentDataProvider", () => {
   const imodelKey = "test-imodel-Key";
 
   before(() => {
-    rulesetId = faker.random.word();
-    displayType = faker.random.word();
+    rulesetId = "ruleset_id";
+    displayType = "test_display";
   });
 
   beforeEach(() => {
@@ -72,13 +71,13 @@ describe("ContentDataProvider", () => {
   describe("constructor", () => {
 
     it("sets display type", () => {
-      const type = faker.random.word();
+      const type = "new_display_type";
       const p = new Provider({ imodel: imodelMock.object, ruleset: rulesetId, displayType: type });
       expect(p.displayType).to.eq(type);
     });
 
     it("sets paging size", () => {
-      const pagingSize = faker.random.number();
+      const pagingSize = 50;
       const p = new Provider({ imodel: imodelMock.object, ruleset: rulesetId, displayType, pagingSize });
       expect(p.pagingSize).to.be.eq(pagingSize);
     });
@@ -308,7 +307,7 @@ describe("ContentDataProvider", () => {
         .returns(async () => result.promise)
         .verifiable();
       provider.pagingSize = 10;
-      const contentAndContentSize = { content: new Content(createTestContentDescriptor({ fields: [] }), []), size: faker.random.number() };
+      const contentAndContentSize = { content: new Content(createTestContentDescriptor({ fields: [] }), []), size: 2 };
       result.resolve(contentAndContentSize);
       const size = await provider.getContentSetSize();
       expect(size).to.eq(contentAndContentSize.size);
@@ -322,7 +321,7 @@ describe("ContentDataProvider", () => {
         .verifiable(moq.Times.once());
       provider.pagingSize = 10;
       const requests = [provider.getContentSetSize(), provider.getContentSetSize()];
-      const result = { content: new Content(createTestContentDescriptor({ fields: [] }), []), size: faker.random.number() };
+      const result = { content: new Content(createTestContentDescriptor({ fields: [] }), []), size: 2 };
       resultPromiseContainer.resolve(result);
       const sizes = await Promise.all(requests);
       sizes.forEach((size) => expect(size).to.eq(result.size));
@@ -338,7 +337,7 @@ describe("ContentDataProvider", () => {
         .verifiable(moq.Times.once());
 
       provider.pagingSize = pagingSize;
-      const result = { content: new Content(createTestContentDescriptor({ fields: [] }), []), size: faker.random.number() };
+      const result = { content: new Content(createTestContentDescriptor({ fields: [] }), []), size: 2 };
       resultPromiseContainer.resolve(result);
       const size = await provider.getContentSetSize();
       expect(size).to.eq(result.size);

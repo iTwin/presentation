@@ -5,7 +5,6 @@
 
 import { expect } from "chai";
 import { mount, shallow } from "enzyme";
-import * as faker from "faker";
 import * as sinon from "sinon";
 import * as moq from "typemoq";
 import { Id64, Id64Arg, Id64String } from "@itwin/core-bentley";
@@ -29,7 +28,6 @@ describe("Viewport withUnifiedSelection", () => {
     await NoRenderApp.startup({
       localization: new EmptyLocalization(),
     });
-    classNameGenerator = () => faker.random.word();
   });
 
   after(async () => {
@@ -169,8 +167,6 @@ describe("ViewportSelectionHandler", () => {
     await NoRenderApp.startup({
       localization: new EmptyLocalization(),
     });
-    const defaultClassName = faker.random.word();
-    classNameGenerator = () => defaultClassName;
   });
 
   after(async () => {
@@ -507,11 +503,10 @@ const mockIModel = (mock: moq.IMock<IModelConnection>) => {
   mock.setup((imodel) => imodel.selectionSet).returns(() => selectionSet);
 };
 
-let classNameGenerator = () => faker.random.word();
 const createElementProps = (ids: Id64Arg): ElementProps[] => {
   return [...Id64.toIdSet(ids)].map((id: Id64String): ElementProps => ({
     id,
-    classFullName: classNameGenerator(),
+    classFullName: "ElementSchema:ElementClass",
     code: Code.createEmpty(),
     model: id,
   }));

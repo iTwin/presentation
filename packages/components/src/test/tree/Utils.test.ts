@@ -4,7 +4,6 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import * as faker from "faker";
 import { LabelDefinition, Node } from "@itwin/presentation-common";
 import { PageOptions } from "@itwin/components-react";
 import {
@@ -28,7 +27,7 @@ describe("Utils", () => {
 
     it("creates tree node with parent id", () => {
       const node = createTestECInstancesNode();
-      const parentId = faker.random.word();
+      const parentId = "test_parent_id";
       const treeNode = createTreeNodeItem(node, parentId);
       expect(treeNode).to.matchSnapshot();
     });
@@ -113,7 +112,7 @@ describe("Utils", () => {
 
     it("creates tree nodes with parentId", () => {
       const nodes = [createTestECInstancesNode(), createTestECInstancesNode()];
-      const parentId = faker.random.word();
+      const parentId = "test_parent_id";
       const treeNode = createTreeNodeItems(nodes, parentId);
       expect(treeNode).to.matchSnapshot();
     });
@@ -127,8 +126,8 @@ describe("Utils", () => {
     });
 
     it("converts ui page options to presentation page options", () => {
-      const size = faker.random.number();
-      const start = faker.random.number();
+      const size = 10;
+      const start = 2;
       const pageOptions: PageOptions = { size, start };
       const result = pageOptionsUiToPresentation(pageOptions);
 

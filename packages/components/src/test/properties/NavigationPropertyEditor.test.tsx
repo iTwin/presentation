@@ -21,7 +21,7 @@ import {
 import {
   createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField, createTestSimpleContentField,
 } from "../_helpers/Content";
-import { createRandomPropertyRecord } from "../_helpers/UiComponents";
+import { createTestPropertyRecord } from "../_helpers/UiComponents";
 
 function createNavigationPropertyInfo(): NavigationPropertyInfo {
   return {
@@ -47,7 +47,7 @@ function render(ui: React.ReactElement, context?: Partial<NavigationPropertyEdit
 
 describe("<NavigationPropertyEditor />", () => {
   function createRecord() {
-    const record = createRandomPropertyRecord();
+    const record = createTestPropertyRecord();
     record.property.typename = "navigation";
     return record;
   }
@@ -111,7 +111,7 @@ describe("<NavigationPropertyEditor />", () => {
 });
 
 describe("<NavigationPropertyTargetEditor />", () => {
-  const testRecord = createRandomPropertyRecord();
+  const testRecord = createTestPropertyRecord();
 
   beforeEach(async () => {
     await NoRenderApp.startup({

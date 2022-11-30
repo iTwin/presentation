@@ -38,7 +38,7 @@ export function createTestECInstancesNode(props?: Partial<Node>): Node {
   };
 }
 
-export function createRandomNodePathElement(element?: Partial<NodePathElement>): NodePathElement {
+export function createTestNodePathElement(element?: Partial<NodePathElement>): NodePathElement {
   return {
     node: element?.node ?? createTestECInstancesNode(),
     index: element?.index ?? 0,

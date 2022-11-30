@@ -4,7 +4,6 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import * as faker from "faker";
 import * as moq from "typemoq";
 import { IModelConnection } from "@itwin/core-frontend";
 import { LabelDefinition, NodePathElement } from "@itwin/presentation-common";
@@ -12,13 +11,13 @@ import { PageOptions } from "@itwin/components-react";
 import { FilteredPresentationTreeDataProvider } from "../../presentation-components/tree/FilteredDataProvider";
 import { IPresentationTreeDataProvider } from "../../presentation-components/tree/IPresentationTreeDataProvider";
 import { createTreeNodeItem } from "../../presentation-components/tree/Utils";
-import { createRandomTreeNodeItem } from "../_helpers/UiComponents";
-import { createRandomNodePathElement, createTestECInstancesNode, createTestECInstancesNodeKey } from "../_helpers/Hierarchy";
+import { createTestTreeNodeItem } from "../_helpers/UiComponents";
+import { createTestECInstancesNode, createTestECInstancesNodeKey, createTestNodePathElement } from "../_helpers/Hierarchy";
 import { createTestECInstanceKey } from "../_helpers/Common";
 
 describe("FilteredTreeDataProvider", () => {
-  function createRandomNodePathElementWithId(id: string) {
-    return createRandomNodePathElement({
+  function createTestNodePathElementWithId(id: string) {
+    return createTestNodePathElement({
       node: createTestECInstancesNode({
         key: createTestECInstancesNodeKey({
           instanceKeys: [createTestECInstanceKey({ id })],
@@ -39,25 +38,25 @@ describe("FilteredTreeDataProvider", () => {
     */
     const nodePaths: NodePathElement[] = [];
 
-    nodePaths[0] = createRandomNodePathElementWithId("0x1");
+    nodePaths[0] = createTestNodePathElementWithId("0x1");
     nodePaths[0].node.label = LabelDefinition.fromLabelString("A-1");
 
-    nodePaths[1] = createRandomNodePathElementWithId("0x2");
+    nodePaths[1] = createTestNodePathElementWithId("0x2");
     nodePaths[1].node.label = LabelDefinition.fromLabelString("A-2");
 
     nodePaths[0].children = [];
-    nodePaths[0].children[0] = createRandomNodePathElementWithId("0x3");
+    nodePaths[0].children[0] = createTestNodePathElementWithId("0x3");
     nodePaths[0].children[0].node.label = LabelDefinition.fromLabelString("A-1-1");
 
     nodePaths[1].children = [];
-    nodePaths[1].children[0] = createRandomNodePathElementWithId("0x4");
+    nodePaths[1].children[0] = createTestNodePathElementWithId("0x4");
     nodePaths[1].children[0].node.label = LabelDefinition.fromLabelString("A-2-1");
 
-    nodePaths[1].children[1] = createRandomNodePathElementWithId("0x5");
+    nodePaths[1].children[1] = createTestNodePathElementWithId("0x5");
     nodePaths[1].children[1].node.label = LabelDefinition.fromLabelString("A-2-2");
 
     nodePaths[1].children[1].children = [];
-    nodePaths[1].children[1].children[0] = createRandomNodePathElementWithId("0x6");
+    nodePaths[1].children[1].children[0] = createTestNodePathElementWithId("0x6");
     nodePaths[1].children[1].children[0].node.label = LabelDefinition.fromLabelString("A-2-2-1");
     return nodePaths;
   }
@@ -71,7 +70,7 @@ describe("FilteredTreeDataProvider", () => {
 
   beforeEach(() => {
     parentProviderMock.reset();
-    filter = faker.random.word();
+    filter = "test_filter";
     paths = createPaths();
     provider = new FilteredPresentationTreeDataProvider({
       parentDataProvider: parentProviderMock.object,
@@ -91,7 +90,7 @@ describe("FilteredTreeDataProvider", () => {
   describe("rulesetId", () => {
 
     it("returns rulesetId of the parent data provider", () => {
-      const expectedRulesetId = faker.random.word();
+      const expectedRulesetId = "ruleset_id";
       parentProviderMock.setup((x) => x.rulesetId)
         .returns(() => expectedRulesetId)
         .verifiable();
@@ -171,7 +170,7 @@ describe("FilteredTreeDataProvider", () => {
 
     it("returns node key", () => {
       const key = createTestECInstancesNodeKey();
-      const treeNode = createRandomTreeNodeItem(key);
+      const treeNode = createTestTreeNodeItem(key);
 
       parentProviderMock.setup((x) => x.getNodeKey(treeNode)).returns(() => key);
       const result = provider.getNodeKey(treeNode);
@@ -183,25 +182,25 @@ describe("FilteredTreeDataProvider", () => {
   const constantFilter = "test";
   const filteredNodePaths: NodePathElement[] = [];
 
-  filteredNodePaths[0] = createRandomNodePathElementWithId("0x1");
+  filteredNodePaths[0] = createTestNodePathElementWithId("0x1");
   filteredNodePaths[0].node.label = LabelDefinition.fromLabelString("A-1");
   filteredNodePaths[0].filteringData = { matchesCount: 0, childMatchesCount: 1 };
 
   filteredNodePaths[0].children = [];
-  filteredNodePaths[0].children[0] = createRandomNodePathElementWithId("0x2");
+  filteredNodePaths[0].children[0] = createTestNodePathElementWithId("0x2");
   filteredNodePaths[0].children[0].node.label = LabelDefinition.fromLabelString("A-1-1 test");
   filteredNodePaths[0].children[0].filteringData = { matchesCount: 1, childMatchesCount: 0 };
 
-  filteredNodePaths[1] = createRandomNodePathElementWithId("0x3");
+  filteredNodePaths[1] = createTestNodePathElementWithId("0x3");
   filteredNodePaths[1].node.label = LabelDefinition.fromLabelString("A-2 test");
   filteredNodePaths[1].filteringData = { matchesCount: 1, childMatchesCount: 0 };
 
   filteredNodePaths[1].children = [];
-  filteredNodePaths[1].children[0] = createRandomNodePathElementWithId("0x4");
+  filteredNodePaths[1].children[0] = createTestNodePathElementWithId("0x4");
   filteredNodePaths[1].children[0].node.label = LabelDefinition.fromLabelString("A-2-1");
   filteredNodePaths[1].children[0].filteringData = { matchesCount: 0, childMatchesCount: 0 };
 
-  filteredNodePaths[1].children[1] = createRandomNodePathElementWithId("0x5");
+  filteredNodePaths[1].children[1] = createTestNodePathElementWithId("0x5");
   filteredNodePaths[1].children[1].node.label = LabelDefinition.fromLabelString("A-2-2");
   filteredNodePaths[1].children[1].filteringData = { matchesCount: 0, childMatchesCount: 0 };
 
@@ -212,7 +211,7 @@ describe("FilteredTreeDataProvider", () => {
 
     it("doesn't count if node paths don't have filtering data", () => {
       paths = [];
-      paths[0] = createRandomNodePathElement();
+      paths[0] = createTestNodePathElement();
       paths[0].node.label = LabelDefinition.fromLabelString("A-1");
       paths[0].filteringData = undefined;
       expect(provider.countFilteringResults(paths)).to.eq(0);
