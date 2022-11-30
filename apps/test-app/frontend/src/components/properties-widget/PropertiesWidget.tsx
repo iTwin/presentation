@@ -6,22 +6,19 @@
 import "./PropertiesWidget.css";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
-import { PropertyRecord } from "@itwin/appui-abstract";
 import {
-  ActionButtonRendererProps, CompositeFilterType, CompositePropertyDataFilterer, DisplayValuePropertyDataFilterer,
-  FilteredPropertyData, FilteringInput, FilteringInputStatus, FilteringPropertyDataProvider, HighlightInfo,
-  LabelPropertyDataFilterer, PropertyCategory, PropertyCategoryLabelFilterer, PropertyData, PropertyGridContextMenuArgs,
-  useAsyncValue, useDebouncedAsyncValue, VirtualizedPropertyGridWithDataProvider,
+  ActionButtonRendererProps, CompositeFilterType, CompositePropertyDataFilterer, DisplayValuePropertyDataFilterer, FilteredPropertyData,
+  FilteringInput, FilteringInputStatus, FilteringPropertyDataProvider, HighlightInfo, LabelPropertyDataFilterer, PropertyCategory,
+  PropertyCategoryLabelFilterer, PropertyData, PropertyGridContextMenuArgs, useAsyncValue, useDebouncedAsyncValue,
+  VirtualizedPropertyGridWithDataProvider,
 } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import {
-  ContextMenuItem, ContextMenuItemProps, FillCentered, GlobalContextMenu, Orientation, useDisposable,
-} from "@itwin/core-react";
+import { ContextMenuItem, ContextMenuItemProps, FillCentered, GlobalContextMenu, Orientation, useDisposable } from "@itwin/core-react";
 import { ToggleSwitch } from "@itwin/itwinui-react";
 import { Field } from "@itwin/presentation-common";
 import {
-  DiagnosticsProps, FavoritePropertiesDataFilterer, IPresentationPropertyDataProvider, navigationPropertyEditorContext,
-  PresentationPropertyDataProvider, useNavigationPropertyEditingContext, usePropertyDataProviderWithUnifiedSelection,
+  DiagnosticsProps, FavoritePropertiesDataFilterer, navigationPropertyEditorContext, PresentationPropertyDataProvider,
+  useNavigationPropertyEditingContext, usePropertyDataProviderWithUnifiedSelection,
 } from "@itwin/presentation-components";
 import { FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
 import { DiagnosticsSelector } from "../diagnostics-selector/DiagnosticsSelector";
@@ -31,11 +28,10 @@ const FAVORITES_SCOPE = FavoritePropertiesScope.IModel;
 export interface Props {
   imodel: IModelConnection;
   rulesetId?: string;
-  onFindSimilar?: (propertiesProvider: IPresentationPropertyDataProvider, record: PropertyRecord) => void;
 }
 
 export function PropertiesWidget(props: Props) {
-  const { imodel, rulesetId, onFindSimilar } = props;
+  const { imodel, rulesetId } = props;
   const [diagnosticsOptions, setDiagnosticsOptions] = useState<DiagnosticsProps>({ ruleDiagnostics: undefined, devDiagnostics: undefined });
 
   const [filterText, setFilterText] = useState("");
@@ -92,7 +88,6 @@ export function PropertiesWidget(props: Props) {
             imodel={imodel}
             rulesetId={rulesetId}
             filtering={{ filter: filterText, onlyFavorites: isFavoritesFilterActive, activeHighlight, onFilteringStateChanged }}
-            onFindSimilar={onFindSimilar}
             diagnostics={diagnosticsOptions}
           />
           : null
@@ -112,12 +107,11 @@ interface PropertyGridProps {
     activeHighlight?: HighlightInfo;
     onFilteringStateChanged: (result: FilteredPropertyData | undefined) => void;
   };
-  onFindSimilar?: (propertiesProvider: IPresentationPropertyDataProvider, record: PropertyRecord) => void;
   width: number;
   height: number;
 }
 function PropertyGrid(props: PropertyGridProps) {
-  const { imodel, rulesetId, diagnostics, filtering, onFindSimilar: onFindSimilarProp, width, height } = props;
+  const { imodel, rulesetId, diagnostics, filtering, width, height } = props;
 
   const dataProvider = useDisposable(useCallback(
     () => {
@@ -163,12 +157,6 @@ function PropertyGrid(props: PropertyGridProps) {
   const onCloseContextMenu = useCallback(() => {
     setContextMenuArgs(undefined);
   }, []);
-  const onFindSimilar = useCallback((property: PropertyRecord) => {
-    if (onFindSimilarProp)
-      onFindSimilarProp(dataProvider, property);
-    setContextMenuArgs(undefined);
-  }, [onFindSimilarProp, dataProvider]);
-
   const contextValue = useNavigationPropertyEditingContext(imodel, dataProvider);
 
   if (numSelectedElements === 0) {
@@ -197,7 +185,7 @@ function PropertyGrid(props: PropertyGridProps) {
         isPropertyEditingEnabled={true}
       />
     </navigationPropertyEditorContext.Provider>
-    {contextMenuArgs && <PropertiesWidgetContextMenu args={contextMenuArgs} dataProvider={dataProvider} onFindSimilar={onFindSimilar} onCloseContextMenu={onCloseContextMenu} />}
+    {contextMenuArgs && <PropertiesWidgetContextMenu args={contextMenuArgs} dataProvider={dataProvider} onCloseContextMenu={onCloseContextMenu} />}
   </>;
 }
 
@@ -206,16 +194,10 @@ interface PropertiesWidgetContextMenuProps {
   dataProvider: PresentationPropertyDataProvider;
   args: PropertyGridContextMenuArgs;
   onCloseContextMenu: () => void;
-  onFindSimilar?: (property: PropertyRecord) => void;
 }
 function PropertiesWidgetContextMenu(props: PropertiesWidgetContextMenuProps) {
-  const { dataProvider, args: { propertyRecord: property }, onFindSimilar: onFindSimilarProp, onCloseContextMenu } = props;
+  const { dataProvider, args: { propertyRecord: property }, onCloseContextMenu } = props;
   const imodel = dataProvider.imodel;
-
-  const onFindSimilar = useCallback(() => {
-    if (onFindSimilarProp)
-      onFindSimilarProp(property);
-  }, [onFindSimilarProp, property]);
 
   const addFavorite = useCallback(async (propertyField: Field) => {
     await Presentation.favoriteProperties.add(propertyField, imodel, FAVORITES_SCOPE);
@@ -247,16 +229,8 @@ function PropertiesWidgetContextMenu(props: PropertiesWidgetContextMenuProps) {
         });
       }
     }
-    if (onFindSimilarProp) {
-      items.push({
-        key: "find-similar",
-        onSelect: onFindSimilar,
-        title: IModelApp.localization.getLocalizedString("Sample:controls.properties.context-menu.find-similar.description"),
-        label: IModelApp.localization.getLocalizedString("Sample:controls.properties.context-menu.find-similar.label"),
-      });
-    }
     return items;
-  }, [imodel, dataProvider, property, addFavorite, removeFavorite, onFindSimilar, onFindSimilarProp]));
+  }, [imodel, dataProvider, property, addFavorite, removeFavorite]));
 
   if (!asyncItems.value || asyncItems.value.length === 0)
     return null;
