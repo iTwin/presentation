@@ -171,7 +171,7 @@ Mon, 24 Jan 2022 14:00:52 GMT
 - `usePresentationTreeNodeLoader`: Redesign the way tree component reloads when `enableHierarchyAutoUpdate` is set.
 - Remove `IPresentationTreeDataProvider.loadHierarchy`.
 - Fixed SameInstance nested properties bug when merged cells with multiple nested content items were not created properly.
-- Created an additional nodeLoader used only when filtering Tree Component. That fixed the bug when spinner was not showing when filtering was in progress. 
+- Created an additional nodeLoader used only when filtering Tree Component. That fixed the bug when spinner was not showing when filtering was in progress.
 - Replace usage of I18N with generic Localization interface.
 -  Renamed an iModel's parent container to iTwin
 - Removed deprecated `DEPRECATED_controlledTreeWithFilteringSupport` and `DEPRECATED_controlledTreeWithVisibleNodes`.
@@ -1195,7 +1195,7 @@ Thu, 08 Nov 2018 17:59:21 GMT
 
 ### Updates
 
-- Deprecated dev-cors-proxy-server and use of it. 
+- Deprecated dev-cors-proxy-server and use of it.
 - Fix filtered tree rendering "0 matches found" when there's no filtering applied and data provider returns 0 nodes
 - Updated to TypeScript 3.1
 - React to Tree API changes
@@ -1245,4 +1245,3 @@ Fri, 12 Oct 2018 23:00:10 GMT
 ### Updates
 
 - Initial release
-
