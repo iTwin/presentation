@@ -42,8 +42,7 @@
 }
 
 .app-content-left {
-  display: grid;
-  grid-template-rows: calc(100% - 300px) 300px;
+  position: relative; /* Because viewport component is absolute */
 }
 
 .app-content-right {
@@ -59,15 +58,6 @@
 .app-content-right-separator hr{
   margin-top: 15px;
   margin-bottom: 0px;
-}
-
-.app-content-left-top {
-  position: relative; /* Because viewport component is absolute */
-}
-
-.app-content-left-bottom {
-  display: flex;
-  flex-direction: row;
 }
 
 .app-content-left-bottom > * {

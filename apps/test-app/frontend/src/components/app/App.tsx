@@ -6,21 +6,14 @@
 import "./App.css";
 import "@bentley/icons-generic-webfont/dist/bentley-icons-generic-webfont.css";
 import { Component, createRef } from "react";
-import { PropertyRecord } from "@itwin/appui-abstract";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Geometry } from "@itwin/core-geometry";
 import { UnitSystemKey } from "@itwin/core-quantity";
 import { ElementSeparator, Orientation, RatioChangeResult } from "@itwin/core-react";
 import { ToggleSwitch } from "@itwin/itwinui-react";
-import { DefaultContentDisplayTypes } from "@itwin/presentation-common";
-import {
-  DataProvidersFactory, IPresentationPropertyDataProvider, IPresentationTableDataProvider,
-  UnifiedSelectionContextProvider,
-} from "@itwin/presentation-components";
+import { UnifiedSelectionContextProvider } from "@itwin/presentation-components";
 import { Presentation, SelectionChangeEventArgs } from "@itwin/presentation-frontend";
 import { MyAppFrontend, MyAppSettings } from "../../api/MyAppFrontend";
-import FindSimilarWidget from "../find-similar-widget/FindSimilarWidget";
-import { GridWidget } from "../grid-widget/GridWidget";
 import { IModelSelector } from "../imodel-selector/IModelSelector";
 import { PropertiesWidget } from "../properties-widget/PropertiesWidget";
 import { RulesetSelector } from "../ruleset-selector/RulesetSelector";
@@ -36,7 +29,6 @@ export interface State {
   rightPaneHeight?: number;
   contentRatio: number;
   contentWidth?: number;
-  similarInstancesProvider?: IPresentationTableDataProvider;
   activeUnitSystem?: UnitSystemKey;
   persistSettings: boolean;
 }
@@ -123,34 +115,6 @@ export default class App extends Component<{}, State> {
     return { ratio };
   };
 
-  private _selectAllInstances = async (provider: IPresentationTableDataProvider) => {
-    const size = await provider.getRowsCount();
-    const rowPromises = [];
-    for (let i = 0; i < size; ++i)
-      rowPromises.push(provider.getRow(i));
-    const rows = await Promise.all(rowPromises);
-    const keys = rows.map((r) => provider.getRowKey(r));
-    Presentation.selection.addToSelection("app", provider.imodel, keys);
-  };
-
-  private _onFindSimilar = async (provider: IPresentationPropertyDataProvider, record: PropertyRecord) => {
-    try {
-      const factory = new DataProvidersFactory();
-      const similarInstancesProvider = await factory.createSimilarInstancesTableDataProvider(provider,
-        record, { displayType: DefaultContentDisplayTypes.List });
-      await this._selectAllInstances(similarInstancesProvider);
-      this.setState({ similarInstancesProvider });
-    } catch (e) {
-      console.log(e); // eslint-disable-line no-console
-      alert(`Can't find similar instances for the selected property`);
-      this.setState({ similarInstancesProvider: undefined });
-    }
-  };
-
-  private _onSimilarInstancesResultsDismissed = () => {
-    this.setState({ similarInstancesProvider: undefined });
-  };
-
   private _onSelectionChanged = async (args: SelectionChangeEventArgs) => {
     if (!IModelApp.viewManager.selectedView) {
       // no viewport to zoom in
@@ -181,19 +145,7 @@ export default class App extends Component<{}, State> {
         }}>
         <UnifiedSelectionContextProvider imodel={imodel} selectionLevel={0}>
           <div className="app-content-left">
-            <div className="app-content-left-top">
-              <ViewportContentControl imodel={imodel} />
-            </div>
-            <div className="app-content-left-bottom">
-              {
-                <GridWidget imodel={imodel} rulesetId={rulesetId} />
-              }
-              {
-                this.state.similarInstancesProvider ?
-                  <FindSimilarWidget dataProvider={this.state.similarInstancesProvider} onDismissed={this._onSimilarInstancesResultsDismissed} />
-                  : undefined
-              }
-            </div>
+            <ViewportContentControl imodel={imodel} />
           </div>
           <ElementSeparator
             orientation={Orientation.Horizontal}
@@ -217,7 +169,7 @@ export default class App extends Component<{}, State> {
                 movableArea={this.state.rightPaneHeight}
                 onRatioChanged={this._onTreePaneRatioChanged} />
             </div>
-            <PropertiesWidget imodel={imodel} rulesetId={rulesetId} onFindSimilar={this._onFindSimilar} />
+            <PropertiesWidget imodel={imodel} rulesetId={rulesetId} />
           </div>
         </UnifiedSelectionContextProvider>
       </div>
