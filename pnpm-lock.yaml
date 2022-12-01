@@ -192,7 +192,6 @@ importers:
       '@types/chai-jest-snapshot': ^1.3.0
       '@types/chai-subset': 1.3.1
       '@types/enzyme': 3.9.3
-      '@types/faker': ^4.1.0
       '@types/mocha': ^8.2.2
       '@types/react': ^17.0.37
       '@types/react-dom': ^17.0.0
@@ -210,7 +209,6 @@ importers:
       enzyme: 3.10.0
       enzyme-to-json: ^3.3.4
       eslint: ^7.11.0
-      faker: ^4.1.0
       fast-deep-equal: ^3.1.3
       fast-sort: ^3.0.2
       ignore-styles: ^5.0.1
@@ -266,7 +264,6 @@ importers:
       '@types/chai-jest-snapshot': 1.3.6
       '@types/chai-subset': 1.3.1
       '@types/enzyme': 3.9.3
-      '@types/faker': 4.1.12
       '@types/mocha': 8.2.3
       '@types/react': 17.0.52
       '@types/react-dom': 17.0.18
@@ -283,7 +280,6 @@ importers:
       enzyme: 3.10.0
       enzyme-to-json: 3.6.2_enzyme@3.10.0
       eslint: 7.32.0
-      faker: 4.1.0
       ignore-styles: 5.0.1
       jsdom: 19.0.0
       jsdom-global: 3.0.2_jsdom@19.0.0
@@ -1815,10 +1811,6 @@ packages:
       '@types/qs': 6.9.7
       '@types/serve-static': 1.15.0
     dev: false
-
-  /@types/faker/4.1.12:
-    resolution: {integrity: sha512-0MEyzJrLLs1WaOCx9ULK6FzdCSj2EuxdSP9kvuxxdBEGujZYUOZ4vkPXdgu3dhyg/pOdn7VCatelYX7k0YShlA==}
-    dev: true
 
   /@types/flatbuffers/1.10.0:
     resolution: {integrity: sha512-7btbphLrKvo5yl/5CC2OCxUSMx1wV1wvGT1qDXkSt7yi00/YW7E8k6qzXqJHsp+WU0eoG7r6MTQQXI9lIvd0qA==}
@@ -4683,10 +4675,6 @@ packages:
     transitivePeerDependencies:
       - supports-color
     dev: false
-
-  /faker/4.1.0:
-    resolution: {integrity: sha512-ILKg69P6y/D8/wSmDXw35Ly0re8QzQ8pMfBCflsGiZG2ZjMUNLYNexA6lz5pkmJlepVdsiDFUxYAzPQ9/+iGLA==}
-    dev: true
 
   /fast-deep-equal/3.1.3:
     resolution: {integrity: sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==}

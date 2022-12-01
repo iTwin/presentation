@@ -16,7 +16,7 @@ import {
 } from "../../../presentation-components";
 import { FilteredPresentationTreeDataProvider } from "../../../presentation-components/tree/FilteredDataProvider";
 import { ResolvablePromise } from "../../_helpers/Promises";
-import { createRandomPropertyRecord, createRandomTreeNodeItem } from "../../_helpers/UiComponents";
+import { createTestPropertyRecord, createTestTreeNodeItem } from "../../_helpers/UiComponents";
 
 describe("useControlledPresentationTreeFiltering", () => {
   const nodeLoaderMock = moq.Mock.ofType<AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>>();
@@ -249,8 +249,8 @@ describe("useControlledPresentationTreeFiltering", () => {
       description: "",
       isExpanded: false,
       isSelected: false,
-      item: createRandomTreeNodeItem(),
-      label: createRandomPropertyRecord(),
+      item: createTestTreeNodeItem(),
+      label: createTestPropertyRecord(),
       numChildren: 3,
       parentId: "parentId",
     };

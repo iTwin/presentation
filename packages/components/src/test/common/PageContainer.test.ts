@@ -4,17 +4,9 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import * as faker from "faker";
 import { PageContainer } from "../../presentation-components/common/PageContainer";
 
 describe("PageContainer", () => {
-
-  const createFakeData = (size: number) => {
-    const data = new Array<number>();
-    while (size--)
-      data.push(faker.random.number());
-    return data;
-  };
 
   describe("pageSize", () => {
 
@@ -87,7 +79,7 @@ describe("PageContainer", () => {
 
     it("returns undefined when requesting non-existing item", () => {
       const container = new PageContainer<number>(1, 5);
-      container.reservePage(0).items = createFakeData(1);
+      container.reservePage(0).items = [111];
       expect(container.getItem(1)).to.be.undefined;
     });
 

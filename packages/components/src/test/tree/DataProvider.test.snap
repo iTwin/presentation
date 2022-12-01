@@ -112,7 +112,7 @@ Array [
         "valueFormat": 0,
       },
     },
-    "parentId": "9e7164b4-6a85-47e4-b28a-58df26ce9acb",
+    "parentId": "node_id",
   },
   Object {
     "__presentation-components/key": Object {
@@ -147,7 +147,7 @@ Array [
         "valueFormat": 0,
       },
     },
-    "parentId": "9e7164b4-6a85-47e4-b28a-58df26ce9acb",
+    "parentId": "node_id",
   },
 ]
 `;
