@@ -28,7 +28,7 @@ import { UnifiedSelectionTreeEventHandlerParams } from "../../../presentation-co
 import { PRESENTATION_TREE_NODE_KEY } from "../../../presentation-components/tree/Utils";
 import { createTestECClassGroupingNodeKey, createTestECInstancesNodeKey } from "../../_helpers/Hierarchy";
 import { ResolvablePromise } from "../../_helpers/Promises";
-import { createRandomTreeNodeItem } from "../../_helpers/UiComponents";
+import { createTestTreeNodeItem } from "../../_helpers/UiComponents";
 
 const awaitableObservable = <T extends unknown>(input: ObservableInput<T>) => {
   const promise = new ResolvablePromise<void>();
@@ -69,7 +69,7 @@ describe("UnifiedSelectionEventHandler", () => {
   });
 
   const createNode = (nodeKeyGenerator: () => NodeKey = createTestECInstancesNodeKey) => {
-    const nodeItem = createRandomTreeNodeItem(nodeKeyGenerator());
+    const nodeItem = createTestTreeNodeItem(nodeKeyGenerator());
     const node: MutableTreeModelNode = {
       id: nodeItem.id,
       label: nodeItem.label,

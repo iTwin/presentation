@@ -216,7 +216,7 @@ Object {
       "valueFormat": 0,
     },
   },
-  "parentId": "JBOD",
+  "parentId": "test_parent_id",
 }
 `;
 
@@ -366,7 +366,7 @@ Array [
         "valueFormat": 0,
       },
     },
-    "parentId": "Harbors",
+    "parentId": "test_parent_id",
   },
   Object {
     "__presentation-components/key": Object {
@@ -401,7 +401,7 @@ Array [
         "valueFormat": 0,
       },
     },
-    "parentId": "Harbors",
+    "parentId": "test_parent_id",
   },
 ]
 `;

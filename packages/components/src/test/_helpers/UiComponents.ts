@@ -3,7 +3,6 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
-import * as faker from "faker";
 import * as moq from "typemoq";
 import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { DelayLoadedTreeNodeItem } from "@itwin/components-react";
@@ -15,28 +14,28 @@ import {
 import { PRESENTATION_TREE_NODE_KEY } from "../../presentation-components/tree/Utils";
 import { createTestECInstancesNodeKey } from "./Hierarchy";
 
-export function createRandomTreeNodeItem(key?: NodeKey, parentId?: string): DelayLoadedTreeNodeItem {
+export function createTestTreeNodeItem(key?: NodeKey, partialNode?: Partial<DelayLoadedTreeNodeItem>): DelayLoadedTreeNodeItem {
   const node = {
-    id: faker.random.uuid(),
-    parentId,
-    label: PropertyRecord.fromString(faker.random.word()),
-    description: faker.random.words(),
-    hasChildren: faker.random.boolean(),
+    id: partialNode?.id ?? "node_id",
+    parentId: partialNode?.parentId,
+    label: partialNode?.label ?? PropertyRecord.fromString("Node Label"),
+    description: partialNode?.description ?? "Test Node Description",
+    hasChildren: partialNode?.hasChildren ?? false,
   };
-  (node as any)[PRESENTATION_TREE_NODE_KEY] = key ? key : createTestECInstancesNodeKey();
+  (node as any)[PRESENTATION_TREE_NODE_KEY] = key ?? createTestECInstancesNodeKey();
   return node;
 }
 
-export function createRandomPropertyRecord(): PropertyRecord {
+export function createTestPropertyRecord(): PropertyRecord {
   const value: PrimitiveValue = {
     valueFormat: PropertyValueFormat.Primitive,
-    value: faker.random.word(),
-    displayValue: faker.random.words(),
+    value: "test_prop_value",
+    displayValue: "test_prop_displayValue",
   };
   const descr: PropertyDescription = {
     typename: "string",
-    name: faker.random.word(),
-    displayLabel: faker.random.word(),
+    name: "test_prop",
+    displayLabel: "TestProp",
   };
   return new PropertyRecord(value, descr);
 }

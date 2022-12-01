@@ -4,7 +4,6 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import * as faker from "faker";
 import sinon from "sinon";
 import * as moq from "typemoq";
 import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
@@ -69,7 +68,7 @@ describe("FavoritePropertiesDataFilterer", () => {
     const recordsToTest: PropertyRecord[] = [
       createPrimitiveStringProperty("Property", "value1", undefined),
       createPrimitiveStringProperty("Property", "value1", ""),
-      createPrimitiveStringProperty("Property", "value1", faker.random.word()),
+      createPrimitiveStringProperty("Property", "value1", "test_value"),
       createArrayProperty("Array"),
       createStructProperty("Struct"),
     ];
