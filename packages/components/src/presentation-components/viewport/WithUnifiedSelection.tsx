@@ -6,13 +6,12 @@
  * @module Viewport
  */
 
-import { PureComponent } from "react";
+import { memo, useEffect, useState } from "react";
 import { IDisposable, using } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ViewportProps } from "@itwin/imodel-components-react";
 import { AsyncTasksTracker, KeySet, SelectionInfo } from "@itwin/presentation-common";
 import { ISelectionProvider, Presentation, SelectionChangeEventArgs, SelectionHandler } from "@itwin/presentation-frontend";
-import { IUnifiedSelectionComponent } from "../common/IUnifiedSelectionComponent";
 import { getDisplayName } from "../common/Utils";
 
 /**
@@ -30,57 +29,32 @@ export interface ViewWithUnifiedSelectionProps {
  *
  * @public
  */
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export function viewWithUnifiedSelection<P extends ViewportProps>(ViewportComponent: React.ComponentType<P>): React.ComponentType<P & ViewWithUnifiedSelectionProps> {
 
   type CombinedProps = P & ViewWithUnifiedSelectionProps;
 
-  return class WithUnifiedSelection extends PureComponent<CombinedProps> implements IUnifiedSelectionComponent {
+  const WithUnifiedSelection = memo<CombinedProps>((props) => {
+    const { selectionHandler, ...restProps } = props;
+    const imodel = restProps.imodel;
+    const [viewportSelectionHandler] = useState(() => selectionHandler ?? new ViewportSelectionHandler({ imodel }));
 
-    /** @internal */
-    public viewportSelectionHandler?: ViewportSelectionHandler;
+    // apply currentSelection when 'viewportSelectionHandler' is initialized (set to handler from props or new is created)
+    // 'viewportSelectionHandler' should never change because setter is not used.
+    useEffect(() => {
+      void viewportSelectionHandler.applyCurrentSelection();
+      return () => { viewportSelectionHandler.dispose(); };
+    }, [viewportSelectionHandler]);
 
-    /** Returns the display name of this component */
-    public static get displayName() { return `WithUnifiedSelection(${getDisplayName(ViewportComponent)})`; }
+    // set new imodel on 'viewportSelectionHandler' when it changes
+    useEffect(() => {
+      viewportSelectionHandler.imodel = imodel;
+    }, [viewportSelectionHandler, imodel]);
 
-    /** Get selection handler used by this viewport */
-    public get selectionHandler(): SelectionHandler | undefined {
-      return this.viewportSelectionHandler ? this.viewportSelectionHandler.selectionHandler : undefined;
-    }
+    return <ViewportComponent {...restProps as P} />;
+  });
 
-    public get imodel() { return this.props.imodel; }
-
-    public override componentDidMount() {
-      this.viewportSelectionHandler = this.props.selectionHandler ?? new ViewportSelectionHandler({ imodel: this.props.imodel });
-      this.viewportSelectionHandler.applyCurrentSelection(); // eslint-disable-line @typescript-eslint/no-floating-promises
-    }
-
-    public override componentWillUnmount() {
-      if (this.viewportSelectionHandler) {
-        this.viewportSelectionHandler.dispose();
-        this.viewportSelectionHandler = undefined;
-      }
-    }
-
-    public override componentDidUpdate() {
-      if (this.viewportSelectionHandler) {
-        this.viewportSelectionHandler.imodel = this.props.imodel;
-      }
-    }
-
-    public override render() {
-      const {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        ruleset, selectionHandler, // do not bleed our props
-        // eslint-disable-next-line comma-dangle
-        ...props  // pass-through props
-      } = this.props as any;
-      return (
-        <ViewportComponent {...props} />
-      );
-    }
-
-  };
+  WithUnifiedSelection.displayName = `WithUnifiedSelection(${getDisplayName(ViewportComponent)})`;
+  return WithUnifiedSelection;
 }
 
 /** @internal */
@@ -139,7 +113,7 @@ export class ViewportSelectionHandler implements IDisposable {
     this._imodel.hilited.wantSyncWithSelectionSet = false;
     this._selectionHandler.imodel = value;
 
-    this.applyCurrentSelection(); // eslint-disable-line @typescript-eslint/no-floating-promises
+    void this.applyCurrentSelection();
   }
 
   /** note: used only it tests */
@@ -183,7 +157,6 @@ export class ViewportSelectionHandler implements IDisposable {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   private onUnifiedSelectionChanged = async (args: SelectionChangeEventArgs, provider: ISelectionProvider): Promise<void> => {
     // this component only cares about its own imodel
     if (args.imodel !== this._imodel)

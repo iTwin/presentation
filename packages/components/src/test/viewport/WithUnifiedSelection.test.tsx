@@ -4,7 +4,6 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { mount, shallow } from "enzyme";
 import * as sinon from "sinon";
 import * as moq from "typemoq";
 import { Id64, Id64Arg, Id64String } from "@itwin/core-bentley";
@@ -15,7 +14,8 @@ import { KeySet } from "@itwin/presentation-common";
 import {
   HiliteSet, Presentation, SelectionChangeEvent, SelectionChangeEventArgs, SelectionChangeType, SelectionManager, SelectionScopesManager,
 } from "@itwin/presentation-frontend";
-import { IUnifiedSelectionComponent, viewWithUnifiedSelection } from "../../presentation-components";
+import { render } from "@testing-library/react";
+import { viewWithUnifiedSelection } from "../../presentation-components";
 import { ViewportSelectionHandler } from "../../presentation-components/viewport/WithUnifiedSelection";
 import { createTestECInstanceKey, waitForAllAsyncs } from "../_helpers/Common";
 import { ResolvablePromise } from "../_helpers/Promises";
@@ -23,7 +23,6 @@ import { ResolvablePromise } from "../_helpers/Promises";
 const PresentationViewport = viewWithUnifiedSelection(ViewportComponent);
 
 describe("Viewport withUnifiedSelection", () => {
-
   before(async () => {
     await NoRenderApp.startup({
       localization: new EmptyLocalization(),
@@ -50,115 +49,63 @@ describe("Viewport withUnifiedSelection", () => {
     imodelMock.setup((imodel) => imodel.views).returns(() => viewsMock.object);
   });
 
-  it("mounts", () => {
-    mount(<PresentationViewport
+  it("renders", () => {
+    render(<PresentationViewport
       imodel={imodelMock.object}
       viewDefinitionId={viewDefinitionId}
       selectionHandler={selectionHandlerMock.object}
     />);
   });
 
-  it("uses supplied imodel", () => {
-    const component = shallow(<PresentationViewport
+  it("creates default ViewportSelectionHandler implementation when not provided through props", () => {
+    const selectionManagerMock = moq.Mock.ofType<SelectionManager>();
+    const selectionChangeEvent = new SelectionChangeEvent();
+    selectionManagerMock.setup((x) => x.selectionChange).returns(() => selectionChangeEvent);
+    selectionManagerMock.setup((x) => x.suspendIModelToolSelectionSync(imodelMock.object)).returns(() => ({ dispose: () => { } }));
+    selectionManagerMock.setup(async (x) => x.getHiliteSet(imodelMock.object)).returns(async () => ({}));
+    Presentation.setSelectionManager(selectionManagerMock.object);
+
+    expect(selectionChangeEvent.numberOfListeners).to.be.eq(0);
+
+    render(<PresentationViewport
+      imodel={imodelMock.object}
+      viewDefinitionId={viewDefinitionId}
+    />);
+
+    // new 'ViewportSelectionHandler' should be listening to selection change event
+    expect(selectionChangeEvent.numberOfListeners).to.be.eq(1);
+  });
+
+  it("sets ViewportSelectionHandler.imodel property when rendered with new imodel", () => {
+    const { rerender } = render(<PresentationViewport
       imodel={imodelMock.object}
       viewDefinitionId={viewDefinitionId}
       selectionHandler={selectionHandlerMock.object}
-    />).instance() as any as IUnifiedSelectionComponent;
-    expect(component.imodel).to.equal(imodelMock.object);
+    />);
+    selectionHandlerMock.verify((x) => x.imodel = imodelMock.object, moq.Times.once());
+
+    const newImodel = moq.Mock.ofType<IModelConnection>();
+    rerender(<PresentationViewport
+      imodel={newImodel.object}
+      viewDefinitionId={viewDefinitionId}
+      selectionHandler={selectionHandlerMock.object}
+    />);
+
+    selectionHandlerMock.verify((x) => x.imodel = newImodel.object, moq.Times.once());
   });
 
-  it("renders correctly", () => {
-    expect(shallow(<PresentationViewport
+  it("disposes ViewportSelectionHandler when unmounted", () => {
+    const { unmount } = render(<PresentationViewport
       imodel={imodelMock.object}
       viewDefinitionId={viewDefinitionId}
       selectionHandler={selectionHandlerMock.object}
-    />)).to.matchSnapshot();
+    />);
+    unmount();
+    selectionHandlerMock.verify((x) => x.dispose(), moq.Times.once());
   });
-
-  describe("selectionHandler", () => {
-
-    it("creates default implementation when not provided through props", () => {
-      const selectionManagerMock = moq.Mock.ofType<SelectionManager>();
-      selectionManagerMock.setup((x) => x.selectionChange).returns(() => new SelectionChangeEvent());
-      selectionManagerMock.setup((x) => x.suspendIModelToolSelectionSync(imodelMock.object)).returns(() => ({ dispose: () => { } }));
-      selectionManagerMock.setup(async (x) => x.getHiliteSet(imodelMock.object)).returns(async () => ({}));
-      Presentation.setSelectionManager(selectionManagerMock.object);
-
-      const viewport = shallow(<PresentationViewport
-        imodel={imodelMock.object}
-        viewDefinitionId={viewDefinitionId}
-      />).instance() as any as IUnifiedSelectionComponent;
-
-      expect(viewport.selectionHandler).to.not.be.undefined;
-      expect(viewport.selectionHandler?.imodel).to.eq(imodelMock.object);
-    });
-
-    it("applies current selection after mounting", () => {
-      const viewport = shallow(<PresentationViewport
-        imodel={imodelMock.object}
-        viewDefinitionId={viewDefinitionId}
-        selectionHandler={selectionHandlerMock.object}
-      />).instance() as any as IUnifiedSelectionComponent;
-      expect(viewport.selectionHandler).to.not.be.undefined;
-      selectionHandlerMock.verify(async (x) => x.applyCurrentSelection(), moq.Times.once());
-    });
-
-    it("disposes when component unmounts", () => {
-      const viewport = shallow(<PresentationViewport
-        imodel={imodelMock.object}
-        viewDefinitionId={viewDefinitionId}
-        selectionHandler={selectionHandlerMock.object}
-      />);
-      viewport.unmount();
-      selectionHandlerMock.verify((x) => x.dispose(), moq.Times.once());
-    });
-
-    it("updates handler when component's props change", () => {
-      const viewport = shallow(<PresentationViewport
-        imodel={imodelMock.object}
-        viewDefinitionId={viewDefinitionId}
-        selectionHandler={selectionHandlerMock.object}
-      />);
-      const imodelMock2 = moq.Mock.ofType<IModelConnection>();
-      viewport.setProps({
-        imodel: imodelMock2.object,
-      });
-      selectionHandlerMock.verify((x) => x.imodel = imodelMock2.object, moq.Times.once());
-    });
-
-    it("returns undefined handler when not mounted", () => {
-      const viewport = shallow(<PresentationViewport
-        imodel={imodelMock.object}
-        viewDefinitionId={viewDefinitionId}
-        selectionHandler={selectionHandlerMock.object}
-      />, { disableLifecycleMethods: true }).instance() as any as IUnifiedSelectionComponent;
-      expect(viewport.selectionHandler).to.be.undefined;
-    });
-
-    it("handles missing handler when unmounts", () => {
-      const viewport = shallow(<PresentationViewport
-        imodel={imodelMock.object}
-        viewDefinitionId={viewDefinitionId}
-        selectionHandler={selectionHandlerMock.object}
-      />, { disableLifecycleMethods: true });
-      viewport.unmount();
-    });
-
-    it("handles missing handler when updates", () => {
-      const viewport = shallow(<PresentationViewport
-        imodel={imodelMock.object}
-        viewDefinitionId={viewDefinitionId}
-        selectionHandler={selectionHandlerMock.object}
-      />, { disableLifecycleMethods: true });
-      viewport.instance().componentDidUpdate!(viewport.props(), viewport.state()!);
-    });
-
-  });
-
 });
 
 describe("ViewportSelectionHandler", () => {
-
   let handler: ViewportSelectionHandler;
   const imodelMock = moq.Mock.ofType<IModelConnection>();
   let getHiliteSet: sinon.SinonStub<[IModelConnection], Promise<HiliteSet>>;
@@ -186,7 +133,6 @@ describe("ViewportSelectionHandler", () => {
   });
 
   describe("imodel", () => {
-
     it("returns imodel handler is created with", () => {
       expect(handler.imodel).to.eq(imodelMock.object);
     });
@@ -203,11 +149,9 @@ describe("ViewportSelectionHandler", () => {
       handler.imodel = newConnection.object;
       expect(handler.imodel).to.eq(newConnection.object);
     });
-
   });
 
   describe("reacting to unified selection changes", () => {
-
     interface HiliteSpies {
       clear: sinon.SinonSpy<[], void>;
       elements: sinon.SinonSpy<[Id64Arg], void>;
@@ -455,9 +399,7 @@ describe("ViewportSelectionHandler", () => {
       expect(spies.hilite.clear).to.be.calledOnce;
       expect(spies.hilite.models).to.be.calledOnce;
     });
-
   });
-
 });
 
 const createIModelSpies = (mock: moq.IMock<IModelConnection>) => {

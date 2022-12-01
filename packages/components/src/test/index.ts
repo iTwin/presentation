@@ -17,17 +17,12 @@ import chaiSubset from "chai-subset";
 import sinon from "sinon";
 import sinonChai from "sinon-chai";
 import path from "path";
-import * as enzyme from "enzyme";
 
 // setup chai
 chai.use(chaiAsPromised);
 chai.use(chaiJestSnapshot);
 chai.use(sinonChai);
 chai.use(chaiSubset);
-
-// configure enzyme (testing utils for React)
-enzyme.configure({ adapter: new (require("@wojtekmaj/enzyme-adapter-react-17/build"))() }); // eslint-disable-line @typescript-eslint/no-var-requires
-chaiJestSnapshot.addSerializer(require("enzyme-to-json/serializer")); // eslint-disable-line @typescript-eslint/no-var-requires
 
 before(function () {
   chaiJestSnapshot.resetSnapshotRegistry();
