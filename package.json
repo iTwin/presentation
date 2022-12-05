@@ -14,10 +14,10 @@
     "build:test-app": "lage build --to @test-app/*",
     "cover": "lage cover --continue",
     "lint": "lage lint --continue",
-    "change": "beachball change -b add_beachball",
-    "check": "beachball check -b add_beachball",
-    "bump:beachball": "beachball bump -b add_beachball --verbose",
-    "bumpDev:beachball": "beachball bump -b add_beachball --config beachball.config.dev.js --keep-change-files --verbose"
+    "change": "beachball change",
+    "check": "beachball check",
+    "bump:beachball": "beachball bump",
+    "bumpDev:beachball": "beachball bump --config beachball.config.dev.js --keep-change-files"
   },
   "engines": {
     "pnpm": ">=6",
