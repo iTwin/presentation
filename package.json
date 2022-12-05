@@ -1,5 +1,9 @@
 {
   "name": "presentation-monorepo",
+  "private": true,
+  "repository": {
+    "url": "https://github.com/iTwin/presentation"
+  },
   "scripts": {
     "start:web": "run-p --silent start:frontend start:web-backend",
     "start:electron": "run-p --silent start:frontend start:electron-backend",
