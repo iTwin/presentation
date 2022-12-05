@@ -10,11 +10,13 @@
     "start": "node --inspect --max-http-header-size=16000 ./lib/main.js",
     "start:electron": "cross-env NODE_ENV=development electron ./lib/main.js",
     "build": "tsc",
-    "lint": "eslint ./src/**/*.ts"
+    "lint": "eslint ./src/**/*.ts",
+    "docs": "betools extract --fileExt=ts,tsx --extractFrom=./src --recursive --out=../../../build/generated-docs/extract"
   },
   "dependencies": {
     "@test-app/common": "workspace:*",
     "@itwin/appui-abstract": "^3.5.0-dev.63",
+    "@itwin/build-tools": "^3.5.0-dev.63",
     "@itwin/core-bentley": "^3.5.0-dev.63",
     "@itwin/core-backend": "^3.5.0-dev.63",
     "@itwin/core-common": "^3.5.0-dev.63",

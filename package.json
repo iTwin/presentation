@@ -12,6 +12,7 @@
     "start:electron-backend": "npm run start:electron --prefix ./apps/test-app/backend",
     "build:all": "lage build",
     "build:test-app": "lage build --to @test-app/*",
+    "generate-docs": "lage docs",
     "cover": "lage cover --continue",
     "lint": "lage lint --continue",
     "change": "beachball change",

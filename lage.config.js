@@ -4,6 +4,7 @@ module.exports = {
     build: ["^build"],
     cover: ["build"],
     lint: [],
+    docs: []
   },
   cache: true,
 };
