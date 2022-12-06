@@ -16,8 +16,8 @@
     "lint": "lage lint --continue",
     "change": "beachball change",
     "check": "beachball check",
-    "bump:beachball": "beachball bump",
-    "bumpDev:beachball": "beachball bump --config beachball.config.dev.js --keep-change-files"
+    "version-bump": "beachball bump",
+    "version-bump-dev": "beachball bump --config beachball.config.dev.js --keep-change-files"
   },
   "engines": {
     "pnpm": ">=6",
