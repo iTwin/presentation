@@ -1,4 +1,4 @@
-name: Continuous Integration
+name: CI
 
 on:
   push:
@@ -7,8 +7,37 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
+  check-change-files:
+    runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        node-version: [16]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    name: Check change files
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2.2.4
+      with:
+        version: 7.17.0
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      run: pnpm install -w
+
+    - name: Run check
+      run: pnpm check
+
+  build:
     runs-on: ubuntu-latest
 
     strategy:
