@@ -10,8 +10,7 @@ import { Logger, LogLevel } from "@itwin/core-bentley";
 import { RpcInterfaceDefinition } from "@itwin/core-common";
 // __PUBLISH_EXTRACT_START__ Presentation.Backend.Initialization.Imports
 import {
-  Presentation, PresentationBackendLoggerCategory, PresentationBackendNativeLoggerCategory, PresentationManagerMode,
-  PresentationProps,
+  Presentation, PresentationBackendLoggerCategory, PresentationBackendNativeLoggerCategory, PresentationProps,
 } from "@itwin/presentation-backend";
 // __PUBLISH_EXTRACT_END__
 import { rpcInterfaces } from "@test-app/common";
@@ -42,7 +41,6 @@ void (async () => {
   // __PUBLISH_EXTRACT_END__
 
   // props that we don't want to show in documentation set up example
-  presentationBackendProps.mode = PresentationManagerMode.ReadWrite;
   presentationBackendProps.workerThreadsCount = 1;
   presentationBackendProps.useMmap = true;
   presentationBackendProps.updatesPollInterval = 20;
