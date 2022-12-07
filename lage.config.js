@@ -4,6 +4,10 @@ module.exports = {
     build: ["^build"],
     cover: ["build"],
     lint: [],
+    docs: [],
+    clean: {
+      cache: false
+    },
   },
   cache: true,
 };
