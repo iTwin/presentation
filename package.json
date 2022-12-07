@@ -12,6 +12,8 @@
     "start:electron-backend": "npm run start:electron --prefix ./apps/test-app/backend",
     "build:all": "lage build",
     "build:test-app": "lage build --to @test-app/*",
+    "clean": "npm run -s clean-docs && lage clean",
+    "clean-docs": "rimraf build",
     "generate-docs": "lage docs",
     "cover": "lage cover --continue",
     "lint": "lage lint --continue",
@@ -28,6 +30,7 @@
   "dependencies": {
     "beachball": "^2.31.5",
     "lage": "^1.9.5",
-    "npm-run-all": "^4.1.5"
+    "npm-run-all": "^4.1.5",
+    "rimraf": "^3.0.2"
   }
 }

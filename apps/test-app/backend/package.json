@@ -10,8 +10,9 @@
     "start": "node --inspect --max-http-header-size=16000 ./lib/main.js",
     "start:electron": "cross-env NODE_ENV=development electron ./lib/main.js",
     "build": "tsc",
+    "clean": "rimraf lib",
     "lint": "eslint ./src/**/*.ts",
-    "docs": "betools extract --fileExt=ts,tsx --extractFrom=./src --recursive --out=../../../build/generated-docs/extract"
+    "docs": "betools extract --fileExt=ts --extractFrom=./src --recursive --out=../../../build/generated-docs/extract"
   },
   "dependencies": {
     "@test-app/common": "workspace:*",
@@ -33,6 +34,7 @@
     "cross-env": "^7.0.3",
     "electron": "^17.0.0",
     "eslint": "^7.11.0",
+    "rimraf": "^3.0.2",
     "typescript": "~4.4.0"
   }
 }
