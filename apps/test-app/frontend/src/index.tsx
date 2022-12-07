@@ -13,9 +13,7 @@ import { ElectronApp } from "@itwin/core-electron/lib/cjs/ElectronFrontend";
 import { IModelApp, IModelAppOptions } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
 // __PUBLISH_EXTRACT_START__ Presentation.Frontend.Imports
-import {
-  createFavoritePropertiesStorage, DefaultFavoritePropertiesStorageTypes, Presentation,
-} from "@itwin/presentation-frontend";
+import { createFavoritePropertiesStorage, DefaultFavoritePropertiesStorageTypes, Presentation } from "@itwin/presentation-frontend";
 // __PUBLISH_EXTRACT_END__
 import { rpcInterfaces } from "@test-app/common";
 import App from "./components/app/App";
@@ -25,13 +23,18 @@ Logger.initializeToConsole();
 Logger.setLevelDefault(LogLevel.Warning);
 
 async function initializeApp() {
+  // __PUBLISH_EXTRACT_START__ Presentation.Frontend.RpcInterface.Options
   const iModelAppOpts: IModelAppOptions = {
     rpcInterfaces,
+  };
+  // __PUBLISH_EXTRACT_END__
+
+  Object.assign(iModelAppOpts, {
     localization: new ITwinLocalization({
       initOptions: { lng: "en" },
-      urlTemplate: "/locales/{{lng}}/{{ns}}.json",
     }),
-  };
+  });
+
   if (ProcessDetector.isElectronAppFrontend) {
     await ElectronApp.startup({ iModelApp: iModelAppOpts });
   } else if (ProcessDetector.isBrowserProcess) {

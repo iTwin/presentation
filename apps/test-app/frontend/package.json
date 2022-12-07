@@ -10,12 +10,14 @@
     "start": "webpack serve",
     "webpack": "webpack",
     "build": "tsc --noEmit",
-    "lint": "eslint ./src/**/*.{ts,tsx}"
+    "lint": "eslint ./src/**/*.{ts,tsx}",
+    "docs": "betools extract --fileExt=ts,tsx --extractFrom=./src --recursive --out=../../../build/generated-docs/extract"
   },
   "dependencies": {
     "@test-app/common": "workspace:*",
     "@bentley/icons-generic-webfont": "^1.0.15",
     "@itwin/appui-abstract": "^3.5.0-dev.63",
+    "@itwin/build-tools": "^3.5.0-dev.63",
     "@itwin/components-react": "^3.5.0-dev.63",
     "@itwin/core-backend": "^3.5.0-dev.63",
     "@itwin/core-bentley": "^3.5.0-dev.63",
