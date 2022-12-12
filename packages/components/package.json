@@ -40,7 +40,7 @@
     "test:watch": "npm -s test -- --reporter min --watch-extensions ts,tsx --watch",
     "docs": "npm run -s docs:extract && npm run -s docs:reference && npm run -s docs:changelog",
     "docs:changelog": "cpx ./CHANGELOG.md ../../build/generated-docs/presentation/presentation-components",
-    "docs:reference": "betools docs --includes=../../build/generated-docs/extract --json=../../build/generated-docs/presentation/presentation-components/file.json --tsIndexFile=presentation-components.ts --onlyJson --excludeGlob=**/presentation-components.ts",
+    "docs:reference": "betools docs --includes=../../build/generated-docs/extract --json=../../build/generated-docs/presentation/presentation-components/file.json --tsIndexFile=presentation-components.ts --onlyJson",
     "docs:extract": "betools extract --fileExt=ts,tsx --extractFrom=./src/test --recursive --out=../../build/generated-docs/extract"
   },
   "dependencies": {
