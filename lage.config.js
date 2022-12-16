@@ -3,7 +3,7 @@ module.exports = {
   pipeline: {
     build: ["^build"],
     cover: ["build"],
-    lint: [],
+    lint: ["build"],
     docs: [],
     clean: {
       cache: false
