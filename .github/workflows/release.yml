@@ -1,0 +1,47 @@
+name: Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release-packages:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [16]
+
+    name: Release packages
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2.2.4
+      with:
+        version: 7.17.0
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        registry-url: https://registry.npmjs.org/
+
+    - name: Install dependencies
+      run: pnpm install
+
+    - name: Lint
+      run: pnpm run lint
+
+    - name: Build
+      run: pnpm run build:all
+
+    - name: Test
+      run: pnpm run cover
+
+    - name: Publish packages
+      run: pnpm publish-packages -y
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
