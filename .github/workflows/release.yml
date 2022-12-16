@@ -49,5 +49,5 @@ jobs:
 
     - name: Publish packages
       run: pnpm publish-packages -y --no-publish --branch ${{ inputs.target }}
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # env:
+      #   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
