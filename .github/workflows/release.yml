@@ -38,14 +38,8 @@ jobs:
     - name: Install dependencies
       run: pnpm install
 
-    - name: Lint
-      run: pnpm run lint
-
-    - name: Build
-      run: pnpm run build:all
-
-    - name: Test
-      run: pnpm run cover
+    - name: Build, Lint, Test
+      run: pnpm lage build lint cover
 
     - name: Publish packages
       run: pnpm publish-packages -y --no-publish --branch ${{ inputs.target }}
