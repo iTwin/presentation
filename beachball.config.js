@@ -1,10 +1,7 @@
 /** @type {import("beachball").BeachballConfig } */
 module.exports = {
-  publish: false,
-  gitTags: false,
-  disallowedChangeTypes: [
-    "major"
-  ],
+  bumpDeps: false,
+  tag: "latest",
   scope: [
     "packages/**"
   ],
