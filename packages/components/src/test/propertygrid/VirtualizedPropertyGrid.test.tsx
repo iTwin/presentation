@@ -4,16 +4,18 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import * as React from "react";
+import { useEffect, useState } from "react";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import {
-  CategorizedPropertyItem, FlatGridItemType, IPropertyDataProvider, PrimitivePropertyRenderer, PropertyCategory, PropertyCategoryRendererManager,
-  PropertyCategoryRendererProps, PropertyData, PropertyDataChangeEvent, PropertyValueRendererManager, VirtualizedPropertyGridWithDataProvider,
+  CategorizedPropertyItem, FlatGridItemType, IPropertyDataProvider, PrimitivePropertyRenderer, PrimitivePropertyValueRenderer, PropertyCategory,
+  PropertyCategoryRendererManager, PropertyCategoryRendererProps, PropertyData, PropertyDataChangeEvent, PropertyValueRendererContext,
+  PropertyValueRendererManager, VirtualizedPropertyGridWithDataProvider,
 } from "@itwin/components-react";
 import { Orientation } from "@itwin/core-react";
 import { render } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import { PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider";
+import { createTestCategoryDescription } from "../_helpers/Content";
 import { createPrimitiveStringProperty } from "../_helpers/Properties";
 
 describe("Category renderer customization", () => {
@@ -83,10 +85,10 @@ describe("Category renderer customization", () => {
 
     it("compiles PropertyRecord to InstanceKey sample", () => {
       function useInstanceKeys(props: PropertyCategoryRendererProps): void {
-        const [_, setInstanceKeys] = React.useState<unknown>();
+        const [_, setInstanceKeys] = useState<unknown>();
         // __PUBLISH_EXTRACT_START__ Presentation.Customization.PropertyRecordToInstanceKey
         // <Somewhere within MyCustomRenderer component>
-        React.useEffect(
+        useEffect(
           () => {
             void (async () => {
               const properties = props.categoryItem.getChildren() as CategorizedPropertyItem[];
@@ -106,6 +108,62 @@ describe("Category renderer customization", () => {
         gridContext: { dataProvider: { async getPropertyRecordInstanceKeys() { return []; } } },
       };
       renderHook(() => useInstanceKeys(stubProps as any));
+    });
+  });
+});
+
+describe("Property renderer customization", () => {
+  describe("documentation snippets", () => {
+    function setupDataProvider(): IPropertyDataProvider {
+      const rootCategory = createTestCategoryDescription({
+        name: "root-category",
+        label: "Root Category",
+        description: "Root Category Description",
+        expand: true });
+      const property = createPrimitiveStringProperty("rootCategoryProperty", "TestValue");
+      property.property.renderer = {
+        name: "my-renderer",
+      };
+      return {
+        onDataChanged: new PropertyDataChangeEvent(),
+        getData: async (): Promise<PropertyData> => ({
+          label: PropertyRecord.fromString("test_label"),
+          description: "test_description",
+          categories: [rootCategory],
+          records: {
+            [rootCategory.name]: [property],
+          },
+          reusePropertyDataState: true,
+        }),
+      };
+    }
+
+    afterEach(() => {
+      PropertyValueRendererManager.defaultManager.unregisterRenderer("my-renderer");
+    });
+
+    it("works with custom property renderer", async () => {
+      // __PUBLISH_EXTRACT_START__ Presentation.Content.Customization.PropertySpecification.Renderer.Register
+      // The custom renderer renders the property value in red
+      PropertyValueRendererManager.defaultManager.registerRenderer("my-renderer", {
+        canRender: () => true,
+        render: function myRenderer(record: PropertyRecord, ctx?: PropertyValueRendererContext) {
+          const defaultRenderer = new PrimitivePropertyValueRenderer();
+          return defaultRenderer.render(record, { ...ctx, style: { ...ctx?.style, color: "red" } });
+        },
+      });
+      // __PUBLISH_EXTRACT_END__
+
+      const dataProvider = setupDataProvider();
+      const { findAllByText } = render(
+        <VirtualizedPropertyGridWithDataProvider
+          dataProvider={dataProvider}
+          width={500}
+          height={1200}
+        />,
+      );
+      const renderedElements = await findAllByText("TestValue");
+      expect(renderedElements[0].style.color).to.eq("red");
     });
   });
 });

@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import * as React from "react";
+import { Component } from "react";
 import * as moq from "typemoq";
 import { Primitives, PrimitiveValue } from "@itwin/appui-abstract";
 import { ITwinLocalization } from "@itwin/core-i18n";
@@ -17,7 +17,7 @@ import {
 } from "../_helpers/Content";
 import { createTestLabelCompositeValue, createTestLabelDefinition } from "../_helpers/LabelDefinition";
 
-class TestComponent extends React.Component {
+class TestComponent extends Component {
 }
 
 describe("Utils", () => {
