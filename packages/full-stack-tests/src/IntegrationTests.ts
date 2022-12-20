@@ -6,11 +6,13 @@
 import * as fs from "fs";
 import Backend from "i18next-http-backend";
 import * as path from "path";
-import { Guid } from "@itwin/core-bentley";
+import { Guid, Logger, LogLevel } from "@itwin/core-bentley";
 import { IModelApp, IModelAppOptions, NoRenderApp } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
 import { TestBrowserAuthorizationClient, TestUsers, TestUtility } from "@itwin/oidc-signin-tool";
-import { HierarchyCacheMode, Presentation as PresentationBackend, PresentationProps as PresentationBackendProps } from "@itwin/presentation-backend";
+import {
+  HierarchyCacheMode, Presentation as PresentationBackend, PresentationBackendNativeLoggerCategory, PresentationProps as PresentationBackendProps,
+} from "@itwin/presentation-backend";
 import { PresentationProps as PresentationFrontendProps } from "@itwin/presentation-frontend";
 import { initialize as initializePresentation, PresentationTestingInitProps, terminate as terminatePresentation } from "@itwin/presentation-testing";
 
@@ -40,10 +42,11 @@ class IntegrationTestsApp extends NoRenderApp {
 
 async function initializeCommon(props: { backendTimeout?: number, useClientServices?: boolean  }) {
   // init logging
-  // Logger.initializeToConsole();
-  // Logger.setLevelDefault(LogLevel.Warning);
-  // Logger.setLevel("i18n", LogLevel.Error);
-  // Logger.setLevel(PresentationBackendNativeLoggerCategory.ECObjects, LogLevel.Warning);
+  Logger.initializeToConsole();
+  Logger.setLevelDefault(LogLevel.Warning);
+  Logger.setLevel("i18n", LogLevel.Error);
+  Logger.setLevel("SQLite", LogLevel.Error);
+  Logger.setLevel(PresentationBackendNativeLoggerCategory.ECObjects, LogLevel.Warning);
 
   const libDir = path.resolve("lib");
   const hierarchiesCacheDir = path.join(libDir, "cache");
