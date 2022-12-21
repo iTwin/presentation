@@ -281,6 +281,10 @@ describe("Favorite properties", () => {
       await Presentation.favoriteProperties.initializeConnection(imodel);
     });
 
+    after(() => {
+      sinon.restore();
+    });
+
     it("favorite properties survive Presentation re-initialization", async () => {
       propertiesDataProvider.keys = new KeySet([{ className: "Generic:PhysicalObject", id: "0x74" }]);
       let propertyData = await propertiesDataProvider.getData();
