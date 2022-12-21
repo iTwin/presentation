@@ -75,6 +75,21 @@
       "outFiles": [
         "${workspaceFolder}/packages/components/lib/**/*.js"
       ]
+    },
+    {
+      "name": "Tests: Full-stack",
+      "cwd": "${workspaceFolder}/packages/full-stack-tests",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/packages/full-stack-tests/node_modules/mocha/bin/_mocha",
+      "args": [
+        "--config",
+        "./.mocharc.json",
+        "--no-timeouts"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/packages/full-stack-tests/lib/**/*.js"
+      ]
     }
   ],
   "compounds": [

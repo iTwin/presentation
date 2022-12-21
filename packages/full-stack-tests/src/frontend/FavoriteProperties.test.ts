@@ -13,7 +13,7 @@ import { DEFAULT_PROPERTY_GRID_RULESET, FAVORITES_CATEGORY_NAME, PresentationPro
 import {
   createFavoritePropertiesStorage, DefaultFavoritePropertiesStorageTypes, FavoritePropertiesManager, FavoritePropertiesScope, Presentation,
 } from "@itwin/presentation-frontend";
-import { initialize, initializeWithClientServices, terminate } from "../IntegrationTests";
+import { initialize, terminate } from "../IntegrationTests";
 
 describe("Favorite properties", () => {
 
@@ -260,31 +260,28 @@ describe("Favorite properties", () => {
 
   });
 
-  describe("#with-services", () => {
-
+  describe("re-initialization", () => {
     function setupFavoritesStorageWithSettingsService() {
       Presentation.setFavoritePropertiesManager(new FavoritePropertiesManager({
         storage: createFavoritePropertiesStorage(DefaultFavoritePropertiesStorageTypes.UserPreferencesStorage),
       }));
     }
 
+    const storage = new Map<string, any>();
     before(async () => {
-      await imodel.close();
-      await terminate();
-      await initializeWithClientServices();
-      await openIModel();
-      setupFavoritesStorageWithSettingsService();
-      await Presentation.favoriteProperties.initializeConnection(imodel);
-    });
-
-    it("favorite properties survive Presentation re-initialization", async () => {
-      const storage = new Map<string, any>();
       sinon.stub(IModelApp, "userPreferences").get(() => ({
         get: async (arg: PreferenceKeyArg & ITwinIdArg & TokenArg) => storage.get(arg.key),
         save: async (arg: PreferenceArg & ITwinIdArg & TokenArg) => storage.set(arg.key, arg.content),
         delete: async (arg: PreferenceKeyArg & ITwinIdArg & TokenArg) => storage.delete(arg.key),
       }));
+      sinon.stub(IModelApp, "authorizationClient").get(() => ({
+        getAccessToken: async () => "accessToken",
+      }));
+      setupFavoritesStorageWithSettingsService();
+      await Presentation.favoriteProperties.initializeConnection(imodel);
+    });
 
+    it("favorite properties survive Presentation re-initialization", async () => {
       propertiesDataProvider.keys = new KeySet([{ className: "Generic:PhysicalObject", id: "0x74" }]);
       let propertyData = await propertiesDataProvider.getData();
       expect(propertyData.categories.length).to.be.eq(5);
