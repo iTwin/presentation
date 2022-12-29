@@ -1,0 +1,75 @@
+trigger:
+  branches:
+    include:
+     - master
+
+pr:
+  drafts: false
+  branches:
+    include:
+     - master
+
+# resources:
+#   repositories:
+#     - repository: itwinjs-core
+#       type: github
+#       endpoint: iModelJs
+#       name: iTwin/itwinjs-core
+#       ref: refs/heads/master
+
+stages:
+  - stage: Generate_Docs
+    jobs:
+    - job:
+      displayName: Generate Docs
+      workspace:
+        clean: all
+
+      steps:
+        - checkout: self
+          path: presentation
+          clean: true
+
+        - task: NodeTool@0
+          displayName: Use Node 16
+          inputs:
+            versionSpec: 16.18.1
+            checkLatest: true
+
+        - script: npm install pnpm
+          displayName: Install pnpm
+          workingDirectory: $(Pipeline.Workspace)/presentation
+
+        - script: pnpm install
+          displayName: Run 'pnpm install'
+          workingDirectory: $(Pipeline.Workspace)/presentation
+
+        - script: pnpm generate-docs
+          displayName: Run 'pnpm generate-docs'
+          workingDirectory: $(Pipeline.Workspace)/presentation
+
+        - script: |
+            echo Copying all reference files to staging
+            mkdir $(Agent.BuildDirectory)/docs/reference/
+            robocopy /E build/generated-docs/presentation/ $(Agent.BuildDirectory)/docs/reference/
+            echo Copying extracted code to staging
+            mkdir $(Agent.BuildDirectory)/docs/extract/
+            robocopy /E build/generated-docs/extract/ $(Agent.BuildDirectory)/docs/extract/
+          workingDirectory: $(Pipeline.Workspace)/presentation
+          displayName: Copy Reference files to Staging
+          failOnStderr: false
+          continueOnError: true
+
+        - publish: $(Agent.BuildDirectory)/docs/
+          artifact: 'Presentation Docs'
+          displayName: Publish Pipeline Artifact - Presentation Docs
+          condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+
+  # - stage: Validate_Docs
+  #   dependsOn: Generate_Docs
+  #   condition: and(succeeded(), in(variables['Build.Reason'], 'IndividualCI', 'PullRequest', 'Manual'))
+  #   jobs:
+  #   - template: common/config/azure-pipelines/jobs/docs-build.yaml@itwinjs-core
+  #     parameters:
+  #       checkout: itwinjs-core
+  #       useCurrentPresentationDocsArtifact: true
