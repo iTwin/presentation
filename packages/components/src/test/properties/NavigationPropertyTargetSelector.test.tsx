@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import * as React from "react";
+import { createRef } from "react";
 import sinon from "sinon";
 import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
@@ -111,7 +111,7 @@ describe("NavigationPropertyTargetSelector", () => {
 
   it("get value from target selector reference", async () => {
     sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
-    const ref = React.createRef<NavigationPropertyTargetSelectorAttributes>();
+    const ref = createRef<NavigationPropertyTargetSelectorAttributes>();
     const { container, getByText } = render(
       <NavigationPropertyTargetSelector
         ref={ref}
