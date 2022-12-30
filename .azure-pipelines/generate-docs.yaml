@@ -59,7 +59,7 @@ stages:
         - publish: $(Agent.BuildDirectory)/docs/
           artifact: 'Presentation Docs'
           displayName: Publish Pipeline Artifact - Presentation Docs
-          condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+          condition: succeeded()
 
   # - stage: Validate_Docs
   #   dependsOn: Generate_Docs
