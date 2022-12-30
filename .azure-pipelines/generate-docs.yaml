@@ -27,6 +27,7 @@ stages:
 
       steps:
         - checkout: self
+          path: presentation
           clean: true
 
         - task: NodeTool@0
@@ -44,7 +45,7 @@ stages:
         - script: pnpm generate-docs
           displayName: Run 'pnpm generate-docs'
           env:
-            RUSHSTACK_FILE_ERROR_BASE_FOLDER: $(Pipeline.Workspace)
+            RUSHSTACK_FILE_ERROR_BASE_FOLDER: $(Pipeline.Workspace)/presentation
 
         - task: CopyFiles@2
           displayName: 'Copy generated docs to: $(Agent.BuildDirectory)'
