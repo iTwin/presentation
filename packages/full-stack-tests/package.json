@@ -11,7 +11,7 @@
     "test": "mocha --config ./.mocharc.json",
     "cover": "npm run -s test",
     "docs": "npm run -s docs:extract",
-    "docs:extract": "betools extract --fileExt=ts,tsx --extractFrom=./src --recursive --out=../../build/generated-docs/extract"
+    "docs:extract": "betools extract --fileExt=ts,tsx --extractFrom=./src --recursive --out=../../build/docs/extract"
   },
   "dependencies": {
     "@itwin/appui-abstract": "^3.6.0-dev.14",

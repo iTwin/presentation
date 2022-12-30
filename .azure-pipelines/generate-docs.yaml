@@ -50,17 +50,11 @@ stages:
           env:
             RUSHSTACK_FILE_ERROR_BASE_FOLDER: $(Pipeline.Workspace)/presentation
 
-        - script: |
-            echo Copying all reference files to staging
-            mkdir $(Agent.BuildDirectory)/docs/reference/
-            robocopy /E build/generated-docs/presentation/ $(Agent.BuildDirectory)/docs/reference/
-            echo Copying extracted code to staging
-            mkdir $(Agent.BuildDirectory)/docs/extract/
-            robocopy /E build/generated-docs/extract/ $(Agent.BuildDirectory)/docs/extract/
-          workingDirectory: $(Pipeline.Workspace)/presentation
-          displayName: Copy Reference files to Staging
-          failOnStderr: false
-          continueOnError: true
+        - task: CopyFiles@2
+          displayName: 'Copy generated docs to: $(Agent.BuildDirectory)'
+          inputs:
+            SourceFolder: $(Pipeline.Workspace)/presentation/build
+            TargetFolder: $(Agent.BuildDirectory)
 
         - publish: $(Agent.BuildDirectory)/docs/
           artifact: 'Presentation Docs'

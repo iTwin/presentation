@@ -12,7 +12,7 @@
     "build": "tsc",
     "clean": "rimraf lib",
     "lint": "eslint ./src/**/*.ts",
-    "docs": "betools extract --fileExt=ts --extractFrom=./src --recursive --out=../../../build/generated-docs/extract"
+    "docs": "betools extract --fileExt=ts --extractFrom=./src --recursive --out=../../../build/docs/extract"
   },
   "dependencies": {
     "@itwin/build-tools": "^3.6.0-dev.14",
