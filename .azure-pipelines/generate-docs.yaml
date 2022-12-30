@@ -47,6 +47,8 @@ stages:
         - script: pnpm generate-docs
           displayName: Run 'pnpm generate-docs'
           workingDirectory: $(Pipeline.Workspace)/presentation
+          env:
+            RUSHSTACK_FILE_ERROR_BASE_FOLDER: $(Pipeline.Workspace)/presentation
 
         - script: |
             echo Copying all reference files to staging
