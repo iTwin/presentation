@@ -56,7 +56,7 @@ stages:
           displayName: 'Publish Artifact: Presentation Docs'
           inputs:
             PathtoPublish: '$(Build.StagingDirectory)/docs/'
-            ArtifactName: 'Bis Docs'
+            ArtifactName: 'Presentation Docs'
 
   # - stage: Validate_Docs
   #   dependsOn: Generate_Docs
