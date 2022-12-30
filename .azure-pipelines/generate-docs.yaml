@@ -36,7 +36,7 @@ stages:
             versionSpec: 16.18.1
             checkLatest: true
 
-        - script: npm install pnpm
+        - script: npm install pnpm -g
           displayName: Install pnpm
           workingDirectory: $(Pipeline.Workspace)/presentation
 
