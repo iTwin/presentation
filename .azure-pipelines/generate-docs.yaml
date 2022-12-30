@@ -55,7 +55,7 @@ stages:
         - task: PublishBuildArtifacts@1
           displayName: 'Publish Artifact: Presentation Docs'
           inputs:
-            PathtoPublish: '$(Build.StagingDirectory)\docs\'
+            PathtoPublish: '$(Build.StagingDirectory)/docs/'
             ArtifactName: 'Bis Docs'
 
   # - stage: Validate_Docs
