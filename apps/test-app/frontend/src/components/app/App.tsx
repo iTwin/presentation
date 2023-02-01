@@ -20,6 +20,7 @@ import { RulesetSelector } from "../ruleset-selector/RulesetSelector";
 import { TreeWidget } from "../tree-widget/TreeWidget";
 import { UnitSystemSelector } from "../unit-system-selector/UnitSystemSelector";
 import ViewportContentControl from "../viewport/ViewportContentControl";
+import { TableWidget } from "../table-widget/TableWidget";
 
 export interface State {
   imodel?: IModelConnection;
@@ -145,7 +146,12 @@ export default class App extends Component<{}, State> {
         }}>
         <UnifiedSelectionContextProvider imodel={imodel} selectionLevel={0}>
           <div className="app-content-left">
-            <ViewportContentControl imodel={imodel} />
+            <div className="app-content-left-top">
+              <ViewportContentControl imodel={imodel} />
+            </div>
+            <div className="app-content-left-bottom">
+              <TableWidget imodel={imodel} rulesetId={rulesetId} />
+            </div>
           </div>
           <ElementSeparator
             orientation={Orientation.Horizontal}

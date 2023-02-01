@@ -42,7 +42,17 @@
 }
 
 .app-content-left {
+  display: grid;
+  grid-template-rows: calc(100% - 300px) 300px;
+}
+
+.app-content-left-top {
   position: relative; /* Because viewport component is absolute */
+}
+
+.app-content-left-bottom {
+  display: flex;
+  flex-direction: row;
 }
 
 .app-content-right {
