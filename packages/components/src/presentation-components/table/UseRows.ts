@@ -53,13 +53,14 @@ export function useRows(props: UseRowsProps): UseRowsResult {
       )
       .subscribe({
         next: (rowDefinitions) => {
-          setState((prev) => ({
-            isLoading: false,
-            rows: [...prev.rows, ...rowDefinitions],
-            loadMoreRows: () => {
-              loader.next(prev.rows.length + rowDefinitions.length);
-            },
-          }),
+          setState(
+            (prev) => ({
+              isLoading: false,
+              rows: [...prev.rows, ...rowDefinitions],
+              loadMoreRows: () => {
+                loader.next(prev.rows.length + rowDefinitions.length);
+              },
+            }),
           );
         },
         error: () => {
