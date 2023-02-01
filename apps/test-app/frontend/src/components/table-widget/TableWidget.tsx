@@ -3,11 +3,11 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
+import { useCallback, useMemo } from "react";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ProgressRadial, Table, tableFilters } from "@itwin/itwinui-react";
-import { ColumnDefinition, RowDefinition, TableCellRenderer, useUnifiedSelectionPresentationTable } from "@itwin/presentation-components";
-import { useCallback, useMemo } from "react";
+import { ProgressRadial, Table } from "@itwin/itwinui-react";
+import { ColumnDefinition, RowDefinition, TableCellRenderer, usePresentationTableWithUnifiedSelection } from "@itwin/presentation-components";
 
 export interface TableWidgetProps {
   imodel: IModelConnection;
@@ -31,7 +31,7 @@ interface PresentationTableProps {
 function PresentationTable(props: PresentationTableProps) {
   const { imodel, rulesetId } = props;
 
-  const { columns, rows, isLoading, loadMoreRows, sort, filter } = useUnifiedSelectionPresentationTable({
+  const { columns, rows, isLoading, loadMoreRows, sort } = usePresentationTableWithUnifiedSelection({
     imodel,
     ruleset: rulesetId,
     pageSize: 20,
@@ -43,17 +43,6 @@ function PresentationTable(props: PresentationTableProps) {
     const sortBy = tableState.sortBy[0];
     sort(sortBy?.id, sortBy?.desc);
   }, [sort]);
-
-  const onFilter = useCallback((filters: any) => {
-    const tableFilter = filters[0];
-    if (!tableFilter) {
-      filter(undefined);
-      return;
-    }
-
-    const expression = `${tableFilter.id} = "${tableFilter.value}"`;
-    filter(expression);
-  }, [filter]);
 
   const tableColumns = useMemo(() => columns
     ? ([{ Header: "Table Header", columns }])
@@ -74,8 +63,6 @@ function PresentationTable(props: PresentationTableProps) {
       isSortable={true}
       manualSortBy={true}
       onSort={onSort}
-      manualFilters={true}
-      onFilter={onFilter}
     />
   );
 }
@@ -86,8 +73,6 @@ function mapTableColumns(columnDefinitions: ColumnDefinition) {
     accessor: columnDefinitions.name,
     Header: columnDefinitions.label,
     Cell: cellRenderer,
-    fieldTypes: "string",
-    Filter: tableFilters.TextFilter(),
   };
 }
 
