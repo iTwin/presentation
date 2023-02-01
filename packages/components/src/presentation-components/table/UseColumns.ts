@@ -3,10 +3,10 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
+import { useEffect, useState } from "react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { DefaultContentDisplayTypes, Descriptor, Field, KeySet, Ruleset } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { useEffect, useState } from "react";
 import { ColumnDefinition } from "./Types";
 
 export interface UseColumnsProps {
@@ -28,8 +28,9 @@ export function useColumns(props: UseColumnsProps): ColumnDefinition[] | undefin
 
     void (async () => {
       const columnDefinitions = await loadColumns(imodel, ruleset, keys);
+      // istanbul ignore else
       if (!disposed)
-        setColumns(columnDefinitions);
+        setColumns(columnDefinitions ?? []);
     })();
 
     return () => {disposed=true;};

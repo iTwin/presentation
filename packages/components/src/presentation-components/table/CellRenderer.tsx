@@ -40,7 +40,7 @@ function ArrayPropertyRenderer(props: TableCellRendererProps) {
   const rendererProps: NonPrimitiveCellRendererProps = {
     record,
     buttonLabel: value.items.length !== 0 ? `${value.itemsTypeName}[${value.items.length}]` : "[]",
-    dialogLabel: `Array of type ${value.itemsTypeName}`,
+    dialogLabel: `Array of type "${value.itemsTypeName}"`,
     uniqueKey: `table_array_${record.property.name}`,
   };
   return <NonPrimitiveCellRenderer {...rendererProps} />;
@@ -75,7 +75,7 @@ function NonPrimitiveCellRenderer(props: NonPrimitiveCellRendererProps) {
       <Modal
         isOpen={isOpen}
         title={dialogLabel}
-        onClose={() => { setIsOpen(false); }}
+        onClose={/* istanbul ignore next */() => { setIsOpen(false); }}
         className="presentation-components-non-primitive-value"
       >
         <NonPrimitivePropertyRenderer

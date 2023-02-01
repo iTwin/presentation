@@ -20,27 +20,23 @@ export interface TableOptions {
 }
 
 export interface UseTableOptionsResult {
-  options?: TableOptions;
+  options: TableOptions;
   sort: (columnName?: string, descending?: boolean) => void;
   filter: (filterExpression?: string) => void;
 }
 
 export function useTableOptions(props: UseTableOptionsProps): UseTableOptionsResult {
   const { columns } = props;
-  const [options, setOptions] = useState<TableOptions>();
+  const [options, setOptions] = useState<TableOptions>({});
 
   useEffect(() => {
-    setOptions(undefined);
+    setOptions({});
   }, [columns]);
 
   const sort = useCallback((columnName?: string, descending?: boolean) => {
-    if (!columnName) {
-      setOptions((prev) => prev?.sorting ? { ...prev, sorting: undefined }: prev);
-      return;
-    }
-
     const field = columns?.find((column) => column.name === columnName)?.field;
     if (!field) {
+      setOptions((prev) => ({ ...prev, sorting: undefined }));
       return;
     }
 

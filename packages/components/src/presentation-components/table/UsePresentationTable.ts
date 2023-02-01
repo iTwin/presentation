@@ -3,9 +3,9 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
+import { useMemo } from "react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet, Ruleset } from "@itwin/presentation-common";
-import { useMemo } from "react";
 import { useUnifiedSelectionContext } from "../unified-selection/UnifiedSelectionContext";
 import { ColumnDefinition, RowDefinition } from "./Types";
 import { useColumns } from "./UseColumns";
@@ -74,7 +74,7 @@ export function usePresentationTable<TColumn, TRow>(props: UsePresentationTableP
  * Custom hook that load data for generic table component. It uses UnifiedSelection to get keys of defining what to load rows for.
  * @beta
  */
-export function useUnifiedSelectionPresentationTable<TColumn, TRow>(props: Omit<UsePresentationTableProps<TColumn, TRow>, "keys">): UsePresentationTableResult<TColumn, TRow> {
+export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(props: Omit<UsePresentationTableProps<TColumn, TRow>, "keys">): UsePresentationTableResult<TColumn, TRow> {
   const unifiedSelection = useUnifiedSelectionContext();
   const keys = useMemo(() => unifiedSelection ? new KeySet(unifiedSelection.getSelection(0)) : new KeySet(), [unifiedSelection]);
   return usePresentationTable({ ...props, keys });

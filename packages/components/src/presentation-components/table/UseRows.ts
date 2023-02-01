@@ -5,6 +5,7 @@
 
 import { useEffect, useState } from "react";
 import { from, Subject } from "rxjs";
+import { distinct } from "rxjs/internal/operators/distinct";
 import { mergeMap } from "rxjs/internal/operators/mergeMap";
 import { assert } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -21,7 +22,7 @@ export interface UseRowsProps {
   ruleset: Ruleset | string;
   keys: Readonly<KeySet>;
   pageSize: number;
-  options?: TableOptions;
+  options: TableOptions;
 }
 
 export interface UseRowsResult {
@@ -35,19 +36,16 @@ export function useRows(props: UseRowsProps): UseRowsResult {
   const [state, setState] = useState<UseRowsResult>({
     isLoading: true,
     rows: [],
-    loadMoreRows: () => {},
+    loadMoreRows: /* istanbul ignore next*/ () => {},
   });
 
   useEffect(() => {
-    setState({
-      isLoading: true,
-      rows: [],
-      loadMoreRows: () => {},
-    });
+    setState((prev) => ({ ...prev, rows: [] }));
 
     const loader = new Subject<number>();
     const subscription = loader
       .pipe(
+        distinct(),
         mergeMap((pageStart) => {
           setState((prev) => ({ ...prev, isLoading: true }));
           return from(loadRows(imodel, ruleset, keys, { start: pageStart, size: pageSize }, options));
@@ -55,28 +53,17 @@ export function useRows(props: UseRowsProps): UseRowsResult {
       )
       .subscribe({
         next: (rowDefinitions) => {
-          setState((prev) => {
-            const loadedRows = [...prev.rows, ...rowDefinitions];
-            const hasMore = rowDefinitions.length === pageSize;
-            let loadingNext = false;
-            return {
-              isLoading: false,
-              rows: loadedRows,
-              loadMoreRows: () => {
-                if (hasMore && !loadingNext) {
-                  loadingNext = true;
-                  loader.next(loadedRows.length);
-                }
-              },
-            };
-          });
+          setState((prev) => ({
+            isLoading: false,
+            rows: [...prev.rows, ...rowDefinitions],
+            loadMoreRows: () => {
+              loader.next(prev.rows.length + rowDefinitions.length);
+            },
+          }),
+          );
         },
         error: () => {
-          setState({
-            isLoading: false,
-            rows: [],
-            loadMoreRows: () => {},
-          });
+          setState((prev) => ({ ...prev, rows: [], isLoading: false }));
         },
       });
 
@@ -87,13 +74,13 @@ export function useRows(props: UseRowsProps): UseRowsResult {
   return state;
 }
 
-async function loadRows(imodel: IModelConnection, ruleset: Ruleset| string, keys: Readonly<KeySet>, paging: PageOptions, options?: TableOptions): Promise<RowDefinition[]> {
+async function loadRows(imodel: IModelConnection, ruleset: Ruleset | string, keys: Readonly<KeySet>, paging: PageOptions, options: TableOptions): Promise<RowDefinition[]> {
   const content = await Presentation.presentation.getContent({
     imodel,
     keys: new KeySet(keys),
     descriptor: {
-      sorting: options?.sorting,
-      fieldsFilterExpression: options?.fieldsFilterExpression,
+      sorting: options.sorting,
+      fieldsFilterExpression: options.fieldsFilterExpression,
     },
     rulesetOrId: ruleset,
     paging,
