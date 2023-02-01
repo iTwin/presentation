@@ -20,7 +20,7 @@ import { TableOptions } from "./UseTableOptions";
 export interface UseRowsProps {
   imodel: IModelConnection;
   ruleset: Ruleset | string;
-  keys: Readonly<KeySet>;
+  keys: KeySet;
   pageSize: number;
   options: TableOptions;
 }
@@ -74,10 +74,10 @@ export function useRows(props: UseRowsProps): UseRowsResult {
   return state;
 }
 
-async function loadRows(imodel: IModelConnection, ruleset: Ruleset | string, keys: Readonly<KeySet>, paging: PageOptions, options: TableOptions): Promise<RowDefinition[]> {
+async function loadRows(imodel: IModelConnection, ruleset: Ruleset | string, keys: KeySet, paging: PageOptions, options: TableOptions): Promise<RowDefinition[]> {
   const content = await Presentation.presentation.getContent({
     imodel,
-    keys: new KeySet(keys),
+    keys,
     descriptor: {
       sorting: options.sorting,
       fieldsFilterExpression: options.fieldsFilterExpression,
