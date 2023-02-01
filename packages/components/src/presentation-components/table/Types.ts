@@ -26,7 +26,7 @@ export interface ColumnDefinition {
 export interface RowDefinition {
   /** Unique row key. */
   key: string;
-  /**  */
+  /** List of cells in this row. */
   cells: CellDefinition[];
 }
 

@@ -71,7 +71,7 @@ export function usePresentationTable<TColumn, TRow>(props: UsePresentationTableP
 }
 
 /**
- * Custom hook that load data for generic table component. It uses UnifiedSelection to get keys of defining what to load rows for.
+ * Custom hook that load data for generic table component. It uses [Unified Selection]($docs/presentation/unified-selection/index.md) to get keys defining what to load rows for.
  * @beta
  */
 export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(props: Omit<UsePresentationTableProps<TColumn, TRow>, "keys">): UsePresentationTableResult<TColumn, TRow> {
