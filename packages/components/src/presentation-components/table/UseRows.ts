@@ -131,6 +131,7 @@ class RowsBuilder extends PropertyRecordsBuilder {
   public override finishItem(): void {
     assert(this._currentRow !== undefined);
     this._rows.push(this._currentRow);
+    this._currentRow = undefined;
     super.finishItem();
   }
 }
