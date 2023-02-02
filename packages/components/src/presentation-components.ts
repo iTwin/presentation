@@ -4,7 +4,6 @@
 *--------------------------------------------------------------------------------------------*/
 import { Presentation } from "@itwin/presentation-frontend";
 import { initializeLocalization, initializePropertyValueRenderers } from "./presentation-components/common/Utils";
-import { PRESENTATION_TREE_NODE_KEY } from "./presentation-components/tree/Utils";
 
 /**
  * @module Core
@@ -63,11 +62,13 @@ export * from "./presentation-components/favorite-properties/DataProvider";
 export * from "./presentation-components/tree/DataProvider";
 export * from "./presentation-components/tree/IPresentationTreeDataProvider";
 export * from "./presentation-components/tree/FilteredDataProvider";
+export * from "./presentation-components/tree/PresentationTreeNodeItem";
 export * from "./presentation-components/tree/controlled/UseUnifiedSelection";
 export * from "./presentation-components/tree/controlled/UseControlledTreeFiltering";
 export * from "./presentation-components/tree/controlled/TreeHooks";
 export * from "./presentation-components/tree/controlled/PresentationTreeNodeRenderer";
-export { PRESENTATION_TREE_NODE_KEY };
+export * from "./presentation-components/tree/controlled/PresentationTreeRenderer";
+export * from "./presentation-components/tree/controlled/UseHierarchyLevelFiltering";
 
 /**
  * @module Table

@@ -11,18 +11,18 @@ import { NodeKey, RegisteredRuleset, Ruleset, VariableValue } from "@itwin/prese
 import {
   IModelContentChangeEventArgs, IModelHierarchyChangeEventArgs, PresentationManager, RulesetManager, RulesetVariablesManager,
 } from "@itwin/presentation-frontend";
-import { PRESENTATION_TREE_NODE_KEY } from "../../presentation-components/tree/Utils";
+import { PresentationTreeNodeItem } from "../../presentation-components/tree/PresentationTreeNodeItem";
 import { createTestECInstancesNodeKey } from "./Hierarchy";
 
-export function createTestTreeNodeItem(key?: NodeKey, partialNode?: Partial<DelayLoadedTreeNodeItem>): DelayLoadedTreeNodeItem {
+export function createTestTreeNodeItem(key?: NodeKey,  partialNode?: Partial<DelayLoadedTreeNodeItem>): PresentationTreeNodeItem {
   const node = {
     id: partialNode?.id ?? "node_id",
     parentId: partialNode?.parentId,
     label: partialNode?.label ?? PropertyRecord.fromString("Node Label"),
     description: partialNode?.description ?? "Test Node Description",
     hasChildren: partialNode?.hasChildren ?? false,
+    key: key ? key : createTestECInstancesNodeKey(),
   };
-  (node as any)[PRESENTATION_TREE_NODE_KEY] = key ?? createTestECInstancesNodeKey();
   return node;
 }
 
