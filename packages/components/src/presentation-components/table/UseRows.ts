@@ -33,6 +33,7 @@ export interface UseRowsResult {
   loadMoreRows: () => void;
 }
 
+/** @internal */
 export function useRows(props: UseRowsProps): UseRowsResult {
   const { imodel, ruleset, keys, pageSize, options } = props;
   const [state, setState] = useState<UseRowsResult>({
