@@ -10,7 +10,7 @@ import { PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ClassInfo, RelationshipPath } from "@itwin/presentation-common";
+import { ClassInfo, RelationshipPath, PropertyValueFormat as TypeValueFormat } from "@itwin/presentation-common";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import { convertToInstanceFilterDefinition } from "../../presentation-components/instance-filter-builder/InstanceFilterConverter";
 import {
@@ -146,9 +146,9 @@ describe("convertToInstanceFilterDefinition", () => {
     });
 
     it("instance key value", async () => {
-      const propertyInfo = createTestPropertyInfo({ type: "navigation" });
+      const propertyInfo = createTestPropertyInfo({ type: "long" });
       const filter: PresentationInstanceFilterCondition = {
-        field: createTestPropertiesContentField({ properties: [{ property: propertyInfo }] }),
+        field: createTestPropertiesContentField({ properties: [{ property: propertyInfo }], type: { valueFormat: TypeValueFormat.Primitive, typeName: "navigation" } }),
         operator: PropertyFilterRuleOperator.IsEqual,
         value: { ...value, value: { className: "TestSchema:TestClass", id: "0x1" } },
       };
@@ -159,7 +159,7 @@ describe("convertToInstanceFilterDefinition", () => {
     it("double value", async () => {
       const propertyInfo = createTestPropertyInfo({ type: "double" });
       const filter: PresentationInstanceFilterCondition = {
-        field: createTestPropertiesContentField({ properties: [{ property: propertyInfo }] }),
+        field: createTestPropertiesContentField({ properties: [{ property: propertyInfo }], type: { valueFormat: TypeValueFormat.Primitive, typeName: "double" } }),
         operator: PropertyFilterRuleOperator.IsEqual,
         value: { ...value, value: 1.5 },
       };
@@ -170,7 +170,7 @@ describe("convertToInstanceFilterDefinition", () => {
     it("dateTime value", async () => {
       const propertyInfo = createTestPropertyInfo({ type: "dateTime" });
       const filter: PresentationInstanceFilterCondition = {
-        field: createTestPropertiesContentField({ properties: [{ property: propertyInfo }] }),
+        field: createTestPropertiesContentField({ properties: [{ property: propertyInfo }], type: { valueFormat: TypeValueFormat.Primitive, typeName: "dateTime" } }),
         operator: PropertyFilterRuleOperator.IsEqual,
         value: { ...value, value: "2021-10-12T08:45:41" },
       };
