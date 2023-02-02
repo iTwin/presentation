@@ -9,12 +9,14 @@ import { DefaultContentDisplayTypes, Descriptor, Field, KeySet, Ruleset } from "
 import { Presentation } from "@itwin/presentation-frontend";
 import { TableColumnDefinition } from "./Types";
 
+/** @internal */
 export interface UseColumnsProps {
   imodel: IModelConnection;
   ruleset: Ruleset | string;
   keys: KeySet;
 }
 
+/** @internal */
 export function useColumns(props: UseColumnsProps): TableColumnDefinition[] | undefined {
   const { imodel, ruleset, keys } = props;
   const [columns, setColumns] = useState<TableColumnDefinition[]>();

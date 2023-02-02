@@ -7,10 +7,12 @@ import { useCallback, useEffect, useState } from "react";
 import { FieldDescriptor, SortDirection } from "@itwin/presentation-common";
 import { TableColumnDefinition } from "./Types";
 
+/** @internal */
 export interface UseTableOptionsProps {
   columns: TableColumnDefinition[] | undefined;
 }
 
+/** @internal */
 export interface TableOptions {
   sorting?: {
     field: FieldDescriptor;
@@ -19,12 +21,14 @@ export interface TableOptions {
   fieldsFilterExpression?: string;
 }
 
+/** @internal */
 export interface UseTableOptionsResult {
   options: TableOptions;
   sort: (columnName?: string, descending?: boolean) => void;
   filter: (filterExpression?: string) => void;
 }
 
+/** @internal */
 export function useTableOptions(props: UseTableOptionsProps): UseTableOptionsResult {
   const { columns } = props;
   const [options, setOptions] = useState<TableOptions>({});

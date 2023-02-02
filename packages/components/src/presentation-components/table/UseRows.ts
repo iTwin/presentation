@@ -17,6 +17,7 @@ import { FieldHierarchyRecord, PropertyRecordsBuilder } from "../common/ContentB
 import { TableRowDefinition } from "./Types";
 import { TableOptions } from "./UseTableOptions";
 
+/** @internal */
 export interface UseRowsProps {
   imodel: IModelConnection;
   ruleset: Ruleset | string;
@@ -25,6 +26,7 @@ export interface UseRowsProps {
   options: TableOptions;
 }
 
+/** @internal */
 export interface UseRowsResult {
   isLoading: boolean;
   rows: TableRowDefinition[];
