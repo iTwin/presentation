@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import * as sinon from "sinon";
+import sinon from "sinon";
 import * as moq from "typemoq";
 import { TreeModelNodeInput, TreeModelSource, TreeNodeItem, UiComponents } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
@@ -12,9 +12,11 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { NodeKey } from "@itwin/presentation-common";
 import { Presentation, StateTracker } from "@itwin/presentation-frontend";
 import { cleanup, renderHook } from "@testing-library/react-hooks";
-import { IPresentationTreeDataProvider } from "../../../presentation-components";
 import { createLabelRecord } from "../../../presentation-components/common/Utils";
-import { useExpandedNodesTracking, UseExpandedNodesTrackingProps } from "../../../presentation-components/tree/controlled/UseExpandedNodesTracking";
+import {
+  useHierarchyStateTracking, UseHierarchyStateTrackingProps,
+} from "../../../presentation-components/tree/controlled/UseHierarchyStateTracking";
+import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";
 import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy";
 import { mockPresentationManager } from "../../_helpers/UiComponents";
 
@@ -37,13 +39,13 @@ function createTreeModelInput(node: TestTreeNodeItem, isExpanded?: boolean): Tre
   };
 }
 
-describe("UseExpandedNodesTracking", () => {
+describe("useHierarchyStateTracking", () => {
   const dataProviderMock = moq.Mock.ofType<IPresentationTreeDataProvider>();
   const imodelMock = moq.Mock.ofType<IModelConnection>();
   const stateTrackerMock = moq.Mock.ofType<StateTracker>();
   const rulesetId = "ruleset-id";
   let modelSource: TreeModelSource;
-  let initialProps: UseExpandedNodesTrackingProps;
+  let initialProps: UseHierarchyStateTrackingProps;
 
   before(async () => {
     await UiComponents.initialize(new EmptyLocalization());
@@ -64,7 +66,7 @@ describe("UseExpandedNodesTracking", () => {
     initialProps = {
       modelSource,
       dataProvider: dataProviderMock.object,
-      enableNodesTracking: true,
+      enableTracking: true,
     };
 
     const presentationMocks = mockPresentationManager();
@@ -80,19 +82,18 @@ describe("UseExpandedNodesTracking", () => {
   it("does not add 'onModelChange' event listener if nodes tracking is disabled", () => {
     const addListenerSpy = sinon.spy(modelSource.onModelChanged, "addListener");
     renderHook(
-      useExpandedNodesTracking,
-      { initialProps: { ...initialProps, enableNodesTracking: false } },
+      useHierarchyStateTracking,
+      { initialProps: { ...initialProps, enableTracking: false } },
     );
 
     expect(addListenerSpy).to.be.not.called;
   });
 
   it("adds and removes 'onModelChange' event listener if auto update is enabled", () => {
-
     const addListenerSpy = sinon.spy(modelSource.onModelChanged, "addListener");
     const removeListenerSpy = sinon.spy(modelSource.onModelChanged, "removeListener");
     const { unmount } = renderHook(
-      useExpandedNodesTracking,
+      useHierarchyStateTracking,
       { initialProps },
     );
 
@@ -103,7 +104,7 @@ describe("UseExpandedNodesTracking", () => {
 
   it("calls 'onHierarchyClosed' when unmounted", () => {
     const { unmount } = renderHook(
-      useExpandedNodesTracking,
+      useHierarchyStateTracking,
       { initialProps },
     );
 
@@ -112,51 +113,56 @@ describe("UseExpandedNodesTracking", () => {
     stateTrackerMock.verifyAll();
   });
 
-  it("calls 'onExpandedNodesChanged' with root node when expanded root node is added to model", () => {
+  it("calls 'onHierarchyStateChanged' with root node when expanded root node is added to model", () => {
     const node = createNodeItem("root-1");
     renderHook(
-      useExpandedNodesTracking,
+      useHierarchyStateTracking,
       { initialProps },
     );
-
-    stateTrackerMock.setup(async (x) => x.onExpandedNodesChanged(imodelMock.object, rulesetId, moq.It.isAnyString(), [{ id: node.id, key: node.key }])).verifiable(moq.Times.once());
+    stateTrackerMock.reset();
+    stateTrackerMock.setup(async (x) => x.onHierarchyStateChanged(imodelMock.object, rulesetId, moq.It.isAnyString(), [{
+      node: { id: node.id, key: node.key },
+      state: { isExpanded: true },
+    }])).verifiable(moq.Times.once());
     modelSource.modifyModel((model) => {
       model.setChildren(undefined, [createTreeModelInput(node, true)], 0);
     });
     stateTrackerMock.verifyAll();
   });
 
-  it("call 'onExpandedNodesChanged' without nodes when non expanded root node is added to model", () => {
+  it("call 'onHierarchyStateChanged' without nodes when non expanded root node is added to model", () => {
     const node = createNodeItem("root-1");
     renderHook(
-      useExpandedNodesTracking,
+      useHierarchyStateTracking,
       { initialProps },
     );
-
     stateTrackerMock.reset();
-    stateTrackerMock.setup(async (x) => x.onExpandedNodesChanged(imodelMock.object, rulesetId, moq.It.isAnyString(), [])).verifiable(moq.Times.once());
+    stateTrackerMock.setup(async (x) => x.onHierarchyStateChanged(imodelMock.object, rulesetId, moq.It.isAnyString(), [])).verifiable(moq.Times.once());
     modelSource.modifyModel((model) => {
       model.setChildren(undefined, [createTreeModelInput(node, false)], 0);
     });
     stateTrackerMock.verifyAll();
   });
 
-  it("calls 'onExpandedNodesChanged' with existing node that was expanded", () => {
+  it("calls 'onHierarchyStateChanged' with existing node that was expanded", () => {
     const node = createNodeItem("root-1");
     modelSource.modifyModel((model) => { model.setChildren(undefined, [createTreeModelInput(node)], 0); });
     renderHook(
-      useExpandedNodesTracking,
+      useHierarchyStateTracking,
       { initialProps },
     );
-
-    stateTrackerMock.setup(async (x) => x.onExpandedNodesChanged(imodelMock.object, rulesetId, moq.It.isAnyString(), [{ id: node.id, key: node.key }])).verifiable(moq.Times.once());
+    stateTrackerMock.reset();
+    stateTrackerMock.setup(async (x) => x.onHierarchyStateChanged(imodelMock.object, rulesetId, moq.It.isAnyString(), [{
+      node: { id: node.id, key: node.key },
+      state: { isExpanded: true },
+    }])).verifiable(moq.Times.once());
     modelSource.modifyModel((model) => {
       model.getNode(node.id)!.isExpanded = true;
     });
     stateTrackerMock.verifyAll();
   });
 
-  it("calls 'onExpandedNodesChanged' with expanded children nodes and parent when parent is expanded", () => {
+  it("calls 'onHierarchyStateChanged' with expanded children nodes and parent when parent is expanded", () => {
     const node = createNodeItem("root-1");
     const children = [createNodeItem("child-1"), createNodeItem("child-2")];
     modelSource.modifyModel((model) => {
@@ -164,33 +170,39 @@ describe("UseExpandedNodesTracking", () => {
       model.setChildren(node.id, [createTreeModelInput(children[0], false), createTreeModelInput(children[1], true)], 0);
     });
     renderHook(
-      useExpandedNodesTracking,
+      useHierarchyStateTracking,
       { initialProps },
     );
-
-    stateTrackerMock.setup(async (x) => x.onExpandedNodesChanged(imodelMock.object, rulesetId, moq.It.isAnyString(), [{ id: node.id, key: node.key }, { id: children[1].id, key: children[1].key }])).verifiable(moq.Times.once());
+    stateTrackerMock.reset();
+    stateTrackerMock.setup(async (x) => x.onHierarchyStateChanged(imodelMock.object, rulesetId, moq.It.isAnyString(), [{
+      node: { id: node.id, key: node.key },
+      state: { isExpanded: true },
+    }, {
+      node: { id: children[1].id, key: children[1].key },
+      state: { isExpanded: true },
+    }])).verifiable(moq.Times.once());
     modelSource.modifyModel((model) => {
       model.getNode(node.id)!.isExpanded = true;
     });
     stateTrackerMock.verifyAll();
   });
 
-  it("calls 'onExpandedNodesChanged' without nodes when node is collapsed", () => {
+  it("calls 'onHierarchyStateChanged' without nodes when node is collapsed", () => {
     const node = createNodeItem("root-1");
     modelSource.modifyModel((model) => { model.setChildren(undefined, [createTreeModelInput(node, true)], 0); });
     renderHook(
-      useExpandedNodesTracking,
+      useHierarchyStateTracking,
       { initialProps }
     );
-
-    stateTrackerMock.setup(async (x) => x.onExpandedNodesChanged(imodelMock.object, rulesetId, moq.It.isAnyString(), [])).verifiable(moq.Times.once());
+    stateTrackerMock.reset();
+    stateTrackerMock.setup(async (x) => x.onHierarchyStateChanged(imodelMock.object, rulesetId, moq.It.isAnyString(), [])).verifiable(moq.Times.once());
     modelSource.modifyModel((model) => {
       model.getNode(node.id)!.isExpanded = false;
     });
     stateTrackerMock.verifyAll();
   });
 
-  it("calls 'onExpandedNodesChanged' without nodes when parent with expanded child nodes is collapsed", () => {
+  it("calls 'onHierarchyStateChanged' without nodes when parent with expanded child nodes is collapsed", () => {
     const node = createNodeItem("root-1");
     const children = [createNodeItem("child-1"), createNodeItem("child-2")];
     modelSource.modifyModel((model) => {
@@ -198,11 +210,11 @@ describe("UseExpandedNodesTracking", () => {
       model.setChildren(node.id, [createTreeModelInput(children[0], false), createTreeModelInput(children[1], true)], 0);
     });
     renderHook(
-      useExpandedNodesTracking,
+      useHierarchyStateTracking,
       { initialProps }
     );
-
-    stateTrackerMock.setup(async (x) => x.onExpandedNodesChanged(imodelMock.object, rulesetId, moq.It.isAnyString(), [])).verifiable(moq.Times.once());
+    stateTrackerMock.reset();
+    stateTrackerMock.setup(async (x) => x.onHierarchyStateChanged(imodelMock.object, rulesetId, moq.It.isAnyString(), [])).verifiable(moq.Times.once());
     modelSource.modifyModel((model) => {
       model.getNode(node.id)!.isExpanded = false;
     });
