@@ -14,7 +14,7 @@ import {
 } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { FieldHierarchyRecord, PropertyRecordsBuilder } from "../common/ContentBuilder";
-import { RowDefinition } from "./Types";
+import { TableRowDefinition } from "./Types";
 import { TableOptions } from "./UseTableOptions";
 
 export interface UseRowsProps {
@@ -27,7 +27,7 @@ export interface UseRowsProps {
 
 export interface UseRowsResult {
   isLoading: boolean;
-  rows: RowDefinition[];
+  rows: TableRowDefinition[];
   loadMoreRows: () => void;
 }
 
@@ -75,7 +75,7 @@ export function useRows(props: UseRowsProps): UseRowsResult {
   return state;
 }
 
-async function loadRows(imodel: IModelConnection, ruleset: Ruleset | string, keys: KeySet, paging: PageOptions, options: TableOptions): Promise<RowDefinition[]> {
+async function loadRows(imodel: IModelConnection, ruleset: Ruleset | string, keys: KeySet, paging: PageOptions, options: TableOptions): Promise<TableRowDefinition[]> {
   const content = await Presentation.presentation.getContent({
     imodel,
     keys,
@@ -100,10 +100,10 @@ function createRows(content: Content) {
 }
 
 class RowsBuilder extends PropertyRecordsBuilder {
-  private _rows: RowDefinition[] = [];
-  private _currentRow: RowDefinition | undefined = undefined;
+  private _rows: TableRowDefinition[] = [];
+  private _currentRow: TableRowDefinition | undefined = undefined;
 
-  public get rows(): RowDefinition[] {
+  public get rows(): TableRowDefinition[] {
     return this._rows;
   }
 

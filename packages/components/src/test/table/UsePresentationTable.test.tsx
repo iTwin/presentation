@@ -11,7 +11,7 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { Content, KeySet } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, SelectionManager } from "@itwin/presentation-frontend";
 import { renderHook } from "@testing-library/react-hooks";
-import { ColumnDefinition, RowDefinition } from "../../presentation-components/table/Types";
+import { TableColumnDefinition, TableRowDefinition } from "../../presentation-components/table/Types";
 import {
   usePresentationTable, UsePresentationTableProps, usePresentationTableWithUnifiedSelection,
 } from "../../presentation-components/table/UsePresentationTable";
@@ -22,7 +22,7 @@ import { mockPresentationManager } from "../_helpers/UiComponents";
 
 describe("usePresentationTable", () => {
   const imodel = {} as IModelConnection;
-  const initialProps: UsePresentationTableProps<ColumnDefinition, RowDefinition> = {
+  const initialProps: UsePresentationTableProps<TableColumnDefinition, TableRowDefinition> = {
     imodel,
     keys: new KeySet([createTestECInstanceKey()]),
     ruleset: "ruleset_id",
@@ -50,7 +50,7 @@ describe("usePresentationTable", () => {
     presentationManagerMock.setup(async (x) => x.getContent(moq.It.isAny())).returns(async () => new Content(descriptor, [item]));
 
     const { result, waitFor } = renderHook(
-      (props: UsePresentationTableProps<ColumnDefinition, RowDefinition>) => usePresentationTable(props),
+      (props: UsePresentationTableProps<TableColumnDefinition, TableRowDefinition>) => usePresentationTable(props),
       { initialProps },
     );
 
@@ -69,7 +69,7 @@ describe("usePresentationTable", () => {
 
 describe("usePresentationTableWithUnifiedSelection", () => {
   const imodel = {} as IModelConnection;
-  const initialProps: Omit<UsePresentationTableProps<ColumnDefinition, RowDefinition>, "keys"> = {
+  const initialProps: Omit<UsePresentationTableProps<TableColumnDefinition, TableRowDefinition>, "keys"> = {
     imodel,
     ruleset: "ruleset_id",
     columnMapper: (col) => col,

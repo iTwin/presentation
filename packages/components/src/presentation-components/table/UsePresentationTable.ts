@@ -7,7 +7,7 @@ import { useMemo } from "react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet, Ruleset } from "@itwin/presentation-common";
 import { useUnifiedSelectionContext } from "../unified-selection/UnifiedSelectionContext";
-import { ColumnDefinition, RowDefinition } from "./Types";
+import { TableColumnDefinition, TableRowDefinition } from "./Types";
 import { useColumns } from "./UseColumns";
 import { useRows } from "./UseRows";
 import { useTableOptions } from "./UseTableOptions";
@@ -25,10 +25,10 @@ export interface UsePresentationTableProps<TColumn, TRow> {
   keys: KeySet;
   /** Paging size for obtaining rows. */
   pageSize: number;
-  /** Function that maps one column from generic [[ColumnDefinition]] to table component specific type. */
-  columnMapper: (columns: ColumnDefinition) => TColumn;
-  /** Function that maps one row from generic [[RowDefinition]] to table component specific type. */
-  rowMapper: (row: RowDefinition) => TRow;
+  /** Function that maps one column from generic [[TableColumnDefinition]] to table component specific type. */
+  columnMapper: (columns: TableColumnDefinition) => TColumn;
+  /** Function that maps one row from generic [[TableRowDefinition]] to table component specific type. */
+  rowMapper: (row: TableRowDefinition) => TRow;
 }
 
 /**

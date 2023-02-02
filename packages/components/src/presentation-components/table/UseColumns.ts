@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { DefaultContentDisplayTypes, Descriptor, Field, KeySet, Ruleset } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { ColumnDefinition } from "./Types";
+import { TableColumnDefinition } from "./Types";
 
 export interface UseColumnsProps {
   imodel: IModelConnection;
@@ -15,9 +15,9 @@ export interface UseColumnsProps {
   keys: KeySet;
 }
 
-export function useColumns(props: UseColumnsProps): ColumnDefinition[] | undefined {
+export function useColumns(props: UseColumnsProps): TableColumnDefinition[] | undefined {
   const { imodel, ruleset, keys } = props;
-  const [columns, setColumns] = useState<ColumnDefinition[]>();
+  const [columns, setColumns] = useState<TableColumnDefinition[]>();
 
   useEffect(() => {
     let disposed = false;
@@ -39,7 +39,7 @@ export function useColumns(props: UseColumnsProps): ColumnDefinition[] | undefin
   return columns;
 }
 
-async function loadColumns(imodel: IModelConnection, ruleset: Ruleset | string, keys: KeySet): Promise<ColumnDefinition[] | undefined> {
+async function loadColumns(imodel: IModelConnection, ruleset: Ruleset | string, keys: KeySet): Promise<TableColumnDefinition[] | undefined> {
   const descriptor = await Presentation.presentation.getContentDescriptor({
     imodel,
     rulesetOrId: ruleset,
@@ -50,15 +50,15 @@ async function loadColumns(imodel: IModelConnection, ruleset: Ruleset | string, 
   return descriptor ? createColumns(descriptor) : undefined;
 }
 
-function createColumns(descriptor: Descriptor): ColumnDefinition[] {
+function createColumns(descriptor: Descriptor): TableColumnDefinition[] {
   return descriptor.fields.flatMap(convertFieldToColumns);
 }
 
-function convertFieldToColumns(field: Field): ColumnDefinition[] {
-  return field.isPropertiesField() ? [createColumnDefinition(field)] : [];
+function convertFieldToColumns(field: Field): TableColumnDefinition[] {
+  return field.isPropertiesField() ? [createTableColumnDefinition(field)] : [];
 }
 
-function createColumnDefinition(field: Field): ColumnDefinition {
+function createTableColumnDefinition(field: Field): TableColumnDefinition {
   return {
     name: field.name,
     label: field.label,

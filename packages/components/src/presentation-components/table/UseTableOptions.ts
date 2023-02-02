@@ -5,10 +5,10 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { FieldDescriptor, SortDirection } from "@itwin/presentation-common";
-import { ColumnDefinition } from "./Types";
+import { TableColumnDefinition } from "./Types";
 
 export interface UseTableOptionsProps {
-  columns: ColumnDefinition[] | undefined;
+  columns: TableColumnDefinition[] | undefined;
 }
 
 export interface TableOptions {

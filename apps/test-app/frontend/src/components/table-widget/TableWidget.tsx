@@ -7,7 +7,7 @@ import { useCallback, useMemo } from "react";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ProgressRadial, Table } from "@itwin/itwinui-react";
-import { ColumnDefinition, RowDefinition, TableCellRenderer, usePresentationTableWithUnifiedSelection } from "@itwin/presentation-components";
+import { TableCellRenderer, TableColumnDefinition, TableRowDefinition, usePresentationTableWithUnifiedSelection } from "@itwin/presentation-components";
 
 export interface TableWidgetProps {
   imodel: IModelConnection;
@@ -67,7 +67,7 @@ function PresentationTable(props: PresentationTableProps) {
   );
 }
 
-function mapTableColumns(columnDefinitions: ColumnDefinition) {
+function mapTableColumns(columnDefinitions: TableColumnDefinition) {
   return {
     id: columnDefinitions.name,
     accessor: columnDefinitions.name,
@@ -76,7 +76,7 @@ function mapTableColumns(columnDefinitions: ColumnDefinition) {
   };
 }
 
-function mapTableRow(rowDefinition: RowDefinition) {
+function mapTableRow(rowDefinition: TableRowDefinition) {
   const newRow: { [key: string]: PropertyRecord } = {};
   rowDefinition.cells.forEach((cell) => { newRow[cell.key] = cell.record; });
   return newRow;

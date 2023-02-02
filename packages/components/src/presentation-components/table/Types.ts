@@ -10,7 +10,7 @@ import { Field } from "@itwin/presentation-common";
  * Data structure that defines table column.
  * @beta
  */
-export interface ColumnDefinition {
+export interface TableColumnDefinition {
   /** Unique column name. */
   name: string;
   /** Column display label. */
@@ -23,19 +23,19 @@ export interface ColumnDefinition {
  * Data structure that defined table row.
  * @beta
  */
-export interface RowDefinition {
+export interface TableRowDefinition {
   /** Unique row key. */
   key: string;
   /** List of cells in this row. */
-  cells: CellDefinition[];
+  cells: TableCellDefinition[];
 }
 
 /**
  * Data structure that defined table cell.
  * @beta
  */
-export interface CellDefinition {
-  /** Unique key that matches [[ColumnDefinition]] name. */
+export interface TableCellDefinition {
+  /** Unique key that matches [[TableColumnDefinition]] name. */
   key: string;
   /** Record containing property definition and value of this cell. */
   record: PropertyRecord;
