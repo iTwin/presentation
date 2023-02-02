@@ -9,6 +9,7 @@ import * as sinon from "sinon";
 import * as moq from "typemoq";
 import { PageOptions, PropertyFilterRuleOperator } from "@itwin/components-react";
 import { BeEvent, Logger } from "@itwin/core-bentley";
+import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { CheckBoxState } from "@itwin/core-react";
 import {
@@ -51,6 +52,7 @@ describe("TreeDataProvider", () => {
 
   before(() => {
     rulesetId = "ruleset_id";
+    Presentation.setLocalization(new EmptyLocalization());
     Presentation.setPresentationManager(presentationManagerMock.object);
   });
 

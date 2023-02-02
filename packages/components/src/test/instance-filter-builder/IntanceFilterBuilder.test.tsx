@@ -342,7 +342,7 @@ describe("usePresentationInstanceFilteringProps", () => {
         { initialProps });
 
       const property = result.current.properties.find((prop) => prop.displayLabel === concretePropertiesField2.label);
-      result.current.onRulePropertySelected(property);
+      result.current.onRulePropertySelected(property!);
       await waitForValueToChange(() => result.current);
       expect(result.current.selectedClasses).to.have.lengthOf(1).and.containSubset([
         concreteClass2,
@@ -355,7 +355,7 @@ describe("usePresentationInstanceFilteringProps", () => {
         { initialProps });
 
       const property = result.current.properties.find((prop) => prop.displayLabel === basePropertiesField.label);
-      result.current.onRulePropertySelected(property);
+      result.current.onRulePropertySelected(property!);
       await waitForValueToChange(() => result.current);
       expect(result.current.selectedClasses).to.have.lengthOf(2).and.containSubset([
         concreteClass1,
@@ -374,7 +374,7 @@ describe("usePresentationInstanceFilteringProps", () => {
         concreteClass2,
       ]);
       const property = result.current.properties.find((prop) => prop.displayLabel === concretePropertiesField2.label);
-      result.current.onRulePropertySelected(property);
+      result.current.onRulePropertySelected(property!);
       await waitForValueToChange(() => result.current);
       expect(result.current.selectedClasses).to.have.lengthOf(1).and.containSubset([
         concreteClass2,
