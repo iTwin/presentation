@@ -70,6 +70,16 @@ export * from "./presentation-components/tree/controlled/PresentationTreeNodeRen
 export { PRESENTATION_TREE_NODE_KEY };
 
 /**
+ * @module Table
+ *
+ * @docs-group-description Table
+ * Presentation features for Table component.
+ */
+export * from "./presentation-components/table/UsePresentationTable";
+export * from "./presentation-components/table/Types";
+export * from "./presentation-components/table/CellRenderer";
+
+/**
  * @module Viewport
  *
  * @docs-group-description Viewport
