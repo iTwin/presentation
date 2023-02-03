@@ -25,7 +25,7 @@ import {
   IPresentationTreeDataProvider, UnifiedSelectionTreeEventHandler, useUnifiedSelectionTreeEventHandler,
 } from "../../../presentation-components";
 import { UnifiedSelectionTreeEventHandlerParams } from "../../../presentation-components/tree/controlled/UseUnifiedSelection";
-import { PRESENTATION_TREE_NODE_KEY } from "../../../presentation-components/tree/Utils";
+import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem";
 import { createTestECClassGroupingNodeKey, createTestECInstancesNodeKey } from "../../_helpers/Hierarchy";
 import { ResolvablePromise } from "../../_helpers/Promises";
 import { createTestTreeNodeItem } from "../../_helpers/UiComponents";
@@ -44,7 +44,7 @@ describe("UnifiedSelectionEventHandler", () => {
   const treeModelMock = moq.Mock.ofType<TreeModel>();
   const dataProviderMock = moq.Mock.ofType<IPresentationTreeDataProvider>();
   dataProviderMock.setup((x) => x.getNodeKey(moq.It.isAny())).returns((n: TreeNodeItem) => {
-    return (n as any)[PRESENTATION_TREE_NODE_KEY];
+    return (n as PresentationTreeNodeItem).key;
   });
 
   let onModelChangeEvent: BeUiEvent<[TreeModel, TreeModelChanges]>;
@@ -289,7 +289,7 @@ describe("UnifiedSelectionEventHandler", () => {
       const keySet = new KeySet([dataProviderMock.target.getNodeKey(node.item)]);
       selectionHandlerMock.setup((x) => x.getSelection()).returns(() => keySet);
       treeModelSourceMock.setup((x) => x.modifyModel(moq.It.isAny())).callback((action) => action(treeModelMock.object));
-      (node.item as any)[PRESENTATION_TREE_NODE_KEY] = undefined;
+      (node.item as Partial<PresentationTreeNodeItem>).key = undefined;
 
       treeModelMock.setup((x) => x.getNode(node.id)).returns(() => node);
 

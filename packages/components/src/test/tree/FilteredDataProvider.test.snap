@@ -3,7 +3,9 @@
 exports[`FilteredTreeDataProvider getNodes returns child nodes 1`] = `
 Array [
   Object {
-    "__presentation-components/key": Object {
+    "description": "testDescription",
+    "id": "0x4",
+    "key": Object {
       "instanceKeys": Array [
         Object {
           "className": "TestSchema:TestClass",
@@ -16,8 +18,6 @@ Array [
       "type": "ECInstancesNode",
       "version": 2,
     },
-    "description": "testDescription",
-    "id": "0x4",
     "label": PropertyRecord {
       "property": Object {
         "displayLabel": "Label",
@@ -33,7 +33,11 @@ Array [
     "parentId": "0x2",
   },
   Object {
-    "__presentation-components/key": Object {
+    "autoExpand": true,
+    "description": "testDescription",
+    "hasChildren": true,
+    "id": "0x5",
+    "key": Object {
       "instanceKeys": Array [
         Object {
           "className": "TestSchema:TestClass",
@@ -46,10 +50,6 @@ Array [
       "type": "ECInstancesNode",
       "version": 2,
     },
-    "autoExpand": true,
-    "description": "testDescription",
-    "hasChildren": true,
-    "id": "0x5",
     "label": PropertyRecord {
       "property": Object {
         "displayLabel": "Label",
@@ -70,7 +70,11 @@ Array [
 exports[`FilteredTreeDataProvider getNodes returns root nodes 1`] = `
 Array [
   Object {
-    "__presentation-components/key": Object {
+    "autoExpand": true,
+    "description": "testDescription",
+    "hasChildren": true,
+    "id": "0x1",
+    "key": Object {
       "instanceKeys": Array [
         Object {
           "className": "TestSchema:TestClass",
@@ -83,10 +87,6 @@ Array [
       "type": "ECInstancesNode",
       "version": 2,
     },
-    "autoExpand": true,
-    "description": "testDescription",
-    "hasChildren": true,
-    "id": "0x1",
     "label": PropertyRecord {
       "property": Object {
         "displayLabel": "Label",
@@ -101,7 +101,11 @@ Array [
     },
   },
   Object {
-    "__presentation-components/key": Object {
+    "autoExpand": true,
+    "description": "testDescription",
+    "hasChildren": true,
+    "id": "0x2",
+    "key": Object {
       "instanceKeys": Array [
         Object {
           "className": "TestSchema:TestClass",
@@ -114,10 +118,6 @@ Array [
       "type": "ECInstancesNode",
       "version": 2,
     },
-    "autoExpand": true,
-    "description": "testDescription",
-    "hasChildren": true,
-    "id": "0x2",
     "label": PropertyRecord {
       "property": Object {
         "displayLabel": "Label",

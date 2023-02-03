@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
-import { InstanceFilterPropertyInfo } from "../../presentation-components/instance-filter-builder/Types";
+import { InstanceFilterPropertyInfo } from "../../presentation-components/instance-filter-builder/Utils";
 import { createTestPropertyInfo } from "../_helpers/Common";
 import { createTestCategoryDescription, createTestPropertiesContentField } from "../_helpers/Content";
 
