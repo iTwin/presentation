@@ -1,4 +1,4 @@
-name: Publish NPM packages
+name: Publish dev pre-release NPM packages
 
 on:
   workflow_dispatch:
@@ -39,6 +39,6 @@ jobs:
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
-        pnpm publish-packages -y --branch ${{ github.ref_name }}
+        pnpm publish-packages-dev -y --branch ${{ github.ref_name }}
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPMJS_PUBLISH_ITWIN }}
