@@ -1,5 +1,5 @@
 {
-  "name": "presentation-monorepo",
+  "name": "presentation",
   "private": true,
   "repository": {
     "url": "https://github.com/iTwin/presentation"
