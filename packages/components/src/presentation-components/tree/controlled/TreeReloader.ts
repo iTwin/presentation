@@ -19,7 +19,7 @@ import { tap } from "rxjs/internal/operators/tap";
 import {
   isTreeModelNode, PagedTreeNodeLoader, toRxjsObservable, TreeModel, TreeModelNode, TreeModelRootNode, TreeModelSource, TreeNodeLoadResult,
 } from "@itwin/components-react";
-import { assert } from "@itwin/core-bentley";
+import { assert, isIDisposable } from "@itwin/core-bentley";
 import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
 
 /**
@@ -39,7 +39,7 @@ export function reloadTree(
   const nodeLoader = new TreeReloader(dataProvider, modelSource, pageSize, treeModel);
   return nodeLoader.reloadTree().pipe(
     endWith(modelSource),
-    finalize(() => nodeLoader.dispose()),
+    finalize(() => isIDisposable(nodeLoader) && /* istanbul ignore next */ nodeLoader.dispose()),
   );
 }
 
