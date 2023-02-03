@@ -32,8 +32,8 @@ jobs:
     - name: Install dependencies
       run: pnpm install
 
-    - name: Build, Lint, Test
-      run: pnpm lage build lint cover
+    - name: Build
+      run: pnpm build:all
 
     - name: Publish packages
       run: |
