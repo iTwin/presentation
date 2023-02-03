@@ -15,7 +15,7 @@ import { IPresentationPropertyDataProvider } from "../../presentation-components
 
 /**
  * Props for [[FavoritePropertiesDataFilterer]].
- * @beta
+ * @public
  */
 export interface FavoritePropertiesDataFiltererProps {
   /** Source properties data provider */
@@ -27,13 +27,13 @@ export interface FavoritePropertiesDataFiltererProps {
   /** Should the filterer become active when created. */
   isActive?: boolean;
 
-  /** Callback to check whether a property is favorite or not */
+  /** Callback to check whether a property is favorite or not. Defaults to calling `Presentation.favoriteProperties` to get this information. */
   isFavorite?: (field: Field, imodel: IModelConnection, scope: FavoritePropertiesScope) => boolean;
 }
 
 /**
  * [[IPropertyDataFilterer]] implementation which filters favorite properties
- * @beta
+ * @public
  */
 export class FavoritePropertiesDataFilterer extends PropertyDataFiltererBase {
   private _source: IPresentationPropertyDataProvider;

@@ -7,7 +7,7 @@ import { expect } from "chai";
 import { LabelDefinition, Node } from "@itwin/presentation-common";
 import { PageOptions } from "@itwin/components-react";
 import {
-  createPartialTreeNodeItem, createTreeNodeItem, createTreeNodeItems, pageOptionsUiToPresentation, PRESENTATION_TREE_NODE_KEY,
+  createPartialTreeNodeItem, createTreeNodeItem, createTreeNodeItems, pageOptionsUiToPresentation,
 } from "../../presentation-components/tree/Utils";
 import { createTestECClassGroupingNodeKey, createTestECInstancesNode } from "../_helpers/Hierarchy";
 
@@ -78,12 +78,12 @@ describe("Utils", () => {
       );
       expect(node.id).not.to.be.undefined;
       expect(node.label).not.to.be.undefined;
-      expect(PRESENTATION_TREE_NODE_KEY in node).to.be.true;
+      expect(node.key).not.to.be.undefined;
     });
 
     it("does not set a presentation tree node key when input does not have a key", () => {
       const node = createPartialTreeNodeItem({}, undefined, {});
-      expect(PRESENTATION_TREE_NODE_KEY in node).to.be.false;
+      expect(node.key).to.be.undefined;
     });
 
     it("uses provided callback to customize tree node", () => {
