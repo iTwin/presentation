@@ -6,10 +6,9 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import * as moq from "typemoq";
-import { TreeModelNodeInput, TreeModelSource, TreeNodeItem, UiComponents } from "@itwin/components-react";
+import { TreeModelNodeInput, TreeModelSource, UiComponents } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { NodeKey } from "@itwin/presentation-common";
 import { Presentation, StateTracker } from "@itwin/presentation-frontend";
 import { cleanup, renderHook } from "@testing-library/react-hooks";
 import { createLabelRecord } from "../../../presentation-components/common/Utils";
@@ -17,18 +16,15 @@ import {
   useHierarchyStateTracking, UseHierarchyStateTrackingProps,
 } from "../../../presentation-components/tree/controlled/UseHierarchyStateTracking";
 import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";
+import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem";
 import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy";
 import { mockPresentationManager } from "../../_helpers/UiComponents";
 
-interface TestTreeNodeItem extends TreeNodeItem {
-  key: NodeKey;
-}
-
-function createNodeItem(nodeId: string): TestTreeNodeItem {
+function createNodeItem(nodeId: string): PresentationTreeNodeItem {
   return { id: nodeId, label: createLabelRecord({ displayValue: nodeId, typeName: "string", rawValue: nodeId }, nodeId), key: createTestECInstancesNodeKey() };
 }
 
-function createTreeModelInput(node: TestTreeNodeItem, isExpanded?: boolean): TreeModelNodeInput {
+function createTreeModelInput(node: PresentationTreeNodeItem, isExpanded?: boolean): TreeModelNodeInput {
   return {
     id: node.id,
     isExpanded: isExpanded ?? false,
@@ -58,7 +54,7 @@ describe("useHierarchyStateTracking", () => {
   beforeEach(() => {
     stateTrackerMock.reset();
     dataProviderMock.reset();
-    dataProviderMock.setup((x) => x.getNodeKey(moq.It.isAny())).returns((node) => (node as TestTreeNodeItem).key);
+    dataProviderMock.setup((x) => x.getNodeKey(moq.It.isAny())).returns((node) => (node as PresentationTreeNodeItem).key);
     dataProviderMock.setup((x) => x.imodel).returns(() => imodelMock.object);
     dataProviderMock.setup((x) => x.rulesetId).returns(() => rulesetId);
 

@@ -5,15 +5,18 @@
 
 import { expect } from "chai";
 import { PropertyDescription, PropertyValueFormat } from "@itwin/appui-abstract";
-import { PropertyFilter, PropertyFilterRule, PropertyFilterRuleGroup, PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator } from "@itwin/components-react";
-import { Field } from "@itwin/presentation-common";
 import {
-  convertPresentationFilterToPropertyFilter,
-  createInstanceFilterPropertyInfos, createPresentationInstanceFilter, INSTANCE_FILTER_FIELD_SEPARATOR,
-} from "../../presentation-components/instance-filter-builder/Utils";
+  PropertyFilter, PropertyFilterRule, PropertyFilterRuleGroup, PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator,
+} from "@itwin/components-react";
+import { Field } from "@itwin/presentation-common";
 import { PresentationInstanceFilter } from "../../presentation-components/instance-filter-builder/Types";
-import { createTestCategoryDescription, createTestContentDescriptor, createTestNestedContentField, createTestPropertiesContentField } from "../_helpers/Content";
+import {
+  convertPresentationFilterToPropertyFilter, createInstanceFilterPropertyInfos, createPresentationInstanceFilter, INSTANCE_FILTER_FIELD_SEPARATOR,
+} from "../../presentation-components/instance-filter-builder/Utils";
 import { createTestECClassInfo } from "../_helpers/Common";
+import {
+  createTestCategoryDescription, createTestContentDescriptor, createTestNestedContentField, createTestPropertiesContentField,
+} from "../_helpers/Content";
 
 function getPropertyDescriptionName(field: Field) {
   return `${INSTANCE_FILTER_FIELD_SEPARATOR}${field.name}`;

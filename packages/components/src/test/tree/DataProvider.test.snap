@@ -36,6 +36,7 @@ Array [
         "rawValue": "test_label",
         "typeName": "string",
       },
+      "supportsFiltering": undefined,
     },
   },
   Object {
@@ -72,6 +73,7 @@ Array [
         "rawValue": "test_label",
         "typeName": "string",
       },
+      "supportsFiltering": undefined,
     },
   },
 ]
@@ -80,7 +82,9 @@ Array [
 exports[`TreeDataProvider getNodes returns presentation manager result 1`] = `
 Array [
   Object {
-    "__presentation-components/key": Object {
+    "description": "testDescription",
+    "id": "childHash/parentHash",
+    "key": Object {
       "instanceKeys": Array [
         Object {
           "className": "TestSchema:TestClass",
@@ -98,8 +102,6 @@ Array [
       "type": "ECInstancesNode",
       "version": 2,
     },
-    "description": "testDescription",
-    "id": "childHash/parentHash",
     "label": PropertyRecord {
       "property": Object {
         "displayLabel": "Label",
@@ -115,7 +117,9 @@ Array [
     "parentId": "node_id",
   },
   Object {
-    "__presentation-components/key": Object {
+    "description": "testDescription",
+    "id": "childHash/parentHash",
+    "key": Object {
       "instanceKeys": Array [
         Object {
           "className": "TestSchema:TestClass",
@@ -133,8 +137,6 @@ Array [
       "type": "ECInstancesNode",
       "version": 2,
     },
-    "description": "testDescription",
-    "id": "childHash/parentHash",
     "label": PropertyRecord {
       "property": Object {
         "displayLabel": "Label",
