@@ -11,7 +11,7 @@
     "webpack": "webpack",
     "build": "tsc --noEmit",
     "lint": "eslint ./src/**/*.{ts,tsx}",
-    "docs": "betools extract --fileExt=ts,tsx --extractFrom=./src --recursive --out=../../../build/generated-docs/extract"
+    "docs": "betools extract --fileExt=ts,tsx --extractFrom=./src --recursive --out=../../../build/docs/extract"
   },
   "dependencies": {
     "@test-app/common": "workspace:*",
