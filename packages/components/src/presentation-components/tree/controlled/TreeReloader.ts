@@ -39,7 +39,7 @@ export function reloadTree(
   const nodeLoader = new TreeReloader(dataProvider, modelSource, pageSize, treeModel);
   return nodeLoader.reloadTree().pipe(
     endWith(modelSource),
-    finalize(() => nodeLoader.dispose()),
+    finalize(() => (nodeLoader as any).dispose && (nodeLoader as any).dispose()),
   );
 }
 
