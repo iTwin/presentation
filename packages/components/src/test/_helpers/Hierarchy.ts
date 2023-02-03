@@ -35,6 +35,7 @@ export function createTestECInstancesNode(props?: Partial<Node>): Node {
     isSelectionDisabled: props?.isSelectionDisabled ?? false,
     isEditable: props?.isEditable ?? false,
     isExpanded: props?.isExpanded ?? false,
+    supportsFiltering: props?.supportsFiltering,
   };
 }
 

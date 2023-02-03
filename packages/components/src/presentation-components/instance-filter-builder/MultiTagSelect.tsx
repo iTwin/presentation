@@ -14,7 +14,7 @@ export function MultiTagSelect<Option extends OptionTypeBase>(props: Props<Optio
   return <Component
     {...props}
     styles={{
-      control: () => ({ display: "grid", gridTemplateColumns: "auto auto", height: "41px", padding: "0 12px" }),
+      control: () => ({ display: "grid", gridTemplateColumns: "auto auto", height: "41px", padding: "0 0 0 12px" }),
       menu: () => ({ position: "absolute", zIndex: 9999 }),
       option: () => ({}),
       input: (style) => ({ ...style, order: -1, flex: 0 }),

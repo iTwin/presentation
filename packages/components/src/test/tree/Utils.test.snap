@@ -2,14 +2,14 @@
 
 exports[`Utils createPartialTreeNodeItem uses provided callback to customize tree node 1`] = `
 Object {
-  "__presentation-components/key": Object {
+  "description": "custom-description",
+  "icon": "custom-icon",
+  "id": "",
+  "key": Object {
     "pathFromRoot": Array [],
     "type": "",
     "version": 0,
   },
-  "description": "custom-description",
-  "icon": "custom-icon",
-  "id": "",
   "label": PropertyRecord {
     "property": Object {
       "displayLabel": "Label",
@@ -27,7 +27,8 @@ Object {
 
 exports[`Utils createTreeNodeItem appends grouped nodes count if requested 1`] = `
 Object {
-  "__presentation-components/key": Object {
+  "id": "hash",
+  "key": Object {
     "className": "TestSchema:GroupedClass",
     "groupedInstancesCount": 999,
     "pathFromRoot": Array [
@@ -36,7 +37,6 @@ Object {
     "type": "ECClassGroupingNode",
     "version": 2,
   },
-  "id": "hash",
   "label": PropertyRecord {
     "property": Object {
       "displayLabel": "Label",
@@ -68,7 +68,10 @@ Object {
 
 exports[`Utils createTreeNodeItem creates auto expanded tree node 1`] = `
 Object {
-  "__presentation-components/key": Object {
+  "autoExpand": true,
+  "description": "testDescription",
+  "id": "childHash/parentHash",
+  "key": Object {
     "instanceKeys": Array [
       Object {
         "className": "TestSchema:TestClass",
@@ -86,9 +89,6 @@ Object {
     "type": "ECInstancesNode",
     "version": 2,
   },
-  "autoExpand": true,
-  "description": "testDescription",
-  "id": "childHash/parentHash",
   "label": PropertyRecord {
     "property": Object {
       "displayLabel": "Label",
@@ -106,7 +106,9 @@ Object {
 
 exports[`Utils createTreeNodeItem creates tree node 1`] = `
 Object {
-  "__presentation-components/key": Object {
+  "description": "testDescription",
+  "id": "childHash/parentHash",
+  "key": Object {
     "instanceKeys": Array [
       Object {
         "className": "TestSchema:TestClass",
@@ -124,8 +126,6 @@ Object {
     "type": "ECInstancesNode",
     "version": 2,
   },
-  "description": "testDescription",
-  "id": "childHash/parentHash",
   "label": PropertyRecord {
     "property": Object {
       "displayLabel": "Label",
@@ -143,7 +143,9 @@ Object {
 
 exports[`Utils createTreeNodeItem creates tree node with custom label styles 1`] = `
 Object {
-  "__presentation-components/key": Object {
+  "description": "testDescription",
+  "id": "childHash/parentHash",
+  "key": Object {
     "instanceKeys": Array [
       Object {
         "className": "TestSchema:TestClass",
@@ -161,8 +163,6 @@ Object {
     "type": "ECInstancesNode",
     "version": 2,
   },
-  "description": "testDescription",
-  "id": "childHash/parentHash",
   "label": PropertyRecord {
     "property": Object {
       "displayLabel": "Label",
@@ -184,7 +184,9 @@ Object {
 
 exports[`Utils createTreeNodeItem creates tree node with parent id 1`] = `
 Object {
-  "__presentation-components/key": Object {
+  "description": "testDescription",
+  "id": "childHash/parentHash",
+  "key": Object {
     "instanceKeys": Array [
       Object {
         "className": "TestSchema:TestClass",
@@ -202,8 +204,6 @@ Object {
     "type": "ECInstancesNode",
     "version": 2,
   },
-  "description": "testDescription",
-  "id": "childHash/parentHash",
   "label": PropertyRecord {
     "property": Object {
       "displayLabel": "Label",
@@ -222,7 +222,10 @@ Object {
 
 exports[`Utils createTreeNodeItem uses provided callback to customize tree node 1`] = `
 Object {
-  "__presentation-components/key": Object {
+  "description": "custom-description",
+  "icon": "custom-icon",
+  "id": "childHash/parentHash",
+  "key": Object {
     "instanceKeys": Array [
       Object {
         "className": "TestSchema:TestClass",
@@ -240,9 +243,6 @@ Object {
     "type": "ECInstancesNode",
     "version": 2,
   },
-  "description": "custom-description",
-  "icon": "custom-icon",
-  "id": "childHash/parentHash",
   "label": PropertyRecord {
     "property": Object {
       "displayLabel": "Label",
@@ -261,7 +261,9 @@ Object {
 exports[`Utils createTreeNodeItems creates tree nodes 1`] = `
 Array [
   Object {
-    "__presentation-components/key": Object {
+    "description": "testDescription",
+    "id": "childHash/parentHash",
+    "key": Object {
       "instanceKeys": Array [
         Object {
           "className": "TestSchema:TestClass",
@@ -279,8 +281,6 @@ Array [
       "type": "ECInstancesNode",
       "version": 2,
     },
-    "description": "testDescription",
-    "id": "childHash/parentHash",
     "label": PropertyRecord {
       "property": Object {
         "displayLabel": "Label",
@@ -295,7 +295,9 @@ Array [
     },
   },
   Object {
-    "__presentation-components/key": Object {
+    "description": "testDescription",
+    "id": "childHash/parentHash",
+    "key": Object {
       "instanceKeys": Array [
         Object {
           "className": "TestSchema:TestClass",
@@ -313,8 +315,6 @@ Array [
       "type": "ECInstancesNode",
       "version": 2,
     },
-    "description": "testDescription",
-    "id": "childHash/parentHash",
     "label": PropertyRecord {
       "property": Object {
         "displayLabel": "Label",
@@ -334,7 +334,9 @@ Array [
 exports[`Utils createTreeNodeItems creates tree nodes with parentId 1`] = `
 Array [
   Object {
-    "__presentation-components/key": Object {
+    "description": "testDescription",
+    "id": "childHash/parentHash",
+    "key": Object {
       "instanceKeys": Array [
         Object {
           "className": "TestSchema:TestClass",
@@ -352,8 +354,6 @@ Array [
       "type": "ECInstancesNode",
       "version": 2,
     },
-    "description": "testDescription",
-    "id": "childHash/parentHash",
     "label": PropertyRecord {
       "property": Object {
         "displayLabel": "Label",
@@ -369,7 +369,9 @@ Array [
     "parentId": "test_parent_id",
   },
   Object {
-    "__presentation-components/key": Object {
+    "description": "testDescription",
+    "id": "childHash/parentHash",
+    "key": Object {
       "instanceKeys": Array [
         Object {
           "className": "TestSchema:TestClass",
@@ -387,8 +389,6 @@ Array [
       "type": "ECInstancesNode",
       "version": 2,
     },
-    "description": "testDescription",
-    "id": "childHash/parentHash",
     "label": PropertyRecord {
       "property": Object {
         "displayLabel": "Label",

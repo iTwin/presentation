@@ -8,7 +8,7 @@ import { useEffect } from "react";
 import { ControlledTree, SelectionMode, useTreeModel } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
-  DiagnosticsProps, useControlledPresentationTreeFiltering, usePresentationTreeNodeLoader,
+  DiagnosticsProps, PresentationTreeRenderer, useControlledPresentationTreeFiltering, usePresentationTreeNodeLoader,
   useUnifiedSelectionTreeEventHandler,
 } from "@itwin/presentation-components";
 
@@ -61,6 +61,7 @@ export function Tree(props: Props) {
       iconsEnabled={true}
       width={props.width}
       height={props.height}
+      treeRenderer={(treeProps) => <PresentationTreeRenderer {...treeProps} imodel={props.imodel} modelSource={filteredModelSource} />}
     />
   );
 }

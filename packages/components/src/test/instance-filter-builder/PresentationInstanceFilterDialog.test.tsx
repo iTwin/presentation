@@ -6,21 +6,21 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import * as moq from "typemoq";
-import { getPropertyFilterOperatorLabel, PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator, UiComponents } from "@itwin/components-react";
+import { getPropertyFilterOperatorLabel, PropertyFilterRuleOperator, UiComponents } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection, NoRenderApp } from "@itwin/core-frontend";
+import { Descriptor } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render, waitFor } from "@testing-library/react";
+import { PresentationInstanceFilterDialog } from "../../presentation-components";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
-import {
-  PresentationInstanceFilterBuilder, PresentationInstanceFilterInfo,
-} from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterBuilder";
+import { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterBuilder";
 import { createTestECClassInfo } from "../_helpers/Common";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
 import { stubRaf } from "./Common";
 
-describe("PresentationInstanceFilter", () => {
+describe("PresentationInstanceFilterDialog", () => {
   stubRaf();
   const category = createTestCategoryDescription({ name: "root", label: "Root" });
   const classInfo = createTestECClassInfo();
@@ -30,58 +30,22 @@ describe("PresentationInstanceFilter", () => {
     label: "propertiesField",
     category,
   });
-  const propertiesField2 = createTestPropertiesContentField({
-    properties: [{ property: { classInfo, name: "prop2", type: "string" } }],
-    name: "prop2Field",
-    label: "propertiesField2",
-    category,
-  });
-  const propertiesField3 = createTestPropertiesContentField({
-    properties: [{ property: { classInfo, name: "prop3", type: "string" } }],
-    name: "prop3Field",
-    label: "propertiesField3",
-    category,
-  });
   const descriptor = createTestContentDescriptor({
     selectClasses: [{ selectClassInfo: classInfo, isSelectPolymorphic: false }],
     categories: [category],
-    fields: [propertiesField, propertiesField2, propertiesField3],
+    fields: [propertiesField],
   });
   const initialFilter: PresentationInstanceFilterInfo = {
     filter: {
-      operator: PropertyFilterRuleGroupOperator.And,
-      conditions: [{
-        field: propertiesField,
-        operator: PropertyFilterRuleOperator.IsNull,
-        value: undefined,
-      },
-      {
-        field: propertiesField2,
-        operator: PropertyFilterRuleOperator.IsNull,
-        value: undefined,
-      }],
+      field: propertiesField,
+      operator: PropertyFilterRuleOperator.IsNull,
+      value: undefined,
     },
     usedClasses: [classInfo],
   };
 
   const imodelMock = moq.Mock.ofType<IModelConnection>();
   const onCloseEvent = new BeEvent<() => void>();
-
-  before(async () => {
-    await NoRenderApp.startup({
-      localization: new EmptyLocalization(),
-    });
-    await UiComponents.initialize(new EmptyLocalization());
-    await Presentation.initialize();
-    Element.prototype.scrollIntoView = sinon.stub();
-  });
-
-  after(async () => {
-    Presentation.terminate();
-    UiComponents.terminate();
-    await IModelApp.shutdown();
-    sinon.restore();
-  });
 
   beforeEach(() => {
     async function* generator() {
@@ -101,57 +65,129 @@ describe("PresentationInstanceFilter", () => {
     imodelMock.reset();
   });
 
-  it("invokes 'onInstanceFilterChanged' with filter", async () => {
+  before(async () => {
+    await NoRenderApp.startup({
+      localization: new EmptyLocalization(),
+    });
+    await UiComponents.initialize(new EmptyLocalization());
+    await Presentation.initialize();
+    Element.prototype.scrollIntoView = sinon.stub();
+  });
+
+  after(async () => {
+    Presentation.terminate();
+    UiComponents.terminate();
+    await IModelApp.shutdown();
+    sinon.restore();
+  });
+
+  it("invokes 'onInstanceFilterApplied' with filter", async () => {
     const spy = sinon.spy();
-    const { container, getByText, getByDisplayValue } = render(<PresentationInstanceFilterBuilder
+    const { container, getByText, getByDisplayValue } = render(<PresentationInstanceFilterDialog
       imodel={imodelMock.object}
       descriptor={descriptor}
-      onInstanceFilterChanged={spy}
+      onClose={() => { }}
+      onApply={spy}
+      isOpen={true}
     />);
+
+    const applyButton = container.querySelector<HTMLInputElement>(".presentation-instance-filter-button-bar .iui-high-visibility:disabled");
+    expect(applyButton?.disabled).to.be.true;
 
     // select property
     const propertySelector = container.querySelector<HTMLInputElement>(".rule-property .iui-input");
     expect(propertySelector).to.not.be.null;
     propertySelector?.focus();
     fireEvent.click(getByText(propertiesField.label));
-
     // wait until property is selected
     await waitFor(() => getByDisplayValue(propertiesField.label));
-
     // select operator
     const operatorSelector = container.querySelector<HTMLInputElement>(".rule-operator .iui-select-button");
     expect(operatorSelector).to.not.be.null;
     fireEvent.click(operatorSelector!);
-
     fireEvent.click(getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.IsNotNull)));
-
     // wait until operator is selected
     await waitFor(() => getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.IsNotNull)));
 
-    expect(spy).to.be.calledWith({
+    expect(applyButton?.disabled).to.be.false;
+    fireEvent.click(applyButton!);
+    expect(spy).to.be.calledOnceWith({
       filter: {
         field: propertiesField,
         operator: PropertyFilterRuleOperator.IsNotNull,
         value: undefined,
       },
       usedClasses: [classInfo],
-    }
-    );
+    });
   });
 
-  it("renders with initial filter", async () => {
+  it("renders custom title", async () => {
     const spy = sinon.spy();
-    const { container, queryByDisplayValue } = render(<PresentationInstanceFilterBuilder
+    const title = "custom title";
+
+    const { queryByText } = render(<PresentationInstanceFilterDialog
       imodel={imodelMock.object}
       descriptor={descriptor}
-      onInstanceFilterChanged={spy}
+      onClose={() => { }}
+      title={<div>{title}</div>}
+      onApply={spy}
+      isOpen={true}
       initialFilter={initialFilter}
     />);
-    const rules = container.querySelectorAll(".rule-property");
-    expect(rules.length).to.be.eq(2);
-    const rule1 = queryByDisplayValue(propertiesField.label);
-    expect(rule1).to.not.be.null;
-    const rule2 = queryByDisplayValue(propertiesField2.label);
-    expect(rule2).to.not.be.null;
+
+    expect(queryByText(title)).to.not.be.null;
+  });
+
+  it("renders filterResultCountRenderer", async () => {
+    const spy = sinon.spy();
+    const count = "custom count";
+
+    const { queryByText } = render(<PresentationInstanceFilterDialog
+      imodel={imodelMock.object}
+      descriptor={descriptor}
+      onClose={() => { }}
+      filterResultCountRenderer={() => { return <div>{count}</div>; }}
+      onApply={spy}
+      isOpen={true}
+    />);
+
+    expect(queryByText(count)).to.not.be.null;
+  });
+
+  it("renders with lazy-loaded descriptor", async () => {
+    const spy = sinon.spy();
+    const descriptorGetter = async () => descriptor;
+
+    const { container } = render(<PresentationInstanceFilterDialog
+      imodel={imodelMock.object}
+      descriptor={descriptorGetter}
+      onClose={() => { }}
+      onApply={spy}
+      isOpen={true}
+    />);
+
+    await waitFor(() => {
+      const propertySelector = container.querySelector<HTMLInputElement>(".rule-property .iui-input");
+      expect(propertySelector).to.not.be.undefined;
+    });
+  });
+
+  it("renders spinner while loading descriptor", async () => {
+    const spy = sinon.spy();
+    // simulate long loading descriptor
+    const descriptorGetter = async () => undefined as unknown as Descriptor;
+
+    const { container } = render(<PresentationInstanceFilterDialog
+      imodel={imodelMock.object}
+      descriptor={descriptorGetter}
+      onClose={() => { }}
+      onApply={spy}
+      isOpen={true}
+    />);
+
+    await waitFor(() => {
+      const progressIndicator = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-progress");
+      expect(progressIndicator).to.not.be.null;
+    });
   });
 });
