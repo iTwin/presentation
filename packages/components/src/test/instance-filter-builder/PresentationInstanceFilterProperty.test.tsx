@@ -7,7 +7,7 @@ import { expect } from "chai";
 import sinon from "sinon";
 import { UiComponents } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelApp, NoRenderApp } from "@itwin/core-frontend";
+import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render } from "@testing-library/react";
 import { PresentationInstanceFilterProperty } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterProperty";
@@ -19,9 +19,9 @@ describe("PresentationInstanceFilterProperty", () => {
   const schemaName = "TestSchema";
 
   before(async () => {
-    await NoRenderApp.startup({
-      localization: new EmptyLocalization(),
-    });
+    const localization = new EmptyLocalization();
+    sinon.stub(IModelApp, "initialized").get(() => true);
+    sinon.stub(IModelApp, "localization").get(() => localization);
     await UiComponents.initialize(new EmptyLocalization());
     await Presentation.initialize();
     Element.prototype.scrollIntoView = sinon.stub();
@@ -30,7 +30,6 @@ describe("PresentationInstanceFilterProperty", () => {
   after(async () => {
     Presentation.terminate();
     UiComponents.terminate();
-    await IModelApp.shutdown();
     sinon.restore();
   });
 

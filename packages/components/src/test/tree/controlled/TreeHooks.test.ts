@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { it } from "mocha";
+import sinon from "sinon";
 import * as moq from "typemoq";
 import { PrimitiveValue } from "@itwin/appui-abstract";
 import {
@@ -38,16 +38,7 @@ describe("usePresentationNodeLoader", () => {
     pagingSize: 5,
   };
 
-  before(async () => {
-    await UiComponents.initialize(new ITwinLocalization());
-  });
-
-  after(() => {
-    UiComponents.terminate();
-  });
-
-  beforeEach(() => {
-    imodelMock.reset();
+  beforeEach(async () => {
     imodelMock.setup((x) => x.key).returns(() => imodelKey);
     const mocks = mockPresentationManager();
     presentationManagerMock = mocks.presentationManager;
@@ -59,11 +50,14 @@ describe("usePresentationNodeLoader", () => {
     mocks.presentationManager
       .setup(async (x) => x.getNodesAndCount(moq.It.isAny()))
       .returns(async () => ({ count: 0, nodes: [] }));
-    Presentation.setPresentationManager(mocks.presentationManager.object);
+    sinon.stub(Presentation, "presentation").get(() => mocks.presentationManager.object);
+    await UiComponents.initialize(new ITwinLocalization());
   });
 
   afterEach(async () => {
     await cleanup();
+    imodelMock.reset();
+    UiComponents.terminate();
     Presentation.terminate();
   });
 

@@ -36,8 +36,8 @@ class Provider extends ContentDataProvider {
 
 describe("ContentDataProvider", () => {
 
-  let rulesetId: string;
-  let displayType: string;
+  const rulesetId = "ruleset_id";
+  const displayType = "test_display";
   let provider: Provider;
   let invalidateCacheSpy: sinon.SinonSpy<[CacheInvalidationProps], void>;
   let presentationManagerMock: moq.IMock<PresentationManager>;
@@ -45,18 +45,12 @@ describe("ContentDataProvider", () => {
   const imodelMock = moq.Mock.ofType<IModelConnection>();
   const imodelKey = "test-imodel-Key";
 
-  before(() => {
-    rulesetId = "ruleset_id";
-    displayType = "test_display";
-  });
-
   beforeEach(() => {
     const mocks = mockPresentationManager();
     rulesetsManagerMock = mocks.rulesetsManager;
     presentationManagerMock = mocks.presentationManager;
-    Presentation.setPresentationManager(presentationManagerMock.object);
+    sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
 
-    imodelMock.reset();
     imodelMock.setup((x) => x.key).returns(() => imodelKey);
 
     provider = new Provider({ imodel: imodelMock.object, ruleset: rulesetId, displayType, enableContentAutoUpdate: true });
@@ -64,7 +58,9 @@ describe("ContentDataProvider", () => {
   });
 
   afterEach(() => {
+    imodelMock.reset();
     provider.dispose();
+    sinon.restore();
     Presentation.terminate();
   });
 

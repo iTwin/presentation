@@ -36,7 +36,11 @@ describe("usePresentationTable", () => {
   beforeEach(() => {
     const { presentationManager } = mockPresentationManager();
     presentationManagerMock = presentationManager;
-    Presentation.setPresentationManager(presentationManagerMock.object);
+    sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
+  });
+
+  afterEach(() => {
+    sinon.restore();
   });
 
   it("loads columns and rows", async () => {
