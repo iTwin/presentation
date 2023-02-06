@@ -1,7 +1,9 @@
-name: Publish NPM packages
+name: Publish dev pre-release NPM packages
 
 on:
   workflow_dispatch:
+  push:
+    branches: [ "master" ]
 
 jobs:
   release-packages:
@@ -32,13 +34,13 @@ jobs:
     - name: Install dependencies
       run: pnpm install
 
-    - name: Build, Lint, Test
-      run: pnpm lage build lint cover
+    - name: Build
+      run: pnpm build:all
 
     - name: Publish packages
       run: |
         git config --local user.email imodeljs-admin@users.noreply.github.com
         git config --local user.name imodeljs-admin
-        pnpm publish-packages -y --branch ${{ github.ref_name }}
+        pnpm publish-packages-dev -y --branch ${{ github.ref_name }}
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPMJS_PUBLISH_ITWIN }}
