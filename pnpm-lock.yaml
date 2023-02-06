@@ -16,21 +16,21 @@ importers:
 
   apps/test-app/backend:
     specifiers:
-      '@itwin/appui-abstract': ^4.0.0-dev.3
-      '@itwin/build-tools': ^4.0.0-dev.3
-      '@itwin/core-backend': ^4.0.0-dev.3
-      '@itwin/core-bentley': ^4.0.0-dev.3
-      '@itwin/core-common': ^4.0.0-dev.3
-      '@itwin/core-electron': ^4.0.0-dev.3
-      '@itwin/core-frontend': ^4.0.0-dev.3
-      '@itwin/core-geometry': ^4.0.0-dev.3
-      '@itwin/core-orbitgt': ^4.0.0-dev.3
-      '@itwin/core-quantity': ^4.0.0-dev.3
-      '@itwin/eslint-plugin': ^4.0.0-dev.3
-      '@itwin/express-server': ^4.0.0-dev.3
-      '@itwin/presentation-backend': ^4.0.0-dev.3
-      '@itwin/presentation-common': ^4.0.0-dev.3
-      '@itwin/webgl-compatibility': ^4.0.0-dev.3
+      '@itwin/appui-abstract': ^4.0.0-dev.7
+      '@itwin/build-tools': ^4.0.0-dev.7
+      '@itwin/core-backend': ^4.0.0-dev.7
+      '@itwin/core-bentley': ^4.0.0-dev.7
+      '@itwin/core-common': ^4.0.0-dev.7
+      '@itwin/core-electron': ^4.0.0-dev.7
+      '@itwin/core-frontend': ^4.0.0-dev.7
+      '@itwin/core-geometry': ^4.0.0-dev.7
+      '@itwin/core-orbitgt': ^4.0.0-dev.7
+      '@itwin/core-quantity': ^4.0.0-dev.7
+      '@itwin/eslint-plugin': ^4.0.0-dev.7
+      '@itwin/express-server': ^4.0.0-dev.7
+      '@itwin/presentation-backend': ^4.0.0-dev.7
+      '@itwin/presentation-common': ^4.0.0-dev.7
+      '@itwin/webgl-compatibility': ^4.0.0-dev.7
       '@test-app/common': workspace:*
       cross-env: ^7.0.3
       electron: ^22.0.0
@@ -62,13 +62,13 @@ importers:
 
   apps/test-app/common:
     specifiers:
-      '@itwin/build-tools': ^4.0.0-dev.3
-      '@itwin/core-bentley': ^4.0.0-dev.3
-      '@itwin/core-common': ^4.0.0-dev.3
-      '@itwin/core-geometry': ^4.0.0-dev.3
-      '@itwin/core-quantity': ^4.0.0-dev.3
-      '@itwin/eslint-plugin': ^4.0.0-dev.3
-      '@itwin/presentation-common': ^4.0.0-dev.3
+      '@itwin/build-tools': ^4.0.0-dev.7
+      '@itwin/core-bentley': ^4.0.0-dev.7
+      '@itwin/core-common': ^4.0.0-dev.7
+      '@itwin/core-geometry': ^4.0.0-dev.7
+      '@itwin/core-quantity': ^4.0.0-dev.7
+      '@itwin/eslint-plugin': ^4.0.0-dev.7
+      '@itwin/presentation-common': ^4.0.0-dev.7
       eslint: ^7.11.0
       rimraf: ^3.0.2
       typescript: ~4.4.0
@@ -87,27 +87,27 @@ importers:
   apps/test-app/frontend:
     specifiers:
       '@bentley/icons-generic-webfont': ^1.0.15
-      '@itwin/appui-abstract': ^4.0.0-dev.3
-      '@itwin/build-tools': ^4.0.0-dev.3
-      '@itwin/components-react': ^4.0.0-dev.3
-      '@itwin/core-backend': ^4.0.0-dev.3
-      '@itwin/core-bentley': ^4.0.0-dev.3
-      '@itwin/core-common': ^4.0.0-dev.3
-      '@itwin/core-electron': ^4.0.0-dev.3
-      '@itwin/core-frontend': ^4.0.0-dev.3
-      '@itwin/core-geometry': ^4.0.0-dev.3
-      '@itwin/core-i18n': ^4.0.0-dev.3
-      '@itwin/core-orbitgt': ^4.0.0-dev.3
-      '@itwin/core-quantity': ^4.0.0-dev.3
-      '@itwin/core-react': ^4.0.0-dev.3
-      '@itwin/eslint-plugin': ^4.0.0-dev.3
-      '@itwin/imodel-components-react': ^4.0.0-dev.3
+      '@itwin/appui-abstract': ^4.0.0-dev.7
+      '@itwin/build-tools': ^4.0.0-dev.7
+      '@itwin/components-react': ^4.0.0-dev.7
+      '@itwin/core-backend': ^4.0.0-dev.7
+      '@itwin/core-bentley': ^4.0.0-dev.7
+      '@itwin/core-common': ^4.0.0-dev.7
+      '@itwin/core-electron': ^4.0.0-dev.7
+      '@itwin/core-frontend': ^4.0.0-dev.7
+      '@itwin/core-geometry': ^4.0.0-dev.7
+      '@itwin/core-i18n': ^4.0.0-dev.7
+      '@itwin/core-orbitgt': ^4.0.0-dev.7
+      '@itwin/core-quantity': ^4.0.0-dev.7
+      '@itwin/core-react': ^4.0.0-dev.7
+      '@itwin/eslint-plugin': ^4.0.0-dev.7
+      '@itwin/imodel-components-react': ^4.0.0-dev.7
       '@itwin/itwinui-css': 0.x
       '@itwin/itwinui-react': ~1.42.0
-      '@itwin/presentation-common': ^4.0.0-dev.3
+      '@itwin/presentation-common': ^4.0.0-dev.7
       '@itwin/presentation-components': workspace:*
-      '@itwin/presentation-frontend': ^4.0.0-dev.3
-      '@itwin/webgl-compatibility': ^4.0.0-dev.3
+      '@itwin/presentation-frontend': ^4.0.0-dev.7
+      '@itwin/webgl-compatibility': ^4.0.0-dev.7
       '@test-app/common': workspace:*
       '@types/node': ^16.0.0
       '@types/react': ^17.0.37
@@ -180,25 +180,25 @@ importers:
 
   packages/components:
     specifiers:
-      '@itwin/appui-abstract': ^4.0.0-dev.3
-      '@itwin/build-tools': ^4.0.0-dev.3
-      '@itwin/components-react': ^4.0.0-dev.3
-      '@itwin/core-bentley': ^4.0.0-dev.3
-      '@itwin/core-common': ^4.0.0-dev.3
-      '@itwin/core-frontend': ^4.0.0-dev.3
-      '@itwin/core-geometry': ^4.0.0-dev.3
-      '@itwin/core-i18n': ^4.0.0-dev.3
-      '@itwin/core-orbitgt': ^4.0.0-dev.3
-      '@itwin/core-quantity': ^4.0.0-dev.3
-      '@itwin/core-react': ^4.0.0-dev.3
-      '@itwin/eslint-plugin': ^4.0.0-dev.3
-      '@itwin/imodel-components-react': ^4.0.0-dev.3
+      '@itwin/appui-abstract': ^4.0.0-dev.7
+      '@itwin/build-tools': ^4.0.0-dev.7
+      '@itwin/components-react': ^4.0.0-dev.7
+      '@itwin/core-bentley': ^4.0.0-dev.7
+      '@itwin/core-common': ^4.0.0-dev.7
+      '@itwin/core-frontend': ^4.0.0-dev.7
+      '@itwin/core-geometry': ^4.0.0-dev.7
+      '@itwin/core-i18n': ^4.0.0-dev.7
+      '@itwin/core-orbitgt': ^4.0.0-dev.7
+      '@itwin/core-quantity': ^4.0.0-dev.7
+      '@itwin/core-react': ^4.0.0-dev.7
+      '@itwin/eslint-plugin': ^4.0.0-dev.7
+      '@itwin/imodel-components-react': ^4.0.0-dev.7
       '@itwin/itwinui-css': 0.x
       '@itwin/itwinui-icons-react': ^1.8.0
       '@itwin/itwinui-react': ~1.46.0
-      '@itwin/presentation-common': ^4.0.0-dev.3
-      '@itwin/presentation-frontend': ^4.0.0-dev.3
-      '@itwin/webgl-compatibility': ^4.0.0-dev.3
+      '@itwin/presentation-common': ^4.0.0-dev.7
+      '@itwin/presentation-frontend': ^4.0.0-dev.7
+      '@itwin/webgl-compatibility': ^4.0.0-dev.7
       '@testing-library/react': ^12.0.0
       '@testing-library/react-hooks': ^7.0.2
       '@types/chai': 4.3.1
@@ -299,25 +299,25 @@ importers:
 
   packages/full-stack-tests:
     specifiers:
-      '@itwin/appui-abstract': ^4.0.0-dev.3
-      '@itwin/build-tools': ^4.0.0-dev.3
-      '@itwin/components-react': ^4.0.0-dev.3
-      '@itwin/core-backend': ^4.0.0-dev.3
-      '@itwin/core-bentley': ^4.0.0-dev.3
-      '@itwin/core-common': ^4.0.0-dev.3
-      '@itwin/core-frontend': ^4.0.0-dev.3
-      '@itwin/core-geometry': ^4.0.0-dev.3
-      '@itwin/core-i18n': ^4.0.0-dev.3
-      '@itwin/core-orbitgt': ^4.0.0-dev.3
-      '@itwin/core-quantity': ^4.0.0-dev.3
-      '@itwin/core-react': ^4.0.0-dev.3
-      '@itwin/eslint-plugin': ^4.0.0-dev.3
-      '@itwin/presentation-backend': ^4.0.0-dev.3
-      '@itwin/presentation-common': ^4.0.0-dev.3
+      '@itwin/appui-abstract': ^4.0.0-dev.7
+      '@itwin/build-tools': ^4.0.0-dev.7
+      '@itwin/components-react': ^4.0.0-dev.7
+      '@itwin/core-backend': ^4.0.0-dev.7
+      '@itwin/core-bentley': ^4.0.0-dev.7
+      '@itwin/core-common': ^4.0.0-dev.7
+      '@itwin/core-frontend': ^4.0.0-dev.7
+      '@itwin/core-geometry': ^4.0.0-dev.7
+      '@itwin/core-i18n': ^4.0.0-dev.7
+      '@itwin/core-orbitgt': ^4.0.0-dev.7
+      '@itwin/core-quantity': ^4.0.0-dev.7
+      '@itwin/core-react': ^4.0.0-dev.7
+      '@itwin/eslint-plugin': ^4.0.0-dev.7
+      '@itwin/presentation-backend': ^4.0.0-dev.7
+      '@itwin/presentation-common': ^4.0.0-dev.7
       '@itwin/presentation-components': workspace:^
-      '@itwin/presentation-frontend': ^4.0.0-dev.3
+      '@itwin/presentation-frontend': ^4.0.0-dev.7
       '@itwin/presentation-testing': workspace:^
-      '@itwin/webgl-compatibility': ^4.0.0-dev.3
+      '@itwin/webgl-compatibility': ^4.0.0-dev.7
       '@testing-library/react': ^12.0.0
       '@testing-library/react-hooks': ^7.0.2
       '@types/chai': 4.3.1
@@ -403,23 +403,23 @@ importers:
 
   packages/testing:
     specifiers:
-      '@itwin/appui-abstract': ^4.0.0-dev.3
-      '@itwin/build-tools': ^4.0.0-dev.3
-      '@itwin/components-react': ^4.0.0-dev.3
-      '@itwin/core-backend': ^4.0.0-dev.3
-      '@itwin/core-bentley': ^4.0.0-dev.3
-      '@itwin/core-common': ^4.0.0-dev.3
-      '@itwin/core-frontend': ^4.0.0-dev.3
-      '@itwin/core-geometry': ^4.0.0-dev.3
-      '@itwin/core-orbitgt': ^4.0.0-dev.3
-      '@itwin/core-quantity': ^4.0.0-dev.3
-      '@itwin/core-react': ^4.0.0-dev.3
-      '@itwin/eslint-plugin': ^4.0.0-dev.3
-      '@itwin/presentation-backend': ^4.0.0-dev.3
-      '@itwin/presentation-common': ^4.0.0-dev.3
+      '@itwin/appui-abstract': ^4.0.0-dev.7
+      '@itwin/build-tools': ^4.0.0-dev.7
+      '@itwin/components-react': ^4.0.0-dev.7
+      '@itwin/core-backend': ^4.0.0-dev.7
+      '@itwin/core-bentley': ^4.0.0-dev.7
+      '@itwin/core-common': ^4.0.0-dev.7
+      '@itwin/core-frontend': ^4.0.0-dev.7
+      '@itwin/core-geometry': ^4.0.0-dev.7
+      '@itwin/core-orbitgt': ^4.0.0-dev.7
+      '@itwin/core-quantity': ^4.0.0-dev.7
+      '@itwin/core-react': ^4.0.0-dev.7
+      '@itwin/eslint-plugin': ^4.0.0-dev.7
+      '@itwin/presentation-backend': ^4.0.0-dev.7
+      '@itwin/presentation-common': ^4.0.0-dev.7
       '@itwin/presentation-components': workspace:^
-      '@itwin/presentation-frontend': ^4.0.0-dev.3
-      '@itwin/webgl-compatibility': ^4.0.0-dev.3
+      '@itwin/presentation-frontend': ^4.0.0-dev.7
+      '@itwin/webgl-compatibility': ^4.0.0-dev.7
       '@types/chai': 4.3.1
       '@types/chai-as-promised': ^7
       '@types/chai-jest-snapshot': ^1.3.0
