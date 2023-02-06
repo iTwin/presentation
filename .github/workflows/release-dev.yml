@@ -2,8 +2,8 @@ name: Publish dev pre-release NPM packages
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ "master" ]
+  # push:
+  #   branches: [ "master" ]
 
 jobs:
   release-packages:
