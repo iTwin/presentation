@@ -6,4 +6,5 @@ module.exports = {
   tag: "dev",
   prereleasePrefix: "dev",
   generateChangelog: false,
+  gitTags: false,
 };
