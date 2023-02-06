@@ -7,7 +7,7 @@ import { expect } from "chai";
 import sinon from "sinon";
 import { PropertyDescription } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelApp, IModelConnection, NoRenderApp } from "@itwin/core-frontend";
+import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { renderHook } from "@testing-library/react-hooks";
@@ -20,15 +20,14 @@ describe("UseNavigationPropertyTargetsLoader", () => {
   const testImodel = {} as IModelConnection;
 
   beforeEach(async () => {
-    await NoRenderApp.startup({
-      localization: new EmptyLocalization(),
-    });
+    const localization = new EmptyLocalization();
+    sinon.stub(IModelApp, "initialized").get(() => true);
+    sinon.stub(IModelApp, "localization").get(() => localization);
     await Presentation.initialize();
   });
 
   afterEach(async () => {
     Presentation.terminate();
-    await IModelApp.shutdown();
     sinon.restore();
   });
 

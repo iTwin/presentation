@@ -5,6 +5,7 @@
 
 import { expect } from "chai";
 import { Component } from "react";
+import sinon from "sinon";
 import * as moq from "typemoq";
 import { Primitives, PrimitiveValue } from "@itwin/appui-abstract";
 import { ITwinLocalization } from "@itwin/core-i18n";
@@ -91,11 +92,12 @@ describe("Utils", () => {
 
     beforeEach(() => {
       i18nMock.setup(async (x) => x.registerNamespace(moq.It.isAny())).returns(async () => (Promise.resolve()));
-      Presentation.setLocalization(i18nMock.object);
+      sinon.stub(Presentation, "localization").get(() => i18nMock.object);
     });
 
     afterEach(() => {
       Presentation.terminate();
+      sinon.restore();
     });
 
     it("registers and unregisters namespace", async () => {

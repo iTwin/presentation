@@ -52,14 +52,13 @@ describe("PropertyDataProvider", () => {
   beforeEach(async () => {
     const mocks = mockPresentationManager();
     presentationManagerMock = mocks.presentationManager;
-    Presentation.setPresentationManager(presentationManagerMock.object);
 
     favoritePropertiesManagerMock = moq.Mock.ofType<FavoritePropertiesManager>();
     favoritePropertiesManagerMock.setup((x) => x.onFavoritesChanged).returns(() => new BeEvent());
 
-    Presentation.setPresentationManager(presentationManagerMock.object);
-    Presentation.setFavoritePropertiesManager(favoritePropertiesManagerMock.object);
-    Presentation.setLocalization(new EmptyLocalization());
+    sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
+    sinon.stub(Presentation, "favoriteProperties").get(() => favoritePropertiesManagerMock.object);
+    sinon.stub(Presentation, "localization").get(() => new EmptyLocalization());
 
     provider = new Provider({ imodel: imodelMock.object, ruleset: rulesetId });
   });
@@ -67,6 +66,7 @@ describe("PropertyDataProvider", () => {
   afterEach(() => {
     provider.dispose();
     Presentation.terminate();
+    sinon.restore();
   });
 
   describe("constructor", () => {

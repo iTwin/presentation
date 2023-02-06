@@ -7,8 +7,8 @@ import { expect } from "chai";
 import * as sinon from "sinon";
 import * as moq from "typemoq";
 import { Id64, Id64Arg, Id64String } from "@itwin/core-bentley";
-import { Code, ElementProps, EmptyLocalization } from "@itwin/core-common";
-import { IModelApp, IModelConnection, HiliteSet as IModelHiliteSet, NoRenderApp, SelectionSet, ViewState3d } from "@itwin/core-frontend";
+import { Code, ElementProps } from "@itwin/core-common";
+import { IModelApp, IModelConnection, HiliteSet as IModelHiliteSet, SelectionSet, ViewState3d } from "@itwin/core-frontend";
 import { ViewportComponent } from "@itwin/imodel-components-react";
 import { KeySet } from "@itwin/presentation-common";
 import {
@@ -23,16 +23,6 @@ import { ResolvablePromise } from "../_helpers/Promises";
 const PresentationViewport = viewWithUnifiedSelection(ViewportComponent);
 
 describe("Viewport withUnifiedSelection", () => {
-  before(async () => {
-    await NoRenderApp.startup({
-      localization: new EmptyLocalization(),
-    });
-  });
-
-  after(async () => {
-    await IModelApp.shutdown();
-  });
-
   let viewDefinitionId: Id64String;
   const imodelMock = moq.Mock.ofType<IModelConnection>();
   const selectionHandlerMock = moq.Mock.ofType<ViewportSelectionHandler>();
@@ -44,9 +34,13 @@ describe("Viewport withUnifiedSelection", () => {
     imodelMock.reset();
     mockIModel(imodelMock);
 
-    const viewsMock = moq.Mock.ofInstance<IModelConnection.Views>(new IModelConnection.Views(imodelMock.object));
+    const viewsMock = moq.Mock.ofType<IModelConnection.Views>();
     viewsMock.setup(async (views) => views.load(moq.It.isAny())).returns(async () => moq.Mock.ofType<ViewState3d>().object);
     imodelMock.setup((imodel) => imodel.views).returns(() => viewsMock.object);
+  });
+
+  afterEach(() => {
+    sinon.restore();
   });
 
   it("renders", () => {
@@ -63,7 +57,7 @@ describe("Viewport withUnifiedSelection", () => {
     selectionManagerMock.setup((x) => x.selectionChange).returns(() => selectionChangeEvent);
     selectionManagerMock.setup((x) => x.suspendIModelToolSelectionSync(imodelMock.object)).returns(() => ({ dispose: () => { } }));
     selectionManagerMock.setup(async (x) => x.getHiliteSet(imodelMock.object)).returns(async () => ({}));
-    Presentation.setSelectionManager(selectionManagerMock.object);
+    sinon.stub(Presentation, "selection").get(() => selectionManagerMock.object);
 
     expect(selectionChangeEvent.numberOfListeners).to.be.eq(0);
 
@@ -110,19 +104,11 @@ describe("ViewportSelectionHandler", () => {
   const imodelMock = moq.Mock.ofType<IModelConnection>();
   let getHiliteSet: sinon.SinonStub<[IModelConnection], Promise<HiliteSet>>;
 
-  before(async () => {
-    await NoRenderApp.startup({
-      localization: new EmptyLocalization(),
-    });
-  });
-
-  after(async () => {
-    await IModelApp.shutdown();
-  });
-
   beforeEach(() => {
     mockIModel(imodelMock);
-    Presentation.setSelectionManager(new SelectionManager({ scopes: moq.Mock.ofType<SelectionScopesManager>().object }));
+    sinon.stub(IModelApp, "viewManager").get(() => ({ onSelectionSetChanged: () => {} }));
+    sinon.stub(Presentation, "selection").get(() => selectionManager);
+    const selectionManager = new SelectionManager({ scopes: moq.Mock.ofType<SelectionScopesManager>().object });
 
     getHiliteSet = sinon.stub(Presentation.selection, "getHiliteSet").resolves({});
     handler = new ViewportSelectionHandler({ imodel: imodelMock.object });
@@ -130,6 +116,7 @@ describe("ViewportSelectionHandler", () => {
 
   afterEach(() => {
     handler.dispose();
+    sinon.restore();
   });
 
   describe("imodel", () => {

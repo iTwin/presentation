@@ -67,12 +67,13 @@ describe("useHierarchyStateTracking", () => {
 
     const presentationMocks = mockPresentationManager();
     presentationMocks.presentationManager.setup((x) => x.stateTracker).returns(() => stateTrackerMock.object);
-    Presentation.setPresentationManager(presentationMocks.presentationManager.object);
+    sinon.stub(Presentation, "presentation").get(() => presentationMocks.presentationManager.object);
   });
 
   afterEach(async () => {
     await cleanup();
     Presentation.terminate();
+    sinon.restore();
   });
 
   it("does not add 'onModelChange' event listener if nodes tracking is disabled", () => {

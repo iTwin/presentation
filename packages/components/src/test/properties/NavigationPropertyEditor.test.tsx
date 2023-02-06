@@ -8,7 +8,7 @@ import sinon from "sinon";
 import { PropertyDescription } from "@itwin/appui-abstract";
 import { EditorContainer, PropertyValueRendererManager } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelApp, IModelConnection, NoRenderApp } from "@itwin/core-frontend";
+import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, KeySet, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render as renderRTL, waitFor } from "@testing-library/react";
@@ -52,16 +52,15 @@ describe("<NavigationPropertyEditor />", () => {
   }
 
   beforeEach(async () => {
-    await NoRenderApp.startup({
-      localization: new EmptyLocalization(),
-    });
+    const localization = new EmptyLocalization();
+    sinon.stub(IModelApp, "initialized").get(() => true);
+    sinon.stub(IModelApp, "localization").get(() => localization);
     await Presentation.initialize();
   });
 
   afterEach(async () => {
-    sinon.restore();
     Presentation.terminate();
-    await IModelApp.shutdown();
+    sinon.restore();
   });
 
   it("renders editor for 'navigation' type", async () => {
@@ -113,16 +112,15 @@ describe("<NavigationPropertyTargetEditor />", () => {
   const testRecord = createTestPropertyRecord();
 
   beforeEach(async () => {
-    await NoRenderApp.startup({
-      localization: new EmptyLocalization(),
-    });
+    const localization = new EmptyLocalization();
+    sinon.stub(IModelApp, "initialized").get(() => true);
+    sinon.stub(IModelApp, "localization").get(() => localization);
     await Presentation.initialize();
   });
 
   afterEach(async () => {
-    sinon.restore();
     Presentation.terminate();
-    await IModelApp.shutdown();
+    sinon.restore();
   });
 
   it("renders selector when rendered inside context", async () => {

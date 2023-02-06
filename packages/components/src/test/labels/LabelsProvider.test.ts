@@ -4,7 +4,9 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import sinon from "sinon";
 import * as moq from "typemoq";
+import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { DEFAULT_KEYS_BATCH_SIZE } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
@@ -17,17 +19,17 @@ describe("PresentationLabelsProvider", () => {
   const presentationManagerMock = moq.Mock.ofType<PresentationManager>();
   const imodelMock = moq.Mock.ofType<IModelConnection>();
 
-  before(() => {
-    Presentation.setPresentationManager(presentationManagerMock.object);
-  });
-
-  after(() => {
-    Presentation.terminate();
-  });
-
   beforeEach(() => {
-    presentationManagerMock.reset();
+    const localization = new EmptyLocalization();
+    sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
+    sinon.stub(Presentation, "localization").get(() => localization);
     provider = new PresentationLabelsProvider({ imodel: imodelMock.object });
+  });
+
+  afterEach(() => {
+    presentationManagerMock.reset();
+    sinon.restore();
+    Presentation.terminate();
   });
 
   describe("getLabel", () => {
