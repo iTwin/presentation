@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@test-app/common": "workspace:*",
-    "@itwin/appui-abstract": "^4.0.0-dev.7",
+    "@itwin/appui-abstract": "4.0.0-dev.3",
     "@itwin/build-tools": "^4.0.0-dev.7",
     "@itwin/core-bentley": "^4.0.0-dev.7",
     "@itwin/core-backend": "^4.0.0-dev.7",

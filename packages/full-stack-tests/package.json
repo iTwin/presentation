@@ -14,9 +14,9 @@
     "docs:extract": "betools extract --fileExt=ts,tsx --extractFrom=./src --recursive --out=../../build/docs/extract"
   },
   "dependencies": {
-    "@itwin/appui-abstract": "^4.0.0-dev.7",
+    "@itwin/appui-abstract": "4.0.0-dev.3",
     "@itwin/build-tools": "^4.0.0-dev.7",
-    "@itwin/components-react": "^4.0.0-dev.7",
+    "@itwin/components-react": "4.0.0-dev.3",
     "@itwin/core-backend": "^4.0.0-dev.7",
     "@itwin/core-bentley": "^4.0.0-dev.7",
     "@itwin/core-common": "^4.0.0-dev.7",
@@ -25,7 +25,7 @@
     "@itwin/core-i18n": "^4.0.0-dev.7",
     "@itwin/core-orbitgt": "^4.0.0-dev.7",
     "@itwin/core-quantity": "^4.0.0-dev.7",
-    "@itwin/core-react": "^4.0.0-dev.7",
+    "@itwin/core-react": "4.0.0-dev.3",
     "@itwin/eslint-plugin": "^4.0.0-dev.7",
     "@itwin/presentation-backend": "^4.0.0-dev.7",
     "@itwin/presentation-common": "^4.0.0-dev.7",
