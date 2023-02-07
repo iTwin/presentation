@@ -4,6 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import sinon from "sinon";
 import * as moq from "typemoq";
 import { TreeNodeItem } from "@itwin/components-react";
 import { BeEvent, Guid } from "@itwin/core-bentley";
@@ -60,8 +61,12 @@ describe("HierarchyBuilder", () => {
   describe("createHierarchy", () => {
     context("without data", () => {
       beforeEach(() => {
-        Presentation.setPresentationManager(presentationManagerMock.object);
+        sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
         presentationManagerMock.setup(async (manager) => manager.getNodesAndCount(moq.It.isAny())).returns(async () => ({ nodes: [], count: 0 }));
+      });
+
+      afterEach(() => {
+        sinon.restore();
       });
 
       it("returns empty list when rulesetId is given", async () => {
@@ -81,7 +86,11 @@ describe("HierarchyBuilder", () => {
       beforeEach(() => {
         presentationManagerMock.setup(async (manager) => manager.getNodesAndCount(moq.It.is((opts) => opts.parentKey === undefined))).returns(getRootNodes);
         presentationManagerMock.setup(async (manager) => manager.getNodesAndCount(moq.It.is((opts) => opts.parentKey !== undefined))).returns(getChildrenNodes);
-        Presentation.setPresentationManager(presentationManagerMock.object);
+        sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
+      });
+
+      afterEach(() => {
+        sinon.restore();
       });
 
       it("returns correct hierarchy", async () => {
