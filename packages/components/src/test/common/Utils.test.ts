@@ -8,10 +8,11 @@ import { Component } from "react";
 import sinon from "sinon";
 import * as moq from "typemoq";
 import { Primitives, PrimitiveValue } from "@itwin/appui-abstract";
+import { using } from "@itwin/core-bentley";
 import { ITwinLocalization } from "@itwin/core-i18n";
 import { combineFieldNames, LabelCompositeValue, LabelDefinition } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import * as utils from "../../presentation-components/common/Utils";
+import { AsyncTasksTracker, createLabelRecord, findField, getDisplayName, initializeLocalization } from "../../presentation-components/common/Utils";
 import { createTestPropertyInfo } from "../_helpers/Common";
 import {
   createTestContentDescriptor, createTestNestedContentField, createTestPropertiesContentField, createTestSimpleContentField,
@@ -33,17 +34,17 @@ describe("Utils", () => {
     it("returns displayName property value, if set", () => {
       const displayName = "Test Display Name";
       (TestComponent as any).displayName = displayName;
-      expect(utils.getDisplayName(TestComponent)).to.eq(displayName);
+      expect(getDisplayName(TestComponent)).to.eq(displayName);
     });
 
     it("returns name property value, if set", () => {
       const displayName = "Test Display Name";
       Object.defineProperty(TestComponent, "name", { value: displayName });
-      expect(utils.getDisplayName(TestComponent)).to.eq(displayName);
+      expect(getDisplayName(TestComponent)).to.eq(displayName);
     });
 
     it("returns 'Component' if neither displayName nor name properties are set", () => {
-      expect(utils.getDisplayName(TestComponent)).to.eq("Component");
+      expect(getDisplayName(TestComponent)).to.eq("Component");
     });
 
   });
@@ -52,7 +53,7 @@ describe("Utils", () => {
 
     it("returns undefined for invalid name", () => {
       const descriptor = createTestContentDescriptor({ fields: [] });
-      const result = utils.findField(descriptor, "doesn't exist");
+      const result = findField(descriptor, "doesn't exist");
       expect(result).to.be.undefined;
     });
 
@@ -62,7 +63,7 @@ describe("Utils", () => {
       });
       const nestingField = createTestNestedContentField({ nestedFields: [nestedField] });
       const descriptor = createTestContentDescriptor({ fields: [nestingField] });
-      const result = utils.findField(descriptor, combineFieldNames(nestedField.name, "doesn't exist"));
+      const result = findField(descriptor, combineFieldNames(nestedField.name, "doesn't exist"));
       expect(result).to.be.undefined;
     });
 
@@ -71,7 +72,7 @@ describe("Utils", () => {
         fields: [createTestSimpleContentField()],
       });
       const field = descriptor.fields[0];
-      const result = utils.findField(descriptor, field.name);
+      const result = findField(descriptor, field.name);
       expect(result).to.eq(field);
     });
 
@@ -81,7 +82,7 @@ describe("Utils", () => {
       });
       const nestingField = createTestNestedContentField({ nestedFields: [nestedField] });
       const descriptor = createTestContentDescriptor({ fields: [nestingField] });
-      const result = utils.findField(descriptor, combineFieldNames(nestedField.name, nestingField.name));
+      const result = findField(descriptor, combineFieldNames(nestedField.name, nestingField.name));
       expect(result!.name).to.eq(nestedField.name);
     });
 
@@ -101,7 +102,7 @@ describe("Utils", () => {
     });
 
     it("registers and unregisters namespace", async () => {
-      const terminate = await utils.initializeLocalization();
+      const terminate = await initializeLocalization();
       i18nMock.verify(async (x) => x.registerNamespace(moq.It.isAny()), moq.Times.once());
       terminate();
       i18nMock.verify((x) => x.unregisterNamespace(moq.It.isAny()), moq.Times.once());
@@ -122,7 +123,7 @@ describe("Utils", () => {
 
     it("creates PropertyRecord for label with simple value", () => {
       const definition = createTestLabelDefinition();
-      const record = utils.createLabelRecord(definition, "test");
+      const record = createLabelRecord(definition, "test");
       const primitiveValue = record.value as PrimitiveValue;
       expect(primitiveValue.value).to.be.eq(definition.rawValue);
       expect(primitiveValue.displayValue).to.be.eq(definition.displayValue);
@@ -131,13 +132,38 @@ describe("Utils", () => {
 
     it("creates PropertyRecord for label with composite value", () => {
       const definition = createTestLabelDefinition({ rawValue: createTestLabelCompositeValue(), typeName: LabelDefinition.COMPOSITE_DEFINITION_TYPENAME });
-      const record = utils.createLabelRecord(definition, "test");
+      const record = createLabelRecord(definition, "test");
       const primitiveValue = record.value as PrimitiveValue;
       validateCompositeValue(primitiveValue.value as Primitives.Composite, definition.rawValue as LabelCompositeValue);
       expect(primitiveValue.displayValue).to.be.eq(definition.displayValue);
       expect(record.property.typename).to.be.eq(definition.typeName);
     });
 
+  });
+
+});
+
+describe("AsyncTasksTracker", () => {
+
+  it("tracks async task while it's disposed", () => {
+    const tracker = new AsyncTasksTracker();
+    expect(tracker.pendingAsyncs.size).to.eq(0);
+    const res = tracker.trackAsyncTask();
+    expect(tracker.pendingAsyncs.size).to.eq(1);
+    res.dispose();
+    expect(tracker.pendingAsyncs.size).to.eq(0);
+  });
+
+  it("supports nesting", () => {
+    const tracker = new AsyncTasksTracker();
+    using(tracker.trackAsyncTask(), (_r1) => {
+      expect(tracker.pendingAsyncs.size).to.eq(1);
+      using(tracker.trackAsyncTask(), (_r2) => {
+        expect(tracker.pendingAsyncs.size).to.eq(2);
+      });
+      expect(tracker.pendingAsyncs.size).to.eq(1);
+    });
+    expect(tracker.pendingAsyncs.size).to.eq(0);
   });
 
 });
