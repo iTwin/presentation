@@ -10,7 +10,6 @@
     "object-curly-spacing": [
       "error",
       "always"
-    ],
-    "@itwin/no-internal": "error"
+    ]
   }
 }
