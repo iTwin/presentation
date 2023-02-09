@@ -12,10 +12,9 @@ import { AsyncPaginate } from "react-select-async-paginate";
 import { PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyEditorProps, PropertyValueRendererManager } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
-import { useRefs, useResizeObserver } from "@itwin/core-react";
 import { SvgCaretDownSmall } from "@itwin/itwinui-icons-react";
 import { InstanceKey, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
-import { translate } from "../common/Utils";
+import { mergeRefs, translate, useResizeObserver } from "../common/Utils";
 import {
   NavigationPropertyTarget, useNavigationPropertyTargetsLoader, useNavigationPropertyTargetsRuleset,
 } from "./UseNavigationPropertyTargetsLoader";
@@ -59,14 +58,12 @@ export const NavigationPropertyTargetSelector = forwardRef<NavigationPropertyTar
     setSelectedTarget(getNavigationTargetFromPropertyRecord(propertyRecord));
   }, [propertyRecord]);
 
-  const [width, setWidth] = useState<number>();
-  const selectRef = useResizeObserver(useCallback((newWidth) => { setWidth(newWidth); }, []));
-  const refs = useRefs(selectRef, divRef);
+  const { ref: selectRef, width } = useResizeObserver();
 
   if (!targetsRuleset)
     return <ReadonlyNavigationPropertyTarget record={props.propertyRecord} />;
 
-  return <div ref={refs}>
+  return <div ref={mergeRefs(divRef, selectRef)}>
     <AsyncPaginate
       isMulti={false}
       onChange={onChange}
