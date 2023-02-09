@@ -2,8 +2,6 @@ name: Publish dev pre-release NPM packages
 
 on:
   workflow_dispatch:
-  # push:
-  #   branches: [ "master" ]
 
 jobs:
   release-packages:
@@ -18,7 +16,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
       with:
-        fetch-depth: 0
+        token: ${{ secrets.IMJS_ADMIN_GH_TOKEN }}
 
     - name: Install pnpm
       uses: pnpm/action-setup@v2.2.4

@@ -79,7 +79,7 @@ describe("PresentationTreeRenderer", () => {
     visibleNodesMock.setup((x) => x.getNumNodes()).returns(() => 1);
     visibleNodesMock.setup((x) => x.getAtIndex(0)).returns(() => node);
 
-    const { getByText, container } = render(
+    const { getByText, container, baseElement } = render(
       <PresentationTreeRenderer
         {...treeProps}
       />);
@@ -93,14 +93,14 @@ describe("PresentationTreeRenderer", () => {
 
     // wait for dialog to be visible
     await waitFor(() => {
-      expect(container.querySelector(".presentation-instance-filter-dialog")).to.not.be.null;
+      expect(baseElement.querySelector(".presentation-instance-filter-dialog")).to.not.be.null;
     });
 
-    const closeButton = container.querySelector(".presentation-instance-filter-dialog-close-button");
+    const closeButton = baseElement.querySelector(".presentation-instance-filter-dialog-close-button");
     expect(closeButton).to.not.be.null;
     fireEvent.click(closeButton!);
 
-    const dialog = container.querySelector(".presentation-instance-filter-dialog");
+    const dialog = baseElement.querySelector(".presentation-instance-filter-dialog");
     expect(dialog).to.be.null;
   });
 
@@ -123,7 +123,7 @@ describe("PresentationTreeRenderer", () => {
     modelSourceMock.setup((x) => x.getModel()).returns(() => treeModelMock.object);
     modelSourceMock.setup((x) => x.modifyModel(moq.It.isAny())).verifiable(moq.Times.once());
 
-    const { getByText, container } = render(
+    const { getByText, container, baseElement } = render(
       <PresentationTreeRenderer
         {...treeProps}
       />);
@@ -136,18 +136,18 @@ describe("PresentationTreeRenderer", () => {
 
     // wait for dialog to be visible
     await waitFor(() => {
-      expect(container.querySelector(".presentation-instance-filter-dialog")).to.not.be.null;
+      expect(baseElement.querySelector(".presentation-instance-filter-dialog")).to.not.be.null;
     });
 
     // select property in filter builder dialog
-    const propertySelector = container.querySelector<HTMLInputElement>(".rule-property .iui-input");
+    const propertySelector = baseElement.querySelector<HTMLInputElement>(".rule-property .iui-input");
     expect(propertySelector).to.not.be.null;
     propertySelector?.focus();
     fireEvent.click(getByText(propertyField.label));
 
     // wait until apply button is enabled
     const applyButton = await waitFor(() => {
-      const button = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
+      const button = baseElement.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
       expect(button?.disabled).to.be.false;
       return button;
     });
@@ -155,7 +155,7 @@ describe("PresentationTreeRenderer", () => {
 
     // wait until dialog closes
     await waitFor(() => {
-      expect(container.querySelector(".presentation-instance-filter-dialog")).to.be.null;
+      expect(baseElement.querySelector(".presentation-instance-filter-dialog")).to.be.null;
     });
 
     modelSourceMock.verifyAll();
