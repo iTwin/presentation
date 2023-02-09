@@ -11,7 +11,7 @@ import { IModelApp, IModelConnection, ITwinIdArg, PreferenceArg, PreferenceKeyAr
 import { Field, KeySet } from "@itwin/presentation-common";
 import { DEFAULT_PROPERTY_GRID_RULESET, FAVORITES_CATEGORY_NAME, PresentationPropertyDataProvider } from "@itwin/presentation-components";
 import {
-  createFavoritePropertiesStorage, DefaultFavoritePropertiesStorageTypes, FavoritePropertiesManager, FavoritePropertiesScope, Presentation,
+  createFavoritePropertiesStorage, DefaultFavoritePropertiesStorageTypes, FavoritePropertiesScope, Presentation,
 } from "@itwin/presentation-frontend";
 import { initialize, terminate } from "../IntegrationTests";
 
@@ -261,12 +261,6 @@ describe("Favorite properties", () => {
   });
 
   describe("re-initialization", () => {
-    function setupFavoritesStorageWithSettingsService() {
-      Presentation.setFavoritePropertiesManager(new FavoritePropertiesManager({
-        storage: createFavoritePropertiesStorage(DefaultFavoritePropertiesStorageTypes.UserPreferencesStorage),
-      }));
-    }
-
     const storage = new Map<string, any>();
     before(async () => {
       sinon.stub(IModelApp, "userPreferences").get(() => ({
@@ -277,7 +271,12 @@ describe("Favorite properties", () => {
       sinon.stub(IModelApp, "authorizationClient").get(() => ({
         getAccessToken: async () => "accessToken",
       }));
-      setupFavoritesStorageWithSettingsService();
+      Presentation.terminate();
+      await Presentation.initialize({
+        favorites: {
+          storage: createFavoritePropertiesStorage(DefaultFavoritePropertiesStorageTypes.UserPreferencesStorage),
+        },
+      });
       await Presentation.favoriteProperties.initializeConnection(imodel);
     });
 
@@ -305,8 +304,11 @@ describe("Favorite properties", () => {
 
       // refresh Presentation
       Presentation.terminate();
-      await Presentation.initialize();
-      setupFavoritesStorageWithSettingsService();
+      await Presentation.initialize({
+        favorites: {
+          storage: createFavoritePropertiesStorage(DefaultFavoritePropertiesStorageTypes.UserPreferencesStorage),
+        },
+      });
       await Presentation.favoriteProperties.initializeConnection(imodel);
 
       propertiesDataProvider = new PresentationPropertyDataProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
