@@ -11,7 +11,7 @@ let pattern = process.argv
 
 // if no pattern is specified, then lint everything
 if (pattern.length === 0) {
-  pattern = '**/*.{ts,tsx,js,scss}';
+  pattern = '**/*.{ts,tsx,js,scss,css}';
 }
 
 const filePaths = fg.sync(pattern, {
