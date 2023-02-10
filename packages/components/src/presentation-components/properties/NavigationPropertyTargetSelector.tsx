@@ -119,7 +119,7 @@ function getNavigationTargetFromPropertyRecord(record: PropertyRecord): Navigati
   if (value.valueFormat !== PropertyValueFormat.Primitive || !value.value || !value.displayValue)
     return undefined;
 
-  return { key: value.value as InstanceKey, label: LabelDefinition.fromLabelString(value.displayValue) };
+  return { key: value.value as InstanceKey, label: LabelDefinition.fromLabelString(value.displayValue) }; // eslint-disable-line @itwin/no-internal
 }
 
 function TargetSelectControl<TOption extends OptionTypeBase>({ children, ...props }: ControlProps<TOption>) {

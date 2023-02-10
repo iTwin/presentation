@@ -423,7 +423,7 @@ const mockIModel = (mock: moq.IMock<IModelConnection>) => {
   const imodelElementsMock = moq.Mock.ofType<IModelConnection.Elements>();
   imodelElementsMock.setup(async (x) => x.getProps(moq.It.isAny())).returns(async (ids: Id64Arg) => createElementProps(ids));
 
-  const hiliteSet = new IModelHiliteSet(mock.object, false);
+  const hiliteSet = new IModelHiliteSet(mock.object, false); // eslint-disable-line @itwin/no-internal
   mock.reset();
   mock.setup((imodel) => imodel.hilited).returns(() => hiliteSet);
   mock.setup((imodel) => imodel.elements).returns(() => imodelElementsMock.object);

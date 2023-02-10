@@ -138,7 +138,7 @@ class TreeReloader extends PagedTreeNodeLoader<IPresentationTreeDataProvider> {
       return EMPTY;
     }
 
-    return toRxjsObservable(super.loadNode(parent, childIndex));
+    return toRxjsObservable(super.loadNode(parent, childIndex)); // eslint-disable-line @itwin/no-internal
   }
 }
 

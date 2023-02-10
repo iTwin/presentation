@@ -205,7 +205,7 @@ describe("ContentBuilder", () => {
       presentationManagerMock.reset();
       presentationManagerMock.setup((manager) => manager.rulesets()).returns(() => rulesetManagerMock.object);
       presentationManagerMock.setup(async (manager) => manager.getContent(moq.It.isAny())).returns(getEmptyContent);
-      presentationManagerMock.setup((x) => x.onIModelContentChanged).returns(() => new BeEvent());
+      presentationManagerMock.setup((x) => x.onIModelContentChanged).returns(() => new BeEvent()); // eslint-disable-line @itwin/no-internal
       sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
     });
 

@@ -105,7 +105,7 @@ describe("Utils", () => {
       const terminate = await initializeLocalization();
       i18nMock.verify(async (x) => x.registerNamespace(moq.It.isAny()), moq.Times.once());
       terminate();
-      i18nMock.verify((x) => x.unregisterNamespace(moq.It.isAny()), moq.Times.once());
+      i18nMock.verify((x) => x.unregisterNamespace(moq.It.isAny()), moq.Times.once()); // eslint-disable-line @itwin/no-internal
     });
 
   });

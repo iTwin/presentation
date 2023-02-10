@@ -66,7 +66,7 @@ describe("useHierarchyStateTracking", () => {
     };
 
     const presentationMocks = mockPresentationManager();
-    presentationMocks.presentationManager.setup((x) => x.stateTracker).returns(() => stateTrackerMock.object);
+    presentationMocks.presentationManager.setup((x) => x.stateTracker).returns(() => stateTrackerMock.object); // eslint-disable-line @itwin/no-internal
     sinon.stub(Presentation, "presentation").get(() => presentationMocks.presentationManager.object);
   });
 
@@ -105,7 +105,7 @@ describe("useHierarchyStateTracking", () => {
       { initialProps },
     );
 
-    stateTrackerMock.setup(async (x) => x.onHierarchyClosed(imodelMock.object, rulesetId, moq.It.isAnyString())).verifiable(moq.Times.once());
+    stateTrackerMock.setup(async (x) => x.onHierarchyClosed(imodelMock.object, rulesetId, moq.It.isAnyString())).verifiable(moq.Times.once()); // eslint-disable-line @itwin/no-internal
     unmount();
     stateTrackerMock.verifyAll();
   });
@@ -117,7 +117,7 @@ describe("useHierarchyStateTracking", () => {
       { initialProps },
     );
     stateTrackerMock.reset();
-    stateTrackerMock.setup(async (x) => x.onHierarchyStateChanged(imodelMock.object, rulesetId, moq.It.isAnyString(), [{
+    stateTrackerMock.setup(async (x) => x.onHierarchyStateChanged(imodelMock.object, rulesetId, moq.It.isAnyString(), [{ // eslint-disable-line @itwin/no-internal
       node: { id: node.id, key: node.key },
       state: { isExpanded: true },
     }])).verifiable(moq.Times.once());
@@ -134,7 +134,7 @@ describe("useHierarchyStateTracking", () => {
       { initialProps },
     );
     stateTrackerMock.reset();
-    stateTrackerMock.setup(async (x) => x.onHierarchyStateChanged(imodelMock.object, rulesetId, moq.It.isAnyString(), [])).verifiable(moq.Times.once());
+    stateTrackerMock.setup(async (x) => x.onHierarchyStateChanged(imodelMock.object, rulesetId, moq.It.isAnyString(), [])).verifiable(moq.Times.once()); // eslint-disable-line @itwin/no-internal
     modelSource.modifyModel((model) => {
       model.setChildren(undefined, [createTreeModelInput(node, false)], 0);
     });
@@ -149,7 +149,7 @@ describe("useHierarchyStateTracking", () => {
       { initialProps },
     );
     stateTrackerMock.reset();
-    stateTrackerMock.setup(async (x) => x.onHierarchyStateChanged(imodelMock.object, rulesetId, moq.It.isAnyString(), [{
+    stateTrackerMock.setup(async (x) => x.onHierarchyStateChanged(imodelMock.object, rulesetId, moq.It.isAnyString(), [{ // eslint-disable-line @itwin/no-internal
       node: { id: node.id, key: node.key },
       state: { isExpanded: true },
     }])).verifiable(moq.Times.once());
@@ -171,7 +171,7 @@ describe("useHierarchyStateTracking", () => {
       { initialProps },
     );
     stateTrackerMock.reset();
-    stateTrackerMock.setup(async (x) => x.onHierarchyStateChanged(imodelMock.object, rulesetId, moq.It.isAnyString(), [{
+    stateTrackerMock.setup(async (x) => x.onHierarchyStateChanged(imodelMock.object, rulesetId, moq.It.isAnyString(), [{ // eslint-disable-line @itwin/no-internal
       node: { id: node.id, key: node.key },
       state: { isExpanded: true },
     }, {
@@ -192,7 +192,7 @@ describe("useHierarchyStateTracking", () => {
       { initialProps }
     );
     stateTrackerMock.reset();
-    stateTrackerMock.setup(async (x) => x.onHierarchyStateChanged(imodelMock.object, rulesetId, moq.It.isAnyString(), [])).verifiable(moq.Times.once());
+    stateTrackerMock.setup(async (x) => x.onHierarchyStateChanged(imodelMock.object, rulesetId, moq.It.isAnyString(), [])).verifiable(moq.Times.once()); // eslint-disable-line @itwin/no-internal
     modelSource.modifyModel((model) => {
       model.getNode(node.id)!.isExpanded = false;
     });
@@ -211,7 +211,7 @@ describe("useHierarchyStateTracking", () => {
       { initialProps }
     );
     stateTrackerMock.reset();
-    stateTrackerMock.setup(async (x) => x.onHierarchyStateChanged(imodelMock.object, rulesetId, moq.It.isAnyString(), [])).verifiable(moq.Times.once());
+    stateTrackerMock.setup(async (x) => x.onHierarchyStateChanged(imodelMock.object, rulesetId, moq.It.isAnyString(), [])).verifiable(moq.Times.once()); // eslint-disable-line @itwin/no-internal
     modelSource.modifyModel((model) => {
       model.getNode(node.id)!.isExpanded = false;
     });

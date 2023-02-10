@@ -539,17 +539,17 @@ describe("ContentDataProvider", () => {
   describe("reacting to updates", () => {
 
     it("doesn't react to imodel content updates to unrelated rulesets", () => {
-      presentationManagerMock.object.onIModelContentChanged.raiseEvent({ rulesetId: "unrelated", updateInfo: "FULL", imodelKey });
+      presentationManagerMock.object.onIModelContentChanged.raiseEvent({ rulesetId: "unrelated", updateInfo: "FULL", imodelKey }); // eslint-disable-line @itwin/no-internal
       expect(invalidateCacheSpy).to.not.be.called;
     });
 
     it("doesn't react to imodel content updates to unrelated imodels", () => {
-      presentationManagerMock.object.onIModelContentChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey: "unrelated" });
+      presentationManagerMock.object.onIModelContentChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey: "unrelated" }); // eslint-disable-line @itwin/no-internal
       expect(invalidateCacheSpy).to.not.be.called;
     });
 
     it("invalidates cache when imodel content change happens to related ruleset", () => {
-      presentationManagerMock.object.onIModelContentChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey });
+      presentationManagerMock.object.onIModelContentChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey }); // eslint-disable-line @itwin/no-internal
       expect(invalidateCacheSpy).to.be.calledOnceWith(CacheInvalidationProps.full());
     });
 

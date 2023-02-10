@@ -43,10 +43,10 @@ describe("usePresentationNodeLoader", () => {
     const mocks = mockPresentationManager();
     presentationManagerMock = mocks.presentationManager;
     rulesetVariablesManagerMock = mocks.rulesetVariablesManager;
-    onIModelHierarchyChanged = mocks.presentationManager.object.onIModelHierarchyChanged;
+    onIModelHierarchyChanged = mocks.presentationManager.object.onIModelHierarchyChanged; // eslint-disable-line @itwin/no-internal
     onRulesetModified = mocks.rulesetsManager.object.onRulesetModified;
     onRulesetVariableChanged = mocks.rulesetVariablesManager.object.onVariableChanged;
-    mocks.presentationManager.setup((x) => x.stateTracker).returns(() => undefined);
+    mocks.presentationManager.setup((x) => x.stateTracker).returns(() => undefined); // eslint-disable-line @itwin/no-internal
     mocks.presentationManager
       .setup(async (x) => x.getNodesAndCount(moq.It.isAny()))
       .returns(async () => ({ count: 0, nodes: [] }));
@@ -207,7 +207,7 @@ describe("usePresentationNodeLoader", () => {
         value: 123,
       }];
 
-      rulesetVariablesManagerMock.setup((x) => x.getAllVariables()).returns(() => variables);
+      rulesetVariablesManagerMock.setup((x) => x.getAllVariables()).returns(() => variables); // eslint-disable-line @itwin/no-internal
 
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
       act(() => { onRulesetVariableChanged.raiseEvent("var-id", undefined, "curr"); });
@@ -233,7 +233,7 @@ describe("usePresentationNodeLoader", () => {
         value: 123,
       }];
 
-      rulesetVariablesManagerMock.setup((x) => x.getAllVariables()).returns(() => variables);
+      rulesetVariablesManagerMock.setup((x) => x.getAllVariables()).returns(() => variables); // eslint-disable-line @itwin/no-internal
 
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
       act(() => { onRulesetVariableChanged.raiseEvent("var-id", "prev", "curr"); });
@@ -255,7 +255,7 @@ describe("usePresentationNodeLoader", () => {
         value: 123,
       }];
 
-      rulesetVariablesManagerMock.setup((x) => x.getAllVariables()).returns(() => variables);
+      rulesetVariablesManagerMock.setup((x) => x.getAllVariables()).returns(() => variables); // eslint-disable-line @itwin/no-internal
 
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
       act(() => { onRulesetVariableChanged.raiseEvent("var-id", "prev", undefined); });
@@ -351,7 +351,7 @@ function createNode(label: string): Node {
       instanceKeys: [],
       pathFromRoot: [label],
     },
-    label: LabelDefinition.fromLabelString(label),
+    label: LabelDefinition.fromLabelString(label), // eslint-disable-line @itwin/no-internal
   };
 }
 

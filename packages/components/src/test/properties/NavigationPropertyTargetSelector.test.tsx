@@ -39,7 +39,7 @@ describe("NavigationPropertyTargetSelector", () => {
   };
   const testRecord = createRecord();
   const contentItem = createTestContentItem({
-    label: LabelDefinition.fromLabelString("TestLabel"),
+    label: LabelDefinition.fromLabelString("TestLabel"), // eslint-disable-line @itwin/no-internal
     primaryKeys: [{ id: "1", className: "TestSchema:TestClass" }],
     displayValues: {},
     values: {},

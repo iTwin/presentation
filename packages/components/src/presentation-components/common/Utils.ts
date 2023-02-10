@@ -23,7 +23,7 @@ const localizationNamespaceName = "PresentationComponents";
  */
 export const initializeLocalization = async () => {
   await Presentation.localization.registerNamespace(localizationNamespaceName);
-  return () => Presentation.localization.unregisterNamespace(localizationNamespaceName);
+  return () => Presentation.localization.unregisterNamespace(localizationNamespaceName); // eslint-disable-line @itwin/no-internal
 };
 
 /**
@@ -106,7 +106,7 @@ export const createLabelRecord = (label: LabelDefinition, name: string): Propert
 };
 
 const createPrimitiveLabelValue = (label: LabelDefinition) => {
-  return LabelDefinition.isCompositeDefinition(label) ? createPrimitiveCompositeValue(label.rawValue) : label.rawValue;
+  return LabelDefinition.isCompositeDefinition(label) ? createPrimitiveCompositeValue(label.rawValue) : label.rawValue; // eslint-disable-line @itwin/no-internal
 };
 
 const createPrimitiveCompositeValue = (compositeValue: LabelCompositeValue): Primitives.Composite => {

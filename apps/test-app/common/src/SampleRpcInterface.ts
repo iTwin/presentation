@@ -15,7 +15,7 @@ export abstract class SampleRpcInterface extends RpcInterface {
   /** The version of the interface. */
   public static interfaceVersion = "1.0.0";
 
-  public static getClient(): SampleRpcInterface { return RpcManager.getClientForInterface(SampleRpcInterface); }
+  public static getClient(): SampleRpcInterface { return RpcManager.getClientForInterface(SampleRpcInterface); } // eslint-disable-line @itwin/no-internal
 
   @RpcOperation.setRoutingProps(localDeploymentOnly)
   public async getSampleImodels(): Promise<string[]> { return this.forward(arguments); }

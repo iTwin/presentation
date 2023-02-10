@@ -114,7 +114,7 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
       });
     }
 
-    const keys = await Presentation.selection.scopes.computeSelection(imodel, elementIds, createSelectionScopeProps(Presentation.selection.scopes.activeScope));
+    const keys = await Presentation.selection.scopes.computeSelection(imodel, elementIds, createSelectionScopeProps(Presentation.selection.scopes.activeScope)); // eslint-disable-line @itwin/no-internal
     return this.getData(imodel, keys);
   }
 }

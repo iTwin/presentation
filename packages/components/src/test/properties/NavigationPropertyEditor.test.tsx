@@ -71,7 +71,7 @@ describe("<NavigationPropertyEditor />", () => {
 
   it("invokes 'onCommit' when new target is selected changes", async () => {
     const contentItem = createTestContentItem({
-      label: LabelDefinition.fromLabelString("TestLabel"),
+      label: LabelDefinition.fromLabelString("TestLabel"), // eslint-disable-line @itwin/no-internal
       primaryKeys: [{ id: "1", className: "TestSchema:TestClass" }],
       values: {},
       displayValues: {},

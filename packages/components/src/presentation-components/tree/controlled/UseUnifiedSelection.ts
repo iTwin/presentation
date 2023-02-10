@@ -89,7 +89,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
   }
 
   public override onSelectionModified({ modifications }: TreeSelectionModificationEventArgs) {
-    const withUnifiedSelection = toRxjsObservable(modifications).pipe(
+    const withUnifiedSelection = toRxjsObservable(modifications).pipe( // eslint-disable-line @itwin/no-internal
       takeUntil(this._cancelled),
       tap({
         next: ({ selectedNodeItems, deselectedNodeItems }) => {
@@ -109,7 +109,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
 
   public override onSelectionReplaced({ replacements }: TreeSelectionReplacementEventArgs) {
     let firstEmission = true;
-    const withUnifiedSelection = toRxjsObservable(replacements).pipe(
+    const withUnifiedSelection = toRxjsObservable(replacements).pipe( // eslint-disable-line @itwin/no-internal
       takeUntil(this._cancelled),
       tap({
         next: ({ selectedNodeItems }) => {
@@ -176,7 +176,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
 
   protected getKeys(nodes: TreeNodeItem[]): Keys {
     const nodeKeys: NodeKey[] = nodes.map((node) => this._dataProvider.getNodeKey(node));
-    return SelectionHelper.getKeysForSelection(nodeKeys);
+    return SelectionHelper.getKeysForSelection(nodeKeys); // eslint-disable-line @itwin/no-internal
   }
 
   private onSelect(evt: SelectionChangeEventArgs) {
