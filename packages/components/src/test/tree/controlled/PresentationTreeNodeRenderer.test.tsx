@@ -8,15 +8,16 @@ import sinon from "sinon";
 import * as moq from "typemoq";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { PropertyFilterRuleOperator, TreeActions, UiComponents } from "@itwin/components-react";
-import { IModelApp, NoRenderApp } from "@itwin/core-frontend";
+import { EmptyLocalization } from "@itwin/core-common";
+import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import { PresentationInfoTreeNodeItem } from "../../../presentation-components";
 import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/PresentationInstanceFilterBuilder";
 import { PresentationTreeNodeRenderer } from "../../../presentation-components/tree/controlled/PresentationTreeNodeRenderer";
-import { createTreeModelNode, createTreeNodeItem } from "./Helpers";
 import { createTestPropertyInfo } from "../../_helpers/Common";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content";
+import { createTreeModelNode, createTreeNodeItem } from "./Helpers";
 
 function createFilterInfo(propName: string = "prop"): PresentationInstanceFilterInfo {
   const property = createTestPropertyInfo({ name: propName });
@@ -33,21 +34,25 @@ function createFilterInfo(propName: string = "prop"): PresentationInstanceFilter
 describe("PresentationTreeNodeRenderer", () => {
   const treeActionsMock = moq.Mock.ofType<TreeActions>();
 
-  before(async () => {
-    await NoRenderApp.startup();
-    await UiComponents.initialize(IModelApp.localization);
-    await Presentation.initialize();
+  before(() => {
     HTMLElement.prototype.scrollIntoView = () => { };
   });
 
-  after(async () => {
-    UiComponents.terminate();
-    Presentation.terminate();
-    await IModelApp.shutdown();
+  after(() => {
     delete (HTMLElement.prototype as any).scrollIntoView;
   });
 
+  beforeEach(async () => {
+    const localization = new EmptyLocalization();
+    sinon.stub(IModelApp, "initialized").get(() => true);
+    sinon.stub(IModelApp, "localization").get(() => localization);
+    await UiComponents.initialize(localization);
+    await Presentation.initialize();
+  });
+
   afterEach(() => {
+    UiComponents.terminate();
+    Presentation.terminate();
     treeActionsMock.reset();
     sinon.restore();
   });

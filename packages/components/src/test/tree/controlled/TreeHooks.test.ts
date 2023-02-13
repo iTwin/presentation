@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { it } from "mocha";
+import sinon from "sinon";
 import * as moq from "typemoq";
 import { PrimitiveValue } from "@itwin/appui-abstract";
 import {
@@ -12,7 +12,7 @@ import {
 } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
-import { LabelDefinition, Node, RegisteredRuleset, RulesetVariable, StandardNodeTypes, VariableValueTypes } from "@itwin/presentation-common";
+import { LabelDefinition, Node, RegisteredRuleset, StandardNodeTypes } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
 import { act, cleanup, renderHook } from "@testing-library/react-hooks";
 import { IPresentationTreeDataProvider } from "../../../presentation-components";
@@ -28,7 +28,6 @@ describe("usePresentationNodeLoader", () => {
   let onRulesetModified: RulesetManager["onRulesetModified"];
   let onRulesetVariableChanged: RulesetVariablesManager["onVariableChanged"];
   let presentationManagerMock: moq.IMock<PresentationManager>;
-  let rulesetVariablesManagerMock: moq.IMock<RulesetVariablesManager>;
   const imodelMock = moq.Mock.ofType<IModelConnection>();
   const rulesetId = "test-ruleset-id";
   const imodelKey = "test-imodel-key";
@@ -38,32 +37,25 @@ describe("usePresentationNodeLoader", () => {
     pagingSize: 5,
   };
 
-  before(async () => {
-    await UiComponents.initialize(new ITwinLocalization());
-  });
-
-  after(() => {
-    UiComponents.terminate();
-  });
-
-  beforeEach(() => {
-    imodelMock.reset();
+  beforeEach(async () => {
     imodelMock.setup((x) => x.key).returns(() => imodelKey);
     const mocks = mockPresentationManager();
     presentationManagerMock = mocks.presentationManager;
-    rulesetVariablesManagerMock = mocks.rulesetVariablesManager;
-    onIModelHierarchyChanged = mocks.presentationManager.object.onIModelHierarchyChanged;
+    onIModelHierarchyChanged = mocks.presentationManager.object.onIModelHierarchyChanged; // eslint-disable-line @itwin/no-internal
     onRulesetModified = mocks.rulesetsManager.object.onRulesetModified;
     onRulesetVariableChanged = mocks.rulesetVariablesManager.object.onVariableChanged;
-    mocks.presentationManager.setup((x) => x.stateTracker).returns(() => undefined);
+    mocks.presentationManager.setup((x) => x.stateTracker).returns(() => undefined); // eslint-disable-line @itwin/no-internal
     mocks.presentationManager
       .setup(async (x) => x.getNodesAndCount(moq.It.isAny()))
       .returns(async () => ({ count: 0, nodes: [] }));
-    Presentation.setPresentationManager(mocks.presentationManager.object);
+    sinon.stub(Presentation, "presentation").get(() => mocks.presentationManager.object);
+    await UiComponents.initialize(new ITwinLocalization());
   });
 
   afterEach(async () => {
     await cleanup();
+    imodelMock.reset();
+    UiComponents.terminate();
     Presentation.terminate();
   });
 
@@ -189,7 +181,6 @@ describe("usePresentationNodeLoader", () => {
       const oldNodeLoader = result.current.nodeLoader;
 
       const currRuleset = new RegisteredRuleset({ id: rulesetId, rules: [] }, "", () => { });
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       act(() => { onRulesetModified.raiseEvent(currRuleset, currRuleset.toJSON()); });
       await waitForNextUpdate();
 
@@ -203,19 +194,6 @@ describe("usePresentationNodeLoader", () => {
       );
       const oldNodeLoader = result.current.nodeLoader;
 
-      const variables: RulesetVariable[] = [{
-        id: "var-id",
-        type: VariableValueTypes.String,
-        value: "curr",
-      }, {
-        id: "other-var",
-        type: VariableValueTypes.Int,
-        value: 123,
-      }];
-
-      rulesetVariablesManagerMock.setup((x) => x.getAllVariables()).returns(() => variables);
-
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       act(() => { onRulesetVariableChanged.raiseEvent("var-id", undefined, "curr"); });
       await waitForNextUpdate();
 
@@ -229,19 +207,6 @@ describe("usePresentationNodeLoader", () => {
       );
       const oldNodeLoader = result.current.nodeLoader;
 
-      const variables: RulesetVariable[] = [{
-        id: "var-id",
-        type: VariableValueTypes.String,
-        value: "curr",
-      }, {
-        id: "other-var",
-        type: VariableValueTypes.Int,
-        value: 123,
-      }];
-
-      rulesetVariablesManagerMock.setup((x) => x.getAllVariables()).returns(() => variables);
-
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       act(() => { onRulesetVariableChanged.raiseEvent("var-id", "prev", "curr"); });
       await waitForNextUpdate();
 
@@ -255,15 +220,6 @@ describe("usePresentationNodeLoader", () => {
       );
       const oldNodeLoader = result.current.nodeLoader;
 
-      const variables: RulesetVariable[] = [{
-        id: "other-var",
-        type: VariableValueTypes.Int,
-        value: 123,
-      }];
-
-      rulesetVariablesManagerMock.setup((x) => x.getAllVariables()).returns(() => variables);
-
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       act(() => { onRulesetVariableChanged.raiseEvent("var-id", "prev", undefined); });
       await waitForNextUpdate();
 
@@ -357,7 +313,7 @@ function createNode(label: string): Node {
       instanceKeys: [],
       pathFromRoot: [label],
     },
-    label: LabelDefinition.fromLabelString(label),
+    label: LabelDefinition.fromLabelString(label), // eslint-disable-line @itwin/no-internal
   };
 }
 

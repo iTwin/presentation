@@ -115,7 +115,7 @@ describe("TreeDataProvider", async () => {
   });
 
   it("requests backend only once to get first page", async () => {
-    const getNodesSpy = sinon.spy(Presentation.presentation.rpcRequestsHandler, "getPagedNodes");
+    const getNodesSpy = sinon.spy(Presentation.presentation.rpcRequestsHandler, "getPagedNodes"); // eslint-disable-line @itwin/no-internal
     provider.pagingSize = 10;
 
     // request count and first page

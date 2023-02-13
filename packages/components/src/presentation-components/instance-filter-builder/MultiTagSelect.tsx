@@ -8,13 +8,11 @@ import Component, {
   components, ControlProps, IndicatorProps, MenuProps, MultiValueProps, OptionProps, OptionTypeBase, Props, ValueContainerProps,
 } from "react-select";
 import { SvgCaretDown, SvgCheckmarkSmall, SvgCloseSmall } from "@itwin/itwinui-icons-react";
-import { useResizeObserver } from "@itwin/core-react";
-import { useCallback, useState } from "react";
+import { useResizeObserver } from "../common/Utils";
 
 /** @internal */
 export function MultiTagSelect<Option>(props: Props<Option>) {
-  const [width, setWidth] = useState<number>();
-  const selectRef = useResizeObserver(useCallback((newWidth) => { setWidth(newWidth); }, []));
+  const { ref: selectRef, width } = useResizeObserver();
 
   return (<div ref={selectRef}>
     <Component

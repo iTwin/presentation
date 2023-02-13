@@ -36,8 +36,8 @@ class Provider extends ContentDataProvider {
 
 describe("ContentDataProvider", () => {
 
-  let rulesetId: string;
-  let displayType: string;
+  const rulesetId = "ruleset_id";
+  const displayType = "test_display";
   let provider: Provider;
   let invalidateCacheSpy: sinon.SinonSpy<[CacheInvalidationProps], void>;
   let presentationManagerMock: moq.IMock<PresentationManager>;
@@ -45,18 +45,12 @@ describe("ContentDataProvider", () => {
   const imodelMock = moq.Mock.ofType<IModelConnection>();
   const imodelKey = "test-imodel-Key";
 
-  before(() => {
-    rulesetId = "ruleset_id";
-    displayType = "test_display";
-  });
-
   beforeEach(() => {
     const mocks = mockPresentationManager();
     rulesetsManagerMock = mocks.rulesetsManager;
     presentationManagerMock = mocks.presentationManager;
-    Presentation.setPresentationManager(presentationManagerMock.object);
+    sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
 
-    imodelMock.reset();
     imodelMock.setup((x) => x.key).returns(() => imodelKey);
 
     provider = new Provider({ imodel: imodelMock.object, ruleset: rulesetId, displayType, enableContentAutoUpdate: true });
@@ -64,7 +58,9 @@ describe("ContentDataProvider", () => {
   });
 
   afterEach(() => {
+    imodelMock.reset();
     provider.dispose();
+    sinon.restore();
     Presentation.terminate();
   });
 
@@ -543,17 +539,17 @@ describe("ContentDataProvider", () => {
   describe("reacting to updates", () => {
 
     it("doesn't react to imodel content updates to unrelated rulesets", () => {
-      presentationManagerMock.object.onIModelContentChanged.raiseEvent({ rulesetId: "unrelated", updateInfo: "FULL", imodelKey });
+      presentationManagerMock.object.onIModelContentChanged.raiseEvent({ rulesetId: "unrelated", updateInfo: "FULL", imodelKey }); // eslint-disable-line @itwin/no-internal
       expect(invalidateCacheSpy).to.not.be.called;
     });
 
     it("doesn't react to imodel content updates to unrelated imodels", () => {
-      presentationManagerMock.object.onIModelContentChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey: "unrelated" });
+      presentationManagerMock.object.onIModelContentChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey: "unrelated" }); // eslint-disable-line @itwin/no-internal
       expect(invalidateCacheSpy).to.not.be.called;
     });
 
     it("invalidates cache when imodel content change happens to related ruleset", () => {
-      presentationManagerMock.object.onIModelContentChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey });
+      presentationManagerMock.object.onIModelContentChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey }); // eslint-disable-line @itwin/no-internal
       expect(invalidateCacheSpy).to.be.calledOnceWith(CacheInvalidationProps.full());
     });
 

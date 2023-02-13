@@ -10,9 +10,9 @@ import { memo, useEffect, useState } from "react";
 import { IDisposable, using } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ViewportProps } from "@itwin/imodel-components-react";
-import { AsyncTasksTracker, KeySet, SelectionInfo } from "@itwin/presentation-common";
+import { KeySet, SelectionInfo } from "@itwin/presentation-common";
 import { ISelectionProvider, Presentation, SelectionChangeEventArgs, SelectionHandler } from "@itwin/presentation-frontend";
-import { getDisplayName } from "../common/Utils";
+import { AsyncTasksTracker, getDisplayName } from "../common/Utils";
 
 /**
  * Props that are injected to the ViewWithUnifiedSelection HOC component.

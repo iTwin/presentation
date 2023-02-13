@@ -195,14 +195,14 @@ function useModelSourceUpdateOnIModelHierarchyUpdate(params: {
       }
 
       let subscription: Subscription | undefined;
-      const removeListener = Presentation.presentation.onIModelHierarchyChanged.addListener(
+      const removeListener = Presentation.presentation.onIModelHierarchyChanged.addListener( // eslint-disable-line @itwin/no-internal
         async (args: IModelHierarchyChangeEventArgs) => {
-          if (args.rulesetId !== dataProvider.rulesetId || args.imodelKey !== dataProvider.imodel.key) {
+          if (args.rulesetId !== dataProvider.rulesetId || args.imodelKey !== dataProvider.imodel.key) { // eslint-disable-line @itwin/no-internal
             return;
           }
 
-          const newDataProvider = new PresentationTreeDataProvider({ ...dataProviderProps, ruleset: args.rulesetId });
-          if (args.updateInfo === UPDATE_FULL) {
+          const newDataProvider = new PresentationTreeDataProvider({ ...dataProviderProps, ruleset: args.rulesetId }); // eslint-disable-line @itwin/no-internal
+          if (args.updateInfo === UPDATE_FULL) { // eslint-disable-line @itwin/no-internal
             subscription = reloadTree(modelSource.getModel(), newDataProvider, pageSize).subscribe({
               next: (newModelSource) => setTreeNodeLoaderState((prevState) => ({
                 modelSource: newModelSource,
@@ -213,7 +213,7 @@ function useModelSourceUpdateOnIModelHierarchyUpdate(params: {
           } else {
             const newModelSource = await updateModelSourceAfterIModelChange(
               modelSource,
-              args.updateInfo,
+              args.updateInfo, // eslint-disable-line @itwin/no-internal
               newDataProvider,
               treeNodeItemCreationProps,
               renderedItems.current,
@@ -355,9 +355,9 @@ export function applyHierarchyChanges(
   const modelSource = new TreeModelSource(treeModel);
   modelSource.modifyModel((model: MutableTreeModel) => {
     const updateParentIds = hierarchyUpdateRecords
-      .map((record) => record.parent ? createTreeNodeId(record.parent) : undefined);
+      .map((record) => record.parent ? createTreeNodeId(record.parent) : undefined); // eslint-disable-line @itwin/no-internal
     for (const record of hierarchyUpdateRecords) {
-      const parentNodeId = record.parent ? createTreeNodeId(record.parent) : undefined;
+      const parentNodeId = record.parent ? createTreeNodeId(record.parent) : undefined; // eslint-disable-line @itwin/no-internal
       const parentNode = parentNodeId ? model.getNode(parentNodeId) : model.getRootNode();
       if (!parentNode) {
         continue;
@@ -368,14 +368,14 @@ export function applyHierarchyChanges(
       // of the parent node from model.
 
       model.clearChildren(parentNodeId);
-      model.setNumChildren(parentNodeId, record.nodesCount);
+      model.setNumChildren(parentNodeId, record.nodesCount); // eslint-disable-line @itwin/no-internal
       if (isTreeModelNode(parentNode) && !parentNode.isExpanded)
         continue;
 
-      for (const expandedNode of record.expandedNodes ?? []) {
-        const treeItem = createTreeNodeItem(expandedNode.node, parentNodeId, treeNodeItemCreationProps);
+      for (const expandedNode of record.expandedNodes ?? []) { // eslint-disable-line @itwin/no-internal
+        const treeItem = createTreeNodeItem(expandedNode.node, parentNodeId, treeNodeItemCreationProps); // eslint-disable-line @itwin/no-internal
         const existingNode = treeModel.getNode(treeItem.id);
-        model.setChildren(parentNodeId, [createModelNodeInput(existingNode, treeItem)], expandedNode.position);
+        model.setChildren(parentNodeId, [createModelNodeInput(existingNode, treeItem)], expandedNode.position); // eslint-disable-line @itwin/no-internal
         if (existingNode) {
           rebuildSubTree(treeModel, model, existingNode, updateParentIds);
         }

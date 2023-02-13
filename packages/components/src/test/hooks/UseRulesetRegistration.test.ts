@@ -3,6 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
+import sinon from "sinon";
 import * as moq from "typemoq";
 import { RegisteredRuleset, Ruleset } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, RulesetManager } from "@itwin/presentation-frontend";
@@ -23,13 +24,14 @@ describe("useRulesetRegistration", () => {
 
   beforeEach(() => {
     presentationManagerMock = moq.Mock.ofType<PresentationManager>();
-    Presentation.setPresentationManager(presentationManagerMock.object);
+    sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
     rulesetManagerMock = moq.Mock.ofType<RulesetManager>();
     presentationManagerMock.setup((x) => x.rulesets()).returns(() => rulesetManagerMock.object);
   });
 
   afterEach(() => {
     Presentation.terminate();
+    sinon.restore();
   });
 
   it("registers and un-registers ruleset", async () => {

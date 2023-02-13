@@ -7,7 +7,7 @@ import { expect } from "chai";
 import sinon from "sinon";
 import { PropertyDescription } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelApp, IModelConnection, NoRenderApp } from "@itwin/core-frontend";
+import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { renderHook } from "@testing-library/react-hooks";
@@ -20,15 +20,14 @@ describe("UseNavigationPropertyTargetsLoader", () => {
   const testImodel = {} as IModelConnection;
 
   beforeEach(async () => {
-    await NoRenderApp.startup({
-      localization: new EmptyLocalization(),
-    });
+    const localization = new EmptyLocalization();
+    sinon.stub(IModelApp, "initialized").get(() => true);
+    sinon.stub(IModelApp, "localization").get(() => localization);
     await Presentation.initialize();
   });
 
   afterEach(async () => {
     Presentation.terminate();
-    await IModelApp.shutdown();
     sinon.restore();
   });
 
@@ -48,7 +47,7 @@ describe("UseNavigationPropertyTargetsLoader", () => {
 
   it("loads targets", async () => {
     const contentItem = createTestContentItem({
-      label: LabelDefinition.fromLabelString("testLabel"),
+      label: LabelDefinition.fromLabelString("testLabel"), // eslint-disable-line @itwin/no-internal
       primaryKeys: [{ className: "class", id: "1" }],
       displayValues: {},
       values: {},
@@ -78,8 +77,8 @@ describe("UseNavigationPropertyTargetsLoader", () => {
     );
 
     const loadedTargets: NavigationPropertyTarget[] = [
-      { label: LabelDefinition.fromLabelString("test1"), key: { className: "class", id: "1" } },
-      { label: LabelDefinition.fromLabelString("test2"), key: { className: "class", id: "2" } },
+      { label: LabelDefinition.fromLabelString("test1"), key: { className: "class", id: "1" } }, // eslint-disable-line @itwin/no-internal
+      { label: LabelDefinition.fromLabelString("test2"), key: { className: "class", id: "2" } }, // eslint-disable-line @itwin/no-internal
     ];
     await result.current("", loadedTargets);
     expect(getContentStub).to.be.calledOnce;

@@ -29,12 +29,12 @@ function initializeRpcInterfaces(interfaces: RpcInterfaceDefinition[]) {
   };
 
   for (const definition of interfaces)
-    RpcConfiguration.assign(definition, () => config);
+    RpcConfiguration.assign(definition, () => config); // eslint-disable-line @itwin/no-internal
 
-  const instance = RpcConfiguration.obtain(config);
+  const instance = RpcConfiguration.obtain(config); // eslint-disable-line @itwin/no-internal
 
   try {
-    RpcConfiguration.initializeInterfaces(instance);
+    RpcConfiguration.initializeInterfaces(instance); // eslint-disable-line @itwin/no-internal
   } catch {
     // this may fail with "Error: RPC interface "xxx" is already initialized." because
     // multiple different tests want to set up rpc interfaces
@@ -91,8 +91,8 @@ export const initialize = async (props?: PresentationTestingInitProps) => {
   // init backend
   // make sure backend gets assigned an id which puts its resources into a unique directory
   props.backendProps = props.backendProps ?? {};
-  if (!props.backendProps.id)
-    props.backendProps.id = `test-${Guid.createValue()}`;
+  if (!props.backendProps.id) // eslint-disable-line @itwin/no-internal
+    props.backendProps.id = `test-${Guid.createValue()}`; // eslint-disable-line @itwin/no-internal
   await IModelHost.startup({ cacheDir: join(__dirname, ".cache"), ...props.backendHostProps });
   PresentationBackend.initialize(props.backendProps);
 

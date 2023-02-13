@@ -292,13 +292,13 @@ describe("convertToInstanceFilterDefinition", () => {
     const classBNestedField = createTestNestedContentField({ nestedFields: [classCNestedField], pathToPrimaryClass: pathBToA });
 
     beforeEach(() => {
-      classCPropertiesField.resetParentship();
-      classCNestedField.resetParentship();
-      classBNestedField.resetParentship();
+      classCPropertiesField.resetParentship(); // eslint-disable-line @itwin/no-internal
+      classCNestedField.resetParentship(); // eslint-disable-line @itwin/no-internal
+      classBNestedField.resetParentship(); // eslint-disable-line @itwin/no-internal
     });
 
     it("in single condition", async () => {
-      classCPropertiesField.rebuildParentship(classCNestedField);
+      classCPropertiesField.rebuildParentship(classCNestedField); // eslint-disable-line @itwin/no-internal
       const filter: PresentationInstanceFilterCondition = {
         field: classCPropertiesField,
         operator: PropertyFilterRuleOperator.IsNull,
@@ -317,7 +317,7 @@ describe("convertToInstanceFilterDefinition", () => {
     });
 
     it("in multiple conditions", async () => {
-      classCPropertiesField.rebuildParentship(classCNestedField);
+      classCPropertiesField.rebuildParentship(classCNestedField); // eslint-disable-line @itwin/no-internal
       const filter: PresentationInstanceFilterConditionGroup = {
         operator: PropertyFilterRuleGroupOperator.And,
         conditions: [{
@@ -342,7 +342,7 @@ describe("convertToInstanceFilterDefinition", () => {
     });
 
     it("in deeply nested condition field", async () => {
-      classCNestedField.rebuildParentship(classBNestedField);
+      classCNestedField.rebuildParentship(classBNestedField); // eslint-disable-line @itwin/no-internal
       const filter: PresentationInstanceFilterCondition = {
         field: classCPropertiesField,
         operator: PropertyFilterRuleOperator.IsNull,
