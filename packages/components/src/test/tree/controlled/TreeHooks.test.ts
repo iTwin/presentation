@@ -220,7 +220,6 @@ describe("usePresentationNodeLoader", () => {
       );
       const oldNodeLoader = result.current.nodeLoader;
 
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       act(() => { onRulesetVariableChanged.raiseEvent("var-id", "prev", undefined); });
       await waitForNextUpdate();
 
