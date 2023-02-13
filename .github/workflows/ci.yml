@@ -42,7 +42,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18, 16]
+        node-version: [18]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     name: Lint Build and run Tests
