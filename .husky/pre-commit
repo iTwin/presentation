@@ -1,4 +1,17 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
+# validate email
+emailPattern="[^@]+@users\\.noreply\\.github\\.com"
+email=$(git config user.email)
+
+if ! [[ $email =~ $emailPattern ]]; then
+  echo "Git commits should be using an e-mail like this pattern: \"$emailPattern\""
+  echo "But yours is configured like this: $email"
+  echo "To fix it, you can use command like this:"
+  echo "git config --local user.email \"mrexample@users.noreply.github.com\""
+  exit 1;
+fi
+
+# lint staged files
 pnpm lint-staged
