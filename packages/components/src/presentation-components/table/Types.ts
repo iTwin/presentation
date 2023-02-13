@@ -2,6 +2,9 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
+/** @packageDocumentation
+ * @module Table
+ */
 
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { Field } from "@itwin/presentation-common";
