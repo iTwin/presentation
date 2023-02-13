@@ -12,7 +12,7 @@ import {
 } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
-import { LabelDefinition, Node, RegisteredRuleset, RulesetVariable, StandardNodeTypes, VariableValueTypes } from "@itwin/presentation-common";
+import { LabelDefinition, Node, RegisteredRuleset, StandardNodeTypes } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
 import { act, cleanup, renderHook } from "@testing-library/react-hooks";
 import { IPresentationTreeDataProvider } from "../../../presentation-components";
@@ -28,7 +28,6 @@ describe("usePresentationNodeLoader", () => {
   let onRulesetModified: RulesetManager["onRulesetModified"];
   let onRulesetVariableChanged: RulesetVariablesManager["onVariableChanged"];
   let presentationManagerMock: moq.IMock<PresentationManager>;
-  let rulesetVariablesManagerMock: moq.IMock<RulesetVariablesManager>;
   const imodelMock = moq.Mock.ofType<IModelConnection>();
   const rulesetId = "test-ruleset-id";
   const imodelKey = "test-imodel-key";
@@ -42,7 +41,6 @@ describe("usePresentationNodeLoader", () => {
     imodelMock.setup((x) => x.key).returns(() => imodelKey);
     const mocks = mockPresentationManager();
     presentationManagerMock = mocks.presentationManager;
-    rulesetVariablesManagerMock = mocks.rulesetVariablesManager;
     onIModelHierarchyChanged = mocks.presentationManager.object.onIModelHierarchyChanged; // eslint-disable-line @itwin/no-internal
     onRulesetModified = mocks.rulesetsManager.object.onRulesetModified;
     onRulesetVariableChanged = mocks.rulesetVariablesManager.object.onVariableChanged;
@@ -183,7 +181,6 @@ describe("usePresentationNodeLoader", () => {
       const oldNodeLoader = result.current.nodeLoader;
 
       const currRuleset = new RegisteredRuleset({ id: rulesetId, rules: [] }, "", () => { });
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       act(() => { onRulesetModified.raiseEvent(currRuleset, currRuleset.toJSON()); });
       await waitForNextUpdate();
 
@@ -197,19 +194,6 @@ describe("usePresentationNodeLoader", () => {
       );
       const oldNodeLoader = result.current.nodeLoader;
 
-      const variables: RulesetVariable[] = [{
-        id: "var-id",
-        type: VariableValueTypes.String,
-        value: "curr",
-      }, {
-        id: "other-var",
-        type: VariableValueTypes.Int,
-        value: 123,
-      }];
-
-      rulesetVariablesManagerMock.setup((x) => x.getAllVariables()).returns(() => variables); // eslint-disable-line @itwin/no-internal
-
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       act(() => { onRulesetVariableChanged.raiseEvent("var-id", undefined, "curr"); });
       await waitForNextUpdate();
 
@@ -223,19 +207,6 @@ describe("usePresentationNodeLoader", () => {
       );
       const oldNodeLoader = result.current.nodeLoader;
 
-      const variables: RulesetVariable[] = [{
-        id: "var-id",
-        type: VariableValueTypes.String,
-        value: "curr",
-      }, {
-        id: "other-var",
-        type: VariableValueTypes.Int,
-        value: 123,
-      }];
-
-      rulesetVariablesManagerMock.setup((x) => x.getAllVariables()).returns(() => variables); // eslint-disable-line @itwin/no-internal
-
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       act(() => { onRulesetVariableChanged.raiseEvent("var-id", "prev", "curr"); });
       await waitForNextUpdate();
 
@@ -248,14 +219,6 @@ describe("usePresentationNodeLoader", () => {
         { initialProps },
       );
       const oldNodeLoader = result.current.nodeLoader;
-
-      const variables: RulesetVariable[] = [{
-        id: "other-var",
-        type: VariableValueTypes.Int,
-        value: 123,
-      }];
-
-      rulesetVariablesManagerMock.setup((x) => x.getAllVariables()).returns(() => variables); // eslint-disable-line @itwin/no-internal
 
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
       act(() => { onRulesetVariableChanged.raiseEvent("var-id", "prev", undefined); });
