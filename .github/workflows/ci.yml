@@ -10,7 +10,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [16]
+        node-version: [18]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     name: Check change files
@@ -23,7 +23,7 @@ jobs:
     - name: Install pnpm
       uses: pnpm/action-setup@v2.2.4
       with:
-        version: 7.17.0
+        version: 7.27.0
 
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
@@ -42,7 +42,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [16]
+        node-version: [18]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     name: Lint Build and run Tests
@@ -53,7 +53,7 @@ jobs:
     - name: Install pnpm
       uses: pnpm/action-setup@v2.2.4
       with:
-        version: 7.17.0
+        version: 7.27.0
 
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
