@@ -115,5 +115,5 @@ export * from "./presentation-components/instance-filter-builder/PresentationIns
 export * from "./presentation-components/instance-filter-builder/InstanceFilterConverter";
 export * from "./presentation-components/instance-filter-builder/Types";
 
-Presentation.registerInitializationHandler(initializeLocalization);
-Presentation.registerInitializationHandler(initializePropertyValueRenderers);
+Presentation.registerInitializationHandler(initializeLocalization); // eslint-disable-line @itwin/no-internal
+Presentation.registerInitializationHandler(initializePropertyValueRenderers); // eslint-disable-line @itwin/no-internal

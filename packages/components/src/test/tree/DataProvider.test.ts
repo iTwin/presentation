@@ -43,34 +43,28 @@ function createTestECInstancesNodeWithId(id?: string) {
 
 describe("TreeDataProvider", () => {
 
-  let rulesetId: string;
+  const rulesetId: string = "ruleset_id";
   let provider: PresentationTreeDataProvider;
   let onVariableChanged: BeEvent<(variableId: string) => void>;
   const presentationManagerMock = moq.Mock.ofType<PresentationManager>();
   const rulesetVariablesManagerMock = moq.Mock.ofType<RulesetVariablesManager>();
   const imodelMock = moq.Mock.ofType<IModelConnection>();
 
-  before(() => {
-    rulesetId = "ruleset_id";
-    Presentation.setLocalization(new EmptyLocalization());
-    Presentation.setPresentationManager(presentationManagerMock.object);
-  });
-
-  after(() => {
-    Presentation.terminate();
-  });
-
   beforeEach(() => {
     onVariableChanged = new BeEvent();
-    presentationManagerMock.reset();
-    rulesetVariablesManagerMock.reset();
     presentationManagerMock.setup((x) => x.vars(moq.It.isAny())).returns(() => rulesetVariablesManagerMock.object);
     rulesetVariablesManagerMock.setup((x) => x.onVariableChanged).returns(() => onVariableChanged);
+    sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
+    sinon.stub(Presentation, "localization").get(() => new EmptyLocalization());
     provider = new PresentationTreeDataProvider({ imodel: imodelMock.object, ruleset: rulesetId });
   });
 
   afterEach(() => {
+    presentationManagerMock.reset();
+    rulesetVariablesManagerMock.reset();
     provider.dispose();
+    sinon.restore();
+    Presentation.terminate();
   });
 
   describe("dispose", () => {

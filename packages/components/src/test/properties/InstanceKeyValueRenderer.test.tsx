@@ -8,7 +8,7 @@ import sinon from "sinon";
 import { Primitives, PrimitiveValue, PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { TypeConverter, TypeConverterManager } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelApp, IModelConnection, NoRenderApp } from "@itwin/core-frontend";
+import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Presentation, SelectionManager } from "@itwin/presentation-frontend";
 import { act, cleanup, render } from "@testing-library/react";
 import { InstanceKeyValueRenderer } from "../../presentation-components/properties/InstanceKeyValueRenderer";
@@ -26,15 +26,15 @@ describe("InstanceKeyValueRenderer", () => {
   }
 
   before(async () => {
-    await NoRenderApp.startup({
-      localization: new EmptyLocalization(),
-    });
+    const localization = new EmptyLocalization();
+    sinon.stub(IModelApp, "initialized").get(() => true);
+    sinon.stub(IModelApp, "localization").get(() => localization);
     await Presentation.initialize();
   });
 
   after(async () => {
     Presentation.terminate();
-    await IModelApp.shutdown();
+    sinon.restore();
   });
 
   describe("canRender", () => {
@@ -63,6 +63,7 @@ describe("InstanceKeyValueRenderer", () => {
     beforeEach(() => {
       const selectionManager = new SelectionManager({ scopes: undefined as any });
       sinon.stub(Presentation, "selection").get(() => selectionManager);
+      sinon.stub(Presentation, "localization").get(() => new EmptyLocalization());
     });
 
     afterEach(() => {

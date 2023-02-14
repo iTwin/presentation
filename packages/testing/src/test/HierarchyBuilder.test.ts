@@ -4,6 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import sinon from "sinon";
 import * as moq from "typemoq";
 import { TreeNodeItem } from "@itwin/components-react";
 import { BeEvent, Guid } from "@itwin/core-bentley";
@@ -14,7 +15,7 @@ import { HierarchyBuilder, NodeMappingFunc } from "../presentation-testing/Hiera
 
 async function getRootNodes() {
   const root: Node = {
-    label: LabelDefinition.fromLabelString("Root Node"),
+    label: LabelDefinition.fromLabelString("Root Node"), // eslint-disable-line @itwin/no-internal
     hasChildren: true,
     key: { type: "", version: 0, pathFromRoot: ["root"] },
   };
@@ -26,11 +27,11 @@ async function getChildrenNodes(opts: HierarchyRequestOptions<IModelConnection, 
     return { nodes: [], count: 0 };
 
   const child1: Node = {
-    label: LabelDefinition.fromLabelString("Child 1"),
+    label: LabelDefinition.fromLabelString("Child 1"), // eslint-disable-line @itwin/no-internal
     key: { type: "", version: 0, pathFromRoot: ["root", "child1"] },
   };
   const child2: Node = {
-    label: LabelDefinition.fromLabelString("Child 2"),
+    label: LabelDefinition.fromLabelString("Child 2"), // eslint-disable-line @itwin/no-internal
     key: { type: "", version: 0, pathFromRoot: ["root", "child2"] },
   };
   return { nodes: [child1, child2], count: 2 };
@@ -60,8 +61,12 @@ describe("HierarchyBuilder", () => {
   describe("createHierarchy", () => {
     context("without data", () => {
       beforeEach(() => {
-        Presentation.setPresentationManager(presentationManagerMock.object);
+        sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
         presentationManagerMock.setup(async (manager) => manager.getNodesAndCount(moq.It.isAny())).returns(async () => ({ nodes: [], count: 0 }));
+      });
+
+      afterEach(() => {
+        sinon.restore();
       });
 
       it("returns empty list when rulesetId is given", async () => {
@@ -81,7 +86,11 @@ describe("HierarchyBuilder", () => {
       beforeEach(() => {
         presentationManagerMock.setup(async (manager) => manager.getNodesAndCount(moq.It.is((opts) => opts.parentKey === undefined))).returns(getRootNodes);
         presentationManagerMock.setup(async (manager) => manager.getNodesAndCount(moq.It.is((opts) => opts.parentKey !== undefined))).returns(getChildrenNodes);
-        Presentation.setPresentationManager(presentationManagerMock.object);
+        sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
+      });
+
+      afterEach(() => {
+        sinon.restore();
       });
 
       it("returns correct hierarchy", async () => {

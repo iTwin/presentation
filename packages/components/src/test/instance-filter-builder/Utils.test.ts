@@ -201,7 +201,7 @@ describe("convertPresentationInstanceFilterToInstanceFilter", () => {
     name: "nestedField2",
     label: "NestedProp2",
   });
-  propertyField3.rebuildParentship(nestedField);
+  propertyField3.rebuildParentship(nestedField); // eslint-disable-line @itwin/no-internal
   const descriptor = createTestContentDescriptor({
     categories: [category],
     fields: [propertyField1, propertyField2, nestedField2],

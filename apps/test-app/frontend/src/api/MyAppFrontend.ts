@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
-import { AsyncMethodsOf, Guid, Id64Arg, Logger, OpenMode, PromiseReturnType } from "@itwin/core-bentley";
+import { Guid, Id64Arg, Logger, OpenMode } from "@itwin/core-bentley";
 import { ElementProps, IModelError, ViewQueryParams } from "@itwin/core-common";
 import { BriefcaseConnection, IModelConnection, IpcApp, SnapshotConnection } from "@itwin/core-frontend";
 import { UnitSystemKey } from "@itwin/core-quantity";
@@ -19,6 +19,8 @@ export interface MyAppSettings {
 }
 
 export class MyAppFrontend {
+  private static _ipcProxy = IpcApp.makeIpcProxy<SampleIpcInterface>(PRESENTATION_TEST_APP_IPC_CHANNEL_NAME);
+
   public static async getSampleImodels(): Promise<string[]> {
     return SampleRpcInterface.getClient().getSampleImodels();
   }
@@ -88,17 +90,13 @@ export class MyAppFrontend {
   public static async updateElement(imodel: IModelConnection, newProps: ElementProps) {
     if (!IpcApp.isValid)
       throw new Error(`Updating element only supported in 'IpcApp'`);
-    return this.callIpc("updateElement", imodel.key, newProps);
+    return this._ipcProxy.updateElement(imodel.key, newProps);
   }
 
   public static async deleteElements(imodel: IModelConnection, elementIds: Id64Arg) {
     if (!IpcApp.isValid)
       throw new Error(`Deleting elements only supported in 'IpcApp'`);
-    return this.callIpc("deleteElements", imodel.key, elementIds);
-  }
-
-  private static async callIpc<T extends AsyncMethodsOf<SampleIpcInterface>>(methodName: T, ...args: Parameters<SampleIpcInterface[T]>): Promise<PromiseReturnType<SampleIpcInterface[T]>> {
-    return IpcApp.callIpcChannel(PRESENTATION_TEST_APP_IPC_CHANNEL_NAME, methodName, ...args);
+    return this._ipcProxy.deleteElements(imodel.key, elementIds);
   }
 }
 

@@ -9,7 +9,7 @@ import * as moq from "typemoq";
 import { getPropertyFilterOperatorLabel, PropertyFilterRuleOperator, UiComponents } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelApp, IModelConnection, NoRenderApp } from "@itwin/core-frontend";
+import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Descriptor } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render, waitFor } from "@testing-library/react";
@@ -47,7 +47,13 @@ describe("PresentationInstanceFilterDialog", () => {
   const imodelMock = moq.Mock.ofType<IModelConnection>();
   const onCloseEvent = new BeEvent<() => void>();
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    const localization = new EmptyLocalization();
+    sinon.stub(IModelApp, "initialized").get(() => true);
+    sinon.stub(IModelApp, "localization").get(() => localization);
+    await UiComponents.initialize(localization);
+    await Presentation.initialize();
+
     async function* generator() {
       return;
     }
@@ -63,21 +69,8 @@ describe("PresentationInstanceFilterDialog", () => {
   afterEach(() => {
     onCloseEvent.raiseEvent();
     imodelMock.reset();
-  });
-
-  before(async () => {
-    await NoRenderApp.startup({
-      localization: new EmptyLocalization(),
-    });
-    await UiComponents.initialize(new EmptyLocalization());
-    await Presentation.initialize();
-    Element.prototype.scrollIntoView = sinon.stub();
-  });
-
-  after(async () => {
-    Presentation.terminate();
     UiComponents.terminate();
-    await IModelApp.shutdown();
+    Presentation.terminate();
     sinon.restore();
   });
 

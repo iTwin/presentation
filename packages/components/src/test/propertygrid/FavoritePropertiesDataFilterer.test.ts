@@ -25,13 +25,17 @@ describe("FavoritePropertiesDataFilterer", () => {
     matchingField = undefined;
   });
 
+  afterEach(() => {
+    sinon.restore();
+  });
+
   it("uses FavoritePropertiesManager to determine favorites if callback is not provided through props", async () => {
     const record = createPrimitiveStringProperty("Property", "Value");
     matchingField = createTestSimpleContentField();
 
     const managerMock = moq.Mock.ofType<FavoritePropertiesManager>();
     managerMock.setup((x) => x.has(matchingField!, moq.It.isAny(), FavoritePropertiesScope.Global)).returns(() => true).verifiable();
-    Presentation.setFavoritePropertiesManager(managerMock.object);
+    sinon.stub(Presentation, "favoriteProperties").get(() => managerMock.object);
 
     const filterer = new FavoritePropertiesDataFilterer({
       source: mockDataProvider.object,

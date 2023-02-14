@@ -6,8 +6,10 @@
  * @module Core
  */
 
+import { LegacyRef, MutableRefObject, RefCallback, useCallback, useEffect, useRef, useState } from "react";
 import { Primitives, PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IPropertyValueRenderer, PropertyValueRendererManager } from "@itwin/components-react";
+import { assert, Guid, GuidString, IDisposable } from "@itwin/core-bentley";
 import { Descriptor, Field, LabelCompositeValue, LabelDefinition, parseCombinedFieldNames } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { InstanceKeyValueRenderer } from "../properties/InstanceKeyValueRenderer";
@@ -21,7 +23,7 @@ const localizationNamespaceName = "PresentationComponents";
  */
 export const initializeLocalization = async () => {
   await Presentation.localization.registerNamespace(localizationNamespaceName);
-  return () => Presentation.localization.unregisterNamespace(localizationNamespaceName);
+  return () => Presentation.localization.unregisterNamespace(localizationNamespaceName); // eslint-disable-line @itwin/no-internal
 };
 
 /**
@@ -104,7 +106,7 @@ export const createLabelRecord = (label: LabelDefinition, name: string): Propert
 };
 
 const createPrimitiveLabelValue = (label: LabelDefinition) => {
-  return LabelDefinition.isCompositeDefinition(label) ? createPrimitiveCompositeValue(label.rawValue) : label.rawValue;
+  return LabelDefinition.isCompositeDefinition(label) ? createPrimitiveCompositeValue(label.rawValue) : label.rawValue; // eslint-disable-line @itwin/no-internal
 };
 
 const createPrimitiveCompositeValue = (compositeValue: LabelCompositeValue): Primitives.Composite => {
@@ -117,3 +119,70 @@ const createPrimitiveCompositeValue = (compositeValue: LabelCompositeValue): Pri
     })),
   };
 };
+
+/**
+ * A helper to track ongoing async tasks. Usage:
+ * ```
+ * await using(tracker.trackAsyncTask(), async (_r) => {
+ *   await doSomethingAsync();
+ * });
+ * ```
+ *
+ * Can be used with `waitForPendingAsyncs` in test helpers to wait for all
+ * async tasks to complete.
+ *
+ * @internal
+ */
+export class AsyncTasksTracker {
+  private _asyncsInProgress = new Set<GuidString>();
+  public get pendingAsyncs() { return this._asyncsInProgress; }
+  public trackAsyncTask(): IDisposable {
+    const id = Guid.createValue();
+    this._asyncsInProgress.add(id);
+    return {
+      dispose: () => this._asyncsInProgress.delete(id),
+    };
+  }
+}
+
+/** @internal */
+export function useResizeObserver<T extends HTMLElement>() {
+  const observer = useRef<ResizeObserver>();
+  const [{ width, height }, setSize] = useState<{ width?: number, height?: number }>({});
+
+  const ref = useCallback((element: T | null) => {
+    observer.current?.disconnect();
+    if (element) {
+      observer.current = new ResizeObserver(
+        /* istanbul ignore next */
+        (entries) => {
+          assert(entries.length === 1);
+          setSize(entries[0].contentRect);
+        }
+      );
+      observer.current.observe(element);
+    }
+  }, []);
+
+  useEffect(() => () => { observer.current?.disconnect(); }, []);
+
+  return {
+    ref,
+    width,
+    height,
+  };
+}
+
+/** @internal */
+export function mergeRefs<T>(...refs: Array<MutableRefObject<T | null> | LegacyRef<T>>): RefCallback<T> {
+  return (instance: T | null) => {
+    refs.forEach((ref) => {
+      // istanbul ignore else
+      if( typeof ref === "function") {
+        ref(instance);
+      } else if (ref) {
+        (ref as MutableRefObject<T | null>).current = instance;
+      }
+    });
+  };
+}

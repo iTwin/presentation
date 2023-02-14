@@ -21,11 +21,12 @@ describe("RulesetRegistrationHelper", () => {
   beforeEach(() => {
     const mocks = mockPresentationManager();
     rulesetsManagerMock = mocks.rulesetsManager;
-    Presentation.setPresentationManager(mocks.presentationManager.object);
+    sinon.stub(Presentation, "presentation").get(() => mocks.presentationManager.object);
   });
 
   afterEach(() => {
     Presentation.terminate();
+    sinon.restore();
   });
 
   it("does nothing when helper is created with ruleset id", () => {

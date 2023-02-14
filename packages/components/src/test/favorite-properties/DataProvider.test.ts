@@ -4,6 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import sinon from "sinon";
 import * as moq from "typemoq";
 import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyData } from "@itwin/components-react";
@@ -29,28 +30,27 @@ describe("FavoritePropertiesDataProvider", () => {
   const favoritePropertiesManagerMock = moq.Mock.ofType<FavoritePropertiesManager>();
   const factoryMock = moq.Mock.ofType<(imodel: IModelConnection, ruleset?: Ruleset | string) => PresentationPropertyDataProvider>();
 
-  before(async () => {
-    elementId = "0x11";
-    Presentation.setPresentationManager(presentationManagerMock.object);
-    Presentation.setSelectionManager(selectionManagerMock.object);
-    Presentation.setFavoritePropertiesManager(favoritePropertiesManagerMock.object);
-    Presentation.setLocalization(new EmptyLocalization());
-  });
-
-  after(() => {
-    Presentation.terminate();
-  });
-
   beforeEach(() => {
+    elementId = "0x11";
+    const localization = new EmptyLocalization();
+    sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
+    sinon.stub(Presentation, "favoriteProperties").get(() => favoritePropertiesManagerMock.object);
+    sinon.stub(Presentation, "selection").get(() => selectionManagerMock.object);
+    sinon.stub(Presentation, "localization").get(() => localization);
+
+    presentationManagerMock.setup((x) => x.rulesets()).returns(() => rulesetsManagerMock.object);
+    factoryMock.setup((x) => x(moq.It.isAny(), moq.It.isAny())).returns(() => presentationPropertyDataProviderMock.object);
+    provider = new FavoritePropertiesDataProvider({ propertyDataProviderFactory: factoryMock.object });
+  });
+
+  afterEach(() => {
     presentationManagerMock.reset();
     selectionManagerMock.reset();
     rulesetsManagerMock.reset();
     presentationPropertyDataProviderMock.reset();
     favoritePropertiesManagerMock.reset();
-
-    presentationManagerMock.setup((x) => x.rulesets()).returns(() => rulesetsManagerMock.object);
-    factoryMock.setup((x) => x(moq.It.isAny(), moq.It.isAny())).returns(() => presentationPropertyDataProviderMock.object);
-    provider = new FavoritePropertiesDataProvider({ propertyDataProviderFactory: factoryMock.object });
+    sinon.restore();
+    Presentation.terminate();
   });
 
   describe("constructor", () => {

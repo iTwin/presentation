@@ -14,15 +14,17 @@ import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import chaiJestSnapshot from "chai-jest-snapshot";
 import chaiSubset from "chai-subset";
-import sinon from "sinon";
 import sinonChai from "sinon-chai";
 import path from "path";
+import ResizeObserver from "resize-observer-polyfill";
 
 // setup chai
 chai.use(chaiAsPromised);
 chai.use(chaiJestSnapshot);
 chai.use(sinonChai);
 chai.use(chaiSubset);
+
+global.ResizeObserver = ResizeObserver;
 
 before(function () {
   chaiJestSnapshot.resetSnapshotRegistry();
@@ -38,7 +40,4 @@ beforeEach(function () {
   const snapPath = `${sourceFilePath}.snap`;
   chaiJestSnapshot.setFilename(snapPath);
   chaiJestSnapshot.setTestName(currentTest.fullTitle());
-});
-beforeEach(() => {
-  sinon.restore();
 });

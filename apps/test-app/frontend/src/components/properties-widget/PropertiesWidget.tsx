@@ -189,7 +189,7 @@ function PropertyGrid(props: PropertyGridProps) {
   </>;
 }
 
-type ContextMenuItemInfo = ContextMenuItemProps & React.Attributes & { label: string };
+type ContextMenuItemInfo = ContextMenuItemProps & { id: string, label: string };
 interface PropertiesWidgetContextMenuProps {
   dataProvider: PresentationPropertyDataProvider;
   args: PropertyGridContextMenuArgs;
@@ -215,14 +215,14 @@ function PropertiesWidgetContextMenu(props: PropertiesWidgetContextMenuProps) {
     if (field !== undefined) {
       if (Presentation.favoriteProperties.has(field, imodel, FAVORITES_SCOPE)) {
         items.push({
-          key: "remove-favorite",
+          id: "remove-favorite",
           onSelect: async () => removeFavorite(field),
           title: IModelApp.localization.getLocalizedString("Sample:controls.properties.context-menu.remove-favorite.description"),
           label: IModelApp.localization.getLocalizedString("Sample:controls.properties.context-menu.remove-favorite.label"),
         });
       } else {
         items.push({
-          key: "add-favorite",
+          id: "add-favorite",
           onSelect: async () => addFavorite(field),
           title: IModelApp.localization.getLocalizedString("Sample:controls.properties.context-menu.add-favorite.description"),
           label: IModelApp.localization.getLocalizedString("Sample:controls.properties.context-menu.add-favorite.label"),
@@ -245,7 +245,7 @@ function PropertiesWidgetContextMenu(props: PropertiesWidgetContextMenuProps) {
       y={props.args.event.clientY}
     >
       {asyncItems.value.map((item) =>
-        <ContextMenuItem key={item.key} onSelect={item.onSelect} title={item.title}>
+        <ContextMenuItem key={item.id} onSelect={item.onSelect} title={item.title}>
           {item.label}
         </ContextMenuItem>
       )}

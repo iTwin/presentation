@@ -162,7 +162,7 @@ export class ContentDataProvider implements IContentDataProvider {
     this._pagingSize = props.pagingSize;
     this._diagnosticsOptions = createDiagnosticsOptions(props);
     if (props.enableContentAutoUpdate) {
-      Presentation.presentation.onIModelContentChanged.addListener(this.onIModelContentChanged);
+      Presentation.presentation.onIModelContentChanged.addListener(this.onIModelContentChanged); // eslint-disable-line @itwin/no-internal
       Presentation.presentation.rulesets().onRulesetModified.addListener(this.onRulesetModified);
       Presentation.presentation.vars(this._rulesetRegistration.rulesetId).onVariableChanged.addListener(this.onRulesetVariableChanged);
     }
@@ -171,7 +171,7 @@ export class ContentDataProvider implements IContentDataProvider {
 
   /** Destructor. Must be called to clean up.  */
   public dispose() {
-    Presentation.presentation.onIModelContentChanged.removeListener(this.onIModelContentChanged);
+    Presentation.presentation.onIModelContentChanged.removeListener(this.onIModelContentChanged); // eslint-disable-line @itwin/no-internal
     Presentation.presentation.rulesets().onRulesetModified.removeListener(this.onRulesetModified);
     Presentation.presentation.vars(this._rulesetRegistration.rulesetId).onVariableChanged.removeListener(this.onRulesetVariableChanged);
     this._rulesetRegistration.dispose();
@@ -372,7 +372,7 @@ export class ContentDataProvider implements IContentDataProvider {
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
   private onIModelContentChanged = (args: IModelContentChangeEventArgs) => {
-    if (args.rulesetId === this.rulesetId && args.imodelKey === this.imodel.key)
+    if (args.rulesetId === this.rulesetId && args.imodelKey === this.imodel.key) // eslint-disable-line @itwin/no-internal
       this.onContentUpdate();
   };
 
