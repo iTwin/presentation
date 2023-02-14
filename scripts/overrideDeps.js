@@ -63,7 +63,7 @@ function override(packageJsonPath, coreVersion, uiVersion) {
 }
 
 const argv = yargs(process.argv).argv
-const packageJsonPath = argv.packageJson ?? path.resolve("../package.json");
+const packageJsonPath = require.resolve(argv.packageJson ?? "../package.json");
 const coreVersion = argv.coreVersion;
 const uiVersion = argv.uiVersion;
 
