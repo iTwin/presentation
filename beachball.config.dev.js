@@ -7,7 +7,7 @@ const base = require("./beachball.config.js");
 /** @type {import("beachball").BeachballConfig } */
 module.exports = {
   ...base,
-  tag: "dev",
+  tag: "nightly",
   prereleasePrefix: "dev",
   generateChangelog: false,
   gitTags: false,
