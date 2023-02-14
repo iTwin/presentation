@@ -11,14 +11,15 @@ import { takeUntil } from "rxjs/internal/operators/takeUntil";
 import { tap } from "rxjs/internal/operators/tap";
 import { Subject } from "rxjs/internal/Subject";
 import {
-  AbstractTreeNodeLoaderWithProvider, MutableTreeModel, MutableTreeModelNode, toRxjsObservable, TreeEditingParams, TreeEventHandler, TreeModelChanges,
-  TreeModelSource, TreeNodeItem, TreeSelectionModificationEventArgs, TreeSelectionReplacementEventArgs,
+  AbstractTreeNodeLoaderWithProvider, MutableTreeModel, MutableTreeModelNode, TreeEditingParams, TreeEventHandler, TreeModelChanges, TreeModelSource,
+  TreeNodeItem, TreeSelectionModificationEventArgs, TreeSelectionReplacementEventArgs,
 } from "@itwin/components-react";
 import { Guid, IDisposable } from "@itwin/core-bentley";
 import { useDisposable } from "@itwin/core-react";
 import { Keys, KeySet, NodeKey } from "@itwin/presentation-common";
 import { Presentation, SelectionChangeEventArgs, SelectionChangeType, SelectionHandler, SelectionHelper } from "@itwin/presentation-frontend";
 import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
+import { toRxjsObservable } from "../Utils";
 
 /**
  * Data structure that describes parameters for UnifiedSelectionTreeEventHandler
@@ -89,7 +90,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
   }
 
   public override onSelectionModified({ modifications }: TreeSelectionModificationEventArgs) {
-    const withUnifiedSelection = toRxjsObservable(modifications).pipe( // eslint-disable-line @itwin/no-internal
+    const withUnifiedSelection = toRxjsObservable(modifications).pipe(
       takeUntil(this._cancelled),
       tap({
         next: ({ selectedNodeItems, deselectedNodeItems }) => {
@@ -109,7 +110,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
 
   public override onSelectionReplaced({ replacements }: TreeSelectionReplacementEventArgs) {
     let firstEmission = true;
-    const withUnifiedSelection = toRxjsObservable(replacements).pipe( // eslint-disable-line @itwin/no-internal
+    const withUnifiedSelection = toRxjsObservable(replacements).pipe(
       takeUntil(this._cancelled),
       tap({
         next: ({ selectedNodeItems }) => {
