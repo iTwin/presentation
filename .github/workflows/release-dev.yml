@@ -6,7 +6,7 @@ on:
     branches: ["master"]
     paths:
       - 'packages/**'
-      - '!packages/full-stack-test/**'
+      - '!packages/full-stack-tests/**'
 
 jobs:
   release-packages:
