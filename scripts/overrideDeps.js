@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 // script that sets overrides for `@itwin` package versions.
-// this should allow to test our packages with all supported versions of `@itwin` packages
+// this allows to test our packages with various supported versions of `@itwin` packages
 
 "use strict"
 
@@ -48,32 +48,29 @@ function getOverrides(coreVersion, uiVersion) {
   });
   uiPackages.forEach((packageName) => {
     overrides[packageName] = uiVersion;
-  })
+  });
 
   return overrides;
 }
 
 function override(packageJsonPath, coreVersion, uiVersion) {
   const pkgJsonData = JSON.parse(fs.readFileSync(packageJsonPath, { encoding: "utf8" }));
-  const overrides = getOverrides(coreVersion, uiVersion);
-  pkgJsonData.pnpm = {
-    overrides
-  }
+  if (!pkgJsonData)
+    throw new Error(`Failed to read package.json content at ${packagesJsonPath}`);
+
+  pkgJsonData.pnpm = { overrides: getOverrides(coreVersion, uiVersion) };
   fs.writeFileSync(packageJsonPath, JSON.stringify(pkgJsonData, undefined, 2), { encoding: "utf8" });
 }
 
-const argv = yargs(process.argv).argv
+const argv = yargs(process.argv).argv;
 const packageJsonPath = require.resolve(argv.packageJson ?? "../package.json");
 const coreVersion = argv.coreVersion;
 const uiVersion = argv.uiVersion;
 
-if (!coreVersion) {
-  console.error("Argument --coreVersion was not provided.");
-  process.exit(1);
-}
-if (!uiVersion) {
-  console.error("Argument --uiVersion was not provided.");
-  process.exit(1);
-}
+if (!coreVersion)
+  throw new Error("Argument --coreVersion was not provided.");
+
+if (!uiVersion)
+  throw new Error("Argument --uiVersion was not provided.");
 
 override(packageJsonPath, coreVersion, uiVersion);
