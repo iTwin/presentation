@@ -6,8 +6,9 @@
  * @module Tree
  */
 
+import { Observable as RxjsObservable } from "rxjs/internal/Observable";
 import { PropertyRecord } from "@itwin/appui-abstract";
-import { DelayLoadedTreeNodeItem, ItemColorOverrides, ItemStyle, PageOptions as UiPageOptions } from "@itwin/components-react";
+import { DelayLoadedTreeNodeItem, ItemColorOverrides, ItemStyle, Observable, PageOptions as UiPageOptions } from "@itwin/components-react";
 import { CheckBoxState } from "@itwin/core-react";
 import { LabelDefinition, Node, NodeKey, PartialNode, PageOptions as PresentationPageOptions } from "@itwin/presentation-common";
 import { StyleHelper } from "../common/StyleHelper";
@@ -187,4 +188,9 @@ function createNodeLabelRecord(node: Node, appendChildrenCountForGroupingNodes: 
     };
   }
   return createLabelRecord(labelDefinition, "node_label");
+}
+
+/** @internal */
+export function toRxjsObservable<T>(source: Observable<T>): RxjsObservable<T> {
+  return new RxjsObservable((subscriber) => source.subscribe(subscriber));
 }
