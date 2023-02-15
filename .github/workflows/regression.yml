@@ -2,8 +2,8 @@ name: Regression
 
 on:
   workflow_dispatch:
-  # push:
-  #   branches: [ "master" ]
+  schedule:
+    - cron: 0 0 * * 0
 
 jobs:
   build:
@@ -11,10 +11,10 @@ jobs:
 
     strategy:
       matrix:
-        core-version: [3.6.0, 4.0.0-dev.15]
-        ui-version: [3.6.0, 4.0.0-dev.3]
+        core-version: [3.6.0, nightly]
+        ui-version: [3.6.0, nightly]
         exclude:
-          - core-version: 4.0.0-dev.15
+          - core-version: nightly
             ui-version: 3.6.0
 
     name: Build with Core - ${{ matrix.core-version }}, UI - ${{ matrix.ui-version }}
@@ -36,11 +36,11 @@ jobs:
     - name: Install workspace dependencies
       run: pnpm install -w
 
-    - name: Override dependencies
+    - name: Override dependencies Core - ${{ matrix.core-version }}, UI - ${{ matrix.ui-version }}
       run: node ./scripts/overrideDeps.js --coreVersion ${{ matrix.core-version }} --uiVersion ${{ matrix.ui-version }}
 
     - name: Install dependencies
       run: pnpm install --no-frozen-lockfile
 
-    - name: Build, Lint, Test
-      run: pnpm lage build lint cover
+    - name: Build, Test
+      run: pnpm lage build cover
