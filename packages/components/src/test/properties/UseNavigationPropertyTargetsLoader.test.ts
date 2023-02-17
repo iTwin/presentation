@@ -47,7 +47,7 @@ describe("UseNavigationPropertyTargetsLoader", () => {
 
   it("loads targets", async () => {
     const contentItem = createTestContentItem({
-      label: LabelDefinition.fromLabelString("testLabel"), // eslint-disable-line @itwin/no-internal
+      label: LabelDefinition.fromLabelString("testLabel"),
       primaryKeys: [{ className: "class", id: "1" }],
       displayValues: {},
       values: {},
@@ -77,8 +77,8 @@ describe("UseNavigationPropertyTargetsLoader", () => {
     );
 
     const loadedTargets: NavigationPropertyTarget[] = [
-      { label: LabelDefinition.fromLabelString("test1"), key: { className: "class", id: "1" } }, // eslint-disable-line @itwin/no-internal
-      { label: LabelDefinition.fromLabelString("test2"), key: { className: "class", id: "2" } }, // eslint-disable-line @itwin/no-internal
+      { label: LabelDefinition.fromLabelString("test1"), key: { className: "class", id: "1" } },
+      { label: LabelDefinition.fromLabelString("test2"), key: { className: "class", id: "2" } },
     ];
     await result.current("", loadedTargets);
     expect(getContentStub).to.be.calledOnce;

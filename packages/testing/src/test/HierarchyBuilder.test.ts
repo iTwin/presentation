@@ -15,7 +15,7 @@ import { HierarchyBuilder, NodeMappingFunc } from "../presentation-testing/Hiera
 
 async function getRootNodes() {
   const root: Node = {
-    label: LabelDefinition.fromLabelString("Root Node"), // eslint-disable-line @itwin/no-internal
+    label: LabelDefinition.fromLabelString("Root Node"),
     hasChildren: true,
     key: { type: "", version: 0, pathFromRoot: ["root"] },
   };
@@ -27,11 +27,11 @@ async function getChildrenNodes(opts: HierarchyRequestOptions<IModelConnection, 
     return { nodes: [], count: 0 };
 
   const child1: Node = {
-    label: LabelDefinition.fromLabelString("Child 1"), // eslint-disable-line @itwin/no-internal
+    label: LabelDefinition.fromLabelString("Child 1"),
     key: { type: "", version: 0, pathFromRoot: ["root", "child1"] },
   };
   const child2: Node = {
-    label: LabelDefinition.fromLabelString("Child 2"), // eslint-disable-line @itwin/no-internal
+    label: LabelDefinition.fromLabelString("Child 2"),
     key: { type: "", version: 0, pathFromRoot: ["root", "child2"] },
   };
   return { nodes: [child1, child2], count: 2 };
