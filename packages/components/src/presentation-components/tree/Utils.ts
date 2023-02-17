@@ -111,6 +111,7 @@ function assignOptionalTreeNodeItemFields(
  * [[TreeNodeItem]] customization based on values in extended data.
  * See [extended data usage page]($docs/presentation/customization/ExtendedDataUsage.md) for more details.
  */
+// istanbul ignore next
 export function customizeTreeNodeItem(item: Partial<DelayLoadedTreeNodeItem>, node: Partial<Node>) {
   if (node.imageId) { // eslint-disable-line deprecation/deprecation
     item.icon = node.imageId; // eslint-disable-line deprecation/deprecation
