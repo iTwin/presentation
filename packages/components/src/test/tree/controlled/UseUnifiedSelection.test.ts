@@ -104,7 +104,7 @@ describe("UnifiedSelectionEventHandler", () => {
     it("adds nodes to selection", async () => {
       const node1: MutableTreeModelNode = createNode();
       const node2: MutableTreeModelNode = createNode(createTestECClassGroupingNodeKey);
-      const selectionKeys = SelectionHelper.getKeysForSelection([ // eslint-disable-line @itwin/no-internal
+      const selectionKeys = SelectionHelper.getKeysForSelection([
         dataProviderMock.target.getNodeKey(node1.item),
         dataProviderMock.target.getNodeKey(node2.item),
       ]);
@@ -127,7 +127,7 @@ describe("UnifiedSelectionEventHandler", () => {
     it("removes nodes from selection", async () => {
       const node1: MutableTreeModelNode = createNode();
       const node2: MutableTreeModelNode = createNode(createTestECClassGroupingNodeKey);
-      const selectionKeys = SelectionHelper.getKeysForSelection([ // eslint-disable-line @itwin/no-internal
+      const selectionKeys = SelectionHelper.getKeysForSelection([
         dataProviderMock.target.getNodeKey(node1.item),
         dataProviderMock.target.getNodeKey(node2.item),
       ]);
@@ -181,7 +181,7 @@ describe("UnifiedSelectionEventHandler", () => {
     it("collects affected node items", async () => {
       const node1: MutableTreeModelNode = createNode();
       const node2: MutableTreeModelNode = createNode(createTestECClassGroupingNodeKey);
-      const selectionKeys = SelectionHelper.getKeysForSelection([ // eslint-disable-line @itwin/no-internal
+      const selectionKeys = SelectionHelper.getKeysForSelection([
         dataProviderMock.target.getNodeKey(node1.item),
         dataProviderMock.target.getNodeKey(node2.item),
       ]);
@@ -215,8 +215,8 @@ describe("UnifiedSelectionEventHandler", () => {
       unifiedEventHandler.onSelectionReplaced(event);
       await waitForCompletion();
 
-      selectionHandlerMock.verify((x) => x.replaceSelection(SelectionHelper.getKeysForSelection([dataProviderMock.target.getNodeKey(node1.item)])), moq.Times.once()); // eslint-disable-line @itwin/no-internal
-      selectionHandlerMock.verify((x) => x.addToSelection(SelectionHelper.getKeysForSelection([dataProviderMock.target.getNodeKey(node2.item)])), moq.Times.once()); // eslint-disable-line @itwin/no-internal
+      selectionHandlerMock.verify((x) => x.replaceSelection(SelectionHelper.getKeysForSelection([dataProviderMock.target.getNodeKey(node1.item)])), moq.Times.once());
+      selectionHandlerMock.verify((x) => x.addToSelection(SelectionHelper.getKeysForSelection([dataProviderMock.target.getNodeKey(node2.item)])), moq.Times.once());
     });
 
     it("does not replace selection if event does not have nodes", async () => {
@@ -332,7 +332,7 @@ describe("UnifiedSelectionEventHandler", () => {
         createNode(createTestECClassGroupingNodeKey),
       ];
       nodes[1].isSelected = true;
-      const selectionKeys = SelectionHelper.getKeysForSelection(nodes.map((n) => dataProviderMock.target.getNodeKey(n.item))); // eslint-disable-line @itwin/no-internal
+      const selectionKeys = SelectionHelper.getKeysForSelection(nodes.map((n) => dataProviderMock.target.getNodeKey(n.item)));
 
       selectionHandlerMock.setup((x) => x.getSelection()).returns(() => new KeySet(selectionKeys));
       treeModelMock.setup((x) => x.iterateTreeModelNodes()).returns(() => nodes[Symbol.iterator]());

@@ -48,7 +48,7 @@ describe("Utils", () => {
     it("appends grouped nodes count if requested", () => {
       const node: Node = {
         key: createTestECClassGroupingNodeKey({ groupedInstancesCount: 999 }),
-        label: LabelDefinition.fromLabelString("test"), // eslint-disable-line @itwin/no-internal
+        label: LabelDefinition.fromLabelString("test"),
       };
       const treeNode = createTreeNodeItem(node, undefined, { appendChildrenCountForGroupingNodes: true });
       expect(treeNode).to.matchSnapshot();
@@ -71,7 +71,7 @@ describe("Utils", () => {
       const node = createPartialTreeNodeItem(
         {
           key: { type: "", version: 0, pathFromRoot: [] },
-          label: LabelDefinition.fromLabelString("test"), // eslint-disable-line @itwin/no-internal
+          label: LabelDefinition.fromLabelString("test"),
         },
         undefined,
         {},
@@ -90,7 +90,7 @@ describe("Utils", () => {
       const treeNode = createPartialTreeNodeItem(
         {
           key: { type: "", version: 0, pathFromRoot: [] },
-          label: LabelDefinition.fromLabelString("test"), // eslint-disable-line @itwin/no-internal
+          label: LabelDefinition.fromLabelString("test"),
         }, undefined,
         {
           customizeTreeNodeItem: (item) => {
