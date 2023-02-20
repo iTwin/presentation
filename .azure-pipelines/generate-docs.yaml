@@ -32,7 +32,7 @@ stages:
         - task: NodeTool@0
           displayName: Use Node 18
           inputs:
-            versionSpec: 18.x
+            versionSpec: 18
             checkLatest: true
 
         - script: npm install pnpm -g

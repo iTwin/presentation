@@ -13,7 +13,7 @@ if (commonjsGlobal.MessageChannel)
 
 import * as chai from "chai";
 import chaiJestSnapshot from "chai-jest-snapshot";
-import { execSync } from "child_process";
+import { execFileSync } from "child_process";
 import * as cpx from "cpx2";
 import * as fs from "fs";
 import jsdomGlobal from "jsdom-global";
@@ -62,15 +62,16 @@ function copyITwinFrontendAssets(outputDir: string) {
 
 function pseudoLocalize(localesDir: string) {
   const betoolsPath = path.resolve("node_modules", "@itwin", "build-tools", "bin", "betools.js");
-  const cmd = ["node", betoolsPath, "pseudolocalize"];
   const args = [
+    betoolsPath,
+    "pseudolocalize",
     "--englishDir",
     `${localesDir}/en`,
     "--out",
     `${localesDir}/en-PSEUDO`,
   ];
   try {
-    execSync([...cmd, ...args].join(" "));
+    execFileSync("node", args);
   } catch {
     throw new Error("Failed to pseudoLocalize localization files");
   }

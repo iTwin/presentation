@@ -17,10 +17,11 @@ import { map } from "rxjs/internal/operators/map";
 import { take } from "rxjs/internal/operators/take";
 import { tap } from "rxjs/internal/operators/tap";
 import {
-  isTreeModelNode, PagedTreeNodeLoader, toRxjsObservable, TreeModel, TreeModelNode, TreeModelRootNode, TreeModelSource, TreeNodeLoadResult,
+  isTreeModelNode, PagedTreeNodeLoader, TreeModel, TreeModelNode, TreeModelRootNode, TreeModelSource, TreeNodeLoadResult,
 } from "@itwin/components-react";
 import { assert, isIDisposable } from "@itwin/core-bentley";
 import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
+import { toRxjsObservable } from "../Utils";
 
 /**
  * Creates a new tree model from scratch while attempting to match provided tree model's expanded structure.

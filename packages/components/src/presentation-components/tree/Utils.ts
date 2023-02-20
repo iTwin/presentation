@@ -6,8 +6,9 @@
  * @module Tree
  */
 
+import { Observable as RxjsObservable } from "rxjs/internal/Observable";
 import { PropertyRecord } from "@itwin/appui-abstract";
-import { DelayLoadedTreeNodeItem, ItemColorOverrides, ItemStyle, PageOptions as UiPageOptions } from "@itwin/components-react";
+import { DelayLoadedTreeNodeItem, ItemColorOverrides, ItemStyle, Observable, PageOptions as UiPageOptions } from "@itwin/components-react";
 import { CheckBoxState } from "@itwin/core-react";
 import { LabelDefinition, Node, NodeKey, PartialNode, PageOptions as PresentationPageOptions } from "@itwin/presentation-common";
 import { StyleHelper } from "../common/StyleHelper";
@@ -105,7 +106,10 @@ function assignOptionalTreeNodeItemFields(
 /**
  * Applies customization from [[Node]] to [[TreeNodeItem]].
  * @public
- * @deprecated in 3.x.
+ * @deprecated in 3.x. This is a temporary function to apply deprecated [[Node]] customization attributes on a [[TreeNodeItem]].
+ * The recommendation is to switch to using a custom customization function that looks at node's [[Node.extendedData]] and applies
+ * [[TreeNodeItem]] customization based on values in extended data.
+ * See [extended data usage page]($docs/presentation/customization/ExtendedDataUsage.md) for more details.
  */
 // istanbul ignore next
 export function customizeTreeNodeItem(item: Partial<DelayLoadedTreeNodeItem>, node: Partial<Node>) {
@@ -187,4 +191,9 @@ function createNodeLabelRecord(node: Node, appendChildrenCountForGroupingNodes: 
     };
   }
   return createLabelRecord(labelDefinition, "node_label");
+}
+
+/** @internal */
+export function toRxjsObservable<T>(source: Observable<T>): RxjsObservable<T> {
+  return new RxjsObservable((subscriber) => source.subscribe(subscriber));
 }

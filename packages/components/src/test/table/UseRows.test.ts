@@ -4,6 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import sinon from "sinon";
 import * as moq from "typemoq";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Content, DescriptorOverrides, KeySet, SortDirection } from "@itwin/presentation-common";
@@ -31,7 +32,11 @@ describe("useRows", () => {
   beforeEach(() => {
     const { presentationManager } = mockPresentationManager();
     presentationManagerMock = presentationManager;
-    Presentation.setPresentationManager(presentationManagerMock.object);
+    sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
+  });
+
+  afterEach(() => {
+    sinon.restore();
   });
 
   it("loads rows", async () => {

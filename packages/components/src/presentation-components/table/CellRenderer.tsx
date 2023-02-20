@@ -2,6 +2,9 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
+/** @packageDocumentation
+ * @module Table
+ */
 
 import { useState } from "react";
 import { ArrayValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";

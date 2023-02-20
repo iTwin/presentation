@@ -40,7 +40,7 @@ async function initializeApp() {
   } else if (ProcessDetector.isBrowserProcess) {
     const rpcParams = { info: { title: "presentation-test-app", version: "v1.0" }, uriPrefix: "http://localhost:3001" };
     await IModelApp.startup(iModelAppOpts);
-    BentleyCloudRpcManager.initializeClient(rpcParams, iModelAppOpts.rpcInterfaces ?? []);
+    BentleyCloudRpcManager.initializeClient(rpcParams, iModelAppOpts.rpcInterfaces ?? []); // eslint-disable-line @itwin/no-internal
   }
   const readyPromises = new Array<Promise<void>>();
 

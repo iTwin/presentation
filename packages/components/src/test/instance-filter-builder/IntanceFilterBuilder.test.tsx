@@ -7,10 +7,9 @@ import { expect } from "chai";
 import sinon from "sinon";
 import * as moq from "typemoq";
 import { PropertyDescription } from "@itwin/appui-abstract";
-import { UiComponents } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelApp, IModelConnection, NoRenderApp } from "@itwin/core-frontend";
+import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo, Descriptor, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render } from "@testing-library/react";
@@ -34,17 +33,15 @@ describe("InstanceFilter", () => {
   ];
 
   before(async () => {
-    await NoRenderApp.startup({
-      localization: new EmptyLocalization(),
-    });
-    await UiComponents.initialize(new EmptyLocalization());
+    const localization = new EmptyLocalization();
+    sinon.stub(IModelApp, "initialized").get(() => true);
+    sinon.stub(IModelApp, "localization").get(() => localization);
     await Presentation.initialize();
   });
 
   after(async () => {
     Presentation.terminate();
-    UiComponents.terminate();
-    await IModelApp.shutdown();
+    sinon.restore();
   });
 
   it("invokes 'onClassSelected' when non selected class is clicked", () => {

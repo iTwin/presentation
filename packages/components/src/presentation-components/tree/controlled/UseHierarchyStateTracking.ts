@@ -28,7 +28,7 @@ export function useHierarchyStateTracking(props: UseHierarchyStateTrackingProps)
     const sourceId = componentId.current;
 
     const updateNodeStates = () => {
-      if (!Presentation.presentation.stateTracker)
+      if (!Presentation.presentation.stateTracker) // eslint-disable-line @itwin/no-internal
         return;
 
       const nodeStates = getNodeStates(modelSource).map((itemState) => {
@@ -40,7 +40,7 @@ export function useHierarchyStateTracking(props: UseHierarchyStateTrackingProps)
           state,
         };
       });
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises, @itwin/no-internal
       Presentation.presentation.stateTracker.onHierarchyStateChanged(dataProvider.imodel, dataProvider.rulesetId, sourceId, nodeStates);
     };
     const removeModelChangeListener = modelSource.onModelChanged.addListener(updateNodeStates);
@@ -48,7 +48,7 @@ export function useHierarchyStateTracking(props: UseHierarchyStateTrackingProps)
 
     return () => {
       removeModelChangeListener();
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises, @itwin/no-internal
       Presentation.presentation.stateTracker?.onHierarchyClosed(dataProvider.imodel, dataProvider.rulesetId, sourceId);
     };
   }, [modelSource, dataProvider, props.enableTracking]);
@@ -57,7 +57,7 @@ export function useHierarchyStateTracking(props: UseHierarchyStateTrackingProps)
 /** @internal */
 export function getNodeStates(modelSource: TreeModelSource) {
   const states = new Array<NodeState & { item: TreeNodeItem | undefined }>();
-  for (const node of getVisibleDescendants(modelSource.getModel(), modelSource.getModel().getRootNode())) {
+  for (const node of getVisibleDescendants(modelSource.getModel(), modelSource.getModel().getRootNode())) { // eslint-disable-line @itwin/no-internal
     if (isTreeModelNode(node) && node.isExpanded)
       states.push({ item: node.item, isExpanded: true });
   }

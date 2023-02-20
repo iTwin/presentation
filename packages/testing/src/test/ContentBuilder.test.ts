@@ -206,7 +206,11 @@ describe("ContentBuilder", () => {
       presentationManagerMock.setup((manager) => manager.rulesets()).returns(() => rulesetManagerMock.object);
       presentationManagerMock.setup(async (manager) => manager.getContent(moq.It.isAny())).returns(getEmptyContent);
       presentationManagerMock.setup((x) => x.onIModelContentChanged).returns(() => new BeEvent());
-      Presentation.setPresentationManager(presentationManagerMock.object);
+      sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
+    });
+
+    afterEach(() => {
+      sinon.restore();
     });
 
     it("returns empty records when there is no content returned from presentation", async () => {

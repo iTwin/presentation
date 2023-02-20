@@ -183,17 +183,18 @@ export abstract class PropertyRecordsBuilder implements IContentVisitor {
   }
 
   public processMergedValue(props: ProcessMergedValueProps): void {
+    const propertyField = props.requestedField;
     const value: PrimitiveValue = {
       valueFormat: UiPropertyValueFormat.Primitive,
     };
     const record = new PropertyRecord(
       value,
-      createPropertyDescriptionFromFieldInfo(createFieldInfo(props.mergedField, props.parentFieldName)),
+      createPropertyDescriptionFromFieldInfo(createFieldInfo(propertyField, props.parentFieldName)),
     );
     record.isMerged = true;
     record.isReadonly = true;
-    record.autoExpand = props.mergedField.isNestedContentField() && props.mergedField.autoExpand;
-    this.currentPropertiesAppender.append({ record, fieldHierarchy: { field: props.mergedField, childFields: [] } });
+    record.autoExpand = propertyField.isNestedContentField() && propertyField.autoExpand;
+    this.currentPropertiesAppender.append({ record, fieldHierarchy: { field: propertyField, childFields: [] } });
   }
 
   public processPrimitiveValue(props: ProcessPrimitiveValueProps): void {

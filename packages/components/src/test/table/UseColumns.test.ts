@@ -4,6 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import sinon from "sinon";
 import * as moq from "typemoq";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
@@ -27,7 +28,11 @@ describe("useColumns", () => {
   beforeEach(() => {
     const { presentationManager } = mockPresentationManager();
     presentationManagerMock = presentationManager;
-    Presentation.setPresentationManager(presentationManagerMock.object);
+    sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
+  });
+
+  afterEach(() => {
+    sinon.restore();
   });
 
   it("loads columns", async () => {
