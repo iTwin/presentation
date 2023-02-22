@@ -3,6 +3,9 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
+import "@itwin/itwinui-css/css/tag.css";
+import "@itwin/itwinui-css/css/inputs.css";
+import "@itwin/itwinui-css/css/menu.css";
 import classnames from "classnames";
 import { Children, forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import {
