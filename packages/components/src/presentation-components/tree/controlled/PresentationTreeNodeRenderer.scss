@@ -33,4 +33,8 @@
   .presentation-components-node-action-buttons.filtered {
     visibility: visible;
   }
+
+  &.is-selected > .presentation-components-node-action-buttons.filtered {
+    background-color: inherit;
+  }
 }
