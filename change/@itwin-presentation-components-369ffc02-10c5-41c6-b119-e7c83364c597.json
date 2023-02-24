@@ -1,6 +1,6 @@
 {
   "type": "minor",
-  "comment": "The editor has changed for numeric types to StandardEditorNames.NumericInput",
+  "comment": "Set editor to `StandardEditorNames.NumericInput` for all numeric properties",
   "packageName": "@itwin/presentation-components",
   "email": "124659623+simasjar@users.noreply.github.com",
   "dependentChangeType": "patch"
