@@ -7,7 +7,7 @@
  */
 
 import {
-  ArrayValue, PrimitiveValue, PropertyDescription, PropertyEditorInfo, PropertyRecord, StructValue, PropertyValueFormat as UiPropertyValueFormat,
+  ArrayValue, PrimitiveValue, PropertyDescription, PropertyEditorInfo, PropertyRecord, StandardEditorNames, StandardTypeNames, StructValue, PropertyValueFormat as UiPropertyValueFormat,
 } from "@itwin/appui-abstract";
 import { assert } from "@itwin/core-bentley";
 import {
@@ -52,6 +52,13 @@ export function createPropertyDescriptionFromFieldInfo(info: FieldInfo) {
     name: info.name,
     displayLabel: info.label,
   };
+
+  if (descr.typename === StandardTypeNames.Number
+    || descr.typename === StandardTypeNames.Int
+    || descr.typename === StandardTypeNames.Float
+    || descr.typename === StandardTypeNames.Double) {
+    descr.editor = { name: StandardEditorNames.NumericInput };
+  }
 
   if (info.renderer) {
     descr.renderer = { name: info.renderer.name };
