@@ -3,6 +3,9 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
+import "@itwin/itwinui-css/css/tag.css";
+import "@itwin/itwinui-css/css/inputs.css";
+import "@itwin/itwinui-css/css/menu.css";
 import classnames from "classnames";
 import { Children, forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import {
@@ -119,7 +122,7 @@ function getNavigationTargetFromPropertyRecord(record: PropertyRecord): Navigati
   if (value.valueFormat !== PropertyValueFormat.Primitive || !value.value || !value.displayValue)
     return undefined;
 
-  return { key: value.value as InstanceKey, label: LabelDefinition.fromLabelString(value.displayValue) }; // eslint-disable-line @itwin/no-internal
+  return { key: value.value as InstanceKey, label: LabelDefinition.fromLabelString(value.displayValue) };
 }
 
 function TargetSelectControl<TOption extends OptionTypeBase>({ children, ...props }: ControlProps<TOption>) {

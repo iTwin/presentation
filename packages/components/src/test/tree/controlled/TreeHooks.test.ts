@@ -41,7 +41,7 @@ describe("usePresentationNodeLoader", () => {
     imodelMock.setup((x) => x.key).returns(() => imodelKey);
     const mocks = mockPresentationManager();
     presentationManagerMock = mocks.presentationManager;
-    onIModelHierarchyChanged = mocks.presentationManager.object.onIModelHierarchyChanged; // eslint-disable-line @itwin/no-internal
+    onIModelHierarchyChanged = mocks.presentationManager.object.onIModelHierarchyChanged;
     onRulesetModified = mocks.rulesetsManager.object.onRulesetModified;
     onRulesetVariableChanged = mocks.rulesetVariablesManager.object.onVariableChanged;
     mocks.presentationManager.setup((x) => x.stateTracker).returns(() => undefined); // eslint-disable-line @itwin/no-internal
@@ -313,7 +313,7 @@ function createNode(label: string): Node {
       instanceKeys: [],
       pathFromRoot: [label],
     },
-    label: LabelDefinition.fromLabelString(label), // eslint-disable-line @itwin/no-internal
+    label: LabelDefinition.fromLabelString(label),
   };
 }
 

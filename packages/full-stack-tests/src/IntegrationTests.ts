@@ -17,7 +17,7 @@ import { initialize as initializePresentation, PresentationTestingInitProps, ter
 
 class IntegrationTestsApp extends NoRenderApp {
   public static override async startup(opts?: IModelAppOptions): Promise<void> {
-    await NoRenderApp.startup(opts); // eslint-disable-line @itwin/no-internal
+    await NoRenderApp.startup(opts);
     await IModelApp.localization.changeLanguage("en-PSEUDO");
   }
 }

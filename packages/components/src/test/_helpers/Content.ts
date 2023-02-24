@@ -110,7 +110,7 @@ export function createTestNestedContentField(props: {
   );
   if (props.relationshipMeaning)
     field.relationshipMeaning = props.relationshipMeaning;
-  field.rebuildParentship(); // eslint-disable-line @itwin/no-internal
+  field.rebuildParentship();
   return field;
 }
 

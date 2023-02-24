@@ -22,7 +22,6 @@ module.exports = {
     "pnpm-lock.yaml",
   ],
   changehint: "Run 'pnpm change' to generate a change file",
-  message: "Version bump [skip actions]",
   changelog: {
     customRenderers: {
       renderEntry: (entry) => {

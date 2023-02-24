@@ -450,7 +450,7 @@ class PropertyDataBuilder extends PropertyRecordsBuilder {
       field = parentField;
       parentField = parentField.parent;
     }
-    field.rebuildParentship(); // eslint-disable-line @itwin/no-internal
+    field.rebuildParentship();
   }
   private createFavoriteFieldsHierarchy(hierarchy: FieldHierarchy): FieldHierarchy {
     const favoriteField = hierarchy.field.clone();
@@ -721,6 +721,6 @@ function destructureRecords(records: FieldHierarchyRecord[]) {
   // lastly, when there's only one record in the list and it's an array that we want destructured, set the `hideCompositePropertyLabel`
   // attribute so only the items are rendered
   if (records.length === 1 && records[0].record.value.valueFormat === UiPropertyValueFormat.Array && shouldDestructureArrayField(records[0].fieldHierarchy.field)) {
-    records[0].record.property.hideCompositePropertyLabel = true; // eslint-disable-line @itwin/no-internal
+    records[0].record.property.hideCompositePropertyLabel = true;
   }
 }

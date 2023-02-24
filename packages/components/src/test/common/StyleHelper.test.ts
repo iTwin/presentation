@@ -11,7 +11,7 @@ import { createTestECInstancesNodeKey } from "../_helpers/Hierarchy";
 describe("StyleHelper", () => {
 
   const createNodeBase = (): Node => ({
-    label: LabelDefinition.fromLabelString("Test Label"), // eslint-disable-line @itwin/no-internal
+    label: LabelDefinition.fromLabelString("Test Label"),
     key: createTestECInstancesNodeKey(),
   });
 

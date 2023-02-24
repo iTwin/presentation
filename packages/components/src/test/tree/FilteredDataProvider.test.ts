@@ -39,25 +39,25 @@ describe("FilteredTreeDataProvider", () => {
     const nodePaths: NodePathElement[] = [];
 
     nodePaths[0] = createTestNodePathElementWithId("0x1");
-    nodePaths[0].node.label = LabelDefinition.fromLabelString("A-1"); // eslint-disable-line @itwin/no-internal
+    nodePaths[0].node.label = LabelDefinition.fromLabelString("A-1");
 
     nodePaths[1] = createTestNodePathElementWithId("0x2");
-    nodePaths[1].node.label = LabelDefinition.fromLabelString("A-2"); // eslint-disable-line @itwin/no-internal
+    nodePaths[1].node.label = LabelDefinition.fromLabelString("A-2");
 
     nodePaths[0].children = [];
     nodePaths[0].children[0] = createTestNodePathElementWithId("0x3");
-    nodePaths[0].children[0].node.label = LabelDefinition.fromLabelString("A-1-1"); // eslint-disable-line @itwin/no-internal
+    nodePaths[0].children[0].node.label = LabelDefinition.fromLabelString("A-1-1");
 
     nodePaths[1].children = [];
     nodePaths[1].children[0] = createTestNodePathElementWithId("0x4");
-    nodePaths[1].children[0].node.label = LabelDefinition.fromLabelString("A-2-1"); // eslint-disable-line @itwin/no-internal
+    nodePaths[1].children[0].node.label = LabelDefinition.fromLabelString("A-2-1");
 
     nodePaths[1].children[1] = createTestNodePathElementWithId("0x5");
-    nodePaths[1].children[1].node.label = LabelDefinition.fromLabelString("A-2-2"); // eslint-disable-line @itwin/no-internal
+    nodePaths[1].children[1].node.label = LabelDefinition.fromLabelString("A-2-2");
 
     nodePaths[1].children[1].children = [];
     nodePaths[1].children[1].children[0] = createTestNodePathElementWithId("0x6");
-    nodePaths[1].children[1].children[0].node.label = LabelDefinition.fromLabelString("A-2-2-1"); // eslint-disable-line @itwin/no-internal
+    nodePaths[1].children[1].children[0].node.label = LabelDefinition.fromLabelString("A-2-2-1");
     return nodePaths;
   }
 
@@ -183,25 +183,25 @@ describe("FilteredTreeDataProvider", () => {
   const filteredNodePaths: NodePathElement[] = [];
 
   filteredNodePaths[0] = createTestNodePathElementWithId("0x1");
-  filteredNodePaths[0].node.label = LabelDefinition.fromLabelString("A-1"); // eslint-disable-line @itwin/no-internal
+  filteredNodePaths[0].node.label = LabelDefinition.fromLabelString("A-1");
   filteredNodePaths[0].filteringData = { matchesCount: 0, childMatchesCount: 1 };
 
   filteredNodePaths[0].children = [];
   filteredNodePaths[0].children[0] = createTestNodePathElementWithId("0x2");
-  filteredNodePaths[0].children[0].node.label = LabelDefinition.fromLabelString("A-1-1 test"); // eslint-disable-line @itwin/no-internal
+  filteredNodePaths[0].children[0].node.label = LabelDefinition.fromLabelString("A-1-1 test");
   filteredNodePaths[0].children[0].filteringData = { matchesCount: 1, childMatchesCount: 0 };
 
   filteredNodePaths[1] = createTestNodePathElementWithId("0x3");
-  filteredNodePaths[1].node.label = LabelDefinition.fromLabelString("A-2 test"); // eslint-disable-line @itwin/no-internal
+  filteredNodePaths[1].node.label = LabelDefinition.fromLabelString("A-2 test");
   filteredNodePaths[1].filteringData = { matchesCount: 1, childMatchesCount: 0 };
 
   filteredNodePaths[1].children = [];
   filteredNodePaths[1].children[0] = createTestNodePathElementWithId("0x4");
-  filteredNodePaths[1].children[0].node.label = LabelDefinition.fromLabelString("A-2-1"); // eslint-disable-line @itwin/no-internal
+  filteredNodePaths[1].children[0].node.label = LabelDefinition.fromLabelString("A-2-1");
   filteredNodePaths[1].children[0].filteringData = { matchesCount: 0, childMatchesCount: 0 };
 
   filteredNodePaths[1].children[1] = createTestNodePathElementWithId("0x5");
-  filteredNodePaths[1].children[1].node.label = LabelDefinition.fromLabelString("A-2-2"); // eslint-disable-line @itwin/no-internal
+  filteredNodePaths[1].children[1].node.label = LabelDefinition.fromLabelString("A-2-2");
   filteredNodePaths[1].children[1].filteringData = { matchesCount: 0, childMatchesCount: 0 };
 
   describe("countFilteringResults", () => {
@@ -212,7 +212,7 @@ describe("FilteredTreeDataProvider", () => {
     it("doesn't count if node paths don't have filtering data", () => {
       paths = [];
       paths[0] = createTestNodePathElement();
-      paths[0].node.label = LabelDefinition.fromLabelString("A-1"); // eslint-disable-line @itwin/no-internal
+      paths[0].node.label = LabelDefinition.fromLabelString("A-1");
       paths[0].filteringData = undefined;
       expect(provider.countFilteringResults(paths)).to.eq(0);
     });

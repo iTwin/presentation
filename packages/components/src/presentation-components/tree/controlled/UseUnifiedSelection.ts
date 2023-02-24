@@ -177,7 +177,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
 
   protected getKeys(nodes: TreeNodeItem[]): Keys {
     const nodeKeys: NodeKey[] = nodes.map((node) => this._dataProvider.getNodeKey(node));
-    return SelectionHelper.getKeysForSelection(nodeKeys); // eslint-disable-line @itwin/no-internal
+    return SelectionHelper.getKeysForSelection(nodeKeys);
   }
 
   private onSelect(evt: SelectionChangeEventArgs) {

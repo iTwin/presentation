@@ -3,6 +3,10 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
+import "@itwin/itwinui-css/css/tag.css";
+import "@itwin/itwinui-css/css/inputs.css";
+import "@itwin/itwinui-css/css/button.css";
+import "@itwin/itwinui-css/css/menu.css";
 import classnames from "classnames";
 import Component, {
   components, ControlProps, IndicatorProps, MenuProps, MultiValueProps, OptionProps, OptionTypeBase, Props, ValueContainerProps,

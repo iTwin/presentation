@@ -11,6 +11,11 @@
       "error",
       "always"
     ],
-    "@itwin/no-internal": "error"
+    "@itwin/no-internal": [
+      "error",
+      {
+        "tag": ["internal"]
+      }
+    ]
   }
 }

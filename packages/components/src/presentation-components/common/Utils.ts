@@ -106,7 +106,7 @@ export const createLabelRecord = (label: LabelDefinition, name: string): Propert
 };
 
 const createPrimitiveLabelValue = (label: LabelDefinition) => {
-  return LabelDefinition.isCompositeDefinition(label) ? createPrimitiveCompositeValue(label.rawValue) : label.rawValue; // eslint-disable-line @itwin/no-internal
+  return LabelDefinition.isCompositeDefinition(label) ? createPrimitiveCompositeValue(label.rawValue) : label.rawValue;
 };
 
 const createPrimitiveCompositeValue = (compositeValue: LabelCompositeValue): Primitives.Composite => {
