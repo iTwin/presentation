@@ -127,7 +127,7 @@ describe("PropertyRecordsBuilder", () => {
     });
   });
 
-  it("Sets editor name when field info types typeName is Number", () => {
+  it("sets editor name when field info types typeName is Number", () => {
     const descriptor = createPropertyDescriptionFromFieldInfo(createTestSimpleContentField(
       { type: { valueFormat: PropertyValueFormat.Primitive, typeName: StandardTypeNames.Number } },
     ));
