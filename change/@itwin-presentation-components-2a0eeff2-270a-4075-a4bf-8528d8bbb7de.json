@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "InstanceFilterDialog: ensure that action buttons have same background and parent node",
+  "packageName": "@itwin/presentation-components",
+  "email": "124659623+simasjar@users.noreply.github.com",
+  "dependentChangeType": "patch"
+}
