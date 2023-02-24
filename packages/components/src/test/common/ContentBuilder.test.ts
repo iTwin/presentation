@@ -4,9 +4,9 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { ArrayValue, PropertyRecord, StructValue } from "@itwin/appui-abstract";
-import { EnumerationInfo, FieldHierarchy, traverseContentItem } from "@itwin/presentation-common";
-import { FieldHierarchyRecord, IPropertiesAppender, PropertyRecordsBuilder } from "../../presentation-components/common/ContentBuilder";
+import { ArrayValue, PropertyRecord, StandardEditorNames, StandardTypeNames, StructValue } from "@itwin/appui-abstract";
+import { EnumerationInfo, FieldHierarchy, PropertyValueFormat, traverseContentItem } from "@itwin/presentation-common";
+import { createPropertyDescriptionFromFieldInfo, FieldHierarchyRecord, IPropertiesAppender, PropertyRecordsBuilder } from "../../presentation-components/common/ContentBuilder";
 import { createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
 import {
   createTestCategoryDescription, createTestContentDescriptor, createTestContentItem, createTestNestedContentField, createTestPropertiesContentField,
@@ -125,6 +125,13 @@ describe("PropertyRecordsBuilder", () => {
     expect(builder.entries[0].record.property.editor).to.deep.eq({
       name: "custom-editor",
     });
+  });
+
+  it("Sets editor name when field info types typeName is Number", () => {
+    const descriptor = createPropertyDescriptionFromFieldInfo(createTestSimpleContentField(
+      { type: { valueFormat: PropertyValueFormat.Primitive, typeName: StandardTypeNames.Number } },
+    ));
+    expect(descriptor.editor?.name).to.eq(StandardEditorNames.NumericInput);
   });
 
 });

@@ -44,7 +44,7 @@ export interface PresentationInstanceFilterDialogProps extends Omit<Presentation
  */
 export function PresentationInstanceFilterDialog(props: PresentationInstanceFilterDialogProps) {
   const { isOpen, onApply, onClose, filterResultCountRenderer, title, descriptor, ...restProps } = props;
-  const [filter, setFilter] = useState<PresentationInstanceFilterInfo>();
+  const [filter, setFilter] = useState<PresentationInstanceFilterInfo | undefined>(restProps.initialFilter);
 
   const onInstanceFilterChanged = useCallback((filterInfo?: PresentationInstanceFilterInfo) => {
     setFilter(filterInfo);

@@ -352,6 +352,9 @@ Object {
         "description": "150.1235 cm²",
         "property": Object {
           "displayLabel": "cm2",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_cm2",
           "typename": "double",
         },
@@ -365,6 +368,9 @@ Object {
         "description": "150.1235 acres",
         "property": Object {
           "displayLabel": "Acres",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_Acres",
           "typename": "double",
         },
@@ -378,6 +384,9 @@ Object {
         "description": "150.1235 ft·ft",
         "property": Object {
           "displayLabel": "ft ft",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_ft__x0020__ft",
           "typename": "double",
         },
@@ -391,6 +400,9 @@ Object {
         "description": "150.1235 ft·mi",
         "property": Object {
           "displayLabel": "ft mi",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_ft__x0020__mi",
           "typename": "double",
         },
@@ -404,6 +416,9 @@ Object {
         "description": "150.1235 ft²",
         "property": Object {
           "displayLabel": "ft2",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_ft2",
           "typename": "double",
         },
@@ -417,6 +432,9 @@ Object {
         "description": "150.1235 ha",
         "property": Object {
           "displayLabel": "ha",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_ha",
           "typename": "double",
         },
@@ -430,6 +448,9 @@ Object {
         "description": "150.1235 in·ft",
         "property": Object {
           "displayLabel": "in ft",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_in__x0020__ft",
           "typename": "double",
         },
@@ -443,6 +464,9 @@ Object {
         "description": "150.1235 in·m",
         "property": Object {
           "displayLabel": "in m",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_in__x0020__m",
           "typename": "double",
         },
@@ -456,6 +480,9 @@ Object {
         "description": "150.1235 in·mi",
         "property": Object {
           "displayLabel": "in mi",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_in__x0020__mi",
           "typename": "double",
         },
@@ -469,6 +496,9 @@ Object {
         "description": "150.1235 in²",
         "property": Object {
           "displayLabel": "in2",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_in2",
           "typename": "double",
         },
@@ -482,6 +512,9 @@ Object {
         "description": "150.1235 km²",
         "property": Object {
           "displayLabel": "km2",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_km2",
           "typename": "double",
         },
@@ -495,6 +528,9 @@ Object {
         "description": "150.1235 m²",
         "property": Object {
           "displayLabel": "m2",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_m2",
           "typename": "double",
         },
@@ -508,6 +544,9 @@ Object {
         "description": "150.1235 m·km",
         "property": Object {
           "displayLabel": "m km",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_m__x0020__km",
           "typename": "double",
         },
@@ -521,6 +560,9 @@ Object {
         "description": "150.1235 mm·m",
         "property": Object {
           "displayLabel": "m m",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_m__x0020__m",
           "typename": "double",
         },
@@ -534,6 +576,9 @@ Object {
         "description": "150.1235 mi²",
         "property": Object {
           "displayLabel": "mi2",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_mi2",
           "typename": "double",
         },
@@ -547,6 +592,9 @@ Object {
         "description": "150.1235 mm·km",
         "property": Object {
           "displayLabel": "mm km",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_mm__x0020__km",
           "typename": "double",
         },
@@ -560,6 +608,9 @@ Object {
         "description": "150.1235 thousand ft²",
         "property": Object {
           "displayLabel": "thousand ft2",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_thousand__x0020__ft2",
           "typename": "double",
         },
@@ -575,6 +626,9 @@ Object {
         "description": "150.1235 cSt",
         "property": Object {
           "displayLabel": "cSt",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_area__x0020__per__x0020__timeElementAspect$pc_MyProp_area__x0020__per__x0020__timeElementAspect_cSt",
           "typename": "double",
         },
@@ -588,6 +642,9 @@ Object {
         "description": "150.1235 ft²/s",
         "property": Object {
           "displayLabel": "ft2 s",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_area__x0020__per__x0020__timeElementAspect$pc_MyProp_area__x0020__per__x0020__timeElementAspect_ft2__x0020__s",
           "typename": "double",
         },
@@ -603,6 +660,9 @@ Object {
         "description": "1475.699 Btu/lb",
         "property": Object {
           "displayLabel": "Btu/lb [Btu per pound mass]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_area__x0020__per__x0020__time__x0020__squaredElementAspect$pc_MyProp_area__x0020__per__x0020__time__x0020__squaredElementAspect_Btu__x002F__lb__x0020____x005B__Btu__x0020__per__x0020__pound__x0020__mass__x005D__",
           "typename": "double",
         },
@@ -618,6 +678,9 @@ Object {
         "description": "14759.0 Btu/(lbm·Δ°R)",
         "property": Object {
           "displayLabel": "Btu/(lbm·Δ°R) [btu per pound mass per delta degree rankine]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_area__x0020__per__x0020__time__x0020__squared__x0020__temperatureElementAspect$pc_MyProp_area__x0020__per__x0020__time__x0020__squared__x0020__temperatureElementAspect_Btu__x002F____x0028__lbm__x00B7____x0394____x00B0__R__x0029____x0020____x005B__btu__x0020__per__x0020__pound__x0020__mass__x0020__per__x0020__delta__x0020__degree__x0020__rankine__x005D__",
           "typename": "double",
         },
@@ -633,6 +696,9 @@ Object {
         "description": "14758.99",
         "property": Object {
           "displayLabel": "ft^(1/3)/s [ft^(1/3)/s]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_cube__x0020__root__x0020__length__x0020__per__x0020__timeElementAspect$pc_MyProp_cube__x0020__root__x0020__length__x0020__per__x0020__timeElementAspect_ft__x005E____x0028__1__x002F__3__x0029____x002F__s__x0020____x005B__ft__x005E____x0028__1__x002F__3__x0029____x002F__s__x005D__",
           "typename": "double",
         },
@@ -648,6 +714,9 @@ Object {
         "description": "15845.0 $",
         "property": Object {
           "displayLabel": "$ [dollar]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_dimensionlessElementAspect$pc_MyProp_dimensionlessElementAspect___x0024____x0020____x005B__dollar__x005D__",
           "typename": "double",
         },
@@ -663,6 +732,9 @@ Object {
         "description": "1475.65 KA",
         "property": Object {
           "displayLabel": "KA [kiloampere]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_electric__x0020__currentElementAspect$pc_MyProp_electric__x0020__currentElementAspect_KA__x0020____x005B__kiloampere__x005D__",
           "typename": "double",
         },
@@ -678,6 +750,9 @@ Object {
         "description": "1475.96 µin",
         "property": Object {
           "displayLabel": "µin [microinch]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_lengthElementAspect$pc_MyProp_lengthElementAspect___x00B5__in__x0020____x005B__microinch__x005D__",
           "typename": "double",
         },
@@ -693,6 +768,9 @@ Object {
         "description": "123654.47 in/degree",
         "property": Object {
           "displayLabel": "in/deg [inch per degree]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_length__x0020__per__x0020__plane__x0020__angleElementAspect$pc_MyProp_length__x0020__per__x0020__plane__x0020__angleElementAspect_in__x002F__deg__x0020____x005B__inch__x0020__per__x0020__degree__x005D__",
           "typename": "double",
         },
@@ -708,6 +786,9 @@ Object {
         "description": "15896.698 ft³/(ft²·min)",
         "property": Object {
           "displayLabel": "ft³/(ft²·min) [Foot cubed per foot squared per minute]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_length__x0020__per__x0020__timeElementAspect$pc_MyProp_length__x0020__per__x0020__timeElementAspect_ft__x00B3____x002F____x0028__ft__x00B2____x00B7__min__x0029____x0020____x005B__Foot__x0020__cubed__x0020__per__x0020__foot__x0020__squared__x0020__per__x0020__minute__x005D__",
           "typename": "double",
         },
@@ -723,6 +804,9 @@ Object {
         "description": "14851.00",
         "property": Object {
           "displayLabel": "1/Bar [1/Bar]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_length__x0020__time__x0020__squared__x0020__per__x0020__massElementAspect$pc_MyProp_length__x0020__time__x0020__squared__x0020__per__x0020__massElementAspect___x0031____x002F__Bar__x0020____x005B__1__x002F__Bar__x005D__",
           "typename": "double",
         },
@@ -750,6 +834,9 @@ Object {
         "description": "14758.964 mm⁶",
         "property": Object {
           "displayLabel": "mm⁶ [millimeter to the sixth]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_length__x0020__to__x0020__the__x0020__six__x0020__powerElementAspect$pc_MyProp_length__x0020__to__x0020__the__x0020__six__x0020__powerElementAspect_mm__x2076____x0020____x005B__millimeter__x0020__to__x0020__the__x0020__sixth__x005D__",
           "typename": "double",
         },
@@ -765,6 +852,9 @@ Object {
         "description": "147.158 lb/ft",
         "property": Object {
           "displayLabel": "lb/ft [pound per foot]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_lenic__x0020__massElementAspect$pc_MyProp_lenic__x0020__massElementAspect_lb__x002F__ft__x0020____x005B__pound__x0020__per__x0020__foot__x005D__",
           "typename": "double",
         },
@@ -780,6 +870,9 @@ Object {
         "description": "1589.741 lm",
         "property": Object {
           "displayLabel": "lm [lumen]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_luminous__x0020__fluxElementAspect$pc_MyProp_luminous__x0020__fluxElementAspect_lm__x0020____x005B__lumen__x005D__",
           "typename": "double",
         },
@@ -795,6 +888,9 @@ Object {
         "description": "1485.9 lm/ft²",
         "property": Object {
           "displayLabel": "lm/ft² [lumen per foot squared]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_luminous__x0020__flux__x0020__per__x0020__areaElementAspect$pc_MyProp_luminous__x0020__flux__x0020__per__x0020__areaElementAspect_lm__x002F__ft__x00B2____x0020____x005B__lumen__x0020__per__x0020__foot__x0020__squared__x005D__",
           "typename": "double",
         },
@@ -810,6 +906,9 @@ Object {
         "description": "14785.5896 µg",
         "property": Object {
           "displayLabel": "µg [microgram]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_massElementAspect$pc_MyProp_massElementAspect___x00B5__g__x0020____x005B__microgram__x005D__",
           "typename": "double",
         },
@@ -825,6 +924,9 @@ Object {
         "description": "1478.5 KV",
         "property": Object {
           "displayLabel": "KV [kilovolt]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_mass__x0020__area__x0020__per__x0020__time__x0020__cubed__x0020__electric__x0020__currentElementAspect$pc_MyProp_mass__x0020__area__x0020__per__x0020__time__x0020__cubed__x0020__electric__x0020__currentElementAspect_KV__x0020____x005B__kilovolt__x005D__",
           "typename": "double",
         },
@@ -840,6 +942,9 @@ Object {
         "description": "14758.36 N·m/deg",
         "property": Object {
           "displayLabel": "N·m/deg [newton meter per degree]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_mass__x0020__area__x0020__per__x0020__time__x0020__squared__x0020__plane__x0020__angleElementAspect$pc_MyProp_mass__x0020__area__x0020__per__x0020__time__x0020__squared__x0020__plane__x0020__angleElementAspect_N__x00B7__m__x002F__deg__x0020____x005B__newton__x0020__meter__x0020__per__x0020__degree__x005D__",
           "typename": "double",
         },
@@ -855,6 +960,9 @@ Object {
         "description": "14758.5 Btu/(lb-mol·Δ°R)",
         "property": Object {
           "displayLabel": "Btu/(lb-mol·Δ°R) [btu per pound mole per delta degree rankine]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_mass__x0020__area__x0020__per__x0020__time__x0020__squared__x0020__temperature__x0020__moleElementAspect$pc_MyProp_mass__x0020__area__x0020__per__x0020__time__x0020__squared__x0020__temperature__x0020__moleElementAspect_Btu__x002F____x0028__lb__x002D__mol__x00B7____x0394____x00B0__R__x0029____x0020____x005B__btu__x0020__per__x0020__pound__x0020__mole__x0020__per__x0020__delta__x0020__degree__x0020__rankine__x005D__",
           "typename": "double",
         },
@@ -870,6 +978,9 @@ Object {
         "description": "123456799.00",
         "property": Object {
           "displayLabel": "(in·lbf)/(s·in·°F) [inch pound force per second inch fahrenheit]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_mass__x0020__length__x0020__per__x0020__time__x0020__cubed__x0020__temperatureElementAspect$pc_MyProp_mass__x0020__length__x0020__per__x0020__time__x0020__cubed__x0020__temperatureElementAspect___x0028__in__x00B7__lbf__x0029____x002F____x0028__s__x00B7__in__x00B7____x00B0__F__x0029____x0020____x005B__inch__x0020__pound__x0020__force__x0020__per__x0020__second__x0020__inch__x0020__fahrenheit__x005D__",
           "typename": "double",
         },
@@ -885,6 +996,9 @@ Object {
         "description": "1232584.897489 lbf/in",
         "property": Object {
           "displayLabel": "lbf/in [pound force per inch]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_mass__x0020__per__x0020__time__x0020__squaredElementAspect$pc_MyProp_mass__x0020__per__x0020__time__x0020__squaredElementAspect_lbf__x002F__in__x0020____x005B__pound__x0020__force__x0020__per__x0020__inch__x005D__",
           "typename": "double",
         },
@@ -900,6 +1014,9 @@ Object {
         "description": "45896318.0 µg/L",
         "property": Object {
           "displayLabel": "µg/L [micrograms per liter]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_mass__x0020__per__x0020__volumeElementAspect$pc_MyProp_mass__x0020__per__x0020__volumeElementAspect___x00B5__g__x002F__L__x0020____x005B__micrograms__x0020__per__x0020__liter__x005D__",
           "typename": "double",
         },
@@ -915,6 +1032,9 @@ Object {
         "description": "15789.46",
         "property": Object {
           "displayLabel": "lbf·ft² [pound force foot squared]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_mass__x0020__volume__x0020__per__x0020__time__x0020__squaredElementAspect$pc_MyProp_mass__x0020__volume__x0020__per__x0020__time__x0020__squaredElementAspect_lbf__x00B7__ft__x00B2____x0020____x005B__pound__x0020__force__x0020__foot__x0020__squared__x005D__",
           "typename": "double",
         },
@@ -930,6 +1050,9 @@ Object {
         "description": "0.5689 ft³/lb-mol",
         "property": Object {
           "displayLabel": "ft³/lb-mol [foot cubed per pound mole]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_molar__x0020__volumeElementAspect$pc_MyProp_molar__x0020__volumeElementAspect_ft__x00B3____x002F__lb__x002D__mol__x0020____x005B__foot__x0020__cubed__x0020__per__x0020__pound__x0020__mole__x005D__",
           "typename": "double",
         },
@@ -945,6 +1068,9 @@ Object {
         "description": "123456.78 kmol/s",
         "property": Object {
           "displayLabel": "kmol/s [kilomole per second]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_mole__x0020__per__x0020__timeElementAspect$pc_MyProp_mole__x0020__per__x0020__timeElementAspect_kmol__x002F__s__x0020____x005B__kilomole__x0020__per__x0020__second__x005D__",
           "typename": "double",
         },
@@ -960,6 +1086,9 @@ Object {
         "description": "0.12",
         "property": Object {
           "displayLabel": "lb-mol/ft³ [pound mole per foot cubed]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_mole__x0020__per__x0020__volumeElementAspect$pc_MyProp_mole__x0020__per__x0020__volumeElementAspect_lb__x002D__mol__x002F__ft__x00B3____x0020____x005B__pound__x0020__mole__x0020__per__x0020__foot__x0020__cubed__x005D__",
           "typename": "double",
         },
@@ -975,6 +1104,9 @@ Object {
         "description": "0.01233 quadrants",
         "property": Object {
           "displayLabel": "quadrants [quadrants]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_plane__x0020__angleElementAspect$pc_MyProp_plane__x0020__angleElementAspect_quadrants__x0020____x005B__quadrants__x005D__",
           "typename": "double",
         },
@@ -990,6 +1122,9 @@ Object {
         "description": "0.02 cycle/sec",
         "property": Object {
           "displayLabel": "cycle/sec [cycle per second]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_plane__x0020__angle__x0020__per__x0020__timeElementAspect$pc_MyProp_plane__x0020__angle__x0020__per__x0020__timeElementAspect_cycle__x002F__sec__x0020____x005B__cycle__x0020__per__x0020__second__x005D__",
           "typename": "double",
         },
@@ -1005,6 +1140,9 @@ Object {
         "description": "123456789.12345 ft⁴",
         "property": Object {
           "displayLabel": "ft⁴ [foot to the fourth]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_quartic__x0020__lengthElementAspect$pc_MyProp_quartic__x0020__lengthElementAspect_ft__x2074____x0020____x005B__foot__x0020__to__x0020__the__x0020__fourth__x005D__",
           "typename": "double",
         },
@@ -1020,6 +1158,9 @@ Object {
         "description": "1234567.89 p/ft²",
         "property": Object {
           "displayLabel": "p/ft² [person per foot squared]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_reciprocal__x0020__areaElementAspect$pc_MyProp_reciprocal__x0020__areaElementAspect_p__x002F__ft__x00B2____x0020____x005B__person__x0020__per__x0020__foot__x0020__squared__x005D__",
           "typename": "double",
         },
@@ -1035,6 +1176,9 @@ Object {
         "description": "12345.6789 1/mile",
         "property": Object {
           "displayLabel": "1/mile [1/mile]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_reciprocal__x0020__lengthElementAspect$pc_MyProp_reciprocal__x0020__lengthElementAspect___x0031____x002F__mile__x0020____x005B__1__x002F__mile__x005D__",
           "typename": "double",
         },
@@ -1050,6 +1194,9 @@ Object {
         "description": "123.46",
         "property": Object {
           "displayLabel": "1/tn(short) [one per short ton]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_reciprocal__x0020__massElementAspect$pc_MyProp_reciprocal__x0020__massElementAspect___x0031____x002F__tn__x0028__short__x0029____x0020____x005B__one__x0020__per__x0020__short__x0020__ton__x005D__",
           "typename": "double",
         },
@@ -1065,6 +1212,9 @@ Object {
         "description": "0.0 1/Δ°R",
         "property": Object {
           "displayLabel": "1/Δ°R [reciprocal delta degree rankine]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_reciprocal__x0020__temperatureElementAspect$pc_MyProp_reciprocal__x0020__temperatureElementAspect___x0031____x002F____x0394____x00B0__R__x0020____x005B__reciprocal__x0020__delta__x0020__degree__x0020__rankine__x005D__",
           "typename": "double",
         },
@@ -1080,6 +1230,9 @@ Object {
         "description": "123456.79",
         "property": Object {
           "displayLabel": "grf/(h·ft²·inHg) [Grain mass per hour per foot squared per inch Mercury conventional]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_reciprocal__x0020__timeElementAspect$pc_MyProp_reciprocal__x0020__timeElementAspect_grf__x002F____x0028__h__x00B7__ft__x00B2____x00B7__inHg__x0029____x0020____x005B__Grain__x0020__mass__x0020__per__x0020__hour__x0020__per__x0020__foot__x0020__squared__x0020__per__x0020__inch__x0020__Mercury__x0020__conventional__x005D__",
           "typename": "double",
         },
@@ -1095,6 +1248,9 @@ Object {
         "description": "1.23",
         "property": Object {
           "displayLabel": "1/ million gal",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_reciprocal__x0020__volumeElementAspect$pc_MyProp_reciprocal__x0020__volumeElementAspect___x0031____x002F____x0020__million__x0020__gal",
           "typename": "double",
         },
@@ -1110,6 +1266,9 @@ Object {
         "description": "1234.57",
         "property": Object {
           "displayLabel": "ft^(1/2)/s [ft^(1/2)/s]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_square__x0020__root__x0020__length__x0020__per__x0020__timeElementAspect$pc_MyProp_square__x0020__root__x0020__length__x0020__per__x0020__timeElementAspect_ft__x005E____x0028__1__x002F__2__x0029____x002F__s__x0020____x005B__ft__x005E____x0028__1__x002F__2__x0029____x002F__s__x005D__",
           "typename": "double",
         },
@@ -1125,6 +1284,9 @@ Object {
         "description": "1.23",
         "property": Object {
           "displayLabel": "Gallon per minute per square root pounds per inch squared",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_square__x0020__root__x0020__length__x0020__to__x0020__the__x0020__seventh__x0020__power__x0020__per__x0020__square__x0020__root__x0020__massElementAspect$pc_MyProp_square__x0020__root__x0020__length__x0020__to__x0020__the__x0020__seventh__x0020__power__x0020__per__x0020__square__x0020__root__x0020__massElementAspect_Gallon__x0020__per__x0020__minute__x0020__per__x0020__square__x0020__root__x0020__pounds__x0020__per__x0020__inch__x0020__squared",
           "typename": "double",
         },
@@ -1140,6 +1302,9 @@ Object {
         "description": "0.0 Δ°C",
         "property": Object {
           "displayLabel": "Delta celsius",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_temperatureElementAspect$pc_MyProp_temperatureElementAspect_Delta__x0020__celsius",
           "typename": "double",
         },
@@ -1155,6 +1320,9 @@ Object {
         "description": "123.456789 ΔK/m",
         "property": Object {
           "displayLabel": "delta degree Kelvin per meter",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_temperature__x0020__per__x0020__lengthElementAspect$pc_MyProp_temperature__x0020__per__x0020__lengthElementAspect_delta__x0020__degree__x0020__Kelvin__x0020__per__x0020__meter",
           "typename": "double",
         },
@@ -1170,6 +1338,9 @@ Object {
         "description": "1234.56789 days",
         "property": Object {
           "displayLabel": "days",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_timeElementAspect$pc_MyProp_timeElementAspect_days",
           "typename": "double",
         },
@@ -1185,6 +1356,9 @@ Object {
         "description": "1234.57",
         "property": Object {
           "displayLabel": "one per kilowat",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_time__x0020__cubed__x0020__per__x0020__mass__x0020__areaElementAspect$pc_MyProp_time__x0020__cubed__x0020__per__x0020__mass__x0020__areaElementAspect_one__x0020__per__x0020__kilowat",
           "typename": "double",
         },
@@ -1200,6 +1374,9 @@ Object {
         "description": "1.2346 ft²·h·Δ°F/Btu",
         "property": Object {
           "displayLabel": "foot squared hour delta degree Fahrenheit per Btu",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_time__x0020__cubed__x0020__temperatureElementAspect$pc_MyProp_time__x0020__cubed__x0020__temperatureElementAspect_foot__x0020__squared__x0020__hour__x0020__delta__x0020__degree__x0020__Fahrenheit__x0020__per__x0020__Btu",
           "typename": "double",
         },
@@ -1215,6 +1392,9 @@ Object {
         "description": "1.23",
         "property": Object {
           "displayLabel": "kg/kW h",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_time__x0020__squared__x0020__per__x0020__lengthElementAspect$pc_MyProp_time__x0020__squared__x0020__per__x0020__lengthElementAspect_kg__x002F__kW__x0020__h",
           "typename": "double",
         },
@@ -1230,6 +1410,9 @@ Object {
         "description": "1.23",
         "property": Object {
           "displayLabel": "1/Btu",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_time__x0020__squared__x0020__per__x0020__massElementAspect$pc_MyProp_time__x0020__squared__x0020__per__x0020__massElementAspect___x0031____x002F__Btu",
           "typename": "double",
         },
@@ -1245,6 +1428,9 @@ Object {
         "description": "1.2346 thousand gal",
         "property": Object {
           "displayLabel": "thousand gal",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volumeElementAspect$pc_MyProp_volumeElementAspect_thousand__x0020__gal",
           "typename": "double",
         },
@@ -1260,6 +1446,9 @@ Object {
         "description": "123456789.0 acre·ft/day",
         "property": Object {
           "displayLabel": "acre ft/day",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_acre__x0020__ft__x002F__day",
           "typename": "double",
         },
@@ -1273,6 +1462,9 @@ Object {
         "description": "123456789.0 acre·ft/h",
         "property": Object {
           "displayLabel": "acre ft/h",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_acre__x0020__ft__x002F__h",
           "typename": "double",
         },
@@ -1286,6 +1478,9 @@ Object {
         "description": "123456789.0 acre·ft/min",
         "property": Object {
           "displayLabel": "acre ft/min",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_acre__x0020__ft__x002F__min",
           "typename": "double",
         },
@@ -1299,6 +1494,9 @@ Object {
         "description": "123456789.0 acre·in/h",
         "property": Object {
           "displayLabel": "acre in/h",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_acre__x0020__in__x002F__h",
           "typename": "double",
         },
@@ -1312,6 +1510,9 @@ Object {
         "description": "123456789.0 acre·in/min",
         "property": Object {
           "displayLabel": "acre in/min",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_acre__x0020__in__x002F__min",
           "typename": "double",
         },
@@ -1325,6 +1526,9 @@ Object {
         "description": "123456789.0 ft³/day",
         "property": Object {
           "displayLabel": "ft3/day",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_ft3__x002F__day",
           "typename": "double",
         },
@@ -1338,6 +1542,9 @@ Object {
         "description": "123456789.0 ft³/min",
         "property": Object {
           "displayLabel": "ft3/min",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_ft3__x002F__min",
           "typename": "double",
         },
@@ -1351,6 +1558,9 @@ Object {
         "description": "123456789.0 ft³/s",
         "property": Object {
           "displayLabel": "ft3/s",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_ft3__x002F__s",
           "typename": "double",
         },
@@ -1364,6 +1574,9 @@ Object {
         "description": "123456789.0 gal (imp)/day",
         "property": Object {
           "displayLabel": "gal(imp)/day",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_gal__x0028__imp__x0029____x002F__day",
           "typename": "double",
         },
@@ -1377,6 +1590,9 @@ Object {
         "description": "123456789.0 gal (imp)/s",
         "property": Object {
           "displayLabel": "gal(imp)/s",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_gal__x0028__imp__x0029____x002F__s",
           "typename": "double",
         },
@@ -1390,6 +1606,9 @@ Object {
         "description": "123456789.0 gal/s",
         "property": Object {
           "displayLabel": "gal/s",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_gal__x002F__s",
           "typename": "double",
         },
@@ -1403,6 +1622,9 @@ Object {
         "description": "123.46",
         "property": Object {
           "displayLabel": "gpd/capita",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_gpd__x002F__capita",
           "typename": "double",
         },
@@ -1416,6 +1638,9 @@ Object {
         "description": "123456.789 L/min",
         "property": Object {
           "displayLabel": "L/min",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_L__x002F__min",
           "typename": "double",
         },
@@ -1429,6 +1654,9 @@ Object {
         "description": "12345.6789 m³/min",
         "property": Object {
           "displayLabel": "m3/min",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_m3__x002F__min",
           "typename": "double",
         },
@@ -1442,6 +1670,9 @@ Object {
         "description": "123456.79",
         "property": Object {
           "displayLabel": "million gal(impl)/day",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_million__x0020__gal__x0028__impl__x0029____x002F__day",
           "typename": "double",
         },
@@ -1455,6 +1686,9 @@ Object {
         "description": "1234567.89",
         "property": Object {
           "displayLabel": "ML/day",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_ML__x002F__day",
           "typename": "double",
         },
@@ -1470,6 +1704,9 @@ Object {
         "description": "1.234568 ft³/lm",
         "property": Object {
           "displayLabel": "ft3/lm",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__massElementAspect$pc_MyProp_volume__x0020__per__x0020__massElementAspect_ft3__x002F__lm",
           "typename": "double",
         },
@@ -1485,6 +1722,9 @@ Object {
         "description": "150.12",
         "property": Object {
           "displayLabel": "Distance",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_workingUnitsPropElementAspect$pc_MyProp_workingUnitsPropElementAspect_Distance",
           "typename": "double",
         },
@@ -1498,6 +1738,9 @@ Object {
         "description": "2.62",
         "property": Object {
           "displayLabel": "Angle",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_workingUnitsPropElementAspect$pc_MyProp_workingUnitsPropElementAspect_Angle",
           "typename": "double",
         },
@@ -1511,6 +1754,9 @@ Object {
         "description": "150.12",
         "property": Object {
           "displayLabel": "Area",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_workingUnitsPropElementAspect$pc_MyProp_workingUnitsPropElementAspect_Area",
           "typename": "double",
         },
@@ -1524,6 +1770,9 @@ Object {
         "description": "150.12",
         "property": Object {
           "displayLabel": "Volume",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_workingUnitsPropElementAspect$pc_MyProp_workingUnitsPropElementAspect_Volume",
           "typename": "double",
         },
@@ -2088,6 +2337,9 @@ Object {
         "description": "150.1235 cm²",
         "property": Object {
           "displayLabel": "cm2",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_cm2",
           "typename": "double",
         },
@@ -2101,6 +2353,9 @@ Object {
         "description": "150.1235 acres",
         "property": Object {
           "displayLabel": "Acres",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_Acres",
           "typename": "double",
         },
@@ -2114,6 +2369,9 @@ Object {
         "description": "150.1235 ft·ft",
         "property": Object {
           "displayLabel": "ft ft",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_ft__x0020__ft",
           "typename": "double",
         },
@@ -2127,6 +2385,9 @@ Object {
         "description": "150.1235 ft·mi",
         "property": Object {
           "displayLabel": "ft mi",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_ft__x0020__mi",
           "typename": "double",
         },
@@ -2140,6 +2401,9 @@ Object {
         "description": "150.1235 ft²",
         "property": Object {
           "displayLabel": "ft2",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_ft2",
           "typename": "double",
         },
@@ -2153,6 +2417,9 @@ Object {
         "description": "150.1235 ha",
         "property": Object {
           "displayLabel": "ha",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_ha",
           "typename": "double",
         },
@@ -2166,6 +2433,9 @@ Object {
         "description": "150.1235 in·ft",
         "property": Object {
           "displayLabel": "in ft",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_in__x0020__ft",
           "typename": "double",
         },
@@ -2179,6 +2449,9 @@ Object {
         "description": "150.1235 in·m",
         "property": Object {
           "displayLabel": "in m",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_in__x0020__m",
           "typename": "double",
         },
@@ -2192,6 +2465,9 @@ Object {
         "description": "150.1235 in·mi",
         "property": Object {
           "displayLabel": "in mi",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_in__x0020__mi",
           "typename": "double",
         },
@@ -2205,6 +2481,9 @@ Object {
         "description": "150.1235 in²",
         "property": Object {
           "displayLabel": "in2",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_in2",
           "typename": "double",
         },
@@ -2218,6 +2497,9 @@ Object {
         "description": "150.1235 km²",
         "property": Object {
           "displayLabel": "km2",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_km2",
           "typename": "double",
         },
@@ -2231,6 +2513,9 @@ Object {
         "description": "150.1235 m²",
         "property": Object {
           "displayLabel": "m2",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_m2",
           "typename": "double",
         },
@@ -2244,6 +2529,9 @@ Object {
         "description": "150.1235 m·km",
         "property": Object {
           "displayLabel": "m km",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_m__x0020__km",
           "typename": "double",
         },
@@ -2257,6 +2545,9 @@ Object {
         "description": "150.1235 mm·m",
         "property": Object {
           "displayLabel": "m m",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_m__x0020__m",
           "typename": "double",
         },
@@ -2270,6 +2561,9 @@ Object {
         "description": "150.1235 mi²",
         "property": Object {
           "displayLabel": "mi2",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_mi2",
           "typename": "double",
         },
@@ -2283,6 +2577,9 @@ Object {
         "description": "150.1235 mm·km",
         "property": Object {
           "displayLabel": "mm km",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_mm__x0020__km",
           "typename": "double",
         },
@@ -2296,6 +2593,9 @@ Object {
         "description": "150.1235 thousand ft²",
         "property": Object {
           "displayLabel": "thousand ft2",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_thousand__x0020__ft2",
           "typename": "double",
         },
@@ -2311,6 +2611,9 @@ Object {
         "description": "150.1235 cSt",
         "property": Object {
           "displayLabel": "cSt",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_area__x0020__per__x0020__timeElementAspect$pc_MyProp_area__x0020__per__x0020__timeElementAspect_cSt",
           "typename": "double",
         },
@@ -2324,6 +2627,9 @@ Object {
         "description": "150.1235 ft²/s",
         "property": Object {
           "displayLabel": "ft2 s",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_area__x0020__per__x0020__timeElementAspect$pc_MyProp_area__x0020__per__x0020__timeElementAspect_ft2__x0020__s",
           "typename": "double",
         },
@@ -2339,6 +2645,9 @@ Object {
         "description": "1475.699 Btu/lb",
         "property": Object {
           "displayLabel": "Btu/lb [Btu per pound mass]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_area__x0020__per__x0020__time__x0020__squaredElementAspect$pc_MyProp_area__x0020__per__x0020__time__x0020__squaredElementAspect_Btu__x002F__lb__x0020____x005B__Btu__x0020__per__x0020__pound__x0020__mass__x005D__",
           "typename": "double",
         },
@@ -2354,6 +2663,9 @@ Object {
         "description": "14759.0 Btu/(lbm·Δ°R)",
         "property": Object {
           "displayLabel": "Btu/(lbm·Δ°R) [btu per pound mass per delta degree rankine]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_area__x0020__per__x0020__time__x0020__squared__x0020__temperatureElementAspect$pc_MyProp_area__x0020__per__x0020__time__x0020__squared__x0020__temperatureElementAspect_Btu__x002F____x0028__lbm__x00B7____x0394____x00B0__R__x0029____x0020____x005B__btu__x0020__per__x0020__pound__x0020__mass__x0020__per__x0020__delta__x0020__degree__x0020__rankine__x005D__",
           "typename": "double",
         },
@@ -2369,6 +2681,9 @@ Object {
         "description": "14758.99",
         "property": Object {
           "displayLabel": "ft^(1/3)/s [ft^(1/3)/s]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_cube__x0020__root__x0020__length__x0020__per__x0020__timeElementAspect$pc_MyProp_cube__x0020__root__x0020__length__x0020__per__x0020__timeElementAspect_ft__x005E____x0028__1__x002F__3__x0029____x002F__s__x0020____x005B__ft__x005E____x0028__1__x002F__3__x0029____x002F__s__x005D__",
           "typename": "double",
         },
@@ -2384,6 +2699,9 @@ Object {
         "description": "15845.0 $",
         "property": Object {
           "displayLabel": "$ [dollar]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_dimensionlessElementAspect$pc_MyProp_dimensionlessElementAspect___x0024____x0020____x005B__dollar__x005D__",
           "typename": "double",
         },
@@ -2399,6 +2717,9 @@ Object {
         "description": "1475.65 KA",
         "property": Object {
           "displayLabel": "KA [kiloampere]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_electric__x0020__currentElementAspect$pc_MyProp_electric__x0020__currentElementAspect_KA__x0020____x005B__kiloampere__x005D__",
           "typename": "double",
         },
@@ -2414,6 +2735,9 @@ Object {
         "description": "1475.96 µin",
         "property": Object {
           "displayLabel": "µin [microinch]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_lengthElementAspect$pc_MyProp_lengthElementAspect___x00B5__in__x0020____x005B__microinch__x005D__",
           "typename": "double",
         },
@@ -2429,6 +2753,9 @@ Object {
         "description": "123654.47 in/degree",
         "property": Object {
           "displayLabel": "in/deg [inch per degree]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_length__x0020__per__x0020__plane__x0020__angleElementAspect$pc_MyProp_length__x0020__per__x0020__plane__x0020__angleElementAspect_in__x002F__deg__x0020____x005B__inch__x0020__per__x0020__degree__x005D__",
           "typename": "double",
         },
@@ -2444,6 +2771,9 @@ Object {
         "description": "15896.698 ft³/(ft²·min)",
         "property": Object {
           "displayLabel": "ft³/(ft²·min) [Foot cubed per foot squared per minute]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_length__x0020__per__x0020__timeElementAspect$pc_MyProp_length__x0020__per__x0020__timeElementAspect_ft__x00B3____x002F____x0028__ft__x00B2____x00B7__min__x0029____x0020____x005B__Foot__x0020__cubed__x0020__per__x0020__foot__x0020__squared__x0020__per__x0020__minute__x005D__",
           "typename": "double",
         },
@@ -2459,6 +2789,9 @@ Object {
         "description": "14851.00",
         "property": Object {
           "displayLabel": "1/Bar [1/Bar]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_length__x0020__time__x0020__squared__x0020__per__x0020__massElementAspect$pc_MyProp_length__x0020__time__x0020__squared__x0020__per__x0020__massElementAspect___x0031____x002F__Bar__x0020____x005B__1__x002F__Bar__x005D__",
           "typename": "double",
         },
@@ -2486,6 +2819,9 @@ Object {
         "description": "14758.964 mm⁶",
         "property": Object {
           "displayLabel": "mm⁶ [millimeter to the sixth]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_length__x0020__to__x0020__the__x0020__six__x0020__powerElementAspect$pc_MyProp_length__x0020__to__x0020__the__x0020__six__x0020__powerElementAspect_mm__x2076____x0020____x005B__millimeter__x0020__to__x0020__the__x0020__sixth__x005D__",
           "typename": "double",
         },
@@ -2501,6 +2837,9 @@ Object {
         "description": "147.158 lb/ft",
         "property": Object {
           "displayLabel": "lb/ft [pound per foot]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_lenic__x0020__massElementAspect$pc_MyProp_lenic__x0020__massElementAspect_lb__x002F__ft__x0020____x005B__pound__x0020__per__x0020__foot__x005D__",
           "typename": "double",
         },
@@ -2516,6 +2855,9 @@ Object {
         "description": "1589.741 lm",
         "property": Object {
           "displayLabel": "lm [lumen]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_luminous__x0020__fluxElementAspect$pc_MyProp_luminous__x0020__fluxElementAspect_lm__x0020____x005B__lumen__x005D__",
           "typename": "double",
         },
@@ -2531,6 +2873,9 @@ Object {
         "description": "1485.9 lm/ft²",
         "property": Object {
           "displayLabel": "lm/ft² [lumen per foot squared]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_luminous__x0020__flux__x0020__per__x0020__areaElementAspect$pc_MyProp_luminous__x0020__flux__x0020__per__x0020__areaElementAspect_lm__x002F__ft__x00B2____x0020____x005B__lumen__x0020__per__x0020__foot__x0020__squared__x005D__",
           "typename": "double",
         },
@@ -2546,6 +2891,9 @@ Object {
         "description": "14785.5896 µg",
         "property": Object {
           "displayLabel": "µg [microgram]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_massElementAspect$pc_MyProp_massElementAspect___x00B5__g__x0020____x005B__microgram__x005D__",
           "typename": "double",
         },
@@ -2561,6 +2909,9 @@ Object {
         "description": "1478.5 KV",
         "property": Object {
           "displayLabel": "KV [kilovolt]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_mass__x0020__area__x0020__per__x0020__time__x0020__cubed__x0020__electric__x0020__currentElementAspect$pc_MyProp_mass__x0020__area__x0020__per__x0020__time__x0020__cubed__x0020__electric__x0020__currentElementAspect_KV__x0020____x005B__kilovolt__x005D__",
           "typename": "double",
         },
@@ -2576,6 +2927,9 @@ Object {
         "description": "14758.36 N·m/deg",
         "property": Object {
           "displayLabel": "N·m/deg [newton meter per degree]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_mass__x0020__area__x0020__per__x0020__time__x0020__squared__x0020__plane__x0020__angleElementAspect$pc_MyProp_mass__x0020__area__x0020__per__x0020__time__x0020__squared__x0020__plane__x0020__angleElementAspect_N__x00B7__m__x002F__deg__x0020____x005B__newton__x0020__meter__x0020__per__x0020__degree__x005D__",
           "typename": "double",
         },
@@ -2591,6 +2945,9 @@ Object {
         "description": "14758.5 Btu/(lb-mol·Δ°R)",
         "property": Object {
           "displayLabel": "Btu/(lb-mol·Δ°R) [btu per pound mole per delta degree rankine]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_mass__x0020__area__x0020__per__x0020__time__x0020__squared__x0020__temperature__x0020__moleElementAspect$pc_MyProp_mass__x0020__area__x0020__per__x0020__time__x0020__squared__x0020__temperature__x0020__moleElementAspect_Btu__x002F____x0028__lb__x002D__mol__x00B7____x0394____x00B0__R__x0029____x0020____x005B__btu__x0020__per__x0020__pound__x0020__mole__x0020__per__x0020__delta__x0020__degree__x0020__rankine__x005D__",
           "typename": "double",
         },
@@ -2606,6 +2963,9 @@ Object {
         "description": "123456799.00",
         "property": Object {
           "displayLabel": "(in·lbf)/(s·in·°F) [inch pound force per second inch fahrenheit]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_mass__x0020__length__x0020__per__x0020__time__x0020__cubed__x0020__temperatureElementAspect$pc_MyProp_mass__x0020__length__x0020__per__x0020__time__x0020__cubed__x0020__temperatureElementAspect___x0028__in__x00B7__lbf__x0029____x002F____x0028__s__x00B7__in__x00B7____x00B0__F__x0029____x0020____x005B__inch__x0020__pound__x0020__force__x0020__per__x0020__second__x0020__inch__x0020__fahrenheit__x005D__",
           "typename": "double",
         },
@@ -2621,6 +2981,9 @@ Object {
         "description": "1232584.897489 lbf/in",
         "property": Object {
           "displayLabel": "lbf/in [pound force per inch]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_mass__x0020__per__x0020__time__x0020__squaredElementAspect$pc_MyProp_mass__x0020__per__x0020__time__x0020__squaredElementAspect_lbf__x002F__in__x0020____x005B__pound__x0020__force__x0020__per__x0020__inch__x005D__",
           "typename": "double",
         },
@@ -2636,6 +2999,9 @@ Object {
         "description": "45896318.0 µg/L",
         "property": Object {
           "displayLabel": "µg/L [micrograms per liter]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_mass__x0020__per__x0020__volumeElementAspect$pc_MyProp_mass__x0020__per__x0020__volumeElementAspect___x00B5__g__x002F__L__x0020____x005B__micrograms__x0020__per__x0020__liter__x005D__",
           "typename": "double",
         },
@@ -2651,6 +3017,9 @@ Object {
         "description": "15789.46",
         "property": Object {
           "displayLabel": "lbf·ft² [pound force foot squared]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_mass__x0020__volume__x0020__per__x0020__time__x0020__squaredElementAspect$pc_MyProp_mass__x0020__volume__x0020__per__x0020__time__x0020__squaredElementAspect_lbf__x00B7__ft__x00B2____x0020____x005B__pound__x0020__force__x0020__foot__x0020__squared__x005D__",
           "typename": "double",
         },
@@ -2666,6 +3035,9 @@ Object {
         "description": "0.5689 ft³/lb-mol",
         "property": Object {
           "displayLabel": "ft³/lb-mol [foot cubed per pound mole]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_molar__x0020__volumeElementAspect$pc_MyProp_molar__x0020__volumeElementAspect_ft__x00B3____x002F__lb__x002D__mol__x0020____x005B__foot__x0020__cubed__x0020__per__x0020__pound__x0020__mole__x005D__",
           "typename": "double",
         },
@@ -2681,6 +3053,9 @@ Object {
         "description": "123456.78 kmol/s",
         "property": Object {
           "displayLabel": "kmol/s [kilomole per second]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_mole__x0020__per__x0020__timeElementAspect$pc_MyProp_mole__x0020__per__x0020__timeElementAspect_kmol__x002F__s__x0020____x005B__kilomole__x0020__per__x0020__second__x005D__",
           "typename": "double",
         },
@@ -2696,6 +3071,9 @@ Object {
         "description": "0.12",
         "property": Object {
           "displayLabel": "lb-mol/ft³ [pound mole per foot cubed]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_mole__x0020__per__x0020__volumeElementAspect$pc_MyProp_mole__x0020__per__x0020__volumeElementAspect_lb__x002D__mol__x002F__ft__x00B3____x0020____x005B__pound__x0020__mole__x0020__per__x0020__foot__x0020__cubed__x005D__",
           "typename": "double",
         },
@@ -2711,6 +3089,9 @@ Object {
         "description": "0.01233 quadrants",
         "property": Object {
           "displayLabel": "quadrants [quadrants]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_plane__x0020__angleElementAspect$pc_MyProp_plane__x0020__angleElementAspect_quadrants__x0020____x005B__quadrants__x005D__",
           "typename": "double",
         },
@@ -2726,6 +3107,9 @@ Object {
         "description": "0.02 cycle/sec",
         "property": Object {
           "displayLabel": "cycle/sec [cycle per second]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_plane__x0020__angle__x0020__per__x0020__timeElementAspect$pc_MyProp_plane__x0020__angle__x0020__per__x0020__timeElementAspect_cycle__x002F__sec__x0020____x005B__cycle__x0020__per__x0020__second__x005D__",
           "typename": "double",
         },
@@ -2741,6 +3125,9 @@ Object {
         "description": "123456789.12345 ft⁴",
         "property": Object {
           "displayLabel": "ft⁴ [foot to the fourth]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_quartic__x0020__lengthElementAspect$pc_MyProp_quartic__x0020__lengthElementAspect_ft__x2074____x0020____x005B__foot__x0020__to__x0020__the__x0020__fourth__x005D__",
           "typename": "double",
         },
@@ -2756,6 +3143,9 @@ Object {
         "description": "1234567.89 p/ft²",
         "property": Object {
           "displayLabel": "p/ft² [person per foot squared]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_reciprocal__x0020__areaElementAspect$pc_MyProp_reciprocal__x0020__areaElementAspect_p__x002F__ft__x00B2____x0020____x005B__person__x0020__per__x0020__foot__x0020__squared__x005D__",
           "typename": "double",
         },
@@ -2771,6 +3161,9 @@ Object {
         "description": "12345.6789 1/mile",
         "property": Object {
           "displayLabel": "1/mile [1/mile]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_reciprocal__x0020__lengthElementAspect$pc_MyProp_reciprocal__x0020__lengthElementAspect___x0031____x002F__mile__x0020____x005B__1__x002F__mile__x005D__",
           "typename": "double",
         },
@@ -2786,6 +3179,9 @@ Object {
         "description": "123.46",
         "property": Object {
           "displayLabel": "1/tn(short) [one per short ton]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_reciprocal__x0020__massElementAspect$pc_MyProp_reciprocal__x0020__massElementAspect___x0031____x002F__tn__x0028__short__x0029____x0020____x005B__one__x0020__per__x0020__short__x0020__ton__x005D__",
           "typename": "double",
         },
@@ -2801,6 +3197,9 @@ Object {
         "description": "0.0 1/Δ°R",
         "property": Object {
           "displayLabel": "1/Δ°R [reciprocal delta degree rankine]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_reciprocal__x0020__temperatureElementAspect$pc_MyProp_reciprocal__x0020__temperatureElementAspect___x0031____x002F____x0394____x00B0__R__x0020____x005B__reciprocal__x0020__delta__x0020__degree__x0020__rankine__x005D__",
           "typename": "double",
         },
@@ -2816,6 +3215,9 @@ Object {
         "description": "123456.79",
         "property": Object {
           "displayLabel": "grf/(h·ft²·inHg) [Grain mass per hour per foot squared per inch Mercury conventional]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_reciprocal__x0020__timeElementAspect$pc_MyProp_reciprocal__x0020__timeElementAspect_grf__x002F____x0028__h__x00B7__ft__x00B2____x00B7__inHg__x0029____x0020____x005B__Grain__x0020__mass__x0020__per__x0020__hour__x0020__per__x0020__foot__x0020__squared__x0020__per__x0020__inch__x0020__Mercury__x0020__conventional__x005D__",
           "typename": "double",
         },
@@ -2831,6 +3233,9 @@ Object {
         "description": "1.23",
         "property": Object {
           "displayLabel": "1/ million gal",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_reciprocal__x0020__volumeElementAspect$pc_MyProp_reciprocal__x0020__volumeElementAspect___x0031____x002F____x0020__million__x0020__gal",
           "typename": "double",
         },
@@ -2846,6 +3251,9 @@ Object {
         "description": "1234.57",
         "property": Object {
           "displayLabel": "ft^(1/2)/s [ft^(1/2)/s]",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_square__x0020__root__x0020__length__x0020__per__x0020__timeElementAspect$pc_MyProp_square__x0020__root__x0020__length__x0020__per__x0020__timeElementAspect_ft__x005E____x0028__1__x002F__2__x0029____x002F__s__x0020____x005B__ft__x005E____x0028__1__x002F__2__x0029____x002F__s__x005D__",
           "typename": "double",
         },
@@ -2861,6 +3269,9 @@ Object {
         "description": "1.23",
         "property": Object {
           "displayLabel": "Gallon per minute per square root pounds per inch squared",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_square__x0020__root__x0020__length__x0020__to__x0020__the__x0020__seventh__x0020__power__x0020__per__x0020__square__x0020__root__x0020__massElementAspect$pc_MyProp_square__x0020__root__x0020__length__x0020__to__x0020__the__x0020__seventh__x0020__power__x0020__per__x0020__square__x0020__root__x0020__massElementAspect_Gallon__x0020__per__x0020__minute__x0020__per__x0020__square__x0020__root__x0020__pounds__x0020__per__x0020__inch__x0020__squared",
           "typename": "double",
         },
@@ -2876,6 +3287,9 @@ Object {
         "description": "0.0 Δ°C",
         "property": Object {
           "displayLabel": "Delta celsius",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_temperatureElementAspect$pc_MyProp_temperatureElementAspect_Delta__x0020__celsius",
           "typename": "double",
         },
@@ -2891,6 +3305,9 @@ Object {
         "description": "123.456789 ΔK/m",
         "property": Object {
           "displayLabel": "delta degree Kelvin per meter",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_temperature__x0020__per__x0020__lengthElementAspect$pc_MyProp_temperature__x0020__per__x0020__lengthElementAspect_delta__x0020__degree__x0020__Kelvin__x0020__per__x0020__meter",
           "typename": "double",
         },
@@ -2906,6 +3323,9 @@ Object {
         "description": "1234.56789 days",
         "property": Object {
           "displayLabel": "days",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_timeElementAspect$pc_MyProp_timeElementAspect_days",
           "typename": "double",
         },
@@ -2921,6 +3341,9 @@ Object {
         "description": "1234.57",
         "property": Object {
           "displayLabel": "one per kilowat",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_time__x0020__cubed__x0020__per__x0020__mass__x0020__areaElementAspect$pc_MyProp_time__x0020__cubed__x0020__per__x0020__mass__x0020__areaElementAspect_one__x0020__per__x0020__kilowat",
           "typename": "double",
         },
@@ -2936,6 +3359,9 @@ Object {
         "description": "1.2346 ft²·h·Δ°F/Btu",
         "property": Object {
           "displayLabel": "foot squared hour delta degree Fahrenheit per Btu",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_time__x0020__cubed__x0020__temperatureElementAspect$pc_MyProp_time__x0020__cubed__x0020__temperatureElementAspect_foot__x0020__squared__x0020__hour__x0020__delta__x0020__degree__x0020__Fahrenheit__x0020__per__x0020__Btu",
           "typename": "double",
         },
@@ -2951,6 +3377,9 @@ Object {
         "description": "1.23",
         "property": Object {
           "displayLabel": "kg/kW h",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_time__x0020__squared__x0020__per__x0020__lengthElementAspect$pc_MyProp_time__x0020__squared__x0020__per__x0020__lengthElementAspect_kg__x002F__kW__x0020__h",
           "typename": "double",
         },
@@ -2966,6 +3395,9 @@ Object {
         "description": "1.23",
         "property": Object {
           "displayLabel": "1/Btu",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_time__x0020__squared__x0020__per__x0020__massElementAspect$pc_MyProp_time__x0020__squared__x0020__per__x0020__massElementAspect___x0031____x002F__Btu",
           "typename": "double",
         },
@@ -2981,6 +3413,9 @@ Object {
         "description": "1.2346 thousand gal",
         "property": Object {
           "displayLabel": "thousand gal",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volumeElementAspect$pc_MyProp_volumeElementAspect_thousand__x0020__gal",
           "typename": "double",
         },
@@ -2996,6 +3431,9 @@ Object {
         "description": "123456789.0 acre·ft/day",
         "property": Object {
           "displayLabel": "acre ft/day",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_acre__x0020__ft__x002F__day",
           "typename": "double",
         },
@@ -3009,6 +3447,9 @@ Object {
         "description": "123456789.0 acre·ft/h",
         "property": Object {
           "displayLabel": "acre ft/h",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_acre__x0020__ft__x002F__h",
           "typename": "double",
         },
@@ -3022,6 +3463,9 @@ Object {
         "description": "123456789.0 acre·ft/min",
         "property": Object {
           "displayLabel": "acre ft/min",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_acre__x0020__ft__x002F__min",
           "typename": "double",
         },
@@ -3035,6 +3479,9 @@ Object {
         "description": "123456789.0 acre·in/h",
         "property": Object {
           "displayLabel": "acre in/h",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_acre__x0020__in__x002F__h",
           "typename": "double",
         },
@@ -3048,6 +3495,9 @@ Object {
         "description": "123456789.0 acre·in/min",
         "property": Object {
           "displayLabel": "acre in/min",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_acre__x0020__in__x002F__min",
           "typename": "double",
         },
@@ -3061,6 +3511,9 @@ Object {
         "description": "123456789.0 ft³/day",
         "property": Object {
           "displayLabel": "ft3/day",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_ft3__x002F__day",
           "typename": "double",
         },
@@ -3074,6 +3527,9 @@ Object {
         "description": "123456789.0 ft³/min",
         "property": Object {
           "displayLabel": "ft3/min",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_ft3__x002F__min",
           "typename": "double",
         },
@@ -3087,6 +3543,9 @@ Object {
         "description": "123456789.0 ft³/s",
         "property": Object {
           "displayLabel": "ft3/s",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_ft3__x002F__s",
           "typename": "double",
         },
@@ -3100,6 +3559,9 @@ Object {
         "description": "123456789.0 gal (imp)/day",
         "property": Object {
           "displayLabel": "gal(imp)/day",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_gal__x0028__imp__x0029____x002F__day",
           "typename": "double",
         },
@@ -3113,6 +3575,9 @@ Object {
         "description": "123456789.0 gal (imp)/s",
         "property": Object {
           "displayLabel": "gal(imp)/s",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_gal__x0028__imp__x0029____x002F__s",
           "typename": "double",
         },
@@ -3126,6 +3591,9 @@ Object {
         "description": "123456789.0 gal/s",
         "property": Object {
           "displayLabel": "gal/s",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_gal__x002F__s",
           "typename": "double",
         },
@@ -3139,6 +3607,9 @@ Object {
         "description": "123.46",
         "property": Object {
           "displayLabel": "gpd/capita",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_gpd__x002F__capita",
           "typename": "double",
         },
@@ -3152,6 +3623,9 @@ Object {
         "description": "123456.789 L/min",
         "property": Object {
           "displayLabel": "L/min",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_L__x002F__min",
           "typename": "double",
         },
@@ -3165,6 +3639,9 @@ Object {
         "description": "12345.6789 m³/min",
         "property": Object {
           "displayLabel": "m3/min",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_m3__x002F__min",
           "typename": "double",
         },
@@ -3178,6 +3655,9 @@ Object {
         "description": "123456.79",
         "property": Object {
           "displayLabel": "million gal(impl)/day",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_million__x0020__gal__x0028__impl__x0029____x002F__day",
           "typename": "double",
         },
@@ -3191,6 +3671,9 @@ Object {
         "description": "1234567.89",
         "property": Object {
           "displayLabel": "ML/day",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__TimeElementAspect$pc_MyProp_volume__x0020__per__x0020__TimeElementAspect_ML__x002F__day",
           "typename": "double",
         },
@@ -3206,6 +3689,9 @@ Object {
         "description": "1.234568 ft³/lm",
         "property": Object {
           "displayLabel": "ft3/lm",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_volume__x0020__per__x0020__massElementAspect$pc_MyProp_volume__x0020__per__x0020__massElementAspect_ft3__x002F__lm",
           "typename": "double",
         },
@@ -3221,6 +3707,9 @@ Object {
         "description": "150.12",
         "property": Object {
           "displayLabel": "Distance",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_workingUnitsPropElementAspect$pc_MyProp_workingUnitsPropElementAspect_Distance",
           "typename": "double",
         },
@@ -3234,6 +3723,9 @@ Object {
         "description": "2.62",
         "property": Object {
           "displayLabel": "Angle",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_workingUnitsPropElementAspect$pc_MyProp_workingUnitsPropElementAspect_Angle",
           "typename": "double",
         },
@@ -3247,6 +3739,9 @@ Object {
         "description": "150.12",
         "property": Object {
           "displayLabel": "Area",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_workingUnitsPropElementAspect$pc_MyProp_workingUnitsPropElementAspect_Area",
           "typename": "double",
         },
@@ -3260,6 +3755,9 @@ Object {
         "description": "150.12",
         "property": Object {
           "displayLabel": "Volume",
+          "editor": Object {
+            "name": "numeric-input",
+          },
           "name": "rc_generic_PhysicalObject_ncc_MyProp_workingUnitsPropElementAspect$pc_MyProp_workingUnitsPropElementAspect_Volume",
           "typename": "double",
         },
