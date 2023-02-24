@@ -53,10 +53,10 @@ export function createPropertyDescriptionFromFieldInfo(info: FieldInfo) {
     displayLabel: info.label,
   };
 
-  if ((info.type.typeName === StandardTypeNames.Number
-    || info.type.typeName === StandardTypeNames.Int
-    || info.type.typeName === StandardTypeNames.Float
-    || info.type.typeName === StandardTypeNames.Double)) {
+  if (descr.typeName === StandardTypeNames.Number
+    || descr.typeName === StandardTypeNames.Int
+    || descr.typeName === StandardTypeNames.Float
+    || descr.typeName === StandardTypeNames.Double) {
     descr.editor = { name: StandardEditorNames.NumericInput };
   }
 
