@@ -1,6 +1,6 @@
 {
   "type": "minor",
-  "comment": "InstanceFilterDialog: make \"Accept\" button to be enabled when opening the dialog with pre-filled values",
+  "comment": "The editor has changed for numeric types to StandardEditorNames.NumericInput",
   "packageName": "@itwin/presentation-components",
   "email": "124659623+simasjar@users.noreply.github.com",
   "dependentChangeType": "patch"
