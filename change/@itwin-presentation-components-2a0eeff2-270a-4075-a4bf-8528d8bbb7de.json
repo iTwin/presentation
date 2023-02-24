@@ -1,6 +1,6 @@
 {
   "type": "minor",
-  "comment": "Controlled tree: ensure that the action buttons have the same background color as the parent node",
+  "comment": "`PresentationTreeNodeRenderer`: ensure that the action buttons have the same background color as the node",
   "packageName": "@itwin/presentation-components",
   "email": "124659623+simasjar@users.noreply.github.com",
   "dependentChangeType": "patch"
