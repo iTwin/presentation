@@ -159,7 +159,7 @@ function TargetSelectIndicatorsContainer<TOption extends OptionTypeBase>({ child
 }
 
 function TargetSelectDropdownIndicator<TOption extends OptionTypeBase>(_: IndicatorProps<TOption>) {
-  return <span className="iui-end-icon iui-actionable" >
+  return <span className="iui-end-icon iui-actionable" style={{ backgroundColor: "white", height: "22px" }} >
     <SvgCaretDownSmall />
   </span>;
 }
