@@ -15,7 +15,7 @@ resources:
       type: github
       endpoint: iModelJs
       name: iTwin/itwinjs-core
-      ref: refs/heads/master
+      ref: refs/heads/add-presentation-docs
 
 stages:
   - stage: Generate_Docs
@@ -58,11 +58,11 @@ stages:
             PathtoPublish: '$(Build.StagingDirectory)/docs/'
             ArtifactName: 'Presentation Docs'
 
-  # - stage: Validate_Docs
-  #   dependsOn: Generate_Docs
-  #   condition: and(succeeded(), in(variables['Build.Reason'], 'IndividualCI', 'PullRequest', 'Manual'))
-  #   jobs:
-  #   - template: common/config/azure-pipelines/jobs/docs-build.yaml@itwinjs-core
-  #     parameters:
-  #       checkout: itwinjs-core
-  #       useCurrentPresentationDocsArtifact: true
+  - stage: Validate_Docs
+    dependsOn: Generate_Docs
+    condition: and(succeeded(), in(variables['Build.Reason'], 'IndividualCI', 'PullRequest', 'Manual'))
+    jobs:
+    - template: common/config/azure-pipelines/jobs/docs-build.yaml@itwinjs-core
+      parameters:
+        checkout: itwinjs-core
+        useCurrentPresentationDocsArtifact: true
