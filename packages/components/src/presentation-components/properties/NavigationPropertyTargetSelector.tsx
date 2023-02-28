@@ -88,6 +88,7 @@ export const NavigationPropertyTargetSelector = forwardRef<NavigationPropertyTar
         menu: () => ({ position: "absolute", zIndex: 9999, width }),
         option: () => ({ whiteSpace: "nowrap" }),
         placeholder: (style: any) => ({ ...style, position: "relative", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }),
+        dropdownIndicator: () => ({ backgroundColor: "var(--iui-color-background)" }),
       }}
       components={{
         Control: TargetSelectControl,
@@ -158,8 +159,8 @@ function TargetSelectIndicatorsContainer<TOption extends OptionTypeBase>({ child
   return Children.toArray(children).pop();
 }
 
-function TargetSelectDropdownIndicator<TOption extends OptionTypeBase>(_: IndicatorProps<TOption>) {
-  return <span className="iui-end-icon iui-actionable" >
+function TargetSelectDropdownIndicator<TOption extends OptionTypeBase>(props: IndicatorProps<TOption>) {
+  return <components.DropdownIndicator {...props} className="iui-end-icon iui-actionable" >
     <SvgCaretDownSmall />
-  </span>;
+  </components.DropdownIndicator>;
 }
