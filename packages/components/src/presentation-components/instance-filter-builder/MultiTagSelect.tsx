@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import "@itwin/itwinui-css/css/tag.css";
-import "@itwin/itwinui-css/css/inputs.css";
+import "@itwin/itwinui-css/css/input.css";
 import "@itwin/itwinui-css/css/button.css";
 import "@itwin/itwinui-css/css/menu.css";
 import classnames from "classnames";
@@ -25,6 +25,7 @@ export function MultiTagSelect<Option>(props: Props<Option>) {
         control: () => ({ display: "grid", gridTemplateColumns: "auto auto", height: "41px", padding: "0 0 0 12px" }),
         container: () => ({ width: "auto" }),
         menu: () => ({ position: "absolute", zIndex: 9999, width }),
+        menuList: (style) => ({ ...style, padding: 0 }),
         option: () => ({}),
         input: (style) => ({ ...style, order: -1, flex: 0 }),
         valueContainer: (style) => ({ ...style, padding: 0, flexWrap: "nowrap" }),
@@ -101,7 +102,7 @@ function TagLabel({ children, ...props }: any) {
 }
 
 function TagRemove(props: any) {
-  return <components.MultiValueRemove {...props} innerProps={{ ...props.innerProps, className: "iui-button iui-borderless iui-small iui-tag-button" }}>
+  return <components.MultiValueRemove {...props} innerProps={{ ...props.innerProps, className: "iui-button iui-tag-button", ["data-iui-variant"]: "borderless", ["data-iui-size"]: "size" }}>
     <SvgCloseSmall className="iui-button-icon" aria-hidden />
   </components.MultiValueRemove>;
 }
