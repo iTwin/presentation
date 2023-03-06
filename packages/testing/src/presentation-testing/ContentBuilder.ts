@@ -99,7 +99,7 @@ export class ContentBuilder {
 
   /**
    * Create a list of property records using the supplied presentation ruleset.
-   * @param rulesetOrId Either a [[Ruleset]] object or a ruleset id.
+   * @param rulesetOrId Either a [Ruleset]($presentation-common) object or a ruleset id.
    * @param instanceKeys Keys of instances that should be queried.
    * @param displayType Type of content container display. For example:
    * "PropertyPane", "Grid", "List" etc.
@@ -157,7 +157,7 @@ export class ContentBuilder {
   /**
    * Create a list of grouped property records using the supplied presentation ruleset.
    * Each group includes all of the class instances.
-   * @param rulesetOrId Either a [[Ruleset]] object or a ruleset id.
+   * @param rulesetOrId Either a [Ruleset]($presentation-common) object or a ruleset id.
    * @param displayType Type of content container display. For example:
    * "PropertyPane", "Grid", "List" etc.
    * @deprecated in 3.x. This method turned out to be useless as it creates content for too many instances. Should use [[createContent]] instead.
@@ -169,7 +169,7 @@ export class ContentBuilder {
   /**
    * Create a list of grouped property records using the supplied presentation ruleset.
    * Each group includes at most one class instance.
-   * @param rulesetOrId Either a [[Ruleset]] object or a ruleset id.
+   * @param rulesetOrId Either a [Ruleset]($presentation-common) object or a ruleset id.
    * @param displayType Type of content container display. For example:
    * "PropertyPane", "Grid", "List" etc.
    * @deprecated in 3.x. This method turned out to be useless as it creates content for too many instances. Should use [[createContent]] instead.

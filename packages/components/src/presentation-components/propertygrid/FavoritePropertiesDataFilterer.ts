@@ -32,7 +32,7 @@ export interface FavoritePropertiesDataFiltererProps {
 }
 
 /**
- * [[IPropertyDataFilterer]] implementation which filters favorite properties
+ * [IPropertyDataFilterer]($component-react) implementation which filters favorite properties
  * @public
  */
 export class FavoritePropertiesDataFilterer extends PropertyDataFiltererBase {

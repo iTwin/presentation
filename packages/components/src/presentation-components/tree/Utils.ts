@@ -104,11 +104,11 @@ function assignOptionalTreeNodeItemFields(
 }
 
 /**
- * Applies customization from [[Node]] to [[TreeNodeItem]].
+ * Applies customization from [Node]($presentation-common) to [TreeNodeItem]($components-react).
  * @public
- * @deprecated in 3.x. This is a temporary function to apply deprecated [[Node]] customization attributes on a [[TreeNodeItem]].
- * The recommendation is to switch to using a custom customization function that looks at node's [[Node.extendedData]] and applies
- * [[TreeNodeItem]] customization based on values in extended data.
+ * @deprecated in 3.x. This is a temporary function to apply deprecated [Node]($presentation-common) customization attributes on a [TreeNodeItem]($components-react).
+ * The recommendation is to switch to using a custom customization function that looks at node's [Node.extendedData]($presentation-common) and applies
+ * [TreeNodeItem]($components-react) customization based on values in extended data.
  * See [extended data usage page]($docs/presentation/customization/ExtendedDataUsage.md) for more details.
  */
 // istanbul ignore next
