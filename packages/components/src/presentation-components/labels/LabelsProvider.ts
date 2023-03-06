@@ -16,7 +16,7 @@ import { Presentation } from "@itwin/presentation-frontend";
  * @public
  */
 export interface IPresentationLabelsProvider {
-  /** [[IModelConnection]] used by this data provider */
+  /** [IModelConnection]($core-frontend) used by this data provider */
   readonly imodel: IModelConnection;
   /**
    * Get label for instance identified with the given key.
