@@ -15,7 +15,7 @@ import { IModelConnection } from "@itwin/core-frontend";
  */
 export interface IPresentationDataProvider extends IDisposable {
   /**
-   * [[IModelConnection]] used by this data provider
+   * [IModelConnection]($core-frontend) used by this data provider
    */
   readonly imodel: IModelConnection;
 

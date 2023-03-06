@@ -16,7 +16,7 @@ import { IPresentationDataProvider } from "../common/IPresentationDataProvider";
  */
 export interface IPresentationTreeDataProvider extends ITreeDataProvider, IPresentationDataProvider {
   /**
-   * Returns a [[NodeKey]] from given [[TreeNodeItem]].
+   * Returns a [NodeKey]($presentation-common) from given [TreeNodeItem]($components-react).
    */
   getNodeKey(node: TreeNodeItem): NodeKey;
 
