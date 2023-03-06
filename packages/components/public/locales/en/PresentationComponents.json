@@ -24,8 +24,10 @@
     "filter": "Filter"
   },
   "tree": {
-    "too-many-child-nodes": "Too many child nodes",
-    "no-filtered-children": "There are no child nodes matching current filter"
+    "no-filtered-children": "There are no child nodes matching current filter",
+    "result-set-too-large": "The hierarchy level is too large to be displayed - please provide additional filtering",
+    "timeout": "Creating the hierarchy level took too long",
+    "unknown-error": "Error creating the hierarchy level"
   },
   "navigation-property-editor": {
     "select-target-instance": "Select target instance",

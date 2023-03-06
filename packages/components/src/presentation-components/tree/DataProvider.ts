@@ -23,7 +23,7 @@ import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategor
 import { convertToInstanceFilterDefinition } from "../instance-filter-builder/InstanceFilterConverter";
 import { IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider";
 import { isPresentationTreeNodeItem, PresentationInfoTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem";
-import { createTreeNodeId, createTreeNodeItem, CreateTreeNodeItemProps, pageOptionsUiToPresentation } from "./Utils";
+import { createTreeNodeItem, CreateTreeNodeItemProps, pageOptionsUiToPresentation } from "./Utils";
 
 /**
  * Properties for creating a `PresentationTreeDataProvider` instance.
@@ -56,6 +56,24 @@ export interface PresentationTreeDataProviderProps extends DiagnosticsProps {
    */
   pagingSize?: number;
 
+  /**
+   * The limit for how many ECInstances should be loaded for a single hierarchy level. If the limit is exceeded, the data
+   * provider returns a single `PresentationInfoTreeNodeItem` asking the user to apply filtering to reduce the size of the
+   * hierarchy level.
+   *
+   * Specifying the limit is useful when creating unlimited size result sets is not meaningful - this allows the library
+   * to return early as soon as the limit is reached, instead of creating a very large result that's possibly too large to
+   * be useful to be displayed to end users.
+   *
+   * **Warning:** The data provider has no way of knowing whether hierarchy level filtering is enabled at the component
+   * level - API consumers, when using this attribute, should make sure to enable filtering or otherwise large hierarchy levels
+   * will become impossible to filter-down.
+   *
+   * @see [Hierarchies' filtering and limiting]($docs/presentation/hierarchies/FilteringLimiting.md)
+   * @beta
+   */
+  hierarchyLevelSizeLimit?: number;
+
   /** Should grouping nodes have a suffix with grouped nodes count. Defaults to `false`. */
   appendChildrenCountForGroupingNodes?: boolean;
 
@@ -78,7 +96,8 @@ export interface PresentationTreeDataProviderProps extends DiagnosticsProps {
  * @beta
  */
 export interface PresentationTreeDataProviderDataSourceEntryPoints {
-  getNodesCount: (requestOptions: HierarchyRequestOptions<IModelConnection, NodeKey>) => Promise<number>;
+  /** @deprecated in 4.0 The entry point is not used anymore, it's usage has been replaced by [[getNodesAndCount]]. */
+  getNodesCount?: (requestOptions: HierarchyRequestOptions<IModelConnection, NodeKey>) => Promise<number>;
   getNodesAndCount: (requestOptions: Paged<HierarchyRequestOptions<IModelConnection, NodeKey>>) => Promise<{ nodes: Node[], count: number }>;
   getFilteredNodePaths: (requestOptions: FilterByTextHierarchyRequestOptions<IModelConnection>) => Promise<NodePathElement[]>;
 }
@@ -95,6 +114,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
   private _dataSource: PresentationTreeDataProviderDataSourceEntryPoints;
   private _diagnosticsOptions?: ClientDiagnosticsOptions;
   private _nodesCreateProps: CreateTreeNodeItemProps;
+  public hierarchyLevelSizeLimit?: number;
 
   /** Constructor. */
   public constructor(props: PresentationTreeDataProviderProps) {
@@ -107,7 +127,6 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
     };
 
     this._dataSource = {
-      getNodesCount: async (requestOptions: HierarchyRequestOptions<IModelConnection, NodeKey>) => Presentation.presentation.getNodesCount(requestOptions),
       getNodesAndCount: async (requestOptions: Paged<HierarchyRequestOptions<IModelConnection, NodeKey>>) => Presentation.presentation.getNodesAndCount(requestOptions),
       getFilteredNodePaths: async (requestOptions: FilterByTextHierarchyRequestOptions<IModelConnection>) => Presentation.presentation.getFilteredNodePaths(requestOptions),
       ...props.dataSourceOverrides,
@@ -117,6 +136,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
       this._getNodesAndCount.cache.keys.length = 0;
     });
     this._diagnosticsOptions = createDiagnosticsOptions(props);
+    this.hierarchyLevelSizeLimit = props.hierarchyLevelSizeLimit;
   }
 
   /** Destructor. Must be called to clean up.  */
@@ -148,10 +168,15 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
   }
 
   /** Called to get options for node requests */
-  private createRequestOptions<TNodeKey = NodeKey>(parentKey: TNodeKey | undefined): HierarchyRequestOptions<IModelConnection, TNodeKey> {
+  private createRequestOptions<TNodeKey = NodeKey>(parentKey: TNodeKey | undefined, pageOptions?: PageOptions, instanceFilter?: InstanceFilterDefinition): HierarchyRequestOptions<IModelConnection, TNodeKey> {
+    const isHierarchyLevelLimitingSupported = !!this.hierarchyLevelSizeLimit && parentKey;
+    const isPaging = pageOptions && (pageOptions.start || pageOptions.size !== undefined);
     return {
       ...this.createBaseRequestOptions(),
       ...(parentKey ? { parentKey } : undefined),
+      ...(isHierarchyLevelLimitingSupported ? { sizeLimit: this.hierarchyLevelSizeLimit } : undefined),
+      ...(isPaging ? { paging: pageOptionsUiToPresentation(pageOptions) } : undefined),
+      ...(instanceFilter ? { instanceFilter } : undefined),
     };
   }
 
@@ -184,19 +209,13 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
    */
   public async getNodesCount(parentNode?: TreeNodeItem): Promise<number> {
     const instanceFilter = await getFilterDefinition(this.imodel, parentNode);
-    if (this.pagingSize !== undefined)
-      return (await this._getNodesAndCount(parentNode, { start: 0, size: this.pagingSize }, instanceFilter)).count;
-
-    const parentKey = parentNode ? this.getNodeKey(parentNode) : undefined;
-    const requestOptions: HierarchyRequestOptions<IModelConnection, NodeKey> = { ...this.createRequestOptions(parentKey), instanceFilter };
-    return this._dataSource.getNodesCount(requestOptions);
+    return (await this._getNodesAndCount(parentNode, { start: 0, size: this.pagingSize }, instanceFilter)).count;
   }
 
   private _getNodesAndCount = memoize(async (parentNode?: TreeNodeItem, pageOptions?: PageOptions, instanceFilter?: InstanceFilterDefinition): Promise<{ nodes: TreeNodeItem[], count: number }> => {
     const parentKey = parentNode ? this.getNodeKey(parentNode) : undefined;
-    const requestOptions: Paged<HierarchyRequestOptions<IModelConnection, NodeKey>> = { ...this.createRequestOptions(parentKey), paging: pageOptionsUiToPresentation(pageOptions), instanceFilter };
-    const result = await this._dataSource.getNodesAndCount(requestOptions);
-    return createNodesAndCountResult(result.nodes, result.count, this.createBaseRequestOptions(), parentNode, this._nodesCreateProps);
+    const requestOptions = this.createRequestOptions(parentKey, pageOptions, instanceFilter);
+    return createNodesAndCountResult(async () => this._dataSource.getNodesAndCount(requestOptions), this.createBaseRequestOptions(), parentNode, this._nodesCreateProps);
   }, { isMatchingKey: MemoizationHelpers.areNodesRequestsEqual as any });
 
   /**
@@ -205,7 +224,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
    */
   public async getFilteredNodePaths(filter: string): Promise<NodePathElement[]> {
     return this._dataSource.getFilteredNodePaths({
-      ...this.createRequestOptions<never>(undefined),
+      ...this.createBaseRequestOptions(),
       filterText: filter,
     });
   }
@@ -217,21 +236,42 @@ function getFilterDefinition(imodel: IModelConnection, node?: TreeNodeItem) {
   return convertToInstanceFilterDefinition(node.filtering.active.filter, imodel);
 }
 
-function createNodesAndCountResult(
-  nodes: Node[],
-  count: number,
+async function createNodesAndCountResult(
+  resultFactory: () => Promise<{ nodes: Node[], count: number }>,
   baseOptions: RequestOptionsWithRuleset<IModelConnection>,
   parentNode?: TreeNodeItem,
   nodesCreateProps?: CreateTreeNodeItemProps
 ) {
-  if (nodes.length > 0 || !parentNode || !isPresentationTreeNodeItem(parentNode) || !parentNode.filtering || !parentNode.filtering.active) {
+  try {
+    const result = await resultFactory();
+    const { nodes, count } = result;
+    const isParentFiltered = parentNode && isPresentationTreeNodeItem(parentNode) && parentNode.filtering?.active;
+    if (nodes.length === 0 && isParentFiltered)
+      return createStatusNodeResult(parentNode, "tree.no-filtered-children");
     return { nodes: createTreeItems(nodes, baseOptions, parentNode, nodesCreateProps), count };
+  } catch (e) {
+    if (e instanceof PresentationError) {
+      switch (e.errorNumber) {
+        case PresentationStatus.Canceled:
+          return { nodes: [], count: 0 };
+        case PresentationStatus.BackendTimeout:
+          return createStatusNodeResult(parentNode, "tree.timeout");
+        case PresentationStatus.ResultSetTooLarge:
+          return createStatusNodeResult(parentNode, "tree.result-set-too-large");
+      }
+    }
+    // istanbul ignore else
+    if (e instanceof Error) {
+      // eslint-disable-next-line no-console
+      console.error(`Error creating nodes: ${e.toString()}`);
+    }
+    return createStatusNodeResult(parentNode, "tree.unknown-error");
   }
+}
 
-  // TODO: handle case when requesting children for node with too many children
-
+function createStatusNodeResult(parentNode: TreeNodeItem | undefined, labelKey: string) {
   return {
-    nodes: [createInfoNode(parentNode, translate("tree.no-filtered-children"))],
+    nodes: [createInfoNode(parentNode, translate(labelKey))],
     count: 1,
   };
 }
@@ -260,8 +300,10 @@ function createTreeItems(
   return items;
 }
 
-function createInfoNode(parentNode: PresentationTreeNodeItem, message: string): PresentationInfoTreeNodeItem {
-  const id = `${createTreeNodeId(parentNode.key)}/info-node`;
+function createInfoNode(parentNode: TreeNodeItem | undefined, message: string): PresentationInfoTreeNodeItem {
+  const id = parentNode
+    ? `${parentNode.id}/info-node`
+    : `/info-node/${message}`;
   return {
     id,
     label: PropertyRecord.fromString(message),

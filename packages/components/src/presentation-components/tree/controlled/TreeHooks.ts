@@ -74,27 +74,10 @@ export interface PresentationTreeNodeLoaderResult {
 export function usePresentationTreeNodeLoader(
   props: PresentationTreeNodeLoaderProps,
 ): PresentationTreeNodeLoaderResult {
+  const { enableHierarchyAutoUpdate, seedTreeModel, ...rest } = props;
   const dataProviderProps: PresentationTreeDataProviderProps = useMemo(
-    () => ({
-      imodel: props.imodel,
-      ruleset: props.ruleset,
-      pagingSize: props.pagingSize,
-      appendChildrenCountForGroupingNodes: props.appendChildrenCountForGroupingNodes,
-      dataSourceOverrides: props.dataSourceOverrides,
-      ruleDiagnostics: props.ruleDiagnostics,
-      devDiagnostics: props.devDiagnostics,
-      customizeTreeNodeItem: props.customizeTreeNodeItem,
-    }),
-    [
-      props.appendChildrenCountForGroupingNodes,
-      props.dataSourceOverrides,
-      props.devDiagnostics,
-      props.imodel,
-      props.pagingSize,
-      props.ruleDiagnostics,
-      props.ruleset,
-      props.customizeTreeNodeItem,
-    ],
+    () => rest,
+    Object.values(rest), // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const firstRenderRef = useRef(true);
@@ -103,7 +86,7 @@ export function usePresentationTreeNodeLoader(
     setTreeNodeLoaderState,
   ] = useResettableState<TreeNodeLoaderState>(
     () => ({
-      modelSource: new TreeModelSource(new MutableTreeModel(firstRenderRef.current ? props.seedTreeModel : undefined)),
+      modelSource: new TreeModelSource(new MutableTreeModel(firstRenderRef.current ? seedTreeModel : undefined)),
       rulesetRegistration: new RulesetRegistrationHelper(dataProviderProps.ruleset),
       dataProvider: new PresentationTreeDataProvider({
         ...dataProviderProps,
@@ -117,11 +100,11 @@ export function usePresentationTreeNodeLoader(
   useEffect(() => { return () => rulesetRegistration.dispose(); }, [rulesetRegistration]);
   useEffect(() => { return () => dataProvider.dispose(); }, [dataProvider]);
 
-  const nodeLoader = usePagedTreeNodeLoader(dataProvider, props.pagingSize, modelSource);
+  const nodeLoader = usePagedTreeNodeLoader(dataProvider, rest.pagingSize, modelSource);
 
   const params = {
-    enable: !!props.enableHierarchyAutoUpdate,
-    pageSize: props.pagingSize,
+    enable: !!enableHierarchyAutoUpdate,
+    pageSize: rest.pagingSize,
     modelSource,
     dataProviderProps,
     setTreeNodeLoaderState,
@@ -129,7 +112,7 @@ export function usePresentationTreeNodeLoader(
   const onItemsRendered = useModelSourceUpdateOnIModelHierarchyUpdate({
     ...params,
     dataProvider,
-    treeNodeItemCreationProps: { appendChildrenCountForGroupingNodes: props.appendChildrenCountForGroupingNodes },
+    treeNodeItemCreationProps: { appendChildrenCountForGroupingNodes: dataProviderProps.appendChildrenCountForGroupingNodes },
   });
   useModelSourceUpdateOnRulesetModification(params);
   useModelSourceUpdateOnRulesetVariablesChange({ ...params, rulesetId: dataProvider.rulesetId });
