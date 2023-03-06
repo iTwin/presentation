@@ -128,7 +128,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
   /** Id of the ruleset used by this data provider */
   public get rulesetId(): string { return this._rulesetRegistration.rulesetId; }
 
-  /** [IModelConnection]$(core-frontend) used by this data provider */
+  /** [IModelConnection]($core-frontend) used by this data provider */
   public get imodel(): IModelConnection { return this._imodel; }
 
   /**
