@@ -68,7 +68,7 @@ export function DiagnosticsSelector(props: DiagnosticsSelectorProps) {
         size="small"
       />
       <ToggleSwitch label="Measure performance" labelPosition="right" checked={shouldMeasurePerformance} onChange={handleMeasurePerformanceChange} />
-    </MenuExtraContent>
+    </MenuExtraContent>,
   ];
 
   return (

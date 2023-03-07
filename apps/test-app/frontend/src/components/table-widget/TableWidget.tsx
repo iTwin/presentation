@@ -3,10 +3,13 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
+import { useCallback } from "react";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ProgressRadial, Table } from "@itwin/itwinui-react";
-import { TableCellRenderer, TableColumnDefinition, TableRowDefinition, usePresentationTableWithUnifiedSelection } from "@itwin/presentation-components";
+import {
+  TableCellRenderer, TableColumnDefinition, TableRowDefinition, usePresentationTableWithUnifiedSelection,
+} from "@itwin/presentation-components";
 
 export interface TableWidgetProps {
   imodel: IModelConnection;
@@ -38,7 +41,7 @@ function PresentationTable(props: PresentationTableProps) {
     rowMapper: mapTableRow,
   });
 
-  const onSort = useCallback((tableState: any) => {
+  const onSort = useCallback((tableState) => {
     const sortBy = tableState.sortBy[0];
     sort(sortBy?.id, sortBy?.desc);
   }, [sort]);
