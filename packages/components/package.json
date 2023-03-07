@@ -57,13 +57,13 @@
     "rxjs": "^6.6.2"
   },
   "peerDependencies": {
-    "@itwin/appui-abstract": "^3.6.0 || 4.0.0-dev.37",
-    "@itwin/components-react": "^3.6.0 || 4.0.0-dev.11",
+    "@itwin/appui-abstract": "^3.6.0 || ^4.0.0-dev.37",
+    "@itwin/components-react": "^4.0.0-dev.11",
     "@itwin/core-bentley": "^3.6.0 || ^4.0.0-dev.7",
     "@itwin/core-common": "^3.6.0 || ^4.0.0-dev.7",
     "@itwin/core-frontend": "^3.6.0 || ^4.0.0-dev.7",
-    "@itwin/core-react": "^3.6.0 || 4.0.0-dev.11",
-    "@itwin/imodel-components-react": "^3.6.0 || 4.0.0-dev.11",
+    "@itwin/core-react": "^4.0.0-dev.11",
+    "@itwin/imodel-components-react": "^4.0.0-dev.11",
     "@itwin/presentation-common": "^3.6.0 || ^4.0.0-dev.7",
     "@itwin/presentation-frontend": "^3.6.0 || ^4.0.0-dev.7",
     "react": "^17.0.0",

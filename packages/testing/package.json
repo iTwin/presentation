@@ -38,7 +38,7 @@
   },
   "peerDependencies": {
     "@itwin/appui-abstract": "^3.6.0 || ^4.0.0-dev.37",
-    "@itwin/components-react": "^3.6.0 || ^4.0.0-dev.11",
+    "@itwin/components-react": "^4.0.0-dev.11",
     "@itwin/core-backend": "^3.6.0 || ^4.0.0-dev.7",
     "@itwin/core-bentley": "^3.6.0 || ^4.0.0-dev.7",
     "@itwin/core-common": "^3.6.0 || ^4.0.0-dev.7",
@@ -49,7 +49,7 @@
     "@itwin/presentation-components": "workspace:^"
   },
   "devDependencies": {
-    "@itwin/appui-abstract": "4.0.0-dev.37",
+    "@itwin/appui-abstract": "^4.0.0-dev.37",
     "@itwin/build-tools": "^4.0.0-dev.37",
     "@itwin/components-react": "^4.0.0-dev.11",
     "@itwin/core-backend": "^4.0.0-dev.37",

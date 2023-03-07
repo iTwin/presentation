@@ -24,7 +24,7 @@ importers:
 
   apps/test-app/backend:
     specifiers:
-      '@itwin/appui-abstract': 4.0.0-dev.37
+      '@itwin/appui-abstract': ^4.0.0-dev.37
       '@itwin/build-tools': ^4.0.0-dev.37
       '@itwin/core-backend': ^4.0.0-dev.37
       '@itwin/core-bentley': ^4.0.0-dev.37
@@ -425,7 +425,7 @@ importers:
 
   packages/testing:
     specifiers:
-      '@itwin/appui-abstract': 4.0.0-dev.37
+      '@itwin/appui-abstract': ^4.0.0-dev.37
       '@itwin/build-tools': ^4.0.0-dev.37
       '@itwin/components-react': ^4.0.0-dev.11
       '@itwin/core-backend': ^4.0.0-dev.37
