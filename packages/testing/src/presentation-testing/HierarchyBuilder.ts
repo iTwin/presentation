@@ -104,7 +104,7 @@ export class HierarchyBuilder {
 
   /**
    * Create a hierarchy using the supplied presentation ruleset.
-   * @param rulesetOrId Either a [[Ruleset]] object or a ruleset id.
+   * @param rulesetOrId Either a [Ruleset]($presentation-common) object or a ruleset id.
    */
   public async createHierarchy(rulesetOrId: Ruleset | string): Promise<HierarchyNode[]> {
     if (typeof rulesetOrId === "string")

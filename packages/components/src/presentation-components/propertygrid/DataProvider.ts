@@ -42,7 +42,7 @@ export const DEFAULT_PROPERTY_GRID_RULESET: Ruleset = require("./DefaultProperty
 export type IPresentationPropertyDataProvider = IPropertyDataProvider & IContentDataProvider;
 
 /**
- * Properties for creating a `PresentationPropertyDataProvider` instance.
+ * Properties for creating a [[PresentationPropertyDataProvider]] instance.
  * @public
  */
 export interface PresentationPropertyDataProviderProps extends DiagnosticsProps {
@@ -245,7 +245,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
   }
 
   /**
-   * Get keys of instances which were used to create given [[PropertyRecord]].
+   * Get keys of instances which were used to create given [PropertyRecord]($appui-abstract).
    */
   public async getPropertyRecordInstanceKeys(record: PropertyRecord): Promise<InstanceKey[]> {
     const content = await this.getContent();
