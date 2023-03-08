@@ -10,12 +10,10 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
         core-version: [3.6.0, nightly]
-        ui-version: [3.6.0, nightly]
-        exclude:
-          - core-version: nightly
-            ui-version: 3.6.0
+        ui-version: [nightly]
 
     name: Build with Core - ${{ matrix.core-version }}, UI - ${{ matrix.ui-version }}
     steps:
