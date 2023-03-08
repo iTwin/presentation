@@ -14,7 +14,7 @@ import { SelectionHandler } from "@itwin/presentation-frontend";
  * @public
  */
 export interface IUnifiedSelectionComponent {
-  /** [[IModelConnection]] used by this data provider */
+  /** [IModelConnection]($core-frontend) used by this data provider */
   readonly imodel: IModelConnection;
 
   /** Selection handler used by this component */

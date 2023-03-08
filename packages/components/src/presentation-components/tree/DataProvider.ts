@@ -148,7 +148,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
   /** Id of the ruleset used by this data provider */
   public get rulesetId(): string { return this._rulesetRegistration.rulesetId; }
 
-  /** [[IModelConnection]] used by this data provider */
+  /** [IModelConnection]($core-frontend) used by this data provider */
   public get imodel(): IModelConnection { return this._imodel; }
 
   /**
@@ -181,7 +181,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
   }
 
   /**
-   * Returns a [[NodeKey]] from given [[TreeNodeItem]].
+   * Returns a [NodeKey]($presentation-common) from given [TreeNodeItem]($components-react).
    * **Warning:** the `node` must be created by this data provider.
    */
   public getNodeKey(node: TreeNodeItem): NodeKey {
