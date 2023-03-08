@@ -84,7 +84,7 @@ describe("PresentationInstanceFilterDialog", () => {
       isOpen={true}
     />);
 
-    const applyButton = container.querySelector<HTMLInputElement>(".presentation-instance-filter-button-bar .iui-high-visibility:disabled");
+    const applyButton = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
     expect(applyButton?.disabled).to.be.true;
 
     // select property
