@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
         core-version: [3.6.0, nightly]
         ui-version: [nightly]
