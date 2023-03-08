@@ -102,7 +102,7 @@ function TagLabel({ children, ...props }: any) {
 }
 
 function TagRemove(props: any) {
-  return <components.MultiValueRemove {...props} innerProps={{ ...props.innerProps, className: "iui-button iui-tag-button", ["data-iui-variant"]: "borderless", ["data-iui-size"]: "size" }}>
+  return <components.MultiValueRemove {...props} innerProps={{ ...props.innerProps, className: "iui-button iui-tag-button", ["data-iui-variant"]: "borderless", ["data-iui-size"]: "small" }}>
     <SvgCloseSmall className="iui-button-icon" aria-hidden />
   </components.MultiValueRemove>;
 }
