@@ -3,11 +3,8 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
-import "./DiagnosticsSelector.css";
-import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
-import { PointProps } from "@itwin/appui-abstract";
-import { ContextMenuDirection, GlobalContextMenu } from "@itwin/core-react";
-import { LabeledSelect, ToggleSwitch } from "@itwin/itwinui-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Button, DropdownMenu, LabeledSelect, MenuExtraContent, ToggleSwitch } from "@itwin/itwinui-react";
 import { DiagnosticsLoggerSeverity } from "@itwin/presentation-common";
 import { DiagnosticsProps } from "@itwin/presentation-components";
 import { consoleDiagnosticsHandler } from "@itwin/presentation-frontend";
@@ -40,51 +37,43 @@ export function DiagnosticsSelector(props: DiagnosticsSelectorProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const [position, setPosition] = useState<PointProps>();
-  const onClose = useCallback(() => {
-    setPosition(undefined);
-    onDiagnosticsOptionsChanged(result);
-  }, [onDiagnosticsOptionsChanged, result]);
   const handleMeasurePerformanceChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     toggleMeasurePerformance(e.target.checked);
   }, []);
 
+  const menuItems = () => [
+    <MenuExtraContent key={0}>
+      <LabeledSelect
+        label="Editor severity"
+        options={[
+          { value: "error", label: "Error" },
+          { value: "warning", label: "Warning" },
+          { value: "info", label: "Info" },
+        ]}
+        value={editorSeverity}
+        onChange={(newValue: string) => setEditorSeverity(newValue)}
+        size="small"
+      />
+      <LabeledSelect
+        label="Dev severity"
+        options={[
+          { value: "error", label: "Error" },
+          { value: "warning", label: "Warning" },
+          { value: "info", label: "Info" },
+          { value: "debug", label: "Debug" },
+          { value: "trace", label: "Trace" },
+        ]}
+        value={devSeverity}
+        onChange={(newValue: string) => setDevSeverity(newValue)}
+        size="small"
+      />
+      <ToggleSwitch label="Measure performance" labelPosition="right" checked={shouldMeasurePerformance} onChange={handleMeasurePerformanceChange} />
+    </MenuExtraContent>,
+  ];
+
   return (
-    <Fragment>
-      <button onClick={(e) => setPosition({ x: e.clientX, y: e.clientY })}>Diagnostics</button>
-      <GlobalContextMenu
-        className="DiagnosticsSelector"
-        opened={undefined !== position}
-        onOutsideClick={onClose}
-        onEsc={onClose}
-        identifier="Diagnostics"
-        x={position?.x ?? 0}
-        y={position?.y ?? 0}
-        direction={ContextMenuDirection.BottomLeft}
-        autoflip={false}
-      >
-        <LabeledSelect label="Editor severity"
-          options={[
-            { value: "error", label: "Error" },
-            { value: "warning", label: "Warning" },
-            { value: "info", label: "Info" },
-          ]}
-          value={editorSeverity}
-          onChange={(newValue: string) => setEditorSeverity(newValue)}
-          size="small" />
-        <LabeledSelect label="Dev severity"
-          options={[
-            { value: "error", label: "Error" },
-            { value: "warning", label: "Warning" },
-            { value: "info", label: "Info" },
-            { value: "debug", label: "Debug" },
-            { value: "trace", label: "Trace" },
-          ]}
-          value={devSeverity}
-          onChange={(newValue: string) => setDevSeverity(newValue)}
-          size="small" />
-        <ToggleSwitch label="Measure performance" labelPosition="right" checked={shouldMeasurePerformance} onChange={handleMeasurePerformanceChange} />
-      </GlobalContextMenu>
-    </Fragment>
+    <DropdownMenu menuItems={menuItems} onClickOutside={() => {}} onHide={() => onDiagnosticsOptionsChanged(result)}>
+      <Button size="small">Diagnostics</Button>
+    </DropdownMenu>
   );
 }

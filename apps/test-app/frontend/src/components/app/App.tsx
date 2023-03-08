@@ -10,7 +10,7 @@ import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Geometry } from "@itwin/core-geometry";
 import { UnitSystemKey } from "@itwin/core-quantity";
 import { ElementSeparator, Orientation, RatioChangeResult } from "@itwin/core-react";
-import { ToggleSwitch } from "@itwin/itwinui-react";
+import { ThemeProvider, ToggleSwitch } from "@itwin/itwinui-react";
 import { UnifiedSelectionContextProvider } from "@itwin/presentation-components";
 import { Presentation, SelectionChangeEventArgs } from "@itwin/presentation-frontend";
 import { MyAppFrontend, MyAppSettings } from "../../api/MyAppFrontend";
@@ -215,18 +215,20 @@ export default class App extends Component<{}, State> {
       imodelComponents = this.renderIModelComponents(this.state.imodel, this.state.currentRulesetId);
 
     return (
-      <div className="app">
-        <div className="app-header">
-          <h2>{IModelApp.localization.getLocalizedString("Sample:welcome-message")}</h2>
+      <ThemeProvider theme="os">
+        <div className="app">
+          <div className="app-header">
+            <h2>{IModelApp.localization.getLocalizedString("Sample:welcome-message")}</h2>
+          </div>
+          <div className="app-pickers">
+            <IModelSelector onIModelSelected={this.onIModelSelected} activeIModelPath={this.state.imodelPath} />
+            <RulesetSelector onRulesetSelected={this.onRulesetSelected} activeRulesetId={this.state.currentRulesetId} />
+            <UnitSystemSelector selectedUnitSystem={this.state.activeUnitSystem} onUnitSystemSelected={this.onUnitSystemSelected} />
+            <ToggleSwitch label="Persist settings" labelPosition="right" checked={this.state.persistSettings} onChange={this.onPersistSettingsValueChange} />
+          </div>
+          {imodelComponents}
         </div>
-        <div className="app-pickers">
-          <IModelSelector onIModelSelected={this.onIModelSelected} activeIModelPath={this.state.imodelPath} />
-          <RulesetSelector onRulesetSelected={this.onRulesetSelected} activeRulesetId={this.state.currentRulesetId} />
-          <UnitSystemSelector selectedUnitSystem={this.state.activeUnitSystem} onUnitSystemSelected={this.onUnitSystemSelected} />
-          <ToggleSwitch label="Persist settings" labelPosition="right" checked={this.state.persistSettings} onChange={this.onPersistSettingsValueChange} />
-        </div>
-        {imodelComponents}
-      </div>
+      </ThemeProvider>
     );
   }
 }

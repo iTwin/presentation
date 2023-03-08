@@ -15,13 +15,14 @@
     "docs": "betools extract --fileExt=ts --extractFrom=./src --recursive --out=../../../build/docs/extract"
   },
   "dependencies": {
-    "@itwin/build-tools": "^4.0.0-dev.18",
-    "@itwin/core-bentley": "^4.0.0-dev.18",
-    "@itwin/core-common": "^4.0.0-dev.18",
-    "@itwin/core-geometry": "^4.0.0-dev.18",
-    "@itwin/core-quantity": "^4.0.0-dev.18",
-    "@itwin/eslint-plugin": "^4.0.0-dev.18",
-    "@itwin/presentation-common": "^4.0.0-dev.18",
+    "@itwin/build-tools": "^4.0.0-dev.37",
+    "@itwin/core-bentley": "^4.0.0-dev.37",
+    "@itwin/core-common": "^4.0.0-dev.37",
+    "@itwin/core-geometry": "^4.0.0-dev.37",
+    "@itwin/core-quantity": "^4.0.0-dev.37",
+    "@itwin/ecschema-metadata": "^4.0.0-dev.37",
+    "@itwin/eslint-plugin": "^4.0.0-dev.30",
+    "@itwin/presentation-common": "^4.0.0-dev.37",
     "eslint": "^7.11.0",
     "rimraf": "^3.0.2",
     "typescript": "~4.4.0"
