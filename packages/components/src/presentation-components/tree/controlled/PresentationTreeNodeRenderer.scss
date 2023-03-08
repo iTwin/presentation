@@ -2,20 +2,16 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
-@import "~@itwin/itwinui-css/scss/style/theme";
-@import "~@itwin/core-react/lib/cjs/core-react/style/themecolors";
 
 .presentation-components-info-node {
-  @include themed {
-    color: t(iui-text-color-muted);
-  }
+  color: var(--iui-color-text-muted);
 }
 
 .presentation-components-node {
   .presentation-components-node-action-buttons {
     visibility: hidden;
     position: sticky;
-    background-color: $buic-background-control;
+    background-color: var(--iui-color-background);
     right: 0;
     display: flex;
 

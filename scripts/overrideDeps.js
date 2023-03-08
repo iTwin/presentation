@@ -14,6 +14,7 @@ const yargs = require("yargs");
 
 // list of packages from `itwinjs-core`
 const corePackages = [
+  "@itwin/appui-abstract",
   "@itwin/build-tools",
   "@itwin/core-backend",
   "@itwin/core-bentley",
@@ -35,7 +36,6 @@ const corePackages = [
 // list of packages from `appui`
 const uiPackages = [
   "@itwin/core-react",
-  "@itwin/appui-abstract",
   "@itwin/components-react",
   "@itwin/imodel-components-react",
 ];

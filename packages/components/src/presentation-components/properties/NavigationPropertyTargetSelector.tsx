@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import "@itwin/itwinui-css/css/tag.css";
-import "@itwin/itwinui-css/css/inputs.css";
+import "@itwin/itwinui-css/css/input.css";
 import "@itwin/itwinui-css/css/menu.css";
 import classnames from "classnames";
 import { Children, forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
@@ -84,9 +84,10 @@ export const NavigationPropertyTargetSelector = forwardRef<NavigationPropertyTar
       styles={{
         control: () => ({ height: "27px" }),
         container: () => ({ width: "auto" }),
-        valueContainer: () => ({ height: "27px" }),
+        valueContainer: () => ({ height: "27px", ["--_iui-select-padding-block"]: 0, ["--_iui-select-min-height"]: "var(--iui-component-height-small)" }),
         menu: () => ({ position: "absolute", zIndex: 9999, width }),
-        option: () => ({ whiteSpace: "nowrap" }),
+        menuList: (style: any) => ({ ...style, padding: 0 }),
+        option: () => ({ whiteSpace: "nowrap", width: "max-content", minWidth: "100%" }),
         placeholder: (style: any) => ({ ...style, position: "relative", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }),
         dropdownIndicator: () => ({ backgroundColor: "var(--iui-color-background)" }),
       }}
@@ -133,7 +134,7 @@ function TargetSelectControl<TOption extends OptionTypeBase>({ children, ...prop
 }
 
 function TargetSelectValueContainer<TOption extends OptionTypeBase>({ children, ...props }: ValueContainerProps<TOption>) {
-  return <components.ValueContainer {...props} className="iui-select-button iui-small" >
+  return <components.ValueContainer {...props} className="iui-select-button">
     {children}
   </components.ValueContainer>;
 }
@@ -151,7 +152,7 @@ function TargetSelectOption<TOption extends OptionTypeBase>({ children: _, ...pr
   });
 
   return <components.Option {...props} className={className} >
-    <span>{props.selectProps.getOptionLabel && props.selectProps.getOptionLabel(props.data)} </span>
+    {props.selectProps.getOptionLabel && props.selectProps.getOptionLabel(props.data)}
   </components.Option>;
 }
 

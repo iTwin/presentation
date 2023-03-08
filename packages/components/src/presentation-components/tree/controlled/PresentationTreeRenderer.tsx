@@ -63,7 +63,7 @@ export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
             onClose={() => { setFilterNode(undefined); }}
             filteringInfo={filterNode.filtering}
           />,
-          divRef.current.ownerDocument.body)
+          divRef.current.ownerDocument.body.querySelector(".iui-root") ?? divRef.current.ownerDocument.body)
           : null
       }
     </div>
