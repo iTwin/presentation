@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { fireEvent, render, waitFor } from "@testing-library/react";
+import { fireEvent, render } from "@testing-library/react";
 import { MultiTagSelect } from "../../presentation-components/instance-filter-builder/MultiTagSelect";
 
 describe("MultiTagSelect", () => {
@@ -19,7 +19,7 @@ describe("MultiTagSelect", () => {
     value: "option3",
   }];
 
-  it("renders with selected tags", async () => {
+  it("renders with selected tags", () => {
     const { container } = render(<MultiTagSelect
       options={options}
       getOptionLabel={(option) => option.label}
@@ -27,13 +27,11 @@ describe("MultiTagSelect", () => {
       value={[options[1], options[2]]}
     />);
 
-    await waitFor(() => {
-      const tags = container.querySelectorAll(".iui-tag");
-      expect(tags).to.have.lengthOf(2);
-    });
+    const tags = container.querySelectorAll(".iui-tag");
+    expect(tags).to.have.lengthOf(2);
   });
 
-  it("render dropdown menu", async () => {
+  it("render dropdown menu", () => {
     const { container, getByTestId } = render(<MultiTagSelect
       options={options}
       getOptionLabel={(option) => option.label}
@@ -42,12 +40,10 @@ describe("MultiTagSelect", () => {
       hideSelectedOptions={false}
     />);
 
-    const dropdownIndicator = await waitFor(() => getByTestId("multi-tag-select-dropdownIndicator"));
+    const dropdownIndicator = getByTestId("multi-tag-select-dropdownIndicator");
     fireEvent.mouseDown(dropdownIndicator);
 
-    await waitFor(() => {
-      const dropdownMenu = container.querySelector(".iui-menu");
-      expect(dropdownMenu).to.not.be.null;
-    });
+    const dropdownMenu = container.querySelector(".iui-menu");
+    expect(dropdownMenu).to.not.be.null;
   });
 });

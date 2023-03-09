@@ -117,19 +117,17 @@ describe("PresentationInstanceFilterDialog", () => {
     expect(applyButton?.disabled).to.be.false;
     fireEvent.click(applyButton!);
 
-    await waitFor(() => {
-      expect(spy).to.be.calledOnceWith({
-        filter: {
-          field: propertiesField,
-          operator: PropertyFilterRuleOperator.IsNotNull,
-          value: undefined,
-        },
-        usedClasses: [classInfo],
-      });
+    expect(spy).to.be.calledOnceWith({
+      filter: {
+        field: propertiesField,
+        operator: PropertyFilterRuleOperator.IsNotNull,
+        value: undefined,
+      },
+      usedClasses: [classInfo],
     });
   });
 
-  it("renders custom title", async () => {
+  it("renders custom title", () => {
     const spy = sinon.spy();
     const title = "custom title";
 
@@ -143,10 +141,10 @@ describe("PresentationInstanceFilterDialog", () => {
       initialFilter={initialFilter}
     />);
 
-    await waitFor(() => { expect(queryByText(title)).to.not.be.null; });
+    expect(queryByText(title)).to.not.be.null;
   });
 
-  it("renders filterResultCountRenderer", async () => {
+  it("renders filterResultCountRenderer", () => {
     const spy = sinon.spy();
     const count = "custom count";
 
@@ -159,7 +157,7 @@ describe("PresentationInstanceFilterDialog", () => {
       isOpen={true}
     />);
 
-    await waitFor(() => { expect(queryByText(count)).to.not.be.null; });
+    expect(queryByText(count)).to.not.be.null;
   });
 
   it("renders with lazy-loaded descriptor", async () => {

@@ -44,7 +44,7 @@ describe("InstanceFilter", () => {
     sinon.restore();
   });
 
-  it("invokes 'onClassSelected' when non selected class is clicked", async () => {
+  it("invokes 'onClassSelected' when non selected class is clicked", () => {
     const spy = sinon.spy();
     const { container, getByTestId } = render(<InstanceFilterBuilder
       classes={classInfos}
@@ -58,18 +58,14 @@ describe("InstanceFilter", () => {
 
     fireEvent.mouseDown(getByTestId("multi-tag-select-dropdownIndicator"));
 
-    const option = await waitFor(() => {
-      const element = container.querySelector(".iui-menu-item");
-      expect(element).to.not.be.null;
-      return element;
-    });
+    const option = container.querySelector(".iui-menu-item");
+    expect(option).to.not.be.null;
 
     fireEvent.click(option!);
-
-    await waitFor(() => expect(spy).to.be.calledOnceWith(classInfos[0]));
+    expect(spy).to.be.calledOnceWith(classInfos[0]);
   });
 
-  it("invokes 'onClassDeselected' when selected class is clicked", async () => {
+  it("invokes 'onClassDeselected' when selected class is clicked", () => {
     const spy = sinon.spy();
     const { container, getByTestId } = render(<InstanceFilterBuilder
       classes={classInfos}
@@ -83,18 +79,14 @@ describe("InstanceFilter", () => {
 
     fireEvent.mouseDown(getByTestId("multi-tag-select-dropdownIndicator"));
 
-    const option = await waitFor(() => {
-      const element = container.querySelector(".iui-menu-item");
-      expect(element).to.not.be.null;
-      return element;
-    });
+    const option = container.querySelector(".iui-menu-item");
+    expect(option).to.not.be.null;
 
     fireEvent.click(option!);
-
-    await waitFor(() => expect(spy).to.be.calledOnceWith(classInfos[0]));
+    expect(spy).to.be.calledOnceWith(classInfos[0]);
   });
 
-  it("invokes 'onClassDeselected' when remove tag button is clicked", async () => {
+  it("invokes 'onClassDeselected' when remove tag button is clicked", () => {
     const spy = sinon.spy();
     const { container } = render(<InstanceFilterBuilder
       classes={classInfos}
@@ -106,18 +98,14 @@ describe("InstanceFilter", () => {
       onFilterChanged={() => { }}
     />);
 
-    const removeTagButton = await waitFor(() => {
-      const element = container.querySelector(".iui-tag .iui-button");
-      expect(element).to.not.be.null;
-      return element;
-    });
+    const removeTagButton = container.querySelector(".iui-tag .iui-button");
+    expect(removeTagButton).to.not.be.null;
 
     fireEvent.click(removeTagButton!);
-
-    await waitFor(() => expect(spy).to.be.calledOnceWith(classInfos[0]));
+    expect(spy).to.be.calledOnceWith(classInfos[0]);
   });
 
-  it("invokes 'onClearClasses' when clear indicator is clicked", async () => {
+  it("invokes 'onClearClasses' when clear indicator is clicked", () => {
     const spy = sinon.spy();
     const { getByTestId } = render(<InstanceFilterBuilder
       classes={classInfos}
@@ -130,8 +118,7 @@ describe("InstanceFilter", () => {
     />);
 
     fireEvent.mouseDown(getByTestId("multi-tag-select-clearIndicator"));
-
-    await waitFor(() => expect(spy).to.be.calledOnce);
+    expect(spy).to.be.calledOnce;
   });
 });
 
@@ -214,20 +201,18 @@ describe("usePresentationInstanceFilteringProps", () => {
     sinon.resetBehavior();
   });
 
-  it("initializes class list from descriptor", async () => {
+  it("initializes class list from descriptor", () => {
     const { result } = renderHook(
       (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
       { initialProps });
 
-    await waitFor(
-      () => expect(result.current.classes).to.have.lengthOf(2).and.to.containSubset([
-        concreteClass1,
-        concreteClass2,
-      ])
-    );
+    expect(result.current.classes).to.have.lengthOf(2).and.to.containSubset([
+      concreteClass1,
+      concreteClass2,
+    ]);
   });
 
-  it("does not duplicate classes when descriptor contains multiple similar select classes", async () => {
+  it("does not duplicate classes when descriptor contains multiple similar select classes", () => {
     initialProps.descriptor = createTestContentDescriptor({
       selectClasses: [
         // in practice these would be different by additional attributes like path to input class
@@ -241,11 +226,9 @@ describe("usePresentationInstanceFilteringProps", () => {
       (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
       { initialProps });
 
-    await waitFor(
-      () => expect(result.current.classes).to.have.lengthOf(1).and.to.containSubset([
-        concreteClass1,
-      ])
-    );
+    expect(result.current.classes).to.have.lengthOf(1).and.to.containSubset([
+      concreteClass1,
+    ]);
   });
 
   it("updates selected classes when 'onClassSelected' is called", async () => {
@@ -254,7 +237,6 @@ describe("usePresentationInstanceFilteringProps", () => {
       { initialProps });
 
     result.current.onClassSelected(concreteClass1);
-
     await waitFor(
       () => expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([
         concreteClass1,
@@ -291,11 +273,9 @@ describe("usePresentationInstanceFilteringProps", () => {
     );
 
     result.current.onClassDeselected(concreteClass2);
-    await waitFor(
-      () => expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([
-        concreteClass1,
-      ])
-    );
+    expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([
+      concreteClass1,
+    ]);
   });
 
   it("clears selected classes when 'onClearClasses' is called", async () => {
@@ -311,7 +291,7 @@ describe("usePresentationInstanceFilteringProps", () => {
     );
 
     result.current.onClearClasses();
-    await waitFor(() =>  expect(result.current.selectedClasses).to.be.empty);
+    await waitFor(() => expect(result.current.selectedClasses).to.be.empty);
   });
 
   it("clears selected classes when new descriptor is provided", async () => {
@@ -335,7 +315,7 @@ describe("usePresentationInstanceFilteringProps", () => {
     });
     // rerender with new descriptor
     rerender({ descriptor: newDescriptor, imodel: initialProps.imodel });
-    await waitFor(() => expect(result.current.selectedClasses).to.be.empty);
+    expect(result.current.selectedClasses).to.be.empty;
   });
 
   describe("properties filtering", () => {
@@ -409,20 +389,18 @@ describe("usePresentationInstanceFilteringProps", () => {
 
       const property = result.current.properties.find((prop) => prop.displayLabel === concretePropertiesField2.label) as PropertyDescription;
       result.current.onRulePropertySelected(property);
-      await waitFor(
-        () => expect(result.current.selectedClasses).to.have.lengthOf(1).and.containSubset([
-          concreteClass2,
-        ])
-      );
+      expect(result.current.selectedClasses).to.have.lengthOf(1).and.containSubset([
+        concreteClass2,
+      ]);
     });
 
-    it("does not change selected classes when 'onPropertySelected' is invoked with invalid property", async () => {
+    it("does not change selected classes when 'onPropertySelected' is invoked with invalid property", () => {
       const { result } = renderHook(
         (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
         { initialProps });
 
       result.current.onRulePropertySelected({ name: "invalidProp", displayLabel: "InvalidProp", typename: "string" });
-      await waitFor(() => expect(result.current.selectedClasses).to.be.empty);
+      expect(result.current.selectedClasses).to.be.empty;
     });
   });
 });

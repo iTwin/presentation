@@ -100,10 +100,8 @@ describe("PresentationTreeRenderer", () => {
     expect(closeButton).to.not.be.null;
     fireEvent.click(closeButton!);
 
-    await waitFor(() => {
-      const dialog = baseElement.querySelector(".presentation-instance-filter-dialog");
-      expect(dialog).to.be.null;
-    });
+    const dialog = baseElement.querySelector(".presentation-instance-filter-dialog");
+    expect(dialog).to.be.null;
   });
 
   it("applies filter and closes dialog", async () => {

@@ -143,7 +143,7 @@ describe("PresentationInstanceFilter", () => {
     });
   });
 
-  it("renders with initial filter", async () => {
+  it("renders with initial filter", () => {
     const spy = sinon.spy();
     const { container, queryByDisplayValue } = render(<PresentationInstanceFilterBuilder
       imodel={imodelMock.object}
@@ -152,13 +152,11 @@ describe("PresentationInstanceFilter", () => {
       initialFilter={initialFilter}
     />);
 
-    await waitFor(() => {
-      const rules = container.querySelectorAll(".rule-property");
-      expect(rules.length).to.be.eq(2);
-      const rule1 = queryByDisplayValue(propertiesField.label);
-      expect(rule1).to.not.be.null;
-      const rule2 = queryByDisplayValue(propertiesField2.label);
-      expect(rule2).to.not.be.null;
-    });
+    const rules = container.querySelectorAll(".rule-property");
+    expect(rules.length).to.be.eq(2);
+    const rule1 = queryByDisplayValue(propertiesField.label);
+    expect(rule1).to.not.be.null;
+    const rule2 = queryByDisplayValue(propertiesField2.label);
+    expect(rule2).to.not.be.null;
   });
 });
