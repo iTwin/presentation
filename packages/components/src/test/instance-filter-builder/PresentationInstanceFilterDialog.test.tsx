@@ -12,7 +12,7 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Descriptor } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { fireEvent, render, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, waitFor } from "@testing-library/react";
 import { PresentationInstanceFilterDialog } from "../../presentation-components";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterBuilder";
@@ -46,6 +46,14 @@ describe("PresentationInstanceFilterDialog", () => {
 
   const imodelMock = moq.Mock.ofType<IModelConnection>();
   const onCloseEvent = new BeEvent<() => void>();
+
+  before(() => {
+    HTMLElement.prototype.scrollIntoView = () => { };
+  });
+
+  after(() => {
+    delete (HTMLElement.prototype as any).scrollIntoView;
+  });
 
   beforeEach(async () => {
     const localization = new EmptyLocalization();
@@ -87,30 +95,47 @@ describe("PresentationInstanceFilterDialog", () => {
     const applyButton = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
     expect(applyButton?.disabled).to.be.true;
 
+    // open property selector
+    act(() => {
+      const propertySelector = container.querySelector<HTMLInputElement>(".rule-property input");
+      expect(propertySelector).to.not.be.null;
+      fireEvent.focus(propertySelector!);
+    });
     // select property
-    const propertySelector = container.querySelector<HTMLInputElement>(".rule-property .iui-input");
-    expect(propertySelector).to.not.be.null;
-    propertySelector?.focus();
-    fireEvent.click(getByText(propertiesField.label));
+    act(() => {
+      fireEvent.click(getByText(propertiesField.label));
+    });
+
     // wait until property is selected
     await waitFor(() => getByDisplayValue(propertiesField.label));
+
+    // open operator selector
+    act(() => {
+      const operatorSelector = container.querySelector<HTMLInputElement>(".rule-operator .iui-select-button");
+      expect(operatorSelector).to.not.be.null;
+      fireEvent.click(operatorSelector!);
+    });
     // select operator
-    const operatorSelector = container.querySelector<HTMLInputElement>(".rule-operator .iui-select-button");
-    expect(operatorSelector).to.not.be.null;
-    fireEvent.click(operatorSelector!);
-    fireEvent.click(getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.IsNotNull)));
+    act(() => {
+      fireEvent.click(getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.IsNotNull)));
+    });
     // wait until operator is selected
     await waitFor(() => getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.IsNotNull)));
-
     expect(applyButton?.disabled).to.be.false;
-    fireEvent.click(applyButton!);
-    expect(spy).to.be.calledOnceWith({
-      filter: {
-        field: propertiesField,
-        operator: PropertyFilterRuleOperator.IsNotNull,
-        value: undefined,
-      },
-      usedClasses: [classInfo],
+
+    act(() => {
+      fireEvent.click(applyButton!);
+    });
+
+    await waitFor(() => {
+      expect(spy).to.be.calledOnceWith({
+        filter: {
+          field: propertiesField,
+          operator: PropertyFilterRuleOperator.IsNotNull,
+          value: undefined,
+        },
+        usedClasses: [classInfo],
+      });
     });
   });
 
@@ -128,7 +153,7 @@ describe("PresentationInstanceFilterDialog", () => {
       initialFilter={initialFilter}
     />);
 
-    expect(queryByText(title)).to.not.be.null;
+    await waitFor(() => { expect(queryByText(title)).to.not.be.null; });
   });
 
   it("renders filterResultCountRenderer", async () => {
@@ -144,7 +169,7 @@ describe("PresentationInstanceFilterDialog", () => {
       isOpen={true}
     />);
 
-    expect(queryByText(count)).to.not.be.null;
+    await waitFor(() => { expect(queryByText(count)).to.not.be.null; });
   });
 
   it("renders with lazy-loaded descriptor", async () => {

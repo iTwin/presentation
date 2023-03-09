@@ -10,10 +10,12 @@ import { PrimitiveValue } from "@itwin/appui-abstract";
 import {
   computeVisibleNodes, MutableTreeModel, TreeModel, TreeModelNode, TreeModelNodeEditingInfo, TreeModelNodeInput, UiComponents,
 } from "@itwin/components-react";
+import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
 import { LabelDefinition, Node, RegisteredRuleset, StandardNodeTypes } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
+import { waitFor } from "@testing-library/react";
 import { act, cleanup, renderHook } from "@testing-library/react-hooks";
 import { IPresentationTreeDataProvider } from "../../../presentation-components";
 import {
@@ -110,57 +112,55 @@ describe("usePresentationNodeLoader", () => {
       initialProps.enableHierarchyAutoUpdate = true;
     });
 
-    it("doesn't create a new nodeLoader when `PresentationManager` raises `onIModelHierarchyChanged` event with unrelated ruleset", () => {
+    it("doesn't create a new nodeLoader when `PresentationManager` raises `onIModelHierarchyChanged` event with unrelated ruleset", async  () => {
       const { result } = renderHook(
         (props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props),
         { initialProps },
       );
       const oldNodeLoader = result.current.nodeLoader;
 
-      onIModelHierarchyChanged.raiseEvent({ rulesetId: "unrelated", updateInfo: "FULL", imodelKey });
+      act(() => { onIModelHierarchyChanged.raiseEvent({ rulesetId: "unrelated", updateInfo: "FULL", imodelKey }); });
 
-      expect(result.current.nodeLoader).to.eq(oldNodeLoader);
+      await waitFor(() => expect(result.current.nodeLoader).to.eq(oldNodeLoader));
     });
 
-    it("doesn't create a new nodeLoader when `PresentationManager` raises `onIModelHierarchyChanged` event with unrelated imodel", () => {
+    it("doesn't create a new nodeLoader when `PresentationManager` raises `onIModelHierarchyChanged` event with unrelated imodel", async () => {
       const { result } = renderHook(
         (props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props),
         { initialProps },
       );
       const oldNodeLoader = result.current.nodeLoader;
 
-      onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey: "unrelated" });
+      act(() => { onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey: "unrelated" }); });
 
-      expect(result.current.nodeLoader).to.eq(oldNodeLoader);
+      await waitFor(() => expect(result.current.nodeLoader).to.eq(oldNodeLoader));
     });
 
     it("creates a new nodeLoader when `PresentationManager` raises a related `onIModelHierarchyChanged` event with FULL hierarchy update", async () => {
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         (props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props),
         { initialProps: { ...initialProps, ruleset: rulesetId } },
       );
       const oldNodeLoader = result.current.nodeLoader;
 
-      onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey });
+      act(() => { onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey }); });
 
-      await waitForNextUpdate();
-      expect(result.current.nodeLoader).to.not.eq(oldNodeLoader);
+      await waitFor(() => expect(result.current.nodeLoader).to.not.eq(oldNodeLoader));
     });
 
     it("creates a new nodeLoader when `PresentationManager` raises a related `onIModelHierarchyChanged` event with partial hierarchy updates", async () => {
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         (props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props),
         { initialProps },
       );
       const oldNodeLoader = result.current.nodeLoader;
 
-      onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: [{ parent: undefined, nodesCount: 2 }], imodelKey });
+      act(() => { onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: [{ parent: undefined, nodesCount: 2 }], imodelKey }); });
 
-      await waitForNextUpdate();
-      expect(result.current.nodeLoader).to.not.eq(oldNodeLoader);
+      await waitFor(() => expect(result.current.nodeLoader).to.not.eq(oldNodeLoader));
     });
 
-    it("doesn't create a new nodeLoader when `RulesetsManager` raises an unrelated `onRulesetModified` event", () => {
+    it("doesn't create a new nodeLoader when `RulesetsManager` raises an unrelated `onRulesetModified` event", async () => {
       const { result } = renderHook(
         (props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props),
         { initialProps },
@@ -168,13 +168,13 @@ describe("usePresentationNodeLoader", () => {
       const oldNodeLoader = result.current.nodeLoader;
 
       const currRuleset = new RegisteredRuleset({ id: "unrelated", rules: [] }, "", () => { });
-      onRulesetModified.raiseEvent(currRuleset, { ...currRuleset.toJSON() });
+      act(() => { onRulesetModified.raiseEvent(currRuleset, { ...currRuleset.toJSON() }); });
 
-      expect(result.current.nodeLoader).to.eq(oldNodeLoader);
+      await waitFor(() => expect(result.current.nodeLoader).to.eq(oldNodeLoader));
     });
 
     it("creates a new nodeLoader when `RulesetsManager` raises a related `onRulesetModified` event", async () => {
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         (props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props),
         { initialProps },
       );
@@ -182,51 +182,43 @@ describe("usePresentationNodeLoader", () => {
 
       const currRuleset = new RegisteredRuleset({ id: rulesetId, rules: [] }, "", () => { });
       act(() => { onRulesetModified.raiseEvent(currRuleset, currRuleset.toJSON()); });
-      await waitForNextUpdate();
-
-      expect(result.current.nodeLoader).to.not.eq(oldNodeLoader);
+      await waitFor(() => expect(result.current.nodeLoader).to.not.eq(oldNodeLoader));
     });
 
     it("creates a new nodeLoader when `RulesetVariablesManager` raises an `onRulesetVariableChanged` event with a new value", async () => {
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         (props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props),
         { initialProps },
       );
       const oldNodeLoader = result.current.nodeLoader;
 
       act(() => { onRulesetVariableChanged.raiseEvent("var-id", undefined, "curr"); });
-      await waitForNextUpdate();
-
-      expect(result.current.nodeLoader).to.not.eq(oldNodeLoader);
+      await waitFor(() => expect(result.current.nodeLoader).to.not.eq(oldNodeLoader));
     });
 
     it("creates a new nodeLoader when `RulesetVariablesManager` raises an `onRulesetVariableChanged` event with a changed value", async () => {
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         (props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props),
         { initialProps },
       );
       const oldNodeLoader = result.current.nodeLoader;
 
       act(() => { onRulesetVariableChanged.raiseEvent("var-id", "prev", "curr"); });
-      await waitForNextUpdate();
-
-      expect(result.current.nodeLoader).to.not.eq(oldNodeLoader);
+      await waitFor(() => expect(result.current.nodeLoader).to.not.eq(oldNodeLoader));
     });
 
     it("creates a new nodeLoader when `RulesetVariablesManager` raises an `onRulesetVariableChanged` event with a removed value", async () => {
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         (props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props),
         { initialProps },
       );
       const oldNodeLoader = result.current.nodeLoader;
 
       act(() => { onRulesetVariableChanged.raiseEvent("var-id", "prev", undefined); });
-      await waitForNextUpdate();
-
-      expect(result.current.nodeLoader).to.not.eq(oldNodeLoader);
+      await waitFor(() => expect(result.current.nodeLoader).to.not.eq(oldNodeLoader));
     });
 
-    it("does not create a new nodeLoader when `onRulesetModified` event is raised but there are no changes", () => {
+    it("does not create a new nodeLoader when `onRulesetModified` event is raised but there are no changes", async () => {
       const { result } = renderHook(
         (props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props),
         { initialProps },
@@ -234,49 +226,44 @@ describe("usePresentationNodeLoader", () => {
       const oldNodeLoader = result.current.nodeLoader;
 
       const currRuleset = new RegisteredRuleset({ id: rulesetId, rules: [] }, "", () => { });
-      onRulesetModified.raiseEvent(currRuleset, currRuleset.toJSON());
+      act(() => { onRulesetModified.raiseEvent(currRuleset, currRuleset.toJSON()); });
 
-      expect(result.current.nodeLoader).to.eq(oldNodeLoader);
+      await waitFor(() => expect(result.current.nodeLoader).to.eq(oldNodeLoader));
     });
 
-    it("does not create a new nodeLoader when 'onIModelHierarchyChanged' event is raised but there are no changes", () => {
+    it("does not create a new nodeLoader when 'onIModelHierarchyChanged' event is raised but there are no changes", async () => {
       const { result } = renderHook(
         (props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props),
         { initialProps },
       );
       const oldNodeLoader = result.current.nodeLoader;
 
-      onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: [], imodelKey });
+      act(() => { onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: [], imodelKey }); });
 
-      expect(result.current.nodeLoader).to.eq(oldNodeLoader);
+      await waitFor(() => expect(result.current.nodeLoader).to.eq(oldNodeLoader));
     });
 
     it("creates a fresh `TreeModelSource` when nodeLoader changes", async () => {
       const seedTreeModel = createTreeModel(["test"]);
-      const { result, rerender, waitForNextUpdate } = renderHook<PresentationTreeNodeLoaderProps, PresentationTreeNodeLoaderResult>(
+      const { result, rerender } = renderHook<PresentationTreeNodeLoaderProps, PresentationTreeNodeLoaderResult>(
         (props) => usePresentationTreeNodeLoader(props),
         { initialProps: { ...initialProps, ruleset: "initial", seedTreeModel } },
       );
 
-      // Update tree so that `info.treeModel` is not undefined
-      onRulesetModified.raiseEvent(
-        new RegisteredRuleset({ id: "initial", rules: [] }, "", () => { }),
-        { id: "initial", rules: [] },
-      );
-      await waitForNextUpdate();
+      await waitFor(() => expectTree(result.current.nodeLoader.modelSource.getModel(), ["test"]));
 
       rerender({ ...initialProps, ruleset: "updated" });
       const newModelSource = result.current.nodeLoader.modelSource;
-      expectTree(newModelSource.getModel(), []);
+      await waitFor(() => expectTree(newModelSource.getModel(), []));
     });
 
     it("reloads nodes and creates a new nodeLoader when 'onIModelHierarchyChanged' event is raised", async () => {
-      const { result, waitForNextUpdate } = renderHook(
+      const { result } = renderHook(
         (props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props),
         { initialProps },
       );
       const oldNodeLoader = result.current.nodeLoader;
-      result.current.onItemsRendered({ overscanStartIndex: 0, overscanStopIndex: 1, visibleStartIndex: 0, visibleStopIndex: 1 });
+      act(() => { result.current.onItemsRendered({ overscanStartIndex: 0, overscanStopIndex: 1, visibleStartIndex: 0, visibleStopIndex: 1 }); });
 
       presentationManagerMock.setup(async (x) => x.getNodesAndCount(
         moq.It.is(({ paging, parentKey }) => paging?.start === 0 && paging.size === 1 && !parentKey))
@@ -284,10 +271,8 @@ describe("usePresentationNodeLoader", () => {
         .returns(async () => ({ count: 1, nodes: [createNode("root1")] }))
         .verifiable(moq.Times.once());
 
-      void act(() => { onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: [{ parent: undefined, nodesCount: 1 }], imodelKey }); });
-      await waitForNextUpdate();
-
-      expect(result.current.nodeLoader).to.not.eq(oldNodeLoader);
+      act(() => { onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: [{ parent: undefined, nodesCount: 1 }], imodelKey }); });
+      await waitFor(() => expect(result.current.nodeLoader).to.not.eq(oldNodeLoader));
       presentationManagerMock.verifyAll();
     });
   });
@@ -348,7 +333,7 @@ function expectTree(model: TreeModel, expectedHierarchy: TreeHierarchy[]): void 
   function buildActualHierarchy(parentId: string | undefined): TreeHierarchy[] {
     const result: TreeHierarchy[] = [];
     for (const childId of model.getChildren(parentId) ?? []) {
-      const node = model.getNode(childId) as TreeModelNode;
+      const node = model.getNode(childId) as TreeModelNode | undefined;
       if (!node)
         continue;
       const label = (node.label.value as PrimitiveValue).displayValue!;
@@ -424,6 +409,14 @@ function createTreeModel(hierarchy: TreeHierarchy[]): MutableTreeModel {
 }
 
 describe("applyHierarchyUpdateRecords", () => {
+  before(async () => {
+    await UiComponents.initialize(new EmptyLocalization());
+  });
+
+  after(() => {
+    UiComponents.terminate();
+  });
+
   it("returns same model if node was not present in model", () => {
     const nonExistingNode = createNode("non-existing");
     const initialTree = createTreeModel(["root1", "root2"]);

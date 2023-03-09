@@ -10,6 +10,7 @@ import * as moq from "typemoq";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Content, KeySet } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, SelectionManager } from "@itwin/presentation-frontend";
+import { waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import { TableColumnDefinition, TableRowDefinition } from "../../presentation-components/table/Types";
 import {
@@ -53,12 +54,12 @@ describe("usePresentationTable", () => {
     presentationManagerMock.setup(async (x) => x.getContentDescriptor(moq.It.isAny())).returns(async () => descriptor);
     presentationManagerMock.setup(async (x) => x.getContent(moq.It.isAny())).returns(async () => new Content(descriptor, [item]));
 
-    const { result, waitFor } = renderHook(
+    const { result } = renderHook(
       (props: UsePresentationTableProps<TableColumnDefinition, TableRowDefinition>) => usePresentationTable(props),
       { initialProps },
     );
 
-    await waitFor(() => result.current.columns !== undefined && !result.current.isLoading);
+    await waitFor(() => expect(result.current.isLoading).to.be.false);
     expect(result.current.columns).to.have.lengthOf(1).and.containSubset([{
       name: propertiesField.name,
       label: propertiesField.label,
@@ -110,12 +111,12 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     presentationManagerMock.setup(async (x) => x.getContentDescriptor(moq.It.is((options) => options.keys.size === keys.size))).returns(async () => descriptor);
     presentationManagerMock.setup(async (x) => x.getContent(moq.It.is((options) => options.keys.size === keys.size))).returns(async () => new Content(descriptor, [item]));
 
-    const { result, waitFor } = renderHook(
+    const { result } = renderHook(
       () => usePresentationTableWithUnifiedSelection(initialProps),
       { wrapper: Wrapper },
     );
 
-    await waitFor(() => result.current.columns !== undefined && !result.current.isLoading);
+    await waitFor(() => expect(result.current.isLoading).to.be.false);
     expect(result.current.columns).to.have.lengthOf(1).and.containSubset([{
       name: propertiesField.name,
       label: propertiesField.label,
@@ -131,11 +132,11 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     presentationManagerMock.setup(async (x) => x.getContentDescriptor(moq.It.is((options) => options.keys.isEmpty))).returns(async () => undefined);
     presentationManagerMock.setup(async (x) => x.getContent(moq.It.is((options) => options.keys.isEmpty))).returns(async () => undefined);
 
-    const { result, waitFor } = renderHook(
+    const { result } = renderHook(
       () => usePresentationTableWithUnifiedSelection(initialProps),
     );
 
-    await waitFor(() => result.current.columns !== undefined && !result.current.isLoading);
+    await waitFor(() => expect(result.current.isLoading).to.be.false);
     expect(result.current.columns).to.have.lengthOf(0);
     expect(result.current.rows).to.have.lengthOf(0);
   });

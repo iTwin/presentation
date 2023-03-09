@@ -25,7 +25,7 @@ export interface UsePresentationTableProps<TColumn, TRow> {
   /** Ruleset or ruleset id that should be used to load data. */
   ruleset: Ruleset | string;
   /** Keys defining what to request data for. */
-  keys: KeySet;
+  keys: Readonly<KeySet>;
   /** Paging size for obtaining rows. */
   pageSize: number;
   /** Function that maps one column from generic [[TableColumnDefinition]] to table component specific type. */
@@ -81,6 +81,8 @@ export function usePresentationTable<TColumn, TRow>(props: UsePresentationTableP
  */
 export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(props: Omit<UsePresentationTableProps<TColumn, TRow>, "keys">): UsePresentationTableResult<TColumn, TRow> {
   const unifiedSelection = useUnifiedSelectionContext();
-  const keys = useMemo(() => unifiedSelection ? new KeySet(unifiedSelection.getSelection(0)) : new KeySet(), [unifiedSelection]);
+  const keys = unifiedSelection?.getSelection() ?? emptyKeySet;
   return usePresentationTable({ ...props, keys });
 }
+
+const emptyKeySet = new KeySet();

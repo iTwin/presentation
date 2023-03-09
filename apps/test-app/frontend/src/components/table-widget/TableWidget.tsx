@@ -41,7 +41,7 @@ function PresentationTable(props: PresentationTableProps) {
     rowMapper: mapTableRow,
   });
 
-  const onSort = useCallback((tableState) => {
+  const onSort = useCallback((tableState: any) => {
     const sortBy = tableState.sortBy[0];
     sort(sortBy?.id, sortBy?.desc);
   }, [sort]);

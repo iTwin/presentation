@@ -8,7 +8,7 @@
 
 import "./InstanceFilterBuilder.scss";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActionMeta } from "react-select";
+import { ActionMeta, MultiValue, SingleValue } from "react-select";
 import { BehaviorSubject, from, of } from "rxjs";
 import { map } from "rxjs/internal/operators/map";
 import { switchAll } from "rxjs/internal/operators/switchAll";
@@ -51,7 +51,7 @@ export interface InstanceFilterBuilderProps extends PropertyFilterBuilderProps {
 export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
   const { selectedClasses, classes, onClassSelected, onClassDeselected, onClearClasses, ...restProps } = props;
 
-  const onSelectChange = useCallback((_, action: ActionMeta<ClassInfo>) => {
+  const onSelectChange = useCallback((_: MultiValue<ClassInfo> | SingleValue<ClassInfo>, action: ActionMeta<ClassInfo>) => {
     switch (action.action) {
       case "select-option":
         action.option && onClassSelected(action.option);
@@ -191,8 +191,6 @@ function useProperties(propertyInfos: InstanceFilterPropertyInfo[], selectedClas
 function useSelectedClasses(classes: ClassInfo[], imodel: IModelConnection, initialClasses?: ClassInfo[]) {
   const [selectedClasses, setSelectedClasses] = useState<ClassInfo[]>(initialClasses ?? []);
   const [isFilteringClasses, setIsFilteringClasses] = useState(false);
-  const disposedRef = useRef(false);
-  useEffect(() => () => { disposedRef.current = true; }, []);
 
   const firstRender = useRef(true);
   useEffect(() => {
@@ -201,36 +199,21 @@ function useSelectedClasses(classes: ClassInfo[], imodel: IModelConnection, init
     firstRender.current = false;
   }, [classes]);
 
-  const onClassSelected = useCallback((info: ClassInfo) => {
-    setSelectedClasses((prevClasses) => [...prevClasses, info]);
-  }, []);
-
-  const onClassDeselected = useCallback((classInfo: ClassInfo) => {
-    setSelectedClasses((prevClasses) => prevClasses.filter((info) => info.id !== classInfo.id));
-  }, []);
-
-  const onClearClasses = useCallback(() => {
-    setSelectedClasses([]);
-  }, []);
-
   const filterClassesByProperty = useCallback((property: InstanceFilterPropertyInfo) => {
     setIsFilteringClasses(true);
     void (async () => {
       const newSelectedClasses = await computeClassesByProperty(selectedClasses.length === 0 ? classes : selectedClasses, property, imodel);
-      // istanbul ignore else
-      if (!disposedRef.current) {
-        setSelectedClasses(newSelectedClasses);
-        setIsFilteringClasses(false);
-      }
+      setSelectedClasses(newSelectedClasses);
+      setIsFilteringClasses(false);
     })();
   }, [selectedClasses, classes, imodel]);
 
   return {
     selectedClasses,
     isFilteringClasses,
-    onClassSelected,
-    onClassDeselected,
-    onClearClasses,
+    onClassSelected: useCallback((info: ClassInfo) => { setSelectedClasses((prevClasses) => [...prevClasses, info]); }, []),
+    onClassDeselected: useCallback((classInfo: ClassInfo) => { setSelectedClasses((prevClasses) => prevClasses.filter((info) => info.id !== classInfo.id)); }, []),
+    onClearClasses: useCallback(() => { setSelectedClasses([]); }, []),
     filterClassesByProperty,
   };
 }

@@ -10,7 +10,7 @@ import { mergeMap } from "rxjs/internal/operators/mergeMap";
 import { assert } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
-  Content, KeySet, PageOptions, PresentationError, PresentationStatus, Ruleset, StartItemProps, traverseContent,
+  Content, DefaultContentDisplayTypes, KeySet, PageOptions, PresentationError, PresentationStatus, Ruleset, StartItemProps, traverseContent,
 } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { FieldHierarchyRecord, PropertyRecordsBuilder } from "../common/ContentBuilder";
@@ -21,7 +21,7 @@ import { TableOptions } from "./UseTableOptions";
 export interface UseRowsProps {
   imodel: IModelConnection;
   ruleset: Ruleset | string;
-  keys: KeySet;
+  keys: Readonly<KeySet>;
   pageSize: number;
   options: TableOptions;
 }
@@ -78,11 +78,12 @@ export function useRows(props: UseRowsProps): UseRowsResult {
   return state;
 }
 
-async function loadRows(imodel: IModelConnection, ruleset: Ruleset | string, keys: KeySet, paging: PageOptions, options: TableOptions): Promise<TableRowDefinition[]> {
+async function loadRows(imodel: IModelConnection, ruleset: Ruleset | string, keys: Readonly<KeySet>, paging: PageOptions, options: TableOptions): Promise<TableRowDefinition[]> {
   const content = await Presentation.presentation.getContent({
     imodel,
-    keys,
+    keys: new KeySet(keys),
     descriptor: {
+      displayType: DefaultContentDisplayTypes.Grid,
       sorting: options.sorting,
       fieldsFilterExpression: options.fieldsFilterExpression,
     },

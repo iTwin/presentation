@@ -11,7 +11,7 @@ import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
-import { fireEvent, render, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, waitFor } from "@testing-library/react";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import {
   PresentationInstanceFilterBuilder, PresentationInstanceFilterInfo,
@@ -67,6 +67,14 @@ describe("PresentationInstanceFilter", () => {
   const imodelMock = moq.Mock.ofType<IModelConnection>();
   const onCloseEvent = new BeEvent<() => void>();
 
+  before(() => {
+    HTMLElement.prototype.scrollIntoView = () => { };
+  });
+
+  after(() => {
+    delete (HTMLElement.prototype as any).scrollIntoView;
+  });
+
   beforeEach(async () => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
@@ -103,34 +111,46 @@ describe("PresentationInstanceFilter", () => {
       onInstanceFilterChanged={spy}
     />);
 
+    // open property selector
+    act(() => {
+      const propertySelector = container.querySelector<HTMLInputElement>(".rule-property .iui-input");
+      expect(propertySelector).to.not.be.null;
+      fireEvent.focus(propertySelector!);
+    });
+
     // select property
-    const propertySelector = container.querySelector<HTMLInputElement>(".rule-property .iui-input");
-    expect(propertySelector).to.not.be.null;
-    propertySelector?.focus();
-    fireEvent.click(getByText(propertiesField.label));
+    act(() => {
+      fireEvent.click(getByText(propertiesField.label));
+    });
 
     // wait until property is selected
     await waitFor(() => getByDisplayValue(propertiesField.label));
 
-    // select operator
-    const operatorSelector = container.querySelector<HTMLInputElement>(".rule-operator .iui-select-button");
-    expect(operatorSelector).to.not.be.null;
-    fireEvent.click(operatorSelector!);
+    // open operator selector
+    act(() => {
+      const operatorSelector = container.querySelector<HTMLInputElement>(".rule-operator .iui-select-button");
+      expect(operatorSelector).to.not.be.null;
+      fireEvent.click(operatorSelector!);
+    });
 
-    fireEvent.click(getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.IsNotNull)));
+    // select operator
+    act(() => {
+      fireEvent.click(getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.IsNotNull)));
+    });
 
     // wait until operator is selected
     await waitFor(() => getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.IsNotNull)));
 
-    expect(spy).to.be.calledWith({
-      filter: {
-        field: propertiesField,
-        operator: PropertyFilterRuleOperator.IsNotNull,
-        value: undefined,
-      },
-      usedClasses: [classInfo],
-    }
-    );
+    await waitFor(() => {
+      expect(spy).to.be.calledWith({
+        filter: {
+          field: propertiesField,
+          operator: PropertyFilterRuleOperator.IsNotNull,
+          value: undefined,
+        },
+        usedClasses: [classInfo],
+      });
+    });
   });
 
   it("renders with initial filter", async () => {
@@ -141,11 +161,13 @@ describe("PresentationInstanceFilter", () => {
       onInstanceFilterChanged={spy}
       initialFilter={initialFilter}
     />);
-    const rules = container.querySelectorAll(".rule-property");
-    expect(rules.length).to.be.eq(2);
-    const rule1 = queryByDisplayValue(propertiesField.label);
-    expect(rule1).to.not.be.null;
-    const rule2 = queryByDisplayValue(propertiesField2.label);
-    expect(rule2).to.not.be.null;
+    await waitFor(() => {
+      const rules = container.querySelectorAll(".rule-property");
+      expect(rules.length).to.be.eq(2);
+      const rule1 = queryByDisplayValue(propertiesField.label);
+      expect(rule1).to.not.be.null;
+      const rule2 = queryByDisplayValue(propertiesField2.label);
+      expect(rule2).to.not.be.null;
+    });
   });
 });

@@ -39,7 +39,7 @@ export function PropertiesWidget(props: Props) {
   const [activeMatchIndex, setActiveMatchIndex] = useState(0);
   const [activeHighlight, setActiveHighlight] = useState<HighlightInfo>();
 
-  const setFilter = useCallback((filter) => {
+  const setFilter = useCallback((filter: string) => {
     if (filter !== filterText)
       setFilterText(filter);
   }, [filterText]);
