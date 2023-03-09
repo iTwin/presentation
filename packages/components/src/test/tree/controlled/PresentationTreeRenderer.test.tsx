@@ -12,7 +12,7 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { PropertyValueFormat } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { act, fireEvent, render, waitFor } from "@testing-library/react";
+import { fireEvent, render, waitFor } from "@testing-library/react";
 import { PresentationTreeRenderer, PresentationTreeRendererProps } from "../../../presentation-components/tree/controlled/PresentationTreeRenderer";
 import { createTestPropertyInfo } from "../../_helpers/Common";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content";
@@ -87,25 +87,23 @@ describe("PresentationTreeRenderer", () => {
     await waitFor(() => getByText(label));
     expect(container.querySelector(".presentation-components-node")).to.not.be.null;
 
-    act(() => {
-      const filterButton = container.querySelector(".presentation-components-node-action-buttons button");
-      expect(filterButton).to.not.be.null;
-      fireEvent.click(filterButton!);
-    });
+    const filterButton = container.querySelector(".presentation-components-node-action-buttons button");
+    expect(filterButton).to.not.be.null;
+    fireEvent.click(filterButton!);
 
     // wait for dialog to be visible
     await waitFor(() => {
       expect(baseElement.querySelector(".presentation-instance-filter-dialog")).to.not.be.null;
     });
 
-    act(() => {
-      const closeButton = baseElement.querySelector(".presentation-instance-filter-dialog-close-button");
-      expect(closeButton).to.not.be.null;
-      fireEvent.click(closeButton!);
-    });
+    const closeButton = baseElement.querySelector(".presentation-instance-filter-dialog-close-button");
+    expect(closeButton).to.not.be.null;
+    fireEvent.click(closeButton!);
 
-    const dialog = baseElement.querySelector(".presentation-instance-filter-dialog");
-    expect(dialog).to.be.null;
+    await waitFor(() => {
+      const dialog = baseElement.querySelector(".presentation-instance-filter-dialog");
+      expect(dialog).to.be.null;
+    });
   });
 
   it("applies filter and closes dialog", async () => {
@@ -134,11 +132,9 @@ describe("PresentationTreeRenderer", () => {
 
     await waitFor(() => getByText(label));
 
-    act(() => {
-      const filterButton = container.querySelector(".presentation-components-node-action-buttons button");
-      expect(filterButton).to.not.be.null;
-      fireEvent.click(filterButton!);
-    });
+    const filterButton = container.querySelector(".presentation-components-node-action-buttons button");
+    expect(filterButton).to.not.be.null;
+    fireEvent.click(filterButton!);
 
     // wait for dialog to be visible
     await waitFor(() => {
@@ -147,15 +143,11 @@ describe("PresentationTreeRenderer", () => {
 
     // select property in filter builder dialog
     // open property selector
-    act(() => {
-      const propertySelector = baseElement.querySelector<HTMLInputElement>(".rule-property input");
-      expect(propertySelector).to.not.be.null;
-      fireEvent.focus(propertySelector!);
-    });
+    const propertySelector = baseElement.querySelector<HTMLInputElement>(".rule-property input");
+    expect(propertySelector).to.not.be.null;
+    fireEvent.focus(propertySelector!);
     // select property
-    act(() => {
-      fireEvent.click(getByText(propertyField.label));
-    });
+    fireEvent.click(getByText(propertyField.label));
 
     // wait until apply button is enabled
     const applyButton = await waitFor(() => {
@@ -163,7 +155,7 @@ describe("PresentationTreeRenderer", () => {
       expect(button?.disabled).to.be.false;
       return button;
     });
-    act(() => { fireEvent.click(applyButton!); });
+    fireEvent.click(applyButton!);
 
     // wait until dialog closes
     await waitFor(() => {

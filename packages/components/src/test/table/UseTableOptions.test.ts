@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import { FieldDescriptorType, SortDirection } from "@itwin/presentation-common";
-import { act } from "@testing-library/react";
+import { waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import { useTableOptions, UseTableOptionsProps } from "../../presentation-components/table/UseTableOptions";
 import { createTestPropertyInfo } from "../_helpers/Common";
@@ -21,55 +21,60 @@ describe("useTableOptions", () => {
     }],
   };
 
-  it("applies sorting ascending", () => {
+  it("applies sorting ascending", async () => {
     const { result } = renderHook(
       (props: UseTableOptionsProps) => useTableOptions(props),
       { initialProps },
     );
 
     expect(result.current.options.sorting).to.be.undefined;
-    act(() => { result.current.sort(propertiesField.name, false); });
-    expect(result.current.options.sorting?.direction).to.be.eq(SortDirection.Ascending);
+
+    result.current.sort(propertiesField.name, false);
+    await waitFor(() => expect(result.current.options.sorting?.direction).to.be.eq(SortDirection.Ascending));
     expect(result.current.options.sorting?.field.type).to.be.eq(FieldDescriptorType.Properties);
   });
 
-  it("applies sorting descending", () => {
+  it("applies sorting descending", async () => {
     const { result } = renderHook(
       (props: UseTableOptionsProps) => useTableOptions(props),
       { initialProps },
     );
 
     expect(result.current.options.sorting).to.be.undefined;
-    act(() => { result.current.sort(propertiesField.name, true); });
-    expect(result.current.options.sorting?.direction).to.be.eq(SortDirection.Descending);
+
+    result.current.sort(propertiesField.name, true);
+    await waitFor(() => expect(result.current.options.sorting?.direction).to.be.eq(SortDirection.Descending));
     expect(result.current.options.sorting?.field.type).to.be.eq(FieldDescriptorType.Properties);
   });
 
-  it("removes sorting", () => {
+  it("removes sorting", async () => {
     const { result } = renderHook(
       (props: UseTableOptionsProps) => useTableOptions(props),
       { initialProps },
     );
 
     expect(result.current.options.sorting).to.be.undefined;
-    act(() => { result.current.sort(propertiesField.name, true); });
-    expect(result.current.options.sorting?.direction).to.be.eq(SortDirection.Descending);
-    act(() => { result.current.sort(); });
-    expect(result.current.options.sorting).to.be.undefined;
+
+    result.current.sort(propertiesField.name, true);
+    await waitFor(() => expect(result.current.options.sorting?.direction).to.be.eq(SortDirection.Descending));
+
+    result.current.sort();
+    await waitFor(() => expect(result.current.options.sorting).to.be.undefined);
   });
 
-  it("does not apply sorting when invalid column", () => {
+  it("does not apply sorting when invalid column", async () => {
     const { result } = renderHook(
       (props: UseTableOptionsProps) => useTableOptions(props),
       { initialProps },
     );
 
     expect(result.current.options.sorting).to.be.undefined;
-    act(() => { result.current.sort("invalid_name", true); });
-    expect(result.current.options.sorting).to.be.undefined;
+
+    result.current.sort("invalid_name", true);
+    await waitFor(() => expect(result.current.options.sorting).to.be.undefined);
   });
 
-  it("applies filtering", () => {
+  it("applies filtering", async () => {
     const { result } = renderHook(
       (props: UseTableOptionsProps) => useTableOptions(props),
       { initialProps },
@@ -77,11 +82,12 @@ describe("useTableOptions", () => {
 
     const filterExpression = `${propertiesField.name} = 1`;
     expect(result.current.options.fieldsFilterExpression).to.be.undefined;
-    act(() => { result.current.filter(filterExpression); });
-    expect(result.current.options.fieldsFilterExpression).to.be.eq(filterExpression);
+
+    result.current.filter(filterExpression);
+    await waitFor(() => expect(result.current.options.fieldsFilterExpression).to.be.eq(filterExpression));
   });
 
-  it("removes filtering", () => {
+  it("removes filtering", async () => {
     const { result } = renderHook(
       (props: UseTableOptionsProps) => useTableOptions(props),
       { initialProps },
@@ -89,13 +95,15 @@ describe("useTableOptions", () => {
 
     const filterExpression = `${propertiesField.name} = 1`;
     expect(result.current.options.fieldsFilterExpression).to.be.undefined;
-    act(() => { result.current.filter(filterExpression); });
-    expect(result.current.options.fieldsFilterExpression).to.be.eq(filterExpression);
-    act(() => { result.current.filter(); });
-    expect(result.current.options.fieldsFilterExpression).to.be.undefined;
+
+    result.current.filter(filterExpression);
+    await waitFor(() => expect(result.current.options.fieldsFilterExpression).to.be.eq(filterExpression));
+
+    result.current.filter();
+    await waitFor(() => expect(result.current.options.fieldsFilterExpression).to.be.undefined);
   });
 
-  it("resets options when columns changes", () => {
+  it("resets options when columns changes", async () => {
     const { result, rerender } = renderHook(
       (props: UseTableOptionsProps) => useTableOptions(props),
       { initialProps },
@@ -103,8 +111,9 @@ describe("useTableOptions", () => {
 
     const filterExpression = `${propertiesField.name} = 1`;
     expect(result.current.options.fieldsFilterExpression).to.be.undefined;
-    act(() => { result.current.filter(filterExpression); });
-    expect(result.current.options.fieldsFilterExpression).to.be.eq(filterExpression);
+
+    result.current.filter(filterExpression);
+    await waitFor(() => expect(result.current.options.fieldsFilterExpression).to.be.eq(filterExpression));
 
     const newField = createTestPropertiesContentField({ name: "new_field", label: "New Field", properties: [{ property: createTestPropertyInfo() }] });
     rerender({ ...initialProps, columns: [{ name: newField.name, label: newField.label, field: newField }] });

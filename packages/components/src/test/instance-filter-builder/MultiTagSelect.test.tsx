@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { act, fireEvent, render, waitFor } from "@testing-library/react";
+import { fireEvent, render, waitFor } from "@testing-library/react";
 import { MultiTagSelect } from "../../presentation-components/instance-filter-builder/MultiTagSelect";
 
 describe("MultiTagSelect", () => {
@@ -43,9 +43,7 @@ describe("MultiTagSelect", () => {
     />);
 
     const dropdownIndicator = await waitFor(() => getByTestId("multi-tag-select-dropdownIndicator"));
-    act(() => {
-      fireEvent.mouseDown(dropdownIndicator);
-    });
+    fireEvent.mouseDown(dropdownIndicator);
 
     await waitFor(() => {
       const dropdownMenu = container.querySelector(".iui-menu");

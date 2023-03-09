@@ -10,7 +10,7 @@ import { TreeModelNodeInput, TreeModelSource, UiComponents } from "@itwin/compon
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Presentation, StateTracker } from "@itwin/presentation-frontend";
-import { act, waitFor } from "@testing-library/react";
+import { waitFor } from "@testing-library/react";
 import { cleanup, renderHook } from "@testing-library/react-hooks";
 import { createLabelRecord } from "../../../presentation-components/common/Utils";
 import {
@@ -121,11 +121,11 @@ describe("useHierarchyStateTracking", () => {
       node: { id: node.id, key: node.key },
       state: { isExpanded: true },
     }])).verifiable(moq.Times.once());
-    act(() =>
-      modelSource.modifyModel((model) => {
-        model.setChildren(undefined, [createTreeModelInput(node, true)], 0);
-      })
-    );
+
+    modelSource.modifyModel((model) => {
+      model.setChildren(undefined, [createTreeModelInput(node, true)], 0);
+    });
+
     await waitFor(() => stateTrackerMock.verifyAll());
   });
 
@@ -137,11 +137,11 @@ describe("useHierarchyStateTracking", () => {
     );
     stateTrackerMock.reset();
     stateTrackerMock.setup(async (x) => x.onHierarchyStateChanged(imodelMock.object, rulesetId, moq.It.isAnyString(), [])).verifiable(moq.Times.once()); // eslint-disable-line @itwin/no-internal
-    act(() =>
-      modelSource.modifyModel((model) => {
-        model.setChildren(undefined, [createTreeModelInput(node, false)], 0);
-      })
-    );
+
+    modelSource.modifyModel((model) => {
+      model.setChildren(undefined, [createTreeModelInput(node, false)], 0);
+    });
+
     await waitFor(() => stateTrackerMock.verifyAll());
   });
 
@@ -157,11 +157,11 @@ describe("useHierarchyStateTracking", () => {
       node: { id: node.id, key: node.key },
       state: { isExpanded: true },
     }])).verifiable(moq.Times.once());
-    act(() =>
-      modelSource.modifyModel((model) => {
-        model.getNode(node.id)!.isExpanded = true;
-      })
-    );
+
+    modelSource.modifyModel((model) => {
+      model.getNode(node.id)!.isExpanded = true;
+    });
+
     await waitFor(() => stateTrackerMock.verifyAll());
   });
 
@@ -184,11 +184,11 @@ describe("useHierarchyStateTracking", () => {
       node: { id: children[1].id, key: children[1].key },
       state: { isExpanded: true },
     }])).verifiable(moq.Times.once());
-    act(() =>
-      modelSource.modifyModel((model) => {
-        model.getNode(node.id)!.isExpanded = true;
-      })
-    );
+
+    modelSource.modifyModel((model) => {
+      model.getNode(node.id)!.isExpanded = true;
+    });
+
     await waitFor(() => stateTrackerMock.verifyAll());
   });
 
@@ -201,11 +201,11 @@ describe("useHierarchyStateTracking", () => {
     );
     stateTrackerMock.reset();
     stateTrackerMock.setup(async (x) => x.onHierarchyStateChanged(imodelMock.object, rulesetId, moq.It.isAnyString(), [])).verifiable(moq.Times.once()); // eslint-disable-line @itwin/no-internal
-    act(() =>
-      modelSource.modifyModel((model) => {
-        model.getNode(node.id)!.isExpanded = false;
-      })
-    );
+
+    modelSource.modifyModel((model) => {
+      model.getNode(node.id)!.isExpanded = false;
+    });
+
     await waitFor(() => stateTrackerMock.verifyAll());
   });
 
@@ -222,11 +222,11 @@ describe("useHierarchyStateTracking", () => {
     );
     stateTrackerMock.reset();
     stateTrackerMock.setup(async (x) => x.onHierarchyStateChanged(imodelMock.object, rulesetId, moq.It.isAnyString(), [])).verifiable(moq.Times.once()); // eslint-disable-line @itwin/no-internal
-    act(() =>
-      modelSource.modifyModel((model) => {
-        model.getNode(node.id)!.isExpanded = false;
-      })
-    );
+
+    modelSource.modifyModel((model) => {
+      model.getNode(node.id)!.isExpanded = false;
+    });
+
     await waitFor(() => stateTrackerMock.verifyAll());
   });
 });

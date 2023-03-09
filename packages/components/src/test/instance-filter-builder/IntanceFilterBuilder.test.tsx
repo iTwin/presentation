@@ -12,7 +12,7 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo, Descriptor, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { act, fireEvent, render, waitFor } from "@testing-library/react";
+import { fireEvent, render, waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import {
@@ -56,9 +56,7 @@ describe("InstanceFilter", () => {
       onFilterChanged={() => { }}
     />);
 
-    act(() => {
-      fireEvent.mouseDown(getByTestId("multi-tag-select-dropdownIndicator"));
-    });
+    fireEvent.mouseDown(getByTestId("multi-tag-select-dropdownIndicator"));
 
     const option = await waitFor(() => {
       const element = container.querySelector(".iui-menu-item");
@@ -66,9 +64,7 @@ describe("InstanceFilter", () => {
       return element;
     });
 
-    act(() => {
-      fireEvent.click(option!);
-    });
+    fireEvent.click(option!);
 
     await waitFor(() => expect(spy).to.be.calledOnceWith(classInfos[0]));
   });
@@ -85,9 +81,7 @@ describe("InstanceFilter", () => {
       onFilterChanged={() => { }}
     />);
 
-    act(() => {
-      fireEvent.mouseDown(getByTestId("multi-tag-select-dropdownIndicator"));
-    });
+    fireEvent.mouseDown(getByTestId("multi-tag-select-dropdownIndicator"));
 
     const option = await waitFor(() => {
       const element = container.querySelector(".iui-menu-item");
@@ -95,9 +89,7 @@ describe("InstanceFilter", () => {
       return element;
     });
 
-    act(() => {
-      fireEvent.click(option!);
-    });
+    fireEvent.click(option!);
 
     await waitFor(() => expect(spy).to.be.calledOnceWith(classInfos[0]));
   });
@@ -120,9 +112,7 @@ describe("InstanceFilter", () => {
       return element;
     });
 
-    act(() => {
-      fireEvent.click(removeTagButton!);
-    });
+    fireEvent.click(removeTagButton!);
 
     await waitFor(() => expect(spy).to.be.calledOnceWith(classInfos[0]));
   });
@@ -139,9 +129,7 @@ describe("InstanceFilter", () => {
       onFilterChanged={() => { }}
     />);
 
-    act(() => {
-      fireEvent.mouseDown(getByTestId("multi-tag-select-clearIndicator"));
-    });
+    fireEvent.mouseDown(getByTestId("multi-tag-select-clearIndicator"));
 
     await waitFor(() => expect(spy).to.be.calledOnce);
   });
@@ -265,9 +253,7 @@ describe("usePresentationInstanceFilteringProps", () => {
       (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
       { initialProps });
 
-    act(() => {
-      result.current.onClassSelected(concreteClass1);
-    });
+    result.current.onClassSelected(concreteClass1);
 
     await waitFor(
       () => expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([
@@ -281,20 +267,14 @@ describe("usePresentationInstanceFilteringProps", () => {
       (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
       { initialProps });
 
-    act(() => {
-      result.current.onClassSelected(concreteClass1);
-    });
-
+    result.current.onClassSelected(concreteClass1);
     await waitFor(
       () => expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([
         concreteClass1,
       ])
     );
 
-    act(() => {
-      result.current.onClassDeselected(concreteClass1);
-    });
-
+    result.current.onClassDeselected(concreteClass1);
     await waitFor(() => expect(result.current.selectedClasses).to.be.empty);
   });
 
@@ -303,20 +283,14 @@ describe("usePresentationInstanceFilteringProps", () => {
       (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
       { initialProps });
 
-    act(() => {
-      result.current.onClassSelected(concreteClass1);
-    });
-
+    result.current.onClassSelected(concreteClass1);
     await waitFor(
       () => expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([
         concreteClass1,
       ])
     );
 
-    act(() => {
-      result.current.onClassDeselected(concreteClass2);
-    });
-
+    result.current.onClassDeselected(concreteClass2);
     await waitFor(
       () => expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([
         concreteClass1,
@@ -329,20 +303,14 @@ describe("usePresentationInstanceFilteringProps", () => {
       (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
       { initialProps });
 
-    act(() => {
-      result.current.onClassSelected(concreteClass1);
-    });
-
+    result.current.onClassSelected(concreteClass1);
     await waitFor(
       () => expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([
         concreteClass1,
       ])
     );
 
-    act(() => {
-      result.current.onClearClasses();
-    });
-
+    result.current.onClearClasses();
     await waitFor(() =>  expect(result.current.selectedClasses).to.be.empty);
   });
 
@@ -351,10 +319,7 @@ describe("usePresentationInstanceFilteringProps", () => {
       (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
       { initialProps });
 
-    act(() => {
-      result.current.onClassSelected(concreteClass1);
-    });
-
+    result.current.onClassSelected(concreteClass1);
     await waitFor(
       () => expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([
         concreteClass1,
@@ -370,7 +335,6 @@ describe("usePresentationInstanceFilteringProps", () => {
     });
     // rerender with new descriptor
     rerender({ descriptor: newDescriptor, imodel: initialProps.imodel });
-
     await waitFor(() => expect(result.current.selectedClasses).to.be.empty);
   });
 
@@ -380,10 +344,7 @@ describe("usePresentationInstanceFilteringProps", () => {
         (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
         { initialProps });
 
-      act(() => {
-        result.current.onClassSelected(concreteClass2);
-      });
-
+      result.current.onClassSelected(concreteClass2);
       await waitFor(() => expect(result.current.properties).to.have.lengthOf(2));
     });
 
@@ -401,10 +362,7 @@ describe("usePresentationInstanceFilteringProps", () => {
 
       await waitFor(() => expect(result.current.properties).to.have.lengthOf(2));
 
-      act(() => {
-        result.current.onClassSelected(concreteClass1);
-      });
-
+      result.current.onClassSelected(concreteClass1);
       await waitFor(() => expect(result.current.properties).to.have.lengthOf(2));
     });
 
@@ -414,10 +372,7 @@ describe("usePresentationInstanceFilteringProps", () => {
         { initialProps });
 
       const property = result.current.properties.find((prop) => prop.displayLabel === concretePropertiesField2.label) as PropertyDescription;
-      act(() => {
-        result.current.onRulePropertySelected(property);
-      });
-
+      result.current.onRulePropertySelected(property);
       await waitFor(
         () => expect(result.current.selectedClasses).to.have.lengthOf(1).and.containSubset([
           concreteClass2,
@@ -431,10 +386,7 @@ describe("usePresentationInstanceFilteringProps", () => {
         { initialProps });
 
       const property = result.current.properties.find((prop) => prop.displayLabel === basePropertiesField.label) as PropertyDescription;
-      act(() => {
-        result.current.onRulePropertySelected(property);
-      });
-
+      result.current.onRulePropertySelected(property);
       await waitFor(
         () => expect(result.current.selectedClasses).to.have.lengthOf(2).and.containSubset([
           concreteClass1,
@@ -448,10 +400,7 @@ describe("usePresentationInstanceFilteringProps", () => {
         (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
         { initialProps });
 
-      act(() => {
-        result.current.onClassSelected(concreteClass2);
-      });
-
+      result.current.onClassSelected(concreteClass2);
       await waitFor(
         () => expect(result.current.selectedClasses).to.have.lengthOf(1).and.containSubset([
           concreteClass2,
@@ -459,10 +408,7 @@ describe("usePresentationInstanceFilteringProps", () => {
       );
 
       const property = result.current.properties.find((prop) => prop.displayLabel === concretePropertiesField2.label) as PropertyDescription;
-      act(() => {
-        result.current.onRulePropertySelected(property);
-      });
-
+      result.current.onRulePropertySelected(property);
       await waitFor(
         () => expect(result.current.selectedClasses).to.have.lengthOf(1).and.containSubset([
           concreteClass2,
@@ -475,10 +421,7 @@ describe("usePresentationInstanceFilteringProps", () => {
         (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
         { initialProps });
 
-      act(() => {
-        result.current.onRulePropertySelected({ name: "invalidProp", displayLabel: "InvalidProp", typename: "string" });
-      });
-
+      result.current.onRulePropertySelected({ name: "invalidProp", displayLabel: "InvalidProp", typename: "string" });
       await waitFor(() => expect(result.current.selectedClasses).to.be.empty);
     });
   });

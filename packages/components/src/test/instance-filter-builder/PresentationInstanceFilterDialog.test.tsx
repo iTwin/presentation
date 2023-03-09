@@ -12,7 +12,7 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Descriptor } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { act, fireEvent, render, waitFor } from "@testing-library/react";
+import { fireEvent, render, waitFor } from "@testing-library/react";
 import { PresentationInstanceFilterDialog } from "../../presentation-components";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterBuilder";
@@ -96,36 +96,26 @@ describe("PresentationInstanceFilterDialog", () => {
     expect(applyButton?.disabled).to.be.true;
 
     // open property selector
-    act(() => {
-      const propertySelector = container.querySelector<HTMLInputElement>(".rule-property input");
-      expect(propertySelector).to.not.be.null;
-      fireEvent.focus(propertySelector!);
-    });
+    const propertySelector = container.querySelector<HTMLInputElement>(".rule-property input");
+    expect(propertySelector).to.not.be.null;
+    fireEvent.focus(propertySelector!);
     // select property
-    act(() => {
-      fireEvent.click(getByText(propertiesField.label));
-    });
+    fireEvent.click(getByText(propertiesField.label));
 
     // wait until property is selected
     await waitFor(() => getByDisplayValue(propertiesField.label));
 
     // open operator selector
-    act(() => {
-      const operatorSelector = container.querySelector<HTMLInputElement>(".rule-operator .iui-select-button");
-      expect(operatorSelector).to.not.be.null;
-      fireEvent.click(operatorSelector!);
-    });
+    const operatorSelector = container.querySelector<HTMLInputElement>(".rule-operator .iui-select-button");
+    expect(operatorSelector).to.not.be.null;
+    fireEvent.click(operatorSelector!);
     // select operator
-    act(() => {
-      fireEvent.click(getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.IsNotNull)));
-    });
+    fireEvent.click(getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.IsNotNull)));
+
     // wait until operator is selected
     await waitFor(() => getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.IsNotNull)));
     expect(applyButton?.disabled).to.be.false;
-
-    act(() => {
-      fireEvent.click(applyButton!);
-    });
+    fireEvent.click(applyButton!);
 
     await waitFor(() => {
       expect(spy).to.be.calledOnceWith({

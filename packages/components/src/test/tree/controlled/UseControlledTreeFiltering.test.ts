@@ -10,7 +10,7 @@ import { AbstractTreeNodeLoaderWithProvider, TreeModelNode, TreeModelSource, Tre
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { NodePathElement } from "@itwin/presentation-common";
-import { act, waitFor } from "@testing-library/react";
+import { waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import {
   ControlledPresentationTreeFilteringProps, IPresentationTreeDataProvider, useControlledPresentationTreeFiltering,
@@ -64,7 +64,7 @@ describe("useControlledPresentationTreeFiltering", () => {
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.true;
 
-    await act(async () => pathsResult1.resolve([]));
+    await pathsResult1.resolve([]);
 
     await waitFor(() => expect(result.current.isFiltering).to.be.false);
     expect(result.current.filteredNodeLoader).to.not.eq(nodeLoaderMock.object);
@@ -87,7 +87,7 @@ describe("useControlledPresentationTreeFiltering", () => {
     );
 
     // give time to start request
-    await act(async () => { await clock.tickAsync(1); });
+    await clock.tickAsync(1);
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.once());
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.true;
@@ -96,7 +96,7 @@ describe("useControlledPresentationTreeFiltering", () => {
     rerender({ ...initialProps, filter: "changed" });
 
     // give time to start request if necessary
-    await act(async () => { await clock.tickAsync(1); });
+    await clock.tickAsync(1);
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.once());
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.true;
@@ -105,20 +105,20 @@ describe("useControlledPresentationTreeFiltering", () => {
     rerender({ ...initialProps, filter: "last" });
 
     // give time to start request if necessary
-    await act(async () => { await clock.tickAsync(1); });
+    await clock.tickAsync(1);
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.once());
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.true;
 
     clock.restore();
     // resolve first request and verify that new filtering request started
-    await act(async () => pathsResult1.resolve([]));
+    await pathsResult1.resolve([]);
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.exactly(2));
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.true;
 
     // resolve second request and verify state
-    await act(async () => pathsResult2.resolve([]));
+    await pathsResult2.resolve([]);
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.exactly(2));
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths("test"), moq.Times.once());
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths("last"), moq.Times.once());
@@ -145,7 +145,7 @@ describe("useControlledPresentationTreeFiltering", () => {
     );
 
     // give time to start request if necessary
-    await act(async () => { await clock.tickAsync(1); });
+    await clock.tickAsync(1);
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.once());
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.true;
@@ -154,14 +154,14 @@ describe("useControlledPresentationTreeFiltering", () => {
     rerender({ ...initialProps, filter: "" });
 
     // give time to start request if necessary
-    await act(async () => { await clock.tickAsync(1); });
+    await clock.tickAsync(1);
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.once());
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.false;
 
     clock.restore();
     // resolve first request verify that filtering was not applied
-    await act(async () => pathsResult.resolve([]));
+    await pathsResult.resolve([]);
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.exactly(1));
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.false;
@@ -183,7 +183,7 @@ describe("useControlledPresentationTreeFiltering", () => {
       { initialProps },
     );
 
-    await act(async () => pathsResult.resolve([]));
+    await pathsResult.resolve([]);
     await waitFor(() => expect(result.current.isFiltering).to.be.false);
     expect(result.current.filteredNodeLoader).to.not.be.undefined;
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths(filter), moq.Times.once());
@@ -196,7 +196,7 @@ describe("useControlledPresentationTreeFiltering", () => {
 
     rerender({ ...initialProps, nodeLoader: newNodeLoader.object });
 
-    await act(async () => newPathsResult.resolve([]));
+    await newPathsResult.resolve([]);
     await waitFor(() => expect(result.current.isFiltering).to.be.false);
     expect(result.current.filteredNodeLoader).to.not.be.undefined;
     newProvider.verify(async (x) => x.getFilteredNodePaths(filter), moq.Times.once());
@@ -215,14 +215,14 @@ describe("useControlledPresentationTreeFiltering", () => {
       { initialProps },
     );
 
-    await act(async () => pathsResult.resolve([]));
+    await pathsResult.resolve([]);
     await waitFor(() => expect(result.current.isFiltering).to.be.false);
 
     const filteredNodeLoader = result.current.filteredNodeLoader;
     expect(filteredNodeLoader.dataProvider).to.be.instanceOf(FilteredPresentationTreeDataProvider);
     rerender({ ...initialProps, filter: "changed", nodeLoader: filteredNodeLoader });
 
-    await act(async () => pathsResult.resolve([]));
+    await pathsResult.resolve([]);
     await waitFor(() => expect(result.current.isFiltering).to.be.false);
     expect(result.current.filteredNodeLoader).to.not.eq(filteredNodeLoader);
 
@@ -263,10 +263,8 @@ describe("useControlledPresentationTreeFiltering", () => {
     expect(nodeLoader.modelSource.getModel().getRootNode().numChildren).to.be.undefined;
 
     let loadedNodes: TreeNodeItem[] | undefined;
-    act(() => {
-      nodeLoader.loadNode(testModelNode, 0).subscribe((res) => {
-        loadedNodes = res.loadedNodes;
-      });
+    nodeLoader.loadNode(testModelNode, 0).subscribe((res) => {
+      loadedNodes = res.loadedNodes;
     });
     await waitFor(() => expect(loadedNodes).to.have.lengthOf(0));
   });

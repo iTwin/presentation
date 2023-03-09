@@ -9,7 +9,7 @@ import * as moq from "typemoq";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Content, DescriptorOverrides, KeySet, SortDirection } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { act, waitFor } from "@testing-library/react";
+import { waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import { useRows, UseRowsProps } from "../../presentation-components/table/UseRows";
 import { createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
@@ -54,8 +54,7 @@ describe("useRows", () => {
       { initialProps }
     );
 
-    await waitFor(() => expect(result.current.isLoading).to.be.false);
-    expect(result.current.rows).to.have.lengthOf(1);
+    await waitFor(() => expect(result.current.rows).to.have.lengthOf(1));
     const cell = result.current.rows[0].cells[0];
     expect(cell).to.containSubset({
       key: propertiesField.name,
@@ -92,8 +91,7 @@ describe("useRows", () => {
       { initialProps }
     );
 
-    await waitFor(() => expect(result.current.isLoading).to.be.false);
-    expect(result.current.rows).to.have.lengthOf(1);
+    await waitFor(() => expect(result.current.rows).to.have.lengthOf(1));
     expect(result.current.rows[0].cells).to.have.lengthOf(1);
     const cell = result.current.rows[0].cells[0];
     expect(cell).to.containSubset({
@@ -120,14 +118,10 @@ describe("useRows", () => {
       { initialProps: { ...initialProps, pageSize: 1 } }
     );
 
-    await waitFor(() => expect(result.current.isLoading).to.be.false);
-    expect(result.current.rows).to.have.lengthOf(1);
+    await waitFor(() => expect(result.current.rows).to.have.lengthOf(1));
 
-    act(() => { result.current.loadMoreRows(); });
-    await waitFor(() => expect(result.current.isLoading).to.be.true);
-
-    await waitFor(() => expect(result.current.isLoading).to.be.false);
-    expect(result.current.rows).to.have.lengthOf(2);
+    result.current.loadMoreRows();
+    await waitFor(() => expect(result.current.rows).to.have.lengthOf(2));
   });
 
   it("returns empty rows list if content was not loaded", async () => {

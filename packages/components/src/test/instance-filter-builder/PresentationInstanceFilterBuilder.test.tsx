@@ -11,7 +11,7 @@ import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
-import { act, fireEvent, render, waitFor } from "@testing-library/react";
+import { fireEvent, render, waitFor } from "@testing-library/react";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import {
   PresentationInstanceFilterBuilder, PresentationInstanceFilterInfo,
@@ -112,44 +112,34 @@ describe("PresentationInstanceFilter", () => {
     />);
 
     // open property selector
-    act(() => {
-      const propertySelector = container.querySelector<HTMLInputElement>(".rule-property .iui-input");
-      expect(propertySelector).to.not.be.null;
-      fireEvent.focus(propertySelector!);
-    });
+    const propertySelector = container.querySelector<HTMLInputElement>(".rule-property .iui-input");
+    expect(propertySelector).to.not.be.null;
+    fireEvent.focus(propertySelector!);
 
     // select property
-    act(() => {
-      fireEvent.click(getByText(propertiesField.label));
-    });
+    fireEvent.click(getByText(propertiesField.label));
 
     // wait until property is selected
     await waitFor(() => getByDisplayValue(propertiesField.label));
 
     // open operator selector
-    act(() => {
-      const operatorSelector = container.querySelector<HTMLInputElement>(".rule-operator .iui-select-button");
-      expect(operatorSelector).to.not.be.null;
-      fireEvent.click(operatorSelector!);
-    });
+    const operatorSelector = container.querySelector<HTMLInputElement>(".rule-operator .iui-select-button");
+    expect(operatorSelector).to.not.be.null;
+    fireEvent.click(operatorSelector!);
 
     // select operator
-    act(() => {
-      fireEvent.click(getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.IsNotNull)));
-    });
+    fireEvent.click(getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.IsNotNull)));
 
     // wait until operator is selected
     await waitFor(() => getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.IsNotNull)));
 
-    await waitFor(() => {
-      expect(spy).to.be.calledWith({
-        filter: {
-          field: propertiesField,
-          operator: PropertyFilterRuleOperator.IsNotNull,
-          value: undefined,
-        },
-        usedClasses: [classInfo],
-      });
+    expect(spy).to.be.calledWith({
+      filter: {
+        field: propertiesField,
+        operator: PropertyFilterRuleOperator.IsNotNull,
+        value: undefined,
+      },
+      usedClasses: [classInfo],
     });
   });
 
@@ -161,6 +151,7 @@ describe("PresentationInstanceFilter", () => {
       onInstanceFilterChanged={spy}
       initialFilter={initialFilter}
     />);
+
     await waitFor(() => {
       const rules = container.querySelectorAll(".rule-property");
       expect(rules.length).to.be.eq(2);

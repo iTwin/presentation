@@ -16,7 +16,7 @@ import { ITwinLocalization } from "@itwin/core-i18n";
 import { LabelDefinition, Node, RegisteredRuleset, StandardNodeTypes } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
 import { waitFor } from "@testing-library/react";
-import { act, cleanup, renderHook } from "@testing-library/react-hooks";
+import { cleanup, renderHook } from "@testing-library/react-hooks";
 import { IPresentationTreeDataProvider } from "../../../presentation-components";
 import {
   applyHierarchyChanges, PresentationTreeNodeLoaderProps, PresentationTreeNodeLoaderResult, reloadVisibleHierarchyParts,
@@ -119,7 +119,7 @@ describe("usePresentationNodeLoader", () => {
       );
       const oldNodeLoader = result.current.nodeLoader;
 
-      act(() => { onIModelHierarchyChanged.raiseEvent({ rulesetId: "unrelated", updateInfo: "FULL", imodelKey }); });
+      onIModelHierarchyChanged.raiseEvent({ rulesetId: "unrelated", updateInfo: "FULL", imodelKey });
 
       await waitFor(() => expect(result.current.nodeLoader).to.eq(oldNodeLoader));
     });
@@ -131,7 +131,7 @@ describe("usePresentationNodeLoader", () => {
       );
       const oldNodeLoader = result.current.nodeLoader;
 
-      act(() => { onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey: "unrelated" }); });
+      onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey: "unrelated" });
 
       await waitFor(() => expect(result.current.nodeLoader).to.eq(oldNodeLoader));
     });
@@ -143,7 +143,7 @@ describe("usePresentationNodeLoader", () => {
       );
       const oldNodeLoader = result.current.nodeLoader;
 
-      act(() => { onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey }); });
+      onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey });
 
       await waitFor(() => expect(result.current.nodeLoader).to.not.eq(oldNodeLoader));
     });
@@ -155,7 +155,7 @@ describe("usePresentationNodeLoader", () => {
       );
       const oldNodeLoader = result.current.nodeLoader;
 
-      act(() => { onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: [{ parent: undefined, nodesCount: 2 }], imodelKey }); });
+      onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: [{ parent: undefined, nodesCount: 2 }], imodelKey });
 
       await waitFor(() => expect(result.current.nodeLoader).to.not.eq(oldNodeLoader));
     });
@@ -168,7 +168,7 @@ describe("usePresentationNodeLoader", () => {
       const oldNodeLoader = result.current.nodeLoader;
 
       const currRuleset = new RegisteredRuleset({ id: "unrelated", rules: [] }, "", () => { });
-      act(() => { onRulesetModified.raiseEvent(currRuleset, { ...currRuleset.toJSON() }); });
+      onRulesetModified.raiseEvent(currRuleset, { ...currRuleset.toJSON() });
 
       await waitFor(() => expect(result.current.nodeLoader).to.eq(oldNodeLoader));
     });
@@ -181,7 +181,7 @@ describe("usePresentationNodeLoader", () => {
       const oldNodeLoader = result.current.nodeLoader;
 
       const currRuleset = new RegisteredRuleset({ id: rulesetId, rules: [] }, "", () => { });
-      act(() => { onRulesetModified.raiseEvent(currRuleset, currRuleset.toJSON()); });
+      onRulesetModified.raiseEvent(currRuleset, currRuleset.toJSON());
       await waitFor(() => expect(result.current.nodeLoader).to.not.eq(oldNodeLoader));
     });
 
@@ -192,7 +192,7 @@ describe("usePresentationNodeLoader", () => {
       );
       const oldNodeLoader = result.current.nodeLoader;
 
-      act(() => { onRulesetVariableChanged.raiseEvent("var-id", undefined, "curr"); });
+      onRulesetVariableChanged.raiseEvent("var-id", undefined, "curr");
       await waitFor(() => expect(result.current.nodeLoader).to.not.eq(oldNodeLoader));
     });
 
@@ -203,7 +203,7 @@ describe("usePresentationNodeLoader", () => {
       );
       const oldNodeLoader = result.current.nodeLoader;
 
-      act(() => { onRulesetVariableChanged.raiseEvent("var-id", "prev", "curr"); });
+      onRulesetVariableChanged.raiseEvent("var-id", "prev", "curr");
       await waitFor(() => expect(result.current.nodeLoader).to.not.eq(oldNodeLoader));
     });
 
@@ -214,7 +214,7 @@ describe("usePresentationNodeLoader", () => {
       );
       const oldNodeLoader = result.current.nodeLoader;
 
-      act(() => { onRulesetVariableChanged.raiseEvent("var-id", "prev", undefined); });
+      onRulesetVariableChanged.raiseEvent("var-id", "prev", undefined);
       await waitFor(() => expect(result.current.nodeLoader).to.not.eq(oldNodeLoader));
     });
 
@@ -226,7 +226,7 @@ describe("usePresentationNodeLoader", () => {
       const oldNodeLoader = result.current.nodeLoader;
 
       const currRuleset = new RegisteredRuleset({ id: rulesetId, rules: [] }, "", () => { });
-      act(() => { onRulesetModified.raiseEvent(currRuleset, currRuleset.toJSON()); });
+      onRulesetModified.raiseEvent(currRuleset, currRuleset.toJSON());
 
       await waitFor(() => expect(result.current.nodeLoader).to.eq(oldNodeLoader));
     });
@@ -238,7 +238,7 @@ describe("usePresentationNodeLoader", () => {
       );
       const oldNodeLoader = result.current.nodeLoader;
 
-      act(() => { onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: [], imodelKey }); });
+      onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: [], imodelKey });
 
       await waitFor(() => expect(result.current.nodeLoader).to.eq(oldNodeLoader));
     });
@@ -263,7 +263,7 @@ describe("usePresentationNodeLoader", () => {
         { initialProps },
       );
       const oldNodeLoader = result.current.nodeLoader;
-      act(() => { result.current.onItemsRendered({ overscanStartIndex: 0, overscanStopIndex: 1, visibleStartIndex: 0, visibleStopIndex: 1 }); });
+      result.current.onItemsRendered({ overscanStartIndex: 0, overscanStopIndex: 1, visibleStartIndex: 0, visibleStopIndex: 1 });
 
       presentationManagerMock.setup(async (x) => x.getNodesAndCount(
         moq.It.is(({ paging, parentKey }) => paging?.start === 0 && paging.size === 1 && !parentKey))
@@ -271,7 +271,7 @@ describe("usePresentationNodeLoader", () => {
         .returns(async () => ({ count: 1, nodes: [createNode("root1")] }))
         .verifiable(moq.Times.once());
 
-      act(() => { onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: [{ parent: undefined, nodesCount: 1 }], imodelKey }); });
+      onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: [{ parent: undefined, nodesCount: 1 }], imodelKey });
       await waitFor(() => expect(result.current.nodeLoader).to.not.eq(oldNodeLoader));
       presentationManagerMock.verifyAll();
     });
