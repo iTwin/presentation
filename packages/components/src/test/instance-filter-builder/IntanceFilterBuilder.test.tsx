@@ -273,9 +273,9 @@ describe("usePresentationInstanceFilteringProps", () => {
     );
 
     result.current.onClassDeselected(concreteClass2);
-    expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([
+    await waitFor(() => expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([
       concreteClass1,
-    ]);
+    ]));
   });
 
   it("clears selected classes when 'onClearClasses' is called", async () => {
