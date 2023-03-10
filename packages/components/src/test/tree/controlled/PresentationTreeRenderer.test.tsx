@@ -140,9 +140,11 @@ describe("PresentationTreeRenderer", () => {
     });
 
     // select property in filter builder dialog
-    const propertySelector = baseElement.querySelector<HTMLInputElement>(".rule-property .iui-input");
+    // open property selector
+    const propertySelector = baseElement.querySelector<HTMLInputElement>(".rule-property input");
     expect(propertySelector).to.not.be.null;
-    propertySelector?.focus();
+    fireEvent.focus(propertySelector!);
+    // select property
     fireEvent.click(getByText(propertyField.label));
 
     // wait until apply button is enabled

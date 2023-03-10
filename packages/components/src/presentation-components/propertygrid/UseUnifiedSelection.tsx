@@ -6,8 +6,7 @@
  * @module PropertyGrid
  */
 
-import { useCallback, useEffect, useState } from "react";
-import { useDisposable } from "@itwin/core-react";
+import { useEffect, useState } from "react";
 import { KeySet } from "@itwin/presentation-common";
 import { Presentation, SelectionChangeEventArgs, SelectionHandler } from "@itwin/presentation-frontend";
 import { IPresentationPropertyDataProvider } from "./DataProvider";
@@ -54,35 +53,43 @@ export interface UsePropertyDataProviderWithUnifiedSelectionResult {
 export function usePropertyDataProviderWithUnifiedSelection(
   props: PropertyDataProviderWithUnifiedSelectionProps,
 ): UsePropertyDataProviderWithUnifiedSelectionResult {
-  const { dataProvider } = props;
+  const { dataProvider, selectionHandler: suppliedSelectionHandler } = props;
   const { imodel, rulesetId } = dataProvider;
-  const name = `PropertyGrid`;
   const requestedContentInstancesLimit = props.requestedContentInstancesLimit ?? DEFAULT_REQUESTED_CONTENT_INSTANCES_LIMIT;
 
   const [numSelectedElements, setNumSelectedElements] = useState(0);
 
-  const updateDataProviderSelection = useCallback((handler: SelectionHandler, selectionLevel?: number) => {
-    const selection = getSelectedKeys(handler, selectionLevel);
-    if (selection) {
-      setNumSelectedElements(selection.size);
-      dataProvider.keys = isOverLimit(selection.size, requestedContentInstancesLimit) ? new KeySet() : selection;
-    }
-  }, [requestedContentInstancesLimit, dataProvider]);
-
-  const selectionHandler = useDisposable(useCallback(() => {
-    // istanbul ignore next
-    const handler = props.selectionHandler ??
-      new SelectionHandler({ manager: Presentation.selection, name, imodel, rulesetId });
-    handler.onSelect = (evt: SelectionChangeEventArgs): void => {
-      updateDataProviderSelection(handler, evt.level);
+  useEffect(() => {
+    const updateProviderSelection = (selectionHandler: SelectionHandler, selectionLevel?: number) => {
+      const selection = getSelectedKeys(selectionHandler, selectionLevel);
+      if (selection) {
+        setNumSelectedElements(selection.size);
+        dataProvider.keys = isOverLimit(selection.size, requestedContentInstancesLimit) ? new KeySet() : selection;
+      }
     };
-    return handler;
-  }, [imodel, rulesetId, name, updateDataProviderSelection, props.selectionHandler]));
 
-  useEffect(() => updateDataProviderSelection(selectionHandler), [updateDataProviderSelection, selectionHandler]);
+    // istanbul ignore next
+    const handler = suppliedSelectionHandler ?? new SelectionHandler({
+      manager: Presentation.selection,
+      name,
+      imodel,
+      rulesetId,
+    });
+
+    handler.onSelect = (evt: SelectionChangeEventArgs): void => {
+      updateProviderSelection(handler, evt.level);
+    };
+
+    updateProviderSelection(handler);
+    return () => {
+      handler.dispose();
+    };
+  }, [dataProvider, imodel, rulesetId, requestedContentInstancesLimit, suppliedSelectionHandler]);
 
   return { isOverLimit: isOverLimit(numSelectedElements, requestedContentInstancesLimit), numSelectedElements };
 }
+
+const name = `PropertyGrid`;
 
 function getSelectedKeys(selectionHandler: SelectionHandler, selectionLevel?: number): KeySet | undefined {
   if (undefined === selectionLevel) {

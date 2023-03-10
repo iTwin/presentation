@@ -67,6 +67,14 @@ describe("PresentationInstanceFilter", () => {
   const imodelMock = moq.Mock.ofType<IModelConnection>();
   const onCloseEvent = new BeEvent<() => void>();
 
+  before(() => {
+    HTMLElement.prototype.scrollIntoView = () => { };
+  });
+
+  after(() => {
+    delete (HTMLElement.prototype as any).scrollIntoView;
+  });
+
   beforeEach(async () => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
@@ -103,20 +111,23 @@ describe("PresentationInstanceFilter", () => {
       onInstanceFilterChanged={spy}
     />);
 
-    // select property
+    // open property selector
     const propertySelector = container.querySelector<HTMLInputElement>(".rule-property .iui-input");
     expect(propertySelector).to.not.be.null;
-    propertySelector?.focus();
+    fireEvent.focus(propertySelector!);
+
+    // select property
     fireEvent.click(getByText(propertiesField.label));
 
     // wait until property is selected
     await waitFor(() => getByDisplayValue(propertiesField.label));
 
-    // select operator
+    // open operator selector
     const operatorSelector = container.querySelector<HTMLInputElement>(".rule-operator .iui-select-button");
     expect(operatorSelector).to.not.be.null;
     fireEvent.click(operatorSelector!);
 
+    // select operator
     fireEvent.click(getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.IsNotNull)));
 
     // wait until operator is selected
@@ -129,11 +140,10 @@ describe("PresentationInstanceFilter", () => {
         value: undefined,
       },
       usedClasses: [classInfo],
-    }
-    );
+    });
   });
 
-  it("renders with initial filter", async () => {
+  it("renders with initial filter", () => {
     const spy = sinon.spy();
     const { container, queryByDisplayValue } = render(<PresentationInstanceFilterBuilder
       imodel={imodelMock.object}
@@ -141,6 +151,7 @@ describe("PresentationInstanceFilter", () => {
       onInstanceFilterChanged={spy}
       initialFilter={initialFilter}
     />);
+
     const rules = container.querySelectorAll(".rule-property");
     expect(rules.length).to.be.eq(2);
     const rule1 = queryByDisplayValue(propertiesField.label);

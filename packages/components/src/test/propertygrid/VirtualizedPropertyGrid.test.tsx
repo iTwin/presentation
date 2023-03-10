@@ -12,7 +12,8 @@ import {
   PropertyValueRendererManager, VirtualizedPropertyGridWithDataProvider,
 } from "@itwin/components-react";
 import { Orientation } from "@itwin/core-react";
-import { render } from "@testing-library/react";
+import { InstanceKey } from "@itwin/presentation-common";
+import { render, waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import { PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider";
 import { createTestCategoryDescription } from "../_helpers/Content";
@@ -72,7 +73,7 @@ describe("Category renderer customization", () => {
       // __PUBLISH_EXTRACT_END__
 
       const dataProvider = setupDataProvider();
-      const { findByText } = render(
+      const { queryByText } = render(
         <VirtualizedPropertyGridWithDataProvider
           dataProvider={dataProvider}
           width={500}
@@ -80,12 +81,12 @@ describe("Category renderer customization", () => {
           orientation={Orientation.Horizontal}
         />,
       );
-      expect(await findByText("rootCategory1Property")).not.to.be.null;
+      await waitFor(() => expect(queryByText("rootCategory1Property")).not.to.be.null);
     });
 
-    it("compiles PropertyRecord to InstanceKey sample", () => {
-      function useInstanceKeys(props: PropertyCategoryRendererProps): void {
-        const [_, setInstanceKeys] = useState<unknown>();
+    it("compiles PropertyRecord to InstanceKey sample", async () => {
+      function useInstanceKeys(props: PropertyCategoryRendererProps) {
+        const [keys, setInstanceKeys] = useState<InstanceKey[][] | undefined>();
         // __PUBLISH_EXTRACT_START__ Presentation.Customization.PropertyRecordToInstanceKey
         // <Somewhere within MyCustomRenderer component>
         useEffect(
@@ -101,13 +102,15 @@ describe("Category renderer customization", () => {
           [],
         );
         // __PUBLISH_EXTRACT_END__
+        return keys;
       }
 
       const stubProps = {
         categoryItem: { getChildren() { return []; } },
         gridContext: { dataProvider: { async getPropertyRecordInstanceKeys() { return []; } } },
       };
-      renderHook(() => useInstanceKeys(stubProps as any));
+      const { result } = renderHook(() => useInstanceKeys(stubProps as any));
+      await waitFor(() => { expect(result.current).to.not.be.undefined; });
     });
   });
 });

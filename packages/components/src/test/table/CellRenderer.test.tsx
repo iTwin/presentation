@@ -30,7 +30,7 @@ describe("TableCellRenderer", () => {
     const record = createRecord(value, { typename: "string" });
 
     const { queryByText } = render(<TableCellRenderer record={record}/>);
-    await waitFor(() => expect(queryByText(stringValue)).to.not.be.null);
+    expect(queryByText(stringValue)).to.not.be.null;
   });
 
   it("renders array value as button that opens dialog", async () => {
@@ -44,7 +44,7 @@ describe("TableCellRenderer", () => {
 
     const { getByText, queryByText } = render(<TableCellRenderer record={record}/>);
     const buttonLabel = `${value.itemsTypeName}[1]`;
-    const button = await waitFor(() => getByText(buttonLabel));
+    const button = getByText(buttonLabel);
 
     fireEvent.click(button);
     const dialogLabel = `Array of type "${value.itemsTypeName}"`;
@@ -61,7 +61,7 @@ describe("TableCellRenderer", () => {
 
     const { getByText, queryByText } = render(<TableCellRenderer record={record}/>);
     const buttonLabel = `[]`;
-    const button = await waitFor(() => getByText(buttonLabel));
+    const button = getByText(buttonLabel);
 
     fireEvent.click(button);
     const dialogLabel = `Array of type "${value.itemsTypeName}"`;
@@ -80,7 +80,7 @@ describe("TableCellRenderer", () => {
 
     const { getByText, queryByText } = render(<TableCellRenderer record={record}/>);
     const buttonLabel = `{${record.property.typename}}`;
-    const button = await waitFor(() => getByText(buttonLabel));
+    const button = getByText(buttonLabel);
 
     fireEvent.click(button);
     const dialogLabel = `Struct of type "${record.property.typename}"`;

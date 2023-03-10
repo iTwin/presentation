@@ -47,6 +47,14 @@ describe("PresentationInstanceFilterDialog", () => {
   const imodelMock = moq.Mock.ofType<IModelConnection>();
   const onCloseEvent = new BeEvent<() => void>();
 
+  before(() => {
+    HTMLElement.prototype.scrollIntoView = () => { };
+  });
+
+  after(() => {
+    delete (HTMLElement.prototype as any).scrollIntoView;
+  });
+
   beforeEach(async () => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
@@ -87,23 +95,28 @@ describe("PresentationInstanceFilterDialog", () => {
     const applyButton = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
     expect(applyButton?.disabled).to.be.true;
 
-    // select property
-    const propertySelector = container.querySelector<HTMLInputElement>(".rule-property .iui-input");
+    // open property selector
+    const propertySelector = container.querySelector<HTMLInputElement>(".rule-property input");
     expect(propertySelector).to.not.be.null;
-    propertySelector?.focus();
+    fireEvent.focus(propertySelector!);
+    // select property
     fireEvent.click(getByText(propertiesField.label));
+
     // wait until property is selected
     await waitFor(() => getByDisplayValue(propertiesField.label));
-    // select operator
+
+    // open operator selector
     const operatorSelector = container.querySelector<HTMLInputElement>(".rule-operator .iui-select-button");
     expect(operatorSelector).to.not.be.null;
     fireEvent.click(operatorSelector!);
+    // select operator
     fireEvent.click(getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.IsNotNull)));
+
     // wait until operator is selected
     await waitFor(() => getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.IsNotNull)));
-
     expect(applyButton?.disabled).to.be.false;
     fireEvent.click(applyButton!);
+
     expect(spy).to.be.calledOnceWith({
       filter: {
         field: propertiesField,
@@ -114,7 +127,7 @@ describe("PresentationInstanceFilterDialog", () => {
     });
   });
 
-  it("renders custom title", async () => {
+  it("renders custom title", () => {
     const spy = sinon.spy();
     const title = "custom title";
 
@@ -131,7 +144,7 @@ describe("PresentationInstanceFilterDialog", () => {
     expect(queryByText(title)).to.not.be.null;
   });
 
-  it("renders filterResultCountRenderer", async () => {
+  it("renders filterResultCountRenderer", () => {
     const spy = sinon.spy();
     const count = "custom count";
 

@@ -15,10 +15,14 @@ import { createTestECInstanceKey, isKeySet } from "../_helpers/Common";
 describe("usePropertyDataProviderWithUnifiedSelection", () => {
   const selectionHandlerMock = moq.Mock.ofType<SelectionHandler>();
   const dataProviderMock = moq.Mock.ofType<IPresentationPropertyDataProvider>();
+  const testImodel = {} as IModelConnection;
 
   beforeEach(() => {
     selectionHandlerMock.reset();
     dataProviderMock.reset();
+
+    dataProviderMock.setup((x) => x.rulesetId).returns(() => "test_ruleset_id");
+    dataProviderMock.setup((x) => x.imodel).returns(() => testImodel);
   });
 
   it("doesn't set provider keys when handler returns no selection", () => {
@@ -117,9 +121,6 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
     const setKeys = new KeySet([createTestECInstanceKey({ id: "0x1" }), createTestECInstanceKey({ id: "0x2" })]);
     selectionHandlerMock.setup((x) => x.getSelectionLevels()).returns(() => [0]);
     selectionHandlerMock.setup((x) => x.getSelection(0)).returns(() => setKeys);
-    const mockIModel = moq.Mock.ofType<IModelConnection>();
-    dataProviderMock.setup((x) => x.imodel).returns(() => mockIModel.object);
-    dataProviderMock.setup((x) => x.rulesetId).returns(() => "ruleset");
 
     const { unmount } = renderHook(
       usePropertyDataProviderWithUnifiedSelection,

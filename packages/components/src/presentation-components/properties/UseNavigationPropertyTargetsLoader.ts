@@ -35,7 +35,7 @@ export interface UseNavigationPropertyTargetsLoaderProps {
 /** @internal */
 export function useNavigationPropertyTargetsLoader(props: UseNavigationPropertyTargetsLoaderProps) {
   const { imodel, ruleset } = props;
-  const loadTargets = useCallback(async (filter: string, loadedOptions: NavigationPropertyTarget[]): Promise<NavigationPropertyTargetsResult> => {
+  const loadTargets = useCallback(async (filter: string, loadedOptionsCount: number): Promise<NavigationPropertyTargetsResult> => {
     if (!ruleset) {
       return { options: [], hasMore: false };
     }
@@ -48,7 +48,7 @@ export function useNavigationPropertyTargetsLoader(props: UseNavigationPropertyT
         contentFlags: ContentFlags.ShowLabels | ContentFlags.NoFields,
         fieldsFilterExpression: filter ? `/DisplayLabel/ ~ \"%${filter}%\"` : undefined,
       },
-      paging: { start: loadedOptions.length, size: NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE },
+      paging: { start: loadedOptionsCount, size: NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE },
     });
 
     return {

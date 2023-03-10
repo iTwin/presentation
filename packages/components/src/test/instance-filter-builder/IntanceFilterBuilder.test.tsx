@@ -12,7 +12,7 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo, Descriptor, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { fireEvent, render } from "@testing-library/react";
+import { fireEvent, render, waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import {
@@ -205,6 +205,7 @@ describe("usePresentationInstanceFilteringProps", () => {
     const { result } = renderHook(
       (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
       { initialProps });
+
     expect(result.current.classes).to.have.lengthOf(2).and.to.containSubset([
       concreteClass1,
       concreteClass2,
@@ -224,67 +225,87 @@ describe("usePresentationInstanceFilteringProps", () => {
     const { result } = renderHook(
       (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
       { initialProps });
+
     expect(result.current.classes).to.have.lengthOf(1).and.to.containSubset([
       concreteClass1,
     ]);
   });
 
-  it("updates selected classes when 'onClassSelected' is called", () => {
+  it("updates selected classes when 'onClassSelected' is called", async () => {
     const { result } = renderHook(
       (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
       { initialProps });
+
     result.current.onClassSelected(concreteClass1);
-    expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([
-      concreteClass1,
-    ]);
+    await waitFor(
+      () => expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([
+        concreteClass1,
+      ])
+    );
   });
 
-  it("updates selected classes when 'onClassDeselected' is called", () => {
+  it("updates selected classes when 'onClassDeselected' is called", async () => {
     const { result } = renderHook(
       (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
       { initialProps });
+
     result.current.onClassSelected(concreteClass1);
-    expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([
-      concreteClass1,
-    ]);
+    await waitFor(
+      () => expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([
+        concreteClass1,
+      ])
+    );
+
     result.current.onClassDeselected(concreteClass1);
-    expect(result.current.selectedClasses).to.be.empty;
+    await waitFor(() => expect(result.current.selectedClasses).to.be.empty);
   });
 
-  it("does not change selected classes when 'onClassDeselected' is called with not selected class", () => {
+  it("does not change selected classes when 'onClassDeselected' is called with not selected class", async () => {
     const { result } = renderHook(
       (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
       { initialProps });
+
     result.current.onClassSelected(concreteClass1);
-    expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([
-      concreteClass1,
-    ]);
+    await waitFor(
+      () => expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([
+        concreteClass1,
+      ])
+    );
+
     result.current.onClassDeselected(concreteClass2);
-    expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([
+    await waitFor(() => expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([
       concreteClass1,
-    ]);
+    ]));
   });
 
-  it("clears selected classes when 'onClearClasses' is called", () => {
+  it("clears selected classes when 'onClearClasses' is called", async () => {
     const { result } = renderHook(
       (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
       { initialProps });
+
     result.current.onClassSelected(concreteClass1);
-    expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([
-      concreteClass1,
-    ]);
+    await waitFor(
+      () => expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([
+        concreteClass1,
+      ])
+    );
+
     result.current.onClearClasses();
-    expect(result.current.selectedClasses).to.be.empty;
+    await waitFor(() => expect(result.current.selectedClasses).to.be.empty);
   });
 
-  it("clears selected classes when new descriptor is provided", () => {
+  it("clears selected classes when new descriptor is provided", async () => {
     const { result, rerender } = renderHook(
       (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
       { initialProps });
+
     result.current.onClassSelected(concreteClass1);
-    expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([
-      concreteClass1,
-    ]);
+    await waitFor(
+      () => expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([
+        concreteClass1,
+      ])
+    );
+
     const newDescriptor = createTestContentDescriptor({
       selectClasses: [
         { selectClassInfo: concreteClass1, isSelectPolymorphic: false },
@@ -294,19 +315,17 @@ describe("usePresentationInstanceFilteringProps", () => {
     });
     // rerender with new descriptor
     rerender({ descriptor: newDescriptor, imodel: initialProps.imodel });
-
     expect(result.current.selectedClasses).to.be.empty;
   });
 
   describe("properties filtering", () => {
     it("returns properties only of selected class", async () => {
-      const { result, waitForValueToChange } = renderHook(
+      const { result } = renderHook(
         (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
         { initialProps });
 
       result.current.onClassSelected(concreteClass2);
-      await waitForValueToChange(() => result.current);
-      expect(result.current.properties).to.have.lengthOf(2);
+      await waitFor(() => expect(result.current.properties).to.have.lengthOf(2));
     });
 
     it("return all properties when selected class contains all available properties", async () => {
@@ -317,57 +336,59 @@ describe("usePresentationInstanceFilteringProps", () => {
         categories: [category],
         fields: [basePropertiesField, concretePropertiesField1],
       });
-      const { result, waitForValueToChange } = renderHook(
+      const { result } = renderHook(
         (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
         { initialProps: { ...initialProps, descriptor: testDescriptor } });
 
-      expect(result.current.properties).to.have.lengthOf(2);
-      result.current.onClassSelected(concreteClass1);
-      await waitForValueToChange(() => result.current);
-      expect(result.current.properties).to.have.lengthOf(2);
+      await waitFor(() => expect(result.current.properties).to.have.lengthOf(2));
 
+      result.current.onClassSelected(concreteClass1);
+      await waitFor(() => expect(result.current.properties).to.have.lengthOf(2));
     });
 
     it("selects classes that have selected property", async () => {
-      const { result, waitForValueToChange } = renderHook(
+      const { result } = renderHook(
         (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
         { initialProps });
 
-      const property = result.current.properties.find((prop) => prop.displayLabel === concretePropertiesField2.label);
-      result.current.onRulePropertySelected(property!);
-      await waitForValueToChange(() => result.current);
-      expect(result.current.selectedClasses).to.have.lengthOf(1).and.containSubset([
-        concreteClass2,
-      ]);
+      const property = result.current.properties.find((prop) => prop.displayLabel === concretePropertiesField2.label) as PropertyDescription;
+      result.current.onRulePropertySelected(property);
+      await waitFor(
+        () => expect(result.current.selectedClasses).to.have.lengthOf(1).and.containSubset([
+          concreteClass2,
+        ])
+      );
     });
 
     it("selects all derived classes that have selected property", async () => {
-      const { result, waitForValueToChange } = renderHook(
+      const { result } = renderHook(
         (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
         { initialProps });
 
-      const property = result.current.properties.find((prop) => prop.displayLabel === basePropertiesField.label);
-      result.current.onRulePropertySelected(property!);
-      await waitForValueToChange(() => result.current);
-      expect(result.current.selectedClasses).to.have.lengthOf(2).and.containSubset([
-        concreteClass1,
-        concreteClass2,
-      ]);
+      const property = result.current.properties.find((prop) => prop.displayLabel === basePropertiesField.label) as PropertyDescription;
+      result.current.onRulePropertySelected(property);
+      await waitFor(
+        () => expect(result.current.selectedClasses).to.have.lengthOf(2).and.containSubset([
+          concreteClass1,
+          concreteClass2,
+        ])
+      );
     });
 
     it("does not change selected classes when selected property class is already selected", async () => {
-      const { result, waitForValueToChange } = renderHook(
+      const { result } = renderHook(
         (props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel),
         { initialProps });
 
       result.current.onClassSelected(concreteClass2);
-      await waitForValueToChange(() => result.current);
-      expect(result.current.selectedClasses).to.have.lengthOf(1).and.containSubset([
-        concreteClass2,
-      ]);
-      const property = result.current.properties.find((prop) => prop.displayLabel === concretePropertiesField2.label);
-      result.current.onRulePropertySelected(property!);
-      await waitForValueToChange(() => result.current);
+      await waitFor(
+        () => expect(result.current.selectedClasses).to.have.lengthOf(1).and.containSubset([
+          concreteClass2,
+        ])
+      );
+
+      const property = result.current.properties.find((prop) => prop.displayLabel === concretePropertiesField2.label) as PropertyDescription;
+      result.current.onRulePropertySelected(property);
       expect(result.current.selectedClasses).to.have.lengthOf(1).and.containSubset([
         concreteClass2,
       ]);
