@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import * as moq from "typemoq";
-import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
+import { PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Field } from "@itwin/presentation-common";
 import { FavoritePropertiesManager, FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
@@ -20,7 +20,7 @@ describe("FavoritePropertiesDataFilterer", () => {
   let matchingField: Field | undefined;
   beforeEach(() => {
     mockDataProvider = moq.Mock.ofType<IPresentationPropertyDataProvider>();
-    mockDataProvider.setup(async (x) => x.getFieldByPropertyRecord(moq.It.isAny())).returns(async () => matchingField);
+    mockDataProvider.setup(async (x) => x.getFieldByPropertyDescription(moq.It.isAny())).returns(async () => matchingField);
     mockDataProvider.setup((x) => x.imodel).returns(() => moq.Mock.ofType<IModelConnection>().object);
     matchingField = undefined;
   });
@@ -29,7 +29,7 @@ describe("FavoritePropertiesDataFilterer", () => {
     sinon.restore();
   });
 
-  it("uses FavoritePropertiesManager to determine favorites if callback is not provided through props", async () => {
+  it("uses `FavoritePropertiesManager` to determine favorites if callback is not provided through props", async () => {
     const record = createPrimitiveStringProperty("Property", "Value");
     matchingField = createTestSimpleContentField();
 
@@ -89,13 +89,13 @@ describe("FavoritePropertiesDataFilterer", () => {
 
     for (const record of recordsToTest) {
       const recordType = PropertyValueFormat[record.value.valueFormat];
-      it(`Should always match propertyRecord (type: ${recordType})`, async () => {
+      it(`should always match \`propertyRecord\` (type: ${recordType})`, async () => {
         const matchResult = await filterer.recordMatchesFilter(record, []);
         expect(matchResult).to.deep.eq({ matchesFilter: true });
       });
     }
 
-    it(`Should always return 'matchesFilter: true' when calling categoryMatchesFilter`, async () => {
+    it(`should always return \`'matchesFilter: true\` when calling \`categoryMatchesFilter\``, async () => {
       const matchResult = await filterer.categoryMatchesFilter();
       expect(matchResult).to.deep.eq({ matchesFilter: true });
     });
@@ -123,39 +123,39 @@ describe("FavoritePropertiesDataFilterer", () => {
     for (const record of recordsToTest) {
       const recordType = PropertyValueFormat[record.value.valueFormat];
 
-      it(`Should not match propertyRecord when getFieldByPropertyRecord cannot find record field (type: ${recordType})`, async () => {
+      it(`should not match propertyRecord when \`getFieldByPropertyDescription\` cannot find record field (type: ${recordType})`, async () => {
         matchingField = undefined;
         const matchResult = await filterer.recordMatchesFilter(record, []);
         expect(matchResult).to.deep.eq({ matchesFilter: false });
       });
 
-      it(`Should not match propertyRecord when record is not favorite and has no parents (type: ${recordType})`, async () => {
+      it(`should not match \`propertyRecord\` when record is not favorite and has no parents (type: ${recordType})`, async () => {
         isFavoriteStub.returns(false);
         matchingField = createTestSimpleContentField();
         const matchResult = await filterer.recordMatchesFilter(record, []);
         expect(matchResult).to.deep.eq({ matchesFilter: false });
       });
 
-      it(`Should not match propertyRecord when record is not favorite and has non favorite parents (type: ${recordType})`, async () => {
+      it(`should not match \`propertyRecord\` when record is not favorite and has non favorite parents (type: ${recordType})`, async () => {
         isFavoriteStub.returns(false);
         matchingField = createTestSimpleContentField();
         const matchResult = await filterer.recordMatchesFilter(record, [createStructProperty("Struct"), createArrayProperty("Array")]);
         expect(matchResult).to.deep.eq({ matchesFilter: false });
       });
 
-      it(`Should match propertyRecord when record is favorite and has no parents (type: ${recordType})`, async () => {
+      it(`should match \`propertyRecord\` when record is favorite and has no parents (type: ${recordType})`, async () => {
         isFavoriteStub.returns(true);
         matchingField = createTestSimpleContentField();
         const matchResult = await filterer.recordMatchesFilter(record, []);
         expect(matchResult).to.deep.eq({ matchesFilter: true, shouldExpandNodeParents: true });
       });
 
-      it(`Should match propertyRecord when record is not favorite and has favorite parents (type: ${recordType})`, async () => {
+      it(`should match \`propertyRecord\` when record is not favorite and has favorite parents (type: ${recordType})`, async () => {
         const favoriteParentRecord = createStructProperty("FavoriteStruct");
         const favoriteParentField = createTestSimpleContentField();
         mockDataProvider.reset();
-        mockDataProvider.setup(async (x) => x.getFieldByPropertyRecord(moq.It.isAny())).returns(async (argRecord: PropertyRecord) => {
-          if (argRecord.property.name === favoriteParentRecord.property.name)
+        mockDataProvider.setup(async (x) => x.getFieldByPropertyDescription(moq.It.isAny())).returns(async (arg: PropertyDescription) => {
+          if (arg.name === favoriteParentRecord.property.name)
             return favoriteParentField;
           return createTestSimpleContentField();
         });
@@ -168,7 +168,7 @@ describe("FavoritePropertiesDataFilterer", () => {
       });
     }
 
-    it("Should not match when calling `categoryMatchesFilter`", async () => {
+    it("should not match when calling `categoryMatchesFilter`", async () => {
       const matchResult = await filterer.categoryMatchesFilter();
       expect(matchResult).to.deep.eq({ matchesFilter: false });
     });

@@ -196,7 +196,7 @@ interface PropertiesWidgetContextMenuProps {
   onCloseContextMenu: () => void;
 }
 function PropertiesWidgetContextMenu(props: PropertiesWidgetContextMenuProps) {
-  const { dataProvider, args: { propertyRecord: property }, onCloseContextMenu } = props;
+  const { dataProvider, args: { propertyRecord: record }, onCloseContextMenu } = props;
   const imodel = dataProvider.imodel;
 
   const addFavorite = useCallback(async (propertyField: Field) => {
@@ -210,7 +210,7 @@ function PropertiesWidgetContextMenu(props: PropertiesWidgetContextMenuProps) {
   }, [onCloseContextMenu, imodel]);
 
   const asyncItems = useDebouncedAsyncValue(useCallback(async () => {
-    const field = await dataProvider.getFieldByPropertyRecord(property);
+    const field = await dataProvider.getFieldByPropertyDescription(record.property);
     const items: ContextMenuItemInfo[] = [];
     if (field !== undefined) {
       if (Presentation.favoriteProperties.has(field, imodel, FAVORITES_SCOPE)) {
@@ -230,7 +230,7 @@ function PropertiesWidgetContextMenu(props: PropertiesWidgetContextMenuProps) {
       }
     }
     return items;
-  }, [imodel, dataProvider, property, addFavorite, removeFavorite]));
+  }, [imodel, dataProvider, record, addFavorite, removeFavorite]));
 
   if (!asyncItems.value || asyncItems.value.length === 0)
     return null;
@@ -254,8 +254,8 @@ function PropertiesWidgetContextMenu(props: PropertiesWidgetContextMenuProps) {
 }
 
 function FavoritePropertyActionButton(props: ActionButtonRendererProps & { dataProvider: PresentationPropertyDataProvider }) {
-  const { property, dataProvider } = props;
-  const field = useAsyncValue(useMemo(async () => dataProvider.getFieldByPropertyRecord(property), [dataProvider, property]));
+  const { property: record, dataProvider } = props;
+  const field = useAsyncValue(useMemo(async () => dataProvider.getFieldByPropertyDescription(record.property), [dataProvider, record.property]));
   return (
     <div>
       {
