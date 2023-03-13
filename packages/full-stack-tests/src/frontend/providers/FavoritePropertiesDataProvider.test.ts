@@ -47,10 +47,10 @@ describe("FavoritePropertiesDataProvider", async () => {
       const propertyData = await propertyProvider.getData();
 
       let record = getPropertyRecordByLabel(propertyData, "Country")!;
-      let field = await propertyProvider.getFieldByPropertyRecord(record);
+      let field = await propertyProvider.getFieldByPropertyDescription(record.property);
       await Presentation.favoriteProperties.add(field!, imodel, scope);
       record = getPropertyRecordByLabel(propertyData, "Model")!;
-      field = await propertyProvider.getFieldByPropertyRecord(record);
+      field = await propertyProvider.getFieldByPropertyDescription(record.property);
       await Presentation.favoriteProperties.add(field!, imodel, scope);
 
       Presentation.selection.scopes.activeScope = "element";

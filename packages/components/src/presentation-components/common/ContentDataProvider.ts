@@ -7,7 +7,7 @@
  */
 
 import memoize from "micro-memoize";
-import { PropertyRecord } from "@itwin/appui-abstract";
+import { PropertyDescription, PropertyRecord } from "@itwin/appui-abstract";
 import { Logger } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
@@ -93,8 +93,14 @@ export interface IContentDataProvider extends IPresentationDataProvider {
    */
   getContent: (pageOptions?: PageOptions) => Promise<Content | undefined>;
 
-  /** Get field that was used to create the given property record */
+  /**
+   * Get field that was used to create the given property record.
+   * @deprecated in 4.0. Use [[getFieldByPropertyDescription]] instead.
+   */
   getFieldByPropertyRecord: (propertyRecord: PropertyRecord) => Promise<Field | undefined>;
+
+  /** Get field that was used to create a property record with given property description. */
+  getFieldByPropertyDescription: (descr: PropertyDescription) => Promise<Field | undefined>;
 }
 
 /**
@@ -330,10 +336,16 @@ export class ContentDataProvider implements IContentDataProvider {
 
   /**
    * Get field using PropertyRecord.
+   * @deprecated in 4.0. Use [[getFieldByPropertyDescription]] instead.
    */
   public async getFieldByPropertyRecord(propertyRecord: PropertyRecord): Promise<Field | undefined> {
+    return this.getFieldByPropertyDescription(propertyRecord.property);
+  }
+
+  /** Get field that was used to create a property record with given property description. */
+  public async getFieldByPropertyDescription(descr: PropertyDescription): Promise<Field | undefined> {
     const descriptor = await this.getContentDescriptor();
-    return descriptor ? findField(descriptor, propertyRecord.property.name) : undefined;
+    return descriptor ? findField(descriptor, descr.name) : undefined;
   }
 
   private _getContentAndSize = memoize(async (pageOptions?: PageOptions): Promise<{ content: Content, size: number } | undefined> => {
