@@ -1,6 +1,6 @@
 {
   "type": "minor",
-  "comment": "Prepared package to be used with React 18. Updated React peerDependency to \"^17.0.0 || ^18.0.0\"",
+  "comment": "Prepared package to be used with React 18. Updated React `peerDependency` to `^17.0.0 || ^18.0.0`",
   "packageName": "@itwin/presentation-components",
   "email": "24278440+saskliutas@users.noreply.github.com",
   "dependentChangeType": "patch"
