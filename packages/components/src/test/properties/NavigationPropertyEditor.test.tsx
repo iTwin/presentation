@@ -158,6 +158,7 @@ describe("useNavigationPropertyEditingContext", () => {
       getContentDescriptor: async () => undefined,
       getContentSetSize: async () => 0,
       getFieldByPropertyRecord: async () => undefined,
+      getFieldByPropertyDescription: async () => undefined,
       keys: new KeySet(),
       selectionInfo: undefined,
     };
@@ -172,7 +173,7 @@ describe("useNavigationPropertyEditingContext", () => {
       isTargetPolymorphic: true,
     };
 
-    testDataProvider.getFieldByPropertyRecord = async () => createTestPropertiesContentField({
+    testDataProvider.getFieldByPropertyDescription = async () => createTestPropertiesContentField({
       properties: [{
         property: {
           classInfo: { id: "3", label: "Field Class", name: "TestSchema:FieldClass" },
@@ -194,7 +195,7 @@ describe("useNavigationPropertyEditingContext", () => {
 
   it("returns undefined if non properties field is returned", async () => {
     const propertyDescription: PropertyDescription = { displayLabel: "TestProp", name: "test_prop", typename: "navigation" };
-    testDataProvider.getFieldByPropertyRecord = async () => createTestSimpleContentField();
+    testDataProvider.getFieldByPropertyDescription = async () => createTestSimpleContentField();
 
     const { result } = renderHook(
       ({ imodel, dataProvider }: Props) => useNavigationPropertyEditingContext(imodel, dataProvider),

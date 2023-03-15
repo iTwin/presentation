@@ -6,10 +6,11 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import * as moq from "typemoq";
-import { AbstractTreeNodeLoaderWithProvider, TreeModelNode, TreeModelSource, UiComponents } from "@itwin/components-react";
+import { AbstractTreeNodeLoaderWithProvider, TreeModelNode, TreeModelSource, TreeNodeItem, UiComponents } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { NodePathElement } from "@itwin/presentation-common";
+import { waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import {
   ControlledPresentationTreeFilteringProps, IPresentationTreeDataProvider, useControlledPresentationTreeFiltering,
@@ -49,7 +50,6 @@ describe("useControlledPresentationTreeFiltering", () => {
       useControlledPresentationTreeFiltering,
       { initialProps: { nodeLoader: nodeLoaderMock.object } },
     );
-    expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.false;
   });
 
@@ -66,8 +66,7 @@ describe("useControlledPresentationTreeFiltering", () => {
 
     await pathsResult1.resolve([]);
 
-    expect(result.current).to.not.be.undefined;
-    expect(result.current.isFiltering).to.be.false;
+    await waitFor(() => expect(result.current.isFiltering).to.be.false);
     expect(result.current.filteredNodeLoader).to.not.eq(nodeLoaderMock.object);
   });
 
@@ -123,8 +122,8 @@ describe("useControlledPresentationTreeFiltering", () => {
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.exactly(2));
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths("test"), moq.Times.once());
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths("last"), moq.Times.once());
-    expect(result.current).to.not.be.undefined;
-    expect(result.current.isFiltering).to.be.false;
+
+    await waitFor(() => expect(result.current.isFiltering).to.be.false);
     expect(result.current.filteredNodeLoader).to.not.be.undefined;
     const filteredProvider = result.current.filteredNodeLoader.dataProvider;
     expect(filteredProvider).to.be.instanceOf(FilteredPresentationTreeDataProvider);
@@ -185,8 +184,7 @@ describe("useControlledPresentationTreeFiltering", () => {
     );
 
     await pathsResult.resolve([]);
-    expect(result.current).to.not.be.undefined;
-    expect(result.current.isFiltering).to.be.false;
+    await waitFor(() => expect(result.current.isFiltering).to.be.false);
     expect(result.current.filteredNodeLoader).to.not.be.undefined;
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths(filter), moq.Times.once());
 
@@ -199,8 +197,7 @@ describe("useControlledPresentationTreeFiltering", () => {
     rerender({ ...initialProps, nodeLoader: newNodeLoader.object });
 
     await newPathsResult.resolve([]);
-    expect(result.current).to.not.be.undefined;
-    expect(result.current.isFiltering).to.be.false;
+    await waitFor(() => expect(result.current.isFiltering).to.be.false);
     expect(result.current.filteredNodeLoader).to.not.be.undefined;
     newProvider.verify(async (x) => x.getFilteredNodePaths(filter), moq.Times.once());
   });
@@ -219,16 +216,14 @@ describe("useControlledPresentationTreeFiltering", () => {
     );
 
     await pathsResult.resolve([]);
-    expect(result.current).to.not.be.undefined;
-    expect(result.current.isFiltering).to.be.false;
+    await waitFor(() => expect(result.current.isFiltering).to.be.false);
 
     const filteredNodeLoader = result.current.filteredNodeLoader;
     expect(filteredNodeLoader.dataProvider).to.be.instanceOf(FilteredPresentationTreeDataProvider);
     rerender({ ...initialProps, filter: "changed", nodeLoader: filteredNodeLoader });
 
     await pathsResult.resolve([]);
-    expect(result.current).to.not.be.undefined;
-    expect(result.current.isFiltering).to.be.false;
+    await waitFor(() => expect(result.current.isFiltering).to.be.false);
     expect(result.current.filteredNodeLoader).to.not.eq(filteredNodeLoader);
 
     // make sure that FilteredPresentationTreeDataProvider was not wrapped into another FilteredPresentationTreeDataProvider
@@ -237,7 +232,7 @@ describe("useControlledPresentationTreeFiltering", () => {
     expect((provider as FilteredPresentationTreeDataProvider).parentDataProvider).to.not.be.instanceOf(FilteredPresentationTreeDataProvider);
   });
 
-  it("returns `filteredNodeLoader` with model whose root node's `numRootNodes` is undefined and `loadNode` method returns result with an empty `loadedNodes` array when filtering", (done) => {
+  it("returns `filteredNodeLoader` with model whose root node's `numRootNodes` is undefined and `loadNode` method returns result with an empty `loadedNodes` array when filtering", async () => {
     const testModelNode: TreeModelNode = {
       id: "test",
       checkbox: {
@@ -266,11 +261,11 @@ describe("useControlledPresentationTreeFiltering", () => {
     const nodeLoader = result.current.filteredNodeLoader;
     expect(result.current.isFiltering).to.be.true;
     expect(nodeLoader.modelSource.getModel().getRootNode().numChildren).to.be.undefined;
+
+    let loadedNodes: TreeNodeItem[] | undefined;
     nodeLoader.loadNode(testModelNode, 0).subscribe((res) => {
-      expect(res).to.deep.eq({
-        loadedNodes: [],
-      });
-      done();
+      loadedNodes = res.loadedNodes;
     });
+    await waitFor(() => expect(loadedNodes).to.have.lengthOf(0));
   });
 });

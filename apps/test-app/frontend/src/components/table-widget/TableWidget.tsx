@@ -3,11 +3,13 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ProgressRadial, Table } from "@itwin/itwinui-react";
-import { TableCellRenderer, TableColumnDefinition, TableRowDefinition, usePresentationTableWithUnifiedSelection } from "@itwin/presentation-components";
+import {
+  TableCellRenderer, TableColumnDefinition, TableRowDefinition, usePresentationTableWithUnifiedSelection,
+} from "@itwin/presentation-components";
 
 export interface TableWidgetProps {
   imodel: IModelConnection;
@@ -44,18 +46,13 @@ function PresentationTable(props: PresentationTableProps) {
     sort(sortBy?.id, sortBy?.desc);
   }, [sort]);
 
-  const tableColumns = useMemo(() => columns
-    ? ([{ Header: "Table Header", columns }])
-    : undefined,
-  [columns]);
-
-  if (!tableColumns) {
+  if (!columns) {
     return <ProgressRadial indeterminate={true} />;
   }
 
   return (
     <Table
-      columns={tableColumns}
+      columns={columns}
       data={rows}
       emptyTableContent={"No data"}
       isLoading={isLoading}
@@ -63,6 +60,7 @@ function PresentationTable(props: PresentationTableProps) {
       isSortable={true}
       manualSortBy={true}
       onSort={onSort}
+      density="extra-condensed"
     />
   );
 }

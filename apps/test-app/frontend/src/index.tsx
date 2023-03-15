@@ -36,7 +36,9 @@ async function initializeApp() {
   });
 
   if (ProcessDetector.isElectronAppFrontend) {
+    // __PUBLISH_EXTRACT_START__ Presentation.Frontend.IModelAppStartup
     await ElectronApp.startup({ iModelApp: iModelAppOpts });
+    // __PUBLISH_EXTRACT_END__
   } else if (ProcessDetector.isBrowserProcess) {
     const rpcParams = { info: { title: "presentation-test-app", version: "v1.0" }, uriPrefix: "http://localhost:3001" };
     await IModelApp.startup(iModelAppOpts);

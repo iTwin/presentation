@@ -6,7 +6,7 @@
  * @module Core
  */
 
-import { LegacyRef, MutableRefObject, RefCallback, useCallback, useEffect, useRef, useState } from "react";
+import { LegacyRef, MutableRefObject, RefCallback, useCallback, useRef, useState } from "react";
 import { Primitives, PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IPropertyValueRenderer, PropertyValueRendererManager } from "@itwin/components-react";
 import { assert, Guid, GuidString, IDisposable } from "@itwin/core-bentley";
@@ -163,8 +163,6 @@ export function useResizeObserver<T extends HTMLElement>() {
       observer.current.observe(element);
     }
   }, []);
-
-  useEffect(() => () => { observer.current?.disconnect(); }, []);
 
   return {
     ref,

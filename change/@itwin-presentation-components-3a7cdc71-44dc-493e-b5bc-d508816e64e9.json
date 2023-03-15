@@ -1,5 +1,5 @@
 {
-  "type": "minor",
+  "type": "patch",
   "comment": "`NavigationPropertyTargetSelector`: add white background to the chevron",
   "packageName": "@itwin/presentation-components",
   "email": "124659623+simasjar@users.noreply.github.com",

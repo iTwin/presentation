@@ -59,7 +59,7 @@ export class FavoritePropertiesDataFilterer extends PropertyDataFiltererBase {
   }
 
   private async isFavorite(record: PropertyRecord): Promise<boolean> {
-    const field = await this._source.getFieldByPropertyRecord(record);
+    const field = await this._source.getFieldByPropertyDescription(record.property);
     return !!field && this._favoritesCheckCallback(field, this._source.imodel, this._favoritesScope);
   }
 

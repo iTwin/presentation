@@ -13,7 +13,7 @@ import { TableColumnDefinition } from "./Types";
 export interface UseColumnsProps {
   imodel: IModelConnection;
   ruleset: Ruleset | string;
-  keys: KeySet;
+  keys: Readonly<KeySet>;
 }
 
 /** @internal */
@@ -41,12 +41,12 @@ export function useColumns(props: UseColumnsProps): TableColumnDefinition[] | un
   return columns;
 }
 
-async function loadColumns(imodel: IModelConnection, ruleset: Ruleset | string, keys: KeySet): Promise<TableColumnDefinition[] | undefined> {
+async function loadColumns(imodel: IModelConnection, ruleset: Ruleset | string, keys: Readonly<KeySet>): Promise<TableColumnDefinition[] | undefined> {
   const descriptor = await Presentation.presentation.getContentDescriptor({
     imodel,
     rulesetOrId: ruleset,
     displayType: DefaultContentDisplayTypes.Grid,
-    keys,
+    keys: new KeySet(keys),
   });
 
   return descriptor ? createColumns(descriptor) : undefined;

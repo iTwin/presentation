@@ -10,13 +10,14 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
+import { waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import {
   NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE, NavigationPropertyTarget, useNavigationPropertyTargetsLoader, useNavigationPropertyTargetsRuleset,
 } from "../../presentation-components/properties/UseNavigationPropertyTargetsLoader";
 import { createTestContentDescriptor, createTestContentItem } from "../_helpers/Content";
 
-describe("UseNavigationPropertyTargetsLoader", () => {
+describe("useNavigationPropertyTargetsLoader", () => {
   const testImodel = {} as IModelConnection;
 
   beforeEach(async () => {
@@ -39,7 +40,7 @@ describe("UseNavigationPropertyTargetsLoader", () => {
       { initialProps: { imodel: testImodel } }
     );
 
-    const { options, hasMore } = await result.current("", []);
+    const { options, hasMore } = await result.current("", 0);
     expect(getContentStub).to.not.be.called;
     expect(options).to.be.empty;
     expect(hasMore).to.be.false;
@@ -62,7 +63,7 @@ describe("UseNavigationPropertyTargetsLoader", () => {
       { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } }
     );
 
-    const { options, hasMore } = await result.current("", []);
+    const { options, hasMore } = await result.current("", 0);
     expect(options).to.have.lengthOf(1);
     expect(options[0]).to.contain({ label: contentItem.label, key: contentItem.primaryKeys[0] });
     expect(hasMore).to.be.false;
@@ -80,7 +81,7 @@ describe("UseNavigationPropertyTargetsLoader", () => {
       { label: LabelDefinition.fromLabelString("test1"), key: { className: "class", id: "1" } },
       { label: LabelDefinition.fromLabelString("test2"), key: { className: "class", id: "2" } },
     ];
-    await result.current("", loadedTargets);
+    await result.current("", loadedTargets.length);
     expect(getContentStub).to.be.calledOnce;
     expect(getContentStub.getCall(0).args[0]).to.containSubset({ paging: { start: loadedTargets.length } });
   });
@@ -95,7 +96,7 @@ describe("UseNavigationPropertyTargetsLoader", () => {
       { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } }
     );
 
-    const { options, hasMore } = await result.current("", []);
+    const { options, hasMore } = await result.current("", 0);
     expect(options).to.have.lengthOf(NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE);
     expect(hasMore).to.be.true;
   });
@@ -109,7 +110,7 @@ describe("UseNavigationPropertyTargetsLoader", () => {
       { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } }
     );
 
-    await result.current("testFilter", []);
+    await result.current("testFilter", 0);
     expect(getContentStub).to.be.calledOnce;
     const descriptor = getContentStub.getCall(0).args[0].descriptor;
     expect(descriptor.fieldsFilterExpression).to.contain("testFilter");
@@ -130,11 +131,11 @@ describe("useNavigationPropertyTargetsRuleset", () => {
       targetClassInfo: { id: "2", label: "Target Class", name: "TestSchema:TargetClass" },
     };
     const propertyDescription: PropertyDescription = { displayLabel: "TestProp", name: "test_prop", typename: "navigation" };
-    const { result, waitForNextUpdate } = renderHook(
+    const { result } = renderHook(
       ({ getNavigationPropertyInfo, property }: Props) => useNavigationPropertyTargetsRuleset(getNavigationPropertyInfo, property),
       { initialProps: { getNavigationPropertyInfo: async () => testInfo, property: propertyDescription } });
 
-    await waitForNextUpdate();
+    await waitFor(() => expect(result.current).to.not.be.undefined);
     const ruleset = result.current;
     expect(ruleset).to.containSubset({
       rules: [{
