@@ -8,7 +8,7 @@
  */
 
 import { createContext, createRef, forwardRef, PureComponent, useContext, useMemo } from "react";
-import { PropertyDescription, PropertyRecord, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
+import { PropertyDescription, StandardTypeNames } from "@itwin/appui-abstract";
 import { PropertyEditorBase, PropertyEditorManager, PropertyEditorProps, TypeEditor } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { NavigationPropertyInfo } from "@itwin/presentation-common";
@@ -64,7 +64,7 @@ export function useNavigationPropertyEditingContext(imodel: IModelConnection, da
   return useMemo<NavigationPropertyEditorContextProps>(() => ({
     imodel,
     getNavigationPropertyInfo: async (property) => {
-      const field = await dataProvider.getFieldByPropertyRecord(new PropertyRecord({ valueFormat: PropertyValueFormat.Primitive }, property));
+      const field = await dataProvider.getFieldByPropertyDescription(property);
       if (!field || !field.isPropertiesField())
         return undefined;
       return field.properties[0].property.navigationPropertyInfo;

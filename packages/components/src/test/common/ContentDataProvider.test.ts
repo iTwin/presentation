@@ -451,26 +451,50 @@ describe("ContentDataProvider", () => {
 
   });
 
-  describe("getFieldByPropertyRecord", () => {
+  describe("[deprecated] getFieldByPropertyRecord", () => {
 
-    let propertyRecord: PropertyRecord;
-
-    before(() => {
+    it("passes record's description to `getFieldByPropertyDescription`", async () => {
       const value: PrimitiveValue = {
         displayValue: "displayValue",
         value: "rawValue",
         valueFormat: 0,
       };
-
       const description: PropertyDescription = {
         name: "propertyName",
         displayLabel: "labelString",
         typename: "number",
         editor: undefined,
       };
+      const record = new PropertyRecord(value, description);
 
-      propertyRecord = new PropertyRecord(value, description);
-      propertyRecord.isReadonly = false;
+      const field = createTestPropertiesContentField({
+        name: "test-field",
+        properties: [{
+          property: createTestPropertyInfo({ name: "test-property" }),
+        }],
+      });
+      provider.getFieldByPropertyDescription = sinon.fake(async () => field);
+
+      // eslint-disable-next-line deprecation/deprecation
+      const actualField = await provider.getFieldByPropertyRecord(record);
+
+      expect(provider.getFieldByPropertyDescription).to.be.calledOnceWith(record.property);
+      expect(actualField).to.eq(field);
+    });
+
+  });
+
+  describe("getFieldByPropertyDescription", () => {
+
+    let propertyDescription: PropertyDescription;
+
+    before(() => {
+      propertyDescription = {
+        name: "propertyName",
+        displayLabel: "labelString",
+        typename: "number",
+        editor: undefined,
+      };
     });
 
     beforeEach(() => {
@@ -483,7 +507,7 @@ describe("ContentDataProvider", () => {
         .returns(async () => undefined)
         .verifiable(moq.Times.once());
 
-      const field = await provider.getFieldByPropertyRecord(propertyRecord);
+      const field = await provider.getFieldByPropertyDescription(propertyDescription);
       presentationManagerMock.verifyAll();
       expect(field).to.be.undefined;
     });
@@ -496,7 +520,7 @@ describe("ContentDataProvider", () => {
         .returns(async () => descriptor)
         .verifiable(moq.Times.once());
 
-      const resultField = await provider.getFieldByPropertyRecord(propertyRecord);
+      const resultField = await provider.getFieldByPropertyDescription(propertyDescription);
       presentationManagerMock.verifyAll();
       expect(resultField).to.be.undefined;
     });
@@ -509,11 +533,11 @@ describe("ContentDataProvider", () => {
         }],
       });
       const descriptor = createTestContentDescriptor({ fields: [field] });
-      propertyRecord.property.name = "test-field";
+      propertyDescription.name = "test-field";
 
       presentationManagerMock.setup(async (x) => x.getContentDescriptor(moq.It.isAny())).returns(async () => descriptor).verifiable(moq.Times.once());
 
-      const resultField = await provider.getFieldByPropertyRecord(propertyRecord);
+      const resultField = await provider.getFieldByPropertyDescription(propertyDescription);
       presentationManagerMock.verifyAll();
       expect(resultField).to.eq(field);
     });
@@ -525,11 +549,11 @@ describe("ContentDataProvider", () => {
         nestedFields: [nestedField],
       });
       const descriptor = createTestContentDescriptor({ fields: [nestingField] });
-      propertyRecord.property.name = `${nestingField.name}${FIELD_NAMES_SEPARATOR}${nestedField.name}`;
+      propertyDescription.name = `${nestingField.name}${FIELD_NAMES_SEPARATOR}${nestedField.name}`;
 
       presentationManagerMock.setup(async (x) => x.getContentDescriptor(moq.It.isAny())).returns(async () => descriptor).verifiable(moq.Times.once());
 
-      const resultField = await provider.getFieldByPropertyRecord(propertyRecord);
+      const resultField = await provider.getFieldByPropertyDescription(propertyDescription);
       presentationManagerMock.verifyAll();
       expect(resultField).to.eq(nestedField);
     });

@@ -68,7 +68,7 @@ describe("Favorite properties", () => {
 
       // find the property record to make the property favorite
       const record = getPropertyRecordByLabel(propertyData, "Country")!;
-      const field = await propertiesDataProvider.getFieldByPropertyRecord(record);
+      const field = await propertiesDataProvider.getFieldByPropertyDescription(record.property);
       await Presentation.favoriteProperties.add(field!, imodel, FavoritePropertiesScope.Global);
 
       // verify we have a new favorites category
@@ -91,7 +91,7 @@ describe("Favorite properties", () => {
 
       // find the property record to make the property favorite
       const record = getPropertyRecordByLabel(propertyData, "area")!;
-      const field = await propertiesDataProvider.getFieldByPropertyRecord(record);
+      const field = await propertiesDataProvider.getFieldByPropertyDescription(record.property);
       await Presentation.favoriteProperties.add(field!, imodel, FavoritePropertiesScope.Global);
 
       // request properties for 1 element again
@@ -109,7 +109,7 @@ describe("Favorite properties", () => {
 
       // find the property record to make the property favorite
       const record = getPropertyRecordByLabel(propertyData, "Model")!;
-      const field = await propertiesDataProvider.getFieldByPropertyRecord(record);
+      const field = await propertiesDataProvider.getFieldByPropertyDescription(record.property);
       await Presentation.favoriteProperties.add(field!, imodel, FavoritePropertiesScope.Global);
 
       // verify the property is now in favorites group
@@ -134,7 +134,7 @@ describe("Favorite properties", () => {
       // find the property record to make the property favorite
       const sourceInfoModelSourceCategory = propertyData.categories.find((c) => c.name.endsWith("model_source"))!;
       const sourceFileNameRecord = propertyData.records[sourceInfoModelSourceCategory.name][0];
-      const field = await propertiesDataProvider.getFieldByPropertyRecord(sourceFileNameRecord);
+      const field = await propertiesDataProvider.getFieldByPropertyDescription(sourceFileNameRecord.property);
       await Presentation.favoriteProperties.add(field!, imodel, FavoritePropertiesScope.Global);
 
       // verify the property is now in favorites group
@@ -158,7 +158,7 @@ describe("Favorite properties", () => {
 
     const makeFieldFavorite = async (propertyData: PropertyData, fieldLabel: string) => {
       const record = getPropertyRecordByLabel(propertyData, fieldLabel)!;
-      const field = await propertiesDataProvider.getFieldByPropertyRecord(record);
+      const field = await propertiesDataProvider.getFieldByPropertyDescription(record.property);
       await Presentation.favoriteProperties.add(field!, imodel, FavoritePropertiesScope.Global);
     };
 
@@ -175,12 +175,12 @@ describe("Favorite properties", () => {
       expect(propertyData.records[FAVORITES_CATEGORY_NAME][1].property.displayLabel).to.eq("Category");
 
       const visibleFavoriteFields = await Promise.all(
-        propertyData.records[FAVORITES_CATEGORY_NAME].map(async (property) => propertiesDataProvider.getFieldByPropertyRecord(property)),
+        propertyData.records[FAVORITES_CATEGORY_NAME].map(async (r) => propertiesDataProvider.getFieldByPropertyDescription(r.property)),
       );
       expect(visibleFavoriteFields.every((f) => f !== undefined)).to.be.true;
 
       const record = getPropertyRecordByLabel(propertyData, "Category")!;
-      const field = await propertiesDataProvider.getFieldByPropertyRecord(record);
+      const field = await propertiesDataProvider.getFieldByPropertyDescription(record.property);
       await Presentation.favoriteProperties.changeFieldPriority(imodel, field!, undefined, visibleFavoriteFields as Field[]);
 
       propertyData = await propertiesDataProvider.getData();
@@ -206,14 +206,14 @@ describe("Favorite properties", () => {
       propertyData = await propertiesDataProvider.getData();
 
       const visibleFavoriteFields = await Promise.all(
-        propertyData.records[FAVORITES_CATEGORY_NAME].map(async (property) => propertiesDataProvider.getFieldByPropertyRecord(property)),
+        propertyData.records[FAVORITES_CATEGORY_NAME].map(async (r) => propertiesDataProvider.getFieldByPropertyDescription(r.property)),
       );
       expect(visibleFavoriteFields.every((f) => f !== undefined)).to.be.true;
 
       let record = getPropertyRecordByLabel(propertyData, "Code")!;
-      const codeField = (await propertiesDataProvider.getFieldByPropertyRecord(record))!;
+      const codeField = (await propertiesDataProvider.getFieldByPropertyDescription(record.property))!;
       record = getPropertyRecordByLabel(propertyData, "Model")!;
-      const modelField = (await propertiesDataProvider.getFieldByPropertyRecord(record))!;
+      const modelField = (await propertiesDataProvider.getFieldByPropertyDescription(record.property))!;
       await Presentation.favoriteProperties.changeFieldPriority(imodel, codeField, modelField, visibleFavoriteFields as Field[]);
 
       propertiesDataProvider.keys = new KeySet([{ className: "PCJ_TestSchema:TestClass", id: "0x65" }, { className: "Generic:PhysicalObject", id: "0x74" }]);
@@ -241,14 +241,14 @@ describe("Favorite properties", () => {
       propertyData = await propertiesDataProvider.getData();
 
       const visibleFavoriteFields = await Promise.all(
-        propertyData.records[FAVORITES_CATEGORY_NAME].map(async (property) => propertiesDataProvider.getFieldByPropertyRecord(property)),
+        propertyData.records[FAVORITES_CATEGORY_NAME].map(async (r) => propertiesDataProvider.getFieldByPropertyDescription(r.property)),
       );
       expect(visibleFavoriteFields.every((f) => f !== undefined)).to.be.true;
 
       let record = getPropertyRecordByLabel(propertyData, "Code")!;
-      const codeField = (await propertiesDataProvider.getFieldByPropertyRecord(record))!;
+      const codeField = (await propertiesDataProvider.getFieldByPropertyDescription(record.property))!;
       record = getPropertyRecordByLabel(propertyData, "Country")!;
-      const modelField = (await propertiesDataProvider.getFieldByPropertyRecord(record))!;
+      const modelField = (await propertiesDataProvider.getFieldByPropertyDescription(record.property))!;
       await Presentation.favoriteProperties.changeFieldPriority(imodel, codeField, modelField, visibleFavoriteFields as Field[]);
 
       propertiesDataProvider.keys = new KeySet([{ className: "PCJ_TestSchema:TestClass", id: "0x65" }, { className: "Generic:PhysicalObject", id: "0x74" }]);
@@ -292,7 +292,7 @@ describe("Favorite properties", () => {
 
       // find the property record to make the property favorite
       const record = getPropertyRecordByLabel(propertyData, "Model")!;
-      const field = await propertiesDataProvider.getFieldByPropertyRecord(record);
+      const field = await propertiesDataProvider.getFieldByPropertyDescription(record.property);
       await Presentation.favoriteProperties.add(field!, imodel, FavoritePropertiesScope.Global);
 
       // verify the property is now in favorites group
