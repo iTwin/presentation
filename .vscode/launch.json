@@ -74,7 +74,29 @@
       ],
       "outFiles": [
         "${workspaceFolder}/packages/components/lib/**/*.js"
-      ]
+      ],
+      "env": {
+        "NODE_ENV": "development"
+      }
+    },
+    {
+      "name": "Tests: Testing",
+      "cwd": "${workspaceFolder}/packages/testing",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/packages/testing/node_modules/mocha/bin/_mocha",
+      "args": [
+        "--config",
+        "./.mocharc.json",
+        "--no-timeouts",
+        "lib/cjs/test/**/*.test.js"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/packages/testing/lib/**/*.js"
+      ],
+      "env": {
+        "NODE_ENV": "development"
+      }
     },
     {
       "name": "Tests: Full-stack",
@@ -88,8 +110,12 @@
         "--no-timeouts"
       ],
       "outFiles": [
+        "${workspaceFolder}/packages/{components, testing}/lib/**/*.js",
         "${workspaceFolder}/packages/full-stack-tests/lib/**/*.js"
-      ]
+      ],
+      "env": {
+        "NODE_ENV": "development"
+      }
     }
   ],
   "compounds": [
