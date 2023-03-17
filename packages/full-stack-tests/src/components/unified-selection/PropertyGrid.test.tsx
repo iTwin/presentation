@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import React from "react";
+import { useCallback, useState } from "react";
 import { UiComponents, VirtualizedPropertyGridWithDataProvider } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { useDisposable } from "@itwin/core-react";
@@ -38,7 +38,7 @@ describe("Learning snippets", async () => {
         function MyPropertyGrid(props: { imodel: IModelConnection }) {
           // create a presentation rules driven data provider; the provider implements `IDisposable`, so we
           // create it through `useDisposable` hook to make sure it's properly cleaned up
-          const dataProvider = useDisposable(React.useCallback(() => {
+          const dataProvider = useDisposable(useCallback(() => {
             return new PresentationPropertyDataProvider({ imodel: props.imodel });
           }, [props.imodel]));
 
@@ -46,8 +46,8 @@ describe("Learning snippets", async () => {
           const { isOverLimit, numSelectedElements } = usePropertyDataProviderWithUnifiedSelection({ dataProvider });
 
           // width and height should generally we computed using ResizeObserver API or one of its derivatives
-          const [width] = React.useState(400);
-          const [height] = React.useState(600);
+          const [width] = useState(400);
+          const [height] = useState(600);
 
           // data provider is going to be empty if no elements are selected
           if (numSelectedElements === 0)

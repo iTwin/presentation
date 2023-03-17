@@ -4,7 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import React from "react";
+import { useState } from "react";
 import { ControlledTree, SelectionMode, UiComponents, useTreeModel } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { InstanceKey, KeySet, Ruleset, RuleTypes } from "@itwin/presentation-common";
@@ -45,8 +45,8 @@ describe("Learning snippets", async () => {
           const treeEventsHandler = useUnifiedSelectionTreeEventHandler({ nodeLoader });
 
           // width and height should generally we computed using ResizeObserver API or one of its derivatives
-          const [width] = React.useState(400);
-          const [height] = React.useState(600);
+          const [width] = useState(400);
+          const [height] = useState(600);
 
           return (
             <ControlledTree
