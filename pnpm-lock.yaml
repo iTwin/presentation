@@ -331,6 +331,7 @@ importers:
       '@itwin/core-react': ^4.0.0-dev.11
       '@itwin/ecschema-metadata': ^4.0.0-dev.37
       '@itwin/eslint-plugin': ^4.0.0-dev.30
+      '@itwin/imodel-components-react': ^4.0.0-dev.11
       '@itwin/presentation-backend': ^4.0.0-dev.37
       '@itwin/presentation-common': ^4.0.0-dev.37
       '@itwin/presentation-components': workspace:^
@@ -383,6 +384,7 @@ importers:
       '@itwin/core-react': 4.0.0-dev.11_e3aiwhirm6vbie5hl443q4qiuu
       '@itwin/ecschema-metadata': 4.0.0-dev.37_tmx55w27u7jzrvy6gmadp5e4fq
       '@itwin/eslint-plugin': 4.0.0-dev.30_wnilx7boviscikmvsfkd6ljepe
+      '@itwin/imodel-components-react': 4.0.0-dev.11_xkp3xaqra6xslyl4gwirluux6u
       '@itwin/presentation-backend': 4.0.0-dev.37_4spucsnvoksbk26tzli2hoof44
       '@itwin/presentation-common': 4.0.0-dev.37_zwdxjia2h6b2v2dwhzmtwhrg4u
       '@itwin/presentation-components': link:../components
