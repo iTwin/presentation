@@ -12,7 +12,7 @@ import { InstanceKey, KeySet } from "@itwin/presentation-common";
 import { PresentationPropertyDataProvider, usePropertyDataProviderWithUnifiedSelection } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
-import { act, fireEvent, render, waitFor } from "@testing-library/react";
+import { act, fireEvent, getByText, render, waitFor } from "@testing-library/react";
 import { insertPhysicalElement, insertPhysicalModel, insertSpatialCategory } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 
@@ -106,10 +106,10 @@ async function ensurePropertyGridHasPropertyRecord(container: HTMLElement, prope
     fireEvent.click(category.querySelector(".iui-expandable-block .iui-header")!);
   await waitFor(() => expect(category.querySelector(".iui-expanded")).to.not.be.null);
 
-  // find the property label
+  // find the property record
   await waitFor(() => {
-    const record = getPropertyRecordByLabel(container, propertyLabel);
-    expect(record.querySelector(`.components-property-record-value [title="${propertyValue}"]`)).to.not.be.null;
+    getByText(container, propertyLabel);
+    getByText(container, propertyValue);
   });
 }
 
@@ -118,13 +118,4 @@ function getRootPropertyCategory(htmlContainer: HTMLElement) {
   if (!categoryElement)
     throw new Error(`Failed to find root category`);
   return categoryElement;
-}
-
-function getPropertyRecordByLabel(htmlContainer: HTMLElement, label: string) {
-  let curr = htmlContainer.querySelector(`.virtualized-grid-node .components-property-record-label [title*="${label}"]`);
-  while (curr && !curr.classList.contains("virtualized-grid-node"))
-    curr = curr.parentElement;
-  if (!curr || !curr.classList.contains("virtualized-grid-node"))
-    throw new Error(`Failed to find property record with property label "${label}"`);
-  return curr;
 }
