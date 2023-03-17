@@ -79,19 +79,19 @@ class TreeReloader extends PagedTreeNodeLoader<IPresentationTreeDataProvider> {
         expand((expandedNode) => {
           const node = this.modelSource.getModel().getNode(expandedNode.id);
           if (node !== undefined) {
-          // The expanded node is already loaded in the new tree model, now load and expand its children recursively
+            // The expanded node is already loaded in the new tree model, now load and expand its children recursively
             return concat(this.loadChildren(node), expandedNode.expandedChildren);
           }
 
           // The expanded node is either not loaded yet, or does not exist in the new tree hierarchy
           const parentNode = getTreeNode(this.modelSource.getModel(), expandedNode.parentId);
           if (parentNode === undefined || parentNode.numChildren === undefined) {
-          // Cannot determine sibling count. Assume parent is missing from the new tree or something went wrong.
+            // Cannot determine sibling count. Assume parent is missing from the new tree or something went wrong.
             return EMPTY;
           }
 
           if (parentNode.numChildren === 0) {
-          // Parent node no longer has any children, thus we will not find the expanded node
+            // Parent node no longer has any children, thus we will not find the expanded node
             return EMPTY;
           }
 
@@ -106,7 +106,7 @@ class TreeReloader extends PagedTreeNodeLoader<IPresentationTreeDataProvider> {
             Math.min(expandedNode.index + this.pageSize, parentNode.numChildren - 1),
           ])
             .pipe(
-            // For each guess, load the corresponding page
+              // For each guess, load the corresponding page
               concatMap((index) => this.loadNode(parentNode, index)),
               // Stop making guesses when the node is found
               map(() => this.modelSource.getModel().getNode(expandedNode.id)),
