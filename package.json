@@ -19,7 +19,7 @@
     "lint": "lage lint --continue",
     "lint:copyright": "node scripts/copyrightLinter.js",
     "prepare": "husky install",
-    "change": "beachball change --no-commit",
+    "change": "beachball change",
     "check": "beachball check",
     "version-bump": "beachball bump",
     "version-bump-dev": "beachball bump --config beachball.config.dev.js --keep-change-files",
