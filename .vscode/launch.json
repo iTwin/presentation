@@ -99,22 +99,6 @@
       }
     },
     {
-      "name": "Tests: Testing",
-      "cwd": "${workspaceFolder}/packages/testing",
-      "type": "node",
-      "request": "launch",
-      "program": "${workspaceFolder}/packages/testing/node_modules/mocha/bin/_mocha",
-      "args": [
-        "--config",
-        "./.mocharc.json",
-        "--no-timeouts",
-        "lib/cjs/test/**/*.test.js"
-      ],
-      "outFiles": [
-        "${workspaceFolder}/packages/testing/lib/**/*.js"
-      ]
-    },
-    {
       "name": "Tests: Full-stack",
       "cwd": "${workspaceFolder}/packages/full-stack-tests",
       "type": "node",
