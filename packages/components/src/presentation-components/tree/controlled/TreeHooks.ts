@@ -162,38 +162,30 @@ function useResettableState<T>(initialValue: () => T, dependencies: unknown[]): 
   return [stateRef.current, setNewStateRef.current];
 }
 
-function useModelSourceUpdateOnIModelHierarchyUpdate(params: {
-  enable: boolean;
+interface UpdateParams {
   dataProviderProps: PresentationTreeDataProviderProps;
   rulesetId: string;
   pageSize: number;
   modelSource: TreeModelSource;
   setTreeNodeLoaderState: React.Dispatch<React.SetStateAction<TreeNodeLoaderState>>;
   renderedItems: React.MutableRefObject<RenderedItemsRange | undefined>;
-}): void {
+}
+
+function useModelSourceUpdateOnIModelHierarchyUpdate(params: UpdateParams & { enable: boolean }): void {
   const { enable, dataProviderProps, rulesetId, pageSize, modelSource, setTreeNodeLoaderState, renderedItems } = params;
 
   useEffect(
     () => {
-      if (!enable) {
+      if (!enable)
         return;
-      }
 
       let subscription: Subscription | undefined;
       const removeListener = Presentation.presentation.onIModelHierarchyChanged.addListener(
-        async (args: IModelHierarchyChangeEventArgs) => {
-          if (args.rulesetId !== rulesetId || args.imodelKey !== dataProviderProps.imodel.key) {
+        (args: IModelHierarchyChangeEventArgs) => {
+          if (args.rulesetId !== rulesetId || args.imodelKey !== dataProviderProps.imodel.key)
             return;
-          }
 
-          const dataProvider = new PresentationTreeDataProvider({ ...dataProviderProps, ruleset: rulesetId });
-          subscription = reloadTree(modelSource.getModel(), dataProvider, pageSize, renderedItems.current).subscribe({
-            next: (newModelSource) => setTreeNodeLoaderState((prevState) => ({
-              modelSource: newModelSource,
-              rulesetRegistration: prevState.rulesetRegistration,
-              dataProvider,
-            })),
-          });
+          subscription = startTreeReload({ dataProviderProps, rulesetId, pageSize, modelSource, renderedItems, setTreeNodeLoaderState });
         },
       );
 
@@ -206,37 +198,20 @@ function useModelSourceUpdateOnIModelHierarchyUpdate(params: {
   );
 }
 
-function useModelSourceUpdateOnRulesetModification(params: {
-  enable: boolean;
-  dataProviderProps: PresentationTreeDataProviderProps;
-  rulesetId: string;
-  pageSize: number;
-  modelSource: TreeModelSource;
-  setTreeNodeLoaderState: React.Dispatch<React.SetStateAction<TreeNodeLoaderState>>;
-  renderedItems: React.MutableRefObject<RenderedItemsRange | undefined>;
-}): void {
+function useModelSourceUpdateOnRulesetModification(params: UpdateParams & { enable: boolean }): void {
   const { enable, dataProviderProps, rulesetId, pageSize, modelSource, setTreeNodeLoaderState, renderedItems } = params;
 
   useEffect(
     () => {
-      if (!enable) {
+      if (!enable)
         return;
-      }
 
       let subscription: Subscription | undefined;
       const removeListener = Presentation.presentation.rulesets().onRulesetModified.addListener((ruleset) => {
-        if (ruleset.id !== rulesetId) {
+        if (ruleset.id !== rulesetId)
           return;
-        }
 
-        const dataProvider = new PresentationTreeDataProvider({ ...dataProviderProps, ruleset: rulesetId });
-        subscription = reloadTree(modelSource.getModel(), dataProvider, pageSize, renderedItems.current).subscribe({
-          next: (newModelSource) => setTreeNodeLoaderState((prevState) => ({
-            modelSource: newModelSource,
-            rulesetRegistration: prevState.rulesetRegistration,
-            dataProvider,
-          })),
-        });
+        subscription = startTreeReload({ dataProviderProps, rulesetId, pageSize, modelSource, renderedItems, setTreeNodeLoaderState });
       });
 
       return () => {
@@ -248,34 +223,18 @@ function useModelSourceUpdateOnRulesetModification(params: {
   );
 }
 
-function useModelSourceUpdateOnRulesetVariablesChange(params: {
-  enable: boolean;
-  dataProviderProps: PresentationTreeDataProviderProps;
-  rulesetId: string;
-  pageSize: number;
-  modelSource: TreeModelSource;
-  setTreeNodeLoaderState: React.Dispatch<React.SetStateAction<TreeNodeLoaderState>>;
-  renderedItems: React.MutableRefObject<RenderedItemsRange | undefined>;
-}): void {
+function useModelSourceUpdateOnRulesetVariablesChange(params: UpdateParams & { enable: boolean }): void {
   const { enable, dataProviderProps, pageSize, rulesetId, modelSource, setTreeNodeLoaderState, renderedItems } = params;
 
   useEffect(
     () => {
-      if (!enable) {
+      if (!enable)
         return;
-      }
 
       let subscription: Subscription | undefined;
       const removeListener = Presentation.presentation.vars(rulesetId).onVariableChanged.addListener(() => {
         // note: we should probably debounce these events while accumulating changed variables in case multiple vars are changed
-        const dataProvider = new PresentationTreeDataProvider({ ...dataProviderProps, ruleset: rulesetId });
-        subscription = reloadTree(modelSource.getModel(), dataProvider, pageSize, renderedItems.current).subscribe({
-          next: (newModelSource) => setTreeNodeLoaderState((prevState) => ({
-            modelSource: newModelSource,
-            rulesetRegistration: prevState.rulesetRegistration,
-            dataProvider,
-          })),
-        });
+        subscription = startTreeReload({ dataProviderProps, rulesetId, pageSize, modelSource, renderedItems, setTreeNodeLoaderState });
       });
 
       return () => {
@@ -285,4 +244,15 @@ function useModelSourceUpdateOnRulesetVariablesChange(params: {
     },
     [dataProviderProps, enable, modelSource, pageSize, rulesetId, setTreeNodeLoaderState, renderedItems],
   );
+}
+
+function startTreeReload({ dataProviderProps, rulesetId, modelSource, pageSize, renderedItems, setTreeNodeLoaderState }: UpdateParams): Subscription {
+  const dataProvider = new PresentationTreeDataProvider({ ...dataProviderProps, ruleset: rulesetId });
+  return reloadTree(modelSource.getModel(), dataProvider, pageSize, renderedItems.current).subscribe({
+    next: (newModelSource) => setTreeNodeLoaderState((prevState) => ({
+      modelSource: newModelSource,
+      rulesetRegistration: prevState.rulesetRegistration,
+      dataProvider,
+    })),
+  });
 }
