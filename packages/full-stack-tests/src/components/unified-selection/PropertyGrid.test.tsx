@@ -80,10 +80,10 @@ describe("Learning snippets", async () => {
         });
 
         // render the component
-        const { container, getByText } = render(
+        const { container } = render(
           <MyPropertyGrid imodel={imodel} />
         );
-        await waitFor(() => getByText("Select an element to see its properties"));
+        await waitFor(() => getByText(container, "Select an element to see its properties"));
 
         // test Unified Selection -> Property Grid content synchronization
         act(() => Presentation.selection.replaceSelection("", imodel, new KeySet([elementKeys[0]])));
