@@ -46,6 +46,7 @@ export default class App extends Component<{}, State> {
   constructor() {
     super({});
     this.state = {
+      // eslint-disable-next-line deprecation/deprecation
       activeUnitSystem: Presentation.presentation.activeUnitSystem,
       rightPaneRatio: 0.5,
       contentRatio: 0.7,
@@ -90,6 +91,7 @@ export default class App extends Component<{}, State> {
   };
 
   private onUnitSystemSelected = (unitSystem: UnitSystemKey | undefined) => {
+    // eslint-disable-next-line deprecation/deprecation
     Presentation.presentation.activeUnitSystem = unitSystem;
     this.setState({ activeUnitSystem: unitSystem }, () => this.updateAppSettings());
   };
