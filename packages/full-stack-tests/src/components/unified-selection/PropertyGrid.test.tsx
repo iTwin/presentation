@@ -49,7 +49,7 @@ describe("Learning snippets", async () => {
           const [width] = React.useState(400);
           const [height] = React.useState(600);
 
-          // data provider is going to be empty is no elements are selected
+          // data provider is going to be empty if no elements are selected
           if (numSelectedElements === 0)
             return <>Select an element to see its properties</>;
 
