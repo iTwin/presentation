@@ -95,6 +95,6 @@
     "sinon": "^9.0.2",
     "sinon-chai": "^3.2.0",
     "typemoq": "^2.1.0",
-    "typescript": "~4.4.0"
+    "typescript": "~5.0.2"
   }
 }

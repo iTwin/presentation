@@ -25,6 +25,6 @@
     "@itwin/presentation-common": "^4.0.0-dev.37",
     "eslint": "^7.11.0",
     "rimraf": "^3.0.2",
-    "typescript": "~4.4.0"
+    "typescript": "~5.0.2"
   }
 }
