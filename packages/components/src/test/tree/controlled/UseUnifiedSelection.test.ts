@@ -30,7 +30,7 @@ import { createTestECClassGroupingNodeKey, createTestECInstancesNodeKey } from "
 import { ResolvablePromise } from "../../_helpers/Promises";
 import { createTestTreeNodeItem } from "../../_helpers/UiComponents";
 
-const awaitableObservable = <T extends unknown>(input: ObservableInput<T>) => {
+const awaitableObservable = <T>(input: ObservableInput<T>) => {
   const promise = new ResolvablePromise<void>();
   const observable = from(input).pipe(finalize(async () => promise.resolve()));
   return { observable, waitForCompletion: async () => promise };
