@@ -7,6 +7,7 @@
  */
 
 import path from "path";
+import sanitize from "sanitize-filename";
 import { IModelDb, IModelJsFs, SnapshotDb } from "@itwin/core-backend";
 import { Id64String } from "@itwin/core-bentley";
 import { BisCodeSpec, Code, CodeScopeProps, CodeSpec, ElementAspectProps, ElementProps, LocalFileName, ModelProps } from "@itwin/core-common";
@@ -15,7 +16,6 @@ import { getTestOutputDir } from "./Helpers";
 
 /**
  * Interface for IModel builder pattern. Used for building IModels to test rulesets.
- *
  * @beta
  */
 export interface TestIModelBuilder {
@@ -36,10 +36,19 @@ export interface TestIModelBuilder {
  * Function that creates an iModel and returns a connection to it.
  * @param name Name of test IModel
  * @param cb Callback function that receives an [[TestIModelBuilder]] to fill the iModel with data
- *
  * @beta
  */
-export async function buildTestIModel(name: string, cb: (builder: TestIModelBuilder) => void): Promise<IModelConnection> {
+export async function buildTestIModel(name: string, cb: (builder: TestIModelBuilder) => void): Promise<IModelConnection>;
+/**
+ * Function that creates an iModel and returns a connection to it.
+ * @param mochaContext Mocha context to generate iModel name from
+ * @param cb Callback function that receives an [[TestIModelBuilder]] to fill the iModel with data
+ * @beta
+ */
+// eslint-disable-next-line @typescript-eslint/unified-signatures
+export async function buildTestIModel(mochaContext: Mocha.Context, cb: (builder: TestIModelBuilder) => void): Promise<IModelConnection>;
+export async function buildTestIModel(nameParam: string | Mocha.Context, cb: (builder: TestIModelBuilder) => void): Promise<IModelConnection> {
+  const name = (typeof nameParam === "string") ? nameParam : createFileNameFromString(nameParam.test!.fullTitle());
   const outputFile = setupOutputFileLocation(name);
   const db = SnapshotDb.createEmpty(outputFile, { rootSubject: { name } });
   const builder = new IModelBuilder(db);
@@ -96,4 +105,9 @@ function setupOutputFileLocation(fileName: string): LocalFileName {
   const outputFile = path.join(testOutputDir, `${fileName}.bim`);
   IModelJsFs.existsSync(outputFile) && IModelJsFs.unlinkSync(outputFile);
   return outputFile;
+}
+
+/** @internal */
+export function createFileNameFromString(str: string) {
+  return sanitize(str.replace(" ", "-")).toLocaleLowerCase();
 }

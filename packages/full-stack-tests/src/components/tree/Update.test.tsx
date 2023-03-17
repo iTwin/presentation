@@ -16,7 +16,7 @@ import { ChildNodeSpecificationTypes, RuleTypes } from "@itwin/presentation-comm
 import { IPresentationTreeDataProvider, PresentationTreeNodeLoaderProps, usePresentationTreeNodeLoader } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { renderHook } from "@testing-library/react-hooks";
-import { initialize, terminate } from "../IntegrationTests";
+import { initialize, terminate } from "../../IntegrationTests";
 
 describe("Update", () => {
   let imodel: IModelConnection;
