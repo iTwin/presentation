@@ -8,7 +8,7 @@ import { Observable } from "rxjs/internal/Observable";
 import * as sinon from "sinon";
 import * as moq from "typemoq";
 import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
-import { DelayLoadedTreeNodeItem, MutableTreeModel, TreeModelNodeInput, TreeModelSource, UiComponents } from "@itwin/components-react";
+import { DelayLoadedTreeNodeItem, MutableTreeModel, RenderedItemsRange, TreeModelNodeInput, TreeModelSource, UiComponents } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { reloadTree } from "../../../presentation-components/tree/controlled/TreeReloader";
@@ -248,6 +248,106 @@ describe("reloadTree", () => {
     expect(rootNodes.get(0)).to.be.equal("root-0");
 
     expect(treeModel.getNode("root-0")!.isExpanded).to.be.false;
+  });
+
+  describe("visible range", () => {
+    const itemsRange: RenderedItemsRange = { visibleStartIndex: 0, visibleStopIndex: 0, overscanStartIndex: 0, overscanStopIndex: 0 };
+
+    it("reload nodes in visible range", async () => {
+      const initialTreeModel = new MutableTreeModel();
+      initialTreeModel.setChildren(
+        undefined,
+        [createTreeModelNodeInput("root-0"), createTreeModelNodeInput("root-1"), createTreeModelNodeInput("root-2")],
+        0
+      );
+
+      // simulate that "root-2" are visible
+      const modelSource = await waitForReload(reloadTree(initialTreeModel, dataProvider, 1, { ...itemsRange, visibleStartIndex: 2, visibleStopIndex: 2 }));
+      const treeModel = modelSource.getModel();
+
+      const rootNodes = treeModel.getChildren(undefined)!;
+      expect(rootNodes.getLength()).to.be.equal(3);
+      expect(rootNodes.get(0)).to.be.equal("root-0");
+      expect(rootNodes.get(1)).to.be.undefined;
+      expect(rootNodes.get(2)).to.be.equal("root-2");
+    });
+
+    it("adjusts visible range when reloading nodes", async () => {
+      const initialTreeModel = new MutableTreeModel();
+      initialTreeModel.setChildren(
+        undefined,
+        [createTreeModelNodeInput("root-0"), createTreeModelNodeInput("root-1"), createTreeModelNodeInput("root-2"), createTreeModelNodeInput("root-3")],
+        0
+      );
+
+      // simulate that "root-3" is visible
+      const modelSource = await waitForReload(reloadTree(initialTreeModel, dataProvider, 1, { ...itemsRange, visibleStartIndex: 3, visibleStopIndex: 3 }));
+      const treeModel = modelSource.getModel();
+
+      // expect visible range to be adjusted and one last node to be loaded
+      const rootNodes = treeModel.getChildren(undefined)!;
+      expect(rootNodes.getLength()).to.be.equal(3);
+      expect(rootNodes.get(0)).to.be.equal("root-0");
+      expect(rootNodes.get(1)).to.be.undefined;
+      expect(rootNodes.get(2)).to.be.equal("root-2");
+    });
+
+    it("reloads child nodes in visible range", async () => {
+      const initialTreeModel = new MutableTreeModel();
+      initialTreeModel.setChildren(
+        undefined,
+        [createTreeModelNodeInput("root-0"), createTreeModelNodeInput("root-1"), createTreeModelNodeInput("root-2")],
+        0
+      );
+      initialTreeModel.setChildren(
+        "root-1",
+        [createTreeModelNodeInput("root-1-0"), createTreeModelNodeInput("root-1-1"), createTreeModelNodeInput("root-1-2")],
+        0
+      );
+      initialTreeModel.getNode("root-1")!.isExpanded = true;
+
+      // simulate visible range:
+      // - root-0
+      // - root-1
+      //   - root-1-0
+      //   - root-1-1
+      const modelSource = await waitForReload(reloadTree(initialTreeModel, dataProvider, 1, { ...itemsRange, visibleStartIndex: 0, visibleStopIndex: 3 }));
+      const treeModel = modelSource.getModel();
+
+      const rootNodes = treeModel.getChildren(undefined)!;
+      expect(rootNodes.getLength()).to.be.equal(3);
+      expect(rootNodes.get(0)).to.be.equal("root-0");
+      expect(rootNodes.get(1)).to.be.equal("root-1");
+      expect(rootNodes.get(2)).to.undefined;
+
+      const childNodes = treeModel.getChildren("root-1")!;
+      expect(childNodes.getLength()).to.be.equal(3);
+      expect(childNodes.get(0)).to.be.equal("root-1-0");
+      expect(childNodes.get(1)).to.be.equal("root-1-1");
+      expect(childNodes.get(2)).to.undefined;
+    });
+
+    it("handles reload resulting in empty tree", async () => {
+      dataProvider.getNodes = async () => [];
+      dataProvider.getNodesCount = async () => 0;
+
+      const initialTreeModel = new MutableTreeModel();
+      initialTreeModel.setChildren(
+        undefined,
+        [createTreeModelNodeInput("root-0"), createTreeModelNodeInput("root-1"), createTreeModelNodeInput("root-2")],
+        0
+      );
+
+      // simulate visible range:
+      // - root-0
+      // - root-1
+      // - root-2
+      const modelSource = await waitForReload(reloadTree(initialTreeModel, dataProvider, 1, { ...itemsRange, visibleStartIndex: 0, visibleStopIndex: 2 }));
+      const treeModel = modelSource.getModel();
+
+      const rootNodes = treeModel.getChildren(undefined)!;
+      expect(rootNodes.getLength()).to.be.equal(0);
+    });
   });
 
   function createTreeModelNodeInput(id: string): TreeModelNodeInput {
