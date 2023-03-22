@@ -13,7 +13,7 @@ import { DEFAULT_PROPERTY_GRID_RULESET, FAVORITES_CATEGORY_NAME, PresentationPro
 import {
   createFavoritePropertiesStorage, DefaultFavoritePropertiesStorageTypes, FavoritePropertiesScope, Presentation,
 } from "@itwin/presentation-frontend";
-import { initialize, terminate } from "../IntegrationTests";
+import { initialize, terminate } from "../../IntegrationTests";
 
 describe("Favorite properties", () => {
 
