@@ -21,7 +21,7 @@
     "@itwin/core-geometry": "^4.0.0-dev.37",
     "@itwin/core-quantity": "^4.0.0-dev.37",
     "@itwin/ecschema-metadata": "^4.0.0-dev.37",
-    "@itwin/eslint-plugin": "^4.0.0-dev.30",
+    "@itwin/eslint-plugin": "^4.0.0-dev.32",
     "@itwin/presentation-common": "^4.0.0-dev.37",
     "eslint": "^7.11.0",
     "rimraf": "^3.0.2",
