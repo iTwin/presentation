@@ -13,7 +13,7 @@ import {
 } from "@itwin/core-common";
 import { SnapshotConnection } from "@itwin/core-frontend";
 import { getTestOutputDir } from "../presentation-testing/Helpers";
-import { buildTestIModel, IModelBuilder } from "../presentation-testing/IModelUtilities";
+import { buildTestIModel, createFileNameFromString, IModelBuilder } from "../presentation-testing/IModelUtilities";
 
 interface SetupSnapshotResult {
   dbMock: moq.IMock<SnapshotDb>;
@@ -139,11 +139,21 @@ describe("IModelUtilities", () => {
       expect(mkdirFake.notCalled);
     });
 
-    it("calls SnapshotDb.createEmpty with correct parameters", async () => {
+    it("calls `SnapshotDb.createEmpty` with correct parameters when using overload with imodel name", async () => {
       const fileName = "fileName";
       const { createSnapshotDb } = setupSnapshot();
 
       await buildTestIModel(fileName, () => { });
+
+      expect(createSnapshotDb.firstCall.firstArg).to.include(`${fileName}.bim`);
+      expect(createSnapshotDb.firstCall.lastArg).to.deep.equal({ rootSubject: { name: fileName } });
+    });
+
+    it("calls `SnapshotDb.createEmpty` with correct parameters when using overload with mocha context", async function () {
+      const fileName = createFileNameFromString(this.test!.fullTitle());
+      const { createSnapshotDb } = setupSnapshot();
+
+      await buildTestIModel(this, () => { });
 
       expect(createSnapshotDb.firstCall.firstArg).to.include(`${fileName}.bim`);
       expect(createSnapshotDb.firstCall.lastArg).to.deep.equal({ rootSubject: { name: fileName } });

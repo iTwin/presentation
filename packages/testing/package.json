@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-testing",
-  "version": "4.0.0-dev.23",
+  "version": "4.0.0-dev.26",
   "description": "Testing utilities for iTwin.js Presentation library",
   "license": "MIT",
   "repository": {
@@ -34,7 +34,8 @@
     "test": "mocha --config ./.mocharc.json \"./lib/cjs/test/**/*.test.js\""
   },
   "dependencies": {
-    "rimraf": "^3.0.2"
+    "rimraf": "^3.0.2",
+    "sanitize-filename": "^1.6.3"
   },
   "peerDependencies": {
     "@itwin/appui-abstract": "^3.6.0 || ^4.0.0-dev.37",
@@ -61,7 +62,7 @@
     "@itwin/core-quantity": "^4.0.0-dev.37",
     "@itwin/core-react": "^4.0.0-dev.11",
     "@itwin/ecschema-metadata": "^4.0.0-dev.37",
-    "@itwin/eslint-plugin": "^4.0.0-dev.30",
+    "@itwin/eslint-plugin": "^4.0.0-dev.32",
     "@itwin/presentation-backend": "^4.0.0-dev.37",
     "@itwin/presentation-common": "^4.0.0-dev.37",
     "@itwin/presentation-frontend": "^4.0.0-dev.37",
@@ -94,6 +95,6 @@
     "sinon": "^9.0.2",
     "sinon-chai": "^3.2.0",
     "typemoq": "^2.1.0",
-    "typescript": "~4.4.0"
+    "typescript": "~5.0.2"
   }
 }

@@ -230,7 +230,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
   }
 }
 
-function getFilterDefinition(imodel: IModelConnection, node?: TreeNodeItem) {
+async function getFilterDefinition(imodel: IModelConnection, node?: TreeNodeItem) {
   if (!node || !isPresentationTreeNodeItem(node) || !node.filtering?.active)
     return undefined;
   return convertToInstanceFilterDefinition(node.filtering.active.filter, imodel);

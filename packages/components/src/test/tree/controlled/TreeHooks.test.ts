@@ -7,20 +7,15 @@ import { expect } from "chai";
 import sinon from "sinon";
 import * as moq from "typemoq";
 import { PrimitiveValue } from "@itwin/appui-abstract";
-import {
-  computeVisibleNodes, MutableTreeModel, TreeModel, TreeModelNode, TreeModelNodeEditingInfo, TreeModelNodeInput, UiComponents,
-} from "@itwin/components-react";
-import { EmptyLocalization } from "@itwin/core-common";
+import { MutableTreeModel, TreeModel, TreeModelNode, TreeModelNodeEditingInfo, TreeModelNodeInput, UiComponents } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
 import { LabelDefinition, Node, RegisteredRuleset, StandardNodeTypes } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
 import { waitFor } from "@testing-library/react";
 import { cleanup, renderHook } from "@testing-library/react-hooks";
-import { IPresentationTreeDataProvider } from "../../../presentation-components";
 import {
-  applyHierarchyChanges, PresentationTreeNodeLoaderProps, PresentationTreeNodeLoaderResult, reloadVisibleHierarchyParts,
-  usePresentationTreeNodeLoader,
+  PresentationTreeNodeLoaderProps, PresentationTreeNodeLoaderResult, usePresentationTreeNodeLoader,
 } from "../../../presentation-components/tree/controlled/TreeHooks";
 import { createTreeNodeItem } from "../../../presentation-components/tree/Utils";
 import { mockPresentationManager } from "../../_helpers/UiComponents";
@@ -29,7 +24,6 @@ describe("usePresentationNodeLoader", () => {
   let onIModelHierarchyChanged: PresentationManager["onIModelHierarchyChanged"];
   let onRulesetModified: RulesetManager["onRulesetModified"];
   let onRulesetVariableChanged: RulesetVariablesManager["onVariableChanged"];
-  let presentationManagerMock: moq.IMock<PresentationManager>;
   const imodelMock = moq.Mock.ofType<IModelConnection>();
   const rulesetId = "test-ruleset-id";
   const imodelKey = "test-imodel-key";
@@ -42,11 +36,9 @@ describe("usePresentationNodeLoader", () => {
   beforeEach(async () => {
     imodelMock.setup((x) => x.key).returns(() => imodelKey);
     const mocks = mockPresentationManager();
-    presentationManagerMock = mocks.presentationManager;
     onIModelHierarchyChanged = mocks.presentationManager.object.onIModelHierarchyChanged;
     onRulesetModified = mocks.rulesetsManager.object.onRulesetModified;
     onRulesetVariableChanged = mocks.rulesetVariablesManager.object.onVariableChanged;
-    mocks.presentationManager.setup((x) => x.stateTracker).returns(() => undefined); // eslint-disable-line @itwin/no-internal
     mocks.presentationManager
       .setup(async (x) => x.getNodesAndCount(moq.It.isAny()))
       .returns(async () => ({ count: 0, nodes: [] }));
@@ -136,7 +128,7 @@ describe("usePresentationNodeLoader", () => {
       await waitFor(() => expect(result.current.nodeLoader).to.eq(oldNodeLoader));
     });
 
-    it("creates a new nodeLoader when `PresentationManager` raises a related `onIModelHierarchyChanged` event with FULL hierarchy update", async () => {
+    it("creates a new nodeLoader when `PresentationManager` raises a related `onIModelHierarchyChanged event`", async () => {
       const { result } = renderHook(
         (props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props),
         { initialProps: { ...initialProps, ruleset: rulesetId } },
@@ -144,18 +136,6 @@ describe("usePresentationNodeLoader", () => {
       const oldNodeLoader = result.current.nodeLoader;
 
       onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey });
-
-      await waitFor(() => expect(result.current.nodeLoader).to.not.eq(oldNodeLoader));
-    });
-
-    it("creates a new nodeLoader when `PresentationManager` raises a related `onIModelHierarchyChanged` event with partial hierarchy updates", async () => {
-      const { result } = renderHook(
-        (props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props),
-        { initialProps },
-      );
-      const oldNodeLoader = result.current.nodeLoader;
-
-      onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: [{ parent: undefined, nodesCount: 2 }], imodelKey });
 
       await waitFor(() => expect(result.current.nodeLoader).to.not.eq(oldNodeLoader));
     });
@@ -231,18 +211,6 @@ describe("usePresentationNodeLoader", () => {
       await waitFor(() => expect(result.current.nodeLoader).to.eq(oldNodeLoader));
     });
 
-    it("does not create a new nodeLoader when 'onIModelHierarchyChanged' event is raised but there are no changes", async () => {
-      const { result } = renderHook(
-        (props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props),
-        { initialProps },
-      );
-      const oldNodeLoader = result.current.nodeLoader;
-
-      onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: [], imodelKey });
-
-      await waitFor(() => expect(result.current.nodeLoader).to.eq(oldNodeLoader));
-    });
-
     it("creates a fresh `TreeModelSource` when nodeLoader changes", async () => {
       const seedTreeModel = createTreeModel(["test"]);
       const { result, rerender } = renderHook<PresentationTreeNodeLoaderProps, PresentationTreeNodeLoaderResult>(
@@ -255,25 +223,6 @@ describe("usePresentationNodeLoader", () => {
       rerender({ ...initialProps, ruleset: "updated" });
       const newModelSource = result.current.nodeLoader.modelSource;
       await waitFor(() => expectTree(newModelSource.getModel(), []));
-    });
-
-    it("reloads nodes and creates a new nodeLoader when 'onIModelHierarchyChanged' event is raised", async () => {
-      const { result } = renderHook(
-        (props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props),
-        { initialProps },
-      );
-      const oldNodeLoader = result.current.nodeLoader;
-      result.current.onItemsRendered({ overscanStartIndex: 0, overscanStopIndex: 1, visibleStartIndex: 0, visibleStopIndex: 1 });
-
-      presentationManagerMock.setup(async (x) => x.getNodesAndCount(
-        moq.It.is(({ paging, parentKey }) => paging?.start === 0 && paging.size === 1 && !parentKey))
-      )
-        .returns(async () => ({ count: 1, nodes: [createNode("root1")] }))
-        .verifiable(moq.Times.once());
-
-      onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: [{ parent: undefined, nodesCount: 1 }], imodelKey });
-      await waitFor(() => expect(result.current.nodeLoader).to.not.eq(oldNodeLoader));
-      presentationManagerMock.verifyAll();
     });
   });
 
@@ -407,296 +356,3 @@ function createTreeModel(hierarchy: TreeHierarchy[]): MutableTreeModel {
     }
   }
 }
-
-describe("applyHierarchyUpdateRecords", () => {
-  before(async () => {
-    await UiComponents.initialize(new EmptyLocalization());
-  });
-
-  after(() => {
-    UiComponents.terminate();
-  });
-
-  it("returns same model if node was not present in model", () => {
-    const nonExistingNode = createNode("non-existing");
-    const initialTree = createTreeModel(["root1", "root2"]);
-    const updatedTree = applyHierarchyChanges(
-      initialTree,
-      [{
-        parent: nonExistingNode.key,
-        nodesCount: 2,
-      }],
-      [],
-      {}
-    );
-    expect(updatedTree).to.be.eq(initialTree);
-  });
-
-  it("updates children count of updated root node", () => {
-    const initialTree = createTreeModel(["root1", "root2"]);
-    const updatedTree = applyHierarchyChanges(
-      initialTree,
-      [{
-        parent: createNode("root1").key,
-        nodesCount: 2,
-      }],
-      [],
-      {}
-    );
-    expectTree(updatedTree, ["root1", "root2"]);
-    expect(updatedTree.getNode("root1")?.numChildren).to.be.eq(2);
-  });
-
-  it("updates expanded root node and removes siblings", () => {
-    const initialTree = createTreeModel(["root1", "root2"]);
-    const updatedTree = applyHierarchyChanges(
-      initialTree,
-      [{
-        parent: undefined,
-        nodesCount: 1,
-        expandedNodes: [{
-          node: { ...createNode("root1"), description: "updated-description" },
-          position: 0,
-        }],
-      }],
-      [],
-      {}
-    );
-    expectTree(updatedTree, ["root1"]);
-    expect(updatedTree.getNode("root1")?.description).to.be.eq("updated-description");
-  });
-
-  it("replaces root node with new", () => {
-    const initialTree = createTreeModel(["root1", "root2"]);
-    const updatedTree = applyHierarchyChanges(
-      initialTree,
-      [{
-        parent: undefined,
-        nodesCount: 1,
-        expandedNodes: [{
-          node: createNode("updated-root"),
-          position: 0,
-        }],
-      }],
-      [],
-      {}
-    );
-    expectTree(updatedTree, ["updated-root"]);
-  });
-
-  it("replaces child nodes with new if parent is expanded", () => {
-    const initialTree = createTreeModel([{ label: "root1", expanded: true, children: ["child1", "child2"] }, "root2"]);
-    const updatedTree = applyHierarchyChanges(
-      initialTree,
-      [{
-        parent: createNode("root1").key,
-        nodesCount: 1,
-        expandedNodes: [{
-          node: createNode("updated-child"),
-          position: 0,
-        }],
-      }],
-      [],
-      {}
-    );
-    expectTree(updatedTree, [{ label: "root1", expanded: true, children: ["updated-child"] }, "root2"]);
-  });
-
-  it("removes child nodes if parent is not expanded", () => {
-    const initialTree = createTreeModel([{ ["root1"]: ["child1", "child2"] }, "root2"]);
-    const updatedTree = applyHierarchyChanges(
-      initialTree,
-      [{
-        parent: createNode("root1").key,
-        nodesCount: 1,
-        expandedNodes: [{
-          node: createNode("updated-child"),
-          position: 0,
-        }],
-      }],
-      [],
-      {}
-    );
-    expectTree(updatedTree, ["root1", "root2"]);
-    expect(updatedTree.getNode("root1")?.numChildren).to.be.eq(1);
-  });
-
-  it("updates parent node and persists it's subtree", () => {
-    const initialTree = createTreeModel([
-      {
-        label: "root1",
-        expanded: true,
-        children: [
-          "child1",
-          {
-            label: "child2",
-            expanded: true,
-            children: ["grandChild1"],
-          },
-        ],
-      },
-      "root2",
-    ]);
-
-    const updatedTree = applyHierarchyChanges(
-      initialTree,
-      [{
-        parent: undefined,
-        nodesCount: 2,
-        expandedNodes: [{
-          node: { ...createNode("root1"), description: "updated-description" },
-          position: 0,
-        }],
-      }],
-      [],
-      {}
-    );
-
-    expectTree(updatedTree, [
-      {
-        label: "root1",
-        expanded: true,
-        children: [
-          "child1",
-          {
-            label: "child2",
-            expanded: true,
-            children: ["grandChild1"],
-          },
-        ],
-      },
-    ]);
-    expect(updatedTree.getNode("root1")?.description).to.be.eq("updated-description");
-  });
-
-  it("updates node children count to 'undefined' when it is collapsed and has children", () => {
-    const initialTree = createTreeModel([
-      {
-        root1: [
-          "child1",
-          "child2",
-        ],
-      },
-    ]);
-
-    const updatedTree = applyHierarchyChanges(
-      initialTree,
-      [{
-        parent: undefined,
-        nodesCount: 1,
-        expandedNodes: [{
-          node: { ...createNode("root1"), description: "updated-description", hasChildren: true },
-          position: 0,
-        }],
-      }],
-      [],
-      {}
-    );
-
-    expectTree(updatedTree, ["root1"]);
-    expect(updatedTree.getNode("root1")?.description).to.be.eq("updated-description");
-    expect(updatedTree.getNode("root1")?.numChildren).to.be.undefined;
-  });
-
-  it("updates root node and adds reloaded siblings", () => {
-    const initialTree = createTreeModel(["root1", "root2", "root3"]);
-
-    const updatedTree = applyHierarchyChanges(
-      initialTree,
-      [{
-        parent: undefined,
-        nodesCount: 3,
-        expandedNodes: [{
-          node: { ...createNode("root2"), description: "updated-description" },
-          position: 1,
-        }],
-      }],
-      [{
-        parentId: undefined,
-        nodeItems: [createTreeNodeItem(createNode("root1")), createTreeNodeItem(createNode("root2")), createTreeNodeItem(createNode("root3"))],
-        offset: 0,
-      }],
-      {}
-    );
-
-    expectTree(updatedTree, ["root1", "root2", "root3"]);
-    expect(updatedTree.getNode("root2")?.description).to.be.eq("updated-description");
-  });
-});
-
-describe("reloadVisibleHierarchyParts", () => {
-  interface HierarchyItem {
-    label: string;
-    position: number;
-    children?: HierarchyItem[];
-    childCount?: number;
-  }
-
-  function addNodes(model: MutableTreeModel, parentId: string | undefined, items?: HierarchyItem[], itemsCount?: number) {
-    model.setNumChildren(parentId, itemsCount ?? items?.length);
-    for (const item of items ?? []) {
-      model.setChildren(parentId, [{ ...createNodeInput(item.label), isExpanded: true }], item.position);
-      addNodes(model, item.label, item.children, item.childCount);
-    }
-  }
-
-  function createVisibleNodes(rootNodesCount: number, hierarchy: HierarchyItem[],) {
-    const model = new MutableTreeModel();
-    addNodes(model, undefined, hierarchy, rootNodesCount);
-    return computeVisibleNodes(model);
-  }
-
-  const dataProviderMock = moq.Mock.ofType<IPresentationTreeDataProvider>();
-
-  beforeEach(() => {
-    dataProviderMock.reset();
-  });
-
-  it("does not load nodes if they are already loaded", async () => {
-    const visibleNodes = createVisibleNodes(2, [{ label: "root1", position: 0 }, { label: "root2", position: 1 }]);
-    await reloadVisibleHierarchyParts(visibleNodes, { overscanStartIndex: 0, overscanStopIndex: 1, visibleStartIndex: 0, visibleStopIndex: 1 }, dataProviderMock.object);
-    dataProviderMock.verify(async (x) => x.getNodes(moq.It.isAny(), moq.It.isAny()), moq.Times.never());
-  });
-
-  it("does not load nodes if there are no visible nodes", async () => {
-    const visibleNodes = createVisibleNodes(0, []);
-    await reloadVisibleHierarchyParts(visibleNodes, { overscanStartIndex: 0, overscanStopIndex: 4, visibleStartIndex: 0, visibleStopIndex: 4 }, dataProviderMock.object);
-    dataProviderMock.verify(async (x) => x.getNodes(moq.It.isAny(), moq.It.isAny()), moq.Times.never());
-  });
-
-  it("reloads visible root nodes", async () => {
-    const visibleNodes = createVisibleNodes(4, [{ label: "root2", position: 1 }, { label: "root3", position: 2 }]);
-    dataProviderMock.setup(async (x) => x.getNodes(undefined, moq.It.isObjectWith({ start: 0, size: 4 })))
-      .returns(async () => [])
-      .verifiable(moq.Times.once());
-    await reloadVisibleHierarchyParts(visibleNodes, { overscanStartIndex: 0, overscanStopIndex: 3, visibleStartIndex: 0, visibleStopIndex: 3 }, dataProviderMock.object);
-    dataProviderMock.verifyAll();
-  });
-
-  it("reloads visible child nodes", async () => {
-    const visibleNodes = createVisibleNodes(2, [{ label: "root1", position: 0 }, { label: "root2", position: 1, childCount: 3 }]);
-    dataProviderMock.setup(async (x) => x.getNodes(moq.It.is((item) => item !== undefined && item.id === "root2"), moq.It.isObjectWith({ start: 0, size: 3 })))
-      .returns(async () => [])
-      .verifiable(moq.Times.once());
-    await reloadVisibleHierarchyParts(visibleNodes, { overscanStartIndex: 0, overscanStopIndex: 5, visibleStartIndex: 0, visibleStopIndex: 5 }, dataProviderMock.object);
-    dataProviderMock.verifyAll();
-  });
-
-  it("reloads with correct page size if there are less visible nodes", async () => {
-    const visibleNodes = createVisibleNodes(1, []);
-    dataProviderMock.setup(async (x) => x.getNodes(undefined, moq.It.isObjectWith({ start: 0, size: 1 })))
-      .returns(async () => [])
-      .verifiable(moq.Times.once());
-    await reloadVisibleHierarchyParts(visibleNodes, { overscanStartIndex: 0, overscanStopIndex: 4, visibleStartIndex: 0, visibleStopIndex: 4 }, dataProviderMock.object);
-    dataProviderMock.verifyAll();
-  });
-
-  it("reloads with correct page start if there are less visible nodes", async () => {
-    const visibleNodes = createVisibleNodes(3, []);
-    dataProviderMock.setup(async (x) => x.getNodes(undefined, moq.It.isObjectWith({ start: 0, size: 3 })))
-      .returns(async () => [])
-      .verifiable(moq.Times.once());
-    await reloadVisibleHierarchyParts(visibleNodes, { overscanStartIndex: 1, overscanStopIndex: 3, visibleStartIndex: 1, visibleStopIndex: 3 }, dataProviderMock.object);
-    dataProviderMock.verifyAll();
-  });
-});

@@ -45,6 +45,12 @@ describe("Utils", () => {
       expect(treeNode).to.matchSnapshot();
     });
 
+    it("creates tree node with children", () => {
+      const node = createTestECInstancesNode({ hasChildren: true });
+      const treeNode = createTreeNodeItem(node);
+      expect(treeNode.hasChildren).to.be.true;
+    });
+
     it("appends grouped nodes count if requested", () => {
       const node: Node = {
         key: createTestECClassGroupingNodeKey({ groupedInstancesCount: 999 }),

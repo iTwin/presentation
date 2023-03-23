@@ -9,18 +9,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Subscription } from "rxjs/internal/Subscription";
 import {
-  computeVisibleNodes, DelayLoadedTreeNodeItem, isTreeModelNode, isTreeModelNodePlaceholder, MutableTreeModel, MutableTreeModelNode,
-  PagedTreeNodeLoader, RenderedItemsRange, TreeModel, TreeModelNode, TreeModelNodeInput, TreeModelSource, TreeNodeItem, usePagedTreeNodeLoader,
-  VisibleTreeNodes,
+  MutableTreeModel, PagedTreeNodeLoader, RenderedItemsRange, TreeModel, TreeModelSource, usePagedTreeNodeLoader,
 } from "@itwin/components-react";
-import { HierarchyUpdateRecord, PageOptions, UPDATE_FULL } from "@itwin/presentation-common";
 import { IModelHierarchyChangeEventArgs, Presentation } from "@itwin/presentation-frontend";
 import { RulesetRegistrationHelper } from "../../common/RulesetRegistrationHelper";
 import { PresentationTreeDataProvider, PresentationTreeDataProviderProps } from "../DataProvider";
 import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
-import { createTreeNodeId, createTreeNodeItem, CreateTreeNodeItemProps } from "../Utils";
 import { reloadTree } from "./TreeReloader";
-import { useHierarchyStateTracking } from "./UseHierarchyStateTracking";
 
 /**
  * Properties for [[usePresentationTreeNodeLoader]] hook.
@@ -102,20 +97,22 @@ export function usePresentationTreeNodeLoader(
 
   const nodeLoader = usePagedTreeNodeLoader(dataProvider, rest.pagingSize, modelSource);
 
+  const renderedItems = useRef<RenderedItemsRange | undefined>(undefined);
+  // istanbul ignore next
+  const onItemsRendered = useCallback((items: RenderedItemsRange) => { renderedItems.current = items; }, []);
+
   const params = {
     enable: !!enableHierarchyAutoUpdate,
     pageSize: rest.pagingSize,
     modelSource,
     dataProviderProps,
+    rulesetId: dataProvider.rulesetId,
     setTreeNodeLoaderState,
+    renderedItems,
   };
-  const onItemsRendered = useModelSourceUpdateOnIModelHierarchyUpdate({
-    ...params,
-    dataProvider,
-    treeNodeItemCreationProps: { appendChildrenCountForGroupingNodes: dataProviderProps.appendChildrenCountForGroupingNodes },
-  });
+  useModelSourceUpdateOnIModelHierarchyUpdate(params);
   useModelSourceUpdateOnRulesetModification(params);
-  useModelSourceUpdateOnRulesetVariablesChange({ ...params, rulesetId: dataProvider.rulesetId });
+  useModelSourceUpdateOnRulesetVariablesChange(params);
 
   firstRenderRef.current = false;
   return { nodeLoader, onItemsRendered };
@@ -148,65 +145,30 @@ function useResettableState<T>(initialValue: () => T, dependencies: unknown[]): 
   return [stateRef.current, setNewStateRef.current];
 }
 
-function useModelSourceUpdateOnIModelHierarchyUpdate(params: {
-  enable: boolean;
-  dataProvider: IPresentationTreeDataProvider;
+interface UpdateParams {
   dataProviderProps: PresentationTreeDataProviderProps;
+  rulesetId: string;
   pageSize: number;
   modelSource: TreeModelSource;
   setTreeNodeLoaderState: React.Dispatch<React.SetStateAction<TreeNodeLoaderState>>;
-  treeNodeItemCreationProps: CreateTreeNodeItemProps;
-}): (items: RenderedItemsRange) => void {
-  const {
-    enable,
-    dataProvider,
-    dataProviderProps,
-    pageSize,
-    modelSource,
-    setTreeNodeLoaderState,
-    treeNodeItemCreationProps,
-  } = params;
+  renderedItems: React.MutableRefObject<RenderedItemsRange | undefined>;
+}
 
-  useHierarchyStateTracking({ modelSource, dataProvider, enableTracking: enable });
-  const renderedItems = useRef<RenderedItemsRange | undefined>(undefined);
-  const onItemsRendered = useCallback((items: RenderedItemsRange) => { renderedItems.current = items; }, []);
+function useModelSourceUpdateOnIModelHierarchyUpdate(params: UpdateParams & { enable: boolean }): void {
+  const { enable, dataProviderProps, rulesetId, pageSize, modelSource, setTreeNodeLoaderState, renderedItems } = params;
 
   useEffect(
     () => {
-      if (!enable) {
+      if (!enable)
         return;
-      }
 
       let subscription: Subscription | undefined;
       const removeListener = Presentation.presentation.onIModelHierarchyChanged.addListener(
-        async (args: IModelHierarchyChangeEventArgs) => {
-          if (args.rulesetId !== dataProvider.rulesetId || args.imodelKey !== dataProvider.imodel.key) {
+        (args: IModelHierarchyChangeEventArgs) => {
+          if (args.rulesetId !== rulesetId || args.imodelKey !== dataProviderProps.imodel.key)
             return;
-          }
 
-          const newDataProvider = new PresentationTreeDataProvider({ ...dataProviderProps, ruleset: args.rulesetId });
-          if (args.updateInfo === UPDATE_FULL) {
-            subscription = reloadTree(modelSource.getModel(), newDataProvider, pageSize).subscribe({
-              next: (newModelSource) => setTreeNodeLoaderState((prevState) => ({
-                modelSource: newModelSource,
-                rulesetRegistration: prevState.rulesetRegistration,
-                dataProvider: newDataProvider,
-              })),
-            });
-          } else {
-            const newModelSource = await updateModelSourceAfterIModelChange(
-              modelSource,
-              args.updateInfo,
-              newDataProvider,
-              treeNodeItemCreationProps,
-              renderedItems.current,
-            );
-            setTreeNodeLoaderState((prevState) => ({
-              modelSource: newModelSource,
-              rulesetRegistration: prevState.rulesetRegistration,
-              dataProvider: newDataProvider,
-            }));
-          }
+          subscription = startTreeReload({ dataProviderProps, rulesetId, pageSize, modelSource, renderedItems, setTreeNodeLoaderState });
         },
       );
 
@@ -215,37 +177,24 @@ function useModelSourceUpdateOnIModelHierarchyUpdate(params: {
         subscription?.unsubscribe();
       };
     },
-    [dataProvider, modelSource, enable, pageSize, treeNodeItemCreationProps, dataProviderProps, setTreeNodeLoaderState],
+    [modelSource, enable, pageSize, dataProviderProps, rulesetId, setTreeNodeLoaderState, renderedItems],
   );
-
-  return onItemsRendered;
 }
 
-function useModelSourceUpdateOnRulesetModification(params: {
-  enable: boolean;
-  dataProviderProps: PresentationTreeDataProviderProps;
-  pageSize: number;
-  modelSource: TreeModelSource;
-  setTreeNodeLoaderState: React.Dispatch<React.SetStateAction<TreeNodeLoaderState>>;
-}): void {
-  const { enable, dataProviderProps, pageSize, modelSource, setTreeNodeLoaderState } = params;
+function useModelSourceUpdateOnRulesetModification(params: UpdateParams & { enable: boolean }): void {
+  const { enable, dataProviderProps, rulesetId, pageSize, modelSource, setTreeNodeLoaderState, renderedItems } = params;
 
   useEffect(
     () => {
-      if (!enable) {
+      if (!enable)
         return;
-      }
 
       let subscription: Subscription | undefined;
       const removeListener = Presentation.presentation.rulesets().onRulesetModified.addListener((ruleset) => {
-        const dataProvider = new PresentationTreeDataProvider({ ...dataProviderProps, ruleset: ruleset.id });
-        subscription = reloadTree(modelSource.getModel(), dataProvider, pageSize).subscribe({
-          next: (newModelSource) => setTreeNodeLoaderState((prevState) => ({
-            modelSource: newModelSource,
-            rulesetRegistration: prevState.rulesetRegistration,
-            dataProvider,
-          })),
-        });
+        if (ruleset.id !== rulesetId)
+          return;
+
+        subscription = startTreeReload({ dataProviderProps, rulesetId, pageSize, modelSource, renderedItems, setTreeNodeLoaderState });
       });
 
       return () => {
@@ -253,37 +202,22 @@ function useModelSourceUpdateOnRulesetModification(params: {
         subscription?.unsubscribe();
       };
     },
-    [dataProviderProps, enable, modelSource, pageSize, setTreeNodeLoaderState],
+    [dataProviderProps, rulesetId, enable, modelSource, pageSize, setTreeNodeLoaderState, renderedItems],
   );
 }
 
-function useModelSourceUpdateOnRulesetVariablesChange(params: {
-  enable: boolean;
-  dataProviderProps: PresentationTreeDataProviderProps;
-  pageSize: number;
-  rulesetId: string;
-  modelSource: TreeModelSource;
-  setTreeNodeLoaderState: React.Dispatch<React.SetStateAction<TreeNodeLoaderState>>;
-}): void {
-  const { enable, dataProviderProps, pageSize, rulesetId, modelSource, setTreeNodeLoaderState } = params;
+function useModelSourceUpdateOnRulesetVariablesChange(params: UpdateParams & { enable: boolean }): void {
+  const { enable, dataProviderProps, pageSize, rulesetId, modelSource, setTreeNodeLoaderState, renderedItems } = params;
 
   useEffect(
     () => {
-      if (!enable) {
+      if (!enable)
         return;
-      }
 
       let subscription: Subscription | undefined;
       const removeListener = Presentation.presentation.vars(rulesetId).onVariableChanged.addListener(() => {
         // note: we should probably debounce these events while accumulating changed variables in case multiple vars are changed
-        const dataProvider = new PresentationTreeDataProvider({ ...dataProviderProps, ruleset: rulesetId });
-        subscription = reloadTree(modelSource.getModel(), dataProvider, pageSize).subscribe({
-          next: (newModelSource) => setTreeNodeLoaderState((prevState) => ({
-            modelSource: newModelSource,
-            rulesetRegistration: prevState.rulesetRegistration,
-            dataProvider,
-          })),
-        });
+        subscription = startTreeReload({ dataProviderProps, rulesetId, pageSize, modelSource, renderedItems, setTreeNodeLoaderState });
       });
 
       return () => {
@@ -291,194 +225,17 @@ function useModelSourceUpdateOnRulesetVariablesChange(params: {
         subscription?.unsubscribe();
       };
     },
-    [dataProviderProps, enable, modelSource, pageSize, rulesetId, setTreeNodeLoaderState],
+    [dataProviderProps, enable, modelSource, pageSize, rulesetId, setTreeNodeLoaderState, renderedItems],
   );
 }
 
-async function updateModelSourceAfterIModelChange(
-  modelSource: TreeModelSource,
-  hierarchyUpdateRecords: HierarchyUpdateRecord[],
-  dataProvider: IPresentationTreeDataProvider,
-  treeNodeItemCreationProps: CreateTreeNodeItemProps,
-  renderedItems?: RenderedItemsRange,
-): Promise<TreeModelSource> {
-  const modelWithUpdateRecords = applyHierarchyChanges(
-    modelSource.getModel() as MutableTreeModel,
-    hierarchyUpdateRecords,
-    [],
-    treeNodeItemCreationProps,
-  );
-  if (modelWithUpdateRecords === modelSource.getModel()) {
-    return modelSource;
-  }
-
-  if (!renderedItems) {
-    return new TreeModelSource(modelWithUpdateRecords);
-  }
-
-  const reloadedHierarchyParts = await reloadVisibleHierarchyParts(computeVisibleNodes(modelWithUpdateRecords), renderedItems, dataProvider);
-  const newModel = applyHierarchyChanges(modelSource.getModel() as MutableTreeModel, hierarchyUpdateRecords, reloadedHierarchyParts, treeNodeItemCreationProps);
-  return new TreeModelSource(newModel);
-}
-
-/** @internal */
-export interface ReloadedHierarchyPart {
-  parentId: string | undefined;
-  nodeItems: DelayLoadedTreeNodeItem[];
-  offset: number;
-}
-
-/** @internal */
-export function applyHierarchyChanges(
-  treeModel: MutableTreeModel,
-  hierarchyUpdateRecords: HierarchyUpdateRecord[],
-  reloadedHierarchyParts: ReloadedHierarchyPart[],
-  treeNodeItemCreationProps: CreateTreeNodeItemProps
-) {
-  const modelSource = new TreeModelSource(treeModel);
-  modelSource.modifyModel((model: MutableTreeModel) => {
-    const updateParentIds = hierarchyUpdateRecords
-      .map((record) => record.parent ? createTreeNodeId(record.parent) : undefined);
-    for (const record of hierarchyUpdateRecords) {
-      const parentNodeId = record.parent ? createTreeNodeId(record.parent) : undefined;
-      const parentNode = parentNodeId ? model.getNode(parentNodeId) : model.getRootNode();
-      if (!parentNode) {
-        continue;
-      }
-
-      // FIXME: we may receive an update record for the same parent node with different instance
-      // filters - here we should check if the instance filter in the update record matches instance filter
-      // of the parent node from model.
-
-      model.clearChildren(parentNodeId);
-      model.setNumChildren(parentNodeId, record.nodesCount);
-      if (isTreeModelNode(parentNode) && !parentNode.isExpanded)
-        continue;
-
-      for (const expandedNode of record.expandedNodes ?? []) {
-        const treeItem = createTreeNodeItem(expandedNode.node, parentNodeId, treeNodeItemCreationProps);
-        const existingNode = treeModel.getNode(treeItem.id);
-        model.setChildren(parentNodeId, [createModelNodeInput(existingNode, treeItem)], expandedNode.position);
-        if (existingNode) {
-          rebuildSubTree(treeModel, model, existingNode, updateParentIds);
-        }
-      }
-    }
-
-    for (const reloadedHierarchyPart of reloadedHierarchyParts) {
-      let offset = reloadedHierarchyPart.offset;
-      for (const item of reloadedHierarchyPart.nodeItems) {
-        const newItem = createModelNodeInput(undefined, item);
-        const existingItem = model.getNode(newItem.id);
-        if (!existingItem) {
-          model.setChildren(reloadedHierarchyPart.parentId, [newItem], offset);
-        }
-        offset++;
-      }
-    }
+function startTreeReload({ dataProviderProps, rulesetId, modelSource, pageSize, renderedItems, setTreeNodeLoaderState }: UpdateParams): Subscription {
+  const dataProvider = new PresentationTreeDataProvider({ ...dataProviderProps, ruleset: rulesetId });
+  return reloadTree(modelSource.getModel(), dataProvider, pageSize, renderedItems.current).subscribe({
+    next: (newModelSource) => setTreeNodeLoaderState((prevState) => ({
+      modelSource: newModelSource,
+      rulesetRegistration: prevState.rulesetRegistration,
+      dataProvider,
+    })),
   });
-  return modelSource.getModel() as MutableTreeModel;
-}
-
-function rebuildSubTree(oldModel: MutableTreeModel, newModel: MutableTreeModel, parentNode: TreeModelNode, excludedNodeIds: Array<string | undefined>) {
-  const oldChildren = oldModel.getChildren(parentNode.id);
-  if (!oldChildren || !parentNode.isExpanded || excludedNodeIds.includes(parentNode.id))
-    return;
-
-  newModel.setNumChildren(parentNode.id, oldChildren.getLength());
-  for (const [childId, index] of oldChildren.iterateValues()) {
-    const childNode = oldModel.getNode(childId);
-    // istanbul ignore else
-    if (childNode) {
-      newModel.setChildren(parentNode.id, [{ ...childNode }], index);
-      rebuildSubTree(oldModel, newModel, childNode, excludedNodeIds);
-    }
-  }
-}
-
-function createModelNodeInput(oldNode: MutableTreeModelNode | undefined, newNode: DelayLoadedTreeNodeItem): TreeModelNodeInput {
-  const newInput = {
-    description: newNode.description,
-    isExpanded: !!newNode.autoExpand,
-    id: newNode.id,
-    item: newNode,
-    label: newNode.label,
-    isLoading: false,
-    numChildren: !newNode.hasChildren ? 0 : undefined,
-    isSelected: false,
-  };
-  if (!oldNode) {
-    return newInput;
-  }
-
-  return {
-    ...newInput,
-    isExpanded: oldNode.isExpanded,
-    isSelected: oldNode.isSelected,
-    isLoading: oldNode.isLoading,
-  };
-}
-
-/** @internal */
-export async function reloadVisibleHierarchyParts(
-  visibleNodes: VisibleTreeNodes,
-  renderedItems: RenderedItemsRange,
-  dataProvider: IPresentationTreeDataProvider,
-) {
-  const itemsRange = getItemsRange(renderedItems, visibleNodes);
-
-  interface ChildRange {
-    parentItem: TreeNodeItem | undefined;
-    startIndex: number;
-    endIndex: number;
-  }
-
-  const partsToReload = new Map<string | undefined, ChildRange>();
-
-  for (let i = itemsRange.startIndex; i <= itemsRange.endIndex; i++) {
-    const node = visibleNodes.getAtIndex(i);
-    if (!node || !isTreeModelNodePlaceholder(node))
-      continue;
-
-    const parentNode = node.parentId ? visibleNodes.getModel().getNode(node.parentId) : visibleNodes.getModel().getRootNode();
-    // istanbul ignore if
-    if (!parentNode || isTreeModelNodePlaceholder(parentNode))
-      continue;
-
-    const partToReload = partsToReload.get(parentNode.id);
-    if (!partToReload) {
-      partsToReload.set(parentNode.id, { parentItem: isTreeModelNode(parentNode) ? parentNode.item : undefined, startIndex: node.childIndex, endIndex: node.childIndex });
-      continue;
-    }
-    partToReload.endIndex = node.childIndex;
-  }
-
-  const reloadedHierarchyParts = new Array<ReloadedHierarchyPart>();
-  for (const [parentId, hierarchyPart] of partsToReload) {
-    const pageOptions: PageOptions = {
-      start: hierarchyPart.startIndex,
-      size: hierarchyPart.endIndex - hierarchyPart.startIndex + 1,
-    };
-    const reloadedPart: ReloadedHierarchyPart = {
-      parentId,
-      offset: hierarchyPart.startIndex,
-      nodeItems: await dataProvider.getNodes(hierarchyPart.parentItem, pageOptions),
-    };
-    reloadedHierarchyParts.push(reloadedPart);
-  }
-
-  return reloadedHierarchyParts;
-}
-
-function getItemsRange(renderedNodes: RenderedItemsRange, visibleNodes: VisibleTreeNodes) {
-  if (renderedNodes.visibleStopIndex < visibleNodes.getNumNodes())
-    return { startIndex: renderedNodes.visibleStartIndex, endIndex: renderedNodes.visibleStopIndex };
-
-  const visibleNodesCount = renderedNodes.visibleStopIndex - renderedNodes.visibleStartIndex;
-  const endPosition = visibleNodes.getNumNodes() - 1;
-  const startPosition = endPosition - visibleNodesCount;
-  return {
-    startIndex: startPosition < 0 ? 0 : startPosition,
-    endIndex: endPosition < 0 ? 0 : endPosition,
-  };
 }
