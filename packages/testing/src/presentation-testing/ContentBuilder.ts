@@ -11,8 +11,8 @@ import { using } from "@itwin/core-bentley";
 import { QueryRowFormat } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
-  Content, DefaultContentDisplayTypes, InstanceKey, KeySet, PageOptions, ProcessPrimitiveValueProps, RegisteredRuleset, Ruleset, traverseContent,
-  Value, ValuesMap,
+  Content, DefaultContentDisplayTypes, InstanceId, InstanceKey, KeySet, PageOptions, ProcessPrimitiveValueProps, RegisteredRuleset, Ruleset,
+  traverseContent, Value, ValuesMap,
 } from "@itwin/presentation-common";
 import { ContentDataProvider, FieldHierarchyRecord, PropertyRecordsBuilder } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
@@ -114,16 +114,13 @@ export class ContentBuilder {
   }
 
   private async getECClassNames(): Promise<Array<{ schemaName: string, className: string }>> {
-    const rows = [];
-    for await (const row of this._iModel.query(`
+    const reader = this._iModel.createQueryReader(`
       SELECT s.Name schemaName, c.Name className FROM meta.ECClassDef c
       INNER JOIN meta.ECSchemaDef s ON c.Schema.id = s.ECInstanceId
       WHERE c.Modifier <> 1 AND c.Type = 0
       ORDER BY s.Name, c.Name
-    `, undefined, { rowFormat: QueryRowFormat.UseJsPropertyNames })) {
-      rows.push(row);
-    }
-    return rows;
+    `, undefined, { rowFormat: QueryRowFormat.UseJsPropertyNames });
+    return reader.toArray();
   }
 
   private async createContentForClasses(rulesetOrId: Ruleset | string, limitInstances: boolean, displayType: string) {
@@ -133,12 +130,11 @@ export class ContentBuilder {
 
     for (const nameEntry of classNameEntries) {
       // try {
-      const instanceIds = [];
-      for await (const row of this._iModel.query(`
-      SELECT ECInstanceId FROM ONLY "${nameEntry.schemaName}"."${nameEntry.className}"
-      ORDER BY ECInstanceId`, undefined, { rowFormat: QueryRowFormat.UseJsPropertyNames, limit: { count: limitInstances ? 1 : 4000 } })) {
-        instanceIds.push(row.id);
-      }
+      const reader = this._iModel.createQueryReader(`
+        SELECT ECInstanceId FROM ONLY "${nameEntry.schemaName}"."${nameEntry.className}"
+        ORDER BY ECInstanceId
+      `, undefined, { rowFormat: QueryRowFormat.UseJsPropertyNames, limit: { count: limitInstances ? 1 : 4000 } });
+      const instanceIds: InstanceId[] = await reader.toArray();
 
       if (!instanceIds.length)
         continue;

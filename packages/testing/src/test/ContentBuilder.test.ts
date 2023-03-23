@@ -8,6 +8,7 @@ import * as sinon from "sinon";
 import * as moq from "typemoq";
 import { ArrayValue, PrimitiveValue, StructValue } from "@itwin/appui-abstract";
 import { BeEvent, Guid, Id64String } from "@itwin/core-bentley";
+import { ECSqlReader } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
   ArrayTypeDescription, CategoryDescription, Content, DefaultContentDisplayTypes, Descriptor, DisplayValuesMap, Field, Item, KeySet,
@@ -159,33 +160,27 @@ function verifyKeyset(keyset: KeySet, testInstances: TestInstance[], verificatio
   }
 }
 
-const createThrowingQueryFunc = (instances: TestInstance[]) => {
-  return async function* (query: string) {
-    if (query.includes("SELECT s.Name")) {
-      for (const row of instances)
-        yield row;
-      return;
-    }
-    throw new Error("Test error");
-  };
+const mockThrowingQueryReader = (imodelMock: moq.IMock<IModelConnection>) => {
+  const mock1 = moq.Mock.ofType<ECSqlReader>();
+  mock1.setup(async (x) => x.toArray())
+    .returns(async () => { throw new Error("Test error"); });
+  imodelMock.setup((x) => x.createQueryReader(moq.It.is((query) => query.includes("SELECT s.Name")), moq.It.isAny(), moq.It.isAny())).returns(() => mock1.object);
 };
 
-const createQueryFunc = (instances: TestInstance[]) => {
-  return async function* (query: string) {
-    if (query.includes("SELECT s.Name")) {
-      for (const row of instances)
-        yield row;
-      return;
-    }
+const mockQueryReaders = (imodelMock: moq.IMock<IModelConnection>, instances: TestInstance[]) => {
+  const mock1 = moq.Mock.ofType<ECSqlReader>();
+  mock1.setup(async (x) => x.toArray()).returns(async () => instances);
+  imodelMock.setup((x) => x.createQueryReader(moq.It.is((query) => query.includes("SELECT s.Name")), moq.It.isAny(), moq.It.isAny())).returns(() => mock1.object);
 
-    for (const entry of instances) {
-      if (query.includes(`"${entry.schemaName}"."${entry.className}"`)) {
-        for (const id of entry.ids)
-          yield id;
-        return;
-      }
-    }
-  };
+  for (const entry of instances) {
+    imodelMock
+      .setup((x) => x.createQueryReader(moq.It.is((query) => query.includes(`"${entry.schemaName}"."${entry.className}"`)), moq.It.isAny(), moq.It.isAny()))
+      .returns(() => {
+        const mock2 = moq.Mock.ofType<ECSqlReader>();
+        mock2.setup(async (x) => x.toArray()).returns(async () => entry.ids.map((e) => e.id));
+        return mock2.object;
+      });
+  }
 };
 
 describe("ContentBuilder", () => {
@@ -302,8 +297,7 @@ describe("ContentBuilder", () => {
 
     before(() => {
       imodelMock.reset();
-      const f = createQueryFunc(testInstances);
-      imodelMock.setup((imodel) => imodel.query(moq.It.isAny(), moq.It.isAny(), moq.It.isAny())).returns(f);
+      mockQueryReaders(imodelMock, testInstances);
     });
 
     it("returns all required instances with empty records", async () => {
@@ -346,7 +340,7 @@ describe("ContentBuilder", () => {
 
       it("returns all required instances with empty records", async () => {
         imodelMock.reset();
-        imodelMock.setup((imodel) => imodel.query(moq.It.isAny(), moq.It.isAny(), moq.It.isAny())).returns(createQueryFunc(testInstances));
+        mockQueryReaders(imodelMock, testInstances);
 
         const verificationSpy = sinon.spy();
 
@@ -371,7 +365,7 @@ describe("ContentBuilder", () => {
 
       it("throws when id query throws an unexpected error", async () => {
         imodelMock.reset();
-        imodelMock.setup((imodel) => imodel.query(moq.It.isAny(), moq.It.isAny(), moq.It.isAny())).returns(createThrowingQueryFunc(testInstances));
+        mockThrowingQueryReader(imodelMock);
 
         const verificationSpy = sinon.spy();
 
@@ -390,7 +384,7 @@ describe("ContentBuilder", () => {
 
       before(() => {
         imodelMock.reset();
-        imodelMock.setup((imodel) => imodel.query(moq.It.isAny(), moq.It.isAny(), moq.It.isAny())).returns(createQueryFunc(testInstances));
+        mockQueryReaders(imodelMock, testInstances);
       });
 
       it("returns an empty list", async () => {
