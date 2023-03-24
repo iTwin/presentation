@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "`PresentationTreeDataProvider`: Handle errors that may occur when loading nodes",
+  "packageName": "@itwin/presentation-components",
+  "email": "35135765+grigasp@users.noreply.github.com",
+  "dependentChangeType": "patch"
+}

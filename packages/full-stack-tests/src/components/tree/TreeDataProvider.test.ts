@@ -5,10 +5,10 @@
 
 import { expect } from "chai";
 import * as sinon from "sinon";
-import { Guid } from "@itwin/core-bentley";
+import { assert, Guid } from "@itwin/core-bentley";
 import { IModelConnection, SnapshotConnection } from "@itwin/core-frontend";
 import { ChildNodeSpecificationTypes, Ruleset, RuleTypes } from "@itwin/presentation-common";
-import { PresentationTreeDataProvider } from "@itwin/presentation-components";
+import { isPresentationInfoTreeNodeItem, PresentationTreeDataProvider } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { initialize, terminate } from "../../IntegrationTests";
 
@@ -81,10 +81,13 @@ describe("TreeDataProvider", async () => {
     expect(nodes).to.matchSnapshot();
   });
 
-  it("does not return root nodes with invalid paging", async () => {
+  it("creates error node when requesting root nodes with invalid paging", async () => {
     provider.pagingSize = 5;
     const nodes = await provider.getNodes(undefined, { start: 1, size: 5 });
-    expect(nodes.length).to.eq(0);
+    expect(nodes).to.have.lengthOf(1);
+    const node = nodes[0];
+    assert(isPresentationInfoTreeNodeItem(node));
+    expect(node).to.matchSnapshot();
   });
 
   it("returns child nodes count", async () => {
@@ -107,11 +110,14 @@ describe("TreeDataProvider", async () => {
     expect(nodes).to.matchSnapshot();
   });
 
-  it("does not return child nodes with invalid paging", async () => {
+  it("returns error node when requesting child nodes with invalid paging", async () => {
     const rootNodes = await provider.getNodes();
     provider.pagingSize = 5;
     const nodes = await provider.getNodes(rootNodes[0], { start: 1, size: 5 });
-    expect(nodes.length).to.eq(0);
+    expect(nodes).to.have.lengthOf(1);
+    const node = nodes[0];
+    assert(isPresentationInfoTreeNodeItem(node));
+    expect(node).to.matchSnapshot();
   });
 
   it("requests backend only once to get first page", async () => {

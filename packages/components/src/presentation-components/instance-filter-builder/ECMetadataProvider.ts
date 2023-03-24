@@ -2,9 +2,12 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
+/** @packageDocumentation
+ * @module Internal
+ */
 
 import { compareStrings, Id64, Id64String, LRUDictionary } from "@itwin/core-bentley";
-import { QueryBinder, QueryOptions, QueryRowFormat } from "@itwin/core-common";
+import { ECSqlReader, QueryBinder, QueryOptions, QueryRowFormat } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 
 // istanbul ignore file
@@ -40,7 +43,7 @@ export class ECClassInfo {
 export class ECMetadataProvider {
   private _classInfoCache = new LRUDictionary<CacheKey, ECClassInfo>(50, compareKeys);
 
-  constructor(private _queryRunner: (ecsql: string, params?: QueryBinder, options?: QueryOptions) => AsyncIterableIterator<any>) {
+  constructor(private _queryReaderFactory: (ecsql: string, params?: QueryBinder, config?: QueryOptions) => ECSqlReader) {
   }
 
   public async getECClassInfo(idOrFullName: Id64String | string): Promise<ECClassInfo | undefined>;
@@ -63,7 +66,7 @@ export class ECMetadataProvider {
         ${classQueryBase}
         WHERE classDef.ECInstanceId = :id
       `;
-      classInfo = await this.createECClassInfo(this._queryRunner(classQuery, QueryBinder.from({ id }), { rowFormat: QueryRowFormat.UseJsPropertyNames }));
+      classInfo = await this.createECClassInfo(this._queryReaderFactory(classQuery, QueryBinder.from({ id }), { rowFormat: QueryRowFormat.UseJsPropertyNames }));
       classInfo && this._classInfoCache.set({ id: classInfo.id, name: classInfo.name }, classInfo);
     }
     return classInfo;
@@ -77,16 +80,16 @@ export class ECMetadataProvider {
         WHERE classDef.Name = :className AND schemaDef.Name = :schemaName
       `;
       const [schemaName, className] = this.splitFullClassName(name);
-      classInfo = await this.createECClassInfo(this._queryRunner(classQuery, QueryBinder.from({ schemaName, className }), { rowFormat: QueryRowFormat.UseJsPropertyNames }));
+      classInfo = await this.createECClassInfo(this._queryReaderFactory(classQuery, QueryBinder.from({ schemaName, className }), { rowFormat: QueryRowFormat.UseJsPropertyNames }));
       classInfo && this._classInfoCache.set({ id: classInfo.id, name: classInfo.name }, classInfo);
     }
     return classInfo;
   }
 
-  private async createECClassInfo(rowsIterator: AsyncIterableIterator<any>) {
-    for await (const row of rowsIterator) {
-      const classHierarchy = await this.queryClassHierarchyInfo(row.id);
-      return new ECClassInfo(row.id, row.name, row.label, classHierarchy.baseClasses, classHierarchy.derivedClasses);
+  private async createECClassInfo(reader: ECSqlReader) {
+    while (await reader.step()) {
+      const classHierarchy = await this.queryClassHierarchyInfo(reader.current.id);
+      return new ECClassInfo(reader.current.id, reader.current.name, reader.current.label, classHierarchy.baseClasses, classHierarchy.derivedClasses);
     }
     return undefined;
   }
@@ -99,11 +102,12 @@ export class ECMetadataProvider {
     `;
 
     const hierarchy = { baseClasses: new Set<Id64String>(), derivedClasses: new Set<Id64String>() };
-    for await (const row of this._queryRunner(classHierarchyQuery, QueryBinder.from({ id }), { rowFormat: QueryRowFormat.UseJsPropertyNames })) {
-      if (row.baseId === id)
-        hierarchy.derivedClasses.add(row.derivedId);
-      if (row.derivedId === id)
-        hierarchy.baseClasses.add(row.baseId);
+    const reader = this._queryReaderFactory(classHierarchyQuery, QueryBinder.from({ id }), { rowFormat: QueryRowFormat.UseJsPropertyNames });
+    while (await reader.step()) {
+      if (reader.current.baseId === id)
+        hierarchy.derivedClasses.add(reader.current.derivedId);
+      if (reader.current.derivedId === id)
+        hierarchy.baseClasses.add(reader.current.baseId);
     }
     return hierarchy;
   }
@@ -117,7 +121,7 @@ export class ECMetadataProvider {
 const classQueryBase = `
   SELECT classDef.ECInstanceId id, (schemaDef.Name || ':' || classDef.Name) name, COALESCE(classDef.DisplayLabel, classDef.name) label
   FROM meta.ECClassDef classDef
-  JOIN meta.ECSChemaDef schemaDef ON classDef.Schema.Id = schemaDef.ECInstanceId
+  JOIN meta.ECSchemaDef schemaDef ON classDef.Schema.Id = schemaDef.ECInstanceId
 `;
 
 const metadataProviders = new Map<string, ECMetadataProvider>();
@@ -125,7 +129,7 @@ const metadataProviders = new Map<string, ECMetadataProvider>();
 export function getIModelMetadataProvider(imodel: IModelConnection) {
   let metadataProvider = metadataProviders.get(imodel.key);
   if (!metadataProvider) {
-    metadataProvider = new ECMetadataProvider(imodel.query.bind(imodel));
+    metadataProvider = new ECMetadataProvider((ecsql: string, params?: QueryBinder, config?: QueryOptions) => imodel.createQueryReader(ecsql, params, config));
     metadataProviders.set(imodel.key, metadataProvider);
     // istanbul ignore next
     imodel.onClose.addOnce(() => {

@@ -115,5 +115,12 @@ export * from "./presentation-components/instance-filter-builder/PresentationIns
 export * from "./presentation-components/instance-filter-builder/InstanceFilterConverter";
 export * from "./presentation-components/instance-filter-builder/Types";
 
+/**
+ * @module Internal
+ *
+ * @docs-group-description Internal
+ * Internal APIs aren't published in documentation, so this group is expected to be empty.
+ */
+
 Presentation.registerInitializationHandler(initializeLocalization);
 Presentation.registerInitializationHandler(initializePropertyValueRenderers);
