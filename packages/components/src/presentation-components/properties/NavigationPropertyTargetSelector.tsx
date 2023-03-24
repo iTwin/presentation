@@ -2,6 +2,9 @@
 * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
+/** @packageDocumentation
+ * @module Internal
+ */
 
 import "@itwin/itwinui-css/css/tag.css";
 import "@itwin/itwinui-css/css/input.css";
