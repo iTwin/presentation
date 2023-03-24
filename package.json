@@ -45,5 +45,11 @@
     "pnpm": ">=6",
     "npm": "<0",
     "node": ">=16"
+  },
+  "pnpm": {
+    "overrides": {
+      "typedoc": "^0.23.28",
+      "typedoc-plugin-merge-modules": "^4.0.1"
+    }
   }
 }
