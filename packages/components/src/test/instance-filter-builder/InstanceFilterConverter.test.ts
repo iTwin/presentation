@@ -367,10 +367,6 @@ describe("convertToInstanceFilterDefinition", () => {
   });
 
   describe("returns base properties class", () => {
-    // async function* asyncGenerator(): AsyncIterableIterator<any> {
-    //   return;
-    // }
-
     const onClose = new BeEvent<() => void>();
     const imodelMock = moq.Mock.ofType<IModelConnection>();
 
