@@ -18,9 +18,11 @@ import * as cpx from "cpx2";
 import * as fs from "fs";
 import jsdomGlobal from "jsdom-global";
 import * as path from "path";
+import ResizeObserver from "resize-observer-polyfill";
 import sinonChai from "sinon-chai";
 
 jsdomGlobal();
+global.ResizeObserver = ResizeObserver;
 
 // eslint-disable-next-line no-console
 console.log(`Backend PID: ${process.pid}`);

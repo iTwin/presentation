@@ -14,6 +14,7 @@ import { buildTestIModel } from "@itwin/presentation-testing";
 import { act, fireEvent, render, waitFor } from "@testing-library/react";
 import { insertPhysicalElement, insertPhysicalModel, insertSpatialCategory } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
+import { getNodeByLabel, isNodeSelectedInTree, toggleExpandNode } from "../../TreeUtils";
 
 /* eslint-disable @typescript-eslint/naming-convention */
 
@@ -78,7 +79,7 @@ describe("Learning snippets", async () => {
 
         // find & expand the model node
         const modelNode = await waitFor(() => getNodeByLabel(container, "My Model"));
-        fireEvent.click(modelNode.querySelector(".core-tree-expansionToggle")!);
+        toggleExpandNode(modelNode);
         // find the element node
         const elementNode = await waitFor(() => getNodeByLabel(container, "My Element"));
 
@@ -116,19 +117,6 @@ function getInstanceKeysInUnifiedSelection(imodel: IModelConnection) {
   const arr = new Array<InstanceKey>();
   map.forEach((ids, className) => ids.forEach((id) => arr.push({ className, id })));
   return arr;
-}
-
-function getNodeByLabel(htmlContainer: HTMLElement, label: string) {
-  let curr = htmlContainer.querySelector(`[title*="${label}"]`);
-  while (curr && !curr.classList.contains("core-tree-node"))
-    curr = curr.parentElement;
-  if (!curr || !curr.classList.contains("core-tree-node"))
-    throw new Error(`Failed to find node with label "${label}"`);
-  return curr;
-}
-
-function isNodeSelectedInTree(htmlElement: Element) {
-  return htmlElement.classList.contains("is-selected");
 }
 
 const ruleset: Ruleset = {
