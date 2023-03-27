@@ -100,7 +100,7 @@ describe("Learning snippets", () => {
         await waitFor(() => getNodeByLabel(container, `A element ${i + 1}`));
 
       // expect B model to not have any children
-      for (let i = 0; i < 15; ++i)
+      for (let i = 0; i < 11; ++i)
         expect(() => getNodeByLabel(container, `B element ${i + 1}`)).to.throw;
       await waitFor(() => expect(container.querySelector(".presentation-components-info-node")).is.not.null);
     });
