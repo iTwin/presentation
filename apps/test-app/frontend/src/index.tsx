@@ -30,7 +30,12 @@ async function initializeApp() {
   };
 
   if (ProcessDetector.isElectronAppFrontend) {
-    await ElectronApp.startup({ iModelApp: iModelAppOpts });
+    await ElectronApp.startup({
+      iModelApp: {
+        ...iModelAppOpts,
+        rpcInterfaces, // docs say we shouldn't use this but the alternative doesn't work...
+      },
+    });
   } else if (ProcessDetector.isBrowserProcess) {
     // __PUBLISH_EXTRACT_START__ Presentation.Frontend.IModelAppStartup
     await IModelApp.startup(iModelAppOpts);
