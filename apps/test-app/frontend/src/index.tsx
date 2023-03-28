@@ -23,26 +23,22 @@ Logger.initializeToConsole();
 Logger.setLevelDefault(LogLevel.Warning);
 
 async function initializeApp() {
-  // __PUBLISH_EXTRACT_START__ Presentation.Frontend.RpcInterface.Options
   const iModelAppOpts: IModelAppOptions = {
-    rpcInterfaces,
-  };
-  // __PUBLISH_EXTRACT_END__
-
-  Object.assign(iModelAppOpts, {
     localization: new ITwinLocalization({
       initOptions: { lng: "en" },
     }),
-  });
+  };
 
   if (ProcessDetector.isElectronAppFrontend) {
-    // __PUBLISH_EXTRACT_START__ Presentation.Frontend.IModelAppStartup
     await ElectronApp.startup({ iModelApp: iModelAppOpts });
-    // __PUBLISH_EXTRACT_END__
   } else if (ProcessDetector.isBrowserProcess) {
-    const rpcParams = { info: { title: "presentation-test-app", version: "v1.0" }, uriPrefix: "http://localhost:3001" };
+    // __PUBLISH_EXTRACT_START__ Presentation.Frontend.IModelAppStartup
     await IModelApp.startup(iModelAppOpts);
-    BentleyCloudRpcManager.initializeClient(rpcParams, iModelAppOpts.rpcInterfaces ?? []); // eslint-disable-line @itwin/no-internal
+    // __PUBLISH_EXTRACT_END__
+    const rpcParams = { info: { title: "presentation-test-app", version: "v1.0" }, uriPrefix: "http://localhost:3001" };
+    // __PUBLISH_EXTRACT_START__ Presentation.Frontend.RpcInterface.Options
+    BentleyCloudRpcManager.initializeClient(rpcParams, rpcInterfaces);
+    // __PUBLISH_EXTRACT_END__
   }
   const readyPromises = new Array<Promise<void>>();
 
