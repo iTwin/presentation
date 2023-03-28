@@ -7,7 +7,7 @@ import { expect } from "chai";
 import { useState } from "react";
 import { ControlledTree, SelectionMode, TreeRendererProps, UiComponents, useTreeModel } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { Ruleset } from "@itwin/presentation-common";
+import { PresentationRpcInterface, Ruleset } from "@itwin/presentation-common";
 import { PresentationTreeRenderer, usePresentationTreeNodeLoader, useUnifiedSelectionTreeEventHandler } from "@itwin/presentation-components";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { getByRole, render, waitFor } from "@testing-library/react";
@@ -33,12 +33,17 @@ describe("Learning snippets", () => {
     });
 
     it("limits hierarchy level size", async function () {
+      if (Number.parseInt(PresentationRpcInterface.interfaceVersion.split(".")[0], 10) < 4) {
+        // hierarchy level size limiting requires core libraries at least @4.0
+        this.skip();
+      }
+
       // __PUBLISH_EXTRACT_START__ Presentation.Components.HierarchyLevelLimiting
       function MyTree(props: { imodel: IModelConnection }) {
         const { nodeLoader } = usePresentationTreeNodeLoader({
           imodel: props.imodel,
           ruleset,
-          pagingSize: 10,
+          pagingSize: 100,
           // supply the limit of instances to load for a single hierarchy level
           hierarchyLevelSizeLimit: 10,
         });
@@ -101,7 +106,7 @@ describe("Learning snippets", () => {
 
       // expect B model to not have any children
       for (let i = 0; i < 11; ++i)
-        expect(() => getNodeByLabel(container, `B element ${i + 1}`)).to.throw;
+        expect(() => getNodeByLabel(container, `B element ${i + 1}`)).to.throw();
       await waitFor(() => expect(container.querySelector(".presentation-components-info-node")).is.not.null);
     });
 
