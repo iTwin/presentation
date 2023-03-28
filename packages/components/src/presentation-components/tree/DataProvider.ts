@@ -70,6 +70,7 @@ export interface PresentationTreeDataProviderProps extends DiagnosticsProps {
    * will become impossible to filter-down.
    *
    * @see [Hierarchies' filtering and limiting]($docs/presentation/hierarchies/FilteringLimiting.md)
+   * @note Requires `@itwin/presentation-frontend` peer dependency to be at least `4.0`, otherwise has no effect.
    * @beta
    */
   hierarchyLevelSizeLimit?: number;
