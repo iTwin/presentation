@@ -5,9 +5,10 @@
 
 import { expect } from "chai";
 import * as sinon from "sinon";
+import { PropertyValueFormat } from "@itwin/appui-abstract";
 import { assert, Guid } from "@itwin/core-bentley";
 import { IModelConnection, SnapshotConnection } from "@itwin/core-frontend";
-import { ChildNodeSpecificationTypes, Ruleset, RuleTypes } from "@itwin/presentation-common";
+import { ChildNodeSpecificationTypes, NodeKey, Ruleset, RuleTypes } from "@itwin/presentation-common";
 import { isPresentationInfoTreeNodeItem, PresentationTreeDataProvider } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { initialize, terminate } from "../../IntegrationTests";
@@ -84,10 +85,14 @@ describe("TreeDataProvider", async () => {
   it("creates error node when requesting root nodes with invalid paging", async () => {
     provider.pagingSize = 5;
     const nodes = await provider.getNodes(undefined, { start: 1, size: 5 });
-    expect(nodes).to.have.lengthOf(1);
-    const node = nodes[0];
-    assert(isPresentationInfoTreeNodeItem(node));
-    expect(node).to.matchSnapshot();
+    if (nodes.length === 1) {
+      const node = nodes[0];
+      assert(isPresentationInfoTreeNodeItem(node));
+      expect(node).to.matchSnapshot();
+    } else {
+      // presentation-frontend@3.6 returns an empty list in case of invalid page options
+      expect(nodes).to.be.empty;
+    }
   });
 
   it("returns child nodes count", async () => {
@@ -114,10 +119,14 @@ describe("TreeDataProvider", async () => {
     const rootNodes = await provider.getNodes();
     provider.pagingSize = 5;
     const nodes = await provider.getNodes(rootNodes[0], { start: 1, size: 5 });
-    expect(nodes).to.have.lengthOf(1);
-    const node = nodes[0];
-    assert(isPresentationInfoTreeNodeItem(node));
-    expect(node).to.matchSnapshot();
+    if (nodes.length === 1) {
+      const node = nodes[0];
+      assert(isPresentationInfoTreeNodeItem(node));
+      expect(node).to.matchSnapshot();
+    } else {
+      // presentation-frontend@3.6 returns an empty list in case of invalid page options
+      expect(nodes).to.be.empty;
+    }
   });
 
   it("requests backend only once to get first page", async () => {
@@ -142,14 +151,19 @@ describe("TreeDataProvider", async () => {
           specType: ChildNodeSpecificationTypes.InstanceNodesOfSpecificClasses,
           classes: { schemaName: "BisCore", classNames: ["Model"] },
           arePolymorphic: true,
-          groupByLabel: true,
+          groupByClass: true,
         }],
       }],
     };
     provider = new PresentationTreeDataProvider({ imodel, ruleset, appendChildrenCountForGroupingNodes: true });
-
     const nodes = await provider.getNodes(undefined);
-    expect(nodes).to.matchSnapshot();
+    expect(nodes).to.not.be.empty;
+    nodes.forEach((item) => {
+      const key = provider.getNodeKey(item);
+      assert(NodeKey.isClassGroupingNodeKey(key));
+      assert(item.label.value.valueFormat === PropertyValueFormat.Primitive);
+      expect(item.label.value.displayValue).to.match(new RegExp(`^[\\w\\d_ ]+ \\(${key.groupedInstancesCount}\\)$`, "i"));
+    });
   });
 
 });
