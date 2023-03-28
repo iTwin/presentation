@@ -7,7 +7,7 @@
  */
 
 import { useEffect, useState } from "react";
-import { from, Subject } from "rxjs";
+import { EMPTY, from, Subject } from "rxjs";
 import { distinct } from "rxjs/internal/operators/distinct";
 import { mergeMap } from "rxjs/internal/operators/mergeMap";
 import { assert } from "@itwin/core-bentley";
@@ -40,7 +40,7 @@ export interface UseRowsResult {
 export function useRows(props: UseRowsProps): UseRowsResult {
   const { imodel, ruleset, keys, pageSize, options } = props;
   const [state, setState] = useState<UseRowsResult>({
-    isLoading: true,
+    isLoading: false,
     rows: [],
     loadMoreRows: /* istanbul ignore next*/ () => {},
   });
@@ -53,18 +53,23 @@ export function useRows(props: UseRowsProps): UseRowsResult {
       .pipe(
         distinct(),
         mergeMap((pageStart) => {
+          if (keys.isEmpty)
+            return EMPTY;
           setState((prev) => ({ ...prev, isLoading: true }));
           return from(loadRows(imodel, ruleset, keys, { start: pageStart, size: pageSize }, options));
         }, 1)
       )
       .subscribe({
-        next: (rowDefinitions) => {
+        next: (loadedRows) => {
           setState(
             (prev) => ({
               isLoading: false,
-              rows: [...prev.rows, ...rowDefinitions],
+              rows: [...prev.rows, ...loadedRows.rowDefinitions],
               loadMoreRows: () => {
-                loader.next(prev.rows.length + rowDefinitions.length);
+                const pageStart = prev.rows.length + loadedRows.rowDefinitions.length;
+                if (pageStart >= loadedRows.total)
+                  return;
+                loader.next(pageStart);
               },
             }),
           );
@@ -81,8 +86,8 @@ export function useRows(props: UseRowsProps): UseRowsResult {
   return state;
 }
 
-async function loadRows(imodel: IModelConnection, ruleset: Ruleset | string, keys: Readonly<KeySet>, paging: PageOptions, options: TableOptions): Promise<TableRowDefinition[]> {
-  const content = await Presentation.presentation.getContent({
+async function loadRows(imodel: IModelConnection, ruleset: Ruleset | string, keys: Readonly<KeySet>, paging: PageOptions, options: TableOptions) {
+  const result = await Presentation.presentation.getContentAndSize({
     imodel,
     keys: new KeySet(keys),
     descriptor: {
@@ -94,10 +99,13 @@ async function loadRows(imodel: IModelConnection, ruleset: Ruleset | string, key
     paging,
   });
 
-  if (!content)
+  if (!result)
     throw new PresentationError(PresentationStatus.Error, "Failed to load table rows.");
 
-  return createRows(content);
+  return {
+    rowDefinitions: createRows(result.content),
+    total: result.size,
+  };
 }
 
 function createRows(content: Content) {

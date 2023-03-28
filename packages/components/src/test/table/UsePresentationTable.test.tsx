@@ -52,7 +52,7 @@ describe("usePresentationTable", () => {
       displayValues: { [propertiesField.name]: "Test value" },
     });
     presentationManagerMock.setup(async (x) => x.getContentDescriptor(moq.It.isAny())).returns(async () => descriptor);
-    presentationManagerMock.setup(async (x) => x.getContent(moq.It.isAny())).returns(async () => new Content(descriptor, [item]));
+    presentationManagerMock.setup(async (x) => x.getContentAndSize(moq.It.isAny())).returns(async () => ({ content: new Content(descriptor, [item]), size: 1 }));
 
     const { result } = renderHook(
       (props: UsePresentationTableProps<TableColumnDefinition, TableRowDefinition>) => usePresentationTable(props),
@@ -109,7 +109,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     sinon.stub(Presentation.selection, "getSelection").returns(keys);
 
     presentationManagerMock.setup(async (x) => x.getContentDescriptor(moq.It.is((options) => options.keys.size === keys.size))).returns(async () => descriptor);
-    presentationManagerMock.setup(async (x) => x.getContent(moq.It.is((options) => options.keys.size === keys.size))).returns(async () => new Content(descriptor, [item]));
+    presentationManagerMock.setup(async (x) => x.getContentAndSize(moq.It.is((options) => options.keys.size === keys.size))).returns(async () => ({ content: new Content(descriptor, [item]), size: 1 }));
 
     const { result } = renderHook(
       () => usePresentationTableWithUnifiedSelection(initialProps),
@@ -130,7 +130,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
 
   it("loads columns and rows with no keys unified selection context is not available", async () => {
     presentationManagerMock.setup(async (x) => x.getContentDescriptor(moq.It.is((options) => options.keys.isEmpty))).returns(async () => undefined);
-    presentationManagerMock.setup(async (x) => x.getContent(moq.It.is((options) => options.keys.isEmpty))).returns(async () => undefined);
+    presentationManagerMock.setup(async (x) => x.getContentAndSize(moq.It.is((options) => options.keys.isEmpty))).returns(async () => undefined);
 
     const { result } = renderHook(
       () => usePresentationTableWithUnifiedSelection(initialProps),
