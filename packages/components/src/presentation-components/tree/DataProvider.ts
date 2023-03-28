@@ -168,7 +168,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
   }
 
   /** Called to get options for node requests */
-  private createRequestOptions<TNodeKey = NodeKey>(parentKey: TNodeKey | undefined, pageOptions?: PageOptions, instanceFilter?: InstanceFilterDefinition): HierarchyRequestOptions<IModelConnection, TNodeKey> {
+  private createRequestOptions<TNodeKey = NodeKey>(parentKey: TNodeKey | undefined, pageOptions?: PageOptions, instanceFilter?: InstanceFilterDefinition) {
     const isHierarchyLevelLimitingSupported = !!this.hierarchyLevelSizeLimit && parentKey;
     const isPaging = pageOptions && (pageOptions.start || pageOptions.size !== undefined);
     return {

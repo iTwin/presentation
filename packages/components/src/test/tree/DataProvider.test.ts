@@ -600,8 +600,8 @@ describe("TreeDataProvider", () => {
 
 });
 
-function is(expected: Paged<HierarchyRequestOptions<IModelConnection, NodeKey, RulesetVariable>>) {
-  return moq.It.is((options: Paged<HierarchyRequestOptions<IModelConnection, NodeKey, RulesetVariable>>) => {
+function is(expected: Paged<HierarchyRequestOptions<IModelConnection, NodeKey, RulesetVariable>> & { sizeLimit?: number }) {
+  return moq.It.is((options: Paged<HierarchyRequestOptions<IModelConnection, NodeKey, RulesetVariable>> & { sizeLimit?: number }) => {
     return equal(options.imodel, expected.imodel)
       && equal(options.rulesetOrId, expected.rulesetOrId)
       && equal(options.parentKey, expected.parentKey)

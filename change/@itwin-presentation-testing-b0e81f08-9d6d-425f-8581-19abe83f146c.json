@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Bump minimum required `itwinjs-core` version to `3.6.3`",
+  "packageName": "@itwin/presentation-testing",
+  "email": "35135765+grigasp@users.noreply.github.com",
+  "dependentChangeType": "patch"
+}
