@@ -47,7 +47,7 @@ describe("useRows", () => {
       values: { [propertiesField.name]: "test_value" },
       displayValues: { [propertiesField.name]: "Test value" },
     });
-    presentationManagerMock.setup(async (x) => x.getContent(moq.It.isAny())).returns(async () => new Content(descriptor, [item]));
+    presentationManagerMock.setup(async (x) => x.getContentAndSize(moq.It.isAny())).returns(async () => ({ content: new Content(descriptor, [item]), size: 1 }));
 
     const { result } = renderHook(
       (props: UseRowsProps) => useRows(props),
@@ -84,7 +84,7 @@ describe("useRows", () => {
         },
       },
     });
-    presentationManagerMock.setup(async (x) => x.getContent(moq.It.isAny())).returns(async () => new Content(descriptor, [item]));
+    presentationManagerMock.setup(async (x) => x.getContentAndSize(moq.It.isAny())).returns(async () => ({ content: new Content(descriptor, [item]), size: 1 }));
 
     const { result } = renderHook(
       (props: UseRowsProps) => useRows(props),
@@ -110,8 +110,8 @@ describe("useRows", () => {
       values: { [propertiesField.name]: "test_value_2" },
       displayValues: { [propertiesField.name]: "Test value 2" },
     });
-    presentationManagerMock.setup(async (x) => x.getContent(moq.It.is((options) => options.paging?.start === 0))).returns(async () => new Content(descriptor, [item1]));
-    presentationManagerMock.setup(async (x) => x.getContent(moq.It.is((options) => options.paging?.start === 1))).returns(async () => new Content(descriptor, [item2]));
+    presentationManagerMock.setup(async (x) => x.getContentAndSize(moq.It.is((options) => options.paging?.start === 0))).returns(async () => ({ content: new Content(descriptor, [item1]), size: 2 }));
+    presentationManagerMock.setup(async (x) => x.getContentAndSize(moq.It.is((options) => options.paging?.start === 1))).returns(async () => ({ content: new Content(descriptor, [item2]), size: 2 }));
 
     const { result } = renderHook(
       (props: UseRowsProps) => useRows(props),
@@ -124,8 +124,27 @@ describe("useRows", () => {
     await waitFor(() => expect(result.current.rows).to.have.lengthOf(2));
   });
 
+  it("does not attempt to load more rows if there are no more content items", async () => {
+    const propertiesField = createTestPropertiesContentField({ name: "first_field", label: "First Field", properties: [{ property: createTestPropertyInfo() }] });
+    const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
+    const item = createTestContentItem({
+      values: { [propertiesField.name]: "test_value_1" },
+      displayValues: { [propertiesField.name]: "Test value 1" },
+    });
+    presentationManagerMock.setup(async (x) => x.getContentAndSize(moq.It.isAny())).returns(async () => ({ content: new Content(descriptor, [item]), size: 1 }));
+
+    const { result } = renderHook(
+      (props: UseRowsProps) => useRows(props),
+      { initialProps: { ...initialProps, pageSize: 1 } }
+    );
+
+    await waitFor(() => expect(result.current.rows).to.have.lengthOf(1));
+    result.current.loadMoreRows();
+    presentationManagerMock.verify(async (x) => x.getContentAndSize(moq.It.isAny()), moq.Times.once());
+  });
+
   it("returns empty rows list if content was not loaded", async () => {
-    presentationManagerMock.setup(async (x) => x.getContent(moq.It.isAny())).returns(async () => undefined);
+    presentationManagerMock.setup(async (x) => x.getContentAndSize(moq.It.isAny())).returns(async () => undefined);
 
     const { result } = renderHook(
       (props: UseRowsProps) => useRows(props),
@@ -136,11 +155,23 @@ describe("useRows", () => {
     expect(result.current.rows).to.have.lengthOf(0);
   });
 
+  it("returns empty rows list if key set is empty", async () => {
+    const emptyKeySet = new KeySet();
+    const { result } = renderHook(
+      (props: UseRowsProps) => useRows(props),
+      { initialProps: { ...initialProps, keys: emptyKeySet } }
+    );
+
+    await waitFor(() => expect(result.current.isLoading).to.be.false);
+    expect(result.current.rows).to.have.lengthOf(0);
+    presentationManagerMock.verify(async (x) => x.getContentAndSize(moq.It.isAny()), moq.Times.never());
+  });
+
   it("applies fields filter expression", async () => {
     const filterExpression = "propField = 1";
     presentationManagerMock
-      .setup(async (x) => x.getContent(moq.It.is((options)=> options.descriptor.fieldsFilterExpression === filterExpression)))
-      .returns(async () => new Content(createTestContentDescriptor({ fields: [] }), []))
+      .setup(async (x) => x.getContentAndSize(moq.It.is((options)=> options.descriptor.fieldsFilterExpression === filterExpression)))
+      .returns(async () => ({ content: new Content(createTestContentDescriptor({ fields: [] }), []), size: 0 }))
       .verifiable(moq.Times.once());
 
     const { result } = renderHook(
@@ -160,8 +191,8 @@ describe("useRows", () => {
       direction: SortDirection.Descending,
     };
     presentationManagerMock
-      .setup(async (x) => x.getContent(moq.It.is((options)=> (options.descriptor as DescriptorOverrides).sorting?.direction === SortDirection.Descending)))
-      .returns(async () => new Content(createTestContentDescriptor({ fields: [] }), []))
+      .setup(async (x) => x.getContentAndSize(moq.It.is((options)=> (options.descriptor as DescriptorOverrides).sorting?.direction === SortDirection.Descending)))
+      .returns(async () => ({ content: new Content(createTestContentDescriptor({ fields: [] }), []), size: 0 }))
       .verifiable(moq.Times.once());
 
     const { result } = renderHook(

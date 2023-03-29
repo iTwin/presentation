@@ -46,7 +46,7 @@ function PresentationTable(props: PresentationTableProps) {
     sort(sortBy?.id, sortBy?.desc);
   }, [sort]);
 
-  if (!columns) {
+  if (columns === undefined) {
     return <ProgressRadial indeterminate={true} />;
   }
 
