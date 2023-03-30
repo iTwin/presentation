@@ -5,7 +5,8 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/iTwin/presentation/tree/master/packages/components"
+    "url": "https://github.com/iTwin/presentation.git",
+    "directory": "packages/components"
   },
   "keywords": [
     "Bentley",
