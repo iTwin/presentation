@@ -1,9 +1,5 @@
 {
   "name": "@test-app/frontend",
-  "author": {
-    "name": "Bentley Systems, Inc.",
-    "url": "http://www.bentley.com"
-  },
   "version": "0.0.0",
   "private": true,
   "scripts": {

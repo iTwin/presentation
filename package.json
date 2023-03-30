@@ -2,7 +2,7 @@
   "name": "presentation",
   "private": true,
   "repository": {
-    "url": "https://github.com/iTwin/presentation"
+    "url": "https://github.com/iTwin/presentation.git"
   },
   "scripts": {
     "start:web": "run-p --silent start:frontend start:web-backend",
