@@ -3,6 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
+import React from "react";
 import { It } from "typemoq";
 import { BeDuration } from "@itwin/core-bentley";
 import {
@@ -84,3 +85,47 @@ export const waitForPendingAsyncs = async (handler: { pendingAsyncs: Set<string>
   const recursiveWaitInternal = async (): Promise<void> => recursiveWait(pred, recursiveWaitInternal);
   await recursiveWaitInternal();
 };
+
+/** Props for `TestErrorBoundary` */
+export interface TestErrorBoundaryProps {
+  children: React.ReactNode;
+  onError: (error: Error, componentStack: any) => void;
+}
+/** Internal state of `TestErrorBoundary` */
+export interface TestErrorBoundaryState {
+  hasError?: boolean;
+}
+/**
+ * A component for testing component's error reporting. React error boundaries only capture errors thrown
+ * in React's lifecycle and render methods. Errors thrown outside of that (e.g. in async callbacks) aren't captured.
+ * The purpose of this component is to help test is the errors are thrown correctly.
+ *
+ * Example usage:
+ * ```tsx
+ * const errorSpy = sinon.spy();
+ * render(
+ *   <TestErrorBoundary onError={errorSpy}>
+ *     <TestComponent />
+ *   </TestErrorBoundary>
+ * );
+ * await waitFor(() => {
+ *   expect(errorSpy).to.be.calledOnce.and.calledWith(sinon.match((error: Error) => error.message === "test error"));
+ * });
+ * ```
+ */
+export class TestErrorBoundary extends React.Component<TestErrorBoundaryProps, TestErrorBoundaryState> {
+  public constructor(props: TestErrorBoundaryProps) {
+    super(props);
+    this.state = {};
+  }
+  // eslint-disable-next-line @typescript-eslint/explicit-member-accessibility
+  static getDerivedStateFromError(): TestErrorBoundaryState { return { hasError: true }; }
+  public override componentDidCatch(error: Error, info: any) {
+    this.props.onError(error, info.componentStack);
+  }
+  public override render() {
+    if (this.state.hasError)
+      return null;
+    return this.props.children;
+  }
+}

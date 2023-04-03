@@ -9,10 +9,10 @@ import * as moq from "typemoq";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Content, DescriptorOverrides, KeySet, SortDirection } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { waitFor } from "@testing-library/react";
+import { render, waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import { useRows, UseRowsProps } from "../../presentation-components/table/UseRows";
-import { createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
+import { createTestECInstanceKey, createTestPropertyInfo, TestErrorBoundary } from "../_helpers/Common";
 import {
   createTestCategoryDescription, createTestContentDescriptor, createTestContentItem, createTestNestedContentField, createTestPropertiesContentField,
 } from "../_helpers/Content";
@@ -143,16 +143,23 @@ describe("useRows", () => {
     presentationManagerMock.verify(async (x) => x.getContentAndSize(moq.It.isAny()), moq.Times.once());
   });
 
-  it("returns empty rows list if content was not loaded", async () => {
+  it("throws in React render loop on failure to get content", async () => {
     presentationManagerMock.setup(async (x) => x.getContentAndSize(moq.It.isAny())).returns(async () => undefined);
 
-    const { result } = renderHook(
-      (props: UseRowsProps) => useRows(props),
-      { initialProps }
+    const errorSpy = sinon.spy();
+    function TestComponent() {
+      useRows(initialProps);
+      return null;
+    }
+    render(
+      <TestErrorBoundary onError={errorSpy} >
+        <TestComponent />
+      </TestErrorBoundary>
     );
 
-    await waitFor(() => expect(result.current.isLoading).to.be.false);
-    expect(result.current.rows).to.have.lengthOf(0);
+    await waitFor(() => {
+      expect(errorSpy).to.be.calledOnce.and.calledWith(sinon.match((error: Error) => error.message === "Failed to load table rows."));
+    });
   });
 
   it("returns empty rows list if key set is empty", async () => {
