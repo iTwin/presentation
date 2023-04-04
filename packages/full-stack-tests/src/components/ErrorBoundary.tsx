@@ -3,7 +3,6 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
 import { Component } from "react";
 import { getByText, waitFor } from "@testing-library/react";
 
@@ -36,5 +35,5 @@ export class ErrorBoundary extends Component<{ children: React.ReactNode }, { er
 // __PUBLISH_EXTRACT_END__
 
 export async function ensureHasError(container: HTMLElement, expectedError?: string) {
-  return waitFor(() => expect(getByText(container, expectedError ?? "Error")).to.not.be.undefined);
+  return waitFor(() => getByText(container, expectedError ?? "Error"));
 }
