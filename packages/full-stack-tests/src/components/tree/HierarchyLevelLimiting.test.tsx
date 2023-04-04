@@ -74,9 +74,13 @@ describe("Learning snippets", () => {
       const imodel = await buildTestIModel(this, (builder) => {
         const categoryKey = insertSpatialCategory(builder, "My Category");
         const modelKeyA = insertPhysicalModel(builder, "My Model A");
-        for (let i = 0; i < 10; ++i) insertPhysicalElement(builder, `A element ${i + 1}`, modelKeyA.id, categoryKey.id);
+        for (let i = 0; i < 10; ++i) {
+          insertPhysicalElement(builder, `A element ${i + 1}`, modelKeyA.id, categoryKey.id);
+        }
         const modelKeyB = insertPhysicalModel(builder, "My Model B");
-        for (let i = 0; i < 11; ++i) insertPhysicalElement(builder, `B element ${i + 1}`, modelKeyB.id, categoryKey.id);
+        for (let i = 0; i < 11; ++i) {
+          insertPhysicalElement(builder, `B element ${i + 1}`, modelKeyB.id, categoryKey.id);
+        }
       });
 
       // render the component
@@ -91,10 +95,14 @@ describe("Learning snippets", () => {
       toggleExpandNode(modelNodeB);
 
       // expect A model to have child nodes
-      for (let i = 0; i < 10; ++i) await waitFor(() => getNodeByLabel(container, `A element ${i + 1}`));
+      for (let i = 0; i < 10; ++i) {
+        await waitFor(() => getNodeByLabel(container, `A element ${i + 1}`));
+      }
 
       // expect B model to not have any children
-      for (let i = 0; i < 11; ++i) expect(() => getNodeByLabel(container, `B element ${i + 1}`)).to.throw();
+      for (let i = 0; i < 11; ++i) {
+        expect(() => getNodeByLabel(container, `B element ${i + 1}`)).to.throw();
+      }
       await waitFor(() => expect(container.querySelector(".presentation-components-info-node")).is.not.null);
     });
   });

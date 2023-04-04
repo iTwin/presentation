@@ -113,8 +113,9 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
           if (selectedNodeItems.length !== 0) {
             this._selectionHandler.addToSelection(this.createKeysForSelection(selectedNodeItems, SelectionChangeType.Add));
           }
-          if (deselectedNodeItems.length !== 0)
+          if (deselectedNodeItems.length !== 0) {
             this._selectionHandler.removeFromSelection(this.createKeysForSelection(deselectedNodeItems, SelectionChangeType.Remove));
+          }
         },
         complete: () => {
           this.selectNodes();
@@ -156,7 +157,9 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
     // when handling model change event only need to update newly added nodes
     if (modelChange) {
       this.updateAffectedNodes(selection, modelChange);
-    } else this.updateAllNodes(selection);
+    } else {
+      this.updateAllNodes(selection);
+    }
   }
 
   /** @deprecated in 4.0. Use [[isPresentationTreeNodeItem]] and [[PresentationTreeNodeItem.key]] to get [NodeKey]($presentation-common). */
