@@ -46,7 +46,9 @@ interface ConvertContext {
 }
 
 function convertFilter(filter: PresentationInstanceFilter, ctx: ConvertContext) {
-  if (isFilterConditionGroup(filter)) return convertConditionGroup(filter, ctx);
+  if (isFilterConditionGroup(filter)) {
+    return convertConditionGroup(filter, ctx);
+  }
   return convertCondition(filter, ctx);
 }
 
@@ -66,17 +68,23 @@ function convertCondition(condition: PresentationInstanceFilterCondition, ctx: C
 }
 
 function addClassInfoToContext(classInfo: ClassInfo, ctx: ConvertContext) {
-  if (ctx.propertyClasses.find((existing) => existing.id === classInfo.id)) return;
+  if (ctx.propertyClasses.find((existing) => existing.id === classInfo.id)) {
+    return;
+  }
 
   ctx.propertyClasses.push(classInfo);
 }
 
 function getRelatedInstanceDescription(field: PropertiesField, propClassName: string, ctx: ConvertContext): RelatedInstanceDescription | undefined {
-  if (!field.parent) return undefined;
+  if (!field.parent) {
+    return undefined;
+  }
 
   const pathToProperty = RelationshipPath.reverse(getPathToPrimaryClass(field.parent));
   const existing = ctx.relatedInstances.find((instance) => RelationshipPath.equals(pathToProperty, instance.path));
-  if (existing) return existing;
+  if (existing) {
+    return existing;
+  }
 
   const newRelated = {
     path: pathToProperty,
@@ -116,9 +124,15 @@ function createComparison(propertyName: string, type: string, alias: string, ope
       break;
   }
 
-  if (type === "navigation") return `${propertyAccessor}.Id ${operatorExpression} ${(value as Primitives.InstanceKey).id}`;
-  if (type === "double") return `CompareDoubles(${propertyAccessor}, ${valueExpression}) ${operatorExpression} 0`;
-  if (type === "dateTime") return `CompareDateTimes(${propertyAccessor}, ${valueExpression}) ${operatorExpression} 0`;
+  if (type === "navigation") {
+    return `${propertyAccessor}.Id ${operatorExpression} ${(value as Primitives.InstanceKey).id}`;
+  }
+  if (type === "double") {
+    return `CompareDoubles(${propertyAccessor}, ${valueExpression}) ${operatorExpression} 0`;
+  }
+  if (type === "dateTime") {
+    return `CompareDateTimes(${propertyAccessor}, ${valueExpression}) ${operatorExpression} 0`;
+  }
 
   return `${propertyAccessor} ${operatorExpression} ${valueExpression}`;
 }
@@ -172,7 +186,9 @@ function isFilterConditionGroup(obj: PresentationInstanceFilter): obj is Present
 }
 
 async function findBaseExpressionClass(imodel: IModelConnection, propertyClasses: ClassInfo[]) {
-  if (propertyClasses.length === 1) return propertyClasses[0];
+  if (propertyClasses.length === 1) {
+    return propertyClasses[0];
+  }
 
   const metadataProvider = getIModelMetadataProvider(imodel);
   const [firstClass, ...restClasses] = propertyClasses;

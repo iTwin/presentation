@@ -12,7 +12,9 @@ import { SampleRpcInterface } from "@test-app/common";
 /** The backend implementation of SampleRpcInterface. */
 export default class SampleRpcImpl extends SampleRpcInterface {
   private getAssetsDir(): string {
-    if (IModelHost.appAssetsDir) return IModelHost.appAssetsDir;
+    if (IModelHost.appAssetsDir) {
+      return IModelHost.appAssetsDir;
+    }
     return "assets";
   }
 

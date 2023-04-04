@@ -87,7 +87,9 @@ interface DelayLoadedPresentationInstanceFilterBuilderProps extends Omit<Present
 function DelayLoadedPresentationInstanceFilterBuilder(props: DelayLoadedPresentationInstanceFilterBuilderProps) {
   const { descriptorGetter, ...restProps } = props;
   const descriptor = useDelayLoadedDescriptor(descriptorGetter);
-  if (!descriptor) return <DelayedCenteredProgressRadial />;
+  if (!descriptor) {
+    return <DelayedCenteredProgressRadial />;
+  }
 
   return <PresentationInstanceFilterBuilder {...restProps} descriptor={descriptor} />;
 }
@@ -100,7 +102,9 @@ function useDelayLoadedDescriptor(descriptorGetter: () => Promise<Descriptor>) {
     void (async () => {
       const newDescriptor = await descriptorGetter();
       // istanbul ignore else
-      if (!disposed) setDescriptor(newDescriptor);
+      if (!disposed) {
+        setDescriptor(newDescriptor);
+      }
     })();
     return () => {
       disposed = true;
@@ -122,7 +126,9 @@ function DelayedCenteredProgressRadial() {
     };
   }, []);
 
-  if (!show) return null;
+  if (!show) {
+    return null;
+  }
   return (
     <div className="presentation-instance-filter-dialog-progress">
       <ProgressRadial indeterminate={true} size="large" />

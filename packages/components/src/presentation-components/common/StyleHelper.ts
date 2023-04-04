@@ -165,14 +165,19 @@ export class StyleHelper {
 
   private static getColor(name: string): number {
     name = name.trim();
-    if (name.indexOf("#") === 0 && name.length === 7) return StyleHelper.getColorFromHex(name);
-    else if (name.toUpperCase().indexOf("RGB(") === 0) return StyleHelper.getColorFromRGB(name);
+    if (name.indexOf("#") === 0 && name.length === 7) {
+      return StyleHelper.getColorFromHex(name);
+    } else if (name.toUpperCase().indexOf("RGB(") === 0) {
+      return StyleHelper.getColorFromRGB(name);
+    }
     return StyleHelper.getColorFromColorName(name);
   }
 
   /** Get color number from a named color. @see `colors` map for available names. */
   private static getColorFromColorName(name: string): number {
-    if (colors.hasOwnProperty(name)) return colors[name] >>> 8;
+    if (colors.hasOwnProperty(name)) {
+      return colors[name] >>> 8;
+    }
     throw new Error("Invalid color name");
   }
 

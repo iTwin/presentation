@@ -111,7 +111,9 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
 
   public getActiveMatch: (index: number) => ActiveMatchInfo | undefined = memoize((index: number): ActiveMatchInfo | undefined => {
     let activeMatch: ActiveMatchInfo | undefined;
-    if (index <= 0) return undefined;
+    if (index <= 0) {
+      return undefined;
+    }
 
     let i = 1;
     for (const node of this._filteredResultMatches) {
@@ -134,7 +136,9 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
 
     // Loops through root level only
     for (const path of nodePaths) {
-      if (path.filteringData) resultCount += path.filteringData.matchesCount + path.filteringData.childMatchesCount;
+      if (path.filteringData) {
+        resultCount += path.filteringData.matchesCount + path.filteringData.childMatchesCount;
+      }
     }
 
     return resultCount;

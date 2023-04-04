@@ -28,7 +28,9 @@ export default function ViewportContentComponent(props: ViewportContentComponent
   }
   useEffect(() => {
     void MyAppFrontend.getViewDefinitions(props.imodel).then((definitions) => {
-      if (definitions.length) setSelectedViewDefinitionId(definitions[0].id);
+      if (definitions.length) {
+        setSelectedViewDefinitionId(definitions[0].id);
+      }
     });
   }, [props.imodel]);
 

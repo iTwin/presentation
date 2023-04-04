@@ -48,10 +48,14 @@ describe("Learning snippets", async () => {
         const [height] = useState(600);
 
         // data provider is going to be empty if no elements are selected
-        if (numSelectedElements === 0) return <>Select an element to see its properties</>;
+        if (numSelectedElements === 0) {
+          return <>Select an element to see its properties</>;
+        }
 
         // there's little value in loading properties for many elements (see `PropertyDataProviderWithUnifiedSelectionProps.requestedContentInstancesLimit`)
-        if (isOverLimit) return <>Please select less elements</>;
+        if (isOverLimit) {
+          return <>Please select less elements</>;
+        }
 
         // render the property grid
         return <VirtualizedPropertyGridWithDataProvider dataProvider={dataProvider} width={width} height={height} />;

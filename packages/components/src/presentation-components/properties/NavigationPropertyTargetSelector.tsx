@@ -76,7 +76,9 @@ export const NavigationPropertyTargetSelector = forwardRef<NavigationPropertyTar
 
   const { ref: selectRef, width } = useResizeObserver();
 
-  if (!targetsRuleset) return <ReadonlyNavigationPropertyTarget record={props.propertyRecord} />;
+  if (!targetsRuleset) {
+    return <ReadonlyNavigationPropertyTarget record={props.propertyRecord} />;
+  }
 
   return (
     <div ref={mergeRefs(divRef, selectRef)}>
@@ -135,7 +137,9 @@ function getPropertyValue(target?: NavigationPropertyTarget): PropertyValue {
 
 function getNavigationTargetFromPropertyRecord(record: PropertyRecord): NavigationPropertyTarget | undefined {
   const value = record.value;
-  if (value.valueFormat !== PropertyValueFormat.Primitive || !value.value || !value.displayValue) return undefined;
+  if (value.valueFormat !== PropertyValueFormat.Primitive || !value.value || !value.displayValue) {
+    return undefined;
+  }
 
   return { key: value.value as InstanceKey, label: LabelDefinition.fromLabelString(value.displayValue) };
 }

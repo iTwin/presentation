@@ -23,7 +23,9 @@ async function getRootNodes() {
 }
 
 async function getChildrenNodes(opts: HierarchyRequestOptions<IModelConnection, NodeKey>) {
-  if (opts.parentKey?.pathFromRoot[0] !== "root" || opts?.parentKey.pathFromRoot.length !== 1) return { nodes: [], count: 0 };
+  if (opts.parentKey?.pathFromRoot[0] !== "root" || opts?.parentKey.pathFromRoot.length !== 1) {
+    return { nodes: [], count: 0 };
+  }
 
   const child1: Node = {
     label: LabelDefinition.fromLabelString("Child 1"),

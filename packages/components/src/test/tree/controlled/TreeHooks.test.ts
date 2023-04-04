@@ -248,7 +248,9 @@ function expectTree(model: TreeModel, expectedHierarchy: TreeHierarchy[]): void 
     const result: TreeHierarchy[] = [];
     for (const childId of model.getChildren(parentId) ?? []) {
       const node = model.getNode(childId) as TreeModelNode | undefined;
-      if (!node) continue;
+      if (!node) {
+        continue;
+      }
       const label = (node.label.value as PrimitiveValue).displayValue!;
       const children = buildActualHierarchy(childId);
       const additionalProperties: Partial<TreeHierarchy> = {};

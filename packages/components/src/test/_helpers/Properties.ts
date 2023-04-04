@@ -33,18 +33,24 @@ export function createPrimitiveStringProperty(
     typename: StandardTypeNames.String,
   };
 
-  if (editorInfo) description.editor = editorInfo;
+  if (editorInfo) {
+    description.editor = editorInfo;
+  }
 
   const property = new PropertyRecord(value, description);
   property.isReadonly = false;
   property.autoExpand = autoExpand;
-  if (property.autoExpand === undefined) delete property.autoExpand;
+  if (property.autoExpand === undefined) {
+    delete property.autoExpand;
+  }
 
   return property;
 }
 
 export function createArrayProperty(name: string, items?: PropertyRecord[], autoExpand?: boolean): PropertyRecord {
-  if (!items) items = [];
+  if (!items) {
+    items = [];
+  }
 
   const value: ArrayValue = {
     items,
@@ -70,7 +76,9 @@ export function createStructProperty(
   },
   autoExpand?: boolean,
 ): PropertyRecord {
-  if (!members) members = {};
+  if (!members) {
+    members = {};
+  }
 
   const value: StructValue = {
     members,

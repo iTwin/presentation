@@ -9,7 +9,9 @@ import { fireEvent } from "@testing-library/react";
 export function getNodeByLabel(htmlContainer: HTMLElement, label: string) {
   let curr = htmlContainer.querySelector<HTMLElement>(`[title*="${label}"]`);
   while (curr && !curr.classList.contains("core-tree-node")) curr = curr.parentElement;
-  if (!curr || !curr.classList.contains("core-tree-node")) throw new Error(`Failed to find node with label "${label}"`);
+  if (!curr || !curr.classList.contains("core-tree-node")) {
+    throw new Error(`Failed to find node with label "${label}"`);
+  }
   return curr;
 }
 

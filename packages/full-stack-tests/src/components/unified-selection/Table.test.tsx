@@ -47,11 +47,15 @@ describe("Learning snippets", async () => {
         });
 
         // don't render anything if the table is loading
-        if (isLoading) return null;
+        if (isLoading) {
+          return null;
+        }
 
         // if we're not loading and still don't have any columns or the columns list is empty - there's nothing
         // to build the table from, which means we probably have nothing selected
-        if (!columns || columns.length === 0) return <>Select something to see properties</>;
+        if (!columns || columns.length === 0) {
+          return <>Select something to see properties</>;
+        }
 
         // render a simple HTML table
         return (

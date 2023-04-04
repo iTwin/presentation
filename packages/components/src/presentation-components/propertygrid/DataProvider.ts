@@ -133,7 +133,9 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
       this.getMemoizedData.cache.keys.length = 0;
       this.getMemoizedData.cache.values.length = 0;
     }
-    if (this.onDataChanged) this.onDataChanged.raiseEvent();
+    if (this.onDataChanged) {
+      this.onDataChanged.raiseEvent();
+    }
   }
 
   /**
@@ -165,7 +167,9 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     return this._includeFieldsWithNoValues;
   }
   public set includeFieldsWithNoValues(value: boolean) {
-    if (this._includeFieldsWithNoValues === value) return;
+    if (this._includeFieldsWithNoValues === value) {
+      return;
+    }
     this._includeFieldsWithNoValues = value;
     this.invalidateCache({ content: true });
   }
@@ -182,7 +186,9 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     return this._includeFieldsWithCompositeValues;
   }
   public set includeFieldsWithCompositeValues(value: boolean) {
-    if (this._includeFieldsWithCompositeValues === value) return;
+    if (this._includeFieldsWithCompositeValues === value) {
+      return;
+    }
     this._includeFieldsWithCompositeValues = value;
     this.invalidateCache({ content: true });
   }
@@ -194,7 +200,9 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     return this._isNestedPropertyCategoryGroupingEnabled;
   }
   public set isNestedPropertyCategoryGroupingEnabled(value: boolean) {
-    if (this._isNestedPropertyCategoryGroupingEnabled === value) return;
+    if (this._isNestedPropertyCategoryGroupingEnabled === value) {
+      return;
+    }
     this._isNestedPropertyCategoryGroupingEnabled = value;
     this.invalidateCache({ content: true });
   }
@@ -218,8 +226,9 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
    */
   // eslint-disable-next-line @typescript-eslint/naming-convention
   protected sortFields = (category: CategoryDescription, fields: Field[]) => {
-    if (category.name === FAVORITES_CATEGORY_NAME) Presentation.favoriteProperties.sortFields(this.imodel, fields);
-    else {
+    if (category.name === FAVORITES_CATEGORY_NAME) {
+      Presentation.favoriteProperties.sortFields(this.imodel, fields);
+    } else {
       inPlaceSort(fields).by([{ desc: (f) => f.priority }, { asc: (f) => f.label, comparer: labelsComparer }]);
     }
   };
@@ -230,7 +239,9 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
   // eslint-disable-next-line @typescript-eslint/naming-convention
   protected getMemoizedData = memoize(async (): Promise<PropertyData> => {
     const content = await this.getContent();
-    if (!content || 0 === content.contentSet.length) return createDefaultPropertyData();
+    if (!content || 0 === content.contentSet.length) {
+      return createDefaultPropertyData();
+    }
 
     const contentItem = content.contentSet[0];
     const callbacks: PropertyPaneCallbacks = {
@@ -263,10 +274,14 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
    */
   public async getPropertyRecordInstanceKeys(record: PropertyRecord): Promise<InstanceKey[]> {
     const content = await this.getContent();
-    if (!content || 0 === content.contentSet.length) return [];
+    if (!content || 0 === content.contentSet.length) {
+      return [];
+    }
 
     let recordField = findField(content.descriptor, record.property.name);
-    if (!recordField) return [];
+    if (!recordField) {
+      return [];
+    }
 
     const fieldsStack: Field[] = [];
     while (recordField.parent) {
@@ -381,13 +396,17 @@ class PropertyDataBuilder extends PropertyRecordsBuilder {
     const usedCategoryNames = new Set();
     this._categorizedRecords.forEach((records, categoryName) => {
       // istanbul ignore if
-      if (records.length === 0) return;
+      if (records.length === 0) {
+        return;
+      }
 
       let category = this._categoriesCache.getEntry(categoryName);
       while (category) {
         usedCategoryNames.add(category.name);
 
-        if (!this._props.wantNestedCategories) break;
+        if (!this._props.wantNestedCategories) {
+          break;
+        }
 
         category = category.parent ? this._categoriesCache.getEntry(category.parent.name) : undefined;
       }
@@ -413,9 +432,13 @@ class PropertyDataBuilder extends PropertyRecordsBuilder {
     // sort categories
     const nestedSortCategory = (category: CategoryDescription | undefined) => {
       const childCategories = categoriesHierarchy.get(category);
-      if (childCategories && childCategories.length > 1) this._props.callbacks.sortCategories(childCategories);
+      if (childCategories && childCategories.length > 1) {
+        this._props.callbacks.sortCategories(childCategories);
+      }
 
-      if (childCategories) childCategories.forEach(nestedSortCategory);
+      if (childCategories) {
+        childCategories.forEach(nestedSortCategory);
+      }
     };
     nestedSortCategory(undefined);
 
@@ -433,13 +456,17 @@ class PropertyDataBuilder extends PropertyRecordsBuilder {
           label: categoryDescr.label,
           expand: categoryDescr.expand,
         };
-        if (categoryDescr.renderer) category.renderer = categoryDescr.renderer;
+        if (categoryDescr.renderer) {
+          category.renderer = categoryDescr.renderer;
+        }
         return { category, source: categoryDescr, categoryHasParent: parentDescr !== undefined };
       });
       propertyCategories.push(...childPropertyCategories);
       for (const categoryInfo of childPropertyCategories) {
         const childCategories = pushPropertyCategories(categoryInfo.source);
-        if (childCategories.length) categoryInfo.category.childCategories = childCategories;
+        if (childCategories.length) {
+          categoryInfo.category.childCategories = childCategories;
+        }
       }
       return childPropertyCategories.map((categoryInfo) => categoryInfo.category);
     };
@@ -471,7 +498,9 @@ class PropertyDataBuilder extends PropertyRecordsBuilder {
     const favorites: FieldHierarchy[] = [];
     fieldHierarchies.forEach((fh) =>
       traverseFieldHierarchy(fh, (hierarchy) => {
-        if (!this._props.callbacks.isFavorite(hierarchy.field)) return true;
+        if (!this._props.callbacks.isFavorite(hierarchy.field)) {
+          return true;
+        }
 
         addFieldHierarchy(favorites, this.createFavoriteFieldsHierarchy(hierarchy));
         return false;
@@ -486,19 +515,25 @@ class PropertyDataBuilder extends PropertyRecordsBuilder {
   }
 
   public override startStruct(props: StartStructProps): boolean {
-    if (this.shouldSkipField(props.hierarchy.field, () => !Object.keys(props.rawValues).length)) return false;
+    if (this.shouldSkipField(props.hierarchy.field, () => !Object.keys(props.rawValues).length)) {
+      return false;
+    }
 
     return super.startStruct(props);
   }
 
   public override startArray(props: StartArrayProps): boolean {
-    if (this.shouldSkipField(props.hierarchy.field, () => !props.rawValues.length)) return false;
+    if (this.shouldSkipField(props.hierarchy.field, () => !props.rawValues.length)) {
+      return false;
+    }
 
     return super.startArray(props);
   }
 
   public override processPrimitiveValue(props: ProcessPrimitiveValueProps): void {
-    if (this.shouldSkipField(props.field, () => null === props.rawValue || undefined === props.rawValue || "" === props.rawValue)) return;
+    if (this.shouldSkipField(props.field, () => null === props.rawValue || undefined === props.rawValue || "" === props.rawValue)) {
+      return;
+    }
 
     super.processPrimitiveValue(props);
   }
@@ -507,10 +542,14 @@ class PropertyDataBuilder extends PropertyRecordsBuilder {
     const isFieldFavorite = this._favoriteFieldHierarchies.find((h) => h.field.name === field.name) !== undefined;
 
     // skip values of hidden fields
-    if (!isFieldFavorite && this._props.callbacks.isHidden(field)) return true;
+    if (!isFieldFavorite && this._props.callbacks.isHidden(field)) {
+      return true;
+    }
 
     // skip empty values
-    if (!isFieldFavorite && !this._props.includeWithNoValues && isValueEmpty()) return true;
+    if (!isFieldFavorite && !this._props.includeWithNoValues && isValueEmpty()) {
+      return true;
+    }
 
     if (field.type.valueFormat !== PresentationPropertyValueFormat.Primitive && !this._props.includeWithCompositeValues) {
       // skip composite fields if requested
@@ -551,7 +590,9 @@ class PropertyCategoriesCache {
 
   private cache(category: CategoryDescription) {
     const entry = this._byName.get(category.name);
-    if (entry) return entry;
+    if (entry) {
+      return entry;
+    }
 
     this._byName.set(category.name, category);
     return category;
@@ -566,7 +607,9 @@ class PropertyCategoriesCache {
   }
 
   public getFavoriteCategory(sourceCategory: CategoryDescription): CategoryDescription {
-    if (!this._enableCategoryNesting) return this.getRootFavoritesCategory();
+    if (!this._enableCategoryNesting) {
+      return this.getRootFavoritesCategory();
+    }
 
     const fieldCategoryRenameStatus = this.getRenamedCategory(`${FAVORITES_CATEGORY_NAME}-${sourceCategory.name}`, sourceCategory);
     let curr = fieldCategoryRenameStatus;
@@ -575,13 +618,17 @@ class PropertyCategoriesCache {
       curr.category.parent = parentCategoryRenameStatus.category;
       curr = parentCategoryRenameStatus;
     }
-    if (!curr.fromCache) curr.category.parent = this.getRootFavoritesCategory();
+    if (!curr.fromCache) {
+      curr.category.parent = this.getRootFavoritesCategory();
+    }
     return fieldCategoryRenameStatus.category;
   }
 
   private getCachedCategory(name: string, factory: () => CategoryDescription) {
     let cached = this._byName.get(name);
-    if (cached) return { category: cached, fromCache: true };
+    if (cached) {
+      return { category: cached, fromCache: true };
+    }
 
     cached = factory();
     this._byName.set(name, cached);
@@ -619,10 +666,14 @@ function destructureStructMember(member: FieldHierarchyRecord): Array<FieldHiera
     return [member];
 
   // don't want to include struct arrays without items - just return empty array
-  if (member.record.value.items.length === 0) return [];
+  if (member.record.value.items.length === 0) {
+    return [];
+  }
 
   // the array should be of size 1
-  if (member.record.value.items.length > 1) return [member];
+  if (member.record.value.items.length > 1) {
+    return [member];
+  }
 
   // the single item should be a struct
   const item = member.record.value.items[0];
@@ -670,7 +721,9 @@ function destructureStructArrayItems(items: PropertyRecord[], fieldHierarchy: Fi
   // if we got a chance to destructure at least one item, replace old members with new ones
   // in the field hierarchy that we got
   // istanbul ignore else
-  if (items.length > 0) fieldHierarchy.childFields = destructuredFields;
+  if (items.length > 0) {
+    fieldHierarchy.childFields = destructuredFields;
+  }
 }
 
 function destructureRecords(records: FieldHierarchyRecord[]) {

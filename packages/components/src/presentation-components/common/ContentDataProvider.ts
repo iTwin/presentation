@@ -215,7 +215,9 @@ export class ContentDataProvider implements IContentDataProvider {
     return this._imodel;
   }
   public set imodel(imodel: IModelConnection) {
-    if (this._imodel === imodel) return;
+    if (this._imodel === imodel) {
+      return;
+    }
 
     this._imodel = imodel;
     this.invalidateCache(CacheInvalidationProps.full());
@@ -226,7 +228,9 @@ export class ContentDataProvider implements IContentDataProvider {
     return this._rulesetRegistration.rulesetId;
   }
   public set rulesetId(value: string) {
-    if (this.rulesetId === value) return;
+    if (this.rulesetId === value) {
+      return;
+    }
 
     this._rulesetRegistration = new RulesetRegistrationHelper(value);
     this.invalidateCache(CacheInvalidationProps.full());
@@ -237,7 +241,9 @@ export class ContentDataProvider implements IContentDataProvider {
     return this._keys;
   }
   public set keys(keys: KeySet) {
-    if (keys.guid === this._previousKeysGuid) return;
+    if (keys.guid === this._previousKeysGuid) {
+      return;
+    }
 
     this._keys = keys;
     this._previousKeysGuid = this._keys.guid;
@@ -249,7 +255,9 @@ export class ContentDataProvider implements IContentDataProvider {
     return this._selectionInfo;
   }
   public set selectionInfo(info: SelectionInfo | undefined) {
-    if (this._selectionInfo === info) return;
+    if (this._selectionInfo === info) {
+      return;
+    }
 
     this._selectionInfo = info;
     this.invalidateCache(CacheInvalidationProps.full());
@@ -324,10 +332,14 @@ export class ContentDataProvider implements IContentDataProvider {
    * - there is no content based on the ruleset and input
    */
   public getContentDescriptor = memoize(async (): Promise<Descriptor | undefined> => {
-    if (!this.shouldRequestContentForEmptyKeyset() && this.keys.isEmpty) return undefined;
+    if (!this.shouldRequestContentForEmptyKeyset() && this.keys.isEmpty) {
+      return undefined;
+    }
 
     const descriptor = await this.getDefaultContentDescriptor();
-    if (!descriptor) return undefined;
+    if (!descriptor) {
+      return undefined;
+    }
 
     return new Descriptor({ ...descriptor });
   });
@@ -371,7 +383,9 @@ export class ContentDataProvider implements IContentDataProvider {
 
   private _getContentAndSize = memoize(
     async (pageOptions?: PageOptions): Promise<{ content: Content; size: number } | undefined> => {
-      if (!this.shouldRequestContentForEmptyKeyset() && this.keys.isEmpty) return undefined;
+      if (!this.shouldRequestContentForEmptyKeyset() && this.keys.isEmpty) {
+        return undefined;
+      }
 
       const descriptorOverrides = await this.getDescriptorOverrides();
 
@@ -390,7 +404,9 @@ export class ContentDataProvider implements IContentDataProvider {
         paging: pageOptions,
       };
 
-      if (requestSize) return Presentation.presentation.getContentAndSize(options);
+      if (requestSize) {
+        return Presentation.presentation.getContentAndSize(options);
+      }
 
       const content = await Presentation.presentation.getContent(options);
       return content ? { content, size: content.contentSet.length } : undefined;
@@ -406,12 +422,16 @@ export class ContentDataProvider implements IContentDataProvider {
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
   private onIModelContentChanged = (args: IModelContentChangeEventArgs) => {
-    if (args.rulesetId === this.rulesetId && args.imodelKey === this.imodel.key) this.onContentUpdate();
+    if (args.rulesetId === this.rulesetId && args.imodelKey === this.imodel.key) {
+      this.onContentUpdate();
+    }
   };
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
   private onRulesetModified = (curr: RegisteredRuleset) => {
-    if (curr.id === this.rulesetId) this.onContentUpdate();
+    if (curr.id === this.rulesetId) {
+      this.onContentUpdate();
+    }
   };
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -423,9 +443,13 @@ export class ContentDataProvider implements IContentDataProvider {
 class MemoizationHelpers {
   public static areContentRequestsEqual(lhsArgs: [PageOptions?], rhsArgs: [PageOptions?]): boolean {
     // istanbul ignore next
-    if ((lhsArgs[0]?.start ?? 0) !== (rhsArgs[0]?.start ?? 0)) return false;
+    if ((lhsArgs[0]?.start ?? 0) !== (rhsArgs[0]?.start ?? 0)) {
+      return false;
+    }
     // istanbul ignore next
-    if ((lhsArgs[0]?.size ?? 0) !== (rhsArgs[0]?.size ?? 0)) return false;
+    if ((lhsArgs[0]?.size ?? 0) !== (rhsArgs[0]?.size ?? 0)) {
+      return false;
+    }
     return true;
   }
 }

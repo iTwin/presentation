@@ -37,7 +37,9 @@ export function useColumns(props: UseColumnsProps): TableColumnDefinition[] | un
       try {
         const columnDefinitions = await loadColumns(imodel, ruleset, keys);
         // istanbul ignore else
-        if (!disposed) setColumns(columnDefinitions ?? []);
+        if (!disposed) {
+          setColumns(columnDefinitions ?? []);
+        }
       } catch (err) {
         setErrorState(err);
       }

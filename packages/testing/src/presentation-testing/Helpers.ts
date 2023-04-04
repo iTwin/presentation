@@ -79,9 +79,13 @@ export interface PresentationTestingInitProps {
  * @public
  */
 export const initialize = async (props?: PresentationTestingInitProps) => {
-  if (isInitialized) return;
+  if (isInitialized) {
+    return;
+  }
 
-  if (!props) props = {};
+  if (!props) {
+    props = {};
+  }
 
   // set up rpc interfaces
   initializeRpcInterfaces([SnapshotIModelRpcInterface, IModelReadRpcInterface, PresentationRpcInterface]);
@@ -89,14 +93,17 @@ export const initialize = async (props?: PresentationTestingInitProps) => {
   // init backend
   // make sure backend gets assigned an id which puts its resources into a unique directory
   props.backendProps = props.backendProps ?? {};
-  if (!props.backendProps.id)
+  if (!props.backendProps.id) {
     // eslint-disable-line @itwin/no-internal
     props.backendProps.id = `test-${Guid.createValue()}`; // eslint-disable-line @itwin/no-internal
+  }
   await IModelHost.startup({ cacheDir: join(__dirname, ".cache"), ...props.backendHostProps });
   PresentationBackend.initialize(props.backendProps);
 
   // init frontend
-  if (!props.frontendApp) props.frontendApp = NoRenderApp;
+  if (!props.frontendApp) {
+    props.frontendApp = NoRenderApp;
+  }
   await props.frontendApp.startup(props.frontendAppOptions);
   const defaultFrontendProps: PresentationFrontendProps = {
     presentation: {
@@ -118,18 +125,25 @@ export const initialize = async (props?: PresentationTestingInitProps) => {
  * @public
  */
 export const terminate = async (frontendApp = IModelApp) => {
-  if (!isInitialized) return;
+  if (!isInitialized) {
+    return;
+  }
 
   // store directory that needs to be cleaned-up
   let hierarchiesCacheDirectory: string | undefined;
   const hierarchiesCacheConfig = PresentationBackend.initProps?.caching?.hierarchies;
-  if (hierarchiesCacheConfig?.mode === HierarchyCacheMode.Disk) hierarchiesCacheDirectory = hierarchiesCacheConfig?.directory;
-  else if (hierarchiesCacheConfig?.mode === HierarchyCacheMode.Hybrid) hierarchiesCacheDirectory = hierarchiesCacheConfig?.disk?.directory;
+  if (hierarchiesCacheConfig?.mode === HierarchyCacheMode.Disk) {
+    hierarchiesCacheDirectory = hierarchiesCacheConfig?.directory;
+  } else if (hierarchiesCacheConfig?.mode === HierarchyCacheMode.Hybrid) {
+    hierarchiesCacheDirectory = hierarchiesCacheConfig?.disk?.directory;
+  }
 
   // terminate backend
   PresentationBackend.terminate();
   await IModelHost.shutdown();
-  if (hierarchiesCacheDirectory) rimraf.sync(hierarchiesCacheDirectory);
+  if (hierarchiesCacheDirectory) {
+    rimraf.sync(hierarchiesCacheDirectory);
+  }
 
   // terminate frontend
   PresentationFrontend.terminate();

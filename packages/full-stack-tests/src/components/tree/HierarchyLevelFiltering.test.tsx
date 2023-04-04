@@ -107,7 +107,9 @@ describe("Learning snippets", () => {
       await waitFor(() => {
         // wait for the "apply" button to become enabled
         const disabledButton = filteringDialog.querySelector(".presentation-instance-filter-dialog-apply-button[disabled]");
-        if (disabledButton) throw new Error(`The "Apply" button is disabled`);
+        if (disabledButton) {
+          throw new Error(`The "Apply" button is disabled`);
+        }
       });
 
       // do filter

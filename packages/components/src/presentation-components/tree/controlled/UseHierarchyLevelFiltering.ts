@@ -48,14 +48,20 @@ export function useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProp
 function applyHierarchyLevelFilter(nodeLoader: ITreeNodeLoader, modelSource: TreeModelSource, nodeId: string, filter?: PresentationInstanceFilterInfo) {
   modelSource.modifyModel((model) => {
     const modelNode = model.getNode(nodeId);
-    if (!modelNode || !isTreeModelNode(modelNode) || !isPresentationTreeNodeItem(modelNode.item) || !modelNode.item.filtering) return;
+    if (!modelNode || !isTreeModelNode(modelNode) || !isPresentationTreeNodeItem(modelNode.item) || !modelNode.item.filtering) {
+      return;
+    }
 
     modelNode.item.filtering.active = filter;
-    if (filter) modelNode.isExpanded = true;
+    if (filter) {
+      modelNode.isExpanded = true;
+    }
     model.clearChildren(nodeId);
   });
 
   const updatedNode = modelSource.getModel().getNode(nodeId);
-  if (updatedNode === undefined || !updatedNode.isExpanded || updatedNode.numChildren !== undefined) return;
+  if (updatedNode === undefined || !updatedNode.isExpanded || updatedNode.numChildren !== undefined) {
+    return;
+  }
   nodeLoader.loadNode(updatedNode, 0).subscribe();
 }

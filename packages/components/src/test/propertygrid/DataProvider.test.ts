@@ -1638,8 +1638,12 @@ describe("PropertyDataProvider", () => {
         it("sorts categories according to sortCategories callback", async () => {
           provider.sortCategories = (cats: CategoryDescription[]) => {
             cats.sort((lhs: CategoryDescription, rhs: CategoryDescription): number => {
-              if (lhs.label < rhs.label) return -1;
-              if (lhs.label > rhs.label) return 1;
+              if (lhs.label < rhs.label) {
+                return -1;
+              }
+              if (lhs.label > rhs.label) {
+                return 1;
+              }
               return 0;
             });
           };
@@ -1701,8 +1705,12 @@ describe("PropertyDataProvider", () => {
         it("sorts records according to sortFields callback", async () => {
           (provider as any).sortFields = (_cat: CategoryDescription, fields: Field[]) => {
             fields.sort((lhs: Field, rhs: Field): number => {
-              if (lhs.label < rhs.label) return -1;
-              if (lhs.label > rhs.label) return 1;
+              if (lhs.label < rhs.label) {
+                return -1;
+              }
+              if (lhs.label > rhs.label) {
+                return 1;
+              }
               return 0;
             });
           };

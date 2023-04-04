@@ -99,7 +99,9 @@ export class ContentBuilder {
     dataProvider.keys = new KeySet(instanceKeys);
 
     const content = await dataProvider.getContent();
-    if (!content) return [];
+    if (!content) {
+      return [];
+    }
 
     const accumulator = new PropertyRecordsAccumulator(this._decimalPrecision);
     traverseContent(accumulator, content);
@@ -114,7 +116,9 @@ export class ContentBuilder {
    * "PropertyPane", "Grid", "List" etc.
    */
   public async createContent(rulesetOrId: Ruleset | string, instanceKeys: InstanceKey[], displayType: string = DefaultContentDisplayTypes.PropertyPane) {
-    if (typeof rulesetOrId === "string") return this.doCreateContent(rulesetOrId, instanceKeys, displayType);
+    if (typeof rulesetOrId === "string") {
+      return this.doCreateContent(rulesetOrId, instanceKeys, displayType);
+    }
 
     return using(await Presentation.presentation.rulesets().add(rulesetOrId), async (ruleset: RegisteredRuleset) => {
       return this.doCreateContent(ruleset.id, instanceKeys, displayType);
@@ -152,7 +156,9 @@ export class ContentBuilder {
       );
       const instanceIds: InstanceId[] = await reader.toArray();
 
-      if (!instanceIds.length) continue;
+      if (!instanceIds.length) {
+        continue;
+      }
 
       const instanceKeys = instanceIds.map((idEntry) => ({ className: `${nameEntry.schemaName}:${nameEntry.className}`, id: idEntry } as InstanceKey));
 
@@ -212,7 +218,9 @@ class PropertyRecordsAccumulator extends PropertyRecordsBuilder {
   }
 
   private processRawValue(value: Value): Value {
-    if (this._decimalPrecision === undefined) return value;
+    if (this._decimalPrecision === undefined) {
+      return value;
+    }
 
     if (typeof value === "number") {
       return +Number(value).toFixed(this._decimalPrecision);

@@ -134,7 +134,9 @@ class TreeReloader extends PagedTreeNodeLoader<IPresentationTreeDataProvider> {
   private reloadVisibleNodes() {
     return defer(() => {
       // if visible range is not provided do not load any more nodes
-      if (!this.itemsRange) return EMPTY;
+      if (!this.itemsRange) {
+        return EMPTY;
+      }
 
       // collect not loaded (placeholder) nodes that are in visible range
       const visibleNodes = computeVisibleNodes(this.modelSource.getModel());
@@ -142,7 +144,9 @@ class TreeReloader extends PagedTreeNodeLoader<IPresentationTreeDataProvider> {
       const notLoadedNode: TreeModelNodePlaceholder[] = [];
       for (let i = visibleRange.start; i <= visibleRange.end; i++) {
         const node = visibleNodes.getAtIndex(i);
-        if (!node || !isTreeModelNodePlaceholder(node)) continue;
+        if (!node || !isTreeModelNodePlaceholder(node)) {
+          continue;
+        }
         notLoadedNode.push(node);
       }
 
@@ -220,7 +224,9 @@ function getTreeNode(treeModel: TreeModel, nodeId: string | undefined): TreeMode
 }
 
 function getVisibleRange(itemsRange: RenderedItemsRange, visibleNodes: VisibleTreeNodes) {
-  if (itemsRange.visibleStopIndex < visibleNodes.getNumNodes()) return { start: itemsRange.visibleStartIndex, end: itemsRange.visibleStopIndex };
+  if (itemsRange.visibleStopIndex < visibleNodes.getNumNodes()) {
+    return { start: itemsRange.visibleStartIndex, end: itemsRange.visibleStopIndex };
+  }
 
   const visibleNodesCount = itemsRange.visibleStopIndex - itemsRange.visibleStartIndex;
   const endPosition = visibleNodes.getNumNodes() - 1;

@@ -88,7 +88,9 @@ export function useNavigationPropertyTargetsRuleset(
     let disposed = false;
     void (async () => {
       const propertyInfo = await getNavigationPropertyInfo(property);
-      if (!disposed && propertyInfo) setRuleset(createNavigationPropertyTargetsRuleset(propertyInfo));
+      if (!disposed && propertyInfo) {
+        setRuleset(createNavigationPropertyTargetsRuleset(propertyInfo));
+      }
     })();
     return () => {
       disposed = true;

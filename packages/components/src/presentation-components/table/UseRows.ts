@@ -63,7 +63,9 @@ export function useRows(props: UseRowsProps): UseRowsResult {
       .pipe(
         distinct(),
         mergeMap((pageStart) => {
-          if (keys.isEmpty) return EMPTY;
+          if (keys.isEmpty) {
+            return EMPTY;
+          }
           setState((prev) => ({ ...prev, isLoading: true }));
           return from(loadRows(imodel, ruleset, keys, { start: pageStart, size: pageSize }, options));
         }, 1),
@@ -75,7 +77,9 @@ export function useRows(props: UseRowsProps): UseRowsResult {
             rows: [...prev.rows, ...loadedRows.rowDefinitions],
             loadMoreRows: () => {
               const pageStart = prev.rows.length + loadedRows.rowDefinitions.length;
-              if (pageStart >= loadedRows.total) return;
+              if (pageStart >= loadedRows.total) {
+                return;
+              }
               loader.next(pageStart);
             },
           }));
@@ -108,7 +112,9 @@ async function loadRows(imodel: IModelConnection, ruleset: Ruleset | string, key
     paging,
   });
 
-  if (!result) throw new PresentationError(PresentationStatus.Error, "Failed to load table rows.");
+  if (!result) {
+    throw new PresentationError(PresentationStatus.Error, "Failed to load table rows.");
+  }
 
   return {
     rowDefinitions: createRows(result.content),
@@ -133,7 +139,9 @@ class RowsBuilder extends PropertyRecordsBuilder {
   protected createRootPropertiesAppender() {
     return {
       append: (record: FieldHierarchyRecord) => {
-        if (record.fieldHierarchy.field.isNestedContentField()) return;
+        if (record.fieldHierarchy.field.isNestedContentField()) {
+          return;
+        }
 
         assert(this._currentRow !== undefined);
         this._currentRow.cells.push({

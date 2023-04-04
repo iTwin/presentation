@@ -96,13 +96,17 @@ const name = `PropertyGrid`;
 function getSelectedKeys(selectionHandler: SelectionHandler, selectionLevel?: number): KeySet | undefined {
   if (undefined === selectionLevel) {
     const availableLevels = selectionHandler.getSelectionLevels();
-    if (0 === availableLevels.length) return undefined;
+    if (0 === availableLevels.length) {
+      return undefined;
+    }
     selectionLevel = availableLevels[availableLevels.length - 1];
   }
 
   for (let i = selectionLevel; i >= 0; i--) {
     const selection = selectionHandler.getSelection(i);
-    if (!selection.isEmpty) return new KeySet(selection);
+    if (!selection.isEmpty) {
+      return new KeySet(selection);
+    }
   }
   return new KeySet();
 }

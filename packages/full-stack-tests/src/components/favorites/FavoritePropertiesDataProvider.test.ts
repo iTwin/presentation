@@ -66,7 +66,9 @@ describe("FavoritePropertiesDataProvider", async () => {
 const getPropertyRecordByLabel = (props: PropertyData, label: string): PropertyRecord | undefined => {
   for (const category of props.categories) {
     const record = props.records[category.name].find((r) => r.property.displayLabel === label);
-    if (record) return record;
+    if (record) {
+      return record;
+    }
   }
   return undefined;
 };

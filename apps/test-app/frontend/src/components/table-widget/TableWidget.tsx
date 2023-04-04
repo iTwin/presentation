@@ -17,7 +17,9 @@ export interface TableWidgetProps {
 export function TableWidget(props: TableWidgetProps) {
   const { imodel, rulesetId } = props;
 
-  if (!rulesetId) return null;
+  if (!rulesetId) {
+    return null;
+  }
 
   return <PresentationTable imodel={imodel} rulesetId={rulesetId} />;
 }
@@ -83,6 +85,8 @@ function mapTableRow(rowDefinition: TableRowDefinition) {
 }
 
 function cellRenderer(cellProps: any) {
-  if (!cellProps.value) return null;
+  if (!cellProps.value) {
+    return null;
+  }
   return <TableCellRenderer record={cellProps.value as PropertyRecord} />;
 }

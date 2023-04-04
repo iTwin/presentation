@@ -84,7 +84,9 @@ export default class App extends Component<{}, State> {
   };
 
   private onRulesetSelected = (rulesetId: string | undefined) => {
-    if (this.state.imodel) Presentation.selection.clearSelection("onRulesetChanged", this.state.imodel, 0);
+    if (this.state.imodel) {
+      Presentation.selection.clearSelection("onRulesetChanged", this.state.imodel, 0);
+    }
 
     this.setState({ currentRulesetId: rulesetId }, () => this.updateAppSettings());
   };
@@ -101,7 +103,9 @@ export default class App extends Component<{}, State> {
 
   private _onTreePaneRatioChanged = (ratio: number): RatioChangeResult => {
     ratio = Geometry.clamp(ratio, this._minRightPaneRatio, this._maxRightPaneRatio);
-    if (this.state.rightPaneRatio === ratio) return { ratio };
+    if (this.state.rightPaneRatio === ratio) {
+      return { ratio };
+    }
 
     this.setState({ rightPaneRatio: ratio });
     return { ratio };
@@ -109,7 +113,9 @@ export default class App extends Component<{}, State> {
 
   private _onContentRatioChanged = (ratio: number): RatioChangeResult => {
     ratio = Geometry.clamp(ratio, this._minContentRatio, this._maxContentRatio);
-    if (this.state.contentRatio === ratio) return { ratio };
+    if (this.state.contentRatio === ratio) {
+      return { ratio };
+    }
 
     this.setState({ contentRatio: ratio });
     return { ratio };
@@ -187,11 +193,15 @@ export default class App extends Component<{}, State> {
   private afterRender() {
     if (this._rightPaneRef.current) {
       const height = this._rightPaneRef.current.getBoundingClientRect().height;
-      if (height !== this.state.rightPaneHeight) this.setState({ rightPaneHeight: height });
+      if (height !== this.state.rightPaneHeight) {
+        this.setState({ rightPaneHeight: height });
+      }
     }
     if (this._contentRef.current) {
       const width = this._contentRef.current.getBoundingClientRect().width;
-      if (width !== this.state.contentWidth) this.setState({ contentWidth: width });
+      if (width !== this.state.contentWidth) {
+        this.setState({ contentWidth: width });
+      }
     }
   }
 
@@ -211,7 +221,9 @@ export default class App extends Component<{}, State> {
 
   public override render() {
     let imodelComponents = null;
-    if (this.state.imodel) imodelComponents = this.renderIModelComponents(this.state.imodel, this.state.currentRulesetId);
+    if (this.state.imodel) {
+      imodelComponents = this.renderIModelComponents(this.state.imodel, this.state.currentRulesetId);
+    }
 
     return (
       <ThemeProvider theme="os">

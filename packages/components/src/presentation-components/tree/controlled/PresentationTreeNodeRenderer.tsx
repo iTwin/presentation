@@ -68,7 +68,9 @@ interface PresentationTreeNodeActionsProps {
 
 function PresentationTreeNodeActions(props: PresentationTreeNodeActionsProps) {
   const { onFilterClick, onClearFilterClick, filteringDisabled, isFiltered } = props;
-  if (filteringDisabled) return null;
+  if (filteringDisabled) {
+    return null;
+  }
 
   return (
     <div className={classnames("presentation-components-node-action-buttons", isFiltered && "filtered")}>

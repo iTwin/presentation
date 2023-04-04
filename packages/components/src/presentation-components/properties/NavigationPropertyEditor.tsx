@@ -68,7 +68,9 @@ export function useNavigationPropertyEditingContext(imodel: IModelConnection, da
       imodel,
       getNavigationPropertyInfo: async (property) => {
         const field = await dataProvider.getFieldByPropertyDescription(property);
-        if (!field || !field.isPropertiesField()) return undefined;
+        if (!field || !field.isPropertiesField()) {
+          return undefined;
+        }
         return field.properties[0].property.navigationPropertyInfo;
       },
     }),
@@ -97,7 +99,9 @@ export class NavigationPropertyTargetEditor extends PureComponent<PropertyEditor
 
   // istanbul ignore next
   public get hasFocus() {
-    if (!this._ref.current?.divElement || !document.activeElement) return false;
+    if (!this._ref.current?.divElement || !document.activeElement) {
+      return false;
+    }
     return this._ref.current.divElement.contains(document.activeElement);
   }
 
@@ -109,9 +113,13 @@ export class NavigationPropertyTargetEditor extends PureComponent<PropertyEditor
 
 const NavigationPropertyTargetEditorInner = forwardRef<NavigationPropertyTargetSelectorAttributes, PropertyEditorProps>((props, ref) => {
   const context = useContext(navigationPropertyEditorContext);
-  if (!props.propertyRecord) return null;
+  if (!props.propertyRecord) {
+    return null;
+  }
 
-  if (!context) return <ReadonlyNavigationPropertyTarget record={props.propertyRecord} />;
+  if (!context) {
+    return <ReadonlyNavigationPropertyTarget record={props.propertyRecord} />;
+  }
 
   return (
     <NavigationPropertyTargetSelector

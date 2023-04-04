@@ -61,8 +61,12 @@ export const translate = (stringId: string): string => {
  * @internal
  */
 export const getDisplayName = <P>(component: React.ComponentType<P>): string => {
-  if (component.displayName) return component.displayName;
-  if (component.name) return component.name;
+  if (component.displayName) {
+    return component.displayName;
+  }
+  if (component.name) {
+    return component.name;
+  }
   return "Component";
 };
 
@@ -76,7 +80,9 @@ export const findField = (descriptor: Descriptor, recordPropertyName: string): F
   while (fieldsSource && fieldNames.length) {
     const field: Field | undefined = fieldsSource.getFieldByName(fieldNames.shift()!);
     fieldsSource = field && field.isNestedContentField() ? field : undefined;
-    if (!fieldNames.length) return field;
+    if (!fieldNames.length) {
+      return field;
+    }
   }
   return undefined;
 };

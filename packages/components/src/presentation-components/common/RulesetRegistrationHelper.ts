@@ -39,7 +39,9 @@ export class RulesetRegistrationHelper implements IDisposable {
   }
 
   private disposeRegisteredRuleset() {
-    if (!this._registeredRuleset) return;
+    if (!this._registeredRuleset) {
+      return;
+    }
 
     this._registeredRuleset.dispose();
     this._registeredRuleset = undefined;

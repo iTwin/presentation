@@ -487,7 +487,9 @@ describe("TreeDataProvider", () => {
 
   describe("filterable nodes", () => {
     async function loadDescriptor(filteringInfo: PresentationTreeNodeItemFilteringInfo) {
-      if (filteringInfo.descriptor instanceof Descriptor) return filteringInfo.descriptor;
+      if (filteringInfo.descriptor instanceof Descriptor) {
+        return filteringInfo.descriptor;
+      }
       return filteringInfo.descriptor();
     }
 

@@ -58,7 +58,9 @@ export function PropertiesWidget(props: Props) {
 
   const setFilter = useCallback(
     (filter: string) => {
-      if (filter !== filterText) setFilterText(filter);
+      if (filter !== filterText) {
+        setFilterText(filter);
+      }
     },
     [filterText],
   );
@@ -76,7 +78,9 @@ export function PropertiesWidget(props: Props) {
   const onFilteringStateChanged = useCallback(
     (newFilteringResult: FilteredPropertyData | undefined) => {
       setFilteringResult(newFilteringResult);
-      if (newFilteringResult?.getMatchByIndex) setActiveHighlight(newFilteringResult.getMatchByIndex(activeMatchIndex));
+      if (newFilteringResult?.getMatchByIndex) {
+        setActiveHighlight(newFilteringResult.getMatchByIndex(activeMatchIndex));
+      }
     },
     [activeMatchIndex],
   );
@@ -278,7 +282,9 @@ function PropertiesWidgetContextMenu(props: PropertiesWidgetContextMenuProps) {
     }, [imodel, dataProvider, record, addFavorite, removeFavorite]),
   );
 
-  if (!asyncItems.value || asyncItems.value.length === 0) return null;
+  if (!asyncItems.value || asyncItems.value.length === 0) {
+    return null;
+  }
 
   return (
     <GlobalContextMenu
@@ -313,8 +319,11 @@ function FavoritePropertyActionButton(props: ActionButtonRendererProps & { dataP
 function FavoriteFieldActionButton(props: { imodel: IModelConnection; field: Field }) {
   const { field, imodel } = props;
   const toggleFavoriteProperty = useCallback(async () => {
-    if (Presentation.favoriteProperties.has(field, imodel, FAVORITES_SCOPE)) await Presentation.favoriteProperties.remove(field, imodel, FAVORITES_SCOPE);
-    else await Presentation.favoriteProperties.add(field, imodel, FAVORITES_SCOPE);
+    if (Presentation.favoriteProperties.has(field, imodel, FAVORITES_SCOPE)) {
+      await Presentation.favoriteProperties.remove(field, imodel, FAVORITES_SCOPE);
+    } else {
+      await Presentation.favoriteProperties.add(field, imodel, FAVORITES_SCOPE);
+    }
   }, [field, imodel]);
   return (
     <div className="favorite-action-button" onClick={toggleFavoriteProperty} onKeyDown={toggleFavoriteProperty} role="button" tabIndex={0}>
@@ -345,7 +354,9 @@ class AutoExpandingPropertyDataProvider extends PresentationPropertyDataProvider
   private expandCategories(categories: PropertyCategory[]) {
     categories.forEach((category: PropertyCategory) => {
       category.expand = true;
-      if (category.childCategories) this.expandCategories(category.childCategories);
+      if (category.childCategories) {
+        this.expandCategories(category.childCategories);
+      }
     });
   }
 }

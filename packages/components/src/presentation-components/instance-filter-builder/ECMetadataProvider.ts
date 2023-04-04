@@ -30,12 +30,16 @@ export class ECClassInfo {
   }
 
   public isBaseOf(idOrInfo: Id64String | ECClassInfo): boolean {
-    if (typeof idOrInfo === "string") return idOrInfo === this.id || this._derivedClasses.has(idOrInfo);
+    if (typeof idOrInfo === "string") {
+      return idOrInfo === this.id || this._derivedClasses.has(idOrInfo);
+    }
     return idOrInfo.id === this.id || this._derivedClasses.has(idOrInfo.id);
   }
 
   public isDerivedFrom(idOrInfo: Id64String | ECClassInfo): boolean {
-    if (typeof idOrInfo === "string") return idOrInfo === this.id || this._baseClasses.has(idOrInfo);
+    if (typeof idOrInfo === "string") {
+      return idOrInfo === this.id || this._baseClasses.has(idOrInfo);
+    }
     return idOrInfo.id === this.id || this._baseClasses.has(idOrInfo.id);
   }
 }
@@ -108,8 +112,12 @@ export class ECMetadataProvider {
     const hierarchy = { baseClasses: new Set<Id64String>(), derivedClasses: new Set<Id64String>() };
     const reader = this._queryReaderFactory(classHierarchyQuery, QueryBinder.from({ id }), { rowFormat: QueryRowFormat.UseJsPropertyNames });
     while (await reader.step()) {
-      if (reader.current.baseId === id) hierarchy.derivedClasses.add(reader.current.derivedId);
-      if (reader.current.derivedId === id) hierarchy.baseClasses.add(reader.current.baseId);
+      if (reader.current.baseId === id) {
+        hierarchy.derivedClasses.add(reader.current.derivedId);
+      }
+      if (reader.current.derivedId === id) {
+        hierarchy.baseClasses.add(reader.current.baseId);
+      }
     }
     return hierarchy;
   }

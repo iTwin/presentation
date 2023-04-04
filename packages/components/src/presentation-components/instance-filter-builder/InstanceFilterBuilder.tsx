@@ -136,7 +136,9 @@ export function usePresentationInstanceFilteringProps(
   const onRulePropertySelected = useCallback(
     (property: PropertyDescription) => {
       const propertyInfo = propertyInfos.find((info) => info.propertyDescription.name === property.name);
-      if (propertyInfo) filterClassesByProperty(propertyInfo);
+      if (propertyInfo) {
+        filterClassesByProperty(propertyInfo);
+      }
     },
     [propertyInfos, filterClassesByProperty],
   );
@@ -184,7 +186,9 @@ function useProperties(propertyInfos: InstanceFilterPropertyInfo[], selectedClas
     const subscription = classChanges.current
       .pipe(
         map((classes) => {
-          if (classes.length === 0) return of(undefined);
+          if (classes.length === 0) {
+            return of(undefined);
+          }
           setIsFilteringProperties(true);
           return from(computePropertiesByClasses(propertyInfos, classes, imodel));
         }),
@@ -213,7 +217,9 @@ function useSelectedClasses(classes: ClassInfo[], imodel: IModelConnection, init
 
   const firstRender = useRef(true);
   useEffect(() => {
-    if (!firstRender.current) setSelectedClasses([]);
+    if (!firstRender.current) {
+      setSelectedClasses([]);
+    }
     firstRender.current = false;
   }, [classes]);
 
@@ -252,7 +258,9 @@ export function useFilterBuilderNavigationPropertyEditorContext(imodel: IModelCo
       imodel,
       getNavigationPropertyInfo: async (property) => {
         const field = descriptor.getFieldByName(getInstanceFilterFieldName(property));
-        if (!field || !field.isPropertiesField()) return undefined;
+        if (!field || !field.isPropertiesField()) {
+          return undefined;
+        }
 
         return field.properties[0].property.navigationPropertyInfo;
       },
@@ -271,7 +279,9 @@ async function computePropertiesByClasses(
   const filteredProperties: InstanceFilterPropertyInfo[] = [];
   for (const prop of properties) {
     // property should be shown if all selected classes are derived from property source class
-    if (ecClassInfos.every((info) => info && info.isDerivedFrom(prop.sourceClassId))) filteredProperties.push(prop);
+    if (ecClassInfos.every((info) => info && info.isDerivedFrom(prop.sourceClassId))) {
+      filteredProperties.push(prop);
+    }
   }
 
   return filteredProperties.length === properties.length ? undefined : filteredProperties;
@@ -281,12 +291,16 @@ async function computeClassesByProperty(classes: ClassInfo[], property: Instance
   const metadataProvider = getIModelMetadataProvider(imodel);
   const propertyClass = await metadataProvider.getECClassInfo(property.sourceClassId);
   // istanbul ignore next
-  if (!propertyClass) return classes;
+  if (!propertyClass) {
+    return classes;
+  }
 
   const classesWithProperty: ClassInfo[] = [];
   for (const currentClass of classes) {
     // add classes that are derived from property source class
-    if (propertyClass.isBaseOf(currentClass.id)) classesWithProperty.push(currentClass);
+    if (propertyClass.isBaseOf(currentClass.id)) {
+      classesWithProperty.push(currentClass);
+    }
   }
 
   return classesWithProperty;

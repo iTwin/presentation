@@ -132,7 +132,9 @@ export class TestErrorBoundary extends Component<TestErrorBoundaryProps, TestErr
     this.props.onError(error, info.componentStack);
   }
   public override render() {
-    if (this.state.hasError) return null;
+    if (this.state.hasError) {
+      return null;
+    }
     return this.props.children;
   }
 }

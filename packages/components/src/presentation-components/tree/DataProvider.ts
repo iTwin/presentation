@@ -269,7 +269,9 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
 }
 
 async function getFilterDefinition(imodel: IModelConnection, node?: TreeNodeItem) {
-  if (!node || !isPresentationTreeNodeItem(node) || !node.filtering?.active) return undefined;
+  if (!node || !isPresentationTreeNodeItem(node) || !node.filtering?.active) {
+    return undefined;
+  }
   return convertToInstanceFilterDefinition(node.filtering.active.filter, imodel);
 }
 
@@ -283,7 +285,9 @@ async function createNodesAndCountResult(
     const result = await resultFactory();
     const { nodes, count } = result;
     const isParentFiltered = parentNode && isPresentationTreeNodeItem(parentNode) && parentNode.filtering?.active;
-    if (nodes.length === 0 && isParentFiltered) return createStatusNodeResult(parentNode, "tree.no-filtered-children");
+    if (nodes.length === 0 && isParentFiltered) {
+      return createStatusNodeResult(parentNode, "tree.no-filtered-children");
+    }
     return { nodes: createTreeItems(nodes, baseOptions, parentNode, nodesCreateProps), count };
   } catch (e) {
     if (e instanceof PresentationError) {
@@ -325,7 +329,9 @@ function createTreeItems(
       item.filtering = {
         descriptor: async () => {
           const descriptor = await Presentation.presentation.getNodesDescriptor({ ...baseOptions, parentKey: node.key });
-          if (!descriptor) throw new PresentationError(PresentationStatus.Error, `Failed to get descriptor for node - ${node.label.displayValue}`);
+          if (!descriptor) {
+            throw new PresentationError(PresentationStatus.Error, `Failed to get descriptor for node - ${node.label.displayValue}`);
+          }
           return descriptor;
         },
       };
@@ -351,10 +357,18 @@ class MemoizationHelpers {
     lhsArgs: [TreeNodeItem?, PageOptions?, InstanceFilterDefinition?],
     rhsArgs: [TreeNodeItem?, PageOptions?, InstanceFilterDefinition?],
   ): boolean {
-    if (lhsArgs[0]?.id !== rhsArgs[0]?.id) return false;
-    if ((lhsArgs[1]?.start ?? 0) !== (rhsArgs[1]?.start ?? 0)) return false;
-    if ((lhsArgs[1]?.size ?? 0) !== (rhsArgs[1]?.size ?? 0)) return false;
-    if (lhsArgs[2]?.expression !== rhsArgs[2]?.expression) return false;
+    if (lhsArgs[0]?.id !== rhsArgs[0]?.id) {
+      return false;
+    }
+    if ((lhsArgs[1]?.start ?? 0) !== (rhsArgs[1]?.start ?? 0)) {
+      return false;
+    }
+    if ((lhsArgs[1]?.size ?? 0) !== (rhsArgs[1]?.size ?? 0)) {
+      return false;
+    }
+    if (lhsArgs[2]?.expression !== rhsArgs[2]?.expression) {
+      return false;
+    }
     return true;
   }
 }

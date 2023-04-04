@@ -110,7 +110,9 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
       takeUntil(this._cancelled),
       tap({
         next: ({ selectedNodeItems, deselectedNodeItems }) => {
-          if (selectedNodeItems.length !== 0) this._selectionHandler.addToSelection(this.createKeysForSelection(selectedNodeItems, SelectionChangeType.Add));
+          if (selectedNodeItems.length !== 0) {
+            this._selectionHandler.addToSelection(this.createKeysForSelection(selectedNodeItems, SelectionChangeType.Add));
+          }
           if (deselectedNodeItems.length !== 0)
             this._selectionHandler.removeFromSelection(this.createKeysForSelection(deselectedNodeItems, SelectionChangeType.Remove));
         },
@@ -129,7 +131,9 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
       takeUntil(this._cancelled),
       tap({
         next: ({ selectedNodeItems }) => {
-          if (selectedNodeItems.length === 0) return;
+          if (selectedNodeItems.length === 0) {
+            return;
+          }
           if (firstEmission) {
             firstEmission = false;
             this._selectionHandler.replaceSelection(this.createKeysForSelection(selectedNodeItems, SelectionChangeType.Replace));
@@ -150,8 +154,9 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
     const selection = this._selectionHandler.getSelection();
 
     // when handling model change event only need to update newly added nodes
-    if (modelChange) this.updateAffectedNodes(selection, modelChange);
-    else this.updateAllNodes(selection);
+    if (modelChange) {
+      this.updateAffectedNodes(selection, modelChange);
+    } else this.updateAllNodes(selection);
   }
 
   /** @deprecated in 4.0. Use [[isPresentationTreeNodeItem]] and [[PresentationTreeNodeItem.key]] to get [NodeKey]($presentation-common). */
@@ -168,13 +173,19 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
    */
   protected shouldSelectNode(node: TreeNodeItem, selection: Readonly<KeySet>) {
     const nodeKey = isPresentationTreeNodeItem(node) ? node.key : undefined;
-    if (nodeKey === undefined) return false;
+    if (nodeKey === undefined) {
+      return false;
+    }
 
     // consider node selected if it's key is in selection
-    if (selection.has(nodeKey)) return true;
+    if (selection.has(nodeKey)) {
+      return true;
+    }
 
     // ... or if it's an ECInstances node and any of instance keys is in selection
-    if (NodeKey.isInstancesNodeKey(nodeKey) && nodeKey.instanceKeys.some((instanceKey) => selection.has(instanceKey))) return true;
+    if (NodeKey.isInstancesNodeKey(nodeKey) && nodeKey.instanceKeys.some((instanceKey) => selection.has(instanceKey))) {
+      return true;
+    }
 
     return false;
   }
@@ -195,9 +206,13 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
   }
 
   private onSelect(evt: SelectionChangeEventArgs) {
-    if (evt.source === this._selectionHandler.name) return;
+    if (evt.source === this._selectionHandler.name) {
+      return;
+    }
 
-    if (evt.changeType === SelectionChangeType.Clear || evt.changeType === SelectionChangeType.Replace) this._cancelled.next();
+    if (evt.changeType === SelectionChangeType.Clear || evt.changeType === SelectionChangeType.Replace) {
+      this._cancelled.next();
+    }
 
     this.selectNodes();
   }
@@ -212,13 +227,17 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
 
   private updateAffectedNodes(selection: Readonly<KeySet>, modelChange: TreeModelChanges) {
     const affectedNodeIds = [...modelChange.addedNodeIds, ...modelChange.modifiedNodeIds];
-    if (affectedNodeIds.length === 0) return;
+    if (affectedNodeIds.length === 0) {
+      return;
+    }
 
     this._modelSource.modifyModel((model: MutableTreeModel) => {
       for (const nodeId of affectedNodeIds) {
         const node = model.getNode(nodeId);
         // istanbul ignore if
-        if (!node) continue;
+        if (!node) {
+          continue;
+        }
 
         this.updateNodeSelectionState(node, selection);
       }

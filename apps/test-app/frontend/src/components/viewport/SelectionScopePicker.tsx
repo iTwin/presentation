@@ -47,7 +47,9 @@ export default class SelectionScopePicker extends Component<SelectionScopePicker
     this.setState({ activeScopeId: e.target.value });
   };
   public override render() {
-    if (!this.state.availableSelectionScopes || 0 === this.state.availableSelectionScopes.length) return null;
+    if (!this.state.availableSelectionScopes || 0 === this.state.availableSelectionScopes.length) {
+      return null;
+    }
     return (
       <div className="SelectionScopePicker">
         {/* eslint-disable-next-line jsx-a11y/no-onchange */}

@@ -44,7 +44,9 @@ class EmptyDataProvider implements IContentBuilderDataProvider {
   public getContent = async (): Promise<Readonly<Content> | undefined> => undefined;
 
   public set keys(keyset: KeySet) {
-    if (this._keyVerificationFunction) this._keyVerificationFunction(keyset);
+    if (this._keyVerificationFunction) {
+      this._keyVerificationFunction(keyset);
+    }
     this._keyset = keyset;
   }
   public get keys() {

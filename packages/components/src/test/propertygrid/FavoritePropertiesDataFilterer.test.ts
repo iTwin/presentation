@@ -156,7 +156,9 @@ describe("FavoritePropertiesDataFilterer", () => {
         mockDataProvider
           .setup(async (x) => x.getFieldByPropertyDescription(moq.It.isAny()))
           .returns(async (arg: PropertyDescription) => {
-            if (arg.name === favoriteParentRecord.property.name) return favoriteParentField;
+            if (arg.name === favoriteParentRecord.property.name) {
+              return favoriteParentField;
+            }
             return createTestSimpleContentField();
           });
 

@@ -17,7 +17,9 @@ const commonjsGlobal: { MessageChannel?: any } =
     : typeof self !== "undefined"
     ? self
     : {};
-if (commonjsGlobal.MessageChannel) delete commonjsGlobal.MessageChannel;
+if (commonjsGlobal.MessageChannel) {
+  delete commonjsGlobal.MessageChannel;
+}
 
 import * as chai from "chai";
 import chaiJestSnapshot from "chai-jest-snapshot";

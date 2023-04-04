@@ -35,7 +35,9 @@ export async function initialize(props?: { backendTimeout?: number }) {
 
   const libDir = path.resolve("lib");
   const hierarchiesCacheDir = path.join(libDir, "cache");
-  if (!fs.existsSync(hierarchiesCacheDir)) fs.mkdirSync(hierarchiesCacheDir);
+  if (!fs.existsSync(hierarchiesCacheDir)) {
+    fs.mkdirSync(hierarchiesCacheDir);
+  }
 
   const backendInitProps: PresentationBackendProps = {
     id: `test-${Guid.createValue()}`,

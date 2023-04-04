@@ -51,7 +51,9 @@ function getOverrides(coreVersion, uiVersion) {
 
 function override(packageJsonPath, coreVersion, uiVersion) {
   const pkgJsonData = JSON.parse(fs.readFileSync(packageJsonPath, { encoding: "utf8" }));
-  if (!pkgJsonData) throw new Error(`Failed to read package.json content at ${packagesJsonPath}`);
+  if (!pkgJsonData) {
+    throw new Error(`Failed to read package.json content at ${packagesJsonPath}`);
+  }
 
   pkgJsonData.pnpm = { overrides: getOverrides(coreVersion, uiVersion) };
   fs.writeFileSync(packageJsonPath, JSON.stringify(pkgJsonData, undefined, 2), { encoding: "utf8" });
@@ -62,8 +64,12 @@ const packageJsonPath = require.resolve(argv.packageJson ?? "../package.json");
 const coreVersion = argv.coreVersion;
 const uiVersion = argv.uiVersion;
 
-if (!coreVersion) throw new Error("Argument --coreVersion was not provided.");
+if (!coreVersion) {
+  throw new Error("Argument --coreVersion was not provided.");
+}
 
-if (!uiVersion) throw new Error("Argument --uiVersion was not provided.");
+if (!uiVersion) {
+  throw new Error("Argument --uiVersion was not provided.");
+}
 
 override(packageJsonPath, coreVersion, uiVersion);

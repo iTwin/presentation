@@ -26,7 +26,9 @@ export default function ViewDefinitionSelector(props: ViewDefinitionSelectorProp
   const memoizedOnViewDefinitionSelected = useCallback(
     (evt: React.ChangeEvent<HTMLSelectElement>) => {
       const selectedId = evt.target.value || undefined;
-      if (onViewDefinitionSelected) onViewDefinitionSelected(selectedId);
+      if (onViewDefinitionSelected) {
+        onViewDefinitionSelected(selectedId);
+      }
     },
     [onViewDefinitionSelected],
   );

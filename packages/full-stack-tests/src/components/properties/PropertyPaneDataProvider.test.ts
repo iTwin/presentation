@@ -127,10 +127,14 @@ describe("PropertyDataProvider", async () => {
 
         function findNestedCategory(categories: PropertyCategory[], label: string): PropertyCategory | undefined {
           for (const c of categories) {
-            if (c.label === label) return c;
+            if (c.label === label) {
+              return c;
+            }
 
             const nested = findNestedCategory(c.childCategories ?? [], label);
-            if (nested) return nested;
+            if (nested) {
+              return nested;
+            }
           }
           return undefined;
         }

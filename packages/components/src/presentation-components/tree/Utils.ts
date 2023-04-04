@@ -152,7 +152,9 @@ function createTreeNodeItemStyle(node: Partial<Node>): ItemStyle {
 
 /** @internal */
 export function pageOptionsUiToPresentation(pageOptions?: UiPageOptions): PresentationPageOptions | undefined {
-  if (pageOptions) return { ...pageOptions };
+  if (pageOptions) {
+    return { ...pageOptions };
+  }
   return undefined;
 }
 

@@ -121,7 +121,9 @@ export function useNodeHighlightingProps(
     let highlighProps: HighlightableTreeProps | undefined;
     if (normalizedFilter) {
       let activeMatch: ActiveMatchInfo | undefined;
-      if (filteredNodeLoader && undefined !== activeMatchIndex) activeMatch = filteredNodeLoader.dataProvider.getActiveMatch(activeMatchIndex);
+      if (filteredNodeLoader && undefined !== activeMatchIndex) {
+        activeMatch = filteredNodeLoader.dataProvider.getActiveMatch(activeMatchIndex);
+      }
       highlighProps = {
         searchText: normalizedFilter,
         activeMatch,

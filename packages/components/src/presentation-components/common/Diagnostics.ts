@@ -48,19 +48,30 @@ export interface DiagnosticsProps {
  * @alpha
  */
 export function createDiagnosticsOptions(props: DiagnosticsProps): ClientDiagnosticsOptions | undefined {
-  if (!props.ruleDiagnostics && !props.devDiagnostics) return undefined;
+  if (!props.ruleDiagnostics && !props.devDiagnostics) {
+    return undefined;
+  }
 
   const options: DiagnosticsOptions = {};
-  if (props.devDiagnostics?.perf) options.perf = props.devDiagnostics.perf;
-  if (props.devDiagnostics?.severity) options.dev = props.devDiagnostics.severity;
-  if (props.ruleDiagnostics?.severity) options.editor = props.ruleDiagnostics.severity;
+  if (props.devDiagnostics?.perf) {
+    options.perf = props.devDiagnostics.perf;
+  }
+  if (props.devDiagnostics?.severity) {
+    options.dev = props.devDiagnostics.severity;
+  }
+  if (props.ruleDiagnostics?.severity) {
+    options.editor = props.ruleDiagnostics.severity;
+  }
 
   let handler: ClientDiagnosticsHandler;
   // istanbul ignore else
   if (props.devDiagnostics && props.ruleDiagnostics && props.devDiagnostics.handler !== props.ruleDiagnostics.handler)
     handler = createCombinedDiagnosticsHandler([props.devDiagnostics.handler, props.ruleDiagnostics.handler]);
-  else if (props.devDiagnostics) handler = props.devDiagnostics.handler;
-  else if (props.ruleDiagnostics) handler = props.ruleDiagnostics.handler;
+  else if (props.devDiagnostics) {
+    handler = props.devDiagnostics.handler;
+  } else if (props.ruleDiagnostics) {
+    handler = props.ruleDiagnostics.handler;
+  }
 
   return {
     ...options,

@@ -14,7 +14,9 @@ export class SampleIpcHandler extends IpcHandler implements SampleIpcInterface {
 
   public async deleteElements(imodelKey: string, elementIds: Id64Arg): Promise<void> {
     const iModelDb = IModelDb.tryFindByKey(imodelKey);
-    if (!iModelDb) return;
+    if (!iModelDb) {
+      return;
+    }
 
     iModelDb.elements.deleteElement(elementIds);
     iModelDb.saveChanges();
@@ -22,7 +24,9 @@ export class SampleIpcHandler extends IpcHandler implements SampleIpcInterface {
 
   public async updateElement(imodelKey: string, newProps: ElementProps): Promise<void> {
     const iModelDb = IModelDb.tryFindByKey(imodelKey);
-    if (!iModelDb) return;
+    if (!iModelDb) {
+      return;
+    }
 
     iModelDb.elements.updateElement(newProps);
     iModelDb.saveChanges();

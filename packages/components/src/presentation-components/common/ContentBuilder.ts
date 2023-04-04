@@ -257,8 +257,16 @@ function applyPropertyRecordAttributes(
   displayValue: string | undefined,
   extendedData: typeof Item.prototype.extendedData | undefined,
 ) {
-  if (displayValue) record.description = displayValue.toString();
-  if (field.isReadonly || (field.isNestedContentField() && record.value.valueFormat === UiPropertyValueFormat.Array)) record.isReadonly = true;
-  if (field.isNestedContentField() && field.autoExpand) record.autoExpand = true;
-  if (extendedData) record.extendedData = extendedData;
+  if (displayValue) {
+    record.description = displayValue.toString();
+  }
+  if (field.isReadonly || (field.isNestedContentField() && record.value.valueFormat === UiPropertyValueFormat.Array)) {
+    record.isReadonly = true;
+  }
+  if (field.isNestedContentField() && field.autoExpand) {
+    record.autoExpand = true;
+  }
+  if (extendedData) {
+    record.extendedData = extendedData;
+  }
 }

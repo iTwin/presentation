@@ -38,7 +38,9 @@ export function createInstanceFilterPropertyInfos(descriptor: Descriptor): Insta
 
 /** @internal */
 export function createPresentationInstanceFilter(descriptor: Descriptor, filter: PropertyFilter) {
-  if (isPropertyFilterRuleGroup(filter)) return createPresentationInstanceFilterConditionGroup(descriptor, filter);
+  if (isPropertyFilterRuleGroup(filter)) {
+    return createPresentationInstanceFilterConditionGroup(descriptor, filter);
+  }
   return createPresentationInstanceFilterCondition(descriptor, filter);
 }
 
@@ -49,9 +51,13 @@ export function getInstanceFilterFieldName(property: PropertyDescription) {
 }
 
 function getPropertySourceClassInfo(field: PropertiesField | NestedContentField): ClassInfo {
-  if (field.parent) return getPropertySourceClassInfo(field.parent);
+  if (field.parent) {
+    return getPropertySourceClassInfo(field.parent);
+  }
 
-  if (field.isPropertiesField()) return field.properties[0].property.classInfo;
+  if (field.isPropertiesField()) {
+    return field.properties[0].property.classInfo;
+  }
   return field.pathToPrimaryClass[field.pathToPrimaryClass.length - 1].targetClassInfo;
 }
 
@@ -59,13 +65,19 @@ function createPresentationInstanceFilterConditionGroup(descriptor: Descriptor, 
   const conditions = new Array<PresentationInstanceFilter>();
   for (const rule of group.rules) {
     const condition = createPresentationInstanceFilter(descriptor, rule);
-    if (!condition) return undefined;
+    if (!condition) {
+      return undefined;
+    }
     conditions.push(condition);
   }
 
-  if (conditions.length === 0) return undefined;
+  if (conditions.length === 0) {
+    return undefined;
+  }
 
-  if (conditions.length === 1) return conditions[0];
+  if (conditions.length === 1) {
+    return conditions[0];
+  }
 
   return {
     operator: group.operator,
@@ -75,8 +87,12 @@ function createPresentationInstanceFilterConditionGroup(descriptor: Descriptor, 
 
 function createPresentationInstanceFilterCondition(descriptor: Descriptor, condition: PropertyFilterRule): PresentationInstanceFilterCondition | undefined {
   const field = findField(descriptor, getInstanceFilterFieldName(condition.property));
-  if (!field || !field.isPropertiesField()) return undefined;
-  if (condition.value && condition.value.valueFormat !== PropertyValueFormat.Primitive) return undefined;
+  if (!field || !field.isPropertiesField()) {
+    return undefined;
+  }
+  if (condition.value && condition.value.valueFormat !== PropertyValueFormat.Primitive) {
+    return undefined;
+  }
   return {
     operator: condition.operator,
     field,
@@ -102,7 +118,9 @@ interface CategoryInfo {
 }
 
 function getCategoryInfo(category: CategoryDescription, categoryInfo: CategoryInfo): CategoryInfo {
-  if (!category.parent) return categoryInfo;
+  if (!category.parent) {
+    return categoryInfo;
+  }
   return getCategoryInfo(category.parent, {
     name: categoryInfo.name ? `${category.name}/${categoryInfo.name}` : `${category.name}`,
     label: categoryInfo.label ? `${category.label} | ${categoryInfo.label}` : `${category.label}`,
@@ -110,7 +128,9 @@ function getCategoryInfo(category: CategoryDescription, categoryInfo: CategoryIn
 }
 
 function getParentNames(field: Field, name: string): string {
-  if (!field.parent) return combineFieldNames(name, field.name);
+  if (!field.parent) {
+    return combineFieldNames(name, field.name);
+  }
   return getParentNames(field.parent, combineFieldNames(name, field.name));
 }
 
@@ -145,7 +165,9 @@ function getCategorizedFieldName(fieldName: string, categoryName?: string) {
 
 function convertPresentationInstanceFilterCondition(filter: PresentationInstanceFilterCondition, descriptor: Descriptor) {
   const field = descriptor.getFieldByName(filter.field.name, true);
-  if (!field || !field.isPropertiesField()) return undefined;
+  if (!field || !field.isPropertiesField()) {
+    return undefined;
+  }
   return {
     property: createPropertyInfoFromPropertiesField(field).propertyDescription,
     operator: filter.operator,
@@ -157,7 +179,9 @@ function convertPresentationInstanceFilterConditionGroup(filter: PresentationIns
   const rules: PropertyFilter[] = [];
   for (const condition of filter.conditions) {
     const rule = convertPresentationFilterToPropertyFilter(descriptor, condition);
-    if (!rule) return undefined;
+    if (!rule) {
+      return undefined;
+    }
     rules.push(rule);
   }
   return {
@@ -168,6 +192,8 @@ function convertPresentationInstanceFilterConditionGroup(filter: PresentationIns
 
 /** @internal */
 export function convertPresentationFilterToPropertyFilter(descriptor: Descriptor, filter: PresentationInstanceFilter): PropertyFilter | undefined {
-  if (isPresentationInstanceFilterConditionGroup(filter)) return convertPresentationInstanceFilterConditionGroup(filter, descriptor);
+  if (isPresentationInstanceFilterConditionGroup(filter)) {
+    return convertPresentationInstanceFilterConditionGroup(filter, descriptor);
+  }
   return convertPresentationInstanceFilterCondition(filter, descriptor);
 }

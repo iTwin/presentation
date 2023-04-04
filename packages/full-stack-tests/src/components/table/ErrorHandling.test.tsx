@@ -53,7 +53,9 @@ describe("Learning snippets", () => {
         });
 
         // either loading or nothing to render
-        if (isLoading || !columns || !columns.length) return null;
+        if (isLoading || !columns || !columns.length) {
+          return null;
+        }
 
         // render a simple HTML table
         return (

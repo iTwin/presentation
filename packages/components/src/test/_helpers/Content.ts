@@ -126,7 +126,9 @@ export function createTestNestedContentField(props: {
     !!props.autoExpand,
     props.renderer,
   );
-  if (props.relationshipMeaning) field.relationshipMeaning = props.relationshipMeaning;
+  if (props.relationshipMeaning) {
+    field.relationshipMeaning = props.relationshipMeaning;
+  }
   field.rebuildParentship();
   return field;
 }

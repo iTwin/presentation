@@ -155,11 +155,15 @@ function useModelSourceUpdateOnIModelHierarchyUpdate(params: UpdateParams & { en
   const { enable, dataProviderProps, rulesetId, pageSize, modelSource, setTreeNodeLoaderState, renderedItems } = params;
 
   useEffect(() => {
-    if (!enable) return;
+    if (!enable) {
+      return;
+    }
 
     let subscription: Subscription | undefined;
     const removeListener = Presentation.presentation.onIModelHierarchyChanged.addListener((args: IModelHierarchyChangeEventArgs) => {
-      if (args.rulesetId !== rulesetId || args.imodelKey !== dataProviderProps.imodel.key) return;
+      if (args.rulesetId !== rulesetId || args.imodelKey !== dataProviderProps.imodel.key) {
+        return;
+      }
 
       subscription = startTreeReload({ dataProviderProps, rulesetId, pageSize, modelSource, renderedItems, setTreeNodeLoaderState });
     });
@@ -175,11 +179,15 @@ function useModelSourceUpdateOnRulesetModification(params: UpdateParams & { enab
   const { enable, dataProviderProps, rulesetId, pageSize, modelSource, setTreeNodeLoaderState, renderedItems } = params;
 
   useEffect(() => {
-    if (!enable) return;
+    if (!enable) {
+      return;
+    }
 
     let subscription: Subscription | undefined;
     const removeListener = Presentation.presentation.rulesets().onRulesetModified.addListener((ruleset) => {
-      if (ruleset.id !== rulesetId) return;
+      if (ruleset.id !== rulesetId) {
+        return;
+      }
 
       subscription = startTreeReload({ dataProviderProps, rulesetId, pageSize, modelSource, renderedItems, setTreeNodeLoaderState });
     });
@@ -195,7 +203,9 @@ function useModelSourceUpdateOnRulesetVariablesChange(params: UpdateParams & { e
   const { enable, dataProviderProps, pageSize, rulesetId, modelSource, setTreeNodeLoaderState, renderedItems } = params;
 
   useEffect(() => {
-    if (!enable) return;
+    if (!enable) {
+      return;
+    }
 
     let subscription: Subscription | undefined;
     const removeListener = Presentation.presentation.vars(rulesetId).onVariableChanged.addListener(() => {

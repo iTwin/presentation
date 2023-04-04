@@ -28,8 +28,12 @@ export interface TableCellRendererProps {
 export function TableCellRenderer(props: TableCellRendererProps) {
   const { record } = props;
 
-  if (record.value.valueFormat === PropertyValueFormat.Array) return <ArrayPropertyRenderer record={record} />;
-  if (record.value.valueFormat === PropertyValueFormat.Struct) return <StructPropertyRenderer record={record} />;
+  if (record.value.valueFormat === PropertyValueFormat.Array) {
+    return <ArrayPropertyRenderer record={record} />;
+  }
+  if (record.value.valueFormat === PropertyValueFormat.Struct) {
+    return <StructPropertyRenderer record={record} />;
+  }
 
   return <>{PropertyValueRendererManager.defaultManager.render(record)}</>;
 }

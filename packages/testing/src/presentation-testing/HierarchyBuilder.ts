@@ -90,7 +90,9 @@ export class HierarchyBuilder {
       const { key: _key, ...nodeNoKey } = node as PresentationTreeNodeItem;
       const nodeIndex = hierarchy.push(this._nodeMappingFunc(nodeNoKey)) - 1;
       const childNodes = await dataProvider.getNodes(node);
-      if (childNodes.length > 0) hierarchy[nodeIndex].children = await this.createSubHierarchy(childNodes, dataProvider);
+      if (childNodes.length > 0) {
+        hierarchy[nodeIndex].children = await this.createSubHierarchy(childNodes, dataProvider);
+      }
     }
     return hierarchy;
   }
@@ -106,7 +108,9 @@ export class HierarchyBuilder {
    * @param rulesetOrId Either a [Ruleset]($presentation-common) object or a ruleset id.
    */
   public async createHierarchy(rulesetOrId: Ruleset | string): Promise<HierarchyNode[]> {
-    if (typeof rulesetOrId === "string") return this.doCreateHierarchy(rulesetOrId);
+    if (typeof rulesetOrId === "string") {
+      return this.doCreateHierarchy(rulesetOrId);
+    }
 
     return using(await Presentation.presentation.rulesets().add(rulesetOrId), async (ruleset: RegisteredRuleset) => {
       return this.doCreateHierarchy(ruleset.id);

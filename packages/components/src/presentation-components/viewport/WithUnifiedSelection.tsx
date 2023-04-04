@@ -110,7 +110,9 @@ export class ViewportSelectionHandler implements IDisposable {
     return this._imodel;
   }
   public set imodel(value: IModelConnection) {
-    if (this._imodel === value) return;
+    if (this._imodel === value) {
+      return;
+    }
 
     this._selectionHandler.manager.setSyncWithIModelToolSelection(this._imodel, false);
     this._selectionHandler.manager.setSyncWithIModelToolSelection(value, true);
@@ -152,7 +154,9 @@ export class ViewportSelectionHandler implements IDisposable {
           imodel.selectionSet.replace(ids.elements);
           shouldClearSelectionSet = false;
         }
-        if (shouldClearSelectionSet) imodel.selectionSet.emptyAll();
+        if (shouldClearSelectionSet) {
+          imodel.selectionSet.emptyAll();
+        }
       });
     });
 
@@ -165,11 +169,15 @@ export class ViewportSelectionHandler implements IDisposable {
 
   private onUnifiedSelectionChanged = async (args: SelectionChangeEventArgs, provider: ISelectionProvider): Promise<void> => {
     // this component only cares about its own imodel
-    if (args.imodel !== this._imodel) return;
+    if (args.imodel !== this._imodel) {
+      return;
+    }
 
     // viewports are only interested in top-level selection changes
     // wip: may want to handle different selection levels?
-    if (0 !== args.level) return;
+    if (0 !== args.level) {
+      return;
+    }
 
     const selection = provider.getSelection(args.imodel, 0);
     const info: SelectionInfo = {

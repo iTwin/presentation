@@ -88,12 +88,16 @@ export class MyAppFrontend {
   }
 
   public static async updateElement(imodel: IModelConnection, newProps: ElementProps) {
-    if (!IpcApp.isValid) throw new Error(`Updating element only supported in 'IpcApp'`);
+    if (!IpcApp.isValid) {
+      throw new Error(`Updating element only supported in 'IpcApp'`);
+    }
     return this._ipcProxy.updateElement(imodel.key, newProps);
   }
 
   public static async deleteElements(imodel: IModelConnection, elementIds: Id64Arg) {
-    if (!IpcApp.isValid) throw new Error(`Deleting elements only supported in 'IpcApp'`);
+    if (!IpcApp.isValid) {
+      throw new Error(`Deleting elements only supported in 'IpcApp'`);
+    }
     return this._ipcProxy.deleteElements(imodel.key, elementIds);
   }
 }
