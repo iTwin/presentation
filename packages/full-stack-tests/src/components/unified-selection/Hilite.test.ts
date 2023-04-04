@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import { Id64, using } from "@itwin/core-bentley";
@@ -11,12 +11,16 @@ import { Presentation, TRANSIENT_ELEMENT_CLASSNAME } from "@itwin/presentation-f
 import { buildTestIModel as buildTestIModel } from "@itwin/presentation-testing";
 import { waitFor } from "@testing-library/react";
 import {
-  getDefaultSubcategoryKey, insertPhysicalElement, insertPhysicalModel, insertSpatialCategory, insertSubCategory, insertSubject,
+  getDefaultSubcategoryKey,
+  insertPhysicalElement,
+  insertPhysicalModel,
+  insertSpatialCategory,
+  insertSubCategory,
+  insertSubject,
 } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 
 describe("Unified Selection", () => {
-
   before(async () => {
     await initialize();
   });
@@ -26,17 +30,13 @@ describe("Unified Selection", () => {
   });
 
   describe("Hiliting selection", () => {
-
     describe("Subject", () => {
       it("hilites models directly under subject", async function () {
         let subjectKey: InstanceKey;
         let modelKeys: InstanceKey[];
         const imodel = await buildTestIModel(this, (builder) => {
           subjectKey = insertSubject(builder, "test subject");
-          modelKeys = [
-            insertPhysicalModel(builder, "model 1", subjectKey.id),
-            insertPhysicalModel(builder, "model 2", subjectKey.id),
-          ];
+          modelKeys = [insertPhysicalModel(builder, "model 1", subjectKey.id), insertPhysicalModel(builder, "model 2", subjectKey.id)];
         });
         await using(new ViewportSelectionHandler({ imodel }), async (_) => {
           Presentation.selection.replaceSelection("", imodel, new KeySet([subjectKey!]));
@@ -59,10 +59,7 @@ describe("Unified Selection", () => {
           const subject2 = insertSubject(builder, "subject 2", subjectKey.id);
           const subject3 = insertSubject(builder, "subject 3", subjectKey.id);
           const subject4 = insertSubject(builder, "subject 4", subject3.id);
-          modelKeys = [
-            insertPhysicalModel(builder, "model 1", subject2.id),
-            insertPhysicalModel(builder, "model 2", subject4.id),
-          ];
+          modelKeys = [insertPhysicalModel(builder, "model 1", subject2.id), insertPhysicalModel(builder, "model 2", subject4.id)];
         });
         await using(new ViewportSelectionHandler({ imodel }), async (_) => {
           Presentation.selection.replaceSelection("", imodel, new KeySet([subjectKey!]));
@@ -87,9 +84,7 @@ describe("Unified Selection", () => {
         await using(new ViewportSelectionHandler({ imodel }), async (_) => {
           Presentation.selection.replaceSelection("", imodel, new KeySet([modelKey!]));
           await waitFor(() => {
-            expect(imodel.hilited.models.toId64Array())
-              .to.have.lengthOf(1)
-              .and.to.include(modelKey.id);
+            expect(imodel.hilited.models.toId64Array()).to.have.lengthOf(1).and.to.include(modelKey.id);
             expect(imodel.hilited.subcategories.isEmpty).to.be.true;
             expect(imodel.hilited.elements.isEmpty).to.be.true;
             expect(imodel.selectionSet.size).to.eq(0);
@@ -133,9 +128,7 @@ describe("Unified Selection", () => {
           Presentation.selection.replaceSelection("", imodel, new KeySet([subCategoryKey]));
           await waitFor(() => {
             expect(imodel.hilited.models.isEmpty).to.be.true;
-            expect(imodel.hilited.subcategories.toId64Array())
-              .to.have.lengthOf(1)
-              .and.to.include(subCategoryKey.id);
+            expect(imodel.hilited.subcategories.toId64Array()).to.have.lengthOf(1).and.to.include(subCategoryKey.id);
             expect(imodel.hilited.elements.isEmpty).to.be.true;
             expect(imodel.selectionSet.size).to.eq(0);
           });
@@ -184,9 +177,7 @@ describe("Unified Selection", () => {
           await waitFor(() => {
             expect(imodel.hilited.models.isEmpty).to.be.true;
             expect(imodel.hilited.subcategories.isEmpty).to.be.true;
-            expect(imodel.hilited.elements.toId64Array())
-              .to.have.lengthOf(1)
-              .and.to.include(elementKey.id);
+            expect(imodel.hilited.elements.toId64Array()).to.have.lengthOf(1).and.to.include(elementKey.id);
             expect([...imodel.selectionSet.elements])
               .to.have.lengthOf(1)
               .and.to.include(elementKey.id);
@@ -195,7 +186,7 @@ describe("Unified Selection", () => {
       });
 
       it("hilites transient element", async function () {
-        const imodel = await buildTestIModel(this, (_) => { });
+        const imodel = await buildTestIModel(this, (_) => {});
         const transientElementKey = { className: TRANSIENT_ELEMENT_CLASSNAME, id: Id64.fromLocalAndBriefcaseIds(123, 0xffffff) };
         await using(new ViewportSelectionHandler({ imodel }), async (_) => {
           Presentation.selection.replaceSelection("", imodel, new KeySet([transientElementKey]));
@@ -203,20 +194,24 @@ describe("Unified Selection", () => {
             expect(imodel.hilited.models.isEmpty).to.be.true;
             expect(imodel.hilited.subcategories.isEmpty).to.be.true;
             expect(imodel.hilited.elements.toId64Array()).to.have.lengthOf(1).and.to.include(transientElementKey.id);
-            expect([...imodel.selectionSet.elements]).to.have.lengthOf(1).and.to.include(transientElementKey.id);
+            expect([...imodel.selectionSet.elements])
+              .to.have.lengthOf(1)
+              .and.to.include(transientElementKey.id);
           });
         });
       });
 
       it("hilites transient element after removing and adding it back", async function () {
-        const imodel = await buildTestIModel(this, (_) => { });
+        const imodel = await buildTestIModel(this, (_) => {});
         const transientElementKey = { className: TRANSIENT_ELEMENT_CLASSNAME, id: Id64.fromLocalAndBriefcaseIds(123, 0xffffff) };
         await using(new ViewportSelectionHandler({ imodel }), async (_) => {
           // set up the selection to contain a transient element
           Presentation.selection.replaceSelection("", imodel, new KeySet([transientElementKey]));
           await waitFor(() => {
             expect(imodel.hilited.elements.toId64Array()).to.have.lengthOf(1).and.to.include(transientElementKey.id);
-            expect([...imodel.selectionSet.elements]).to.have.lengthOf(1).and.to.include(transientElementKey.id);
+            expect([...imodel.selectionSet.elements])
+              .to.have.lengthOf(1)
+              .and.to.include(transientElementKey.id);
           });
 
           // remove and add back the transient element
@@ -226,12 +221,12 @@ describe("Unified Selection", () => {
           // expect the transient element to be both hilited and selected
           await waitFor(() => {
             expect(imodel.hilited.elements.toId64Array()).to.have.lengthOf(1).and.to.include(transientElementKey.id);
-            expect([...imodel.selectionSet.elements]).to.have.lengthOf(1).and.to.include(transientElementKey.id);
+            expect([...imodel.selectionSet.elements])
+              .to.have.lengthOf(1)
+              .and.to.include(transientElementKey.id);
           });
         });
       });
     });
-
   });
-
 });

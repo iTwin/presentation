@@ -1,12 +1,30 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import {
-  CategoryDescription, ClassInfo, Descriptor, DescriptorSource, DisplayValuesMap, EditorDescription, Field, InstanceKey, Item, LabelDefinition,
-  NestedContentField, PropertiesField, Property, PropertyValueFormat, RelationshipMeaning, RelationshipPath, RendererDescription, SelectClassInfo,
-  StructTypeDescription, TypeDescription, ValuesMap,
+  CategoryDescription,
+  ClassInfo,
+  Descriptor,
+  DescriptorSource,
+  DisplayValuesMap,
+  EditorDescription,
+  Field,
+  InstanceKey,
+  Item,
+  LabelDefinition,
+  NestedContentField,
+  PropertiesField,
+  Property,
+  PropertyValueFormat,
+  RelationshipMeaning,
+  RelationshipPath,
+  RendererDescription,
+  SelectClassInfo,
+  StructTypeDescription,
+  TypeDescription,
+  ValuesMap,
 } from "@itwin/presentation-common";
 import { createTestECClassInfo, createTestECInstanceKey, createTestRelationshipPath } from "./Common";
 
@@ -43,7 +61,7 @@ export function createTestSimpleContentField(props?: {
     props?.isReadonly ?? false,
     props?.priority ?? 0,
     props?.editor,
-    props?.renderer
+    props?.renderer,
   );
 }
 
@@ -67,7 +85,7 @@ export function createTestPropertiesContentField(props: {
     props.priority ?? 0,
     props.properties,
     props.editor,
-    props.renderer
+    props.renderer,
   );
 }
 
@@ -108,8 +126,7 @@ export function createTestNestedContentField(props: {
     !!props.autoExpand,
     props.renderer,
   );
-  if (props.relationshipMeaning)
-    field.relationshipMeaning = props.relationshipMeaning;
+  if (props.relationshipMeaning) field.relationshipMeaning = props.relationshipMeaning;
   field.rebuildParentship();
   return field;
 }

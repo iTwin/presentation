@@ -1,14 +1,12 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import { LabelDefinition, Node } from "@itwin/presentation-common";
 import { PageOptions } from "@itwin/components-react";
-import {
-  createPartialTreeNodeItem, createTreeNodeItem, createTreeNodeItems, pageOptionsUiToPresentation,
-} from "../../presentation-components/tree/Utils";
+import { createPartialTreeNodeItem, createTreeNodeItem, createTreeNodeItems, pageOptionsUiToPresentation } from "../../presentation-components/tree/Utils";
 import { createTestECClassGroupingNodeKey, createTestECInstancesNode } from "../_helpers/Hierarchy";
 
 describe("Utils", () => {
@@ -97,7 +95,8 @@ describe("Utils", () => {
         {
           key: { type: "", version: 0, pathFromRoot: [] },
           label: LabelDefinition.fromLabelString("test"),
-        }, undefined,
+        },
+        undefined,
         {
           customizeTreeNodeItem: (item) => {
             item.icon = "custom-icon";
@@ -122,7 +121,6 @@ describe("Utils", () => {
       const treeNode = createTreeNodeItems(nodes, parentId);
       expect(treeNode).to.matchSnapshot();
     });
-
   });
 
   describe("pageOptionsUiToPresentation", () => {

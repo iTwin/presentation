@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { useCallback, useState } from "react";
 import { UiComponents, VirtualizedPropertyGridWithDataProvider } from "@itwin/components-react";
@@ -19,9 +19,7 @@ import { ensurePropertyGridHasPropertyRecord } from "../PropertyGridUtils";
 /* eslint-disable @typescript-eslint/naming-convention */
 
 describe("Learning snippets", async () => {
-
   describe("Property grid", () => {
-
     before(async () => {
       await initialize();
       await UiComponents.initialize(IModelApp.localization);
@@ -36,9 +34,11 @@ describe("Learning snippets", async () => {
       function MyPropertyGrid(props: { imodel: IModelConnection }) {
         // create a presentation rules driven data provider; the provider implements `IDisposable`, so we
         // create it through `useDisposable` hook to make sure it's properly cleaned up
-        const dataProvider = useDisposable(useCallback(() => {
-          return new PresentationPropertyDataProvider({ imodel: props.imodel });
-        }, [props.imodel]));
+        const dataProvider = useDisposable(
+          useCallback(() => {
+            return new PresentationPropertyDataProvider({ imodel: props.imodel });
+          }, [props.imodel]),
+        );
 
         // set up the data provider to be notified about changes in unified selection
         const { isOverLimit, numSelectedElements } = usePropertyDataProviderWithUnifiedSelection({ dataProvider });
@@ -48,21 +48,13 @@ describe("Learning snippets", async () => {
         const [height] = useState(600);
 
         // data provider is going to be empty if no elements are selected
-        if (numSelectedElements === 0)
-          return <>Select an element to see its properties</>;
+        if (numSelectedElements === 0) return <>Select an element to see its properties</>;
 
         // there's little value in loading properties for many elements (see `PropertyDataProviderWithUnifiedSelectionProps.requestedContentInstancesLimit`)
-        if (isOverLimit)
-          return <>Please select less elements</>;
+        if (isOverLimit) return <>Please select less elements</>;
 
         // render the property grid
-        return (
-          <VirtualizedPropertyGridWithDataProvider
-            dataProvider={dataProvider}
-            width={width}
-            height={height}
-          />
-        );
+        return <VirtualizedPropertyGridWithDataProvider dataProvider={dataProvider} width={width} height={height} />;
       }
       // __PUBLISH_EXTRACT_END__
 
@@ -78,9 +70,7 @@ describe("Learning snippets", async () => {
       });
 
       // render the component
-      const { container } = render(
-        <MyPropertyGrid imodel={imodel} />
-      );
+      const { container } = render(<MyPropertyGrid imodel={imodel} />);
       await waitFor(() => getByText(container, "Select an element to see its properties"));
 
       // test Unified Selection -> Property Grid content synchronization
@@ -90,7 +80,5 @@ describe("Learning snippets", async () => {
       act(() => Presentation.selection.replaceSelection("", imodel, new KeySet([elementKeys[1]])));
       await ensurePropertyGridHasPropertyRecord(container, "User Label", "My Element 2");
     });
-
   });
-
 });

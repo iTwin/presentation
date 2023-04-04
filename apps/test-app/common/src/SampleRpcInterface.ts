@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { RpcInterface, RpcManager, RpcOperation, RpcRequestTokenSupplier_T } from "@itwin/core-common";
 
@@ -15,11 +15,17 @@ export abstract class SampleRpcInterface extends RpcInterface {
   /** The version of the interface. */
   public static interfaceVersion = "1.0.0";
 
-  public static getClient(): SampleRpcInterface { return RpcManager.getClientForInterface(SampleRpcInterface); } // eslint-disable-line @itwin/no-internal
+  public static getClient(): SampleRpcInterface {
+    return RpcManager.getClientForInterface(SampleRpcInterface);
+  } // eslint-disable-line @itwin/no-internal
 
   @RpcOperation.setRoutingProps(localDeploymentOnly)
-  public async getSampleImodels(): Promise<string[]> { return this.forward(arguments); }
+  public async getSampleImodels(): Promise<string[]> {
+    return this.forward(arguments);
+  }
 
   @RpcOperation.setRoutingProps(localDeploymentOnly)
-  public async getAvailableRulesets(): Promise<string[]> { return this.forward(arguments); }
+  public async getAvailableRulesets(): Promise<string[]> {
+    return this.forward(arguments);
+  }
 }

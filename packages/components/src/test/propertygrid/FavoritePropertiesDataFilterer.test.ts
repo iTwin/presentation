@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import sinon from "sinon";
@@ -34,7 +34,10 @@ describe("FavoritePropertiesDataFilterer", () => {
     matchingField = createTestSimpleContentField();
 
     const managerMock = moq.Mock.ofType<FavoritePropertiesManager>();
-    managerMock.setup((x) => x.has(matchingField!, moq.It.isAny(), FavoritePropertiesScope.Global)).returns(() => true).verifiable();
+    managerMock
+      .setup((x) => x.has(matchingField!, moq.It.isAny(), FavoritePropertiesScope.Global))
+      .returns(() => true)
+      .verifiable();
     sinon.stub(Presentation, "favoriteProperties").get(() => managerMock.object);
 
     const filterer = new FavoritePropertiesDataFilterer({
@@ -102,11 +105,7 @@ describe("FavoritePropertiesDataFilterer", () => {
   });
 
   describe("when filtering is enabled", () => {
-    const recordsToTest: PropertyRecord[] = [
-      createPrimitiveStringProperty("Property", "value1"),
-      createArrayProperty("Array"),
-      createStructProperty("Struct"),
-    ];
+    const recordsToTest: PropertyRecord[] = [createPrimitiveStringProperty("Property", "value1"), createArrayProperty("Array"), createStructProperty("Struct")];
 
     const isFavoriteStub = sinon.stub();
     let filterer: FavoritePropertiesDataFilterer;
@@ -154,11 +153,12 @@ describe("FavoritePropertiesDataFilterer", () => {
         const favoriteParentRecord = createStructProperty("FavoriteStruct");
         const favoriteParentField = createTestSimpleContentField();
         mockDataProvider.reset();
-        mockDataProvider.setup(async (x) => x.getFieldByPropertyDescription(moq.It.isAny())).returns(async (arg: PropertyDescription) => {
-          if (arg.name === favoriteParentRecord.property.name)
-            return favoriteParentField;
-          return createTestSimpleContentField();
-        });
+        mockDataProvider
+          .setup(async (x) => x.getFieldByPropertyDescription(moq.It.isAny()))
+          .returns(async (arg: PropertyDescription) => {
+            if (arg.name === favoriteParentRecord.property.name) return favoriteParentField;
+            return createTestSimpleContentField();
+          });
 
         isFavoriteStub.returns(false);
         isFavoriteStub.withArgs(favoriteParentField, sinon.match.any, sinon.match.any).returns(true);
@@ -172,6 +172,5 @@ describe("FavoritePropertiesDataFilterer", () => {
       const matchResult = await filterer.categoryMatchesFilter();
       expect(matchResult).to.deep.eq({ matchesFilter: false });
     });
-
   });
 });

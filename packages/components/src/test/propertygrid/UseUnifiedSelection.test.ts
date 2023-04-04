@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import * as moq from "typemoq";
@@ -27,44 +27,41 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
 
   it("doesn't set provider keys when handler returns no selection", () => {
     selectionHandlerMock.setup((x) => x.getSelectionLevels()).returns(() => []);
-    const { result } = renderHook(
-      usePropertyDataProviderWithUnifiedSelection,
-      { initialProps: { selectionHandler: selectionHandlerMock.object, dataProvider: dataProviderMock.object } },
-    );
+    const { result } = renderHook(usePropertyDataProviderWithUnifiedSelection, {
+      initialProps: { selectionHandler: selectionHandlerMock.object, dataProvider: dataProviderMock.object },
+    });
     expect(result.current).to.not.be.undefined;
     expect(result.current.isOverLimit).to.be.false;
     expect(result.current.numSelectedElements).to.be.equal(0);
 
-    dataProviderMock.verify((x) => x.keys = moq.It.isAny(), moq.Times.never());
+    dataProviderMock.verify((x) => (x.keys = moq.It.isAny()), moq.Times.never());
   });
 
   it("sets empty keyset when handler returns empty selection", () => {
     selectionHandlerMock.setup((x) => x.getSelectionLevels()).returns(() => [0]);
     selectionHandlerMock.setup((x) => x.getSelection(0)).returns(() => new KeySet());
-    const { result } = renderHook(
-      usePropertyDataProviderWithUnifiedSelection,
-      { initialProps: { selectionHandler: selectionHandlerMock.object, dataProvider: dataProviderMock.object } },
-    );
+    const { result } = renderHook(usePropertyDataProviderWithUnifiedSelection, {
+      initialProps: { selectionHandler: selectionHandlerMock.object, dataProvider: dataProviderMock.object },
+    });
     expect(result.current).to.not.be.undefined;
     expect(result.current.isOverLimit).to.be.false;
     expect(result.current.numSelectedElements).to.be.equal(0);
 
-    dataProviderMock.verify((x) => x.keys = moq.It.is((keys) => keys.isEmpty), moq.Times.exactly(1));
+    dataProviderMock.verify((x) => (x.keys = moq.It.is((keys) => keys.isEmpty)), moq.Times.exactly(1));
   });
 
   it("sets keyset when handler returns a selection", () => {
     const setKeys = new KeySet([createTestECInstanceKey({ id: "0x1" }), createTestECInstanceKey({ id: "0x2" })]);
     selectionHandlerMock.setup((x) => x.getSelectionLevels()).returns(() => [0]);
     selectionHandlerMock.setup((x) => x.getSelection(0)).returns(() => setKeys);
-    const { result } = renderHook(
-      usePropertyDataProviderWithUnifiedSelection,
-      { initialProps: { selectionHandler: selectionHandlerMock.object, dataProvider: dataProviderMock.object } },
-    );
+    const { result } = renderHook(usePropertyDataProviderWithUnifiedSelection, {
+      initialProps: { selectionHandler: selectionHandlerMock.object, dataProvider: dataProviderMock.object },
+    });
     expect(result.current).to.not.be.undefined;
     expect(result.current.isOverLimit).to.be.false;
     expect(result.current.numSelectedElements).to.be.equal(2);
 
-    dataProviderMock.verify((x) => x.keys = isKeySet(setKeys), moq.Times.once());
+    dataProviderMock.verify((x) => (x.keys = isKeySet(setKeys)), moq.Times.once());
   });
 
   it("sets empty keyset when handler returns selection containing more keys than set limit", () => {
@@ -73,15 +70,14 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
     selectionHandlerMock.setup((x) => x.getSelectionLevels()).returns(() => [0]);
     selectionHandlerMock.setup((x) => x.getSelection(0)).returns(() => setKeys);
 
-    const { result } = renderHook(
-      usePropertyDataProviderWithUnifiedSelection,
-      { initialProps: { selectionHandler: selectionHandlerMock.object, requestedContentInstancesLimit: instancesLimit, dataProvider: dataProviderMock.object } },
-    );
+    const { result } = renderHook(usePropertyDataProviderWithUnifiedSelection, {
+      initialProps: { selectionHandler: selectionHandlerMock.object, requestedContentInstancesLimit: instancesLimit, dataProvider: dataProviderMock.object },
+    });
 
     expect(result.current).to.not.be.undefined;
     expect(result.current.isOverLimit).to.be.true;
     expect(result.current.numSelectedElements).to.be.equal(2);
-    dataProviderMock.verify((x) => x.keys = moq.It.is((keys) => keys.isEmpty), moq.Times.exactly(1));
+    dataProviderMock.verify((x) => (x.keys = moq.It.is((keys) => keys.isEmpty)), moq.Times.exactly(1));
   });
 
   it("changes KeySet according to selection", () => {
@@ -101,12 +97,11 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
     selectionHandlerMock.setup((x) => x.getSelection(0)).returns(() => keys0);
     selectionHandlerMock.setup((x) => x.getSelection(2)).returns(() => keys2);
 
-    const { result } = renderHook(
-      usePropertyDataProviderWithUnifiedSelection,
-      { initialProps: { selectionHandler: selectionHandlerMock.object, dataProvider: dataProviderMock.object } },
-    );
+    const { result } = renderHook(usePropertyDataProviderWithUnifiedSelection, {
+      initialProps: { selectionHandler: selectionHandlerMock.object, dataProvider: dataProviderMock.object },
+    });
 
-    dataProviderMock.verify((x) => x.keys = isKeySet(keys0), moq.Times.once());
+    dataProviderMock.verify((x) => (x.keys = isKeySet(keys0)), moq.Times.once());
 
     expect(selectionHandlerMock.target.onSelect).to.not.be.undefined;
     expect(result.current).to.not.be.undefined;
@@ -114,7 +109,7 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
     expect(result.current.numSelectedElements).to.be.equal(2);
 
     selectionHandlerMock.target.onSelect!(selectionEvent, selectionProviderMock.object);
-    dataProviderMock.verify((x) => x.keys = isKeySet(keys2), moq.Times.once());
+    dataProviderMock.verify((x) => (x.keys = isKeySet(keys2)), moq.Times.once());
   });
 
   it("disposes selection handler when unmounts", () => {
@@ -122,10 +117,9 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
     selectionHandlerMock.setup((x) => x.getSelectionLevels()).returns(() => [0]);
     selectionHandlerMock.setup((x) => x.getSelection(0)).returns(() => setKeys);
 
-    const { unmount } = renderHook(
-      usePropertyDataProviderWithUnifiedSelection,
-      { initialProps: { selectionHandler: selectionHandlerMock.object, dataProvider: dataProviderMock.object } },
-    );
+    const { unmount } = renderHook(usePropertyDataProviderWithUnifiedSelection, {
+      initialProps: { selectionHandler: selectionHandlerMock.object, dataProvider: dataProviderMock.object },
+    });
 
     unmount();
     selectionHandlerMock.verify((x) => x.dispose(), moq.Times.once());

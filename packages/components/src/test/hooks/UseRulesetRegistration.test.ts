@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import sinon from "sinon";
 import * as moq from "typemoq";
@@ -37,10 +37,7 @@ describe("useRulesetRegistration", () => {
   it("registers and un-registers ruleset", async () => {
     const registeredRulesetPromise = new ResolvablePromise<RegisteredRuleset>();
     rulesetManagerMock.setup(async (x) => x.add(initialProps.ruleset)).returns(async () => registeredRulesetPromise);
-    const { unmount } = renderHook(
-      (props: HookProps) => useRulesetRegistration(props.ruleset),
-      { initialProps },
-    );
+    const { unmount } = renderHook((props: HookProps) => useRulesetRegistration(props.ruleset), { initialProps });
 
     const registered = new RegisteredRuleset(initialProps.ruleset, "testId", async (r) => Presentation.presentation.rulesets().remove(r));
     await registeredRulesetPromise.resolve(registered);
@@ -55,10 +52,7 @@ describe("useRulesetRegistration", () => {
   it("unregisters ruleset if registration happens after unmount", async () => {
     const registeredRulesetPromise = new ResolvablePromise<RegisteredRuleset>();
     rulesetManagerMock.setup(async (x) => x.add(initialProps.ruleset)).returns(async () => registeredRulesetPromise);
-    const { unmount } = renderHook(
-      (props: HookProps) => useRulesetRegistration(props.ruleset),
-      { initialProps },
-    );
+    const { unmount } = renderHook((props: HookProps) => useRulesetRegistration(props.ruleset), { initialProps });
 
     const registered = new RegisteredRuleset(initialProps.ruleset, "testId", async (r) => Presentation.presentation.rulesets().remove(r));
     unmount();
@@ -71,5 +65,4 @@ describe("useRulesetRegistration", () => {
     rulesetManagerMock.verify(async (x) => x.add(initialProps.ruleset), moq.Times.once());
     rulesetManagerMock.verify(async (x) => x.remove(registered), moq.Times.once());
   });
-
 });

@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import { useState } from "react";
@@ -19,15 +19,13 @@ import { getNodeByLabel, toggleExpandNode } from "../TreeUtils";
 /* eslint-disable @typescript-eslint/naming-convention */
 
 describe("Learning snippets", () => {
-
   describe("Tree", () => {
-
     stubRaf();
 
     before(async () => {
       await initialize();
       await UiComponents.initialize(IModelApp.localization);
-      HTMLElement.prototype.scrollIntoView = () => { };
+      HTMLElement.prototype.scrollIntoView = () => {};
     });
 
     after(async () => {
@@ -43,11 +41,7 @@ describe("Learning snippets", () => {
         // create presentation-specific tree renderer that enables hierarchy
         // level filtering
         const treeRenderer = (treeRendererProps: TreeRendererProps) => (
-          <PresentationTreeRenderer
-            {...treeRendererProps}
-            imodel={props.imodel}
-            modelSource={nodeLoader.modelSource}
-          />
+          <PresentationTreeRenderer {...treeRendererProps} imodel={props.imodel} modelSource={nodeLoader.modelSource} />
         );
 
         // width and height should generally we computed using ResizeObserver API or one of its derivatives
@@ -79,9 +73,7 @@ describe("Learning snippets", () => {
 
       // render the component
       const user = userEvent.setup();
-      const { container, baseElement } = render(
-        <MyTree imodel={imodel} />
-      );
+      const { container, baseElement } = render(<MyTree imodel={imodel} />);
       await waitFor(() => getByRole(container, "tree"));
 
       // find & expand the model node
@@ -115,8 +107,7 @@ describe("Learning snippets", () => {
       await waitFor(() => {
         // wait for the "apply" button to become enabled
         const disabledButton = filteringDialog.querySelector(".presentation-instance-filter-dialog-apply-button[disabled]");
-        if (disabledButton)
-          throw new Error(`The "Apply" button is disabled`);
+        if (disabledButton) throw new Error(`The "Apply" button is disabled`);
       });
 
       // do filter
@@ -128,34 +119,41 @@ describe("Learning snippets", () => {
       await waitFor(() => getNodeByLabel(container, "My Element 2"));
       expect(() => getNodeByLabel(container, "My Element 1")).to.throw;
     });
-
   });
-
 });
 
 const ruleset: Ruleset = {
   id: "elements-grouped-by-models",
-  rules: [{
-    ruleType: "RootNodes",
-    specifications: [{
-      specType: "InstanceNodesOfSpecificClasses",
-      classes: { schemaName: "BisCore", classNames: ["PhysicalModel"], arePolymorphic: true },
-      groupByClass: false,
-      groupByLabel: false,
-    }],
-  }, {
-    ruleType: "ChildNodes",
-    condition: "ParentNode.IsOfClass(\"Model\", \"BisCore\")",
-    specifications: [{
-      specType: "RelatedInstanceNodes",
-      relationshipPaths: [{
-        relationship: { schemaName: "BisCore", className: "ModelContainsElements" },
-        direction: "Forward",
-      }],
-      groupByClass: false,
-      groupByLabel: false,
-    }],
-  }],
+  rules: [
+    {
+      ruleType: "RootNodes",
+      specifications: [
+        {
+          specType: "InstanceNodesOfSpecificClasses",
+          classes: { schemaName: "BisCore", classNames: ["PhysicalModel"], arePolymorphic: true },
+          groupByClass: false,
+          groupByLabel: false,
+        },
+      ],
+    },
+    {
+      ruleType: "ChildNodes",
+      condition: 'ParentNode.IsOfClass("Model", "BisCore")',
+      specifications: [
+        {
+          specType: "RelatedInstanceNodes",
+          relationshipPaths: [
+            {
+              relationship: { schemaName: "BisCore", className: "ModelContainsElements" },
+              direction: "Forward",
+            },
+          ],
+          groupByClass: false,
+          groupByLabel: false,
+        },
+      ],
+    },
+  ],
 };
 
 /**

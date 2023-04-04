@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { useCallback, useState } from "react";
 import sinon from "sinon";
@@ -22,9 +22,7 @@ import { ensurePropertyGridHasPropertyRecord } from "../PropertyGridUtils";
 /* eslint-disable @typescript-eslint/naming-convention */
 
 describe("Learning snippets", () => {
-
   describe("Property grid", () => {
-
     before(async () => {
       await initialize();
       await UiComponents.initialize(IModelApp.localization);
@@ -41,14 +39,16 @@ describe("Learning snippets", () => {
       }
 
       // __PUBLISH_EXTRACT_START__ Presentation.Components.PropertyGrid.ErrorHandling
-      function MyPropertyGrid(props: { imodel: IModelConnection, elementKey: InstanceKey }) {
+      function MyPropertyGrid(props: { imodel: IModelConnection; elementKey: InstanceKey }) {
         // create a presentation rules driven data provider; the provider implements `IDisposable`, so we
         // create it through `useDisposable` hook to make sure it's properly cleaned up
-        const dataProvider = useDisposable(useCallback(() => {
-          const provider = new PresentationPropertyDataProvider({ imodel: props.imodel });
-          provider.keys = new KeySet([props.elementKey]);
-          return provider;
-        }, [props.imodel, props.elementKey]));
+        const dataProvider = useDisposable(
+          useCallback(() => {
+            const provider = new PresentationPropertyDataProvider({ imodel: props.imodel });
+            provider.keys = new KeySet([props.elementKey]);
+            return provider;
+          }, [props.imodel, props.elementKey]),
+        );
 
         // width and height should generally we computed using ResizeObserver API or one of its derivatives
         const [width] = useState(400);
@@ -58,11 +58,7 @@ describe("Learning snippets", () => {
         // and handled by the error boundary
         return (
           <ErrorBoundary>
-            <VirtualizedPropertyGridWithDataProvider
-              dataProvider={dataProvider}
-              width={width}
-              height={height}
-            />
+            <VirtualizedPropertyGridWithDataProvider dataProvider={dataProvider} width={width} height={height} />
           </ErrorBoundary>
         );
       }
@@ -73,26 +69,20 @@ describe("Learning snippets", () => {
       const imodel = await buildTestIModel(this, (builder) => {
         const categoryKey = insertSpatialCategory(builder, "My Category");
         const modelKey = insertPhysicalModel(builder, "My Model");
-        elementKey= insertPhysicalElement(builder, "My Element", modelKey.id, categoryKey.id);
+        elementKey = insertPhysicalElement(builder, "My Element", modelKey.id, categoryKey.id);
       });
       assert(elementKey !== undefined);
 
       // render the component
-      const { container, rerender } = render(
-        <MyPropertyGrid imodel={imodel} elementKey={elementKey} />
-      );
+      const { container, rerender } = render(<MyPropertyGrid imodel={imodel} elementKey={elementKey} />);
       await ensurePropertyGridHasPropertyRecord(container, "User Label", "My Element");
 
       // simulate a network error in RPC request
       sinon.stub(Presentation.presentation, "getContentAndSize").throws(new Error("Network error"));
 
       // re-render the component, ensure we now get an error
-      rerender(
-        <MyPropertyGrid imodel={imodel} elementKey={{ ...elementKey }} />
-      );
+      rerender(<MyPropertyGrid imodel={imodel} elementKey={{ ...elementKey }} />);
       await ensureHasError(container, "Network error");
     });
-
   });
-
 });

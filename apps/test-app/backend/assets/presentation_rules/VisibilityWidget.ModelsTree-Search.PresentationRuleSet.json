@@ -10,9 +10,7 @@
           "classes": [
             {
               "schemaName": "BisCore",
-              "classNames": [
-                "Subject"
-              ]
+              "classNames": ["Subject"]
             }
           ],
           "instanceFilter": "this.Parent = NULL",
@@ -105,9 +103,7 @@
           "specType": "InstanceNodesOfSpecificClasses",
           "classes": {
             "schemaName": "BisCore",
-            "classNames": [
-              "GeometricModel3d"
-            ]
+            "classNames": ["GeometricModel3d"]
           },
           "arePolymorphic": true,
           "relatedInstances": [
@@ -149,9 +145,7 @@
           "specType": "InstanceNodesOfSpecificClasses",
           "classes": {
             "schemaName": "BisCore",
-            "classNames": [
-              "GeometricModel3d"
-            ]
+            "classNames": ["GeometricModel3d"]
           },
           "arePolymorphic": true,
           "relatedInstances": [

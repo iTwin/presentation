@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import * as sinon from "sinon";
@@ -12,7 +12,13 @@ import { IModelApp, IModelConnection, HiliteSet as IModelHiliteSet, SelectionSet
 import { ViewportComponent } from "@itwin/imodel-components-react";
 import { KeySet } from "@itwin/presentation-common";
 import {
-  HiliteSet, Presentation, SelectionChangeEvent, SelectionChangeEventArgs, SelectionChangeType, SelectionManager, SelectionScopesManager,
+  HiliteSet,
+  Presentation,
+  SelectionChangeEvent,
+  SelectionChangeEventArgs,
+  SelectionChangeType,
+  SelectionManager,
+  SelectionScopesManager,
 } from "@itwin/presentation-frontend";
 import { render } from "@testing-library/react";
 import { viewWithUnifiedSelection } from "../../presentation-components";
@@ -44,56 +50,41 @@ describe("Viewport withUnifiedSelection", () => {
   });
 
   it("renders", () => {
-    render(<PresentationViewport
-      imodel={imodelMock.object}
-      viewDefinitionId={viewDefinitionId}
-      selectionHandler={selectionHandlerMock.object}
-    />);
+    render(<PresentationViewport imodel={imodelMock.object} viewDefinitionId={viewDefinitionId} selectionHandler={selectionHandlerMock.object} />);
   });
 
   it("creates default ViewportSelectionHandler implementation when not provided through props", () => {
     const selectionManagerMock = moq.Mock.ofType<SelectionManager>();
     const selectionChangeEvent = new SelectionChangeEvent();
     selectionManagerMock.setup((x) => x.selectionChange).returns(() => selectionChangeEvent);
-    selectionManagerMock.setup((x) => x.suspendIModelToolSelectionSync(imodelMock.object)).returns(() => ({ dispose: () => { } }));
+    selectionManagerMock.setup((x) => x.suspendIModelToolSelectionSync(imodelMock.object)).returns(() => ({ dispose: () => {} }));
     selectionManagerMock.setup(async (x) => x.getHiliteSet(imodelMock.object)).returns(async () => ({}));
     sinon.stub(Presentation, "selection").get(() => selectionManagerMock.object);
 
     expect(selectionChangeEvent.numberOfListeners).to.be.eq(0);
 
-    render(<PresentationViewport
-      imodel={imodelMock.object}
-      viewDefinitionId={viewDefinitionId}
-    />);
+    render(<PresentationViewport imodel={imodelMock.object} viewDefinitionId={viewDefinitionId} />);
 
     // new 'ViewportSelectionHandler' should be listening to selection change event
     expect(selectionChangeEvent.numberOfListeners).to.be.eq(1);
   });
 
   it("sets ViewportSelectionHandler.imodel property when rendered with new imodel", () => {
-    const { rerender } = render(<PresentationViewport
-      imodel={imodelMock.object}
-      viewDefinitionId={viewDefinitionId}
-      selectionHandler={selectionHandlerMock.object}
-    />);
-    selectionHandlerMock.verify((x) => x.imodel = imodelMock.object, moq.Times.once());
+    const { rerender } = render(
+      <PresentationViewport imodel={imodelMock.object} viewDefinitionId={viewDefinitionId} selectionHandler={selectionHandlerMock.object} />,
+    );
+    selectionHandlerMock.verify((x) => (x.imodel = imodelMock.object), moq.Times.once());
 
     const newImodel = moq.Mock.ofType<IModelConnection>();
-    rerender(<PresentationViewport
-      imodel={newImodel.object}
-      viewDefinitionId={viewDefinitionId}
-      selectionHandler={selectionHandlerMock.object}
-    />);
+    rerender(<PresentationViewport imodel={newImodel.object} viewDefinitionId={viewDefinitionId} selectionHandler={selectionHandlerMock.object} />);
 
-    selectionHandlerMock.verify((x) => x.imodel = newImodel.object, moq.Times.once());
+    selectionHandlerMock.verify((x) => (x.imodel = newImodel.object), moq.Times.once());
   });
 
   it("disposes ViewportSelectionHandler when unmounted", () => {
-    const { unmount } = render(<PresentationViewport
-      imodel={imodelMock.object}
-      viewDefinitionId={viewDefinitionId}
-      selectionHandler={selectionHandlerMock.object}
-    />);
+    const { unmount } = render(
+      <PresentationViewport imodel={imodelMock.object} viewDefinitionId={viewDefinitionId} selectionHandler={selectionHandlerMock.object} />,
+    );
     unmount();
     selectionHandlerMock.verify((x) => x.dispose(), moq.Times.once());
   });
@@ -154,7 +145,7 @@ describe("ViewportSelectionHandler", () => {
       resetHistory: () => void;
     }
 
-    let spies: { hilite: HiliteSpies, selectionSet: SelectionSetSpies };
+    let spies: { hilite: HiliteSpies; selectionSet: SelectionSetSpies };
 
     beforeEach(() => {
       // ensure there's something in the selection set
@@ -162,7 +153,11 @@ describe("ViewportSelectionHandler", () => {
       spies = createIModelSpies(imodelMock);
     });
 
-    const triggerSelectionChange = ({ sourceName = "", selectionLevel = 0, imodel = imodelMock.object }: { sourceName?: string, selectionLevel?: number, imodel?: IModelConnection } = {}) => {
+    const triggerSelectionChange = ({
+      sourceName = "",
+      selectionLevel = 0,
+      imodel = imodelMock.object,
+    }: { sourceName?: string; selectionLevel?: number; imodel?: IModelConnection } = {}) => {
       const selectionChangeArgs: SelectionChangeEventArgs = {
         imodel,
         changeType: SelectionChangeType.Add,
@@ -364,8 +359,7 @@ describe("ViewportSelectionHandler", () => {
       expect(spies.hilite.elements).to.not.be.called;
 
       // trigger some intermediate selection changes
-      for (let i = 1; i <= 10; ++i)
-        triggerSelectionChange({ sourceName: i.toString() });
+      for (let i = 1; i <= 10; ++i) triggerSelectionChange({ sourceName: i.toString() });
 
       // ensure new hilite set requests were not triggered - we're still
       // waiting for the first one to resolve
@@ -433,10 +427,12 @@ const mockIModel = (mock: moq.IMock<IModelConnection>) => {
 };
 
 const createElementProps = (ids: Id64Arg): ElementProps[] => {
-  return [...Id64.toIdSet(ids)].map((id: Id64String): ElementProps => ({
-    id,
-    classFullName: "ElementSchema:ElementClass",
-    code: Code.createEmpty(),
-    model: id,
-  }));
+  return [...Id64.toIdSet(ids)].map(
+    (id: Id64String): ElementProps => ({
+      id,
+      classFullName: "ElementSchema:ElementClass",
+      code: Code.createEmpty(),
+      model: id,
+    }),
+  );
 };

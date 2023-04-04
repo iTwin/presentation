@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { Id64, Id64String } from "@itwin/core-bentley";
 import { BisCodeSpec, Code, IModel, PhysicalElementProps } from "@itwin/core-common";
@@ -12,11 +12,7 @@ export function insertSubject(builder: TestIModelBuilder, label: string, parentI
   const id = builder.insertElement({
     classFullName: className,
     model: IModel.repositoryModelId,
-    code: builder.createCode(
-      parentId ?? IModel.rootSubjectId,
-      BisCodeSpec.subject,
-      label,
-    ),
+    code: builder.createCode(parentId ?? IModel.rootSubjectId, BisCodeSpec.subject, label),
     parent: {
       id: parentId ?? IModel.rootSubjectId,
       relClassName: "BisCore:SubjectOwnsSubjects",
@@ -29,11 +25,7 @@ export function insertPhysicalModel(builder: TestIModelBuilder, label: string, p
   const partitionId = builder.insertElement({
     classFullName: "BisCore:PhysicalPartition",
     model: IModel.repositoryModelId,
-    code: builder.createCode(
-      parentId ?? IModel.rootSubjectId,
-      BisCodeSpec.informationPartitionElement,
-      label,
-    ),
+    code: builder.createCode(parentId ?? IModel.rootSubjectId, BisCodeSpec.informationPartitionElement, label),
     parent: {
       id: parentId ?? IModel.rootSubjectId,
       relClassName: "BisCore:SubjectOwnsPartitionElements",
@@ -52,11 +44,7 @@ export function insertSpatialCategory(builder: TestIModelBuilder, label: string,
   const id = builder.insertElement({
     classFullName: className,
     model: modelId,
-    code: builder.createCode(
-      modelId,
-      BisCodeSpec.spatialCategory,
-      label,
-    ),
+    code: builder.createCode(modelId, BisCodeSpec.spatialCategory, label),
   });
   return { className, id };
 }
@@ -75,11 +63,7 @@ export function insertSubCategory(builder: TestIModelBuilder, label: string, par
   const id = builder.insertElement({
     classFullName: className,
     model: modelId,
-    code: builder.createCode(
-      modelId,
-      BisCodeSpec.subCategory,
-      label,
-    ),
+    code: builder.createCode(modelId, BisCodeSpec.subCategory, label),
     parent: {
       id: parentCategoryId,
       relClassName: "BisCore:CategoryOwnsSubCategories",
@@ -96,12 +80,14 @@ export function insertPhysicalElement(builder: TestIModelBuilder, label: string,
     category: categoryId,
     code: Code.createEmpty(),
     userLabel: label,
-    ...(parentId ? {
-      parent: {
-        id: parentId,
-        relClassName: "BisCore:PhysicalElementAssemblesElements",
-      },
-    } : undefined),
+    ...(parentId
+      ? {
+          parent: {
+            id: parentId,
+            relClassName: "BisCore:PhysicalElementAssemblesElements",
+          },
+        }
+      : undefined),
   } as PhysicalElementProps);
   return { className, id };
 }

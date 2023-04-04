@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button, DropdownMenu, LabeledSelect, MenuExtraContent, ToggleSwitch } from "@itwin/itwinui-react";
@@ -19,17 +19,20 @@ export function DiagnosticsSelector(props: DiagnosticsSelectorProps) {
   const [shouldMeasurePerformance, toggleMeasurePerformance] = useState(false);
   const [editorSeverity, setEditorSeverity] = useState("error");
   const [devSeverity, setDevSeverity] = useState("error");
-  const result = useMemo((): DiagnosticsProps => ({
-    ruleDiagnostics: {
-      severity: editorSeverity as DiagnosticsLoggerSeverity,
-      handler: consoleDiagnosticsHandler,
-    },
-    devDiagnostics: {
-      perf: shouldMeasurePerformance,
-      severity: devSeverity as DiagnosticsLoggerSeverity,
-      handler: consoleDiagnosticsHandler,
-    },
-  }), [shouldMeasurePerformance, editorSeverity, devSeverity]);
+  const result = useMemo(
+    (): DiagnosticsProps => ({
+      ruleDiagnostics: {
+        severity: editorSeverity as DiagnosticsLoggerSeverity,
+        handler: consoleDiagnosticsHandler,
+      },
+      devDiagnostics: {
+        perf: shouldMeasurePerformance,
+        severity: devSeverity as DiagnosticsLoggerSeverity,
+        handler: consoleDiagnosticsHandler,
+      },
+    }),
+    [shouldMeasurePerformance, editorSeverity, devSeverity],
+  );
 
   useEffect(() => {
     onDiagnosticsOptionsChanged(result);

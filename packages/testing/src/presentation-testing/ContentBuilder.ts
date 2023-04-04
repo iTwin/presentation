@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module Content
  */
@@ -11,8 +11,18 @@ import { using } from "@itwin/core-bentley";
 import { QueryRowFormat } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
-  Content, DefaultContentDisplayTypes, InstanceId, InstanceKey, KeySet, PageOptions, ProcessPrimitiveValueProps, RegisteredRuleset, Ruleset,
-  traverseContent, Value, ValuesMap,
+  Content,
+  DefaultContentDisplayTypes,
+  InstanceId,
+  InstanceKey,
+  KeySet,
+  PageOptions,
+  ProcessPrimitiveValueProps,
+  RegisteredRuleset,
+  Ruleset,
+  traverseContent,
+  Value,
+  ValuesMap,
 } from "@itwin/presentation-common";
 import { ContentDataProvider, FieldHierarchyRecord, PropertyRecordsBuilder } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
@@ -89,8 +99,7 @@ export class ContentBuilder {
     dataProvider.keys = new KeySet(instanceKeys);
 
     const content = await dataProvider.getContent();
-    if (!content)
-      return [];
+    if (!content) return [];
 
     const accumulator = new PropertyRecordsAccumulator(this._decimalPrecision);
     traverseContent(accumulator, content);
@@ -105,21 +114,24 @@ export class ContentBuilder {
    * "PropertyPane", "Grid", "List" etc.
    */
   public async createContent(rulesetOrId: Ruleset | string, instanceKeys: InstanceKey[], displayType: string = DefaultContentDisplayTypes.PropertyPane) {
-    if (typeof rulesetOrId === "string")
-      return this.doCreateContent(rulesetOrId, instanceKeys, displayType);
+    if (typeof rulesetOrId === "string") return this.doCreateContent(rulesetOrId, instanceKeys, displayType);
 
     return using(await Presentation.presentation.rulesets().add(rulesetOrId), async (ruleset: RegisteredRuleset) => {
       return this.doCreateContent(ruleset.id, instanceKeys, displayType);
     });
   }
 
-  private async getECClassNames(): Promise<Array<{ schemaName: string, className: string }>> {
-    const reader = this._iModel.createQueryReader(`
+  private async getECClassNames(): Promise<Array<{ schemaName: string; className: string }>> {
+    const reader = this._iModel.createQueryReader(
+      `
       SELECT s.Name schemaName, c.Name className FROM meta.ECClassDef c
       INNER JOIN meta.ECSchemaDef s ON c.Schema.id = s.ECInstanceId
       WHERE c.Modifier <> 1 AND c.Type = 0
       ORDER BY s.Name, c.Name
-    `, undefined, { rowFormat: QueryRowFormat.UseJsPropertyNames });
+    `,
+      undefined,
+      { rowFormat: QueryRowFormat.UseJsPropertyNames },
+    );
     return reader.toArray();
   }
 
@@ -130,14 +142,17 @@ export class ContentBuilder {
 
     for (const nameEntry of classNameEntries) {
       // try {
-      const reader = this._iModel.createQueryReader(`
+      const reader = this._iModel.createQueryReader(
+        `
         SELECT ECInstanceId FROM ONLY "${nameEntry.schemaName}"."${nameEntry.className}"
         ORDER BY ECInstanceId
-      `, undefined, { rowFormat: QueryRowFormat.UseJsPropertyNames, limit: { count: limitInstances ? 1 : 4000 } });
+      `,
+        undefined,
+        { rowFormat: QueryRowFormat.UseJsPropertyNames, limit: { count: limitInstances ? 1 : 4000 } },
+      );
       const instanceIds: InstanceId[] = await reader.toArray();
 
-      if (!instanceIds.length)
-        continue;
+      if (!instanceIds.length) continue;
 
       const instanceKeys = instanceIds.map((idEntry) => ({ className: `${nameEntry.schemaName}:${nameEntry.className}`, id: idEntry } as InstanceKey));
 
@@ -197,11 +212,10 @@ class PropertyRecordsAccumulator extends PropertyRecordsBuilder {
   }
 
   private processRawValue(value: Value): Value {
-    if (this._decimalPrecision === undefined)
-      return value;
+    if (this._decimalPrecision === undefined) return value;
 
     if (typeof value === "number") {
-      return +(Number(value)).toFixed(this._decimalPrecision);
+      return +Number(value).toFixed(this._decimalPrecision);
     }
 
     if (Array.isArray(value)) {

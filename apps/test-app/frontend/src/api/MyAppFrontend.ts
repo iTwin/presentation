@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { Guid, Id64Arg, Logger, OpenMode } from "@itwin/core-bentley";
 import { ElementProps, IModelError, ViewQueryParams } from "@itwin/core-common";
@@ -88,14 +88,12 @@ export class MyAppFrontend {
   }
 
   public static async updateElement(imodel: IModelConnection, newProps: ElementProps) {
-    if (!IpcApp.isValid)
-      throw new Error(`Updating element only supported in 'IpcApp'`);
+    if (!IpcApp.isValid) throw new Error(`Updating element only supported in 'IpcApp'`);
     return this._ipcProxy.updateElement(imodel.key, newProps);
   }
 
   public static async deleteElements(imodel: IModelConnection, elementIds: Id64Arg) {
-    if (!IpcApp.isValid)
-      throw new Error(`Deleting elements only supported in 'IpcApp'`);
+    if (!IpcApp.isValid) throw new Error(`Deleting elements only supported in 'IpcApp'`);
     return this._ipcProxy.deleteElements(imodel.key, elementIds);
   }
 }

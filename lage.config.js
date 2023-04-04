@@ -10,7 +10,7 @@ module.exports = {
     lint: ["build"],
     docs: ["build"],
     clean: {
-      cache: false
+      cache: false,
     },
   },
   cache: true,

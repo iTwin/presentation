@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module Internal
  */
@@ -20,21 +20,22 @@ export class ECClassInfo {
     public readonly label: string,
     private _baseClasses: Set<Id64String>,
     private _derivedClasses: Set<Id64String>,
-  ) {
+  ) {}
+
+  public get baseClassIds(): Array<Id64String> {
+    return Array.from(this._baseClasses);
+  }
+  public get derivedClassIds(): Array<Id64String> {
+    return Array.from(this._derivedClasses);
   }
 
-  public get baseClassIds(): Array<Id64String> { return Array.from(this._baseClasses); }
-  public get derivedClassIds(): Array<Id64String> { return Array.from(this._derivedClasses); }
-
   public isBaseOf(idOrInfo: Id64String | ECClassInfo): boolean {
-    if (typeof idOrInfo === "string")
-      return idOrInfo === this.id || this._derivedClasses.has(idOrInfo);
+    if (typeof idOrInfo === "string") return idOrInfo === this.id || this._derivedClasses.has(idOrInfo);
     return idOrInfo.id === this.id || this._derivedClasses.has(idOrInfo.id);
   }
 
   public isDerivedFrom(idOrInfo: Id64String | ECClassInfo): boolean {
-    if (typeof idOrInfo === "string")
-      return idOrInfo === this.id || this._baseClasses.has(idOrInfo);
+    if (typeof idOrInfo === "string") return idOrInfo === this.id || this._baseClasses.has(idOrInfo);
     return idOrInfo.id === this.id || this._baseClasses.has(idOrInfo.id);
   }
 }
@@ -43,8 +44,7 @@ export class ECClassInfo {
 export class ECMetadataProvider {
   private _classInfoCache = new LRUDictionary<CacheKey, ECClassInfo>(50, compareKeys);
 
-  constructor(private _queryReaderFactory: (ecsql: string, params?: QueryBinder, config?: QueryOptions) => ECSqlReader) {
-  }
+  constructor(private _queryReaderFactory: (ecsql: string, params?: QueryBinder, config?: QueryOptions) => ECSqlReader) {}
 
   public async getECClassInfo(idOrFullName: Id64String | string): Promise<ECClassInfo | undefined>;
   public async getECClassInfo(schemaName: string, className: string): Promise<ECClassInfo | undefined>;
@@ -66,7 +66,9 @@ export class ECMetadataProvider {
         ${classQueryBase}
         WHERE classDef.ECInstanceId = :id
       `;
-      classInfo = await this.createECClassInfo(this._queryReaderFactory(classQuery, QueryBinder.from({ id }), { rowFormat: QueryRowFormat.UseJsPropertyNames }));
+      classInfo = await this.createECClassInfo(
+        this._queryReaderFactory(classQuery, QueryBinder.from({ id }), { rowFormat: QueryRowFormat.UseJsPropertyNames }),
+      );
       classInfo && this._classInfoCache.set({ id: classInfo.id, name: classInfo.name }, classInfo);
     }
     return classInfo;
@@ -80,7 +82,9 @@ export class ECMetadataProvider {
         WHERE classDef.Name = :className AND schemaDef.Name = :schemaName
       `;
       const [schemaName, className] = this.splitFullClassName(name);
-      classInfo = await this.createECClassInfo(this._queryReaderFactory(classQuery, QueryBinder.from({ schemaName, className }), { rowFormat: QueryRowFormat.UseJsPropertyNames }));
+      classInfo = await this.createECClassInfo(
+        this._queryReaderFactory(classQuery, QueryBinder.from({ schemaName, className }), { rowFormat: QueryRowFormat.UseJsPropertyNames }),
+      );
       classInfo && this._classInfoCache.set({ id: classInfo.id, name: classInfo.name }, classInfo);
     }
     return classInfo;
@@ -94,7 +98,7 @@ export class ECMetadataProvider {
     return undefined;
   }
 
-  private async queryClassHierarchyInfo(id: Id64String): Promise<{ baseClasses: Set<Id64String>, derivedClasses: Set<Id64String> }> {
+  private async queryClassHierarchyInfo(id: Id64String): Promise<{ baseClasses: Set<Id64String>; derivedClasses: Set<Id64String> }> {
     const classHierarchyQuery = `
       SELECT chc.TargetECInstanceId baseId, chc.SourceECInstanceId derivedId
       FROM meta.ClassHasAllBaseClasses chc
@@ -104,10 +108,8 @@ export class ECMetadataProvider {
     const hierarchy = { baseClasses: new Set<Id64String>(), derivedClasses: new Set<Id64String>() };
     const reader = this._queryReaderFactory(classHierarchyQuery, QueryBinder.from({ id }), { rowFormat: QueryRowFormat.UseJsPropertyNames });
     while (await reader.step()) {
-      if (reader.current.baseId === id)
-        hierarchy.derivedClasses.add(reader.current.derivedId);
-      if (reader.current.derivedId === id)
-        hierarchy.baseClasses.add(reader.current.baseId);
+      if (reader.current.baseId === id) hierarchy.derivedClasses.add(reader.current.derivedId);
+      if (reader.current.derivedId === id) hierarchy.baseClasses.add(reader.current.baseId);
     }
     return hierarchy;
   }

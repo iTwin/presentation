@@ -1,14 +1,16 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { TreeNodeItem } from "@itwin/components-react";
 import {
   isPresentationInfoTreeNodeItem,
-  isPresentationTreeNodeItem, PresentationInfoTreeNodeItem, PresentationTreeNodeItem,
+  isPresentationTreeNodeItem,
+  PresentationInfoTreeNodeItem,
+  PresentationTreeNodeItem,
 } from "../../presentation-components/tree/PresentationTreeNodeItem";
 import { createTestECInstancesNodeKey } from "../_helpers/Hierarchy";
 

@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import "./SampleRpcImpl"; // just to get the RPC implementation registered
 import { app as electron } from "electron";
@@ -9,9 +9,7 @@ import * as path from "path";
 import { Logger, LogLevel } from "@itwin/core-bentley";
 import { RpcInterfaceDefinition } from "@itwin/core-common";
 // __PUBLISH_EXTRACT_START__ Presentation.Backend.Initialization.Imports
-import {
-  Presentation, PresentationProps,
-} from "@itwin/presentation-backend";
+import { Presentation, PresentationProps } from "@itwin/presentation-backend";
 // __PUBLISH_EXTRACT_END__
 // eslint-disable-next-line no-duplicate-imports
 import { PresentationBackendLoggerCategory, PresentationBackendNativeLoggerCategory } from "@itwin/presentation-backend";

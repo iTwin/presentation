@@ -1,14 +1,17 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { PropertyValueRendererManager, UiComponents } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { InstanceKey, KeySet, Ruleset } from "@itwin/presentation-common";
 import {
-  TableColumnDefinition, TableRowDefinition, UnifiedSelectionContextProvider, usePresentationTableWithUnifiedSelection,
+  TableColumnDefinition,
+  TableRowDefinition,
+  UnifiedSelectionContextProvider,
+  usePresentationTableWithUnifiedSelection,
 } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
@@ -20,9 +23,7 @@ import { ensureTableHasRowsWithCellValues } from "../TableUtils";
 /* eslint-disable @typescript-eslint/naming-convention */
 
 describe("Learning snippets", async () => {
-
   describe("Table", () => {
-
     before(async () => {
       await initialize();
       await UiComponents.initialize(IModelApp.localization);
@@ -46,40 +47,32 @@ describe("Learning snippets", async () => {
         });
 
         // don't render anything if the table is loading
-        if (isLoading)
-          return null;
+        if (isLoading) return null;
 
         // if we're not loading and still don't have any columns or the columns list is empty - there's nothing
         // to build the table from, which means we probably have nothing selected
-        if (!columns || columns.length === 0)
-          return <>Select something to see properties</>;
+        if (!columns || columns.length === 0) return <>Select something to see properties</>;
 
         // render a simple HTML table
         return (
           <table>
             <thead>
               <tr>
-                {
-                  columns.map((col, i) => (
-                    <td key={i}>{col.label}</td>
-                  ))
-                }
+                {columns.map((col, i) => (
+                  <td key={i}>{col.label}</td>
+                ))}
               </tr>
             </thead>
             <tbody>
-              {
-                rows.map((row, ri) => (
-                  <tr key={ri}>
-                    {
-                      columns.map((col, ci) => (
-                        <td key={ci}>
-                          <Cell record={row[col.id]} />
-                        </td>
-                      ))
-                    }
-                  </tr>
-                ))
-              }
+              {rows.map((row, ri) => (
+                <tr key={ri}>
+                  {columns.map((col, ci) => (
+                    <td key={ci}>
+                      <Cell record={row[col.id]} />
+                    </td>
+                  ))}
+                </tr>
+              ))}
             </tbody>
           </table>
         );
@@ -123,7 +116,7 @@ describe("Learning snippets", async () => {
         // __PUBLISH_EXTRACT_START__ Presentation.Components.UnifiedSelection.TableWithinUnifiedSelectionContext
         <UnifiedSelectionContextProvider imodel={imodel}>
           <MyTable imodel={imodel} />
-        </UnifiedSelectionContextProvider>
+        </UnifiedSelectionContextProvider>,
         // __PUBLISH_EXTRACT_END__
       );
       await waitFor(() => getByText(container, "Select something to see properties"));
@@ -144,28 +137,35 @@ describe("Learning snippets", async () => {
       act(() => Presentation.selection.replaceSelection("", imodel, new KeySet([modelKey])));
       await ensureTableHasRowsWithCellValues(container, "User Label", ["My Element 1", "My Element 2"]);
     });
-
   });
-
 });
 
 const ruleset: Ruleset = {
   id: "my-table-rules",
-  rules: [{
-    ruleType: "Content",
-    condition: `SelectedNode.IsOfClass("Element", "BisCore")`,
-    specifications: [{
-      specType: "SelectedNodeInstances",
-    }],
-  }, {
-    ruleType: "Content",
-    condition: `SelectedNode.IsOfClass("Model", "BisCore")`,
-    specifications: [{
-      specType: "ContentRelatedInstances",
-      relationshipPaths: [{
-        relationship: { schemaName: "BisCore", className: "ModelContainsElements" },
-        direction: "Forward",
-      }],
-    }],
-  }],
+  rules: [
+    {
+      ruleType: "Content",
+      condition: `SelectedNode.IsOfClass("Element", "BisCore")`,
+      specifications: [
+        {
+          specType: "SelectedNodeInstances",
+        },
+      ],
+    },
+    {
+      ruleType: "Content",
+      condition: `SelectedNode.IsOfClass("Model", "BisCore")`,
+      specifications: [
+        {
+          specType: "ContentRelatedInstances",
+          relationshipPaths: [
+            {
+              relationship: { schemaName: "BisCore", className: "ModelContainsElements" },
+              direction: "Forward",
+            },
+          ],
+        },
+      ],
+    },
+  ],
 };

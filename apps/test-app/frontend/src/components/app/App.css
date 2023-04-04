@@ -65,7 +65,7 @@
   height: 30px; /* Because ElementSeperator is 30 */
 }
 
-.app-content-right-separator hr{
+.app-content-right-separator hr {
   margin-top: 15px;
   margin-bottom: 0px;
 }

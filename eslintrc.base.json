@@ -1,10 +1,6 @@
 {
-  "extends": [
-    "prettier"
-  ],
-  "plugins": [
-    "@itwin"
-  ],
+  "extends": ["prettier"],
+  "plugins": ["@itwin"],
   "rules": {
     "@itwin/no-internal": [
       "error",

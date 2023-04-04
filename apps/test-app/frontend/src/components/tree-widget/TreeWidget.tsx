@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { useCallback, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
@@ -25,9 +25,12 @@ export function TreeWidget(props: Props) {
   const [activeMatchIndex, setActiveMatchIndex] = useState(0);
 
   const onFilteringStateChange = useCallback((isFiltering: boolean, newMatchesCount: number | undefined) => {
-    setFilteringStatus(isFiltering
-      ? FilteringInputStatus.FilteringInProgress : (undefined !== newMatchesCount)
-        ? FilteringInputStatus.FilteringFinished : FilteringInputStatus.ReadyToFilter,
+    setFilteringStatus(
+      isFiltering
+        ? FilteringInputStatus.FilteringInProgress
+        : undefined !== newMatchesCount
+        ? FilteringInputStatus.FilteringFinished
+        : FilteringInputStatus.ReadyToFilter,
     );
     setMatchesCount(newMatchesCount);
   }, []);
@@ -39,28 +42,39 @@ export function TreeWidget(props: Props) {
       <div className="treewidget-header">
         <h3>{IModelApp.localization.getLocalizedString("Sample:controls.tree")}</h3>
         <DiagnosticsSelector onDiagnosticsOptionsChanged={setDiagnosticsOptions} />
-        {rulesetId ? <FilteringInput
-          status={filteringStatus}
-          onFilterCancel={() => { setFilter(""); }}
-          onFilterClear={() => { setFilter(""); }}
-          onFilterStart={(newFilter) => { setFilter(newFilter); }}
-          resultSelectorProps={{
-            onSelectedChanged: (index) => setActiveMatchIndex(index),
-            resultCount: matchesCount || 0,
-          }} /> : null}
+        {rulesetId ? (
+          <FilteringInput
+            status={filteringStatus}
+            onFilterCancel={() => {
+              setFilter("");
+            }}
+            onFilterClear={() => {
+              setFilter("");
+            }}
+            onFilterStart={(newFilter) => {
+              setFilter(newFilter);
+            }}
+            resultSelectorProps={{
+              onSelectedChanged: (index) => setActiveMatchIndex(index),
+              resultCount: matchesCount || 0,
+            }}
+          />
+        ) : null}
       </div>
       <div ref={ref} className="filteredTree">
-        {rulesetId && width && height ? <>
-          <Tree
-            imodel={imodel}
-            rulesetId={rulesetId}
-            diagnostics={diagnosticsOptions}
-            filtering={{ filter, activeMatchIndex, onFilteringStateChange }}
-            width={width}
-            height={height}
-          />
-          {(filteringStatus === FilteringInputStatus.FilteringInProgress) ? <div className="filteredTreeOverlay" /> : null}
-        </> : null}
+        {rulesetId && width && height ? (
+          <>
+            <Tree
+              imodel={imodel}
+              rulesetId={rulesetId}
+              diagnostics={diagnosticsOptions}
+              filtering={{ filter, activeMatchIndex, onFilteringStateChange }}
+              width={width}
+              height={height}
+            />
+            {filteringStatus === FilteringInputStatus.FilteringInProgress ? <div className="filteredTreeOverlay" /> : null}
+          </>
+        ) : null}
       </div>
     </div>
   );

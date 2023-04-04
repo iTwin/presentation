@@ -1,29 +1,39 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import { ArrayValue, PropertyRecord, StandardEditorNames, StandardTypeNames, StructValue } from "@itwin/appui-abstract";
 import { EnumerationInfo, FieldHierarchy, PropertyValueFormat, traverseContentItem } from "@itwin/presentation-common";
-import { createPropertyDescriptionFromFieldInfo, FieldHierarchyRecord, IPropertiesAppender, PropertyRecordsBuilder } from "../../presentation-components/common/ContentBuilder";
+import {
+  createPropertyDescriptionFromFieldInfo,
+  FieldHierarchyRecord,
+  IPropertiesAppender,
+  PropertyRecordsBuilder,
+} from "../../presentation-components/common/ContentBuilder";
 import { createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
 import {
-  createTestCategoryDescription, createTestContentDescriptor, createTestContentItem, createTestNestedContentField, createTestPropertiesContentField,
+  createTestCategoryDescription,
+  createTestContentDescriptor,
+  createTestContentItem,
+  createTestNestedContentField,
+  createTestPropertiesContentField,
   createTestSimpleContentField,
 } from "../_helpers/Content";
 
 class TestPropertyRecordsBuilder extends PropertyRecordsBuilder {
-  public entries: Array<{ record: PropertyRecord, fieldHierarchy: FieldHierarchy }> = [];
+  public entries: Array<{ record: PropertyRecord; fieldHierarchy: FieldHierarchy }> = [];
   protected createRootPropertiesAppender(): IPropertiesAppender {
     return {
-      append: (record: FieldHierarchyRecord) => { this.entries.push(record); },
+      append: (record: FieldHierarchyRecord) => {
+        this.entries.push(record);
+      },
     };
   }
 }
 
 describe("PropertyRecordsBuilder", () => {
-
   let builder: TestPropertyRecordsBuilder;
 
   beforeEach(() => {
@@ -36,11 +46,15 @@ describe("PropertyRecordsBuilder", () => {
       isStrict: true,
     };
     const descriptor = createTestContentDescriptor({
-      fields: [createTestPropertiesContentField({
-        properties: [{
-          property: createTestPropertyInfo({ enumerationInfo }),
-        }],
-      })],
+      fields: [
+        createTestPropertiesContentField({
+          properties: [
+            {
+              property: createTestPropertyInfo({ enumerationInfo }),
+            },
+          ],
+        }),
+      ],
     });
     const item = createTestContentItem({
       values: {},
@@ -71,27 +85,29 @@ describe("PropertyRecordsBuilder", () => {
   it("sets `autoExpand` flag for nested content field based property records", () => {
     const category = createTestCategoryDescription();
     const descriptor = createTestContentDescriptor({
-      fields: [createTestNestedContentField({
-        name: "parent",
-        category,
-        autoExpand: true,
-        nestedFields: [
-          createTestSimpleContentField({ name: "child", category }),
-        ],
-      })],
+      fields: [
+        createTestNestedContentField({
+          name: "parent",
+          category,
+          autoExpand: true,
+          nestedFields: [createTestSimpleContentField({ name: "child", category })],
+        }),
+      ],
     });
     const item = createTestContentItem({
       values: {
-        parent: [{
-          primaryKeys: [createTestECInstanceKey()],
-          values: {
-            child: "value",
+        parent: [
+          {
+            primaryKeys: [createTestECInstanceKey()],
+            values: {
+              child: "value",
+            },
+            displayValues: {
+              child: "display value",
+            },
+            mergedFieldNames: [],
           },
-          displayValues: {
-            child: "display value",
-          },
-          mergedFieldNames: [],
-        }],
+        ],
       },
       displayValues: {},
     });
@@ -128,10 +144,9 @@ describe("PropertyRecordsBuilder", () => {
   });
 
   it("sets editor name when field info types typeName is Number", () => {
-    const descriptor = createPropertyDescriptionFromFieldInfo(createTestSimpleContentField(
-      { type: { valueFormat: PropertyValueFormat.Primitive, typeName: StandardTypeNames.Number } },
-    ));
+    const descriptor = createPropertyDescriptionFromFieldInfo(
+      createTestSimpleContentField({ type: { valueFormat: PropertyValueFormat.Primitive, typeName: StandardTypeNames.Number } }),
+    );
     expect(descriptor.editor?.name).to.eq(StandardEditorNames.NumericInput);
   });
-
 });

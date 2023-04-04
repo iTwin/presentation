@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module InstancesFilter
  */
@@ -31,22 +31,30 @@ export interface PresentationInstanceFilterPropertyProps {
  */
 export function PresentationInstanceFilterProperty(props: PresentationInstanceFilterPropertyProps) {
   const { propertyDescription, categoryLabel, fullClassName } = props;
-  return <div className="property-item-line">
-    <Tooltip content={propertyDescription.displayLabel} placement="bottom">
-      <div className="property-display-label" title={propertyDescription.displayLabel}>
-        {propertyDescription.displayLabel}
-      </div>
-    </Tooltip>
-    <div className="property-badge-container">
-      {categoryLabel && <Tooltip content={<CategoryTooltipContent categoryLabel={categoryLabel} fullClassName={fullClassName} />} placement="bottom" style={{ textAlign: "left" }}>
-        <div className="badge">
-          <Badge className="property-category-badge" backgroundColor={"montecarlo"}>
-            {categoryLabel}
-          </Badge>
+  return (
+    <div className="property-item-line">
+      <Tooltip content={propertyDescription.displayLabel} placement="bottom">
+        <div className="property-display-label" title={propertyDescription.displayLabel}>
+          {propertyDescription.displayLabel}
         </div>
-      </Tooltip>}
+      </Tooltip>
+      <div className="property-badge-container">
+        {categoryLabel && (
+          <Tooltip
+            content={<CategoryTooltipContent categoryLabel={categoryLabel} fullClassName={fullClassName} />}
+            placement="bottom"
+            style={{ textAlign: "left" }}
+          >
+            <div className="badge">
+              <Badge className="property-category-badge" backgroundColor={"montecarlo"}>
+                {categoryLabel}
+              </Badge>
+            </div>
+          </Tooltip>
+        )}
+      </div>
     </div>
-  </div>;
+  );
 }
 
 interface CategoryTooltipContentProps {
@@ -57,24 +65,26 @@ interface CategoryTooltipContentProps {
 function CategoryTooltipContent(props: CategoryTooltipContentProps) {
   const { categoryLabel, fullClassName } = props;
   const [schemaName, className] = fullClassName.split(":");
-  return <table>
-    <tbody>
-      <tr>
-        <th className="tooltip-content-header">{translate("instance-filter-builder.category")}</th>
-        <td className="tooltip-content-data">{categoryLabel}</td>
-      </tr>
-    </tbody>
-    <tbody>
-      <tr>
-        <th className="tooltip-content-header">{translate("instance-filter-builder.class")}</th>
-        <td className="tooltip-content-data">{className}</td>
-      </tr>
-    </tbody>
-    <tbody>
-      <tr>
-        <th className="tooltip-content-header">{translate("instance-filter-builder.schema")}</th>
-        <td className="tooltip-content-data">{schemaName}</td>
-      </tr>
-    </tbody>
-  </table>;
+  return (
+    <table>
+      <tbody>
+        <tr>
+          <th className="tooltip-content-header">{translate("instance-filter-builder.category")}</th>
+          <td className="tooltip-content-data">{categoryLabel}</td>
+        </tr>
+      </tbody>
+      <tbody>
+        <tr>
+          <th className="tooltip-content-header">{translate("instance-filter-builder.class")}</th>
+          <td className="tooltip-content-data">{className}</td>
+        </tr>
+      </tbody>
+      <tbody>
+        <tr>
+          <th className="tooltip-content-header">{translate("instance-filter-builder.schema")}</th>
+          <td className="tooltip-content-data">{schemaName}</td>
+        </tr>
+      </tbody>
+    </table>
+  );
 }

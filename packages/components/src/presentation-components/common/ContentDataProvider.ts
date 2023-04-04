@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module Core
  */
@@ -11,8 +11,19 @@ import { PropertyDescription, PropertyRecord } from "@itwin/appui-abstract";
 import { Logger } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
-  ClientDiagnosticsOptions, Content, DEFAULT_KEYS_BATCH_SIZE, Descriptor, DescriptorOverrides, Field, KeySet, PageOptions, RegisteredRuleset,
-  RequestOptionsWithRuleset, Ruleset, RulesetVariable, SelectionInfo,
+  ClientDiagnosticsOptions,
+  Content,
+  DEFAULT_KEYS_BATCH_SIZE,
+  Descriptor,
+  DescriptorOverrides,
+  Field,
+  KeySet,
+  PageOptions,
+  RegisteredRuleset,
+  RequestOptionsWithRuleset,
+  Ruleset,
+  RulesetVariable,
+  SelectionInfo,
 } from "@itwin/presentation-common";
 import { IModelContentChangeEventArgs, Presentation } from "@itwin/presentation-frontend";
 import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory";
@@ -184,40 +195,49 @@ export class ContentDataProvider implements IContentDataProvider {
   }
 
   /** Display type used to format content */
-  public get displayType(): string { return this._displayType; }
+  public get displayType(): string {
+    return this._displayType;
+  }
 
   /**
    * Paging options for obtaining content.
    * @see `ContentDataProviderProps.pagingSize`
    */
-  public get pagingSize(): number | undefined { return this._pagingSize; }
-  public set pagingSize(value: number | undefined) { this._pagingSize = value; }
+  public get pagingSize(): number | undefined {
+    return this._pagingSize;
+  }
+  public set pagingSize(value: number | undefined) {
+    this._pagingSize = value;
+  }
 
   /** IModel to pull data from */
-  public get imodel(): IModelConnection { return this._imodel; }
+  public get imodel(): IModelConnection {
+    return this._imodel;
+  }
   public set imodel(imodel: IModelConnection) {
-    if (this._imodel === imodel)
-      return;
+    if (this._imodel === imodel) return;
 
     this._imodel = imodel;
     this.invalidateCache(CacheInvalidationProps.full());
   }
 
   /** Id of the ruleset to use when requesting content */
-  public get rulesetId(): string { return this._rulesetRegistration.rulesetId; }
+  public get rulesetId(): string {
+    return this._rulesetRegistration.rulesetId;
+  }
   public set rulesetId(value: string) {
-    if (this.rulesetId === value)
-      return;
+    if (this.rulesetId === value) return;
 
     this._rulesetRegistration = new RulesetRegistrationHelper(value);
     this.invalidateCache(CacheInvalidationProps.full());
   }
 
   /** Keys defining what to request content for */
-  public get keys() { return this._keys; }
+  public get keys() {
+    return this._keys;
+  }
   public set keys(keys: KeySet) {
-    if (keys.guid === this._previousKeysGuid)
-      return;
+    if (keys.guid === this._previousKeysGuid) return;
 
     this._keys = keys;
     this._previousKeysGuid = this._keys.guid;
@@ -225,10 +245,11 @@ export class ContentDataProvider implements IContentDataProvider {
   }
 
   /** Information about selection event that results in content change */
-  public get selectionInfo() { return this._selectionInfo; }
+  public get selectionInfo() {
+    return this._selectionInfo;
+  }
   public set selectionInfo(info: SelectionInfo | undefined) {
-    if (this._selectionInfo === info)
-      return;
+    if (this._selectionInfo === info) return;
 
     this._selectionInfo = info;
     this.invalidateCache(CacheInvalidationProps.full());
@@ -265,7 +286,9 @@ export class ContentDataProvider implements IContentDataProvider {
    * method returns `false`, then content is not requested and this saves a trip
    * to the backend.
    */
-  protected shouldRequestContentForEmptyKeyset(): boolean { return false; }
+  protected shouldRequestContentForEmptyKeyset(): boolean {
+    return false;
+  }
 
   /**
    * Get the content descriptor overrides.
@@ -301,12 +324,10 @@ export class ContentDataProvider implements IContentDataProvider {
    * - there is no content based on the ruleset and input
    */
   public getContentDescriptor = memoize(async (): Promise<Descriptor | undefined> => {
-    if (!this.shouldRequestContentForEmptyKeyset() && this.keys.isEmpty)
-      return undefined;
+    if (!this.shouldRequestContentForEmptyKeyset() && this.keys.isEmpty) return undefined;
 
     const descriptor = await this.getDefaultContentDescriptor();
-    if (!descriptor)
-      return undefined;
+    if (!descriptor) return undefined;
 
     return new Descriptor({ ...descriptor });
   });
@@ -348,33 +369,34 @@ export class ContentDataProvider implements IContentDataProvider {
     return descriptor ? findField(descriptor, descr.name) : undefined;
   }
 
-  private _getContentAndSize = memoize(async (pageOptions?: PageOptions): Promise<{ content: Content, size: number } | undefined> => {
-    if (!this.shouldRequestContentForEmptyKeyset() && this.keys.isEmpty)
-      return undefined;
+  private _getContentAndSize = memoize(
+    async (pageOptions?: PageOptions): Promise<{ content: Content; size: number } | undefined> => {
+      if (!this.shouldRequestContentForEmptyKeyset() && this.keys.isEmpty) return undefined;
 
-    const descriptorOverrides = await this.getDescriptorOverrides();
+      const descriptorOverrides = await this.getDescriptorOverrides();
 
-    // istanbul ignore if
-    if (this.keys.size > DEFAULT_KEYS_BATCH_SIZE) {
-      const msg = `ContentDataProvider.getContent requesting with ${this.keys.size} keys which
+      // istanbul ignore if
+      if (this.keys.size > DEFAULT_KEYS_BATCH_SIZE) {
+        const msg = `ContentDataProvider.getContent requesting with ${this.keys.size} keys which
         exceeds the suggested size of ${DEFAULT_KEYS_BATCH_SIZE}. Possible "HTTP 413 Payload Too Large" error.`;
-      Logger.logWarning(PresentationComponentsLoggerCategory.Content, msg);
-    }
+        Logger.logWarning(PresentationComponentsLoggerCategory.Content, msg);
+      }
 
-    const requestSize = undefined !== pageOptions && 0 === pageOptions.start && undefined !== pageOptions.size;
-    const options = {
-      ...this.createRequestOptions(),
-      descriptor: descriptorOverrides,
-      keys: this.keys,
-      paging: pageOptions,
-    };
+      const requestSize = undefined !== pageOptions && 0 === pageOptions.start && undefined !== pageOptions.size;
+      const options = {
+        ...this.createRequestOptions(),
+        descriptor: descriptorOverrides,
+        keys: this.keys,
+        paging: pageOptions,
+      };
 
-    if (requestSize)
-      return Presentation.presentation.getContentAndSize(options);
+      if (requestSize) return Presentation.presentation.getContentAndSize(options);
 
-    const content = await Presentation.presentation.getContent(options);
-    return content ? { content, size: content.contentSet.length } : undefined;
-  }, { isMatchingKey: MemoizationHelpers.areContentRequestsEqual as any });
+      const content = await Presentation.presentation.getContent(options);
+      return content ? { content, size: content.contentSet.length } : undefined;
+    },
+    { isMatchingKey: MemoizationHelpers.areContentRequestsEqual as any },
+  );
 
   private onContentUpdate() {
     // note: subclasses are expected to override `invalidateCache` and notify components about
@@ -384,31 +406,26 @@ export class ContentDataProvider implements IContentDataProvider {
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
   private onIModelContentChanged = (args: IModelContentChangeEventArgs) => {
-    if (args.rulesetId === this.rulesetId && args.imodelKey === this.imodel.key)
-      this.onContentUpdate();
+    if (args.rulesetId === this.rulesetId && args.imodelKey === this.imodel.key) this.onContentUpdate();
   };
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
   private onRulesetModified = (curr: RegisteredRuleset) => {
-    if (curr.id === this.rulesetId)
-      this.onContentUpdate();
+    if (curr.id === this.rulesetId) this.onContentUpdate();
   };
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
   private onRulesetVariableChanged = () => {
     this.onContentUpdate();
   };
-
 }
 
 class MemoizationHelpers {
   public static areContentRequestsEqual(lhsArgs: [PageOptions?], rhsArgs: [PageOptions?]): boolean {
     // istanbul ignore next
-    if ((lhsArgs[0]?.start ?? 0) !== (rhsArgs[0]?.start ?? 0))
-      return false;
+    if ((lhsArgs[0]?.start ?? 0) !== (rhsArgs[0]?.start ?? 0)) return false;
     // istanbul ignore next
-    if ((lhsArgs[0]?.size ?? 0) !== (rhsArgs[0]?.size ?? 0))
-      return false;
+    if ((lhsArgs[0]?.size ?? 0) !== (rhsArgs[0]?.size ?? 0)) return false;
     return true;
   }
 }

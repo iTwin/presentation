@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import * as sinon from "sinon";
@@ -15,7 +15,6 @@ import { Presentation } from "@itwin/presentation-frontend";
 import { initialize, terminate } from "../../IntegrationTests";
 
 describe("PropertyDataProvider", async () => {
-
   let imodel: IModelConnection;
   let provider: PresentationPropertyDataProvider;
   let physicalModelProps: ModelProps;
@@ -42,9 +41,7 @@ describe("PropertyDataProvider", async () => {
   });
 
   const runTests = (configName: string, setup: () => void) => {
-
     describe(configName, () => {
-
       beforeEach(setup);
 
       afterEach(() => {
@@ -95,10 +92,12 @@ describe("PropertyDataProvider", async () => {
               },
               {
                 ruleType: RuleTypes.ContentModifier,
-                propertyOverrides: [{
-                  name: "UserLabel",
-                  isDisplayed: true,
-                }],
+                propertyOverrides: [
+                  {
+                    name: "UserLabel",
+                    isDisplayed: true,
+                  },
+                ],
               },
             ],
           },
@@ -128,12 +127,10 @@ describe("PropertyDataProvider", async () => {
 
         function findNestedCategory(categories: PropertyCategory[], label: string): PropertyCategory | undefined {
           for (const c of categories) {
-            if (c.label === label)
-              return c;
+            if (c.label === label) return c;
 
             const nested = findNestedCategory(c.childCategories ?? [], label);
-            if (nested)
-              return nested;
+            if (nested) return nested;
           }
           return undefined;
         }
@@ -146,13 +143,11 @@ describe("PropertyDataProvider", async () => {
         const keys = await provider.getPropertyRecordInstanceKeys(record!);
         expect(keys).to.deep.eq([{ className: "DgnCustomItemTypes_MyProp:workingUnitsPropElementAspect", id: "0x24" }]);
       });
-
     });
-
   };
 
-  runTests("with flat property categories", () => provider.isNestedPropertyCategoryGroupingEnabled = false);
-  runTests("with nested property categories", () => provider.isNestedPropertyCategoryGroupingEnabled = true);
+  runTests("with flat property categories", () => (provider.isNestedPropertyCategoryGroupingEnabled = false));
+  runTests("with nested property categories", () => (provider.isNestedPropertyCategoryGroupingEnabled = true));
 
   it("gets property data after re-initializing Presentation", async () => {
     const checkDataProvider = async () => {

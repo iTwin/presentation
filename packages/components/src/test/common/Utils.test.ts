@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import { Component } from "react";
@@ -14,18 +14,13 @@ import { combineFieldNames, LabelCompositeValue, LabelDefinition } from "@itwin/
 import { Presentation } from "@itwin/presentation-frontend";
 import { AsyncTasksTracker, createLabelRecord, findField, getDisplayName, initializeLocalization } from "../../presentation-components/common/Utils";
 import { createTestPropertyInfo } from "../_helpers/Common";
-import {
-  createTestContentDescriptor, createTestNestedContentField, createTestPropertiesContentField, createTestSimpleContentField,
-} from "../_helpers/Content";
+import { createTestContentDescriptor, createTestNestedContentField, createTestPropertiesContentField, createTestSimpleContentField } from "../_helpers/Content";
 import { createTestLabelCompositeValue, createTestLabelDefinition } from "../_helpers/LabelDefinition";
 
-class TestComponent extends Component {
-}
+class TestComponent extends Component {}
 
 describe("Utils", () => {
-
   describe("getDisplayName", () => {
-
     beforeEach(() => {
       (TestComponent as any).displayName = undefined;
       Object.defineProperty(TestComponent, "name", { value: undefined });
@@ -46,11 +41,9 @@ describe("Utils", () => {
     it("returns 'Component' if neither displayName nor name properties are set", () => {
       expect(getDisplayName(TestComponent)).to.eq("Component");
     });
-
   });
 
   describe("findField", () => {
-
     it("returns undefined for invalid name", () => {
       const descriptor = createTestContentDescriptor({ fields: [] });
       const result = findField(descriptor, "doesn't exist");
@@ -85,14 +78,13 @@ describe("Utils", () => {
       const result = findField(descriptor, combineFieldNames(nestedField.name, nestingField.name));
       expect(result!.name).to.eq(nestedField.name);
     });
-
   });
 
   describe("initializeLocalization", () => {
     const i18nMock = moq.Mock.ofType<ITwinLocalization>();
 
     beforeEach(() => {
-      i18nMock.setup(async (x) => x.registerNamespace(moq.It.isAny())).returns(async () => (Promise.resolve()));
+      i18nMock.setup(async (x) => x.registerNamespace(moq.It.isAny())).returns(async () => Promise.resolve());
       sinon.stub(Presentation, "localization").get(() => i18nMock.object);
     });
 
@@ -107,7 +99,6 @@ describe("Utils", () => {
       terminate();
       i18nMock.verify((x) => x.unregisterNamespace(moq.It.isAny()), moq.Times.once()); // eslint-disable-line @itwin/no-internal
     });
-
   });
 
   describe("createLabelRecord", () => {
@@ -138,13 +129,10 @@ describe("Utils", () => {
       expect(primitiveValue.displayValue).to.be.eq(definition.displayValue);
       expect(record.property.typename).to.be.eq(definition.typeName);
     });
-
   });
-
 });
 
 describe("AsyncTasksTracker", () => {
-
   it("tracks async task while it's disposed", () => {
     const tracker = new AsyncTasksTracker();
     expect(tracker.pendingAsyncs.size).to.eq(0);
@@ -165,5 +153,4 @@ describe("AsyncTasksTracker", () => {
     });
     expect(tracker.pendingAsyncs.size).to.eq(0);
   });
-
 });

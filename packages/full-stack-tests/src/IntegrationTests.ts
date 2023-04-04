@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import * as fs from "fs";
 import Backend from "i18next-http-backend";
@@ -10,7 +10,10 @@ import { Guid, Logger, LogLevel } from "@itwin/core-bentley";
 import { IModelApp, IModelAppOptions, NoRenderApp } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
 import {
-  HierarchyCacheMode, Presentation as PresentationBackend, PresentationBackendNativeLoggerCategory, PresentationProps as PresentationBackendProps,
+  HierarchyCacheMode,
+  Presentation as PresentationBackend,
+  PresentationBackendNativeLoggerCategory,
+  PresentationProps as PresentationBackendProps,
 } from "@itwin/presentation-backend";
 import { PresentationProps as PresentationFrontendProps } from "@itwin/presentation-frontend";
 import { initialize as initializePresentation, PresentationTestingInitProps, terminate as terminatePresentation } from "@itwin/presentation-testing";
@@ -32,8 +35,7 @@ export async function initialize(props?: { backendTimeout?: number }) {
 
   const libDir = path.resolve("lib");
   const hierarchiesCacheDir = path.join(libDir, "cache");
-  if (!fs.existsSync(hierarchiesCacheDir))
-    fs.mkdirSync(hierarchiesCacheDir);
+  if (!fs.existsSync(hierarchiesCacheDir)) fs.mkdirSync(hierarchiesCacheDir);
 
   const backendInitProps: PresentationBackendProps = {
     id: `test-${Guid.createValue()}`,

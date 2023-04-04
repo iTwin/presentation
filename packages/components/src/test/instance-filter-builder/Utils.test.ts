@@ -1,21 +1,31 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import { PropertyDescription, PropertyValueFormat } from "@itwin/appui-abstract";
 import {
-  PropertyFilter, PropertyFilterRule, PropertyFilterRuleGroup, PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator,
+  PropertyFilter,
+  PropertyFilterRule,
+  PropertyFilterRuleGroup,
+  PropertyFilterRuleGroupOperator,
+  PropertyFilterRuleOperator,
 } from "@itwin/components-react";
 import { Field } from "@itwin/presentation-common";
 import { PresentationInstanceFilter } from "../../presentation-components/instance-filter-builder/Types";
 import {
-  convertPresentationFilterToPropertyFilter, createInstanceFilterPropertyInfos, createPresentationInstanceFilter, INSTANCE_FILTER_FIELD_SEPARATOR,
+  convertPresentationFilterToPropertyFilter,
+  createInstanceFilterPropertyInfos,
+  createPresentationInstanceFilter,
+  INSTANCE_FILTER_FIELD_SEPARATOR,
 } from "../../presentation-components/instance-filter-builder/Utils";
 import { createTestECClassInfo } from "../_helpers/Common";
 import {
-  createTestCategoryDescription, createTestContentDescriptor, createTestNestedContentField, createTestPropertiesContentField,
+  createTestCategoryDescription,
+  createTestContentDescriptor,
+  createTestNestedContentField,
+  createTestPropertiesContentField,
 } from "../_helpers/Content";
 
 function getPropertyDescriptionName(field: Field) {
@@ -23,7 +33,6 @@ function getPropertyDescriptionName(field: Field) {
 }
 
 describe("createInstanceFilterPropertyInfos", () => {
-
   it("creates property infos when fields are in root category", () => {
     const rootCategory = createTestCategoryDescription({ name: "root", label: "Root Category" });
     const descriptor = createTestContentDescriptor({
@@ -111,13 +120,16 @@ describe("createPresentationInstanceFilter", () => {
   it("finds properties fields for property description", () => {
     const filter: PropertyFilterRuleGroup = {
       operator: PropertyFilterRuleGroupOperator.And,
-      rules: [{
-        property: { name: getPropertyDescriptionName(propertyField1), displayLabel: "Prop1", typename: "string" },
-        operator: PropertyFilterRuleOperator.IsNull,
-      }, {
-        property: { name: getPropertyDescriptionName(propertyField2), displayLabel: "Prop2", typename: "string" },
-        operator: PropertyFilterRuleOperator.IsNull,
-      }],
+      rules: [
+        {
+          property: { name: getPropertyDescriptionName(propertyField1), displayLabel: "Prop1", typename: "string" },
+          operator: PropertyFilterRuleOperator.IsNull,
+        },
+        {
+          property: { name: getPropertyDescriptionName(propertyField2), displayLabel: "Prop2", typename: "string" },
+          operator: PropertyFilterRuleOperator.IsNull,
+        },
+      ],
     };
     expect(createPresentationInstanceFilter(descriptor, filter)).to.matchSnapshot();
   });
@@ -125,10 +137,12 @@ describe("createPresentationInstanceFilter", () => {
   it("returns filter condition when group has only one rule", () => {
     const filter: PropertyFilterRuleGroup = {
       operator: PropertyFilterRuleGroupOperator.And,
-      rules: [{
-        property: { name: getPropertyDescriptionName(propertyField1), displayLabel: "Prop1", typename: "string" },
-        operator: PropertyFilterRuleOperator.IsNull,
-      }],
+      rules: [
+        {
+          property: { name: getPropertyDescriptionName(propertyField1), displayLabel: "Prop1", typename: "string" },
+          operator: PropertyFilterRuleOperator.IsNull,
+        },
+      ],
     };
     expect(createPresentationInstanceFilter(descriptor, filter)).to.containSubset({
       operator: PropertyFilterRuleOperator.IsNull,
@@ -148,13 +162,16 @@ describe("createPresentationInstanceFilter", () => {
   it("returns undefined when group has rule with invalid property field", () => {
     const filter: PropertyFilterRuleGroup = {
       operator: PropertyFilterRuleGroupOperator.And,
-      rules: [{
-        property: { name: getPropertyDescriptionName(propertyField1), displayLabel: "Prop1", typename: "string" },
-        operator: PropertyFilterRuleOperator.IsNull,
-      }, {
-        property: { name: `${INSTANCE_FILTER_FIELD_SEPARATOR}invalidFieldName`, displayLabel: "Prop2", typename: "string" },
-        operator: PropertyFilterRuleOperator.IsNull,
-      }],
+      rules: [
+        {
+          property: { name: getPropertyDescriptionName(propertyField1), displayLabel: "Prop1", typename: "string" },
+          operator: PropertyFilterRuleOperator.IsNull,
+        },
+        {
+          property: { name: `${INSTANCE_FILTER_FIELD_SEPARATOR}invalidFieldName`, displayLabel: "Prop2", typename: "string" },
+          operator: PropertyFilterRuleOperator.IsNull,
+        },
+      ],
     };
     expect(createPresentationInstanceFilter(descriptor, filter)).to.be.undefined;
   });
@@ -210,15 +227,18 @@ describe("convertPresentationInstanceFilterToInstanceFilter", () => {
   it("property filter converts to presentation filter and vise versa correctly", () => {
     const filter: PropertyFilter = {
       operator: PropertyFilterRuleGroupOperator.And,
-      rules: [{
-        property: { name: getPropertyDescriptionName(propertyField1), displayLabel: "Prop1", typename: "string" },
-        operator: PropertyFilterRuleOperator.IsNull,
-        value: undefined,
-      }, {
-        property: { name: getPropertyDescriptionName(propertyField2), displayLabel: "Prop2", typename: "string" },
-        operator: PropertyFilterRuleOperator.IsNull,
-        value: undefined,
-      }],
+      rules: [
+        {
+          property: { name: getPropertyDescriptionName(propertyField1), displayLabel: "Prop1", typename: "string" },
+          operator: PropertyFilterRuleOperator.IsNull,
+          value: undefined,
+        },
+        {
+          property: { name: getPropertyDescriptionName(propertyField2), displayLabel: "Prop2", typename: "string" },
+          operator: PropertyFilterRuleOperator.IsNull,
+          value: undefined,
+        },
+      ],
     };
 
     const presentationFilter = createPresentationInstanceFilter(descriptor, filter);
@@ -230,26 +250,34 @@ describe("convertPresentationInstanceFilterToInstanceFilter", () => {
   it("converts presentation filter with nested conditions to property filter", () => {
     const presentationFilter: PresentationInstanceFilter = {
       operator: PropertyFilterRuleGroupOperator.And,
-      conditions: [{
-        operator: PropertyFilterRuleGroupOperator.And,
-        conditions: [{
-          field: propertyField1,
-          operator: PropertyFilterRuleOperator.IsNull,
-          value: undefined,
-        }],
-      }],
+      conditions: [
+        {
+          operator: PropertyFilterRuleGroupOperator.And,
+          conditions: [
+            {
+              field: propertyField1,
+              operator: PropertyFilterRuleOperator.IsNull,
+              value: undefined,
+            },
+          ],
+        },
+      ],
     };
 
     const propertyFilter: PropertyFilter = {
       operator: PropertyFilterRuleGroupOperator.And,
-      rules: [{
-        operator: PropertyFilterRuleGroupOperator.And,
-        rules: [{
-          property: { name: getPropertyDescriptionName(propertyField1), displayLabel: "Prop1", typename: "string" },
-          operator: PropertyFilterRuleOperator.IsNull,
-          value: undefined,
-        }],
-      }],
+      rules: [
+        {
+          operator: PropertyFilterRuleGroupOperator.And,
+          rules: [
+            {
+              property: { name: getPropertyDescriptionName(propertyField1), displayLabel: "Prop1", typename: "string" },
+              operator: PropertyFilterRuleOperator.IsNull,
+              value: undefined,
+            },
+          ],
+        },
+      ],
     };
 
     const result = convertPresentationFilterToPropertyFilter(descriptor, presentationFilter);
@@ -259,20 +287,28 @@ describe("convertPresentationInstanceFilterToInstanceFilter", () => {
   it("converts presentation filter with nested fields to property filter", () => {
     const presentationFilter: PresentationInstanceFilter = {
       operator: PropertyFilterRuleGroupOperator.And,
-      conditions: [{
-        field: propertyField3,
-        operator: PropertyFilterRuleOperator.IsNull,
-        value: undefined,
-      }],
+      conditions: [
+        {
+          field: propertyField3,
+          operator: PropertyFilterRuleOperator.IsNull,
+          value: undefined,
+        },
+      ],
     };
 
     const propertyFilter: PropertyFilter = {
       operator: PropertyFilterRuleGroupOperator.And,
-      rules: [{
-        property: { name: `${getPropertyDescriptionName(nestedField2)}$${nestedField.name}$${propertyField3.name}`, displayLabel: "Prop3", typename: "string" },
-        operator: PropertyFilterRuleOperator.IsNull,
-        value: undefined,
-      }],
+      rules: [
+        {
+          property: {
+            name: `${getPropertyDescriptionName(nestedField2)}$${nestedField.name}$${propertyField3.name}`,
+            displayLabel: "Prop3",
+            typename: "string",
+          },
+          operator: PropertyFilterRuleOperator.IsNull,
+          value: undefined,
+        },
+      ],
     };
 
     const result = convertPresentationFilterToPropertyFilter(descriptor, presentationFilter);
@@ -289,11 +325,13 @@ describe("convertPresentationInstanceFilterToInstanceFilter", () => {
 
     const presentationFilter: PresentationInstanceFilter = {
       operator: PropertyFilterRuleGroupOperator.And,
-      conditions: [{
-        field: propertyField,
-        operator: PropertyFilterRuleOperator.IsNull,
-        value: undefined,
-      }],
+      conditions: [
+        {
+          field: propertyField,
+          operator: PropertyFilterRuleOperator.IsNull,
+          value: undefined,
+        },
+      ],
     };
 
     const result = convertPresentationFilterToPropertyFilter(descriptor, presentationFilter);

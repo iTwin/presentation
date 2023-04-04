@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import { FieldDescriptorType, SortDirection } from "@itwin/presentation-common";
@@ -14,18 +14,17 @@ import { createTestPropertiesContentField } from "../_helpers/Content";
 describe("useTableOptions", () => {
   const propertiesField = createTestPropertiesContentField({ name: "prop_field", label: "Prop Field", properties: [{ property: createTestPropertyInfo() }] });
   const initialProps: UseTableOptionsProps = {
-    columns: [{
-      name: propertiesField.name,
-      label: propertiesField.label,
-      field: propertiesField,
-    }],
+    columns: [
+      {
+        name: propertiesField.name,
+        label: propertiesField.label,
+        field: propertiesField,
+      },
+    ],
   };
 
   it("applies sorting ascending", async () => {
-    const { result } = renderHook(
-      (props: UseTableOptionsProps) => useTableOptions(props),
-      { initialProps },
-    );
+    const { result } = renderHook((props: UseTableOptionsProps) => useTableOptions(props), { initialProps });
 
     expect(result.current.options.sorting).to.be.undefined;
 
@@ -35,10 +34,7 @@ describe("useTableOptions", () => {
   });
 
   it("applies sorting descending", async () => {
-    const { result } = renderHook(
-      (props: UseTableOptionsProps) => useTableOptions(props),
-      { initialProps },
-    );
+    const { result } = renderHook((props: UseTableOptionsProps) => useTableOptions(props), { initialProps });
 
     expect(result.current.options.sorting).to.be.undefined;
 
@@ -48,10 +44,7 @@ describe("useTableOptions", () => {
   });
 
   it("removes sorting", async () => {
-    const { result } = renderHook(
-      (props: UseTableOptionsProps) => useTableOptions(props),
-      { initialProps },
-    );
+    const { result } = renderHook((props: UseTableOptionsProps) => useTableOptions(props), { initialProps });
 
     expect(result.current.options.sorting).to.be.undefined;
 
@@ -63,10 +56,7 @@ describe("useTableOptions", () => {
   });
 
   it("does not apply sorting when invalid column", async () => {
-    const { result } = renderHook(
-      (props: UseTableOptionsProps) => useTableOptions(props),
-      { initialProps },
-    );
+    const { result } = renderHook((props: UseTableOptionsProps) => useTableOptions(props), { initialProps });
 
     expect(result.current.options.sorting).to.be.undefined;
 
@@ -75,10 +65,7 @@ describe("useTableOptions", () => {
   });
 
   it("applies filtering", async () => {
-    const { result } = renderHook(
-      (props: UseTableOptionsProps) => useTableOptions(props),
-      { initialProps },
-    );
+    const { result } = renderHook((props: UseTableOptionsProps) => useTableOptions(props), { initialProps });
 
     const filterExpression = `${propertiesField.name} = 1`;
     expect(result.current.options.fieldsFilterExpression).to.be.undefined;
@@ -88,10 +75,7 @@ describe("useTableOptions", () => {
   });
 
   it("removes filtering", async () => {
-    const { result } = renderHook(
-      (props: UseTableOptionsProps) => useTableOptions(props),
-      { initialProps },
-    );
+    const { result } = renderHook((props: UseTableOptionsProps) => useTableOptions(props), { initialProps });
 
     const filterExpression = `${propertiesField.name} = 1`;
     expect(result.current.options.fieldsFilterExpression).to.be.undefined;
@@ -104,10 +88,7 @@ describe("useTableOptions", () => {
   });
 
   it("resets options when columns changes", async () => {
-    const { result, rerender } = renderHook(
-      (props: UseTableOptionsProps) => useTableOptions(props),
-      { initialProps },
-    );
+    const { result, rerender } = renderHook((props: UseTableOptionsProps) => useTableOptions(props), { initialProps });
 
     const filterExpression = `${propertiesField.name} = 1`;
     expect(result.current.options.fieldsFilterExpression).to.be.undefined;

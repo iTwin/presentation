@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module Internal
  */
@@ -40,21 +40,24 @@ export function useTableOptions(props: UseTableOptionsProps): UseTableOptionsRes
     setOptions({});
   }, [columns]);
 
-  const sort = useCallback((columnName?: string, descending?: boolean) => {
-    const field = columns?.find((column) => column.name === columnName)?.field;
-    if (!field) {
-      setOptions((prev) => ({ ...prev, sorting: undefined }));
-      return;
-    }
+  const sort = useCallback(
+    (columnName?: string, descending?: boolean) => {
+      const field = columns?.find((column) => column.name === columnName)?.field;
+      if (!field) {
+        setOptions((prev) => ({ ...prev, sorting: undefined }));
+        return;
+      }
 
-    setOptions((prev) => ({
-      ...prev,
-      sorting: {
-        field: field.getFieldDescriptor(),
-        direction: descending ? SortDirection.Descending : SortDirection.Ascending,
-      },
-    }));
-  }, [columns]);
+      setOptions((prev) => ({
+        ...prev,
+        sorting: {
+          field: field.getFieldDescriptor(),
+          direction: descending ? SortDirection.Descending : SortDirection.Ascending,
+        },
+      }));
+    },
+    [columns],
+  );
 
   const filter = useCallback((filterExpression?: string) => {
     setOptions((prev) => ({ ...prev, fieldsFilterExpression: filterExpression }));

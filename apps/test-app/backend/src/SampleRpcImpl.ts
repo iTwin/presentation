@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import * as fs from "fs";
 import * as path from "path";
@@ -11,19 +11,15 @@ import { SampleRpcInterface } from "@test-app/common";
 
 /** The backend implementation of SampleRpcInterface. */
 export default class SampleRpcImpl extends SampleRpcInterface {
-
   private getAssetsDir(): string {
-    if (IModelHost.appAssetsDir)
-      return IModelHost.appAssetsDir;
+    if (IModelHost.appAssetsDir) return IModelHost.appAssetsDir;
     return "assets";
   }
 
   public override async getSampleImodels(): Promise<string[]> {
     const dir = path.join(this.getAssetsDir(), "sample_documents");
     const files = fs.readdirSync(dir);
-    return files
-      .filter((name) => name.endsWith(".ibim") || name.endsWith(".bim"))
-      .map((name) => path.resolve(dir, name));
+    return files.filter((name) => name.endsWith(".ibim") || name.endsWith(".bim")).map((name) => path.resolve(dir, name));
   }
 
   public override async getAvailableRulesets(): Promise<string[]> {
@@ -34,7 +30,6 @@ export default class SampleRpcImpl extends SampleRpcInterface {
       .filter((fullPath) => extensions.some((ext) => fullPath.endsWith(ext)))
       .map((fullPath) => extensions.reduce((name, ext) => path.basename(name, ext), fullPath));
   }
-
 }
 
 /** Auto-register the impl when this file is included. */

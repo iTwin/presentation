@@ -1,15 +1,13 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import { PageContainer } from "../../presentation-components/common/PageContainer";
 
 describe("PageContainer", () => {
-
   describe("pageSize", () => {
-
     it("sets different page size and invalidates pages", () => {
       const container = new PageContainer<number>(1, 5);
       const page = container.reservePage(0);
@@ -25,11 +23,9 @@ describe("PageContainer", () => {
       container.pageSize = 1;
       expect(container.getPage(page.position.index)).to.not.be.undefined;
     });
-
   });
 
   describe("getPage", () => {
-
     it("returns undefined when there are no pages", () => {
       const container = new PageContainer<number>(1, 5);
       expect(container.getPage(0)).to.be.undefined;
@@ -67,11 +63,9 @@ describe("PageContainer", () => {
       const result = container.getPage(4);
       expect(result!.position.index).to.eq(1);
     });
-
   });
 
   describe("getItem", () => {
-
     it("returns undefined when there are no pages", () => {
       const container = new PageContainer<number>(1, 5);
       expect(container.getItem(0)).to.be.undefined;
@@ -106,11 +100,9 @@ describe("PageContainer", () => {
       container.reservePage(6).items = [777, 888, 999];
       expect(container.getItem(4)).to.eq(555);
     });
-
   });
 
   describe("getIndex", () => {
-
     it("returns -1 when there are no pages", () => {
       const container = new PageContainer<number>(1, 5);
       expect(container.getIndex(123)).to.eq(-1);
@@ -151,11 +143,9 @@ describe("PageContainer", () => {
       container.reservePage(6).items = [777, 888, 999];
       expect(container.getIndex(555)).to.eq(4);
     });
-
   });
 
   describe("reservePage", () => {
-
     let container: PageContainer<number>;
     beforeEach(() => {
       container = new PageContainer<number>(3, 10);
@@ -249,11 +239,9 @@ describe("PageContainer", () => {
       container.reservePage(0);
       expect(() => container.reservePage(0)).to.throw();
     });
-
   });
 
   describe("disposeFarthestPages", () => {
-
     let container: PageContainer<number>;
     beforeEach(() => {
       container = new PageContainer<number>(1, 3);
@@ -276,7 +264,5 @@ describe("PageContainer", () => {
       container.reservePage(1);
       expect(container.getPage(3)).to.be.undefined;
     });
-
   });
-
 });

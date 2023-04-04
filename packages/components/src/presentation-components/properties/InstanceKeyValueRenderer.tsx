@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /**
  * @packageDocumentation
  * @module Properties
@@ -21,8 +21,7 @@ import { useUnifiedSelectionContext } from "../unified-selection/UnifiedSelectio
  */
 export class InstanceKeyValueRenderer implements IPropertyValueRenderer {
   public canRender(record: PropertyRecord) {
-    return record.value.valueFormat === PropertyValueFormat.Primitive
-      && (record.value.value === undefined || isInstanceKey(record.value.value));
+    return record.value.valueFormat === PropertyValueFormat.Primitive && (record.value.value === undefined || isInstanceKey(record.value.value));
   }
 
   public render(record: PropertyRecord, context?: PropertyValueRendererContext) {
@@ -43,12 +42,20 @@ const InstanceKeyValueRendererImpl: React.FC<InstanceKeyValueRendererImplProps> 
   const instanceKey = (props.record.value as PrimitiveValue).value as Primitives.InstanceKey | undefined;
 
   if (instanceKey === undefined || selectionContext === undefined) {
-    return <span style={props.context?.style} title={stringValue}>{valueElement}</span>;
+    return (
+      <span style={props.context?.style} title={stringValue}>
+        {valueElement}
+      </span>
+    );
   }
 
   const title = translate("instance-key-value-renderer.select-instance");
   const handleClick = () => selectionContext.replaceSelection([instanceKey]);
-  return <UnderlinedButton title={title} onClick={handleClick}>{valueElement}</UnderlinedButton>;
+  return (
+    <UnderlinedButton title={title} onClick={handleClick}>
+      {valueElement}
+    </UnderlinedButton>
+  );
 };
 
 function isInstanceKey(value: Primitives.Value): value is Primitives.InstanceKey {
@@ -58,8 +65,8 @@ function isInstanceKey(value: Primitives.Value): value is Primitives.InstanceKey
 
 function convertRecordToString(record: PropertyRecord): string | Promise<string> {
   const primitive = record.value as PrimitiveValue;
-  return primitive.displayValue ?? TypeConverterManager.getConverter(
-    record.property.typename,
-    record.property.converter?.name,
-  ).convertPropertyToString(record.property, primitive.value);
+  return (
+    primitive.displayValue ??
+    TypeConverterManager.getConverter(record.property.typename, record.property.converter?.name).convertPropertyToString(record.property, primitive.value)
+  );
 }

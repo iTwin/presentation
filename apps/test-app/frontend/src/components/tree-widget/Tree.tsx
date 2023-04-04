@@ -1,14 +1,17 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import "./TreeWidget.css";
 import { useEffect } from "react";
 import { ControlledTree, SelectionMode, useTreeModel } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
-  DiagnosticsProps, PresentationTreeRenderer, useControlledPresentationTreeFiltering, usePresentationTreeNodeLoader,
+  DiagnosticsProps,
+  PresentationTreeRenderer,
+  useControlledPresentationTreeFiltering,
+  usePresentationTreeNodeLoader,
   useUnifiedSelectionTreeEventHandler,
 } from "@itwin/presentation-components";
 
@@ -35,13 +38,11 @@ export function Tree(props: Props) {
     ...props.diagnostics,
   });
 
-  const {
-    filteredModelSource,
-    filteredNodeLoader,
-    isFiltering,
-    matchesCount,
-    nodeHighlightingProps,
-  } = useControlledPresentationTreeFiltering({ nodeLoader, filter: props.filtering.filter, activeMatchIndex: props.filtering.activeMatchIndex });
+  const { filteredModelSource, filteredNodeLoader, isFiltering, matchesCount, nodeHighlightingProps } = useControlledPresentationTreeFiltering({
+    nodeLoader,
+    filter: props.filtering.filter,
+    activeMatchIndex: props.filtering.activeMatchIndex,
+  });
 
   const { onFilteringStateChange } = props.filtering;
   useEffect(() => {

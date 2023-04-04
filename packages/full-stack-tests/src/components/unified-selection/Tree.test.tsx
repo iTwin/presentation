@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import { useState } from "react";
@@ -19,9 +19,7 @@ import { getNodeByLabel, isNodeSelectedInTree, toggleExpandNode } from "../TreeU
 /* eslint-disable @typescript-eslint/naming-convention */
 
 describe("Learning snippets", async () => {
-
   describe("Tree", () => {
-
     before(async () => {
       await initialize();
       await UiComponents.initialize(IModelApp.localization);
@@ -70,9 +68,7 @@ describe("Learning snippets", async () => {
       });
 
       // render the component
-      const { container, getByRole } = render(
-        <MyTree imodel={imodel} />
-      );
+      const { container, getByRole } = render(<MyTree imodel={imodel} />);
       await waitFor(() => getByRole("tree"));
 
       // find & expand the model node
@@ -103,9 +99,7 @@ describe("Learning snippets", async () => {
         expect(getInstanceKeysInUnifiedSelection(imodel)).to.deep.eq([elementKey]);
       });
     });
-
   });
-
 });
 
 function getInstanceKeysInUnifiedSelection(imodel: IModelConnection) {
@@ -117,25 +111,34 @@ function getInstanceKeysInUnifiedSelection(imodel: IModelConnection) {
 
 const ruleset: Ruleset = {
   id: "elements-grouped-by-models",
-  rules: [{
-    ruleType: RuleTypes.RootNodes,
-    specifications: [{
-      specType: "InstanceNodesOfSpecificClasses",
-      classes: { schemaName: "BisCore", classNames: ["PhysicalModel"], arePolymorphic: true },
-      groupByClass: false,
-      groupByLabel: false,
-    }],
-  }, {
-    ruleType: RuleTypes.ChildNodes,
-    condition: "ParentNode.IsOfClass(\"Model\", \"BisCore\")",
-    specifications: [{
-      specType: "RelatedInstanceNodes",
-      relationshipPaths: [{
-        relationship: { schemaName: "BisCore", className: "ModelContainsElements" },
-        direction: "Forward",
-      }],
-      groupByClass: false,
-      groupByLabel: false,
-    }],
-  }],
+  rules: [
+    {
+      ruleType: RuleTypes.RootNodes,
+      specifications: [
+        {
+          specType: "InstanceNodesOfSpecificClasses",
+          classes: { schemaName: "BisCore", classNames: ["PhysicalModel"], arePolymorphic: true },
+          groupByClass: false,
+          groupByLabel: false,
+        },
+      ],
+    },
+    {
+      ruleType: RuleTypes.ChildNodes,
+      condition: 'ParentNode.IsOfClass("Model", "BisCore")',
+      specifications: [
+        {
+          specType: "RelatedInstanceNodes",
+          relationshipPaths: [
+            {
+              relationship: { schemaName: "BisCore", className: "ModelContainsElements" },
+              direction: "Forward",
+            },
+          ],
+          groupByClass: false,
+          groupByLabel: false,
+        },
+      ],
+    },
+  ],
 };

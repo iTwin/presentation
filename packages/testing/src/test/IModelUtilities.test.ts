@@ -1,16 +1,14 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import { join } from "path";
 import sinon, { SinonStub } from "sinon";
 import * as moq from "typemoq";
 import { CodeSpecs, IModelDb, IModelJsFs, SnapshotDb } from "@itwin/core-backend";
-import {
-  BisCodeSpec, Code, CodeScopeProps, CodeSpec, CreateEmptySnapshotIModelProps, ElementAspectProps, ElementProps, ModelProps,
-} from "@itwin/core-common";
+import { BisCodeSpec, Code, CodeScopeProps, CodeSpec, CreateEmptySnapshotIModelProps, ElementAspectProps, ElementProps, ModelProps } from "@itwin/core-common";
 import { SnapshotConnection } from "@itwin/core-frontend";
 import { getTestOutputDir } from "../presentation-testing/Helpers";
 import { buildTestIModel, createFileNameFromString, IModelBuilder } from "../presentation-testing/IModelUtilities";
@@ -61,7 +59,10 @@ describe("IModelUtilities", () => {
       const imodelMock = moq.Mock.ofType<IModelDb>();
       const codeSpecsMock = moq.Mock.ofType<CodeSpecs>();
       const codeSpecMock = moq.Mock.ofType<CodeSpec>();
-      codeSpecsMock.setup((x) => x.getByName(BisCodeSpec.drawing)).returns(() => codeSpecMock.object).verifiable(moq.Times.once());
+      codeSpecsMock
+        .setup((x) => x.getByName(BisCodeSpec.drawing))
+        .returns(() => codeSpecMock.object)
+        .verifiable(moq.Times.once());
       imodelMock.setup((x) => x.codeSpecs).returns(() => codeSpecsMock.object);
 
       const builder = new IModelBuilder(imodelMock.object);
@@ -94,7 +95,7 @@ describe("IModelUtilities", () => {
       const mkdirFake = sinon.fake();
       sinon.replace(IModelJsFs, "mkdirSync", mkdirFake);
 
-      await buildTestIModel("name", () => { });
+      await buildTestIModel("name", () => {});
 
       expect(mkdirFake.calledOnceWith(getTestOutputDir()));
     });
@@ -106,7 +107,7 @@ describe("IModelUtilities", () => {
       const unlinkFake = sinon.fake();
       sinon.replace(IModelJsFs, "unlinkSync", unlinkFake);
 
-      await buildTestIModel(fileName, () => { });
+      await buildTestIModel(fileName, () => {});
 
       const outputFile = join(getTestOutputDir(), `${fileName}.bim`);
       expect(unlinkFake.calledOnceWith(outputFile));
@@ -120,7 +121,7 @@ describe("IModelUtilities", () => {
       const unlinkFake = sinon.fake();
       sinon.replace(IModelJsFs, "unlinkSync", unlinkFake);
 
-      await buildTestIModel("name", () => { });
+      await buildTestIModel("name", () => {});
 
       expect(unlinkFake.notCalled);
     });
@@ -134,7 +135,7 @@ describe("IModelUtilities", () => {
       const unlinkFake = sinon.fake();
       sinon.replace(IModelJsFs, "unlinkSync", unlinkFake);
 
-      await buildTestIModel(fileName, () => { });
+      await buildTestIModel(fileName, () => {});
 
       expect(mkdirFake.notCalled);
     });
@@ -143,7 +144,7 @@ describe("IModelUtilities", () => {
       const fileName = "fileName";
       const { createSnapshotDb } = setupSnapshot();
 
-      await buildTestIModel(fileName, () => { });
+      await buildTestIModel(fileName, () => {});
 
       expect(createSnapshotDb.firstCall.firstArg).to.include(`${fileName}.bim`);
       expect(createSnapshotDb.firstCall.lastArg).to.deep.equal({ rootSubject: { name: fileName } });
@@ -153,7 +154,7 @@ describe("IModelUtilities", () => {
       const fileName = createFileNameFromString(this.test!.fullTitle());
       const { createSnapshotDb } = setupSnapshot();
 
-      await buildTestIModel(this, () => { });
+      await buildTestIModel(this, () => {});
 
       expect(createSnapshotDb.firstCall.firstArg).to.include(`${fileName}.bim`);
       expect(createSnapshotDb.firstCall.lastArg).to.deep.equal({ rootSubject: { name: fileName } });
@@ -171,7 +172,7 @@ describe("IModelUtilities", () => {
     it("builder saves database changes and closes it when callback succeeds", async () => {
       const { dbMock } = setupSnapshot();
 
-      await buildTestIModel("name", () => { });
+      await buildTestIModel("name", () => {});
 
       dbMock.verify((x) => x.saveChanges("Created test IModel"), moq.Times.once());
       dbMock.verify((x) => x.close(), moq.Times.once());
@@ -193,7 +194,7 @@ describe("IModelUtilities", () => {
     it("returns result of SnapshotConnection.openFile", async () => {
       const { connectionMock } = setupSnapshot();
 
-      const promise = buildTestIModel("name", () => { });
+      const promise = buildTestIModel("name", () => {});
       const result = await promise;
 
       expect(result).to.equal(connectionMock.object);

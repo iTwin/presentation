@@ -9,32 +9,32 @@ jobs:
 
     name: Release packages
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-      with:
-        token: ${{ secrets.IMJS_ADMIN_GH_TOKEN }}
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.IMJS_ADMIN_GH_TOKEN }}
 
-    - name: Install pnpm
-      uses: pnpm/action-setup@v2.2.4
-      with:
-        version: 7.27.0
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2.2.4
+        with:
+          version: 7.27.0
 
-    - name: Use Node.js 18
-      uses: actions/setup-node@v3
-      with:
-        node-version: 18
-        registry-url: https://registry.npmjs.org/
+      - name: Use Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          registry-url: https://registry.npmjs.org/
 
-    - name: Install dependencies
-      run: pnpm install
+      - name: Install dependencies
+        run: pnpm install
 
-    - name: Build, Lint, Test
-      run: pnpm lage build lint cover
+      - name: Build, Lint, Test
+        run: pnpm lage build lint cover
 
-    - name: Publish packages
-      run: |
-        git config --local user.email imodeljs-admin@users.noreply.github.com
-        git config --local user.name imodeljs-admin
-        pnpm publish-packages -y --branch ${{ github.ref_name }} --message "Version bump [skip actions]"
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPMJS_PUBLISH_ITWIN }}
+      - name: Publish packages
+        run: |
+          git config --local user.email imodeljs-admin@users.noreply.github.com
+          git config --local user.name imodeljs-admin
+          pnpm publish-packages -y --branch ${{ github.ref_name }} --message "Version bump [skip actions]"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPMJS_PUBLISH_ITWIN }}

@@ -1,16 +1,14 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module Tree
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Subscription } from "rxjs/internal/Subscription";
-import {
-  MutableTreeModel, PagedTreeNodeLoader, RenderedItemsRange, TreeModel, TreeModelSource, usePagedTreeNodeLoader,
-} from "@itwin/components-react";
+import { MutableTreeModel, PagedTreeNodeLoader, RenderedItemsRange, TreeModel, TreeModelSource, usePagedTreeNodeLoader } from "@itwin/components-react";
 import { IModelHierarchyChangeEventArgs, Presentation } from "@itwin/presentation-frontend";
 import { RulesetRegistrationHelper } from "../../common/RulesetRegistrationHelper";
 import { PresentationTreeDataProvider, PresentationTreeDataProviderProps } from "../DataProvider";
@@ -66,9 +64,7 @@ export interface PresentationTreeNodeLoaderResult {
  * supplied imodel and ruleset.
  * @public
  */
-export function usePresentationTreeNodeLoader(
-  props: PresentationTreeNodeLoaderProps,
-): PresentationTreeNodeLoaderResult {
+export function usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderProps): PresentationTreeNodeLoaderResult {
   const { enableHierarchyAutoUpdate, seedTreeModel, ...rest } = props;
   const dataProviderProps: PresentationTreeDataProviderProps = useMemo(
     () => rest,
@@ -76,30 +72,31 @@ export function usePresentationTreeNodeLoader(
   );
 
   const firstRenderRef = useRef(true);
-  const [
-    { modelSource, rulesetRegistration, dataProvider },
-    setTreeNodeLoaderState,
-  ] = useResettableState<TreeNodeLoaderState>(
+  const [{ modelSource, rulesetRegistration, dataProvider }, setTreeNodeLoaderState] = useResettableState<TreeNodeLoaderState>(
     () => ({
       modelSource: new TreeModelSource(new MutableTreeModel(firstRenderRef.current ? seedTreeModel : undefined)),
       rulesetRegistration: new RulesetRegistrationHelper(dataProviderProps.ruleset),
       dataProvider: new PresentationTreeDataProvider({
         ...dataProviderProps,
-        ruleset: typeof dataProviderProps.ruleset === "string"
-          ? dataProviderProps.ruleset
-          : /* istanbul ignore next */ dataProviderProps.ruleset.id,
+        ruleset: typeof dataProviderProps.ruleset === "string" ? dataProviderProps.ruleset : /* istanbul ignore next */ dataProviderProps.ruleset.id,
       }),
     }),
     [dataProviderProps],
   );
-  useEffect(() => { return () => rulesetRegistration.dispose(); }, [rulesetRegistration]);
-  useEffect(() => { return () => dataProvider.dispose(); }, [dataProvider]);
+  useEffect(() => {
+    return () => rulesetRegistration.dispose();
+  }, [rulesetRegistration]);
+  useEffect(() => {
+    return () => dataProvider.dispose();
+  }, [dataProvider]);
 
   const nodeLoader = usePagedTreeNodeLoader(dataProvider, rest.pagingSize, modelSource);
 
   const renderedItems = useRef<RenderedItemsRange | undefined>(undefined);
   // istanbul ignore next
-  const onItemsRendered = useCallback((items: RenderedItemsRange) => { renderedItems.current = items; }, []);
+  const onItemsRendered = useCallback((items: RenderedItemsRange) => {
+    renderedItems.current = items;
+  }, []);
 
   const params = {
     enable: !!enableHierarchyAutoUpdate,
@@ -131,7 +128,7 @@ interface TreeNodeLoaderState {
 function useResettableState<T>(initialValue: () => T, dependencies: unknown[]): [T, React.Dispatch<React.SetStateAction<T>>] {
   const stateRef = useRef<T>() as React.MutableRefObject<T>;
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useMemo(() => stateRef.current = initialValue(), dependencies);
+  useMemo(() => (stateRef.current = initialValue()), dependencies);
 
   const [_, setState] = useState({});
   const setNewStateRef = useRef((action: T | ((previousState: T) => T)) => {
@@ -157,85 +154,70 @@ interface UpdateParams {
 function useModelSourceUpdateOnIModelHierarchyUpdate(params: UpdateParams & { enable: boolean }): void {
   const { enable, dataProviderProps, rulesetId, pageSize, modelSource, setTreeNodeLoaderState, renderedItems } = params;
 
-  useEffect(
-    () => {
-      if (!enable)
-        return;
+  useEffect(() => {
+    if (!enable) return;
 
-      let subscription: Subscription | undefined;
-      const removeListener = Presentation.presentation.onIModelHierarchyChanged.addListener(
-        (args: IModelHierarchyChangeEventArgs) => {
-          if (args.rulesetId !== rulesetId || args.imodelKey !== dataProviderProps.imodel.key)
-            return;
+    let subscription: Subscription | undefined;
+    const removeListener = Presentation.presentation.onIModelHierarchyChanged.addListener((args: IModelHierarchyChangeEventArgs) => {
+      if (args.rulesetId !== rulesetId || args.imodelKey !== dataProviderProps.imodel.key) return;
 
-          subscription = startTreeReload({ dataProviderProps, rulesetId, pageSize, modelSource, renderedItems, setTreeNodeLoaderState });
-        },
-      );
+      subscription = startTreeReload({ dataProviderProps, rulesetId, pageSize, modelSource, renderedItems, setTreeNodeLoaderState });
+    });
 
-      return () => {
-        removeListener();
-        subscription?.unsubscribe();
-      };
-    },
-    [modelSource, enable, pageSize, dataProviderProps, rulesetId, setTreeNodeLoaderState, renderedItems],
-  );
+    return () => {
+      removeListener();
+      subscription?.unsubscribe();
+    };
+  }, [modelSource, enable, pageSize, dataProviderProps, rulesetId, setTreeNodeLoaderState, renderedItems]);
 }
 
 function useModelSourceUpdateOnRulesetModification(params: UpdateParams & { enable: boolean }): void {
   const { enable, dataProviderProps, rulesetId, pageSize, modelSource, setTreeNodeLoaderState, renderedItems } = params;
 
-  useEffect(
-    () => {
-      if (!enable)
-        return;
+  useEffect(() => {
+    if (!enable) return;
 
-      let subscription: Subscription | undefined;
-      const removeListener = Presentation.presentation.rulesets().onRulesetModified.addListener((ruleset) => {
-        if (ruleset.id !== rulesetId)
-          return;
+    let subscription: Subscription | undefined;
+    const removeListener = Presentation.presentation.rulesets().onRulesetModified.addListener((ruleset) => {
+      if (ruleset.id !== rulesetId) return;
 
-        subscription = startTreeReload({ dataProviderProps, rulesetId, pageSize, modelSource, renderedItems, setTreeNodeLoaderState });
-      });
+      subscription = startTreeReload({ dataProviderProps, rulesetId, pageSize, modelSource, renderedItems, setTreeNodeLoaderState });
+    });
 
-      return () => {
-        removeListener();
-        subscription?.unsubscribe();
-      };
-    },
-    [dataProviderProps, rulesetId, enable, modelSource, pageSize, setTreeNodeLoaderState, renderedItems],
-  );
+    return () => {
+      removeListener();
+      subscription?.unsubscribe();
+    };
+  }, [dataProviderProps, rulesetId, enable, modelSource, pageSize, setTreeNodeLoaderState, renderedItems]);
 }
 
 function useModelSourceUpdateOnRulesetVariablesChange(params: UpdateParams & { enable: boolean }): void {
   const { enable, dataProviderProps, pageSize, rulesetId, modelSource, setTreeNodeLoaderState, renderedItems } = params;
 
-  useEffect(
-    () => {
-      if (!enable)
-        return;
+  useEffect(() => {
+    if (!enable) return;
 
-      let subscription: Subscription | undefined;
-      const removeListener = Presentation.presentation.vars(rulesetId).onVariableChanged.addListener(() => {
-        // note: we should probably debounce these events while accumulating changed variables in case multiple vars are changed
-        subscription = startTreeReload({ dataProviderProps, rulesetId, pageSize, modelSource, renderedItems, setTreeNodeLoaderState });
-      });
+    let subscription: Subscription | undefined;
+    const removeListener = Presentation.presentation.vars(rulesetId).onVariableChanged.addListener(() => {
+      // note: we should probably debounce these events while accumulating changed variables in case multiple vars are changed
+      subscription = startTreeReload({ dataProviderProps, rulesetId, pageSize, modelSource, renderedItems, setTreeNodeLoaderState });
+    });
 
-      return () => {
-        removeListener();
-        subscription?.unsubscribe();
-      };
-    },
-    [dataProviderProps, enable, modelSource, pageSize, rulesetId, setTreeNodeLoaderState, renderedItems],
-  );
+    return () => {
+      removeListener();
+      subscription?.unsubscribe();
+    };
+  }, [dataProviderProps, enable, modelSource, pageSize, rulesetId, setTreeNodeLoaderState, renderedItems]);
 }
 
 function startTreeReload({ dataProviderProps, rulesetId, modelSource, pageSize, renderedItems, setTreeNodeLoaderState }: UpdateParams): Subscription {
   const dataProvider = new PresentationTreeDataProvider({ ...dataProviderProps, ruleset: rulesetId });
   return reloadTree(modelSource.getModel(), dataProvider, pageSize, renderedItems.current).subscribe({
-    next: (newModelSource) => setTreeNodeLoaderState((prevState) => ({
-      modelSource: newModelSource,
-      rulesetRegistration: prevState.rulesetRegistration,
-      dataProvider,
-    })),
+    next: (newModelSource) =>
+      setTreeNodeLoaderState((prevState) => ({
+        modelSource: newModelSource,
+        rulesetRegistration: prevState.rulesetRegistration,
+        dataProvider,
+      })),
   });
 }

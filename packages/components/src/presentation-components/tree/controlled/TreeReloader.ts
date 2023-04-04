@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module Internal
  */
@@ -22,8 +22,18 @@ import { mergeMap } from "rxjs/internal/operators/mergeMap";
 import { take } from "rxjs/internal/operators/take";
 import { tap } from "rxjs/internal/operators/tap";
 import {
-  computeVisibleNodes, isTreeModelNode, isTreeModelNodePlaceholder, PagedTreeNodeLoader, RenderedItemsRange, TreeModel, TreeModelNode,
-  TreeModelNodePlaceholder, TreeModelRootNode, TreeModelSource, TreeNodeLoadResult, VisibleTreeNodes,
+  computeVisibleNodes,
+  isTreeModelNode,
+  isTreeModelNodePlaceholder,
+  PagedTreeNodeLoader,
+  RenderedItemsRange,
+  TreeModel,
+  TreeModelNode,
+  TreeModelNodePlaceholder,
+  TreeModelRootNode,
+  TreeModelSource,
+  TreeNodeLoadResult,
+  VisibleTreeNodes,
 } from "@itwin/components-react";
 import { assert, isIDisposable } from "@itwin/core-bentley";
 import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
@@ -70,66 +80,61 @@ class TreeReloader extends PagedTreeNodeLoader<IPresentationTreeDataProvider> {
       this.loadNode(this.modelSource.getModel().getRootNode(), 0),
       this.reloadPreviouslyExpandedNodes(previouslyExpandedNodes),
       this.reloadVisibleNodes(),
-    ).pipe(
-      ignoreElements()
-    );
+    ).pipe(ignoreElements());
   }
 
   private reloadPreviouslyExpandedNodes(previouslyExpandedNodes: ExpandedNode[]) {
-    return from(previouslyExpandedNodes)
-      .pipe(
-        // Process expanded nodes recursively, breadth first
-        expand((expandedNode) => {
-          const node = this.modelSource.getModel().getNode(expandedNode.id);
-          if (node !== undefined) {
-            // The expanded node is already loaded in the new tree model, now load and expand its children recursively
-            return concat(this.loadChildren(node), expandedNode.expandedChildren);
-          }
+    return from(previouslyExpandedNodes).pipe(
+      // Process expanded nodes recursively, breadth first
+      expand((expandedNode) => {
+        const node = this.modelSource.getModel().getNode(expandedNode.id);
+        if (node !== undefined) {
+          // The expanded node is already loaded in the new tree model, now load and expand its children recursively
+          return concat(this.loadChildren(node), expandedNode.expandedChildren);
+        }
 
-          // The expanded node is either not loaded yet, or does not exist in the new tree hierarchy
-          const parentNode = getTreeNode(this.modelSource.getModel(), expandedNode.parentId);
-          if (parentNode === undefined || parentNode.numChildren === undefined) {
-            // Cannot determine sibling count. Assume parent is missing from the new tree or something went wrong.
-            return EMPTY;
-          }
+        // The expanded node is either not loaded yet, or does not exist in the new tree hierarchy
+        const parentNode = getTreeNode(this.modelSource.getModel(), expandedNode.parentId);
+        if (parentNode === undefined || parentNode.numChildren === undefined) {
+          // Cannot determine sibling count. Assume parent is missing from the new tree or something went wrong.
+          return EMPTY;
+        }
 
-          if (parentNode.numChildren === 0) {
-            // Parent node no longer has any children, thus we will not find the expanded node
-            return EMPTY;
-          }
+        if (parentNode.numChildren === 0) {
+          // Parent node no longer has any children, thus we will not find the expanded node
+          return EMPTY;
+        }
 
-          // Try to make the expanded node appear in the new tree hierarchy. Test three locations: at, a page before,
-          // and a page after previous known location.
+        // Try to make the expanded node appear in the new tree hierarchy. Test three locations: at, a page before,
+        // and a page after previous known location.
 
-          // TODO: We should keep a list of nodes that we failed to find. There is a chance that we will load them
-          // accidentally while searching for other expanded nodes under the same parent.
-          return from([
-            Math.min(expandedNode.index, parentNode.numChildren - 1),
-            Math.min(Math.max(0, expandedNode.index - this.pageSize), parentNode.numChildren - 1),
-            Math.min(expandedNode.index + this.pageSize, parentNode.numChildren - 1),
-          ])
-            .pipe(
-              // For each guess, load the corresponding page
-              concatMap((index) => this.loadNode(parentNode, index)),
-              // Stop making guesses when the node is found
-              map(() => this.modelSource.getModel().getNode(expandedNode.id)),
-              filter((loadedNode) => loadedNode !== undefined),
-              take(1),
-              // If the node is found, load and expand its children recursively
-              concatMap((loadedNode) => {
-                assert(loadedNode !== undefined);
-                return concat(this.loadChildren(loadedNode), expandedNode.expandedChildren);
-              }),
-            );
-        }),
-      );
+        // TODO: We should keep a list of nodes that we failed to find. There is a chance that we will load them
+        // accidentally while searching for other expanded nodes under the same parent.
+        return from([
+          Math.min(expandedNode.index, parentNode.numChildren - 1),
+          Math.min(Math.max(0, expandedNode.index - this.pageSize), parentNode.numChildren - 1),
+          Math.min(expandedNode.index + this.pageSize, parentNode.numChildren - 1),
+        ]).pipe(
+          // For each guess, load the corresponding page
+          concatMap((index) => this.loadNode(parentNode, index)),
+          // Stop making guesses when the node is found
+          map(() => this.modelSource.getModel().getNode(expandedNode.id)),
+          filter((loadedNode) => loadedNode !== undefined),
+          take(1),
+          // If the node is found, load and expand its children recursively
+          concatMap((loadedNode) => {
+            assert(loadedNode !== undefined);
+            return concat(this.loadChildren(loadedNode), expandedNode.expandedChildren);
+          }),
+        );
+      }),
+    );
   }
 
   private reloadVisibleNodes() {
     return defer(() => {
       // if visible range is not provided do not load any more nodes
-      if (!this.itemsRange)
-        return EMPTY;
+      if (!this.itemsRange) return EMPTY;
 
       // collect not loaded (placeholder) nodes that are in visible range
       const visibleNodes = computeVisibleNodes(this.modelSource.getModel());
@@ -137,20 +142,18 @@ class TreeReloader extends PagedTreeNodeLoader<IPresentationTreeDataProvider> {
       const notLoadedNode: TreeModelNodePlaceholder[] = [];
       for (let i = visibleRange.start; i <= visibleRange.end; i++) {
         const node = visibleNodes.getAtIndex(i);
-        if (!node || !isTreeModelNodePlaceholder(node))
-          continue;
+        if (!node || !isTreeModelNodePlaceholder(node)) continue;
         notLoadedNode.push(node);
       }
 
       // load all placeholder nodes in visible range
-      return from(notLoadedNode)
-        .pipe(
-          mergeMap((placeholder) => {
-            const parentNode = placeholder.parentId ? this.modelSource.getModel().getNode(placeholder.parentId) : this.modelSource.getModel().getRootNode();
-            assert(parentNode !== undefined);
-            return toRxjsObservable(super.loadNode(parentNode, placeholder.childIndex));
-          }),
-        );
+      return from(notLoadedNode).pipe(
+        mergeMap((placeholder) => {
+          const parentNode = placeholder.parentId ? this.modelSource.getModel().getNode(placeholder.parentId) : this.modelSource.getModel().getRootNode();
+          assert(parentNode !== undefined);
+          return toRxjsObservable(super.loadNode(parentNode, placeholder.childIndex));
+        }),
+      );
     });
   }
 
@@ -163,22 +166,20 @@ class TreeReloader extends PagedTreeNodeLoader<IPresentationTreeDataProvider> {
       ignoreElements(),
       tap({
         // If node loading succeeded, set parent's expansion state to `true`
-        complete: () => this.modelSource.modifyModel((model) => {
-          const node = model.getNode(parentNode.id);
-          assert(node !== undefined);
-          if ((node.numChildren ?? 0) > 0) {
-            node.isExpanded = true;
-          }
-        }),
+        complete: () =>
+          this.modelSource.modifyModel((model) => {
+            const node = model.getNode(parentNode.id);
+            assert(node !== undefined);
+            if ((node.numChildren ?? 0) > 0) {
+              node.isExpanded = true;
+            }
+          }),
       }),
     );
   }
 
   /** Only loads the node if it is not present in the tree model already */
-  public override loadNode(
-    parent: TreeModelNode | TreeModelRootNode,
-    childIndex: number,
-  ): Observable<TreeNodeLoadResult> {
+  public override loadNode(parent: TreeModelNode | TreeModelRootNode, childIndex: number): Observable<TreeNodeLoadResult> {
     const node = this.modelSource.getModel().getNode(parent.id, childIndex);
     if (isTreeModelNode(node)) {
       return EMPTY;
@@ -219,8 +220,7 @@ function getTreeNode(treeModel: TreeModel, nodeId: string | undefined): TreeMode
 }
 
 function getVisibleRange(itemsRange: RenderedItemsRange, visibleNodes: VisibleTreeNodes) {
-  if (itemsRange.visibleStopIndex < visibleNodes.getNumNodes())
-    return { start: itemsRange.visibleStartIndex, end: itemsRange.visibleStopIndex };
+  if (itemsRange.visibleStopIndex < visibleNodes.getNumNodes()) return { start: itemsRange.visibleStartIndex, end: itemsRange.visibleStopIndex };
 
   const visibleNodesCount = itemsRange.visibleStopIndex - itemsRange.visibleStartIndex;
   const endPosition = visibleNodes.getNumNodes() - 1;

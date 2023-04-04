@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import sinon from "sinon";
@@ -35,7 +35,7 @@ describe("PresentationTreeNodeRenderer", () => {
   const treeActionsMock = moq.Mock.ofType<TreeActions>();
 
   before(() => {
-    HTMLElement.prototype.scrollIntoView = () => { };
+    HTMLElement.prototype.scrollIntoView = () => {};
   });
 
   after(() => {
@@ -62,12 +62,8 @@ describe("PresentationTreeNodeRenderer", () => {
     const node = createTreeModelNode(undefined, { id: "node_id", label: PropertyRecord.fromString(testLabel) });
 
     const { getByText, container } = render(
-      <PresentationTreeNodeRenderer
-        treeActions={treeActionsMock.object}
-        node={node}
-        onFilterClick={() => { }}
-        onClearFilterClick={() => { }}
-      />);
+      <PresentationTreeNodeRenderer treeActions={treeActionsMock.object} node={node} onFilterClick={() => {}} onClearFilterClick={() => {}} />,
+    );
 
     await waitFor(() => getByText(testLabel));
     expect(container.querySelector(".presentation-components-node")).to.be.null;
@@ -85,12 +81,8 @@ describe("PresentationTreeNodeRenderer", () => {
     const node = createTreeModelNode(undefined, item);
 
     const { getByText } = render(
-      <PresentationTreeNodeRenderer
-        treeActions={treeActionsMock.object}
-        node={node}
-        onFilterClick={() => { }}
-        onClearFilterClick={() => { }}
-      />);
+      <PresentationTreeNodeRenderer treeActions={treeActionsMock.object} node={node} onFilterClick={() => {}} onClearFilterClick={() => {}} />,
+    );
 
     getByText(message);
   });
@@ -101,12 +93,8 @@ describe("PresentationTreeNodeRenderer", () => {
     const node = createTreeModelNode(undefined, item);
 
     const { getByText, container } = render(
-      <PresentationTreeNodeRenderer
-        treeActions={treeActionsMock.object}
-        node={node}
-        onFilterClick={() => { }}
-        onClearFilterClick={() => { }}
-      />);
+      <PresentationTreeNodeRenderer treeActions={treeActionsMock.object} node={node} onFilterClick={() => {}} onClearFilterClick={() => {}} />,
+    );
 
     await waitFor(() => getByText(testLabel));
     expect(container.querySelector(".presentation-components-node")).to.not.be.null;
@@ -117,12 +105,8 @@ describe("PresentationTreeNodeRenderer", () => {
     const node = createTreeModelNode(undefined, nodeItem);
 
     const { container } = render(
-      <PresentationTreeNodeRenderer
-        treeActions={treeActionsMock.object}
-        node={node}
-        onFilterClick={() => { }}
-        onClearFilterClick={() => { }}
-      />);
+      <PresentationTreeNodeRenderer treeActions={treeActionsMock.object} node={node} onFilterClick={() => {}} onClearFilterClick={() => {}} />,
+    );
 
     const buttons = container.querySelectorAll(".presentation-components-node-action-buttons button");
     expect(buttons.length).to.eq(1);
@@ -138,12 +122,8 @@ describe("PresentationTreeNodeRenderer", () => {
     const node = createTreeModelNode(undefined, nodeItem);
 
     const { container } = render(
-      <PresentationTreeNodeRenderer
-        treeActions={treeActionsMock.object}
-        node={node}
-        onFilterClick={() => { }}
-        onClearFilterClick={() => { }}
-      />);
+      <PresentationTreeNodeRenderer treeActions={treeActionsMock.object} node={node} onFilterClick={() => {}} onClearFilterClick={() => {}} />,
+    );
 
     const buttons = container.querySelectorAll(".presentation-components-node-action-buttons button");
     expect(buttons.length).to.eq(2);
@@ -154,12 +134,8 @@ describe("PresentationTreeNodeRenderer", () => {
     const node = createTreeModelNode(undefined, nodeItem);
 
     const { container } = render(
-      <PresentationTreeNodeRenderer
-        treeActions={treeActionsMock.object}
-        node={node}
-        onFilterClick={() => { }}
-        onClearFilterClick={() => { }}
-      />);
+      <PresentationTreeNodeRenderer treeActions={treeActionsMock.object} node={node} onFilterClick={() => {}} onClearFilterClick={() => {}} />,
+    );
 
     const buttons = container.querySelectorAll(".presentation-components-node-action-buttons button");
     expect(buttons).to.be.empty;
@@ -171,12 +147,8 @@ describe("PresentationTreeNodeRenderer", () => {
     const node = createTreeModelNode(undefined, nodeItem);
 
     const { container } = render(
-      <PresentationTreeNodeRenderer
-        treeActions={treeActionsMock.object}
-        node={node}
-        onFilterClick={spy}
-        onClearFilterClick={() => { }}
-      />);
+      <PresentationTreeNodeRenderer treeActions={treeActionsMock.object} node={node} onFilterClick={spy} onClearFilterClick={() => {}} />,
+    );
 
     const buttons = container.querySelectorAll(".presentation-components-node-action-buttons button");
     expect(buttons.length).to.eq(1);
@@ -195,12 +167,8 @@ describe("PresentationTreeNodeRenderer", () => {
     const node = createTreeModelNode(undefined, nodeItem);
 
     const { container } = render(
-      <PresentationTreeNodeRenderer
-        treeActions={treeActionsMock.object}
-        node={node}
-        onFilterClick={() => { }}
-        onClearFilterClick={spy}
-      />);
+      <PresentationTreeNodeRenderer treeActions={treeActionsMock.object} node={node} onFilterClick={() => {}} onClearFilterClick={spy} />,
+    );
 
     const buttons = container.querySelectorAll(".presentation-components-node-action-buttons button");
     expect(buttons.length).to.eq(2);

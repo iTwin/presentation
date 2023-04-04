@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import sinon from "sinon";
 import { PropertyRecord } from "@itwin/appui-abstract";
@@ -21,9 +21,7 @@ import { ensureTableHasRowsWithCellValues } from "../TableUtils";
 /* eslint-disable @typescript-eslint/naming-convention */
 
 describe("Learning snippets", () => {
-
   describe("Table", () => {
-
     before(async () => {
       await initialize();
       await UiComponents.initialize(IModelApp.localization);
@@ -55,35 +53,28 @@ describe("Learning snippets", () => {
         });
 
         // either loading or nothing to render
-        if (isLoading || !columns || !columns.length)
-          return null;
+        if (isLoading || !columns || !columns.length) return null;
 
         // render a simple HTML table
         return (
           <table>
             <thead>
               <tr>
-                {
-                  columns.map((col, i) => (
-                    <td key={i}>{col.label}</td>
-                  ))
-                }
+                {columns.map((col, i) => (
+                  <td key={i}>{col.label}</td>
+                ))}
               </tr>
             </thead>
             <tbody>
-              {
-                rows.map((row, ri) => (
-                  <tr key={ri}>
-                    {
-                      columns.map((col, ci) => (
-                        <td key={ci}>
-                          <Cell record={row[col.id]} />
-                        </td>
-                      ))
-                    }
-                  </tr>
-                ))
-              }
+              {rows.map((row, ri) => (
+                <tr key={ri}>
+                  {columns.map((col, ci) => (
+                    <td key={ci}>
+                      <Cell record={row[col.id]} />
+                    </td>
+                  ))}
+                </tr>
+              ))}
             </tbody>
           </table>
         );
@@ -131,36 +122,36 @@ describe("Learning snippets", () => {
       assert(modelKey !== undefined);
 
       // render the component
-      const { container, rerender } = render(
-        <MyTable imodel={imodel} keys={new KeySet([modelKey])} />
-      );
+      const { container, rerender } = render(<MyTable imodel={imodel} keys={new KeySet([modelKey])} />);
       await ensureTableHasRowsWithCellValues(container, "User Label", ["My Element 1", "My Element 2"]);
 
       // simulate a network error in RPC request
       sinon.stub(Presentation.presentation, "getContentAndSize").throws(new Error("Network error"));
 
       // re-render the component, ensure we now get an error
-      rerender(
-        <MyTable imodel={imodel} keys={new KeySet([modelKey])} />
-      );
+      rerender(<MyTable imodel={imodel} keys={new KeySet([modelKey])} />);
       await ensureHasError(container, "Network error");
     });
-
   });
-
 });
 
 const ruleset: Ruleset = {
   id: "my-table-rules",
-  rules: [{
-    ruleType: "Content",
-    condition: `SelectedNode.IsOfClass("Model", "BisCore")`,
-    specifications: [{
-      specType: "ContentRelatedInstances",
-      relationshipPaths: [{
-        relationship: { schemaName: "BisCore", className: "ModelContainsElements" },
-        direction: "Forward",
-      }],
-    }],
-  }],
+  rules: [
+    {
+      ruleType: "Content",
+      condition: `SelectedNode.IsOfClass("Model", "BisCore")`,
+      specifications: [
+        {
+          specType: "ContentRelatedInstances",
+          relationshipPaths: [
+            {
+              relationship: { schemaName: "BisCore", className: "ModelContainsElements" },
+              direction: "Forward",
+            },
+          ],
+        },
+      ],
+    },
+  ],
 };

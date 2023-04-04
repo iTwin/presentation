@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module Viewport
  */
@@ -29,8 +29,9 @@ export interface ViewWithUnifiedSelectionProps {
  *
  * @public
  */
-export function viewWithUnifiedSelection<P extends ViewportProps>(ViewportComponent: React.ComponentType<P>): React.ComponentType<P & ViewWithUnifiedSelectionProps> {
-
+export function viewWithUnifiedSelection<P extends ViewportProps>(
+  ViewportComponent: React.ComponentType<P>,
+): React.ComponentType<P & ViewWithUnifiedSelectionProps> {
   type CombinedProps = P & ViewWithUnifiedSelectionProps;
 
   const WithUnifiedSelection = memo<CombinedProps>((props) => {
@@ -42,7 +43,9 @@ export function viewWithUnifiedSelection<P extends ViewportProps>(ViewportCompon
     // 'viewportSelectionHandler' should never change because setter is not used.
     useEffect(() => {
       void viewportSelectionHandler.applyCurrentSelection();
-      return () => { viewportSelectionHandler.dispose(); };
+      return () => {
+        viewportSelectionHandler.dispose();
+      };
     }, [viewportSelectionHandler]);
 
     // set new imodel on 'viewportSelectionHandler' when it changes
@@ -50,7 +53,7 @@ export function viewWithUnifiedSelection<P extends ViewportProps>(ViewportCompon
       viewportSelectionHandler.imodel = imodel;
     }, [viewportSelectionHandler, imodel]);
 
-    return <ViewportComponent {...restProps as P} />;
+    return <ViewportComponent {...(restProps as P)} />;
   });
 
   WithUnifiedSelection.displayName = `WithUnifiedSelection(${getDisplayName(ViewportComponent)})`;
@@ -72,10 +75,9 @@ export interface ViewportSelectionHandlerProps {
  * @internal
  */
 export class ViewportSelectionHandler implements IDisposable {
-
   private _imodel: IModelConnection;
   private _selectionHandler: SelectionHandler;
-  private _lastPendingSelectionChange?: { info: SelectionInfo, selection: Readonly<KeySet> };
+  private _lastPendingSelectionChange?: { info: SelectionInfo; selection: Readonly<KeySet> };
   private _asyncsTracker = new AsyncTasksTracker();
 
   public constructor(props: ViewportSelectionHandlerProps) {
@@ -100,12 +102,15 @@ export class ViewportSelectionHandler implements IDisposable {
     this._selectionHandler.dispose();
   }
 
-  public get selectionHandler() { return this._selectionHandler; }
+  public get selectionHandler() {
+    return this._selectionHandler;
+  }
 
-  public get imodel() { return this._imodel; }
+  public get imodel() {
+    return this._imodel;
+  }
   public set imodel(value: IModelConnection) {
-    if (this._imodel === value)
-      return;
+    if (this._imodel === value) return;
 
     this._selectionHandler.manager.setSyncWithIModelToolSelection(this._imodel, false);
     this._selectionHandler.manager.setSyncWithIModelToolSelection(value, true);
@@ -117,7 +122,9 @@ export class ViewportSelectionHandler implements IDisposable {
   }
 
   /** note: used only it tests */
-  public get pendingAsyncs() { return this._asyncsTracker.pendingAsyncs; }
+  public get pendingAsyncs() {
+    return this._asyncsTracker.pendingAsyncs;
+  }
 
   public async applyCurrentSelection() {
     await this.applyUnifiedSelection(this._imodel, { providerName: "" }, this.selectionHandler.getSelection());
@@ -145,8 +152,7 @@ export class ViewportSelectionHandler implements IDisposable {
           imodel.selectionSet.replace(ids.elements);
           shouldClearSelectionSet = false;
         }
-        if (shouldClearSelectionSet)
-          imodel.selectionSet.emptyAll();
+        if (shouldClearSelectionSet) imodel.selectionSet.emptyAll();
       });
     });
 
@@ -159,13 +165,11 @@ export class ViewportSelectionHandler implements IDisposable {
 
   private onUnifiedSelectionChanged = async (args: SelectionChangeEventArgs, provider: ISelectionProvider): Promise<void> => {
     // this component only cares about its own imodel
-    if (args.imodel !== this._imodel)
-      return;
+    if (args.imodel !== this._imodel) return;
 
     // viewports are only interested in top-level selection changes
     // wip: may want to handle different selection levels?
-    if (0 !== args.level)
-      return;
+    if (0 !== args.level) return;
 
     const selection = provider.getSelection(args.imodel, 0);
     const info: SelectionInfo = {

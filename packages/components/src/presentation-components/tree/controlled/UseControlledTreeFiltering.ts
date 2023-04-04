@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module Tree
  */
@@ -10,8 +10,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { of } from "rxjs";
 import { Observable } from "rxjs/internal/Observable";
 import {
-  AbstractTreeNodeLoaderWithProvider, ActiveMatchInfo, HighlightableTreeProps, ITreeNodeLoaderWithProvider, LoadedNodeHierarchy, PagedTreeNodeLoader,
-  TreeModelSource, useDebouncedAsyncValue,
+  AbstractTreeNodeLoaderWithProvider,
+  ActiveMatchInfo,
+  HighlightableTreeProps,
+  ITreeNodeLoaderWithProvider,
+  LoadedNodeHierarchy,
+  PagedTreeNodeLoader,
+  TreeModelSource,
+  useDebouncedAsyncValue,
 } from "@itwin/components-react";
 import { FilteredPresentationTreeDataProvider, IFilteredPresentationTreeDataProvider } from "../FilteredDataProvider";
 import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
@@ -66,10 +72,7 @@ export function useControlledPresentationTreeFiltering(props: ControlledPresenta
 }
 
 /** @internal */
-export function useFilteredNodeLoader(
-  nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>,
-  filter: string | undefined,
-) {
+export function useFilteredNodeLoader(nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>, filter: string | undefined) {
   const normalizedFilter = normalizeFilter(filter);
   const dataProvider = normalizeDataProvider(nodeLoader.dataProvider);
   const { value: nodePaths, inProgress } = useNodePaths(dataProvider, normalizedFilter);
@@ -118,8 +121,7 @@ export function useNodeHighlightingProps(
     let highlighProps: HighlightableTreeProps | undefined;
     if (normalizedFilter) {
       let activeMatch: ActiveMatchInfo | undefined;
-      if (filteredNodeLoader && undefined !== activeMatchIndex)
-        activeMatch = filteredNodeLoader.dataProvider.getActiveMatch(activeMatchIndex);
+      if (filteredNodeLoader && undefined !== activeMatchIndex) activeMatch = filteredNodeLoader.dataProvider.getActiveMatch(activeMatchIndex);
       highlighProps = {
         searchText: normalizedFilter,
         activeMatch,

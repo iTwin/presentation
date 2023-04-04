@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import sinon from "sinon";
@@ -14,7 +14,8 @@ import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import {
-  PresentationInstanceFilterBuilder, PresentationInstanceFilterInfo,
+  PresentationInstanceFilterBuilder,
+  PresentationInstanceFilterInfo,
 } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterBuilder";
 import { createTestECClassInfo } from "../_helpers/Common";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
@@ -50,16 +51,18 @@ describe("PresentationInstanceFilter", () => {
   const initialFilter: PresentationInstanceFilterInfo = {
     filter: {
       operator: PropertyFilterRuleGroupOperator.And,
-      conditions: [{
-        field: propertiesField,
-        operator: PropertyFilterRuleOperator.IsNull,
-        value: undefined,
-      },
-      {
-        field: propertiesField2,
-        operator: PropertyFilterRuleOperator.IsNull,
-        value: undefined,
-      }],
+      conditions: [
+        {
+          field: propertiesField,
+          operator: PropertyFilterRuleOperator.IsNull,
+          value: undefined,
+        },
+        {
+          field: propertiesField2,
+          operator: PropertyFilterRuleOperator.IsNull,
+          value: undefined,
+        },
+      ],
     },
     usedClasses: [classInfo],
   };
@@ -68,7 +71,7 @@ describe("PresentationInstanceFilter", () => {
   const onCloseEvent = new BeEvent<() => void>();
 
   before(() => {
-    HTMLElement.prototype.scrollIntoView = () => { };
+    HTMLElement.prototype.scrollIntoView = () => {};
   });
 
   after(() => {
@@ -101,11 +104,9 @@ describe("PresentationInstanceFilter", () => {
 
   it("invokes 'onInstanceFilterChanged' with filter", async () => {
     const spy = sinon.spy();
-    const { container, getByText, getByDisplayValue } = render(<PresentationInstanceFilterBuilder
-      imodel={imodelMock.object}
-      descriptor={descriptor}
-      onInstanceFilterChanged={spy}
-    />);
+    const { container, getByText, getByDisplayValue } = render(
+      <PresentationInstanceFilterBuilder imodel={imodelMock.object} descriptor={descriptor} onInstanceFilterChanged={spy} />,
+    );
 
     // open property selector
     const propertySelector = container.querySelector<HTMLInputElement>(".rule-property .iui-input");
@@ -141,12 +142,9 @@ describe("PresentationInstanceFilter", () => {
 
   it("renders with initial filter", () => {
     const spy = sinon.spy();
-    const { container, queryByDisplayValue } = render(<PresentationInstanceFilterBuilder
-      imodel={imodelMock.object}
-      descriptor={descriptor}
-      onInstanceFilterChanged={spy}
-      initialFilter={initialFilter}
-    />);
+    const { container, queryByDisplayValue } = render(
+      <PresentationInstanceFilterBuilder imodel={imodelMock.object} descriptor={descriptor} onInstanceFilterChanged={spy} initialFilter={initialFilter} />,
+    );
 
     const rules = container.querySelectorAll(".rule-property");
     expect(rules.length).to.be.eq(2);

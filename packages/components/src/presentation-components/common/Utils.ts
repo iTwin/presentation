@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module Core
  */
@@ -31,9 +31,7 @@ export const initializeLocalization = async () => {
  * @internal
  */
 export const initializePropertyValueRenderers = async () => {
-  const customRenderers: Array<{ name: string, renderer: IPropertyValueRenderer }> = [
-    { name: "SelectableInstance", renderer: new InstanceKeyValueRenderer() },
-  ];
+  const customRenderers: Array<{ name: string; renderer: IPropertyValueRenderer }> = [{ name: "SelectableInstance", renderer: new InstanceKeyValueRenderer() }];
 
   for (const { name, renderer } of customRenderers) {
     PropertyValueRendererManager.defaultManager.registerRenderer(name, renderer);
@@ -63,10 +61,8 @@ export const translate = (stringId: string): string => {
  * @internal
  */
 export const getDisplayName = <P>(component: React.ComponentType<P>): string => {
-  if (component.displayName)
-    return component.displayName;
-  if (component.name)
-    return component.name;
+  if (component.displayName) return component.displayName;
+  if (component.name) return component.name;
   return "Component";
 };
 
@@ -79,9 +75,8 @@ export const findField = (descriptor: Descriptor, recordPropertyName: string): F
   const fieldNames = parseCombinedFieldNames(recordPropertyName);
   while (fieldsSource && fieldNames.length) {
     const field: Field | undefined = fieldsSource.getFieldByName(fieldNames.shift()!);
-    fieldsSource = (field && field.isNestedContentField()) ? field : undefined;
-    if (!fieldNames.length)
-      return field;
+    fieldsSource = field && field.isNestedContentField() ? field : undefined;
+    if (!fieldNames.length) return field;
   }
   return undefined;
 };
@@ -135,7 +130,9 @@ const createPrimitiveCompositeValue = (compositeValue: LabelCompositeValue): Pri
  */
 export class AsyncTasksTracker {
   private _asyncsInProgress = new Set<GuidString>();
-  public get pendingAsyncs() { return this._asyncsInProgress; }
+  public get pendingAsyncs() {
+    return this._asyncsInProgress;
+  }
   public trackAsyncTask(): IDisposable {
     const id = Guid.createValue();
     this._asyncsInProgress.add(id);
@@ -148,7 +145,7 @@ export class AsyncTasksTracker {
 /** @internal */
 export function useResizeObserver<T extends HTMLElement>() {
   const observer = useRef<ResizeObserver>();
-  const [{ width, height }, setSize] = useState<{ width?: number, height?: number }>({});
+  const [{ width, height }, setSize] = useState<{ width?: number; height?: number }>({});
 
   const ref = useCallback((element: T | null) => {
     observer.current?.disconnect();
@@ -158,7 +155,7 @@ export function useResizeObserver<T extends HTMLElement>() {
         (entries) => {
           assert(entries.length === 1);
           setSize(entries[0].contentRect);
-        }
+        },
       );
       observer.current.observe(element);
     }
@@ -176,7 +173,7 @@ export function mergeRefs<T>(...refs: Array<MutableRefObject<T | null> | LegacyR
   return (instance: T | null) => {
     refs.forEach((ref) => {
       // istanbul ignore else
-      if( typeof ref === "function") {
+      if (typeof ref === "function") {
         ref(instance);
       } else if (ref) {
         (ref as MutableRefObject<T | null>).current = instance;
@@ -196,7 +193,7 @@ export function mergeRefs<T>(...refs: Array<MutableRefObject<T | null> | LegacyR
 export function useErrorState() {
   const [error, setError] = useState<Error | undefined>(undefined);
   const setErrorState = useCallback((e: unknown) => {
-    setError((e instanceof Error) ? e : /* istanbul ignore next */ new Error());
+    setError(e instanceof Error ? e : /* istanbul ignore next */ new Error());
   }, []);
   if (error) {
     throw error;

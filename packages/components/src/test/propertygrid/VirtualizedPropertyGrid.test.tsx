@@ -1,15 +1,25 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import { useEffect, useState } from "react";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import {
-  CategorizedPropertyItem, FlatGridItemType, IPropertyDataProvider, PrimitivePropertyRenderer, PrimitivePropertyValueRenderer, PropertyCategory,
-  PropertyCategoryRendererManager, PropertyCategoryRendererProps, PropertyData, PropertyDataChangeEvent, PropertyValueRendererContext,
-  PropertyValueRendererManager, VirtualizedPropertyGridWithDataProvider,
+  CategorizedPropertyItem,
+  FlatGridItemType,
+  IPropertyDataProvider,
+  PrimitivePropertyRenderer,
+  PrimitivePropertyValueRenderer,
+  PropertyCategory,
+  PropertyCategoryRendererManager,
+  PropertyCategoryRendererProps,
+  PropertyData,
+  PropertyDataChangeEvent,
+  PropertyValueRendererContext,
+  PropertyValueRendererManager,
+  VirtualizedPropertyGridWithDataProvider,
 } from "@itwin/components-react";
 import { Orientation } from "@itwin/core-react";
 import { InstanceKey } from "@itwin/presentation-common";
@@ -51,9 +61,7 @@ describe("Category renderer customization", () => {
       PropertyCategoryRendererManager.defaultManager.addRenderer("my_custom_renderer", () => MyCustomRenderer);
 
       const MyCustomRenderer: React.FC<PropertyCategoryRendererProps> = (props) => {
-        const primitiveItems = props.categoryItem
-          .getChildren()
-          .filter((item) => item.type === FlatGridItemType.Primitive) as CategorizedPropertyItem[];
+        const primitiveItems = props.categoryItem.getChildren().filter((item) => item.type === FlatGridItemType.Primitive) as CategorizedPropertyItem[];
 
         return (
           <>
@@ -74,12 +82,7 @@ describe("Category renderer customization", () => {
 
       const dataProvider = setupDataProvider();
       const { queryByText } = render(
-        <VirtualizedPropertyGridWithDataProvider
-          dataProvider={dataProvider}
-          width={500}
-          height={1200}
-          orientation={Orientation.Horizontal}
-        />,
+        <VirtualizedPropertyGridWithDataProvider dataProvider={dataProvider} width={500} height={1200} orientation={Orientation.Horizontal} />,
       );
       await waitFor(() => expect(queryByText("rootCategory1Property")).not.to.be.null);
     });
@@ -106,11 +109,23 @@ describe("Category renderer customization", () => {
       }
 
       const stubProps = {
-        categoryItem: { getChildren() { return []; } },
-        gridContext: { dataProvider: { async getPropertyRecordInstanceKeys() { return []; } } },
+        categoryItem: {
+          getChildren() {
+            return [];
+          },
+        },
+        gridContext: {
+          dataProvider: {
+            async getPropertyRecordInstanceKeys() {
+              return [];
+            },
+          },
+        },
       };
       const { result } = renderHook(() => useInstanceKeys(stubProps as any));
-      await waitFor(() => { expect(result.current).to.not.be.undefined; });
+      await waitFor(() => {
+        expect(result.current).to.not.be.undefined;
+      });
     });
   });
 });
@@ -122,7 +137,8 @@ describe("Property renderer customization", () => {
         name: "root-category",
         label: "Root Category",
         description: "Root Category Description",
-        expand: true });
+        expand: true,
+      });
       const property = createPrimitiveStringProperty("rootCategoryProperty", "TestValue");
       property.property.renderer = {
         name: "my-renderer",
@@ -158,13 +174,7 @@ describe("Property renderer customization", () => {
       // __PUBLISH_EXTRACT_END__
 
       const dataProvider = setupDataProvider();
-      const { findAllByText } = render(
-        <VirtualizedPropertyGridWithDataProvider
-          dataProvider={dataProvider}
-          width={500}
-          height={1200}
-        />,
-      );
+      const { findAllByText } = render(<VirtualizedPropertyGridWithDataProvider dataProvider={dataProvider} width={500} height={1200} />);
       const renderedElements = await findAllByText("TestValue");
       expect(renderedElements[0].style.color).to.eq("red");
     });

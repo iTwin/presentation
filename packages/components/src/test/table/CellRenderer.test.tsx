@@ -1,12 +1,10 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import {
-  ArrayValue, PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat, StructValue,
-} from "@itwin/appui-abstract";
+import { ArrayValue, PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat, StructValue } from "@itwin/appui-abstract";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import { TableCellRenderer } from "../../presentation-components/table/CellRenderer";
 
@@ -14,7 +12,7 @@ describe("TableCellRenderer", () => {
   function createRecord(value: PropertyValue, propDescription?: Partial<PropertyDescription>) {
     const descr: PropertyDescription = {
       ...propDescription,
-      typename:  propDescription?.typename ?? "string",
+      typename: propDescription?.typename ?? "string",
       name: propDescription?.name ?? "test_prop",
       displayLabel: propDescription?.displayLabel ?? "TestProp",
     };
@@ -29,7 +27,7 @@ describe("TableCellRenderer", () => {
     };
     const record = createRecord(value, { typename: "string" });
 
-    const { queryByText } = render(<TableCellRenderer record={record}/>);
+    const { queryByText } = render(<TableCellRenderer record={record} />);
     expect(queryByText(stringValue)).to.not.be.null;
   });
 
@@ -42,7 +40,7 @@ describe("TableCellRenderer", () => {
     };
     const record = createRecord(value, { typename: "array" });
 
-    const { getByText, queryByText } = render(<TableCellRenderer record={record}/>);
+    const { getByText, queryByText } = render(<TableCellRenderer record={record} />);
     const buttonLabel = `${value.itemsTypeName}[1]`;
     const button = getByText(buttonLabel);
 
@@ -59,7 +57,7 @@ describe("TableCellRenderer", () => {
     };
     const record = createRecord(value, { typename: "array" });
 
-    const { getByText, queryByText } = render(<TableCellRenderer record={record}/>);
+    const { getByText, queryByText } = render(<TableCellRenderer record={record} />);
     const buttonLabel = `[]`;
     const button = getByText(buttonLabel);
 
@@ -78,7 +76,7 @@ describe("TableCellRenderer", () => {
     };
     const record = createRecord(value, { typename: "TestStruct" });
 
-    const { getByText, queryByText } = render(<TableCellRenderer record={record}/>);
+    const { getByText, queryByText } = render(<TableCellRenderer record={record} />);
     const buttonLabel = `{${record.property.typename}}`;
     const button = getByText(buttonLabel);
 

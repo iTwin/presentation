@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module Internal
  */
@@ -10,7 +10,14 @@ import { useCallback, useEffect, useState } from "react";
 import { PropertyDescription } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
-  ContentFlags, ContentSpecificationTypes, InstanceKey, KeySet, LabelDefinition, NavigationPropertyInfo, Ruleset, RuleTypes,
+  ContentFlags,
+  ContentSpecificationTypes,
+  InstanceKey,
+  KeySet,
+  LabelDefinition,
+  NavigationPropertyInfo,
+  Ruleset,
+  RuleTypes,
 } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 
@@ -38,30 +45,34 @@ export interface UseNavigationPropertyTargetsLoaderProps {
 /** @internal */
 export function useNavigationPropertyTargetsLoader(props: UseNavigationPropertyTargetsLoaderProps) {
   const { imodel, ruleset } = props;
-  const loadTargets = useCallback(async (filter: string, loadedOptionsCount: number): Promise<NavigationPropertyTargetsResult> => {
-    if (!ruleset) {
-      return { options: [], hasMore: false };
-    }
+  const loadTargets = useCallback(
+    async (filter: string, loadedOptionsCount: number): Promise<NavigationPropertyTargetsResult> => {
+      if (!ruleset) {
+        return { options: [], hasMore: false };
+      }
 
-    const content = await Presentation.presentation.getContent({
-      imodel,
-      rulesetOrId: ruleset,
-      keys: new KeySet(),
-      descriptor: {
-        contentFlags: ContentFlags.ShowLabels | ContentFlags.NoFields,
-        fieldsFilterExpression: filter ? `/DisplayLabel/ ~ \"%${filter}%\"` : undefined,
-      },
-      paging: { start: loadedOptionsCount, size: NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE },
-    });
+      const content = await Presentation.presentation.getContent({
+        imodel,
+        rulesetOrId: ruleset,
+        keys: new KeySet(),
+        descriptor: {
+          contentFlags: ContentFlags.ShowLabels | ContentFlags.NoFields,
+          fieldsFilterExpression: filter ? `/DisplayLabel/ ~ \"%${filter}%\"` : undefined,
+        },
+        paging: { start: loadedOptionsCount, size: NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE },
+      });
 
-    return {
-      options: content?.contentSet.map((item) => ({
-        label: item.label,
-        key: item.primaryKeys[0],
-      })) ?? [],
-      hasMore: content !== undefined && content.contentSet.length === NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE,
-    };
-  }, [ruleset, imodel]);
+      return {
+        options:
+          content?.contentSet.map((item) => ({
+            label: item.label,
+            key: item.primaryKeys[0],
+          })) ?? [],
+        hasMore: content !== undefined && content.contentSet.length === NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE,
+      };
+    },
+    [ruleset, imodel],
+  );
 
   return loadTargets;
 }
@@ -77,10 +88,11 @@ export function useNavigationPropertyTargetsRuleset(
     let disposed = false;
     void (async () => {
       const propertyInfo = await getNavigationPropertyInfo(property);
-      if (!disposed && propertyInfo)
-        setRuleset(createNavigationPropertyTargetsRuleset(propertyInfo));
+      if (!disposed && propertyInfo) setRuleset(createNavigationPropertyTargetsRuleset(propertyInfo));
     })();
-    return () => { disposed = true; };
+    return () => {
+      disposed = true;
+    };
   }, [property, getNavigationPropertyInfo]);
 
   return ruleset;
@@ -90,12 +102,16 @@ function createNavigationPropertyTargetsRuleset(propertyInfo: NavigationProperty
   const [schemaName, className] = propertyInfo.targetClassInfo.name.split(":");
   return {
     id: `navigation-property-targets`,
-    rules: [{
-      ruleType: RuleTypes.Content,
-      specifications: [{
-        specType: ContentSpecificationTypes.ContentInstancesOfSpecificClasses,
-        classes: { schemaName, classNames: [className], arePolymorphic: propertyInfo.isTargetPolymorphic },
-      }],
-    }],
+    rules: [
+      {
+        ruleType: RuleTypes.Content,
+        specifications: [
+          {
+            specType: ContentSpecificationTypes.ContentInstancesOfSpecificClasses,
+            classes: { schemaName, classNames: [className], arePolymorphic: propertyInfo.isTargetPolymorphic },
+          },
+        ],
+      },
+    ],
   };
 }

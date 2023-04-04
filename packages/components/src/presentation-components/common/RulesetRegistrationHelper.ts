@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module Core
  */
@@ -21,7 +21,7 @@ export class RulesetRegistrationHelper implements IDisposable {
 
   /** Constructor. Registers the ruleset if necessary */
   public constructor(ruleset: Ruleset | string) {
-    this._rulesetId = (typeof ruleset === "string") ? ruleset : ruleset.id;
+    this._rulesetId = typeof ruleset === "string" ? ruleset : ruleset.id;
     if (typeof ruleset === "object") {
       this.registerRuleset(ruleset); // eslint-disable-line @typescript-eslint/no-floating-promises
     }
@@ -34,11 +34,12 @@ export class RulesetRegistrationHelper implements IDisposable {
   }
 
   /** Get ID of the ruleset. */
-  public get rulesetId() { return this._rulesetId; }
+  public get rulesetId() {
+    return this._rulesetId;
+  }
 
   private disposeRegisteredRuleset() {
-    if (!this._registeredRuleset)
-      return;
+    if (!this._registeredRuleset) return;
 
     this._registeredRuleset.dispose();
     this._registeredRuleset = undefined;

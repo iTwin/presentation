@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module PropertyGrid
  */
@@ -50,7 +50,9 @@ export class FavoritePropertiesDataFilterer extends PropertyDataFiltererBase {
   }
 
   /** Is this filterer currently active */
-  public get isActive() { return this._isActive; }
+  public get isActive() {
+    return this._isActive;
+  }
   public set isActive(value: boolean) {
     if (value !== this._isActive) {
       this._isActive = value;
@@ -64,18 +66,15 @@ export class FavoritePropertiesDataFilterer extends PropertyDataFiltererBase {
   }
 
   public async recordMatchesFilter(node: PropertyRecord, parents: PropertyRecord[]): Promise<PropertyDataFilterResult> {
-    if (!this.isActive)
-      return { matchesFilter: true };
+    if (!this.isActive) return { matchesFilter: true };
 
     // If one of the parents is favorite, we don't want to expand to this node, because the parent has already matched and expanded
     const anyParentFavorite = (await Promise.all(parents.map(async (parent) => this.isFavorite(parent)))).some((isParentFavorite) => isParentFavorite);
-    if (anyParentFavorite)
-      return { matchesFilter: true };
+    if (anyParentFavorite) return { matchesFilter: true };
 
     // If none of the parents is favorite, but provided node is, then we want to expand up to this match
     const isFavorite = await this.isFavorite(node);
-    if (isFavorite)
-      return { matchesFilter: true, shouldExpandNodeParents: true };
+    if (isFavorite) return { matchesFilter: true, shouldExpandNodeParents: true };
 
     return { matchesFilter: false };
   }

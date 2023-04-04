@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import sinon from "sinon";
@@ -23,8 +23,7 @@ async function getRootNodes() {
 }
 
 async function getChildrenNodes(opts: HierarchyRequestOptions<IModelConnection, NodeKey>) {
-  if (opts.parentKey?.pathFromRoot[0] !== "root" || opts?.parentKey.pathFromRoot.length !== 1)
-    return { nodes: [], count: 0 };
+  if (opts.parentKey?.pathFromRoot[0] !== "root" || opts?.parentKey.pathFromRoot.length !== 1) return { nodes: [], count: 0 };
 
   const child1: Node = {
     label: LabelDefinition.fromLabelString("Child 1"),
@@ -46,7 +45,7 @@ describe("HierarchyBuilder", () => {
 
   beforeEach(() => {
     rulesetMock.setup((ruleset) => ruleset.id).returns(() => "1");
-    rulesetManagerMock.setup(async (x) => x.add(moq.It.isAny())).returns(async (ruleset) => new RegisteredRuleset(ruleset, Guid.createValue(), () => { }));
+    rulesetManagerMock.setup(async (x) => x.add(moq.It.isAny())).returns(async (ruleset) => new RegisteredRuleset(ruleset, Guid.createValue(), () => {}));
     rulesetVariablesManagerMock.setup((x) => x.onVariableChanged).returns(() => new BeEvent());
     presentationManagerMock.setup((manager) => manager.rulesets()).returns(() => rulesetManagerMock.object);
     presentationManagerMock.setup((manager) => manager.vars(moq.It.isAny())).returns(() => rulesetVariablesManagerMock.object);

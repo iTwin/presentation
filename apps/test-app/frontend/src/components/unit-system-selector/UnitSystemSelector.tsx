@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { IModelApp } from "@itwin/core-frontend";
 import { UnitSystemKey } from "@itwin/core-quantity";
@@ -28,19 +28,25 @@ export function UnitSystemSelector(props: UnitSystemSelectorProps) {
   );
 }
 
-const availableUnitSystems: SelectOption<UnitSystemKey | undefined>[] = [{
-  value: undefined,
-  label: "",
-}, {
-  value: "metric",
-  label: "Metric",
-}, {
-  value: "imperial",
-  label: "British Imperial",
-}, {
-  value: "usCustomary",
-  label: "US Customary",
-}, {
-  value: "usSurvey",
-  label: "US Survey",
-}];
+const availableUnitSystems: SelectOption<UnitSystemKey | undefined>[] = [
+  {
+    value: undefined,
+    label: "",
+  },
+  {
+    value: "metric",
+    label: "Metric",
+  },
+  {
+    value: "imperial",
+    label: "British Imperial",
+  },
+  {
+    value: "usCustomary",
+    label: "US Customary",
+  },
+  {
+    value: "usSurvey",
+    label: "US Survey",
+  },
+];

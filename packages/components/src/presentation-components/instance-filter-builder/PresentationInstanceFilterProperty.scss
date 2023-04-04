@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
-.property-item-line{
+.property-item-line {
   display: grid;
   grid-template-columns: minmax(50%, auto) minmax(auto, 50%);
   align-items: center;
@@ -16,7 +16,8 @@
       max-width: 100%;
       display: inline-block;
 
-      .iui-badge, .property-category-badge {
+      .iui-badge,
+      .property-category-badge {
         max-width: 100%;
         vertical-align: middle;
         box-sizing: border-box;
@@ -36,7 +37,7 @@
   }
 }
 
-.tooltip-content-header{
+.tooltip-content-header {
   text-align: left;
 }
 

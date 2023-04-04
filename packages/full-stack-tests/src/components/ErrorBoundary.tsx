@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { Component } from "react";
 import { getByText, waitFor } from "@testing-library/react";
@@ -25,8 +25,7 @@ export class ErrorBoundary extends Component<{ children: React.ReactNode }, { er
 
   public override render() {
     // in case we got an error - render the error message
-    if (this.state.error)
-      return this.state.error?.message ?? "Error";
+    if (this.state.error) return this.state.error?.message ?? "Error";
 
     // otherwise - render provided child component
     return this.props.children;

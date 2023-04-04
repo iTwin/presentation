@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import sinon from "sinon";
@@ -10,7 +10,10 @@ import { KeySet } from "@itwin/presentation-common";
 import { Presentation, SelectionManager } from "@itwin/presentation-frontend";
 import { act, renderHook, RenderHookResult } from "@testing-library/react-hooks";
 import {
-  UnifiedSelectionContext, UnifiedSelectionContextProvider, UnifiedSelectionContextProviderProps, useUnifiedSelectionContext,
+  UnifiedSelectionContext,
+  UnifiedSelectionContextProvider,
+  UnifiedSelectionContextProviderProps,
+  useUnifiedSelectionContext,
 } from "../../presentation-components/unified-selection/UnifiedSelectionContext";
 
 describe("UnifiedSelectionContext", () => {
@@ -20,13 +23,10 @@ describe("UnifiedSelectionContext", () => {
     imodel = {} as IModelConnection,
     selectionLevel?: number,
   ): RenderHookResult<UnifiedSelectionContextProviderProps, UnifiedSelectionContext> {
-    return renderHook(
-      () => useUnifiedSelectionContext()!,
-      {
-        wrapper: UnifiedSelectionContextProvider,
-        initialProps: { imodel, selectionLevel } as UnifiedSelectionContextProviderProps,
-      },
-    );
+    return renderHook(() => useUnifiedSelectionContext()!, {
+      wrapper: UnifiedSelectionContextProvider,
+      initialProps: { imodel, selectionLevel } as UnifiedSelectionContextProviderProps,
+    });
   }
 
   beforeEach(() => {
@@ -79,7 +79,9 @@ describe("UnifiedSelectionContext", () => {
     const firstResult = result.current;
 
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    act(() => { Presentation.selection.addToSelection("", testIModel, [{ className: "test", id: "1" }], 0); });
+    act(() => {
+      Presentation.selection.addToSelection("", testIModel, [{ className: "test", id: "1" }], 0);
+    });
     const secondResult = result.current;
 
     expect(firstResult).not.to.be.equal(secondResult);
@@ -95,7 +97,9 @@ describe("UnifiedSelectionContext", () => {
     const firstResult = result.current;
 
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    act(() => { Presentation.selection.addToSelection("", testIModel, [{ className: "test", id: "1" }], 0); });
+    act(() => {
+      Presentation.selection.addToSelection("", testIModel, [{ className: "test", id: "1" }], 0);
+    });
     const secondResult = result.current;
 
     expect(firstResult).not.to.be.equal(secondResult);
@@ -111,7 +115,9 @@ describe("UnifiedSelectionContext", () => {
     const firstResult = result.current;
 
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    act(() => { Presentation.selection.addToSelection("", testIModel, [{ className: "test", id: "1" }], 1); });
+    act(() => {
+      Presentation.selection.addToSelection("", testIModel, [{ className: "test", id: "1" }], 1);
+    });
     const secondResult = result.current;
 
     expect(firstResult.getSelection).to.be.equal(secondResult.getSelection);

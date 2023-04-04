@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module Tree
  */
@@ -34,30 +34,23 @@ export function PresentationTreeNodeRenderer(props: PresentationTreeNodeRenderer
   const nodeItem = props.node.item;
 
   if (isPresentationInfoTreeNodeItem(nodeItem)) {
-    return (
-      <TreeNode
-        className="presentation-components-info-node"
-        isLeaf={true}
-        label={nodeItem.message}
-        level={props.node.depth}
-        isHoverDisabled={true}
-      />
-    );
+    return <TreeNode className="presentation-components-info-node" isLeaf={true} label={nodeItem.message} level={props.node.depth} isHoverDisabled={true} />;
   }
 
   if (isPresentationTreeNodeItem(nodeItem)) {
     // hide filtering buttons if filtering is disabled explicitly or node is not filtered and has no children
     const filteringDisabled = nodeItem.filtering === undefined || (nodeItem.filtering.active === undefined && props.node.numChildren === 0);
     return (
-      <TreeNodeRenderer
-        {...restProps}
-        className={classnames("presentation-components-node", restProps.className)}
-      >
+      <TreeNodeRenderer {...restProps} className={classnames("presentation-components-node", restProps.className)}>
         <PresentationTreeNodeActions
           isFiltered={nodeItem.filtering?.active !== undefined}
           filteringDisabled={filteringDisabled}
-          onClearFilterClick={() => { onClearFilterClick(nodeItem); }}
-          onFilterClick={() => { onFilterClick(nodeItem); }}
+          onClearFilterClick={() => {
+            onClearFilterClick(nodeItem);
+          }}
+          onFilterClick={() => {
+            onFilterClick(nodeItem);
+          }}
         />
       </TreeNodeRenderer>
     );
@@ -75,14 +68,13 @@ interface PresentationTreeNodeActionsProps {
 
 function PresentationTreeNodeActions(props: PresentationTreeNodeActionsProps) {
   const { onFilterClick, onClearFilterClick, filteringDisabled, isFiltered } = props;
-  if (filteringDisabled)
-    return null;
+  if (filteringDisabled) return null;
 
   return (
     <div className={classnames("presentation-components-node-action-buttons", isFiltered && "filtered")}>
       <ButtonGroup>
-        {isFiltered
-          ? <IconButton
+        {isFiltered ? (
+          <IconButton
             styleType="borderless"
             size="small"
             onClick={(e) => {
@@ -92,7 +84,7 @@ function PresentationTreeNodeActions(props: PresentationTreeNodeActionsProps) {
           >
             <SvgCloseSmall />
           </IconButton>
-          : null}
+        ) : null}
         <IconButton
           styleType="borderless"
           size="small"
