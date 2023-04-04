@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { DefaultContentDisplayTypes, Descriptor, Field, KeySet, Ruleset } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
+import { useErrorState } from "../common/Utils";
 import { TableColumnDefinition } from "./Types";
 
 /** @internal */
@@ -23,6 +24,7 @@ export interface UseColumnsProps {
 export function useColumns(props: UseColumnsProps): TableColumnDefinition[] | undefined {
   const { imodel, ruleset, keys } = props;
   const [columns, setColumns] = useState<TableColumnDefinition[]>();
+  const setErrorState = useErrorState();
 
   useEffect(() => {
     let disposed = false;
@@ -32,14 +34,18 @@ export function useColumns(props: UseColumnsProps): TableColumnDefinition[] | un
     }
 
     void (async () => {
-      const columnDefinitions = await loadColumns(imodel, ruleset, keys);
-      // istanbul ignore else
-      if (!disposed)
-        setColumns(columnDefinitions ?? []);
+      try {
+        const columnDefinitions = await loadColumns(imodel, ruleset, keys);
+        // istanbul ignore else
+        if (!disposed)
+          setColumns(columnDefinitions ?? []);
+      } catch (err) {
+        setErrorState(err);
+      }
     })();
 
     return () => {disposed=true;};
-  }, [imodel, ruleset, keys]);
+  }, [imodel, ruleset, keys, setErrorState]);
 
   return columns;
 }

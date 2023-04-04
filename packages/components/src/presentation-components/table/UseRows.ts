@@ -17,6 +17,7 @@ import {
 } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { FieldHierarchyRecord, PropertyRecordsBuilder } from "../common/ContentBuilder";
+import { useErrorState } from "../common/Utils";
 import { TableRowDefinition } from "./Types";
 import { TableOptions } from "./UseTableOptions";
 
@@ -39,6 +40,7 @@ export interface UseRowsResult {
 /** @internal */
 export function useRows(props: UseRowsProps): UseRowsResult {
   const { imodel, ruleset, keys, pageSize, options } = props;
+  const setErrorState = useErrorState();
   const [state, setState] = useState<UseRowsResult>({
     isLoading: false,
     rows: [],
@@ -74,14 +76,15 @@ export function useRows(props: UseRowsProps): UseRowsResult {
             }),
           );
         },
-        error: () => {
+        error: (err) => {
+          setErrorState(err);
           setState((prev) => ({ ...prev, rows: [], isLoading: false }));
         },
       });
 
     loader.next(0);
     return () => { subscription.unsubscribe(); };
-  }, [imodel, ruleset, keys, pageSize, options]);
+  }, [imodel, ruleset, keys, pageSize, options, setErrorState]);
 
   return state;
 }
