@@ -55,6 +55,7 @@ export interface UsePresentationTableResult<TColumns, TRow> {
 
 /**
  * Custom hook that loads data for generic table component.
+ * @throws on failure to get table data. The error is thrown in the React's render loop, so it can be caught using an error boundary.
  * @beta
  */
 export function usePresentationTable<TColumn, TRow>(props: UsePresentationTableProps<TColumn, TRow>): UsePresentationTableResult<TColumn, TRow> {
@@ -77,6 +78,8 @@ export function usePresentationTable<TColumn, TRow>(props: UsePresentationTableP
  * Custom hook that load data for generic table component. It uses [Unified Selection]($docs/presentation/unified-selection/index.md) to get keys defining what to load rows for.
  *
  * **Note**: Should be used within [[UnifiedSelectionContextProvider]].
+ *
+ * @throws on failure to get table data. The error is thrown in the React's render loop, so it can be caught using an error boundary.
  * @beta
  */
 export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(props: Omit<UsePresentationTableProps<TColumn, TRow>, "keys">): UsePresentationTableResult<TColumn, TRow> {

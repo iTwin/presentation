@@ -14,13 +14,13 @@ import { fireEvent, getByRole, getByText, render, waitFor } from "@testing-libra
 import userEvent from "@testing-library/user-event";
 import { insertPhysicalElement, insertPhysicalModel, insertSpatialCategory } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
-import { getNodeByLabel, toggleExpandNode } from "../../TreeUtils";
+import { getNodeByLabel, toggleExpandNode } from "../TreeUtils";
 
 /* eslint-disable @typescript-eslint/naming-convention */
 
 describe("Learning snippets", () => {
 
-  describe("Hierarchy level filtering", () => {
+  describe("Tree", () => {
 
     stubRaf();
 

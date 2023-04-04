@@ -9,10 +9,10 @@ import * as moq from "typemoq";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { waitFor } from "@testing-library/react";
+import { render, waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import { useColumns, UseColumnsProps } from "../../presentation-components/table/UseColumns";
-import { createTestECInstanceKey } from "../_helpers/Common";
+import { createTestECInstanceKey, TestErrorBoundary } from "../_helpers/Common";
 import { createTestContentDescriptor, createTestNestedContentField, createTestPropertiesContentField } from "../_helpers/Content";
 import { mockPresentationManager } from "../_helpers/UiComponents";
 
@@ -91,5 +91,26 @@ describe("useColumns", () => {
     );
 
     await waitFor(() => expect(result.current).to.have.lengthOf(0));
+  });
+
+  it("throws in React render loop on failure to get content descriptor", async () => {
+    presentationManagerMock.setup(async (x) => x.getContentDescriptor(moq.It.isAny()))
+      .callback(() => { throw new Error("test error"); })
+      .returns(async () => undefined);
+
+    const errorSpy = sinon.spy();
+    function TestComponent() {
+      useColumns(initialProps);
+      return null;
+    }
+    render(
+      <TestErrorBoundary onError={errorSpy}>
+        <TestComponent />
+      </TestErrorBoundary>
+    );
+
+    await waitFor(() => {
+      expect(errorSpy).to.be.calledOnce.and.calledWith(sinon.match((error: Error) => error.message === "test error"));
+    });
   });
 });
