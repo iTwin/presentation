@@ -2,6 +2,8 @@
   "editor.insertSpaces": true,
   "editor.tabSize": 2,
   "editor.trimAutoWhitespace": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
 
   "files.associations": {
     ".nycrc": "json",
@@ -16,18 +18,9 @@
   "files.trimFinalNewlines": true,
   "files.trimTrailingWhitespace": true,
 
-  "typescript.format.semicolons": "insert",
-
-  "[javascript][typescript][typescriptreact]": {
-    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
-  },
-
   "[markdown]": {
     "editor.tabSize": 4,
   },
-
-  "eslint.format.enable": true,
-  "eslint.workingDirectories": [{ "mode": "auto" }],
 
   "importSorter.importStringConfiguration.maximumNumberOfImportExpressionsPerLine.count": 150,
   "importSorter.importStringConfiguration.quoteMark": "double",

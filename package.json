@@ -18,6 +18,7 @@
     "cover": "lage cover --continue",
     "lint": "lage lint --continue",
     "lint:copyright": "node scripts/copyrightLinter.js",
+    "prettier:fix": "prettier --write",
     "prepare": "husky install",
     "change": "beachball change",
     "check": "beachball check",
@@ -28,11 +29,14 @@
   },
   "dependencies": {
     "beachball": "^2.31.5",
+    "eslint": "^7.11.0",
+    "eslint-config-prettier": "^8.8.0",
     "fast-glob": "^3.2.12",
     "husky": "^8.0.0",
     "lage": "^1.9.5",
     "lint-staged": "^13.1.1",
     "npm-run-all": "^4.1.5",
+    "prettier": "^2.8.7",
     "rimraf": "^3.0.2",
     "yargs": "~17.6.2"
   },
