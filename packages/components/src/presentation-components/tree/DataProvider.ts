@@ -12,8 +12,8 @@ import { DelayLoadedTreeNodeItem, PageOptions, TreeNodeItem } from "@itwin/compo
 import { IDisposable, Logger } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
-  ClientDiagnosticsOptions, FilterByTextHierarchyRequestOptions, HierarchyRequestOptions, InstanceFilterDefinition, Node, NodeKey, NodePathElement,
-  Paged, PresentationError, PresentationStatus, RequestOptionsWithRuleset, Ruleset,
+  BaseNodeKey, ClientDiagnosticsOptions, FilterByTextHierarchyRequestOptions, HierarchyRequestOptions, InstanceFilterDefinition, Node, NodeKey,
+  NodePathElement, Paged, PresentationError, PresentationStatus, RequestOptionsWithRuleset, Ruleset,
 } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { createDiagnosticsOptions, DiagnosticsProps } from "../common/Diagnostics";
@@ -183,10 +183,12 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
 
   /**
    * Returns a [NodeKey]($presentation-common) from given [TreeNodeItem]($components-react).
-   * **Warning:** the `node` must be created by this data provider.
+   *
+   * **Warning**: Returns invalid [NodeKey]($presentation-common) if `node` is not a [[PresentationTreeNodeItem]].
    */
   public getNodeKey(node: TreeNodeItem): NodeKey {
-    return (node as PresentationTreeNodeItem).key;
+    const invalidKey: BaseNodeKey = { type: "", pathFromRoot: [], version: 0 };
+    return isPresentationTreeNodeItem(node) ? node.key : invalidKey;
   }
 
   /**
@@ -214,7 +216,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
   }
 
   private _getNodesAndCount = memoize(async (parentNode?: TreeNodeItem, pageOptions?: PageOptions, instanceFilter?: InstanceFilterDefinition): Promise<{ nodes: TreeNodeItem[], count: number }> => {
-    const parentKey = parentNode ? this.getNodeKey(parentNode) : undefined;
+    const parentKey = parentNode && isPresentationTreeNodeItem(parentNode) ? parentNode.key : undefined;
     const requestOptions = this.createRequestOptions(parentKey, pageOptions, instanceFilter);
     return createNodesAndCountResult(async () => this._dataSource.getNodesAndCount(requestOptions), this.createBaseRequestOptions(), parentNode, this._nodesCreateProps);
   }, { isMatchingKey: MemoizationHelpers.areNodesRequestsEqual as any });

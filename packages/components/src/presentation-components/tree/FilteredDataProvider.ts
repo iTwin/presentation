@@ -142,6 +142,7 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
   }
 
   public getNodeKey(node: TreeNodeItem): NodeKey {
+    // eslint-disable-next-line deprecation/deprecation
     return this._parentDataProvider.getNodeKey(node);
   }
 

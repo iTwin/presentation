@@ -7,6 +7,7 @@ import { expect } from "chai";
 import equal from "fast-deep-equal";
 import * as sinon from "sinon";
 import * as moq from "typemoq";
+import { PropertyRecord } from "@itwin/appui-abstract";
 import { PageOptions, PropertyFilterRuleOperator } from "@itwin/components-react";
 import { BeEvent, Logger } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
@@ -100,6 +101,27 @@ describe("TreeDataProvider", () => {
 
     it("returns imodel provider is initialized with", () => {
       expect(provider.imodel).to.eq(imodelMock.object);
+    });
+
+  });
+
+  describe("getNodeKey", () => {
+
+    it("returns invalid key for non presentation tree node item", () => {
+      const key = provider.getNodeKey({ id: "test_id", label: PropertyRecord.fromString("Test Label") }); // eslint-disable-line deprecation/deprecation
+      expect(key.type).to.be.empty;
+      expect(key.pathFromRoot).to.be.empty;
+      expect(key.version).to.be.eq(0);
+    });
+
+    it("returns valid key for presentation tree node item", () => {
+      const nodeKey = createTestECInstancesNodeKey();
+      const item: PresentationTreeNodeItem = {
+        id: "test_id",
+        label: PropertyRecord.fromString("Test Label"),
+        key: nodeKey,
+      };
+      expect(provider.getNodeKey(item)).to.be.eq(nodeKey); // eslint-disable-line deprecation/deprecation
     });
 
   });

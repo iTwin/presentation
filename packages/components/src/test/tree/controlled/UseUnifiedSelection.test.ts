@@ -43,9 +43,6 @@ describe("UnifiedSelectionEventHandler", () => {
   const selectionHandlerMock = moq.Mock.ofType<SelectionHandler>();
   const treeModelMock = moq.Mock.ofType<TreeModel>();
   const dataProviderMock = moq.Mock.ofType<IPresentationTreeDataProvider>();
-  dataProviderMock.setup((x) => x.getNodeKey(moq.It.isAny())).returns((n: TreeNodeItem) => {
-    return (n as PresentationTreeNodeItem).key;
-  });
 
   let onModelChangeEvent: BeUiEvent<[TreeModel, TreeModelChanges]>;
 
@@ -91,6 +88,8 @@ describe("UnifiedSelectionEventHandler", () => {
     return node;
   };
 
+  const getItemKey = (item: TreeNodeItem) => (item as PresentationTreeNodeItem).key;
+
   describe("modelSource", () => {
 
     it("returns modelSource", () => {
@@ -105,8 +104,8 @@ describe("UnifiedSelectionEventHandler", () => {
       const node1: MutableTreeModelNode = createNode();
       const node2: MutableTreeModelNode = createNode(createTestECClassGroupingNodeKey);
       const selectionKeys = SelectionHelper.getKeysForSelection([
-        dataProviderMock.target.getNodeKey(node1.item),
-        dataProviderMock.target.getNodeKey(node2.item),
+        getItemKey(node1.item),
+        getItemKey(node2.item),
       ]);
 
       treeModelSourceMock.setup((x) => x.getModel()).returns(() => treeModelMock.object);
@@ -128,8 +127,8 @@ describe("UnifiedSelectionEventHandler", () => {
       const node1: MutableTreeModelNode = createNode();
       const node2: MutableTreeModelNode = createNode(createTestECClassGroupingNodeKey);
       const selectionKeys = SelectionHelper.getKeysForSelection([
-        dataProviderMock.target.getNodeKey(node1.item),
-        dataProviderMock.target.getNodeKey(node2.item),
+        getItemKey(node1.item),
+        getItemKey(node2.item),
       ]);
 
       treeModelSourceMock.setup((x) => x.getModel()).returns(() => treeModelMock.object);
@@ -182,8 +181,8 @@ describe("UnifiedSelectionEventHandler", () => {
       const node1: MutableTreeModelNode = createNode();
       const node2: MutableTreeModelNode = createNode(createTestECClassGroupingNodeKey);
       const selectionKeys = SelectionHelper.getKeysForSelection([
-        dataProviderMock.target.getNodeKey(node1.item),
-        dataProviderMock.target.getNodeKey(node2.item),
+        getItemKey(node1.item),
+        getItemKey(node2.item),
       ]);
 
       treeModelSourceMock.setup((x) => x.getModel()).returns(() => treeModelMock.object);
@@ -215,8 +214,8 @@ describe("UnifiedSelectionEventHandler", () => {
       unifiedEventHandler.onSelectionReplaced(event);
       await waitForCompletion();
 
-      selectionHandlerMock.verify((x) => x.replaceSelection(SelectionHelper.getKeysForSelection([dataProviderMock.target.getNodeKey(node1.item)])), moq.Times.once());
-      selectionHandlerMock.verify((x) => x.addToSelection(SelectionHelper.getKeysForSelection([dataProviderMock.target.getNodeKey(node2.item)])), moq.Times.once());
+      selectionHandlerMock.verify((x) => x.replaceSelection(SelectionHelper.getKeysForSelection([getItemKey(node1.item)])), moq.Times.once());
+      selectionHandlerMock.verify((x) => x.addToSelection(SelectionHelper.getKeysForSelection([getItemKey(node2.item)])), moq.Times.once());
     });
 
     it("does not replace selection if event does not have nodes", async () => {
@@ -265,7 +264,7 @@ describe("UnifiedSelectionEventHandler", () => {
 
     it("applies unified selection for added nodes", () => {
       const node = createNode();
-      selectionHandlerMock.setup((x) => x.getSelection()).returns(() => new KeySet([dataProviderMock.target.getNodeKey(node.item)]));
+      selectionHandlerMock.setup((x) => x.getSelection()).returns(() => new KeySet([getItemKey(node.item)]));
       treeModelSourceMock.setup((x) => x.modifyModel(moq.It.isAny())).callback((action) => action(treeModelMock.object));
       treeModelMock.setup((x) => x.getNode(node.id)).returns(() => node);
 
@@ -275,7 +274,7 @@ describe("UnifiedSelectionEventHandler", () => {
 
     it("applies unified selection for modified nodes", () => {
       const node = createNode();
-      selectionHandlerMock.setup((x) => x.getSelection()).returns(() => new KeySet([dataProviderMock.target.getNodeKey(node.item)]));
+      selectionHandlerMock.setup((x) => x.getSelection()).returns(() => new KeySet([getItemKey(node.item)]));
       treeModelSourceMock.setup((x) => x.modifyModel(moq.It.isAny())).callback((action) => action(treeModelMock.object));
       treeModelMock.setup((x) => x.getNode(node.id)).returns(() => node);
 
@@ -286,7 +285,7 @@ describe("UnifiedSelectionEventHandler", () => {
     it("deselects added node without key", () => {
       const node = createNode();
       node.isSelected = true;
-      const keySet = new KeySet([dataProviderMock.target.getNodeKey(node.item)]);
+      const keySet = new KeySet([getItemKey(node.item)]);
       selectionHandlerMock.setup((x) => x.getSelection()).returns(() => keySet);
       treeModelSourceMock.setup((x) => x.modifyModel(moq.It.isAny())).callback((action) => action(treeModelMock.object));
       (node.item as Partial<PresentationTreeNodeItem>).key = undefined;
@@ -332,7 +331,7 @@ describe("UnifiedSelectionEventHandler", () => {
         createNode(createTestECClassGroupingNodeKey),
       ];
       nodes[1].isSelected = true;
-      const selectionKeys = SelectionHelper.getKeysForSelection(nodes.map((n) => dataProviderMock.target.getNodeKey(n.item)));
+      const selectionKeys = SelectionHelper.getKeysForSelection(nodes.map((n) => getItemKey(n.item)));
 
       selectionHandlerMock.setup((x) => x.getSelection()).returns(() => new KeySet(selectionKeys));
       treeModelMock.setup((x) => x.iterateTreeModelNodes()).returns(() => nodes[Symbol.iterator]());

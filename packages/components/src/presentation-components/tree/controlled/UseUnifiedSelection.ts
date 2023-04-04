@@ -19,6 +19,7 @@ import { useDisposable } from "@itwin/core-react";
 import { Keys, KeySet, NodeKey } from "@itwin/presentation-common";
 import { Presentation, SelectionChangeEventArgs, SelectionChangeType, SelectionHandler, SelectionHelper } from "@itwin/presentation-frontend";
 import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
+import { isPresentationTreeNodeItem } from "../PresentationTreeNodeItem";
 import { toRxjsObservable } from "../Utils";
 
 /**
@@ -142,7 +143,10 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
       this.updateAllNodes(selection);
   }
 
-  protected getNodeKey(node: TreeNodeItem) {
+  /** @deprecated in 4.0. Use [[isPresentationTreeNodeItem]] and [[PresentationTreeNodeItem.key]] to get [NodeKey]($presentation-common). */
+  // istanbul ignore next
+  protected getNodeKey(node: TreeNodeItem): NodeKey {
+    // eslint-disable-next-line deprecation/deprecation
     return this._dataProvider.getNodeKey(node);
   }
 
@@ -152,7 +156,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
    * or node is ECInstance node and instance key is in selection.
    */
   protected shouldSelectNode(node: TreeNodeItem, selection: Readonly<KeySet>) {
-    const nodeKey = this.getNodeKey(node);
+    const nodeKey = isPresentationTreeNodeItem(node) ? node.key : undefined;
     if (nodeKey === undefined)
       return false;
 
@@ -176,7 +180,9 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
   }
 
   protected getKeys(nodes: TreeNodeItem[]): Keys {
-    const nodeKeys: NodeKey[] = nodes.map((node) => this._dataProvider.getNodeKey(node));
+    const nodeKeys: NodeKey[] = nodes
+      .map((node) => isPresentationTreeNodeItem(node) ? node.key : undefined)
+      .filter((key) => key !== undefined) as NodeKey[];
     return SelectionHelper.getKeysForSelection(nodeKeys);
   }
 
