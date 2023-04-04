@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "`IPresentationTreeDataProvider`: deprecated `getNodeKey` method in favor of getting `NodeKey` directly from `TreeNodeItem` using `isPresentationTreeNodeItem` typeguard.",
+  "packageName": "@itwin/presentation-components",
+  "email": "24278440+saskliutas@users.noreply.github.com",
+  "dependentChangeType": "patch"
+}
