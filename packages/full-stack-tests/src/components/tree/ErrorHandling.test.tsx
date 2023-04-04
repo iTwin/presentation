@@ -5,10 +5,13 @@
 
 import { expect } from "chai";
 import { useState } from "react";
+import sinon from "sinon";
 import { ControlledTree, SelectionMode, TreeRendererProps, UiComponents, useTreeModel } from "@itwin/components-react";
+import { Guid } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { PresentationRpcInterface, Ruleset } from "@itwin/presentation-common";
+import { Ruleset } from "@itwin/presentation-common";
 import { PresentationTreeRenderer, usePresentationTreeNodeLoader, useUnifiedSelectionTreeEventHandler } from "@itwin/presentation-components";
+import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { getByRole, render, waitFor } from "@testing-library/react";
 import { insertPhysicalElement, insertPhysicalModel, insertSpatialCategory } from "../../IModelUtils";
@@ -32,24 +35,16 @@ describe("Learning snippets", () => {
       await terminate();
     });
 
-    it("limits hierarchy level size", async function () {
-      if (Number.parseInt(PresentationRpcInterface.interfaceVersion.split(".")[0], 10) < 4) {
-        // hierarchy level size limiting requires core libraries at least @4.0
-        this.skip();
-      }
-
-      // __PUBLISH_EXTRACT_START__ Presentation.Components.HierarchyLevelLimiting
+    it("handles errors", async function () {
+      // __PUBLISH_EXTRACT_START__ Presentation.Components.Tree.ErrorHandling
       function MyTree(props: { imodel: IModelConnection }) {
         const { nodeLoader } = usePresentationTreeNodeLoader({
           imodel: props.imodel,
           ruleset,
           pagingSize: 100,
-          // supply the limit of instances to load for a single hierarchy level
-          hierarchyLevelSizeLimit: 10,
         });
 
-        // presentation-specific tree renderer should be used when limiting to allow filtering
-        // down the results when the limit is exceeded
+        // presentation-specific tree renderer takes care of handling errors when requesting nodes
         const treeRenderer = (treeRendererProps: TreeRendererProps) => (
           <PresentationTreeRenderer
             {...treeRendererProps}
@@ -80,34 +75,47 @@ describe("Learning snippets", () => {
       const imodel = await buildTestIModel(this, (builder) => {
         const categoryKey = insertSpatialCategory(builder, "My Category");
         const modelKeyA = insertPhysicalModel(builder, "My Model A");
-        for (let i = 0; i < 10; ++i)
-          insertPhysicalElement(builder, `A element ${i + 1}`, modelKeyA.id, categoryKey.id);
         const modelKeyB = insertPhysicalModel(builder, "My Model B");
-        for (let i = 0; i < 11; ++i)
+        for (let i = 0; i < 2; ++i) {
+          insertPhysicalElement(builder, `A element ${i + 1}`, modelKeyA.id, categoryKey.id);
           insertPhysicalElement(builder, `B element ${i + 1}`, modelKeyB.id, categoryKey.id);
+        }
       });
 
       // render the component
-      const { container } = render(
+      const { container, rerender } = render(
         <MyTree imodel={imodel} />
       );
       await waitFor(() => getByRole(container, "tree"));
 
-      // find & expand both model nodes
+      // find & expand model A node
       const modelNodeA = await waitFor(() => getNodeByLabel(container, "My Model A"));
       toggleExpandNode(modelNodeA);
 
+      // expect the model to have 2 child nodes
+      await waitFor(() => getNodeByLabel(container, `A element 1`));
+      await waitFor(() => getNodeByLabel(container, `A element 2`));
+
+      // simulate a network error for B model node's children
+      sinon.stub(Presentation.presentation, "getNodesAndCount").throws(new Error("Network error"));
+
+      // find & expand model B node
       const modelNodeB = await waitFor(() => getNodeByLabel(container, "My Model B"));
       toggleExpandNode(modelNodeB);
 
-      // expect A model to have child nodes
-      for (let i = 0; i < 10; ++i)
-        await waitFor(() => getNodeByLabel(container, `A element ${i + 1}`));
-
-      // expect B model to not have any children
-      for (let i = 0; i < 11; ++i)
-        expect(() => getNodeByLabel(container, `B element ${i + 1}`)).to.throw();
+      // expect B model to have a single error node
       await waitFor(() => expect(container.querySelector(".presentation-components-info-node")).is.not.null);
+      expect(() => getNodeByLabel(container, `B element 1`)).to.throw();
+      expect(() => getNodeByLabel(container, `B element 2`)).to.throw();
+
+      // now try to force-rerender the tree to see how the error is handled at the root nodes' level
+      rerender(
+        <MyTree key={Guid.createValue()} imodel={imodel} />
+      );
+      await waitFor(() => getByRole(container, "tree"));
+      expect(() => getNodeByLabel(container, `My Model A`)).to.throw();
+      expect(() => getNodeByLabel(container, `My Model B`)).to.throw();
+      expect(container.querySelector(".presentation-components-info-node")).is.not.null;
     });
 
   });

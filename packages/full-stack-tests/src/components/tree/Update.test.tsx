@@ -18,7 +18,7 @@ import { Presentation } from "@itwin/presentation-frontend";
 import { renderHook } from "@testing-library/react-hooks";
 import { initialize, terminate } from "../../IntegrationTests";
 
-describe("Update", () => {
+describe("Tree update", () => {
   let imodel: IModelConnection;
 
   before(async () => {
