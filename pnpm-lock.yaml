@@ -343,7 +343,7 @@ importers:
       '@itwin/presentation-testing': workspace:^
       '@itwin/webgl-compatibility': ^4.0.0-dev.60
       '@testing-library/dom': ^7.21.4
-      '@testing-library/react': ^12.0.0
+      '@testing-library/react': ^12.1.5
       '@testing-library/react-hooks': ^7.0.2
       '@testing-library/user-event': ^14.4.3
       '@types/chai': 4.3.1
@@ -6674,7 +6674,6 @@ packages:
 
   /lz-string/1.4.4:
     resolution: {integrity: sha512-0ckx7ZHRPqb0oUm8zNr+90mtf9DQB60H1wMCjBtfi62Kl3a7JbHob6gA2bC+xRvZoOL+1hzUK8jeuEIQE8svEQ==}
-    hasBin: true
 
   /make-array/1.0.5:
     resolution: {integrity: sha512-sgK2SAzxT19rWU+qxKUcn6PAh/swiIiz2F8C2cZjLc1z4iwYIfdoihqFIDQ8BDzAGtWPYJ6Sr13K1j/DXynDLA==}
