@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
-import React from "react";
+import { Component } from "react";
 import { It } from "typemoq";
 import { BeDuration } from "@itwin/core-bentley";
 import {
@@ -113,7 +113,7 @@ export interface TestErrorBoundaryState {
  * });
  * ```
  */
-export class TestErrorBoundary extends React.Component<TestErrorBoundaryProps, TestErrorBoundaryState> {
+export class TestErrorBoundary extends Component<TestErrorBoundaryProps, TestErrorBoundaryState> {
   public constructor(props: TestErrorBoundaryProps) {
     super(props);
     this.state = {};

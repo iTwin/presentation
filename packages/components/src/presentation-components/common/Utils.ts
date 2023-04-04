@@ -197,7 +197,7 @@ export function useErrorState() {
   const [error, setError] = useState<Error | undefined>(undefined);
   const setErrorState = useCallback((e: unknown) => {
     setError((e instanceof Error) ? e : /* istanbul ignore next */ new Error());
-  }, [setError]);
+  }, []);
   if (error) {
     throw error;
   }
