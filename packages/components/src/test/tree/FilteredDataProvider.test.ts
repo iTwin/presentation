@@ -172,8 +172,8 @@ describe("FilteredTreeDataProvider", () => {
       const key = createTestECInstancesNodeKey();
       const treeNode = createTestTreeNodeItem(key);
 
-      parentProviderMock.setup((x) => x.getNodeKey(treeNode)).returns(() => key);
-      const result = provider.getNodeKey(treeNode);
+      parentProviderMock.setup((x) => x.getNodeKey(treeNode)).returns(() => key); // eslint-disable-line deprecation/deprecation
+      const result = provider.getNodeKey(treeNode); // eslint-disable-line deprecation/deprecation
       expect(result).to.deep.equal(key);
     });
 

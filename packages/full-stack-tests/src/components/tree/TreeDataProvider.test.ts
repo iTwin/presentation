@@ -9,7 +9,7 @@ import { PropertyValueFormat } from "@itwin/appui-abstract";
 import { assert, Guid } from "@itwin/core-bentley";
 import { IModelConnection, SnapshotConnection } from "@itwin/core-frontend";
 import { ChildNodeSpecificationTypes, NodeKey, Ruleset, RuleTypes } from "@itwin/presentation-common";
-import { isPresentationInfoTreeNodeItem, PresentationTreeDataProvider } from "@itwin/presentation-components";
+import { isPresentationInfoTreeNodeItem, PresentationTreeDataProvider, PresentationTreeNodeItem } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { initialize, terminate } from "../../IntegrationTests";
 
@@ -159,7 +159,7 @@ describe("TreeDataProvider", async () => {
     const nodes = await provider.getNodes(undefined);
     expect(nodes).to.not.be.empty;
     nodes.forEach((item) => {
-      const key = provider.getNodeKey(item);
+      const key = (item as PresentationTreeNodeItem).key;
       assert(NodeKey.isClassGroupingNodeKey(key));
       assert(item.label.value.valueFormat === PropertyValueFormat.Primitive);
       expect(item.label.value.displayValue).to.match(new RegExp(`^[\\w\\d_ ]+ \\(${key.groupedInstancesCount}\\)$`, "i"));
