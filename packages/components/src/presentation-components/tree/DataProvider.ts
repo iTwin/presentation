@@ -185,6 +185,8 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
    * Returns a [NodeKey]($presentation-common) from given [TreeNodeItem]($components-react).
    *
    * **Warning**: Returns invalid [NodeKey]($presentation-common) if `node` is not a [[PresentationTreeNodeItem]].
+   *
+   * @deprecated in 4.0. Use [[isPresentationTreeNodeItem]] and [[PresentationTreeNodeItem.key]] to get [NodeKey]($presentation-common).
    */
   public getNodeKey(node: TreeNodeItem): NodeKey {
     const invalidKey: BaseNodeKey = { type: "", pathFromRoot: [], version: 0 };
