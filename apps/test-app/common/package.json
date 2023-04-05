@@ -17,9 +17,9 @@
     "@itwin/core-geometry": "^4.0.0-dev.60",
     "@itwin/core-quantity": "^4.0.0-dev.60",
     "@itwin/ecschema-metadata": "^4.0.0-dev.60",
-    "@itwin/eslint-plugin": "^4.0.0-dev.32",
+    "@itwin/eslint-plugin": "^4.0.0-dev.33",
     "@itwin/presentation-common": "^4.0.0-dev.60",
-    "eslint": "^7.11.0",
+    "eslint": "^8.36.0",
     "rimraf": "^3.0.2",
     "typescript": "~5.0.2"
   }
