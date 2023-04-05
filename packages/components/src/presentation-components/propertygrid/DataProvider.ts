@@ -584,7 +584,9 @@ class PropertyCategoriesCache {
     // add parent categories that have no fields of their own
     [...this._byName.values()].forEach((entry) => {
       let curr: CategoryDescription | undefined = entry;
-      while (curr) curr = curr.parent ? this.cache(curr.parent) : undefined;
+      while (curr) {
+        curr = curr.parent ? this.cache(curr.parent) : undefined;
+      }
     });
   }
 
@@ -662,8 +664,9 @@ function destructureStructMember(member: FieldHierarchyRecord): Array<FieldHiera
     member.record.value.valueFormat !== UiPropertyValueFormat.Array ||
     !shouldDestructureArrayField(member.fieldHierarchy.field) ||
     !shouldDestructureStructField(member.fieldHierarchy.field, undefined)
-  )
+  ) {
     return [member];
+  }
 
   // don't want to include struct arrays without items - just return empty array
   if (member.record.value.items.length === 0) {

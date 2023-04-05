@@ -24,7 +24,9 @@ export interface CreateTreeNodeItemProps {
 /** @internal */
 export function createTreeNodeItems(nodes: ReadonlyArray<Readonly<Node>>, parentId?: string, props?: CreateTreeNodeItemProps): PresentationTreeNodeItem[] {
   const list = new Array<PresentationTreeNodeItem>();
-  for (const node of nodes) list.push(createTreeNodeItem(node, parentId, props));
+  for (const node of nodes) {
+    list.push(createTreeNodeItem(node, parentId, props));
+  }
   return list;
 }
 
@@ -96,21 +98,22 @@ function assignOptionalTreeNodeItemFields(item: Partial<PresentationTreeNodeItem
  */
 // istanbul ignore next
 export function customizeTreeNodeItem(item: Partial<DelayLoadedTreeNodeItem>, node: Partial<Node>) {
+  // eslint-disable-next-line deprecation/deprecation
   if (node.imageId) {
-    // eslint-disable-line deprecation/deprecation
     item.icon = node.imageId; // eslint-disable-line deprecation/deprecation
   }
 
+  // eslint-disable-next-line deprecation/deprecation
   if (node.isCheckboxVisible) {
-    // eslint-disable-line deprecation/deprecation
     item.isCheckboxVisible = true;
+    // eslint-disable-next-line deprecation/deprecation
     if (node.isChecked) {
       // eslint-disable-line deprecation/deprecation
       item.checkBoxState = CheckBoxState.On;
     }
 
+    // eslint-disable-next-line deprecation/deprecation
     if (!node.isCheckboxEnabled) {
-      // eslint-disable-line deprecation/deprecation
       item.isCheckboxDisabled = true;
     }
   }

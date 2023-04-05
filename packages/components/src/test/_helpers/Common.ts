@@ -57,7 +57,9 @@ export const createTestRelatedClassInfoWithOptionalRelationship = (props?: Parti
 
 export const createTestRelationshipPath = (length: number = 2) => {
   const path = new Array<RelatedClassInfo>();
-  while (length--) path.push(createTestRelatedClassInfo());
+  while (length--) {
+    path.push(createTestRelatedClassInfo());
+  }
   return path;
 };
 

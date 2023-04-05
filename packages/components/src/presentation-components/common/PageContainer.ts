@@ -118,8 +118,9 @@ export class PageContainer<TItem, TPage extends Page<TItem> = Page<TItem>> {
     if (undefined !== pageBefore && pageBefore.position.end > pageStartIndex) {
       pageStartIndex = pageBefore.position.end + 1;
     }
-    if (pageBefore && pageAfter && pageAfter.position.start - pageBefore.position.end < pageSize)
+    if (pageBefore && pageAfter && pageAfter.position.start - pageBefore.position.end < pageSize) {
       pageSize = pageAfter.position.start - pageBefore.position.end - 1;
+    }
     if (pageStartIndex < 0) {
       pageSize += pageStartIndex;
       pageStartIndex = 0;
@@ -142,7 +143,9 @@ export class PageContainer<TItem, TPage extends Page<TItem> = Page<TItem>> {
   }
 
   private reIndexPages(startIndex: number): void {
-    for (let i = startIndex + 1; i < this._pages.length; ++i) this._pages[i].position.index = i;
+    for (let i = startIndex + 1; i < this._pages.length; ++i) {
+      this._pages[i].position.index = i;
+    }
   }
 
   private disposeFarthestPages(position: Position): void {

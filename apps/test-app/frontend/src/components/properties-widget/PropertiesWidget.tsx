@@ -180,8 +180,8 @@ function PropertyGrid(props: PropertyGridProps) {
   const { value: filteringResult } = useDebouncedAsyncValue(
     useCallback(async () => {
       return filteringDataProvider.getData();
-    }, [filteringDataProvider, filteringProvDataChanged]),
-  ); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [filteringDataProvider, filteringProvDataChanged]), // eslint-disable-line react-hooks/exhaustive-deps
+  );
   useEffect(() => {
     onFilteringStateChanged(filteringResult);
   }, [filteringResult, onFilteringStateChanged]);

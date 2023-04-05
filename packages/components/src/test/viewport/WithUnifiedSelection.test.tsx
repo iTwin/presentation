@@ -359,7 +359,9 @@ describe("ViewportSelectionHandler", () => {
       expect(spies.hilite.elements).to.not.be.called;
 
       // trigger some intermediate selection changes
-      for (let i = 1; i <= 10; ++i) triggerSelectionChange({ sourceName: i.toString() });
+      for (let i = 1; i <= 10; ++i) {
+        triggerSelectionChange({ sourceName: i.toString() });
+      }
 
       // ensure new hilite set requests were not triggered - we're still
       // waiting for the first one to resolve

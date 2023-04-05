@@ -92,8 +92,9 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
     for (let i = 0; i < paths.length; i++) {
       const node = createTreeNodeItem(paths[i].node, parentId);
 
-      if (paths[i].filteringData && paths[i].filteringData!.matchesCount)
+      if (paths[i].filteringData && paths[i].filteringData!.matchesCount) {
         this._filteredResultMatches.push({ id: node.id, matchesCount: paths[i].filteringData!.matchesCount });
+      }
 
       if (paths[i].children.length !== 0) {
         this.createHierarchy(paths[i].children, hierarchy, node.id);

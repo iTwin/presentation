@@ -28,10 +28,12 @@ export class RulesetSelector extends Component<RulesetSelectorProps, RulesetSele
     this.setState({ availableRulesets: rulesetIds.map((id) => ({ value: id, label: id })) });
   }
   public override render() {
-    if (!this.state.availableRulesets)
+    if (!this.state.availableRulesets) {
       return <div className="RulesetSelector">{IModelApp.localization.getLocalizedString("Sample:controls.notifications.loading")}</div>;
-    if (0 === this.state.availableRulesets.length)
+    }
+    if (0 === this.state.availableRulesets.length) {
       return <div className="RulesetSelector">{IModelApp.localization.getLocalizedString("Sample:controls.notifications.no-available-rulesets")}</div>;
+    }
     return (
       <div className="RulesetSelector">
         <Select

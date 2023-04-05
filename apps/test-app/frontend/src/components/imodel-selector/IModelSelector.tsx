@@ -63,12 +63,13 @@ export class IModelSelector extends Component<Props, State> {
 
   public override render() {
     let error = null;
-    if (this.state.error)
+    if (this.state.error) {
       error = (
         <div className="Error">
           {IModelApp.localization.getLocalizedString("Sample:controls.notifications.error")}: {this.state.error.message}
         </div>
       );
+    }
 
     return (
       <div className="IModelSelector">
