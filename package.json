@@ -18,7 +18,6 @@
     "cover": "lage cover --continue",
     "lint": "lage lint --continue",
     "lint:copyright": "node scripts/copyrightLinter.js",
-    "prettier:fix": "prettier --write",
     "prepare": "husky install",
     "change": "beachball change",
     "check": "beachball check",
