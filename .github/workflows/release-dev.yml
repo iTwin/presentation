@@ -5,8 +5,8 @@ on:
   push:
     branches: ["master"]
     paths:
-      - "packages/**"
-      - "!packages/full-stack-tests/**"
+      - 'packages/**'
+      - '!packages/full-stack-tests/**'
 
 jobs:
   release-packages:

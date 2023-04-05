@@ -1,4 +1,4 @@
-name: "Issue Labeler"
+name: Issue Labeler
 
 on:
   issues:
@@ -10,6 +10,6 @@ jobs:
     steps:
       - uses: github/issue-labeler@v3.1
         with:
-          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
           configuration-path: .github/labeler.yml
           enable-versioned-regex: 0

@@ -1,14 +1,19 @@
-# Ignore artifacts:
+# Ignore artifacts
 build
 change
 lib
 
-# Ignore auto-generated files:
+# Ignore auto-generated files
 CHANGELOG.md
 
-# Ignore vs code settings:
+# Ignore vs code settings
 .vscode
 
-# Ignore pnpm file:
+# Ignore pnpm file
 pnpm-lock.yaml
 pnpm-workspace.yaml
+
+# Ignore configs and pipelines
+.azure-pipelines
+.github
+.husky

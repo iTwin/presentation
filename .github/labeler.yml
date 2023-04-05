@@ -1,3 +1,3 @@
 # Add 'presentation' label to any issue that gets opened in this repo
 presentation:
-  - "/.*/"
+  - '/.*/'
