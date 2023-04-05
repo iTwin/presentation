@@ -34,7 +34,7 @@ describe("Learning snippets", () => {
       await terminate();
     });
 
-    it.skip("handles errors", async function () {
+    it("handles errors", async function () {
       if (Number.parseInt(PresentationRpcInterface.interfaceVersion.split(".")[0], 10) < 4) {
         // property grid started supporting error boundaries since appui@4.0
         this.skip();
