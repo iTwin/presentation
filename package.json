@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "beachball": "^2.31.5",
-    "eslint": "^7.11.0",
+    "eslint": "^8.36.0",
     "eslint-config-prettier": "^8.8.0",
     "fast-glob": "^3.2.12",
     "husky": "^8.0.0",
