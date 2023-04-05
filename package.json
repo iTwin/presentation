@@ -42,7 +42,9 @@
   },
   "lint-staged": {
     "*.{tsx,ts,jsx,js,scss,css,html}": [
-      "pnpm lint:copyright --fix"
+      "pnpm lint:copyright --fix",
+      "eslint --fix",
+      "prettier --write --ignore-unknown"
     ]
   },
   "engines": {
