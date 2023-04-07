@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import sinon from "sinon";
@@ -14,7 +14,11 @@ import { renderHook } from "@testing-library/react-hooks";
 import { useRows, UseRowsProps } from "../../presentation-components/table/UseRows";
 import { createTestECInstanceKey, createTestPropertyInfo, TestErrorBoundary } from "../_helpers/Common";
 import {
-  createTestCategoryDescription, createTestContentDescriptor, createTestContentItem, createTestNestedContentField, createTestPropertiesContentField,
+  createTestCategoryDescription,
+  createTestContentDescriptor,
+  createTestContentItem,
+  createTestNestedContentField,
+  createTestPropertiesContentField,
 } from "../_helpers/Content";
 import { mockPresentationManager } from "../_helpers/UiComponents";
 
@@ -41,18 +45,21 @@ describe("useRows", () => {
   });
 
   it("loads rows", async () => {
-    const propertiesField = createTestPropertiesContentField({ name: "first_field", label: "First Field", properties: [{ property: createTestPropertyInfo() }] });
+    const propertiesField = createTestPropertiesContentField({
+      name: "first_field",
+      label: "First Field",
+      properties: [{ property: createTestPropertyInfo() }],
+    });
     const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
     const item = createTestContentItem({
       values: { [propertiesField.name]: "test_value" },
       displayValues: { [propertiesField.name]: "Test value" },
     });
-    presentationManagerMock.setup(async (x) => x.getContentAndSize(moq.It.isAny())).returns(async () => ({ content: new Content(descriptor, [item]), size: 1 }));
+    presentationManagerMock
+      .setup(async (x) => x.getContentAndSize(moq.It.isAny()))
+      .returns(async () => ({ content: new Content(descriptor, [item]), size: 1 }));
 
-    const { result } = renderHook(
-      (props: UseRowsProps) => useRows(props),
-      { initialProps }
-    );
+    const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps });
 
     await waitFor(() => expect(result.current.rows).to.have.lengthOf(1));
     const cell = result.current.rows[0].cells[0];
@@ -63,19 +70,30 @@ describe("useRows", () => {
 
   it("does not create cells for nested content fields", async () => {
     const nestedCategory = createTestCategoryDescription({ name: "nested_category" });
-    const propertiesField = createTestPropertiesContentField({ name: "first_field", label: "First Field", properties: [{ property: createTestPropertyInfo() }] });
-    const nestedField = createTestPropertiesContentField({ name: "nested_field", label: "Nested Field", category: nestedCategory, properties: [{ property: createTestPropertyInfo() }] });
+    const propertiesField = createTestPropertiesContentField({
+      name: "first_field",
+      label: "First Field",
+      properties: [{ property: createTestPropertyInfo() }],
+    });
+    const nestedField = createTestPropertiesContentField({
+      name: "nested_field",
+      label: "Nested Field",
+      category: nestedCategory,
+      properties: [{ property: createTestPropertyInfo() }],
+    });
     const nestingField = createTestNestedContentField({ name: "nesting_field", label: "Nesting Field", category: nestedCategory, nestedFields: [nestedField] });
     const descriptor = createTestContentDescriptor({ fields: [propertiesField, nestingField] });
     const item = createTestContentItem({
       values: {
         [propertiesField.name]: "test_value",
-        [nestingField.name]: [{
-          primaryKeys: [],
-          values: { [nestedField.name]: "nested_value" },
-          displayValues: { [nestedField.name]: "Nested Value" },
-          mergedFieldNames: [],
-        }],
+        [nestingField.name]: [
+          {
+            primaryKeys: [],
+            values: { [nestedField.name]: "nested_value" },
+            displayValues: { [nestedField.name]: "Nested Value" },
+            mergedFieldNames: [],
+          },
+        ],
       },
       displayValues: {
         [propertiesField.name]: "Test value",
@@ -84,12 +102,11 @@ describe("useRows", () => {
         },
       },
     });
-    presentationManagerMock.setup(async (x) => x.getContentAndSize(moq.It.isAny())).returns(async () => ({ content: new Content(descriptor, [item]), size: 1 }));
+    presentationManagerMock
+      .setup(async (x) => x.getContentAndSize(moq.It.isAny()))
+      .returns(async () => ({ content: new Content(descriptor, [item]), size: 1 }));
 
-    const { result } = renderHook(
-      (props: UseRowsProps) => useRows(props),
-      { initialProps }
-    );
+    const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps });
 
     await waitFor(() => expect(result.current.rows).to.have.lengthOf(1));
     expect(result.current.rows[0].cells).to.have.lengthOf(1);
@@ -100,7 +117,11 @@ describe("useRows", () => {
   });
 
   it("loads next page of rows when 'loadMoreRows' is called", async () => {
-    const propertiesField = createTestPropertiesContentField({ name: "first_field", label: "First Field", properties: [{ property: createTestPropertyInfo() }] });
+    const propertiesField = createTestPropertiesContentField({
+      name: "first_field",
+      label: "First Field",
+      properties: [{ property: createTestPropertyInfo() }],
+    });
     const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
     const item1 = createTestContentItem({
       values: { [propertiesField.name]: "test_value_1" },
@@ -110,13 +131,14 @@ describe("useRows", () => {
       values: { [propertiesField.name]: "test_value_2" },
       displayValues: { [propertiesField.name]: "Test value 2" },
     });
-    presentationManagerMock.setup(async (x) => x.getContentAndSize(moq.It.is((options) => options.paging?.start === 0))).returns(async () => ({ content: new Content(descriptor, [item1]), size: 2 }));
-    presentationManagerMock.setup(async (x) => x.getContentAndSize(moq.It.is((options) => options.paging?.start === 1))).returns(async () => ({ content: new Content(descriptor, [item2]), size: 2 }));
+    presentationManagerMock
+      .setup(async (x) => x.getContentAndSize(moq.It.is((options) => options.paging?.start === 0)))
+      .returns(async () => ({ content: new Content(descriptor, [item1]), size: 2 }));
+    presentationManagerMock
+      .setup(async (x) => x.getContentAndSize(moq.It.is((options) => options.paging?.start === 1)))
+      .returns(async () => ({ content: new Content(descriptor, [item2]), size: 2 }));
 
-    const { result } = renderHook(
-      (props: UseRowsProps) => useRows(props),
-      { initialProps: { ...initialProps, pageSize: 1 } }
-    );
+    const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, pageSize: 1 } });
 
     await waitFor(() => expect(result.current.rows).to.have.lengthOf(1));
 
@@ -125,18 +147,21 @@ describe("useRows", () => {
   });
 
   it("does not attempt to load more rows if there are no more content items", async () => {
-    const propertiesField = createTestPropertiesContentField({ name: "first_field", label: "First Field", properties: [{ property: createTestPropertyInfo() }] });
+    const propertiesField = createTestPropertiesContentField({
+      name: "first_field",
+      label: "First Field",
+      properties: [{ property: createTestPropertyInfo() }],
+    });
     const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
     const item = createTestContentItem({
       values: { [propertiesField.name]: "test_value_1" },
       displayValues: { [propertiesField.name]: "Test value 1" },
     });
-    presentationManagerMock.setup(async (x) => x.getContentAndSize(moq.It.isAny())).returns(async () => ({ content: new Content(descriptor, [item]), size: 1 }));
+    presentationManagerMock
+      .setup(async (x) => x.getContentAndSize(moq.It.isAny()))
+      .returns(async () => ({ content: new Content(descriptor, [item]), size: 1 }));
 
-    const { result } = renderHook(
-      (props: UseRowsProps) => useRows(props),
-      { initialProps: { ...initialProps, pageSize: 1 } }
-    );
+    const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, pageSize: 1 } });
 
     await waitFor(() => expect(result.current.rows).to.have.lengthOf(1));
     result.current.loadMoreRows();
@@ -152,9 +177,9 @@ describe("useRows", () => {
       return null;
     }
     render(
-      <TestErrorBoundary onError={errorSpy} >
+      <TestErrorBoundary onError={errorSpy}>
         <TestComponent />
-      </TestErrorBoundary>
+      </TestErrorBoundary>,
     );
 
     await waitFor(() => {
@@ -164,10 +189,7 @@ describe("useRows", () => {
 
   it("returns empty rows list if key set is empty", async () => {
     const emptyKeySet = new KeySet();
-    const { result } = renderHook(
-      (props: UseRowsProps) => useRows(props),
-      { initialProps: { ...initialProps, keys: emptyKeySet } }
-    );
+    const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, keys: emptyKeySet } });
 
     await waitFor(() => expect(result.current.isLoading).to.be.false);
     expect(result.current.rows).to.have.lengthOf(0);
@@ -177,35 +199,37 @@ describe("useRows", () => {
   it("applies fields filter expression", async () => {
     const filterExpression = "propField = 1";
     presentationManagerMock
-      .setup(async (x) => x.getContentAndSize(moq.It.is((options)=> options.descriptor.fieldsFilterExpression === filterExpression)))
+      .setup(async (x) => x.getContentAndSize(moq.It.is((options) => options.descriptor.fieldsFilterExpression === filterExpression)))
       .returns(async () => ({ content: new Content(createTestContentDescriptor({ fields: [] }), []), size: 0 }))
       .verifiable(moq.Times.once());
 
-    const { result } = renderHook(
-      (props: UseRowsProps) => useRows(props),
-      { initialProps: { ...initialProps, options: { fieldsFilterExpression: filterExpression } } }
-    );
+    const { result } = renderHook((props: UseRowsProps) => useRows(props), {
+      initialProps: { ...initialProps, options: { fieldsFilterExpression: filterExpression } },
+    });
 
     await waitFor(() => expect(result.current.isLoading).to.be.false);
     presentationManagerMock.verifyAll();
   });
 
   it("applies sorting", async () => {
-    const propertiesField = createTestPropertiesContentField({ name: "first_field", label: "First Field", properties: [{ property: createTestPropertyInfo() }] });
+    const propertiesField = createTestPropertiesContentField({
+      name: "first_field",
+      label: "First Field",
+      properties: [{ property: createTestPropertyInfo() }],
+    });
     const fieldDescriptor = propertiesField.getFieldDescriptor();
     const sorting = {
       field: fieldDescriptor,
       direction: SortDirection.Descending,
     };
     presentationManagerMock
-      .setup(async (x) => x.getContentAndSize(moq.It.is((options)=> (options.descriptor as DescriptorOverrides).sorting?.direction === SortDirection.Descending)))
+      .setup(async (x) =>
+        x.getContentAndSize(moq.It.is((options) => (options.descriptor as DescriptorOverrides).sorting?.direction === SortDirection.Descending)),
+      )
       .returns(async () => ({ content: new Content(createTestContentDescriptor({ fields: [] }), []), size: 0 }))
       .verifiable(moq.Times.once());
 
-    const { result } = renderHook(
-      (props: UseRowsProps) => useRows(props),
-      { initialProps: { ...initialProps, options: { sorting } } }
-    );
+    const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, options: { sorting } } });
 
     await waitFor(() => expect(result.current.isLoading).to.be.false);
     presentationManagerMock.verifyAll();

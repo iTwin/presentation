@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module IModel
  */
@@ -63,7 +63,7 @@ export async function buildTestIModel(name: string, cb: (builder: TestIModelBuil
 // eslint-disable-next-line @typescript-eslint/unified-signatures
 export async function buildTestIModel(mochaContext: Mocha.Context, cb: (builder: TestIModelBuilder) => void): Promise<IModelConnection>;
 export async function buildTestIModel(nameParam: string | Mocha.Context, cb: (builder: TestIModelBuilder) => void): Promise<IModelConnection> {
-  const name = (typeof nameParam === "string") ? nameParam : createFileNameFromString(nameParam.test!.fullTitle());
+  const name = typeof nameParam === "string" ? nameParam : createFileNameFromString(nameParam.test!.fullTitle());
   const outputFile = setupOutputFileLocation(name);
   const db = SnapshotDb.createEmpty(outputFile, { rootSubject: { name } });
   const builder = new IModelBuilder(db);

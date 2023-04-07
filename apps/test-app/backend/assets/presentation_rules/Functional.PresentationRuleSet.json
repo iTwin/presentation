@@ -17,9 +17,7 @@
           "specType": "InstanceNodesOfSpecificClasses",
           "classes": {
             "schemaName": "Functional",
-            "classNames": [
-              "FunctionalElement"
-            ]
+            "classNames": ["FunctionalElement"]
           },
           "arePolymorphic": true,
           "groupByClass": false,

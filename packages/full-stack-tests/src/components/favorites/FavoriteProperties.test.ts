@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import sinon from "sinon";
@@ -10,13 +10,10 @@ import { PropertyData } from "@itwin/components-react";
 import { IModelApp, IModelConnection, ITwinIdArg, PreferenceArg, PreferenceKeyArg, SnapshotConnection, TokenArg } from "@itwin/core-frontend";
 import { Field, KeySet } from "@itwin/presentation-common";
 import { DEFAULT_PROPERTY_GRID_RULESET, FAVORITES_CATEGORY_NAME, PresentationPropertyDataProvider } from "@itwin/presentation-components";
-import {
-  createFavoritePropertiesStorage, DefaultFavoritePropertiesStorageTypes, FavoritePropertiesScope, Presentation,
-} from "@itwin/presentation-frontend";
+import { createFavoritePropertiesStorage, DefaultFavoritePropertiesStorageTypes, FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
 import { initialize, terminate } from "../../IntegrationTests";
 
 describe("Favorite properties", () => {
-
   let imodel: IModelConnection;
   async function openIModel() {
     imodel = await SnapshotConnection.openFile("assets/datasets/Properties_60InstancesWithUrl2.ibim");
@@ -44,14 +41,14 @@ describe("Favorite properties", () => {
   const getPropertyRecordByLabel = (props: PropertyData, label: string): PropertyRecord | undefined => {
     for (const category of props.categories) {
       const record = props.records[category.name].find((r) => r.property.displayLabel === label);
-      if (record)
+      if (record) {
         return record;
+      }
     }
     return undefined;
   };
 
   describe("favoriting different types of properties", () => {
-
     beforeEach(async () => {
       // note: Presentation is initialized without client services, so favorite properties are stored locally - clearing
       // them doesn't affect what's stored in user settings service
@@ -85,7 +82,10 @@ describe("Favorite properties", () => {
       expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).to.be.false;
 
       // request properties for 2 elements
-      propertiesDataProvider.keys = new KeySet([{ className: "PCJ_TestSchema:TestClass", id: "0x38" }, { className: "Generic:PhysicalObject", id: "0x74" }]);
+      propertiesDataProvider.keys = new KeySet([
+        { className: "PCJ_TestSchema:TestClass", id: "0x38" },
+        { className: "Generic:PhysicalObject", id: "0x74" },
+      ]);
       propertyData = await propertiesDataProvider.getData();
       expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).to.be.false;
 
@@ -143,11 +143,9 @@ describe("Favorite properties", () => {
       expect(propertyData.categories.some((category) => category.name === FAVORITES_CATEGORY_NAME)).to.be.true;
       expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).to.eq(sourceFileNameRecord.property.displayLabel);
     });
-
   });
 
   describe("ordering", () => {
-
     beforeEach(async () => {
       // note: Presentation is initialized without client services, so favorite properties are stored locally - clearing
       // them doesn't affect what's stored in user settings service
@@ -189,7 +187,10 @@ describe("Favorite properties", () => {
     });
 
     it("keeps the logical order of non-visible fields when there are relevant fields", async () => {
-      propertiesDataProvider.keys = new KeySet([{ className: "PCJ_TestSchema:TestClass", id: "0x65" }, { className: "Generic:PhysicalObject", id: "0x74" }]);
+      propertiesDataProvider.keys = new KeySet([
+        { className: "PCJ_TestSchema:TestClass", id: "0x65" },
+        { className: "Generic:PhysicalObject", id: "0x74" },
+      ]);
 
       let propertyData = await propertiesDataProvider.getData();
       await makeFieldFavorite(propertyData, "Code");
@@ -216,7 +217,10 @@ describe("Favorite properties", () => {
       const modelField = (await propertiesDataProvider.getFieldByPropertyDescription(record.property))!;
       await Presentation.favoriteProperties.changeFieldPriority(imodel, codeField, modelField, visibleFavoriteFields as Field[]);
 
-      propertiesDataProvider.keys = new KeySet([{ className: "PCJ_TestSchema:TestClass", id: "0x65" }, { className: "Generic:PhysicalObject", id: "0x74" }]);
+      propertiesDataProvider.keys = new KeySet([
+        { className: "PCJ_TestSchema:TestClass", id: "0x65" },
+        { className: "Generic:PhysicalObject", id: "0x74" },
+      ]);
       propertyData = await propertiesDataProvider.getData();
       expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).to.eq("area");
       expect(propertyData.records[FAVORITES_CATEGORY_NAME][1].property.displayLabel).to.eq("Model");
@@ -224,7 +228,10 @@ describe("Favorite properties", () => {
     });
 
     it("keeps the logical order of non-visible fields when there are no relevant fields", async () => {
-      propertiesDataProvider.keys = new KeySet([{ className: "PCJ_TestSchema:TestClass", id: "0x65" }, { className: "Generic:PhysicalObject", id: "0x74" }]);
+      propertiesDataProvider.keys = new KeySet([
+        { className: "PCJ_TestSchema:TestClass", id: "0x65" },
+        { className: "Generic:PhysicalObject", id: "0x74" },
+      ]);
 
       let propertyData = await propertiesDataProvider.getData();
       await makeFieldFavorite(propertyData, "Code");
@@ -251,13 +258,15 @@ describe("Favorite properties", () => {
       const modelField = (await propertiesDataProvider.getFieldByPropertyDescription(record.property))!;
       await Presentation.favoriteProperties.changeFieldPriority(imodel, codeField, modelField, visibleFavoriteFields as Field[]);
 
-      propertiesDataProvider.keys = new KeySet([{ className: "PCJ_TestSchema:TestClass", id: "0x65" }, { className: "Generic:PhysicalObject", id: "0x74" }]);
+      propertiesDataProvider.keys = new KeySet([
+        { className: "PCJ_TestSchema:TestClass", id: "0x65" },
+        { className: "Generic:PhysicalObject", id: "0x74" },
+      ]);
       propertyData = await propertiesDataProvider.getData();
       expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).to.eq("Country");
       expect(propertyData.records[FAVORITES_CATEGORY_NAME][1].property.displayLabel).to.eq("Code");
       expect(propertyData.records[FAVORITES_CATEGORY_NAME][2].property.displayLabel).to.eq("area");
     });
-
   });
 
   describe("re-initialization", () => {
@@ -322,7 +331,5 @@ describe("Favorite properties", () => {
       expect(propertyData.records[FAVORITES_CATEGORY_NAME].length).to.eq(1);
       expect(propertyData.records[FAVORITES_CATEGORY_NAME][0].property.displayLabel).to.eq("Model");
     });
-
   });
-
 });

@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import sinon from "sinon";
@@ -13,7 +13,10 @@ import { Presentation } from "@itwin/presentation-frontend";
 import { waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import {
-  NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE, NavigationPropertyTarget, useNavigationPropertyTargetsLoader, useNavigationPropertyTargetsRuleset,
+  NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE,
+  NavigationPropertyTarget,
+  useNavigationPropertyTargetsLoader,
+  useNavigationPropertyTargetsRuleset,
 } from "../../presentation-components/properties/UseNavigationPropertyTargetsLoader";
 import { createTestContentDescriptor, createTestContentItem } from "../_helpers/Content";
 
@@ -35,10 +38,7 @@ describe("useNavigationPropertyTargetsLoader", () => {
   it("returns empty targets array if ruleset is undefined", async () => {
     const getContentStub = sinon.stub(Presentation.presentation, "getContent");
 
-    const { result } = renderHook(
-      useNavigationPropertyTargetsLoader,
-      { initialProps: { imodel: testImodel } }
-    );
+    const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel } });
 
     const { options, hasMore } = await result.current("", 0);
     expect(getContentStub).to.not.be.called;
@@ -53,15 +53,9 @@ describe("useNavigationPropertyTargetsLoader", () => {
       displayValues: {},
       values: {},
     });
-    sinon.stub(Presentation.presentation, "getContent").resolves(new Content(
-      createTestContentDescriptor({ fields: [] }),
-      [contentItem]
-    ));
+    sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [] }), [contentItem]));
 
-    const { result } = renderHook(
-      useNavigationPropertyTargetsLoader,
-      { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } }
-    );
+    const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
 
     const { options, hasMore } = await result.current("", 0);
     expect(options).to.have.lengthOf(1);
@@ -72,10 +66,7 @@ describe("useNavigationPropertyTargetsLoader", () => {
   it("loads targets with offset", async () => {
     const getContentStub = sinon.stub(Presentation.presentation, "getContent");
 
-    const { result } = renderHook(
-      useNavigationPropertyTargetsLoader,
-      { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } }
-    );
+    const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
 
     const loadedTargets: NavigationPropertyTarget[] = [
       { label: LabelDefinition.fromLabelString("test1"), key: { className: "class", id: "1" } },
@@ -88,13 +79,9 @@ describe("useNavigationPropertyTargetsLoader", () => {
 
   it("loads full batch of targets and sets 'hasMore' flag to true", async () => {
     const contentItems = Array.from({ length: NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE }, () => createTestContentItem({ displayValues: {}, values: {} }));
-    sinon.stub(Presentation.presentation, "getContent")
-      .resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), contentItems));
+    sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), contentItems));
 
-    const { result } = renderHook(
-      useNavigationPropertyTargetsLoader,
-      { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } }
-    );
+    const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
 
     const { options, hasMore } = await result.current("", 0);
     expect(options).to.have.lengthOf(NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE);
@@ -102,13 +89,11 @@ describe("useNavigationPropertyTargetsLoader", () => {
   });
 
   it("loads targets using provided filter string", async () => {
-    const getContentStub = sinon.stub(Presentation.presentation, "getContent")
+    const getContentStub = sinon
+      .stub(Presentation.presentation, "getContent")
       .resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), []));
 
-    const { result } = renderHook(
-      useNavigationPropertyTargetsLoader,
-      { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } }
-    );
+    const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
 
     await result.current("testFilter", 0);
     expect(getContentStub).to.be.calledOnce;
@@ -133,16 +118,21 @@ describe("useNavigationPropertyTargetsRuleset", () => {
     const propertyDescription: PropertyDescription = { displayLabel: "TestProp", name: "test_prop", typename: "navigation" };
     const { result } = renderHook(
       ({ getNavigationPropertyInfo, property }: Props) => useNavigationPropertyTargetsRuleset(getNavigationPropertyInfo, property),
-      { initialProps: { getNavigationPropertyInfo: async () => testInfo, property: propertyDescription } });
+      { initialProps: { getNavigationPropertyInfo: async () => testInfo, property: propertyDescription } },
+    );
 
     await waitFor(() => expect(result.current).to.not.be.undefined);
     const ruleset = result.current;
     expect(ruleset).to.containSubset({
-      rules: [{
-        specifications: [{
-          classes: { schemaName: "TestSchema", classNames: ["TargetClass"], arePolymorphic: true },
-        }],
-      }],
+      rules: [
+        {
+          specifications: [
+            {
+              classes: { schemaName: "TestSchema", classNames: ["TargetClass"], arePolymorphic: true },
+            },
+          ],
+        },
+      ],
     });
   });
 
@@ -150,7 +140,8 @@ describe("useNavigationPropertyTargetsRuleset", () => {
     const propertyDescription: PropertyDescription = { displayLabel: "TestProp", name: "test_prop", typename: "navigation" };
     const { result } = renderHook(
       ({ getNavigationPropertyInfo, property }: Props) => useNavigationPropertyTargetsRuleset(getNavigationPropertyInfo, property),
-      { initialProps: { getNavigationPropertyInfo: async () => undefined, property: propertyDescription } });
+      { initialProps: { getNavigationPropertyInfo: async () => undefined, property: propertyDescription } },
+    );
 
     const ruleset = result.current;
     expect(ruleset).to.be.undefined;

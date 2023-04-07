@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module Core
  */
@@ -42,22 +42,28 @@ export class PageContainer<TItem, TPage extends Page<TItem> = Page<TItem>> {
   }
 
   /** Get page size used by this container */
-  public get pageSize() { return this._pageSize; }
+  public get pageSize() {
+    return this._pageSize;
+  }
   public set pageSize(value: number) {
-    if (this._pageSize === value)
+    if (this._pageSize === value) {
       return;
+    }
     this._pageSize = value;
     this.invalidatePages();
   }
 
   /** Drop all pages */
-  public invalidatePages(): void { this._pages = []; }
+  public invalidatePages(): void {
+    this._pages = [];
+  }
 
   /** Get a page containing an item with the specified index. */
   public getPage(itemIndex: number): TPage | undefined {
     for (const page of this._pages) {
-      if (page.position.start <= itemIndex && itemIndex <= page.position.end)
+      if (page.position.start <= itemIndex && itemIndex <= page.position.end) {
         return page;
+      }
     }
     return undefined;
   }
@@ -68,20 +74,23 @@ export class PageContainer<TItem, TPage extends Page<TItem> = Page<TItem>> {
    */
   public getItem(index: number): TItem | undefined {
     const page = this.getPage(index);
-    if (!page || !page.items)
+    if (!page || !page.items) {
       return undefined;
+    }
     return page.items[index - page.position.start];
   }
 
   /** Get index of the specified item */
   public getIndex(item: TItem): number {
     for (const page of this._pages) {
-      if (!page.items)
+      if (!page.items) {
         continue;
+      }
       for (let i = 0; i < page.items.length; ++i) {
         const row = page.items[i];
-        if (row === item)
+        if (row === item) {
           return page.position.start + i;
+        }
       }
     }
     return -1;
@@ -92,12 +101,13 @@ export class PageContainer<TItem, TPage extends Page<TItem> = Page<TItem>> {
     // find the place for the new page to insert
     let pageIndex: number = 0;
     for (const p of this._pages) {
-      if (p.position.start >= index)
+      if (p.position.start >= index) {
         break;
+      }
       pageIndex++;
     }
-    const pageBefore = (pageIndex > 0) ? this._pages[pageIndex - 1] : undefined;
-    const pageAfter = (pageIndex < this._pages.length) ? this._pages[pageIndex] : undefined;
+    const pageBefore = pageIndex > 0 ? this._pages[pageIndex - 1] : undefined;
+    const pageAfter = pageIndex < this._pages.length ? this._pages[pageIndex] : undefined;
 
     // determine the start of the page for the specified index
     let pageStartIndex = index;
@@ -108,14 +118,16 @@ export class PageContainer<TItem, TPage extends Page<TItem> = Page<TItem>> {
     if (undefined !== pageBefore && pageBefore.position.end > pageStartIndex) {
       pageStartIndex = pageBefore.position.end + 1;
     }
-    if (pageBefore && pageAfter && (pageAfter.position.start - pageBefore.position.end) < pageSize)
+    if (pageBefore && pageAfter && pageAfter.position.start - pageBefore.position.end < pageSize) {
       pageSize = pageAfter.position.start - pageBefore.position.end - 1;
+    }
     if (pageStartIndex < 0) {
       pageSize += pageStartIndex;
       pageStartIndex = 0;
     }
-    if (pageSize <= 0)
+    if (pageSize <= 0) {
       throw new Error("Invalid page size");
+    }
 
     // insert the new page
     const position = {
@@ -131,8 +143,9 @@ export class PageContainer<TItem, TPage extends Page<TItem> = Page<TItem>> {
   }
 
   private reIndexPages(startIndex: number): void {
-    for (let i = startIndex + 1; i < this._pages.length; ++i)
+    for (let i = startIndex + 1; i < this._pages.length; ++i) {
       this._pages[i].position.index = i;
+    }
   }
 
   private disposeFarthestPages(position: Position): void {
@@ -140,10 +153,11 @@ export class PageContainer<TItem, TPage extends Page<TItem> = Page<TItem>> {
       // we drop the page that's furthest from the newly created one
       const distanceToFront = position.index;
       const distanceToBack = this._pages.length - position.index - 1;
-      if (distanceToBack > distanceToFront)
+      if (distanceToBack > distanceToFront) {
         this._pages.pop();
-      else
+      } else {
         this._pages.splice(0, 1);
+      }
     }
   }
 }

@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import * as sinon from "sinon";
@@ -15,40 +15,49 @@ import { initialize, terminate } from "../../IntegrationTests";
 
 const RULESET: Ruleset = {
   id: "SimpleHierarchy",
-  rules: [{
-    ruleType: RuleTypes.RootNodes,
-    specifications: [{
-      specType: ChildNodeSpecificationTypes.CustomNode,
-      type: "root",
-      label: "root label",
-      description: "root description",
-      imageId: "root image id",
-    }],
-    customizationRules: [{
-      ruleType: RuleTypes.CheckBox,
-      defaultValue: true,
-      isEnabled: false,
-    }, {
-      ruleType: RuleTypes.StyleOverride,
-      foreColor: "\"Red\"",
-      backColor: "\"Green\"",
-      fontStyle: "\"Italic Bold\"",
-    }],
-  }, {
-    ruleType: RuleTypes.ChildNodes,
-    condition: "ParentNode.Type = \"root\"",
-    specifications: [{
-      specType: ChildNodeSpecificationTypes.CustomNode,
-      type: "child",
-      label: "child label",
-      description: "child description",
-      imageId: "child image id",
-    }],
-  }],
+  rules: [
+    {
+      ruleType: RuleTypes.RootNodes,
+      specifications: [
+        {
+          specType: ChildNodeSpecificationTypes.CustomNode,
+          type: "root",
+          label: "root label",
+          description: "root description",
+          imageId: "root image id",
+        },
+      ],
+      customizationRules: [
+        {
+          ruleType: RuleTypes.CheckBox,
+          defaultValue: true,
+          isEnabled: false,
+        },
+        {
+          ruleType: RuleTypes.StyleOverride,
+          foreColor: `"Red"`,
+          backColor: `"Green"`,
+          fontStyle: `"Italic Bold"`,
+        },
+      ],
+    },
+    {
+      ruleType: RuleTypes.ChildNodes,
+      condition: `ParentNode.Type = "root"`,
+      specifications: [
+        {
+          specType: ChildNodeSpecificationTypes.CustomNode,
+          type: "child",
+          label: "child label",
+          description: "child description",
+          imageId: "child image id",
+        },
+      ],
+    },
+  ],
 };
 
 describe("TreeDataProvider", async () => {
-
   let imodel: IModelConnection;
   let provider: PresentationTreeDataProvider;
 
@@ -145,15 +154,19 @@ describe("TreeDataProvider", async () => {
   it("shows grouping node children counts", async () => {
     const ruleset: Ruleset = {
       id: Guid.createValue(),
-      rules: [{
-        ruleType: RuleTypes.RootNodes,
-        specifications: [{
-          specType: ChildNodeSpecificationTypes.InstanceNodesOfSpecificClasses,
-          classes: { schemaName: "BisCore", classNames: ["Model"] },
-          arePolymorphic: true,
-          groupByClass: true,
-        }],
-      }],
+      rules: [
+        {
+          ruleType: RuleTypes.RootNodes,
+          specifications: [
+            {
+              specType: ChildNodeSpecificationTypes.InstanceNodesOfSpecificClasses,
+              classes: { schemaName: "BisCore", classNames: ["Model"] },
+              arePolymorphic: true,
+              groupByClass: true,
+            },
+          ],
+        },
+      ],
     };
     provider = new PresentationTreeDataProvider({ imodel, ruleset, appendChildrenCountForGroupingNodes: true });
     const nodes = await provider.getNodes(undefined);
@@ -165,5 +178,4 @@ describe("TreeDataProvider", async () => {
       expect(item.label.value.displayValue).to.match(new RegExp(`^[\\w\\d_ ]+ \\(${key.groupedInstancesCount}\\)$`, "i"));
     });
   });
-
 });

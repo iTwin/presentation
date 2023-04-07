@@ -1,24 +1,10 @@
 {
-  "require": [
-    "source-map-support/register",
-    "jsdom-global/register",
-    "ignore-styles"
-  ],
+  "require": ["source-map-support/register", "jsdom-global/register", "ignore-styles"],
   "checkLeaks": true,
-  "globals": [
-    "requestAnimationFrame"
-  ],
+  "globals": ["requestAnimationFrame"],
   "timeout": 60000,
-  "file": [
-    "./lib/setup.js"
-  ],
-  "reporter": [
-    "node_modules/@itwin/build-tools/mocha-reporter"
-  ],
-  "reporterOptions": [
-    "mochaFile=lib/test/junit_results.xml"
-  ],
-  "spec": [
-    "./lib/**/*.js"
-  ]
+  "file": ["./lib/setup.js"],
+  "reporter": ["node_modules/@itwin/build-tools/mocha-reporter"],
+  "reporterOptions": ["mochaFile=lib/test/junit_results.xml"],
+  "spec": ["./lib/**/*.js"]
 }

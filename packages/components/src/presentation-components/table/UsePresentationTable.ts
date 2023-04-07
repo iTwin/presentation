@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module Table
  */
@@ -82,7 +82,9 @@ export function usePresentationTable<TColumn, TRow>(props: UsePresentationTableP
  * @throws on failure to get table data. The error is thrown in the React's render loop, so it can be caught using an error boundary.
  * @beta
  */
-export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(props: Omit<UsePresentationTableProps<TColumn, TRow>, "keys">): UsePresentationTableResult<TColumn, TRow> {
+export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(
+  props: Omit<UsePresentationTableProps<TColumn, TRow>, "keys">,
+): UsePresentationTableResult<TColumn, TRow> {
   const unifiedSelection = useUnifiedSelectionContext();
   const keys = unifiedSelection?.getSelection() ?? emptyKeySet;
   return usePresentationTable({ ...props, keys });

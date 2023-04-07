@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module Table
  */
@@ -28,10 +28,12 @@ export interface TableCellRendererProps {
 export function TableCellRenderer(props: TableCellRendererProps) {
   const { record } = props;
 
-  if (record.value.valueFormat === PropertyValueFormat.Array)
+  if (record.value.valueFormat === PropertyValueFormat.Array) {
     return <ArrayPropertyRenderer record={record} />;
-  if (record.value.valueFormat ===PropertyValueFormat.Struct)
+  }
+  if (record.value.valueFormat === PropertyValueFormat.Struct) {
     return <StructPropertyRenderer record={record} />;
+  }
 
   return <>{PropertyValueRendererManager.defaultManager.render(record)}</>;
 }
@@ -74,18 +76,24 @@ function NonPrimitiveCellRenderer(props: NonPrimitiveCellRendererProps) {
 
   return (
     <>
-      <UnderlinedButton onClick={() => { setIsOpen(true); }}>{buttonLabel}</UnderlinedButton>
+      <UnderlinedButton
+        onClick={() => {
+          setIsOpen(true);
+        }}
+      >
+        {buttonLabel}
+      </UnderlinedButton>
       <Modal
         isOpen={isOpen}
         title={dialogLabel}
-        onClose={/* istanbul ignore next */() => { setIsOpen(false); }}
+        onClose={
+          /* istanbul ignore next */ () => {
+            setIsOpen(false);
+          }
+        }
         className="presentation-components-non-primitive-value"
       >
-        <NonPrimitivePropertyRenderer
-          uniqueKey={uniqueKey}
-          propertyRecord={record}
-          orientation={Orientation.Horizontal}
-        />
+        <NonPrimitivePropertyRenderer uniqueKey={uniqueKey} propertyRecord={record} orientation={Orientation.Horizontal} />
       </Modal>
     </>
   );

@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import * as moq from "typemoq";
@@ -80,48 +80,41 @@ describe("FilteredTreeDataProvider", () => {
   });
 
   describe("filter", () => {
-
     it("returns filter with which it was initialized", () => {
       expect(provider.filter).to.be.equal(filter);
     });
-
   });
 
   describe("rulesetId", () => {
-
     it("returns rulesetId of the parent data provider", () => {
       const expectedRulesetId = "ruleset_id";
-      parentProviderMock.setup((x) => x.rulesetId)
+      parentProviderMock
+        .setup((x) => x.rulesetId)
         .returns(() => expectedRulesetId)
         .verifiable();
       expect(provider.rulesetId).to.eq(expectedRulesetId);
       parentProviderMock.verifyAll();
     });
-
   });
 
   describe("imodel", () => {
-
     it("returns imodel of the parent data provider", () => {
-      parentProviderMock.setup((x) => x.imodel)
+      parentProviderMock
+        .setup((x) => x.imodel)
         .returns(() => imodelMock.object)
         .verifiable();
       expect(provider.imodel).to.eq(imodelMock.object);
       parentProviderMock.verifyAll();
     });
-
   });
 
   describe("parentDataProvider", () => {
-
     it("returns parent data provider", () => {
       expect(provider.parentDataProvider).to.eq(parentProviderMock.object);
     });
-
   });
 
   describe("getNodes", () => {
-
     it("returns root nodes", async () => {
       const result = await provider.getNodes(undefined, pageOptions);
       expect(result).to.matchSnapshot();
@@ -133,11 +126,9 @@ describe("FilteredTreeDataProvider", () => {
       const result = await provider.getNodes(parentNode, pageOptions);
       expect(result).to.matchSnapshot();
     });
-
   });
 
   describe("getNodesCount", () => {
-
     it("returns root nodes count", async () => {
       const result = await provider.getNodesCount();
       expect(result).to.equal(paths.length);
@@ -149,13 +140,12 @@ describe("FilteredTreeDataProvider", () => {
       const result = await provider.getNodesCount(parentNode);
       expect(result).to.equal(paths[1].children.length);
     });
-
   });
 
   describe("getFilteredNodePaths", () => {
-
     it("calls parent data provider", async () => {
-      parentProviderMock.setup(async (x) => x.getFilteredNodePaths(filter))
+      parentProviderMock
+        .setup(async (x) => x.getFilteredNodePaths(filter))
         .returns(async () => paths)
         .verifiable();
 
@@ -163,11 +153,9 @@ describe("FilteredTreeDataProvider", () => {
       expect(result).to.equal(paths);
       parentProviderMock.verifyAll();
     });
-
   });
 
   describe("getNodeKey", () => {
-
     it("returns node key", () => {
       const key = createTestECInstancesNodeKey();
       const treeNode = createTestTreeNodeItem(key);
@@ -176,7 +164,6 @@ describe("FilteredTreeDataProvider", () => {
       const result = provider.getNodeKey(treeNode); // eslint-disable-line deprecation/deprecation
       expect(result).to.deep.equal(key);
     });
-
   });
 
   const constantFilter = "test";

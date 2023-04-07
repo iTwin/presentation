@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import { PropertyRecord } from "@itwin/appui-abstract";
@@ -13,7 +13,6 @@ import { FavoritePropertiesScope, Presentation } from "@itwin/presentation-front
 import { initialize, terminate } from "../../IntegrationTests";
 
 describe("FavoritePropertiesDataProvider", async () => {
-
   let imodel: IModelConnection;
   let provider: FavoritePropertiesDataProvider;
   const scope = FavoritePropertiesScope.IModel;
@@ -38,7 +37,6 @@ describe("FavoritePropertiesDataProvider", async () => {
   });
 
   describe("getData", () => {
-
     it("returns favorite properties", async () => {
       // make a couple of properties favorited
       const propertyProvider = new PresentationPropertyDataProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
@@ -62,16 +60,15 @@ describe("FavoritePropertiesDataProvider", async () => {
       expect(tooltipData.records[favoritesCategory.name].some((r) => r.property.displayLabel === "Model")).to.be.true;
       expect(tooltipData.records[favoritesCategory.name].some((r) => r.property.displayLabel === "Country")).to.be.true;
     });
-
   });
-
 });
 
 const getPropertyRecordByLabel = (props: PropertyData, label: string): PropertyRecord | undefined => {
   for (const category of props.categories) {
     const record = props.records[category.name].find((r) => r.property.displayLabel === label);
-    if (record)
+    if (record) {
       return record;
+    }
   }
   return undefined;
 };

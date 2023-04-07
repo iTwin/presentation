@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module Internal
  */
@@ -37,14 +37,17 @@ export function useColumns(props: UseColumnsProps): TableColumnDefinition[] | un
       try {
         const columnDefinitions = await loadColumns(imodel, ruleset, keys);
         // istanbul ignore else
-        if (!disposed)
+        if (!disposed) {
           setColumns(columnDefinitions ?? []);
+        }
       } catch (err) {
         setErrorState(err);
       }
     })();
 
-    return () => {disposed=true;};
+    return () => {
+      disposed = true;
+    };
   }, [imodel, ruleset, keys, setErrorState]);
 
   return columns;

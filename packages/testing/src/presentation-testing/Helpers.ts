@@ -1,24 +1,25 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module Helpers
  */
 
-/* istanbul ignore file */  // TODO: Remove istanbul ignore file when https://github.com/iTwin/itwinjs-backlog/issues/463 is fixed.
+/* istanbul ignore file */ // TODO: Remove istanbul ignore file when https://github.com/iTwin/itwinjs-backlog/issues/463 is fixed.
 
 import { tmpdir } from "os";
 import { join } from "path";
 import * as rimraf from "rimraf";
 import { IModelHost, IModelHostOptions } from "@itwin/core-backend";
 import { Guid } from "@itwin/core-bentley";
-import {
-  IModelReadRpcInterface, RpcConfiguration, RpcDefaultConfiguration, RpcInterfaceDefinition, SnapshotIModelRpcInterface,
-} from "@itwin/core-common";
+import { IModelReadRpcInterface, RpcConfiguration, RpcDefaultConfiguration, RpcInterfaceDefinition, SnapshotIModelRpcInterface } from "@itwin/core-common";
 import { IModelApp, IModelAppOptions, NoRenderApp } from "@itwin/core-frontend";
 import {
-  HierarchyCacheMode, Presentation as PresentationBackend, PresentationManagerProps as PresentationBackendProps, PresentationManagerMode,
+  HierarchyCacheMode,
+  Presentation as PresentationBackend,
+  PresentationManagerProps as PresentationBackendProps,
+  PresentationManagerMode,
 } from "@itwin/presentation-backend";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { Presentation as PresentationFrontend, PresentationProps as PresentationFrontendProps } from "@itwin/presentation-frontend";
@@ -28,8 +29,9 @@ function initializeRpcInterfaces(interfaces: RpcInterfaceDefinition[]) {
     public override interfaces: any = () => interfaces;
   };
 
-  for (const definition of interfaces)
+  for (const definition of interfaces) {
     RpcConfiguration.assign(definition, () => config); // eslint-disable-line @itwin/no-internal
+  }
 
   const instance = RpcConfiguration.obtain(config); // eslint-disable-line @itwin/no-internal
 
@@ -79,11 +81,13 @@ export interface PresentationTestingInitProps {
  * @public
  */
 export const initialize = async (props?: PresentationTestingInitProps) => {
-  if (isInitialized)
+  if (isInitialized) {
     return;
+  }
 
-  if (!props)
+  if (!props) {
     props = {};
+  }
 
   // set up rpc interfaces
   initializeRpcInterfaces([SnapshotIModelRpcInterface, IModelReadRpcInterface, PresentationRpcInterface]);
@@ -91,14 +95,17 @@ export const initialize = async (props?: PresentationTestingInitProps) => {
   // init backend
   // make sure backend gets assigned an id which puts its resources into a unique directory
   props.backendProps = props.backendProps ?? {};
-  if (!props.backendProps.id) // eslint-disable-line @itwin/no-internal
+  // eslint-disable-next-line @itwin/no-internal
+  if (!props.backendProps.id) {
     props.backendProps.id = `test-${Guid.createValue()}`; // eslint-disable-line @itwin/no-internal
+  }
   await IModelHost.startup({ cacheDir: join(__dirname, ".cache"), ...props.backendHostProps });
   PresentationBackend.initialize(props.backendProps);
 
   // init frontend
-  if (!props.frontendApp)
+  if (!props.frontendApp) {
     props.frontendApp = NoRenderApp;
+  }
   await props.frontendApp.startup(props.frontendAppOptions);
   const defaultFrontendProps: PresentationFrontendProps = {
     presentation: {
@@ -120,22 +127,25 @@ export const initialize = async (props?: PresentationTestingInitProps) => {
  * @public
  */
 export const terminate = async (frontendApp = IModelApp) => {
-  if (!isInitialized)
+  if (!isInitialized) {
     return;
+  }
 
   // store directory that needs to be cleaned-up
   let hierarchiesCacheDirectory: string | undefined;
   const hierarchiesCacheConfig = PresentationBackend.initProps?.caching?.hierarchies;
-  if (hierarchiesCacheConfig?.mode === HierarchyCacheMode.Disk)
+  if (hierarchiesCacheConfig?.mode === HierarchyCacheMode.Disk) {
     hierarchiesCacheDirectory = hierarchiesCacheConfig?.directory;
-  else if (hierarchiesCacheConfig?.mode === HierarchyCacheMode.Hybrid)
+  } else if (hierarchiesCacheConfig?.mode === HierarchyCacheMode.Hybrid) {
     hierarchiesCacheDirectory = hierarchiesCacheConfig?.disk?.directory;
+  }
 
   // terminate backend
   PresentationBackend.terminate();
   await IModelHost.shutdown();
-  if (hierarchiesCacheDirectory)
+  if (hierarchiesCacheDirectory) {
     rimraf.sync(hierarchiesCacheDirectory);
+  }
 
   // terminate frontend
   PresentationFrontend.terminate();

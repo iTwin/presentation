@@ -1,13 +1,20 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { Component } from "react";
 import { It } from "typemoq";
 import { BeDuration } from "@itwin/core-bentley";
 import {
-  ClassInfo, InstanceKey, Keys, KeySet, PropertyInfo, RelatedClassInfo, RelatedClassInfoWithOptionalRelationship, Ruleset,
+  ClassInfo,
+  InstanceKey,
+  Keys,
+  KeySet,
+  PropertyInfo,
+  RelatedClassInfo,
+  RelatedClassInfoWithOptionalRelationship,
+  Ruleset,
 } from "@itwin/presentation-common";
 
 export function createTestECInstanceKey(key?: Partial<InstanceKey>): InstanceKey {
@@ -50,14 +57,15 @@ export const createTestRelatedClassInfoWithOptionalRelationship = (props?: Parti
 
 export const createTestRelationshipPath = (length: number = 2) => {
   const path = new Array<RelatedClassInfo>();
-  while (length--)
+  while (length--) {
     path.push(createTestRelatedClassInfo());
+  }
   return path;
 };
 
 export function isKeySet(expectedKeys: Keys) {
   const expected = new KeySet(expectedKeys);
-  return It.is<KeySet>((actual: KeySet) => (actual.size === expected.size && actual.hasAll(expected)));
+  return It.is<KeySet>((actual: KeySet) => actual.size === expected.size && actual.hasAll(expected));
 }
 
 export function createTestRuleset(ruleset?: Partial<Ruleset>): Ruleset {
@@ -75,7 +83,7 @@ const recursiveWait = async (pred: () => boolean, repeater: () => Promise<void>)
 };
 
 export const waitForAllAsyncs = async (handlers: Array<{ pendingAsyncs: Set<string> }>) => {
-  const pred = () => handlers.some((h) => (h.pendingAsyncs.size > 0));
+  const pred = () => handlers.some((h) => h.pendingAsyncs.size > 0);
   await recursiveWait(pred, async () => waitForAllAsyncs(handlers));
 };
 
@@ -119,13 +127,16 @@ export class TestErrorBoundary extends Component<TestErrorBoundaryProps, TestErr
     this.state = {};
   }
   // eslint-disable-next-line @typescript-eslint/explicit-member-accessibility
-  static getDerivedStateFromError(): TestErrorBoundaryState { return { hasError: true }; }
+  static getDerivedStateFromError(): TestErrorBoundaryState {
+    return { hasError: true };
+  }
   public override componentDidCatch(error: Error, info: any) {
     this.props.onError(error, info.componentStack);
   }
   public override render() {
-    if (this.state.hasError)
+    if (this.state.hasError) {
       return null;
+    }
     return this.props.children;
   }
 }

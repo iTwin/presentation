@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import sinon from "sinon";
@@ -38,46 +38,55 @@ describe("useColumns", () => {
 
   it("loads columns", async () => {
     const contentField = createTestPropertiesContentField({ name: "first_field", label: "First Field", properties: [] });
-    presentationManagerMock.setup(async (x) => x.getContentDescriptor(moq.It.isAny())).returns(async () => createTestContentDescriptor({ fields: [contentField] }));
+    presentationManagerMock
+      .setup(async (x) => x.getContentDescriptor(moq.It.isAny()))
+      .returns(async () => createTestContentDescriptor({ fields: [contentField] }));
 
-    const { result } = renderHook(
-      (props) => useColumns(props),
-      { initialProps }
+    const { result } = renderHook((props) => useColumns(props), { initialProps });
+
+    await waitFor(() =>
+      expect(result.current)
+        .to.have.lengthOf(1)
+        .and.containSubset([
+          {
+            name: contentField.name,
+            label: contentField.label,
+            field: contentField,
+          },
+        ]),
     );
-
-    await waitFor(() => expect(result.current).to.have.lengthOf(1).and.containSubset([{
-      name: contentField.name,
-      label: contentField.label,
-      field: contentField,
-    }]));
   });
 
   it("loads columns only for properties fields", async () => {
     const propertyField = createTestPropertiesContentField({ name: "first_field", label: "First Field", properties: [] });
     const nestedField = createTestPropertiesContentField({ name: "nested_field", label: "Nested Field", properties: [] });
     const nestingField = createTestNestedContentField({ name: "nesting_field", label: "Nesting Field", nestedFields: [nestedField] });
-    presentationManagerMock.setup(async (x) => x.getContentDescriptor(moq.It.isAny())).returns(async () => createTestContentDescriptor({ fields: [propertyField, nestingField] }));
+    presentationManagerMock
+      .setup(async (x) => x.getContentDescriptor(moq.It.isAny()))
+      .returns(async () => createTestContentDescriptor({ fields: [propertyField, nestingField] }));
 
-    const { result } = renderHook(
-      (props) => useColumns(props),
-      { initialProps }
+    const { result } = renderHook((props) => useColumns(props), { initialProps });
+
+    await waitFor(() =>
+      expect(result.current)
+        .to.have.lengthOf(1)
+        .and.containSubset([
+          {
+            name: propertyField.name,
+            label: propertyField.label,
+            field: propertyField,
+          },
+        ]),
     );
-
-    await waitFor(() => expect(result.current).to.have.lengthOf(1).and.containSubset([{
-      name: propertyField.name,
-      label: propertyField.label,
-      field: propertyField,
-    }]));
   });
 
   it("returns empty column list if no keys provided", async () => {
     const propertyField = createTestPropertiesContentField({ name: "first_field", label: "First Field", properties: [] });
-    presentationManagerMock.setup(async (x) => x.getContentDescriptor(moq.It.isAny())).returns(async () => createTestContentDescriptor({ fields: [propertyField] }));
+    presentationManagerMock
+      .setup(async (x) => x.getContentDescriptor(moq.It.isAny()))
+      .returns(async () => createTestContentDescriptor({ fields: [propertyField] }));
 
-    const { result } = renderHook(
-      (props) => useColumns(props),
-      { initialProps: { ...initialProps, keys: new KeySet() } }
-    );
+    const { result } = renderHook((props) => useColumns(props), { initialProps: { ...initialProps, keys: new KeySet() } });
 
     await waitFor(() => expect(result.current).to.have.lengthOf(0));
   });
@@ -85,17 +94,17 @@ describe("useColumns", () => {
   it("returns empty column list if content descriptor was not loaded", async () => {
     presentationManagerMock.setup(async (x) => x.getContentDescriptor(moq.It.isAny())).returns(async () => undefined);
 
-    const { result } = renderHook(
-      (props) => useColumns(props),
-      { initialProps }
-    );
+    const { result } = renderHook((props) => useColumns(props), { initialProps });
 
     await waitFor(() => expect(result.current).to.have.lengthOf(0));
   });
 
   it("throws in React render loop on failure to get content descriptor", async () => {
-    presentationManagerMock.setup(async (x) => x.getContentDescriptor(moq.It.isAny()))
-      .callback(() => { throw new Error("test error"); })
+    presentationManagerMock
+      .setup(async (x) => x.getContentDescriptor(moq.It.isAny()))
+      .callback(() => {
+        throw new Error("test error");
+      })
       .returns(async () => undefined);
 
     const errorSpy = sinon.spy();
@@ -106,7 +115,7 @@ describe("useColumns", () => {
     render(
       <TestErrorBoundary onError={errorSpy}>
         <TestComponent />
-      </TestErrorBoundary>
+      </TestErrorBoundary>,
     );
 
     await waitFor(() => {

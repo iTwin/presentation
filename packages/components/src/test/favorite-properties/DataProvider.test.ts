@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import sinon from "sinon";
@@ -13,13 +13,17 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet, Ruleset } from "@itwin/presentation-common";
 import {
-  FavoritePropertiesManager, Presentation, PresentationManager, RulesetManager, SelectionManager, SelectionScopesManager,
+  FavoritePropertiesManager,
+  Presentation,
+  PresentationManager,
+  RulesetManager,
+  SelectionManager,
+  SelectionScopesManager,
 } from "@itwin/presentation-frontend";
 import { FavoritePropertiesDataProvider, getFavoritesCategory } from "../../presentation-components/favorite-properties/DataProvider";
 import { PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider";
 
 describe("FavoritePropertiesDataProvider", () => {
-
   let provider: FavoritePropertiesDataProvider;
   let elementId: Id64String;
   const imodelMock = moq.Mock.ofType<IModelConnection>();
@@ -54,7 +58,6 @@ describe("FavoritePropertiesDataProvider", () => {
   });
 
   describe("constructor", () => {
-
     it("sets `includeFieldsWithNoValues` to true", () => {
       expect(provider.includeFieldsWithNoValues).to.be.true;
     });
@@ -62,11 +65,9 @@ describe("FavoritePropertiesDataProvider", () => {
     it("sets `includeFieldsWithCompositeValues` to true", () => {
       expect(provider.includeFieldsWithCompositeValues).to.be.true;
     });
-
   });
 
   describe("getData", () => {
-
     beforeEach(() => {
       const selectionScopesManager = moq.Mock.ofType<SelectionScopesManager>();
       selectionScopesManager.setup(async (x) => x.computeSelection(moq.It.isAny(), elementId, moq.It.isAny())).returns(async () => new KeySet());
@@ -74,11 +75,13 @@ describe("FavoritePropertiesDataProvider", () => {
     });
 
     it("passes `customRulesetId` to PropertyDataProvider if set", async () => {
-      presentationPropertyDataProviderMock.setup(async (x) => x.getData()).returns(async () => ({
-        label: PropertyRecord.fromString("Test Item"),
-        categories: [],
-        records: {},
-      }));
+      presentationPropertyDataProviderMock
+        .setup(async (x) => x.getData())
+        .returns(async () => ({
+          label: PropertyRecord.fromString("Test Item"),
+          categories: [],
+          records: {},
+        }));
 
       const customRulesetId = "custom_ruleset_id";
       provider = new FavoritePropertiesDataProvider({ propertyDataProviderFactory: factoryMock.object, ruleset: customRulesetId });
@@ -95,7 +98,8 @@ describe("FavoritePropertiesDataProvider", () => {
           test: [
             new PropertyRecord(
               { valueFormat: PropertyValueFormat.Primitive, displayValue: "Test Value" },
-              { typename: "string", name: "test_prop", displayLabel: "Test Property" }),
+              { typename: "string", name: "test_prop", displayLabel: "Test Property" },
+            ),
           ],
         },
       };
@@ -118,12 +122,14 @@ describe("FavoritePropertiesDataProvider", () => {
           [favoritesCategory.name]: [
             new PropertyRecord(
               { valueFormat: PropertyValueFormat.Primitive, displayValue: "SomeString" },
-              { typename: "string", name: favoritePropertyName, displayLabel: "Favorite Property" }),
+              { typename: "string", name: favoritePropertyName, displayLabel: "Favorite Property" },
+            ),
           ],
           test: [
             new PropertyRecord(
               { valueFormat: PropertyValueFormat.Primitive, displayValue: "1" },
-              { typename: "int", name: regularPropertyName, displayLabel: "Regular Property" }),
+              { typename: "int", name: regularPropertyName, displayLabel: "Regular Property" },
+            ),
           ],
         },
       };
@@ -135,7 +141,5 @@ describe("FavoritePropertiesDataProvider", () => {
       expect(data.records[favoritesCategory.name].length).to.eq(1);
       expect(data.records[favoritesCategory.name][0].property.name).to.eq(favoritePropertyName);
     });
-
   });
-
 });

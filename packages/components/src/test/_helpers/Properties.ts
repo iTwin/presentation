@@ -1,10 +1,17 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import {
-  ArrayValue, PrimitiveValue, PropertyDescription, PropertyEditorInfo, PropertyRecord, PropertyValueFormat, StandardTypeNames, StructValue,
+  ArrayValue,
+  PrimitiveValue,
+  PropertyDescription,
+  PropertyEditorInfo,
+  PropertyRecord,
+  PropertyValueFormat,
+  StandardTypeNames,
+  StructValue,
 } from "@itwin/appui-abstract";
 
 export function createPrimitiveStringProperty(
@@ -26,21 +33,24 @@ export function createPrimitiveStringProperty(
     typename: StandardTypeNames.String,
   };
 
-  if (editorInfo)
+  if (editorInfo) {
     description.editor = editorInfo;
+  }
 
   const property = new PropertyRecord(value, description);
   property.isReadonly = false;
   property.autoExpand = autoExpand;
-  if (property.autoExpand === undefined)
+  if (property.autoExpand === undefined) {
     delete property.autoExpand;
+  }
 
   return property;
 }
 
 export function createArrayProperty(name: string, items?: PropertyRecord[], autoExpand?: boolean): PropertyRecord {
-  if (!items)
+  if (!items) {
     items = [];
+  }
 
   const value: ArrayValue = {
     items,
@@ -66,8 +76,9 @@ export function createStructProperty(
   },
   autoExpand?: boolean,
 ): PropertyRecord {
-  if (!members)
+  if (!members) {
     members = {};
+  }
 
   const value: StructValue = {
     members,

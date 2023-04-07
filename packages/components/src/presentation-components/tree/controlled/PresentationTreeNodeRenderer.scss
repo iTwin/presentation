@@ -15,11 +15,11 @@
     right: 0;
     display: flex;
 
-    .iui-button{
+    .iui-button {
       height: 24px;
       width: 24px;
-      }
     }
+  }
 
   &:hover > .presentation-components-node-action-buttons {
     visibility: visible;

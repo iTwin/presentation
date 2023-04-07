@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import sinon from "sinon";
@@ -48,7 +48,7 @@ describe("PresentationInstanceFilterDialog", () => {
   const onCloseEvent = new BeEvent<() => void>();
 
   before(() => {
-    HTMLElement.prototype.scrollIntoView = () => { };
+    HTMLElement.prototype.scrollIntoView = () => {};
   });
 
   after(() => {
@@ -80,13 +80,9 @@ describe("PresentationInstanceFilterDialog", () => {
 
   it("invokes 'onInstanceFilterApplied' with filter", async () => {
     const spy = sinon.spy();
-    const { container, getByText, getByDisplayValue } = render(<PresentationInstanceFilterDialog
-      imodel={imodelMock.object}
-      descriptor={descriptor}
-      onClose={() => { }}
-      onApply={spy}
-      isOpen={true}
-    />);
+    const { container, getByText, getByDisplayValue } = render(
+      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />,
+    );
 
     const applyButton = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
     expect(applyButton?.disabled).to.be.true;
@@ -127,15 +123,17 @@ describe("PresentationInstanceFilterDialog", () => {
     const spy = sinon.spy();
     const title = "custom title";
 
-    const { queryByText } = render(<PresentationInstanceFilterDialog
-      imodel={imodelMock.object}
-      descriptor={descriptor}
-      onClose={() => { }}
-      title={<div>{title}</div>}
-      onApply={spy}
-      isOpen={true}
-      initialFilter={initialFilter}
-    />);
+    const { queryByText } = render(
+      <PresentationInstanceFilterDialog
+        imodel={imodelMock.object}
+        descriptor={descriptor}
+        onClose={() => {}}
+        title={<div>{title}</div>}
+        onApply={spy}
+        isOpen={true}
+        initialFilter={initialFilter}
+      />,
+    );
 
     expect(queryByText(title)).to.not.be.null;
   });
@@ -144,14 +142,18 @@ describe("PresentationInstanceFilterDialog", () => {
     const spy = sinon.spy();
     const count = "custom count";
 
-    const { queryByText } = render(<PresentationInstanceFilterDialog
-      imodel={imodelMock.object}
-      descriptor={descriptor}
-      onClose={() => { }}
-      filterResultCountRenderer={() => { return <div>{count}</div>; }}
-      onApply={spy}
-      isOpen={true}
-    />);
+    const { queryByText } = render(
+      <PresentationInstanceFilterDialog
+        imodel={imodelMock.object}
+        descriptor={descriptor}
+        onClose={() => {}}
+        filterResultCountRenderer={() => {
+          return <div>{count}</div>;
+        }}
+        onApply={spy}
+        isOpen={true}
+      />,
+    );
 
     expect(queryByText(count)).to.not.be.null;
   });
@@ -160,13 +162,9 @@ describe("PresentationInstanceFilterDialog", () => {
     const spy = sinon.spy();
     const descriptorGetter = async () => descriptor;
 
-    const { container } = render(<PresentationInstanceFilterDialog
-      imodel={imodelMock.object}
-      descriptor={descriptorGetter}
-      onClose={() => { }}
-      onApply={spy}
-      isOpen={true}
-    />);
+    const { container } = render(
+      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptorGetter} onClose={() => {}} onApply={spy} isOpen={true} />,
+    );
 
     await waitFor(() => {
       const propertySelector = container.querySelector<HTMLInputElement>(".rule-property .iui-input");
@@ -179,13 +177,9 @@ describe("PresentationInstanceFilterDialog", () => {
     // simulate long loading descriptor
     const descriptorGetter = async () => undefined as unknown as Descriptor;
 
-    const { container } = render(<PresentationInstanceFilterDialog
-      imodel={imodelMock.object}
-      descriptor={descriptorGetter}
-      onClose={() => { }}
-      onApply={spy}
-      isOpen={true}
-    />);
+    const { container } = render(
+      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptorGetter} onClose={() => {}} onApply={spy} isOpen={true} />,
+    );
 
     await waitFor(() => {
       const progressIndicator = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-progress");

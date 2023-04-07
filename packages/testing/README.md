@@ -4,4 +4,4 @@ Copyright © Bentley Systems, Incorporated. All rights reserved. See LICENSE.md 
 
 ## Description
 
-The __@itwin/presentation-testing__ package contains helper classes and APIs that help test presentation modules.
+The **@itwin/presentation-testing** package contains helper classes and APIs that help test presentation modules.

@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import sinon from "sinon";
@@ -13,7 +13,9 @@ import { NodePathElement } from "@itwin/presentation-common";
 import { waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import {
-  ControlledPresentationTreeFilteringProps, IPresentationTreeDataProvider, useControlledPresentationTreeFiltering,
+  ControlledPresentationTreeFilteringProps,
+  IPresentationTreeDataProvider,
+  useControlledPresentationTreeFiltering,
 } from "../../../presentation-components";
 import { FilteredPresentationTreeDataProvider } from "../../../presentation-components/tree/FilteredDataProvider";
 import { ResolvablePromise } from "../../_helpers/Promises";
@@ -46,10 +48,7 @@ describe("useControlledPresentationTreeFiltering", () => {
   });
 
   it("does not start filtering if filter is not provided", () => {
-    const { result } = renderHook(
-      useControlledPresentationTreeFiltering,
-      { initialProps: { nodeLoader: nodeLoaderMock.object } },
-    );
+    const { result } = renderHook(useControlledPresentationTreeFiltering, { initialProps: { nodeLoader: nodeLoaderMock.object } });
     expect(result.current.isFiltering).to.be.false;
   });
 
@@ -57,10 +56,9 @@ describe("useControlledPresentationTreeFiltering", () => {
     const pathsResult1 = new ResolvablePromise<NodePathElement[]>();
     dataProviderMock.setup(async (x) => x.getFilteredNodePaths("test")).returns(async () => pathsResult1);
 
-    const { result } = renderHook(
-      useControlledPresentationTreeFiltering,
-      { initialProps: { nodeLoader: nodeLoaderMock.object, filter: "test", activeMatchIndex: 0 } },
-    );
+    const { result } = renderHook(useControlledPresentationTreeFiltering, {
+      initialProps: { nodeLoader: nodeLoaderMock.object, filter: "test", activeMatchIndex: 0 },
+    });
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.true;
 
@@ -81,10 +79,7 @@ describe("useControlledPresentationTreeFiltering", () => {
       nodeLoader: nodeLoaderMock.object,
       filter: "test",
     };
-    const { result, rerender } = renderHook(
-      useControlledPresentationTreeFiltering,
-      { initialProps },
-    );
+    const { result, rerender } = renderHook(useControlledPresentationTreeFiltering, { initialProps });
 
     // give time to start request
     await clock.tickAsync(1);
@@ -139,10 +134,7 @@ describe("useControlledPresentationTreeFiltering", () => {
       nodeLoader: nodeLoaderMock.object,
       filter: "test",
     };
-    const { result, rerender } = renderHook(
-      useControlledPresentationTreeFiltering,
-      { initialProps },
-    );
+    const { result, rerender } = renderHook(useControlledPresentationTreeFiltering, { initialProps });
 
     // give time to start request if necessary
     await clock.tickAsync(1);
@@ -178,10 +170,7 @@ describe("useControlledPresentationTreeFiltering", () => {
       nodeLoader: nodeLoaderMock.object,
       filter,
     };
-    const { result, rerender } = renderHook(
-      useControlledPresentationTreeFiltering,
-      { initialProps },
-    );
+    const { result, rerender } = renderHook(useControlledPresentationTreeFiltering, { initialProps });
 
     await pathsResult.resolve([]);
     await waitFor(() => expect(result.current.isFiltering).to.be.false);
@@ -210,10 +199,7 @@ describe("useControlledPresentationTreeFiltering", () => {
       nodeLoader: nodeLoaderMock.object,
       filter: "test",
     };
-    const { result, rerender } = renderHook(
-      useControlledPresentationTreeFiltering,
-      { initialProps },
-    );
+    const { result, rerender } = renderHook(useControlledPresentationTreeFiltering, { initialProps });
 
     await pathsResult.resolve([]);
     await waitFor(() => expect(result.current.isFiltering).to.be.false);
@@ -253,10 +239,7 @@ describe("useControlledPresentationTreeFiltering", () => {
       nodeLoader: nodeLoaderMock.object,
       filter: "test",
     };
-    const { result } = renderHook(
-      useControlledPresentationTreeFiltering,
-      { initialProps },
-    );
+    const { result } = renderHook(useControlledPresentationTreeFiltering, { initialProps });
 
     const nodeLoader = result.current.filteredNodeLoader;
     expect(result.current.isFiltering).to.be.true;

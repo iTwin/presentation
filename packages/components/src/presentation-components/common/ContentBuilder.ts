@@ -1,19 +1,43 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module Core
  */
 
 import {
-  ArrayValue, PrimitiveValue, PropertyDescription, PropertyEditorInfo, PropertyRecord, StandardEditorNames, StandardTypeNames, StructValue, PropertyValueFormat as UiPropertyValueFormat,
+  ArrayValue,
+  PrimitiveValue,
+  PropertyDescription,
+  PropertyEditorInfo,
+  PropertyRecord,
+  StandardEditorNames,
+  StandardTypeNames,
+  StructValue,
+  PropertyValueFormat as UiPropertyValueFormat,
 } from "@itwin/appui-abstract";
 import { assert } from "@itwin/core-bentley";
 import {
-  combineFieldNames, EditorDescription, EnumerationInfo, Field, FieldHierarchy, IContentVisitor, Item, PropertyValueFormat as PresentationPropertyValueFormat,
-  ProcessFieldHierarchiesProps, ProcessMergedValueProps, ProcessPrimitiveValueProps, RendererDescription, StartArrayProps,
-  StartCategoryProps, StartContentProps, StartFieldProps, StartItemProps, StartStructProps, TypeDescription,
+  combineFieldNames,
+  EditorDescription,
+  EnumerationInfo,
+  Field,
+  FieldHierarchy,
+  IContentVisitor,
+  Item,
+  PropertyValueFormat as PresentationPropertyValueFormat,
+  ProcessFieldHierarchiesProps,
+  ProcessMergedValueProps,
+  ProcessPrimitiveValueProps,
+  RendererDescription,
+  StartArrayProps,
+  StartCategoryProps,
+  StartContentProps,
+  StartFieldProps,
+  StartItemProps,
+  StartStructProps,
+  TypeDescription,
 } from "@itwin/presentation-common";
 
 /** @internal */
@@ -53,10 +77,12 @@ export function createPropertyDescriptionFromFieldInfo(info: FieldInfo) {
     displayLabel: info.label,
   };
 
-  if (descr.typename === StandardTypeNames.Number
-    || descr.typename === StandardTypeNames.Int
-    || descr.typename === StandardTypeNames.Float
-    || descr.typename === StandardTypeNames.Double) {
+  if (
+    descr.typename === StandardTypeNames.Number ||
+    descr.typename === StandardTypeNames.Int ||
+    descr.typename === StandardTypeNames.Float ||
+    descr.typename === StandardTypeNames.Double
+  ) {
     descr.editor = { name: StandardEditorNames.NumericInput };
   }
 
@@ -98,7 +124,7 @@ namespace IPropertiesAppender {
 }
 class StructMembersAppender implements INestedPropertiesAppender {
   private _members: { [name: string]: PropertyRecord } = {};
-  constructor(private _parentAppender: IPropertiesAppender, private _fieldHierarchy: FieldHierarchy, private _fieldInfo: FieldInfo) { }
+  constructor(private _parentAppender: IPropertiesAppender, private _fieldHierarchy: FieldHierarchy, private _fieldInfo: FieldInfo) {}
   public append(record: FieldHierarchyRecord): void {
     this._members[record.fieldHierarchy.field.name] = record.record;
   }
@@ -114,7 +140,7 @@ class StructMembersAppender implements INestedPropertiesAppender {
 }
 class ArrayItemsAppender implements INestedPropertiesAppender {
   private _items: PropertyRecord[] = [];
-  constructor(private _parentAppender: IPropertiesAppender, private _fieldHierarchy: FieldHierarchy, private _fieldInfo: FieldInfo) { }
+  constructor(private _parentAppender: IPropertiesAppender, private _fieldHierarchy: FieldHierarchy, private _fieldInfo: FieldInfo) {}
   public append(record: FieldHierarchyRecord): void {
     this._items.push(record.record);
   }
@@ -142,8 +168,10 @@ export abstract class PropertyRecordsBuilder implements IContentVisitor {
     return appender;
   }
 
-  public startContent(_props: StartContentProps): boolean { return true; }
-  public finishContent(): void { }
+  public startContent(_props: StartContentProps): boolean {
+    return true;
+  }
+  public finishContent(): void {}
 
   public startItem(props: StartItemProps): boolean {
     const appender = this.createRootPropertiesAppender();
@@ -151,22 +179,27 @@ export abstract class PropertyRecordsBuilder implements IContentVisitor {
     this._appendersStack.push(appender);
     return true;
   }
-  public finishItem(): void { }
+  public finishItem(): void {}
 
-  public processFieldHierarchies(_props: ProcessFieldHierarchiesProps): void { }
+  public processFieldHierarchies(_props: ProcessFieldHierarchiesProps): void {}
 
-  public startCategory(_props: StartCategoryProps): boolean { return true; }
-  public finishCategory(): void { }
+  public startCategory(_props: StartCategoryProps): boolean {
+    return true;
+  }
+  public finishCategory(): void {}
 
-  public startField(_props: StartFieldProps): boolean { return true; }
-  public finishField(): void { }
+  public startField(_props: StartFieldProps): boolean {
+    return true;
+  }
+  public finishField(): void {}
 
   public startStruct(props: StartStructProps): boolean {
-    this._appendersStack.push(new StructMembersAppender(
-      this.currentPropertiesAppender,
-      props.hierarchy,
-      { ...createFieldInfo(props.hierarchy.field, props.parentFieldName), type: props.valueType },
-    ));
+    this._appendersStack.push(
+      new StructMembersAppender(this.currentPropertiesAppender, props.hierarchy, {
+        ...createFieldInfo(props.hierarchy.field, props.parentFieldName),
+        type: props.valueType,
+      }),
+    );
     return true;
   }
   public finishStruct(): void {
@@ -176,11 +209,12 @@ export abstract class PropertyRecordsBuilder implements IContentVisitor {
   }
 
   public startArray(props: StartArrayProps): boolean {
-    this._appendersStack.push(new ArrayItemsAppender(
-      this.currentPropertiesAppender,
-      props.hierarchy,
-      { ...createFieldInfo(props.hierarchy.field, props.parentFieldName), type: props.valueType },
-    ));
+    this._appendersStack.push(
+      new ArrayItemsAppender(this.currentPropertiesAppender, props.hierarchy, {
+        ...createFieldInfo(props.hierarchy.field, props.parentFieldName),
+        type: props.valueType,
+      }),
+    );
     return true;
   }
   public finishArray(): void {
@@ -194,10 +228,7 @@ export abstract class PropertyRecordsBuilder implements IContentVisitor {
     const value: PrimitiveValue = {
       valueFormat: UiPropertyValueFormat.Primitive,
     };
-    const record = new PropertyRecord(
-      value,
-      createPropertyDescriptionFromFieldInfo(createFieldInfo(propertyField, props.parentFieldName)),
-    );
+    const record = new PropertyRecord(value, createPropertyDescriptionFromFieldInfo(createFieldInfo(propertyField, props.parentFieldName)));
     record.isMerged = true;
     record.isReadonly = true;
     record.autoExpand = propertyField.isNestedContentField() && propertyField.autoExpand;
@@ -220,13 +251,22 @@ export abstract class PropertyRecordsBuilder implements IContentVisitor {
   }
 }
 
-function applyPropertyRecordAttributes(record: PropertyRecord, field: Field, displayValue: string | undefined, extendedData: typeof Item.prototype.extendedData | undefined) {
-  if (displayValue)
+function applyPropertyRecordAttributes(
+  record: PropertyRecord,
+  field: Field,
+  displayValue: string | undefined,
+  extendedData: typeof Item.prototype.extendedData | undefined,
+) {
+  if (displayValue) {
     record.description = displayValue.toString();
-  if (field.isReadonly || (field.isNestedContentField() && record.value.valueFormat === UiPropertyValueFormat.Array))
+  }
+  if (field.isReadonly || (field.isNestedContentField() && record.value.valueFormat === UiPropertyValueFormat.Array)) {
     record.isReadonly = true;
-  if (field.isNestedContentField() && field.autoExpand)
+  }
+  if (field.isNestedContentField() && field.autoExpand) {
     record.autoExpand = true;
-  if (extendedData)
+  }
+  if (extendedData) {
     record.extendedData = extendedData;
+  }
 }

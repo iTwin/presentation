@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import sinon from "sinon";
@@ -14,7 +14,6 @@ import { PresentationLabelsProvider } from "../../presentation-components/labels
 import { createTestECInstanceKey } from "../_helpers/Common";
 
 describe("PresentationLabelsProvider", () => {
-
   let provider: PresentationLabelsProvider;
   const presentationManagerMock = moq.Mock.ofType<PresentationManager>();
   const imodelMock = moq.Mock.ofType<IModelConnection>();
@@ -33,7 +32,6 @@ describe("PresentationLabelsProvider", () => {
   });
 
   describe("getLabel", () => {
-
     it("calls manager to get result and returns it", async () => {
       const key = createTestECInstanceKey();
       const result = "Label";
@@ -74,11 +72,9 @@ describe("PresentationLabelsProvider", () => {
       expect(await provider.getLabel(key2)).to.eq(result2);
       presentationManagerMock.verifyAll();
     });
-
   });
 
   describe("getLabels", () => {
-
     it("calls manager to get result and returns it", async () => {
       const keys = [createTestECInstanceKey({ id: "0x1" }), createTestECInstanceKey({ id: "0x2" })];
       const result = ["Label 1", "Label 2"];
@@ -103,8 +99,8 @@ describe("PresentationLabelsProvider", () => {
     });
 
     it("calls manager for every different list of keys", async () => {
-      const keys1 = [createTestECInstanceKey({ id:"0x1" }), createTestECInstanceKey({ id: "0x2" })];
-      const keys2 = [createTestECInstanceKey({ id:"0x3" }), createTestECInstanceKey({ id:"0x4" })];
+      const keys1 = [createTestECInstanceKey({ id: "0x1" }), createTestECInstanceKey({ id: "0x2" })];
+      const keys2 = [createTestECInstanceKey({ id: "0x3" }), createTestECInstanceKey({ id: "0x4" })];
       const result1 = ["Label 1", "Label 2"];
       const result2 = ["Label 3", "Label 4"];
       presentationManagerMock
@@ -124,7 +120,7 @@ describe("PresentationLabelsProvider", () => {
       const inputKeys = [];
       const results = [];
       // create a key set of such size that we need 3 content requests
-      for (let i = 0; i < (2 * DEFAULT_KEYS_BATCH_SIZE + 1); ++i) {
+      for (let i = 0; i < 2 * DEFAULT_KEYS_BATCH_SIZE + 1; ++i) {
         inputKeys.push(createTestECInstanceKey({ id: `0x${i}` }));
         results.push(`Label_${i}`);
       }
@@ -155,7 +151,5 @@ describe("PresentationLabelsProvider", () => {
       expect(result).to.deep.eq(results);
       presentationManagerMock.verifyAll();
     });
-
   });
-
 });

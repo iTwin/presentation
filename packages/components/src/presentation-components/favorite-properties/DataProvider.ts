@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module FavoriteProperties
  */
@@ -57,7 +57,6 @@ export interface FavoritePropertiesDataProviderProps {
  * @public
  */
 export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataProvider {
-
   private _customRuleset?: Ruleset | string;
   private _propertyDataProviderFactory: (imodel: IModelConnection, ruleset?: Ruleset | string) => PresentationPropertyDataProvider;
 
@@ -82,13 +81,14 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
     this.includeFieldsWithNoValues = true;
     this.includeFieldsWithCompositeValues = true;
     this._customRuleset = /* istanbul ignore next */ props?.ruleset;
-    this._propertyDataProviderFactory = props && props.propertyDataProviderFactory
-      ? props.propertyDataProviderFactory
-      : /* istanbul ignore next */ (imodel: IModelConnection, ruleset?: Ruleset | string) => {
-        const provider = new PresentationPropertyDataProvider({ imodel, ruleset });
-        provider.isNestedPropertyCategoryGroupingEnabled = false;
-        return provider;
-      };
+    this._propertyDataProviderFactory =
+      props && props.propertyDataProviderFactory
+        ? props.propertyDataProviderFactory
+        : /* istanbul ignore next */ (imodel: IModelConnection, ruleset?: Ruleset | string) => {
+            const provider = new PresentationPropertyDataProvider({ imodel, ruleset });
+            provider.isNestedPropertyCategoryGroupingEnabled = false;
+            return provider;
+          };
   }
 
   /**
@@ -108,8 +108,9 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
         // leave only favorite properties
         const favoritesCategory = getFavoritesCategory();
         propertyData.categories = propertyData.categories.filter((c) => c.name === favoritesCategory.name);
-        propertyData.records = propertyData.records.hasOwnProperty(favoritesCategory.name) ?
-          { [favoritesCategory.name]: propertyData.records[favoritesCategory.name] } : {};
+        propertyData.records = propertyData.records.hasOwnProperty(favoritesCategory.name)
+          ? { [favoritesCategory.name]: propertyData.records[favoritesCategory.name] }
+          : {};
         return propertyData;
       });
     }

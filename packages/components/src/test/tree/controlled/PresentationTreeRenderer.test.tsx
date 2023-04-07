@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import sinon from "sinon";
@@ -43,7 +43,7 @@ describe("PresentationTreeRenderer", () => {
     sinon.stub(IModelApp, "localization").get(() => localization);
     await UiComponents.initialize(localization);
     await Presentation.initialize();
-    HTMLElement.prototype.scrollIntoView = () => { };
+    HTMLElement.prototype.scrollIntoView = () => {};
   });
 
   afterEach(() => {
@@ -63,10 +63,7 @@ describe("PresentationTreeRenderer", () => {
     visibleNodesMock.setup((x) => x.getNumNodes()).returns(() => 1);
     visibleNodesMock.setup((x) => x.getAtIndex(0)).returns(() => node);
 
-    const { getByText, container } = render(
-      <PresentationTreeRenderer
-        {...treeProps}
-      />);
+    const { getByText, container } = render(<PresentationTreeRenderer {...treeProps} />);
 
     await waitFor(() => getByText(testLabel));
     expect(container.querySelector(".presentation-components-node")).to.be.null;
@@ -79,10 +76,7 @@ describe("PresentationTreeRenderer", () => {
     visibleNodesMock.setup((x) => x.getNumNodes()).returns(() => 1);
     visibleNodesMock.setup((x) => x.getAtIndex(0)).returns(() => node);
 
-    const { getByText, container, baseElement } = render(
-      <PresentationTreeRenderer
-        {...treeProps}
-      />);
+    const { getByText, container, baseElement } = render(<PresentationTreeRenderer {...treeProps} />);
 
     await waitFor(() => getByText(label));
     expect(container.querySelector(".presentation-components-node")).to.not.be.null;
@@ -123,10 +117,7 @@ describe("PresentationTreeRenderer", () => {
     modelSourceMock.setup((x) => x.getModel()).returns(() => treeModelMock.object);
     modelSourceMock.setup((x) => x.modifyModel(moq.It.isAny())).verifiable(moq.Times.once());
 
-    const { getByText, container, baseElement } = render(
-      <PresentationTreeRenderer
-        {...treeProps}
-      />);
+    const { getByText, container, baseElement } = render(<PresentationTreeRenderer {...treeProps} />);
 
     await waitFor(() => getByText(label));
 

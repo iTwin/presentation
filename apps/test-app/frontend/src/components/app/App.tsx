@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import "./App.css";
 import "@bentley/icons-generic-webfont/dist/bentley-icons-generic-webfont.css";
@@ -84,8 +84,9 @@ export default class App extends Component<{}, State> {
   };
 
   private onRulesetSelected = (rulesetId: string | undefined) => {
-    if (this.state.imodel)
+    if (this.state.imodel) {
       Presentation.selection.clearSelection("onRulesetChanged", this.state.imodel, 0);
+    }
 
     this.setState({ currentRulesetId: rulesetId }, () => this.updateAppSettings());
   };
@@ -102,8 +103,9 @@ export default class App extends Component<{}, State> {
 
   private _onTreePaneRatioChanged = (ratio: number): RatioChangeResult => {
     ratio = Geometry.clamp(ratio, this._minRightPaneRatio, this._maxRightPaneRatio);
-    if (this.state.rightPaneRatio === ratio)
+    if (this.state.rightPaneRatio === ratio) {
       return { ratio };
+    }
 
     this.setState({ rightPaneRatio: ratio });
     return { ratio };
@@ -111,8 +113,9 @@ export default class App extends Component<{}, State> {
 
   private _onContentRatioChanged = (ratio: number): RatioChangeResult => {
     ratio = Geometry.clamp(ratio, this._minContentRatio, this._maxContentRatio);
-    if (this.state.contentRatio === ratio)
+    if (this.state.contentRatio === ratio) {
       return { ratio };
+    }
 
     this.setState({ contentRatio: ratio });
     return { ratio };
@@ -145,7 +148,8 @@ export default class App extends Component<{}, State> {
         ref={this._contentRef}
         style={{
           gridTemplateColumns: `${this.state.contentRatio * 100}% 1px calc(${(1 - this.state.contentRatio) * 100}% - 1px)`,
-        }}>
+        }}
+      >
         <UnifiedSelectionContextProvider imodel={imodel} selectionLevel={0}>
           <div className="app-content-left">
             <div className="app-content-left-top">
@@ -167,7 +171,8 @@ export default class App extends Component<{}, State> {
             className="app-content-right"
             style={{
               gridTemplateRows: `${this.state.rightPaneRatio * 100}% 30px calc(${(1 - this.state.rightPaneRatio) * 100}% - 30px)`,
-            }}>
+            }}
+          >
             <TreeWidget imodel={imodel} rulesetId={rulesetId} />
             <div className="app-content-right-separator">
               <hr />
@@ -175,7 +180,8 @@ export default class App extends Component<{}, State> {
                 orientation={Orientation.Vertical}
                 ratio={this.state.rightPaneRatio}
                 movableArea={this.state.rightPaneHeight}
-                onRatioChanged={this._onTreePaneRatioChanged} />
+                onRatioChanged={this._onTreePaneRatioChanged}
+              />
             </div>
             <PropertiesWidget imodel={imodel} rulesetId={rulesetId} />
           </div>
@@ -187,13 +193,15 @@ export default class App extends Component<{}, State> {
   private afterRender() {
     if (this._rightPaneRef.current) {
       const height = this._rightPaneRef.current.getBoundingClientRect().height;
-      if (height !== this.state.rightPaneHeight)
+      if (height !== this.state.rightPaneHeight) {
         this.setState({ rightPaneHeight: height });
+      }
     }
     if (this._contentRef.current) {
       const width = this._contentRef.current.getBoundingClientRect().width;
-      if (width !== this.state.contentWidth)
+      if (width !== this.state.contentWidth) {
         this.setState({ contentWidth: width });
+      }
     }
   }
 
@@ -213,8 +221,9 @@ export default class App extends Component<{}, State> {
 
   public override render() {
     let imodelComponents = null;
-    if (this.state.imodel)
+    if (this.state.imodel) {
       imodelComponents = this.renderIModelComponents(this.state.imodel, this.state.currentRulesetId);
+    }
 
     return (
       <ThemeProvider theme="os">

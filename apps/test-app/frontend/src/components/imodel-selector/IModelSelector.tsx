@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import "./IModelSelector.css";
 import { Component } from "react";
@@ -21,7 +21,6 @@ export interface State {
 }
 
 export class IModelSelector extends Component<Props, State> {
-
   constructor(props: Props) {
     super(props);
     this.state = { availableImodels: [] };
@@ -64,8 +63,13 @@ export class IModelSelector extends Component<Props, State> {
 
   public override render() {
     let error = null;
-    if (this.state.error)
-      error = (<div className="Error">{IModelApp.localization.getLocalizedString("Sample:controls.notifications.error")}: {this.state.error.message}</div>);
+    if (this.state.error) {
+      error = (
+        <div className="Error">
+          {IModelApp.localization.getLocalizedString("Sample:controls.notifications.error")}: {this.state.error.message}
+        </div>
+      );
+    }
 
     return (
       <div className="IModelSelector">

@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { Component } from "react";
 import { IModelApp } from "@itwin/core-frontend";
@@ -25,13 +25,15 @@ export class RulesetSelector extends Component<RulesetSelectorProps, RulesetSele
   }
   private async initAvailableRulesets() {
     const rulesetIds = await MyAppFrontend.getAvailableRulesets();
-    this.setState({ availableRulesets: rulesetIds.map((id) => ({ value: id, label:id })) });
+    this.setState({ availableRulesets: rulesetIds.map((id) => ({ value: id, label: id })) });
   }
   public override render() {
-    if (!this.state.availableRulesets)
-      return (<div className="RulesetSelector">{IModelApp.localization.getLocalizedString("Sample:controls.notifications.loading")}</div>);
-    if (0 === this.state.availableRulesets.length)
-      return (<div className="RulesetSelector">{IModelApp.localization.getLocalizedString("Sample:controls.notifications.no-available-rulesets")}</div>);
+    if (!this.state.availableRulesets) {
+      return <div className="RulesetSelector">{IModelApp.localization.getLocalizedString("Sample:controls.notifications.loading")}</div>;
+    }
+    if (0 === this.state.availableRulesets.length) {
+      return <div className="RulesetSelector">{IModelApp.localization.getLocalizedString("Sample:controls.notifications.no-available-rulesets")}</div>;
+    }
     return (
       <div className="RulesetSelector">
         <Select

@@ -2,7 +2,7 @@ name: Regression
 
 on:
   pull_request:
-    branches: [ "master" ]
+    branches: ["master"]
 
 jobs:
   build:
@@ -16,28 +16,28 @@ jobs:
 
     name: Build with Core - ${{ matrix.core-version }}, UI - ${{ matrix.ui-version }}
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
 
-    - name: Install pnpm
-      uses: pnpm/action-setup@v2.2.4
-      with:
-        version: 7.27.0
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2.2.4
+        with:
+          version: 7.27.0
 
-    - name: Use Node.js 18
-      uses: actions/setup-node@v3
-      with:
-        node-version: 18
-        cache: 'pnpm'
+      - name: Use Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'pnpm'
 
-    - name: Install workspace dependencies
-      run: pnpm install -w
+      - name: Install workspace dependencies
+        run: pnpm install -w
 
-    - name: Override dependencies Core - ${{ matrix.core-version }}, UI - ${{ matrix.ui-version }}
-      run: node ./scripts/overrideDeps.js --coreVersion ${{ matrix.core-version }} --uiVersion ${{ matrix.ui-version }}
+      - name: Override dependencies Core - ${{ matrix.core-version }}, UI - ${{ matrix.ui-version }}
+        run: node ./scripts/overrideDeps.js --coreVersion ${{ matrix.core-version }} --uiVersion ${{ matrix.ui-version }}
 
-    - name: Install dependencies
-      run: pnpm install --no-frozen-lockfile
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
 
-    - name: Build, Test
-      run: pnpm lage build cover
+      - name: Build, Test
+        run: pnpm lage build cover

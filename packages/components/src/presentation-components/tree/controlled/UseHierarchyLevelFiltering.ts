@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module Tree
  */
@@ -28,13 +28,19 @@ export interface UseHierarchyLevelFilteringProps {
 export function useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProps) {
   const { nodeLoader, modelSource } = props;
 
-  const applyFilter = useCallback((node: TreeNodeItem, info: PresentationInstanceFilterInfo) => {
-    applyHierarchyLevelFilter(nodeLoader, modelSource, node.id, info);
-  }, [nodeLoader, modelSource]);
+  const applyFilter = useCallback(
+    (node: TreeNodeItem, info: PresentationInstanceFilterInfo) => {
+      applyHierarchyLevelFilter(nodeLoader, modelSource, node.id, info);
+    },
+    [nodeLoader, modelSource],
+  );
 
-  const clearFilter = useCallback((node: TreeNodeItem) => {
-    applyHierarchyLevelFilter(nodeLoader, modelSource, node.id);
-  }, [nodeLoader, modelSource]);
+  const clearFilter = useCallback(
+    (node: TreeNodeItem) => {
+      applyHierarchyLevelFilter(nodeLoader, modelSource, node.id);
+    },
+    [nodeLoader, modelSource],
+  );
 
   return { applyFilter, clearFilter };
 }
@@ -42,17 +48,20 @@ export function useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProp
 function applyHierarchyLevelFilter(nodeLoader: ITreeNodeLoader, modelSource: TreeModelSource, nodeId: string, filter?: PresentationInstanceFilterInfo) {
   modelSource.modifyModel((model) => {
     const modelNode = model.getNode(nodeId);
-    if (!modelNode || !isTreeModelNode(modelNode) || !isPresentationTreeNodeItem(modelNode.item) || !modelNode.item.filtering)
+    if (!modelNode || !isTreeModelNode(modelNode) || !isPresentationTreeNodeItem(modelNode.item) || !modelNode.item.filtering) {
       return;
+    }
 
     modelNode.item.filtering.active = filter;
-    if (filter)
+    if (filter) {
       modelNode.isExpanded = true;
+    }
     model.clearChildren(nodeId);
   });
 
   const updatedNode = modelSource.getModel().getNode(nodeId);
-  if (updatedNode === undefined || !updatedNode.isExpanded || updatedNode.numChildren !== undefined)
+  if (updatedNode === undefined || !updatedNode.isExpanded || updatedNode.numChildren !== undefined) {
     return;
+  }
   nodeLoader.loadNode(updatedNode, 0).subscribe();
 }

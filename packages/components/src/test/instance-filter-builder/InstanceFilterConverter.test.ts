@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import sinon from "sinon";
@@ -13,9 +13,7 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo, RelationshipPath, PropertyValueFormat as TypeValueFormat } from "@itwin/presentation-common";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import { convertToInstanceFilterDefinition } from "../../presentation-components/instance-filter-builder/InstanceFilterConverter";
-import {
-  PresentationInstanceFilterCondition, PresentationInstanceFilterConditionGroup,
-} from "../../presentation-components/instance-filter-builder/Types";
+import { PresentationInstanceFilterCondition, PresentationInstanceFilterConditionGroup } from "../../presentation-components/instance-filter-builder/Types";
 import { createTestPropertyInfo } from "../_helpers/Common";
 import { createTestNestedContentField, createTestPropertiesContentField } from "../_helpers/Content";
 
@@ -148,7 +146,10 @@ describe("convertToInstanceFilterDefinition", () => {
     it("instance key value", async () => {
       const propertyInfo = createTestPropertyInfo({ type: "long" });
       const filter: PresentationInstanceFilterCondition = {
-        field: createTestPropertiesContentField({ properties: [{ property: propertyInfo }], type: { valueFormat: TypeValueFormat.Primitive, typeName: "navigation" } }),
+        field: createTestPropertiesContentField({
+          properties: [{ property: propertyInfo }],
+          type: { valueFormat: TypeValueFormat.Primitive, typeName: "navigation" },
+        }),
         operator: PropertyFilterRuleOperator.IsEqual,
         value: { ...value, value: { className: "TestSchema:TestClass", id: "0x1" } },
       };
@@ -159,7 +160,10 @@ describe("convertToInstanceFilterDefinition", () => {
     it("double value", async () => {
       const propertyInfo = createTestPropertyInfo({ type: "double" });
       const filter: PresentationInstanceFilterCondition = {
-        field: createTestPropertiesContentField({ properties: [{ property: propertyInfo }], type: { valueFormat: TypeValueFormat.Primitive, typeName: "double" } }),
+        field: createTestPropertiesContentField({
+          properties: [{ property: propertyInfo }],
+          type: { valueFormat: TypeValueFormat.Primitive, typeName: "double" },
+        }),
         operator: PropertyFilterRuleOperator.IsEqual,
         value: { ...value, value: 1.5 },
       };
@@ -170,7 +174,10 @@ describe("convertToInstanceFilterDefinition", () => {
     it("dateTime value", async () => {
       const propertyInfo = createTestPropertyInfo({ type: "dateTime" });
       const filter: PresentationInstanceFilterCondition = {
-        field: createTestPropertiesContentField({ properties: [{ property: propertyInfo }], type: { valueFormat: TypeValueFormat.Primitive, typeName: "dateTime" } }),
+        field: createTestPropertiesContentField({
+          properties: [{ property: propertyInfo }],
+          type: { valueFormat: TypeValueFormat.Primitive, typeName: "dateTime" },
+        }),
         operator: PropertyFilterRuleOperator.IsEqual,
         value: { ...value, value: "2021-10-12T08:45:41" },
       };
@@ -196,13 +203,16 @@ describe("convertToInstanceFilterDefinition", () => {
     it("'AND' operator", async () => {
       const filter: PresentationInstanceFilterConditionGroup = {
         operator: PropertyFilterRuleGroupOperator.And,
-        conditions: [{
-          field,
-          operator: PropertyFilterRuleOperator.IsNull,
-        }, {
-          field,
-          operator: PropertyFilterRuleOperator.IsNotNull,
-        }],
+        conditions: [
+          {
+            field,
+            operator: PropertyFilterRuleOperator.IsNull,
+          },
+          {
+            field,
+            operator: PropertyFilterRuleOperator.IsNotNull,
+          },
+        ],
       };
       const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(`(${propertyAccessor} = NULL AND ${propertyAccessor} <> NULL)`);
@@ -211,13 +221,16 @@ describe("convertToInstanceFilterDefinition", () => {
     it("'OR' operator", async () => {
       const filter: PresentationInstanceFilterConditionGroup = {
         operator: PropertyFilterRuleGroupOperator.Or,
-        conditions: [{
-          field,
-          operator: PropertyFilterRuleOperator.IsNull,
-        }, {
-          field,
-          operator: PropertyFilterRuleOperator.IsNotNull,
-        }],
+        conditions: [
+          {
+            field,
+            operator: PropertyFilterRuleOperator.IsNull,
+          },
+          {
+            field,
+            operator: PropertyFilterRuleOperator.IsNotNull,
+          },
+        ],
       };
       const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(`(${propertyAccessor} = NULL OR ${propertyAccessor} <> NULL)`);
@@ -226,19 +239,25 @@ describe("convertToInstanceFilterDefinition", () => {
     it("nested condition group", async () => {
       const filter: PresentationInstanceFilterConditionGroup = {
         operator: PropertyFilterRuleGroupOperator.Or,
-        conditions: [{
-          field,
-          operator: PropertyFilterRuleOperator.IsNull,
-        }, {
-          operator: PropertyFilterRuleGroupOperator.And,
-          conditions: [{
+        conditions: [
+          {
             field,
             operator: PropertyFilterRuleOperator.IsNull,
-          }, {
-            field,
-            operator: PropertyFilterRuleOperator.IsNotNull,
-          }],
-        }],
+          },
+          {
+            operator: PropertyFilterRuleGroupOperator.And,
+            conditions: [
+              {
+                field,
+                operator: PropertyFilterRuleOperator.IsNull,
+              },
+              {
+                field,
+                operator: PropertyFilterRuleOperator.IsNotNull,
+              },
+            ],
+          },
+        ],
       };
       const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(`(${propertyAccessor} = NULL OR (${propertyAccessor} = NULL AND ${propertyAccessor} <> NULL))`);
@@ -247,13 +266,16 @@ describe("convertToInstanceFilterDefinition", () => {
     it("invalid operator", async () => {
       const filter: PresentationInstanceFilterConditionGroup = {
         operator: "invalid" as unknown as PropertyFilterRuleGroupOperator,
-        conditions: [{
-          field,
-          operator: PropertyFilterRuleOperator.IsNull,
-        }, {
-          field,
-          operator: PropertyFilterRuleOperator.IsNotNull,
-        }],
+        conditions: [
+          {
+            field,
+            operator: PropertyFilterRuleOperator.IsNull,
+          },
+          {
+            field,
+            operator: PropertyFilterRuleOperator.IsNotNull,
+          },
+        ],
       };
       await expect(convertToInstanceFilterDefinition(filter, testImodel)).to.be.rejected;
     });
@@ -270,22 +292,26 @@ describe("convertToInstanceFilterDefinition", () => {
     const classCInfo: ClassInfo = { id: "0x3", name: "TestSchema:C", label: "C Class" };
     const classAToBInfo: ClassInfo = { id: "0x4", name: "TestSchema:AToB", label: "A To B" };
     const classBToCInfo: ClassInfo = { id: "0x5", name: "TestSchema:BToC", label: "B TO C" };
-    const pathBToA: RelationshipPath = [{
-      sourceClassInfo: classBInfo,
-      targetClassInfo: classAInfo,
-      relationshipInfo: classAToBInfo,
-      isForwardRelationship: false,
-      isPolymorphicRelationship: true,
-      isPolymorphicTargetClass: true,
-    }];
-    const pathCToB: RelationshipPath = [{
-      sourceClassInfo: classCInfo,
-      targetClassInfo: classBInfo,
-      relationshipInfo: classBToCInfo,
-      isForwardRelationship: false,
-      isPolymorphicRelationship: true,
-      isPolymorphicTargetClass: true,
-    }];
+    const pathBToA: RelationshipPath = [
+      {
+        sourceClassInfo: classBInfo,
+        targetClassInfo: classAInfo,
+        relationshipInfo: classAToBInfo,
+        isForwardRelationship: false,
+        isPolymorphicRelationship: true,
+        isPolymorphicTargetClass: true,
+      },
+    ];
+    const pathCToB: RelationshipPath = [
+      {
+        sourceClassInfo: classCInfo,
+        targetClassInfo: classBInfo,
+        relationshipInfo: classBToCInfo,
+        isForwardRelationship: false,
+        isPolymorphicRelationship: true,
+        isPolymorphicTargetClass: true,
+      },
+    ];
     const propertyInfo = createTestPropertyInfo({ classInfo: classCInfo });
     const classCPropertiesField = createTestPropertiesContentField({ properties: [{ property: propertyInfo }] });
     const classCNestedField = createTestNestedContentField({ nestedFields: [classCPropertiesField], pathToPrimaryClass: pathCToB });
@@ -305,40 +331,55 @@ describe("convertToInstanceFilterDefinition", () => {
       };
       const { expression, relatedInstances } = await convertToInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(`${createAlias("C")}.${propertyInfo.name} = NULL`);
-      expect(relatedInstances).to.be.lengthOf(1).and.containSubset([{
-        pathFromSelectToPropertyClass: [{
-          sourceClassName: classBInfo.name,
-          targetClassName: classCInfo.name,
-          relationshipName: classBToCInfo.name,
-          isForwardRelationship: true,
-        }],
-        alias: createAlias("C"),
-      }]);
+      expect(relatedInstances)
+        .to.be.lengthOf(1)
+        .and.containSubset([
+          {
+            pathFromSelectToPropertyClass: [
+              {
+                sourceClassName: classBInfo.name,
+                targetClassName: classCInfo.name,
+                relationshipName: classBToCInfo.name,
+                isForwardRelationship: true,
+              },
+            ],
+            alias: createAlias("C"),
+          },
+        ]);
     });
 
     it("in multiple conditions", async () => {
       classCPropertiesField.rebuildParentship(classCNestedField);
       const filter: PresentationInstanceFilterConditionGroup = {
         operator: PropertyFilterRuleGroupOperator.And,
-        conditions: [{
-          field: classCPropertiesField,
-          operator: PropertyFilterRuleOperator.IsNull,
-        }, {
-          field: classCPropertiesField,
-          operator: PropertyFilterRuleOperator.IsNotNull,
-        }],
+        conditions: [
+          {
+            field: classCPropertiesField,
+            operator: PropertyFilterRuleOperator.IsNull,
+          },
+          {
+            field: classCPropertiesField,
+            operator: PropertyFilterRuleOperator.IsNotNull,
+          },
+        ],
       };
       const { expression, relatedInstances } = await convertToInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(`(${createAlias("C")}.${propertyInfo.name} = NULL AND ${createAlias("C")}.${propertyInfo.name} <> NULL)`);
-      expect(relatedInstances).to.be.lengthOf(1).and.containSubset([{
-        pathFromSelectToPropertyClass: [{
-          sourceClassName: classBInfo.name,
-          targetClassName: classCInfo.name,
-          relationshipName: classBToCInfo.name,
-          isForwardRelationship: true,
-        }],
-        alias: createAlias("C"),
-      }]);
+      expect(relatedInstances)
+        .to.be.lengthOf(1)
+        .and.containSubset([
+          {
+            pathFromSelectToPropertyClass: [
+              {
+                sourceClassName: classBInfo.name,
+                targetClassName: classCInfo.name,
+                relationshipName: classBToCInfo.name,
+                isForwardRelationship: true,
+              },
+            ],
+            alias: createAlias("C"),
+          },
+        ]);
     });
 
     it("in deeply nested condition field", async () => {
@@ -349,20 +390,27 @@ describe("convertToInstanceFilterDefinition", () => {
       };
       const { expression, relatedInstances } = await convertToInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(`${createAlias("C")}.${propertyInfo.name} = NULL`);
-      expect(relatedInstances).to.be.lengthOf(1).and.containSubset([{
-        pathFromSelectToPropertyClass: [{
-          sourceClassName: classAInfo.name,
-          targetClassName: classBInfo.name,
-          relationshipName: classAToBInfo.name,
-          isForwardRelationship: true,
-        }, {
-          sourceClassName: classBInfo.name,
-          targetClassName: classCInfo.name,
-          relationshipName: classBToCInfo.name,
-          isForwardRelationship: true,
-        }],
-        alias: createAlias("C"),
-      }]);
+      expect(relatedInstances)
+        .to.be.lengthOf(1)
+        .and.containSubset([
+          {
+            pathFromSelectToPropertyClass: [
+              {
+                sourceClassName: classAInfo.name,
+                targetClassName: classBInfo.name,
+                relationshipName: classAToBInfo.name,
+                isForwardRelationship: true,
+              },
+              {
+                sourceClassName: classBInfo.name,
+                targetClassName: classCInfo.name,
+                relationshipName: classBToCInfo.name,
+                isForwardRelationship: true,
+              },
+            ],
+            alias: createAlias("C"),
+          },
+        ]);
     });
   });
 
@@ -412,13 +460,16 @@ describe("convertToInstanceFilterDefinition", () => {
     it("when all properties from same class", async () => {
       const filter: PresentationInstanceFilterConditionGroup = {
         operator: PropertyFilterRuleGroupOperator.And,
-        conditions: [{
-          field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classAInfo, name: "PropA1" }) }] }),
-          operator: PropertyFilterRuleOperator.IsNull,
-        }, {
-          field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classAInfo, name: "PropA2" }) }] }),
-          operator: PropertyFilterRuleOperator.IsNull,
-        }],
+        conditions: [
+          {
+            field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classAInfo, name: "PropA1" }) }] }),
+            operator: PropertyFilterRuleOperator.IsNull,
+          },
+          {
+            field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classAInfo, name: "PropA2" }) }] }),
+            operator: PropertyFilterRuleOperator.IsNull,
+          },
+        ],
       };
 
       const { selectClassName } = await convertToInstanceFilterDefinition(filter, imodelMock.object);
@@ -428,13 +479,16 @@ describe("convertToInstanceFilterDefinition", () => {
     it("when second condition property is derived from first condition property", async () => {
       const filter: PresentationInstanceFilterConditionGroup = {
         operator: PropertyFilterRuleGroupOperator.And,
-        conditions: [{
-          field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classAInfo, name: "PropA" }) }] }),
-          operator: PropertyFilterRuleOperator.IsNull,
-        }, {
-          field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classBInfo, name: "PropB" }) }] }),
-          operator: PropertyFilterRuleOperator.IsNull,
-        }],
+        conditions: [
+          {
+            field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classAInfo, name: "PropA" }) }] }),
+            operator: PropertyFilterRuleOperator.IsNull,
+          },
+          {
+            field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classBInfo, name: "PropB" }) }] }),
+            operator: PropertyFilterRuleOperator.IsNull,
+          },
+        ],
       };
 
       const { selectClassName } = await convertToInstanceFilterDefinition(filter, imodelMock.object);
@@ -444,13 +498,16 @@ describe("convertToInstanceFilterDefinition", () => {
     it("when first condition property is derived from second condition property", async () => {
       const filter: PresentationInstanceFilterConditionGroup = {
         operator: PropertyFilterRuleGroupOperator.And,
-        conditions: [{
-          field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classBInfo, name: "PropB" }) }] }),
-          operator: PropertyFilterRuleOperator.IsNull,
-        }, {
-          field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classAInfo, name: "PropA" }) }] }),
-          operator: PropertyFilterRuleOperator.IsNull,
-        }],
+        conditions: [
+          {
+            field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classBInfo, name: "PropB" }) }] }),
+            operator: PropertyFilterRuleOperator.IsNull,
+          },
+          {
+            field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classAInfo, name: "PropA" }) }] }),
+            operator: PropertyFilterRuleOperator.IsNull,
+          },
+        ],
       };
 
       const { selectClassName } = await convertToInstanceFilterDefinition(filter, imodelMock.object);
@@ -460,16 +517,20 @@ describe("convertToInstanceFilterDefinition", () => {
     it("when properties from different derived classes are used", async () => {
       const filter: PresentationInstanceFilterConditionGroup = {
         operator: PropertyFilterRuleGroupOperator.And,
-        conditions: [{
-          field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classAInfo, name: "PropA" }) }] }),
-          operator: PropertyFilterRuleOperator.IsNull,
-        }, {
-          field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classCInfo, name: "PropC" }) }] }),
-          operator: PropertyFilterRuleOperator.IsNull,
-        }, {
-          field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classBInfo, name: "PropB" }) }] }),
-          operator: PropertyFilterRuleOperator.IsNull,
-        }],
+        conditions: [
+          {
+            field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classAInfo, name: "PropA" }) }] }),
+            operator: PropertyFilterRuleOperator.IsNull,
+          },
+          {
+            field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classCInfo, name: "PropC" }) }] }),
+            operator: PropertyFilterRuleOperator.IsNull,
+          },
+          {
+            field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classBInfo, name: "PropB" }) }] }),
+            operator: PropertyFilterRuleOperator.IsNull,
+          },
+        ],
       };
 
       const { selectClassName } = await convertToInstanceFilterDefinition(filter, imodelMock.object);

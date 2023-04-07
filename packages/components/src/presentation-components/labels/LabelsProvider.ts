@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module DisplayLabels
  */
@@ -42,7 +42,6 @@ export interface PresentationLabelsProviderProps {
  * @public
  */
 export class PresentationLabelsProvider implements IPresentationLabelsProvider {
-
   public readonly imodel: IModelConnection;
 
   /** Constructor. */
@@ -94,13 +93,12 @@ export class PresentationLabelsProvider implements IPresentationLabelsProvider {
 
 class MemoizationHelpers {
   private static areInstanceKeysEqual(lhs: InstanceKey, rhs: InstanceKey) {
-    return (lhs.className === rhs.className && lhs.id === rhs.id);
+    return lhs.className === rhs.className && lhs.id === rhs.id;
   }
   public static areLabelRequestsEqual(lhsArgs: [InstanceKey], rhsArgs: [InstanceKey]): boolean {
     return MemoizationHelpers.areInstanceKeysEqual(lhsArgs[0], rhsArgs[0]);
   }
   public static areLabelsRequestsEqual(lhsArgs: [InstanceKey[]], rhsArgs: [InstanceKey[]]): boolean {
-    return lhsArgs[0].length === rhsArgs[0].length
-      && lhsArgs[0].every((key, index) => MemoizationHelpers.areInstanceKeysEqual(key, rhsArgs[0][index]));
+    return lhsArgs[0].length === rhsArgs[0].length && lhsArgs[0].every((key, index) => MemoizationHelpers.areInstanceKeysEqual(key, rhsArgs[0][index]));
   }
 }

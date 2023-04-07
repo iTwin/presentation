@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module InstancesFilter
  */
@@ -11,9 +11,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Button, Dialog, ProgressRadial } from "@itwin/itwinui-react";
 import { Descriptor } from "@itwin/presentation-common";
 import { translate } from "../common/Utils";
-import {
-  PresentationInstanceFilterBuilder, PresentationInstanceFilterBuilderProps, PresentationInstanceFilterInfo,
-} from "./PresentationInstanceFilterBuilder";
+import { PresentationInstanceFilterBuilder, PresentationInstanceFilterBuilderProps, PresentationInstanceFilterInfo } from "./PresentationInstanceFilterBuilder";
 
 /**
  * Props for [[PresentationInstanceFilterDialog]] component.
@@ -55,40 +53,24 @@ export function PresentationInstanceFilterDialog(props: PresentationInstanceFilt
   };
 
   return (
-    <Dialog
-      isOpen={isOpen}
-      onClose={onClose}
-      closeOnEsc={false}
-      preventDocumentScroll={true}
-      trapFocus={true}
-    >
+    <Dialog isOpen={isOpen} onClose={onClose} closeOnEsc={false} preventDocumentScroll={true} trapFocus={true}>
       <Dialog.Backdrop />
       <Dialog.Main className="presentation-instance-filter-dialog">
-        <Dialog.TitleBar
-          className="presentation-instance-filter-title"
-          titleText={title ? title : translate("instance-filter-builder.filter")}
-        />
+        <Dialog.TitleBar className="presentation-instance-filter-title" titleText={title ? title : translate("instance-filter-builder.filter")} />
         <Dialog.Content className="presentation-instance-filter-content">
-          {descriptor instanceof Descriptor
-            ? <PresentationInstanceFilterBuilder {...restProps} descriptor={descriptor} onInstanceFilterChanged={onInstanceFilterChanged} />
-            : <DelayLoadedPresentationInstanceFilterBuilder {...restProps} onInstanceFilterChanged={onInstanceFilterChanged} descriptorGetter={descriptor} />
-          }
+          {descriptor instanceof Descriptor ? (
+            <PresentationInstanceFilterBuilder {...restProps} descriptor={descriptor} onInstanceFilterChanged={onInstanceFilterChanged} />
+          ) : (
+            <DelayLoadedPresentationInstanceFilterBuilder {...restProps} onInstanceFilterChanged={onInstanceFilterChanged} descriptorGetter={descriptor} />
+          )}
         </Dialog.Content>
         <div className="presentation-instance-filter-dialog-bottom-container">
           <div>{filterResultCountRenderer && filterResultCountRenderer(filter)}</div>
           <Dialog.ButtonBar className="presentation-instance-filter-button-bar">
-            <Button
-              className="presentation-instance-filter-dialog-apply-button"
-              styleType='high-visibility'
-              onClick={applyButtonHandle}
-              disabled={!filter}
-            >
+            <Button className="presentation-instance-filter-dialog-apply-button" styleType="high-visibility" onClick={applyButtonHandle} disabled={!filter}>
               {translate("instance-filter-builder.apply")}
             </Button>
-            <Button
-              className="presentation-instance-filter-dialog-close-button"
-              onClick={onClose}
-            >
+            <Button className="presentation-instance-filter-dialog-close-button" onClick={onClose}>
               {translate("instance-filter-builder.cancel")}
             </Button>
           </Dialog.ButtonBar>
@@ -105,13 +87,11 @@ interface DelayLoadedPresentationInstanceFilterBuilderProps extends Omit<Present
 function DelayLoadedPresentationInstanceFilterBuilder(props: DelayLoadedPresentationInstanceFilterBuilderProps) {
   const { descriptorGetter, ...restProps } = props;
   const descriptor = useDelayLoadedDescriptor(descriptorGetter);
-  if (!descriptor)
+  if (!descriptor) {
     return <DelayedCenteredProgressRadial />;
+  }
 
-  return <PresentationInstanceFilterBuilder
-    {...restProps}
-    descriptor={descriptor}
-  />;
+  return <PresentationInstanceFilterBuilder {...restProps} descriptor={descriptor} />;
 }
 
 function useDelayLoadedDescriptor(descriptorGetter: () => Promise<Descriptor>) {
@@ -122,10 +102,13 @@ function useDelayLoadedDescriptor(descriptorGetter: () => Promise<Descriptor>) {
     void (async () => {
       const newDescriptor = await descriptorGetter();
       // istanbul ignore else
-      if (!disposed)
+      if (!disposed) {
         setDescriptor(newDescriptor);
+      }
     })();
-    return () => { disposed = true; };
+    return () => {
+      disposed = true;
+    };
   }, [descriptorGetter]);
 
   return descriptor;
@@ -138,11 +121,14 @@ function DelayedCenteredProgressRadial() {
     const timeout = setTimeout(() => {
       setShow(true);
     }, 250);
-    return () => { clearTimeout(timeout); };
+    return () => {
+      clearTimeout(timeout);
+    };
   }, []);
 
-  if (!show)
+  if (!show) {
     return null;
+  }
   return (
     <div className="presentation-instance-filter-dialog-progress">
       <ProgressRadial indeterminate={true} size="large" />

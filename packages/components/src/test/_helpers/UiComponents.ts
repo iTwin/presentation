@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import * as moq from "typemoq";
 import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
@@ -9,12 +9,16 @@ import { DelayLoadedTreeNodeItem } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { NodeKey, RegisteredRuleset, Ruleset, VariableValue } from "@itwin/presentation-common";
 import {
-  IModelContentChangeEventArgs, IModelHierarchyChangeEventArgs, PresentationManager, RulesetManager, RulesetVariablesManager,
+  IModelContentChangeEventArgs,
+  IModelHierarchyChangeEventArgs,
+  PresentationManager,
+  RulesetManager,
+  RulesetVariablesManager,
 } from "@itwin/presentation-frontend";
 import { PresentationTreeNodeItem } from "../../presentation-components/tree/PresentationTreeNodeItem";
 import { createTestECInstancesNodeKey } from "./Hierarchy";
 
-export function createTestTreeNodeItem(key?: NodeKey,  partialNode?: Partial<DelayLoadedTreeNodeItem>): PresentationTreeNodeItem {
+export function createTestTreeNodeItem(key?: NodeKey, partialNode?: Partial<DelayLoadedTreeNodeItem>): PresentationTreeNodeItem {
   const node = {
     id: partialNode?.id ?? "node_id",
     parentId: partialNode?.parentId,

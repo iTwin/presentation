@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module Tree
  */
@@ -12,8 +12,19 @@ import { DelayLoadedTreeNodeItem, PageOptions, TreeNodeItem } from "@itwin/compo
 import { IDisposable, Logger } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
-  BaseNodeKey, ClientDiagnosticsOptions, FilterByTextHierarchyRequestOptions, HierarchyRequestOptions, InstanceFilterDefinition, Node, NodeKey,
-  NodePathElement, Paged, PresentationError, PresentationStatus, RequestOptionsWithRuleset, Ruleset,
+  BaseNodeKey,
+  ClientDiagnosticsOptions,
+  FilterByTextHierarchyRequestOptions,
+  HierarchyRequestOptions,
+  InstanceFilterDefinition,
+  Node,
+  NodeKey,
+  NodePathElement,
+  Paged,
+  PresentationError,
+  PresentationStatus,
+  RequestOptionsWithRuleset,
+  Ruleset,
 } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { createDiagnosticsOptions, DiagnosticsProps } from "../common/Diagnostics";
@@ -99,7 +110,7 @@ export interface PresentationTreeDataProviderProps extends DiagnosticsProps {
 export interface PresentationTreeDataProviderDataSourceEntryPoints {
   /** @deprecated in 4.0 The entry point is not used anymore, it's usage has been replaced by [[getNodesAndCount]]. */
   getNodesCount?: (requestOptions: HierarchyRequestOptions<IModelConnection, NodeKey>) => Promise<number>;
-  getNodesAndCount: (requestOptions: Paged<HierarchyRequestOptions<IModelConnection, NodeKey>>) => Promise<{ nodes: Node[], count: number }>;
+  getNodesAndCount: (requestOptions: Paged<HierarchyRequestOptions<IModelConnection, NodeKey>>) => Promise<{ nodes: Node[]; count: number }>;
   getFilteredNodePaths: (requestOptions: FilterByTextHierarchyRequestOptions<IModelConnection>) => Promise<NodePathElement[]>;
 }
 
@@ -128,8 +139,10 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
     };
 
     this._dataSource = {
-      getNodesAndCount: async (requestOptions: Paged<HierarchyRequestOptions<IModelConnection, NodeKey>>) => Presentation.presentation.getNodesAndCount(requestOptions),
-      getFilteredNodePaths: async (requestOptions: FilterByTextHierarchyRequestOptions<IModelConnection>) => Presentation.presentation.getFilteredNodePaths(requestOptions),
+      getNodesAndCount: async (requestOptions: Paged<HierarchyRequestOptions<IModelConnection, NodeKey>>) =>
+        Presentation.presentation.getNodesAndCount(requestOptions),
+      getFilteredNodePaths: async (requestOptions: FilterByTextHierarchyRequestOptions<IModelConnection>) =>
+        Presentation.presentation.getFilteredNodePaths(requestOptions),
       ...props.dataSourceOverrides,
     };
     this._disposeVariablesChangeListener = Presentation.presentation.vars(this._rulesetRegistration.rulesetId).onVariableChanged.addListener(() => {
@@ -147,17 +160,25 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
   }
 
   /** Id of the ruleset used by this data provider */
-  public get rulesetId(): string { return this._rulesetRegistration.rulesetId; }
+  public get rulesetId(): string {
+    return this._rulesetRegistration.rulesetId;
+  }
 
   /** [IModelConnection]($core-frontend) used by this data provider */
-  public get imodel(): IModelConnection { return this._imodel; }
+  public get imodel(): IModelConnection {
+    return this._imodel;
+  }
 
   /**
    * Paging options for obtaining nodes.
    * @see `PresentationTreeDataProviderProps.pagingSize`
    */
-  public get pagingSize(): number | undefined { return this._pagingSize; }
-  public set pagingSize(value: number | undefined) { this._pagingSize = value; }
+  public get pagingSize(): number | undefined {
+    return this._pagingSize;
+  }
+  public set pagingSize(value: number | undefined) {
+    this._pagingSize = value;
+  }
 
   /** Called to get base options for requests */
   private createBaseRequestOptions(): RequestOptionsWithRuleset<IModelConnection> {
@@ -217,11 +238,23 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
     return (await this._getNodesAndCount(parentNode, { start: 0, size: this.pagingSize }, instanceFilter)).count;
   }
 
-  private _getNodesAndCount = memoize(async (parentNode?: TreeNodeItem, pageOptions?: PageOptions, instanceFilter?: InstanceFilterDefinition): Promise<{ nodes: TreeNodeItem[], count: number }> => {
-    const parentKey = parentNode && isPresentationTreeNodeItem(parentNode) ? parentNode.key : undefined;
-    const requestOptions = this.createRequestOptions(parentKey, pageOptions, instanceFilter);
-    return createNodesAndCountResult(async () => this._dataSource.getNodesAndCount(requestOptions), this.createBaseRequestOptions(), parentNode, this._nodesCreateProps);
-  }, { isMatchingKey: MemoizationHelpers.areNodesRequestsEqual as any });
+  private _getNodesAndCount = memoize(
+    async (
+      parentNode?: TreeNodeItem,
+      pageOptions?: PageOptions,
+      instanceFilter?: InstanceFilterDefinition,
+    ): Promise<{ nodes: TreeNodeItem[]; count: number }> => {
+      const parentKey = parentNode && isPresentationTreeNodeItem(parentNode) ? parentNode.key : undefined;
+      const requestOptions = this.createRequestOptions(parentKey, pageOptions, instanceFilter);
+      return createNodesAndCountResult(
+        async () => this._dataSource.getNodesAndCount(requestOptions),
+        this.createBaseRequestOptions(),
+        parentNode,
+        this._nodesCreateProps,
+      );
+    },
+    { isMatchingKey: MemoizationHelpers.areNodesRequestsEqual as any },
+  );
 
   /**
    * Returns filtered node paths.
@@ -236,23 +269,25 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
 }
 
 async function getFilterDefinition(imodel: IModelConnection, node?: TreeNodeItem) {
-  if (!node || !isPresentationTreeNodeItem(node) || !node.filtering?.active)
+  if (!node || !isPresentationTreeNodeItem(node) || !node.filtering?.active) {
     return undefined;
+  }
   return convertToInstanceFilterDefinition(node.filtering.active.filter, imodel);
 }
 
 async function createNodesAndCountResult(
-  resultFactory: () => Promise<{ nodes: Node[], count: number }>,
+  resultFactory: () => Promise<{ nodes: Node[]; count: number }>,
   baseOptions: RequestOptionsWithRuleset<IModelConnection>,
   parentNode?: TreeNodeItem,
-  nodesCreateProps?: CreateTreeNodeItemProps
+  nodesCreateProps?: CreateTreeNodeItemProps,
 ) {
   try {
     const result = await resultFactory();
     const { nodes, count } = result;
     const isParentFiltered = parentNode && isPresentationTreeNodeItem(parentNode) && parentNode.filtering?.active;
-    if (nodes.length === 0 && isParentFiltered)
+    if (nodes.length === 0 && isParentFiltered) {
       return createStatusNodeResult(parentNode, "tree.no-filtered-children");
+    }
     return { nodes: createTreeItems(nodes, baseOptions, parentNode, nodesCreateProps), count };
   } catch (e) {
     if (e instanceof PresentationError) {
@@ -285,7 +320,7 @@ function createTreeItems(
   nodes: Node[],
   baseOptions: RequestOptionsWithRuleset<IModelConnection>,
   parentNode?: TreeNodeItem,
-  nodesCreateProps?: CreateTreeNodeItemProps
+  nodesCreateProps?: CreateTreeNodeItemProps,
 ) {
   const items: PresentationTreeNodeItem[] = [];
   for (const node of nodes) {
@@ -294,8 +329,9 @@ function createTreeItems(
       item.filtering = {
         descriptor: async () => {
           const descriptor = await Presentation.presentation.getNodesDescriptor({ ...baseOptions, parentKey: node.key });
-          if (!descriptor)
+          if (!descriptor) {
             throw new PresentationError(PresentationStatus.Error, `Failed to get descriptor for node - ${node.label.displayValue}`);
+          }
           return descriptor;
         },
       };
@@ -306,9 +342,7 @@ function createTreeItems(
 }
 
 function createInfoNode(parentNode: TreeNodeItem | undefined, message: string): PresentationInfoTreeNodeItem {
-  const id = parentNode
-    ? `${parentNode.id}/info-node`
-    : `/info-node/${message}`;
+  const id = parentNode ? `${parentNode.id}/info-node` : `/info-node/${message}`;
   return {
     id,
     label: PropertyRecord.fromString(message),
@@ -319,15 +353,22 @@ function createInfoNode(parentNode: TreeNodeItem | undefined, message: string): 
 }
 
 class MemoizationHelpers {
-  public static areNodesRequestsEqual(lhsArgs: [TreeNodeItem?, PageOptions?, InstanceFilterDefinition?], rhsArgs: [TreeNodeItem?, PageOptions?, InstanceFilterDefinition?]): boolean {
-    if (lhsArgs[0]?.id !== rhsArgs[0]?.id)
+  public static areNodesRequestsEqual(
+    lhsArgs: [TreeNodeItem?, PageOptions?, InstanceFilterDefinition?],
+    rhsArgs: [TreeNodeItem?, PageOptions?, InstanceFilterDefinition?],
+  ): boolean {
+    if (lhsArgs[0]?.id !== rhsArgs[0]?.id) {
       return false;
-    if ((lhsArgs[1]?.start ?? 0) !== (rhsArgs[1]?.start ?? 0))
+    }
+    if ((lhsArgs[1]?.start ?? 0) !== (rhsArgs[1]?.start ?? 0)) {
       return false;
-    if ((lhsArgs[1]?.size ?? 0) !== (rhsArgs[1]?.size ?? 0))
+    }
+    if ((lhsArgs[1]?.size ?? 0) !== (rhsArgs[1]?.size ?? 0)) {
       return false;
-    if (lhsArgs[2]?.expression !== rhsArgs[2]?.expression)
+    }
+    if (lhsArgs[2]?.expression !== rhsArgs[2]?.expression) {
       return false;
+    }
     return true;
   }
 }

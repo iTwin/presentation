@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module Tree
  */
@@ -22,23 +22,16 @@ export interface CreateTreeNodeItemProps {
 }
 
 /** @internal */
-export function createTreeNodeItems(
-  nodes: ReadonlyArray<Readonly<Node>>,
-  parentId?: string,
-  props?: CreateTreeNodeItemProps,
-): PresentationTreeNodeItem[] {
+export function createTreeNodeItems(nodes: ReadonlyArray<Readonly<Node>>, parentId?: string, props?: CreateTreeNodeItemProps): PresentationTreeNodeItem[] {
   const list = new Array<PresentationTreeNodeItem>();
-  for (const node of nodes)
+  for (const node of nodes) {
     list.push(createTreeNodeItem(node, parentId, props));
+  }
   return list;
 }
 
 /** @internal */
-export function createTreeNodeItem(
-  node: Readonly<Node>,
-  parentId?: string,
-  props?: CreateTreeNodeItemProps,
-): PresentationTreeNodeItem {
+export function createTreeNodeItem(node: Readonly<Node>, parentId?: string, props?: CreateTreeNodeItemProps): PresentationTreeNodeItem {
   const item: PresentationTreeNodeItem = {
     id: createTreeNodeId(node.key),
     label: createNodeLabelRecord(node, !!props?.appendChildrenCountForGroupingNodes),
@@ -51,11 +44,7 @@ export function createTreeNodeItem(
 }
 
 /** @internal */
-export function createPartialTreeNodeItem(
-  node: PartialNode,
-  parentId: string | undefined,
-  props: CreateTreeNodeItemProps,
-): Partial<PresentationTreeNodeItem> {
+export function createPartialTreeNodeItem(node: PartialNode, parentId: string | undefined, props: CreateTreeNodeItemProps): Partial<PresentationTreeNodeItem> {
   const item: Partial<PresentationTreeNodeItem> = {};
   if (node.key !== undefined) {
     item.id = createTreeNodeId(node.key);
@@ -73,11 +62,7 @@ export function createTreeNodeId(key: NodeKey): string {
   return [...key.pathFromRoot].reverse().join("/");
 }
 
-function assignOptionalTreeNodeItemFields(
-  item: Partial<PresentationTreeNodeItem>,
-  node: Partial<Node>,
-  parentId?: string,
-): void {
+function assignOptionalTreeNodeItemFields(item: Partial<PresentationTreeNodeItem>, node: Partial<Node>, parentId?: string): void {
   if (node.key !== undefined) {
     item.key = node.key;
   }
@@ -113,17 +98,22 @@ function assignOptionalTreeNodeItemFields(
  */
 // istanbul ignore next
 export function customizeTreeNodeItem(item: Partial<DelayLoadedTreeNodeItem>, node: Partial<Node>) {
-  if (node.imageId) { // eslint-disable-line deprecation/deprecation
+  // eslint-disable-next-line deprecation/deprecation
+  if (node.imageId) {
     item.icon = node.imageId; // eslint-disable-line deprecation/deprecation
   }
 
-  if (node.isCheckboxVisible) { // eslint-disable-line deprecation/deprecation
+  // eslint-disable-next-line deprecation/deprecation
+  if (node.isCheckboxVisible) {
     item.isCheckboxVisible = true;
-    if (node.isChecked) { // eslint-disable-line deprecation/deprecation
+    // eslint-disable-next-line deprecation/deprecation
+    if (node.isChecked) {
+      // eslint-disable-line deprecation/deprecation
       item.checkBoxState = CheckBoxState.On;
     }
 
-    if (!node.isCheckboxEnabled) { // eslint-disable-line deprecation/deprecation
+    // eslint-disable-next-line deprecation/deprecation
+    if (!node.isCheckboxEnabled) {
       item.isCheckboxDisabled = true;
     }
   }
@@ -165,8 +155,9 @@ function createTreeNodeItemStyle(node: Partial<Node>): ItemStyle {
 
 /** @internal */
 export function pageOptionsUiToPresentation(pageOptions?: UiPageOptions): PresentationPageOptions | undefined {
-  if (pageOptions)
+  if (pageOptions) {
     return { ...pageOptions };
+  }
   return undefined;
 }
 
@@ -182,10 +173,7 @@ function createNodeLabelRecord(node: Node, appendChildrenCountForGroupingNodes: 
       displayValue: `${labelDefinition.displayValue} ${countDefinition.displayValue}`,
       rawValue: {
         separator: " ",
-        values: [
-          labelDefinition,
-          countDefinition,
-        ],
+        values: [labelDefinition, countDefinition],
       },
       typeName: LabelDefinition.COMPOSITE_DEFINITION_TYPENAME,
     };

@@ -4,8 +4,8 @@ Copyright © Bentley Systems, Incorporated. All rights reserved. See LICENSE.md 
 
 ## Description
 
-The __@itwin/presentation-components__ package contains data providers and react HOCs for
-certain react components delivered in __@itwin/components-react__.
+The **@itwin/presentation-components** package contains data providers and react HOCs for
+certain react components delivered in **@itwin/components-react**.
 
 ## Documentation
 

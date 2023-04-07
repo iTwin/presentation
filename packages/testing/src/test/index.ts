@@ -1,15 +1,25 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 // Node 15+ using MessageChannel prevents node.js process from exiting
 // This becomes an issue when testing React code within JSDOM environment, as the test process cannot exit properly.
 // https://github.com/facebook/react/issues/20756
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const commonjsGlobal: { MessageChannel?: any } = typeof globalThis !== "undefined" ? globalThis : typeof window !== "undefined" ? window : typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : {};
-if (commonjsGlobal.MessageChannel)
+const commonjsGlobal: { MessageChannel?: any } =
+  typeof globalThis !== "undefined"
+    ? globalThis
+    : typeof window !== "undefined"
+    ? window
+    : typeof global !== "undefined"
+    ? global
+    : typeof self !== "undefined"
+    ? self
+    : {};
+if (commonjsGlobal.MessageChannel) {
   delete commonjsGlobal.MessageChannel;
+}
 
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";

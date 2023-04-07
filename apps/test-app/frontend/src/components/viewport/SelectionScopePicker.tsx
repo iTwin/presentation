@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { Component } from "react";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -19,7 +19,10 @@ export default class SelectionScopePicker extends Component<SelectionScopePicker
   constructor(props: SelectionScopePickerProps) {
     super(props);
     this.state = {
-      activeScopeId: (typeof Presentation.selection.scopes.activeScope === "string") ? Presentation.selection.scopes.activeScope : Presentation.selection.scopes.activeScope?.id,
+      activeScopeId:
+        typeof Presentation.selection.scopes.activeScope === "string"
+          ? Presentation.selection.scopes.activeScope
+          : Presentation.selection.scopes.activeScope?.id,
     };
   }
   public override componentDidMount() {
@@ -44,18 +47,18 @@ export default class SelectionScopePicker extends Component<SelectionScopePicker
     this.setState({ activeScopeId: e.target.value });
   };
   public override render() {
-    if (!this.state.availableSelectionScopes || 0 === this.state.availableSelectionScopes.length)
+    if (!this.state.availableSelectionScopes || 0 === this.state.availableSelectionScopes.length) {
       return null;
+    }
     return (
       <div className="SelectionScopePicker">
         {/* eslint-disable-next-line jsx-a11y/no-onchange */}
         <select onChange={this.onSelectedScopeChanged} value={this.state.activeScopeId}>
-          {this.state.availableSelectionScopes.map((scope: SelectionScope) => (<option
-            value={scope.id}
-            key={scope.id}
-          >
-            {scope.label}
-          </option>))}
+          {this.state.availableSelectionScopes.map((scope: SelectionScope) => (
+            <option value={scope.id} key={scope.id}>
+              {scope.label}
+            </option>
+          ))}
         </select>
       </div>
     );

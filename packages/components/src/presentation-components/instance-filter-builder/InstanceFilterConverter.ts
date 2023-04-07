@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module InstancesFilter
  */
@@ -46,8 +46,9 @@ interface ConvertContext {
 }
 
 function convertFilter(filter: PresentationInstanceFilter, ctx: ConvertContext) {
-  if (isFilterConditionGroup(filter))
+  if (isFilterConditionGroup(filter)) {
     return convertConditionGroup(filter, ctx);
+  }
   return convertCondition(filter, ctx);
 }
 
@@ -67,20 +68,23 @@ function convertCondition(condition: PresentationInstanceFilterCondition, ctx: C
 }
 
 function addClassInfoToContext(classInfo: ClassInfo, ctx: ConvertContext) {
-  if (ctx.propertyClasses.find((existing) => existing.id === classInfo.id))
+  if (ctx.propertyClasses.find((existing) => existing.id === classInfo.id)) {
     return;
+  }
 
   ctx.propertyClasses.push(classInfo);
 }
 
 function getRelatedInstanceDescription(field: PropertiesField, propClassName: string, ctx: ConvertContext): RelatedInstanceDescription | undefined {
-  if (!field.parent)
+  if (!field.parent) {
     return undefined;
+  }
 
   const pathToProperty = RelationshipPath.reverse(getPathToPrimaryClass(field.parent));
   const existing = ctx.relatedInstances.find((instance) => RelationshipPath.equals(pathToProperty, instance.path));
-  if (existing)
+  if (existing) {
     return existing;
+  }
 
   const newRelated = {
     path: pathToProperty,
@@ -120,12 +124,15 @@ function createComparison(propertyName: string, type: string, alias: string, ope
       break;
   }
 
-  if (type === "navigation")
+  if (type === "navigation") {
     return `${propertyAccessor}.Id ${operatorExpression} ${(value as Primitives.InstanceKey).id}`;
-  if (type === "double")
+  }
+  if (type === "double") {
     return `CompareDoubles(${propertyAccessor}, ${valueExpression}) ${operatorExpression} 0`;
-  if (type === "dateTime")
+  }
+  if (type === "dateTime") {
     return `CompareDateTimes(${propertyAccessor}, ${valueExpression}) ${operatorExpression} 0`;
+  }
 
   return `${propertyAccessor} ${operatorExpression} ${valueExpression}`;
 }
@@ -179,8 +186,9 @@ function isFilterConditionGroup(obj: PresentationInstanceFilter): obj is Present
 }
 
 async function findBaseExpressionClass(imodel: IModelConnection, propertyClasses: ClassInfo[]) {
-  if (propertyClasses.length === 1)
+  if (propertyClasses.length === 1) {
     return propertyClasses[0];
+  }
 
   const metadataProvider = getIModelMetadataProvider(imodel);
   const [firstClass, ...restClasses] = propertyClasses;

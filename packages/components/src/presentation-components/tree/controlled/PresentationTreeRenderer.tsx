@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module Tree
  */
@@ -38,34 +38,41 @@ export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
   const { applyFilter, clearFilter } = useHierarchyLevelFiltering({ nodeLoader, modelSource });
   const [filterNode, setFilterNode] = useState<PresentationTreeNodeItem>();
 
-  const filterableNodeRenderer = useCallback((nodeProps: TreeNodeRendererProps) => {
-    return (
-      <PresentationTreeNodeRenderer
-        {...nodeProps}
-        onFilterClick={(node) => { setFilterNode(node); }}
-        onClearFilterClick={clearFilter}
-      />
-    );
-  }, [clearFilter]);
+  const filterableNodeRenderer = useCallback(
+    (nodeProps: TreeNodeRendererProps) => {
+      return (
+        <PresentationTreeNodeRenderer
+          {...nodeProps}
+          onFilterClick={(node) => {
+            setFilterNode(node);
+          }}
+          onClearFilterClick={clearFilter}
+        />
+      );
+    },
+    [clearFilter],
+  );
 
   const divRef = useRef<HTMLDivElement>(null);
   return (
     <div ref={divRef}>
       <TreeRenderer {...restProps} nodeRenderer={filterableNodeRenderer} />
-      {
-        filterNode && filterNode.filtering && divRef.current
-          ? createPortal(<TreeNodeFilterBuilderDialog
-            imodel={imodel}
-            onApply={(info) => {
-              applyFilter(filterNode, info);
-              setFilterNode(undefined);
-            }}
-            onClose={() => { setFilterNode(undefined); }}
-            filteringInfo={filterNode.filtering}
-          />,
-          divRef.current.ownerDocument.body.querySelector(".iui-root") ?? divRef.current.ownerDocument.body)
-          : null
-      }
+      {filterNode && filterNode.filtering && divRef.current
+        ? createPortal(
+            <TreeNodeFilterBuilderDialog
+              imodel={imodel}
+              onApply={(info) => {
+                applyFilter(filterNode, info);
+                setFilterNode(undefined);
+              }}
+              onClose={() => {
+                setFilterNode(undefined);
+              }}
+              filteringInfo={filterNode.filtering}
+            />,
+            divRef.current.ownerDocument.body.querySelector(".iui-root") ?? divRef.current.ownerDocument.body,
+          )
+        : null}
     </div>
   );
 }

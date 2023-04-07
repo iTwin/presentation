@@ -8,5 +8,5 @@
     "lib": ["dom"],
     "outDir": "./lib"
   },
-  "include": [ "src", "webpack.config.ts" ],
+  "include": ["src", "webpack.config.ts"]
 }

@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import { createRef } from "react";
@@ -13,7 +13,9 @@ import { Content, LabelDefinition, NavigationPropertyInfo } from "@itwin/present
 import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import {
-  NavigationPropertyTargetSelector, NavigationPropertyTargetSelectorAttributes, NavigationPropertyTargetSelectorProps,
+  NavigationPropertyTargetSelector,
+  NavigationPropertyTargetSelectorAttributes,
+  NavigationPropertyTargetSelectorProps,
 } from "../../presentation-components/properties/NavigationPropertyTargetSelector";
 import { createTestContentDescriptor, createTestContentItem } from "../_helpers/Content";
 
@@ -60,11 +62,7 @@ describe("NavigationPropertyTargetSelector", () => {
   it("renders selector", async () => {
     sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
     const { container, queryByText } = render(
-      <NavigationPropertyTargetSelector
-        imodel={testImodel}
-        getNavigationPropertyInfo={async () => testNavigationPropertyInfo}
-        propertyRecord={testRecord}
-      />
+      <NavigationPropertyTargetSelector imodel={testImodel} getNavigationPropertyInfo={async () => testNavigationPropertyInfo} propertyRecord={testRecord} />,
     );
 
     const select = await waitFor(() => {
@@ -86,7 +84,7 @@ describe("NavigationPropertyTargetSelector", () => {
         getNavigationPropertyInfo={async () => testNavigationPropertyInfo}
         propertyRecord={testRecord}
         onCommit={spy}
-      />
+      />,
     );
 
     const select = await waitFor(() => {
@@ -117,7 +115,7 @@ describe("NavigationPropertyTargetSelector", () => {
         imodel={testImodel}
         getNavigationPropertyInfo={async () => testNavigationPropertyInfo}
         propertyRecord={testRecord}
-      />
+      />,
     );
 
     expect((ref.current?.getValue() as PrimitiveValue).value).to.be.undefined;

@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import sinon from "sinon";
@@ -15,11 +15,12 @@ import { fireEvent, render as renderRTL, waitFor } from "@testing-library/react"
 import { renderHook } from "@testing-library/react-hooks";
 import { IContentDataProvider } from "../../presentation-components/common/ContentDataProvider";
 import {
-  navigationPropertyEditorContext, NavigationPropertyEditorContextProps, NavigationPropertyTargetEditor, useNavigationPropertyEditingContext,
+  navigationPropertyEditorContext,
+  NavigationPropertyEditorContextProps,
+  NavigationPropertyTargetEditor,
+  useNavigationPropertyEditingContext,
 } from "../../presentation-components/properties/NavigationPropertyEditor";
-import {
-  createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField, createTestSimpleContentField,
-} from "../_helpers/Content";
+import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField, createTestSimpleContentField } from "../_helpers/Content";
 import { createTestPropertyRecord } from "../_helpers/UiComponents";
 
 function createNavigationPropertyInfo(): NavigationPropertyInfo {
@@ -34,14 +35,10 @@ function createNavigationPropertyInfo(): NavigationPropertyInfo {
 function render(ui: React.ReactElement, context?: Partial<NavigationPropertyEditorContextProps>) {
   const contextValue: NavigationPropertyEditorContextProps = {
     getNavigationPropertyInfo: context?.getNavigationPropertyInfo ?? (async () => createNavigationPropertyInfo()),
-    imodel: context?.imodel ?? {} as IModelConnection,
+    imodel: context?.imodel ?? ({} as IModelConnection),
   };
 
-  return renderRTL(
-    <navigationPropertyEditorContext.Provider value={contextValue}>
-      {ui}
-    </navigationPropertyEditorContext.Provider>
-  );
+  return renderRTL(<navigationPropertyEditorContext.Provider value={contextValue}>{ui}</navigationPropertyEditorContext.Provider>);
 }
 
 describe("<NavigationPropertyEditor />", () => {
@@ -65,7 +62,7 @@ describe("<NavigationPropertyEditor />", () => {
 
   it("renders editor for 'navigation' type", async () => {
     const record = createRecord();
-    const { container } = render(<EditorContainer propertyRecord={record} onCancel={() => { }} onCommit={() => { }} />);
+    const { container } = render(<EditorContainer propertyRecord={record} onCancel={() => {}} onCommit={() => {}} />);
     await waitFor(() => expect(container.querySelector<HTMLDivElement>(".iui-select-button")).to.not.be.null);
   });
 
@@ -79,17 +76,14 @@ describe("<NavigationPropertyEditor />", () => {
     sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
     const record = createRecord();
     const spy = sinon.spy();
-    const { container, getByText, queryByText } = render(
-      <EditorContainer propertyRecord={record} onCancel={() => { }} onCommit={spy} />,
-      {
-        getNavigationPropertyInfo: async () => ({
-          classInfo: { id: "1", label: "Class Label", name: "TestSchema:TestClass" },
-          targetClassInfo: { id: "1", label: "Target Label", name: "TestSchema:TargetClass" },
-          isForwardRelationship: true,
-          isTargetPolymorphic: true,
-        }),
-      }
-    );
+    const { container, getByText, queryByText } = render(<EditorContainer propertyRecord={record} onCancel={() => {}} onCommit={spy} />, {
+      getNavigationPropertyInfo: async () => ({
+        classInfo: { id: "1", label: "Class Label", name: "TestSchema:TestClass" },
+        targetClassInfo: { id: "1", label: "Target Label", name: "TestSchema:TargetClass" },
+        isForwardRelationship: true,
+        isTargetPolymorphic: true,
+      }),
+    });
 
     // open dropdown
     const select = await waitFor(() => {
@@ -153,7 +147,7 @@ describe("useNavigationPropertyEditingContext", () => {
       imodel: testImodel,
       rulesetId: "",
       displayType: "",
-      dispose: () => { },
+      dispose: () => {},
       getContent: async () => undefined,
       getContentDescriptor: async () => undefined,
       getContentSetSize: async () => 0,
@@ -173,21 +167,23 @@ describe("useNavigationPropertyEditingContext", () => {
       isTargetPolymorphic: true,
     };
 
-    testDataProvider.getFieldByPropertyDescription = async () => createTestPropertiesContentField({
-      properties: [{
-        property: {
-          classInfo: { id: "3", label: "Field Class", name: "TestSchema:FieldClass" },
-          name: "Field Name",
-          type: "navigation",
-          navigationPropertyInfo,
-        },
-      }],
-    });
+    testDataProvider.getFieldByPropertyDescription = async () =>
+      createTestPropertiesContentField({
+        properties: [
+          {
+            property: {
+              classInfo: { id: "3", label: "Field Class", name: "TestSchema:FieldClass" },
+              name: "Field Name",
+              type: "navigation",
+              navigationPropertyInfo,
+            },
+          },
+        ],
+      });
 
-    const { result } = renderHook(
-      ({ imodel, dataProvider }: Props) => useNavigationPropertyEditingContext(imodel, dataProvider),
-      { initialProps: { imodel: testImodel, dataProvider: testDataProvider } }
-    );
+    const { result } = renderHook(({ imodel, dataProvider }: Props) => useNavigationPropertyEditingContext(imodel, dataProvider), {
+      initialProps: { imodel: testImodel, dataProvider: testDataProvider },
+    });
 
     const info = await result.current.getNavigationPropertyInfo(propertyDescription);
     expect(info).to.be.eq(navigationPropertyInfo);
@@ -197,10 +193,9 @@ describe("useNavigationPropertyEditingContext", () => {
     const propertyDescription: PropertyDescription = { displayLabel: "TestProp", name: "test_prop", typename: "navigation" };
     testDataProvider.getFieldByPropertyDescription = async () => createTestSimpleContentField();
 
-    const { result } = renderHook(
-      ({ imodel, dataProvider }: Props) => useNavigationPropertyEditingContext(imodel, dataProvider),
-      { initialProps: { imodel: testImodel, dataProvider: testDataProvider } }
-    );
+    const { result } = renderHook(({ imodel, dataProvider }: Props) => useNavigationPropertyEditingContext(imodel, dataProvider), {
+      initialProps: { imodel: testImodel, dataProvider: testDataProvider },
+    });
 
     const info = await result.current.getNavigationPropertyInfo(propertyDescription);
     expect(info).to.be.undefined;

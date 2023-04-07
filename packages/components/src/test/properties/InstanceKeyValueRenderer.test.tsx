@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import sinon from "sinon";
@@ -83,11 +83,7 @@ describe("InstanceKeyValueRenderer", () => {
 
       it("renders empty when there is no display value", () => {
         const record = createNavigationPropertyRecord(createPrimitiveValue(instanceKey));
-        const { getByRole } = render(
-          <UnifiedSelectionContextProvider imodel={testIModel}>
-            {renderer.render(record)}
-          </UnifiedSelectionContextProvider>
-        );
+        const { getByRole } = render(<UnifiedSelectionContextProvider imodel={testIModel}>{renderer.render(record)}</UnifiedSelectionContextProvider>);
         expect(getByRole("link").textContent).to.be.empty;
       });
 
@@ -96,10 +92,12 @@ describe("InstanceKeyValueRenderer", () => {
         const { getByRole } = render(
           <UnifiedSelectionContextProvider imodel={testIModel} selectionLevel={10}>
             {renderer.render(record)}
-          </UnifiedSelectionContextProvider>
+          </UnifiedSelectionContextProvider>,
         );
 
-        act(() => { getByRole("link").click(); });
+        act(() => {
+          getByRole("link").click();
+        });
 
         expect(Presentation.selection.getSelection(testIModel, 10).has(instanceKey)).to.be.true;
       });
@@ -118,7 +116,6 @@ describe("InstanceKeyValueRenderer", () => {
 
         before(() => {
           class TestTypeConverter extends TypeConverter {
-
             public override convertToStringWithOptions(_value?: Primitives.Value, options?: Record<string, any>) {
               return options?.value;
             }
@@ -152,11 +149,7 @@ describe("InstanceKeyValueRenderer", () => {
         it("renders empty if converted value is undefined and there is no default", () => {
           const record = createNavigationPropertyRecord(createPrimitiveValue(instanceKey));
           applyCustomTypeConverter(record, undefined);
-          const { getByRole } = render(
-            <UnifiedSelectionContextProvider imodel={testIModel}>
-              {renderer.render(record)}
-            </UnifiedSelectionContextProvider>
-          );
+          const { getByRole } = render(<UnifiedSelectionContextProvider imodel={testIModel}>{renderer.render(record)}</UnifiedSelectionContextProvider>);
           expect(getByRole("link").textContent).to.be.empty;
         });
       });

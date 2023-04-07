@@ -1,14 +1,19 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module Tree
  */
 
 import memoize from "micro-memoize";
 import {
-  ActiveMatchInfo, DelayLoadedTreeNodeItem, PageOptions, SimpleTreeDataProvider, SimpleTreeDataProviderHierarchy, TreeNodeItem,
+  ActiveMatchInfo,
+  DelayLoadedTreeNodeItem,
+  PageOptions,
+  SimpleTreeDataProvider,
+  SimpleTreeDataProviderHierarchy,
+  TreeNodeItem,
 } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { NodeKey, NodePathElement } from "@itwin/presentation-common";
@@ -53,7 +58,7 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
   private _parentDataProvider: IPresentationTreeDataProvider;
   private _filteredDataProvider: SimpleTreeDataProvider;
   private _filter: string;
-  private _filteredResultMatches: Array<{ id: string, matchesCount: number }> = [];
+  private _filteredResultMatches: Array<{ id: string; matchesCount: number }> = [];
 
   public constructor(props: FilteredPresentationTreeDataProviderProps) {
     this._parentDataProvider = props.parentDataProvider;
@@ -64,23 +69,32 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
   }
 
   // istanbul ignore next - only here to meet interface's requirements, nothing to test
-  public dispose() { }
+  public dispose() {}
 
-  public get rulesetId(): string { return this._parentDataProvider.rulesetId; }
+  public get rulesetId(): string {
+    return this._parentDataProvider.rulesetId;
+  }
 
-  public get imodel(): IModelConnection { return this._parentDataProvider.imodel; }
+  public get imodel(): IModelConnection {
+    return this._parentDataProvider.imodel;
+  }
 
-  public get filter(): string { return this._filter; }
+  public get filter(): string {
+    return this._filter;
+  }
 
-  public get parentDataProvider(): IPresentationTreeDataProvider { return this._parentDataProvider; }
+  public get parentDataProvider(): IPresentationTreeDataProvider {
+    return this._parentDataProvider;
+  }
 
   private createHierarchy(paths: ReadonlyArray<Readonly<NodePathElement>>, hierarchy: SimpleTreeDataProviderHierarchy, parentId?: string) {
     const treeNodes: DelayLoadedTreeNodeItem[] = [];
     for (let i = 0; i < paths.length; i++) {
       const node = createTreeNodeItem(paths[i].node, parentId);
 
-      if (paths[i].filteringData && paths[i].filteringData!.matchesCount)
+      if (paths[i].filteringData && paths[i].filteringData!.matchesCount) {
         this._filteredResultMatches.push({ id: node.id, matchesCount: paths[i].filteringData!.matchesCount });
+      }
 
       if (paths[i].children.length !== 0) {
         this.createHierarchy(paths[i].children, hierarchy, node.id);
@@ -98,8 +112,9 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
 
   public getActiveMatch: (index: number) => ActiveMatchInfo | undefined = memoize((index: number): ActiveMatchInfo | undefined => {
     let activeMatch: ActiveMatchInfo | undefined;
-    if (index <= 0)
+    if (index <= 0) {
       return undefined;
+    }
 
     let i = 1;
     for (const node of this._filteredResultMatches) {
@@ -122,8 +137,9 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
 
     // Loops through root level only
     for (const path of nodePaths) {
-      if (path.filteringData)
+      if (path.filteringData) {
         resultCount += path.filteringData.matchesCount + path.filteringData.childMatchesCount;
+      }
     }
 
     return resultCount;

@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module PropertyGrid
  */
@@ -69,12 +69,14 @@ export function usePropertyDataProviderWithUnifiedSelection(
     };
 
     // istanbul ignore next
-    const handler = suppliedSelectionHandler ?? new SelectionHandler({
-      manager: Presentation.selection,
-      name,
-      imodel,
-      rulesetId,
-    });
+    const handler =
+      suppliedSelectionHandler ??
+      new SelectionHandler({
+        manager: Presentation.selection,
+        name,
+        imodel,
+        rulesetId,
+      });
 
     handler.onSelect = (evt: SelectionChangeEventArgs): void => {
       updateProviderSelection(handler, evt.level);
@@ -94,15 +96,17 @@ const name = `PropertyGrid`;
 function getSelectedKeys(selectionHandler: SelectionHandler, selectionLevel?: number): KeySet | undefined {
   if (undefined === selectionLevel) {
     const availableLevels = selectionHandler.getSelectionLevels();
-    if (0 === availableLevels.length)
+    if (0 === availableLevels.length) {
       return undefined;
+    }
     selectionLevel = availableLevels[availableLevels.length - 1];
   }
 
   for (let i = selectionLevel; i >= 0; i--) {
     const selection = selectionHandler.getSelection(i);
-    if (!selection.isEmpty)
+    if (!selection.isEmpty) {
       return new KeySet(selection);
+    }
   }
   return new KeySet();
 }

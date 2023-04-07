@@ -1,15 +1,13 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { useCallback } from "react";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ProgressRadial, Table } from "@itwin/itwinui-react";
-import {
-  TableCellRenderer, TableColumnDefinition, TableRowDefinition, usePresentationTableWithUnifiedSelection,
-} from "@itwin/presentation-components";
+import { TableCellRenderer, TableColumnDefinition, TableRowDefinition, usePresentationTableWithUnifiedSelection } from "@itwin/presentation-components";
 
 export interface TableWidgetProps {
   imodel: IModelConnection;
@@ -19,8 +17,9 @@ export interface TableWidgetProps {
 export function TableWidget(props: TableWidgetProps) {
   const { imodel, rulesetId } = props;
 
-  if (!rulesetId)
+  if (!rulesetId) {
     return null;
+  }
 
   return <PresentationTable imodel={imodel} rulesetId={rulesetId} />;
 }
@@ -41,10 +40,13 @@ function PresentationTable(props: PresentationTableProps) {
     rowMapper: mapTableRow,
   });
 
-  const onSort = useCallback((tableState: any) => {
-    const sortBy = tableState.sortBy[0];
-    sort(sortBy?.id, sortBy?.desc);
-  }, [sort]);
+  const onSort = useCallback(
+    (tableState: any) => {
+      const sortBy = tableState.sortBy[0];
+      sort(sortBy?.id, sortBy?.desc);
+    },
+    [sort],
+  );
 
   if (columns === undefined) {
     return <ProgressRadial indeterminate={true} />;
@@ -76,12 +78,15 @@ function mapTableColumns(columnDefinitions: TableColumnDefinition) {
 
 function mapTableRow(rowDefinition: TableRowDefinition) {
   const newRow: { [key: string]: PropertyRecord } = {};
-  rowDefinition.cells.forEach((cell) => { newRow[cell.key] = cell.record; });
+  rowDefinition.cells.forEach((cell) => {
+    newRow[cell.key] = cell.record;
+  });
   return newRow;
 }
 
 function cellRenderer(cellProps: any) {
-  if (!cellProps.value)
+  if (!cellProps.value) {
     return null;
-  return <TableCellRenderer record={(cellProps.value as PropertyRecord)} />;
+  }
+  return <TableCellRenderer record={cellProps.value as PropertyRecord} />;
 }

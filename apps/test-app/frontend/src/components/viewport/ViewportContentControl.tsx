@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import "./ViewportContentControl.css";
 import { useCallback, useEffect, useState } from "react";
@@ -28,8 +28,9 @@ export default function ViewportContentComponent(props: ViewportContentComponent
   }
   useEffect(() => {
     void MyAppFrontend.getViewDefinitions(props.imodel).then((definitions) => {
-      if (definitions.length)
+      if (definitions.length) {
         setSelectedViewDefinitionId(definitions[0].id);
+      }
     });
   }, [props.imodel]);
 
@@ -39,12 +40,7 @@ export default function ViewportContentComponent(props: ViewportContentComponent
 
   return (
     <div className="ViewportContentComponent" style={{ height: "100%" }}>
-      {selectedViewDefinitionId ? (
-        <SampleViewport
-          imodel={props.imodel}
-          viewDefinitionId={selectedViewDefinitionId}
-        />
-      ) : undefined}
+      {selectedViewDefinitionId ? <SampleViewport imodel={props.imodel} viewDefinitionId={selectedViewDefinitionId} /> : undefined}
       <ViewDefinitionSelector imodel={props.imodel} selectedViewDefinition={selectedViewDefinitionId} onViewDefinitionSelected={onViewDefinitionChanged} />
       <SelectionScopePicker imodel={props.imodel} />
     </div>

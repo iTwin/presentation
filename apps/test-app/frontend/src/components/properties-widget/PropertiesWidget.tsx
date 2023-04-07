@@ -1,15 +1,28 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import "./PropertiesWidget.css";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import {
-  ActionButtonRendererProps, CompositeFilterType, CompositePropertyDataFilterer, DisplayValuePropertyDataFilterer, FilteredPropertyData,
-  FilteringInput, FilteringInputStatus, FilteringPropertyDataProvider, HighlightInfo, LabelPropertyDataFilterer, PropertyCategory,
-  PropertyCategoryLabelFilterer, PropertyData, PropertyGridContextMenuArgs, useAsyncValue, useDebouncedAsyncValue,
+  ActionButtonRendererProps,
+  CompositeFilterType,
+  CompositePropertyDataFilterer,
+  DisplayValuePropertyDataFilterer,
+  FilteredPropertyData,
+  FilteringInput,
+  FilteringInputStatus,
+  FilteringPropertyDataProvider,
+  HighlightInfo,
+  LabelPropertyDataFilterer,
+  PropertyCategory,
+  PropertyCategoryLabelFilterer,
+  PropertyData,
+  PropertyGridContextMenuArgs,
+  useAsyncValue,
+  useDebouncedAsyncValue,
   VirtualizedPropertyGridWithDataProvider,
 } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
@@ -17,8 +30,12 @@ import { ContextMenuItem, ContextMenuItemProps, FillCentered, GlobalContextMenu,
 import { ToggleSwitch } from "@itwin/itwinui-react";
 import { Field } from "@itwin/presentation-common";
 import {
-  DiagnosticsProps, FavoritePropertiesDataFilterer, navigationPropertyEditorContext, PresentationPropertyDataProvider,
-  useNavigationPropertyEditingContext, usePropertyDataProviderWithUnifiedSelection,
+  DiagnosticsProps,
+  FavoritePropertiesDataFilterer,
+  navigationPropertyEditorContext,
+  PresentationPropertyDataProvider,
+  useNavigationPropertyEditingContext,
+  usePropertyDataProviderWithUnifiedSelection,
 } from "@itwin/presentation-components";
 import { FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
 import { DiagnosticsSelector } from "../diagnostics-selector/DiagnosticsSelector";
@@ -39,24 +56,34 @@ export function PropertiesWidget(props: Props) {
   const [activeMatchIndex, setActiveMatchIndex] = useState(0);
   const [activeHighlight, setActiveHighlight] = useState<HighlightInfo>();
 
-  const setFilter = useCallback((filter: string) => {
-    if (filter !== filterText)
-      setFilterText(filter);
-  }, [filterText]);
+  const setFilter = useCallback(
+    (filter: string) => {
+      if (filter !== filterText) {
+        setFilterText(filter);
+      }
+    },
+    [filterText],
+  );
 
   const [filteringResult, setFilteringResult] = useState<FilteredPropertyData>();
   const resultSelectorProps = useMemo(() => {
-    return filteringResult?.matchesCount !== undefined ? {
-      onSelectedChanged: (index: React.SetStateAction<number>) => setActiveMatchIndex(index),
-      resultCount: filteringResult.matchesCount,
-    } : undefined;
+    return filteringResult?.matchesCount !== undefined
+      ? {
+          onSelectedChanged: (index: React.SetStateAction<number>) => setActiveMatchIndex(index),
+          resultCount: filteringResult.matchesCount,
+        }
+      : undefined;
   }, [filteringResult]);
 
-  const onFilteringStateChanged = useCallback((newFilteringResult: FilteredPropertyData | undefined) => {
-    setFilteringResult(newFilteringResult);
-    if (newFilteringResult?.getMatchByIndex)
-      setActiveHighlight(newFilteringResult.getMatchByIndex(activeMatchIndex));
-  }, [activeMatchIndex]);
+  const onFilteringStateChanged = useCallback(
+    (newFilteringResult: FilteredPropertyData | undefined) => {
+      setFilteringResult(newFilteringResult);
+      if (newFilteringResult?.getMatchByIndex) {
+        setActiveHighlight(newFilteringResult.getMatchByIndex(activeMatchIndex));
+      }
+    },
+    [activeMatchIndex],
+  );
 
   const { width, height, ref } = useResizeDetector();
 
@@ -64,25 +91,28 @@ export function PropertiesWidget(props: Props) {
     <div className="PropertiesWidget">
       <h3>{IModelApp.localization.getLocalizedString("Sample:controls.properties.widget-label")}</h3>
       <DiagnosticsSelector onDiagnosticsOptionsChanged={setDiagnosticsOptions} />
-      {rulesetId
-        ? (<div className="SearchBar">
+      {rulesetId ? (
+        <div className="SearchBar">
           <FilteringInput
-            onFilterCancel={() => { setFilter(""); }}
-            onFilterClear={() => { setFilter(""); }}
-            onFilterStart={(newFilter) => { setFilter(newFilter); }}
+            onFilterCancel={() => {
+              setFilter("");
+            }}
+            onFilterClear={() => {
+              setFilter("");
+            }}
+            onFilterStart={(newFilter) => {
+              setFilter(newFilter);
+            }}
             style={{ flex: "auto" }}
             resultSelectorProps={resultSelectorProps}
             status={filterText.length !== 0 ? FilteringInputStatus.FilteringFinished : FilteringInputStatus.ReadyToFilter}
           />
-          <ToggleSwitch
-            title="Favorites"
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIsFavoritesFilterActive(e.target.checked)}
-          />
-        </div>)
-        : null}
+          <ToggleSwitch title="Favorites" onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIsFavoritesFilterActive(e.target.checked)} />
+        </div>
+      ) : null}
       <div ref={ref} className="ContentContainer">
-        {rulesetId && width && height
-          ? <PropertyGrid
+        {rulesetId && width && height ? (
+          <PropertyGrid
             width={width}
             height={height}
             imodel={imodel}
@@ -90,8 +120,7 @@ export function PropertiesWidget(props: Props) {
             filtering={{ filter: filterText, onlyFavorites: isFavoritesFilterActive, activeHighlight, onFilteringStateChanged }}
             diagnostics={diagnosticsOptions}
           />
-          : null
-        }
+        ) : null}
       </div>
     </div>
   );
@@ -113,38 +142,46 @@ interface PropertyGridProps {
 function PropertyGrid(props: PropertyGridProps) {
   const { imodel, rulesetId, diagnostics, filtering, width, height } = props;
 
-  const dataProvider = useDisposable(useCallback(
-    () => {
+  const dataProvider = useDisposable(
+    useCallback(() => {
       const provider = new AutoExpandingPropertyDataProvider({ imodel, ruleset: rulesetId, ...diagnostics });
       provider.isNestedPropertyCategoryGroupingEnabled = true;
       return provider;
-    }, [imodel, rulesetId, diagnostics]));
+    }, [imodel, rulesetId, diagnostics]),
+  );
   const { isOverLimit, numSelectedElements } = usePropertyDataProviderWithUnifiedSelection({ dataProvider });
 
-  const renderFavoritesActionButton = useCallback((buttonProps: ActionButtonRendererProps) => (<FavoritePropertyActionButton {...buttonProps} dataProvider={dataProvider} />), [dataProvider]);
+  const renderFavoritesActionButton = useCallback(
+    (buttonProps: ActionButtonRendererProps) => <FavoritePropertyActionButton {...buttonProps} dataProvider={dataProvider} />,
+    [dataProvider],
+  );
   const renderCopyActionButton = useCallback(() => <CopyActionButton />, []);
 
   const { filter: filterText, onlyFavorites, activeHighlight, onFilteringStateChanged } = filtering;
   const [filteringProvDataChanged, setFilteringProvDataChanged] = useState({});
-  const filteringDataProvider = useDisposable(useCallback(() => {
-    const valueFilterer = new DisplayValuePropertyDataFilterer(filterText);
-    const labelFilterer = new LabelPropertyDataFilterer(filterText);
-    const categoryFilterer = new PropertyCategoryLabelFilterer(filterText);
-    const favoriteFilterer = new FavoritePropertiesDataFilterer({ source: dataProvider, favoritesScope: FAVORITES_SCOPE, isActive: onlyFavorites });
+  const filteringDataProvider = useDisposable(
+    useCallback(() => {
+      const valueFilterer = new DisplayValuePropertyDataFilterer(filterText);
+      const labelFilterer = new LabelPropertyDataFilterer(filterText);
+      const categoryFilterer = new PropertyCategoryLabelFilterer(filterText);
+      const favoriteFilterer = new FavoritePropertiesDataFilterer({ source: dataProvider, favoritesScope: FAVORITES_SCOPE, isActive: onlyFavorites });
 
-    const recordFilterer = new CompositePropertyDataFilterer(labelFilterer, CompositeFilterType.Or, valueFilterer);
-    const textFilterer = new CompositePropertyDataFilterer(recordFilterer, CompositeFilterType.Or, categoryFilterer);
-    const favoriteTextFilterer = new CompositePropertyDataFilterer(textFilterer, CompositeFilterType.And, favoriteFilterer);
-    const filteringDataProv = new FilteringPropertyDataProvider(dataProvider, favoriteTextFilterer);
-    filteringDataProv.onDataChanged.addListener(() => {
-      setFilteringProvDataChanged({});
-    });
-    return filteringDataProv;
-  }, [dataProvider, filterText, onlyFavorites]));
+      const recordFilterer = new CompositePropertyDataFilterer(labelFilterer, CompositeFilterType.Or, valueFilterer);
+      const textFilterer = new CompositePropertyDataFilterer(recordFilterer, CompositeFilterType.Or, categoryFilterer);
+      const favoriteTextFilterer = new CompositePropertyDataFilterer(textFilterer, CompositeFilterType.And, favoriteFilterer);
+      const filteringDataProv = new FilteringPropertyDataProvider(dataProvider, favoriteTextFilterer);
+      filteringDataProv.onDataChanged.addListener(() => {
+        setFilteringProvDataChanged({});
+      });
+      return filteringDataProv;
+    }, [dataProvider, filterText, onlyFavorites]),
+  );
 
-  const { value: filteringResult } = useDebouncedAsyncValue(useCallback(async () => {
-    return filteringDataProvider.getData();
-  }, [filteringDataProvider, filteringProvDataChanged])); // eslint-disable-line react-hooks/exhaustive-deps
+  const { value: filteringResult } = useDebouncedAsyncValue(
+    useCallback(async () => {
+      return filteringDataProvider.getData();
+    }, [filteringDataProvider, filteringProvDataChanged]), // eslint-disable-line react-hooks/exhaustive-deps
+  );
   useEffect(() => {
     onFilteringStateChanged(filteringResult);
   }, [filteringResult, onFilteringStateChanged]);
@@ -167,73 +204,87 @@ function PropertyGrid(props: PropertyGridProps) {
     return <FillCentered>{IModelApp.localization.getLocalizedString("Sample:property-grid.too-many-elements-selected")}</FillCentered>;
   }
 
-  return <>
-    <navigationPropertyEditorContext.Provider value={contextValue}>
-      <VirtualizedPropertyGridWithDataProvider
-        width={width}
-        height={height}
-        dataProvider={filteringDataProvider}
-        isPropertyHoverEnabled={true}
-        onPropertyContextMenu={onPropertyContextMenu}
-        actionButtonRenderers={[renderFavoritesActionButton, renderCopyActionButton]}
-        orientation={Orientation.Horizontal}
-        horizontalOrientationMinWidth={500}
-        highlight={(filterText && filterText.length !== 0)
-          ? { highlightedText: filterText, activeHighlight, filteredTypes: filteringResult?.filteredTypes }
-          : undefined
-        }
-        isPropertyEditingEnabled={true}
-      />
-    </navigationPropertyEditorContext.Provider>
-    {contextMenuArgs && <PropertiesWidgetContextMenu args={contextMenuArgs} dataProvider={dataProvider} onCloseContextMenu={onCloseContextMenu} />}
-  </>;
+  return (
+    <>
+      <navigationPropertyEditorContext.Provider value={contextValue}>
+        <VirtualizedPropertyGridWithDataProvider
+          width={width}
+          height={height}
+          dataProvider={filteringDataProvider}
+          isPropertyHoverEnabled={true}
+          onPropertyContextMenu={onPropertyContextMenu}
+          actionButtonRenderers={[renderFavoritesActionButton, renderCopyActionButton]}
+          orientation={Orientation.Horizontal}
+          horizontalOrientationMinWidth={500}
+          highlight={
+            filterText && filterText.length !== 0 ? { highlightedText: filterText, activeHighlight, filteredTypes: filteringResult?.filteredTypes } : undefined
+          }
+          isPropertyEditingEnabled={true}
+        />
+      </navigationPropertyEditorContext.Provider>
+      {contextMenuArgs && <PropertiesWidgetContextMenu args={contextMenuArgs} dataProvider={dataProvider} onCloseContextMenu={onCloseContextMenu} />}
+    </>
+  );
 }
 
-type ContextMenuItemInfo = ContextMenuItemProps & { id: string, label: string };
+type ContextMenuItemInfo = ContextMenuItemProps & { id: string; label: string };
 interface PropertiesWidgetContextMenuProps {
   dataProvider: PresentationPropertyDataProvider;
   args: PropertyGridContextMenuArgs;
   onCloseContextMenu: () => void;
 }
 function PropertiesWidgetContextMenu(props: PropertiesWidgetContextMenuProps) {
-  const { dataProvider, args: { propertyRecord: record }, onCloseContextMenu } = props;
+  const {
+    dataProvider,
+    args: { propertyRecord: record },
+    onCloseContextMenu,
+  } = props;
   const imodel = dataProvider.imodel;
 
-  const addFavorite = useCallback(async (propertyField: Field) => {
-    await Presentation.favoriteProperties.add(propertyField, imodel, FAVORITES_SCOPE);
-    onCloseContextMenu();
-  }, [onCloseContextMenu, imodel]);
+  const addFavorite = useCallback(
+    async (propertyField: Field) => {
+      await Presentation.favoriteProperties.add(propertyField, imodel, FAVORITES_SCOPE);
+      onCloseContextMenu();
+    },
+    [onCloseContextMenu, imodel],
+  );
 
-  const removeFavorite = useCallback(async (propertyField: Field) => {
-    await Presentation.favoriteProperties.remove(propertyField, imodel, FAVORITES_SCOPE);
-    onCloseContextMenu();
-  }, [onCloseContextMenu, imodel]);
+  const removeFavorite = useCallback(
+    async (propertyField: Field) => {
+      await Presentation.favoriteProperties.remove(propertyField, imodel, FAVORITES_SCOPE);
+      onCloseContextMenu();
+    },
+    [onCloseContextMenu, imodel],
+  );
 
-  const asyncItems = useDebouncedAsyncValue(useCallback(async () => {
-    const field = await dataProvider.getFieldByPropertyDescription(record.property);
-    const items: ContextMenuItemInfo[] = [];
-    if (field !== undefined) {
-      if (Presentation.favoriteProperties.has(field, imodel, FAVORITES_SCOPE)) {
-        items.push({
-          id: "remove-favorite",
-          onSelect: async () => removeFavorite(field),
-          title: IModelApp.localization.getLocalizedString("Sample:controls.properties.context-menu.remove-favorite.description"),
-          label: IModelApp.localization.getLocalizedString("Sample:controls.properties.context-menu.remove-favorite.label"),
-        });
-      } else {
-        items.push({
-          id: "add-favorite",
-          onSelect: async () => addFavorite(field),
-          title: IModelApp.localization.getLocalizedString("Sample:controls.properties.context-menu.add-favorite.description"),
-          label: IModelApp.localization.getLocalizedString("Sample:controls.properties.context-menu.add-favorite.label"),
-        });
+  const asyncItems = useDebouncedAsyncValue(
+    useCallback(async () => {
+      const field = await dataProvider.getFieldByPropertyDescription(record.property);
+      const items: ContextMenuItemInfo[] = [];
+      if (field !== undefined) {
+        if (Presentation.favoriteProperties.has(field, imodel, FAVORITES_SCOPE)) {
+          items.push({
+            id: "remove-favorite",
+            onSelect: async () => removeFavorite(field),
+            title: IModelApp.localization.getLocalizedString("Sample:controls.properties.context-menu.remove-favorite.description"),
+            label: IModelApp.localization.getLocalizedString("Sample:controls.properties.context-menu.remove-favorite.label"),
+          });
+        } else {
+          items.push({
+            id: "add-favorite",
+            onSelect: async () => addFavorite(field),
+            title: IModelApp.localization.getLocalizedString("Sample:controls.properties.context-menu.add-favorite.description"),
+            label: IModelApp.localization.getLocalizedString("Sample:controls.properties.context-menu.add-favorite.label"),
+          });
+        }
       }
-    }
-    return items;
-  }, [imodel, dataProvider, record, addFavorite, removeFavorite]));
+      return items;
+    }, [imodel, dataProvider, record, addFavorite, removeFavorite]),
+  );
 
-  if (!asyncItems.value || asyncItems.value.length === 0)
+  if (!asyncItems.value || asyncItems.value.length === 0) {
     return null;
+  }
 
   return (
     <GlobalContextMenu
@@ -244,11 +295,11 @@ function PropertiesWidgetContextMenu(props: PropertiesWidgetContextMenuProps) {
       x={props.args.event.clientX}
       y={props.args.event.clientY}
     >
-      {asyncItems.value.map((item) =>
+      {asyncItems.value.map((item) => (
         <ContextMenuItem key={item.id} onSelect={item.onSelect} title={item.title}>
           {item.label}
         </ContextMenuItem>
-      )}
+      ))}
     </GlobalContextMenu>
   );
 }
@@ -258,28 +309,29 @@ function FavoritePropertyActionButton(props: ActionButtonRendererProps & { dataP
   const field = useAsyncValue(useMemo(async () => dataProvider.getFieldByPropertyDescription(record.property), [dataProvider, record.property]));
   return (
     <div>
-      {
-        (field && (Presentation.favoriteProperties.has(field, dataProvider.imodel, FAVORITES_SCOPE) || props.isPropertyHovered))
-          ? <FavoriteFieldActionButton field={field} imodel={dataProvider.imodel} />
-          : undefined
-      }
+      {field && (Presentation.favoriteProperties.has(field, dataProvider.imodel, FAVORITES_SCOPE) || props.isPropertyHovered) ? (
+        <FavoriteFieldActionButton field={field} imodel={dataProvider.imodel} />
+      ) : undefined}
     </div>
   );
 }
 
-function FavoriteFieldActionButton(props: { imodel: IModelConnection, field: Field }) {
+function FavoriteFieldActionButton(props: { imodel: IModelConnection; field: Field }) {
   const { field, imodel } = props;
   const toggleFavoriteProperty = useCallback(async () => {
-    if (Presentation.favoriteProperties.has(field, imodel, FAVORITES_SCOPE))
+    if (Presentation.favoriteProperties.has(field, imodel, FAVORITES_SCOPE)) {
       await Presentation.favoriteProperties.remove(field, imodel, FAVORITES_SCOPE);
-    else
+    } else {
       await Presentation.favoriteProperties.add(field, imodel, FAVORITES_SCOPE);
+    }
   }, [field, imodel]);
   return (
     <div className="favorite-action-button" onClick={toggleFavoriteProperty} onKeyDown={toggleFavoriteProperty} role="button" tabIndex={0}>
-      {Presentation.favoriteProperties.has(field, imodel, FAVORITES_SCOPE) ?
-        <div style={{ width: "20px", height: "20px", background: "orange" }} /> :
-        <div style={{ width: "20px", height: "20px", background: "blue" }} />}
+      {Presentation.favoriteProperties.has(field, imodel, FAVORITES_SCOPE) ? (
+        <div style={{ width: "20px", height: "20px", background: "orange" }} />
+      ) : (
+        <div style={{ width: "20px", height: "20px", background: "blue" }} />
+      )}
     </div>
   );
 }
@@ -302,8 +354,9 @@ class AutoExpandingPropertyDataProvider extends PresentationPropertyDataProvider
   private expandCategories(categories: PropertyCategory[]) {
     categories.forEach((category: PropertyCategory) => {
       category.expand = true;
-      if (category.childCategories)
+      if (category.childCategories) {
         this.expandCategories(category.childCategories);
+      }
     });
   }
 }

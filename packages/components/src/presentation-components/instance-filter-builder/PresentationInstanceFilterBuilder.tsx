@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
  * @module InstancesFilter
  */
@@ -11,9 +11,7 @@ import { PropertyFilter } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo, Descriptor } from "@itwin/presentation-common";
 import { navigationPropertyEditorContext } from "../properties/NavigationPropertyEditor";
-import {
-  InstanceFilterBuilder, useFilterBuilderNavigationPropertyEditorContext, usePresentationInstanceFilteringProps,
-} from "./InstanceFilterBuilder";
+import { InstanceFilterBuilder, useFilterBuilderNavigationPropertyEditorContext, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder";
 import { PresentationInstanceFilter } from "./Types";
 import { convertPresentationFilterToPropertyFilter, createPresentationInstanceFilter } from "./Utils";
 
@@ -53,20 +51,25 @@ export function PresentationInstanceFilterBuilder(props: PresentationInstanceFil
   const { imodel, descriptor, onInstanceFilterChanged, ruleGroupDepthLimit, initialFilter } = props;
   const filteringProps = usePresentationInstanceFilteringProps(descriptor, imodel, initialFilter?.usedClasses);
 
-  const onFilterChanged = useCallback((filter?: PropertyFilter) => {
-    const presentationFilter = filter ? createPresentationInstanceFilter(descriptor, filter) : undefined;
-    onInstanceFilterChanged(presentationFilter ? { filter: presentationFilter, usedClasses: filteringProps.selectedClasses } : undefined);
-  }, [descriptor, onInstanceFilterChanged, filteringProps.selectedClasses]);
+  const onFilterChanged = useCallback(
+    (filter?: PropertyFilter) => {
+      const presentationFilter = filter ? createPresentationInstanceFilter(descriptor, filter) : undefined;
+      onInstanceFilterChanged(presentationFilter ? { filter: presentationFilter, usedClasses: filteringProps.selectedClasses } : undefined);
+    },
+    [descriptor, onInstanceFilterChanged, filteringProps.selectedClasses],
+  );
 
   const contextValue = useFilterBuilderNavigationPropertyEditorContext(imodel, descriptor);
-  const [initialPropertyFilter] = useState(() => initialFilter ? convertPresentationFilterToPropertyFilter(descriptor, initialFilter.filter) : undefined);
+  const [initialPropertyFilter] = useState(() => (initialFilter ? convertPresentationFilterToPropertyFilter(descriptor, initialFilter.filter) : undefined));
 
-  return <navigationPropertyEditorContext.Provider value={contextValue}>
-    <InstanceFilterBuilder
-      {...filteringProps}
-      initialFilter={initialPropertyFilter}
-      onFilterChanged={onFilterChanged}
-      ruleGroupDepthLimit={ruleGroupDepthLimit}
-    />
-  </navigationPropertyEditorContext.Provider>;
+  return (
+    <navigationPropertyEditorContext.Provider value={contextValue}>
+      <InstanceFilterBuilder
+        {...filteringProps}
+        initialFilter={initialPropertyFilter}
+        onFilterChanged={onFilterChanged}
+        ruleGroupDepthLimit={ruleGroupDepthLimit}
+      />
+    </navigationPropertyEditorContext.Provider>
+  );
 }

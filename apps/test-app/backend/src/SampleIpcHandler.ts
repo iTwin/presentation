@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { IModelDb, IpcHandler } from "@itwin/core-backend";
 import { Id64Arg } from "@itwin/core-bentley";
@@ -14,8 +14,9 @@ export class SampleIpcHandler extends IpcHandler implements SampleIpcInterface {
 
   public async deleteElements(imodelKey: string, elementIds: Id64Arg): Promise<void> {
     const iModelDb = IModelDb.tryFindByKey(imodelKey);
-    if (!iModelDb)
+    if (!iModelDb) {
       return;
+    }
 
     iModelDb.elements.deleteElement(elementIds);
     iModelDb.saveChanges();
@@ -23,8 +24,9 @@ export class SampleIpcHandler extends IpcHandler implements SampleIpcInterface {
 
   public async updateElement(imodelKey: string, newProps: ElementProps): Promise<void> {
     const iModelDb = IModelDb.tryFindByKey(imodelKey);
-    if (!iModelDb)
+    if (!iModelDb) {
       return;
+    }
 
     iModelDb.elements.updateElement(newProps);
     iModelDb.saveChanges();

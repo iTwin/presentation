@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import * as sinon from "sinon";
@@ -9,14 +9,26 @@ import * as moq from "typemoq";
 import { PrimitiveValue, PropertyDescription, PropertyRecord } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
-  ClientDiagnosticsAttribute, Content, ContentDescriptorRequestOptions, ContentRequestOptions, Descriptor, FIELD_NAMES_SEPARATOR, KeySet, Paged,
-  RegisteredRuleset, SelectionInfo,
+  ClientDiagnosticsAttribute,
+  Content,
+  ContentDescriptorRequestOptions,
+  ContentRequestOptions,
+  Descriptor,
+  FIELD_NAMES_SEPARATOR,
+  KeySet,
+  Paged,
+  RegisteredRuleset,
+  SelectionInfo,
 } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, RulesetManager } from "@itwin/presentation-frontend";
 import { CacheInvalidationProps, ContentDataProvider, ContentDataProviderProps } from "../../presentation-components/common/ContentDataProvider";
 import { createTestECInstanceKey, createTestPropertyInfo, createTestRuleset } from "../_helpers/Common";
 import {
-  createTestContentDescriptor, createTestContentItem, createTestNestedContentField, createTestPropertiesContentField, createTestSimpleContentField,
+  createTestContentDescriptor,
+  createTestContentItem,
+  createTestNestedContentField,
+  createTestPropertiesContentField,
+  createTestSimpleContentField,
 } from "../_helpers/Content";
 import { PromiseContainer, ResolvablePromise } from "../_helpers/Promises";
 import { mockPresentationManager } from "../_helpers/UiComponents";
@@ -29,13 +41,18 @@ class Provider extends ContentDataProvider {
   constructor(props: ContentDataProviderProps) {
     super(props);
   }
-  public override invalidateCache(props: CacheInvalidationProps) { super.invalidateCache(props); }
-  public override shouldRequestContentForEmptyKeyset() { return super.shouldRequestContentForEmptyKeyset(); }
-  public override async getDescriptorOverrides() { return super.getDescriptorOverrides(); }
+  public override invalidateCache(props: CacheInvalidationProps) {
+    super.invalidateCache(props);
+  }
+  public override shouldRequestContentForEmptyKeyset() {
+    return super.shouldRequestContentForEmptyKeyset();
+  }
+  public override async getDescriptorOverrides() {
+    return super.getDescriptorOverrides();
+  }
 }
 
 describe("ContentDataProvider", () => {
-
   const rulesetId = "ruleset_id";
   const displayType = "test_display";
   let provider: Provider;
@@ -65,7 +82,6 @@ describe("ContentDataProvider", () => {
   });
 
   describe("constructor", () => {
-
     it("sets display type", () => {
       const type = "new_display_type";
       const p = new Provider({ imodel: imodelMock.object, ruleset: rulesetId, displayType: type });
@@ -79,7 +95,7 @@ describe("ContentDataProvider", () => {
     });
 
     it("registers ruleset", () => {
-      rulesetsManagerMock.setup(async (x) => x.add(moq.It.isAny())).returns(async (r) => new RegisteredRuleset(r, "test", () => { }));
+      rulesetsManagerMock.setup(async (x) => x.add(moq.It.isAny())).returns(async (r) => new RegisteredRuleset(r, "test", () => {}));
       const ruleset = createTestRuleset();
       const p = new Provider({ imodel: imodelMock.object, ruleset, displayType });
       expect(p.rulesetId).to.eq(ruleset.id);
@@ -98,11 +114,9 @@ describe("ContentDataProvider", () => {
       await registerPromise.resolve(new RegisteredRuleset(ruleset, "test", rulesetDisposeSpy));
       expect(rulesetDisposeSpy).to.be.calledOnce;
     });
-
   });
 
   describe("dispose", () => {
-
     it("disposes registered ruleset", async () => {
       const registerPromise = new ResolvablePromise<RegisteredRuleset>();
       rulesetsManagerMock.setup(async (x) => x.add(moq.It.isAny())).returns(async () => registerPromise);
@@ -116,11 +130,9 @@ describe("ContentDataProvider", () => {
       p.dispose();
       expect(rulesetDisposeSpy).to.be.calledOnce;
     });
-
   });
 
   describe("rulesetId", () => {
-
     it("returns rulesetId provider is initialized with", () => {
       expect(provider.rulesetId).to.eq(rulesetId);
     });
@@ -138,11 +150,9 @@ describe("ContentDataProvider", () => {
       expect(provider.rulesetId).to.eq(newId);
       expect(invalidateCacheSpy).to.not.be.called;
     });
-
   });
 
   describe("imodel", () => {
-
     it("returns imodel provider is initialized with", () => {
       expect(provider.imodel).to.eq(imodelMock.object);
     });
@@ -159,11 +169,9 @@ describe("ContentDataProvider", () => {
       expect(provider.imodel).to.eq(imodelMock.object);
       expect(invalidateCacheSpy).to.not.be.called;
     });
-
   });
 
   describe("selectionInfo", () => {
-
     it("sets a different selectionInfo and clears caches", () => {
       const info1: SelectionInfo = { providerName: "a" };
       provider.selectionInfo = info1;
@@ -186,11 +194,9 @@ describe("ContentDataProvider", () => {
       expect(provider.selectionInfo).to.eq(info1);
       expect(invalidateCacheSpy).to.not.be.called;
     });
-
   });
 
   describe("keys", () => {
-
     it("sets keys and clears caches", () => {
       const keys = new KeySet([createTestECInstanceKey()]);
       provider.keys = keys;
@@ -214,11 +220,9 @@ describe("ContentDataProvider", () => {
       provider.keys = keys;
       expect(invalidateCacheSpy).to.be.calledOnceWith(CacheInvalidationProps.full());
     });
-
   });
 
   describe("getContentDescriptor", () => {
-
     const selection: SelectionInfo = { providerName: "test" };
 
     beforeEach(() => {
@@ -228,7 +232,16 @@ describe("ContentDataProvider", () => {
     it("requests presentation manager for descriptor and returns its copy", async () => {
       const result = createTestContentDescriptor({ displayType, fields: [] });
       presentationManagerMock
-        .setup(async (x) => x.getContentDescriptor(moq.It.isObjectWith<ContentDescriptorRequestOptions<IModelConnection, KeySet>>({ imodel: imodelMock.object, rulesetOrId: rulesetId, displayType, selection })))
+        .setup(async (x) =>
+          x.getContentDescriptor(
+            moq.It.isObjectWith<ContentDescriptorRequestOptions<IModelConnection, KeySet>>({
+              imodel: imodelMock.object,
+              rulesetOrId: rulesetId,
+              displayType,
+              selection,
+            }),
+          ),
+        )
         .returns(async () => result)
         .verifiable();
       provider.selectionInfo = selection;
@@ -262,15 +275,15 @@ describe("ContentDataProvider", () => {
     });
 
     it("handles undefined descriptor returned by presentation manager", async () => {
-      presentationManagerMock.setup(async (x) => x.getContentDescriptor(moq.It.isAny()))
-        .returns(async () => undefined);
+      presentationManagerMock.setup(async (x) => x.getContentDescriptor(moq.It.isAny())).returns(async () => undefined);
       const descriptor = await provider.getContentDescriptor();
       expect(descriptor).to.be.undefined;
     });
 
     it("memoizes result", async () => {
       const resultPromiseContainer = new PromiseContainer<Descriptor>();
-      presentationManagerMock.setup(async (x) => x.getContentDescriptor(moq.It.isAny()))
+      presentationManagerMock
+        .setup(async (x) => x.getContentDescriptor(moq.It.isAny()))
         .returns(async () => resultPromiseContainer.promise)
         .verifiable(moq.Times.once());
       const requests = [provider.getContentDescriptor(), provider.getContentDescriptor()];
@@ -280,26 +293,26 @@ describe("ContentDataProvider", () => {
       descriptors.forEach((descriptor) => expect(descriptor).to.deep.eq(result));
       presentationManagerMock.verifyAll();
     });
-
   });
 
   describe("getContentSetSize", () => {
-
     beforeEach(() => {
       provider.keys = new KeySet([createTestECInstanceKey()]);
     });
 
     it("returns 0 when manager returns undefined descriptor", async () => {
-      presentationManagerMock.setup(async (x) => x.getContentSetSize(moq.It.isAny()))
-        .verifiable(moq.Times.never());
+      presentationManagerMock.setup(async (x) => x.getContentSetSize(moq.It.isAny())).verifiable(moq.Times.never());
       const size = await provider.getContentSetSize();
       presentationManagerMock.verifyAll();
       expect(size).to.eq(0);
     });
 
     it("requests presentation manager for size", async () => {
-      const result = new PromiseContainer<{ content: Content, size: number }>();
-      presentationManagerMock.setup(async (x) => x.getContentAndSize(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: 10 } })))
+      const result = new PromiseContainer<{ content: Content; size: number }>();
+      presentationManagerMock
+        .setup(async (x) =>
+          x.getContentAndSize(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: 10 } })),
+        )
         .returns(async () => result.promise)
         .verifiable();
       provider.pagingSize = 10;
@@ -311,8 +324,11 @@ describe("ContentDataProvider", () => {
     });
 
     it("memoizes result", async () => {
-      const resultPromiseContainer = new PromiseContainer<{ content: Content, size: number }>();
-      presentationManagerMock.setup(async (x) => x.getContentAndSize(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: 10 } })))
+      const resultPromiseContainer = new PromiseContainer<{ content: Content; size: number }>();
+      presentationManagerMock
+        .setup(async (x) =>
+          x.getContentAndSize(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: 10 } })),
+        )
         .returns(async () => resultPromiseContainer.promise)
         .verifiable(moq.Times.once());
       provider.pagingSize = 10;
@@ -325,10 +341,15 @@ describe("ContentDataProvider", () => {
     });
 
     it("requests size and first page when paging size is set", async () => {
-      const resultPromiseContainer = new PromiseContainer<{ content: Content, size: number }>();
+      const resultPromiseContainer = new PromiseContainer<{ content: Content; size: number }>();
       const pagingSize = 20;
 
-      presentationManagerMock.setup(async (x) => x.getContentAndSize(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: pagingSize } })))
+      presentationManagerMock
+        .setup(async (x) =>
+          x.getContentAndSize(
+            moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: pagingSize } }),
+          ),
+        )
         .returns(async () => resultPromiseContainer.promise)
         .verifiable(moq.Times.once());
 
@@ -343,26 +364,25 @@ describe("ContentDataProvider", () => {
     it("returns content size equal to content set size when page options are undefined", async () => {
       const descriptor = createTestContentDescriptor({ fields: [] });
       const content = new Content(descriptor, [createTestContentItem({ values: {}, displayValues: {} })]);
-      presentationManagerMock.setup(async (x) => x.getContent(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: undefined })))
+      presentationManagerMock
+        .setup(async (x) => x.getContent(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: undefined })))
         .returns(async () => content)
         .verifiable(moq.Times.once());
-      presentationManagerMock.setup(async (x) => x.getContentSetSize(moq.It.isAny()))
-        .verifiable(moq.Times.never());
+      presentationManagerMock.setup(async (x) => x.getContentSetSize(moq.It.isAny())).verifiable(moq.Times.never());
       const size = await provider.getContentSetSize();
       presentationManagerMock.verifyAll();
       expect(size).to.equal(content.contentSet.length);
     });
-
   });
 
   describe("getContent", () => {
-
     beforeEach(() => {
       provider.keys = new KeySet([createTestECInstanceKey()]);
     });
 
     it("returns undefined when manager returns undefined content", async () => {
-      presentationManagerMock.setup(async (x) => x.getContent(moq.It.isAny()))
+      presentationManagerMock
+        .setup(async (x) => x.getContent(moq.It.isAny()))
         .returns(async () => undefined)
         .verifiable();
       const c = await provider.getContent();
@@ -372,11 +392,14 @@ describe("ContentDataProvider", () => {
 
     it("requests presentation manager for content", async () => {
       const descriptor = createTestContentDescriptor({ fields: [] });
-      const result: { content: Content, size: number } = {
+      const result: { content: Content; size: number } = {
         content: new Content(descriptor, []),
         size: 1,
       };
-      presentationManagerMock.setup(async (x) => x.getContentAndSize(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: 10 } })))
+      presentationManagerMock
+        .setup(async (x) =>
+          x.getContentAndSize(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: 10 } })),
+        )
         .returns(async () => result)
         .verifiable();
       const c = await provider.getContent({ start: 0, size: 10 });
@@ -386,23 +409,39 @@ describe("ContentDataProvider", () => {
 
     it("memoizes result", async () => {
       const resultContentFirstPagePromise0 = new PromiseContainer<Content>();
-      presentationManagerMock.setup(async (x) => x.getContent(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: undefined })))
+      presentationManagerMock
+        .setup(async (x) => x.getContent(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: undefined })))
         .returns(async () => resultContentFirstPagePromise0.promise)
         .verifiable(moq.Times.once());
-      presentationManagerMock.setup(async (x) => x.getContent(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: undefined, size: 0 } })))
+      presentationManagerMock
+        .setup(async (x) =>
+          x.getContent(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: undefined, size: 0 } })),
+        )
         .verifiable(moq.Times.never());
-      presentationManagerMock.setup(async (x) => x.getContent(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: undefined } })))
+      presentationManagerMock
+        .setup(async (x) =>
+          x.getContent(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: undefined } })),
+        )
         .verifiable(moq.Times.never());
-      presentationManagerMock.setup(async (x) => x.getContent(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: 0 } })))
+      presentationManagerMock
+        .setup(async (x) =>
+          x.getContent(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: 0 } })),
+        )
         .verifiable(moq.Times.never());
 
-      const resultContentFirstPagePromise1 = new PromiseContainer<{ content: Content, size: number }>();
-      presentationManagerMock.setup(async (x) => x.getContentAndSize(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: 1 } })))
+      const resultContentFirstPagePromise1 = new PromiseContainer<{ content: Content; size: number }>();
+      presentationManagerMock
+        .setup(async (x) =>
+          x.getContentAndSize(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: 1 } })),
+        )
         .returns(async () => resultContentFirstPagePromise1.promise)
         .verifiable(moq.Times.once());
 
       const resultContentNonFirstPagePromise = new PromiseContainer<Content>();
-      presentationManagerMock.setup(async (x) => x.getContent(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 1, size: 0 } })))
+      presentationManagerMock
+        .setup(async (x) =>
+          x.getContent(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 1, size: 0 } })),
+        )
         .returns(async () => resultContentNonFirstPagePromise.promise)
         .verifiable(moq.Times.once());
 
@@ -435,7 +474,10 @@ describe("ContentDataProvider", () => {
         .to.deep.eq(responses[1], "responses[1] should eq responses[0]")
         .to.deep.eq(responses[2], "responses[2] should eq responses[0]")
         .to.deep.eq(responses[3], "responses[3] should eq responses[0]")
-        .to.deep.eq(nonPagedContentStartingAt0Response, "responses[0], responses[1], responses[2] and responses[3] should eq nonPagedContentStartingAt0Response");
+        .to.deep.eq(
+          nonPagedContentStartingAt0Response,
+          "responses[0], responses[1], responses[2] and responses[3] should eq nonPagedContentStartingAt0Response",
+        );
       expect(responses[4]).to.deep.eq(pagedContentAndSizeResponse.content, "responses[4] should eq pagedContentAndSizeResponse.content");
       expect(responses[5]).to.deep.eq(nonPagedContentStartingAt1Response, "responses[5] should eq nonPagedContentStartingAt1Response");
       presentationManagerMock.verifyAll();
@@ -448,11 +490,9 @@ describe("ContentDataProvider", () => {
       presentationManagerMock.verify(async (x) => x.getContent(moq.It.isAny()), moq.Times.never());
       presentationManagerMock.verify(async (x) => x.getContentAndSize(moq.It.isAny()), moq.Times.never());
     });
-
   });
 
   describe("[deprecated] getFieldByPropertyRecord", () => {
-
     it("passes record's description to `getFieldByPropertyDescription`", async () => {
       const value: PrimitiveValue = {
         displayValue: "displayValue",
@@ -469,9 +509,11 @@ describe("ContentDataProvider", () => {
 
       const field = createTestPropertiesContentField({
         name: "test-field",
-        properties: [{
-          property: createTestPropertyInfo({ name: "test-property" }),
-        }],
+        properties: [
+          {
+            property: createTestPropertyInfo({ name: "test-property" }),
+          },
+        ],
       });
       provider.getFieldByPropertyDescription = sinon.fake(async () => field);
 
@@ -481,11 +523,9 @@ describe("ContentDataProvider", () => {
       expect(provider.getFieldByPropertyDescription).to.be.calledOnceWith(record.property);
       expect(actualField).to.eq(field);
     });
-
   });
 
   describe("getFieldByPropertyDescription", () => {
-
     let propertyDescription: PropertyDescription;
 
     before(() => {
@@ -502,8 +542,8 @@ describe("ContentDataProvider", () => {
     });
 
     it("return undefined if descriptor is not set", async () => {
-      presentationManagerMock.setup(async (x) =>
-        x.getContentDescriptor(moq.It.isAny()))
+      presentationManagerMock
+        .setup(async (x) => x.getContentDescriptor(moq.It.isAny()))
         .returns(async () => undefined)
         .verifiable(moq.Times.once());
 
@@ -515,8 +555,8 @@ describe("ContentDataProvider", () => {
     it("return undefined when field is not found", async () => {
       const descriptor = createTestContentDescriptor({ fields: [] });
 
-      presentationManagerMock.setup(async (x) =>
-        x.getContentDescriptor(moq.It.isAny()))
+      presentationManagerMock
+        .setup(async (x) => x.getContentDescriptor(moq.It.isAny()))
         .returns(async () => descriptor)
         .verifiable(moq.Times.once());
 
@@ -528,14 +568,19 @@ describe("ContentDataProvider", () => {
     it("return a field", async () => {
       const field = createTestPropertiesContentField({
         name: "test-field",
-        properties: [{
-          property: createTestPropertyInfo({ name: "test-property" }),
-        }],
+        properties: [
+          {
+            property: createTestPropertyInfo({ name: "test-property" }),
+          },
+        ],
       });
       const descriptor = createTestContentDescriptor({ fields: [field] });
       propertyDescription.name = "test-field";
 
-      presentationManagerMock.setup(async (x) => x.getContentDescriptor(moq.It.isAny())).returns(async () => descriptor).verifiable(moq.Times.once());
+      presentationManagerMock
+        .setup(async (x) => x.getContentDescriptor(moq.It.isAny()))
+        .returns(async () => descriptor)
+        .verifiable(moq.Times.once());
 
       const resultField = await provider.getFieldByPropertyDescription(propertyDescription);
       presentationManagerMock.verifyAll();
@@ -551,17 +596,18 @@ describe("ContentDataProvider", () => {
       const descriptor = createTestContentDescriptor({ fields: [nestingField] });
       propertyDescription.name = `${nestingField.name}${FIELD_NAMES_SEPARATOR}${nestedField.name}`;
 
-      presentationManagerMock.setup(async (x) => x.getContentDescriptor(moq.It.isAny())).returns(async () => descriptor).verifiable(moq.Times.once());
+      presentationManagerMock
+        .setup(async (x) => x.getContentDescriptor(moq.It.isAny()))
+        .returns(async () => descriptor)
+        .verifiable(moq.Times.once());
 
       const resultField = await provider.getFieldByPropertyDescription(propertyDescription);
       presentationManagerMock.verifyAll();
       expect(resultField).to.eq(nestedField);
     });
-
   });
 
   describe("reacting to updates", () => {
-
     it("doesn't react to imodel content updates to unrelated rulesets", () => {
       presentationManagerMock.object.onIModelContentChanged.raiseEvent({ rulesetId: "unrelated", updateInfo: "FULL", imodelKey });
       expect(invalidateCacheSpy).to.not.be.called;
@@ -578,13 +624,13 @@ describe("ContentDataProvider", () => {
     });
 
     it("doesn't react to unrelated ruleset modifications", () => {
-      const ruleset = new RegisteredRuleset(createTestRuleset(), "", () => { });
+      const ruleset = new RegisteredRuleset(createTestRuleset(), "", () => {});
       rulesetsManagerMock.object.onRulesetModified.raiseEvent(ruleset, { ...ruleset.toJSON() });
       expect(invalidateCacheSpy).to.not.be.called;
     });
 
     it("invalidates cache when related ruleset is modified", () => {
-      const ruleset = new RegisteredRuleset({ ...(createTestRuleset()), id: rulesetId }, "", () => { });
+      const ruleset = new RegisteredRuleset({ ...createTestRuleset(), id: rulesetId }, "", () => {});
       rulesetsManagerMock.object.onRulesetModified.raiseEvent(ruleset, { ...ruleset.toJSON() });
       expect(invalidateCacheSpy).to.be.calledOnceWith(CacheInvalidationProps.full());
     });
@@ -593,11 +639,9 @@ describe("ContentDataProvider", () => {
       presentationManagerMock.object.vars("").onVariableChanged.raiseEvent("var_id", "prev", "curr");
       expect(invalidateCacheSpy).to.be.calledOnceWith(CacheInvalidationProps.full());
     });
-
   });
 
   describe("diagnostics", () => {
-
     it("passes rule diagnostics options to presentation manager", async () => {
       const diagnosticsHandler = sinon.stub();
 
@@ -612,7 +656,14 @@ describe("ContentDataProvider", () => {
 
       const descriptor = createTestContentDescriptor({ fields: [] });
       const content = new Content(descriptor, [createTestContentItem({ values: {}, displayValues: {} })]);
-      presentationManagerMock.setup(async (x) => x.getContent(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>> & ClientDiagnosticsAttribute>({ diagnostics: { editor: "error", handler: diagnosticsHandler } })))
+      presentationManagerMock
+        .setup(async (x) =>
+          x.getContent(
+            moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>> & ClientDiagnosticsAttribute>({
+              diagnostics: { editor: "error", handler: diagnosticsHandler },
+            }),
+          ),
+        )
         .returns(async () => content)
         .verifiable(moq.Times.once());
       await provider.getContentSetSize();
@@ -638,13 +689,18 @@ describe("ContentDataProvider", () => {
 
       const descriptor = createTestContentDescriptor({ fields: [] });
       const content = new Content(descriptor, [createTestContentItem({ values: {}, displayValues: {} })]);
-      presentationManagerMock.setup(async (x) => x.getContent(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>> & ClientDiagnosticsAttribute>({ diagnostics: { backendVersion: true, perf: true, dev: "error", handler: diagnosticsHandler } })))
+      presentationManagerMock
+        .setup(async (x) =>
+          x.getContent(
+            moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>> & ClientDiagnosticsAttribute>({
+              diagnostics: { backendVersion: true, perf: true, dev: "error", handler: diagnosticsHandler },
+            }),
+          ),
+        )
         .returns(async () => content)
         .verifiable(moq.Times.once());
       await provider.getContentSetSize();
       presentationManagerMock.verifyAll();
     });
-
   });
-
 });

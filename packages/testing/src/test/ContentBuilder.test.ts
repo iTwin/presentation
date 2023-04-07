@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
 import * as sinon from "sinon";
@@ -11,8 +11,22 @@ import { BeEvent, Guid, Id64String } from "@itwin/core-bentley";
 import { ECSqlReader } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
-  ArrayTypeDescription, CategoryDescription, Content, DefaultContentDisplayTypes, Descriptor, DisplayValuesMap, Field, Item, KeySet,
-  PrimitiveTypeDescription, PropertyValueFormat, RegisteredRuleset, Ruleset, StructTypeDescription, TypeDescription, ValuesMap,
+  ArrayTypeDescription,
+  CategoryDescription,
+  Content,
+  DefaultContentDisplayTypes,
+  Descriptor,
+  DisplayValuesMap,
+  Field,
+  Item,
+  KeySet,
+  PrimitiveTypeDescription,
+  PropertyValueFormat,
+  RegisteredRuleset,
+  Ruleset,
+  StructTypeDescription,
+  TypeDescription,
+  ValuesMap,
 } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, RulesetManager } from "@itwin/presentation-frontend";
 import { ContentBuilder, IContentBuilderDataProvider } from "../presentation-testing/ContentBuilder";
@@ -30,8 +44,9 @@ class EmptyDataProvider implements IContentBuilderDataProvider {
   public getContent = async (): Promise<Readonly<Content> | undefined> => undefined;
 
   public set keys(keyset: KeySet) {
-    if (this._keyVerificationFunction)
+    if (this._keyVerificationFunction) {
       this._keyVerificationFunction(keyset);
+    }
     this._keyset = keyset;
   }
   public get keys() {
@@ -162,19 +177,44 @@ function verifyKeyset(keyset: KeySet, testInstances: TestInstance[], verificatio
 
 const mockThrowingQueryReader = (imodelMock: moq.IMock<IModelConnection>) => {
   const mock1 = moq.Mock.ofType<ECSqlReader>();
-  mock1.setup(async (x) => x.toArray())
-    .returns(async () => { throw new Error("Test error"); });
-  imodelMock.setup((x) => x.createQueryReader(moq.It.is((query) => query.includes("SELECT s.Name")), moq.It.isAny(), moq.It.isAny())).returns(() => mock1.object);
+  mock1
+    .setup(async (x) => x.toArray())
+    .returns(async () => {
+      throw new Error("Test error");
+    });
+  imodelMock
+    .setup((x) =>
+      x.createQueryReader(
+        moq.It.is((query) => query.includes("SELECT s.Name")),
+        moq.It.isAny(),
+        moq.It.isAny(),
+      ),
+    )
+    .returns(() => mock1.object);
 };
 
 const mockQueryReaders = (imodelMock: moq.IMock<IModelConnection>, instances: TestInstance[]) => {
   const mock1 = moq.Mock.ofType<ECSqlReader>();
   mock1.setup(async (x) => x.toArray()).returns(async () => instances);
-  imodelMock.setup((x) => x.createQueryReader(moq.It.is((query) => query.includes("SELECT s.Name")), moq.It.isAny(), moq.It.isAny())).returns(() => mock1.object);
+  imodelMock
+    .setup((x) =>
+      x.createQueryReader(
+        moq.It.is((query) => query.includes("SELECT s.Name")),
+        moq.It.isAny(),
+        moq.It.isAny(),
+      ),
+    )
+    .returns(() => mock1.object);
 
   for (const entry of instances) {
     imodelMock
-      .setup((x) => x.createQueryReader(moq.It.is((query) => query.includes(`"${entry.schemaName}"."${entry.className}"`)), moq.It.isAny(), moq.It.isAny()))
+      .setup((x) =>
+        x.createQueryReader(
+          moq.It.is((query) => query.includes(`"${entry.schemaName}"."${entry.className}"`)),
+          moq.It.isAny(),
+          moq.It.isAny(),
+        ),
+      )
       .returns(() => {
         const mock2 = moq.Mock.ofType<ECSqlReader>();
         mock2.setup(async (x) => x.toArray()).returns(async () => entry.ids.map((e) => e.id));
@@ -196,7 +236,7 @@ describe("ContentBuilder", () => {
     });
 
     beforeEach(() => {
-      rulesetManagerMock.setup(async (x) => x.add(moq.It.isAny())).returns(async (ruleset) => new RegisteredRuleset(ruleset, Guid.createValue(), () => { }));
+      rulesetManagerMock.setup(async (x) => x.add(moq.It.isAny())).returns(async (ruleset) => new RegisteredRuleset(ruleset, Guid.createValue(), () => {}));
       presentationManagerMock.reset();
       presentationManagerMock.setup((manager) => manager.rulesets()).returns(() => rulesetManagerMock.object);
       presentationManagerMock.setup(async (manager) => manager.getContent(moq.It.isAny())).returns(getEmptyContent);
@@ -242,10 +282,15 @@ describe("ContentBuilder", () => {
         { name: "doubleLowPrecision", value: 1.9, displayValue: "1.9", type: createDoubleTypeDescription() },
         { name: "doubleRoundedDown", value: 1.234, displayValue: "1.2", type: createDoubleTypeDescription() },
         { name: "doubleRoundedUp", value: 4.567, displayValue: "4.6", type: createDoubleTypeDescription() },
-        { name: "doublesArray", value: [1.234, 4.567, 7.890], displayValue: ["1.2", "4.6", "7.9"], type: createArrayTypeDescription(createDoubleTypeDescription()) },
+        {
+          name: "doublesArray",
+          value: [1.234, 4.567, 7.89],
+          displayValue: ["1.2", "4.6", "7.9"],
+          type: createArrayTypeDescription(createDoubleTypeDescription()),
+        },
         { name: "doublesStruct", value: { a: 1.234 }, displayValue: { a: "1.2" }, type: createStructTypeDescription({ a: createDoubleTypeDescription() }) },
         { name: "point2d", value: [1.456, 4.789], displayValue: ["1.5", "4.8"], type: createPoint2dTypeDescription() },
-        { name: "point3d", value: { x: 1.234, y: 4.567, z: 7.890 }, displayValue: { x: "1.2", y: "4.6", z: "7.9" }, type: createPoint3dTypeDescription() },
+        { name: "point3d", value: { x: 1.234, y: 4.567, z: 7.89 }, displayValue: { x: "1.2", y: "4.6", z: "7.9" }, type: createPoint3dTypeDescription() },
       ];
       const category = createCategoryDescription();
       const descriptor = new Descriptor({
@@ -257,11 +302,16 @@ describe("ContentBuilder", () => {
       });
       class TestDataProvider extends EmptyDataProvider {
         public readonly descriptor = descriptor;
-        public readonly items = [testValues.reduce((item, v) => {
-          item.rawValues[v.name] = v.value;
-          item.displayValues[v.name] = v.displayValue;
-          return item;
-        }, { rawValues: {}, displayValues: {} } as ItemValues)];
+        public readonly items = [
+          testValues.reduce(
+            (item, v) => {
+              item.rawValues[v.name] = v.value;
+              item.displayValues[v.name] = v.displayValue;
+              return item;
+            },
+            { rawValues: {}, displayValues: {} } as ItemValues,
+          ),
+        ];
         public override getContentSetSize = async () => this.items.length;
         public override getContent = async () => getContent(this.items, this.descriptor);
       }

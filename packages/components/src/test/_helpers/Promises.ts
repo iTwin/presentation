@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
 export type PromiseResolveFunc<T> = (value: T | PromiseLike<T>) => void;
 
@@ -17,7 +17,9 @@ export class PromiseContainer<T> {
       this._reject = reject;
     });
   }
-  public get promise(): Promise<T> { return this._internal; }
+  public get promise(): Promise<T> {
+    return this._internal;
+  }
   public resolve(value: T | PromiseLike<T>): void {
     this._resolve(value);
   }
@@ -36,7 +38,10 @@ export class ResolvablePromise<T> implements PromiseLike<T> {
       this._reject = reject;
     });
   }
-  public then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): PromiseLike<TResult1 | TResult2> {
+  public then<TResult1 = T, TResult2 = never>(
+    onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null,
+    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null,
+  ): PromiseLike<TResult1 | TResult2> {
     return this._wrapped.then(onfulfilled, onrejected);
   }
   public async resolve(result: T) {

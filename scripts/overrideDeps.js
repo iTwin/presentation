@@ -6,7 +6,7 @@
 // script that sets overrides for `@itwin` package versions.
 // this allows to test our packages with various supported versions of `@itwin` packages
 
-"use strict"
+"use strict";
 
 const fs = require("fs");
 const path = require("path");
@@ -34,11 +34,7 @@ const corePackages = [
 ];
 
 // list of packages from `appui`
-const uiPackages = [
-  "@itwin/core-react",
-  "@itwin/components-react",
-  "@itwin/imodel-components-react",
-];
+const uiPackages = ["@itwin/core-react", "@itwin/components-react", "@itwin/imodel-components-react"];
 
 function getOverrides(coreVersion, uiVersion) {
   const overrides = {};
@@ -55,8 +51,9 @@ function getOverrides(coreVersion, uiVersion) {
 
 function override(packageJsonPath, coreVersion, uiVersion) {
   const pkgJsonData = JSON.parse(fs.readFileSync(packageJsonPath, { encoding: "utf8" }));
-  if (!pkgJsonData)
+  if (!pkgJsonData) {
     throw new Error(`Failed to read package.json content at ${packagesJsonPath}`);
+  }
 
   pkgJsonData.pnpm = { overrides: getOverrides(coreVersion, uiVersion) };
   fs.writeFileSync(packageJsonPath, JSON.stringify(pkgJsonData, undefined, 2), { encoding: "utf8" });
@@ -67,10 +64,12 @@ const packageJsonPath = require.resolve(argv.packageJson ?? "../package.json");
 const coreVersion = argv.coreVersion;
 const uiVersion = argv.uiVersion;
 
-if (!coreVersion)
+if (!coreVersion) {
   throw new Error("Argument --coreVersion was not provided.");
+}
 
-if (!uiVersion)
+if (!uiVersion) {
   throw new Error("Argument --uiVersion was not provided.");
+}
 
 override(packageJsonPath, coreVersion, uiVersion);

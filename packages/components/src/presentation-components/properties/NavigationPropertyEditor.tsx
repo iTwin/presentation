@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------------------------
-* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
-* See LICENSE.md in the project root for license terms and full copyright notice.
-*--------------------------------------------------------------------------------------------*/
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 /**
  * @packageDocumentation
  * @module Properties
@@ -14,7 +14,9 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { NavigationPropertyInfo } from "@itwin/presentation-common";
 import { IContentDataProvider } from "../common/ContentDataProvider";
 import {
-  NavigationPropertyTargetSelector, NavigationPropertyTargetSelectorAttributes, ReadonlyNavigationPropertyTarget,
+  NavigationPropertyTargetSelector,
+  NavigationPropertyTargetSelectorAttributes,
+  ReadonlyNavigationPropertyTarget,
 } from "./NavigationPropertyTargetSelector";
 
 /**
@@ -61,15 +63,19 @@ export const navigationPropertyEditorContext = createContext<NavigationPropertyE
  * @beta
  */
 export function useNavigationPropertyEditingContext(imodel: IModelConnection, dataProvider: IContentDataProvider): NavigationPropertyEditorContextProps {
-  return useMemo<NavigationPropertyEditorContextProps>(() => ({
-    imodel,
-    getNavigationPropertyInfo: async (property) => {
-      const field = await dataProvider.getFieldByPropertyDescription(property);
-      if (!field || !field.isPropertiesField())
-        return undefined;
-      return field.properties[0].property.navigationPropertyInfo;
-    },
-  }), [imodel, dataProvider]);
+  return useMemo<NavigationPropertyEditorContextProps>(
+    () => ({
+      imodel,
+      getNavigationPropertyInfo: async (property) => {
+        const field = await dataProvider.getFieldByPropertyDescription(property);
+        if (!field || !field.isPropertiesField()) {
+          return undefined;
+        }
+        return field.properties[0].property.navigationPropertyInfo;
+      },
+    }),
+    [imodel, dataProvider],
+  );
 }
 
 /**
@@ -93,8 +99,9 @@ export class NavigationPropertyTargetEditor extends PureComponent<PropertyEditor
 
   // istanbul ignore next
   public get hasFocus() {
-    if (!this._ref.current?.divElement || !document.activeElement)
+    if (!this._ref.current?.divElement || !document.activeElement) {
       return false;
+    }
     return this._ref.current.divElement.contains(document.activeElement);
   }
 
@@ -106,18 +113,22 @@ export class NavigationPropertyTargetEditor extends PureComponent<PropertyEditor
 
 const NavigationPropertyTargetEditorInner = forwardRef<NavigationPropertyTargetSelectorAttributes, PropertyEditorProps>((props, ref) => {
   const context = useContext(navigationPropertyEditorContext);
-  if (!props.propertyRecord)
+  if (!props.propertyRecord) {
     return null;
+  }
 
-  if (!context)
+  if (!context) {
     return <ReadonlyNavigationPropertyTarget record={props.propertyRecord} />;
+  }
 
-  return <NavigationPropertyTargetSelector
-    {...props}
-    ref={ref}
-    imodel={context.imodel}
-    getNavigationPropertyInfo={context.getNavigationPropertyInfo}
-    propertyRecord={props.propertyRecord}
-  />;
+  return (
+    <NavigationPropertyTargetSelector
+      {...props}
+      ref={ref}
+      imodel={context.imodel}
+      getNavigationPropertyInfo={context.getNavigationPropertyInfo}
+      propertyRecord={props.propertyRecord}
+    />
+  );
 });
 NavigationPropertyTargetEditorInner.displayName = "NavigationPropertyTargetEditorInner";
