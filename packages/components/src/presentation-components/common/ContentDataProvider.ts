@@ -411,7 +411,7 @@ export class ContentDataProvider implements IContentDataProvider {
       const content = await Presentation.presentation.getContent(options);
       return content ? { content, size: content.contentSet.length } : undefined;
     },
-    { isMatchingKey: MemoizationHelpers.areContentRequestsEqual as any },
+    { isMatchingKey: MemoizationHelpers.areContentRequestsEqual as any }
   );
 
   private onContentUpdate() {

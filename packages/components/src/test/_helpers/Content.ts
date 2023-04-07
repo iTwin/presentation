@@ -61,7 +61,7 @@ export function createTestSimpleContentField(props?: {
     props?.isReadonly ?? false,
     props?.priority ?? 0,
     props?.editor,
-    props?.renderer,
+    props?.renderer
   );
 }
 
@@ -85,7 +85,7 @@ export function createTestPropertiesContentField(props: {
     props.priority ?? 0,
     props.properties,
     props.editor,
-    props.renderer,
+    props.renderer
   );
 }
 
@@ -124,7 +124,7 @@ export function createTestNestedContentField(props: {
     props.nestedFields,
     props.editor,
     !!props.autoExpand,
-    props.renderer,
+    props.renderer
   );
   if (props.relationshipMeaning) {
     field.relationshipMeaning = props.relationshipMeaning;
@@ -162,6 +162,6 @@ export function createTestContentItem(props: {
     props.values,
     props.displayValues,
     props.mergedFieldNames ?? [],
-    props.extendedData,
+    props.extendedData
   );
 }

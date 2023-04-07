@@ -78,7 +78,7 @@ describe("Utils", () => {
           label: LabelDefinition.fromLabelString("test"),
         },
         undefined,
-        {},
+        {}
       );
       expect(node.id).not.to.be.undefined;
       expect(node.label).not.to.be.undefined;
@@ -102,7 +102,7 @@ describe("Utils", () => {
             item.icon = "custom-icon";
             item.description = "custom-description";
           },
-        },
+        }
       );
       expect(treeNode).to.matchSnapshot();
     });

@@ -82,7 +82,7 @@ describe("Category renderer customization", () => {
 
       const dataProvider = setupDataProvider();
       const { queryByText } = render(
-        <VirtualizedPropertyGridWithDataProvider dataProvider={dataProvider} width={500} height={1200} orientation={Orientation.Horizontal} />,
+        <VirtualizedPropertyGridWithDataProvider dataProvider={dataProvider} width={500} height={1200} orientation={Orientation.Horizontal} />
       );
       await waitFor(() => expect(queryByText("rootCategory1Property")).not.to.be.null);
     });
@@ -102,7 +102,7 @@ describe("Category renderer customization", () => {
             })();
           },
           // eslint-disable-next-line react-hooks/exhaustive-deps
-          [],
+          []
         );
         // __PUBLISH_EXTRACT_END__
         return keys;

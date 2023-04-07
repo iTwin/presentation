@@ -178,7 +178,7 @@ describe("usePresentationNodeLoader", () => {
       const seedTreeModel = createTreeModel(["test"]);
       const { result, rerender } = renderHook<PresentationTreeNodeLoaderProps, PresentationTreeNodeLoaderResult>(
         (props) => usePresentationTreeNodeLoader(props),
-        { initialProps: { ...initialProps, ruleset: "initial", seedTreeModel } },
+        { initialProps: { ...initialProps, ruleset: "initial", seedTreeModel } }
       );
 
       await waitFor(() => expectTree(result.current.nodeLoader.modelSource.getModel(), ["test"]));

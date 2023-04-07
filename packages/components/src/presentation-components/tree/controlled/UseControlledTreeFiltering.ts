@@ -112,7 +112,7 @@ const useNodePaths = (dataProvider: IPresentationTreeDataProvider, filter: strin
 export function useNodeHighlightingProps(
   filter: string | undefined,
   filteredNodeLoader?: ITreeNodeLoaderWithProvider<IFilteredPresentationTreeDataProvider>,
-  activeMatchIndex?: number,
+  activeMatchIndex?: number
 ) {
   const [nodeHighlightingProps, setNodeHighlightingProps] = useState<HighlightableTreeProps>();
   const normalizedFilter = normalizeFilter(filter);

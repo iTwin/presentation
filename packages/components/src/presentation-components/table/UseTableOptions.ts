@@ -56,7 +56,7 @@ export function useTableOptions(props: UseTableOptionsProps): UseTableOptionsRes
         },
       }));
     },
-    [columns],
+    [columns]
   );
 
   const filter = useCallback((filterExpression?: string) => {

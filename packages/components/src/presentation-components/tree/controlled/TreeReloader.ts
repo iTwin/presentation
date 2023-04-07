@@ -52,13 +52,13 @@ export function reloadTree(
   treeModel: TreeModel,
   dataProvider: IPresentationTreeDataProvider,
   pageSize: number,
-  itemsRange?: RenderedItemsRange,
+  itemsRange?: RenderedItemsRange
 ): Observable<TreeModelSource> {
   const modelSource = new TreeModelSource();
   const nodeLoader = new TreeReloader(dataProvider, modelSource, pageSize, treeModel, itemsRange);
   return nodeLoader.reloadTree().pipe(
     endWith(modelSource),
-    finalize(() => isIDisposable(nodeLoader) && /* istanbul ignore next */ nodeLoader.dispose()),
+    finalize(() => isIDisposable(nodeLoader) && /* istanbul ignore next */ nodeLoader.dispose())
   );
 }
 
@@ -68,7 +68,7 @@ class TreeReloader extends PagedTreeNodeLoader<IPresentationTreeDataProvider> {
     modelSource: TreeModelSource,
     pageSize: number,
     private previousTreeModel: TreeModel,
-    private itemsRange?: RenderedItemsRange,
+    private itemsRange?: RenderedItemsRange
   ) {
     super(dataProvider, modelSource, pageSize);
   }
@@ -79,7 +79,7 @@ class TreeReloader extends PagedTreeNodeLoader<IPresentationTreeDataProvider> {
       // We need to know root node count before continuing
       this.loadNode(this.modelSource.getModel().getRootNode(), 0),
       this.reloadPreviouslyExpandedNodes(previouslyExpandedNodes),
-      this.reloadVisibleNodes(),
+      this.reloadVisibleNodes()
     ).pipe(ignoreElements());
   }
 
@@ -125,9 +125,9 @@ class TreeReloader extends PagedTreeNodeLoader<IPresentationTreeDataProvider> {
           concatMap((loadedNode) => {
             assert(loadedNode !== undefined);
             return concat(this.loadChildren(loadedNode), expandedNode.expandedChildren);
-          }),
+          })
         );
-      }),
+      })
     );
   }
 
@@ -156,7 +156,7 @@ class TreeReloader extends PagedTreeNodeLoader<IPresentationTreeDataProvider> {
           const parentNode = placeholder.parentId ? this.modelSource.getModel().getNode(placeholder.parentId) : this.modelSource.getModel().getRootNode();
           assert(parentNode !== undefined);
           return toRxjsObservable(super.loadNode(parentNode, placeholder.childIndex));
-        }),
+        })
       );
     });
   }
@@ -178,7 +178,7 @@ class TreeReloader extends PagedTreeNodeLoader<IPresentationTreeDataProvider> {
               node.isExpanded = true;
             }
           }),
-      }),
+      })
     );
   }
 

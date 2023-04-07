@@ -86,6 +86,6 @@ void (async () => {
     <StrictMode>
       <App />
     </StrictMode>,
-    rootElement,
+    rootElement
   );
 })();

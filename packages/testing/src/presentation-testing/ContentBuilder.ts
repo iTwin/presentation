@@ -134,7 +134,7 @@ export class ContentBuilder {
       ORDER BY s.Name, c.Name
     `,
       undefined,
-      { rowFormat: QueryRowFormat.UseJsPropertyNames },
+      { rowFormat: QueryRowFormat.UseJsPropertyNames }
     );
     return reader.toArray();
   }
@@ -152,7 +152,7 @@ export class ContentBuilder {
         ORDER BY ECInstanceId
       `,
         undefined,
-        { rowFormat: QueryRowFormat.UseJsPropertyNames, limit: { count: limitInstances ? 1 : 4000 } },
+        { rowFormat: QueryRowFormat.UseJsPropertyNames, limit: { count: limitInstances ? 1 : 4000 } }
       );
       const instanceIds: InstanceId[] = await reader.toArray();
 

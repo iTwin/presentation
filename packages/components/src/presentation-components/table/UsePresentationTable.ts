@@ -83,7 +83,7 @@ export function usePresentationTable<TColumn, TRow>(props: UsePresentationTableP
  * @beta
  */
 export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(
-  props: Omit<UsePresentationTableProps<TColumn, TRow>, "keys">,
+  props: Omit<UsePresentationTableProps<TColumn, TRow>, "keys">
 ): UsePresentationTableResult<TColumn, TRow> {
   const unifiedSelection = useUnifiedSelectionContext();
   const keys = unifiedSelection?.getSelection() ?? emptyKeySet;

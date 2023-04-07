@@ -98,7 +98,7 @@ describe("FavoritePropertiesDataProvider", () => {
           test: [
             new PropertyRecord(
               { valueFormat: PropertyValueFormat.Primitive, displayValue: "Test Value" },
-              { typename: "string", name: "test_prop", displayLabel: "Test Property" },
+              { typename: "string", name: "test_prop", displayLabel: "Test Property" }
             ),
           ],
         },
@@ -122,13 +122,13 @@ describe("FavoritePropertiesDataProvider", () => {
           [favoritesCategory.name]: [
             new PropertyRecord(
               { valueFormat: PropertyValueFormat.Primitive, displayValue: "SomeString" },
-              { typename: "string", name: favoritePropertyName, displayLabel: "Favorite Property" },
+              { typename: "string", name: favoritePropertyName, displayLabel: "Favorite Property" }
             ),
           ],
           test: [
             new PropertyRecord(
               { valueFormat: PropertyValueFormat.Primitive, displayValue: "1" },
-              { typename: "int", name: regularPropertyName, displayLabel: "Regular Property" },
+              { typename: "int", name: regularPropertyName, displayLabel: "Regular Property" }
             ),
           ],
         },

@@ -161,7 +161,7 @@ export function useResizeObserver<T extends HTMLElement>() {
         (entries) => {
           assert(entries.length === 1);
           setSize(entries[0].contentRect);
-        },
+        }
       );
       observer.current.observe(element);
     }

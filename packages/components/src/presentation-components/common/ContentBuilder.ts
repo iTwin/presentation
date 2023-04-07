@@ -198,7 +198,7 @@ export abstract class PropertyRecordsBuilder implements IContentVisitor {
       new StructMembersAppender(this.currentPropertiesAppender, props.hierarchy, {
         ...createFieldInfo(props.hierarchy.field, props.parentFieldName),
         type: props.valueType,
-      }),
+      })
     );
     return true;
   }
@@ -213,7 +213,7 @@ export abstract class PropertyRecordsBuilder implements IContentVisitor {
       new ArrayItemsAppender(this.currentPropertiesAppender, props.hierarchy, {
         ...createFieldInfo(props.hierarchy.field, props.parentFieldName),
         type: props.valueType,
-      }),
+      })
     );
     return true;
   }
@@ -244,7 +244,7 @@ export abstract class PropertyRecordsBuilder implements IContentVisitor {
     };
     const record = new PropertyRecord(
       value,
-      createPropertyDescriptionFromFieldInfo({ ...createFieldInfo(props.field, props.parentFieldName), type: props.valueType }),
+      createPropertyDescriptionFromFieldInfo({ ...createFieldInfo(props.field, props.parentFieldName), type: props.valueType })
     );
     applyPropertyRecordAttributes(record, props.field, props.displayValue?.toString(), appender.item?.extendedData);
     appender.append({ record, fieldHierarchy: { field: props.field, childFields: [] } });
@@ -255,7 +255,7 @@ function applyPropertyRecordAttributes(
   record: PropertyRecord,
   field: Field,
   displayValue: string | undefined,
-  extendedData: typeof Item.prototype.extendedData | undefined,
+  extendedData: typeof Item.prototype.extendedData | undefined
 ) {
   if (displayValue) {
     record.description = displayValue.toString();

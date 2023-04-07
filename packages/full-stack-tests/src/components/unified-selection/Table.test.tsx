@@ -111,7 +111,7 @@ describe("Learning snippets", async () => {
         modelKey = insertPhysicalModel(builder, "My Model");
         elementKeys.push(
           insertPhysicalElement(builder, "My Element 1", modelKey.id, categoryKey.id),
-          insertPhysicalElement(builder, "My Element 2", modelKey.id, categoryKey.id),
+          insertPhysicalElement(builder, "My Element 2", modelKey.id, categoryKey.id)
         );
       });
 
@@ -120,7 +120,7 @@ describe("Learning snippets", async () => {
         // __PUBLISH_EXTRACT_START__ Presentation.Components.UnifiedSelection.TableWithinUnifiedSelectionContext
         <UnifiedSelectionContextProvider imodel={imodel}>
           <MyTable imodel={imodel} />
-        </UnifiedSelectionContextProvider>,
+        </UnifiedSelectionContextProvider>
         // __PUBLISH_EXTRACT_END__
       );
       await waitFor(() => getByText(container, "Select something to see properties"));

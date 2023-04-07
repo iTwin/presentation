@@ -74,7 +74,7 @@ export function useNavigationPropertyEditingContext(imodel: IModelConnection, da
         return field.properties[0].property.navigationPropertyInfo;
       },
     }),
-    [imodel, dataProvider],
+    [imodel, dataProvider]
   );
 }
 

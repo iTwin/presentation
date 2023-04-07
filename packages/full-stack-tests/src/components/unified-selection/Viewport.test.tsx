@@ -49,7 +49,7 @@ describe("Learning snippets", async () => {
         elementKeys.push(insertPhysicalElement(builder, "My Assembly Element", modelKey.id, categoryKey.id)),
           elementKeys.push(
             insertPhysicalElement(builder, "My Child Element 1", modelKey.id, categoryKey.id, elementKeys[0].id),
-            insertPhysicalElement(builder, "My Child Element 2", modelKey.id, categoryKey.id, elementKeys[0].id),
+            insertPhysicalElement(builder, "My Child Element 2", modelKey.id, categoryKey.id, elementKeys[0].id)
           );
       });
 
@@ -58,7 +58,7 @@ describe("Learning snippets", async () => {
 
       // render the component
       const { getByTestId } = render(
-        <MyViewport imodel={imodel} initialViewState={SpatialViewState.createBlank(imodel, Point3d.createZero(), Vector3d.create(400, 400))} />,
+        <MyViewport imodel={imodel} initialViewState={SpatialViewState.createBlank(imodel, Point3d.createZero(), Vector3d.create(400, 400))} />
       );
       await waitFor(() => getByTestId("viewport-component"));
 

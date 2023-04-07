@@ -30,7 +30,7 @@ export default function ViewDefinitionSelector(props: ViewDefinitionSelectorProp
         onViewDefinitionSelected(selectedId);
       }
     },
-    [onViewDefinitionSelected],
+    [onViewDefinitionSelected]
   );
   return (
     <div className="ViewDefinitionSelector">

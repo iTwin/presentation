@@ -68,7 +68,7 @@ export function useRows(props: UseRowsProps): UseRowsResult {
           }
           setState((prev) => ({ ...prev, isLoading: true }));
           return from(loadRows(imodel, ruleset, keys, { start: pageStart, size: pageSize }, options));
-        }, 1),
+        }, 1)
       )
       .subscribe({
         next: (loadedRows) => {

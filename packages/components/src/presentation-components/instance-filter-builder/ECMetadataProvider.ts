@@ -19,7 +19,7 @@ export class ECClassInfo {
     public readonly name: string,
     public readonly label: string,
     private _baseClasses: Set<Id64String>,
-    private _derivedClasses: Set<Id64String>,
+    private _derivedClasses: Set<Id64String>
   ) {}
 
   public get baseClassIds(): Array<Id64String> {
@@ -71,7 +71,7 @@ export class ECMetadataProvider {
         WHERE classDef.ECInstanceId = :id
       `;
       classInfo = await this.createECClassInfo(
-        this._queryReaderFactory(classQuery, QueryBinder.from({ id }), { rowFormat: QueryRowFormat.UseJsPropertyNames }),
+        this._queryReaderFactory(classQuery, QueryBinder.from({ id }), { rowFormat: QueryRowFormat.UseJsPropertyNames })
       );
       classInfo && this._classInfoCache.set({ id: classInfo.id, name: classInfo.name }, classInfo);
     }
@@ -87,7 +87,7 @@ export class ECMetadataProvider {
       `;
       const [schemaName, className] = this.splitFullClassName(name);
       classInfo = await this.createECClassInfo(
-        this._queryReaderFactory(classQuery, QueryBinder.from({ schemaName, className }), { rowFormat: QueryRowFormat.UseJsPropertyNames }),
+        this._queryReaderFactory(classQuery, QueryBinder.from({ schemaName, className }), { rowFormat: QueryRowFormat.UseJsPropertyNames })
       );
       classInfo && this._classInfoCache.set({ id: classInfo.id, name: classInfo.name }, classInfo);
     }

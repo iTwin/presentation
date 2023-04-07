@@ -118,7 +118,7 @@ describe("useNavigationPropertyTargetsRuleset", () => {
     const propertyDescription: PropertyDescription = { displayLabel: "TestProp", name: "test_prop", typename: "navigation" };
     const { result } = renderHook(
       ({ getNavigationPropertyInfo, property }: Props) => useNavigationPropertyTargetsRuleset(getNavigationPropertyInfo, property),
-      { initialProps: { getNavigationPropertyInfo: async () => testInfo, property: propertyDescription } },
+      { initialProps: { getNavigationPropertyInfo: async () => testInfo, property: propertyDescription } }
     );
 
     await waitFor(() => expect(result.current).to.not.be.undefined);
@@ -140,7 +140,7 @@ describe("useNavigationPropertyTargetsRuleset", () => {
     const propertyDescription: PropertyDescription = { displayLabel: "TestProp", name: "test_prop", typename: "navigation" };
     const { result } = renderHook(
       ({ getNavigationPropertyInfo, property }: Props) => useNavigationPropertyTargetsRuleset(getNavigationPropertyInfo, property),
-      { initialProps: { getNavigationPropertyInfo: async () => undefined, property: propertyDescription } },
+      { initialProps: { getNavigationPropertyInfo: async () => undefined, property: propertyDescription } }
     );
 
     const ruleset = result.current;

@@ -25,7 +25,7 @@ describe("MultiTagSelect", () => {
 
   it("renders with selected tags", () => {
     const { container } = render(
-      <MultiTagSelect options={options} getOptionLabel={(option) => option.label} getOptionValue={(option) => option.value} value={[options[1], options[2]]} />,
+      <MultiTagSelect options={options} getOptionLabel={(option) => option.label} getOptionValue={(option) => option.value} value={[options[1], options[2]]} />
     );
 
     const tags = container.querySelectorAll(".iui-tag");
@@ -40,7 +40,7 @@ describe("MultiTagSelect", () => {
         getOptionValue={(option) => option.value}
         value={[options[1], options[2]]}
         hideSelectedOptions={false}
-      />,
+      />
     );
 
     const dropdownIndicator = getByTestId("multi-tag-select-dropdownIndicator");

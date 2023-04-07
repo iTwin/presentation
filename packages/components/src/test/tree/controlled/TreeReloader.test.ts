@@ -239,7 +239,7 @@ describe("reloadTree", () => {
       initialTreeModel.setChildren(
         undefined,
         [createTreeModelNodeInput("root-0"), createTreeModelNodeInput("root-1"), createTreeModelNodeInput("root-2"), createTreeModelNodeInput("root-3")],
-        0,
+        0
       );
 
       // simulate that "root-3" is visible
@@ -260,7 +260,7 @@ describe("reloadTree", () => {
       initialTreeModel.setChildren(
         "root-1",
         [createTreeModelNodeInput("root-1-0"), createTreeModelNodeInput("root-1-1"), createTreeModelNodeInput("root-1-2")],
-        0,
+        0
       );
       initialTreeModel.getNode("root-1")!.isExpanded = true;
 

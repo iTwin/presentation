@@ -105,7 +105,7 @@ describe("PresentationInstanceFilter", () => {
   it("invokes 'onInstanceFilterChanged' with filter", async () => {
     const spy = sinon.spy();
     const { container, getByText, getByDisplayValue } = render(
-      <PresentationInstanceFilterBuilder imodel={imodelMock.object} descriptor={descriptor} onInstanceFilterChanged={spy} />,
+      <PresentationInstanceFilterBuilder imodel={imodelMock.object} descriptor={descriptor} onInstanceFilterChanged={spy} />
     );
 
     // open property selector
@@ -143,7 +143,7 @@ describe("PresentationInstanceFilter", () => {
   it("renders with initial filter", () => {
     const spy = sinon.spy();
     const { container, queryByDisplayValue } = render(
-      <PresentationInstanceFilterBuilder imodel={imodelMock.object} descriptor={descriptor} onInstanceFilterChanged={spy} initialFilter={initialFilter} />,
+      <PresentationInstanceFilterBuilder imodel={imodelMock.object} descriptor={descriptor} onInstanceFilterChanged={spy} initialFilter={initialFilter} />
     );
 
     const rules = container.querySelectorAll(".rule-property");

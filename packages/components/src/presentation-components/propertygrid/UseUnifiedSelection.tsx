@@ -51,7 +51,7 @@ export interface UsePropertyDataProviderWithUnifiedSelectionResult {
  * @public
  */
 export function usePropertyDataProviderWithUnifiedSelection(
-  props: PropertyDataProviderWithUnifiedSelectionProps,
+  props: PropertyDataProviderWithUnifiedSelectionProps
 ): UsePropertyDataProviderWithUnifiedSelectionResult {
   const { dataProvider, selectionHandler: suppliedSelectionHandler } = props;
   const { imodel, rulesetId } = dataProvider;

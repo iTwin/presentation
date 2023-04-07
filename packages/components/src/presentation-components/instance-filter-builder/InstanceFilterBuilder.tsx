@@ -68,7 +68,7 @@ export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
           break;
       }
     },
-    [onClassSelected, onClassDeselected, onClearClasses],
+    [onClassSelected, onClassDeselected, onClearClasses]
   );
 
   return (
@@ -104,7 +104,7 @@ export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
 export function usePresentationInstanceFilteringProps(
   descriptor: Descriptor,
   imodel: IModelConnection,
-  initialClasses?: ClassInfo[],
+  initialClasses?: ClassInfo[]
 ): Required<
   Pick<
     InstanceFilterBuilderProps,
@@ -129,7 +129,7 @@ export function usePresentationInstanceFilteringProps(
   const { selectedClasses, onClassSelected, onClassDeselected, onClearClasses, isFilteringClasses, filterClassesByProperty } = useSelectedClasses(
     classes,
     imodel,
-    initialClasses,
+    initialClasses
   );
   const { properties, isFilteringProperties } = useProperties(propertyInfos, selectedClasses, imodel);
 
@@ -140,7 +140,7 @@ export function usePresentationInstanceFilteringProps(
         filterClassesByProperty(propertyInfo);
       }
     },
-    [propertyInfos, filterClassesByProperty],
+    [propertyInfos, filterClassesByProperty]
   );
 
   const propertyRenderer = useCallback(
@@ -155,7 +155,7 @@ export function usePresentationInstanceFilteringProps(
         />
       );
     },
-    [propertyInfos],
+    [propertyInfos]
   );
 
   return {
@@ -192,7 +192,7 @@ function useProperties(propertyInfos: InstanceFilterPropertyInfo[], selectedClas
           setIsFilteringProperties(true);
           return from(computePropertiesByClasses(propertyInfos, classes, imodel));
         }),
-        switchAll(),
+        switchAll()
       )
       .subscribe({
         next: (infos: InstanceFilterPropertyInfo[] | undefined) => {
@@ -232,7 +232,7 @@ function useSelectedClasses(classes: ClassInfo[], imodel: IModelConnection, init
         setIsFilteringClasses(false);
       })();
     },
-    [selectedClasses, classes, imodel],
+    [selectedClasses, classes, imodel]
   );
 
   return {
@@ -265,14 +265,14 @@ export function useFilterBuilderNavigationPropertyEditorContext(imodel: IModelCo
         return field.properties[0].property.navigationPropertyInfo;
       },
     }),
-    [imodel, descriptor],
+    [imodel, descriptor]
   );
 }
 
 async function computePropertiesByClasses(
   properties: InstanceFilterPropertyInfo[],
   classes: ClassInfo[],
-  imodel: IModelConnection,
+  imodel: IModelConnection
 ): Promise<InstanceFilterPropertyInfo[] | undefined> {
   const metadataProvider = getIModelMetadataProvider(imodel);
   const ecClassInfos = await Promise.all(classes.map(async (info) => metadataProvider.getECClassInfo(info.id)));
