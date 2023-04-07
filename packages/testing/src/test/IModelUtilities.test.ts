@@ -7,8 +7,18 @@ import { expect } from "chai";
 import { join } from "path";
 import sinon, { SinonStub } from "sinon";
 import * as moq from "typemoq";
-import { CodeSpecs, IModelDb, IModelJsFs, SnapshotDb } from "@itwin/core-backend";
-import { BisCodeSpec, Code, CodeScopeProps, CodeSpec, CreateEmptySnapshotIModelProps, ElementAspectProps, ElementProps, ModelProps } from "@itwin/core-common";
+import { CodeSpecs, IModelDb, IModelJsFs, Relationships, SnapshotDb } from "@itwin/core-backend";
+import {
+  BisCodeSpec,
+  Code,
+  CodeScopeProps,
+  CodeSpec,
+  CreateEmptySnapshotIModelProps,
+  ElementAspectProps,
+  ElementProps,
+  ModelProps,
+  RelationshipProps,
+} from "@itwin/core-common";
 import { SnapshotConnection } from "@itwin/core-frontend";
 import { getTestOutputDir } from "../presentation-testing/Helpers";
 import { buildTestIModel, createFileNameFromString, IModelBuilder } from "../presentation-testing/IModelUtilities";
@@ -53,6 +63,17 @@ describe("IModelUtilities", () => {
       builder.insertAspect({} as ElementAspectProps);
 
       elementsMock.verify(async (x) => x.insertAspect({} as ElementAspectProps), moq.Times.once());
+    });
+
+    it("insertRelationship calls iModel.relationships.insertInstance", async () => {
+      const imodelMock = moq.Mock.ofType<IModelDb>();
+      const relationshipsMock = moq.Mock.ofType<Relationships>();
+      imodelMock.setup((x) => x.relationships).returns(() => relationshipsMock.object);
+
+      const builder = new IModelBuilder(imodelMock.object);
+      builder.insertRelationship({} as RelationshipProps);
+
+      relationshipsMock.verify(async (x) => x.insertInstance({} as RelationshipProps), moq.Times.once());
     });
 
     it("createCode calls iModel.codeSpecs.getByName", () => {

@@ -10,7 +10,17 @@ import path from "path";
 import sanitize from "sanitize-filename";
 import { IModelDb, IModelJsFs, SnapshotDb } from "@itwin/core-backend";
 import { Id64String } from "@itwin/core-bentley";
-import { BisCodeSpec, Code, CodeScopeProps, CodeSpec, ElementAspectProps, ElementProps, LocalFileName, ModelProps } from "@itwin/core-common";
+import {
+  BisCodeSpec,
+  Code,
+  CodeScopeProps,
+  CodeSpec,
+  ElementAspectProps,
+  ElementProps,
+  LocalFileName,
+  ModelProps,
+  RelationshipProps,
+} from "@itwin/core-common";
 import { IModelConnection, SnapshotConnection } from "@itwin/core-frontend";
 import { getTestOutputDir } from "./Helpers";
 
@@ -25,6 +35,11 @@ export interface TestIModelBuilder {
   insertElement<TProps extends ElementProps>(props: TProps): Id64String;
   /** Insert an element aspect into the specified element */
   insertAspect<TProps extends ElementAspectProps>(props: TProps): void;
+  /**
+   * Insert a relationship between two instances. The relationship is expected to be a subclass
+   * of `BisCore:ElementRefersToElements` or `BisCore:ElementDrivesElement`.
+   */
+  insertRelationship<TProps extends RelationshipProps>(props: TProps): Id64String;
   /**
    * Create code for specified element.
    * Code value has to be unique within its scope (see [Codes documentation page]($docs/bis/guide/fundamentals/codes.md)).
@@ -83,6 +98,10 @@ export class IModelBuilder implements TestIModelBuilder {
 
   public insertAspect<TProps extends ElementAspectProps>(props: TProps): void {
     this._iModel.elements.insertAspect(props);
+  }
+
+  public insertRelationship<TProps extends RelationshipProps>(props: TProps): Id64String {
+    return this._iModel.relationships.insertInstance(props);
   }
 
   public createCode(scopeModelId: CodeScopeProps, codeSpecName: BisCodeSpec, codeValue: string): Code {
