@@ -120,7 +120,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
         complete: () => {
           this.selectNodes();
         },
-      })
+      }),
     );
 
     return super.onSelectionModified({ modifications: withUnifiedSelection });
@@ -145,7 +145,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
         complete: () => {
           this.selectNodes();
         },
-      })
+      }),
     );
 
     return super.onSelectionReplaced({ replacements: withUnifiedSelection });
@@ -265,7 +265,7 @@ export function useUnifiedSelectionTreeEventHandler(props: UnifiedSelectionTreeE
   return useDisposable(
     useCallback(
       () => new UnifiedSelectionTreeEventHandler(props),
-      Object.values(props) /* eslint-disable-line react-hooks/exhaustive-deps */ /* want to re-create the handler whenever any prop changes */
-    )
+      Object.values(props) /* eslint-disable-line react-hooks/exhaustive-deps */ /* want to re-create the handler whenever any prop changes */,
+    ),
   );
 }

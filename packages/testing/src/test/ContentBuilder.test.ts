@@ -79,7 +79,7 @@ function createItem({ rawValues, displayValues }: ItemValues) {
     undefined,
     rawValues,
     displayValues,
-    []
+    [],
   );
 }
 
@@ -187,8 +187,8 @@ const mockThrowingQueryReader = (imodelMock: moq.IMock<IModelConnection>) => {
       x.createQueryReader(
         moq.It.is((query) => query.includes("SELECT s.Name")),
         moq.It.isAny(),
-        moq.It.isAny()
-      )
+        moq.It.isAny(),
+      ),
     )
     .returns(() => mock1.object);
 };
@@ -201,8 +201,8 @@ const mockQueryReaders = (imodelMock: moq.IMock<IModelConnection>, instances: Te
       x.createQueryReader(
         moq.It.is((query) => query.includes("SELECT s.Name")),
         moq.It.isAny(),
-        moq.It.isAny()
-      )
+        moq.It.isAny(),
+      ),
     )
     .returns(() => mock1.object);
 
@@ -212,8 +212,8 @@ const mockQueryReaders = (imodelMock: moq.IMock<IModelConnection>, instances: Te
         x.createQueryReader(
           moq.It.is((query) => query.includes(`"${entry.schemaName}"."${entry.className}"`)),
           moq.It.isAny(),
-          moq.It.isAny()
-        )
+          moq.It.isAny(),
+        ),
       )
       .returns(() => {
         const mock2 = moq.Mock.ofType<ECSqlReader>();
@@ -309,7 +309,7 @@ describe("ContentBuilder", () => {
               item.displayValues[v.name] = v.displayValue;
               return item;
             },
-            { rawValues: {}, displayValues: {} } as ItemValues
+            { rawValues: {}, displayValues: {} } as ItemValues,
           ),
         ];
         public override getContentSetSize = async () => this.items.length;

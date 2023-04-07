@@ -46,7 +46,7 @@ describe("createDiagnosticsOptions", () => {
       createDiagnosticsOptions({
         devDiagnostics: { severity: "info", handler: handler1 },
         ruleDiagnostics: { severity: "warning", handler: handler2 },
-      })
+      }),
     ).to.deep.eq({
       editor: "warning",
       dev: "info",

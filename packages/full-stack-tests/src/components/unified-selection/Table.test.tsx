@@ -111,18 +111,23 @@ describe("Learning snippets", async () => {
         modelKey = insertPhysicalModel(builder, "My Model");
         elementKeys.push(
           insertPhysicalElement(builder, "My Element 1", modelKey.id, categoryKey.id),
-          insertPhysicalElement(builder, "My Element 2", modelKey.id, categoryKey.id)
+          insertPhysicalElement(builder, "My Element 2", modelKey.id, categoryKey.id),
         );
       });
 
+      function TableWithUnifiedSelection() {
+        return (
+          // __PUBLISH_EXTRACT_START__ Presentation.Components.UnifiedSelection.TableWithinUnifiedSelectionContext
+          <UnifiedSelectionContextProvider imodel={imodel}>
+            <MyTable imodel={imodel} />
+          </UnifiedSelectionContextProvider>
+          // __PUBLISH_EXTRACT_END__
+        );
+      }
+
       // render the component
-      const { container } = render(
-        // __PUBLISH_EXTRACT_START__ Presentation.Components.UnifiedSelection.TableWithinUnifiedSelectionContext
-        <UnifiedSelectionContextProvider imodel={imodel}>
-          <MyTable imodel={imodel} />
-        </UnifiedSelectionContextProvider>
-        // __PUBLISH_EXTRACT_END__
-      );
+      const { container } = render(<TableWithUnifiedSelection />);
+
       await waitFor(() => getByText(container, "Select something to see properties"));
 
       // test Unified Selection -> Table content synchronization

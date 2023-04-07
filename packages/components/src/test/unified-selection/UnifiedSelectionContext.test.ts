@@ -21,7 +21,7 @@ describe("UnifiedSelectionContext", () => {
 
   function renderUnifiedSelectionContextHook(
     imodel = {} as IModelConnection,
-    selectionLevel?: number
+    selectionLevel?: number,
   ): RenderHookResult<UnifiedSelectionContextProviderProps, UnifiedSelectionContext> {
     return renderHook(() => useUnifiedSelectionContext()!, {
       wrapper: UnifiedSelectionContextProvider,

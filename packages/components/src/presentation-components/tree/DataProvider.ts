@@ -242,7 +242,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
     async (
       parentNode?: TreeNodeItem,
       pageOptions?: PageOptions,
-      instanceFilter?: InstanceFilterDefinition
+      instanceFilter?: InstanceFilterDefinition,
     ): Promise<{ nodes: TreeNodeItem[]; count: number }> => {
       const parentKey = parentNode && isPresentationTreeNodeItem(parentNode) ? parentNode.key : undefined;
       const requestOptions = this.createRequestOptions(parentKey, pageOptions, instanceFilter);
@@ -250,10 +250,10 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
         async () => this._dataSource.getNodesAndCount(requestOptions),
         this.createBaseRequestOptions(),
         parentNode,
-        this._nodesCreateProps
+        this._nodesCreateProps,
       );
     },
-    { isMatchingKey: MemoizationHelpers.areNodesRequestsEqual as any }
+    { isMatchingKey: MemoizationHelpers.areNodesRequestsEqual as any },
   );
 
   /**
@@ -279,7 +279,7 @@ async function createNodesAndCountResult(
   resultFactory: () => Promise<{ nodes: Node[]; count: number }>,
   baseOptions: RequestOptionsWithRuleset<IModelConnection>,
   parentNode?: TreeNodeItem,
-  nodesCreateProps?: CreateTreeNodeItemProps
+  nodesCreateProps?: CreateTreeNodeItemProps,
 ) {
   try {
     const result = await resultFactory();
@@ -320,7 +320,7 @@ function createTreeItems(
   nodes: Node[],
   baseOptions: RequestOptionsWithRuleset<IModelConnection>,
   parentNode?: TreeNodeItem,
-  nodesCreateProps?: CreateTreeNodeItemProps
+  nodesCreateProps?: CreateTreeNodeItemProps,
 ) {
   const items: PresentationTreeNodeItem[] = [];
   for (const node of nodes) {
@@ -355,7 +355,7 @@ function createInfoNode(parentNode: TreeNodeItem | undefined, message: string): 
 class MemoizationHelpers {
   public static areNodesRequestsEqual(
     lhsArgs: [TreeNodeItem?, PageOptions?, InstanceFilterDefinition?],
-    rhsArgs: [TreeNodeItem?, PageOptions?, InstanceFilterDefinition?]
+    rhsArgs: [TreeNodeItem?, PageOptions?, InstanceFilterDefinition?],
   ): boolean {
     if (lhsArgs[0]?.id !== rhsArgs[0]?.id) {
       return false;

@@ -30,7 +30,7 @@ export function TreeWidget(props: Props) {
         ? FilteringInputStatus.FilteringInProgress
         : undefined !== newMatchesCount
         ? FilteringInputStatus.FilteringFinished
-        : FilteringInputStatus.ReadyToFilter
+        : FilteringInputStatus.ReadyToFilter,
     );
     setMatchesCount(newMatchesCount);
   }, []);

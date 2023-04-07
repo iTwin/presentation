@@ -87,8 +87,8 @@ describe("useHierarchyLevelFiltering", () => {
       .setup((x) =>
         x.loadNode(
           moq.It.is((parentNode) => parentNode?.id === node.id),
-          0
-        )
+          0,
+        ),
       )
       .returns(() => from([]))
       .verifiable(moq.Times.once());
@@ -163,7 +163,7 @@ describe("useHierarchyLevelFiltering", () => {
           descriptor: createTestContentDescriptor({ fields: [] }),
           active: filterInfo,
         },
-      }
+      },
     );
     modelSource.modifyModel((model) => {
       model.setChildren(undefined, [node], 0);
@@ -173,8 +173,8 @@ describe("useHierarchyLevelFiltering", () => {
       .setup((x) =>
         x.loadNode(
           moq.It.is((parentNode) => parentNode?.id === node.id),
-          0
-        )
+          0,
+        ),
       )
       .returns(() => from([]))
       .verifiable(moq.Times.once());
@@ -193,7 +193,7 @@ describe("useHierarchyLevelFiltering", () => {
           descriptor: createTestContentDescriptor({ fields: [] }),
           active: filterInfo,
         },
-      }
+      },
     );
     const childNode = createTreeModelInput({ id: "child_id" });
     modelSource.modifyModel((model) => {

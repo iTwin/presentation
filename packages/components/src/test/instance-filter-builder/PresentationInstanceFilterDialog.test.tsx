@@ -81,7 +81,7 @@ describe("PresentationInstanceFilterDialog", () => {
   it("invokes 'onInstanceFilterApplied' with filter", async () => {
     const spy = sinon.spy();
     const { container, getByText, getByDisplayValue } = render(
-      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />
+      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />,
     );
 
     const applyButton = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
@@ -132,7 +132,7 @@ describe("PresentationInstanceFilterDialog", () => {
         onApply={spy}
         isOpen={true}
         initialFilter={initialFilter}
-      />
+      />,
     );
 
     expect(queryByText(title)).to.not.be.null;
@@ -152,7 +152,7 @@ describe("PresentationInstanceFilterDialog", () => {
         }}
         onApply={spy}
         isOpen={true}
-      />
+      />,
     );
 
     expect(queryByText(count)).to.not.be.null;
@@ -163,7 +163,7 @@ describe("PresentationInstanceFilterDialog", () => {
     const descriptorGetter = async () => descriptor;
 
     const { container } = render(
-      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptorGetter} onClose={() => {}} onApply={spy} isOpen={true} />
+      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptorGetter} onClose={() => {}} onApply={spy} isOpen={true} />,
     );
 
     await waitFor(() => {
@@ -178,7 +178,7 @@ describe("PresentationInstanceFilterDialog", () => {
     const descriptorGetter = async () => undefined as unknown as Descriptor;
 
     const { container } = render(
-      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptorGetter} onClose={() => {}} onApply={spy} isOpen={true} />
+      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptorGetter} onClose={() => {}} onApply={spy} isOpen={true} />,
     );
 
     await waitFor(() => {

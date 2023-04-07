@@ -53,7 +53,7 @@ describe("useColumns", () => {
             label: contentField.label,
             field: contentField,
           },
-        ])
+        ]),
     );
   });
 
@@ -76,7 +76,7 @@ describe("useColumns", () => {
             label: propertyField.label,
             field: propertyField,
           },
-        ])
+        ]),
     );
   });
 
@@ -115,7 +115,7 @@ describe("useColumns", () => {
     render(
       <TestErrorBoundary onError={errorSpy}>
         <TestComponent />
-      </TestErrorBoundary>
+      </TestErrorBoundary>,
     );
 
     await waitFor(() => {

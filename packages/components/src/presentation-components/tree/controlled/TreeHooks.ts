@@ -68,7 +68,7 @@ export function usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderP
   const { enableHierarchyAutoUpdate, seedTreeModel, ...rest } = props;
   const dataProviderProps: PresentationTreeDataProviderProps = useMemo(
     () => rest,
-    Object.values(rest) // eslint-disable-line react-hooks/exhaustive-deps
+    Object.values(rest), // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const firstRenderRef = useRef(true);
@@ -81,7 +81,7 @@ export function usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderP
         ruleset: typeof dataProviderProps.ruleset === "string" ? dataProviderProps.ruleset : /* istanbul ignore next */ dataProviderProps.ruleset.id,
       }),
     }),
-    [dataProviderProps]
+    [dataProviderProps],
   );
   useEffect(() => {
     return () => rulesetRegistration.dispose();

@@ -62,7 +62,7 @@ export function PropertiesWidget(props: Props) {
         setFilterText(filter);
       }
     },
-    [filterText]
+    [filterText],
   );
 
   const [filteringResult, setFilteringResult] = useState<FilteredPropertyData>();
@@ -82,7 +82,7 @@ export function PropertiesWidget(props: Props) {
         setActiveHighlight(newFilteringResult.getMatchByIndex(activeMatchIndex));
       }
     },
-    [activeMatchIndex]
+    [activeMatchIndex],
   );
 
   const { width, height, ref } = useResizeDetector();
@@ -147,13 +147,13 @@ function PropertyGrid(props: PropertyGridProps) {
       const provider = new AutoExpandingPropertyDataProvider({ imodel, ruleset: rulesetId, ...diagnostics });
       provider.isNestedPropertyCategoryGroupingEnabled = true;
       return provider;
-    }, [imodel, rulesetId, diagnostics])
+    }, [imodel, rulesetId, diagnostics]),
   );
   const { isOverLimit, numSelectedElements } = usePropertyDataProviderWithUnifiedSelection({ dataProvider });
 
   const renderFavoritesActionButton = useCallback(
     (buttonProps: ActionButtonRendererProps) => <FavoritePropertyActionButton {...buttonProps} dataProvider={dataProvider} />,
-    [dataProvider]
+    [dataProvider],
   );
   const renderCopyActionButton = useCallback(() => <CopyActionButton />, []);
 
@@ -174,13 +174,13 @@ function PropertyGrid(props: PropertyGridProps) {
         setFilteringProvDataChanged({});
       });
       return filteringDataProv;
-    }, [dataProvider, filterText, onlyFavorites])
+    }, [dataProvider, filterText, onlyFavorites]),
   );
 
   const { value: filteringResult } = useDebouncedAsyncValue(
     useCallback(async () => {
       return filteringDataProvider.getData();
-    }, [filteringDataProvider, filteringProvDataChanged]) // eslint-disable-line react-hooks/exhaustive-deps
+    }, [filteringDataProvider, filteringProvDataChanged]), // eslint-disable-line react-hooks/exhaustive-deps
   );
   useEffect(() => {
     onFilteringStateChanged(filteringResult);
@@ -246,7 +246,7 @@ function PropertiesWidgetContextMenu(props: PropertiesWidgetContextMenuProps) {
       await Presentation.favoriteProperties.add(propertyField, imodel, FAVORITES_SCOPE);
       onCloseContextMenu();
     },
-    [onCloseContextMenu, imodel]
+    [onCloseContextMenu, imodel],
   );
 
   const removeFavorite = useCallback(
@@ -254,7 +254,7 @@ function PropertiesWidgetContextMenu(props: PropertiesWidgetContextMenuProps) {
       await Presentation.favoriteProperties.remove(propertyField, imodel, FAVORITES_SCOPE);
       onCloseContextMenu();
     },
-    [onCloseContextMenu, imodel]
+    [onCloseContextMenu, imodel],
   );
 
   const asyncItems = useDebouncedAsyncValue(
@@ -279,7 +279,7 @@ function PropertiesWidgetContextMenu(props: PropertiesWidgetContextMenuProps) {
         }
       }
       return items;
-    }, [imodel, dataProvider, record, addFavorite, removeFavorite])
+    }, [imodel, dataProvider, record, addFavorite, removeFavorite]),
   );
 
   if (!asyncItems.value || asyncItems.value.length === 0) {

@@ -19,7 +19,7 @@ export function createPrimitiveStringProperty(
   rawValue: string,
   displayValue: string = rawValue.toString(),
   editorInfo?: PropertyEditorInfo,
-  autoExpand?: boolean
+  autoExpand?: boolean,
 ): PropertyRecord {
   const value: PrimitiveValue = {
     displayValue,
@@ -74,7 +74,7 @@ export function createStructProperty(
   members?: {
     [name: string]: PropertyRecord;
   },
-  autoExpand?: boolean
+  autoExpand?: boolean,
 ): PropertyRecord {
   if (!members) {
     members = {};

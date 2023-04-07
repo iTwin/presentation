@@ -30,7 +30,7 @@ export interface ViewWithUnifiedSelectionProps {
  * @public
  */
 export function viewWithUnifiedSelection<P extends ViewportProps>(
-  ViewportComponent: React.ComponentType<P>
+  ViewportComponent: React.ComponentType<P>,
 ): React.ComponentType<P & ViewWithUnifiedSelectionProps> {
   type CombinedProps = P & ViewWithUnifiedSelectionProps;
 

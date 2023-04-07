@@ -204,7 +204,7 @@ describe("TreeDataProvider", () => {
       const pageOptions: PageOptions = { start: 0, size: 5 };
       presentationManagerMock
         .setup(async (x) =>
-          x.getNodesAndCount({ imodel: imodelMock.object, rulesetOrId: rulesetId, paging: pageOptionsUiToPresentation(pageOptions), parentKey })
+          x.getNodesAndCount({ imodel: imodelMock.object, rulesetOrId: rulesetId, paging: pageOptionsUiToPresentation(pageOptions), parentKey }),
         )
         .returns(async () => ({ nodes: [createTestECInstancesNode(), createTestECInstancesNode()], count: 2 }))
         .verifiable();
@@ -311,8 +311,8 @@ describe("TreeDataProvider", () => {
               paging: pageOptionsUiToPresentation(pageOptions),
               parentKey,
               instanceFilter: instanceFilter0,
-            })
-          )
+            }),
+          ),
         )
         .returns(async () => ({ nodes: [createTestECInstancesNode()], count: 1 }))
         .verifiable();
@@ -330,8 +330,8 @@ describe("TreeDataProvider", () => {
               paging: pageOptionsUiToPresentation(pageOptions),
               parentKey,
               instanceFilter: instanceFilter1,
-            })
-          )
+            }),
+          ),
         )
         .returns(async () => ({ nodes: [createTestECInstancesNode(), createTestECInstancesNode()], count: 2 }))
         .verifiable();
@@ -364,8 +364,8 @@ describe("TreeDataProvider", () => {
       presentationManagerMock
         .setup(async (x) =>
           x.getNodesAndCount(
-            is({ imodel: imodelMock.object, rulesetOrId: rulesetId, paging: pageOptionsUiToPresentation(pageOptions), parentKey, instanceFilter })
-          )
+            is({ imodel: imodelMock.object, rulesetOrId: rulesetId, paging: pageOptionsUiToPresentation(pageOptions), parentKey, instanceFilter }),
+          ),
         )
         .returns(async () => ({ nodes: [], count: 0 }));
 
@@ -452,7 +452,7 @@ describe("TreeDataProvider", () => {
 
       presentationManagerMock
         .setup(async (x) =>
-          x.getNodesAndCount({ imodel: imodelMock.object, rulesetOrId: rulesetId, diagnostics: { editor: "error", handler: diagnosticsHandler } })
+          x.getNodesAndCount({ imodel: imodelMock.object, rulesetOrId: rulesetId, diagnostics: { editor: "error", handler: diagnosticsHandler } }),
         )
         .returns(async () => ({ nodes: [], count: 0 }))
         .verifiable();
@@ -476,7 +476,7 @@ describe("TreeDataProvider", () => {
             imodel: imodelMock.object,
             rulesetOrId: rulesetId,
             diagnostics: { backendVersion: true, perf: true, dev: "error", handler: diagnosticsHandler },
-          })
+          }),
         )
         .returns(async () => ({ nodes: [], count: 0 }))
         .verifiable();

@@ -62,7 +62,7 @@ describe("NavigationPropertyTargetSelector", () => {
   it("renders selector", async () => {
     sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
     const { container, queryByText } = render(
-      <NavigationPropertyTargetSelector imodel={testImodel} getNavigationPropertyInfo={async () => testNavigationPropertyInfo} propertyRecord={testRecord} />
+      <NavigationPropertyTargetSelector imodel={testImodel} getNavigationPropertyInfo={async () => testNavigationPropertyInfo} propertyRecord={testRecord} />,
     );
 
     const select = await waitFor(() => {
@@ -84,7 +84,7 @@ describe("NavigationPropertyTargetSelector", () => {
         getNavigationPropertyInfo={async () => testNavigationPropertyInfo}
         propertyRecord={testRecord}
         onCommit={spy}
-      />
+      />,
     );
 
     const select = await waitFor(() => {
@@ -115,7 +115,7 @@ describe("NavigationPropertyTargetSelector", () => {
         imodel={testImodel}
         getNavigationPropertyInfo={async () => testNavigationPropertyInfo}
         propertyRecord={testRecord}
-      />
+      />,
     );
 
     expect((ref.current?.getValue() as PrimitiveValue).value).to.be.undefined;

@@ -239,8 +239,8 @@ describe("ContentDataProvider", () => {
               rulesetOrId: rulesetId,
               displayType,
               selection,
-            })
-          )
+            }),
+          ),
         )
         .returns(async () => result)
         .verifiable();
@@ -311,7 +311,7 @@ describe("ContentDataProvider", () => {
       const result = new PromiseContainer<{ content: Content; size: number }>();
       presentationManagerMock
         .setup(async (x) =>
-          x.getContentAndSize(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: 10 } }))
+          x.getContentAndSize(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: 10 } })),
         )
         .returns(async () => result.promise)
         .verifiable();
@@ -327,7 +327,7 @@ describe("ContentDataProvider", () => {
       const resultPromiseContainer = new PromiseContainer<{ content: Content; size: number }>();
       presentationManagerMock
         .setup(async (x) =>
-          x.getContentAndSize(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: 10 } }))
+          x.getContentAndSize(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: 10 } })),
         )
         .returns(async () => resultPromiseContainer.promise)
         .verifiable(moq.Times.once());
@@ -347,8 +347,8 @@ describe("ContentDataProvider", () => {
       presentationManagerMock
         .setup(async (x) =>
           x.getContentAndSize(
-            moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: pagingSize } })
-          )
+            moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: pagingSize } }),
+          ),
         )
         .returns(async () => resultPromiseContainer.promise)
         .verifiable(moq.Times.once());
@@ -398,7 +398,7 @@ describe("ContentDataProvider", () => {
       };
       presentationManagerMock
         .setup(async (x) =>
-          x.getContentAndSize(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: 10 } }))
+          x.getContentAndSize(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: 10 } })),
         )
         .returns(async () => result)
         .verifiable();
@@ -415,24 +415,24 @@ describe("ContentDataProvider", () => {
         .verifiable(moq.Times.once());
       presentationManagerMock
         .setup(async (x) =>
-          x.getContent(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: undefined, size: 0 } }))
+          x.getContent(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: undefined, size: 0 } })),
         )
         .verifiable(moq.Times.never());
       presentationManagerMock
         .setup(async (x) =>
-          x.getContent(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: undefined } }))
+          x.getContent(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: undefined } })),
         )
         .verifiable(moq.Times.never());
       presentationManagerMock
         .setup(async (x) =>
-          x.getContent(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: 0 } }))
+          x.getContent(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: 0 } })),
         )
         .verifiable(moq.Times.never());
 
       const resultContentFirstPagePromise1 = new PromiseContainer<{ content: Content; size: number }>();
       presentationManagerMock
         .setup(async (x) =>
-          x.getContentAndSize(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: 1 } }))
+          x.getContentAndSize(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: 1 } })),
         )
         .returns(async () => resultContentFirstPagePromise1.promise)
         .verifiable(moq.Times.once());
@@ -440,7 +440,7 @@ describe("ContentDataProvider", () => {
       const resultContentNonFirstPagePromise = new PromiseContainer<Content>();
       presentationManagerMock
         .setup(async (x) =>
-          x.getContent(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 1, size: 0 } }))
+          x.getContent(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 1, size: 0 } })),
         )
         .returns(async () => resultContentNonFirstPagePromise.promise)
         .verifiable(moq.Times.once());
@@ -476,7 +476,7 @@ describe("ContentDataProvider", () => {
         .to.deep.eq(responses[3], "responses[3] should eq responses[0]")
         .to.deep.eq(
           nonPagedContentStartingAt0Response,
-          "responses[0], responses[1], responses[2] and responses[3] should eq nonPagedContentStartingAt0Response"
+          "responses[0], responses[1], responses[2] and responses[3] should eq nonPagedContentStartingAt0Response",
         );
       expect(responses[4]).to.deep.eq(pagedContentAndSizeResponse.content, "responses[4] should eq pagedContentAndSizeResponse.content");
       expect(responses[5]).to.deep.eq(nonPagedContentStartingAt1Response, "responses[5] should eq nonPagedContentStartingAt1Response");
@@ -661,8 +661,8 @@ describe("ContentDataProvider", () => {
           x.getContent(
             moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>> & ClientDiagnosticsAttribute>({
               diagnostics: { editor: "error", handler: diagnosticsHandler },
-            })
-          )
+            }),
+          ),
         )
         .returns(async () => content)
         .verifiable(moq.Times.once());
@@ -694,8 +694,8 @@ describe("ContentDataProvider", () => {
           x.getContent(
             moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>> & ClientDiagnosticsAttribute>({
               diagnostics: { backendVersion: true, perf: true, dev: "error", handler: diagnosticsHandler },
-            })
-          )
+            }),
+          ),
         )
         .returns(async () => content)
         .verifiable(moq.Times.once());

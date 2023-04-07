@@ -31,7 +31,7 @@ export function DiagnosticsSelector(props: DiagnosticsSelectorProps) {
         handler: consoleDiagnosticsHandler,
       },
     }),
-    [shouldMeasurePerformance, editorSeverity, devSeverity]
+    [shouldMeasurePerformance, editorSeverity, devSeverity],
   );
 
   useEffect(() => {

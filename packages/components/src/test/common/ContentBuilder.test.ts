@@ -145,7 +145,7 @@ describe("PropertyRecordsBuilder", () => {
 
   it("sets editor name when field info types typeName is Number", () => {
     const descriptor = createPropertyDescriptionFromFieldInfo(
-      createTestSimpleContentField({ type: { valueFormat: PropertyValueFormat.Primitive, typeName: StandardTypeNames.Number } })
+      createTestSimpleContentField({ type: { valueFormat: PropertyValueFormat.Primitive, typeName: StandardTypeNames.Number } }),
     );
     expect(descriptor.editor?.name).to.eq(StandardEditorNames.NumericInput);
   });

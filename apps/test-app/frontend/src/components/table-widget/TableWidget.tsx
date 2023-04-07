@@ -45,7 +45,7 @@ function PresentationTable(props: PresentationTableProps) {
       const sortBy = tableState.sortBy[0];
       sort(sortBy?.id, sortBy?.desc);
     },
-    [sort]
+    [sort],
   );
 
   if (columns === undefined) {

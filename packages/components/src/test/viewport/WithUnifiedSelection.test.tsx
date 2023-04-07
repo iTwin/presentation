@@ -71,7 +71,7 @@ describe("Viewport withUnifiedSelection", () => {
 
   it("sets ViewportSelectionHandler.imodel property when rendered with new imodel", () => {
     const { rerender } = render(
-      <PresentationViewport imodel={imodelMock.object} viewDefinitionId={viewDefinitionId} selectionHandler={selectionHandlerMock.object} />
+      <PresentationViewport imodel={imodelMock.object} viewDefinitionId={viewDefinitionId} selectionHandler={selectionHandlerMock.object} />,
     );
     selectionHandlerMock.verify((x) => (x.imodel = imodelMock.object), moq.Times.once());
 
@@ -83,7 +83,7 @@ describe("Viewport withUnifiedSelection", () => {
 
   it("disposes ViewportSelectionHandler when unmounted", () => {
     const { unmount } = render(
-      <PresentationViewport imodel={imodelMock.object} viewDefinitionId={viewDefinitionId} selectionHandler={selectionHandlerMock.object} />
+      <PresentationViewport imodel={imodelMock.object} viewDefinitionId={viewDefinitionId} selectionHandler={selectionHandlerMock.object} />,
     );
     unmount();
     selectionHandlerMock.verify((x) => x.dispose(), moq.Times.once());
@@ -435,6 +435,6 @@ const createElementProps = (ids: Id64Arg): ElementProps[] => {
       classFullName: "ElementSchema:ElementClass",
       code: Code.createEmpty(),
       model: id,
-    })
+    }),
   );
 };

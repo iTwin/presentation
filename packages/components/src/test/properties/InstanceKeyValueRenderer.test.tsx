@@ -92,7 +92,7 @@ describe("InstanceKeyValueRenderer", () => {
         const { getByRole } = render(
           <UnifiedSelectionContextProvider imodel={testIModel} selectionLevel={10}>
             {renderer.render(record)}
-          </UnifiedSelectionContextProvider>
+          </UnifiedSelectionContextProvider>,
         );
 
         act(() => {

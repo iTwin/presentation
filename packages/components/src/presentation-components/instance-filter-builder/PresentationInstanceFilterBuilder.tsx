@@ -56,7 +56,7 @@ export function PresentationInstanceFilterBuilder(props: PresentationInstanceFil
       const presentationFilter = filter ? createPresentationInstanceFilter(descriptor, filter) : undefined;
       onInstanceFilterChanged(presentationFilter ? { filter: presentationFilter, usedClasses: filteringProps.selectedClasses } : undefined);
     },
-    [descriptor, onInstanceFilterChanged, filteringProps.selectedClasses]
+    [descriptor, onInstanceFilterChanged, filteringProps.selectedClasses],
   );
 
   const contextValue = useFilterBuilderNavigationPropertyEditorContext(imodel, descriptor);

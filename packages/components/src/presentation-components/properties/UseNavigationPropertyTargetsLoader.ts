@@ -71,7 +71,7 @@ export function useNavigationPropertyTargetsLoader(props: UseNavigationPropertyT
         hasMore: content !== undefined && content.contentSet.length === NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE,
       };
     },
-    [ruleset, imodel]
+    [ruleset, imodel],
   );
 
   return loadTargets;
@@ -80,7 +80,7 @@ export function useNavigationPropertyTargetsLoader(props: UseNavigationPropertyT
 /** @internal */
 export function useNavigationPropertyTargetsRuleset(
   getNavigationPropertyInfo: (property: PropertyDescription) => Promise<NavigationPropertyInfo | undefined>,
-  property: PropertyDescription
+  property: PropertyDescription,
 ) {
   const [ruleset, setRuleset] = useState<Ruleset>();
 

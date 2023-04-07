@@ -173,7 +173,7 @@ describe("Favorite properties", () => {
       expect(propertyData.records[FAVORITES_CATEGORY_NAME][1].property.displayLabel).to.eq("Category");
 
       const visibleFavoriteFields = await Promise.all(
-        propertyData.records[FAVORITES_CATEGORY_NAME].map(async (r) => propertiesDataProvider.getFieldByPropertyDescription(r.property))
+        propertyData.records[FAVORITES_CATEGORY_NAME].map(async (r) => propertiesDataProvider.getFieldByPropertyDescription(r.property)),
       );
       expect(visibleFavoriteFields.every((f) => f !== undefined)).to.be.true;
 
@@ -207,7 +207,7 @@ describe("Favorite properties", () => {
       propertyData = await propertiesDataProvider.getData();
 
       const visibleFavoriteFields = await Promise.all(
-        propertyData.records[FAVORITES_CATEGORY_NAME].map(async (r) => propertiesDataProvider.getFieldByPropertyDescription(r.property))
+        propertyData.records[FAVORITES_CATEGORY_NAME].map(async (r) => propertiesDataProvider.getFieldByPropertyDescription(r.property)),
       );
       expect(visibleFavoriteFields.every((f) => f !== undefined)).to.be.true;
 
@@ -248,7 +248,7 @@ describe("Favorite properties", () => {
       propertyData = await propertiesDataProvider.getData();
 
       const visibleFavoriteFields = await Promise.all(
-        propertyData.records[FAVORITES_CATEGORY_NAME].map(async (r) => propertiesDataProvider.getFieldByPropertyDescription(r.property))
+        propertyData.records[FAVORITES_CATEGORY_NAME].map(async (r) => propertiesDataProvider.getFieldByPropertyDescription(r.property)),
       );
       expect(visibleFavoriteFields.every((f) => f !== undefined)).to.be.true;
 

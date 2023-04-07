@@ -179,7 +179,7 @@ describe("useRows", () => {
     render(
       <TestErrorBoundary onError={errorSpy}>
         <TestComponent />
-      </TestErrorBoundary>
+      </TestErrorBoundary>,
     );
 
     await waitFor(() => {
@@ -224,7 +224,7 @@ describe("useRows", () => {
     };
     presentationManagerMock
       .setup(async (x) =>
-        x.getContentAndSize(moq.It.is((options) => (options.descriptor as DescriptorOverrides).sorting?.direction === SortDirection.Descending))
+        x.getContentAndSize(moq.It.is((options) => (options.descriptor as DescriptorOverrides).sorting?.direction === SortDirection.Descending)),
       )
       .returns(async () => ({ content: new Content(createTestContentDescriptor({ fields: [] }), []), size: 0 }))
       .verifiable(moq.Times.once());

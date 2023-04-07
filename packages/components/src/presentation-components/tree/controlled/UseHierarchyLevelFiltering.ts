@@ -32,14 +32,14 @@ export function useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProp
     (node: TreeNodeItem, info: PresentationInstanceFilterInfo) => {
       applyHierarchyLevelFilter(nodeLoader, modelSource, node.id, info);
     },
-    [nodeLoader, modelSource]
+    [nodeLoader, modelSource],
   );
 
   const clearFilter = useCallback(
     (node: TreeNodeItem) => {
       applyHierarchyLevelFilter(nodeLoader, modelSource, node.id);
     },
-    [nodeLoader, modelSource]
+    [nodeLoader, modelSource],
   );
 
   return { applyFilter, clearFilter };

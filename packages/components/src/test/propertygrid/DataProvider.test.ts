@@ -1782,7 +1782,7 @@ describe("PropertyDataProvider", () => {
           createTestContentDescriptor({
             fields: [createTestSimpleContentField({ name: "test-field-name" })],
           }),
-          [new Item(instanceKeys, "", "", undefined, { ["test-field-name"]: "value" }, {}, [])]
+          [new Item(instanceKeys, "", "", undefined, { ["test-field-name"]: "value" }, {}, [])],
         );
       const record = PropertyRecord.fromString("value", "test-field-name");
       expect(await provider.getPropertyRecordInstanceKeys(record)).to.deep.eq(instanceKeys);
@@ -1823,9 +1823,9 @@ describe("PropertyDataProvider", () => {
                 ],
               },
               {},
-              []
+              [],
             ),
-          ]
+          ],
         );
       const record = PropertyRecord.fromString("", combineFieldNames("nested-field", "root-field"));
       expect(await provider.getPropertyRecordInstanceKeys(record)).to.deep.eq(instanceKeys);

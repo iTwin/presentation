@@ -37,7 +37,7 @@ describe("Learning snippets", async () => {
         const dataProvider = useDisposable(
           useCallback(() => {
             return new PresentationPropertyDataProvider({ imodel: props.imodel });
-          }, [props.imodel])
+          }, [props.imodel]),
         );
 
         // set up the data provider to be notified about changes in unified selection
@@ -69,7 +69,7 @@ describe("Learning snippets", async () => {
         const modelKey = insertPhysicalModel(builder, "My Model");
         elementKeys.push(
           insertPhysicalElement(builder, "My Element 1", modelKey.id, categoryKey.id),
-          insertPhysicalElement(builder, "My Element 2", modelKey.id, categoryKey.id)
+          insertPhysicalElement(builder, "My Element 2", modelKey.id, categoryKey.id),
         );
       });
 

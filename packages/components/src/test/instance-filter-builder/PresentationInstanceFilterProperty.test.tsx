@@ -43,7 +43,7 @@ describe("PresentationInstanceFilterProperty", () => {
         propertyDescription={testPropertyInfo.propertyDescription}
         fullClassName={testPropertyInfo.className}
         categoryLabel={testPropertyInfo.categoryLabel}
-      />
+      />,
     );
 
     expect(queryByText(testPropertyInfo.propertyDescription.displayLabel)).to.not.be.null;
@@ -59,7 +59,7 @@ describe("PresentationInstanceFilterProperty", () => {
       className: `${schemaName}:${className}`,
     });
     const { container, queryByText } = render(
-      <PresentationInstanceFilterProperty propertyDescription={testPropertyInfo.propertyDescription} fullClassName={testPropertyInfo.className} />
+      <PresentationInstanceFilterProperty propertyDescription={testPropertyInfo.propertyDescription} fullClassName={testPropertyInfo.className} />,
     );
 
     expect(queryByText(testPropertyInfo.propertyDescription.displayLabel)).to.not.be.null;

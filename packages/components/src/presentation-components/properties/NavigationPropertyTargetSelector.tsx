@@ -57,7 +57,7 @@ export const NavigationPropertyTargetSelector = forwardRef<NavigationPropertyTar
       setSelectedTarget(target === null ? undefined : target);
       target && onCommit && onCommit({ propertyRecord, newValue: getPropertyValue(target) });
     },
-    [propertyRecord, onCommit]
+    [propertyRecord, onCommit],
   );
 
   const divRef = useRef<HTMLDivElement>(null);
@@ -67,7 +67,7 @@ export const NavigationPropertyTargetSelector = forwardRef<NavigationPropertyTar
       getValue: () => getPropertyValue(selectedTarget),
       divElement: divRef.current,
     }),
-    [selectedTarget]
+    [selectedTarget],
   );
 
   useEffect(() => {

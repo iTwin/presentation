@@ -47,7 +47,7 @@ describe("Learning snippets", () => {
             const provider = new PresentationPropertyDataProvider({ imodel: props.imodel });
             provider.keys = new KeySet([props.elementKey]);
             return provider;
-          }, [props.imodel, props.elementKey])
+          }, [props.imodel, props.elementKey]),
         );
 
         // width and height should generally we computed using ResizeObserver API or one of its derivatives

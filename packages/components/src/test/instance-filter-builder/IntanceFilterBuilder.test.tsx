@@ -60,7 +60,7 @@ describe("InstanceFilter", () => {
         onClassSelected={spy}
         onClearClasses={() => {}}
         onFilterChanged={() => {}}
-      />
+      />,
     );
 
     fireEvent.mouseDown(getByTestId("multi-tag-select-dropdownIndicator"));
@@ -83,7 +83,7 @@ describe("InstanceFilter", () => {
         onClassSelected={() => {}}
         onClearClasses={() => {}}
         onFilterChanged={() => {}}
-      />
+      />,
     );
 
     fireEvent.mouseDown(getByTestId("multi-tag-select-dropdownIndicator"));
@@ -106,7 +106,7 @@ describe("InstanceFilter", () => {
         onClassSelected={() => {}}
         onClearClasses={() => {}}
         onFilterChanged={() => {}}
-      />
+      />,
     );
 
     const removeTagButton = container.querySelector(".iui-tag .iui-button");
@@ -127,7 +127,7 @@ describe("InstanceFilter", () => {
         onClassSelected={() => {}}
         onClearClasses={spy}
         onFilterChanged={() => {}}
-      />
+      />,
     );
 
     fireEvent.mouseDown(getByTestId("multi-tag-select-clearIndicator"));

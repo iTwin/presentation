@@ -504,7 +504,7 @@ class PropertyDataBuilder extends PropertyRecordsBuilder {
 
         addFieldHierarchy(favorites, this.createFavoriteFieldsHierarchy(hierarchy));
         return false;
-      })
+      }),
     );
     return favorites;
   }
