@@ -127,10 +127,12 @@ export class ContentBuilder {
 
   private async getECClassNames(): Promise<Array<{ schemaName: string; className: string }>> {
     const reader = this._iModel.createQueryReader(
-      `SELECT s.Name schemaName, c.Name className FROM meta.ECClassDef c
-       INNER JOIN meta.ECSchemaDef s ON c.Schema.id = s.ECInstanceId
-       WHERE c.Modifier <> 1 AND c.Type = 0
-       ORDER BY s.Name, c.Name`,
+      `
+        SELECT s.Name schemaName, c.Name className FROM meta.ECClassDef c
+        INNER JOIN meta.ECSchemaDef s ON c.Schema.id = s.ECInstanceId
+        WHERE c.Modifier <> 1 AND c.Type = 0
+        ORDER BY s.Name, c.Name
+      `,
       undefined,
       { rowFormat: QueryRowFormat.UseJsPropertyNames },
     );
@@ -145,8 +147,10 @@ export class ContentBuilder {
     for (const nameEntry of classNameEntries) {
       // try {
       const reader = this._iModel.createQueryReader(
-        `SELECT ECInstanceId FROM ONLY "${nameEntry.schemaName}"."${nameEntry.className}"
-         ORDER BY ECInstanceId`,
+        `
+          SELECT ECInstanceId FROM ONLY "${nameEntry.schemaName}"."${nameEntry.className}"
+          ORDER BY ECInstanceId
+        `,
         undefined,
         { rowFormat: QueryRowFormat.UseJsPropertyNames, limit: { count: limitInstances ? 1 : 4000 } },
       );
