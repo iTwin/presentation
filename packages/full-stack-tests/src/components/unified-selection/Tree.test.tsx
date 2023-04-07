@@ -125,7 +125,7 @@ const ruleset: Ruleset = {
     },
     {
       ruleType: RuleTypes.ChildNodes,
-      condition: 'ParentNode.IsOfClass("Model", "BisCore")',
+      condition: `ParentNode.IsOfClass("Model", "BisCore")`,
       specifications: [
         {
           specType: "RelatedInstanceNodes",

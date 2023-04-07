@@ -35,15 +35,15 @@ const RULESET: Ruleset = {
         },
         {
           ruleType: RuleTypes.StyleOverride,
-          foreColor: '"Red"',
-          backColor: '"Green"',
-          fontStyle: '"Italic Bold"',
+          foreColor: `"Red"`,
+          backColor: `"Green"`,
+          fontStyle: `"Italic Bold"`,
         },
       ],
     },
     {
       ruleType: RuleTypes.ChildNodes,
-      condition: 'ParentNode.Type = "root"',
+      condition: `ParentNode.Type = "root"`,
       specifications: [
         {
           specType: ChildNodeSpecificationTypes.CustomNode,

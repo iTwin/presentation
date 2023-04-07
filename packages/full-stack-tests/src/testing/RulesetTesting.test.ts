@@ -38,7 +38,7 @@ const MY_HIERARCHY_RULESET: Ruleset = {
     },
     {
       ruleType: RuleTypes.ChildNodes,
-      condition: 'ParentNode.IsOfClass("Subject", "BisCore")',
+      condition: `ParentNode.IsOfClass("Subject", "BisCore")`,
       onlyIfNotHandled: true,
       specifications: [
         {
@@ -87,7 +87,7 @@ const MY_HIERARCHY_RULESET: Ruleset = {
     },
     {
       ruleType: RuleTypes.ChildNodes,
-      condition: 'ParentNode.IsOfClass("Model", "BisCore")',
+      condition: `ParentNode.IsOfClass("Model", "BisCore")`,
       onlyIfNotHandled: true,
       specifications: [
         {
@@ -109,7 +109,7 @@ const MY_HIERARCHY_RULESET: Ruleset = {
     },
     {
       ruleType: RuleTypes.ChildNodes,
-      condition: 'ParentNode.IsOfClass("Element", "BisCore")',
+      condition: `ParentNode.IsOfClass("Element", "BisCore")`,
       onlyIfNotHandled: true,
       specifications: [
         {
