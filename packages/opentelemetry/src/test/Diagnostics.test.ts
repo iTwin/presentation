@@ -2,242 +2,226 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+
 import { expect } from "chai";
-import { convertToReadableSpans } from "../presentation-opentelemetry";
-import { SpanContext, SpanKind, SpanStatusCode, TraceFlags } from "@opentelemetry/api";
-import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions";
+import * as sinon from "sinon";
+import { context, Span, SpanKind, trace } from "@opentelemetry/api";
+import { exportDiagnostics } from "../presentation-opentelemetry/Diagnostics";
 
-describe("convertToReadableSpans", () => {
-  const defaultSpanAttributes = {
-    attributes: {},
-    ended: true,
-    events: [],
-    instrumentationLibrary: { name: "" },
-    kind: SpanKind.INTERNAL,
-    links: [],
-    resource: { attributes: { [SemanticResourceAttributes.SERVICE_NAME]: "iTwin.js Presentation" } },
-    status: { code: SpanStatusCode.UNSET },
+describe("exportDiagnostics", () => {
+  interface TestSpanContext {
+    parentSpanName?: string;
+  }
+
+  const startActiveSpanStub = sinon.stub<any[], Span>();
+  const spanStub: Span = {
+    addEvent: sinon.stub(),
+    end: sinon.stub(),
+    isRecording: sinon.stub(),
+    recordException: sinon.stub(),
+    setAttribute: sinon.stub(),
+    setAttributes: sinon.stub(),
+    setStatus: sinon.stub(),
+    spanContext: sinon.stub(),
+    updateName: sinon.stub(),
   };
+  let currentSpanContext: TestSpanContext;
 
-  it("converts empty logs to empty readable spans", () => {
-    expect(convertToReadableSpans({})).to.be.empty;
-    expect(convertToReadableSpans({ logs: [] })).to.be.empty;
-  });
-
-  it("does not include logs when duration not set", () => {
-    const spans = convertToReadableSpans({
-      logs: [{ scope: "test scope 1", scopeCreateTimestamp: 12345 }],
+  before(() => {
+    sinon.stub(context, "active").callsFake(() => currentSpanContext as any);
+    sinon.stub(trace, "getTracer").returns({
+      startActiveSpan: startActiveSpanStub,
+      startSpan: sinon.stub(),
     });
-
-    expect(spans).to.deep.eq([]);
-  });
-
-  it("does not include logs when scopeCreateTimestamp not set", () => {
-    const spans = convertToReadableSpans({
-      logs: [{ scope: "test scope 1", duration: 100 }],
+    startActiveSpanStub.callsFake((spanName: string, _spanAttributes: Object, _ctx: TestSpanContext, cb: (span: Span) => Span) => {
+      currentSpanContext = { parentSpanName: spanName };
+      return cb(spanStub);
     });
-
-    expect(spans).to.deep.eq([]);
   });
 
-  it("converts logs to readable spans", () => {
-    const actualSpans = convertToReadableSpans({
-      logs: [
-        { scope: "test scope 1", scopeCreateTimestamp: 12345, duration: 1111 },
-        { scope: "test scope 2", scopeCreateTimestamp: 12350, duration: 40 },
-      ],
-    });
-
-    const expectedSpans = [
-      {
-        ...defaultSpanAttributes,
-        name: "test scope 1",
-        startTime: [12, 345000000],
-        endTime: [13, 456000000],
-        duration: [1, 111000000],
-      },
-      {
-        ...defaultSpanAttributes,
-        name: "test scope 2",
-        startTime: [12, 350000000],
-        endTime: [12, 390000000],
-        duration: [0, 40000000],
-      },
-    ];
-
-    expect(actualSpans.length).to.eq(2);
-    expect(actualSpans[0]).to.deep.include(expectedSpans[0]);
-    expect(actualSpans[1]).to.deep.include(expectedSpans[1]);
-    expect(actualSpans[0].spanContext().traceId).to.not.eq(actualSpans[1].spanContext().traceId);
-    expect(actualSpans[0].spanContext().spanId.length).to.eq(16);
-    expect(actualSpans[0].spanContext().traceId.length).to.eq(32);
+  beforeEach(() => {
+    currentSpanContext = { parentSpanName: undefined };
   });
 
-  it("converts logs to readable spans when parent span id is provided", () => {
-    const parentSpanContext: SpanContext = { traceId: "testTraceId", spanId: "testSpanId", traceFlags: TraceFlags.NONE };
-    const actualSpans = convertToReadableSpans(
+  afterEach(() => {
+    sinon.resetHistory();
+  });
+
+  it("does nothing if there are no diagnostics", () => {
+    exportDiagnostics({}, context.active());
+    expect(startActiveSpanStub).to.not.be.called;
+
+    exportDiagnostics({ logs: [] }, context.active());
+    expect(startActiveSpanStub).to.not.be.called;
+  });
+
+  it("does nothing when `duration` not set", () => {
+    exportDiagnostics(
       {
-        logs: [{ scope: "test scope 1", scopeCreateTimestamp: 12345, duration: 1111 }],
+        logs: [{ scope: "test scope 1", scopeCreateTimestamp: 12345 }],
       },
-      parentSpanContext,
+      context.active(),
     );
-
-    const expectedSpans = [
-      {
-        ...defaultSpanAttributes,
-        name: "test scope 1",
-        startTime: [12, 345000000],
-        endTime: [13, 456000000],
-        duration: [1, 111000000],
-      },
-    ];
-
-    expect(actualSpans.length).to.be.eq(1);
-    expect(actualSpans[0]).to.deep.include(expectedSpans[0]);
-    expect(actualSpans[0].spanContext().traceId).to.eq(parentSpanContext.traceId);
-    expect(actualSpans[0].parentSpanId).to.be.eq(parentSpanContext.spanId);
+    expect(startActiveSpanStub).to.not.be.called;
   });
 
-  it("adds span attributes", () => {
-    const actualSpans = convertToReadableSpans({
-      logs: [
-        {
-          scope: "test scope 1",
-          scopeCreateTimestamp: 12345,
-          duration: 1111,
-          attributes: {
-            stringAttribute: "stringAttributeValue",
-            stringArrayAttribute: ["value1", "value2"],
-          },
-        },
-      ],
-    });
-
-    const expectedSpans = [
+  it("does nothing when `scopeCreateTimestamp` not set", () => {
+    exportDiagnostics(
       {
-        ...defaultSpanAttributes,
+        logs: [{ scope: "test scope 1", duration: 100 }],
+      },
+      context.active(),
+    );
+    expect(startActiveSpanStub).to.not.be.called;
+  });
+
+  it("exports logs as spans", () => {
+    const ctx = context.active();
+    exportDiagnostics(
+      {
+        logs: [{ scope: "test scope", scopeCreateTimestamp: 12345, duration: 1111 }],
+      },
+      ctx,
+    );
+    expect(startActiveSpanStub).to.be.calledOnceWith(
+      "test scope",
+      {
+        kind: SpanKind.INTERNAL,
+        attributes: {},
+        startTime: [12, 345000000],
+      },
+      ctx,
+    );
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(spanStub.end).to.be.calledOnceWith([13, 456000000]);
+  });
+
+  it("exports spans with attributes", () => {
+    const ctx = context.active();
+    exportDiagnostics(
+      {
+        logs: [
+          {
+            scope: "test scope",
+            scopeCreateTimestamp: 12345,
+            duration: 2222,
+            attributes: {
+              stringAttribute: "stringAttributeValue",
+              stringArrayAttribute: ["value1", "value2"],
+            },
+          },
+        ],
+      },
+      ctx,
+    );
+    expect(startActiveSpanStub).to.be.calledOnceWith(
+      "test scope",
+      {
+        kind: SpanKind.INTERNAL,
         attributes: {
           stringAttribute: "stringAttributeValue",
           stringArrayAttribute: ["value1", "value2"],
         },
-        name: "test scope 1",
         startTime: [12, 345000000],
-        endTime: [13, 456000000],
-        duration: [1, 111000000],
       },
-    ];
-
-    expect(actualSpans.length).to.eq(1);
-    expect(actualSpans[0]).to.deep.include(expectedSpans[0]);
+      ctx,
+    );
   });
 
-  it("converts nested logs to readable spans", () => {
-    const actualSpans = convertToReadableSpans({
-      logs: [
-        {
-          scope: "test scope 1",
-          scopeCreateTimestamp: 12345,
-          duration: 1111,
-          logs: [{ scope: "test scope 2", scopeCreateTimestamp: 12350, duration: 40 }],
-        },
-      ],
-    });
-
-    const expectedSpans = [
+  it("exports spans with events", () => {
+    const ctx = context.active();
+    exportDiagnostics(
       {
-        ...defaultSpanAttributes,
-        name: "test scope 2",
+        logs: [
+          {
+            scope: "test scope",
+            scopeCreateTimestamp: 12345,
+            duration: 1111,
+            logs: [{ severity: { dev: "error", editor: "info" }, message: "test message", category: "test category", timestamp: 12350 }],
+          },
+        ],
+      },
+      ctx,
+    );
+    expect(startActiveSpanStub).to.be.calledOnceWith(
+      "test scope",
+      {
+        kind: SpanKind.INTERNAL,
+        attributes: {},
+        startTime: [12, 345000000],
+      },
+      ctx,
+    );
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(spanStub.addEvent).to.be.calledOnceWith(
+      "test message",
+      {
+        devSeverity: "error",
+        editorSeverity: "info",
+        category: "test category",
+      },
+      [12, 350000000],
+    );
+  });
+
+  it("exports nested logs", () => {
+    const ctx = context.active();
+    exportDiagnostics(
+      {
+        logs: [
+          {
+            scope: "parent scope",
+            scopeCreateTimestamp: 12345,
+            duration: 1111,
+            logs: [{ scope: "child scope", scopeCreateTimestamp: 12350, duration: 40 }],
+          },
+        ],
+      },
+      ctx,
+    );
+    expect(startActiveSpanStub).to.be.calledTwice;
+    expect(startActiveSpanStub.firstCall).to.be.calledWith(
+      "parent scope",
+      {
+        kind: SpanKind.INTERNAL,
+        attributes: {},
+        startTime: [12, 345000000],
+      },
+      { parentSpanName: undefined },
+    );
+    expect(startActiveSpanStub.secondCall).to.be.calledWith(
+      "child scope",
+      {
+        kind: SpanKind.INTERNAL,
+        attributes: {},
         startTime: [12, 350000000],
-        endTime: [12, 390000000],
-        duration: [0, 40000000],
       },
-      {
-        ...defaultSpanAttributes,
-        name: "test scope 1",
-        startTime: [12, 345000000],
-        endTime: [13, 456000000],
-        duration: [1, 111000000],
-      },
-    ];
-
-    expect(actualSpans.length).to.be.eq(2);
-    expect(actualSpans[0]).to.deep.include(expectedSpans[0]);
-    expect(actualSpans[1]).to.deep.include(expectedSpans[1]);
-    expect(actualSpans[0].spanContext().traceId).to.eq(actualSpans[1].spanContext().traceId);
-    expect(actualSpans[0].parentSpanId).to.be.eq(actualSpans[1].spanContext().spanId);
+      { parentSpanName: "parent scope" },
+    );
   });
 
-  it("converts logs with messages to readable spans with events", () => {
-    const actualSpans = convertToReadableSpans({
-      logs: [
-        {
-          scope: "test scope",
-          scopeCreateTimestamp: 12345,
-          duration: 1111,
-          logs: [{ severity: { dev: "error", editor: "info" }, message: "test message", category: "test category", timestamp: 12350 }],
-        },
-      ],
-    });
-
-    const expectedSpans = [
+  it("does not include undefined severity attributes in span events", () => {
+    const ctx = context.active();
+    exportDiagnostics(
       {
-        ...defaultSpanAttributes,
-        name: "test scope",
-        startTime: [12, 345000000],
-        endTime: [13, 456000000],
-        duration: [1, 111000000],
-        events: [
+        logs: [
           {
-            time: [12, 350000000],
-            name: "test message",
-            attributes: {
-              devSeverity: "error",
-              editorSeverity: "info",
-              category: "test category",
-            },
+            scope: "test scope",
+            scopeCreateTimestamp: 12345,
+            duration: 1111,
+            logs: [{ severity: {}, message: "test message", category: "test category", timestamp: 12350 }],
           },
         ],
       },
-    ];
-
-    expect(actualSpans.length).to.be.eq(1);
-    expect(actualSpans[0]).to.deep.include(expectedSpans[0]);
-  });
-
-  it("does not include undefined severity attributes", () => {
-    const actualSpans = convertToReadableSpans({
-      logs: [
-        {
-          scope: "test scope",
-          scopeCreateTimestamp: 12345,
-          duration: 1111,
-          logs: [{ severity: {}, message: "test message", category: "test category", timestamp: 12350 }],
-        },
-      ],
-    });
-
-    const expectedSpans = [
+      ctx,
+    );
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(spanStub.addEvent).to.be.calledOnceWith(
+      "test message",
       {
-        ...defaultSpanAttributes,
-        name: "test scope",
-        startTime: [12, 345000000],
-        endTime: [13, 456000000],
-        duration: [1, 111000000],
-        events: [
-          {
-            time: [12, 350000000],
-            name: "test message",
-            attributes: {
-              category: "test category",
-            },
-          },
-        ],
+        category: "test category",
       },
-    ];
-
-    expect(actualSpans.length).to.be.eq(1);
-    expect(actualSpans[0]).to.deep.include(expectedSpans[0]);
-    expect(actualSpans[0].events[0].attributes).to.not.have.property("devSeverity");
-    expect(actualSpans[0].events[0].attributes).to.not.have.property("editorSeverity");
+      [12, 350000000],
+    );
   });
 });

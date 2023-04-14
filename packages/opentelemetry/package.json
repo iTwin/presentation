@@ -41,10 +41,7 @@
   },
   "peerDependencies": {
     "@itwin/presentation-common": "^3.6.3 || ^4.0.0-dev.60",
-    "@opentelemetry/api": "^1.0.4",
-    "@opentelemetry/resources": "~1.5.0",
-    "@opentelemetry/sdk-trace-base": "~1.5.0",
-    "@opentelemetry/semantic-conventions": "~1.5.0"
+    "@opentelemetry/api": "^1.0.4"
   },
   "devDependencies": {
     "@itwin/build-tools": "^4.0.0-dev.60",
@@ -56,17 +53,19 @@
     "@itwin/eslint-plugin": "^4.0.0-dev.33",
     "@itwin/presentation-common": "^4.0.0-dev.60",
     "@opentelemetry/api": "1.0.4",
-    "@opentelemetry/resources": "~1.5.0",
-    "@opentelemetry/sdk-trace-base": "~1.5.0",
-    "@opentelemetry/semantic-conventions": "~1.5.0",
     "@types/chai": "4.3.1",
     "@types/mocha": "^8.2.2",
     "@types/node": "^18.11.5",
+    "@types/sinon": "^9.0.0",
+    "@types/sinon-chai": "^3.2.0",
+    "chai": "^4.1.2",
     "cpx2": "^3.0.0",
     "eslint": "^8.36.0",
     "mocha": "^10.0.0",
     "nyc": "^15.1.0",
     "rimraf": "^3.0.2",
+    "sinon": "^9.0.2",
+    "sinon-chai": "^3.2.0",
     "typescript": "~5.0.2"
   },
   "nyc": {
