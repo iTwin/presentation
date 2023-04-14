@@ -80,6 +80,25 @@
       }
     },
     {
+      "name": "Tests: OpenTelemetry",
+      "cwd": "${workspaceFolder}/packages/opentelemetry",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/packages/opentelemetry/node_modules/mocha/bin/_mocha",
+      "args": [
+        "--config",
+        "./.mocharc.json",
+        "--no-timeouts",
+        "lib/cjs/test/**/*.test.js"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/packages/opentelemetry/lib/**/*.js"
+      ],
+      "env": {
+        "NODE_ENV": "development"
+      }
+    },
+    {
       "name": "Tests: Testing",
       "cwd": "${workspaceFolder}/packages/testing",
       "type": "node",
