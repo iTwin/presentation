@@ -10,7 +10,8 @@ import { Diagnostics, DiagnosticsLogEntry, DiagnosticsScopeLogs } from "@itwin/p
 import { context, Context, HrTime, SpanKind, trace } from "@opentelemetry/api";
 
 /**
- * Convert diagnostics to readable span format that can be passed to OpenTelemetry exporter.
+ * Export Presentation diagnostics as OpenTelemetry traces to the given context.
+ * @see [Diagnostics and OpenTelemetry]($docs/presentation/advanced/Diagnostics.md#diagnostics-and-opentelemetry)
  * @beta
  */
 export function exportDiagnostics(diagnostics: Diagnostics, ctx: Context) {
