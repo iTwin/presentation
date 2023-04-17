@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-opentelemetry",
-  "version": "4.0.0-dev.76",
+  "version": "4.0.0-dev.77",
   "description": "Utilities to enable OpenTelemetry tracing of Presentation requests",
   "license": "MIT",
   "engines": {
