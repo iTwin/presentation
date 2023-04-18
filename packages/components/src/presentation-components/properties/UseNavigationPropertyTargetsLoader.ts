@@ -2,9 +2,6 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/** @packageDocumentation
- * @module Internal
- */
 
 import { useCallback, useEffect, useState } from "react";
 import { PropertyDescription } from "@itwin/appui-abstract";
