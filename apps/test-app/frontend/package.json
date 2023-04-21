@@ -38,7 +38,7 @@
     "@types/node": "^16.0.0",
     "@types/react": "^17.0.37",
     "@types/react-dom": "^17.0.0",
-    "copy-webpack-plugin": "^11.0.0",
+    "copy-webpack-plugin": "^9.0.0",
     "css-loader": "^6.7.3",
     "electron": "^23.0.0",
     "esbuild-loader": "^2.20.0",

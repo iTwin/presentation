@@ -8,8 +8,9 @@
     "url": "https://www.bentley.com"
   },
   "scripts": {
-    "start": "npm test",
-    "lint": "eslint ./src/**/*.{ts,tsx}"
+    "build": "tsc",
+    "clean": "rimraf lib",
+    "lint": "eslint ./src/**/*.ts"
   },
   "dependencies": {
     "@itwin/appui-abstract": "^4.0.0-dev.60",
@@ -33,7 +34,7 @@
     "@types/node": "^16.0.0",
     "@types/react": "^17.0.37",
     "@types/react-dom": "^17.0.0",
-    "artillery": "^2.0.0-31",
+    "artillery": "2.0.0-31",
     "eslint": "^8.36.0",
     "react": "^17.0.0",
     "react-dom": "^17.0.0",
