@@ -1,0 +1,35 @@
+{
+  "name": "@load-tests/backend",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node --inspect --max-http-header-size=16000 ./lib/main.js",
+    "start:electron": "cross-env NODE_ENV=development electron ./lib/main.js",
+    "build": "tsc",
+    "clean": "rimraf lib",
+    "lint": "eslint ./src/**/*.ts"
+  },
+  "dependencies": {
+    "@itwin/appui-abstract": "^4.0.0-dev.60",
+    "@itwin/build-tools": "^4.0.0-dev.60",
+    "@itwin/core-bentley": "^4.0.0-dev.60",
+    "@itwin/core-backend": "^4.0.0-dev.60",
+    "@itwin/core-common": "^4.0.0-dev.60",
+    "@itwin/core-electron": "^4.0.0-dev.60",
+    "@itwin/core-frontend": "^4.0.0-dev.60",
+    "@itwin/core-geometry": "^4.0.0-dev.60",
+    "@itwin/core-orbitgt": "^4.0.0-dev.60",
+    "@itwin/core-quantity": "^4.0.0-dev.60",
+    "@itwin/ecschema-metadata": "^4.0.0-dev.60",
+    "@itwin/eslint-plugin": "^4.0.0-dev.33",
+    "@itwin/express-server": "^4.0.0-dev.60",
+    "@itwin/presentation-common": "^4.0.0-dev.60",
+    "@itwin/presentation-backend": "^4.0.0-dev.60",
+    "@itwin/webgl-compatibility": "^4.0.0-dev.60",
+    "cross-env": "^7.0.3",
+    "electron": "^23.0.0",
+    "eslint": "^8.36.0",
+    "rimraf": "^3.0.2",
+    "typescript": "~5.0.2"
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "name": "@load-tests/frontend",
+  "version": "0.0.0",
+  "license": "MIT",
+  "private": true,
+  "author": {
+    "name": "Bentley Systems, Inc.",
+    "url": "https://www.bentley.com"
+  },
+  "scripts": {
+    "start": "npm test",
+    "lint": "eslint ./src/**/*.{ts,tsx}"
+  },
+  "dependencies": {
+    "@itwin/appui-abstract": "^4.0.0-dev.60",
+    "@itwin/build-tools": "^4.0.0-dev.60",
+    "@itwin/components-react": "^4.0.0-dev.15",
+    "@itwin/core-bentley": "^4.0.0-dev.60",
+    "@itwin/core-common": "^4.0.0-dev.60",
+    "@itwin/core-frontend": "^4.0.0-dev.60",
+    "@itwin/core-geometry": "^4.0.0-dev.60",
+    "@itwin/core-i18n": "^4.0.0-dev.60",
+    "@itwin/core-orbitgt": "^4.0.0-dev.60",
+    "@itwin/core-quantity": "^4.0.0-dev.60",
+    "@itwin/core-react": "^4.0.0-dev.15",
+    "@itwin/ecschema-metadata": "^4.0.0-dev.60",
+    "@itwin/eslint-plugin": "^4.0.0-dev.33",
+    "@itwin/imodel-components-react": "^4.0.0-dev.15",
+    "@itwin/presentation-common": "^4.0.0-dev.60",
+    "@itwin/presentation-components": "workspace:*",
+    "@itwin/presentation-frontend": "^4.0.0-dev.60",
+    "@itwin/webgl-compatibility": "^4.0.0-dev.60",
+    "@types/node": "^16.0.0",
+    "@types/react": "^17.0.37",
+    "@types/react-dom": "^17.0.0",
+    "artillery": "^2.0.0-31",
+    "eslint": "^8.36.0",
+    "react": "^17.0.0",
+    "react-dom": "^17.0.0",
+    "typescript": "~5.0.2"
+  }
+}
