@@ -12,17 +12,7 @@ import { distinct } from "rxjs/internal/operators/distinct";
 import { mergeMap } from "rxjs/internal/operators/mergeMap";
 import { assert } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
-import {
-  Content,
-  DefaultContentDisplayTypes,
-  KeySet,
-  PageOptions,
-  PresentationError,
-  PresentationStatus,
-  Ruleset,
-  StartItemProps,
-  traverseContent,
-} from "@itwin/presentation-common";
+import { Content, DefaultContentDisplayTypes, KeySet, PageOptions, Ruleset, StartItemProps, traverseContent } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { FieldHierarchyRecord, PropertyRecordsBuilder } from "../common/ContentBuilder";
 import { useErrorState } from "../common/Utils";
@@ -113,7 +103,10 @@ async function loadRows(imodel: IModelConnection, ruleset: Ruleset | string, key
   });
 
   if (!result) {
-    throw new PresentationError(PresentationStatus.Error, "Failed to load table rows.");
+    return {
+      rowDefinitions: [],
+      total: 0,
+    };
   }
 
   return {
