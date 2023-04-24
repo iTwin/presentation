@@ -301,6 +301,11 @@ Object {
           "value": Object {
             "className": "BisCore:SpatialCategory",
             "id": "0x17",
+            "label": Object {
+              "displayValue": "Uncategorized",
+              "rawValue": "Uncategorized",
+              "typeName": "string",
+            },
           },
           "valueFormat": 0,
         },
@@ -330,6 +335,11 @@ Object {
           "value": Object {
             "className": "BisCore:PhysicalModel",
             "id": "0x1c",
+            "label": Object {
+              "displayValue": "Properties_60InstancesWithUrl2",
+              "rawValue": "Properties_60InstancesWithUrl2",
+              "typeName": "string",
+            },
           },
           "valueFormat": 0,
         },
@@ -1788,7 +1798,7 @@ Object {
         "description": "Properties_60InstancesWithUrl2.dgn",
         "property": Object {
           "displayLabel": "Name",
-          "name": "rc_generic_PhysicalObject_bis_PhysicalModel_bis_PhysicalPartition_ncc_bis_RepositoryLink$pc_bis_Element_UserLabel_2",
+          "name": "rc_generic_PhysicalObject_bis_Model_bis_ISubModeledElement_ncc_bis_RepositoryLink$pc_bis_Element_UserLabel_2",
           "typename": "string",
         },
         "value": Object {
@@ -1801,7 +1811,7 @@ Object {
         "description": "file:///d|/temp/properties_60instanceswithurl2.dgn",
         "property": Object {
           "displayLabel": "Path",
-          "name": "rc_generic_PhysicalObject_bis_PhysicalModel_bis_PhysicalPartition_ncc_bis_RepositoryLink$pc_bis_UrlLink_Url",
+          "name": "rc_generic_PhysicalObject_bis_Model_bis_ISubModeledElement_ncc_bis_RepositoryLink$pc_bis_UrlLink_Url",
           "typename": "string",
         },
         "value": Object {
@@ -1853,6 +1863,11 @@ Object {
           "value": Object {
             "className": "BisCore:PhysicalPartition",
             "id": "0x1c",
+            "label": Object {
+              "displayValue": "Properties_60InstancesWithUrl2",
+              "rawValue": "Properties_60InstancesWithUrl2",
+              "typeName": "string",
+            },
           },
           "valueFormat": 0,
         },
@@ -1905,6 +1920,11 @@ Object {
           "value": Object {
             "className": "BisCore:PhysicalPartition",
             "id": "0x1c",
+            "label": Object {
+              "displayValue": "Properties_60InstancesWithUrl2",
+              "rawValue": "Properties_60InstancesWithUrl2",
+              "typeName": "string",
+            },
           },
           "valueFormat": 0,
         },
@@ -1924,6 +1944,11 @@ Object {
           "value": Object {
             "className": "BisCore:PhysicalPartition",
             "id": "0x1c",
+            "label": Object {
+              "displayValue": "Properties_60InstancesWithUrl2",
+              "rawValue": "Properties_60InstancesWithUrl2",
+              "typeName": "string",
+            },
           },
           "valueFormat": 0,
         },
@@ -2286,6 +2311,11 @@ Object {
           "value": Object {
             "className": "BisCore:SpatialCategory",
             "id": "0x17",
+            "label": Object {
+              "displayValue": "Uncategorized",
+              "rawValue": "Uncategorized",
+              "typeName": "string",
+            },
           },
           "valueFormat": 0,
         },
@@ -2315,6 +2345,11 @@ Object {
           "value": Object {
             "className": "BisCore:PhysicalModel",
             "id": "0x1c",
+            "label": Object {
+              "displayValue": "Properties_60InstancesWithUrl2",
+              "rawValue": "Properties_60InstancesWithUrl2",
+              "typeName": "string",
+            },
           },
           "valueFormat": 0,
         },
@@ -3773,7 +3808,7 @@ Object {
         "description": "Properties_60InstancesWithUrl2.dgn",
         "property": Object {
           "displayLabel": "Name",
-          "name": "rc_generic_PhysicalObject_bis_PhysicalModel_bis_PhysicalPartition_ncc_bis_RepositoryLink$pc_bis_Element_UserLabel_2",
+          "name": "rc_generic_PhysicalObject_bis_Model_bis_ISubModeledElement_ncc_bis_RepositoryLink$pc_bis_Element_UserLabel_2",
           "typename": "string",
         },
         "value": Object {
@@ -3786,7 +3821,7 @@ Object {
         "description": "file:///d|/temp/properties_60instanceswithurl2.dgn",
         "property": Object {
           "displayLabel": "Path",
-          "name": "rc_generic_PhysicalObject_bis_PhysicalModel_bis_PhysicalPartition_ncc_bis_RepositoryLink$pc_bis_UrlLink_Url",
+          "name": "rc_generic_PhysicalObject_bis_Model_bis_ISubModeledElement_ncc_bis_RepositoryLink$pc_bis_UrlLink_Url",
           "typename": "string",
         },
         "value": Object {
@@ -3838,6 +3873,11 @@ Object {
           "value": Object {
             "className": "BisCore:PhysicalPartition",
             "id": "0x1c",
+            "label": Object {
+              "displayValue": "Properties_60InstancesWithUrl2",
+              "rawValue": "Properties_60InstancesWithUrl2",
+              "typeName": "string",
+            },
           },
           "valueFormat": 0,
         },
@@ -3897,6 +3937,11 @@ Object {
           "value": Object {
             "className": "BisCore:PhysicalPartition",
             "id": "0x1c",
+            "label": Object {
+              "displayValue": "Properties_60InstancesWithUrl2",
+              "rawValue": "Properties_60InstancesWithUrl2",
+              "typeName": "string",
+            },
           },
           "valueFormat": 0,
         },
@@ -3916,6 +3961,11 @@ Object {
           "value": Object {
             "className": "BisCore:PhysicalPartition",
             "id": "0x1c",
+            "label": Object {
+              "displayValue": "Properties_60InstancesWithUrl2",
+              "rawValue": "Properties_60InstancesWithUrl2",
+              "typeName": "string",
+            },
           },
           "valueFormat": 0,
         },
