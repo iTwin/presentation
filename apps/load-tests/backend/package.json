@@ -4,9 +4,8 @@
   "private": true,
   "scripts": {
     "start": "node --inspect --max-http-header-size=16000 ./lib/main.js",
-    "start:electron": "cross-env NODE_ENV=development electron ./lib/main.js",
     "build": "tsc",
-    "clean": "rimraf lib",
+    "clean": "rimraf lib temp",
     "lint": "eslint ./src/**/*.ts"
   },
   "dependencies": {

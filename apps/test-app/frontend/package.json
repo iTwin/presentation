@@ -35,6 +35,7 @@
     "@itwin/presentation-frontend": "^4.0.0-dev.85",
     "@itwin/webgl-compatibility": "^4.0.0-dev.85",
     "@opentelemetry/api": "^1.4.1",
+    "@types/copy-webpack-plugin": "^8.0.0",
     "@types/node": "^16.0.0",
     "@types/react": "^17.0.37",
     "@types/react-dom": "^17.0.0",

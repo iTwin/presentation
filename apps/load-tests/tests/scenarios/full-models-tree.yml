@@ -1,0 +1,39 @@
+config:
+  target: "http://localhost:3001/presentation-test-app/v1.0/mode/1/context/00000000-0000-0000-0000-000000000000"
+
+  http:
+    maxSockets: 5
+    timeout: 120
+    extendedMetrics: false
+
+  phases:
+    - duration: 60
+      arrivalRate: 100
+      maxVusers: 200
+      name: Sustained load
+
+  payload:
+    path: "./datasets.csv"
+    fields:
+      - "iModelPath"
+      - "iModelId"
+    order: sequence
+    loadAll: true
+
+  variables:
+    operationGetNodes:
+      - "PresentationRpcInterface-4.0.0-getPagedNodes"
+
+  processor: "../lib/index.js"
+
+scenarios:
+  - name: Full Models Tree
+    beforeScenario: "createClientId"
+    flow:
+      - loop:
+          - post:
+              ifTrue: "iModelId"
+              url: "/imodel/{{ iModelId }}/changeset/0/{{ operationGetNodes }}"
+              beforeRequest: "createModelsTreeRequestParams"
+              afterResponse: "extractNodeKeysFromNodesResponse"
+        whileTrue: "hasParentNodeKeys"

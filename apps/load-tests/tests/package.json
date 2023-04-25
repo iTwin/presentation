@@ -10,7 +10,9 @@
   "scripts": {
     "build": "tsc",
     "clean": "rimraf lib",
-    "lint": "eslint ./src/**/*.ts"
+    "lint": "eslint ./src/**/*.ts",
+    "start:full-models-tree": "artillery run ./scenarios/full-models-tree.yml",
+    "start": "npm run start:full-models-tree"
   },
   "dependencies": {
     "@itwin/appui-abstract": "^4.0.0-dev.60",
@@ -31,6 +33,7 @@
     "@itwin/presentation-components": "workspace:*",
     "@itwin/presentation-frontend": "^4.0.0-dev.60",
     "@itwin/webgl-compatibility": "^4.0.0-dev.60",
+    "@types/artillery": "^1.7.0",
     "@types/node": "^16.0.0",
     "@types/react": "^17.0.37",
     "@types/react-dom": "^17.0.0",
