@@ -7,9 +7,10 @@ config:
     extendedMetrics: false
 
   phases:
-    - duration: 1
-      arrivalRate: 10
-      name: "10 users"
+    # 10 users start the scenario one after another in 1 second intervals
+    - name: "10 users"
+      duration: 10
+      arrivalRate: 1
 
   payload:
     path: "./datasets.csv"
@@ -34,4 +35,5 @@ scenarios:
               url: "/{{ operationGetNodes }}"
               beforeRequest: "createModelsTreeRequestParams"
               afterResponse: "extractNodeKeysFromNodesResponse"
+          - think: 0.1
         whileTrue: "hasParentNodeKeys"

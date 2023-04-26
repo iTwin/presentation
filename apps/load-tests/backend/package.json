@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node --inspect --max-http-header-size=16000 ./lib/main.js",
+    "start": "rimraf temp && node --inspect --max-http-header-size=16000 ./lib/main.js",
     "build": "tsc",
     "clean": "rimraf lib temp",
     "lint": "eslint ./src/**/*.ts"

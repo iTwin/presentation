@@ -74,15 +74,17 @@ export function extractNodeKeysFromNodesResponse(requestConfig: any, response: a
       // repeat the request by adding the parent node key back to the list
       const requestParams = JSON.parse(requestConfig.body);
       const nodesRequestParams = requestParams[1] as HierarchyRpcRequestOptions;
-      parentNodeKeys.splice(0, 0, nodesRequestParams.parentKey);
+      parentNodeKeys.push(nodesRequestParams.parentKey);
       break;
     default:
       throw new PresentationError(body.statusCode, body.errorMessage);
   }
   body.result?.items.forEach((n) => {
     if (n.hasChildren) {
+      // push node's key to a random location in the list
+      const location = Math.random() * parentNodeKeys!.length;
       // eslint-disable-next-line deprecation/deprecation
-      parentNodeKeys!.push(NodeKey.fromJSON(n.key));
+      parentNodeKeys!.splice(location, 0, NodeKey.fromJSON(n.key));
     }
   });
   next();
