@@ -15,6 +15,7 @@ import { HierarchyCacheMode, Presentation } from "@itwin/presentation-backend";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 
 const processCount = process.env.PROCESS_COUNT ? Number.parseInt(process.env.PROCESS_COUNT, 10) : 1;
+const shareCaches = !!process.env.SHARE_CACHES;
 const port = process.env.PORT ? Number.parseInt(process.env.PORT, 10) : 3001;
 
 cluster.schedulingPolicy = cluster.SCHED_RR;
@@ -48,7 +49,10 @@ async function initBackend() {
   });
 
   // initialize Presentation backend
-  const hierarchyCacheDir = path.join(process.cwd(), "temp", "hierarchy-caches", process.pid.toString());
+  let hierarchyCacheDir = path.join(process.cwd(), "temp", "hierarchy-caches");
+  if (!shareCaches) {
+    hierarchyCacheDir = path.join(hierarchyCacheDir, process.pid.toString());
+  }
   IModelJsFs.recursiveMkDirSync(hierarchyCacheDir);
   Presentation.initialize({
     workerThreadsCount: 2,
