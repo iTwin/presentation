@@ -2,7 +2,7 @@ config:
   target: "http://localhost:3001/presentation-test-app/v1.0/mode/1/context/00000000-0000-0000-0000-000000000000/imodel/00000000-0000-0000-0000-000000000000/changeset/0"
 
   http:
-    maxSockets: 5
+    maxSockets: 1000
     timeout: 120
     extendedMetrics: false
 
