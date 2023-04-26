@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Change `TestIModelBuilder.insertAspect` to return inserted aspect id.",
+  "packageName": "@itwin/presentation-testing",
+  "email": "24278440+saskliutas@users.noreply.github.com",
+  "dependentChangeType": "patch"
+}
