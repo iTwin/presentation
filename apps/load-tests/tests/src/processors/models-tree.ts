@@ -29,7 +29,7 @@ export function createModelsTreeRequestParams(requestParams: RequestParams, cont
   requestParams.body = JSON.stringify([
     {
       iTwinId: Guid.empty,
-      iModelId: context.vars.iModelId,
+      iModelId: Guid.empty,
       key: context.vars.iModelPath,
       changeset: { index: 0, id: "" },
     },

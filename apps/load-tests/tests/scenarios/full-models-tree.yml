@@ -1,5 +1,5 @@
 config:
-  target: "http://localhost:3001/presentation-test-app/v1.0/mode/1/context/00000000-0000-0000-0000-000000000000"
+  target: "http://localhost:3001/presentation-test-app/v1.0/mode/1/context/00000000-0000-0000-0000-000000000000/imodel/00000000-0000-0000-0000-000000000000/changeset/0"
 
   http:
     maxSockets: 5
@@ -7,16 +7,14 @@ config:
     extendedMetrics: false
 
   phases:
-    - duration: 60
-      arrivalRate: 100
-      maxVusers: 200
-      name: Sustained load
+    - duration: 1
+      arrivalRate: 10
+      name: "10 users"
 
   payload:
     path: "./datasets.csv"
     fields:
       - "iModelPath"
-      - "iModelId"
     order: sequence
     loadAll: true
 
@@ -32,8 +30,8 @@ scenarios:
     flow:
       - loop:
           - post:
-              ifTrue: "iModelId"
-              url: "/imodel/{{ iModelId }}/changeset/0/{{ operationGetNodes }}"
+              ifTrue: "iModelPath"
+              url: "/{{ operationGetNodes }}"
               beforeRequest: "createModelsTreeRequestParams"
               afterResponse: "extractNodeKeysFromNodesResponse"
         whileTrue: "hasParentNodeKeys"
