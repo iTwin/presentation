@@ -5,158 +5,267 @@
 
 import { expect } from "chai";
 import * as sinon from "sinon";
+import { PrimitiveValue, PropertyRecord } from "@itwin/appui-abstract";
 import { PropertyCategory } from "@itwin/components-react";
 import { using } from "@itwin/core-bentley";
-import { ModelProps } from "@itwin/core-common";
-import { IModelConnection, SnapshotConnection } from "@itwin/core-frontend";
-import { KeySet, RuleTypes } from "@itwin/presentation-common";
-import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider } from "@itwin/presentation-components";
+import { InstanceKey, KeySet, RuleTypes } from "@itwin/presentation-common";
+import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider, PresentationPropertyDataProviderProps } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
+import { buildTestIModel } from "@itwin/presentation-testing";
+import { insertExternalSourceAspect, insertPhysicalElement, insertPhysicalModel, insertRepositoryLink, insertSpatialCategory } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 
 describe("PropertyDataProvider", async () => {
-  let imodel: IModelConnection;
-  let provider: PresentationPropertyDataProvider;
-  let physicalModelProps: ModelProps;
-
   before(async () => {
     await initialize();
-
-    const testIModelName: string = "assets/datasets/Properties_60InstancesWithUrl2.ibim";
-    imodel = await SnapshotConnection.openFile(testIModelName);
-    physicalModelProps = (await imodel.models.queryProps({ from: "bis.PhysicalModel" }))[0];
   });
 
   after(async () => {
-    await imodel.close();
     await terminate();
   });
 
-  beforeEach(() => {
-    provider = new PresentationPropertyDataProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET });
-  });
+  const runTests = (configName: string, setup: (proider: PresentationPropertyDataProvider) => void) => {
+    const createProvider = (props: PresentationPropertyDataProviderProps) => {
+      const provider = new PresentationPropertyDataProvider(props);
+      setup(provider);
+      return provider;
+    };
 
-  afterEach(() => {
-    provider.dispose();
-  });
-
-  const runTests = (configName: string, setup: () => void) => {
     describe(configName, () => {
-      beforeEach(setup);
-
       afterEach(() => {
         sinon.restore();
       });
 
-      it("creates empty result when properties requested for 0 instances", async () => {
-        provider.keys = new KeySet();
-        const properties = await provider.getData();
-        expect(properties).to.matchSnapshot();
-      });
-
-      it("creates property data when given key with concrete class", async () => {
-        provider.keys = new KeySet([physicalModelProps]);
-        const properties = await provider.getData();
-        expect(properties).to.matchSnapshot();
-      });
-
-      it("creates property data when given key with base class", async () => {
-        provider.keys = new KeySet([{ className: "BisCore:Element", id: "0x75" }]);
-        const properties = await provider.getData();
-        expect(properties).to.matchSnapshot();
-      });
-
-      it("favorites properties", async () => {
-        sinon.stub(provider as any, "isFieldFavorite").returns(true);
-        provider.keys = new KeySet([physicalModelProps]);
-        const properties = await provider.getData();
-        expect(properties).to.matchSnapshot();
-      });
-
-      it("overrides default property category", async () => {
-        provider.dispose();
-        provider = new PresentationPropertyDataProvider({
-          imodel,
-          ruleset: {
-            ...DEFAULT_PROPERTY_GRID_RULESET,
-            rules: [
-              ...DEFAULT_PROPERTY_GRID_RULESET.rules,
-              {
-                ruleType: RuleTypes.DefaultPropertyCategoryOverride,
-                specification: {
-                  id: "default",
-                  label: "Custom Category",
-                  description: "Custom description",
-                  autoExpand: true,
-                },
-              },
-              {
-                ruleType: RuleTypes.ContentModifier,
-                propertyOverrides: [
-                  {
-                    name: "UserLabel",
-                    isDisplayed: true,
-                  },
-                ],
-              },
-            ],
-          },
+      it("creates empty result when properties requested for 0 instances", async function () {
+        const imodel = await buildTestIModel(this, (builder) => {
+          insertSpatialCategory(builder, "My Category");
         });
-        provider.keys = new KeySet([{ className: "BisCore:Element", id: "0x1" }]);
-        const properties = await provider.getData();
-        expect(properties).to.matchSnapshot();
+        await using(createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET }), async (provider) => {
+          provider.keys = new KeySet();
+          const properties = await provider.getData();
+          expect(properties.records).to.be.empty;
+        });
       });
 
-      it("finds root property record keys", async () => {
-        provider.keys = new KeySet([{ className: "BisCore:Element", id: "0x75" }]);
-        const properties = await provider.getData();
-
-        const category = properties.categories.find((c) => c.name === "/selected-item/");
-        expect(category).to.not.be.undefined;
-
-        const record = properties.records[category!.name].find((r) => r.property.displayLabel === "Code");
-        expect(record).to.not.be.undefined;
-
-        const keys = await provider.getPropertyRecordInstanceKeys(record!);
-        expect(keys).to.deep.eq([{ className: "Generic:PhysicalObject", id: "0x75" }]);
+      it("creates property data when given key with concrete class", async function () {
+        let categoryKey: InstanceKey;
+        let modelKey: InstanceKey;
+        let elementKey: InstanceKey;
+        const imodel = await buildTestIModel(this, (builder) => {
+          categoryKey = insertSpatialCategory(builder, "My Category");
+          modelKey = insertPhysicalModel(builder, "My Model");
+          elementKey = insertPhysicalElement(builder, "My Element", modelKey.id, categoryKey.id);
+        });
+        await using(createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET }), async (provider) => {
+          provider.keys = new KeySet([elementKey]);
+          const properties = await provider.getData();
+          expect((properties.label.value as PrimitiveValue).displayValue).to.contain("My Element");
+          validateRecords(properties.records["/selected-item/"], [
+            {
+              propName: "CodeValue",
+              valueComparer: (value) => expect(value.value).to.be.undefined,
+            },
+            {
+              propName: "UserLabel",
+              valueComparer: (value) => expect(value.value).to.be.eq("My Element"),
+            },
+            {
+              propName: "Model",
+              valueComparer: (value) => expect((value.value as InstanceKey).id).to.be.eq(modelKey.id),
+            },
+            {
+              propName: "Category",
+              valueComparer: (value) => expect((value.value as InstanceKey).id).to.be.eq(categoryKey.id),
+            },
+          ]);
+        });
       });
 
-      it("finds nested property record keys", async () => {
-        provider.keys = new KeySet([{ className: "BisCore:Element", id: "0x75" }]);
-        const properties = await provider.getData();
+      it("creates property data when given key with base class", async function () {
+        let categoryKey: InstanceKey;
+        let modelKey: InstanceKey;
+        let elementKey: InstanceKey;
+        const imodel = await buildTestIModel(this, (builder) => {
+          categoryKey = insertSpatialCategory(builder, "My Category");
+          modelKey = insertPhysicalModel(builder, "My Model");
+          elementKey = insertPhysicalElement(builder, "My Element", modelKey.id, categoryKey.id);
+        });
+        await using(createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET }), async (provider) => {
+          provider.keys = new KeySet([{ className: "BisCore:Element", id: elementKey.id }]);
+          const properties = await provider.getData();
+          expect((properties.label.value as PrimitiveValue).displayValue).to.contain("My Element");
+          validateRecords(properties.records["/selected-item/"], [
+            {
+              propName: "CodeValue",
+              valueComparer: (value) => expect(value.value).to.be.undefined,
+            },
+            {
+              propName: "UserLabel",
+              valueComparer: (value) => expect(value.value).to.be.eq("My Element"),
+            },
+            {
+              propName: "Model",
+              valueComparer: (value) => expect((value.value as InstanceKey).id).to.be.eq(modelKey.id),
+            },
+            {
+              propName: "Category",
+              valueComparer: (value) => expect((value.value as InstanceKey).id).to.be.eq(categoryKey.id),
+            },
+          ]);
+        });
+      });
 
-        function findNestedCategory(categories: PropertyCategory[], label: string): PropertyCategory | undefined {
-          for (const c of categories) {
-            if (c.label === label) {
-              return c;
-            }
+      it("favorites properties", async function () {
+        let categoryKey: InstanceKey;
+        const imodel = await buildTestIModel(this, (builder) => {
+          categoryKey = insertSpatialCategory(builder, "My Category");
+        });
+        await using(createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET }), async (provider) => {
+          sinon.stub(provider as any, "isFieldFavorite").returns(true);
+          provider.keys = new KeySet([categoryKey]);
+          const properties = await provider.getData();
+          const favoriteCategoryName = provider.isNestedPropertyCategoryGroupingEnabled ? "Favorite-/selected-item/" : "Favorite";
+          validateRecords(properties.records["/selected-item/"], [
+            {
+              propName: "CodeValue",
+            },
+            {
+              propName: "UserLabel",
+            },
+            {
+              propName: "Model",
+            },
+          ]);
+          validateRecords(properties.records[favoriteCategoryName], [
+            {
+              propName: "CodeValue",
+            },
+            {
+              propName: "UserLabel",
+            },
+            {
+              propName: "Model",
+            },
+          ]);
+        });
+      });
 
-            const nested = findNestedCategory(c.childCategories ?? [], label);
-            if (nested) {
-              return nested;
+      it("overrides default property category", async function () {
+        let categoryKey: InstanceKey;
+        const imodel = await buildTestIModel(this, (builder) => {
+          categoryKey = insertSpatialCategory(builder, "My Category");
+        });
+        await using(
+          createProvider({
+            imodel,
+            ruleset: {
+              ...DEFAULT_PROPERTY_GRID_RULESET,
+              rules: [
+                ...DEFAULT_PROPERTY_GRID_RULESET.rules,
+                {
+                  ruleType: RuleTypes.DefaultPropertyCategoryOverride,
+                  specification: {
+                    id: "default",
+                    label: "Custom Category",
+                    description: "Custom description",
+                    autoExpand: true,
+                  },
+                },
+              ],
+            },
+          }),
+          async (provider) => {
+            provider.keys = new KeySet([categoryKey]);
+            const properties = await provider.getData();
+            expect(properties.categories.find((category) => category.name === "default")?.label).to.be.eq("Custom Category");
+            validateRecords(properties.records.default, [
+              {
+                propName: "CodeValue",
+              },
+              {
+                propName: "UserLabel",
+              },
+              {
+                propName: "Model",
+              },
+            ]);
+          },
+        );
+      });
+
+      it("finds root property record keys", async function () {
+        let categoryKey: InstanceKey;
+        const imodel = await buildTestIModel(this, (builder) => {
+          categoryKey = insertSpatialCategory(builder, "My Category");
+        });
+
+        await using(createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET }), async (provider) => {
+          provider.keys = new KeySet([categoryKey]);
+          const properties = await provider.getData();
+
+          const category = properties.categories.find((c) => c.name === "/selected-item/");
+          expect(category).to.not.be.undefined;
+
+          const record = properties.records[category!.name].find((r) => r.property.displayLabel === "Code");
+          expect(record).to.not.be.undefined;
+
+          const keys = await provider.getPropertyRecordInstanceKeys(record!);
+          expect(keys).to.deep.eq([categoryKey]);
+        });
+      });
+
+      it("finds nested property record keys", async function () {
+        let elementKey: InstanceKey;
+        let repositoryLinkKey: InstanceKey;
+        const imodel = await buildTestIModel(this, (builder) => {
+          const categoryKey = insertSpatialCategory(builder, "My Category");
+          const modelKey = insertPhysicalModel(builder, "My Model");
+          elementKey = insertPhysicalElement(builder, "My Element", modelKey.id, categoryKey.id);
+          repositoryLinkKey = insertRepositoryLink(builder, "Repository URl", "Repository Label");
+          insertExternalSourceAspect(builder, elementKey.id, repositoryLinkKey.id);
+        });
+
+        await using(createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET }), async (provider) => {
+          provider.keys = new KeySet([elementKey]);
+          const properties = await provider.getData();
+
+          function findNestedCategory(categories: PropertyCategory[], name: string): PropertyCategory | undefined {
+            for (const c of categories) {
+              if (c.name === name) {
+                return c;
+              }
+
+              const nested = findNestedCategory(c.childCategories ?? [], name);
+              if (nested) {
+                return nested;
+              }
             }
+            return undefined;
           }
-          return undefined;
-        }
-        const category = findNestedCategory(properties.categories, "workingUnitsProp");
-        expect(category).to.not.be.undefined;
+          const category = findNestedCategory(properties.categories, "/selected-item/-source_information");
+          expect(category).to.not.be.undefined;
 
-        const record = properties.records[category!.name].find((r) => r.property.displayLabel === "Distance");
-        expect(record).to.not.be.undefined;
+          const record = properties.records[category!.name].find((r) => r.property.displayLabel === "Path");
+          expect(record).to.not.be.undefined;
 
-        const keys = await provider.getPropertyRecordInstanceKeys(record!);
-        expect(keys).to.deep.eq([{ className: "DgnCustomItemTypes_MyProp:workingUnitsPropElementAspect", id: "0x24" }]);
+          const keys = await provider.getPropertyRecordInstanceKeys(record!);
+          expect(keys).to.deep.eq([repositoryLinkKey]);
+        });
       });
     });
   };
 
-  runTests("with flat property categories", () => (provider.isNestedPropertyCategoryGroupingEnabled = false));
-  runTests("with nested property categories", () => (provider.isNestedPropertyCategoryGroupingEnabled = true));
+  runTests("with flat property categories", (provider) => (provider.isNestedPropertyCategoryGroupingEnabled = false));
+  runTests("with nested property categories", (provider) => (provider.isNestedPropertyCategoryGroupingEnabled = true));
 
-  it("gets property data after re-initializing Presentation", async () => {
+  it("gets property data after re-initializing Presentation", async function () {
+    let categoryKey: InstanceKey;
+    const imodel = await buildTestIModel(this, (builder) => {
+      categoryKey = insertSpatialCategory(builder, "My Category");
+    });
     const checkDataProvider = async () => {
       await using(new PresentationPropertyDataProvider({ imodel }), async (p) => {
-        p.keys = new KeySet([physicalModelProps]);
+        p.keys = new KeySet([categoryKey]);
         const properties = await p.getData();
         expect(properties.categories).to.not.be.empty;
       });
@@ -177,3 +286,13 @@ describe("PropertyDataProvider", async () => {
     await checkDataProvider();
   });
 });
+
+function validateRecords(records: PropertyRecord[], expectations: Array<{ propName: string; valueComparer?: (value: PrimitiveValue) => void }>) {
+  for (const { propName, valueComparer } of expectations) {
+    const record = records.find((rec) => rec.property.name.endsWith(propName));
+    if (!record) {
+      throw new Error(`Failed to find PropertyRecord for property - ${propName}`);
+    }
+    valueComparer?.(record.value as PrimitiveValue);
+  }
+}
