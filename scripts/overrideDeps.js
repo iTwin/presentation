@@ -25,6 +25,7 @@ const corePackages = [
   "@itwin/core-i18n",
   "@itwin/core-orbitgt",
   "@itwin/core-quantity",
+  "@itwin/ecschema-metadata",
   "@itwin/eslint-plugin",
   "@itwin/express-server",
   "@itwin/presentation-backend",
@@ -55,7 +56,7 @@ function override(packageJsonPath, coreVersion, uiVersion) {
     throw new Error(`Failed to read package.json content at ${packagesJsonPath}`);
   }
 
-  pkgJsonData.pnpm = { overrides: getOverrides(coreVersion, uiVersion) };
+  pkgJsonData.pnpm = { ...pkgJsonData.pnpm, overrides: { ...pkgJsonData.pnpm?.overrides, ...getOverrides(coreVersion, uiVersion) } };
   fs.writeFileSync(packageJsonPath, JSON.stringify(pkgJsonData, undefined, 2), { encoding: "utf8" });
 }
 
