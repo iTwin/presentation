@@ -54,15 +54,5 @@
     "pnpm": ">=7",
     "npm": "<0",
     "node": ">=16"
-  },
-  "pnpm": {
-    "overrides": {
-      "typedoc": "^0.23.28",
-      "typedoc-plugin-merge-modules": "^4.0.1",
-      "eslint-plugin-deprecation": "^1.4.0",
-      "eslint-plugin-import": "^2.24.5",
-      "eslint-plugin-jsdoc": "^40.1.1",
-      "eslint-plugin-jsx-a11y": "^6.7.1"
-    }
   }
 }
