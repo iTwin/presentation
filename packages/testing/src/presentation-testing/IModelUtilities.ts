@@ -128,5 +128,5 @@ function setupOutputFileLocation(fileName: string): LocalFileName {
 
 /** @internal */
 export function createFileNameFromString(str: string) {
-  return sanitize(str.replace(" ", "-")).toLocaleLowerCase();
+  return sanitize(str.replace(/[ ]+/g, "-")).toLocaleLowerCase();
 }
