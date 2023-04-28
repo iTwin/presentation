@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Replace all spaces in test name when creating test iModel.",
+  "packageName": "@itwin/presentation-testing",
+  "email": "24278440+saskliutas@users.noreply.github.com",
+  "dependentChangeType": "patch"
+}
