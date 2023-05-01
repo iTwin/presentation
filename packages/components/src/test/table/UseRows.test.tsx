@@ -169,7 +169,7 @@ describe("useRows", () => {
   });
 
   it("throws in React render loop on failure to get content", async () => {
-    presentationManagerMock.setup(async (x) => x.getContentAndSize(moq.It.isAny())).returns(async () => undefined);
+    presentationManagerMock.setup(async (x) => x.getContentAndSize(moq.It.isAny())).throws(new Error("Failed to load"));
 
     const errorSpy = sinon.spy();
     function TestComponent() {
@@ -183,8 +183,16 @@ describe("useRows", () => {
     );
 
     await waitFor(() => {
-      expect(errorSpy).to.be.calledOnce.and.calledWith(sinon.match((error: Error) => error.message === "Failed to load table rows."));
+      expect(errorSpy).to.be.calledOnce.and.calledWith(sinon.match((error: Error) => error.message === "Failed to load"));
     });
+  });
+
+  it("returns empty rows list if there are no content", async () => {
+    presentationManagerMock.setup(async (x) => x.getContentAndSize(moq.It.isAny())).returns(async () => undefined);
+    const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps });
+
+    await waitFor(() => expect(result.current.isLoading).to.be.false);
+    expect(result.current.rows).to.have.lengthOf(0);
   });
 
   it("returns empty rows list if key set is empty", async () => {

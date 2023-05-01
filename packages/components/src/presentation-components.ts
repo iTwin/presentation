@@ -39,7 +39,7 @@ export * from "./presentation-components/properties/NavigationPropertyEditor";
  * @module PropertyGrid
  *
  * @docs-group-description PropertyGrid
- * Presentation features for [PropertyGrid]($components-react) component.
+ * Presentation features for [VirtualizedPropertyGrid]($components-react) component.
  */
 export * from "./presentation-components/propertygrid/DataProvider";
 export * from "./presentation-components/propertygrid/FavoritePropertiesDataFilterer";

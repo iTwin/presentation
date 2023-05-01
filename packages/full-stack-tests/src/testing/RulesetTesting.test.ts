@@ -142,6 +142,52 @@ const MY_CONTENT_RULESET: Ruleset = {
         },
       ],
     },
+    {
+      ruleType: RuleTypes.ContentModifier,
+      class: { schemaName: "Generic", className: "PhysicalObject" },
+      propertyOverrides: [
+        {
+          name: "Model",
+          isDisplayed: false,
+        },
+        {
+          name: "Category",
+          isDisplayed: false,
+        },
+      ],
+      relatedProperties: [
+        {
+          propertiesSource: [
+            {
+              relationship: {
+                schemaName: "BisCore",
+                className: "ModelContainsElements",
+              },
+              direction: "Backward",
+            },
+            {
+              relationship: {
+                schemaName: "BisCore",
+                className: "ModelModelsElement",
+              },
+              direction: "Forward",
+            },
+            {
+              relationship: {
+                schemaName: "BisCore",
+                className: "ElementHasLinks",
+              },
+              targetClass: {
+                schemaName: "BisCore",
+                className: "RepositoryLink",
+              },
+              direction: "Forward",
+            },
+          ],
+          properties: "_none_",
+        },
+      ],
+    },
   ],
 };
 

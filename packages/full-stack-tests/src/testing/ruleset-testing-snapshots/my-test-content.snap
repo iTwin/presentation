@@ -3,23 +3,6 @@
 exports[`Generic:PhysicalObject-0x74`] = `
 Array [
   PropertyRecord {
-    "description": "Properties_60InstancesWithUrl2",
-    "isReadonly": true,
-    "property": Object {
-      "displayLabel": "Model",
-      "name": "pc_bis_Element_Model",
-      "typename": "navigation",
-    },
-    "value": Object {
-      "displayValue": "Properties_60InstancesWithUrl2",
-      "value": Object {
-        "className": "BisCore:PhysicalModel",
-        "id": "0x1c",
-      },
-      "valueFormat": 0,
-    },
-  },
-  PropertyRecord {
     "property": Object {
       "displayLabel": "Code",
       "name": "pc_bis_Element_CodeValue",
@@ -40,23 +23,6 @@ Array [
     "value": Object {
       "displayValue": "",
       "value": undefined,
-      "valueFormat": 0,
-    },
-  },
-  PropertyRecord {
-    "description": "Uncategorized",
-    "isReadonly": true,
-    "property": Object {
-      "displayLabel": "Category",
-      "name": "pc_bis_GeometricElement3d_Category",
-      "typename": "navigation",
-    },
-    "value": Object {
-      "displayValue": "Uncategorized",
-      "value": Object {
-        "className": "BisCore:SpatialCategory",
-        "id": "0x17",
-      },
       "valueFormat": 0,
     },
   },
@@ -539,59 +505,6 @@ Array [
         },
       ],
       "itemsTypeName": "workingUnitsProp",
-      "valueFormat": 1,
-    },
-  },
-  PropertyRecord {
-    "isReadonly": true,
-    "property": Object {
-      "displayLabel": "Repository Link",
-      "name": "rc_generic_PhysicalObject_bis_PhysicalModel_bis_PhysicalPartition_ncc_bis_RepositoryLink",
-      "typename": "Repository Link[]",
-    },
-    "value": Object {
-      "items": Array [
-        PropertyRecord {
-          "isReadonly": true,
-          "property": Object {
-            "displayLabel": "Repository Link",
-            "name": "rc_generic_PhysicalObject_bis_PhysicalModel_bis_PhysicalPartition_ncc_bis_RepositoryLink",
-            "typename": "Repository Link",
-          },
-          "value": Object {
-            "members": Object {
-              "pc_bis_Element_UserLabel_2": PropertyRecord {
-                "description": "Properties_60InstancesWithUrl2.dgn",
-                "property": Object {
-                  "displayLabel": "Name",
-                  "name": "rc_generic_PhysicalObject_bis_PhysicalModel_bis_PhysicalPartition_ncc_bis_RepositoryLink$pc_bis_Element_UserLabel_2",
-                  "typename": "string",
-                },
-                "value": Object {
-                  "displayValue": "Properties_60InstancesWithUrl2.dgn",
-                  "value": "Properties_60InstancesWithUrl2.dgn",
-                  "valueFormat": 0,
-                },
-              },
-              "pc_bis_UrlLink_Url": PropertyRecord {
-                "description": "file:///d|/temp/properties_60instanceswithurl2.dgn",
-                "property": Object {
-                  "displayLabel": "Path",
-                  "name": "rc_generic_PhysicalObject_bis_PhysicalModel_bis_PhysicalPartition_ncc_bis_RepositoryLink$pc_bis_UrlLink_Url",
-                  "typename": "string",
-                },
-                "value": Object {
-                  "displayValue": "file:///d|/temp/properties_60instanceswithurl2.dgn",
-                  "value": "file:///d|/temp/properties_60instanceswithurl2.dgn",
-                  "valueFormat": 0,
-                },
-              },
-            },
-            "valueFormat": 2,
-          },
-        },
-      ],
-      "itemsTypeName": "Repository Link",
       "valueFormat": 1,
     },
   },

@@ -12,11 +12,11 @@
     "start:electron-backend": "npm run start:electron --prefix ./apps/test-app/backend",
     "build:all": "lage build",
     "build:test-app": "lage build --to @test-app/*",
-    "clean": "npm run -s clean-docs && lage clean",
+    "clean:all": "npm run -s clean-docs && lage clean",
     "clean-docs": "rimraf build",
     "generate-docs": "lage docs",
-    "cover": "lage cover --continue",
-    "lint": "lage lint --continue",
+    "cover:all": "lage cover --continue",
+    "lint:all": "lage lint --continue",
     "lint:copyright": "node scripts/copyrightLinter.js",
     "prepare": "husky install",
     "change": "beachball change",
@@ -40,14 +40,18 @@
     "yargs": "~17.6.2"
   },
   "lint-staged": {
-    "*.{tsx,ts,jsx,js,scss,css,html}": [
+    "./{apps, packages}/**/*.{tsx,ts,jsx,js,scss,css,html}": [
       "pnpm lint:copyright --fix",
       "eslint --fix",
+      "prettier --write --ignore-unknown"
+    ],
+    "./scripts/*.js": [
+      "pnpm lint:copyright --fix",
       "prettier --write --ignore-unknown"
     ]
   },
   "engines": {
-    "pnpm": ">=6",
+    "pnpm": ">=7",
     "npm": "<0",
     "node": ">=16"
   },
