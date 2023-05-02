@@ -1,6 +1,33 @@
 # Change Log - @itwin/presentation-testing
 
-This log was last generated on Tue, 25 Apr 2023 17:50:35 GMT and should not be manually modified.
+This log was last generated on Tue, 02 May 2023 11:39:31 GMT and should not be manually modified.
+
+<!-- Start content -->
+
+## 4.0.0
+
+Tue, 02 May 2023 11:39:31 GMT
+
+### Major changes
+
+- Upgrade to AppUI 4.0 ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+
+### Minor changes
+
+- Add a `buildTestIModel` overload that generates imodel name from mocha context ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- Change `TestIModelBuilder.insertAspect` to return inserted aspect id. ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- Add `TestIModelBuilder.insertRelationship` ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- Bump minimum required `itwinjs-core` version to `3.6.3` ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+
+### Patches
+
+- Reduce deprecated API usage ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- Replace all spaces in test name when creating test iModel. ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+
+### Changes
+
+- Update dependencies ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- Updated to TypeScript 5.0 ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
 
 ## 3.7.4
 

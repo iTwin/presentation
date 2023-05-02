@@ -2,6 +2,53 @@
   "name": "@itwin/presentation-opentelemetry",
   "entries": [
     {
+      "date": "Tue, 02 May 2023 11:39:31 GMT",
+      "tag": "@itwin/presentation-opentelemetry_v4.0.0",
+      "version": "4.0.0",
+      "comments": {
+        "major": [
+          {
+            "author": "35135765+grigasp@users.noreply.github.com",
+            "package": "@itwin/presentation-opentelemetry",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "**BREAKING CHANGE:** Remove `convertToReadableSpans` function in favor of `exportDiagnostics`."
+          },
+          {
+            "author": "GytisCepk@users.noreply.github.com",
+            "package": "@itwin/presentation-opentelemetry",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Drop Node 12 and Node 14."
+          },
+          {
+            "author": "GytisCepk@users.noreply.github.com",
+            "package": "@itwin/presentation-opentelemetry",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Drop Node 16 support."
+          }
+        ],
+        "none": [
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-opentelemetry",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Bump dependencies"
+          },
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-opentelemetry",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Bump deps"
+          },
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-opentelemetry",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Update peerDependencies versions"
+          }
+        ]
+      }
+    },
+    {
       "version": "3.7.4",
       "tag": "@itwin/presentation-opentelemetry_v3.7.4",
       "date": "Tue, 25 Apr 2023 17:50:35 GMT",

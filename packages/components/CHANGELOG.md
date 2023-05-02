@@ -1,6 +1,44 @@
 # Change Log - @itwin/presentation-components
 
-This log was last generated on Tue, 25 Apr 2023 17:50:35 GMT and should not be manually modified.
+This log was last generated on Tue, 02 May 2023 11:39:31 GMT and should not be manually modified.
+
+<!-- Start content -->
+
+## 4.0.0
+
+Tue, 02 May 2023 11:39:31 GMT
+
+### Major changes
+
+- Upgrade to AppUI 4.0 ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+
+### Minor changes
+
+- Deprecate `IContentDataProvider.getFieldByPropertyRecord` in favor of the new `IContentDataProvider.getFieldByPropertyDescription`. ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- Unified hierarchy update handling in all situations (after iModel change, ruleset change or ruleset variables change) ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- Add support for hierarchy level size limiting ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- Updated `@itwinui-react` package to `^2.5.0` ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- Prepared package to be used with React 18. Updated React `peerDependency` to `^17.0.0 || ^18.0.0` ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- Bump minimum required `itwinjs-core` version to `3.6.3` ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- Added custom hook to get Presentation data for displaying it in table components. ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- `IPresentationTreeDataProvider`: deprecated `getNodeKey` method in favor of getting `NodeKey` directly from `TreeNodeItem` using `isPresentationTreeNodeItem` typeguard. ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+
+### Patches
+
+- Fixed Table rows not loading with latest `presentation-frontend` version ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- `PresentationTreeNodeRenderer`: ensure that the action buttons have the same background color as the node ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- Set editor to `StandardEditorNames.NumericInput` for all numeric properties ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- `NavigationPropertyTargetSelector`: add white background to the chevron ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- `InstanceFilterDialog`: Ensure "Accept" button is enabled when opening the dialog with pre-filled values ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- Fix failure to load property data when nested properties are placed in root categories different from their parent property category ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- `PresentationTreeDataProvider`: Handle errors that may occur when loading nodes ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- Fixed styles in `PresentationInstanceFilterBuilder` component. ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- Fixed `usePresentationTable` to re -throw errors in React render loop on failure to get table content. Also affects `usePresentationTableWithUnifiedSelection` hook. ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+
+### Changes
+
+- Updated to TypeScript 5.0 ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- Update dependencies ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
 
 ## 3.7.4
 

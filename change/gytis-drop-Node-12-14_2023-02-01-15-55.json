@@ -1,7 +1,0 @@
-{
-  "type": "major",
-  "comment": "Drop Node 12 and Node 14.",
-  "packageName": "@itwin/presentation-opentelemetry",
-  "email": "GytisCepk@users.noreply.github.com",
-  "dependentChangeType": "none"
-}

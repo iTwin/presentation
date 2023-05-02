@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Reduce deprecated API usage",
-  "packageName": "@itwin/presentation-testing",
-  "email": "35135765+grigasp@users.noreply.github.com",
-  "dependentChangeType": "patch"
-}

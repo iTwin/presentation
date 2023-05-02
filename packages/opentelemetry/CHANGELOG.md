@@ -1,6 +1,18 @@
 # Change Log - @itwin/presentation-opentelemetry
 
-This log was last generated on Tue, 25 Apr 2023 17:50:35 GMT and should not be manually modified.
+This log was last generated on Tue, 02 May 2023 11:39:31 GMT and should not be manually modified.
+
+<!-- Start content -->
+
+## 4.0.0
+
+Tue, 02 May 2023 11:39:31 GMT
+
+### Major changes
+
+- **BREAKING CHANGE:** Remove `convertToReadableSpans` function in favor of `exportDiagnostics`. ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- Drop Node 12 and Node 14. ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- Drop Node 16 support. ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
 
 ## 3.7.4
 

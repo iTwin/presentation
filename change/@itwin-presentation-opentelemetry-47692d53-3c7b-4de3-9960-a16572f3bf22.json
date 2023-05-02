@@ -1,7 +1,0 @@
-{
-  "type": "major",
-  "comment": "**BREAKING CHANGE:** Remove `convertToReadableSpans` function in favor of `exportDiagnostics`.",
-  "packageName": "@itwin/presentation-opentelemetry",
-  "email": "35135765+grigasp@users.noreply.github.com",
-  "dependentChangeType": "patch"
-}

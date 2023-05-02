@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Deprecate `IContentDataProvider.getFieldByPropertyRecord` in favor of the new `IContentDataProvider.getFieldByPropertyDescription`.",
-  "packageName": "@itwin/presentation-components",
-  "email": "35135765+grigasp@users.noreply.github.com",
-  "dependentChangeType": "patch"
-}
