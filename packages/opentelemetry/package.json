@@ -39,7 +39,7 @@
     "test": "mocha --config ./.mocharc.json \"./lib/cjs/test/**/*.test.js\""
   },
   "peerDependencies": {
-    "@itwin/presentation-common": "^3.6.3 || ^4.0.0-dev.90",
+    "@itwin/presentation-common": "^3.6.3 || ^4.0.0",
     "@opentelemetry/api": "^1.0.4"
   },
   "devDependencies": {
