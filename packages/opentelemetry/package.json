@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-opentelemetry",
-  "version": "4.0.0-dev.80",
+  "version": "4.0.0",
   "description": "Utilities to enable OpenTelemetry tracing of Presentation requests",
   "license": "MIT",
   "engines": {
@@ -39,18 +39,18 @@
     "test": "mocha --config ./.mocharc.json \"./lib/cjs/test/**/*.test.js\""
   },
   "peerDependencies": {
-    "@itwin/presentation-common": "^3.6.3 || ^4.0.0-dev.85",
+    "@itwin/presentation-common": "^3.6.3 || ^4.0.0",
     "@opentelemetry/api": "^1.0.4"
   },
   "devDependencies": {
-    "@itwin/build-tools": "^4.0.0-dev.85",
-    "@itwin/core-bentley": "^4.0.0-dev.85",
-    "@itwin/core-common": "^4.0.0-dev.85",
-    "@itwin/core-geometry": "^4.0.0-dev.85",
-    "@itwin/core-quantity": "^4.0.0-dev.85",
-    "@itwin/ecschema-metadata": "^4.0.0-dev.85",
-    "@itwin/eslint-plugin": "^4.0.0-dev.35",
-    "@itwin/presentation-common": "^4.0.0-dev.85",
+    "@itwin/build-tools": "^4.0.0-dev.90",
+    "@itwin/core-bentley": "^4.0.0-dev.90",
+    "@itwin/core-common": "^4.0.0-dev.90",
+    "@itwin/core-geometry": "^4.0.0-dev.90",
+    "@itwin/core-quantity": "^4.0.0-dev.90",
+    "@itwin/ecschema-metadata": "^4.0.0-dev.90",
+    "@itwin/eslint-plugin": "^4.0.0-dev.38",
+    "@itwin/presentation-common": "^4.0.0-dev.90",
     "@opentelemetry/api": "1.0.4",
     "@types/chai": "4.3.1",
     "@types/mocha": "^8.2.2",

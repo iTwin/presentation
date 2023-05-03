@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Add a `buildTestIModel` overload that generates imodel name from mocha context",
-  "packageName": "@itwin/presentation-testing",
-  "email": "35135765+grigasp@users.noreply.github.com",
-  "dependentChangeType": "patch"
-}

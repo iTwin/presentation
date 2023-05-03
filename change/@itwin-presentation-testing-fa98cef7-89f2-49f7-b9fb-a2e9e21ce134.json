@@ -1,7 +1,0 @@
-{
-  "type": "prerelease",
-  "comment": "Updated to TypeScript 5.0",
-  "packageName": "@itwin/presentation-testing",
-  "email": "33036725+wgoehrig@users.noreply.github.com",
-  "dependentChangeType": "patch"
-}

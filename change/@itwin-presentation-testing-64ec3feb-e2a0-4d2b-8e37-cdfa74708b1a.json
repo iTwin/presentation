@@ -1,7 +1,0 @@
-{
-  "type": "none",
-  "comment": "Add `@opentelemetry/api` dev dependency",
-  "packageName": "@itwin/presentation-testing",
-  "email": "35135765+grigasp@users.noreply.github.com",
-  "dependentChangeType": "none"
-}

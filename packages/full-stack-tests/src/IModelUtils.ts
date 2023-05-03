@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Id64, Id64String } from "@itwin/core-bentley";
-import { BisCodeSpec, Code, IModel, PhysicalElementProps } from "@itwin/core-common";
+import { BisCodeSpec, Code, ExternalSourceAspectProps, ExternalSourceProps, IModel, PhysicalElementProps, RepositoryLinkProps } from "@itwin/core-common";
 import { TestIModelBuilder } from "@itwin/presentation-testing";
 
 export function insertSubject(builder: TestIModelBuilder, label: string, parentId?: Id64String) {
@@ -89,5 +89,40 @@ export function insertPhysicalElement(builder: TestIModelBuilder, label: string,
         }
       : undefined),
   } as PhysicalElementProps);
+  return { className, id };
+}
+
+export function insertRepositoryLink(builder: TestIModelBuilder, repositoryUrl: string, repositoryLabel: string) {
+  const className = "BisCore:RepositoryLink";
+  const id = builder.insertElement({
+    classFullName: className,
+    model: IModel.repositoryModelId,
+    url: repositoryUrl,
+    userLabel: repositoryLabel,
+  } as RepositoryLinkProps);
+  return { className, id };
+}
+
+export function insertExternalSourceAspect(builder: TestIModelBuilder, elementId: Id64String, repositoryId: Id64String) {
+  const externalSourceId = builder.insertElement({
+    classFullName: "BisCore:ExternalSource",
+    model: IModel.repositoryModelId,
+    repository: {
+      id: repositoryId,
+    },
+  } as ExternalSourceProps);
+
+  const className = "BisCore:ExternalSourceAspect";
+  const id = builder.insertAspect({
+    classFullName: className,
+    kind: "ExternalSource",
+    element: {
+      id: elementId,
+    },
+    source: {
+      id: externalSourceId,
+    },
+  } as ExternalSourceAspectProps);
+
   return { className, id };
 }

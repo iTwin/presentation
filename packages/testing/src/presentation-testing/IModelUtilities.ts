@@ -34,7 +34,7 @@ export interface TestIModelBuilder {
   /** Insert an element into the builder's iModel */
   insertElement<TProps extends ElementProps>(props: TProps): Id64String;
   /** Insert an element aspect into the specified element */
-  insertAspect<TProps extends ElementAspectProps>(props: TProps): void;
+  insertAspect<TProps extends ElementAspectProps>(props: TProps): Id64String;
   /**
    * Insert a relationship between two instances. The relationship is expected to be a subclass
    * of `BisCore:ElementRefersToElements` or `BisCore:ElementDrivesElement`.
@@ -96,8 +96,8 @@ export class IModelBuilder implements TestIModelBuilder {
     return this._iModel.elements.insertElement(props);
   }
 
-  public insertAspect<TProps extends ElementAspectProps>(props: TProps): void {
-    this._iModel.elements.insertAspect(props);
+  public insertAspect<TProps extends ElementAspectProps>(props: TProps): Id64String {
+    return this._iModel.elements.insertAspect(props);
   }
 
   public insertRelationship<TProps extends RelationshipProps>(props: TProps): Id64String {
@@ -128,5 +128,5 @@ function setupOutputFileLocation(fileName: string): LocalFileName {
 
 /** @internal */
 export function createFileNameFromString(str: string) {
-  return sanitize(str.replace(" ", "-")).toLocaleLowerCase();
+  return sanitize(str.replace(/[ ]+/g, "-")).toLocaleLowerCase();
 }

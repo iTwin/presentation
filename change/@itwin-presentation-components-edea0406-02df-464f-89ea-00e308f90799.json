@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Fixed `usePresentationTable` to re -throw errors in React render loop on failure to get table content. Also affects `usePresentationTableWithUnifiedSelection` hook.",
-  "packageName": "@itwin/presentation-components",
-  "email": "35135765+grigasp@users.noreply.github.com",
-  "dependentChangeType": "patch"
-}

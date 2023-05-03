@@ -1,7 +1,0 @@
-{
-  "type": "major",
-  "comment": "Drop Node 16 support.",
-  "packageName": "@itwin/presentation-opentelemetry",
-  "email": "GytisCepk@users.noreply.github.com",
-  "dependentChangeType": "none"
-}

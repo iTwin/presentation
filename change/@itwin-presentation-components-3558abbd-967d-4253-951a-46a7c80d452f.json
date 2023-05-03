@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Add support for hierarchy level size limiting",
-  "packageName": "@itwin/presentation-components",
-  "email": "35135765+grigasp@users.noreply.github.com",
-  "dependentChangeType": "patch"
-}

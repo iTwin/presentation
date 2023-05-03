@@ -2,6 +2,245 @@
   "name": "@itwin/presentation-testing",
   "entries": [
     {
+      "date": "Tue, 02 May 2023 11:39:31 GMT",
+      "tag": "@itwin/presentation-testing_v4.0.0",
+      "version": "4.0.0",
+      "comments": {
+        "none": [
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Updated links in type documentation"
+          },
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Fix docs path"
+          },
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Standardize package.json"
+          },
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Restore docs generation"
+          },
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Reduce internal APIs usage"
+          },
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Bump deps"
+          },
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Bump dependencies"
+          },
+          {
+            "author": "35135765+grigasp@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Add `@opentelemetry/api` dev dependency"
+          },
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Update package version"
+          },
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Bump dependencies"
+          },
+          {
+            "author": "35135765+grigasp@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Update dependencies"
+          },
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Version bump"
+          },
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Update dependencies"
+          },
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Use prettier to format code"
+          },
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Update itwin packages"
+          },
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Update dependencies"
+          },
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Moved from itwinjs-core"
+          },
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Update license.md"
+          },
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Merge from itwinjs-core"
+          },
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Fix docs script"
+          }
+        ],
+        "minor": [
+          {
+            "author": "35135765+grigasp@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Add a `buildTestIModel` overload that generates imodel name from mocha context"
+          },
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Change `TestIModelBuilder.insertAspect` to return inserted aspect id."
+          },
+          {
+            "author": "35135765+grigasp@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Add `TestIModelBuilder.insertRelationship`"
+          },
+          {
+            "author": "35135765+grigasp@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Bump minimum required `itwinjs-core` version to `3.6.3`"
+          }
+        ],
+        "prerelease": [
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Update dependencies"
+          },
+          {
+            "author": "33036725+wgoehrig@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Updated to TypeScript 5.0"
+          }
+        ],
+        "patch": [
+          {
+            "author": "35135765+grigasp@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Reduce deprecated API usage"
+          },
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Replace all spaces in test name when creating test iModel."
+          }
+        ],
+        "major": [
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "comment": "Upgrade to AppUI 4.0"
+          }
+        ]
+      }
+    },
+    {
+      "version": "3.7.4",
+      "tag": "@itwin/presentation-testing_v3.7.4",
+      "date": "Tue, 25 Apr 2023 17:50:35 GMT",
+      "comments": {}
+    },
+    {
+      "version": "3.7.3",
+      "tag": "@itwin/presentation-testing_v3.7.3",
+      "date": "Thu, 20 Apr 2023 13:19:29 GMT",
+      "comments": {}
+    },
+    {
+      "version": "3.7.2",
+      "tag": "@itwin/presentation-testing_v3.7.2",
+      "date": "Wed, 12 Apr 2023 13:12:42 GMT",
+      "comments": {}
+    },
+    {
+      "version": "3.7.1",
+      "tag": "@itwin/presentation-testing_v3.7.1",
+      "date": "Mon, 03 Apr 2023 15:15:37 GMT",
+      "comments": {}
+    },
+    {
+      "version": "3.7.0",
+      "tag": "@itwin/presentation-testing_v3.7.0",
+      "date": "Wed, 29 Mar 2023 15:02:27 GMT",
+      "comments": {}
+    },
+    {
+      "version": "3.6.3",
+      "tag": "@itwin/presentation-testing_v3.6.3",
+      "date": "Mon, 27 Mar 2023 16:26:47 GMT",
+      "comments": {}
+    },
+    {
+      "version": "3.6.2",
+      "tag": "@itwin/presentation-testing_v3.6.2",
+      "date": "Fri, 17 Mar 2023 17:52:32 GMT",
+      "comments": {}
+    },
+    {
+      "version": "3.6.1",
+      "tag": "@itwin/presentation-testing_v3.6.1",
+      "date": "Fri, 24 Feb 2023 22:00:48 GMT",
+      "comments": {}
+    },
+    {
       "version": "3.6.0",
       "tag": "@itwin/presentation-testing_v3.6.0",
       "date": "Wed, 08 Feb 2023 14:58:40 GMT",
