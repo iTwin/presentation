@@ -25,6 +25,7 @@
     "@itwin/presentation-common": "^4.0.0-dev.90",
     "@itwin/presentation-backend": "^4.0.0-dev.90",
     "@itwin/webgl-compatibility": "^4.0.0-dev.90",
+    "@opentelemetry/api": "^1.4.1",
     "cross-env": "^7.0.3",
     "electron": "^23.0.0",
     "eslint": "^8.36.0",
