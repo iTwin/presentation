@@ -1,3 +1,4 @@
 packages:
  - apps/test-app/*
+ - apps/load-tests/*
  - packages/*
