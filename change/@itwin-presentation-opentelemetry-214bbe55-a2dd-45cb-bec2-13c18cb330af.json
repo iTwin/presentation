@@ -1,0 +1,7 @@
+{
+  "type": "none",
+  "comment": "Extract APIs of published packages",
+  "packageName": "@itwin/presentation-opentelemetry",
+  "email": "35135765+grigasp@users.noreply.github.com",
+  "dependentChangeType": "none"
+}
