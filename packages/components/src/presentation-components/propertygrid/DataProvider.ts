@@ -157,9 +157,9 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
 
   /**
    * Should fields with no values be included in the property list. No value means:
-   * - For *primitive* fields: null, undefined, "" (empty string)
-   * - For *array* fields: [] (empty array)
-   * - For *struct* fields: {} (object with no members)
+   * - For *primitive* fields: `null`, `undefined`, `""` (empty string)
+   * - For *array* fields: `[]` (empty array)
+   * - For *struct* fields: `{}` (object with no members)
    *
    * @deprecated in 3.x. Use [FilteringPropertyDataProvider]($components-react) and [IPropertyDataFilterer]($components-react) APIs for filtering-out properties.
    */

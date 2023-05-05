@@ -41,7 +41,8 @@
     "docs": "npm run -s docs:extract && npm run -s docs:reference && npm run -s docs:changelog",
     "docs:changelog": "cpx ./CHANGELOG.md ../../build/docs/reference/presentation-components",
     "docs:reference": "betools docs --includes=../../build/docs/extract --json=../../build/docs/reference/presentation-components/file.json --tsIndexFile=presentation-components.ts --onlyJson",
-    "docs:extract": "betools extract --fileExt=ts,tsx --extractFrom=./src/test --recursive --out=../../build/docs/extract"
+    "docs:extract": "betools extract --fileExt=ts,tsx --extractFrom=./src/test --recursive --out=../../build/docs/extract",
+    "extract-api": "betools extract-api --entry=presentation-components --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api"
   },
   "dependencies": {
     "@itwin/itwinui-css": "^1.6.0",

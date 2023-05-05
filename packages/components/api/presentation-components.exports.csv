@@ -1,0 +1,99 @@
+sep=;
+Release Tag;API Item
+public;CacheInvalidationProps
+public;CacheInvalidationProps
+public;ContentDataProvider 
+public;ContentDataProviderProps 
+public;ControlledPresentationTreeFilteringProps
+beta;convertToInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection): Promise
+alpha;createDiagnosticsOptions(props: DiagnosticsProps): ClientDiagnosticsOptions | undefined
+internal;createFieldInfo(field: Field, parentFieldName?: string):
+internal;createPropertyDescriptionFromFieldInfo(info: FieldInfo): PropertyDescription
+public;DEFAULT_PROPERTY_GRID_RULESET: Ruleset
+public;DiagnosticsProps
+public;FavoritePropertiesDataFilterer 
+public;FavoritePropertiesDataFiltererProps
+public;FavoritePropertiesDataProvider 
+public;FavoritePropertiesDataProviderProps
+internal;FAVORITES_CATEGORY_NAME = "Favorite"
+internal;FieldHierarchyRecord
+internal;FieldInfo
+internal;FieldRecord
+internal;FilteredPresentationTreeDataProvider 
+internal;FilteredPresentationTreeDataProviderProps
+internal;getFavoritesCategory: () => CategoryDescription
+public;IContentDataProvider 
+public;IFavoritePropertiesDataProvider
+public;IFilteredPresentationTreeDataProvider 
+beta;InstanceKeyValueRenderer 
+public;IPresentationDataProvider 
+public;IPresentationLabelsProvider
+public;IPresentationPropertyDataProvider = IPropertyDataProvider & IContentDataProvider
+public;IPresentationTreeDataProvider 
+internal;IPropertiesAppender
+beta;isPresentationInfoTreeNodeItem(item: TreeNodeItem): item is PresentationInfoTreeNodeItem
+beta;isPresentationInstanceFilterConditionGroup(filter: PresentationInstanceFilter): filter is PresentationInstanceFilterConditionGroup
+beta;isPresentationTreeNodeItem(item: TreeNodeItem): item is PresentationTreeNodeItem
+public;IUnifiedSelectionComponent
+beta;NavigationPropertyEditor 
+beta;navigationPropertyEditorContext: Context
+beta;NavigationPropertyEditorContextProps
+beta;NavigationPropertyTargetEditor 
+public;PresentationComponentsLoggerCategory
+beta;PresentationInfoTreeNodeItem 
+beta;PresentationInstanceFilter = PresentationInstanceFilterConditionGroup | PresentationInstanceFilterCondition
+beta;PresentationInstanceFilterBuilder(props: PresentationInstanceFilterBuilderProps): JSX.Element
+beta;PresentationInstanceFilterBuilderProps
+beta;PresentationInstanceFilterCondition
+beta;PresentationInstanceFilterConditionGroup
+beta;PresentationInstanceFilterDialog(props: PresentationInstanceFilterDialogProps): JSX.Element
+beta;PresentationInstanceFilterDialogProps 
+beta;PresentationInstanceFilterInfo
+public;PresentationLabelsProvider 
+public;PresentationLabelsProviderProps
+public;PresentationPropertyDataProvider 
+public;PresentationPropertyDataProviderProps 
+public;PresentationTreeDataProvider 
+beta;PresentationTreeDataProviderDataSourceEntryPoints
+public;PresentationTreeDataProviderProps 
+beta;PresentationTreeNodeItem 
+beta;PresentationTreeNodeItemFilteringInfo
+public;PresentationTreeNodeLoaderProps 
+public;PresentationTreeNodeLoaderResult
+beta;PresentationTreeNodeRenderer(props: PresentationTreeNodeRendererProps): JSX.Element
+beta;PresentationTreeNodeRendererProps 
+beta;PresentationTreeRenderer(props: PresentationTreeRendererProps): JSX.Element
+beta;PresentationTreeRendererProps 
+public;PropertyDataProviderWithUnifiedSelectionProps
+internal;class PropertyRecordsBuilder 
+beta;TableCellDefinition
+beta;TableCellRenderer(props: TableCellRendererProps): JSX.Element
+beta;TableCellRendererProps
+beta;TableColumnDefinition
+beta;TableRowDefinition
+beta;UnifiedSelectionContext
+beta;UnifiedSelectionContextProvider(props: UnifiedSelectionContextProviderProps): React.ReactElement
+beta;UnifiedSelectionContextProviderProps
+beta;UnifiedSelectionState = (selectionLevel?: number) => Readonly
+public;UnifiedSelectionTreeEventHandler 
+public;UnifiedSelectionTreeEventHandlerParams
+public;useControlledPresentationTreeFiltering(props: ControlledPresentationTreeFilteringProps):
+internal;useFilteredNodeLoader(nodeLoader: AbstractTreeNodeLoaderWithProvider
+beta;useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProps):
+beta;UseHierarchyLevelFilteringProps
+beta;useNavigationPropertyEditingContext(imodel: IModelConnection, dataProvider: IContentDataProvider): NavigationPropertyEditorContextProps
+internal;useNodeHighlightingProps(filter: string | undefined, filteredNodeLoader?: ITreeNodeLoaderWithProvider
+beta;usePresentationTable
+beta;UsePresentationTableProps
+beta;UsePresentationTableResult
+beta;usePresentationTableWithUnifiedSelection
+public;usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderProps): PresentationTreeNodeLoaderResult
+public;usePropertyDataProviderWithUnifiedSelection(props: PropertyDataProviderWithUnifiedSelectionProps): UsePropertyDataProviderWithUnifiedSelectionResult
+public;UsePropertyDataProviderWithUnifiedSelectionResult
+public;useRulesetRegistration(ruleset: Ruleset): void
+beta;useUnifiedSelectionContext(): UnifiedSelectionContext | undefined
+public;useUnifiedSelectionTreeEventHandler(props: UnifiedSelectionTreeEventHandlerParams): UnifiedSelectionTreeEventHandler
+internal;ViewportSelectionHandler 
+internal;ViewportSelectionHandlerProps
+public;viewWithUnifiedSelection
+public;ViewWithUnifiedSelectionProps

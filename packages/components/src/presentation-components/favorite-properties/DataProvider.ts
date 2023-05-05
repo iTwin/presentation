@@ -62,9 +62,9 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
 
   /**
    * Should fields with no values be included in the property list. No value means:
-   * - For *primitive* fields: null, undefined, "" (empty string)
-   * - For *array* fields: [] (empty array)
-   * - For *struct* fields: {} (object with no members)
+   * - For *primitive* fields: `null`, `undefined`, `""` (empty string)
+   * - For *array* fields: `[]` (empty array)
+   * - For *struct* fields: `{}` (object with no members)
    */
   public includeFieldsWithNoValues: boolean;
 

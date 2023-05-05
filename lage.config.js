@@ -9,6 +9,9 @@ module.exports = {
     cover: ["build"],
     lint: ["build"],
     docs: ["build"],
+    ["@itwin/presentation-components#extract-api"]: ["@itwin/presentation-components#build"],
+    ["@itwin/presentation-testing#extract-api"]: ["@itwin/presentation-testing#build"],
+    ["@itwin/presentation-opentelemetry#extract-api"]: ["@itwin/presentation-opentelemetry#build"],
     clean: {
       cache: false,
     },
