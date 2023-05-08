@@ -226,7 +226,7 @@ export default class App extends Component<{}, State> {
     }
 
     return (
-      <ThemeProvider theme="os">
+      <ThemeProvider theme="os" data-root-container="iui-root-id">
         <div className="app">
           <div className="app-header">
             <h2>{IModelApp.localization.getLocalizedString("Sample:welcome-message")}</h2>
