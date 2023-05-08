@@ -3,5 +3,7 @@ build
 lib
 node_modules
 
+/packages/*/api/temp
+
 npm-debug.log*
 pnpm-debug.log*

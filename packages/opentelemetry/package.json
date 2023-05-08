@@ -36,21 +36,22 @@
     "docs:reference": "betools docs --includes=../../build/docs/extract --json=../../build/docs/reference/presentation-opentelemetry/file.json --tsIndexFile=presentation-opentelemetry.ts --onlyJson",
     "extract": "betools extract --fileExt=ts --extractFrom=./src/test --recursive --out=../../build/docs/extract",
     "lint": "eslint \"./src/**/*.ts\"",
-    "test": "mocha --config ./.mocharc.json \"./lib/cjs/test/**/*.test.js\""
+    "test": "mocha --config ./.mocharc.json \"./lib/cjs/test/**/*.test.js\"",
+    "extract-api": "betools extract-api --entry=presentation-opentelemetry --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api"
   },
   "peerDependencies": {
     "@itwin/presentation-common": "^3.6.3 || ^4.0.0",
     "@opentelemetry/api": "^1.0.4"
   },
   "devDependencies": {
-    "@itwin/build-tools": "^4.0.0-dev.90",
-    "@itwin/core-bentley": "^4.0.0-dev.90",
-    "@itwin/core-common": "^4.0.0-dev.90",
-    "@itwin/core-geometry": "^4.0.0-dev.90",
-    "@itwin/core-quantity": "^4.0.0-dev.90",
-    "@itwin/ecschema-metadata": "^4.0.0-dev.90",
+    "@itwin/build-tools": "^4.0.0-dev.99",
+    "@itwin/core-bentley": "^4.0.0-dev.99",
+    "@itwin/core-common": "^4.0.0-dev.99",
+    "@itwin/core-geometry": "^4.0.0-dev.99",
+    "@itwin/core-quantity": "^4.0.0-dev.99",
+    "@itwin/ecschema-metadata": "^4.0.0-dev.99",
     "@itwin/eslint-plugin": "^4.0.0-dev.38",
-    "@itwin/presentation-common": "^4.0.0-dev.90",
+    "@itwin/presentation-common": "^4.0.0-dev.99",
     "@opentelemetry/api": "1.0.4",
     "@types/chai": "4.3.1",
     "@types/mocha": "^8.2.2",
