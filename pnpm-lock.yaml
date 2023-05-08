@@ -485,8 +485,8 @@ importers:
         specifier: ^3.0.2
         version: 3.2.0
       micro-memoize:
-        specifier: ^4.0.9
-        version: 4.0.11
+        specifier: ^4.1.0
+        version: 4.1.0
       react-select:
         specifier: 5.7.0
         version: 5.7.0(@types/react@17.0.52)(react-dom@17.0.2)(react@17.0.2)
@@ -10023,8 +10023,8 @@ packages:
     engines: {node: '>= 0.6'}
     dev: false
 
-  /micro-memoize@4.0.11:
-    resolution: {integrity: sha512-CjxsaYe4j43df32DtzzNCwanPqZjZDwuQAZilsCYpa2ZVtSPDjHXbTlR4gsEZRyO9/twHs0b7HLjvy/sowl7sA==}
+  /micro-memoize@4.1.0:
+    resolution: {integrity: sha512-97ETgMNtORfXO3bzJJD3+3VFEyjCOT4wJWZTT8PJSR2pOiRNOwZixPvuvwVL6J9afYKMNOobnb/sYzCeBGaEfQ==}
     dev: false
 
   /micromatch@4.0.5:
