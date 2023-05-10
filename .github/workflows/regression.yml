@@ -3,6 +3,8 @@ name: Regression
 on:
   pull_request:
     branches: ["master"]
+    paths:
+      - 'packages/**'
 
 jobs:
   build:
