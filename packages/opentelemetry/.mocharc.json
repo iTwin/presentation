@@ -1,9 +1,8 @@
 {
-  "require": ["source-map-support/register"],
   "checkLeaks": true,
   "timeout": 60000,
   "file": ["./lib/cjs/test/index.js"],
-  "exclude": ["./lib/cjs/test/coverage/**/*"],
+  "exclude": ["./lib/test/coverage/**/*"],
   "reporter": ["node_modules/@itwin/build-tools/mocha-reporter"],
   "reporterOptions": ["mochaFile=lib/test/junit_results.xml"]
 }

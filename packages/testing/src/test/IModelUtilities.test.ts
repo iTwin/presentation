@@ -167,7 +167,7 @@ describe("IModelUtilities", () => {
 
       await buildTestIModel(fileName, () => {});
 
-      expect(createSnapshotDb.firstCall.firstArg).to.include(`${fileName}.bim`);
+      expect(createSnapshotDb.firstCall.args[0]).to.include(`${fileName}.bim`);
       expect(createSnapshotDb.firstCall.lastArg).to.deep.equal({ rootSubject: { name: fileName } });
     });
 
@@ -177,7 +177,7 @@ describe("IModelUtilities", () => {
 
       await buildTestIModel(this, () => {});
 
-      expect(createSnapshotDb.firstCall.firstArg).to.include(`${fileName}.bim`);
+      expect(createSnapshotDb.firstCall.args[0]).to.include(`${fileName}.bim`);
       expect(createSnapshotDb.firstCall.lastArg).to.deep.equal({ rootSubject: { name: fileName } });
     });
 

@@ -83,7 +83,7 @@ export default function (): Configuration & { devServer?: any } {
         fs: false,
         browser: false,
         buffer: false,
-        stream: "stream-browserify",
+        stream: false,
       },
     },
     cache: {

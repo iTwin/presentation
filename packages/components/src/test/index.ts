@@ -24,9 +24,9 @@ import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import chaiJestSnapshot from "chai-jest-snapshot";
 import chaiSubset from "chai-subset";
-import sinonChai from "sinon-chai";
 import path from "path";
 import ResizeObserver from "resize-observer-polyfill";
+import sinonChai from "sinon-chai";
 
 // setup chai
 chai.use(chaiAsPromised);
