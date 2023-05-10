@@ -6,6 +6,7 @@ on:
 
 jobs:
   check-change-files:
+    if: ! github.event.pull_request.draft
     runs-on: ubuntu-latest
 
     name: Check change files
@@ -33,6 +34,7 @@ jobs:
         run: pnpm check
 
   build:
+    if: ! github.event.pull_request.draft
     runs-on: ubuntu-latest
 
     name: Lint Build and run Tests
