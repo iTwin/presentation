@@ -24,9 +24,9 @@ if (commonjsGlobal.MessageChannel) {
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import chaiJestSnapshot from "chai-jest-snapshot";
+import path from "path";
 import sinon from "sinon";
 import sinonChai from "sinon-chai";
-import path from "path";
 
 // setup chai
 chai.use(chaiAsPromised);

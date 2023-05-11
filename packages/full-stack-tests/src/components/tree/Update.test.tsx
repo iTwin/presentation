@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { enablePatches } from "immer";
 import * as sinon from "sinon";
 import { PrimitiveValue } from "@itwin/appui-abstract";
 import {
@@ -28,7 +27,6 @@ describe("Tree update", () => {
   let imodel: IModelConnection;
 
   before(async () => {
-    enablePatches();
     await initialize();
     const testIModelName: string = "assets/datasets/Properties_60InstancesWithUrl2.ibim";
     imodel = await SnapshotConnection.openFile(testIModelName);

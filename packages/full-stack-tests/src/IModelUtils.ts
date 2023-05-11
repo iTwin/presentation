@@ -103,13 +103,15 @@ export function insertRepositoryLink(builder: TestIModelBuilder, repositoryUrl: 
   return { className, id };
 }
 
-export function insertExternalSourceAspect(builder: TestIModelBuilder, elementId: Id64String, repositoryId: Id64String) {
+export function insertExternalSourceAspect(builder: TestIModelBuilder, elementId: Id64String, identifier: String, repositoryId?: Id64String) {
   const externalSourceId = builder.insertElement({
     classFullName: "BisCore:ExternalSource",
     model: IModel.repositoryModelId,
-    repository: {
-      id: repositoryId,
-    },
+    repository: repositoryId
+      ? {
+          id: repositoryId,
+        }
+      : undefined,
   } as ExternalSourceProps);
 
   const className = "BisCore:ExternalSourceAspect";
@@ -122,6 +124,7 @@ export function insertExternalSourceAspect(builder: TestIModelBuilder, elementId
     source: {
       id: externalSourceId,
     },
+    identifier,
   } as ExternalSourceAspectProps);
 
   return { className, id };

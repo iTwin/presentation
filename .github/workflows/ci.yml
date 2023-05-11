@@ -3,9 +3,11 @@ name: CI
 on:
   pull_request:
     branches: ["master"]
+    types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
   check-change-files:
+    if: '! github.event.pull_request.draft'
     runs-on: ubuntu-latest
 
     name: Check change files
@@ -18,7 +20,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v2.2.4
         with:
-          version: 7.27.0
+          version: 8.4.0
 
       - name: Use Node.js 18
         uses: actions/setup-node@v3
@@ -33,6 +35,7 @@ jobs:
         run: pnpm check
 
   build:
+    if: '! github.event.pull_request.draft'
     runs-on: ubuntu-latest
 
     name: Lint Build and run Tests
@@ -43,7 +46,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v2.2.4
         with:
-          version: 7.27.0
+          version: 8.4.0
 
       - name: Use Node.js 18
         uses: actions/setup-node@v3

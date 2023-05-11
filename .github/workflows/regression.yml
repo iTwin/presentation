@@ -3,9 +3,13 @@ name: Regression
 on:
   pull_request:
     branches: ["master"]
+    paths:
+      - 'packages/**'
+    types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
   build:
+    if: '! github.event.pull_request.draft'
     runs-on: ubuntu-latest
 
     strategy:
@@ -22,7 +26,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v2.2.4
         with:
-          version: 7.27.0
+          version: 8.4.0
 
       - name: Use Node.js 18
         uses: actions/setup-node@v3

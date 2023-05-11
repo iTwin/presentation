@@ -19,8 +19,8 @@
     "@itwin/ecschema-metadata": "^4.0.0-dev.99",
     "@itwin/eslint-plugin": "^4.0.0-dev.38",
     "@itwin/presentation-common": "^4.0.0-dev.99",
-    "eslint": "^8.36.0",
-    "rimraf": "^3.0.2",
+    "eslint": "^8.40.0",
+    "rimraf": "^5.0.0",
     "typescript": "~5.0.2"
   }
 }
