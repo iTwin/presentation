@@ -216,13 +216,13 @@ describe("PropertyDataProvider", async () => {
 
       it("finds nested property record keys", async function () {
         let elementKey: InstanceKey;
-        let repositoryLinkKey: InstanceKey;
+        let externalsSourceAspectKey: InstanceKey;
         const imodel = await buildTestIModel(this, (builder) => {
           const categoryKey = insertSpatialCategory(builder, "My Category");
           const modelKey = insertPhysicalModel(builder, "My Model");
           elementKey = insertPhysicalElement(builder, "My Element", modelKey.id, categoryKey.id);
-          repositoryLinkKey = insertRepositoryLink(builder, "Repository URl", "Repository Label");
-          insertExternalSourceAspect(builder, elementKey.id, repositoryLinkKey.id);
+          const repositoryLinkKey = insertRepositoryLink(builder, "Repository URl", "Repository Label");
+          externalsSourceAspectKey = insertExternalSourceAspect(builder, elementKey.id, "My External Source Aspect", repositoryLinkKey.id);
         });
 
         await using(createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET }), async (provider) => {
@@ -245,11 +245,11 @@ describe("PropertyDataProvider", async () => {
           const category = findNestedCategory(properties.categories, "/selected-item/-source_information");
           expect(category).to.not.be.undefined;
 
-          const record = properties.records[category!.name].find((r) => r.property.displayLabel === "Path");
+          const record = properties.records[category!.name].find((r) => r.property.displayLabel === "Source Element ID");
           expect(record).to.not.be.undefined;
 
           const keys = await provider.getPropertyRecordInstanceKeys(record!);
-          expect(keys).to.deep.eq([repositoryLinkKey]);
+          expect(keys).to.deep.eq([externalsSourceAspectKey]);
         });
       });
     });
