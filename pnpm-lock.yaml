@@ -747,6 +747,72 @@ importers:
         specifier: ~5.0.2
         version: 5.0.2
 
+  packages/hierarchy-builder:
+    devDependencies:
+      '@itwin/build-tools':
+        specifier: ^4.0.0-dev.104
+        version: 4.0.0-dev.104(@types/node@18.11.5)
+      '@itwin/core-bentley':
+        specifier: ^4.0.0-dev.104
+        version: 4.0.0-dev.104
+      '@itwin/core-common':
+        specifier: ^4.0.0-dev.104
+        version: 4.0.0-dev.104(@itwin/core-bentley@4.0.0-dev.104)(@itwin/core-geometry@4.0.0-dev.104)
+      '@itwin/core-quantity':
+        specifier: ^4.0.0-dev.104
+        version: 4.0.0-dev.104(@itwin/core-bentley@4.0.0-dev.104)
+      '@itwin/ecschema-metadata':
+        specifier: ^4.0.0-dev.104
+        version: 4.0.0-dev.104(@itwin/core-bentley@4.0.0-dev.104)(@itwin/core-quantity@4.0.0-dev.104)
+      '@itwin/eslint-plugin':
+        specifier: ^4.0.0-dev.38
+        version: 4.0.0-dev.38(eslint@8.40.0)(typescript@5.0.2)
+      '@itwin/presentation-common':
+        specifier: ^4.0.0-dev.104
+        version: 4.0.0-dev.104(@itwin/core-bentley@4.0.0-dev.104)(@itwin/core-common@4.0.0-dev.104)(@itwin/core-quantity@4.0.0-dev.104)(@itwin/ecschema-metadata@4.0.0-dev.104)
+      '@types/chai':
+        specifier: 4.3.1
+        version: 4.3.1
+      '@types/chai-as-promised':
+        specifier: ^7
+        version: 7.1.0
+      '@types/mocha':
+        specifier: ^8.2.2
+        version: 8.2.2
+      '@types/sinon':
+        specifier: ^10.0.14
+        version: 10.0.14
+      '@types/sinon-chai':
+        specifier: ^3.2.9
+        version: 3.2.9
+      chai:
+        specifier: ^4.1.2
+        version: 4.1.2
+      chai-as-promised:
+        specifier: ^7
+        version: 7.0.0(chai@4.1.2)
+      cpx2:
+        specifier: ^3.0.0
+        version: 3.0.0
+      eslint:
+        specifier: ^8.40.0
+        version: 8.40.0
+      mocha:
+        specifier: ^10.0.0
+        version: 10.0.0
+      nyc:
+        specifier: ^15.1.0
+        version: 15.1.0
+      sinon:
+        specifier: ^15.0.4
+        version: 15.0.4
+      sinon-chai:
+        specifier: ^3.7.0
+        version: 3.7.0(chai@4.1.2)(sinon@15.0.4)
+      typescript:
+        specifier: ~5.0.2
+        version: 5.0.2
+
   packages/opentelemetry:
     devDependencies:
       '@itwin/build-tools':
@@ -6440,7 +6506,7 @@ packages:
     dev: false
 
   /concat-map@0.0.1:
-    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
+    resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
 
   /concat-stream@1.6.2:
     resolution: {integrity: sha512-27HBghJxjiZtIk3Ycvn/4kbJk/1uZuJFfuPEns6LaEvpvG1f0hTea8lilrouyo9mVc2GWdcEZ8OLoGmSADlrCw==}
@@ -10461,7 +10527,7 @@ packages:
       uid-safe: 2.1.5
 
   /mute-stream@0.0.5:
-    resolution: {integrity: sha512-EbrziT4s8cWPmzr47eYVW3wimS4HsvlnV5ri1xw1aR6JQo/OrJX5rkl32K/QQHdxeabJETtfeaROGhd8W7uBgg==}
+    resolution: {integrity: sha1-j7+rsKmKJT0xhDMfno3rc3L6xsA=}
     dev: true
 
   /mute-stream@0.0.8:

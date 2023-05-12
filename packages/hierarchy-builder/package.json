@@ -1,0 +1,65 @@
+{
+  "name": "hierarchy-builder",
+  "version": "0.0.0",
+  "description": "Proof of concept for stateless hierarchy builder",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iTwin/presentation.git",
+    "directory": "packages/hierarchy-builder"
+  },
+  "keywords": [
+    "Bentley",
+    "Presentation",
+    "iTwin.js",
+    "Hierarchy",
+    "ECSQL"
+  ],
+  "author": {
+    "name": "Bentley Systems, Inc.",
+    "url": "http://www.bentley.com"
+  },
+  "main": "lib/cjs/hierarchy-builder.js",
+  "module": "lib/esm/hierarchy-builder.js",
+  "types": "lib/cjs/hierarchy-builder.d.ts",
+  "scripts": {
+    "build": "npm run -s build:cjs && npm run -s build:esm",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:watch": "npm run -s build:cjs -- -w",
+    "clean": "rimraf lib",
+    "cover": "nyc npm -s test",
+    "lint": "eslint ./src/**/*.ts",
+    "test": "mocha --config ./.mocharc.json \"./lib/cjs/test/**/*.test.js\""
+  },
+  "dependencies": {},
+  "peerDependencies": {
+    "@itwin/core-bentley": "^3.6.3 || ^4.0.0",
+    "@itwin/core-common": "^3.6.3 || ^4.0.0",
+    "@itwin/ecschema-metadata": "^3.6.3 || ^4.0.0",
+    "@itwin/presentation-common": "^3.6.3 || ^4.0.0"
+  },
+  "devDependencies": {
+    "@itwin/build-tools": "^4.0.0-dev.104",
+    "@itwin/core-bentley": "^4.0.0-dev.104",
+    "@itwin/core-common": "^4.0.0-dev.104",
+    "@itwin/core-quantity": "^4.0.0-dev.104",
+    "@itwin/ecschema-metadata": "^4.0.0-dev.104",
+    "@itwin/eslint-plugin": "^4.0.0-dev.38",
+    "@itwin/presentation-common": "^4.0.0-dev.104",
+    "@types/chai": "4.3.1",
+    "@types/chai-as-promised": "^7",
+    "@types/mocha": "^8.2.2",
+    "@types/sinon": "^10.0.14",
+    "@types/sinon-chai": "^3.2.9",
+    "chai": "^4.1.2",
+    "chai-as-promised": "^7",
+    "cpx2": "^3.0.0",
+    "eslint": "^8.40.0",
+    "mocha": "^10.0.0",
+    "nyc": "^15.1.0",
+    "sinon": "^15.0.4",
+    "sinon-chai": "^3.7.0",
+    "typescript": "~5.0.2"
+  }
+}
