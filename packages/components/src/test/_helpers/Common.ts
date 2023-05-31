@@ -18,7 +18,7 @@ import {
   Ruleset,
 } from "@itwin/presentation-common";
 import { InstanceFilterPropertyInfo } from "../../presentation-components/instance-filter-builder/Utils";
-import { createTestPropertiesContentField, createTestCategoryDescription } from "./Content";
+import { createTestCategoryDescription, createTestPropertiesContentField } from "./Content";
 
 export function createTestECInstanceKey(key?: Partial<InstanceKey>): InstanceKey {
   return {

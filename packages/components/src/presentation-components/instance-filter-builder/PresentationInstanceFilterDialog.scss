@@ -14,12 +14,11 @@
     }
 
     .presentation-instance-filter-content {
-      max-height: 80vh;
       overflow: hidden;
 
       .presentation-property-filter-builder {
-        overflow: scroll;
-        height: calc(100% - var(--iui-size-xl));
+        overflow: auto;
+        height: calc(100% - var(--iui-component-height-large));
       }
     }
 

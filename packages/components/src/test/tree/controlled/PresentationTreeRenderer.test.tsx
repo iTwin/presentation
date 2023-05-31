@@ -14,9 +14,8 @@ import { PropertyValueFormat } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import { PresentationTreeRenderer, PresentationTreeRendererProps } from "../../../presentation-components/tree/controlled/PresentationTreeRenderer";
-import { createTestPropertyInfo, stubDOMMatrix } from "../../_helpers/Common";
-import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content";
-import { stubRaf } from "../../_helpers/Common";
+import { createTestPropertyInfo, stubDOMMatrix, stubRaf } from "../../_helpers/Common";
+import { createTestContentDescriptor, createTestPropertiesContentField,  } from "../../_helpers/Content";
 import { createTreeModelNode, createTreeNodeItem } from "./Helpers";
 
 describe("PresentationTreeRenderer", () => {
