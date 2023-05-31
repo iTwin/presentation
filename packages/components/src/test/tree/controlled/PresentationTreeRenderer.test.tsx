@@ -14,13 +14,14 @@ import { PropertyValueFormat } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import { PresentationTreeRenderer, PresentationTreeRendererProps } from "../../../presentation-components/tree/controlled/PresentationTreeRenderer";
-import { createTestPropertyInfo } from "../../_helpers/Common";
-import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content";
-import { stubRaf } from "../../instance-filter-builder/Common";
+import { createTestPropertyInfo, stubDOMMatrix, stubRaf } from "../../_helpers/Common";
+import { createTestContentDescriptor, createTestPropertiesContentField,  } from "../../_helpers/Content";
 import { createTreeModelNode, createTreeNodeItem } from "./Helpers";
 
 describe("PresentationTreeRenderer", () => {
   stubRaf();
+  stubDOMMatrix();
+
   const imodelMock = moq.Mock.ofType<IModelConnection>();
   const treeActionsMock = moq.Mock.ofType<TreeActions>();
   const modelSourceMock = moq.Mock.ofType<TreeModelSource>();

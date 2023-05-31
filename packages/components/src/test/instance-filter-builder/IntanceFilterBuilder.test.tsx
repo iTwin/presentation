@@ -21,14 +21,13 @@ import {
   usePresentationInstanceFilteringProps,
 } from "../../presentation-components/instance-filter-builder/InstanceFilterBuilder";
 import { INSTANCE_FILTER_FIELD_SEPARATOR } from "../../presentation-components/instance-filter-builder/Utils";
-import { createTestECClassInfo } from "../_helpers/Common";
+import { createTestECClassInfo, stubRaf } from "../_helpers/Common";
 import {
   createTestCategoryDescription,
   createTestContentDescriptor,
   createTestPropertiesContentField,
   createTestSimpleContentField,
 } from "../_helpers/Content";
-import { stubRaf } from "./Common";
 
 describe("InstanceFilter", () => {
   stubRaf();
