@@ -17,6 +17,7 @@
     "@itwin/core-geometry": "^4.0.0",
     "@itwin/core-quantity": "^4.0.0",
     "@itwin/ecschema-metadata": "^4.0.0",
+    "@itwin/ecschema-rpcinterface-common": "^4.0.0",
     "@itwin/eslint-plugin": "^4.0.0-dev.38",
     "@itwin/presentation-common": "^4.0.0",
     "eslint": "^8.40.0",

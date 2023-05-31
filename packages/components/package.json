@@ -55,7 +55,7 @@
     "micro-memoize": "^4.1.0",
     "react-select": "5.7.0",
     "react-select-async-paginate": "0.7.2",
-    "rxjs": "^6.6.2"
+    "rxjs": "^7.8.1"
   },
   "peerDependencies": {
     "@itwin/appui-abstract": "^3.6.3 || ^4.0.0",

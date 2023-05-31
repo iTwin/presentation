@@ -121,6 +121,9 @@ importers:
       '@itwin/presentation-common':
         specifier: ^4.0.0
         version: 4.0.0(@itwin/core-bentley@4.0.0)(@itwin/core-common@4.0.0)(@itwin/core-quantity@4.0.0)(@itwin/ecschema-metadata@4.0.0)
+      '@itwin/presentation-hierarchy-builder':
+        specifier: workspace:*
+        version: link:../../../packages/hierarchy-builder
       '@types/artillery':
         specifier: ^1.7.0
         version: 1.7.0
@@ -175,6 +178,9 @@ importers:
       '@itwin/ecschema-metadata':
         specifier: ^4.0.0
         version: 4.0.0(@itwin/core-bentley@4.0.0)(@itwin/core-quantity@4.0.0)
+      '@itwin/ecschema-rpcinterface-impl':
+        specifier: ^4.0.0
+        version: 4.0.0(@itwin/core-backend@4.0.0)(@itwin/core-bentley@4.0.0)(@itwin/core-common@4.0.0)(@itwin/core-geometry@4.0.0)(@itwin/ecschema-metadata@4.0.0)(@itwin/ecschema-rpcinterface-common@4.0.0)
       '@itwin/eslint-plugin':
         specifier: ^4.0.0-dev.38
         version: 4.0.0-dev.38(eslint@8.40.0)(typescript@5.0.2)
@@ -247,6 +253,9 @@ importers:
       '@itwin/ecschema-metadata':
         specifier: ^4.0.0
         version: 4.0.0(@itwin/core-bentley@4.0.0)(@itwin/core-quantity@4.0.0)
+      '@itwin/ecschema-rpcinterface-common':
+        specifier: ^4.0.0
+        version: 4.0.0(@itwin/core-bentley@4.0.0)(@itwin/core-common@4.0.0)(@itwin/core-geometry@4.0.0)(@itwin/ecschema-metadata@4.0.0)
       '@itwin/eslint-plugin':
         specifier: ^4.0.0-dev.38
         version: 4.0.0-dev.38(eslint@8.40.0)(typescript@5.0.2)
@@ -310,6 +319,9 @@ importers:
       '@itwin/ecschema-metadata':
         specifier: ^4.0.0
         version: 4.0.0(@itwin/core-bentley@4.0.0)(@itwin/core-quantity@4.0.0)
+      '@itwin/ecschema-rpcinterface-common':
+        specifier: ^4.0.0
+        version: 4.0.0(@itwin/core-bentley@4.0.0)(@itwin/core-common@4.0.0)(@itwin/core-geometry@4.0.0)(@itwin/ecschema-metadata@4.0.0)
       '@itwin/eslint-plugin':
         specifier: ^4.0.0-dev.38
         version: 4.0.0-dev.38(eslint@8.40.0)(typescript@5.0.2)
@@ -331,6 +343,9 @@ importers:
       '@itwin/presentation-frontend':
         specifier: ^4.0.0
         version: 4.0.0(@itwin/core-bentley@4.0.0)(@itwin/core-common@4.0.0)(@itwin/core-frontend@4.0.0)(@itwin/core-quantity@4.0.0)(@itwin/ecschema-metadata@4.0.0)(@itwin/presentation-common@4.0.0)
+      '@itwin/presentation-hierarchy-builder':
+        specifier: workspace:*
+        version: link:../../../packages/hierarchy-builder
       '@itwin/webgl-compatibility':
         specifier: ^4.0.0
         version: 4.0.0
@@ -437,8 +452,8 @@ importers:
         specifier: 0.7.2
         version: 0.7.2(react-select@5.7.0)(react@17.0.0)
       rxjs:
-        specifier: ^6.6.2
-        version: 6.6.2
+        specifier: ^7.8.1
+        version: 7.8.1
     devDependencies:
       '@itwin/appui-abstract':
         specifier: ^4.0.0
@@ -748,28 +763,32 @@ importers:
         version: 5.0.2
 
   packages/hierarchy-builder:
+    dependencies:
+      rxjs:
+        specifier: ^7.8.1
+        version: 7.8.1
     devDependencies:
       '@itwin/build-tools':
         specifier: ^4.0.0-dev.104
-        version: 4.0.0-dev.104(@types/node@18.11.5)
+        version: 4.0.0(@types/node@18.11.5)
       '@itwin/core-bentley':
         specifier: ^4.0.0-dev.104
-        version: 4.0.0-dev.104
+        version: 4.0.0
       '@itwin/core-common':
         specifier: ^4.0.0-dev.104
-        version: 4.0.0-dev.104(@itwin/core-bentley@4.0.0-dev.104)(@itwin/core-geometry@4.0.0-dev.104)
+        version: 4.0.0(@itwin/core-bentley@4.0.0)(@itwin/core-geometry@4.0.0)
       '@itwin/core-quantity':
         specifier: ^4.0.0-dev.104
-        version: 4.0.0-dev.104(@itwin/core-bentley@4.0.0-dev.104)
+        version: 4.0.0(@itwin/core-bentley@4.0.0)
       '@itwin/ecschema-metadata':
         specifier: ^4.0.0-dev.104
-        version: 4.0.0-dev.104(@itwin/core-bentley@4.0.0-dev.104)(@itwin/core-quantity@4.0.0-dev.104)
+        version: 4.0.0(@itwin/core-bentley@4.0.0)(@itwin/core-quantity@4.0.0)
       '@itwin/eslint-plugin':
         specifier: ^4.0.0-dev.38
         version: 4.0.0-dev.38(eslint@8.40.0)(typescript@5.0.2)
       '@itwin/presentation-common':
         specifier: ^4.0.0-dev.104
-        version: 4.0.0-dev.104(@itwin/core-bentley@4.0.0-dev.104)(@itwin/core-common@4.0.0-dev.104)(@itwin/core-quantity@4.0.0-dev.104)(@itwin/ecschema-metadata@4.0.0-dev.104)
+        version: 4.0.0(@itwin/core-bentley@4.0.0)(@itwin/core-common@4.0.0)(@itwin/core-quantity@4.0.0)(@itwin/ecschema-metadata@4.0.0)
       '@types/chai':
         specifier: 4.3.1
         version: 4.3.1
@@ -3281,6 +3300,38 @@ packages:
       '@itwin/core-bentley': 4.0.0
       '@itwin/core-quantity': 4.0.0(@itwin/core-bentley@4.0.0)
       almost-equal: 1.1.0
+
+  /@itwin/ecschema-rpcinterface-common@4.0.0(@itwin/core-bentley@4.0.0)(@itwin/core-common@4.0.0)(@itwin/core-geometry@4.0.0)(@itwin/ecschema-metadata@4.0.0):
+    resolution: {integrity: sha512-PDdsnJcU0A7XjuVrdhMDHRTfYcbOsNQJiDsBDttej/qxU6xxtbNg6lvpwmvieK5X8VPMRMrwtUj8Ivk0bn8a2A==}
+    peerDependencies:
+      '@itwin/core-bentley': 4.0.0
+      '@itwin/core-common': 4.0.0
+      '@itwin/core-geometry': 4.0.0
+      '@itwin/ecschema-metadata': 4.0.0
+    dependencies:
+      '@itwin/core-bentley': 4.0.0
+      '@itwin/core-common': 4.0.0(@itwin/core-bentley@4.0.0)(@itwin/core-geometry@4.0.0)
+      '@itwin/core-geometry': 4.0.0
+      '@itwin/ecschema-metadata': 4.0.0(@itwin/core-bentley@4.0.0)(@itwin/core-quantity@4.0.0)
+    dev: false
+
+  /@itwin/ecschema-rpcinterface-impl@4.0.0(@itwin/core-backend@4.0.0)(@itwin/core-bentley@4.0.0)(@itwin/core-common@4.0.0)(@itwin/core-geometry@4.0.0)(@itwin/ecschema-metadata@4.0.0)(@itwin/ecschema-rpcinterface-common@4.0.0):
+    resolution: {integrity: sha512-j3BgjgeqUxP13avB0kbOj2VOheZMZobhyhR86oKsfoTZZkxj2xD6JvnYoi3FgFJGhjm+XahbgYOr4i/jF20W4Q==}
+    peerDependencies:
+      '@itwin/core-backend': 4.0.0
+      '@itwin/core-bentley': 4.0.0
+      '@itwin/core-common': 4.0.0
+      '@itwin/core-geometry': 4.0.0
+      '@itwin/ecschema-metadata': 4.0.0
+      '@itwin/ecschema-rpcinterface-common': 4.0.0
+    dependencies:
+      '@itwin/core-backend': 4.0.0(@itwin/core-bentley@4.0.0)(@itwin/core-common@4.0.0)(@itwin/core-geometry@4.0.0)(@opentelemetry/api@1.4.1)
+      '@itwin/core-bentley': 4.0.0
+      '@itwin/core-common': 4.0.0(@itwin/core-bentley@4.0.0)(@itwin/core-geometry@4.0.0)
+      '@itwin/core-geometry': 4.0.0
+      '@itwin/ecschema-metadata': 4.0.0(@itwin/core-bentley@4.0.0)(@itwin/core-quantity@4.0.0)
+      '@itwin/ecschema-rpcinterface-common': 4.0.0(@itwin/core-bentley@4.0.0)(@itwin/core-common@4.0.0)(@itwin/core-geometry@4.0.0)(@itwin/ecschema-metadata@4.0.0)
+    dev: false
 
   /@itwin/eslint-plugin@4.0.0-dev.38(eslint@8.40.0)(typescript@5.0.2):
     resolution: {integrity: sha512-u/R5hnG48GCqL20nsesHeMsKxfJHljUI/6EZGFxSHtt+R7zYdp5dLYT6vNn9HmpQsRNrjyXEkWpA5hSjb/MOIw==}
