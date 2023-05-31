@@ -5,7 +5,7 @@
 
 .presentation-instance-filter-dialog {
   .presentation-instance-filter-dialog-content-container {
-    min-height: calc(var(--iui-size-2xl) * 5 + var( --iui-size-xs));
+    min-height: calc(var(--iui-component-height-large) * 7);
     min-width: calc(var(--iui-size-2xl) * 8);
 
     .presentation-instance-filter-title {

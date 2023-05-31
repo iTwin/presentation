@@ -11,7 +11,7 @@ import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render } from "@testing-library/react";
 import { PresentationInstanceFilterProperty } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterProperty";
-import { createTestInstanceFilterPropertyInfo, stubRaf } from "./Common";
+import { createTestInstanceFilterPropertyInfo, stubRaf } from "../_helpers/Common";
 
 describe("PresentationInstanceFilterProperty", () => {
   stubRaf();

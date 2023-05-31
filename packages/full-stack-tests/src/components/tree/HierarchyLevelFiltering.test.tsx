@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import sinon from "sinon";
 import { expect } from "chai";
 import { useState } from "react";
 import { ControlledTree, SelectionMode, TreeRendererProps, UiComponents, useTreeModel } from "@itwin/components-react";
@@ -20,7 +21,7 @@ import { getNodeByLabel, toggleExpandNode } from "../TreeUtils";
 
 describe("Learning snippets", () => {
   describe("Tree", () => {
-    stubRaf();
+    stubGlobals();
 
     before(async () => {
       await initialize();
@@ -159,12 +160,14 @@ const ruleset: Ruleset = {
 };
 
 /**
- * Stubs global 'requestAnimationFrame' and 'cancelAnimationFrame' functions.
- * This is needed for tests using 'react-select' component.
+ * Stubs global 'requestAnimationFrame' and 'cancelAnimationFrame' functions and 'DOMMatrix' interface.
+ * 'requestAnimationFrame' and 'cancelAnimationFrame' is needed for tests using the 'react-select' component.
+ * 'DOMMatrix' is needed for tests using draggable 'Dialog'.
  */
-function stubRaf() {
+function stubGlobals() {
   const raf = global.requestAnimationFrame;
   const caf = global.cancelAnimationFrame;
+  const domMatrix = global.DOMMatrix;
 
   before(() => {
     Object.defineProperty(global, "requestAnimationFrame", {
@@ -179,6 +182,10 @@ function stubRaf() {
         clearTimeout(handle);
       },
     });
+    Object.defineProperty(global, "DOMMatrix", {
+      writable: true,
+      value: sinon.fake(() => ({ m41: 0, m42: 0 })),
+    });
   });
 
   after(() => {
@@ -189,6 +196,10 @@ function stubRaf() {
     Object.defineProperty(global, "cancelAnimationFrame", {
       writable: true,
       value: caf,
+    });
+    Object.defineProperty(global, "DOMMatrix", {
+      writable: true,
+      value: domMatrix,
     });
   });
 }
