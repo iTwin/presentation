@@ -146,7 +146,7 @@ export const createTestInstanceFilterPropertyInfo = (props?: Partial<InstanceFil
 });
 
 /**
- *  Stubs global 'DOMMatrix' interface.
+ * Stubs global 'DOMMatrix' interface.
  * 'DOMMatrix' is needed for tests using draggable 'Dialog'.
  */
 export function stubDOMMatrix() {
