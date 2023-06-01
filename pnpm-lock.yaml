@@ -67,6 +67,12 @@ importers:
       '@itwin/ecschema-metadata':
         specifier: ^4.0.0
         version: 4.0.0(@itwin/core-bentley@4.0.0)(@itwin/core-quantity@4.0.0)
+      '@itwin/ecschema-rpcinterface-common':
+        specifier: ^4.0.0
+        version: 4.0.0(@itwin/core-bentley@4.0.0)(@itwin/core-common@4.0.0)(@itwin/core-geometry@4.0.0)(@itwin/ecschema-metadata@4.0.0)
+      '@itwin/ecschema-rpcinterface-impl':
+        specifier: ^4.0.0
+        version: 4.0.0(@itwin/core-backend@4.0.0)(@itwin/core-bentley@4.0.0)(@itwin/core-common@4.0.0)(@itwin/core-geometry@4.0.0)(@itwin/ecschema-metadata@4.0.0)(@itwin/ecschema-rpcinterface-common@4.0.0)
       '@itwin/eslint-plugin':
         specifier: ^4.0.0-dev.38
         version: 4.0.0-dev.38(eslint@8.40.0)(typescript@5.0.2)
@@ -638,6 +644,12 @@ importers:
       '@itwin/ecschema-metadata':
         specifier: ^4.0.0
         version: 4.0.0(@itwin/core-bentley@4.0.0)(@itwin/core-quantity@4.0.0)
+      '@itwin/ecschema-rpcinterface-common':
+        specifier: ^4.0.0
+        version: 4.0.0(@itwin/core-bentley@4.0.0)(@itwin/core-common@4.0.0)(@itwin/core-geometry@4.0.0)(@itwin/ecschema-metadata@4.0.0)
+      '@itwin/ecschema-rpcinterface-impl':
+        specifier: ^4.0.0
+        version: 4.0.0(@itwin/core-backend@4.0.0)(@itwin/core-bentley@4.0.0)(@itwin/core-common@4.0.0)(@itwin/core-geometry@4.0.0)(@itwin/ecschema-metadata@4.0.0)(@itwin/ecschema-rpcinterface-common@4.0.0)
       '@itwin/eslint-plugin':
         specifier: ^4.0.0-dev.38
         version: 4.0.0-dev.38(eslint@8.40.0)(typescript@5.0.2)
@@ -656,6 +668,9 @@ importers:
       '@itwin/presentation-frontend':
         specifier: ^4.0.0
         version: 4.0.0(@itwin/core-bentley@4.0.0)(@itwin/core-common@4.0.0)(@itwin/core-frontend@4.0.0)(@itwin/core-quantity@4.0.0)(@itwin/ecschema-metadata@4.0.0)(@itwin/presentation-common@4.0.0)
+      '@itwin/presentation-hierarchy-builder':
+        specifier: workspace:^
+        version: link:../hierarchy-builder
       '@itwin/presentation-testing':
         specifier: workspace:^
         version: link:../testing

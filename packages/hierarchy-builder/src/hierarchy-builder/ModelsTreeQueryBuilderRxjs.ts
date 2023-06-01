@@ -411,7 +411,7 @@ function createClassGroupingReducer(schemas: SchemaContext) {
         if (!groupingInfo) {
           const nodeClass = await getClass(schemas, fullClassName);
           groupingInfo = {
-            class: { id: Id64.invalid, name: nodeClass.name, label: nodeClass.label ?? nodeClass.name },
+            class: { id: Id64.invalid, name: nodeClass.fullName.replace(".", ":"), label: nodeClass.label ?? nodeClass.name },
             groupedNodes: [],
           };
           groupings.grouped.set(fullClassName, groupingInfo);
