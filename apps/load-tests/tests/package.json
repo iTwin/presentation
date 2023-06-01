@@ -12,6 +12,7 @@
     "clean": "rimraf lib",
     "lint": "eslint ./src/**/*.ts",
     "start:full-models-tree": "artillery run ./scenarios/full-models-tree.yml",
+    "start:full-models-tree-stateless": "artillery run ./scenarios/full-models-tree-stateless.yml",
     "start": "npm run start:full-models-tree"
   },
   "dependencies": {
@@ -23,6 +24,7 @@
     "@itwin/ecschema-metadata": "^4.0.0",
     "@itwin/eslint-plugin": "^4.0.0-dev.38",
     "@itwin/presentation-common": "^4.0.0",
+    "@itwin/presentation-hierarchy-builder": "workspace:*",
     "@types/artillery": "^1.7.0",
     "@types/node": "^16.0.0",
     "artillery": "2.0.0-31",

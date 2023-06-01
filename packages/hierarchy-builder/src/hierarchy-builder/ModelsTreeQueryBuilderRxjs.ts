@@ -176,7 +176,7 @@ export class ModelsTreeNodesProviderRxjs {
   }
 
   public hasNodes(node: TreeNode): Observable<boolean> {
-    const enableLogging = true;
+    const enableLogging = false;
     if (Array.isArray(node.children)) {
       return of(node.children.length > 0);
     }

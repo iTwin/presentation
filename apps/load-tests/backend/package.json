@@ -18,6 +18,8 @@
     "@itwin/core-orbitgt": "^4.0.0",
     "@itwin/core-quantity": "^4.0.0",
     "@itwin/ecschema-metadata": "^4.0.0",
+    "@itwin/ecschema-rpcinterface-common": "^4.0.0",
+    "@itwin/ecschema-rpcinterface-impl": "^4.0.0",
     "@itwin/eslint-plugin": "^4.0.0-dev.38",
     "@itwin/express-server": "^4.0.0",
     "@itwin/presentation-common": "^4.0.0",

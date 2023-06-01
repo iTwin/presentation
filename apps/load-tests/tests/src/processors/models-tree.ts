@@ -2,6 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+/* eslint-disable no-console */
 
 import { EventEmitter, Next, RequestParams, ScenarioContext } from "artillery";
 import { Guid } from "@itwin/core-bentley";
@@ -15,6 +16,22 @@ import {
   PresentationStatus,
 } from "@itwin/presentation-common";
 import RULESET_ModelsTree from "../rulesets/ModelsTree-GroupedByClass.PresentationRuleSet.json";
+
+export { createClientId } from "./common";
+
+export function initScenario(context: ScenarioContext, _ee: EventEmitter, next: Next) {
+  context.vars.nodesCreated = 0;
+  context.vars.tooLargeHierarchyLevelsCount = 0;
+  next();
+}
+
+export function terminateScenario(context: ScenarioContext, _ee: EventEmitter, next: Next) {
+  console.log(`Total nodes created: ${context.vars.nodesCreated}`);
+  console.log(`Total hierarchy levels that exceeded nodes limit: ${context.vars.tooLargeHierarchyLevelsCount}`);
+  context.vars.nodesCreated = 0;
+  context.vars.tooLargeHierarchyLevelsCount = 0;
+  next();
+}
 
 /**
  * Pops a parent node key from context and creates request params for getting its child nodes.
@@ -66,9 +83,11 @@ export function extractNodeKeysFromNodesResponse(requestConfig: any, response: a
   const body = JSON.parse(response.body) as PresentationRpcResponseData<PagedResponse<NodeJSON>>;
   switch (body.statusCode) {
     case PresentationStatus.Success:
-    case PresentationStatus.ResultSetTooLarge:
     case PresentationStatus.Canceled:
       // do nothing
+      break;
+    case PresentationStatus.ResultSetTooLarge:
+      ++(context.vars.tooLargeHierarchyLevelsCount as number);
       break;
     case PresentationStatus.BackendTimeout:
       // repeat the request by adding the parent node key back to the list
@@ -80,6 +99,7 @@ export function extractNodeKeysFromNodesResponse(requestConfig: any, response: a
       throw new PresentationError(body.statusCode, body.errorMessage);
   }
   body.result?.items.forEach((n) => {
+    ++(context.vars.nodesCreated as number);
     if (n.hasChildren) {
       // push node's key to a random location in the list
       const location = Math.random() * parentNodeKeys!.length;

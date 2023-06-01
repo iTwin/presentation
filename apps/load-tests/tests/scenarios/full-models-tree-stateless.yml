@@ -1,0 +1,48 @@
+config:
+  target: "http://localhost:3001/presentation-test-app/v1.0/mode/1/context/00000000-0000-0000-0000-000000000000/imodel/00000000-0000-0000-0000-000000000000/changeset/0"
+
+  http:
+    maxSockets: 1000
+    timeout: 120
+    extendedMetrics: false
+
+  phases:
+    # 10 users start the scenario one after another in 1 second intervals
+    - name: "10 users"
+      duration: 10
+      arrivalRate: 1
+
+  payload:
+    path: "./datasets.csv"
+    fields:
+      - "iModelPath"
+    order: sequence
+    loadAll: true
+
+  variables:
+    operationQueryRows:
+      - "IModelReadRpcInterface-3.5.0-queryRows"
+    operationGetSchemaJson:
+      - "ECSchemaRpcInterface-2.0.0-getSchemaJSON"
+
+  processor: "../lib/processors/models-tree-stateless.js"
+
+scenarios:
+  - name: Full Models Tree (Stateless)
+    beforeScenario:
+      - "initScenario"
+      - "loadHierarchy"
+    afterScenario: "terminateScenario"
+    flow:
+      - loop:
+          - post:
+              ifTrue: "pendingSchemaJsonRequest"
+              url: "/{{ operationGetSchemaJson }}"
+              beforeRequest: "createSchemaJsonRequestParams"
+              afterResponse: "resolveResponse"
+          - post:
+              ifTrue: "pendingQueryRowsRequest"
+              url: "/{{ operationQueryRows }}"
+              beforeRequest: "createQueryRowsRequestParams"
+              afterResponse: "resolveResponse"
+        whileTrue: "popPendingRequest"
