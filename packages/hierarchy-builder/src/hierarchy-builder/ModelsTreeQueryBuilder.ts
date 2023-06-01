@@ -309,4 +309,25 @@ export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
       },
     ];
   }
+
+  private createGeometricElementLabelSelectClause(classAlias: string) {
+    return `COALESCE(
+      [${classAlias}].[CodeValue],
+      CASE
+        WHEN [${classAlias}].[UserLabel] IS NOT NULL
+          THEN [${classAlias}].[UserLabel] || ' ' || ${this.createECInstanceBase36IdSelector(classAlias)}
+        ELSE
+          NULL
+      END,
+      (
+        SELECT [c].[DisplayLabel] || ' ' || ${this.createECInstanceBase36IdSelector(classAlias)}
+        FROM [meta].[ECClassDef] AS [c]
+        WHERE [c].[ECInstanceId] = [${classAlias}].[ECClassId]
+      )
+    )`;
+  }
+
+  private createECInstanceBase36IdSelector(classAlias: string) {
+    return `'[' || ']'`;
+  }
 }
