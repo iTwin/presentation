@@ -79,4 +79,4 @@ stages:
             inputs:
               type: "Build"
               tags: "hasDocs"
-            condition: contains(variables['Build.SourceVersionMessage'], '[Publish Docs]')
+            condition: contains(variables['Build.SourceVersionMessage'], '[publish docs]')
