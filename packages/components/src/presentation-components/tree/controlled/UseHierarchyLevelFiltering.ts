@@ -29,31 +29,24 @@ export function useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProp
   const { nodeLoader, modelSource } = props;
   const ongoingSubscriptions = useRef(new Map<string, Subscription>());
 
-  const applyFilter = useCallback(
-    (node: TreeNodeItem, info: PresentationInstanceFilterInfo) => {
-      const subscription = applyHierarchyLevelFilter(nodeLoader, modelSource, node.id, () => ongoingSubscriptions.current.delete(node.id), info);
+  const handleFilterAction = useCallback(
+    (nodeId: string, info?: PresentationInstanceFilterInfo) => {
+      if (ongoingSubscriptions.current.has(nodeId)) {
+        ongoingSubscriptions.current.get(nodeId)!.unsubscribe();
+        ongoingSubscriptions.current.delete(nodeId);
+      }
+      const subscription = applyHierarchyLevelFilter(nodeLoader, modelSource, nodeId, () => ongoingSubscriptions.current.delete(nodeId), info);
       if (subscription) {
-        ongoingSubscriptions.current.set(node.id, subscription);
+        ongoingSubscriptions.current.set(nodeId, subscription);
       }
     },
     [nodeLoader, modelSource],
   );
 
-  const clearFilter = useCallback(
-    (node: TreeNodeItem) => {
-      if (ongoingSubscriptions.current.has(node.id)) {
-        ongoingSubscriptions.current.get(node.id)?.unsubscribe();
-        ongoingSubscriptions.current.delete(node.id);
-      }
-      const subscription = applyHierarchyLevelFilter(nodeLoader, modelSource, node.id, () => ongoingSubscriptions.current.delete(node.id));
-      if (subscription) {
-        ongoingSubscriptions.current.set(node.id, subscription);
-      }
-    },
-    [nodeLoader, modelSource],
-  );
-
-  return { applyFilter, clearFilter };
+  return {
+    applyFilter: (node: TreeNodeItem, info: PresentationInstanceFilterInfo) => handleFilterAction(node.id, info),
+    clearFilter: (node: TreeNodeItem) => handleFilterAction(node.id),
+  };
 }
 
 function applyHierarchyLevelFilter(nodeLoader: ITreeNodeLoader, modelSource: TreeModelSource, nodeId: string, onComplete: (id: string) => void, filter?: PresentationInstanceFilterInfo) {
@@ -75,5 +68,5 @@ function applyHierarchyLevelFilter(nodeLoader: ITreeNodeLoader, modelSource: Tre
   if (updatedNode === undefined || !updatedNode.isExpanded || updatedNode.numChildren !== undefined) {
     return;
   }
-  return nodeLoader.loadNode(updatedNode, 0).subscribe({ next: () => onComplete(nodeId) });
+  return nodeLoader.loadNode(updatedNode, 0).subscribe({ complete: () => onComplete(nodeId) });
 }
