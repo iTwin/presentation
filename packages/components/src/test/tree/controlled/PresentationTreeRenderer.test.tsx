@@ -134,7 +134,7 @@ describe("PresentationTreeRenderer", () => {
     modelSourceMock.verifyAll();
   });
 
-  it("sets node.isLoading to true when filter is aplied", async () => {
+  it("sets `node.isLoading` to true when filter is applied", async () => {
     const subject = new Subject<TreeNodeLoadResult>();
     nodeLoaderMock.setup((x) => x.loadNode(moq.It.isAny(), 0)).returns(() => subject);
     const label = "Node Label";
