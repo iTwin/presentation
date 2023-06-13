@@ -6,8 +6,8 @@
  * @module Tree
  */
 
-import { isTreeModelNode, ITreeNodeLoader, TreeModelSource, TreeNodeItem } from "@itwin/components-react";
-import { useCallback } from "react";
+import { isTreeModelNode, ITreeNodeLoader, Subscription, TreeModelSource, TreeNodeItem } from "@itwin/components-react";
+import { useCallback, useRef } from "react";
 import { PresentationInstanceFilterInfo } from "../../instance-filter-builder/PresentationInstanceFilterBuilder";
 import { isPresentationTreeNodeItem } from "../PresentationTreeNodeItem";
 
@@ -27,17 +27,28 @@ export interface UseHierarchyLevelFilteringProps {
  */
 export function useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProps) {
   const { nodeLoader, modelSource } = props;
+  const ongoingSubscriptions = useRef(new Map<string, Subscription>());
 
   const applyFilter = useCallback(
     (node: TreeNodeItem, info: PresentationInstanceFilterInfo) => {
-      applyHierarchyLevelFilter(nodeLoader, modelSource, node.id, info);
+      const subscription = applyHierarchyLevelFilter(nodeLoader, modelSource, node.id, () => ongoingSubscriptions.current.delete(node.id), info);
+      if (subscription) {
+        ongoingSubscriptions.current.set(node.id, subscription);
+      }
     },
     [nodeLoader, modelSource],
   );
 
   const clearFilter = useCallback(
     (node: TreeNodeItem) => {
-      applyHierarchyLevelFilter(nodeLoader, modelSource, node.id);
+      if (ongoingSubscriptions.current.has(node.id)) {
+        ongoingSubscriptions.current.get(node.id)?.unsubscribe();
+        ongoingSubscriptions.current.delete(node.id);
+      }
+      const subscription = applyHierarchyLevelFilter(nodeLoader, modelSource, node.id, () => ongoingSubscriptions.current.delete(node.id));
+      if (subscription) {
+        ongoingSubscriptions.current.set(node.id, subscription);
+      }
     },
     [nodeLoader, modelSource],
   );
@@ -45,7 +56,7 @@ export function useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProp
   return { applyFilter, clearFilter };
 }
 
-function applyHierarchyLevelFilter(nodeLoader: ITreeNodeLoader, modelSource: TreeModelSource, nodeId: string, filter?: PresentationInstanceFilterInfo) {
+function applyHierarchyLevelFilter(nodeLoader: ITreeNodeLoader, modelSource: TreeModelSource, nodeId: string, onComplete: (id: string) => void, filter?: PresentationInstanceFilterInfo) {
   modelSource.modifyModel((model) => {
     const modelNode = model.getNode(nodeId);
     if (!modelNode || !isTreeModelNode(modelNode) || !isPresentationTreeNodeItem(modelNode.item) || !modelNode.item.filtering) {
@@ -55,6 +66,7 @@ function applyHierarchyLevelFilter(nodeLoader: ITreeNodeLoader, modelSource: Tre
     modelNode.item.filtering.active = filter;
     if (filter) {
       modelNode.isExpanded = true;
+      modelNode.isLoading = true;
     }
     model.clearChildren(nodeId);
   });
@@ -63,5 +75,5 @@ function applyHierarchyLevelFilter(nodeLoader: ITreeNodeLoader, modelSource: Tre
   if (updatedNode === undefined || !updatedNode.isExpanded || updatedNode.numChildren !== undefined) {
     return;
   }
-  nodeLoader.loadNode(updatedNode, 0).subscribe();
+  return nodeLoader.loadNode(updatedNode, 0).subscribe({ next: () => onComplete(nodeId) });
 }
