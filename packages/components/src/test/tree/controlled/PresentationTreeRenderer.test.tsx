@@ -161,7 +161,7 @@ describe("PresentationTreeRenderer", () => {
     await applyFilter(result, propertyField.label);
     const modelSourceNode = modelSource.getModel().getNode(node.id)!;
     expect(modelSourceNode.isLoading).to.be.true;
-    subject.next({ loadedNodes: [] });
+    subject.complete();
     nodeLoaderMock.verify((x) => x.loadNode(modelSourceNode, 0), moq.Times.once());
   });
 });
