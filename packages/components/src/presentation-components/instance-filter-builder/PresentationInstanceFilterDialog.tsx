@@ -53,9 +53,18 @@ export function PresentationInstanceFilterDialog(props: PresentationInstanceFilt
   };
 
   return (
-    <Dialog isOpen={isOpen} onClose={onClose} closeOnEsc={false} preventDocumentScroll={true} trapFocus={true}>
+    <Dialog
+      className="presentation-instance-filter-dialog"
+      isOpen={isOpen}
+      onClose={onClose}
+      closeOnEsc={false}
+      preventDocumentScroll={true}
+      trapFocus={true}
+      isDraggable
+      isResizable
+    >
       <Dialog.Backdrop />
-      <Dialog.Main className="presentation-instance-filter-dialog">
+      <Dialog.Main className="presentation-instance-filter-dialog-content-container">
         <Dialog.TitleBar className="presentation-instance-filter-title" titleText={title ? title : translate("instance-filter-builder.filter")} />
         <Dialog.Content className="presentation-instance-filter-content">
           {descriptor instanceof Descriptor ? (

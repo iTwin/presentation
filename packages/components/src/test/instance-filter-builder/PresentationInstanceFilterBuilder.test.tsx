@@ -17,12 +17,13 @@ import {
   PresentationInstanceFilterBuilder,
   PresentationInstanceFilterInfo,
 } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterBuilder";
-import { createTestECClassInfo } from "../_helpers/Common";
+import { createTestECClassInfo, stubDOMMatrix, stubRaf } from "../_helpers/Common";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
-import { stubRaf } from "./Common";
 
 describe("PresentationInstanceFilter", () => {
   stubRaf();
+  stubDOMMatrix();
+
   const category = createTestCategoryDescription({ name: "root", label: "Root" });
   const classInfo = createTestECClassInfo();
   const propertiesField = createTestPropertiesContentField({

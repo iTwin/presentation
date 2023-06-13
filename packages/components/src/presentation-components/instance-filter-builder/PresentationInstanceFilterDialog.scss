@@ -4,40 +4,42 @@
 *--------------------------------------------------------------------------------------------*/
 
 .presentation-instance-filter-dialog {
-  min-width: 50vw;
+  .presentation-instance-filter-dialog-content-container {
+    min-height: calc(var(--iui-component-height-large) * 7);
+    min-width: calc(var(--iui-size-2xl) * 8);
 
-  .presentation-instance-filter-title {
-    margin-bottom: 0;
-    padding: 6px;
-  }
-
-  .presentation-instance-filter-content {
-    max-height: 80vh;
-    overflow: hidden;
-
-    .presentation-property-filter-builder {
-      overflow: scroll;
-      max-height: 70vh;
+    .presentation-instance-filter-title {
+      margin-bottom: 0;
+      padding: 6px;
     }
-  }
 
-  .presentation-instance-filter-dialog-bottom-container {
-    display: grid;
-    grid-template-columns: 50% 50%;
-    align-items: center;
-    border-style: solid none none none;
-    padding-top: 6px;
-    border-color: var(--iui-color-border);
+    .presentation-instance-filter-content {
+      overflow: hidden;
 
-    .presentation-instance-filter-button-bar {
-      margin-top: 0;
+      .presentation-property-filter-builder {
+        overflow: auto;
+        height: calc(100% - var(--iui-component-height-large));
+      }
     }
-  }
 
-  .presentation-instance-filter-dialog-progress {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 11px 0;
+    .presentation-instance-filter-dialog-bottom-container {
+      display: grid;
+      grid-template-columns: 50% 50%;
+      align-items: center;
+      border-style: solid none none none;
+      padding-top: 6px;
+      border-color: var(--iui-color-border);
+
+      .presentation-instance-filter-button-bar {
+        margin-top: 0;
+      }
+    }
+
+    .presentation-instance-filter-dialog-progress {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 11px 0;
+    }
   }
 }
