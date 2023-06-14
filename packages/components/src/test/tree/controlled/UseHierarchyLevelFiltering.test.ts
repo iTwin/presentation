@@ -214,7 +214,8 @@ describe("useHierarchyLevelFiltering", () => {
     const applyFilterActionSubject = new Subject<TreeNodeLoadResult>();
     const clearFilterActionSubject = new Subject<TreeNodeLoadResult>();
     let isFilterCalled = false;
-    nodeLoaderMock.setup((x) => x.loadNode(moq.It.isAny(), 0)).returns(() => isFilterCalled ? clearFilterActionSubject : applyFilterActionSubject);
+    nodeLoaderMock.setup((x) => x.loadNode(moq.It.isAny(), 0)).returns(() => applyFilterActionSubject);
+    nodeLoaderMock.setup((x) => x.loadNode(moq.It.isAny(), 0)).returns(() => clearFilterActionSubject);
 
     const node = createTreeModelInput(undefined, { filtering: { descriptor: createTestContentDescriptor({ fields: [] }) } });
     modelSource.modifyModel((model) => {
