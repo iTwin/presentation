@@ -7,7 +7,7 @@
  */
 
 import { isTreeModelNode, ITreeNodeLoader, Subscription, TreeModelSource, TreeNodeItem } from "@itwin/components-react";
-import { useCallback, useRef } from "react";
+import { useRef } from "react";
 import { PresentationInstanceFilterInfo } from "../../instance-filter-builder/PresentationInstanceFilterBuilder";
 import { isPresentationTreeNodeItem } from "../PresentationTreeNodeItem";
 
@@ -29,19 +29,16 @@ export function useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProp
   const { nodeLoader, modelSource } = props;
   const ongoingSubscriptions = useRef(new Map<string, Subscription>());
 
-  const handleFilterAction = useCallback(
-    (nodeId: string, info?: PresentationInstanceFilterInfo) => {
-      if (ongoingSubscriptions.current.has(nodeId)) {
-        ongoingSubscriptions.current.get(nodeId)!.unsubscribe();
-        ongoingSubscriptions.current.delete(nodeId);
-      }
-      const subscription = applyHierarchyLevelFilter(nodeLoader, modelSource, nodeId, () => ongoingSubscriptions.current.delete(nodeId), info);
-      if (subscription) {
-        ongoingSubscriptions.current.set(nodeId, subscription);
-      }
-    },
-    [nodeLoader, modelSource],
-  );
+  const handleFilterAction = (nodeId: string, info?: PresentationInstanceFilterInfo) => {
+    if (ongoingSubscriptions.current.has(nodeId)) {
+      ongoingSubscriptions.current.get(nodeId)!.unsubscribe();
+      ongoingSubscriptions.current.delete(nodeId);
+    }
+    const subscription = applyHierarchyLevelFilter(nodeLoader, modelSource, nodeId, () => ongoingSubscriptions.current.delete(nodeId), info);
+    if (subscription) {
+      ongoingSubscriptions.current.set(nodeId, subscription);
+    }
+  }
 
   return {
     applyFilter: (node: TreeNodeItem, info: PresentationInstanceFilterInfo) => handleFilterAction(node.id, info),
