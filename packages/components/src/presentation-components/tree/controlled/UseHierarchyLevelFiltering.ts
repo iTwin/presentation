@@ -68,5 +68,5 @@ function applyHierarchyLevelFilter(nodeLoader: ITreeNodeLoader, modelSource: Tre
   if (updatedNode === undefined || !updatedNode.isExpanded || updatedNode.numChildren !== undefined) {
     return;
   }
-  return nodeLoader.loadNode(updatedNode, 0).subscribe({ complete: () => onComplete(nodeId) });
+  return nodeLoader.loadNode(updatedNode, 0).subscribe({ complete: () => onComplete(nodeId), error: () => onComplete(nodeId) });
 }
