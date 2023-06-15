@@ -77,7 +77,7 @@ describe("Learning snippets", () => {
       });
 
       // render the component
-      const { container, rerender } = render(<MyTree imodel={imodel} />);
+      const { container, getByText, rerender } = render(<MyTree imodel={imodel} />);
       await waitFor(() => getByRole(container, "tree"));
 
       // find & expand model A node
@@ -96,7 +96,7 @@ describe("Learning snippets", () => {
       toggleExpandNode(modelNodeB);
 
       // expect B model to have a single error node
-      await waitFor(() => expect(container.querySelector(".presentation-components-info-node")).is.not.null);
+      await waitFor(() => expect(getByText("Èrrór ¢rëätíñg thë hìérärçhý lévêl")).is.not.null);
       expect(() => getNodeByLabel(container, `B element 1`)).to.throw();
       expect(() => getNodeByLabel(container, `B element 2`)).to.throw();
 
@@ -105,7 +105,7 @@ describe("Learning snippets", () => {
       await waitFor(() => getByRole(container, "tree"));
       expect(() => getNodeByLabel(container, `My Model A`)).to.throw();
       expect(() => getNodeByLabel(container, `My Model B`)).to.throw();
-      expect(container.querySelector(".presentation-components-info-node")).is.not.null;
+      expect(getByText("Èrrór ¢rëätíñg thë hìérärçhý lévêl")).is.not.null;
     });
   });
 });

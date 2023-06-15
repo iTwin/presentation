@@ -8,12 +8,12 @@
 
 import { Observable as RxjsObservable } from "rxjs/internal/Observable";
 import { PropertyRecord } from "@itwin/appui-abstract";
-import { DelayLoadedTreeNodeItem, ItemColorOverrides, ItemStyle, Observable, PageOptions as UiPageOptions } from "@itwin/components-react";
+import { DelayLoadedTreeNodeItem, ItemColorOverrides, ItemStyle, Observable, TreeNodeItem, PageOptions as UiPageOptions } from "@itwin/components-react";
 import { CheckBoxState } from "@itwin/core-react";
 import { LabelDefinition, Node, NodeKey, PartialNode, PageOptions as PresentationPageOptions } from "@itwin/presentation-common";
 import { StyleHelper } from "../common/StyleHelper";
 import { createLabelRecord } from "../common/Utils";
-import { PresentationTreeNodeItem } from "./PresentationTreeNodeItem";
+import { PresentationInfoTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem";
 
 /** @internal */
 export interface CreateTreeNodeItemProps {
@@ -184,4 +184,15 @@ function createNodeLabelRecord(node: Node, appendChildrenCountForGroupingNodes: 
 /** @internal */
 export function toRxjsObservable<T>(source: Observable<T>): RxjsObservable<T> {
   return new RxjsObservable((subscriber) => source.subscribe(subscriber));
+}
+
+export function createInfoNode(parentNode: TreeNodeItem | undefined, message: string): PresentationInfoTreeNodeItem {
+  const id = parentNode ? `${parentNode.id}/info-node` : `/info-node/${message}`;
+  return {
+    id,
+    label: PropertyRecord.fromString(message),
+    message,
+    isSelectionDisabled: true,
+    children: undefined,
+  };
 }

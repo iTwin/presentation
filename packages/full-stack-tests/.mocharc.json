@@ -6,5 +6,5 @@
   "file": ["./lib/setup.js"],
   "reporter": ["node_modules/@itwin/build-tools/mocha-reporter"],
   "reporterOptions": ["mochaFile=lib/test/junit_results.xml"],
-  "spec": ["./lib/**/*.js"]
+  "spec": ["./lib/**/*.test.js"]
 }
