@@ -24,7 +24,7 @@
     "@itwin/eslint-plugin": "^4.0.0-dev.38",
     "@itwin/presentation-common": "^4.1.0-dev.35",
     "@types/artillery": "^1.7.0",
-    "@types/node": "^16.0.0",
+    "@types/node": "^18.16.18",
     "artillery": "2.0.0-31",
     "eslint": "^8.40.0",
     "rimraf": "^5.0.0",

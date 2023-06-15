@@ -45,7 +45,7 @@
     "@types/cpx2": "npm:@types/cpx@1.5.2",
     "@types/jsdom-global": "3.0.4",
     "@types/mocha": "^8.2.2",
-    "@types/node": "18.11.5",
+    "@types/node": "^18.16.18",
     "@types/react-dom": "^17.0.0",
     "@types/react": "^17.0.37",
     "@types/sinon": "^10.0.14",
