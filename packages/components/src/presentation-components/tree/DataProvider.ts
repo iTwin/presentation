@@ -7,7 +7,6 @@
  */
 
 import memoize from "micro-memoize";
-import { PropertyRecord } from "@itwin/appui-abstract";
 import { DelayLoadedTreeNodeItem, PageOptions, TreeNodeItem } from "@itwin/components-react";
 import { IDisposable, Logger } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -33,8 +32,8 @@ import { translate } from "../common/Utils";
 import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory";
 import { convertToInstanceFilterDefinition } from "../instance-filter-builder/InstanceFilterConverter";
 import { IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider";
-import { isPresentationTreeNodeItem, PresentationInfoTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem";
-import { createTreeNodeItem, CreateTreeNodeItemProps, pageOptionsUiToPresentation } from "./Utils";
+import { isPresentationTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem";
+import { createInfoNode, createTreeNodeItem, CreateTreeNodeItemProps, pageOptionsUiToPresentation } from "./Utils";
 
 /**
  * Properties for creating a `PresentationTreeDataProvider` instance.
@@ -339,17 +338,6 @@ function createTreeItems(
     items.push(item);
   }
   return items;
-}
-
-function createInfoNode(parentNode: TreeNodeItem | undefined, message: string): PresentationInfoTreeNodeItem {
-  const id = parentNode ? `${parentNode.id}/info-node` : `/info-node/${message}`;
-  return {
-    id,
-    label: PropertyRecord.fromString(message),
-    message,
-    isSelectionDisabled: true,
-    children: undefined,
-  };
 }
 
 class MemoizationHelpers {
