@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "`InstanceFilterDialog`: Show loading spinner when filtering is in progress.",
-  "packageName": "@itwin/presentation-components",
-  "email": "124659623+simasjar@users.noreply.github.com",
-  "dependentChangeType": "patch"
-}
