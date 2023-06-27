@@ -1,7 +1,0 @@
-{
-  "type": "none",
-  "comment": "Upgrade `itwinjs-core` devDependencies to `4.0.0-rc`",
-  "packageName": "@itwin/presentation-components",
-  "email": "35135765+grigasp@users.noreply.github.com",
-  "dependentChangeType": "none"
-}

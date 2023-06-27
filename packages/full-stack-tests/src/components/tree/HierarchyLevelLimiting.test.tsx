@@ -84,7 +84,7 @@ describe("Learning snippets", () => {
       });
 
       // render the component
-      const { container } = render(<MyTree imodel={imodel} />);
+      const { container, getByText } = render(<MyTree imodel={imodel} />);
       await waitFor(() => getByRole(container, "tree"));
 
       // find & expand both model nodes
@@ -103,7 +103,7 @@ describe("Learning snippets", () => {
       for (let i = 0; i < 11; ++i) {
         expect(() => getNodeByLabel(container, `B element ${i + 1}`)).to.throw();
       }
-      await waitFor(() => expect(container.querySelector(".presentation-components-info-node")).is.not.null);
+      await waitFor(() => expect(getByText("Thè híêrãr¢hÿ lêvël ìs tõö lårgè tó bê dïspläÿêd - plëâsé prövïdè áddîtïöñàl fïltèríñg")).is.not.null);
     });
   });
 });
