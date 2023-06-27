@@ -2,6 +2,45 @@
   "name": "@itwin/presentation-opentelemetry",
   "entries": [
     {
+      "date": "Thu, 15 Jun 2023 07:31:33 GMT",
+      "tag": "@itwin/presentation-opentelemetry_v4.0.0",
+      "version": "4.0.0",
+      "comments": {
+        "none": [
+          {
+            "author": "35135765+grigasp@users.noreply.github.com",
+            "package": "@itwin/presentation-opentelemetry",
+            "commit": "49a6fa2ab5256d00d4424033d5b0efb96e049a6b",
+            "comment": "Upgrade `itwinjs-core` devDependencies to `4.0.0-rc`"
+          },
+          {
+            "author": "35135765+grigasp@users.noreply.github.com",
+            "package": "@itwin/presentation-opentelemetry",
+            "commit": "49a6fa2ab5256d00d4424033d5b0efb96e049a6b",
+            "comment": "Extract APIs of published packages"
+          },
+          {
+            "author": "35135765+grigasp@users.noreply.github.com",
+            "package": "@itwin/presentation-opentelemetry",
+            "commit": "49a6fa2ab5256d00d4424033d5b0efb96e049a6b",
+            "comment": "Update `itwinjs-core` dependencies to official `4.0` version"
+          },
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-opentelemetry",
+            "commit": "49a6fa2ab5256d00d4424033d5b0efb96e049a6b",
+            "comment": "Updated devDependencies"
+          },
+          {
+            "author": "35135765+grigasp@users.noreply.github.com",
+            "package": "@itwin/presentation-opentelemetry",
+            "commit": "49a6fa2ab5256d00d4424033d5b0efb96e049a6b",
+            "comment": "Update package dependencies"
+          }
+        ]
+      }
+    },
+    {
       "date": "Tue, 02 May 2023 11:39:31 GMT",
       "tag": "@itwin/presentation-opentelemetry_v4.0.0",
       "version": "4.0.0",

@@ -7,16 +7,17 @@ import { expect } from "chai";
 import sinon from "sinon";
 import * as moq from "typemoq";
 import { PropertyRecord, StandardTypeNames } from "@itwin/appui-abstract";
-import { ITreeNodeLoader, TreeActions, TreeModel, TreeModelSource, UiComponents, VisibleTreeNodes } from "@itwin/components-react";
+import { ITreeNodeLoader, TreeActions, TreeModel, TreeModelSource, TreeNodeLoadResult, UiComponents, VisibleTreeNodes } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { PropertyValueFormat } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { fireEvent, render, waitFor } from "@testing-library/react";
+import { fireEvent, render, RenderResult, waitFor } from "@testing-library/react";
 import { PresentationTreeRenderer, PresentationTreeRendererProps } from "../../../presentation-components/tree/controlled/PresentationTreeRenderer";
 import { createTestPropertyInfo, stubDOMMatrix, stubRaf } from "../../_helpers/Common";
 import { createTestContentDescriptor, createTestPropertiesContentField,  } from "../../_helpers/Content";
 import { createTreeModelNode, createTreeNodeItem } from "./Helpers";
+import { Subject } from "rxjs";
 
 describe("PresentationTreeRenderer", () => {
   stubRaf();
@@ -118,11 +119,55 @@ describe("PresentationTreeRenderer", () => {
     modelSourceMock.setup((x) => x.getModel()).returns(() => treeModelMock.object);
     modelSourceMock.setup((x) => x.modifyModel(moq.It.isAny())).verifiable(moq.Times.once());
 
-    const { getByText, container, baseElement } = render(<PresentationTreeRenderer {...treeProps} />);
+    const result = render(<PresentationTreeRenderer {...treeProps} />);
 
+    const { getByText, baseElement } = result
     await waitFor(() => getByText(label));
 
-    const filterButton = container.querySelector(".presentation-components-node-action-buttons button");
+    await applyFilter(result, propertyField.label);
+
+    // wait until dialog closes
+    await waitFor(() => {
+      expect(baseElement.querySelector(".presentation-instance-filter-dialog")).to.be.null;
+    });
+
+    modelSourceMock.verifyAll();
+  });
+
+  it("sets `node.isLoading` to true when filter is applied", async () => {
+    const subject = new Subject<TreeNodeLoadResult>();
+    nodeLoaderMock.setup((x) => x.loadNode(moq.It.isAny(), 0)).returns(() => subject);
+    const label = "Node Label";
+    const property = createTestPropertyInfo({ name: "TestProperty", type: StandardTypeNames.Bool });
+    const propertyField = createTestPropertiesContentField({
+      properties: [{ property }],
+      name: property.name,
+      label: property.name,
+      type: { typeName: StandardTypeNames.Bool, valueFormat: PropertyValueFormat.Primitive },
+    });
+    const nodeItem = createTreeNodeItem({ filtering: { descriptor: createTestContentDescriptor({ fields: [propertyField] }) } });
+    const node = createTreeModelNode({ label: PropertyRecord.fromString(label), isExpanded: true }, nodeItem);
+    const modelSource = new TreeModelSource();
+    modelSource.modifyModel((model) => {
+      model.setChildren(undefined, [{...node, isLoading: false}], 0);
+    });
+    visibleNodesMock.setup((x) => x.getNumNodes()).returns(() => 1);
+    visibleNodesMock.setup((x) => x.getAtIndex(0)).returns(() => modelSource.getModel().getNode(node.id));
+
+    const result = render(<PresentationTreeRenderer {...treeProps} modelSource={modelSource} />);
+    const { getByText } = result;
+    await waitFor(() => getByText(label));
+
+    await applyFilter(result, propertyField.label);
+    const modelSourceNode = modelSource.getModel().getNode(node.id)!;
+    expect(modelSourceNode.isLoading).to.be.true;
+    subject.complete();
+    nodeLoaderMock.verify((x) => x.loadNode(modelSourceNode, 0), moq.Times.once());
+  });
+});
+
+async function applyFilter({ container, baseElement, getByText }: RenderResult, propertyLabel: string) {
+  const filterButton = container.querySelector(".presentation-components-node-action-buttons button");
     expect(filterButton).to.not.be.null;
     fireEvent.click(filterButton!);
 
@@ -137,7 +182,7 @@ describe("PresentationTreeRenderer", () => {
     expect(propertySelector).to.not.be.null;
     fireEvent.focus(propertySelector!);
     // select property
-    fireEvent.click(getByText(propertyField.label));
+    fireEvent.click(getByText(propertyLabel));
 
     // wait until apply button is enabled
     const applyButton = await waitFor(() => {
@@ -146,12 +191,4 @@ describe("PresentationTreeRenderer", () => {
       return button;
     });
     fireEvent.click(applyButton!);
-
-    // wait until dialog closes
-    await waitFor(() => {
-      expect(baseElement.querySelector(".presentation-instance-filter-dialog")).to.be.null;
-    });
-
-    modelSourceMock.verifyAll();
-  });
-});
+}

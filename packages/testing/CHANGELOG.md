@@ -1,8 +1,16 @@
 # Change Log - @itwin/presentation-testing
 
-This log was last generated on Tue, 02 May 2023 11:39:31 GMT and should not be manually modified.
+This log was last generated on Thu, 15 Jun 2023 07:31:33 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 4.0.1
+
+Thu, 15 Jun 2023 07:31:33 GMT
+
+### Patches
+
+- Bumped `rimraf` version ([commit](https://github.com/iTwin/presentation/commit/49a6fa2ab5256d00d4424033d5b0efb96e049a6b))
 
 ## 4.0.0
 
