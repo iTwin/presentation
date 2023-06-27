@@ -200,7 +200,6 @@ function TargetSelectControl(props: ControlProps<NavigationPropertyTarget, false
       <components.ValueContainer {...props} className="iui-select-button" innerProps={{ onClick: handleMenuOpen, style: { cursor: "text" } }}>
         <Input
           ref={inputRef}
-          type="search"
           value={inputValue}
           onBlur={handleInputBlur}
           onFocus={handleMenuOpen}
