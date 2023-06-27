@@ -271,11 +271,7 @@ describe("NavigationPropertyTargetSelector", () => {
     };
     const { container, getByDisplayValue } = render(<NavigationPropertyTargetSelector {...initialProps} />);
 
-    const inputcontainer = await waitFor(() => {
-      const element = container.querySelector<HTMLInputElement>("input");
-      expect(element).to.not.be.null;
-      return element;
-    });
+    const inputcontainer = getByRole("input");
 
     fireEvent.click(inputcontainer!);
     await user.keyboard("{End}");
