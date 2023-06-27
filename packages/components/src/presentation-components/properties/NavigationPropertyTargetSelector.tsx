@@ -10,16 +10,13 @@ import "@itwin/itwinui-css/css/tag.css";
 import "@itwin/itwinui-css/css/input.css";
 import "@itwin/itwinui-css/css/menu.css";
 import classnames from "classnames";
-import { Children, forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import {
   components,
   ControlProps,
-  DropdownIndicatorProps,
-  IndicatorsContainerProps,
   MenuProps,
   OptionProps,
   SingleValue,
-  ValueContainerProps,
 } from "react-select";
 import { AsyncPaginate } from "react-select-async-paginate";
 import { PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
@@ -29,6 +26,7 @@ import { SvgCaretDownSmall } from "@itwin/itwinui-icons-react";
 import { InstanceKey, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { mergeRefs, translate, useResizeObserver } from "../common/Utils";
 import { NavigationPropertyTarget, useNavigationPropertyTargetsLoader, useNavigationPropertyTargetsRuleset } from "./UseNavigationPropertyTargetsLoader";
+import { Input } from "@itwin/itwinui-react";
 
 /** @internal */
 export interface NavigationPropertyTargetSelectorAttributes {
@@ -45,7 +43,7 @@ export interface NavigationPropertyTargetSelectorProps extends PropertyEditorPro
 
 /** @internal */
 export const NavigationPropertyTargetSelector = forwardRef<NavigationPropertyTargetSelectorAttributes, NavigationPropertyTargetSelectorProps>((props, ref) => {
-  const { imodel, getNavigationPropertyInfo, propertyRecord, onCommit, setFocus } = props;
+  const { imodel, getNavigationPropertyInfo, propertyRecord, onCommit } = props;
   const targetsRuleset = useNavigationPropertyTargetsRuleset(getNavigationPropertyInfo, propertyRecord.property);
   const loadTargets = useNavigationPropertyTargetsLoader({ imodel, ruleset: targetsRuleset });
 
@@ -92,9 +90,8 @@ export const NavigationPropertyTargetSelector = forwardRef<NavigationPropertyTar
         debounceTimeout={500}
         loadOptions={async (inputValue, options) => loadTargets(inputValue, options.length)}
         cacheUniqs={[loadTargets]}
-        // eslint-disable-next-line jsx-a11y/no-autofocus
-        autoFocus={setFocus}
-        placeholder={<>{translate("navigation-property-editor.select-target-instance")}</>}
+        backspaceRemovesValue={false}
+        tabSelectsValue={false}
         loadingMessage={() => translate("navigation-property-editor.loading-target-instances")}
         styles={{
           control: () => ({ height: "27px" }),
@@ -103,16 +100,12 @@ export const NavigationPropertyTargetSelector = forwardRef<NavigationPropertyTar
           menu: () => ({ position: "absolute", zIndex: 9999, width }),
           menuList: (style: any) => ({ ...style, padding: 0 }),
           option: () => ({ whiteSpace: "nowrap", width: "max-content", minWidth: "100%" }),
-          placeholder: (style: any) => ({ ...style, position: "relative", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }),
           dropdownIndicator: () => ({ backgroundColor: "var(--iui-color-background)" }),
         }}
         components={{
           Control: TargetSelectControl,
-          ValueContainer: TargetSelectValueContainer,
           Menu: TargetSelectMenu,
           Option: TargetSelectOption,
-          IndicatorsContainer: TargetSelectIndicatorsContainer,
-          DropdownIndicator: TargetSelectDropdownIndicator,
         }}
       />
     </div>
@@ -144,19 +137,88 @@ function getNavigationTargetFromPropertyRecord(record: PropertyRecord): Navigati
   return { key: value.value as InstanceKey, label: LabelDefinition.fromLabelString(value.displayValue) };
 }
 
-function TargetSelectControl<TOption, IsMulti extends boolean = boolean>({ children, ...props }: ControlProps<TOption, IsMulti>) {
+function TargetSelectControl(props: ControlProps<NavigationPropertyTarget, false>) {
+  const { hasValue, getValue, selectProps } = props;
+  const [inputValue, setInputValue] = useState<string>(() => getValue()[0]?.label.displayValue ?? "");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const selectedValue = getValue()[0];
+
+  useEffect(() => {
+    // istanbul ignore else
+    if (hasValue && selectedValue) {
+      setInputValue(selectedValue.label.displayValue);
+    }
+  }, [hasValue, selectedValue]);
+
+  const handleMenuOpen = () => {
+    selectProps.onMenuOpen();
+    inputRef.current?.focus();
+    inputRef.current?.toggleAttribute
+    selectProps.onInputChange("", { action: "input-change", prevInputValue: inputValue });
+  }
+
+  const handleInputBlur = () => {
+    if (selectedValue?.label.displayValue) {
+      setInputValue(selectedValue.label.displayValue);
+      selectProps.onInputChange(selectedValue.label.displayValue, { action: "set-value", prevInputValue: inputValue });
+    }
+    else {
+      setInputValue("");
+      selectProps.onInputChange("", { action: "set-value", prevInputValue: inputValue });
+    }
+    selectProps.onMenuClose();
+  }
+
+  const handleDropdownButtonClick = () => {
+    if (selectProps.menuIsOpen) {
+      selectProps.onMenuClose();
+      inputRef.current?.blur();
+    }
+    else {
+      handleMenuOpen();
+    }
+  }
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(event.target.value);
+    selectProps.onMenuOpen();
+    selectProps.onInputChange(event.target.value, { action: "input-change", prevInputValue: inputValue });
+  }
+
+  /** This function is used to cancel overriden react-select keyboard events. */
+  const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.code === "Space" || event.code === "Home" || event.code === "End") {
+      event.stopPropagation();
+    }
+    if (event.key === "Tab") {
+      selectProps.onMenuClose();
+    }
+  }
+
   return (
     <components.Control {...props} className="iui-input-with-icon">
-      {children}
+      <components.ValueContainer {...props} className="iui-select-button" innerProps={{ onClick: handleMenuOpen, style: { cursor: "text" } }}>
+        <Input
+          ref={inputRef}
+          type="search"
+          value={inputValue}
+          onBlur={handleInputBlur}
+          onFocus={handleMenuOpen}
+          onChange={handleInputChange}
+          style={{ width: "100%", height: "100%", border: "none", textOverflow: "ellipsis", overflow: "hidden", outline: "none", padding: "0" }}
+          size="small"
+          onKeyDown={handleInputKeyDown}
+          placeholder={translate("navigation-property-editor.select-target-instance")}
+        />
+      </components.ValueContainer>
+      <components.DropdownIndicator
+        {...props}
+        className={classnames("iui-end-icon iui-actionable", { "iui-open": props.selectProps.menuIsOpen })}
+        innerProps={{ onClick: handleDropdownButtonClick }}
+      >
+        <SvgCaretDownSmall />
+      </components.DropdownIndicator>
     </components.Control>
-  );
-}
-
-function TargetSelectValueContainer<TOption, IsMulti extends boolean = boolean>({ children, ...props }: ValueContainerProps<TOption, IsMulti>) {
-  return (
-    <components.ValueContainer {...props} className="iui-select-button">
-      {children}
-    </components.ValueContainer>
   );
 }
 
@@ -178,17 +240,5 @@ function TargetSelectOption<TOption, IsMulti extends boolean = boolean>({ childr
     <components.Option {...props} className={className}>
       {props.selectProps.getOptionLabel && props.selectProps.getOptionLabel(props.data)}
     </components.Option>
-  );
-}
-
-function TargetSelectIndicatorsContainer<TOption, IsMulti extends boolean = boolean>({ children }: IndicatorsContainerProps<TOption, IsMulti>) {
-  return <>{Children.toArray(children).pop()}</>;
-}
-
-function TargetSelectDropdownIndicator<TOption, IsMulti extends boolean = boolean>(props: DropdownIndicatorProps<TOption, IsMulti>) {
-  return (
-    <components.DropdownIndicator {...props} className="iui-end-icon iui-actionable">
-      <SvgCaretDownSmall />
-    </components.DropdownIndicator>
   );
 }

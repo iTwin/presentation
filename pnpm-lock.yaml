@@ -1,4 +1,8 @@
-lockfileVersion: '6.0'
+lockfileVersion: '6.1'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
 
 importers:
 
@@ -497,6 +501,9 @@ importers:
       '@testing-library/react-hooks':
         specifier: ^7.0.2
         version: 7.0.2(react-dom@17.0.0)(react@17.0.0)
+      '@testing-library/user-event':
+        specifier: ^14.4.3
+        version: 14.4.3(@testing-library/dom@7.21.4)
       '@types/chai':
         specifier: 4.3.1
         version: 4.3.1
@@ -976,8 +983,8 @@ packages:
       - supports-color
     dev: false
 
-  /@artilleryio/int-core@2.0.6:
-    resolution: {integrity: sha512-ShcvHIcsArTzot+/cGvSTgdl7KgRMUxSfnPkDxY9OJpRAt0l6iEtf40qvF96hf9Is/PntD+reDOsC0GD1n2qKA==}
+  /@artilleryio/int-core@2.0.7:
+    resolution: {integrity: sha512-AVOW9gdkgzWzkfFYi0SnAddVqkBhuDjM28FEFHReA/g7EF5113jdlh+7sO8W4Vql5tpS26x8pNnkEa60gHMAsA==}
     dependencies:
       '@artilleryio/int-commons': 2.0.0
       '@artilleryio/sketches-js': 1.0.4
@@ -2632,7 +2639,6 @@ packages:
     dependencies:
       core-js-pure: 3.30.2
       regenerator-runtime: 0.13.11
-    dev: false
 
   /@babel/runtime@7.21.5:
     resolution: {integrity: sha512-8jI69toZqqcsnqGGqwGS4Qb1VwLOEp4hz+CXPywcvjs60u3B4Pom/U/7rm4W8tMOYEB+E9wgD0mW1l3r8qlI9Q==}
@@ -3416,7 +3422,6 @@ packages:
       '@types/istanbul-reports': 1.1.2
       '@types/yargs': 15.0.15
       chalk: 3.0.0
-    dev: false
 
   /@jridgewell/gen-mapping@0.3.3:
     resolution: {integrity: sha512-HLhSWOLRi875zjjMG/r+Nv0oCW8umGb0BgEhyX3dDX3egwZtB8PqLnjz3yedt8R5StBrzcg4aBpnh8UA9D1BoQ==}
@@ -4299,7 +4304,6 @@ packages:
       aria-query: 4.2.2
       dom-accessibility-api: 0.4.7
       pretty-format: 25.5.0
-    dev: false
 
   /@testing-library/dom@8.20.0:
     resolution: {integrity: sha512-d9ULIT+a4EXLX3UU8FBjauG9NnsZHkHztXoIcTsOKoOw030fyjheN9svkTULjJxtYag9DZz5Jz5qkWZDPxTFwA==}
@@ -4355,7 +4359,6 @@ packages:
       '@testing-library/dom': '>=7.21.4'
     dependencies:
       '@testing-library/dom': 7.21.4
-    dev: false
 
   /@tippyjs/react@4.2.6(react-dom@17.0.0)(react@17.0.0):
     resolution: {integrity: sha512-91RicDR+H7oDSyPycI13q3b7o4O60wa2oRbjlz2fyRLmHImc4vyDwuUP8NtZaN0VARJY5hybvDYrFzhY9+Lbyw==}
@@ -4397,7 +4400,6 @@ packages:
 
   /@types/aria-query@4.2.2:
     resolution: {integrity: sha512-HnYpAE1Y6kRyKM/XkEuiRQhTHvkzMBurTHnpFLYLBGPIylZNPs9jJcuOOYWxPLJCSEtmZT0Y8rHDokKN7rRTig==}
-    dev: false
 
   /@types/aria-query@5.0.1:
     resolution: {integrity: sha512-XTIieEY+gvJ39ChLcB4If5zHtPxt3Syj5rgZR+e1ctpmK8NjPf0zFqsz4JpLJT0xla9GFDKjy8Cpu331nrmE1Q==}
@@ -4564,20 +4566,17 @@ packages:
 
   /@types/istanbul-lib-coverage@2.0.4:
     resolution: {integrity: sha512-z/QT1XN4K4KYuslS23k62yDIDLwLFkzxOuMplDtObz0+y7VqJCaO2o+SPwHCvLFZh7xazvvoor2tA/hPz9ee7g==}
-    dev: false
 
   /@types/istanbul-lib-report@3.0.0:
     resolution: {integrity: sha512-plGgXAPfVKFoYfa9NpYDAkseG+g6Jr294RqeqcqDixSbU34MZVJRi/P+7Y8GDpzkEwLaGZZOpKIEmeVZNtKsrg==}
     dependencies:
       '@types/istanbul-lib-coverage': 2.0.4
-    dev: false
 
   /@types/istanbul-reports@1.1.2:
     resolution: {integrity: sha512-P/W9yOX/3oPZSpaYOCQzGqgCQRXn0FFO/V8bWrCQs+wLmvVVxk6CRBXALEvNs9OHIatlnlFokfhuDo2ug01ciw==}
     dependencies:
       '@types/istanbul-lib-coverage': 2.0.4
       '@types/istanbul-lib-report': 3.0.0
-    dev: false
 
   /@types/jquery@3.5.16:
     resolution: {integrity: sha512-bsI7y4ZgeMkmpG9OM710RRzDFp+w4P1RGiIt30C1mSBT+ExCleeh4HObwgArnDFELmRrOpXgSYN9VF1hj+f1lw==}
@@ -4782,13 +4781,11 @@ packages:
 
   /@types/yargs-parser@21.0.0:
     resolution: {integrity: sha512-iO9ZQHkZxHn4mSakYV0vFHAVDyEOIJQrV2uZ06HxEPcx+mt8swXoZHIbaaJ2crJYFfErySgktuTZ3BeLz+XmFA==}
-    dev: false
 
   /@types/yargs@15.0.15:
     resolution: {integrity: sha512-IziEYMU9XoVj8hWg7k+UJrXALkGFjWJhn5QFEv9q4p+v40oZhSuC135M38st8XPjICL7Ey4TV64ferBGUoJhBg==}
     dependencies:
       '@types/yargs-parser': 21.0.0
-    dev: false
 
   /@types/yauzl@2.10.0:
     resolution: {integrity: sha512-Cn6WYCm0tXv8p6k+A8PvbDG763EDpBoTzHdA+Q/MF6H3sapGjCm9NzoaJncJS9tUKSuCoDs9XHxYYsQDgxR6kw==}
@@ -5473,7 +5470,6 @@ packages:
     dependencies:
       '@babel/runtime': 7.21.5
       '@babel/runtime-corejs3': 7.21.5
-    dev: false
 
   /aria-query@5.1.3:
     resolution: {integrity: sha512-R5iJ5lkuHybztUfuOAznmboyjWq8O6sqNqtK7CLOqdydi54VNbORp49mb14KbWgG1QD3JFO9hJdZ+y4KutfdOQ==}
@@ -5553,19 +5549,20 @@ packages:
       - supports-color
     dev: false
 
-  /artillery-plugin-expect@2.2.1:
-    resolution: {integrity: sha512-Ruu7MWsC+mOIchQGITgI0lMIzkPnBLCknQ13NBXTWSJqDmyNeq0FT+iFdQ29yKv6XkP3lQZWX8T1dqexMYIgeA==}
+  /artillery-plugin-expect@2.3.1:
+    resolution: {integrity: sha512-jsdebUgqwfa3rS7Cp2I2ItZk3u0KG8cFHxIatn8Y8v/6iMnuDEq+X93UA5xnnNDHNUomsXFUZwM7GdGN3jYuJw==}
     engines: {node: '>= 14.17.6'}
     dependencies:
       chalk: 4.1.2
       debug: 4.3.4(supports-color@8.1.1)
+      jmespath: 0.16.0
       lodash: 4.17.21
     transitivePeerDependencies:
       - supports-color
     dev: false
 
-  /artillery-plugin-metrics-by-endpoint@1.0.2:
-    resolution: {integrity: sha512-/dDlmDhG/tM6zOPJ/AktrbWvYXKfgaT48P6EmYLvb3erq+f5Z06AKKlpqoVRoWfcMYPMVX0Kde5fnaQnnW6CmA==}
+  /artillery-plugin-metrics-by-endpoint@1.2.0:
+    resolution: {integrity: sha512-4SatrmYffyex/j/wjCBW2gVGwgRfLSJFBTuOGM1pJH3l0iEOeHM+/HOzVIUL8IQbnjA/G1WpkJL3bB7jOuX4Dg==}
     dependencies:
       debug: 4.3.4(supports-color@8.1.1)
     transitivePeerDependencies:
@@ -5600,7 +5597,7 @@ packages:
     hasBin: true
     dependencies:
       '@artilleryio/int-commons': 2.0.0
-      '@artilleryio/int-core': 2.0.6
+      '@artilleryio/int-core': 2.0.7
       '@aws-sdk/credential-providers': 3.329.0
       '@oclif/command': 1.8.24(@oclif/config@1.18.8)
       '@oclif/config': 1.18.8
@@ -5608,8 +5605,8 @@ packages:
       '@oclif/plugin-not-found': 2.3.23(@types/node@16.0.0)(typescript@5.0.2)
       archiver: 5.3.1
       artillery-plugin-ensure: 1.1.3
-      artillery-plugin-expect: 2.2.1
-      artillery-plugin-metrics-by-endpoint: 1.0.2
+      artillery-plugin-expect: 2.3.1
+      artillery-plugin-metrics-by-endpoint: 1.2.0
       artillery-plugin-publish-metrics: 2.4.0
       async: 2.6.4
       aws-sdk: 2.1375.0
@@ -6485,7 +6482,7 @@ packages:
     dev: false
 
   /cookie-signature@1.0.6:
-    resolution: {integrity: sha1-4wOogrNCzD7oylE6eZmXNNqzriw=}
+    resolution: {integrity: sha512-QADzlaHc8icV8I7vbaJXJwod9HWYp8uCqf1xa4OfNu1T7JVxQIrUgOWtHdNDtPiywmFbiS12VjotIXLrKM3orQ==}
     dev: false
 
   /cookie@0.4.1:
@@ -6526,7 +6523,6 @@ packages:
   /core-js-pure@3.30.2:
     resolution: {integrity: sha512-p/npFUJXXBkCCTIlEGBdghofn00jWG6ZOtdoIXSJmAu2QBvN0IqpZXWweOytcwE6cfx8ZvVUy1vw8zxhe4Y2vg==}
     requiresBuild: true
-    dev: false
 
   /core-util-is@1.0.3:
     resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
@@ -6985,7 +6981,6 @@ packages:
 
   /dom-accessibility-api@0.4.7:
     resolution: {integrity: sha512-5+GzhTpCQYHz4NjL8loYTDVBnXIjNLBadWQBKxXk+osFEplLt3EsSYBu2YZcdZ8QqrvCHgW6TSMGMbmgfhrn2g==}
-    dev: false
 
   /dom-accessibility-api@0.5.16:
     resolution: {integrity: sha512-X7BJ2yElsnOJ30pZF4uIIDfBEVgF4XEBxL9Bxhy6dnrm5hkzqmsWHGTiHqRiITNhMyFLyAiWndIJP7Z1NTteDg==}
@@ -11272,7 +11267,6 @@ packages:
       ansi-regex: 5.0.1
       ansi-styles: 4.3.0
       react-is: 16.13.1
-    dev: false
 
   /pretty-format@27.5.1:
     resolution: {integrity: sha512-Qb1gy5OrP5+zDf2Bvnzdl3jsTf1qXVMazbvCoKhtKqVs4/YK4ozX4gKQJJVyNe+cajNPn0KoC0MC3FUmaHWEmQ==}
