@@ -283,7 +283,7 @@ describe("NavigationPropertyTargetSelector", () => {
 
     fireEvent.click(inputContainer);
 
-    // Check if user can write text after selecting option.
+    // Check if it's possible to type after option is selected and menu is opened again
     await user.keyboard("{Enter}");
     await user.type(inputContainer, "E", { skipClick: true });
     await waitFor(() => expect(getByDisplayValue(`${contentItem.label.displayValue}E`)).to.not.be.null);
