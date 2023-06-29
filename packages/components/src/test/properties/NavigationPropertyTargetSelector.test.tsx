@@ -3,22 +3,22 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from "chai";
-import { createRef } from "react";
-import sinon from "sinon";
 import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { expect } from "chai";
+import { createRef } from "react";
+import sinon from "sinon";
 import {
   NavigationPropertyTargetSelector,
   NavigationPropertyTargetSelectorAttributes,
   NavigationPropertyTargetSelectorProps,
 } from "../../presentation-components/properties/NavigationPropertyTargetSelector";
 import { createTestContentDescriptor, createTestContentItem } from "../_helpers/Content";
-import userEvent from "@testing-library/user-event";
 
 function createNavigationPropertyDescription(): PropertyDescription {
   return {
@@ -220,7 +220,7 @@ describe("NavigationPropertyTargetSelector", () => {
       getNavigationPropertyInfo: async () => testNavigationPropertyInfo,
       propertyRecord,
     };
-    const { container, getByDisplayValue, getByRole, queryByText } = render(<NavigationPropertyTargetSelector {...initialProps} />);
+    const { container, getByRole, getByText, queryByText } = render(<NavigationPropertyTargetSelector {...initialProps} />);
 
     const dropdownButton = await waitFor(() => {
       const element = container.querySelector<HTMLDivElement>(".iui-end-icon");
@@ -238,9 +238,9 @@ describe("NavigationPropertyTargetSelector", () => {
     // when input value is not empty
     fireEvent.click(dropdownButton!);
     const menuItem = getByText(contentItem.label.displayValue);
-    fireEvent.click(menuItem!);
+    fireEvent.click(menuItem);
     await waitFor(() => expect(queryByText(contentItem.label.displayValue)).to.be.null);
-    expect(getByDisplayValue(contentItem.label.displayValue)).to.not.be.null;
+    expect((getByRole("textbox") as HTMLInputElement).value).to.be.eq(contentItem.label.displayValue)
   });
 
   it("correctly handles keyDown events", async () => {
@@ -264,9 +264,12 @@ describe("NavigationPropertyTargetSelector", () => {
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
     fireEvent.click(inputContainer);
+
+    // Check if input's cursor is at the end of the text after pressing `End`.
     await user.keyboard("{End}");
     await user.type(inputContainer, "E", { skipClick: true });
 
+    // Check if input's cursor is at the start of the text after pressing `Home`.
     await user.keyboard("{Home}");
     await user.type(inputContainer, "H ", { skipClick: true });
 
@@ -274,11 +277,13 @@ describe("NavigationPropertyTargetSelector", () => {
 
     await waitFor(() => expect(queryByText(contentItem.label.displayValue)).to.not.be.null);
 
+    // Check if the menu is closed after the `tab` key was pressed.
     fireEvent.keyDown(inputContainer, { key: "Tab" });
     await waitFor(() => expect(queryByText(contentItem.label.displayValue)).to.be.null);
 
     fireEvent.click(inputContainer);
 
+    // Check if user can write text after selecting option.
     await user.keyboard("{Enter}");
     await user.type(inputContainer, "E", { skipClick: true });
     await waitFor(() => expect(getByDisplayValue(`${contentItem.label.displayValue}E`)).to.not.be.null);

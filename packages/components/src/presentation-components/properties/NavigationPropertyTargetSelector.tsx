@@ -6,28 +6,28 @@
  * @module Internal
  */
 
-import "@itwin/itwinui-css/css/tag.css";
+import { PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
+import { PropertyEditorProps, PropertyValueRendererManager } from "@itwin/components-react";
+import { IModelConnection } from "@itwin/core-frontend";
 import "@itwin/itwinui-css/css/input.css";
 import "@itwin/itwinui-css/css/menu.css";
+import "@itwin/itwinui-css/css/tag.css";
+import { SvgCaretDownSmall } from "@itwin/itwinui-icons-react";
+import { Input } from "@itwin/itwinui-react";
+import { InstanceKey, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
 import classnames from "classnames";
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import {
-  components,
   ControlProps,
   MenuProps,
   OptionProps,
   SingleValue,
+  components,
 } from "react-select";
 import { AsyncPaginate } from "react-select-async-paginate";
-import { PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
-import { PropertyEditorProps, PropertyValueRendererManager } from "@itwin/components-react";
-import { IModelConnection } from "@itwin/core-frontend";
-import { SvgCaretDownSmall } from "@itwin/itwinui-icons-react";
-import { InstanceKey, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { mergeRefs, translate, useResizeObserver } from "../common/Utils";
-import { NavigationPropertyTarget, useNavigationPropertyTargetsLoader, useNavigationPropertyTargetsRuleset } from "./UseNavigationPropertyTargetsLoader";
-import { Input } from "@itwin/itwinui-react";
 import "./NavigationPropertyTargetSelector.scss";
+import { NavigationPropertyTarget, useNavigationPropertyTargetsLoader, useNavigationPropertyTargetsRuleset } from "./UseNavigationPropertyTargetsLoader";
 
 /** @internal */
 export interface NavigationPropertyTargetSelectorAttributes {
@@ -139,18 +139,15 @@ function getNavigationTargetFromPropertyRecord(record: PropertyRecord): Navigati
 }
 
 function TargetSelectControl<TOption, IsMulti extends boolean = boolean>(props: ControlProps<TOption, IsMulti>) {
-  const { hasValue, getValue, selectProps } = props;
+  const { getValue, selectProps } = props;
   const selectedValue = getValue()[0];
   const label = selectedValue ? selectProps.getOptionLabel(selectedValue) : "";
   const [inputValue, setInputValue] = useState<string>(() => label);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // istanbul ignore else
-    if (hasValue) {
-      setInputValue(label);
-    }
-  }, [hasValue, label]);
+    setInputValue(label);
+  }, [label]);
 
   const handleMenuOpen = () => {
     if (!selectProps.menuIsOpen) {
@@ -196,7 +193,11 @@ function TargetSelectControl<TOption, IsMulti extends boolean = boolean>(props: 
 
   return (
     <components.Control {...props} className="iui-input-with-icon">
-      <components.ValueContainer {...props} className="iui-select-button rule-value-input" innerProps={{ onClick: handleMenuOpen, style: { cursor: "text" } }}>
+      <components.ValueContainer
+        {...props}
+        className="iui-select-button presentation-navigation-property-select-input"
+        innerProps={{ onClick: handleMenuOpen, style: { cursor: "text" } }}
+      >
         <Input
           ref={inputRef}
           value={inputValue}
