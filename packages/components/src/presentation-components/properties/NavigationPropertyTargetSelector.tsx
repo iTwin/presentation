@@ -27,6 +27,7 @@ import { InstanceKey, LabelDefinition, NavigationPropertyInfo } from "@itwin/pre
 import { mergeRefs, translate, useResizeObserver } from "../common/Utils";
 import { NavigationPropertyTarget, useNavigationPropertyTargetsLoader, useNavigationPropertyTargetsRuleset } from "./UseNavigationPropertyTargetsLoader";
 import { Input } from "@itwin/itwinui-react";
+import "./NavigationPropertyTargetSelector.scss";
 
 /** @internal */
 export interface NavigationPropertyTargetSelectorAttributes {
@@ -137,35 +138,31 @@ function getNavigationTargetFromPropertyRecord(record: PropertyRecord): Navigati
   return { key: value.value as InstanceKey, label: LabelDefinition.fromLabelString(value.displayValue) };
 }
 
-function TargetSelectControl(props: ControlProps<NavigationPropertyTarget, false>) {
+function TargetSelectControl<TOption, IsMulti extends boolean = boolean>(props: ControlProps<TOption, IsMulti>) {
   const { hasValue, getValue, selectProps } = props;
-  const [inputValue, setInputValue] = useState<string>(() => getValue()[0]?.label.displayValue ?? "");
-  const inputRef = useRef<HTMLInputElement>(null);
   const selectedValue = getValue()[0];
+  const label = selectedValue ? selectProps.getOptionLabel(selectedValue) : "";
+  const [inputValue, setInputValue] = useState<string>(() => label);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // istanbul ignore else
-    if (hasValue && selectedValue) {
-      setInputValue(selectedValue.label.displayValue);
+    if (hasValue) {
+      setInputValue(label);
     }
-  }, [hasValue, selectedValue]);
+  }, [hasValue, label]);
 
   const handleMenuOpen = () => {
-    selectProps.onMenuOpen();
+    if (!selectProps.menuIsOpen) {
+      selectProps.onMenuOpen();
+    }
     inputRef.current?.focus();
-    inputRef.current?.toggleAttribute
     selectProps.onInputChange("", { action: "input-change", prevInputValue: inputValue });
   }
 
   const handleInputBlur = () => {
-    if (selectedValue?.label.displayValue) {
-      setInputValue(selectedValue.label.displayValue);
-      selectProps.onInputChange(selectedValue.label.displayValue, { action: "set-value", prevInputValue: inputValue });
-    }
-    else {
-      setInputValue("");
-      selectProps.onInputChange("", { action: "set-value", prevInputValue: inputValue });
-    }
+    setInputValue(label);
+    selectProps.onInputChange(label, { action: "input-blur", prevInputValue: inputValue });
     selectProps.onMenuClose();
   }
 
@@ -180,8 +177,10 @@ function TargetSelectControl(props: ControlProps<NavigationPropertyTarget, false
   }
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!selectProps.menuIsOpen) {
+      selectProps.onMenuOpen();
+    }
     setInputValue(event.target.value);
-    selectProps.onMenuOpen();
     selectProps.onInputChange(event.target.value, { action: "input-change", prevInputValue: inputValue });
   }
 
@@ -197,14 +196,13 @@ function TargetSelectControl(props: ControlProps<NavigationPropertyTarget, false
 
   return (
     <components.Control {...props} className="iui-input-with-icon">
-      <components.ValueContainer {...props} className="iui-select-button" innerProps={{ onClick: handleMenuOpen, style: { cursor: "text" } }}>
+      <components.ValueContainer {...props} className="iui-select-button rule-value-input" innerProps={{ onClick: handleMenuOpen, style: { cursor: "text" } }}>
         <Input
           ref={inputRef}
           value={inputValue}
           onBlur={handleInputBlur}
           onFocus={handleMenuOpen}
           onChange={handleInputChange}
-          style={{ width: "100%", height: "100%", border: "none", textOverflow: "ellipsis", overflow: "hidden", outline: "none", padding: "0" }}
           size="small"
           onKeyDown={handleInputKeyDown}
           placeholder={translate("navigation-property-editor.select-target-instance")}
