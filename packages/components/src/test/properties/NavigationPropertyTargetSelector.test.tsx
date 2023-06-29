@@ -237,8 +237,7 @@ describe("NavigationPropertyTargetSelector", () => {
 
     // when input value is not empty
     fireEvent.click(dropdownButton!);
-    await waitFor(() => expect(queryByText(contentItem.label.displayValue)).to.not.be.null);
-    const menuItem = queryByText(contentItem.label.displayValue);
+    const menuItem = getByText(contentItem.label.displayValue);
     fireEvent.click(menuItem!);
     await waitFor(() => expect(queryByText(contentItem.label.displayValue)).to.be.null);
     expect(getByDisplayValue(contentItem.label.displayValue)).to.not.be.null;
