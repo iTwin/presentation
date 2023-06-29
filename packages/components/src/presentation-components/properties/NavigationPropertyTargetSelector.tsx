@@ -6,28 +6,24 @@
  * @module Internal
  */
 
-import { PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
-import { PropertyEditorProps, PropertyValueRendererManager } from "@itwin/components-react";
-import { IModelConnection } from "@itwin/core-frontend";
 import "@itwin/itwinui-css/css/input.css";
 import "@itwin/itwinui-css/css/menu.css";
 import "@itwin/itwinui-css/css/tag.css";
+import "./NavigationPropertyTargetSelector.scss";
+import classnames from "classnames";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { components, ControlProps, MenuProps, OptionProps, SingleValue } from "react-select";
+import { AsyncPaginate } from "react-select-async-paginate";
+import { PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
+import { PropertyEditorProps, PropertyValueRendererManager } from "@itwin/components-react";
+import { IModelConnection } from "@itwin/core-frontend";
 import { SvgCaretDownSmall } from "@itwin/itwinui-icons-react";
 import { Input } from "@itwin/itwinui-react";
 import { InstanceKey, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
-import classnames from "classnames";
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
-import {
-  ControlProps,
-  MenuProps,
-  OptionProps,
-  SingleValue,
-  components,
-} from "react-select";
-import { AsyncPaginate } from "react-select-async-paginate";
 import { mergeRefs, translate, useResizeObserver } from "../common/Utils";
-import "./NavigationPropertyTargetSelector.scss";
-import { NavigationPropertyTarget, useNavigationPropertyTargetsLoader, useNavigationPropertyTargetsRuleset } from "./UseNavigationPropertyTargetsLoader";
+import {
+  NavigationPropertyTarget, useNavigationPropertyTargetsLoader, useNavigationPropertyTargetsRuleset,
+} from "./UseNavigationPropertyTargetsLoader";
 
 /** @internal */
 export interface NavigationPropertyTargetSelectorAttributes {
