@@ -76,7 +76,7 @@ describe("<NavigationPropertyEditor />", () => {
     sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
     const record = createRecord();
     const spy = sinon.spy();
-    const { container, getByText, queryByText } = render(<EditorContainer propertyRecord={record} onCancel={() => {}} onCommit={spy} />, {
+    const { container, getByText, queryByDisplayValue } = render(<EditorContainer propertyRecord={record} onCancel={() => {}} onCommit={spy} />, {
       getNavigationPropertyInfo: async () => ({
         classInfo: { id: "1", label: "Class Label", name: "TestSchema:TestClass" },
         targetClassInfo: { id: "1", label: "Target Label", name: "TestSchema:TargetClass" },
@@ -91,13 +91,13 @@ describe("<NavigationPropertyEditor />", () => {
       expect(element).to.not.be.null;
       return element;
     });
-    fireEvent.mouseDown(select!);
+    fireEvent.click(select!);
 
     // select option from dropdown
     const target = await waitFor(() => getByText(contentItem.label.displayValue));
     fireEvent.click(target);
 
-    await waitFor(() => expect(queryByText(contentItem.label.displayValue)).to.not.be.null);
+    await waitFor(() => expect(queryByDisplayValue(contentItem.label.displayValue)).to.not.be.null);
     expect(spy).to.be.calledOnce;
   });
 });
