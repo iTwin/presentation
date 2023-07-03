@@ -15,6 +15,7 @@ import {
   createTestCategoryDescription, createTestContentDescriptor, createTestContentItem, createTestNestedContentField, createTestPropertiesContentField,
   createTestSimpleContentField,
 } from "../_helpers/Content";
+import { NumericEditorName } from "../../presentation-components";
 
 class TestPropertyRecordsBuilder extends PropertyRecordsBuilder {
   public entries: Array<{ record: PropertyRecord; fieldHierarchy: FieldHierarchy }> = [];
