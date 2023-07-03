@@ -1,6 +1,6 @@
 {
   "type": "patch",
-  "comment": "Add cnefined",
+  "comment": "Add custom numeric property editor.",
   "packageName": "@itwin/presentation-components",
   "email": "124659623+simasjar@users.noreply.github.com",
   "dependentChangeType": "patch"
