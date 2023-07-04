@@ -31,14 +31,14 @@ export const NumericPropertyTargetInput = forwardRef<NumericPropertyTargetInputA
 
   const onChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = formatValue(e.currentTarget.value, inputValue);
+      const value = validateValue(e.currentTarget.value, inputValue);
       setInputValue(value);
       onCommit && onCommit({ propertyRecord, newValue: { valueFormat: PropertyValueFormat.Primitive, value: parseFloat(value), displayValue: value } });
     },
     [inputValue, onCommit, propertyRecord],
   );
 
-  const formatValue = (newValue: string, oldValue: string) => {
+  const validateValue = (newValue: string, oldValue: string) => {
     if (newValue.split(".").length > 2 || newValue.match(/[^0-9.-]/) || (newValue.match(/[-]/) && (newValue[0] !== "-" || newValue.split("-").length > 2))) {
       return oldValue;
     }
