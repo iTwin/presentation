@@ -46,9 +46,7 @@ export const NumericPropertyTargetInput = forwardRef<NumericPropertyTargetInputA
   };
 
   return (
-    <div ref={inputRef}>
-      <Input size="small" value={inputValue} onChange={onChange} data-testId="numeric-editor-input" ref={inputRef}/>
-    </div>
+    <Input size="small" value={inputValue} onChange={onChange} data-testid="numeric-editor-input" ref={inputRef}/>
   );
 });
 NumericPropertyTargetInput.displayName = "NumericPropertyTargetInput";
