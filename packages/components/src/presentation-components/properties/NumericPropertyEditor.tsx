@@ -1,13 +1,12 @@
-import { createRef, forwardRef, PureComponent } from 'react';
+import { createRef, PureComponent } from 'react';
 
 import { StandardTypeNames } from '@itwin/appui-abstract';
 import {
     PropertyEditorBase, PropertyEditorManager, PropertyEditorProps, TypeEditor
 } from '@itwin/components-react';
 
-import {
-    NumericPropertyTargetInput, NumericPropertyTargetInputAttributes
-} from './NumericPropertyTargetInput';
+import { NumericPropertyInput, NumericPropertyInputAttributes
+} from './NumericPropertyInput';
 
 /**
  * Name for `NumericPropertyEditor`.
@@ -21,7 +20,7 @@ export const NumericEditorName = "numeric-editor";
  *
  * @internal
  */
-export class NumericPropertyEditor extends PropertyEditorBase {
+export class NumericPropertyEditorBase extends PropertyEditorBase {
   // istanbul ignore next
   public override get containerHandlesEnter(): boolean {
     return false;
@@ -33,22 +32,22 @@ export class NumericPropertyEditor extends PropertyEditorBase {
   }
 
   public get reactNode(): React.ReactNode {
-    return <NumericPropertyTargetEditor />;
+    return <NumericPropertyEditor />;
   }
 }
 
-PropertyEditorManager.registerEditor(StandardTypeNames.Number, NumericPropertyEditor, NumericEditorName);
-PropertyEditorManager.registerEditor(StandardTypeNames.Int, NumericPropertyEditor, NumericEditorName);
-PropertyEditorManager.registerEditor(StandardTypeNames.Float, NumericPropertyEditor, NumericEditorName);
-PropertyEditorManager.registerEditor(StandardTypeNames.Double, NumericPropertyEditor, NumericEditorName);
+PropertyEditorManager.registerEditor(StandardTypeNames.Number, NumericPropertyEditorBase, NumericEditorName);
+PropertyEditorManager.registerEditor(StandardTypeNames.Int, NumericPropertyEditorBase, NumericEditorName);
+PropertyEditorManager.registerEditor(StandardTypeNames.Float, NumericPropertyEditorBase, NumericEditorName);
+PropertyEditorManager.registerEditor(StandardTypeNames.Double, NumericPropertyEditorBase, NumericEditorName);
 
 /**
  * Component that renders numeric property target input for numeric value editing.
  *
  * @internal
  */
-export class NumericPropertyTargetEditor extends PureComponent<PropertyEditorProps> implements TypeEditor {
-  private _ref = createRef<NumericPropertyTargetInputAttributes>();
+export class NumericPropertyEditor extends PureComponent<PropertyEditorProps> implements TypeEditor {
+  private _ref = createRef<NumericPropertyInputAttributes>();
 
   // istanbul ignore next
   public async getPropertyValue() {
@@ -57,28 +56,19 @@ export class NumericPropertyTargetEditor extends PureComponent<PropertyEditorPro
 
   // istanbul ignore next
   public get htmlElement() {
-    return this._ref.current?.inputElement ?? null;
+    return this._ref.current?.divElement ?? null;
   }
 
   // istanbul ignore next
   public get hasFocus() {
-    if (!this._ref.current?.inputElement || !document.activeElement) {
+    if (!this._ref.current?.divElement || !document.activeElement) {
       return false;
     }
-    return this._ref.current.inputElement.contains(document.activeElement);
+    return this._ref.current.divElement.contains(document.activeElement);
   }
 
   /** @internal */
   public override render() {
-    return <NumericPropertyTargetEditorInner ref={this._ref} {...this.props} />;
+    return this.props.propertyRecord ? <NumericPropertyInput ref={this._ref} {...this.props} propertyRecord={this.props.propertyRecord} /> : null;
   }
 }
-
-const NumericPropertyTargetEditorInner = forwardRef<NumericPropertyTargetInputAttributes, PropertyEditorProps>((props, ref) => {
-  if (!props.propertyRecord) {
-    return null;
-  }
-
-  return <NumericPropertyTargetInput {...props} propertyRecord={props.propertyRecord} ref={ref} />;
-});
-NumericPropertyTargetEditorInner.displayName = "NumericPropertyTargetEditorInner";

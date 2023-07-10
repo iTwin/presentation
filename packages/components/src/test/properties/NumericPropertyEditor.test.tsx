@@ -7,7 +7,7 @@ import { EditorContainer } from "@itwin/components-react";
 import { expect } from "chai";
 import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import userEvent from "@testing-library/user-event";
-import { NumericPropertyTargetEditor } from "../../presentation-components";
+import { NumericPropertyEditor } from "../../presentation-components";
 
 export const createRecord = (initialValue?: number) => {
   const value: PrimitiveValue = {
@@ -41,7 +41,7 @@ describe("<NumericPropertyEditor />", () => {
   it("renders editor for `numeric-editor` type", async () => {
     const record = createRecord();
     const { getByTestId } = render(<EditorContainer propertyRecord={record} onCancel={() => {}} onCommit={() => {}} />);
-    await waitFor(() => expect(getByTestId("numeric-editor-input")).to.not.be.null);
+    await waitFor(() => expect(getByTestId("numeric-input")).to.not.be.null);
   });
 
   it("invokes `onCommit` when input changes", async () => {
@@ -50,7 +50,7 @@ describe("<NumericPropertyEditor />", () => {
     const spy = sinon.spy();
     const { getByTestId, queryByDisplayValue } = render(<EditorContainer propertyRecord={record} onCancel={() => {}} onCommit={spy} />);
 
-    const inputContainer = await waitFor(() => getByTestId("numeric-editor-input"));
+    const inputContainer = await waitFor(() => getByTestId("numeric-input"));
 
     await user.type(inputContainer, "1");
 
@@ -59,7 +59,7 @@ describe("<NumericPropertyEditor />", () => {
   });
 });
 
-describe("<NumericPropertyTargetEditor />", () => {
+describe("<NumericPropertyEditor />", () => {
   beforeEach(async () => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
@@ -74,12 +74,12 @@ describe("<NumericPropertyTargetEditor />", () => {
 
   it("renders input when property record is provided", async () => {
     const record = createRecord();
-    const { getByTestId } = render(<NumericPropertyTargetEditor propertyRecord={record}/>);
-    expect(getByTestId("numeric-editor-input")).to.not.be.null;
+    const { getByTestId } = render(<NumericPropertyEditor propertyRecord={record}/>);
+    expect(getByTestId("numeric-input")).to.not.be.null;
   });
 
   it("renders nothing when property record is not provided", async () => {
-    const { container } = render(<NumericPropertyTargetEditor />);
+    const { container } = render(<NumericPropertyEditor />);
     expect(container.firstChild).to.be.null;
   });
 });
