@@ -25,7 +25,7 @@ export const NumericPropertyInput = forwardRef<NumericPropertyInputAttributes, N
   useImperativeHandle(
     ref,
     () => ({
-      getValue: () => ({ valueFormat: PropertyValueFormat.Primitive, value: isNaN(Number(inputValue)) ? undefined : Number(inputValue), inputValue }),
+      getValue: () => ({ valueFormat: PropertyValueFormat.Primitive, value: isNaN(Number(inputValue)) ? undefined : Number(inputValue), displayValue: inputValue }),
       divElement: divRef.current,
     }),
     [inputValue],
