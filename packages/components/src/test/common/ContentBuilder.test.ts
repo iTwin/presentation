@@ -7,21 +7,14 @@ import { expect } from "chai";
 import { ArrayValue, PropertyRecord, StandardTypeNames, StructValue } from "@itwin/appui-abstract";
 import { EnumerationInfo, FieldHierarchy, PropertyValueFormat, traverseContentItem } from "@itwin/presentation-common";
 import {
-  createPropertyDescriptionFromFieldInfo,
-  FieldHierarchyRecord,
-  IPropertiesAppender,
-  PropertyRecordsBuilder,
+  createPropertyDescriptionFromFieldInfo, FieldHierarchyRecord, IPropertiesAppender, PropertyRecordsBuilder,
 } from "../../presentation-components/common/ContentBuilder";
+import { NumericEditorName } from "../../presentation-components/properties/NumericPropertyEditor";
 import { createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
 import {
-  createTestCategoryDescription,
-  createTestContentDescriptor,
-  createTestContentItem,
-  createTestNestedContentField,
-  createTestPropertiesContentField,
+  createTestCategoryDescription, createTestContentDescriptor, createTestContentItem, createTestNestedContentField, createTestPropertiesContentField,
   createTestSimpleContentField,
 } from "../_helpers/Content";
-import { NumericEditorName } from "../../presentation-components";
 
 class TestPropertyRecordsBuilder extends PropertyRecordsBuilder {
   public entries: Array<{ record: PropertyRecord; fieldHierarchy: FieldHierarchy }> = [];

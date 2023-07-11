@@ -1,14 +1,19 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+
+import { expect } from "chai";
+import { createRef } from "react";
+import sinon from "sinon";
+import { PrimitiveValue } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
-import sinon from "sinon";
-import { NumericInput, NumericPropertyInput, NumericPropertyInputAttributes } from "../../presentation-components/properties/NumericPropertyInput";
 import { render, waitFor } from "@testing-library/react";
-import { createRecord } from "./NumericPropertyEditor.test";
-import { createRef } from "react";
-import { PrimitiveValue } from "@itwin/appui-abstract";
-import { expect } from "chai";
 import userEvent from "@testing-library/user-event";
+import { NumericInput, NumericPropertyInput, NumericPropertyInputAttributes } from "../../presentation-components/properties/NumericPropertyInput";
+import { createRecord } from "./NumericPropertyEditor.test";
 
 describe("<NumericPropertyInput />", () => {
   beforeEach(async () => {
@@ -23,7 +28,7 @@ describe("<NumericPropertyInput />", () => {
     sinon.restore();
   });
 
-  it("get value from target input reference", async () => {
+  it("get value from NumericPropertyInput reference", async () => {
     const user = userEvent.setup();
     const record = createRecord(1);
     const ref = createRef<NumericPropertyInputAttributes>();
@@ -38,7 +43,7 @@ describe("<NumericPropertyInput />", () => {
     await waitFor(() => expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(10));
   });
 
-  it("get value from target input reference returns undefined when input is not a number", async () => {
+  it("get value from NumericPropertyInput reference returns undefined when input is not a number", async () => {
     const user = userEvent.setup();
     const record = createRecord();
     const ref = createRef<NumericPropertyInputAttributes>();
@@ -63,7 +68,7 @@ describe("<NumericPropertyInput />", () => {
       expect(getByDisplayValue("-101")).to.not.be.null;
     });
 
-    it("converts `-`", async () => {
+    it("allows typing `-1`", async () => {
       const user = userEvent.setup();
       const record = createRecord();
       const ref = createRef<NumericPropertyInputAttributes>();
@@ -78,7 +83,7 @@ describe("<NumericPropertyInput />", () => {
       expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(-1);
     });
 
-    it("converts `+`", async () => {
+    it("allows typing `+1`", async () => {
       const user = userEvent.setup();
       const record = createRecord();
       const ref = createRef<NumericPropertyInputAttributes>();
@@ -93,7 +98,7 @@ describe("<NumericPropertyInput />", () => {
       expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(1);
     });
 
-    it("converts `.` ", async () => {
+    it("allows typing `.1` ", async () => {
       const user = userEvent.setup();
       const record = createRecord();
       const ref = createRef<NumericPropertyInputAttributes>();
@@ -108,7 +113,7 @@ describe("<NumericPropertyInput />", () => {
       expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(0.1);
     });
 
-    it("converts `+.`", async () => {
+    it("allows typing `+.1`", async () => {
       const user = userEvent.setup();
       const record = createRecord();
       const ref = createRef<NumericPropertyInputAttributes>();
@@ -123,7 +128,7 @@ describe("<NumericPropertyInput />", () => {
       expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(0.1);
     });
 
-    it("converts `-.`", async () => {
+    it("allows typing `-.1`", async () => {
       const user = userEvent.setup();
       const record = createRecord();
       const ref = createRef<NumericPropertyInputAttributes>();
@@ -138,7 +143,7 @@ describe("<NumericPropertyInput />", () => {
       expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(-0.1);
     });
 
-    it("converts base-10 exponent (e)", async () => {
+    it("allows typing 1e5", async () => {
       const user = userEvent.setup();
       const record = createRecord(1);
       const ref = createRef<NumericPropertyInputAttributes>();
@@ -153,7 +158,7 @@ describe("<NumericPropertyInput />", () => {
       expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(100000);
     });
 
-    it("converts base-10 exponent (e) and negative numbers", async () => {
+    it("allows typing 1e-5", async () => {
       const user = userEvent.setup();
       const record = createRecord(1);
       const ref = createRef<NumericPropertyInputAttributes>();
@@ -215,10 +220,13 @@ describe("<NumericInput />", () => {
     const { getByRole } = render(<NumericInput onChange={spy} value="" />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
-    await user.type(inputContainer, "+-.");
-
+    await user.type(inputContainer, "+");
     expect(spy).to.be.calledWith("+");
+
+    await user.type(inputContainer, "-");
     expect(spy).to.be.calledWith("-");
+
+    await user.type(inputContainer, ".");
     expect(spy).to.be.calledWith(".");
   });
 

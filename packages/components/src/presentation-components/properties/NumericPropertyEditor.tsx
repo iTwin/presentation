@@ -1,12 +1,12 @@
-import { createRef, PureComponent } from 'react';
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
-import { StandardTypeNames } from '@itwin/appui-abstract';
-import {
-    PropertyEditorBase, PropertyEditorManager, PropertyEditorProps, TypeEditor
-} from '@itwin/components-react';
-
-import { NumericPropertyInput, NumericPropertyInputAttributes
-} from './NumericPropertyInput';
+import { createRef, PureComponent } from "react";
+import { StandardTypeNames } from "@itwin/appui-abstract";
+import { PropertyEditorBase, PropertyEditorManager, PropertyEditorProps, TypeEditor } from "@itwin/components-react";
+import { NumericPropertyInput, NumericPropertyInputAttributes } from "./NumericPropertyInput";
 
 /**
  * Name for `NumericPropertyEditor`.

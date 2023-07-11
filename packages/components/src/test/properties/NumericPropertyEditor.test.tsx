@@ -1,11 +1,13 @@
-import sinon from "sinon";
-import { EmptyLocalization } from "@itwin/core-common";
-import { IModelApp } from "@itwin/core-frontend";
-import { Presentation } from "@itwin/presentation-frontend";
-import { render, waitFor } from "@testing-library/react";
-import { EditorContainer } from "@itwin/components-react";
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+
 import { expect } from "chai";
+import sinon from "sinon";
 import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
+import { EditorContainer } from "@itwin/components-react";
+import { render, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NumericPropertyEditor } from "../../presentation-components";
 
@@ -21,24 +23,16 @@ export const createRecord = (initialValue?: number) => {
     displayLabel: "TestProp",
   };
   const record = new PropertyRecord(value, descr);
-  record.property.typename = "number:numeric-editor";
+  record.property.typename = "number:presentation-numeric-editor";
   return record;
 };
 
-describe("<NumericPropertyEditor />", () => {
-  beforeEach(async () => {
-    const localization = new EmptyLocalization();
-    sinon.stub(IModelApp, "initialized").get(() => true);
-    sinon.stub(IModelApp, "localization").get(() => localization);
-    await Presentation.initialize();
-  });
-
+describe("<NumericPropertyEditorBase />", () => {
   afterEach(async () => {
-    Presentation.terminate();
     sinon.restore();
   });
 
-  it("renders editor for `numeric-editor` type", async () => {
+  it("renders editor for `presentation-numeric-editor` type", async () => {
     const record = createRecord();
     const { getByTestId } = render(<EditorContainer propertyRecord={record} onCancel={() => {}} onCommit={() => {}} />);
     await waitFor(() => expect(getByTestId("numeric-input")).to.not.be.null);
@@ -60,18 +54,6 @@ describe("<NumericPropertyEditor />", () => {
 });
 
 describe("<NumericPropertyEditor />", () => {
-  beforeEach(async () => {
-    const localization = new EmptyLocalization();
-    sinon.stub(IModelApp, "initialized").get(() => true);
-    sinon.stub(IModelApp, "localization").get(() => localization);
-    await Presentation.initialize();
-  });
-
-  afterEach(async () => {
-    Presentation.terminate();
-    sinon.restore();
-  });
-
   it("renders input when property record is provided", async () => {
     const record = createRecord();
     const { getByTestId } = render(<NumericPropertyEditor propertyRecord={record}/>);

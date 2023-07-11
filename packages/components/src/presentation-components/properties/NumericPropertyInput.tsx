@@ -1,8 +1,12 @@
-import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 
-import { PropertyRecord, PropertyValue, PropertyValueFormat } from '@itwin/appui-abstract';
-import { PropertyEditorProps } from '@itwin/components-react';
-import { Input } from '@itwin/itwinui-react';
+import { forwardRef, useImperativeHandle, useRef, useState } from "react";
+import { PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
+import { PropertyEditorProps } from "@itwin/components-react";
+import { Input } from "@itwin/itwinui-react";
 
 /** @internal */
 export interface NumericPropertyInputAttributes {
