@@ -13,7 +13,7 @@ import { NumericPropertyInput, NumericPropertyInputAttributes
  *
  * @internal
  */
-export const NumericEditorName = "numeric-editor";
+export const NumericEditorName = "presentation-numeric-editor";
 
 /**
  * Editor for numeric properties.
