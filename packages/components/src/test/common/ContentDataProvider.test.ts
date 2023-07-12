@@ -308,7 +308,7 @@ describe("ContentDataProvider", () => {
     });
 
     it("requests presentation manager for size", async () => {
-      const result = new PromiseContainer<{ content: Content; size: number }>();
+      const result = new PromiseContainer<{ content: Content, size: number }>();
       presentationManagerMock
         .setup(async (x) =>
           x.getContentAndSize(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: 10 } })),
@@ -324,7 +324,7 @@ describe("ContentDataProvider", () => {
     });
 
     it("memoizes result", async () => {
-      const resultPromiseContainer = new PromiseContainer<{ content: Content; size: number }>();
+      const resultPromiseContainer = new PromiseContainer<{ content: Content, size: number }>();
       presentationManagerMock
         .setup(async (x) =>
           x.getContentAndSize(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: 10 } })),
@@ -341,7 +341,7 @@ describe("ContentDataProvider", () => {
     });
 
     it("requests size and first page when paging size is set", async () => {
-      const resultPromiseContainer = new PromiseContainer<{ content: Content; size: number }>();
+      const resultPromiseContainer = new PromiseContainer<{ content: Content, size: number }>();
       const pagingSize = 20;
 
       presentationManagerMock
@@ -392,7 +392,7 @@ describe("ContentDataProvider", () => {
 
     it("requests presentation manager for content", async () => {
       const descriptor = createTestContentDescriptor({ fields: [] });
-      const result: { content: Content; size: number } = {
+      const result: { content: Content, size: number } = {
         content: new Content(descriptor, []),
         size: 1,
       };
@@ -429,7 +429,7 @@ describe("ContentDataProvider", () => {
         )
         .verifiable(moq.Times.never());
 
-      const resultContentFirstPagePromise1 = new PromiseContainer<{ content: Content; size: number }>();
+      const resultContentFirstPagePromise1 = new PromiseContainer<{ content: Content, size: number }>();
       presentationManagerMock
         .setup(async (x) =>
           x.getContentAndSize(moq.It.isObjectWith<Paged<ContentRequestOptions<IModelConnection, Descriptor, KeySet>>>({ paging: { start: 0, size: 1 } })),

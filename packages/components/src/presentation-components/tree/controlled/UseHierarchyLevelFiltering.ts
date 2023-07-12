@@ -38,7 +38,7 @@ export function useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProp
     if (subscription) {
       ongoingSubscriptions.current.set(nodeId, subscription);
     }
-  }
+  };
 
   return {
     applyFilter: (node: TreeNodeItem, info: PresentationInstanceFilterInfo) => handleFilterAction(node.id, info),

@@ -85,10 +85,10 @@ export class FavoritePropertiesDataProvider implements IFavoritePropertiesDataPr
       props && props.propertyDataProviderFactory
         ? props.propertyDataProviderFactory
         : /* istanbul ignore next */ (imodel: IModelConnection, ruleset?: Ruleset | string) => {
-            const provider = new PresentationPropertyDataProvider({ imodel, ruleset });
-            provider.isNestedPropertyCategoryGroupingEnabled = false;
-            return provider;
-          };
+          const provider = new PresentationPropertyDataProvider({ imodel, ruleset });
+          provider.isNestedPropertyCategoryGroupingEnabled = false;
+          return provider;
+        };
   }
 
   /**
