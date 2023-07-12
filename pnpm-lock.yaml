@@ -1,4 +1,8 @@
-lockfileVersion: '6.0'
+lockfileVersion: '6.1'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
 
 importers:
 
@@ -779,6 +783,9 @@ importers:
 
   packages/hierarchy-builder:
     dependencies:
+      natural-compare-lite:
+        specifier: ^1.4.0
+        version: 1.4.0
       rxjs:
         specifier: ^7.8.1
         version: 7.8.1
@@ -813,6 +820,9 @@ importers:
       '@types/mocha':
         specifier: ^8.2.2
         version: 8.2.2
+      '@types/natural-compare-lite':
+        specifier: ^1.4.0
+        version: 1.4.0
       '@types/sinon':
         specifier: ^10.0.14
         version: 10.0.14
@@ -4757,6 +4767,10 @@ packages:
 
   /@types/mocha@8.2.2:
     resolution: {integrity: sha512-Lwh0lzzqT5Pqh6z61P3c3P5nm6fzQK/MMHl9UKeneAeInVflBSz1O2EkX6gM6xfJd7FBXBY5purtLx7fUiZ7Hw==}
+
+  /@types/natural-compare-lite@1.4.0:
+    resolution: {integrity: sha512-ZDcj/yWsRPacqKPpCExWWFq9X1JQwEOfHsu8deN1Qfa6M02z6tN4DK6AMf2IkM7709gp3QW6Bo7m2NFDhA485w==}
+    dev: true
 
   /@types/node-fetch@2.6.3:
     resolution: {integrity: sha512-ETTL1mOEdq/sxUtgtOhKjyB2Irra4cjxksvcMUR5Zr4n+PxVhsCD9WS46oPbHL3et9Zde7CNRr+WUNlcHvsX+w==}

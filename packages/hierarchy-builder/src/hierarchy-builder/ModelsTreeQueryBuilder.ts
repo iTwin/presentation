@@ -48,7 +48,7 @@ export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
           SELECT
             ec_classname(this.ECClassId) FullClassName,
             ECInstanceId,
-            COALESCE(UserLabel, CodeValue) AS DisplayLabel,
+            ${this.createNonGeometricElementLabelSelectClause("this")} AS DisplayLabel,
             json_object(
               'imageId', 'icon-imodel-hollow-2'
             ) AS ExtendedData,
@@ -86,7 +86,7 @@ export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
           SELECT
             ec_classname(this.ECClassId) FullClassName,
             this.ECInstanceId,
-            COALESCE(this.UserLabel, this.CodeValue, 'Subject') AS DisplayLabel,
+            ${this.createNonGeometricElementLabelSelectClause("this")} AS DisplayLabel,
             CAST(CASE
               WHEN (
                 json_extract(this.JsonProperties, '$.Subject.Job.Bridge') IS NOT NULL
@@ -134,18 +134,7 @@ export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
           SELECT
             ec_classname(this.ECClassId) FullClassName,
             this.ECInstanceId,
-            (
-              SELECT
-                COALESCE(
-                  modeledElement.UserLabel,
-                  modeledElement.CodeValue,
-                  'Geometric Model'
-                )
-              FROM
-                bis.Element modeledElement
-              WHERE
-                modeledElement.ECInstanceId = this.ModeledElement.Id
-            ) AS DisplayLabel,
+            ${this.createNonGeometricElementLabelSelectClause("partition")} AS DisplayLabel,
             CAST(CASE
               WHEN (
                 json_extract(partition.JsonProperties, '$.PhysicalPartition.Model.Content') IS NOT NULL
@@ -207,12 +196,12 @@ export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
       // Note: `json_array` function only accepts up to 128 arguments and we may have more `modelIds` than that. As a workaround,
       // we're creating an array of arrays
       const slices = new Array<InstanceId[]>();
-      for (let sliceIndex = 0; sliceIndex * 128 < modelIds.length; ++sliceIndex) {
-        let endIndex: number | undefined = (sliceIndex + 1) * 128;
-        if (endIndex > modelIds.length) {
-          endIndex = undefined;
+      for (let sliceStartIndex = 0; sliceStartIndex < modelIds.length; sliceStartIndex += 128) {
+        let sliceEndIndex: number | undefined = sliceStartIndex + 128;
+        if (sliceEndIndex > modelIds.length) {
+          sliceEndIndex = undefined;
         }
-        slices.push(modelIds.slice(sliceIndex * 128, endIndex));
+        slices.push(modelIds.slice(sliceStartIndex, sliceEndIndex));
       }
       return `json_array(${slices.map((sliceIds) => `json_array(${sliceIds.map((id) => `'${id}'`).join(",")})`).join(",")})`;
     }
@@ -222,7 +211,7 @@ export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
           SELECT
             ec_classname(this.ECClassId) FullClassName,
             this.ECInstanceId,
-            COALESCE(this.UserLabel, this.CodeValue, 'Spatial Category') AS DisplayLabel,
+            ${this.createNonGeometricElementLabelSelectClause("this")} AS DisplayLabel,
             'category' AS MergeByLabelId,
             1 AS HasChildren,
             json_object(
@@ -255,7 +244,7 @@ export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
           SELECT
             ec_classname(this.ECClassId) FullClassName,
             this.ECInstanceId,
-            COALESCE(this.UserLabel, this.CodeValue, 'Geometric Element') AS DisplayLabel,
+            ${this.createGeometricElementLabelSelectClause("this")} AS DisplayLabel,
             json_object(
               'imageId', 'icon-item'
             ) AS ExtendedData,
@@ -287,7 +276,7 @@ export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
           SELECT
             ec_classname(this.ECClassId) FullClassName,
             this.ECInstanceId,
-            COALESCE(this.UserLabel, this.CodeValue, 'Geometric Element') AS DisplayLabel,
+            ${this.createGeometricElementLabelSelectClause("this")} AS DisplayLabel,
             json_object(
               'imageId', 'icon-item'
             ) AS ExtendedData,
@@ -313,21 +302,31 @@ export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
   private createGeometricElementLabelSelectClause(classAlias: string) {
     return `COALESCE(
       [${classAlias}].[CodeValue],
-      CASE
-        WHEN [${classAlias}].[UserLabel] IS NOT NULL
-          THEN [${classAlias}].[UserLabel] || ' ' || ${this.createECInstanceBase36IdSelector(classAlias)}
-        ELSE
-          NULL
+      CASE WHEN [${classAlias}].[UserLabel] IS NOT NULL
+        THEN [${classAlias}].[UserLabel] || ' ' || ${this.createECInstanceIdentifier(classAlias)}
+        ELSE NULL
       END,
       (
-        SELECT [c].[DisplayLabel] || ' ' || ${this.createECInstanceBase36IdSelector(classAlias)}
+        SELECT COALESCE([c].[DisplayLabel], [c].[Name]) || ' ' || ${this.createECInstanceIdentifier(classAlias)}
         FROM [meta].[ECClassDef] AS [c]
         WHERE [c].[ECInstanceId] = [${classAlias}].[ECClassId]
       )
     )`;
   }
 
-  private createECInstanceBase36IdSelector(classAlias: string) {
-    return `'[' || ']'`;
+  private createNonGeometricElementLabelSelectClause(classAlias: string) {
+    return `COALESCE(
+      [${classAlias}].[UserLabel],
+      [${classAlias}].[CodeValue],
+      (
+        SELECT COALESCE([c].[DisplayLabel], [c].[Name]) || ' ' || ${this.createECInstanceIdentifier(classAlias)}
+        FROM [meta].[ECClassDef] AS [c]
+        WHERE [c].[ECInstanceId] = [${classAlias}].[ECClassId]
+      )
+    )`;
+  }
+
+  private createECInstanceIdentifier(classAlias: string) {
+    return `'[' || printf('0x%x', [${classAlias}].[ECInstanceId]) || ']'`;
   }
 }

@@ -8,6 +8,7 @@
 import { assert, DuplicatePolicy, Id64, SortedArray } from "@itwin/core-bentley";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ClassInfo } from "@itwin/presentation-common";
+import naturalCompare from "natural-compare-lite";
 import { getClass, mergeInstanceNodes } from "./Common";
 import { InProgressTreeNode, IQueryExecutor, TreeNode } from "./Interfaces";
 import { ModelsTreeQueryBuilder } from "./ModelsTreeQueryBuilder";
@@ -41,6 +42,7 @@ import {
   subscribeOn,
   take,
   tap,
+  toArray,
 } from "rxjs";
 
 const QUERY_CONCURRENCY = 10;
@@ -118,6 +120,7 @@ export class ModelsTreeNodesProviderRxjs {
           ),
         ),
       mergeAll(),
+      map(convertECInstanceIdSuffixToBase36),
       shareReplay({ refCount: false }),
     );
   }
@@ -423,7 +426,7 @@ function createClassGroupingReducer(schemas: SchemaContext) {
     }
     return groupings;
   }
-  function groupNodes(groupings: ClassGroupingInformation): InProgressTreeNode[] {
+  function groupNodes(groupings: ClassGroupingInformation): InProgressTreeNode[] & { hasClassGroupingNodes?: boolean } {
     const outNodes = new Array<InProgressTreeNode>();
     groupings.grouped.forEach((entry) => {
       outNodes.push({
@@ -436,29 +439,26 @@ function createClassGroupingReducer(schemas: SchemaContext) {
       });
     });
     outNodes.push(...groupings.ungrouped);
+    (outNodes as any).hasClassGroupingNodes = groupings.grouped.size > 0;
     return outNodes;
   }
-  return function (inNodes: Observable<InProgressTreeNode>): Observable<InProgressTreeNode> {
-    let didCreateGroupingNodes = false;
-    const out = inNodes.pipe(
-      reduce((acc, node) => [...acc, node], new Array<InProgressTreeNode>()),
+  return function (nodes: Observable<InProgressTreeNode>): Observable<InProgressTreeNode> {
+    return nodes.pipe(
+      toArray(),
       mergeMap((resolvedNodes) => from(createClassGroupingInformation(resolvedNodes))),
-      tap((groupings) => {
-        didCreateGroupingNodes = groupings.grouped.size > 0;
+      mergeMap((groupings) => {
+        const grouped = groupNodes(groupings);
+        const obs = from(grouped);
+        return grouped.hasClassGroupingNodes ? obs.pipe(sortNodesByLabelReducer) : obs;
       }),
-      mergeMap((groupings) => groupNodes(groupings)),
     );
-    if (didCreateGroupingNodes) {
-      return out.pipe(sortNodesByLabelReducer);
-    }
-    return out;
   };
 }
 
 function sortNodesByLabelReducer(nodes: Observable<TreeNode>): Observable<TreeNode> {
   return nodes.pipe(
-    reduce((acc, node) => [...acc, node], new Array<InProgressTreeNode>()),
-    mergeMap((allNodes) => allNodes.sort((lhs, rhs) => lhs.label.localeCompare(rhs.label))),
+    toArray(),
+    mergeMap((allNodes) => allNodes.sort((lhs, rhs) => naturalCompare(lhs.label.toLocaleLowerCase(), rhs.label.toLocaleLowerCase()))),
   );
 }
 
@@ -490,4 +490,19 @@ function mergeDirectNodeObservables(a: InProgressTreeNode, b: InProgressTreeNode
   }
   const merged = merge(cachedA, cachedB);
   cache.set(JSON.stringify(m.key), merged);
+}
+
+function convertECInstanceIdSuffixToBase36<TNode extends { label: string }>(node: TNode): TNode {
+  const m = node.label.match(/\s\[(0x[\w\d]+)\]$/);
+  const suffix = m?.at(1);
+  if (!suffix) {
+    return node;
+  }
+
+  const suffixBase36 = `${Id64.getBriefcaseId(suffix).toString(36).toLocaleUpperCase()}-${Id64.getLocalId(suffix).toString(36).toLocaleUpperCase()}`;
+  const label = `${node.label.substring(0, m!.index)} [${suffixBase36}]`;
+  return {
+    ...node,
+    label,
+  };
 }
