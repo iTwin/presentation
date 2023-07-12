@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import { from, of } from "rxjs";
 import sinon from "sinon";
-import { createHideIfNoChildrenReducer } from "../hierarchy-builder/ModelsTreeQueryBuilderRxjs";
+import { createHideIfNoChildrenReducer } from "../hierarchy-builder/TreeNodesProvider";
 import { createTestNode, getObservableResult } from "./Utils";
 
 describe("hideIfNoChildrenReducer", () => {

@@ -7,7 +7,9 @@ import { Id64String } from "@itwin/core-bentley";
 import { ECClass, SchemaContext } from "@itwin/ecschema-metadata";
 import { InstanceId } from "@itwin/presentation-common";
 import { getClass } from "./Common";
-import { ECSqlBinding, ITreeQueryBuilder, QueryDef, TreeNode } from "./Interfaces";
+import { ITreeQueryBuilder, QueryDef } from "./TreeQueryBuilder";
+import { TreeNode } from "./TreeNode";
+import { ECSqlBinding } from "./ECSqlBinding";
 
 export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
   public constructor(private _schemas: SchemaContext) {}

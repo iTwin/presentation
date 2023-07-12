@@ -4,56 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Id64String } from "@itwin/core-bentley";
-import { QueryBinder, QueryOptionsBuilder, QueryRowFormat } from "@itwin/core-common";
-import { InProgressTreeNode, IQueryExecutor, ITreeQueryResultsReader, QueryDef } from "./Interfaces";
+import { QueryOptionsBuilder, QueryRowFormat } from "@itwin/core-common";
+import { InProgressTreeNode } from "./TreeNode";
+import { QueryDef } from "./TreeQueryBuilder";
+import { bind } from "./ECSqlBinding";
+import { IQueryExecutor } from "./IQueryExecutor";
 
-const ROWS_LIMIT = 1000;
-export function applyLimit(ecsql: string, ctes?: string[]) {
-  const ctesPrefix = ctes && ctes.length ? `WITH RECURSIVE ${ctes.join(", ")}` : ``;
-  return `
-    ${ctesPrefix}
-    SELECT *
-    FROM (${ecsql})
-    LIMIT ${ROWS_LIMIT + 1}
-  `;
-}
-
-function createECSqlReader(executor: IQueryExecutor, query: QueryDef) {
-  const opts = new QueryOptionsBuilder();
-  opts.setRowFormat(QueryRowFormat.UseECSqlPropertyNames);
-  const bindings = new QueryBinder();
-  (query.bindings ?? []).forEach((b, i) => {
-    switch (b.type) {
-      case "boolean":
-        bindings.bindBoolean(i + 1, b.value);
-        break;
-      case "double":
-        bindings.bindDouble(i + 1, b.value);
-        break;
-      case "id":
-        bindings.bindId(i + 1, b.value);
-        break;
-      case "idset":
-        bindings.bindIdSet(i + 1, b.value);
-        break;
-      case "int":
-        bindings.bindInt(i + 1, b.value);
-        break;
-      case "long":
-        bindings.bindLong(i + 1, b.value);
-        break;
-      case "point2d":
-        bindings.bindPoint2d(i + 1, b.value);
-        break;
-      case "point3d":
-        bindings.bindPoint3d(i + 1, b.value);
-        break;
-      case "string":
-        bindings.bindString(i + 1, b.value);
-        break;
-    }
-  });
-  return executor.createQueryReader(query.ecsql, bindings, opts.getOptions());
+export interface ITreeQueryResultsReader {
+  read(executor: IQueryExecutor, query: QueryDef): Promise<InProgressTreeNode[]>;
 }
 
 export class TreeQueryResultsReader implements ITreeQueryResultsReader {
@@ -100,4 +58,21 @@ function parseNode(row: RowDef): InProgressTreeNode {
     mergeByLabelId: row.MergeByLabelId,
     autoExpand: row.AutoExpand,
   };
+}
+
+const ROWS_LIMIT = 1000;
+export function applyLimit(ecsql: string, ctes?: string[]) {
+  const ctesPrefix = ctes && ctes.length ? `WITH RECURSIVE ${ctes.join(", ")}` : ``;
+  return `
+    ${ctesPrefix}
+    SELECT *
+    FROM (${ecsql})
+    LIMIT ${ROWS_LIMIT + 1}
+  `;
+}
+
+function createECSqlReader(executor: IQueryExecutor, query: QueryDef) {
+  const opts = new QueryOptionsBuilder();
+  opts.setRowFormat(QueryRowFormat.UseECSqlPropertyNames);
+  return executor.createQueryReader(query.ecsql, bind(query.bindings ?? []), opts.getOptions());
 }

@@ -10,8 +10,7 @@ import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ClassInfo } from "@itwin/presentation-common";
 import naturalCompare from "natural-compare-lite";
 import { getClass, mergeInstanceNodes } from "./Common";
-import { InProgressTreeNode, IQueryExecutor, TreeNode } from "./Interfaces";
-import { ModelsTreeQueryBuilder } from "./ModelsTreeQueryBuilder";
+import { InProgressTreeNode, TreeNode } from "./TreeNode";
 import { applyLimit, TreeQueryResultsReader } from "./TreeNodesReader";
 import {
   asapScheduler,
@@ -44,6 +43,8 @@ import {
   tap,
   toArray,
 } from "rxjs";
+import { ITreeQueryBuilder } from "./TreeQueryBuilder";
+import { IQueryExecutor } from "./IQueryExecutor";
 
 const QUERY_CONCURRENCY = 10;
 class QueryScheduler<T> {
@@ -91,18 +92,24 @@ class QueryScheduler<T> {
   }
 }
 
-export class ModelsTreeNodesProviderRxjs {
+export interface TreeNodesProviderProps {
+  schemas: SchemaContext;
+  queryBuilder: ITreeQueryBuilder;
+  queryExecutor: IQueryExecutor;
+}
+
+export class TreeNodesProvider {
   private _schemas: SchemaContext;
-  private _queryBuilder: ModelsTreeQueryBuilder;
+  private _queryBuilder: ITreeQueryBuilder;
   private _queryExecutor: IQueryExecutor;
   private _queryReader: TreeQueryResultsReader;
   private _scheduler: QueryScheduler<InProgressTreeNode[]>;
   private _directNodesCache: Map<string, Observable<InProgressTreeNode>>;
 
-  public constructor(schemas: SchemaContext, executor: IQueryExecutor) {
-    this._schemas = schemas;
-    this._queryBuilder = new ModelsTreeQueryBuilder(schemas);
-    this._queryExecutor = executor;
+  public constructor(props: TreeNodesProviderProps) {
+    this._schemas = props.schemas;
+    this._queryBuilder = props.queryBuilder;
+    this._queryExecutor = props.queryExecutor;
     this._queryReader = new TreeQueryResultsReader();
     this._scheduler = new QueryScheduler();
     this._directNodesCache = new Map();
@@ -226,7 +233,7 @@ function createPersistChildrenReducer(parentNode: TreeNode) {
   };
 }
 
-function createDetermineChildrenReducer(provider: ModelsTreeNodesProviderRxjs) {
+function createDetermineChildrenReducer(provider: TreeNodesProvider) {
   const enableLogging = false;
   return function (nodes: Observable<InProgressTreeNode>): Observable<InProgressTreeNode> {
     const [determined, undetermined] = partition(nodes.pipe(share()), (node) => node.children !== undefined);
@@ -247,7 +254,7 @@ function createDetermineChildrenReducer(provider: ModelsTreeNodesProviderRxjs) {
 }
 
 function createHideNodesInHierarchyReducer(
-  provider: ModelsTreeNodesProviderRxjs,
+  provider: TreeNodesProvider,
   directNodesCache: Map<string, Observable<InProgressTreeNode>>,
   stopOnFirstChild: boolean,
 ) {

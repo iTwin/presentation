@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ECClass, SchemaContext, SchemaKey } from "@itwin/ecschema-metadata";
-import { InProgressTreeNode } from "./Interfaces";
+import { InProgressTreeNode } from "./TreeNode";
 
 export async function getClass(schemas: SchemaContext, fullClassName: string) {
   const [schemaName, className] = fullClassName.split(/[\.:]/);
