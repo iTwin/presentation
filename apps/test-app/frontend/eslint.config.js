@@ -26,7 +26,7 @@ module.exports = [
   {
     files: ["**/*.{ts,tsx}"],
     rules: {
-      ...jsxRuntimeConfig.rules,
+      ...jsxRuntimeConfig.configs["jsx-runtime"].rules,
     },
   },
 ];

@@ -17,7 +17,7 @@ export interface RulesetSelectorState {
   availableViewDefinitions?: string[];
 }
 export default function ViewDefinitionSelector(props: ViewDefinitionSelectorProps) {
-  const [availableViewDefinitions, setAvailableViewDefinitions] = useState<Array<{ id: Id64String; class: string; label: string }> | undefined>();
+  const [availableViewDefinitions, setAvailableViewDefinitions] = useState<Array<{ id: Id64String, class: string, label: string }> | undefined>();
   useEffect(() => {
     setAvailableViewDefinitions([]);
     void MyAppFrontend.getViewDefinitions(props.imodel).then(setAvailableViewDefinitions);
