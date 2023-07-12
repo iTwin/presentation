@@ -16,9 +16,8 @@ import { fireEvent, render, waitFor } from "@testing-library/react";
 import { PresentationInstanceFilterDialog } from "../../presentation-components";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterBuilder";
-import { createTestECClassInfo } from "../_helpers/Common";
+import { createTestECClassInfo, stubRaf } from "../_helpers/Common";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
-import { stubRaf } from "./Common";
 
 describe("PresentationInstanceFilterDialog", () => {
   stubRaf();

@@ -17,12 +17,12 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v2.2.4
         with:
-          version: 8.4.0
+          version: 8.6.2
 
       - name: Use Node.js 18
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 18.16.0 #TODO Change back to 18.x once segfault on 18.16.1? is resolved.
           registry-url: https://registry.npmjs.org/
 
       - name: Install dependencies
@@ -35,6 +35,6 @@ jobs:
         run: |
           git config --local user.email imodeljs-admin@users.noreply.github.com
           git config --local user.name imodeljs-admin
-          pnpm publish-packages -y --branch ${{ github.ref_name }} --message "Version bump [skip actions]"
+          pnpm publish-packages -y --branch ${{ github.ref_name }} --message "Version bump [skip actions][publish docs]"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPMJS_PUBLISH_ITWIN }}

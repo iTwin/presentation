@@ -21,13 +21,13 @@ export function createTreeNodeItem(item?: Partial<PresentationTreeNodeItem>): Pr
 export function createTreeModelNode(node?: Partial<TreeModelNode>, nodeItem?: TreeNodeItem): TreeModelNode {
   const label = nodeItem?.label ?? node?.label ?? PropertyRecord.fromString("TestLabel");
   return {
-    id: node?.id ?? "0",
-    parentId: node?.parentId,
+    id: node?.id ?? nodeItem?.id ?? "0",
+    parentId: nodeItem?.parentId ?? node?.parentId,
     numChildren: node?.numChildren,
     depth: node?.depth ?? 0,
     isExpanded: node?.isExpanded ?? false,
     isSelected: node?.isSelected ?? false,
-    description: node?.description ?? "Node Description",
+    description: nodeItem?.description ?? node?.description ?? "Node Description",
     checkbox: node?.checkbox ?? {
       isDisabled: false,
       isVisible: true,

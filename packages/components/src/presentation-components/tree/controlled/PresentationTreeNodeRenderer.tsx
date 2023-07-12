@@ -11,7 +11,7 @@ import classnames from "classnames";
 import { TreeNodeRenderer, TreeNodeRendererProps } from "@itwin/components-react";
 import { TreeNode } from "@itwin/core-react";
 import { SvgCloseSmall, SvgFilter, SvgFilterHollow } from "@itwin/itwinui-icons-react";
-import { ButtonGroup, IconButton } from "@itwin/itwinui-react";
+import { ButtonGroup, IconButton, Text } from "@itwin/itwinui-react";
 import { isPresentationInfoTreeNodeItem, isPresentationTreeNodeItem, PresentationTreeNodeItem } from "../PresentationTreeNodeItem";
 
 /**
@@ -34,7 +34,7 @@ export function PresentationTreeNodeRenderer(props: PresentationTreeNodeRenderer
   const nodeItem = props.node.item;
 
   if (isPresentationInfoTreeNodeItem(nodeItem)) {
-    return <TreeNode className="presentation-components-info-node" isLeaf={true} label={nodeItem.message} level={props.node.depth} isHoverDisabled={true} />;
+    return <TreeNode isLeaf={true} label={<Text isMuted>{nodeItem.message}</Text>} level={props.node.depth} isHoverDisabled={true} />;
   }
 
   if (isPresentationTreeNodeItem(nodeItem)) {

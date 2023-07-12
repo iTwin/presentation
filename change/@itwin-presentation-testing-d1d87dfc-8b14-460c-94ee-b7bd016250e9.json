@@ -1,7 +1,0 @@
-{
-  "type": "none",
-  "comment": "Update `itwinjs-core` dependencies to official `4.0` version",
-  "packageName": "@itwin/presentation-testing",
-  "email": "35135765+grigasp@users.noreply.github.com",
-  "dependentChangeType": "none"
-}

@@ -35,7 +35,7 @@ stages:
               versionSpec: 18
               checkLatest: true
 
-          - script: npm install -g pnpm@8.4.0
+          - script: npm install -g pnpm@8.6.2
             displayName: Install pnpm
 
           - script: pnpm install
@@ -66,3 +66,17 @@ stages:
         parameters:
           checkout: itwinjs-core
           useCurrentPresentationDocsArtifact: true
+
+  - stage: Tag_Docs
+    dependsOn: Validate_Docs
+    condition: and(succeeded(), in(variables['Build.Reason'], 'IndividualCI', 'Manual'))
+    jobs:
+      - job:
+        displayName: Tag Docs
+        steps:
+          - task: tagBuildOrRelease@0
+            displayName: Tag Docs
+            inputs:
+              type: "Build"
+              tags: "hasDocs"
+            condition: contains(variables['Build.SourceVersionMessage'], '[publish docs]')
