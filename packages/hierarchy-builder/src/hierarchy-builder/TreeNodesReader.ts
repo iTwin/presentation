@@ -17,11 +17,12 @@ export interface ITreeQueryResultsReader {
 export class TreeQueryResultsReader implements ITreeQueryResultsReader {
   public async read(executor: IQueryExecutor, query: QueryDef): Promise<InProgressTreeNode[]> {
     const nodes = new Array<InProgressTreeNode>();
-    for await (const row of createECSqlReader(executor, query)) {
+    const reader = createECSqlReader(executor, query);
+    while (await reader.step()) {
       if (nodes.length >= ROWS_LIMIT) {
         throw new Error("rows limit exceeded");
       }
-      nodes.push(parseNode(row.toRow()));
+      nodes.push(parseNode(reader.current.toRow()));
     }
     return nodes;
   }
