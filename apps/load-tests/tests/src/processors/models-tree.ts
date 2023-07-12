@@ -4,108 +4,97 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-console */
 
-import { EventEmitter, Next, RequestParams, ScenarioContext } from "artillery";
-import { Guid } from "@itwin/core-bentley";
+import { EventEmitter, Next, ScenarioContext } from "artillery";
+import { Guid, StopWatch } from "@itwin/core-bentley";
 import {
   HierarchyRpcRequestOptions,
+  Node,
   NodeJSON,
-  NodeKey,
   PagedResponse,
   PresentationError,
   PresentationRpcResponseData,
   PresentationStatus,
 } from "@itwin/presentation-common";
 import RULESET_ModelsTree from "../rulesets/ModelsTree-GroupedByClass.PresentationRuleSet.json";
+import { doRequest, getCurrentIModelName, getCurrentIModelPath, loadNodes, nodeRequestsTracker } from "./common";
 
-export { createClientId } from "./common";
-
-export function initScenario(context: ScenarioContext, _ee: EventEmitter, next: Next) {
-  context.vars.nodesCreated = 0;
+export function initScenario(context: ScenarioContext, _events: EventEmitter, next: Next) {
   context.vars.tooLargeHierarchyLevelsCount = 0;
+  context.vars.pendingNodeRequestsLogger = setInterval(() => {
+    nodeRequestsTracker.logCount(context, false);
+  }, 1000);
+  nodeRequestsTracker.reset(context);
   next();
 }
 
 export function terminateScenario(context: ScenarioContext, _ee: EventEmitter, next: Next) {
-  console.log(`Total nodes created: ${context.vars.nodesCreated}`);
   console.log(`Total hierarchy levels that exceeded nodes limit: ${context.vars.tooLargeHierarchyLevelsCount}`);
-  context.vars.nodesCreated = 0;
   context.vars.tooLargeHierarchyLevelsCount = 0;
+  clearInterval(context.vars.pendingNodeRequestsLogger as NodeJS.Timeout);
+  nodeRequestsTracker.logCount(context, true);
   next();
 }
 
-/**
- * Pops a parent node key from context and creates request params for getting its child nodes.
- */
-export function createModelsTreeRequestParams(requestParams: RequestParams, context: ScenarioContext, _ee: EventEmitter, next: Next) {
-  const parentNodeKeys = context.vars.parentNodeKeys as Array<NodeKey | undefined> | undefined;
-  const parentKey = parentNodeKeys?.pop();
-  requestParams.headers = {
-    ["X-Correlation-Id"]: Guid.createValue(),
-    ["Content-Type"]: "text/plain",
-  };
-  requestParams.body = JSON.stringify([
-    {
-      iTwinId: Guid.empty,
-      iModelId: Guid.empty,
-      key: context.vars.iModelPath,
-      changeset: { index: 0, id: "" },
-    },
-    {
-      clientId: context.vars.clientId,
-      rulesetOrId: RULESET_ModelsTree,
-      sizeLimit: 1000,
-      parentKey,
-    } as HierarchyRpcRequestOptions,
-  ]);
-  next();
+export function loadInitialHierarchy(context: ScenarioContext, events: EventEmitter, next: Next) {
+  // we limit loaded hierarchy depth by telling that node has no children if it has `!isExpanded` (root node in models tree is always auto-expanded)
+  const timer = new StopWatch(undefined, true);
+  void loadNodes(context, events, createProvider(context, events), (node) => !!node.hasChildren && !!node.isExpanded)
+    .then(() => {
+      events.emit("histogram", `initial-load-${getCurrentIModelName(context)}`, timer.current.milliseconds);
+    })
+    .then(() => {
+      next();
+    });
 }
 
-/**
- * Checks if context contains any parent node keys to get children for.
- */
-export function hasParentNodeKeys(context: ScenarioContext, next: Next) {
-  const parentNodeKeys = context.vars.parentNodeKeys as Array<NodeKey | undefined> | undefined;
-  const hasKeys = parentNodeKeys && parentNodeKeys.length > 0;
-  return next(hasKeys as any);
+export function loadFullHierarchy(context: ScenarioContext, events: EventEmitter, next: Next) {
+  const timer = new StopWatch(undefined, true);
+  void loadNodes(context, events, createProvider(context, events), (node) => !!node.hasChildren)
+    .then(() => {
+      events.emit("histogram", `full-load-${getCurrentIModelName(context)}`, timer.current.milliseconds);
+    })
+    .then(() => {
+      next();
+    });
 }
 
-/**
- * Extracts keys from nodes response and pushes them to context for getting their children (if `hasChildren == true`).
- * In case of the `BackendTimeout` response, pushes the same (requested) parent node key to context to repeat the request ASAP.
- */
-export function extractNodeKeysFromNodesResponse(requestConfig: any, response: any, context: ScenarioContext, _ee: EventEmitter, next: Next) {
-  let parentNodeKeys = context.vars.parentNodeKeys as Array<NodeKey | undefined> | undefined;
-  if (!parentNodeKeys) {
-    parentNodeKeys = [];
-    context.vars.parentNodeKeys = parentNodeKeys;
-  }
-  // eslint-disable-next-line deprecation/deprecation
-  const body = JSON.parse(response.body) as PresentationRpcResponseData<PagedResponse<NodeJSON>>;
-  switch (body.statusCode) {
-    case PresentationStatus.Success:
-    case PresentationStatus.Canceled:
-      // do nothing
-      break;
-    case PresentationStatus.ResultSetTooLarge:
-      ++(context.vars.tooLargeHierarchyLevelsCount as number);
-      break;
-    case PresentationStatus.BackendTimeout:
-      // repeat the request by adding the parent node key back to the list
-      const requestParams = JSON.parse(requestConfig.body);
-      const nodesRequestParams = requestParams[1] as HierarchyRpcRequestOptions;
-      parentNodeKeys.push(nodesRequestParams.parentKey);
-      break;
-    default:
-      throw new PresentationError(body.statusCode, body.errorMessage);
-  }
-  body.result?.items.forEach((n) => {
-    ++(context.vars.nodesCreated as number);
-    if (n.hasChildren) {
-      // push node's key to a random location in the list
-      const location = Math.random() * parentNodeKeys!.length;
-      // eslint-disable-next-line deprecation/deprecation
-      parentNodeKeys!.splice(location, 0, NodeKey.fromJSON(n.key));
+function createProvider(context: ScenarioContext, events: EventEmitter) {
+  const clientId = Guid.createValue();
+  return async function (parent: Node | undefined): Promise<Node[]> {
+    const requestBody = JSON.stringify([
+      {
+        iTwinId: Guid.empty,
+        iModelId: Guid.empty,
+        key: getCurrentIModelPath(context),
+        changeset: { index: 0, id: "" },
+      },
+      {
+        clientId,
+        rulesetOrId: RULESET_ModelsTree,
+        sizeLimit: 1000,
+        parentKey: parent?.key,
+      } as HierarchyRpcRequestOptions,
+    ]);
+    async function requestRepeatedly(): Promise<Node[]> {
+      return doRequest("PresentationRpcInterface-4.0.0-getPagedNodes", requestBody, events, "nodes").then(async (response) => {
+        // eslint-disable-next-line deprecation/deprecation
+        const responseBody = response as PresentationRpcResponseData<PagedResponse<NodeJSON>>;
+        switch (responseBody.statusCode) {
+          case PresentationStatus.Canceled:
+            return [];
+          case PresentationStatus.ResultSetTooLarge:
+            ++(context.vars.tooLargeHierarchyLevelsCount as number);
+            return [];
+          case PresentationStatus.BackendTimeout:
+            return requestRepeatedly();
+          case PresentationStatus.Success:
+            // eslint-disable-next-line deprecation/deprecation
+            return responseBody.result!.items.map(Node.fromJSON);
+          default:
+            throw new PresentationError(responseBody.statusCode, responseBody.errorMessage);
+        }
+      });
     }
-  });
-  next();
+    return requestRepeatedly();
+  };
 }

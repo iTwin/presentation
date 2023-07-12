@@ -11,9 +11,10 @@
     "build": "tsc",
     "clean": "rimraf lib",
     "lint": "eslint ./src/**/*.ts",
+    "start:initial-models-tree": "artillery run ./scenarios/initial-models-tree.yml",
     "start:full-models-tree": "artillery run ./scenarios/full-models-tree.yml",
-    "start:full-models-tree-stateless": "artillery run ./scenarios/full-models-tree-stateless.yml",
-    "start": "npm run start:full-models-tree"
+    "start:initial-models-tree-stateless": "artillery run ./scenarios/initial-models-tree-stateless.yml",
+    "start:full-models-tree-stateless": "artillery run ./scenarios/full-models-tree-stateless.yml"
   },
   "dependencies": {
     "@itwin/build-tools": "^4.0.0",

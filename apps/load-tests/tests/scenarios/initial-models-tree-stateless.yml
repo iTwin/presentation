@@ -14,10 +14,10 @@ config:
   processor: "../lib/processors/models-tree-stateless.js"
 
 scenarios:
-  - name: Full Models Tree (stateless)
+  - name: Initial Models Tree (stateless)
     beforeScenario: "initScenario"
     afterScenario: "terminateScenario"
     flow:
       - loop:
-          - function: "loadFullHierarchy"
+          - function: "loadInitialHierarchy"
         over: iModels
