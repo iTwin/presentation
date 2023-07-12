@@ -335,6 +335,9 @@ importers:
       '@itwin/ecschema-metadata':
         specifier: ^4.1.0-dev.62
         version: 4.1.0-dev.62(@itwin/core-bentley@4.1.0-dev.62)(@itwin/core-quantity@4.1.0-dev.62)
+      '@itwin/ecschema-rpcinterface-common':
+        specifier: ^4.1.0-dev.62
+        version: 4.1.0-dev.62(@itwin/core-bentley@4.1.0-dev.62)(@itwin/core-common@4.1.0-dev.62)(@itwin/core-geometry@4.1.0-dev.62)(@itwin/ecschema-metadata@4.1.0-dev.62)
       '@itwin/eslint-plugin':
         specifier: ^4.0.0-dev.38
         version: 4.0.0-dev.38(eslint@8.40.0)(typescript@5.0.2)
@@ -654,6 +657,12 @@ importers:
       '@itwin/ecschema-metadata':
         specifier: ^4.1.0-dev.62
         version: 4.1.0-dev.62(@itwin/core-bentley@4.1.0-dev.62)(@itwin/core-quantity@4.1.0-dev.62)
+      '@itwin/ecschema-rpcinterface-common':
+        specifier: ^4.1.0-dev.62
+        version: 4.1.0-dev.62(@itwin/core-bentley@4.1.0-dev.62)(@itwin/core-common@4.1.0-dev.62)(@itwin/core-geometry@4.1.0-dev.62)(@itwin/ecschema-metadata@4.1.0-dev.62)
+      '@itwin/ecschema-rpcinterface-impl':
+        specifier: ^4.1.0-dev.62
+        version: 4.1.0-dev.62(@itwin/core-backend@4.1.0-dev.62)(@itwin/core-bentley@4.1.0-dev.62)(@itwin/core-common@4.1.0-dev.62)(@itwin/core-geometry@4.1.0-dev.62)(@itwin/ecschema-metadata@4.1.0-dev.62)(@itwin/ecschema-rpcinterface-common@4.1.0-dev.62)
       '@itwin/eslint-plugin':
         specifier: ^4.0.0-dev.38
         version: 4.0.0-dev.38(eslint@8.40.0)(typescript@5.0.2)

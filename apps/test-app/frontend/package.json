@@ -26,6 +26,7 @@
     "@itwin/core-quantity": "^4.1.0-dev.62",
     "@itwin/core-react": "^4.1.0",
     "@itwin/ecschema-metadata": "^4.1.0-dev.62",
+    "@itwin/ecschema-rpcinterface-common": "^4.1.0-dev.62",
     "@itwin/eslint-plugin": "^4.0.0-dev.38",
     "@itwin/imodel-components-react": "^4.1.0",
     "@itwin/itwinui-react": "^2.5.0",

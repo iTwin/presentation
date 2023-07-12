@@ -7,7 +7,7 @@ import { expect } from "chai";
 import { PrimitiveValue } from "@itwin/appui-abstract";
 import { InstanceKey, NodeKey, Ruleset } from "@itwin/presentation-common";
 import { isPresentationTreeNodeItem, PresentationTreeDataProvider, PresentationTreeNodeItem } from "@itwin/presentation-components";
-import { ModelsTreeNodesProviderRxjs, TreeNode } from "@itwin/presentation-hierarchy-builder";
+import { ModelsTreeQueryBuilder, TreeNode, TreeNodesProvider } from "@itwin/presentation-hierarchy-builder";
 import { initialize, terminate } from "../IntegrationTests";
 import { IModelConnection, SnapshotConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
@@ -15,7 +15,7 @@ import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { assert, OrderedId64Iterable } from "@itwin/core-bentley";
 import { DelayLoadedTreeNodeItem } from "@itwin/components-react";
 
-describe.only("Models tree", async () => {
+describe("Models tree", async () => {
   before(async () => {
     await initialize();
   });
@@ -126,7 +126,11 @@ function createNativeProvider(imodel: IModelConnection) {
 function createStatelessProvider(imodel: IModelConnection) {
   const schemas = new SchemaContext();
   schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-  return new ModelsTreeNodesProviderRxjs(schemas, imodel);
+  return new TreeNodesProvider({
+    schemas,
+    queryBuilder: new ModelsTreeQueryBuilder(schemas),
+    queryExecutor: imodel,
+  });
 }
 
 const MODELS_TREE_RULESET: Ruleset = {
