@@ -23,7 +23,7 @@
     "@itwin/core-orbitgt": "^4.1.0-dev.35",
     "@itwin/core-quantity": "^4.1.0-dev.35",
     "@itwin/ecschema-metadata": "^4.1.0-dev.35",
-    "@itwin/eslint-plugin": "^4.0.0-dev.38",
+    "@itwin/eslint-plugin": "^4.0.0-dev.43",
     "@itwin/express-server": "^4.1.0-dev.35",
     "@itwin/presentation-common": "^4.1.0-dev.35",
     "@itwin/presentation-backend": "^4.1.0-dev.35",
@@ -36,7 +36,7 @@
     "@opentelemetry/semantic-conventions": "^1.12.0",
     "cross-env": "^7.0.3",
     "electron": "^23.0.0",
-    "eslint": "^8.40.0",
+    "eslint": "^8.44.0",
     "rimraf": "^5.0.0",
     "typescript": "~5.0.2"
   }

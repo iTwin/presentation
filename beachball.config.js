@@ -8,7 +8,7 @@ module.exports = {
   access: "public",
   tag: "latest",
   scope: ["packages/**"],
-  ignorePatterns: [".nycrc", ".eslintrc.json", ".mocharc.json", "tsconfig.*", ".*ignore", ".github/**", ".vscode/**", "**/test/**", "pnpm-lock.yaml"],
+  ignorePatterns: [".nycrc", "eslint.config.js", ".mocharc.json", "tsconfig.*", ".*ignore", ".github/**", ".vscode/**", "**/test/**", "pnpm-lock.yaml"],
   changehint: "Run 'pnpm change' to generate a change file",
   changelog: {
     customRenderers: {
