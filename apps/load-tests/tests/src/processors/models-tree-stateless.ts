@@ -8,7 +8,7 @@
 import { EventEmitter, Next, ScenarioContext } from "artillery";
 import { Guid, StopWatch } from "@itwin/core-bentley";
 import { DbQueryRequest, DbQueryResponse, DbRequestExecutor, ECSqlReader } from "@itwin/core-common";
-import { ModelsTreeNodesProviderRxjs, TreeNode } from "@itwin/presentation-hierarchy-builder";
+import { ModelsTreeQueryBuilder, TreeNode, TreeNodesProvider } from "@itwin/presentation-hierarchy-builder";
 import { ISchemaLocater, Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType, SchemaProps } from "@itwin/ecschema-metadata";
 import { doRequest, getCurrentIModelName, getCurrentIModelPath, loadNodes, nodeRequestsTracker } from "./common";
 
@@ -123,16 +123,21 @@ function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter
   const schemas = new SchemaContext();
   schemas.addLocater(schedulingSchemaLocater);
 
-  const provider = new ModelsTreeNodesProviderRxjs(schemas, {
-    createQueryReader(ecsql, bindings, config) {
-      // eslint-disable-next-line @itwin/no-internal
-      return new ECSqlReader(schedulingQueryExecutor, ecsql, bindings, config);
+  const provider = new TreeNodesProvider({
+    schemas,
+    queryBuilder: new ModelsTreeQueryBuilder(schemas),
+    queryExecutor: {
+      createQueryReader(ecsql, bindings, config) {
+        // eslint-disable-next-line @itwin/no-internal
+        return new ECSqlReader(schedulingQueryExecutor, ecsql, bindings, config);
+      },
     },
   });
 
   return async (parent: TreeNode | undefined) => {
     try {
-      return await provider.getNodes(parent);
+      const nodes = await provider.getNodes(parent);
+      return nodes;
     } catch (e) {
       if (e instanceof Error && e.message === "rows limit exceeded") {
         ++(context.vars.tooLargeHierarchyLevelsCount as number);

@@ -71,6 +71,12 @@ importers:
       '@itwin/ecschema-metadata':
         specifier: ^4.1.0-dev.62
         version: 4.1.0-dev.62(@itwin/core-bentley@4.1.0-dev.62)(@itwin/core-quantity@4.1.0-dev.62)
+      '@itwin/ecschema-rpcinterface-common':
+        specifier: ^4.1.0-dev.62
+        version: 4.1.0-dev.62(@itwin/core-bentley@4.1.0-dev.62)(@itwin/core-common@4.1.0-dev.62)(@itwin/core-geometry@4.1.0-dev.62)(@itwin/ecschema-metadata@4.1.0-dev.62)
+      '@itwin/ecschema-rpcinterface-impl':
+        specifier: ^4.1.0-dev.62
+        version: 4.1.0-dev.62(@itwin/core-backend@4.1.0-dev.62)(@itwin/core-bentley@4.1.0-dev.62)(@itwin/core-common@4.1.0-dev.62)(@itwin/core-geometry@4.1.0-dev.62)(@itwin/ecschema-metadata@4.1.0-dev.62)(@itwin/ecschema-rpcinterface-common@4.1.0-dev.62)
       '@itwin/eslint-plugin':
         specifier: ^4.0.0-dev.38
         version: 4.0.0-dev.38(eslint@8.40.0)(typescript@5.0.2)
@@ -119,6 +125,9 @@ importers:
       '@itwin/ecschema-metadata':
         specifier: ^4.1.0-dev.62
         version: 4.1.0-dev.62(@itwin/core-bentley@4.1.0-dev.62)(@itwin/core-quantity@4.1.0-dev.62)
+      '@itwin/ecschema-rpcinterface-common':
+        specifier: ^4.1.0-dev.62
+        version: 4.1.0-dev.62(@itwin/core-bentley@4.1.0-dev.62)(@itwin/core-common@4.1.0-dev.62)(@itwin/core-geometry@4.1.0-dev.62)(@itwin/ecschema-metadata@4.1.0-dev.62)
       '@itwin/eslint-plugin':
         specifier: ^4.0.0-dev.38
         version: 4.0.0-dev.38(eslint@8.40.0)(typescript@5.0.2)
@@ -182,6 +191,12 @@ importers:
       '@itwin/ecschema-metadata':
         specifier: ^4.1.0-dev.62
         version: 4.1.0-dev.62(@itwin/core-bentley@4.1.0-dev.62)(@itwin/core-quantity@4.1.0-dev.62)
+      '@itwin/ecschema-rpcinterface-common':
+        specifier: ^4.1.0-dev.62
+        version: 4.1.0-dev.62(@itwin/core-bentley@4.1.0-dev.62)(@itwin/core-common@4.1.0-dev.62)(@itwin/core-geometry@4.1.0-dev.62)(@itwin/ecschema-metadata@4.1.0-dev.62)
+      '@itwin/ecschema-rpcinterface-impl':
+        specifier: ^4.1.0-dev.62
+        version: 4.1.0-dev.62(@itwin/core-backend@4.1.0-dev.62)(@itwin/core-bentley@4.1.0-dev.62)(@itwin/core-common@4.1.0-dev.62)(@itwin/core-geometry@4.1.0-dev.62)(@itwin/ecschema-metadata@4.1.0-dev.62)(@itwin/ecschema-rpcinterface-common@4.1.0-dev.62)
       '@itwin/eslint-plugin':
         specifier: ^4.0.0-dev.38
         version: 4.0.0-dev.38(eslint@8.40.0)(typescript@5.0.2)
@@ -254,6 +269,9 @@ importers:
       '@itwin/ecschema-metadata':
         specifier: ^4.1.0-dev.62
         version: 4.1.0-dev.62(@itwin/core-bentley@4.1.0-dev.62)(@itwin/core-quantity@4.1.0-dev.62)
+      '@itwin/ecschema-rpcinterface-common':
+        specifier: ^4.1.0-dev.62
+        version: 4.1.0-dev.62(@itwin/core-bentley@4.1.0-dev.62)(@itwin/core-common@4.1.0-dev.62)(@itwin/core-geometry@4.1.0-dev.62)(@itwin/ecschema-metadata@4.1.0-dev.62)
       '@itwin/eslint-plugin':
         specifier: ^4.0.0-dev.38
         version: 4.0.0-dev.38(eslint@8.40.0)(typescript@5.0.2)
@@ -3307,8 +3325,41 @@ packages:
       '@itwin/core-quantity': 4.1.0-dev.62(@itwin/core-bentley@4.1.0-dev.62)
       almost-equal: 1.1.0
 
+  /@itwin/ecschema-rpcinterface-common@4.1.0-dev.62(@itwin/core-bentley@4.1.0-dev.62)(@itwin/core-common@4.1.0-dev.62)(@itwin/core-geometry@4.1.0-dev.62)(@itwin/ecschema-metadata@4.1.0-dev.62):
+    resolution: {integrity: sha512-enZjdUercYEBnqbMKFIjfYUFQsB3DStcZG6BD1mUV1O+CVDzIQMo+613vpB/6k2qnEu0rkYtpZiGdUkMtqJnPg==}
+    peerDependencies:
+      '@itwin/core-bentley': 4.1.0-dev.62
+      '@itwin/core-common': 4.1.0-dev.62
+      '@itwin/core-geometry': 4.1.0-dev.62
+      '@itwin/ecschema-metadata': 4.1.0-dev.62
+    dependencies:
+      '@itwin/core-bentley': 4.1.0-dev.62
+      '@itwin/core-common': 4.1.0-dev.62(@itwin/core-bentley@4.1.0-dev.62)(@itwin/core-geometry@4.1.0-dev.62)
+      '@itwin/core-geometry': 4.1.0-dev.62
+      '@itwin/ecschema-metadata': 4.1.0-dev.62(@itwin/core-bentley@4.1.0-dev.62)(@itwin/core-quantity@4.1.0-dev.62)
+    dev: false
+
+  /@itwin/ecschema-rpcinterface-impl@4.1.0-dev.62(@itwin/core-backend@4.1.0-dev.62)(@itwin/core-bentley@4.1.0-dev.62)(@itwin/core-common@4.1.0-dev.62)(@itwin/core-geometry@4.1.0-dev.62)(@itwin/ecschema-metadata@4.1.0-dev.62)(@itwin/ecschema-rpcinterface-common@4.1.0-dev.62):
+    resolution: {integrity: sha512-rL1MfDInXatbCZ/0V8RxH8VAk64Cft53yxpS7q+UdUV7SFxcGDU/d/Ttckyt/QPfFMRoRJut2EzMHFe+1vsPJQ==}
+    peerDependencies:
+      '@itwin/core-backend': 4.1.0-dev.62
+      '@itwin/core-bentley': 4.1.0-dev.62
+      '@itwin/core-common': 4.1.0-dev.62
+      '@itwin/core-geometry': 4.1.0-dev.62
+      '@itwin/ecschema-metadata': 4.1.0-dev.62
+      '@itwin/ecschema-rpcinterface-common': 4.1.0-dev.62
+    dependencies:
+      '@itwin/core-backend': 4.1.0-dev.62(@itwin/core-bentley@4.1.0-dev.62)(@itwin/core-common@4.1.0-dev.62)(@itwin/core-geometry@4.1.0-dev.62)(@opentelemetry/api@1.4.1)
+      '@itwin/core-bentley': 4.1.0-dev.62
+      '@itwin/core-common': 4.1.0-dev.62(@itwin/core-bentley@4.1.0-dev.62)(@itwin/core-geometry@4.1.0-dev.62)
+      '@itwin/core-geometry': 4.1.0-dev.62
+      '@itwin/ecschema-metadata': 4.1.0-dev.62(@itwin/core-bentley@4.1.0-dev.62)(@itwin/core-quantity@4.1.0-dev.62)
+      '@itwin/ecschema-rpcinterface-common': 4.1.0-dev.62(@itwin/core-bentley@4.1.0-dev.62)(@itwin/core-common@4.1.0-dev.62)(@itwin/core-geometry@4.1.0-dev.62)(@itwin/ecschema-metadata@4.1.0-dev.62)
+    dev: false
+
   /@itwin/eslint-plugin@4.0.0-dev.38(eslint@8.40.0)(typescript@5.0.2):
     resolution: {integrity: sha512-u/R5hnG48GCqL20nsesHeMsKxfJHljUI/6EZGFxSHtt+R7zYdp5dLYT6vNn9HmpQsRNrjyXEkWpA5hSjb/MOIw==}
+    hasBin: true
     peerDependencies:
       eslint: ^8.36.0
       typescript: ^3.7.0 || ^4.0.0 || ^5.0.0
@@ -3334,6 +3385,7 @@ packages:
 
   /@itwin/eslint-plugin@4.0.0-dev.38(eslint@8.42.0)(typescript@5.0.4):
     resolution: {integrity: sha512-u/R5hnG48GCqL20nsesHeMsKxfJHljUI/6EZGFxSHtt+R7zYdp5dLYT6vNn9HmpQsRNrjyXEkWpA5hSjb/MOIw==}
+    hasBin: true
     peerDependencies:
       eslint: ^8.36.0
       typescript: ^3.7.0 || ^4.0.0 || ^5.0.0
@@ -5456,6 +5508,7 @@ packages:
   /acorn@8.8.2:
     resolution: {integrity: sha512-xjIYgE8HBrkpd/sJqOGNspf8uHG+NOHGOw6a/Urj8taM2EXfdNAH2oFcPeIFfsv3+kz/mJrS5VuMqbNLjCa2vw==}
     engines: {node: '>=0.4.0'}
+    hasBin: true
 
   /agent-base@6.0.2:
     resolution: {integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==}
@@ -7920,6 +7973,7 @@ packages:
 
   /eslint-config-prettier@8.8.0(eslint@8.40.0):
     resolution: {integrity: sha512-wLbQiFre3tdGgpDv67NQKnJuTlcUVYHas3k+DZCc2U2BadthoEY4B7hLPvAxaqdyOGCzuLfii2fqGph10va7oA==}
+    hasBin: true
     peerDependencies:
       eslint: '>=7.0.0'
     dependencies:
@@ -13608,6 +13662,7 @@ packages:
 
   /ts-node@10.9.1(@types/node@18.16.18)(typescript@5.0.2):
     resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
+    hasBin: true
     peerDependencies:
       '@swc/core': '>=1.2.50'
       '@swc/wasm': '>=1.2.50'
@@ -13752,6 +13807,7 @@ packages:
   /typedoc@0.23.28(typescript@5.0.2):
     resolution: {integrity: sha512-9x1+hZWTHEQcGoP7qFmlo4unUoVJLB0H/8vfO/7wqTnZxg4kPuji9y3uRzEu0ZKez63OJAUmiGhUrtukC6Uj3w==}
     engines: {node: '>= 14.14'}
+    hasBin: true
     peerDependencies:
       typescript: 4.6.x || 4.7.x || 4.8.x || 4.9.x || 5.0.x
     dependencies:
@@ -13830,6 +13886,7 @@ packages:
 
   /update-browserslist-db@1.0.11(browserslist@4.21.5):
     resolution: {integrity: sha512-dCwEFf0/oT85M1fHBg4F0jtLwJrutGoHSQXCh7u4o2t1drG+c0a9Flnqww6XUKSfQMPpJBRjU8d4RXB09qtvaA==}
+    hasBin: true
     peerDependencies:
       browserslist: '>= 4.21.0'
     dependencies:
@@ -14011,6 +14068,7 @@ packages:
   /webpack-cli@5.0.0(webpack-dev-server@4.11.1)(webpack@5.75.0):
     resolution: {integrity: sha512-AACDTo20yG+xn6HPW5xjbn2Be4KUzQPebWXsDMHwPPyKh9OnTOJgZN2Nc+g/FZKV3ObRTYsGvibAvc+5jAUrVA==}
     engines: {node: '>=14.15.0'}
+    hasBin: true
     peerDependencies:
       '@webpack-cli/generators': '*'
       webpack: 5.x.x
@@ -14058,6 +14116,7 @@ packages:
   /webpack-dev-server@4.11.1(webpack-cli@5.0.0)(webpack@5.75.0):
     resolution: {integrity: sha512-lILVz9tAUy1zGFwieuaQtYiadImb5M3d+H+L1zDYalYoDl0cksAB1UNyuE5MMWJrG6zR1tXkCP2fitl7yoUJiw==}
     engines: {node: '>= 12.13.0'}
+    hasBin: true
     peerDependencies:
       webpack: ^4.37.0 || ^5.0.0
       webpack-cli: '*'
@@ -14127,6 +14186,7 @@ packages:
   /webpack@5.75.0(webpack-cli@5.0.0):
     resolution: {integrity: sha512-piaIaoVJlqMsPtX/+3KTTO6jfvrSYgauFVdt8cr9LTHKmcq/AMd4mhzsiP7ZF/PGRNPGA8336jldh9l2Kt2ogQ==}
     engines: {node: '>=10.13.0'}
+    hasBin: true
     peerDependencies:
       webpack-cli: '*'
     peerDependenciesMeta:
