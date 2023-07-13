@@ -109,7 +109,7 @@ export interface PresentationTreeDataProviderProps extends DiagnosticsProps {
 export interface PresentationTreeDataProviderDataSourceEntryPoints {
   /** @deprecated in 4.0 The entry point is not used anymore, it's usage has been replaced by [[getNodesAndCount]]. */
   getNodesCount?: (requestOptions: HierarchyRequestOptions<IModelConnection, NodeKey>) => Promise<number>;
-  getNodesAndCount: (requestOptions: Paged<HierarchyRequestOptions<IModelConnection, NodeKey>>) => Promise<{ nodes: Node[], count: number }>;
+  getNodesAndCount: (requestOptions: Paged<HierarchyRequestOptions<IModelConnection, NodeKey>>) => Promise<{ nodes: Node[]; count: number }>;
   getFilteredNodePaths: (requestOptions: FilterByTextHierarchyRequestOptions<IModelConnection>) => Promise<NodePathElement[]>;
 }
 
@@ -242,7 +242,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
       parentNode?: TreeNodeItem,
       pageOptions?: PageOptions,
       instanceFilter?: InstanceFilterDefinition,
-    ): Promise<{ nodes: TreeNodeItem[], count: number }> => {
+    ): Promise<{ nodes: TreeNodeItem[]; count: number }> => {
       const parentKey = parentNode && isPresentationTreeNodeItem(parentNode) ? parentNode.key : undefined;
       const requestOptions = this.createRequestOptions(parentKey, pageOptions, instanceFilter);
       return createNodesAndCountResult(
@@ -275,7 +275,7 @@ async function getFilterDefinition(imodel: IModelConnection, node?: TreeNodeItem
 }
 
 async function createNodesAndCountResult(
-  resultFactory: () => Promise<{ nodes: Node[], count: number }>,
+  resultFactory: () => Promise<{ nodes: Node[]; count: number }>,
   baseOptions: RequestOptionsWithRuleset<IModelConnection>,
   parentNode?: TreeNodeItem,
   nodesCreateProps?: CreateTreeNodeItemProps,

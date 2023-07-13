@@ -102,7 +102,7 @@ export class ECMetadataProvider {
     return undefined;
   }
 
-  private async queryClassHierarchyInfo(id: Id64String): Promise<{ baseClasses: Set<Id64String>, derivedClasses: Set<Id64String> }> {
+  private async queryClassHierarchyInfo(id: Id64String): Promise<{ baseClasses: Set<Id64String>; derivedClasses: Set<Id64String> }> {
     const classHierarchyQuery = `
       SELECT chc.TargetECInstanceId baseId, chc.SourceECInstanceId derivedId
       FROM meta.ClassHasAllBaseClasses chc

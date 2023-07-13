@@ -58,7 +58,7 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
   private _parentDataProvider: IPresentationTreeDataProvider;
   private _filteredDataProvider: SimpleTreeDataProvider;
   private _filter: string;
-  private _filteredResultMatches: Array<{ id: string, matchesCount: number }> = [];
+  private _filteredResultMatches: Array<{ id: string; matchesCount: number }> = [];
 
   public constructor(props: FilteredPresentationTreeDataProviderProps) {
     this._parentDataProvider = props.parentDataProvider;

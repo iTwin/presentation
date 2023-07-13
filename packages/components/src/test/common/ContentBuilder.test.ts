@@ -23,7 +23,7 @@ import {
 } from "../_helpers/Content";
 
 class TestPropertyRecordsBuilder extends PropertyRecordsBuilder {
-  public entries: Array<{ record: PropertyRecord, fieldHierarchy: FieldHierarchy }> = [];
+  public entries: Array<{ record: PropertyRecord; fieldHierarchy: FieldHierarchy }> = [];
   protected createRootPropertiesAppender(): IPropertiesAppender {
     return {
       append: (record: FieldHierarchyRecord) => {

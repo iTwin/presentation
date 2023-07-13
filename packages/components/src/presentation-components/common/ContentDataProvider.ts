@@ -382,7 +382,7 @@ export class ContentDataProvider implements IContentDataProvider {
   }
 
   private _getContentAndSize = memoize(
-    async (pageOptions?: PageOptions): Promise<{ content: Content, size: number } | undefined> => {
+    async (pageOptions?: PageOptions): Promise<{ content: Content; size: number } | undefined> => {
       if (!this.shouldRequestContentForEmptyKeyset() && this.keys.isEmpty) {
         return undefined;
       }

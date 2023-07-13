@@ -31,7 +31,7 @@ export const initializeLocalization = async () => {
  * @internal
  */
 export const initializePropertyValueRenderers = async () => {
-  const customRenderers: Array<{ name: string, renderer: IPropertyValueRenderer }> = [{ name: "SelectableInstance", renderer: new InstanceKeyValueRenderer() }];
+  const customRenderers: Array<{ name: string; renderer: IPropertyValueRenderer }> = [{ name: "SelectableInstance", renderer: new InstanceKeyValueRenderer() }];
 
   for (const { name, renderer } of customRenderers) {
     PropertyValueRendererManager.defaultManager.registerRenderer(name, renderer);
@@ -151,7 +151,7 @@ export class AsyncTasksTracker {
 /** @internal */
 export function useResizeObserver<T extends HTMLElement>() {
   const observer = useRef<ResizeObserver>();
-  const [{ width, height }, setSize] = useState<{ width?: number, height?: number }>({});
+  const [{ width, height }, setSize] = useState<{ width?: number; height?: number }>({});
 
   const ref = useCallback((element: T | null) => {
     observer.current?.disconnect();
