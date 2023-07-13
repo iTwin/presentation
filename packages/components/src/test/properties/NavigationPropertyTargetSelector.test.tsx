@@ -240,7 +240,7 @@ describe("NavigationPropertyTargetSelector", () => {
     const menuItem = getByText(contentItem.label.displayValue);
     fireEvent.click(menuItem);
     await waitFor(() => expect(queryByText(contentItem.label.displayValue)).to.be.null);
-    expect((getByRole("textbox") as HTMLInputElement).value).to.be.eq(contentItem.label.displayValue)
+    expect((getByRole("textbox") as HTMLInputElement).value).to.be.eq(contentItem.label.displayValue);
   });
 
   it("correctly handles keyDown events", async () => {

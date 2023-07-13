@@ -97,7 +97,6 @@ export const waitForPendingAsyncs = async (handler: { pendingAsyncs: Set<string>
   await recursiveWaitInternal();
 };
 
-
 /**
  * Stubs global 'requestAnimationFrame' and 'cancelAnimationFrame' functions.
  * This is needed for tests using 'react-select' component.

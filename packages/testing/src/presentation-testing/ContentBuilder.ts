@@ -125,7 +125,7 @@ export class ContentBuilder {
     });
   }
 
-  private async getECClassNames(): Promise<Array<{ schemaName: string, className: string }>> {
+  private async getECClassNames(): Promise<Array<{ schemaName: string; className: string }>> {
     const reader = this._iModel.createQueryReader(
       `
         SELECT s.Name schemaName, c.Name className FROM meta.ECClassDef c

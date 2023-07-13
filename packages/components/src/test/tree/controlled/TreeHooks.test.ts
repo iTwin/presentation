@@ -229,16 +229,16 @@ function createNodeInput(label: string): TreeModelNodeInput {
 type TreeHierarchy =
   | string
   | {
-      [label: string]: TreeHierarchy[];
-    }
+    [label: string]: TreeHierarchy[];
+  }
   | {
-      label: string;
-      selected?: true;
-      expanded?: true;
-      loading?: true;
-      editingInfo?: TreeModelNodeEditingInfo;
-      children?: TreeHierarchy[];
-    };
+    label: string;
+    selected?: true;
+    expanded?: true;
+    loading?: true;
+    editingInfo?: TreeModelNodeEditingInfo;
+    children?: TreeHierarchy[];
+  };
 
 function expectTree(model: TreeModel, expectedHierarchy: TreeHierarchy[]): void {
   const actualHierarchy = buildActualHierarchy(undefined);

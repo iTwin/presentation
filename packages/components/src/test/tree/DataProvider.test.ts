@@ -144,7 +144,7 @@ describe("TreeDataProvider", () => {
     it("memoizes result", async () => {
       const parentKeys = [createTestECInstancesNodeKeyWithId("0x1"), createTestECInstancesNodeKeyWithId("0x2")];
       const parentNodes = parentKeys.map((key, i) => createTestTreeNodeItem(key, { id: `node_id_${i}` }));
-      const resultContainers = [new PromiseContainer<{ nodes: Node[]; count: number }>(), new PromiseContainer<{ nodes: Node[]; count: number }>()];
+      const resultContainers = [new PromiseContainer<{ nodes: Node[], count: number }>(), new PromiseContainer<{ nodes: Node[], count: number }>()];
 
       presentationManagerMock
 
@@ -216,9 +216,9 @@ describe("TreeDataProvider", () => {
     it("memoizes result", async () => {
       const parentKeys = [createTestECInstancesNodeKeyWithId("0x1"), createTestECInstancesNodeKeyWithId("0x2")];
       const parentNodes = parentKeys.map((key, i) => createTestTreeNodeItem(key, { id: `node_id_${i}` }));
-      const resultNodesFirstPageContainer0 = new PromiseContainer<{ nodes: Node[]; count: number }>();
-      const resultNodesFirstPageContainer1 = new PromiseContainer<{ nodes: Node[]; count: number }>();
-      const resultNodesNonFirstPageContainer = new PromiseContainer<{ nodes: Node[]; count: number }>();
+      const resultNodesFirstPageContainer0 = new PromiseContainer<{ nodes: Node[], count: number }>();
+      const resultNodesFirstPageContainer1 = new PromiseContainer<{ nodes: Node[], count: number }>();
+      const resultNodesNonFirstPageContainer = new PromiseContainer<{ nodes: Node[], count: number }>();
 
       presentationManagerMock
         .setup(async (x) => x.getNodesAndCount({ imodel: imodelMock.object, rulesetOrId: rulesetId, parentKey: parentKeys[0] }))

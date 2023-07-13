@@ -290,7 +290,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     }
     fieldsStack.reverse();
 
-    let contentItems: Array<{ primaryKeys: InstanceKey[]; values: ValuesMap }> = content.contentSet;
+    let contentItems: Array<{ primaryKeys: InstanceKey[], values: ValuesMap }> = content.contentSet;
     fieldsStack.forEach((field) => {
       const nestedContent = contentItems.reduce((nc, curr) => {
         const currItemValue = curr.values[field.name];
@@ -391,7 +391,7 @@ class PropertyDataBuilder extends PropertyRecordsBuilder {
     };
   }
 
-  private createPropertyCategories(): Array<{ category: PropertyCategory; source: CategoryDescription; categoryHasParent: boolean }> {
+  private createPropertyCategories(): Array<{ category: PropertyCategory, source: CategoryDescription, categoryHasParent: boolean }> {
     // determine which categories are actually used
     const usedCategoryNames = new Set();
     this._categorizedRecords.forEach((records, categoryName) => {

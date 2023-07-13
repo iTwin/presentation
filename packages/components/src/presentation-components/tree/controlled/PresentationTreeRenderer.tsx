@@ -59,19 +59,19 @@ export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
       <TreeRenderer {...restProps} nodeRenderer={filterableNodeRenderer} />
       {filterNode && filterNode.filtering && divRef.current
         ? createPortal(
-            <TreeNodeFilterBuilderDialog
-              imodel={imodel}
-              onApply={(info) => {
-                applyFilter(filterNode, info);
-                setFilterNode(undefined);
-              }}
-              onClose={() => {
-                setFilterNode(undefined);
-              }}
-              filteringInfo={filterNode.filtering}
-            />,
-            divRef.current.ownerDocument.body.querySelector(".iui-root") ?? divRef.current.ownerDocument.body,
-          )
+          <TreeNodeFilterBuilderDialog
+            imodel={imodel}
+            onApply={(info) => {
+              applyFilter(filterNode, info);
+              setFilterNode(undefined);
+            }}
+            onClose={() => {
+              setFilterNode(undefined);
+            }}
+            filteringInfo={filterNode.filtering}
+          />,
+          divRef.current.ownerDocument.body.querySelector(".iui-root") ?? divRef.current.ownerDocument.body,
+        )
         : null}
     </div>
   );

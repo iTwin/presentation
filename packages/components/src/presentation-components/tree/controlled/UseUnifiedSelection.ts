@@ -84,11 +84,11 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
     this._selectionHandler = params.selectionHandler
       ? params.selectionHandler
       : /* istanbul ignore next */ new SelectionHandler({
-          manager: Presentation.selection,
-          name,
-          imodel: this._dataProvider.imodel,
-          rulesetId: this._dataProvider.rulesetId,
-        });
+        manager: Presentation.selection,
+        name,
+        imodel: this._dataProvider.imodel,
+        rulesetId: this._dataProvider.rulesetId,
+      });
     this._selectionHandler.onSelect = this.onSelect.bind(this);
     this._unregisterModelChangedListener = this._modelSource.onModelChanged.addListener((args) => this.selectNodes(args[1]));
     this.selectNodes();
