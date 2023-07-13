@@ -38,7 +38,7 @@ export function useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProp
     if (subscription) {
       ongoingSubscriptions.current.set(nodeId, subscription);
     }
-  }
+  };
 
   return {
     applyFilter: (node: TreeNodeItem, info: PresentationInstanceFilterInfo) => handleFilterAction(node.id, info),
@@ -46,7 +46,13 @@ export function useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProp
   };
 }
 
-function applyHierarchyLevelFilter(nodeLoader: ITreeNodeLoader, modelSource: TreeModelSource, nodeId: string, onComplete: (id: string) => void, filter?: PresentationInstanceFilterInfo) {
+function applyHierarchyLevelFilter(
+  nodeLoader: ITreeNodeLoader,
+  modelSource: TreeModelSource,
+  nodeId: string,
+  onComplete: (id: string) => void,
+  filter?: PresentationInstanceFilterInfo,
+) {
   modelSource.modifyModel((model) => {
     const modelNode = model.getNode(nodeId);
     if (!modelNode || !isTreeModelNode(modelNode) || !isPresentationTreeNodeItem(modelNode.item) || !modelNode.item.filtering) {

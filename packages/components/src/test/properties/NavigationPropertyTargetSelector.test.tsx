@@ -66,7 +66,7 @@ describe("NavigationPropertyTargetSelector", () => {
       <NavigationPropertyTargetSelector imodel={testImodel} getNavigationPropertyInfo={async () => testNavigationPropertyInfo} propertyRecord={testRecord} />,
     );
 
-    const inputContainer = await waitFor(()=> getByRole("textbox"));
+    const inputContainer = await waitFor(() => getByRole("textbox"));
 
     fireEvent.click(inputContainer);
 
@@ -85,7 +85,7 @@ describe("NavigationPropertyTargetSelector", () => {
       />,
     );
 
-    const inputContainer = await waitFor(()=> getByRole("textbox"));
+    const inputContainer = await waitFor(() => getByRole("textbox"));
 
     fireEvent.click(inputContainer);
 
@@ -115,7 +115,7 @@ describe("NavigationPropertyTargetSelector", () => {
 
     expect((ref.current?.getValue() as PrimitiveValue).value).to.be.undefined;
 
-    const inputContainer = await waitFor(()=> getByRole("textbox"));
+    const inputContainer = await waitFor(() => getByRole("textbox"));
 
     fireEvent.click(inputContainer);
 
@@ -240,7 +240,7 @@ describe("NavigationPropertyTargetSelector", () => {
     const menuItem = getByText(contentItem.label.displayValue);
     fireEvent.click(menuItem);
     await waitFor(() => expect(queryByText(contentItem.label.displayValue)).to.be.null);
-    expect((getByRole("textbox") as HTMLInputElement).value).to.be.eq(contentItem.label.displayValue)
+    expect((getByRole("textbox") as HTMLInputElement).value).to.be.eq(contentItem.label.displayValue);
   });
 
   it("correctly handles keyDown events", async () => {
