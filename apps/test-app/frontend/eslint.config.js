@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 const iTwinPlugin = require("@itwin/eslint-plugin");
 const eslintBaseConfig = require("../../../eslint.base.config");
-const jsxRuntimeConfig = require("eslint-plugin-react");
+const reactPlugin = require("eslint-plugin-react");
 
 module.exports = [
   ...eslintBaseConfig,
@@ -15,7 +15,7 @@ module.exports = [
   {
     files: ["**/*.{ts,tsx}"],
     rules: {
-      ...jsxRuntimeConfig.rules,
+      ...reactPlugin.configs["jsx-runtime"].rules,
     },
   },
 ];

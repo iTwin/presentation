@@ -106,6 +106,7 @@
     "chai-subset": "1.6.0",
     "cpx2": "^3.0.2",
     "eslint": "^8.44.0",
+    "eslint-plugin-react": "^7.32.2",
     "ignore-styles": "^5.0.1",
     "jsdom": "^22.1.0",
     "jsdom-global": "3.0.2",

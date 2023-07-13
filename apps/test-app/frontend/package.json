@@ -10,7 +10,6 @@
     "docs": "betools extract --fileExt=ts,tsx --extractFrom=./src --recursive --out=../../../build/docs/extract"
   },
   "dependencies": {
-    "@test-app/common": "workspace:*",
     "@bentley/icons-generic-webfont": "^1.0.15",
     "@itwin/appui-abstract": "^4.1.0-dev.62",
     "@itwin/build-tools": "^4.1.0-dev.62",
@@ -37,6 +36,7 @@
     "@itwin/presentation-hierarchy-builder": "workspace:*",
     "@itwin/webgl-compatibility": "^4.1.0-dev.62",
     "@opentelemetry/api": "^1.4.1",
+    "@test-app/common": "workspace:*",
     "@types/copy-webpack-plugin": "^8.0.0",
     "@types/node": "^18.16.18",
     "@types/react": "^17.0.37",
@@ -58,5 +58,8 @@
     "webpack": "^5.75.0",
     "webpack-cli": "^5.0.0",
     "webpack-dev-server": "^4.11.1"
+  },
+  "devDependencies": {
+    "eslint-plugin-react": "^7.32.2"
   }
 }
