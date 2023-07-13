@@ -21,7 +21,8 @@ import {
   SelectionScopesManager,
 } from "@itwin/presentation-frontend";
 import { render } from "@testing-library/react";
-import { ViewportSelectionHandler, viewWithUnifiedSelection } from "../../presentation-components/viewport/WithUnifiedSelection";
+import { viewWithUnifiedSelection } from "../../presentation-components";
+import { ViewportSelectionHandler } from "../../presentation-components/viewport/WithUnifiedSelection";
 import { createTestECInstanceKey, waitForAllAsyncs } from "../_helpers/Common";
 import { ResolvablePromise } from "../_helpers/Promises";
 
@@ -144,7 +145,7 @@ describe("ViewportSelectionHandler", () => {
       resetHistory: () => void;
     }
 
-    let spies: { hilite: HiliteSpies, selectionSet: SelectionSetSpies };
+    let spies: { hilite: HiliteSpies; selectionSet: SelectionSetSpies };
 
     beforeEach(() => {
       // ensure there's something in the selection set
@@ -156,7 +157,7 @@ describe("ViewportSelectionHandler", () => {
       sourceName = "",
       selectionLevel = 0,
       imodel = imodelMock.object,
-    }: { sourceName?: string, selectionLevel?: number, imodel?: IModelConnection } = {}) => {
+    }: { sourceName?: string; selectionLevel?: number; imodel?: IModelConnection } = {}) => {
       const selectionChangeArgs: SelectionChangeEventArgs = {
         imodel,
         changeType: SelectionChangeType.Add,

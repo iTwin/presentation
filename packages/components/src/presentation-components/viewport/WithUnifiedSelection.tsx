@@ -77,7 +77,7 @@ export interface ViewportSelectionHandlerProps {
 export class ViewportSelectionHandler implements IDisposable {
   private _imodel: IModelConnection;
   private _selectionHandler: SelectionHandler;
-  private _lastPendingSelectionChange?: { info: SelectionInfo, selection: Readonly<KeySet> };
+  private _lastPendingSelectionChange?: { info: SelectionInfo; selection: Readonly<KeySet> };
   private _asyncsTracker = new AsyncTasksTracker();
 
   public constructor(props: ViewportSelectionHandlerProps) {

@@ -29,8 +29,8 @@ export function TreeWidget(props: Props) {
       isFiltering
         ? FilteringInputStatus.FilteringInProgress
         : undefined !== newMatchesCount
-          ? FilteringInputStatus.FilteringFinished
-          : FilteringInputStatus.ReadyToFilter,
+        ? FilteringInputStatus.FilteringFinished
+        : FilteringInputStatus.ReadyToFilter,
     );
     setMatchesCount(newMatchesCount);
   }, []);

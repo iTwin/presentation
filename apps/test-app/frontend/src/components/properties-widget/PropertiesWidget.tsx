@@ -69,9 +69,9 @@ export function PropertiesWidget(props: Props) {
   const resultSelectorProps = useMemo(() => {
     return filteringResult?.matchesCount !== undefined
       ? {
-        onSelectedChanged: (index: React.SetStateAction<number>) => setActiveMatchIndex(index),
-        resultCount: filteringResult.matchesCount,
-      }
+          onSelectedChanged: (index: React.SetStateAction<number>) => setActiveMatchIndex(index),
+          resultCount: filteringResult.matchesCount,
+        }
       : undefined;
   }, [filteringResult]);
 
@@ -227,7 +227,7 @@ function PropertyGrid(props: PropertyGridProps) {
   );
 }
 
-type ContextMenuItemInfo = ContextMenuItemProps & { id: string, label: string };
+type ContextMenuItemInfo = ContextMenuItemProps & { id: string; label: string };
 interface PropertiesWidgetContextMenuProps {
   dataProvider: PresentationPropertyDataProvider;
   args: PropertyGridContextMenuArgs;
@@ -316,7 +316,7 @@ function FavoritePropertyActionButton(props: ActionButtonRendererProps & { dataP
   );
 }
 
-function FavoriteFieldActionButton(props: { imodel: IModelConnection, field: Field }) {
+function FavoriteFieldActionButton(props: { imodel: IModelConnection; field: Field }) {
   const { field, imodel } = props;
   const toggleFavoriteProperty = useCallback(async () => {
     if (Presentation.favoriteProperties.has(field, imodel, FAVORITES_SCOPE)) {

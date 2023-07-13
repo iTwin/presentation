@@ -10,12 +10,12 @@ const commonjsGlobal: { MessageChannel?: any } =
   typeof globalThis !== "undefined"
     ? globalThis
     : typeof window !== "undefined"
-      ? window
-      : typeof global !== "undefined"
-        ? global
-        : typeof self !== "undefined"
-          ? self
-          : {};
+    ? window
+    : typeof global !== "undefined"
+    ? global
+    : typeof self !== "undefined"
+    ? self
+    : {};
 if (commonjsGlobal.MessageChannel) {
   delete commonjsGlobal.MessageChannel;
 }

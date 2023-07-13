@@ -107,18 +107,18 @@ export function usePresentationInstanceFilteringProps(
   initialClasses?: ClassInfo[],
 ): Required<
   Pick<
-  InstanceFilterBuilderProps,
-  | "properties"
-  | "classes"
-  | "selectedClasses"
-  | "onClassSelected"
-  | "onClassDeselected"
-  | "onClearClasses"
-  | "propertyRenderer"
-  | "onRulePropertySelected"
-  | "isDisabled"
+    InstanceFilterBuilderProps,
+    | "properties"
+    | "classes"
+    | "selectedClasses"
+    | "onClassSelected"
+    | "onClassDeselected"
+    | "onClearClasses"
+    | "propertyRenderer"
+    | "onRulePropertySelected"
+    | "isDisabled"
   >
-  > {
+> {
   const propertyInfos = useMemo(() => createInstanceFilterPropertyInfos(descriptor), [descriptor]);
   const classes = useMemo((): ClassInfo[] => {
     const uniqueClasses = new Map();

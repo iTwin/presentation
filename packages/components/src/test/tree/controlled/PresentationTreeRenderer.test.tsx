@@ -15,7 +15,7 @@ import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render, RenderResult, waitFor } from "@testing-library/react";
 import { PresentationTreeRenderer, PresentationTreeRendererProps } from "../../../presentation-components/tree/controlled/PresentationTreeRenderer";
 import { createTestPropertyInfo, stubDOMMatrix, stubRaf } from "../../_helpers/Common";
-import { createTestContentDescriptor, createTestPropertiesContentField  } from "../../_helpers/Content";
+import { createTestContentDescriptor, createTestPropertiesContentField,  } from "../../_helpers/Content";
 import { createTreeModelNode, createTreeNodeItem } from "./Helpers";
 import { Subject } from "rxjs";
 
@@ -121,7 +121,7 @@ describe("PresentationTreeRenderer", () => {
 
     const result = render(<PresentationTreeRenderer {...treeProps} />);
 
-    const { getByText, baseElement } = result;
+    const { getByText, baseElement } = result
     await waitFor(() => getByText(label));
 
     await applyFilter(result, propertyField.label);
@@ -168,27 +168,27 @@ describe("PresentationTreeRenderer", () => {
 
 async function applyFilter({ container, baseElement, getByText }: RenderResult, propertyLabel: string) {
   const filterButton = container.querySelector(".presentation-components-node-action-buttons button");
-  expect(filterButton).to.not.be.null;
-  fireEvent.click(filterButton!);
+    expect(filterButton).to.not.be.null;
+    fireEvent.click(filterButton!);
 
-  // wait for dialog to be visible
-  await waitFor(() => {
-    expect(baseElement.querySelector(".presentation-instance-filter-dialog")).to.not.be.null;
-  });
+    // wait for dialog to be visible
+    await waitFor(() => {
+      expect(baseElement.querySelector(".presentation-instance-filter-dialog")).to.not.be.null;
+    });
 
-  // select property in filter builder dialog
-  // open property selector
-  const propertySelector = baseElement.querySelector<HTMLInputElement>(".rule-property input");
-  expect(propertySelector).to.not.be.null;
-  fireEvent.focus(propertySelector!);
-  // select property
-  fireEvent.click(getByText(propertyLabel));
+    // select property in filter builder dialog
+    // open property selector
+    const propertySelector = baseElement.querySelector<HTMLInputElement>(".rule-property input");
+    expect(propertySelector).to.not.be.null;
+    fireEvent.focus(propertySelector!);
+    // select property
+    fireEvent.click(getByText(propertyLabel));
 
-  // wait until apply button is enabled
-  const applyButton = await waitFor(() => {
-    const button = baseElement.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
-    expect(button?.disabled).to.be.false;
-    return button;
-  });
-  fireEvent.click(applyButton!);
+    // wait until apply button is enabled
+    const applyButton = await waitFor(() => {
+      const button = baseElement.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
+      expect(button?.disabled).to.be.false;
+      return button;
+    });
+    fireEvent.click(applyButton!);
 }
