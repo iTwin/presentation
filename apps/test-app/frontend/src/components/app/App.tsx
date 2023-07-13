@@ -17,7 +17,7 @@ import { MyAppFrontend, MyAppSettings } from "../../api/MyAppFrontend";
 import { IModelSelector } from "../imodel-selector/IModelSelector";
 import { PropertiesWidget } from "../properties-widget/PropertiesWidget";
 import { RulesetSelector } from "../ruleset-selector/RulesetSelector";
-import { TreeWidget } from "../tree-widget/TreeWidget";
+import { ExperimentalModelsTree /* , TreeWidget */ } from "../tree-widget/TreeWidget";
 import { UnitSystemSelector } from "../unit-system-selector/UnitSystemSelector";
 import ViewportContentControl from "../viewport/ViewportContentControl";
 import { TableWidget } from "../table-widget/TableWidget";
@@ -173,7 +173,8 @@ export default class App extends Component<{}, State> {
               gridTemplateRows: `${this.state.rightPaneRatio * 100}% 30px calc(${(1 - this.state.rightPaneRatio) * 100}% - 30px)`,
             }}
           >
-            <TreeWidget imodel={imodel} rulesetId={rulesetId} />
+            {/* <TreeWidget imodel={imodel} rulesetId={rulesetId} /> */}
+            <ExperimentalModelsTree imodel={imodel} />
             <div className="app-content-right-separator">
               <hr />
               <ElementSeparator

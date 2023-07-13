@@ -1,5 +1,5 @@
 config:
-  target: "http://localhost:5001/presentation-test-app/v1.0/mode/1/context/00000000-0000-0000-0000-000000000000/imodel/00000000-0000-0000-0000-000000000000/changeset/0"
+  target: "http://127.0.0.1:5001/presentation-test-app/v1.0/mode/1/context/00000000-0000-0000-0000-000000000000/imodel/00000000-0000-0000-0000-000000000000/changeset/0"
 
   phases:
     - name: "1 user"
@@ -11,10 +11,10 @@ config:
     name: "iModels"
     loadAll: true
 
-  processor: "../lib/processors/models-tree.js"
+  processor: "../lib/processors/models-tree-stateless.js"
 
 scenarios:
-  - name: Full Models Tree
+  - name: Full Models Tree (stateless)
     beforeScenario: "initScenario"
     afterScenario: "terminateScenario"
     flow:

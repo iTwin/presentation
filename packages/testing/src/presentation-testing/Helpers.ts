@@ -58,6 +58,12 @@ export { HierarchyCacheMode, PresentationManagerMode, PresentationBackendProps }
 
 /** @public */
 export interface PresentationTestingInitProps {
+  /**
+   * RPC interfaces to enable. Defaults to `[SnapshotIModelRpcInterface, IModelReadRpcInterface, PresentationRpcInterface]`.
+   *
+   * Note: Implementations for these interfaces are **not** automatically registered on the backend - that has to be done manually.
+   */
+  rpcs?: RpcInterfaceDefinition[];
   /** Properties for backend initialization */
   backendProps?: PresentationBackendProps;
   /** Properties for `IModelHost` */
@@ -90,7 +96,7 @@ export const initialize = async (props?: PresentationTestingInitProps) => {
   }
 
   // set up rpc interfaces
-  initializeRpcInterfaces([SnapshotIModelRpcInterface, IModelReadRpcInterface, PresentationRpcInterface]);
+  initializeRpcInterfaces(props.rpcs ?? [SnapshotIModelRpcInterface, IModelReadRpcInterface, PresentationRpcInterface]);
 
   // init backend
   // make sure backend gets assigned an id which puts its resources into a unique directory
