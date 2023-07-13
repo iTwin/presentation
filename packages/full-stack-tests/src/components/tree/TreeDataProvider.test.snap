@@ -29,11 +29,11 @@ Array [
       "descriptor": [Function],
     },
     "icon": "child image id",
-    "id": "b962077bc72152eba17fa9e9f4707f0b/b2104362eeb494ead21226f88653900b",
+    "id": "45a35284023f06495cb8802368089dd5/d40a267dc8ff557a9c69ad79d652e39f",
     "key": Object {
       "pathFromRoot": Array [
-        "b2104362eeb494ead21226f88653900b",
-        "b962077bc72152eba17fa9e9f4707f0b",
+        "d40a267dc8ff557a9c69ad79d652e39f",
+        "45a35284023f06495cb8802368089dd5",
       ],
       "type": "child",
       "version": 2,
@@ -50,7 +50,7 @@ Array [
         "valueFormat": 0,
       },
     },
-    "parentId": "b2104362eeb494ead21226f88653900b",
+    "parentId": "d40a267dc8ff557a9c69ad79d652e39f",
   },
 ]
 `;
@@ -63,11 +63,11 @@ Array [
       "descriptor": [Function],
     },
     "icon": "child image id",
-    "id": "b962077bc72152eba17fa9e9f4707f0b/b2104362eeb494ead21226f88653900b",
+    "id": "45a35284023f06495cb8802368089dd5/d40a267dc8ff557a9c69ad79d652e39f",
     "key": Object {
       "pathFromRoot": Array [
-        "b2104362eeb494ead21226f88653900b",
-        "b962077bc72152eba17fa9e9f4707f0b",
+        "d40a267dc8ff557a9c69ad79d652e39f",
+        "45a35284023f06495cb8802368089dd5",
       ],
       "type": "child",
       "version": 2,
@@ -84,7 +84,7 @@ Array [
         "valueFormat": 0,
       },
     },
-    "parentId": "b2104362eeb494ead21226f88653900b",
+    "parentId": "d40a267dc8ff557a9c69ad79d652e39f",
   },
 ]
 `;
@@ -92,7 +92,7 @@ Array [
 exports[`TreeDataProvider returns error node when requesting child nodes with invalid paging 1`] = `
 Object {
   "children": undefined,
-  "id": "b2104362eeb494ead21226f88653900b/info-node",
+  "id": "d40a267dc8ff557a9c69ad79d652e39f/info-node",
   "isSelectionDisabled": true,
   "label": PropertyRecord {
     "property": Object {
@@ -120,12 +120,12 @@ Array [
     },
     "hasChildren": true,
     "icon": "root image id",
-    "id": "b2104362eeb494ead21226f88653900b",
+    "id": "d40a267dc8ff557a9c69ad79d652e39f",
     "isCheckboxDisabled": true,
     "isCheckboxVisible": true,
     "key": Object {
       "pathFromRoot": Array [
-        "b2104362eeb494ead21226f88653900b",
+        "d40a267dc8ff557a9c69ad79d652e39f",
       ],
       "type": "root",
       "version": 2,
@@ -164,12 +164,12 @@ Array [
     },
     "hasChildren": true,
     "icon": "root image id",
-    "id": "b2104362eeb494ead21226f88653900b",
+    "id": "d40a267dc8ff557a9c69ad79d652e39f",
     "isCheckboxDisabled": true,
     "isCheckboxVisible": true,
     "key": Object {
       "pathFromRoot": Array [
-        "b2104362eeb494ead21226f88653900b",
+        "d40a267dc8ff557a9c69ad79d652e39f",
       ],
       "type": "root",
       "version": 2,
