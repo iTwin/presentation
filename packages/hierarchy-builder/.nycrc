@@ -1,0 +1,13 @@
+{
+  "check-coverage": false,
+  "statements": 100,
+  "functions": 100,
+  "branches": 100,
+  "lines": 100,
+  "include": ["src/**/*", "lib/cjs/**/*"],
+  "exclude": ["src/hierarchy-builder.ts", "src/test/**", "lib/cjs/test/**"],
+  "extension": [".ts"],
+  "temp-dir": "./lib/test/coverage/.nyc_output",
+  "report-dir": "./lib/test/coverage",
+  "reporter": ["text-summary", "lcov", "cobertura"]
+}
