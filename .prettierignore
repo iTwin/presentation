@@ -17,3 +17,7 @@ pnpm-workspace.yaml
 .azure-pipelines
 .github
 .husky
+
+
+# Ignore extracted api definitions
+api
