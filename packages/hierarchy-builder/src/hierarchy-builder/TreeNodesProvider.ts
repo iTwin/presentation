@@ -157,7 +157,7 @@ export class TreeNodesProvider {
     const result = directChildren.pipe(
       createMergeInstanceNodesByLabelReducer(this._directNodesCache),
       createHideIfNoChildrenReducer((n) => this.hasNodes(n), false),
-      createHideNodesInHierarchyReducer(this, this._directNodesCache, false),
+      createHideNodesInHierarchyReducer((n) => this.getNodesObservable(n), this._directNodesCache, false),
       sortNodesByLabelReducer,
       createClassGroupingReducer(this._schemas),
     );
@@ -169,7 +169,10 @@ export class TreeNodesProvider {
       const nodes = new Array<TreeNode>();
       this.getNodesObservable(parentNode)
         // finalize before returning
-        .pipe(createDetermineChildrenReducer(this), supplyIconsReducer)
+        .pipe(
+          createDetermineChildrenReducer((n) => this.hasNodes(n)),
+          supplyIconsReducer,
+        )
         // load all nodes into the array and resolve
         .subscribe({
           next(node) {
@@ -197,7 +200,7 @@ export class TreeNodesProvider {
         tap((n) => enableLogging && console.log(`HasNodes: partial node before HideIfNoChildrenReducer: ${JSON.stringify(n)}`)),
         createHideIfNoChildrenReducer((n) => this.hasNodes(n), true),
         tap((n) => enableLogging && console.log(`HasNodes: partial node before HideNodesInHierarchyReducer: ${JSON.stringify(n)}`)),
-        createHideNodesInHierarchyReducer(this, this._directNodesCache, true),
+        createHideNodesInHierarchyReducer((n) => this.getNodesObservable(n), this._directNodesCache, true),
       )
       .pipe(
         tap((n) => enableLogging && console.log(`HasNodes: partial node before mapping to 'true': ${JSON.stringify(n)}`)),
@@ -233,7 +236,7 @@ function createPersistChildrenReducer(parentNode: TreeNode) {
   };
 }
 
-function createDetermineChildrenReducer(provider: TreeNodesProvider) {
+function createDetermineChildrenReducer(hasNodes: (node: InProgressTreeNode) => Observable<boolean>) {
   const enableLogging = false;
   return function (nodes: Observable<InProgressTreeNode>): Observable<InProgressTreeNode> {
     const [determined, undetermined] = partition(nodes.pipe(share()), (node) => node.children !== undefined);
@@ -241,7 +244,7 @@ function createDetermineChildrenReducer(provider: TreeNodesProvider) {
       determined,
       undetermined.pipe(
         mergeMap((n) =>
-          provider.hasNodes(n).pipe(
+          hasNodes(n).pipe(
             map((children) => {
               enableLogging && console.log(`DetermineChildrenReducer: children for ${n.label}: ${children}`);
               return { ...n, children };
@@ -254,7 +257,7 @@ function createDetermineChildrenReducer(provider: TreeNodesProvider) {
 }
 
 function createHideNodesInHierarchyReducer(
-  provider: TreeNodesProvider,
+  getNodes: (parentNode: InProgressTreeNode) => Observable<InProgressTreeNode>,
   directNodesCache: Map<string, Observable<InProgressTreeNode>>,
   stopOnFirstChild: boolean,
 ) {
@@ -297,7 +300,7 @@ function createHideNodesInHierarchyReducer(
           addToMergeMap(acc, node);
           return acc;
         }, new Map<string, InProgressTreeNode>()),
-        mergeMap((mergedNodes) => [...mergedNodes.values()].map((mergedNode) => defer(() => provider.getNodesObservable(mergedNode)))),
+        mergeMap((mergedNodes) => [...mergedNodes.values()].map((mergedNode) => defer(() => getNodes(mergedNode)))),
         mergeAll(),
       ),
     ).pipe(tap((node) => enableLogging && console.log(`HideNodesInHierarchyReducer out: ${node.label}`)));
