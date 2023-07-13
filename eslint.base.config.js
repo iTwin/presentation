@@ -13,11 +13,11 @@ module.exports = [
       "@itwin/no-internal": [
         "error",
         {
-          "tag": ["internal"]
-        }
+          tag: ["internal"],
+        },
       ],
-      "curly": ["error", "all"],
-      "@itwin/no-internal-barrel-imports": "warn"
+      curly: ["error", "all"],
+      "@itwin/no-internal-barrel-imports": "warn",
     },
   },
 ];
