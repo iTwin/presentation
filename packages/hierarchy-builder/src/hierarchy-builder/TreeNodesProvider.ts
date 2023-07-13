@@ -128,7 +128,7 @@ export class TreeNodesProvider {
         ),
       mergeAll(),
       map(convertECInstanceIdSuffixToBase36),
-      shareReplay({ refCount: false }),
+      shareReplay(),
     );
   }
 
