@@ -82,6 +82,7 @@ export const NumericInput = ({ value, onChange }: NumericInputProps) => {
       onChange(val);
     }
     // Let user write scientific numbers. Number("1e-") returns NaN, but we want to fire `onChange` function when input before `e-` is a correct number.
+    // We don't need to check if string before `e-` is a valid number, because there is a check if string before `e` is a correct number.
     else if (val.endsWith("e-")) {
       onChange(val);
     }
