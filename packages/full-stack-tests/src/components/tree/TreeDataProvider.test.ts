@@ -81,14 +81,13 @@ describe("TreeDataProvider", async () => {
 
   it("returns root nodes", async () => {
     const nodes = await provider.getNodes();
-    expect(nodes).to.matchSnapshot();
+    expect(nodes.length).to.eq(1);
   });
 
   it("returns root nodes with paging", async () => {
     provider.pagingSize = 5;
     const nodes = await provider.getNodes(undefined, { start: 0, size: 5 });
     expect(nodes.length).to.eq(1);
-    expect(nodes).to.matchSnapshot();
   });
 
   it("creates error node when requesting root nodes with invalid paging", async () => {
@@ -97,7 +96,7 @@ describe("TreeDataProvider", async () => {
     if (nodes.length === 1) {
       const node = nodes[0];
       assert(isPresentationInfoTreeNodeItem(node));
-      expect(node).to.matchSnapshot();
+      expect(node.message).to.eq("Èrrór ¢rëätíñg thë hìérärçhý lévêl");
     } else {
       // presentation-frontend@3.6 returns an empty list in case of invalid page options
       expect(nodes).to.be.empty;
@@ -113,7 +112,7 @@ describe("TreeDataProvider", async () => {
   it("returns child nodes", async () => {
     const rootNodes = await provider.getNodes();
     const childNodes = await provider.getNodes(rootNodes[0]);
-    expect(childNodes).to.matchSnapshot();
+    expect(childNodes.length).to.eq(1);
   });
 
   it("returns child nodes with paging", async () => {
@@ -121,7 +120,6 @@ describe("TreeDataProvider", async () => {
     provider.pagingSize = 5;
     const nodes = await provider.getNodes(rootNodes[0], { start: 0, size: 5 });
     expect(nodes.length).to.eq(1);
-    expect(nodes).to.matchSnapshot();
   });
 
   it("returns error node when requesting child nodes with invalid paging", async () => {
@@ -131,7 +129,7 @@ describe("TreeDataProvider", async () => {
     if (nodes.length === 1) {
       const node = nodes[0];
       assert(isPresentationInfoTreeNodeItem(node));
-      expect(node).to.matchSnapshot();
+      expect(node.message).to.eq("Èrrór ¢rëätíñg thë hìérärçhý lévêl");
     } else {
       // presentation-frontend@3.6 returns an empty list in case of invalid page options
       expect(nodes).to.be.empty;

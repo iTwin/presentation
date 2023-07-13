@@ -224,15 +224,19 @@ describe("useHierarchyLevelFiltering", () => {
     const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader: nodeLoaderMock.object } });
 
     result.current.applyFilter(node.item, filterInfo);
-    expect(applyFilterActionSubject.observers.length).to.be.eq(1);
-    result.current.clearFilter(node.item);
+    expect(applyFilterActionSubject.observed).to.be.true;
 
-    expect(applyFilterActionSubject.observers.length).to.be.eq(0);
+    result.current.clearFilter(node.item);
+    expect(applyFilterActionSubject.observed).to.be.false;
   });
 
   it("`applyFilter` unsubscribes from previous observable if called second time", () => {
-    const subject = new Subject<TreeNodeLoadResult>();
-    nodeLoaderMock.setup((x) => x.loadNode(moq.It.isAny(), 0)).returns(() => subject);
+    const nodeLoad1 = new Subject<TreeNodeLoadResult>();
+    nodeLoaderMock.setup((x) => x.loadNode(moq.It.isAny(), 0)).returns(() => nodeLoad1);
+
+    const nodeLoad2 = new Subject<TreeNodeLoadResult>();
+    nodeLoaderMock.setup((x) => x.loadNode(moq.It.isAny(), 0)).returns(() => nodeLoad2);
+
     const node = createTreeModelInput(undefined, { filtering: { descriptor: createTestContentDescriptor({ fields: [] }) } });
     modelSource.modifyModel((model) => {
       model.setChildren(undefined, [node], 0);
@@ -241,10 +245,12 @@ describe("useHierarchyLevelFiltering", () => {
     const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader: nodeLoaderMock.object } });
 
     result.current.applyFilter(node.item, filterInfo);
-    const firstObservable = subject.observers[0];
+    expect(nodeLoad1.observed).to.be.true;
+    expect(nodeLoad2.observed).to.be.false;
+
     result.current.applyFilter(node.item, filterInfo);
-    expect(subject.observers.length).to.be.eq(1);
-    expect(firstObservable.closed).to.be.true;
+    expect(nodeLoad1.observed).to.be.false;
+    expect(nodeLoad2.observed).to.be.true;
   });
 
   it("unsubscribes from observable if error is thrown", () => {
@@ -258,8 +264,8 @@ describe("useHierarchyLevelFiltering", () => {
     const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader: nodeLoaderMock.object } });
 
     result.current.applyFilter(node.item, filterInfo);
-    expect(subject.observers.length).to.be.eq(1);
+    expect(subject.observed).to.be.true;
     subject.error([]);
-    expect(subject.observers.length).to.be.eq(0);
+    expect(subject.observed).to.be.false;
   });
 });

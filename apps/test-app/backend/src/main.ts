@@ -8,6 +8,7 @@ import { app as electron } from "electron";
 import * as path from "path";
 import { Logger, LogLevel } from "@itwin/core-bentley";
 import { RpcInterfaceDefinition } from "@itwin/core-common";
+import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 // __PUBLISH_EXTRACT_START__ Presentation.Backend.Initialization.Imports
 import { Presentation, PresentationProps } from "@itwin/presentation-backend";
 // __PUBLISH_EXTRACT_END__
@@ -42,6 +43,8 @@ void (async () => {
   }
   // do initialize
   init(rpcInterfaces);
+  // eslint-disable-next-line @itwin/no-internal
+  ECSchemaRpcImpl.register();
 
   // __PUBLISH_EXTRACT_START__ Presentation.Backend.Initialization.OpenTelemetry.SdkSetup
   // configure the OpenTelemetry data exporting to the console
