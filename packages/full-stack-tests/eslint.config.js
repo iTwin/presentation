@@ -10,6 +10,5 @@ module.exports = [
   {
     files: ["**/*.{ts,tsx}"],
     ...iTwinPlugin.configs.iTwinjsRecommendedConfig,
-    languageOptions: customLanguageOptions,
   },
 ];

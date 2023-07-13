@@ -8,8 +8,7 @@ const eslintBaseConfig = require("../../eslint.base.config");
 module.exports = [
   ...eslintBaseConfig,
   {
-    files: ["**/*.{ts,tsx}"],
+    files: ["**/*.ts"],
     ...iTwinPlugin.configs.iTwinjsRecommendedConfig,
-    languageOptions: customLanguageOptions,
   },
 ];
