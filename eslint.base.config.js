@@ -16,7 +16,8 @@ module.exports = [
           "tag": ["internal"]
         }
       ],
-      "curly": ["error", "all"]
+      "curly": ["error", "all"],
+      "@itwin/no-internal-barrel-imports": "warn"
     },
   },
 ];
