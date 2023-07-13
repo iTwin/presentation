@@ -56,129 +56,127 @@ describe("<NumericPropertyInput />", () => {
     await waitFor(() => expect((ref.current?.getValue() as PrimitiveValue).value).to.be.undefined);
   });
 
-  describe("integration with <NumericInput /> ", () => {
-    it("returns new value after typing number", async () => {
-      const user = userEvent.setup();
-      const record = createRecord(-10);
-      const { getByDisplayValue, getByRole } = render(<NumericPropertyInput propertyRecord={record}/>);
+  it("returns new value after typing number", async () => {
+    const user = userEvent.setup();
+    const record = createRecord(-10);
+    const { getByDisplayValue, getByRole } = render(<NumericPropertyInput propertyRecord={record}/>);
 
-      const inputContainer = await waitFor(() => getByRole("textbox"));
+    const inputContainer = await waitFor(() => getByRole("textbox"));
 
-      await user.type(inputContainer, "1");
-      expect(getByDisplayValue("-101")).to.not.be.null;
-    });
+    await user.type(inputContainer, "1");
+    expect(getByDisplayValue("-101")).to.not.be.null;
+  });
 
-    it("allows typing `-1`", async () => {
-      const user = userEvent.setup();
-      const record = createRecord();
-      const ref = createRef<NumericPropertyInputAttributes>();
-      const { getByDisplayValue, getByRole } = render(<NumericPropertyInput propertyRecord={record} ref={ref}/>);
+  it("allows typing `-1`", async () => {
+    const user = userEvent.setup();
+    const record = createRecord();
+    const ref = createRef<NumericPropertyInputAttributes>();
+    const { getByDisplayValue, getByRole } = render(<NumericPropertyInput propertyRecord={record} ref={ref}/>);
 
-      const inputContainer = await waitFor(() => getByRole("textbox"));
+    const inputContainer = await waitFor(() => getByRole("textbox"));
 
-      await user.type(inputContainer, "-");
-      expect(getByDisplayValue("-")).to.not.be.null;
+    await user.type(inputContainer, "-");
+    expect(getByDisplayValue("-")).to.not.be.null;
 
-      await user.type(inputContainer, "1");
-      expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(-1);
-    });
+    await user.type(inputContainer, "1");
+    expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(-1);
+  });
 
-    it("allows typing `+1`", async () => {
-      const user = userEvent.setup();
-      const record = createRecord();
-      const ref = createRef<NumericPropertyInputAttributes>();
-      const { getByDisplayValue, getByRole } = render(<NumericPropertyInput propertyRecord={record} ref={ref}/>);
+  it("allows typing `+1`", async () => {
+    const user = userEvent.setup();
+    const record = createRecord();
+    const ref = createRef<NumericPropertyInputAttributes>();
+    const { getByDisplayValue, getByRole } = render(<NumericPropertyInput propertyRecord={record} ref={ref}/>);
 
-      const inputContainer = await waitFor(() => getByRole("textbox"));
+    const inputContainer = await waitFor(() => getByRole("textbox"));
 
-      await user.type(inputContainer, "+");
-      expect(getByDisplayValue("+")).to.not.be.null;
+    await user.type(inputContainer, "+");
+    expect(getByDisplayValue("+")).to.not.be.null;
 
-      await user.type(inputContainer, "1");
-      expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(1);
-    });
+    await user.type(inputContainer, "1");
+    expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(1);
+  });
 
-    it("allows typing `.1` ", async () => {
-      const user = userEvent.setup();
-      const record = createRecord();
-      const ref = createRef<NumericPropertyInputAttributes>();
-      const { getByDisplayValue, getByRole } = render(<NumericPropertyInput propertyRecord={record} ref={ref}/>);
+  it("allows typing `.1` ", async () => {
+    const user = userEvent.setup();
+    const record = createRecord();
+    const ref = createRef<NumericPropertyInputAttributes>();
+    const { getByDisplayValue, getByRole } = render(<NumericPropertyInput propertyRecord={record} ref={ref}/>);
 
-      const inputContainer = await waitFor(() => getByRole("textbox"));
+    const inputContainer = await waitFor(() => getByRole("textbox"));
 
-      await user.type(inputContainer, ".");
-      expect(getByDisplayValue(".")).to.not.be.null;
+    await user.type(inputContainer, ".");
+    expect(getByDisplayValue(".")).to.not.be.null;
 
-      await user.type(inputContainer, "1");
-      expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(0.1);
-    });
+    await user.type(inputContainer, "1");
+    expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(0.1);
+  });
 
-    it("allows typing `+.1`", async () => {
-      const user = userEvent.setup();
-      const record = createRecord();
-      const ref = createRef<NumericPropertyInputAttributes>();
-      const { getByDisplayValue, getByRole } = render(<NumericPropertyInput propertyRecord={record} ref={ref}/>);
+  it("allows typing `+.1`", async () => {
+    const user = userEvent.setup();
+    const record = createRecord();
+    const ref = createRef<NumericPropertyInputAttributes>();
+    const { getByDisplayValue, getByRole } = render(<NumericPropertyInput propertyRecord={record} ref={ref}/>);
 
-      const inputContainer = await waitFor(() => getByRole("textbox"));
+    const inputContainer = await waitFor(() => getByRole("textbox"));
 
-      await user.type(inputContainer, "+.");
-      expect(getByDisplayValue("+.")).to.not.be.null;
+    await user.type(inputContainer, "+.");
+    expect(getByDisplayValue("+.")).to.not.be.null;
 
-      await user.type(inputContainer, "1");
-      expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(0.1);
-    });
+    await user.type(inputContainer, "1");
+    expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(0.1);
+  });
 
-    it("allows typing `-.1`", async () => {
-      const user = userEvent.setup();
-      const record = createRecord();
-      const ref = createRef<NumericPropertyInputAttributes>();
-      const { getByDisplayValue, getByRole } = render(<NumericPropertyInput propertyRecord={record} ref={ref}/>);
+  it("allows typing `-.1`", async () => {
+    const user = userEvent.setup();
+    const record = createRecord();
+    const ref = createRef<NumericPropertyInputAttributes>();
+    const { getByDisplayValue, getByRole } = render(<NumericPropertyInput propertyRecord={record} ref={ref}/>);
 
-      const inputContainer = await waitFor(() => getByRole("textbox"));
+    const inputContainer = await waitFor(() => getByRole("textbox"));
 
-      await user.type(inputContainer, "-.");
-      expect(getByDisplayValue("-.")).to.not.be.null;
+    await user.type(inputContainer, "-.");
+    expect(getByDisplayValue("-.")).to.not.be.null;
 
-      await user.type(inputContainer, "1");
-      expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(-0.1);
-    });
+    await user.type(inputContainer, "1");
+    expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(-0.1);
+  });
 
-    it("allows typing 1e5", async () => {
-      const user = userEvent.setup();
-      const record = createRecord(1);
-      const ref = createRef<NumericPropertyInputAttributes>();
-      const { getByDisplayValue, getByRole } = render(<NumericPropertyInput propertyRecord={record} ref={ref}/>);
+  it("allows typing 1e5", async () => {
+    const user = userEvent.setup();
+    const record = createRecord(1);
+    const ref = createRef<NumericPropertyInputAttributes>();
+    const { getByDisplayValue, getByRole } = render(<NumericPropertyInput propertyRecord={record} ref={ref}/>);
 
-      const inputContainer = await waitFor(() => getByRole("textbox"));
+    const inputContainer = await waitFor(() => getByRole("textbox"));
 
-      await user.type(inputContainer, "e");
-      expect(getByDisplayValue("1e")).to.not.be.null;
+    await user.type(inputContainer, "e");
+    expect(getByDisplayValue("1e")).to.not.be.null;
 
-      await user.type(inputContainer, "5");
-      expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(100000);
-    });
+    await user.type(inputContainer, "5");
+    expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(100000);
+  });
 
-    it("allows typing 1e-5", async () => {
-      const user = userEvent.setup();
-      const record = createRecord(1);
-      const ref = createRef<NumericPropertyInputAttributes>();
-      const { getByDisplayValue, getByRole } = render(<NumericPropertyInput propertyRecord={record} ref={ref}/>);
+  it("allows typing 1e-5", async () => {
+    const user = userEvent.setup();
+    const record = createRecord(1);
+    const ref = createRef<NumericPropertyInputAttributes>();
+    const { getByDisplayValue, getByRole } = render(<NumericPropertyInput propertyRecord={record} ref={ref}/>);
 
-      const inputContainer = await waitFor(() => getByRole("textbox"));
+    const inputContainer = await waitFor(() => getByRole("textbox"));
 
-      await user.type(inputContainer, "e-");
-      expect(getByDisplayValue("1e-")).to.not.be.null;
+    await user.type(inputContainer, "e-");
+    expect(getByDisplayValue("1e-")).to.not.be.null;
 
-      await user.type(inputContainer, "5");
-      expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(0.00001);
-    });
+    await user.type(inputContainer, "5");
+    expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(0.00001);
   });
 });
 
 describe("<NumericInput />", () => {
-  it("renders NumericInput", () => {
-    const { getByRole } = render(<NumericInput onChange={() => {}} value="" />)
-    expect(getByRole("textbox")).to.not.be.null;
+  it("renders NumericInput with initial value", () => {
+    const { getByRole } = render(<NumericInput onChange={() => {}} value="1" />)
+    expect((getByRole("textbox") as HTMLInputElement).value).to.be.eq("1");
   });
 
   it("does not fire `onChange` when input is a letter", async () => {
