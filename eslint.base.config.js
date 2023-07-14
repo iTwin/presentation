@@ -21,7 +21,6 @@ module.exports = [
         },
       ],
       curly: ["error", "all"],
-      "@itwin/no-internal-barrel-imports": "warn",
     },
   },
 ];

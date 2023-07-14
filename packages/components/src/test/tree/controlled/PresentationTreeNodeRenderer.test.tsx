@@ -12,7 +12,7 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render, waitFor } from "@testing-library/react";
-import { PresentationInfoTreeNodeItem } from "../../../presentation-components";
+import { PresentationInfoTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem";
 import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/PresentationInstanceFilterBuilder";
 import { PresentationTreeNodeRenderer } from "../../../presentation-components/tree/controlled/PresentationTreeNodeRenderer";
 import { createTestPropertyInfo } from "../../_helpers/Common";
