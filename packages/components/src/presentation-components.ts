@@ -34,6 +34,7 @@ export * from "./presentation-components/ComponentsLoggerCategory";
  */
 export * from "./presentation-components/properties/InstanceKeyValueRenderer";
 export * from "./presentation-components/properties/NavigationPropertyEditor";
+export * from "./presentation-components/properties/NumericPropertyEditor";
 
 /**
  * @module PropertyGrid
