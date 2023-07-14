@@ -17,6 +17,10 @@ import {
 } from "@itwin/presentation-backend";
 import { PresentationProps as PresentationFrontendProps } from "@itwin/presentation-frontend";
 import { initialize as initializePresentation, PresentationTestingInitProps, terminate as terminatePresentation } from "@itwin/presentation-testing";
+import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
+import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
+import { IModelReadRpcInterface, SnapshotIModelRpcInterface } from "@itwin/core-common";
+import { PresentationRpcInterface } from "@itwin/presentation-common";
 
 class IntegrationTestsApp extends NoRenderApp {
   public static override async startup(opts?: IModelAppOptions): Promise<void> {
@@ -45,8 +49,7 @@ export async function initialize(props?: { backendTimeout?: number }) {
     workerThreadsCount: 1,
     caching: {
       hierarchies: {
-        mode: HierarchyCacheMode.Disk,
-        directory: hierarchiesCacheDir,
+        mode: HierarchyCacheMode.Memory,
       },
     },
   };
@@ -61,6 +64,7 @@ export async function initialize(props?: { backendTimeout?: number }) {
   };
 
   const presentationTestingInitProps: PresentationTestingInitProps = {
+    rpcs: [SnapshotIModelRpcInterface, IModelReadRpcInterface, PresentationRpcInterface, ECSchemaRpcInterface],
     backendProps: backendInitProps,
     backendHostProps: { cacheDir: path.join(__dirname, ".cache") },
     frontendProps: frontendInitProps,
@@ -69,6 +73,9 @@ export async function initialize(props?: { backendTimeout?: number }) {
   };
 
   await initializePresentation(presentationTestingInitProps);
+
+  // eslint-disable-next-line @itwin/no-internal
+  ECSchemaRpcImpl.register();
 }
 
 export async function terminate() {

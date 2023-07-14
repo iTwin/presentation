@@ -10,19 +10,21 @@ import * as path from "path";
 import { IModelDb, IModelHost, IModelJsFs, SnapshotDb } from "@itwin/core-backend";
 import { IModelStatus, Logger, LogLevel } from "@itwin/core-bentley";
 import { BentleyCloudRpcManager, IModelError, IModelReadRpcInterface, RpcConfiguration, SnapshotIModelRpcInterface } from "@itwin/core-common";
+import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
+import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { IModelJsExpressServer } from "@itwin/express-server";
 import { HierarchyCacheMode, Presentation } from "@itwin/presentation-backend";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 
-const processCount = process.env.PROCESS_COUNT ? Number.parseInt(process.env.PROCESS_COUNT, 10) : 1;
-const shareCaches = !!process.env.SHARE_CACHES;
-const port = process.env.PORT ? Number.parseInt(process.env.PORT, 10) : 3001;
+const PROCESS_COUNT = process.env.PROCESS_COUNT ? Number.parseInt(process.env.PROCESS_COUNT, 10) : 1;
+const SHARE_HIERARCHY_CACHES = !!process.env.SHARE_HIERARCHY_CACHES;
+const PORT = process.env.PORT ? Number.parseInt(process.env.PORT, 10) : 5001;
 
 cluster.schedulingPolicy = cluster.SCHED_RR;
 
-if (processCount > 1 && cluster.isPrimary) {
-  console.log(`[${process.pid}] Master is running, starting ${processCount} workers...`);
-  for (let i = 0; i < processCount; i++) {
+if (PROCESS_COUNT > 1 && cluster.isPrimary) {
+  console.log(`[${process.pid}] Master is running, starting ${PROCESS_COUNT} workers...`);
+  for (let i = 0; i < PROCESS_COUNT; i++) {
     cluster.fork();
   }
   cluster.on("exit", (worker) => {
@@ -50,7 +52,7 @@ async function initBackend() {
 
   // initialize Presentation backend
   let hierarchyCacheDir = path.join(process.cwd(), "temp", "hierarchy-caches");
-  if (!shareCaches) {
+  if (!SHARE_HIERARCHY_CACHES) {
     hierarchyCacheDir = path.join(hierarchyCacheDir, process.pid.toString());
   }
   IModelJsFs.recursiveMkDirSync(hierarchyCacheDir);
@@ -66,19 +68,21 @@ async function initBackend() {
 
   // tell BentleyCloudRpcManager which RPC interfaces to handle
   const rpcConfig = BentleyCloudRpcManager.initializeImpl({ info: { title: "presentation-load-tests-backend", version: "v1.0" } }, [
+    ECSchemaRpcInterface,
     IModelReadRpcInterface,
     SnapshotIModelRpcInterface,
     PresentationRpcInterface,
   ]);
+  ECSchemaRpcImpl.register();
 
   // create a basic express web server
   const server = new IModelJsExpressServer(rpcConfig.protocol);
-  await server.initialize(port);
+  await server.initialize(PORT);
 
   // ensure each worker can open a snapshot without specifically asking that from the frontend
   applySnapshotOpenHack();
 
-  console.log(`[${process.pid}] Web backend for presentation-load-tests-backend listening on port ${port}`);
+  console.log(`[${process.pid}] Web backend for presentation-load-tests-backend listening on port ${PORT}`);
 }
 
 function applySnapshotOpenHack() {
@@ -97,7 +101,9 @@ function applySnapshotOpenHack() {
     isOpeningSnapshot = true;
     try {
       file.key = file.path;
-      return originalOpenDgnDb(file, openMode, upgradeOptions, props);
+      const imodel = originalOpenDgnDb(file, openMode, upgradeOptions, props);
+      // imodel.concurrentQueryResetConfig({ workerThreads: 2 });
+      return imodel;
     } catch (e) {
       if (e instanceof IModelError && e.errorNumber === IModelStatus.AlreadyOpen) {
         return IModelDb.findByKey(file.key!).nativeDb;

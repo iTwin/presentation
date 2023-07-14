@@ -21,9 +21,7 @@ import { SvgCaretDownSmall } from "@itwin/itwinui-icons-react";
 import { Input } from "@itwin/itwinui-react";
 import { InstanceKey, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { mergeRefs, translate, useResizeObserver } from "../common/Utils";
-import {
-  NavigationPropertyTarget, useNavigationPropertyTargetsLoader, useNavigationPropertyTargetsRuleset,
-} from "./UseNavigationPropertyTargetsLoader";
+import { NavigationPropertyTarget, useNavigationPropertyTargetsLoader, useNavigationPropertyTargetsRuleset } from "./UseNavigationPropertyTargetsLoader";
 
 /** @internal */
 export interface NavigationPropertyTargetSelectorAttributes {
@@ -151,23 +149,22 @@ function TargetSelectControl<TOption, IsMulti extends boolean = boolean>(props: 
     }
     inputRef.current?.focus();
     selectProps.onInputChange("", { action: "input-change", prevInputValue: inputValue });
-  }
+  };
 
   const handleInputBlur = () => {
     setInputValue(label);
     selectProps.onInputChange(label, { action: "input-blur", prevInputValue: inputValue });
     selectProps.onMenuClose();
-  }
+  };
 
   const handleDropdownButtonClick = () => {
     if (selectProps.menuIsOpen) {
       selectProps.onMenuClose();
       inputRef.current?.blur();
-    }
-    else {
+    } else {
       handleMenuOpen();
     }
-  }
+  };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!selectProps.menuIsOpen) {
@@ -175,7 +172,7 @@ function TargetSelectControl<TOption, IsMulti extends boolean = boolean>(props: 
     }
     setInputValue(event.target.value);
     selectProps.onInputChange(event.target.value, { action: "input-change", prevInputValue: inputValue });
-  }
+  };
 
   /** This function is used to cancel overriden react-select keyboard events. */
   const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -185,7 +182,7 @@ function TargetSelectControl<TOption, IsMulti extends boolean = boolean>(props: 
     if (event.key === "Tab") {
       selectProps.onMenuClose();
     }
-  }
+  };
 
   return (
     <components.Control {...props} className="iui-input-with-icon">

@@ -1,39 +1,23 @@
 config:
-  target: "http://localhost:3001/presentation-test-app/v1.0/mode/1/context/00000000-0000-0000-0000-000000000000/imodel/00000000-0000-0000-0000-000000000000/changeset/0"
-
-  http:
-    maxSockets: 1000
-    timeout: 120
-    extendedMetrics: false
+  target: "http://localhost:5001/presentation-test-app/v1.0/mode/1/context/00000000-0000-0000-0000-000000000000/imodel/00000000-0000-0000-0000-000000000000/changeset/0"
 
   phases:
-    # 10 users start the scenario one after another in 1 second intervals
-    - name: "10 users"
-      duration: 10
+    - name: "1 user"
+      duration: 1
       arrivalRate: 1
 
   payload:
     path: "./datasets.csv"
-    fields:
-      - "iModelPath"
-    order: sequence
+    name: "iModels"
     loadAll: true
 
-  variables:
-    operationGetNodes:
-      - "PresentationRpcInterface-4.0.0-getPagedNodes"
-
-  processor: "../lib/index.js"
+  processor: "../lib/processors/models-tree.js"
 
 scenarios:
   - name: Full Models Tree
-    beforeScenario: "createClientId"
+    beforeScenario: "initScenario"
+    afterScenario: "terminateScenario"
     flow:
       - loop:
-          - post:
-              ifTrue: "iModelPath"
-              url: "/{{ operationGetNodes }}"
-              beforeRequest: "createModelsTreeRequestParams"
-              afterResponse: "extractNodeKeysFromNodesResponse"
-          - think: 0.1
-        whileTrue: "hasParentNodeKeys"
+          - function: "loadFullHierarchy"
+        over: iModels
