@@ -49,7 +49,7 @@ Array [
                 "property": Object {
                   "displayLabel": "Acres",
                   "editor": Object {
-                    "name": "numeric-input",
+                    "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_Acres",
                   "typename": "double",
@@ -65,7 +65,7 @@ Array [
                 "property": Object {
                   "displayLabel": "cm2",
                   "editor": Object {
-                    "name": "numeric-input",
+                    "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_cm2",
                   "typename": "double",
@@ -81,7 +81,7 @@ Array [
                 "property": Object {
                   "displayLabel": "ft2",
                   "editor": Object {
-                    "name": "numeric-input",
+                    "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_ft2",
                   "typename": "double",
@@ -97,7 +97,7 @@ Array [
                 "property": Object {
                   "displayLabel": "ft ft",
                   "editor": Object {
-                    "name": "numeric-input",
+                    "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_ft__x0020__ft",
                   "typename": "double",
@@ -113,7 +113,7 @@ Array [
                 "property": Object {
                   "displayLabel": "ft mi",
                   "editor": Object {
-                    "name": "numeric-input",
+                    "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_ft__x0020__mi",
                   "typename": "double",
@@ -129,7 +129,7 @@ Array [
                 "property": Object {
                   "displayLabel": "ha",
                   "editor": Object {
-                    "name": "numeric-input",
+                    "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_ha",
                   "typename": "double",
@@ -145,7 +145,7 @@ Array [
                 "property": Object {
                   "displayLabel": "in2",
                   "editor": Object {
-                    "name": "numeric-input",
+                    "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_in2",
                   "typename": "double",
@@ -161,7 +161,7 @@ Array [
                 "property": Object {
                   "displayLabel": "in ft",
                   "editor": Object {
-                    "name": "numeric-input",
+                    "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_in__x0020__ft",
                   "typename": "double",
@@ -177,7 +177,7 @@ Array [
                 "property": Object {
                   "displayLabel": "in m",
                   "editor": Object {
-                    "name": "numeric-input",
+                    "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_in__x0020__m",
                   "typename": "double",
@@ -193,7 +193,7 @@ Array [
                 "property": Object {
                   "displayLabel": "in mi",
                   "editor": Object {
-                    "name": "numeric-input",
+                    "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_in__x0020__mi",
                   "typename": "double",
@@ -209,7 +209,7 @@ Array [
                 "property": Object {
                   "displayLabel": "km2",
                   "editor": Object {
-                    "name": "numeric-input",
+                    "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_km2",
                   "typename": "double",
@@ -225,7 +225,7 @@ Array [
                 "property": Object {
                   "displayLabel": "m2",
                   "editor": Object {
-                    "name": "numeric-input",
+                    "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_m2",
                   "typename": "double",
@@ -241,7 +241,7 @@ Array [
                 "property": Object {
                   "displayLabel": "m km",
                   "editor": Object {
-                    "name": "numeric-input",
+                    "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_m__x0020__km",
                   "typename": "double",
@@ -257,7 +257,7 @@ Array [
                 "property": Object {
                   "displayLabel": "m m",
                   "editor": Object {
-                    "name": "numeric-input",
+                    "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_m__x0020__m",
                   "typename": "double",
@@ -273,7 +273,7 @@ Array [
                 "property": Object {
                   "displayLabel": "mi2",
                   "editor": Object {
-                    "name": "numeric-input",
+                    "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_mi2",
                   "typename": "double",
@@ -289,7 +289,7 @@ Array [
                 "property": Object {
                   "displayLabel": "mm km",
                   "editor": Object {
-                    "name": "numeric-input",
+                    "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_mm__x0020__km",
                   "typename": "double",
@@ -305,7 +305,7 @@ Array [
                 "property": Object {
                   "displayLabel": "thousand ft2",
                   "editor": Object {
-                    "name": "numeric-input",
+                    "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_thousand__x0020__ft2",
                   "typename": "double",
@@ -440,7 +440,7 @@ Array [
                 "property": Object {
                   "displayLabel": "Angle",
                   "editor": Object {
-                    "name": "numeric-input",
+                    "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_workingUnitsPropElementAspect$pc_MyProp_workingUnitsPropElementAspect_Angle",
                   "typename": "double",
@@ -456,7 +456,7 @@ Array [
                 "property": Object {
                   "displayLabel": "Area",
                   "editor": Object {
-                    "name": "numeric-input",
+                    "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_workingUnitsPropElementAspect$pc_MyProp_workingUnitsPropElementAspect_Area",
                   "typename": "double",
@@ -472,7 +472,7 @@ Array [
                 "property": Object {
                   "displayLabel": "Distance",
                   "editor": Object {
-                    "name": "numeric-input",
+                    "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_workingUnitsPropElementAspect$pc_MyProp_workingUnitsPropElementAspect_Distance",
                   "typename": "double",
@@ -488,7 +488,7 @@ Array [
                 "property": Object {
                   "displayLabel": "Volume",
                   "editor": Object {
-                    "name": "numeric-input",
+                    "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_workingUnitsPropElementAspect$pc_MyProp_workingUnitsPropElementAspect_Volume",
                   "typename": "double",

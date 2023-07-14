@@ -128,7 +128,7 @@ describe("<NavigationPropertyTargetEditor />", () => {
     expect(rendererStub).to.be.calledOnceWith(testRecord);
   });
 
-  it("renders nothing when property record is 'undefined'", async () => {
+  it("renders nothing when property record is 'undefined'", () => {
     const { container } = render(<NavigationPropertyTargetEditor />, {});
     expect(container.firstChild).to.be.null;
   });
