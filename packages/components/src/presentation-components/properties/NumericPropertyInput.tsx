@@ -29,7 +29,11 @@ export const NumericPropertyInput = forwardRef<NumericPropertyInputAttributes, N
   useImperativeHandle(
     ref,
     () => ({
-      getValue: () => ({ valueFormat: PropertyValueFormat.Primitive, value: isNaN(Number(inputValue)) ? undefined : Number(inputValue), displayValue: inputValue }),
+      getValue: () => ({
+        valueFormat: PropertyValueFormat.Primitive,
+        value: isNaN(Number(inputValue)) ? undefined : Number(inputValue),
+        displayValue: inputValue,
+      }),
       divElement: divRef.current,
     }),
     [inputValue],
@@ -37,7 +41,11 @@ export const NumericPropertyInput = forwardRef<NumericPropertyInputAttributes, N
 
   const handleChange = (newVal: string) => {
     setInputValue(newVal);
-    onCommit && onCommit({ propertyRecord, newValue: { valueFormat: PropertyValueFormat.Primitive, value: isNaN(Number(newVal)) ? undefined : Number(newVal), displayValue: newVal }})
+    onCommit &&
+      onCommit({
+        propertyRecord,
+        newValue: { valueFormat: PropertyValueFormat.Primitive, value: isNaN(Number(newVal)) ? undefined : Number(newVal), displayValue: newVal },
+      });
   };
   return (
     <div ref={divRef}>
@@ -57,7 +65,7 @@ const getInputTargetFromPropertyRecord = (propertyRecord: PropertyRecord) => {
 
 /** @internal */
 export interface NumericInputProps {
-  onChange: (newValue: string) => void
+  onChange: (newValue: string) => void;
   value: string;
 }
 
@@ -88,12 +96,5 @@ export const NumericInput = ({ value, onChange }: NumericInputProps) => {
     }
   };
 
-  return (
-    <Input
-      data-testid="numeric-input"
-      size="small"
-      value={value}
-      onChange={handleChange}
-    />
-  );
-}
+  return <Input data-testid="numeric-input" size="small" value={value} onChange={handleChange} />;
+};

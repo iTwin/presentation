@@ -32,9 +32,9 @@ describe("<NumericPropertyInput />", () => {
     const user = userEvent.setup();
     const record = createRecord(1);
     const ref = createRef<NumericPropertyInputAttributes>();
-    const { getByRole } = render(<NumericPropertyInput ref={ref} propertyRecord={record}/>);
+    const { getByRole } = render(<NumericPropertyInput ref={ref} propertyRecord={record} />);
 
-    expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(1)
+    expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(1);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
@@ -47,7 +47,7 @@ describe("<NumericPropertyInput />", () => {
     const user = userEvent.setup();
     const record = createRecord();
     const ref = createRef<NumericPropertyInputAttributes>();
-    const { getByRole } = render(<NumericPropertyInput ref={ref} propertyRecord={record} onCommit={() => {}}/>);
+    const { getByRole } = render(<NumericPropertyInput ref={ref} propertyRecord={record} onCommit={() => {}} />);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
@@ -60,7 +60,7 @@ describe("<NumericPropertyInput />", () => {
     const user = userEvent.setup();
     const record = createRecord(-10);
     const ref = createRef<NumericPropertyInputAttributes>();
-    const { getByRole, queryByDisplayValue } = render(<NumericPropertyInput propertyRecord={record} ref={ref}/>);
+    const { getByRole, queryByDisplayValue } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
@@ -73,7 +73,7 @@ describe("<NumericPropertyInput />", () => {
     const user = userEvent.setup();
     const record = createRecord();
     const ref = createRef<NumericPropertyInputAttributes>();
-    const { getByRole, queryByDisplayValue } = render(<NumericPropertyInput propertyRecord={record} ref={ref}/>);
+    const { getByRole, queryByDisplayValue } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
@@ -86,7 +86,7 @@ describe("<NumericPropertyInput />", () => {
     const user = userEvent.setup();
     const record = createRecord();
     const ref = createRef<NumericPropertyInputAttributes>();
-    const { getByRole, queryByDisplayValue } = render(<NumericPropertyInput propertyRecord={record} ref={ref}/>);
+    const { getByRole, queryByDisplayValue } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
@@ -99,7 +99,7 @@ describe("<NumericPropertyInput />", () => {
     const user = userEvent.setup();
     const record = createRecord();
     const ref = createRef<NumericPropertyInputAttributes>();
-    const { getByRole, queryByDisplayValue } = render(<NumericPropertyInput propertyRecord={record} ref={ref}/>);
+    const { getByRole, queryByDisplayValue } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
@@ -112,7 +112,7 @@ describe("<NumericPropertyInput />", () => {
     const user = userEvent.setup();
     const record = createRecord();
     const ref = createRef<NumericPropertyInputAttributes>();
-    const { getByRole, queryByDisplayValue } = render(<NumericPropertyInput propertyRecord={record} ref={ref}/>);
+    const { getByRole, queryByDisplayValue } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
@@ -125,7 +125,7 @@ describe("<NumericPropertyInput />", () => {
     const user = userEvent.setup();
     const record = createRecord();
     const ref = createRef<NumericPropertyInputAttributes>();
-    const { getByRole, queryByDisplayValue } = render(<NumericPropertyInput propertyRecord={record} ref={ref}/>);
+    const { getByRole, queryByDisplayValue } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
@@ -138,7 +138,7 @@ describe("<NumericPropertyInput />", () => {
     const user = userEvent.setup();
     const record = createRecord();
     const ref = createRef<NumericPropertyInputAttributes>();
-    const { getByDisplayValue, getByRole } = render(<NumericPropertyInput propertyRecord={record} ref={ref}/>);
+    const { getByDisplayValue, getByRole } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
@@ -151,7 +151,7 @@ describe("<NumericPropertyInput />", () => {
     const user = userEvent.setup();
     const record = createRecord();
     const ref = createRef<NumericPropertyInputAttributes>();
-    const { getByDisplayValue, getByRole } = render(<NumericPropertyInput propertyRecord={record} ref={ref}/>);
+    const { getByDisplayValue, getByRole } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
@@ -163,7 +163,7 @@ describe("<NumericPropertyInput />", () => {
 
 describe("<NumericInput />", () => {
   it("renders NumericInput with initial value", () => {
-    const { getByRole } = render(<NumericInput onChange={() => {}} value="1" />)
+    const { getByRole } = render(<NumericInput onChange={() => {}} value="1" />);
     expect((getByRole("textbox") as HTMLInputElement).value).to.be.eq("1");
   });
 

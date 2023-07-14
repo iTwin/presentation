@@ -56,7 +56,7 @@ describe("<NumericPropertyEditorBase />", () => {
 describe("<NumericPropertyEditor />", () => {
   it("renders input when property record is provided", async () => {
     const record = createRecord();
-    const { getByTestId } = render(<NumericPropertyEditor propertyRecord={record}/>);
+    const { getByTestId } = render(<NumericPropertyEditor propertyRecord={record} />);
     expect(getByTestId("numeric-input")).to.not.be.null;
   });
 
