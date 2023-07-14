@@ -9,7 +9,7 @@ import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueForma
 import { EditorContainer } from "@itwin/components-react";
 import { render, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { NumericPropertyEditor } from "../../presentation-components";
+import { NumericPropertyEditor } from "../../presentation-components/properties/NumericPropertyEditor";
 
 export const createRecord = (initialValue?: number) => {
   const value: PrimitiveValue = {

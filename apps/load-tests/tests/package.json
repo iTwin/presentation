@@ -24,13 +24,13 @@
     "@itwin/core-quantity": "^4.1.0-dev.62",
     "@itwin/ecschema-metadata": "^4.1.0-dev.62",
     "@itwin/ecschema-rpcinterface-common": "^4.1.0-dev.62",
-    "@itwin/eslint-plugin": "^4.0.0-dev.38",
+    "@itwin/eslint-plugin": "^4.0.0-dev.43",
     "@itwin/presentation-common": "^4.1.0-dev.62",
     "@itwin/presentation-hierarchy-builder": "workspace:*",
     "@types/artillery": "^1.7.0",
     "@types/node": "^18.16.18",
     "artillery": "2.0.0-31",
-    "eslint": "^8.40.0",
+    "eslint": "^8.44.0",
     "rimraf": "^5.0.0",
     "typescript": "~5.0.2"
   }

@@ -52,4 +52,10 @@
       "orderLevel": 30
     }
   ],
+  "eslint.experimental.useFlatConfig": true,
+  "eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
+  ]
 }

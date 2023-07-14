@@ -5,7 +5,7 @@
 
 import { InstanceKey } from "@itwin/presentation-common";
 import { Observable } from "rxjs";
-import { InProgressTreeNode } from "../hierarchy-builder";
+import { InProgressTreeNode } from "../hierarchy-builder/TreeNode";
 
 export async function getObservableResult<T>(obs: Observable<T>): Promise<Array<T>> {
   const arr = new Array<T>();
