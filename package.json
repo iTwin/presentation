@@ -18,6 +18,8 @@
     "cover:all": "lage cover --grouped --continue",
     "lint:all": "lage lint --grouped --continue",
     "lint:copyright": "node scripts/copyrightLinter.js",
+    "prettier": "prettier --check .",
+    "prettier:fix": "prettier --write .",
     "prepare": "husky install",
     "change": "beachball change",
     "check": "beachball check",
@@ -41,13 +43,10 @@
   },
   "lint-staged": {
     "./{apps, packages}/**/*.{tsx,ts,jsx,js,scss,css,html}": [
-      "pnpm lint:copyright --fix",
-      "eslint --fix",
-      "prettier --write --ignore-unknown"
+      "pnpm lint:copyright --fix"
     ],
     "./scripts/*.js": [
-      "pnpm lint:copyright --fix",
-      "prettier --write --ignore-unknown"
+      "pnpm lint:copyright --fix"
     ]
   },
   "engines": {

@@ -4,7 +4,7 @@ Copyright © Bentley Systems, Incorporated. All rights reserved. See LICENSE.md 
 
 ## Description
 
-The __@itwin/presentation-opentelemetry__ package contains functions for making interop between OpenTelemetry
+The **@itwin/presentation-opentelemetry** package contains functions for making interop between OpenTelemetry
 and iTwin.js Presentation types easier.
 
 ## Documentation
