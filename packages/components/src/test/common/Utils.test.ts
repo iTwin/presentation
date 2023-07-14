@@ -8,11 +8,19 @@ import { Component } from "react";
 import sinon from "sinon";
 import * as moq from "typemoq";
 import { Primitives, PrimitiveValue } from "@itwin/appui-abstract";
+import { PropertyValueRendererManager } from "@itwin/components-react";
 import { using } from "@itwin/core-bentley";
 import { ITwinLocalization } from "@itwin/core-i18n";
 import { combineFieldNames, LabelCompositeValue, LabelDefinition } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { AsyncTasksTracker, createLabelRecord, findField, getDisplayName, initializeLocalization } from "../../presentation-components/common/Utils";
+import {
+  AsyncTasksTracker,
+  createLabelRecord,
+  findField,
+  getDisplayName,
+  initializeLocalization,
+  initializePropertyValueRenderers,
+} from "../../presentation-components/common/Utils";
 import { createTestPropertyInfo } from "../_helpers/Common";
 import { createTestContentDescriptor, createTestNestedContentField, createTestPropertiesContentField, createTestSimpleContentField } from "../_helpers/Content";
 import { createTestLabelCompositeValue, createTestLabelDefinition } from "../_helpers/LabelDefinition";
@@ -128,6 +136,20 @@ describe("Utils", () => {
       validateCompositeValue(primitiveValue.value as Primitives.Composite, definition.rawValue as LabelCompositeValue);
       expect(primitiveValue.displayValue).to.be.eq(definition.displayValue);
       expect(record.property.typename).to.be.eq(definition.typeName);
+    });
+  });
+
+  describe("initializePropertyValueRenderers", () => {
+    it("registers custom renderers", async () => {
+      const registerSpy = sinon.spy(PropertyValueRendererManager.defaultManager, "registerRenderer");
+      const unregisterSpy = sinon.spy(PropertyValueRendererManager.defaultManager, "unregisterRenderer");
+
+      const unregisterCallback = await initializePropertyValueRenderers();
+      expect(registerSpy).to.be.calledOnceWith("SelectableInstance");
+      expect(unregisterSpy).to.not.be.called;
+
+      unregisterCallback();
+      expect(unregisterSpy).to.be.calledOnceWith("SelectableInstance");
     });
   });
 });
