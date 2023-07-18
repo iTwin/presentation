@@ -19,6 +19,7 @@ import {
 } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterBuilder";
 import { createTestECClassInfo, stubDOMMatrix, stubRaf } from "../_helpers/Common";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
+import { PropertyValueFormat } from "@itwin/presentation-common";
 
 describe("PresentationInstanceFilter", () => {
   stubRaf();
@@ -153,5 +154,98 @@ describe("PresentationInstanceFilter", () => {
     expect(rule1).to.not.be.null;
     const rule2 = queryByDisplayValue(propertiesField2.label);
     expect(rule2).to.not.be.null;
+  });
+
+  describe("UniqueValuesRenderer", () => {
+    it("renders <UniquePropertyValuesSelector /> when operator is `IsEqual` and property is not equal to `navigation`", async () => {
+      const filter: PresentationInstanceFilterInfo = {
+        filter: {
+          operator: PropertyFilterRuleGroupOperator.Or,
+          conditions: [
+            {
+              field: propertiesField,
+              operator: PropertyFilterRuleOperator.IsEqual,
+              value: undefined,
+            },
+          ],
+        },
+        usedClasses: [classInfo],
+      };
+      const { queryByText } = render(
+        <PresentationInstanceFilterBuilder
+          imodel={imodelMock.object}
+          descriptor={descriptor}
+          onInstanceFilterChanged={() => {}}
+          initialFilter={filter}
+          enableUniqueValuesRenderer
+        />,
+      );
+      await waitFor(() => expect(queryByText("search")).to.not.be.null);
+    });
+
+    it("renders <UniquePropertyValuesSelector /> when operator is `IsNotEqual` and property is not equal to `navigation`", async () => {
+      const filter: PresentationInstanceFilterInfo = {
+        filter: {
+          operator: PropertyFilterRuleGroupOperator.Or,
+          conditions: [
+            {
+              field: propertiesField,
+              operator: PropertyFilterRuleOperator.IsNotEqual,
+              value: undefined,
+            },
+          ],
+        },
+        usedClasses: [classInfo],
+      };
+      const { queryByText } = render(
+        <PresentationInstanceFilterBuilder
+          imodel={imodelMock.object}
+          descriptor={descriptor}
+          onInstanceFilterChanged={() => {}}
+          initialFilter={filter}
+          enableUniqueValuesRenderer
+        />,
+      );
+      await waitFor(() => expect(queryByText("search")).to.not.be.null);
+    });
+
+    it("does not render <UniquePropertyValuesSelector /> when the property is equal to `navigation`", async () => {
+      const filter: PresentationInstanceFilterInfo = {
+        filter: {
+          field: createTestPropertiesContentField({
+            properties: [{ property: { classInfo, name: "prop1", type: "string" } }],
+            name: "prop1Fdfdield",
+            label: "propertiesField",
+            category,
+            type: { typeName: "navigation", valueFormat: PropertyValueFormat.Primitive },
+          }),
+          operator: PropertyFilterRuleOperator.IsNotEqual,
+          value: undefined,
+        },
+        usedClasses: [],
+      };
+      const { queryByText } = render(
+        <PresentationInstanceFilterBuilder
+          imodel={imodelMock.object}
+          descriptor={createTestContentDescriptor({
+            selectClasses: [{ selectClassInfo: classInfo, isSelectPolymorphic: false }],
+            categories: [category],
+            fields: [
+              createTestPropertiesContentField({
+                properties: [{ property: { classInfo, name: "prop1", type: "string" } }],
+                name: "prop1Fdfdield",
+                label: "propertiesField",
+                category,
+                type: { typeName: "navigation", valueFormat: PropertyValueFormat.Primitive },
+              }),
+            ],
+          })}
+          onInstanceFilterChanged={() => {}}
+          initialFilter={filter}
+          enableUniqueValuesRenderer
+        />,
+      );
+      await waitFor(() => expect(queryByText("search")).to.be.null);
+    });
   });
 });

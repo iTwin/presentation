@@ -6,12 +6,13 @@
  * @module InstancesFilter
  */
 
-import { Primitives, PrimitiveValue } from "@itwin/appui-abstract";
+import { Primitives, PrimitiveValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { isUnaryPropertyFilterOperator, PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo, InstanceFilterDefinition, NestedContentField, PropertiesField, RelationshipPath } from "@itwin/presentation-common";
 import { getIModelMetadataProvider } from "./ECMetadataProvider";
 import { PresentationInstanceFilter, PresentationInstanceFilterCondition, PresentationInstanceFilterConditionGroup } from "./Types";
+import { tryParseJSON } from "../common/Utils";
 
 /**
  * Converts [[PresentationInstanceFilter]] built by [[PresentationInstanceFilterBuilder]] component into
@@ -48,6 +49,12 @@ interface ConvertContext {
 function convertFilter(filter: PresentationInstanceFilter, ctx: ConvertContext) {
   if (isFilterConditionGroup(filter)) {
     return convertConditionGroup(filter, ctx);
+  }
+  if (typeof filter.value?.value === "string" && filter.value.displayValue && tryParseJSON(filter.value.value) && tryParseJSON(filter.value.displayValue)) {
+    return convertConditionGroup(
+      convertGroupedRawValuesToFilterConditionGroup(filter, JSON.parse(filter.value.value), JSON.parse(filter.value.displayValue)),
+      ctx,
+    );
   }
   return convertCondition(filter, ctx);
 }
@@ -200,4 +207,25 @@ async function findBaseExpressionClass(imodel: IModelConnection, propertyClasses
     }
   }
   return currentBaseClass;
+}
+
+function convertGroupedRawValuesToFilterConditionGroup(filter: PresentationInstanceFilterCondition, groupedRawValues: string[][], displayValues: string[]) {
+  const { field, operator } = filter;
+  let selectedValueIndex = 0;
+
+  const conditionGroup: PresentationInstanceFilterConditionGroup = {
+    operator: operator === PropertyFilterRuleOperator.IsEqual ? PropertyFilterRuleGroupOperator.Or : PropertyFilterRuleGroupOperator.And,
+    conditions: [],
+  };
+  for (const displayValue of displayValues) {
+    for (const value of groupedRawValues[selectedValueIndex]) {
+      conditionGroup.conditions.push({
+        field,
+        operator,
+        value: { valueFormat: PropertyValueFormat.Primitive, displayValue, value },
+      });
+    }
+    selectedValueIndex++;
+  }
+  return conditionGroup;
 }

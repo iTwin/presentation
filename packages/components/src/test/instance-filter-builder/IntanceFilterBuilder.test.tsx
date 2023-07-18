@@ -108,7 +108,7 @@ describe("InstanceFilter", () => {
       />,
     );
 
-    const removeTagButton = container.querySelector(".iui-tag .iui-button");
+    const removeTagButton = container.querySelector(".iui-select-tag .iui-button");
     expect(removeTagButton).to.not.be.null;
 
     fireEvent.click(removeTagButton!);

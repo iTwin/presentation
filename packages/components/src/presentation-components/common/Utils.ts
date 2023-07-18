@@ -206,3 +206,16 @@ export function useErrorState() {
   }
   return setErrorState;
 }
+
+/**
+ * Helper function for parsing JSON value.
+ * If provided value is not a valid JSON value, function will return false.
+ * Otherwise function will return parsed JSON value.
+ */
+export function tryParseJSON(value: string) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return false;
+  }
+}

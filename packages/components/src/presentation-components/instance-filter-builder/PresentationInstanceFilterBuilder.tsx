@@ -7,13 +7,15 @@
  */
 
 import { useCallback, useState } from "react";
-import { PropertyFilter } from "@itwin/components-react";
+import { PropertyFilter, PropertyFilterBuilderRuleValue, PropertyFilterBuilderRuleValueProps, PropertyFilterRuleOperator } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo, Descriptor } from "@itwin/presentation-common";
 import { navigationPropertyEditorContext } from "../properties/NavigationPropertyEditor";
+import { UniquePropertyValuesTargetSelector } from "../properties/UniquePropertyValuesTargetSelector";
 import { InstanceFilterBuilder, useFilterBuilderNavigationPropertyEditorContext, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder";
 import { PresentationInstanceFilter } from "./Types";
 import { convertPresentationFilterToPropertyFilter, createPresentationInstanceFilter } from "./Utils";
+import { StandardTypeNames } from "@itwin/appui-abstract";
 
 /**
  * Data structure that stores information about filter built by [[PresentationInstanceFilterBuilder]].
@@ -41,6 +43,8 @@ export interface PresentationInstanceFilterBuilderProps {
   ruleGroupDepthLimit?: number;
   /** Initial filter that will be show when component is mounted. */
   initialFilter?: PresentationInstanceFilterInfo;
+  /** Should unique values rendeder be enabled */
+  enableUniqueValuesRenderer?: boolean;
 }
 
 /**
@@ -48,7 +52,7 @@ export interface PresentationInstanceFilterBuilderProps {
  * @beta
  */
 export function PresentationInstanceFilterBuilder(props: PresentationInstanceFilterBuilderProps) {
-  const { imodel, descriptor, onInstanceFilterChanged, ruleGroupDepthLimit, initialFilter } = props;
+  const { imodel, descriptor, onInstanceFilterChanged, ruleGroupDepthLimit, initialFilter, enableUniqueValuesRenderer } = props;
   const filteringProps = usePresentationInstanceFilteringProps(descriptor, imodel, initialFilter?.usedClasses);
 
   const onFilterChanged = useCallback(
@@ -69,7 +73,25 @@ export function PresentationInstanceFilterBuilder(props: PresentationInstanceFil
         initialFilter={initialPropertyFilter}
         onFilterChanged={onFilterChanged}
         ruleGroupDepthLimit={ruleGroupDepthLimit}
+        ruleValueRenderer={
+          enableUniqueValuesRenderer
+            ? (props: PropertyFilterBuilderRuleValueProps) => <UniqueValuesRenderer {...props} imodel={imodel} descriptor={descriptor} />
+            : undefined
+        }
       />
     </navigationPropertyEditorContext.Provider>
+  );
+}
+
+function UniqueValuesRenderer(props: PropertyFilterBuilderRuleValueProps & { imodel: IModelConnection; descriptor: Descriptor }) {
+  return (
+    <>
+      {props.property.typename !== StandardTypeNames.Navigation &&
+      (props.operator === PropertyFilterRuleOperator.IsEqual || props.operator === PropertyFilterRuleOperator.IsNotEqual) ? (
+        <UniquePropertyValuesTargetSelector {...props} />
+      ) : (
+        <PropertyFilterBuilderRuleValue {...props} />
+      )}
+    </>
   );
 }
