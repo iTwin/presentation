@@ -19,7 +19,7 @@ import {
 } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterBuilder";
 import { createTestECClassInfo, stubDOMMatrix, stubRaf } from "../_helpers/Common";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
-import { PropertyValueFormat } from "@itwin/presentation-common";
+import { PropertiesField, PropertyValueFormat } from "@itwin/presentation-common";
 
 describe("PresentationInstanceFilter", () => {
   stubRaf();
@@ -157,95 +157,68 @@ describe("PresentationInstanceFilter", () => {
   });
 
   describe("UniqueValuesRenderer", () => {
-    it("renders <UniquePropertyValuesSelector /> when operator is `IsEqual` and property is not equal to `navigation`", async () => {
-      const filter: PresentationInstanceFilterInfo = {
+    const createFilter = (operator: PropertyFilterRuleOperator, field?: PropertiesField): PresentationInstanceFilterInfo => {
+      return {
         filter: {
           operator: PropertyFilterRuleGroupOperator.Or,
           conditions: [
             {
-              field: propertiesField,
-              operator: PropertyFilterRuleOperator.IsEqual,
+              field: field ?? propertiesField,
+              operator,
               value: undefined,
             },
           ],
-        },
-        usedClasses: [classInfo],
-      };
-      const { queryByText } = render(
-        <PresentationInstanceFilterBuilder
-          imodel={imodelMock.object}
-          descriptor={descriptor}
-          onInstanceFilterChanged={() => {}}
-          initialFilter={filter}
-          enableUniqueValuesRenderer
-        />,
-      );
-      await waitFor(() => expect(queryByText("search")).to.not.be.null);
-    });
-
-    it("renders <UniquePropertyValuesSelector /> when operator is `IsNotEqual` and property is not equal to `navigation`", async () => {
-      const filter: PresentationInstanceFilterInfo = {
-        filter: {
-          operator: PropertyFilterRuleGroupOperator.Or,
-          conditions: [
-            {
-              field: propertiesField,
-              operator: PropertyFilterRuleOperator.IsNotEqual,
-              value: undefined,
-            },
-          ],
-        },
-        usedClasses: [classInfo],
-      };
-      const { queryByText } = render(
-        <PresentationInstanceFilterBuilder
-          imodel={imodelMock.object}
-          descriptor={descriptor}
-          onInstanceFilterChanged={() => {}}
-          initialFilter={filter}
-          enableUniqueValuesRenderer
-        />,
-      );
-      await waitFor(() => expect(queryByText("search")).to.not.be.null);
-    });
-
-    it("does not render <UniquePropertyValuesSelector /> when the property is equal to `navigation`", async () => {
-      const filter: PresentationInstanceFilterInfo = {
-        filter: {
-          field: createTestPropertiesContentField({
-            properties: [{ property: { classInfo, name: "prop1", type: "string" } }],
-            name: "prop1Fdfdield",
-            label: "propertiesField",
-            category,
-            type: { typeName: "navigation", valueFormat: PropertyValueFormat.Primitive },
-          }),
-          operator: PropertyFilterRuleOperator.IsNotEqual,
-          value: undefined,
         },
         usedClasses: [],
       };
+    };
+
+    it("renders <UniquePropertyValuesSelector /> when operator is `IsEqual` and property is not equal to `navigation`", async () => {
+      const filter = createFilter(PropertyFilterRuleOperator.IsEqual);
       const { queryByText } = render(
         <PresentationInstanceFilterBuilder
           imodel={imodelMock.object}
-          descriptor={createTestContentDescriptor({
-            selectClasses: [{ selectClassInfo: classInfo, isSelectPolymorphic: false }],
-            categories: [category],
-            fields: [
-              createTestPropertiesContentField({
-                properties: [{ property: { classInfo, name: "prop1", type: "string" } }],
-                name: "prop1Fdfdield",
-                label: "propertiesField",
-                category,
-                type: { typeName: "navigation", valueFormat: PropertyValueFormat.Primitive },
-              }),
-            ],
-          })}
+          descriptor={descriptor}
           onInstanceFilterChanged={() => {}}
           initialFilter={filter}
           enableUniqueValuesRenderer
         />,
       );
-      await waitFor(() => expect(queryByText("search")).to.be.null);
+      await waitFor(() => expect(queryByText("unique-values-property-editor.select-values")).to.not.be.null);
+    });
+
+    it("renders <UniquePropertyValuesSelector /> when operator is `IsNotEqual` and property is not equal to `navigation`", async () => {
+      const filter = createFilter(PropertyFilterRuleOperator.IsNotEqual);
+      const { queryByText } = render(
+        <PresentationInstanceFilterBuilder
+          imodel={imodelMock.object}
+          descriptor={descriptor}
+          onInstanceFilterChanged={() => {}}
+          initialFilter={filter}
+          enableUniqueValuesRenderer
+        />,
+      );
+      await waitFor(() => expect(queryByText("unique-values-property-editor.select-values")).to.not.be.null);
+    });
+
+    it("does not render <UniquePropertyValuesSelector /> when the property is equal to `navigation`", async () => {
+      const filter = createFilter(
+        PropertyFilterRuleOperator.IsEqual,
+        createTestPropertiesContentField({
+          properties: [{ property: { classInfo, name: "prop1", type: "navigation" } }],
+          type: { typeName: "navigation", valueFormat: PropertyValueFormat.Primitive },
+        }),
+      );
+      const { queryByText } = render(
+        <PresentationInstanceFilterBuilder
+          imodel={imodelMock.object}
+          descriptor={descriptor}
+          onInstanceFilterChanged={() => {}}
+          initialFilter={filter}
+          enableUniqueValuesRenderer
+        />,
+      );
+      await waitFor(() => expect(queryByText("unique-values-property-editor.select-values")).to.be.null);
     });
   });
 });

@@ -51,10 +51,7 @@ function convertFilter(filter: PresentationInstanceFilter, ctx: ConvertContext) 
     return convertConditionGroup(filter, ctx);
   }
   if (typeof filter.value?.value === "string" && filter.value.displayValue && tryParseJSON(filter.value.value) && tryParseJSON(filter.value.displayValue)) {
-    return convertConditionGroup(
-      convertGroupedRawValuesToFilterConditionGroup(filter, JSON.parse(filter.value.value), JSON.parse(filter.value.displayValue)),
-      ctx,
-    );
+    return convertConditionGroup(handleStringifiedValues(filter, JSON.parse(filter.value.value), JSON.parse(filter.value.displayValue)), ctx);
   }
   return convertCondition(filter, ctx);
 }
@@ -209,7 +206,7 @@ async function findBaseExpressionClass(imodel: IModelConnection, propertyClasses
   return currentBaseClass;
 }
 
-function convertGroupedRawValuesToFilterConditionGroup(filter: PresentationInstanceFilterCondition, groupedRawValues: string[][], displayValues: string[]) {
+function handleStringifiedValues(filter: PresentationInstanceFilterCondition, groupedRawValues: string[][], displayValues: string[]) {
   const { field, operator } = filter;
   let selectedValueIndex = 0;
 

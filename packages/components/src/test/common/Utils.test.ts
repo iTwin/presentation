@@ -12,7 +12,14 @@ import { using } from "@itwin/core-bentley";
 import { ITwinLocalization } from "@itwin/core-i18n";
 import { combineFieldNames, LabelCompositeValue, LabelDefinition } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { AsyncTasksTracker, createLabelRecord, findField, getDisplayName, initializeLocalization } from "../../presentation-components/common/Utils";
+import {
+  AsyncTasksTracker,
+  createLabelRecord,
+  findField,
+  getDisplayName,
+  initializeLocalization,
+  tryParseJSON,
+} from "../../presentation-components/common/Utils";
 import { createTestPropertyInfo } from "../_helpers/Common";
 import { createTestContentDescriptor, createTestNestedContentField, createTestPropertiesContentField, createTestSimpleContentField } from "../_helpers/Content";
 import { createTestLabelCompositeValue, createTestLabelDefinition } from "../_helpers/LabelDefinition";
@@ -152,5 +159,20 @@ describe("AsyncTasksTracker", () => {
       expect(tracker.pendingAsyncs.size).to.eq(1);
     });
     expect(tracker.pendingAsyncs.size).to.eq(0);
+  });
+});
+
+describe("tryParseJSON", () => {
+  it("returns parsed value if argument is correct JSON value", () => {
+    const value = tryParseJSON("[1, 2, 3]");
+    expect(value).to.have.lengthOf(3);
+    expect(value[0]).to.be.eq(1);
+    expect(value[1]).to.be.eq(2);
+    expect(value[2]).to.be.eq(3);
+  });
+
+  it("returns false if argument is not correct JSON value", () => {
+    const value = tryParseJSON("a");
+    expect(value).to.be.false;
   });
 });

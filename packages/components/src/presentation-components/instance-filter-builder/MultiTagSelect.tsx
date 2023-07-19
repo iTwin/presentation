@@ -196,22 +196,35 @@ export function AsyncMultiTagSelect<OptionType, Group extends GroupBase<OptionTy
           control: () => ({
             display: "grid",
             gridTemplateColumns: "auto auto",
-            gridTemplateRows: "26px",
+            gridTemplateRows: "calc(var(--iui-size-l) + var(--iui-size-3xs))",
             height: "27px",
             minHeight: "27px",
-            padding: "0 0 0 12px",
+            padding: "0 0 0 var(--iui-size-s)",
+            gap: "2px",
           }),
           container: () => ({ width: "auto" }),
           menu: () => ({ position: "absolute", zIndex: 9999, width }),
           menuList: (style) => ({ ...style, padding: 0 }),
           option: () => ({ whiteSpace: "nowrap", width: "max-content", minWidth: "100%" }),
-          input: (style) => ({ ...style, order: -1, flex: 0 }),
-          valueContainer: (style) => ({ ...style, padding: 0, flexWrap: "nowrap", gridTemplateRows: "26px", alignItems: "center", height: "27px" }),
-          indicatorsContainer: () => ({ marginLeft: "auto", display: "flex" }),
+          valueContainer: (style) => ({
+            ...style,
+            padding: 0,
+            flexWrap: "nowrap",
+            gridTemplateRows: "calc(var(--iui-size-l) + var(--iui-size-3xs))",
+            alignItems: "center",
+            height: "27px",
+          }),
+          indicatorsContainer: () => ({ marginLeft: "auto", display: "flex", width: "calc(var(--iui-size-xl) + var(--iui-size-3xs))", marginRight: "1px" }),
           multiValue: () => ({ margin: 0 }),
           multiValueLabel: () => ({}),
-          placeholder: (style) => ({ ...style, userSelect: "none", color: "var(--iui-color-text-disabled)" }),
-          indicatorSeparator: () => ({ display: "none" }),
+          placeholder: (style) => ({
+            ...style,
+            color: "var(--iui-color-text-disabled)",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            marginLeft: "0",
+          }),
           loadingIndicator: () => ({ display: "none" }),
         }}
         components={{
@@ -222,6 +235,7 @@ export function AsyncMultiTagSelect<OptionType, Group extends GroupBase<OptionTy
           Option: TagSelectOption,
           DropdownIndicator: TagSelectDropdownIndicatorSmall,
           ClearIndicator: TagSelectClearIndicator,
+          IndicatorSeparator: () => null,
         }}
         isMulti={true}
       />

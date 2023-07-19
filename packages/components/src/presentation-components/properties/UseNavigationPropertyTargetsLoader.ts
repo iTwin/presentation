@@ -22,7 +22,7 @@ import {
 import { Presentation } from "@itwin/presentation-frontend";
 
 /** @internal */
-export const NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE = 100;
+export const PRESENTATION_TARGETS_BATCH_SIZE = 100;
 
 /** @internal */
 export interface NavigationPropertyTarget {
@@ -59,7 +59,7 @@ export function useNavigationPropertyTargetsLoader(props: UseNavigationPropertyT
           contentFlags: ContentFlags.ShowLabels | ContentFlags.NoFields,
           fieldsFilterExpression: filter ? `/DisplayLabel/ ~ \"%${filter}%\"` : undefined,
         },
-        paging: { start: loadedOptionsCount, size: NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE },
+        paging: { start: loadedOptionsCount, size: PRESENTATION_TARGETS_BATCH_SIZE },
       });
 
       return {
@@ -68,7 +68,7 @@ export function useNavigationPropertyTargetsLoader(props: UseNavigationPropertyT
             label: item.label,
             key: item.primaryKeys[0],
           })) ?? [],
-        hasMore: content !== undefined && content.contentSet.length === NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE,
+        hasMore: content !== undefined && content.contentSet.length === PRESENTATION_TARGETS_BATCH_SIZE,
       };
     },
     [ruleset, imodel],

@@ -1,3 +1,8 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+
 import { render, waitFor } from "@testing-library/react";
 import { UniquePropertyValuesTargetSelector } from "../../presentation-components/properties/UniquePropertyValuesTargetSelector";
 import sinon from "sinon";
@@ -11,7 +16,7 @@ import { expect } from "chai";
 import { EmptyLocalization } from "@itwin/core-common";
 import { Presentation } from "@itwin/presentation-frontend";
 
-describe.only("UniquePropertyValuesTargetSelector", () => {
+describe("UniquePropertyValuesTargetSelector", () => {
   beforeEach(async () => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
@@ -40,8 +45,27 @@ describe.only("UniquePropertyValuesTargetSelector", () => {
     fields: [propertiesField],
   });
 
+  const propertyDescription = {
+    name: "propertyName",
+    displayLabel: "propertiesField",
+    typename: "number",
+    editor: undefined,
+  };
+
+  const convertToPropertyValue = (displayValue: string[], groupedRawValues: string[][]): PropertyValue => {
+    return {
+      valueFormat: PropertyValueFormat.Primitive,
+      displayValue: JSON.stringify(displayValue),
+      value: JSON.stringify(groupedRawValues),
+    };
+  };
+
+  const testImodel = {} as IModelConnection;
+
   it("invokes `onChange` when item from the menu is selected and then deselected", async () => {
     const user = userEvent.setup();
+    const spy = sinon.spy();
+
     sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
       total: 2,
       items: [
@@ -49,26 +73,22 @@ describe.only("UniquePropertyValuesTargetSelector", () => {
         { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
       ],
     });
-    const spy = sinon.spy();
-    const description: PropertyDescription = {
-      name: "propertyName",
-      displayLabel: "propertiesField",
-      typename: "number",
-      editor: undefined,
-    };
+
     const { queryByTestId, queryByText } = render(
       <UniquePropertyValuesTargetSelector
-        property={description}
+        property={propertyDescription}
         onChange={spy}
         operator={PropertyFilterRuleOperator.IsEqual}
-        imodel={{} as IModelConnection}
+        imodel={testImodel}
         descriptor={descriptor}
       />,
     );
 
-    const selector = await waitFor(() => queryByText("search"));
+    // open menu
+    const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
     await user.click(selector!);
 
+    // click on menu item
     const menuItem = await waitFor(() => queryByText("TestValue1"));
     await user.click(menuItem!);
     expect(spy).to.be.calledWith({
@@ -77,8 +97,10 @@ describe.only("UniquePropertyValuesTargetSelector", () => {
       value: JSON.stringify([["TestValue1"]]),
     });
 
+    // open menu again
     await user.click(selector!);
 
+    // click on `clear` button
     const clearIndicator = await waitFor(() => queryByTestId("multi-tag-select-clearIndicator"));
     await user.click(clearIndicator!);
     await waitFor(() =>
@@ -90,7 +112,7 @@ describe.only("UniquePropertyValuesTargetSelector", () => {
     );
   });
 
-  it("menu showss `No options` message when there is no fieldDescriptor", async () => {
+  it("menu showss `No options` message when there is no `fieldDescriptor`", async () => {
     sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
       total: 2,
       items: [
@@ -100,9 +122,9 @@ describe.only("UniquePropertyValuesTargetSelector", () => {
     });
     const user = userEvent.setup();
     const description: PropertyDescription = {
-      name: "propertyName",
-      displayLabel: "NotpropertiesField",
-      typename: "number",
+      name: "",
+      displayLabel: "",
+      typename: "",
       editor: undefined,
     };
     const { queryByText } = render(
@@ -110,66 +132,53 @@ describe.only("UniquePropertyValuesTargetSelector", () => {
         property={description}
         onChange={() => {}}
         operator={PropertyFilterRuleOperator.IsEqual}
-        imodel={{} as IModelConnection}
+        imodel={testImodel}
         descriptor={descriptor}
       />,
     );
 
-    const selector = await waitFor(() => queryByText("search"));
+    const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
     await user.click(selector!);
 
     expect(queryByText("No options")).to.not.be.null;
   });
 
   it("sets provided value", () => {
-    const description: PropertyDescription = {
-      name: "propertyName",
-      displayLabel: "propertiesField",
-      typename: "number",
-      editor: undefined,
-    };
+    const displayValue = ["TestValue"];
+    const groupedRawValues = [["TestValue"]];
+    const value = convertToPropertyValue(displayValue, groupedRawValues);
 
-    const value: PropertyValue = {
-      valueFormat: PropertyValueFormat.Primitive,
-      value: JSON.stringify(["TestValue"]),
-      displayValue: JSON.stringify("TestValue"),
-    };
-
-    render(
+    const { queryByText } = render(
       <UniquePropertyValuesTargetSelector
-        property={description}
+        property={propertyDescription}
         onChange={() => {}}
         operator={PropertyFilterRuleOperator.IsEqual}
-        imodel={{} as IModelConnection}
+        imodel={testImodel}
         descriptor={descriptor}
         value={value}
       />,
     );
+
+    expect(queryByText(displayValue[0])).to.not.be.null;
   });
 
   it("sets multiple provided values", () => {
-    const description: PropertyDescription = {
-      name: "propertyName",
-      displayLabel: "propertiesField",
-      typename: "number",
-      editor: undefined,
-    };
+    const displayValue = ["TestValue1", "TestValue2"];
+    const groupedRawValues = [["TestValue1"], ["TestValue2"]];
+    const value = convertToPropertyValue(displayValue, groupedRawValues);
 
-    const value: PropertyValue = {
-      valueFormat: PropertyValueFormat.Primitive,
-      value: JSON.stringify([["TestValue1"], ["TestValue2"]]),
-      displayValue: JSON.stringify(["TestValue1, TestValue2"]),
-    };
-
-    render(
+    const { queryByText } = render(
       <UniquePropertyValuesTargetSelector
-        property={description}
+        property={propertyDescription}
         onChange={() => {}}
         operator={PropertyFilterRuleOperator.IsEqual}
-        imodel={{} as IModelConnection}
+        imodel={testImodel}
         descriptor={descriptor}
         value={value}
       />,
     );
+
+    expect(queryByText(displayValue[0])).to.not.be.null;
+    expect(queryByText(displayValue[1])).to.not.be.null;
   });
 });

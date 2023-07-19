@@ -8,22 +8,13 @@ import { ActionMeta, MultiValue } from "react-select";
 import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyFilterBuilderRuleValueProps } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
-import {
-  ContentFlags,
-  ContentSpecificationTypes,
-  Descriptor,
-  DisplayValueGroup,
-  FieldDescriptor,
-  KeySet,
-  Ruleset,
-  RuleTypes,
-  Value,
-} from "@itwin/presentation-common";
+import { ContentSpecificationTypes, Descriptor, DisplayValueGroup, FieldDescriptor, KeySet, Ruleset, RuleTypes, Value } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { AsyncMultiTagSelect } from "../instance-filter-builder/MultiTagSelect";
-import { NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE } from "./UseNavigationPropertyTargetsLoader";
-import { tryParseJSON } from "../common/Utils";
+import { PRESENTATION_TARGETS_BATCH_SIZE } from "./UseNavigationPropertyTargetsLoader";
+import { translate } from "../common/Utils";
 
+/** @internal */
 export function UniquePropertyValuesTargetSelector(props: PropertyFilterBuilderRuleValueProps & { imodel: IModelConnection; descriptor: Descriptor }) {
   const { imodel, descriptor, property, onChange, value } = props;
   const [selectedTarget, setSelectedTarget] = useState<DisplayValueGroup[] | undefined>(() => getUniqueValueTargetFromProperty(value));
@@ -52,7 +43,7 @@ export function UniquePropertyValuesTargetSelector(props: PropertyFilterBuilderR
         onChange({
           valueFormat: PropertyValueFormat.Primitive,
           displayValue: JSON.stringify(newValue.map((item) => item.displayValue)),
-          value: convertDisplayMultiValueMultiGroupRawValuesToString(newValue),
+          value: stringifyGroupRawValuesTo(newValue),
         });
       }
     },
@@ -66,7 +57,7 @@ export function UniquePropertyValuesTargetSelector(props: PropertyFilterBuilderR
     <AsyncMultiTagSelect
       value={selectedTarget ?? null}
       loadOptions={async (inputValue, options) => loadTargets(inputValue, options.length)}
-      placeholder="search"
+      placeholder={translate("unique-values-property-editor.select-values")}
       onChange={onValueChange}
       debounceTimeout={500}
       cacheUniqs={[property]}
@@ -82,11 +73,8 @@ export function UniquePropertyValuesTargetSelector(props: PropertyFilterBuilderR
 function getUniqueValueTargetFromProperty(property: PropertyValue | undefined): DisplayValueGroup[] | undefined {
   if (property && property.valueFormat === PropertyValueFormat.Primitive && typeof property.value === "string" && property.displayValue) {
     const { displayValue, value } = property;
-    const parsedDisplayValues = tryParseJSON(displayValue);
+    const parsedDisplayValues = JSON.parse(displayValue);
     const parsedGroupedRawValues = JSON.parse(value);
-    if (parsedDisplayValues === false || !Array.isArray(parsedDisplayValues)) {
-      return [{ displayValue: parsedDisplayValues, groupedRawValues: parsedGroupedRawValues }];
-    }
     const uniqueValues: DisplayValueGroup[] = [];
     for (let i = 0; i < parsedDisplayValues.length; i++) {
       uniqueValues.push({ displayValue: parsedDisplayValues[i], groupedRawValues: parsedGroupedRawValues[i] });
@@ -139,21 +127,18 @@ function useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor }: Use
 
       const content = await Presentation.presentation.getPagedDistinctValues({
         imodel,
-        descriptor: {
-          contentFlags: ContentFlags.ShowLabels,
-        },
+        descriptor: {},
         fieldDescriptor,
         rulesetOrId: ruleset,
-        paging: { start: loadedOptionsCount, size: NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE },
+        paging: { start: loadedOptionsCount, size: PRESENTATION_TARGETS_BATCH_SIZE },
         keys: new KeySet(),
       });
-      // pakeisk NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE i kazka kita
       return {
         options: content.items.filter(
           (item) =>
             item.groupedRawValues.filter((value) => value !== undefined && value !== null) && item.displayValue !== undefined && item.displayValue !== "",
         ),
-        hasMore: content.items.length === NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE,
+        hasMore: content.items.length === PRESENTATION_TARGETS_BATCH_SIZE,
       };
     },
     [imodel, ruleset, fieldDescriptor],
@@ -162,7 +147,7 @@ function useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor }: Use
   return loadTargets;
 }
 
-function convertDisplayMultiValueMultiGroupRawValuesToString(values: MultiValue<DisplayValueGroup>) {
+function stringifyGroupRawValuesTo(values: MultiValue<DisplayValueGroup>) {
   let singleArray: Value[] = [];
   values.forEach((item) => singleArray.push(item.groupedRawValues));
   return JSON.stringify(singleArray);

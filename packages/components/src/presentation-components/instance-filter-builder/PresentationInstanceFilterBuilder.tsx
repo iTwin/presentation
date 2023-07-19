@@ -43,7 +43,7 @@ export interface PresentationInstanceFilterBuilderProps {
   ruleGroupDepthLimit?: number;
   /** Initial filter that will be show when component is mounted. */
   initialFilter?: PresentationInstanceFilterInfo;
-  /** Should unique values rendeder be enabled */
+  /** Should unique values renderer be enabled */
   enableUniqueValuesRenderer?: boolean;
 }
 

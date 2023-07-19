@@ -13,7 +13,7 @@ import { Presentation } from "@itwin/presentation-frontend";
 import { waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import {
-  NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE,
+  PRESENTATION_TARGETS_BATCH_SIZE,
   NavigationPropertyTarget,
   useNavigationPropertyTargetsLoader,
   useNavigationPropertyTargetsRuleset,
@@ -78,13 +78,13 @@ describe("useNavigationPropertyTargetsLoader", () => {
   });
 
   it("loads full batch of targets and sets 'hasMore' flag to true", async () => {
-    const contentItems = Array.from({ length: NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE }, () => createTestContentItem({ displayValues: {}, values: {} }));
+    const contentItems = Array.from({ length: PRESENTATION_TARGETS_BATCH_SIZE }, () => createTestContentItem({ displayValues: {}, values: {} }));
     sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), contentItems));
 
     const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
 
     const { options, hasMore } = await result.current("", 0);
-    expect(options).to.have.lengthOf(NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE);
+    expect(options).to.have.lengthOf(PRESENTATION_TARGETS_BATCH_SIZE);
     expect(hasMore).to.be.true;
   });
 

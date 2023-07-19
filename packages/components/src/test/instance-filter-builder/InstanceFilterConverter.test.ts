@@ -537,4 +537,42 @@ describe("convertToInstanceFilterDefinition", () => {
       expect(selectClassName).to.be.eq(classCInfo.name);
     });
   });
+
+  describe("handleStringifiedValues", () => {
+    const testImodel = {} as IModelConnection;
+    const property = createTestPropertyInfo();
+    const field = createTestPropertiesContentField({ properties: [{ property }] });
+    const propertyAccessor = `this.${property.name}`;
+    const groupedRawValues = [
+      [0.001, 0.00099],
+      [0.002, 0.00199],
+    ];
+    const displayValue = ["0.001", "0.002"];
+
+    const createFilter = (operator: PropertyFilterRuleOperator): PresentationInstanceFilterCondition => {
+      return {
+        field,
+        operator,
+        value: { valueFormat: PropertyValueFormat.Primitive, value: JSON.stringify(groupedRawValues), displayValue: JSON.stringify(displayValue) },
+      };
+    };
+
+    it("converts values when operator is `IsEqual`", async () => {
+      const filter = createFilter(PropertyFilterRuleOperator.IsEqual);
+
+      const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+      expect(expression).to.be.eq(
+        `(${propertyAccessor} = ${groupedRawValues[0][0]} OR ${propertyAccessor} = ${groupedRawValues[0][1]} OR ${propertyAccessor} = ${groupedRawValues[1][0]} OR ${propertyAccessor} = ${groupedRawValues[1][1]})`,
+      );
+    });
+
+    it("converts values when operator is `IsNotEqual`", async () => {
+      const filter = createFilter(PropertyFilterRuleOperator.IsNotEqual);
+
+      const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+      expect(expression).to.be.eq(
+        `(${propertyAccessor} <> ${groupedRawValues[0][0]} AND ${propertyAccessor} <> ${groupedRawValues[0][1]} AND ${propertyAccessor} <> ${groupedRawValues[1][0]} AND ${propertyAccessor} <> ${groupedRawValues[1][1]})`,
+      );
+    });
+  });
 });

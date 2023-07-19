@@ -9,4 +9,7 @@
     outline: none;
     padding: 0;
   }
+  > input::placeholder {
+    opacity: 1; // it is used to override mozilla firefox style for placeholder.
+  }
 }

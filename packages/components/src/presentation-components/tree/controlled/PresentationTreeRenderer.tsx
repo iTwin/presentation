@@ -95,7 +95,7 @@ function TreeNodeFilterBuilderDialog(props: TreeNodeFilterBuilderDialogProps) {
       imodel={imodel}
       descriptor={filteringInfo.descriptor}
       initialFilter={filteringInfo.active}
-      enableUniqueValuesRenderer
+      enableUniqueValuesRenderer={true}
     />
   );
 }
