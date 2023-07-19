@@ -39,6 +39,9 @@ beta;NavigationPropertyEditor
 beta;navigationPropertyEditorContext: Context
 beta;NavigationPropertyEditorContextProps
 beta;NavigationPropertyTargetEditor 
+internal;NumericEditorName = "presentation-numeric-editor"
+internal;NumericPropertyEditor 
+internal;NumericPropertyEditorBase 
 public;PresentationComponentsLoggerCategory
 beta;PresentationInfoTreeNodeItem 
 beta;PresentationInstanceFilter = PresentationInstanceFilterConditionGroup | PresentationInstanceFilterCondition
