@@ -61,8 +61,8 @@ export function UniquePropertyValuesTargetSelector(props: PropertyFilterBuilderR
       onChange={onValueChange}
       debounceTimeout={500}
       cacheUniqs={[property]}
-      getOptionLabel={(option) => option.displayValue?.toString()!}
-      getOptionValue={(option) => option.groupedRawValues[0]?.toString()!}
+      getOptionLabel={(option) => option.displayValue?.toString() ?? ""}
+      getOptionValue={(option) => option.groupedRawValues[0]?.toString() ?? ""}
       hideSelectedOptions={false}
       isSearchable={false}
       closeMenuOnSelect={false}
@@ -148,7 +148,7 @@ function useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor }: Use
 }
 
 function stringifyGroupRawValuesTo(values: MultiValue<DisplayValueGroup>) {
-  let singleArray: Value[] = [];
+  const singleArray: Value[] = [];
   values.forEach((item) => singleArray.push(item.groupedRawValues));
   return JSON.stringify(singleArray);
 }

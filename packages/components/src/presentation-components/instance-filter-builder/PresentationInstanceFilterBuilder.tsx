@@ -75,7 +75,7 @@ export function PresentationInstanceFilterBuilder(props: PresentationInstanceFil
         ruleGroupDepthLimit={ruleGroupDepthLimit}
         ruleValueRenderer={
           enableUniqueValuesRenderer
-            ? (props: PropertyFilterBuilderRuleValueProps) => <UniqueValuesRenderer {...props} imodel={imodel} descriptor={descriptor} />
+            ? (pr: PropertyFilterBuilderRuleValueProps) => <UniqueValuesRenderer {...pr} imodel={imodel} descriptor={descriptor} />
             : undefined
         }
       />

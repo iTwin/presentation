@@ -13,8 +13,8 @@ import { Presentation } from "@itwin/presentation-frontend";
 import { waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import {
-  PRESENTATION_TARGETS_BATCH_SIZE,
   NavigationPropertyTarget,
+  PRESENTATION_TARGETS_BATCH_SIZE,
   useNavigationPropertyTargetsLoader,
   useNavigationPropertyTargetsRuleset,
 } from "../../presentation-components/properties/UseNavigationPropertyTargetsLoader";

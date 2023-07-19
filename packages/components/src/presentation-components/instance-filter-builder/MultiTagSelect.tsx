@@ -225,7 +225,6 @@ export function AsyncMultiTagSelect<OptionType, Group extends GroupBase<OptionTy
             textOverflow: "ellipsis",
             marginLeft: "0",
           }),
-          loadingIndicator: () => ({ display: "none" }),
         }}
         components={{
           Control: TagSelectControl,
@@ -236,6 +235,7 @@ export function AsyncMultiTagSelect<OptionType, Group extends GroupBase<OptionTy
           DropdownIndicator: TagSelectDropdownIndicatorSmall,
           ClearIndicator: TagSelectClearIndicator,
           IndicatorSeparator: () => null,
+          LoadingIndicator: () => null,
         }}
         isMulti={true}
       />
