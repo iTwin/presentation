@@ -19,7 +19,7 @@ export function UniquePropertyValuesTargetSelector(props: PropertyFilterBuilderR
   const { imodel, descriptor, property, onChange, value } = props;
   const [selectedTarget, setSelectedTarget] = useState<DisplayValueGroup[] | undefined>(() => getUniqueValueTargetFromProperty(value));
   const [fieldDescriptor, setFieldDescriptor] = useState<FieldDescriptor | undefined>(() =>
-    descriptor.fields.find((field) => field.label === property.displayLabel)?.getFieldDescriptor(),
+    descriptor.fields.find((field) => field.name === property.name)?.getFieldDescriptor(),
   );
 
   useEffect(() => {
