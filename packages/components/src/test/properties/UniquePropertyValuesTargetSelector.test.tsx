@@ -162,7 +162,7 @@ describe("UniquePropertyValuesTargetSelector", () => {
     expect(queryByText(displayValue[0])).to.not.be.null;
   });
 
-  it("sets multiple provided values", () => {
+  it("selects multiple provided values", () => {
     const displayValue = ["TestValue1", "TestValue2"];
     const groupedRawValues = [["TestValue1"], ["TestValue2"]];
     const value = convertToPropertyValue(displayValue, groupedRawValues);
