@@ -36,6 +36,24 @@ export async function convertToInstanceFilterDefinition(filter: PresentationInst
   };
 }
 
+/** @internal */
+export async function findBaseExpressionClass(imodel: IModelConnection, propertyClasses: ClassInfo[]) {
+  if (propertyClasses.length === 1) {
+    return propertyClasses[0];
+  }
+
+  const metadataProvider = getIModelMetadataProvider(imodel);
+  const [firstClass, ...restClasses] = propertyClasses;
+  let currentBaseClass = firstClass;
+  for (const propClass of restClasses) {
+    const propClassInfo = await metadataProvider.getECClassInfo(propClass.id);
+    if (propClassInfo && propClassInfo.isDerivedFrom(currentBaseClass.id)) {
+      currentBaseClass = propClass;
+    }
+  }
+  return currentBaseClass;
+}
+
 interface RelatedInstanceDescription {
   path: RelationshipPath;
   alias: string;
@@ -199,23 +217,6 @@ function escapeString(str: string) {
 
 function isFilterConditionGroup(obj: PresentationInstanceFilter): obj is PresentationInstanceFilterConditionGroup {
   return (obj as PresentationInstanceFilterConditionGroup).conditions !== undefined;
-}
-
-export async function findBaseExpressionClass(imodel: IModelConnection, propertyClasses: ClassInfo[]) {
-  if (propertyClasses.length === 1) {
-    return propertyClasses[0];
-  }
-
-  const metadataProvider = getIModelMetadataProvider(imodel);
-  const [firstClass, ...restClasses] = propertyClasses;
-  let currentBaseClass = firstClass;
-  for (const propClass of restClasses) {
-    const propClassInfo = await metadataProvider.getECClassInfo(propClass.id);
-    if (propClassInfo && propClassInfo.isDerivedFrom(currentBaseClass.id)) {
-      currentBaseClass = propClass;
-    }
-  }
-  return currentBaseClass;
 }
 
 function handleStringifiedValues(filter: PresentationInstanceFilterCondition, groupedRawValues: string, displayValues: string) {

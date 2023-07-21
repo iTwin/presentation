@@ -303,6 +303,9 @@ export interface FilteredPresentationTreeDataProviderProps {
 }
 
 // @internal (undocumented)
+export function findBaseExpressionClass(imodel: IModelConnection, propertyClasses: ClassInfo[]): Promise<ClassInfo>;
+
+// @internal (undocumented)
 export const getFavoritesCategory: () => CategoryDescription;
 
 // @public

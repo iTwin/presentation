@@ -21,6 +21,7 @@ internal;FieldInfo
 internal;FieldRecord
 internal;FilteredPresentationTreeDataProvider 
 internal;FilteredPresentationTreeDataProviderProps
+internal;findBaseExpressionClass(imodel: IModelConnection, propertyClasses: ClassInfo[]): Promise
 internal;getFavoritesCategory: () => CategoryDescription
 public;IContentDataProvider 
 public;IFavoritePropertiesDataProvider
