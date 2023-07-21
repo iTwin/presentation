@@ -126,7 +126,7 @@ describe("convertToInstanceFilterDefinition", () => {
         const filter: PresentationInstanceFilterCondition = {
           field,
           operator: PropertyFilterRuleOperator.Like,
-          value: { valueFormat: PropertyValueFormat.Primitive, value: `someString` },
+          value: { valueFormat: PropertyValueFormat.Primitive, value: `someString`, displayValue: "someString" },
         };
         const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
         expect(expression).to.be.eq(`${propertyAccessor} ~ "%someString%"`);

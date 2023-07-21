@@ -10,7 +10,7 @@ import { LegacyRef, MutableRefObject, RefCallback, useCallback, useRef, useState
 import { Primitives, PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IPropertyValueRenderer, PropertyValueRendererManager } from "@itwin/components-react";
 import { assert, Guid, GuidString, IDisposable } from "@itwin/core-bentley";
-import { Descriptor, Field, LabelCompositeValue, LabelDefinition, parseCombinedFieldNames } from "@itwin/presentation-common";
+import { Descriptor, Field, LabelCompositeValue, LabelDefinition, parseCombinedFieldNames, Value } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { InstanceKeyValueRenderer } from "../properties/InstanceKeyValueRenderer";
 
@@ -208,14 +208,25 @@ export function useErrorState() {
 }
 
 /**
- * Helper function for parsing JSON value.
- * If provided value is not a valid JSON value, function will return false.
- * Otherwise function will return parsed JSON value.
+ * Function for deserializing `DisplayValueGroup` array.
+ * Returns an object, which consists of `deserializedDisplayValues` and `deserializedGroupedRawValues`.
+ * If values were parsed, then `deserializedDisplayValues` type is string[] and `deserializedGroupedRawValues` type is Value[][].
+ * If values were not parsed, or they are null or undefined, then field types will be undefined.
  */
-export function tryParseJSON(value: string) {
-  try {
-    return JSON.parse(value);
-  } catch {
-    return false;
+export function deserializeDisplayValueGroupArray(serializedDisplayValues: string, serializedGroupedRawValues: string) {
+  const tryParseJSON = (value: string) => {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return false;
+    }
+  };
+  const displayValues = tryParseJSON(serializedDisplayValues);
+  const groupedRawValues = tryParseJSON(serializedGroupedRawValues);
+
+  if (displayValues === false || groupedRawValues === false) {
+    return { deserializedDisplayValues: undefined, deserializedGroupedRawValues: undefined };
   }
+
+  return { deserializedDisplayValues: displayValues as string[], deserializedGroupedRawValues: groupedRawValues as Value[][] };
 }

@@ -10,6 +10,7 @@ import { getPropertyFilterOperatorLabel, PropertyFilterRuleGroupOperator, Proper
 import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { PropertiesField, PropertyValueFormat } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
@@ -19,7 +20,6 @@ import {
 } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterBuilder";
 import { createTestECClassInfo, stubDOMMatrix, stubRaf } from "../_helpers/Common";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
-import { PropertiesField, PropertyValueFormat } from "@itwin/presentation-common";
 
 describe("PresentationInstanceFilter", () => {
   stubRaf();
@@ -45,10 +45,17 @@ describe("PresentationInstanceFilter", () => {
     label: "propertiesField3",
     category,
   });
+  const navigationPropertyField = createTestPropertiesContentField({
+    properties: [{ property: { classInfo, name: "navField", type: "navigation" } }],
+    name: "navField",
+    label: "navigationField",
+    category,
+    type: { valueFormat: PropertyValueFormat.Primitive, typeName: "navigation" },
+  });
   const descriptor = createTestContentDescriptor({
     selectClasses: [{ selectClassInfo: classInfo, isSelectPolymorphic: false }],
     categories: [category],
-    fields: [propertiesField, propertiesField2, propertiesField3],
+    fields: [propertiesField, propertiesField2, propertiesField3, navigationPropertyField],
   });
   const initialFilter: PresentationInstanceFilterInfo = {
     filter: {
@@ -202,13 +209,7 @@ describe("PresentationInstanceFilter", () => {
     });
 
     it("does not render <UniquePropertyValuesSelector /> when the property is equal to `navigation`", async () => {
-      const filter = createFilter(
-        PropertyFilterRuleOperator.IsEqual,
-        createTestPropertiesContentField({
-          properties: [{ property: { classInfo, name: "prop1", type: "navigation" } }],
-          type: { typeName: "navigation", valueFormat: PropertyValueFormat.Primitive },
-        }),
-      );
+      const filter = createFilter(PropertyFilterRuleOperator.IsEqual, navigationPropertyField);
       const { queryByText } = render(
         <PresentationInstanceFilterBuilder
           imodel={imodelMock.object}

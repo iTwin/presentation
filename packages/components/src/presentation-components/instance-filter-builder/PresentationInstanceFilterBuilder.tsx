@@ -7,15 +7,20 @@
  */
 
 import { useCallback, useState } from "react";
-import { PropertyFilter, PropertyFilterBuilderRuleValue, PropertyFilterBuilderRuleValueProps, PropertyFilterRuleOperator } from "@itwin/components-react";
+import { StandardTypeNames } from "@itwin/appui-abstract";
+import {
+  PropertyFilter,
+  PropertyFilterBuilderRuleValue,
+  PropertyFilterBuilderRuleValueRendererProps,
+  PropertyFilterRuleOperator,
+} from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo, Descriptor } from "@itwin/presentation-common";
 import { navigationPropertyEditorContext } from "../properties/NavigationPropertyEditor";
-import { UniquePropertyValuesTargetSelector } from "../properties/UniquePropertyValuesTargetSelector";
+import { UniquePropertyValuesSelector } from "../properties/UniquePropertyValuesSelector";
 import { InstanceFilterBuilder, useFilterBuilderNavigationPropertyEditorContext, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder";
 import { PresentationInstanceFilter } from "./Types";
 import { convertPresentationFilterToPropertyFilter, createPresentationInstanceFilter } from "./Utils";
-import { StandardTypeNames } from "@itwin/appui-abstract";
 
 /**
  * Data structure that stores information about filter built by [[PresentationInstanceFilterBuilder]].
@@ -75,7 +80,7 @@ export function PresentationInstanceFilterBuilder(props: PresentationInstanceFil
         ruleGroupDepthLimit={ruleGroupDepthLimit}
         ruleValueRenderer={
           enableUniqueValuesRenderer
-            ? (pr: PropertyFilterBuilderRuleValueProps) => <UniqueValuesRenderer {...pr} imodel={imodel} descriptor={descriptor} />
+            ? (pr: PropertyFilterBuilderRuleValueRendererProps) => <UniqueValuesRenderer {...pr} imodel={imodel} descriptor={descriptor} />
             : undefined
         }
       />
@@ -83,15 +88,12 @@ export function PresentationInstanceFilterBuilder(props: PresentationInstanceFil
   );
 }
 
-function UniqueValuesRenderer(props: PropertyFilterBuilderRuleValueProps & { imodel: IModelConnection; descriptor: Descriptor }) {
-  return (
-    <>
-      {props.property.typename !== StandardTypeNames.Navigation &&
-      (props.operator === PropertyFilterRuleOperator.IsEqual || props.operator === PropertyFilterRuleOperator.IsNotEqual) ? (
-        <UniquePropertyValuesTargetSelector {...props} />
-      ) : (
-        <PropertyFilterBuilderRuleValue {...props} />
-      )}
-    </>
-  );
+function UniqueValuesRenderer(props: PropertyFilterBuilderRuleValueRendererProps & { imodel: IModelConnection; descriptor: Descriptor }) {
+  if (
+    props.property.typename !== StandardTypeNames.Navigation &&
+    (props.operator === PropertyFilterRuleOperator.IsEqual || props.operator === PropertyFilterRuleOperator.IsNotEqual)
+  ) {
+    return <UniquePropertyValuesSelector {...props} />;
+  }
+  return <PropertyFilterBuilderRuleValue {...props} />;
 }

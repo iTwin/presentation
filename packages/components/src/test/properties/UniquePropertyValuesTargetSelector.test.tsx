@@ -3,20 +3,19 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { render, waitFor } from "@testing-library/react";
-import { UniquePropertyValuesTargetSelector } from "../../presentation-components/properties/UniquePropertyValuesTargetSelector";
+import { expect } from "chai";
 import sinon from "sinon";
 import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
-import { PropertyFilterRuleOperator } from "@itwin/components-react";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
-import { createTestECClassInfo } from "../_helpers/Common";
-import userEvent from "@testing-library/user-event";
-import { expect } from "chai";
 import { EmptyLocalization } from "@itwin/core-common";
+import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
+import { render, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { UniquePropertyValuesSelector } from "../../presentation-components/properties/UniquePropertyValuesSelector";
+import { createTestECClassInfo } from "../_helpers/Common";
+import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
 
-describe("UniquePropertyValuesTargetSelector", () => {
+describe("UniquePropertyValuesSelector", () => {
   beforeEach(async () => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
@@ -34,7 +33,7 @@ describe("UniquePropertyValuesTargetSelector", () => {
 
   const propertiesField = createTestPropertiesContentField({
     properties: [{ property: { classInfo, name: "prop1", type: "string" } }],
-    name: "prop1Field",
+    name: "propertyName",
     label: "propertiesField",
     category,
   });
@@ -46,7 +45,7 @@ describe("UniquePropertyValuesTargetSelector", () => {
   });
 
   const propertyDescription = {
-    name: "propertyName",
+    name: "#propertyName",
     displayLabel: "propertiesField",
     typename: "number",
     editor: undefined,
@@ -75,13 +74,7 @@ describe("UniquePropertyValuesTargetSelector", () => {
     });
 
     const { queryByTestId, queryByText } = render(
-      <UniquePropertyValuesTargetSelector
-        property={propertyDescription}
-        onChange={spy}
-        operator={PropertyFilterRuleOperator.IsEqual}
-        imodel={testImodel}
-        descriptor={descriptor}
-      />,
+      <UniquePropertyValuesSelector property={propertyDescription} onChange={spy} imodel={testImodel} descriptor={descriptor} />,
     );
 
     // open menu
@@ -127,15 +120,7 @@ describe("UniquePropertyValuesTargetSelector", () => {
       typename: "",
       editor: undefined,
     };
-    const { queryByText } = render(
-      <UniquePropertyValuesTargetSelector
-        property={description}
-        onChange={() => {}}
-        operator={PropertyFilterRuleOperator.IsEqual}
-        imodel={testImodel}
-        descriptor={descriptor}
-      />,
-    );
+    const { queryByText } = render(<UniquePropertyValuesSelector property={description} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />);
 
     const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
     await user.click(selector!);
@@ -149,14 +134,7 @@ describe("UniquePropertyValuesTargetSelector", () => {
     const value = convertToPropertyValue(displayValue, groupedRawValues);
 
     const { queryByText } = render(
-      <UniquePropertyValuesTargetSelector
-        property={propertyDescription}
-        onChange={() => {}}
-        operator={PropertyFilterRuleOperator.IsEqual}
-        imodel={testImodel}
-        descriptor={descriptor}
-        value={value}
-      />,
+      <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} value={value} />,
     );
 
     expect(queryByText(displayValue[0])).to.not.be.null;
@@ -168,17 +146,36 @@ describe("UniquePropertyValuesTargetSelector", () => {
     const value = convertToPropertyValue(displayValue, groupedRawValues);
 
     const { queryByText } = render(
-      <UniquePropertyValuesTargetSelector
-        property={propertyDescription}
-        onChange={() => {}}
-        operator={PropertyFilterRuleOperator.IsEqual}
-        imodel={testImodel}
-        descriptor={descriptor}
-        value={value}
-      />,
+      <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} value={value} />,
     );
 
     expect(queryByText(displayValue[0])).to.not.be.null;
     expect(queryByText(displayValue[1])).to.not.be.null;
+  });
+
+  it("does not set value when provided value is not parsable", () => {
+    const { queryByText } = render(
+      <UniquePropertyValuesSelector
+        property={propertyDescription}
+        onChange={() => {}}
+        imodel={testImodel}
+        descriptor={descriptor}
+        value={{ valueFormat: PropertyValueFormat.Primitive, displayValue: "a", value: "a" }}
+      />,
+    );
+    expect(queryByText("unique-values-property-editor.select-values")).to.not.be.null;
+  });
+
+  it("sets empty text if provided value is parsed to null", () => {
+    const { container } = render(
+      <UniquePropertyValuesSelector
+        property={propertyDescription}
+        onChange={() => {}}
+        imodel={testImodel}
+        descriptor={descriptor}
+        value={{ valueFormat: PropertyValueFormat.Primitive, displayValue: "[null]", value: "[[null]]" }}
+      />,
+    );
+    expect(container.querySelector(".iui-tag-label")?.innerHTML).to.be.eq("");
   });
 });

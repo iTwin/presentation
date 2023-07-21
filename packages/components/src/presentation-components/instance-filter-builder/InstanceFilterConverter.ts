@@ -10,9 +10,9 @@ import { Primitives, PrimitiveValue, PropertyValueFormat } from "@itwin/appui-ab
 import { isUnaryPropertyFilterOperator, PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo, InstanceFilterDefinition, NestedContentField, PropertiesField, RelationshipPath } from "@itwin/presentation-common";
+import { deserializeDisplayValueGroupArray } from "../common/Utils";
 import { getIModelMetadataProvider } from "./ECMetadataProvider";
 import { PresentationInstanceFilter, PresentationInstanceFilterCondition, PresentationInstanceFilterConditionGroup } from "./Types";
-import { tryParseJSON } from "../common/Utils";
 
 /**
  * Converts [[PresentationInstanceFilter]] built by [[PresentationInstanceFilterBuilder]] component into
@@ -50,10 +50,22 @@ function convertFilter(filter: PresentationInstanceFilter, ctx: ConvertContext) 
   if (isFilterConditionGroup(filter)) {
     return convertConditionGroup(filter, ctx);
   }
-  if (typeof filter.value?.value === "string" && filter.value.displayValue && tryParseJSON(filter.value.value) && tryParseJSON(filter.value.displayValue)) {
-    return convertConditionGroup(handleStringifiedValues(filter, JSON.parse(filter.value.value), JSON.parse(filter.value.displayValue)), ctx);
+  const result = convertUniqueValuesCondition(filter, ctx);
+  if (result !== undefined) {
+    return result;
   }
   return convertCondition(filter, ctx);
+}
+
+function convertUniqueValuesCondition(filter: PresentationInstanceFilterCondition, ctx: ConvertContext) {
+  if (typeof filter.value?.value !== "string" || typeof filter.value?.displayValue !== "string") {
+    return undefined;
+  }
+  const result = handleStringifiedValues(filter, filter.value.value, filter.value.displayValue);
+  if (result === undefined) {
+    return undefined;
+  }
+  return convertConditionGroup(result, ctx);
 }
 
 function convertConditionGroup(group: PresentationInstanceFilterConditionGroup, ctx: ConvertContext): string {
@@ -189,7 +201,7 @@ function isFilterConditionGroup(obj: PresentationInstanceFilter): obj is Present
   return (obj as PresentationInstanceFilterConditionGroup).conditions !== undefined;
 }
 
-async function findBaseExpressionClass(imodel: IModelConnection, propertyClasses: ClassInfo[]) {
+export async function findBaseExpressionClass(imodel: IModelConnection, propertyClasses: ClassInfo[]) {
   if (propertyClasses.length === 1) {
     return propertyClasses[0];
   }
@@ -206,16 +218,21 @@ async function findBaseExpressionClass(imodel: IModelConnection, propertyClasses
   return currentBaseClass;
 }
 
-function handleStringifiedValues(filter: PresentationInstanceFilterCondition, groupedRawValues: string[][], displayValues: string[]) {
+function handleStringifiedValues(filter: PresentationInstanceFilterCondition, groupedRawValues: string, displayValues: string) {
   const { field, operator } = filter;
   let selectedValueIndex = 0;
+
+  const { deserializedDisplayValues, deserializedGroupedRawValues } = deserializeDisplayValueGroupArray(displayValues, groupedRawValues);
+  if (deserializedDisplayValues === undefined || deserializedGroupedRawValues === undefined) {
+    return undefined;
+  }
 
   const conditionGroup: PresentationInstanceFilterConditionGroup = {
     operator: operator === PropertyFilterRuleOperator.IsEqual ? PropertyFilterRuleGroupOperator.Or : PropertyFilterRuleGroupOperator.And,
     conditions: [],
   };
-  for (const displayValue of displayValues) {
-    for (const value of groupedRawValues[selectedValueIndex]) {
+  for (const displayValue of deserializedDisplayValues) {
+    for (const value of deserializedGroupedRawValues[selectedValueIndex]) {
       conditionGroup.conditions.push({
         field,
         operator,
