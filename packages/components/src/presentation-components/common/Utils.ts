@@ -227,7 +227,7 @@ export function serializeDisplayValueGroupArray(values: DisplayValueGroup[]) {
     displayValues.push(item.displayValue);
     groupedRawValues.push(item.groupedRawValues);
   });
-  return { serializedDisplayValues: JSON.stringify(displayValues), serializedGroupedRawValues: JSON.stringify(groupedRawValues) };
+  return { displayValues: JSON.stringify(displayValues), groupedRawValues: JSON.stringify(groupedRawValues) };
 }
 
 /**
