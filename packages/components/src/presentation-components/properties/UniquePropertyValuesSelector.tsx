@@ -92,7 +92,7 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
   );
 }
 
-function getUniqueValueTargetFromProperty(property: PropertyValue | undefined): DisplayValueGroup[] | undefined {
+function getUniqueValueFromProperty(property: PropertyValue | undefined): DisplayValueGroup[] | undefined {
   if (property && property.valueFormat === PropertyValueFormat.Primitive && typeof property.value === "string" && property.displayValue) {
     const { displayValue, value } = property;
     const { deserializedDisplayValues, deserializedGroupedRawValues } = deserializeDisplayValueGroupArray(displayValue, value);

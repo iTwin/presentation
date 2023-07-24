@@ -224,9 +224,9 @@ export function deserializeDisplayValueGroupArray(serializedDisplayValues: strin
   const displayValues = tryParseJSON(serializedDisplayValues);
   const groupedRawValues = tryParseJSON(serializedGroupedRawValues);
 
-  if (displayValues === false || groupedRawValues === false) {
+  if (!displayValues || !groupedRawValues) {
     return { deserializedDisplayValues: undefined, deserializedGroupedRawValues: undefined };
   }
 
-  return { deserializedDisplayValues: displayValues as string[], deserializedGroupedRawValues: groupedRawValues as Value[][] };
+  return { displayValues: displayValues as string[], groupedRawValues: groupedRawValues as Value[][] };
 }
