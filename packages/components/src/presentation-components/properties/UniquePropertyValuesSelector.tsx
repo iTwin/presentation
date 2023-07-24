@@ -41,11 +41,11 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
   }, [descriptor, property]);
 
   useEffect(() => {
-    setSelectedTarget(getUniqueValueFromProperty(value));
+    setSelectedValues(getUniqueValueFromProperty(value));
   }, [value]);
 
   const onValueChange = (newValue: MultiValue<DisplayValueGroup>, _: ActionMeta<DisplayValueGroup>) => {
-    setSelectedTarget(newValue.map((item) => item));
+    setSelectedValues(newValue.map((item) => item));
     if (newValue.length === 0) {
       onChange({
         valueFormat: PropertyValueFormat.Primitive,
@@ -53,11 +53,11 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
         value: undefined,
       });
     } else {
-      const { serializedDisplayValues, serializedGroupedRawValues } = serializeDisplayValueGroupArray([...newValue]);
+      const { displayValues, groupedRawValues } = serializeDisplayValueGroupArray([...newValue]);
       onChange({
         valueFormat: PropertyValueFormat.Primitive,
-        displayValue: serializedDisplayValues,
-        value: serializedGroupedRawValues,
+        displayValue: displayValues,
+        value: groupedRawValues,
       });
     }
   };
@@ -67,7 +67,7 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
 
   return (
     <AsyncMultiTagSelect
-      value={selectedTarget ?? null}
+      value={selectedValues ?? null}
       loadOptions={async (_, options) => loadTargets(options.length)}
       placeholder={translate("unique-values-property-editor.select-values")}
       onChange={onValueChange}
