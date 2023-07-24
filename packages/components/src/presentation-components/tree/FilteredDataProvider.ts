@@ -16,8 +16,10 @@ import {
   TreeNodeItem,
 } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
-import { NodeKey, NodePathElement } from "@itwin/presentation-common";
+import { Node, NodeKey, NodePathElement } from "@itwin/presentation-common";
+import { PresentationTreeDataProvider } from "./DataProvider";
 import { IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider";
+import { PresentationTreeNodeItem } from "./PresentationTreeNodeItem";
 import { createTreeNodeItem } from "./Utils";
 
 /**
@@ -63,8 +65,14 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
   public constructor(props: FilteredPresentationTreeDataProviderProps) {
     this._parentDataProvider = props.parentDataProvider;
     this._filter = props.filter;
+
+    const treeNodeItemFactory: (node: Node, parentId?: string) => PresentationTreeNodeItem =
+      this._parentDataProvider instanceof PresentationTreeDataProvider
+        ? this._parentDataProvider.createTreeNodeItem.bind(this._parentDataProvider)
+        : createTreeNodeItem;
+
     const hierarchy: SimpleTreeDataProviderHierarchy = new Map<string | undefined, TreeNodeItem[]>();
-    this.createHierarchy(props.paths, hierarchy);
+    this.createHierarchy(props.paths, hierarchy, treeNodeItemFactory);
     this._filteredDataProvider = new SimpleTreeDataProvider(hierarchy);
   }
 
@@ -87,17 +95,22 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
     return this._parentDataProvider;
   }
 
-  private createHierarchy(paths: ReadonlyArray<Readonly<NodePathElement>>, hierarchy: SimpleTreeDataProviderHierarchy, parentId?: string) {
+  private createHierarchy(
+    paths: ReadonlyArray<Readonly<NodePathElement>>,
+    hierarchy: SimpleTreeDataProviderHierarchy,
+    treeNodeItemFactory: (node: Node, parentId?: string) => PresentationTreeNodeItem,
+    parentId?: string,
+  ) {
     const treeNodes: DelayLoadedTreeNodeItem[] = [];
     for (let i = 0; i < paths.length; i++) {
-      const node = createTreeNodeItem(paths[i].node, parentId);
+      const node = treeNodeItemFactory(paths[i].node, parentId);
 
       if (paths[i].filteringData && paths[i].filteringData!.matchesCount) {
         this._filteredResultMatches.push({ id: node.id, matchesCount: paths[i].filteringData!.matchesCount });
       }
 
       if (paths[i].children.length !== 0) {
-        this.createHierarchy(paths[i].children, hierarchy, node.id);
+        this.createHierarchy(paths[i].children, hierarchy, treeNodeItemFactory, node.id);
         node.hasChildren = true;
         node.autoExpand = true;
       } else {

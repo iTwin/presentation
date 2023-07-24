@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "Make sure `FilteredPresentationTreeDataProvider` creates same tree node items as parent `PresentationTreeDataProvider`.",
+  "packageName": "@itwin/presentation-components",
+  "email": "24278440+saskliutas@users.noreply.github.com",
+  "dependentChangeType": "patch"
+}
