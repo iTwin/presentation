@@ -34,7 +34,7 @@ export interface UniquePropertyValuesSelectorProps {
 /** @internal */
 export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelectorProps) {
   const { imodel, descriptor, property, onChange, value } = props;
-  const [selectedTarget, setSelectedTarget] = useState<DisplayValueGroup[] | undefined>(() => getUniqueValueFromProperty(value));
+  const [selectedValues, setSelectedValues] = useState<DisplayValueGroup[] | undefined>(() => getUniqueValueFromProperty(value));
   const [field, setField] = useState<Field | undefined>(() => findField(descriptor, getInstanceFilterFieldName(property)));
   useEffect(() => {
     setField(findField(descriptor, getInstanceFilterFieldName(property)));
