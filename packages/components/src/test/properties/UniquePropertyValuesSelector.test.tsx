@@ -153,7 +153,7 @@ describe("UniquePropertyValuesSelector", () => {
     expect(queryByText(displayValue[1])).to.not.be.null;
   });
 
-  it("does not set value when provided value is not parsable", () => {
+  it("does not set value when provided value is invalid", () => {
     const { queryByText } = render(
       <UniquePropertyValuesSelector
         property={propertyDescription}

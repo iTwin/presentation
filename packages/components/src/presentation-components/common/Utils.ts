@@ -10,7 +10,16 @@ import { LegacyRef, MutableRefObject, RefCallback, useCallback, useRef, useState
 import { Primitives, PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IPropertyValueRenderer, PropertyValueRendererManager } from "@itwin/components-react";
 import { assert, Guid, GuidString, IDisposable } from "@itwin/core-bentley";
-import { Descriptor, Field, LabelCompositeValue, LabelDefinition, parseCombinedFieldNames, Value } from "@itwin/presentation-common";
+import {
+  Descriptor,
+  DisplayValue,
+  DisplayValueGroup,
+  Field,
+  LabelCompositeValue,
+  LabelDefinition,
+  parseCombinedFieldNames,
+  Value,
+} from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { InstanceKeyValueRenderer } from "../properties/InstanceKeyValueRenderer";
 
@@ -208,9 +217,23 @@ export function useErrorState() {
 }
 
 /**
- * Function for deserializing `DisplayValueGroup` array.
- * Returns an object, which consists of `deserializedDisplayValues` and `deserializedGroupedRawValues`.
- * If values were parsed, then `deserializedDisplayValues` type is string[] and `deserializedGroupedRawValues` type is Value[][].
+ * Function for serializing `DisplayValueGroup`.
+ * Returns an object, which consists of `serializedDisplayValues` and `serializedGroupedRawValues`.
+ */
+export function serializeDisplayValueGroupArray(values: DisplayValueGroup[]) {
+  const displayValues: DisplayValue[] = [];
+  const groupedRawValues: Value[] = [];
+  values.forEach((item) => {
+    displayValues.push(item.displayValue);
+    groupedRawValues.push(item.groupedRawValues);
+  });
+  return { serializedDisplayValues: JSON.stringify(displayValues), serializedGroupedRawValues: JSON.stringify(groupedRawValues) };
+}
+
+/**
+ * Function for deserializing `displayValues` and `groupedRawValues`.
+ * Returns an object, which consists of `displayValues` and `groupedRawValues`.
+ * If values were parsed, then `displayValues` type is string[] and `groupedRawValues` type is Value[][].
  * If values were not parsed, or they are null or undefined, then field types will be undefined.
  */
 export function deserializeDisplayValueGroupArray(serializedDisplayValues: string, serializedGroupedRawValues: string) {
@@ -225,7 +248,7 @@ export function deserializeDisplayValueGroupArray(serializedDisplayValues: strin
   const groupedRawValues = tryParseJSON(serializedGroupedRawValues);
 
   if (!displayValues || !groupedRawValues) {
-    return { deserializedDisplayValues: undefined, deserializedGroupedRawValues: undefined };
+    return { displayValues: undefined, groupedRawValues: undefined };
   }
 
   return { displayValues: displayValues as string[], groupedRawValues: groupedRawValues as Value[][] };

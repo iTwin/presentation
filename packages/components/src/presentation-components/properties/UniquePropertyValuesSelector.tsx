@@ -7,20 +7,9 @@ import { useCallback, useEffect, useState } from "react";
 import { ActionMeta, MultiValue } from "react-select";
 import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
-import {
-  ContentSpecificationTypes,
-  Descriptor,
-  DisplayValue,
-  DisplayValueGroup,
-  Field,
-  FieldDescriptor,
-  KeySet,
-  Ruleset,
-  RuleTypes,
-  Value,
-} from "@itwin/presentation-common";
+import { ContentSpecificationTypes, Descriptor, DisplayValueGroup, Field, FieldDescriptor, KeySet, Ruleset, RuleTypes } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { deserializeDisplayValueGroupArray, findField, translate } from "../common/Utils";
+import { deserializeDisplayValueGroupArray, findField, serializeDisplayValueGroupArray, translate } from "../common/Utils";
 import { findBaseExpressionClass } from "../instance-filter-builder/InstanceFilterConverter";
 import { AsyncMultiTagSelect } from "../instance-filter-builder/MultiTagSelect";
 import { getInstanceFilterFieldName } from "../instance-filter-builder/Utils";
@@ -45,14 +34,14 @@ export interface UniquePropertyValuesSelectorProps {
 /** @internal */
 export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelectorProps) {
   const { imodel, descriptor, property, onChange, value } = props;
-  const [selectedTarget, setSelectedTarget] = useState<DisplayValueGroup[] | undefined>(() => getUniqueValueTargetFromProperty(value));
+  const [selectedTarget, setSelectedTarget] = useState<DisplayValueGroup[] | undefined>(() => getUniqueValueFromProperty(value));
   const [field, setField] = useState<Field | undefined>(() => findField(descriptor, getInstanceFilterFieldName(property)));
   useEffect(() => {
     setField(findField(descriptor, getInstanceFilterFieldName(property)));
   }, [descriptor, property]);
 
   useEffect(() => {
-    setSelectedTarget(getUniqueValueTargetFromProperty(value));
+    setSelectedTarget(getUniqueValueFromProperty(value));
   }, [value]);
 
   const onValueChange = (newValue: MultiValue<DisplayValueGroup>, _: ActionMeta<DisplayValueGroup>) => {
@@ -95,13 +84,13 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
 function getUniqueValueFromProperty(property: PropertyValue | undefined): DisplayValueGroup[] | undefined {
   if (property && property.valueFormat === PropertyValueFormat.Primitive && typeof property.value === "string" && property.displayValue) {
     const { displayValue, value } = property;
-    const { deserializedDisplayValues, deserializedGroupedRawValues } = deserializeDisplayValueGroupArray(displayValue, value);
-    if (deserializedDisplayValues === undefined || deserializedGroupedRawValues === undefined) {
+    const { displayValues, groupedRawValues } = deserializeDisplayValueGroupArray(displayValue, value);
+    if (displayValues === undefined || groupedRawValues === undefined) {
       return undefined;
     }
     const uniqueValues: DisplayValueGroup[] = [];
-    for (let i = 0; i < deserializedDisplayValues.length; i++) {
-      uniqueValues.push({ displayValue: deserializedDisplayValues[i], groupedRawValues: deserializedGroupedRawValues[i] });
+    for (let i = 0; i < displayValues.length; i++) {
+      uniqueValues.push({ displayValue: displayValues[i], groupedRawValues: groupedRawValues[i] });
     }
     return uniqueValues;
   }
@@ -173,10 +162,7 @@ function useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor }: Use
         keys: new KeySet(),
       });
       return {
-        options: content.items.filter(
-          (item) =>
-            item.groupedRawValues.filter((value) => value !== undefined && value !== null) && item.displayValue !== undefined && item.displayValue !== "",
-        ),
+        options: content.items.filter((item) => item.displayValue !== undefined && item.displayValue !== ""),
         hasMore: content.items.length === UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
       };
     },
@@ -184,14 +170,4 @@ function useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor }: Use
   );
 
   return loadTargets;
-}
-
-function serializeDisplayValueGroupArray(values: DisplayValueGroup[]) {
-  const displayValues: DisplayValue[] = [];
-  const groupedRawValues: Value[] = [];
-  values.forEach((item) => {
-    displayValues.push(item.displayValue);
-    groupedRawValues.push(item.groupedRawValues);
-  });
-  return { serializedDisplayValues: JSON.stringify(displayValues), serializedGroupedRawValues: JSON.stringify(groupedRawValues) };
 }

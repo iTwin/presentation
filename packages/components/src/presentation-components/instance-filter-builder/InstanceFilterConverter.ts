@@ -79,7 +79,7 @@ function convertUniqueValuesCondition(filter: PresentationInstanceFilterConditio
   if (typeof filter.value?.value !== "string" || typeof filter.value?.displayValue !== "string") {
     return undefined;
   }
-  const result = handleStringifiedValues(filter, filter.value.value, filter.value.displayValue);
+  const result = handleStringifiedValues(filter, filter.value.displayValue, filter.value.value);
   if (result === undefined) {
     return undefined;
   }
@@ -219,12 +219,12 @@ function isFilterConditionGroup(obj: PresentationInstanceFilter): obj is Present
   return (obj as PresentationInstanceFilterConditionGroup).conditions !== undefined;
 }
 
-function handleStringifiedValues(filter: PresentationInstanceFilterCondition, groupedRawValues: string, displayValues: string) {
+function handleStringifiedValues(filter: PresentationInstanceFilterCondition, serializedDisplayValues: string, serializedGroupedRawValues: string) {
   const { field, operator } = filter;
   let selectedValueIndex = 0;
 
-  const { deserializedDisplayValues, deserializedGroupedRawValues } = deserializeDisplayValueGroupArray(displayValues, groupedRawValues);
-  if (deserializedDisplayValues === undefined || deserializedGroupedRawValues === undefined) {
+  const { displayValues, groupedRawValues } = deserializeDisplayValueGroupArray(serializedDisplayValues, serializedGroupedRawValues);
+  if (displayValues === undefined || groupedRawValues === undefined) {
     return undefined;
   }
 
@@ -232,8 +232,8 @@ function handleStringifiedValues(filter: PresentationInstanceFilterCondition, gr
     operator: operator === PropertyFilterRuleOperator.IsEqual ? PropertyFilterRuleGroupOperator.Or : PropertyFilterRuleGroupOperator.And,
     conditions: [],
   };
-  for (const displayValue of deserializedDisplayValues) {
-    for (const value of deserializedGroupedRawValues[selectedValueIndex]) {
+  for (const displayValue of displayValues) {
+    for (const value of groupedRawValues[selectedValueIndex]) {
       conditionGroup.conditions.push({
         field,
         operator,
