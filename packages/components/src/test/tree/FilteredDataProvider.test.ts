@@ -4,16 +4,20 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import sinon from "sinon";
 import * as moq from "typemoq";
+import { PageOptions } from "@itwin/components-react";
+import { BeEvent } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { LabelDefinition, NodePathElement } from "@itwin/presentation-common";
-import { PageOptions } from "@itwin/components-react";
+import { Presentation, PresentationManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
+import { PresentationTreeDataProvider } from "../../presentation-components/tree/DataProvider";
 import { FilteredPresentationTreeDataProvider } from "../../presentation-components/tree/FilteredDataProvider";
 import { IPresentationTreeDataProvider } from "../../presentation-components/tree/IPresentationTreeDataProvider";
 import { createTreeNodeItem } from "../../presentation-components/tree/Utils";
-import { createTestTreeNodeItem } from "../_helpers/UiComponents";
-import { createTestECInstancesNode, createTestECInstancesNodeKey, createTestNodePathElement } from "../_helpers/Hierarchy";
 import { createTestECInstanceKey } from "../_helpers/Common";
+import { createTestECInstancesNode, createTestECInstancesNodeKey, createTestNodePathElement } from "../_helpers/Hierarchy";
+import { createTestTreeNodeItem } from "../_helpers/UiComponents";
 
 describe("FilteredTreeDataProvider", () => {
   function createTestNodePathElementWithId(id: string) {
@@ -69,6 +73,13 @@ describe("FilteredTreeDataProvider", () => {
   const pageOptions: PageOptions = { size: 0, start: 0 };
 
   beforeEach(() => {
+    const onVariableChanged = new BeEvent();
+    const presentationManagerMock = moq.Mock.ofType<PresentationManager>();
+    const rulesetVariablesManagerMock = moq.Mock.ofType<RulesetVariablesManager>();
+    presentationManagerMock.setup((x) => x.vars(moq.It.isAny())).returns(() => rulesetVariablesManagerMock.object);
+    rulesetVariablesManagerMock.setup((x) => x.onVariableChanged).returns(() => onVariableChanged);
+    sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
+
     parentProviderMock.reset();
     filter = "test_filter";
     paths = createPaths();
@@ -77,6 +88,10 @@ describe("FilteredTreeDataProvider", () => {
       filter,
       paths,
     });
+  });
+
+  afterEach(() => {
+    sinon.restore();
   });
 
   describe("filter", () => {
@@ -125,6 +140,23 @@ describe("FilteredTreeDataProvider", () => {
 
       const result = await provider.getNodes(parentNode, pageOptions);
       expect(result).to.matchSnapshot();
+    });
+
+    it("applies same node customizations as parent data provider", async () => {
+      const customizeStub = sinon.stub();
+      const parentProvider = new PresentationTreeDataProvider({
+        imodel: imodelMock.object,
+        ruleset: "test-rules",
+        customizeTreeNodeItem: customizeStub,
+      });
+      const testPaths = [createTestNodePathElement()];
+      const filteredProvider = new FilteredPresentationTreeDataProvider({
+        parentDataProvider: parentProvider,
+        filter: "Test",
+        paths: testPaths,
+      });
+      await filteredProvider.getNodes(undefined, pageOptions);
+      expect(customizeStub).to.be.calledOnce;
     });
   });
 

@@ -248,8 +248,8 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
       return createNodesAndCountResult(
         async () => this._dataSource.getNodesAndCount(requestOptions),
         this.createBaseRequestOptions(),
+        (node, parentId) => this.createTreeNodeItem(node, parentId),
         parentNode,
-        this._nodesCreateProps,
       );
     },
     { isMatchingKey: MemoizationHelpers.areNodesRequestsEqual as any },
@@ -265,6 +265,14 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
       filterText: filter,
     });
   }
+
+  /**
+   * Creates tree node item from supplied [[Node]].
+   * @internal
+   */
+  public createTreeNodeItem(node: Node, parentId?: string) {
+    return createTreeNodeItem(node, parentId, this._nodesCreateProps);
+  }
 }
 
 async function getFilterDefinition(imodel: IModelConnection, node?: TreeNodeItem) {
@@ -277,8 +285,8 @@ async function getFilterDefinition(imodel: IModelConnection, node?: TreeNodeItem
 async function createNodesAndCountResult(
   resultFactory: () => Promise<{ nodes: Node[]; count: number }>,
   baseOptions: RequestOptionsWithRuleset<IModelConnection>,
+  treeItemFactory: (node: Node, parentId?: string) => PresentationTreeNodeItem,
   parentNode?: TreeNodeItem,
-  nodesCreateProps?: CreateTreeNodeItemProps,
 ) {
   try {
     const result = await resultFactory();
@@ -287,7 +295,7 @@ async function createNodesAndCountResult(
     if (nodes.length === 0 && isParentFiltered) {
       return createStatusNodeResult(parentNode, "tree.no-filtered-children");
     }
-    return { nodes: createTreeItems(nodes, baseOptions, parentNode, nodesCreateProps), count };
+    return { nodes: createTreeItems(nodes, baseOptions, treeItemFactory, parentNode), count };
   } catch (e) {
     if (e instanceof PresentationError) {
       switch (e.errorNumber) {
@@ -318,12 +326,12 @@ function createStatusNodeResult(parentNode: TreeNodeItem | undefined, labelKey: 
 function createTreeItems(
   nodes: Node[],
   baseOptions: RequestOptionsWithRuleset<IModelConnection>,
+  treeItemFactory: (node: Node, parentId?: string) => PresentationTreeNodeItem,
   parentNode?: TreeNodeItem,
-  nodesCreateProps?: CreateTreeNodeItemProps,
 ) {
   const items: PresentationTreeNodeItem[] = [];
   for (const node of nodes) {
-    const item = createTreeNodeItem(node, parentNode?.id, nodesCreateProps);
+    const item = treeItemFactory(node, parentNode?.id);
     if (node.supportsFiltering) {
       item.filtering = {
         descriptor: async () => {
