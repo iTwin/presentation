@@ -271,7 +271,10 @@ describe("NavigationPropertyTargetSelector", () => {
 
     // Check if input's cursor is at the start of the text after pressing `Home`.
     await user.keyboard("{Home}");
-    await user.type(inputContainer, "H ", { skipClick: true });
+    await user.type(inputContainer, "H", { skipClick: true });
+
+    // Check if pressing `Space` does not invoke default `react-select` behavior.
+    await user.type(inputContainer, " ", { skipClick: true });
 
     await waitFor(() => expect(getByDisplayValue("H Target Class InstanceE")).to.not.be.null);
 

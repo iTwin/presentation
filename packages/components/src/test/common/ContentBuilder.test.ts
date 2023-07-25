@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { ArrayValue, PropertyRecord, StandardEditorNames, StandardTypeNames, StructValue } from "@itwin/appui-abstract";
+import { ArrayValue, PropertyRecord, StandardTypeNames, StructValue } from "@itwin/appui-abstract";
 import { EnumerationInfo, FieldHierarchy, PropertyValueFormat, traverseContentItem } from "@itwin/presentation-common";
 import {
   createPropertyDescriptionFromFieldInfo,
@@ -12,6 +12,7 @@ import {
   IPropertiesAppender,
   PropertyRecordsBuilder,
 } from "../../presentation-components/common/ContentBuilder";
+import { NumericEditorName } from "../../presentation-components/properties/NumericPropertyEditor";
 import { createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
 import {
   createTestCategoryDescription,
@@ -147,6 +148,6 @@ describe("PropertyRecordsBuilder", () => {
     const descriptor = createPropertyDescriptionFromFieldInfo(
       createTestSimpleContentField({ type: { valueFormat: PropertyValueFormat.Primitive, typeName: StandardTypeNames.Number } }),
     );
-    expect(descriptor.editor?.name).to.eq(StandardEditorNames.NumericInput);
+    expect(descriptor.editor?.name).to.eq(NumericEditorName);
   });
 });

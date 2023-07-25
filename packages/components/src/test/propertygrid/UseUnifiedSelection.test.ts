@@ -9,7 +9,8 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { ISelectionProvider, SelectionChangeEventArgs, SelectionChangeType, SelectionHandler } from "@itwin/presentation-frontend";
 import { renderHook } from "@testing-library/react-hooks";
-import { IPresentationPropertyDataProvider, usePropertyDataProviderWithUnifiedSelection } from "../../presentation-components";
+import { IPresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider";
+import { usePropertyDataProviderWithUnifiedSelection } from "../../presentation-components/propertygrid/UseUnifiedSelection";
 import { createTestECInstanceKey, isKeySet } from "../_helpers/Common";
 
 describe("usePropertyDataProviderWithUnifiedSelection", () => {

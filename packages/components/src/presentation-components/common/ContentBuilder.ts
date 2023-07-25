@@ -12,7 +12,6 @@ import {
   PropertyDescription,
   PropertyEditorInfo,
   PropertyRecord,
-  StandardEditorNames,
   StandardTypeNames,
   StructValue,
   PropertyValueFormat as UiPropertyValueFormat,
@@ -39,6 +38,7 @@ import {
   StartStructProps,
   TypeDescription,
 } from "@itwin/presentation-common";
+import { NumericEditorName } from "../properties/NumericPropertyEditor";
 
 /** @internal */
 export interface FieldRecord {
@@ -83,7 +83,7 @@ export function createPropertyDescriptionFromFieldInfo(info: FieldInfo) {
     descr.typename === StandardTypeNames.Float ||
     descr.typename === StandardTypeNames.Double
   ) {
-    descr.editor = { name: StandardEditorNames.NumericInput };
+    descr.editor = { name: NumericEditorName };
   }
 
   if (info.renderer) {

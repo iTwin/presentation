@@ -80,12 +80,12 @@ describe("Learning snippets", async () => {
       // test Unified Selection -> Tree selection synchronization
       act(() => Presentation.selection.replaceSelection("", imodel, new KeySet([modelKey!])));
       await waitFor(() => {
-        expect(isNodeSelectedInTree(modelNode!)).to.be.true;
+        expect(isNodeSelectedInTree(modelNode)).to.be.true;
         expect(isNodeSelectedInTree(elementNode)).to.be.false;
       });
       act(() => Presentation.selection.replaceSelection("", imodel, new KeySet([elementKey!])));
       await waitFor(() => {
-        expect(isNodeSelectedInTree(modelNode!)).to.be.false;
+        expect(isNodeSelectedInTree(modelNode)).to.be.false;
         expect(isNodeSelectedInTree(elementNode)).to.be.true;
       });
 

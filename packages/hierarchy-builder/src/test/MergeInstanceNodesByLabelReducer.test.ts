@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import { from, Observable } from "rxjs";
-import { InProgressTreeNode } from "../hierarchy-builder";
+import { InProgressTreeNode } from "../hierarchy-builder/TreeNode";
 import { createMergeInstanceNodesByLabelReducer } from "../hierarchy-builder/TreeNodesProvider";
 import { createTestInstanceKey, createTestNode, getObservableResult } from "./Utils";
 

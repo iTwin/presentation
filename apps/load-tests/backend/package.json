@@ -20,13 +20,13 @@
     "@itwin/ecschema-metadata": "^4.1.0-dev.62",
     "@itwin/ecschema-rpcinterface-common": "^4.1.0-dev.62",
     "@itwin/ecschema-rpcinterface-impl": "^4.1.0-dev.62",
-    "@itwin/eslint-plugin": "^4.0.0-dev.38",
+    "@itwin/eslint-plugin": "^4.0.0-dev.43",
     "@itwin/express-server": "^4.1.0-dev.62",
     "@itwin/presentation-common": "^4.1.0-dev.62",
     "@itwin/presentation-backend": "^4.1.0-dev.62",
     "@itwin/webgl-compatibility": "^4.1.0-dev.62",
     "@opentelemetry/api": "^1.4.1",
-    "eslint": "^8.40.0",
+    "eslint": "^8.44.0",
     "rimraf": "^5.0.0",
     "typescript": "~5.0.2"
   }

@@ -12,11 +12,11 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { NodePathElement } from "@itwin/presentation-common";
 import { waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
+import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";
 import {
   ControlledPresentationTreeFilteringProps,
-  IPresentationTreeDataProvider,
   useControlledPresentationTreeFiltering,
-} from "../../../presentation-components";
+} from "../../../presentation-components/tree/controlled/UseControlledTreeFiltering";
 import { FilteredPresentationTreeDataProvider } from "../../../presentation-components/tree/FilteredDataProvider";
 import { ResolvablePromise } from "../../_helpers/Promises";
 import { createTestPropertyRecord, createTestTreeNodeItem } from "../../_helpers/UiComponents";
