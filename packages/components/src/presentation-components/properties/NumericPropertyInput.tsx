@@ -44,7 +44,11 @@ export const NumericPropertyInput = forwardRef<NumericPropertyInputAttributes, N
     onCommit &&
       onCommit({
         propertyRecord,
-        newValue: { valueFormat: PropertyValueFormat.Primitive, value: isNaN(Number(newVal)) ? undefined : Number(newVal), displayValue: newVal },
+        newValue: {
+          valueFormat: PropertyValueFormat.Primitive,
+          value: isNaN(Number(newVal)) || newVal.trim() === "" ? undefined : Number(newVal),
+          displayValue: newVal,
+        },
       });
   };
   return (

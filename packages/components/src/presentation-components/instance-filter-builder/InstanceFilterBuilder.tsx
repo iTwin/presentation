@@ -13,7 +13,7 @@ import { BehaviorSubject, from, of } from "rxjs";
 import { map } from "rxjs/internal/operators/map";
 import { switchAll } from "rxjs/internal/operators/switchAll";
 import { PropertyDescription } from "@itwin/appui-abstract";
-import { PropertyFilter, PropertyFilterBuilder, PropertyFilterBuilderProps } from "@itwin/components-react";
+import { PropertyFilterBuilderRenderer, PropertyFilterBuilderRendererProps } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo, Descriptor } from "@itwin/presentation-common";
@@ -28,13 +28,11 @@ import { createInstanceFilterPropertyInfos, getInstanceFilterFieldName, Instance
  * Props for [[InstanceFilterBuilder]] component.
  * @internal
  */
-export interface InstanceFilterBuilderProps extends PropertyFilterBuilderProps {
+export interface InstanceFilterBuilderProps extends PropertyFilterBuilderRendererProps {
   /** Currently selected classes. */
   selectedClasses: ClassInfo[];
   /** List of all available classes. */
   classes: ClassInfo[];
-  /** Callback that is invoked when filter is changed. */
-  onFilterChanged: (filter?: PropertyFilter) => void;
   /** Callback that is invoked when class is selected. */
   onClassSelected: (selectedClass: ClassInfo) => void;
   /** Callback that is invoked when class is de-selected. */
@@ -88,7 +86,7 @@ export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
         />
       </div>
       <div className="presentation-property-filter-builder">
-        <PropertyFilterBuilder {...restProps} />
+        <PropertyFilterBuilderRenderer {...restProps} />
       </div>
     </div>
   );

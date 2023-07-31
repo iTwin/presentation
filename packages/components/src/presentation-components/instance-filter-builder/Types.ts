@@ -8,7 +8,7 @@
 
 import { PrimitiveValue } from "@itwin/appui-abstract";
 import { PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator } from "@itwin/components-react";
-import { PropertiesField } from "@itwin/presentation-common";
+import { ClassInfo, PropertiesField } from "@itwin/presentation-common";
 
 /**
  * Type that describes instance filter based on [Descriptor]($presentation-common) fields. It can be
@@ -47,4 +47,11 @@ export interface PresentationInstanceFilterCondition {
  */
 export function isPresentationInstanceFilterConditionGroup(filter: PresentationInstanceFilter): filter is PresentationInstanceFilterConditionGroup {
   return (filter as any).conditions !== undefined;
+}
+
+export interface PresentationInstanceFilterInfo {
+  /** Instance filter. */
+  filter: PresentationInstanceFilter;
+  /** Classes of the properties used in filter. */
+  usedClasses: ClassInfo[];
 }
