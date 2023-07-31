@@ -121,7 +121,7 @@ describe("PresentationInstanceFilterDialog", () => {
     });
   });
 
-  it("does not invoke `onApply` when `validate` returns undefined", async () => {
+  it("does not invoke `onApply` when filter is invalid", async () => {
     const spy = sinon.spy();
     const { container, getByText, getByDisplayValue } = render(
       <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />,
@@ -146,7 +146,7 @@ describe("PresentationInstanceFilterDialog", () => {
     expect(spy).to.not.be.called;
   });
 
-  it("does not invoke `onApply` when `createPresentationInstanceFilter` returns undefined", async () => {
+  it("does not invoke `onApply` when filter is missing presentation metadata", async () => {
     sinon.stub(instanceFilterBuilderUtils, "createPresentationInstanceFilter").returns(undefined);
     const spy = sinon.spy();
     const { container, getByText, getByDisplayValue } = render(
