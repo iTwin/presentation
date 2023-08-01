@@ -120,17 +120,11 @@ function PresentationInstanceFilterDialogContent(props: PresedntationInstanceFil
     }
   };
 
-  const shouldApplyButtonBeEnabled = (item: PropertyFilterBuilderRuleGroupItem) => {
+  const hasNonEmptyRule = (item: PropertyFilterBuilderRuleGroupItem) => {
     if (isPropertyFilterBuilderRuleGroup(item)) {
-      for (const itm of item.items) {
-        if (shouldApplyButtonBeEnabled(itm)) {
-          return true;
-        }
-      }
-      return false;
-    } else {
-      return item.operator !== undefined;
+      return item.items.some(hasNonEmptyRule);
     }
+    return item.operator !== undefined;
   };
 
   const isDisabled = !shouldApplyButtonBeEnabled(rootGroup);
