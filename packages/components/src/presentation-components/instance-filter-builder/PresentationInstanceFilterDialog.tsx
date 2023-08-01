@@ -127,7 +127,7 @@ function PresentationInstanceFilterDialogContent(props: PresedntationInstanceFil
     return item.operator !== undefined;
   };
 
-  const isDisabled = !shouldApplyButtonBeEnabled(rootGroup);
+  const isDisabled = !hasNonEmptyRule(rootGroup);
 
   return (
     <>
