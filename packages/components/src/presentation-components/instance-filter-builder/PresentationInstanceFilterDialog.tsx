@@ -8,13 +8,12 @@
 
 import "./PresentationInstanceFilterDialog.scss";
 import { useEffect, useRef, useState } from "react";
-import { isPropertyFilterBuilderRuleGroup, usePropertyFilterBuilder } from "@itwin/components-react";
+import { PropertyFilter, isPropertyFilterBuilderRuleGroup, usePropertyFilterBuilder } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Button, Dialog, ProgressRadial } from "@itwin/itwinui-react";
 import { Descriptor } from "@itwin/presentation-common";
 import { translate, useDelay } from "../common/Utils";
-import { navigationPropertyEditorContext } from "../properties/NavigationPropertyEditor";
-import { InstanceFilterBuilder, useFilterBuilderNavigationPropertyEditorContext, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder";
+import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder";
 import { PresentationInstanceFilterInfo } from "./Types";
 import { convertPresentationFilterToPropertyFilter, createPresentationInstanceFilter } from "./Utils";
 
@@ -34,7 +33,7 @@ export interface PresentationInstanceFilterDialogProps {
   /** Callback that is invoked when 'Close' button is clicked or dialog is closed. */
   onClose: () => void;
   /**
-   * [Descriptor]($presentation-common) that will be used in [[PresentationInstanceFilterBuilder]] component rendered inside this dialog.
+   * [Descriptor]($presentation-common) that will be used in [[InstanceFilterBuilder]] component rendered inside this dialog.
    *
    * This property can be set to function in order to lazy load [Descriptor]($presentation-common) when dialog is opened.
    */
@@ -43,11 +42,12 @@ export interface PresentationInstanceFilterDialogProps {
   filterResultCountRenderer?: (filter?: PresentationInstanceFilterInfo) => React.ReactNode;
   /** Dialog title. */
   title?: React.ReactNode;
+  /** Initial filter that will be show when component is mounted. */
   initialFilter?: PresentationInstanceFilterInfo;
 }
 
 /**
- * Dialog component that renders [[PresentationInstanceFilterBuilder]] inside.
+ * Dialog component that renders [[InstanceFilterBuilder]] inside.
  * @beta
  */
 export function PresentationInstanceFilterDialog(props: PresentationInstanceFilterDialogProps) {
@@ -68,11 +68,7 @@ export function PresentationInstanceFilterDialog(props: PresentationInstanceFilt
       <Dialog.Backdrop />
       <Dialog.Main className="presentation-instance-filter-dialog-content-container">
         <Dialog.TitleBar className="presentation-instance-filter-title" titleText={title ? title : translate("instance-filter-builder.filter")} />
-        {descriptor instanceof Descriptor ? (
-          <PresentationInstanceFilterDialogContent {...restProps} descriptor={descriptor} onClose={onClose} />
-        ) : (
-          <DelayedCenteredProgressRadial />
-        )}
+        {descriptor ? <PresentationInstanceFilterDialogContent {...restProps} descriptor={descriptor} onClose={onClose} /> : <DelayedCenteredProgressRadial />}
       </Dialog.Main>
     </Dialog>
   );
@@ -80,24 +76,24 @@ export function PresentationInstanceFilterDialog(props: PresentationInstanceFilt
 
 function useDelayLoadedDescriptor(descr: Descriptor | (() => Promise<Descriptor>)) {
   const [descriptor, setDescriptor] = useState<Descriptor | (() => Promise<Descriptor>)>(() => descr);
-  const disposed = useRef<boolean>(false);
 
   useEffect(() => {
+    let disposed = false;
     void (async () => {
       if (descriptor && !(descriptor instanceof Descriptor)) {
         const newDescriptor = await descriptor();
         // istanbul ignore else
-        if (!disposed.current) {
+        if (!disposed) {
           setDescriptor(newDescriptor);
         }
       }
     })();
     return () => {
-      disposed.current = true;
+      disposed = true;
     };
-  }, [descr, descriptor]);
+  }, [descr]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return descriptor;
+  return descriptor instanceof Descriptor ? descriptor : undefined;
 }
 
 interface PresedntationInstanceFilterDialogContentProps extends Omit<PresentationInstanceFilterDialogProps, "isOpen" | "title" | "descriptor"> {
@@ -107,13 +103,19 @@ interface PresedntationInstanceFilterDialogContentProps extends Omit<Presentatio
 function PresentationInstanceFilterDialogContent(props: PresedntationInstanceFilterDialogContentProps) {
   const { onApply, initialFilter, descriptor, imodel, ruleGroupDepthLimit, filterResultCountRenderer, onClose } = props;
 
+  const initialPropertyFilter = useRef<PropertyFilter | undefined>(
+    initialFilter ? convertPresentationFilterToPropertyFilter(descriptor, initialFilter.filter) : undefined,
+  );
+
+  useEffect(() => {
+    initialPropertyFilter.current = initialFilter ? convertPresentationFilterToPropertyFilter(descriptor, initialFilter.filter) : undefined;
+  }, [descriptor, initialFilter]);
+
   const { rootGroup, actions, validate } = usePropertyFilterBuilder({
-    initialFilter: initialFilter ? convertPresentationFilterToPropertyFilter(descriptor, initialFilter.filter) : undefined,
+    initialFilter: initialPropertyFilter.current,
   });
 
   const filteringProps = usePresentationInstanceFilteringProps(descriptor, imodel, initialFilter?.usedClasses);
-
-  const navigationPropertyEditorContextValue = useFilterBuilderNavigationPropertyEditorContext(imodel, descriptor);
 
   const applyButtonHandle = () => {
     const filter = validate();
@@ -125,16 +127,19 @@ function PresentationInstanceFilterDialogContent(props: PresedntationInstanceFil
     }
   };
 
-  const isDisabled = !rootGroup.items
-    .flat(ruleGroupDepthLimit ?? Number.MAX_SAFE_INTEGER)
-    .some((item) => !isPropertyFilterBuilderRuleGroup(item) && item.operator !== undefined);
+  const isDisabled = !rootGroup.items.flat(Number.MAX_SAFE_INTEGER).some((item) => !isPropertyFilterBuilderRuleGroup(item) && item.operator !== undefined);
 
   return (
     <>
       <Dialog.Content className="presentation-instance-filter-content">
-        <navigationPropertyEditorContext.Provider value={navigationPropertyEditorContextValue}>
-          <InstanceFilterBuilder {...filteringProps} rootGroup={rootGroup} actions={actions} />
-        </navigationPropertyEditorContext.Provider>
+        <InstanceFilterBuilder
+          {...filteringProps}
+          rootGroup={rootGroup}
+          actions={actions}
+          ruleGroupDepthLimit={ruleGroupDepthLimit}
+          imodel={imodel}
+          descriptor={descriptor}
+        />
       </Dialog.Content>
       <div className="presentation-instance-filter-dialog-bottom-container">
         <div>{filterResultCountRenderer && filterResultCountRenderer()}</div>

@@ -18,7 +18,7 @@ import { assert } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo, Descriptor } from "@itwin/presentation-common";
 import { translate } from "../common/Utils";
-import { NavigationPropertyEditorContextProps } from "../properties/NavigationPropertyEditor";
+import { navigationPropertyEditorContext, NavigationPropertyEditorContextProps } from "../properties/NavigationPropertyEditor";
 import { getIModelMetadataProvider } from "./ECMetadataProvider";
 import { MultiTagSelect } from "./MultiTagSelect";
 import { PresentationInstanceFilterProperty } from "./PresentationInstanceFilterProperty";
@@ -39,6 +39,10 @@ export interface InstanceFilterBuilderProps extends PropertyFilterBuilderRendere
   onClassDeselected: (selectedClass: ClassInfo) => void;
   /** Callback that is invoked when all selected classes are cleared. */
   onClearClasses: () => void;
+  /** iModel connection that will be used for getting [[navigationPropertyEditorContext]] */
+  imodel: IModelConnection;
+  /** [Descriptor]($presentation-common) that will be used for getting [[navigationPropertyEditorContext]]. */
+  descriptor: Descriptor;
 }
 
 /**
@@ -47,7 +51,9 @@ export interface InstanceFilterBuilderProps extends PropertyFilterBuilderRendere
  * @internal
  */
 export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
-  const { selectedClasses, classes, onClassSelected, onClassDeselected, onClearClasses, ...restProps } = props;
+  const { selectedClasses, classes, onClassSelected, onClassDeselected, onClearClasses, imodel, descriptor, ...restProps } = props;
+
+  const navigationPropertyEditorContextValue = useFilterBuilderNavigationPropertyEditorContext(imodel, descriptor);
 
   const onSelectChange = useCallback(
     (_: MultiValue<ClassInfo> | SingleValue<ClassInfo>, action: ActionMeta<ClassInfo>) => {
@@ -86,7 +92,9 @@ export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
         />
       </div>
       <div className="presentation-property-filter-builder">
-        <PropertyFilterBuilderRenderer {...restProps} />
+        <navigationPropertyEditorContext.Provider value={navigationPropertyEditorContextValue}>
+          <PropertyFilterBuilderRenderer {...restProps} />
+        </navigationPropertyEditorContext.Provider>
       </div>
     </div>
   );

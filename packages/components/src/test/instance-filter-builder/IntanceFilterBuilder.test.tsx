@@ -7,7 +7,7 @@ import { expect } from "chai";
 import sinon from "sinon";
 import * as moq from "typemoq";
 import { PropertyDescription } from "@itwin/appui-abstract";
-import { PropertyFilter, PropertyFilterRuleOperator, usePropertyFilterBuilder } from "@itwin/components-react";
+import { PropertyFilterBuilderActions, PropertyFilterBuilderRuleGroup } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
@@ -49,21 +49,21 @@ describe("InstanceFilter", () => {
     sinon.restore();
   });
 
-  const property: PropertyDescription = {
-    name: "propertyField1",
-    displayLabel: "Prop1",
-    typename: "boolean",
-  };
+  const testImodel = {} as IModelConnection;
+  const testDescriptor = {} as Descriptor;
+  const testActions = {} as PropertyFilterBuilderActions;
 
-  const propertyFilter: PropertyFilter = {
-    property,
-    operator: PropertyFilterRuleOperator.IsNull,
-    value: undefined,
-  };
+  const rootGroupMock = moq.Mock.ofType<PropertyFilterBuilderRuleGroup>();
+
+  beforeEach(() => {
+    rootGroupMock.setup((x) => x.items).returns(() => []);
+  });
+
+  afterEach(() => {
+    rootGroupMock.reset();
+  });
 
   it("invokes 'onClassSelected' when non selected class is clicked", () => {
-    const { result } = renderHook(() => usePropertyFilterBuilder({ initialFilter: propertyFilter }));
-    const { actions, rootGroup } = result.current;
     const spy = sinon.spy();
     const { container, getByTestId } = render(
       <InstanceFilterBuilder
@@ -73,8 +73,10 @@ describe("InstanceFilter", () => {
         onClassDeselected={() => {}}
         onClassSelected={spy}
         onClearClasses={() => {}}
-        rootGroup={rootGroup}
-        actions={actions}
+        actions={testActions}
+        rootGroup={rootGroupMock.object}
+        imodel={testImodel}
+        descriptor={testDescriptor}
       />,
     );
 
@@ -89,8 +91,6 @@ describe("InstanceFilter", () => {
 
   it("invokes 'onClassDeselected' when selected class is clicked", () => {
     const spy = sinon.spy();
-    const { result } = renderHook(() => usePropertyFilterBuilder({ initialFilter: propertyFilter }));
-    const { actions, rootGroup } = result.current;
     const { container, getByTestId } = render(
       <InstanceFilterBuilder
         classes={classInfos}
@@ -99,8 +99,10 @@ describe("InstanceFilter", () => {
         onClassDeselected={spy}
         onClassSelected={() => {}}
         onClearClasses={() => {}}
-        rootGroup={rootGroup}
-        actions={actions}
+        actions={testActions}
+        rootGroup={rootGroupMock.object}
+        imodel={testImodel}
+        descriptor={testDescriptor}
       />,
     );
 
@@ -115,8 +117,6 @@ describe("InstanceFilter", () => {
 
   it("invokes 'onClassDeselected' when remove tag button is clicked", () => {
     const spy = sinon.spy();
-    const { result } = renderHook(() => usePropertyFilterBuilder({ initialFilter: propertyFilter }));
-    const { actions, rootGroup } = result.current;
     const { container } = render(
       <InstanceFilterBuilder
         classes={classInfos}
@@ -125,8 +125,10 @@ describe("InstanceFilter", () => {
         onClassDeselected={spy}
         onClassSelected={() => {}}
         onClearClasses={() => {}}
-        rootGroup={rootGroup}
-        actions={actions}
+        actions={testActions}
+        rootGroup={rootGroupMock.object}
+        imodel={testImodel}
+        descriptor={testDescriptor}
       />,
     );
 
@@ -139,8 +141,6 @@ describe("InstanceFilter", () => {
 
   it("invokes 'onClearClasses' when clear indicator is clicked", () => {
     const spy = sinon.spy();
-    const { result } = renderHook(() => usePropertyFilterBuilder({ initialFilter: propertyFilter }));
-    const { actions, rootGroup } = result.current;
     const { getByTestId } = render(
       <InstanceFilterBuilder
         classes={classInfos}
@@ -149,8 +149,10 @@ describe("InstanceFilter", () => {
         onClassDeselected={() => {}}
         onClassSelected={() => {}}
         onClearClasses={spy}
-        rootGroup={rootGroup}
-        actions={actions}
+        actions={testActions}
+        rootGroup={rootGroupMock.object}
+        imodel={testImodel}
+        descriptor={testDescriptor}
       />,
     );
 

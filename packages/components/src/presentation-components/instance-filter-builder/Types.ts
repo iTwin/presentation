@@ -49,6 +49,10 @@ export function isPresentationInstanceFilterConditionGroup(filter: PresentationI
   return (filter as any).conditions !== undefined;
 }
 
+/**
+ * Data structure that stores information about filter built by [[PresentationInstanceFilterDialog]].
+ * @beta
+ */
 export interface PresentationInstanceFilterInfo {
   /** Instance filter. */
   filter: PresentationInstanceFilter;
