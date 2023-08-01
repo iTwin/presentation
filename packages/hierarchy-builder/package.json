@@ -48,7 +48,7 @@
     "@itwin/core-common": "4.1.0-dev.71",
     "@itwin/core-quantity": "4.1.0-dev.71",
     "@itwin/ecschema-metadata": "4.1.0-dev.71",
-    "@itwin/eslint-plugin": "4.0.0-dev.45",
+    "@itwin/eslint-plugin": "^4.0.0-dev.48",
     "@itwin/presentation-common": "4.1.0-dev.71",
     "@types/chai": "4.3.1",
     "@types/chai-as-promised": "^7.1.5",
