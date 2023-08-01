@@ -7,8 +7,8 @@
  */
 
 import "./PresentationInstanceFilterDialog.scss";
-import { useEffect, useRef, useState } from "react";
-import { isPropertyFilterBuilderRuleGroup, PropertyFilter, PropertyFilterBuilderRuleGroupItem, usePropertyFilterBuilder } from "@itwin/components-react";
+import { useEffect, useState } from "react";
+import { isPropertyFilterBuilderRuleGroup, PropertyFilterBuilderRuleGroupItem, usePropertyFilterBuilder } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Button, Dialog, ProgressRadial } from "@itwin/itwinui-react";
 import { Descriptor } from "@itwin/presentation-common";
@@ -102,17 +102,10 @@ interface PresedntationInstanceFilterDialogContentProps extends Omit<Presentatio
 
 function PresentationInstanceFilterDialogContent(props: PresedntationInstanceFilterDialogContentProps) {
   const { onApply, initialFilter, descriptor, imodel, ruleGroupDepthLimit, filterResultCountRenderer, onClose } = props;
-
-  const initialPropertyFilter = useRef<PropertyFilter | undefined>(
-    initialFilter ? convertPresentationFilterToPropertyFilter(descriptor, initialFilter.filter) : undefined,
-  );
-
-  useEffect(() => {
-    initialPropertyFilter.current = initialFilter ? convertPresentationFilterToPropertyFilter(descriptor, initialFilter.filter) : undefined;
-  }, [descriptor, initialFilter]);
+  const [initialPropertyFilter] = useState(() => (initialFilter ? convertPresentationFilterToPropertyFilter(descriptor, initialFilter.filter) : undefined));
 
   const { rootGroup, actions, validate } = usePropertyFilterBuilder({
-    initialFilter: initialPropertyFilter.current,
+    initialFilter: initialPropertyFilter,
   });
 
   const filteringProps = usePresentationInstanceFilteringProps(descriptor, imodel, initialFilter?.usedClasses);
