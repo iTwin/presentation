@@ -84,8 +84,8 @@ importers:
         specifier: 4.1.0-dev.71
         version: 4.1.0-dev.71(@itwin/core-backend@4.1.0-dev.71)(@itwin/core-bentley@4.1.0-dev.71)(@itwin/core-common@4.1.0-dev.71)(@itwin/core-geometry@4.1.0-dev.71)(@itwin/ecschema-metadata@4.1.0-dev.71)(@itwin/ecschema-rpcinterface-common@4.1.0-dev.71)
       '@itwin/eslint-plugin':
-        specifier: 4.0.0-dev.45
-        version: 4.0.0-dev.45(eslint@8.45.0)(typescript@5.0.4)
+        specifier: ^4.0.0-dev.48
+        version: 4.0.0-dev.48(eslint@8.45.0)(typescript@5.0.4)
       '@itwin/express-server':
         specifier: 4.1.0-dev.71
         version: 4.1.0-dev.71(@itwin/core-backend@4.1.0-dev.71)
@@ -135,8 +135,8 @@ importers:
         specifier: 4.1.0-dev.71
         version: 4.1.0-dev.71(@itwin/core-bentley@4.1.0-dev.71)(@itwin/core-common@4.1.0-dev.71)(@itwin/core-geometry@4.1.0-dev.71)(@itwin/ecschema-metadata@4.1.0-dev.71)
       '@itwin/eslint-plugin':
-        specifier: 4.0.0-dev.45
-        version: 4.0.0-dev.45(eslint@8.45.0)(typescript@5.0.4)
+        specifier: ^4.0.0-dev.48
+        version: 4.0.0-dev.48(eslint@8.45.0)(typescript@5.0.4)
       '@itwin/presentation-common':
         specifier: 4.1.0-dev.71
         version: 4.1.0-dev.71(@itwin/core-bentley@4.1.0-dev.71)(@itwin/core-common@4.1.0-dev.71)(@itwin/core-quantity@4.1.0-dev.71)(@itwin/ecschema-metadata@4.1.0-dev.71)
@@ -204,8 +204,8 @@ importers:
         specifier: 4.1.0-dev.71
         version: 4.1.0-dev.71(@itwin/core-backend@4.1.0-dev.71)(@itwin/core-bentley@4.1.0-dev.71)(@itwin/core-common@4.1.0-dev.71)(@itwin/core-geometry@4.1.0-dev.71)(@itwin/ecschema-metadata@4.1.0-dev.71)(@itwin/ecschema-rpcinterface-common@4.1.0-dev.71)
       '@itwin/eslint-plugin':
-        specifier: 4.0.0-dev.45
-        version: 4.0.0-dev.45(eslint@8.45.0)(typescript@5.0.4)
+        specifier: ^4.0.0-dev.48
+        version: 4.0.0-dev.48(eslint@8.45.0)(typescript@5.0.4)
       '@itwin/express-server':
         specifier: 4.1.0-dev.71
         version: 4.1.0-dev.71(@itwin/core-backend@4.1.0-dev.71)
@@ -279,8 +279,8 @@ importers:
         specifier: 4.1.0-dev.71
         version: 4.1.0-dev.71(@itwin/core-bentley@4.1.0-dev.71)(@itwin/core-common@4.1.0-dev.71)(@itwin/core-geometry@4.1.0-dev.71)(@itwin/ecschema-metadata@4.1.0-dev.71)
       '@itwin/eslint-plugin':
-        specifier: 4.0.0-dev.45
-        version: 4.0.0-dev.45(eslint@8.45.0)(typescript@5.0.4)
+        specifier: ^4.0.0-dev.48
+        version: 4.0.0-dev.48(eslint@8.45.0)(typescript@5.0.4)
       '@itwin/presentation-common':
         specifier: 4.1.0-dev.71
         version: 4.1.0-dev.71(@itwin/core-bentley@4.1.0-dev.71)(@itwin/core-common@4.1.0-dev.71)(@itwin/core-quantity@4.1.0-dev.71)(@itwin/ecschema-metadata@4.1.0-dev.71)
@@ -345,8 +345,8 @@ importers:
         specifier: 4.1.0-dev.71
         version: 4.1.0-dev.71(@itwin/core-bentley@4.1.0-dev.71)(@itwin/core-common@4.1.0-dev.71)(@itwin/core-geometry@4.1.0-dev.71)(@itwin/ecschema-metadata@4.1.0-dev.71)
       '@itwin/eslint-plugin':
-        specifier: 4.0.0-dev.45
-        version: 4.0.0-dev.45(eslint@8.45.0)(typescript@5.0.4)
+        specifier: ^4.0.0-dev.48
+        version: 4.0.0-dev.48(eslint@8.45.0)(typescript@5.0.4)
       '@itwin/imodel-components-react':
         specifier: ^4.3.0
         version: 4.3.0(@itwin/appui-abstract@4.1.0-dev.71)(@itwin/components-react@4.3.0)(@itwin/core-bentley@4.1.0-dev.71)(@itwin/core-common@4.1.0-dev.71)(@itwin/core-frontend@4.1.0-dev.71)(@itwin/core-geometry@4.1.0-dev.71)(@itwin/core-quantity@4.1.0-dev.71)(@itwin/core-react@4.3.0)(react-dom@17.0.0)(react@17.0.0)
@@ -517,8 +517,8 @@ importers:
         specifier: 4.1.0-dev.71
         version: 4.1.0-dev.71(@itwin/core-bentley@4.1.0-dev.71)(@itwin/core-quantity@4.1.0-dev.71)
       '@itwin/eslint-plugin':
-        specifier: 4.0.0-dev.45
-        version: 4.0.0-dev.45(eslint@8.45.0)(typescript@5.0.4)
+        specifier: ^4.0.0-dev.48
+        version: 4.0.0-dev.48(eslint@8.45.0)(typescript@5.0.4)
       '@itwin/imodel-components-react':
         specifier: ^4.3.0
         version: 4.3.0(@itwin/appui-abstract@4.1.0-dev.71)(@itwin/components-react@4.3.0)(@itwin/core-bentley@4.1.0-dev.71)(@itwin/core-common@4.1.0-dev.71)(@itwin/core-frontend@4.1.0-dev.71)(@itwin/core-geometry@4.1.0-dev.71)(@itwin/core-quantity@4.1.0-dev.71)(@itwin/core-react@4.3.0)(react-dom@17.0.0)(react@17.0.0)
@@ -676,8 +676,8 @@ importers:
         specifier: 4.1.0-dev.71
         version: 4.1.0-dev.71(@itwin/core-backend@4.1.0-dev.71)(@itwin/core-bentley@4.1.0-dev.71)(@itwin/core-common@4.1.0-dev.71)(@itwin/core-geometry@4.1.0-dev.71)(@itwin/ecschema-metadata@4.1.0-dev.71)(@itwin/ecschema-rpcinterface-common@4.1.0-dev.71)
       '@itwin/eslint-plugin':
-        specifier: 4.0.0-dev.45
-        version: 4.0.0-dev.45(eslint@8.45.0)(typescript@5.0.4)
+        specifier: ^4.0.0-dev.48
+        version: 4.0.0-dev.48(eslint@8.45.0)(typescript@5.0.4)
       '@itwin/imodel-components-react':
         specifier: ^4.3.0
         version: 4.3.0(@itwin/appui-abstract@4.1.0-dev.71)(@itwin/components-react@4.3.0)(@itwin/core-bentley@4.1.0-dev.71)(@itwin/core-common@4.1.0-dev.71)(@itwin/core-frontend@4.1.0-dev.71)(@itwin/core-geometry@4.1.0-dev.71)(@itwin/core-quantity@4.1.0-dev.71)(@itwin/core-react@4.3.0)(react-dom@17.0.0)(react@17.0.0)
@@ -827,8 +827,8 @@ importers:
         specifier: 4.1.0-dev.71
         version: 4.1.0-dev.71(@itwin/core-bentley@4.1.0-dev.71)(@itwin/core-quantity@4.1.0-dev.71)
       '@itwin/eslint-plugin':
-        specifier: 4.0.0-dev.45
-        version: 4.0.0-dev.45(eslint@8.45.0)(typescript@5.0.4)
+        specifier: ^4.0.0-dev.48
+        version: 4.0.0-dev.48(eslint@8.45.0)(typescript@5.0.4)
       '@itwin/presentation-common':
         specifier: 4.1.0-dev.71
         version: 4.1.0-dev.71(@itwin/core-bentley@4.1.0-dev.71)(@itwin/core-common@4.1.0-dev.71)(@itwin/core-quantity@4.1.0-dev.71)(@itwin/ecschema-metadata@4.1.0-dev.71)
@@ -899,8 +899,8 @@ importers:
         specifier: 4.1.0-dev.71
         version: 4.1.0-dev.71(@itwin/core-bentley@4.1.0-dev.71)(@itwin/core-quantity@4.1.0-dev.71)
       '@itwin/eslint-plugin':
-        specifier: 4.0.0-dev.45
-        version: 4.0.0-dev.45(eslint@8.45.0)(typescript@5.0.4)
+        specifier: ^4.0.0-dev.48
+        version: 4.0.0-dev.48(eslint@8.45.0)(typescript@5.0.4)
       '@itwin/presentation-common':
         specifier: 4.1.0-dev.71
         version: 4.1.0-dev.71(@itwin/core-bentley@4.1.0-dev.71)(@itwin/core-common@4.1.0-dev.71)(@itwin/core-quantity@4.1.0-dev.71)(@itwin/ecschema-metadata@4.1.0-dev.71)
@@ -996,8 +996,8 @@ importers:
         specifier: 4.1.0-dev.71
         version: 4.1.0-dev.71(@itwin/core-bentley@4.1.0-dev.71)(@itwin/core-quantity@4.1.0-dev.71)
       '@itwin/eslint-plugin':
-        specifier: 4.0.0-dev.45
-        version: 4.0.0-dev.45(eslint@8.45.0)(typescript@5.0.4)
+        specifier: ^4.0.0-dev.48
+        version: 4.0.0-dev.48(eslint@8.45.0)(typescript@5.0.4)
       '@itwin/presentation-backend':
         specifier: 4.1.0-dev.71
         version: 4.1.0-dev.71(@itwin/core-backend@4.1.0-dev.71)(@itwin/core-bentley@4.1.0-dev.71)(@itwin/core-common@4.1.0-dev.71)(@itwin/core-quantity@4.1.0-dev.71)(@itwin/ecschema-metadata@4.1.0-dev.71)(@itwin/presentation-common@4.1.0-dev.71)
@@ -2821,8 +2821,9 @@ packages:
       '@itwin/ecschema-rpcinterface-common': 4.1.0-dev.71(@itwin/core-bentley@4.1.0-dev.71)(@itwin/core-common@4.1.0-dev.71)(@itwin/core-geometry@4.1.0-dev.71)(@itwin/ecschema-metadata@4.1.0-dev.71)
     dev: false
 
-  /@itwin/eslint-plugin@4.0.0-dev.45(eslint@8.45.0)(typescript@5.0.4):
-    resolution: {integrity: sha512-y0w0gEzeCeaUu2uj283eFL6hmnS13JW9sf5Da5Xcuc9mT7hUKaUEP0qlIDDWz1obMScY7Mj5sTDTY99TAjhofw==}
+  /@itwin/eslint-plugin@4.0.0-dev.48(eslint@8.45.0)(typescript@5.0.4):
+    resolution: {integrity: sha512-+hZPrjt2/aKOvlde1AZMR23xvXk7wIEmkqBNWIzOjfvYCV+ndo/mFC9m8qRmpV5WwiMehKTG+lVY48CWUQrS5Q==}
+    hasBin: true
     peerDependencies:
       eslint: ^8.36.0
       typescript: ^3.7.0 || ^4.0.0 || ^5.0.0
@@ -2841,6 +2842,7 @@ packages:
       eslint-plugin-react: 7.33.0(eslint@8.45.0)
       eslint-plugin-react-hooks: 4.6.0(eslint@8.45.0)
       typescript: 5.0.4
+      workspace-tools: 0.34.6
     transitivePeerDependencies:
       - eslint-import-resolver-webpack
       - supports-color
@@ -4938,7 +4940,6 @@ packages:
 
   /@yarnpkg/lockfile@1.1.0:
     resolution: {integrity: sha512-GpSwvyXOcOOlV70vbnzjj4fW5xW/FdUF6nQEt1ENy7m4ZCczi1+/buVUPAqmGfqznsORNFzUMjctTIp8a9tuCQ==}
-    dev: false
 
   /abab@2.0.6:
     resolution: {integrity: sha512-j2afSsaIENvHZN2B8GOpF566vZ5WVk5opAiMTvWgaQT8DkbOqsTfvNAvHoRGU2zzP8cPoqys+xHTRDWW8L+/BA==}
@@ -7335,6 +7336,7 @@ packages:
 
   /eslint-config-prettier@8.8.0(eslint@8.45.0):
     resolution: {integrity: sha512-wLbQiFre3tdGgpDv67NQKnJuTlcUVYHas3k+DZCc2U2BadthoEY4B7hLPvAxaqdyOGCzuLfii2fqGph10va7oA==}
+    hasBin: true
     peerDependencies:
       eslint: '>=7.0.0'
     dependencies:
@@ -8251,13 +8253,11 @@ packages:
     dependencies:
       is-ssh: 1.4.0
       parse-url: 8.1.0
-    dev: false
 
   /git-url-parse@13.1.0:
     resolution: {integrity: sha512-5FvPJP/70WkIprlUZ33bm4UAaFdjcLkJLpWft1BeZKqwR0uhhNGoKwlUaPtVb4LxCSQ++erHapRak9kWGj+FCA==}
     dependencies:
       git-up: 7.0.0
-    dev: false
 
   /glob-gitignore@1.0.14:
     resolution: {integrity: sha512-YuAEPqL58bOQDqDF2kMv009rIjSAtPs+WPzyGbwRWK+wD0UWQVRoP34Pz6yJ6ivco65C9tZnaIt0I3JCuQ8NZQ==}
@@ -9093,7 +9093,6 @@ packages:
     resolution: {integrity: sha512-x7+VxdxOdlV3CYpjvRLBv5Lo9OJerlYanjwFrPR9fuGPjCiNiCzFgAWpiLAohSbsnH4ZAys3SBh+hq5rJosxUQ==}
     dependencies:
       protocols: 2.0.1
-    dev: false
 
   /is-stream@1.1.0:
     resolution: {integrity: sha512-uQPm8kcs47jx38atAcWTVxyltQYoPT68y9aWYdV6yWXSyW8mzSat0TL6CiWdZeCdF3KrAvpVtnHbTv4RN+rqdQ==}
@@ -9453,6 +9452,7 @@ packages:
 
   /json5@1.0.2:
     resolution: {integrity: sha512-g1MWMLBiz8FKi1e4w0UyVL3w+iJceWAFBAaBnnGKOpNa5f8TLktkbre1+s6oICydWAm+HRUGTmI+//xv2hvXYA==}
+    hasBin: true
     dependencies:
       minimist: 1.2.8
 
@@ -10781,13 +10781,11 @@ packages:
     resolution: {integrity: sha512-Euf9GG8WT9CdqwuWJGdf3RkUcTBArppHABkO7Lm8IzRQp0e2r/kkFnmhu4TSK30Wcu5rVAZLmfPKSBBi9tWFog==}
     dependencies:
       protocols: 2.0.1
-    dev: false
 
   /parse-url@8.1.0:
     resolution: {integrity: sha512-xDvOoLU5XRrcOZvnI6b8zA6n9O9ejNk/GExuz1yBuWUGn9KA97GI6HTs6u02wKara1CeVmZhH+0TZFdWScR89w==}
     dependencies:
       parse-path: 7.0.0
-    dev: false
 
   /parse5-htmlparser2-tree-adapter@6.0.1:
     resolution: {integrity: sha512-qPuWvbLgvDGilKc5BoicRovlT4MtYT6JfJyBOMDsKoiT+GiuP5qyrPCnR9HcPECIJJmZh5jRndyNThnhhb/vlA==}
@@ -11172,7 +11170,6 @@ packages:
 
   /protocols@2.0.1:
     resolution: {integrity: sha512-/XJ368cyBJ7fzLMwLKv1e4vLxOju2MNAIokcr7meSaNcVbWz/CPcW22cP04mwxOErdA5mwjA8Q6w/cdAQxVn7Q==}
-    dev: false
 
   /proxy-addr@2.0.7:
     resolution: {integrity: sha512-llQsMLSUDUPT44jdrU/O37qlnifitDP+ZwrmmZcoSKyLKvtZxpyV0n2/bD/N4tBAAZ/gJEdZU7KMraoK1+XYAg==}
@@ -12764,6 +12761,7 @@ packages:
 
   /ts-node@10.9.1(@types/node@18.17.0)(typescript@5.0.4):
     resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
+    hasBin: true
     peerDependencies:
       '@swc/core': '>=1.2.50'
       '@swc/wasm': '>=1.2.50'
@@ -12914,6 +12912,7 @@ packages:
   /typedoc@0.23.28(typescript@5.0.4):
     resolution: {integrity: sha512-9x1+hZWTHEQcGoP7qFmlo4unUoVJLB0H/8vfO/7wqTnZxg4kPuji9y3uRzEu0ZKez63OJAUmiGhUrtukC6Uj3w==}
     engines: {node: '>= 14.14'}
+    hasBin: true
     peerDependencies:
       typescript: 4.6.x || 4.7.x || 4.8.x || 4.9.x || 5.0.x
     dependencies:
@@ -12943,6 +12942,7 @@ packages:
   /typeorm@0.3.17(typeorm-aurora-data-api-driver@2.4.4):
     resolution: {integrity: sha512-UDjUEwIQalO9tWw9O2A4GU+sT3oyoUXheHJy4ft+RFdnRdQctdQ34L9SqE2p7LdwzafHx1maxT+bqXON+Qnmig==}
     engines: {node: '>= 12.9.0'}
+    hasBin: true
     peerDependencies:
       '@google-cloud/spanner': ^5.18.0
       '@sap/hana-client': ^2.12.25
@@ -13091,6 +13091,7 @@ packages:
 
   /update-browserslist-db@1.0.11(browserslist@4.21.9):
     resolution: {integrity: sha512-dCwEFf0/oT85M1fHBg4F0jtLwJrutGoHSQXCh7u4o2t1drG+c0a9Flnqww6XUKSfQMPpJBRjU8d4RXB09qtvaA==}
+    hasBin: true
     peerDependencies:
       browserslist: '>= 4.21.0'
     dependencies:
@@ -13277,6 +13278,7 @@ packages:
   /webpack-cli@5.1.4(webpack-dev-server@4.15.1)(webpack@5.88.2):
     resolution: {integrity: sha512-pIDJHIEI9LR0yxHXQ+Qh95k2EvXpWzZ5l+d+jIo+RdSm9MiHfzazIxwwni/p7+x4eJZuvG1AJwgC4TNQ7NRgsg==}
     engines: {node: '>=14.15.0'}
+    hasBin: true
     peerDependencies:
       '@webpack-cli/generators': '*'
       webpack: 5.x.x
@@ -13324,6 +13326,7 @@ packages:
   /webpack-dev-server@4.15.1(webpack-cli@5.1.4)(webpack@5.88.2):
     resolution: {integrity: sha512-5hbAst3h3C3L8w6W4P96L5vaV0PxSmJhxZvWKYIdgxOQm8pNZ5dEOmmSLBVpP85ReeyRt6AS1QJNyo/oFFPeVA==}
     engines: {node: '>= 12.13.0'}
+    hasBin: true
     peerDependencies:
       webpack: ^4.37.0 || ^5.0.0
       webpack-cli: '*'
@@ -13395,6 +13398,7 @@ packages:
   /webpack@5.88.2(webpack-cli@5.1.4):
     resolution: {integrity: sha512-JmcgNZ1iKj+aiR0OvTYtWQqJwq37Pf683dY9bVORwVbUrDhLhdn/PlO2sHsFHPkj7sHNQF3JwaAkp49V+Sq1tQ==}
     engines: {node: '>=10.13.0'}
+    hasBin: true
     peerDependencies:
       webpack-cli: '*'
     peerDependenciesMeta:
@@ -13556,6 +13560,16 @@ packages:
       js-yaml: 4.1.0
       micromatch: 4.0.5
     dev: false
+
+  /workspace-tools@0.34.6:
+    resolution: {integrity: sha512-6KDZW4K/t+CM3RGp56KN11Jp75NwNsEgTGCIxnvLbCY14j/Xa67vBCdWipFkB7t72gJJb61qDoCL9CHVNcI6Qg==}
+    dependencies:
+      '@yarnpkg/lockfile': 1.1.0
+      git-url-parse: 13.1.0
+      globby: 11.1.0
+      jju: 1.4.0
+      js-yaml: 4.1.0
+      micromatch: 4.0.5
 
   /workspace-tools@0.35.0:
     resolution: {integrity: sha512-Xy6fu6gk4/6jf59H4XE20d8aHCEI4pmfy1xMdmGhTHMf4wDbPbYrd0qywONu88jSu7habVbCB5ygI3v/nttZYg==}
