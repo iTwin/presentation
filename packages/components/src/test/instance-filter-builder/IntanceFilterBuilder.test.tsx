@@ -7,7 +7,7 @@ import { expect } from "chai";
 import sinon from "sinon";
 import * as moq from "typemoq";
 import { PropertyDescription } from "@itwin/appui-abstract";
-import { PropertyFilterBuilderActions, PropertyFilterBuilderRuleGroup } from "@itwin/components-react";
+import { PropertyFilterBuilderActions, PropertyFilterBuilderRuleGroup, PropertyFilterRuleGroupOperator } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
@@ -52,16 +52,11 @@ describe("InstanceFilter", () => {
   const testImodel = {} as IModelConnection;
   const testDescriptor = {} as Descriptor;
   const testActions = {} as PropertyFilterBuilderActions;
-
-  const rootGroupMock = moq.Mock.ofType<PropertyFilterBuilderRuleGroup>();
-
-  beforeEach(() => {
-    rootGroupMock.setup((x) => x.items).returns(() => []);
-  });
-
-  afterEach(() => {
-    rootGroupMock.reset();
-  });
+  const testRootGroup = {
+    operator: PropertyFilterRuleGroupOperator.Or,
+    id: "0",
+    items: [],
+  } as PropertyFilterBuilderRuleGroup;
 
   it("invokes 'onClassSelected' when non selected class is clicked", () => {
     const spy = sinon.spy();
@@ -74,7 +69,7 @@ describe("InstanceFilter", () => {
         onClassSelected={spy}
         onClearClasses={() => {}}
         actions={testActions}
-        rootGroup={rootGroupMock.object}
+        rootGroup={testRootGroup}
         imodel={testImodel}
         descriptor={testDescriptor}
       />,
@@ -100,7 +95,7 @@ describe("InstanceFilter", () => {
         onClassSelected={() => {}}
         onClearClasses={() => {}}
         actions={testActions}
-        rootGroup={rootGroupMock.object}
+        rootGroup={testRootGroup}
         imodel={testImodel}
         descriptor={testDescriptor}
       />,
@@ -126,7 +121,7 @@ describe("InstanceFilter", () => {
         onClassSelected={() => {}}
         onClearClasses={() => {}}
         actions={testActions}
-        rootGroup={rootGroupMock.object}
+        rootGroup={testRootGroup}
         imodel={testImodel}
         descriptor={testDescriptor}
       />,
@@ -150,7 +145,7 @@ describe("InstanceFilter", () => {
         onClassSelected={() => {}}
         onClearClasses={spy}
         actions={testActions}
-        rootGroup={rootGroupMock.object}
+        rootGroup={testRootGroup}
         imodel={testImodel}
         descriptor={testDescriptor}
       />,

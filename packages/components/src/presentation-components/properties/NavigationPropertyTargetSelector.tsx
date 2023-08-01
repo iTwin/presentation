@@ -185,7 +185,7 @@ function TargetSelectControl<TOption, IsMulti extends boolean = boolean>(props: 
   };
 
   return (
-    <components.Control {...props} className="iui-input-with-icon">
+    <components.Control {...props} className="iui-input-with-icon presentation-navigation-property-select-control">
       <components.ValueContainer
         {...props}
         className="iui-select-button presentation-navigation-property-select-input"

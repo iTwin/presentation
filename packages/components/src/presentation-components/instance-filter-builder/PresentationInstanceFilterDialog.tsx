@@ -8,7 +8,7 @@
 
 import "./PresentationInstanceFilterDialog.scss";
 import { useEffect, useRef, useState } from "react";
-import { isPropertyFilterBuilderRuleGroup, PropertyFilter, usePropertyFilterBuilder } from "@itwin/components-react";
+import { isPropertyFilterBuilderRuleGroup, PropertyFilter, PropertyFilterBuilderRuleGroupItem, usePropertyFilterBuilder } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Button, Dialog, ProgressRadial } from "@itwin/itwinui-react";
 import { Descriptor } from "@itwin/presentation-common";
@@ -74,14 +74,14 @@ export function PresentationInstanceFilterDialog(props: PresentationInstanceFilt
   );
 }
 
-function useDelayLoadedDescriptor(descr: Descriptor | (() => Promise<Descriptor>)) {
-  const [descriptor, setDescriptor] = useState<Descriptor | (() => Promise<Descriptor>)>(() => descr);
+function useDelayLoadedDescriptor(descriptorOrGetter: Descriptor | (() => Promise<Descriptor>)) {
+  const [descriptor, setDescriptor] = useState<Descriptor | undefined>(() => (descriptorOrGetter instanceof Descriptor ? descriptorOrGetter : undefined));
 
   useEffect(() => {
     let disposed = false;
     void (async () => {
-      if (descriptor && !(descriptor instanceof Descriptor)) {
-        const newDescriptor = await descriptor();
+      if (!(descriptorOrGetter instanceof Descriptor)) {
+        const newDescriptor = await descriptorOrGetter();
         // istanbul ignore else
         if (!disposed) {
           setDescriptor(newDescriptor);
@@ -91,9 +91,9 @@ function useDelayLoadedDescriptor(descr: Descriptor | (() => Promise<Descriptor>
     return () => {
       disposed = true;
     };
-  }, [descr]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [descriptorOrGetter]);
 
-  return descriptor instanceof Descriptor ? descriptor : undefined;
+  return descriptor;
 }
 
 interface PresedntationInstanceFilterDialogContentProps extends Omit<PresentationInstanceFilterDialogProps, "isOpen" | "title" | "descriptor"> {
@@ -127,7 +127,20 @@ function PresentationInstanceFilterDialogContent(props: PresedntationInstanceFil
     }
   };
 
-  const isDisabled = !rootGroup.items.flat(Number.MAX_SAFE_INTEGER).some((item) => !isPropertyFilterBuilderRuleGroup(item) && item.operator !== undefined);
+  const shouldApplyButtonBeEnabled = (item: PropertyFilterBuilderRuleGroupItem) => {
+    if (isPropertyFilterBuilderRuleGroup(item)) {
+      for (const itm of item.items) {
+        if (shouldApplyButtonBeEnabled(itm)) {
+          return true;
+        }
+      }
+      return false;
+    } else {
+      return item.operator !== undefined;
+    }
+  };
+
+  const isDisabled = !shouldApplyButtonBeEnabled(rootGroup);
 
   return (
     <>
@@ -159,9 +172,13 @@ function PresentationInstanceFilterDialogContent(props: PresedntationInstanceFil
 function DelayedCenteredProgressRadial() {
   const show = useDelay();
 
-  return show ? (
+  if (!show) {
+    return null;
+  }
+
+  return (
     <div className="presentation-instance-filter-dialog-progress">
       <ProgressRadial indeterminate={true} size="large" />
     </div>
-  ) : null;
+  );
 }
