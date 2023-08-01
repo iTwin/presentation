@@ -8,7 +8,7 @@
 
 import "./PresentationInstanceFilterDialog.scss";
 import { useEffect, useRef, useState } from "react";
-import { PropertyFilter, isPropertyFilterBuilderRuleGroup, usePropertyFilterBuilder } from "@itwin/components-react";
+import { isPropertyFilterBuilderRuleGroup, PropertyFilter, usePropertyFilterBuilder } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Button, Dialog, ProgressRadial } from "@itwin/itwinui-react";
 import { Descriptor } from "@itwin/presentation-common";
