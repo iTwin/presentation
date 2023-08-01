@@ -185,7 +185,7 @@ function TargetSelectControl<TOption, IsMulti extends boolean = boolean>(props: 
   };
 
   return (
-    <components.Control {...props} className="iui-input-with-icon presentation-navigation-property-select-control">
+    <components.Control {...props} className="iui-input-with-icon">
       <components.ValueContainer
         {...props}
         className="iui-select-button presentation-navigation-property-select-input"
@@ -200,6 +200,7 @@ function TargetSelectControl<TOption, IsMulti extends boolean = boolean>(props: 
           size="small"
           onKeyDown={handleInputKeyDown}
           placeholder={translate("navigation-property-editor.select-target-instance")}
+          style={{ border: "none", outline: "none" }}
         />
       </components.ValueContainer>
       <components.DropdownIndicator
