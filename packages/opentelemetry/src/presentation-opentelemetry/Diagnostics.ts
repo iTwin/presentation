@@ -7,7 +7,7 @@
  */
 
 import { Diagnostics, DiagnosticsLogEntry, DiagnosticsScopeLogs } from "@itwin/presentation-common";
-import { context, Context, HrTime, SpanKind, trace } from "@opentelemetry/api";
+import { context, Context, HrTime, SpanKind, SpanStatusCode, trace } from "@opentelemetry/api";
 
 /**
  * Export Presentation diagnostics as OpenTelemetry traces to the given context.
@@ -42,6 +42,9 @@ function exportDiagnosticsLogs(logs: DiagnosticsScopeLogs, ctx?: Context) {
             ...(entry.severity.editor ? { editorSeverity: entry.severity.editor } : undefined),
           };
           thisSpan.addEvent(entry.message, eventAttributes, millisToHrTime(entry.timestamp));
+          if (entry.severity.dev === "error") {
+            thisSpan.setStatus({ code: SpanStatusCode.ERROR, message: entry.message });
+          }
         } else {
           exportDiagnosticsLogs(entry);
         }

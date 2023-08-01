@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import * as sinon from "sinon";
-import { context, Span, SpanKind, trace } from "@opentelemetry/api";
+import { context, Span, SpanKind, SpanStatusCode, trace } from "@opentelemetry/api";
 import { exportDiagnostics } from "../presentation-opentelemetry/Diagnostics";
 
 describe("exportDiagnostics", () => {
@@ -162,6 +162,109 @@ describe("exportDiagnostics", () => {
       },
       [12, 350000000],
     );
+  });
+
+  it("doesn't set span status when logs don't contain errors", () => {
+    const ctx = context.active();
+    exportDiagnostics(
+      {
+        logs: [
+          {
+            scope: "test scope",
+            scopeCreateTimestamp: 12345,
+            duration: 1111,
+            logs: [
+              {
+                severity: { dev: "info", editor: "error" },
+                message: "editor error",
+                category: "test category 1",
+                timestamp: 12350,
+              },
+            ],
+          },
+        ],
+      },
+      ctx,
+    );
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(spanStub.setStatus).to.not.be.called;
+  });
+
+  it("sets span status to 'error' when logs contain errors", () => {
+    const ctx = context.active();
+    exportDiagnostics(
+      {
+        logs: [
+          {
+            scope: "test scope",
+            scopeCreateTimestamp: 12345,
+            duration: 1111,
+            logs: [
+              {
+                severity: { dev: "info", editor: "error" },
+                message: "editor error",
+                category: "test category",
+                timestamp: 12350,
+              },
+              {
+                severity: { dev: "error", editor: "info" },
+                message: "dev error",
+                category: "test category",
+                timestamp: 12360,
+              },
+            ],
+          },
+        ],
+      },
+      ctx,
+    );
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(spanStub.setStatus).to.be.calledOnceWith({
+      code: SpanStatusCode.ERROR,
+      message: "dev error",
+    });
+  });
+
+  it("sets span status to 'error' when nested logs contain errors", () => {
+    const ctx = context.active();
+    exportDiagnostics(
+      {
+        logs: [
+          {
+            scope: "root scope",
+            scopeCreateTimestamp: 12345,
+            duration: 1111,
+            logs: [
+              {
+                scope: "nested scope",
+                scopeCreateTimestamp: 12346,
+                duration: 2222,
+                logs: [
+                  {
+                    severity: { dev: "info", editor: "error" },
+                    message: "editor error",
+                    category: "test category",
+                    timestamp: 12350,
+                  },
+                  {
+                    severity: { dev: "error", editor: "info" },
+                    message: "dev error",
+                    category: "test category",
+                    timestamp: 12360,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      ctx,
+    );
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(spanStub.setStatus).to.be.calledOnceWith({
+      code: SpanStatusCode.ERROR,
+      message: "dev error",
+    });
   });
 
   it("exports nested logs", () => {
