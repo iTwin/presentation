@@ -125,11 +125,7 @@ function PresentationInstanceFilterDialogContent(props: PresedntationInstanceFil
     ) {
       return translate("instance-filter-builder.error-messages.notANumber");
     }
-    let errorMessage = defaultPropertyFilterBuilderRuleValidator(item);
-    if (errorMessage) {
-      return errorMessage;
-    }
-    return undefined;
+    return defaultPropertyFilterBuilderRuleValidator(item);
   };
 
   const { rootGroup, actions, buildFilter } = usePropertyFilterBuilder({
