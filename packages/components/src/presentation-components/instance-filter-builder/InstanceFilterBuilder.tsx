@@ -12,8 +12,14 @@ import { ActionMeta, MultiValue, SingleValue } from "react-select";
 import { BehaviorSubject, from, of } from "rxjs";
 import { map } from "rxjs/internal/operators/map";
 import { switchAll } from "rxjs/internal/operators/switchAll";
-import { PropertyDescription } from "@itwin/appui-abstract";
-import { PropertyFilterBuilderRenderer, PropertyFilterBuilderRendererProps } from "@itwin/components-react";
+import { PropertyDescription, StandardTypeNames } from "@itwin/appui-abstract";
+import {
+  PropertyFilterBuilderRenderer,
+  PropertyFilterBuilderRendererProps,
+  PropertyFilterBuilderRuleValue,
+  PropertyFilterBuilderRuleValueRendererProps,
+  PropertyFilterRuleOperator,
+} from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo, Descriptor } from "@itwin/presentation-common";
@@ -23,6 +29,7 @@ import { getIModelMetadataProvider } from "./ECMetadataProvider";
 import { MultiTagSelect } from "./MultiTagSelect";
 import { PresentationInstanceFilterProperty } from "./PresentationInstanceFilterProperty";
 import { createInstanceFilterPropertyInfos, getInstanceFilterFieldName, InstanceFilterPropertyInfo } from "./Utils";
+import { UniquePropertyValuesSelector } from "../properties/UniquePropertyValuesSelector";
 
 /**
  * Props for [[InstanceFilterBuilder]] component.
@@ -43,6 +50,8 @@ export interface InstanceFilterBuilderProps extends PropertyFilterBuilderRendere
   imodel: IModelConnection;
   /** [Descriptor]($presentation-common) that will be used for getting [[navigationPropertyEditorContext]]. */
   descriptor: Descriptor;
+  /** Should unique values renderer be enabled */
+  enableUniqueValuesRenderer?: boolean;
 }
 
 /**
@@ -51,7 +60,7 @@ export interface InstanceFilterBuilderProps extends PropertyFilterBuilderRendere
  * @internal
  */
 export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
-  const { selectedClasses, classes, onClassSelected, onClassDeselected, onClearClasses, imodel, descriptor, ...restProps } = props;
+  const { selectedClasses, classes, onClassSelected, onClassDeselected, onClearClasses, imodel, descriptor, enableUniqueValuesRenderer, ...restProps } = props;
 
   const navigationPropertyEditorContextValue = useFilterBuilderNavigationPropertyEditorContext(imodel, descriptor);
 
@@ -93,7 +102,14 @@ export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
       </div>
       <div className="presentation-property-filter-builder">
         <navigationPropertyEditorContext.Provider value={navigationPropertyEditorContextValue}>
-          <PropertyFilterBuilderRenderer {...restProps} />
+          <PropertyFilterBuilderRenderer
+            {...restProps}
+            ruleValueRenderer={
+              enableUniqueValuesRenderer
+                ? (pr: PropertyFilterBuilderRuleValueRendererProps) => <UniqueValuesRenderer {...pr} imodel={imodel} descriptor={descriptor} />
+                : undefined
+            }
+          />
         </navigationPropertyEditorContext.Provider>
       </div>
     </div>
@@ -310,4 +326,14 @@ async function computeClassesByProperty(classes: ClassInfo[], property: Instance
   }
 
   return classesWithProperty;
+}
+
+function UniqueValuesRenderer(props: PropertyFilterBuilderRuleValueRendererProps & { imodel: IModelConnection; descriptor: Descriptor }) {
+  if (
+    props.property.typename !== StandardTypeNames.Navigation &&
+    (props.operator === PropertyFilterRuleOperator.IsEqual || props.operator === PropertyFilterRuleOperator.IsNotEqual)
+  ) {
+    return <UniquePropertyValuesSelector {...props} />;
+  }
+  return <PropertyFilterBuilderRuleValue {...props} />;
 }

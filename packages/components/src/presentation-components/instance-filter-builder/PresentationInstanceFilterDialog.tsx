@@ -51,6 +51,8 @@ export interface PresentationInstanceFilterDialogProps {
   title?: React.ReactNode;
   /** Initial filter that will be show when component is mounted. */
   initialFilter?: PresentationInstanceFilterInfo;
+  /** Should unique values renderer be enabled */
+  enableUniqueValuesRenderer?: boolean;
 }
 
 /**
@@ -108,7 +110,7 @@ interface PresedntationInstanceFilterDialogContentProps extends Omit<Presentatio
 }
 
 function PresentationInstanceFilterDialogContent(props: PresedntationInstanceFilterDialogContentProps) {
-  const { onApply, initialFilter, descriptor, imodel, ruleGroupDepthLimit, filterResultCountRenderer, onClose } = props;
+  const { onApply, initialFilter, descriptor, imodel, ruleGroupDepthLimit, filterResultCountRenderer, onClose, enableUniqueValuesRenderer } = props;
   const [initialPropertyFilter] = useState(() => (initialFilter ? convertPresentationFilterToPropertyFilter(descriptor, initialFilter.filter) : undefined));
 
   const { rootGroup, actions, buildFilter } = usePropertyFilterBuilder({
@@ -142,6 +144,7 @@ function PresentationInstanceFilterDialogContent(props: PresedntationInstanceFil
       <Dialog.Content className="presentation-instance-filter-content">
         <InstanceFilterBuilder
           {...filteringProps}
+          enableUniqueValuesRenderer={enableUniqueValuesRenderer}
           rootGroup={rootGroup}
           actions={actions}
           ruleGroupDepthLimit={ruleGroupDepthLimit}

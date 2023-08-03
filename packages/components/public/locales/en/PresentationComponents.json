@@ -35,5 +35,8 @@
   "navigation-property-editor": {
     "select-target-instance": "Select target instance",
     "loading-target-instances": "Loading target instances"
+  },
+  "unique-values-property-editor": {
+    "select-values": "Select provided value(s)"
   }
 }
