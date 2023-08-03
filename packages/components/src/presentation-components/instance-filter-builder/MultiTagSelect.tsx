@@ -16,6 +16,7 @@ import Component, {
   components,
   ControlProps,
   DropdownIndicatorProps,
+  GroupBase,
   MenuProps,
   MultiValueGenericProps,
   MultiValueProps,
@@ -24,7 +25,8 @@ import Component, {
   Props,
   ValueContainerProps,
 } from "react-select";
-import { SvgCaretDown, SvgCheckmarkSmall, SvgCloseSmall } from "@itwin/itwinui-icons-react";
+import { AsyncPaginate, AsyncPaginateProps } from "react-select-async-paginate";
+import { SvgCaretDown, SvgCaretDownSmall, SvgCheckmarkSmall, SvgCloseSmall } from "@itwin/itwinui-icons-react";
 import { useResizeObserver } from "../common/Utils";
 
 /** @internal */
@@ -121,7 +123,7 @@ function TagMultiValue<TOption, IsMulti extends boolean = boolean>({ children, .
 
 function TagContainer<TOption, IsMulti extends boolean = boolean>({ children, ...props }: MultiValueGenericProps<TOption, IsMulti>) {
   return (
-    <components.MultiValueContainer {...props} innerProps={{ ...props.innerProps, className: "iui-tag" }}>
+    <components.MultiValueContainer {...props} innerProps={{ ...props.innerProps, className: "iui-select-tag" }}>
       {children}
     </components.MultiValueContainer>
   );
@@ -141,6 +143,7 @@ function TagRemove<TOption, IsMulti extends boolean = boolean>(props: MultiValue
     className: "iui-button iui-tag-button",
     ["data-iui-variant"]: "borderless",
     ["data-iui-size"]: "small",
+    style: { background: "none" },
   };
   return (
     <components.MultiValueRemove {...props} innerProps={innerProps}>
@@ -152,9 +155,21 @@ function TagRemove<TOption, IsMulti extends boolean = boolean>(props: MultiValue
 function TagSelectDropdownIndicator<TOption, IsMulti extends boolean = boolean>({ children: _, ...props }: DropdownIndicatorProps<TOption, IsMulti>) {
   return (
     <components.DropdownIndicator {...props}>
-      <span data-testid="multi-tag-select-dropdownIndicator" className="iui-end-icon iui-actionable" style={{ padding: 0 }}>
+      <span
+        data-testid="multi-tag-select-dropdownIndicator"
+        className={classnames("iui-end-icon iui-actionable", { "iui-open": props.selectProps.menuIsOpen })}
+        style={{ padding: 0 }}
+      >
         <SvgCaretDown />
       </span>
+    </components.DropdownIndicator>
+  );
+}
+
+function TagSelectDropdownIndicatorSmall<TOption, IsMulti extends boolean = boolean>({ children: _, ...props }: DropdownIndicatorProps<TOption, IsMulti>) {
+  return (
+    <components.DropdownIndicator {...props} className={classnames("iui-end-icon iui-actionable", { "iui-open": props.selectProps.menuIsOpen })}>
+      <SvgCaretDownSmall />
     </components.DropdownIndicator>
   );
 }
@@ -166,5 +181,64 @@ function TagSelectClearIndicator<TOption, IsMulti extends boolean = boolean>({ c
         <SvgCloseSmall aria-hidden />
       </span>
     </components.ClearIndicator>
+  );
+}
+
+export function AsyncMultiTagSelect<OptionType, Group extends GroupBase<OptionType>, Additional>(
+  props: AsyncPaginateProps<OptionType, Group, Additional, true>,
+) {
+  const { ref: selectRef, width } = useResizeObserver();
+  return (
+    <div ref={selectRef}>
+      <AsyncPaginate
+        {...props}
+        styles={{
+          control: () => ({
+            display: "grid",
+            gridTemplateColumns: "auto auto",
+            gridTemplateRows: "calc(var(--iui-size-l) + var(--iui-size-3xs))",
+            height: "27px",
+            minHeight: "27px",
+            padding: "0 0 0 var(--iui-size-s)",
+            gap: "2px",
+          }),
+          container: () => ({ width: "auto" }),
+          menu: () => ({ position: "absolute", zIndex: 9999, width }),
+          menuList: (style) => ({ ...style, padding: 0 }),
+          option: () => ({ whiteSpace: "nowrap", width: "max-content", minWidth: "100%" }),
+          valueContainer: (style) => ({
+            ...style,
+            padding: 0,
+            flexWrap: "nowrap",
+            gridTemplateRows: "calc(var(--iui-size-l) + var(--iui-size-3xs))",
+            alignItems: "center",
+            height: "27px",
+          }),
+          indicatorsContainer: () => ({ marginLeft: "auto", display: "flex", width: "calc(var(--iui-size-xl) + var(--iui-size-3xs))", marginRight: "1px" }),
+          multiValue: () => ({ margin: 0 }),
+          multiValueLabel: () => ({}),
+          placeholder: (style) => ({
+            ...style,
+            color: "var(--iui-color-text-disabled)",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            marginLeft: "0",
+          }),
+        }}
+        components={{
+          Control: TagSelectControl,
+          Menu: TagSelectMenu,
+          ValueContainer: TagSelectValueContainer,
+          MultiValue: TagMultiValue,
+          Option: TagSelectOption,
+          DropdownIndicator: TagSelectDropdownIndicatorSmall,
+          ClearIndicator: TagSelectClearIndicator,
+          IndicatorSeparator: () => null,
+          LoadingIndicator: () => null,
+        }}
+        isMulti={true}
+      />
+    </div>
   );
 }

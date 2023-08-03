@@ -28,7 +28,7 @@ describe("MultiTagSelect", () => {
       <MultiTagSelect options={options} getOptionLabel={(option) => option.label} getOptionValue={(option) => option.value} value={[options[1], options[2]]} />,
     );
 
-    const tags = container.querySelectorAll(".iui-tag");
+    const tags = container.querySelectorAll(".iui-select-tag");
     expect(tags).to.have.lengthOf(2);
   });
 

@@ -21,6 +21,7 @@ internal;FieldInfo
 internal;FieldRecord
 internal;FilteredPresentationTreeDataProvider 
 internal;FilteredPresentationTreeDataProviderProps
+internal;findBaseExpressionClass(imodel: IModelConnection, propertyClasses: ClassInfo[]): Promise
 internal;getFavoritesCategory: () => CategoryDescription
 public;IContentDataProvider 
 public;IFavoritePropertiesDataProvider
@@ -39,6 +40,9 @@ beta;NavigationPropertyEditor
 beta;navigationPropertyEditorContext: Context
 beta;NavigationPropertyEditorContextProps
 beta;NavigationPropertyTargetEditor 
+internal;NumericEditorName = "presentation-numeric-editor"
+internal;NumericPropertyEditor 
+internal;NumericPropertyEditorBase 
 public;PresentationComponentsLoggerCategory
 beta;PresentationInfoTreeNodeItem 
 beta;PresentationInstanceFilter = PresentationInstanceFilterConditionGroup | PresentationInstanceFilterCondition

@@ -10,6 +10,7 @@ import { getPropertyFilterOperatorLabel, PropertyFilterRuleGroupOperator, Proper
 import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { PropertiesField, PropertyValueFormat } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
@@ -44,10 +45,17 @@ describe("PresentationInstanceFilter", () => {
     label: "propertiesField3",
     category,
   });
+  const navigationPropertyField = createTestPropertiesContentField({
+    properties: [{ property: { classInfo, name: "navField", type: "navigation" } }],
+    name: "navField",
+    label: "navigationField",
+    category,
+    type: { valueFormat: PropertyValueFormat.Primitive, typeName: "navigation" },
+  });
   const descriptor = createTestContentDescriptor({
     selectClasses: [{ selectClassInfo: classInfo, isSelectPolymorphic: false }],
     categories: [category],
-    fields: [propertiesField, propertiesField2, propertiesField3],
+    fields: [propertiesField, propertiesField2, propertiesField3, navigationPropertyField],
   });
   const initialFilter: PresentationInstanceFilterInfo = {
     filter: {
@@ -153,5 +161,65 @@ describe("PresentationInstanceFilter", () => {
     expect(rule1).to.not.be.null;
     const rule2 = queryByDisplayValue(propertiesField2.label);
     expect(rule2).to.not.be.null;
+  });
+
+  describe("UniqueValuesRenderer", () => {
+    const createFilter = (operator: PropertyFilterRuleOperator, field?: PropertiesField): PresentationInstanceFilterInfo => {
+      return {
+        filter: {
+          operator: PropertyFilterRuleGroupOperator.Or,
+          conditions: [
+            {
+              field: field ?? propertiesField,
+              operator,
+              value: undefined,
+            },
+          ],
+        },
+        usedClasses: [],
+      };
+    };
+
+    it("renders <UniquePropertyValuesSelector /> when operator is `IsEqual` and property is not equal to `navigation`", async () => {
+      const filter = createFilter(PropertyFilterRuleOperator.IsEqual);
+      const { queryByText } = render(
+        <PresentationInstanceFilterBuilder
+          imodel={imodelMock.object}
+          descriptor={descriptor}
+          onInstanceFilterChanged={() => {}}
+          initialFilter={filter}
+          enableUniqueValuesRenderer
+        />,
+      );
+      await waitFor(() => expect(queryByText("unique-values-property-editor.select-values")).to.not.be.null);
+    });
+
+    it("renders <UniquePropertyValuesSelector /> when operator is `IsNotEqual` and property is not equal to `navigation`", async () => {
+      const filter = createFilter(PropertyFilterRuleOperator.IsNotEqual);
+      const { queryByText } = render(
+        <PresentationInstanceFilterBuilder
+          imodel={imodelMock.object}
+          descriptor={descriptor}
+          onInstanceFilterChanged={() => {}}
+          initialFilter={filter}
+          enableUniqueValuesRenderer
+        />,
+      );
+      await waitFor(() => expect(queryByText("unique-values-property-editor.select-values")).to.not.be.null);
+    });
+
+    it("does not render <UniquePropertyValuesSelector /> when the property is equal to `navigation`", async () => {
+      const filter = createFilter(PropertyFilterRuleOperator.IsEqual, navigationPropertyField);
+      const { queryByText } = render(
+        <PresentationInstanceFilterBuilder
+          imodel={imodelMock.object}
+          descriptor={descriptor}
+          onInstanceFilterChanged={() => {}}
+          initialFilter={filter}
+          enableUniqueValuesRenderer
+        />,
+      );
+      await waitFor(() => expect(queryByText("unique-values-property-editor.select-values")).to.be.null);
+    });
   });
 });
