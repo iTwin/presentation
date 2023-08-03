@@ -34,6 +34,8 @@ export interface PresentationInstanceFilterDialogProps extends Omit<Presentation
   filterResultCountRenderer?: (filter?: PresentationInstanceFilterInfo) => React.ReactNode;
   /** Dialog title. */
   title?: React.ReactNode;
+  /** Should unique values renderer be enabled */
+  enableUniqueValuesRenderer?: boolean;
 }
 
 /**
