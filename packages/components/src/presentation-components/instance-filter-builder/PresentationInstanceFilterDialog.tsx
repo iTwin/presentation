@@ -111,23 +111,6 @@ function PresentationInstanceFilterDialogContent(props: PresedntationInstanceFil
   const { onApply, initialFilter, descriptor, imodel, ruleGroupDepthLimit, filterResultCountRenderer, onClose } = props;
   const [initialPropertyFilter] = useState(() => (initialFilter ? convertPresentationFilterToPropertyFilter(descriptor, initialFilter.filter) : undefined));
 
-  const numericInputValidator = (item: PropertyFilterBuilderRule) => {
-    if (
-      item.value &&
-      item.value.valueFormat === PropertyValueFormat.Primitive &&
-      item.property &&
-      (item.property.typename === StandardTypeNames.Number ||
-        item.property.typename === StandardTypeNames.Int ||
-        item.property.typename === StandardTypeNames.Float ||
-        item.property.typename === StandardTypeNames.Double) &&
-      item.value.value === undefined &&
-      item.value.displayValue !== ""
-    ) {
-      return translate("instance-filter-builder.error-messages.notANumber");
-    }
-    return defaultPropertyFilterBuilderRuleValidator(item);
-  };
-
   const { rootGroup, actions, buildFilter } = usePropertyFilterBuilder({
     initialFilter: initialPropertyFilter,
     ruleValidator: numericInputValidator,
@@ -192,5 +175,25 @@ function DelayedCenteredProgressRadial() {
     <div className="presentation-instance-filter-dialog-progress">
       <ProgressRadial indeterminate={true} size="large" />
     </div>
+  );
+}
+
+function numericInputValidator(item: PropertyFilterBuilderRule) {
+  if (
+    item.value &&
+    item.value.valueFormat === PropertyValueFormat.Primitive &&
+    item.property &&
+    istypenameNumeric(item.property.typename) &&
+    item.value.value === undefined &&
+    item.value.displayValue !== ""
+  ) {
+    return translate("instance-filter-builder.error-messages.notANumber");
+  }
+  return defaultPropertyFilterBuilderRuleValidator(item);
+}
+
+function istypenameNumeric(typename: string) {
+  return (
+    typename === StandardTypeNames.Number || typename === StandardTypeNames.Int || typename === StandardTypeNames.Float || typename === StandardTypeNames.Double
   );
 }
