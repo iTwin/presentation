@@ -21,7 +21,10 @@
     "schema": "Schema:",
     "apply": "Apply",
     "cancel": "Cancel",
-    "filter": "Filter"
+    "filter": "Filter",
+    "error-messages": {
+      "notANumber": "Value is not a number"
+    }
   },
   "tree": {
     "no-filtered-children": "There are no child nodes matching current filter",

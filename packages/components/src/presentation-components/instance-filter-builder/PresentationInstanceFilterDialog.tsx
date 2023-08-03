@@ -8,7 +8,14 @@
 
 import "./PresentationInstanceFilterDialog.scss";
 import { useEffect, useState } from "react";
-import { isPropertyFilterBuilderRuleGroup, PropertyFilterBuilderRuleGroupItem, usePropertyFilterBuilder } from "@itwin/components-react";
+import { PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
+import {
+  defaultPropertyFilterBuilderRuleValidator,
+  isPropertyFilterBuilderRuleGroup,
+  PropertyFilterBuilderRule,
+  PropertyFilterBuilderRuleGroupItem,
+  usePropertyFilterBuilder,
+} from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Button, Dialog, ProgressRadial } from "@itwin/itwinui-react";
 import { Descriptor } from "@itwin/presentation-common";
@@ -104,14 +111,36 @@ function PresentationInstanceFilterDialogContent(props: PresedntationInstanceFil
   const { onApply, initialFilter, descriptor, imodel, ruleGroupDepthLimit, filterResultCountRenderer, onClose } = props;
   const [initialPropertyFilter] = useState(() => (initialFilter ? convertPresentationFilterToPropertyFilter(descriptor, initialFilter.filter) : undefined));
 
-  const { rootGroup, actions, validate } = usePropertyFilterBuilder({
+  const numericInputValidator = (item: PropertyFilterBuilderRule) => {
+    if (
+      item.value &&
+      item.value.valueFormat === PropertyValueFormat.Primitive &&
+      item.property &&
+      (item.property.typename === StandardTypeNames.Number ||
+        item.property.typename === StandardTypeNames.Int ||
+        item.property.typename === StandardTypeNames.Float ||
+        item.property.typename === StandardTypeNames.Double) &&
+      item.value.value === undefined &&
+      item.value.displayValue !== ""
+    ) {
+      return translate("instance-filter-builder.error-messages.notANumber");
+    }
+    let errorMessage = defaultPropertyFilterBuilderRuleValidator(item);
+    if (errorMessage) {
+      return errorMessage;
+    }
+    return undefined;
+  };
+
+  const { rootGroup, actions, buildFilter } = usePropertyFilterBuilder({
     initialFilter: initialPropertyFilter,
+    ruleValidator: numericInputValidator,
   });
 
   const filteringProps = usePresentationInstanceFilteringProps(descriptor, imodel, initialFilter?.usedClasses);
 
   const applyButtonHandle = () => {
-    const filter = validate();
+    const filter = buildFilter();
     if (filter) {
       const presentationInstanceFilter = createPresentationInstanceFilter(descriptor, filter);
       if (presentationInstanceFilter) {
