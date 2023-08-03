@@ -303,6 +303,9 @@ export interface FilteredPresentationTreeDataProviderProps {
 }
 
 // @internal (undocumented)
+export function findBaseExpressionClass(imodel: IModelConnection, propertyClasses: ClassInfo[]): Promise<ClassInfo>;
+
+// @internal (undocumented)
 export const getFavoritesCategory: () => CategoryDescription;
 
 // @public
@@ -465,6 +468,7 @@ export function PresentationInstanceFilterBuilder(props: PresentationInstanceFil
 // @beta
 export interface PresentationInstanceFilterBuilderProps {
     descriptor: Descriptor;
+    enableUniqueValuesRenderer?: boolean;
     imodel: IModelConnection;
     initialFilter?: PresentationInstanceFilterInfo;
     onInstanceFilterChanged: (filter?: PresentationInstanceFilterInfo) => void;
@@ -490,6 +494,7 @@ export function PresentationInstanceFilterDialog(props: PresentationInstanceFilt
 // @beta
 export interface PresentationInstanceFilterDialogProps extends Omit<PresentationInstanceFilterBuilderProps, "onInstanceFilterChanged" | "descriptor"> {
     descriptor: (() => Promise<Descriptor>) | Descriptor;
+    enableUniqueValuesRenderer?: boolean;
     filterResultCountRenderer?: (filter?: PresentationInstanceFilterInfo) => React.ReactNode;
     isOpen: boolean;
     onApply: (filter: PresentationInstanceFilterInfo) => void;

@@ -1,0 +1,181 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+
+import { expect } from "chai";
+import sinon from "sinon";
+import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
+import { EmptyLocalization } from "@itwin/core-common";
+import { IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { Presentation } from "@itwin/presentation-frontend";
+import { render, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { UniquePropertyValuesSelector } from "../../presentation-components/properties/UniquePropertyValuesSelector";
+import { createTestECClassInfo } from "../_helpers/Common";
+import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
+
+describe("UniquePropertyValuesSelector", () => {
+  beforeEach(async () => {
+    const localization = new EmptyLocalization();
+    sinon.stub(IModelApp, "initialized").get(() => true);
+    sinon.stub(IModelApp, "localization").get(() => localization);
+    await Presentation.initialize();
+  });
+
+  afterEach(async () => {
+    Presentation.terminate();
+    sinon.restore();
+  });
+
+  const category = createTestCategoryDescription({ name: "root", label: "Root" });
+  const classInfo = createTestECClassInfo();
+
+  const propertiesField = createTestPropertiesContentField({
+    properties: [{ property: { classInfo, name: "prop1", type: "string" } }],
+    name: "propertyName",
+    label: "propertiesField",
+    category,
+  });
+
+  const descriptor = createTestContentDescriptor({
+    selectClasses: [{ selectClassInfo: classInfo, isSelectPolymorphic: false }],
+    categories: [category],
+    fields: [propertiesField],
+  });
+
+  const propertyDescription = {
+    name: "#propertyName",
+    displayLabel: "propertiesField",
+    typename: "number",
+    editor: undefined,
+  };
+
+  const convertToPropertyValue = (displayValue: string[], groupedRawValues: string[][]): PropertyValue => {
+    return {
+      valueFormat: PropertyValueFormat.Primitive,
+      displayValue: JSON.stringify(displayValue),
+      value: JSON.stringify(groupedRawValues),
+    };
+  };
+
+  const testImodel = {} as IModelConnection;
+
+  it("invokes `onChange` when item from the menu is selected and then deselected", async () => {
+    const user = userEvent.setup();
+    const spy = sinon.spy();
+
+    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+      total: 2,
+      items: [
+        { displayValue: "TestValue1", groupedRawValues: ["TestValue1"] },
+        { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
+      ],
+    });
+
+    const { queryByTestId, queryByText } = render(
+      <UniquePropertyValuesSelector property={propertyDescription} onChange={spy} imodel={testImodel} descriptor={descriptor} />,
+    );
+
+    // open menu
+    const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
+    await user.click(selector!);
+
+    // click on menu item
+    const menuItem = await waitFor(() => queryByText("TestValue1"));
+    await user.click(menuItem!);
+    expect(spy).to.be.calledWith({
+      valueFormat: PropertyValueFormat.Primitive,
+      displayValue: JSON.stringify(["TestValue1"]),
+      value: JSON.stringify([["TestValue1"]]),
+    });
+
+    // open menu again
+    await user.click(selector!);
+
+    // click on `clear` button
+    const clearIndicator = await waitFor(() => queryByTestId("multi-tag-select-clearIndicator"));
+    await user.click(clearIndicator!);
+    await waitFor(() =>
+      expect(spy).to.be.calledWith({
+        valueFormat: PropertyValueFormat.Primitive,
+        displayValue: undefined,
+        value: undefined,
+      }),
+    );
+  });
+
+  it("menu showss `No options` message when there is no `fieldDescriptor`", async () => {
+    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+      total: 2,
+      items: [
+        { displayValue: "TestValue1", groupedRawValues: ["TestValue1"] },
+        { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
+      ],
+    });
+    const user = userEvent.setup();
+    const description: PropertyDescription = {
+      name: "",
+      displayLabel: "",
+      typename: "",
+      editor: undefined,
+    };
+    const { queryByText } = render(<UniquePropertyValuesSelector property={description} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />);
+
+    const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
+    await user.click(selector!);
+
+    expect(queryByText("No options")).to.not.be.null;
+  });
+
+  it("sets provided value", () => {
+    const displayValue = ["TestValue"];
+    const groupedRawValues = [["TestValue"]];
+    const value = convertToPropertyValue(displayValue, groupedRawValues);
+
+    const { queryByText } = render(
+      <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} value={value} />,
+    );
+
+    expect(queryByText(displayValue[0])).to.not.be.null;
+  });
+
+  it("selects multiple provided values", () => {
+    const displayValue = ["TestValue1", "TestValue2"];
+    const groupedRawValues = [["TestValue1"], ["TestValue2"]];
+    const value = convertToPropertyValue(displayValue, groupedRawValues);
+
+    const { queryByText } = render(
+      <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} value={value} />,
+    );
+
+    expect(queryByText(displayValue[0])).to.not.be.null;
+    expect(queryByText(displayValue[1])).to.not.be.null;
+  });
+
+  it("does not set value when provided value is invalid", () => {
+    const { queryByText } = render(
+      <UniquePropertyValuesSelector
+        property={propertyDescription}
+        onChange={() => {}}
+        imodel={testImodel}
+        descriptor={descriptor}
+        value={{ valueFormat: PropertyValueFormat.Primitive, displayValue: "a", value: "a" }}
+      />,
+    );
+    expect(queryByText("unique-values-property-editor.select-values")).to.not.be.null;
+  });
+
+  it("sets empty text if provided value is parsed to null", () => {
+    const { container } = render(
+      <UniquePropertyValuesSelector
+        property={propertyDescription}
+        onChange={() => {}}
+        imodel={testImodel}
+        descriptor={descriptor}
+        value={{ valueFormat: PropertyValueFormat.Primitive, displayValue: "[null]", value: "[[null]]" }}
+      />,
+    );
+    expect(container.querySelector(".iui-tag-label")?.innerHTML).to.be.eq("");
+  });
+});
