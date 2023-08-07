@@ -23,7 +23,7 @@
     "cancel": "Cancel",
     "filter": "Filter",
     "error-messages": {
-      "notANumber": "Value is not a number"
+      "notANumber": "Value must be a number"
     }
   },
   "tree": {

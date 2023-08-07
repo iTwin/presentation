@@ -122,12 +122,14 @@ function PresentationInstanceFilterDialogContent(props: PresedntationInstanceFil
 
   const applyButtonHandle = () => {
     const filter = buildFilter();
-    if (filter) {
-      const presentationInstanceFilter = createPresentationInstanceFilter(descriptor, filter);
-      if (presentationInstanceFilter) {
-        onApply({ filter: presentationInstanceFilter, usedClasses: filteringProps.selectedClasses });
-      }
+    if (!filter) {
+      return;
     }
+    const presentationInstanceFilter = createPresentationInstanceFilter(descriptor, filter);
+    if (!presentationInstanceFilter) {
+      return;
+    }
+    onApply({ filter: presentationInstanceFilter, usedClasses: filteringProps.selectedClasses });
   };
 
   const hasNonEmptyRule = (item: PropertyFilterBuilderRuleGroupItem) => {
