@@ -538,7 +538,7 @@ describe("convertToInstanceFilterDefinition", () => {
     });
   });
 
-  describe("handleStringifiedValues", () => {
+  describe("handles unqiue values", () => {
     const testImodel = {} as IModelConnection;
     const property = createTestPropertyInfo();
     const field = createTestPropertiesContentField({ properties: [{ property }] });
