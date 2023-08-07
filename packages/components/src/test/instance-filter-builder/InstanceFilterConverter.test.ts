@@ -10,7 +10,7 @@ import { PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ClassInfo, RelationshipPath, PropertyValueFormat as TypeValueFormat } from "@itwin/presentation-common";
+import { ClassInfo, RelationshipPath, PropertyValueFormat as TypeValueFormat, Value } from "@itwin/presentation-common";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import { convertToInstanceFilterDefinition } from "../../presentation-components/instance-filter-builder/InstanceFilterConverter";
 import { PresentationInstanceFilterCondition, PresentationInstanceFilterConditionGroup } from "../../presentation-components/instance-filter-builder/Types";
@@ -549,11 +549,15 @@ describe("convertToInstanceFilterDefinition", () => {
     ];
     const displayValue = ["0.001", "0.002"];
 
-    const createFilter = (operator: PropertyFilterRuleOperator): PresentationInstanceFilterCondition => {
+    const createFilter = (operator: PropertyFilterRuleOperator, customValue?: Value, customDisplayValue?: string): PresentationInstanceFilterCondition => {
       return {
         field,
         operator,
-        value: { valueFormat: PropertyValueFormat.Primitive, value: JSON.stringify(groupedRawValues), displayValue: JSON.stringify(displayValue) },
+        value: {
+          valueFormat: PropertyValueFormat.Primitive,
+          value: customValue ?? JSON.stringify(groupedRawValues),
+          displayValue: customDisplayValue ?? JSON.stringify(displayValue),
+        },
       };
     };
 
@@ -573,6 +577,13 @@ describe("convertToInstanceFilterDefinition", () => {
       expect(expression).to.be.eq(
         `(${propertyAccessor} <> ${groupedRawValues[0][0]} AND ${propertyAccessor} <> ${groupedRawValues[0][1]} AND ${propertyAccessor} <> ${groupedRawValues[1][0]} AND ${propertyAccessor} <> ${groupedRawValues[1][1]})`,
       );
+    });
+
+    it("converts values when `deserializeDisplayValueGroupArray` returns `undefined`", async () => {
+      const filter = createFilter(PropertyFilterRuleOperator.IsEqual, "a", "a");
+
+      const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+      expect(expression).to.be.eq(`${propertyAccessor} = "a"`);
     });
   });
 });

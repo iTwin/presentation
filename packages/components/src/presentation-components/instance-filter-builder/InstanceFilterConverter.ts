@@ -221,14 +221,15 @@ function isFilterConditionGroup(obj: PresentationInstanceFilter): obj is Present
 
 function handleStringifiedValues(filter: PresentationInstanceFilterCondition, serializedDisplayValues: string, serializedGroupedRawValues: string) {
   const { field, operator } = filter;
+
+  if (operator !== PropertyFilterRuleOperator.IsEqual && operator !== PropertyFilterRuleOperator.IsNotEqual) {
+    return undefined;
+  }
+
   let selectedValueIndex = 0;
 
   const { displayValues, groupedRawValues } = deserializeDisplayValueGroupArray(serializedDisplayValues, serializedGroupedRawValues);
-  if (
-    displayValues === undefined ||
-    groupedRawValues === undefined ||
-    (operator !== PropertyFilterRuleOperator.IsEqual && operator !== PropertyFilterRuleOperator.IsNotEqual)
-  ) {
+  if (displayValues === undefined || groupedRawValues === undefined) {
     return undefined;
   }
 
