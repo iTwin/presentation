@@ -224,7 +224,11 @@ function handleStringifiedValues(filter: PresentationInstanceFilterCondition, se
   let selectedValueIndex = 0;
 
   const { displayValues, groupedRawValues } = deserializeDisplayValueGroupArray(serializedDisplayValues, serializedGroupedRawValues);
-  if (displayValues === undefined || groupedRawValues === undefined) {
+  if (
+    displayValues === undefined ||
+    groupedRawValues === undefined ||
+    (operator !== PropertyFilterRuleOperator.IsEqual && operator !== PropertyFilterRuleOperator.IsNotEqual)
+  ) {
     return undefined;
   }
 
