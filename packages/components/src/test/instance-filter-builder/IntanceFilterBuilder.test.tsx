@@ -21,13 +21,13 @@ import { ClassInfo, Descriptor, NavigationPropertyInfo, PropertiesField, Propert
 import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
-import { PresentationInstanceFilterInfo } from "../../presentation-components";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import {
   InstanceFilterBuilder,
   useFilterBuilderNavigationPropertyEditorContext,
   usePresentationInstanceFilteringProps,
 } from "../../presentation-components/instance-filter-builder/InstanceFilterBuilder";
+import { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/Types";
 import { convertPresentationFilterToPropertyFilter, INSTANCE_FILTER_FIELD_SEPARATOR } from "../../presentation-components/instance-filter-builder/Utils";
 import { createTestECClassInfo, stubRaf } from "../_helpers/Common";
 import {
