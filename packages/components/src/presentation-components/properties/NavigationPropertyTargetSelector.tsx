@@ -200,6 +200,7 @@ function TargetSelectControl<TOption, IsMulti extends boolean = boolean>(props: 
           size="small"
           onKeyDown={handleInputKeyDown}
           placeholder={translate("navigation-property-editor.select-target-instance")}
+          style={{ border: "none", outline: "none" }}
         />
       </components.ValueContainer>
       <components.DropdownIndicator

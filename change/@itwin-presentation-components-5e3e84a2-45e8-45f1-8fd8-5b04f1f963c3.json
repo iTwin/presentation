@@ -1,0 +1,7 @@
+{
+  "type": "minor",
+  "comment": "`InstanceFilterDialog`: Show error message when input is invalid",
+  "packageName": "@itwin/presentation-components",
+  "email": "124659623+simasjar@users.noreply.github.com",
+  "dependentChangeType": "patch"
+}

@@ -8,7 +8,7 @@
 
 import { DelayLoadedTreeNodeItem, ImmediatelyLoadedTreeNodeItem, TreeNodeItem } from "@itwin/components-react";
 import { Descriptor, NodeKey } from "@itwin/presentation-common";
-import { PresentationInstanceFilterInfo } from "../instance-filter-builder/PresentationInstanceFilterBuilder";
+import { PresentationInstanceFilterInfo } from "../instance-filter-builder/Types";
 
 /**
  * Data structure that describes information for tree item hierarchy level filtering.

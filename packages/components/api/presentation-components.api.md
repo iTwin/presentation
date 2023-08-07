@@ -492,13 +492,16 @@ export interface PresentationInstanceFilterConditionGroup {
 export function PresentationInstanceFilterDialog(props: PresentationInstanceFilterDialogProps): JSX.Element;
 
 // @beta
-export interface PresentationInstanceFilterDialogProps extends Omit<PresentationInstanceFilterBuilderProps, "onInstanceFilterChanged" | "descriptor"> {
+export interface PresentationInstanceFilterDialogProps {
     descriptor: (() => Promise<Descriptor>) | Descriptor;
     enableUniqueValuesRenderer?: boolean;
     filterResultCountRenderer?: (filter?: PresentationInstanceFilterInfo) => React.ReactNode;
+    imodel: IModelConnection;
+    initialFilter?: PresentationInstanceFilterInfo;
     isOpen: boolean;
     onApply: (filter: PresentationInstanceFilterInfo) => void;
     onClose: () => void;
+    ruleGroupDepthLimit?: number;
     title?: React.ReactNode;
 }
 
@@ -560,6 +563,8 @@ export interface PresentationPropertyDataProviderProps extends DiagnosticsProps 
 // @public
 export class PresentationTreeDataProvider implements IPresentationTreeDataProvider, IDisposable {
     constructor(props: PresentationTreeDataProviderProps);
+    // @internal
+    createTreeNodeItem(node: Node_2, parentId?: string): PresentationTreeNodeItem;
     dispose(): void;
     getFilteredNodePaths(filter: string): Promise<NodePathElement[]>;
     // @deprecated

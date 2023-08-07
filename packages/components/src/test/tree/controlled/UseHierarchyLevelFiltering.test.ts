@@ -4,19 +4,19 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { Subject } from "rxjs";
 import { from } from "rxjs/internal/observable/from";
 import * as moq from "typemoq";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { ITreeNodeLoader, PropertyFilterRuleOperator, TreeModelNodeInput, TreeModelSource, TreeNodeLoadResult, UiComponents } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { renderHook } from "@testing-library/react-hooks";
-import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/PresentationInstanceFilterBuilder";
+import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/Types";
 import { useHierarchyLevelFiltering } from "../../../presentation-components/tree/controlled/UseHierarchyLevelFiltering";
 import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem";
 import { createTestPropertyInfo } from "../../_helpers/Common";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content";
 import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy";
-import { Subject } from "rxjs";
 
 function createTreeModelInput(input?: Partial<TreeModelNodeInput>, treeItem?: Partial<PresentationTreeNodeItem>): TreeModelNodeInput {
   const item: PresentationTreeNodeItem = {
