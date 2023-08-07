@@ -47,7 +47,7 @@
       }
     }
   }
-  > input::placeholder {
+  input::placeholder {
     opacity: 1; // it is used to override mozilla firefox style for placeholder.
   }
 }

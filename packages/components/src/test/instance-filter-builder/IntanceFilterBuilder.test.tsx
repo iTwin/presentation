@@ -7,10 +7,17 @@ import { expect } from "chai";
 import sinon from "sinon";
 import * as moq from "typemoq";
 import { PropertyDescription } from "@itwin/appui-abstract";
+import {
+  PropertyFilterBuilderActions,
+  PropertyFilterBuilderRuleGroup,
+  PropertyFilterRuleGroupOperator,
+  PropertyFilterRuleOperator,
+  usePropertyFilterBuilder,
+} from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { ClassInfo, Descriptor, NavigationPropertyInfo } from "@itwin/presentation-common";
+import { ClassInfo, Descriptor, NavigationPropertyInfo, PropertiesField, PropertyValueFormat } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
@@ -20,7 +27,8 @@ import {
   useFilterBuilderNavigationPropertyEditorContext,
   usePresentationInstanceFilteringProps,
 } from "../../presentation-components/instance-filter-builder/InstanceFilterBuilder";
-import { INSTANCE_FILTER_FIELD_SEPARATOR } from "../../presentation-components/instance-filter-builder/Utils";
+import { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/Types";
+import { convertPresentationFilterToPropertyFilter, INSTANCE_FILTER_FIELD_SEPARATOR } from "../../presentation-components/instance-filter-builder/Utils";
 import { createTestECClassInfo, stubRaf } from "../_helpers/Common";
 import {
   createTestCategoryDescription,
@@ -48,10 +56,28 @@ describe("InstanceFilter", () => {
     sinon.restore();
   });
 
+  const testImodel = {} as IModelConnection;
+  const testDescriptor = {} as Descriptor;
+  const testActions = {} as PropertyFilterBuilderActions;
+  const testRootGroup = {
+    operator: PropertyFilterRuleGroupOperator.Or,
+    id: "0",
+    items: [],
+  } as PropertyFilterBuilderRuleGroup;
+
   it("invokes 'onSelectedClassesChanged' when class is selected", async () => {
     const spy = sinon.spy();
     const { getByRole, getAllByRole } = render(
-      <InstanceFilterBuilder classes={classInfos} selectedClasses={[]} properties={[]} onSelectedClassesChanged={spy} onFilterChanged={() => {}} />,
+      <InstanceFilterBuilder
+        classes={classInfos}
+        selectedClasses={[]}
+        properties={[]}
+        onSelectedClassesChanged={spy}
+        actions={testActions}
+        rootGroup={testRootGroup}
+        imodel={testImodel}
+        descriptor={testDescriptor}
+      />,
     );
 
     const selector = getAllByRole("combobox")[0];
@@ -71,7 +97,10 @@ describe("InstanceFilter", () => {
         selectedClasses={[classInfos[0]]}
         properties={[]}
         onSelectedClassesChanged={spy}
-        onFilterChanged={() => {}}
+        actions={testActions}
+        rootGroup={testRootGroup}
+        imodel={testImodel}
+        descriptor={testDescriptor}
       />,
     );
 
@@ -331,5 +360,131 @@ describe("useFilterBuilderNavigationPropertyEditorContext", () => {
 
     const info = await result.current.getNavigationPropertyInfo(propertyDescription);
     expect(info).to.be.undefined;
+  });
+});
+
+describe("UniqueValuesRenderer", () => {
+  stubRaf();
+
+  before(async () => {
+    const localization = new EmptyLocalization();
+    sinon.stub(IModelApp, "initialized").get(() => true);
+    sinon.stub(IModelApp, "localization").get(() => localization);
+    await Presentation.initialize();
+  });
+
+  after(async () => {
+    Presentation.terminate();
+  });
+
+  const category = createTestCategoryDescription({ name: "root", label: "Root" });
+  const classInfo = createTestECClassInfo();
+  const propertiesField = createTestPropertiesContentField({
+    properties: [{ property: { classInfo, name: "prop1", type: "string" } }],
+    name: "prop1Field",
+    label: "propertiesField",
+    category,
+  });
+  const navigationPropertyField = createTestPropertiesContentField({
+    properties: [{ property: { classInfo, name: "navField", type: "navigation" } }],
+    name: "navField",
+    label: "navigationField",
+    category,
+    type: { valueFormat: PropertyValueFormat.Primitive, typeName: "navigation" },
+  });
+  const descriptor = createTestContentDescriptor({
+    selectClasses: [{ selectClassInfo: classInfo, isSelectPolymorphic: false }],
+    categories: [category],
+    fields: [propertiesField, navigationPropertyField],
+  });
+
+  const testIModel = {} as IModelConnection;
+  const createFilter = (operator: PropertyFilterRuleOperator, field?: PropertiesField): PresentationInstanceFilterInfo => {
+    return {
+      filter: {
+        operator: PropertyFilterRuleGroupOperator.Or,
+        conditions: [
+          {
+            field: field ?? propertiesField,
+            operator,
+            value: undefined,
+          },
+        ],
+      },
+      usedClasses: [],
+    };
+  };
+
+  it("renders <UniquePropertyValuesSelector /> when operator is `IsEqual` and property is not equal to `navigation`", async () => {
+    const { result } = renderHook(() =>
+      usePropertyFilterBuilder({
+        initialFilter: convertPresentationFilterToPropertyFilter(descriptor, createFilter(PropertyFilterRuleOperator.IsEqual).filter),
+      }),
+    );
+
+    const { actions, rootGroup } = result.current;
+    const { queryByText } = render(
+      <InstanceFilterBuilder
+        properties={[]}
+        rootGroup={rootGroup}
+        imodel={testIModel}
+        actions={actions}
+        selectedClasses={[]}
+        classes={[classInfo]}
+        onSelectedClassesChanged={() => {}}
+        descriptor={descriptor}
+        enableUniqueValuesRenderer
+      />,
+    );
+    await waitFor(() => expect(queryByText("unique-values-property-editor.select-values")).to.not.be.null);
+  });
+
+  it("renders <UniquePropertyValuesSelector /> when operator is `IsNotEqual` and property is not equal to `navigation`", async () => {
+    const { result } = renderHook(() =>
+      usePropertyFilterBuilder({
+        initialFilter: convertPresentationFilterToPropertyFilter(descriptor, createFilter(PropertyFilterRuleOperator.IsNotEqual).filter),
+      }),
+    );
+    const { actions, rootGroup } = result.current;
+    const { queryByText } = render(
+      <InstanceFilterBuilder
+        properties={[]}
+        rootGroup={rootGroup}
+        imodel={testIModel}
+        actions={actions}
+        selectedClasses={[]}
+        classes={[classInfo]}
+        onSelectedClassesChanged={() => {}}
+        descriptor={descriptor}
+        enableUniqueValuesRenderer
+      />,
+    );
+    await waitFor(() => expect(queryByText("unique-values-property-editor.select-values")).to.not.be.null);
+  });
+
+  it("does not render <UniquePropertyValuesSelector /> when the property is equal to `navigation`", async () => {
+    const { result } = renderHook(() =>
+      usePropertyFilterBuilder({
+        initialFilter: convertPresentationFilterToPropertyFilter(
+          descriptor,
+          createFilter(PropertyFilterRuleOperator.IsNotEqual, navigationPropertyField).filter,
+        ),
+      }),
+    );
+    const { actions, rootGroup } = result.current;
+    const { queryByText } = render(
+      <InstanceFilterBuilder
+        properties={[]}
+        rootGroup={rootGroup}
+        imodel={testIModel}
+        actions={actions}
+        selectedClasses={[]}
+        classes={[classInfo]}
+        onSelectedClassesChanged={() => {}}
+        descriptor={descriptor}
+        enableUniqueValuesRenderer
+      />,
+    );
+    await waitFor(() => expect(queryByText("unique-values-property-editor.select-values")).to.be.null);
   });
 });
