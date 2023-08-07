@@ -492,13 +492,16 @@ export interface PresentationInstanceFilterConditionGroup {
 export function PresentationInstanceFilterDialog(props: PresentationInstanceFilterDialogProps): JSX.Element;
 
 // @beta
-export interface PresentationInstanceFilterDialogProps extends Omit<PresentationInstanceFilterBuilderProps, "onInstanceFilterChanged" | "descriptor"> {
+export interface PresentationInstanceFilterDialogProps {
     descriptor: (() => Promise<Descriptor>) | Descriptor;
     enableUniqueValuesRenderer?: boolean;
     filterResultCountRenderer?: (filter?: PresentationInstanceFilterInfo) => React.ReactNode;
+    imodel: IModelConnection;
+    initialFilter?: PresentationInstanceFilterInfo;
     isOpen: boolean;
     onApply: (filter: PresentationInstanceFilterInfo) => void;
     onClose: () => void;
+    ruleGroupDepthLimit?: number;
     title?: React.ReactNode;
 }
 

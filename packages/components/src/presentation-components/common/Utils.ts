@@ -6,7 +6,7 @@
  * @module Core
  */
 
-import { LegacyRef, MutableRefObject, RefCallback, useCallback, useRef, useState } from "react";
+import { LegacyRef, MutableRefObject, RefCallback, useCallback, useEffect, useRef, useState } from "react";
 import { Primitives, PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IPropertyValueRenderer, PropertyValueRendererManager } from "@itwin/components-react";
 import { assert, Guid, GuidString, IDisposable } from "@itwin/core-bentley";
@@ -219,6 +219,26 @@ export function useErrorState() {
     throw error;
   }
   return setErrorState;
+}
+
+/**
+ * A hook that rerenders component after some time.
+ * @param delayMilliseconds - milliseconds to delay. Default is 250.
+ * @internal
+ */
+export function useDelay(delayMilliseconds: number = 250) {
+  const [passed, setPassed] = useState(false);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setPassed(true);
+    }, delayMilliseconds);
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [delayMilliseconds]);
+
+  return passed;
 }
 
 /**
