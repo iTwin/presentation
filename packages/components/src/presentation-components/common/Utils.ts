@@ -159,8 +159,10 @@ export function useResizeObserver<T extends HTMLElement>() {
       observer.current = new ResizeObserver(
         /* istanbul ignore next */
         (entries) => {
-          assert(entries.length === 1);
-          setSize(entries[0].contentRect);
+          window.requestAnimationFrame(() => {
+            assert(entries.length === 1);
+            setSize(entries[0].contentRect);
+          });
         },
       );
       observer.current.observe(element);
