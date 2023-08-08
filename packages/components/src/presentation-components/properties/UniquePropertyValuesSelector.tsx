@@ -76,7 +76,7 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
       isSearchable={false}
       closeMenuOnSelect={false}
       getOptionLabel={(option) => option.displayValue?.toString() ?? ""}
-      getOptionValue={(option) => option.groupedRawValues[0]?.toString() ?? ""}
+      getOptionValue={(option) => option.displayValue?.toString() ?? ""}
     />
   );
 }

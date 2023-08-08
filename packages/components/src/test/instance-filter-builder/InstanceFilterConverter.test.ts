@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import * as moq from "typemoq";
-import { PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
+import { PropertyValue, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import { PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -183,6 +183,36 @@ describe("convertToInstanceFilterDefinition", () => {
       };
       const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(`CompareDateTimes(${propertyAccessor}, "2021-10-12T08:45:41") = 0`);
+    });
+
+    it("point2d value", async () => {
+      const propertyInfo = createTestPropertyInfo({ type: StandardTypeNames.Point2d });
+      const filter: PresentationInstanceFilterCondition = {
+        field: createTestPropertiesContentField({
+          properties: [{ property: propertyInfo }],
+          type: { valueFormat: TypeValueFormat.Primitive, typeName: StandardTypeNames.Point2d },
+        }),
+        operator: PropertyFilterRuleOperator.IsEqual,
+        value: { ...value, value: { x: 10, y: 20 } },
+      };
+      const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+      expect(expression).to.be.eq(`(CompareDoubles(${propertyAccessor}.x, 10) = 0) AND (CompareDoubles(${propertyAccessor}.y, 20) = 0)`);
+    });
+
+    it("point3d value", async () => {
+      const propertyInfo = createTestPropertyInfo({ type: StandardTypeNames.Point3d });
+      const filter: PresentationInstanceFilterCondition = {
+        field: createTestPropertiesContentField({
+          properties: [{ property: propertyInfo }],
+          type: { valueFormat: TypeValueFormat.Primitive, typeName: StandardTypeNames.Point3d },
+        }),
+        operator: PropertyFilterRuleOperator.IsEqual,
+        value: { ...value, value: { x: 10, y: 20, z: 5 } },
+      };
+      const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+      expect(expression).to.be.eq(
+        `(CompareDoubles(${propertyAccessor}.x, 10) = 0) AND (CompareDoubles(${propertyAccessor}.y, 20) = 0) AND (CompareDoubles(${propertyAccessor}.z, 5) = 0)`,
+      );
     });
 
     it("invalid operator", async () => {
@@ -538,7 +568,7 @@ describe("convertToInstanceFilterDefinition", () => {
     });
   });
 
-  describe("handles unqiue values", () => {
+  describe("handles unique values", () => {
     const testImodel = {} as IModelConnection;
     const property = createTestPropertyInfo();
     const field = createTestPropertiesContentField({ properties: [{ property }] });

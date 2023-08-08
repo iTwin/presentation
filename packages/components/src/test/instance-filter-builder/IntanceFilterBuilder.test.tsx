@@ -17,7 +17,7 @@ import {
 import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { ClassInfo, Descriptor, NavigationPropertyInfo, PropertiesField, PropertyValueFormat } from "@itwin/presentation-common";
+import { ClassInfo, Descriptor, NavigationPropertyInfo, PropertiesField } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
@@ -464,17 +464,10 @@ describe("UniqueValuesRenderer", () => {
     label: "propertiesField",
     category,
   });
-  const navigationPropertyField = createTestPropertiesContentField({
-    properties: [{ property: { classInfo, name: "navField", type: "navigation" } }],
-    name: "navField",
-    label: "navigationField",
-    category,
-    type: { valueFormat: PropertyValueFormat.Primitive, typeName: "navigation" },
-  });
   const descriptor = createTestContentDescriptor({
     selectClasses: [{ selectClassInfo: classInfo, isSelectPolymorphic: false }],
     categories: [category],
-    fields: [propertiesField, navigationPropertyField],
+    fields: [propertiesField],
   });
 
   const testIModel = {} as IModelConnection;
@@ -545,13 +538,10 @@ describe("UniqueValuesRenderer", () => {
     await waitFor(() => expect(queryByText("unique-values-property-editor.select-values")).to.not.be.null);
   });
 
-  it("does not render <UniquePropertyValuesSelector /> when the property is equal to `navigation`", async () => {
+  it("does not render <UniquePropertyValuesSelector /> when the operator is not equal to `IsEqual` and `IsNotEqual`", async () => {
     const { result } = renderHook(() =>
       usePropertyFilterBuilder({
-        initialFilter: convertPresentationFilterToPropertyFilter(
-          descriptor,
-          createFilter(PropertyFilterRuleOperator.IsNotEqual, navigationPropertyField).filter,
-        ),
+        initialFilter: convertPresentationFilterToPropertyFilter(descriptor, createFilter(PropertyFilterRuleOperator.Like).filter),
       }),
     );
     const { actions, rootGroup } = result.current;

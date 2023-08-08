@@ -12,7 +12,7 @@ import { ActionMeta, MultiValue, SingleValue } from "react-select";
 import { BehaviorSubject, from, of } from "rxjs";
 import { map } from "rxjs/internal/operators/map";
 import { switchAll } from "rxjs/internal/operators/switchAll";
-import { PropertyDescription, StandardTypeNames } from "@itwin/appui-abstract";
+import { PropertyDescription } from "@itwin/appui-abstract";
 import {
   PropertyFilterBuilderRenderer,
   PropertyFilterBuilderRendererProps,
@@ -329,10 +329,7 @@ async function computeClassesByProperty(classes: ClassInfo[], property: Instance
 }
 
 function UniqueValuesRenderer(props: PropertyFilterBuilderRuleValueRendererProps & { imodel: IModelConnection; descriptor: Descriptor }) {
-  if (
-    props.property.typename !== StandardTypeNames.Navigation &&
-    (props.operator === PropertyFilterRuleOperator.IsEqual || props.operator === PropertyFilterRuleOperator.IsNotEqual)
-  ) {
+  if (props.operator === PropertyFilterRuleOperator.IsEqual || props.operator === PropertyFilterRuleOperator.IsNotEqual) {
     return <UniquePropertyValuesSelector {...props} />;
   }
   return <PropertyFilterBuilderRuleValue {...props} />;
