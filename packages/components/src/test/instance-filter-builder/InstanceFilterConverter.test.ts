@@ -215,6 +215,22 @@ describe("convertToInstanceFilterDefinition", () => {
       );
     });
 
+    it("point3d value with `IsNotEqual` operator", async () => {
+      const propertyInfo = createTestPropertyInfo({ type: StandardTypeNames.Point3d });
+      const filter: PresentationInstanceFilterCondition = {
+        field: createTestPropertiesContentField({
+          properties: [{ property: propertyInfo }],
+          type: { valueFormat: TypeValueFormat.Primitive, typeName: StandardTypeNames.Point3d },
+        }),
+        operator: PropertyFilterRuleOperator.IsNotEqual,
+        value: { ...value, value: { x: 10, y: 20, z: 5 } },
+      };
+      const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+      expect(expression).to.be.eq(
+        `(CompareDoubles(${propertyAccessor}.x, 10) <> 0) OR (CompareDoubles(${propertyAccessor}.y, 20) <> 0) OR (CompareDoubles(${propertyAccessor}.z, 5) <> 0)`,
+      );
+    });
+
     it("invalid operator", async () => {
       const filter: PresentationInstanceFilterCondition = {
         field: createTestPropertiesContentField({ properties: [{ property }] }),

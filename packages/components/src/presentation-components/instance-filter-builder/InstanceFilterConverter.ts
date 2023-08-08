@@ -6,7 +6,7 @@
  * @module InstancesFilter
  */
 
-import { Primitives, PrimitiveValue } from "@itwin/appui-abstract";
+import { Primitives, PrimitiveValue, StandardTypeNames } from "@itwin/appui-abstract";
 import { isUnaryPropertyFilterOperator, PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo, InstanceFilterDefinition, NestedContentField, PropertiesField, RelationshipPath } from "@itwin/presentation-common";
@@ -122,13 +122,14 @@ function createComparison(propertyName: string, type: string, alias: string, ope
     case "number":
       valueExpression = value.toString();
       break;
-    case "object":
-      if (isPoint2d(value)) {
-        return createPointComparision(value, operatorExpression, propertyAccessor);
-      }
-      break;
   }
 
+  if (type === StandardTypeNames.Point2d || type === StandardTypeNames.Point3d) {
+    // istanbul ignore else
+    if (typeof value === "object" && isPoint2d(value)) {
+      return createPointComparision(value, operatorExpression, propertyAccessor);
+    }
+  }
   if (type === "navigation") {
     return `${propertyAccessor}.Id ${operatorExpression} ${(value as Primitives.InstanceKey).id}`;
   }
@@ -208,9 +209,10 @@ async function findBaseExpressionClass(imodel: IModelConnection, propertyClasses
 }
 
 function createPointComparision(point: { x: number; y: number } | { x: number; y: number; z: number }, operatorExpression: string, propertyAccessor: string) {
-  return `(CompareDoubles(${propertyAccessor}.x, ${point.x}) ${operatorExpression} 0) AND (CompareDoubles(${propertyAccessor}.y, ${
+  const logicalOperator = operatorExpression === "=" ? "AND" : "OR";
+  return `(CompareDoubles(${propertyAccessor}.x, ${point.x}) ${operatorExpression} 0) ${logicalOperator} (CompareDoubles(${propertyAccessor}.y, ${
     point.y
-  }) ${operatorExpression} 0)${isPoint3d(point) ? ` AND (CompareDoubles(${propertyAccessor}.z, ${point.z}) ${operatorExpression} 0)` : ""}`;
+  }) ${operatorExpression} 0)${isPoint3d(point) ? ` ${logicalOperator} (CompareDoubles(${propertyAccessor}.z, ${point.z}) ${operatorExpression} 0)` : ""}`;
 }
 
 function isPoint2d(obj: object): obj is { x: number; y: number } {
