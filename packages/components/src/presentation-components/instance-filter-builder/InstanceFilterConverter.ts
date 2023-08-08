@@ -122,6 +122,11 @@ function createComparison(propertyName: string, type: string, alias: string, ope
     case "number":
       valueExpression = value.toString();
       break;
+    case "object":
+      if (isPoint2d(value)) {
+        return createPointComparision(value, operatorExpression, propertyAccessor);
+      }
+      break;
   }
 
   if (type === "navigation") {
@@ -200,4 +205,18 @@ async function findBaseExpressionClass(imodel: IModelConnection, propertyClasses
     }
   }
   return currentBaseClass;
+}
+
+function createPointComparision(point: { x: number; y: number } | { x: number; y: number; z: number }, operatorExpression: string, propertyAccessor: string) {
+  return `(CompareDoubles(${propertyAccessor}.x, ${point.x}) ${operatorExpression} 0) AND (CompareDoubles(${propertyAccessor}.y, ${
+    point.y
+  }) ${operatorExpression} 0)${isPoint3d(point) ? ` AND (CompareDoubles(${propertyAccessor}.z, ${point.z}) ${operatorExpression} 0)` : ""}`;
+}
+
+function isPoint2d(obj: object): obj is { x: number; y: number } {
+  return (obj as any).x !== undefined && (obj as any).y !== undefined;
+}
+
+function isPoint3d(obj: object): obj is { x: number; y: number; z: number } {
+  return isPoint2d(obj) && (obj as any).z !== undefined;
 }
