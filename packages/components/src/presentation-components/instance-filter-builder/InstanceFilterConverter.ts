@@ -77,10 +77,14 @@ function convertFilter(filter: PresentationInstanceFilter, ctx: ConvertContext) 
 }
 
 function convertUniqueValuesCondition(filter: PresentationInstanceFilterCondition, ctx: ConvertContext) {
+  // Unique values works only with `IsEqual` and `IsNotEqual` operators.
+  if (filter.operator !== PropertyFilterRuleOperator.IsEqual && filter.operator !== PropertyFilterRuleOperator.IsNotEqual) {
+    return undefined;
+  }
   if (typeof filter.value?.value !== "string" || typeof filter.value?.displayValue !== "string") {
     return undefined;
   }
-  const result = handleStringifiedValues(filter, filter.value.displayValue, filter.value.value);
+  const result = handleStringifiedUniqueValues(filter, filter.value.displayValue, filter.value.value);
   if (result === undefined) {
     return undefined;
   }
@@ -220,8 +224,9 @@ function isFilterConditionGroup(obj: PresentationInstanceFilter): obj is Present
   return (obj as PresentationInstanceFilterConditionGroup).conditions !== undefined;
 }
 
-function handleStringifiedValues(filter: PresentationInstanceFilterCondition, serializedDisplayValues: string, serializedGroupedRawValues: string) {
+function handleStringifiedUniqueValues(filter: PresentationInstanceFilterCondition, serializedDisplayValues: string, serializedGroupedRawValues: string) {
   const { field, operator } = filter;
+
   let selectedValueIndex = 0;
 
   const { displayValues, groupedRawValues } = deserializeDisplayValueGroupArray(serializedDisplayValues, serializedGroupedRawValues);
