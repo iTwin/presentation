@@ -8,6 +8,7 @@
 
 import { Primitives, PrimitiveValue, StandardTypeNames } from "@itwin/appui-abstract";
 import { isUnaryPropertyFilterOperator, PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator } from "@itwin/components-react";
+import { assert } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo, InstanceFilterDefinition, NestedContentField, PropertiesField, RelationshipPath } from "@itwin/presentation-common";
 import { getIModelMetadataProvider } from "./ECMetadataProvider";
@@ -125,9 +126,8 @@ function createComparison(propertyName: string, type: string, alias: string, ope
   }
 
   if (type === StandardTypeNames.Point2d || type === StandardTypeNames.Point3d) {
-    assert(isPoint2d(value)
-      return createPointComparision(value, operatorExpression, propertyAccessor);
-    }
+    assert(isPoint2d(value));
+    return createPointComparision(value, operatorExpression, propertyAccessor);
   }
   if (type === "navigation") {
     return `${propertyAccessor}.Id ${operatorExpression} ${(value as Primitives.InstanceKey).id}`;
@@ -214,10 +214,10 @@ function createPointComparision(point: { x: number; y: number } | { x: number; y
   }) ${operatorExpression} 0)${isPoint3d(point) ? ` ${logicalOperator} (CompareDoubles(${propertyAccessor}.z, ${point.z}) ${operatorExpression} 0)` : ""}`;
 }
 
-function isPoint2d(obj: object): obj is { x: number; y: number } {
+function isPoint2d(obj?: Primitives.Value): obj is { x: number; y: number } {
   return (obj as any).x !== undefined && (obj as any).y !== undefined;
 }
 
-function isPoint3d(obj: object): obj is { x: number; y: number; z: number } {
+function isPoint3d(obj?: Primitives.Value): obj is { x: number; y: number; z: number } {
   return isPoint2d(obj) && (obj as any).z !== undefined;
 }
