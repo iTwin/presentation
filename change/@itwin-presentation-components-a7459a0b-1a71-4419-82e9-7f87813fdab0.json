@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Fix filtering with `Point` types.",
+  "packageName": "@itwin/presentation-components",
+  "email": "124659623+simasjar@users.noreply.github.com",
+  "dependentChangeType": "patch"
+}
