@@ -125,8 +125,7 @@ function createComparison(propertyName: string, type: string, alias: string, ope
   }
 
   if (type === StandardTypeNames.Point2d || type === StandardTypeNames.Point3d) {
-    // istanbul ignore else
-    if (typeof value === "object" && isPoint2d(value)) {
+    assert(isPoint2d(value)
       return createPointComparision(value, operatorExpression, propertyAccessor);
     }
   }
