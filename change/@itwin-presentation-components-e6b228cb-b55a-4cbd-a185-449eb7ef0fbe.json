@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Update `rxjs` dependency to `7.8.1`",
-  "packageName": "@itwin/presentation-components",
-  "email": "35135765+grigasp@users.noreply.github.com",
-  "dependentChangeType": "patch"
-}

@@ -1,8 +1,27 @@
 # Change Log - @itwin/presentation-components
 
-This log was last generated on Thu, 15 Jun 2023 07:31:33 GMT and should not be manually modified.
+This log was last generated on Wed, 09 Aug 2023 11:47:16 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 4.1.0
+
+Wed, 09 Aug 2023 11:47:16 GMT
+
+### Minor changes
+
+- Make sure `FilteredPresentationTreeDataProvider` creates same tree node items as parent `PresentationTreeDataProvider`. ([commit](https://github.com/iTwin/presentation/commit/3f36136778e2444c1224a5b68b0a21f707b5685f))
+
+### Patches
+
+- `InstanceFilterDialog`: fix resize observer error when navigation property is selected. ([commit](https://github.com/iTwin/presentation/commit/3f36136778e2444c1224a5b68b0a21f707b5685f))
+- Update package dependencies ([commit](https://github.com/iTwin/presentation/commit/3f36136778e2444c1224a5b68b0a21f707b5685f))
+- Add `Home` and `End` buttons functionality to the navigation property value selector. ([commit](https://github.com/iTwin/presentation/commit/3f36136778e2444c1224a5b68b0a21f707b5685f))
+- Remove dead code ([commit](https://github.com/iTwin/presentation/commit/3f36136778e2444c1224a5b68b0a21f707b5685f))
+- `useControlledPresentationTreeFiltering`: Reset `filteredNodeLoader` after filter string is changed and filtering is in progress. ([commit](https://github.com/iTwin/presentation/commit/3f36136778e2444c1224a5b68b0a21f707b5685f))
+- `InstanceFilterDialog`: Add filter expression for `Point` type. ([commit](https://github.com/iTwin/presentation/commit/3f36136778e2444c1224a5b68b0a21f707b5685f))
+- Add custom numeric property editor. ([commit](https://github.com/iTwin/presentation/commit/3f36136778e2444c1224a5b68b0a21f707b5685f))
+- Update `rxjs` dependency to `7.8.1` ([commit](https://github.com/iTwin/presentation/commit/3f36136778e2444c1224a5b68b0a21f707b5685f))
 
 ## 4.0.1
 

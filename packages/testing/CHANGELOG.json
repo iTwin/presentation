@@ -2,6 +2,41 @@
   "name": "@itwin/presentation-testing",
   "entries": [
     {
+      "date": "Wed, 09 Aug 2023 11:47:16 GMT",
+      "tag": "@itwin/presentation-testing_v4.0.2",
+      "version": "4.0.2",
+      "comments": {
+        "none": [
+          {
+            "author": "35135765+grigasp@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "3f36136778e2444c1224a5b68b0a21f707b5685f",
+            "comment": "Update `itwinjs-core` dev dependencies to `4.1.0-dev.62`"
+          },
+          {
+            "author": "anmol.shrestha@bentley.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "3f36136778e2444c1224a5b68b0a21f707b5685f",
+            "comment": "Upgrade to eslint@8 and @itwin/eslint-plugin accordingly"
+          },
+          {
+            "author": "35135765+grigasp@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "3f36136778e2444c1224a5b68b0a21f707b5685f",
+            "comment": "Upgrade `@itwin/eslint-plugin` to `4.0.0-dev.48`"
+          }
+        ],
+        "patch": [
+          {
+            "author": "35135765+grigasp@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "3f36136778e2444c1224a5b68b0a21f707b5685f",
+            "comment": "Update package dependencies"
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 15 Jun 2023 07:31:33 GMT",
       "tag": "@itwin/presentation-testing_v4.0.1",
       "version": "4.0.1",

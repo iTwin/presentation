@@ -2,6 +2,97 @@
   "name": "@itwin/presentation-components",
   "entries": [
     {
+      "date": "Wed, 09 Aug 2023 11:47:16 GMT",
+      "tag": "@itwin/presentation-components_v4.1.0",
+      "version": "4.1.0",
+      "comments": {
+        "patch": [
+          {
+            "author": "124659623+simasjar@users.noreply.github.com",
+            "package": "@itwin/presentation-components",
+            "commit": "3f36136778e2444c1224a5b68b0a21f707b5685f",
+            "comment": "`InstanceFilterDialog`: fix resize observer error when navigation property is selected."
+          },
+          {
+            "author": "35135765+grigasp@users.noreply.github.com",
+            "package": "@itwin/presentation-components",
+            "commit": "3f36136778e2444c1224a5b68b0a21f707b5685f",
+            "comment": "Update package dependencies"
+          },
+          {
+            "author": "124659623+simasjar@users.noreply.github.com",
+            "package": "@itwin/presentation-components",
+            "commit": "3f36136778e2444c1224a5b68b0a21f707b5685f",
+            "comment": "Add `Home` and `End` buttons functionality to the navigation property value selector."
+          },
+          {
+            "author": "35135765+grigasp@users.noreply.github.com",
+            "package": "@itwin/presentation-components",
+            "commit": "3f36136778e2444c1224a5b68b0a21f707b5685f",
+            "comment": "Remove dead code"
+          },
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-components",
+            "commit": "3f36136778e2444c1224a5b68b0a21f707b5685f",
+            "comment": "`useControlledPresentationTreeFiltering`: Reset `filteredNodeLoader` after filter string is changed and filtering is in progress."
+          },
+          {
+            "author": "124659623+simasjar@users.noreply.github.com",
+            "package": "@itwin/presentation-components",
+            "commit": "3f36136778e2444c1224a5b68b0a21f707b5685f",
+            "comment": "`InstanceFilterDialog`: Add filter expression for `Point` type."
+          },
+          {
+            "author": "124659623+simasjar@users.noreply.github.com",
+            "package": "@itwin/presentation-components",
+            "commit": "3f36136778e2444c1224a5b68b0a21f707b5685f",
+            "comment": "Add custom numeric property editor."
+          },
+          {
+            "author": "35135765+grigasp@users.noreply.github.com",
+            "package": "@itwin/presentation-components",
+            "commit": "3f36136778e2444c1224a5b68b0a21f707b5685f",
+            "comment": "Update `rxjs` dependency to `7.8.1`"
+          }
+        ],
+        "none": [
+          {
+            "author": "35135765+grigasp@users.noreply.github.com",
+            "package": "@itwin/presentation-components",
+            "commit": "3f36136778e2444c1224a5b68b0a21f707b5685f",
+            "comment": "Update `itwinjs-core` dev dependencies to `4.1.0-dev.62`"
+          },
+          {
+            "author": "35135765+grigasp@users.noreply.github.com",
+            "package": "@itwin/presentation-components",
+            "commit": "3f36136778e2444c1224a5b68b0a21f707b5685f",
+            "comment": "Upgrade `@itwin/eslint-plugin` to `4.0.0-dev.48`"
+          },
+          {
+            "author": "anmol.shrestha@bentley.com",
+            "package": "@itwin/presentation-components",
+            "commit": "3f36136778e2444c1224a5b68b0a21f707b5685f",
+            "comment": "Upgrade to eslint@8 and @itwin/eslint-plugin accordingly"
+          },
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-components",
+            "commit": "3f36136778e2444c1224a5b68b0a21f707b5685f",
+            "comment": "Fixed formatting"
+          }
+        ],
+        "minor": [
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-components",
+            "commit": "3f36136778e2444c1224a5b68b0a21f707b5685f",
+            "comment": "Make sure `FilteredPresentationTreeDataProvider` creates same tree node items as parent `PresentationTreeDataProvider`."
+          }
+        ]
+      }
+    },
+    {
       "date": "Thu, 15 Jun 2023 07:31:33 GMT",
       "tag": "@itwin/presentation-components_v4.0.1",
       "version": "4.0.1",

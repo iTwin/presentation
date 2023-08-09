@@ -1,8 +1,17 @@
 # Change Log - @itwin/presentation-opentelemetry
 
-This log was last generated on Tue, 02 May 2023 11:39:31 GMT and should not be manually modified.
+This log was last generated on Wed, 09 Aug 2023 11:47:16 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 4.0.1
+
+Wed, 09 Aug 2023 11:47:16 GMT
+
+### Patches
+
+- Set span status to error when it contains error logs ([commit](https://github.com/iTwin/presentation/commit/3f36136778e2444c1224a5b68b0a21f707b5685f))
+- Update package dependencies ([commit](https://github.com/iTwin/presentation/commit/3f36136778e2444c1224a5b68b0a21f707b5685f))
 
 ## 4.0.0
 

@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "`InstanceFilterDialog`: Add filter expression for `Point` type.",
-  "packageName": "@itwin/presentation-components",
-  "email": "124659623+simasjar@users.noreply.github.com",
-  "dependentChangeType": "patch"
-}
