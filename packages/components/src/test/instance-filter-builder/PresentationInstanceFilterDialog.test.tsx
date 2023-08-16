@@ -41,18 +41,20 @@ describe("PresentationInstanceFilterDialog", () => {
     category,
   });
   const quantityField = createTestPropertiesContentField({
-    properties: [{
-      property: {
-        classInfo,
-        name: "quantityProp",
-        type: "double",
-        kindOfQuantity: {
-          name: "testKOQ",
-          label: "Test KOQ",
-          persistenceUnit: "unit",
-        }
-      }
-    }],
+    properties: [
+      {
+        property: {
+          classInfo,
+          name: "quantityProp",
+          type: "double",
+          kindOfQuantity: {
+            name: "testKOQ",
+            label: "Test KOQ",
+            persistenceUnit: "unit",
+          },
+        },
+      },
+    ],
     type: { valueFormat: PropertyValueFormat.Primitive, typeName: "double" },
     name: "quantityField",
     label: "Quantity Field",
@@ -76,7 +78,7 @@ describe("PresentationInstanceFilterDialog", () => {
   const onCloseEvent = new BeEvent<() => void>();
 
   before(() => {
-    HTMLElement.prototype.scrollIntoView = () => { };
+    HTMLElement.prototype.scrollIntoView = () => {};
   });
 
   after(() => {
@@ -108,7 +110,7 @@ describe("PresentationInstanceFilterDialog", () => {
   it("invokes 'onApply' with filter", async () => {
     const spy = sinon.spy();
     const { container, getByText, getByDisplayValue } = render(
-      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => { }} onApply={spy} isOpen={true} />,
+      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />,
     );
 
     const applyButton = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
@@ -149,7 +151,7 @@ describe("PresentationInstanceFilterDialog", () => {
   it("does not invoke `onApply` when filter is invalid", async () => {
     const spy = sinon.spy();
     const { container, getByText, getByDisplayValue } = render(
-      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => { }} onApply={spy} isOpen={true} />,
+      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />,
     );
 
     const applyButton = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
@@ -175,7 +177,7 @@ describe("PresentationInstanceFilterDialog", () => {
     sinon.stub(instanceFilterBuilderUtils, "createPresentationInstanceFilter").returns(undefined);
     const spy = sinon.spy();
     const { container, getByText, getByDisplayValue } = render(
-      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => { }} onApply={spy} isOpen={true} />,
+      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />,
     );
 
     const applyButton = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
@@ -209,7 +211,7 @@ describe("PresentationInstanceFilterDialog", () => {
   it("sets error message if numeric input is invalid", async () => {
     const user = userEvent.setup();
     const { container, queryByDisplayValue, getByText, getByTestId, queryByText } = render(
-      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => { }} onApply={() => { }} isOpen={true} />,
+      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => {}} onApply={() => {}} isOpen={true} />,
     );
 
     const applyButton = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
@@ -250,7 +252,7 @@ describe("PresentationInstanceFilterDialog", () => {
       <PresentationInstanceFilterDialog
         imodel={imodelMock.object}
         descriptor={descriptor}
-        onClose={() => { }}
+        onClose={() => {}}
         title={<div>{title}</div>}
         onApply={spy}
         isOpen={true}
@@ -269,7 +271,7 @@ describe("PresentationInstanceFilterDialog", () => {
       <PresentationInstanceFilterDialog
         imodel={imodelMock.object}
         descriptor={descriptor}
-        onClose={() => { }}
+        onClose={() => {}}
         filterResultCountRenderer={() => {
           return <div>{count}</div>;
         }}
@@ -286,7 +288,7 @@ describe("PresentationInstanceFilterDialog", () => {
     const descriptorGetter = async () => descriptor;
 
     const { container } = render(
-      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptorGetter} onClose={() => { }} onApply={spy} isOpen={true} />,
+      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptorGetter} onClose={() => {}} onApply={spy} isOpen={true} />,
     );
 
     await waitFor(() => {
@@ -301,7 +303,7 @@ describe("PresentationInstanceFilterDialog", () => {
     const descriptorGetter = async () => undefined as unknown as Descriptor;
 
     const { container } = render(
-      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptorGetter} onClose={() => { }} onApply={spy} isOpen={true} />,
+      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptorGetter} onClose={() => {}} onApply={spy} isOpen={true} />,
     );
 
     await waitFor(() => {

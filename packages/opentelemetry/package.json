@@ -40,18 +40,18 @@
     "extract-api": "betools extract-api --entry=presentation-opentelemetry --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api"
   },
   "peerDependencies": {
-    "@itwin/presentation-common": "^3.6.3 || ^4.0.0",
+    "@itwin/presentation-common": "^4.0.0",
     "@opentelemetry/api": "^1.0.4"
   },
   "devDependencies": {
-    "@itwin/build-tools": "4.1.0-dev.71",
-    "@itwin/core-bentley": "4.1.0-dev.71",
-    "@itwin/core-common": "4.1.0-dev.71",
-    "@itwin/core-geometry": "4.1.0-dev.71",
-    "@itwin/core-quantity": "4.1.0-dev.71",
-    "@itwin/ecschema-metadata": "4.1.0-dev.71",
+    "@itwin/build-tools": "^4.1.0",
+    "@itwin/core-bentley": "^4.1.0",
+    "@itwin/core-common": "^4.1.0",
+    "@itwin/core-geometry": "^4.1.0",
+    "@itwin/core-quantity": "^4.1.0",
+    "@itwin/ecschema-metadata": "^4.1.0",
     "@itwin/eslint-plugin": "^4.0.0-dev.48",
-    "@itwin/presentation-common": "4.1.0-dev.71",
+    "@itwin/presentation-common": "^4.1.0",
     "@opentelemetry/api": "1.0.4",
     "@types/chai": "4.3.1",
     "@types/mocha": "^8.2.3",

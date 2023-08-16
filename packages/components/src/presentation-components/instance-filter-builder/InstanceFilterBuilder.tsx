@@ -105,7 +105,9 @@ export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
         <navigationPropertyEditorContext.Provider value={navigationPropertyEditorContextValue}>
           <PropertyFilterBuilderRenderer
             {...restProps}
-            ruleValueRenderer={(rendererProps: PropertyFilterBuilderRuleValueRendererProps) => <FilterBuilderValueRenderer {...rendererProps} imodel={imodel} descriptor={descriptor} />}
+            ruleValueRenderer={(rendererProps: PropertyFilterBuilderRuleValueRendererProps) => (
+              <FilterBuilderValueRenderer {...rendererProps} imodel={imodel} descriptor={descriptor} />
+            )}
           />
         </navigationPropertyEditorContext.Provider>
       </div>
@@ -333,18 +335,28 @@ function FilterBuilderValueRenderer(props: PropertyFilterBuilderRuleValueRendere
 
   if (props.property.quantityType && schemaMetadataContext) {
     const initialValue = (props.value as PrimitiveValue)?.value as number;
-    return <QuantityPropertyValue onChange={props.onChange} koqName={props.property.quantityType} schemaContext={schemaMetadataContext.schemaContext} initialRawValue={initialValue} />;
+    return (
+      <QuantityPropertyValue
+        onChange={props.onChange}
+        koqName={props.property.quantityType}
+        schemaContext={schemaMetadataContext.schemaContext}
+        initialRawValue={initialValue}
+      />
+    );
   }
 
   return <PropertyFilterBuilderRuleValue {...props} />;
 }
 
-function QuantityPropertyValue({onChange, ...koqInputProps}: UseQuantityValueInputProps & { onChange: PropertyFilterBuilderRuleValueRendererProps["onChange"] }) {
-  const { quantityValue, inputProps} = useQuantityValueInput(koqInputProps);
+function QuantityPropertyValue({
+  onChange,
+  ...koqInputProps
+}: UseQuantityValueInputProps & { onChange: PropertyFilterBuilderRuleValueRendererProps["onChange"] }) {
+  const { quantityValue, inputProps } = useQuantityValueInput(koqInputProps);
 
   const onChangeRef = useLatestRef(onChange);
   useEffect(() => {
-    onChangeRef.current({ valueFormat: PropertyValueFormat.Primitive, value: quantityValue.rawValue, displayValue: quantityValue.formattedValue})
+    onChangeRef.current({ valueFormat: PropertyValueFormat.Primitive, value: quantityValue.rawValue, displayValue: quantityValue.formattedValue });
   }, [quantityValue, onChangeRef]);
 
   return <Input size="small" {...inputProps} />;

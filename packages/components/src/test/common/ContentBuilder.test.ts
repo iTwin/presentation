@@ -6,11 +6,7 @@
 import { expect } from "chai";
 import { ArrayValue, PropertyRecord, StandardTypeNames, StructValue } from "@itwin/appui-abstract";
 import { EnumerationInfo, FieldHierarchy, PropertyValueFormat, traverseContentItem } from "@itwin/presentation-common";
-import {
-  FieldHierarchyRecord,
-  IPropertiesAppender,
-  PropertyRecordsBuilder,
-} from "../../presentation-components/common/ContentBuilder";
+import { FieldHierarchyRecord, IPropertiesAppender, PropertyRecordsBuilder } from "../../presentation-components/common/ContentBuilder";
 import { NumericEditorName } from "../../presentation-components/properties/NumericPropertyEditor";
 import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
 import {
@@ -157,20 +153,24 @@ describe("PropertyRecordsBuilder", () => {
 
   it("sets quantity type", () => {
     const descriptor = createTestContentDescriptor({
-      fields: [createTestPropertiesContentField({
-        properties: [{
-          property: {
-            classInfo: createTestECClassInfo(),
-            name: "test-props",
-            type: "string",
-            kindOfQuantity: {
-              label: "KOQ Label",
-              name: "testKOQ",
-              persistenceUnit: "testUnit"
-            }
-          }
-        }]
-      })],
+      fields: [
+        createTestPropertiesContentField({
+          properties: [
+            {
+              property: {
+                classInfo: createTestECClassInfo(),
+                name: "test-props",
+                type: "string",
+                kindOfQuantity: {
+                  label: "KOQ Label",
+                  name: "testKOQ",
+                  persistenceUnit: "testUnit",
+                },
+              },
+            },
+          ],
+        }),
+      ],
     });
     const item = createTestContentItem({ values: {}, displayValues: {} });
     traverseContentItem(builder, descriptor, item);

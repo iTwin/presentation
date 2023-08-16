@@ -79,13 +79,15 @@ export function useQuantityValueInput({ initialRawValue, schemaContext, koqName 
     const newValue = e.currentTarget.value;
     const parseResult = parser.parseToQuantityValue(newValue);
 
-    setState((prev): State => ({
-      ...prev,
-      quantityValue: {
-        formattedValue: newValue,
-        rawValue: parseResult.ok ? parseResult.value : undefined,
-      },
-    }));
+    setState(
+      (prev): State => ({
+        ...prev,
+        quantityValue: {
+          formattedValue: newValue,
+          rawValue: parseResult.ok ? parseResult.value : undefined,
+        },
+      }),
+    );
   };
 
   return {

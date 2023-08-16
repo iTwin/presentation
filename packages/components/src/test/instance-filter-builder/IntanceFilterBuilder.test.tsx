@@ -8,38 +8,29 @@ import sinon from "sinon";
 import * as moq from "typemoq";
 import { PropertyDescription, PropertyValueFormat } from "@itwin/appui-abstract";
 import {
-  PropertyFilterBuilderActions,
-  PropertyFilterBuilderRuleGroup,
-  PropertyFilterRuleGroupOperator,
-  PropertyFilterRuleOperator,
-  UiComponents,
+  PropertyFilterBuilderActions, PropertyFilterBuilderRuleGroup, PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator, UiComponents,
 } from "@itwin/components-react";
 import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { FormatterSpec, ParserSpec } from "@itwin/core-quantity";
+import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ClassInfo, Descriptor, KoqPropertyValueFormatter, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
+import { SchemaMetadataContextProvider } from "../../presentation-components/common/SchemaMetadataContext";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import {
-  InstanceFilterBuilder,
-  useFilterBuilderNavigationPropertyEditorContext,
-  usePresentationInstanceFilteringProps,
+  InstanceFilterBuilder, useFilterBuilderNavigationPropertyEditorContext, usePresentationInstanceFilteringProps,
 } from "../../presentation-components/instance-filter-builder/InstanceFilterBuilder";
 import { INSTANCE_FILTER_FIELD_SEPARATOR } from "../../presentation-components/instance-filter-builder/Utils";
 import { createTestECClassInfo, stubRaf } from "../_helpers/Common";
 import {
-  createTestCategoryDescription,
-  createTestContentDescriptor,
-  createTestPropertiesContentField,
-  createTestSimpleContentField,
+  createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField, createTestSimpleContentField,
 } from "../_helpers/Content";
-import { FormatterSpec, ParserSpec } from "@itwin/core-quantity";
-import { SchemaContext } from "@itwin/ecschema-metadata";
-import { SchemaMetadataContextProvider } from "../../presentation-components/common/SchemaMetadataContext";
 
-describe("InstanceFilter", () => {
+describe("InstanceFilterBuilder", () => {
   stubRaf();
   const classInfos: ClassInfo[] = [
     { id: "0x1", name: "Schema:Class1", label: "Class1" },
@@ -173,20 +164,22 @@ describe("InstanceFilter", () => {
     const property: PropertyDescription = {
       displayLabel: "Test Prop",
       name: "testProp",
-      typename: "double"
-    }
+      typename: "double",
+    };
 
     it("renders <UniquePropertyValuesSelector /> when operator is `IsEqual`", async () => {
       const rootGroup: PropertyFilterBuilderRuleGroup = {
         id: "root-id",
         operator: PropertyFilterRuleGroupOperator.And,
-        items: [{
-          id: "item-id",
-          groupId: "root-id",
-          property,
-          operator: PropertyFilterRuleOperator.IsEqual
-        }]
-      }
+        items: [
+          {
+            id: "item-id",
+            groupId: "root-id",
+            property,
+            operator: PropertyFilterRuleOperator.IsEqual,
+          },
+        ],
+      };
 
       const { queryByText } = render(
         <InstanceFilterBuilder
@@ -209,13 +202,15 @@ describe("InstanceFilter", () => {
       const rootGroup: PropertyFilterBuilderRuleGroup = {
         id: "root-id",
         operator: PropertyFilterRuleGroupOperator.And,
-        items: [{
-          id: "item-id",
-          groupId: "root-id",
-          property,
-          operator: PropertyFilterRuleOperator.IsNotEqual
-        }]
-      }
+        items: [
+          {
+            id: "item-id",
+            groupId: "root-id",
+            property,
+            operator: PropertyFilterRuleOperator.IsNotEqual,
+          },
+        ],
+      };
 
       const { queryByText } = render(
         <InstanceFilterBuilder
@@ -246,13 +241,15 @@ describe("InstanceFilter", () => {
     const rootGroup: PropertyFilterBuilderRuleGroup = {
       id: "root-id",
       operator: PropertyFilterRuleGroupOperator.And,
-      items: [{
-        id: "item-id",
-        groupId: "root-id",
-        property,
-        operator: PropertyFilterRuleOperator.Less,
-        value: { valueFormat: PropertyValueFormat.Primitive, value: 2.5, displayValue: "2.5" },
-      }],
+      items: [
+        {
+          id: "item-id",
+          groupId: "root-id",
+          property,
+          operator: PropertyFilterRuleOperator.Less,
+          value: { valueFormat: PropertyValueFormat.Primitive, value: 2.5, displayValue: "2.5" },
+        },
+      ],
     };
 
     beforeEach(() => {
@@ -267,12 +264,8 @@ describe("InstanceFilter", () => {
       sinon.stub(KoqPropertyValueFormatter.prototype, "getParserSpec").resolves(parserSpec as ParserSpec);
 
       sinon.stub(IModelApp, "quantityFormatter").get(() => ({
-        onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>()
-      }))
-    });
-
-    afterEach(() => {
-      sinon.stub()
+        onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
+      }));
     });
 
     it("does not render quantity input if there is no schema metadata context", async () => {
@@ -303,17 +296,17 @@ describe("InstanceFilter", () => {
       const { queryByDisplayValue } = render(
         <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={getSchemaContext}>
           <InstanceFilterBuilder
-          classes={classInfos}
-          selectedClasses={[]}
-          properties={[property]}
-          onClassDeselected={() => {}}
-          onClassSelected={() => {}}
-          onClearClasses={() => {}}
-          actions={testActions}
-          rootGroup={rootGroup}
-          imodel={testImodel}
-          descriptor={testDescriptor}
-        />
+            classes={classInfos}
+            selectedClasses={[]}
+            properties={[property]}
+            onClassDeselected={() => {}}
+            onClassSelected={() => {}}
+            onClearClasses={() => {}}
+            actions={testActions}
+            rootGroup={rootGroup}
+            imodel={testImodel}
+            descriptor={testDescriptor}
+          />
         </SchemaMetadataContextProvider>,
       );
 

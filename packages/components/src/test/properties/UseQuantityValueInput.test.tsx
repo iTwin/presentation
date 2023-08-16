@@ -19,11 +19,11 @@ function render(...args: Parameters<typeof renderRTL>) {
   const user = userEvent.setup();
   return {
     ...renderRTL(...args),
-    user
+    user,
   };
 }
 
-function TestInput({onChange, ...restProps}: UseQuantityValueInputProps & { onChange?: (value: QuantityValue) => void}) {
+function TestInput({ onChange, ...restProps }: UseQuantityValueInputProps & { onChange?: (value: QuantityValue) => void }) {
   const { quantityValue, inputProps } = useQuantityValueInput(restProps);
 
   useEffect(() => {
@@ -42,17 +42,20 @@ describe("UseQuantityValueInput", () => {
     parseToQuantityValue: sinon.stub<[string], QuantityParseResult>(),
   };
   const quantityFormatter = {
-    onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>()
+    onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
   };
 
-  let getFormatterSpecStub: sinon.SinonStub<Parameters<KoqPropertyValueFormatter["getFormatterSpec"]>, ReturnType<KoqPropertyValueFormatter["getFormatterSpec"]>>;
+  let getFormatterSpecStub: sinon.SinonStub<
+    Parameters<KoqPropertyValueFormatter["getFormatterSpec"]>,
+    ReturnType<KoqPropertyValueFormatter["getFormatterSpec"]>
+  >;
   let getParserSpecStub: sinon.SinonStub<Parameters<KoqPropertyValueFormatter["getParserSpec"]>, ReturnType<KoqPropertyValueFormatter["getParserSpec"]>>;
 
   before(() => {
     getFormatterSpecStub = sinon.stub(KoqPropertyValueFormatter.prototype, "getFormatterSpec");
     getParserSpecStub = sinon.stub(KoqPropertyValueFormatter.prototype, "getParserSpec");
 
-    sinon.stub(IModelApp, "quantityFormatter").get(() => (quantityFormatter))
+    sinon.stub(IModelApp, "quantityFormatter").get(() => quantityFormatter);
   });
 
   beforeEach(() => {
@@ -81,24 +84,24 @@ describe("UseQuantityValueInput", () => {
   });
 
   it("renders with placeholder", async () => {
-    const { queryByPlaceholderText } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ"/>);
+    const { queryByPlaceholderText } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" />);
     await waitFor(() => expect(queryByPlaceholderText("12.34 unit")).to.not.be.null);
   });
 
   it("renders with formatted initial raw value", async () => {
-    const { queryByDisplayValue } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" initialRawValue={2.5}/>);
+    const { queryByDisplayValue } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" initialRawValue={2.5} />);
     await waitFor(() => expect(queryByDisplayValue("2.5 unit")).to.not.be.null);
   });
 
   it("renders disabled input if cannot create formatter", async () => {
     getFormatterSpecStub.reset();
-    const { getByRole } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" initialRawValue={2.5}/>);
+    const { getByRole } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" initialRawValue={2.5} />);
     await waitFor(() => expect((getByRole("textbox") as HTMLInputElement).disabled).to.be.true);
   });
 
   it("renders disabled input if cannot create parser", async () => {
     getParserSpecStub.reset();
-    const { getByRole } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" initialRawValue={2.5}/>);
+    const { getByRole } = render(<TestInput schemaContext={schemaContext} koqName="testKOQ" initialRawValue={2.5} />);
     await waitFor(() => expect((getByRole("textbox") as HTMLInputElement).disabled).to.be.true);
   });
 

@@ -3,6 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { expect } from "chai";
+import { createRef } from "react";
+import sinon from "sinon";
 import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
@@ -10,9 +13,6 @@ import { Content, LabelDefinition, NavigationPropertyInfo } from "@itwin/present
 import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { expect } from "chai";
-import { createRef } from "react";
-import sinon from "sinon";
 import {
   NavigationPropertyTargetSelector,
   NavigationPropertyTargetSelectorAttributes,
@@ -275,8 +275,9 @@ describe("NavigationPropertyTargetSelector", () => {
     await user.type(inputContainer, "H", { skipClick: true });
     await waitFor(() => expect(queryByDisplayValue("HTarget Class InstanceE")).to.not.be.null);
 
+    // position cursor before last character.
+    await user.keyboard("{End}{ArrowLeft}");
     // Check if pressing `Space` does not invoke default `react-select` behavior.
-    await user.keyboard("{ArrowLeft}");
     await user.type(inputContainer, " ", { skipClick: true });
     await waitFor(() => expect(queryByDisplayValue("HTarget Class Instance E")).to.not.be.null);
 
