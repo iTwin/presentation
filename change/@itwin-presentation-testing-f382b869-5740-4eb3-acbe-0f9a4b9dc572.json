@@ -1,0 +1,7 @@
+{
+  "type": "major",
+  "comment": "Bumped `itwinjs-core` peer dependencies.",
+  "packageName": "@itwin/presentation-testing",
+  "email": "24278440+saskliutas@users.noreply.github.com",
+  "dependentChangeType": "patch"
+}
