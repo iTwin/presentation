@@ -103,11 +103,11 @@ function useDelayLoadedDescriptor(descriptorOrGetter: Descriptor | (() => Promis
   return descriptor;
 }
 
-interface PresedntationInstanceFilterDialogContentProps extends Omit<PresentationInstanceFilterDialogProps, "isOpen" | "title" | "descriptor"> {
+interface PresentationInstanceFilterDialogContentProps extends Omit<PresentationInstanceFilterDialogProps, "isOpen" | "title" | "descriptor"> {
   descriptor: Descriptor;
 }
 
-function PresentationInstanceFilterDialogContent(props: PresedntationInstanceFilterDialogContentProps) {
+function PresentationInstanceFilterDialogContent(props: PresentationInstanceFilterDialogContentProps) {
   const { onApply, initialFilter, descriptor, imodel, ruleGroupDepthLimit, filterResultCountRenderer, onClose } = props;
   const [initialPropertyFilter] = useState(() => (initialFilter ? convertPresentationFilterToPropertyFilter(descriptor, initialFilter.filter) : undefined));
 
