@@ -259,7 +259,7 @@ describe("NavigationPropertyTargetSelector", () => {
       getNavigationPropertyInfo: async () => testNavigationPropertyInfo,
       propertyRecord,
     };
-    const { getByDisplayValue, getByRole, queryByText } = render(<NavigationPropertyTargetSelector {...initialProps} />);
+    const { queryByDisplayValue, getByRole, queryByText } = render(<NavigationPropertyTargetSelector {...initialProps} />);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
@@ -268,16 +268,19 @@ describe("NavigationPropertyTargetSelector", () => {
     // Check if input's cursor is at the end of the text after pressing `End`.
     await user.keyboard("{End}");
     await user.type(inputContainer, "E", { skipClick: true });
+    await waitFor(() => expect(queryByDisplayValue("Target Class InstanceE")).to.not.be.null);
 
     // Check if input's cursor is at the start of the text after pressing `Home`.
     await user.keyboard("{Home}");
     await user.type(inputContainer, "H", { skipClick: true });
+    await waitFor(() => expect(queryByDisplayValue("HTarget Class InstanceE")).to.not.be.null);
 
     // Check if pressing `Space` does not invoke default `react-select` behavior.
+    await user.keyboard("{ArrowLeft}");
     await user.type(inputContainer, " ", { skipClick: true });
+    await waitFor(() => expect(queryByDisplayValue("HTarget Class Instance E")).to.not.be.null);
 
-    await waitFor(() => expect(getByDisplayValue("H Target Class InstanceE")).to.not.be.null);
-
+    // check if the menu is opened.
     await waitFor(() => expect(queryByText(contentItem.label.displayValue)).to.not.be.null);
 
     // Check if the menu is closed after the `tab` key was pressed.
@@ -289,10 +292,10 @@ describe("NavigationPropertyTargetSelector", () => {
     // Check if it's possible to type after option is selected and menu is opened again
     await user.keyboard("{Enter}");
     await user.type(inputContainer, "E", { skipClick: true });
-    await waitFor(() => expect(getByDisplayValue(`${contentItem.label.displayValue}E`)).to.not.be.null);
+    await waitFor(() => expect(queryByDisplayValue(`${contentItem.label.displayValue}E`)).to.not.be.null);
   });
 
-  it("click on input does not close menu when menu is openned", async () => {
+  it("click on input does not close menu when menu is opened", async () => {
     sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
     const propertyDescription = createNavigationPropertyDescription();
     const value = {

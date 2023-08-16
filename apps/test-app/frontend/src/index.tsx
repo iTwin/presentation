@@ -16,6 +16,7 @@ import { ITwinLocalization } from "@itwin/core-i18n";
 import { createFavoritePropertiesStorage, DefaultFavoritePropertiesStorageTypes, Presentation } from "@itwin/presentation-frontend";
 // __PUBLISH_EXTRACT_END__
 import { rpcInterfaces } from "@test-app/common";
+import { MyAppFrontend } from "./api/MyAppFrontend";
 import App from "./components/app/App";
 
 // initialize logging
@@ -54,6 +55,7 @@ async function initializeApp() {
 
   readyPromises.push(initializePresentation());
   readyPromises.push(UiComponents.initialize(IModelApp.localization));
+  readyPromises.push(IModelApp.quantityFormatter.setActiveUnitSystem("metric"));
   await Promise.all(readyPromises);
 }
 
@@ -63,9 +65,7 @@ async function initializePresentation() {
     presentation: {
       // specify locale for localizing presentation data, it can be changed afterwards
       activeLocale: IModelApp.localization.getLanguageList()[0],
-
-      // specify the preferred unit system
-      activeUnitSystem: "metric",
+      schemaContextProvider: MyAppFrontend.getSchemaContext.bind(MyAppFrontend),
     },
     favorites: {
       storage: createFavoritePropertiesStorage(DefaultFavoritePropertiesStorageTypes.UserPreferencesStorage),

@@ -51,8 +51,6 @@ export interface PresentationInstanceFilterDialogProps {
   title?: React.ReactNode;
   /** Initial filter that will be show when component is mounted. */
   initialFilter?: PresentationInstanceFilterInfo;
-  /** Should unique values renderer be enabled */
-  enableUniqueValuesRenderer?: boolean;
 }
 
 /**
@@ -110,7 +108,7 @@ interface PresedntationInstanceFilterDialogContentProps extends Omit<Presentatio
 }
 
 function PresentationInstanceFilterDialogContent(props: PresedntationInstanceFilterDialogContentProps) {
-  const { onApply, initialFilter, descriptor, imodel, ruleGroupDepthLimit, filterResultCountRenderer, onClose, enableUniqueValuesRenderer } = props;
+  const { onApply, initialFilter, descriptor, imodel, ruleGroupDepthLimit, filterResultCountRenderer, onClose } = props;
   const [initialPropertyFilter] = useState(() => (initialFilter ? convertPresentationFilterToPropertyFilter(descriptor, initialFilter.filter) : undefined));
 
   const { rootGroup, actions, buildFilter } = usePropertyFilterBuilder({
@@ -146,7 +144,6 @@ function PresentationInstanceFilterDialogContent(props: PresedntationInstanceFil
       <Dialog.Content className="presentation-instance-filter-content">
         <InstanceFilterBuilder
           {...filteringProps}
-          enableUniqueValuesRenderer={enableUniqueValuesRenderer}
           rootGroup={rootGroup}
           actions={actions}
           ruleGroupDepthLimit={ruleGroupDepthLimit}
@@ -188,7 +185,7 @@ function numericInputValidator(item: PropertyFilterBuilderRule) {
     item.value &&
     item.value.valueFormat === PropertyValueFormat.Primitive &&
     item.property &&
-    istypenameNumeric(item.property.typename) &&
+    isTypenameNumeric(item.property.typename) &&
     item.value.value === undefined &&
     item.value.displayValue !== ""
   ) {
@@ -197,7 +194,7 @@ function numericInputValidator(item: PropertyFilterBuilderRule) {
   return defaultPropertyFilterBuilderRuleValidator(item);
 }
 
-function istypenameNumeric(typename: string) {
+function isTypenameNumeric(typename: string) {
   return (
     typename === StandardTypeNames.Number || typename === StandardTypeNames.Int || typename === StandardTypeNames.Float || typename === StandardTypeNames.Double
   );

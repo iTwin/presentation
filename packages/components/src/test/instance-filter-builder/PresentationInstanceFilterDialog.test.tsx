@@ -11,7 +11,6 @@ import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Descriptor, PropertyValueFormat } from "@itwin/presentation-common";
-import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
@@ -20,6 +19,7 @@ import { PresentationInstanceFilterInfo } from "../../presentation-components/in
 import * as instanceFilterBuilderUtils from "../../presentation-components/instance-filter-builder/Utils";
 import { createTestECClassInfo, stubDOMMatrix, stubRaf } from "../_helpers/Common";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
+import { Presentation } from "@itwin/presentation-frontend";
 
 describe("PresentationInstanceFilterDialog", () => {
   stubRaf();
@@ -27,27 +27,45 @@ describe("PresentationInstanceFilterDialog", () => {
 
   const category = createTestCategoryDescription({ name: "root", label: "Root" });
   const classInfo = createTestECClassInfo();
-  const propertiesField1 = createTestPropertiesContentField({
-    properties: [{ property: { classInfo, name: "prop1", type: "string" } }],
-    name: "prop1Field",
-    label: "propertiesField1",
+  const stringField = createTestPropertiesContentField({
+    properties: [{ property: { classInfo, name: "stringProps", type: "string" } }],
+    name: "stringField",
+    label: "String Field",
     category,
   });
-  const propertiesField2 = createTestPropertiesContentField({
-    properties: [{ property: { classInfo, name: "prop2", type: "double" } }],
+  const numericField = createTestPropertiesContentField({
+    properties: [{ property: { classInfo, name: "numericProp", type: "double" } }],
     type: { valueFormat: PropertyValueFormat.Primitive, typeName: "double" },
-    name: "prop2Field",
-    label: "propertiesField2",
+    name: "numericField",
+    label: "Numeric Field",
+    category,
+  });
+  const quantityField = createTestPropertiesContentField({
+    properties: [{
+      property: {
+        classInfo,
+        name: "quantityProp",
+        type: "double",
+        kindOfQuantity: {
+          name: "testKOQ",
+          label: "Test KOQ",
+          persistenceUnit: "unit",
+        }
+      }
+    }],
+    type: { valueFormat: PropertyValueFormat.Primitive, typeName: "double" },
+    name: "quantityField",
+    label: "Quantity Field",
     category,
   });
   const descriptor = createTestContentDescriptor({
     selectClasses: [{ selectClassInfo: classInfo, isSelectPolymorphic: false }],
     categories: [category],
-    fields: [propertiesField1, propertiesField2],
+    fields: [stringField, numericField, quantityField],
   });
   const initialFilter: PresentationInstanceFilterInfo = {
     filter: {
-      field: propertiesField1,
+      field: stringField,
       operator: PropertyFilterRuleOperator.IsNull,
       value: undefined,
     },
@@ -58,7 +76,7 @@ describe("PresentationInstanceFilterDialog", () => {
   const onCloseEvent = new BeEvent<() => void>();
 
   before(() => {
-    HTMLElement.prototype.scrollIntoView = () => {};
+    HTMLElement.prototype.scrollIntoView = () => { };
   });
 
   after(() => {
@@ -69,8 +87,9 @@ describe("PresentationInstanceFilterDialog", () => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
-    await UiComponents.initialize(localization);
-    await Presentation.initialize();
+
+    sinon.stub(Presentation, "localization").get(() => localization);
+    sinon.stub(UiComponents, "translate").callsFake((key) => key as string);
 
     imodelMock.setup((x) => x.key).returns(() => "test_imodel");
     imodelMock.setup((x) => x.onClose).returns(() => onCloseEvent);
@@ -83,15 +102,13 @@ describe("PresentationInstanceFilterDialog", () => {
   afterEach(() => {
     onCloseEvent.raiseEvent();
     imodelMock.reset();
-    UiComponents.terminate();
-    Presentation.terminate();
     sinon.restore();
   });
 
   it("invokes 'onApply' with filter", async () => {
     const spy = sinon.spy();
     const { container, getByText, getByDisplayValue } = render(
-      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />,
+      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => { }} onApply={spy} isOpen={true} />,
     );
 
     const applyButton = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
@@ -102,10 +119,10 @@ describe("PresentationInstanceFilterDialog", () => {
     expect(propertySelector).to.not.be.null;
     fireEvent.focus(propertySelector!);
     // select property
-    fireEvent.click(getByText(propertiesField1.label));
+    fireEvent.click(getByText(stringField.label));
 
     // wait until property is selected
-    await waitFor(() => getByDisplayValue(propertiesField1.label));
+    await waitFor(() => getByDisplayValue(stringField.label));
 
     // open operator selector
     const operatorSelector = container.querySelector<HTMLInputElement>(".rule-operator .iui-select-button");
@@ -121,7 +138,7 @@ describe("PresentationInstanceFilterDialog", () => {
 
     expect(spy).to.be.calledOnceWith({
       filter: {
-        field: propertiesField1,
+        field: stringField,
         operator: PropertyFilterRuleOperator.IsNotNull,
         value: undefined,
       },
@@ -132,7 +149,7 @@ describe("PresentationInstanceFilterDialog", () => {
   it("does not invoke `onApply` when filter is invalid", async () => {
     const spy = sinon.spy();
     const { container, getByText, getByDisplayValue } = render(
-      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />,
+      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => { }} onApply={spy} isOpen={true} />,
     );
 
     const applyButton = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
@@ -143,10 +160,10 @@ describe("PresentationInstanceFilterDialog", () => {
     expect(propertySelector).to.not.be.null;
     fireEvent.focus(propertySelector!);
     // select property
-    fireEvent.click(getByText(propertiesField1.label));
+    fireEvent.click(getByText(stringField.label));
 
     // wait until property is selected
-    await waitFor(() => getByDisplayValue(propertiesField1.label));
+    await waitFor(() => getByDisplayValue(stringField.label));
     expect(applyButton?.disabled).to.be.false;
 
     fireEvent.click(applyButton!);
@@ -158,7 +175,7 @@ describe("PresentationInstanceFilterDialog", () => {
     sinon.stub(instanceFilterBuilderUtils, "createPresentationInstanceFilter").returns(undefined);
     const spy = sinon.spy();
     const { container, getByText, getByDisplayValue } = render(
-      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />,
+      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => { }} onApply={spy} isOpen={true} />,
     );
 
     const applyButton = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
@@ -169,10 +186,10 @@ describe("PresentationInstanceFilterDialog", () => {
     expect(propertySelector).to.not.be.null;
     fireEvent.focus(propertySelector!);
     // select property
-    fireEvent.click(getByText(propertiesField1.label));
+    fireEvent.click(getByText(stringField.label));
 
     // wait until property is selected
-    await waitFor(() => getByDisplayValue(propertiesField1.label));
+    await waitFor(() => getByDisplayValue(stringField.label));
 
     // open operator selector
     const operatorSelector = container.querySelector<HTMLInputElement>(".rule-operator .iui-select-button");
@@ -189,10 +206,10 @@ describe("PresentationInstanceFilterDialog", () => {
     expect(spy).to.not.be.called;
   });
 
-  it("sets error message if numeric inpout is invalid", async () => {
+  it("sets error message if numeric input is invalid", async () => {
     const user = userEvent.setup();
-    const { container, getByText, getByDisplayValue, getByRole } = render(
-      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => {}} onApply={() => {}} isOpen={true} />,
+    const { container, queryByDisplayValue, getByText, getByTestId, queryByText } = render(
+      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => { }} onApply={() => { }} isOpen={true} />,
     );
 
     const applyButton = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
@@ -203,21 +220,26 @@ describe("PresentationInstanceFilterDialog", () => {
     expect(propertySelector).to.not.be.null;
     fireEvent.focus(propertySelector!);
     // select property
-    fireEvent.click(getByText(propertiesField2.label));
+    fireEvent.click(getByText(numericField.label));
 
     // wait until property is selected
-    await waitFor(() => getByDisplayValue(propertiesField2.label));
+    await waitFor(() => expect(queryByDisplayValue(numericField.label)).to.not.be.null);
+
+    // open operator selector
+    const operatorSelector = container.querySelector<HTMLInputElement>(".rule-operator .iui-select-button");
+    expect(operatorSelector).to.not.be.null;
+    fireEvent.click(operatorSelector!);
+    // select operator
+    fireEvent.click(getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.Less)));
 
     // type invalid value in input
-    const inputContainer = getByRole("textbox");
+    const inputContainer = await waitFor(() => getByTestId("numeric-input"));
 
     await user.type(inputContainer, "1e");
-
     expect(applyButton?.disabled).to.be.false;
 
     fireEvent.click(applyButton!);
-
-    await waitFor(() => expect(getByText("instance-filter-builder.error-messages.notANumber")).to.not.be.undefined);
+    await waitFor(() => expect(queryByText("instance-filter-builder.error-messages.notANumber")).to.not.be.undefined);
   });
 
   it("renders custom title", () => {
@@ -228,7 +250,7 @@ describe("PresentationInstanceFilterDialog", () => {
       <PresentationInstanceFilterDialog
         imodel={imodelMock.object}
         descriptor={descriptor}
-        onClose={() => {}}
+        onClose={() => { }}
         title={<div>{title}</div>}
         onApply={spy}
         isOpen={true}
@@ -247,7 +269,7 @@ describe("PresentationInstanceFilterDialog", () => {
       <PresentationInstanceFilterDialog
         imodel={imodelMock.object}
         descriptor={descriptor}
-        onClose={() => {}}
+        onClose={() => { }}
         filterResultCountRenderer={() => {
           return <div>{count}</div>;
         }}
@@ -264,7 +286,7 @@ describe("PresentationInstanceFilterDialog", () => {
     const descriptorGetter = async () => descriptor;
 
     const { container } = render(
-      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptorGetter} onClose={() => {}} onApply={spy} isOpen={true} />,
+      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptorGetter} onClose={() => { }} onApply={spy} isOpen={true} />,
     );
 
     await waitFor(() => {
@@ -279,7 +301,7 @@ describe("PresentationInstanceFilterDialog", () => {
     const descriptorGetter = async () => undefined as unknown as Descriptor;
 
     const { container } = render(
-      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptorGetter} onClose={() => {}} onApply={spy} isOpen={true} />,
+      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptorGetter} onClose={() => { }} onApply={spy} isOpen={true} />,
     );
 
     await waitFor(() => {

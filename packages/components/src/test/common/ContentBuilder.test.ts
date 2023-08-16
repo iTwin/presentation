@@ -7,13 +7,12 @@ import { expect } from "chai";
 import { ArrayValue, PropertyRecord, StandardTypeNames, StructValue } from "@itwin/appui-abstract";
 import { EnumerationInfo, FieldHierarchy, PropertyValueFormat, traverseContentItem } from "@itwin/presentation-common";
 import {
-  createPropertyDescriptionFromFieldInfo,
   FieldHierarchyRecord,
   IPropertiesAppender,
   PropertyRecordsBuilder,
 } from "../../presentation-components/common/ContentBuilder";
 import { NumericEditorName } from "../../presentation-components/properties/NumericPropertyEditor";
-import { createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
+import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
 import {
   createTestCategoryDescription,
   createTestContentDescriptor,
@@ -145,9 +144,37 @@ describe("PropertyRecordsBuilder", () => {
   });
 
   it("sets editor name when field info types typeName is Number", () => {
-    const descriptor = createPropertyDescriptionFromFieldInfo(
-      createTestSimpleContentField({ type: { valueFormat: PropertyValueFormat.Primitive, typeName: StandardTypeNames.Number } }),
-    );
-    expect(descriptor.editor?.name).to.eq(NumericEditorName);
+    const descriptor = createTestContentDescriptor({
+      fields: [createTestSimpleContentField({ type: { valueFormat: PropertyValueFormat.Primitive, typeName: StandardTypeNames.Number } })],
+    });
+    const item = createTestContentItem({ values: {}, displayValues: {} });
+    traverseContentItem(builder, descriptor, item);
+    expect(builder.entries.length).to.eq(1);
+    expect(builder.entries[0].record.property.editor).to.deep.eq({
+      name: NumericEditorName,
+    });
+  });
+
+  it("sets quantity type", () => {
+    const descriptor = createTestContentDescriptor({
+      fields: [createTestPropertiesContentField({
+        properties: [{
+          property: {
+            classInfo: createTestECClassInfo(),
+            name: "test-props",
+            type: "string",
+            kindOfQuantity: {
+              label: "KOQ Label",
+              name: "testKOQ",
+              persistenceUnit: "testUnit"
+            }
+          }
+        }]
+      })],
+    });
+    const item = createTestContentItem({ values: {}, displayValues: {} });
+    traverseContentItem(builder, descriptor, item);
+    expect(builder.entries.length).to.eq(1);
+    expect(builder.entries[0].record.property.quantityType).to.be.eq("testKOQ");
   });
 });

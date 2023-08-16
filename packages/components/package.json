@@ -58,15 +58,17 @@
     "rxjs": "^7.8.1"
   },
   "peerDependencies": {
-    "@itwin/appui-abstract": "^3.6.3 || ^4.0.0",
+    "@itwin/appui-abstract": "^4.0.0",
     "@itwin/components-react": "^4.0.0",
-    "@itwin/core-bentley": "^3.6.3 || ^4.0.0",
-    "@itwin/core-common": "^3.6.3 || ^4.0.0",
-    "@itwin/core-frontend": "^3.6.3 || ^4.0.0",
+    "@itwin/core-bentley": "^4.0.0",
+    "@itwin/core-common": "^4.0.0",
+    "@itwin/core-frontend": "^4.0.0",
     "@itwin/core-react": "^4.0.0",
+    "@itwin/core-quantity": "^4.0.0",
+    "@itwin/ecschema-metadata": "^4.0.0",
     "@itwin/imodel-components-react": "^4.0.0",
-    "@itwin/presentation-common": "^3.6.3 || ^4.0.0",
-    "@itwin/presentation-frontend": "^3.6.3 || ^4.0.0",
+    "@itwin/presentation-common": "^4.0.0",
+    "@itwin/presentation-frontend": "^4.0.0",
     "react": "^17.0.0 || ^18.0.0",
     "react-dom": "^17.0.0 || ^18.0.0"
   },

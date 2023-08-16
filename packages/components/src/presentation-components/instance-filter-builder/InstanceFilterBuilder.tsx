@@ -12,7 +12,7 @@ import { ActionMeta, MultiValue, SingleValue } from "react-select";
 import { BehaviorSubject, from, of } from "rxjs";
 import { map } from "rxjs/internal/operators/map";
 import { switchAll } from "rxjs/internal/operators/switchAll";
-import { PropertyDescription, StandardTypeNames } from "@itwin/appui-abstract";
+import { PrimitiveValue, PropertyDescription, PropertyValueFormat } from "@itwin/appui-abstract";
 import {
   PropertyFilterBuilderRenderer,
   PropertyFilterBuilderRendererProps,
@@ -30,6 +30,9 @@ import { MultiTagSelect } from "./MultiTagSelect";
 import { PresentationInstanceFilterProperty } from "./PresentationInstanceFilterProperty";
 import { createInstanceFilterPropertyInfos, getInstanceFilterFieldName, InstanceFilterPropertyInfo } from "./Utils";
 import { UniquePropertyValuesSelector } from "../properties/UniquePropertyValuesSelector";
+import { useSchemaMetadataContext } from "../common/SchemaMetadataContext";
+import { Input } from "@itwin/itwinui-react";
+import { useQuantityValueInput, UseQuantityValueInputProps } from "../properties/UseQuantityValueInput";
 
 /**
  * Props for [[InstanceFilterBuilder]] component.
@@ -50,8 +53,6 @@ export interface InstanceFilterBuilderProps extends PropertyFilterBuilderRendere
   imodel: IModelConnection;
   /** [Descriptor]($presentation-common) that will be used for getting [[navigationPropertyEditorContext]]. */
   descriptor: Descriptor;
-  /** Should unique values renderer be enabled */
-  enableUniqueValuesRenderer?: boolean;
 }
 
 /**
@@ -60,7 +61,7 @@ export interface InstanceFilterBuilderProps extends PropertyFilterBuilderRendere
  * @internal
  */
 export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
-  const { selectedClasses, classes, onClassSelected, onClassDeselected, onClearClasses, imodel, descriptor, enableUniqueValuesRenderer, ...restProps } = props;
+  const { selectedClasses, classes, onClassSelected, onClassDeselected, onClearClasses, imodel, descriptor, ...restProps } = props;
 
   const navigationPropertyEditorContextValue = useFilterBuilderNavigationPropertyEditorContext(imodel, descriptor);
 
@@ -104,11 +105,7 @@ export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
         <navigationPropertyEditorContext.Provider value={navigationPropertyEditorContextValue}>
           <PropertyFilterBuilderRenderer
             {...restProps}
-            ruleValueRenderer={
-              enableUniqueValuesRenderer
-                ? (pr: PropertyFilterBuilderRuleValueRendererProps) => <UniqueValuesRenderer {...pr} imodel={imodel} descriptor={descriptor} />
-                : undefined
-            }
+            ruleValueRenderer={(rendererProps: PropertyFilterBuilderRuleValueRendererProps) => <FilterBuilderValueRenderer {...rendererProps} imodel={imodel} descriptor={descriptor} />}
           />
         </navigationPropertyEditorContext.Provider>
       </div>
@@ -328,12 +325,35 @@ async function computeClassesByProperty(classes: ClassInfo[], property: Instance
   return classesWithProperty;
 }
 
-function UniqueValuesRenderer(props: PropertyFilterBuilderRuleValueRendererProps & { imodel: IModelConnection; descriptor: Descriptor }) {
-  if (
-    props.property.typename !== StandardTypeNames.Navigation &&
-    (props.operator === PropertyFilterRuleOperator.IsEqual || props.operator === PropertyFilterRuleOperator.IsNotEqual)
-  ) {
+function FilterBuilderValueRenderer(props: PropertyFilterBuilderRuleValueRendererProps & { imodel: IModelConnection; descriptor: Descriptor }) {
+  const schemaMetadataContext = useSchemaMetadataContext();
+  if (props.operator === PropertyFilterRuleOperator.IsEqual || props.operator === PropertyFilterRuleOperator.IsNotEqual) {
     return <UniquePropertyValuesSelector {...props} />;
   }
+
+  if (props.property.quantityType && schemaMetadataContext) {
+    const initialValue = (props.value as PrimitiveValue)?.value as number;
+    return <QuantityPropertyValue onChange={props.onChange} koqName={props.property.quantityType} schemaContext={schemaMetadataContext.schemaContext} initialRawValue={initialValue} />;
+  }
+
   return <PropertyFilterBuilderRuleValue {...props} />;
+}
+
+function QuantityPropertyValue({onChange, ...koqInputProps}: UseQuantityValueInputProps & { onChange: PropertyFilterBuilderRuleValueRendererProps["onChange"] }) {
+  const { quantityValue, inputProps} = useQuantityValueInput(koqInputProps);
+
+  const onChangeRef = useLatestRef(onChange);
+  useEffect(() => {
+    onChangeRef.current({ valueFormat: PropertyValueFormat.Primitive, value: quantityValue.rawValue, displayValue: quantityValue.formattedValue})
+  }, [quantityValue, onChangeRef]);
+
+  return <Input size="small" {...inputProps} />;
+}
+
+function useLatestRef<T>(value: T) {
+  const valueRef = useRef<T>(value);
+  useEffect(() => {
+    valueRef.current = value;
+  }, [value]);
+  return valueRef;
 }
