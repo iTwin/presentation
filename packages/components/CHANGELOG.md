@@ -10,18 +10,18 @@ Wed, 09 Aug 2023 11:47:16 GMT
 
 ### Minor changes
 
-- Make sure `FilteredPresentationTreeDataProvider` creates same tree node items as parent `PresentationTreeDataProvider`. ([commit](https://github.com/iTwin/presentation/commit/3f36136778e2444c1224a5b68b0a21f707b5685f))
+- Make sure `FilteredPresentationTreeDataProvider` creates same tree node items as parent `PresentationTreeDataProvider`. ([commit](https://github.com/iTwin/presentation/commit/3d770080cb55dcfef0cb39a32119ad8ce042aad6))
 
 ### Patches
 
-- `InstanceFilterDialog`: fix resize observer error when navigation property is selected. ([commit](https://github.com/iTwin/presentation/commit/3f36136778e2444c1224a5b68b0a21f707b5685f))
-- Update package dependencies ([commit](https://github.com/iTwin/presentation/commit/3f36136778e2444c1224a5b68b0a21f707b5685f))
-- Add `Home` and `End` buttons functionality to the navigation property value selector. ([commit](https://github.com/iTwin/presentation/commit/3f36136778e2444c1224a5b68b0a21f707b5685f))
-- Remove dead code ([commit](https://github.com/iTwin/presentation/commit/3f36136778e2444c1224a5b68b0a21f707b5685f))
+- `InstanceFilterDialog`: fix resize observer error when navigation property is selected. ([commit](https://github.com/iTwin/presentation/commit/11ad3f98efde2a8eb78aa9f2c986472a34c66ea7))
+- Update package dependencies ([commit](https://github.com/iTwin/presentation/commit/22593a8fddc52b5c547c024d64e7cc5659c81d01))
+- Add `Home` and `End` buttons functionality to the navigation property value selector. ([commit](https://github.com/iTwin/presentation/commit/0840ddf4b9ac098eb457169696bd48ea88797095))
+- Remove dead code ([commit](https://github.com/iTwin/presentation/commit/f18cae3e518e50265c39ae2684fe91bc56cf38de))
 - `useControlledPresentationTreeFiltering`: Reset `filteredNodeLoader` after filter string is changed and filtering is in progress. ([commit](https://github.com/iTwin/presentation/commit/3f36136778e2444c1224a5b68b0a21f707b5685f))
-- `InstanceFilterDialog`: Add filter expression for `Point` type. ([commit](https://github.com/iTwin/presentation/commit/3f36136778e2444c1224a5b68b0a21f707b5685f))
-- Add custom numeric property editor. ([commit](https://github.com/iTwin/presentation/commit/3f36136778e2444c1224a5b68b0a21f707b5685f))
-- Update `rxjs` dependency to `7.8.1` ([commit](https://github.com/iTwin/presentation/commit/3f36136778e2444c1224a5b68b0a21f707b5685f))
+- `InstanceFilterDialog`: Add filter expression for `Point` type. ([commit](https://github.com/iTwin/presentation/commit/a9f4c2b467bfdd75501f4e48bfaadd51108665b1))
+- Add custom numeric property editor. ([commit](https://github.com/iTwin/presentation/commit/aeae3ff736d772ce61b0dfdb34335f1a7d76f1ce))
+- Update `rxjs` dependency to `7.8.1` ([commit](https://github.com/iTwin/presentation/commit/cfef82ba0050915a1d2bb5d3bd9538737bc47326))
 
 ## 4.0.1
 

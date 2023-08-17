@@ -10,8 +10,8 @@ Wed, 09 Aug 2023 11:47:16 GMT
 
 ### Patches
 
-- Set span status to error when it contains error logs ([commit](https://github.com/iTwin/presentation/commit/3f36136778e2444c1224a5b68b0a21f707b5685f))
-- Update package dependencies ([commit](https://github.com/iTwin/presentation/commit/3f36136778e2444c1224a5b68b0a21f707b5685f))
+- Set span status to error when it contains error logs ([commit](https://github.com/iTwin/presentation/commit/ea3a0ea2c27f773ba9ecf49c81d25af4cfd7caf8))
+- Update package dependencies ([commit](https://github.com/iTwin/presentation/commit/22593a8fddc52b5c547c024d64e7cc5659c81d01))
 
 ## 4.0.0
 

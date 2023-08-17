@@ -10,7 +10,7 @@ Wed, 09 Aug 2023 11:47:16 GMT
 
 ### Patches
 
-- Update package dependencies ([commit](https://github.com/iTwin/presentation/commit/3f36136778e2444c1224a5b68b0a21f707b5685f))
+- Update package dependencies ([commit](https://github.com/iTwin/presentation/commit/22593a8fddc52b5c547c024d64e7cc5659c81d01))
 
 ## 4.0.1
 

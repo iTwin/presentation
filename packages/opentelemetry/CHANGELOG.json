@@ -10,13 +10,13 @@
           {
             "author": "35135765+grigasp@users.noreply.github.com",
             "package": "@itwin/presentation-opentelemetry",
-            "commit": "3f36136778e2444c1224a5b68b0a21f707b5685f",
+            "commit": "ea3a0ea2c27f773ba9ecf49c81d25af4cfd7caf8",
             "comment": "Set span status to error when it contains error logs"
           },
           {
             "author": "35135765+grigasp@users.noreply.github.com",
             "package": "@itwin/presentation-opentelemetry",
-            "commit": "3f36136778e2444c1224a5b68b0a21f707b5685f",
+            "commit": "22593a8fddc52b5c547c024d64e7cc5659c81d01",
             "comment": "Update package dependencies"
           }
         ],
@@ -24,25 +24,25 @@
           {
             "author": "anmol.shrestha@bentley.com",
             "package": "@itwin/presentation-opentelemetry",
-            "commit": "3f36136778e2444c1224a5b68b0a21f707b5685f",
+            "commit": "da5b999c8082061f188b7ee0c1e78e62e5c95f2b",
             "comment": "Upgrade to eslint@8 and @itwin/eslint-plugin accordingly"
           },
           {
             "author": "35135765+grigasp@users.noreply.github.com",
             "package": "@itwin/presentation-opentelemetry",
-            "commit": "3f36136778e2444c1224a5b68b0a21f707b5685f",
+            "commit": "cfef82ba0050915a1d2bb5d3bd9538737bc47326",
             "comment": "Update `itwinjs-core` dev dependencies to `4.1.0-dev.62`"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-opentelemetry",
-            "commit": "3f36136778e2444c1224a5b68b0a21f707b5685f",
+            "commit": "c17f261730a7d0249f32eac72795a95c94fb6366",
             "comment": "Fixed formatting"
           },
           {
             "author": "35135765+grigasp@users.noreply.github.com",
             "package": "@itwin/presentation-opentelemetry",
-            "commit": "3f36136778e2444c1224a5b68b0a21f707b5685f",
+            "commit": "01baa357cc66aeba1ff2b431a1205303e8783058",
             "comment": "Upgrade `@itwin/eslint-plugin` to `4.0.0-dev.48`"
           }
         ]
