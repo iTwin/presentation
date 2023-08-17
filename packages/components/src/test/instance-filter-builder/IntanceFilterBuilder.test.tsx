@@ -8,7 +8,11 @@ import sinon from "sinon";
 import * as moq from "typemoq";
 import { PropertyDescription, PropertyValueFormat } from "@itwin/appui-abstract";
 import {
-  PropertyFilterBuilderActions, PropertyFilterBuilderRuleGroup, PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator, UiComponents,
+  PropertyFilterBuilderActions,
+  PropertyFilterBuilderRuleGroup,
+  PropertyFilterRuleGroupOperator,
+  PropertyFilterRuleOperator,
+  UiComponents,
 } from "@itwin/components-react";
 import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
@@ -22,12 +26,17 @@ import { renderHook } from "@testing-library/react-hooks";
 import { SchemaMetadataContextProvider } from "../../presentation-components/common/SchemaMetadataContext";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import {
-  InstanceFilterBuilder, useFilterBuilderNavigationPropertyEditorContext, usePresentationInstanceFilteringProps,
+  InstanceFilterBuilder,
+  useFilterBuilderNavigationPropertyEditorContext,
+  usePresentationInstanceFilteringProps,
 } from "../../presentation-components/instance-filter-builder/InstanceFilterBuilder";
 import { INSTANCE_FILTER_FIELD_SEPARATOR } from "../../presentation-components/instance-filter-builder/Utils";
 import { createTestECClassInfo, stubRaf } from "../_helpers/Common";
 import {
-  createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField, createTestSimpleContentField,
+  createTestCategoryDescription,
+  createTestContentDescriptor,
+  createTestPropertiesContentField,
+  createTestSimpleContentField,
 } from "../_helpers/Content";
 
 describe("InstanceFilterBuilder", () => {
