@@ -40,35 +40,35 @@ Tue, 02 May 2023 11:39:31 GMT
 
 ### Major changes
 
-- Upgrade to AppUI 4.0 ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- Upgrade to AppUI 4.0 ([commit](https://github.com/iTwin/presentation/commit/c869d568d3b462670d20e1ec31807aee15a0857e))
 
 ### Minor changes
 
-- Deprecate `IContentDataProvider.getFieldByPropertyRecord` in favor of the new `IContentDataProvider.getFieldByPropertyDescription`. ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
-- Unified hierarchy update handling in all situations (after iModel change, ruleset change or ruleset variables change) ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
-- Add support for hierarchy level size limiting ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
-- Updated `@itwinui-react` package to `^2.5.0` ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
-- Prepared package to be used with React 18. Updated React `peerDependency` to `^17.0.0 || ^18.0.0` ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
-- Bump minimum required `itwinjs-core` version to `3.6.3` ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
-- Added custom hook to get Presentation data for displaying it in table components. ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
-- `IPresentationTreeDataProvider`: deprecated `getNodeKey` method in favor of getting `NodeKey` directly from `TreeNodeItem` using `isPresentationTreeNodeItem` typeguard. ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- Deprecate `IContentDataProvider.getFieldByPropertyRecord` in favor of the new `IContentDataProvider.getFieldByPropertyDescription`. ([commit](https://github.com/iTwin/presentation/commit/4c31428c0bff68186256b9375edf41e68c75c4f2))
+- Unified hierarchy update handling in all situations (after iModel change, ruleset change or ruleset variables change) ([commit](https://github.com/iTwin/presentation/commit/ba7ef1aab92651f624c6d9190e150c438f8cfab8))
+- Add support for hierarchy level size limiting ([commit](https://github.com/iTwin/presentation/commit/6bf1a99ec570751e16f30af658e0fa7e27e7631f))
+- Updated `@itwinui-react` package to `^2.5.0` ([commit](https://github.com/iTwin/presentation/commit/fbbb45e2a75fb11f282f2474f6419cd20a65829c))
+- Prepared package to be used with React 18. Updated React `peerDependency` to `^17.0.0 || ^18.0.0` ([commit](https://github.com/iTwin/presentation/commit/d46358ebcd7e035d36e700b2a76c581922e1053b))
+- Bump minimum required `itwinjs-core` version to `3.6.3` ([commit](https://github.com/iTwin/presentation/commit/7bf12337f09b7fda0362474d3d63b18bb4b07aab))
+- Added custom hook to get Presentation data for displaying it in table components. ([commit](https://github.com/iTwin/presentation/commit/90d197c1949d05f456d818a32c150e0096b85747))
+- `IPresentationTreeDataProvider`: deprecated `getNodeKey` method in favor of getting `NodeKey` directly from `TreeNodeItem` using `isPresentationTreeNodeItem` typeguard. ([commit](https://github.com/iTwin/presentation/commit/f24452ceeb1277d85e0f515d8e18a24493242833))
 
 ### Patches
 
-- Fixed Table rows not loading with latest `presentation-frontend` version ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
-- `PresentationTreeNodeRenderer`: ensure that the action buttons have the same background color as the node ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
-- Set editor to `StandardEditorNames.NumericInput` for all numeric properties ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
-- `NavigationPropertyTargetSelector`: add white background to the chevron ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
-- `InstanceFilterDialog`: Ensure "Accept" button is enabled when opening the dialog with pre-filled values ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
-- Fix failure to load property data when nested properties are placed in root categories different from their parent property category ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
-- `PresentationTreeDataProvider`: Handle errors that may occur when loading nodes ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
-- Fixed styles in `PresentationInstanceFilterBuilder` component. ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
-- Fixed `usePresentationTable` to re -throw errors in React render loop on failure to get table content. Also affects `usePresentationTableWithUnifiedSelection` hook. ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- Fixed Table rows not loading with latest `presentation-frontend` version ([commit](https://github.com/iTwin/presentation/commit/d6145c666d398c5c22f7d7402c318ec924232009))
+- `PresentationTreeNodeRenderer`: ensure that the action buttons have the same background color as the node ([commit](https://github.com/iTwin/presentation/commit/98e77a3d2dcd57d758f77bdaa5e82971c82d0b09))
+- Set editor to `StandardEditorNames.NumericInput` for all numeric properties ([commit](https://github.com/iTwin/presentation/commit/acac9a6426372eb68010bf737f4b8308edad3bdc))
+- `NavigationPropertyTargetSelector`: add white background to the chevron ([commit](https://github.com/iTwin/presentation/commit/015bd5926437beb911cb0947958a56c4f46a2c5e))
+- `InstanceFilterDialog`: Ensure "Accept" button is enabled when opening the dialog with pre-filled values ([commit](https://github.com/iTwin/presentation/commit/acac9a6426372eb68010bf737f4b8308edad3bdc))
+- Fix failure to load property data when nested properties are placed in root categories different from their parent property category ([commit](https://github.com/iTwin/presentation/commit/3e241403894c693bb94214ad186ea04f17b5d4b5))
+- `PresentationTreeDataProvider`: Handle errors that may occur when loading nodes ([commit](https://github.com/iTwin/presentation/commit/6bf1a99ec570751e16f30af658e0fa7e27e7631f))
+- Fixed styles in `PresentationInstanceFilterBuilder` component. ([commit](https://github.com/iTwin/presentation/commit/39ca07c58f3031c97fbd760df53dc5c6a9b5222e))
+- Fixed `usePresentationTable` to re -throw errors in React render loop on failure to get table content. Also affects `usePresentationTableWithUnifiedSelection` hook. ([commit](https://github.com/iTwin/presentation/commit/cc86391c6e437da4cec8365326e99db2a5423d1b))
 
 ### Changes
 
-- Updated to TypeScript 5.0 ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
-- Update dependencies ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- Updated to TypeScript 5.0 ([commit](https://github.com/iTwin/presentation/commit/4b7924ee69265aaadeaba81f02162bf5c404d33a))
+- Update dependencies ([commit](https://github.com/iTwin/presentation/commit/ddf8cf327436fa38dc304666992e9fb66e942933))
 
 ## 3.7.4
 

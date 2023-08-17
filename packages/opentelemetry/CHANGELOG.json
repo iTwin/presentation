@@ -49,45 +49,6 @@
       }
     },
     {
-      "date": "Thu, 15 Jun 2023 07:31:33 GMT",
-      "tag": "@itwin/presentation-opentelemetry_v4.0.0",
-      "version": "4.0.0",
-      "comments": {
-        "none": [
-          {
-            "author": "35135765+grigasp@users.noreply.github.com",
-            "package": "@itwin/presentation-opentelemetry",
-            "commit": "49a6fa2ab5256d00d4424033d5b0efb96e049a6b",
-            "comment": "Upgrade `itwinjs-core` devDependencies to `4.0.0-rc`"
-          },
-          {
-            "author": "35135765+grigasp@users.noreply.github.com",
-            "package": "@itwin/presentation-opentelemetry",
-            "commit": "49a6fa2ab5256d00d4424033d5b0efb96e049a6b",
-            "comment": "Extract APIs of published packages"
-          },
-          {
-            "author": "35135765+grigasp@users.noreply.github.com",
-            "package": "@itwin/presentation-opentelemetry",
-            "commit": "49a6fa2ab5256d00d4424033d5b0efb96e049a6b",
-            "comment": "Update `itwinjs-core` dependencies to official `4.0` version"
-          },
-          {
-            "author": "24278440+saskliutas@users.noreply.github.com",
-            "package": "@itwin/presentation-opentelemetry",
-            "commit": "49a6fa2ab5256d00d4424033d5b0efb96e049a6b",
-            "comment": "Updated devDependencies"
-          },
-          {
-            "author": "35135765+grigasp@users.noreply.github.com",
-            "package": "@itwin/presentation-opentelemetry",
-            "commit": "49a6fa2ab5256d00d4424033d5b0efb96e049a6b",
-            "comment": "Update package dependencies"
-          }
-        ]
-      }
-    },
-    {
       "date": "Tue, 02 May 2023 11:39:31 GMT",
       "tag": "@itwin/presentation-opentelemetry_v4.0.0",
       "version": "4.0.0",
@@ -96,19 +57,19 @@
           {
             "author": "35135765+grigasp@users.noreply.github.com",
             "package": "@itwin/presentation-opentelemetry",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "3ea71c980ec134087ea5efaac8a91468e360d044",
             "comment": "**BREAKING CHANGE:** Remove `convertToReadableSpans` function in favor of `exportDiagnostics`."
           },
           {
             "author": "GytisCepk@users.noreply.github.com",
             "package": "@itwin/presentation-opentelemetry",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "4a853c7d99ddf3fe920d657f5b1ac5a6169c19b2",
             "comment": "Drop Node 12 and Node 14."
           },
           {
             "author": "GytisCepk@users.noreply.github.com",
             "package": "@itwin/presentation-opentelemetry",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "4a853c7d99ddf3fe920d657f5b1ac5a6169c19b2",
             "comment": "Drop Node 16 support."
           }
         ],
@@ -116,19 +77,19 @@
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-opentelemetry",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "bfa39978734464e9ea85f35c59440ca288824fc8",
             "comment": "Bump dependencies"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-opentelemetry",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "7c01d87881285a77f4c416aa02f7f72eab62578a",
             "comment": "Bump deps"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-opentelemetry",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "c869d568d3b462670d20e1ec31807aee15a0857e",
             "comment": "Update peerDependencies versions"
           }
         ]

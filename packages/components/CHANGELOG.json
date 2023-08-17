@@ -160,151 +160,151 @@
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "3cae35eb2b68a6da23892ac71c994b17607f2849",
             "comment": "Use prettier to format code"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "453735da2e2ef8099b01dfecbc3d80de90252c12",
             "comment": "Updated links in type documentation"
           },
           {
             "author": "35135765+grigasp@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "e68fc0778ee56b7a24cad23eefd0449b8bddec27",
             "comment": "Doc improvement"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "356c341ed5e0286539ab992d1b3f286f0919af38",
             "comment": "Update dependencies"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "df7d9c970e3cdabff59d69942c3275e0ef15a932",
             "comment": "Standardize package.json"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "85022b085e3ff4bc362b97bcb96597bfca827027",
             "comment": "Do not use toRxjsObservable from components-react"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "3f0a732dba9ea9bbaed6a79c614211f1ae26b027",
             "comment": "Updated docs generation script"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "6cf3c5ecb914ff21b213e49a13e610a32d241d46",
             "comment": "Do not reference deprecated PropertyGrid in docs"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "00d701dd457b6a201661ad7264d654822567f190",
             "comment": "Update dependencies and add script for generating testing docs"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "300bb7c75bdbc4b58fef0d6b8927e618fd58a735",
             "comment": "Merge from itwinjs-core"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "288089281172ee40967639f73a6010a6cc1ee44a",
             "comment": "Add docs generation"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "e29521580546f1e85848aab29aa06b07c0a8e116",
             "comment": "Adjust to latest components-react changes"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "9acf1269170787dd6abe16c002555caeaa5a1959",
             "comment": "Backport hierarchy state tracking changes"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "dbae52c49817e38bcb881c287ba52366c2aa5d22",
             "comment": "Fix docs script"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "a12de5dc23283d9e06defa1cb1b95d31ff0dbc78",
             "comment": "Add table related API to documentation group"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "01af33aa6538a3b371d6f1ccc55a1dfae3313089",
             "comment": "Merge filter dialog fixes from core"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "a27eec9655f6e438fcc18b7b647c295c96865db3",
             "comment": "Update license.md"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "2b5ea5c31a781613cee0a41b2c00439084e55e82",
             "comment": "Add support for initial InstanceFilter support in PresentationInstanceFilterBuilder"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "0b349f12455880dc43f608a2f85ab2cc9bb434a3",
             "comment": "Version bump"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "73fa48f279fcc3d01e5cfe79fe0fbee5f0e96630",
             "comment": "Reduce internal API usage"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "bfa39978734464e9ea85f35c59440ca288824fc8",
             "comment": "Bump dependencies"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "7c01d87881285a77f4c416aa02f7f72eab62578a",
             "comment": "Bump deps"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "6ac21eb9d3ea887d53c2fb02bf7df1fe8c359483",
             "comment": "Backport components changes"
           },
           {
             "author": "35135765+grigasp@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "2478f2a63690ba923ccbf98dd03fb52c6c20ad32",
             "comment": "Update dependencies"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "dbd3486563f03955acb6fdf9ef64931e70c824e0",
             "comment": "Update package version"
           }
         ],
@@ -312,55 +312,55 @@
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "d6145c666d398c5c22f7d7402c318ec924232009",
             "comment": "Fixed Table rows not loading with latest `presentation-frontend` version"
           },
           {
             "author": "124659623+simasjar@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "98e77a3d2dcd57d758f77bdaa5e82971c82d0b09",
             "comment": "`PresentationTreeNodeRenderer`: ensure that the action buttons have the same background color as the node"
           },
           {
             "author": "124659623+simasjar@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "acac9a6426372eb68010bf737f4b8308edad3bdc",
             "comment": "Set editor to `StandardEditorNames.NumericInput` for all numeric properties"
           },
           {
             "author": "124659623+simasjar@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "015bd5926437beb911cb0947958a56c4f46a2c5e",
             "comment": "`NavigationPropertyTargetSelector`: add white background to the chevron"
           },
           {
             "author": "124659623+simasjar@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "acac9a6426372eb68010bf737f4b8308edad3bdc",
             "comment": "`InstanceFilterDialog`: Ensure \"Accept\" button is enabled when opening the dialog with pre-filled values"
           },
           {
             "author": "35135765+grigasp@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "3e241403894c693bb94214ad186ea04f17b5d4b5",
             "comment": "Fix failure to load property data when nested properties are placed in root categories different from their parent property category"
           },
           {
             "author": "35135765+grigasp@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "6bf1a99ec570751e16f30af658e0fa7e27e7631f",
             "comment": "`PresentationTreeDataProvider`: Handle errors that may occur when loading nodes"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "39ca07c58f3031c97fbd760df53dc5c6a9b5222e",
             "comment": "Fixed styles in `PresentationInstanceFilterBuilder` component."
           },
           {
             "author": "35135765+grigasp@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "cc86391c6e437da4cec8365326e99db2a5423d1b",
             "comment": "Fixed `usePresentationTable` to re -throw errors in React render loop on failure to get table content. Also affects `usePresentationTableWithUnifiedSelection` hook."
           }
         ],
@@ -368,49 +368,49 @@
           {
             "author": "35135765+grigasp@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "4c31428c0bff68186256b9375edf41e68c75c4f2",
             "comment": "Deprecate `IContentDataProvider.getFieldByPropertyRecord` in favor of the new `IContentDataProvider.getFieldByPropertyDescription`."
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "ba7ef1aab92651f624c6d9190e150c438f8cfab8",
             "comment": "Unified hierarchy update handling in all situations (after iModel change, ruleset change or ruleset variables change)"
           },
           {
             "author": "35135765+grigasp@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "6bf1a99ec570751e16f30af658e0fa7e27e7631f",
             "comment": "Add support for hierarchy level size limiting"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "fbbb45e2a75fb11f282f2474f6419cd20a65829c",
             "comment": "Updated `@itwinui-react` package to `^2.5.0`"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "d46358ebcd7e035d36e700b2a76c581922e1053b",
             "comment": "Prepared package to be used with React 18. Updated React `peerDependency` to `^17.0.0 || ^18.0.0`"
           },
           {
             "author": "35135765+grigasp@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "7bf12337f09b7fda0362474d3d63b18bb4b07aab",
             "comment": "Bump minimum required `itwinjs-core` version to `3.6.3`"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "90d197c1949d05f456d818a32c150e0096b85747",
             "comment": "Added custom hook to get Presentation data for displaying it in table components."
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "f24452ceeb1277d85e0f515d8e18a24493242833",
             "comment": "`IPresentationTreeDataProvider`: deprecated `getNodeKey` method in favor of getting `NodeKey` directly from `TreeNodeItem` using `isPresentationTreeNodeItem` typeguard."
           }
         ],
@@ -418,7 +418,7 @@
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "c869d568d3b462670d20e1ec31807aee15a0857e",
             "comment": "Upgrade to AppUI 4.0"
           }
         ],
@@ -426,13 +426,13 @@
           {
             "author": "33036725+wgoehrig@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "4b7924ee69265aaadeaba81f02162bf5c404d33a",
             "comment": "Updated to TypeScript 5.0"
           },
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "062b24b95a6b9207c18f1e9c79e6c1875f5070b5",
+            "commit": "ddf8cf327436fa38dc304666992e9fb66e942933",
             "comment": "Update dependencies"
           }
         ]
