@@ -29,10 +29,10 @@ Thu, 15 Jun 2023 07:31:33 GMT
 
 ### Patches
 
-- `InstanceFilterDialog`: Make dialog width and height larger. ([commit](https://github.com/iTwin/presentation/commit/49a6fa2ab5256d00d4424033d5b0efb96e049a6b))
-- Small documentation improvements ([commit](https://github.com/iTwin/presentation/commit/49a6fa2ab5256d00d4424033d5b0efb96e049a6b))
-- `InstanceFilterDialog`: Make dialog resizable and draggable. ([commit](https://github.com/iTwin/presentation/commit/49a6fa2ab5256d00d4424033d5b0efb96e049a6b))
-- `InstanceFilterDialog`: Show loading spinner when filtering is in progress. ([commit](https://github.com/iTwin/presentation/commit/49a6fa2ab5256d00d4424033d5b0efb96e049a6b))
+- `InstanceFilterDialog`: Make dialog width and height larger. ([commit](https://github.com/iTwin/presentation/commit/676e370cf2f76863ee595fb8b2c3270281de5ba8))
+- Small documentation improvements ([commit](https://github.com/iTwin/presentation/commit/5bdb5ab060142225d5249b52cdb5fd9520d112ed))
+- `InstanceFilterDialog`: Make dialog resizable and draggable. ([commit](https://github.com/iTwin/presentation/commit/676e370cf2f76863ee595fb8b2c3270281de5ba8))
+- `InstanceFilterDialog`: Show loading spinner when filtering is in progress. ([commit](https://github.com/iTwin/presentation/commit/55e97cb3c74c15c32aae9ea61c94b568c4461b7b))
 
 ## 4.0.0
 

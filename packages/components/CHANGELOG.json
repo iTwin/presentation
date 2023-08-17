@@ -101,7 +101,7 @@
           {
             "author": "35135765+grigasp@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "49a6fa2ab5256d00d4424033d5b0efb96e049a6b",
+            "commit": "7ebff536994257c1d4a456deba0cee4e2891360a",
             "comment": "Upgrade `itwinjs-core` devDependencies to `4.0.0-rc`"
           },
           {
@@ -113,13 +113,13 @@
           {
             "author": "24278440+saskliutas@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "49a6fa2ab5256d00d4424033d5b0efb96e049a6b",
+            "commit": "e5fdd420d31c98ef6d43daa3faad4fbb27625829",
             "comment": "Updated devDependencies"
           },
           {
             "author": "35135765+grigasp@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "49a6fa2ab5256d00d4424033d5b0efb96e049a6b",
+            "commit": "4ef8836fccdcea613f2cf09cbab1e4b36a691397",
             "comment": "Update `itwinjs-core` dependencies to official `4.0` version"
           }
         ],
@@ -127,25 +127,25 @@
           {
             "author": "124659623+simasjar@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "49a6fa2ab5256d00d4424033d5b0efb96e049a6b",
+            "commit": "676e370cf2f76863ee595fb8b2c3270281de5ba8",
             "comment": "`InstanceFilterDialog`: Make dialog width and height larger."
           },
           {
             "author": "35135765+grigasp@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "49a6fa2ab5256d00d4424033d5b0efb96e049a6b",
+            "commit": "5bdb5ab060142225d5249b52cdb5fd9520d112ed",
             "comment": "Small documentation improvements"
           },
           {
             "author": "124659623+simasjar@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "49a6fa2ab5256d00d4424033d5b0efb96e049a6b",
+            "commit": "676e370cf2f76863ee595fb8b2c3270281de5ba8",
             "comment": "`InstanceFilterDialog`: Make dialog resizable and draggable."
           },
           {
             "author": "124659623+simasjar@users.noreply.github.com",
             "package": "@itwin/presentation-components",
-            "commit": "49a6fa2ab5256d00d4424033d5b0efb96e049a6b",
+            "commit": "55e97cb3c74c15c32aae9ea61c94b568c4461b7b",
             "comment": "`InstanceFilterDialog`: Show loading spinner when filtering is in progress."
           }
         ]

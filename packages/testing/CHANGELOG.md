@@ -18,7 +18,7 @@ Thu, 15 Jun 2023 07:31:33 GMT
 
 ### Patches
 
-- Bumped `rimraf` version ([commit](https://github.com/iTwin/presentation/commit/49a6fa2ab5256d00d4424033d5b0efb96e049a6b))
+- Bumped `rimraf` version ([commit](https://github.com/iTwin/presentation/commit/e5fdd420d31c98ef6d43daa3faad4fbb27625829))
 
 ## 4.0.0
 
