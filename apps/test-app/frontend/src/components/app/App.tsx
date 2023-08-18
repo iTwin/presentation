@@ -30,8 +30,8 @@ export interface State {
   rightPaneHeight?: number;
   contentRatio: number;
   contentWidth?: number;
+  activeUnitSystem?: UnitSystemKey;
   persistSettings: boolean;
-  activeUnitSystem: UnitSystemKey;
 }
 
 export default class App extends Component<{}, State> {
@@ -42,12 +42,12 @@ export default class App extends Component<{}, State> {
   private _rightPaneRef = createRef<HTMLDivElement>();
   private _contentRef = createRef<HTMLDivElement>();
   private _selectionListener!: () => void;
-  private _unitSystemChangeDispose!: () => void;
 
   constructor() {
     super({});
     this.state = {
-      activeUnitSystem: IModelApp.quantityFormatter.activeUnitSystem,
+      // eslint-disable-next-line deprecation/deprecation
+      activeUnitSystem: Presentation.presentation.activeUnitSystem,
       rightPaneRatio: 0.5,
       contentRatio: 0.7,
       persistSettings: MyAppFrontend.settings.persistSettings,
@@ -71,14 +71,10 @@ export default class App extends Component<{}, State> {
     const update: Partial<State> = {
       persistSettings: settings.persistSettings,
     };
-    if (!settings.persistSettings) {
-      return;
-    }
-
-    update.imodelPath = settings.imodelPath;
-    update.currentRulesetId = settings.rulesetId;
-    if (settings.unitSystem) {
-      void IModelApp.quantityFormatter.setActiveUnitSystem(settings.unitSystem);
+    if (settings.persistSettings) {
+      update.imodelPath = settings.imodelPath;
+      update.currentRulesetId = settings.rulesetId;
+      update.activeUnitSystem = settings.unitSystem;
     }
     this.setState(update as State);
   }
@@ -95,9 +91,10 @@ export default class App extends Component<{}, State> {
     this.setState({ currentRulesetId: rulesetId }, () => this.updateAppSettings());
   };
 
-  private onUnitSystemSelected = async (unitSystem: UnitSystemKey) => {
-    await IModelApp.quantityFormatter.setActiveUnitSystem(unitSystem);
-    this.updateAppSettings();
+  private onUnitSystemSelected = (unitSystem: UnitSystemKey | undefined) => {
+    // eslint-disable-next-line deprecation/deprecation
+    Presentation.presentation.activeUnitSystem = unitSystem;
+    this.setState({ activeUnitSystem: unitSystem }, () => this.updateAppSettings());
   };
 
   private onPersistSettingsValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -214,9 +211,6 @@ export default class App extends Component<{}, State> {
     this.loadAppSettings();
     this.afterRender();
     this._selectionListener = Presentation.selection.selectionChange.addListener(this._onSelectionChanged);
-    this._unitSystemChangeDispose = IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(({ system }) =>
-      this.setState((prev) => ({ ...prev, activeUnitSystem: system })),
-    );
   }
 
   public override componentDidUpdate() {
@@ -225,7 +219,6 @@ export default class App extends Component<{}, State> {
 
   public override componentWillUnmount() {
     Presentation.selection.selectionChange.removeListener(this._selectionListener);
-    this._unitSystemChangeDispose();
   }
 
   public override render() {

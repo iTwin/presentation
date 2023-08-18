@@ -55,7 +55,6 @@ async function initializeApp() {
 
   readyPromises.push(initializePresentation());
   readyPromises.push(UiComponents.initialize(IModelApp.localization));
-  readyPromises.push(IModelApp.quantityFormatter.setActiveUnitSystem("metric"));
   await Promise.all(readyPromises);
 }
 
@@ -65,6 +64,10 @@ async function initializePresentation() {
     presentation: {
       // specify locale for localizing presentation data, it can be changed afterwards
       activeLocale: IModelApp.localization.getLanguageList()[0],
+
+      // specify the preferred unit system
+      activeUnitSystem: "metric",
+
       schemaContextProvider: MyAppFrontend.getSchemaContext.bind(MyAppFrontend),
     },
     favorites: {
