@@ -15,8 +15,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        core-version: [3.6.3, nightly]
-        ui-version: [nightly]
+        core-version: [3.6.3, latest]
+        ui-version: [latest]
 
     name: Build with Core - ${{ matrix.core-version }}, UI - ${{ matrix.ui-version }}
     steps:
