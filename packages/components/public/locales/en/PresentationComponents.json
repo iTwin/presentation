@@ -23,7 +23,7 @@
     "cancel": "Cancel",
     "filter": "Filter",
     "error-messages": {
-      "not-Number": "Value must be a number",
+      "not-a-number": "Value must be a number",
       "invalid": "Value is invalid"
     }
   },

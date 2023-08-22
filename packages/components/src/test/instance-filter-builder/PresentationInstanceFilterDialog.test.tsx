@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import * as moq from "typemoq";
-import { PropertyValueFormat as AbstractPropertyValueFormat, PrimitiveValue } from "@itwin/appui-abstract";
+import { PrimitiveValue, PropertyValueFormat as AbstractPropertyValueFormat } from "@itwin/appui-abstract";
 import { getPropertyFilterOperatorLabel, PropertyFilterRuleOperator, UiComponents } from "@itwin/components-react";
 import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
@@ -387,7 +387,7 @@ describe("PresentationInstanceFilterDialog", () => {
     });
 
     await user.click(applyButton);
-    await waitFor(() => expect(queryByText("instance-filter-builder.error-messages.not-number")).to.not.be.null);
+    await waitFor(() => expect(queryByText("instance-filter-builder.error-messages.not-a-number")).to.not.be.null);
   });
 
   it("shows error message for invalid quantity values", async () => {

@@ -245,7 +245,7 @@ function numericPropertyValidator({ property, value }: ValidatorContext) {
   }
 
   if (isInvalidPrimitiveValue(value)) {
-    return translate("instance-filter-builder.error-messages.not-number");
+    return translate("instance-filter-builder.error-messages.not-a-number");
   }
 
   return undefined;
