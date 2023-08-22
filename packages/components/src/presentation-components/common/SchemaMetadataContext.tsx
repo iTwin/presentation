@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 /** @packageDocumentation
- * @module Internal
+ * @module Core
  */
 
 import { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
@@ -26,7 +26,7 @@ const schemaMetadataContext = createContext<SchemaMetadataContext | undefined>(u
  * @beta
  */
 export interface SchemaMetadataContextProviderProps {
-  /** Imodel to pull schemas from. */
+  /** iModel to pull schemas from. */
   imodel: IModelConnection;
   /** Callback that provides schema context for supplied imodel. */
   schemaContextProvider: (imodel: IModelConnection) => SchemaContext;
