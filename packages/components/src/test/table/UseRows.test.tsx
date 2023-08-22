@@ -6,12 +6,13 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import * as moq from "typemoq";
-import { IModelConnection } from "@itwin/core-frontend";
+import { BeUiEvent } from "@itwin/core-bentley";
+import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
 import { Content, DescriptorOverrides, KeySet, SortDirection } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { render, waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
-import { useRows, UseRowsProps } from "../../presentation-components/table/UseRows";
+import { ROWS_RELOAD_PAGE_SIZE, useRows, UseRowsProps } from "../../presentation-components/table/UseRows";
 import { createTestECInstanceKey, createTestPropertyInfo, TestErrorBoundary } from "../_helpers/Common";
 import {
   createTestCategoryDescription,
@@ -23,6 +24,7 @@ import {
 import { mockPresentationManager } from "../_helpers/UiComponents";
 
 describe("useRows", () => {
+  let onActiveFormattingUnitSystemChanged: QuantityFormatter["onActiveFormattingUnitSystemChanged"];
   const imodel = {} as IModelConnection;
   const initialProps: UseRowsProps = {
     imodel,
@@ -38,6 +40,10 @@ describe("useRows", () => {
     const { presentationManager } = mockPresentationManager();
     presentationManagerMock = presentationManager;
     sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
+    onActiveFormattingUnitSystemChanged = new BeUiEvent<FormattingUnitSystemChangedArgs>();
+    sinon.stub(IModelApp, "quantityFormatter").get(() => ({
+      onActiveFormattingUnitSystemChanged,
+    }));
   });
 
   afterEach(() => {
@@ -241,5 +247,114 @@ describe("useRows", () => {
 
     await waitFor(() => expect(result.current.isLoading).to.be.false);
     presentationManagerMock.verifyAll();
+  });
+
+  it("reloads rows when active unit system changes", async () => {
+    const propertiesField = createTestPropertiesContentField({
+      name: "first_field",
+      label: "First Field",
+      properties: [{ property: createTestPropertyInfo() }],
+    });
+    const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
+    const item1 = createTestContentItem({
+      values: { [propertiesField.name]: "test_value_1" },
+      displayValues: { [propertiesField.name]: "Test value 1" },
+    });
+    const item2 = createTestContentItem({
+      values: { [propertiesField.name]: "test_value_2" },
+      displayValues: { [propertiesField.name]: "Test value 2" },
+    });
+
+    presentationManagerMock
+      .setup(async (x) => x.getContentAndSize(moq.It.is(({ paging }) => paging?.start === 0 && paging?.size === 10)))
+      .returns(async () => ({ content: new Content(descriptor, [item1, item2]), size: 2 }));
+
+    // setup presentation manager for reload call. Reload call should setup page options to get only previously loaded rows.
+    presentationManagerMock
+      .setup(async (x) => x.getContentAndSize(moq.It.is(({ paging }) => paging?.start === 0 && paging?.size === 2)))
+      .returns(async () => ({ content: new Content(descriptor, [item1, item2]), size: 2 }));
+
+    const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, pageSize: 10 } });
+
+    await waitFor(() => expect(result.current.rows).to.have.lengthOf(2));
+
+    onActiveFormattingUnitSystemChanged.raiseEvent({ system: "metric" });
+
+    await waitFor(() => {
+      expect(result.current.rows).to.have.lengthOf(2);
+      presentationManagerMock.verify(async (x) => x.getContentAndSize(moq.It.is(({ paging }) => paging?.start === 0 && paging?.size === 2)), moq.Times.once());
+    });
+  });
+
+  it("does not reload rows when active unit system changes if there are no rows", async () => {
+    const propertiesField = createTestPropertiesContentField({
+      name: "first_field",
+      label: "First Field",
+      properties: [{ property: createTestPropertyInfo() }],
+    });
+    const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
+    presentationManagerMock.setup(async (x) => x.getContentAndSize(moq.It.isAny())).returns(async () => ({ content: new Content(descriptor, []), size: 0 }));
+
+    const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, pageSize: 10 } });
+
+    await waitFor(() => {
+      expect(result.current.rows).to.have.lengthOf(0);
+      expect(result.current.isLoading).to.be.false;
+    });
+
+    onActiveFormattingUnitSystemChanged.raiseEvent({ system: "metric" });
+
+    await waitFor(() => {
+      expect(result.current.rows).to.have.lengthOf(0);
+      presentationManagerMock.verify(async (x) => x.getContentAndSize(moq.It.isAny()), moq.Times.once());
+    });
+  });
+
+  it("reloads rows in pages", async () => {
+    const propertiesField = createTestPropertiesContentField({
+      name: "first_field",
+      label: "First Field",
+      properties: [{ property: createTestPropertyInfo() }],
+    });
+    const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
+    const itemsCount = ROWS_RELOAD_PAGE_SIZE + 1;
+    const items = Array.from(Array(itemsCount).keys()).map((i) =>
+      createTestContentItem({
+        values: { [propertiesField.name]: `test_value_${i}` },
+        displayValues: { [propertiesField.name]: `Test value ${i}` },
+      }),
+    );
+
+    presentationManagerMock
+      .setup(async (x) => x.getContentAndSize(moq.It.is(({ paging }) => paging?.start === 0 && paging?.size === itemsCount)))
+      .returns(async () => ({ content: new Content(descriptor, items), size: itemsCount }));
+
+    // all items should be loaded with single request
+    const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, pageSize: itemsCount } });
+    await waitFor(() => {
+      expect(result.current.rows).to.have.lengthOf(itemsCount);
+    });
+
+    // setup presentation manager for rows reload
+    presentationManagerMock
+      .setup(async (x) => x.getContentAndSize(moq.It.is(({ paging }) => paging?.start === 0 && paging?.size === ROWS_RELOAD_PAGE_SIZE)))
+      .returns(async () => ({ content: new Content(descriptor, items.slice(0, ROWS_RELOAD_PAGE_SIZE)), size: ROWS_RELOAD_PAGE_SIZE }));
+    presentationManagerMock
+      .setup(async (x) => x.getContentAndSize(moq.It.is(({ paging }) => paging?.start === ROWS_RELOAD_PAGE_SIZE && paging?.size === 1)))
+      .returns(async () => ({ content: new Content(descriptor, items.slice(ROWS_RELOAD_PAGE_SIZE)), size: 1 }));
+
+    onActiveFormattingUnitSystemChanged.raiseEvent({ system: "metric" });
+
+    await waitFor(() => {
+      expect(result.current.rows).to.have.lengthOf(itemsCount);
+      presentationManagerMock.verify(
+        async (x) => x.getContentAndSize(moq.It.is(({ paging }) => paging?.start === 0 && paging?.size === ROWS_RELOAD_PAGE_SIZE)),
+        moq.Times.once(),
+      );
+      presentationManagerMock.verify(
+        async (x) => x.getContentAndSize(moq.It.is(({ paging }) => paging?.start === ROWS_RELOAD_PAGE_SIZE && paging?.size === 1)),
+        moq.Times.once(),
+      );
+    });
   });
 });

@@ -8,7 +8,8 @@ import sinon from "sinon";
 import * as moq from "typemoq";
 import { PrimitiveValue } from "@itwin/appui-abstract";
 import { MutableTreeModel, TreeModel, TreeModelNode, TreeModelNodeEditingInfo, TreeModelNodeInput, UiComponents } from "@itwin/components-react";
-import { IModelConnection } from "@itwin/core-frontend";
+import { BeUiEvent } from "@itwin/core-bentley";
+import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
 import { LabelDefinition, Node, RegisteredRuleset, StandardNodeTypes } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
@@ -26,6 +27,7 @@ describe("usePresentationNodeLoader", () => {
   let onIModelHierarchyChanged: PresentationManager["onIModelHierarchyChanged"];
   let onRulesetModified: RulesetManager["onRulesetModified"];
   let onRulesetVariableChanged: RulesetVariablesManager["onVariableChanged"];
+  let onActiveFormattingUnitSystemChanged: QuantityFormatter["onActiveFormattingUnitSystemChanged"];
   const imodelMock = moq.Mock.ofType<IModelConnection>();
   const rulesetId = "test-ruleset-id";
   const imodelKey = "test-imodel-key";
@@ -43,6 +45,10 @@ describe("usePresentationNodeLoader", () => {
     onRulesetVariableChanged = mocks.rulesetVariablesManager.object.onVariableChanged;
     mocks.presentationManager.setup(async (x) => x.getNodesAndCount(moq.It.isAny())).returns(async () => ({ count: 0, nodes: [] }));
     sinon.stub(Presentation, "presentation").get(() => mocks.presentationManager.object);
+    onActiveFormattingUnitSystemChanged = new BeUiEvent<FormattingUnitSystemChangedArgs>();
+    sinon.stub(IModelApp, "quantityFormatter").get(() => ({
+      onActiveFormattingUnitSystemChanged,
+    }));
     await UiComponents.initialize(new ITwinLocalization());
   });
 
@@ -50,7 +56,6 @@ describe("usePresentationNodeLoader", () => {
     await cleanup();
     imodelMock.reset();
     UiComponents.terminate();
-    Presentation.terminate();
   });
 
   it("creates node loader", () => {
@@ -161,6 +166,14 @@ describe("usePresentationNodeLoader", () => {
       const oldNodeLoader = result.current.nodeLoader;
 
       onRulesetVariableChanged.raiseEvent("var-id", "prev", undefined);
+      await waitFor(() => expect(result.current.nodeLoader).to.not.eq(oldNodeLoader));
+    });
+
+    it("creates a new nodeLoader when `QuantityFormatter` raises an `onActiveFormattingUnitSystemChanged` event", async () => {
+      const { result } = renderHook((props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props), { initialProps });
+      const oldNodeLoader = result.current.nodeLoader;
+
+      onActiveFormattingUnitSystemChanged.raiseEvent({ system: "metric" });
       await waitFor(() => expect(result.current.nodeLoader).to.not.eq(oldNodeLoader));
     });
 

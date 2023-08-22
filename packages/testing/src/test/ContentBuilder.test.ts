@@ -7,9 +7,9 @@ import { expect } from "chai";
 import * as sinon from "sinon";
 import * as moq from "typemoq";
 import { ArrayValue, PrimitiveValue, StructValue } from "@itwin/appui-abstract";
-import { BeEvent, Guid, Id64String } from "@itwin/core-bentley";
+import { BeEvent, BeUiEvent, Guid, Id64String } from "@itwin/core-bentley";
 import { ECSqlReader } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
+import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
 import {
   ArrayTypeDescription,
   CategoryDescription,
@@ -242,6 +242,9 @@ describe("ContentBuilder", () => {
       presentationManagerMock.setup(async (manager) => manager.getContent(moq.It.isAny())).returns(getEmptyContent);
       presentationManagerMock.setup((x) => x.onIModelContentChanged).returns(() => new BeEvent());
       sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
+      sinon.stub(IModelApp, "quantityFormatter").get(() => ({
+        onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
+      }));
     });
 
     afterEach(() => {
