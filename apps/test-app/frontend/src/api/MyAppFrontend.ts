@@ -7,6 +7,8 @@ import { Guid, Id64Arg, Logger, OpenMode } from "@itwin/core-bentley";
 import { ElementProps, IModelError, ViewQueryParams } from "@itwin/core-common";
 import { BriefcaseConnection, IModelConnection, IpcApp, SnapshotConnection } from "@itwin/core-frontend";
 import { UnitSystemKey } from "@itwin/core-quantity";
+import { SchemaContext } from "@itwin/ecschema-metadata";
+import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { PRESENTATION_TEST_APP_IPC_CHANNEL_NAME, SampleIpcInterface, SampleRpcInterface } from "@test-app/common";
 
 const LOCAL_STORAGE_KEY_AppSettings = "presentation-test-app/settings";
@@ -20,6 +22,7 @@ export interface MyAppSettings {
 
 export class MyAppFrontend {
   private static _ipcProxy = IpcApp.makeIpcProxy<SampleIpcInterface>(PRESENTATION_TEST_APP_IPC_CHANNEL_NAME);
+  private static _schemaContextsCache = new Map<string, SchemaContext>();
 
   public static async getSampleImodels(): Promise<string[]> {
     return SampleRpcInterface.getClient().getSampleImodels();
@@ -99,6 +102,21 @@ export class MyAppFrontend {
       throw new Error(`Deleting elements only supported in 'IpcApp'`);
     }
     return this._ipcProxy.deleteElements(imodel.key, elementIds);
+  }
+
+  public static getSchemaContext(imodel: IModelConnection) {
+    const context = MyAppFrontend._schemaContextsCache.get(imodel.key);
+    if (context) {
+      return context;
+    }
+
+    const newContext = new SchemaContext();
+    newContext.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
+    MyAppFrontend._schemaContextsCache.set(imodel.key, newContext);
+
+    imodel.onClose.addListener(() => MyAppFrontend._schemaContextsCache.delete(imodel.key));
+
+    return newContext;
   }
 }
 

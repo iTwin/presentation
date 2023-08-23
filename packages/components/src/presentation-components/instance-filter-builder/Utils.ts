@@ -146,6 +146,7 @@ function createPropertyInfoFromPropertiesField(field: PropertiesField): Instance
     enum: field.properties[0].property.enumerationInfo,
     isReadonly: field.isReadonly,
     renderer: field.renderer,
+    koqName: field.properties[0].property.kindOfQuantity?.name,
   });
 
   return {

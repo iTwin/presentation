@@ -2,7 +2,7 @@ name: CI
 
 on:
   pull_request:
-    branches: ["master"]
+    branches: ["master", "next"]
     types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
@@ -32,7 +32,7 @@ jobs:
         run: pnpm install -w
 
       - name: Run check
-        run: pnpm check
+        run: pnpm check --branch origin/next
 
   build:
     if: '! github.event.pull_request.draft'
