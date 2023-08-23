@@ -7,7 +7,8 @@ import { expect } from "chai";
 import * as sinon from "sinon";
 import * as moq from "typemoq";
 import { PrimitiveValue, PropertyDescription, PropertyRecord } from "@itwin/appui-abstract";
-import { IModelConnection } from "@itwin/core-frontend";
+import { BeUiEvent } from "@itwin/core-bentley";
+import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
 import {
   ClientDiagnosticsAttribute,
   Content,
@@ -59,6 +60,7 @@ describe("ContentDataProvider", () => {
   let invalidateCacheSpy: sinon.SinonSpy<[CacheInvalidationProps], void>;
   let presentationManagerMock: moq.IMock<PresentationManager>;
   let rulesetsManagerMock: moq.IMock<RulesetManager>;
+  let onActiveFormattingUnitSystemChanged: QuantityFormatter["onActiveFormattingUnitSystemChanged"];
   const imodelMock = moq.Mock.ofType<IModelConnection>();
   const imodelKey = "test-imodel-Key";
 
@@ -67,6 +69,10 @@ describe("ContentDataProvider", () => {
     rulesetsManagerMock = mocks.rulesetsManager;
     presentationManagerMock = mocks.presentationManager;
     sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
+    onActiveFormattingUnitSystemChanged = new BeUiEvent<FormattingUnitSystemChangedArgs>();
+    sinon.stub(IModelApp, "quantityFormatter").get(() => ({
+      onActiveFormattingUnitSystemChanged,
+    }));
 
     imodelMock.setup((x) => x.key).returns(() => imodelKey);
 
@@ -638,6 +644,11 @@ describe("ContentDataProvider", () => {
     it("invalidates cache when related ruleset variables change", () => {
       presentationManagerMock.object.vars("").onVariableChanged.raiseEvent("var_id", "prev", "curr");
       expect(invalidateCacheSpy).to.be.calledOnceWith(CacheInvalidationProps.full());
+    });
+
+    it("invalidates cache when active unit system change", () => {
+      onActiveFormattingUnitSystemChanged.raiseEvent({ system: "metric" });
+      expect(invalidateCacheSpy).to.be.calledOnceWith({ content: true });
     });
   });
 
