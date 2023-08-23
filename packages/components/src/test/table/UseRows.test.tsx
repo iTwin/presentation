@@ -338,23 +338,18 @@ describe("useRows", () => {
     // setup presentation manager for rows reload
     presentationManagerMock
       .setup(async (x) => x.getContentAndSize(moq.It.is(({ paging }) => paging?.start === 0 && paging?.size === ROWS_RELOAD_PAGE_SIZE)))
-      .returns(async () => ({ content: new Content(descriptor, items.slice(0, ROWS_RELOAD_PAGE_SIZE)), size: ROWS_RELOAD_PAGE_SIZE }));
+      .returns(async () => ({ content: new Content(descriptor, items.slice(0, ROWS_RELOAD_PAGE_SIZE)), size: ROWS_RELOAD_PAGE_SIZE }))
+      .verifiable(moq.Times.once());
     presentationManagerMock
       .setup(async (x) => x.getContentAndSize(moq.It.is(({ paging }) => paging?.start === ROWS_RELOAD_PAGE_SIZE && paging?.size === 1)))
-      .returns(async () => ({ content: new Content(descriptor, items.slice(ROWS_RELOAD_PAGE_SIZE)), size: 1 }));
+      .returns(async () => ({ content: new Content(descriptor, items.slice(ROWS_RELOAD_PAGE_SIZE)), size: 1 }))
+      .verifiable(moq.Times.once());
 
     onActiveFormattingUnitSystemChanged.raiseEvent({ system: "metric" });
 
     await waitFor(() => {
       expect(result.current.rows).to.have.lengthOf(itemsCount);
-      presentationManagerMock.verify(
-        async (x) => x.getContentAndSize(moq.It.is(({ paging }) => paging?.start === 0 && paging?.size === ROWS_RELOAD_PAGE_SIZE)),
-        moq.Times.once(),
-      );
-      presentationManagerMock.verify(
-        async (x) => x.getContentAndSize(moq.It.is(({ paging }) => paging?.start === ROWS_RELOAD_PAGE_SIZE && paging?.size === 1)),
-        moq.Times.once(),
-      );
+      presentationManagerMock.verifyAll();
     });
   });
 });
