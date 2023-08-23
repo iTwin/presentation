@@ -14,7 +14,6 @@ import {
   ArrayTypeDescription,
   CategoryDescription,
   Content,
-  DefaultContentDisplayTypes,
   Descriptor,
   DisplayValuesMap,
   Field,
@@ -28,6 +27,7 @@ import {
   TypeDescription,
   ValuesMap,
 } from "@itwin/presentation-common";
+import { ContentDataProvider } from "@itwin/presentation-components";
 import { Presentation, PresentationManager, RulesetManager } from "@itwin/presentation-frontend";
 import { ContentBuilder, IContentBuilderDataProvider } from "../presentation-testing/ContentBuilder";
 
@@ -142,10 +142,6 @@ class DataProvider extends EmptyDataProvider {
   public override getContent = async () => getContent(createItemValues(this.values), this.descriptor);
 }
 
-async function getEmptyContent(props: { descriptor: Readonly<Descriptor> }) {
-  return new Content(props.descriptor, []);
-}
-
 interface TestInstance {
   schemaName: string;
   className: string;
@@ -228,41 +224,41 @@ describe("ContentBuilder", () => {
 
   describe("createContent", () => {
     const presentationManagerMock = moq.Mock.ofType<PresentationManager>();
-    const rulesetMock = moq.Mock.ofType<Ruleset>();
     const rulesetManagerMock = moq.Mock.ofType<RulesetManager>();
-
-    before(() => {
-      rulesetMock.setup((ruleset) => ruleset.id).returns(() => "1");
-    });
 
     beforeEach(() => {
       rulesetManagerMock.setup(async (x) => x.add(moq.It.isAny())).returns(async (ruleset) => new RegisteredRuleset(ruleset, Guid.createValue(), () => {}));
       presentationManagerMock.reset();
       presentationManagerMock.setup((manager) => manager.rulesets()).returns(() => rulesetManagerMock.object);
-      presentationManagerMock.setup(async (manager) => manager.getContent(moq.It.isAny())).returns(getEmptyContent);
       presentationManagerMock.setup((x) => x.onIModelContentChanged).returns(() => new BeEvent());
       sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
-      sinon.stub(IModelApp, "quantityFormatter").get(() => ({
-        onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
-      }));
     });
 
     afterEach(() => {
       sinon.restore();
     });
 
-    it("returns empty records when there is no content returned from presentation", async () => {
+    it("registers ruleset when creating content", async () => {
+      const ruleset: Ruleset = {
+        id: "test-ruleset",
+        rules: [],
+      };
+      const builder = new ContentBuilder({ imodel: imodelMock.object, dataProvider: new EmptyDataProvider() });
+      const content = await builder.createContent(ruleset, []);
+      expect(content).to.be.empty;
+      rulesetManagerMock.verify(async (x) => x.add(ruleset), moq.Times.once());
+    });
+
+    it("uses `ContentDataProvider` if data provider was not supplied", async () => {
+      sinon.stub(IModelApp, "quantityFormatter").get(() => ({
+        onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
+      }));
+      const getContentStub = sinon.stub(ContentDataProvider.prototype, "getContent").resolves(new Content(createContentDescriptor(), []));
       const builder = new ContentBuilder({ imodel: imodelMock.object });
-      let content = await builder.createContent("1", []);
-      expect(content).to.be.empty;
 
-      presentationManagerMock.verify((manager) => manager.rulesets(), moq.Times.never());
-      content = await builder.createContent(rulesetMock.object, []);
-      presentationManagerMock.verify((manager) => manager.rulesets(), moq.Times.once());
+      const content = await builder.createContent("1", []);
       expect(content).to.be.empty;
-
-      content = await builder.createContent("1", [], DefaultContentDisplayTypes.List);
-      expect(content).to.be.empty;
+      expect(getContentStub).to.be.calledOnce;
     });
 
     it("returns empty records when there is no content in the supplied data provider", async () => {
