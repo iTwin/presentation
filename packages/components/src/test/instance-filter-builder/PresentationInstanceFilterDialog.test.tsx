@@ -6,14 +6,18 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import * as moq from "typemoq";
+import { PropertyValueFormat as AbstractPropertyValueFormat, PrimitiveValue } from "@itwin/appui-abstract";
 import { getPropertyFilterOperatorLabel, PropertyFilterRuleOperator, UiComponents } from "@itwin/components-react";
-import { BeEvent } from "@itwin/core-bentley";
+import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { Descriptor, PropertyValueFormat } from "@itwin/presentation-common";
+import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { FormatterSpec, ParseError, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
+import { SchemaContext } from "@itwin/ecschema-metadata";
+import { Descriptor, KoqPropertyValueFormatter, PropertyValueFormat } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { SchemaMetadataContextProvider } from "../../presentation-components/common/SchemaMetadataContext";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import { PresentationInstanceFilterDialog } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog";
 import { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/Types";
@@ -27,27 +31,47 @@ describe("PresentationInstanceFilterDialog", () => {
 
   const category = createTestCategoryDescription({ name: "root", label: "Root" });
   const classInfo = createTestECClassInfo();
-  const propertiesField1 = createTestPropertiesContentField({
-    properties: [{ property: { classInfo, name: "prop1", type: "string" } }],
-    name: "prop1Field",
-    label: "propertiesField1",
+  const stringField = createTestPropertiesContentField({
+    properties: [{ property: { classInfo, name: "stringProps", type: "string" } }],
+    name: "stringField",
+    label: "String Field",
     category,
   });
-  const propertiesField2 = createTestPropertiesContentField({
-    properties: [{ property: { classInfo, name: "prop2", type: "double" } }],
+  const numericField = createTestPropertiesContentField({
+    properties: [{ property: { classInfo, name: "numericProp", type: "double" } }],
     type: { valueFormat: PropertyValueFormat.Primitive, typeName: "double" },
-    name: "prop2Field",
-    label: "propertiesField2",
+    name: "numericField",
+    label: "Numeric Field",
+    category,
+  });
+  const quantityField = createTestPropertiesContentField({
+    properties: [
+      {
+        property: {
+          classInfo,
+          name: "quantityProp",
+          type: "double",
+          kindOfQuantity: {
+            name: "testKOQ",
+            label: "Test KOQ",
+            persistenceUnit: "unit",
+          },
+        },
+      },
+    ],
+    type: { valueFormat: PropertyValueFormat.Primitive, typeName: "double" },
+    name: "quantityField",
+    label: "Quantity Field",
     category,
   });
   const descriptor = createTestContentDescriptor({
     selectClasses: [{ selectClassInfo: classInfo, isSelectPolymorphic: false }],
     categories: [category],
-    fields: [propertiesField1, propertiesField2],
+    fields: [stringField, numericField, quantityField],
   });
   const initialFilter: PresentationInstanceFilterInfo = {
     filter: {
-      field: propertiesField1,
+      field: stringField,
       operator: PropertyFilterRuleOperator.IsNull,
       value: undefined,
     },
@@ -69,8 +93,9 @@ describe("PresentationInstanceFilterDialog", () => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
-    await UiComponents.initialize(localization);
-    await Presentation.initialize();
+
+    sinon.stub(Presentation, "localization").get(() => localization);
+    sinon.stub(UiComponents, "translate").callsFake((key) => key as string);
 
     imodelMock.setup((x) => x.key).returns(() => "test_imodel");
     imodelMock.setup((x) => x.onClose).returns(() => onCloseEvent);
@@ -83,47 +108,188 @@ describe("PresentationInstanceFilterDialog", () => {
   afterEach(() => {
     onCloseEvent.raiseEvent();
     imodelMock.reset();
-    UiComponents.terminate();
-    Presentation.terminate();
     sinon.restore();
   });
 
-  it("invokes 'onApply' with filter", async () => {
+  it("invokes 'onApply' with string property filter rule", async () => {
+    const user = userEvent.setup();
+    const spy = sinon.spy();
+    const { container, getByText, getByDisplayValue, queryByDisplayValue } = render(
+      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />,
+    );
+
+    // open property selector
+    const propertySelector = container.querySelector<HTMLInputElement>(".rule-property input");
+    expect(propertySelector).to.not.be.null;
+    await user.click(propertySelector!);
+    // select property
+    await user.click(getByText(stringField.label));
+
+    // wait until property is selected
+    await waitFor(() => getByDisplayValue(stringField.label));
+
+    // enter value
+    const inputContainer = await waitFor(() => {
+      const element = container.querySelector<HTMLInputElement>(".rule-value input");
+      expect(element).to.be.not.null;
+      return element!;
+    });
+    await user.type(inputContainer, "test value");
+    await waitFor(() => expect(queryByDisplayValue("test value")).to.not.be.null);
+
+    fireEvent.blur(inputContainer);
+
+    const applyButton = await waitFor(() => {
+      const element = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
+      expect(element?.disabled).to.be.false;
+      return element!;
+    });
+    await user.click(applyButton);
+
+    expect(spy).to.be.calledOnceWith({
+      filter: {
+        field: stringField,
+        operator: PropertyFilterRuleOperator.Like,
+        value: {
+          valueFormat: AbstractPropertyValueFormat.Primitive,
+          value: "test value",
+          displayValue: "test value",
+        } as PrimitiveValue,
+      },
+      usedClasses: [classInfo],
+    });
+  });
+
+  it("invokes 'onApply' with numeric property filter rule", async () => {
+    const user = userEvent.setup();
     const spy = sinon.spy();
     const { container, getByText, getByDisplayValue } = render(
       <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />,
     );
 
-    const applyButton = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
-    expect(applyButton?.disabled).to.be.true;
-
     // open property selector
     const propertySelector = container.querySelector<HTMLInputElement>(".rule-property input");
     expect(propertySelector).to.not.be.null;
-    fireEvent.focus(propertySelector!);
+    await user.click(propertySelector!);
     // select property
-    fireEvent.click(getByText(propertiesField1.label));
+    await user.click(getByText(numericField.label));
 
     // wait until property is selected
-    await waitFor(() => getByDisplayValue(propertiesField1.label));
+    await waitFor(() => getByDisplayValue(numericField.label));
 
     // open operator selector
     const operatorSelector = container.querySelector<HTMLInputElement>(".rule-operator .iui-select-button");
     expect(operatorSelector).to.not.be.null;
     fireEvent.click(operatorSelector!);
     // select operator
-    fireEvent.click(getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.IsNotNull)));
+    fireEvent.click(getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.Less)));
 
     // wait until operator is selected
-    await waitFor(() => getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.IsNotNull)));
-    expect(applyButton?.disabled).to.be.false;
-    fireEvent.click(applyButton!);
+    await waitFor(() => getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.Less)));
+
+    // enter value
+    const inputContainer = await waitFor(() => {
+      const element = container.querySelector<HTMLInputElement>(".rule-value input");
+      expect(element).to.be.not.null;
+      return element!;
+    });
+    await user.type(inputContainer, "123");
+
+    const applyButton = await waitFor(() => {
+      const element = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
+      expect(element?.disabled).to.be.false;
+      return element!;
+    });
+    await user.click(applyButton);
 
     expect(spy).to.be.calledOnceWith({
       filter: {
-        field: propertiesField1,
-        operator: PropertyFilterRuleOperator.IsNotNull,
-        value: undefined,
+        field: numericField,
+        operator: PropertyFilterRuleOperator.Less,
+        value: {
+          valueFormat: AbstractPropertyValueFormat.Primitive,
+          value: 123,
+          displayValue: "123",
+        } as PrimitiveValue,
+      },
+      usedClasses: [classInfo],
+    });
+  });
+
+  it("invokes 'onApply' with quantity property filter rule", async () => {
+    const user = userEvent.setup();
+    const spy = sinon.spy();
+
+    sinon.stub(KoqPropertyValueFormatter.prototype, "getFormatterSpec").resolves({
+      applyFormatting: (magnitude: number) => `${magnitude} unit`,
+    } as unknown as FormatterSpec);
+
+    sinon.stub(KoqPropertyValueFormatter.prototype, "getParserSpec").resolves({
+      parseToQuantityValue: (value: string): QuantityParseResult => {
+        if (value.endsWith("unit")) {
+          return { ok: true, value: Number(value.substring(0, value.length - 5)) };
+        }
+        return { ok: false, error: ParseError.UnknownUnit };
+      },
+    } as unknown as ParserSpec);
+
+    sinon.stub(IModelApp, "quantityFormatter").get(() => ({
+      onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
+    }));
+
+    const imodel = {} as IModelConnection;
+    const getSchemaContext = () => ({} as SchemaContext);
+
+    const { container, getByText, getByDisplayValue } = render(
+      <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={getSchemaContext}>
+        <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />
+      </SchemaMetadataContextProvider>,
+    );
+
+    // open property selector
+    const propertySelector = container.querySelector<HTMLInputElement>(".rule-property input");
+    expect(propertySelector).to.not.be.null;
+    await user.click(propertySelector!);
+    // select property
+    await user.click(getByText(quantityField.label));
+
+    // wait until property is selected
+    await waitFor(() => getByDisplayValue(quantityField.label));
+
+    // open operator selector
+    const operatorSelector = container.querySelector<HTMLInputElement>(".rule-operator .iui-select-button");
+    expect(operatorSelector).to.not.be.null;
+    fireEvent.click(operatorSelector!);
+    // select operator
+    fireEvent.click(getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.Less)));
+
+    // wait until operator is selected
+    await waitFor(() => getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.Less)));
+
+    // enter value
+    const inputContainer = await waitFor(() => {
+      const element = container.querySelector<HTMLInputElement>(".rule-value input");
+      expect(element).to.be.not.null;
+      return element!;
+    });
+    await user.type(inputContainer, "123 unit");
+
+    const applyButton = await waitFor(() => {
+      const element = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
+      expect(element?.disabled).to.be.false;
+      return element!;
+    });
+    await user.click(applyButton);
+
+    expect(spy).to.be.calledOnceWith({
+      filter: {
+        field: quantityField,
+        operator: PropertyFilterRuleOperator.Less,
+        value: {
+          valueFormat: AbstractPropertyValueFormat.Primitive,
+          value: 123,
+          displayValue: "123 unit",
+        } as PrimitiveValue,
       },
       usedClasses: [classInfo],
     });
@@ -143,10 +309,10 @@ describe("PresentationInstanceFilterDialog", () => {
     expect(propertySelector).to.not.be.null;
     fireEvent.focus(propertySelector!);
     // select property
-    fireEvent.click(getByText(propertiesField1.label));
+    fireEvent.click(getByText(stringField.label));
 
     // wait until property is selected
-    await waitFor(() => getByDisplayValue(propertiesField1.label));
+    await waitFor(() => getByDisplayValue(stringField.label));
     expect(applyButton?.disabled).to.be.false;
 
     fireEvent.click(applyButton!);
@@ -169,10 +335,10 @@ describe("PresentationInstanceFilterDialog", () => {
     expect(propertySelector).to.not.be.null;
     fireEvent.focus(propertySelector!);
     // select property
-    fireEvent.click(getByText(propertiesField1.label));
+    fireEvent.click(getByText(stringField.label));
 
     // wait until property is selected
-    await waitFor(() => getByDisplayValue(propertiesField1.label));
+    await waitFor(() => getByDisplayValue(stringField.label));
 
     // open operator selector
     const operatorSelector = container.querySelector<HTMLInputElement>(".rule-operator .iui-select-button");
@@ -189,35 +355,92 @@ describe("PresentationInstanceFilterDialog", () => {
     expect(spy).to.not.be.called;
   });
 
-  it("sets error message if numeric inpout is invalid", async () => {
+  it("shows error message for invalid numeric values", async () => {
     const user = userEvent.setup();
-    const { container, getByText, getByDisplayValue, getByRole } = render(
-      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => {}} onApply={() => {}} isOpen={true} />,
+    const { container, queryByText } = render(
+      <PresentationInstanceFilterDialog
+        imodel={imodelMock.object}
+        descriptor={descriptor}
+        onClose={() => {}}
+        onApply={() => {}}
+        isOpen={true}
+        initialFilter={{
+          filter: { field: numericField, operator: PropertyFilterRuleOperator.Less },
+          usedClasses: [],
+        }}
+      />,
     );
 
-    const applyButton = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
-    expect(applyButton?.disabled).to.be.true;
-
-    // open property selector
-    const propertySelector = container.querySelector<HTMLInputElement>(".rule-property input");
-    expect(propertySelector).to.not.be.null;
-    fireEvent.focus(propertySelector!);
-    // select property
-    fireEvent.click(getByText(propertiesField2.label));
-
-    // wait until property is selected
-    await waitFor(() => getByDisplayValue(propertiesField2.label));
-
     // type invalid value in input
-    const inputContainer = getByRole("textbox");
+    const inputContainer = await waitFor(() => {
+      const element = container.querySelector<HTMLInputElement>(".rule-value input");
+      expect(element).to.be.not.null;
+      return element!;
+    });
 
     await user.type(inputContainer, "1e");
 
-    expect(applyButton?.disabled).to.be.false;
+    const applyButton = await waitFor(() => {
+      const element = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
+      expect(element?.disabled).to.be.false;
+      return element!;
+    });
 
-    fireEvent.click(applyButton!);
+    await user.click(applyButton);
+    await waitFor(() => expect(queryByText("instance-filter-builder.error-messages.not-a-number")).to.not.be.null);
+  });
 
-    await waitFor(() => expect(getByText("instance-filter-builder.error-messages.notANumber")).to.not.be.undefined);
+  it("shows error message for invalid quantity values", async () => {
+    const user = userEvent.setup();
+
+    sinon.stub(KoqPropertyValueFormatter.prototype, "getFormatterSpec").resolves({
+      applyFormatting: (magnitude: number) => `${magnitude} unit`,
+    } as unknown as FormatterSpec);
+
+    sinon.stub(KoqPropertyValueFormatter.prototype, "getParserSpec").resolves({
+      parseToQuantityValue: (_value: string): QuantityParseResult => ({ ok: false, error: ParseError.UnknownUnit }),
+    } as unknown as ParserSpec);
+
+    sinon.stub(IModelApp, "quantityFormatter").get(() => ({
+      onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
+    }));
+
+    const imodel = {} as IModelConnection;
+    const getSchemaContext = () => ({} as SchemaContext);
+
+    const { container, queryByText } = render(
+      <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={getSchemaContext}>
+        <PresentationInstanceFilterDialog
+          imodel={imodelMock.object}
+          descriptor={descriptor}
+          onClose={() => {}}
+          onApply={() => {}}
+          isOpen={true}
+          initialFilter={{
+            filter: { field: quantityField, operator: PropertyFilterRuleOperator.Less },
+            usedClasses: [],
+          }}
+        />
+      </SchemaMetadataContextProvider>,
+    );
+
+    // type invalid value in input
+    const inputContainer = await waitFor(() => {
+      const element = container.querySelector<HTMLInputElement>(".rule-value input");
+      expect(element).to.be.not.null;
+      return element!;
+    });
+
+    await user.type(inputContainer, "1 unit");
+
+    const applyButton = await waitFor(() => {
+      const element = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
+      expect(element?.disabled).to.be.false;
+      return element!;
+    });
+
+    await user.click(applyButton);
+    await waitFor(() => expect(queryByText("instance-filter-builder.error-messages.invalid")).to.not.be.null);
   });
 
   it("renders custom title", () => {
@@ -269,7 +492,7 @@ describe("PresentationInstanceFilterDialog", () => {
 
     await waitFor(() => {
       const propertySelector = container.querySelector<HTMLInputElement>(".rule-property .iui-input");
-      expect(propertySelector).to.not.be.undefined;
+      expect(propertySelector).to.not.be.null;
     });
   });
 

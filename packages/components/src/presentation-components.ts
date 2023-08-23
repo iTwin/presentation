@@ -17,6 +17,7 @@ export * from "./presentation-components/common/ContentBuilder";
 export * from "./presentation-components/common/ContentDataProvider";
 export * from "./presentation-components/hooks/UseRulesetRegistration";
 export * from "./presentation-components/common/Diagnostics";
+export * from "./presentation-components/common/SchemaMetadataContext";
 
 /**
  * @module Logging

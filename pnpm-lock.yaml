@@ -3136,6 +3136,23 @@ packages:
       react-table: 7.8.0(react@17.0.2)
       react-transition-group: 4.4.5(react-dom@17.0.2)(react@17.0.2)
       tippy.js: 6.3.7
+    dev: false
+
+  /@itwin/itwinui-react@2.12.2(react-dom@17.0.0)(react@17.0.0):
+    resolution: {integrity: sha512-2z+9aTpHmnj4B8jeoXv16WztnVT/ccuuuskcs25QittB5gV+1fgg+7aJouSF5NixXh0iB1Ktu/8qMvVcJbbpDw==}
+    peerDependencies:
+      react: '>=16.8.6 < 19.0.0'
+      react-dom: '>=16.8.6 < 19.0.0'
+    dependencies:
+      '@itwin/itwinui-illustrations-react': 2.1.0(react-dom@17.0.0)(react@17.0.0)
+      '@tippyjs/react': 4.2.6(react-dom@17.0.0)(react@17.0.0)
+      '@types/react-table': 7.7.14
+      classnames: 2.3.2
+      react: 17.0.0
+      react-dom: 17.0.0(react@17.0.0)
+      react-table: 7.8.0(react@17.0.0)
+      react-transition-group: 4.4.5(react-dom@17.0.0)(react@17.0.0)
+      tippy.js: 6.3.7
 
   /@itwin/itwinui-variables@2.1.0:
     resolution: {integrity: sha512-aQHziuXDTLLZeJCB8gJD3tRKlY/2J/IhSZB5K2E6UeUOcEr1Gnc/j6tdV5VLFx+B2omxAdZyUSqpxlHvHHf+Vg==}
@@ -10992,6 +11009,7 @@ packages:
 
   /opener@1.5.2:
     resolution: {integrity: sha512-ur5UIdyw5Y7yEj9wLzhqXiy6GZ3Mwx0yGI+5sMn2r0N0v3cKJvUmFH5yPP+WXh9e0xfyzyJX95D8l088DNFj7A==}
+    hasBin: true
     dev: false
 
   /opentracing@0.14.7:
@@ -12469,6 +12487,7 @@ packages:
 
   /shortid@2.2.16:
     resolution: {integrity: sha512-Ugt+GIZqvGXCIItnsL+lvFJOiN7RYqlGy7QE41O3YC1xbNSeDGIRO7xg2JJXIAj1cAGnOeC1r7/T9pgrtQbv4g==}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
     dependencies:
       nanoid: 2.1.11
 
@@ -13999,6 +14018,7 @@ packages:
 
   /wms-capabilities@0.4.0:
     resolution: {integrity: sha512-dGe1SQ4GySIfsmGF+yk07QRsed0DgJJkPpimbmehE9nGXLqIGhbpi6pNk71YENqupLPSqcABDrKZ1UqepOhCyA==}
+    hasBin: true
     dependencies:
       minimist: 1.2.8
 

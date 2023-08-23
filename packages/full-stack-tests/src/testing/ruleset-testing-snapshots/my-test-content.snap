@@ -52,6 +52,7 @@ Array [
                     "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_Acres",
+                  "quantityType": "DgnCustomItemTypes_MyProp:AREA_area_Acres",
                   "typename": "double",
                 },
                 "value": Object {
@@ -68,6 +69,7 @@ Array [
                     "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_cm2",
+                  "quantityType": "DgnCustomItemTypes_MyProp:AREA_area",
                   "typename": "double",
                 },
                 "value": Object {
@@ -84,6 +86,7 @@ Array [
                     "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_ft2",
+                  "quantityType": "DgnCustomItemTypes_MyProp:AREA_area_ft2",
                   "typename": "double",
                 },
                 "value": Object {
@@ -100,6 +103,7 @@ Array [
                     "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_ft__x0020__ft",
+                  "quantityType": "DgnCustomItemTypes_MyProp:SIZE_LENGTH_RATE",
                   "typename": "double",
                 },
                 "value": Object {
@@ -116,6 +120,7 @@ Array [
                     "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_ft__x0020__mi",
+                  "quantityType": "DgnCustomItemTypes_MyProp:SIZE_LENGTH_RATE_area",
                   "typename": "double",
                 },
                 "value": Object {
@@ -132,6 +137,7 @@ Array [
                     "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_ha",
+                  "quantityType": "DgnCustomItemTypes_MyProp:AREA_area_ha",
                   "typename": "double",
                 },
                 "value": Object {
@@ -148,6 +154,7 @@ Array [
                     "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_in2",
+                  "quantityType": "DgnCustomItemTypes_MyProp:AREA_area_in2",
                   "typename": "double",
                 },
                 "value": Object {
@@ -164,6 +171,7 @@ Array [
                     "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_in__x0020__ft",
+                  "quantityType": "DgnCustomItemTypes_MyProp:SIZE_LENGTH_RATE_area_in__x0020__ft",
                   "typename": "double",
                 },
                 "value": Object {
@@ -180,6 +188,7 @@ Array [
                     "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_in__x0020__m",
+                  "quantityType": "DgnCustomItemTypes_MyProp:SIZE_LENGTH_RATE_area_in__x0020__m",
                   "typename": "double",
                 },
                 "value": Object {
@@ -196,6 +205,7 @@ Array [
                     "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_in__x0020__mi",
+                  "quantityType": "DgnCustomItemTypes_MyProp:SIZE_LENGTH_RATE_area_in__x0020__mi",
                   "typename": "double",
                 },
                 "value": Object {
@@ -212,6 +222,7 @@ Array [
                     "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_km2",
+                  "quantityType": "DgnCustomItemTypes_MyProp:AREA_area_km2",
                   "typename": "double",
                 },
                 "value": Object {
@@ -228,6 +239,7 @@ Array [
                     "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_m2",
+                  "quantityType": "DgnCustomItemTypes_MyProp:AREA_area_m2",
                   "typename": "double",
                 },
                 "value": Object {
@@ -244,6 +256,7 @@ Array [
                     "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_m__x0020__km",
+                  "quantityType": "DgnCustomItemTypes_MyProp:SIZE_LENGTH_RATE_area_m__x0020__km",
                   "typename": "double",
                 },
                 "value": Object {
@@ -260,6 +273,7 @@ Array [
                     "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_m__x0020__m",
+                  "quantityType": "DgnCustomItemTypes_MyProp:SIZE_LENGTH_RATE_area_m__x0020__m",
                   "typename": "double",
                 },
                 "value": Object {
@@ -276,6 +290,7 @@ Array [
                     "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_mi2",
+                  "quantityType": "DgnCustomItemTypes_MyProp:AREA_area_mi2",
                   "typename": "double",
                 },
                 "value": Object {
@@ -292,6 +307,7 @@ Array [
                     "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_mm__x0020__km",
+                  "quantityType": "DgnCustomItemTypes_MyProp:SIZE_LENGTH_RATE_area_mm__x0020__km",
                   "typename": "double",
                 },
                 "value": Object {
@@ -308,6 +324,7 @@ Array [
                     "name": "presentation-numeric-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_thousand__x0020__ft2",
+                  "quantityType": "DgnCustomItemTypes_MyProp:AREA_area_thousand__x0020__ft2",
                   "typename": "double",
                 },
                 "value": Object {

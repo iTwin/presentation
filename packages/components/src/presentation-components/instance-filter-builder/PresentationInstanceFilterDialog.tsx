@@ -8,12 +8,14 @@
 
 import "./PresentationInstanceFilterDialog.scss";
 import { useEffect, useState } from "react";
-import { PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
+import { PrimitiveValue, PropertyDescription, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import {
   defaultPropertyFilterBuilderRuleValidator,
   isPropertyFilterBuilderRuleGroup,
+  isUnaryPropertyFilterOperator,
   PropertyFilterBuilderRule,
   PropertyFilterBuilderRuleGroupItem,
+  PropertyFilterRuleOperator,
   usePropertyFilterBuilder,
 } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -51,8 +53,6 @@ export interface PresentationInstanceFilterDialogProps {
   title?: React.ReactNode;
   /** Initial filter that will be show when component is mounted. */
   initialFilter?: PresentationInstanceFilterInfo;
-  /** Should unique values renderer be enabled */
-  enableUniqueValuesRenderer?: boolean;
 }
 
 /**
@@ -105,17 +105,17 @@ function useDelayLoadedDescriptor(descriptorOrGetter: Descriptor | (() => Promis
   return descriptor;
 }
 
-interface PresedntationInstanceFilterDialogContentProps extends Omit<PresentationInstanceFilterDialogProps, "isOpen" | "title" | "descriptor"> {
+interface PresentationInstanceFilterDialogContentProps extends Omit<PresentationInstanceFilterDialogProps, "isOpen" | "title" | "descriptor"> {
   descriptor: Descriptor;
 }
 
-function PresentationInstanceFilterDialogContent(props: PresedntationInstanceFilterDialogContentProps) {
-  const { onApply, initialFilter, descriptor, imodel, ruleGroupDepthLimit, filterResultCountRenderer, onClose, enableUniqueValuesRenderer } = props;
+function PresentationInstanceFilterDialogContent(props: PresentationInstanceFilterDialogContentProps) {
+  const { onApply, initialFilter, descriptor, imodel, ruleGroupDepthLimit, filterResultCountRenderer, onClose } = props;
   const [initialPropertyFilter] = useState(() => (initialFilter ? convertPresentationFilterToPropertyFilter(descriptor, initialFilter.filter) : undefined));
 
   const { rootGroup, actions, buildFilter } = usePropertyFilterBuilder({
     initialFilter: initialPropertyFilter,
-    ruleValidator: numericInputValidator,
+    ruleValidator: filterRuleValidator,
   });
 
   const filteringProps = usePresentationInstanceFilteringProps(descriptor, imodel, initialFilter?.usedClasses);
@@ -146,7 +146,6 @@ function PresentationInstanceFilterDialogContent(props: PresedntationInstanceFil
       <Dialog.Content className="presentation-instance-filter-content">
         <InstanceFilterBuilder
           {...filteringProps}
-          enableUniqueValuesRenderer={enableUniqueValuesRenderer}
           rootGroup={rootGroup}
           actions={actions}
           ruleGroupDepthLimit={ruleGroupDepthLimit}
@@ -183,22 +182,81 @@ function DelayedCenteredProgressRadial() {
   );
 }
 
-function numericInputValidator(item: PropertyFilterBuilderRule) {
-  if (
-    item.value &&
-    item.value.valueFormat === PropertyValueFormat.Primitive &&
-    item.property &&
-    istypenameNumeric(item.property.typename) &&
-    item.value.value === undefined &&
-    item.value.displayValue !== ""
-  ) {
-    return translate("instance-filter-builder.error-messages.notANumber");
+function filterRuleValidator(item: PropertyFilterBuilderRule) {
+  // skip empty rules and rules that do not require value
+  if (item.property === undefined || item.operator === undefined || isUnaryPropertyFilterOperator(item.operator)) {
+    return undefined;
   }
+
+  // istanbul ignore if
+  if (item.value !== undefined && item.value.valueFormat !== PropertyValueFormat.Primitive) {
+    return undefined;
+  }
+
+  const error = combineValidators(
+    quantityPropertyValidator,
+    numericPropertyValidator,
+  )({
+    property: item.property,
+    operator: item.operator,
+    value: item.value,
+  });
+
+  if (error) {
+    return error;
+  }
+
   return defaultPropertyFilterBuilderRuleValidator(item);
 }
 
-function istypenameNumeric(typename: string) {
+function combineValidators(...validators: Array<(ctx: ValidatorContext) => string | undefined>) {
+  return (ctx: ValidatorContext) => {
+    for (const validator of validators) {
+      const error = validator(ctx);
+      if (error) {
+        return error;
+      }
+    }
+    return undefined;
+  };
+}
+
+interface ValidatorContext {
+  property: PropertyDescription;
+  operator: PropertyFilterRuleOperator;
+  value?: PrimitiveValue;
+}
+
+function quantityPropertyValidator({ property, value }: ValidatorContext) {
+  // rules with non quantity properties or without values
+  if (property.quantityType === undefined || value === undefined) {
+    return undefined;
+  }
+  if (isInvalidPrimitiveValue(value)) {
+    return translate("instance-filter-builder.error-messages.invalid");
+  }
+
+  return undefined;
+}
+
+function numericPropertyValidator({ property, value }: ValidatorContext) {
+  if (!isPropertyNumeric(property.typename) || value === undefined) {
+    return undefined;
+  }
+
+  if (isInvalidPrimitiveValue(value)) {
+    return translate("instance-filter-builder.error-messages.not-a-number");
+  }
+
+  return undefined;
+}
+
+function isPropertyNumeric(typename: string) {
   return (
     typename === StandardTypeNames.Number || typename === StandardTypeNames.Int || typename === StandardTypeNames.Float || typename === StandardTypeNames.Double
   );
+}
+
+function isInvalidPrimitiveValue(value: PrimitiveValue) {
+  return value.value === undefined && value.displayValue !== undefined && value.displayValue !== "";
 }
