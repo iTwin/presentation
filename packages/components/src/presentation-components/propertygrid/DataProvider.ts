@@ -129,13 +129,9 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
    */
   protected override invalidateCache(props: CacheInvalidationProps): void {
     super.invalidateCache(props);
-    if (this.getMemoizedData) {
-      this.getMemoizedData.cache.keys.length = 0;
-      this.getMemoizedData.cache.values.length = 0;
-    }
-    if (this.onDataChanged) {
-      this.onDataChanged.raiseEvent();
-    }
+    this.getMemoizedData.cache.keys.length = 0;
+    this.getMemoizedData.cache.values.length = 0;
+    this.onDataChanged.raiseEvent();
   }
 
   /**

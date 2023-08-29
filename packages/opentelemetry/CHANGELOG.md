@@ -1,8 +1,17 @@
 # Change Log - @itwin/presentation-opentelemetry
 
-This log was last generated on Tue, 02 May 2023 11:39:31 GMT and should not be manually modified.
+This log was last generated on Wed, 09 Aug 2023 11:47:16 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 4.0.1
+
+Wed, 09 Aug 2023 11:47:16 GMT
+
+### Patches
+
+- Set span status to error when it contains error logs ([commit](https://github.com/iTwin/presentation/commit/ea3a0ea2c27f773ba9ecf49c81d25af4cfd7caf8))
+- Update package dependencies ([commit](https://github.com/iTwin/presentation/commit/22593a8fddc52b5c547c024d64e7cc5659c81d01))
 
 ## 4.0.0
 
@@ -10,9 +19,9 @@ Tue, 02 May 2023 11:39:31 GMT
 
 ### Major changes
 
-- **BREAKING CHANGE:** Remove `convertToReadableSpans` function in favor of `exportDiagnostics`. ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
-- Drop Node 12 and Node 14. ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
-- Drop Node 16 support. ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- **BREAKING CHANGE:** Remove `convertToReadableSpans` function in favor of `exportDiagnostics`. ([commit](https://github.com/iTwin/presentation/commit/3ea71c980ec134087ea5efaac8a91468e360d044))
+- Drop Node 12 and Node 14. ([commit](https://github.com/iTwin/presentation/commit/4a853c7d99ddf3fe920d657f5b1ac5a6169c19b2))
+- Drop Node 16 support. ([commit](https://github.com/iTwin/presentation/commit/4a853c7d99ddf3fe920d657f5b1ac5a6169c19b2))
 
 ## 3.7.4
 

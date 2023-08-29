@@ -1,7 +1,0 @@
-{
-  "type": "none",
-  "comment": "Upgrade to eslint@8 and @itwin/eslint-plugin accordingly",
-  "packageName": "@itwin/presentation-components",
-  "email": "anmol.shrestha@bentley.com",
-  "dependentChangeType": "none"
-}

@@ -1,6 +1,6 @@
 {
   "type": "patch",
-  "comment": "Update package dependencies",
+  "comment": "Update dependencies",
   "packageName": "@itwin/presentation-components",
   "email": "35135765+grigasp@users.noreply.github.com",
   "dependentChangeType": "patch"

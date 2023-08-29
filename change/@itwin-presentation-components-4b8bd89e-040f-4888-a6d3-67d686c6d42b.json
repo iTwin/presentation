@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "Add `Home` and `End` buttons functionality to the navigation property value selector.",
-  "packageName": "@itwin/presentation-components",
-  "email": "124659623+simasjar@users.noreply.github.com",
-  "dependentChangeType": "patch"
-}
