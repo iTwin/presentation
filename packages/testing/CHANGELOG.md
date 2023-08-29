@@ -1,8 +1,16 @@
 # Change Log - @itwin/presentation-testing
 
-This log was last generated on Thu, 15 Jun 2023 07:31:33 GMT and should not be manually modified.
+This log was last generated on Wed, 09 Aug 2023 11:47:16 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 4.0.2
+
+Wed, 09 Aug 2023 11:47:16 GMT
+
+### Patches
+
+- Update package dependencies ([commit](https://github.com/iTwin/presentation/commit/22593a8fddc52b5c547c024d64e7cc5659c81d01))
 
 ## 4.0.1
 
@@ -10,7 +18,7 @@ Thu, 15 Jun 2023 07:31:33 GMT
 
 ### Patches
 
-- Bumped `rimraf` version ([commit](https://github.com/iTwin/presentation/commit/49a6fa2ab5256d00d4424033d5b0efb96e049a6b))
+- Bumped `rimraf` version ([commit](https://github.com/iTwin/presentation/commit/e5fdd420d31c98ef6d43daa3faad4fbb27625829))
 
 ## 4.0.0
 
@@ -18,24 +26,24 @@ Tue, 02 May 2023 11:39:31 GMT
 
 ### Major changes
 
-- Upgrade to AppUI 4.0 ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- Upgrade to AppUI 4.0 ([commit](https://github.com/iTwin/presentation/commit/c869d568d3b462670d20e1ec31807aee15a0857e))
 
 ### Minor changes
 
-- Add a `buildTestIModel` overload that generates imodel name from mocha context ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
-- Change `TestIModelBuilder.insertAspect` to return inserted aspect id. ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
-- Add `TestIModelBuilder.insertRelationship` ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
-- Bump minimum required `itwinjs-core` version to `3.6.3` ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- Add a `buildTestIModel` overload that generates imodel name from mocha context ([commit](https://github.com/iTwin/presentation/commit/6b844055de128dbf3b1de1611144391dc7ee6d31))
+- Change `TestIModelBuilder.insertAspect` to return inserted aspect id. ([commit](https://github.com/iTwin/presentation/commit/4b7ff68423cd641c73d9f3fb5b4bfbb5266fa1e0))
+- Add `TestIModelBuilder.insertRelationship` ([commit](https://github.com/iTwin/presentation/commit/56c533083105473e4c9c05d061609a7cd5928d5d))
+- Bump minimum required `itwinjs-core` version to `3.6.3` ([commit](https://github.com/iTwin/presentation/commit/7bf12337f09b7fda0362474d3d63b18bb4b07aab))
 
 ### Patches
 
-- Reduce deprecated API usage ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
-- Replace all spaces in test name when creating test iModel. ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- Reduce deprecated API usage ([commit](https://github.com/iTwin/presentation/commit/6bf1a99ec570751e16f30af658e0fa7e27e7631f))
+- Replace all spaces in test name when creating test iModel. ([commit](https://github.com/iTwin/presentation/commit/070f9587299e156ebd58eb7fa0941b50f56ec188))
 
 ### Changes
 
-- Update dependencies ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
-- Updated to TypeScript 5.0 ([commit](https://github.com/iTwin/presentation/commit/062b24b95a6b9207c18f1e9c79e6c1875f5070b5))
+- Update dependencies ([commit](https://github.com/iTwin/presentation/commit/ddf8cf327436fa38dc304666992e9fb66e942933))
+- Updated to TypeScript 5.0 ([commit](https://github.com/iTwin/presentation/commit/4b7924ee69265aaadeaba81f02162bf5c404d33a))
 
 ## 3.7.4
 

@@ -57,7 +57,7 @@ export interface ControlledPresentationTreeFilteringProps {
  * @public
  */
 export function useControlledPresentationTreeFiltering(props: ControlledPresentationTreeFilteringProps) {
-  const { filteredNodeLoader, isFiltering, matchesCount } = useFilteredNodeLoader(props.nodeLoader, props.filter);
+  const { filteredNodeLoader, isFiltering, matchesCount } = useFilteredNodeLoader(props.nodeLoader.dataProvider, props.filter);
   const filteringInProgressNodeLoader = useMemo(() => {
     return isFiltering ? new FilteringInProgressNodeLoader(props.nodeLoader.dataProvider) : undefined;
   }, [isFiltering, props.nodeLoader.dataProvider]);
@@ -71,35 +71,47 @@ export function useControlledPresentationTreeFiltering(props: ControlledPresenta
   };
 }
 
+interface FilteredState {
+  filteredNodeLoader: AbstractTreeNodeLoaderWithProvider<IFilteredPresentationTreeDataProvider>;
+  matchesCount: number;
+}
+
 /** @internal */
-export function useFilteredNodeLoader(nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>, filter: string | undefined) {
+export function useFilteredNodeLoader(dataProvider: IPresentationTreeDataProvider, filter: string | undefined) {
   const normalizedFilter = normalizeFilter(filter);
-  const dataProvider = normalizeDataProvider(nodeLoader.dataProvider);
-  const { value: nodePaths, inProgress } = useNodePaths(dataProvider, normalizedFilter);
+  const normalizedDataProvider = normalizeDataProvider(dataProvider);
+  const { value: nodePaths, inProgress } = useNodePaths(normalizedDataProvider, normalizedFilter);
+  const [filteredState, setFilteredState] = useState<FilteredState | undefined>();
 
-  const { filteredProvider, matchesCount } = useMemo(() => {
-    if (nodePaths !== undefined) {
-      const provider: IFilteredPresentationTreeDataProvider = new FilteredPresentationTreeDataProvider({
-        parentDataProvider: dataProvider,
-        filter: normalizedFilter,
-        paths: nodePaths,
-      });
-
-      return { filteredProvider: provider, matchesCount: provider.countFilteringResults(nodePaths) };
+  useEffect((): (() => void) | void => {
+    // if filtering is in progress reset filtered node loader.
+    // Filtered node loader is reset after some delay to avoid unnecessary state change if filtering request is quick.
+    if (inProgress) {
+      const timeout = setTimeout(() => setFilteredState(undefined), 200);
+      return () => {
+        clearTimeout(timeout);
+      };
     }
 
-    return { filteredProvider: undefined, matchesCount: undefined };
-  }, [dataProvider, nodePaths, normalizedFilter]);
+    if (nodePaths === undefined) {
+      setFilteredState(undefined);
+      return;
+    }
 
-  const filteredNodeLoader = useMemo(() => {
-    return filteredProvider ? new PagedTreeNodeLoader(filteredProvider, new TreeModelSource(), FILTERED_DATA_PAGE_SIZE) : undefined;
-  }, [filteredProvider]);
+    const provider: IFilteredPresentationTreeDataProvider = new FilteredPresentationTreeDataProvider({
+      parentDataProvider: normalizedDataProvider,
+      filter: normalizedFilter,
+      paths: nodePaths,
+    });
+    const nodeLoader = new PagedTreeNodeLoader(provider, new TreeModelSource(), FILTERED_DATA_PAGE_SIZE);
+    setFilteredState({ filteredNodeLoader: nodeLoader, matchesCount: provider.countFilteringResults(nodePaths) });
+  }, [normalizedDataProvider, nodePaths, normalizedFilter, inProgress]);
 
   return {
-    filteredNodeLoader,
+    filteredNodeLoader: filteredState?.filteredNodeLoader,
     isFiltering: inProgress,
-    filterApplied: filteredNodeLoader ? filteredNodeLoader.dataProvider.filter : undefined,
-    matchesCount,
+    filterApplied: filteredState?.filteredNodeLoader ? filteredState?.filteredNodeLoader.dataProvider.filter : undefined,
+    matchesCount: filteredState?.matchesCount,
   };
 }
 
