@@ -62,7 +62,9 @@ export function Tree(props: Props) {
       iconsEnabled={true}
       width={props.width}
       height={props.height}
-      treeRenderer={(treeProps) => <PresentationTreeRenderer {...treeProps} imodel={props.imodel} modelSource={filteredModelSource} />}
+      treeRenderer={(treeProps) => (
+        <PresentationTreeRenderer {...treeProps} imodel={props.imodel} modelSource={filteredModelSource} dataProvider={filteredNodeLoader.dataProvider} />
+      )}
     />
   );
 }

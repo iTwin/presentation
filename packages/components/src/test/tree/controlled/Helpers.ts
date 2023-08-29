@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { PropertyRecord } from "@itwin/appui-abstract";
-import { TreeModelNode, TreeNodeItem } from "@itwin/components-react";
+import { TreeModelNode, TreeModelNodeInput, TreeNodeItem } from "@itwin/components-react";
 import { CheckBoxState } from "@itwin/core-react";
 import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem";
 import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy";
@@ -35,5 +35,19 @@ export function createTreeModelNode(node?: Partial<TreeModelNode>, nodeItem?: Tr
     },
     label,
     item: nodeItem ?? createTreeNodeItem({ label }),
+  };
+}
+
+export function createTreeModelNodeInput(input?: Partial<Omit<TreeModelNodeInput, "item"> & { item?: Partial<PresentationTreeNodeItem> }>): TreeModelNodeInput {
+  const id = input?.id ?? "0";
+  const label = input?.label ?? PropertyRecord.fromString(input?.id ?? "TestNode");
+  return {
+    ...input,
+    id,
+    label,
+    item: createTreeNodeItem({ id, label, ...input?.item }),
+    isExpanded: input?.isExpanded ?? false,
+    isSelected: input?.isSelected ?? false,
+    isLoading: input?.isLoading ?? false,
   };
 }

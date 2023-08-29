@@ -22,6 +22,7 @@
     "apply": "Apply",
     "cancel": "Cancel",
     "filter": "Filter",
+    "results-count": "Instances matching filter count:",
     "error-messages": {
       "not-a-number": "Value must be a number",
       "invalid": "Value is invalid"
@@ -31,7 +32,9 @@
     "no-filtered-children": "There are no child nodes matching current filter",
     "result-set-too-large": "The hierarchy level is too large to be displayed - please provide additional filtering",
     "timeout": "Creating the hierarchy level took too long",
-    "unknown-error": "Error creating the hierarchy level"
+    "unknown-error": "Error creating the hierarchy level",
+    "filter-hierarchy-level": "Filter hierarchy level",
+    "clear-hierarchy-level-filter": "Clean hierarchy level filter"
   },
   "navigation-property-editor": {
     "select-target-instance": "Select target instance",

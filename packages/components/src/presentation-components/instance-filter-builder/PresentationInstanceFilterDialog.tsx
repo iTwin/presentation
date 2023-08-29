@@ -7,15 +7,17 @@
  */
 
 import "./PresentationInstanceFilterDialog.scss";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { PrimitiveValue, PropertyDescription, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import {
+  BuildFilterOptions,
   defaultPropertyFilterBuilderRuleValidator,
   isPropertyFilterBuilderRuleGroup,
   isUnaryPropertyFilterOperator,
   PropertyFilterBuilderRule,
   PropertyFilterBuilderRuleGroupItem,
   PropertyFilterRuleOperator,
+  useDebouncedAsyncValue,
   usePropertyFilterBuilder,
 } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -47,8 +49,8 @@ export interface PresentationInstanceFilterDialogProps {
    * This property can be set to function in order to lazy load [Descriptor]($presentation-common) when dialog is opened.
    */
   descriptor: (() => Promise<Descriptor>) | Descriptor;
-  /** Renderer that renders count of results for currently built filter. */
-  filterResultCountRenderer?: (filter?: PresentationInstanceFilterInfo) => React.ReactNode;
+  /** Returns count of instances matching current filter. */
+  getFilteredResultsCount?: (filter: PresentationInstanceFilterInfo) => Promise<number>;
   /** Dialog title. */
   title?: React.ReactNode;
   /** Initial filter that will be show when component is mounted. */
@@ -110,7 +112,7 @@ interface PresentationInstanceFilterDialogContentProps extends Omit<Presentation
 }
 
 function PresentationInstanceFilterDialogContent(props: PresentationInstanceFilterDialogContentProps) {
-  const { onApply, initialFilter, descriptor, imodel, ruleGroupDepthLimit, filterResultCountRenderer, onClose } = props;
+  const { onApply, initialFilter, descriptor, imodel, ruleGroupDepthLimit, getFilteredResultsCount, onClose } = props;
   const [initialPropertyFilter] = useState(() => (initialFilter ? convertPresentationFilterToPropertyFilter(descriptor, initialFilter.filter) : undefined));
 
   const { rootGroup, actions, buildFilter } = usePropertyFilterBuilder({
@@ -119,17 +121,28 @@ function PresentationInstanceFilterDialogContent(props: PresentationInstanceFilt
   });
 
   const filteringProps = usePresentationInstanceFilteringProps(descriptor, imodel, initialFilter?.usedClasses);
+  const getFilterInfo = useCallback(
+    (options?: BuildFilterOptions) => {
+      const filter = buildFilter(options);
+      if (!filter) {
+        return undefined;
+      }
+      const presentationInstanceFilter = createPresentationInstanceFilter(descriptor, filter);
+      if (!presentationInstanceFilter) {
+        return undefined;
+      }
+
+      return { filter: presentationInstanceFilter, usedClasses: filteringProps.selectedClasses };
+    },
+    [buildFilter, descriptor, filteringProps.selectedClasses],
+  );
 
   const applyButtonHandle = () => {
-    const filter = buildFilter();
-    if (!filter) {
+    const result = getFilterInfo();
+    if (!result) {
       return;
     }
-    const presentationInstanceFilter = createPresentationInstanceFilter(descriptor, filter);
-    if (!presentationInstanceFilter) {
-      return;
-    }
-    onApply({ filter: presentationInstanceFilter, usedClasses: filteringProps.selectedClasses });
+    onApply(result);
   };
 
   const hasNonEmptyRule = (item: PropertyFilterBuilderRuleGroupItem) => {
@@ -154,7 +167,7 @@ function PresentationInstanceFilterDialogContent(props: PresentationInstanceFilt
         />
       </Dialog.Content>
       <div className="presentation-instance-filter-dialog-bottom-container">
-        <div>{filterResultCountRenderer && filterResultCountRenderer()}</div>
+        <div>{getFilteredResultsCount ? <ResultsRenderer buildFilter={getFilterInfo} getResultsCount={getFilteredResultsCount} /> : null}</div>
         <Dialog.ButtonBar className="presentation-instance-filter-button-bar">
           <Button className="presentation-instance-filter-dialog-apply-button" styleType="high-visibility" onClick={applyButtonHandle} disabled={isDisabled}>
             {translate("instance-filter-builder.apply")}
@@ -164,6 +177,38 @@ function PresentationInstanceFilterDialogContent(props: PresentationInstanceFilt
           </Button>
         </Dialog.ButtonBar>
       </div>
+    </>
+  );
+}
+
+interface ResultsRendererProps {
+  buildFilter: (options?: BuildFilterOptions) => PresentationInstanceFilterInfo | undefined;
+  getResultsCount: (filter: PresentationInstanceFilterInfo) => Promise<number>;
+}
+
+function ResultsRenderer({ buildFilter, getResultsCount }: ResultsRendererProps) {
+  const { value, inProgress } = useDebouncedAsyncValue(
+    useCallback(async () => {
+      const filter = buildFilter({ ignoreErrors: true });
+      if (!filter) {
+        return undefined;
+      }
+
+      try {
+        return await getResultsCount(filter);
+      } catch {}
+
+      return undefined;
+    }, [getResultsCount, buildFilter]),
+  );
+
+  if (value === undefined || inProgress) {
+    return null;
+  }
+
+  return (
+    <>
+      {translate("instance-filter-builder.results-count")} {value}
     </>
   );
 }
