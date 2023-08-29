@@ -4,13 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { HierarchyCacheMode, initialize, PresentationTestingInitProps, terminate } from "../presentation-testing/Helpers";
-import * as sinon from "sinon";
-import { Presentation as PresentationBackend } from "@itwin/presentation-backend";
-import { Presentation as PresentationFrontend } from "@itwin/presentation-frontend";
 import * as rimraf from "rimraf";
+import * as sinon from "sinon";
 import { Guid } from "@itwin/core-bentley";
 import { NoRenderApp } from "@itwin/core-frontend";
+import { Presentation as PresentationBackend } from "@itwin/presentation-backend";
+import { Presentation as PresentationFrontend } from "@itwin/presentation-frontend";
+import { HierarchyCacheMode, initialize, PresentationTestingInitProps, terminate } from "../presentation-testing/Helpers";
 
 describe("Helpers", () => {
   describe("initialize", () => {
