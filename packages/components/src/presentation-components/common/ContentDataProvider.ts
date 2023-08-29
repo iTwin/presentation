@@ -9,7 +9,7 @@
 import memoize from "micro-memoize";
 import { PropertyDescription, PropertyRecord } from "@itwin/appui-abstract";
 import { Logger } from "@itwin/core-bentley";
-import { IModelConnection } from "@itwin/core-frontend";
+import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import {
   ClientDiagnosticsOptions,
   Content,
@@ -168,6 +168,7 @@ export class ContentDataProvider implements IContentDataProvider {
   private _selectionInfo?: SelectionInfo;
   private _pagingSize?: number;
   private _diagnosticsOptions?: ClientDiagnosticsOptions;
+  private _listeners: Array<() => void> = [];
 
   /** Constructor. */
   constructor(props: ContentDataProviderProps) {
@@ -179,18 +180,18 @@ export class ContentDataProvider implements IContentDataProvider {
     this._pagingSize = props.pagingSize;
     this._diagnosticsOptions = createDiagnosticsOptions(props);
     if (props.enableContentAutoUpdate) {
-      Presentation.presentation.onIModelContentChanged.addListener(this.onIModelContentChanged);
-      Presentation.presentation.rulesets().onRulesetModified.addListener(this.onRulesetModified);
-      Presentation.presentation.vars(this._rulesetRegistration.rulesetId).onVariableChanged.addListener(this.onRulesetVariableChanged);
+      this._listeners.push(Presentation.presentation.onIModelContentChanged.addListener(this.onIModelContentChanged));
+      this._listeners.push(Presentation.presentation.rulesets().onRulesetModified.addListener(this.onRulesetModified));
+      this._listeners.push(Presentation.presentation.vars(this._rulesetRegistration.rulesetId).onVariableChanged.addListener(this.onRulesetVariableChanged));
     }
-    this.invalidateCache(CacheInvalidationProps.full());
+    this._listeners.push(IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(this.onUnitSystemChanged));
   }
 
   /** Destructor. Must be called to clean up.  */
   public dispose() {
-    Presentation.presentation.onIModelContentChanged.removeListener(this.onIModelContentChanged);
-    Presentation.presentation.rulesets().onRulesetModified.removeListener(this.onRulesetModified);
-    Presentation.presentation.vars(this._rulesetRegistration.rulesetId).onVariableChanged.removeListener(this.onRulesetVariableChanged);
+    for (const removeListener of this._listeners) {
+      removeListener();
+    }
     this._rulesetRegistration.dispose();
   }
 
@@ -437,6 +438,11 @@ export class ContentDataProvider implements IContentDataProvider {
   // eslint-disable-next-line @typescript-eslint/naming-convention
   private onRulesetVariableChanged = () => {
     this.onContentUpdate();
+  };
+
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  private onUnitSystemChanged = () => {
+    this.invalidateCache({ content: true });
   };
 }
 

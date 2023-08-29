@@ -6,8 +6,9 @@
  * @module InstancesFilter
  */
 
-import { Primitives, PrimitiveValue, PropertyValueFormat } from "@itwin/appui-abstract";
+import { Primitives, PrimitiveValue, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import { isUnaryPropertyFilterOperator, PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator } from "@itwin/components-react";
+import { assert } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo, InstanceFilterDefinition, NestedContentField, PropertiesField, RelationshipPath } from "@itwin/presentation-common";
 import { deserializeDisplayValueGroupArray } from "../common/Utils";
@@ -162,6 +163,10 @@ function createComparison(propertyName: string, type: string, alias: string, ope
       break;
   }
 
+  if (type === StandardTypeNames.Point2d || type === StandardTypeNames.Point3d) {
+    assert(isPoint2d(value));
+    return createPointComparison(value, operatorExpression, propertyAccessor);
+  }
   if (type === "navigation") {
     return `${propertyAccessor}.Id ${operatorExpression} ${(value as Primitives.InstanceKey).id}`;
   }
@@ -248,4 +253,19 @@ function handleStringifiedUniqueValues(filter: PresentationInstanceFilterConditi
     selectedValueIndex++;
   }
   return conditionGroup;
+}
+
+function createPointComparison(point: { x: number; y: number } | { x: number; y: number; z: number }, operatorExpression: string, propertyAccessor: string) {
+  const logicalOperator = operatorExpression === "=" ? "AND" : "OR";
+  return `(CompareDoubles(${propertyAccessor}.x, ${point.x}) ${operatorExpression} 0) ${logicalOperator} (CompareDoubles(${propertyAccessor}.y, ${
+    point.y
+  }) ${operatorExpression} 0)${isPoint3d(point) ? ` ${logicalOperator} (CompareDoubles(${propertyAccessor}.z, ${point.z}) ${operatorExpression} 0)` : ""}`;
+}
+
+function isPoint2d(obj?: Primitives.Value): obj is { x: number; y: number } {
+  return (obj as any).x !== undefined && (obj as any).y !== undefined;
+}
+
+function isPoint3d(obj?: Primitives.Value): obj is { x: number; y: number; z: number } {
+  return isPoint2d(obj) && (obj as any).z !== undefined;
 }

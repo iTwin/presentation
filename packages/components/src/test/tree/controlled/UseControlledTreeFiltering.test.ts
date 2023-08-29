@@ -12,12 +12,12 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { NodePathElement } from "@itwin/presentation-common";
 import { waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
-import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";
 import {
   ControlledPresentationTreeFilteringProps,
   useControlledPresentationTreeFiltering,
 } from "../../../presentation-components/tree/controlled/UseControlledTreeFiltering";
 import { FilteredPresentationTreeDataProvider } from "../../../presentation-components/tree/FilteredDataProvider";
+import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";
 import { ResolvablePromise } from "../../_helpers/Promises";
 import { createTestPropertyRecord, createTestTreeNodeItem } from "../../_helpers/UiComponents";
 
@@ -250,5 +250,38 @@ describe("useControlledPresentationTreeFiltering", () => {
       loadedNodes = res.loadedNodes;
     });
     await waitFor(() => expect(loadedNodes).to.have.lengthOf(0));
+  });
+
+  it("resets filtered node loader when filter changes", async () => {
+    const initialPathsResult = new ResolvablePromise<NodePathElement[]>();
+    dataProviderMock.setup(async (x) => x.getFilteredNodePaths("test")).returns(async () => initialPathsResult);
+    const changedPathsResult = new ResolvablePromise<NodePathElement[]>();
+    dataProviderMock.setup(async (x) => x.getFilteredNodePaths("changed")).returns(async () => changedPathsResult);
+
+    const initialProps: ControlledPresentationTreeFilteringProps = {
+      nodeLoader: nodeLoaderMock.object,
+      filter: "test",
+    };
+    const { result, rerender } = renderHook(useControlledPresentationTreeFiltering, { initialProps });
+
+    await initialPathsResult.resolve([]);
+    await waitFor(() => expect(result.current.isFiltering).to.be.false);
+
+    expect(result.current.filteredNodeLoader.dataProvider).to.be.instanceOf(FilteredPresentationTreeDataProvider);
+
+    rerender({ ...initialProps, filter: "changed" });
+    expect(result.current.filteredNodeLoader.dataProvider).to.be.instanceOf(FilteredPresentationTreeDataProvider);
+
+    // wait until filtered node loader is reset
+    await waitFor(() => {
+      expect(result.current.filteredNodeLoader.dataProvider).to.not.be.instanceOf(FilteredPresentationTreeDataProvider);
+      expect(result.current.filteredModelSource.getModel().getRootNode().numChildren).to.be.undefined;
+      expect(result.current.isFiltering).to.be.true;
+    });
+
+    await changedPathsResult.resolve([]);
+    await waitFor(() => expect(result.current.isFiltering).to.be.false);
+
+    expect(result.current.filteredNodeLoader.dataProvider).to.be.instanceOf(FilteredPresentationTreeDataProvider);
   });
 });

@@ -12,6 +12,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
+          fetch-depth: 0
           token: ${{ secrets.IMJS_ADMIN_GH_TOKEN }}
 
       - name: Install pnpm
