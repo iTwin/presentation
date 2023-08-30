@@ -14,20 +14,22 @@ import { Presentation as PresentationFrontend } from "@itwin/presentation-fronte
 import { HierarchyCacheMode, initialize, PresentationTestingInitProps, terminate } from "../presentation-testing/Helpers";
 
 describe("Helpers", () => {
+  let backendInitializationStub: sinon.SinonStub;
+  let frontendInitializationStub: sinon.SinonStub;
+  let backendTerminationStub: sinon.SinonStub;
+  let frontendTerminationStub: sinon.SinonStub;
+
+  beforeEach(() => {
+    backendInitializationStub = sinon.stub(PresentationBackend, "initialize");
+    frontendInitializationStub = sinon.stub(PresentationFrontend, "initialize");
+    backendTerminationStub = sinon.stub(PresentationBackend, "terminate");
+    frontendTerminationStub = sinon.stub(PresentationFrontend, "terminate");
+    sinon.stub(IModelHost, "startup");
+    sinon.stub(NoRenderApp, "startup");
+    sinon.stub(IModelApp, "localization").get(() => ({ getLanguageList: () => ["en"] }));
+  });
+
   describe("initialize", () => {
-    let backendInitializationStub: sinon.SinonStub;
-    let frontendInitializationStub: sinon.SinonStub;
-
-    beforeEach(() => {
-      backendInitializationStub = sinon.stub(PresentationBackend, "initialize");
-      frontendInitializationStub = sinon.stub(PresentationFrontend, "initialize");
-      sinon.stub(PresentationBackend, "terminate");
-      sinon.stub(PresentationFrontend, "terminate");
-      sinon.stub(IModelHost, "startup");
-      sinon.stub(NoRenderApp, "startup");
-      sinon.stub(IModelApp, "localization").get(() => ({ getLanguageList: () => ["en"] }));
-    });
-
     afterEach(async () => {
       await terminate();
     });
@@ -66,19 +68,10 @@ describe("Helpers", () => {
   });
 
   describe("terminate", () => {
-    let backendTerminationStub: sinon.SinonStub;
-    let frontendTerminationStub: sinon.SinonStub;
     let rimrafSyncStub: sinon.SinonStub;
 
     beforeEach(() => {
-      backendTerminationStub = sinon.stub(PresentationBackend, "terminate");
-      frontendTerminationStub = sinon.stub(PresentationFrontend, "terminate");
       rimrafSyncStub = sinon.stub(rimraf, "sync");
-      sinon.stub(PresentationBackend, "initialize");
-      sinon.stub(PresentationFrontend, "initialize");
-      sinon.stub(IModelHost, "startup");
-      sinon.stub(NoRenderApp, "startup");
-      sinon.stub(IModelApp, "localization").get(() => ({ getLanguageList: () => ["en"] }));
     });
 
     it("terminates PresentationBackend and PresentationFrontend on terminate", async () => {
