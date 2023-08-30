@@ -80,24 +80,26 @@ describe("Helpers", () => {
       expect(frontendTerminationSpy).to.not.be.called;
     });
 
-    it("calls rimraf sync when initialized with DiskHierarchyCacheConfig", async () => {
+    it("clears cache directory when initialized with DiskHierarchyCacheConfig", async () => {
       const syncStub = sinon.stub(rimraf, "sync");
-      const props: PresentationTestingInitProps = { backendProps: { caching: { hierarchies: { mode: HierarchyCacheMode.Disk, directory: process.cwd() } } } };
+      const testDirectory = "/test/directory/";
+      const props: PresentationTestingInitProps = { backendProps: { caching: { hierarchies: { mode: HierarchyCacheMode.Disk, directory: testDirectory } } } };
       await initialize(props);
 
       await terminate();
-      expect(syncStub).to.be.calledOnce;
+      expect(syncStub).to.be.calledOnceWith(testDirectory);
     });
 
-    it("calls rimraf sync when initialized with HybridCacheConfig", async () => {
+    it("clears cache directory when initialized with HybridCacheConfig", async () => {
       const syncStub = sinon.stub(rimraf, "sync");
+      const testDirectory = "/test/directory/";
       const props: PresentationTestingInitProps = {
-        backendProps: { caching: { hierarchies: { mode: HierarchyCacheMode.Hybrid, disk: { mode: HierarchyCacheMode.Disk, directory: process.cwd() } } } },
+        backendProps: { caching: { hierarchies: { mode: HierarchyCacheMode.Hybrid, disk: { mode: HierarchyCacheMode.Disk, directory: testDirectory } } } },
       };
       await initialize(props);
 
       await terminate();
-      expect(syncStub).to.be.calledOnce;
+      expect(syncStub).to.be.calledOnceWith(testDirectory);
     });
   });
 });
