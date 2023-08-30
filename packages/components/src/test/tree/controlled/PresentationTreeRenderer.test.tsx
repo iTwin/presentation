@@ -20,17 +20,17 @@ import {
 } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { PropertyValueFormat } from "@itwin/presentation-common";
+import { PresentationError, PresentationStatus, PropertyValueFormat } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { waitFor } from "@testing-library/react";
 import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/Types";
 import { PresentationTreeRenderer } from "../../../presentation-components/tree/controlled/PresentationTreeRenderer";
+import { PresentationTreeDataProvider } from "../../../presentation-components/tree/DataProvider";
 import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";
 import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem";
 import { createTestPropertyInfo, render, stubDOMMatrix, stubRaf } from "../../_helpers/Common";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content";
 import { createTreeModelNodeInput } from "./Helpers";
-import { PresentationTreeDataProvider } from "../../../presentation-components/tree/DataProvider";
 
 describe("PresentationTreeRenderer", () => {
   stubRaf();
@@ -82,6 +82,18 @@ describe("PresentationTreeRenderer", () => {
     UiComponents.terminate();
     delete (HTMLElement.prototype as any).scrollIntoView;
   });
+
+  const property = createTestPropertyInfo({ name: "TestProperty", type: StandardTypeNames.Bool });
+  const propertyField = createTestPropertiesContentField({
+    properties: [{ property }],
+    name: property.name,
+    label: property.name,
+    type: { typeName: StandardTypeNames.Bool, valueFormat: PropertyValueFormat.Primitive },
+  });
+  const initialFilter: PresentationInstanceFilterInfo = {
+    filter: { field: propertyField, operator: PropertyFilterRuleOperator.IsFalse },
+    usedClasses: [],
+  };
 
   function setupTreeModel(setup: (model: MutableTreeModel) => void) {
     const model = new MutableTreeModel();
@@ -140,13 +152,6 @@ describe("PresentationTreeRenderer", () => {
   });
 
   it("applies filter and closes dialog", async () => {
-    const property = createTestPropertyInfo({ name: "TestProperty", type: StandardTypeNames.Bool });
-    const propertyField = createTestPropertiesContentField({
-      properties: [{ property }],
-      name: property.name,
-      label: property.name,
-      type: { typeName: StandardTypeNames.Bool, valueFormat: PropertyValueFormat.Primitive },
-    });
     const { visibleNodes, modelSource, nodeLoader } = setupTreeModel((model) => {
       model.setChildren(
         undefined,
@@ -171,13 +176,6 @@ describe("PresentationTreeRenderer", () => {
     nodeLoaderStub.loadNode.reset();
     nodeLoaderStub.loadNode.callsFake(() => subject);
 
-    const property = createTestPropertyInfo({ name: "TestProperty", type: StandardTypeNames.Bool });
-    const propertyField = createTestPropertiesContentField({
-      properties: [{ property }],
-      name: property.name,
-      label: property.name,
-      type: { typeName: StandardTypeNames.Bool, valueFormat: PropertyValueFormat.Primitive },
-    });
     const { visibleNodes, modelSource, nodeLoader } = setupTreeModel((model) => {
       model.setChildren(
         undefined,
@@ -198,19 +196,7 @@ describe("PresentationTreeRenderer", () => {
     subject.complete();
   });
 
-  it("shows results count when filtering dialog has valid filter", async () => {
-    const property = createTestPropertyInfo({ name: "TestProperty", type: StandardTypeNames.Bool });
-    const propertyField = createTestPropertiesContentField({
-      properties: [{ property }],
-      name: property.name,
-      label: property.name,
-      type: { typeName: StandardTypeNames.Bool, valueFormat: PropertyValueFormat.Primitive },
-    });
-    const initialFilter: PresentationInstanceFilterInfo = {
-      filter: { field: propertyField, operator: PropertyFilterRuleOperator.IsFalse },
-      usedClasses: [],
-    };
-
+  it("renders results count when filtering dialog has valid filter", async () => {
     const { visibleNodes, nodeLoader } = setupTreeModel((model) => {
       model.setChildren(
         undefined,
@@ -233,6 +219,66 @@ describe("PresentationTreeRenderer", () => {
 
     await waitFor(() => expect(queryByText(/15$/i)).to.not.be.null);
     expect(presentationManager.getNodesCount).to.be.calledOnce;
+  });
+
+  it("renders `Too many instances match filter` message if results set too large error is thrown", async () => {
+    presentationManager.getNodesCount.reset();
+    presentationManager.getNodesCount.callsFake(async () => {
+      throw new PresentationError(PresentationStatus.ResultSetTooLarge, "Results set too large");
+    });
+
+    const { visibleNodes, nodeLoader } = setupTreeModel((model) => {
+      model.setChildren(
+        undefined,
+        [
+          createTreeModelNodeInput({
+            id: "A",
+            item: { filtering: { descriptor: createTestContentDescriptor({ fields: [propertyField] }), active: initialFilter } },
+          }),
+        ],
+        0,
+      );
+    });
+
+    const result = render(<PresentationTreeRenderer {...baseTreeProps} visibleNodes={visibleNodes} nodeLoader={nodeLoader} />);
+
+    const { queryByText } = result;
+    await waitFor(() => expect(queryByText("A")).to.not.be.null);
+
+    await openFilterDialog(result);
+
+    await waitFor(() => expect(presentationManager.getNodesCount).to.be.calledOnce);
+    expect(queryByText("tree.filter-dialog.results-count-too-large")).to.not.be.null;
+  });
+
+  it("does not render result if unknown error is encountered", async () => {
+    presentationManager.getNodesCount.reset();
+    presentationManager.getNodesCount.callsFake(async () => {
+      throw new Error("Test Error");
+    });
+
+    const { visibleNodes, nodeLoader } = setupTreeModel((model) => {
+      model.setChildren(
+        undefined,
+        [
+          createTreeModelNodeInput({
+            id: "A",
+            item: { filtering: { descriptor: createTestContentDescriptor({ fields: [propertyField] }), active: initialFilter } },
+          }),
+        ],
+        0,
+      );
+    });
+
+    const result = render(<PresentationTreeRenderer {...baseTreeProps} visibleNodes={visibleNodes} nodeLoader={nodeLoader} />);
+
+    const { queryByText } = result;
+    await waitFor(() => expect(queryByText("A")).to.not.be.null);
+
+    await openFilterDialog(result);
+
+    await waitFor(() => expect(presentationManager.getNodesCount).to.be.calledOnce);
+    expect(queryByText(/tree.filter-dialog/i)).to.be.null;
   });
 });
 

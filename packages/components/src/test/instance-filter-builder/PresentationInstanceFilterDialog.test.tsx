@@ -456,8 +456,6 @@ describe("PresentationInstanceFilterDialog", () => {
   });
 
   it("renders results count", async () => {
-    const spy = sinon.fake(async () => 10);
-
     const { queryByText } = render(
       <PresentationInstanceFilterDialog
         imodel={imodelMock.object}
@@ -466,32 +464,11 @@ describe("PresentationInstanceFilterDialog", () => {
         onApply={() => {}}
         isOpen={true}
         initialFilter={initialFilter}
-        getFilteredResultsCount={spy}
+        filterResultsCountRenderer={() => <div>Test Results</div>}
       />,
     );
 
-    await waitFor(() => expect(queryByText("instance-filter-builder.results-count 10")).to.not.be.null);
-  });
-
-  it("does not render result if error is encountered", async () => {
-    const spy = sinon.fake(async () => {
-      throw new Error("Some Error");
-    });
-
-    const { queryByText } = render(
-      <PresentationInstanceFilterDialog
-        imodel={imodelMock.object}
-        descriptor={descriptor}
-        onClose={() => {}}
-        onApply={() => {}}
-        isOpen={true}
-        initialFilter={initialFilter}
-        getFilteredResultsCount={spy}
-      />,
-    );
-
-    await waitFor(() => expect(spy).to.be.calledOnce);
-    expect(queryByText(/instance-filter-builder.results-count/i)).to.be.null;
+    await waitFor(() => expect(queryByText("Test Results")).to.not.be.null);
   });
 
   it("renders with lazy-loaded descriptor", async () => {

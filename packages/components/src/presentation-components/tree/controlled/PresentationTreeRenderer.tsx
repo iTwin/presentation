@@ -8,15 +8,17 @@
 
 import { useCallback, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AbstractTreeNodeLoaderWithProvider, TreeNodeRendererProps, TreeRenderer, TreeRendererProps } from "@itwin/components-react";
+import { AbstractTreeNodeLoaderWithProvider, TreeNodeRendererProps, TreeRenderer, TreeRendererProps, useDebouncedAsyncValue } from "@itwin/components-react";
+import { NodeKey, PresentationError, PresentationStatus } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
+import { translate } from "../../common/Utils";
 import { convertToInstanceFilterDefinition } from "../../instance-filter-builder/InstanceFilterConverter";
 import { PresentationInstanceFilterDialog } from "../../instance-filter-builder/PresentationInstanceFilterDialog";
 import { PresentationInstanceFilterInfo } from "../../instance-filter-builder/Types";
+import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
 import { FilterablePresentationTreeNodeItem, isFilterablePresentationTreeNodeItem, PresentationTreeNodeItem } from "../PresentationTreeNodeItem";
 import { PresentationTreeNodeRenderer } from "./PresentationTreeNodeRenderer";
 import { useHierarchyLevelFiltering } from "./UseHierarchyLevelFiltering";
-import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
 
 /**
  * Props for [[PresentationTreeRenderer]] component.
@@ -89,14 +91,6 @@ function TreeNodeFilterBuilderDialog(props: TreeNodeFilterBuilderDialogProps) {
   const filteringInfo = filterNode.filtering;
   const imodel = dataProvider.imodel;
 
-  const getFilteredResultsCount = useCallback(
-    async (filter: PresentationInstanceFilterInfo) => {
-      const instanceFilter = await convertToInstanceFilterDefinition(filter.filter, imodel);
-      return Presentation.presentation.getNodesCount(dataProvider.createRequestOptions(filterNode.key, instanceFilter));
-    },
-    [dataProvider, filterNode, imodel],
-  );
-
   return (
     <PresentationInstanceFilterDialog
       isOpen={true}
@@ -105,7 +99,36 @@ function TreeNodeFilterBuilderDialog(props: TreeNodeFilterBuilderDialogProps) {
       imodel={imodel}
       descriptor={filteringInfo.descriptor}
       initialFilter={filteringInfo.active}
-      getFilteredResultsCount={getFilteredResultsCount}
+      filterResultsCountRenderer={(filter) => <MatchingInstancesCount dataProvider={dataProvider} filter={filter} parentKey={filterNode.key} />}
     />
   );
+}
+
+interface MatchingInstancesCountProps {
+  filter: PresentationInstanceFilterInfo;
+  dataProvider: IPresentationTreeDataProvider;
+  parentKey: NodeKey;
+}
+
+function MatchingInstancesCount({ filter, dataProvider, parentKey }: MatchingInstancesCountProps) {
+  const { value, inProgress } = useDebouncedAsyncValue(
+    useCallback(async () => {
+      const instanceFilter = await convertToInstanceFilterDefinition(filter.filter, dataProvider.imodel);
+
+      try {
+        const count = await Presentation.presentation.getNodesCount(dataProvider.createRequestOptions(parentKey, instanceFilter));
+        return `${translate("tree.filter-dialog.results-count")}: ${count}`;
+      } catch (e) {
+        if (e instanceof PresentationError && e.errorNumber === PresentationStatus.ResultSetTooLarge) {
+          return translate("tree.filter-dialog.results-count-too-large");
+        }
+      }
+
+      return undefined;
+    }, [dataProvider, filter, parentKey]),
+  );
+  if (!value || inProgress) {
+    return null;
+  }
+  return <>{value}</>;
 }

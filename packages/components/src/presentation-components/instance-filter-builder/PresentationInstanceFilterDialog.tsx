@@ -7,7 +7,7 @@
  */
 
 import "./PresentationInstanceFilterDialog.scss";
-import { useCallback, useEffect, useState } from "react";
+import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { PrimitiveValue, PropertyDescription, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import {
   BuildFilterOptions,
@@ -17,7 +17,6 @@ import {
   PropertyFilterBuilderRule,
   PropertyFilterBuilderRuleGroupItem,
   PropertyFilterRuleOperator,
-  useDebouncedAsyncValue,
   usePropertyFilterBuilder,
 } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -49,8 +48,8 @@ export interface PresentationInstanceFilterDialogProps {
    * This property can be set to function in order to lazy load [Descriptor]($presentation-common) when dialog is opened.
    */
   descriptor: (() => Promise<Descriptor>) | Descriptor;
-  /** Returns count of instances matching current filter. */
-  getFilteredResultsCount?: (filter: PresentationInstanceFilterInfo) => Promise<number>;
+  /** Renders filter results count. */
+  filterResultsCountRenderer?: (filter: PresentationInstanceFilterInfo) => ReactNode;
   /** Dialog title. */
   title?: React.ReactNode;
   /** Initial filter that will be show when component is mounted. */
@@ -112,7 +111,7 @@ interface PresentationInstanceFilterDialogContentProps extends Omit<Presentation
 }
 
 function PresentationInstanceFilterDialogContent(props: PresentationInstanceFilterDialogContentProps) {
-  const { onApply, initialFilter, descriptor, imodel, ruleGroupDepthLimit, getFilteredResultsCount, onClose } = props;
+  const { onApply, initialFilter, descriptor, imodel, ruleGroupDepthLimit, filterResultsCountRenderer, onClose } = props;
   const [initialPropertyFilter] = useState(() => (initialFilter ? convertPresentationFilterToPropertyFilter(descriptor, initialFilter.filter) : undefined));
 
   const { rootGroup, actions, buildFilter } = usePropertyFilterBuilder({
@@ -167,7 +166,7 @@ function PresentationInstanceFilterDialogContent(props: PresentationInstanceFilt
         />
       </Dialog.Content>
       <div className="presentation-instance-filter-dialog-bottom-container">
-        <div>{getFilteredResultsCount ? <ResultsRenderer buildFilter={getFilterInfo} getResultsCount={getFilteredResultsCount} /> : null}</div>
+        <div>{filterResultsCountRenderer ? <ResultsRenderer buildFilter={getFilterInfo} renderer={filterResultsCountRenderer} /> : null}</div>
         <Dialog.ButtonBar className="presentation-instance-filter-button-bar">
           <Button className="presentation-instance-filter-dialog-apply-button" styleType="high-visibility" onClick={applyButtonHandle} disabled={isDisabled}>
             {translate("instance-filter-builder.apply")}
@@ -183,34 +182,15 @@ function PresentationInstanceFilterDialogContent(props: PresentationInstanceFilt
 
 interface ResultsRendererProps {
   buildFilter: (options?: BuildFilterOptions) => PresentationInstanceFilterInfo | undefined;
-  getResultsCount: (filter: PresentationInstanceFilterInfo) => Promise<number>;
+  renderer: (filter: PresentationInstanceFilterInfo) => ReactNode;
 }
 
-function ResultsRenderer({ buildFilter, getResultsCount }: ResultsRendererProps) {
-  const { value, inProgress } = useDebouncedAsyncValue(
-    useCallback(async () => {
-      const filter = buildFilter({ ignoreErrors: true });
-      if (!filter) {
-        return undefined;
-      }
-
-      try {
-        return await getResultsCount(filter);
-      } catch {}
-
-      return undefined;
-    }, [getResultsCount, buildFilter]),
-  );
-
-  if (value === undefined || inProgress) {
+function ResultsRenderer({ buildFilter, renderer }: ResultsRendererProps) {
+  const filter = useMemo(() => buildFilter({ ignoreErrors: true }), [buildFilter]);
+  if (!filter) {
     return null;
   }
-
-  return (
-    <>
-      {translate("instance-filter-builder.results-count")} {value}
-    </>
-  );
+  return <>{renderer(filter)}</>;
 }
 
 function DelayedCenteredProgressRadial() {

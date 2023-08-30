@@ -22,7 +22,6 @@
     "apply": "Apply",
     "cancel": "Cancel",
     "filter": "Filter",
-    "results-count": "Instances matching filter count:",
     "error-messages": {
       "not-a-number": "Value must be a number",
       "invalid": "Value is invalid"
@@ -34,7 +33,11 @@
     "timeout": "Creating the hierarchy level took too long",
     "unknown-error": "Error creating the hierarchy level",
     "filter-hierarchy-level": "Apply filter",
-    "clear-hierarchy-level-filter": "Clear active filter"
+    "clear-hierarchy-level-filter": "Clear active filter",
+    "filter-dialog": {
+      "results-count": "Instances matching filter count",
+      "results-count-too-large": "Too many instances match filter"
+    }
   },
   "navigation-property-editor": {
     "select-target-instance": "Select target instance",
