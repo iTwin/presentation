@@ -27,7 +27,7 @@ export interface PresentationTreeNodeItemFilteringInfo {
    *
    * If it is set to `undefined` hierarchy level under this node is not filterable.
    */
-  descriptor?: HierarchyLevelFilteringDescriptor;
+  descriptor: HierarchyLevelFilteringDescriptor;
   /** Currently active filter for this item hierarchy. */
   active?: PresentationInstanceFilterInfo;
 }
@@ -62,9 +62,7 @@ export interface PresentationInfoTreeNodeItem extends ImmediatelyLoadedTreeNodeI
  * @beta
  */
 export type FilterablePresentationTreeNodeItem = PresentationTreeNodeItem & {
-  filtering: PresentationTreeNodeItemFilteringInfo & {
-    descriptor: HierarchyLevelFilteringDescriptor;
-  };
+  filtering: PresentationTreeNodeItemFilteringInfo;
 };
 
 /**
@@ -88,5 +86,5 @@ export function isPresentationInfoTreeNodeItem(item: TreeNodeItem): item is Pres
  * @beta
  */
 export function isFilterablePresentationTreeNodeItem(item: PresentationTreeNodeItem): item is FilterablePresentationTreeNodeItem {
-  return item.filtering !== undefined && item.filtering?.descriptor !== undefined;
+  return item.filtering !== undefined;
 }

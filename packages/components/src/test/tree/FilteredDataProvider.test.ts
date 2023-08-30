@@ -9,7 +9,7 @@ import * as moq from "typemoq";
 import { PageOptions } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
-import { LabelDefinition, NodePathElement } from "@itwin/presentation-common";
+import { InstanceFilterDefinition, LabelDefinition, NodePathElement } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
 import { PresentationTreeDataProvider } from "../../presentation-components/tree/DataProvider";
 import { FilteredPresentationTreeDataProvider } from "../../presentation-components/tree/FilteredDataProvider";
@@ -195,6 +195,21 @@ describe("FilteredTreeDataProvider", () => {
       parentProviderMock.setup((x) => x.getNodeKey(treeNode)).returns(() => key); // eslint-disable-line deprecation/deprecation
       const result = provider.getNodeKey(treeNode); // eslint-disable-line deprecation/deprecation
       expect(result).to.deep.equal(key);
+    });
+  });
+
+  describe("createRequestOptions", () => {
+    it("calls parent data provider", () => {
+      const key = createTestECInstancesNodeKey();
+      const filterDefinition = {} as InstanceFilterDefinition;
+
+      parentProviderMock
+        .setup((x) => x.createRequestOptions(key, filterDefinition))
+        .returns(() => ({ rulesetOrId: "test_ruleset", imodel: {} as IModelConnection }))
+        .verifiable();
+      const result = provider.createRequestOptions(key, filterDefinition);
+      expect(result.rulesetOrId).to.be.equal("test_ruleset");
+      parentProviderMock.verifyAll();
     });
   });
 

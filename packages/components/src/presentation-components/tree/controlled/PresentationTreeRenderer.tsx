@@ -8,25 +8,22 @@
 
 import { useCallback, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { TreeModelSource, TreeNodeRendererProps, TreeRenderer, TreeRendererProps } from "@itwin/components-react";
-import { IModelConnection } from "@itwin/core-frontend";
+import { AbstractTreeNodeLoaderWithProvider, TreeNodeRendererProps, TreeRenderer, TreeRendererProps } from "@itwin/components-react";
 import { Presentation } from "@itwin/presentation-frontend";
 import { convertToInstanceFilterDefinition } from "../../instance-filter-builder/InstanceFilterConverter";
 import { PresentationInstanceFilterDialog } from "../../instance-filter-builder/PresentationInstanceFilterDialog";
 import { PresentationInstanceFilterInfo } from "../../instance-filter-builder/Types";
-import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
 import { FilterablePresentationTreeNodeItem, isFilterablePresentationTreeNodeItem, PresentationTreeNodeItem } from "../PresentationTreeNodeItem";
 import { PresentationTreeNodeRenderer } from "./PresentationTreeNodeRenderer";
 import { useHierarchyLevelFiltering } from "./UseHierarchyLevelFiltering";
+import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
 
 /**
  * Props for [[PresentationTreeRenderer]] component.
  * @beta
  */
 export interface PresentationTreeRendererProps extends TreeRendererProps {
-  imodel: IModelConnection;
-  modelSource: TreeModelSource;
-  dataProvider: IPresentationTreeDataProvider;
+  nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
 }
 
 /**
@@ -36,10 +33,9 @@ export interface PresentationTreeRendererProps extends TreeRendererProps {
  * @beta
  */
 export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
-  const { imodel, modelSource, dataProvider, ...restProps } = props;
-  const nodeLoader = restProps.nodeLoader;
+  const nodeLoader = props.nodeLoader;
 
-  const { applyFilter, clearFilter } = useHierarchyLevelFiltering({ nodeLoader, modelSource });
+  const { applyFilter, clearFilter } = useHierarchyLevelFiltering({ nodeLoader, modelSource: nodeLoader.modelSource });
   const [filterNode, setFilterNode] = useState<PresentationTreeNodeItem>();
 
   const filterableNodeRenderer = useCallback(
@@ -60,12 +56,11 @@ export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
   const divRef = useRef<HTMLDivElement>(null);
   return (
     <div ref={divRef}>
-      <TreeRenderer {...restProps} nodeRenderer={filterableNodeRenderer} />
+      <TreeRenderer {...props} nodeRenderer={filterableNodeRenderer} />
       {divRef.current && filterNode && isFilterablePresentationTreeNodeItem(filterNode)
         ? createPortal(
             <TreeNodeFilterBuilderDialog
-              imodel={imodel}
-              dataProvider={dataProvider}
+              dataProvider={nodeLoader.dataProvider}
               onApply={(info) => {
                 applyFilter(filterNode, info);
                 setFilterNode(undefined);
@@ -83,7 +78,6 @@ export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
 }
 
 interface TreeNodeFilterBuilderDialogProps {
-  imodel: IModelConnection;
   dataProvider: IPresentationTreeDataProvider;
   filterNode: FilterablePresentationTreeNodeItem;
   onClose: () => void;
@@ -91,18 +85,14 @@ interface TreeNodeFilterBuilderDialogProps {
 }
 
 function TreeNodeFilterBuilderDialog(props: TreeNodeFilterBuilderDialogProps) {
-  const { onClose, onApply, imodel, filterNode, dataProvider } = props;
+  const { onClose, onApply, filterNode, dataProvider } = props;
   const filteringInfo = filterNode.filtering;
+  const imodel = dataProvider.imodel;
 
   const getFilteredResultsCount = useCallback(
     async (filter: PresentationInstanceFilterInfo) => {
       const instanceFilter = await convertToInstanceFilterDefinition(filter.filter, imodel);
-      return Presentation.presentation.getNodesCount({
-        imodel,
-        rulesetOrId: dataProvider.rulesetId,
-        instanceFilter,
-        parentKey: filterNode.key,
-      });
+      return Presentation.presentation.getNodesCount(dataProvider.createRequestOptions(filterNode.key, instanceFilter));
     },
     [dataProvider, filterNode, imodel],
   );

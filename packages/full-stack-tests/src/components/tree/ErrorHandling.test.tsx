@@ -43,9 +43,7 @@ describe("Learning snippets", () => {
         });
 
         // presentation-specific tree renderer takes care of handling errors when requesting nodes
-        const treeRenderer = (treeRendererProps: TreeRendererProps) => (
-          <PresentationTreeRenderer {...treeRendererProps} imodel={props.imodel} modelSource={nodeLoader.modelSource} dataProvider={nodeLoader.dataProvider} />
-        );
+        const treeRenderer = (treeRendererProps: TreeRendererProps) => <PresentationTreeRenderer {...treeRendererProps} nodeLoader={nodeLoader} />;
 
         // width and height should generally we computed using ResizeObserver API or one of its derivatives
         const [width] = useState(400);

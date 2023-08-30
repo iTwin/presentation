@@ -7,8 +7,9 @@
  */
 
 import { ITreeDataProvider, TreeNodeItem } from "@itwin/components-react";
-import { NodeKey, NodePathElement } from "@itwin/presentation-common";
+import { HierarchyRequestOptions, InstanceFilterDefinition, NodeKey, NodePathElement } from "@itwin/presentation-common";
 import { IPresentationDataProvider } from "../common/IPresentationDataProvider";
+import { IModelConnection } from "@itwin/core-frontend";
 
 /**
  * Presentation tree data provider.
@@ -26,4 +27,9 @@ export interface IPresentationTreeDataProvider extends ITreeDataProvider, IPrese
    * Returns filtered node paths.
    */
   getFilteredNodePaths(filter: string): Promise<NodePathElement[]>;
+
+  /**
+   * Creates options for nodes request.
+   */
+  createRequestOptions(parentKey?: NodeKey, instanceFilter?: InstanceFilterDefinition): HierarchyRequestOptions<IModelConnection, NodeKey>;
 }

@@ -8,6 +8,7 @@ import { EMPTY, Subject } from "rxjs";
 import sinon from "sinon";
 import { StandardTypeNames } from "@itwin/appui-abstract";
 import {
+  AbstractTreeNodeLoaderWithProvider,
   computeVisibleNodes,
   ITreeNodeLoader,
   MutableTreeModel,
@@ -29,6 +30,7 @@ import { PresentationTreeNodeItem } from "../../../presentation-components/tree/
 import { createTestPropertyInfo, render, stubDOMMatrix, stubRaf } from "../../_helpers/Common";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content";
 import { createTreeModelNodeInput } from "./Helpers";
+import { PresentationTreeDataProvider } from "../../../presentation-components/tree/DataProvider";
 
 describe("PresentationTreeRenderer", () => {
   stubRaf();
@@ -37,13 +39,22 @@ describe("PresentationTreeRenderer", () => {
   const baseTreeProps = {
     imodel: {} as IModelConnection,
     treeActions: {} as TreeActions,
-    nodeLoader: {
-      loadNode: sinon.stub<Parameters<ITreeNodeLoader["loadNode"]>, ReturnType<ITreeNodeLoader["loadNode"]>>(),
-    },
     dataProvider: {} as IPresentationTreeDataProvider,
     height: 100,
     width: 100,
     nodeHeight: () => 20,
+  };
+
+  const dataProviderStub = {
+    imodel: {} as IModelConnection,
+    rulesetId: "test-ruleset",
+    createRequestOptions: () => ({}),
+  };
+
+  const nodeLoaderStub = {
+    loadNode: sinon.stub<Parameters<ITreeNodeLoader["loadNode"]>, ReturnType<ITreeNodeLoader["loadNode"]>>(),
+    modelSource: {},
+    dataProvider: dataProviderStub,
   };
 
   const presentationManager = {
@@ -60,12 +71,12 @@ describe("PresentationTreeRenderer", () => {
     await UiComponents.initialize(localization);
     HTMLElement.prototype.scrollIntoView = () => {};
 
-    baseTreeProps.nodeLoader.loadNode.returns(EMPTY);
+    nodeLoaderStub.loadNode.returns(EMPTY);
     presentationManager.getNodesCount.resolves(15);
   });
 
   afterEach(() => {
-    baseTreeProps.nodeLoader.loadNode.reset();
+    nodeLoaderStub.loadNode.reset();
     presentationManager.getNodesCount.reset();
     sinon.restore();
     UiComponents.terminate();
@@ -77,25 +88,26 @@ describe("PresentationTreeRenderer", () => {
     setup(model);
     const modelSource = new TreeModelSource(model);
     const visibleNodes = computeVisibleNodes(model);
-    return { modelSource, visibleNodes };
+    nodeLoaderStub.modelSource = modelSource;
+    return { modelSource, visibleNodes, nodeLoader: nodeLoaderStub as unknown as AbstractTreeNodeLoaderWithProvider<PresentationTreeDataProvider> };
   }
 
   it("renders default tree node", async () => {
-    const { visibleNodes, modelSource } = setupTreeModel((model) => {
+    const { visibleNodes, nodeLoader } = setupTreeModel((model) => {
       const input = createTreeModelNodeInput({ id: "A" });
       // use non presentation tree node item
       (input as any).item = { id: "A", label: input.label };
       model.setChildren(undefined, [input], 0);
     });
 
-    const { queryByText, container } = render(<PresentationTreeRenderer {...baseTreeProps} visibleNodes={visibleNodes} modelSource={modelSource} />);
+    const { queryByText, container } = render(<PresentationTreeRenderer {...baseTreeProps} visibleNodes={visibleNodes} nodeLoader={nodeLoader} />);
 
     await waitFor(() => expect(queryByText("A")).to.not.be.null);
     expect(container.querySelector(".presentation-components-node")).to.be.null;
   });
 
   it("renders filter builder dialog when node filter button is clicked", async () => {
-    const { visibleNodes, modelSource } = setupTreeModel((model) => {
+    const { visibleNodes, nodeLoader } = setupTreeModel((model) => {
       model.setChildren(
         undefined,
         [createTreeModelNodeInput({ id: "A", item: { filtering: { descriptor: createTestContentDescriptor({ fields: [] }) } } })],
@@ -104,7 +116,7 @@ describe("PresentationTreeRenderer", () => {
     });
 
     const { queryByText, container, baseElement, user } = render(
-      <PresentationTreeRenderer {...baseTreeProps} visibleNodes={visibleNodes} modelSource={modelSource} />,
+      <PresentationTreeRenderer {...baseTreeProps} visibleNodes={visibleNodes} nodeLoader={nodeLoader} />,
     );
 
     await waitFor(() => expect(queryByText("A")).to.not.be.null);
@@ -135,7 +147,7 @@ describe("PresentationTreeRenderer", () => {
       label: property.name,
       type: { typeName: StandardTypeNames.Bool, valueFormat: PropertyValueFormat.Primitive },
     });
-    const { visibleNodes, modelSource } = setupTreeModel((model) => {
+    const { visibleNodes, modelSource, nodeLoader } = setupTreeModel((model) => {
       model.setChildren(
         undefined,
         [createTreeModelNodeInput({ id: "A", item: { filtering: { descriptor: createTestContentDescriptor({ fields: [propertyField] }) } } })],
@@ -143,7 +155,7 @@ describe("PresentationTreeRenderer", () => {
       );
     });
 
-    const result = render(<PresentationTreeRenderer {...baseTreeProps} visibleNodes={visibleNodes} modelSource={modelSource} />);
+    const result = render(<PresentationTreeRenderer {...baseTreeProps} visibleNodes={visibleNodes} nodeLoader={nodeLoader} />);
 
     const { queryByText } = result;
     await waitFor(() => expect(queryByText("A")).to.not.be.null);
@@ -156,8 +168,8 @@ describe("PresentationTreeRenderer", () => {
 
   it("sets `node.isLoading` to true when filter is applied", async () => {
     const subject = new Subject<TreeNodeLoadResult>();
-    baseTreeProps.nodeLoader.loadNode.reset();
-    baseTreeProps.nodeLoader.loadNode.callsFake(() => subject);
+    nodeLoaderStub.loadNode.reset();
+    nodeLoaderStub.loadNode.callsFake(() => subject);
 
     const property = createTestPropertyInfo({ name: "TestProperty", type: StandardTypeNames.Bool });
     const propertyField = createTestPropertiesContentField({
@@ -166,7 +178,7 @@ describe("PresentationTreeRenderer", () => {
       label: property.name,
       type: { typeName: StandardTypeNames.Bool, valueFormat: PropertyValueFormat.Primitive },
     });
-    const { visibleNodes, modelSource } = setupTreeModel((model) => {
+    const { visibleNodes, modelSource, nodeLoader } = setupTreeModel((model) => {
       model.setChildren(
         undefined,
         [createTreeModelNodeInput({ id: "A", item: { filtering: { descriptor: createTestContentDescriptor({ fields: [propertyField] }) } } })],
@@ -174,14 +186,14 @@ describe("PresentationTreeRenderer", () => {
       );
     });
 
-    const result = render(<PresentationTreeRenderer {...baseTreeProps} visibleNodes={visibleNodes} modelSource={modelSource} />);
+    const result = render(<PresentationTreeRenderer {...baseTreeProps} visibleNodes={visibleNodes} nodeLoader={nodeLoader} />);
 
     const { queryByText } = result;
     await waitFor(() => expect(queryByText("A")).to.not.be.null);
 
     await applyFilter(result, propertyField.label);
 
-    await waitFor(() => expect(baseTreeProps.nodeLoader.loadNode).to.be.calledOnce);
+    await waitFor(() => expect(nodeLoaderStub.loadNode).to.be.calledOnce);
     expect(modelSource.getModel().getNode("A")?.isLoading).to.be.true;
     subject.complete();
   });
@@ -199,7 +211,7 @@ describe("PresentationTreeRenderer", () => {
       usedClasses: [],
     };
 
-    const { visibleNodes, modelSource } = setupTreeModel((model) => {
+    const { visibleNodes, nodeLoader } = setupTreeModel((model) => {
       model.setChildren(
         undefined,
         [
@@ -212,7 +224,7 @@ describe("PresentationTreeRenderer", () => {
       );
     });
 
-    const result = render(<PresentationTreeRenderer {...baseTreeProps} visibleNodes={visibleNodes} modelSource={modelSource} />);
+    const result = render(<PresentationTreeRenderer {...baseTreeProps} visibleNodes={visibleNodes} nodeLoader={nodeLoader} />);
 
     const { queryByText } = result;
     await waitFor(() => expect(queryByText("A")).to.not.be.null);
