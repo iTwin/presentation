@@ -8,7 +8,7 @@ import { PropsWithChildren } from "react";
 import sinon from "sinon";
 import * as moq from "typemoq";
 import { IModelConnection } from "@itwin/core-frontend";
-import { Content, KeySet } from "@itwin/presentation-common";
+import { Content, Key, KeySet } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, SelectionManager } from "@itwin/presentation-frontend";
 import { waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
@@ -18,7 +18,7 @@ import {
   UsePresentationTableProps,
   usePresentationTableWithUnifiedSelection,
 } from "../../presentation-components/table/UsePresentationTable";
-import { UnifiedSelectionContextProvider } from "../../presentation-components/unified-selection/UnifiedSelectionContext";
+import { UnifiedSelectionContextProvider, useUnifiedSelectionContext } from "../../presentation-components/unified-selection/UnifiedSelectionContext";
 import { createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
 import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField } from "../_helpers/Content";
 import { mockPresentationManager } from "../_helpers/UiComponents";
@@ -163,5 +163,133 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     await waitFor(() => expect(result.current.isLoading).to.be.false);
     expect(result.current.columns).to.have.lengthOf(0);
     expect(result.current.rows).to.have.lengthOf(0);
+  });
+
+  it.only("Adds passed keys to the unified selection", async () => {
+    const propertiesField = createTestPropertiesContentField({
+      name: "first_field",
+      label: "First Field",
+      properties: [{ property: createTestPropertyInfo() }],
+    });
+    const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
+    const item = createTestContentItem({
+      values: { [propertiesField.name]: "test_value" },
+      displayValues: { [propertiesField.name]: "Test value" },
+    });
+
+    const keys = new KeySet([createTestECInstanceKey()]);
+    sinon.stub(Presentation.selection, "getSelection").returns(keys);
+
+    presentationManagerMock.setup(async (x) => x.getContentDescriptor(moq.It.is((options) => options.keys.size === keys.size))).returns(async () => descriptor);
+    presentationManagerMock
+      .setup(async (x) => x.getContentAndSize(moq.It.is((options) => options.keys.size === keys.size)))
+      .returns(async () => ({ content: new Content(descriptor, [item]), size: 1 }));
+
+    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
+
+    result.toString();
+
+    const brup = result.all[0];
+    if (brup instanceof Error) {
+      return;
+    }
+
+    const onSelectCallback = brup.onSelect;
+    // iskviest onSelect su keysais
+
+    const hopefullyUsefulKeys: string[] = [];
+    const defoUsefulKeys: Key[] = [];
+
+    keys.forEach((brr) => {
+      hopefullyUsefulKeys.push(JSON.stringify(brr));
+    });
+
+    hopefullyUsefulKeys.forEach((brr) => {
+      defoUsefulKeys.push(JSON.parse(brr));
+    });
+
+    // const sandbox = sinon.createSandbox();
+    const everything = renderHook(() => useUnifiedSelectionContext(), { wrapper: Wrapper });
+
+    const plspls = everything.result;
+    const pls = plspls.all[0];
+
+    if (pls instanceof Error) {
+      return;
+    }
+    context.toString();
+
+    // const spy = sandbox.spy(pls!, "replaceSelection");
+
+    const replaceSpy = sinon.stub(Presentation.selection, "replaceSelection");
+
+    onSelectCallback(hopefullyUsefulKeys);
+    expect(replaceSpy).to.be.calledOnceWith("UnifiedSelectionContext", {}, defoUsefulKeys, 1);
+
+    // presentationManagerMock.verify((x) => x.selection.replaceSelection(moq.It.isAny()), moq.Times.never())
+  });
+
+  it.only("Gets invalid keys and does not pass any to the selection", async () => {
+    // const propertiesField = createTestPropertiesContentField({
+    //   name: "first_field",
+    //   label: "First Field",
+    //   properties: [{ property: createTestPropertyInfo() }],
+    // });
+    // const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
+    // const item = createTestContentItem({
+    //   values: { [propertiesField.name]: "test_value" },
+    //   displayValues: { [propertiesField.name]: "Test value" },
+    // });
+
+    const keys = ["lmao", "nu nx", "suka"];
+    // sinon.stub(Presentation.selection, "getSelection").returns(keys);
+
+    // presentationManagerMock.setup(async (x) => x.getContentDescriptor(moq.It.is((options) => options.keys.size === keys.size))).returns(async () => descriptor);
+    // presentationManagerMock
+    //   .setup(async (x) => x.getContentAndSize(moq.It.is((options) => options.keys.size === keys.size)))
+    //   .returns(async () => ({ content: new Content(descriptor, [item]), size: 1 }));
+
+    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
+
+    result.toString();
+
+    const brup = result.all[0];
+    if (brup instanceof Error) {
+      return;
+    }
+
+    const onSelectCallback = brup.onSelect;
+    // iskviest onSelect su keysais
+
+    const hopefullyUsefulKeys: string[] = [];
+    const defoUsefulKeys: Key[] = [];
+
+    keys.forEach((brr) => {
+      hopefullyUsefulKeys.push(JSON.stringify(brr));
+    });
+
+    hopefullyUsefulKeys.forEach((brr) => {
+      defoUsefulKeys.push(JSON.parse(brr));
+    });
+
+    // const sandbox = sinon.createSandbox();
+    const everything = renderHook(() => useUnifiedSelectionContext(), { wrapper: Wrapper });
+
+    const plspls = everything.result;
+    const pls = plspls.all[0];
+
+    if (pls instanceof Error) {
+      return;
+    }
+    context.toString();
+
+    // const spy = sandbox.spy(pls!, "replaceSelection");
+
+    const replaceSpy = sinon.stub(Presentation.selection, "replaceSelection");
+
+    onSelectCallback(keys);
+    expect(replaceSpy).to.be.calledOnceWith("UnifiedSelectionContext", {}, [], 1);
+
+    // presentationManagerMock.verify((x) => x.selection.replaceSelection(moq.It.isAny()), moq.Times.never())
   });
 });

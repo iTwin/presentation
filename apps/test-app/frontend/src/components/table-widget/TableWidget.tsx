@@ -32,7 +32,7 @@ interface PresentationTableProps {
 function PresentationTable(props: PresentationTableProps) {
   const { imodel, rulesetId } = props;
 
-  const { columns, rows, isLoading, loadMoreRows, sort } = usePresentationTableWithUnifiedSelection({
+  const { columns, rows, isLoading, loadMoreRows, sort, onSelect } = usePresentationTableWithUnifiedSelection({
     imodel,
     ruleset: rulesetId,
     pageSize: 20,
@@ -62,6 +62,8 @@ function PresentationTable(props: PresentationTableProps) {
       isSortable={true}
       manualSortBy={true}
       onSort={onSort}
+      isSelectable={true}
+      onSelect={(rowsList, _) => onSelect((rowsList ?? []).map((a) => a.rowKey as string))}
       density="extra-condensed"
     />
   );
@@ -77,10 +79,11 @@ function mapTableColumns(columnDefinitions: TableColumnDefinition) {
 }
 
 function mapTableRow(rowDefinition: TableRowDefinition) {
-  const newRow: { [key: string]: PropertyRecord } = {};
+  const newRow: { [key: string]: PropertyRecord | string } = {};
   rowDefinition.cells.forEach((cell) => {
     newRow[cell.key] = cell.record;
   });
+  newRow.rowKey = rowDefinition.key;
   return newRow;
 }
 

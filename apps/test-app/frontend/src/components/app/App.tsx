@@ -17,10 +17,10 @@ import { MyAppFrontend, MyAppSettings } from "../../api/MyAppFrontend";
 import { IModelSelector } from "../imodel-selector/IModelSelector";
 import { PropertiesWidget } from "../properties-widget/PropertiesWidget";
 import { RulesetSelector } from "../ruleset-selector/RulesetSelector";
-import { ExperimentalModelsTree /* , TreeWidget */ } from "../tree-widget/TreeWidget";
+import { TableWidget } from "../table-widget/TableWidget";
+import { ExperimentalModelsTree } from "../tree-widget/TreeWidget";
 import { UnitSystemSelector } from "../unit-system-selector/UnitSystemSelector";
 import ViewportContentControl from "../viewport/ViewportContentControl";
-import { TableWidget } from "../table-widget/TableWidget";
 
 export interface State {
   imodel?: IModelConnection;
@@ -156,6 +156,7 @@ export default class App extends Component<{}, State> {
               <ViewportContentControl imodel={imodel} />
             </div>
             <div className="app-content-left-bottom">
+              <TableWidget imodel={imodel} rulesetId={rulesetId} />
               <TableWidget imodel={imodel} rulesetId={rulesetId} />
             </div>
           </div>

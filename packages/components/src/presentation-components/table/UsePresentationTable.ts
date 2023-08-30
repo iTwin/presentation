@@ -8,7 +8,7 @@
 
 import { useMemo } from "react";
 import { IModelConnection } from "@itwin/core-frontend";
-import { KeySet, Ruleset } from "@itwin/presentation-common";
+import { Key, KeySet, Ruleset } from "@itwin/presentation-common";
 import { useUnifiedSelectionContext } from "../unified-selection/UnifiedSelectionContext";
 import { TableColumnDefinition, TableRowDefinition } from "./Types";
 import { useColumns } from "./UseColumns";
@@ -54,6 +54,27 @@ export interface UsePresentationTableResult<TColumns, TRow> {
 }
 
 /**
+ * Return type of [[usePresentationTable]] hook.
+ * @beta
+ */
+export interface UseUnifiedPresentationTableResult<TColumns, TRow> {
+  /** List of table columns. If columns are not loaded yet it is set to `undefined` */
+  columns: TColumns[] | undefined;
+  /** List of table rows loaded. */
+  rows: TRow[];
+  /** Specifies whether rows loading is on going. */
+  isLoading: boolean;
+  /** Loads more rows if there are any available. If there are no rows available it is no-op. */
+  loadMoreRows: () => void;
+  /** Sorts table data by the specific column. If called with `undefined` column name sorting is removed. */
+  sort: (columnName?: string, descending?: boolean) => void;
+  /** Filters table data using provided ECExpression. If called with `undefined` filtering is removed. */
+  filter: (filterExpression?: string) => void;
+  /** Filters table data using provided ECExpression. If called with `undefined` filtering is removed. */
+  onSelect: (selectedData: string[]) => void;
+}
+
+/**
  * Custom hook that loads data for generic table component.
  * @throws on failure to get table data. The error is thrown in the React's render loop, so it can be caught using an error boundary.
  * @beta
@@ -84,10 +105,37 @@ export function usePresentationTable<TColumn, TRow>(props: UsePresentationTableP
  */
 export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(
   props: Omit<UsePresentationTableProps<TColumn, TRow>, "keys">,
-): UsePresentationTableResult<TColumn, TRow> {
+): UseUnifiedPresentationTableResult<TColumn, TRow> {
   const unifiedSelection = useUnifiedSelectionContext();
   const keys = unifiedSelection?.getSelection() ?? emptyKeySet;
-  return usePresentationTable({ ...props, keys });
+  const moreKeys = unifiedSelection?.getSelection(unifiedSelection?.selectionLevel + 1) ?? emptyKeySet;
+
+  moreKeys.forEach((x) => {
+    keys.add(x);
+  });
+
+  const presentationTable = usePresentationTable({ ...props, keys });
+
+  const onSelect = (selectedData: string[]) => {
+    const kurwa = [];
+    for (const passedData of selectedData) {
+      try {
+        const parsedKey: Key = JSON.parse(passedData);
+        kurwa.push(parsedKey);
+      } catch {
+        // possibly log?
+        continue;
+      }
+    }
+
+    unifiedSelection?.replaceSelection(kurwa, unifiedSelection.selectionLevel + 1);
+    // unifiedSelection?.replaceSelection(kurwa, unifiedSelection.selectionLevel);
+  };
+
+  return {
+    ...presentationTable,
+    onSelect,
+  };
 }
 
 const emptyKeySet = new KeySet();
