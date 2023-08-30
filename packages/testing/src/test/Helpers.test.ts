@@ -23,8 +23,8 @@ describe("Helpers", () => {
       const frontendInitializationSpy = sinon.spy(PresentationFrontend, "initialize");
 
       await initialize();
-      expect(backendInitializationSpy.calledOnce);
-      expect(frontendInitializationSpy.calledOnce);
+      expect(backendInitializationSpy).to.be.calledOnce;
+      expect(frontendInitializationSpy).to.be.calledOnce;
     });
 
     it("does not initialize PresentationBackend and PresentationFrontend on second call to initialize", async () => {
@@ -32,14 +32,14 @@ describe("Helpers", () => {
       const frontendInitializationSpy = sinon.spy(PresentationFrontend, "initialize");
 
       await initialize();
-      expect(backendInitializationSpy.calledOnce);
-      expect(frontendInitializationSpy.calledOnce);
+      expect(backendInitializationSpy).to.be.calledOnce;
+      expect(frontendInitializationSpy).to.be.calledOnce;
 
       sinon.resetHistory();
 
       await initialize();
-      expect(backendInitializationSpy.notCalled);
-      expect(frontendInitializationSpy.notCalled);
+      expect(backendInitializationSpy).to.not.be.called;
+      expect(frontendInitializationSpy).to.not.be.called;
     });
 
     it("initializes PresentationBackend and PresentationFrontend with provided props", async () => {
@@ -48,8 +48,8 @@ describe("Helpers", () => {
       const props: PresentationTestingInitProps = { backendProps: { id: Guid.createValue() }, frontendApp: NoRenderApp };
 
       await initialize(props);
-      expect(backendInitializationSpy.calledOnceWith(props.backendProps));
-      expect(frontendAppStartupSpy.calledOnce);
+      expect(backendInitializationSpy).to.be.calledOnceWith(props.backendProps);
+      expect(frontendAppStartupSpy).to.be.calledOnce;
     });
   });
 
@@ -60,8 +60,8 @@ describe("Helpers", () => {
       await initialize();
 
       await terminate();
-      expect(backendTerminationSpy.calledOnce);
-      expect(frontendTerminationSpy.calledOnce);
+      expect(backendTerminationSpy).to.be.calledOnce;
+      expect(frontendTerminationSpy).to.be.calledOnce;
     });
 
     it("does not terminate PresentationBackend and PresentationFrontend on second call to terminate", async () => {
@@ -70,14 +70,14 @@ describe("Helpers", () => {
       await initialize();
 
       await terminate();
-      expect(backendTerminationSpy.calledOnce);
-      expect(frontendTerminationSpy.calledOnce);
+      expect(backendTerminationSpy).to.be.calledOnce;
+      expect(frontendTerminationSpy).to.be.calledOnce;
 
       sinon.resetHistory();
 
       await terminate();
-      expect(backendTerminationSpy.notCalled);
-      expect(frontendTerminationSpy.notCalled);
+      expect(backendTerminationSpy).to.not.be.called;
+      expect(frontendTerminationSpy).to.not.be.called;
     });
 
     it("calls rimraf sync when initialized with DiskHierarchyCacheConfig", async () => {
@@ -86,7 +86,7 @@ describe("Helpers", () => {
       await initialize(props);
 
       await terminate();
-      expect(syncStub.calledOnce);
+      expect(syncStub).to.be.calledOnce;
     });
 
     it("calls rimraf sync when initialized with HybridCacheConfig", async () => {
@@ -97,7 +97,7 @@ describe("Helpers", () => {
       await initialize(props);
 
       await terminate();
-      expect(syncStub.calledOnce);
+      expect(syncStub).to.be.calledOnce;
     });
   });
 });
