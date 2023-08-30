@@ -23,7 +23,7 @@ function initializeRpcInterfaces(interfaces: RpcInterfaceDefinition[]) {
   };
 
   for (const definition of interfaces) {
-    RpcConfiguration.assign(definition, () => config); // eslint-disable-line @itwin/no-internal
+    RpcConfiguration.assign(definition, /* istanbul ignore next */ () => config); // eslint-disable-line @itwin/no-internal
   }
 
   const instance = RpcConfiguration.obtain(config); // eslint-disable-line @itwin/no-internal
