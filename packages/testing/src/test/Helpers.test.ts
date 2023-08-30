@@ -2,11 +2,13 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+
 import { expect } from "chai";
 import * as rimraf from "rimraf";
 import * as sinon from "sinon";
+import { IModelHost } from "@itwin/core-backend";
 import { Guid } from "@itwin/core-bentley";
-import { NoRenderApp } from "@itwin/core-frontend";
+import { IModelApp, NoRenderApp } from "@itwin/core-frontend";
 import { Presentation as PresentationBackend, PresentationProps } from "@itwin/presentation-backend";
 import { Presentation as PresentationFrontend } from "@itwin/presentation-frontend";
 import { HierarchyCacheMode, initialize, PresentationTestingInitProps, terminate } from "../presentation-testing/Helpers";
@@ -21,6 +23,9 @@ describe("Helpers", () => {
       frontendInitializationStub = sinon.stub(PresentationFrontend, "initialize");
       sinon.stub(PresentationBackend, "terminate");
       sinon.stub(PresentationFrontend, "terminate");
+      sinon.stub(IModelHost, "startup");
+      sinon.stub(NoRenderApp, "startup");
+      sinon.stub(IModelApp, "localization").get(() => ({ getLanguageList: () => ["en"] }));
     });
 
     afterEach(async () => {
@@ -46,10 +51,17 @@ describe("Helpers", () => {
     });
 
     it("initializes PresentationBackend and PresentationFrontend with provided props", async () => {
-      const props: PresentationTestingInitProps = { backendProps: { id: Guid.createValue() }, frontendApp: NoRenderApp };
+      const frontendAppStartupSpy = sinon.spy();
+      const props: PresentationTestingInitProps = {
+        backendProps: { id: Guid.createValue() },
+        frontendApp: { startup: frontendAppStartupSpy },
+        frontendProps: { presentation: { clientId: Guid.createValue() } },
+      };
 
       await initialize(props);
       expect(backendInitializationStub).to.be.calledOnceWith(props.backendProps);
+      expect(frontendInitializationStub).to.be.calledOnceWith(props.frontendProps);
+      expect(frontendAppStartupSpy).to.be.calledOnce;
     });
   });
 
@@ -64,6 +76,9 @@ describe("Helpers", () => {
       rimrafSyncStub = sinon.stub(rimraf, "sync");
       sinon.stub(PresentationBackend, "initialize");
       sinon.stub(PresentationFrontend, "initialize");
+      sinon.stub(IModelHost, "startup");
+      sinon.stub(NoRenderApp, "startup");
+      sinon.stub(IModelApp, "localization").get(() => ({ getLanguageList: () => ["en"] }));
     });
 
     it("terminates PresentationBackend and PresentationFrontend on terminate", async () => {
@@ -88,7 +103,7 @@ describe("Helpers", () => {
       expect(frontendTerminationStub).to.not.be.called;
     });
 
-    it("clears cache directory when initialized with DiskHierarchyCacheConfig", async () => {
+    it("clears cache directory when PresentationBackend has DiskHierarchyCacheConfig in initProps", async () => {
       const testDirectory = "/test/directory/";
       const cachingProps: PresentationProps = { caching: { hierarchies: { mode: HierarchyCacheMode.Disk, directory: testDirectory } } };
       sinon.stub(PresentationBackend, "initProps").get(() => cachingProps);
@@ -98,7 +113,7 @@ describe("Helpers", () => {
       expect(rimrafSyncStub).to.be.calledOnceWith(testDirectory);
     });
 
-    it("clears cache directory when initialized with HybridCacheConfig", async () => {
+    it("clears cache directory when PresentationBackend has HybridCacheConfig in initProps", async () => {
       const testDirectory = "/test/directory/";
       const cachingProps: PresentationProps = {
         caching: { hierarchies: { mode: HierarchyCacheMode.Hybrid, disk: { mode: HierarchyCacheMode.Disk, directory: testDirectory } } },
