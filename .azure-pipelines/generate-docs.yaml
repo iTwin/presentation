@@ -41,10 +41,13 @@ stages:
           - script: pnpm install
             displayName: Run 'pnpm install'
 
-          - script: pnpm generate-docs
-            displayName: Run 'pnpm generate-docs'
+          - script: pnpm docs:all
+            displayName: Run 'pnpm docs:all'
             env:
               RUSHSTACK_FILE_ERROR_BASE_FOLDER: $(Build.SourcesDirectory)
+
+          - script: pnpm gather-docs
+            displayName: Run 'pnpm gather-docs'
 
           - task: CopyFiles@2
             displayName: 'Copy generated docs to: $(Build.StagingDirectory)'

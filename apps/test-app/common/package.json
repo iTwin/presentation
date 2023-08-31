@@ -6,9 +6,9 @@
   "types": "lib/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "clean": "rimraf lib",
+    "clean": "rimraf lib build",
     "lint": "eslint ./src/**/*.ts",
-    "docs": "betools extract --fileExt=ts --extractFrom=./src --recursive --out=../../../build/docs/extract"
+    "docs": "betools extract --fileExt=ts --extractFrom=./src --recursive --out=./build/docs/extract"
   },
   "dependencies": {
     "@itwin/build-tools": "^4.1.1",
