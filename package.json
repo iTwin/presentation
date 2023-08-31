@@ -27,6 +27,7 @@
     "version-bump-dev": "beachball bump --config beachball.config.dev.js --keep-change-files",
     "publish-packages": "beachball publish",
     "publish-packages-dev": "beachball publish --config beachball.config.dev.js --keep-change-files",
+    "add-changeset": "changeset add",
     "release": "npm run build:all && changeset publish"
   },
   "dependencies": {
