@@ -2,6 +2,29 @@
   "name": "@itwin/presentation-components",
   "entries": [
     {
+      "date": "Thu, 31 Aug 2023 11:51:06 GMT",
+      "version": "4.2.0",
+      "tag": "@itwin/presentation-components_v4.2.0",
+      "comments": {
+        "patch": [
+          {
+            "author": "35135765+grigasp@users.noreply.github.com",
+            "package": "@itwin/presentation-components",
+            "commit": "585bfe098c3c388c48ffa4f311c4722f1b6835df",
+            "comment": "Update dependencies"
+          }
+        ],
+        "minor": [
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-components",
+            "commit": "326dd33a9e40659f6b6af4a0dd100948798db6c8",
+            "comment": "Reload content and hierarchies when active unit system is changed."
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 09 Aug 2023 11:47:16 GMT",
       "tag": "@itwin/presentation-components_v4.1.0",
       "version": "4.1.0",

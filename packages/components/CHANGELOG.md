@@ -1,8 +1,20 @@
 # Change Log - @itwin/presentation-components
 
-This log was last generated on Wed, 09 Aug 2023 11:47:16 GMT and should not be manually modified.
+This log was last generated on Thu, 31 Aug 2023 11:51:06 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 4.2.0
+
+Thu, 31 Aug 2023 11:51:06 GMT
+
+### Minor changes
+
+- Reload content and hierarchies when active unit system is changed. ([commit](https://github.com/iTwin/presentation/commit/326dd33a9e40659f6b6af4a0dd100948798db6c8))
+
+### Patches
+
+- Update dependencies ([commit](https://github.com/iTwin/presentation/commit/585bfe098c3c388c48ffa4f311c4722f1b6835df))
 
 ## 4.1.0
 
