@@ -34,7 +34,9 @@ module.exports = {
   },
 
   getDependencyReleaseLine: async (changesets, dependenciesUpdated) => {
-    if (dependenciesUpdated.length === 0) return "";
+    if (dependenciesUpdated.length === 0) {
+      return "";
+    }
 
     const updatedDependenciesList = dependenciesUpdated.map((dependency) => `  - ${dependency.name}@${dependency.newVersion}`);
 
