@@ -6,9 +6,9 @@
     "start": "node --inspect --max-http-header-size=16000 ./lib/main.js",
     "start:electron": "cross-env NODE_ENV=development electron ./lib/main.js",
     "build": "tsc",
-    "clean": "rimraf lib",
+    "clean": "rimraf lib build",
     "lint": "eslint ./src/**/*.ts",
-    "docs": "betools extract --fileExt=ts --extractFrom=./src --recursive --out=../../../build/docs/extract"
+    "docs": "betools extract --fileExt=ts --extractFrom=./src --recursive --out=./build/docs/extract"
   },
   "dependencies": {
     "@itwin/appui-abstract": "^4.1.1",

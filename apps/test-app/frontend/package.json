@@ -6,8 +6,9 @@
     "start": "webpack serve",
     "webpack": "webpack",
     "build": "tsc --noEmit",
+    "clean": "rimraf build",
     "lint": "eslint ./src/**/*.{ts,tsx}",
-    "docs": "betools extract --fileExt=ts,tsx --extractFrom=./src --recursive --out=../../../build/docs/extract"
+    "docs": "betools extract --fileExt=ts,tsx --extractFrom=./src --recursive --out=./build/docs/extract"
   },
   "dependencies": {
     "@bentley/icons-generic-webfont": "^1.0.34",
