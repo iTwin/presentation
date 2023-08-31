@@ -26,7 +26,8 @@
     "version-bump": "beachball bump",
     "version-bump-dev": "beachball bump --config beachball.config.dev.js --keep-change-files",
     "publish-packages": "beachball publish",
-    "publish-packages-dev": "beachball publish --config beachball.config.dev.js --keep-change-files"
+    "publish-packages-dev": "beachball publish --config beachball.config.dev.js --keep-change-files",
+    "release": "npm run build:all && changeset publish"
   },
   "dependencies": {
     "@changesets/cli": "^2.26.2",
