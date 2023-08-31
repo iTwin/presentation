@@ -1,8 +1,17 @@
 # Change Log - @itwin/presentation-testing
 
-This log was last generated on Wed, 09 Aug 2023 11:47:16 GMT and should not be manually modified.
+This log was last generated on Thu, 31 Aug 2023 11:51:06 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 4.0.3
+
+Thu, 31 Aug 2023 11:51:06 GMT
+
+### Patches
+
+- Update dependencies ([commit](https://github.com/iTwin/presentation/commit/585bfe098c3c388c48ffa4f311c4722f1b6835df))
+- Removed `@itwin/presentation-components` peer dependency. ([commit](https://github.com/iTwin/presentation/commit/9b369dc2cb208ecf4cc6518f319a1648f85c81d9))
 
 ## 4.0.2
 
