@@ -36,6 +36,7 @@
     "extract-api": "betools extract-api --entry=presentation-testing --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api"
   },
   "dependencies": {
+    "@itwin/presentation-components": "workspace:*",
     "rimraf": "^5.0.1",
     "sanitize-filename": "^1.6.3"
   },
@@ -48,7 +49,6 @@
     "@itwin/core-frontend": "^3.6.3 || ^4.0.0",
     "@itwin/presentation-backend": "^3.6.3 || ^4.0.0",
     "@itwin/presentation-common": "^3.6.3 || ^4.0.0",
-    "@itwin/presentation-components": "workspace:^",
     "@itwin/presentation-frontend": "^3.6.3 || ^4.0.0"
   },
   "devDependencies": {
@@ -67,7 +67,6 @@
     "@itwin/eslint-plugin": "4.0.0-dev.48",
     "@itwin/presentation-backend": "^4.1.1",
     "@itwin/presentation-common": "^4.1.1",
-    "@itwin/presentation-components": "workspace:^",
     "@itwin/presentation-frontend": "^4.1.1",
     "@itwin/webgl-compatibility": "^4.1.1",
     "@opentelemetry/api": "^1.4.1",

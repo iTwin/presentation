@@ -1,0 +1,7 @@
+{
+  "type": "patch",
+  "comment": "Removed `@itwin/presentation-components` peer dependency.",
+  "packageName": "@itwin/presentation-testing",
+  "email": "24278440+saskliutas@users.noreply.github.com",
+  "dependentChangeType": "patch"
+}
