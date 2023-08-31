@@ -3,8 +3,7 @@ name: Release packages (changeset)
 on:
   push:
     branches:
-      - main
-      - dev
+      - master
 
 env:
   NPM_CONFIG_PROVENANCE: true
