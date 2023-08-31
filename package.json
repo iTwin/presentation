@@ -26,9 +26,12 @@
     "version-bump": "beachball bump",
     "version-bump-dev": "beachball bump --config beachball.config.dev.js --keep-change-files",
     "publish-packages": "beachball publish",
-    "publish-packages-dev": "beachball publish --config beachball.config.dev.js --keep-change-files"
+    "publish-packages-dev": "beachball publish --config beachball.config.dev.js --keep-change-files",
+    "add-changeset": "changeset add",
+    "release": "npm run build:all && changeset publish"
   },
   "dependencies": {
+    "@changesets/cli": "^2.26.2",
     "beachball": "^2.36.0",
     "cpx2": "^5.0.0",
     "eslint": "^8.47.0",

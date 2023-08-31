@@ -1,0 +1,49 @@
+name: Release packages (changeset)
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  NPM_CONFIG_PROVENANCE: true
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  release:
+    name: Release
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.IMJS_ADMIN_GH_TOKEN }}
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2.2.4
+        with:
+          version: 8.6.2
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          registry-url: https://registry.npmjs.org/
+
+      - name: Create release PR or publish to npm
+        uses: changesets/action@v1
+        with:
+          publish: pnpm release
+          title: Release packages
+          commit: Release packages [skip actions][publish docs]
+        env:
+          GITHUB_TOKEN: ${{ secrets.IMJS_ADMIN_GH_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPMJS_PUBLISH_ITWIN }}
+          GIT_AUTHOR_NAME: imodeljs-admin
+          GIT_AUTHOR_EMAIL: imodeljs-admin@users.noreply.github.com
+          GIT_COMMITTER_NAME: imodeljs-admin
+          GIT_COMMITTER_EMAIL: imodeljs-admin@users.noreply.github.com
