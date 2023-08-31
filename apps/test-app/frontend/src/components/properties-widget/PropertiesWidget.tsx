@@ -220,6 +220,10 @@ function PropertyGrid(props: PropertyGridProps) {
             filterText && filterText.length !== 0 ? { highlightedText: filterText, activeHighlight, filteredTypes: filteringResult?.filteredTypes } : undefined
           }
           isPropertyEditingEnabled={true}
+          onPropertyUpdated={async (args) => {
+            console.log(args);
+            return true;
+          }}
         />
       </navigationPropertyEditorContext.Provider>
       {contextMenuArgs && <PropertiesWidgetContextMenu args={contextMenuArgs} dataProvider={dataProvider} onCloseContextMenu={onCloseContextMenu} />}
