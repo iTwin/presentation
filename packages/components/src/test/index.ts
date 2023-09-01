@@ -24,6 +24,8 @@ import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import chaiJestSnapshot from "chai-jest-snapshot";
 import chaiSubset from "chai-subset";
+import * as jsdom from "jsdom";
+import jsdomGlobal from "jsdom-global";
 import path from "path";
 import ResizeObserver from "resize-observer-polyfill";
 import sinonChai from "sinon-chai";
@@ -34,6 +36,9 @@ chai.use(chaiJestSnapshot);
 chai.use(sinonChai);
 chai.use(chaiSubset);
 
+jsdomGlobal(undefined, {
+  virtualConsole: new jsdom.VirtualConsole().sendTo(console, { omitJSDOMErrors: true }),
+});
 global.ResizeObserver = ResizeObserver;
 
 before(function () {

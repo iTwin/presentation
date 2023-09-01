@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { Subject } from "rxjs";
 import sinon from "sinon";
 import * as moq from "typemoq";
 import { PropertyRecord, StandardTypeNames } from "@itwin/appui-abstract";
@@ -17,7 +18,6 @@ import { PresentationTreeRenderer, PresentationTreeRendererProps } from "../../.
 import { createTestPropertyInfo, stubDOMMatrix, stubRaf } from "../../_helpers/Common";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content";
 import { createTreeModelNode, createTreeNodeItem } from "./Helpers";
-import { Subject } from "rxjs";
 
 describe("PresentationTreeRenderer", () => {
   stubRaf();
@@ -73,7 +73,7 @@ describe("PresentationTreeRenderer", () => {
 
   it("renders filter builder dialog when node filter button is clicked", async () => {
     const label = "Node Label";
-    const nodeItem = createTreeNodeItem({ filtering: { descriptor: createTestContentDescriptor({ fields: [] }) } });
+    const nodeItem = createTreeNodeItem({ filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [] } });
     const node = createTreeModelNode({ label: PropertyRecord.fromString(label) }, nodeItem);
     visibleNodesMock.setup((x) => x.getNumNodes()).returns(() => 1);
     visibleNodesMock.setup((x) => x.getAtIndex(0)).returns(() => node);
@@ -109,7 +109,7 @@ describe("PresentationTreeRenderer", () => {
       label: property.name,
       type: { typeName: StandardTypeNames.Bool, valueFormat: PropertyValueFormat.Primitive },
     });
-    const nodeItem = createTreeNodeItem({ filtering: { descriptor: createTestContentDescriptor({ fields: [propertyField] }) } });
+    const nodeItem = createTreeNodeItem({ filtering: { descriptor: createTestContentDescriptor({ fields: [propertyField] }), ancestorFilters: [] } });
     const node = createTreeModelNode({ label: PropertyRecord.fromString(label) }, nodeItem);
     visibleNodesMock.setup((x) => x.getNumNodes()).returns(() => 1);
     visibleNodesMock.setup((x) => x.getAtIndex(0)).returns(() => node);
@@ -145,7 +145,7 @@ describe("PresentationTreeRenderer", () => {
       label: property.name,
       type: { typeName: StandardTypeNames.Bool, valueFormat: PropertyValueFormat.Primitive },
     });
-    const nodeItem = createTreeNodeItem({ filtering: { descriptor: createTestContentDescriptor({ fields: [propertyField] }) } });
+    const nodeItem = createTreeNodeItem({ filtering: { descriptor: createTestContentDescriptor({ fields: [propertyField] }), ancestorFilters: [] } });
     const node = createTreeModelNode({ label: PropertyRecord.fromString(label), isExpanded: true }, nodeItem);
     const modelSource = new TreeModelSource();
     modelSource.modifyModel((model) => {
