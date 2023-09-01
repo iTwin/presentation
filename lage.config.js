@@ -8,7 +8,7 @@ module.exports = {
     build: {
       dependsOn: ["^build"],
       outputs: ["lib/**"],
-      inputs: ["lib/**"],
+      inputs: ["src/**"],
     },
     cover: {
       dependsOn: ["build"],
