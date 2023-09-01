@@ -193,6 +193,7 @@ function IModelComponents(props: IModelComponentsProps) {
           </div>
           <div className="app-content-left-bottom">
             <TableWidget imodel={imodel} rulesetId={rulesetId} />
+            <TableWidget imodel={imodel} rulesetId={rulesetId} />
           </div>
         </div>
         <ElementSeparator

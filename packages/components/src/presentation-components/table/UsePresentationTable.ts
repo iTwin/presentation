@@ -66,7 +66,7 @@ export interface UseUnifiedPresentationTableResult<TColumns, TRow> {
   /** Specifies whether rows loading is on going. */
   isLoading: boolean;
   /** Specifies whether rows loading is on going. */
-  selectedRows: TableRowDefinition[];
+  selectedRows: TRow[];
   /** Loads more rows if there are any available. If there are no rows available it is no-op. */
   loadMoreRows: () => void;
   /** Sorts table data by the specific column. If called with `undefined` column name sorting is removed. */
@@ -113,37 +113,32 @@ export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(
   const keys = unifiedSelection?.getSelection() ?? emptyKeySet;
   const [selectedRows, setSelectedRows] = useState<TableRowDefinition[]>();
 
-  const { imodel, ruleset, pageSize } = props;
+  const { imodel, ruleset, pageSize, columnMapper, rowMapper } = props;
   const columns = useColumns({ imodel, ruleset, keys });
-  const { options } = useTableOptions({ columns });
-  const { rows } = useRows({ imodel, ruleset, keys, pageSize, options });
+  const { options, sort, filter } = useTableOptions({ columns });
+  const { rows, isLoading, loadMoreRows } = useRows({ imodel, ruleset, keys, pageSize, options });
 
   const guid: string = useMemo(() => crypto.randomUUID(), []);
   useEffect(() => {
-    const disposeListener = Presentation.selection.selectionChange.addListener((x) => {
-      if (x.source !== guid) {
-        if (unifiedSelection?.selectionLevel === undefined) {
-          return;
-        }
-
-        if (x.level === unifiedSelection?.selectionLevel + 1) {
-          const rowsToAddToSelection: TableRowDefinition[] = [];
-          x.keys.forEach((key) => {
-            // should return just on row
-            const selectedRow = rows.filter((row) => row.key === JSON.stringify(key));
-            rowsToAddToSelection.push(selectedRow[0]);
-          });
-
-          setSelectedRows(rowsToAddToSelection);
-        }
+    const disposeListener = Presentation.selection.selectionChange.addListener(({ level, keys: newKeys }) => {
+      if (unifiedSelection?.selectionLevel === undefined || level !== unifiedSelection.selectionLevel + 1) {
+        return;
       }
+
+      const rowsToAddToSelection: TableRowDefinition[] = [];
+      newKeys.forEach((key) => {
+        // should return just on row
+        const selectedRow = rows.filter((row) => row.key === JSON.stringify(key));
+        rowsToAddToSelection.push(selectedRow[0]);
+      });
+
+      setSelectedRows(rowsToAddToSelection);
     });
 
     return () => {
       disposeListener();
     };
-  }, [guid, rows, unifiedSelection?.selectionLevel]);
-  const presentationTable = usePresentationTable({ ...props, keys });
+  }, [rows, unifiedSelection?.selectionLevel]);
 
   const onSelect = (selectedData: string[]) => {
     const parsedKeys: Key[] = [];
@@ -160,9 +155,14 @@ export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(
   };
 
   return {
-    ...presentationTable,
+    columns: useMemo(() => columns?.map(columnMapper), [columns, columnMapper]),
+    rows: useMemo(() => rows.map(rowMapper), [rows, rowMapper]),
+    isLoading,
+    loadMoreRows,
+    sort,
+    filter,
     onSelect,
-    selectedRows: selectedRows ?? [],
+    selectedRows: useMemo(() => (selectedRows ?? []).map(rowMapper), [selectedRows, rowMapper]),
   };
 }
 
