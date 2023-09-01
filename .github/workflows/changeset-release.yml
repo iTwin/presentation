@@ -34,10 +34,13 @@ jobs:
           node-version: 18
           registry-url: https://registry.npmjs.org/
 
+      - name: Install dependencies
+        run: pnpm install -w
+
       - name: Create release PR or publish to npm
         uses: changesets/action@v1
         with:
-          publish: pnpm install && pnpm release
+          publish: pnpm release
           title: Release packages
           commit: Release packages [skip actions][publish docs]
         env:
