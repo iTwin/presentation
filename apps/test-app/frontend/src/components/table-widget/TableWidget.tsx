@@ -3,10 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
+import { UseRowSelectInstanceProps } from "react-table";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ProgressRadial, Table } from "@itwin/itwinui-react";
+import { Table } from "@itwin/itwinui-react";
 import { TableCellRenderer, TableColumnDefinition, TableRowDefinition, usePresentationTableWithUnifiedSelection } from "@itwin/presentation-components";
 
 export interface TableWidgetProps {
@@ -32,13 +33,25 @@ interface PresentationTableProps {
 function PresentationTable(props: PresentationTableProps) {
   const { imodel, rulesetId } = props;
 
-  const { columns, rows, isLoading, loadMoreRows, sort, onSelect } = usePresentationTableWithUnifiedSelection({
+  const tableInstance = React.useRef<
+    UseRowSelectInstanceProps<{
+      [key: string]: string | PropertyRecord;
+    }>
+  >();
+
+  const { columns, rows, isLoading, loadMoreRows, sort, onSelect, selectedKeys } = usePresentationTableWithUnifiedSelection({
     imodel,
     ruleset: rulesetId,
     pageSize: 20,
     columnMapper: mapTableColumns,
     rowMapper: mapTableRow,
   });
+
+  // useEffect(() => {
+  //   selectedKeys?.forEach((selRow) => {
+  //     tableInstance.current?.toggleAllRowsSelected( true);
+  //   });
+  // }, [selectedKeys]);
 
   const onSort = useCallback(
     (tableState: any) => {
@@ -48,13 +61,22 @@ function PresentationTable(props: PresentationTableProps) {
     [sort],
   );
 
-  if (columns === undefined) {
-    return <ProgressRadial indeterminate={true} />;
-  }
+  // if (columns === undefined) {
+  //   return <ProgressRadial indeterminate={true} />;
+  // }
+
+  const plswork = selectedKeys?.map((x) => mapTableRow(x));
+
+  useEffect(() => {
+    plswork?.forEach((plspls) => {
+      plspls.toString();
+      tableInstance.current?.toggleRowSelected(plspls.id as string, true);
+    });
+  }, [plswork]);
 
   return (
     <Table
-      columns={columns}
+      columns={columns ?? []}
       data={rows}
       emptyTableContent={"No data"}
       isLoading={isLoading}
@@ -62,9 +84,17 @@ function PresentationTable(props: PresentationTableProps) {
       isSortable={true}
       manualSortBy={true}
       onSort={onSort}
+      getRowId={(x) => {
+        return x.id as string;
+      }}
       isSelectable={true}
-      onSelect={(rowsList, _) => onSelect((rowsList ?? []).map((a) => a.rowKey as string))}
-      density="extra-condensed"
+      onSelect={(rowsList, _) => {
+        onSelect((rowsList ?? []).map((a) => a.id as string));
+      }}
+      stateReducer={useCallback((newState, _action, _prevState, instance) => {
+        tableInstance.current = instance;
+        return newState;
+      }, [])}
     />
   );
 }
@@ -83,7 +113,7 @@ function mapTableRow(rowDefinition: TableRowDefinition) {
   rowDefinition.cells.forEach((cell) => {
     newRow[cell.key] = cell.record;
   });
-  newRow.rowKey = rowDefinition.key;
+  newRow.id = rowDefinition.key;
   return newRow;
 }
 
