@@ -6,8 +6,6 @@
  * @module Helpers
  */
 
-/* istanbul ignore file */ // TODO: Remove istanbul ignore file when https://github.com/iTwin/itwinjs-backlog/issues/463 is fixed.
-
 import { tmpdir } from "os";
 import { join } from "path";
 import * as rimraf from "rimraf";
@@ -15,12 +13,7 @@ import { IModelHost, IModelHostOptions } from "@itwin/core-backend";
 import { Guid } from "@itwin/core-bentley";
 import { IModelReadRpcInterface, RpcConfiguration, RpcDefaultConfiguration, RpcInterfaceDefinition, SnapshotIModelRpcInterface } from "@itwin/core-common";
 import { IModelApp, IModelAppOptions, NoRenderApp } from "@itwin/core-frontend";
-import {
-  HierarchyCacheMode,
-  Presentation as PresentationBackend,
-  PresentationManagerProps as PresentationBackendProps,
-  PresentationManagerMode,
-} from "@itwin/presentation-backend";
+import { HierarchyCacheMode, Presentation as PresentationBackend, PresentationManagerProps as PresentationBackendProps } from "@itwin/presentation-backend";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { Presentation as PresentationFrontend, PresentationProps as PresentationFrontendProps } from "@itwin/presentation-frontend";
 
@@ -30,7 +23,7 @@ function initializeRpcInterfaces(interfaces: RpcInterfaceDefinition[]) {
   };
 
   for (const definition of interfaces) {
-    RpcConfiguration.assign(definition, () => config); // eslint-disable-line @itwin/no-internal
+    RpcConfiguration.assign(definition, /* istanbul ignore next */ () => config); // eslint-disable-line @itwin/no-internal
   }
 
   const instance = RpcConfiguration.obtain(config); // eslint-disable-line @itwin/no-internal
@@ -53,8 +46,7 @@ export const getTestOutputDir = (): string => {
   return testOutputDir ?? defaultTestOutputDir;
 };
 
-// eslint-disable-next-line deprecation/deprecation
-export { HierarchyCacheMode, PresentationManagerMode, PresentationBackendProps };
+export { HierarchyCacheMode, PresentationBackendProps };
 
 /** @public */
 export interface PresentationTestingInitProps {

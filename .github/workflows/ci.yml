@@ -6,6 +6,7 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
+  # remove after switch to `changesets`
   check-change-files:
     if: '! github.event.pull_request.draft'
     runs-on: ubuntu-latest
@@ -51,7 +52,7 @@ jobs:
       - name: Use Node.js 18
         uses: actions/setup-node@v3
         with:
-          node-version: 18.16.0 #TODO Change back to 18.x once segfault on 18.16.1? is resolved.
+          node-version: 18
           cache: 'pnpm'
 
       - name: Install dependencies

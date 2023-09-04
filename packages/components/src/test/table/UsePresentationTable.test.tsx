@@ -7,7 +7,8 @@ import { assert, expect } from "chai";
 import { PropsWithChildren } from "react";
 import sinon from "sinon";
 import * as moq from "typemoq";
-import { IModelConnection } from "@itwin/core-frontend";
+import { BeUiEvent } from "@itwin/core-bentley";
+import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, Key, KeySet } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, SelectionManager } from "@itwin/presentation-frontend";
 import { waitFor } from "@testing-library/react";
@@ -40,6 +41,9 @@ describe("usePresentationTable", () => {
     const { presentationManager } = mockPresentationManager();
     presentationManagerMock = presentationManager;
     sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
+    sinon.stub(IModelApp, "quantityFormatter").get(() => ({
+      onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
+    }));
   });
 
   afterEach(() => {
@@ -107,6 +111,9 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     const { presentationManager } = mockPresentationManager();
     presentationManagerMock = presentationManager;
     sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
+    sinon.stub(IModelApp, "quantityFormatter").get(() => ({
+      onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
+    }));
 
     const selectionManager = new SelectionManager({ scopes: undefined as any });
     sinon.stub(Presentation, "selection").get(() => selectionManager);

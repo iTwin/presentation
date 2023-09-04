@@ -6,21 +6,21 @@
   "types": "lib/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "clean": "rimraf lib",
+    "clean": "rimraf lib build",
     "lint": "eslint ./src/**/*.ts",
-    "docs": "betools extract --fileExt=ts --extractFrom=./src --recursive --out=../../../build/docs/extract"
+    "docs": "betools extract --fileExt=ts --extractFrom=./src --recursive --out=./build/docs/extract"
   },
   "dependencies": {
-    "@itwin/build-tools": "4.1.0-dev.71",
-    "@itwin/core-bentley": "4.1.0-dev.71",
-    "@itwin/core-common": "4.1.0-dev.71",
-    "@itwin/core-geometry": "4.1.0-dev.71",
-    "@itwin/core-quantity": "4.1.0-dev.71",
-    "@itwin/ecschema-metadata": "4.1.0-dev.71",
-    "@itwin/ecschema-rpcinterface-common": "4.1.0-dev.71",
-    "@itwin/eslint-plugin": "^4.0.0-dev.48",
-    "@itwin/presentation-common": "4.1.0-dev.71",
-    "eslint": "^8.45.0",
+    "@itwin/build-tools": "^4.1.1",
+    "@itwin/core-bentley": "^4.1.1",
+    "@itwin/core-common": "^4.1.1",
+    "@itwin/core-geometry": "^4.1.1",
+    "@itwin/core-quantity": "^4.1.1",
+    "@itwin/ecschema-metadata": "^4.1.1",
+    "@itwin/ecschema-rpcinterface-common": "^4.1.1",
+    "@itwin/eslint-plugin": "4.0.0-dev.48",
+    "@itwin/presentation-common": "^4.1.1",
+    "eslint": "^8.47.0",
     "rimraf": "^5.0.1",
     "typescript": "~5.0.4"
   }

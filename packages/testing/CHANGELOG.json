@@ -2,6 +2,35 @@
   "name": "@itwin/presentation-testing",
   "entries": [
     {
+      "date": "Thu, 31 Aug 2023 11:51:06 GMT",
+      "version": "4.0.3",
+      "tag": "@itwin/presentation-testing_v4.0.3",
+      "comments": {
+        "patch": [
+          {
+            "author": "35135765+grigasp@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "585bfe098c3c388c48ffa4f311c4722f1b6835df",
+            "comment": "Update dependencies"
+          },
+          {
+            "author": "24278440+saskliutas@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "9b369dc2cb208ecf4cc6518f319a1648f85c81d9",
+            "comment": "Removed `@itwin/presentation-components` peer dependency."
+          }
+        ],
+        "none": [
+          {
+            "author": "100586436+JonasDov@users.noreply.github.com",
+            "package": "@itwin/presentation-testing",
+            "commit": "0b377b39b8ee853a4eb1e8122dd2602222fe30eb",
+            "comment": "Add tests for Helpers.ts to reach 100% coverage"
+          }
+        ]
+      }
+    },
+    {
       "date": "Wed, 09 Aug 2023 11:47:16 GMT",
       "tag": "@itwin/presentation-testing_v4.0.2",
       "version": "4.0.2",

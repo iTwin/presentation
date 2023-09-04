@@ -71,54 +71,38 @@ For local development it is recommended to setup [`CoSpace`](https://www.npmjs.c
    ```yaml
    packages:
      # presentation
-     - "repos/presentation"
-     - "repos/presentation/apps/**"
-     # uncomment this and comment 'itwinjs-core/presentation/components' to use 'presentation-components' package
-     # from this repo instead of 'itwinjs-core'
-     # - 'repos/presentation/packages/components'
+     - "repos/presentation/**"
 
      # itwinjs-core
-     - "repos/itwinjs-core/presentation/backend"
-     - "repos/itwinjs-core/presentation/common"
-     - "repos/itwinjs-core/presentation/components"
-     - "repos/itwinjs-core/presentation/frontend"
-     - "repos/itwinjs-core/presentation/testing"
-     - "repos/itwinjs-core/presentation/opentelemetry"
-     - "repos/itwinjs-core/core/bentley"
-     - "repos/itwinjs-core/core/backend"
-     - "repos/itwinjs-core/core/common"
-     - "repos/itwinjs-core/core/frontend"
-     - "repos/itwinjs-core/core/geometry"
-     - "repos/itwinjs-core/core/quantity"
-     - "repos/itwinjs-core/core/telemetry"
-     - "repos/itwinjs-core/core/i18n"
-     - "repos/itwinjs-core/core/orbitgt"
-     - "repos/itwinjs-core/core/ecschema-metadata"
-     - "repos/itwinjs-core/core/electron"
-     - "repos/itwinjs-core/core/express-server"
-     - "repos/itwinjs-core/core/webgl-compatibility"
-     - "repos/itwinjs-core/ui/appui-abstract"
-     - "repos/itwinjs-core/ui/core-react"
-     - "repos/itwinjs-core/ui/components-react"
-     - "repos/itwinjs-core/ui/imodel-components-react"
+     - "repos/itwinjs-core/presentation/*"
+     - "repos/itwinjs-core/core/**"
      - "repos/itwinjs-core/tools/build"
-     - "repos/itwinjs-core/tools/eslint-plugin"
      - "repos/itwinjs-core/tools/webpack-core"
      - "repos/itwinjs-core/tools/internal"
-     - "repos/itwinjs-core/tools/certa"
-     - "repos/itwinjs-core/common/autoinstallers/rush-lintstaged"
-   # imodel-native
-   # - "repos/imodel-native/src/imodel-native/iModelJsNodeAddon/api_package/ts"
-   # - "repos/imodel-native/out/Winx64/imodeljsnodeaddon_pkgs/imodeljs-native"
+     - "repos/itwinjs-core/ui/*"
    ```
 
 4. Update the `cospace.code-workspace` file with all the repos you want to add to your [vscode multi-root workspace](https://code.visualstudio.com/docs/editor/multi-root-workspaces).
 
-5. Run `pnpm exec cospace override` to automatically update the `pnpm.overrides` section of the `CoSpace`'s `package.json`, to link all the dependencies together with the copy found in the workspace.
+5. Add the following to the `pnpm.overrides` section of the `CoSpace`'s `package.json`:
 
-6. Run `pnpm install` to install all dependencies in your workspace and link all the packages you've added to your `CoSpace`.
+   ```json
+   "overrides": {
+     // other overrides
+     "@itwin/certa": "nightly",
+     "form-data": "2.5.1",
+     "@types/express": "4.17.17",
+     "express": "4.18.2"
+   }
+   ```
 
-7. Run `pnpm build` to build all the packages you've added to your `CoSpace` using your monorepo task runner.
+   _Note:_ You might have to add new packages or update versions of ones that are listed above in the `pnpm.overrides` section. To know which versions you need look at the `dependencies` sections of `itwinjs-core > common > config > rush > pnpm-lock.aml` file.
+
+6. Run `pnpm exec cospace override` to automatically update the `pnpm.overrides` section of the `CoSpace`'s `package.json`, to link all the dependencies together with the copy found in the workspace.
+
+7. Run `pnpm install` to install all dependencies in your workspace and link all the packages you've added to your `CoSpace`.
+
+8. Run `pnpm build` to build all the packages you've added to your `CoSpace` using your monorepo task runner.
 
 #### Debugging code from linked repos
 

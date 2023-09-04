@@ -5,10 +5,26 @@
 /** @type {import("lage").ConfigOptions } */
 module.exports = {
   pipeline: {
-    build: ["^build"],
-    cover: ["build"],
-    lint: ["build"],
-    docs: ["build"],
+    build: {
+      dependsOn: ["^build"],
+      outputs: ["lib/**"],
+      inputs: ["src/**"],
+    },
+    cover: {
+      dependsOn: ["build"],
+      outputs: [],
+      inputs: ["lib/**"],
+    },
+    lint: {
+      dependsOn: ["build"],
+      outputs: [],
+      inputs: ["src/**"],
+    },
+    docs: {
+      dependsOn: ["build"],
+      outputs: ["build/docs/**"],
+      inputs: ["src/**"],
+    },
     ["@itwin/presentation-components#extract-api"]: ["@itwin/presentation-components#build"],
     ["@itwin/presentation-testing#extract-api"]: ["@itwin/presentation-testing#build"],
     ["@itwin/presentation-opentelemetry#extract-api"]: ["@itwin/presentation-opentelemetry#build"],
@@ -16,5 +32,5 @@ module.exports = {
       cache: false,
     },
   },
-  cache: true,
+  npmClient: "pnpm",
 };

@@ -9,6 +9,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Subscription } from "rxjs/internal/Subscription";
 import { MutableTreeModel, PagedTreeNodeLoader, RenderedItemsRange, TreeModel, TreeModelSource, usePagedTreeNodeLoader } from "@itwin/components-react";
+import { IModelApp } from "@itwin/core-frontend";
 import { IModelHierarchyChangeEventArgs, Presentation } from "@itwin/presentation-frontend";
 import { RulesetRegistrationHelper } from "../../common/RulesetRegistrationHelper";
 import { PresentationTreeDataProvider, PresentationTreeDataProviderProps } from "../DataProvider";
@@ -110,6 +111,7 @@ export function usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderP
   useModelSourceUpdateOnIModelHierarchyUpdate(params);
   useModelSourceUpdateOnRulesetModification(params);
   useModelSourceUpdateOnRulesetVariablesChange(params);
+  useModelSourceUpdateOnUnitSystemChange(params);
 
   firstRenderRef.current = false;
   return { nodeLoader, onItemsRendered };
@@ -218,6 +220,22 @@ function useModelSourceUpdateOnRulesetVariablesChange(params: UpdateParams & { e
       subscription?.unsubscribe();
     };
   }, [dataProviderProps, enable, modelSource, pageSize, rulesetId, setTreeNodeLoaderState, renderedItems]);
+}
+
+function useModelSourceUpdateOnUnitSystemChange(params: UpdateParams): void {
+  const { dataProviderProps, pageSize, rulesetId, modelSource, setTreeNodeLoaderState, renderedItems } = params;
+
+  useEffect(() => {
+    let subscription: Subscription | undefined;
+    const removeListener = IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(() => {
+      subscription = startTreeReload({ dataProviderProps, rulesetId, pageSize, modelSource, renderedItems, setTreeNodeLoaderState });
+    });
+
+    return () => {
+      removeListener();
+      subscription?.unsubscribe();
+    };
+  }, [dataProviderProps, modelSource, pageSize, rulesetId, setTreeNodeLoaderState, renderedItems]);
 }
 
 function startTreeReload({ dataProviderProps, rulesetId, modelSource, pageSize, renderedItems, setTreeNodeLoaderState }: UpdateParams): Subscription {

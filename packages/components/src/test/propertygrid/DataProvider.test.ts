@@ -8,9 +8,9 @@ import * as sinon from "sinon";
 import * as moq from "typemoq";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { PropertyCategory } from "@itwin/components-react";
-import { BeEvent, using } from "@itwin/core-bentley";
+import { BeEvent, BeUiEvent, using } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
+import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
 import {
   ArrayTypeDescription,
   CategoryDescription,
@@ -84,6 +84,9 @@ describe("PropertyDataProvider", () => {
     sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
     sinon.stub(Presentation, "favoriteProperties").get(() => favoritePropertiesManagerMock.object);
     sinon.stub(Presentation, "localization").get(() => new EmptyLocalization());
+    sinon.stub(IModelApp, "quantityFormatter").get(() => ({
+      onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
+    }));
 
     provider = new Provider({ imodel: imodelMock.object, ruleset: rulesetId });
   });
