@@ -289,7 +289,7 @@ async function getFilterDefinition(imodel: IModelConnection, node?: TreeNodeItem
     return undefined;
   }
 
-  // if there are more and one filter applied combine them using `AND` operator
+  // if there are more than one filter applied, combine them using `AND` operator
   // otherwise apply filter directly
   const filter: PresentationInstanceFilter =
     appliedFilters.length > 1
