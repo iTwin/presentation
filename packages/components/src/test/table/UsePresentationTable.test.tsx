@@ -34,10 +34,6 @@ describe("usePresentationTable", () => {
     pageSize: 10,
   };
 
-  Object.defineProperty(window, "crypto", {
-    value: { randomUUID: () => "Table1" },
-  });
-
   let presentationManagerMock: moq.IMock<PresentationManager>;
 
   beforeEach(() => {
