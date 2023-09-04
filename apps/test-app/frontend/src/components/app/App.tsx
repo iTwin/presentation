@@ -157,7 +157,6 @@ export default class App extends Component<{}, State> {
             </div>
             <div className="app-content-left-bottom">
               <TableWidget imodel={imodel} rulesetId={rulesetId} />
-              <TableWidget imodel={imodel} rulesetId={rulesetId} />
             </div>
           </div>
           <ElementSeparator
