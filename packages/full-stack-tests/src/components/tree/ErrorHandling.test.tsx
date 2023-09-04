@@ -14,7 +14,7 @@ import { PresentationTreeRenderer, usePresentationTreeNodeLoader, useUnifiedSele
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { getByRole, render, waitFor } from "@testing-library/react";
-import { insertPhysicalElement, insertPhysicalModel, insertSpatialCategory } from "../../IModelUtils";
+import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { getNodeByLabel, toggleExpandNode } from "../TreeUtils";
 
@@ -66,13 +66,14 @@ describe("Learning snippets", () => {
       // __PUBLISH_EXTRACT_END__
 
       // set up imodel for the test
+      // eslint-disable-next-line deprecation/deprecation
       const imodel = await buildTestIModel(this, (builder) => {
-        const categoryKey = insertSpatialCategory(builder, "My Category");
-        const modelKeyA = insertPhysicalModel(builder, "My Model A");
-        const modelKeyB = insertPhysicalModel(builder, "My Model B");
+        const categoryKey = insertSpatialCategory({ builder, label: "My Category" });
+        const modelKeyA = insertPhysicalModelWithPartition({ builder, label: "My Model A" });
+        const modelKeyB = insertPhysicalModelWithPartition({ builder, label: "My Model B" });
         for (let i = 0; i < 2; ++i) {
-          insertPhysicalElement(builder, `A element ${i + 1}`, modelKeyA.id, categoryKey.id);
-          insertPhysicalElement(builder, `B element ${i + 1}`, modelKeyB.id, categoryKey.id);
+          insertPhysicalElement({ builder, userLabel: `A element ${i + 1}`, modelId: modelKeyA.id, categoryId: categoryKey.id });
+          insertPhysicalElement({ builder, userLabel: `B element ${i + 1}`, modelId: modelKeyB.id, categoryId: categoryKey.id });
         }
       });
 

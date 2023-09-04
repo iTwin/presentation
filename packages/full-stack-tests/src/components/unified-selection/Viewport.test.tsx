@@ -14,7 +14,7 @@ import { viewWithUnifiedSelection } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { render, waitFor } from "@testing-library/react";
-import { insertPhysicalElement, insertPhysicalModel, insertSpatialCategory } from "../../IModelUtils";
+import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 
 /* eslint-disable @typescript-eslint/naming-convention */
@@ -43,13 +43,14 @@ describe("Learning snippets", async () => {
 
       // set up imodel for the test
       const elementKeys: InstanceKey[] = [];
-      const imodel = await buildTestIModel(this, (builder) => {
-        const categoryKey = insertSpatialCategory(builder, "My Category");
-        const modelKey = insertPhysicalModel(builder, "My Model");
-        elementKeys.push(insertPhysicalElement(builder, "My Assembly Element", modelKey.id, categoryKey.id)),
+      // eslint-disable-next-line deprecation/deprecation
+      const imodel = await buildTestIModel(this, async (builder) => {
+        const categoryKey = insertSpatialCategory({ builder, label: "My Category" });
+        const modelKey = insertPhysicalModelWithPartition({ builder, label: "My Model" });
+        elementKeys.push(insertPhysicalElement({ builder, userLabel: "My Assembly Element", modelId: modelKey.id, categoryId: categoryKey.id })),
           elementKeys.push(
-            insertPhysicalElement(builder, "My Child Element 1", modelKey.id, categoryKey.id, elementKeys[0].id),
-            insertPhysicalElement(builder, "My Child Element 2", modelKey.id, categoryKey.id, elementKeys[0].id),
+            insertPhysicalElement({ builder, userLabel: "My Child Element 1", modelId: modelKey.id, categoryId: categoryKey.id, parentId: elementKeys[0].id }),
+            insertPhysicalElement({ builder, userLabel: "My Child Element 2", modelId: modelKey.id, categoryId: categoryKey.id, parentId: elementKeys[0].id }),
           );
       });
 

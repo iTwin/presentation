@@ -3,6 +3,7 @@
   "checkLeaks": true,
   "globals": ["requestAnimationFrame"],
   "timeout": 60000,
+  "slow": 500,
   "file": ["./lib/setup.js"],
   "reporter": ["node_modules/@itwin/build-tools/mocha-reporter"],
   "reporterOptions": ["mochaFile=lib/test/junit_results.xml"],

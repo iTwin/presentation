@@ -12,7 +12,13 @@ import { InstanceKey, KeySet, RuleTypes } from "@itwin/presentation-common";
 import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider, PresentationPropertyDataProviderProps } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
-import { insertExternalSourceAspect, insertPhysicalElement, insertPhysicalModel, insertRepositoryLink, insertSpatialCategory } from "../../IModelUtils";
+import {
+  insertExternalSourceAspect,
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertRepositoryLink,
+  insertSpatialCategory,
+} from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 
 describe("PropertyDataProvider", async () => {
@@ -37,8 +43,9 @@ describe("PropertyDataProvider", async () => {
       });
 
       it("creates empty result when properties requested for 0 instances", async function () {
-        const imodel = await buildTestIModel(this, (builder) => {
-          insertSpatialCategory(builder, "My Category");
+        // eslint-disable-next-line deprecation/deprecation
+        const imodel = await buildTestIModel(this, async (builder) => {
+          insertSpatialCategory({ builder, label: "My Category" });
         });
         await using(createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET }), async (provider) => {
           provider.keys = new KeySet();
@@ -51,10 +58,11 @@ describe("PropertyDataProvider", async () => {
         let categoryKey: InstanceKey;
         let modelKey: InstanceKey;
         let elementKey: InstanceKey;
-        const imodel = await buildTestIModel(this, (builder) => {
-          categoryKey = insertSpatialCategory(builder, "My Category");
-          modelKey = insertPhysicalModel(builder, "My Model");
-          elementKey = insertPhysicalElement(builder, "My Element", modelKey.id, categoryKey.id);
+        // eslint-disable-next-line deprecation/deprecation
+        const imodel = await buildTestIModel(this, async (builder) => {
+          categoryKey = insertSpatialCategory({ builder, label: "My Category" });
+          modelKey = insertPhysicalModelWithPartition({ builder, label: "My Model" });
+          elementKey = insertPhysicalElement({ builder, userLabel: "My Element", modelId: modelKey.id, categoryId: categoryKey.id });
         });
         await using(createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET }), async (provider) => {
           provider.keys = new KeySet([elementKey]);
@@ -85,10 +93,11 @@ describe("PropertyDataProvider", async () => {
         let categoryKey: InstanceKey;
         let modelKey: InstanceKey;
         let elementKey: InstanceKey;
-        const imodel = await buildTestIModel(this, (builder) => {
-          categoryKey = insertSpatialCategory(builder, "My Category");
-          modelKey = insertPhysicalModel(builder, "My Model");
-          elementKey = insertPhysicalElement(builder, "My Element", modelKey.id, categoryKey.id);
+        // eslint-disable-next-line deprecation/deprecation
+        const imodel = await buildTestIModel(this, async (builder) => {
+          categoryKey = insertSpatialCategory({ builder, label: "My Category" });
+          modelKey = insertPhysicalModelWithPartition({ builder, label: "My Model" });
+          elementKey = insertPhysicalElement({ builder, userLabel: "My Element", modelId: modelKey.id, categoryId: categoryKey.id });
         });
         await using(createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET }), async (provider) => {
           provider.keys = new KeySet([{ className: "BisCore:Element", id: elementKey.id }]);
@@ -117,8 +126,9 @@ describe("PropertyDataProvider", async () => {
 
       it("favorites properties", async function () {
         let categoryKey: InstanceKey;
-        const imodel = await buildTestIModel(this, (builder) => {
-          categoryKey = insertSpatialCategory(builder, "My Category");
+        // eslint-disable-next-line deprecation/deprecation
+        const imodel = await buildTestIModel(this, async (builder) => {
+          categoryKey = insertSpatialCategory({ builder, label: "My Category" });
         });
         await using(createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET }), async (provider) => {
           sinon.stub(provider as any, "isFieldFavorite").returns(true);
@@ -152,8 +162,9 @@ describe("PropertyDataProvider", async () => {
 
       it("overrides default property category", async function () {
         let categoryKey: InstanceKey;
-        const imodel = await buildTestIModel(this, (builder) => {
-          categoryKey = insertSpatialCategory(builder, "My Category");
+        // eslint-disable-next-line deprecation/deprecation
+        const imodel = await buildTestIModel(this, async (builder) => {
+          categoryKey = insertSpatialCategory({ builder, label: "My Category" });
         });
         await using(
           createProvider({
@@ -195,8 +206,9 @@ describe("PropertyDataProvider", async () => {
 
       it("finds root property record keys", async function () {
         let categoryKey: InstanceKey;
-        const imodel = await buildTestIModel(this, (builder) => {
-          categoryKey = insertSpatialCategory(builder, "My Category");
+        // eslint-disable-next-line deprecation/deprecation
+        const imodel = await buildTestIModel(this, async (builder) => {
+          categoryKey = insertSpatialCategory({ builder, label: "My Category" });
         });
 
         await using(createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET }), async (provider) => {
@@ -217,12 +229,18 @@ describe("PropertyDataProvider", async () => {
       it("finds nested property record keys", async function () {
         let elementKey: InstanceKey;
         let externalsSourceAspectKey: InstanceKey;
-        const imodel = await buildTestIModel(this, (builder) => {
-          const categoryKey = insertSpatialCategory(builder, "My Category");
-          const modelKey = insertPhysicalModel(builder, "My Model");
-          elementKey = insertPhysicalElement(builder, "My Element", modelKey.id, categoryKey.id);
-          const repositoryLinkKey = insertRepositoryLink(builder, "Repository URl", "Repository Label");
-          externalsSourceAspectKey = insertExternalSourceAspect(builder, elementKey.id, "My External Source Aspect", repositoryLinkKey.id);
+        // eslint-disable-next-line deprecation/deprecation
+        const imodel = await buildTestIModel(this, async (builder) => {
+          const categoryKey = insertSpatialCategory({ builder, label: "My Category" });
+          const modelKey = insertPhysicalModelWithPartition({ builder, label: "My Model" });
+          elementKey = insertPhysicalElement({ builder, userLabel: "My Element", modelId: modelKey.id, categoryId: categoryKey.id });
+          const repositoryLinkKey = insertRepositoryLink({ builder, repositoryUrl: "Repository URL", repositoryLabel: "Repository Label" });
+          externalsSourceAspectKey = insertExternalSourceAspect({
+            builder,
+            elementId: elementKey.id,
+            identifier: "My External Source Aspect",
+            repositoryId: repositoryLinkKey.id,
+          });
         });
 
         await using(createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET }), async (provider) => {
@@ -260,8 +278,9 @@ describe("PropertyDataProvider", async () => {
 
   it("gets property data after re-initializing Presentation", async function () {
     let categoryKey: InstanceKey;
-    const imodel = await buildTestIModel(this, (builder) => {
-      categoryKey = insertSpatialCategory(builder, "My Category");
+    // eslint-disable-next-line deprecation/deprecation
+    const imodel = await buildTestIModel(this, async (builder) => {
+      categoryKey = insertSpatialCategory({ builder, label: "My Category" });
     });
     const checkDataProvider = async () => {
       await using(new PresentationPropertyDataProvider({ imodel }), async (p) => {
