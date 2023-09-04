@@ -93,6 +93,17 @@ describe("IModelUtilities", () => {
       expect(result).to.deep.equal(expected);
       codeSpecsMock.verifyAll();
     });
+
+    it("importSchema calls iModel.importSchemaStrings", async () => {
+      const importSchemaStringsStub = sinon.stub().resolves();
+      const imodel = {
+        importSchemaStrings: importSchemaStringsStub,
+      } as unknown as IModelDb;
+
+      const builder = new IModelBuilder(imodel);
+      await builder.importSchema("test xml");
+      expect(importSchemaStringsStub).to.be.calledOnceWith(["test xml"]);
+    });
   });
 
   describe("buildTestIModel", () => {
@@ -116,7 +127,8 @@ describe("IModelUtilities", () => {
       const mkdirFake = sinon.fake();
       sinon.replace(IModelJsFs, "mkdirSync", mkdirFake);
 
-      await buildTestIModel("name", () => {});
+      // eslint-disable-next-line deprecation/deprecation
+      await buildTestIModel("name", async () => {});
 
       expect(mkdirFake.calledOnceWith(getTestOutputDir()));
     });
@@ -128,7 +140,8 @@ describe("IModelUtilities", () => {
       const unlinkFake = sinon.fake();
       sinon.replace(IModelJsFs, "unlinkSync", unlinkFake);
 
-      await buildTestIModel(fileName, () => {});
+      // eslint-disable-next-line deprecation/deprecation
+      await buildTestIModel(fileName, async () => {});
 
       const outputFile = join(getTestOutputDir(), `${fileName}.bim`);
       expect(unlinkFake.calledOnceWith(outputFile));
@@ -142,7 +155,8 @@ describe("IModelUtilities", () => {
       const unlinkFake = sinon.fake();
       sinon.replace(IModelJsFs, "unlinkSync", unlinkFake);
 
-      await buildTestIModel("name", () => {});
+      // eslint-disable-next-line deprecation/deprecation
+      await buildTestIModel("name", async () => {});
 
       expect(unlinkFake.notCalled);
     });
@@ -156,7 +170,8 @@ describe("IModelUtilities", () => {
       const unlinkFake = sinon.fake();
       sinon.replace(IModelJsFs, "unlinkSync", unlinkFake);
 
-      await buildTestIModel(fileName, () => {});
+      // eslint-disable-next-line deprecation/deprecation
+      await buildTestIModel(fileName, async () => {});
 
       expect(mkdirFake.notCalled);
     });
@@ -165,7 +180,8 @@ describe("IModelUtilities", () => {
       const fileName = "fileName";
       const { createSnapshotDb } = setupSnapshot();
 
-      await buildTestIModel(fileName, () => {});
+      // eslint-disable-next-line deprecation/deprecation
+      await buildTestIModel(fileName, async () => {});
 
       expect(createSnapshotDb.firstCall.args[0]).to.include(`${fileName}.bim`);
       expect(createSnapshotDb.firstCall.lastArg).to.deep.equal({ rootSubject: { name: fileName } });
@@ -175,7 +191,8 @@ describe("IModelUtilities", () => {
       const fileName = createFileNameFromString(this.test!.fullTitle());
       const { createSnapshotDb } = setupSnapshot();
 
-      await buildTestIModel(this, () => {});
+      // eslint-disable-next-line deprecation/deprecation
+      await buildTestIModel(this, async () => {});
 
       expect(createSnapshotDb.firstCall.args[0]).to.include(`${fileName}.bim`);
       expect(createSnapshotDb.firstCall.lastArg).to.deep.equal({ rootSubject: { name: fileName } });
@@ -183,8 +200,9 @@ describe("IModelUtilities", () => {
 
     it("builder calls provided callback function", async () => {
       setupSnapshot();
-      const cb = sinon.spy();
+      const cb: sinon.SinonSpy<any[], Promise<void>> = sinon.spy();
 
+      // eslint-disable-next-line deprecation/deprecation
       await buildTestIModel("name", cb);
 
       expect(cb.calledOnce);
@@ -193,7 +211,8 @@ describe("IModelUtilities", () => {
     it("builder saves database changes and closes it when callback succeeds", async () => {
       const { dbMock } = setupSnapshot();
 
-      await buildTestIModel("name", () => {});
+      // eslint-disable-next-line deprecation/deprecation
+      await buildTestIModel("name", async () => {});
 
       dbMock.verify((x) => x.saveChanges("Created test IModel"), moq.Times.once());
       dbMock.verify((x) => x.close(), moq.Times.once());
@@ -201,10 +220,11 @@ describe("IModelUtilities", () => {
 
     it("builder saves database changes and closes it when callback throws", async () => {
       const { dbMock } = setupSnapshot();
-      const cb = () => {
+      const cb = async () => {
         throw new Error("TestError");
       };
 
+      // eslint-disable-next-line deprecation/deprecation
       const promise = buildTestIModel("name", cb);
 
       await expect(promise).to.be.rejectedWith(Error);
@@ -215,7 +235,8 @@ describe("IModelUtilities", () => {
     it("returns result of SnapshotConnection.openFile", async () => {
       const { connectionMock } = setupSnapshot();
 
-      const promise = buildTestIModel("name", () => {});
+      // eslint-disable-next-line deprecation/deprecation
+      const promise = buildTestIModel("name", async () => {});
       const result = await promise;
 
       expect(result).to.equal(connectionMock.object);

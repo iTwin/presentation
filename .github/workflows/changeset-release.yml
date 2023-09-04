@@ -41,8 +41,8 @@ jobs:
         uses: changesets/action@v1
         with:
           publish: pnpm release
-          title: Release packages
-          commit: Release packages [skip actions][publish docs]
+          title: Release packages [skip actions][publish docs]
+          commit: Release packages
         env:
           GITHUB_TOKEN: ${{ secrets.IMJS_ADMIN_GH_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPMJS_PUBLISH_ITWIN }}
