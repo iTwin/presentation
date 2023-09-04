@@ -16,7 +16,7 @@ import {
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { act, getByText, render, waitFor } from "@testing-library/react";
-import { insertPhysicalElement, insertPhysicalModel, insertSpatialCategory } from "../../IModelUtils";
+import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { ensureTableHasRowsWithCellValues } from "../TableUtils";
 
@@ -106,12 +106,13 @@ describe("Learning snippets", async () => {
       // set up imodel for the test
       let modelKey: InstanceKey;
       const elementKeys: InstanceKey[] = [];
+      // eslint-disable-next-line deprecation/deprecation
       const imodel = await buildTestIModel(this, (builder) => {
-        const categoryKey = insertSpatialCategory(builder, "My Category");
-        modelKey = insertPhysicalModel(builder, "My Model");
+        const categoryKey = insertSpatialCategory({ builder, label: "My Category" });
+        modelKey = insertPhysicalModelWithPartition({ builder, label: "My Model" });
         elementKeys.push(
-          insertPhysicalElement(builder, "My Element 1", modelKey.id, categoryKey.id),
-          insertPhysicalElement(builder, "My Element 2", modelKey.id, categoryKey.id),
+          insertPhysicalElement({ builder, userLabel: "My Element 1", modelId: modelKey.id, categoryId: categoryKey.id }),
+          insertPhysicalElement({ builder, userLabel: "My Element 2", modelId: modelKey.id, categoryId: categoryKey.id }),
         );
       });
 
