@@ -1352,7 +1352,7 @@ Mon, 01 Jul 2019 19:04:29 GMT
 ### Updates
 
 - Reorganize docs script output
-- Include !lib/\*_/_.\*css in .npmignore for presentation-components to includes css files in lib/module/prod
+- Include `!lib/**/*.*css` in `.npmignore` for presentation-components to includes css files in `lib/module/prod`
 - `treeWithFilteringSupport` HOC now sends the filtered data provider as the second parameter to `onFilterApplied` prop callback
 - Moved the part that determines hilite set out of `presentation-components` to `presentation-frontend` and expose it as a public API.
 - Clear tool selection set when models or categories are selected. Replace tool selection set with new selection when elements are selected.
