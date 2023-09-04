@@ -22,6 +22,8 @@
     "prettier:fix": "prettier --write .",
     "prepare": "husky install",
     "change": "changeset add",
+    "change:empty": "changeset add --empty",
+    "check": "changeset status",
     "release": "npm run build:all && changeset publish"
   },
   "dependencies": {
