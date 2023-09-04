@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import React, { useCallback, useEffect } from "react";
-import { UseRowSelectInstanceProps } from "react-table";
+import { useCallback } from "react";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Table } from "@itwin/itwinui-react";
@@ -33,25 +32,13 @@ interface PresentationTableProps {
 function PresentationTable(props: PresentationTableProps) {
   const { imodel, rulesetId } = props;
 
-  const tableInstance = React.useRef<
-    UseRowSelectInstanceProps<{
-      [key: string]: string | PropertyRecord;
-    }>
-  >();
-
-  const { columns, rows, isLoading, loadMoreRows, sort, onSelect, selectedKeys } = usePresentationTableWithUnifiedSelection({
+  const { columns, rows, isLoading, loadMoreRows, sort, onSelect } = usePresentationTableWithUnifiedSelection({
     imodel,
     ruleset: rulesetId,
     pageSize: 20,
     columnMapper: mapTableColumns,
     rowMapper: mapTableRow,
   });
-
-  // useEffect(() => {
-  //   selectedKeys?.forEach((selRow) => {
-  //     tableInstance.current?.toggleAllRowsSelected( true);
-  //   });
-  // }, [selectedKeys]);
 
   const onSort = useCallback(
     (tableState: any) => {
@@ -60,19 +47,6 @@ function PresentationTable(props: PresentationTableProps) {
     },
     [sort],
   );
-
-  // if (columns === undefined) {
-  //   return <ProgressRadial indeterminate={true} />;
-  // }
-
-  const plswork = selectedKeys?.map((x) => mapTableRow(x));
-
-  useEffect(() => {
-    plswork?.forEach((plspls) => {
-      plspls.toString();
-      tableInstance.current?.toggleRowSelected(plspls.id as string, true);
-    });
-  }, [plswork]);
 
   return (
     <Table
@@ -84,17 +58,10 @@ function PresentationTable(props: PresentationTableProps) {
       isSortable={true}
       manualSortBy={true}
       onSort={onSort}
-      getRowId={(x) => {
-        return x.id as string;
-      }}
       isSelectable={true}
       onSelect={(rowsList, _) => {
         onSelect((rowsList ?? []).map((a) => a.id as string));
       }}
-      stateReducer={useCallback((newState, _action, _prevState, instance) => {
-        tableInstance.current = instance;
-        return newState;
-      }, [])}
     />
   );
 }
