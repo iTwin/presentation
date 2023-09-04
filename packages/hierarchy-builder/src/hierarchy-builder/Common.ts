@@ -3,19 +3,27 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ECClass, SchemaContext, SchemaKey } from "@itwin/ecschema-metadata";
+import { ECClass, Schema, SchemaContext, SchemaKey } from "@itwin/ecschema-metadata";
 import { InProgressTreeNode } from "./TreeNode";
 
 export async function getClass(schemas: SchemaContext, fullClassName: string) {
   const [schemaName, className] = fullClassName.split(/[\.:]/);
-  const schema = await schemas.getSchema(new SchemaKey(schemaName));
+  let schema: Schema | undefined;
+  try {
+    schema = await schemas.getSchema(new SchemaKey(schemaName));
+  } catch {}
   if (!schema) {
-    throw new Error(`Invalid schema: ${schema}`);
+    throw new Error(`Invalid schema: ${schemaName}`);
   }
-  const nodeClass = await schema.getItem<ECClass>(className);
+
+  let nodeClass: ECClass | undefined;
+  try {
+    nodeClass = await schema.getItem<ECClass>(className);
+  } catch {}
   if (!nodeClass) {
     throw new Error(`Invalid class: ${nodeClass}`);
   }
+
   return nodeClass;
 }
 
@@ -49,4 +57,8 @@ export function mergeInstanceNodes<TDirectChildren>(
     ...(lhs.extendedData || rhs.extendedData ? { extendedData: { ...lhs.extendedData, ...rhs.extendedData } } : undefined),
     ...(lhs.directChildren || rhs.directChildren ? { directChildren: directChildrenMerger(lhs.directChildren, rhs.directChildren) } : undefined),
   };
+}
+
+export function hasChildren<TNode extends { children?: boolean | Array<unknown> }>(node: TNode) {
+  return node.children === true || (Array.isArray(node.children) && node.children.length > 0);
 }

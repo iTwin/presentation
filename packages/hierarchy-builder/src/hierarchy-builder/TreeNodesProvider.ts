@@ -5,13 +5,7 @@
 /* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { assert, DuplicatePolicy, Id64, SortedArray } from "@itwin/core-bentley";
-import { SchemaContext } from "@itwin/ecschema-metadata";
-import { ClassInfo } from "@itwin/presentation-common";
 import naturalCompare from "natural-compare-lite";
-import { getClass, mergeInstanceNodes } from "./Common";
-import { InProgressTreeNode, TreeNode } from "./TreeNode";
-import { applyLimit, TreeQueryResultsReader } from "./TreeNodesReader";
 import {
   asapScheduler,
   catchError,
@@ -43,8 +37,14 @@ import {
   tap,
   toArray,
 } from "rxjs";
-import { ITreeQueryBuilder } from "./TreeQueryBuilder";
+import { assert, DuplicatePolicy, Id64, SortedArray } from "@itwin/core-bentley";
+import { SchemaContext } from "@itwin/ecschema-metadata";
+import { ClassInfo } from "@itwin/presentation-common";
+import { getClass, hasChildren, mergeInstanceNodes } from "./Common";
 import { IQueryExecutor } from "./IQueryExecutor";
+import { InProgressTreeNode, TreeNode } from "./TreeNode";
+import { applyLimit, TreeQueryResultsReader } from "./TreeNodesReader";
+import { ITreeQueryBuilder } from "./TreeQueryBuilder";
 
 const QUERY_CONCURRENCY = 10;
 class QueryScheduler<T> {
@@ -134,7 +134,7 @@ export class TreeNodesProvider {
 
   private ensureDirectChildren(parentNode: TreeNode | undefined): Observable<InProgressTreeNode> {
     const enableLogging = false;
-    const key = parentNode ? JSON.stringify(parentNode.key) : "";
+    const key = parentNode ? `${JSON.stringify(parentNode.key)}+${JSON.stringify(parentNode.extendedData)}` : "";
 
     const cached = this._directNodesCache.get(key);
     if (cached) {
@@ -309,9 +309,6 @@ function createHideNodesInHierarchyReducer(
 
 export function createHideIfNoChildrenReducer(hasNodes: (node: InProgressTreeNode) => Observable<boolean>, stopOnFirstChild: boolean) {
   const enableLogging = false;
-  function hasChildren(node: TreeNode) {
-    return node.children === true || (Array.isArray(node.children) && node.children.length > 0);
-  }
   return function (nodes: Observable<InProgressTreeNode>): Observable<InProgressTreeNode> {
     const [needsHide, doesntNeedHide] = partition(
       nodes.pipe(
