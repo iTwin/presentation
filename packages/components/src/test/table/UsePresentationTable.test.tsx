@@ -223,10 +223,10 @@ describe("usePresentationTableWithUnifiedSelection", () => {
       selectionLevel: 1,
       selectionSource: "Table2",
       returnLength: [createTestECInstanceKey()].length,
-      testName: "Returns an  array of selectedRows when keys are passed correctly",
+      testName: "Returns an array of selectedRows when keys are passed correctly",
     },
   ].forEach((args) => {
-    it.only(args.testName, async () => {
+    it(args.testName, async () => {
       const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
 
       const resultBeforeAdding = result.current.selectedRows;
