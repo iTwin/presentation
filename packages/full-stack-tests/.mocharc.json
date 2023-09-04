@@ -1,10 +1,23 @@
 {
-  "require": ["ignore-styles"],
+  "require": [
+    "ignore-styles"
+  ],
   "checkLeaks": true,
-  "globals": ["requestAnimationFrame"],
+  "globals": [
+    "requestAnimationFrame"
+  ],
   "timeout": 60000,
-  "file": ["./lib/setup.js"],
-  "reporter": ["node_modules/@itwin/build-tools/mocha-reporter"],
-  "reporterOptions": ["mochaFile=lib/test/junit_results.xml"],
-  "spec": ["./lib/**/*.test.js"]
+  "slow": 500,
+  "file": [
+    "./lib/setup.js"
+  ],
+  "reporter": [
+    "node_modules/@itwin/build-tools/mocha-reporter"
+  ],
+  "reporterOptions": [
+    "mochaFile=lib/test/junit_results.xml"
+  ],
+  "spec": [
+    "./lib/**/*.test.js"
+  ]
 }

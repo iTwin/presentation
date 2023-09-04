@@ -12,7 +12,7 @@ import { usePresentationTreeNodeLoader, useUnifiedSelectionTreeEventHandler } fr
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { act, fireEvent, render, waitFor } from "@testing-library/react";
-import { insertPhysicalElement, insertPhysicalModel, insertSpatialCategory } from "../../IModelUtils";
+import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { getNodeByLabel, isNodeSelectedInTree, toggleExpandNode } from "../TreeUtils";
 
@@ -61,10 +61,11 @@ describe("Learning snippets", async () => {
       // set up imodel for the test
       let modelKey: InstanceKey;
       let elementKey: InstanceKey;
-      const imodel = await buildTestIModel(this, (builder) => {
-        const categoryKey = insertSpatialCategory(builder, "My Category");
-        modelKey = insertPhysicalModel(builder, "My Model");
-        elementKey = insertPhysicalElement(builder, "My Element", modelKey.id, categoryKey.id);
+      // eslint-disable-next-line deprecation/deprecation
+      const imodel = await buildTestIModel(this, async (builder) => {
+        const categoryKey = insertSpatialCategory({ builder, label: "My Category" });
+        modelKey = insertPhysicalModelWithPartition({ builder, label: "My Model" });
+        elementKey = insertPhysicalElement({ builder, userLabel: "My Element", modelId: modelKey.id, categoryId: categoryKey.id });
       });
 
       // render the component
