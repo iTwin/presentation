@@ -22,7 +22,14 @@ export interface PresentationTreeNodeItemFilteringInfo {
    * It can be set to a function in order to lazy load it.
    */
   descriptor: Descriptor | (() => Promise<Descriptor>);
-  /** Currently active filter for this item hierarchy. */
+  /**
+   * List of filters applied on ancestor nodes. Some nodes might need to apply ancestor filter to get correct children.
+   * For example, grouping node under filtered hierarchy level.
+   */
+  ancestorFilters: PresentationInstanceFilterInfo[];
+  /**
+   * Currently active filter.
+   */
   active?: PresentationInstanceFilterInfo;
 }
 

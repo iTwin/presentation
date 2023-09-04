@@ -558,6 +558,12 @@ importers:
       '@types/chai-subset':
         specifier: 1.3.1
         version: 1.3.1
+      '@types/jsdom':
+        specifier: 21.1.1
+        version: 21.1.1
+      '@types/jsdom-global':
+        specifier: 3.0.4
+        version: 3.0.4
       '@types/mocha':
         specifier: ^8.2.3
         version: 8.2.3
@@ -4469,7 +4475,6 @@ packages:
     resolution: {integrity: sha512-7QAKHPEVcNvEPpHhGWwN9rRs+JTraZXXRatkud/TD2Zm8p9nO6Y8462lcOmgu6FHho20TkjbxP4qra8MzYL9HA==}
     dependencies:
       '@types/jsdom': 21.1.1
-    dev: false
 
   /@types/jsdom@21.1.1:
     resolution: {integrity: sha512-cZFuoVLtzKP3gmq9eNosUL1R50U+USkbLtUQ1bYVgl/lKp0FZM7Cq4aIHAL8oIvQ17uSHi7jXPtfDOdjPwBE7A==}
@@ -4477,7 +4482,6 @@ packages:
       '@types/node': 18.17.7
       '@types/tough-cookie': 4.0.2
       parse5: 7.1.2
-    dev: false
 
   /@types/json-schema@7.0.12:
     resolution: {integrity: sha512-Hr5Jfhc9eYOQNPYO5WLDq/n4jqijdHNlDXjuAQkkt+mWdQR+XJToOHrsD4cPaMXpn6KO7y2+wM8AZEs8VpBLVA==}
@@ -4654,7 +4658,6 @@ packages:
 
   /@types/tough-cookie@4.0.2:
     resolution: {integrity: sha512-Q5vtl1W5ue16D+nIaW8JWebSSraJVlK+EthKn7e7UcD4KWsaSJ8BqGPXNaPghgtcn/fhvrN17Tv8ksUsQpiplw==}
-    dev: false
 
   /@types/tunnel@0.0.3:
     resolution: {integrity: sha512-sOUTGn6h1SfQ+gbgqC364jLFBw2lnFqkgF3q0WovEHRLMrVD1sd5aufqi/aJObLekJO+Aq5z646U4Oxy6shXMA==}

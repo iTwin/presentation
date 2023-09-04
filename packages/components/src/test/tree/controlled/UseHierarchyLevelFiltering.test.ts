@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { Subject } from "rxjs";
 import { from } from "rxjs/internal/observable/from";
 import * as moq from "typemoq";
 import { PropertyRecord } from "@itwin/appui-abstract";
@@ -16,7 +17,6 @@ import { PresentationTreeNodeItem } from "../../../presentation-components/tree/
 import { createTestPropertyInfo } from "../../_helpers/Common";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content";
 import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy";
-import { Subject } from "rxjs";
 
 function createTreeModelInput(input?: Partial<TreeModelNodeInput>, treeItem?: Partial<PresentationTreeNodeItem>): TreeModelNodeInput {
   const item: PresentationTreeNodeItem = {
@@ -65,7 +65,7 @@ describe("useHierarchyLevelFiltering", () => {
   });
 
   it("applies filter", () => {
-    const node = createTreeModelInput(undefined, { filtering: { descriptor: createTestContentDescriptor({ fields: [] }) } });
+    const node = createTreeModelInput(undefined, { filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [] } });
     modelSource.modifyModel((model) => {
       model.setChildren(undefined, [node], 0);
     });
@@ -79,7 +79,7 @@ describe("useHierarchyLevelFiltering", () => {
   });
 
   it("reloads children after filter applied to expanded node", () => {
-    const node = createTreeModelInput({ isExpanded: true }, { filtering: { descriptor: createTestContentDescriptor({ fields: [] }) } });
+    const node = createTreeModelInput({ isExpanded: true }, { filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [] } });
     modelSource.modifyModel((model) => {
       model.setChildren(undefined, [node], 0);
     });
@@ -101,7 +101,10 @@ describe("useHierarchyLevelFiltering", () => {
   });
 
   it("clears children from tree model when filter applied", () => {
-    const parentNode = createTreeModelInput({ id: "parent_id" }, { filtering: { descriptor: createTestContentDescriptor({ fields: [] }) } });
+    const parentNode = createTreeModelInput(
+      { id: "parent_id" },
+      { filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [] } },
+    );
     const childNode = createTreeModelInput({ id: "child_id" });
     modelSource.modifyModel((model) => {
       model.setChildren(undefined, [parentNode], 0);
@@ -141,6 +144,7 @@ describe("useHierarchyLevelFiltering", () => {
     const node = createTreeModelInput(undefined, {
       filtering: {
         descriptor: createTestContentDescriptor({ fields: [] }),
+        ancestorFilters: [],
         active: filterInfo,
       },
     });
@@ -162,6 +166,7 @@ describe("useHierarchyLevelFiltering", () => {
       {
         filtering: {
           descriptor: createTestContentDescriptor({ fields: [] }),
+          ancestorFilters: [],
           active: filterInfo,
         },
       },
@@ -192,6 +197,7 @@ describe("useHierarchyLevelFiltering", () => {
       {
         filtering: {
           descriptor: createTestContentDescriptor({ fields: [] }),
+          ancestorFilters: [],
           active: filterInfo,
         },
       },
@@ -216,7 +222,7 @@ describe("useHierarchyLevelFiltering", () => {
     nodeLoaderMock.setup((x) => x.loadNode(moq.It.isAny(), 0)).returns(() => applyFilterActionSubject);
     nodeLoaderMock.setup((x) => x.loadNode(moq.It.isAny(), 0)).returns(() => clearFilterActionSubject);
 
-    const node = createTreeModelInput(undefined, { filtering: { descriptor: createTestContentDescriptor({ fields: [] }) } });
+    const node = createTreeModelInput(undefined, { filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [] } });
     modelSource.modifyModel((model) => {
       model.setChildren(undefined, [node], 0);
     });
@@ -237,7 +243,7 @@ describe("useHierarchyLevelFiltering", () => {
     const nodeLoad2 = new Subject<TreeNodeLoadResult>();
     nodeLoaderMock.setup((x) => x.loadNode(moq.It.isAny(), 0)).returns(() => nodeLoad2);
 
-    const node = createTreeModelInput(undefined, { filtering: { descriptor: createTestContentDescriptor({ fields: [] }) } });
+    const node = createTreeModelInput(undefined, { filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [] } });
     modelSource.modifyModel((model) => {
       model.setChildren(undefined, [node], 0);
     });
@@ -256,7 +262,7 @@ describe("useHierarchyLevelFiltering", () => {
   it("unsubscribes from observable if error is thrown", () => {
     const subject = new Subject<TreeNodeLoadResult>();
     nodeLoaderMock.setup((x) => x.loadNode(moq.It.isAny(), 0)).returns(() => subject);
-    const node = createTreeModelInput(undefined, { filtering: { descriptor: createTestContentDescriptor({ fields: [] }) } });
+    const node = createTreeModelInput(undefined, { filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [] } });
     modelSource.modifyModel((model) => {
       model.setChildren(undefined, [node], 0);
     });
