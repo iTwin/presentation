@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Added `buildTestIModel` overloads that take an async callback to set up the iModel. Deprecated the previous ones.",
-  "packageName": "@itwin/presentation-testing",
-  "email": "35135765+grigasp@users.noreply.github.com",
-  "dependentChangeType": "patch"
-}
