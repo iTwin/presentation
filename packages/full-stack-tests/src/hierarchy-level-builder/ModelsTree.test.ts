@@ -134,7 +134,7 @@ function createStatelessProvider(imodel: IModelConnection) {
   schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
   return new TreeNodesProvider({
     schemas,
-    queryBuilder: new ModelsTreeQueryBuilder(schemas),
+    queryBuilder: new ModelsTreeQueryBuilder({ schemas }),
     queryExecutor: imodel,
   });
 }

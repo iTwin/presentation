@@ -92,12 +92,14 @@ class QueryScheduler<T> {
   }
 }
 
+/** @beta */
 export interface TreeNodesProviderProps {
   schemas: SchemaContext;
-  queryBuilder: ITreeQueryBuilder;
   queryExecutor: IQueryExecutor;
+  queryBuilder: ITreeQueryBuilder;
 }
 
+/** @beta */
 export class TreeNodesProvider {
   private _schemas: SchemaContext;
   private _queryBuilder: ITreeQueryBuilder;
@@ -148,7 +150,7 @@ export class TreeNodesProvider {
     return obs;
   }
 
-  public getNodesObservable(parentNode: TreeNode | undefined): Observable<InProgressTreeNode> {
+  private getNodesObservable(parentNode: TreeNode | undefined): Observable<InProgressTreeNode> {
     if (parentNode && Array.isArray(parentNode.children)) {
       return from(parentNode.children);
     }
@@ -307,6 +309,7 @@ function createHideNodesInHierarchyReducer(
   };
 }
 
+/** @internal */
 export function createHideIfNoChildrenReducer(hasNodes: (node: InProgressTreeNode) => Observable<boolean>, stopOnFirstChild: boolean) {
   const enableLogging = false;
   return function (nodes: Observable<InProgressTreeNode>): Observable<InProgressTreeNode> {
@@ -345,6 +348,7 @@ export function createHideIfNoChildrenReducer(hasNodes: (node: InProgressTreeNod
   };
 }
 
+/** @internal */
 export function createMergeInstanceNodesByLabelReducer(directNodesCache: Map<string, Observable<InProgressTreeNode>>) {
   return function mergeInstanceNodesByLabelReducer(nodes: Observable<InProgressTreeNode>): Observable<InProgressTreeNode> {
     const enableLogging = false;

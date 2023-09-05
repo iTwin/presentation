@@ -6,6 +6,7 @@
 import { ECClass, Schema, SchemaContext, SchemaKey } from "@itwin/ecschema-metadata";
 import { InProgressTreeNode } from "./TreeNode";
 
+/** @internal */
 export async function getClass(schemas: SchemaContext, fullClassName: string) {
   const [schemaName, className] = fullClassName.split(/[\.:]/);
   let schema: Schema | undefined;
@@ -27,6 +28,7 @@ export async function getClass(schemas: SchemaContext, fullClassName: string) {
   return nodeClass;
 }
 
+/** @internal */
 export function mergeInstanceNodes<TDirectChildren>(
   lhs: InProgressTreeNode,
   rhs: InProgressTreeNode,
@@ -59,6 +61,7 @@ export function mergeInstanceNodes<TDirectChildren>(
   };
 }
 
+/** @internal */
 export function hasChildren<TNode extends { children?: boolean | Array<unknown> }>(node: TNode) {
   return node.children === true || (Array.isArray(node.children) && node.children.length > 0);
 }

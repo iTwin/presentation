@@ -5,13 +5,16 @@
 
 import { QueryBinder } from "@itwin/core-common";
 
+/** @internal */
 export type ECSqlBindingType = "boolean" | "double" | "id" | "idset" | "int" | "long" | "string" | "point2d" | "point3d";
 
+/** @internal */
 export interface ECSqlBinding {
   type: ECSqlBindingType;
   value?: any;
 }
 
+/** @internal */
 export function bind(bindings: ECSqlBinding[]): QueryBinder {
   const binder = new QueryBinder();
   bindings.forEach((b, i) => {

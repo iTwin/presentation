@@ -5,6 +5,7 @@
 
 import { ClassInfo, InstanceKey } from "@itwin/presentation-common";
 
+/** @beta */
 export type TreeNodeKey =
   | {
       type: "instances";
@@ -15,6 +16,7 @@ export type TreeNodeKey =
       class: ClassInfo;
     };
 
+/** @beta */
 export interface TreeNode {
   key: TreeNodeKey;
   label: string;
@@ -24,6 +26,7 @@ export interface TreeNode {
   directChildren?: any;
 }
 
+/** @internal */
 export interface TreeNodeHandlingParams {
   hideIfNoChildren?: boolean;
   hideInHierarchy?: boolean;
@@ -31,4 +34,5 @@ export interface TreeNodeHandlingParams {
   mergeByLabelId?: string;
 }
 
+/** @internal */
 export type InProgressTreeNode = TreeNode & TreeNodeHandlingParams;
