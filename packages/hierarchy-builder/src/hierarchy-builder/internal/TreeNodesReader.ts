@@ -5,10 +5,9 @@
 
 import { Id64String } from "@itwin/core-bentley";
 import { QueryOptionsBuilder, QueryRowFormat } from "@itwin/core-common";
-import { bind } from "./ECSqlBinding";
-import { IQueryExecutor } from "./IQueryExecutor";
-import { InProgressTreeNode } from "./TreeNode";
-import { QueryDef } from "./TreeQueryBuilder";
+import { IQueryExecutor } from "../IQueryExecutor";
+import { QueryDef } from "../TreeQueryBuilder";
+import { bind, InProgressTreeNode } from "./Common";
 
 /** @internal */
 export interface ITreeQueryResultsReader {

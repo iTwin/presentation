@@ -25,14 +25,3 @@ export interface TreeNode {
   autoExpand?: boolean;
   directChildren?: any;
 }
-
-/** @internal */
-export interface TreeNodeHandlingParams {
-  hideIfNoChildren?: boolean;
-  hideInHierarchy?: boolean;
-  groupByClass?: boolean;
-  mergeByLabelId?: string;
-}
-
-/** @internal */
-export type InProgressTreeNode = TreeNode & TreeNodeHandlingParams;

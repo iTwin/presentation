@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { InstanceKey } from "@itwin/presentation-common";
-import { hasChildren, TreeNode, TreeNodesProvider } from "@itwin/presentation-hierarchy-builder";
+import { TreeNode, TreeNodesProvider } from "@itwin/presentation-hierarchy-builder";
+import { hasChildren } from "@itwin/presentation-hierarchy-builder/lib/cjs/hierarchy-builder/internal/Common";
 
 export interface HierarchyDef<TNode> {
   node: TNode;

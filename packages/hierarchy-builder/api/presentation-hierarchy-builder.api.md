@@ -5,30 +5,12 @@
 ```ts
 
 import { ClassInfo } from '@itwin/presentation-common';
-import { ECClass } from '@itwin/ecschema-metadata';
 import { ECSqlReader } from '@itwin/core-common';
 import { InstanceKey } from '@itwin/presentation-common';
 import { Observable } from 'rxjs';
 import { QueryBinder } from '@itwin/core-common';
 import { QueryOptions } from '@itwin/core-common';
 import { SchemaContext } from '@itwin/ecschema-metadata';
-
-// @internal (undocumented)
-export function createHideIfNoChildrenReducer(hasNodes: (node: InProgressTreeNode) => Observable<boolean>, stopOnFirstChild: boolean): (nodes: Observable<InProgressTreeNode>) => Observable<InProgressTreeNode>;
-
-// @internal (undocumented)
-export function createMergeInstanceNodesByLabelReducer(directNodesCache: Map<string, Observable<InProgressTreeNode>>): (nodes: Observable<InProgressTreeNode>) => Observable<InProgressTreeNode>;
-
-// @internal (undocumented)
-export function getClass(schemas: SchemaContext, fullClassName: string): Promise<ECClass>;
-
-// @internal (undocumented)
-export function hasChildren<TNode extends {
-    children?: boolean | Array<unknown>;
-}>(node: TNode): boolean;
-
-// @internal (undocumented)
-export type InProgressTreeNode = TreeNode & TreeNodeHandlingParams;
 
 // @beta (undocumented)
 export interface IQueryExecutor {
@@ -41,9 +23,6 @@ export interface ITreeQueryBuilder {
     // (undocumented)
     createQueries(parentNode: TreeNode | undefined): Promise<QueryDef[]>;
 }
-
-// @internal (undocumented)
-export function mergeInstanceNodes<TDirectChildren>(lhs: InProgressTreeNode, rhs: InProgressTreeNode, directChildrenMerger: (lhsChildren: TDirectChildren, rhsChildren: TDirectChildren) => TDirectChildren): InProgressTreeNode;
 
 // @beta (undocumented)
 export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
@@ -85,18 +64,6 @@ export interface TreeNode {
     key: TreeNodeKey;
     // (undocumented)
     label: string;
-}
-
-// @internal (undocumented)
-export interface TreeNodeHandlingParams {
-    // (undocumented)
-    groupByClass?: boolean;
-    // (undocumented)
-    hideIfNoChildren?: boolean;
-    // (undocumented)
-    hideInHierarchy?: boolean;
-    // (undocumented)
-    mergeByLabelId?: string;
 }
 
 // @beta (undocumented)

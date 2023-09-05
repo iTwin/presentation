@@ -5,9 +5,9 @@
 
 import { expect } from "chai";
 import { from, Observable } from "rxjs";
-import { InProgressTreeNode } from "../hierarchy-builder/TreeNode";
-import { createMergeInstanceNodesByLabelReducer } from "../hierarchy-builder/TreeNodesProvider";
-import { createTestInstanceKey, createTestNode, getObservableResult } from "./Utils";
+import { InProgressTreeNode } from "../../../hierarchy-builder/internal/Common";
+import { createMergeInstanceNodesByLabelReducer } from "../../../hierarchy-builder/internal/operators/MergeInstanceNodesByLabel";
+import { createTestInstanceKey, createTestNode, getObservableResult } from "../../Utils";
 
 describe("mergeInstanceNodesByLabelReducer", () => {
   const directNodesCache = new Map<string, Observable<InProgressTreeNode>>();

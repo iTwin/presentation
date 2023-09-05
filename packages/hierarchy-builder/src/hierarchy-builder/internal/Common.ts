@@ -3,8 +3,22 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { from, merge, Observable } from "rxjs";
+import { QueryBinder } from "@itwin/core-common";
 import { ECClass, Schema, SchemaContext, SchemaKey } from "@itwin/ecschema-metadata";
-import { InProgressTreeNode } from "./TreeNode";
+import { ECSqlBinding } from "../ECSqlBinding";
+import { TreeNode } from "../TreeNode";
+
+/** @internal */
+export interface TreeNodeHandlingParams {
+  hideIfNoChildren?: boolean;
+  hideInHierarchy?: boolean;
+  groupByClass?: boolean;
+  mergeByLabelId?: string;
+}
+
+/** @internal */
+export type InProgressTreeNode = TreeNode & TreeNodeHandlingParams;
 
 /** @internal */
 export async function getClass(schemas: SchemaContext, fullClassName: string) {
@@ -64,4 +78,67 @@ export function mergeInstanceNodes<TDirectChildren>(
 /** @internal */
 export function hasChildren<TNode extends { children?: boolean | Array<unknown> }>(node: TNode) {
   return node.children === true || (Array.isArray(node.children) && node.children.length > 0);
+}
+
+/** @internal */
+export function mergeInstanceNodesObs(lhs: InProgressTreeNode, rhs: InProgressTreeNode, directNodesCache: Map<string, Observable<InProgressTreeNode>>) {
+  const merged = mergeInstanceNodes<Observable<InProgressTreeNode>>(lhs, rhs, () => from<InProgressTreeNode[]>([]));
+  mergeDirectNodeObservables(lhs, rhs, merged, directNodesCache);
+  return merged;
+}
+
+/** @internal */
+export function mergeDirectNodeObservables(
+  a: InProgressTreeNode,
+  b: InProgressTreeNode,
+  m: InProgressTreeNode,
+  cache: Map<string, Observable<InProgressTreeNode>>,
+) {
+  const cachedA = cache.get(JSON.stringify(a.key));
+  if (!cachedA) {
+    return;
+  }
+  const cachedB = cache.get(JSON.stringify(b.key));
+  if (!cachedB) {
+    return;
+  }
+  const merged = merge(cachedA, cachedB);
+  cache.set(JSON.stringify(m.key), merged);
+}
+
+/** @internal */
+export function bind(bindings: ECSqlBinding[]): QueryBinder {
+  const binder = new QueryBinder();
+  bindings.forEach((b, i) => {
+    switch (b.type) {
+      case "boolean":
+        binder.bindBoolean(i + 1, b.value);
+        break;
+      case "double":
+        binder.bindDouble(i + 1, b.value);
+        break;
+      case "id":
+        binder.bindId(i + 1, b.value);
+        break;
+      case "idset":
+        binder.bindIdSet(i + 1, b.value);
+        break;
+      case "int":
+        binder.bindInt(i + 1, b.value);
+        break;
+      case "long":
+        binder.bindLong(i + 1, b.value);
+        break;
+      case "point2d":
+        binder.bindPoint2d(i + 1, b.value);
+        break;
+      case "point3d":
+        binder.bindPoint3d(i + 1, b.value);
+        break;
+      case "string":
+        binder.bindString(i + 1, b.value);
+        break;
+    }
+  });
+  return binder;
 }

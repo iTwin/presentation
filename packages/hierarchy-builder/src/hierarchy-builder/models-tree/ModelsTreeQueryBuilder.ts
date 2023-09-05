@@ -6,8 +6,8 @@
 import { Id64String } from "@itwin/core-bentley";
 import { ECClass, SchemaContext } from "@itwin/ecschema-metadata";
 import { InstanceKey } from "@itwin/presentation-common";
-import { getClass } from "../Common";
 import { ECSqlBinding } from "../ECSqlBinding";
+import { getClass } from "../internal/Common";
 import { TreeNode } from "../TreeNode";
 import { ITreeQueryBuilder, QueryDef } from "../TreeQueryBuilder";
 
