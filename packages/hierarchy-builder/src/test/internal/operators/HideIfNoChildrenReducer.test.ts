@@ -6,8 +6,8 @@
 import { expect } from "chai";
 import { from, of } from "rxjs";
 import sinon from "sinon";
-import { createHideIfNoChildrenReducer } from "../hierarchy-builder/TreeNodesProvider";
-import { createTestNode, getObservableResult } from "./Utils";
+import { createHideIfNoChildrenReducer } from "../../../hierarchy-builder/internal/operators/HideIfNoChildren";
+import { createTestNode, getObservableResult } from "../../Utils";
 
 describe("hideIfNoChildrenReducer", () => {
   it("returns nodes that don't need hiding", async () => {

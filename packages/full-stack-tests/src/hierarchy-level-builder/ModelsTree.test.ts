@@ -5,32 +5,38 @@
 
 import { expect } from "chai";
 import { PrimitiveValue } from "@itwin/appui-abstract";
+import { DelayLoadedTreeNodeItem } from "@itwin/components-react";
+import { assert, OrderedId64Iterable } from "@itwin/core-bentley";
+import { IModelConnection, SnapshotConnection } from "@itwin/core-frontend";
+import { SchemaContext } from "@itwin/ecschema-metadata";
+import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { InstanceKey, NodeKey, Ruleset } from "@itwin/presentation-common";
 import { isPresentationTreeNodeItem, PresentationTreeDataProvider, PresentationTreeNodeItem } from "@itwin/presentation-components";
 import { ModelsTreeQueryBuilder, TreeNode, TreeNodesProvider } from "@itwin/presentation-hierarchy-builder";
 import { initialize, terminate } from "../IntegrationTests";
-import { IModelConnection, SnapshotConnection } from "@itwin/core-frontend";
-import { SchemaContext } from "@itwin/ecschema-metadata";
-import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-import { assert, OrderedId64Iterable } from "@itwin/core-bentley";
-import { DelayLoadedTreeNodeItem } from "@itwin/components-react";
 
 describe("Models tree", async () => {
-  before(async () => {
+  let imodel!: IModelConnection;
+
+  before(async function () {
     await initialize();
-  });
 
-  after(async () => {
-    await terminate();
-  });
-
-  it("produces the same hierarchy as native impl", async function () {
     const imodelPath = process.env.TEST_IMODEL_PATH;
     if (!imodelPath) {
       this.skip();
     }
 
-    const imodel = await SnapshotConnection.openFile(imodelPath);
+    await SnapshotConnection.openFile(imodelPath);
+  });
+
+  after(async () => {
+    if (imodel) {
+      await imodel.close();
+    }
+    await terminate();
+  });
+
+  it("produces the same hierarchy as native impl", async function () {
     const nativeProvider = createNativeProvider(imodel);
     const statelessProvider = createStatelessProvider(imodel);
     let nodesCreated = 0;
@@ -128,7 +134,7 @@ function createStatelessProvider(imodel: IModelConnection) {
   schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
   return new TreeNodesProvider({
     schemas,
-    queryBuilder: new ModelsTreeQueryBuilder(schemas),
+    queryBuilder: new ModelsTreeQueryBuilder({ schemas }),
     queryExecutor: imodel,
   });
 }

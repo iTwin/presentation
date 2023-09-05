@@ -3,9 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { InstanceKey } from "@itwin/presentation-common";
 import { Observable } from "rxjs";
-import { InProgressTreeNode } from "../hierarchy-builder/TreeNode";
+import { InstanceKey } from "../hierarchy-builder/EC";
+import { InProgressTreeNode } from "../hierarchy-builder/internal/Common";
 
 export async function getObservableResult<T>(obs: Observable<T>): Promise<Array<T>> {
   const arr = new Array<T>();
