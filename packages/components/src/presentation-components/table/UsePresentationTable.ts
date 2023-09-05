@@ -106,38 +106,52 @@ export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(
   const { options, sort, filter } = useTableOptions({ columns });
   const { rows, isLoading, loadMoreRows } = useRows({ imodel, ruleset, keys, pageSize, options });
 
-  const tableGuid: string = useMemo(() => window.crypto.randomUUID(), []);
+  const unifiedSelectionLevel = useMemo(() => (unifiedSelection?.selectionLevel ?? 0) + 1, [unifiedSelection?.selectionLevel]);
 
   useEffect(() => {
-    const disposeListener = Presentation.selection.selectionChange.addListener(({ level, keys: toggledRowKeys, source }) => {
-      if (level !== (unifiedSelection?.selectionLevel ?? 0) + 1 || source === tableGuid) {
-        return;
-      }
-
+    const updateSelectedRows = (toggledRowKeys: Readonly<KeySet>) => {
       const rowsToAddToSelection: TableRowDefinition[] = [];
       toggledRowKeys.forEach((key) => {
         // should return just one row
-        const selectedRow = rows.filter((row) => row.key === JSON.stringify(key))[0];
-        rowsToAddToSelection.push(selectedRow);
-      });
+        const selectedRow = rows.filter((row) => row.key === JSON.stringify(key));
 
+        if (selectedRow[0] !== undefined) {
+          rowsToAddToSelection.push(selectedRow[0]);
+        }
+      });
       setSelectedRows(rowsToAddToSelection);
+    };
+
+    const selectedRowKeys = Presentation.selection.getSelection(imodel, unifiedSelectionLevel) ?? emptyKeySet;
+    if (selectedRowKeys !== emptyKeySet) {
+      updateSelectedRows(selectedRowKeys);
+    }
+
+    const disposeListener = Presentation.selection.selectionChange.addListener(({ level, keys: toggledRowKeys }) => {
+      if (level !== unifiedSelectionLevel) {
+        return;
+      }
+
+      updateSelectedRows(toggledRowKeys);
     });
 
     return disposeListener;
-  }, [rows, tableGuid, unifiedSelection?.selectionLevel]);
+  }, [rows, unifiedSelectionLevel, imodel]);
 
   const onSelect = (selectedData: string[]) => {
     const parsedKeys: Key[] = [];
     for (const passedData of selectedData) {
       try {
         const parsedKey: Key = JSON.parse(passedData);
-        parsedKeys.push(parsedKey);
+        if (rows.some((row) => row.key === JSON.stringify(parsedKey))) {
+          parsedKeys.push(parsedKey);
+        }
       } catch {
         continue;
       }
     }
-    Presentation.selection.replaceSelection(tableGuid, imodel, parsedKeys, (unifiedSelection?.selectionLevel ?? 0) + 1);
+
+    unifiedSelection?.replaceSelection(parsedKeys, unifiedSelectionLevel);
   };
 
   return {
@@ -151,4 +165,5 @@ export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(
     selectedRows: useMemo(() => (selectedRows ?? []).map(rowMapper), [selectedRows, rowMapper]),
   };
 }
+
 const emptyKeySet = new KeySet();

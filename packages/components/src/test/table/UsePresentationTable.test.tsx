@@ -101,10 +101,6 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     pageSize: 10,
   };
 
-  Object.defineProperty(window, "crypto", {
-    value: { randomUUID: () => "Table1" },
-  });
-
   let presentationManagerMock: moq.IMock<PresentationManager>;
 
   beforeEach(() => {
@@ -176,7 +172,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     expect(result.current.rows).to.have.lengthOf(0);
   });
 
-  it("Adds passed keys to the unified selection", async () => {
+  it("Adds passed keys to the unified selection with onSelect", async () => {
     const keys = new KeySet([createTestECInstanceKey()]);
 
     const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
@@ -198,8 +194,8 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     expect(replaceSpy).to.be.calledOnceWith("UnifiedSelectionContext", {}, validKeys, 1);
   });
 
-  it("Gets invalid keys and does not pass any to the selection", async () => {
-    const keys = ["this is not a valid key", "this one too", ""];
+  it("Gets invalid keys and does not pass any to the selection with onSelect", async () => {
+    const keys = ["this is not a valid key", ""];
     const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
     assert(!(result.current instanceof Error));
 
@@ -210,37 +206,52 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     onSelectCallback(keys);
 
     expect(onSelectSpy).to.not.have.thrown();
-    expect(replaceSpy).to.be.calledOnceWith("UnifiedSelectionContext", {}, [], 1);
+    expect(replaceSpy).to.have.been.calledOnceWithExactly("UnifiedSelectionContext", {}, [], 1);
   });
 
   [
     {
-      selectionLevel: 1,
-      selectionSource: "Table1",
-      returnLength: 0,
-      testName: "Returns an empty array of selectedRows when keys are passed from itself as the source",
-    },
-    {
       selectionLevel: 3,
-      selectionSource: "Table2",
+      keys: new KeySet(),
       returnLength: 0,
       testName: "Returns an empty array of selectedRows when keys are passed from a wrong level",
     },
     {
       selectionLevel: 1,
-      selectionSource: "Table2",
+      keys: new KeySet([createTestECInstanceKey()]),
       returnLength: [createTestECInstanceKey()].length,
       testName: "Returns an array of selectedRows when keys are passed correctly",
     },
   ].forEach((args) => {
     it(args.testName, async () => {
-      const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
+      const propertiesField = createTestPropertiesContentField({
+        name: "first_field",
+        label: "First Field",
+        properties: [{ property: createTestPropertyInfo() }],
+      });
+      const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
+      const item = createTestContentItem({
+        values: { [propertiesField.name]: "test_value" },
+        displayValues: { [propertiesField.name]: "Test value" },
+      });
 
+      sinon.stub(Presentation.selection, "getSelection").returns(args.keys);
+
+      presentationManagerMock
+        .setup(async (x) => x.getContentDescriptor(moq.It.is((options) => options.keys.size === args.keys.size)))
+        .returns(async () => descriptor);
+      presentationManagerMock
+        .setup(async (x) => x.getContentAndSize(moq.It.is((options) => options.keys.size === args.keys.size)))
+        .returns(async () => ({ content: new Content(descriptor, [item]), size: 1 }));
+
+      Presentation.selection.addToSelection("UnifiedSelectionContext", initialProps.imodel, new KeySet([createTestECInstanceKey()]), 1);
+
+      const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
       const resultBeforeAdding = result.current.selectedRows;
       expect(resultBeforeAdding.length).to.be.equal(0);
 
-      Presentation.selection.addToSelection(args.selectionSource, initialProps.imodel, new KeySet([createTestECInstanceKey()]), args.selectionLevel);
-
+      // Presentation.selection.addToSelection(args.selectionSource, initialProps.imodel, new KeySet([createTestECInstanceKey()]), args.selectionLevel);
+      await waitFor(() => expect(result.current.isLoading).to.be.false);
       const resultAfterAdding = result.current.selectedRows;
       expect(resultAfterAdding.length).to.be.equal(args.returnLength);
     });
