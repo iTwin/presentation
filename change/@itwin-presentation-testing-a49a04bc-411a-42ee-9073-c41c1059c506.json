@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Added `TestIModelBuilder.importSchema` API to allow creating iModels with custom schemas.",
-  "packageName": "@itwin/presentation-testing",
-  "email": "35135765+grigasp@users.noreply.github.com",
-  "dependentChangeType": "patch"
-}
