@@ -7,7 +7,7 @@
 import { from, mergeMap, Observable, toArray } from "rxjs";
 import { Id64 } from "@itwin/core-bentley";
 import { SchemaContext } from "@itwin/ecschema-metadata";
-import { ClassInfo } from "@itwin/presentation-common";
+import { ClassInfo } from "../../EC";
 import { getClass, InProgressTreeNode } from "../Common";
 import { sortNodesByLabelReducer } from "./Sorting";
 

@@ -88,7 +88,7 @@ export class TreeNodesProvider {
     const directChildren = this.ensureDirectChildren(parentNode);
     const result = directChildren.pipe(
       createMergeInstanceNodesByLabelReducer(this._directNodesCache),
-      createHideIfNoChildrenReducer((n) => this.hasNodes(n), false),
+      createHideIfNoChildrenReducer((n) => this.hasNodesObservable(n), false),
       createHideNodesInHierarchyReducer((n) => this.getNodesObservable(n), this._directNodesCache, false),
       sortNodesByLabelReducer,
       createClassGroupingReducer(this._schemas),
@@ -102,7 +102,7 @@ export class TreeNodesProvider {
       this.getNodesObservable(parentNode)
         // finalize before returning
         .pipe(
-          createDetermineChildrenReducer((n) => this.hasNodes(n)),
+          createDetermineChildrenReducer((n) => this.hasNodesObservable(n)),
           supplyIconsReducer,
         )
         // load all nodes into the array and resolve
@@ -120,7 +120,7 @@ export class TreeNodesProvider {
     });
   }
 
-  public hasNodes(node: TreeNode): Observable<boolean> {
+  private hasNodesObservable(node: TreeNode): Observable<boolean> {
     const enableLogging = false;
     if (Array.isArray(node.children)) {
       return of(node.children.length > 0);
@@ -130,7 +130,7 @@ export class TreeNodesProvider {
     return directChildren
       .pipe(
         tap((n) => enableLogging && console.log(`HasNodes: partial node before HideIfNoChildrenReducer: ${JSON.stringify(n)}`)),
-        createHideIfNoChildrenReducer((n) => this.hasNodes(n), true),
+        createHideIfNoChildrenReducer((n) => this.hasNodesObservable(n), true),
         tap((n) => enableLogging && console.log(`HasNodes: partial node before HideNodesInHierarchyReducer: ${JSON.stringify(n)}`)),
         createHideNodesInHierarchyReducer((n) => this.getNodesObservable(n), this._directNodesCache, true),
       )
@@ -148,6 +148,21 @@ export class TreeNodesProvider {
         }),
         tap((r) => enableLogging && console.log(`HasNodes: result: ${r}`)),
       );
+  }
+
+  public async hasNodes(node: TreeNode): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      this.hasNodesObservable(node)
+        .pipe(take(1))
+        .subscribe({
+          next(res) {
+            resolve(res);
+          },
+          error(err) {
+            reject(err);
+          },
+        });
+    });
   }
 }
 

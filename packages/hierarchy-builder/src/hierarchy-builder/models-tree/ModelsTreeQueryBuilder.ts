@@ -5,7 +5,6 @@
 
 import { Id64String } from "@itwin/core-bentley";
 import { ECClass, SchemaContext } from "@itwin/ecschema-metadata";
-import { InstanceKey } from "@itwin/presentation-common";
 import { ECSqlBinding } from "../ECSqlBinding";
 import { getClass } from "../internal/Common";
 import { TreeNode } from "../TreeNode";
@@ -16,7 +15,11 @@ export interface ModelsTreeQueryBuilderProps {
   schemas: SchemaContext;
 }
 
-/** @beta */
+/**
+ * This class is responsible for building the Models tree hierarchy - it's only part of this package
+ * for testing reasons.
+ * @beta
+ */
 export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
   private _schemas: SchemaContext;
 
@@ -78,12 +81,7 @@ export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
     ];
   }
 
-  private async createChildNodesQuery(
-    parentNodeClass: ECClass,
-    parentInstanceIds: Id64String[],
-    parentNode: TreeNode,
-    _targetInstances?: InstanceKey[],
-  ): Promise<QueryDef[]> {
+  private async createChildNodesQuery(parentNodeClass: ECClass, parentInstanceIds: Id64String[], parentNode: TreeNode): Promise<QueryDef[]> {
     if (await parentNodeClass.is("Subject", "BisCore")) {
       return this.createSubjectChildrenQuery(parentInstanceIds, parentNode);
     }

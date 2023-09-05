@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ClassInfo, InstanceKey } from "@itwin/presentation-common";
+import { ClassInfo, InstanceKey } from "./EC";
 
 /** @beta */
 export type TreeNodeKey =

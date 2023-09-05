@@ -4,10 +4,8 @@
 
 ```ts
 
-import { ClassInfo } from '@itwin/presentation-common';
 import { ECSqlReader } from '@itwin/core-common';
-import { InstanceKey } from '@itwin/presentation-common';
-import { Observable } from 'rxjs';
+import { Id64String } from '@itwin/core-bentley';
 import { QueryBinder } from '@itwin/core-common';
 import { QueryOptions } from '@itwin/core-common';
 import { SchemaContext } from '@itwin/ecschema-metadata';
@@ -24,7 +22,7 @@ export interface ITreeQueryBuilder {
     createQueries(parentNode: TreeNode | undefined): Promise<QueryDef[]>;
 }
 
-// @beta (undocumented)
+// @beta
 export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
     constructor(props: ModelsTreeQueryBuilderProps);
     createQueries(parentNode: TreeNode | undefined): Promise<QueryDef[]>;
@@ -81,7 +79,7 @@ export class TreeNodesProvider {
     // (undocumented)
     getNodes(parentNode: TreeNode | undefined): Promise<TreeNode[]>;
     // (undocumented)
-    hasNodes(node: TreeNode): Observable<boolean>;
+    hasNodes(node: TreeNode): Promise<boolean>;
 }
 
 // @beta (undocumented)
