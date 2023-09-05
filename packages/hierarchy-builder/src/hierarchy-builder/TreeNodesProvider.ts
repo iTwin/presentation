@@ -19,8 +19,8 @@ import { supplyIconsReducer } from "./internal/operators/SupplyIcons";
 import { QueryScheduler } from "./internal/QueryScheduler";
 import { applyLimit, TreeQueryResultsReader } from "./internal/TreeNodesReader";
 import { IQueryExecutor } from "./IQueryExecutor";
+import { ITreeQueryBuilder } from "./ITreeQueryBuilder";
 import { TreeNode } from "./TreeNode";
-import { ITreeQueryBuilder } from "./TreeQueryBuilder";
 
 /** @beta */
 export interface TreeNodesProviderProps {

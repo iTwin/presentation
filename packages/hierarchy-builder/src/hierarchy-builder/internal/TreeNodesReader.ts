@@ -6,7 +6,7 @@
 import { Id64String } from "@itwin/core-bentley";
 import { QueryOptionsBuilder, QueryRowFormat } from "@itwin/core-common";
 import { IQueryExecutor } from "../IQueryExecutor";
-import { QueryDef } from "../TreeQueryBuilder";
+import { QueryDef } from "../ITreeQueryBuilder";
 import { bind, InProgressTreeNode } from "./Common";
 
 /** @internal */
