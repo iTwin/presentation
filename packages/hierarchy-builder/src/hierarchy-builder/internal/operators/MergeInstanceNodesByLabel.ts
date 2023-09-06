@@ -6,15 +6,15 @@
 
 import { from, merge, mergeMap, Observable, partition, reduce, share, tap } from "rxjs";
 import { assert, DuplicatePolicy, SortedArray } from "@itwin/core-bentley";
-import { InProgressTreeNode, mergeDirectNodeObservables, mergeInstanceNodesObs } from "../Common";
+import { InProgressHierarchyNode, mergeDirectNodeObservables, mergeInstanceNodesObs } from "../Common";
 
 /** @internal */
-export function createMergeInstanceNodesByLabelReducer(directNodesCache: Map<string, Observable<InProgressTreeNode>>) {
-  return function mergeInstanceNodesByLabelReducer(nodes: Observable<InProgressTreeNode>): Observable<InProgressTreeNode> {
+export function createMergeInstanceNodesByLabelReducer(directNodesCache: Map<string, Observable<InProgressHierarchyNode>>) {
+  return function mergeInstanceNodesByLabelReducer(nodes: Observable<InProgressHierarchyNode>): Observable<InProgressHierarchyNode> {
     const enableLogging = false;
-    class SortedNodesList extends SortedArray<InProgressTreeNode> {
+    class SortedNodesList extends SortedArray<InProgressHierarchyNode> {
       public constructor() {
-        const comp = (lhs: InProgressTreeNode, rhs: InProgressTreeNode): number => {
+        const comp = (lhs: InProgressHierarchyNode, rhs: InProgressHierarchyNode): number => {
           const labelCompare = lhs.label.localeCompare(rhs.label);
           if (labelCompare !== 0) {
             return labelCompare;
@@ -23,12 +23,12 @@ export function createMergeInstanceNodesByLabelReducer(directNodesCache: Map<str
         };
         super(comp, DuplicatePolicy.Retain);
       }
-      public replace(pos: number, replacement: InProgressTreeNode) {
+      public replace(pos: number, replacement: InProgressHierarchyNode) {
         assert(this._compare(this._array[pos], replacement) === 0);
         this._array[pos] = replacement;
       }
     }
-    function tryMergeNodes(lhs: InProgressTreeNode, rhs: InProgressTreeNode): InProgressTreeNode | undefined {
+    function tryMergeNodes(lhs: InProgressHierarchyNode, rhs: InProgressHierarchyNode): InProgressHierarchyNode | undefined {
       if (lhs.mergeByLabelId !== rhs.mergeByLabelId) {
         return undefined;
       }

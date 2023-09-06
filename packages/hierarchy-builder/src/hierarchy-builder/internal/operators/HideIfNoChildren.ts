@@ -5,12 +5,12 @@
 /* eslint-disable no-console */
 
 import { defer, filter, map, merge, mergeMap, Observable, partition, share, tap } from "rxjs";
-import { hasChildren, InProgressTreeNode } from "../Common";
+import { hasChildren, InProgressHierarchyNode } from "../Common";
 
 /** @internal */
-export function createHideIfNoChildrenReducer(hasNodes: (node: InProgressTreeNode) => Observable<boolean>, stopOnFirstChild: boolean) {
+export function createHideIfNoChildrenReducer(hasNodes: (node: InProgressHierarchyNode) => Observable<boolean>, stopOnFirstChild: boolean) {
   const enableLogging = false;
-  return function (nodes: Observable<InProgressTreeNode>): Observable<InProgressTreeNode> {
+  return function (nodes: Observable<InProgressHierarchyNode>): Observable<InProgressHierarchyNode> {
     const [needsHide, doesntNeedHide] = partition(
       nodes.pipe(
         tap((n) => `HideIfNoChildrenReducer in: ${n.label}`),

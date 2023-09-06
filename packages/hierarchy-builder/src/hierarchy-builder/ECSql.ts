@@ -11,3 +11,10 @@ export interface ECSqlBinding {
   type: ECSqlBindingType;
   value?: any;
 }
+
+/** @beta */
+export interface ECSqlQueryDef {
+  ctes?: string[];
+  ecsql: string;
+  bindings?: ECSqlBinding[];
+}

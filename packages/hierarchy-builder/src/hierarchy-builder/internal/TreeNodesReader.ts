@@ -5,19 +5,19 @@
 
 import { Id64String } from "@itwin/core-bentley";
 import { QueryOptionsBuilder, QueryRowFormat } from "@itwin/core-common";
+import { ECSqlQueryDef } from "../ECSql";
 import { IQueryExecutor } from "../IQueryExecutor";
-import { QueryDef } from "../ITreeQueryBuilder";
-import { bind, InProgressTreeNode } from "./Common";
+import { bind, InProgressHierarchyNode } from "./Common";
 
 /** @internal */
 export interface ITreeQueryResultsReader {
-  read(executor: IQueryExecutor, query: QueryDef): Promise<InProgressTreeNode[]>;
+  read(executor: IQueryExecutor, query: ECSqlQueryDef): Promise<InProgressHierarchyNode[]>;
 }
 
 /** @internal */
 export class TreeQueryResultsReader implements ITreeQueryResultsReader {
-  public async read(executor: IQueryExecutor, query: QueryDef): Promise<InProgressTreeNode[]> {
-    const nodes = new Array<InProgressTreeNode>();
+  public async read(executor: IQueryExecutor, query: ECSqlQueryDef): Promise<InProgressHierarchyNode[]> {
+    const nodes = new Array<InProgressHierarchyNode>();
     const reader = createECSqlReader(executor, query);
     while (await reader.step()) {
       if (nodes.length >= ROWS_LIMIT) {
@@ -44,7 +44,7 @@ interface RowDef {
 }
 /* eslint-enable @typescript-eslint/naming-convention */
 
-function parseNode(row: RowDef): InProgressTreeNode {
+function parseNode(row: RowDef): InProgressHierarchyNode {
   const parsedExtendedData = row.ExtendedData ? JSON.parse(row.ExtendedData) : undefined;
   return {
     label: row.DisplayLabel,
@@ -75,7 +75,7 @@ export function applyLimit(ecsql: string, ctes?: string[]) {
   `;
 }
 
-function createECSqlReader(executor: IQueryExecutor, query: QueryDef) {
+function createECSqlReader(executor: IQueryExecutor, query: ECSqlQueryDef) {
   const opts = new QueryOptionsBuilder();
   opts.setRowFormat(QueryRowFormat.UseECSqlPropertyNames);
   return executor.createQueryReader(query.ecsql, bind(query.bindings ?? []), opts.getOptions());

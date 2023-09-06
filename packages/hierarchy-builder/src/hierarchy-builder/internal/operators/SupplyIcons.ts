@@ -5,10 +5,10 @@
 /* eslint-disable no-console */
 
 import { map, Observable } from "rxjs";
-import { TreeNode } from "../../TreeNode";
+import { HierarchyNode } from "../../HierarchyNode";
 
 /** @internal */
-export function supplyIconsReducer(nodes: Observable<TreeNode>): Observable<TreeNode> {
+export function supplyIconsReducer(nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
   return nodes.pipe(
     map((node) => {
       if (node.key.type !== "class-grouping") {

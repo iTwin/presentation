@@ -11,83 +11,121 @@ import { QueryOptions } from '@itwin/core-common';
 import { SchemaContext } from '@itwin/ecschema-metadata';
 
 // @beta (undocumented)
-export interface IQueryExecutor {
+export interface ClassGroupingNodeKey {
     // (undocumented)
-    createQueryReader(ecsql: string, params?: QueryBinder, config?: QueryOptions): ECSqlReader;
+    class: ClassInfo;
+    // (undocumented)
+    type: "class-grouping";
 }
 
 // @beta (undocumented)
-export interface ITreeQueryBuilder {
-    // (undocumented)
-    createQueries(parentNode: TreeNode | undefined): Promise<QueryDef[]>;
-}
-
-// @beta
-export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
-    constructor(props: ModelsTreeQueryBuilderProps);
-    createQueries(parentNode: TreeNode | undefined): Promise<QueryDef[]>;
+export interface ClassInfo {
+    id: Id64String;
+    label: string;
+    name: string;
 }
 
 // @beta (undocumented)
-export interface ModelsTreeQueryBuilderProps {
+export interface ECSqlBinding {
     // (undocumented)
-    schemas: SchemaContext;
+    type: ECSqlBindingType;
+    // (undocumented)
+    value?: any;
 }
 
 // @beta (undocumented)
-export interface QueryDef {
+export type ECSqlBindingType = "boolean" | "double" | "id" | "idset" | "int" | "long" | "string" | "point2d" | "point3d";
+
+// @beta (undocumented)
+export interface ECSqlQueryDef {
     // (undocumented)
     bindings?: ECSqlBinding[];
     // (undocumented)
     ctes?: string[];
     // (undocumented)
     ecsql: string;
-    // (undocumented)
-    fullClassName: string;
 }
 
 // @beta (undocumented)
-export interface TreeNode {
+export interface HierarchyLevelDefinition {
+    // (undocumented)
+    fullClassName: string;
+    // (undocumented)
+    query: ECSqlQueryDef;
+}
+
+// @beta (undocumented)
+export interface HierarchyNode {
     // (undocumented)
     autoExpand?: boolean;
     // (undocumented)
-    children: undefined | boolean | Array<TreeNode>;
-    // (undocumented)
-    directChildren?: any;
+    children: undefined | boolean | Array<HierarchyNode>;
     // (undocumented)
     extendedData?: {
         [key: string]: any;
     };
     // (undocumented)
-    key: TreeNodeKey;
+    key: HierarchyNodeKey;
     // (undocumented)
     label: string;
 }
 
 // @beta (undocumented)
-export type TreeNodeKey = {
-    type: "instances";
-    instanceKeys: InstanceKey[];
-} | {
-    type: "class-grouping";
-    class: ClassInfo;
-};
+export type HierarchyNodeKey = InstancesNodeKey | ClassGroupingNodeKey;
 
 // @beta (undocumented)
-export class TreeNodesProvider {
-    constructor(props: TreeNodesProviderProps);
+export class HierarchyProvider {
+    constructor(props: HierarchyProviderProps);
     // (undocumented)
-    getNodes(parentNode: TreeNode | undefined): Promise<TreeNode[]>;
+    getNodes(parentNode: HierarchyNode | undefined): Promise<HierarchyNode[]>;
     // (undocumented)
-    hasNodes(node: TreeNode): Promise<boolean>;
+    hasNodes(node: HierarchyNode): Promise<boolean>;
 }
 
 // @beta (undocumented)
-export interface TreeNodesProviderProps {
+export interface HierarchyProviderProps {
     // (undocumented)
-    queryBuilder: ITreeQueryBuilder;
+    queryBuilder: IHierarchyDefinition;
     // (undocumented)
     queryExecutor: IQueryExecutor;
+    // (undocumented)
+    schemas: SchemaContext;
+}
+
+// @beta (undocumented)
+export interface IHierarchyDefinition {
+    // (undocumented)
+    defineHierarchyLevel(parentNode: HierarchyNode | undefined): Promise<HierarchyLevelDefinition[]>;
+}
+
+// @beta (undocumented)
+export interface InstanceKey {
+    className: string;
+    id: Id64String;
+}
+
+// @beta (undocumented)
+export interface InstancesNodeKey {
+    // (undocumented)
+    instanceKeys: InstanceKey[];
+    // (undocumented)
+    type: "instances";
+}
+
+// @beta (undocumented)
+export interface IQueryExecutor {
+    // (undocumented)
+    createQueryReader(ecsql: string, params?: QueryBinder, config?: QueryOptions): ECSqlReader;
+}
+
+// @beta
+export class ModelsTreeQueryBuilder implements IHierarchyDefinition {
+    constructor(props: ModelsTreeQueryBuilderProps);
+    defineHierarchyLevel(parentNode: HierarchyNode | undefined): Promise<HierarchyLevelDefinition[]>;
+}
+
+// @beta (undocumented)
+export interface ModelsTreeQueryBuilderProps {
     // (undocumented)
     schemas: SchemaContext;
 }

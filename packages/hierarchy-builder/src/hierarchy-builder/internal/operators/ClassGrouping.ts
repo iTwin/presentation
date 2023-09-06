@@ -8,16 +8,16 @@ import { from, mergeMap, Observable, toArray } from "rxjs";
 import { Id64 } from "@itwin/core-bentley";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ClassInfo } from "../../EC";
-import { getClass, InProgressTreeNode } from "../Common";
+import { getClass, InProgressHierarchyNode } from "../Common";
 import { sortNodesByLabelReducer } from "./Sorting";
 
 /** @internal */
 export function createClassGroupingReducer(schemas: SchemaContext) {
   interface ClassGroupingInformation {
-    ungrouped: Array<InProgressTreeNode>;
-    grouped: Map<string, { class: ClassInfo; groupedNodes: Array<InProgressTreeNode> }>;
+    ungrouped: Array<InProgressHierarchyNode>;
+    grouped: Map<string, { class: ClassInfo; groupedNodes: Array<InProgressHierarchyNode> }>;
   }
-  async function createClassGroupingInformation(nodes: InProgressTreeNode[]): Promise<ClassGroupingInformation> {
+  async function createClassGroupingInformation(nodes: InProgressHierarchyNode[]): Promise<ClassGroupingInformation> {
     const groupings: ClassGroupingInformation = { ungrouped: [], grouped: new Map() };
     for (const node of nodes) {
       if (node.key.type === "instances" && node.groupByClass) {
@@ -38,8 +38,8 @@ export function createClassGroupingReducer(schemas: SchemaContext) {
     }
     return groupings;
   }
-  function groupNodes(groupings: ClassGroupingInformation): InProgressTreeNode[] & { hasClassGroupingNodes?: boolean } {
-    const outNodes = new Array<InProgressTreeNode>();
+  function groupNodes(groupings: ClassGroupingInformation): InProgressHierarchyNode[] & { hasClassGroupingNodes?: boolean } {
+    const outNodes = new Array<InProgressHierarchyNode>();
     groupings.grouped.forEach((entry) => {
       outNodes.push({
         label: entry.class.label,
@@ -54,7 +54,7 @@ export function createClassGroupingReducer(schemas: SchemaContext) {
     (outNodes as any).hasClassGroupingNodes = groupings.grouped.size > 0;
     return outNodes;
   }
-  return function (nodes: Observable<InProgressTreeNode>): Observable<InProgressTreeNode> {
+  return function (nodes: Observable<InProgressHierarchyNode>): Observable<InProgressHierarchyNode> {
     return nodes.pipe(
       toArray(),
       mergeMap((resolvedNodes) => from(createClassGroupingInformation(resolvedNodes))),

@@ -5,16 +5,16 @@
 /* eslint-disable no-console */
 
 import { defer, filter, from, merge, mergeAll, mergeMap, Observable, partition, reduce, share, take, tap } from "rxjs";
-import { InProgressTreeNode, mergeInstanceNodesObs } from "../Common";
+import { InProgressHierarchyNode, mergeInstanceNodesObs } from "../Common";
 
 /** @internal */
 export function createHideNodesInHierarchyReducer(
-  getNodes: (parentNode: InProgressTreeNode) => Observable<InProgressTreeNode>,
-  directNodesCache: Map<string, Observable<InProgressTreeNode>>,
+  getNodes: (parentNode: InProgressHierarchyNode) => Observable<InProgressHierarchyNode>,
+  directNodesCache: Map<string, Observable<InProgressHierarchyNode>>,
   stopOnFirstChild: boolean,
 ) {
   const enableLogging = false;
-  function addToMergeMap(list: Map<string, InProgressTreeNode>, node: InProgressTreeNode) {
+  function addToMergeMap(list: Map<string, InProgressHierarchyNode>, node: InProgressHierarchyNode) {
     if (node.key.type !== "instances" || node.key.instanceKeys.length === 0) {
       return;
     }
@@ -26,7 +26,7 @@ export function createHideNodesInHierarchyReducer(
       list.set(fullClassName, node);
     }
   }
-  return function (nodes: Observable<InProgressTreeNode>): Observable<InProgressTreeNode> {
+  return function (nodes: Observable<InProgressHierarchyNode>): Observable<InProgressHierarchyNode> {
     const sharedNodes = nodes.pipe(
       tap((n) => `HideNodesInHierarchyReducer in: ${n.label}`),
       share(),
@@ -35,7 +35,7 @@ export function createHideNodesInHierarchyReducer(
     const [withChildren, withoutChildren] = partition(withFlag, (node) => Array.isArray(node.children));
     return merge(
       withoutFlag,
-      withChildren.pipe(mergeMap((parent) => from(parent.children as InProgressTreeNode[]))),
+      withChildren.pipe(mergeMap((parent) => from(parent.children as InProgressHierarchyNode[]))),
       ...(stopOnFirstChild
         ? [
             // a small hack to handle situation when we're here to only check if parent node has children and one of them has `hideIfNoChildren` flag
@@ -51,7 +51,7 @@ export function createHideNodesInHierarchyReducer(
         reduce((acc, node) => {
           addToMergeMap(acc, node);
           return acc;
-        }, new Map<string, InProgressTreeNode>()),
+        }, new Map<string, InProgressHierarchyNode>()),
         mergeMap((mergedNodes) => [...mergedNodes.values()].map((mergedNode) => defer(() => getNodes(mergedNode)))),
         mergeAll(),
       ),
