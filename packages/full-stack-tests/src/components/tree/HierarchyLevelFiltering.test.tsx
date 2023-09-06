@@ -3,9 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import sinon from "sinon";
 import { expect } from "chai";
 import { useState } from "react";
+import sinon from "sinon";
 import { ControlledTree, SelectionMode, TreeRendererProps, UiComponents, useTreeModel } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Ruleset } from "@itwin/presentation-common";
@@ -13,7 +13,7 @@ import { PresentationTreeRenderer, usePresentationTreeNodeLoader, useUnifiedSele
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { fireEvent, getByRole, getByText, render, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { insertPhysicalElement, insertPhysicalModel, insertSpatialCategory } from "../../IModelUtils";
+import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { getNodeByLabel, toggleExpandNode } from "../TreeUtils";
 
@@ -65,11 +65,12 @@ describe("Learning snippets", () => {
       // __PUBLISH_EXTRACT_END__
 
       // set up imodel for the test
-      const imodel = await buildTestIModel(this, (builder) => {
-        const categoryKey = insertSpatialCategory(builder, "My Category");
-        const modelKey = insertPhysicalModel(builder, "My Model");
-        insertPhysicalElement(builder, "My Element 1", modelKey.id, categoryKey.id);
-        insertPhysicalElement(builder, "My Element 2", modelKey.id, categoryKey.id);
+      // eslint-disable-next-line deprecation/deprecation
+      const imodel = await buildTestIModel(this, async (builder) => {
+        const categoryKey = insertSpatialCategory({ builder, label: "My Category" });
+        const modelKey = insertPhysicalModelWithPartition({ builder, label: "My Model" });
+        insertPhysicalElement({ builder, userLabel: "My Element 1", modelId: modelKey.id, categoryId: categoryKey.id });
+        insertPhysicalElement({ builder, userLabel: "My Element 2", modelId: modelKey.id, categoryId: categoryKey.id });
       });
 
       // render the component

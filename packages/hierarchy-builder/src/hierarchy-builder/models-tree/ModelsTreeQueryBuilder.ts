@@ -5,22 +5,39 @@
 
 import { Id64String } from "@itwin/core-bentley";
 import { ECClass, SchemaContext } from "@itwin/ecschema-metadata";
-import { InstanceId } from "@itwin/presentation-common";
-import { getClass } from "./Common";
-import { ITreeQueryBuilder, QueryDef } from "./TreeQueryBuilder";
-import { TreeNode } from "./TreeNode";
-import { ECSqlBinding } from "./ECSqlBinding";
+import { ECSqlBinding } from "../ECSqlBinding";
+import { getClass } from "../internal/Common";
+import { ITreeQueryBuilder, QueryDef } from "../ITreeQueryBuilder";
+import { TreeNode } from "../TreeNode";
 
+/** @beta */
+export interface ModelsTreeQueryBuilderProps {
+  schemas: SchemaContext;
+}
+
+/**
+ * This class is responsible for building the Models tree hierarchy - it's only part of this package
+ * for testing reasons.
+ * @beta
+ */
 export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
-  public constructor(private _schemas: SchemaContext) {}
+  private _schemas: SchemaContext;
 
+  public constructor(props: ModelsTreeQueryBuilderProps) {
+    this._schemas = props.schemas;
+  }
+
+  /**
+   * Create ECSQL queries for selecting nodes from an iModel.
+   * @param parentNode Parent node to create children queries for.
+   */
   public async createQueries(parentNode: TreeNode | undefined): Promise<QueryDef[]> {
     if (!parentNode) {
       return this.createRootNodesQuery();
     }
 
     if (parentNode.key.type === "instances") {
-      const instanceIdsByClass = new Map<string, InstanceId[]>();
+      const instanceIdsByClass = new Map<string, Id64String[]>();
       parentNode.key.instanceKeys.forEach((key) => {
         let instanceIds = instanceIdsByClass.get(key.className);
         if (!instanceIds) {
@@ -46,49 +63,51 @@ export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
   private createRootNodesQuery() {
     return [
       {
+        fullClassName: "BisCore.Subject",
         ecsql: `
           SELECT
             ec_classname(this.ECClassId) FullClassName,
             ECInstanceId,
-            ${this.createNonGeometricElementLabelSelectClause("this")} AS DisplayLabel,
+            ${createNonGeometricElementLabelSelectClause("this")} AS DisplayLabel,
             json_object(
               'imageId', 'icon-imodel-hollow-2'
             ) AS ExtendedData,
             1 as AutoExpand
           FROM bis.Subject this
-          WHERE Parent IS NULL
+          WHERE
+            this.Parent IS NULL
         `,
       },
     ];
   }
 
-  private async createChildNodesQuery(parentNodeClass: ECClass, instanceIds: InstanceId[], parentNode: TreeNode): Promise<QueryDef[]> {
+  private async createChildNodesQuery(parentNodeClass: ECClass, parentInstanceIds: Id64String[], parentNode: TreeNode): Promise<QueryDef[]> {
     if (await parentNodeClass.is("Subject", "BisCore")) {
-      return this.createSubjectChildrenQuery(instanceIds, parentNode);
+      return this.createSubjectChildrenQuery(parentInstanceIds, parentNode);
     }
     if (await parentNodeClass.is("ISubModeledElement", "BisCore")) {
-      return this.createISubModeledElementChildrenQuery(instanceIds, parentNode);
+      return this.createISubModeledElementChildrenQuery(parentInstanceIds, parentNode);
     }
     if (await parentNodeClass.is("GeometricModel3d", "BisCore")) {
-      return this.createGeometricModel3dChildrenQuery(instanceIds, parentNode);
+      return this.createGeometricModel3dChildrenQuery(parentInstanceIds, parentNode);
     }
     if (await parentNodeClass.is("SpatialCategory", "BisCore")) {
-      return this.createSpatialCategoryChildrenQuery(instanceIds, parentNode);
+      return this.createSpatialCategoryChildrenQuery(parentInstanceIds, parentNode);
     }
     if (await parentNodeClass.is("GeometricElement3d", "BisCore")) {
-      return this.createGeometricElement3dChildrenQuery(instanceIds, parentNode);
+      return this.createGeometricElement3dChildrenQuery(parentInstanceIds, parentNode);
     }
     return [];
   }
 
-  private async createSubjectChildrenQuery(subjectIds: InstanceId[], _parentNode: TreeNode): Promise<QueryDef[]> {
+  private async createSubjectChildrenQuery(subjectIds: Id64String[], _parentNode: TreeNode): Promise<QueryDef[]> {
     const ctes = [
       `
         subjects(FullClassName, ECInstanceId, DisplayLabel, HideInHierarchy, HideIfNoChildren, HasChildren, MergeByLabelId, ExtendedData, ParentId) AS (
           SELECT
             ec_classname(this.ECClassId) FullClassName,
             this.ECInstanceId,
-            ${this.createNonGeometricElementLabelSelectClause("this")} AS DisplayLabel,
+            ${createNonGeometricElementLabelSelectClause("this")} AS DisplayLabel,
             CAST(CASE
               WHEN (
                 json_extract(this.JsonProperties, '$.Subject.Job.Bridge') IS NOT NULL
@@ -118,6 +137,7 @@ export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
     ];
     return [
       {
+        fullClassName: "BisCore.Subject",
         ctes,
         ecsql: `
           SELECT
@@ -131,12 +151,13 @@ export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
         bindings: [...subjectIds.map((id): ECSqlBinding => ({ type: "id", value: id }))],
       },
       {
+        fullClassName: "BisCore.GeometricModel3d",
         ctes,
         ecsql: `
           SELECT
             ec_classname(this.ECClassId) FullClassName,
             this.ECInstanceId,
-            ${this.createNonGeometricElementLabelSelectClause("partition")} AS DisplayLabel,
+            ${createNonGeometricElementLabelSelectClause("partition")} AS DisplayLabel,
             CAST(CASE
               WHEN (
                 json_extract(partition.JsonProperties, '$.PhysicalPartition.Model.Content') IS NOT NULL
@@ -174,9 +195,10 @@ export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
     ];
   }
 
-  private async createISubModeledElementChildrenQuery(elementIds: InstanceId[], _parentNode: TreeNode): Promise<QueryDef[]> {
+  private async createISubModeledElementChildrenQuery(elementIds: Id64String[], _parentNode: TreeNode): Promise<QueryDef[]> {
     return [
       {
+        fullClassName: "BisCore.GeometricModel3d",
         ecsql: `
           SELECT
             ec_classname(this.ECClassId) FullClassName,
@@ -184,20 +206,20 @@ export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
             '<always hidden>' AS DisplayLabel,
             1 AS HideInHierarchy
           FROM bis.GeometricModel3d this
-          WHERE this.ModeledElement.Id.ECInstanceId IN (${elementIds.map(() => "?").join(",")})
+          WHERE this.ModeledElement.Id IN (${elementIds.map(() => "?").join(",")})
             AND NOT this.IsPrivate
             AND this.ECInstanceId IN (SELECT Model.Id FROM bis.GeometricElement3d)
         `,
-        bindings: elementIds.map((id) => ({ type: "id", value: id })),
+        bindings: [...elementIds.map((id): ECSqlBinding => ({ type: "id", value: id }))],
       },
     ];
   }
 
-  private async createGeometricModel3dChildrenQuery(modelIds: InstanceId[], _parentNode: TreeNode): Promise<QueryDef[]> {
+  private async createGeometricModel3dChildrenQuery(modelIds: Id64String[], _parentNode: TreeNode): Promise<QueryDef[]> {
     function createModelIdsSelector(): string {
       // Note: `json_array` function only accepts up to 128 arguments and we may have more `modelIds` than that. As a workaround,
       // we're creating an array of arrays
-      const slices = new Array<InstanceId[]>();
+      const slices = new Array<Id64String[]>();
       for (let sliceStartIndex = 0; sliceStartIndex < modelIds.length; sliceStartIndex += 128) {
         let sliceEndIndex: number | undefined = sliceStartIndex + 128;
         if (sliceEndIndex > modelIds.length) {
@@ -209,11 +231,12 @@ export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
     }
     return [
       {
+        fullClassName: "BisCore.SpatialCategory",
         ecsql: `
           SELECT
             ec_classname(this.ECClassId) FullClassName,
             this.ECInstanceId,
-            ${this.createNonGeometricElementLabelSelectClause("this")} AS DisplayLabel,
+            ${createNonGeometricElementLabelSelectClause("this")} AS DisplayLabel,
             'category' AS MergeByLabelId,
             1 AS HasChildren,
             json_object(
@@ -235,18 +258,19 @@ export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
     ];
   }
 
-  private async createSpatialCategoryChildrenQuery(categoryIds: InstanceId[], parentNode: TreeNode): Promise<QueryDef[]> {
+  private async createSpatialCategoryChildrenQuery(categoryIds: Id64String[], parentNode: TreeNode): Promise<QueryDef[]> {
     const modelIds: Id64String[] =
       parentNode.extendedData && parentNode.extendedData.hasOwnProperty("modelIds")
-        ? (parentNode.extendedData.modelIds as Array<Array<InstanceId>>).reduce((arr, ids) => [...arr, ...ids])
+        ? (parentNode.extendedData.modelIds as Array<Array<Id64String>>).reduce((arr, ids) => [...arr, ...ids])
         : [];
     return [
       {
+        fullClassName: "BisCore.GeometricElement3d",
         ecsql: `
           SELECT
             ec_classname(this.ECClassId) FullClassName,
             this.ECInstanceId,
-            ${this.createGeometricElementLabelSelectClause("this")} AS DisplayLabel,
+            ${createGeometricElementLabelSelectClause("this")} AS DisplayLabel,
             json_object(
               'imageId', 'icon-item'
             ) AS ExtendedData,
@@ -271,14 +295,15 @@ export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
     ];
   }
 
-  private async createGeometricElement3dChildrenQuery(elementIds: InstanceId[], _parentNode: TreeNode): Promise<QueryDef[]> {
+  private async createGeometricElement3dChildrenQuery(elementIds: Id64String[], _parentNode: TreeNode): Promise<QueryDef[]> {
     return [
       {
+        fullClassName: "BisCore.GeometricElement3d",
         ecsql: `
           SELECT
             ec_classname(this.ECClassId) FullClassName,
             this.ECInstanceId,
-            ${this.createGeometricElementLabelSelectClause("this")} AS DisplayLabel,
+            ${createGeometricElementLabelSelectClause("this")} AS DisplayLabel,
             json_object(
               'imageId', 'icon-item'
             ) AS ExtendedData,
@@ -300,35 +325,35 @@ export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
       },
     ];
   }
+}
 
-  private createGeometricElementLabelSelectClause(classAlias: string) {
-    return `COALESCE(
-      [${classAlias}].[CodeValue],
-      CASE WHEN [${classAlias}].[UserLabel] IS NOT NULL
-        THEN [${classAlias}].[UserLabel] || ' ' || ${this.createECInstanceIdentifier(classAlias)}
-        ELSE NULL
-      END,
-      (
-        SELECT COALESCE([c].[DisplayLabel], [c].[Name]) || ' ' || ${this.createECInstanceIdentifier(classAlias)}
-        FROM [meta].[ECClassDef] AS [c]
-        WHERE [c].[ECInstanceId] = [${classAlias}].[ECClassId]
-      )
-    )`;
-  }
+function createGeometricElementLabelSelectClause(classAlias: string) {
+  return `COALESCE(
+    [${classAlias}].[CodeValue],
+    CASE WHEN [${classAlias}].[UserLabel] IS NOT NULL
+      THEN [${classAlias}].[UserLabel] || ' ' || ${createECInstanceIdentifier(classAlias)}
+      ELSE NULL
+    END,
+    (
+      SELECT COALESCE([c].[DisplayLabel], [c].[Name]) || ' ' || ${createECInstanceIdentifier(classAlias)}
+      FROM [meta].[ECClassDef] AS [c]
+      WHERE [c].[ECInstanceId] = [${classAlias}].[ECClassId]
+    )
+  )`;
+}
 
-  private createNonGeometricElementLabelSelectClause(classAlias: string) {
-    return `COALESCE(
-      [${classAlias}].[UserLabel],
-      [${classAlias}].[CodeValue],
-      (
-        SELECT COALESCE([c].[DisplayLabel], [c].[Name]) || ' ' || ${this.createECInstanceIdentifier(classAlias)}
-        FROM [meta].[ECClassDef] AS [c]
-        WHERE [c].[ECInstanceId] = [${classAlias}].[ECClassId]
-      )
-    )`;
-  }
+function createNonGeometricElementLabelSelectClause(classAlias: string) {
+  return `COALESCE(
+    [${classAlias}].[UserLabel],
+    [${classAlias}].[CodeValue],
+    (
+      SELECT COALESCE([c].[DisplayLabel], [c].[Name]) || ' ' || ${createECInstanceIdentifier(classAlias)}
+      FROM [meta].[ECClassDef] AS [c]
+      WHERE [c].[ECInstanceId] = [${classAlias}].[ECClassId]
+    )
+  )`;
+}
 
-  private createECInstanceIdentifier(classAlias: string) {
-    return `'[' || printf('0x%x', [${classAlias}].[ECInstanceId]) || ']'`;
-  }
+function createECInstanceIdentifier(classAlias: string) {
+  return `'[' || printf('0x%x', [${classAlias}].[ECInstanceId]) || ']'`;
 }
