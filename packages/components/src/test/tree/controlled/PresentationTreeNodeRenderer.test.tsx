@@ -12,9 +12,9 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render, waitFor } from "@testing-library/react";
-import { PresentationInfoTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem";
 import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/PresentationInstanceFilterBuilder";
 import { PresentationTreeNodeRenderer } from "../../../presentation-components/tree/controlled/PresentationTreeNodeRenderer";
+import { PresentationInfoTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem";
 import { createTestPropertyInfo } from "../../_helpers/Common";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content";
 import { createTreeModelNode, createTreeNodeItem } from "./Helpers";
@@ -101,7 +101,7 @@ describe("PresentationTreeNodeRenderer", () => {
   });
 
   it("renders node with filter button", () => {
-    const nodeItem = createTreeNodeItem({ filtering: { descriptor: createTestContentDescriptor({ fields: [] }) } });
+    const nodeItem = createTreeNodeItem({ filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [] } });
     const node = createTreeModelNode(undefined, nodeItem);
 
     const { container } = render(
@@ -116,6 +116,7 @@ describe("PresentationTreeNodeRenderer", () => {
     const nodeItem = createTreeNodeItem({
       filtering: {
         descriptor: createTestContentDescriptor({ fields: [] }),
+        ancestorFilters: [],
         active: createFilterInfo(),
       },
     });
@@ -143,7 +144,7 @@ describe("PresentationTreeNodeRenderer", () => {
 
   it("invokes 'onFilterClick' when filter button is clicked", () => {
     const spy = sinon.spy();
-    const nodeItem = createTreeNodeItem({ filtering: { descriptor: createTestContentDescriptor({ fields: [] }) } });
+    const nodeItem = createTreeNodeItem({ filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [] } });
     const node = createTreeModelNode(undefined, nodeItem);
 
     const { container } = render(
@@ -161,6 +162,7 @@ describe("PresentationTreeNodeRenderer", () => {
     const nodeItem = createTreeNodeItem({
       filtering: {
         descriptor: createTestContentDescriptor({ fields: [] }),
+        ancestorFilters: [],
         active: createFilterInfo(),
       },
     });

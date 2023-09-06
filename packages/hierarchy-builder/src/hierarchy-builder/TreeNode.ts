@@ -3,8 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ClassInfo, InstanceKey } from "@itwin/presentation-common";
+import { ClassInfo, InstanceKey } from "./EC";
 
+/** @beta */
 export type TreeNodeKey =
   | {
       type: "instances";
@@ -15,6 +16,7 @@ export type TreeNodeKey =
       class: ClassInfo;
     };
 
+/** @beta */
 export interface TreeNode {
   key: TreeNodeKey;
   label: string;
@@ -23,12 +25,3 @@ export interface TreeNode {
   autoExpand?: boolean;
   directChildren?: any;
 }
-
-export interface TreeNodeHandlingParams {
-  hideIfNoChildren?: boolean;
-  hideInHierarchy?: boolean;
-  groupByClass?: boolean;
-  mergeByLabelId?: string;
-}
-
-export type InProgressTreeNode = TreeNode & TreeNodeHandlingParams;

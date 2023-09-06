@@ -4,11 +4,27 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Id64, Id64String } from "@itwin/core-bentley";
-import { BisCodeSpec, Code, ExternalSourceAspectProps, ExternalSourceProps, IModel, PhysicalElementProps, RepositoryLinkProps } from "@itwin/core-common";
+import {
+  BisCodeSpec,
+  CategoryProps,
+  Code,
+  ExternalSourceAspectProps,
+  ExternalSourceProps,
+  GeometricModel3dProps,
+  IModel,
+  PhysicalElementProps,
+  RepositoryLinkProps,
+  SubCategoryProps,
+  SubjectProps,
+} from "@itwin/core-common";
 import { TestIModelBuilder } from "@itwin/presentation-testing";
 
-export function insertSubject(builder: TestIModelBuilder, label: string, parentId?: Id64String) {
-  const className = "BisCore:Subject";
+export function insertSubject(
+  props: { builder: TestIModelBuilder; label: string; parentId?: Id64String } & Partial<Omit<SubjectProps, "id" | "parent" | "code" | "model">>,
+) {
+  const { builder, classFullName, label, parentId, ...subjectProps } = props;
+  const defaultClassName = "BisCore:Subject";
+  const className = classFullName ?? defaultClassName;
   const id = builder.insertElement({
     classFullName: className,
     model: IModel.repositoryModelId,
@@ -17,34 +33,51 @@ export function insertSubject(builder: TestIModelBuilder, label: string, parentI
       id: parentId ?? IModel.rootSubjectId,
       relClassName: "BisCore:SubjectOwnsSubjects",
     },
+    ...subjectProps,
   });
   return { className, id };
 }
 
-export function insertPhysicalModel(builder: TestIModelBuilder, label: string, parentId?: Id64String) {
+export function insertPhysicalModelWithPartition(props: { builder: TestIModelBuilder; label: string; partitionParentId?: Id64String }) {
+  const { builder, label, partitionParentId } = props;
   const partitionId = builder.insertElement({
     classFullName: "BisCore:PhysicalPartition",
     model: IModel.repositoryModelId,
-    code: builder.createCode(parentId ?? IModel.rootSubjectId, BisCodeSpec.informationPartitionElement, label),
+    code: builder.createCode(partitionParentId ?? IModel.rootSubjectId, BisCodeSpec.informationPartitionElement, label),
     parent: {
-      id: parentId ?? IModel.rootSubjectId,
+      id: partitionParentId ?? IModel.rootSubjectId,
       relClassName: "BisCore:SubjectOwnsPartitionElements",
     },
   });
-  const modelClassName = "BisCore:PhysicalModel";
-  const modelId = builder.insertModel({
-    classFullName: modelClassName,
-    modeledElement: { id: partitionId },
-  });
-  return { className: modelClassName, id: modelId };
+  return insertPhysicalSubModel({ builder, modeledElementId: partitionId });
 }
 
-export function insertSpatialCategory(builder: TestIModelBuilder, label: string, modelId = IModel.dictionaryId) {
-  const className = "BisCore:SpatialCategory";
+export function insertPhysicalSubModel(
+  props: { builder: TestIModelBuilder; modeledElementId: Id64String } & Partial<Omit<GeometricModel3dProps, "id" | "modeledElement" | "parentModel">>,
+) {
+  const { builder, classFullName, modeledElementId, ...modelProps } = props;
+  const defaultModelClassName = "BisCore:PhysicalModel";
+  const className = classFullName ?? defaultModelClassName;
+  const modelId = builder.insertModel({
+    classFullName: className,
+    modeledElement: { id: modeledElementId },
+    ...modelProps,
+  });
+  return { className, id: modelId };
+}
+
+export function insertSpatialCategory(
+  props: { builder: TestIModelBuilder; label: string; modelId?: Id64String } & Partial<Omit<CategoryProps, "id" | "model" | "parent" | "code">>,
+) {
+  const { builder, classFullName, modelId, label, ...categoryProps } = props;
+  const defaultClassName = "BisCore:SpatialCategory";
+  const className = classFullName ?? defaultClassName;
+  const model = modelId ?? IModel.dictionaryId;
   const id = builder.insertElement({
     classFullName: className,
-    model: modelId,
-    code: builder.createCode(modelId, BisCodeSpec.spatialCategory, label),
+    model,
+    code: builder.createCode(model, BisCodeSpec.spatialCategory, label),
+    ...categoryProps,
   });
   return { className, id };
 }
@@ -58,28 +91,41 @@ export function getDefaultSubcategoryKey(categoryId: Id64String) {
   };
 }
 
-export function insertSubCategory(builder: TestIModelBuilder, label: string, parentCategoryId: Id64String, modelId = IModel.dictionaryId) {
-  const className = "BisCore:SubCategory";
+export function insertSubCategory(
+  props: { builder: TestIModelBuilder; label: string; parentCategoryId: Id64String; modelId?: Id64String } & Partial<
+    Omit<SubCategoryProps, "id" | "model" | "parent" | "code">
+  >,
+) {
+  const { builder, classFullName, modelId, label, parentCategoryId, ...subCategoryProps } = props;
+  const defaultClassName = "BisCore:SubCategory";
+  const className = classFullName ?? defaultClassName;
+  const model = modelId ?? IModel.dictionaryId;
   const id = builder.insertElement({
     classFullName: className,
-    model: modelId,
-    code: builder.createCode(modelId, BisCodeSpec.subCategory, label),
+    model,
+    code: builder.createCode(model, BisCodeSpec.subCategory, label),
     parent: {
       id: parentCategoryId,
       relClassName: "BisCore:CategoryOwnsSubCategories",
     },
+    ...subCategoryProps,
   });
   return { className, id };
 }
 
-export function insertPhysicalElement(builder: TestIModelBuilder, label: string, modelId: Id64String, categoryId: Id64String, parentId?: Id64String) {
-  const className = "Generic:PhysicalObject";
+export function insertPhysicalElement(
+  props: { builder: TestIModelBuilder; modelId: Id64String; categoryId: Id64String; parentId?: Id64String } & Partial<
+    Omit<PhysicalElementProps, "id" | "model" | "category" | "parent">
+  >,
+) {
+  const { builder, classFullName, modelId, categoryId, parentId, ...elementProps } = props;
+  const defaultClassName = "Generic:PhysicalObject";
+  const className = classFullName ?? defaultClassName;
   const id = builder.insertElement({
     classFullName: className,
     model: modelId,
     category: categoryId,
     code: Code.createEmpty(),
-    userLabel: label,
     ...(parentId
       ? {
           parent: {
@@ -88,22 +134,35 @@ export function insertPhysicalElement(builder: TestIModelBuilder, label: string,
           },
         }
       : undefined),
+    ...elementProps,
   } as PhysicalElementProps);
   return { className, id };
 }
 
-export function insertRepositoryLink(builder: TestIModelBuilder, repositoryUrl: string, repositoryLabel: string) {
-  const className = "BisCore:RepositoryLink";
+export function insertRepositoryLink(
+  props: { builder: TestIModelBuilder; repositoryUrl: string; repositoryLabel: string } & Partial<
+    Omit<RepositoryLinkProps, "id" | "model" | "url" | "userLabel">
+  >,
+) {
+  const { builder, classFullName, repositoryUrl, repositoryLabel, ...repoLinkProps } = props;
+  const defaultClassName = "BisCore:RepositoryLink";
+  const className = classFullName ?? defaultClassName;
   const id = builder.insertElement({
     classFullName: className,
     model: IModel.repositoryModelId,
     url: repositoryUrl,
     userLabel: repositoryLabel,
+    ...repoLinkProps,
   } as RepositoryLinkProps);
   return { className, id };
 }
 
-export function insertExternalSourceAspect(builder: TestIModelBuilder, elementId: Id64String, identifier: String, repositoryId?: Id64String) {
+export function insertExternalSourceAspect(
+  props: { builder: TestIModelBuilder; elementId: Id64String; identifier: String; repositoryId?: Id64String } & Partial<
+    Omit<ExternalSourceAspectProps, "id" | "classFullName" | "element" | "source">
+  >,
+) {
+  const { builder, repositoryId, elementId, identifier, ...externalSourceAspectProps } = props;
   const externalSourceId = builder.insertElement({
     classFullName: "BisCore:ExternalSource",
     model: IModel.repositoryModelId,
@@ -125,6 +184,7 @@ export function insertExternalSourceAspect(builder: TestIModelBuilder, elementId
       id: externalSourceId,
     },
     identifier,
+    ...externalSourceAspectProps,
   } as ExternalSourceAspectProps);
 
   return { className, id };

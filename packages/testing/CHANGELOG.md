@@ -1,5 +1,17 @@
 # Change Log - @itwin/presentation-testing
 
+## 4.1.0
+
+### Minor Changes
+
+- [#232](https://github.com/iTwin/presentation/pull/232): Added `TestIModelBuilder.importSchema` API to allow creating iModels with custom schemas.
+- [#232](https://github.com/iTwin/presentation/pull/232): Added `buildTestIModel` overloads that take an async callback to set up the iModel. Deprecated the previous ones.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-components@4.2.1
+
 This log was last generated on Thu, 31 Aug 2023 11:51:06 GMT and should not be manually modified.
 
 <!-- Start content -->

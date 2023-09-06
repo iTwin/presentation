@@ -16,7 +16,6 @@ import { CheckBoxState } from "@itwin/core-react";
 import {
   Descriptor,
   HierarchyRequestOptions,
-  InstanceFilterDefinition,
   Node,
   NodeKey,
   Paged,
@@ -36,7 +35,7 @@ import {
 import { pageOptionsUiToPresentation } from "../../presentation-components/tree/Utils";
 import { createTestECInstanceKey, createTestPropertyInfo, createTestRuleset } from "../_helpers/Common";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
-import { createTestECInstancesNode, createTestECInstancesNodeKey, createTestNodePathElement } from "../_helpers/Hierarchy";
+import { createTestECClassGroupingNodeKey, createTestECInstancesNode, createTestECInstancesNodeKey, createTestNodePathElement } from "../_helpers/Hierarchy";
 import { createTestLabelDefinition } from "../_helpers/LabelDefinition";
 import { PromiseContainer, ResolvablePromise } from "../_helpers/Promises";
 import { createTestTreeNodeItem } from "../_helpers/UiComponents";
@@ -185,9 +184,12 @@ describe("TreeDataProvider", () => {
     it("passes instance filter to presentation manager", async () => {
       const parentKey = createTestECInstancesNodeKey();
       const parentNode = createTestTreeNodeItem(parentKey);
-      const instanceFilter = applyInstanceFilter(parentNode);
+
+      const { filterDefinition, filteringInfo } = createInstanceFilteringInfo("prop1");
+      parentNode.filtering = filteringInfo;
+
       presentationManagerMock
-        .setup(async (x) => x.getNodesAndCount(is({ imodel: imodelMock.object, rulesetOrId: rulesetId, parentKey, instanceFilter })))
+        .setup(async (x) => x.getNodesAndCount(is({ imodel: imodelMock.object, rulesetOrId: rulesetId, parentKey, instanceFilter: filterDefinition })))
         .returns(async () => ({ nodes: [createTestECInstancesNode()], count: 1 }))
         .verifiable();
 
@@ -299,7 +301,8 @@ describe("TreeDataProvider", () => {
     it("passes instance filter to presentation manager", async () => {
       const parentKey = createTestECInstancesNodeKey();
       const parentNode = createTestTreeNodeItem(parentKey);
-      const instanceFilter0 = applyInstanceFilter(parentNode);
+      const { filterDefinition: instanceFilter0, filteringInfo: filteringInfo0 } = createInstanceFilteringInfo("prop");
+      parentNode.filtering = filteringInfo0;
 
       const pageOptions: PageOptions = { start: 0, size: 2 };
       presentationManagerMock
@@ -320,7 +323,8 @@ describe("TreeDataProvider", () => {
       const actualResult0 = await provider.getNodes(parentNode, pageOptions);
       expect(actualResult0).to.have.lengthOf(1);
 
-      const instanceFilter1 = applyInstanceFilter(parentNode, "prop2");
+      const { filterDefinition: instanceFilter1, filteringInfo: filteringInfo1 } = createInstanceFilteringInfo("prop2");
+      parentNode.filtering = filteringInfo1;
       presentationManagerMock
         .setup(async (x) =>
           x.getNodesAndCount(
@@ -342,6 +346,90 @@ describe("TreeDataProvider", () => {
       presentationManagerMock.verifyAll();
     });
 
+    it("passes parent instance filter to presentation manager", async () => {
+      const nodeKey = createTestECInstancesNodeKey();
+      const nodeItem = createTestTreeNodeItem(nodeKey);
+      const { filterDefinition, filteringInfo } = createInstanceFilteringInfo(undefined, ["parentProp"]);
+      nodeItem.filtering = filteringInfo;
+
+      const pageOptions: PageOptions = { start: 0, size: 2 };
+      presentationManagerMock
+        .setup(async (x) =>
+          x.getNodesAndCount(
+            is({
+              imodel: imodelMock.object,
+              rulesetOrId: rulesetId,
+              paging: pageOptionsUiToPresentation(pageOptions),
+              parentKey: nodeKey,
+              instanceFilter: filterDefinition,
+            }),
+          ),
+        )
+        .returns(async () => ({ nodes: [createTestECInstancesNode()], count: 1 }))
+        .verifiable();
+
+      const actualResult = await provider.getNodes(nodeItem, pageOptions);
+      expect(actualResult).to.have.lengthOf(1);
+
+      presentationManagerMock.verifyAll();
+    });
+
+    it("passes combined parent and current node instance filter to presentation manager", async () => {
+      const nodeKey = createTestECInstancesNodeKey();
+      const nodeItem = createTestTreeNodeItem(nodeKey);
+      const { filterDefinition, filteringInfo } = createInstanceFilteringInfo("prop", ["parentProp"]);
+      nodeItem.filtering = filteringInfo;
+
+      const pageOptions: PageOptions = { start: 0, size: 2 };
+      presentationManagerMock
+        .setup(async (x) =>
+          x.getNodesAndCount(
+            is({
+              imodel: imodelMock.object,
+              rulesetOrId: rulesetId,
+              paging: pageOptionsUiToPresentation(pageOptions),
+              parentKey: nodeKey,
+              instanceFilter: filterDefinition,
+            }),
+          ),
+        )
+        .returns(async () => ({ nodes: [createTestECInstancesNode()], count: 1 }))
+        .verifiable();
+
+      const actualResult = await provider.getNodes(nodeItem, pageOptions);
+      expect(actualResult).to.have.lengthOf(1);
+
+      presentationManagerMock.verifyAll();
+    });
+
+    it("passes empty instance filter to manager if there are no ancestor and active filters", async () => {
+      const nodeKey = createTestECInstancesNodeKey();
+      const nodeItem = createTestTreeNodeItem(nodeKey);
+      const { filteringInfo } = createInstanceFilteringInfo(undefined, []);
+      nodeItem.filtering = filteringInfo;
+
+      const pageOptions: PageOptions = { start: 0, size: 2 };
+      presentationManagerMock
+        .setup(async (x) =>
+          x.getNodesAndCount(
+            is({
+              imodel: imodelMock.object,
+              rulesetOrId: rulesetId,
+              paging: pageOptionsUiToPresentation(pageOptions),
+              parentKey: nodeKey,
+              instanceFilter: undefined,
+            }),
+          ),
+        )
+        .returns(async () => ({ nodes: [createTestECInstancesNode()], count: 1 }))
+        .verifiable();
+
+      const actualResult = await provider.getNodes(nodeItem, pageOptions);
+      expect(actualResult).to.have.lengthOf(1);
+
+      presentationManagerMock.verifyAll();
+    });
+
     it("passes hierarchy level size limit to presentation manager", async () => {
       const parentKey = createTestECInstancesNodeKey();
       const parentNode = createTestTreeNodeItem(parentKey);
@@ -358,13 +446,20 @@ describe("TreeDataProvider", () => {
     it("returns info node if filtered hierarchy level does not have children", async () => {
       const parentKey = createTestECInstancesNodeKey();
       const parentNode = createTestTreeNodeItem(parentKey);
-      const instanceFilter = applyInstanceFilter(parentNode);
+      const { filterDefinition, filteringInfo } = createInstanceFilteringInfo("prop");
+      parentNode.filtering = filteringInfo;
 
       const pageOptions: PageOptions = { start: 0, size: 2 };
       presentationManagerMock
         .setup(async (x) =>
           x.getNodesAndCount(
-            is({ imodel: imodelMock.object, rulesetOrId: rulesetId, paging: pageOptionsUiToPresentation(pageOptions), parentKey, instanceFilter }),
+            is({
+              imodel: imodelMock.object,
+              rulesetOrId: rulesetId,
+              paging: pageOptionsUiToPresentation(pageOptions),
+              parentKey,
+              instanceFilter: filterDefinition,
+            }),
           ),
         )
         .returns(async () => ({ nodes: [], count: 0 }));
@@ -536,6 +631,39 @@ describe("TreeDataProvider", () => {
       expect(treeItem.filtering).to.not.be.undefined;
       await expect(loadDescriptor(treeItem.filtering!)).to.eventually.be.rejected;
     });
+
+    it("adds parent filter to grouping node filtering info", async () => {
+      const { filterInfo: parentFilterInfo } = createFilterInfo("parentProp");
+      const parentTreeNodeItem = createTestTreeNodeItem();
+      parentTreeNodeItem.filtering = {
+        ancestorFilters: [],
+        descriptor: createTestContentDescriptor({ fields: [] }),
+        active: parentFilterInfo,
+      };
+      const groupingNode = createTestECInstancesNode({ key: createTestECClassGroupingNodeKey(), supportsFiltering: true });
+
+      presentationManagerMock.setup(async (x) => x.getNodesAndCount(moq.It.isAny())).returns(async () => ({ nodes: [groupingNode], count: 1 }));
+
+      const result = await provider.getNodes(parentTreeNodeItem);
+      const groupingNodeItem = result[0] as PresentationTreeNodeItem;
+      expect(groupingNodeItem.filtering?.ancestorFilters).to.have.lengthOf(1).and.containSubset([parentFilterInfo]);
+    });
+
+    it("adds grandparent filter to grouping node filtering info", async () => {
+      const { filterInfo: grandParentFilterInfo } = createFilterInfo("parentProp");
+      const parentTreeNodeItem = createTestTreeNodeItem();
+      parentTreeNodeItem.filtering = {
+        ancestorFilters: [grandParentFilterInfo],
+        descriptor: createTestContentDescriptor({ fields: [] }),
+      };
+      const groupingNode = createTestECInstancesNode({ key: createTestECClassGroupingNodeKey(), supportsFiltering: true });
+
+      presentationManagerMock.setup(async (x) => x.getNodesAndCount(moq.It.isAny())).returns(async () => ({ nodes: [groupingNode], count: 1 }));
+
+      const result = await provider.getNodes(parentTreeNodeItem);
+      const groupingNodeItem = result[0] as PresentationTreeNodeItem;
+      expect(groupingNodeItem.filtering?.ancestorFilters).to.have.lengthOf(1).and.containSubset([grandParentFilterInfo]);
+    });
   });
 
   describe("documentation snippets", () => {
@@ -664,22 +792,48 @@ function is(expected: Paged<HierarchyRequestOptions<IModelConnection, NodeKey, R
   });
 }
 
-function applyInstanceFilter(node: PresentationTreeNodeItem, propName: string = "prop"): InstanceFilterDefinition {
+function createFilterInfo(propName: string) {
   const property = createTestPropertyInfo({ name: propName });
   const field = createTestPropertiesContentField({ properties: [{ property }], name: property.name });
-  const instanceFilter = `this.${property.name} = NULL`;
-  node.filtering = {
-    descriptor: createTestContentDescriptor({ fields: [] }),
-    active: {
+  return {
+    filterInfo: {
       filter: {
         field,
         operator: PropertyFilterRuleOperator.IsNull,
       },
       usedClasses: [],
     },
+    property,
   };
+}
+
+function createInstanceFilteringInfo(currentFilterPropName: string | undefined, ancestorFilterPropNames: string[] = []) {
+  const currentFilter = currentFilterPropName !== undefined ? createFilterInfo(currentFilterPropName) : undefined;
+  const ancestorFilters = ancestorFilterPropNames.map((propName) => createFilterInfo(propName));
+
+  const filteringInfo = {
+    descriptor: createTestContentDescriptor({ fields: [] }),
+    ancestorFilters: ancestorFilters.map((filter) => filter.filterInfo),
+    active: currentFilter?.filterInfo,
+  };
+
+  const properties = [...ancestorFilters.map((filter) => filter.property), ...(currentFilter ? [currentFilter.property] : [])];
+  const filterExpressions = properties.map((prop) => `this.${prop.name} = NULL`);
+
+  if (filterExpressions.length === 0) {
+    return {
+      filterDefinition: undefined,
+      filteringInfo,
+    };
+  }
+
+  const expression = filterExpressions.length > 1 ? `(${filterExpressions.join(" AND ")})` : filterExpressions[0];
+
   return {
-    expression: instanceFilter,
-    selectClassName: property.classInfo.name,
+    filterDefinition: {
+      expression,
+      selectClassName: properties[0].classInfo.name,
+    },
+    filteringInfo,
   };
 }

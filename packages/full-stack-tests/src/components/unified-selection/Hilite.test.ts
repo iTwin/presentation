@@ -13,7 +13,7 @@ import { waitFor } from "@testing-library/react";
 import {
   getDefaultSubcategoryKey,
   insertPhysicalElement,
-  insertPhysicalModel,
+  insertPhysicalModelWithPartition,
   insertSpatialCategory,
   insertSubCategory,
   insertSubject,
@@ -34,9 +34,13 @@ describe("Unified Selection", () => {
       it("hilites models directly under subject", async function () {
         let subjectKey: InstanceKey;
         let modelKeys: InstanceKey[];
-        const imodel = await buildTestIModel(this, (builder) => {
-          subjectKey = insertSubject(builder, "test subject");
-          modelKeys = [insertPhysicalModel(builder, "model 1", subjectKey.id), insertPhysicalModel(builder, "model 2", subjectKey.id)];
+        // eslint-disable-next-line deprecation/deprecation
+        const imodel = await buildTestIModel(this, async (builder) => {
+          subjectKey = insertSubject({ builder, label: "test subject" });
+          modelKeys = [
+            insertPhysicalModelWithPartition({ builder, label: "model 1", partitionParentId: subjectKey.id }),
+            insertPhysicalModelWithPartition({ builder, label: "model 2", partitionParentId: subjectKey.id }),
+          ];
         });
         await using(new ViewportSelectionHandler({ imodel }), async (_) => {
           Presentation.selection.replaceSelection("", imodel, new KeySet([subjectKey!]));
@@ -54,12 +58,16 @@ describe("Unified Selection", () => {
       it("hilites models nested deeply under subject", async function () {
         let subjectKey: InstanceKey;
         let modelKeys: InstanceKey[];
-        const imodel = await buildTestIModel(this, (builder) => {
-          subjectKey = insertSubject(builder, "test subject");
-          const subject2 = insertSubject(builder, "subject 2", subjectKey.id);
-          const subject3 = insertSubject(builder, "subject 3", subjectKey.id);
-          const subject4 = insertSubject(builder, "subject 4", subject3.id);
-          modelKeys = [insertPhysicalModel(builder, "model 1", subject2.id), insertPhysicalModel(builder, "model 2", subject4.id)];
+        // eslint-disable-next-line deprecation/deprecation
+        const imodel = await buildTestIModel(this, async (builder) => {
+          subjectKey = insertSubject({ builder, label: "test subject" });
+          const subject2 = insertSubject({ builder, label: "subject 2", parentId: subjectKey.id });
+          const subject3 = insertSubject({ builder, label: "subject 3", parentId: subjectKey.id });
+          const subject4 = insertSubject({ builder, label: "subject 4", parentId: subject3.id });
+          modelKeys = [
+            insertPhysicalModelWithPartition({ builder, label: "model 1", partitionParentId: subject2.id }),
+            insertPhysicalModelWithPartition({ builder, label: "model 2", partitionParentId: subject4.id }),
+          ];
         });
         await using(new ViewportSelectionHandler({ imodel }), async (_) => {
           Presentation.selection.replaceSelection("", imodel, new KeySet([subjectKey!]));
@@ -78,8 +86,9 @@ describe("Unified Selection", () => {
     describe("Model", () => {
       it("hilites model", async function () {
         let modelKey: InstanceKey;
-        const imodel = await buildTestIModel(this, (builder) => {
-          modelKey = insertPhysicalModel(builder, "test model");
+        // eslint-disable-next-line deprecation/deprecation
+        const imodel = await buildTestIModel(this, async (builder) => {
+          modelKey = insertPhysicalModelWithPartition({ builder, label: "test model" });
         });
         await using(new ViewportSelectionHandler({ imodel }), async (_) => {
           Presentation.selection.replaceSelection("", imodel, new KeySet([modelKey!]));
@@ -97,12 +106,13 @@ describe("Unified Selection", () => {
       it("hilites category's subcategories", async function () {
         let categoryKey: InstanceKey;
         let subCategoryKeys: InstanceKey[];
-        const imodel = await buildTestIModel(this, (builder) => {
-          categoryKey = insertSpatialCategory(builder, "test category");
+        // eslint-disable-next-line deprecation/deprecation
+        const imodel = await buildTestIModel(this, async (builder) => {
+          categoryKey = insertSpatialCategory({ builder, label: "test category" });
           subCategoryKeys = [
             getDefaultSubcategoryKey(categoryKey.id),
-            insertSubCategory(builder, "sub 1", categoryKey.id),
-            insertSubCategory(builder, "sub 2", categoryKey.id),
+            insertSubCategory({ builder, label: "sub 1", parentCategoryId: categoryKey.id }),
+            insertSubCategory({ builder, label: "sub 2", parentCategoryId: categoryKey.id }),
           ];
         });
         await using(new ViewportSelectionHandler({ imodel }), async (_) => {
@@ -120,8 +130,9 @@ describe("Unified Selection", () => {
 
       it("hilites subcategory", async function () {
         let categoryKey: InstanceKey;
-        const imodel = await buildTestIModel(this, (builder) => {
-          categoryKey = insertSpatialCategory(builder, "test category");
+        // eslint-disable-next-line deprecation/deprecation
+        const imodel = await buildTestIModel(this, async (builder) => {
+          categoryKey = insertSpatialCategory({ builder, label: "test category" });
         });
         const subCategoryKey = getDefaultSubcategoryKey(categoryKey!.id);
         await using(new ViewportSelectionHandler({ imodel }), async (_) => {
@@ -140,14 +151,27 @@ describe("Unified Selection", () => {
       it("hilites assembly element", async function () {
         let assemblyKey: InstanceKey;
         let expectedHighlightedElementKeys: InstanceKey[];
-        const imodel = await buildTestIModel(this, (builder) => {
-          const modelKey = insertPhysicalModel(builder, "test model");
-          const categoryKey = insertSpatialCategory(builder, "test category");
-          assemblyKey = insertPhysicalElement(builder, "element 1", modelKey.id, categoryKey.id);
-          const element2 = insertPhysicalElement(builder, "element 2", modelKey.id, categoryKey.id, assemblyKey.id);
-          const element3 = insertPhysicalElement(builder, "element 3", modelKey.id, categoryKey.id, assemblyKey.id);
-          const element4 = insertPhysicalElement(builder, "element 4", modelKey.id, categoryKey.id, element3.id);
-          const element5 = insertPhysicalElement(builder, "element 5", modelKey.id, categoryKey.id, element3.id);
+        // eslint-disable-next-line deprecation/deprecation
+        const imodel = await buildTestIModel(this, async (builder) => {
+          const modelKey = insertPhysicalModelWithPartition({ builder, label: "test model" });
+          const categoryKey = insertSpatialCategory({ builder, label: "test category" });
+          assemblyKey = insertPhysicalElement({ builder, userLabel: "element 1", modelId: modelKey.id, categoryId: categoryKey.id });
+          const element2 = insertPhysicalElement({
+            builder,
+            userLabel: "element 2",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+            parentId: assemblyKey.id,
+          });
+          const element3 = insertPhysicalElement({
+            builder,
+            userLabel: "element 3",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+            parentId: assemblyKey.id,
+          });
+          const element4 = insertPhysicalElement({ builder, userLabel: "element 4", modelId: modelKey.id, categoryId: categoryKey.id, parentId: element3.id });
+          const element5 = insertPhysicalElement({ builder, userLabel: "element 5", modelId: modelKey.id, categoryId: categoryKey.id, parentId: element3.id });
           expectedHighlightedElementKeys = [assemblyKey, element2, element3, element4, element5];
         });
         await using(new ViewportSelectionHandler({ imodel }), async (_) => {
@@ -167,10 +191,11 @@ describe("Unified Selection", () => {
 
       it("hilites leaf element", async function () {
         let elementKey: InstanceKey;
-        const imodel = await buildTestIModel(this, (builder) => {
-          const modelKey = insertPhysicalModel(builder, "test model");
-          const categoryKey = insertSpatialCategory(builder, "test category");
-          elementKey = insertPhysicalElement(builder, "element", modelKey.id, categoryKey.id);
+        // eslint-disable-next-line deprecation/deprecation
+        const imodel = await buildTestIModel(this, async (builder) => {
+          const modelKey = insertPhysicalModelWithPartition({ builder, label: "test model" });
+          const categoryKey = insertSpatialCategory({ builder, label: "test category" });
+          elementKey = insertPhysicalElement({ builder, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id });
         });
         await using(new ViewportSelectionHandler({ imodel }), async (_) => {
           Presentation.selection.replaceSelection("", imodel, new KeySet([elementKey!]));
@@ -186,7 +211,8 @@ describe("Unified Selection", () => {
       });
 
       it("hilites transient element", async function () {
-        const imodel = await buildTestIModel(this, (_) => {});
+        // eslint-disable-next-line deprecation/deprecation
+        const imodel = await buildTestIModel(this, async (_) => {});
         const transientElementKey = { className: TRANSIENT_ELEMENT_CLASSNAME, id: Id64.fromLocalAndBriefcaseIds(123, 0xffffff) };
         await using(new ViewportSelectionHandler({ imodel }), async (_) => {
           Presentation.selection.replaceSelection("", imodel, new KeySet([transientElementKey]));
@@ -202,7 +228,8 @@ describe("Unified Selection", () => {
       });
 
       it("hilites transient element after removing and adding it back", async function () {
-        const imodel = await buildTestIModel(this, (_) => {});
+        // eslint-disable-next-line deprecation/deprecation
+        const imodel = await buildTestIModel(this, async (_) => {});
         const transientElementKey = { className: TRANSIENT_ELEMENT_CLASSNAME, id: Id64.fromLocalAndBriefcaseIds(123, 0xffffff) };
         await using(new ViewportSelectionHandler({ imodel }), async (_) => {
           // set up the selection to contain a transient element

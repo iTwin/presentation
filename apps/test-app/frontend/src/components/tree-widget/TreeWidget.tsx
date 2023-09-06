@@ -103,7 +103,7 @@ export function ExperimentalModelsTree({ imodel }: { imodel: IModelConnection })
     schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
     const modelsTreeHierarchyProvider = new TreeNodesProvider({
       schemas,
-      queryBuilder: new ModelsTreeQueryBuilder(schemas),
+      queryBuilder: new ModelsTreeQueryBuilder({ schemas }),
       queryExecutor: imodel,
     });
     return async (node?: TreeNodeItem): Promise<TreeNodeItem[]> => {

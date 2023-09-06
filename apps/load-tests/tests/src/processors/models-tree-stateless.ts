@@ -8,8 +8,8 @@
 import { EventEmitter, Next, ScenarioContext } from "artillery";
 import { Guid, StopWatch } from "@itwin/core-bentley";
 import { DbQueryRequest, DbQueryResponse, DbRequestExecutor, ECSqlReader } from "@itwin/core-common";
-import { ModelsTreeQueryBuilder, TreeNode, TreeNodesProvider } from "@itwin/presentation-hierarchy-builder";
 import { ISchemaLocater, Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType, SchemaProps } from "@itwin/ecschema-metadata";
+import { ModelsTreeQueryBuilder, TreeNode, TreeNodesProvider } from "@itwin/presentation-hierarchy-builder";
 import { doRequest, getCurrentIModelName, getCurrentIModelPath, loadNodes, nodeRequestsTracker } from "./common";
 
 console.log(`Frontend PID: ${process.pid}`);
@@ -125,7 +125,7 @@ function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter
 
   const provider = new TreeNodesProvider({
     schemas,
-    queryBuilder: new ModelsTreeQueryBuilder(schemas),
+    queryBuilder: new ModelsTreeQueryBuilder({ schemas }),
     queryExecutor: {
       createQueryReader(ecsql, bindings, config) {
         // eslint-disable-next-line @itwin/no-internal

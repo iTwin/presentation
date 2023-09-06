@@ -7,7 +7,7 @@
  */
 
 import memoize from "micro-memoize";
-import { DelayLoadedTreeNodeItem, PageOptions, TreeNodeItem } from "@itwin/components-react";
+import { DelayLoadedTreeNodeItem, PageOptions, PropertyFilterRuleGroupOperator, TreeNodeItem } from "@itwin/components-react";
 import { IDisposable, Logger } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
@@ -31,6 +31,8 @@ import { RulesetRegistrationHelper } from "../common/RulesetRegistrationHelper";
 import { translate } from "../common/Utils";
 import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory";
 import { convertToInstanceFilterDefinition } from "../instance-filter-builder/InstanceFilterConverter";
+import { PresentationInstanceFilterInfo } from "../instance-filter-builder/PresentationInstanceFilterBuilder";
+import { PresentationInstanceFilter } from "../instance-filter-builder/Types";
 import { IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider";
 import { isPresentationTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem";
 import { createInfoNode, createTreeNodeItem, CreateTreeNodeItemProps, pageOptionsUiToPresentation } from "./Utils";
@@ -276,10 +278,28 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
 }
 
 async function getFilterDefinition(imodel: IModelConnection, node?: TreeNodeItem) {
-  if (!node || !isPresentationTreeNodeItem(node) || !node.filtering?.active) {
+  if (!node || !isPresentationTreeNodeItem(node) || !node.filtering) {
     return undefined;
   }
-  return convertToInstanceFilterDefinition(node.filtering.active.filter, imodel);
+
+  // combine ancestors and current filters
+  const appliedFilters: PresentationInstanceFilterInfo[] = [...node.filtering.ancestorFilters, ...(node.filtering.active ? [node.filtering.active] : [])];
+
+  if (appliedFilters.length === 0) {
+    return undefined;
+  }
+
+  // if there are more than one filter applied, combine them using `AND` operator
+  // otherwise apply filter directly
+  const filter: PresentationInstanceFilter =
+    appliedFilters.length > 1
+      ? {
+          operator: PropertyFilterRuleGroupOperator.And,
+          conditions: appliedFilters.map((ancestorFilter) => ancestorFilter.filter),
+        }
+      : appliedFilters[0].filter;
+
+  return convertToInstanceFilterDefinition(filter, imodel);
 }
 
 async function createNodesAndCountResult(
@@ -330,6 +350,15 @@ function createTreeItems(
   parentNode?: TreeNodeItem,
 ) {
   const items: PresentationTreeNodeItem[] = [];
+
+  // collect filters for child elements. These filter will be applied for grouping nodes
+  // if current node has `ancestorFilters` it means it is grouping node and those filter should be forwarded to child grouping nodes alongside current node filter.
+  // if current node does not have `ancestorFilters` it means it is an instance node and only it's filter should be applied to child grouping nodes.
+  const ancestorFilters =
+    parentNode && isPresentationTreeNodeItem(parentNode) && parentNode.filtering
+      ? [...parentNode.filtering.ancestorFilters, ...(parentNode.filtering.active ? [parentNode.filtering.active] : [])]
+      : [];
+
   for (const node of nodes) {
     const item = treeItemFactory(node, parentNode?.id);
     if (node.supportsFiltering) {
@@ -341,6 +370,7 @@ function createTreeItems(
           }
           return descriptor;
         },
+        ancestorFilters: NodeKey.isGroupingNodeKey(item.key) ? ancestorFilters : [],
       };
     }
     items.push(item);
