@@ -3,18 +3,16 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ECSqlBinding } from "./ECSqlBinding";
-import { TreeNode } from "./TreeNode";
+import { ECSqlQueryDef } from "./ECSql";
+import { HierarchyNode } from "./HierarchyNode";
 
 /** @beta */
-export interface QueryDef {
+export interface HierarchyLevelDefinition {
   fullClassName: string;
-  ctes?: string[];
-  ecsql: string;
-  bindings?: ECSqlBinding[];
+  query: ECSqlQueryDef;
 }
 
 /** @beta */
-export interface ITreeQueryBuilder {
-  createQueries(parentNode: TreeNode | undefined): Promise<QueryDef[]>;
+export interface IHierarchyDefinition {
+  defineHierarchyLevel(parentNode: HierarchyNode | undefined): Promise<HierarchyLevelDefinition[]>;
 }

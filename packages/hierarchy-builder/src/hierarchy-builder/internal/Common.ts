@@ -3,14 +3,14 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { from, merge, Observable } from "rxjs";
+import { merge, Observable } from "rxjs";
 import { QueryBinder } from "@itwin/core-common";
 import { ECClass, Schema, SchemaContext, SchemaKey } from "@itwin/ecschema-metadata";
-import { ECSqlBinding } from "../ECSqlBinding";
-import { TreeNode } from "../TreeNode";
+import { ECSqlBinding } from "../ECSql";
+import { HierarchyNode } from "../HierarchyNode";
 
 /** @internal */
-export interface TreeNodeHandlingParams {
+export interface HierarchyNodeHandlingParams {
   hideIfNoChildren?: boolean;
   hideInHierarchy?: boolean;
   groupByClass?: boolean;
@@ -18,7 +18,7 @@ export interface TreeNodeHandlingParams {
 }
 
 /** @internal */
-export type InProgressTreeNode = TreeNode & TreeNodeHandlingParams;
+export type InProgressHierarchyNode = HierarchyNode & HierarchyNodeHandlingParams;
 
 /** @internal */
 export async function getClass(schemas: SchemaContext, fullClassName: string) {
@@ -43,11 +43,7 @@ export async function getClass(schemas: SchemaContext, fullClassName: string) {
 }
 
 /** @internal */
-export function mergeInstanceNodes<TDirectChildren>(
-  lhs: InProgressTreeNode,
-  rhs: InProgressTreeNode,
-  directChildrenMerger: (lhsChildren: TDirectChildren, rhsChildren: TDirectChildren) => TDirectChildren,
-): InProgressTreeNode {
+export function mergeInstanceNodes(lhs: InProgressHierarchyNode, rhs: InProgressHierarchyNode): InProgressHierarchyNode {
   if (lhs.key.type !== "instances" || rhs.key.type !== "instances") {
     throw new Error("Only instance nodes allowed");
   }
@@ -71,7 +67,6 @@ export function mergeInstanceNodes<TDirectChildren>(
     ...(lhs.groupByClass || rhs.groupByClass ? { groupByClass: lhs.groupByClass || rhs.groupByClass } : undefined),
     ...(lhs.autoExpand || rhs.autoExpand ? { autoExpand: lhs.autoExpand || rhs.autoExpand } : undefined),
     ...(lhs.extendedData || rhs.extendedData ? { extendedData: { ...lhs.extendedData, ...rhs.extendedData } } : undefined),
-    ...(lhs.directChildren || rhs.directChildren ? { directChildren: directChildrenMerger(lhs.directChildren, rhs.directChildren) } : undefined),
   };
 }
 
@@ -81,18 +76,22 @@ export function hasChildren<TNode extends { children?: boolean | Array<unknown> 
 }
 
 /** @internal */
-export function mergeInstanceNodesObs(lhs: InProgressTreeNode, rhs: InProgressTreeNode, directNodesCache: Map<string, Observable<InProgressTreeNode>>) {
-  const merged = mergeInstanceNodes<Observable<InProgressTreeNode>>(lhs, rhs, () => from<InProgressTreeNode[]>([]));
+export function mergeInstanceNodesObs(
+  lhs: InProgressHierarchyNode,
+  rhs: InProgressHierarchyNode,
+  directNodesCache: Map<string, Observable<InProgressHierarchyNode>>,
+) {
+  const merged = mergeInstanceNodes(lhs, rhs);
   mergeDirectNodeObservables(lhs, rhs, merged, directNodesCache);
   return merged;
 }
 
 /** @internal */
 export function mergeDirectNodeObservables(
-  a: InProgressTreeNode,
-  b: InProgressTreeNode,
-  m: InProgressTreeNode,
-  cache: Map<string, Observable<InProgressTreeNode>>,
+  a: InProgressHierarchyNode,
+  b: InProgressHierarchyNode,
+  m: InProgressHierarchyNode,
+  cache: Map<string, Observable<InProgressHierarchyNode>>,
 ) {
   const cachedA = cache.get(JSON.stringify(a.key));
   if (!cachedA) {
