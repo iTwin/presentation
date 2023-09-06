@@ -25,9 +25,16 @@ module.exports = {
       outputs: ["build/docs/**"],
       inputs: ["src/**"],
     },
-    ["@itwin/presentation-components#extract-api"]: ["@itwin/presentation-components#build"],
-    ["@itwin/presentation-testing#extract-api"]: ["@itwin/presentation-testing#build"],
-    ["@itwin/presentation-opentelemetry#extract-api"]: ["@itwin/presentation-opentelemetry#build"],
+    "extract-api": {
+      dependsOn: ["build"],
+      outputs: ["api/**"],
+      inputs: ["lib/**"],
+    },
+    "check-internal": {
+      dependsOn: ["extract-api"],
+      outputs: [],
+      inputs: ["api/**"],
+    },
     clean: {
       cache: false,
     },
