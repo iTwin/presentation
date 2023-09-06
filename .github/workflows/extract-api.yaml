@@ -35,7 +35,6 @@ jobs:
         run: pnpm install
 
       - name: Extract API
-        run: pnpm lage extract-api
-
-      - name: Check API for @internal
-        run: pnpm lage check-internal
+        env:
+          TF_BUILD: 1
+        run: pnpm lage extract-api check-internal
