@@ -5,7 +5,7 @@
 
 import { Observable } from "rxjs";
 import { InstanceKey } from "../hierarchy-builder/EC";
-import { InProgressTreeNode } from "../hierarchy-builder/internal/Common";
+import { InProgressHierarchyNode } from "../hierarchy-builder/internal/Common";
 
 export async function getObservableResult<T>(obs: Observable<T>): Promise<Array<T>> {
   const arr = new Array<T>();
@@ -24,7 +24,7 @@ export async function getObservableResult<T>(obs: Observable<T>): Promise<Array<
   });
 }
 
-export function createTestNode(src?: Partial<InProgressTreeNode>): InProgressTreeNode {
+export function createTestNode(src?: Partial<InProgressHierarchyNode>): InProgressHierarchyNode {
   return {
     label: "test",
     key: {
