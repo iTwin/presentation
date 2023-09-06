@@ -10,14 +10,14 @@ import { SchemaContext } from "@itwin/ecschema-metadata";
 import { HierarchyNode } from "./HierarchyNode";
 import { IHierarchyDefinition } from "./IHierarchyDefinition";
 import { InProgressHierarchyNode } from "./internal/Common";
-import { createClassGroupingReducer } from "./internal/operators/ClassGrouping";
-import { createDetermineChildrenReducer } from "./internal/operators/DetermineChildren";
-import { createHideIfNoChildrenReducer } from "./internal/operators/HideIfNoChildren";
-import { createHideNodesInHierarchyReducer } from "./internal/operators/HideNodesInHierarchy";
-import { createMergeInstanceNodesByLabelReducer } from "./internal/operators/MergeInstanceNodesByLabel";
-import { createPersistChildrenReducer } from "./internal/operators/PersistChildren";
-import { sortNodesByLabelReducer } from "./internal/operators/Sorting";
-import { supplyIconsReducer } from "./internal/operators/SupplyIcons";
+import { createClassGroupingOperator } from "./internal/operators/ClassGrouping";
+import { createDetermineChildrenOperator } from "./internal/operators/DetermineChildren";
+import { createHideIfNoChildrenOperator } from "./internal/operators/HideIfNoChildren";
+import { createHideNodesInHierarchyOperator } from "./internal/operators/HideNodesInHierarchy";
+import { createMergeInstanceNodesByLabelOperator } from "./internal/operators/MergeInstanceNodesByLabel";
+import { createPersistChildrenOperator } from "./internal/operators/PersistChildren";
+import { sortNodesByLabelOperator } from "./internal/operators/Sorting";
+import { supplyIconsOperator } from "./internal/operators/SupplyIcons";
 import { QueryScheduler } from "./internal/QueryScheduler";
 import { applyLimit, TreeQueryResultsReader } from "./internal/TreeNodesReader";
 import { IQueryExecutor } from "./IQueryExecutor";
@@ -90,13 +90,13 @@ export class HierarchyProvider {
 
     const directChildren = this.ensureDirectChildren(parentNode);
     const result = directChildren.pipe(
-      createMergeInstanceNodesByLabelReducer(this._directNodesCache),
-      createHideIfNoChildrenReducer((n) => this.hasNodesObservable(n), false),
-      createHideNodesInHierarchyReducer((n) => this.getNodesObservable(n), this._directNodesCache, false),
-      sortNodesByLabelReducer,
-      createClassGroupingReducer(this._schemas),
+      createMergeInstanceNodesByLabelOperator(this._directNodesCache),
+      createHideIfNoChildrenOperator((n) => this.hasNodesObservable(n), false),
+      createHideNodesInHierarchyOperator((n) => this.getNodesObservable(n), this._directNodesCache, false),
+      sortNodesByLabelOperator,
+      createClassGroupingOperator(this._schemas),
     );
-    return parentNode ? result.pipe(createPersistChildrenReducer(parentNode)) : result;
+    return parentNode ? result.pipe(createPersistChildrenOperator(parentNode)) : result;
   }
 
   public async getNodes(parentNode: HierarchyNode | undefined): Promise<HierarchyNode[]> {
@@ -105,8 +105,8 @@ export class HierarchyProvider {
       this.getNodesObservable(parentNode)
         // finalize before returning
         .pipe(
-          createDetermineChildrenReducer((n) => this.hasNodesObservable(n)),
-          supplyIconsReducer,
+          createDetermineChildrenOperator((n) => this.hasNodesObservable(n)),
+          supplyIconsOperator,
         )
         // load all nodes into the array and resolve
         .subscribe({
@@ -132,10 +132,10 @@ export class HierarchyProvider {
     const directChildren = this.ensureDirectChildren(node);
     return directChildren
       .pipe(
-        tap((n) => enableLogging && console.log(`HasNodes: partial node before HideIfNoChildrenReducer: ${JSON.stringify(n)}`)),
-        createHideIfNoChildrenReducer((n) => this.hasNodesObservable(n), true),
-        tap((n) => enableLogging && console.log(`HasNodes: partial node before HideNodesInHierarchyReducer: ${JSON.stringify(n)}`)),
-        createHideNodesInHierarchyReducer((n) => this.getNodesObservable(n), this._directNodesCache, true),
+        tap((n) => enableLogging && console.log(`HasNodes: partial node before HideIfNoChildrenOperator: ${JSON.stringify(n)}`)),
+        createHideIfNoChildrenOperator((n) => this.hasNodesObservable(n), true),
+        tap((n) => enableLogging && console.log(`HasNodes: partial node before HideNodesInHierarchyOperator: ${JSON.stringify(n)}`)),
+        createHideNodesInHierarchyOperator((n) => this.getNodesObservable(n), this._directNodesCache, true),
       )
       .pipe(
         tap((n) => enableLogging && console.log(`HasNodes: partial node before mapping to 'true': ${JSON.stringify(n)}`)),

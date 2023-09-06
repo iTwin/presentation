@@ -9,10 +9,10 @@ import { Id64 } from "@itwin/core-bentley";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ClassInfo } from "../../EC";
 import { getClass, InProgressHierarchyNode } from "../Common";
-import { sortNodesByLabelReducer } from "./Sorting";
+import { sortNodesByLabelOperator } from "./Sorting";
 
 /** @internal */
-export function createClassGroupingReducer(schemas: SchemaContext) {
+export function createClassGroupingOperator(schemas: SchemaContext) {
   interface ClassGroupingInformation {
     ungrouped: Array<InProgressHierarchyNode>;
     grouped: Map<string, { class: ClassInfo; groupedNodes: Array<InProgressHierarchyNode> }>;
@@ -61,7 +61,7 @@ export function createClassGroupingReducer(schemas: SchemaContext) {
       mergeMap((groupings) => {
         const grouped = groupNodes(groupings);
         const obs = from(grouped);
-        return grouped.hasClassGroupingNodes ? obs.pipe(sortNodesByLabelReducer) : obs;
+        return grouped.hasClassGroupingNodes ? obs.pipe(sortNodesByLabelOperator) : obs;
       }),
     );
   };

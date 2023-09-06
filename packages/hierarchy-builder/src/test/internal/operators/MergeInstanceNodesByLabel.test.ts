@@ -6,10 +6,10 @@
 import { expect } from "chai";
 import { from, Observable } from "rxjs";
 import { InProgressHierarchyNode } from "../../../hierarchy-builder/internal/Common";
-import { createMergeInstanceNodesByLabelReducer } from "../../../hierarchy-builder/internal/operators/MergeInstanceNodesByLabel";
+import { createMergeInstanceNodesByLabelOperator } from "../../../hierarchy-builder/internal/operators/MergeInstanceNodesByLabel";
 import { createTestInstanceKey, createTestNode, getObservableResult } from "../../Utils";
 
-describe("mergeInstanceNodesByLabelReducer", () => {
+describe("mergeInstanceNodesByLabelOperator", () => {
   const directNodesCache = new Map<string, Observable<InProgressHierarchyNode>>();
   beforeEach(() => {
     directNodesCache.clear();
@@ -20,7 +20,7 @@ describe("mergeInstanceNodesByLabelReducer", () => {
       createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] } }),
       createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] } }),
     ];
-    const result = await getObservableResult(from(nodes).pipe(createMergeInstanceNodesByLabelReducer(directNodesCache)));
+    const result = await getObservableResult(from(nodes).pipe(createMergeInstanceNodesByLabelOperator(directNodesCache)));
     expect(result).to.deep.eq(nodes);
   });
 
@@ -29,7 +29,7 @@ describe("mergeInstanceNodesByLabelReducer", () => {
       createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] }, mergeByLabelId: "" }),
       createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] }, mergeByLabelId: "" }),
     ];
-    const result = await getObservableResult(from(nodes).pipe(createMergeInstanceNodesByLabelReducer(directNodesCache)));
+    const result = await getObservableResult(from(nodes).pipe(createMergeInstanceNodesByLabelOperator(directNodesCache)));
     expect(result).to.deep.eq(nodes);
   });
 
@@ -38,7 +38,7 @@ describe("mergeInstanceNodesByLabelReducer", () => {
       createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] }, mergeByLabelId: "a" }),
       createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] }, mergeByLabelId: "b" }),
     ];
-    const result = await getObservableResult(from(nodes).pipe(createMergeInstanceNodesByLabelReducer(directNodesCache)));
+    const result = await getObservableResult(from(nodes).pipe(createMergeInstanceNodesByLabelOperator(directNodesCache)));
     expect(result).to.deep.eq(nodes);
   });
 
@@ -47,7 +47,7 @@ describe("mergeInstanceNodesByLabelReducer", () => {
       createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] }, mergeByLabelId: "x" }),
       createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] }, mergeByLabelId: "x" }),
     ];
-    const result = await getObservableResult(from(nodes).pipe(createMergeInstanceNodesByLabelReducer(directNodesCache)));
+    const result = await getObservableResult(from(nodes).pipe(createMergeInstanceNodesByLabelOperator(directNodesCache)));
     expect(result).to.deep.eq([
       createTestNode({
         key: {

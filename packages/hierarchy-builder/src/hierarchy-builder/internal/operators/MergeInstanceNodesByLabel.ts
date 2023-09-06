@@ -9,8 +9,8 @@ import { assert, DuplicatePolicy, SortedArray } from "@itwin/core-bentley";
 import { InProgressHierarchyNode, mergeDirectNodeObservables, mergeInstanceNodesObs } from "../Common";
 
 /** @internal */
-export function createMergeInstanceNodesByLabelReducer(directNodesCache: Map<string, Observable<InProgressHierarchyNode>>) {
-  return function mergeInstanceNodesByLabelReducer(nodes: Observable<InProgressHierarchyNode>): Observable<InProgressHierarchyNode> {
+export function createMergeInstanceNodesByLabelOperator(directNodesCache: Map<string, Observable<InProgressHierarchyNode>>) {
+  return function (nodes: Observable<InProgressHierarchyNode>): Observable<InProgressHierarchyNode> {
     const enableLogging = false;
     class SortedNodesList extends SortedArray<InProgressHierarchyNode> {
       public constructor() {
@@ -39,7 +39,7 @@ export function createMergeInstanceNodesByLabelReducer(directNodesCache: Map<str
     }
     const [merged, nonMerged] = partition(
       nodes.pipe(
-        tap((n) => enableLogging && console.log(`MergeInstanceNodesByLabelReducer in: ${JSON.stringify(n)}`)),
+        tap((n) => enableLogging && console.log(`MergeInstanceNodesByLabelOperator in: ${JSON.stringify(n)}`)),
         share(),
       ),
       (node) => !!node.mergeByLabelId,
@@ -64,7 +64,7 @@ export function createMergeInstanceNodesByLabelReducer(directNodesCache: Map<str
       ),
     ).pipe(
       tap((n) => {
-        enableLogging && console.log(`MergeInstanceNodesByLabelReducer out: ${JSON.stringify(n)}`);
+        enableLogging && console.log(`MergeInstanceNodesByLabelOperator out: ${JSON.stringify(n)}`);
       }),
     );
     return res;

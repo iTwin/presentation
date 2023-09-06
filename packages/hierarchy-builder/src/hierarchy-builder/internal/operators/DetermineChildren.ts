@@ -8,7 +8,7 @@ import { map, merge, mergeMap, Observable, partition, share, tap } from "rxjs";
 import { InProgressHierarchyNode } from "../Common";
 
 /** @internal */
-export function createDetermineChildrenReducer(hasNodes: (node: InProgressHierarchyNode) => Observable<boolean>) {
+export function createDetermineChildrenOperator(hasNodes: (node: InProgressHierarchyNode) => Observable<boolean>) {
   const enableLogging = false;
   return function (nodes: Observable<InProgressHierarchyNode>): Observable<InProgressHierarchyNode> {
     const [determined, undetermined] = partition(nodes.pipe(share()), (node) => node.children !== undefined);
@@ -18,12 +18,12 @@ export function createDetermineChildrenReducer(hasNodes: (node: InProgressHierar
         mergeMap((n) =>
           hasNodes(n).pipe(
             map((children) => {
-              enableLogging && console.log(`DetermineChildrenReducer: children for ${n.label}: ${children}`);
+              enableLogging && console.log(`DetermineChildrenOperator: children for ${n.label}: ${children}`);
               return { ...n, children };
             }),
           ),
         ),
       ),
-    ).pipe(tap((node) => enableLogging && console.log(`DetermineChildrenReducer partial: ${node.label}: ${node.children}`)));
+    ).pipe(tap((node) => enableLogging && console.log(`DetermineChildrenOperator partial: ${node.label}: ${node.children}`)));
   };
 }

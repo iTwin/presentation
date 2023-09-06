@@ -8,7 +8,7 @@ import { defer, filter, from, merge, mergeAll, mergeMap, Observable, partition, 
 import { InProgressHierarchyNode, mergeInstanceNodesObs } from "../Common";
 
 /** @internal */
-export function createHideNodesInHierarchyReducer(
+export function createHideNodesInHierarchyOperator(
   getNodes: (parentNode: InProgressHierarchyNode) => Observable<InProgressHierarchyNode>,
   directNodesCache: Map<string, Observable<InProgressHierarchyNode>>,
   stopOnFirstChild: boolean,
@@ -28,7 +28,7 @@ export function createHideNodesInHierarchyReducer(
   }
   return function (nodes: Observable<InProgressHierarchyNode>): Observable<InProgressHierarchyNode> {
     const sharedNodes = nodes.pipe(
-      tap((n) => `HideNodesInHierarchyReducer in: ${n.label}`),
+      tap((n) => `HideNodesInHierarchyOperator in: ${n.label}`),
       share(),
     );
     const [withFlag, withoutFlag] = partition(sharedNodes, (node) => !!node.hideInHierarchy);
@@ -55,6 +55,6 @@ export function createHideNodesInHierarchyReducer(
         mergeMap((mergedNodes) => [...mergedNodes.values()].map((mergedNode) => defer(() => getNodes(mergedNode)))),
         mergeAll(),
       ),
-    ).pipe(tap((node) => enableLogging && console.log(`HideNodesInHierarchyReducer out: ${node.label}`)));
+    ).pipe(tap((node) => enableLogging && console.log(`HideNodesInHierarchyOperator out: ${node.label}`)));
   };
 }

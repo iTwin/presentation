@@ -9,7 +9,7 @@ import { HierarchyNode } from "../../HierarchyNode";
 import { InProgressHierarchyNode } from "../Common";
 
 /** @internal */
-export function createPersistChildrenReducer(parentNode: HierarchyNode) {
+export function createPersistChildrenOperator(parentNode: HierarchyNode) {
   return function (nodes: Observable<InProgressHierarchyNode>): Observable<InProgressHierarchyNode> {
     nodes.pipe(
       reduce((acc, node) => [...acc, node], new Array<InProgressHierarchyNode>()),

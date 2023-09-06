@@ -6,13 +6,13 @@
 import { expect } from "chai";
 import { from, of } from "rxjs";
 import sinon from "sinon";
-import { createHideIfNoChildrenReducer } from "../../../hierarchy-builder/internal/operators/HideIfNoChildren";
+import { createHideIfNoChildrenOperator } from "../../../hierarchy-builder/internal/operators/HideIfNoChildren";
 import { createTestNode, getObservableResult } from "../../Utils";
 
-describe("hideIfNoChildrenReducer", () => {
+describe("hideIfNoChildrenOperator", () => {
   it("returns nodes that don't need hiding", async () => {
     const nodes = [createTestNode()];
-    const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenReducer(sinon.spy(), false)));
+    const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenOperator(sinon.spy(), false)));
     expect(result).to.deep.eq(nodes);
   });
 
@@ -23,7 +23,7 @@ describe("hideIfNoChildrenReducer", () => {
         children: false,
       }),
     ];
-    const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenReducer(sinon.spy(), false)));
+    const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenOperator(sinon.spy(), false)));
     expect(result).to.deep.eq([]);
   });
 
@@ -34,7 +34,7 @@ describe("hideIfNoChildrenReducer", () => {
         children: true,
       }),
     ];
-    const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenReducer(sinon.spy(), false)));
+    const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenOperator(sinon.spy(), false)));
     expect(result).to.deep.eq(nodes);
   });
 
@@ -45,7 +45,7 @@ describe("hideIfNoChildrenReducer", () => {
         children: [],
       }),
     ];
-    const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenReducer(sinon.spy(), false)));
+    const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenOperator(sinon.spy(), false)));
     expect(result).to.deep.eq([]);
   });
 
@@ -56,7 +56,7 @@ describe("hideIfNoChildrenReducer", () => {
         children: [createTestNode()],
       }),
     ];
-    const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenReducer(sinon.spy(), false)));
+    const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenOperator(sinon.spy(), false)));
     expect(result).to.deep.eq(nodes);
   });
 
@@ -68,7 +68,7 @@ describe("hideIfNoChildrenReducer", () => {
       }),
     ];
     const hasNodes = sinon.fake(() => of(false));
-    const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenReducer(hasNodes, false)));
+    const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenOperator(hasNodes, false)));
     expect(result).to.deep.eq([]);
   });
 
@@ -80,7 +80,7 @@ describe("hideIfNoChildrenReducer", () => {
       }),
     ];
     const hasNodes = sinon.fake(() => of(true));
-    const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenReducer(hasNodes, false)));
+    const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenOperator(hasNodes, false)));
     expect(result).to.deep.eq([{ ...nodes[0], children: true }]);
   });
 });

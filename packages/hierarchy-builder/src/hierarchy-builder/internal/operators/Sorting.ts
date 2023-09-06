@@ -9,7 +9,7 @@ import { mergeMap, Observable, toArray } from "rxjs";
 import { HierarchyNode } from "../../HierarchyNode";
 
 /** @internal */
-export function sortNodesByLabelReducer(nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
+export function sortNodesByLabelOperator(nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
   return nodes.pipe(
     toArray(),
     mergeMap((allNodes) => allNodes.sort((lhs, rhs) => naturalCompare(lhs.label.toLocaleLowerCase(), rhs.label.toLocaleLowerCase()))),

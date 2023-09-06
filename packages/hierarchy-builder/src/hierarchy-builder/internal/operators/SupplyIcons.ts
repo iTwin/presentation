@@ -8,7 +8,7 @@ import { map, Observable } from "rxjs";
 import { HierarchyNode } from "../../HierarchyNode";
 
 /** @internal */
-export function supplyIconsReducer(nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
+export function supplyIconsOperator(nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
   return nodes.pipe(
     map((node) => {
       if (node.key.type !== "class-grouping") {
