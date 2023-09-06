@@ -175,11 +175,6 @@ describe("usePresentationTableWithUnifiedSelection", () => {
   it("Adds passed keys to the unified selection with onSelect", async () => {
     const keys = new KeySet([createTestECInstanceKey()]);
 
-    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
-
-    assert(!(result.current instanceof Error));
-    const onSelectCallback = result.current.onSelect;
-
     const stringifiedKeys: string[] = [];
     const validKeys: Key[] = [];
 
@@ -188,8 +183,30 @@ describe("usePresentationTableWithUnifiedSelection", () => {
       validKeys.push(key);
     });
 
-    const replaceSpy = sinon.stub(Presentation.selection, "replaceSelection");
+    const propertiesField = createTestPropertiesContentField({
+      name: "first_field",
+      label: "First Field",
+      properties: [{ property: createTestPropertyInfo() }],
+    });
+    const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
+    const item = createTestContentItem({
+      values: { [propertiesField.name]: "test_value" },
+      displayValues: { [propertiesField.name]: "Test value" },
+    });
 
+    sinon.stub(Presentation.selection, "getSelection").returns(keys);
+
+    presentationManagerMock.setup(async (x) => x.getContentDescriptor(moq.It.is((options) => options.keys.size === keys.size))).returns(async () => descriptor);
+    presentationManagerMock
+      .setup(async (x) => x.getContentAndSize(moq.It.is((options) => options.keys.size === keys.size)))
+      .returns(async () => ({ content: new Content(descriptor, [item]), size: 1 }));
+
+    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
+
+    const replaceSpy = sinon.stub(Presentation.selection, "replaceSelection");
+    await waitFor(() => expect(result.current.isLoading).to.be.false);
+
+    const onSelectCallback = result.current.onSelect;
     onSelectCallback(stringifiedKeys);
     expect(replaceSpy).to.be.calledOnceWith("UnifiedSelectionContext", {}, validKeys, 1);
   });
@@ -214,7 +231,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
       selectionLevel: 3,
       keys: new KeySet(),
       returnLength: 0,
-      testName: "Returns an empty array of selectedRows when keys are passed from a wrong level",
+      testName: "Returns an empty array of selectedRows when keys are passed from the wrong level",
     },
     {
       selectionLevel: 1,
@@ -223,7 +240,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
       testName: "Returns an array of selectedRows when keys are passed correctly",
     },
   ].forEach((args) => {
-    it(args.testName, async () => {
+    it(`${args.testName} on selectionChange event`, async () => {
       const propertiesField = createTestPropertiesContentField({
         name: "first_field",
         label: "First Field",
@@ -244,14 +261,13 @@ describe("usePresentationTableWithUnifiedSelection", () => {
         .setup(async (x) => x.getContentAndSize(moq.It.is((options) => options.keys.size === args.keys.size)))
         .returns(async () => ({ content: new Content(descriptor, [item]), size: 1 }));
 
-      Presentation.selection.addToSelection("UnifiedSelectionContext", initialProps.imodel, new KeySet([createTestECInstanceKey()]), 1);
-
       const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
       const resultBeforeAdding = result.current.selectedRows;
       expect(resultBeforeAdding.length).to.be.equal(0);
 
-      // Presentation.selection.addToSelection(args.selectionSource, initialProps.imodel, new KeySet([createTestECInstanceKey()]), args.selectionLevel);
       await waitFor(() => expect(result.current.isLoading).to.be.false);
+      Presentation.selection.addToSelection("UnifiedSelectionContext", initialProps.imodel, new KeySet([createTestECInstanceKey()]), args.selectionLevel);
+
       const resultAfterAdding = result.current.selectedRows;
       expect(resultAfterAdding.length).to.be.equal(args.returnLength);
     });
