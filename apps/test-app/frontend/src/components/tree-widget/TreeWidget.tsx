@@ -144,7 +144,7 @@ export function ExperimentalModelsTree({ imodel }: { imodel: IModelConnection })
   );
 }
 
-function parseTreeNodeItem(node: TreeNode): DelayLoadedTreeNodeItem {
+function parseTreeNodeItem(node: HierarchyNode): DelayLoadedTreeNodeItem {
   if (node.children === undefined) {
     throw new Error("Invalid node: children not determined");
   }
