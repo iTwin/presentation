@@ -9,7 +9,7 @@ import sinon from "sinon";
 import * as moq from "typemoq";
 import { BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { Content, Key, KeySet } from "@itwin/presentation-common";
+import { Content, Descriptor, Item, Key, KeySet } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, SelectionManager } from "@itwin/presentation-frontend";
 import { waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
@@ -174,7 +174,6 @@ describe("usePresentationTableWithUnifiedSelection", () => {
 
   it("Adds passed keys to the unified selection with onSelect", async () => {
     const keys = new KeySet([createTestECInstanceKey()]);
-
     const stringifiedKeys: string[] = [];
     const validKeys: Key[] = [];
 
@@ -183,19 +182,9 @@ describe("usePresentationTableWithUnifiedSelection", () => {
       validKeys.push(key);
     });
 
-    const propertiesField = createTestPropertiesContentField({
-      name: "first_field",
-      label: "First Field",
-      properties: [{ property: createTestPropertyInfo() }],
-    });
-    const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
-    const item = createTestContentItem({
-      values: { [propertiesField.name]: "test_value" },
-      displayValues: { [propertiesField.name]: "Test value" },
-    });
-
     sinon.stub(Presentation.selection, "getSelection").returns(keys);
 
+    const { descriptor, item } = getMockData();
     presentationManagerMock.setup(async (x) => x.getContentDescriptor(moq.It.is((options) => options.keys.size === keys.size))).returns(async () => descriptor);
     presentationManagerMock
       .setup(async (x) => x.getContentAndSize(moq.It.is((options) => options.keys.size === keys.size)))
@@ -241,19 +230,9 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     },
   ].forEach((args) => {
     it(`${args.testName} on selectionChange event`, async () => {
-      const propertiesField = createTestPropertiesContentField({
-        name: "first_field",
-        label: "First Field",
-        properties: [{ property: createTestPropertyInfo() }],
-      });
-      const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
-      const item = createTestContentItem({
-        values: { [propertiesField.name]: "test_value" },
-        displayValues: { [propertiesField.name]: "Test value" },
-      });
-
       sinon.stub(Presentation.selection, "getSelection").returns(args.keys);
 
+      const { descriptor, item } = getMockData();
       presentationManagerMock
         .setup(async (x) => x.getContentDescriptor(moq.It.is((options) => options.keys.size === args.keys.size)))
         .returns(async () => descriptor);
@@ -272,4 +251,19 @@ describe("usePresentationTableWithUnifiedSelection", () => {
       expect(resultAfterAdding.length).to.be.equal(args.returnLength);
     });
   });
+
+  function getMockData(): { descriptor: Descriptor; item: Item } {
+    const propertiesField = createTestPropertiesContentField({
+      name: "first_field",
+      label: "First Field",
+      properties: [{ property: createTestPropertyInfo() }],
+    });
+    const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
+    const item = createTestContentItem({
+      values: { [propertiesField.name]: "test_value" },
+      displayValues: { [propertiesField.name]: "Test value" },
+    });
+
+    return { descriptor, item };
+  }
 });
