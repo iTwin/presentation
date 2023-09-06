@@ -41,7 +41,7 @@ import { ITreeNodeLoader } from '@itwin/components-react';
 import { ITreeNodeLoaderWithProvider } from '@itwin/components-react';
 import { Keys } from '@itwin/presentation-common';
 import { KeySet } from '@itwin/presentation-common';
-import { MicroMemoize } from 'micro-memoize';
+import { Memoized } from 'micro-memoize';
 import { NavigationPropertyInfo } from '@itwin/presentation-common';
 import { Node as Node_2 } from '@itwin/presentation-common';
 import { NodeKey } from '@itwin/presentation-common';
@@ -114,7 +114,7 @@ export class ContentDataProvider implements IContentDataProvider {
     get displayType(): string;
     dispose(): void;
     getContent(pageOptions?: PageOptions): Promise<Content | undefined>;
-    getContentDescriptor: MicroMemoize.Memoized<() => Promise<Descriptor | undefined>>;
+    getContentDescriptor: Memoized<() => Promise<Descriptor | undefined>>;
     getContentSetSize(): Promise<number>;
     protected getDescriptorOverrides(): Promise<DescriptorOverrides>;
     getFieldByPropertyDescription(descr: PropertyDescription): Promise<Field | undefined>;
@@ -416,6 +416,31 @@ export class NavigationPropertyTargetEditor extends PureComponent<PropertyEditor
     render(): JSX.Element;
 }
 
+// @internal
+export const NumericEditorName = "presentation-numeric-editor";
+
+// @internal
+export class NumericPropertyEditor extends PureComponent<PropertyEditorProps> implements TypeEditor {
+    // (undocumented)
+    getPropertyValue(): Promise<PropertyValue | undefined>;
+    // (undocumented)
+    get hasFocus(): boolean;
+    // (undocumented)
+    get htmlElement(): HTMLDivElement | null;
+    // (undocumented)
+    render(): JSX.Element | null;
+}
+
+// @internal
+export class NumericPropertyEditorBase extends PropertyEditorBase {
+    // (undocumented)
+    get containerHandlesEnter(): boolean;
+    // (undocumented)
+    get containerStopsKeydownPropagation(): boolean;
+    // (undocumented)
+    get reactNode(): React.ReactNode;
+}
+
 // @public
 export enum PresentationComponentsLoggerCategory {
     Content = "presentation-components.Content",
@@ -498,7 +523,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     dispose(): void;
     getData(): Promise<PropertyData>;
     protected getDescriptorOverrides(): Promise<DescriptorOverrides>;
-    protected getMemoizedData: MicroMemoize.Memoized<() => Promise<PropertyData>>;
+    protected getMemoizedData: Memoized<() => Promise<PropertyData>>;
     getPropertyRecordInstanceKeys(record: PropertyRecord): Promise<InstanceKey[]>;
     // @deprecated
     get includeFieldsWithCompositeValues(): boolean;
@@ -530,6 +555,8 @@ export interface PresentationPropertyDataProviderProps extends DiagnosticsProps 
 // @public
 export class PresentationTreeDataProvider implements IPresentationTreeDataProvider, IDisposable {
     constructor(props: PresentationTreeDataProviderProps);
+    // @internal
+    createTreeNodeItem(node: Node_2, parentId?: string): PresentationTreeNodeItem;
     dispose(): void;
     getFilteredNodePaths(filter: string): Promise<NodePathElement[]>;
     // @deprecated
@@ -579,6 +606,7 @@ export interface PresentationTreeNodeItem extends DelayLoadedTreeNodeItem {
 // @beta
 export interface PresentationTreeNodeItemFilteringInfo {
     active?: PresentationInstanceFilterInfo;
+    ancestorFilters: PresentationInstanceFilterInfo[];
     descriptor: Descriptor | (() => Promise<Descriptor>);
 }
 
@@ -757,8 +785,8 @@ export function useControlledPresentationTreeFiltering(props: ControlledPresenta
 };
 
 // @internal (undocumented)
-export function useFilteredNodeLoader(nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>, filter: string | undefined): {
-    filteredNodeLoader: PagedTreeNodeLoader<IFilteredPresentationTreeDataProvider> | undefined;
+export function useFilteredNodeLoader(dataProvider: IPresentationTreeDataProvider, filter: string | undefined): {
+    filteredNodeLoader: AbstractTreeNodeLoaderWithProvider<IFilteredPresentationTreeDataProvider> | undefined;
     isFiltering: boolean;
     filterApplied: string | undefined;
     matchesCount: number | undefined;
