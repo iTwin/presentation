@@ -7,9 +7,9 @@ import { expect } from "chai";
 import sinon from "sinon";
 import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import { EditorContainer } from "@itwin/components-react";
-import { render, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { waitFor } from "@testing-library/react";
 import { NumericPropertyEditor } from "../../presentation-components/properties/NumericPropertyEditor";
+import { render } from "../_helpers/Common";
 
 export const createRecord = (initialValue?: number) => {
   const value: PrimitiveValue = {
@@ -39,10 +39,9 @@ describe("<NumericPropertyEditorBase />", () => {
   });
 
   it("invokes `onCommit` when input changes", async () => {
-    const user = userEvent.setup();
     const record = createRecord();
     const spy = sinon.spy();
-    const { getByTestId, queryByDisplayValue } = render(<EditorContainer propertyRecord={record} onCancel={() => {}} onCommit={spy} />);
+    const { getByTestId, queryByDisplayValue, user } = render(<EditorContainer propertyRecord={record} onCancel={() => {}} onCommit={spy} />);
 
     const inputContainer = await waitFor(() => getByTestId("numeric-input"));
 

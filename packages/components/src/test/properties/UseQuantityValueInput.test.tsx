@@ -3,25 +3,17 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { expect } from "chai";
+import { useEffect } from "react";
+import sinon from "sinon";
 import { BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp } from "@itwin/core-frontend";
 import { FormatterSpec, ParseError, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
-import sinon from "sinon";
-import { render as renderRTL, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { waitFor } from "@testing-library/react";
 import { QuantityValue, useQuantityValueInput, UseQuantityValueInputProps } from "../../presentation-components/properties/UseQuantityValueInput";
-import { useEffect } from "react";
-import { expect } from "chai";
-
-function render(...args: Parameters<typeof renderRTL>) {
-  const user = userEvent.setup();
-  return {
-    ...renderRTL(...args),
-    user,
-  };
-}
+import { render } from "../_helpers/Common";
 
 function TestInput({ onChange, ...restProps }: UseQuantityValueInputProps & { onChange?: (value: QuantityValue) => void }) {
   const { quantityValue, inputProps } = useQuantityValueInput(restProps);

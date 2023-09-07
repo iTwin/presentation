@@ -31,7 +31,13 @@
     "no-filtered-children": "There are no child nodes matching current filter",
     "result-set-too-large": "The hierarchy level is too large to be displayed - please provide additional filtering",
     "timeout": "Creating the hierarchy level took too long",
-    "unknown-error": "Error creating the hierarchy level"
+    "unknown-error": "Error creating the hierarchy level",
+    "filter-hierarchy-level": "Apply filter",
+    "clear-hierarchy-level-filter": "Clear active filter",
+    "filter-dialog": {
+      "results-count": "Instances matching filter count",
+      "results-count-too-large": "Too many instances match filter"
+    }
   },
   "navigation-property-editor": {
     "select-target-instance": "Select target instance",

@@ -12,6 +12,7 @@ import { TreeNodeRenderer, TreeNodeRendererProps } from "@itwin/components-react
 import { TreeNode } from "@itwin/core-react";
 import { SvgCloseSmall, SvgFilter, SvgFilterHollow } from "@itwin/itwinui-icons-react";
 import { ButtonGroup, IconButton, Text } from "@itwin/itwinui-react";
+import { translate } from "../../common/Utils";
 import { isPresentationInfoTreeNodeItem, isPresentationTreeNodeItem, PresentationTreeNodeItem } from "../PresentationTreeNodeItem";
 
 /**
@@ -83,6 +84,7 @@ function PresentationTreeNodeActions(props: PresentationTreeNodeActionsProps) {
               e.stopPropagation();
               onClearFilterClick();
             }}
+            title={translate("tree.clear-hierarchy-level-filter")}
           >
             <SvgCloseSmall />
           </IconButton>
@@ -94,6 +96,7 @@ function PresentationTreeNodeActions(props: PresentationTreeNodeActionsProps) {
             e.stopPropagation();
             onFilterClick();
           }}
+          title={translate("tree.filter-hierarchy-level")}
         >
           {isFiltered ? <SvgFilter /> : <SvgFilterHollow />}
         </IconButton>

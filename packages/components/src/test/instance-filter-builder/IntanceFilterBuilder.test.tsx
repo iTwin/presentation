@@ -5,7 +5,6 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import * as moq from "typemoq";
 import { PropertyDescription, PropertyValueFormat } from "@itwin/appui-abstract";
 import {
   PropertyFilterBuilderActions,
@@ -372,19 +371,22 @@ describe("usePresentationInstanceFilteringProps", () => {
   });
 
   const onCloseEvent = new BeEvent<() => void>();
-  const imodelMock = moq.Mock.ofType<IModelConnection>();
+  const imodelStub = {
+    key: "test_imodel",
+    onClose: onCloseEvent,
+  };
   let initialProps: HookProps;
 
   beforeEach(() => {
-    imodelMock.setup((x) => x.key).returns(() => "test_imodel");
-    imodelMock.setup((x) => x.onClose).returns(() => onCloseEvent);
+    const imodel = imodelStub as unknown as IModelConnection;
+
     initialProps = {
       descriptor,
-      imodel: imodelMock.object,
+      imodel,
     };
 
     // stub metadataProvider for test imodel
-    const metadataProvider = getIModelMetadataProvider(imodelMock.object);
+    const metadataProvider = getIModelMetadataProvider(imodel);
     sinon.stub(metadataProvider, "getECClassInfo").callsFake(async (id) => {
       switch (id) {
         case baseClass.id:
@@ -402,8 +404,7 @@ describe("usePresentationInstanceFilteringProps", () => {
 
   afterEach(() => {
     onCloseEvent.raiseEvent();
-    imodelMock.reset();
-    sinon.resetBehavior();
+    sinon.restore();
   });
 
   it("initializes class list from descriptor", () => {

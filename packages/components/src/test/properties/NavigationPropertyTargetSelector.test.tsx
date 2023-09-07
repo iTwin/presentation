@@ -11,13 +11,13 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { fireEvent, render, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { fireEvent, waitFor } from "@testing-library/react";
 import {
   NavigationPropertyTargetSelector,
   NavigationPropertyTargetSelectorAttributes,
   NavigationPropertyTargetSelectorProps,
 } from "../../presentation-components/properties/NavigationPropertyTargetSelector";
+import { render } from "../_helpers/Common";
 import { createTestContentDescriptor, createTestContentItem } from "../_helpers/Content";
 
 function createNavigationPropertyDescription(): PropertyDescription {
@@ -244,7 +244,6 @@ describe("NavigationPropertyTargetSelector", () => {
   });
 
   it("correctly handles keyDown events", async () => {
-    const user = userEvent.setup();
     sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
     const propertyDescription = createNavigationPropertyDescription();
     const value = {
@@ -259,7 +258,7 @@ describe("NavigationPropertyTargetSelector", () => {
       getNavigationPropertyInfo: async () => testNavigationPropertyInfo,
       propertyRecord,
     };
-    const { queryByDisplayValue, getByRole, queryByText } = render(<NavigationPropertyTargetSelector {...initialProps} />);
+    const { queryByDisplayValue, getByRole, queryByText, user } = render(<NavigationPropertyTargetSelector {...initialProps} />);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
