@@ -3,7 +3,6 @@
 name: Extract API
 
 on:
-  workflow_dispatch:
   pull_request:
     branches:
       - master
@@ -16,6 +15,7 @@ jobs:
   extract-api:
     if: '! github.event.pull_request.draft'
     runs-on: ubuntu-latest
+    name: Extract API
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -35,4 +35,6 @@ jobs:
         run: pnpm install
 
       - name: Extract API
-        run: pnpm lage extract-api
+        env:
+          TF_BUILD: 1
+        run: pnpm lage extract-api check-internal

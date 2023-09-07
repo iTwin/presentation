@@ -5,10 +5,10 @@
 
 import { Id64String } from "@itwin/core-bentley";
 import { ECClass, SchemaContext } from "@itwin/ecschema-metadata";
-import { ECSqlBinding } from "../ECSqlBinding";
+import { ECSqlBinding } from "../ECSql";
+import { HierarchyNode } from "../HierarchyNode";
+import { HierarchyLevelDefinition, IHierarchyDefinition } from "../IHierarchyDefinition";
 import { getClass } from "../internal/Common";
-import { ITreeQueryBuilder, QueryDef } from "../ITreeQueryBuilder";
-import { TreeNode } from "../TreeNode";
 
 /** @beta */
 export interface ModelsTreeQueryBuilderProps {
@@ -20,7 +20,7 @@ export interface ModelsTreeQueryBuilderProps {
  * for testing reasons.
  * @beta
  */
-export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
+export class ModelsTreeQueryBuilder implements IHierarchyDefinition {
   private _schemas: SchemaContext;
 
   public constructor(props: ModelsTreeQueryBuilderProps) {
@@ -31,7 +31,7 @@ export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
    * Create ECSQL queries for selecting nodes from an iModel.
    * @param parentNode Parent node to create children queries for.
    */
-  public async createQueries(parentNode: TreeNode | undefined): Promise<QueryDef[]> {
+  public async defineHierarchyLevel(parentNode: HierarchyNode | undefined): Promise<HierarchyLevelDefinition[]> {
     if (!parentNode) {
       return this.createRootNodesQuery();
     }
@@ -47,7 +47,7 @@ export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
         instanceIds.push(key.id);
       });
 
-      const queries: QueryDef[] = [];
+      const queries: HierarchyLevelDefinition[] = [];
       await Promise.all(
         [...instanceIdsByClass.entries()].map(async ([fullClassName, instanceIds]) => {
           const nodeClass = await getClass(this._schemas, fullClassName);
@@ -64,24 +64,30 @@ export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
     return [
       {
         fullClassName: "BisCore.Subject",
-        ecsql: `
-          SELECT
-            ec_classname(this.ECClassId) FullClassName,
-            ECInstanceId,
-            ${createNonGeometricElementLabelSelectClause("this")} AS DisplayLabel,
-            json_object(
-              'imageId', 'icon-imodel-hollow-2'
-            ) AS ExtendedData,
-            1 as AutoExpand
-          FROM bis.Subject this
-          WHERE
-            this.Parent IS NULL
-        `,
+        query: {
+          ecsql: `
+            SELECT
+              ec_classname(this.ECClassId) FullClassName,
+              ECInstanceId,
+              ${createNonGeometricElementLabelSelectClause("this")} AS DisplayLabel,
+              json_object(
+                'imageId', 'icon-imodel-hollow-2'
+              ) AS ExtendedData,
+              1 as AutoExpand
+            FROM bis.Subject this
+            WHERE
+              this.Parent IS NULL
+          `,
+        },
       },
     ];
   }
 
-  private async createChildNodesQuery(parentNodeClass: ECClass, parentInstanceIds: Id64String[], parentNode: TreeNode): Promise<QueryDef[]> {
+  private async createChildNodesQuery(
+    parentNodeClass: ECClass,
+    parentInstanceIds: Id64String[],
+    parentNode: HierarchyNode,
+  ): Promise<HierarchyLevelDefinition[]> {
     if (await parentNodeClass.is("Subject", "BisCore")) {
       return this.createSubjectChildrenQuery(parentInstanceIds, parentNode);
     }
@@ -100,7 +106,7 @@ export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
     return [];
   }
 
-  private async createSubjectChildrenQuery(subjectIds: Id64String[], _parentNode: TreeNode): Promise<QueryDef[]> {
+  private async createSubjectChildrenQuery(subjectIds: Id64String[], _parentNode: HierarchyNode): Promise<HierarchyLevelDefinition[]> {
     const ctes = [
       `
         subjects(FullClassName, ECInstanceId, DisplayLabel, HideInHierarchy, HideIfNoChildren, HasChildren, MergeByLabelId, ExtendedData, ParentId) AS (
@@ -138,84 +144,93 @@ export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
     return [
       {
         fullClassName: "BisCore.Subject",
-        ctes,
-        ecsql: `
-          SELECT
-            FullClassName, ECInstanceId, DisplayLabel, HideInHierarchy, HideIfNoChildren, HasChildren, MergeByLabelId, ExtendedData, ParentId
-          FROM
-            child_subjects this
-          WHERE
-            this.RootId IN (${subjectIds.map(() => "?").join(",")})
-            AND NOT this.HideInHierarchy
-        `,
-        bindings: [...subjectIds.map((id): ECSqlBinding => ({ type: "id", value: id }))],
+        query: {
+          ctes,
+          ecsql: `
+            SELECT
+              FullClassName, ECInstanceId, DisplayLabel, HideInHierarchy, HideIfNoChildren, HasChildren, MergeByLabelId, ExtendedData, ParentId
+            FROM
+              child_subjects this
+            WHERE
+              this.RootId IN (${subjectIds.map(() => "?").join(",")})
+              AND NOT this.HideInHierarchy
+          `,
+          bindings: [...subjectIds.map((id): ECSqlBinding => ({ type: "id", value: id }))],
+        },
       },
       {
         fullClassName: "BisCore.GeometricModel3d",
-        ctes,
-        ecsql: `
-          SELECT
-            ec_classname(this.ECClassId) FullClassName,
-            this.ECInstanceId,
-            ${createNonGeometricElementLabelSelectClause("partition")} AS DisplayLabel,
-            CAST(CASE
-              WHEN (
-                json_extract(partition.JsonProperties, '$.PhysicalPartition.Model.Content') IS NOT NULL
-                OR json_extract(partition.JsonProperties, '$.GraphicalPartition3d.Model.Content') IS NOT NULL
-              ) THEN 1
-              ELSE 0
-            END AS BOOLEAN) AS HideInHierarchy,
-            CAST(0 AS BOOLEAN) AS HideIfNoChildren,
-            CAST(1 AS BOOLEAN) AS HasChildren,
-            CAST('' AS TEXT) AS MergeByLabelId,
-            json_object('imageId', 'icon-model') AS ExtendedData
-          FROM
-            bis.GeometricModel3d this
-            JOIN bis.InformationPartitionElement partition ON partition.ECInstanceId = this.ModeledElement.Id
-            JOIN bis.Subject subject ON subject.ECInstanceId = partition.Parent.Id OR json_extract(subject.JsonProperties,'$.Subject.Model.TargetPartition') = printf('0x%x', partition.ECInstanceId)
-          WHERE
-            NOT this.IsPrivate
-            AND EXISTS (
-              SELECT 1
-              FROM bis.ModelContainsElements a
-              JOIN bis.GeometricElement3d b ON b.ECClassId = a.TargetECClassId AND b.ECInstanceId = a.TargetECInstanceId
-              WHERE a.SourceECInstanceId = +this.ECInstanceId
-            )
-            AND (
-              subject.ECInstanceId IN (${subjectIds.map(() => "?").join(",")})
-              OR subject.ECInstanceId IN (
-                SELECT s.ECInstanceId
-                FROM child_subjects s
-                WHERE s.RootId IN (${subjectIds.map(() => "?").join(",")}) AND s.HideInHierarchy
+        query: {
+          ctes,
+          ecsql: `
+            SELECT
+              ec_classname(this.ECClassId) FullClassName,
+              this.ECInstanceId,
+              ${createNonGeometricElementLabelSelectClause("partition")} AS DisplayLabel,
+              CAST(CASE
+                WHEN (
+                  json_extract(partition.JsonProperties, '$.PhysicalPartition.Model.Content') IS NOT NULL
+                  OR json_extract(partition.JsonProperties, '$.GraphicalPartition3d.Model.Content') IS NOT NULL
+                ) THEN 1
+                ELSE 0
+              END AS BOOLEAN) AS HideInHierarchy,
+              CAST(0 AS BOOLEAN) AS HideIfNoChildren,
+              CAST(1 AS BOOLEAN) AS HasChildren,
+              CAST('' AS TEXT) AS MergeByLabelId,
+              json_object('imageId', 'icon-model') AS ExtendedData
+            FROM
+              bis.GeometricModel3d this
+              JOIN bis.InformationPartitionElement partition ON partition.ECInstanceId = this.ModeledElement.Id
+              JOIN bis.Subject subject ON subject.ECInstanceId = partition.Parent.Id OR json_extract(subject.JsonProperties,'$.Subject.Model.TargetPartition') = printf('0x%x', partition.ECInstanceId)
+            WHERE
+              NOT this.IsPrivate
+              AND EXISTS (
+                SELECT 1
+                FROM bis.ModelContainsElements a
+                JOIN bis.GeometricElement3d b ON b.ECClassId = a.TargetECClassId AND b.ECInstanceId = a.TargetECInstanceId
+                WHERE a.SourceECInstanceId = +this.ECInstanceId
               )
-            )
-        `,
-        bindings: [...subjectIds.map((id): ECSqlBinding => ({ type: "id", value: id })), ...subjectIds.map((id): ECSqlBinding => ({ type: "id", value: id }))],
+              AND (
+                subject.ECInstanceId IN (${subjectIds.map(() => "?").join(",")})
+                OR subject.ECInstanceId IN (
+                  SELECT s.ECInstanceId
+                  FROM child_subjects s
+                  WHERE s.RootId IN (${subjectIds.map(() => "?").join(",")}) AND s.HideInHierarchy
+                )
+              )
+          `,
+          bindings: [
+            ...subjectIds.map((id): ECSqlBinding => ({ type: "id", value: id })),
+            ...subjectIds.map((id): ECSqlBinding => ({ type: "id", value: id })),
+          ],
+        },
       },
     ];
   }
 
-  private async createISubModeledElementChildrenQuery(elementIds: Id64String[], _parentNode: TreeNode): Promise<QueryDef[]> {
+  private async createISubModeledElementChildrenQuery(elementIds: Id64String[], _parentNode: HierarchyNode): Promise<HierarchyLevelDefinition[]> {
     return [
       {
         fullClassName: "BisCore.GeometricModel3d",
-        ecsql: `
-          SELECT
-            ec_classname(this.ECClassId) FullClassName,
-            this.ECInstanceId,
-            '<always hidden>' AS DisplayLabel,
-            1 AS HideInHierarchy
-          FROM bis.GeometricModel3d this
-          WHERE this.ModeledElement.Id IN (${elementIds.map(() => "?").join(",")})
-            AND NOT this.IsPrivate
-            AND this.ECInstanceId IN (SELECT Model.Id FROM bis.GeometricElement3d)
-        `,
-        bindings: [...elementIds.map((id): ECSqlBinding => ({ type: "id", value: id }))],
+        query: {
+          ecsql: `
+            SELECT
+              ec_classname(this.ECClassId) FullClassName,
+              this.ECInstanceId,
+              '<always hidden>' AS DisplayLabel,
+              1 AS HideInHierarchy
+            FROM bis.GeometricModel3d this
+            WHERE this.ModeledElement.Id IN (${elementIds.map(() => "?").join(",")})
+              AND NOT this.IsPrivate
+              AND this.ECInstanceId IN (SELECT Model.Id FROM bis.GeometricElement3d)
+          `,
+          bindings: [...elementIds.map((id): ECSqlBinding => ({ type: "id", value: id }))],
+        },
       },
     ];
   }
 
-  private async createGeometricModel3dChildrenQuery(modelIds: Id64String[], _parentNode: TreeNode): Promise<QueryDef[]> {
+  private async createGeometricModel3dChildrenQuery(modelIds: Id64String[], _parentNode: HierarchyNode): Promise<HierarchyLevelDefinition[]> {
     function createModelIdsSelector(): string {
       // Note: `json_array` function only accepts up to 128 arguments and we may have more `modelIds` than that. As a workaround,
       // we're creating an array of arrays
@@ -232,33 +247,35 @@ export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
     return [
       {
         fullClassName: "BisCore.SpatialCategory",
-        ecsql: `
-          SELECT
-            ec_classname(this.ECClassId) FullClassName,
-            this.ECInstanceId,
-            ${createNonGeometricElementLabelSelectClause("this")} AS DisplayLabel,
-            'category' AS MergeByLabelId,
-            1 AS HasChildren,
-            json_object(
-              'imageId', 'icon-layers',
-              'modelIds', ${createModelIdsSelector()}
-            ) AS ExtendedData
-          FROM bis.SpatialCategory this
-          WHERE EXISTS (
-            SELECT 1
-            FROM bis.GeometricElement3d element
-            WHERE
-              element.Model.Id IN (${modelIds.map(() => "?").join(",")})
-              AND element.Category.Id = +this.ECInstanceId
-              AND element.Parent IS NULL
-          )
-        `,
-        bindings: modelIds.map((id) => ({ type: "id", value: id })),
+        query: {
+          ecsql: `
+            SELECT
+              ec_classname(this.ECClassId) FullClassName,
+              this.ECInstanceId,
+              ${createNonGeometricElementLabelSelectClause("this")} AS DisplayLabel,
+              'category' AS MergeByLabelId,
+              1 AS HasChildren,
+              json_object(
+                'imageId', 'icon-layers',
+                'modelIds', ${createModelIdsSelector()}
+              ) AS ExtendedData
+            FROM bis.SpatialCategory this
+            WHERE EXISTS (
+              SELECT 1
+              FROM bis.GeometricElement3d element
+              WHERE
+                element.Model.Id IN (${modelIds.map(() => "?").join(",")})
+                AND element.Category.Id = +this.ECInstanceId
+                AND element.Parent IS NULL
+            )
+          `,
+          bindings: modelIds.map((id) => ({ type: "id", value: id })),
+        },
       },
     ];
   }
 
-  private async createSpatialCategoryChildrenQuery(categoryIds: Id64String[], parentNode: TreeNode): Promise<QueryDef[]> {
+  private async createSpatialCategoryChildrenQuery(categoryIds: Id64String[], parentNode: HierarchyNode): Promise<HierarchyLevelDefinition[]> {
     const modelIds: Id64String[] =
       parentNode.extendedData && parentNode.extendedData.hasOwnProperty("modelIds")
         ? (parentNode.extendedData.modelIds as Array<Array<Id64String>>).reduce((arr, ids) => [...arr, ...ids])
@@ -266,62 +283,66 @@ export class ModelsTreeQueryBuilder implements ITreeQueryBuilder {
     return [
       {
         fullClassName: "BisCore.GeometricElement3d",
-        ecsql: `
-          SELECT
-            ec_classname(this.ECClassId) FullClassName,
-            this.ECInstanceId,
-            ${createGeometricElementLabelSelectClause("this")} AS DisplayLabel,
-            json_object(
-              'imageId', 'icon-item'
-            ) AS ExtendedData,
-            1 AS GroupByClass,
-            IFNULL((
-              SELECT 1
-              FROM (
-                SELECT Parent.Id ParentId FROM bis.GeometricElement3d
-                UNION ALL
-                SELECT ModeledElement.Id ParentId FROM bis.GeometricModel3d
-              )
-              WHERE ParentId = this.ECInstanceId
-              LIMIT 1
-            ), 0) AS HasChildren
-          FROM bis.GeometricElement3d this
-          WHERE this.Category.Id IN (${categoryIds.map(() => "?").join(",")})
-            AND this.Model.Id IN (${modelIds.map(() => "?").join(",")})
-            AND this.Parent IS NULL
-        `,
-        bindings: [...categoryIds.map((id) => ({ type: "id", value: id })), ...modelIds.map((id) => ({ type: "id", value: id }))] as ECSqlBinding[],
+        query: {
+          ecsql: `
+            SELECT
+              ec_classname(this.ECClassId) FullClassName,
+              this.ECInstanceId,
+              ${createGeometricElementLabelSelectClause("this")} AS DisplayLabel,
+              json_object(
+                'imageId', 'icon-item'
+              ) AS ExtendedData,
+              1 AS GroupByClass,
+              IFNULL((
+                SELECT 1
+                FROM (
+                  SELECT Parent.Id ParentId FROM bis.GeometricElement3d
+                  UNION ALL
+                  SELECT ModeledElement.Id ParentId FROM bis.GeometricModel3d
+                )
+                WHERE ParentId = this.ECInstanceId
+                LIMIT 1
+              ), 0) AS HasChildren
+            FROM bis.GeometricElement3d this
+            WHERE this.Category.Id IN (${categoryIds.map(() => "?").join(",")})
+              AND this.Model.Id IN (${modelIds.map(() => "?").join(",")})
+              AND this.Parent IS NULL
+          `,
+          bindings: [...categoryIds.map((id) => ({ type: "id", value: id })), ...modelIds.map((id) => ({ type: "id", value: id }))] as ECSqlBinding[],
+        },
       },
     ];
   }
 
-  private async createGeometricElement3dChildrenQuery(elementIds: Id64String[], _parentNode: TreeNode): Promise<QueryDef[]> {
+  private async createGeometricElement3dChildrenQuery(elementIds: Id64String[], _parentNode: HierarchyNode): Promise<HierarchyLevelDefinition[]> {
     return [
       {
         fullClassName: "BisCore.GeometricElement3d",
-        ecsql: `
-          SELECT
-            ec_classname(this.ECClassId) FullClassName,
-            this.ECInstanceId,
-            ${createGeometricElementLabelSelectClause("this")} AS DisplayLabel,
-            json_object(
-              'imageId', 'icon-item'
-            ) AS ExtendedData,
-            1 AS GroupByClass,
-            IFNULL((
-              SELECT 1
-              FROM (
-                SELECT Parent.Id ParentId FROM bis.GeometricElement3d
-                UNION ALL
-                SELECT ModeledElement.Id ParentId FROM bis.GeometricModel3d
-              )
-              WHERE ParentId = this.ECInstanceId
-              LIMIT 1
-            ), 0) AS HasChildren
-          FROM bis.GeometricElement3d this
-          WHERE this.Parent.Id IN (${elementIds.map(() => "?").join(",")})
-        `,
-        bindings: elementIds.map((id) => ({ type: "id", value: id })),
+        query: {
+          ecsql: `
+            SELECT
+              ec_classname(this.ECClassId) FullClassName,
+              this.ECInstanceId,
+              ${createGeometricElementLabelSelectClause("this")} AS DisplayLabel,
+              json_object(
+                'imageId', 'icon-item'
+              ) AS ExtendedData,
+              1 AS GroupByClass,
+              IFNULL((
+                SELECT 1
+                FROM (
+                  SELECT Parent.Id ParentId FROM bis.GeometricElement3d
+                  UNION ALL
+                  SELECT ModeledElement.Id ParentId FROM bis.GeometricModel3d
+                )
+                WHERE ParentId = this.ECInstanceId
+                LIMIT 1
+              ), 0) AS HasChildren
+            FROM bis.GeometricElement3d this
+            WHERE this.Parent.Id IN (${elementIds.map(() => "?").join(",")})
+          `,
+          bindings: elementIds.map((id) => ({ type: "id", value: id })),
+        },
       },
     ];
   }

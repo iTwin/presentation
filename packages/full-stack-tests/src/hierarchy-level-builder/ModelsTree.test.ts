@@ -12,7 +12,7 @@ import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { InstanceKey, NodeKey, Ruleset } from "@itwin/presentation-common";
 import { isPresentationTreeNodeItem, PresentationTreeDataProvider, PresentationTreeNodeItem } from "@itwin/presentation-components";
-import { ModelsTreeQueryBuilder, TreeNode, TreeNodesProvider } from "@itwin/presentation-hierarchy-builder";
+import { HierarchyNode, HierarchyProvider, ModelsTreeQueryBuilder } from "@itwin/presentation-hierarchy-builder";
 import { initialize, terminate } from "../IntegrationTests";
 
 describe("Models tree", async () => {
@@ -69,7 +69,7 @@ describe("Models tree", async () => {
         throw e;
       }
 
-      let statelessChildren: TreeNode[];
+      let statelessChildren: HierarchyNode[];
       try {
         statelessChildren = await statelessProvider.getNodes(props.statelessParent);
       } catch (e) {
@@ -106,14 +106,14 @@ describe("Models tree", async () => {
 interface CompareHierarchiesProps {
   nativeParent: PresentationTreeNodeItem | undefined;
   nativeAncestors: PresentationTreeNodeItem[];
-  statelessParent: TreeNode | undefined;
-  statelessAncestors: TreeNode[];
+  statelessParent: HierarchyNode | undefined;
+  statelessAncestors: HierarchyNode[];
 }
 interface CompareNodesProps {
   nativeNode: PresentationTreeNodeItem;
   nativeAncestors: PresentationTreeNodeItem[];
-  statelessNode: TreeNode;
-  statelessAncestors: TreeNode[];
+  statelessNode: HierarchyNode;
+  statelessAncestors: HierarchyNode[];
 }
 
 function createNativeAncestorsPath(ancestors: PresentationTreeNodeItem[]) {
@@ -132,7 +132,7 @@ function createNativeProvider(imodel: IModelConnection) {
 function createStatelessProvider(imodel: IModelConnection) {
   const schemas = new SchemaContext();
   schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-  return new TreeNodesProvider({
+  return new HierarchyProvider({
     schemas,
     queryBuilder: new ModelsTreeQueryBuilder({ schemas }),
     queryExecutor: imodel,

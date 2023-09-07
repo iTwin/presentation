@@ -5,14 +5,14 @@
 /* eslint-disable no-console */
 
 import { Observable, reduce, tap } from "rxjs";
-import { TreeNode } from "../../TreeNode";
-import { InProgressTreeNode } from "../Common";
+import { HierarchyNode } from "../../HierarchyNode";
+import { InProgressHierarchyNode } from "../Common";
 
 /** @internal */
-export function createPersistChildrenReducer(parentNode: TreeNode) {
-  return function (nodes: Observable<InProgressTreeNode>): Observable<InProgressTreeNode> {
+export function createPersistChildrenOperator(parentNode: HierarchyNode) {
+  return function (nodes: Observable<InProgressHierarchyNode>): Observable<InProgressHierarchyNode> {
     nodes.pipe(
-      reduce((acc, node) => [...acc, node], new Array<InProgressTreeNode>()),
+      reduce((acc, node) => [...acc, node], new Array<InProgressHierarchyNode>()),
       tap((list) => {
         if (Object.isExtensible(parentNode)) {
           parentNode.children = list;

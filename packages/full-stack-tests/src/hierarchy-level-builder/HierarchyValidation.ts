@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { InstanceKey } from "@itwin/presentation-common";
-import { TreeNode, TreeNodesProvider } from "@itwin/presentation-hierarchy-builder";
+import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
 import { hasChildren } from "@itwin/presentation-hierarchy-builder/lib/cjs/hierarchy-builder/internal/Common";
 
 export interface HierarchyDef<TNode> {
@@ -12,14 +12,14 @@ export interface HierarchyDef<TNode> {
   children?: Array<HierarchyDef<TNode>> | boolean;
 }
 
-export type ExpectedHierarchyDef = HierarchyDef<(node: TreeNode) => void>;
+export type ExpectedHierarchyDef = HierarchyDef<(node: HierarchyNode) => void>;
 
 export namespace NodeValidators {
   function optionalBooleanToString(value: boolean | undefined) {
     return value === undefined ? "undefined" : value ? "TRUE" : "FALSE";
   }
   function validateBaseNodeAttributes(
-    node: TreeNode,
+    node: HierarchyNode,
     expectations: {
       label?: string | RegExp;
       autoExpand?: boolean;
@@ -102,7 +102,7 @@ export namespace NodeValidators {
   }
 }
 
-export async function validateHierarchy(props: { provider: TreeNodesProvider; parentNode?: TreeNode; expect: ExpectedHierarchyDef[] }) {
+export async function validateHierarchy(props: { provider: HierarchyProvider; parentNode?: HierarchyNode; expect: ExpectedHierarchyDef[] }) {
   const nodes = await props.provider.getNodes(props.parentNode);
 
   if (nodes.length !== props.expect.length) {
@@ -113,7 +113,7 @@ export async function validateHierarchy(props: { provider: TreeNodesProvider; pa
     );
   }
 
-  const resultHierarchy = new Array<HierarchyDef<TreeNode>>();
+  const resultHierarchy = new Array<HierarchyDef<HierarchyNode>>();
 
   for (let i = 0; i < nodes.length; ++i) {
     const node = nodes[i];

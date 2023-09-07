@@ -6,10 +6,10 @@
 
 import naturalCompare from "natural-compare-lite";
 import { mergeMap, Observable, toArray } from "rxjs";
-import { TreeNode } from "../../TreeNode";
+import { HierarchyNode } from "../../HierarchyNode";
 
 /** @internal */
-export function sortNodesByLabelReducer(nodes: Observable<TreeNode>): Observable<TreeNode> {
+export function sortNodesByLabelOperator(nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
   return nodes.pipe(
     toArray(),
     mergeMap((allNodes) => allNodes.sort((lhs, rhs) => naturalCompare(lhs.label.toLocaleLowerCase(), rhs.label.toLocaleLowerCase()))),

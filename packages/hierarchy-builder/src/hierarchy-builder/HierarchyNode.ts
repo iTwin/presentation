@@ -6,22 +6,25 @@
 import { ClassInfo, InstanceKey } from "./EC";
 
 /** @beta */
-export type TreeNodeKey =
-  | {
-      type: "instances";
-      instanceKeys: InstanceKey[];
-    }
-  | {
-      type: "class-grouping";
-      class: ClassInfo;
-    };
+export interface InstancesNodeKey {
+  type: "instances";
+  instanceKeys: InstanceKey[];
+}
 
 /** @beta */
-export interface TreeNode {
-  key: TreeNodeKey;
+export interface ClassGroupingNodeKey {
+  type: "class-grouping";
+  class: ClassInfo;
+}
+
+/** @beta */
+export type HierarchyNodeKey = InstancesNodeKey | ClassGroupingNodeKey;
+
+/** @beta */
+export interface HierarchyNode {
+  key: HierarchyNodeKey;
   label: string;
   extendedData?: { [key: string]: any };
-  children: undefined | boolean | Array<TreeNode>;
+  children: undefined | boolean | Array<HierarchyNode>;
   autoExpand?: boolean;
-  directChildren?: any;
 }

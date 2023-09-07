@@ -9,7 +9,7 @@ import { EventEmitter, Next, ScenarioContext } from "artillery";
 import { Guid, StopWatch } from "@itwin/core-bentley";
 import { DbQueryRequest, DbQueryResponse, DbRequestExecutor, ECSqlReader } from "@itwin/core-common";
 import { ISchemaLocater, Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType, SchemaProps } from "@itwin/ecschema-metadata";
-import { ModelsTreeQueryBuilder, TreeNode, TreeNodesProvider } from "@itwin/presentation-hierarchy-builder";
+import { HierarchyNode, HierarchyProvider, ModelsTreeQueryBuilder } from "@itwin/presentation-hierarchy-builder";
 import { doRequest, getCurrentIModelName, getCurrentIModelPath, loadNodes, nodeRequestsTracker } from "./common";
 
 console.log(`Frontend PID: ${process.pid}`);
@@ -123,7 +123,7 @@ function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter
   const schemas = new SchemaContext();
   schemas.addLocater(schedulingSchemaLocater);
 
-  const provider = new TreeNodesProvider({
+  const provider = new HierarchyProvider({
     schemas,
     queryBuilder: new ModelsTreeQueryBuilder({ schemas }),
     queryExecutor: {
@@ -134,7 +134,7 @@ function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter
     },
   });
 
-  return async (parent: TreeNode | undefined) => {
+  return async (parent: HierarchyNode | undefined) => {
     try {
       const nodes = await provider.getNodes(parent);
       return nodes;
