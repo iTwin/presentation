@@ -61,8 +61,8 @@ export interface UsePresentationTableResult<TColumns, TRow> {
 export interface UsePresentationTableWithUnifiedSelectionResult<TColumns, TRow> extends UsePresentationTableResult<TColumns, TRow> {
   /** Specifies rows that have been selected (toggled) by other components on the appropriate selection level. */
   selectedRows: TRow[];
-  /** Callback to use when a row is selected. */
-  onSelect: (selectedData: string[]) => void;
+  /** Callback to use when a row is selected. It needs to be called with keys of selected rows that have been converted to strings. */
+  onSelect: (selectedKeys: string[]) => void;
 }
 
 /**
@@ -106,7 +106,7 @@ export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(
   const { options, sort, filter } = useTableOptions({ columns });
   const { rows, isLoading, loadMoreRows } = useRows({ imodel, ruleset, keys, pageSize, options });
 
-  const unifiedSelectionLevel = useMemo(() => (unifiedSelection?.selectionLevel ?? 0) + 1, [unifiedSelection?.selectionLevel]);
+  const unifiedSelectionLevel = (unifiedSelection?.selectionLevel ?? 0) + 1;
 
   useEffect(() => {
     const updateSelectedRows = (toggledRowKeys: Readonly<KeySet>) => {
@@ -122,7 +122,7 @@ export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(
       setSelectedRows(rowsToAddToSelection);
     };
 
-    const selectedRowKeys = Presentation.selection.getSelection(imodel, unifiedSelectionLevel) ?? emptyKeySet;
+    const selectedRowKeys = unifiedSelection?.getSelection(unifiedSelectionLevel) ?? emptyKeySet;
     if (selectedRowKeys !== emptyKeySet) {
       updateSelectedRows(selectedRowKeys);
     }
@@ -136,14 +136,14 @@ export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(
     });
 
     return disposeListener;
-  }, [rows, unifiedSelectionLevel, imodel]);
+  }, [rows, unifiedSelectionLevel, unifiedSelection]);
 
-  const onSelect = (selectedData: string[]) => {
+  const onSelect = (selectedKeys: string[]) => {
     const parsedKeys: Key[] = [];
-    for (const passedData of selectedData) {
+    for (const selectedKey of selectedKeys) {
       try {
-        const parsedKey: Key = JSON.parse(passedData);
-        if (rows.some((row) => row.key === JSON.stringify(parsedKey))) {
+        const parsedKey: Key = JSON.parse(selectedKey);
+        if (rows.some((row) => row.key === selectedKey)) {
           parsedKeys.push(parsedKey);
         }
       } catch {

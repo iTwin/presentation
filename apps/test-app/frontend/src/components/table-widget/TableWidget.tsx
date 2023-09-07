@@ -6,7 +6,7 @@
 import { useCallback } from "react";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
-import { Table } from "@itwin/itwinui-react";
+import { ProgressRadial, Table } from "@itwin/itwinui-react";
 import { TableCellRenderer, TableColumnDefinition, TableRowDefinition, usePresentationTableWithUnifiedSelection } from "@itwin/presentation-components";
 
 export interface TableWidgetProps {
@@ -48,9 +48,13 @@ function PresentationTable(props: PresentationTableProps) {
     [sort],
   );
 
+  if (columns === undefined) {
+    return <ProgressRadial indeterminate={true} />;
+  }
+
   return (
     <Table
-      columns={columns ?? []}
+      columns={columns}
       data={rows}
       emptyTableContent={"No data"}
       isLoading={isLoading}

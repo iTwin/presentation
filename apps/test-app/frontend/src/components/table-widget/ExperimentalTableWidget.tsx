@@ -10,12 +10,12 @@ import { ProgressRadial } from "@itwin/itwinui-react";
 import { TableCellRenderer, TableColumnDefinition, TableRowDefinition, usePresentationTableWithUnifiedSelection } from "@itwin/presentation-components";
 import { flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 
-export interface TableWidgetProps {
+export interface ExperimentalTableWidgetProps {
   imodel: IModelConnection;
   rulesetId?: string;
 }
 
-export function ExperimentalTableWidget(props: TableWidgetProps) {
+export function ExperimentalTableWidget(props: ExperimentalTableWidgetProps) {
   const { imodel, rulesetId } = props;
 
   if (!rulesetId) {
@@ -65,12 +65,9 @@ function PresentationTable(props: PresentationTableProps) {
       const newRowSelection = typeof updater === "function" ? updater(rowSelection) : updater;
 
       // collect selected row ids
-      const newSelectedRows: string[] = [];
-      for (const rowId in newRowSelection) {
-        if (rowId in newRowSelection && newRowSelection[rowId]) {
-          newSelectedRows.push(rowId);
-        }
-      }
+      const newSelectedRows = Object.entries(newRowSelection)
+        .filter(([_, isSelected]) => isSelected)
+        .map(([rowId]) => rowId);
 
       onSelect(newSelectedRows);
     },

@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Expand API of usePresentationTableWithUnifiedSelection by adding onSelect callback and selectedRows to the return type.",
-  "packageName": "@itwin/presentation-components",
-  "email": "114080994+ViliusBa@users.noreply.github.com",
-  "dependentChangeType": "patch"
-}

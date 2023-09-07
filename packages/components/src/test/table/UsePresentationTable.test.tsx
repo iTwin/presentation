@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { assert, expect } from "chai";
+import { expect } from "chai";
 import { PropsWithChildren } from "react";
 import sinon from "sinon";
 import * as moq from "typemoq";
@@ -172,7 +172,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     expect(result.current.rows).to.have.lengthOf(0);
   });
 
-  it("Adds passed keys to the unified selection with onSelect", async () => {
+  it("adds passed keys to the unified selection with onSelect", async () => {
     const keys = new KeySet([createTestECInstanceKey()]);
     const stringifiedKeys: string[] = [];
     const validKeys: Key[] = [];
@@ -203,53 +203,55 @@ describe("usePresentationTableWithUnifiedSelection", () => {
   it("Gets invalid keys and does not pass any to the selection with onSelect", async () => {
     const keys = ["this is not a valid key", ""];
     const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
-    assert(!(result.current instanceof Error));
-
     const onSelectCallback = result.current.onSelect;
 
     const replaceSpy = sinon.stub(Presentation.selection, "replaceSelection");
-    const onSelectSpy = sinon.spy(onSelectCallback);
     onSelectCallback(keys);
 
-    expect(onSelectSpy).to.not.have.thrown();
     expect(replaceSpy).to.have.been.calledOnceWithExactly("UnifiedSelectionContext", {}, [], 1);
   });
 
-  [
-    {
-      selectionLevel: 3,
-      keys: new KeySet(),
-      returnLength: 0,
-      testName: "Returns an empty array of selectedRows when keys are passed from the wrong level",
-    },
-    {
-      selectionLevel: 1,
-      keys: new KeySet([createTestECInstanceKey()]),
-      returnLength: [createTestECInstanceKey()].length,
-      testName: "Returns an array of selectedRows when keys are passed correctly",
-    },
-  ].forEach((args) => {
-    it(`${args.testName} on selectionChange event`, async () => {
-      sinon.stub(Presentation.selection, "getSelection").returns(args.keys);
+  it("Gets valid keys for rows that are not loaded and does not pass any to the selection with onSelect", async () => {
+    const stringifiedKeys = [createTestECInstanceKey()].map((key) => JSON.stringify(key));
 
-      const { descriptor, item } = getMockData();
-      presentationManagerMock
-        .setup(async (x) => x.getContentDescriptor(moq.It.is((options) => options.keys.size === args.keys.size)))
-        .returns(async () => descriptor);
-      presentationManagerMock
-        .setup(async (x) => x.getContentAndSize(moq.It.is((options) => options.keys.size === args.keys.size)))
-        .returns(async () => ({ content: new Content(descriptor, [item]), size: 1 }));
+    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
+    const onSelectCallback = result.current.onSelect;
 
-      const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
-      const resultBeforeAdding = result.current.selectedRows;
-      expect(resultBeforeAdding.length).to.be.equal(0);
+    const replaceSpy = sinon.stub(Presentation.selection, "replaceSelection");
+    onSelectCallback(stringifiedKeys);
 
-      await waitFor(() => expect(result.current.isLoading).to.be.false);
-      Presentation.selection.addToSelection("UnifiedSelectionContext", initialProps.imodel, new KeySet([createTestECInstanceKey()]), args.selectionLevel);
+    expect(replaceSpy).to.have.been.calledOnceWithExactly("UnifiedSelectionContext", {}, [], 1);
+  });
 
-      const resultAfterAdding = result.current.selectedRows;
-      expect(resultAfterAdding.length).to.be.equal(args.returnLength);
-    });
+  it("returns an array of selectedRows when keys are passed correctly on selectionChange event", async () => {
+    const keys = new KeySet([createTestECInstanceKey()]);
+    sinon.stub(Presentation.selection, "getSelection").returns(new KeySet([createTestECInstanceKey()]));
+
+    const { descriptor, item } = getMockData();
+    presentationManagerMock.setup(async (x) => x.getContentDescriptor(moq.It.is((options) => options.keys.size === keys.size))).returns(async () => descriptor);
+    presentationManagerMock
+      .setup(async (x) => x.getContentAndSize(moq.It.is((options) => options.keys.size === keys.size)))
+      .returns(async () => ({ content: new Content(descriptor, [item]), size: 1 }));
+
+    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
+
+    await waitFor(() => expect(result.current.isLoading).to.be.false);
+    Presentation.selection.addToSelection("UnifiedSelectionContext", initialProps.imodel, keys, 1);
+
+    await waitFor(() => expect(result.current.isLoading).to.be.false);
+    const resultAfterAdding = result.current.selectedRows;
+    expect(resultAfterAdding.length).to.be.equal(1);
+  });
+
+  it("returns an empty array of selectedRows when keys are passed from the wrong level on selectionChange event", async () => {
+    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
+
+    await waitFor(() => expect(result.current.isLoading).to.be.false);
+    Presentation.selection.addToSelection("UnifiedSelectionContext", initialProps.imodel, new KeySet([createTestECInstanceKey()]), 3);
+
+    await waitFor(() => expect(result.current.isLoading).to.be.false);
+    const resultAfterAdding = result.current.selectedRows;
+    expect(resultAfterAdding.length).to.be.equal(0);
   });
 
   function getMockData(): { descriptor: Descriptor; item: Item } {
