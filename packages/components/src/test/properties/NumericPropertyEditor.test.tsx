@@ -7,9 +7,9 @@ import { expect } from "chai";
 import sinon from "sinon";
 import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import { EditorContainer } from "@itwin/components-react";
-import { fireEvent, render, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { waitFor } from "@testing-library/react";
 import { NumericPropertyEditor } from "../../presentation-components/properties/NumericPropertyEditor";
+import { render } from "../_helpers/Common";
 
 export const createRecord = (initialValue?: number) => {
   const value: PrimitiveValue = {
@@ -38,18 +38,17 @@ describe("<NumericPropertyEditorBase />", () => {
     await waitFor(() => expect(getByTestId("numeric-input")).to.not.be.null);
   });
 
-  it("Invokes `onCommit` with correct parameters only when input container gets blurred", async () => {
-    const user = userEvent.setup();
+  it("invokes `onCommit` when input changes", async () => {
     const record = createRecord();
     const spy = sinon.spy();
-    const { getByTestId, queryByDisplayValue } = render(<EditorContainer propertyRecord={record} onCancel={() => {}} onCommit={spy} />);
+    const { getByTestId, queryByDisplayValue, user } = render(<EditorContainer propertyRecord={record} onCancel={() => {}} onCommit={spy} />);
 
     const inputContainer = await waitFor(() => getByTestId("numeric-input"));
 
     await user.type(inputContainer, "1");
     expect(spy).to.not.be.called;
 
-    fireEvent.blur(inputContainer);
+    await user.tab();
 
     await waitFor(() => expect(queryByDisplayValue("1")).to.not.be.null);
     expect(spy).to.be.calledOnceWith({ propertyRecord: record, newValue: { valueFormat: 0, value: 1, displayValue: "1" } });

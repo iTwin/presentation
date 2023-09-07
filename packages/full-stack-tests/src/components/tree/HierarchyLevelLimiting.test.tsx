@@ -48,9 +48,7 @@ describe("Learning snippets", () => {
 
         // presentation-specific tree renderer should be used when limiting to allow filtering
         // down the results when the limit is exceeded
-        const treeRenderer = (treeRendererProps: TreeRendererProps) => (
-          <PresentationTreeRenderer {...treeRendererProps} imodel={props.imodel} modelSource={nodeLoader.modelSource} />
-        );
+        const treeRenderer = (treeRendererProps: TreeRendererProps) => <PresentationTreeRenderer {...treeRendererProps} nodeLoader={nodeLoader} />;
 
         // width and height should generally we computed using ResizeObserver API or one of its derivatives
         const [width] = useState(400);

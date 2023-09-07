@@ -15,14 +15,13 @@ import { FormatterSpec, ParseError, ParserSpec, QuantityParseResult } from "@itw
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { Descriptor, KoqPropertyValueFormatter, PropertyValueFormat } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { fireEvent, render, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { fireEvent, waitFor } from "@testing-library/react";
 import { SchemaMetadataContextProvider } from "../../presentation-components/common/SchemaMetadataContext";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import { PresentationInstanceFilterDialog } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog";
 import { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/Types";
 import * as instanceFilterBuilderUtils from "../../presentation-components/instance-filter-builder/Utils";
-import { createTestECClassInfo, stubDOMMatrix, stubRaf } from "../_helpers/Common";
+import { createTestECClassInfo, render, stubDOMMatrix, stubRaf } from "../_helpers/Common";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
 
 describe("PresentationInstanceFilterDialog", () => {
@@ -112,9 +111,8 @@ describe("PresentationInstanceFilterDialog", () => {
   });
 
   it("invokes 'onApply' with string property filter rule", async () => {
-    const user = userEvent.setup();
     const spy = sinon.spy();
-    const { container, getByText, getByDisplayValue, queryByDisplayValue } = render(
+    const { container, getByText, getByDisplayValue, queryByDisplayValue, user } = render(
       <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />,
     );
 
@@ -161,9 +159,8 @@ describe("PresentationInstanceFilterDialog", () => {
   });
 
   it("invokes 'onApply' with numeric property filter rule", async () => {
-    const user = userEvent.setup();
     const spy = sinon.spy();
-    const { container, getByText, getByDisplayValue } = render(
+    const { container, getByText, getByDisplayValue, user } = render(
       <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />,
     );
 
@@ -217,7 +214,6 @@ describe("PresentationInstanceFilterDialog", () => {
   });
 
   it("invokes 'onApply' with quantity property filter rule", async () => {
-    const user = userEvent.setup();
     const spy = sinon.spy();
 
     sinon.stub(KoqPropertyValueFormatter.prototype, "getFormatterSpec").resolves({
@@ -240,7 +236,7 @@ describe("PresentationInstanceFilterDialog", () => {
     const imodel = {} as IModelConnection;
     const getSchemaContext = () => ({} as SchemaContext);
 
-    const { container, getByText, getByDisplayValue } = render(
+    const { container, getByText, getByDisplayValue, user } = render(
       <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={getSchemaContext}>
         <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />
       </SchemaMetadataContextProvider>,
@@ -356,8 +352,7 @@ describe("PresentationInstanceFilterDialog", () => {
   });
 
   it("shows error message for invalid numeric values", async () => {
-    const user = userEvent.setup();
-    const { container, queryByText } = render(
+    const { container, queryByText, user } = render(
       <PresentationInstanceFilterDialog
         imodel={imodelMock.object}
         descriptor={descriptor}
@@ -391,8 +386,6 @@ describe("PresentationInstanceFilterDialog", () => {
   });
 
   it("shows error message for invalid quantity values", async () => {
-    const user = userEvent.setup();
-
     sinon.stub(KoqPropertyValueFormatter.prototype, "getFormatterSpec").resolves({
       applyFormatting: (magnitude: number) => `${magnitude} unit`,
     } as unknown as FormatterSpec);
@@ -408,7 +401,7 @@ describe("PresentationInstanceFilterDialog", () => {
     const imodel = {} as IModelConnection;
     const getSchemaContext = () => ({} as SchemaContext);
 
-    const { container, queryByText } = render(
+    const { container, queryByText, user } = render(
       <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={getSchemaContext}>
         <PresentationInstanceFilterDialog
           imodel={imodelMock.object}
@@ -462,24 +455,20 @@ describe("PresentationInstanceFilterDialog", () => {
     expect(queryByText(title)).to.not.be.null;
   });
 
-  it("renders filterResultCountRenderer", () => {
-    const spy = sinon.spy();
-    const count = "custom count";
-
+  it("renders results count", async () => {
     const { queryByText } = render(
       <PresentationInstanceFilterDialog
         imodel={imodelMock.object}
         descriptor={descriptor}
         onClose={() => {}}
-        filterResultCountRenderer={() => {
-          return <div>{count}</div>;
-        }}
-        onApply={spy}
+        onApply={() => {}}
         isOpen={true}
+        initialFilter={initialFilter}
+        filterResultsCountRenderer={() => <div>Test Results</div>}
       />,
     );
 
-    expect(queryByText(count)).to.not.be.null;
+    await waitFor(() => expect(queryByText("Test Results")).to.not.be.null);
   });
 
   it("renders with lazy-loaded descriptor", async () => {
