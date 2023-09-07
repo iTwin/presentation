@@ -61,7 +61,7 @@ export interface UsePresentationTableResult<TColumns, TRow> {
 export interface UsePresentationTableWithUnifiedSelectionResult<TColumns, TRow> extends UsePresentationTableResult<TColumns, TRow> {
   /** Specifies rows that have been selected (toggled) by other components on the appropriate selection level. */
   selectedRows: TRow[];
-  /** Callback to use when a row is selected. It needs to be called with keys of selected rows that have been converted to strings. */
+  /** Callback to use when a row is selected. It needs to be called with stringified keys of selected rows. */
   onSelect: (selectedKeys: string[]) => void;
 }
 
@@ -109,7 +109,12 @@ export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(
   const unifiedSelectionLevel = (unifiedSelection?.selectionLevel ?? 0) + 1;
 
   useEffect(() => {
-    const updateSelectedRows = (toggledRowKeys: Readonly<KeySet>) => {
+    const updateSelectedRows = () => {
+      const toggledRowKeys = unifiedSelection?.getSelection(unifiedSelectionLevel);
+      if (toggledRowKeys === undefined || toggledRowKeys === emptyKeySet) {
+        return;
+      }
+
       const rowsToAddToSelection: TableRowDefinition[] = [];
       toggledRowKeys.forEach((key) => {
         // should return just one row
@@ -119,21 +124,18 @@ export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(
           rowsToAddToSelection.push(selectedRow[0]);
         }
       });
+
       setSelectedRows(rowsToAddToSelection);
     };
 
-    const selectedRowKeys = unifiedSelection?.getSelection(unifiedSelectionLevel) ?? emptyKeySet;
-    if (selectedRowKeys !== emptyKeySet) {
-      updateSelectedRows(selectedRowKeys);
-    }
-
-    const disposeListener = Presentation.selection.selectionChange.addListener(({ level, keys: toggledRowKeys }) => {
+    const disposeListener = Presentation.selection.selectionChange.addListener(({ level }) => {
       if (level !== unifiedSelectionLevel) {
         return;
       }
-
-      updateSelectedRows(toggledRowKeys);
+      updateSelectedRows();
     });
+
+    updateSelectedRows();
 
     return disposeListener;
   }, [rows, unifiedSelectionLevel, unifiedSelection]);
