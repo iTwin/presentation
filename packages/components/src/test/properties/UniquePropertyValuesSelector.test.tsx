@@ -9,10 +9,9 @@ import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
-import { render, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { waitFor } from "@testing-library/react";
 import { UniquePropertyValuesSelector } from "../../presentation-components/properties/UniquePropertyValuesSelector";
-import { createTestECClassInfo } from "../_helpers/Common";
+import { createTestECClassInfo, render } from "../_helpers/Common";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
 
 describe("UniquePropertyValuesSelector", () => {
@@ -62,7 +61,6 @@ describe("UniquePropertyValuesSelector", () => {
   const testImodel = {} as IModelConnection;
 
   it("invokes `onChange` when item from the menu is selected and then deselected", async () => {
-    const user = userEvent.setup();
     const spy = sinon.spy();
 
     sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
@@ -73,7 +71,7 @@ describe("UniquePropertyValuesSelector", () => {
       ],
     });
 
-    const { queryByTestId, queryByText } = render(
+    const { queryByTestId, queryByText, user } = render(
       <UniquePropertyValuesSelector property={propertyDescription} onChange={spy} imodel={testImodel} descriptor={descriptor} />,
     );
 
@@ -113,14 +111,15 @@ describe("UniquePropertyValuesSelector", () => {
         { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
       ],
     });
-    const user = userEvent.setup();
     const description: PropertyDescription = {
       name: "",
       displayLabel: "",
       typename: "",
       editor: undefined,
     };
-    const { queryByText } = render(<UniquePropertyValuesSelector property={description} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />);
+    const { queryByText, user } = render(
+      <UniquePropertyValuesSelector property={description} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+    );
 
     const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
     await user.click(selector!);
