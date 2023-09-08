@@ -19,7 +19,7 @@ describe("hideIfNoChildrenOperator", () => {
   it("doesn't return nodes that need hiding and have children determined as `false`", async () => {
     const nodes = [
       createTestNode({
-        hideIfNoChildren: true,
+        params: { hideIfNoChildren: true },
         children: false,
       }),
     ];
@@ -30,7 +30,7 @@ describe("hideIfNoChildrenOperator", () => {
   it("returns nodes that need hiding and have children determined as `true`", async () => {
     const nodes = [
       createTestNode({
-        hideIfNoChildren: true,
+        params: { hideIfNoChildren: true },
         children: true,
       }),
     ];
@@ -41,7 +41,7 @@ describe("hideIfNoChildrenOperator", () => {
   it("doesn't return nodes that need hiding and have children determined an empty array", async () => {
     const nodes = [
       createTestNode({
-        hideIfNoChildren: true,
+        params: { hideIfNoChildren: true },
         children: [],
       }),
     ];
@@ -52,7 +52,7 @@ describe("hideIfNoChildrenOperator", () => {
   it("returns nodes that need hiding and have children determined as a non-empty array", async () => {
     const nodes = [
       createTestNode({
-        hideIfNoChildren: true,
+        params: { hideIfNoChildren: true },
         children: [createTestNode()],
       }),
     ];
@@ -63,7 +63,7 @@ describe("hideIfNoChildrenOperator", () => {
   it("doesn't return nodes that need hiding, need children determined and don't have children", async () => {
     const nodes = [
       createTestNode({
-        hideIfNoChildren: true,
+        params: { hideIfNoChildren: true },
         children: undefined,
       }),
     ];
@@ -75,7 +75,7 @@ describe("hideIfNoChildrenOperator", () => {
   it("returns nodes that need hiding, need children determined and do have children", async () => {
     const nodes = [
       createTestNode({
-        hideIfNoChildren: true,
+        params: { hideIfNoChildren: true },
         children: undefined,
       }),
     ];

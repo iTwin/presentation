@@ -5,12 +5,12 @@
 /* eslint-disable no-console */
 
 import { map, merge, mergeMap, Observable, partition, share, tap } from "rxjs";
-import { InProgressHierarchyNode } from "../Common";
+import { HierarchyNode } from "../../HierarchyNode";
 
 /** @internal */
-export function createDetermineChildrenOperator(hasNodes: (node: InProgressHierarchyNode) => Observable<boolean>) {
+export function createDetermineChildrenOperator(hasNodes: (node: HierarchyNode) => Observable<boolean>) {
   const enableLogging = false;
-  return function (nodes: Observable<InProgressHierarchyNode>): Observable<InProgressHierarchyNode> {
+  return function (nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
     const [determined, undetermined] = partition(nodes.pipe(share()), (node) => node.children !== undefined);
     return merge(
       determined,

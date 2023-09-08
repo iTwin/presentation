@@ -42,7 +42,7 @@ export class ModelsTreeQueryBuilder implements IHierarchyDefinition {
       return this.createRootNodesQuery();
     }
 
-    if (parentNode.key.type === "instances") {
+    if (HierarchyNode.isStandard(parentNode) && parentNode.key.type === "instances") {
       const instanceIdsByClass = new Map<string, Id64String[]>();
       parentNode.key.instanceKeys.forEach((key) => {
         let instanceIds = instanceIdsByClass.get(key.className);

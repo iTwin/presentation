@@ -6,43 +6,47 @@
 
 import { from, merge, mergeMap, Observable, partition, reduce, share, tap } from "rxjs";
 import { assert, DuplicatePolicy, SortedArray } from "@itwin/core-bentley";
-import { InProgressHierarchyNode, mergeDirectNodeObservables, mergeInstanceNodesObs } from "../Common";
+import { HierarchyNode } from "../../HierarchyNode";
+import { mergeDirectNodeObservables, mergeNodesObs } from "../Common";
 
 /** @internal */
-export function createMergeInstanceNodesByLabelOperator(directNodesCache: Map<string, Observable<InProgressHierarchyNode>>) {
-  return function (nodes: Observable<InProgressHierarchyNode>): Observable<InProgressHierarchyNode> {
+export function createMergeInstanceNodesByLabelOperator(directNodesCache: Map<string, Observable<HierarchyNode>>) {
+  return function (nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
     const enableLogging = false;
-    class SortedNodesList extends SortedArray<InProgressHierarchyNode> {
+    class SortedNodesList extends SortedArray<HierarchyNode> {
       public constructor() {
-        const comp = (lhs: InProgressHierarchyNode, rhs: InProgressHierarchyNode): number => {
+        const comp = (lhs: HierarchyNode, rhs: HierarchyNode): number => {
           const labelCompare = lhs.label.localeCompare(rhs.label);
           if (labelCompare !== 0) {
             return labelCompare;
           }
-          return (lhs.mergeByLabelId ?? "").localeCompare(rhs.mergeByLabelId ?? "");
+          return (lhs.params?.mergeByLabelId ?? "").localeCompare(rhs.params?.mergeByLabelId ?? "");
         };
         super(comp, DuplicatePolicy.Retain);
       }
-      public replace(pos: number, replacement: InProgressHierarchyNode) {
+      public replace(pos: number, replacement: HierarchyNode) {
         assert(this._compare(this._array[pos], replacement) === 0);
         this._array[pos] = replacement;
       }
     }
-    function tryMergeNodes(lhs: InProgressHierarchyNode, rhs: InProgressHierarchyNode): InProgressHierarchyNode | undefined {
-      if (lhs.mergeByLabelId !== rhs.mergeByLabelId) {
+    function tryMergeNodes(lhs: HierarchyNode, rhs: HierarchyNode): HierarchyNode | undefined {
+      if (!HierarchyNode.isInstancesNode(lhs) || !HierarchyNode.isInstancesNode(rhs)) {
+        return undefined;
+      }
+      if (lhs.params?.mergeByLabelId !== rhs.params?.mergeByLabelId) {
         return undefined;
       }
       if (lhs.label !== rhs.label) {
         return undefined;
       }
-      return mergeInstanceNodesObs(lhs, rhs, directNodesCache);
+      return mergeNodesObs(lhs, rhs, directNodesCache);
     }
     const [merged, nonMerged] = partition(
       nodes.pipe(
         tap((n) => enableLogging && console.log(`MergeInstanceNodesByLabelOperator in: ${JSON.stringify(n)}`)),
         share(),
       ),
-      (node) => !!node.mergeByLabelId,
+      (node) => !!node.params?.mergeByLabelId,
     );
     const res = merge(
       nonMerged,

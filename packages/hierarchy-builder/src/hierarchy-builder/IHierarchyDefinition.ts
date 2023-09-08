@@ -7,9 +7,27 @@ import { ECSqlQueryDef } from "./ECSql";
 import { HierarchyNode } from "./HierarchyNode";
 
 /** @beta */
-export interface HierarchyLevelDefinition {
+export interface CustomHierarchyNodeDefinition {
+  node: HierarchyNode;
+}
+
+/** @beta */
+export interface ECSqlQueryHierarchyLevelDefinition {
   fullClassName: string;
   query: ECSqlQueryDef;
+}
+
+/** @beta */
+export type HierarchyLevelDefinition = CustomHierarchyNodeDefinition | ECSqlQueryHierarchyLevelDefinition;
+/** @beta */
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export namespace HierarchyLevelDefinition {
+  export function isCustomNode(def: HierarchyLevelDefinition): def is CustomHierarchyNodeDefinition {
+    return !!(def as CustomHierarchyNodeDefinition).node;
+  }
+  export function isECSqlQuery(def: HierarchyLevelDefinition): def is ECSqlQueryHierarchyLevelDefinition {
+    return !!(def as ECSqlQueryHierarchyLevelDefinition).query;
+  }
 }
 
 /** @beta */

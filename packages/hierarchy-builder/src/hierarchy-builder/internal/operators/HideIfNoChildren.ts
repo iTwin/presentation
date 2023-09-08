@@ -5,18 +5,19 @@
 /* eslint-disable no-console */
 
 import { defer, filter, map, merge, mergeMap, Observable, partition, share, tap } from "rxjs";
-import { hasChildren, InProgressHierarchyNode } from "../Common";
+import { HierarchyNode } from "../../HierarchyNode";
+import { hasChildren } from "../Common";
 
 /** @internal */
-export function createHideIfNoChildrenOperator(hasNodes: (node: InProgressHierarchyNode) => Observable<boolean>, stopOnFirstChild: boolean) {
+export function createHideIfNoChildrenOperator(hasNodes: (node: HierarchyNode) => Observable<boolean>, stopOnFirstChild: boolean) {
   const enableLogging = false;
-  return function (nodes: Observable<InProgressHierarchyNode>): Observable<InProgressHierarchyNode> {
+  return function (nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
     const [needsHide, doesntNeedHide] = partition(
       nodes.pipe(
         tap((n) => `HideIfNoChildrenOperator in: ${n.label}`),
         share(),
       ),
-      (n) => !!n.hideIfNoChildren,
+      (n) => !!n.params?.hideIfNoChildren,
     );
     const [determinedChildren, undeterminedChildren] = partition(needsHide, (n) => n.children !== undefined);
     return merge(

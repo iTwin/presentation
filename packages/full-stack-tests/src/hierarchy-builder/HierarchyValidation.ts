@@ -48,6 +48,26 @@ export namespace NodeValidators {
       throw new Error(`[${node.label}] Expected node to ${hasChildren(expectations) ? "" : "not "}have children but it does ${hasChildren(node) ? "" : "not"}`);
     }
   }
+
+  export function createForCustomNode(expectedNode: Omit<HierarchyNode, "children"> & { children?: ExpectedHierarchyDef[] | boolean }): ExpectedHierarchyDef {
+    return {
+      node: (node) => {
+        if (HierarchyNode.isStandard(node)) {
+          throw new Error(`[${node.label}] Expected a custom node, got a standard "${node.key.type}" one`);
+        }
+        if (node.key !== expectedNode.key) {
+          throw new Error(`[${node.label}] Expected a custom node, got "${node.key}" one`);
+        }
+        validateBaseNodeAttributes(node, {
+          label: expectedNode.label,
+          autoExpand: expectedNode.autoExpand,
+          children: expectedNode.children,
+        });
+      },
+      children: expectedNode.children,
+    };
+  }
+
   export function createForInstanceNode(props: {
     instanceKeys?: InstanceKey[];
     label?: string | RegExp;
@@ -56,6 +76,9 @@ export namespace NodeValidators {
   }): ExpectedHierarchyDef {
     return {
       node: (node) => {
+        if (!HierarchyNode.isStandard(node)) {
+          throw new Error(`[${node.label}] Expected an instance node, got a non-standard "${node.key}"`);
+        }
         if (node.key.type !== "instances") {
           throw new Error(`[${node.label}] Expected an instance node, got "${node.key.type}"`);
         }
@@ -77,6 +100,7 @@ export namespace NodeValidators {
       children: props.children,
     };
   }
+
   export function createForClassGroupingNode(props: {
     className?: string;
     label?: string;
@@ -85,6 +109,9 @@ export namespace NodeValidators {
   }): ExpectedHierarchyDef {
     return {
       node: (node) => {
+        if (!HierarchyNode.isStandard(node)) {
+          throw new Error(`[${node.label}] Expected a class grouping node, got a non-standard "${node.key}"`);
+        }
         if (node.key.type !== "class-grouping") {
           throw new Error(`[${node.label}] Expected a class grouping node, got "${node.key.type}"`);
         }

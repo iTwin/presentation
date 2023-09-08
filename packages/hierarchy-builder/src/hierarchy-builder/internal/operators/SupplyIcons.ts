@@ -17,7 +17,7 @@ import { HierarchyNode } from "../../HierarchyNode";
 export function supplyIconsOperator(nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
   return nodes.pipe(
     map((node) => {
-      if (node.key.type !== "class-grouping") {
+      if (HierarchyNode.isStandard(node) && node.key.type !== "class-grouping") {
         return node;
       }
       return { ...node, extendedData: { ...node.extendedData, imageId: "icon-ec-class" } };

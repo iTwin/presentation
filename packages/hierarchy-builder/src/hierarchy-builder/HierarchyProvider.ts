@@ -8,8 +8,7 @@ import { catchError, concatAll, concatMap, defaultIfEmpty, from, map, mergeMap, 
 import { Id64 } from "@itwin/core-bentley";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { HierarchyNode } from "./HierarchyNode";
-import { IHierarchyDefinition } from "./IHierarchyDefinition";
-import { InProgressHierarchyNode } from "./internal/Common";
+import { HierarchyLevelDefinition, IHierarchyDefinition } from "./IHierarchyDefinition";
 import { createClassGroupingOperator } from "./internal/operators/ClassGrouping";
 import { createDetermineChildrenOperator } from "./internal/operators/DetermineChildren";
 import { createHideIfNoChildrenOperator } from "./internal/operators/HideIfNoChildren";
@@ -35,8 +34,8 @@ export class HierarchyProvider {
   private _queryBuilder: IHierarchyDefinition;
   private _queryExecutor: IQueryExecutor;
   private _queryReader: TreeQueryResultsReader;
-  private _scheduler: QueryScheduler<InProgressHierarchyNode[]>;
-  private _directNodesCache: Map<string, Observable<InProgressHierarchyNode>>;
+  private _scheduler: QueryScheduler<HierarchyNode[]>;
+  private _directNodesCache: Map<string, Observable<HierarchyNode>>;
 
   public constructor(props: HierarchyProviderProps) {
     this._schemas = props.schemas;
@@ -47,27 +46,29 @@ export class HierarchyProvider {
     this._directNodesCache = new Map();
   }
 
-  private loadDirectNodes(parentNode: HierarchyNode | undefined): Observable<InProgressHierarchyNode> {
+  private loadDirectNodes(parentNode: HierarchyNode | undefined): Observable<HierarchyNode> {
     const enableLogging = false;
     // stream hierarchy level definitions in order
     const definitions = from(this._queryBuilder.defineHierarchyLevel(parentNode)).pipe(concatMap((hierarchyLevelDefinition) => from(hierarchyLevelDefinition)));
     // pipe definitions to nodes
     const nodes = definitions.pipe(
-      concatMap(
-        (def): ObservableInput<HierarchyNode[]> =>
-          this._scheduler.scheduleSubscription(
-            of(def.query).pipe(
-              tap(() => enableLogging && console.log(`[loadDirectNodes] Do query for ${parentNode ? JSON.stringify(parentNode) : "<root>"}`)),
-              mergeMap((query) => from(this._queryReader.read(this._queryExecutor, { ...query, ecsql: applyLimit(query.ecsql, query.ctes) }))),
-            ),
+      concatMap((def): ObservableInput<HierarchyNode[]> => {
+        if (HierarchyLevelDefinition.isCustomNode(def)) {
+          return of([def.node]);
+        }
+        return this._scheduler.scheduleSubscription(
+          of(def.query).pipe(
+            tap(() => enableLogging && console.log(`[loadDirectNodes] Do query for ${parentNode ? JSON.stringify(parentNode) : "<root>"}`)),
+            mergeMap((query) => from(this._queryReader.read(this._queryExecutor, { ...query, ecsql: applyLimit(query.ecsql, query.ctes) }))),
           ),
-      ),
+        );
+      }),
       concatAll(),
     );
     return nodes.pipe(map(convertECInstanceIdSuffixToBase36), shareReplay());
   }
 
-  private ensureDirectChildren(parentNode: HierarchyNode | undefined): Observable<InProgressHierarchyNode> {
+  private ensureDirectChildren(parentNode: HierarchyNode | undefined): Observable<HierarchyNode> {
     const enableLogging = false;
     const key = parentNode ? `${JSON.stringify(parentNode.key)}+${JSON.stringify(parentNode.extendedData)}` : "";
 
@@ -83,7 +84,7 @@ export class HierarchyProvider {
     return obs;
   }
 
-  private getNodesObservable(parentNode: HierarchyNode | undefined): Observable<InProgressHierarchyNode> {
+  private getNodesObservable(parentNode: HierarchyNode | undefined): Observable<HierarchyNode> {
     if (parentNode && Array.isArray(parentNode.children)) {
       return from(parentNode.children);
     }

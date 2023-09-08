@@ -6,13 +6,12 @@
 
 import { Observable, reduce, tap } from "rxjs";
 import { HierarchyNode } from "../../HierarchyNode";
-import { InProgressHierarchyNode } from "../Common";
 
 /** @internal */
 export function createPersistChildrenOperator(parentNode: HierarchyNode) {
-  return function (nodes: Observable<InProgressHierarchyNode>): Observable<InProgressHierarchyNode> {
+  return function (nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
     nodes.pipe(
-      reduce((acc, node) => [...acc, node], new Array<InProgressHierarchyNode>()),
+      reduce((acc, node) => [...acc, node], new Array<HierarchyNode>()),
       tap((list) => {
         if (Object.isExtensible(parentNode)) {
           parentNode.children = list;

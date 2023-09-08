@@ -8,19 +8,20 @@ import { from, mergeMap, Observable, toArray } from "rxjs";
 import { Id64 } from "@itwin/core-bentley";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ClassInfo } from "../../EC";
-import { getClass, InProgressHierarchyNode } from "../Common";
+import { HierarchyNode } from "../../HierarchyNode";
+import { getClass } from "../Common";
 import { sortNodesByLabelOperator } from "./Sorting";
 
 /** @internal */
 export function createClassGroupingOperator(schemas: SchemaContext) {
   interface ClassGroupingInformation {
-    ungrouped: Array<InProgressHierarchyNode>;
-    grouped: Map<string, { class: ClassInfo; groupedNodes: Array<InProgressHierarchyNode> }>;
+    ungrouped: Array<HierarchyNode>;
+    grouped: Map<string, { class: ClassInfo; groupedNodes: Array<HierarchyNode> }>;
   }
-  async function createClassGroupingInformation(nodes: InProgressHierarchyNode[]): Promise<ClassGroupingInformation> {
+  async function createClassGroupingInformation(nodes: HierarchyNode[]): Promise<ClassGroupingInformation> {
     const groupings: ClassGroupingInformation = { ungrouped: [], grouped: new Map() };
     for (const node of nodes) {
-      if (node.key.type === "instances" && node.groupByClass) {
+      if (HierarchyNode.isStandard(node) && node.key.type === "instances" && node.params?.groupByClass) {
         const fullClassName = node.key.instanceKeys[0].className;
         let groupingInfo = groupings.grouped.get(fullClassName);
         if (!groupingInfo) {
@@ -38,8 +39,8 @@ export function createClassGroupingOperator(schemas: SchemaContext) {
     }
     return groupings;
   }
-  function groupNodes(groupings: ClassGroupingInformation): InProgressHierarchyNode[] & { hasClassGroupingNodes?: boolean } {
-    const outNodes = new Array<InProgressHierarchyNode>();
+  function groupNodes(groupings: ClassGroupingInformation): HierarchyNode[] & { hasClassGroupingNodes?: boolean } {
+    const outNodes = new Array<HierarchyNode>();
     groupings.grouped.forEach((entry) => {
       outNodes.push({
         label: entry.class.label,
@@ -54,7 +55,7 @@ export function createClassGroupingOperator(schemas: SchemaContext) {
     (outNodes as any).hasClassGroupingNodes = groupings.grouped.size > 0;
     return outNodes;
   }
-  return function (nodes: Observable<InProgressHierarchyNode>): Observable<InProgressHierarchyNode> {
+  return function (nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
     return nodes.pipe(
       toArray(),
       mergeMap((resolvedNodes) => from(createClassGroupingInformation(resolvedNodes))),
