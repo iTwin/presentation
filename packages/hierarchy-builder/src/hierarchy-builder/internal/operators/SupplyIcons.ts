@@ -7,7 +7,13 @@
 import { map, Observable } from "rxjs";
 import { HierarchyNode } from "../../HierarchyNode";
 
-/** @internal */
+/**
+ * This is only needed to handle class grouping node icons specifically for the Models Tree case
+ * and should get removed ASAP. The real solution should allow assigning a class grouping node icon
+ * when setting up class grouping.
+ *
+ * @internal
+ */
 export function supplyIconsOperator(nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
   return nodes.pipe(
     map((node) => {
