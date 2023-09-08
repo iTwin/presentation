@@ -26,7 +26,7 @@ describe("Models tree", async () => {
       this.skip();
     }
 
-    await SnapshotConnection.openFile(imodelPath);
+    imodel = await SnapshotConnection.openFile(imodelPath);
   });
 
   after(async () => {
