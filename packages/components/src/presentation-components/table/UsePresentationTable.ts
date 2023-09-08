@@ -61,8 +61,11 @@ export interface UsePresentationTableResult<TColumns, TRow> {
 export interface UsePresentationTableWithUnifiedSelectionResult<TColumns, TRow> extends UsePresentationTableResult<TColumns, TRow> {
   /** Specifies rows that have been selected (toggled) by other components on the appropriate selection level. */
   selectedRows: TRow[];
-  /** Callback to use when a row is selected. It needs to be called with stringified keys of selected rows. */
-  onSelect: (selectedKeys: string[]) => void;
+  /**
+   * A function that should be called when a table row is selected.
+   * @param selectedRowKeys Keys of selected table rows. These should match `TableRowDefinition.key` passed to `UsePresentationTableProps.rowMapper` function when new rows are loaded.
+   */
+  onSelect: (selectedRowKeys: string[]) => void;
 }
 
 /**
@@ -111,12 +114,9 @@ export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(
   useEffect(() => {
     const updateSelectedRows = () => {
       const toggledRowKeys = unifiedSelection?.getSelection(unifiedSelectionLevel);
-      if (toggledRowKeys === undefined || toggledRowKeys === emptyKeySet) {
-        return;
-      }
 
       const rowsToAddToSelection: TableRowDefinition[] = [];
-      toggledRowKeys.forEach((key) => {
+      toggledRowKeys?.forEach((key) => {
         // should return just one row
         const selectedRow = rows.filter((row) => row.key === JSON.stringify(key));
 
