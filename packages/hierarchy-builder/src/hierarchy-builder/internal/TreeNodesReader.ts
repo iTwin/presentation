@@ -6,6 +6,7 @@
 import { Id64String } from "@itwin/core-bentley";
 import { QueryOptionsBuilder, QueryRowFormat } from "@itwin/core-common";
 import { ECSqlQueryDef } from "../ECSql";
+import { ECInstanceNodeSelectClauseColumnNames } from "../ECSqlSelectClauseHelpers";
 import { IQueryExecutor } from "../IQueryExecutor";
 import { bind, InProgressHierarchyNode } from "./Common";
 
@@ -29,18 +30,19 @@ export class TreeQueryResultsReader implements ITreeQueryResultsReader {
   }
 }
 
+/** The interface should contain a member for each `ECInstanceNodeSelectClauseColumnNames` value. */
 /* eslint-disable @typescript-eslint/naming-convention */
 interface RowDef {
-  FullClassName: string;
-  ECInstanceId: Id64String;
-  DisplayLabel: string;
-  HasChildren?: boolean;
-  HideIfNoChildren?: boolean;
-  HideInHierarchy?: boolean;
-  GroupByClass?: boolean;
-  MergeByLabelId?: string;
-  ExtendedData?: string;
-  AutoExpand?: boolean;
+  [ECInstanceNodeSelectClauseColumnNames.FullClassName]: string;
+  [ECInstanceNodeSelectClauseColumnNames.ECInstanceId]: Id64String;
+  [ECInstanceNodeSelectClauseColumnNames.DisplayLabel]: string;
+  [ECInstanceNodeSelectClauseColumnNames.HasChildren]?: boolean;
+  [ECInstanceNodeSelectClauseColumnNames.HideIfNoChildren]?: boolean;
+  [ECInstanceNodeSelectClauseColumnNames.HideNodeInHierarchy]?: boolean;
+  [ECInstanceNodeSelectClauseColumnNames.GroupByClass]?: boolean;
+  [ECInstanceNodeSelectClauseColumnNames.MergeByLabelId]?: string;
+  [ECInstanceNodeSelectClauseColumnNames.ExtendedData]?: string;
+  [ECInstanceNodeSelectClauseColumnNames.AutoExpand]?: boolean;
 }
 /* eslint-enable @typescript-eslint/naming-convention */
 
@@ -55,7 +57,7 @@ function parseNode(row: RowDef): InProgressHierarchyNode {
     },
     children: row.HasChildren === undefined ? undefined : !!row.HasChildren,
     hideIfNoChildren: !!row.HideIfNoChildren,
-    hideInHierarchy: !!row.HideInHierarchy,
+    hideInHierarchy: !!row.HideNodeInHierarchy,
     groupByClass: !!row.GroupByClass,
     mergeByLabelId: row.MergeByLabelId,
     autoExpand: row.AutoExpand,
