@@ -836,7 +836,13 @@ export interface UsePresentationTableResult<TColumns, TRow> {
 }
 
 // @beta
-export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(props: Omit<UsePresentationTableProps<TColumn, TRow>, "keys">): UsePresentationTableResult<TColumn, TRow>;
+export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(props: Omit<UsePresentationTableProps<TColumn, TRow>, "keys">): UsePresentationTableWithUnifiedSelectionResult<TColumn, TRow>;
+
+// @beta
+export interface UsePresentationTableWithUnifiedSelectionResult<TColumns, TRow> extends UsePresentationTableResult<TColumns, TRow> {
+    onSelect: (selectedRowKeys: string[]) => void;
+    selectedRows: TRow[];
+}
 
 // @public
 export function usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderProps): PresentationTreeNodeLoaderResult;

@@ -6,9 +6,10 @@
  * @module Table
  */
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { IModelConnection } from "@itwin/core-frontend";
-import { KeySet, Ruleset } from "@itwin/presentation-common";
+import { Key, KeySet, Ruleset } from "@itwin/presentation-common";
+import { Presentation } from "@itwin/presentation-frontend";
 import { useUnifiedSelectionContext } from "../unified-selection/UnifiedSelectionContext";
 import { TableColumnDefinition, TableRowDefinition } from "./Types";
 import { useColumns } from "./UseColumns";
@@ -54,6 +55,20 @@ export interface UsePresentationTableResult<TColumns, TRow> {
 }
 
 /**
+ * Return type of [[usePresentationTableWithUnifiedSelection]] hook.
+ * @beta
+ */
+export interface UsePresentationTableWithUnifiedSelectionResult<TColumns, TRow> extends UsePresentationTableResult<TColumns, TRow> {
+  /** Specifies rows that have been selected (toggled) by other components on the appropriate selection level. */
+  selectedRows: TRow[];
+  /**
+   * A function that should be called when a table row is selected.
+   * @param selectedRowKeys Keys of selected table rows. These should match `TableRowDefinition.key` passed to `UsePresentationTableProps.rowMapper` function when new rows are loaded.
+   */
+  onSelect: (selectedRowKeys: string[]) => void;
+}
+
+/**
  * Custom hook that loads data for generic table component.
  * @throws on failure to get table data. The error is thrown in the React's render loop, so it can be caught using an error boundary.
  * @beta
@@ -84,10 +99,73 @@ export function usePresentationTable<TColumn, TRow>(props: UsePresentationTableP
  */
 export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(
   props: Omit<UsePresentationTableProps<TColumn, TRow>, "keys">,
-): UsePresentationTableResult<TColumn, TRow> {
+): UsePresentationTableWithUnifiedSelectionResult<TColumn, TRow> {
   const unifiedSelection = useUnifiedSelectionContext();
   const keys = unifiedSelection?.getSelection() ?? emptyKeySet;
-  return usePresentationTable({ ...props, keys });
+  const [selectedRows, setSelectedRows] = useState<TableRowDefinition[]>();
+
+  const { imodel, ruleset, pageSize, columnMapper, rowMapper } = props;
+  const columns = useColumns({ imodel, ruleset, keys });
+  const { options, sort, filter } = useTableOptions({ columns });
+  const { rows, isLoading, loadMoreRows } = useRows({ imodel, ruleset, keys, pageSize, options });
+
+  const unifiedSelectionLevel = (unifiedSelection?.selectionLevel ?? 0) + 1;
+
+  useEffect(() => {
+    const updateSelectedRows = () => {
+      const toggledRowKeys = unifiedSelection?.getSelection(unifiedSelectionLevel);
+
+      const rowsToAddToSelection: TableRowDefinition[] = [];
+      toggledRowKeys?.forEach((key) => {
+        // should return just one row
+        const selectedRow = rows.filter((row) => row.key === JSON.stringify(key));
+
+        if (selectedRow[0] !== undefined) {
+          rowsToAddToSelection.push(selectedRow[0]);
+        }
+      });
+
+      setSelectedRows(rowsToAddToSelection);
+    };
+
+    const disposeListener = Presentation.selection.selectionChange.addListener(({ level }) => {
+      if (level !== unifiedSelectionLevel) {
+        return;
+      }
+      updateSelectedRows();
+    });
+
+    updateSelectedRows();
+
+    return disposeListener;
+  }, [rows, unifiedSelectionLevel, unifiedSelection]);
+
+  const onSelect = (selectedKeys: string[]) => {
+    const parsedKeys: Key[] = [];
+    for (const selectedKey of selectedKeys) {
+      try {
+        const parsedKey: Key = JSON.parse(selectedKey);
+        if (rows.some((row) => row.key === selectedKey)) {
+          parsedKeys.push(parsedKey);
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    unifiedSelection?.replaceSelection(parsedKeys, unifiedSelectionLevel);
+  };
+
+  return {
+    columns: useMemo(() => columns?.map(columnMapper), [columns, columnMapper]),
+    rows: useMemo(() => rows.map(rowMapper), [rows, rowMapper]),
+    isLoading,
+    loadMoreRows,
+    sort,
+    filter,
+    onSelect,
+    selectedRows: useMemo(() => (selectedRows ?? []).map(rowMapper), [selectedRows, rowMapper]),
+  };
 }
 
 const emptyKeySet = new KeySet();
