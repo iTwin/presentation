@@ -6,6 +6,12 @@
 import { Id64String } from "@itwin/core-bentley";
 import { ECClass, SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSqlBinding } from "../ECSql";
+import {
+  createECInstanceNodeSelectClause,
+  createGeometricElementLabelSelectClause,
+  createNonGeometricElementLabelSelectClause,
+  ECInstanceNodeSelectClauseColumnNames,
+} from "../ECSqlSelectClauseHelpers";
 import { HierarchyNode } from "../HierarchyNode";
 import { HierarchyLevelDefinition, IHierarchyDefinition } from "../IHierarchyDefinition";
 import { getClass } from "../internal/Common";
@@ -67,13 +73,15 @@ export class ModelsTreeQueryBuilder implements IHierarchyDefinition {
         query: {
           ecsql: `
             SELECT
-              ec_classname(this.ECClassId) FullClassName,
-              ECInstanceId,
-              ${createNonGeometricElementLabelSelectClause("this")} AS DisplayLabel,
-              json_object(
-                'imageId', 'icon-imodel-hollow-2'
-              ) AS ExtendedData,
-              1 as AutoExpand
+              ${createECInstanceNodeSelectClause({
+                ecClassId: { selector: "this.ECClassId" },
+                ecInstanceId: { selector: "this.ECInstanceId" },
+                nodeLabel: { selector: createNonGeometricElementLabelSelectClause("this") },
+                extendedData: {
+                  imageId: "icon-imodel-hollow-2",
+                },
+                autoExpand: true,
+              })}
             FROM bis.Subject this
             WHERE
               this.Parent IS NULL
@@ -107,37 +115,45 @@ export class ModelsTreeQueryBuilder implements IHierarchyDefinition {
   }
 
   private async createSubjectChildrenQuery(subjectIds: Id64String[], _parentNode: HierarchyNode): Promise<HierarchyLevelDefinition[]> {
+    const selectColumnNames = Object.values(ECInstanceNodeSelectClauseColumnNames).join(", ");
     const ctes = [
       `
-        subjects(FullClassName, ECInstanceId, DisplayLabel, HideInHierarchy, HideIfNoChildren, HasChildren, MergeByLabelId, ExtendedData, ParentId) AS (
+        subjects(${selectColumnNames}, ParentId) AS (
           SELECT
-            ec_classname(this.ECClassId) FullClassName,
-            this.ECInstanceId,
-            ${createNonGeometricElementLabelSelectClause("this")} AS DisplayLabel,
-            CAST(CASE
-              WHEN (
-                json_extract(this.JsonProperties, '$.Subject.Job.Bridge') IS NOT NULL
-                OR json_extract(this.JsonProperties, '$.Subject.Model.Type') = 'Hierarchy'
-              ) THEN 1
-              ELSE 0
-            END AS BOOLEAN) AS HideInHierarchy,
-            CAST(1 AS BOOLEAN) AS HideIfNoChildren,
-            CAST(NULL AS BOOLEAN) AS HasChildren,
-            'subject' AS MergeByLabelId,
-            json_object('imageId', 'icon-folder') AS ExtendedData,
+            ${createECInstanceNodeSelectClause({
+              ecClassId: { selector: "this.ECClassId" },
+              ecInstanceId: { selector: "this.ECInstanceId" },
+              nodeLabel: { selector: createNonGeometricElementLabelSelectClause("this") },
+              hideNodeInHierarchy: {
+                selector: `
+                  CASE
+                    WHEN (
+                      json_extract(this.JsonProperties, '$.Subject.Job.Bridge') IS NOT NULL
+                      OR json_extract(this.JsonProperties, '$.Subject.Model.Type') = 'Hierarchy'
+                    ) THEN 1
+                    ELSE 0
+                  END
+                `,
+              },
+              hideIfNoChildren: true,
+              mergeByLabelId: "subject",
+              extendedData: {
+                imageId: "icon-folder",
+              },
+            })},
             this.Parent.Id ParentId
           FROM
             bis.Subject this
         )
       `,
       `
-        child_subjects(FullClassName, ECInstanceId, DisplayLabel, HideInHierarchy, HideIfNoChildren, HasChildren, MergeByLabelId, ExtendedData, ParentId, RootId) AS (
+        child_subjects(${selectColumnNames}, ParentId, RootId) AS (
           SELECT *, s.ParentId RootId FROM subjects s
           UNION ALL
           SELECT s.*, p.RootId
           FROM child_subjects p
           JOIN subjects s ON s.ParentId = p.ECInstanceId
-          WHERE p.HideInHierarchy = 1
+          WHERE p.${ECInstanceNodeSelectClauseColumnNames.HideNodeInHierarchy} = 1
         )
       `,
     ];
@@ -148,12 +164,12 @@ export class ModelsTreeQueryBuilder implements IHierarchyDefinition {
           ctes,
           ecsql: `
             SELECT
-              FullClassName, ECInstanceId, DisplayLabel, HideInHierarchy, HideIfNoChildren, HasChildren, MergeByLabelId, ExtendedData, ParentId
+            ${selectColumnNames}, ParentId
             FROM
               child_subjects this
             WHERE
               this.RootId IN (${subjectIds.map(() => "?").join(",")})
-              AND NOT this.HideInHierarchy
+              AND NOT this.${ECInstanceNodeSelectClauseColumnNames.HideNodeInHierarchy}
           `,
           bindings: [...subjectIds.map((id): ECSqlBinding => ({ type: "id", value: id }))],
         },
@@ -164,20 +180,26 @@ export class ModelsTreeQueryBuilder implements IHierarchyDefinition {
           ctes,
           ecsql: `
             SELECT
-              ec_classname(this.ECClassId) FullClassName,
-              this.ECInstanceId,
-              ${createNonGeometricElementLabelSelectClause("partition")} AS DisplayLabel,
-              CAST(CASE
-                WHEN (
-                  json_extract(partition.JsonProperties, '$.PhysicalPartition.Model.Content') IS NOT NULL
-                  OR json_extract(partition.JsonProperties, '$.GraphicalPartition3d.Model.Content') IS NOT NULL
-                ) THEN 1
-                ELSE 0
-              END AS BOOLEAN) AS HideInHierarchy,
-              CAST(0 AS BOOLEAN) AS HideIfNoChildren,
-              CAST(1 AS BOOLEAN) AS HasChildren,
-              CAST('' AS TEXT) AS MergeByLabelId,
-              json_object('imageId', 'icon-model') AS ExtendedData
+              ${createECInstanceNodeSelectClause({
+                ecClassId: { selector: "this.ECClassId" },
+                ecInstanceId: { selector: "this.ECInstanceId" },
+                nodeLabel: { selector: createNonGeometricElementLabelSelectClause("partition") },
+                hideNodeInHierarchy: {
+                  selector: `
+                    CASE
+                      WHEN (
+                        json_extract(partition.JsonProperties, '$.PhysicalPartition.Model.Content') IS NOT NULL
+                        OR json_extract(partition.JsonProperties, '$.GraphicalPartition3d.Model.Content') IS NOT NULL
+                      ) THEN 1
+                      ELSE 0
+                    END
+                  `,
+                },
+                hasChildren: true,
+                extendedData: {
+                  imageId: "icon-model",
+                },
+              })}
             FROM
               bis.GeometricModel3d this
               JOIN bis.InformationPartitionElement partition ON partition.ECInstanceId = this.ModeledElement.Id
@@ -195,7 +217,7 @@ export class ModelsTreeQueryBuilder implements IHierarchyDefinition {
                 OR subject.ECInstanceId IN (
                   SELECT s.ECInstanceId
                   FROM child_subjects s
-                  WHERE s.RootId IN (${subjectIds.map(() => "?").join(",")}) AND s.HideInHierarchy
+                  WHERE s.RootId IN (${subjectIds.map(() => "?").join(",")}) AND s.${ECInstanceNodeSelectClauseColumnNames.HideNodeInHierarchy}
                 )
               )
           `,
@@ -215,10 +237,12 @@ export class ModelsTreeQueryBuilder implements IHierarchyDefinition {
         query: {
           ecsql: `
             SELECT
-              ec_classname(this.ECClassId) FullClassName,
-              this.ECInstanceId,
-              '<always hidden>' AS DisplayLabel,
-              1 AS HideInHierarchy
+              ${createECInstanceNodeSelectClause({
+                ecClassId: { selector: "this.ECClassId" },
+                ecInstanceId: { selector: "this.ECInstanceId" },
+                nodeLabel: "", // doesn't matter - the node is always hidden
+                hideNodeInHierarchy: true,
+              })}
             FROM bis.GeometricModel3d this
             WHERE this.ModeledElement.Id IN (${elementIds.map(() => "?").join(",")})
               AND NOT this.IsPrivate
@@ -250,15 +274,17 @@ export class ModelsTreeQueryBuilder implements IHierarchyDefinition {
         query: {
           ecsql: `
             SELECT
-              ec_classname(this.ECClassId) FullClassName,
-              this.ECInstanceId,
-              ${createNonGeometricElementLabelSelectClause("this")} AS DisplayLabel,
-              'category' AS MergeByLabelId,
-              1 AS HasChildren,
-              json_object(
-                'imageId', 'icon-layers',
-                'modelIds', ${createModelIdsSelector()}
-              ) AS ExtendedData
+              ${createECInstanceNodeSelectClause({
+                ecClassId: { selector: "this.ECClassId" },
+                ecInstanceId: { selector: "this.ECInstanceId" },
+                nodeLabel: { selector: createNonGeometricElementLabelSelectClause("this") },
+                mergeByLabelId: "category",
+                hasChildren: true,
+                extendedData: {
+                  imageId: "icon-layers",
+                  modelIds: { selector: createModelIdsSelector() },
+                },
+              })}
             FROM bis.SpatialCategory this
             WHERE EXISTS (
               SELECT 1
@@ -286,23 +312,29 @@ export class ModelsTreeQueryBuilder implements IHierarchyDefinition {
         query: {
           ecsql: `
             SELECT
-              ec_classname(this.ECClassId) FullClassName,
-              this.ECInstanceId,
-              ${createGeometricElementLabelSelectClause("this")} AS DisplayLabel,
-              json_object(
-                'imageId', 'icon-item'
-              ) AS ExtendedData,
-              1 AS GroupByClass,
-              IFNULL((
-                SELECT 1
-                FROM (
-                  SELECT Parent.Id ParentId FROM bis.GeometricElement3d
-                  UNION ALL
-                  SELECT ModeledElement.Id ParentId FROM bis.GeometricModel3d
-                )
-                WHERE ParentId = this.ECInstanceId
-                LIMIT 1
-              ), 0) AS HasChildren
+              ${createECInstanceNodeSelectClause({
+                ecClassId: { selector: "this.ECClassId" },
+                ecInstanceId: { selector: "this.ECInstanceId" },
+                nodeLabel: { selector: createGeometricElementLabelSelectClause("this") },
+                groupByClass: true,
+                hasChildren: {
+                  selector: `
+                    IFNULL((
+                      SELECT 1
+                      FROM (
+                        SELECT Parent.Id ParentId FROM bis.GeometricElement3d
+                        UNION ALL
+                        SELECT ModeledElement.Id ParentId FROM bis.GeometricModel3d
+                      )
+                      WHERE ParentId = this.ECInstanceId
+                      LIMIT 1
+                    ), 0)
+                  `,
+                },
+                extendedData: {
+                  imageId: "icon-item",
+                },
+              })}
             FROM bis.GeometricElement3d this
             WHERE this.Category.Id IN (${categoryIds.map(() => "?").join(",")})
               AND this.Model.Id IN (${modelIds.map(() => "?").join(",")})
@@ -321,23 +353,29 @@ export class ModelsTreeQueryBuilder implements IHierarchyDefinition {
         query: {
           ecsql: `
             SELECT
-              ec_classname(this.ECClassId) FullClassName,
-              this.ECInstanceId,
-              ${createGeometricElementLabelSelectClause("this")} AS DisplayLabel,
-              json_object(
-                'imageId', 'icon-item'
-              ) AS ExtendedData,
-              1 AS GroupByClass,
-              IFNULL((
-                SELECT 1
-                FROM (
-                  SELECT Parent.Id ParentId FROM bis.GeometricElement3d
-                  UNION ALL
-                  SELECT ModeledElement.Id ParentId FROM bis.GeometricModel3d
-                )
-                WHERE ParentId = this.ECInstanceId
-                LIMIT 1
-              ), 0) AS HasChildren
+              ${createECInstanceNodeSelectClause({
+                ecClassId: { selector: "this.ECClassId" },
+                ecInstanceId: { selector: "this.ECInstanceId" },
+                nodeLabel: { selector: createGeometricElementLabelSelectClause("this") },
+                groupByClass: true,
+                hasChildren: {
+                  selector: `
+                    IFNULL((
+                      SELECT 1
+                      FROM (
+                        SELECT Parent.Id ParentId FROM bis.GeometricElement3d
+                        UNION ALL
+                        SELECT ModeledElement.Id ParentId FROM bis.GeometricModel3d
+                      )
+                      WHERE ParentId = this.ECInstanceId
+                      LIMIT 1
+                    ), 0)
+                  `,
+                },
+                extendedData: {
+                  imageId: "icon-item",
+                },
+              })}
             FROM bis.GeometricElement3d this
             WHERE this.Parent.Id IN (${elementIds.map(() => "?").join(",")})
           `,
@@ -346,35 +384,4 @@ export class ModelsTreeQueryBuilder implements IHierarchyDefinition {
       },
     ];
   }
-}
-
-function createGeometricElementLabelSelectClause(classAlias: string) {
-  return `COALESCE(
-    [${classAlias}].[CodeValue],
-    CASE WHEN [${classAlias}].[UserLabel] IS NOT NULL
-      THEN [${classAlias}].[UserLabel] || ' ' || ${createECInstanceIdentifier(classAlias)}
-      ELSE NULL
-    END,
-    (
-      SELECT COALESCE([c].[DisplayLabel], [c].[Name]) || ' ' || ${createECInstanceIdentifier(classAlias)}
-      FROM [meta].[ECClassDef] AS [c]
-      WHERE [c].[ECInstanceId] = [${classAlias}].[ECClassId]
-    )
-  )`;
-}
-
-function createNonGeometricElementLabelSelectClause(classAlias: string) {
-  return `COALESCE(
-    [${classAlias}].[UserLabel],
-    [${classAlias}].[CodeValue],
-    (
-      SELECT COALESCE([c].[DisplayLabel], [c].[Name]) || ' ' || ${createECInstanceIdentifier(classAlias)}
-      FROM [meta].[ECClassDef] AS [c]
-      WHERE [c].[ECInstanceId] = [${classAlias}].[ECClassId]
-    )
-  )`;
-}
-
-function createECInstanceIdentifier(classAlias: string) {
-  return `'[' || printf('0x%x', [${classAlias}].[ECInstanceId]) || ']'`;
 }
