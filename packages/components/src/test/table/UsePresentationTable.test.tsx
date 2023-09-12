@@ -342,7 +342,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
   });
 
   /** Creates rows for the provided keys */
-  function setupPresentationManager(keys: Key[] = [createTestECInstanceKey()]) {
+  function setupPresentationManager(keys: InstanceKey[] = [createTestECInstanceKey()]) {
     const propertiesField = createTestPropertiesContentField({
       name: "first_field",
       label: "First Field",
