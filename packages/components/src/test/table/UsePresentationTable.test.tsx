@@ -9,7 +9,7 @@ import sinon from "sinon";
 import * as moq from "typemoq";
 import { BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { Content, InstanceKey, Item, Key, KeySet } from "@itwin/presentation-common";
+import { Content, InstanceKey, Item, KeySet } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, SelectionManager } from "@itwin/presentation-frontend";
 import { waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
@@ -342,7 +342,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
   });
 
   /** Creates rows for the provided keys */
-  function setupPresentationManager(keys: Key[] = [createTestECInstanceKey()]) {
+  function setupPresentationManager(keys: InstanceKey[] = [createTestECInstanceKey()]) {
     const propertiesField = createTestPropertiesContentField({
       name: "first_field",
       label: "First Field",
