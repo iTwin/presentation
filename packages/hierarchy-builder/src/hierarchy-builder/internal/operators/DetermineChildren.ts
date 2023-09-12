@@ -2,28 +2,50 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/* eslint-disable no-console */
 
-import { map, merge, mergeMap, Observable, partition, share, tap } from "rxjs";
+import { map, merge, mergeMap, Observable, partition, shareReplay, tap } from "rxjs";
+import { Logger } from "@itwin/core-bentley";
 import { HierarchyNode } from "../../HierarchyNode";
+import { createOperatorLoggingNamespace } from "../Common";
 
+const OPERATOR_NAME = "DetermineChildren";
 /** @internal */
+export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
+
+/**
+ * Ensures all input nodes have their children determined.
+ *
+ * @internal
+ */
 export function createDetermineChildrenOperator(hasNodes: (node: HierarchyNode) => Observable<boolean>) {
-  const enableLogging = false;
   return function (nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
-    const [determined, undetermined] = partition(nodes.pipe(share()), (node) => node.children !== undefined);
+    const sharedNodes = nodes.pipe(
+      log((n) => `in: ${n.label}`),
+      // each partitioned observable is going to subscribe to this individually - share and replay to avoid requesting
+      // nodes from source observable multiple times
+      shareReplay(),
+    );
+    const [determined, undetermined] = partition(sharedNodes, (node) => node.children !== undefined);
     return merge(
       determined,
       undetermined.pipe(
         mergeMap((n) =>
           hasNodes(n).pipe(
-            map((children) => {
-              enableLogging && console.log(`DetermineChildrenOperator: children for ${n.label}: ${children}`);
-              return { ...n, children };
+            map((hasChildren) => {
+              doLog(`children for ${n.label}: ${hasChildren}`);
+              return { ...n, children: hasChildren };
             }),
           ),
         ),
       ),
-    ).pipe(tap((node) => enableLogging && console.log(`DetermineChildrenOperator partial: ${node.label}: ${node.children}`)));
+    ).pipe(log((n) => `out: ${n.label} / ${n.children}`));
   };
+}
+
+function doLog(msg: string) {
+  Logger.logTrace(LOGGING_NAMESPACE, msg);
+}
+
+function log<T>(msg: (arg: T) => string) {
+  return tap<T>((n) => doLog(msg(n)));
 }

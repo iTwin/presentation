@@ -4,12 +4,19 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { from, of } from "rxjs";
+import { EMPTY, from, of, Subject } from "rxjs";
 import sinon from "sinon";
-import { createHideIfNoChildrenOperator } from "../../../hierarchy-builder/internal/operators/HideIfNoChildren";
+import { Logger, LogLevel } from "@itwin/core-bentley";
+import { createHideIfNoChildrenOperator, LOGGING_NAMESPACE } from "../../../hierarchy-builder/internal/operators/HideIfNoChildren";
 import { createTestNode, getObservableResult } from "../../Utils";
 
-describe("hideIfNoChildrenOperator", () => {
+describe("HideIfNoChildrenOperator", () => {
+  before(() => {
+    Logger.initializeToConsole();
+    Logger.turnOffCategories();
+    Logger.setLevel(LOGGING_NAMESPACE, LogLevel.Trace);
+  });
+
   it("returns nodes that don't need hiding", async () => {
     const nodes = [createTestNode()];
     const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenOperator(sinon.spy(), false)));
@@ -82,5 +89,89 @@ describe("hideIfNoChildrenOperator", () => {
     const hasNodes = sinon.fake(() => of(true));
     const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenOperator(hasNodes, false)));
     expect(result).to.deep.eq([{ ...nodes[0], children: true }]);
+  });
+
+  it("checks children of all siblings at once when `stopOnFirstChild = false`", async () => {
+    const nodeA = createTestNode({
+      params: { hideIfNoChildren: true },
+      label: "a",
+      children: undefined,
+    });
+    const nodeB = createTestNode({
+      params: { hideIfNoChildren: true },
+      label: "b",
+      children: undefined,
+    });
+    const aHasNodesSubject = new Subject<boolean>();
+    const bHasNodesSubject = new Subject<boolean>();
+    const hasNodes = sinon.fake((node) => {
+      if (node === nodeA) {
+        return aHasNodesSubject;
+      }
+      if (node === nodeB) {
+        return bHasNodesSubject;
+      }
+      return EMPTY;
+    });
+
+    const promise = getObservableResult(from([nodeA, nodeB]).pipe(createHideIfNoChildrenOperator(hasNodes, false)));
+
+    expect(hasNodes).to.be.calledTwice;
+    expect(hasNodes.firstCall).to.be.calledWithExactly(nodeA);
+    expect(hasNodes.secondCall).to.be.calledWithExactly(nodeB);
+
+    aHasNodesSubject.next(true);
+    aHasNodesSubject.complete();
+
+    bHasNodesSubject.next(true);
+    bHasNodesSubject.complete();
+
+    const result = await promise;
+    expect(result).to.deep.eq([
+      { ...nodeA, children: true },
+      { ...nodeB, children: true },
+    ]);
+  });
+
+  it("checks children before siblings when `stopOnFirstChild = true`", async () => {
+    const nodeA = createTestNode({
+      params: { hideIfNoChildren: true },
+      label: "a",
+      children: undefined,
+    });
+    const nodeB = createTestNode({
+      params: { hideIfNoChildren: true },
+      label: "b",
+      children: undefined,
+    });
+    const aHasNodesSubject = new Subject<boolean>();
+    const bHasNodesSubject = new Subject<boolean>();
+    const hasNodes = sinon.fake((node) => {
+      if (node === nodeA) {
+        return aHasNodesSubject;
+      }
+      if (node === nodeB) {
+        return bHasNodesSubject;
+      }
+      return EMPTY;
+    });
+
+    const promise = getObservableResult(from([nodeA, nodeB]).pipe(createHideIfNoChildrenOperator(hasNodes, true)));
+
+    expect(hasNodes).to.be.calledOnce;
+    expect(hasNodes.firstCall).to.be.calledWithExactly(nodeA);
+    aHasNodesSubject.next(true);
+    aHasNodesSubject.complete();
+
+    expect(hasNodes).to.be.calledTwice;
+    expect(hasNodes.secondCall).to.be.calledWithExactly(nodeB);
+    bHasNodesSubject.next(true);
+    bHasNodesSubject.complete();
+
+    const result = await promise;
+    expect(result).to.deep.eq([
+      { ...nodeA, children: true },
+      { ...nodeB, children: true },
+    ]);
   });
 });

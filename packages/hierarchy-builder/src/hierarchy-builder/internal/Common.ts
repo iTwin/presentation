@@ -43,7 +43,7 @@ function mergeNodeHandlingParams(
     ...(lhs?.hideIfNoChildren && rhs?.hideIfNoChildren ? { hideIfNoChildren: true } : undefined),
     ...(lhs?.hideInHierarchy && rhs?.hideInHierarchy ? { hideInHierarchy: true } : undefined),
     ...(lhs?.groupByClass || rhs?.groupByClass ? { groupByClass: true } : undefined),
-    mergeByLabelId: lhs?.mergeByLabelId,
+    ...(lhs?.mergeByLabelId ? { mergeByLabelId: lhs.mergeByLabelId } : undefined),
   };
 }
 
@@ -146,4 +146,9 @@ export function bind(bindings: ECSqlBinding[]): QueryBinder {
     }
   });
   return binder;
+}
+
+/** @internal */
+export function createOperatorLoggingNamespace(operatorName: string) {
+  return `Presentation.HierarchyBuilder.Operators.${operatorName}`;
 }
