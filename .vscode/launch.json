@@ -118,6 +118,25 @@
       }
     },
     {
+      "name": "Tests: Hierarchy builder",
+      "cwd": "${workspaceFolder}/packages/hierarchy-builder",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/packages/testing/node_modules/mocha/bin/_mocha",
+      "args": [
+        "--config",
+        "./.mocharc.json",
+        "--no-timeouts",
+        "lib/cjs/test/**/*.test.js"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/packages/hierarchy-builder/lib/**/*.js"
+      ],
+      "env": {
+        "NODE_ENV": "development"
+      }
+    },
+    {
       "name": "Tests: Full-stack",
       "cwd": "${workspaceFolder}/packages/full-stack-tests",
       "type": "node",
