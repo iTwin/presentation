@@ -4,21 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { merge, Observable } from "rxjs";
+import { assert } from "@itwin/core-bentley";
 import { QueryBinder } from "@itwin/core-common";
 import { ECClass, Schema, SchemaContext, SchemaKey } from "@itwin/ecschema-metadata";
 import { ECSqlBinding } from "../ECSql";
-import { HierarchyNode } from "../HierarchyNode";
-
-/** @internal */
-export interface HierarchyNodeHandlingParams {
-  hideIfNoChildren?: boolean;
-  hideInHierarchy?: boolean;
-  groupByClass?: boolean;
-  mergeByLabelId?: string;
-}
-
-/** @internal */
-export type InProgressHierarchyNode = HierarchyNode & HierarchyNodeHandlingParams;
+import { HierarchyNode, HierarchyNodeHandlingParams, HierarchyNodeKey } from "../HierarchyNode";
 
 /** @internal */
 export async function getClass(schemas: SchemaContext, fullClassName: string) {
@@ -42,18 +32,45 @@ export async function getClass(schemas: SchemaContext, fullClassName: string) {
   return nodeClass;
 }
 
-/** @internal */
-export function mergeInstanceNodes(lhs: InProgressHierarchyNode, rhs: InProgressHierarchyNode): InProgressHierarchyNode {
-  if (lhs.key.type !== "instances" || rhs.key.type !== "instances") {
-    throw new Error("Only instance nodes allowed");
+function mergeNodeHandlingParams(
+  lhs: HierarchyNodeHandlingParams | undefined,
+  rhs: HierarchyNodeHandlingParams | undefined,
+): HierarchyNodeHandlingParams | undefined {
+  if (!lhs && !rhs) {
+    return undefined;
   }
   return {
+    ...(lhs?.hideIfNoChildren && rhs?.hideIfNoChildren ? { hideIfNoChildren: true } : undefined),
+    ...(lhs?.hideInHierarchy && rhs?.hideInHierarchy ? { hideInHierarchy: true } : undefined),
+    ...(lhs?.groupByClass || rhs?.groupByClass ? { groupByClass: true } : undefined),
+    ...(lhs?.mergeByLabelId ? { mergeByLabelId: lhs.mergeByLabelId } : undefined),
+  };
+}
+
+function mergeNodeKeys(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): HierarchyNodeKey {
+  if (HierarchyNodeKey.isCustom(lhs) && HierarchyNodeKey.isCustom(rhs)) {
+    assert(lhs === rhs);
+    return lhs;
+  }
+  assert(HierarchyNodeKey.isStandard(lhs) && HierarchyNodeKey.isStandard(rhs) && lhs.type === rhs.type);
+  if (HierarchyNodeKey.isInstances(lhs)) {
+    assert(HierarchyNodeKey.isInstances(rhs));
+    return { type: "instances", instanceKeys: [...lhs.instanceKeys, ...rhs.instanceKeys] };
+  }
+  if (HierarchyNodeKey.isClassGrouping(lhs)) {
+    assert(HierarchyNodeKey.isClassGrouping(rhs));
+    assert(lhs.class.id === rhs.class.id);
+    return { ...lhs };
+  }
+  throw new Error(`Unable to merge given node keys`);
+}
+
+/** @internal */
+export function mergeNodes(lhs: HierarchyNode, rhs: HierarchyNode): HierarchyNode {
+  const mergedParams = mergeNodeHandlingParams(lhs.params, rhs.params);
+  return {
     label: lhs.label,
-    key: {
-      type: "instances",
-      instanceKeys: [...lhs.key.instanceKeys, ...rhs.key.instanceKeys],
-    },
-    mergeByLabelId: lhs.mergeByLabelId,
+    key: mergeNodeKeys(lhs.key, rhs.key),
     children:
       Array.isArray(lhs.children) && Array.isArray(rhs.children)
         ? [...lhs.children, ...rhs.children]
@@ -62,11 +79,9 @@ export function mergeInstanceNodes(lhs: InProgressHierarchyNode, rhs: InProgress
         : lhs.children === false && rhs.children === false
         ? false
         : undefined,
-    ...(lhs.hideIfNoChildren && rhs.hideIfNoChildren ? { hideIfNoChildren: lhs.hideIfNoChildren && rhs.hideIfNoChildren } : undefined),
-    ...(lhs.hideInHierarchy && rhs.hideInHierarchy ? { hideInHierarchy: lhs.hideInHierarchy && rhs.hideInHierarchy } : undefined),
-    ...(lhs.groupByClass || rhs.groupByClass ? { groupByClass: lhs.groupByClass || rhs.groupByClass } : undefined),
     ...(lhs.autoExpand || rhs.autoExpand ? { autoExpand: lhs.autoExpand || rhs.autoExpand } : undefined),
     ...(lhs.extendedData || rhs.extendedData ? { extendedData: { ...lhs.extendedData, ...rhs.extendedData } } : undefined),
+    ...(mergedParams ? { params: mergedParams } : undefined),
   };
 }
 
@@ -76,23 +91,14 @@ export function hasChildren<TNode extends { children?: boolean | Array<unknown> 
 }
 
 /** @internal */
-export function mergeInstanceNodesObs(
-  lhs: InProgressHierarchyNode,
-  rhs: InProgressHierarchyNode,
-  directNodesCache: Map<string, Observable<InProgressHierarchyNode>>,
-) {
-  const merged = mergeInstanceNodes(lhs, rhs);
+export function mergeNodesObs(lhs: HierarchyNode, rhs: HierarchyNode, directNodesCache: Map<string, Observable<HierarchyNode>>) {
+  const merged = mergeNodes(lhs, rhs);
   mergeDirectNodeObservables(lhs, rhs, merged, directNodesCache);
   return merged;
 }
 
 /** @internal */
-export function mergeDirectNodeObservables(
-  a: InProgressHierarchyNode,
-  b: InProgressHierarchyNode,
-  m: InProgressHierarchyNode,
-  cache: Map<string, Observable<InProgressHierarchyNode>>,
-) {
+export function mergeDirectNodeObservables(a: HierarchyNode, b: HierarchyNode, m: HierarchyNode, cache: Map<string, Observable<HierarchyNode>>) {
   const cachedA = cache.get(JSON.stringify(a.key));
   if (!cachedA) {
     return;
@@ -140,4 +146,9 @@ export function bind(bindings: ECSqlBinding[]): QueryBinder {
     }
   });
   return binder;
+}
+
+/** @internal */
+export function createOperatorLoggingNamespace(operatorName: string) {
+  return `Presentation.HierarchyBuilder.Operators.${operatorName}`;
 }

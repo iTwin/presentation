@@ -7,18 +7,19 @@ import { Id64String } from "@itwin/core-bentley";
 import { QueryOptionsBuilder, QueryRowFormat } from "@itwin/core-common";
 import { ECSqlQueryDef } from "../ECSql";
 import { ECInstanceNodeSelectClauseColumnNames } from "../ECSqlSelectClauseHelpers";
+import { HierarchyNode } from "../HierarchyNode";
 import { IQueryExecutor } from "../IQueryExecutor";
-import { bind, InProgressHierarchyNode } from "./Common";
+import { bind } from "./Common";
 
 /** @internal */
 export interface ITreeQueryResultsReader {
-  read(executor: IQueryExecutor, query: ECSqlQueryDef): Promise<InProgressHierarchyNode[]>;
+  read(executor: IQueryExecutor, query: ECSqlQueryDef): Promise<HierarchyNode[]>;
 }
 
 /** @internal */
 export class TreeQueryResultsReader implements ITreeQueryResultsReader {
-  public async read(executor: IQueryExecutor, query: ECSqlQueryDef): Promise<InProgressHierarchyNode[]> {
-    const nodes = new Array<InProgressHierarchyNode>();
+  public async read(executor: IQueryExecutor, query: ECSqlQueryDef): Promise<HierarchyNode[]> {
+    const nodes = new Array<HierarchyNode>();
     const reader = createECSqlReader(executor, query);
     while (await reader.step()) {
       if (nodes.length >= ROWS_LIMIT) {
@@ -46,7 +47,7 @@ interface RowDef {
 }
 /* eslint-enable @typescript-eslint/naming-convention */
 
-function parseNode(row: RowDef): InProgressHierarchyNode {
+function parseNode(row: RowDef): HierarchyNode {
   const parsedExtendedData = row.ExtendedData ? JSON.parse(row.ExtendedData) : undefined;
   return {
     label: row.DisplayLabel,
@@ -56,11 +57,13 @@ function parseNode(row: RowDef): InProgressHierarchyNode {
       instanceKeys: [{ className: row.FullClassName, id: row.ECInstanceId }],
     },
     children: row.HasChildren === undefined ? undefined : !!row.HasChildren,
-    hideIfNoChildren: !!row.HideIfNoChildren,
-    hideInHierarchy: !!row.HideNodeInHierarchy,
-    groupByClass: !!row.GroupByClass,
-    mergeByLabelId: row.MergeByLabelId,
     autoExpand: row.AutoExpand,
+    params: {
+      hideIfNoChildren: !!row.HideIfNoChildren,
+      hideInHierarchy: !!row.HideNodeInHierarchy,
+      groupByClass: !!row.GroupByClass,
+      mergeByLabelId: row.MergeByLabelId,
+    },
   };
 }
 

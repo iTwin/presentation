@@ -2,46 +2,64 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/* eslint-disable no-console */
 
-import { defer, filter, map, merge, mergeMap, Observable, partition, share, tap } from "rxjs";
-import { hasChildren, InProgressHierarchyNode } from "../Common";
+import { defer, filter, map, merge, mergeMap, Observable, partition, shareReplay, tap } from "rxjs";
+import { Logger } from "@itwin/core-bentley";
+import { HierarchyNode } from "../../HierarchyNode";
+import { createOperatorLoggingNamespace, hasChildren } from "../Common";
 
+const OPERATOR_NAME = "HideIfNoChildren";
 /** @internal */
-export function createHideIfNoChildrenOperator(hasNodes: (node: InProgressHierarchyNode) => Observable<boolean>, stopOnFirstChild: boolean) {
-  const enableLogging = false;
-  return function (nodes: Observable<InProgressHierarchyNode>): Observable<InProgressHierarchyNode> {
-    const [needsHide, doesntNeedHide] = partition(
-      nodes.pipe(
-        tap((n) => `HideIfNoChildrenOperator in: ${n.label}`),
-        share(),
-      ),
-      (n) => !!n.hideIfNoChildren,
+export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
+
+/**
+ * Creates an operator that hides nodes with no children if they have a `hideIfNoChildren` handling param.
+ *
+ * @internal
+ */
+export function createHideIfNoChildrenOperator(hasNodes: (node: HierarchyNode) => Observable<boolean>, stopOnFirstChild: boolean) {
+  return function (nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
+    const sharedNodes = nodes.pipe(
+      log((n) => `in: ${n.label}`),
+      // each partitioned observable is going to subscribe to this individually - share and replay to avoid requesting
+      // nodes from source observable multiple times
+      shareReplay(),
     );
+    // split input into 3 pieces:
+    // - `doesntNeedHide` - nodes without the flag (return no matter if they have children or not)
+    // - `determinedChildren` - nodes with the flag and known children
+    // - `undeterminedChildren` - nodes with the flag and unknown children
+    const [needsHide, doesntNeedHide] = partition(sharedNodes, (n) => !!n.params?.hideIfNoChildren);
     const [determinedChildren, undeterminedChildren] = partition(needsHide, (n) => n.children !== undefined);
     return merge(
-      doesntNeedHide.pipe(tap((n) => enableLogging && console.log(`HideIfNoChildrenOperator: doesnt need hide: ${n.label}`))),
+      doesntNeedHide.pipe(log((n) => `doesnt need hide: ${n.label}`)),
       merge(
-        determinedChildren.pipe(tap((n) => enableLogging && console.log(`HideIfNoChildrenOperator: needs hide, has children: ${n.label}`))),
+        determinedChildren.pipe(log((n) => `needs hide, has children: ${n.label}`)),
         undeterminedChildren.pipe(
-          tap((n) => enableLogging && console.log(`HideIfNoChildrenOperator: needs hide, needs children: ${n.label}`)),
+          log((n) => `needs hide, needs children: ${n.label}`),
           mergeMap(
             (n) =>
               defer(() => {
-                enableLogging && console.log(`HideIfNoChildrenOperator: requesting children flag for ${n.label}`);
+                doLog(`requesting children flag for ${n.label}`);
                 return hasNodes(n).pipe(
-                  map((children) => {
-                    enableLogging && console.log(`HideIfNoChildrenOperator: children for ${n.label}: ${children}`);
-                    return { ...n, children };
-                  }),
+                  log((children) => `determined children for ${n.label}: ${children}`),
+                  map((children) => ({ ...n, children })),
                 );
               }),
             // when checking for children, determine children one-by-one using a depth-first approach to avoid starting too many queries
             stopOnFirstChild ? 1 : undefined,
           ),
-          tap((n) => enableLogging && console.log(`HideIfNoChildrenOperator: needs hide, determined children: ${n.label} / ${hasChildren(n)}`)),
+          log((n) => `needs hide, determined children: ${n.label} / ${hasChildren(n)}`),
         ),
       ).pipe(filter(hasChildren)),
-    ).pipe(tap((node) => enableLogging && console.log(`HideIfNoChildrenOperator out: ${node.label}: ${node.children}`)));
+    ).pipe(log((n) => `out: ${n.label}: ${n.children}`));
   };
+}
+
+function doLog(msg: string) {
+  Logger.logTrace(LOGGING_NAMESPACE, msg);
+}
+
+function log<T>(msg: (arg: T) => string) {
+  return tap<T>((n) => doLog(msg(n)));
 }

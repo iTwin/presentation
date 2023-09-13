@@ -26,6 +26,12 @@ export interface ClassInfo {
 }
 
 // @beta (undocumented)
+export interface CustomHierarchyNodeDefinition {
+    // (undocumented)
+    node: HierarchyNode;
+}
+
+// @beta (undocumented)
 export interface ECSqlBinding {
     // (undocumented)
     type: ECSqlBindingType;
@@ -47,11 +53,22 @@ export interface ECSqlQueryDef {
 }
 
 // @beta (undocumented)
-export interface HierarchyLevelDefinition {
+export interface ECSqlQueryHierarchyLevelDefinition {
     // (undocumented)
     fullClassName: string;
     // (undocumented)
     query: ECSqlQueryDef;
+}
+
+// @beta (undocumented)
+export type HierarchyLevelDefinition = CustomHierarchyNodeDefinition | ECSqlQueryHierarchyLevelDefinition;
+
+// @beta (undocumented)
+export namespace HierarchyLevelDefinition {
+    // (undocumented)
+    export function isCustomNode(def: HierarchyLevelDefinition): def is CustomHierarchyNodeDefinition;
+    // (undocumented)
+    export function isECSqlQuery(def: HierarchyLevelDefinition): def is ECSqlQueryHierarchyLevelDefinition;
 }
 
 // @beta (undocumented)
@@ -68,10 +85,56 @@ export interface HierarchyNode {
     key: HierarchyNodeKey;
     // (undocumented)
     label: string;
+    // (undocumented)
+    params?: HierarchyNodeHandlingParams;
 }
 
 // @beta (undocumented)
-export type HierarchyNodeKey = InstancesNodeKey | ClassGroupingNodeKey;
+export namespace HierarchyNode {
+    // (undocumented)
+    export function isClassGroupingNode<TNode extends HierarchyNode>(node: TNode): node is TNode & {
+        key: ClassGroupingNodeKey;
+    };
+    // (undocumented)
+    export function isCustom<TNode extends HierarchyNode>(node: TNode): node is TNode & {
+        key: string;
+    };
+    // (undocumented)
+    export function isInstancesNode<TNode extends HierarchyNode>(node: TNode): node is TNode & {
+        key: InstancesNodeKey;
+    };
+    // (undocumented)
+    export function isStandard<TNode extends HierarchyNode>(node: TNode): node is TNode & {
+        key: StandardHierarchyNodeKey;
+    };
+}
+
+// @beta (undocumented)
+export interface HierarchyNodeHandlingParams {
+    // (undocumented)
+    groupByClass?: boolean;
+    // (undocumented)
+    hideIfNoChildren?: boolean;
+    // (undocumented)
+    hideInHierarchy?: boolean;
+    // (undocumented)
+    mergeByLabelId?: string;
+}
+
+// @beta (undocumented)
+export type HierarchyNodeKey = StandardHierarchyNodeKey | string;
+
+// @beta (undocumented)
+export namespace HierarchyNodeKey {
+    // (undocumented)
+    export function isClassGrouping(key: HierarchyNodeKey): key is ClassGroupingNodeKey;
+    // (undocumented)
+    export function isCustom(key: HierarchyNodeKey): key is string;
+    // (undocumented)
+    export function isInstances(key: HierarchyNodeKey): key is InstancesNodeKey;
+    // (undocumented)
+    export function isStandard(key: HierarchyNodeKey): key is StandardHierarchyNodeKey;
+}
 
 // @beta (undocumented)
 export class HierarchyProvider {
@@ -129,6 +192,9 @@ export interface ModelsTreeQueryBuilderProps {
     // (undocumented)
     schemas: SchemaContext;
 }
+
+// @beta (undocumented)
+export type StandardHierarchyNodeKey = InstancesNodeKey | ClassGroupingNodeKey;
 
 // (No @packageDocumentation comment for this package)
 
