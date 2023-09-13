@@ -22,7 +22,7 @@ describe("MergeInstanceNodesByLabel", () => {
     directNodesCache.clear();
   });
 
-  it("doesnt merge nodes that have `mergeByLabelId = undefined`", async () => {
+  it("doesn't merge nodes that have `mergeByLabelId = undefined`", async () => {
     const nodes = [
       createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] } }),
       createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] } }),
@@ -31,7 +31,7 @@ describe("MergeInstanceNodesByLabel", () => {
     expect(result).to.deep.eq(nodes);
   });
 
-  it("doesnt merge nodes that have empty `mergeByLabelId`", async () => {
+  it("doesn't merge nodes that have empty `mergeByLabelId`", async () => {
     const nodes = [
       createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] }, params: { mergeByLabelId: "" } }),
       createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] }, params: { mergeByLabelId: "" } }),
@@ -40,7 +40,7 @@ describe("MergeInstanceNodesByLabel", () => {
     expect(result).to.deep.eq(nodes);
   });
 
-  it("doesnt merge nodes that have different `mergeByLabelId`", async () => {
+  it("doesn't merge nodes that have different `mergeByLabelId`", async () => {
     const nodes = [
       createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] }, params: { mergeByLabelId: "a" } }),
       createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] }, params: { mergeByLabelId: "b" } }),
@@ -49,7 +49,7 @@ describe("MergeInstanceNodesByLabel", () => {
     expect(result).to.deep.eq(nodes);
   });
 
-  it("doesnt merge nodes that have different labels", async () => {
+  it("doesn't merge nodes that have different labels", async () => {
     const nodes = [
       createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] }, label: "a", params: { mergeByLabelId: "x" } }),
       createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] }, label: "b", params: { mergeByLabelId: "x" } }),
@@ -58,7 +58,7 @@ describe("MergeInstanceNodesByLabel", () => {
     expect(result).to.deep.eq(nodes);
   });
 
-  it("doesnt merge nodes of different types", async () => {
+  it("doesn't merge nodes of different types", async () => {
     const nodes = [
       createTestNode({ key: "custom", params: { mergeByLabelId: "x" } }),
       createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] }, params: { mergeByLabelId: "x" } }),

@@ -40,7 +40,7 @@ describe("ClassGrouping", () => {
     };
   }
 
-  it("doesnt group non-instance nodes", async () => {
+  it("doesn't group non-instance nodes", async () => {
     const nodes: HierarchyNode[] = [
       {
         label: "custom",
