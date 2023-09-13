@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import { createECInstanceNodeSelectClause, ECInstanceNodeSelectClauseColumnNames } from "../hierarchy-builder/ECSqlSelectClauseHelpers";
 
-describe.only("createECInstanceNodeSelectClause", () => {
+describe("createECInstanceNodeSelectClause", () => {
   it("creates valid clause with value props", () => {
     const result = createECInstanceNodeSelectClause({
       ecClassId: "0x1",
