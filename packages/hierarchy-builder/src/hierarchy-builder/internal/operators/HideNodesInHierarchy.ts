@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { concat, defer, filter, finalize, from, merge, mergeAll, mergeMap, Observable, partition, reduce, shareReplay, take, tap } from "rxjs";
+import { concat, defer, EMPTY, filter, finalize, from, merge, mergeAll, mergeMap, Observable, partition, reduce, shareReplay, take, tap } from "rxjs";
 import { Logger } from "@itwin/core-bentley";
 import { HierarchyNode } from "../../HierarchyNode";
 import { createOperatorLoggingNamespace, hasChildren, mergeNodesObs } from "../Common";
@@ -54,7 +54,7 @@ export function createHideNodesInHierarchyOperator(
               filter(hasChildren),
               log((n) => `\`stopOnFirstChild = true\` and ${n.label} is set to always have nodes - return the hidden node without loading children`),
             ),
-            from([]).pipe(finalize(() => doLog(`\`stopOnFirstChild = true\` but none of the nodes had children determined to \`true\` - do load children`))),
+            EMPTY.pipe(finalize(() => doLog(`\`stopOnFirstChild = true\` but none of the nodes had children determined to \`true\` - do load children`))),
             withLoadedChildren,
           ).pipe(take(1))
         : withLoadedChildren,
