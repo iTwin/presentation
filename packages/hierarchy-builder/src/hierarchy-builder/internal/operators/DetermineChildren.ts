@@ -31,10 +31,8 @@ export function createDetermineChildrenOperator(hasNodes: (node: HierarchyNode) 
       undetermined.pipe(
         mergeMap((n) =>
           hasNodes(n).pipe(
-            map((hasChildren) => {
-              doLog(`children for ${n.label}: ${hasChildren}`);
-              return { ...n, children: hasChildren };
-            }),
+            log((hasChildren) => `children for ${n.label}: ${hasChildren}`),
+            map((hasChildren) => ({ ...n, children: hasChildren })),
           ),
         ),
       ),
