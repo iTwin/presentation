@@ -44,12 +44,11 @@ export interface ECInstanceNodeSelectClauseProps {
 export function createECInstanceNodeSelectClause(props: ECInstanceNodeSelectClauseProps): string {
   return `
     ec_ClassName(${createECSqlValueSelector(props.ecClassId)}) AS ${ECInstanceNodeSelectClauseColumnNames.FullClassName},
-    ${createECSqlValueSelector(props.ecInstanceId)} AS ${ECInstanceNodeSelectClauseColumnNames.FullClassName},
+    ${createECSqlValueSelector(props.ecInstanceId)} AS ${ECInstanceNodeSelectClauseColumnNames.ECInstanceId},
     ${createECSqlValueSelector(props.nodeLabel)} AS ${ECInstanceNodeSelectClauseColumnNames.DisplayLabel},
-    CAST(${createECSqlValueSelector(props.autoExpand)} AS BOOLEAN) AS ${ECInstanceNodeSelectClauseColumnNames.AutoExpand},
-    CAST(${createECSqlValueSelector(props.hideNodeInHierarchy)} AS BOOLEAN) AS ${ECInstanceNodeSelectClauseColumnNames.HideNodeInHierarchy},
-    CAST(${createECSqlValueSelector(props.hideIfNoChildren)} AS BOOLEAN) AS ${ECInstanceNodeSelectClauseColumnNames.HideIfNoChildren},
     CAST(${createECSqlValueSelector(props.hasChildren)} AS BOOLEAN) AS ${ECInstanceNodeSelectClauseColumnNames.HasChildren},
+    CAST(${createECSqlValueSelector(props.hideIfNoChildren)} AS BOOLEAN) AS ${ECInstanceNodeSelectClauseColumnNames.HideIfNoChildren},
+    CAST(${createECSqlValueSelector(props.hideNodeInHierarchy)} AS BOOLEAN) AS ${ECInstanceNodeSelectClauseColumnNames.HideNodeInHierarchy},
     CAST(${createECSqlValueSelector(props.groupByClass)} AS BOOLEAN) AS ${ECInstanceNodeSelectClauseColumnNames.GroupByClass},
     CAST(${createECSqlValueSelector(props.mergeByLabelId)} AS TEXT) AS ${ECInstanceNodeSelectClauseColumnNames.MergeByLabelId},
     ${
@@ -58,7 +57,8 @@ export function createECInstanceNodeSelectClause(props: ECInstanceNodeSelectClau
             .map(([key, value]) => `'${key}', ${createECSqlValueSelector(value)}`)
             .join(", ")})`
         : "NULL"
-    } AS ${ECInstanceNodeSelectClauseColumnNames.ExtendedData}
+    } AS ${ECInstanceNodeSelectClauseColumnNames.ExtendedData},
+    CAST(${createECSqlValueSelector(props.autoExpand)} AS BOOLEAN) AS ${ECInstanceNodeSelectClauseColumnNames.AutoExpand}
   `;
 }
 
@@ -111,7 +111,6 @@ function createECSqlValueSelector(input: undefined | Id64String | string | numbe
     case "number":
       return `${input}`;
     case "string":
-      Id64.isId64(input) ? `${input}` : `'${input}'`;
+      return Id64.isId64(input) ? input : `'${input}'`;
   }
-  throw new Error(`Unsupported ECSqlValue type: ${JSON.stringify(input)}`);
 }
