@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { defer, filter, from, merge, mergeAll, mergeMap, Observable, partition, reduce, shareReplay, take, tap } from "rxjs";
+import { concat, defer, filter, finalize, from, merge, mergeAll, mergeMap, Observable, partition, reduce, shareReplay, take, tap } from "rxjs";
 import { Logger } from "@itwin/core-bentley";
 import { HierarchyNode } from "../../HierarchyNode";
 import { createOperatorLoggingNamespace, hasChildren, mergeNodesObs } from "../Common";
@@ -29,22 +29,35 @@ export function createHideNodesInHierarchyOperator(
     );
     const [withFlag, withoutFlag] = partition(sharedNodes, (node) => !!node.params?.hideInHierarchy);
     const [withChildren, withoutChildren] = partition(withFlag, (node) => Array.isArray(node.children));
+    const withLoadedChildren = withoutChildren.pipe(
+      log((n) => `${n.label} needs hide and needs children to be loaded`),
+      filter((node) => node.children !== false),
+      reduce((acc, node) => {
+        addToMergeMap(directNodesCache, acc, node);
+        return acc;
+      }, new Map<string, HierarchyNode>()),
+      log((mm) => `created a merge map of size ${mm.size}`),
+      mergeMap((mergedNodes) => [...mergedNodes.values()].map((mergedNode) => defer(() => getNodes(mergedNode)))),
+      mergeAll(),
+    );
     return merge(
-      withoutFlag,
-      withChildren.pipe(mergeMap((parent) => from(parent.children as HierarchyNode[]))),
+      withoutFlag.pipe(log((n) => `${n.label} doesn't need hide, return the node`)),
+      withChildren.pipe(
+        log((n) => `${n.label} needs hide and has ${(n.children as Array<any>).length} loaded children, return them`),
+        mergeMap((parent) => from(parent.children as HierarchyNode[])),
+      ),
       stopOnFirstChild
-        ? // a small hack to handle situation when we're here to only check if parent node has children and one of them has `hideIfNoChildren` flag
-          // with a `hasChildren = true` - we just return the hidden node itself in that case to avoid digging deeper into the hierarchy
-          sharedNodes.pipe(filter(hasChildren), take(1))
-        : withoutChildren.pipe(
-            filter((node) => node.children !== false),
-            reduce((acc, node) => {
-              addToMergeMap(directNodesCache, acc, node);
-              return acc;
-            }, new Map<string, HierarchyNode>()),
-            mergeMap((mergedNodes) => [...mergedNodes.values()].map((mergedNode) => defer(() => getNodes(mergedNode)))),
-            mergeAll(),
-          ),
+        ? concat(
+            // a small hack to handle situation when we're here to only check if parent node has children and one of them has `hideIfNoChildren` flag
+            // with a `hasChildren = true` - we just return the hidden node itself in that case to avoid digging deeper into the hierarchy
+            sharedNodes.pipe(
+              filter(hasChildren),
+              log((n) => `\`stopOnFirstChild = true\` and ${n.label} is set to always have nodes - return the hidden node without loading children`),
+            ),
+            from([]).pipe(finalize(() => doLog(`\`stopOnFirstChild = true\` but none of the nodes had children determined to \`true\` - do load children`))),
+            withLoadedChildren,
+          ).pipe(take(1))
+        : withLoadedChildren,
     ).pipe(log((n) => `out: ${n.label}`));
   };
 }

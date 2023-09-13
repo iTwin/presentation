@@ -52,6 +52,35 @@ describe("HideNodesInHierarchyOperator", () => {
     expect(result).to.deep.eq([nodes[0]]);
   });
 
+  it("returns the first hidden node if it undetermined children evaluating to `true` and operator is created with `stopOnFirstChild = true`", async () => {
+    const nodes: HierarchyNode[] = [
+      {
+        key: "custom1",
+        label: "custom1",
+        children: undefined,
+        params: {
+          hideInHierarchy: true,
+        },
+      },
+      {
+        key: "custom2",
+        label: "custom2",
+        children: undefined,
+        params: {
+          hideInHierarchy: true,
+        },
+      },
+    ];
+    const childNode: HierarchyNode = {
+      key: "custom child",
+      label: "custom child",
+      children: false,
+    };
+    const getNodes = sinon.fake(() => from([childNode]));
+    const result = await getObservableResult(from(nodes).pipe(createHideNodesInHierarchyOperator(getNodes, directNodesCache, true)));
+    expect(result).to.deep.eq([childNode]);
+  });
+
   describe("instance nodes", () => {
     it("hides nodes without children", async () => {
       const nodes = [
