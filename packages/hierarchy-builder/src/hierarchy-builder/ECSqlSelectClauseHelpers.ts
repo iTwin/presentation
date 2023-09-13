@@ -111,6 +111,6 @@ function createECSqlValueSelector(input: undefined | Id64String | string | numbe
     case "number":
       return `${input}`;
     case "string":
-      return Id64.isId64(input) ? `${input}` : `'${input}'`;
+      return Id64.isId64(input) ? input : `'${input}'`;
   }
 }
