@@ -5,10 +5,10 @@
 
 import { Id64String } from "@itwin/core-bentley";
 import { QueryOptionsBuilder, QueryRowFormat } from "@itwin/core-common";
-import { ECSqlQueryDef } from "../ECSql";
-import { ECInstanceNodeSelectClauseColumnNames } from "../ECSqlSelectClauseHelpers";
 import { HierarchyNode } from "../HierarchyNode";
-import { IQueryExecutor } from "../IQueryExecutor";
+import { ECSqlQueryDef } from "../queries/ECSql";
+import { IQueryExecutor } from "../queries/IQueryExecutor";
+import { NodeSelectClauseColumnNames } from "../queries/NodeSelectClauseFactory";
 import { bind } from "./Common";
 
 /** @internal */
@@ -31,19 +31,19 @@ export class TreeQueryResultsReader implements ITreeQueryResultsReader {
   }
 }
 
-/** The interface should contain a member for each `ECInstanceNodeSelectClauseColumnNames` value. */
+/** The interface should contain a member for each `NodeSelectClauseColumnNames` value. */
 /* eslint-disable @typescript-eslint/naming-convention */
 interface RowDef {
-  [ECInstanceNodeSelectClauseColumnNames.FullClassName]: string;
-  [ECInstanceNodeSelectClauseColumnNames.ECInstanceId]: Id64String;
-  [ECInstanceNodeSelectClauseColumnNames.DisplayLabel]: string;
-  [ECInstanceNodeSelectClauseColumnNames.HasChildren]?: boolean;
-  [ECInstanceNodeSelectClauseColumnNames.HideIfNoChildren]?: boolean;
-  [ECInstanceNodeSelectClauseColumnNames.HideNodeInHierarchy]?: boolean;
-  [ECInstanceNodeSelectClauseColumnNames.GroupByClass]?: boolean;
-  [ECInstanceNodeSelectClauseColumnNames.MergeByLabelId]?: string;
-  [ECInstanceNodeSelectClauseColumnNames.ExtendedData]?: string;
-  [ECInstanceNodeSelectClauseColumnNames.AutoExpand]?: boolean;
+  [NodeSelectClauseColumnNames.FullClassName]: string;
+  [NodeSelectClauseColumnNames.ECInstanceId]: Id64String;
+  [NodeSelectClauseColumnNames.DisplayLabel]: string;
+  [NodeSelectClauseColumnNames.HasChildren]?: boolean;
+  [NodeSelectClauseColumnNames.HideIfNoChildren]?: boolean;
+  [NodeSelectClauseColumnNames.HideNodeInHierarchy]?: boolean;
+  [NodeSelectClauseColumnNames.GroupByClass]?: boolean;
+  [NodeSelectClauseColumnNames.MergeByLabelId]?: string;
+  [NodeSelectClauseColumnNames.ExtendedData]?: string;
+  [NodeSelectClauseColumnNames.AutoExpand]?: boolean;
 }
 /* eslint-enable @typescript-eslint/naming-convention */
 

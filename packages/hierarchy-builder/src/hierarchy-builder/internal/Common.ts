@@ -7,8 +7,8 @@ import { merge, Observable } from "rxjs";
 import { assert } from "@itwin/core-bentley";
 import { QueryBinder } from "@itwin/core-common";
 import { ECClass, Schema, SchemaContext, SchemaKey } from "@itwin/ecschema-metadata";
-import { ECSqlBinding } from "../ECSql";
 import { HierarchyNode, HierarchyNodeHandlingParams, HierarchyNodeKey } from "../HierarchyNode";
+import { ECSqlBinding } from "../queries/ECSql";
 
 /** @internal */
 export async function getClass(schemas: SchemaContext, fullClassName: string) {

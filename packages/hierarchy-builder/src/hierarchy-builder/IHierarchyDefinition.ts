@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ECSqlQueryDef } from "./ECSql";
 import { HierarchyNode } from "./HierarchyNode";
+import { ECSqlQueryDef } from "./queries/ECSql";
 
 /** @beta */
 export interface CustomHierarchyNodeDefinition {

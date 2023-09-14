@@ -1,0 +1,334 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+
+import { expect } from "chai";
+import { SchemaContext } from "@itwin/ecschema-metadata";
+import {
+  BisInstanceLabelSelectClauseFactory,
+  ClassBasedInstanceLabelSelectClauseFactory,
+  DefaultInstanceLabelSelectClauseFactory,
+  IInstanceLabelSelectClauseFactory,
+} from "../../hierarchy-builder/queries/InstanceLabelSelectClauseFactory";
+import { createGetClassStub, TStubClassFunc } from "../Utils";
+import { trimWhitespace } from "./Utils";
+
+describe("DefaultInstanceLabelSelectClauseFactory", () => {
+  let factory: DefaultInstanceLabelSelectClauseFactory;
+  beforeEach(() => {
+    factory = new DefaultInstanceLabelSelectClauseFactory();
+  });
+
+  it("returns valid clause", async () => {
+    const result = await factory.createSelectClause({
+      classAlias: "test",
+    });
+    expect(trimWhitespace(result)).to.eq(
+      trimWhitespace(`(
+        SELECT COALESCE([c].[DisplayLabel], [c].[Name]) || ' ' || '[' || printf('0x%x', [test].[ECInstanceId]) || ']'
+        FROM [meta].[ECClassDef] AS [c]
+        WHERE [c].[ECInstanceId] = [test].[ECClassId]
+      )`),
+    );
+  });
+});
+
+describe("ClassBasedInstanceLabelSelectClauseFactory", () => {
+  const defaultClauseFactory: IInstanceLabelSelectClauseFactory = {
+    async createSelectClause() {
+      return "default selector";
+    },
+  };
+  const schemas = {} as unknown as SchemaContext;
+  let stubClass: TStubClassFunc;
+  beforeEach(() => {
+    stubClass = createGetClassStub(schemas).stubClass;
+  });
+
+  it("returns default clause when given an empty list of clauses", async () => {
+    const factory = new ClassBasedInstanceLabelSelectClauseFactory({
+      schemas,
+      defaultClauseFactory,
+      clauses: [],
+    });
+    const result = await factory.createSelectClause({
+      classAlias: "class-alias",
+    });
+    expect(result).to.eq("default selector");
+  });
+
+  it("returns default clause when none of given clause classes match query class", async () => {
+    const factory = new ClassBasedInstanceLabelSelectClauseFactory({
+      schemas,
+      defaultClauseFactory,
+      clauses: [
+        {
+          className: "Schema.ClassA",
+          clause: async () => "a selector",
+        },
+        {
+          className: "Schema.ClassB",
+          clause: async () => "b selector",
+        },
+      ],
+    });
+    stubClass({ schemaName: "Schema", className: "QueryClass", is: async () => false });
+    stubClass({ schemaName: "Schema", className: "ClassA", is: async () => false });
+    stubClass({ schemaName: "Schema", className: "ClassB", is: async () => false });
+    const result = await factory.createSelectClause({
+      classAlias: "class-alias",
+      className: "Schema.QueryClass",
+    });
+    expect(result).to.eq("default selector");
+  });
+
+  it("returns combination of all clauses if class name prop is not set", async () => {
+    const factory = new ClassBasedInstanceLabelSelectClauseFactory({
+      schemas,
+      defaultClauseFactory,
+      clauses: [
+        {
+          className: "Schema.ClassA",
+          clause: async () => "a selector",
+        },
+        {
+          className: "Schema.ClassB",
+          clause: async () => "b selector",
+        },
+      ],
+    });
+    const result = await factory.createSelectClause({
+      classAlias: "class-alias",
+    });
+    expect(trimWhitespace(result)).to.eq(
+      trimWhitespace(`
+      COALESCE(
+        IIF(
+          [class-alias].[ECClassId] IS (Schema.ClassA),
+          a selector,
+          NULL
+        ),
+        IIF(
+          [class-alias].[ECClassId] IS (Schema.ClassB),
+          b selector,
+          NULL
+        ),
+        default selector
+      )
+    `),
+    );
+  });
+
+  it("returns clauses for classes that derive from query class", async () => {
+    const factory = new ClassBasedInstanceLabelSelectClauseFactory({
+      schemas,
+      defaultClauseFactory,
+      clauses: [
+        {
+          className: "Schema.ClassA",
+          clause: async () => "a selector",
+        },
+        {
+          className: "Schema.ClassB",
+          clause: async () => "b selector",
+        },
+      ],
+    });
+    stubClass({ schemaName: "Schema", className: "QueryClass", is: async () => false });
+    stubClass({ schemaName: "Schema", className: "ClassA", is: async (other) => other === "Schema.QueryClass" });
+    stubClass({ schemaName: "Schema", className: "ClassB", is: async () => false });
+    const result = await factory.createSelectClause({
+      classAlias: "class-alias",
+      className: "Schema.QueryClass",
+    });
+    expect(trimWhitespace(result)).to.eq(
+      trimWhitespace(`
+      COALESCE(
+        IIF(
+          [class-alias].[ECClassId] IS (Schema.ClassA),
+          a selector,
+          NULL
+        ),
+        default selector
+      )
+    `),
+    );
+  });
+
+  it("returns clauses for base classes of query class", async () => {
+    const factory = new ClassBasedInstanceLabelSelectClauseFactory({
+      schemas,
+      defaultClauseFactory,
+      clauses: [
+        {
+          className: "Schema.ClassA",
+          clause: async () => "a selector",
+        },
+        {
+          className: "Schema.ClassB",
+          clause: async () => "b selector",
+        },
+      ],
+    });
+    stubClass({ schemaName: "Schema", className: "QueryClass", is: async (other) => other === "Schema.ClassB" });
+    stubClass({ schemaName: "Schema", className: "ClassA", is: async () => false });
+    stubClass({ schemaName: "Schema", className: "ClassB", is: async () => false });
+    const result = await factory.createSelectClause({
+      classAlias: "class-alias",
+      className: "Schema.QueryClass",
+    });
+    expect(trimWhitespace(result)).to.eq(
+      trimWhitespace(`
+      COALESCE(
+        IIF(
+          [class-alias].[ECClassId] IS (Schema.ClassB),
+          b selector,
+          NULL
+        ),
+        default selector
+      )
+    `),
+    );
+  });
+});
+
+describe("BisInstanceLabelSelectClauseFactory", () => {
+  const schemas = {} as unknown as SchemaContext;
+  let stubClass: TStubClassFunc;
+  let factory: BisInstanceLabelSelectClauseFactory;
+  beforeEach(() => {
+    stubClass = createGetClassStub(schemas).stubClass;
+    factory = new BisInstanceLabelSelectClauseFactory({ schemas });
+    stubClass({ schemaName: "bis", className: "GeometricElement", is: async (other) => other === "bis.Element" || other === "bis.GeometricElement" });
+    stubClass({ schemaName: "bis", className: "Element", is: async (other) => other === "bis.Element" });
+    stubClass({ schemaName: "bis", className: "Model", is: async (other) => other === "bis.Model" });
+  });
+
+  it("returns valid clause for geometric elements", async () => {
+    const result = await factory.createSelectClause({
+      classAlias: "test",
+      className: "bis.GeometricElement",
+    });
+    expect(trimWhitespace(result)).to.eq(
+      trimWhitespace(`
+        COALESCE(
+          IIF(
+            [test].[ECClassId] IS (bis.GeometricElement),
+            COALESCE(
+              [test].[CodeValue],
+              CASE WHEN [test].[UserLabel] IS NOT NULL
+                THEN [test].[UserLabel] || ' ' || '[' || printf('0x%x', [test].[ECInstanceId]) || ']'
+                ELSE NULL
+              END
+            ),
+            NULL
+          ),
+          IIF(
+            [test].[ECClassId] IS (bis.Element),
+            COALESCE(
+              [test].[UserLabel],
+              [test].[CodeValue]
+            ),
+            NULL
+          ),
+          (
+            SELECT COALESCE([c].[DisplayLabel], [c].[Name]) || ' ' || '[' || printf('0x%x', [test].[ECInstanceId]) || ']'
+            FROM [meta].[ECClassDef] AS [c]
+            WHERE [c].[ECInstanceId] = [test].[ECClassId]
+          )
+        )
+      `),
+    );
+  });
+
+  it("returns valid clause for any element", async () => {
+    const result = await factory.createSelectClause({
+      classAlias: "test",
+      className: "bis.Element",
+    });
+    expect(trimWhitespace(result)).to.eq(
+      trimWhitespace(`
+        COALESCE(
+          IIF(
+            [test].[ECClassId] IS (bis.GeometricElement),
+            COALESCE(
+              [test].[CodeValue],
+              CASE WHEN [test].[UserLabel] IS NOT NULL
+                THEN [test].[UserLabel] || ' ' || '[' || printf('0x%x', [test].[ECInstanceId]) || ']'
+                ELSE NULL
+              END
+            ),
+            NULL
+          ),
+          IIF(
+            [test].[ECClassId] IS (bis.Element),
+            COALESCE(
+              [test].[UserLabel],
+              [test].[CodeValue]
+            ),
+            NULL
+          ),
+          (
+            SELECT COALESCE([c].[DisplayLabel], [c].[Name]) || ' ' || '[' || printf('0x%x', [test].[ECInstanceId]) || ']'
+            FROM [meta].[ECClassDef] AS [c]
+            WHERE [c].[ECInstanceId] = [test].[ECClassId]
+          )
+        )
+      `),
+    );
+  });
+
+  it("returns valid clause for any model", async () => {
+    const result = await factory.createSelectClause({
+      classAlias: "test",
+      className: "bis.Model",
+    });
+    expect(trimWhitespace(result)).to.eq(
+      trimWhitespace(`
+        COALESCE(
+          IIF(
+            [test].[ECClassId] IS (bis.Model),
+            (
+              SELECT
+                COALESCE(
+                  IIF(
+                    [e].[ECClassId] IS (bis.GeometricElement),
+                    COALESCE(
+                      [e].[CodeValue],
+                      CASE WHEN [e].[UserLabel] IS NOT NULL
+                        THEN [e].[UserLabel] || ' ' || '[' || printf('0x%x', [e].[ECInstanceId]) || ']'
+                        ELSE NULL
+                      END
+                    ),
+                    NULL
+                  ),
+                  IIF(
+                    [e].[ECClassId] IS (bis.Element),
+                    COALESCE(
+                      [e].[UserLabel],
+                      [e].[CodeValue]
+                    ),
+                    NULL
+                  ),
+                  (
+                    SELECT COALESCE([c].[DisplayLabel], [c].[Name]) || ' ' || '[' || printf('0x%x', [e].[ECInstanceId]) || ']'
+                    FROM [meta].[ECClassDef] AS [c]
+                    WHERE [c].[ECInstanceId] = [e].[ECClassId]
+                  )
+                )
+              FROM [bis].[Element] AS [e]
+              WHERE [e].[ECInstanceId] = [test].[ModeledElement].[Id]
+            ),
+            NULL
+          ),
+          (
+            SELECT COALESCE([c].[DisplayLabel], [c].[Name]) || ' ' || '[' || printf('0x%x', [test].[ECInstanceId]) || ']'
+            FROM [meta].[ECClassDef] AS [c]
+            WHERE [c].[ECInstanceId] = [test].[ECClassId]
+          )
+        )
+      `),
+    );
+  });
+});
