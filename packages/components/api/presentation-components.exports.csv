@@ -39,6 +39,9 @@ beta;NavigationPropertyEditor
 beta;navigationPropertyEditorContext: Context
 beta;NavigationPropertyEditorContextProps
 beta;NavigationPropertyTargetEditor 
+internal;NumericEditorName = "presentation-numeric-editor"
+internal;NumericPropertyEditor 
+internal;NumericPropertyEditorBase 
 public;PresentationComponentsLoggerCategory
 beta;PresentationInfoTreeNodeItem 
 beta;PresentationInstanceFilter = PresentationInstanceFilterConditionGroup | PresentationInstanceFilterCondition
@@ -78,7 +81,7 @@ beta;UnifiedSelectionState = (selectionLevel?: number) => Readonly
 public;UnifiedSelectionTreeEventHandler 
 public;UnifiedSelectionTreeEventHandlerParams
 public;useControlledPresentationTreeFiltering(props: ControlledPresentationTreeFilteringProps):
-internal;useFilteredNodeLoader(nodeLoader: AbstractTreeNodeLoaderWithProvider
+internal;useFilteredNodeLoader(dataProvider: IPresentationTreeDataProvider, filter: string | undefined):
 beta;useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProps):
 beta;UseHierarchyLevelFilteringProps
 beta;useNavigationPropertyEditingContext(imodel: IModelConnection, dataProvider: IContentDataProvider): NavigationPropertyEditorContextProps
@@ -87,6 +90,7 @@ beta;usePresentationTable
 beta;UsePresentationTableProps
 beta;UsePresentationTableResult
 beta;usePresentationTableWithUnifiedSelection
+beta;UsePresentationTableWithUnifiedSelectionResult
 public;usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderProps): PresentationTreeNodeLoaderResult
 public;usePropertyDataProviderWithUnifiedSelection(props: PropertyDataProviderWithUnifiedSelectionProps): UsePropertyDataProviderWithUnifiedSelectionResult
 public;UsePropertyDataProviderWithUnifiedSelectionResult

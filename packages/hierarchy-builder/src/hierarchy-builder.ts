@@ -2,11 +2,13 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-export * from "./hierarchy-builder/Common";
-export * from "./hierarchy-builder/ECSqlBinding";
+
+export * from "./hierarchy-builder/EC";
+export * from "./hierarchy-builder/ECSql";
+export * from "./hierarchy-builder/HierarchyNode";
+export * from "./hierarchy-builder/HierarchyProvider";
+export * from "./hierarchy-builder/IHierarchyDefinition";
 export * from "./hierarchy-builder/IQueryExecutor";
-export * from "./hierarchy-builder/ModelsTreeQueryBuilder";
-export * from "./hierarchy-builder/TreeNode";
-export * from "./hierarchy-builder/TreeNodesProvider";
-export * from "./hierarchy-builder/TreeNodesReader";
-export * from "./hierarchy-builder/TreeQueryBuilder";
+
+// only temporarily here:
+export * from "./hierarchy-builder/models-tree/ModelsTreeQueryBuilder";

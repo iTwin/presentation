@@ -3,9 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { InstanceKey } from "@itwin/presentation-common";
 import { Observable } from "rxjs";
-import { InProgressTreeNode } from "../hierarchy-builder/TreeNode";
+import { InstanceKey } from "../hierarchy-builder/EC";
+import { HierarchyNode } from "../hierarchy-builder/HierarchyNode";
 
 export async function getObservableResult<T>(obs: Observable<T>): Promise<Array<T>> {
   const arr = new Array<T>();
@@ -24,7 +24,7 @@ export async function getObservableResult<T>(obs: Observable<T>): Promise<Array<
   });
 }
 
-export function createTestNode(src?: Partial<InProgressTreeNode>): InProgressTreeNode {
+export function createTestNode(src?: Partial<HierarchyNode>): HierarchyNode {
   return {
     label: "test",
     key: {

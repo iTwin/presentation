@@ -45,6 +45,10 @@ export interface TestIModelBuilder {
    * Code value has to be unique within its scope (see [Codes documentation page]($docs/bis/guide/fundamentals/codes.md)).
    */
   createCode(scopeModelId: CodeScopeProps, codeSpecName: BisCodeSpec, codeValue: string): Code;
+  /**
+   * Import an ECSchema in a form of XML string into the builder's iModel.
+   */
+  importSchema(schemaXml: string): Promise<void>;
 }
 
 /**
@@ -52,8 +56,26 @@ export interface TestIModelBuilder {
  * @param name Name of test IModel
  * @param cb Callback function that receives an [[TestIModelBuilder]] to fill the iModel with data
  * @beta
+ * @deprecated in 4.x. Use an overload with `cb` returning a promise.
  */
 export async function buildTestIModel(name: string, cb: (builder: TestIModelBuilder) => void): Promise<IModelConnection>;
+/**
+ * Function that creates an iModel and returns a connection to it.
+ * @param name Name of test IModel
+ * @param cb Callback function that receives an [[TestIModelBuilder]] to fill the iModel with data
+ * @beta
+ */
+// eslint-disable-next-line @typescript-eslint/unified-signatures
+export async function buildTestIModel(name: string, cb: (builder: TestIModelBuilder) => Promise<void>): Promise<IModelConnection>;
+/**
+ * Function that creates an iModel and returns a connection to it.
+ * @param mochaContext Mocha context to generate iModel name from
+ * @param cb Callback function that receives an [[TestIModelBuilder]] to fill the iModel with data
+ * @beta
+ * @deprecated in 4.x. Use an overload with `cb` returning a promise.
+ */
+// eslint-disable-next-line @typescript-eslint/unified-signatures
+export async function buildTestIModel(mochaContext: Mocha.Context, cb: (builder: TestIModelBuilder) => void): Promise<IModelConnection>;
 /**
  * Function that creates an iModel and returns a connection to it.
  * @param mochaContext Mocha context to generate iModel name from
@@ -61,14 +83,14 @@ export async function buildTestIModel(name: string, cb: (builder: TestIModelBuil
  * @beta
  */
 // eslint-disable-next-line @typescript-eslint/unified-signatures
-export async function buildTestIModel(mochaContext: Mocha.Context, cb: (builder: TestIModelBuilder) => void): Promise<IModelConnection>;
-export async function buildTestIModel(nameParam: string | Mocha.Context, cb: (builder: TestIModelBuilder) => void): Promise<IModelConnection> {
+export async function buildTestIModel(mochaContext: Mocha.Context, cb: (builder: TestIModelBuilder) => Promise<void>): Promise<IModelConnection>;
+export async function buildTestIModel(nameParam: string | Mocha.Context, cb: (builder: TestIModelBuilder) => void | Promise<void>): Promise<IModelConnection> {
   const name = typeof nameParam === "string" ? nameParam : createFileNameFromString(nameParam.test!.fullTitle());
   const outputFile = setupOutputFileLocation(name);
   const db = SnapshotDb.createEmpty(outputFile, { rootSubject: { name } });
   const builder = new IModelBuilder(db);
   try {
-    cb(builder);
+    await cb(builder);
   } finally {
     db.saveChanges("Created test IModel");
     db.close();
@@ -107,6 +129,10 @@ export class IModelBuilder implements TestIModelBuilder {
   public createCode(scopeModelId: CodeScopeProps, codeSpecName: BisCodeSpec, codeValue: string): Code {
     const codeSpec: CodeSpec = this._iModel.codeSpecs.getByName(codeSpecName);
     return new Code({ spec: codeSpec.id, scope: scopeModelId, value: codeValue });
+  }
+
+  public async importSchema(schemaXml: string) {
+    await this._iModel.importSchemaStrings([schemaXml]);
   }
 }
 

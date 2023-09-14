@@ -1,8 +1,26 @@
 # Change Log - @itwin/presentation-components
 
-This log was last generated on Wed, 09 Aug 2023 11:47:16 GMT and should not be manually modified.
+## 4.2.1
+
+### Patch Changes
+
+- [#230](https://github.com/iTwin/presentation/pull/230): Fixed hierarchy level filtering under grouping nodes.
+
+This log was last generated on Thu, 31 Aug 2023 11:51:06 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 4.2.0
+
+Thu, 31 Aug 2023 11:51:06 GMT
+
+### Minor changes
+
+- Reload content and hierarchies when active unit system is changed. ([commit](https://github.com/iTwin/presentation/commit/326dd33a9e40659f6b6af4a0dd100948798db6c8))
+
+### Patches
+
+- Update dependencies ([commit](https://github.com/iTwin/presentation/commit/585bfe098c3c388c48ffa4f311c4722f1b6835df))
 
 ## 4.1.0
 
@@ -1334,7 +1352,7 @@ Mon, 01 Jul 2019 19:04:29 GMT
 ### Updates
 
 - Reorganize docs script output
-- Include !lib/**/*.*css in .npmignore for presentation-components to includes css files in lib/module/prod
+- Include `!lib/**/*.*css` in `.npmignore` for presentation-components to includes css files in `lib/module/prod`
 - `treeWithFilteringSupport` HOC now sends the filtered data provider as the second parameter to `onFilterApplied` prop callback
 - Moved the part that determines hilite set out of `presentation-components` to `presentation-frontend` and expose it as a public API.
 - Clear tool selection set when models or categories are selected. Replace tool selection set with new selection when elements are selected.
@@ -1408,7 +1426,7 @@ Wed, 06 Mar 2019 15:41:22 GMT
 - Add DataProvidersFactory API for creating presentation data providers targeted towards specific use cases
 - (breaking) Change PresentationTableDataProvider's constructor to accept a props object instead of multiple arguments
 - Make all content data providers IDisposable. **Important:** providers must be disposed after use.
-- Changed the way `0` selection level is handled in unified selection tables. Previously we used to reload table data when selection changed with level below boundary __or level `0`__. Now the **underlined** part is removed and we only reload data if selection changes with level below boundary (set through props).
+- Changed the way `0` selection level is handled in unified selection tables. Previously we used to reload table data when selection changed with level below boundary **or level `0`**. Now the **underlined** part is removed and we only reload data if selection changes with level below boundary (set through props).
 - RPC Interface changes to optimize getting first page of nodes/content
 - Move property definitions to imodeljs-frontend so they could be used by tools to define properties for tool settings.
 - Upgrade to TypeScript 3.2.2

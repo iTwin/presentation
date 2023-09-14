@@ -1,0 +1,48 @@
+{
+  "$schema": "../../node_modules/@itwin/presentation-common/Ruleset.schema.json",
+  "id": "ModelElements",
+  "requiredSchemas": [
+    {
+      "name": "BisCore"
+    }
+  ],
+  "rules": [
+    {
+      "ruleType": "RootNodes",
+      "specifications": [
+        {
+          "specType": "InstanceNodesOfSpecificClasses",
+          "classes": [
+            {
+              "schemaName": "BisCore",
+              "classNames": ["Model"],
+              "arePolymorphic": true
+            }
+          ],
+          "groupByClass": false,
+          "groupByLabel": false
+        }
+      ]
+    },
+    {
+      "ruleType": "ChildNodes",
+      "condition": "ParentNode.IsOfClass(\"Model\", \"BisCore\")",
+      "specifications": [
+        {
+          "specType": "RelatedInstanceNodes",
+          "relationshipPaths": [
+            {
+              "relationship": {
+                "schemaName": "BisCore",
+                "className": "ModelContainsElements"
+              },
+              "direction": "Forward"
+            }
+          ],
+          "groupByClass": true,
+          "groupByLabel": false
+        }
+      ]
+    }
+  ]
+}

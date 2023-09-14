@@ -1,7 +1,11 @@
 sep=;
 Release Tag;API Item
 beta;buildTestIModel(name: string, cb: (builder: TestIModelBuilder) => void): Promise
+deprecated;buildTestIModel(name: string, cb: (builder: TestIModelBuilder) => void): Promise
+beta;buildTestIModel(name: string, cb: (builder: TestIModelBuilder) => Promise
 beta;buildTestIModel(mochaContext: Mocha.Context, cb: (builder: TestIModelBuilder) => void): Promise
+deprecated;buildTestIModel(mochaContext: Mocha.Context, cb: (builder: TestIModelBuilder) => void): Promise
+beta;buildTestIModel(mochaContext: Mocha.Context, cb: (builder: TestIModelBuilder) => Promise
 public;ContentBuilder
 public;ContentBuilderProps
 public;ContentBuilderResult
