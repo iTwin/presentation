@@ -260,20 +260,9 @@ describe("<NumericInput />", () => {
     expect(spy).to.be.calledWith("1e-");
   });
 
-  it("does not fire `onBlur` when value is changed but the input is not blurred", async () => {
-    const user = userEvent.setup();
-    const spy = sinon.spy();
-    const { getByRole } = render(<NumericInput handleBlur={spy} onChange={() => {}} value="2" />);
-    const inputContainer = await waitFor(() => getByRole("textbox"));
-
-    await user.type(inputContainer, "1");
-
-    expect(spy).to.be.not.be.called;
-  });
-
   it("fires `onBlur` when inputContainer becomes blurred", async () => {
     const spy = sinon.spy();
-    const { getByRole } = render(<NumericInput handleBlur={spy} onChange={() => {}} value="1" />);
+    const { getByRole } = render(<NumericInput onBlur={spy} onChange={() => {}} value="1" />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
     fireEvent.blur(inputContainer);
 

@@ -52,7 +52,7 @@ export const NumericPropertyInput = forwardRef<NumericPropertyInputAttributes, N
   };
   return (
     <div ref={divRef}>
-      <NumericInput onChange={handleChange} value={inputValue} handleBlur={commitInput} />
+      <NumericInput onChange={handleChange} value={inputValue} onBlur={commitInput} />
     </div>
   );
 });
@@ -69,12 +69,12 @@ const getInputTargetFromPropertyRecord = (propertyRecord: PropertyRecord) => {
 /** @internal */
 export interface NumericInputProps {
   onChange: (newValue: string) => void;
-  handleBlur?: React.FocusEventHandler;
+  onBlur?: React.FocusEventHandler;
   value: string;
 }
 
 /** @internal */
-export const NumericInput = ({ value, onChange, handleBlur }: NumericInputProps) => {
+export const NumericInput = ({ value, onChange, onBlur }: NumericInputProps) => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.currentTarget.value;
     // Check if it is a correct number and it is not infinity.
@@ -100,5 +100,5 @@ export const NumericInput = ({ value, onChange, handleBlur }: NumericInputProps)
     }
   };
 
-  return <Input data-testid="numeric-input" size="small" value={value} onChange={handleChange} onBlur={handleBlur} />;
+  return <Input data-testid="numeric-input" size="small" value={value} onChange={handleChange} onBlur={onBlur} />;
 };

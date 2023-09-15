@@ -38,7 +38,7 @@ describe("<NumericPropertyEditorBase />", () => {
     await waitFor(() => expect(getByTestId("numeric-input")).to.not.be.null);
   });
 
-  it("Does not invoke `onCommit` when input changes but blur event is not triggered", async () => {
+  it("Invokes `onCommit` with correct parameters only when input container gets blurred", async () => {
     const user = userEvent.setup();
     const record = createRecord();
     const spy = sinon.spy();
@@ -47,20 +47,8 @@ describe("<NumericPropertyEditorBase />", () => {
     const inputContainer = await waitFor(() => getByTestId("numeric-input"));
 
     await user.type(inputContainer, "1");
-
-    await waitFor(() => expect(queryByDisplayValue("1")).to.not.be.null);
     expect(spy).to.not.be.called;
-  });
 
-  it("Invokes `onCommit` with correct parameters when input container gets blurred", async () => {
-    const user = userEvent.setup();
-    const record = createRecord();
-    const spy = sinon.spy();
-    const { getByTestId, queryByDisplayValue } = render(<EditorContainer propertyRecord={record} onCancel={() => {}} onCommit={spy} />);
-
-    const inputContainer = await waitFor(() => getByTestId("numeric-input"));
-
-    await user.type(inputContainer, "1");
     fireEvent.blur(inputContainer);
 
     await waitFor(() => expect(queryByDisplayValue("1")).to.not.be.null);
