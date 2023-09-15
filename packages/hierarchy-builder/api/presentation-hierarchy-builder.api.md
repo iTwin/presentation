@@ -10,6 +10,40 @@ import { QueryBinder } from '@itwin/core-common';
 import { QueryOptions } from '@itwin/core-common';
 import { SchemaContext } from '@itwin/ecschema-metadata';
 
+// @beta
+export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelectClauseFactory {
+    constructor(props: BisInstanceLabelSelectClauseFactoryProps);
+    // (undocumented)
+    createSelectClause(props: CreateInstanceLabelSelectClauseProps): Promise<string>;
+}
+
+// @beta
+export interface BisInstanceLabelSelectClauseFactoryProps {
+    // (undocumented)
+    schemas: SchemaContext;
+}
+
+// @beta
+export class ClassBasedInstanceLabelSelectClauseFactory implements IInstanceLabelSelectClauseFactory {
+    constructor(props: ClassBasedInstanceLabelSelectClauseFactoryProps);
+    // (undocumented)
+    createSelectClause(props: CreateInstanceLabelSelectClauseProps): Promise<string>;
+}
+
+// @beta
+export interface ClassBasedInstanceLabelSelectClauseFactoryProps {
+    clauses: ClassBasedLabelSelectClause[];
+    // @internal (undocumented)
+    defaultClauseFactory?: IInstanceLabelSelectClauseFactory;
+    schemas: SchemaContext;
+}
+
+// @beta
+export interface ClassBasedLabelSelectClause {
+    className: string;
+    clause: (props: CreateInstanceLabelSelectClauseProps) => Promise<string>;
+}
+
 // @beta (undocumented)
 export interface ClassGroupingNodeKey {
     // (undocumented)
@@ -25,10 +59,22 @@ export interface ClassInfo {
     name: string;
 }
 
+// @beta
+export interface CreateInstanceLabelSelectClauseProps {
+    classAlias: string;
+    className?: string;
+}
+
 // @beta (undocumented)
 export interface CustomHierarchyNodeDefinition {
     // (undocumented)
     node: HierarchyNode;
+}
+
+// @beta
+export class DefaultInstanceLabelSelectClauseFactory implements IInstanceLabelSelectClauseFactory {
+    // (undocumented)
+    createSelectClause(props: CreateInstanceLabelSelectClauseProps): Promise<string>;
 }
 
 // @beta (undocumented)
@@ -58,6 +104,12 @@ export interface ECSqlQueryHierarchyLevelDefinition {
     fullClassName: string;
     // (undocumented)
     query: ECSqlQueryDef;
+}
+
+// @beta
+export interface ECSqlValueSelector {
+    // (undocumented)
+    selector: string;
 }
 
 // @beta (undocumented)
@@ -161,6 +213,11 @@ export interface IHierarchyDefinition {
     defineHierarchyLevel(parentNode: HierarchyNode | undefined): Promise<HierarchyLevelDefinition[]>;
 }
 
+// @beta
+export interface IInstanceLabelSelectClauseFactory {
+    createSelectClause(props: CreateInstanceLabelSelectClauseProps): Promise<string>;
+}
+
 // @beta (undocumented)
 export interface InstanceKey {
     className: string;
@@ -191,6 +248,52 @@ export class ModelsTreeQueryBuilder implements IHierarchyDefinition {
 export interface ModelsTreeQueryBuilderProps {
     // (undocumented)
     schemas: SchemaContext;
+}
+
+// @beta
+export enum NodeSelectClauseColumnNames {
+    AutoExpand = "AutoExpand",
+    DisplayLabel = "DisplayLabel",
+    ECInstanceId = "ECInstanceId",
+    ExtendedData = "ExtendedData",
+    FullClassName = "FullClassName",
+    GroupByClass = "GroupByClass",
+    HasChildren = "HasChildren",
+    HideIfNoChildren = "HideIfNoChildren",
+    HideNodeInHierarchy = "HideNodeInHierarchy",
+    MergeByLabelId = "MergeByLabelId"
+}
+
+// @beta
+export class NodeSelectClauseFactory {
+    // (undocumented)
+    createSelectClause(props: NodeSelectClauseProps): Promise<string>;
+}
+
+// @beta
+export interface NodeSelectClauseProps {
+    // (undocumented)
+    autoExpand?: boolean | ECSqlValueSelector;
+    // (undocumented)
+    ecClassId: Id64String | ECSqlValueSelector;
+    // (undocumented)
+    ecInstanceId: Id64String | ECSqlValueSelector;
+    // (undocumented)
+    extendedData?: {
+        [key: string]: Id64String | string | number | boolean | ECSqlValueSelector;
+    };
+    // (undocumented)
+    groupByClass?: boolean | ECSqlValueSelector;
+    // (undocumented)
+    hasChildren?: boolean | ECSqlValueSelector;
+    // (undocumented)
+    hideIfNoChildren?: boolean | ECSqlValueSelector;
+    // (undocumented)
+    hideNodeInHierarchy?: boolean | ECSqlValueSelector;
+    // (undocumented)
+    mergeByLabelId?: string | ECSqlValueSelector;
+    // (undocumented)
+    nodeLabel: string | ECSqlValueSelector;
 }
 
 // @beta (undocumented)

@@ -5,13 +5,11 @@
 
 import { expect } from "chai";
 import { from } from "rxjs";
-import sinon from "sinon";
-import { Id64, Logger, LogLevel } from "@itwin/core-bentley";
-import { ECClass, SchemaContext } from "@itwin/ecschema-metadata";
+import { Logger, LogLevel } from "@itwin/core-bentley";
+import { SchemaContext } from "@itwin/ecschema-metadata";
 import { HierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
-import * as common from "../../../hierarchy-builder/internal/Common";
 import { createClassGroupingOperator, LOGGING_NAMESPACE } from "../../../hierarchy-builder/internal/operators/ClassGrouping";
-import { createTestNode, getObservableResult } from "../../Utils";
+import { createGetClassStub, createTestNode, getObservableResult, TStubClassFunc } from "../../Utils";
 
 describe("ClassGrouping", () => {
   before(() => {
@@ -21,24 +19,10 @@ describe("ClassGrouping", () => {
   });
 
   const schemas = {} as unknown as SchemaContext;
-  let getClassStub: sinon.SinonStub<[SchemaContext, string], Promise<ECClass>>;
+  let stubClass: TStubClassFunc;
   beforeEach(() => {
-    getClassStub = sinon.stub(common, "getClass");
+    stubClass = createGetClassStub(schemas).stubClass;
   });
-
-  function stubClass(schemaName: string, className: string, classLabel?: string) {
-    const fullName = `${schemaName}:${className}`;
-    getClassStub.withArgs(schemas, fullName).resolves({
-      fullName,
-      name: className,
-      label: classLabel,
-    } as unknown as ECClass);
-    return {
-      id: Id64.invalid,
-      name: fullName,
-      label: classLabel ?? className,
-    };
-  }
 
   it("doesn't group non-instance nodes", async () => {
     const nodes: HierarchyNode[] = [
@@ -59,7 +43,7 @@ describe("ClassGrouping", () => {
         params: { groupByClass: true },
       }),
     ];
-    const classInfo = stubClass("TestSchema", "TestClass");
+    const classInfo = stubClass({ schemaName: "TestSchema", className: "TestClass" });
     const result = await getObservableResult(from(nodes).pipe(createClassGroupingOperator(schemas)));
     expect(result).to.deep.eq([
       {
@@ -91,8 +75,8 @@ describe("ClassGrouping", () => {
         params: { groupByClass: true },
       }),
     ];
-    const classA = stubClass("TestSchema", "A", "Class A");
-    const classB = stubClass("TestSchema", "B", "Class B");
+    const classA = stubClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A" });
+    const classB = stubClass({ schemaName: "TestSchema", className: "B", classLabel: "Class B" });
     const result = await getObservableResult(from(nodes).pipe(createClassGroupingOperator(schemas)));
     expect(result).to.deep.eq([
       {
@@ -132,7 +116,7 @@ describe("ClassGrouping", () => {
         params: { groupByClass: true },
       }),
     ];
-    const classA = stubClass("TestSchema", "A", "Class A");
+    const classA = stubClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A" });
     const result = await getObservableResult(from(nodes).pipe(createClassGroupingOperator(schemas)));
     expect(result).to.deep.eq([
       {

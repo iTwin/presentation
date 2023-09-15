@@ -19,7 +19,7 @@ import { sortNodesByLabelOperator } from "./internal/operators/Sorting";
 import { supplyIconsOperator } from "./internal/operators/SupplyIcons";
 import { QueryScheduler } from "./internal/QueryScheduler";
 import { applyLimit, TreeQueryResultsReader } from "./internal/TreeNodesReader";
-import { IQueryExecutor } from "./IQueryExecutor";
+import { IQueryExecutor } from "./queries/IQueryExecutor";
 
 /** @beta */
 export interface HierarchyProviderProps {
