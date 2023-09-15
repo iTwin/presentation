@@ -38,7 +38,7 @@ describe("<NumericPropertyEditorBase />", () => {
     await waitFor(() => expect(getByTestId("numeric-input")).to.not.be.null);
   });
 
-  it("Does not invoke `onCommit` when input changes but blur event is not", async () => {
+  it("Does not invoke `onCommit` when input changes but blur event is not triggered", async () => {
     const user = userEvent.setup();
     const record = createRecord();
     const spy = sinon.spy();

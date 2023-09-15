@@ -219,6 +219,7 @@ function PropertyGrid(props: PropertyGridProps) {
           highlight={
             filterText && filterText.length !== 0 ? { highlightedText: filterText, activeHighlight, filteredTypes: filteringResult?.filteredTypes } : undefined
           }
+          isPropertyEditingEnabled={true}
         />
       </navigationPropertyEditorContext.Provider>
       {contextMenuArgs && <PropertiesWidgetContextMenu args={contextMenuArgs} dataProvider={dataProvider} onCloseContextMenu={onCloseContextMenu} />}

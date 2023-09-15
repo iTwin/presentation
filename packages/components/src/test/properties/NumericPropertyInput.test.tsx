@@ -280,7 +280,7 @@ describe("<NumericInput />", () => {
     expect(spy).to.be.be.calledOnce;
   });
 
-  it("commits undefined value when propertyRecord value is NaN on `onBlur` firing", async () => {
+  it("commits undefined value when propertyRecord value is NaN on `onBlur` event", async () => {
     const record = createRecord(Number.NaN);
     const spy = sinon.spy();
     const ref = createRef<NumericPropertyInputAttributes>();
