@@ -7,7 +7,7 @@ import { expect } from "chai";
 import sinon from "sinon";
 import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import { EditorContainer } from "@itwin/components-react";
-import { render, waitFor } from "@testing-library/react";
+import { fireEvent, render, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NumericPropertyEditor } from "../../presentation-components/properties/NumericPropertyEditor";
 
@@ -38,7 +38,7 @@ describe("<NumericPropertyEditorBase />", () => {
     await waitFor(() => expect(getByTestId("numeric-input")).to.not.be.null);
   });
 
-  it("invokes `onCommit` when input changes", async () => {
+  it("Does not invoke `onCommit` when input changes but blur event is not", async () => {
     const user = userEvent.setup();
     const record = createRecord();
     const spy = sinon.spy();
@@ -49,7 +49,22 @@ describe("<NumericPropertyEditorBase />", () => {
     await user.type(inputContainer, "1");
 
     await waitFor(() => expect(queryByDisplayValue("1")).to.not.be.null);
-    expect(spy).to.be.calledOnce;
+    expect(spy).to.not.be.called;
+  });
+
+  it("Invokes `onCommit` with correct parameters when input container gets blurred", async () => {
+    const user = userEvent.setup();
+    const record = createRecord();
+    const spy = sinon.spy();
+    const { getByTestId, queryByDisplayValue } = render(<EditorContainer propertyRecord={record} onCancel={() => {}} onCommit={spy} />);
+
+    const inputContainer = await waitFor(() => getByTestId("numeric-input"));
+
+    await user.type(inputContainer, "1");
+    fireEvent.blur(inputContainer);
+
+    await waitFor(() => expect(queryByDisplayValue("1")).to.not.be.null);
+    expect(spy).to.be.calledOnceWith({ propertyRecord: record, newValue: { valueFormat: 0, value: 1, displayValue: "1" } });
   });
 });
 
