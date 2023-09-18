@@ -15,7 +15,9 @@ import { waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import { TableColumnDefinition, TableRowDefinition } from "../../presentation-components/table/Types";
 import {
-  usePresentationTable, UsePresentationTableProps, usePresentationTableWithUnifiedSelection,
+  usePresentationTable,
+  UsePresentationTableProps,
+  usePresentationTableWithUnifiedSelection,
 } from "../../presentation-components/table/UsePresentationTable";
 import { UnifiedSelectionContextProvider } from "../../presentation-components/unified-selection/UnifiedSelectionContext";
 import { createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
