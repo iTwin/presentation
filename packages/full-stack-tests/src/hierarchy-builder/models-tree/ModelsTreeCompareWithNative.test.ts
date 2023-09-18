@@ -13,8 +13,8 @@ import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { InstanceKey, NodeKey, Ruleset } from "@itwin/presentation-common";
 import { isPresentationTreeNodeItem, PresentationTreeDataProvider, PresentationTreeNodeItem } from "@itwin/presentation-components";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
+import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { initialize, terminate } from "../../IntegrationTests";
-import { ModelsTreeDefinition } from "./ModelsTreeDefinition";
 
 describe("Stateless hierarchy builder", () => {
   let imodel!: IModelConnection;

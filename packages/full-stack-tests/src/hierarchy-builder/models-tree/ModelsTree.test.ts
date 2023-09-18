@@ -9,6 +9,7 @@ import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { InstanceKey } from "@itwin/presentation-common";
 import { HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
+import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { buildTestIModel, TestIModelBuilder } from "@itwin/presentation-testing";
 import {
   insertPhysicalElement,
@@ -20,7 +21,6 @@ import {
 } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
-import { ModelsTreeDefinition } from "./ModelsTreeDefinition";
 
 describe("Stateless hierarchy builder", () => {
   describe("Models tree", () => {
