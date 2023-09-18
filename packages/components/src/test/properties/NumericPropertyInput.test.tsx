@@ -10,7 +10,7 @@ import { PrimitiveValue } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
-import { render, waitFor } from "@testing-library/react";
+import { fireEvent, render, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NumericInput, NumericPropertyInput, NumericPropertyInputAttributes } from "../../presentation-components/properties/NumericPropertyInput";
 import { createRecord } from "./NumericPropertyEditor.test";
@@ -258,5 +258,25 @@ describe("<NumericInput />", () => {
     await user.type(inputContainer, "-");
 
     expect(spy).to.be.calledWith("1e-");
+  });
+
+  it("fires `onBlur` when inputContainer becomes blurred", async () => {
+    const spy = sinon.spy();
+    const { getByRole } = render(<NumericInput onBlur={spy} onChange={() => {}} value="1" />);
+    const inputContainer = await waitFor(() => getByRole("textbox"));
+    fireEvent.blur(inputContainer);
+
+    expect(spy).to.be.be.calledOnce;
+  });
+
+  it("commits undefined value when propertyRecord value is NaN on `onBlur` event", async () => {
+    const record = createRecord(Number.NaN);
+    const spy = sinon.spy();
+    const ref = createRef<NumericPropertyInputAttributes>();
+    const { getByRole } = render(<NumericPropertyInput ref={ref} propertyRecord={record} onCommit={spy} />);
+    const inputContainer = await waitFor(() => getByRole("textbox"));
+    fireEvent.blur(inputContainer);
+
+    expect(spy).to.be.calledWith({ propertyRecord: record, newValue: { valueFormat: 0, value: undefined, displayValue: "NaN" } });
   });
 });
