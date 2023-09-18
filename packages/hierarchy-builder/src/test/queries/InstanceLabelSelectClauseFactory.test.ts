@@ -200,21 +200,25 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
   beforeEach(() => {
     stubClass = createGetClassStub(schemas).stubClass;
     factory = new BisInstanceLabelSelectClauseFactory({ schemas });
-    stubClass({ schemaName: "bis", className: "GeometricElement", is: async (other) => other === "bis.Element" || other === "bis.GeometricElement" });
-    stubClass({ schemaName: "bis", className: "Element", is: async (other) => other === "bis.Element" });
-    stubClass({ schemaName: "bis", className: "Model", is: async (other) => other === "bis.Model" });
+    stubClass({
+      schemaName: "BisCore",
+      className: "GeometricElement",
+      is: async (other) => other === "BisCore.Element" || other === "BisCore.GeometricElement",
+    });
+    stubClass({ schemaName: "BisCore", className: "Element", is: async (other) => other === "BisCore.Element" });
+    stubClass({ schemaName: "BisCore", className: "Model", is: async (other) => other === "BisCore.Model" });
   });
 
   it("returns valid clause for geometric elements", async () => {
     const result = await factory.createSelectClause({
       classAlias: "test",
-      className: "bis.GeometricElement",
+      className: "BisCore.GeometricElement",
     });
     expect(trimWhitespace(result)).to.eq(
       trimWhitespace(`
         COALESCE(
           IIF(
-            [test].[ECClassId] IS (bis.GeometricElement),
+            [test].[ECClassId] IS (BisCore.GeometricElement),
             COALESCE(
               [test].[CodeValue],
               CASE WHEN [test].[UserLabel] IS NOT NULL
@@ -225,7 +229,7 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
             NULL
           ),
           IIF(
-            [test].[ECClassId] IS (bis.Element),
+            [test].[ECClassId] IS (BisCore.Element),
             COALESCE(
               [test].[UserLabel],
               [test].[CodeValue]
@@ -245,13 +249,13 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
   it("returns valid clause for any element", async () => {
     const result = await factory.createSelectClause({
       classAlias: "test",
-      className: "bis.Element",
+      className: "BisCore.Element",
     });
     expect(trimWhitespace(result)).to.eq(
       trimWhitespace(`
         COALESCE(
           IIF(
-            [test].[ECClassId] IS (bis.GeometricElement),
+            [test].[ECClassId] IS (BisCore.GeometricElement),
             COALESCE(
               [test].[CodeValue],
               CASE WHEN [test].[UserLabel] IS NOT NULL
@@ -262,7 +266,7 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
             NULL
           ),
           IIF(
-            [test].[ECClassId] IS (bis.Element),
+            [test].[ECClassId] IS (BisCore.Element),
             COALESCE(
               [test].[UserLabel],
               [test].[CodeValue]
@@ -282,18 +286,18 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
   it("returns valid clause for any model", async () => {
     const result = await factory.createSelectClause({
       classAlias: "test",
-      className: "bis.Model",
+      className: "BisCore.Model",
     });
     expect(trimWhitespace(result)).to.eq(
       trimWhitespace(`
         COALESCE(
           IIF(
-            [test].[ECClassId] IS (bis.Model),
+            [test].[ECClassId] IS (BisCore.Model),
             (
               SELECT
                 COALESCE(
                   IIF(
-                    [e].[ECClassId] IS (bis.GeometricElement),
+                    [e].[ECClassId] IS (BisCore.GeometricElement),
                     COALESCE(
                       [e].[CodeValue],
                       CASE WHEN [e].[UserLabel] IS NOT NULL
@@ -304,7 +308,7 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
                     NULL
                   ),
                   IIF(
-                    [e].[ECClassId] IS (bis.Element),
+                    [e].[ECClassId] IS (BisCore.Element),
                     COALESCE(
                       [e].[UserLabel],
                       [e].[CodeValue]
