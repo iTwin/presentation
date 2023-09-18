@@ -14,7 +14,7 @@ import { PresentationPropertyDataProvider } from "@itwin/presentation-components
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { render } from "@testing-library/react";
-import { insertPhysicalElement, insertPhysicalModel, insertSpatialCategory } from "../../IModelUtils";
+import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { ensureHasError, ErrorBoundary } from "../ErrorBoundary";
 import { ensurePropertyGridHasPropertyRecord } from "../PropertyGridUtils";
@@ -66,10 +66,11 @@ describe("Learning snippets", () => {
 
       // set up imodel for the test
       let elementKey: InstanceKey | undefined;
-      const imodel = await buildTestIModel(this, (builder) => {
-        const categoryKey = insertSpatialCategory(builder, "My Category");
-        const modelKey = insertPhysicalModel(builder, "My Model");
-        elementKey = insertPhysicalElement(builder, "My Element", modelKey.id, categoryKey.id);
+      // eslint-disable-next-line deprecation/deprecation
+      const imodel = await buildTestIModel(this, async (builder) => {
+        const categoryKey = insertSpatialCategory({ builder, label: "My Category" });
+        const modelKey = insertPhysicalModelWithPartition({ builder, label: "My Model" });
+        elementKey = insertPhysicalElement({ builder, userLabel: "My Element", modelId: modelKey.id, categoryId: categoryKey.id });
       });
       assert(elementKey !== undefined);
 

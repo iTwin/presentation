@@ -1,8 +1,16 @@
 # Change Log - @itwin/presentation-opentelemetry
 
-This log was last generated on Wed, 09 Aug 2023 11:47:16 GMT and should not be manually modified.
+This log was last generated on Thu, 31 Aug 2023 11:51:06 GMT and should not be manually modified.
 
 <!-- Start content -->
+
+## 4.0.2
+
+Thu, 31 Aug 2023 11:51:06 GMT
+
+### Patches
+
+- Update dependencies ([commit](https://github.com/iTwin/presentation/commit/585bfe098c3c388c48ffa4f311c4722f1b6835df))
 
 ## 4.0.1
 

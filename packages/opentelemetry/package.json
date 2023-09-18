@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-opentelemetry",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "description": "Utilities to enable OpenTelemetry tracing of Presentation requests",
   "license": "MIT",
   "engines": {
@@ -29,15 +29,16 @@
     "build": "npm run -s build:cjs",
     "build:cjs": "tsc -p tsconfig.cjs.json",
     "build:watch": "npm run -s build:cjs -- -w",
-    "clean": "rimraf lib",
+    "clean": "rimraf lib build",
     "cover": "nyc npm -s test",
-    "docs": "npm run -s docs:reference && npm run -s extract && npm run -s docs:changelog",
-    "docs:changelog": "cpx ./CHANGELOG.md ../../build/docs/reference/presentation-opentelemetry",
-    "docs:reference": "betools docs --includes=../../build/docs/extract --json=../../build/docs/reference/presentation-opentelemetry/file.json --tsIndexFile=presentation-opentelemetry.ts --onlyJson",
-    "extract": "betools extract --fileExt=ts --extractFrom=./src/test --recursive --out=../../build/docs/extract",
+    "docs": "npm run -s docs:reference && npm run -s docs:extract && npm run -s docs:changelog",
+    "docs:changelog": "cpx ./CHANGELOG.md ./build/docs/reference/presentation-opentelemetry",
+    "docs:reference": "betools docs --includes=./build/docs/extract --json=./build/docs/reference/presentation-opentelemetry/file.json --tsIndexFile=presentation-opentelemetry.ts --onlyJson",
+    "docs:extract": "betools extract --fileExt=ts --extractFrom=./src/test --recursive --out=./build/docs/extract",
     "lint": "eslint \"./src/**/*.ts\"",
     "test": "mocha --config ./.mocharc.json \"./lib/cjs/test/**/*.test.js\"",
-    "extract-api": "betools extract-api --entry=presentation-opentelemetry --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api"
+    "extract-api": "betools extract-api --entry=presentation-opentelemetry --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api",
+    "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-opentelemetry.api.md"
   },
   "peerDependencies": {
     "@itwin/presentation-common": "^4.0.0",

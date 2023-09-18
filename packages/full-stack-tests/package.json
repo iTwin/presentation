@@ -6,12 +6,11 @@
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc -w",
-    "clean": "rimraf lib",
+    "clean": "rimraf lib build",
     "lint": "eslint ./src/**/*.{ts,tsx}",
     "test": "mocha --config ./.mocharc.json",
     "cover": "npm run -s test",
-    "docs": "npm run -s docs:extract",
-    "docs:extract": "betools extract --fileExt=ts,tsx --extractFrom=./src --recursive --out=../../build/docs/extract"
+    "docs": "betools extract --fileExt=ts,tsx --extractFrom=./src --recursive --out=./build/docs/extract"
   },
   "dependencies": {
     "@itwin/appui-abstract": "^4.1.1",

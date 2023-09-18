@@ -1,0 +1,49 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+
+import { map, merge, mergeMap, Observable, partition, shareReplay, tap } from "rxjs";
+import { Logger } from "@itwin/core-bentley";
+import { HierarchyNode } from "../../HierarchyNode";
+import { createOperatorLoggingNamespace } from "../Common";
+
+const OPERATOR_NAME = "DetermineChildren";
+/** @internal */
+export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
+
+/**
+ * Ensures all input nodes have their children determined.
+ *
+ * @internal
+ */
+export function createDetermineChildrenOperator(hasNodes: (node: HierarchyNode) => Observable<boolean>) {
+  return function (nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
+    const sharedNodes = nodes.pipe(
+      log((n) => `in: ${n.label}`),
+      // each partitioned observable is going to subscribe to this individually - share and replay to avoid requesting
+      // nodes from source observable multiple times
+      shareReplay(),
+    );
+    const [determined, undetermined] = partition(sharedNodes, (node) => node.children !== undefined);
+    return merge(
+      determined,
+      undetermined.pipe(
+        mergeMap((n) =>
+          hasNodes(n).pipe(
+            log((hasChildren) => `children for ${n.label}: ${hasChildren}`),
+            map((hasChildren) => ({ ...n, children: hasChildren })),
+          ),
+        ),
+      ),
+    ).pipe(log((n) => `out: ${n.label} / ${n.children}`));
+  };
+}
+
+function doLog(msg: string) {
+  Logger.logTrace(LOGGING_NAMESPACE, msg);
+}
+
+function log<T>(msg: (arg: T) => string) {
+  return tap<T>((n) => doLog(msg(n)));
+}

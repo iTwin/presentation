@@ -1,6 +1,6 @@
 {
   "name": "@itwin/presentation-components",
-  "version": "4.1.0",
+  "version": "4.2.1",
   "description": "React components based on iTwin.js Presentation library",
   "license": "MIT",
   "repository": {
@@ -33,16 +33,17 @@
     "copy:cjs": "cpx \"./src/**/*.{scss,json}\" ./lib/cjs",
     "copy:esm": "cpx \"./src/**/*.{scss,json}\" ./lib/esm",
     "build:watch": "npm run -s build:cjs -- -w",
-    "clean": "rimraf lib",
+    "clean": "rimraf lib build",
     "cover": "nyc npm -s test",
     "lint": "eslint ./src/**/*.{ts,tsx}",
     "test": "mocha --config ./.mocharc.json \"./lib/cjs/test/**/*.test.js\"",
     "test:watch": "npm -s test -- --reporter min --watch-extensions ts,tsx --watch",
     "docs": "npm run -s docs:extract && npm run -s docs:reference && npm run -s docs:changelog",
-    "docs:changelog": "cpx ./CHANGELOG.md ../../build/docs/reference/presentation-components",
-    "docs:reference": "betools docs --includes=../../build/docs/extract --json=../../build/docs/reference/presentation-components/file.json --tsIndexFile=presentation-components.ts --onlyJson",
-    "docs:extract": "betools extract --fileExt=ts,tsx --extractFrom=./src/test --recursive --out=../../build/docs/extract",
-    "extract-api": "betools extract-api --entry=presentation-components --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api"
+    "docs:changelog": "cpx ./CHANGELOG.md ./build/docs/reference/presentation-components",
+    "docs:reference": "betools docs --includes=./build/docs/extract --json=./build/docs/reference/presentation-components/file.json --tsIndexFile=presentation-components.ts --onlyJson",
+    "docs:extract": "betools extract --fileExt=ts,tsx --extractFrom=./src/test --recursive --out=./build/docs/extract",
+    "extract-api": "betools extract-api --entry=presentation-components --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api",
+    "check-internal": ""
   },
   "dependencies": {
     "@itwin/itwinui-css": "^1.12.2",

@@ -6,8 +6,9 @@
     "start": "webpack serve",
     "webpack": "webpack",
     "build": "tsc --noEmit",
+    "clean": "rimraf build",
     "lint": "eslint ./src/**/*.{ts,tsx}",
-    "docs": "betools extract --fileExt=ts,tsx --extractFrom=./src --recursive --out=../../../build/docs/extract"
+    "docs": "betools extract --fileExt=ts,tsx --extractFrom=./src --recursive --out=./build/docs/extract"
   },
   "dependencies": {
     "@bentley/icons-generic-webfont": "^1.0.34",
@@ -36,6 +37,7 @@
     "@itwin/presentation-hierarchy-builder": "workspace:*",
     "@itwin/webgl-compatibility": "^4.1.1",
     "@opentelemetry/api": "^1.4.1",
+    "@tanstack/react-table": "^8.9.3",
     "@test-app/common": "workspace:*",
     "@types/copy-webpack-plugin": "^8.0.1",
     "@types/node": "^18.17.7",

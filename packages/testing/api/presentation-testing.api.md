@@ -29,14 +29,21 @@ import { PresentationManagerMode } from '@itwin/presentation-backend';
 import { PresentationProps } from '@itwin/presentation-frontend';
 import { PropertyRecord } from '@itwin/appui-abstract';
 import { RelationshipProps } from '@itwin/core-common';
+import { RpcInterfaceDefinition } from '@itwin/core-common';
 import { Ruleset } from '@itwin/presentation-common';
 import { TreeNodeItem } from '@itwin/components-react';
 
-// @beta
+// @beta @deprecated
 export function buildTestIModel(name: string, cb: (builder: TestIModelBuilder) => void): Promise<IModelConnection>;
 
 // @beta
+export function buildTestIModel(name: string, cb: (builder: TestIModelBuilder) => Promise<void>): Promise<IModelConnection>;
+
+// @beta @deprecated
 export function buildTestIModel(mochaContext: Mocha.Context, cb: (builder: TestIModelBuilder) => void): Promise<IModelConnection>;
+
+// @beta
+export function buildTestIModel(mochaContext: Mocha.Context, cb: (builder: TestIModelBuilder) => Promise<void>): Promise<IModelConnection>;
 
 // @public
 export class ContentBuilder {
@@ -102,6 +109,8 @@ export class IModelBuilder implements TestIModelBuilder {
     // (undocumented)
     createCode(scopeModelId: CodeScopeProps, codeSpecName: BisCodeSpec, codeValue: string): Code;
     // (undocumented)
+    importSchema(schemaXml: string): Promise<void>;
+    // (undocumented)
     insertAspect<TProps extends ElementAspectProps>(props: TProps): Id64String;
     // (undocumented)
     insertElement<TProps extends ElementProps>(props: TProps): Id64String;
@@ -136,6 +145,7 @@ export interface PresentationTestingInitProps {
     };
     frontendAppOptions?: IModelAppOptions;
     frontendProps?: PresentationProps;
+    rpcs?: RpcInterfaceDefinition[];
     testOutputDir?: string;
 }
 
@@ -145,6 +155,7 @@ export const terminate: (frontendApp?: typeof IModelApp) => Promise<void>;
 // @beta
 export interface TestIModelBuilder {
     createCode(scopeModelId: CodeScopeProps, codeSpecName: BisCodeSpec, codeValue: string): Code;
+    importSchema(schemaXml: string): Promise<void>;
     insertAspect<TProps extends ElementAspectProps>(props: TProps): Id64String;
     insertElement<TProps extends ElementProps>(props: TProps): Id64String;
     insertModel<TProps extends ModelProps>(props: TProps): Id64String;

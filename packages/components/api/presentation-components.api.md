@@ -614,6 +614,7 @@ export interface PresentationTreeNodeItem extends DelayLoadedTreeNodeItem {
 // @beta
 export interface PresentationTreeNodeItemFilteringInfo {
     active?: PresentationInstanceFilterInfo;
+    ancestorFilters: PresentationInstanceFilterInfo[];
     descriptor: Descriptor | (() => Promise<Descriptor>);
 }
 
@@ -792,8 +793,8 @@ export function useControlledPresentationTreeFiltering(props: ControlledPresenta
 };
 
 // @internal (undocumented)
-export function useFilteredNodeLoader(nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>, filter: string | undefined): {
-    filteredNodeLoader: PagedTreeNodeLoader<IFilteredPresentationTreeDataProvider> | undefined;
+export function useFilteredNodeLoader(dataProvider: IPresentationTreeDataProvider, filter: string | undefined): {
+    filteredNodeLoader: AbstractTreeNodeLoaderWithProvider<IFilteredPresentationTreeDataProvider> | undefined;
     isFiltering: boolean;
     filterApplied: string | undefined;
     matchesCount: number | undefined;
@@ -843,7 +844,13 @@ export interface UsePresentationTableResult<TColumns, TRow> {
 }
 
 // @beta
-export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(props: Omit<UsePresentationTableProps<TColumn, TRow>, "keys">): UsePresentationTableResult<TColumn, TRow>;
+export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(props: Omit<UsePresentationTableProps<TColumn, TRow>, "keys">): UsePresentationTableWithUnifiedSelectionResult<TColumn, TRow>;
+
+// @beta
+export interface UsePresentationTableWithUnifiedSelectionResult<TColumns, TRow> extends UsePresentationTableResult<TColumns, TRow> {
+    onSelect: (selectedRowKeys: string[]) => void;
+    selectedRows: TRow[];
+}
 
 // @public
 export function usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderProps): PresentationTreeNodeLoaderResult;

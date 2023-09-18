@@ -5,16 +5,39 @@
 /** @type {import("lage").ConfigOptions } */
 module.exports = {
   pipeline: {
-    build: ["^build"],
-    cover: ["build"],
-    lint: ["build"],
-    docs: ["build"],
-    ["@itwin/presentation-components#extract-api"]: ["@itwin/presentation-components#build"],
-    ["@itwin/presentation-testing#extract-api"]: ["@itwin/presentation-testing#build"],
-    ["@itwin/presentation-opentelemetry#extract-api"]: ["@itwin/presentation-opentelemetry#build"],
+    build: {
+      dependsOn: ["^build"],
+      outputs: ["lib/**"],
+      inputs: ["src/**"],
+    },
+    cover: {
+      dependsOn: ["build"],
+      outputs: [],
+      inputs: ["lib/**"],
+    },
+    lint: {
+      dependsOn: ["build"],
+      outputs: [],
+      inputs: ["src/**"],
+    },
+    docs: {
+      dependsOn: ["build"],
+      outputs: ["build/docs/**"],
+      inputs: ["src/**"],
+    },
+    "extract-api": {
+      dependsOn: ["build"],
+      outputs: ["api/**"],
+      inputs: ["lib/**"],
+    },
+    "check-internal": {
+      dependsOn: ["extract-api"],
+      outputs: [],
+      inputs: ["api/**"],
+    },
     clean: {
       cache: false,
     },
   },
-  cache: true,
+  npmClient: "pnpm",
 };
