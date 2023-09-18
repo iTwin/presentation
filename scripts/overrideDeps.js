@@ -26,6 +26,8 @@ const corePackages = [
   "@itwin/core-orbitgt",
   "@itwin/core-quantity",
   "@itwin/ecschema-metadata",
+  "@itwin/ecschema-rpcinterface-common",
+  "@itwin/ecschema-rpcinterface-impl",
   "@itwin/eslint-plugin",
   "@itwin/express-server",
   "@itwin/presentation-backend",
