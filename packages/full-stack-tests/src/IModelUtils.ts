@@ -12,6 +12,7 @@ import {
   ExternalSourceProps,
   GeometricModel3dProps,
   IModel,
+  InformationPartitionElementProps,
   PhysicalElementProps,
   RepositoryLinkProps,
   SubCategoryProps,
@@ -40,16 +41,29 @@ export function insertSubject(
 
 export function insertPhysicalModelWithPartition(props: { builder: TestIModelBuilder; label: string; partitionParentId?: Id64String }) {
   const { builder, label, partitionParentId } = props;
+  const partitionKey = insertPhysicalPartition({ builder, label, parentId: partitionParentId ?? IModel.rootSubjectId });
+  return insertPhysicalSubModel({ builder, modeledElementId: partitionKey.id });
+}
+
+export function insertPhysicalPartition(
+  props: { builder: TestIModelBuilder; label: string; parentId: Id64String } & Partial<
+    Omit<InformationPartitionElementProps, "id" | "parent" | "code" | "userLabel">
+  >,
+) {
+  const { builder, classFullName, label, parentId, ...partitionProps } = props;
+  const defaultModelClassName = "BisCore:PhysicalPartition";
+  const className = classFullName ?? defaultModelClassName;
   const partitionId = builder.insertElement({
-    classFullName: "BisCore:PhysicalPartition",
+    classFullName: className,
     model: IModel.repositoryModelId,
-    code: builder.createCode(partitionParentId ?? IModel.rootSubjectId, BisCodeSpec.informationPartitionElement, label),
+    code: builder.createCode(parentId, BisCodeSpec.informationPartitionElement, label),
     parent: {
-      id: partitionParentId ?? IModel.rootSubjectId,
+      id: parentId,
       relClassName: "BisCore:SubjectOwnsPartitionElements",
     },
+    ...partitionProps,
   });
-  return insertPhysicalSubModel({ builder, modeledElementId: partitionId });
+  return { className, id: partitionId };
 }
 
 export function insertPhysicalSubModel(

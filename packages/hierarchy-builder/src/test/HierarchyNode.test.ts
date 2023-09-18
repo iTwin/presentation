@@ -1,0 +1,57 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+
+import { expect } from "chai";
+import { HierarchyNode } from "../hierarchy-builder/HierarchyNode";
+
+describe("HierarchyNode", () => {
+  const customNode: HierarchyNode = {
+    key: "x",
+    label: "custom node",
+    children: undefined,
+  };
+  const instancesNode: HierarchyNode = {
+    key: { type: "instances", instanceKeys: [] },
+    label: "instances node",
+    children: undefined,
+  };
+  const classGroupingNode: HierarchyNode = {
+    key: { type: "class-grouping", class: { id: "0x1", label: "c", name: "c" } },
+    label: "class grouping node",
+    children: undefined,
+  };
+
+  describe("isCustom", () => {
+    it("returns correct result for different types of nodes", () => {
+      expect(HierarchyNode.isCustom(customNode)).to.be.true;
+      expect(HierarchyNode.isCustom(instancesNode)).to.be.false;
+      expect(HierarchyNode.isCustom(classGroupingNode)).to.be.false;
+    });
+  });
+
+  describe("isStandard", () => {
+    it("returns correct result for different types of nodes", () => {
+      expect(HierarchyNode.isStandard(customNode)).to.be.false;
+      expect(HierarchyNode.isStandard(instancesNode)).to.be.true;
+      expect(HierarchyNode.isStandard(classGroupingNode)).to.be.true;
+    });
+  });
+
+  describe("isInstancesNode", () => {
+    it("returns correct result for different types of nodes", () => {
+      expect(HierarchyNode.isInstancesNode(customNode)).to.be.false;
+      expect(HierarchyNode.isInstancesNode(instancesNode)).to.be.true;
+      expect(HierarchyNode.isInstancesNode(classGroupingNode)).to.be.false;
+    });
+  });
+
+  describe("isClassGroupingNode", () => {
+    it("returns correct result for different types of nodes", () => {
+      expect(HierarchyNode.isClassGroupingNode(customNode)).to.be.false;
+      expect(HierarchyNode.isClassGroupingNode(instancesNode)).to.be.false;
+      expect(HierarchyNode.isClassGroupingNode(classGroupingNode)).to.be.true;
+    });
+  });
+});
