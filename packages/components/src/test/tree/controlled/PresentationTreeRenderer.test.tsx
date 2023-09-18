@@ -122,7 +122,7 @@ describe("PresentationTreeRenderer", () => {
     const { visibleNodes, nodeLoader } = setupTreeModel((model) => {
       model.setChildren(
         undefined,
-        [createTreeModelNodeInput({ id: "A", item: { filtering: { descriptor: createTestContentDescriptor({ fields: [] }) } } })],
+        [createTreeModelNodeInput({ id: "A", item: { filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [] } } })],
         0,
       );
     });
@@ -155,7 +155,12 @@ describe("PresentationTreeRenderer", () => {
     const { visibleNodes, modelSource, nodeLoader } = setupTreeModel((model) => {
       model.setChildren(
         undefined,
-        [createTreeModelNodeInput({ id: "A", item: { filtering: { descriptor: createTestContentDescriptor({ fields: [propertyField] }) } } })],
+        [
+          createTreeModelNodeInput({
+            id: "A",
+            item: { filtering: { descriptor: createTestContentDescriptor({ fields: [propertyField] }), ancestorFilters: [] } },
+          }),
+        ],
         0,
       );
     });
@@ -179,7 +184,12 @@ describe("PresentationTreeRenderer", () => {
     const { visibleNodes, modelSource, nodeLoader } = setupTreeModel((model) => {
       model.setChildren(
         undefined,
-        [createTreeModelNodeInput({ id: "A", item: { filtering: { descriptor: createTestContentDescriptor({ fields: [propertyField] }) } } })],
+        [
+          createTreeModelNodeInput({
+            id: "A",
+            item: { filtering: { descriptor: createTestContentDescriptor({ fields: [propertyField] }), ancestorFilters: [] } },
+          }),
+        ],
         0,
       );
     });
@@ -203,7 +213,7 @@ describe("PresentationTreeRenderer", () => {
         [
           createTreeModelNodeInput({
             id: "A",
-            item: { filtering: { descriptor: createTestContentDescriptor({ fields: [propertyField] }), active: initialFilter } },
+            item: { filtering: { descriptor: createTestContentDescriptor({ fields: [propertyField] }), active: initialFilter, ancestorFilters: [] } },
           }),
         ],
         0,
@@ -233,7 +243,7 @@ describe("PresentationTreeRenderer", () => {
         [
           createTreeModelNodeInput({
             id: "A",
-            item: { filtering: { descriptor: createTestContentDescriptor({ fields: [propertyField] }), active: initialFilter } },
+            item: { filtering: { descriptor: createTestContentDescriptor({ fields: [propertyField] }), active: initialFilter, ancestorFilters: [] } },
           }),
         ],
         0,
@@ -263,7 +273,7 @@ describe("PresentationTreeRenderer", () => {
         [
           createTreeModelNodeInput({
             id: "A",
-            item: { filtering: { descriptor: createTestContentDescriptor({ fields: [propertyField] }), active: initialFilter } },
+            item: { filtering: { descriptor: createTestContentDescriptor({ fields: [propertyField] }), active: initialFilter, ancestorFilters: [] } },
           }),
         ],
         0,
