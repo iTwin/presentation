@@ -841,9 +841,6 @@ importers:
       '@itwin/eslint-plugin':
         specifier: 4.0.0-dev.48
         version: 4.0.0-dev.48(eslint@8.47.0)(typescript@5.0.4)
-      '@itwin/presentation-common':
-        specifier: ^4.1.1
-        version: 4.1.1(@itwin/core-bentley@4.1.1)(@itwin/core-common@4.1.1)(@itwin/core-quantity@4.1.1)(@itwin/ecschema-metadata@4.1.1)
       '@types/chai':
         specifier: 4.3.1
         version: 4.3.1
@@ -1805,7 +1802,7 @@ packages:
     resolution: {integrity: sha512-KxDlhXyMlh2Jhj2ykX6vNEU0Vou4nHr025KoSEiz7cS3BNiHNaZcdECk/DmLkEB0as5T7b/TpRcehJ5yV6NeXQ==}
     engines: {node: '>=12.0.0'}
     dependencies:
-      '@opentelemetry/api': 1.4.1
+      '@opentelemetry/api': 1.6.0
       tslib: 2.6.2
 
   /@azure/core-util@1.4.0:
@@ -3504,7 +3501,6 @@ packages:
   /@opentelemetry/api@1.6.0:
     resolution: {integrity: sha512-OWlrQAnWn9577PhVgqjUvMr1pg57Bc4jv0iL4w0PRuOSRvq67rvHW9Ie/dZVMvCzhSCB+UxhcY/PmCmFj33Q+g==}
     engines: {node: '>=8.0.0'}
-    dev: false
 
   /@opentelemetry/context-async-hooks@1.15.2(@opentelemetry/api@1.4.1):
     resolution: {integrity: sha512-VAMHG67srGFQDG/N2ns5AyUT9vUcoKpZ/NpJ5fDQIPfJd7t3ju+aHwvDsMcrYBWuCh03U3Ky6o16+872CZchBg==}
@@ -4684,13 +4680,13 @@ packages:
     resolution: {integrity: sha512-oyl4jvAfTGX9Bt6Or4H9ni1Z447/tQuxnZsytsCaExKlmJiU8sFgnIBRzJUpKwB5eWn9HuBYlUlVA74q/yN0eQ==}
     dependencies:
       '@types/connect': 3.4.36
-      '@types/node': 18.17.7
+      '@types/node': 18.17.17
     dev: false
 
   /@types/bonjour@3.5.11:
     resolution: {integrity: sha512-isGhjmBtLIxdHBDl2xGwUzEM8AOyOvWsADWq7rqirdi/ZQoHnLWErHvsThcEzTX8juDRiZtzp2Qkv5bgNh6mAg==}
     dependencies:
-      '@types/node': 18.17.7
+      '@types/node': 18.17.17
     dev: false
 
   /@types/cacheable-request@6.0.3:
@@ -4698,7 +4694,7 @@ packages:
     dependencies:
       '@types/http-cache-semantics': 4.0.2
       '@types/keyv': 3.1.4
-      '@types/node': 18.17.7
+      '@types/node': 18.17.17
       '@types/responselike': 1.0.0
     dev: false
 
@@ -4733,7 +4729,7 @@ packages:
     resolution: {integrity: sha512-iaQslNbARe8fctL5Lk+DsmgWOM83lM+7FzP0eQUJs1jd3kBE8NWqBTIT2S8SqQOJjxvt2eyIjpOuYeRXq2AdMw==}
     dependencies:
       '@types/express-serve-static-core': 4.17.36
-      '@types/node': 18.17.7
+      '@types/node': 18.17.17
     dev: false
 
   /@types/connect@3.4.36:
@@ -4782,7 +4778,7 @@ packages:
   /@types/express-serve-static-core@4.17.36:
     resolution: {integrity: sha512-zbivROJ0ZqLAtMzgzIUC4oNqDG9iF0lSsAqpOD9kbs5xcIM3dTiyuHvBc7R8MtWBp3AAWGaovJa+wzWPjLYW7Q==}
     dependencies:
-      '@types/node': 18.17.7
+      '@types/node': 18.17.17
       '@types/qs': 6.9.8
       '@types/range-parser': 1.2.4
       '@types/send': 0.17.1
@@ -4815,7 +4811,7 @@ packages:
   /@types/http-proxy@1.17.12:
     resolution: {integrity: sha512-kQtujO08dVtQ2wXAuSFfk9ASy3sug4+ogFR8Kd8UgP8PEuc1/G/8yjYRmp//PcDNJEUKOza/MrQu15bouEUCiw==}
     dependencies:
-      '@types/node': 18.17.7
+      '@types/node': 18.17.17
     dev: false
 
   /@types/is-ci@3.0.0:
@@ -4956,7 +4952,7 @@ packages:
   /@types/responselike@1.0.0:
     resolution: {integrity: sha512-85Y2BjiufFzaMIlvJDvTTB8Fxl2xfLo4HgmHzVBz08w4wDePCTjYw66PdrolO0kzli3yam/YCgRufyo1DdQVTA==}
     dependencies:
-      '@types/node': 18.17.7
+      '@types/node': 18.17.17
     dev: false
 
   /@types/retry@0.12.0:
@@ -4987,7 +4983,7 @@ packages:
     dependencies:
       '@types/http-errors': 2.0.2
       '@types/mime': 3.0.1
-      '@types/node': 18.17.7
+      '@types/node': 18.17.17
     dev: false
 
   /@types/shimmer@1.0.2:
@@ -5018,7 +5014,7 @@ packages:
   /@types/sockjs@0.3.33:
     resolution: {integrity: sha512-f0KEEe05NvUnat+boPTZ0dgaLZ4SfSouXUgv5noUiefG2ajgKjmETo9ZJyuqsl7dfl2aHlLJUiki6B4ZYldiiw==}
     dependencies:
-      '@types/node': 18.17.7
+      '@types/node': 18.17.17
     dev: false
 
   /@types/source-map-support@0.5.6:
@@ -5038,7 +5034,7 @@ packages:
   /@types/ws@8.5.5:
     resolution: {integrity: sha512-lwhs8hktwxSjf9UaZ9tG5M03PGogvFaH8gUgLNbN9HKIg0dvv6q+gkSuJ8HN4/VbyxkuLzCjlN7GquQ0gUJfIg==}
     dependencies:
-      '@types/node': 18.17.7
+      '@types/node': 18.17.17
     dev: false
 
   /@types/yargs-parser@21.0.0:
@@ -9918,7 +9914,7 @@ packages:
     resolution: {integrity: sha512-7vuh85V5cdDofPyxn58nrPjBktZo0u9x1g8WtjQol+jZDaE+fhN+cIvTj11GndBnMnyfrUOG1sZQxCdjKh+DKg==}
     engines: {node: '>= 10.13.0'}
     dependencies:
-      '@types/node': 18.17.7
+      '@types/node': 18.17.17
       merge-stream: 2.0.0
       supports-color: 8.1.1
     dev: false

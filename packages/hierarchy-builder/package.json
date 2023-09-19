@@ -41,8 +41,7 @@
   "peerDependencies": {
     "@itwin/core-bentley": "^4.0.0",
     "@itwin/core-common": "^4.0.0",
-    "@itwin/ecschema-metadata": "^4.0.0",
-    "@itwin/presentation-common": "^4.0.0"
+    "@itwin/ecschema-metadata": "^4.0.0"
   },
   "devDependencies": {
     "@itwin/build-tools": "^4.1.1",
