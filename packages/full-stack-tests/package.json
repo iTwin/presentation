@@ -35,6 +35,7 @@
     "@itwin/presentation-components": "workspace:^",
     "@itwin/presentation-frontend": "^4.1.1",
     "@itwin/presentation-hierarchy-builder": "workspace:^",
+    "@itwin/presentation-core-interop": "workspace:^",
     "@itwin/presentation-models-tree": "workspace:^",
     "@itwin/presentation-testing": "workspace:^",
     "@itwin/webgl-compatibility": "^4.1.1",

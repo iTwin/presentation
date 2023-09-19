@@ -6,7 +6,6 @@
 
 import { catchError, concatAll, concatMap, defaultIfEmpty, from, map, mergeMap, Observable, ObservableInput, of, shareReplay, take, tap } from "rxjs";
 import { Id64 } from "@itwin/core-bentley";
-import { SchemaContext } from "@itwin/ecschema-metadata";
 import { HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
 import { HierarchyNode } from "./HierarchyNode";
 import { createClassGroupingOperator } from "./internal/operators/ClassGrouping";
@@ -19,18 +18,19 @@ import { sortNodesByLabelOperator } from "./internal/operators/Sorting";
 import { supplyIconsOperator } from "./internal/operators/SupplyIcons";
 import { QueryScheduler } from "./internal/QueryScheduler";
 import { applyLimit, TreeQueryResultsReader } from "./internal/TreeNodesReader";
+import { IMetadataProvider } from "./Metadata";
 import { IQueryExecutor } from "./queries/IQueryExecutor";
 
 /** @beta */
 export interface HierarchyProviderProps {
-  schemas: SchemaContext;
+  metadataProvider: IMetadataProvider;
   queryExecutor: IQueryExecutor;
   hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
 }
 
 /** @beta */
 export class HierarchyProvider {
-  private _schemas: SchemaContext;
+  private _metadataProvider: IMetadataProvider;
   private _hierarchyFactory: IHierarchyLevelDefinitionsFactory;
   private _queryExecutor: IQueryExecutor;
   private _queryReader: TreeQueryResultsReader;
@@ -38,7 +38,7 @@ export class HierarchyProvider {
   private _directNodesCache: Map<string, Observable<HierarchyNode>>;
 
   public constructor(props: HierarchyProviderProps) {
-    this._schemas = props.schemas;
+    this._metadataProvider = props.metadataProvider;
     this._hierarchyFactory = props.hierarchyDefinition;
     this._queryExecutor = props.queryExecutor;
     this._queryReader = new TreeQueryResultsReader();
@@ -97,7 +97,7 @@ export class HierarchyProvider {
       createHideIfNoChildrenOperator((n) => this.hasNodesObservable(n), false),
       createHideNodesInHierarchyOperator((n) => this.getNodesObservable(n), this._directNodesCache, false),
       sortNodesByLabelOperator,
-      createClassGroupingOperator(this._schemas),
+      createClassGroupingOperator(this._metadataProvider),
     );
     return parentNode ? result.pipe(createPersistChildrenOperator(parentNode)) : result;
   }

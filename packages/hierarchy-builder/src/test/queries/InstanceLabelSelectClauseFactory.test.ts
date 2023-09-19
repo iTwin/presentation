@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { SchemaContext } from "@itwin/ecschema-metadata";
+import { IMetadataProvider } from "../../hierarchy-builder/Metadata";
 import {
   BisInstanceLabelSelectClauseFactory,
   ClassBasedInstanceLabelSelectClauseFactory,
@@ -40,15 +40,15 @@ describe("ClassBasedInstanceLabelSelectClauseFactory", () => {
       return "default selector";
     },
   };
-  const schemas = {} as unknown as SchemaContext;
+  const metadataProvider = {} as unknown as IMetadataProvider;
   let stubClass: TStubClassFunc;
   beforeEach(() => {
-    stubClass = createGetClassStub(schemas).stubClass;
+    stubClass = createGetClassStub(metadataProvider).stubClass;
   });
 
   it("returns default clause when given an empty list of clauses", async () => {
     const factory = new ClassBasedInstanceLabelSelectClauseFactory({
-      schemas,
+      metadataProvider,
       defaultClauseFactory,
       clauses: [],
     });
@@ -60,7 +60,7 @@ describe("ClassBasedInstanceLabelSelectClauseFactory", () => {
 
   it("returns default clause when none of given clause classes match query class", async () => {
     const factory = new ClassBasedInstanceLabelSelectClauseFactory({
-      schemas,
+      metadataProvider,
       defaultClauseFactory,
       clauses: [
         {
@@ -85,7 +85,7 @@ describe("ClassBasedInstanceLabelSelectClauseFactory", () => {
 
   it("returns combination of all clauses if class name prop is not set", async () => {
     const factory = new ClassBasedInstanceLabelSelectClauseFactory({
-      schemas,
+      metadataProvider,
       defaultClauseFactory,
       clauses: [
         {
@@ -122,7 +122,7 @@ describe("ClassBasedInstanceLabelSelectClauseFactory", () => {
 
   it("returns clauses for classes that derive from query class", async () => {
     const factory = new ClassBasedInstanceLabelSelectClauseFactory({
-      schemas,
+      metadataProvider,
       defaultClauseFactory,
       clauses: [
         {
@@ -158,7 +158,7 @@ describe("ClassBasedInstanceLabelSelectClauseFactory", () => {
 
   it("returns clauses for base classes of query class", async () => {
     const factory = new ClassBasedInstanceLabelSelectClauseFactory({
-      schemas,
+      metadataProvider,
       defaultClauseFactory,
       clauses: [
         {
@@ -194,12 +194,12 @@ describe("ClassBasedInstanceLabelSelectClauseFactory", () => {
 });
 
 describe("BisInstanceLabelSelectClauseFactory", () => {
-  const schemas = {} as unknown as SchemaContext;
+  const metadataProvider = {} as unknown as IMetadataProvider;
   let stubClass: TStubClassFunc;
   let factory: BisInstanceLabelSelectClauseFactory;
   beforeEach(() => {
-    stubClass = createGetClassStub(schemas).stubClass;
-    factory = new BisInstanceLabelSelectClauseFactory({ schemas });
+    stubClass = createGetClassStub(metadataProvider).stubClass;
+    factory = new BisInstanceLabelSelectClauseFactory({ metadataProvider });
     stubClass({
       schemaName: "BisCore",
       className: "GeometricElement",

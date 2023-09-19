@@ -5,7 +5,6 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { SchemaContext } from "@itwin/ecschema-metadata";
 import {
   ClassBasedHierarchyLevelDefinitionsFactory,
   CustomHierarchyNodeDefinition,
@@ -13,6 +12,7 @@ import {
   HierarchyNodesDefinition,
   InstanceNodesQueryDefinition,
 } from "../hierarchy-builder/HierarchyDefinition";
+import { IMetadataProvider } from "../hierarchy-builder/Metadata";
 import { createGetClassStub, createTestNode, TStubClassFunc } from "./Utils";
 
 describe("HierarchyNodesDefinition", () => {
@@ -35,16 +35,16 @@ describe("HierarchyNodesDefinition", () => {
 });
 
 describe("ClassBasedHierarchyLevelDefinitionsFactory", () => {
-  const schemas = {} as unknown as SchemaContext;
+  const metadataProvider = {} as unknown as IMetadataProvider;
   let stubClass: TStubClassFunc;
   beforeEach(() => {
-    stubClass = createGetClassStub(schemas).stubClass;
+    stubClass = createGetClassStub(metadataProvider).stubClass;
   });
 
   it("returns root hierarchy level definition", async () => {
     const rootHierarchyLevel: HierarchyLevelDefinition = [createCustomNodeDefinition(), createInstanceNodesQueryDefinition()];
     const factory = new ClassBasedHierarchyLevelDefinitionsFactory({
-      schemas,
+      metadataProvider,
       hierarchy: {
         rootNodes: async () => rootHierarchyLevel,
         childNodes: [],
@@ -63,7 +63,7 @@ describe("ClassBasedHierarchyLevelDefinitionsFactory", () => {
     const def4: HierarchyLevelDefinition = [createCustomNodeDefinition({ node: createTestNode({ label: "4" }) })];
 
     const factory = new ClassBasedHierarchyLevelDefinitionsFactory({
-      schemas,
+      metadataProvider,
       hierarchy: {
         rootNodes: async () => [createCustomNodeDefinition({ node: rootNode })],
         childNodes: [
@@ -119,7 +119,7 @@ describe("ClassBasedHierarchyLevelDefinitionsFactory", () => {
     const def4: HierarchyLevelDefinition = [createCustomNodeDefinition({ node: createTestNode({ label: "4" }) })];
 
     const factory = new ClassBasedHierarchyLevelDefinitionsFactory({
-      schemas,
+      metadataProvider,
       hierarchy: {
         rootNodes: async () => [createCustomNodeDefinition({ node: rootNode })],
         childNodes: [
@@ -165,7 +165,7 @@ describe("ClassBasedHierarchyLevelDefinitionsFactory", () => {
     });
 
     const factory = new ClassBasedHierarchyLevelDefinitionsFactory({
-      schemas,
+      metadataProvider,
       hierarchy: {
         rootNodes: async () => [createCustomNodeDefinition({ node: rootNode })],
         childNodes: [
@@ -200,7 +200,7 @@ describe("ClassBasedHierarchyLevelDefinitionsFactory", () => {
 
     const spy = sinon.stub().resolves([]);
     const factory = new ClassBasedHierarchyLevelDefinitionsFactory({
-      schemas,
+      metadataProvider,
       hierarchy: {
         rootNodes: async () => [createCustomNodeDefinition({ node: rootNode })],
         childNodes: [

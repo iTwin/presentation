@@ -6,6 +6,7 @@
 import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
+import { createMetadataProvider } from "@itwin/presentation-core-interop";
 import { HierarchyProvider, IHierarchyLevelDefinitionsFactory } from "@itwin/presentation-hierarchy-builder";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../IntegrationTests";
@@ -28,8 +29,9 @@ describe("Stateless hierarchy builder", () => {
     function createProvider(definition: IHierarchyLevelDefinitionsFactory) {
       const schemas = new SchemaContext();
       schemas.addLocater(new ECSchemaRpcLocater(emptyIModel.getRpcProps()));
+      const metadataProvider = createMetadataProvider(schemas);
       return new HierarchyProvider({
-        schemas,
+        metadataProvider,
         hierarchyDefinition: definition,
         queryExecutor: emptyIModel,
       });

@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { SchemaContext } from "@itwin/ecschema-metadata";
 import { getClass } from "../internal/Common";
+import { IMetadataProvider } from "../Metadata";
 
 /**
  * Props for [[IInstanceLabelSelectClauseFactory.createSelectClause]].
@@ -80,7 +80,7 @@ export interface ClassBasedLabelSelectClause {
  */
 export interface ClassBasedInstanceLabelSelectClauseFactoryProps {
   /** Access to iModel metadata */
-  schemas: SchemaContext;
+  metadataProvider: IMetadataProvider;
   /** A list of instance label selectors associated to classes they should be applied to */
   clauses: ClassBasedLabelSelectClause[];
   /** @internal */
@@ -96,13 +96,13 @@ export interface ClassBasedInstanceLabelSelectClauseFactoryProps {
 export class ClassBasedInstanceLabelSelectClauseFactory implements IInstanceLabelSelectClauseFactory {
   private _defaultFactory: IInstanceLabelSelectClauseFactory;
   private _labelClausesByClass: ClassBasedLabelSelectClause[];
-  private _schemas: SchemaContext;
+  private _metadataProvider: IMetadataProvider;
 
   public constructor(props: ClassBasedInstanceLabelSelectClauseFactoryProps) {
     // istanbul ignore next
     this._defaultFactory = props.defaultClauseFactory ?? new DefaultInstanceLabelSelectClauseFactory();
     this._labelClausesByClass = props.clauses;
-    this._schemas = props.schemas;
+    this._metadataProvider = props.metadataProvider;
   }
 
   public async createSelectClause(props: CreateInstanceLabelSelectClauseProps): Promise<string> {
@@ -139,10 +139,10 @@ export class ClassBasedInstanceLabelSelectClauseFactory implements IInstanceLabe
   }
 
   private async getLabelClausesForClass(queryClassName: string) {
-    const queryClass = await getClass(this._schemas, queryClassName);
+    const queryClass = await getClass(this._metadataProvider, queryClassName);
     const matchingLabelClauses = await Promise.all(
       this._labelClausesByClass.map(async (entry) => {
-        const clauseClass = await getClass(this._schemas, entry.className);
+        const clauseClass = await getClass(this._metadataProvider, entry.className);
         if (await clauseClass.is(queryClass)) {
           // label selector is intended for a more specific class than we're selecting from - need to include it
           // as query results (on polymorphic select) are going to include more specific class instances too
@@ -168,7 +168,7 @@ export class ClassBasedInstanceLabelSelectClauseFactory implements IInstanceLabe
  * @beta
  */
 export interface BisInstanceLabelSelectClauseFactoryProps {
-  schemas: SchemaContext;
+  metadataProvider: IMetadataProvider;
 }
 
 /**
@@ -181,7 +181,7 @@ export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelect
   private _impl: ClassBasedInstanceLabelSelectClauseFactory;
   public constructor(props: BisInstanceLabelSelectClauseFactoryProps) {
     this._impl = new ClassBasedInstanceLabelSelectClauseFactory({
-      schemas: props.schemas,
+      metadataProvider: props.metadataProvider,
       clauses: [
         {
           className: "BisCore.GeometricElement",

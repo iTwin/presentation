@@ -6,10 +6,10 @@
 import { Observable } from "rxjs";
 import sinon from "sinon";
 import { Id64, Id64String } from "@itwin/core-bentley";
-import { ECClass, SchemaContext } from "@itwin/ecschema-metadata";
 import { InstanceKey } from "../hierarchy-builder/EC";
 import { HierarchyNode } from "../hierarchy-builder/HierarchyNode";
 import * as common from "../hierarchy-builder/internal/Common";
+import { ECClass, IMetadataProvider } from "../hierarchy-builder/Metadata";
 
 export async function getObservableResult<T>(obs: Observable<T>): Promise<Array<T>> {
   const arr = new Array<T>();
@@ -60,7 +60,7 @@ export interface TStubClassFuncReturnType {
   label: string;
 }
 export type TStubClassFunc = (props: TStubClassFuncProps) => TStubClassFuncReturnType;
-export function createGetClassStub(schemas: SchemaContext) {
+export function createGetClassStub(schemas: IMetadataProvider) {
   const stub = sinon.stub(common, "getClass");
   const stubClass: TStubClassFunc = (props) => {
     const fullName = `${props.schemaName}:${props.className}`;

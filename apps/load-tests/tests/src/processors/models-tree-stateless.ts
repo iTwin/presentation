@@ -9,6 +9,7 @@ import { EventEmitter, Next, ScenarioContext } from "artillery";
 import { Guid, StopWatch } from "@itwin/core-bentley";
 import { DbQueryRequest, DbQueryResponse, DbRequestExecutor, ECSqlReader } from "@itwin/core-common";
 import { ISchemaLocater, Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType, SchemaProps } from "@itwin/ecschema-metadata";
+import { createMetadataProvider } from "@itwin/presentation-core-interop";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { doRequest, getCurrentIModelName, getCurrentIModelPath, loadNodes, nodeRequestsTracker } from "./common";
@@ -123,10 +124,11 @@ function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter
 
   const schemas = new SchemaContext();
   schemas.addLocater(schedulingSchemaLocater);
+  const metadataProvider = createMetadataProvider(schemas);
 
   const provider = new HierarchyProvider({
-    schemas,
-    hierarchyDefinition: new ModelsTreeDefinition({ schemas }),
+    metadataProvider,
+    hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider }),
     queryExecutor: {
       createQueryReader(ecsql, bindings, config) {
         // eslint-disable-next-line @itwin/no-internal
