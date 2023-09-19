@@ -101,7 +101,7 @@ describe("PresentationTreeNodeRenderer", () => {
   });
 
   it("renders node with filter button", () => {
-    const nodeItem = createTreeNodeItem({ filtering: { descriptor: createTestContentDescriptor({ fields: [] }) } });
+    const nodeItem = createTreeNodeItem({ filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [] } });
     const node = createTreeModelNode(undefined, nodeItem);
 
     const { container } = render(
@@ -116,6 +116,7 @@ describe("PresentationTreeNodeRenderer", () => {
     const nodeItem = createTreeNodeItem({
       filtering: {
         descriptor: createTestContentDescriptor({ fields: [] }),
+        ancestorFilters: [],
         active: createFilterInfo(),
       },
     });
@@ -143,7 +144,7 @@ describe("PresentationTreeNodeRenderer", () => {
 
   it("invokes 'onFilterClick' when filter button is clicked", () => {
     const spy = sinon.spy();
-    const nodeItem = createTreeNodeItem({ filtering: { descriptor: createTestContentDescriptor({ fields: [] }) } });
+    const nodeItem = createTreeNodeItem({ filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [] } });
     const node = createTreeModelNode(undefined, nodeItem);
 
     const { container } = render(
@@ -161,6 +162,7 @@ describe("PresentationTreeNodeRenderer", () => {
     const nodeItem = createTreeNodeItem({
       filtering: {
         descriptor: createTestContentDescriptor({ fields: [] }),
+        ancestorFilters: [],
         active: createFilterInfo(),
       },
     });

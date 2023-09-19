@@ -1,7 +1,0 @@
-{
-  "type": "patch",
-  "comment": "`InstanceFilterDialog`: Validate rule value only when `Apply` button is clicked",
-  "packageName": "@itwin/presentation-components",
-  "email": "124659623+simasjar@users.noreply.github.com",
-  "dependentChangeType": "patch"
-}

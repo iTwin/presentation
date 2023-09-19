@@ -1,0 +1,177 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+
+import { expect } from "chai";
+import { EMPTY, from, of, Subject } from "rxjs";
+import sinon from "sinon";
+import { Logger, LogLevel } from "@itwin/core-bentley";
+import { createHideIfNoChildrenOperator, LOGGING_NAMESPACE } from "../../../hierarchy-builder/internal/operators/HideIfNoChildren";
+import { createTestNode, getObservableResult } from "../../Utils";
+
+describe("HideIfNoChildrenOperator", () => {
+  before(() => {
+    Logger.initializeToConsole();
+    Logger.turnOffCategories();
+    Logger.setLevel(LOGGING_NAMESPACE, LogLevel.Trace);
+  });
+
+  it("returns nodes that don't need hiding", async () => {
+    const nodes = [createTestNode()];
+    const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenOperator(sinon.spy(), false)));
+    expect(result).to.deep.eq(nodes);
+  });
+
+  it("doesn't return nodes that need hiding and have children determined as `false`", async () => {
+    const nodes = [
+      createTestNode({
+        params: { hideIfNoChildren: true },
+        children: false,
+      }),
+    ];
+    const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenOperator(sinon.spy(), false)));
+    expect(result).to.deep.eq([]);
+  });
+
+  it("returns nodes that need hiding and have children determined as `true`", async () => {
+    const nodes = [
+      createTestNode({
+        params: { hideIfNoChildren: true },
+        children: true,
+      }),
+    ];
+    const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenOperator(sinon.spy(), false)));
+    expect(result).to.deep.eq(nodes);
+  });
+
+  it("doesn't return nodes that need hiding and have children determined an empty array", async () => {
+    const nodes = [
+      createTestNode({
+        params: { hideIfNoChildren: true },
+        children: [],
+      }),
+    ];
+    const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenOperator(sinon.spy(), false)));
+    expect(result).to.deep.eq([]);
+  });
+
+  it("returns nodes that need hiding and have children determined as a non-empty array", async () => {
+    const nodes = [
+      createTestNode({
+        params: { hideIfNoChildren: true },
+        children: [createTestNode()],
+      }),
+    ];
+    const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenOperator(sinon.spy(), false)));
+    expect(result).to.deep.eq(nodes);
+  });
+
+  it("doesn't return nodes that need hiding, need children determined and don't have children", async () => {
+    const nodes = [
+      createTestNode({
+        params: { hideIfNoChildren: true },
+        children: undefined,
+      }),
+    ];
+    const hasNodes = sinon.fake(() => of(false));
+    const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenOperator(hasNodes, false)));
+    expect(result).to.deep.eq([]);
+  });
+
+  it("returns nodes that need hiding, need children determined and do have children", async () => {
+    const nodes = [
+      createTestNode({
+        params: { hideIfNoChildren: true },
+        children: undefined,
+      }),
+    ];
+    const hasNodes = sinon.fake(() => of(true));
+    const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenOperator(hasNodes, false)));
+    expect(result).to.deep.eq([{ ...nodes[0], children: true }]);
+  });
+
+  it("checks children of all siblings at once when `stopOnFirstChild = false`", async () => {
+    const nodeA = createTestNode({
+      params: { hideIfNoChildren: true },
+      label: "a",
+      children: undefined,
+    });
+    const nodeB = createTestNode({
+      params: { hideIfNoChildren: true },
+      label: "b",
+      children: undefined,
+    });
+    const aHasNodesSubject = new Subject<boolean>();
+    const bHasNodesSubject = new Subject<boolean>();
+    const hasNodes = sinon.fake((node) => {
+      if (node === nodeA) {
+        return aHasNodesSubject;
+      }
+      if (node === nodeB) {
+        return bHasNodesSubject;
+      }
+      return EMPTY;
+    });
+
+    const promise = getObservableResult(from([nodeA, nodeB]).pipe(createHideIfNoChildrenOperator(hasNodes, false)));
+
+    expect(hasNodes).to.be.calledTwice;
+    expect(hasNodes.firstCall).to.be.calledWithExactly(nodeA);
+    expect(hasNodes.secondCall).to.be.calledWithExactly(nodeB);
+
+    aHasNodesSubject.next(true);
+    aHasNodesSubject.complete();
+
+    bHasNodesSubject.next(true);
+    bHasNodesSubject.complete();
+
+    const result = await promise;
+    expect(result).to.deep.eq([
+      { ...nodeA, children: true },
+      { ...nodeB, children: true },
+    ]);
+  });
+
+  it("checks children before siblings when `stopOnFirstChild = true`", async () => {
+    const nodeA = createTestNode({
+      params: { hideIfNoChildren: true },
+      label: "a",
+      children: undefined,
+    });
+    const nodeB = createTestNode({
+      params: { hideIfNoChildren: true },
+      label: "b",
+      children: undefined,
+    });
+    const aHasNodesSubject = new Subject<boolean>();
+    const bHasNodesSubject = new Subject<boolean>();
+    const hasNodes = sinon.fake((node) => {
+      if (node === nodeA) {
+        return aHasNodesSubject;
+      }
+      if (node === nodeB) {
+        return bHasNodesSubject;
+      }
+      return EMPTY;
+    });
+
+    const promise = getObservableResult(from([nodeA, nodeB]).pipe(createHideIfNoChildrenOperator(hasNodes, true)));
+
+    expect(hasNodes).to.be.calledOnce;
+    expect(hasNodes.firstCall).to.be.calledWithExactly(nodeA);
+    aHasNodesSubject.next(true);
+    aHasNodesSubject.complete();
+
+    expect(hasNodes).to.be.calledTwice;
+    expect(hasNodes.secondCall).to.be.calledWithExactly(nodeB);
+    bHasNodesSubject.next(true);
+    bHasNodesSubject.complete();
+
+    const result = await promise;
+    expect(result).to.deep.eq([
+      { ...nodeA, children: true },
+      { ...nodeB, children: true },
+    ]);
+  });
+});

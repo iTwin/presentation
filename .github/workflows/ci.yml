@@ -6,11 +6,11 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
-  check-change-files:
-    if: '! github.event.pull_request.draft'
+  check-changeset-files:
+    if: ${{ ! github.event.pull_request.draft && github.event.pull_request.title != 'Release packages [publish docs]' }}
     runs-on: ubuntu-latest
 
-    name: Check change files
+    name: Check changesets
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -32,7 +32,7 @@ jobs:
         run: pnpm install -w
 
       - name: Run check
-        run: pnpm check --branch origin/next
+        run: pnpm check --since origin/next
 
   build:
     if: '! github.event.pull_request.draft'
@@ -51,7 +51,7 @@ jobs:
       - name: Use Node.js 18
         uses: actions/setup-node@v3
         with:
-          node-version: 18.16.0 #TODO Change back to 18.x once segfault on 18.16.1? is resolved.
+          node-version: 18
           cache: 'pnpm'
 
       - name: Install dependencies

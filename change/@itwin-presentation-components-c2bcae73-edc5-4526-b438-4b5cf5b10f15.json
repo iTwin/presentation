@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "Add editor for unique values",
-  "packageName": "@itwin/presentation-components",
-  "email": "124659623+simasjar@users.noreply.github.com",
-  "dependentChangeType": "patch"
-}

@@ -1,7 +1,0 @@
-{
-  "type": "minor",
-  "comment": "`PresentationInstanceFilterDialog`: Added support for quantity values.",
-  "packageName": "@itwin/presentation-components",
-  "email": "24278440+saskliutas@users.noreply.github.com",
-  "dependentChangeType": "patch"
-}

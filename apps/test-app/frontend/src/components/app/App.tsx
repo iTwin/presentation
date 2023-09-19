@@ -11,7 +11,7 @@ import { Geometry } from "@itwin/core-geometry";
 import { UnitSystemKey } from "@itwin/core-quantity";
 import { ElementSeparator, Orientation } from "@itwin/core-react";
 import { ThemeProvider, ToggleSwitch } from "@itwin/itwinui-react";
-import { SchemaMetadataContextProvider, UnifiedSelectionContextProvider } from "@itwin/presentation-components";
+import { UnifiedSelectionContextProvider } from "@itwin/presentation-components";
 import { Presentation, SelectionChangeEventArgs } from "@itwin/presentation-frontend";
 import { MyAppFrontend, MyAppSettings } from "../../api/MyAppFrontend";
 import { IModelSelector } from "../imodel-selector/IModelSelector";
@@ -187,38 +187,36 @@ function IModelComponents(props: IModelComponentsProps) {
       }}
     >
       <UnifiedSelectionContextProvider imodel={imodel} selectionLevel={0}>
-        <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={MyAppFrontend.getSchemaContext.bind(MyAppFrontend)}>
-          <div className="app-content-left">
-            <div className="app-content-left-top">
-              <ViewportContentControl imodel={imodel} />
-            </div>
-            <div className="app-content-left-bottom">
-              <TableWidget imodel={imodel} rulesetId={rulesetId} />
-            </div>
+        <div className="app-content-left">
+          <div className="app-content-left-top">
+            <ViewportContentControl imodel={imodel} />
           </div>
-          <ElementSeparator
-            orientation={Orientation.Horizontal}
-            ratio={contentRatio}
-            movableArea={contentWidth}
-            separatorSize={10}
-            onRatioChanged={onContentResize}
-          />
-          <div
-            ref={panelRef}
-            className="app-content-right"
-            style={{
-              gridTemplateRows: `${panelRatio * 100}% 30px calc(${(1 - panelRatio) * 100}% - 30px)`,
-            }}
-          >
-            <TreeWidget imodel={imodel} rulesetId={rulesetId} />
-            {/* <ExperimentalModelsTree imodel={imodel} /> */}
-            <div className="app-content-right-separator">
-              <hr />
-              <ElementSeparator orientation={Orientation.Vertical} ratio={panelRatio} movableArea={panelHeight} onRatioChanged={onPanelResize} />
-            </div>
-            <PropertiesWidget imodel={imodel} rulesetId={rulesetId} />
+          <div className="app-content-left-bottom">
+            <TableWidget imodel={imodel} rulesetId={rulesetId} />
           </div>
-        </SchemaMetadataContextProvider>
+        </div>
+        <ElementSeparator
+          orientation={Orientation.Horizontal}
+          ratio={contentRatio}
+          movableArea={contentWidth}
+          separatorSize={10}
+          onRatioChanged={onContentResize}
+        />
+        <div
+          ref={panelRef}
+          className="app-content-right"
+          style={{
+            gridTemplateRows: `${panelRatio * 100}% 30px calc(${(1 - panelRatio) * 100}% - 30px)`,
+          }}
+        >
+          <TreeWidget imodel={imodel} rulesetId={rulesetId} />
+          {/* <ExperimentalModelsTree imodel={imodel} /> */}
+          <div className="app-content-right-separator">
+            <hr />
+            <ElementSeparator orientation={Orientation.Vertical} ratio={panelRatio} movableArea={panelHeight} onRatioChanged={onPanelResize} />
+          </div>
+          <PropertiesWidget imodel={imodel} rulesetId={rulesetId} />
+        </div>
       </UnifiedSelectionContextProvider>
     </div>
   );

@@ -13,6 +13,7 @@ Array [
                 "children": Array [
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -30,6 +31,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -47,6 +49,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -64,6 +67,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -81,6 +85,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -98,6 +103,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -115,6 +121,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -132,6 +139,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -149,6 +157,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -166,6 +175,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -183,6 +193,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -200,6 +211,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -217,6 +229,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -234,6 +247,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -251,6 +265,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -268,6 +283,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -285,6 +301,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -302,6 +319,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -319,6 +337,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -336,6 +355,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -353,6 +373,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -370,6 +391,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -387,6 +409,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -404,6 +427,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -421,6 +445,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -438,6 +463,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -455,6 +481,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -472,6 +499,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -489,6 +517,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -506,6 +535,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -523,6 +553,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -540,6 +571,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -557,6 +589,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -574,6 +607,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -591,6 +625,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -608,6 +643,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -625,6 +661,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -642,6 +679,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -659,6 +697,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -676,6 +715,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -693,6 +733,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -710,6 +751,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -727,6 +769,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -744,6 +787,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -761,6 +805,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -778,6 +823,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -795,6 +841,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -812,6 +859,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -829,6 +877,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -846,6 +895,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -863,6 +913,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -880,6 +931,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -897,6 +949,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -914,6 +967,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -931,6 +985,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -948,6 +1003,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -965,6 +1021,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -982,6 +1039,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -999,6 +1057,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -1016,6 +1075,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -1033,6 +1093,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -1050,6 +1111,7 @@ Array [
                   },
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -1067,6 +1129,7 @@ Array [
                   },
                 ],
                 "filtering": Object {
+                  "ancestorFilters": Array [],
                   "descriptor": [Function],
                 },
                 "hasChildren": true,
@@ -1100,6 +1163,7 @@ Array [
           },
           Object {
             "filtering": Object {
+              "ancestorFilters": Array [],
               "descriptor": [Function],
             },
             "label": PropertyRecord {
@@ -1117,6 +1181,7 @@ Array [
           },
           Object {
             "filtering": Object {
+              "ancestorFilters": Array [],
               "descriptor": [Function],
             },
             "label": PropertyRecord {
@@ -1134,6 +1199,7 @@ Array [
           },
           Object {
             "filtering": Object {
+              "ancestorFilters": Array [],
               "descriptor": [Function],
             },
             "label": PropertyRecord {
@@ -1153,6 +1219,7 @@ Array [
             "children": Array [
               Object {
                 "filtering": Object {
+                  "ancestorFilters": Array [],
                   "descriptor": [Function],
                 },
                 "label": PropertyRecord {
@@ -1170,6 +1237,7 @@ Array [
               },
               Object {
                 "filtering": Object {
+                  "ancestorFilters": Array [],
                   "descriptor": [Function],
                 },
                 "label": PropertyRecord {
@@ -1187,6 +1255,7 @@ Array [
               },
               Object {
                 "filtering": Object {
+                  "ancestorFilters": Array [],
                   "descriptor": [Function],
                 },
                 "label": PropertyRecord {
@@ -1204,6 +1273,7 @@ Array [
               },
               Object {
                 "filtering": Object {
+                  "ancestorFilters": Array [],
                   "descriptor": [Function],
                 },
                 "label": PropertyRecord {
@@ -1221,6 +1291,7 @@ Array [
               },
               Object {
                 "filtering": Object {
+                  "ancestorFilters": Array [],
                   "descriptor": [Function],
                 },
                 "label": PropertyRecord {
@@ -1238,6 +1309,7 @@ Array [
               },
               Object {
                 "filtering": Object {
+                  "ancestorFilters": Array [],
                   "descriptor": [Function],
                 },
                 "label": PropertyRecord {
@@ -1255,6 +1327,7 @@ Array [
               },
               Object {
                 "filtering": Object {
+                  "ancestorFilters": Array [],
                   "descriptor": [Function],
                 },
                 "label": PropertyRecord {
@@ -1272,6 +1345,7 @@ Array [
               },
               Object {
                 "filtering": Object {
+                  "ancestorFilters": Array [],
                   "descriptor": [Function],
                 },
                 "label": PropertyRecord {
@@ -1289,6 +1363,7 @@ Array [
               },
               Object {
                 "filtering": Object {
+                  "ancestorFilters": Array [],
                   "descriptor": [Function],
                 },
                 "label": PropertyRecord {
@@ -1306,6 +1381,7 @@ Array [
               },
               Object {
                 "filtering": Object {
+                  "ancestorFilters": Array [],
                   "descriptor": [Function],
                 },
                 "label": PropertyRecord {
@@ -1323,6 +1399,7 @@ Array [
               },
               Object {
                 "filtering": Object {
+                  "ancestorFilters": Array [],
                   "descriptor": [Function],
                 },
                 "label": PropertyRecord {
@@ -1340,6 +1417,7 @@ Array [
               },
               Object {
                 "filtering": Object {
+                  "ancestorFilters": Array [],
                   "descriptor": [Function],
                 },
                 "label": PropertyRecord {
@@ -1357,6 +1435,7 @@ Array [
               },
               Object {
                 "filtering": Object {
+                  "ancestorFilters": Array [],
                   "descriptor": [Function],
                 },
                 "label": PropertyRecord {
@@ -1374,6 +1453,7 @@ Array [
               },
               Object {
                 "filtering": Object {
+                  "ancestorFilters": Array [],
                   "descriptor": [Function],
                 },
                 "label": PropertyRecord {
@@ -1391,6 +1471,7 @@ Array [
               },
               Object {
                 "filtering": Object {
+                  "ancestorFilters": Array [],
                   "descriptor": [Function],
                 },
                 "label": PropertyRecord {
@@ -1408,6 +1489,7 @@ Array [
               },
               Object {
                 "filtering": Object {
+                  "ancestorFilters": Array [],
                   "descriptor": [Function],
                 },
                 "label": PropertyRecord {
@@ -1425,6 +1507,7 @@ Array [
               },
               Object {
                 "filtering": Object {
+                  "ancestorFilters": Array [],
                   "descriptor": [Function],
                 },
                 "label": PropertyRecord {
@@ -1442,6 +1525,7 @@ Array [
               },
               Object {
                 "filtering": Object {
+                  "ancestorFilters": Array [],
                   "descriptor": [Function],
                 },
                 "label": PropertyRecord {
@@ -1459,6 +1543,7 @@ Array [
               },
               Object {
                 "filtering": Object {
+                  "ancestorFilters": Array [],
                   "descriptor": [Function],
                 },
                 "label": PropertyRecord {
@@ -1476,6 +1561,7 @@ Array [
               },
               Object {
                 "filtering": Object {
+                  "ancestorFilters": Array [],
                   "descriptor": [Function],
                 },
                 "label": PropertyRecord {
@@ -1495,6 +1581,7 @@ Array [
                 "children": Array [
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -1512,6 +1599,7 @@ Array [
                   },
                 ],
                 "filtering": Object {
+                  "ancestorFilters": Array [],
                   "descriptor": [Function],
                 },
                 "hasChildren": true,
@@ -1532,6 +1620,7 @@ Array [
                 "children": Array [
                   Object {
                     "filtering": Object {
+                      "ancestorFilters": Array [],
                       "descriptor": [Function],
                     },
                     "label": PropertyRecord {
@@ -1549,6 +1638,7 @@ Array [
                   },
                 ],
                 "filtering": Object {
+                  "ancestorFilters": Array [],
                   "descriptor": [Function],
                 },
                 "hasChildren": true,
@@ -1567,6 +1657,7 @@ Array [
               },
             ],
             "filtering": Object {
+              "ancestorFilters": Array [],
               "descriptor": [Function],
             },
             "hasChildren": true,
