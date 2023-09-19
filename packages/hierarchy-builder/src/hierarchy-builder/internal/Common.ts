@@ -6,8 +6,8 @@
 import { merge, Observable } from "rxjs";
 import { assert } from "@itwin/core-bentley";
 import { QueryBinder } from "@itwin/core-common";
-import { ECClass, Schema, SchemaContext, SchemaKey } from "@itwin/ecschema-metadata";
 import { HierarchyNode, HierarchyNodeHandlingParams, HierarchyNodeKey } from "../HierarchyNode";
+import { ECClass, ECSchema, IMetadataProvider } from "../Metadata";
 import { ECSqlBinding } from "../queries/ECSql";
 
 /** @internal */
@@ -17,20 +17,26 @@ export function splitFullClassName(fullClassName: string) {
 }
 
 /** @internal */
-export async function getClass(schemas: SchemaContext, fullClassName: string) {
+export async function getClass(metadata: IMetadataProvider, fullClassName: string): Promise<ECClass> {
   const { schemaName, className } = splitFullClassName(fullClassName);
-  let schema: Schema | undefined;
+  let schema: ECSchema | undefined;
   try {
-    schema = await schemas.getSchema(new SchemaKey(schemaName));
-  } catch {}
+    schema = await metadata.getSchema(schemaName);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error(e);
+  }
   if (!schema) {
     throw new Error(`Invalid schema: ${schemaName}`);
   }
 
   let nodeClass: ECClass | undefined;
   try {
-    nodeClass = await schema.getItem<ECClass>(className);
-  } catch {}
+    nodeClass = await schema.getClass(className);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error(e);
+  }
   if (!nodeClass) {
     throw new Error(`Invalid class: ${nodeClass}`);
   }

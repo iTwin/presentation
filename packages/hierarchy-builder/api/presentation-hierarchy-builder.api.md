@@ -8,7 +8,6 @@ import { ECSqlReader } from '@itwin/core-common';
 import { Id64String } from '@itwin/core-bentley';
 import { QueryBinder } from '@itwin/core-common';
 import { QueryOptions } from '@itwin/core-common';
-import { SchemaContext } from '@itwin/ecschema-metadata';
 
 // @beta
 export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelectClauseFactory {
@@ -20,7 +19,7 @@ export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelect
 // @beta
 export interface BisInstanceLabelSelectClauseFactoryProps {
     // (undocumented)
-    schemas: SchemaContext;
+    metadataProvider: IMetadataProvider;
 }
 
 // @beta
@@ -32,7 +31,7 @@ export interface ClassBasedHierarchyDefinition {
 // @beta
 export interface ClassBasedHierarchyDefinitionsFactoryProps {
     hierarchy: ClassBasedHierarchyDefinition;
-    schemas: SchemaContext;
+    metadataProvider: IMetadataProvider;
 }
 
 // @beta
@@ -56,7 +55,7 @@ export interface ClassBasedInstanceLabelSelectClauseFactoryProps {
     clauses: ClassBasedLabelSelectClause[];
     // @internal (undocumented)
     defaultClauseFactory?: IInstanceLabelSelectClauseFactory;
-    schemas: SchemaContext;
+    metadataProvider: IMetadataProvider;
 }
 
 // @beta
@@ -101,6 +100,34 @@ export interface CustomNodeChildHierarchyLevelDefinition {
 export class DefaultInstanceLabelSelectClauseFactory implements IInstanceLabelSelectClauseFactory {
     // (undocumented)
     createSelectClause(props: CreateInstanceLabelSelectClauseProps): Promise<string>;
+}
+
+// @beta
+export interface ECClass extends ECSchemaItem {
+    // (undocumented)
+    is(className: string, schemaName: string): Promise<boolean>;
+    // (undocumented)
+    is(other: ECClass): Promise<boolean>;
+}
+
+// @beta
+export interface ECSchema {
+    // (undocumented)
+    getItem<T extends ECSchemaItem>(name: string): Promise<T | undefined>;
+    // (undocumented)
+    name: string;
+}
+
+// @beta
+export interface ECSchemaItem {
+    // (undocumented)
+    fullName: string;
+    // (undocumented)
+    label: string;
+    // (undocumented)
+    name: string;
+    // (undocumented)
+    schema: ECSchema;
 }
 
 // @beta (undocumented)
@@ -223,9 +250,9 @@ export interface HierarchyProviderProps {
     // (undocumented)
     hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
     // (undocumented)
-    queryExecutor: IQueryExecutor;
+    metadataProvider: IMetadataProvider;
     // (undocumented)
-    schemas: SchemaContext;
+    queryExecutor: IQueryExecutor;
 }
 
 // @beta
@@ -237,6 +264,12 @@ export interface IHierarchyLevelDefinitionsFactory {
 // @beta
 export interface IInstanceLabelSelectClauseFactory {
     createSelectClause(props: CreateInstanceLabelSelectClauseProps): Promise<string>;
+}
+
+// @beta
+export interface IMetadataProvider {
+    // (undocumented)
+    getSchema(schemaName: string): Promise<ECSchema | undefined>;
 }
 
 // @beta (undocumented)
