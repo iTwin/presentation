@@ -4,10 +4,7 @@
 
 ```ts
 
-import { ECSqlReader } from '@itwin/core-common';
 import { Id64String } from '@itwin/core-bentley';
-import { QueryBinder } from '@itwin/core-common';
-import { QueryOptions } from '@itwin/core-common';
 
 // @beta
 export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelectClauseFactory {
@@ -113,7 +110,7 @@ export interface ECClass extends ECSchemaItem {
 // @beta
 export interface ECSchema {
     // (undocumented)
-    getItem<T extends ECSchemaItem>(name: string): Promise<T | undefined>;
+    getClass(name: string): Promise<ECClass | undefined>;
     // (undocumented)
     name: string;
 }
@@ -123,33 +120,78 @@ export interface ECSchemaItem {
     // (undocumented)
     fullName: string;
     // (undocumented)
-    label: string;
+    label?: string;
     // (undocumented)
     name: string;
     // (undocumented)
     schema: ECSchema;
 }
 
-// @beta (undocumented)
-export interface ECSqlBinding {
-    // (undocumented)
-    type: ECSqlBindingType;
-    // (undocumented)
-    value?: any;
-}
+// @beta
+export type ECSqlBinding = {
+    type: "boolean";
+    value?: boolean;
+} | {
+    type: "double" | "int" | "long";
+    value?: number;
+} | {
+    type: "id";
+    value?: Id64String;
+} | {
+    type: "idset";
+    value?: Id64String[];
+} | {
+    type: "string";
+    value?: string;
+} | {
+    type: "point2d";
+    value?: {
+        x: number;
+        y: number;
+    };
+} | {
+    type: "point3d";
+    value?: {
+        x: number;
+        y: number;
+        z: number;
+    };
+};
 
-// @beta (undocumented)
+// @beta
 export type ECSqlBindingType = "boolean" | "double" | "id" | "idset" | "int" | "long" | "string" | "point2d" | "point3d";
 
-// @beta (undocumented)
+// @beta
 export interface ECSqlQueryDef {
-    // (undocumented)
     bindings?: ECSqlBinding[];
-    // (undocumented)
     ctes?: string[];
-    // (undocumented)
     ecsql: string;
 }
+
+// @beta
+export interface ECSqlQueryReader {
+    // (undocumented)
+    [Symbol.asyncIterator](): AsyncIterableIterator<ECSqlQueryRow>;
+}
+
+// @beta
+export interface ECSqlQueryReaderOptions {
+    // (undocumented)
+    rowFormat: ECSqlQueryRowFormat;
+}
+
+// @beta
+export interface ECSqlQueryRow {
+    // (undocumented)
+    [propertyName: string]: any;
+    // (undocumented)
+    [propertyIndex: number]: any;
+    // (undocumented)
+    toRow(): any;
+}
+
+// @beta
+export type ECSqlQueryRowFormat = "ECSqlPropertyNames" | "Indexes";
 
 // @beta
 export interface ECSqlValueSelector {
@@ -252,7 +294,13 @@ export interface HierarchyProviderProps {
     // (undocumented)
     metadataProvider: IMetadataProvider;
     // (undocumented)
-    queryExecutor: IQueryExecutor;
+    queryExecutor: IECSqlQueryExecutor;
+}
+
+// @beta
+export interface IECSqlQueryExecutor {
+    // (undocumented)
+    createQueryReader(ecsql: string, bindings?: ECSqlBinding[], config?: ECSqlQueryReaderOptions): ECSqlQueryReader;
 }
 
 // @beta
@@ -296,12 +344,6 @@ export interface InstancesNodeKey {
     instanceKeys: InstanceKey[];
     // (undocumented)
     type: "instances";
-}
-
-// @beta (undocumented)
-export interface IQueryExecutor {
-    // (undocumented)
-    createQueryReader(ecsql: string, params?: QueryBinder, config?: QueryOptions): ECSqlReader;
 }
 
 // @beta

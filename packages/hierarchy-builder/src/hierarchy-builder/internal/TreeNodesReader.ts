@@ -4,28 +4,25 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Id64String } from "@itwin/core-bentley";
-import { QueryOptionsBuilder, QueryRowFormat } from "@itwin/core-common";
 import { HierarchyNode } from "../HierarchyNode";
-import { ECSqlQueryDef } from "../queries/ECSql";
-import { IQueryExecutor } from "../queries/IQueryExecutor";
+import { ECSqlQueryDef, IECSqlQueryExecutor } from "../queries/ECSql";
 import { NodeSelectClauseColumnNames } from "../queries/NodeSelectClauseFactory";
-import { bind } from "./Common";
 
 /** @internal */
 export interface ITreeQueryResultsReader {
-  read(executor: IQueryExecutor, query: ECSqlQueryDef): Promise<HierarchyNode[]>;
+  read(executor: IECSqlQueryExecutor, query: ECSqlQueryDef): Promise<HierarchyNode[]>;
 }
 
 /** @internal */
 export class TreeQueryResultsReader implements ITreeQueryResultsReader {
-  public async read(executor: IQueryExecutor, query: ECSqlQueryDef): Promise<HierarchyNode[]> {
+  public async read(executor: IECSqlQueryExecutor, query: ECSqlQueryDef): Promise<HierarchyNode[]> {
+    const reader = executor.createQueryReader(query.ecsql, query.bindings, { rowFormat: "ECSqlPropertyNames" });
     const nodes = new Array<HierarchyNode>();
-    const reader = createECSqlReader(executor, query);
-    while (await reader.step()) {
+    for await (const row of reader) {
       if (nodes.length >= ROWS_LIMIT) {
         throw new Error("rows limit exceeded");
       }
-      nodes.push(parseNode(reader.current.toRow()));
+      nodes.push(parseNode(row.toRow()));
     }
     return nodes;
   }
@@ -78,10 +75,4 @@ export function applyLimit(ecsql: string, ctes?: string[]) {
     FROM (${ecsql})
     LIMIT ${ROWS_LIMIT + 1}
   `;
-}
-
-function createECSqlReader(executor: IQueryExecutor, query: ECSqlQueryDef) {
-  const opts = new QueryOptionsBuilder();
-  opts.setRowFormat(QueryRowFormat.UseECSqlPropertyNames);
-  return executor.createQueryReader(query.ecsql, bind(query.bindings ?? []), opts.getOptions());
 }

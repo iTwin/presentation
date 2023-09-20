@@ -10,5 +10,4 @@ export * from "./hierarchy-builder/HierarchyProvider";
 export * from "./hierarchy-builder/Metadata";
 export * from "./hierarchy-builder/queries/ECSql";
 export * from "./hierarchy-builder/queries/InstanceLabelSelectClauseFactory";
-export * from "./hierarchy-builder/queries/IQueryExecutor";
 export * from "./hierarchy-builder/queries/NodeSelectClauseFactory";

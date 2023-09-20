@@ -663,6 +663,9 @@ importers:
       '@itwin/core-common':
         specifier: ^4.1.1
         version: 4.1.1(@itwin/core-bentley@4.1.1)(@itwin/core-geometry@4.1.1)
+      '@itwin/core-geometry':
+        specifier: ^4.1.1
+        version: 4.1.1
       '@itwin/ecschema-metadata':
         specifier: ^4.1.1
         version: 4.1.1(@itwin/core-bentley@4.1.1)(@itwin/core-quantity@4.1.1)
@@ -907,12 +910,6 @@ importers:
       '@itwin/core-bentley':
         specifier: ^4.1.1
         version: 4.1.1
-      '@itwin/core-common':
-        specifier: ^4.1.1
-        version: 4.1.1(@itwin/core-bentley@4.1.1)(@itwin/core-geometry@4.1.1)
-      '@itwin/core-quantity':
-        specifier: ^4.1.1
-        version: 4.1.1(@itwin/core-bentley@4.1.1)
       '@itwin/eslint-plugin':
         specifier: 4.0.0-dev.48
         version: 4.0.0-dev.48(eslint@8.47.0)(typescript@5.0.4)

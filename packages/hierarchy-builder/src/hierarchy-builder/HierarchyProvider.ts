@@ -19,12 +19,12 @@ import { supplyIconsOperator } from "./internal/operators/SupplyIcons";
 import { QueryScheduler } from "./internal/QueryScheduler";
 import { applyLimit, TreeQueryResultsReader } from "./internal/TreeNodesReader";
 import { IMetadataProvider } from "./Metadata";
-import { IQueryExecutor } from "./queries/IQueryExecutor";
+import { IECSqlQueryExecutor } from "./queries/ECSql";
 
 /** @beta */
 export interface HierarchyProviderProps {
   metadataProvider: IMetadataProvider;
-  queryExecutor: IQueryExecutor;
+  queryExecutor: IECSqlQueryExecutor;
   hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
 }
 
@@ -32,7 +32,7 @@ export interface HierarchyProviderProps {
 export class HierarchyProvider {
   private _metadataProvider: IMetadataProvider;
   private _hierarchyFactory: IHierarchyLevelDefinitionsFactory;
-  private _queryExecutor: IQueryExecutor;
+  private _queryExecutor: IECSqlQueryExecutor;
   private _queryReader: TreeQueryResultsReader;
   private _scheduler: QueryScheduler<HierarchyNode[]>;
   private _directNodesCache: Map<string, Observable<HierarchyNode>>;
