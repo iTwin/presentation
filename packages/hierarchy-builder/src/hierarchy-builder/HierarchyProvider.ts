@@ -7,8 +7,8 @@
 import { catchError, concatAll, concatMap, defaultIfEmpty, from, map, mergeMap, Observable, ObservableInput, of, shareReplay, take, tap } from "rxjs";
 import { Id64 } from "@itwin/core-bentley";
 import { SchemaContext } from "@itwin/ecschema-metadata";
+import { HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
 import { HierarchyNode } from "./HierarchyNode";
-import { HierarchyLevelDefinition, IHierarchyDefinition } from "./IHierarchyDefinition";
 import { createClassGroupingOperator } from "./internal/operators/ClassGrouping";
 import { createDetermineChildrenOperator } from "./internal/operators/DetermineChildren";
 import { createHideIfNoChildrenOperator } from "./internal/operators/HideIfNoChildren";
@@ -25,13 +25,13 @@ import { IQueryExecutor } from "./queries/IQueryExecutor";
 export interface HierarchyProviderProps {
   schemas: SchemaContext;
   queryExecutor: IQueryExecutor;
-  queryBuilder: IHierarchyDefinition;
+  hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
 }
 
 /** @beta */
 export class HierarchyProvider {
   private _schemas: SchemaContext;
-  private _queryBuilder: IHierarchyDefinition;
+  private _hierarchyFactory: IHierarchyLevelDefinitionsFactory;
   private _queryExecutor: IQueryExecutor;
   private _queryReader: TreeQueryResultsReader;
   private _scheduler: QueryScheduler<HierarchyNode[]>;
@@ -39,7 +39,7 @@ export class HierarchyProvider {
 
   public constructor(props: HierarchyProviderProps) {
     this._schemas = props.schemas;
-    this._queryBuilder = props.queryBuilder;
+    this._hierarchyFactory = props.hierarchyDefinition;
     this._queryExecutor = props.queryExecutor;
     this._queryReader = new TreeQueryResultsReader();
     this._scheduler = new QueryScheduler();
@@ -49,11 +49,13 @@ export class HierarchyProvider {
   private loadDirectNodes(parentNode: HierarchyNode | undefined): Observable<HierarchyNode> {
     const enableLogging = false;
     // stream hierarchy level definitions in order
-    const definitions = from(this._queryBuilder.defineHierarchyLevel(parentNode)).pipe(concatMap((hierarchyLevelDefinition) => from(hierarchyLevelDefinition)));
+    const definitions = from(this._hierarchyFactory.defineHierarchyLevel(parentNode)).pipe(
+      concatMap((hierarchyLevelDefinition) => from(hierarchyLevelDefinition)),
+    );
     // pipe definitions to nodes
     const nodes = definitions.pipe(
       concatMap((def): ObservableInput<HierarchyNode[]> => {
-        if (HierarchyLevelDefinition.isCustomNode(def)) {
+        if (HierarchyNodesDefinition.isCustomNode(def)) {
           return of([def.node]);
         }
         return this._scheduler.scheduleSubscription(

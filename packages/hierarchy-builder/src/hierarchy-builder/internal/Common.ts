@@ -11,8 +11,14 @@ import { HierarchyNode, HierarchyNodeHandlingParams, HierarchyNodeKey } from "..
 import { ECSqlBinding } from "../queries/ECSql";
 
 /** @internal */
-export async function getClass(schemas: SchemaContext, fullClassName: string) {
+export function splitFullClassName(fullClassName: string) {
   const [schemaName, className] = fullClassName.split(/[\.:]/);
+  return { schemaName, className };
+}
+
+/** @internal */
+export async function getClass(schemas: SchemaContext, fullClassName: string) {
+  const { schemaName, className } = splitFullClassName(fullClassName);
   let schema: Schema | undefined;
   try {
     schema = await schemas.getSchema(new SchemaKey(schemaName));

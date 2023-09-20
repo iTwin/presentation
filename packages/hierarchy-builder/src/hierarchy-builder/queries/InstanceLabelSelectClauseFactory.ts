@@ -184,7 +184,7 @@ export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelect
       schemas: props.schemas,
       clauses: [
         {
-          className: "bis.GeometricElement",
+          className: "BisCore.GeometricElement",
           clause: async ({ classAlias }) => `
             COALESCE(
               [${classAlias}].[CodeValue],
@@ -196,7 +196,7 @@ export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelect
           `,
         },
         {
-          className: "bis.Element",
+          className: "BisCore.Element",
           clause: async ({ classAlias }) => `
             COALESCE(
               [${classAlias}].[UserLabel],
@@ -205,9 +205,9 @@ export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelect
           `,
         },
         {
-          className: "bis.Model",
+          className: "BisCore.Model",
           clause: async ({ classAlias }) => `(
-            SELECT ${await this.createSelectClause({ classAlias: "e", className: "bis.Element" })}
+            SELECT ${await this.createSelectClause({ classAlias: "e", className: "BisCore.Element" })}
             FROM [bis].[Element] AS [e]
             WHERE [e].[ECInstanceId] = [${classAlias}].[ModeledElement].[Id]
           )`,

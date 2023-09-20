@@ -65,19 +65,23 @@ export function createGetClassStub(schemas: SchemaContext) {
   const stubClass: TStubClassFunc = (props) => {
     const fullName = `${props.schemaName}:${props.className}`;
     const fullNameMatcher = sinon.match((fullClassName: string) => {
-      const { schemaName, className } = parseFullClassName(fullClassName);
+      const { schemaName, className } = common.splitFullClassName(fullClassName);
       return schemaName === props.schemaName && className === props.className;
     });
     stub.withArgs(schemas, fullNameMatcher).resolves({
       fullName,
       name: props.className,
       label: props.classLabel,
-      is: sinon.fake(async (targetClass: ECClass) => {
+      is: sinon.fake(async (targetClassOrClassName: ECClass | string, schemaName?: string) => {
         if (!props.is) {
           return false;
         }
-        const { schemaName, className } = parseFullClassName(targetClass.fullName);
-        return props.is(`${schemaName}.${className}`);
+        if (typeof targetClassOrClassName === "string") {
+          return props.is(`${schemaName}.${targetClassOrClassName}`);
+        }
+        // need this just to make sure `.` is used for separating schema and class names
+        const { schemaName: parsedSchemaName, className: parsedClassName } = common.splitFullClassName(targetClassOrClassName.fullName);
+        return props.is(`${parsedSchemaName}.${parsedClassName}`);
       }),
     } as unknown as ECClass);
     return {
@@ -87,9 +91,4 @@ export function createGetClassStub(schemas: SchemaContext) {
     };
   };
   return { getClass: stub, stubClass };
-}
-
-function parseFullClassName(fullClassName: string) {
-  const [schemaName, className] = fullClassName.split(/[\.:]/);
-  return { schemaName, className };
 }

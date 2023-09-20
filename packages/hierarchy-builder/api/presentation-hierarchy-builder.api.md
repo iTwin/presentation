@@ -24,6 +24,27 @@ export interface BisInstanceLabelSelectClauseFactoryProps {
 }
 
 // @beta
+export interface ClassBasedHierarchyDefinition {
+    childNodes: Array<ClassBasedHierarchyLevelDefinition>;
+    rootNodes: () => Promise<HierarchyLevelDefinition>;
+}
+
+// @beta
+export interface ClassBasedHierarchyDefinitionsFactoryProps {
+    hierarchy: ClassBasedHierarchyDefinition;
+    schemas: SchemaContext;
+}
+
+// @beta
+export type ClassBasedHierarchyLevelDefinition = InstancesNodeChildHierarchyLevelDefinition | CustomNodeChildHierarchyLevelDefinition;
+
+// @beta
+export class ClassBasedHierarchyLevelDefinitionsFactory implements IHierarchyLevelDefinitionsFactory {
+    constructor(props: ClassBasedHierarchyDefinitionsFactoryProps);
+    defineHierarchyLevel(parentNode: HierarchyNode | undefined): Promise<HierarchyLevelDefinition>;
+}
+
+// @beta
 export class ClassBasedInstanceLabelSelectClauseFactory implements IInstanceLabelSelectClauseFactory {
     constructor(props: ClassBasedInstanceLabelSelectClauseFactoryProps);
     // (undocumented)
@@ -65,10 +86,15 @@ export interface CreateInstanceLabelSelectClauseProps {
     className?: string;
 }
 
-// @beta (undocumented)
+// @beta
 export interface CustomHierarchyNodeDefinition {
-    // (undocumented)
     node: HierarchyNode;
+}
+
+// @beta
+export interface CustomNodeChildHierarchyLevelDefinition {
+    customParentNodeKey: string;
+    definitions: (parentNode: HierarchyNode) => Promise<HierarchyLevelDefinition>;
 }
 
 // @beta
@@ -98,30 +124,14 @@ export interface ECSqlQueryDef {
     ecsql: string;
 }
 
-// @beta (undocumented)
-export interface ECSqlQueryHierarchyLevelDefinition {
-    // (undocumented)
-    fullClassName: string;
-    // (undocumented)
-    query: ECSqlQueryDef;
-}
-
 // @beta
 export interface ECSqlValueSelector {
     // (undocumented)
     selector: string;
 }
 
-// @beta (undocumented)
-export type HierarchyLevelDefinition = CustomHierarchyNodeDefinition | ECSqlQueryHierarchyLevelDefinition;
-
-// @beta (undocumented)
-export namespace HierarchyLevelDefinition {
-    // (undocumented)
-    export function isCustomNode(def: HierarchyLevelDefinition): def is CustomHierarchyNodeDefinition;
-    // (undocumented)
-    export function isECSqlQuery(def: HierarchyLevelDefinition): def is ECSqlQueryHierarchyLevelDefinition;
-}
+// @beta
+export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
 
 // @beta (undocumented)
 export interface HierarchyNode {
@@ -188,6 +198,17 @@ export namespace HierarchyNodeKey {
     export function isStandard(key: HierarchyNodeKey): key is StandardHierarchyNodeKey;
 }
 
+// @beta
+export type HierarchyNodesDefinition = CustomHierarchyNodeDefinition | InstanceNodesQueryDefinition;
+
+// @beta (undocumented)
+export namespace HierarchyNodesDefinition {
+    // (undocumented)
+    export function isCustomNode(def: HierarchyNodesDefinition): def is CustomHierarchyNodeDefinition;
+    // (undocumented)
+    export function isInstanceNodesQuery(def: HierarchyNodesDefinition): def is InstanceNodesQueryDefinition;
+}
+
 // @beta (undocumented)
 export class HierarchyProvider {
     constructor(props: HierarchyProviderProps);
@@ -200,17 +221,17 @@ export class HierarchyProvider {
 // @beta (undocumented)
 export interface HierarchyProviderProps {
     // (undocumented)
-    queryBuilder: IHierarchyDefinition;
+    hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
     // (undocumented)
     queryExecutor: IQueryExecutor;
     // (undocumented)
     schemas: SchemaContext;
 }
 
-// @beta (undocumented)
-export interface IHierarchyDefinition {
+// @beta
+export interface IHierarchyLevelDefinitionsFactory {
     // (undocumented)
-    defineHierarchyLevel(parentNode: HierarchyNode | undefined): Promise<HierarchyLevelDefinition[]>;
+    defineHierarchyLevel(parentNode: HierarchyNode | undefined): Promise<HierarchyLevelDefinition>;
 }
 
 // @beta
@@ -222,6 +243,18 @@ export interface IInstanceLabelSelectClauseFactory {
 export interface InstanceKey {
     className: string;
     id: Id64String;
+}
+
+// @beta
+export interface InstanceNodesQueryDefinition {
+    fullClassName: string;
+    query: ECSqlQueryDef;
+}
+
+// @beta
+export interface InstancesNodeChildHierarchyLevelDefinition {
+    definitions: (instanceIds: Id64String[], parentNode: HierarchyNode) => Promise<HierarchyLevelDefinition>;
+    parentNodeClassName: string;
 }
 
 // @beta (undocumented)
@@ -236,18 +269,6 @@ export interface InstancesNodeKey {
 export interface IQueryExecutor {
     // (undocumented)
     createQueryReader(ecsql: string, params?: QueryBinder, config?: QueryOptions): ECSqlReader;
-}
-
-// @beta
-export class ModelsTreeQueryBuilder implements IHierarchyDefinition {
-    constructor(props: ModelsTreeQueryBuilderProps);
-    defineHierarchyLevel(parentNode: HierarchyNode | undefined): Promise<HierarchyLevelDefinition[]>;
-}
-
-// @beta (undocumented)
-export interface ModelsTreeQueryBuilderProps {
-    // (undocumented)
-    schemas: SchemaContext;
 }
 
 // @beta
