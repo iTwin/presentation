@@ -118,7 +118,7 @@ export type ClassBasedHierarchyLevelDefinition = InstancesNodeChildHierarchyLeve
  * @beta
  */
 export interface ClassBasedHierarchyDefinition {
-  /** Called to create the roto hierarchy level definition. */
+  /** Called to create the root hierarchy level definition. */
   rootNodes: () => Promise<HierarchyLevelDefinition>;
 
   /**
