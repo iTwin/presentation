@@ -5,10 +5,8 @@
 
 import { merge, Observable } from "rxjs";
 import { assert } from "@itwin/core-bentley";
-import { QueryBinder } from "@itwin/core-common";
 import { HierarchyNode, HierarchyNodeHandlingParams, HierarchyNodeKey } from "../HierarchyNode";
 import { ECClass, ECSchema, IMetadataProvider } from "../Metadata";
-import { ECSqlBinding } from "../queries/ECSql";
 
 /** @internal */
 export function splitFullClassName(fullClassName: string) {
@@ -121,43 +119,6 @@ export function mergeDirectNodeObservables(a: HierarchyNode, b: HierarchyNode, m
   }
   const merged = merge(cachedA, cachedB);
   cache.set(JSON.stringify(m.key), merged);
-}
-
-/** @internal */
-export function bind(bindings: ECSqlBinding[]): QueryBinder {
-  const binder = new QueryBinder();
-  bindings.forEach((b, i) => {
-    switch (b.type) {
-      case "boolean":
-        binder.bindBoolean(i + 1, b.value);
-        break;
-      case "double":
-        binder.bindDouble(i + 1, b.value);
-        break;
-      case "id":
-        binder.bindId(i + 1, b.value);
-        break;
-      case "idset":
-        binder.bindIdSet(i + 1, b.value);
-        break;
-      case "int":
-        binder.bindInt(i + 1, b.value);
-        break;
-      case "long":
-        binder.bindLong(i + 1, b.value);
-        break;
-      case "point2d":
-        binder.bindPoint2d(i + 1, b.value);
-        break;
-      case "point3d":
-        binder.bindPoint3d(i + 1, b.value);
-        break;
-      case "string":
-        binder.bindString(i + 1, b.value);
-        break;
-    }
-  });
-  return binder;
 }
 
 /** @internal */

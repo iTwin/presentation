@@ -6,7 +6,7 @@
 import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-import { createMetadataProvider } from "@itwin/presentation-core-interop";
+import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import { HierarchyProvider, IHierarchyLevelDefinitionsFactory } from "@itwin/presentation-hierarchy-builder";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../IntegrationTests";
@@ -33,7 +33,7 @@ describe("Stateless hierarchy builder", () => {
       return new HierarchyProvider({
         metadataProvider,
         hierarchyDefinition: definition,
-        queryExecutor: emptyIModel,
+        queryExecutor: createECSqlQueryExecutor(emptyIModel),
       });
     }
 

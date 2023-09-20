@@ -39,14 +39,11 @@
     "rxjs": "^7.8.1"
   },
   "peerDependencies": {
-    "@itwin/core-bentley": "^3.6.3 || ^4.0.0",
-    "@itwin/core-common": "^3.6.3 || ^4.0.0"
+    "@itwin/core-bentley": "^3.6.3 || ^4.0.0"
   },
   "devDependencies": {
     "@itwin/build-tools": "^4.1.1",
     "@itwin/core-bentley": "^4.1.1",
-    "@itwin/core-common": "^4.1.1",
-    "@itwin/core-quantity": "^4.1.1",
     "@itwin/eslint-plugin": "4.0.0-dev.48",
     "@types/chai": "4.3.1",
     "@types/chai-as-promised": "^7.1.5",

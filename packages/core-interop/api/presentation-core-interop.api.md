@@ -4,11 +4,24 @@
 
 ```ts
 
+import { ECSqlReader } from '@itwin/core-common';
+import { IECSqlQueryExecutor } from '@itwin/presentation-hierarchy-builder';
 import { IMetadataProvider } from '@itwin/presentation-hierarchy-builder';
+import { QueryBinder } from '@itwin/core-common';
+import { QueryOptions } from '@itwin/core-common';
 import { SchemaContext } from '@itwin/ecschema-metadata';
 
 // @beta
+export function createECSqlQueryExecutor(imodel: IECSqlReaderFactory): IECSqlQueryExecutor;
+
+// @beta
 export function createMetadataProvider(schemaContext: SchemaContext): IMetadataProvider;
+
+// @beta
+export interface IECSqlReaderFactory {
+    // (undocumented)
+    createQueryReader(ecsql: string, binder?: QueryBinder, options?: QueryOptions): ECSqlReader;
+}
 
 // (No @packageDocumentation comment for this package)
 

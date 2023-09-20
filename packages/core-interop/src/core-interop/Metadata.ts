@@ -8,7 +8,7 @@ import { IMetadataProvider } from "@itwin/presentation-hierarchy-builder";
 import { createECSchema } from "./MetadataInternal";
 
 /**
- * Create an `IMetadataProvider` for given `SchemaContext`.
+ * Create an `IMetadataProvider` for given [SchemaContext]($ecschema-metadata).
  * @beta
  */
 export function createMetadataProvider(schemaContext: SchemaContext): IMetadataProvider {

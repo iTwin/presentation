@@ -4,3 +4,4 @@
  *--------------------------------------------------------------------------------------------*/
 
 export * from "./core-interop/Metadata";
+export * from "./core-interop/QueryExecutor";
