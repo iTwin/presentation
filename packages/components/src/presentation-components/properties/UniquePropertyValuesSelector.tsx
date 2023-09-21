@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback, useEffect, useState } from "react";
-import { ActionMeta, MultiValue } from "react-select";
+import { ActionMeta, MultiValue, Options } from "react-select";
 import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ContentSpecificationTypes, Descriptor, DisplayValueGroup, Field, FieldDescriptor, KeySet, Ruleset, RuleTypes } from "@itwin/presentation-common";
@@ -62,6 +62,9 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
     }
   };
 
+  const isOptionSelected = (option: DisplayValueGroup, _: Options<DisplayValueGroup>): boolean =>
+    selectedValues?.map((selectedValue) => selectedValue.displayValue).includes(option.displayValue) ?? false;
+
   const ruleset = useUniquePropertyValuesRuleset({ descriptor, imodel, field });
   const loadTargets = useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor: field?.getFieldDescriptor() });
 
@@ -71,6 +74,7 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
       loadOptions={async (_, options) => loadTargets(options.length)}
       placeholder={translate("unique-values-property-editor.select-values")}
       onChange={onValueChange}
+      isOptionSelected={isOptionSelected}
       cacheUniqs={[property]}
       hideSelectedOptions={false}
       isSearchable={false}
