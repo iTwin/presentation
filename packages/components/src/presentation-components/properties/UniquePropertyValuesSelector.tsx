@@ -4,10 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback, useEffect, useState } from "react";
-import { ActionMeta, MultiValue } from "react-select";
+import { ActionMeta, MultiValue, Options } from "react-select";
 import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ContentSpecificationTypes, Descriptor, DisplayValueGroup, Field, FieldDescriptor, KeySet, Ruleset, RuleTypes } from "@itwin/presentation-common";
+import {
+  ContentSpecificationTypes, Descriptor, DisplayValueGroup, Field, FieldDescriptor, KeySet, Ruleset, RuleTypes,
+} from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { deserializeDisplayValueGroupArray, findField, serializeDisplayValueGroupArray, translate } from "../common/Utils";
 import { findBaseExpressionClass } from "../instance-filter-builder/InstanceFilterConverter";
@@ -62,6 +64,9 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
     }
   };
 
+  const isOptionSelected = (option: DisplayValueGroup, _: Options<DisplayValueGroup>): boolean =>
+    selectedValues?.map((selectedValue) => selectedValue.displayValue).includes(option.displayValue) ?? false;
+
   const ruleset = useUniquePropertyValuesRuleset({ descriptor, imodel, field });
   const loadTargets = useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor: field?.getFieldDescriptor() });
 
@@ -71,6 +76,7 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
       loadOptions={async (_, options) => loadTargets(options.length)}
       placeholder={translate("unique-values-property-editor.select-values")}
       onChange={onValueChange}
+      isOptionSelected={isOptionSelected}
       cacheUniqs={[property]}
       hideSelectedOptions={false}
       isSearchable={false}
@@ -96,6 +102,22 @@ function getUniqueValueFromProperty(property: PropertyValue | undefined): Displa
   }
   return undefined;
 }
+
+// function areSameOptions(option1: DisplayValueGroup, option2: DisplayValueGroup){
+//   const keys1 = Object.keys(option1);
+//   const keys2 = Object.keys(option2);
+
+//   if (keys1.length !== keys2.length) {
+//     return false;
+//   }
+
+//   for (let key of keys1) {
+//     if (option1[key] !== option2[key]) {
+//       return false;
+//     }
+//   }
+
+//   return true;}
 
 interface UseUniquePropertyValuesRulesetProps {
   descriptor: Descriptor;
