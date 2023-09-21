@@ -178,7 +178,7 @@ describe("UniquePropertyValuesSelector", () => {
     expect(container.querySelector(".iui-tag-label")?.innerHTML).to.be.eq("");
   });
 
-  it("Load two rows and select one of them `isOptionSelected`", async () => {
+  it("loads two rows and selects one of them `isOptionSelected`", async () => {
     sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
       total: 2,
       items: [

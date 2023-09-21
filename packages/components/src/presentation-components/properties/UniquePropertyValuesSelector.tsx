@@ -7,9 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ActionMeta, MultiValue, Options } from "react-select";
 import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
-import {
-  ContentSpecificationTypes, Descriptor, DisplayValueGroup, Field, FieldDescriptor, KeySet, Ruleset, RuleTypes,
-} from "@itwin/presentation-common";
+import { ContentSpecificationTypes, Descriptor, DisplayValueGroup, Field, FieldDescriptor, KeySet, Ruleset, RuleTypes } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { deserializeDisplayValueGroupArray, findField, serializeDisplayValueGroupArray, translate } from "../common/Utils";
 import { findBaseExpressionClass } from "../instance-filter-builder/InstanceFilterConverter";
@@ -102,22 +100,6 @@ function getUniqueValueFromProperty(property: PropertyValue | undefined): Displa
   }
   return undefined;
 }
-
-// function areSameOptions(option1: DisplayValueGroup, option2: DisplayValueGroup){
-//   const keys1 = Object.keys(option1);
-//   const keys2 = Object.keys(option2);
-
-//   if (keys1.length !== keys2.length) {
-//     return false;
-//   }
-
-//   for (let key of keys1) {
-//     if (option1[key] !== option2[key]) {
-//       return false;
-//     }
-//   }
-
-//   return true;}
 
 interface UseUniquePropertyValuesRulesetProps {
   descriptor: Descriptor;
