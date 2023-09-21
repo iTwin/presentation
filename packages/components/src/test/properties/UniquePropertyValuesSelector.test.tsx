@@ -103,7 +103,7 @@ describe("UniquePropertyValuesSelector", () => {
     );
   });
 
-  it("menu showss `No options` message when there is no `fieldDescriptor`", async () => {
+  it("menu shows `No options` message when there is no `fieldDescriptor`", async () => {
     sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
       total: 2,
       items: [
@@ -176,5 +176,35 @@ describe("UniquePropertyValuesSelector", () => {
       />,
     );
     expect(container.querySelector(".iui-tag-label")?.innerHTML).to.be.eq("");
+  });
+
+  it("loads two rows and selects one of them `isOptionSelected`", async () => {
+    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+      total: 2,
+      items: [
+        { displayValue: "TestValue1", groupedRawValues: ["TestValue1"] },
+        { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
+      ],
+    });
+
+    const { queryByText, container, user } = render(
+      <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+    );
+
+    // open menu
+    const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
+    await user.click(selector!);
+    await waitFor(() => expect(container.querySelectorAll(".iui-menu-item.iui-active").length).to.be.equal(0));
+
+    // trigger the addition to selected elements.
+    const option = container.querySelector(".iui-menu-item");
+    await user.click(option!);
+    await waitFor(() => expect(container.querySelectorAll(".iui-menu-item.iui-active").length).to.be.equal(0));
+
+    // click on menu item to make it marked as active
+    const menuItem = await waitFor(() => queryByText("TestValue1"));
+    await user.click(menuItem!);
+
+    await waitFor(() => expect(container.querySelectorAll(".iui-menu-item.iui-active").length).to.be.equal(1));
   });
 });
