@@ -2,4 +2,4 @@
 "@itwin/presentation-components": patch
 ---
 
-Fix issue where UniquePropertyValueSelector selects all values when only one of the values is selected.
+Fix property value selector showing all values as selected when only one of the values is actually selected.
