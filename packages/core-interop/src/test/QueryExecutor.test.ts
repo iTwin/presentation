@@ -14,11 +14,13 @@ describe("createECSqlQueryExecutor", () => {
   describe("createQueryReader", () => {
     it("calls IModel's `createQueryReader` with default params", async () => {
       const imodel = {
-        createQueryReader: sinon.stub(),
+        createQueryReader: sinon.stub().returns(createECSqlReaderStub([{}, {}])),
       } as unknown as IECSqlReaderFactory;
 
       const executor = createECSqlQueryExecutor(imodel);
-      executor.createQueryReader("ecsql");
+      const reader = executor.createQueryReader("ecsql");
+      for await (const _ of reader) {
+      }
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(imodel.createQueryReader).to.be.calledOnceWithExactly(
@@ -30,11 +32,13 @@ describe("createECSqlQueryExecutor", () => {
 
     it('calls IModel\'s `createQueryReader` with "ECSqlPropertyNames" row format', async () => {
       const imodel = {
-        createQueryReader: sinon.stub(),
+        createQueryReader: sinon.stub().returns(createECSqlReaderStub([])),
       } as unknown as IECSqlReaderFactory;
 
       const executor = createECSqlQueryExecutor(imodel);
-      executor.createQueryReader("ecsql", undefined, { rowFormat: "ECSqlPropertyNames" });
+      const reader = executor.createQueryReader("ecsql", undefined, { rowFormat: "ECSqlPropertyNames" });
+      for await (const _ of reader) {
+      }
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(imodel.createQueryReader).to.be.calledOnceWithExactly(
@@ -46,11 +50,13 @@ describe("createECSqlQueryExecutor", () => {
 
     it('calls IModel\'s `createQueryReader` with "Indexes" row format', async () => {
       const imodel = {
-        createQueryReader: sinon.stub(),
+        createQueryReader: sinon.stub().returns(createECSqlReaderStub([])),
       } as unknown as IECSqlReaderFactory;
 
       const executor = createECSqlQueryExecutor(imodel);
-      executor.createQueryReader("ecsql", undefined, { rowFormat: "Indexes" });
+      const reader = executor.createQueryReader("ecsql", undefined, { rowFormat: "Indexes" });
+      for await (const _ of reader) {
+      }
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(imodel.createQueryReader).to.be.calledOnceWithExactly(
@@ -62,7 +68,7 @@ describe("createECSqlQueryExecutor", () => {
 
     it("calls IModel's `createQueryReader` with different bindings", async () => {
       const imodel = {
-        createQueryReader: sinon.stub(),
+        createQueryReader: sinon.stub().returns(createECSqlReaderStub([])),
       } as unknown as IECSqlReaderFactory;
 
       const bindings: ECSqlBinding[] = [
@@ -118,7 +124,9 @@ describe("createECSqlQueryExecutor", () => {
       expectedBinder.bindNull(10);
 
       const executor = createECSqlQueryExecutor(imodel);
-      executor.createQueryReader("ecsql", bindings, undefined);
+      const reader = executor.createQueryReader("ecsql", bindings, undefined);
+      for await (const _ of reader) {
+      }
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(imodel.createQueryReader).to.be.calledOnceWithExactly(
@@ -127,5 +135,35 @@ describe("createECSqlQueryExecutor", () => {
         sinon.match((options: QueryOptions) => Object.keys(options).length === 0),
       );
     });
+
+    it("creates iterable reader", async () => {
+      const rows = [{ x: 1 }, { y: 2 }];
+      const imodel = {
+        createQueryReader: sinon.stub().returns(createECSqlReaderStub(rows)),
+      } as unknown as IECSqlReaderFactory;
+
+      const executor = createECSqlQueryExecutor(imodel);
+      const reader = executor.createQueryReader("ecsql");
+
+      const resultRows = new Array<any>();
+      for await (const row of reader) {
+        resultRows.push(row);
+      }
+
+      expect(resultRows).to.deep.eq(rows);
+    });
   });
 });
+
+function createECSqlReaderStub(rows: object[]) {
+  let curr = -1;
+  return {
+    step: sinon.fake(async () => {
+      ++curr;
+      return curr < rows.length;
+    }),
+    get current() {
+      return rows[curr];
+    },
+  };
+}

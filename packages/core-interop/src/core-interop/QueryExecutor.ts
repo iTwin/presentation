@@ -27,16 +27,23 @@ export interface IECSqlReaderFactory {
 export function createECSqlQueryExecutor(imodel: IECSqlReaderFactory): IECSqlQueryExecutor {
   return {
     createQueryReader(ecsql: string, bindings?: ECSqlBinding[], config?: ECSqlQueryReaderOptions): ECSqlQueryReader {
-      const opts = new QueryOptionsBuilder();
-      switch (config?.rowFormat) {
-        case "ECSqlPropertyNames":
-          opts.setRowFormat(QueryRowFormat.UseECSqlPropertyNames);
-          break;
-        case "Indexes":
-          opts.setRowFormat(QueryRowFormat.UseECSqlPropertyIndexes);
-          break;
-      }
-      return imodel.createQueryReader(ecsql, bind(bindings ?? []), opts.getOptions());
+      return {
+        async *[Symbol.asyncIterator]() {
+          const opts = new QueryOptionsBuilder();
+          switch (config?.rowFormat) {
+            case "ECSqlPropertyNames":
+              opts.setRowFormat(QueryRowFormat.UseECSqlPropertyNames);
+              break;
+            case "Indexes":
+              opts.setRowFormat(QueryRowFormat.UseECSqlPropertyIndexes);
+              break;
+          }
+          const reader = imodel.createQueryReader(ecsql, bind(bindings ?? []), opts.getOptions());
+          while (await reader.step()) {
+            yield reader.current;
+          }
+        },
+      };
     },
   };
 }
