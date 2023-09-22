@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Id64String } from "@itwin/core-bentley";
+import { Id64String } from "../EC";
 import { HierarchyNode } from "../HierarchyNode";
 import { ECSqlQueryDef, IECSqlQueryExecutor } from "../queries/ECSql";
 import { NodeSelectClauseColumnNames } from "../queries/NodeSelectClauseFactory";

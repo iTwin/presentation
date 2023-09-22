@@ -907,9 +907,6 @@ importers:
       '@itwin/build-tools':
         specifier: ^4.1.1
         version: 4.1.1(@types/node@18.17.7)
-      '@itwin/core-bentley':
-        specifier: ^4.1.1
-        version: 4.1.1
       '@itwin/eslint-plugin':
         specifier: 4.0.0-dev.48
         version: 4.0.0-dev.48(eslint@8.47.0)(typescript@5.0.4)

@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Id64String } from "@itwin/core-bentley";
+import { Id64String } from "../EC";
 
 /**
  * Types of values that can be bound to an ECSql query.
