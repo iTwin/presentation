@@ -2,4 +2,4 @@
 "@itwin/presentation-components": patch
 ---
 
-Fix bug where property tooltip appears to be covered by propertySelector.
+Fix property tooltip appearing behind the property selector.
