@@ -23,7 +23,7 @@ import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { DiagnosticsProps } from "@itwin/presentation-components";
-import { createMetadataProvider } from "@itwin/presentation-core-interop";
+import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { DiagnosticsSelector } from "../diagnostics-selector/DiagnosticsSelector";
@@ -107,7 +107,7 @@ export function ExperimentalModelsTree({ imodel }: { imodel: IModelConnection })
     const modelsTreeHierarchyProvider = new HierarchyProvider({
       metadataProvider,
       hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider }),
-      queryExecutor: imodel,
+      queryExecutor: createECSqlQueryExecutor(imodel),
     });
     return async (node?: TreeNodeItem): Promise<TreeNodeItem[]> => {
       const parent: HierarchyNode | undefined = node ? (node as any).__internal : undefined;
