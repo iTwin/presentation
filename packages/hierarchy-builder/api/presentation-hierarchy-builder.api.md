@@ -4,8 +4,6 @@
 
 ```ts
 
-import { Id64String } from '@itwin/core-bentley';
-
 // @beta
 export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelectClauseFactory {
     constructor(props: BisInstanceLabelSelectClauseFactoryProps);
@@ -296,6 +294,9 @@ export interface HierarchyProviderProps {
     // (undocumented)
     queryExecutor: IECSqlQueryExecutor;
 }
+
+// @beta
+export type Id64String = string;
 
 // @beta
 export interface IECSqlQueryExecutor {

@@ -3,7 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Id64String } from "@itwin/core-bentley";
+/**
+ * A string representing a 64 bit number in hex.
+ * @see [Id64String]($core-bentley)
+ * @beta
+ */
+export type Id64String = string;
 
 /** @beta */
 export interface ClassInfo {

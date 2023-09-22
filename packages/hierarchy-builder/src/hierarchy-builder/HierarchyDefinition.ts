@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Id64String } from "@itwin/core-bentley";
-import { InstanceKey } from "./EC";
+import { Id64String, InstanceKey } from "./EC";
 import { HierarchyNode } from "./HierarchyNode";
 import { getClass, splitFullClassName } from "./internal/Common";
 import { IMetadataProvider } from "./Metadata";
