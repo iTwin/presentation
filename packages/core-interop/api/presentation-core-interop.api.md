@@ -6,6 +6,7 @@
 
 import { ECSqlReader } from '@itwin/core-common';
 import { IECSqlQueryExecutor } from '@itwin/presentation-hierarchy-builder';
+import { ILogger } from '@itwin/presentation-hierarchy-builder';
 import { IMetadataProvider } from '@itwin/presentation-hierarchy-builder';
 import { QueryBinder } from '@itwin/core-common';
 import { QueryOptions } from '@itwin/core-common';
@@ -13,6 +14,9 @@ import { SchemaContext } from '@itwin/ecschema-metadata';
 
 // @beta
 export function createECSqlQueryExecutor(imodel: IECSqlReaderFactory): IECSqlQueryExecutor;
+
+// @beta
+export function createLogger(): ILogger;
 
 // @beta
 export function createMetadataProvider(schemaContext: SchemaContext): IMetadataProvider;

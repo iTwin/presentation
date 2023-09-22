@@ -897,6 +897,9 @@ importers:
 
   packages/hierarchy-builder:
     dependencies:
+      '@itwin/core-bentley':
+        specifier: ^4.1.1
+        version: 4.1.1
       natural-compare-lite:
         specifier: ^1.4.0
         version: 1.4.0

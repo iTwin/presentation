@@ -198,6 +198,9 @@ export interface ECSqlValueSelector {
 }
 
 // @beta
+export function getLogger(): ILogger;
+
+// @beta
 export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
 
 // @beta (undocumented)
@@ -316,6 +319,18 @@ export interface IInstanceLabelSelectClauseFactory {
 }
 
 // @beta
+export interface ILogger {
+    // (undocumented)
+    logError: LogFunction;
+    // (undocumented)
+    logInfo: LogFunction;
+    // (undocumented)
+    logTrace: LogFunction;
+    // (undocumented)
+    logWarning: LogFunction;
+}
+
+// @beta
 export interface IMetadataProvider {
     // (undocumented)
     getSchema(schemaName: string): Promise<ECSchema | undefined>;
@@ -346,6 +361,9 @@ export interface InstancesNodeKey {
     // (undocumented)
     type: "instances";
 }
+
+// @beta (undocumented)
+export type LogFunction = (category: string, message: string) => void;
 
 // @beta
 export enum NodeSelectClauseColumnNames {
@@ -392,6 +410,9 @@ export interface NodeSelectClauseProps {
     // (undocumented)
     nodeLabel: string | ECSqlValueSelector;
 }
+
+// @beta
+export function setLogger(logger: ILogger | undefined): void;
 
 // @beta (undocumented)
 export type StandardHierarchyNodeKey = InstancesNodeKey | ClassGroupingNodeKey;

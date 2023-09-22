@@ -5,11 +5,17 @@
 
 import { Observable } from "rxjs";
 import sinon from "sinon";
-import { Id64, Id64String } from "@itwin/core-bentley";
-import { InstanceKey } from "../hierarchy-builder/EC";
+import { Id64, Logger, LogLevel } from "@itwin/core-bentley";
+import { Id64String, InstanceKey } from "../hierarchy-builder/EC";
 import { HierarchyNode } from "../hierarchy-builder/HierarchyNode";
 import * as common from "../hierarchy-builder/internal/Common";
 import { ECClass, IMetadataProvider } from "../hierarchy-builder/Metadata";
+
+export function setupLogging(levels: Array<{ namespace: string; level: LogLevel }>) {
+  Logger.initializeToConsole();
+  Logger.turnOffCategories();
+  levels.forEach(({ namespace, level }) => Logger.setLevel(namespace, level));
+}
 
 export async function getObservableResult<T>(obs: Observable<T>): Promise<Array<T>> {
   const arr = new Array<T>();

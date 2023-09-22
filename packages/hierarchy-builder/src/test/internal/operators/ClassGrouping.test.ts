@@ -5,17 +5,15 @@
 
 import { expect } from "chai";
 import { from } from "rxjs";
-import { Logger, LogLevel } from "@itwin/core-bentley";
+import { LogLevel } from "@itwin/core-bentley";
 import { HierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
 import { createClassGroupingOperator, LOGGING_NAMESPACE } from "../../../hierarchy-builder/internal/operators/ClassGrouping";
 import { IMetadataProvider } from "../../../hierarchy-builder/Metadata";
-import { createGetClassStub, createTestNode, getObservableResult, TStubClassFunc } from "../../Utils";
+import { createGetClassStub, createTestNode, getObservableResult, setupLogging, TStubClassFunc } from "../../Utils";
 
 describe("ClassGrouping", () => {
   before(() => {
-    Logger.initializeToConsole();
-    Logger.turnOffCategories();
-    Logger.setLevel(LOGGING_NAMESPACE, LogLevel.Trace);
+    setupLogging([{ namespace: LOGGING_NAMESPACE, level: LogLevel.Trace }]);
   });
 
   const metadataProvider = {} as unknown as IMetadataProvider;

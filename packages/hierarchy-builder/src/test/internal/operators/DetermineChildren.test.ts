@@ -6,16 +6,14 @@
 import { expect } from "chai";
 import { from, of } from "rxjs";
 import sinon from "sinon";
-import { Logger, LogLevel } from "@itwin/core-bentley";
+import { LogLevel } from "@itwin/core-bentley";
 import { HierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
 import { createDetermineChildrenOperator, LOGGING_NAMESPACE } from "../../../hierarchy-builder/internal/operators/DetermineChildren";
-import { getObservableResult } from "../../Utils";
+import { getObservableResult, setupLogging } from "../../Utils";
 
 describe("DetermineChildren", () => {
   before(() => {
-    Logger.initializeToConsole();
-    Logger.turnOffCategories();
-    Logger.setLevel(LOGGING_NAMESPACE, LogLevel.Trace);
+    setupLogging([{ namespace: LOGGING_NAMESPACE, level: LogLevel.Trace }]);
   });
 
   it("doesn't check children if node has children determined", async () => {

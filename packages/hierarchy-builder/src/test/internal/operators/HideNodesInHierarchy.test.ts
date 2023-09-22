@@ -6,16 +6,14 @@
 import { expect } from "chai";
 import { from, Observable } from "rxjs";
 import sinon from "sinon";
-import { Id64, Logger, LogLevel } from "@itwin/core-bentley";
+import { Id64, LogLevel } from "@itwin/core-bentley";
 import { HierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
 import { createHideNodesInHierarchyOperator, LOGGING_NAMESPACE } from "../../../hierarchy-builder/internal/operators/HideNodesInHierarchy";
-import { createTestInstanceKey, createTestNode, getObservableResult } from "../../Utils";
+import { createTestInstanceKey, createTestNode, getObservableResult, setupLogging } from "../../Utils";
 
 describe("HideNodesInHierarchyOperator", () => {
   before(() => {
-    Logger.initializeToConsole();
-    Logger.turnOffCategories();
-    Logger.setLevel(LOGGING_NAMESPACE, LogLevel.Trace);
+    setupLogging([{ namespace: LOGGING_NAMESPACE, level: LogLevel.Trace }]);
   });
 
   const directNodesCache = new Map<string, Observable<HierarchyNode>>();

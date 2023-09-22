@@ -4,9 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { from, mergeMap, Observable, tap, toArray } from "rxjs";
-import { Id64, Logger } from "@itwin/core-bentley";
+import { Id64 } from "@itwin/core-bentley";
 import { ClassInfo } from "../../EC";
 import { HierarchyNode } from "../../HierarchyNode";
+import { getLogger } from "../../Logging";
 import { IMetadataProvider } from "../../Metadata";
 import { createOperatorLoggingNamespace, getClass } from "../Common";
 import { sortNodesByLabelOperator } from "./Sorting";
@@ -83,7 +84,7 @@ function createGroupingNodes(groupings: ClassGroupingInformation): HierarchyNode
 }
 
 function doLog(msg: string) {
-  Logger.logTrace(LOGGING_NAMESPACE, msg);
+  getLogger().logTrace(LOGGING_NAMESPACE, msg);
 }
 
 function log<T>(msg: (arg: T) => string) {
