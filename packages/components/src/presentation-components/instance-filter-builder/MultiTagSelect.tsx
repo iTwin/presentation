@@ -85,10 +85,11 @@ function TagSelectOption<TOption, IsMulti extends boolean = boolean>({ children:
     "iui-focused": props.isFocused,
     "iui-active": props.isSelected,
   });
+  const optionLabel = props.selectProps.getOptionLabel && props.selectProps.getOptionLabel(props.data);
 
   return (
     <components.Option {...props} className={className}>
-      <span>{props.selectProps.getOptionLabel && props.selectProps.getOptionLabel(props.data)}</span>
+      <span>{optionLabel === "" ? <i>Empty Value</i> : optionLabel}</span>
       {props.isSelected && (
         <span className="iui-icon" style={{ marginLeft: "auto" }}>
           <SvgCheckmarkSmall />
@@ -132,7 +133,7 @@ function TagContainer<TOption, IsMulti extends boolean = boolean>({ children, ..
 function TagLabel<TOption, IsMulti extends boolean = boolean>({ children, ...props }: MultiValueGenericProps<TOption, IsMulti>) {
   return (
     <components.MultiValueLabel {...props} innerProps={{ ...props.innerProps, className: "iui-tag-label" }}>
-      {children}
+      {children === "" ? <i style={{ padding: 1 }}>Empty Value</i> : children}
     </components.MultiValueLabel>
   );
 }

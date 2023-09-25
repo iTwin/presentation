@@ -17,7 +17,10 @@ import { getInstanceFilterFieldName } from "../instance-filter-builder/Utils";
 /** @internal */
 export const UNIQUE_PROPERTY_VALUES_BATCH_SIZE = 100;
 
-/** @interna */
+/** @internal */
+const nullStringIdentifier = "[[NULL]]";
+
+/** @internal */
 export interface UniquePropertyValuesSelectorProps {
   /** Currently entered value. */
   value?: PropertyValue;
@@ -79,8 +82,8 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
       hideSelectedOptions={false}
       isSearchable={false}
       closeMenuOnSelect={false}
-      getOptionLabel={(option) => option.displayValue?.toString() ?? ""}
-      getOptionValue={(option) => option.groupedRawValues[0]?.toString() ?? ""}
+      getOptionLabel={(option) => option.displayValue?.toString() ?? nullStringIdentifier}
+      getOptionValue={(option) => option.groupedRawValues[0]?.toString() ?? nullStringIdentifier}
     />
   );
 }
@@ -166,7 +169,7 @@ function useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor }: Use
         keys: new KeySet(),
       });
       return {
-        options: content.items.filter((item) => item.displayValue !== undefined && item.displayValue !== ""),
+        options: content.items.filter((item) => item.displayValue !== undefined && item.displayValue !== nullStringIdentifier),
         hasMore: content.items.length === UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
       };
     },
