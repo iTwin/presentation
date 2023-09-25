@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { mergeAll, Observable, reduce, tap } from "rxjs";
-
 import { HierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
 import { createOperatorLoggingNamespace } from "../Common";
