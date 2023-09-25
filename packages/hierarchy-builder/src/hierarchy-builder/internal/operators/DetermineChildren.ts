@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { map, merge, mergeMap, Observable, partition, shareReplay, tap } from "rxjs";
-import { Logger } from "@itwin/core-bentley";
 import { HierarchyNode } from "../../HierarchyNode";
+import { getLogger } from "../../Logging";
 import { createOperatorLoggingNamespace } from "../Common";
 
 const OPERATOR_NAME = "DetermineChildren";
@@ -41,7 +41,7 @@ export function createDetermineChildrenOperator(hasNodes: (node: HierarchyNode) 
 }
 
 function doLog(msg: string) {
-  Logger.logTrace(LOGGING_NAMESPACE, msg);
+  getLogger().logTrace(LOGGING_NAMESPACE, msg);
 }
 
 function log<T>(msg: (arg: T) => string) {

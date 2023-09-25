@@ -6,15 +6,13 @@
 import { expect } from "chai";
 import { EMPTY, from, of, Subject } from "rxjs";
 import sinon from "sinon";
-import { Logger, LogLevel } from "@itwin/core-bentley";
+import { LogLevel } from "@itwin/core-bentley";
 import { createHideIfNoChildrenOperator, LOGGING_NAMESPACE } from "../../../hierarchy-builder/internal/operators/HideIfNoChildren";
-import { createTestNode, getObservableResult } from "../../Utils";
+import { createTestNode, getObservableResult, setupLogging } from "../../Utils";
 
 describe("HideIfNoChildrenOperator", () => {
   before(() => {
-    Logger.initializeToConsole();
-    Logger.turnOffCategories();
-    Logger.setLevel(LOGGING_NAMESPACE, LogLevel.Trace);
+    setupLogging([{ namespace: LOGGING_NAMESPACE, level: LogLevel.Trace }]);
   });
 
   it("returns nodes that don't need hiding", async () => {

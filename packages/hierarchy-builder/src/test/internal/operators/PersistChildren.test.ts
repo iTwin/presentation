@@ -6,17 +6,14 @@
 import { expect } from "chai";
 import { from } from "rxjs";
 import sinon from "sinon";
-// import sinon from "sinon";
-import { Logger, LogLevel } from "@itwin/core-bentley";
+import { LogLevel } from "@itwin/core-bentley";
 import { HierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
 import { createPersistChildrenOperator, LOGGING_NAMESPACE } from "../../../hierarchy-builder/internal/operators/PersistChildren";
-import { createTestNode, getObservableResult } from "../../Utils";
+import { createTestNode, getObservableResult, setupLogging } from "../../Utils";
 
 describe("PersistChildren", () => {
   before(() => {
-    Logger.initializeToConsole();
-    Logger.turnOffCategories();
-    Logger.setLevel(LOGGING_NAMESPACE, LogLevel.Trace);
+    setupLogging([{ namespace: LOGGING_NAMESPACE, level: LogLevel.Trace }]);
   });
 
   it("returns input observable if parent has children array", async () => {

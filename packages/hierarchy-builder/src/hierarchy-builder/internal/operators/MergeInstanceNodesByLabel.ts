@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { from, merge, mergeMap, Observable, partition, reduce, shareReplay, tap } from "rxjs";
-import { assert, DuplicatePolicy, Logger, SortedArray } from "@itwin/core-bentley";
+import { assert, DuplicatePolicy, SortedArray } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyNodeKey } from "../../HierarchyNode";
+import { getLogger } from "../../Logging";
 import { createOperatorLoggingNamespace, mergeNodesObs } from "../Common";
 
 const OPERATOR_NAME = "MergeInstanceNodesByLabel";
@@ -78,7 +79,7 @@ function serializeNode(node: HierarchyNode) {
 }
 
 function doLog(msg: string) {
-  Logger.logTrace(LOGGING_NAMESPACE, msg);
+  getLogger().logTrace(LOGGING_NAMESPACE, msg);
 }
 
 function log<T>(msg: (arg: T) => string) {

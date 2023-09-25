@@ -4,12 +4,6 @@
 
 ```ts
 
-import { ECSqlReader } from '@itwin/core-common';
-import { Id64String } from '@itwin/core-bentley';
-import { QueryBinder } from '@itwin/core-common';
-import { QueryOptions } from '@itwin/core-common';
-import { SchemaContext } from '@itwin/ecschema-metadata';
-
 // @beta
 export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelectClauseFactory {
     constructor(props: BisInstanceLabelSelectClauseFactoryProps);
@@ -20,7 +14,7 @@ export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelect
 // @beta
 export interface BisInstanceLabelSelectClauseFactoryProps {
     // (undocumented)
-    schemas: SchemaContext;
+    metadataProvider: IMetadataProvider;
 }
 
 // @beta
@@ -32,7 +26,7 @@ export interface ClassBasedHierarchyDefinition {
 // @beta
 export interface ClassBasedHierarchyDefinitionsFactoryProps {
     hierarchy: ClassBasedHierarchyDefinition;
-    schemas: SchemaContext;
+    metadataProvider: IMetadataProvider;
 }
 
 // @beta
@@ -56,7 +50,7 @@ export interface ClassBasedInstanceLabelSelectClauseFactoryProps {
     clauses: ClassBasedLabelSelectClause[];
     // @internal (undocumented)
     defaultClauseFactory?: IInstanceLabelSelectClauseFactory;
-    schemas: SchemaContext;
+    metadataProvider: IMetadataProvider;
 }
 
 // @beta
@@ -103,32 +97,108 @@ export class DefaultInstanceLabelSelectClauseFactory implements IInstanceLabelSe
     createSelectClause(props: CreateInstanceLabelSelectClauseProps): Promise<string>;
 }
 
-// @beta (undocumented)
-export interface ECSqlBinding {
+// @beta
+export interface ECClass extends ECSchemaItem {
     // (undocumented)
-    type: ECSqlBindingType;
+    is(className: string, schemaName: string): Promise<boolean>;
     // (undocumented)
-    value?: any;
+    is(other: ECClass): Promise<boolean>;
 }
 
-// @beta (undocumented)
+// @beta
+export interface ECSchema {
+    // (undocumented)
+    getClass(name: string): Promise<ECClass | undefined>;
+    // (undocumented)
+    name: string;
+}
+
+// @beta
+export interface ECSchemaItem {
+    // (undocumented)
+    fullName: string;
+    // (undocumented)
+    label?: string;
+    // (undocumented)
+    name: string;
+    // (undocumented)
+    schema: ECSchema;
+}
+
+// @beta
+export type ECSqlBinding = {
+    type: "boolean";
+    value?: boolean;
+} | {
+    type: "double" | "int" | "long";
+    value?: number;
+} | {
+    type: "id";
+    value?: Id64String;
+} | {
+    type: "idset";
+    value?: Id64String[];
+} | {
+    type: "string";
+    value?: string;
+} | {
+    type: "point2d";
+    value?: {
+        x: number;
+        y: number;
+    };
+} | {
+    type: "point3d";
+    value?: {
+        x: number;
+        y: number;
+        z: number;
+    };
+};
+
+// @beta
 export type ECSqlBindingType = "boolean" | "double" | "id" | "idset" | "int" | "long" | "string" | "point2d" | "point3d";
 
-// @beta (undocumented)
+// @beta
 export interface ECSqlQueryDef {
-    // (undocumented)
     bindings?: ECSqlBinding[];
-    // (undocumented)
     ctes?: string[];
-    // (undocumented)
     ecsql: string;
 }
+
+// @beta
+export interface ECSqlQueryReader {
+    // (undocumented)
+    [Symbol.asyncIterator](): AsyncIterableIterator<ECSqlQueryRow>;
+}
+
+// @beta
+export interface ECSqlQueryReaderOptions {
+    // (undocumented)
+    rowFormat: ECSqlQueryRowFormat;
+}
+
+// @beta
+export interface ECSqlQueryRow {
+    // (undocumented)
+    [propertyName: string]: any;
+    // (undocumented)
+    [propertyIndex: number]: any;
+    // (undocumented)
+    toRow(): any;
+}
+
+// @beta
+export type ECSqlQueryRowFormat = "ECSqlPropertyNames" | "Indexes";
 
 // @beta
 export interface ECSqlValueSelector {
     // (undocumented)
     selector: string;
 }
+
+// @beta
+export function getLogger(): ILogger;
 
 // @beta
 export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
@@ -223,9 +293,18 @@ export interface HierarchyProviderProps {
     // (undocumented)
     hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
     // (undocumented)
-    queryExecutor: IQueryExecutor;
+    metadataProvider: IMetadataProvider;
     // (undocumented)
-    schemas: SchemaContext;
+    queryExecutor: IECSqlQueryExecutor;
+}
+
+// @beta
+export type Id64String = string;
+
+// @beta
+export interface IECSqlQueryExecutor {
+    // (undocumented)
+    createQueryReader(ecsql: string, bindings?: ECSqlBinding[], config?: ECSqlQueryReaderOptions): ECSqlQueryReader;
 }
 
 // @beta
@@ -237,6 +316,24 @@ export interface IHierarchyLevelDefinitionsFactory {
 // @beta
 export interface IInstanceLabelSelectClauseFactory {
     createSelectClause(props: CreateInstanceLabelSelectClauseProps): Promise<string>;
+}
+
+// @beta
+export interface ILogger {
+    // (undocumented)
+    logError: LogFunction;
+    // (undocumented)
+    logInfo: LogFunction;
+    // (undocumented)
+    logTrace: LogFunction;
+    // (undocumented)
+    logWarning: LogFunction;
+}
+
+// @beta
+export interface IMetadataProvider {
+    // (undocumented)
+    getSchema(schemaName: string): Promise<ECSchema | undefined>;
 }
 
 // @beta (undocumented)
@@ -266,10 +363,7 @@ export interface InstancesNodeKey {
 }
 
 // @beta (undocumented)
-export interface IQueryExecutor {
-    // (undocumented)
-    createQueryReader(ecsql: string, params?: QueryBinder, config?: QueryOptions): ECSqlReader;
-}
+export type LogFunction = (category: string, message: string) => void;
 
 // @beta
 export enum NodeSelectClauseColumnNames {
@@ -316,6 +410,9 @@ export interface NodeSelectClauseProps {
     // (undocumented)
     nodeLabel: string | ECSqlValueSelector;
 }
+
+// @beta
+export function setLogger(logger: ILogger | undefined): void;
 
 // @beta (undocumented)
 export type StandardHierarchyNodeKey = InstancesNodeKey | ClassGroupingNodeKey;

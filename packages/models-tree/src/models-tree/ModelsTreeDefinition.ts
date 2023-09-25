@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Id64String } from "@itwin/core-bentley";
-import { SchemaContext } from "@itwin/ecschema-metadata";
 import {
   BisInstanceLabelSelectClauseFactory,
   ClassBasedHierarchyLevelDefinitionsFactory,
@@ -12,12 +11,13 @@ import {
   HierarchyLevelDefinition,
   HierarchyNode,
   IHierarchyLevelDefinitionsFactory,
+  IMetadataProvider,
   NodeSelectClauseColumnNames,
   NodeSelectClauseFactory,
 } from "@itwin/presentation-hierarchy-builder";
 
 export interface ModelsTreeDefinitionProps {
-  schemas: SchemaContext;
+  metadataProvider: IMetadataProvider;
 }
 
 export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
@@ -27,7 +27,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
 
   public constructor(props: ModelsTreeDefinitionProps) {
     this._impl = new ClassBasedHierarchyLevelDefinitionsFactory({
-      schemas: props.schemas,
+      metadataProvider: props.metadataProvider,
       hierarchy: {
         rootNodes: async () => this.createRootHierarchyLevelDefinition(),
         childNodes: [
@@ -55,7 +55,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
       },
     });
     this._selectClauseFactory = new NodeSelectClauseFactory();
-    this._nodeLabelSelectClauseFactory = new BisInstanceLabelSelectClauseFactory({ schemas: props.schemas });
+    this._nodeLabelSelectClauseFactory = new BisInstanceLabelSelectClauseFactory({ metadataProvider: props.metadataProvider });
   }
 
   public async defineHierarchyLevel(parentNode: HierarchyNode | undefined) {
