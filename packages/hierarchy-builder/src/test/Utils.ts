@@ -48,7 +48,7 @@ export function createTestNode(src?: Partial<HierarchyNode>): HierarchyNode {
 
 export function createTestInstanceKey(src?: Partial<InstanceKey>): InstanceKey {
   return {
-    className: "TestSchema:TestClass",
+    className: "TestSchema.TestClass",
     id: "0x1",
     ...src,
   };
@@ -69,7 +69,7 @@ export type TStubClassFunc = (props: TStubClassFuncProps) => TStubClassFuncRetur
 export function createGetClassStub(schemas: IMetadataProvider) {
   const stub = sinon.stub(common, "getClass");
   const stubClass: TStubClassFunc = (props) => {
-    const fullName = `${props.schemaName}:${props.className}`;
+    const fullName = `${props.schemaName}.${props.className}`;
     const fullNameMatcher = sinon.match((fullClassName: string) => {
       const { schemaName, className } = parseFullClassName(fullClassName);
       return schemaName === props.schemaName && className === props.className;

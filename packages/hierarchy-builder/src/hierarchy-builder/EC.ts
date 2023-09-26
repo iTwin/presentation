@@ -17,7 +17,7 @@ export type Id64String = string;
 export interface ClassInfo {
   /** ECClass ID */
   id: Id64String;
-  /** Full class name in format `SchemaName:ClassName` */
+  /** Full class name in format `SchemaName.ClassName` */
   name: string;
   /** ECClass label */
   label: string;
@@ -28,7 +28,7 @@ export interface ClassInfo {
  * @beta
  */
 export interface InstanceKey {
-  /** Full class name in format `SchemaName:ClassName` */
+  /** Full class name in format `SchemaName.ClassName` */
   className: string;
   /** ECInstance ID */
   id: Id64String;

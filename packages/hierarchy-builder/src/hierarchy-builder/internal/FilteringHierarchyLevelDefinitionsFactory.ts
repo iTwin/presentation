@@ -62,7 +62,7 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
       const defaultNode = (this._source.parseNode ?? defaultNodesParser)(row);
       return {
         ...defaultNode,
-        autoExpand: defaultNode.autoExpand || (parsedFilteredChildrenPaths && !!parsedFilteredChildrenPaths.length),
+        ...(parsedFilteredChildrenPaths?.length ? { autoExpand: true } : undefined),
         filteredChildrenPaths: parsedFilteredChildrenPaths,
       };
     };
@@ -80,35 +80,36 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
       sourceDefinitions.map(async (definition) => {
         if (HierarchyNodesDefinition.isCustomNode(definition)) {
           filteredDefinitions.push(definition);
-        } else if (HierarchyNodesDefinition.isInstanceNodesQuery(definition)) {
-          const queryClass = await getClass(this._metadataProvider, definition.fullClassName);
-          let hasFilterMatches = false;
-          let isFilterTarget = false;
-          const filterInfos: { [key: Id64String]: InstanceKeyPath[] } = {};
-          for (const path of filteredInstancePaths) {
-            if (path.length === 0) {
-              isFilterTarget = true;
-              continue;
-            }
-            const pathClass = await getClass(this._metadataProvider, path[0].className);
-            if (await pathClass.is(queryClass)) {
-              let childrenPaths = filterInfos[path[0].id];
-              if (!childrenPaths) {
-                childrenPaths = [];
-                filterInfos[path[0].id] = childrenPaths;
-              }
-              const remainingPath = path.slice(1);
-              if (remainingPath.length > 0) {
-                childrenPaths.push(remainingPath);
-              }
-              hasFilterMatches = true;
-            }
+          return;
+        }
+
+        const queryClass = await getClass(this._metadataProvider, definition.fullClassName);
+        let hasFilterMatches = false;
+        let isFilterTarget = false;
+        const filterInfos: { [key: Id64String]: InstanceKeyPath[] } = {};
+        for (const path of filteredInstancePaths) {
+          if (path.length === 0) {
+            isFilterTarget = true;
+            continue;
           }
-          if (hasFilterMatches) {
-            filteredDefinitions.push(applyECInstanceIdsFilter(definition, filterInfos));
-          } else if (isFilterTarget) {
-            filteredDefinitions.push(definition);
+          const pathClass = await getClass(this._metadataProvider, path[0].className);
+          if (await pathClass.is(queryClass)) {
+            let childrenPaths = filterInfos[path[0].id];
+            if (!childrenPaths) {
+              childrenPaths = [];
+              filterInfos[path[0].id] = childrenPaths;
+            }
+            const remainingPath = path.slice(1);
+            if (remainingPath.length > 0) {
+              childrenPaths.push(remainingPath);
+            }
+            hasFilterMatches = true;
           }
+        }
+        if (hasFilterMatches) {
+          filteredDefinitions.push(applyECInstanceIdsFilter(definition, filterInfos));
+        } else if (isFilterTarget) {
+          filteredDefinitions.push(definition);
         }
       }),
     );
@@ -123,10 +124,15 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
   }
 }
 
+/** @internal */
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const ECSQL_COLUMN_NAME_FilteredChildrenPaths = "FilteredChildrenPaths";
+export const ECSQL_COLUMN_NAME_FilteredChildrenPaths = "FilteredChildrenPaths";
 
-function applyECInstanceIdsFilter(def: InstanceNodesQueryDefinition, filterInfo: { [key: Id64String]: InstanceKeyPath[] }): InstanceNodesQueryDefinition {
+/** @internal */
+export function applyECInstanceIdsFilter(
+  def: InstanceNodesQueryDefinition,
+  filterInfo: { [key: Id64String]: InstanceKeyPath[] },
+): InstanceNodesQueryDefinition {
   // return the filtered query
   return {
     ...def,

@@ -227,7 +227,7 @@ function createCustomNodeDefinition(props?: Partial<CustomHierarchyNodeDefinitio
 
 function createInstanceNodesQueryDefinition(props?: Partial<InstanceNodesQueryDefinition>): InstanceNodesQueryDefinition {
   return {
-    fullClassName: "full:class_name",
+    fullClassName: "full.class_name",
     query: {
       ecsql: "test ecsql",
     },
