@@ -4,25 +4,37 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Id64String } from "../EC";
+import { INodeParser } from "../HierarchyDefinition";
 import { HierarchyNode } from "../HierarchyNode";
 import { ECSqlQueryDef, IECSqlQueryExecutor } from "../queries/ECSql";
 import { NodeSelectClauseColumnNames } from "../queries/NodeSelectClauseFactory";
 
 /** @internal */
-export interface ITreeQueryResultsReader {
-  read(executor: IECSqlQueryExecutor, query: ECSqlQueryDef): Promise<HierarchyNode[]>;
+export interface ITreeQueryResultsReader<TNode extends HierarchyNode> {
+  read(executor: IECSqlQueryExecutor, query: ECSqlQueryDef): Promise<TNode[]>;
 }
 
 /** @internal */
-export class TreeQueryResultsReader implements ITreeQueryResultsReader {
-  public async read(executor: IECSqlQueryExecutor, query: ECSqlQueryDef): Promise<HierarchyNode[]> {
+export class TreeQueryResultsReader<TNode extends HierarchyNode> implements ITreeQueryResultsReader<TNode> {
+  private constructor(private _parser: INodeParser<TNode>) {}
+
+  public static create(): TreeQueryResultsReader<HierarchyNode>;
+  public static create<TNode extends HierarchyNode>(nodeParser: INodeParser<TNode>): TreeQueryResultsReader<TNode>;
+  public static create<TNode extends HierarchyNode>(nodeParser?: INodeParser<TNode>) {
+    if (nodeParser) {
+      return new TreeQueryResultsReader<TNode>(nodeParser);
+    }
+    return new TreeQueryResultsReader<HierarchyNode>(defaultNodesParser);
+  }
+
+  public async read(executor: IECSqlQueryExecutor, query: ECSqlQueryDef): Promise<TNode[]> {
     const reader = executor.createQueryReader(query.ecsql, query.bindings, { rowFormat: "ECSqlPropertyNames" });
-    const nodes = new Array<HierarchyNode>();
+    const nodes = new Array<TNode>();
     for await (const row of reader) {
       if (nodes.length >= ROWS_LIMIT) {
         throw new Error("rows limit exceeded");
       }
-      nodes.push(parseNode(row.toRow()));
+      nodes.push(this._parser(row.toRow()));
     }
     return nodes;
   }
@@ -44,22 +56,23 @@ interface RowDef {
 }
 /* eslint-enable @typescript-eslint/naming-convention */
 
-function parseNode(row: RowDef): HierarchyNode {
-  const parsedExtendedData = row.ExtendedData ? JSON.parse(row.ExtendedData) : undefined;
+/** @internal */
+export function defaultNodesParser(row: { [columnName: string]: any }): HierarchyNode {
+  const typedRow = row as RowDef;
+  const parsedExtendedData = typedRow.ExtendedData ? JSON.parse(typedRow.ExtendedData) : undefined;
   return {
-    label: row.DisplayLabel,
+    label: typedRow.DisplayLabel,
     extendedData: parsedExtendedData,
     key: {
       type: "instances",
-      instanceKeys: [{ className: row.FullClassName, id: row.ECInstanceId }],
+      instanceKeys: [{ className: typedRow.FullClassName, id: typedRow.ECInstanceId }],
     },
-    children: row.HasChildren === undefined ? undefined : !!row.HasChildren,
-    autoExpand: row.AutoExpand,
+    children: typedRow.HasChildren === undefined ? undefined : !!typedRow.HasChildren,
     params: {
-      hideIfNoChildren: !!row.HideIfNoChildren,
-      hideInHierarchy: !!row.HideNodeInHierarchy,
-      groupByClass: !!row.GroupByClass,
-      mergeByLabelId: row.MergeByLabelId,
+      hideIfNoChildren: !!typedRow.HideIfNoChildren,
+      hideInHierarchy: !!typedRow.HideNodeInHierarchy,
+      groupByClass: !!typedRow.GroupByClass,
+      mergeByLabelId: typedRow.MergeByLabelId,
     },
   };
 }

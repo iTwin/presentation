@@ -9,7 +9,7 @@ import { Id64, Logger, LogLevel } from "@itwin/core-bentley";
 import { Id64String, InstanceKey } from "../hierarchy-builder/EC";
 import { HierarchyNode } from "../hierarchy-builder/HierarchyNode";
 import * as common from "../hierarchy-builder/internal/Common";
-import { ECClass, IMetadataProvider } from "../hierarchy-builder/Metadata";
+import { ECClass, IMetadataProvider, parseFullClassName } from "../hierarchy-builder/Metadata";
 
 export function setupLogging(levels: Array<{ namespace: string; level: LogLevel }>) {
   Logger.initializeToConsole();
@@ -71,7 +71,7 @@ export function createGetClassStub(schemas: IMetadataProvider) {
   const stubClass: TStubClassFunc = (props) => {
     const fullName = `${props.schemaName}:${props.className}`;
     const fullNameMatcher = sinon.match((fullClassName: string) => {
-      const { schemaName, className } = common.splitFullClassName(fullClassName);
+      const { schemaName, className } = parseFullClassName(fullClassName);
       return schemaName === props.schemaName && className === props.className;
     });
     stub.withArgs(schemas, fullNameMatcher).resolves({
@@ -86,7 +86,7 @@ export function createGetClassStub(schemas: IMetadataProvider) {
           return props.is(`${schemaName}.${targetClassOrClassName}`);
         }
         // need this just to make sure `.` is used for separating schema and class names
-        const { schemaName: parsedSchemaName, className: parsedClassName } = common.splitFullClassName(targetClassOrClassName.fullName);
+        const { schemaName: parsedSchemaName, className: parsedClassName } = parseFullClassName(targetClassOrClassName.fullName);
         return props.is(`${parsedSchemaName}.${parsedClassName}`);
       }),
     } as unknown as ECClass);

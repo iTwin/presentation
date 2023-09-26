@@ -6,8 +6,10 @@
 
 import { catchError, concatAll, concatMap, defaultIfEmpty, from, map, mergeMap, Observable, ObservableInput, of, shareReplay, take, tap } from "rxjs";
 import { Id64 } from "@itwin/core-bentley";
+import { InstanceKeyPath } from "./EC";
 import { HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
 import { HierarchyNode } from "./HierarchyNode";
+import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
 import { createClassGroupingOperator } from "./internal/operators/ClassGrouping";
 import { createDetermineChildrenOperator } from "./internal/operators/DetermineChildren";
 import { createHideIfNoChildrenOperator } from "./internal/operators/HideIfNoChildren";
@@ -15,7 +17,6 @@ import { createHideNodesInHierarchyOperator } from "./internal/operators/HideNod
 import { createMergeInstanceNodesByLabelOperator } from "./internal/operators/MergeInstanceNodesByLabel";
 import { createPersistChildrenOperator } from "./internal/operators/PersistChildren";
 import { sortNodesByLabelOperator } from "./internal/operators/Sorting";
-import { supplyIconsOperator } from "./internal/operators/SupplyIcons";
 import { QueryScheduler } from "./internal/QueryScheduler";
 import { applyLimit, TreeQueryResultsReader } from "./internal/TreeNodesReader";
 import { IMetadataProvider } from "./Metadata";
@@ -26,6 +27,9 @@ export interface HierarchyProviderProps {
   metadataProvider: IMetadataProvider;
   queryExecutor: IECSqlQueryExecutor;
   hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
+  filtering?: {
+    paths: InstanceKeyPath[];
+  };
 }
 
 /** @beta */
@@ -33,15 +37,25 @@ export class HierarchyProvider {
   private _metadataProvider: IMetadataProvider;
   private _hierarchyFactory: IHierarchyLevelDefinitionsFactory;
   private _queryExecutor: IECSqlQueryExecutor;
-  private _queryReader: TreeQueryResultsReader;
+  private _queryReader: TreeQueryResultsReader<HierarchyNode>;
   private _scheduler: QueryScheduler<HierarchyNode[]>;
   private _directNodesCache: Map<string, Observable<HierarchyNode>>;
 
   public constructor(props: HierarchyProviderProps) {
     this._metadataProvider = props.metadataProvider;
-    this._hierarchyFactory = props.hierarchyDefinition;
+    if (props.filtering) {
+      const filteringDefinition = new FilteringHierarchyLevelDefinitionsFactory({
+        metadataProvider: this._metadataProvider,
+        source: props.hierarchyDefinition,
+        instanceKeyPaths: props.filtering.paths,
+      });
+      this._hierarchyFactory = filteringDefinition;
+      this._queryReader = TreeQueryResultsReader.create(filteringDefinition.parseNode);
+    } else {
+      this._hierarchyFactory = props.hierarchyDefinition;
+      this._queryReader = TreeQueryResultsReader.create();
+    }
     this._queryExecutor = props.queryExecutor;
-    this._queryReader = new TreeQueryResultsReader();
     this._scheduler = new QueryScheduler();
     this._directNodesCache = new Map();
   }
@@ -109,7 +123,7 @@ export class HierarchyProvider {
         // finalize before returning
         .pipe(
           createDetermineChildrenOperator((n) => this.hasNodesObservable(n)),
-          supplyIconsOperator,
+          map((n) => (this._hierarchyFactory.postProcessNode ? this._hierarchyFactory.postProcessNode(n) : n)),
         )
         // load all nodes into the array and resolve
         .subscribe({

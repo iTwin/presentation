@@ -3,21 +3,48 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Id64String } from "@itwin/core-bentley";
 import {
   BisInstanceLabelSelectClauseFactory,
   ClassBasedHierarchyLevelDefinitionsFactory,
+  ECSchema,
   ECSqlBinding,
   HierarchyLevelDefinition,
   HierarchyNode,
+  Id64String,
+  IECSqlQueryExecutor,
   IHierarchyLevelDefinitionsFactory,
+  IInstanceLabelSelectClauseFactory,
   IMetadataProvider,
+  InstanceKey,
+  InstanceKeyPath,
   NodeSelectClauseColumnNames,
   NodeSelectClauseFactory,
+  parseFullClassName,
 } from "@itwin/presentation-hierarchy-builder";
 
 export interface ModelsTreeDefinitionProps {
   metadataProvider: IMetadataProvider;
+}
+
+export interface ModelsTreeInstanceKeyPathsFromInstanceKeysProps {
+  metadataProvider: IMetadataProvider;
+  queryExecutor: IECSqlQueryExecutor;
+  keys: InstanceKey[];
+}
+
+export interface ModelsTreeInstanceKeyPathsFromInstanceLabelProps {
+  metadataProvider: IMetadataProvider;
+  queryExecutor: IECSqlQueryExecutor;
+  label: string;
+}
+
+export type ModelsTreeInstanceKeyPathsProps = ModelsTreeInstanceKeyPathsFromInstanceKeysProps | ModelsTreeInstanceKeyPathsFromInstanceLabelProps;
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export namespace ModelsTreeInstanceKeyPathsProps {
+  export function isLabelProps(props: ModelsTreeInstanceKeyPathsProps): props is ModelsTreeInstanceKeyPathsFromInstanceLabelProps {
+    return !!(props as ModelsTreeInstanceKeyPathsFromInstanceLabelProps).label;
+  }
 }
 
 export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
@@ -56,6 +83,15 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
     });
     this._selectClauseFactory = new NodeSelectClauseFactory();
     this._nodeLabelSelectClauseFactory = new BisInstanceLabelSelectClauseFactory({ metadataProvider: props.metadataProvider });
+  }
+
+  public postProcessNode(node: HierarchyNode): HierarchyNode {
+    if (HierarchyNode.isClassGroupingNode(node)) {
+      // `imageId` is assigned to instance nodes at query time, but grouping ones need to
+      // be handled during post-processing
+      return { ...node, extendedData: { ...node.extendedData, imageId: "icon-ec-class" } };
+    }
+    return node;
   }
 
   public async defineHierarchyLevel(parentNode: HierarchyNode | undefined) {
@@ -385,4 +421,288 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
       },
     ];
   }
+
+  public static async createInstanceKeyPaths(props: ModelsTreeInstanceKeyPathsProps) {
+    if (ModelsTreeInstanceKeyPathsProps.isLabelProps(props)) {
+      const labelsFactory = new BisInstanceLabelSelectClauseFactory({ metadataProvider: props.metadataProvider });
+      return createInstanceKeyPathsFromInstanceLabel({ ...props, labelsFactory });
+    }
+    return createInstanceKeyPathsFromInstanceKeys(props);
+  }
+}
+
+function createECInstanceKeySelectClause(
+  props: (({ classIdSelector: string } | { classIdAlias: string }) & ({ instanceHexIdSelector: string } | { instanceIdAlias: string })) | { alias: string },
+) {
+  const classIdSelector = (props as any).classIdSelector ?? `[${(props as any).classIdAlias ?? (props as any).alias}].[ECClassId]`;
+  const instanceHexIdSelector =
+    (props as any).instanceHexIdSelector ?? `printf('0x%x', [${(props as any).instanceIdAlias ?? (props as any).alias}].[ECInstanceId])`;
+  return `json_object('className', ec_classname(${classIdSelector}), 'id', ${instanceHexIdSelector})`;
+}
+
+async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectClauseFactory) {
+  return [
+    `GeometricElementsHierarchy(TargetId, TargetLabel, ECClassId, ECInstanceId, ParentId, ModelId, CategoryId, Path) AS (
+      SELECT
+        e.ECInstanceId,
+        ${await labelsFactory.createSelectClause({ classAlias: "e", className: "BisCore:GeometricElement3d" })},
+        e.ECClassId,
+        e.ECInstanceId,
+        e.Parent.Id,
+        e.Model.Id,
+        e.Category.Id,
+        ${createECInstanceKeySelectClause({ alias: "e" })}
+      FROM bis.GeometricElement3d e
+      UNION ALL
+      SELECT
+        c.TargetId,
+        c.TargetLabel,
+        p.ECClassId,
+        p.ECInstanceId,
+        p.Parent.Id,
+        p.Model.Id,
+        p.Category.Id,
+        c.Path || ',' || ${createECInstanceKeySelectClause({ alias: "p" })}
+      FROM GeometricElementsHierarchy c
+      JOIN bis.GeometricElement3d p on p.ECInstanceId = c.ParentId
+    )`,
+    `GeometricElements(TargetId, TargetLabel, ECClassId, ECInstanceId, ModelId, CategoryId, Path) AS (
+      SELECT e.TargetId, e.TargetLabel, e.ECClassId, e.ECInstanceId, e.ModelId, e.CategoryId, e.Path
+      FROM GeometricElementsHierarchy e
+      WHERE e.ParentId IS NULL
+    )`,
+    `Categories(ECClassId, ECInstanceId, HexId, Label) AS (
+      SELECT
+        c.ECClassId,
+        c.ECInstanceId,
+        printf('0x%x', c.ECInstanceId) HexId,
+        ${await labelsFactory.createSelectClause({ classAlias: "c", className: "BisCore:SpatialCategory" })}
+      FROM bis.SpatialCategory c
+    )`,
+    `Models(ECClassId, ECInstanceId, HexId, ModeledElementParentId, Label) AS (
+      SELECT
+        m.ECClassId,
+        m.ECInstanceId,
+        printf('0x%x', m.ECInstanceId) HexId,
+        p.Parent.Id,
+        ${await labelsFactory.createSelectClause({ classAlias: "p", className: "BisCore:Element" })}
+      FROM bis.Model m
+      JOIN bis.Element p on p.ECInstanceId = m.ModeledElement.Id
+    )`,
+    `ModelsCategoriesElementsHierarchy(TargetElementId, TargetElementLabel, ModelId, ModelHexId, ModelParentId, Path) AS (
+      SELECT
+        e.TargetId,
+        e.TargetLabel,
+        m.ECInstanceId,
+        m.HexId,
+        m.ModeledElementParentId,
+        e.Path || ',' || ${createECInstanceKeySelectClause({
+          classIdAlias: "c",
+          instanceHexIdSelector: "c.HexId",
+        })} || ',' || ${createECInstanceKeySelectClause({ classIdAlias: "m", instanceHexIdSelector: "m.HexId" })}
+      FROM GeometricElements e
+      JOIN Categories c ON c.ECInstanceId = e.CategoryId
+      JOIN Models m ON m.ECInstanceId = e.ModelId
+      UNION ALL
+      SELECT
+        mce.TargetElementId,
+        mce.TargetElementLabel,
+        m.ECInstanceId,
+        m.HexId,
+        m.ModeledElementParentId,
+        mce.Path || ',' || e.Path || ',' || ${createECInstanceKeySelectClause({
+          classIdAlias: "c",
+          instanceHexIdSelector: "c.HexId",
+        })} || ',' || ${createECInstanceKeySelectClause({ classIdAlias: "m", instanceHexIdSelector: "m.HexId" })}
+      FROM ModelsCategoriesElementsHierarchy mce
+      JOIN GeometricElements e on e.TargetId = mce.ModelId
+      JOIN Categories c ON c.ECInstanceId = e.CategoryId
+      JOIN Models m ON m.ECInstanceId = e.ModelId
+    )`,
+    `SubjectsHierarchy(TargetId, TargetLabel, ECClassId, ECInstanceId, ParentId, JsonProperties, Path) AS (
+      SELECT
+        s.ECInstanceId,
+        ${await labelsFactory.createSelectClause({ classAlias: "s", className: "BisCore:Subject" })},
+        s.ECClassId,
+        s.ECInstanceId,
+        s.Parent.Id,
+        s.JsonProperties,
+        ${createECInstanceKeySelectClause({ alias: "s" })}
+      FROM bis.Subject s
+      UNION ALL
+      SELECT
+        c.TargetId,
+        c.TargetLabel,
+        p.ECClassId,
+        p.ECInstanceId,
+        p.Parent.Id,
+        p.JsonProperties,
+        c.Path || ',' || ${createECInstanceKeySelectClause({ alias: "p" })}
+      FROM SubjectsHierarchy c
+      JOIN bis.Element p on p.ECInstanceId = c.ParentId
+    )`,
+    `Subjects(TargetId, TargetLabel, ECClassId, ECInstanceId, JsonProperties, Path) AS (
+      SELECT s.TargetId, s.TargetLabel, s.ECClassId, s.ECInstanceId, s.JsonProperties, s.Path
+      FROM SubjectsHierarchy s
+      WHERE s.ParentId IS NULL
+    )`,
+  ];
+}
+
+async function createInstanceKeyPathsFromInstanceKeys(props: ModelsTreeInstanceKeyPathsFromInstanceKeysProps): Promise<InstanceKeyPath[]> {
+  const ids = {
+    models: new Array<Id64String>(),
+    categories: new Array<Id64String>(),
+    subjects: new Array<Id64String>(),
+    elements: new Array<Id64String>(),
+  };
+  const bisSchema = await props.metadataProvider.getSchema("BisCore");
+  if (!bisSchema) {
+    throw new Error("Failed to load `BisCore` schema");
+  }
+  const subjectClass = await getSchemaClass(bisSchema, "Subject");
+  const modelClass = await getSchemaClass(bisSchema, "Model");
+  const categoryClass = await getSchemaClass(bisSchema, "SpatialCategory");
+  for (const key of props.keys) {
+    const keyClass = await getClass(props.metadataProvider, key.className);
+    if (await keyClass.is(subjectClass)) {
+      ids.subjects.push(key.id);
+    } else if (await keyClass.is(modelClass)) {
+      ids.models.push(key.id);
+    } else if (await keyClass.is(categoryClass)) {
+      ids.categories.push(key.id);
+    } else {
+      ids.elements.push(key.id);
+    }
+  }
+
+  const queries = [];
+  if (ids.elements.length > 0) {
+    queries.push(`
+      SELECT mce.Path || ',' || s.Path
+      FROM ModelsCategoriesElementsHierarchy mce
+      JOIN Subjects s ON s.TargetId = mce.ModelParentId OR json_extract(s.JsonProperties,'$.Subject.Model.TargetPartition') = mce.ModelHexId
+      WHERE mce.TargetElementId IN (${ids.elements.map(() => "?").join(",")})
+    `);
+  }
+  if (ids.categories.length > 0) {
+    queries.push(`
+      SELECT
+      ${createECInstanceKeySelectClause({ classIdAlias: "c", instanceHexIdSelector: "c.HexId" })}
+          || ',' || ${createECInstanceKeySelectClause({ classIdAlias: "m", instanceHexIdSelector: "m.HexId" })}
+          || ',' || s.Path
+      FROM Categories c,
+           Models m
+      JOIN Subjects s ON s.TargetId = m.ModeledElementParentId OR json_extract(s.JsonProperties,'$.Subject.Model.TargetPartition') = m.HexId
+      WHERE
+        m.ECInstanceId IN (SELECT e.Model.Id FROM bis.GeometricElement3d e WHERE e.Category.Id = c.ECInstanceId)
+        AND c.ECInstanceId IN (${ids.categories.map(() => "?").join(",")})
+    `);
+  }
+  if (ids.models.length > 0) {
+    queries.push(`
+      SELECT
+        ${createECInstanceKeySelectClause({ classIdAlias: "m", instanceHexIdSelector: "m.HexId" })} || ',' || s.Path
+      FROM Models m
+      JOIN Subjects s ON s.TargetId = m.ModeledElementParentId OR json_extract(s.JsonProperties,'$.Subject.Model.TargetPartition') = m.HexId
+      WHERE m.ECInstanceId IN (${ids.models.map(() => "?").join(",")})
+    `);
+  }
+  if (ids.subjects.length > 0) {
+    queries.push(`
+      SELECT s.Path
+      FROM Subjects s
+      WHERE s.TargetId IN (${ids.subjects.map(() => "?").join(",")})
+    `);
+  }
+  if (queries.length === 0) {
+    return [];
+  }
+
+  const ecsql = `
+    WITH RECURSIVE
+      ${(await createInstanceKeyPathsCTEs({ createSelectClause: async () => "''" })).join(", ")}
+    ${queries.join(" UNION ALL ")}
+  `;
+
+  const bindings: ECSqlBinding[] = [];
+  ids.elements.forEach((id) => bindings.push({ type: "id", value: id }));
+  ids.categories.forEach((id) => bindings.push({ type: "id", value: id }));
+  ids.models.forEach((id) => bindings.push({ type: "id", value: id }));
+  ids.subjects.forEach((id) => bindings.push({ type: "id", value: id }));
+
+  const reader = props.queryExecutor.createQueryReader(ecsql, bindings, { rowFormat: "Indexes" });
+  const paths = new Array<InstanceKeyPath>();
+  for await (const row of reader) {
+    paths.push(JSON.parse(`[${row.toArray()[0]}]`).reverse());
+  }
+  return paths;
+}
+
+async function createInstanceKeyPathsFromInstanceLabel(
+  props: ModelsTreeInstanceKeyPathsFromInstanceLabelProps & { labelsFactory: IInstanceLabelSelectClauseFactory },
+) {
+  const queries = [];
+  queries.push(`
+    SELECT mce.TargetElementLabel AS Label, mce.Path || ',' || s.Path AS Path
+    FROM ModelsCategoriesElementsHierarchy mce
+    JOIN Subjects s ON s.TargetId = mce.ModelParentId OR json_extract(s.JsonProperties,'$.Subject.Model.TargetPartition') = mce.ModelHexId
+  `);
+  queries.push(`
+    SELECT
+      c.Label AS Label,
+      ${createECInstanceKeySelectClause({ classIdAlias: "c", instanceHexIdSelector: "c.HexId" })}
+        || ',' || ${createECInstanceKeySelectClause({ classIdAlias: "m", instanceHexIdSelector: "m.HexId" })}
+        || ',' || s.Path AS Path
+    FROM Categories c,
+         Models m
+    JOIN Subjects s ON s.TargetId = m.ModeledElementParentId OR json_extract(s.JsonProperties,'$.Subject.Model.TargetPartition') = m.HexId
+    WHERE
+      m.ECInstanceId IN (SELECT e.Model.Id FROM bis.GeometricElement3d e WHERE e.Category.Id = c.ECInstanceId)
+  `);
+  queries.push(`
+    SELECT
+      m.Label AS Label,
+      ${createECInstanceKeySelectClause({ classIdAlias: "m", instanceHexIdSelector: "m.HexId" })} || ',' || s.Path AS Path
+    FROM Models m
+    JOIN Subjects s ON s.TargetId = m.ModeledElementParentId OR json_extract(s.JsonProperties,'$.Subject.Model.TargetPartition') = m.HexId
+  `);
+  queries.push(`
+    SELECT s.TargetLabel AS Label, s.Path AS Path
+    FROM Subjects s
+  `);
+
+  const ecsql = `
+    WITH RECURSIVE
+      ${(await createInstanceKeyPathsCTEs(props.labelsFactory)).join(", ")}
+    SELECT Path
+    FROM (
+      ${queries.join(" UNION ALL ")}
+    )
+    WHERE Label LIKE '%' || ? || '%'
+  `;
+
+  const reader = props.queryExecutor.createQueryReader(ecsql, [{ type: "string", value: props.label }], { rowFormat: "Indexes" });
+  const paths = new Array<InstanceKeyPath>();
+  for await (const row of reader) {
+    paths.push(JSON.parse(`[${row.toArray()[0]}]`).reverse());
+  }
+  return paths;
+}
+
+async function getClass(metadata: IMetadataProvider, fullClassName: string) {
+  const { schemaName, className } = parseFullClassName(fullClassName);
+  const schema = await metadata.getSchema(schemaName);
+  if (!schema) {
+    throw new Error(`Schema "${schemaName}" not found`);
+  }
+  return getSchemaClass(schema, className);
+}
+
+async function getSchemaClass(schema: ECSchema, className: string) {
+  const ecClass = await schema.getClass(className);
+  if (!ecClass) {
+    throw new Error(`Class "${className}" not found in schema "${schema.name}"`);
+  }
+  return ecClass;
 }

@@ -6,17 +6,11 @@
 import { merge, Observable } from "rxjs";
 import { assert } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyNodeHandlingParams, HierarchyNodeKey } from "../HierarchyNode";
-import { ECClass, ECSchema, IMetadataProvider } from "../Metadata";
-
-/** @internal */
-export function splitFullClassName(fullClassName: string) {
-  const [schemaName, className] = fullClassName.split(/[\.:]/);
-  return { schemaName, className };
-}
+import { ECClass, ECSchema, IMetadataProvider, parseFullClassName } from "../Metadata";
 
 /** @internal */
 export async function getClass(metadata: IMetadataProvider, fullClassName: string): Promise<ECClass> {
-  const { schemaName, className } = splitFullClassName(fullClassName);
+  const { schemaName, className } = parseFullClassName(fullClassName);
   let schema: ECSchema | undefined;
   try {
     schema = await metadata.getSchema(schemaName);
