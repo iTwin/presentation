@@ -2,5 +2,7 @@
 "@itwin/presentation-components": minor
 ---
 
-- `null` values will no longer be represented as empty fields in the query builder. Instead, building a query for `null` values will only be possible with `isNull` or `isNotNull` operators.
-- Empty strings will be selectable and displayed as _Empty Value_ in the query builder.
+Property value selector in instance filter builder changes:
+
+- `null` values are no longer represented as empty fields - instead, building a query for `null` values should be done using "**Is Null**" and "**Is Not Null**" operators.
+- Empty strings are now selectable and displayed as _Empty Value_ in the selector.

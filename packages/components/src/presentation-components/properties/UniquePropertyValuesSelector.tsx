@@ -17,7 +17,6 @@ import { getInstanceFilterFieldName } from "../instance-filter-builder/Utils";
 /** @internal */
 export const UNIQUE_PROPERTY_VALUES_BATCH_SIZE = 100;
 
-/** @internal */
 const nullStringIdentifier = "[[NULL]]";
 
 /** @internal */

@@ -237,7 +237,7 @@ describe("UniquePropertyValuesSelector", () => {
     const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
     await user.click(selector!);
 
-    // assert that tno row is loaded in the dropdown.
+    // assert that no row is loaded in the dropdown.
     await waitFor(() => expect(container.querySelectorAll(".iui-menu-item").length).to.be.equal(0));
   });
 
