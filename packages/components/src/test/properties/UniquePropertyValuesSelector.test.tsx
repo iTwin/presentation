@@ -172,25 +172,10 @@ describe("UniquePropertyValuesSelector", () => {
         onChange={() => {}}
         imodel={testImodel}
         descriptor={descriptor}
-        value={{ valueFormat: PropertyValueFormat.Primitive, displayValue: '[""]', value: '[""]' }}
+        value={{ valueFormat: PropertyValueFormat.Primitive, displayValue: '[""]', value: '[[""]]' }}
       />,
     );
     await waitFor(() => expect(container.querySelector(".iui-tag-label")?.innerHTML).to.include("Empty Value"));
-  });
-
-  // This test does not represent a real situation, since one would only be able to create a tag-label if it is selected in the filter
-  // and based on our current logic, one must not have a possibility to add null or undefined value to a filter.
-  it("sets empty text if provided value is parsed to null", () => {
-    const { container } = render(
-      <UniquePropertyValuesSelector
-        property={propertyDescription}
-        onChange={() => {}}
-        imodel={testImodel}
-        descriptor={descriptor}
-        value={{ valueFormat: PropertyValueFormat.Primitive, displayValue: "[null]", value: "[[null]]" }}
-      />,
-    );
-    expect(container.querySelector(".iui-tag-label")?.innerHTML).to.be.eq("[[NULL]]");
   });
 
   it("loads two rows and selects one of them `isOptionSelected`", async () => {
@@ -241,6 +226,24 @@ describe("UniquePropertyValuesSelector", () => {
     await waitFor(() => expect(container.querySelectorAll(".iui-menu-item").length).to.be.equal(0));
   });
 
+  it("does not load a row with a displayLabel but no defined groupedRawValues", async () => {
+    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+      total: 1,
+      items: [{ displayValue: "TestValue", groupedRawValues: [undefined] }],
+    });
+
+    const { queryByText, container, user } = render(
+      <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+    );
+
+    // open menu
+    const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
+    await user.click(selector!);
+
+    // assert that no row is loaded in the dropdown.
+    await waitFor(() => expect(container.querySelectorAll(".iui-menu-item").length).to.be.equal(0));
+  });
+
   it("loads row with empty string as displayValue and sets it to an 'Empty Value' string", async () => {
     sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
       total: 1,
@@ -257,6 +260,22 @@ describe("UniquePropertyValuesSelector", () => {
 
     // assert that the loaded row is the one with the empty string
     await waitFor(() => expect(container.querySelectorAll(".iui-menu-item").length).to.be.equal(1));
-    await waitFor(() => expect(queryByText("Empty Value")).to.not.be.null);
+  });
+
+  it("loads row even if one of the groupedRawValues is undefined ", async () => {
+    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+      total: 1,
+      items: [{ displayValue: "TestValue", groupedRawValues: [undefined, ""] }],
+    });
+
+    const { queryByText, container, user } = render(
+      <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+    );
+
+    // open menu
+    const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
+    await user.click(selector!);
+
+    await waitFor(() => expect(container.querySelectorAll(".iui-menu-item").length).to.be.equal(1));
   });
 });

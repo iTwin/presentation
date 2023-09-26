@@ -29,6 +29,8 @@ import { AsyncPaginate, AsyncPaginateProps } from "react-select-async-paginate";
 import { SvgCaretDown, SvgCaretDownSmall, SvgCheckmarkSmall, SvgCloseSmall } from "@itwin/itwinui-icons-react";
 import { useResizeObserver } from "../common/Utils";
 
+export const EMPTY_PROPERTY_TEXT = "Empty Value";
+
 /** @internal */
 export function MultiTagSelect<Option>(props: Props<Option>) {
   const { ref: selectRef, width } = useResizeObserver();
@@ -81,15 +83,17 @@ function TagSelectMenu<TOption, IsMulti extends boolean = boolean>({ children, .
 }
 
 function TagSelectOption<TOption, IsMulti extends boolean = boolean>({ children: _, ...props }: OptionProps<TOption, IsMulti>) {
+  const optionLabel = props.selectProps.getOptionLabel && props.selectProps.getOptionLabel(props.data);
+
   const className = classnames("iui-menu-item", {
     "iui-focused": props.isFocused,
     "iui-active": props.isSelected,
+    "presentation-instance-filter-special-property-value": optionLabel === "",
   });
-  const optionLabel = props.selectProps.getOptionLabel && props.selectProps.getOptionLabel(props.data);
 
   return (
     <components.Option {...props} className={className}>
-      {optionLabel === "" ? <span className="presentation-instance-filter-empty-property-text">Empty Value</span> : <span>optionLabel</span>}
+      <span>{optionLabel === "" ? EMPTY_PROPERTY_TEXT : optionLabel}</span>
       {props.isSelected && (
         <span className="iui-icon" style={{ marginLeft: "auto" }}>
           <SvgCheckmarkSmall />
@@ -131,15 +135,13 @@ function TagContainer<TOption, IsMulti extends boolean = boolean>({ children, ..
 }
 
 function TagLabel<TOption, IsMulti extends boolean = boolean>({ children, ...props }: MultiValueGenericProps<TOption, IsMulti>) {
+  const className = classnames("iui-tag-label", {
+    "presentation-instance-filter-special-property-value": children === "",
+  });
+
   return (
-    <components.MultiValueLabel {...props} innerProps={{ ...props.innerProps, className: "iui-tag-label" }}>
-      {children === "" ? (
-        <span className="presentation-instance-filter-empty-property-text" style={{ padding: 1 }}>
-          Empty Value
-        </span>
-      ) : (
-        children
-      )}
+    <components.MultiValueLabel {...props} innerProps={{ ...props.innerProps, className }}>
+      {children === "" ? EMPTY_PROPERTY_TEXT : children}
     </components.MultiValueLabel>
   );
 }
