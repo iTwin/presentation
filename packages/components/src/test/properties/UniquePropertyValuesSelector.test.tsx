@@ -258,7 +258,7 @@ describe("UniquePropertyValuesSelector", () => {
     const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
     await user.click(selector!);
 
-    // assert that the loaded row is the one with the empty string
+    // assert that the row is loaded
     await waitFor(() => expect(container.querySelectorAll(".iui-menu-item").length).to.be.equal(1));
   });
 
@@ -276,6 +276,7 @@ describe("UniquePropertyValuesSelector", () => {
     const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
     await user.click(selector!);
 
+    // assert that the row is loaded
     await waitFor(() => expect(container.querySelectorAll(".iui-menu-item").length).to.be.equal(1));
   });
 });
