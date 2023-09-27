@@ -27,7 +27,7 @@ import Component, {
 } from "react-select";
 import { AsyncPaginate, AsyncPaginateProps } from "react-select-async-paginate";
 import { SvgCaretDown, SvgCaretDownSmall, SvgCheckmarkSmall, SvgCloseSmall } from "@itwin/itwinui-icons-react";
-import { useResizeObserver } from "../common/Utils";
+import { translate, useResizeObserver } from "../common/Utils";
 
 /** @internal */
 export function MultiTagSelect<Option>(props: Props<Option>) {
@@ -81,14 +81,17 @@ function TagSelectMenu<TOption, IsMulti extends boolean = boolean>({ children, .
 }
 
 function TagSelectOption<TOption, IsMulti extends boolean = boolean>({ children: _, ...props }: OptionProps<TOption, IsMulti>) {
+  const optionLabel = props.selectProps.getOptionLabel && props.selectProps.getOptionLabel(props.data);
+
   const className = classnames("iui-menu-item", {
     "iui-focused": props.isFocused,
     "iui-active": props.isSelected,
+    "presentation-instance-filter-special-property-value": optionLabel === "",
   });
 
   return (
     <components.Option {...props} className={className}>
-      <span>{props.selectProps.getOptionLabel && props.selectProps.getOptionLabel(props.data)}</span>
+      <span>{optionLabel === "" ? translate("unique-values-property-editor.empty-value") : optionLabel}</span>
       {props.isSelected && (
         <span className="iui-icon" style={{ marginLeft: "auto" }}>
           <SvgCheckmarkSmall />
@@ -130,9 +133,13 @@ function TagContainer<TOption, IsMulti extends boolean = boolean>({ children, ..
 }
 
 function TagLabel<TOption, IsMulti extends boolean = boolean>({ children, ...props }: MultiValueGenericProps<TOption, IsMulti>) {
+  const className = classnames("iui-tag-label", {
+    "presentation-instance-filter-special-property-value": children === "",
+  });
+
   return (
-    <components.MultiValueLabel {...props} innerProps={{ ...props.innerProps, className: "iui-tag-label" }}>
-      {children}
+    <components.MultiValueLabel {...props} innerProps={{ ...props.innerProps, className }}>
+      {children === "" ? translate("unique-values-property-editor.empty-value") : children}
     </components.MultiValueLabel>
   );
 }
