@@ -10,6 +10,7 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
 import { waitFor } from "@testing-library/react";
+import { translate } from "../../presentation-components/common/Utils";
 import { UniquePropertyValuesSelector } from "../../presentation-components/properties/UniquePropertyValuesSelector";
 import { createTestECClassInfo, render } from "../_helpers/Common";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
@@ -175,7 +176,7 @@ describe("UniquePropertyValuesSelector", () => {
         value={{ valueFormat: PropertyValueFormat.Primitive, displayValue: '[""]', value: '[[""]]' }}
       />,
     );
-    await waitFor(() => expect(container.querySelector(".iui-tag-label")?.innerHTML).to.include("Empty Value"));
+    await waitFor(() => expect(container.querySelector(".iui-tag-label")?.innerHTML).to.include(translate("unique-values-property-editor.empty-property")));
   });
 
   it("loads two rows and selects one of them `isOptionSelected`", async () => {

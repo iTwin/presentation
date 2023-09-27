@@ -44,6 +44,7 @@
     "loading-target-instances": "Loading target instances"
   },
   "unique-values-property-editor": {
-    "select-values": "Select provided value(s)"
+    "select-values": "Select provided value(s)",
+    "empty-property": "Empty Value"
   }
 }
