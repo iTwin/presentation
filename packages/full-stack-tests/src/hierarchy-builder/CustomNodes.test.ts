@@ -138,5 +138,43 @@ describe("Stateless hierarchy builder", () => {
         ],
       });
     });
+
+    it("hides custom nodes with no children", async () => {
+      const root = {
+        key: "root",
+        label: "r",
+        children: undefined,
+      };
+      const hiddenChild = {
+        key: "hidden child",
+        label: "hc",
+        children: undefined,
+        params: {
+          hideIfNoChildren: true,
+        },
+      };
+      const provider = createProvider({
+        async defineHierarchyLevel(parent) {
+          switch (parent?.key) {
+            case undefined:
+              return [{ node: root }];
+            case "root":
+              return [{ node: hiddenChild }];
+            case "hidden child":
+              return [];
+          }
+          return [];
+        },
+      });
+      await validateHierarchy({
+        provider,
+        expect: [
+          NodeValidators.createForCustomNode({
+            ...root,
+            children: false,
+          }),
+        ],
+      });
+    });
   });
 });

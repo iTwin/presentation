@@ -11,8 +11,10 @@ import { InstanceKey } from "@itwin/presentation-common";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import { HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
-import { buildTestIModel, TestIModelBuilder } from "@itwin/presentation-testing";
+import { TestIModelBuilder } from "@itwin/presentation-testing";
 import {
+  buildIModel,
+  importSchema,
   insertPhysicalElement,
   insertPhysicalModelWithPartition,
   insertPhysicalPartition,
@@ -34,8 +36,8 @@ describe("Stateless hierarchy builder", () => {
     });
 
     it("creates Subject - Model - Category - Element hierarchy", async function () {
-      const { imodel, keys } = await buildIModel(this, async (builder) => {
-        const { physicalElementClassName } = await importTestSchema(builder);
+      const { imodel, ...keys } = await buildIModel(this, async (builder, mochaContext) => {
+        const { classes } = await importTestSchema(mochaContext, builder);
         const rootSubject: InstanceKey = { className: "BisCore:Subject", id: IModel.rootSubjectId };
         const childSubject = insertSubject({ builder, label: "child subject", parentId: rootSubject.id });
         const model = insertPhysicalModelWithPartition({ builder, label: `model`, partitionParentId: childSubject.id });
@@ -50,7 +52,7 @@ describe("Stateless hierarchy builder", () => {
         });
         const rootElement2 = insertPhysicalElement({
           builder,
-          classFullName: physicalElementClassName,
+          classFullName: classes.PhysicalObject.fullName,
           userLabel: `root element 2`,
           modelId: model.id,
           categoryId: category.id,
@@ -130,7 +132,7 @@ describe("Stateless hierarchy builder", () => {
     });
 
     it('hides subjects with `Subject.Model.Type = "Hierarchy"` json property', async function () {
-      const { imodel, keys } = await buildIModel(this, async (builder) => {
+      const { imodel, ...keys } = await buildIModel(this, async (builder) => {
         const rootSubject: InstanceKey = { className: "BisCore:Subject", id: IModel.rootSubjectId };
         const childSubject = insertSubject({
           builder,
@@ -171,7 +173,7 @@ describe("Stateless hierarchy builder", () => {
     });
 
     it("hides childless subjects", async function () {
-      const { imodel, keys } = await buildIModel(this, async (builder) => {
+      const { imodel, ...keys } = await buildIModel(this, async (builder) => {
         const rootSubject: InstanceKey = { className: "BisCore:Subject", id: IModel.rootSubjectId };
         const childSubject = insertSubject({ builder, label: "child subject", parentId: rootSubject.id });
         return { rootSubject, childSubject };
@@ -188,7 +190,7 @@ describe("Stateless hierarchy builder", () => {
     });
 
     it("hides subjects with childless models", async function () {
-      const { imodel, keys } = await buildIModel(this, async (builder) => {
+      const { imodel, ...keys } = await buildIModel(this, async (builder) => {
         const rootSubject: InstanceKey = { className: "BisCore:Subject", id: IModel.rootSubjectId };
         const childSubject = insertSubject({ builder, label: "child subject", parentId: rootSubject.id });
         const model = insertPhysicalModelWithPartition({ builder, label: `model`, partitionParentId: childSubject.id });
@@ -206,7 +208,7 @@ describe("Stateless hierarchy builder", () => {
     });
 
     it("shows subjects with child models related with subject through `Subject.Model.TargetPartition` json property", async function () {
-      const { imodel, keys } = await buildIModel(this, async (builder) => {
+      const { imodel, ...keys } = await buildIModel(this, async (builder) => {
         const rootSubject: InstanceKey = { className: "BisCore:Subject", id: IModel.rootSubjectId };
         const childSubject1 = insertSubject({ builder, label: "child subject 1", parentId: rootSubject.id });
         const model = insertPhysicalModelWithPartition({ builder, label: `model`, partitionParentId: childSubject1.id });
@@ -272,7 +274,7 @@ describe("Stateless hierarchy builder", () => {
     });
 
     it("hides models with `PhysicalPartition.Model.Content` json property", async function () {
-      const { imodel, keys } = await buildIModel(this, async (builder) => {
+      const { imodel, ...keys } = await buildIModel(this, async (builder) => {
         const rootSubject: InstanceKey = { className: "BisCore:Subject", id: IModel.rootSubjectId };
         const partition = insertPhysicalPartition({
           builder,
@@ -308,7 +310,7 @@ describe("Stateless hierarchy builder", () => {
     });
 
     it("hides models with `GraphicalPartition3d.Model.Content` json property", async function () {
-      const { imodel, keys } = await buildIModel(this, async (builder) => {
+      const { imodel, ...keys } = await buildIModel(this, async (builder) => {
         const rootSubject: InstanceKey = { className: "BisCore:Subject", id: IModel.rootSubjectId };
         const partition = insertPhysicalPartition({
           builder,
@@ -344,7 +346,7 @@ describe("Stateless hierarchy builder", () => {
     });
 
     it("hides private models and their content", async function () {
-      const { imodel, keys } = await buildIModel(this, async (builder) => {
+      const { imodel, ...keys } = await buildIModel(this, async (builder) => {
         const rootSubject: InstanceKey = { className: "BisCore:Subject", id: IModel.rootSubjectId };
         const partition = insertPhysicalPartition({ builder, label: "model", parentId: rootSubject.id });
         const model = insertPhysicalSubModel({ builder, modeledElementId: partition.id, isPrivate: true });
@@ -374,38 +376,20 @@ describe("Stateless hierarchy builder", () => {
       });
     }
 
-    async function buildIModel<TKeys extends {}>(mochaContext: Mocha.Context, setup: (builder: TestIModelBuilder) => Promise<TKeys>) {
-      let keys!: TKeys;
-      // eslint-disable-next-line deprecation/deprecation
-      const imodel = await buildTestIModel(mochaContext, async (builder) => {
-        keys = await setup(builder);
-      });
-      return { imodel, keys };
-    }
-
-    interface TestSchemaInfo {
-      schemaName: string;
-      physicalElementClassName: string;
-    }
-    async function importTestSchema(builder: TestIModelBuilder): Promise<TestSchemaInfo> {
-      const TEST_SCHEMA_NAME = "HierarchyBuilderTestSchema";
-      const TEST_SCHEMA_ALIAS = "hbts";
-      const PHYSICAL_ELEMENT_CLASS_NAME = "PhysicalObject";
-      const TEST_SCHEMA_XML = `
-      <?xml version="1.0" encoding="UTF-8"?>
-      <ECSchema schemaName="${TEST_SCHEMA_NAME}" alias="${TEST_SCHEMA_ALIAS}" version="01.00" xmlns="http://www.bentley.com/schemas/Bentley.ECXML.3.1">
-          <ECSchemaReference name="BisCore" version="01.00" alias="bis" />
-          <ECEntityClass typeName="${PHYSICAL_ELEMENT_CLASS_NAME}" displayLabel="Physical Object" modifier="Sealed" description="Similar to generic:PhysicalObject but also sub-modelable.">
-              <BaseClass>bis:PhysicalElement</BaseClass>
-              <BaseClass>bis:ISubModeledElement</BaseClass>
+    async function importTestSchema(mochaContext: Mocha.Context, builder: TestIModelBuilder) {
+      return importSchema(
+        mochaContext,
+        builder,
+        [
+          `
+          <ECEntityClass typeName="PhysicalObject" displayLabel="Physical Object" modifier="Sealed" description="Similar to generic:PhysicalObject but also sub-modelable.">
+            <BaseClass>bis:PhysicalElement</BaseClass>
+            <BaseClass>bis:ISubModeledElement</BaseClass>
           </ECEntityClass>
-      </ECSchema>
-    `;
-      await builder.importSchema(TEST_SCHEMA_XML);
-      return {
-        schemaName: TEST_SCHEMA_NAME,
-        physicalElementClassName: `${TEST_SCHEMA_NAME}:${PHYSICAL_ELEMENT_CLASS_NAME}`,
-      };
+          `,
+        ],
+        [`<ECSchemaReference name="BisCore" version="01.00" alias="bis" />`],
+      );
     }
   });
 });

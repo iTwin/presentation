@@ -42,10 +42,10 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
   }
 
   public get postProcessNode(): INodePostProcessor {
-    return (node: HierarchyNode): HierarchyNode => {
+    return (node: HierarchyNode) => {
       const processedNode = this._source.postProcessNode ? this._source.postProcessNode(node) : node;
       if (
-        // instance nodes' get auto-expanded in `parseNode`, but grouping ones need to be handled during post-processing
+        // instance nodes get the auto-expand flag in `parseNode`, but grouping ones need to be handled during post-processing
         HierarchyNode.isClassGroupingNode(node) &&
         Array.isArray(node.children) &&
         node.children.some((child: FilteredHierarchyNode) => !!child.filteredChildrenPaths)
@@ -79,7 +79,19 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
     await Promise.all(
       sourceDefinitions.map(async (definition) => {
         if (HierarchyNodesDefinition.isCustomNode(definition)) {
-          filteredDefinitions.push(definition);
+          filteredDefinitions.push({
+            ...definition,
+            node: {
+              ...definition.node,
+              params: {
+                ...definition.node.params,
+                // set 'hide if no children" flag to ensure we don't show the custom node
+                // if all its child nodes are filtered-out
+                hideIfNoChildren: true,
+              },
+              filteredChildrenPaths: filteredInstancePaths,
+            } as FilteredHierarchyNode,
+          });
           return;
         }
 

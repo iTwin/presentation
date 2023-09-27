@@ -61,7 +61,7 @@ export function defaultNodesParser(row: { [columnName: string]: any }): Hierarch
   const typedRow = row as RowDef;
   const parsedExtendedData = typedRow.ExtendedData ? JSON.parse(typedRow.ExtendedData) : undefined;
   return {
-    label: typedRow.DisplayLabel,
+    label: typedRow.DisplayLabel ?? "",
     extendedData: parsedExtendedData,
     key: {
       type: "instances",

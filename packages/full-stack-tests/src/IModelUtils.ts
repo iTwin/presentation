@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { ECDb } from "@itwin/core-backend";
 import { Id64, Id64String } from "@itwin/core-bentley";
 import {
   BisCodeSpec,
@@ -18,7 +19,87 @@ import {
   SubCategoryProps,
   SubjectProps,
 } from "@itwin/core-common";
-import { TestIModelBuilder } from "@itwin/presentation-testing";
+import { buildTestIModel, createFileNameFromString, setupOutputFileLocation, TestIModelBuilder } from "@itwin/presentation-testing";
+
+export async function withECDb<TResult extends {}>(
+  mochaContext: Mocha.Context,
+  setup: (db: ECDb, mochaContext: Mocha.Context) => Promise<TResult>,
+  use: (db: ECDb, res: TResult) => Promise<void>,
+) {
+  let res!: TResult;
+  const name = createFileNameFromString(mochaContext.test!.fullTitle());
+  const outputFile = setupOutputFileLocation(name);
+  const db = new ECDb();
+  db.createDb(outputFile);
+  try {
+    res = await setup(db, mochaContext);
+  } catch (e) {
+    db.dispose();
+    throw e;
+  } finally {
+    db.saveChanges("Created test ECDb");
+  }
+  try {
+    await use(db, res);
+  } finally {
+    db.dispose();
+  }
+}
+
+export async function buildIModel<TResult extends {}>(
+  mochaContext: Mocha.Context,
+  setup: (builder: TestIModelBuilder, mochaContext: Mocha.Context) => Promise<TResult>,
+) {
+  let res!: TResult;
+  // eslint-disable-next-line deprecation/deprecation
+  const imodel = await buildTestIModel(mochaContext, async (builder) => {
+    res = await setup(builder, mochaContext);
+  });
+  return { ...res, imodel };
+}
+
+export async function importSchema(
+  mochaContext: Mocha.Context,
+  imodel: { importSchema: (xml: string) => void | Promise<void> },
+  classes: string[],
+  schemaReferences?: string[],
+) {
+  const schemaName = `schema-${mochaContext.currentTest!.fullTitle()}`;
+  const schemaAlias = `test`;
+  const schemaXml = `
+    <?xml version="1.0" encoding="UTF-8"?>
+    <ECSchema schemaName="${schemaName}" alias="${schemaAlias}" version="01.00" xmlns="http://www.bentley.com/schemas/Bentley.ECXML.3.1">
+      <ECSchemaReference name="CoreCustomAttributes" version="1.0" alias="CoreCA" />
+      <ECSchemaReference name="ECDbMap" version="2.0" alias="ecdbmap" />
+      ${schemaReferences?.map((referenceXml) => referenceXml)}
+      ${classes.map((classXml) => classXml)}
+    </ECSchema>
+  `;
+  await imodel.importSchema(schemaXml);
+  return {
+    schemaName,
+    schemaAlias,
+    classes: classes.reduce<{ [className: string]: { name: string; fullName: string } }>((classesObj, classXml) => {
+      const className = parseClassNameFromXml(classXml);
+      return {
+        ...classesObj,
+        [className]: {
+          name: className,
+          fullName: `${schemaName}.${className}`,
+        },
+      };
+    }, {}),
+  };
+}
+
+function parseClassNameFromXml(xml: string) {
+  const re = /typename="([\w\d_]+)"/i;
+  const match = xml.match(re);
+  if (!match) {
+    throw new Error(`Given XML doesn't contain a "typename": ${xml}`);
+  }
+  return match[1];
+}
 
 export function insertSubject(
   props: { builder: TestIModelBuilder; label: string; parentId?: Id64String } & Partial<Omit<SubjectProps, "id" | "parent" | "code" | "model">>,
