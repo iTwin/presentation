@@ -45,6 +45,6 @@
   },
   "unique-values-property-editor": {
     "select-values": "Select provided value(s)",
-    "empty-property": "Empty Value"
+    "empty-value": "Empty Value"
   }
 }

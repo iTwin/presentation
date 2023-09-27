@@ -176,7 +176,7 @@ describe("UniquePropertyValuesSelector", () => {
         value={{ valueFormat: PropertyValueFormat.Primitive, displayValue: '[""]', value: '[[""]]' }}
       />,
     );
-    await waitFor(() => expect(container.querySelector(".iui-tag-label")?.innerHTML).to.include(translate("unique-values-property-editor.empty-property")));
+    await waitFor(() => expect(container.querySelector(".iui-tag-label")?.innerHTML).to.include(translate("unique-values-property-editor.empty-value")));
   });
 
   it("loads two rows and selects one of them `isOptionSelected`", async () => {
