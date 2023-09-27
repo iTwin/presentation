@@ -17,7 +17,7 @@ import { getInstanceFilterFieldName } from "../instance-filter-builder/Utils";
 /** @internal */
 export const UNIQUE_PROPERTY_VALUES_BATCH_SIZE = 100;
 
-/** @interna */
+/** @internal */
 export interface UniquePropertyValuesSelectorProps {
   /** Currently entered value. */
   value?: PropertyValue;
@@ -79,8 +79,8 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
       hideSelectedOptions={false}
       isSearchable={false}
       closeMenuOnSelect={false}
-      getOptionLabel={(option) => option.displayValue?.toString() ?? ""}
-      getOptionValue={(option) => option.groupedRawValues[0]?.toString() ?? ""}
+      getOptionLabel={(option) => option.displayValue!.toString()}
+      getOptionValue={(option) => option.groupedRawValues[0]!.toString()}
     />
   );
 }
@@ -165,8 +165,20 @@ function useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor }: Use
         paging: { start: loadedOptionsCount, size: UNIQUE_PROPERTY_VALUES_BATCH_SIZE },
         keys: new KeySet(),
       });
+
+      const filteredOptions = [];
+      for (const option of content.items) {
+        if (option.displayValue === undefined) {
+          continue;
+        }
+        const groupedValues = option.groupedRawValues.filter((value) => value !== undefined);
+        if (groupedValues.length !== 0) {
+          filteredOptions.push({ displayValue: option.displayValue, groupedRawValues: groupedValues });
+        }
+      }
+
       return {
-        options: content.items.filter((item) => item.displayValue !== undefined && item.displayValue !== ""),
+        options: filteredOptions,
         hasMore: content.items.length === UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
       };
     },
