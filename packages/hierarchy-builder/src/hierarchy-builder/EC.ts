@@ -33,9 +33,3 @@ export interface InstanceKey {
   /** ECInstance ID */
   id: Id64String;
 }
-
-/**
- * A data structure for describing a path of ECInstances.
- * @beta
- */
-export type InstanceKeyPath = InstanceKey[];

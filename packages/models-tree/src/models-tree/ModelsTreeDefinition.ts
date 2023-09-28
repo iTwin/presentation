@@ -10,13 +10,13 @@ import {
   ECSqlBinding,
   HierarchyLevelDefinition,
   HierarchyNode,
+  HierarchyNodeIdentifiersPath,
   Id64String,
   IECSqlQueryExecutor,
   IHierarchyLevelDefinitionsFactory,
   IInstanceLabelSelectClauseFactory,
   IMetadataProvider,
   InstanceKey,
-  InstanceKeyPath,
   NodeSelectClauseColumnNames,
   NodeSelectClauseFactory,
   parseFullClassName,
@@ -437,7 +437,7 @@ function createECInstanceKeySelectClause(
   const classIdSelector = (props as any).classIdSelector ?? `[${(props as any).classIdAlias ?? (props as any).alias}].[ECClassId]`;
   const instanceHexIdSelector =
     (props as any).instanceHexIdSelector ?? `printf('0x%x', [${(props as any).instanceIdAlias ?? (props as any).alias}].[ECInstanceId])`;
-  return `json_object('className', ec_classname(${classIdSelector}), 'id', ${instanceHexIdSelector})`;
+  return `json_object('className', replace(ec_classname(${classIdSelector}), ':', '.'), 'id', ${instanceHexIdSelector})`;
 }
 
 async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectClauseFactory) {
@@ -445,7 +445,7 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
     `GeometricElementsHierarchy(TargetId, TargetLabel, ECClassId, ECInstanceId, ParentId, ModelId, CategoryId, Path) AS (
       SELECT
         e.ECInstanceId,
-        ${await labelsFactory.createSelectClause({ classAlias: "e", className: "BisCore:GeometricElement3d" })},
+        ${await labelsFactory.createSelectClause({ classAlias: "e", className: "BisCore.GeometricElement3d" })},
         e.ECClassId,
         e.ECInstanceId,
         e.Parent.Id,
@@ -476,7 +476,7 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
         c.ECClassId,
         c.ECInstanceId,
         printf('0x%x', c.ECInstanceId) HexId,
-        ${await labelsFactory.createSelectClause({ classAlias: "c", className: "BisCore:SpatialCategory" })}
+        ${await labelsFactory.createSelectClause({ classAlias: "c", className: "BisCore.SpatialCategory" })}
       FROM bis.SpatialCategory c
     )`,
     `Models(ECClassId, ECInstanceId, HexId, ModeledElementParentId, Label) AS (
@@ -485,7 +485,7 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
         m.ECInstanceId,
         printf('0x%x', m.ECInstanceId) HexId,
         p.Parent.Id,
-        ${await labelsFactory.createSelectClause({ classAlias: "p", className: "BisCore:Element" })}
+        ${await labelsFactory.createSelectClause({ classAlias: "p", className: "BisCore.Element" })}
       FROM bis.Model m
       JOIN bis.Element p on p.ECInstanceId = m.ModeledElement.Id
     )`,
@@ -522,7 +522,7 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
     `SubjectsHierarchy(TargetId, TargetLabel, ECClassId, ECInstanceId, ParentId, JsonProperties, Path) AS (
       SELECT
         s.ECInstanceId,
-        ${await labelsFactory.createSelectClause({ classAlias: "s", className: "BisCore:Subject" })},
+        ${await labelsFactory.createSelectClause({ classAlias: "s", className: "BisCore.Subject" })},
         s.ECClassId,
         s.ECInstanceId,
         s.Parent.Id,
@@ -549,7 +549,7 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
   ];
 }
 
-async function createInstanceKeyPathsFromInstanceKeys(props: ModelsTreeInstanceKeyPathsFromInstanceKeysProps): Promise<InstanceKeyPath[]> {
+async function createInstanceKeyPathsFromInstanceKeys(props: ModelsTreeInstanceKeyPathsFromInstanceKeysProps): Promise<HierarchyNodeIdentifiersPath[]> {
   const ids = {
     models: new Array<Id64String>(),
     categories: new Array<Id64String>(),
@@ -632,7 +632,7 @@ async function createInstanceKeyPathsFromInstanceKeys(props: ModelsTreeInstanceK
   ids.subjects.forEach((id) => bindings.push({ type: "id", value: id }));
 
   const reader = props.queryExecutor.createQueryReader(ecsql, bindings, { rowFormat: "Indexes" });
-  const paths = new Array<InstanceKeyPath>();
+  const paths = new Array<HierarchyNodeIdentifiersPath>();
   for await (const row of reader) {
     paths.push(JSON.parse(`[${row.toArray()[0]}]`).reverse());
   }
@@ -683,7 +683,7 @@ async function createInstanceKeyPathsFromInstanceLabel(
   `;
 
   const reader = props.queryExecutor.createQueryReader(ecsql, [{ type: "string", value: props.label }], { rowFormat: "Indexes" });
-  const paths = new Array<InstanceKeyPath>();
+  const paths = new Array<HierarchyNodeIdentifiersPath>();
   for await (const row of reader) {
     paths.push(JSON.parse(`[${row.toArray()[0]}]`).reverse());
   }

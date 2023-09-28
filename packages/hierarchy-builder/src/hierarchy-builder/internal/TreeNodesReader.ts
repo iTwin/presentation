@@ -65,7 +65,7 @@ export function defaultNodesParser(row: { [columnName: string]: any }): Hierarch
     extendedData: parsedExtendedData,
     key: {
       type: "instances",
-      instanceKeys: [{ className: typedRow.FullClassName, id: typedRow.ECInstanceId }],
+      instanceKeys: [{ className: typedRow.FullClassName.replace(":", "."), id: typedRow.ECInstanceId }],
     },
     children: typedRow.HasChildren === undefined ? undefined : !!typedRow.HasChildren,
     params: {

@@ -11,17 +11,24 @@ import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { InstanceKey } from "@itwin/presentation-common";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import { HierarchyProvider, InstanceKeyPath } from "@itwin/presentation-hierarchy-builder";
+import { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { buildTestIModel, TestIModelBuilder } from "@itwin/presentation-testing";
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertPhysicalSubModel, insertSpatialCategory, insertSubject } from "../../IModelUtils";
+import {
+  importSchema,
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertPhysicalSubModel,
+  insertSpatialCategory,
+  insertSubject,
+} from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { ExpectedHierarchyDef, NodeValidators, validateHierarchy } from "../HierarchyValidation";
 
 interface TreeFilteringTestCaseDefinition<TIModelSetupResult> {
   name: string;
-  setupIModel: (builder: TestIModelBuilder) => Promise<TIModelSetupResult>;
-  getTargetInstancePaths: (setupResult: TIModelSetupResult) => InstanceKeyPath[];
+  setupIModel: (builder: TestIModelBuilder, mochaContext: Mocha.Context) => Promise<TIModelSetupResult>;
+  getTargetInstancePaths: (setupResult: TIModelSetupResult) => HierarchyNodeIdentifiersPath[];
   getTargetInstanceKeys: (setupResult: TIModelSetupResult) => InstanceKey[];
   getTargetInstanceLabel: (setupResult: TIModelSetupResult) => string;
   getExpectedHierarchy: (setupResult: TIModelSetupResult) => ExpectedHierarchyDef[];
@@ -31,8 +38,8 @@ namespace TreeFilteringTestCaseDefinition {
   // only need this to get generic type inferred using setupIModel return type
   export function create<TIModelSetupResult>(
     name: string,
-    setupIModel: (builder: TestIModelBuilder) => Promise<TIModelSetupResult>,
-    getTargetInstancePaths: (setupResult: TIModelSetupResult) => InstanceKeyPath[],
+    setupIModel: (builder: TestIModelBuilder, mochaContext: Mocha.Context) => Promise<TIModelSetupResult>,
+    getTargetInstancePaths: (setupResult: TIModelSetupResult) => HierarchyNodeIdentifiersPath[],
     getTargetInstanceKeys: (setupResult: TIModelSetupResult) => InstanceKey[],
     getTargetInstanceLabel: (setupResult: TIModelSetupResult) => string,
     getExpectedHierarchy: (setupResult: TIModelSetupResult) => ExpectedHierarchyDef[],
@@ -62,7 +69,7 @@ describe("Stateless hierarchy builder", () => {
       TreeFilteringTestCaseDefinition.create(
         "immediate Subject nodes",
         async (builder) => {
-          const rootSubject: InstanceKey = { className: "BisCore:Subject", id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
           const category = insertSpatialCategory({ builder, label: "category" });
           const childSubject1 = insertSubject({ builder, label: "matching subject 1", parentId: rootSubject.id });
           const childSubject2 = insertSubject({ builder, label: "subject 2", parentId: rootSubject.id });
@@ -95,7 +102,7 @@ describe("Stateless hierarchy builder", () => {
                         label: "category",
                         children: [
                           NodeValidators.createForClassGroupingNode({
-                            className: "Generic:PhysicalObject",
+                            label: "Physical Object",
                             children: [NodeValidators.createForInstanceNode({ label: /^element-1/, children: false })],
                           }),
                         ],
@@ -116,7 +123,7 @@ describe("Stateless hierarchy builder", () => {
                         label: "category",
                         children: [
                           NodeValidators.createForClassGroupingNode({
-                            className: "Generic:PhysicalObject",
+                            label: "Physical Object",
                             children: [NodeValidators.createForInstanceNode({ label: /^element-3/, children: false })],
                           }),
                         ],
@@ -132,7 +139,7 @@ describe("Stateless hierarchy builder", () => {
       TreeFilteringTestCaseDefinition.create(
         "nested Subject nodes",
         async (builder) => {
-          const rootSubject: InstanceKey = { className: "BisCore:Subject", id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
           const category = insertSpatialCategory({ builder, label: "category" });
           const intermediateSubject = insertSubject({ builder, label: `subject-x` });
           const childSubject1 = insertSubject({ builder, label: "matching subject 1", parentId: intermediateSubject.id });
@@ -170,7 +177,7 @@ describe("Stateless hierarchy builder", () => {
                             label: "category",
                             children: [
                               NodeValidators.createForClassGroupingNode({
-                                className: "Generic:PhysicalObject",
+                                label: "Physical Object",
                                 children: [NodeValidators.createForInstanceNode({ label: /^element-1/, children: false })],
                               }),
                             ],
@@ -190,7 +197,7 @@ describe("Stateless hierarchy builder", () => {
                             label: "category",
                             children: [
                               NodeValidators.createForClassGroupingNode({
-                                className: "Generic:PhysicalObject",
+                                label: "Physical Object",
                                 children: [NodeValidators.createForInstanceNode({ label: /^element-3/, children: false })],
                               }),
                             ],
@@ -209,7 +216,7 @@ describe("Stateless hierarchy builder", () => {
         "two levels of Subject nodes",
         async (builder) => {
           const category = insertSpatialCategory({ builder, label: "category" });
-          const rootSubject: InstanceKey = { className: "BisCore:Subject", id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
           const intermediateSubject1 = insertSubject({ builder, label: `matching intermediate subject 1`, parentId: rootSubject.id });
           const intermediateSubject2 = insertSubject({ builder, label: `intermediate subject 2`, parentId: rootSubject.id });
           insertModelWithElements(builder, 1, category.id, intermediateSubject2.id);
@@ -247,7 +254,7 @@ describe("Stateless hierarchy builder", () => {
                             label: "category",
                             children: [
                               NodeValidators.createForClassGroupingNode({
-                                className: "Generic:PhysicalObject",
+                                label: "Physical Object",
                                 children: [NodeValidators.createForInstanceNode({ label: /^element-2/, children: false })],
                               }),
                             ],
@@ -265,7 +272,7 @@ describe("Stateless hierarchy builder", () => {
       TreeFilteringTestCaseDefinition.create(
         "Model nodes",
         async (builder) => {
-          const rootSubject: InstanceKey = { className: "BisCore:Subject", id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
           const category = insertSpatialCategory({ builder, label: "category" });
           const model1 = insertPhysicalModelWithPartition({ builder, label: `matching model 1`, partitionParentId: rootSubject.id });
           const model2 = insertPhysicalModelWithPartition({ builder, label: `model 2`, partitionParentId: rootSubject.id });
@@ -295,7 +302,7 @@ describe("Stateless hierarchy builder", () => {
                     label: "category",
                     children: [
                       NodeValidators.createForClassGroupingNode({
-                        className: "Generic:PhysicalObject",
+                        label: "Physical Object",
                         children: [NodeValidators.createForInstanceNode({ label: /^element-1/, children: false })],
                       }),
                     ],
@@ -311,7 +318,7 @@ describe("Stateless hierarchy builder", () => {
                     label: "category",
                     children: [
                       NodeValidators.createForClassGroupingNode({
-                        className: "Generic:PhysicalObject",
+                        label: "Physical Object",
                         children: [NodeValidators.createForInstanceNode({ label: /^element-3/, children: false })],
                       }),
                     ],
@@ -325,7 +332,7 @@ describe("Stateless hierarchy builder", () => {
       TreeFilteringTestCaseDefinition.create(
         "Category nodes",
         async (builder) => {
-          const rootSubject: InstanceKey = { className: "BisCore:Subject", id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
           const model1 = insertPhysicalModelWithPartition({ builder, label: `model-1`, partitionParentId: rootSubject.id });
           const model2 = insertPhysicalModelWithPartition({ builder, label: `model-2`, partitionParentId: rootSubject.id });
 
@@ -361,7 +368,7 @@ describe("Stateless hierarchy builder", () => {
                     autoExpand: false,
                     children: [
                       NodeValidators.createForClassGroupingNode({
-                        className: "Generic:PhysicalObject",
+                        label: "Physical Object",
                         children: [NodeValidators.createForInstanceNode({ label: /^element-1/, children: false })],
                       }),
                     ],
@@ -379,7 +386,7 @@ describe("Stateless hierarchy builder", () => {
                     autoExpand: false,
                     children: [
                       NodeValidators.createForClassGroupingNode({
-                        className: "Generic:PhysicalObject",
+                        label: "Physical Object",
                         children: [NodeValidators.createForInstanceNode({ label: /^element-3/, children: false })],
                       }),
                     ],
@@ -393,7 +400,7 @@ describe("Stateless hierarchy builder", () => {
       TreeFilteringTestCaseDefinition.create(
         "root Element nodes",
         async (builder) => {
-          const rootSubject: InstanceKey = { className: "BisCore:Subject", id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
           const model1 = insertPhysicalModelWithPartition({ builder, label: `model-1`, partitionParentId: rootSubject.id });
           const model2 = insertPhysicalModelWithPartition({ builder, label: `model-2`, partitionParentId: rootSubject.id });
 
@@ -428,7 +435,7 @@ describe("Stateless hierarchy builder", () => {
                     autoExpand: true,
                     children: [
                       NodeValidators.createForClassGroupingNode({
-                        className: "Generic:PhysicalObject",
+                        label: "Physical Object",
                         autoExpand: true,
                         children: [NodeValidators.createForInstanceNode({ label: /^matching element 11/, autoExpand: false, children: false })],
                       }),
@@ -445,7 +452,7 @@ describe("Stateless hierarchy builder", () => {
                     autoExpand: true,
                     children: [
                       NodeValidators.createForClassGroupingNode({
-                        className: "Generic:PhysicalObject",
+                        label: "Physical Object",
                         autoExpand: true,
                         children: [NodeValidators.createForInstanceNode({ label: /^matching element 22/, autoExpand: false, children: false })],
                       }),
@@ -460,7 +467,7 @@ describe("Stateless hierarchy builder", () => {
       TreeFilteringTestCaseDefinition.create(
         "child Element nodes",
         async (builder) => {
-          const rootSubject: InstanceKey = { className: "BisCore:Subject", id: IModel.rootSubjectId };
+          const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
           const model = insertPhysicalModelWithPartition({ builder, label: `model-x`, partitionParentId: rootSubject.id });
           const category = insertSpatialCategory({ builder, label: "category-x" });
           const rootElement = insertPhysicalElement({ builder, userLabel: `root element 0`, modelId: model.id, categoryId: category.id });
@@ -509,7 +516,7 @@ describe("Stateless hierarchy builder", () => {
                     autoExpand: true,
                     children: [
                       NodeValidators.createForClassGroupingNode({
-                        className: "Generic:PhysicalObject",
+                        label: "Physical Object",
                         autoExpand: true,
                         children: [
                           NodeValidators.createForInstanceNode({
@@ -518,7 +525,7 @@ describe("Stateless hierarchy builder", () => {
                             autoExpand: true,
                             children: [
                               NodeValidators.createForClassGroupingNode({
-                                className: "Generic:PhysicalObject",
+                                label: "Physical Object",
                                 autoExpand: true,
                                 children: [
                                   NodeValidators.createForInstanceNode({
@@ -549,14 +556,14 @@ describe("Stateless hierarchy builder", () => {
       ),
       TreeFilteringTestCaseDefinition.create(
         "sub-modeled Element nodes",
-        async (builder) => {
-          const { physicalElementClassName } = await importTestSchema(builder);
-          const rootSubject: InstanceKey = { className: "BisCore:Subject", id: IModel.rootSubjectId };
+        async (builder, mochaContext) => {
+          const { classes } = await importTestSchema(mochaContext, builder);
+          const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
           const model = insertPhysicalModelWithPartition({ builder, label: `model`, partitionParentId: rootSubject.id });
           const category = insertSpatialCategory({ builder, label: "category" });
           const rootElement = insertPhysicalElement({
             builder,
-            classFullName: physicalElementClassName,
+            classFullName: classes.PhysicalObject.fullName,
             userLabel: `root element`,
             modelId: model.id,
             categoryId: category.id,
@@ -639,15 +646,17 @@ describe("Stateless hierarchy builder", () => {
     TEST_CASE_DEFS.forEach((testCase: TreeFilteringTestCaseDefinition<any>) => {
       describe(testCase.name, () => {
         let imodel: IModelConnection;
-        let instanceKeyPaths!: InstanceKeyPath[];
+        let instanceKeyPaths!: HierarchyNodeIdentifiersPath[];
         let targetInstanceKeys!: InstanceKey[];
         let targetInstanceLabel!: string;
         let expectedHierarchy!: ExpectedHierarchyDef[];
 
         before(async function () {
+          // eslint-disable-next-line @typescript-eslint/no-this-alias
+          const mochaContext = this;
           // eslint-disable-next-line deprecation/deprecation
           imodel = await buildTestIModel(this, async (builder) => {
-            const imodelSetupResult = await testCase.setupIModel(builder);
+            const imodelSetupResult = await testCase.setupIModel(builder, mochaContext);
             instanceKeyPaths = testCase.getTargetInstancePaths(imodelSetupResult).sort(instanceKeyPathSorter);
             targetInstanceKeys = testCase.getTargetInstanceKeys(imodelSetupResult);
             targetInstanceLabel = testCase.getTargetInstanceLabel(imodelSetupResult);
@@ -698,7 +707,7 @@ describe("Stateless hierarchy builder", () => {
       });
     });
 
-    async function createFilteredModelsTreeProvider(imodel: IModelConnection, instanceKeyPaths: InstanceKeyPath[]) {
+    async function createFilteredModelsTreeProvider(imodel: IModelConnection, nodePaths: HierarchyNodeIdentifiersPath[]) {
       const schemas = new SchemaContext();
       schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
       const metadataProvider = createMetadataProvider(schemas);
@@ -706,33 +715,24 @@ describe("Stateless hierarchy builder", () => {
         metadataProvider,
         queryExecutor: createECSqlQueryExecutor(imodel),
         hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider }),
-        filtering: { paths: instanceKeyPaths },
+        filtering: { paths: nodePaths },
       });
     }
 
-    interface TestSchemaInfo {
-      schemaName: string;
-      physicalElementClassName: string;
-    }
-    async function importTestSchema(builder: TestIModelBuilder): Promise<TestSchemaInfo> {
-      const TEST_SCHEMA_NAME = "HierarchyBuilderTestSchema";
-      const TEST_SCHEMA_ALIAS = "hbts";
-      const PHYSICAL_ELEMENT_CLASS_NAME = "PhysicalObject";
-      const TEST_SCHEMA_XML = `
-      <?xml version="1.0" encoding="UTF-8"?>
-      <ECSchema schemaName="${TEST_SCHEMA_NAME}" alias="${TEST_SCHEMA_ALIAS}" version="01.00" xmlns="http://www.bentley.com/schemas/Bentley.ECXML.3.1">
-          <ECSchemaReference name="BisCore" version="01.00" alias="bis" />
-          <ECEntityClass typeName="${PHYSICAL_ELEMENT_CLASS_NAME}" displayLabel="Physical Object" modifier="Sealed" description="Similar to generic:PhysicalObject but also sub-modelable.">
-              <BaseClass>bis:PhysicalElement</BaseClass>
-              <BaseClass>bis:ISubModeledElement</BaseClass>
+    async function importTestSchema(mochaContext: Mocha.Context, builder: TestIModelBuilder) {
+      return importSchema(
+        mochaContext,
+        builder,
+        [
+          `
+          <ECEntityClass typeName="PhysicalObject" displayLabel="Physical Object" modifier="Sealed" description="Similar to generic:PhysicalObject but also sub-modelable.">
+            <BaseClass>bis:PhysicalElement</BaseClass>
+            <BaseClass>bis:ISubModeledElement</BaseClass>
           </ECEntityClass>
-      </ECSchema>
-    `;
-      await builder.importSchema(TEST_SCHEMA_XML);
-      return {
-        schemaName: TEST_SCHEMA_NAME,
-        physicalElementClassName: `${TEST_SCHEMA_NAME}:${PHYSICAL_ELEMENT_CLASS_NAME}`,
-      };
+          `,
+        ],
+        [`<ECSchemaReference name="BisCore" version="01.00" alias="bis" />`],
+      );
     }
 
     function insertModelWithElements(builder: TestIModelBuilder, modelNo: number, elementsCategoryId: Id64String, parentId?: Id64String) {
@@ -741,19 +741,24 @@ describe("Stateless hierarchy builder", () => {
       return modelKey;
     }
 
-    function instanceKeyPathSorter(lhs: InstanceKeyPath, rhs: InstanceKeyPath) {
+    function instanceKeyPathSorter(lhs: HierarchyNodeIdentifiersPath, rhs: HierarchyNodeIdentifiersPath) {
       if (lhs.length !== rhs.length) {
         return lhs.length - rhs.length;
       }
       for (let i = 0; i < lhs.length; ++i) {
-        const classNameCmp = lhs[i].className.localeCompare(rhs[i].className);
-        if (0 !== classNameCmp) {
-          return classNameCmp;
+        const lhsId = lhs[i];
+        const rhsId = rhs[i];
+        if (HierarchyNodeIdentifier.isInstanceNodeIdentifier(lhsId) && HierarchyNodeIdentifier.isInstanceNodeIdentifier(rhsId)) {
+          const classNameCmp = lhsId.className.localeCompare(rhsId.className);
+          if (0 !== classNameCmp) {
+            return classNameCmp;
+          }
+          return lhsId.id.localeCompare(rhsId.id);
         }
-        const idCmp = lhs[i].id.localeCompare(rhs[i].id);
-        if (0 !== idCmp) {
-          return idCmp;
+        if (HierarchyNodeIdentifier.isCustomNodeIdentifier(lhsId) && HierarchyNodeIdentifier.isCustomNodeIdentifier(rhsId)) {
+          return lhsId.key.localeCompare(rhsId.key);
         }
+        return HierarchyNodeIdentifier.isCustomNodeIdentifier(lhsId) ? -1 : 1;
       }
       return 0;
     }

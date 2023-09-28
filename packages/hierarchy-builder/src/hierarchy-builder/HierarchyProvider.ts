@@ -4,11 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-console */
 
-import { catchError, concatAll, concatMap, defaultIfEmpty, from, map, mergeMap, Observable, ObservableInput, of, shareReplay, take, tap } from "rxjs";
+import { catchError, concatAll, concatMap, defaultIfEmpty, filter, from, map, mergeMap, Observable, ObservableInput, of, shareReplay, take, tap } from "rxjs";
 import { Id64 } from "@itwin/core-bentley";
-import { InstanceKeyPath } from "./EC";
 import { HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
-import { HierarchyNode } from "./HierarchyNode";
+import { HierarchyNode, HierarchyNodeIdentifiersPath } from "./HierarchyNode";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
 import { createClassGroupingOperator } from "./internal/operators/ClassGrouping";
 import { createDetermineChildrenOperator } from "./internal/operators/DetermineChildren";
@@ -28,7 +27,7 @@ export interface HierarchyProviderProps {
   queryExecutor: IECSqlQueryExecutor;
   hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
   filtering?: {
-    paths: InstanceKeyPath[];
+    paths: HierarchyNodeIdentifiersPath[];
   };
 }
 
@@ -47,7 +46,7 @@ export class HierarchyProvider {
       const filteringDefinition = new FilteringHierarchyLevelDefinitionsFactory({
         metadataProvider: this._metadataProvider,
         source: props.hierarchyDefinition,
-        instanceKeyPaths: props.filtering.paths,
+        nodeIdentifierPaths: props.filtering.paths,
       });
       this._hierarchyFactory = filteringDefinition;
       this._queryReader = TreeQueryResultsReader.create(filteringDefinition.parseNode);
@@ -107,6 +106,8 @@ export class HierarchyProvider {
 
     const directChildren = this.ensureDirectChildren(parentNode);
     const result = directChildren.pipe(
+      map((n) => (this._hierarchyFactory.preProcessNode ? this._hierarchyFactory.preProcessNode(n) : n)),
+      filter((n): n is HierarchyNode => !!n),
       createMergeInstanceNodesByLabelOperator(this._directNodesCache),
       createHideIfNoChildrenOperator((n) => this.hasNodesObservable(n), false),
       createHideNodesInHierarchyOperator((n) => this.getNodesObservable(n), this._directNodesCache, false),
@@ -148,6 +149,11 @@ export class HierarchyProvider {
 
     const directChildren = this.ensureDirectChildren(node);
     return directChildren
+      .pipe(
+        tap((n) => enableLogging && console.log(`HasNodes: partial node before preprocessing: ${JSON.stringify(n)}`)),
+        map((n) => (this._hierarchyFactory.preProcessNode ? this._hierarchyFactory.preProcessNode(n) : n)),
+        filter((n): n is HierarchyNode => !!n),
+      )
       .pipe(
         tap((n) => enableLogging && console.log(`HasNodes: partial node before HideIfNoChildrenOperator: ${JSON.stringify(n)}`)),
         createHideIfNoChildrenOperator((n) => this.hasNodesObservable(n), true),
