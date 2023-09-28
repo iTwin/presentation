@@ -18,6 +18,7 @@ import {
   convertPresentationFilterToPropertyFilter,
   createInstanceFilterPropertyInfos,
   createPresentationInstanceFilter,
+  DEFAULT_ROOT_CATEGORY_NAME,
   INSTANCE_FILTER_FIELD_SEPARATOR,
 } from "../../presentation-components/instance-filter-builder/Utils";
 import { createTestECClassInfo } from "../_helpers/Common";
@@ -29,7 +30,7 @@ import {
 } from "../_helpers/Content";
 
 function getPropertyDescriptionName(field: Field) {
-  return `${INSTANCE_FILTER_FIELD_SEPARATOR}${field.name}`;
+  return `root${INSTANCE_FILTER_FIELD_SEPARATOR}${field.name}`;
 }
 
 describe("createInstanceFilterPropertyInfos", () => {
@@ -51,6 +52,22 @@ describe("createInstanceFilterPropertyInfos", () => {
 
     const input = createInstanceFilterPropertyInfos(descriptor);
     expect(input).to.matchSnapshot();
+  });
+
+  it("creates property info with default root category name and does not assign a label to it", () => {
+    const rootCategory = createTestCategoryDescription({ name: DEFAULT_ROOT_CATEGORY_NAME, label: "Root Category" });
+    const descriptor = createTestContentDescriptor({
+      categories: [rootCategory],
+      fields: [
+        createTestPropertiesContentField({
+          properties: [{ property: { classInfo: createTestECClassInfo(), name: "prop1", type: "string" } }],
+          category: rootCategory,
+        }),
+      ],
+    });
+
+    const input = createInstanceFilterPropertyInfos(descriptor);
+    expect(input[0].categoryLabel).to.be.equal(undefined);
   });
 
   it("creates property infos when fields are in different categories category", () => {

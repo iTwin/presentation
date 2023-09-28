@@ -61,6 +61,8 @@ function getPropertySourceClassInfo(field: PropertiesField | NestedContentField)
   return field.pathToPrimaryClass[field.pathToPrimaryClass.length - 1].targetClassInfo;
 }
 
+export const DEFAULT_ROOT_CATEGORY_NAME = "/selected-item/";
+
 function createPresentationInstanceFilterConditionGroup(descriptor: Descriptor, group: PropertyFilterRuleGroup): PresentationInstanceFilter | undefined {
   const conditions = new Array<PresentationInstanceFilter>();
   for (const rule of group.rules) {
@@ -119,8 +121,16 @@ interface CategoryInfo {
 
 function getCategoryInfo(category: CategoryDescription, categoryInfo: CategoryInfo): CategoryInfo {
   if (!category.parent) {
-    return categoryInfo;
+    if (category.name === DEFAULT_ROOT_CATEGORY_NAME) {
+      return categoryInfo;
+    }
+
+    return {
+      name: categoryInfo.name ? `${category.name}/${categoryInfo.name}` : `${category.name}`,
+      label: categoryInfo.label ? `${category.label} | ${categoryInfo.label}` : `${category.label}`,
+    };
   }
+
   return getCategoryInfo(category.parent, {
     name: categoryInfo.name ? `${category.name}/${categoryInfo.name}` : `${category.name}`,
     label: categoryInfo.label ? `${category.label} | ${categoryInfo.label}` : `${category.label}`,
