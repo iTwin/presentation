@@ -66,8 +66,8 @@ describe("createInstanceFilterPropertyInfos", () => {
       ],
     });
 
-    const input = createInstanceFilterPropertyInfos(descriptor);
-    expect(input[0].categoryLabel).to.be.undefined;
+    const propertyInfos = createInstanceFilterPropertyInfos(descriptor);
+    expect(propertyInfos[0].categoryLabel).to.be.undefined;
   });
 
   it("creates property infos when fields are in different categories category", () => {
