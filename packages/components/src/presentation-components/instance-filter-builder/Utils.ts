@@ -50,6 +50,9 @@ export function getInstanceFilterFieldName(property: PropertyDescription) {
   return fieldName;
 }
 
+/** @internal */
+export const DEFAULT_ROOT_CATEGORY_NAME = "/selected-item/";
+
 function getPropertySourceClassInfo(field: PropertiesField | NestedContentField): ClassInfo {
   if (field.parent) {
     return getPropertySourceClassInfo(field.parent);
@@ -60,8 +63,6 @@ function getPropertySourceClassInfo(field: PropertiesField | NestedContentField)
   }
   return field.pathToPrimaryClass[field.pathToPrimaryClass.length - 1].targetClassInfo;
 }
-
-export const DEFAULT_ROOT_CATEGORY_NAME = "/selected-item/";
 
 function createPresentationInstanceFilterConditionGroup(descriptor: Descriptor, group: PropertyFilterRuleGroup): PresentationInstanceFilter | undefined {
   const conditions = new Array<PresentationInstanceFilter>();
