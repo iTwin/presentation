@@ -59,7 +59,7 @@
     "@types/node": "^18.17.7",
     "@types/sinon": "^10.0.16",
     "@types/sinon-chai": "^3.2.9",
-    "chai": "^4.3.7",
+    "chai": "^4.3.10",
     "cpx2": "^3.0.2",
     "eslint": "^8.47.0",
     "mocha": "^10.2.0",
