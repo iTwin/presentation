@@ -284,8 +284,6 @@ export class HierarchyProvider {
     constructor(props: HierarchyProviderProps);
     // (undocumented)
     getNodes(parentNode: HierarchyNode | undefined): Promise<HierarchyNode[]>;
-    // (undocumented)
-    hasNodes(node: HierarchyNode): Promise<boolean>;
 }
 
 // @beta (undocumented)
