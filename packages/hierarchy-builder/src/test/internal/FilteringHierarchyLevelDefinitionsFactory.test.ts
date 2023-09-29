@@ -218,7 +218,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
     it("returns source definitions when filtered instance paths list is empty", async () => {
       const sourceDefinitions: HierarchyLevelDefinition = [];
       const sourceFactory = {
-        defineHierarchyLevel: sinon.stub().resolves(sourceDefinitions),
+        defineHierarchyLevel: async () => sourceDefinitions,
       } as unknown as IHierarchyLevelDefinitionsFactory;
       const filteringFactory = createFilteringHierarchyLevelsFactory({
         sourceFactory,
@@ -238,7 +238,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           },
         };
         const sourceFactory = {
-          defineHierarchyLevel: sinon.stub().resolves([sourceDefinition]),
+          defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           sourceFactory,
@@ -257,7 +257,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           },
         };
         const sourceFactory = {
-          defineHierarchyLevel: sinon.stub().resolves([sourceDefinition]),
+          defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           sourceFactory,
@@ -276,7 +276,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           },
         };
         const sourceFactory = {
-          defineHierarchyLevel: sinon.stub().resolves([sourceDefinition]),
+          defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           sourceFactory,
@@ -328,7 +328,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           },
         };
         const sourceFactory = {
-          defineHierarchyLevel: sinon.stub().resolves([sourceDefinition]),
+          defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           sourceFactory,
@@ -360,7 +360,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           },
         };
         const sourceFactory = {
-          defineHierarchyLevel: sinon.stub().resolves([sourceDefinition]),
+          defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           sourceFactory,
@@ -380,7 +380,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           },
         };
         const sourceFactory = {
-          defineHierarchyLevel: sinon.stub().resolves([sourceDefinition]),
+          defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           sourceFactory,
@@ -399,7 +399,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           },
         };
         const sourceFactory = {
-          defineHierarchyLevel: sinon.stub().resolves([sourceDefinition]),
+          defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           sourceFactory,
@@ -420,7 +420,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           },
         };
         const sourceFactory = {
-          defineHierarchyLevel: sinon.stub().resolves([sourceDefinition]),
+          defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           sourceFactory,
@@ -450,7 +450,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           },
         };
         const sourceFactory = {
-          defineHierarchyLevel: sinon.stub().resolves([sourceDefinition]),
+          defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           sourceFactory,
@@ -477,7 +477,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           },
         };
         const sourceFactory = {
-          defineHierarchyLevel: sinon.stub().resolves([sourceDefinition]),
+          defineHierarchyLevel: async () => [sourceDefinition],
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           sourceFactory,
@@ -515,7 +515,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         },
       };
       const sourceFactory = {
-        defineHierarchyLevel: sinon.stub().resolves([sourceDefinition]),
+        defineHierarchyLevel: async () => [sourceDefinition],
       } as unknown as IHierarchyLevelDefinitionsFactory;
       const filteringFactory = createFilteringHierarchyLevelsFactory({
         sourceFactory,
