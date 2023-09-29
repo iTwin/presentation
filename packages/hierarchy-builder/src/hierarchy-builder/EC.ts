@@ -10,19 +10,25 @@
  */
 export type Id64String = string;
 
-/** @beta */
+/**
+ * A data structure describing an ECClass
+ * @beta
+ */
 export interface ClassInfo {
   /** ECClass ID */
   id: Id64String;
-  /** Full class name in format `SchemaName:ClassName` */
+  /** Full class name in format `SchemaName.ClassName` */
   name: string;
   /** ECClass label */
   label: string;
 }
 
-/** @beta */
+/**
+ * A data structure uniquely identifying an ECInstance in an iModel.
+ * @beta
+ */
 export interface InstanceKey {
-  /** Full class name in format `SchemaName:ClassName` */
+  /** Full class name in format `SchemaName.ClassName` */
   className: string;
   /** ECInstance ID */
   id: Id64String;
