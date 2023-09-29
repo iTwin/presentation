@@ -175,21 +175,6 @@ export class HierarchyProvider {
         tap((r) => enableLogging && console.log(`HasNodes: result: ${r}`)),
       );
   }
-
-  public async hasNodes(node: HierarchyNode): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      this.hasNodesObservable(node)
-        .pipe(take(1))
-        .subscribe({
-          next(res) {
-            resolve(res);
-          },
-          error(err) {
-            reject(err);
-          },
-        });
-    });
-  }
 }
 
 /**
