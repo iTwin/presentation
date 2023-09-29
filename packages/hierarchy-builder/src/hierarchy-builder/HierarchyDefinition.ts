@@ -5,8 +5,8 @@
 
 import { Id64String, InstanceKey } from "./EC";
 import { HierarchyNode } from "./HierarchyNode";
-import { getClass, splitFullClassName } from "./internal/Common";
-import { IMetadataProvider } from "./Metadata";
+import { getClass } from "./internal/Common";
+import { IMetadataProvider, parseFullClassName } from "./Metadata";
 import { ECSqlQueryDef } from "./queries/ECSql";
 
 /**
@@ -59,10 +59,63 @@ export namespace HierarchyNodesDefinition {
 export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
 
 /**
+ * A type for a function that parses a [[HierarchyNode]] from provided `row` object.
+ * @beta
+ */
+export type INodeParser<TNode extends HierarchyNode> = (row: { [columnName: string]: any }) => TNode;
+
+/**
+ * A type for a function that pre-processes given node. Unless the function decides not to make any modifications,
+ * it should return a new - modified - node, rather than modifying the given one.
+ *
+ * @beta
+ */
+export type INodePreProcessor = (node: HierarchyNode) => HierarchyNode | undefined;
+
+/**
+ * A type for a function that post-processes given node. Unless the function decides not to make any modifications,
+ * it should return a new - modified - node, rather than modifying the given one.
+ *
+ * @beta
+ */
+export type INodePostProcessor = (node: HierarchyNode) => HierarchyNode;
+
+/**
  * An interface for a factory that knows how define a hierarchy based on a given parent node.
  * @beta
  */
-export interface IHierarchyLevelDefinitionsFactory {
+export interface IHierarchyLevelDefinitionsFactory<TNode extends HierarchyNode = HierarchyNode> {
+  /**
+   * An optional function for parsing ECInstance node from ECSQL row.
+   *
+   * Should be used in situations when the [[IHierarchyLevelDefinitionsFactory]] implementation
+   * introduces additional ECSQL columns into the select clause and wants to assign additional
+   * data to the nodes it produces.
+   *
+   * Defaults to a function that parses all [[HierarchyNode]] attributes.
+   */
+  parseNode?: INodeParser<TNode>;
+
+  /**
+   * An optional function for pre-processing nodes.
+   *
+   * Pre-processing happens immediately after the nodes are loaded based on [[HierarchyLevelDefinition]]
+   * returned by this [[IHierarchyLevelDefinitionsFactory]]. The step allows assigning nodes additional data
+   * or excluding them from the hierarchy based on some attributes.
+   */
+  preProcessNode?: INodePreProcessor;
+
+  /**
+   * An optional function for post-processing nodes.
+   *
+   * Post-processing happens after the loaded nodes go through all the merging, hiding, sorting and grouping
+   * steps. This step allows [[IHierarchyLevelDefinitionsFactory]] implementations to assign additional data
+   * to nodes after they're processed. This is especially true for grouping nodes as they're only created during
+   * processing.
+   */
+  postProcessNode?: INodePostProcessor;
+
+  /** A function to create a hierarchy level definition for given parent node. */
   defineHierarchyLevel(parentNode: HierarchyNode | undefined): Promise<HierarchyLevelDefinition>;
 }
 
@@ -145,7 +198,7 @@ export interface ClassBasedHierarchyDefinitionsFactoryProps {
  *
  * @beta
  */
-export class ClassBasedHierarchyLevelDefinitionsFactory implements IHierarchyLevelDefinitionsFactory {
+export class ClassBasedHierarchyLevelDefinitionsFactory<TNode extends HierarchyNode = HierarchyNode> implements IHierarchyLevelDefinitionsFactory<TNode> {
   private _metadataProvider: IMetadataProvider;
   private _definition: ClassBasedHierarchyDefinition;
 
@@ -195,7 +248,7 @@ async function createHierarchyLevelDefinitions(
   return (
     await Promise.all(
       defs.map(async (def) => {
-        const { schemaName, className } = splitFullClassName(def.parentNodeClassName);
+        const { schemaName, className } = parseFullClassName(def.parentNodeClassName);
         if (await parentNodeClass.is(className, schemaName)) {
           return def.definitions(parentNodeInstanceIds, parentNode);
         }

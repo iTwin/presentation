@@ -63,9 +63,9 @@ describe("Learning snippets", async () => {
       let elementKey: InstanceKey;
       // eslint-disable-next-line deprecation/deprecation
       const imodel = await buildTestIModel(this, async (builder) => {
-        const categoryKey = insertSpatialCategory({ builder, label: "My Category" });
-        modelKey = insertPhysicalModelWithPartition({ builder, label: "My Model" });
-        elementKey = insertPhysicalElement({ builder, userLabel: "My Element", modelId: modelKey.id, categoryId: categoryKey.id });
+        const categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", label: "My Category" });
+        modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", label: "My Model" });
+        elementKey = insertPhysicalElement({ builder, fullClassNameSeparator: ":", userLabel: "My Element", modelId: modelKey.id, categoryId: categoryKey.id });
       });
 
       // render the component

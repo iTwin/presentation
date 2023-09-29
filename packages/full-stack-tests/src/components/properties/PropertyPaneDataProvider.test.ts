@@ -45,7 +45,7 @@ describe("PropertyDataProvider", async () => {
       it("creates empty result when properties requested for 0 instances", async function () {
         // eslint-disable-next-line deprecation/deprecation
         const imodel = await buildTestIModel(this, async (builder) => {
-          insertSpatialCategory({ builder, label: "My Category" });
+          insertSpatialCategory({ builder, fullClassNameSeparator: ":", label: "My Category" });
         });
         await using(createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET }), async (provider) => {
           provider.keys = new KeySet();
@@ -60,9 +60,15 @@ describe("PropertyDataProvider", async () => {
         let elementKey: InstanceKey;
         // eslint-disable-next-line deprecation/deprecation
         const imodel = await buildTestIModel(this, async (builder) => {
-          categoryKey = insertSpatialCategory({ builder, label: "My Category" });
-          modelKey = insertPhysicalModelWithPartition({ builder, label: "My Model" });
-          elementKey = insertPhysicalElement({ builder, userLabel: "My Element", modelId: modelKey.id, categoryId: categoryKey.id });
+          categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", label: "My Category" });
+          modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", label: "My Model" });
+          elementKey = insertPhysicalElement({
+            builder,
+            fullClassNameSeparator: ":",
+            userLabel: "My Element",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+          });
         });
         await using(createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET }), async (provider) => {
           provider.keys = new KeySet([elementKey]);
@@ -95,9 +101,15 @@ describe("PropertyDataProvider", async () => {
         let elementKey: InstanceKey;
         // eslint-disable-next-line deprecation/deprecation
         const imodel = await buildTestIModel(this, async (builder) => {
-          categoryKey = insertSpatialCategory({ builder, label: "My Category" });
-          modelKey = insertPhysicalModelWithPartition({ builder, label: "My Model" });
-          elementKey = insertPhysicalElement({ builder, userLabel: "My Element", modelId: modelKey.id, categoryId: categoryKey.id });
+          categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", label: "My Category" });
+          modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", label: "My Model" });
+          elementKey = insertPhysicalElement({
+            builder,
+            fullClassNameSeparator: ":",
+            userLabel: "My Element",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+          });
         });
         await using(createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET }), async (provider) => {
           provider.keys = new KeySet([{ className: "BisCore:Element", id: elementKey.id }]);
@@ -128,7 +140,7 @@ describe("PropertyDataProvider", async () => {
         let categoryKey: InstanceKey;
         // eslint-disable-next-line deprecation/deprecation
         const imodel = await buildTestIModel(this, async (builder) => {
-          categoryKey = insertSpatialCategory({ builder, label: "My Category" });
+          categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", label: "My Category" });
         });
         await using(createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET }), async (provider) => {
           sinon.stub(provider as any, "isFieldFavorite").returns(true);
@@ -164,7 +176,7 @@ describe("PropertyDataProvider", async () => {
         let categoryKey: InstanceKey;
         // eslint-disable-next-line deprecation/deprecation
         const imodel = await buildTestIModel(this, async (builder) => {
-          categoryKey = insertSpatialCategory({ builder, label: "My Category" });
+          categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", label: "My Category" });
         });
         await using(
           createProvider({
@@ -208,7 +220,7 @@ describe("PropertyDataProvider", async () => {
         let categoryKey: InstanceKey;
         // eslint-disable-next-line deprecation/deprecation
         const imodel = await buildTestIModel(this, async (builder) => {
-          categoryKey = insertSpatialCategory({ builder, label: "My Category" });
+          categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", label: "My Category" });
         });
 
         await using(createProvider({ imodel, ruleset: DEFAULT_PROPERTY_GRID_RULESET }), async (provider) => {
@@ -231,12 +243,24 @@ describe("PropertyDataProvider", async () => {
         let externalsSourceAspectKey: InstanceKey;
         // eslint-disable-next-line deprecation/deprecation
         const imodel = await buildTestIModel(this, async (builder) => {
-          const categoryKey = insertSpatialCategory({ builder, label: "My Category" });
-          const modelKey = insertPhysicalModelWithPartition({ builder, label: "My Model" });
-          elementKey = insertPhysicalElement({ builder, userLabel: "My Element", modelId: modelKey.id, categoryId: categoryKey.id });
-          const repositoryLinkKey = insertRepositoryLink({ builder, repositoryUrl: "Repository URL", repositoryLabel: "Repository Label" });
+          const categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", label: "My Category" });
+          const modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", label: "My Model" });
+          elementKey = insertPhysicalElement({
+            builder,
+            fullClassNameSeparator: ":",
+            userLabel: "My Element",
+            modelId: modelKey.id,
+            categoryId: categoryKey.id,
+          });
+          const repositoryLinkKey = insertRepositoryLink({
+            builder,
+            fullClassNameSeparator: ":",
+            repositoryUrl: "Repository URL",
+            repositoryLabel: "Repository Label",
+          });
           externalsSourceAspectKey = insertExternalSourceAspect({
             builder,
+            fullClassNameSeparator: ":",
             elementId: elementKey.id,
             identifier: "My External Source Aspect",
             repositoryId: repositoryLinkKey.id,
@@ -280,7 +304,7 @@ describe("PropertyDataProvider", async () => {
     let categoryKey: InstanceKey;
     // eslint-disable-next-line deprecation/deprecation
     const imodel = await buildTestIModel(this, async (builder) => {
-      categoryKey = insertSpatialCategory({ builder, label: "My Category" });
+      categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", label: "My Category" });
     });
     const checkDataProvider = async () => {
       await using(new PresentationPropertyDataProvider({ imodel }), async (p) => {
