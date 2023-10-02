@@ -90,8 +90,9 @@ export const NavigationPropertyTargetSelector = forwardRef<NavigationPropertyTar
           control: () => ({}),
           container: () => ({}),
           valueContainer: () => ({}),
-          menu: () => ({ position: "absolute", zIndex: 9999, width }),
+          menuPortal: (base) => ({ ...base, zIndex: 9999, width }),
           menuList: () => ({}),
+          menu: () => ({}),
           option: () => ({}),
           dropdownIndicator: () => ({}),
         }}
@@ -100,6 +101,7 @@ export const NavigationPropertyTargetSelector = forwardRef<NavigationPropertyTar
           MenuList: TargetSelectMenuList,
           Option: TargetSelectOption,
         }}
+        menuPortalTarget={divRef.current?.ownerDocument.body.querySelector(".iui-root") ?? divRef.current?.ownerDocument.body}
       />
     </div>
   );
