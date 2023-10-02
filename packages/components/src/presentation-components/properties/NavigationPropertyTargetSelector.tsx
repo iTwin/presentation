@@ -17,7 +17,7 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { SvgCaretDownSmall } from "@itwin/itwinui-icons-react";
 import { Input, List, ListItem } from "@itwin/itwinui-react";
 import { InstanceKey, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
-import { mergeRefs, translate, useResizeObserver } from "../common/Utils";
+import { translate, useMergedRefs, useResizeObserver } from "../common/Utils";
 import { NavigationPropertyTarget, useNavigationPropertyTargetsLoader, useNavigationPropertyTargetsRuleset } from "./UseNavigationPropertyTargetsLoader";
 
 /** @internal */
@@ -65,13 +65,14 @@ export const NavigationPropertyTargetSelector = forwardRef<NavigationPropertyTar
   }, [propertyRecord]);
 
   const { ref: selectRef, width } = useResizeObserver();
+  const mergedRefs = useMergedRefs(divRef, selectRef);
 
   if (!targetsRuleset) {
     return <ReadonlyNavigationPropertyTarget record={props.propertyRecord} />;
   }
 
   return (
-    <div ref={mergeRefs(divRef, selectRef)}>
+    <div ref={mergedRefs}>
       <AsyncPaginate
         isMulti={false}
         onChange={onChange}

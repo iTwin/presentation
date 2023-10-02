@@ -177,17 +177,20 @@ export function useResizeObserver<T extends HTMLElement>() {
 }
 
 /** @internal */
-export function mergeRefs<T>(...refs: Array<MutableRefObject<T | null> | LegacyRef<T>>): RefCallback<T> {
-  return (instance: T | null) => {
-    refs.forEach((ref) => {
-      // istanbul ignore else
-      if (typeof ref === "function") {
-        ref(instance);
-      } else if (ref) {
-        (ref as MutableRefObject<T | null>).current = instance;
-      }
-    });
-  };
+export function useMergedRefs<T>(...refs: Array<MutableRefObject<T | null> | LegacyRef<T>>): RefCallback<T> {
+  return useCallback(
+    (instance: T | null) => {
+      refs.forEach((ref) => {
+        // istanbul ignore else
+        if (typeof ref === "function") {
+          ref(instance);
+        } else if (ref) {
+          (ref as MutableRefObject<T | null>).current = instance;
+        }
+      });
+    },
+    [...refs], // eslint-disable-line react-hooks/exhaustive-deps
+  );
 }
 
 /**
