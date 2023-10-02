@@ -7,10 +7,19 @@ import { useCallback, useEffect, useState } from "react";
 import { ActionMeta, MultiValue, Options } from "react-select";
 import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ContentSpecificationTypes, Descriptor, DisplayValueGroup, Field, FieldDescriptor, KeySet, Ruleset, RuleTypes } from "@itwin/presentation-common";
+import {
+  ClassInfo,
+  ContentSpecificationTypes,
+  Descriptor,
+  DisplayValueGroup,
+  Field,
+  FieldDescriptor,
+  KeySet,
+  Ruleset,
+  RuleTypes,
+} from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { deserializeDisplayValueGroupArray, findField, serializeDisplayValueGroupArray, translate } from "../common/Utils";
-import { findBaseExpressionClass } from "../instance-filter-builder/InstanceFilterConverter";
 import { AsyncMultiTagSelect } from "../instance-filter-builder/MultiTagSelect";
 import { getInstanceFilterFieldName } from "../instance-filter-builder/Utils";
 
@@ -65,7 +74,7 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
   const isOptionSelected = (option: DisplayValueGroup, _: Options<DisplayValueGroup>): boolean =>
     selectedValues?.map((selectedValue) => selectedValue.displayValue).includes(option.displayValue) ?? false;
 
-  const ruleset = useUniquePropertyValuesRuleset({ descriptor, imodel, field });
+  const ruleset = useUniquePropertyValuesRuleset(field);
   const loadTargets = useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor: field?.getFieldDescriptor() });
 
   return (
@@ -101,17 +110,15 @@ function getUniqueValueFromProperty(property: PropertyValue | undefined): Displa
   return undefined;
 }
 
-interface UseUniquePropertyValuesRulesetProps {
-  descriptor: Descriptor;
-  field?: Field;
-  imodel: IModelConnection;
-}
-
-function useUniquePropertyValuesRuleset({ descriptor, field, imodel }: UseUniquePropertyValuesRulesetProps) {
+function useUniquePropertyValuesRuleset(field?: Field) {
   const [ruleset, setRuleset] = useState<Ruleset>();
   useEffect(() => {
     void (async () => {
-      const [schemaName, className] = await getSchemaAndClassNames({ imodel, descriptor, field });
+      const baseClassInfo = getBaseClassInfo(field);
+      if (baseClassInfo === undefined) {
+        return;
+      }
+      const [schemaName, className] = getSchemaAndClassNames(baseClassInfo);
       setRuleset({
         id: "unique-property-values",
         rules: [
@@ -127,23 +134,21 @@ function useUniquePropertyValuesRuleset({ descriptor, field, imodel }: UseUnique
         ],
       });
     })();
-  }, [field, descriptor, imodel]);
+  }, [field]);
 
   return ruleset;
 }
 
-async function getSchemaAndClassNames({ imodel, descriptor, field }: UseUniquePropertyValuesRulesetProps) {
+function getBaseClassInfo(field?: Field) {
   if (field?.parent === undefined && field?.isPropertiesField()) {
-    return field.properties[0].property.classInfo.name.split(":");
+    return field.properties[0].property.classInfo;
   }
-  return (
-    await findBaseExpressionClass(
-      imodel,
-      descriptor.selectClasses.map((item) => item.selectClassInfo),
-    )
-  ).name.split(":");
+  const lastStepToPrimaryClass = field?.parent?.pathToPrimaryClass.slice(-1).pop();
+
+  return lastStepToPrimaryClass?.targetClassInfo;
 }
 
+const getSchemaAndClassNames = (classInfo: ClassInfo) => classInfo.name.split(":");
 interface UseUniquePropertyValuesLoaderProps {
   imodel: IModelConnection;
   ruleset?: Ruleset;
