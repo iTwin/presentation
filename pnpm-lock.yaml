@@ -464,9 +464,6 @@ importers:
 
   packages/components:
     dependencies:
-      '@itwin/itwinui-css':
-        specifier: ^1.12.2
-        version: 1.12.2
       '@itwin/itwinui-icons-react':
         specifier: ^2.4.0
         version: 2.4.0(react-dom@17.0.2)(react@17.0.2)
@@ -3117,10 +3114,6 @@ packages:
       classnames: 2.3.1
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
-
-  /@itwin/itwinui-css@1.12.2:
-    resolution: {integrity: sha512-oTqH8wlZdGZwD1oj+Nt17dDQYEwX/zpEKlFEZGb070e9FYk4Wp7lKYl3KbxBBeayzuJR2gkubNboeoPR3ZzByA==}
-    dev: false
 
   /@itwin/itwinui-icons-react@2.4.0(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-m1oX5Lxws40+IoySenzcV9hwBXk6oMpEGFMPr/XgbKpmMCsT6+ZnvLOf7WLFjz0gbsX3iD+IqLG/QA1dJ+AjRQ==}
