@@ -246,7 +246,7 @@ describe("HideNodesInHierarchyOperator", () => {
         {
           key: {
             type: "class-grouping",
-            class: { id: Id64.invalid, name: "TestSchema:X", label: "X" },
+            class: { id: Id64.invalid, name: "TestSchema.X", label: "X" },
           },
           label: "a",
           children: undefined,
@@ -257,7 +257,7 @@ describe("HideNodesInHierarchyOperator", () => {
         {
           key: {
             type: "class-grouping",
-            class: { id: Id64.invalid, name: "TestSchema:X", label: "X" },
+            class: { id: Id64.invalid, name: "TestSchema.X", label: "X" },
           },
           label: "b",
           children: undefined,
@@ -271,7 +271,7 @@ describe("HideNodesInHierarchyOperator", () => {
       expect(getNodes).to.be.calledOnceWithExactly({
         key: {
           type: "class-grouping",
-          class: { id: Id64.invalid, name: "TestSchema:X", label: "X" },
+          class: { id: Id64.invalid, name: "TestSchema.X", label: "X" },
         },
         label: "a",
         children: undefined,

@@ -33,6 +33,7 @@
     "docs:reference": "betools docs --includes=./build/docs/extract --json=./build/docs/reference/presentation-testing/file.json --tsIndexFile=presentation-testing.ts --onlyJson --testExcludeGlob=./src/test/**",
     "lint": "eslint ./src/**/*.ts",
     "test": "mocha --config ./.mocharc.json \"./lib/cjs/test/**/*.test.js\"",
+    "test:regression": "npm -s test",
     "extract-api": "betools extract-api --entry=presentation-testing --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api",
     "check-internal": ""
   },
@@ -77,7 +78,7 @@
     "@types/mocha": "^8.2.3",
     "@types/sinon": "^10.0.16",
     "@types/sinon-chai": "^3.2.9",
-    "chai": "^4.3.7",
+    "chai": "^4.3.10",
     "chai-as-promised": "^7.1.1",
     "chai-jest-snapshot": "^2.0.0",
     "cpx2": "^3.0.2",

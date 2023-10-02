@@ -7,9 +7,10 @@
     "build": "tsc",
     "build:watch": "tsc -w",
     "clean": "rimraf lib build",
+    "cover": "npm run -s test",
     "lint": "eslint ./src/**/*.{ts,tsx}",
     "test": "mocha --config ./.mocharc.json",
-    "cover": "npm run -s test",
+    "test:regression": "npm -s test -- --invert --grep \"Stateless hierarchy builder\"",
     "docs": "betools extract --fileExt=ts,tsx --extractFrom=./src --recursive --out=./build/docs/extract"
   },
   "dependencies": {
@@ -55,7 +56,7 @@
     "@types/sinon": "^10.0.16",
     "@types/sinon-chai": "^3.2.9",
     "@types/source-map-support": "^0.5.6",
-    "chai": "^4.3.7",
+    "chai": "^4.3.10",
     "chai-jest-snapshot": "^2.0.0",
     "cpx2": "^4.2.3",
     "eslint": "^8.47.0",

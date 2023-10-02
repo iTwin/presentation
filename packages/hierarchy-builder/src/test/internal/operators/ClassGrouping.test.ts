@@ -15,154 +15,117 @@ describe("ClassGrouping", () => {
   before(() => {
     setupLogging([{ namespace: LOGGING_NAMESPACE, level: LogLevel.Trace }]);
   });
+
   const metadataProvider = {} as unknown as IMetadataProvider;
-
-  describe("groupByClass is false", () => {
-    it("doesn't group non-instance nodes", async () => {
-      const nodes: HierarchyNode[] = [
-        {
-          label: "custom",
-          key: "test",
-          children: false,
-        },
-      ];
-      const result = await getObservableResult(from(nodes).pipe(createClassGroupingOperator(metadataProvider)));
-      expect(result).to.deep.eq(nodes);
-    });
-
-    it("doesn't group instance nodes", async () => {
-      const nodes: HierarchyNode[] = [
-        createTestNode({
-          key: { type: "instances", instanceKeys: [{ className: "TestSchema:TestClass", id: "0x1" }] },
-        }),
-      ];
-      const result = await getObservableResult(from(nodes).pipe(createClassGroupingOperator(metadataProvider)));
-      expect(result).to.deep.eq(nodes);
-    });
+  let stubClass: TStubClassFunc;
+  beforeEach(() => {
+    stubClass = createGetClassStub(metadataProvider).stubClass;
   });
 
-  describe("groupByClass is true", () => {
-    let stubClass: TStubClassFunc;
-    beforeEach(() => {
-      stubClass = createGetClassStub(metadataProvider).stubClass;
-    });
+  it("doesn't group non-instance nodes", async () => {
+    const nodes: HierarchyNode[] = [
+      {
+        label: "custom",
+        key: "test",
+        children: false,
+      },
+    ];
+    const result = await getObservableResult(from(nodes).pipe(createClassGroupingOperator(metadataProvider)));
+    expect(result).to.deep.eq(nodes);
+  });
 
-    it("doesn't group non-instance nodes", async () => {
-      const nodes: HierarchyNode[] = [
-        {
-          label: "custom",
-          key: "test",
-          children: false,
-          params: { groupByClass: true },
+  it("groups one instance node", async () => {
+    const nodes = [
+      createTestNode({
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.TestClass", id: "0x1" }] },
+        params: { groupByClass: true },
+      }),
+    ];
+    const classInfo = stubClass({ schemaName: "TestSchema", className: "TestClass" });
+    const result = await getObservableResult(from(nodes).pipe(createClassGroupingOperator(metadataProvider)));
+    expect(result).to.deep.eq([
+      {
+        label: "TestClass",
+        key: {
+          type: "class-grouping",
+          class: classInfo,
         },
-      ];
-      const result = await getObservableResult(from(nodes).pipe(createClassGroupingOperator(metadataProvider)));
-      expect(result).to.deep.eq(nodes);
-    });
+        children: nodes,
+      },
+    ] as HierarchyNode[]);
+  });
 
-    it("groups one instance node", async () => {
-      const nodes: HierarchyNode[] = [
-        createTestNode({
-          key: { type: "instances", instanceKeys: [{ className: "TestSchema:TestClass", id: "0x1" }] },
-          params: { groupByClass: true },
-        }),
-      ];
-      const classInfo = stubClass({ schemaName: "TestSchema", className: "TestClass" });
-      const result = await getObservableResult(from(nodes).pipe(createClassGroupingOperator(metadataProvider)));
-      expect(result).to.deep.eq([
-        {
-          label: "TestClass",
-          key: {
-            type: "class-grouping",
-            class: classInfo,
-          },
-          children: nodes,
+  it("groups multiple instance nodes", async () => {
+    const nodes = [
+      createTestNode({
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
+        label: "1",
+        params: { groupByClass: true },
+      }),
+      createTestNode({
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.B", id: "0x2" }] },
+        label: "2",
+        params: { groupByClass: true },
+      }),
+      createTestNode({
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x3" }] },
+        label: "3",
+        params: { groupByClass: true },
+      }),
+    ];
+    const classA = stubClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A" });
+    const classB = stubClass({ schemaName: "TestSchema", className: "B", classLabel: "Class B" });
+    const result = await getObservableResult(from(nodes).pipe(createClassGroupingOperator(metadataProvider)));
+    expect(result).to.deep.eq([
+      {
+        label: "Class A",
+        key: {
+          type: "class-grouping",
+          class: classA,
         },
-      ] as HierarchyNode[]);
-    });
+        children: [nodes[0], nodes[2]],
+      },
+      {
+        label: "Class B",
+        key: {
+          type: "class-grouping",
+          class: classB,
+        },
+        children: [nodes[1]],
+      },
+    ] as HierarchyNode[]);
+  });
 
-    it("groups multiple instance nodes", async () => {
-      const nodes: HierarchyNode[] = [
-        createTestNode({
-          key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
-          label: "1",
-          params: { groupByClass: true },
-        }),
-        createTestNode({
-          key: { type: "instances", instanceKeys: [{ className: "TestSchema:B", id: "0x2" }] },
-          label: "2",
-          params: { groupByClass: true },
-        }),
-        createTestNode({
-          key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x3" }] },
-          label: "3",
-          params: { groupByClass: true },
-        }),
-      ];
-      const classA = stubClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A" });
-      const classB = stubClass({ schemaName: "TestSchema", className: "B", classLabel: "Class B" });
-      const result = await getObservableResult(from(nodes).pipe(createClassGroupingOperator(metadataProvider)));
-      expect(result).to.deep.eq([
-        {
-          label: "Class A",
-          key: {
-            type: "class-grouping",
-            class: classA,
-          },
-          children: [nodes[0], nodes[2]],
+  it("groups some input nodes", async () => {
+    const nodes = [
+      createTestNode({
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
+        label: "1",
+        params: { groupByClass: true },
+      }),
+      createTestNode({
+        key: "custom",
+        label: "custom",
+        params: { groupByClass: true },
+      }),
+      createTestNode({
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x2" }] },
+        label: "2",
+        params: { groupByClass: true },
+      }),
+    ];
+    const classA = stubClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A" });
+    const result = await getObservableResult(from(nodes).pipe(createClassGroupingOperator(metadataProvider)));
+    expect(result).to.deep.eq([
+      {
+        label: "Class A",
+        key: {
+          type: "class-grouping",
+          class: classA,
         },
-        {
-          label: "Class B",
-          key: {
-            type: "class-grouping",
-            class: classB,
-          },
-          children: [nodes[1]],
-        },
-      ] as HierarchyNode[]);
-    });
-
-    it("only groups nodes of instance type and with groupByClass property set to true", async () => {
-      const nodes: HierarchyNode[] = [
-        createTestNode({
-          key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
-          label: "1",
-          params: { groupByClass: true },
-        }),
-        createTestNode({
-          key: "custom",
-          label: "2",
-          params: { groupByClass: true },
-        }),
-        createTestNode({
-          key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
-          label: "3",
-          params: { groupByClass: true },
-        }),
-        createTestNode({
-          key: { type: "instances", instanceKeys: [{ className: "TestSchema:Z", id: "0x3" }] },
-          label: "4",
-        }),
-        createTestNode({
-          key: "custom2",
-          label: "5",
-        }),
-      ];
-      const classA = stubClass({ schemaName: "TestSchema", className: "A", classLabel: "1" });
-      const result = await getObservableResult(from(nodes).pipe(createClassGroupingOperator(metadataProvider)));
-      expect(result).to.deep.eq([
-        {
-          label: "1",
-          key: {
-            type: "class-grouping",
-            class: classA,
-          },
-          children: [nodes[0], nodes[2]],
-        },
-        nodes[1],
-        nodes[3],
-        nodes[4],
-      ] as HierarchyNode[]);
-    });
+        children: [nodes[0], nodes[2]],
+      },
+      nodes[1],
+    ] as HierarchyNode[]);
   });
 });
