@@ -89,11 +89,8 @@ export const NavigationPropertyTargetSelector = forwardRef<NavigationPropertyTar
         styles={{
           control: () => ({}),
           container: () => ({}),
-          valueContainer: () => ({}),
           menuPortal: (base) => ({ ...base, zIndex: 9999, width }),
-          menuList: () => ({}),
           menu: () => ({}),
-          option: () => ({}),
           dropdownIndicator: () => ({}),
         }}
         components={{
@@ -144,6 +141,7 @@ function TargetSelectControl<TOption, IsMulti extends boolean = boolean>(props: 
   }, [label]);
 
   const handleMenuOpen = () => {
+    // istanbul ignore else
     if (!selectProps.menuIsOpen) {
       selectProps.onMenuOpen();
     }
