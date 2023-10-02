@@ -156,33 +156,64 @@ describe("ClassBasedHierarchyLevelDefinitionsFactory", () => {
     expect(result).to.deep.eq([...def2]);
   });
 
-  it("returns empty definition for a parent node that's neither instances nor custom node", async () => {
-    const rootNode = createTestNode({
-      key: {
-        type: "class-grouping",
-        class: { id: "0x1", name: "some.class", label: "X" },
-      },
+  describe("neither instances nor custom node", () => {
+    it("returns empty definition for a class grouping parent node", async () => {
+      const rootNode = createTestNode({
+        key: {
+          type: "class-grouping",
+          class: { id: "0x1", name: "some.class", label: "X" },
+        },
+      });
+
+      const factory = new ClassBasedHierarchyLevelDefinitionsFactory({
+        metadataProvider,
+        hierarchy: {
+          rootNodes: async () => [createCustomNodeDefinition({ node: rootNode })],
+          childNodes: [
+            {
+              customParentNodeKey: "custom-node",
+              definitions: async () => [createCustomNodeDefinition({ node: createTestNode({ label: "1" }) })],
+            },
+            {
+              parentNodeClassName: "some.class",
+              definitions: async () => [createCustomNodeDefinition({ node: createTestNode({ label: "2" }) })],
+            },
+          ],
+        },
+      });
+
+      const result = await factory.defineHierarchyLevel(rootNode);
+      expect(result).to.be.empty;
     });
 
-    const factory = new ClassBasedHierarchyLevelDefinitionsFactory({
-      metadataProvider,
-      hierarchy: {
-        rootNodes: async () => [createCustomNodeDefinition({ node: rootNode })],
-        childNodes: [
-          {
-            customParentNodeKey: "custom-node",
-            definitions: async () => [createCustomNodeDefinition({ node: createTestNode({ label: "1" }) })],
-          },
-          {
-            parentNodeClassName: "some.class",
-            definitions: async () => [createCustomNodeDefinition({ node: createTestNode({ label: "2" }) })],
-          },
-        ],
-      },
-    });
+    it("returns empty definition for a label grouping parent node", async () => {
+      const rootNode = createTestNode({
+        key: {
+          type: "label-grouping",
+          labelInfo: { id: "0x1", label: "X" },
+        },
+      });
 
-    const result = await factory.defineHierarchyLevel(rootNode);
-    expect(result).to.be.empty;
+      const factory = new ClassBasedHierarchyLevelDefinitionsFactory({
+        metadataProvider,
+        hierarchy: {
+          rootNodes: async () => [createCustomNodeDefinition({ node: rootNode })],
+          childNodes: [
+            {
+              customParentNodeKey: "custom-node",
+              definitions: async () => [createCustomNodeDefinition({ node: createTestNode({ label: "1" }) })],
+            },
+            {
+              parentNodeClassName: "some.class",
+              definitions: async () => [createCustomNodeDefinition({ node: createTestNode({ label: "2" }) })],
+            },
+          ],
+        },
+      });
+
+      const result = await factory.defineHierarchyLevel(rootNode);
+      expect(result).to.be.empty;
+    });
   });
 
   it("uses all parent instance node's instance IDs when creating child hierarchy level", async () => {

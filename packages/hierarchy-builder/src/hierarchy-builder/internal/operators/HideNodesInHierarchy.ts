@@ -71,6 +71,8 @@ function createMergeMapKey(node: HierarchyNode): string {
       return node.key.instanceKeys[0].className;
     case "class-grouping":
       return node.key.class.name;
+    case "label-grouping":
+      return node.key.labelInfo.label;
   }
 }
 

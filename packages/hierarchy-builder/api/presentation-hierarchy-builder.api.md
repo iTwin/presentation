@@ -74,6 +74,20 @@ export interface ClassInfo {
     name: string;
 }
 
+// @beta (undocumented)
+export interface LabelGroupingNodeKey {
+    // (undocumented)
+    labelInfo: LabelInfo;
+    // (undocumented)
+    type: "label-grouping";
+}
+
+// @beta (undocumented)
+export interface LabelInfo {
+    id: Id64String;
+    label: string;
+}
+
 // @beta
 export interface CreateInstanceLabelSelectClauseProps {
     classAlias: string;
@@ -228,6 +242,10 @@ export namespace HierarchyNode {
         key: ClassGroupingNodeKey;
     };
     // (undocumented)
+    export function isLabelGroupingNode<TNode extends HierarchyNode>(node: TNode): node is TNode & {
+        key: LabelGroupingNodeKey;
+    };
+    // (undocumented)
     export function isCustom<TNode extends HierarchyNode>(node: TNode): node is TNode & {
         key: string;
     };
@@ -246,6 +264,8 @@ export interface HierarchyNodeHandlingParams {
     // (undocumented)
     groupByClass?: boolean;
     // (undocumented)
+    groupByLabel?: boolean;
+    // (undocumented)
     hideIfNoChildren?: boolean;
     // (undocumented)
     hideInHierarchy?: boolean;
@@ -260,6 +280,8 @@ export type HierarchyNodeKey = StandardHierarchyNodeKey | string;
 export namespace HierarchyNodeKey {
     // (undocumented)
     export function isClassGrouping(key: HierarchyNodeKey): key is ClassGroupingNodeKey;
+    // (undocumented)
+    export function isLabelGrouping(key: HierarchyNodeKey): key is LabelGroupingNodeKey;
     // (undocumented)
     export function isCustom(key: HierarchyNodeKey): key is string;
     // (undocumented)
@@ -373,6 +395,7 @@ export enum NodeSelectClauseColumnNames {
     ExtendedData = "ExtendedData",
     FullClassName = "FullClassName",
     GroupByClass = "GroupByClass",
+    GroupByLabel = "GroupByLabel",
     HasChildren = "HasChildren",
     HideIfNoChildren = "HideIfNoChildren",
     HideNodeInHierarchy = "HideNodeInHierarchy",
@@ -400,6 +423,8 @@ export interface NodeSelectClauseProps {
     // (undocumented)
     groupByClass?: boolean | ECSqlValueSelector;
     // (undocumented)
+    groupByLabel?: boolean | ECSqlValueSelector;
+    // (undocumented)
     hasChildren?: boolean | ECSqlValueSelector;
     // (undocumented)
     hideIfNoChildren?: boolean | ECSqlValueSelector;
@@ -415,7 +440,7 @@ export interface NodeSelectClauseProps {
 export function setLogger(logger: ILogger | undefined): void;
 
 // @beta (undocumented)
-export type StandardHierarchyNodeKey = InstancesNodeKey | ClassGroupingNodeKey;
+export type StandardHierarchyNodeKey = InstancesNodeKey | ClassGroupingNodeKey | LabelGroupingNodeKey;
 
 // (No @packageDocumentation comment for this package)
 

@@ -26,6 +26,7 @@ describe("NodeSelectClauseFactory", () => {
         bool: true,
       },
       groupByClass: true,
+      groupByLabel: true,
       hasChildren: true,
       hideIfNoChildren: true,
       hideNodeInHierarchy: true,
@@ -40,6 +41,7 @@ describe("NodeSelectClauseFactory", () => {
         CAST(1 AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
         CAST(1 AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
         CAST(1 AS BOOLEAN) AS ${NodeSelectClauseColumnNames.GroupByClass},
+        CAST(1 AS BOOLEAN) AS ${NodeSelectClauseColumnNames.GroupByLabel},
         CAST('merge id' AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
         json_object(
           'id', 0x3,
@@ -62,6 +64,7 @@ describe("NodeSelectClauseFactory", () => {
         sel: { selector: "x.ExtendedData" },
       },
       groupByClass: { selector: "x.GroupByClass" },
+      groupByLabel: { selector: "x.GroupByLabel" },
       hasChildren: { selector: "x.HasChildren" },
       hideIfNoChildren: { selector: "x.HideIfNoChildren" },
       hideNodeInHierarchy: { selector: "x.HideNodeInHierarchy" },
@@ -76,6 +79,7 @@ describe("NodeSelectClauseFactory", () => {
         CAST(x.HideIfNoChildren AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
         CAST(x.HideNodeInHierarchy AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
         CAST(x.GroupByClass AS BOOLEAN) AS ${NodeSelectClauseColumnNames.GroupByClass},
+        CAST(x.GroupByLabel AS BOOLEAN) AS ${NodeSelectClauseColumnNames.GroupByLabel},
         CAST(x.MergeId AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
         json_object(
           'sel', x.ExtendedData
@@ -100,6 +104,7 @@ describe("NodeSelectClauseFactory", () => {
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.GroupByClass},
+        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.GroupByLabel},
         CAST(NULL AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
         NULL AS ${NodeSelectClauseColumnNames.ExtendedData},
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.AutoExpand}

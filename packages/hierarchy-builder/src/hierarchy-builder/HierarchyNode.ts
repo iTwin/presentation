@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ClassInfo, InstanceKey } from "./EC";
+import { ClassInfo, InstanceKey, LabelInfo } from "./EC";
 
 /** @beta */
 export interface InstancesNodeKey {
@@ -18,7 +18,13 @@ export interface ClassGroupingNodeKey {
 }
 
 /** @beta */
-export type StandardHierarchyNodeKey = InstancesNodeKey | ClassGroupingNodeKey;
+export interface LabelGroupingNodeKey {
+  type: "label-grouping";
+  labelInfo: LabelInfo;
+}
+
+/** @beta */
+export type StandardHierarchyNodeKey = InstancesNodeKey | ClassGroupingNodeKey | LabelGroupingNodeKey;
 
 /** @beta */
 export type HierarchyNodeKey = StandardHierarchyNodeKey | string;
@@ -37,6 +43,9 @@ export namespace HierarchyNodeKey {
   export function isClassGrouping(key: HierarchyNodeKey): key is ClassGroupingNodeKey {
     return isStandard(key) && key.type === "class-grouping";
   }
+  export function isLabelGrouping(key: HierarchyNodeKey): key is LabelGroupingNodeKey {
+    return isStandard(key) && key.type === "label-grouping";
+  }
 }
 
 /** @beta */
@@ -44,6 +53,7 @@ export interface HierarchyNodeHandlingParams {
   hideIfNoChildren?: boolean;
   hideInHierarchy?: boolean;
   groupByClass?: boolean;
+  groupByLabel?: boolean;
   mergeByLabelId?: string;
 }
 
@@ -69,5 +79,8 @@ export namespace HierarchyNode {
   }
   export function isClassGroupingNode<TNode extends HierarchyNode>(node: TNode): node is TNode & { key: ClassGroupingNodeKey } {
     return HierarchyNodeKey.isClassGrouping(node.key);
+  }
+  export function isLabelGroupingNode<TNode extends HierarchyNode>(node: TNode): node is TNode & { key: LabelGroupingNodeKey } {
+    return HierarchyNodeKey.isLabelGrouping(node.key);
   }
 }
