@@ -7,17 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ActionMeta, MultiValue, Options } from "react-select";
 import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
-import {
-  ClassInfo,
-  ContentSpecificationTypes,
-  Descriptor,
-  DisplayValueGroup,
-  Field,
-  FieldDescriptor,
-  KeySet,
-  Ruleset,
-  RuleTypes,
-} from "@itwin/presentation-common";
+import { ContentSpecificationTypes, Descriptor, DisplayValueGroup, Field, FieldDescriptor, KeySet, Ruleset, RuleTypes } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { deserializeDisplayValueGroupArray, findField, serializeDisplayValueGroupArray, translate } from "../common/Utils";
 import { AsyncMultiTagSelect } from "../instance-filter-builder/MultiTagSelect";
@@ -113,27 +103,25 @@ function getUniqueValueFromProperty(property: PropertyValue | undefined): Displa
 function useUniquePropertyValuesRuleset(field?: Field) {
   const [ruleset, setRuleset] = useState<Ruleset>();
   useEffect(() => {
-    void (async () => {
-      const baseClassInfo = getBaseClassInfo(field);
-      if (baseClassInfo === undefined) {
-        return;
-      }
-      const [schemaName, className] = getSchemaAndClassNames(baseClassInfo);
-      setRuleset({
-        id: "unique-property-values",
-        rules: [
-          {
-            ruleType: RuleTypes.Content,
-            specifications: [
-              {
-                specType: ContentSpecificationTypes.ContentInstancesOfSpecificClasses,
-                classes: { schemaName, classNames: [className], arePolymorphic: true },
-              },
-            ],
-          },
-        ],
-      });
-    })();
+    const baseClassInfo = getBaseClassInfo(field);
+    if (baseClassInfo === undefined) {
+      return;
+    }
+    const [schemaName, className] = baseClassInfo.name.split(":");
+    setRuleset({
+      id: "unique-property-values",
+      rules: [
+        {
+          ruleType: RuleTypes.Content,
+          specifications: [
+            {
+              specType: ContentSpecificationTypes.ContentInstancesOfSpecificClasses,
+              classes: { schemaName, classNames: [className], arePolymorphic: true },
+            },
+          ],
+        },
+      ],
+    });
   }, [field]);
 
   return ruleset;
@@ -143,12 +131,16 @@ function getBaseClassInfo(field?: Field) {
   if (field?.parent === undefined && field?.isPropertiesField()) {
     return field.properties[0].property.classInfo;
   }
-  const lastStepToPrimaryClass = field?.parent?.pathToPrimaryClass.slice(-1).pop();
+
+  let deepestParentField = field?.parent;
+  while (deepestParentField?.parent !== undefined) {
+    deepestParentField = deepestParentField.parent;
+  }
+  const lastStepToPrimaryClass = deepestParentField?.pathToPrimaryClass.slice(-1).pop();
 
   return lastStepToPrimaryClass?.targetClassInfo;
 }
 
-const getSchemaAndClassNames = (classInfo: ClassInfo) => classInfo.name.split(":");
 interface UseUniquePropertyValuesLoaderProps {
   imodel: IModelConnection;
   ruleset?: Ruleset;
