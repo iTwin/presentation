@@ -49,13 +49,15 @@ export namespace NodeValidators {
     }
   }
 
-  export function createForCustomNode(expectedNode: Omit<HierarchyNode, "children"> & { children?: ExpectedHierarchyDef[] | boolean }): ExpectedHierarchyDef {
+  export function createForCustomNode(
+    expectedNode: Partial<Omit<HierarchyNode, "children">> & { children?: ExpectedHierarchyDef[] | boolean },
+  ): ExpectedHierarchyDef {
     return {
       node: (node) => {
         if (HierarchyNode.isStandard(node)) {
           throw new Error(`[${node.label}] Expected a custom node, got a standard "${node.key.type}" one`);
         }
-        if (node.key !== expectedNode.key) {
+        if (expectedNode.key !== undefined && node.key !== expectedNode.key) {
           throw new Error(`[${node.label}] Expected a custom node, got "${node.key}" one`);
         }
         validateBaseNodeAttributes(node, {

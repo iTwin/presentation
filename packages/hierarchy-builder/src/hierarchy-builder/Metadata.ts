@@ -44,3 +44,13 @@ export interface ECClass extends ECSchemaItem {
 export interface IMetadataProvider {
   getSchema(schemaName: string): Promise<ECSchema | undefined>;
 }
+
+/**
+ * An utility to parse schema and class names from full class name, where
+ * schema and class names are separated by either `:` or `.`
+ * @beta
+ */
+export function parseFullClassName(fullClassName: string) {
+  const [schemaName, className] = fullClassName.split(/[\.:]/);
+  return { schemaName, className };
+}

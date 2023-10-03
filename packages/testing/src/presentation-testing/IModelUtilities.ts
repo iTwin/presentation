@@ -142,8 +142,9 @@ export class IModelBuilder implements TestIModelBuilder {
  * - Making directories as necessary
  * - Removing a previous copy of the output file
  * @param fileName Name of output file
+ * @internal
  */
-function setupOutputFileLocation(fileName: string): LocalFileName {
+export function setupOutputFileLocation(fileName: string): LocalFileName {
   const testOutputDir = getTestOutputDir();
   !IModelJsFs.existsSync(testOutputDir) && IModelJsFs.mkdirSync(testOutputDir);
 

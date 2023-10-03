@@ -18,23 +18,24 @@ export interface ILogger {
   logTrace: LogFunction;
 }
 
-/** A logger implementation that simply outputs all logs to console. */
-const CONSOLE_LOGGER: ILogger = {
-  logError: (cat, msg) => console.error(`[${cat}] ${msg}`),
-  logWarning: (cat, msg) => console.warn(`[${cat}] ${msg}`),
-  logInfo: (cat, msg) => console.info(`[${cat}] ${msg}`),
-  logTrace: (cat, msg) => console.log(`[${cat}] ${msg}`),
+/** A logger implementation does nothing. */
+// istanbul ignore next
+const NOOP_LOGGER: ILogger = {
+  logError: () => {},
+  logWarning: () => {},
+  logInfo: () => {},
+  logTrace: () => {},
 };
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-let g_logger: ILogger = CONSOLE_LOGGER;
+let g_logger: ILogger = NOOP_LOGGER;
 
 /**
- * Set logger to use in this package. By default the package uses console logger.
+ * Set logger to use by this package. By default the package uses a no-op logger.
  * @beta
  */
 export function setLogger(logger: ILogger | undefined) {
-  g_logger = logger ?? CONSOLE_LOGGER;
+  g_logger = logger ?? /* istanbul ignore next */ NOOP_LOGGER;
 }
 
 /**

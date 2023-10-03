@@ -37,7 +37,7 @@ describe("ClassGrouping", () => {
   it("groups one instance node", async () => {
     const nodes = [
       createTestNode({
-        key: { type: "instances", instanceKeys: [{ className: "TestSchema:TestClass", id: "0x1" }] },
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.TestClass", id: "0x1" }] },
         params: { groupByClass: true },
       }),
     ];
@@ -58,17 +58,17 @@ describe("ClassGrouping", () => {
   it("groups multiple instance nodes", async () => {
     const nodes = [
       createTestNode({
-        key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
         label: "1",
         params: { groupByClass: true },
       }),
       createTestNode({
-        key: { type: "instances", instanceKeys: [{ className: "TestSchema:B", id: "0x2" }] },
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.B", id: "0x2" }] },
         label: "2",
         params: { groupByClass: true },
       }),
       createTestNode({
-        key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x3" }] },
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x3" }] },
         label: "3",
         params: { groupByClass: true },
       }),
@@ -99,7 +99,7 @@ describe("ClassGrouping", () => {
   it("groups some input nodes", async () => {
     const nodes = [
       createTestNode({
-        key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
         label: "1",
         params: { groupByClass: true },
       }),
@@ -109,7 +109,7 @@ describe("ClassGrouping", () => {
         params: { groupByClass: true },
       }),
       createTestNode({
-        key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x2" }] },
         label: "2",
         params: { groupByClass: true },
       }),
