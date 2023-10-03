@@ -105,6 +105,7 @@ function useUniquePropertyValuesRuleset(field?: Field) {
   useEffect(() => {
     const baseClassInfo = getBaseClassInfo(field);
     if (baseClassInfo === undefined) {
+      setRuleset(undefined);
       return;
     }
     const [schemaName, className] = baseClassInfo.name.split(":");
@@ -132,11 +133,11 @@ function getBaseClassInfo(field?: Field) {
     return field.properties[0].property.classInfo;
   }
 
-  let deepestParentField = field?.parent;
-  while (deepestParentField?.parent !== undefined) {
-    deepestParentField = deepestParentField.parent;
+  let rootParentField = field?.parent;
+  while (rootParentField?.parent !== undefined) {
+    rootParentField = rootParentField.parent;
   }
-  const lastStepToPrimaryClass = deepestParentField?.pathToPrimaryClass.slice(-1).pop();
+  const lastStepToPrimaryClass = rootParentField?.pathToPrimaryClass.slice(-1).pop();
 
   return lastStepToPrimaryClass?.targetClassInfo;
 }

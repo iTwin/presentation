@@ -323,11 +323,11 @@ describe("UniquePropertyValuesSelector", () => {
       relationshipPath.push(lastStepOfRelationshipPath);
 
       // create the field that is checked and set its parent's pathToPrimaryClass
-      const testField = createTestNestedContentField({ name: "testField", nestedFields: [] });
-      createTestNestedContentField({ nestedFields: [testField], pathToPrimaryClass: relationshipPath });
+      const testField = createTestPropertiesContentField({ name: "testField", properties: [] });
+      const parentField = createTestNestedContentField({ nestedFields: [testField], pathToPrimaryClass: relationshipPath });
 
       const testDescriptor = createTestContentDescriptor({
-        fields: [testField],
+        fields: [testField, parentField],
       });
 
       const spy = sinon.spy(Presentation.presentation, "getPagedDistinctValues");
@@ -361,12 +361,12 @@ describe("UniquePropertyValuesSelector", () => {
       relationshipPath.push(lastStepOfRelationshipPath);
 
       // create the field that is checked and set its 'grandparent' to contain the pathToPrimaryClass
-      const testField = createTestNestedContentField({ name: "testField", nestedFields: [] });
+      const testField = createTestPropertiesContentField({ name: "testField", properties: [] });
       const parentTestField = createTestNestedContentField({ nestedFields: [testField] });
-      createTestNestedContentField({ nestedFields: [parentTestField], pathToPrimaryClass: relationshipPath });
+      const grandParentField = createTestNestedContentField({ nestedFields: [parentTestField], pathToPrimaryClass: relationshipPath });
 
       const testDescriptor = createTestContentDescriptor({
-        fields: [testField],
+        fields: [testField, parentTestField, grandParentField],
       });
 
       const spy = sinon.spy(Presentation.presentation, "getPagedDistinctValues");
