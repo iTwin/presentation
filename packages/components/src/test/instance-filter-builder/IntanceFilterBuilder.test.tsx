@@ -48,7 +48,7 @@ describe("InstanceFilter", () => {
     sinon.restore();
   });
 
-  it("invokes 'onClassSelected' when non selected class is clicked", async () => {
+  it("invokes 'onSelectedClassesChanged' when class is selected", async () => {
     const spy = sinon.spy();
     const { getByRole, getAllByRole } = render(
       <InstanceFilterBuilder classes={classInfos} selectedClasses={[]} properties={[]} onSelectedClassesChanged={spy} onFilterChanged={() => {}} />,
@@ -63,7 +63,7 @@ describe("InstanceFilter", () => {
     expect(spy).to.be.calledOnceWith([classInfos[0].id]);
   });
 
-  it("invokes 'onClassDeselected' when selected class is clicked", async () => {
+  it("invokes 'onSelectedClassesChanged' when class is deselected", async () => {
     const spy = sinon.spy();
     const { getByRole, getAllByRole } = render(
       <InstanceFilterBuilder
