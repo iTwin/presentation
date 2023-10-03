@@ -8,7 +8,6 @@
 
 import "./InstanceFilterBuilder.scss";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActionMeta, MultiValue, SingleValue } from "react-select";
 import { BehaviorSubject, from, of } from "rxjs";
 import { map } from "rxjs/internal/operators/map";
 import { switchAll } from "rxjs/internal/operators/switchAll";
@@ -16,11 +15,11 @@ import { PropertyDescription } from "@itwin/appui-abstract";
 import { PropertyFilter, PropertyFilterBuilder, PropertyFilterBuilderProps } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
+import { ComboBox, SelectOption } from "@itwin/itwinui-react";
 import { ClassInfo, Descriptor } from "@itwin/presentation-common";
 import { translate } from "../common/Utils";
 import { NavigationPropertyEditorContextProps } from "../properties/NavigationPropertyEditor";
 import { getIModelMetadataProvider } from "./ECMetadataProvider";
-import { MultiTagSelect } from "./MultiTagSelect";
 import { PresentationInstanceFilterProperty } from "./PresentationInstanceFilterProperty";
 import { createInstanceFilterPropertyInfos, getInstanceFilterFieldName, InstanceFilterPropertyInfo } from "./Utils";
 
@@ -35,12 +34,8 @@ export interface InstanceFilterBuilderProps extends PropertyFilterBuilderProps {
   classes: ClassInfo[];
   /** Callback that is invoked when filter is changed. */
   onFilterChanged: (filter?: PropertyFilter) => void;
-  /** Callback that is invoked when class is selected. */
-  onClassSelected: (selectedClass: ClassInfo) => void;
-  /** Callback that is invoked when class is de-selected. */
-  onClassDeselected: (selectedClass: ClassInfo) => void;
-  /** Callback that is invoked when all selected classes are cleared. */
-  onClearClasses: () => void;
+  /** Callback that is invoked when selected classes changes. */
+  onSelectedClassesChanged: (classIds: string[]) => void;
 }
 
 /**
@@ -49,44 +44,25 @@ export interface InstanceFilterBuilderProps extends PropertyFilterBuilderProps {
  * @internal
  */
 export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
-  const { selectedClasses, classes, onClassSelected, onClassDeselected, onClearClasses, ...restProps } = props;
+  const { selectedClasses, classes, onSelectedClassesChanged, ...restProps } = props;
 
-  const onSelectChange = useCallback(
-    (_: MultiValue<ClassInfo> | SingleValue<ClassInfo>, action: ActionMeta<ClassInfo>) => {
-      switch (action.action) {
-        case "select-option":
-          action.option && onClassSelected(action.option);
-          break;
-        case "deselect-option":
-          action.option && onClassDeselected(action.option);
-          break;
-        case "remove-value":
-          action.removedValue && onClassDeselected(action.removedValue);
-          break;
-        case "clear":
-          onClearClasses();
-          break;
-      }
-    },
-    [onClassSelected, onClassDeselected, onClearClasses],
-  );
+  const options = useMemo(() => classes.map(createOption), [classes]);
+  const selectedOptions = useMemo(() => selectedClasses.map((classInfo) => classInfo.id), [selectedClasses]);
 
   return (
     <div className="presentation-instance-filter">
-      <div className="presentation-instance-filter-class-selector">
-        <MultiTagSelect
-          id="class-combo-input"
-          placeholder={translate("instance-filter-builder.select-class")}
-          options={classes}
-          value={selectedClasses}
-          onChange={onSelectChange}
-          getOptionLabel={(option) => option.label}
-          getOptionValue={(option) => option.id}
-          hideSelectedOptions={false}
-          closeMenuOnSelect={false}
-          isClearable={true}
-        />
-      </div>
+      <ComboBox
+        enableVirtualization={true}
+        multiple={true}
+        options={options}
+        value={selectedOptions}
+        inputProps={{
+          placeholder: translate("instance-filter-builder.select-class"),
+        }}
+        onChange={(selectedIds) => {
+          onSelectedClassesChanged(selectedIds);
+        }}
+      />
       <div className="presentation-property-filter-builder">
         <PropertyFilterBuilder {...restProps} />
       </div>
@@ -94,12 +70,16 @@ export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
   );
 }
 
+function createOption(classInfo: ClassInfo): SelectOption<string> {
+  return { label: classInfo.label, value: classInfo.id };
+}
+
 /**
  * Custom hook that extracts properties and classes from [Descriptor]($presentation-common) and creates props that can be used by [[InstanceFilterBuilder]] component.
  *
  * This hook also makes sure that when classes are selected available properties list is updated to contain only properties found on selected classes and vice versa -
  * when property is selected in one of the rules selected classes list is updated to contain only classes that has access to that property.
- * @beta
+ * @internal
  */
 export function usePresentationInstanceFilteringProps(
   descriptor: Descriptor,
@@ -108,15 +88,7 @@ export function usePresentationInstanceFilteringProps(
 ): Required<
   Pick<
     InstanceFilterBuilderProps,
-    | "properties"
-    | "classes"
-    | "selectedClasses"
-    | "onClassSelected"
-    | "onClassDeselected"
-    | "onClearClasses"
-    | "propertyRenderer"
-    | "onRulePropertySelected"
-    | "isDisabled"
+    "properties" | "classes" | "selectedClasses" | "onSelectedClassesChanged" | "propertyRenderer" | "onRulePropertySelected" | "isDisabled"
   >
 > {
   const propertyInfos = useMemo(() => createInstanceFilterPropertyInfos(descriptor), [descriptor]);
@@ -126,11 +98,7 @@ export function usePresentationInstanceFilteringProps(
     return [...uniqueClasses.values()];
   }, [descriptor]);
 
-  const { selectedClasses, onClassSelected, onClassDeselected, onClearClasses, isFilteringClasses, filterClassesByProperty } = useSelectedClasses(
-    classes,
-    imodel,
-    initialClasses,
-  );
+  const { selectedClasses, onSelectedClassesChanged, isFilteringClasses, filterClassesByProperty } = useSelectedClasses(classes, imodel, initialClasses);
   const { properties, isFilteringProperties } = useProperties(propertyInfos, selectedClasses, imodel);
 
   const onRulePropertySelected = useCallback(
@@ -160,9 +128,7 @@ export function usePresentationInstanceFilteringProps(
 
   return {
     onRulePropertySelected,
-    onClearClasses,
-    onClassDeselected,
-    onClassSelected,
+    onSelectedClassesChanged,
     propertyRenderer,
     properties,
     classes,
@@ -238,15 +204,13 @@ function useSelectedClasses(classes: ClassInfo[], imodel: IModelConnection, init
   return {
     selectedClasses,
     isFilteringClasses,
-    onClassSelected: useCallback((info: ClassInfo) => {
-      setSelectedClasses((prevClasses) => [...prevClasses, info]);
-    }, []),
-    onClassDeselected: useCallback((classInfo: ClassInfo) => {
-      setSelectedClasses((prevClasses) => prevClasses.filter((info) => info.id !== classInfo.id));
-    }, []),
-    onClearClasses: useCallback(() => {
-      setSelectedClasses([]);
-    }, []),
+    onSelectedClassesChanged: useCallback(
+      (classIds: string[]) => {
+        const newSelectedClasses = classes.filter((classInfo) => classIds.findIndex((classId) => classId === classInfo.id) !== -1);
+        setSelectedClasses(newSelectedClasses);
+      },
+      [classes],
+    ),
     filterClassesByProperty,
   };
 }

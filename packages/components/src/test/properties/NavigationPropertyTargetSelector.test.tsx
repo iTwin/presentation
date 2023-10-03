@@ -3,16 +3,16 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { expect } from "chai";
+import { createRef } from "react";
+import sinon from "sinon";
 import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { fireEvent, render, waitFor } from "@testing-library/react";
+import { render, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { expect } from "chai";
-import { createRef } from "react";
-import sinon from "sinon";
 import {
   NavigationPropertyTargetSelector,
   NavigationPropertyTargetSelectorAttributes,
@@ -61,19 +61,20 @@ describe("NavigationPropertyTargetSelector", () => {
   });
 
   it("renders selector", async () => {
+    const user = userEvent.setup();
     sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
     const { getByRole, queryByText } = render(
       <NavigationPropertyTargetSelector imodel={testImodel} getNavigationPropertyInfo={async () => testNavigationPropertyInfo} propertyRecord={testRecord} />,
     );
 
-    const inputContainer = await waitFor(() => getByRole("textbox"));
-
-    fireEvent.click(inputContainer);
+    const inputContainer = await waitFor(() => getByRole("combobox"));
+    await user.click(inputContainer);
 
     expect(await waitFor(() => queryByText(contentItem.label.displayValue))).to.not.be.undefined;
   });
 
   it("invokes onCommit with selected target", async () => {
+    const user = userEvent.setup();
     const spy = sinon.spy();
     sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
     const { getByRole, getByText } = render(
@@ -85,12 +86,11 @@ describe("NavigationPropertyTargetSelector", () => {
       />,
     );
 
-    const inputContainer = await waitFor(() => getByRole("textbox"));
-
-    fireEvent.click(inputContainer);
+    const inputContainer = await waitFor(() => getByRole("combobox"));
+    await user.click(inputContainer);
 
     const target = await waitFor(() => getByText(contentItem.label.displayValue));
-    fireEvent.click(target);
+    await user.click(target);
     expect(spy).to.be.calledOnceWith({
       propertyRecord: testRecord,
       newValue: {
@@ -102,6 +102,7 @@ describe("NavigationPropertyTargetSelector", () => {
   });
 
   it("get value from target selector reference", async () => {
+    const user = userEvent.setup();
     sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
     const ref = createRef<NavigationPropertyTargetSelectorAttributes>();
     const { getByRole, getByText } = render(
@@ -115,12 +116,11 @@ describe("NavigationPropertyTargetSelector", () => {
 
     expect((ref.current?.getValue() as PrimitiveValue).value).to.be.undefined;
 
-    const inputContainer = await waitFor(() => getByRole("textbox"));
-
-    fireEvent.click(inputContainer);
+    const inputContainer = await waitFor(() => getByRole("combobox"));
+    await user.click(inputContainer);
 
     const target = await waitFor(() => getByText(contentItem.label.displayValue));
-    fireEvent.click(target);
+    await user.click(target);
 
     expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(contentItem.primaryKeys[0]);
   });
@@ -174,6 +174,7 @@ describe("NavigationPropertyTargetSelector", () => {
   });
 
   it("click on dropdown button closes and opens menu", async () => {
+    const user = userEvent.setup();
     sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
     const propertyDescription = createNavigationPropertyDescription();
     const value = {
@@ -191,21 +192,20 @@ describe("NavigationPropertyTargetSelector", () => {
     const { container, queryByText } = render(<NavigationPropertyTargetSelector {...initialProps} />);
 
     const dropdownButton = await waitFor(() => {
-      const element = container.querySelector<HTMLDivElement>(".iui-end-icon");
+      const element = container.querySelector<HTMLDivElement>(".presentation-navigation-property-select-input-icon");
       expect(element).to.not.be.null;
       return element;
     });
-
-    fireEvent.click(dropdownButton!);
+    await user.click(dropdownButton!);
 
     await waitFor(() => expect(queryByText(contentItem.label.displayValue)).to.not.be.null);
-
-    fireEvent.click(dropdownButton!);
+    await user.click(dropdownButton!);
 
     await waitFor(() => expect(queryByText(contentItem.label.displayValue)).to.be.null);
   });
 
   it("handles input blur", async () => {
+    const user = userEvent.setup();
     sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
     const propertyDescription = createNavigationPropertyDescription();
     const value = {
@@ -223,24 +223,24 @@ describe("NavigationPropertyTargetSelector", () => {
     const { container, getByRole, getByText, queryByText } = render(<NavigationPropertyTargetSelector {...initialProps} />);
 
     const dropdownButton = await waitFor(() => {
-      const element = container.querySelector<HTMLDivElement>(".iui-end-icon");
+      const element = container.querySelector<HTMLDivElement>(".presentation-navigation-property-select-input-icon");
       expect(element).to.not.be.null;
       return element;
     });
 
     // when input value is empty
-    fireEvent.click(dropdownButton!);
+    await user.click(dropdownButton!);
     await waitFor(() => expect(queryByText(contentItem.label.displayValue)).to.not.be.null);
-    fireEvent.click(dropdownButton!);
+    await user.click(dropdownButton!);
     await waitFor(() => expect(queryByText(contentItem.label.displayValue)).to.be.null);
-    expect((getByRole("textbox") as HTMLInputElement).value).to.be.eq("");
+    expect((getByRole("combobox") as HTMLInputElement).value).to.be.eq("");
 
     // when input value is not empty
-    fireEvent.click(dropdownButton!);
+    await user.click(dropdownButton!);
     const menuItem = getByText(contentItem.label.displayValue);
-    fireEvent.click(menuItem);
+    await user.click(menuItem);
     await waitFor(() => expect(queryByText(contentItem.label.displayValue)).to.be.null);
-    expect((getByRole("textbox") as HTMLInputElement).value).to.be.eq(contentItem.label.displayValue);
+    expect((getByRole("combobox") as HTMLInputElement).value).to.be.eq(contentItem.label.displayValue);
   });
 
   it("correctly handles keyDown events", async () => {
@@ -261,9 +261,9 @@ describe("NavigationPropertyTargetSelector", () => {
     };
     const { getByDisplayValue, getByRole, queryByText } = render(<NavigationPropertyTargetSelector {...initialProps} />);
 
-    const inputContainer = await waitFor(() => getByRole("textbox"));
+    const inputContainer = await waitFor(() => getByRole("combobox"));
 
-    fireEvent.click(inputContainer);
+    await user.click(inputContainer);
 
     // Check if input's cursor is at the end of the text after pressing `End`.
     await user.keyboard("{End}");
@@ -281,10 +281,10 @@ describe("NavigationPropertyTargetSelector", () => {
     await waitFor(() => expect(queryByText(contentItem.label.displayValue)).to.not.be.null);
 
     // Check if the menu is closed after the `tab` key was pressed.
-    fireEvent.keyDown(inputContainer, { key: "Tab" });
+    await user.keyboard("{Tab}");
     await waitFor(() => expect(queryByText(contentItem.label.displayValue)).to.be.null);
 
-    fireEvent.click(inputContainer);
+    await user.click(inputContainer);
 
     // Check if it's possible to type after option is selected and menu is opened again
     await user.keyboard("{Enter}");
@@ -293,6 +293,7 @@ describe("NavigationPropertyTargetSelector", () => {
   });
 
   it("click on input does not close menu when menu is openned", async () => {
+    const user = userEvent.setup();
     sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
     const propertyDescription = createNavigationPropertyDescription();
     const value = {
@@ -309,11 +310,11 @@ describe("NavigationPropertyTargetSelector", () => {
     };
     const { getByRole, queryByText } = render(<NavigationPropertyTargetSelector {...initialProps} />);
 
-    const inputContainer = await waitFor(() => getByRole("textbox"));
+    const inputContainer = await waitFor(() => getByRole("combobox"));
 
-    fireEvent.click(inputContainer);
+    await user.click(inputContainer);
     await waitFor(() => expect(queryByText(contentItem.label.displayValue)).to.not.be.null);
-    fireEvent.click(inputContainer);
+    await user.click(inputContainer);
     await waitFor(() => expect(queryByText(contentItem.label.displayValue)).to.not.be.null);
   });
 });
