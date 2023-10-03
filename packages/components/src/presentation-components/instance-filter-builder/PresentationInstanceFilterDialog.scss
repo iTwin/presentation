@@ -3,6 +3,11 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
+.iui-dialog-default.presentation-instance-filter-dialog-content-container {
+  height: calc(var(--iui-component-height-large) * 7);
+  width: calc(var(--iui-size-2xl) * 9);
+}
+
 .presentation-instance-filter-dialog {
   .presentation-instance-filter-dialog-content-container {
     min-height: calc(var(--iui-component-height-large) * 7);
