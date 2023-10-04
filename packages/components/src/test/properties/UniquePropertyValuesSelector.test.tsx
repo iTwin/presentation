@@ -310,7 +310,7 @@ describe("UniquePropertyValuesSelector", () => {
       return [schemaName, className];
     };
 
-    it.only("calls 'getPagedDistinctValues' with ruleset that is created from a 'NestedContentField'", async () => {
+    it("calls 'getPagedDistinctValues' with ruleset that is created from a 'NestedContentField'", async () => {
       const testProperty = {
         name: `#${combineFieldNames("testField", "parentField")}`,
         displayLabel: "propertiesField",
@@ -348,7 +348,7 @@ describe("UniquePropertyValuesSelector", () => {
       expect(actualClassName).to.be.equal(expectedClassName);
     });
 
-    it.only("calls 'getPagedDistinctValues' with ruleset that is created from a 'NestedContentField' with multiple layers of nesting", async () => {
+    it("calls 'getPagedDistinctValues' with ruleset that is created from a 'NestedContentField' with multiple layers of nesting", async () => {
       const testProperty = {
         name: `#${combineFieldNames("testField", `${combineFieldNames("parentField", "grandParentField")}`)}`,
         displayLabel: "propertiesField",
