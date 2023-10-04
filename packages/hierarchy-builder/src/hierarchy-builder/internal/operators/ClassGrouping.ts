@@ -4,10 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { from, mergeMap, Observable, tap, toArray } from "rxjs";
-import { Id64, Logger } from "@itwin/core-bentley";
-import { SchemaContext } from "@itwin/ecschema-metadata";
+import { Id64 } from "@itwin/core-bentley";
 import { ClassInfo } from "../../EC";
 import { HierarchyNode } from "../../HierarchyNode";
+import { getLogger } from "../../Logging";
+import { IMetadataProvider } from "../../Metadata";
 import { createOperatorLoggingNamespace, getClass } from "../Common";
 import { sortNodesByLabelOperator } from "./Sorting";
 
@@ -16,14 +17,14 @@ const OPERATOR_NAME = "Grouping.ByClass";
 export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
 
 /** @internal */
-export function createClassGroupingOperator(schemas: SchemaContext) {
+export function createClassGroupingOperator(metadata: IMetadataProvider) {
   return function (nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
     return nodes.pipe(
       log((n) => `in: ${n.label}`),
       // need all nodes in one place to group them
       toArray(),
       // group all nodes
-      mergeMap((resolvedNodes) => from(createClassGroupingInformation(schemas, resolvedNodes))),
+      mergeMap((resolvedNodes) => from(createClassGroupingInformation(metadata, resolvedNodes))),
       // convert intermediate format into a nodes observable
       mergeMap((groupings) => {
         const grouped = createGroupingNodes(groupings);
@@ -42,7 +43,7 @@ interface ClassGroupingInformation {
   grouped: Map<string, { class: ClassInfo; groupedNodes: Array<HierarchyNode> }>;
 }
 
-async function createClassGroupingInformation(schemas: SchemaContext, nodes: HierarchyNode[]): Promise<ClassGroupingInformation> {
+async function createClassGroupingInformation(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<ClassGroupingInformation> {
   const groupings: ClassGroupingInformation = { ungrouped: [], grouped: new Map() };
   for (const node of nodes) {
     // we're only grouping instance nodes
@@ -50,9 +51,9 @@ async function createClassGroupingInformation(schemas: SchemaContext, nodes: Hie
       const fullClassName = node.key.instanceKeys[0].className;
       let groupingInfo = groupings.grouped.get(fullClassName);
       if (!groupingInfo) {
-        const nodeClass = await getClass(schemas, fullClassName);
+        const nodeClass = await getClass(metadata, fullClassName);
         groupingInfo = {
-          class: { id: Id64.invalid, name: nodeClass.fullName.replace(".", ":"), label: nodeClass.label ?? nodeClass.name },
+          class: { id: Id64.invalid, name: nodeClass.fullName, label: nodeClass.label ?? nodeClass.name },
           groupedNodes: [],
         };
         groupings.grouped.set(fullClassName, groupingInfo);
@@ -83,7 +84,7 @@ function createGroupingNodes(groupings: ClassGroupingInformation): HierarchyNode
 }
 
 function doLog(msg: string) {
-  Logger.logTrace(LOGGING_NAMESPACE, msg);
+  getLogger().logTrace(LOGGING_NAMESPACE, msg);
 }
 
 function log<T>(msg: (arg: T) => string) {

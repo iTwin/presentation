@@ -4,12 +4,6 @@
 
 ```ts
 
-import { ECSqlReader } from '@itwin/core-common';
-import { Id64String } from '@itwin/core-bentley';
-import { QueryBinder } from '@itwin/core-common';
-import { QueryOptions } from '@itwin/core-common';
-import { SchemaContext } from '@itwin/ecschema-metadata';
-
 // @beta
 export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelectClauseFactory {
     constructor(props: BisInstanceLabelSelectClauseFactoryProps);
@@ -20,7 +14,28 @@ export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelect
 // @beta
 export interface BisInstanceLabelSelectClauseFactoryProps {
     // (undocumented)
-    schemas: SchemaContext;
+    metadataProvider: IMetadataProvider;
+}
+
+// @beta
+export interface ClassBasedHierarchyDefinition {
+    childNodes: Array<ClassBasedHierarchyLevelDefinition>;
+    rootNodes: () => Promise<HierarchyLevelDefinition>;
+}
+
+// @beta
+export interface ClassBasedHierarchyDefinitionsFactoryProps {
+    hierarchy: ClassBasedHierarchyDefinition;
+    metadataProvider: IMetadataProvider;
+}
+
+// @beta
+export type ClassBasedHierarchyLevelDefinition = InstancesNodeChildHierarchyLevelDefinition | CustomNodeChildHierarchyLevelDefinition;
+
+// @beta
+export class ClassBasedHierarchyLevelDefinitionsFactory<TNode extends HierarchyNode = HierarchyNode> implements IHierarchyLevelDefinitionsFactory<TNode> {
+    constructor(props: ClassBasedHierarchyDefinitionsFactoryProps);
+    defineHierarchyLevel(parentNode: HierarchyNode | undefined): Promise<HierarchyLevelDefinition>;
 }
 
 // @beta
@@ -35,7 +50,7 @@ export interface ClassBasedInstanceLabelSelectClauseFactoryProps {
     clauses: ClassBasedLabelSelectClause[];
     // @internal (undocumented)
     defaultClauseFactory?: IInstanceLabelSelectClauseFactory;
-    schemas: SchemaContext;
+    metadataProvider: IMetadataProvider;
 }
 
 // @beta
@@ -44,7 +59,7 @@ export interface ClassBasedLabelSelectClause {
     clause: (props: CreateInstanceLabelSelectClauseProps) => Promise<string>;
 }
 
-// @beta (undocumented)
+// @beta
 export interface ClassGroupingNodeKey {
     // (undocumented)
     class: ClassInfo;
@@ -52,7 +67,7 @@ export interface ClassGroupingNodeKey {
     type: "class-grouping";
 }
 
-// @beta (undocumented)
+// @beta
 export interface ClassInfo {
     id: Id64String;
     label: string;
@@ -65,10 +80,15 @@ export interface CreateInstanceLabelSelectClauseProps {
     className?: string;
 }
 
-// @beta (undocumented)
+// @beta
 export interface CustomHierarchyNodeDefinition {
-    // (undocumented)
     node: HierarchyNode;
+}
+
+// @beta
+export interface CustomNodeChildHierarchyLevelDefinition {
+    customParentNodeKey: string;
+    definitions: (parentNode: HierarchyNode) => Promise<HierarchyLevelDefinition>;
 }
 
 // @beta
@@ -77,34 +97,99 @@ export class DefaultInstanceLabelSelectClauseFactory implements IInstanceLabelSe
     createSelectClause(props: CreateInstanceLabelSelectClauseProps): Promise<string>;
 }
 
-// @beta (undocumented)
-export interface ECSqlBinding {
+// @beta
+export interface ECClass extends ECSchemaItem {
     // (undocumented)
-    type: ECSqlBindingType;
+    is(className: string, schemaName: string): Promise<boolean>;
     // (undocumented)
-    value?: any;
+    is(other: ECClass): Promise<boolean>;
 }
 
-// @beta (undocumented)
+// @beta
+export interface ECSchema {
+    // (undocumented)
+    getClass(name: string): Promise<ECClass | undefined>;
+    // (undocumented)
+    name: string;
+}
+
+// @beta
+export interface ECSchemaItem {
+    // (undocumented)
+    fullName: string;
+    // (undocumented)
+    label?: string;
+    // (undocumented)
+    name: string;
+    // (undocumented)
+    schema: ECSchema;
+}
+
+// @beta
+export type ECSqlBinding = {
+    type: "boolean";
+    value?: boolean;
+} | {
+    type: "double" | "int" | "long";
+    value?: number;
+} | {
+    type: "id";
+    value?: Id64String;
+} | {
+    type: "idset";
+    value?: Id64String[];
+} | {
+    type: "string";
+    value?: string;
+} | {
+    type: "point2d";
+    value?: {
+        x: number;
+        y: number;
+    };
+} | {
+    type: "point3d";
+    value?: {
+        x: number;
+        y: number;
+        z: number;
+    };
+};
+
+// @beta
 export type ECSqlBindingType = "boolean" | "double" | "id" | "idset" | "int" | "long" | "string" | "point2d" | "point3d";
 
-// @beta (undocumented)
+// @beta
 export interface ECSqlQueryDef {
-    // (undocumented)
     bindings?: ECSqlBinding[];
-    // (undocumented)
     ctes?: string[];
-    // (undocumented)
     ecsql: string;
 }
 
-// @beta (undocumented)
-export interface ECSqlQueryHierarchyLevelDefinition {
+// @beta
+export interface ECSqlQueryReader {
     // (undocumented)
-    fullClassName: string;
-    // (undocumented)
-    query: ECSqlQueryDef;
+    [Symbol.asyncIterator](): AsyncIterableIterator<ECSqlQueryRow>;
 }
+
+// @beta
+export interface ECSqlQueryReaderOptions {
+    // (undocumented)
+    rowFormat: ECSqlQueryRowFormat;
+}
+
+// @beta
+export interface ECSqlQueryRow {
+    // (undocumented)
+    [propertyName: string]: any;
+    // (undocumented)
+    [propertyIndex: number]: any;
+    // (undocumented)
+    toRow(): any;
+}
+
+// @beta
+export type ECSqlQueryRowFormat = "ECSqlPropertyNames" | "Indexes";
 
 // @beta
 export interface ECSqlValueSelector {
@@ -112,18 +197,13 @@ export interface ECSqlValueSelector {
     selector: string;
 }
 
-// @beta (undocumented)
-export type HierarchyLevelDefinition = CustomHierarchyNodeDefinition | ECSqlQueryHierarchyLevelDefinition;
+// @beta
+export function getLogger(): ILogger;
 
-// @beta (undocumented)
-export namespace HierarchyLevelDefinition {
-    // (undocumented)
-    export function isCustomNode(def: HierarchyLevelDefinition): def is CustomHierarchyNodeDefinition;
-    // (undocumented)
-    export function isECSqlQuery(def: HierarchyLevelDefinition): def is ECSqlQueryHierarchyLevelDefinition;
-}
+// @beta
+export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
 
-// @beta (undocumented)
+// @beta
 export interface HierarchyNode {
     // (undocumented)
     autoExpand?: boolean;
@@ -143,19 +223,15 @@ export interface HierarchyNode {
 
 // @beta (undocumented)
 export namespace HierarchyNode {
-    // (undocumented)
     export function isClassGroupingNode<TNode extends HierarchyNode>(node: TNode): node is TNode & {
         key: ClassGroupingNodeKey;
     };
-    // (undocumented)
     export function isCustom<TNode extends HierarchyNode>(node: TNode): node is TNode & {
         key: string;
     };
-    // (undocumented)
     export function isInstancesNode<TNode extends HierarchyNode>(node: TNode): node is TNode & {
         key: InstancesNodeKey;
     };
-    // (undocumented)
     export function isStandard<TNode extends HierarchyNode>(node: TNode): node is TNode & {
         key: StandardHierarchyNodeKey;
     };
@@ -173,19 +249,43 @@ export interface HierarchyNodeHandlingParams {
     mergeByLabelId?: string;
 }
 
+// @beta
+export type HierarchyNodeIdentifier = InstanceKey | {
+    key: string;
+};
+
 // @beta (undocumented)
+export namespace HierarchyNodeIdentifier {
+    export function equal(lhs: HierarchyNodeIdentifier, rhs: HierarchyNodeIdentifier): boolean;
+    export function isCustomNodeIdentifier(id: HierarchyNodeIdentifier): id is {
+        key: string;
+    };
+    export function isInstanceNodeIdentifier(id: HierarchyNodeIdentifier): id is InstanceKey;
+}
+
+// @beta
+export type HierarchyNodeIdentifiersPath = HierarchyNodeIdentifier[];
+
+// @beta
 export type HierarchyNodeKey = StandardHierarchyNodeKey | string;
 
 // @beta (undocumented)
 export namespace HierarchyNodeKey {
-    // (undocumented)
     export function isClassGrouping(key: HierarchyNodeKey): key is ClassGroupingNodeKey;
-    // (undocumented)
     export function isCustom(key: HierarchyNodeKey): key is string;
-    // (undocumented)
     export function isInstances(key: HierarchyNodeKey): key is InstancesNodeKey;
-    // (undocumented)
     export function isStandard(key: HierarchyNodeKey): key is StandardHierarchyNodeKey;
+}
+
+// @beta
+export type HierarchyNodesDefinition = CustomHierarchyNodeDefinition | InstanceNodesQueryDefinition;
+
+// @beta (undocumented)
+export namespace HierarchyNodesDefinition {
+    // (undocumented)
+    export function isCustomNode(def: HierarchyNodesDefinition): def is CustomHierarchyNodeDefinition;
+    // (undocumented)
+    export function isInstanceNodesQuery(def: HierarchyNodesDefinition): def is InstanceNodesQueryDefinition;
 }
 
 // @beta (undocumented)
@@ -193,24 +293,37 @@ export class HierarchyProvider {
     constructor(props: HierarchyProviderProps);
     // (undocumented)
     getNodes(parentNode: HierarchyNode | undefined): Promise<HierarchyNode[]>;
-    // (undocumented)
-    hasNodes(node: HierarchyNode): Promise<boolean>;
 }
 
 // @beta (undocumented)
 export interface HierarchyProviderProps {
     // (undocumented)
-    queryBuilder: IHierarchyDefinition;
+    filtering?: {
+        paths: HierarchyNodeIdentifiersPath[];
+    };
     // (undocumented)
-    queryExecutor: IQueryExecutor;
+    hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
     // (undocumented)
-    schemas: SchemaContext;
+    metadataProvider: IMetadataProvider;
+    // (undocumented)
+    queryExecutor: IECSqlQueryExecutor;
 }
 
-// @beta (undocumented)
-export interface IHierarchyDefinition {
+// @beta
+export type Id64String = string;
+
+// @beta
+export interface IECSqlQueryExecutor {
     // (undocumented)
-    defineHierarchyLevel(parentNode: HierarchyNode | undefined): Promise<HierarchyLevelDefinition[]>;
+    createQueryReader(ecsql: string, bindings?: ECSqlBinding[], config?: ECSqlQueryReaderOptions): ECSqlQueryReader;
+}
+
+// @beta
+export interface IHierarchyLevelDefinitionsFactory<TNode extends HierarchyNode = HierarchyNode> {
+    defineHierarchyLevel(parentNode: HierarchyNode | undefined): Promise<HierarchyLevelDefinition>;
+    parseNode?: INodeParser<TNode>;
+    postProcessNode?: INodePostProcessor;
+    preProcessNode?: INodePreProcessor;
 }
 
 // @beta
@@ -218,13 +331,54 @@ export interface IInstanceLabelSelectClauseFactory {
     createSelectClause(props: CreateInstanceLabelSelectClauseProps): Promise<string>;
 }
 
-// @beta (undocumented)
+// @beta
+export interface ILogger {
+    // (undocumented)
+    logError: LogFunction;
+    // (undocumented)
+    logInfo: LogFunction;
+    // (undocumented)
+    logTrace: LogFunction;
+    // (undocumented)
+    logWarning: LogFunction;
+}
+
+// @beta
+export interface IMetadataProvider {
+    // (undocumented)
+    getSchema(schemaName: string): Promise<ECSchema | undefined>;
+}
+
+// @beta
+export type INodeParser<TNode extends HierarchyNode> = (row: {
+    [columnName: string]: any;
+}) => TNode;
+
+// @beta
+export type INodePostProcessor = (node: HierarchyNode) => HierarchyNode;
+
+// @beta
+export type INodePreProcessor = (node: HierarchyNode) => HierarchyNode | undefined;
+
+// @beta
 export interface InstanceKey {
     className: string;
     id: Id64String;
 }
 
-// @beta (undocumented)
+// @beta
+export interface InstanceNodesQueryDefinition {
+    fullClassName: string;
+    query: ECSqlQueryDef;
+}
+
+// @beta
+export interface InstancesNodeChildHierarchyLevelDefinition {
+    definitions: (instanceIds: Id64String[], parentNode: HierarchyNode) => Promise<HierarchyLevelDefinition>;
+    parentNodeClassName: string;
+}
+
+// @beta
 export interface InstancesNodeKey {
     // (undocumented)
     instanceKeys: InstanceKey[];
@@ -233,22 +387,7 @@ export interface InstancesNodeKey {
 }
 
 // @beta (undocumented)
-export interface IQueryExecutor {
-    // (undocumented)
-    createQueryReader(ecsql: string, params?: QueryBinder, config?: QueryOptions): ECSqlReader;
-}
-
-// @beta
-export class ModelsTreeQueryBuilder implements IHierarchyDefinition {
-    constructor(props: ModelsTreeQueryBuilderProps);
-    defineHierarchyLevel(parentNode: HierarchyNode | undefined): Promise<HierarchyLevelDefinition[]>;
-}
-
-// @beta (undocumented)
-export interface ModelsTreeQueryBuilderProps {
-    // (undocumented)
-    schemas: SchemaContext;
-}
+export type LogFunction = (category: string, message: string) => void;
 
 // @beta
 export enum NodeSelectClauseColumnNames {
@@ -296,7 +435,16 @@ export interface NodeSelectClauseProps {
     nodeLabel: string | ECSqlValueSelector;
 }
 
-// @beta (undocumented)
+// @beta
+export function parseFullClassName(fullClassName: string): {
+    schemaName: string;
+    className: string;
+};
+
+// @beta
+export function setLogger(logger: ILogger | undefined): void;
+
+// @beta
 export type StandardHierarchyNodeKey = InstancesNodeKey | ClassGroupingNodeKey;
 
 // (No @packageDocumentation comment for this package)

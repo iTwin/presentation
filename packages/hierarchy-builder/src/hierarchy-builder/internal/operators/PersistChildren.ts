@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { mergeAll, Observable, reduce, tap } from "rxjs";
-import { Logger } from "@itwin/core-bentley";
 import { HierarchyNode } from "../../HierarchyNode";
+import { getLogger } from "../../Logging";
 import { createOperatorLoggingNamespace } from "../Common";
 
 const OPERATOR_NAME = "PersistChildren";
@@ -34,5 +34,5 @@ export function createPersistChildrenOperator(parentNode: HierarchyNode) {
 }
 
 function doLog(msg: string) {
-  Logger.logTrace(LOGGING_NAMESPACE, msg);
+  getLogger().logTrace(LOGGING_NAMESPACE, msg);
 }

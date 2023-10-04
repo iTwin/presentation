@@ -27,6 +27,8 @@
     "@itwin/eslint-plugin": "4.0.0-dev.48",
     "@itwin/presentation-common": "^4.1.1",
     "@itwin/presentation-hierarchy-builder": "workspace:*",
+    "@itwin/presentation-core-interop": "workspace:*",
+    "@itwin/presentation-models-tree": "workspace:*",
     "@types/artillery": "^1.7.0",
     "@types/node": "^18.17.7",
     "artillery": "2.0.0-35",

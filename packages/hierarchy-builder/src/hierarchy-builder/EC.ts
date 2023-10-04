@@ -3,21 +3,32 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Id64String } from "@itwin/core-bentley";
+/**
+ * A string representing a 64 bit number in hex.
+ * @see [Id64String]($core-bentley)
+ * @beta
+ */
+export type Id64String = string;
 
-/** @beta */
+/**
+ * A data structure describing an ECClass
+ * @beta
+ */
 export interface ClassInfo {
   /** ECClass ID */
   id: Id64String;
-  /** Full class name in format `SchemaName:ClassName` */
+  /** Full class name in format `SchemaName.ClassName` */
   name: string;
   /** ECClass label */
   label: string;
 }
 
-/** @beta */
+/**
+ * A data structure uniquely identifying an ECInstance in an iModel.
+ * @beta
+ */
 export interface InstanceKey {
-  /** Full class name in format `SchemaName:ClassName` */
+  /** Full class name in format `SchemaName.ClassName` */
   className: string;
   /** ECInstance ID */
   id: Id64String;

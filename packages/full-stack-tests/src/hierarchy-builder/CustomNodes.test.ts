@@ -6,7 +6,8 @@
 import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-import { HierarchyProvider, IHierarchyDefinition } from "@itwin/presentation-hierarchy-builder";
+import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
+import { HierarchyProvider, IHierarchyLevelDefinitionsFactory } from "@itwin/presentation-hierarchy-builder";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "./HierarchyValidation";
@@ -25,13 +26,14 @@ describe("Stateless hierarchy builder", () => {
       await terminate();
     });
 
-    function createProvider(definition: IHierarchyDefinition) {
+    function createProvider(definition: IHierarchyLevelDefinitionsFactory) {
       const schemas = new SchemaContext();
       schemas.addLocater(new ECSchemaRpcLocater(emptyIModel.getRpcProps()));
+      const metadataProvider = createMetadataProvider(schemas);
       return new HierarchyProvider({
-        schemas,
-        queryBuilder: definition,
-        queryExecutor: emptyIModel,
+        metadataProvider,
+        hierarchyDefinition: definition,
+        queryExecutor: createECSqlQueryExecutor(emptyIModel),
       });
     }
 
@@ -132,6 +134,44 @@ describe("Stateless hierarchy builder", () => {
           NodeValidators.createForCustomNode({
             ...root,
             children: [NodeValidators.createForCustomNode(visibleChild)],
+          }),
+        ],
+      });
+    });
+
+    it("hides custom nodes with no children", async () => {
+      const root = {
+        key: "root",
+        label: "r",
+        children: undefined,
+      };
+      const hiddenChild = {
+        key: "hidden child",
+        label: "hc",
+        children: undefined,
+        params: {
+          hideIfNoChildren: true,
+        },
+      };
+      const provider = createProvider({
+        async defineHierarchyLevel(parent) {
+          switch (parent?.key) {
+            case undefined:
+              return [{ node: root }];
+            case "root":
+              return [{ node: hiddenChild }];
+            case "hidden child":
+              return [];
+          }
+          return [];
+        },
+      });
+      await validateHierarchy({
+        provider,
+        expect: [
+          NodeValidators.createForCustomNode({
+            ...root,
+            children: false,
           }),
         ],
       });

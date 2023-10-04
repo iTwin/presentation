@@ -5,16 +5,14 @@
 
 import { expect } from "chai";
 import { from, Observable } from "rxjs";
-import { Logger, LogLevel } from "@itwin/core-bentley";
+import { LogLevel } from "@itwin/core-bentley";
 import { HierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
 import { createMergeInstanceNodesByLabelOperator, LOGGING_NAMESPACE } from "../../../hierarchy-builder/internal/operators/MergeInstanceNodesByLabel";
-import { createTestInstanceKey, createTestNode, getObservableResult } from "../../Utils";
+import { createTestInstanceKey, createTestNode, getObservableResult, setupLogging } from "../../Utils";
 
 describe("MergeInstanceNodesByLabel", () => {
   before(() => {
-    Logger.initializeToConsole();
-    Logger.turnOffCategories();
-    Logger.setLevel(LOGGING_NAMESPACE, LogLevel.Trace);
+    setupLogging([{ namespace: LOGGING_NAMESPACE, level: LogLevel.Trace }]);
   });
 
   const directNodesCache = new Map<string, Observable<HierarchyNode>>();

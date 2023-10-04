@@ -35,20 +35,12 @@
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-hierarchy-builder.api.md"
   },
   "dependencies": {
+    "@itwin/core-bentley": "^4.1.1",
     "natural-compare-lite": "^1.4.0",
     "rxjs": "^7.8.1"
   },
-  "peerDependencies": {
-    "@itwin/core-bentley": "^4.0.0",
-    "@itwin/core-common": "^4.0.0",
-    "@itwin/ecschema-metadata": "^4.0.0"
-  },
   "devDependencies": {
     "@itwin/build-tools": "^4.1.1",
-    "@itwin/core-bentley": "^4.1.1",
-    "@itwin/core-common": "^4.1.1",
-    "@itwin/core-quantity": "^4.1.1",
-    "@itwin/ecschema-metadata": "^4.1.1",
     "@itwin/eslint-plugin": "4.0.0-dev.48",
     "@types/chai": "4.3.1",
     "@types/chai-as-promised": "^7.1.5",
@@ -56,7 +48,7 @@
     "@types/natural-compare-lite": "^1.4.0",
     "@types/sinon": "^10.0.16",
     "@types/sinon-chai": "^3.2.9",
-    "chai": "^4.3.7",
+    "chai": "^4.3.10",
     "chai-as-promised": "^7.1.1",
     "cpx2": "^3.0.2",
     "eslint": "^8.47.0",

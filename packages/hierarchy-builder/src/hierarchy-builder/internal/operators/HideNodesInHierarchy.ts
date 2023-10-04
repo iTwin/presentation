@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { concat, defer, EMPTY, filter, finalize, from, merge, mergeAll, mergeMap, Observable, partition, reduce, shareReplay, take, tap } from "rxjs";
-import { Logger } from "@itwin/core-bentley";
 import { HierarchyNode } from "../../HierarchyNode";
+import { getLogger } from "../../Logging";
 import { createOperatorLoggingNamespace, hasChildren, mergeNodesObs } from "../Common";
 
 const OPERATOR_NAME = "HideNodesInHierarchy";
@@ -85,7 +85,7 @@ function addToMergeMap(directNodesCache: Map<string, Observable<HierarchyNode>>,
 }
 
 function doLog(msg: string) {
-  Logger.logTrace(LOGGING_NAMESPACE, msg);
+  getLogger().logTrace(LOGGING_NAMESPACE, msg);
 }
 
 function log<T>(msg: (arg: T) => string) {

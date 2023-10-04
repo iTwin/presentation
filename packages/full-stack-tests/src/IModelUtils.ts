@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { ECDb } from "@itwin/core-backend";
 import { Id64, Id64String } from "@itwin/core-bentley";
 import {
   BisCodeSpec,
@@ -12,18 +13,104 @@ import {
   ExternalSourceProps,
   GeometricModel3dProps,
   IModel,
+  InformationPartitionElementProps,
   PhysicalElementProps,
   RepositoryLinkProps,
   SubCategoryProps,
   SubjectProps,
 } from "@itwin/core-common";
-import { TestIModelBuilder } from "@itwin/presentation-testing";
+import { buildTestIModel, createFileNameFromString, setupOutputFileLocation, TestIModelBuilder } from "@itwin/presentation-testing";
+
+export async function withECDb<TResult extends {}>(
+  mochaContext: Mocha.Context,
+  setup: (db: ECDb, mochaContext: Mocha.Context) => Promise<TResult>,
+  use: (db: ECDb, res: TResult) => Promise<void>,
+) {
+  let res!: TResult;
+  const name = createFileNameFromString(mochaContext.test!.fullTitle());
+  const outputFile = setupOutputFileLocation(name);
+  const db = new ECDb();
+  db.createDb(outputFile);
+  try {
+    res = await setup(db, mochaContext);
+  } catch (e) {
+    db.dispose();
+    throw e;
+  } finally {
+    db.saveChanges("Created test ECDb");
+  }
+  try {
+    await use(db, res);
+  } finally {
+    db.dispose();
+  }
+}
+
+export async function buildIModel<TResult extends {}>(
+  mochaContext: Mocha.Context,
+  setup: (builder: TestIModelBuilder, mochaContext: Mocha.Context) => Promise<TResult>,
+) {
+  let res!: TResult;
+  // eslint-disable-next-line deprecation/deprecation
+  const imodel = await buildTestIModel(mochaContext, async (builder) => {
+    res = await setup(builder, mochaContext);
+  });
+  return { ...res, imodel };
+}
+
+export async function importSchema(
+  mochaContext: Mocha.Context,
+  imodel: { importSchema: (xml: string) => void | Promise<void> },
+  classes: string[],
+  schemaReferences?: string[],
+) {
+  const schemaName = `SCHEMA_${mochaContext.test!.fullTitle()}`.replace(/[^\w\d_]/gi, "_").replace(/_+/g, "_");
+  const schemaAlias = `test`;
+  const schemaXml = `
+    <?xml version="1.0" encoding="UTF-8"?>
+    <ECSchema schemaName="${schemaName}" alias="${schemaAlias}" version="01.00" xmlns="http://www.bentley.com/schemas/Bentley.ECXML.3.1">
+      <ECSchemaReference name="CoreCustomAttributes" version="1.0" alias="CoreCA" />
+      <ECSchemaReference name="ECDbMap" version="2.0" alias="ecdbmap" />
+      ${schemaReferences?.map((referenceXml) => referenceXml).join("\n")}
+      ${classes.map((classXml) => classXml).join("\n")}
+    </ECSchema>
+  `;
+  await imodel.importSchema(schemaXml);
+  return {
+    schemaName,
+    schemaAlias,
+    classes: classes.reduce<{ [className: string]: { name: string; fullName: string } }>((classesObj, classXml) => {
+      const className = parseClassNameFromXml(classXml);
+      return {
+        ...classesObj,
+        [className]: {
+          name: className,
+          fullName: `${schemaName}.${className}`,
+        },
+      };
+    }, {}),
+  };
+}
+
+function parseClassNameFromXml(xml: string) {
+  const re = /typename="([\w\d_]+)"/i;
+  const match = xml.match(re);
+  if (!match) {
+    throw new Error(`Given XML doesn't contain a "typename": ${xml}`);
+  }
+  return match[1];
+}
+
+export interface BaseInstanceInsertProps {
+  builder: TestIModelBuilder;
+  fullClassNameSeparator?: ":" | ".";
+}
 
 export function insertSubject(
-  props: { builder: TestIModelBuilder; label: string; parentId?: Id64String } & Partial<Omit<SubjectProps, "id" | "parent" | "code" | "model">>,
+  props: BaseInstanceInsertProps & { label: string; parentId?: Id64String } & Partial<Omit<SubjectProps, "id" | "parent" | "code" | "model">>,
 ) {
   const { builder, classFullName, label, parentId, ...subjectProps } = props;
-  const defaultClassName = "BisCore:Subject";
+  const defaultClassName = `BisCore${props.fullClassNameSeparator ?? "."}Subject`;
   const className = classFullName ?? defaultClassName;
   const id = builder.insertElement({
     classFullName: className,
@@ -31,32 +118,45 @@ export function insertSubject(
     code: builder.createCode(parentId ?? IModel.rootSubjectId, BisCodeSpec.subject, label),
     parent: {
       id: parentId ?? IModel.rootSubjectId,
-      relClassName: "BisCore:SubjectOwnsSubjects",
+      relClassName: "BisCore.SubjectOwnsSubjects",
     },
     ...subjectProps,
   });
   return { className, id };
 }
 
-export function insertPhysicalModelWithPartition(props: { builder: TestIModelBuilder; label: string; partitionParentId?: Id64String }) {
-  const { builder, label, partitionParentId } = props;
+export function insertPhysicalModelWithPartition(props: BaseInstanceInsertProps & { label: string; partitionParentId?: Id64String }) {
+  const { label, partitionParentId, ...baseProps } = props;
+  const partitionKey = insertPhysicalPartition({ ...baseProps, label, parentId: partitionParentId ?? IModel.rootSubjectId });
+  return insertPhysicalSubModel({ ...baseProps, modeledElementId: partitionKey.id });
+}
+
+export function insertPhysicalPartition(
+  props: BaseInstanceInsertProps & { label: string; parentId: Id64String } & Partial<
+      Omit<InformationPartitionElementProps, "id" | "parent" | "code" | "userLabel">
+    >,
+) {
+  const { builder, classFullName, label, parentId, ...partitionProps } = props;
+  const defaultModelClassName = `BisCore${props.fullClassNameSeparator ?? "."}PhysicalPartition`;
+  const className = classFullName ?? defaultModelClassName;
   const partitionId = builder.insertElement({
-    classFullName: "BisCore:PhysicalPartition",
+    classFullName: className,
     model: IModel.repositoryModelId,
-    code: builder.createCode(partitionParentId ?? IModel.rootSubjectId, BisCodeSpec.informationPartitionElement, label),
+    code: builder.createCode(parentId, BisCodeSpec.informationPartitionElement, label),
     parent: {
-      id: partitionParentId ?? IModel.rootSubjectId,
-      relClassName: "BisCore:SubjectOwnsPartitionElements",
+      id: parentId,
+      relClassName: `BisCore${props.fullClassNameSeparator ?? "."}SubjectOwnsPartitionElements`,
     },
+    ...partitionProps,
   });
-  return insertPhysicalSubModel({ builder, modeledElementId: partitionId });
+  return { className, id: partitionId };
 }
 
 export function insertPhysicalSubModel(
-  props: { builder: TestIModelBuilder; modeledElementId: Id64String } & Partial<Omit<GeometricModel3dProps, "id" | "modeledElement" | "parentModel">>,
+  props: BaseInstanceInsertProps & { modeledElementId: Id64String } & Partial<Omit<GeometricModel3dProps, "id" | "modeledElement" | "parentModel">>,
 ) {
   const { builder, classFullName, modeledElementId, ...modelProps } = props;
-  const defaultModelClassName = "BisCore:PhysicalModel";
+  const defaultModelClassName = `BisCore${props.fullClassNameSeparator ?? "."}PhysicalModel`;
   const className = classFullName ?? defaultModelClassName;
   const modelId = builder.insertModel({
     classFullName: className,
@@ -67,10 +167,10 @@ export function insertPhysicalSubModel(
 }
 
 export function insertSpatialCategory(
-  props: { builder: TestIModelBuilder; label: string; modelId?: Id64String } & Partial<Omit<CategoryProps, "id" | "model" | "parent" | "code">>,
+  props: BaseInstanceInsertProps & { label: string; modelId?: Id64String } & Partial<Omit<CategoryProps, "id" | "model" | "parent" | "code">>,
 ) {
   const { builder, classFullName, modelId, label, ...categoryProps } = props;
-  const defaultClassName = "BisCore:SpatialCategory";
+  const defaultClassName = `BisCore${props.fullClassNameSeparator ?? "."}SpatialCategory`;
   const className = classFullName ?? defaultClassName;
   const model = modelId ?? IModel.dictionaryId;
   const id = builder.insertElement({
@@ -82,22 +182,22 @@ export function insertSpatialCategory(
   return { className, id };
 }
 
-export function getDefaultSubcategoryKey(categoryId: Id64String) {
+export function getDefaultSubcategoryKey(categoryId: Id64String, fullClassNameSeparator?: string) {
   const pair = Id64.getUint32Pair(categoryId);
   pair.lower++; // id of default subcategory is always `category id + 1`
   return {
-    className: "BisCore:SubCategory",
+    className: `BisCore${fullClassNameSeparator ?? "."}SubCategory`,
     id: Id64.fromUint32PairObject(pair),
   };
 }
 
 export function insertSubCategory(
-  props: { builder: TestIModelBuilder; label: string; parentCategoryId: Id64String; modelId?: Id64String } & Partial<
-    Omit<SubCategoryProps, "id" | "model" | "parent" | "code">
-  >,
+  props: BaseInstanceInsertProps & { label: string; parentCategoryId: Id64String; modelId?: Id64String } & Partial<
+      Omit<SubCategoryProps, "id" | "model" | "parent" | "code">
+    >,
 ) {
   const { builder, classFullName, modelId, label, parentCategoryId, ...subCategoryProps } = props;
-  const defaultClassName = "BisCore:SubCategory";
+  const defaultClassName = `BisCore${props.fullClassNameSeparator ?? "."}SubCategory`;
   const className = classFullName ?? defaultClassName;
   const model = modelId ?? IModel.dictionaryId;
   const id = builder.insertElement({
@@ -106,7 +206,7 @@ export function insertSubCategory(
     code: builder.createCode(model, BisCodeSpec.subCategory, label),
     parent: {
       id: parentCategoryId,
-      relClassName: "BisCore:CategoryOwnsSubCategories",
+      relClassName: `BisCore${props.fullClassNameSeparator ?? "."}CategoryOwnsSubCategories`,
     },
     ...subCategoryProps,
   });
@@ -114,12 +214,12 @@ export function insertSubCategory(
 }
 
 export function insertPhysicalElement(
-  props: { builder: TestIModelBuilder; modelId: Id64String; categoryId: Id64String; parentId?: Id64String } & Partial<
-    Omit<PhysicalElementProps, "id" | "model" | "category" | "parent">
-  >,
+  props: BaseInstanceInsertProps & { modelId: Id64String; categoryId: Id64String; parentId?: Id64String } & Partial<
+      Omit<PhysicalElementProps, "id" | "model" | "category" | "parent">
+    >,
 ) {
   const { builder, classFullName, modelId, categoryId, parentId, ...elementProps } = props;
-  const defaultClassName = "Generic:PhysicalObject";
+  const defaultClassName = `Generic${props.fullClassNameSeparator ?? "."}PhysicalObject`;
   const className = classFullName ?? defaultClassName;
   const id = builder.insertElement({
     classFullName: className,
@@ -130,7 +230,7 @@ export function insertPhysicalElement(
       ? {
           parent: {
             id: parentId,
-            relClassName: "BisCore:PhysicalElementAssemblesElements",
+            relClassName: `BisCore${props.fullClassNameSeparator ?? "."}PhysicalElementAssemblesElements`,
           },
         }
       : undefined),
@@ -140,12 +240,12 @@ export function insertPhysicalElement(
 }
 
 export function insertRepositoryLink(
-  props: { builder: TestIModelBuilder; repositoryUrl: string; repositoryLabel: string } & Partial<
-    Omit<RepositoryLinkProps, "id" | "model" | "url" | "userLabel">
-  >,
+  props: BaseInstanceInsertProps & { repositoryUrl: string; repositoryLabel: string } & Partial<
+      Omit<RepositoryLinkProps, "id" | "model" | "url" | "userLabel">
+    >,
 ) {
   const { builder, classFullName, repositoryUrl, repositoryLabel, ...repoLinkProps } = props;
-  const defaultClassName = "BisCore:RepositoryLink";
+  const defaultClassName = `BisCore${props.fullClassNameSeparator ?? "."}RepositoryLink`;
   const className = classFullName ?? defaultClassName;
   const id = builder.insertElement({
     classFullName: className,
@@ -158,13 +258,13 @@ export function insertRepositoryLink(
 }
 
 export function insertExternalSourceAspect(
-  props: { builder: TestIModelBuilder; elementId: Id64String; identifier: String; repositoryId?: Id64String } & Partial<
-    Omit<ExternalSourceAspectProps, "id" | "classFullName" | "element" | "source">
-  >,
+  props: BaseInstanceInsertProps & { elementId: Id64String; identifier: String; repositoryId?: Id64String } & Partial<
+      Omit<ExternalSourceAspectProps, "id" | "classFullName" | "element" | "source">
+    >,
 ) {
   const { builder, repositoryId, elementId, identifier, ...externalSourceAspectProps } = props;
   const externalSourceId = builder.insertElement({
-    classFullName: "BisCore:ExternalSource",
+    classFullName: `BisCore${props.fullClassNameSeparator ?? "."}ExternalSource`,
     model: IModel.repositoryModelId,
     repository: repositoryId
       ? {
@@ -173,7 +273,7 @@ export function insertExternalSourceAspect(
       : undefined,
   } as ExternalSourceProps);
 
-  const className = "BisCore:ExternalSourceAspect";
+  const className = `BisCore${props.fullClassNameSeparator ?? "."}ExternalSourceAspect`;
   const id = builder.insertAspect({
     classFullName: className,
     kind: "ExternalSource",

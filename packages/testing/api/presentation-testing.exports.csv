@@ -21,5 +21,6 @@ public;initialize: (props?: PresentationTestingInitProps) => Promise
 public;MappedNode
 public;NodeMappingFunc = (node: TreeNodeItem) => MappedNode
 public;PresentationTestingInitProps
+internal;setupOutputFileLocation(fileName: string): LocalFileName
 public;terminate: (frontendApp?: typeof IModelApp) => Promise
 beta;TestIModelBuilder
