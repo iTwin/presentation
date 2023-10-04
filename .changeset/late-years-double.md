@@ -1,5 +1,5 @@
 ---
-"@itwin/presentation-components": major
+"@itwin/presentation-components": patch
 ---
 
 Broaden default instance filter builder dialog.
