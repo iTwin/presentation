@@ -8,12 +8,25 @@ import sinon from "sinon";
 import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
+import {
+  combineFieldNames,
+  ContentInstancesOfSpecificClassesSpecification,
+  ContentRule,
+  MultiSchemaClassesSpecification,
+  RelatedClassInfo,
+  Ruleset,
+} from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { waitFor } from "@testing-library/react";
 import { translate } from "../../presentation-components/common/Utils";
 import { UniquePropertyValuesSelector } from "../../presentation-components/properties/UniquePropertyValuesSelector";
-import { createTestECClassInfo, render } from "../_helpers/Common";
-import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
+import { createTestECClassInfo, createTestPropertyInfo, createTestRelatedClassInfo, createTestRelationshipPath, render } from "../_helpers/Common";
+import {
+  createTestCategoryDescription,
+  createTestContentDescriptor,
+  createTestNestedContentField,
+  createTestPropertiesContentField,
+} from "../_helpers/Content";
 
 describe("UniquePropertyValuesSelector", () => {
   beforeEach(async () => {
@@ -279,5 +292,161 @@ describe("UniquePropertyValuesSelector", () => {
 
     // assert that the row is loaded
     await waitFor(() => expect(container.querySelectorAll(".iui-menu-item").length).to.be.equal(1));
+  });
+
+  describe("Ruleset Creation", () => {
+    const getSchemaAndClassNameFromRuleset = (ruleset: Ruleset) => {
+      expect(ruleset.rules.length).to.be.equal(1);
+      const contentRule = ruleset.rules[0] as ContentRule;
+
+      expect(contentRule.specifications.length).to.be.equal(1);
+      const specifications = contentRule.specifications[0] as ContentInstancesOfSpecificClassesSpecification;
+      const schemaAndClassNames = specifications.classes as MultiSchemaClassesSpecification;
+
+      expect(schemaAndClassNames.classNames.length).to.be.equal(1);
+      const className = schemaAndClassNames.classNames[0];
+      const schemaName = schemaAndClassNames.schemaName;
+
+      return [schemaName, className];
+    };
+
+    it("calls 'getPagedDistinctValues' with ruleset that is created from a 'NestedContentField'", async () => {
+      const testProperty = {
+        name: `#${combineFieldNames("testField", "parentField")}`,
+        displayLabel: "propertiesField",
+        typename: "number",
+      };
+
+      const relationshipPath = createTestRelationshipPath();
+      const lastStepOfRelationshipPath: RelatedClassInfo = createTestRelatedClassInfo({
+        targetClassInfo: createTestECClassInfo({ name: "testSchema:testClass" }),
+      });
+      relationshipPath.push(lastStepOfRelationshipPath);
+
+      // create the field that is checked and set its parent's pathToPrimaryClass
+      const testField = createTestPropertiesContentField({ name: "testField", properties: [] });
+      const parentField = createTestNestedContentField({ name: "parentField", nestedFields: [testField], pathToPrimaryClass: relationshipPath });
+
+      const testDescriptor = createTestContentDescriptor({
+        fields: [parentField],
+      });
+
+      const spy = sinon.spy(Presentation.presentation, "getPagedDistinctValues");
+
+      const { queryByText, user } = render(
+        <UniquePropertyValuesSelector property={testProperty} onChange={() => {}} imodel={testImodel} descriptor={testDescriptor} />,
+      );
+
+      // trigger loadTargets function
+      const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
+      await user.click(selector!);
+
+      const [expectedSchemaName, expectedClassName] = lastStepOfRelationshipPath.targetClassInfo.name.split(":");
+      const [actualSchemaName, actualClassName] = getSchemaAndClassNameFromRuleset(spy.firstCall.args[0].rulesetOrId as Ruleset);
+
+      expect(actualSchemaName).to.be.equal(expectedSchemaName);
+      expect(actualClassName).to.be.equal(expectedClassName);
+    });
+
+    it("calls 'getPagedDistinctValues' with ruleset that is created from a 'NestedContentField' with multiple layers of nesting", async () => {
+      const testProperty = {
+        name: `#${combineFieldNames("testField", `${combineFieldNames("parentField", "grandParentField")}`)}`,
+        displayLabel: "propertiesField",
+        typename: "number",
+      };
+
+      const relationshipPath = createTestRelationshipPath();
+      const lastStepOfRelationshipPath: RelatedClassInfo = createTestRelatedClassInfo({
+        targetClassInfo: createTestECClassInfo({ name: "testSchema:testClass" }),
+      });
+      relationshipPath.push(lastStepOfRelationshipPath);
+
+      // create the field that is checked and set its 'grandparent' to contain the pathToPrimaryClass
+      const testField = createTestPropertiesContentField({ name: "testField", properties: [] });
+      const parentTestField = createTestNestedContentField({ name: "parentField", nestedFields: [testField] });
+      const grandParentField = createTestNestedContentField({
+        name: "grandParentField",
+        nestedFields: [parentTestField],
+        pathToPrimaryClass: relationshipPath,
+      });
+
+      const testDescriptor = createTestContentDescriptor({
+        fields: [grandParentField],
+      });
+
+      const spy = sinon.spy(Presentation.presentation, "getPagedDistinctValues");
+
+      const { queryByText, user } = render(
+        <UniquePropertyValuesSelector property={testProperty} onChange={() => {}} imodel={testImodel} descriptor={testDescriptor} />,
+      );
+
+      // trigger loadTargets function
+      const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
+      await user.click(selector!);
+
+      const [expectedSchemaName, expectedClassName] = lastStepOfRelationshipPath.targetClassInfo.name.split(":");
+      const [actualSchemaName, actualClassName] = getSchemaAndClassNameFromRuleset(spy.firstCall.args[0].rulesetOrId as Ruleset);
+
+      expect(actualSchemaName).to.be.equal(expectedSchemaName);
+      expect(actualClassName).to.be.equal(expectedClassName);
+    });
+
+    it("calls 'getPagedDistinctValues' with ruleset that is created from a 'PropertiesField'", async () => {
+      const testProperty = {
+        name: "#testField",
+        displayLabel: "testField",
+        typename: "number",
+      };
+
+      const testClassInfo = createTestECClassInfo({ name: "testSchema:testClass" });
+      const testField = createTestPropertiesContentField({
+        name: "testField",
+        properties: [{ property: createTestPropertyInfo({ classInfo: testClassInfo }) }],
+      });
+
+      const testDescriptor = createTestContentDescriptor({
+        fields: [testField],
+      });
+
+      const spy = sinon.spy(Presentation.presentation, "getPagedDistinctValues");
+
+      const { queryByText, user } = render(
+        <UniquePropertyValuesSelector property={testProperty} onChange={() => {}} imodel={testImodel} descriptor={testDescriptor} />,
+      );
+
+      // trigger loadTargets function
+      const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
+      await user.click(selector!);
+
+      const [expectedSchemaName, expectedClassName] = testClassInfo.name.split(":");
+      const [actualSchemaName, actualClassName] = getSchemaAndClassNameFromRuleset(spy.firstCall.args[0].rulesetOrId as Ruleset);
+
+      expect(actualSchemaName).to.be.equal(expectedSchemaName);
+      expect(actualClassName).to.be.equal(expectedClassName);
+    });
+
+    it("does not create ruleset when field is a 'NestedContentField' with no parent, thus 'getPagedDistinctValues' is not called", async () => {
+      const testProperty = {
+        name: "#testField",
+        displayLabel: "testField",
+        typename: "number",
+      };
+
+      const testDescriptor = createTestContentDescriptor({
+        fields: [createTestNestedContentField({ name: "testField", nestedFields: [] })],
+      });
+
+      const spy = sinon.spy(Presentation.presentation, "getPagedDistinctValues");
+
+      const { queryByText, user } = render(
+        <UniquePropertyValuesSelector property={testProperty} onChange={() => {}} imodel={testImodel} descriptor={testDescriptor} />,
+      );
+
+      // trigger loadTargets function
+      const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
+      await user.click(selector!);
+
+      expect(spy).to.not.be.called;
+    });
   });
 });
