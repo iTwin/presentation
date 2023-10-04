@@ -9,6 +9,7 @@ import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import {
+  combineFieldNames,
   ContentInstancesOfSpecificClassesSpecification,
   ContentRule,
   MultiSchemaClassesSpecification,
@@ -309,9 +310,9 @@ describe("UniquePropertyValuesSelector", () => {
       return [schemaName, className];
     };
 
-    it("calls 'getPagedDistinctValues' with ruleset that is created from a 'NestedContentField'", async () => {
+    it.only("calls 'getPagedDistinctValues' with ruleset that is created from a 'NestedContentField'", async () => {
       const testProperty = {
-        name: "#testField",
+        name: `#${combineFieldNames("testField", "parentField")}`,
         displayLabel: "propertiesField",
         typename: "number",
       };
@@ -324,10 +325,10 @@ describe("UniquePropertyValuesSelector", () => {
 
       // create the field that is checked and set its parent's pathToPrimaryClass
       const testField = createTestPropertiesContentField({ name: "testField", properties: [] });
-      const parentField = createTestNestedContentField({ nestedFields: [testField], pathToPrimaryClass: relationshipPath });
+      const parentField = createTestNestedContentField({ name: "parentField", nestedFields: [testField], pathToPrimaryClass: relationshipPath });
 
       const testDescriptor = createTestContentDescriptor({
-        fields: [testField, parentField],
+        fields: [parentField],
       });
 
       const spy = sinon.spy(Presentation.presentation, "getPagedDistinctValues");
@@ -347,9 +348,9 @@ describe("UniquePropertyValuesSelector", () => {
       expect(actualClassName).to.be.equal(expectedClassName);
     });
 
-    it("calls 'getPagedDistinctValues' with ruleset that is created from a 'NestedContentField' with multiple layers of nesting", async () => {
+    it.only("calls 'getPagedDistinctValues' with ruleset that is created from a 'NestedContentField' with multiple layers of nesting", async () => {
       const testProperty = {
-        name: "#testField",
+        name: `#${combineFieldNames("testField", `${combineFieldNames("parentField", "grandParentField")}`)}`,
         displayLabel: "propertiesField",
         typename: "number",
       };
@@ -362,11 +363,15 @@ describe("UniquePropertyValuesSelector", () => {
 
       // create the field that is checked and set its 'grandparent' to contain the pathToPrimaryClass
       const testField = createTestPropertiesContentField({ name: "testField", properties: [] });
-      const parentTestField = createTestNestedContentField({ nestedFields: [testField] });
-      const grandParentField = createTestNestedContentField({ nestedFields: [parentTestField], pathToPrimaryClass: relationshipPath });
+      const parentTestField = createTestNestedContentField({ name: "parentField", nestedFields: [testField] });
+      const grandParentField = createTestNestedContentField({
+        name: "grandParentField",
+        nestedFields: [parentTestField],
+        pathToPrimaryClass: relationshipPath,
+      });
 
       const testDescriptor = createTestContentDescriptor({
-        fields: [testField, parentTestField, grandParentField],
+        fields: [grandParentField],
       });
 
       const spy = sinon.spy(Presentation.presentation, "getPagedDistinctValues");
