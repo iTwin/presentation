@@ -74,7 +74,7 @@ export interface ClassInfo {
     name: string;
 }
 
-// @beta (undocumented)
+// @beta
 export interface LabelGroupingNodeKey {
     // (undocumented)
     labelInfo: LabelInfo;
@@ -82,7 +82,7 @@ export interface LabelGroupingNodeKey {
     type: "label-grouping";
 }
 
-// @beta (undocumented)
+// @beta
 export interface LabelInfo {
     id: Id64String;
     label: string;
@@ -240,11 +240,9 @@ export namespace HierarchyNode {
     export function isClassGroupingNode<TNode extends HierarchyNode>(node: TNode): node is TNode & {
         key: ClassGroupingNodeKey;
     };
-    // (undocumented)
     export function isLabelGroupingNode<TNode extends HierarchyNode>(node: TNode): node is TNode & {
         key: LabelGroupingNodeKey;
     };
-    // (undocumented)
     export function isCustom<TNode extends HierarchyNode>(node: TNode): node is TNode & {
         key: string;
     };
@@ -293,9 +291,7 @@ export type HierarchyNodeKey = StandardHierarchyNodeKey | string;
 // @beta (undocumented)
 export namespace HierarchyNodeKey {
     export function isClassGrouping(key: HierarchyNodeKey): key is ClassGroupingNodeKey;
-    // (undocumented)
     export function isLabelGrouping(key: HierarchyNodeKey): key is LabelGroupingNodeKey;
-    // (undocumented)
     export function isCustom(key: HierarchyNodeKey): key is string;
     export function isInstances(key: HierarchyNodeKey): key is InstancesNodeKey;
     export function isStandard(key: HierarchyNodeKey): key is StandardHierarchyNodeKey;
