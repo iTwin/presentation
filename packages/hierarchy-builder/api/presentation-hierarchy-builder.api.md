@@ -395,15 +395,9 @@ export interface InstancesNodeKey {
 // @beta
 export interface LabelGroupingNodeKey {
     // (undocumented)
-    labelInfo: LabelInfo;
+    label: string;
     // (undocumented)
     type: "label-grouping";
-}
-
-// @beta
-export interface LabelInfo {
-    id: Id64String;
-    label: string;
 }
 
 // @beta (undocumented)
