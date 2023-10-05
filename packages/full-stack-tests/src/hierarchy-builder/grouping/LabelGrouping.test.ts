@@ -156,6 +156,7 @@ describe("Stateless hierarchy builder", () => {
         const childSubject3 = insertSubject({ builder, codeValue: "test subject 3", parentId: rootSubject.id, userLabel: labelGroupName });
         return { rootSubject, childSubject1, childSubject2, childSubject3 };
       });
+
       await validateHierarchy({
         provider: createProvider({ imodel, hierarchy: basicHierarchy }),
         expect: [
