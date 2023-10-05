@@ -78,12 +78,11 @@ async function createLabelGroupingInformation(nodes: HierarchyNode[]): Promise<L
 
 function createGroupingNodes(groupings: LabelGroupingInformation): HierarchyNode[] & { hasLabelGroupingNodes?: boolean } {
   const outNodes = new Array<HierarchyNode>();
-  let sizeSubtract = 0;
+  let isGroupingNodeCreated = false;
   groupings.grouped.forEach((entry) => {
     // if group contains 1 node, then the grouping should not be created
     if (entry.groupedNodes.length === 1) {
       outNodes.push(...entry.groupedNodes);
-      sizeSubtract++;
     } else {
       outNodes.push({
         label: entry.label,
@@ -93,10 +92,11 @@ function createGroupingNodes(groupings: LabelGroupingInformation): HierarchyNode
         },
         children: entry.groupedNodes,
       });
+      isGroupingNodeCreated = true;
     }
   });
   outNodes.push(...groupings.ungrouped);
-  (outNodes as any).hasLabelGroupingNodes = groupings.grouped.size - sizeSubtract > 0;
+  (outNodes as any).hasLabelGroupingNodes = isGroupingNodeCreated;
   return outNodes;
 }
 
