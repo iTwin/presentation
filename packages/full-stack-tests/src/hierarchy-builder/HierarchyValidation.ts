@@ -131,7 +131,6 @@ export namespace NodeValidators {
   }
 
   export function createForLabelGroupingNode(props: {
-    className?: string;
     label?: string;
     autoExpand?: boolean;
     children?: ExpectedHierarchyDef[] | boolean;
