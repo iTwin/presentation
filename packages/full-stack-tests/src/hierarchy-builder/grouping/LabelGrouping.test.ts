@@ -237,7 +237,7 @@ describe("Stateless hierarchy builder", () => {
     });
 
     describe("Label and Class grouping", () => {
-      it("first groups by class then by label", async function () {
+      it("groups by class and label", async function () {
         const labelGroupName1 = "test1";
         const labelGroupName2 = "test2";
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
