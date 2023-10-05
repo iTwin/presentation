@@ -75,20 +75,6 @@ export interface ClassInfo {
 }
 
 // @beta
-export interface LabelGroupingNodeKey {
-    // (undocumented)
-    labelInfo: LabelInfo;
-    // (undocumented)
-    type: "label-grouping";
-}
-
-// @beta
-export interface LabelInfo {
-    id: Id64String;
-    label: string;
-}
-
-// @beta
 export interface CreateInstanceLabelSelectClauseProps {
     classAlias: string;
     className?: string;
@@ -240,14 +226,14 @@ export namespace HierarchyNode {
     export function isClassGroupingNode<TNode extends HierarchyNode>(node: TNode): node is TNode & {
         key: ClassGroupingNodeKey;
     };
-    export function isLabelGroupingNode<TNode extends HierarchyNode>(node: TNode): node is TNode & {
-        key: LabelGroupingNodeKey;
-    };
     export function isCustom<TNode extends HierarchyNode>(node: TNode): node is TNode & {
         key: string;
     };
     export function isInstancesNode<TNode extends HierarchyNode>(node: TNode): node is TNode & {
         key: InstancesNodeKey;
+    };
+    export function isLabelGroupingNode<TNode extends HierarchyNode>(node: TNode): node is TNode & {
+        key: LabelGroupingNodeKey;
     };
     export function isStandard<TNode extends HierarchyNode>(node: TNode): node is TNode & {
         key: StandardHierarchyNodeKey;
@@ -291,9 +277,9 @@ export type HierarchyNodeKey = StandardHierarchyNodeKey | string;
 // @beta (undocumented)
 export namespace HierarchyNodeKey {
     export function isClassGrouping(key: HierarchyNodeKey): key is ClassGroupingNodeKey;
-    export function isLabelGrouping(key: HierarchyNodeKey): key is LabelGroupingNodeKey;
     export function isCustom(key: HierarchyNodeKey): key is string;
     export function isInstances(key: HierarchyNodeKey): key is InstancesNodeKey;
+    export function isLabelGrouping(key: HierarchyNodeKey): key is LabelGroupingNodeKey;
     export function isStandard(key: HierarchyNodeKey): key is StandardHierarchyNodeKey;
 }
 
@@ -404,6 +390,20 @@ export interface InstancesNodeKey {
     instanceKeys: InstanceKey[];
     // (undocumented)
     type: "instances";
+}
+
+// @beta
+export interface LabelGroupingNodeKey {
+    // (undocumented)
+    labelInfo: LabelInfo;
+    // (undocumented)
+    type: "label-grouping";
+}
+
+// @beta
+export interface LabelInfo {
+    id: Id64String;
+    label: string;
 }
 
 // @beta (undocumented)
