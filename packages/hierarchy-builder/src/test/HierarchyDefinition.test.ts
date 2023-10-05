@@ -156,8 +156,8 @@ describe("ClassBasedHierarchyLevelDefinitionsFactory", () => {
     expect(result).to.deep.eq([...def2]);
   });
 
-  describe("neither instances nor custom node", () => {
-    it("returns empty definition for a class grouping parent node", async () => {
+  describe("returns empty definition", () => {
+    it("class grouping parent node", async () => {
       const rootNode = createTestNode({
         key: {
           type: "class-grouping",
@@ -186,7 +186,7 @@ describe("ClassBasedHierarchyLevelDefinitionsFactory", () => {
       expect(result).to.be.empty;
     });
 
-    it("returns empty definition for a label grouping parent node", async () => {
+    it("label grouping parent node", async () => {
       const rootNode = createTestNode({
         key: {
           type: "label-grouping",
