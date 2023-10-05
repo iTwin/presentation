@@ -148,8 +148,6 @@ function getGroupOperatorString(operator: PropertyFilterRuleGroupOperator) {
       return "AND";
     case PropertyFilterRuleGroupOperator.Or:
       return "OR";
-    default:
-      throw new Error(`Invalid PropertyFilterRuleGroupOperator encountered: ${operator}`);
   }
 }
 
@@ -177,8 +175,6 @@ function getRuleOperatorString(operator: PropertyFilterRuleOperator) {
       return "<=";
     case PropertyFilterRuleOperator.Like:
       return "~";
-    default:
-      throw new Error(`Invalid PropertyFilterRuleOperator encountered: ${operator}`);
   }
 }
 

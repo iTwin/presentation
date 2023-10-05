@@ -67,7 +67,7 @@ describe("Stateless hierarchy builder", () => {
         nativeChildren = await nativeProvider.getNodes(props.nativeParent);
       } catch (e) {
         // eslint-disable-next-line no-console
-        console.error(`Error creating children using native provider: ${e}. At: ${createNativeAncestorsPath(props.nativeAncestors)}`);
+        console.error(`Error creating children using native provider: ${(e as Error).message}. At: ${createNativeAncestorsPath(props.nativeAncestors)}`);
         throw e;
       }
 
@@ -76,7 +76,7 @@ describe("Stateless hierarchy builder", () => {
         statelessChildren = await statelessProvider.getNodes(props.statelessParent);
       } catch (e) {
         // eslint-disable-next-line no-console
-        console.error(`Error creating children using stateless provider: ${e}. At: ${createNativeAncestorsPath(props.nativeAncestors)}`);
+        console.error(`Error creating children using stateless provider: ${(e as Error).message}. At: ${createNativeAncestorsPath(props.nativeAncestors)}`);
         throw e;
       }
 

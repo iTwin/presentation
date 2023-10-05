@@ -52,7 +52,7 @@ export function createHideIfNoChildrenOperator(hasNodes: (node: HierarchyNode) =
           log((n) => `needs hide, determined children: ${n.label} / ${hasChildren(n)}`),
         ),
       ).pipe(filter(hasChildren)),
-    ).pipe(log((n) => `out: ${n.label}: ${n.children}`));
+    ).pipe(log((n) => `out: ${n.label}: ${hasChildren(n)}`));
   };
 }
 
