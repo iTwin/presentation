@@ -156,7 +156,7 @@ describe("ClassBasedHierarchyLevelDefinitionsFactory", () => {
     expect(result).to.deep.eq([...def2]);
   });
 
-  describe("returns empty definition", () => {
+  describe("returns empty definition for grouping parent nodes", () => {
     it("class grouping parent node", async () => {
       const rootNode = createTestNode({
         key: {
