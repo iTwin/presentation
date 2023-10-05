@@ -139,7 +139,7 @@ export namespace NodeValidators {
     return {
       node: (node) => {
         if (!HierarchyNode.isStandard(node)) {
-          throw new Error(`[${node.label}] Expected a label grouping node, got a non-standard "${node.key}"`);
+          throw new Error(`[${node.label}] Expected a label grouping node, got a non-standard "${node.key as string}"`);
         }
         if (node.key.type !== "label-grouping") {
           throw new Error(`[${node.label}] Expected a label grouping node, got "${node.key.type}"`);
