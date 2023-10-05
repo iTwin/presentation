@@ -29,7 +29,7 @@ export interface LabelGroupingNodeKey {
   labelInfo: LabelInfo;
 }
 /**
- * A key for either an instance node, one of the instance grouping nodes or labek grouping nodes.
+ * A key for either an instance node, one of the instance grouping nodes or label grouping nodes.
  * @beta
  */
 export type StandardHierarchyNodeKey = InstancesNodeKey | ClassGroupingNodeKey | LabelGroupingNodeKey;
@@ -59,6 +59,7 @@ export namespace HierarchyNodeKey {
   export function isClassGrouping(key: HierarchyNodeKey): key is ClassGroupingNodeKey {
     return isStandard(key) && key.type === "class-grouping";
   }
+  /** Checks whether the given node key is a [[LabelGroupingNodeKey]]. */
   export function isLabelGrouping(key: HierarchyNodeKey): key is LabelGroupingNodeKey {
     return isStandard(key) && key.type === "label-grouping";
   }
@@ -104,6 +105,7 @@ export namespace HierarchyNode {
   export function isClassGroupingNode<TNode extends HierarchyNode>(node: TNode): node is TNode & { key: ClassGroupingNodeKey } {
     return HierarchyNodeKey.isClassGrouping(node.key);
   }
+  /** Checks whether the given node is a label grouping node */
   export function isLabelGroupingNode<TNode extends HierarchyNode>(node: TNode): node is TNode & { key: LabelGroupingNodeKey } {
     return HierarchyNodeKey.isLabelGrouping(node.key);
   }

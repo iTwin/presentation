@@ -471,7 +471,7 @@ export function parseFullClassName(fullClassName: string): {
 // @beta
 export function setLogger(logger: ILogger | undefined): void;
 
-// @beta (undocumented)
+// @beta
 export type StandardHierarchyNodeKey = InstancesNodeKey | ClassGroupingNodeKey | LabelGroupingNodeKey;
 
 // (No @packageDocumentation comment for this package)
