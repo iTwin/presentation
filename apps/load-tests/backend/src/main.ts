@@ -28,7 +28,7 @@ if (PROCESS_COUNT > 1 && cluster.isPrimary) {
     cluster.fork();
   }
   cluster.on("exit", (worker) => {
-    console.log(`[${process.pid}] Worker ${worker.process.pid} died`);
+    console.log(`[${process.pid}] Worker ${worker.process.pid!} died`);
   });
   console.log(`[${process.pid}] All workers started.`);
 } else {

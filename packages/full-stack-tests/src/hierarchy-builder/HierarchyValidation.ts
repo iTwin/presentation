@@ -33,7 +33,7 @@ export namespace NodeValidators {
         }
       } else {
         if (!expectations.label.test(node.label)) {
-          throw new Error(`Expected node label to match "${expectations.label}", got "${node.label}"`);
+          throw new Error(`Expected node label to match "${expectations.label.toString()}", got "${node.label}"`);
         }
       }
     }
@@ -58,7 +58,7 @@ export namespace NodeValidators {
           throw new Error(`[${node.label}] Expected a custom node, got a standard "${node.key.type}" one`);
         }
         if (expectedNode.key !== undefined && node.key !== expectedNode.key) {
-          throw new Error(`[${node.label}] Expected a custom node, got "${node.key}" one`);
+          throw new Error(`[${node.label}] Expected a custom node, got "${JSON.stringify(node.key)}" one`);
         }
         validateBaseNodeAttributes(node, {
           label: expectedNode.label,
@@ -79,7 +79,7 @@ export namespace NodeValidators {
     return {
       node: (node) => {
         if (!HierarchyNode.isStandard(node)) {
-          throw new Error(`[${node.label}] Expected an instance node, got a non-standard "${node.key}"`);
+          throw new Error(`[${node.label}] Expected an instance node, got a non-standard "${node.key as string}"`);
         }
         if (node.key.type !== "instances") {
           throw new Error(`[${node.label}] Expected an instance node, got "${node.key.type}"`);
@@ -112,7 +112,7 @@ export namespace NodeValidators {
     return {
       node: (node) => {
         if (!HierarchyNode.isStandard(node)) {
-          throw new Error(`[${node.label}] Expected a class grouping node, got a non-standard "${node.key}"`);
+          throw new Error(`[${node.label}] Expected a class grouping node, got a non-standard "${node.key as string}"`);
         }
         if (node.key.type !== "class-grouping") {
           throw new Error(`[${node.label}] Expected a class grouping node, got "${node.key.type}"`);

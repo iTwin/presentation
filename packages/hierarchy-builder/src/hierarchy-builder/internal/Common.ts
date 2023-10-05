@@ -19,7 +19,7 @@ export async function getClass(metadata: IMetadataProvider, fullClassName: strin
     console.error(e);
   }
   if (!schema) {
-    throw new Error(`Invalid schema: ${schemaName}`);
+    throw new Error(`Invalid schema "${schemaName}"`);
   }
 
   let nodeClass: ECClass | undefined;
@@ -30,7 +30,7 @@ export async function getClass(metadata: IMetadataProvider, fullClassName: strin
     console.error(e);
   }
   if (!nodeClass) {
-    throw new Error(`Invalid class: ${nodeClass}`);
+    throw new Error(`Invalid class "${className}" in schema "${schemaName}"`);
   }
 
   return nodeClass;
