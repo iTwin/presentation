@@ -45,8 +45,8 @@ describe("Learning snippets", async () => {
       const elementKeys: InstanceKey[] = [];
       // eslint-disable-next-line deprecation/deprecation
       const imodel = await buildTestIModel(this, async (builder) => {
-        const categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", label: "My Category" });
-        const modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", label: "My Model" });
+        const categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
+        const modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });
         elementKeys.push(
           insertPhysicalElement({ builder, fullClassNameSeparator: ":", userLabel: "My Assembly Element", modelId: modelKey.id, categoryId: categoryKey.id }),
         ),

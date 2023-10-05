@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import naturalCompare from "natural-compare-lite";
 import { from, mergeMap, Observable, tap, toArray } from "rxjs";
 import { Id64 } from "@itwin/core-bentley";
 import { LabelInfo } from "../../EC";
@@ -45,7 +46,17 @@ interface LabelGroupingInformation {
 async function createLabelGroupingInformation(nodes: HierarchyNode[]): Promise<LabelGroupingInformation> {
   const groupings: LabelGroupingInformation = { ungrouped: [], grouped: new Map() };
   for (const node of nodes) {
-    if (node.params?.groupByLabel) {
+    if (HierarchyNode.isClassGroupingNode(node) && Array.isArray(node.children)) {
+      const labelGroupings = await createLabelGroupingInformation(node.children);
+      const labelGroupingNodes = createGroupingNodes(labelGroupings);
+      const sortedNodes = labelGroupingNodes.sort((lhs, rhs) => naturalCompare(lhs.label.toLocaleLowerCase(), rhs.label.toLocaleLowerCase()));
+      const newClassGroupingNode: HierarchyNode = {
+        label: node.label,
+        key: node.key,
+        children: sortedNodes,
+      };
+      groupings.ungrouped.push(newClassGroupingNode);
+    } else if (node.params?.groupByLabel) {
       const nodeLabel = node.label;
       let groupingInfo = groupings.grouped.get(nodeLabel);
       if (!groupingInfo) {
@@ -65,18 +76,17 @@ async function createLabelGroupingInformation(nodes: HierarchyNode[]): Promise<L
     return { ungrouped: nodes, grouped: new Map() };
   }
 
-  if (groupings.grouped.size === 1 && groupings.ungrouped.length === 0) {
-    return { ungrouped: nodes, grouped: new Map() };
-  }
   return groupings;
 }
 
 function createGroupingNodes(groupings: LabelGroupingInformation): HierarchyNode[] & { hasLabelGroupingNodes?: boolean } {
   const outNodes = new Array<HierarchyNode>();
+  let sizeSubtract = 0;
   groupings.grouped.forEach((entry) => {
-    // if group contain 1 node, then they should not have their separate group
+    // if group contains 1 node, then they should not have their separate group
     if (entry.groupedNodes.length === 1) {
       outNodes.push(...entry.groupedNodes);
+      sizeSubtract++;
     } else {
       outNodes.push({
         label: entry.labelInfo.label,
@@ -89,7 +99,7 @@ function createGroupingNodes(groupings: LabelGroupingInformation): HierarchyNode
     }
   });
   outNodes.push(...groupings.ungrouped);
-  (outNodes as any).hasLabelGroupingNodes = groupings.grouped.size > 0;
+  (outNodes as any).hasLabelGroupingNodes = groupings.grouped.size - sizeSubtract > 0;
   return outNodes;
 }
 
