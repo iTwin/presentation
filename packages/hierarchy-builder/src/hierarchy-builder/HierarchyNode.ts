@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ClassInfo, InstanceKey, LabelInfo } from "./EC";
+import { ClassInfo, InstanceKey } from "./EC";
 
 /**
  * A key for a node that represents one or more ECInstances.
@@ -29,7 +29,7 @@ export interface ClassGroupingNodeKey {
  */
 export interface LabelGroupingNodeKey {
   type: "label-grouping";
-  labelInfo: LabelInfo;
+  label: string;
 }
 
 /**

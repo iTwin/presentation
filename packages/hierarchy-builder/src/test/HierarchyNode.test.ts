@@ -24,7 +24,7 @@ describe("HierarchyNode", () => {
     children: undefined,
   };
   const labelGroupingNode: HierarchyNode = {
-    key: { type: "label-grouping", labelInfo: { id: "0x1", label: "c" } },
+    key: { type: "label-grouping", label: "c" },
     label: "label grouping node",
     children: undefined,
   };

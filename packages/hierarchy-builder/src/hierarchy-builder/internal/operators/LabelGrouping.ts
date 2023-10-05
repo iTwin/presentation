@@ -5,8 +5,6 @@
 
 import naturalCompare from "natural-compare-lite";
 import { from, mergeMap, Observable, tap, toArray } from "rxjs";
-import { Id64 } from "@itwin/core-bentley";
-import { LabelInfo } from "../../EC";
 import { HierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
 import { createOperatorLoggingNamespace } from "../Common";
@@ -40,7 +38,7 @@ export function createLabelGroupingOperator() {
 
 interface LabelGroupingInformation {
   ungrouped: Array<HierarchyNode>;
-  grouped: Map<string, { labelInfo: LabelInfo; groupedNodes: Array<HierarchyNode> }>;
+  grouped: Map<string, { label: string; groupedNodes: Array<HierarchyNode> }>;
 }
 
 async function createLabelGroupingInformation(nodes: HierarchyNode[]): Promise<LabelGroupingInformation> {
@@ -61,7 +59,7 @@ async function createLabelGroupingInformation(nodes: HierarchyNode[]): Promise<L
       let groupingInfo = groupings.grouped.get(nodeLabel);
       if (!groupingInfo) {
         groupingInfo = {
-          labelInfo: { id: Id64.invalid, label: nodeLabel },
+          label: nodeLabel,
           groupedNodes: [],
         };
         groupings.grouped.set(nodeLabel, groupingInfo);
@@ -89,10 +87,10 @@ function createGroupingNodes(groupings: LabelGroupingInformation): HierarchyNode
       sizeSubtract++;
     } else {
       outNodes.push({
-        label: entry.labelInfo.label,
+        label: entry.label,
         key: {
           type: "label-grouping",
-          labelInfo: entry.labelInfo,
+          label: entry.label,
         },
         children: entry.groupedNodes,
       });

@@ -131,7 +131,7 @@ describe("LabelGrouping", () => {
           label: "1",
           key: {
             type: "label-grouping",
-            labelInfo: { id: Id64.invalid, label: "1" },
+            label: "1",
           },
           children: [nodes[0], nodes[1]],
         },
@@ -183,7 +183,7 @@ describe("LabelGrouping", () => {
               label: "1",
               key: {
                 type: "label-grouping",
-                labelInfo: { id: Id64.invalid, label: "1" },
+                label: "1",
               },
               children: [classGroupingNodes[0], classGroupingNodes[1]],
             },

@@ -289,7 +289,7 @@ describe("HideNodesInHierarchyOperator", () => {
         {
           key: {
             type: "label-grouping",
-            labelInfo: { id: Id64.invalid, label: "Test class" },
+            label: "Test class",
           },
           label: "Test class",
           params: {
@@ -316,7 +316,7 @@ describe("HideNodesInHierarchyOperator", () => {
         {
           key: {
             type: "label-grouping",
-            labelInfo: { id: Id64.invalid, label: "Test class" },
+            label: "Test class",
           },
           label: "Test class",
           params: {
@@ -345,7 +345,7 @@ describe("HideNodesInHierarchyOperator", () => {
         {
           key: {
             type: "label-grouping",
-            labelInfo: { id: Id64.invalid, label: "1" },
+            label: "1",
           },
           label: "1",
           children: undefined,
@@ -356,7 +356,7 @@ describe("HideNodesInHierarchyOperator", () => {
         {
           key: {
             type: "label-grouping",
-            labelInfo: { id: Id64.invalid, label: "1" },
+            label: "1",
           },
           label: "2",
           children: undefined,
@@ -370,7 +370,7 @@ describe("HideNodesInHierarchyOperator", () => {
       expect(getNodes).to.be.calledOnceWithExactly({
         key: {
           type: "label-grouping",
-          labelInfo: { id: Id64.invalid, label: "1" },
+          label: "1",
         },
         label: "1",
         children: undefined,

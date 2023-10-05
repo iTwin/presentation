@@ -33,14 +33,3 @@ export interface InstanceKey {
   /** ECInstance ID */
   id: Id64String;
 }
-
-/**
- * A data structure describing an ECClass label
- * @beta
- */
-export interface LabelInfo {
-  /** ECClass ID */
-  id: Id64String;
-  /** ECClass label */
-  label: string;
-}

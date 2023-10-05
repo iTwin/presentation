@@ -69,7 +69,7 @@ function mergeNodeKeys(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): HierarchyN
   }
   if (HierarchyNodeKey.isLabelGrouping(lhs)) {
     assert(HierarchyNodeKey.isLabelGrouping(rhs));
-    assert(lhs.labelInfo.id === rhs.labelInfo.id);
+    assert(lhs.label === rhs.label);
     return { ...lhs };
   }
   throw new Error(`Unable to merge given node keys`);

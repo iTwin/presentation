@@ -143,8 +143,8 @@ export namespace NodeValidators {
         if (node.key.type !== "label-grouping") {
           throw new Error(`[${node.label}] Expected a label grouping node, got "${node.key.type}"`);
         }
-        if (props.label && node.key.labelInfo.label !== props.label) {
-          throw new Error(`[${node.label}] Expected node to represent label "${props.label}", got "${node.key.labelInfo.label}"`);
+        if (props.label && node.key.label !== props.label) {
+          throw new Error(`[${node.label}] Expected node to represent label "${props.label}", got "${node.key.label}"`);
         }
         validateBaseNodeAttributes(node, {
           label: props.label,
