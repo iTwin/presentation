@@ -33,7 +33,7 @@ export interface LabelGroupingNodeKey {
 }
 
 /**
- * A key for either an instance node, one of the instance grouping or label grouping nodes.
+ * A key for either an instance node or one of the instance grouping nodes.
  * @beta
  */
 export type StandardHierarchyNodeKey = InstancesNodeKey | ClassGroupingNodeKey | LabelGroupingNodeKey;
