@@ -86,8 +86,8 @@ describe("Stateless hierarchy builder", () => {
     it("does not create groups of 1", async function () {
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
         const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-        const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id, userLabel: "test1" });
-        const childSubject2 = insertSubject({ builder, codeValue: "test subject 2", parentId: rootSubject.id, userLabel: "test2" });
+        const childSubject1 = insertSubject({ builder, codeValue: "1", parentId: rootSubject.id, userLabel: "test1" });
+        const childSubject2 = insertSubject({ builder, codeValue: "2", parentId: rootSubject.id, userLabel: "test2" });
         return { rootSubject, childSubject1, childSubject2 };
       });
 
@@ -149,9 +149,9 @@ describe("Stateless hierarchy builder", () => {
       const labelGroupName = "test1";
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
         const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-        const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id, userLabel: labelGroupName });
-        const childSubject2 = insertSubject({ builder, codeValue: "test subject 2", parentId: rootSubject.id, userLabel: "test2" });
-        const childSubject3 = insertSubject({ builder, codeValue: "test subject 3", parentId: rootSubject.id, userLabel: labelGroupName });
+        const childSubject1 = insertSubject({ builder, codeValue: "1", parentId: rootSubject.id, userLabel: labelGroupName });
+        const childSubject2 = insertSubject({ builder, codeValue: "2", parentId: rootSubject.id, userLabel: "test2" });
+        const childSubject3 = insertSubject({ builder, codeValue: "3", parentId: rootSubject.id, userLabel: labelGroupName });
         return { rootSubject, childSubject1, childSubject2, childSubject3 };
       });
 
@@ -189,10 +189,10 @@ describe("Stateless hierarchy builder", () => {
       const labelGroupName2 = "test2";
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
         const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-        const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id, userLabel: labelGroupName1 });
-        const childSubject2 = insertSubject({ builder, codeValue: "test subject 2", parentId: rootSubject.id, userLabel: labelGroupName2 });
-        const childSubject3 = insertSubject({ builder, codeValue: "test subject 3", parentId: rootSubject.id, userLabel: labelGroupName1 });
-        const childSubject4 = insertSubject({ builder, codeValue: "test subject 4", parentId: rootSubject.id, userLabel: labelGroupName2 });
+        const childSubject1 = insertSubject({ builder, codeValue: "1", parentId: rootSubject.id, userLabel: labelGroupName1 });
+        const childSubject2 = insertSubject({ builder, codeValue: "2", parentId: rootSubject.id, userLabel: labelGroupName2 });
+        const childSubject3 = insertSubject({ builder, codeValue: "3", parentId: rootSubject.id, userLabel: labelGroupName1 });
+        const childSubject4 = insertSubject({ builder, codeValue: "4", parentId: rootSubject.id, userLabel: labelGroupName2 });
         return { rootSubject, childSubject1, childSubject2, childSubject3, childSubject4 };
       });
 
