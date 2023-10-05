@@ -21,7 +21,7 @@ import {
 } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Button, Dialog, ProgressRadial } from "@itwin/itwinui-react";
-import { Descriptor } from "@itwin/presentation-common";
+import { Descriptor, Keys } from "@itwin/presentation-common";
 import { translate, useDelay } from "../common/Utils";
 import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder";
 import { PresentationInstanceFilterInfo } from "./Types";
@@ -50,6 +50,8 @@ export interface PresentationInstanceFilterDialogProps {
   descriptor: (() => Promise<Descriptor>) | Descriptor;
   /** Renders filter results count. */
   filterResultsCountRenderer?: (filter: PresentationInstanceFilterInfo) => ReactNode;
+  /** [Keys]($presentation-common) of the nodes that are being filtered. */
+  filterNodeKeys?: Keys;
   /** Dialog title. */
   title?: React.ReactNode;
   /** Initial filter that will be show when component is mounted. */
@@ -108,10 +110,11 @@ function useDelayLoadedDescriptor(descriptorOrGetter: Descriptor | (() => Promis
 
 interface PresentationInstanceFilterDialogContentProps extends Omit<PresentationInstanceFilterDialogProps, "isOpen" | "title" | "descriptor"> {
   descriptor: Descriptor;
+  filterNodeKeys?: Keys;
 }
 
 function PresentationInstanceFilterDialogContent(props: PresentationInstanceFilterDialogContentProps) {
-  const { onApply, initialFilter, descriptor, imodel, ruleGroupDepthLimit, filterResultsCountRenderer, onClose } = props;
+  const { onApply, initialFilter, descriptor, imodel, ruleGroupDepthLimit, filterResultsCountRenderer, onClose, filterNodeKeys } = props;
   const [initialPropertyFilter] = useState(() => (initialFilter ? convertPresentationFilterToPropertyFilter(descriptor, initialFilter.filter) : undefined));
 
   const { rootGroup, actions, buildFilter } = usePropertyFilterBuilder({
@@ -163,6 +166,7 @@ function PresentationInstanceFilterDialogContent(props: PresentationInstanceFilt
           ruleGroupDepthLimit={ruleGroupDepthLimit}
           imodel={imodel}
           descriptor={descriptor}
+          filterNodeKeys={filterNodeKeys}
         />
       </Dialog.Content>
       <div className="presentation-instance-filter-dialog-bottom-container">

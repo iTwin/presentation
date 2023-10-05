@@ -7,7 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ActionMeta, MultiValue, Options } from "react-select";
 import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ContentSpecificationTypes, Descriptor, DisplayValueGroup, Field, FieldDescriptor, KeySet, Ruleset, RuleTypes } from "@itwin/presentation-common";
+import { ContentSpecificationTypes, Descriptor, DisplayValueGroup, Field, FieldDescriptor, Keys, KeySet, Ruleset, RuleTypes } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { deserializeDisplayValueGroupArray, findField, serializeDisplayValueGroupArray, translate } from "../common/Utils";
 import { AsyncMultiTagSelect } from "../instance-filter-builder/MultiTagSelect";
@@ -28,11 +28,13 @@ export interface UniquePropertyValuesSelectorProps {
   imodel: IModelConnection;
   /** Current descriptor */
   descriptor: Descriptor;
+  /** Keys of the nodes that are currently selected for filtering */
+  filterNodeKeys?: Keys;
 }
 
 /** @internal */
 export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelectorProps) {
-  const { imodel, descriptor, property, onChange, value } = props;
+  const { imodel, descriptor, property, onChange, value, filterNodeKeys } = props;
   const [selectedValues, setSelectedValues] = useState<DisplayValueGroup[] | undefined>(() => getUniqueValueFromProperty(value));
   const [field, setField] = useState<Field | undefined>(() => findField(descriptor, getInstanceFilterFieldName(property)));
   useEffect(() => {
@@ -64,8 +66,8 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
   const isOptionSelected = (option: DisplayValueGroup, _: Options<DisplayValueGroup>): boolean =>
     selectedValues?.map((selectedValue) => selectedValue.displayValue).includes(option.displayValue) ?? false;
 
-  const ruleset = useUniquePropertyValuesRuleset(field);
-  const loadTargets = useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor: field?.getFieldDescriptor() });
+  const ruleset = useUniquePropertyValuesRuleset(descriptor, field);
+  const loadTargets = useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor: field?.getFieldDescriptor() }, filterNodeKeys);
 
   return (
     <AsyncMultiTagSelect
@@ -100,9 +102,14 @@ function getUniqueValueFromProperty(property: PropertyValue | undefined): Displa
   return undefined;
 }
 
-function useUniquePropertyValuesRuleset(field?: Field) {
+function useUniquePropertyValuesRuleset(descriptor: Descriptor, field?: Field) {
   const [ruleset, setRuleset] = useState<Ruleset>();
   useEffect(() => {
+    if (descriptor.ruleset) {
+      setRuleset(descriptor.ruleset);
+      return;
+    }
+
     const baseClassInfo = getBaseClassInfo(field);
     if (baseClassInfo === undefined) {
       setRuleset(undefined);
@@ -123,7 +130,7 @@ function useUniquePropertyValuesRuleset(field?: Field) {
         },
       ],
     });
-  }, [field]);
+  }, [field, descriptor]);
 
   return ruleset;
 }
@@ -148,7 +155,7 @@ interface UseUniquePropertyValuesLoaderProps {
   fieldDescriptor?: FieldDescriptor;
 }
 
-function useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor }: UseUniquePropertyValuesLoaderProps) {
+function useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor }: UseUniquePropertyValuesLoaderProps, filterNodeKeys?: Keys) {
   const loadTargets = useCallback(
     async (loadedOptionsCount: number) => {
       if (!ruleset || !fieldDescriptor) {
@@ -161,7 +168,7 @@ function useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor }: Use
         fieldDescriptor,
         rulesetOrId: ruleset,
         paging: { start: loadedOptionsCount, size: UNIQUE_PROPERTY_VALUES_BATCH_SIZE },
-        keys: new KeySet(),
+        keys: new KeySet(filterNodeKeys),
       });
 
       const filteredOptions = [];
@@ -180,7 +187,7 @@ function useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor }: Use
         hasMore: content.items.length === UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
       };
     },
-    [imodel, ruleset, fieldDescriptor],
+    [imodel, ruleset, fieldDescriptor, filterNodeKeys],
   );
 
   return loadTargets;

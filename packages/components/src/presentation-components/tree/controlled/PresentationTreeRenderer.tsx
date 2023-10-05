@@ -99,6 +99,7 @@ function TreeNodeFilterBuilderDialog(props: TreeNodeFilterBuilderDialogProps) {
       imodel={imodel}
       descriptor={filteringInfo.descriptor}
       initialFilter={filteringInfo.active}
+      filterNodeKeys={[filterNode.key]}
       filterResultsCountRenderer={(filter) => <MatchingInstancesCount dataProvider={dataProvider} filter={filter} parentKey={filterNode.key} />}
     />
   );
