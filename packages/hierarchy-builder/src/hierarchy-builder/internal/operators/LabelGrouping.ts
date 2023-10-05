@@ -71,7 +71,7 @@ async function createLabelGroupingInformation(nodes: HierarchyNode[]): Promise<L
       groupings.ungrouped.push(node);
     }
   }
-  // if all nodes have the same label, then they are already grouped
+  // if all nodes have the same label, then they should not be grouped
   if (groupings.grouped.size === 1 && groupings.ungrouped.length === 0) {
     return { ungrouped: nodes, grouped: new Map() };
   }
@@ -83,7 +83,7 @@ function createGroupingNodes(groupings: LabelGroupingInformation): HierarchyNode
   const outNodes = new Array<HierarchyNode>();
   let sizeSubtract = 0;
   groupings.grouped.forEach((entry) => {
-    // if group contains 1 node, then they should not have their separate group
+    // if group contains 1 node, then the grouping should not be created
     if (entry.groupedNodes.length === 1) {
       outNodes.push(...entry.groupedNodes);
       sizeSubtract++;
