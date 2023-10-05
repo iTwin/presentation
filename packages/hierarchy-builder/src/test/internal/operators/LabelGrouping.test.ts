@@ -95,7 +95,7 @@ describe("LabelGrouping", () => {
       expect(result).to.deep.eq(nodes);
     });
 
-    it("groups if at least two nodes have the same label", async () => {
+    it("groups if at least two nodes have the same label and both have groupByLabel set to true", async () => {
       const nodes: HierarchyNode[] = [
         createTestNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
@@ -138,6 +138,58 @@ describe("LabelGrouping", () => {
         nodes[2],
         nodes[3],
         nodes[4],
+      ] as HierarchyNode[]);
+    });
+
+    it("groups children of class-grouping nodes", async () => {
+      const classGroupingNodes: HierarchyNode[] = [
+        createTestNode({
+          key: { type: "instances", instanceKeys: [{ className: "Schema:B", id: "0x2" }] },
+          label: "1",
+          params: { groupByLabel: true },
+        }),
+        createTestNode({
+          key: { type: "instances", instanceKeys: [{ className: "Schema:B", id: "0x3" }] },
+          label: "1",
+          params: { groupByLabel: true },
+        }),
+        createTestNode({
+          key: { type: "instances", instanceKeys: [{ className: "Schema:B", id: "0x4" }] },
+          label: "2",
+          params: { groupByLabel: true },
+        }),
+      ];
+
+      const nodes: HierarchyNode[] = [
+        {
+          label: "someLabel",
+          key: {
+            type: "class-grouping",
+            class: { id: Id64.invalid, name: "Schema.B", label: "SomeName" },
+          },
+          children: classGroupingNodes,
+        },
+      ];
+      const result = await getObservableResult(from(nodes).pipe(createLabelGroupingOperator()));
+      expect(result).to.deep.eq([
+        {
+          label: "someLabel",
+          key: {
+            type: "class-grouping",
+            class: { id: Id64.invalid, name: "Schema.B", label: "SomeName" },
+          },
+          children: [
+            {
+              label: "1",
+              key: {
+                type: "label-grouping",
+                labelInfo: { id: Id64.invalid, label: "1" },
+              },
+              children: [classGroupingNodes[0], classGroupingNodes[1]],
+            },
+            classGroupingNodes[2],
+          ],
+        },
       ] as HierarchyNode[]);
     });
   });

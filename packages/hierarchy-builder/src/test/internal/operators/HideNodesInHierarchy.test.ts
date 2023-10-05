@@ -301,7 +301,7 @@ describe("HideNodesInHierarchyOperator", () => {
               key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] },
             }),
             createTestNode({
-              label: "b",
+              label: "a",
               key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] },
             }),
           ],

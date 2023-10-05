@@ -85,7 +85,7 @@ describe("Stateless hierarchy builder", () => {
       },
     };
 
-    it.only("does not create groups of 1", async function () {
+    it("does not create groups of 1", async function () {
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
         const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
         const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id, userLabel: "test1" });
