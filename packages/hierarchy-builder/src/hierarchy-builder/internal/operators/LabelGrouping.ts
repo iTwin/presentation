@@ -49,8 +49,7 @@ async function createLabelGroupingInformation(nodes: HierarchyNode[]): Promise<L
       const labelGroupingNodes = createGroupingNodes(labelGroupings);
       const sortedNodes = labelGroupingNodes.sort((lhs, rhs) => naturalCompare(lhs.label.toLocaleLowerCase(), rhs.label.toLocaleLowerCase()));
       const newClassGroupingNode: HierarchyNode = {
-        label: node.label,
-        key: node.key,
+        ...node,
         children: sortedNodes,
       };
       groupings.ungrouped.push(newClassGroupingNode);
