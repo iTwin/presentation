@@ -66,7 +66,7 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
   const isOptionSelected = (option: DisplayValueGroup, _: Options<DisplayValueGroup>): boolean =>
     selectedValues?.map((selectedValue) => selectedValue.displayValue).includes(option.displayValue) ?? false;
 
-  const ruleset = useUniquePropertyValuesRuleset(descriptor, field);
+  const ruleset = useUniquePropertyValuesRuleset(descriptor.ruleset, field);
   const loadTargets = useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor: field?.getFieldDescriptor() }, filterNodeKeys);
 
   return (
@@ -102,11 +102,11 @@ function getUniqueValueFromProperty(property: PropertyValue | undefined): Displa
   return undefined;
 }
 
-function useUniquePropertyValuesRuleset(descriptor: Descriptor, field?: Field) {
+function useUniquePropertyValuesRuleset(descriptorRuleset?: Ruleset, field?: Field) {
   const [ruleset, setRuleset] = useState<Ruleset>();
   useEffect(() => {
-    if (descriptor.ruleset) {
-      setRuleset(descriptor.ruleset);
+    if (descriptorRuleset) {
+      setRuleset(descriptorRuleset);
       return;
     }
 
@@ -130,7 +130,7 @@ function useUniquePropertyValuesRuleset(descriptor: Descriptor, field?: Field) {
         },
       ],
     });
-  }, [field, descriptor]);
+  }, [field, descriptorRuleset]);
 
   return ruleset;
 }
