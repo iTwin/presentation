@@ -43,7 +43,49 @@ describe("Stateless hierarchy builder", () => {
       });
     }
 
-    it("does not create groups of 1", async function () {
+    const basicHierarchy: IHierarchyLevelDefinitionsFactory = {
+      async defineHierarchyLevel(parentNode) {
+        if (!parentNode) {
+          return [
+            {
+              fullClassName: subjectClassName,
+              query: {
+                ecsql: `
+                    SELECT ${await selectClauseFactory.createSelectClause({
+                      ecClassId: { selector: `this.ECClassId` },
+                      ecInstanceId: { selector: `this.ECInstanceId` },
+                      nodeLabel: "root subject",
+                    })}
+                    FROM ${subjectClassName} AS this
+                    WHERE this.ECInstanceId = (${IModel.rootSubjectId})
+                  `,
+              },
+            },
+          ];
+        } else if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "root subject") {
+          return [
+            {
+              fullClassName: subjectClassName,
+              query: {
+                ecsql: `
+                    SELECT ${await selectClauseFactory.createSelectClause({
+                      ecClassId: { selector: `this.ECClassId` },
+                      ecInstanceId: { selector: `this.ECInstanceId` },
+                      nodeLabel: { selector: `this.UserLabel` },
+                      groupByLabel: true,
+                    })}
+                    FROM ${subjectClassName} AS this
+                    WHERE this.Parent.Id = (${IModel.rootSubjectId})
+                  `,
+              },
+            },
+          ];
+        }
+        return [];
+      },
+    };
+
+    it.only("does not create groups of 1", async function () {
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
         const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
         const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id, userLabel: "test1" });
@@ -51,50 +93,8 @@ describe("Stateless hierarchy builder", () => {
         return { rootSubject, childSubject1, childSubject2 };
       });
 
-      const hierarchy: IHierarchyLevelDefinitionsFactory = {
-        async defineHierarchyLevel(parentNode) {
-          if (!parentNode) {
-            return [
-              {
-                fullClassName: subjectClassName,
-                query: {
-                  ecsql: `
-                      SELECT ${await selectClauseFactory.createSelectClause({
-                        ecClassId: { selector: `this.ECClassId` },
-                        ecInstanceId: { selector: `this.ECInstanceId` },
-                        nodeLabel: "root subject",
-                      })}
-                      FROM ${subjectClassName} AS this
-                      WHERE this.ECInstanceId = (${IModel.rootSubjectId})
-                    `,
-                },
-              },
-            ];
-          } else if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "root subject") {
-            return [
-              {
-                fullClassName: subjectClassName,
-                query: {
-                  ecsql: `
-                      SELECT ${await selectClauseFactory.createSelectClause({
-                        ecClassId: { selector: `this.ECClassId` },
-                        ecInstanceId: { selector: `this.ECInstanceId` },
-                        nodeLabel: { selector: `this.UserLabel` },
-                        groupByLabel: true,
-                      })}
-                      FROM ${subjectClassName} AS this
-                      WHERE this.Parent.Id = (${IModel.rootSubjectId})
-                    `,
-                },
-              },
-            ];
-          }
-          return [];
-        },
-      };
-
       await validateHierarchy({
-        provider: createProvider({ imodel, hierarchy }),
+        provider: createProvider({ imodel, hierarchy: basicHierarchy }),
         expect: [
           NodeValidators.createForInstanceNode({
             instanceKeys: [keys.rootSubject],
@@ -123,50 +123,8 @@ describe("Stateless hierarchy builder", () => {
         return { rootSubject, childSubject1, childSubject2, childSubject3 };
       });
 
-      const hierarchy: IHierarchyLevelDefinitionsFactory = {
-        async defineHierarchyLevel(parentNode) {
-          if (!parentNode) {
-            return [
-              {
-                fullClassName: subjectClassName,
-                query: {
-                  ecsql: `
-                      SELECT ${await selectClauseFactory.createSelectClause({
-                        ecClassId: { selector: `this.ECClassId` },
-                        ecInstanceId: { selector: `this.ECInstanceId` },
-                        nodeLabel: "root subject",
-                      })}
-                      FROM ${subjectClassName} AS this
-                      WHERE this.ECInstanceId = (${IModel.rootSubjectId})
-                    `,
-                },
-              },
-            ];
-          } else if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "root subject") {
-            return [
-              {
-                fullClassName: subjectClassName,
-                query: {
-                  ecsql: `
-                      SELECT ${await selectClauseFactory.createSelectClause({
-                        ecClassId: { selector: `this.ECClassId` },
-                        ecInstanceId: { selector: `this.ECInstanceId` },
-                        nodeLabel: { selector: `this.UserLabel` },
-                        groupByLabel: true,
-                      })}
-                      FROM ${subjectClassName} AS this
-                      WHERE this.Parent.Id = (${IModel.rootSubjectId})
-                    `,
-                },
-              },
-            ];
-          }
-          return [];
-        },
-      };
-
       await validateHierarchy({
-        provider: createProvider({ imodel, hierarchy }),
+        provider: createProvider({ imodel, hierarchy: basicHierarchy }),
         expect: [
           NodeValidators.createForInstanceNode({
             instanceKeys: [keys.rootSubject],
@@ -198,51 +156,8 @@ describe("Stateless hierarchy builder", () => {
         const childSubject3 = insertSubject({ builder, codeValue: "test subject 3", parentId: rootSubject.id, userLabel: labelGroupName });
         return { rootSubject, childSubject1, childSubject2, childSubject3 };
       });
-
-      const hierarchy: IHierarchyLevelDefinitionsFactory = {
-        async defineHierarchyLevel(parentNode) {
-          if (!parentNode) {
-            return [
-              {
-                fullClassName: subjectClassName,
-                query: {
-                  ecsql: `
-                      SELECT ${await selectClauseFactory.createSelectClause({
-                        ecClassId: { selector: `this.ECClassId` },
-                        ecInstanceId: { selector: `this.ECInstanceId` },
-                        nodeLabel: "root subject",
-                      })}
-                      FROM ${subjectClassName} AS this
-                      WHERE this.ECInstanceId = (${IModel.rootSubjectId})
-                    `,
-                },
-              },
-            ];
-          } else if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "root subject") {
-            return [
-              {
-                fullClassName: subjectClassName,
-                query: {
-                  ecsql: `
-                      SELECT ${await selectClauseFactory.createSelectClause({
-                        ecClassId: { selector: `this.ECClassId` },
-                        ecInstanceId: { selector: `this.ECInstanceId` },
-                        nodeLabel: { selector: `this.UserLabel` },
-                        groupByLabel: true,
-                      })}
-                      FROM ${subjectClassName} AS this
-                      WHERE this.Parent.Id = (${IModel.rootSubjectId})
-                    `,
-                },
-              },
-            ];
-          }
-          return [];
-        },
-      };
-
       await validateHierarchy({
-        provider: createProvider({ imodel, hierarchy }),
+        provider: createProvider({ imodel, hierarchy: basicHierarchy }),
         expect: [
           NodeValidators.createForInstanceNode({
             instanceKeys: [keys.rootSubject],
@@ -282,50 +197,8 @@ describe("Stateless hierarchy builder", () => {
         return { rootSubject, childSubject1, childSubject2, childSubject3, childSubject4 };
       });
 
-      const hierarchy: IHierarchyLevelDefinitionsFactory = {
-        async defineHierarchyLevel(parentNode) {
-          if (!parentNode) {
-            return [
-              {
-                fullClassName: subjectClassName,
-                query: {
-                  ecsql: `
-                      SELECT ${await selectClauseFactory.createSelectClause({
-                        ecClassId: { selector: `this.ECClassId` },
-                        ecInstanceId: { selector: `this.ECInstanceId` },
-                        nodeLabel: "root subject",
-                      })}
-                      FROM ${subjectClassName} AS this
-                      WHERE this.ECInstanceId = (${IModel.rootSubjectId})
-                    `,
-                },
-              },
-            ];
-          } else if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "root subject") {
-            return [
-              {
-                fullClassName: subjectClassName,
-                query: {
-                  ecsql: `
-                      SELECT ${await selectClauseFactory.createSelectClause({
-                        ecClassId: { selector: `this.ECClassId` },
-                        ecInstanceId: { selector: `this.ECInstanceId` },
-                        nodeLabel: { selector: `this.UserLabel` },
-                        groupByLabel: true,
-                      })}
-                      FROM ${subjectClassName} AS this
-                      WHERE this.Parent.Id = (${IModel.rootSubjectId})
-                    `,
-                },
-              },
-            ];
-          }
-          return [];
-        },
-      };
-
       await validateHierarchy({
-        provider: createProvider({ imodel, hierarchy }),
+        provider: createProvider({ imodel, hierarchy: basicHierarchy }),
         expect: [
           NodeValidators.createForInstanceNode({
             instanceKeys: [keys.rootSubject],
@@ -376,7 +249,7 @@ describe("Stateless hierarchy builder", () => {
           return { rootSubject, childSubject1, childSubject2, childPartition3, childPartition4, childPartition5 };
         });
 
-        const hierarchy: IHierarchyLevelDefinitionsFactory = {
+        const customHierarchy: IHierarchyLevelDefinitionsFactory = {
           async defineHierarchyLevel(parentNode) {
             if (!parentNode) {
               return [
@@ -436,7 +309,7 @@ describe("Stateless hierarchy builder", () => {
         };
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy }),
+          provider: createProvider({ imodel, hierarchy: customHierarchy }),
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.rootSubject],
