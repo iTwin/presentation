@@ -78,35 +78,25 @@ describe("Stateless hierarchy builder", () => {
           } else if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "root subject") {
             return [
               {
-                fullClassName: subjectClassName,
+                fullClassName: `BisCore.InformationContentElement`,
                 query: {
                   ecsql: `
-                      SELECT ${await selectClauseFactory.createSelectClause({
-                        ecClassId: { selector: `this.ECClassId` },
-                        ecInstanceId: { selector: `this.ECInstanceId` },
-                        nodeLabel: { selector: `this.UserLabel` },
-                        groupByClass: true,
-                        groupByLabel: true,
-                      })}
-                      FROM ${subjectClassName} AS this
-                      WHERE this.Parent.Id = (${IModel.rootSubjectId})
-                    `,
-                },
-              },
-              {
-                fullClassName: physicalPartitionClassName,
-                query: {
-                  ecsql: `
-                      SELECT ${await selectClauseFactory.createSelectClause({
-                        ecClassId: { selector: `this.ECClassId` },
-                        ecInstanceId: { selector: `this.ECInstanceId` },
-                        nodeLabel: { selector: `this.UserLabel` },
-                        groupByClass: true,
-                        groupByLabel: true,
-                      })}
-                      FROM ${physicalPartitionClassName} AS this
-                      WHERE this.Parent.Id = (${IModel.rootSubjectId})
-                    `,
+                    SELECT ${await selectClauseFactory.createSelectClause({
+                      ecClassId: { selector: `this.ECClassId` },
+                      ecInstanceId: { selector: `this.ECInstanceId` },
+                      nodeLabel: { selector: `this.UserLabel` },
+                      groupByClass: true,
+                      groupByLabel: true,
+                    })}
+                    FROM (
+                      SELECT ECClassId, ECInstanceId, UserLabel, Parent
+                      FROM ${subjectClassName}
+                      UNION ALL
+                      SELECT ECClassId, ECInstanceId, UserLabel, Parent
+                      FROM ${physicalPartitionClassName}
+                    ) AS this
+                    WHERE this.Parent.Id = (${IModel.rootSubjectId})
+                  `,
                 },
               },
             ];
