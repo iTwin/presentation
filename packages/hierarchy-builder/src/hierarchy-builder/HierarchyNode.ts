@@ -23,13 +23,16 @@ export interface ClassGroupingNodeKey {
   class: ClassInfo;
 }
 
-/** @beta */
+/**
+ * A key for a label-grouping node.
+ * @beta
+ */
 export interface LabelGroupingNodeKey {
   type: "label-grouping";
   labelInfo: LabelInfo;
 }
 /**
- * A key for either an instance node, one of the instance grouping nodes or label grouping nodes.
+ * A key for either an instance node, one of the instance grouping or label grouping nodes.
  * @beta
  */
 export type StandardHierarchyNodeKey = InstancesNodeKey | ClassGroupingNodeKey | LabelGroupingNodeKey;
