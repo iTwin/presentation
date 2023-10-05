@@ -31,6 +31,7 @@ export interface LabelGroupingNodeKey {
   type: "label-grouping";
   labelInfo: LabelInfo;
 }
+
 /**
  * A key for either an instance node, one of the instance grouping or label grouping nodes.
  * @beta
