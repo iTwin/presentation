@@ -89,7 +89,7 @@ export const nodeRequestsTracker = {
     return !!context.vars.pendingNodeRequestsCount;
   },
   logCount(context: ScenarioContext, isFinal: boolean) {
-    ENABLE_NODES_LOGGING && console.log(`${isFinal ? "Final pending" : "Pending"} node requests: ${context.vars.pendingNodeRequestsCount}`);
+    ENABLE_NODES_LOGGING && console.log(`${isFinal ? "Final pending" : "Pending"} node requests: ${context.vars.pendingNodeRequestsCount as number}`);
   },
 };
 

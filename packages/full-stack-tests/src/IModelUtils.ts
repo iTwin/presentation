@@ -71,7 +71,7 @@ export async function importSchema(
     <ECSchema schemaName="${schemaName}" alias="${schemaAlias}" version="01.00" xmlns="http://www.bentley.com/schemas/Bentley.ECXML.3.1">
       <ECSchemaReference name="CoreCustomAttributes" version="1.0" alias="CoreCA" />
       <ECSchemaReference name="ECDbMap" version="2.0" alias="ecdbmap" />
-      ${schemaReferences?.map((referenceXml) => referenceXml).join("\n")}
+      ${schemaReferences?.map((referenceXml) => referenceXml).join("\n") ?? ""}
       ${classes.map((classXml) => classXml).join("\n")}
     </ECSchema>
   `;

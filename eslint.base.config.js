@@ -20,6 +20,17 @@ module.exports = [
           tag: ["internal"],
         },
       ],
+      "@typescript-eslint/restrict-template-expressions": [
+        "error",
+        {
+          allowAny: true,
+          allowBoolean: true,
+          allowNever: false,
+          allowNullish: false,
+          allowNumber: true,
+          allowRegExp: false,
+        },
+      ],
       curly: ["error", "all"],
     },
   },

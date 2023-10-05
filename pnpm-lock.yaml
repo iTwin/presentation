@@ -360,8 +360,8 @@ importers:
         specifier: ^4.4.0
         version: 4.4.0(@itwin/appui-abstract@4.1.1)(@itwin/components-react@4.4.0)(@itwin/core-bentley@4.1.1)(@itwin/core-common@4.1.1)(@itwin/core-frontend@4.1.1)(@itwin/core-geometry@4.1.1)(@itwin/core-quantity@4.1.1)(@itwin/core-react@4.4.0)(react-dom@17.0.2)(react@17.0.2)
       '@itwin/itwinui-react':
-        specifier: ^2.12.4
-        version: 2.12.4(react-dom@17.0.2)(react@17.0.2)
+        specifier: ^2.12.10
+        version: 2.12.10(react-dom@17.0.2)(react@17.0.2)
       '@itwin/itwinui-variables':
         specifier: ^2.1.0
         version: 2.1.0
@@ -464,15 +464,12 @@ importers:
 
   packages/components:
     dependencies:
-      '@itwin/itwinui-css':
-        specifier: ^1.12.2
-        version: 1.12.2
       '@itwin/itwinui-icons-react':
         specifier: ^2.4.0
         version: 2.4.0(react-dom@17.0.2)(react@17.0.2)
       '@itwin/itwinui-react':
-        specifier: ^2.12.4
-        version: 2.12.4(react-dom@17.0.2)(react@17.0.2)
+        specifier: ^2.12.10
+        version: 2.12.10(react-dom@17.0.2)(react@17.0.2)
       '@itwin/itwinui-variables':
         specifier: ^2.1.0
         version: 2.1.0
@@ -2819,7 +2816,7 @@ packages:
       '@itwin/core-bentley': 4.1.1
       '@itwin/core-react': 4.4.0(@itwin/appui-abstract@4.1.1)(@itwin/core-bentley@4.1.1)(react-dom@17.0.2)(react@17.0.2)
       '@itwin/itwinui-icons-react': 2.4.0(react-dom@17.0.2)(react@17.0.2)
-      '@itwin/itwinui-react': 2.12.4(react-dom@17.0.2)(react@17.0.2)
+      '@itwin/itwinui-react': 2.12.10(react-dom@17.0.2)(react@17.0.2)
       '@itwin/itwinui-variables': 2.1.0
       '@types/shortid': 0.0.29
       classnames: 2.3.1
@@ -2975,7 +2972,7 @@ packages:
       '@itwin/appui-abstract': 4.1.1(@itwin/core-bentley@4.1.1)
       '@itwin/core-bentley': 4.1.1
       '@itwin/itwinui-icons-react': 2.4.0(react-dom@17.0.2)(react@17.0.2)
-      '@itwin/itwinui-react': 2.12.4(react-dom@17.0.2)(react@17.0.2)
+      '@itwin/itwinui-react': 2.12.10(react-dom@17.0.2)(react@17.0.2)
       '@itwin/itwinui-variables': 2.1.0
       classnames: 2.3.1
       dompurify: 2.4.7
@@ -3100,15 +3097,11 @@ packages:
       '@itwin/core-quantity': 4.1.1(@itwin/core-bentley@4.1.1)
       '@itwin/core-react': 4.4.0(@itwin/appui-abstract@4.1.1)(@itwin/core-bentley@4.1.1)(react-dom@17.0.2)(react@17.0.2)
       '@itwin/itwinui-icons-react': 2.4.0(react-dom@17.0.2)(react@17.0.2)
-      '@itwin/itwinui-react': 2.12.4(react-dom@17.0.2)(react@17.0.2)
+      '@itwin/itwinui-react': 2.12.10(react-dom@17.0.2)(react@17.0.2)
       '@itwin/itwinui-variables': 2.1.0
       classnames: 2.3.1
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
-
-  /@itwin/itwinui-css@1.12.2:
-    resolution: {integrity: sha512-oTqH8wlZdGZwD1oj+Nt17dDQYEwX/zpEKlFEZGb070e9FYk4Wp7lKYl3KbxBBeayzuJR2gkubNboeoPR3ZzByA==}
-    dev: false
 
   /@itwin/itwinui-icons-react@2.4.0(react-dom@17.0.2)(react@17.0.2):
     resolution: {integrity: sha512-m1oX5Lxws40+IoySenzcV9hwBXk6oMpEGFMPr/XgbKpmMCsT6+ZnvLOf7WLFjz0gbsX3iD+IqLG/QA1dJ+AjRQ==}
@@ -3128,8 +3121,8 @@ packages:
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
 
-  /@itwin/itwinui-react@2.12.4(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-Rcdc5V5nSTuVa+w2yzGUY0vLP0XssBWydsfdRhgjeaXH7l6weErak5KUBX8kZezQLLINM0l9R6iOk1xpRCgyTA==}
+  /@itwin/itwinui-react@2.12.10(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-wVtXLEHVqlKspOADOU8kQYtJr469/VQ62r0L0Ov34s8596HWtiNuS57h3mSg7qnWONoUfSU1IPvPVh5oOrstWQ==}
     peerDependencies:
       react: '>=16.8.6 < 19.0.0'
       react-dom: '>=16.8.6 < 19.0.0'
@@ -3137,7 +3130,7 @@ packages:
       '@itwin/itwinui-illustrations-react': 2.1.0(react-dom@17.0.2)(react@17.0.2)
       '@tippyjs/react': 4.2.6(react-dom@17.0.2)(react@17.0.2)
       '@types/react-table': 7.7.14
-      classnames: 2.3.1
+      classnames: 2.3.2
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
       react-table: 7.8.0(react@17.0.2)
@@ -6260,7 +6253,6 @@ packages:
 
   /classnames@2.3.2:
     resolution: {integrity: sha512-CSbhY4cFEJRe6/GQzIk5qXZ4Jeg5pcsP7b5peFSDpffpe1cqjASH/n9UTjBwOp6XpMSTwQ8Za2K5V02ueA7Tmw==}
-    dev: false
 
   /clean-css@5.3.2:
     resolution: {integrity: sha512-JVJbM+f3d3Q704rF4bqQ5UUyTtuJ0JRKNbTKVEeujCCBoMdkEi+V+e8oktO9qGQNSvHrFTM6JZRXrUvGR1czww==}

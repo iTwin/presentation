@@ -6,7 +6,7 @@
 import { map, merge, mergeMap, Observable, partition, shareReplay, tap } from "rxjs";
 import { HierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
-import { createOperatorLoggingNamespace } from "../Common";
+import { createOperatorLoggingNamespace, hasChildren } from "../Common";
 
 const OPERATOR_NAME = "DetermineChildren";
 /** @internal */
@@ -31,12 +31,12 @@ export function createDetermineChildrenOperator(hasNodes: (node: HierarchyNode) 
       undetermined.pipe(
         mergeMap((n) =>
           hasNodes(n).pipe(
-            log((hasChildren) => `children for ${n.label}: ${hasChildren}`),
-            map((hasChildren) => ({ ...n, children: hasChildren })),
+            log((hasChildrenFlag) => `children for ${n.label}: ${hasChildrenFlag}`),
+            map((hasChildrenFlag) => ({ ...n, children: hasChildrenFlag })),
           ),
         ),
       ),
-    ).pipe(log((n) => `out: ${n.label} / ${n.children}`));
+    ).pipe(log((n) => `out: ${n.label} / ${hasChildren(n)}`));
   };
 }
 

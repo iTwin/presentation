@@ -5,21 +5,19 @@
 
 .presentation-instance-filter-dialog {
   .presentation-instance-filter-dialog-content-container {
+    height: calc(var(--iui-component-height-large) * 7);
+    width: calc(var(--iui-size-2xl) * 15);
     min-height: calc(var(--iui-component-height-large) * 7);
     min-width: calc(var(--iui-size-2xl) * 8);
 
     .presentation-instance-filter-title {
       margin-bottom: 0;
-      padding: 6px;
+      padding: var(--iui-size-xs);
     }
 
     .presentation-instance-filter-content {
+      padding: var(--iui-size-xs);
       overflow: hidden;
-
-      .presentation-property-filter-builder {
-        overflow: auto;
-        height: calc(100% - var(--iui-component-height-large));
-      }
     }
 
     .presentation-instance-filter-dialog-bottom-container {
@@ -27,7 +25,7 @@
       grid-template-columns: 50% 50%;
       align-items: center;
       border-style: solid none none none;
-      padding-top: 6px;
+      padding-top: var(--iui-size-xs);
       border-color: var(--iui-color-border);
 
       .presentation-instance-filter-button-bar {
@@ -39,7 +37,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 11px 0;
+      padding: var(--iui-size-s) 0;
     }
   }
 }

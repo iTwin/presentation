@@ -1,5 +1,23 @@
 # Change Log - @itwin/presentation-components
 
+## 4.3.0
+
+### Minor Changes
+
+- [#289](https://github.com/iTwin/presentation/pull/289): Removed dependency on `@itwin/itwinui-css` and switched to using components from `@itwin/itwinui-react` instead.
+- [#284](https://github.com/iTwin/presentation/pull/284): Fix for missing/incomplete category labels in the property selector of the instance filter builder.
+- [#231](https://github.com/iTwin/presentation/pull/231): Expand the `usePresentationTableWithUnifiedSelection()` hook to additionally return:
+
+  - an `onSelect()` callback which will update the `unifiedSelection` one level above it (+1) with the keys that are passed to it.
+  - `selectedRows` which is updated every time `unifiedSelection` changes one level above the table component.
+
+### Patch Changes
+
+- [#292](https://github.com/iTwin/presentation/pull/292): Broaden default instance filter builder dialog.
+- [#289](https://github.com/iTwin/presentation/pull/289): Fixed navigation property value selector dropdown menu to be visible when used inside dialog.
+- [#291](https://github.com/iTwin/presentation/pull/291): Updated `@itwin/itwinui-react` dependency version to consume the latest fixes.
+- [#264](https://github.com/iTwin/presentation/pull/264): Change `NumericPropertyEditor` logic to only commit changes on `onBlur` event rather than every time the value is changed.
+
 ## 4.2.1
 
 ### Patch Changes

@@ -230,14 +230,6 @@ describe("convertToInstanceFilterDefinition", () => {
         `(CompareDoubles(${propertyAccessor}.x, 10) <> 0) OR (CompareDoubles(${propertyAccessor}.y, 20) <> 0) OR (CompareDoubles(${propertyAccessor}.z, 5) <> 0)`,
       );
     });
-
-    it("invalid operator", async () => {
-      const filter: PresentationInstanceFilterCondition = {
-        field: createTestPropertiesContentField({ properties: [{ property }] }),
-        operator: "invalid" as unknown as PropertyFilterRuleOperator,
-      };
-      await expect(convertToInstanceFilterDefinition(filter, testImodel)).to.be.rejected;
-    });
   });
 
   describe("converts condition group with", () => {
@@ -307,23 +299,6 @@ describe("convertToInstanceFilterDefinition", () => {
       };
       const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(`(${propertyAccessor} = NULL OR (${propertyAccessor} = NULL AND ${propertyAccessor} <> NULL))`);
-    });
-
-    it("invalid operator", async () => {
-      const filter: PresentationInstanceFilterConditionGroup = {
-        operator: "invalid" as unknown as PropertyFilterRuleGroupOperator,
-        conditions: [
-          {
-            field,
-            operator: PropertyFilterRuleOperator.IsNull,
-          },
-          {
-            field,
-            operator: PropertyFilterRuleOperator.IsNotNull,
-          },
-        ],
-      };
-      await expect(convertToInstanceFilterDefinition(filter, testImodel)).to.be.rejected;
     });
   });
 

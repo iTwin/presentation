@@ -11,8 +11,9 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, KeySet, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { fireEvent, render as renderRTL, waitFor } from "@testing-library/react";
+import { render as renderRTL, waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
+import userEvent from "@testing-library/user-event";
 import { IContentDataProvider } from "../../presentation-components/common/ContentDataProvider";
 import {
   navigationPropertyEditorContext,
@@ -62,11 +63,12 @@ describe("<NavigationPropertyEditor />", () => {
 
   it("renders editor for 'navigation' type", async () => {
     const record = createRecord();
-    const { container } = render(<EditorContainer propertyRecord={record} onCancel={() => {}} onCommit={() => {}} />);
-    await waitFor(() => expect(container.querySelector<HTMLDivElement>(".iui-select-button")).to.not.be.null);
+    const { queryByRole } = render(<EditorContainer propertyRecord={record} onCancel={() => {}} onCommit={() => {}} />);
+    await waitFor(() => expect(queryByRole("combobox")).to.not.be.null);
   });
 
   it("invokes 'onCommit' when new target is selected changes", async () => {
+    const user = userEvent.setup();
     const contentItem = createTestContentItem({
       label: LabelDefinition.fromLabelString("TestLabel"),
       primaryKeys: [{ id: "1", className: "TestSchema:TestClass" }],
@@ -76,7 +78,7 @@ describe("<NavigationPropertyEditor />", () => {
     sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
     const record = createRecord();
     const spy = sinon.spy();
-    const { container, getByText, queryByDisplayValue } = render(<EditorContainer propertyRecord={record} onCancel={() => {}} onCommit={spy} />, {
+    const { getByRole, getByText, queryByDisplayValue } = render(<EditorContainer propertyRecord={record} onCancel={() => {}} onCommit={spy} />, {
       getNavigationPropertyInfo: async () => ({
         classInfo: { id: "1", label: "Class Label", name: "TestSchema:TestClass" },
         targetClassInfo: { id: "1", label: "Target Label", name: "TestSchema:TargetClass" },
@@ -86,16 +88,12 @@ describe("<NavigationPropertyEditor />", () => {
     });
 
     // open dropdown
-    const select = await waitFor(() => {
-      const element = container.querySelector<HTMLDivElement>(".iui-select-button");
-      expect(element).to.not.be.null;
-      return element;
-    });
-    fireEvent.click(select!);
+    const select = await waitFor(() => getByRole("combobox"));
+    await user.click(select);
 
     // select option from dropdown
     const target = await waitFor(() => getByText(contentItem.label.displayValue));
-    fireEvent.click(target);
+    await user.click(target);
 
     await waitFor(() => expect(queryByDisplayValue(contentItem.label.displayValue)).to.not.be.null);
     expect(spy).to.be.calledOnce;
@@ -118,8 +116,8 @@ describe("<NavigationPropertyTargetEditor />", () => {
   });
 
   it("renders selector when rendered inside context", async () => {
-    const { container } = render(<NavigationPropertyTargetEditor propertyRecord={testRecord} />, {});
-    await waitFor(() => expect(container.querySelector<HTMLDivElement>(".iui-select-button")).to.not.be.null);
+    const { queryByRole } = render(<NavigationPropertyTargetEditor propertyRecord={testRecord} />, {});
+    await waitFor(() => expect(queryByRole("combobox")).to.not.be.null);
   });
 
   it("uses default property renderer when rendered not in the context", () => {

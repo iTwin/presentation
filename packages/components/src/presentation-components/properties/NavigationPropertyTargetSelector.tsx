@@ -6,21 +6,18 @@
  * @module Internal
  */
 
-import "@itwin/itwinui-css/css/input.css";
-import "@itwin/itwinui-css/css/menu.css";
-import "@itwin/itwinui-css/css/tag.css";
 import "./NavigationPropertyTargetSelector.scss";
-import classnames from "classnames";
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { components, ControlProps, MenuProps, OptionProps, SingleValue } from "react-select";
+import classNames from "classnames";
+import { ChangeEvent, forwardRef, KeyboardEvent, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { components, ControlProps, MenuListProps, OptionProps, SingleValue } from "react-select";
 import { AsyncPaginate } from "react-select-async-paginate";
 import { PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyEditorProps, PropertyValueRendererManager } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { SvgCaretDownSmall } from "@itwin/itwinui-icons-react";
-import { Input } from "@itwin/itwinui-react";
+import { Input, List, ListItem } from "@itwin/itwinui-react";
 import { InstanceKey, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
-import { mergeRefs, translate, useResizeObserver } from "../common/Utils";
+import { translate, useMergedRefs, useResizeObserver } from "../common/Utils";
 import { NavigationPropertyTarget, useNavigationPropertyTargetsLoader, useNavigationPropertyTargetsRuleset } from "./UseNavigationPropertyTargetsLoader";
 
 /** @internal */
@@ -68,13 +65,14 @@ export const NavigationPropertyTargetSelector = forwardRef<NavigationPropertyTar
   }, [propertyRecord]);
 
   const { ref: selectRef, width } = useResizeObserver();
+  const mergedRefs = useMergedRefs(divRef, selectRef);
 
   if (!targetsRuleset) {
     return <ReadonlyNavigationPropertyTarget record={props.propertyRecord} />;
   }
 
   return (
-    <div ref={mergeRefs(divRef, selectRef)}>
+    <div ref={mergedRefs}>
       <AsyncPaginate
         isMulti={false}
         onChange={onChange}
@@ -89,19 +87,18 @@ export const NavigationPropertyTargetSelector = forwardRef<NavigationPropertyTar
         tabSelectsValue={false}
         loadingMessage={() => translate("navigation-property-editor.loading-target-instances")}
         styles={{
-          control: () => ({ height: "27px" }),
-          container: () => ({ width: "auto" }),
-          valueContainer: () => ({ height: "27px", ["--_iui-select-padding-block"]: 0, ["--_iui-select-min-height"]: "var(--iui-component-height-small)" }),
-          menu: () => ({ position: "absolute", zIndex: 9999, width }),
-          menuList: (style: any) => ({ ...style, padding: 0 }),
-          option: () => ({ whiteSpace: "nowrap", width: "max-content", minWidth: "100%" }),
-          dropdownIndicator: () => ({ backgroundColor: "var(--iui-color-background)" }),
+          control: () => ({}),
+          container: () => ({}),
+          menuPortal: (base) => ({ ...base, zIndex: 9999, width }),
+          menu: () => ({}),
+          dropdownIndicator: () => ({}),
         }}
         components={{
           Control: TargetSelectControl,
-          Menu: TargetSelectMenu,
+          MenuList: TargetSelectMenuList,
           Option: TargetSelectOption,
         }}
+        menuPortalTarget={divRef.current?.ownerDocument.body.querySelector(".iui-root") ?? divRef.current?.ownerDocument.body}
       />
     </div>
   );
@@ -144,6 +141,7 @@ function TargetSelectControl<TOption, IsMulti extends boolean = boolean>(props: 
   }, [label]);
 
   const handleMenuOpen = () => {
+    // istanbul ignore else
     if (!selectProps.menuIsOpen) {
       selectProps.onMenuOpen();
     }
@@ -166,7 +164,7 @@ function TargetSelectControl<TOption, IsMulti extends boolean = boolean>(props: 
     }
   };
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (!selectProps.menuIsOpen) {
       selectProps.onMenuOpen();
     }
@@ -175,7 +173,7 @@ function TargetSelectControl<TOption, IsMulti extends boolean = boolean>(props: 
   };
 
   /** This function is used to cancel overriden react-select keyboard events. */
-  const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.code === "Space" || event.code === "Home" || event.code === "End") {
       event.stopPropagation();
     }
@@ -185,26 +183,22 @@ function TargetSelectControl<TOption, IsMulti extends boolean = boolean>(props: 
   };
 
   return (
-    <components.Control {...props} className="iui-input-with-icon">
-      <components.ValueContainer
-        {...props}
-        className="iui-select-button presentation-navigation-property-select-input"
-        innerProps={{ onClick: handleMenuOpen, style: { cursor: "text" } }}
-      >
-        <Input
-          ref={inputRef}
-          value={inputValue}
-          onBlur={handleInputBlur}
-          onFocus={handleMenuOpen}
-          onChange={handleInputChange}
-          size="small"
-          onKeyDown={handleInputKeyDown}
-          placeholder={translate("navigation-property-editor.select-target-instance")}
-        />
-      </components.ValueContainer>
+    <components.Control {...props} className="presentation-navigation-property-select-control">
+      <Input
+        ref={inputRef}
+        className="presentation-navigation-property-select-input"
+        value={inputValue}
+        onBlur={handleInputBlur}
+        onFocus={handleMenuOpen}
+        onChange={handleInputChange}
+        onKeyDown={handleInputKeyDown}
+        size="small"
+        placeholder={translate("navigation-property-editor.select-target-instance")}
+        role="combobox"
+      />
       <components.DropdownIndicator
         {...props}
-        className={classnames("iui-end-icon iui-actionable", { "iui-open": props.selectProps.menuIsOpen })}
+        className={classNames("presentation-navigation-property-select-input-icon", { open: props.menuIsOpen })}
         innerProps={{ onClick: handleDropdownButtonClick }}
       >
         <SvgCaretDownSmall />
@@ -213,23 +207,18 @@ function TargetSelectControl<TOption, IsMulti extends boolean = boolean>(props: 
   );
 }
 
-function TargetSelectMenu<TOption, IsMulti extends boolean = boolean>({ children, ...props }: MenuProps<TOption, IsMulti>) {
+function TargetSelectMenuList<TOption, IsMulti extends boolean = boolean>({ children, ...props }: MenuListProps<TOption, IsMulti>) {
   return (
-    <components.Menu {...props} className="iui-menu">
+    <List className="presentation-navigation-property-select-dropdown" ref={props.innerRef} {...props.innerProps} as="div">
       {children}
-    </components.Menu>
+    </List>
   );
 }
 
 function TargetSelectOption<TOption, IsMulti extends boolean = boolean>({ children: _, ...props }: OptionProps<TOption, IsMulti>) {
-  const className = classnames("iui-menu-item", {
-    "iui-focused": props.isFocused,
-    "iui-active": props.isSelected,
-  });
-
   return (
-    <components.Option {...props} className={className}>
+    <ListItem focused={props.isFocused} active={props.isSelected} ref={props.innerRef} {...props.innerProps} as="div">
       {props.selectProps.getOptionLabel && props.selectProps.getOptionLabel(props.data)}
-    </components.Option>
+    </ListItem>
   );
 }

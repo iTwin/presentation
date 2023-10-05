@@ -4,10 +4,13 @@
 *--------------------------------------------------------------------------------------------*/
 
 .presentation-instance-filter {
-  padding: 5px;
   height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
 
-  .presentation-instance-filter-class-selector {
-    height: var(--iui-component-height-large);
+  .presentation-property-filter-builder {
+    padding-top: var(--iui-size-3xs);
+    overflow: auto;
   }
 }
