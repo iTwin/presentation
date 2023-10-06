@@ -47,12 +47,10 @@ function createLabelGroups(nodes: HierarchyNode[]): HierarchyNode[] {
         if (currentNode.params?.groupByLabel) {
           lastOutputNode.children.push(currentNode);
         } else {
-          outputNodes.push(currentNode);
-          [outputNodes[outputNodes.length - 1], outputNodes[outputNodes.length - 2]] = [
-            outputNodes[outputNodes.length - 2],
-            outputNodes[outputNodes.length - 1],
-          ];
+          outputNodes.push(outputNodes[outputNodes.length - 1]);
+          outputNodes[outputNodes.length - 2] = currentNode;
         }
+        continue;
       } else if (lastOutputNode.params?.groupByLabel) {
         if (currentNode.params?.groupByLabel) {
           outputNodes[outputNodes.length - 1] = {
@@ -64,18 +62,13 @@ function createLabelGroups(nodes: HierarchyNode[]): HierarchyNode[] {
             children: [lastOutputNode, currentNode],
           };
         } else {
-          outputNodes.push(currentNode);
-          [outputNodes[outputNodes.length - 1], outputNodes[outputNodes.length - 2]] = [
-            outputNodes[outputNodes.length - 2],
-            outputNodes[outputNodes.length - 1],
-          ];
+          outputNodes.push(outputNodes[outputNodes.length - 1]);
+          outputNodes[outputNodes.length - 2] = currentNode;
         }
-      } else {
-        outputNodes.push(currentNode);
+        continue;
       }
-    } else {
-      outputNodes.push(nodes[i]);
     }
+    outputNodes.push(nodes[i]);
   }
   // if all nodes have the same label and no classGrouping nodes have been changed then they should not be grouped
   if (outputNodes.length === 1 && !hasChanged) {
