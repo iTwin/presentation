@@ -1,5 +1,12 @@
 # Change Log - @itwin/presentation-testing
 
+## 4.1.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-components@4.3.0
+
 ## 4.1.0
 
 ### Minor Changes

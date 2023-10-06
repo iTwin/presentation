@@ -83,7 +83,7 @@ export function createGetClassStub(schemas: IMetadataProvider) {
           return false;
         }
         if (typeof targetClassOrClassName === "string") {
-          return props.is(`${schemaName}.${targetClassOrClassName}`);
+          return props.is(`${schemaName!}.${targetClassOrClassName}`);
         }
         // need this just to make sure `.` is used for separating schema and class names
         const { schemaName: parsedSchemaName, className: parsedClassName } = parseFullClassName(targetClassOrClassName.fullName);
