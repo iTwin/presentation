@@ -64,14 +64,14 @@ describe("Stateless hierarchy builder", () => {
                 fullClassName: subjectClassName,
                 query: {
                   ecsql: `
-                      SELECT ${await selectClauseFactory.createSelectClause({
-                        ecClassId: { selector: `this.ECClassId` },
-                        ecInstanceId: { selector: `this.ECInstanceId` },
-                        nodeLabel: "root subject",
-                      })}
-                      FROM ${subjectClassName} AS this
-                      WHERE this.ECInstanceId = (${IModel.rootSubjectId})
-                    `,
+                    SELECT ${await selectClauseFactory.createSelectClause({
+                      ecClassId: { selector: `this.ECClassId` },
+                      ecInstanceId: { selector: `this.ECInstanceId` },
+                      nodeLabel: "root subject",
+                    })}
+                    FROM ${subjectClassName} AS this
+                    WHERE this.ECInstanceId = (${IModel.rootSubjectId})
+                  `,
                 },
               },
             ];
