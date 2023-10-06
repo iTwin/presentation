@@ -15,7 +15,7 @@ import { FormatterSpec, ParseError, ParserSpec, QuantityParseResult } from "@itw
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { Descriptor, KoqPropertyValueFormatter, PropertyValueFormat } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { fireEvent, waitFor } from "@testing-library/react";
+import { waitFor } from "@testing-library/react";
 import { SchemaMetadataContextProvider } from "../../presentation-components/common/SchemaMetadataContext";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import { PresentationInstanceFilterDialog } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog";
@@ -112,36 +112,24 @@ describe("PresentationInstanceFilterDialog", () => {
 
   it("invokes 'onApply' with string property filter rule", async () => {
     const spy = sinon.spy();
-    const { container, getByText, getByDisplayValue, queryByDisplayValue, user } = render(
+    const { container, getByText, queryByDisplayValue, user } = render(
       <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />,
     );
 
     // open property selector
-    const propertySelector = container.querySelector<HTMLInputElement>(".rule-property input");
-    expect(propertySelector).to.not.be.null;
-    await user.click(propertySelector!);
+    const propertySelector = await getRulePropertySelector(container);
+    await user.click(propertySelector);
     // select property
     await user.click(getByText(stringField.label));
 
-    // wait until property is selected
-    await waitFor(() => getByDisplayValue(stringField.label));
-
     // enter value
-    const inputContainer = await waitFor(() => {
-      const element = container.querySelector<HTMLInputElement>(".rule-value input");
-      expect(element).to.be.not.null;
-      return element!;
-    });
+    const inputContainer = await waitForElement<HTMLInputElement>(container, ".rule-value input");
     await user.type(inputContainer, "test value");
     await waitFor(() => expect(queryByDisplayValue("test value")).to.not.be.null);
 
-    fireEvent.blur(inputContainer);
+    await user.tab();
 
-    const applyButton = await waitFor(() => {
-      const element = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
-      expect(element?.disabled).to.be.false;
-      return element!;
-    });
+    const applyButton = await getApplyButton(container);
     await user.click(applyButton);
 
     expect(spy).to.be.calledOnceWith({
@@ -160,43 +148,29 @@ describe("PresentationInstanceFilterDialog", () => {
 
   it("invokes 'onApply' with numeric property filter rule", async () => {
     const spy = sinon.spy();
-    const { container, getByText, getByDisplayValue, user } = render(
+    const { container, getByText, user } = render(
       <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />,
     );
 
     // open property selector
-    const propertySelector = container.querySelector<HTMLInputElement>(".rule-property input");
-    expect(propertySelector).to.not.be.null;
-    await user.click(propertySelector!);
+    const propertySelector = await getRulePropertySelector(container);
+    await user.click(propertySelector);
     // select property
     await user.click(getByText(numericField.label));
 
-    // wait until property is selected
-    await waitFor(() => getByDisplayValue(numericField.label));
-
     // open operator selector
-    const operatorSelector = container.querySelector<HTMLInputElement>(".rule-operator .iui-select-button");
-    expect(operatorSelector).to.not.be.null;
-    fireEvent.click(operatorSelector!);
+    const operatorSelector = await getRuleOperatorSelector(container);
+    await user.click(operatorSelector);
     // select operator
-    fireEvent.click(getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.Less)));
-
-    // wait until operator is selected
-    await waitFor(() => getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.Less)));
+    await user.click(getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.Less)));
 
     // enter value
-    const inputContainer = await waitFor(() => {
-      const element = container.querySelector<HTMLInputElement>(".rule-value input");
-      expect(element).to.be.not.null;
-      return element!;
-    });
+    const inputContainer = await waitForElement<HTMLInputElement>(container, ".rule-value input");
     await user.type(inputContainer, "123");
 
-    const applyButton = await waitFor(() => {
-      const element = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
-      expect(element?.disabled).to.be.false;
-      return element!;
-    });
+    await user.tab();
+
+    const applyButton = await getApplyButton(container);
     await user.click(applyButton);
 
     expect(spy).to.be.calledOnceWith({
@@ -236,45 +210,29 @@ describe("PresentationInstanceFilterDialog", () => {
     const imodel = {} as IModelConnection;
     const getSchemaContext = () => ({} as SchemaContext);
 
-    const { container, getByText, getByDisplayValue, user } = render(
+    const { container, getByText, user } = render(
       <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={getSchemaContext}>
         <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />
       </SchemaMetadataContextProvider>,
     );
 
     // open property selector
-    const propertySelector = container.querySelector<HTMLInputElement>(".rule-property input");
-    expect(propertySelector).to.not.be.null;
-    await user.click(propertySelector!);
+    const propertySelector = await getRulePropertySelector(container);
+    await user.click(propertySelector);
     // select property
     await user.click(getByText(quantityField.label));
 
-    // wait until property is selected
-    await waitFor(() => getByDisplayValue(quantityField.label));
-
     // open operator selector
-    const operatorSelector = container.querySelector<HTMLInputElement>(".rule-operator .iui-select-button");
-    expect(operatorSelector).to.not.be.null;
-    fireEvent.click(operatorSelector!);
+    const operatorSelector = await getRuleOperatorSelector(container);
+    await user.click(operatorSelector);
     // select operator
-    fireEvent.click(getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.Less)));
-
-    // wait until operator is selected
-    await waitFor(() => getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.Less)));
+    await user.click(getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.Less)));
 
     // enter value
-    const inputContainer = await waitFor(() => {
-      const element = container.querySelector<HTMLInputElement>(".rule-value input");
-      expect(element).to.be.not.null;
-      return element!;
-    });
+    const inputContainer = await waitForElement<HTMLInputElement>(container, ".rule-value input");
     await user.type(inputContainer, "123 unit");
 
-    const applyButton = await waitFor(() => {
-      const element = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
-      expect(element?.disabled).to.be.false;
-      return element!;
-    });
+    const applyButton = await getApplyButton(container);
     await user.click(applyButton);
 
     expect(spy).to.be.calledOnceWith({
@@ -293,25 +251,18 @@ describe("PresentationInstanceFilterDialog", () => {
 
   it("does not invoke `onApply` when filter is invalid", async () => {
     const spy = sinon.spy();
-    const { container, getByText, getByDisplayValue } = render(
+    const { container, getByText, user } = render(
       <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />,
     );
 
-    const applyButton = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
-    expect(applyButton?.disabled).to.be.true;
-
     // open property selector
-    const propertySelector = container.querySelector<HTMLInputElement>(".rule-property input");
-    expect(propertySelector).to.not.be.null;
-    fireEvent.focus(propertySelector!);
+    const propertySelector = await getRulePropertySelector(container);
+    await user.click(propertySelector);
     // select property
-    fireEvent.click(getByText(stringField.label));
+    await user.click(getByText(stringField.label));
 
-    // wait until property is selected
-    await waitFor(() => getByDisplayValue(stringField.label));
-    expect(applyButton?.disabled).to.be.false;
-
-    fireEvent.click(applyButton!);
+    const applyButton = await getApplyButton(container);
+    await user.click(applyButton);
 
     expect(spy).to.not.be.called;
   });
@@ -319,34 +270,25 @@ describe("PresentationInstanceFilterDialog", () => {
   it("does not invoke `onApply` when filter is missing presentation metadata", async () => {
     sinon.stub(instanceFilterBuilderUtils, "createPresentationInstanceFilter").returns(undefined);
     const spy = sinon.spy();
-    const { container, getByText, getByDisplayValue } = render(
+    const { container, getByText, user } = render(
       <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />,
     );
 
-    const applyButton = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
-    expect(applyButton?.disabled).to.be.true;
-
     // open property selector
-    const propertySelector = container.querySelector<HTMLInputElement>(".rule-property input");
-    expect(propertySelector).to.not.be.null;
-    fireEvent.focus(propertySelector!);
+    const propertySelector = await getRulePropertySelector(container);
+    await user.click(propertySelector);
     // select property
-    fireEvent.click(getByText(stringField.label));
-
-    // wait until property is selected
-    await waitFor(() => getByDisplayValue(stringField.label));
+    await user.click(getByText(stringField.label));
 
     // open operator selector
-    const operatorSelector = container.querySelector<HTMLInputElement>(".rule-operator .iui-select-button");
-    expect(operatorSelector).to.not.be.null;
-    fireEvent.click(operatorSelector!);
+    const operatorSelector = await getRuleOperatorSelector(container);
+    await user.click(operatorSelector);
     // select operator
-    fireEvent.click(getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.IsNotNull)));
+    await user.click(getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.IsNotNull)));
 
     // wait until operator is selected
-    await waitFor(() => getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.IsNotNull)));
-    expect(applyButton?.disabled).to.be.false;
-    fireEvent.click(applyButton!);
+    const applyButton = await getApplyButton(container);
+    await user.click(applyButton);
 
     expect(spy).to.not.be.called;
   });
@@ -367,19 +309,11 @@ describe("PresentationInstanceFilterDialog", () => {
     );
 
     // type invalid value in input
-    const inputContainer = await waitFor(() => {
-      const element = container.querySelector<HTMLInputElement>(".rule-value input");
-      expect(element).to.be.not.null;
-      return element!;
-    });
-
+    const inputContainer = await waitForElement<HTMLInputElement>(container, ".rule-value input");
     await user.type(inputContainer, "1e");
+    await user.tab();
 
-    const applyButton = await waitFor(() => {
-      const element = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
-      expect(element?.disabled).to.be.false;
-      return element!;
-    });
+    const applyButton = await getApplyButton(container);
 
     await user.click(applyButton);
     await waitFor(() => expect(queryByText("instance-filter-builder.error-messages.not-a-number")).to.not.be.null);
@@ -418,20 +352,10 @@ describe("PresentationInstanceFilterDialog", () => {
     );
 
     // type invalid value in input
-    const inputContainer = await waitFor(() => {
-      const element = container.querySelector<HTMLInputElement>(".rule-value input");
-      expect(element).to.be.not.null;
-      return element!;
-    });
-
+    const inputContainer = await waitForElement<HTMLInputElement>(container, ".rule-value input");
     await user.type(inputContainer, "1 unit");
 
-    const applyButton = await waitFor(() => {
-      const element = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
-      expect(element?.disabled).to.be.false;
-      return element!;
-    });
-
+    const applyButton = await getApplyButton(container);
     await user.click(applyButton);
     await waitFor(() => expect(queryByText("instance-filter-builder.error-messages.invalid")).to.not.be.null);
   });
@@ -479,10 +403,7 @@ describe("PresentationInstanceFilterDialog", () => {
       <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptorGetter} onClose={() => {}} onApply={spy} isOpen={true} />,
     );
 
-    await waitFor(() => {
-      const propertySelector = container.querySelector<HTMLInputElement>(".rule-property .iui-input");
-      expect(propertySelector).to.not.be.null;
-    });
+    await getRulePropertySelector(container);
   });
 
   it("renders spinner while loading descriptor", async () => {
@@ -499,4 +420,31 @@ describe("PresentationInstanceFilterDialog", () => {
       expect(progressIndicator).to.not.be.null;
     });
   });
+
+  async function waitForElement<T extends HTMLElement>(container: HTMLElement, selector: string, condition?: (e: T | null) => void): Promise<T> {
+    return waitFor(() => {
+      const element = container.querySelector<T>(selector);
+      if (condition) {
+        condition(element);
+      } else {
+        expect(element, `Failed to find element. Selector: "${selector}"`).to.not.be.null;
+      }
+      return element as T;
+    });
+  }
+
+  async function getRulePropertySelector(container: HTMLElement) {
+    return waitForElement<HTMLInputElement>(container, ".rule-property input");
+  }
+
+  async function getRuleOperatorSelector(container: HTMLElement) {
+    return waitForElement<HTMLDivElement>(container, `.rule-operator [role="combobox"]`);
+  }
+
+  async function getApplyButton(container: HTMLElement, enabled: boolean = false) {
+    return waitForElement<HTMLButtonElement>(container, ".presentation-instance-filter-dialog-apply-button", (e) => {
+      expect(e).to.not.be.null;
+      expect(e?.disabled ?? false).to.be.eq(enabled);
+    });
+  }
 });

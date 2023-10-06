@@ -1,0 +1,78 @@
+.presentation-async-select-container {
+  align-items: center;
+  display: grid;
+  position: relative;
+
+  .presentation-async-select-control {
+    width: 100%;
+    border-radius: var(--iui-border-radius-1);
+    padding-inline: var(--iui-size-s);
+    gap: var(--iui-size-xs);
+    transition: border-color var(--iui-duration-1) ease-out;
+    color: var(--iui-color-text);
+    background-color: var(--iui-color-background);
+    border: 1px solid var(--iui-color-border-foreground);
+    align-items: center;
+    display: grid;
+    position: relative;
+    overflow: hidden;
+    grid-template-columns: 1fr max-content;
+
+    &:focus-within {
+      outline: 2px solid var(--_focus-color, var(--iui-color-border-accent));
+      outline-offset: -2px;
+    }
+
+    .presentation-async-select-values-container {
+      height: var(--iui-component-height-small);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+
+      .presentation-async-select-value {
+        height: 80%;
+        max-height: calc(var(--iui-size-s) * 3);
+        margin-top: 0px;
+        margin-bottom: 0px;
+      }
+    }
+  }
+
+  .presentation-async-select-input-icons {
+    padding-left: calc(var(--iui-size-xs) + 1px);
+    justify-self: end;
+    display: flex;
+    position: relative;
+
+    .presentation-async-select-input-icon {
+      height: calc(100% - 4px);
+      border-radius: var(--iui-border-radius-1);
+      box-sizing: content-box;
+      transition: background var(--iui-duration-2) ease-out;
+      background-position: 50% center;
+      display: flex;
+      align-items: center;
+
+      svg {
+        fill: var(--iui-color-icon);
+        transition: transform var(--iui-duration-1) ease-out;
+      }
+
+      &.open {
+        svg {
+          transform: rotate(180deg);
+        }
+      }
+    }
+  }
+}
+
+.presentation-async-select-dropdown {
+  background-color: var(--iui-color-background);
+  border: 1px solid var(--iui-color-border-subtle);
+  box-shadow: var(--iui-shadow-1);
+  color: var(--iui-color-text);
+  border-radius: var(--iui-border-radius-1);
+  max-height: calc((var(--iui-component-height) - 1px) * 8.5);
+  overflow: overlay;
+}
