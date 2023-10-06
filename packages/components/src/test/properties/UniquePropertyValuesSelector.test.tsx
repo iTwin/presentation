@@ -350,7 +350,7 @@ describe("UniquePropertyValuesSelector", () => {
     it(`displays date in valid format when typename is 'dateTime'`, async () => {
       sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
         total: 1,
-        items: [{ displayValue: "-17655058800", groupedRawValues: [""] }],
+        items: [{ displayValue: "1410-07-15T12:34:00Z", groupedRawValues: [""] }],
       });
       const datePropertyDescription = {
         name: "#propertyName",
@@ -367,9 +367,8 @@ describe("UniquePropertyValuesSelector", () => {
       const selector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
       await user.click(selector);
 
-      // assert that row is displayed correctly
       await waitFor(() => {
-        expect(queryByText(new Date("-17655058800").toLocaleString())).to.not.be.null;
+        expect(queryByText(new Date("1410-07-15T12:34:00Z").toLocaleString())).to.not.be.null;
       });
     });
   });
