@@ -6,7 +6,13 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { PropertyDescription, PropertyValueFormat } from "@itwin/appui-abstract";
-import { PropertyFilterBuilderRuleGroup, PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator, UiComponents } from "@itwin/components-react";
+import {
+  PropertyFilterBuilderActions,
+  PropertyFilterBuilderRuleGroup,
+  PropertyFilterRuleGroupOperator,
+  PropertyFilterRuleOperator,
+  UiComponents,
+} from "@itwin/components-react";
 import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
@@ -68,7 +74,16 @@ describe("InstanceFilterBuilder", () => {
   it("invokes 'onSelectedClassesChanged' when class is selected", async () => {
     const spy = sinon.spy();
     const { getByRole, getAllByRole } = render(
-      <InstanceFilterBuilder classes={classInfos} selectedClasses={[]} properties={[]} onSelectedClassesChanged={spy} onFilterChanged={() => {}} />,
+      <InstanceFilterBuilder
+        classes={classInfos}
+        selectedClasses={[]}
+        properties={[]}
+        onSelectedClassesChanged={spy}
+        actions={testActions}
+        rootGroup={testRootGroup}
+        imodel={testImodel}
+        descriptor={testDescriptor}
+      />,
     );
 
     const selector = getAllByRole("combobox")[0];

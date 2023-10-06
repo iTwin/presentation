@@ -244,9 +244,10 @@ describe("<NumericInput />", () => {
 
   it("fires `onBlur` when inputContainer becomes blurred", async () => {
     const spy = sinon.spy();
-    const { getByRole } = render(<NumericInput onBlur={spy} onChange={() => {}} value="1" />);
+    const { getByRole, user } = render(<NumericInput onBlur={spy} onChange={() => {}} value="1" />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
-    fireEvent.blur(inputContainer);
+    await user.click(inputContainer);
+    await user.tab();
 
     expect(spy).to.be.be.calledOnce;
   });
@@ -255,9 +256,10 @@ describe("<NumericInput />", () => {
     const record = createRecord(Number.NaN);
     const spy = sinon.spy();
     const ref = createRef<NumericPropertyInputAttributes>();
-    const { getByRole } = render(<NumericPropertyInput ref={ref} propertyRecord={record} onCommit={spy} />);
+    const { getByRole, user } = render(<NumericPropertyInput ref={ref} propertyRecord={record} onCommit={spy} />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
-    fireEvent.blur(inputContainer);
+    await user.click(inputContainer);
+    await user.tab();
 
     expect(spy).to.be.calledWith({ propertyRecord: record, newValue: { valueFormat: 0, value: undefined, displayValue: "NaN" } });
   });
