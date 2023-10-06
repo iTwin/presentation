@@ -26,7 +26,7 @@ import {
 } from "react-select";
 import { AsyncPaginate, AsyncPaginateProps } from "react-select-async-paginate";
 import { SvgCaretDownSmall, SvgCheckmarkSmall, SvgCloseSmall } from "@itwin/itwinui-icons-react";
-import { translate, useResizeObserver } from "../common/Utils";
+import { useResizeObserver } from "../common/Utils";
 
 function TagSelectControl<TOption, IsMulti extends boolean = boolean>({ children, ...props }: ControlProps<TOption, IsMulti>) {
   return (
@@ -46,16 +46,17 @@ function TagSelectMenu<TOption, IsMulti extends boolean = boolean>({ children, .
 
 function TagSelectOption<TOption, IsMulti extends boolean = boolean>({ children: _, ...props }: OptionProps<TOption, IsMulti>) {
   const optionLabel = props.selectProps.getOptionLabel && props.selectProps.getOptionLabel(props.data);
+  const optionValue = props.selectProps.getOptionValue && props.selectProps.getOptionValue(props.data);
 
   const className = classnames("iui-menu-item", {
     "iui-focused": props.isFocused,
     "iui-active": props.isSelected,
-    "presentation-instance-filter-special-property-value": optionLabel === "",
+    "presentation-instance-filter-special-property-value": optionValue === "",
   });
 
   return (
     <components.Option {...props} className={className}>
-      <span>{optionLabel === "" ? translate("unique-values-property-editor.empty-value") : optionLabel}</span>
+      <span>{optionLabel}</span>
       {props.isSelected && (
         <span className="iui-icon" style={{ marginLeft: "auto" }}>
           <SvgCheckmarkSmall />
@@ -103,7 +104,7 @@ function TagLabel<TOption, IsMulti extends boolean = boolean>({ children, ...pro
 
   return (
     <components.MultiValueLabel {...props} innerProps={{ ...props.innerProps, className }}>
-      {children === "" ? translate("unique-values-property-editor.empty-value") : children}
+      {children}
     </components.MultiValueLabel>
   );
 }
