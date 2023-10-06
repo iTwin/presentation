@@ -54,9 +54,11 @@ function MenuList<TOption, IsMulti extends boolean = boolean>({ children, ...pro
 
 function Option<TOption, IsMulti extends boolean = boolean>({ children: _, ...props }: OptionProps<TOption, IsMulti>) {
   const optionLabel = props.selectProps.getOptionLabel && props.selectProps.getOptionLabel(props.data);
+  const optionValue = props.selectProps.getOptionValue && props.selectProps.getOptionValue(props.data);
+  const className = classnames({ "presentation-async-select-special-option": optionValue === "" });
 
   return (
-    <ListItem focused={props.isFocused} active={props.isSelected} ref={props.innerRef} {...props.innerProps} as="div">
+    <ListItem ref={props.innerRef} {...props.innerProps} className={className} focused={props.isFocused} active={props.isSelected} as="div">
       <ListItem.Content>{optionLabel}</ListItem.Content>
       {props.isSelected ? (
         <ListItem.Icon>

@@ -79,4 +79,8 @@
   border-radius: var(--iui-border-radius-1);
   max-height: calc((var(--iui-component-height) - 1px) * 8.5);
   overflow: overlay;
+
+  .presentation-async-select-special-option {
+    font-style: italic;
+  }
 }
