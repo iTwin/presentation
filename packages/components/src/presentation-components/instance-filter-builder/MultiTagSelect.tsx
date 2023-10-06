@@ -86,12 +86,12 @@ function TagSelectOption<TOption, IsMulti extends boolean = boolean>({ children:
   const className = classnames("iui-menu-item", {
     "iui-focused": props.isFocused,
     "iui-active": props.isSelected,
-    "presentation-instance-filter-special-property-value": optionLabel === "",
+    "presentation-instance-filter-special-property-value": optionLabel === translate("unique-values-property-editor.empty-value"),
   });
 
   return (
     <components.Option {...props} className={className}>
-      <span>{optionLabel === "" ? translate("unique-values-property-editor.empty-value") : optionLabel}</span>
+      <span>{optionLabel}</span>
       {props.isSelected && (
         <span className="iui-icon" style={{ marginLeft: "auto" }}>
           <SvgCheckmarkSmall />
@@ -139,7 +139,7 @@ function TagLabel<TOption, IsMulti extends boolean = boolean>({ children, ...pro
 
   return (
     <components.MultiValueLabel {...props} innerProps={{ ...props.innerProps, className }}>
-      {children === "" ? translate("unique-values-property-editor.empty-value") : children}
+      {children}
     </components.MultiValueLabel>
   );
 }
