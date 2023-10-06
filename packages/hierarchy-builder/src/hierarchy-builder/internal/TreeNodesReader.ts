@@ -50,6 +50,7 @@ interface RowDef {
   [NodeSelectClauseColumnNames.HideIfNoChildren]?: boolean;
   [NodeSelectClauseColumnNames.HideNodeInHierarchy]?: boolean;
   [NodeSelectClauseColumnNames.GroupByClass]?: boolean;
+  [NodeSelectClauseColumnNames.GroupByLabel]?: boolean;
   [NodeSelectClauseColumnNames.MergeByLabelId]?: string;
   [NodeSelectClauseColumnNames.ExtendedData]?: string;
   [NodeSelectClauseColumnNames.AutoExpand]?: boolean;
@@ -72,6 +73,7 @@ export function defaultNodesParser(row: { [columnName: string]: any }): Hierarch
       hideIfNoChildren: !!typedRow.HideIfNoChildren,
       hideInHierarchy: !!typedRow.HideNodeInHierarchy,
       groupByClass: !!typedRow.GroupByClass,
+      groupByLabel: !!typedRow.GroupByLabel,
       mergeByLabelId: typedRow.MergeByLabelId,
     },
   };

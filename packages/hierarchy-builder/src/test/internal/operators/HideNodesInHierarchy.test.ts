@@ -283,6 +283,105 @@ describe("HideNodesInHierarchyOperator", () => {
     });
   });
 
+  describe("label grouping nodes", () => {
+    it("hides nodes with determined children", async () => {
+      const nodes: HierarchyNode[] = [
+        {
+          key: {
+            type: "label-grouping",
+            label: "Test class",
+          },
+          label: "Test class",
+          params: {
+            hideInHierarchy: true,
+          },
+          children: [
+            createTestNode({
+              label: "a",
+              key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] },
+            }),
+            createTestNode({
+              label: "a",
+              key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] },
+            }),
+          ],
+        },
+      ];
+      const result = await getObservableResult(from(nodes).pipe(createHideNodesInHierarchyOperator(sinon.spy(), directNodesCache, false)));
+      expect(result).to.deep.eq(nodes[0].children);
+    });
+
+    it("hides nodes with undetermined children", async () => {
+      const nodes: HierarchyNode[] = [
+        {
+          key: {
+            type: "label-grouping",
+            label: "Test class",
+          },
+          label: "Test class",
+          params: {
+            hideInHierarchy: true,
+          },
+          children: undefined,
+        },
+      ];
+      const childNodes: HierarchyNode[] = [
+        createTestNode({
+          label: "a",
+          key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] },
+        }),
+        createTestNode({
+          label: "b",
+          key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] },
+        }),
+      ];
+      const getNodes = sinon.fake(() => from(childNodes));
+      const result = await getObservableResult(from(nodes).pipe(createHideNodesInHierarchyOperator(getNodes, directNodesCache, false)));
+      expect(result).to.deep.eq(childNodes);
+    });
+
+    it("merges similar hidden nodes when requesting children", async () => {
+      const hiddenNodes: HierarchyNode[] = [
+        {
+          key: {
+            type: "label-grouping",
+            label: "1",
+          },
+          label: "1",
+          children: undefined,
+          params: {
+            hideInHierarchy: true,
+          },
+        },
+        {
+          key: {
+            type: "label-grouping",
+            label: "1",
+          },
+          label: "2",
+          children: undefined,
+          params: {
+            hideInHierarchy: true,
+          },
+        },
+      ];
+      const getNodes = sinon.fake(() => from([]));
+      const result = await getObservableResult(from(hiddenNodes).pipe(createHideNodesInHierarchyOperator(getNodes, directNodesCache, false)));
+      expect(getNodes).to.be.calledOnceWithExactly({
+        key: {
+          type: "label-grouping",
+          label: "1",
+        },
+        label: "1",
+        children: undefined,
+        params: {
+          hideInHierarchy: true,
+        },
+      });
+      expect(result).to.deep.eq([]);
+    });
+  });
+
   describe("custom nodes", () => {
     it("hides nodes", async () => {
       const hiddenNodes: HierarchyNode[] = [

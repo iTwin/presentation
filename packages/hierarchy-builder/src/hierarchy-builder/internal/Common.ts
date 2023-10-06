@@ -47,6 +47,7 @@ function mergeNodeHandlingParams(
     ...(lhs?.hideIfNoChildren && rhs?.hideIfNoChildren ? { hideIfNoChildren: true } : undefined),
     ...(lhs?.hideInHierarchy && rhs?.hideInHierarchy ? { hideInHierarchy: true } : undefined),
     ...(lhs?.groupByClass || rhs?.groupByClass ? { groupByClass: true } : undefined),
+    ...(lhs?.groupByLabel || rhs?.groupByLabel ? { groupByLabel: true } : undefined),
     ...(lhs?.mergeByLabelId ? { mergeByLabelId: lhs.mergeByLabelId } : undefined),
   };
 }
@@ -64,6 +65,11 @@ function mergeNodeKeys(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): HierarchyN
   if (HierarchyNodeKey.isClassGrouping(lhs)) {
     assert(HierarchyNodeKey.isClassGrouping(rhs));
     assert(lhs.class.id === rhs.class.id);
+    return { ...lhs };
+  }
+  if (HierarchyNodeKey.isLabelGrouping(lhs)) {
+    assert(HierarchyNodeKey.isLabelGrouping(rhs));
+    assert(lhs.label === rhs.label);
     return { ...lhs };
   }
   throw new Error(`Unable to merge given node keys`);

@@ -232,6 +232,9 @@ export namespace HierarchyNode {
     export function isInstancesNode<TNode extends HierarchyNode>(node: TNode): node is TNode & {
         key: InstancesNodeKey;
     };
+    export function isLabelGroupingNode<TNode extends HierarchyNode>(node: TNode): node is TNode & {
+        key: LabelGroupingNodeKey;
+    };
     export function isStandard<TNode extends HierarchyNode>(node: TNode): node is TNode & {
         key: StandardHierarchyNodeKey;
     };
@@ -241,6 +244,8 @@ export namespace HierarchyNode {
 export interface HierarchyNodeHandlingParams {
     // (undocumented)
     groupByClass?: boolean;
+    // (undocumented)
+    groupByLabel?: boolean;
     // (undocumented)
     hideIfNoChildren?: boolean;
     // (undocumented)
@@ -274,6 +279,7 @@ export namespace HierarchyNodeKey {
     export function isClassGrouping(key: HierarchyNodeKey): key is ClassGroupingNodeKey;
     export function isCustom(key: HierarchyNodeKey): key is string;
     export function isInstances(key: HierarchyNodeKey): key is InstancesNodeKey;
+    export function isLabelGrouping(key: HierarchyNodeKey): key is LabelGroupingNodeKey;
     export function isStandard(key: HierarchyNodeKey): key is StandardHierarchyNodeKey;
 }
 
@@ -386,6 +392,14 @@ export interface InstancesNodeKey {
     type: "instances";
 }
 
+// @beta
+export interface LabelGroupingNodeKey {
+    // (undocumented)
+    label: string;
+    // (undocumented)
+    type: "label-grouping";
+}
+
 // @beta (undocumented)
 export type LogFunction = (category: string, message: string) => void;
 
@@ -397,6 +411,7 @@ export enum NodeSelectClauseColumnNames {
     ExtendedData = "ExtendedData",
     FullClassName = "FullClassName",
     GroupByClass = "GroupByClass",
+    GroupByLabel = "GroupByLabel",
     HasChildren = "HasChildren",
     HideIfNoChildren = "HideIfNoChildren",
     HideNodeInHierarchy = "HideNodeInHierarchy",
@@ -424,6 +439,8 @@ export interface NodeSelectClauseProps {
     // (undocumented)
     groupByClass?: boolean | ECSqlValueSelector;
     // (undocumented)
+    groupByLabel?: boolean | ECSqlValueSelector;
+    // (undocumented)
     hasChildren?: boolean | ECSqlValueSelector;
     // (undocumented)
     hideIfNoChildren?: boolean | ECSqlValueSelector;
@@ -445,7 +462,7 @@ export function parseFullClassName(fullClassName: string): {
 export function setLogger(logger: ILogger | undefined): void;
 
 // @beta
-export type StandardHierarchyNodeKey = InstancesNodeKey | ClassGroupingNodeKey;
+export type StandardHierarchyNodeKey = InstancesNodeKey | ClassGroupingNodeKey | LabelGroupingNodeKey;
 
 // (No @packageDocumentation comment for this package)
 

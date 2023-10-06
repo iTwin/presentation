@@ -23,12 +23,18 @@ describe("HierarchyNode", () => {
     label: "class grouping node",
     children: undefined,
   };
+  const labelGroupingNode: HierarchyNode = {
+    key: { type: "label-grouping", label: "c" },
+    label: "label grouping node",
+    children: undefined,
+  };
 
   describe("isCustom", () => {
     it("returns correct result for different types of nodes", () => {
       expect(HierarchyNode.isCustom(customNode)).to.be.true;
       expect(HierarchyNode.isCustom(instancesNode)).to.be.false;
       expect(HierarchyNode.isCustom(classGroupingNode)).to.be.false;
+      expect(HierarchyNode.isCustom(labelGroupingNode)).to.be.false;
     });
   });
 
@@ -37,6 +43,7 @@ describe("HierarchyNode", () => {
       expect(HierarchyNode.isStandard(customNode)).to.be.false;
       expect(HierarchyNode.isStandard(instancesNode)).to.be.true;
       expect(HierarchyNode.isStandard(classGroupingNode)).to.be.true;
+      expect(HierarchyNode.isStandard(labelGroupingNode)).to.be.true;
     });
   });
 
@@ -45,6 +52,7 @@ describe("HierarchyNode", () => {
       expect(HierarchyNode.isInstancesNode(customNode)).to.be.false;
       expect(HierarchyNode.isInstancesNode(instancesNode)).to.be.true;
       expect(HierarchyNode.isInstancesNode(classGroupingNode)).to.be.false;
+      expect(HierarchyNode.isInstancesNode(labelGroupingNode)).to.be.false;
     });
   });
 
@@ -53,6 +61,16 @@ describe("HierarchyNode", () => {
       expect(HierarchyNode.isClassGroupingNode(customNode)).to.be.false;
       expect(HierarchyNode.isClassGroupingNode(instancesNode)).to.be.false;
       expect(HierarchyNode.isClassGroupingNode(classGroupingNode)).to.be.true;
+      expect(HierarchyNode.isClassGroupingNode(labelGroupingNode)).to.be.false;
+    });
+  });
+
+  describe("isLabelGroupingNode", () => {
+    it("returns correct result for different types of nodes", () => {
+      expect(HierarchyNode.isLabelGroupingNode(customNode)).to.be.false;
+      expect(HierarchyNode.isLabelGroupingNode(instancesNode)).to.be.false;
+      expect(HierarchyNode.isLabelGroupingNode(classGroupingNode)).to.be.false;
+      expect(HierarchyNode.isLabelGroupingNode(labelGroupingNode)).to.be.true;
     });
   });
 });

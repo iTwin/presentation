@@ -39,9 +39,9 @@ describe("Stateless hierarchy builder", () => {
       const { imodel, ...keys } = await buildIModel(this, async (builder, mochaContext) => {
         const { classes } = await importTestSchema(mochaContext, builder);
         const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
-        const childSubject = insertSubject({ builder, label: "child subject", parentId: rootSubject.id });
-        const model = insertPhysicalModelWithPartition({ builder, label: `model`, partitionParentId: childSubject.id });
-        const category = insertSpatialCategory({ builder, label: "category" });
+        const childSubject = insertSubject({ builder, codeValue: "child subject", parentId: rootSubject.id });
+        const model = insertPhysicalModelWithPartition({ builder, codeValue: `model`, partitionParentId: childSubject.id });
+        const category = insertSpatialCategory({ builder, codeValue: "category" });
         const rootElement1 = insertPhysicalElement({ builder, userLabel: `root element 1`, modelId: model.id, categoryId: category.id });
         const childElement = insertPhysicalElement({
           builder,
@@ -136,13 +136,13 @@ describe("Stateless hierarchy builder", () => {
         const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
         const childSubject = insertSubject({
           builder,
-          label: "child subject",
+          codeValue: "child subject",
           parentId: rootSubject.id,
           // eslint-disable-next-line @typescript-eslint/naming-convention
           jsonProperties: { Subject: { Model: { Type: "Hierarchy" } } },
         });
-        const model = insertPhysicalModelWithPartition({ builder, label: `model`, partitionParentId: childSubject.id });
-        const category = insertSpatialCategory({ builder, label: "category" });
+        const model = insertPhysicalModelWithPartition({ builder, codeValue: `model`, partitionParentId: childSubject.id });
+        const category = insertSpatialCategory({ builder, codeValue: "category" });
         const element = insertPhysicalElement({ builder, userLabel: `element`, modelId: model.id, categoryId: category.id });
         return { rootSubject, childSubject, model, category, element };
       });
@@ -175,7 +175,7 @@ describe("Stateless hierarchy builder", () => {
     it("hides childless subjects", async function () {
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
         const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
-        const childSubject = insertSubject({ builder, label: "child subject", parentId: rootSubject.id });
+        const childSubject = insertSubject({ builder, codeValue: "child subject", parentId: rootSubject.id });
         return { rootSubject, childSubject };
       });
       await validateHierarchy({
@@ -192,8 +192,8 @@ describe("Stateless hierarchy builder", () => {
     it("hides subjects with childless models", async function () {
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
         const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
-        const childSubject = insertSubject({ builder, label: "child subject", parentId: rootSubject.id });
-        const model = insertPhysicalModelWithPartition({ builder, label: `model`, partitionParentId: childSubject.id });
+        const childSubject = insertSubject({ builder, codeValue: "child subject", parentId: rootSubject.id });
+        const model = insertPhysicalModelWithPartition({ builder, codeValue: `model`, partitionParentId: childSubject.id });
         return { rootSubject, childSubject, model };
       });
       await validateHierarchy({
@@ -210,13 +210,13 @@ describe("Stateless hierarchy builder", () => {
     it("shows subjects with child models related with subject through `Subject.Model.TargetPartition` json property", async function () {
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
         const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
-        const childSubject1 = insertSubject({ builder, label: "child subject 1", parentId: rootSubject.id });
-        const model = insertPhysicalModelWithPartition({ builder, label: `model`, partitionParentId: childSubject1.id });
-        const category = insertSpatialCategory({ builder, label: "category" });
+        const childSubject1 = insertSubject({ builder, codeValue: "child subject 1", parentId: rootSubject.id });
+        const model = insertPhysicalModelWithPartition({ builder, codeValue: `model`, partitionParentId: childSubject1.id });
+        const category = insertSpatialCategory({ builder, codeValue: "category" });
         const element = insertPhysicalElement({ builder, userLabel: `element`, modelId: model.id, categoryId: category.id });
         const childSubject2 = insertSubject({
           builder,
-          label: "child subject 2",
+          codeValue: "child subject 2",
           parentId: rootSubject.id,
           // eslint-disable-next-line @typescript-eslint/naming-convention
           jsonProperties: { Subject: { Model: { TargetPartition: model.id } } },
@@ -278,13 +278,13 @@ describe("Stateless hierarchy builder", () => {
         const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
         const partition = insertPhysicalPartition({
           builder,
-          label: "model",
+          codeValue: "model",
           parentId: rootSubject.id,
           // eslint-disable-next-line @typescript-eslint/naming-convention
           jsonProperties: { PhysicalPartition: { Model: { Content: true } } },
         });
         const model = insertPhysicalSubModel({ builder, modeledElementId: partition.id });
-        const category = insertSpatialCategory({ builder, label: "category" });
+        const category = insertSpatialCategory({ builder, codeValue: "category" });
         const element = insertPhysicalElement({ builder, userLabel: `element`, modelId: model.id, categoryId: category.id });
         return { rootSubject, model, category, element };
       });
@@ -314,13 +314,13 @@ describe("Stateless hierarchy builder", () => {
         const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
         const partition = insertPhysicalPartition({
           builder,
-          label: "model",
+          codeValue: "model",
           parentId: rootSubject.id,
           // eslint-disable-next-line @typescript-eslint/naming-convention
           jsonProperties: { GraphicalPartition3d: { Model: { Content: true } } },
         });
         const model = insertPhysicalSubModel({ builder, modeledElementId: partition.id });
-        const category = insertSpatialCategory({ builder, label: "category" });
+        const category = insertSpatialCategory({ builder, codeValue: "category" });
         const element = insertPhysicalElement({ builder, userLabel: `element`, modelId: model.id, categoryId: category.id });
         return { rootSubject, model, category, element };
       });
@@ -348,9 +348,9 @@ describe("Stateless hierarchy builder", () => {
     it("hides private models and their content", async function () {
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
         const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
-        const partition = insertPhysicalPartition({ builder, label: "model", parentId: rootSubject.id });
+        const partition = insertPhysicalPartition({ builder, codeValue: "model", parentId: rootSubject.id });
         const model = insertPhysicalSubModel({ builder, modeledElementId: partition.id, isPrivate: true });
-        const category = insertSpatialCategory({ builder, label: "category" });
+        const category = insertSpatialCategory({ builder, codeValue: "category" });
         const element = insertPhysicalElement({ builder, userLabel: `element`, modelId: model.id, categoryId: category.id });
         return { rootSubject, model, category, element };
       });

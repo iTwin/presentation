@@ -60,8 +60,8 @@ describe("Stateless hierarchy builder", () => {
       it("filters through custom nodes", async function () {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-          const childSubject1 = insertSubject({ builder, label: "test subject 1", parentId: rootSubject.id });
-          const childSubject2 = insertSubject({ builder, label: "test subject 2", parentId: rootSubject.id });
+          const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id });
+          const childSubject2 = insertSubject({ builder, codeValue: "test subject 2", parentId: rootSubject.id });
           return { rootSubject, childSubject1, childSubject2 };
         });
 
@@ -147,8 +147,8 @@ describe("Stateless hierarchy builder", () => {
       it("filters custom nodes", async function () {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-          const childSubject1 = insertSubject({ builder, label: "test subject 1", parentId: rootSubject.id });
-          const childSubject2 = insertSubject({ builder, label: "test subject 2", parentId: rootSubject.id });
+          const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id });
+          const childSubject2 = insertSubject({ builder, codeValue: "test subject 2", parentId: rootSubject.id });
           return { rootSubject, childSubject1, childSubject2 };
         });
 
@@ -215,8 +215,8 @@ describe("Stateless hierarchy builder", () => {
       it("filters through hidden custom nodes", async function () {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-          const childSubject1 = insertSubject({ builder, label: "test subject 1", parentId: rootSubject.id });
-          const childSubject2 = insertSubject({ builder, label: "test subject 2", parentId: rootSubject.id });
+          const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id });
+          const childSubject2 = insertSubject({ builder, codeValue: "test subject 2", parentId: rootSubject.id });
           return { rootSubject, childSubject1, childSubject2 };
         });
 
@@ -301,8 +301,8 @@ describe("Stateless hierarchy builder", () => {
       it("doesn't return matching hidden custom nodes or their children", async function () {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-          const childSubject1 = insertSubject({ builder, label: "test subject 1", parentId: rootSubject.id });
-          const childSubject2 = insertSubject({ builder, label: "test subject 2", parentId: rootSubject.id });
+          const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id });
+          const childSubject2 = insertSubject({ builder, codeValue: "test subject 2", parentId: rootSubject.id });
           return { rootSubject, childSubject1, childSubject2 };
         });
 
@@ -379,9 +379,9 @@ describe("Stateless hierarchy builder", () => {
       it("doesn't return matching hidden instance nodes", async function () {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-          const childSubject1 = insertSubject({ builder, label: "test subject 1", parentId: rootSubject.id });
-          const childSubject2 = insertSubject({ builder, label: "test subject 2", parentId: childSubject1.id });
-          const childSubject3 = insertSubject({ builder, label: "test subject 3", parentId: childSubject1.id });
+          const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id });
+          const childSubject2 = insertSubject({ builder, codeValue: "test subject 2", parentId: childSubject1.id });
+          const childSubject3 = insertSubject({ builder, codeValue: "test subject 3", parentId: childSubject1.id });
           return { rootSubject, childSubject1, childSubject2, childSubject3 };
         });
 

@@ -32,6 +32,8 @@ export enum NodeSelectClauseColumnNames {
   HideNodeInHierarchy = "HideNodeInHierarchy",
   /** A flag indicating the node should be grouped by class. */
   GroupByClass = "GroupByClass",
+  /** A flag indicating the node should be grouped by label. */
+  GroupByLabel = "GroupByLabel",
   /**
    * A string indicating a label merge group. Values:
    * - non-empty string puts the node into a label merge group.
@@ -68,6 +70,7 @@ export interface NodeSelectClauseProps {
   hideNodeInHierarchy?: boolean | ECSqlValueSelector;
   hideIfNoChildren?: boolean | ECSqlValueSelector;
   groupByClass?: boolean | ECSqlValueSelector;
+  groupByLabel?: boolean | ECSqlValueSelector;
   mergeByLabelId?: string | ECSqlValueSelector;
 }
 
@@ -88,6 +91,7 @@ export class NodeSelectClauseFactory {
       CAST(${createECSqlValueSelector(props.hideIfNoChildren)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
       CAST(${createECSqlValueSelector(props.hideNodeInHierarchy)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
       CAST(${createECSqlValueSelector(props.groupByClass)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.GroupByClass},
+      CAST(${createECSqlValueSelector(props.groupByLabel)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.GroupByLabel},
       CAST(${createECSqlValueSelector(props.mergeByLabelId)} AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
       ${
         props.extendedData

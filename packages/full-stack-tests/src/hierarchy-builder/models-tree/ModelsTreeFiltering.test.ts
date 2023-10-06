@@ -70,10 +70,10 @@ describe("Stateless hierarchy builder", () => {
         "immediate Subject nodes",
         async (builder) => {
           const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
-          const category = insertSpatialCategory({ builder, label: "category" });
-          const childSubject1 = insertSubject({ builder, label: "matching subject 1", parentId: rootSubject.id });
-          const childSubject2 = insertSubject({ builder, label: "subject 2", parentId: rootSubject.id });
-          const childSubject3 = insertSubject({ builder, label: "matching subject 3", parentId: rootSubject.id });
+          const category = insertSpatialCategory({ builder, codeValue: "category" });
+          const childSubject1 = insertSubject({ builder, codeValue: "matching subject 1", parentId: rootSubject.id });
+          const childSubject2 = insertSubject({ builder, codeValue: "subject 2", parentId: rootSubject.id });
+          const childSubject3 = insertSubject({ builder, codeValue: "matching subject 3", parentId: rootSubject.id });
           insertModelWithElements(builder, 1, category.id, childSubject1.id);
           insertModelWithElements(builder, 2, category.id, childSubject2.id);
           insertModelWithElements(builder, 3, category.id, childSubject3.id);
@@ -140,11 +140,11 @@ describe("Stateless hierarchy builder", () => {
         "nested Subject nodes",
         async (builder) => {
           const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
-          const category = insertSpatialCategory({ builder, label: "category" });
-          const intermediateSubject = insertSubject({ builder, label: `subject-x` });
-          const childSubject1 = insertSubject({ builder, label: "matching subject 1", parentId: intermediateSubject.id });
-          const childSubject2 = insertSubject({ builder, label: "subject 2", parentId: intermediateSubject.id });
-          const childSubject3 = insertSubject({ builder, label: "matching subject 3", parentId: intermediateSubject.id });
+          const category = insertSpatialCategory({ builder, codeValue: "category" });
+          const intermediateSubject = insertSubject({ builder, codeValue: `subject-x` });
+          const childSubject1 = insertSubject({ builder, codeValue: "matching subject 1", parentId: intermediateSubject.id });
+          const childSubject2 = insertSubject({ builder, codeValue: "subject 2", parentId: intermediateSubject.id });
+          const childSubject3 = insertSubject({ builder, codeValue: "matching subject 3", parentId: intermediateSubject.id });
           insertModelWithElements(builder, 1, category.id, childSubject1.id);
           insertModelWithElements(builder, 2, category.id, childSubject2.id);
           insertModelWithElements(builder, 3, category.id, childSubject3.id);
@@ -215,13 +215,13 @@ describe("Stateless hierarchy builder", () => {
       TreeFilteringTestCaseDefinition.create(
         "two levels of Subject nodes",
         async (builder) => {
-          const category = insertSpatialCategory({ builder, label: "category" });
+          const category = insertSpatialCategory({ builder, codeValue: "category" });
           const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
-          const intermediateSubject1 = insertSubject({ builder, label: `matching intermediate subject 1`, parentId: rootSubject.id });
-          const intermediateSubject2 = insertSubject({ builder, label: `intermediate subject 2`, parentId: rootSubject.id });
+          const intermediateSubject1 = insertSubject({ builder, codeValue: `matching intermediate subject 1`, parentId: rootSubject.id });
+          const intermediateSubject2 = insertSubject({ builder, codeValue: `intermediate subject 2`, parentId: rootSubject.id });
           insertModelWithElements(builder, 1, category.id, intermediateSubject2.id);
-          const childSubject1 = insertSubject({ builder, label: "subject 1", parentId: intermediateSubject1.id });
-          const childSubject2 = insertSubject({ builder, label: "matching subject 2", parentId: intermediateSubject1.id });
+          const childSubject1 = insertSubject({ builder, codeValue: "subject 1", parentId: intermediateSubject1.id });
+          const childSubject2 = insertSubject({ builder, codeValue: "matching subject 2", parentId: intermediateSubject1.id });
           insertModelWithElements(builder, 1, category.id, childSubject1.id);
           insertModelWithElements(builder, 2, category.id, childSubject2.id);
           return { rootSubject, intermediateSubject1, intermediateSubject2, childSubject1, childSubject2 };
@@ -273,10 +273,10 @@ describe("Stateless hierarchy builder", () => {
         "Model nodes",
         async (builder) => {
           const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
-          const category = insertSpatialCategory({ builder, label: "category" });
-          const model1 = insertPhysicalModelWithPartition({ builder, label: `matching model 1`, partitionParentId: rootSubject.id });
-          const model2 = insertPhysicalModelWithPartition({ builder, label: `model 2`, partitionParentId: rootSubject.id });
-          const model3 = insertPhysicalModelWithPartition({ builder, label: `matching model 3`, partitionParentId: rootSubject.id });
+          const category = insertSpatialCategory({ builder, codeValue: "category" });
+          const model1 = insertPhysicalModelWithPartition({ builder, codeValue: `matching model 1`, partitionParentId: rootSubject.id });
+          const model2 = insertPhysicalModelWithPartition({ builder, codeValue: `model 2`, partitionParentId: rootSubject.id });
+          const model3 = insertPhysicalModelWithPartition({ builder, codeValue: `matching model 3`, partitionParentId: rootSubject.id });
           insertPhysicalElement({ builder, userLabel: `element-1`, modelId: model1.id, categoryId: category.id });
           insertPhysicalElement({ builder, userLabel: `element-2`, modelId: model2.id, categoryId: category.id });
           insertPhysicalElement({ builder, userLabel: `element-3`, modelId: model3.id, categoryId: category.id });
@@ -333,12 +333,12 @@ describe("Stateless hierarchy builder", () => {
         "Category nodes",
         async (builder) => {
           const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
-          const model1 = insertPhysicalModelWithPartition({ builder, label: `model-1`, partitionParentId: rootSubject.id });
-          const model2 = insertPhysicalModelWithPartition({ builder, label: `model-2`, partitionParentId: rootSubject.id });
+          const model1 = insertPhysicalModelWithPartition({ builder, codeValue: `model-1`, partitionParentId: rootSubject.id });
+          const model2 = insertPhysicalModelWithPartition({ builder, codeValue: `model-2`, partitionParentId: rootSubject.id });
 
-          const category1 = insertSpatialCategory({ builder, label: "matching category 1" });
-          const category2 = insertSpatialCategory({ builder, label: "category-2" });
-          const category3 = insertSpatialCategory({ builder, label: "matching category 3" });
+          const category1 = insertSpatialCategory({ builder, codeValue: "matching category 1" });
+          const category2 = insertSpatialCategory({ builder, codeValue: "category-2" });
+          const category3 = insertSpatialCategory({ builder, codeValue: "matching category 3" });
 
           insertPhysicalElement({ builder, userLabel: `element-1`, modelId: model1.id, categoryId: category1.id });
           insertPhysicalElement({ builder, userLabel: `element-2`, modelId: model1.id, categoryId: category2.id });
@@ -401,11 +401,11 @@ describe("Stateless hierarchy builder", () => {
         "root Element nodes",
         async (builder) => {
           const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
-          const model1 = insertPhysicalModelWithPartition({ builder, label: `model-1`, partitionParentId: rootSubject.id });
-          const model2 = insertPhysicalModelWithPartition({ builder, label: `model-2`, partitionParentId: rootSubject.id });
+          const model1 = insertPhysicalModelWithPartition({ builder, codeValue: `model-1`, partitionParentId: rootSubject.id });
+          const model2 = insertPhysicalModelWithPartition({ builder, codeValue: `model-2`, partitionParentId: rootSubject.id });
 
-          const category1 = insertSpatialCategory({ builder, label: "category-1" });
-          const category2 = insertSpatialCategory({ builder, label: "category-2" });
+          const category1 = insertSpatialCategory({ builder, codeValue: "category-1" });
+          const category2 = insertSpatialCategory({ builder, codeValue: "category-2" });
 
           const element11 = insertPhysicalElement({ builder, userLabel: `matching element 11`, modelId: model1.id, categoryId: category1.id });
           const element12 = insertPhysicalElement({ builder, userLabel: `element 12`, modelId: model1.id, categoryId: category1.id });
@@ -468,8 +468,8 @@ describe("Stateless hierarchy builder", () => {
         "child Element nodes",
         async (builder) => {
           const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
-          const model = insertPhysicalModelWithPartition({ builder, label: `model-x`, partitionParentId: rootSubject.id });
-          const category = insertSpatialCategory({ builder, label: "category-x" });
+          const model = insertPhysicalModelWithPartition({ builder, codeValue: `model-x`, partitionParentId: rootSubject.id });
+          const category = insertSpatialCategory({ builder, codeValue: "category-x" });
           const rootElement = insertPhysicalElement({ builder, userLabel: `root element 0`, modelId: model.id, categoryId: category.id });
           const childElement1 = insertPhysicalElement({
             builder,
@@ -559,8 +559,8 @@ describe("Stateless hierarchy builder", () => {
         async (builder, mochaContext) => {
           const { classes } = await importTestSchema(mochaContext, builder);
           const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
-          const model = insertPhysicalModelWithPartition({ builder, label: `model`, partitionParentId: rootSubject.id });
-          const category = insertSpatialCategory({ builder, label: "category" });
+          const model = insertPhysicalModelWithPartition({ builder, codeValue: `model`, partitionParentId: rootSubject.id });
+          const category = insertSpatialCategory({ builder, codeValue: "category" });
           const rootElement = insertPhysicalElement({
             builder,
             classFullName: classes.PhysicalObject.fullName,
@@ -736,7 +736,7 @@ describe("Stateless hierarchy builder", () => {
     }
 
     function insertModelWithElements(builder: TestIModelBuilder, modelNo: number, elementsCategoryId: Id64String, parentId?: Id64String) {
-      const modelKey = insertPhysicalModelWithPartition({ builder, label: `model-${modelNo}`, partitionParentId: parentId });
+      const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: `model-${modelNo}`, partitionParentId: parentId });
       insertPhysicalElement({ builder, userLabel: `element-${modelNo}`, modelId: modelKey.id, categoryId: elementsCategoryId });
       return modelKey;
     }

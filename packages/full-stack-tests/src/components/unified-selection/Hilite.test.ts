@@ -36,10 +36,10 @@ describe("Unified Selection", () => {
         let modelKeys: InstanceKey[];
         // eslint-disable-next-line deprecation/deprecation
         const imodel = await buildTestIModel(this, async (builder) => {
-          subjectKey = insertSubject({ builder, label: "test subject" });
+          subjectKey = insertSubject({ builder, codeValue: "test subject" });
           modelKeys = [
-            insertPhysicalModelWithPartition({ builder, label: "model 1", partitionParentId: subjectKey.id }),
-            insertPhysicalModelWithPartition({ builder, label: "model 2", partitionParentId: subjectKey.id }),
+            insertPhysicalModelWithPartition({ builder, codeValue: "model 1", partitionParentId: subjectKey.id }),
+            insertPhysicalModelWithPartition({ builder, codeValue: "model 2", partitionParentId: subjectKey.id }),
           ];
         });
         await using(new ViewportSelectionHandler({ imodel }), async (_) => {
@@ -60,13 +60,13 @@ describe("Unified Selection", () => {
         let modelKeys: InstanceKey[];
         // eslint-disable-next-line deprecation/deprecation
         const imodel = await buildTestIModel(this, async (builder) => {
-          subjectKey = insertSubject({ builder, label: "test subject" });
-          const subject2 = insertSubject({ builder, label: "subject 2", parentId: subjectKey.id });
-          const subject3 = insertSubject({ builder, label: "subject 3", parentId: subjectKey.id });
-          const subject4 = insertSubject({ builder, label: "subject 4", parentId: subject3.id });
+          subjectKey = insertSubject({ builder, codeValue: "test subject" });
+          const subject2 = insertSubject({ builder, codeValue: "subject 2", parentId: subjectKey.id });
+          const subject3 = insertSubject({ builder, codeValue: "subject 3", parentId: subjectKey.id });
+          const subject4 = insertSubject({ builder, codeValue: "subject 4", parentId: subject3.id });
           modelKeys = [
-            insertPhysicalModelWithPartition({ builder, label: "model 1", partitionParentId: subject2.id }),
-            insertPhysicalModelWithPartition({ builder, label: "model 2", partitionParentId: subject4.id }),
+            insertPhysicalModelWithPartition({ builder, codeValue: "model 1", partitionParentId: subject2.id }),
+            insertPhysicalModelWithPartition({ builder, codeValue: "model 2", partitionParentId: subject4.id }),
           ];
         });
         await using(new ViewportSelectionHandler({ imodel }), async (_) => {
@@ -88,7 +88,7 @@ describe("Unified Selection", () => {
         let modelKey: InstanceKey;
         // eslint-disable-next-line deprecation/deprecation
         const imodel = await buildTestIModel(this, async (builder) => {
-          modelKey = insertPhysicalModelWithPartition({ builder, label: "test model" });
+          modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         });
         await using(new ViewportSelectionHandler({ imodel }), async (_) => {
           Presentation.selection.replaceSelection("", imodel, new KeySet([modelKey!]));
@@ -108,11 +108,11 @@ describe("Unified Selection", () => {
         let subCategoryKeys: InstanceKey[];
         // eslint-disable-next-line deprecation/deprecation
         const imodel = await buildTestIModel(this, async (builder) => {
-          categoryKey = insertSpatialCategory({ builder, label: "test category" });
+          categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           subCategoryKeys = [
             getDefaultSubcategoryKey(categoryKey.id),
-            insertSubCategory({ builder, label: "sub 1", parentCategoryId: categoryKey.id }),
-            insertSubCategory({ builder, label: "sub 2", parentCategoryId: categoryKey.id }),
+            insertSubCategory({ builder, codeValue: "sub 1", parentCategoryId: categoryKey.id }),
+            insertSubCategory({ builder, codeValue: "sub 2", parentCategoryId: categoryKey.id }),
           ];
         });
         await using(new ViewportSelectionHandler({ imodel }), async (_) => {
@@ -132,7 +132,7 @@ describe("Unified Selection", () => {
         let categoryKey: InstanceKey;
         // eslint-disable-next-line deprecation/deprecation
         const imodel = await buildTestIModel(this, async (builder) => {
-          categoryKey = insertSpatialCategory({ builder, label: "test category" });
+          categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
         });
         const subCategoryKey = getDefaultSubcategoryKey(categoryKey!.id);
         await using(new ViewportSelectionHandler({ imodel }), async (_) => {
@@ -153,8 +153,8 @@ describe("Unified Selection", () => {
         let expectedHighlightedElementKeys: InstanceKey[];
         // eslint-disable-next-line deprecation/deprecation
         const imodel = await buildTestIModel(this, async (builder) => {
-          const modelKey = insertPhysicalModelWithPartition({ builder, label: "test model" });
-          const categoryKey = insertSpatialCategory({ builder, label: "test category" });
+          const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
+          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           assemblyKey = insertPhysicalElement({ builder, userLabel: "element 1", modelId: modelKey.id, categoryId: categoryKey.id });
           const element2 = insertPhysicalElement({
             builder,
@@ -193,8 +193,8 @@ describe("Unified Selection", () => {
         let elementKey: InstanceKey;
         // eslint-disable-next-line deprecation/deprecation
         const imodel = await buildTestIModel(this, async (builder) => {
-          const modelKey = insertPhysicalModelWithPartition({ builder, label: "test model" });
-          const categoryKey = insertSpatialCategory({ builder, label: "test category" });
+          const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
+          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           elementKey = insertPhysicalElement({ builder, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id });
         });
         await using(new ViewportSelectionHandler({ imodel }), async (_) => {

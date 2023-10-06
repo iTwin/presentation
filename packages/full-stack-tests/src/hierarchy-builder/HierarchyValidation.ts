@@ -129,6 +129,32 @@ export namespace NodeValidators {
       children: props.children,
     };
   }
+
+  export function createForLabelGroupingNode(props: {
+    label?: string;
+    autoExpand?: boolean;
+    children?: ExpectedHierarchyDef[] | boolean;
+  }): ExpectedHierarchyDef {
+    return {
+      node: (node) => {
+        if (!HierarchyNode.isStandard(node)) {
+          throw new Error(`[${node.label}] Expected a label grouping node, got a non-standard "${node.key as string}"`);
+        }
+        if (node.key.type !== "label-grouping") {
+          throw new Error(`[${node.label}] Expected a label grouping node, got "${node.key.type}"`);
+        }
+        if (props.label && node.key.label !== props.label) {
+          throw new Error(`[${node.label}] Expected node to represent label "${props.label}", got "${node.key.label}"`);
+        }
+        validateBaseNodeAttributes(node, {
+          label: props.label,
+          autoExpand: props.autoExpand,
+          children: props.children,
+        });
+      },
+      children: props.children,
+    };
+  }
 }
 
 export async function validateHierarchy(props: { provider: HierarchyProvider; parentNode?: HierarchyNode; expect: ExpectedHierarchyDef[] }) {

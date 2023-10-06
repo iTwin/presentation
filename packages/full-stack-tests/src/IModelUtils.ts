@@ -107,15 +107,15 @@ export interface BaseInstanceInsertProps {
 }
 
 export function insertSubject(
-  props: BaseInstanceInsertProps & { label: string; parentId?: Id64String } & Partial<Omit<SubjectProps, "id" | "parent" | "code" | "model">>,
+  props: BaseInstanceInsertProps & { codeValue: string; parentId?: Id64String } & Partial<Omit<SubjectProps, "id" | "parent" | "code" | "model">>,
 ) {
-  const { builder, classFullName, label, parentId, ...subjectProps } = props;
+  const { builder, classFullName, codeValue, parentId, ...subjectProps } = props;
   const defaultClassName = `BisCore${props.fullClassNameSeparator ?? "."}Subject`;
   const className = classFullName ?? defaultClassName;
   const id = builder.insertElement({
     classFullName: className,
     model: IModel.repositoryModelId,
-    code: builder.createCode(parentId ?? IModel.rootSubjectId, BisCodeSpec.subject, label),
+    code: builder.createCode(parentId ?? IModel.rootSubjectId, BisCodeSpec.subject, codeValue),
     parent: {
       id: parentId ?? IModel.rootSubjectId,
       relClassName: "BisCore.SubjectOwnsSubjects",
@@ -125,24 +125,22 @@ export function insertSubject(
   return { className, id };
 }
 
-export function insertPhysicalModelWithPartition(props: BaseInstanceInsertProps & { label: string; partitionParentId?: Id64String }) {
-  const { label, partitionParentId, ...baseProps } = props;
-  const partitionKey = insertPhysicalPartition({ ...baseProps, label, parentId: partitionParentId ?? IModel.rootSubjectId });
+export function insertPhysicalModelWithPartition(props: BaseInstanceInsertProps & { codeValue: string; partitionParentId?: Id64String }) {
+  const { codeValue, partitionParentId, ...baseProps } = props;
+  const partitionKey = insertPhysicalPartition({ ...baseProps, codeValue, parentId: partitionParentId ?? IModel.rootSubjectId });
   return insertPhysicalSubModel({ ...baseProps, modeledElementId: partitionKey.id });
 }
 
 export function insertPhysicalPartition(
-  props: BaseInstanceInsertProps & { label: string; parentId: Id64String } & Partial<
-      Omit<InformationPartitionElementProps, "id" | "parent" | "code" | "userLabel">
-    >,
+  props: BaseInstanceInsertProps & { codeValue: string; parentId: Id64String } & Partial<Omit<InformationPartitionElementProps, "id" | "parent" | "code">>,
 ) {
-  const { builder, classFullName, label, parentId, ...partitionProps } = props;
+  const { builder, classFullName, codeValue, parentId, ...partitionProps } = props;
   const defaultModelClassName = `BisCore${props.fullClassNameSeparator ?? "."}PhysicalPartition`;
   const className = classFullName ?? defaultModelClassName;
   const partitionId = builder.insertElement({
     classFullName: className,
     model: IModel.repositoryModelId,
-    code: builder.createCode(parentId, BisCodeSpec.informationPartitionElement, label),
+    code: builder.createCode(parentId, BisCodeSpec.informationPartitionElement, codeValue),
     parent: {
       id: parentId,
       relClassName: `BisCore${props.fullClassNameSeparator ?? "."}SubjectOwnsPartitionElements`,
@@ -167,16 +165,16 @@ export function insertPhysicalSubModel(
 }
 
 export function insertSpatialCategory(
-  props: BaseInstanceInsertProps & { label: string; modelId?: Id64String } & Partial<Omit<CategoryProps, "id" | "model" | "parent" | "code">>,
+  props: BaseInstanceInsertProps & { codeValue: string; modelId?: Id64String } & Partial<Omit<CategoryProps, "id" | "model" | "parent" | "code">>,
 ) {
-  const { builder, classFullName, modelId, label, ...categoryProps } = props;
+  const { builder, classFullName, modelId, codeValue, ...categoryProps } = props;
   const defaultClassName = `BisCore${props.fullClassNameSeparator ?? "."}SpatialCategory`;
   const className = classFullName ?? defaultClassName;
   const model = modelId ?? IModel.dictionaryId;
   const id = builder.insertElement({
     classFullName: className,
     model,
-    code: builder.createCode(model, BisCodeSpec.spatialCategory, label),
+    code: builder.createCode(model, BisCodeSpec.spatialCategory, codeValue),
     ...categoryProps,
   });
   return { className, id };
@@ -192,18 +190,18 @@ export function getDefaultSubcategoryKey(categoryId: Id64String, fullClassNameSe
 }
 
 export function insertSubCategory(
-  props: BaseInstanceInsertProps & { label: string; parentCategoryId: Id64String; modelId?: Id64String } & Partial<
+  props: BaseInstanceInsertProps & { codeValue: string; parentCategoryId: Id64String; modelId?: Id64String } & Partial<
       Omit<SubCategoryProps, "id" | "model" | "parent" | "code">
     >,
 ) {
-  const { builder, classFullName, modelId, label, parentCategoryId, ...subCategoryProps } = props;
+  const { builder, classFullName, modelId, codeValue, parentCategoryId, ...subCategoryProps } = props;
   const defaultClassName = `BisCore${props.fullClassNameSeparator ?? "."}SubCategory`;
   const className = classFullName ?? defaultClassName;
   const model = modelId ?? IModel.dictionaryId;
   const id = builder.insertElement({
     classFullName: className,
     model,
-    code: builder.createCode(model, BisCodeSpec.subCategory, label),
+    code: builder.createCode(model, BisCodeSpec.subCategory, codeValue),
     parent: {
       id: parentCategoryId,
       relClassName: `BisCore${props.fullClassNameSeparator ?? "."}CategoryOwnsSubCategories`,

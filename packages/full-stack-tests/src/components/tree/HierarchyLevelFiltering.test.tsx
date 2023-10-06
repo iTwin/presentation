@@ -67,8 +67,8 @@ describe("Learning snippets", () => {
       // set up imodel for the test
       // eslint-disable-next-line deprecation/deprecation
       const imodel = await buildTestIModel(this, async (builder) => {
-        const categoryKey = insertSpatialCategory({ builder, label: "My Category" });
-        const modelKey = insertPhysicalModelWithPartition({ builder, label: "My Model" });
+        const categoryKey = insertSpatialCategory({ builder, codeValue: "My Category" });
+        const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "My Model" });
         insertPhysicalElement({ builder, userLabel: "My Element 1", modelId: modelKey.id, categoryId: categoryKey.id });
         insertPhysicalElement({ builder, userLabel: "My Element 2", modelId: modelKey.id, categoryId: categoryKey.id });
       });
