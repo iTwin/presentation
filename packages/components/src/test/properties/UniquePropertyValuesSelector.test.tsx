@@ -318,7 +318,7 @@ describe("UniquePropertyValuesSelector", () => {
         displayLabel: "propertiesField",
         typename: "number",
       };
-      const filterNodeKeys = createTestECInstancesNodeKey();
+      const descriptorInputKeys = createTestECInstancesNodeKey();
       const testDescriptor = createTestContentDescriptor({
         fields: [createTestPropertiesContentField({ name: "testField", properties: [] })],
         ruleset: { id: "TestRuleset", rules: [] },
@@ -332,7 +332,7 @@ describe("UniquePropertyValuesSelector", () => {
           onChange={() => {}}
           imodel={testImodel}
           descriptor={testDescriptor}
-          filterNodeKeys={[filterNodeKeys]}
+          descriptorInputKeys={[descriptorInputKeys]}
         />,
       );
 
@@ -342,7 +342,7 @@ describe("UniquePropertyValuesSelector", () => {
 
       const getPagedDistinctValuesCallArguments = spy.firstCall.args[0];
       const ruleset = getPagedDistinctValuesCallArguments.rulesetOrId as Ruleset;
-      const expectedKeySet = new KeySet([filterNodeKeys]);
+      const expectedKeySet = new KeySet([descriptorInputKeys]);
 
       expect(ruleset.id).to.be.equal(testDescriptor.ruleset?.id);
       expect(getPagedDistinctValuesCallArguments.keys.nodeKeys).to.be.deep.equal(expectedKeySet.nodeKeys);

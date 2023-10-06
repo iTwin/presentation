@@ -28,13 +28,13 @@ export interface UniquePropertyValuesSelectorProps {
   imodel: IModelConnection;
   /** Current descriptor */
   descriptor: Descriptor;
-  /** Keys of the nodes that are currently selected for filtering */
-  filterNodeKeys?: Keys;
+  /** Keys that are currently selected for filtering */
+  descriptorInputKeys?: Keys;
 }
 
 /** @internal */
 export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelectorProps) {
-  const { imodel, descriptor, property, onChange, value, filterNodeKeys } = props;
+  const { imodel, descriptor, property, onChange, value, descriptorInputKeys } = props;
   const [selectedValues, setSelectedValues] = useState<DisplayValueGroup[] | undefined>(() => getUniqueValueFromProperty(value));
   const [field, setField] = useState<Field | undefined>(() => findField(descriptor, getInstanceFilterFieldName(property)));
   useEffect(() => {
@@ -67,7 +67,7 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
     selectedValues?.map((selectedValue) => selectedValue.displayValue).includes(option.displayValue) ?? false;
 
   const ruleset = useUniquePropertyValuesRuleset(descriptor.ruleset, field);
-  const loadTargets = useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor: field?.getFieldDescriptor() }, filterNodeKeys);
+  const loadTargets = useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor: field?.getFieldDescriptor() }, descriptorInputKeys);
 
   return (
     <AsyncMultiTagSelect
@@ -155,7 +155,7 @@ interface UseUniquePropertyValuesLoaderProps {
   fieldDescriptor?: FieldDescriptor;
 }
 
-function useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor }: UseUniquePropertyValuesLoaderProps, filterNodeKeys?: Keys) {
+function useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor }: UseUniquePropertyValuesLoaderProps, descriptorInputKeys?: Keys) {
   const loadTargets = useCallback(
     async (loadedOptionsCount: number) => {
       if (!ruleset || !fieldDescriptor) {
@@ -168,7 +168,7 @@ function useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor }: Use
         fieldDescriptor,
         rulesetOrId: ruleset,
         paging: { start: loadedOptionsCount, size: UNIQUE_PROPERTY_VALUES_BATCH_SIZE },
-        keys: new KeySet(filterNodeKeys),
+        keys: new KeySet(descriptorInputKeys),
       });
 
       const filteredOptions = [];
@@ -187,7 +187,7 @@ function useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor }: Use
         hasMore: content.items.length === UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
       };
     },
-    [imodel, ruleset, fieldDescriptor, filterNodeKeys],
+    [imodel, ruleset, fieldDescriptor, descriptorInputKeys],
   );
 
   return loadTargets;

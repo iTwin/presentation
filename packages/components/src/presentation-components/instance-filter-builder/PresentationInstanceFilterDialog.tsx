@@ -50,8 +50,12 @@ export interface PresentationInstanceFilterDialogProps {
   descriptor: (() => Promise<Descriptor>) | Descriptor;
   /** Renders filter results count. */
   filterResultsCountRenderer?: (filter: PresentationInstanceFilterInfo) => ReactNode;
-  /** [Keys]($presentation-common) of the nodes that are being filtered. */
-  filterNodeKeys?: Keys;
+  /**
+   * [Keys]($presentation-common) of filterables on which the filter was called.
+   *
+   * These keys should match the keys that were used to create the descriptor.
+   */
+  descriptorInputKeys?: Keys;
   /** Dialog title. */
   title?: React.ReactNode;
   /** Initial filter that will be show when component is mounted. */
@@ -110,11 +114,11 @@ function useDelayLoadedDescriptor(descriptorOrGetter: Descriptor | (() => Promis
 
 interface PresentationInstanceFilterDialogContentProps extends Omit<PresentationInstanceFilterDialogProps, "isOpen" | "title" | "descriptor"> {
   descriptor: Descriptor;
-  filterNodeKeys?: Keys;
+  descriptorInputKeys?: Keys;
 }
 
 function PresentationInstanceFilterDialogContent(props: PresentationInstanceFilterDialogContentProps) {
-  const { onApply, initialFilter, descriptor, imodel, ruleGroupDepthLimit, filterResultsCountRenderer, onClose, filterNodeKeys } = props;
+  const { onApply, initialFilter, descriptor, imodel, ruleGroupDepthLimit, filterResultsCountRenderer, onClose, descriptorInputKeys } = props;
   const [initialPropertyFilter] = useState(() => (initialFilter ? convertPresentationFilterToPropertyFilter(descriptor, initialFilter.filter) : undefined));
 
   const { rootGroup, actions, buildFilter } = usePropertyFilterBuilder({
@@ -166,7 +170,7 @@ function PresentationInstanceFilterDialogContent(props: PresentationInstanceFilt
           ruleGroupDepthLimit={ruleGroupDepthLimit}
           imodel={imodel}
           descriptor={descriptor}
-          filterNodeKeys={filterNodeKeys}
+          descriptorInputKeys={descriptorInputKeys}
         />
       </Dialog.Content>
       <div className="presentation-instance-filter-dialog-bottom-container">

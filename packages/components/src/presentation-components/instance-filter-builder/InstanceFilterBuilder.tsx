@@ -54,7 +54,7 @@ export interface InstanceFilterBuilderProps extends PropertyFilterBuilderRendere
   /** [Descriptor]($presentation-common) that will be used for getting [[navigationPropertyEditorContext]]. */
   descriptor: Descriptor;
   /** [Keys]($presentation-common) that will be passed through to [[FilterBuilderValueRenderer ]] */
-  filterNodeKeys?: Keys;
+  descriptorInputKeys?: Keys;
 }
 
 /**
@@ -63,7 +63,7 @@ export interface InstanceFilterBuilderProps extends PropertyFilterBuilderRendere
  * @internal
  */
 export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
-  const { selectedClasses, classes, onClassSelected, onClassDeselected, onClearClasses, imodel, descriptor, filterNodeKeys, ...restProps } = props;
+  const { selectedClasses, classes, onClassSelected, onClassDeselected, onClearClasses, imodel, descriptor, descriptorInputKeys, ...restProps } = props;
 
   const navigationPropertyEditorContextValue = useFilterBuilderNavigationPropertyEditorContext(imodel, descriptor);
 
@@ -108,7 +108,7 @@ export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
           <PropertyFilterBuilderRenderer
             {...restProps}
             ruleValueRenderer={(rendererProps: PropertyFilterBuilderRuleValueRendererProps) => (
-              <FilterBuilderValueRenderer {...rendererProps} filterNodeKeys={filterNodeKeys} imodel={imodel} descriptor={descriptor} />
+              <FilterBuilderValueRenderer {...rendererProps} descriptorInputKeys={descriptorInputKeys} imodel={imodel} descriptor={descriptor} />
             )}
           />
         </navigationPropertyEditorContext.Provider>
@@ -330,7 +330,7 @@ async function computeClassesByProperty(classes: ClassInfo[], property: Instance
 }
 
 function FilterBuilderValueRenderer(
-  props: PropertyFilterBuilderRuleValueRendererProps & { imodel: IModelConnection; descriptor: Descriptor; filterNodeKeys?: Keys },
+  props: PropertyFilterBuilderRuleValueRendererProps & { imodel: IModelConnection; descriptor: Descriptor; descriptorInputKeys?: Keys },
 ) {
   const schemaMetadataContext = useSchemaMetadataContext();
   if (props.operator === PropertyFilterRuleOperator.IsEqual || props.operator === PropertyFilterRuleOperator.IsNotEqual) {
