@@ -12,6 +12,7 @@ import {
   combineFieldNames,
   ContentInstancesOfSpecificClassesSpecification,
   ContentRule,
+  KeySet,
   MultiSchemaClassesSpecification,
   RelatedClassInfo,
   Ruleset,
@@ -27,6 +28,7 @@ import {
   createTestNestedContentField,
   createTestPropertiesContentField,
 } from "../_helpers/Content";
+import { createTestECInstancesNodeKey } from "../_helpers/Hierarchy";
 
 describe("UniquePropertyValuesSelector", () => {
   beforeEach(async () => {
@@ -388,6 +390,42 @@ describe("UniquePropertyValuesSelector", () => {
 
       return [schemaName, className];
     };
+
+    it("calls 'getPagedDistinctValues' with a ruleset that is supplied by the descriptor", async () => {
+      const testProperty = {
+        name: "#testField",
+        displayLabel: "propertiesField",
+        typename: "number",
+      };
+      const descriptorInputKeys = createTestECInstancesNodeKey();
+      const testDescriptor = createTestContentDescriptor({
+        fields: [createTestPropertiesContentField({ name: "testField", properties: [] })],
+        ruleset: { id: "TestRuleset", rules: [] },
+      });
+
+      const spy = sinon.spy(Presentation.presentation, "getPagedDistinctValues");
+
+      const { queryByText, user } = render(
+        <UniquePropertyValuesSelector
+          property={testProperty}
+          onChange={() => {}}
+          imodel={testImodel}
+          descriptor={testDescriptor}
+          descriptorInputKeys={[descriptorInputKeys]}
+        />,
+      );
+
+      // trigger loadTargets function
+      const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
+      await user.click(selector!);
+
+      const getPagedDistinctValuesCallArguments = spy.firstCall.args[0];
+      const ruleset = getPagedDistinctValuesCallArguments.rulesetOrId as Ruleset;
+      const expectedKeySet = new KeySet([descriptorInputKeys]);
+
+      expect(ruleset.id).to.be.equal(testDescriptor.ruleset?.id);
+      expect(getPagedDistinctValuesCallArguments.keys.nodeKeys).to.be.deep.equal(expectedKeySet.nodeKeys);
+    });
 
     it("calls 'getPagedDistinctValues' with ruleset that is created from a 'NestedContentField'", async () => {
       const testProperty = {

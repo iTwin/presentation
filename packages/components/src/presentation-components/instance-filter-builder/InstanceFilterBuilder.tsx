@@ -22,17 +22,17 @@ import {
 } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ClassInfo, Descriptor } from "@itwin/presentation-common";
+import { Input } from "@itwin/itwinui-react";
+import { ClassInfo, Descriptor, Keys } from "@itwin/presentation-common";
+import { useSchemaMetadataContext } from "../common/SchemaMetadataContext";
 import { translate } from "../common/Utils";
 import { navigationPropertyEditorContext, NavigationPropertyEditorContextProps } from "../properties/NavigationPropertyEditor";
+import { UniquePropertyValuesSelector } from "../properties/UniquePropertyValuesSelector";
+import { useQuantityValueInput, UseQuantityValueInputProps } from "../properties/UseQuantityValueInput";
 import { getIModelMetadataProvider } from "./ECMetadataProvider";
 import { MultiTagSelect } from "./MultiTagSelect";
 import { PresentationInstanceFilterProperty } from "./PresentationInstanceFilterProperty";
 import { createInstanceFilterPropertyInfos, getInstanceFilterFieldName, InstanceFilterPropertyInfo } from "./Utils";
-import { UniquePropertyValuesSelector } from "../properties/UniquePropertyValuesSelector";
-import { useSchemaMetadataContext } from "../common/SchemaMetadataContext";
-import { Input } from "@itwin/itwinui-react";
-import { useQuantityValueInput, UseQuantityValueInputProps } from "../properties/UseQuantityValueInput";
 
 /**
  * Props for [[InstanceFilterBuilder]] component.
@@ -53,6 +53,8 @@ export interface InstanceFilterBuilderProps extends PropertyFilterBuilderRendere
   imodel: IModelConnection;
   /** [Descriptor]($presentation-common) that will be used for getting [[navigationPropertyEditorContext]]. */
   descriptor: Descriptor;
+  /** [Keys]($presentation-common) that will be passed through to [[FilterBuilderValueRenderer]] */
+  descriptorInputKeys?: Keys;
 }
 
 /**
@@ -61,7 +63,7 @@ export interface InstanceFilterBuilderProps extends PropertyFilterBuilderRendere
  * @internal
  */
 export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
-  const { selectedClasses, classes, onClassSelected, onClassDeselected, onClearClasses, imodel, descriptor, ...restProps } = props;
+  const { selectedClasses, classes, onClassSelected, onClassDeselected, onClearClasses, imodel, descriptor, descriptorInputKeys, ...restProps } = props;
 
   const navigationPropertyEditorContextValue = useFilterBuilderNavigationPropertyEditorContext(imodel, descriptor);
 
@@ -106,7 +108,7 @@ export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
           <PropertyFilterBuilderRenderer
             {...restProps}
             ruleValueRenderer={(rendererProps: PropertyFilterBuilderRuleValueRendererProps) => (
-              <FilterBuilderValueRenderer {...rendererProps} imodel={imodel} descriptor={descriptor} />
+              <FilterBuilderValueRenderer {...rendererProps} descriptorInputKeys={descriptorInputKeys} imodel={imodel} descriptor={descriptor} />
             )}
           />
         </navigationPropertyEditorContext.Provider>
@@ -327,7 +329,9 @@ async function computeClassesByProperty(classes: ClassInfo[], property: Instance
   return classesWithProperty;
 }
 
-function FilterBuilderValueRenderer(props: PropertyFilterBuilderRuleValueRendererProps & { imodel: IModelConnection; descriptor: Descriptor }) {
+function FilterBuilderValueRenderer(
+  props: PropertyFilterBuilderRuleValueRendererProps & { imodel: IModelConnection; descriptor: Descriptor; descriptorInputKeys?: Keys },
+) {
   const schemaMetadataContext = useSchemaMetadataContext();
   if (props.operator === PropertyFilterRuleOperator.IsEqual || props.operator === PropertyFilterRuleOperator.IsNotEqual) {
     return <UniquePropertyValuesSelector {...props} />;
