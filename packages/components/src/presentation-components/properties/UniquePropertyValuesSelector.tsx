@@ -14,6 +14,7 @@ import {
   DisplayValueGroup,
   Field,
   FieldDescriptor,
+  Keys,
   KeySet,
   Ruleset,
   RuleTypes,
@@ -38,11 +39,13 @@ export interface UniquePropertyValuesSelectorProps {
   imodel: IModelConnection;
   /** Current descriptor */
   descriptor: Descriptor;
+  /** Keys that are currently selected for filtering */
+  descriptorInputKeys?: Keys;
 }
 
 /** @internal */
 export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelectorProps) {
-  const { imodel, descriptor, property, onChange, value } = props;
+  const { imodel, descriptor, property, onChange, value, descriptorInputKeys } = props;
   const [selectedValues, setSelectedValues] = useState<DisplayValueGroup[] | undefined>(() => getUniqueValueFromProperty(value));
   const [field, setField] = useState<Field | undefined>(() => findField(descriptor, getInstanceFilterFieldName(property)));
   useEffect(() => {
@@ -74,8 +77,8 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
   const isOptionSelected = (option: DisplayValueGroup, _: Options<DisplayValueGroup>): boolean =>
     selectedValues?.map((selectedValue) => selectedValue.displayValue).includes(option.displayValue) ?? false;
 
-  const ruleset = useUniquePropertyValuesRuleset(field);
-  const loadTargets = useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor: field?.getFieldDescriptor() });
+  const ruleset = useUniquePropertyValuesRuleset(descriptor.ruleset, field);
+  const loadTargets = useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor: field?.getFieldDescriptor() }, descriptorInputKeys);
 
   return (
     <AsyncMultiTagSelect
@@ -126,9 +129,14 @@ function getUniqueValueFromProperty(property: PropertyValue | undefined): Displa
   return undefined;
 }
 
-function useUniquePropertyValuesRuleset(field?: Field) {
+function useUniquePropertyValuesRuleset(descriptorRuleset?: Ruleset, field?: Field) {
   const [ruleset, setRuleset] = useState<Ruleset>();
   useEffect(() => {
+    if (descriptorRuleset) {
+      setRuleset(descriptorRuleset);
+      return;
+    }
+
     const baseClassInfo = getBaseClassInfo(field);
     if (baseClassInfo === undefined) {
       setRuleset(undefined);
@@ -149,7 +157,7 @@ function useUniquePropertyValuesRuleset(field?: Field) {
         },
       ],
     });
-  }, [field]);
+  }, [field, descriptorRuleset]);
 
   return ruleset;
 }
@@ -174,7 +182,7 @@ interface UseUniquePropertyValuesLoaderProps {
   fieldDescriptor?: FieldDescriptor;
 }
 
-function useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor }: UseUniquePropertyValuesLoaderProps) {
+function useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor }: UseUniquePropertyValuesLoaderProps, descriptorInputKeys?: Keys) {
   const loadTargets = useCallback(
     async (loadedOptionsCount: number) => {
       if (!ruleset || !fieldDescriptor) {
@@ -187,7 +195,7 @@ function useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor }: Use
         fieldDescriptor,
         rulesetOrId: ruleset,
         paging: { start: loadedOptionsCount, size: UNIQUE_PROPERTY_VALUES_BATCH_SIZE },
-        keys: new KeySet(),
+        keys: new KeySet(descriptorInputKeys),
       });
 
       const filteredOptions = [];
@@ -206,7 +214,7 @@ function useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor }: Use
         hasMore: content.items.length === UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
       };
     },
-    [imodel, ruleset, fieldDescriptor],
+    [imodel, ruleset, fieldDescriptor, descriptorInputKeys],
   );
 
   return loadTargets;

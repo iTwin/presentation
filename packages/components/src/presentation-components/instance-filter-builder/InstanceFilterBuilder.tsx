@@ -22,7 +22,7 @@ import {
 import { assert } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ComboBox, Input, SelectOption } from "@itwin/itwinui-react";
-import { ClassInfo, Descriptor } from "@itwin/presentation-common";
+import { ClassInfo, Descriptor, Keys } from "@itwin/presentation-common";
 import { useSchemaMetadataContext } from "../common/SchemaMetadataContext";
 import { translate } from "../common/Utils";
 import { navigationPropertyEditorContext, NavigationPropertyEditorContextProps } from "../properties/NavigationPropertyEditor";
@@ -47,6 +47,8 @@ export interface InstanceFilterBuilderProps extends PropertyFilterBuilderRendere
   imodel: IModelConnection;
   /** [Descriptor]($presentation-common) that will be used for getting [[navigationPropertyEditorContext]]. */
   descriptor: Descriptor;
+  /** [Keys]($presentation-common) that will be passed through to [[FilterBuilderValueRenderer]] */
+  descriptorInputKeys?: Keys;
 }
 
 /**
@@ -55,7 +57,7 @@ export interface InstanceFilterBuilderProps extends PropertyFilterBuilderRendere
  * @internal
  */
 export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
-  const { selectedClasses, classes, onSelectedClassesChanged, imodel, descriptor, ...restProps } = props;
+  const { selectedClasses, classes, onSelectedClassesChanged, imodel, descriptor, descriptorInputKeys, ...restProps } = props;
 
   const navigationPropertyEditorContextValue = useFilterBuilderNavigationPropertyEditorContext(imodel, descriptor);
 
@@ -81,7 +83,7 @@ export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
           <PropertyFilterBuilderRenderer
             {...restProps}
             ruleValueRenderer={(rendererProps: PropertyFilterBuilderRuleValueRendererProps) => (
-              <FilterBuilderValueRenderer {...rendererProps} imodel={imodel} descriptor={descriptor} />
+              <FilterBuilderValueRenderer {...rendererProps} descriptorInputKeys={descriptorInputKeys} imodel={imodel} descriptor={descriptor} />
             )}
           />
         </navigationPropertyEditorContext.Provider>
@@ -290,7 +292,9 @@ async function computeClassesByProperty(classes: ClassInfo[], property: Instance
   return classesWithProperty;
 }
 
-function FilterBuilderValueRenderer(props: PropertyFilterBuilderRuleValueRendererProps & { imodel: IModelConnection; descriptor: Descriptor }) {
+function FilterBuilderValueRenderer(
+  props: PropertyFilterBuilderRuleValueRendererProps & { imodel: IModelConnection; descriptor: Descriptor; descriptorInputKeys?: Keys },
+) {
   const schemaMetadataContext = useSchemaMetadataContext();
   if (props.operator === PropertyFilterRuleOperator.IsEqual || props.operator === PropertyFilterRuleOperator.IsNotEqual) {
     return <UniquePropertyValuesSelector {...props} />;
