@@ -10,7 +10,6 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { ContentSpecificationTypes, Descriptor, DisplayValue, Field, KeySet, Ruleset, RuleTypes, Value } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { deserializeDisplayValueGroupArray, findField, serializeDisplayValueGroupArray, translate } from "../common/Utils";
-import { findBaseExpressionClass } from "../instance-filter-builder/InstanceFilterConverter";
 import { getInstanceFilterFieldName } from "../instance-filter-builder/Utils";
 import { AsyncSelect } from "./AsyncSelect";
 
@@ -79,7 +78,7 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
 
   const isOptionSelected = (option: UniqueValue): boolean => selectedValues.map((selectedValue) => selectedValue.displayValue).includes(option.displayValue);
 
-  const ruleset = useUniquePropertyValuesRuleset({ descriptor, imodel, field });
+  const ruleset = useUniquePropertyValuesRuleset(field);
   const loadTargets = useUniquePropertyValuesLoader({ imodel, ruleset, field });
 
   return (
@@ -116,47 +115,46 @@ function getUniqueValueFromProperty(property: PropertyValue | undefined): Unique
   return [];
 }
 
-interface UseUniquePropertyValuesRulesetProps {
-  descriptor: Descriptor;
-  field?: Field;
-  imodel: IModelConnection;
-}
-
-function useUniquePropertyValuesRuleset({ descriptor, field, imodel }: UseUniquePropertyValuesRulesetProps) {
+function useUniquePropertyValuesRuleset(field?: Field) {
   const [ruleset, setRuleset] = useState<Ruleset>();
   useEffect(() => {
-    void (async () => {
-      const [schemaName, className] = await getSchemaAndClassNames({ imodel, descriptor, field });
-      setRuleset({
-        id: "unique-property-values",
-        rules: [
-          {
-            ruleType: RuleTypes.Content,
-            specifications: [
-              {
-                specType: ContentSpecificationTypes.ContentInstancesOfSpecificClasses,
-                classes: { schemaName, classNames: [className], arePolymorphic: true },
-              },
-            ],
-          },
-        ],
-      });
-    })();
-  }, [field, descriptor, imodel]);
+    const baseClassInfo = getBaseClassInfo(field);
+    if (baseClassInfo === undefined) {
+      setRuleset(undefined);
+      return;
+    }
+    const [schemaName, className] = baseClassInfo.name.split(":");
+    setRuleset({
+      id: "unique-property-values",
+      rules: [
+        {
+          ruleType: RuleTypes.Content,
+          specifications: [
+            {
+              specType: ContentSpecificationTypes.ContentInstancesOfSpecificClasses,
+              classes: { schemaName, classNames: [className], arePolymorphic: true },
+            },
+          ],
+        },
+      ],
+    });
+  }, [field]);
 
   return ruleset;
 }
 
-async function getSchemaAndClassNames({ imodel, descriptor, field }: UseUniquePropertyValuesRulesetProps) {
+function getBaseClassInfo(field?: Field) {
   if (field?.parent === undefined && field?.isPropertiesField()) {
-    return field.properties[0].property.classInfo.name.split(":");
+    return field.properties[0].property.classInfo;
   }
-  return (
-    await findBaseExpressionClass(
-      imodel,
-      descriptor.selectClasses.map((item) => item.selectClassInfo),
-    )
-  ).name.split(":");
+
+  let rootParentField = field?.parent;
+  while (rootParentField?.parent !== undefined) {
+    rootParentField = rootParentField.parent;
+  }
+  const lastStepToPrimaryClass = rootParentField?.pathToPrimaryClass.slice(-1).pop();
+
+  return lastStepToPrimaryClass?.targetClassInfo;
 }
 
 interface UseUniquePropertyValuesLoaderProps {
