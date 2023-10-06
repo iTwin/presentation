@@ -7,7 +7,18 @@ import { useCallback, useEffect, useState } from "react";
 import { ActionMeta, MultiValue, Options } from "react-select";
 import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ContentSpecificationTypes, Descriptor, DisplayValueGroup, Field, FieldDescriptor, Keys, KeySet, Ruleset, RuleTypes } from "@itwin/presentation-common";
+import {
+  ContentSpecificationTypes,
+  Descriptor,
+  DisplayValue,
+  DisplayValueGroup,
+  Field,
+  FieldDescriptor,
+  Keys,
+  KeySet,
+  Ruleset,
+  RuleTypes,
+} from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { deserializeDisplayValueGroupArray, findField, serializeDisplayValueGroupArray, translate } from "../common/Utils";
 import { AsyncMultiTagSelect } from "../instance-filter-builder/MultiTagSelect";
@@ -80,10 +91,26 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
       hideSelectedOptions={false}
       isSearchable={false}
       closeMenuOnSelect={false}
-      getOptionLabel={(option) => option.displayValue!.toString()}
-      getOptionValue={(option) => option.groupedRawValues[0]!.toString()}
+      getOptionLabel={(option) => formatOptionLabel(option.displayValue, property.typename)}
+      getOptionValue={(option) => option.displayValue!.toString()}
     />
   );
+}
+
+function formatOptionLabel(displayValue: DisplayValue, type: string): string {
+  const label = displayValue!.toString();
+  if (label === "") {
+    return translate("unique-values-property-editor.empty-value");
+  }
+
+  switch (type) {
+    case "dateTime":
+      return new Date(label).toLocaleString();
+    case "shortDate":
+      return new Date(label).toLocaleDateString();
+    default:
+      return label;
+  }
 }
 
 function getUniqueValueFromProperty(property: PropertyValue | undefined): DisplayValueGroup[] | undefined {
