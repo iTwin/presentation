@@ -41,8 +41,8 @@ function createLabelGroups(nodes: HierarchyNode[]): HierarchyNode[] {
     const [currentNode, currentHasChanged] = createLabelGroupsIfClassGroupingNode(nodes[i]);
     hasChanged |= currentHasChanged;
 
-    if (currentNode.label === outputNodes[outputNodes.length - 1].label) {
-      const lastOutputNode = outputNodes[outputNodes.length - 1];
+    const lastOutputNode = outputNodes[outputNodes.length - 1];
+    if (currentNode.label === lastOutputNode.label) {
       if (HierarchyNode.isLabelGroupingNode(lastOutputNode) && Array.isArray(lastOutputNode.children)) {
         if (currentNode.params?.groupByLabel) {
           lastOutputNode.children.push(currentNode);
