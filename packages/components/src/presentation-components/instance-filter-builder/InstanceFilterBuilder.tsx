@@ -53,7 +53,7 @@ export interface InstanceFilterBuilderProps extends PropertyFilterBuilderRendere
   imodel: IModelConnection;
   /** [Descriptor]($presentation-common) that will be used for getting [[navigationPropertyEditorContext]]. */
   descriptor: Descriptor;
-  /** [Keys]($presentation-common) that will be passed through to [[FilterBuilderValueRenderer ]] */
+  /** [Keys]($presentation-common) that will be passed through to [[FilterBuilderValueRenderer]] */
   descriptorInputKeys?: Keys;
 }
 
