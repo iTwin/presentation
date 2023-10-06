@@ -47,8 +47,7 @@ function createLabelGroups(nodes: HierarchyNode[]): HierarchyNode[] {
         if (currentNode.params?.groupByLabel) {
           lastOutputNode.children.push(currentNode);
         } else {
-          outputNodes.push(outputNodes[outputNodes.length - 1]);
-          outputNodes[outputNodes.length - 2] = currentNode;
+          outputNodes.splice(outputNodes.length - 1, 0, currentNode);
         }
         continue;
       } else if (lastOutputNode.params?.groupByLabel) {
@@ -62,8 +61,7 @@ function createLabelGroups(nodes: HierarchyNode[]): HierarchyNode[] {
             children: [lastOutputNode, currentNode],
           };
         } else {
-          outputNodes.push(outputNodes[outputNodes.length - 1]);
-          outputNodes[outputNodes.length - 2] = currentNode;
+          outputNodes.splice(outputNodes.length - 1, 0, currentNode);
         }
         continue;
       }
