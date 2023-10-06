@@ -39,7 +39,7 @@ function createLabelGroups(nodes: HierarchyNode[]): HierarchyNode[] {
 
   for (let i = 1; i < nodes.length; ++i) {
     const [currentNode, currentHasChanged] = createLabelGroupsIfClassGroupingNode(nodes[i]);
-    hasChanged |= currentHasChanged;
+    hasChanged ||= currentHasChanged;
 
     const lastOutputNode = outputNodes[outputNodes.length - 1];
     if (currentNode.label === lastOutputNode.label) {
@@ -85,7 +85,7 @@ function createLabelGroups(nodes: HierarchyNode[]): HierarchyNode[] {
   return outputNodes;
 }
 
-function createLabelGroupsIfClassGroupingNode(node: HierarchyNode): [node: HierarchyNode, hasChanged?: boolean] {
+function createLabelGroupsIfClassGroupingNode(node: HierarchyNode): [node: HierarchyNode, hasChanged: boolean] {
   if (HierarchyNode.isClassGroupingNode(node) && Array.isArray(node.children)) {
     const labelGroupings = createLabelGroups(node.children);
     if (labelGroupings.length !== node.children.length) {
