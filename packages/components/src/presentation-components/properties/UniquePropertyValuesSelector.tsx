@@ -89,7 +89,7 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
       isSearchable={false}
       closeMenuOnSelect={false}
       getOptionLabel={(option) => formatOptionLabel(option.displayValue, property.typename)}
-      getOptionValue={(option) => option.groupedRawValues[0]!.toString()}
+      getOptionValue={(option) => option.displayValue!.toString()}
     />
   );
 }

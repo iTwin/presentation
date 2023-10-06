@@ -307,17 +307,18 @@ describe("UniquePropertyValuesSelector", () => {
         editor: undefined,
       };
 
-      const { queryByText, container, user } = render(
+      const { queryByText, getByText, user } = render(
         <UniquePropertyValuesSelector property={datePropertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
       );
 
       // open menu
-      const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
-      await user.click(selector!);
+      const selector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+      await user.click(selector);
 
       // assert that row is displayed correctly
-      const option = await waitFor(() => container.querySelector(".iui-menu-item"));
-      expect(option?.innerHTML.indexOf(new Date("1410-07-15").toLocaleDateString())).to.not.be.equal(-1);
+      await waitFor(() => {
+        expect(queryByText(new Date("1410-07-15").toLocaleDateString())).to.not.be.null;
+      });
     });
 
     it(`displays empty value string when typename is 'dateTime' but date is set as empty string`, async () => {
@@ -332,23 +333,24 @@ describe("UniquePropertyValuesSelector", () => {
         editor: undefined,
       };
 
-      const { queryByText, container, user } = render(
+      const { queryByText, getByText, user } = render(
         <UniquePropertyValuesSelector property={datePropertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
       );
 
       // open menu
-      const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
-      await user.click(selector!);
+      const selector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+      await user.click(selector);
 
       // assert that row is displayed correctly
-      const option = await waitFor(() => container.querySelector(".iui-menu-item"));
-      expect(option?.innerHTML.indexOf(translate("unique-values-property-editor.empty-value"))).to.not.be.equal(-1);
+      await waitFor(() => {
+        expect(queryByText(translate("unique-values-property-editor.empty-value"))).to.not.be.null;
+      });
     });
 
     it(`displays date in valid format when typename is 'dateTime'`, async () => {
       sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
         total: 1,
-        items: [{ displayValue: "1410-07-15", groupedRawValues: [""] }],
+        items: [{ displayValue: "-17655058800", groupedRawValues: [""] }],
       });
       const datePropertyDescription = {
         name: "#propertyName",
@@ -357,17 +359,18 @@ describe("UniquePropertyValuesSelector", () => {
         editor: undefined,
       };
 
-      const { queryByText, container, user } = render(
+      const { queryByText, getByText, user } = render(
         <UniquePropertyValuesSelector property={datePropertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
       );
 
       // open menu
-      const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
-      await user.click(selector!);
+      const selector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+      await user.click(selector);
 
       // assert that row is displayed correctly
-      const option = await waitFor(() => container.querySelector(".iui-menu-item"));
-      expect(option?.innerHTML.indexOf(new Date("1410-07-15").toLocaleString())).to.not.be.equal(-1);
+      await waitFor(() => {
+        expect(queryByText(new Date("-17655058800").toLocaleString())).to.not.be.null;
+      });
     });
   });
 

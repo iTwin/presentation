@@ -4,21 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import sinon from "sinon";
-import { EmptyLocalization } from "@itwin/core-common";
-import { IModelApp } from "@itwin/core-frontend";
-import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render } from "@testing-library/react";
 import { MultiTagSelect } from "../../presentation-components/instance-filter-builder/MultiTagSelect";
 
 describe("MultiTagSelect", () => {
-  beforeEach(async () => {
-    const localization = new EmptyLocalization();
-    sinon.stub(IModelApp, "initialized").get(() => true);
-    sinon.stub(IModelApp, "localization").get(() => localization);
-    await Presentation.initialize();
-  });
-
   const options = [
     {
       label: "Option1",

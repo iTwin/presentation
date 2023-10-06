@@ -27,7 +27,7 @@ import Component, {
 } from "react-select";
 import { AsyncPaginate, AsyncPaginateProps } from "react-select-async-paginate";
 import { SvgCaretDown, SvgCaretDownSmall, SvgCheckmarkSmall, SvgCloseSmall } from "@itwin/itwinui-icons-react";
-import { translate, useResizeObserver } from "../common/Utils";
+import { useResizeObserver } from "../common/Utils";
 
 /** @internal */
 export function MultiTagSelect<Option>(props: Props<Option>) {
@@ -82,11 +82,12 @@ function TagSelectMenu<TOption, IsMulti extends boolean = boolean>({ children, .
 
 function TagSelectOption<TOption, IsMulti extends boolean = boolean>({ children: _, ...props }: OptionProps<TOption, IsMulti>) {
   const optionLabel = props.selectProps.getOptionLabel && props.selectProps.getOptionLabel(props.data);
+  const optionValue = props.selectProps.getOptionValue && props.selectProps.getOptionValue(props.data);
 
   const className = classnames("iui-menu-item", {
     "iui-focused": props.isFocused,
     "iui-active": props.isSelected,
-    "presentation-instance-filter-special-property-value": optionLabel === translate("unique-values-property-editor.empty-value"),
+    "presentation-instance-filter-special-property-value": optionValue === "",
   });
 
   return (
