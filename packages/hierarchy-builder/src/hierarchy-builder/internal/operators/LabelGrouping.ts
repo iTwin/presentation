@@ -19,12 +19,9 @@ export function createLabelGroupingOperator() {
       log((n) => `in: ${n.label}`),
       // need all nodes in one place to group them
       toArray(),
-      // group all nodes
-      mergeMap((resolvedNodes) => from(createLabelGroupingInformation(resolvedNodes))),
-      // convert intermediate format into a nodes observable
-      mergeMap((groupings) => {
-        const grouped = createGroupingNodes(groupings);
-        const obs = from(grouped);
+      // group all nodes and format into a nodes observable
+      mergeMap((resolvedNodes) => {
+        const obs = from(createLabelGroups(resolvedNodes));
         return obs;
       }),
       log((n) => `out: ${n.label}`),
@@ -32,91 +29,78 @@ export function createLabelGroupingOperator() {
   };
 }
 
-interface LabelGroupingInformation {
-  ungrouped: Array<HierarchyNode>;
-  grouped: Map<string, { label: string; groupedNodes: Array<HierarchyNode> }>;
-  order: Array<string>;
-}
+function createLabelGroups(nodes: HierarchyNode[]): HierarchyNode[] {
+  if (nodes.length === 0) {
+    return nodes;
+  }
+  const [firstNode, firstHasChanged] = createLabelGroupsIfClassGroupingNode(nodes[0]);
+  const outputNodes: HierarchyNode[] = [firstNode];
+  let hasChanged = firstHasChanged;
 
-async function createLabelGroupingInformation(nodes: HierarchyNode[]): Promise<LabelGroupingInformation> {
-  const groupings: LabelGroupingInformation = { ungrouped: [], grouped: new Map(), order: [] };
-  for (const node of nodes) {
-    if (HierarchyNode.isClassGroupingNode(node) && Array.isArray(node.children)) {
-      const labelGroupings = await createLabelGroupingInformation(node.children);
-      const labelGroupingNodes = createGroupingNodes(labelGroupings);
-      const newClassGroupingNode: HierarchyNode = {
-        ...node,
-        children: labelGroupingNodes,
-      };
-      groupings.ungrouped.push(newClassGroupingNode);
-      groupings.order.push("ungrouped");
-    } else if (node.params?.groupByLabel) {
-      const nodeLabel = node.label;
-      let groupingInfo = groupings.grouped.get(nodeLabel);
-      if (!groupingInfo) {
-        groupingInfo = {
-          label: nodeLabel,
-          groupedNodes: [],
-        };
-        groupings.grouped.set(nodeLabel, groupingInfo);
-        groupings.order.push("grouped");
+  for (let i = 1; i < nodes.length; ++i) {
+    const [currentNode, currentHasChanged] = createLabelGroupsIfClassGroupingNode(nodes[i]);
+    if (currentHasChanged) {
+      hasChanged = currentHasChanged;
+    }
+
+    if (currentNode.label === outputNodes[outputNodes.length - 1].label) {
+      const lastOutputNode = outputNodes[outputNodes.length - 1];
+      if (HierarchyNode.isLabelGroupingNode(lastOutputNode) && Array.isArray(lastOutputNode.children)) {
+        if (currentNode.params?.groupByLabel) {
+          lastOutputNode.children.push(currentNode);
+        } else {
+          outputNodes.push(currentNode);
+          [outputNodes[outputNodes.length - 1], outputNodes[outputNodes.length - 2]] = [
+            outputNodes[outputNodes.length - 2],
+            outputNodes[outputNodes.length - 1],
+          ];
+        }
+      } else if (lastOutputNode.params?.groupByLabel) {
+        if (currentNode.params?.groupByLabel) {
+          outputNodes[outputNodes.length - 1] = {
+            label: currentNode.label,
+            key: {
+              type: "label-grouping",
+              label: currentNode.label,
+            },
+            children: [lastOutputNode, currentNode],
+          };
+        } else {
+          outputNodes.push(currentNode);
+          [outputNodes[outputNodes.length - 1], outputNodes[outputNodes.length - 2]] = [
+            outputNodes[outputNodes.length - 2],
+            outputNodes[outputNodes.length - 1],
+          ];
+        }
+      } else {
+        outputNodes.push(currentNode);
       }
-      groupingInfo.groupedNodes.push(node);
     } else {
-      groupings.order.push("ungrouped");
-      groupings.ungrouped.push(node);
+      outputNodes.push(nodes[i]);
     }
   }
-  // if all nodes have the same label, then they should not be grouped
-  if (groupings.grouped.size === 1 && groupings.ungrouped.length === 0) {
-    return { ungrouped: nodes, grouped: new Map(), order: [] };
+  // if all nodes have the same label and no classGrouping nodes have been changed then they should not be grouped
+  if (outputNodes.length === 1 && !hasChanged) {
+    return nodes;
   }
 
-  return groupings;
+  return outputNodes;
 }
 
-function createGroupingNodes(groupings: LabelGroupingInformation): HierarchyNode[] & { hasLabelGroupingNodes?: boolean } {
-  const outNodes = new Array<HierarchyNode>();
-  if (groupings.order.length === 0) {
-    outNodes.push(...groupings.ungrouped);
-    (outNodes as any).hasLabelGroupingNodes = false;
-    return outNodes;
+function createLabelGroupsIfClassGroupingNode(node: HierarchyNode): [node: HierarchyNode, hasChanged?: boolean] {
+  if (HierarchyNode.isClassGroupingNode(node) && Array.isArray(node.children)) {
+    let hasChanged = false;
+    const labelGroupings = createLabelGroups(node.children);
+    if (labelGroupings.length !== node.children.length) {
+      hasChanged = true;
+    }
+    const newClassGroupingNode: HierarchyNode = {
+      ...node,
+      children: labelGroupings,
+    };
+    return [newClassGroupingNode, hasChanged];
   }
-
-  const tempOutNodes = new Array<HierarchyNode>();
-  let isGroupingNodeCreated = false;
-  groupings.grouped.forEach((entry) => {
-    // if group contains 1 node, then the grouping should not be created
-    if (entry.groupedNodes.length === 1) {
-      tempOutNodes.push(...entry.groupedNodes);
-    } else {
-      tempOutNodes.push({
-        label: entry.label,
-        key: {
-          type: "label-grouping",
-          label: entry.label,
-        },
-        children: entry.groupedNodes,
-      });
-      isGroupingNodeCreated = true;
-    }
-  });
-  tempOutNodes.push(...groupings.ungrouped);
-
-  let ungroupedNodeIndex = 0;
-  let groupedNodeIndex = 0;
-  groupings.order.forEach((nodeType) => {
-    if (nodeType === "grouped") {
-      outNodes.push(tempOutNodes[groupedNodeIndex]);
-      ++groupedNodeIndex;
-    } else {
-      outNodes.push(tempOutNodes[groupings.grouped.size + ungroupedNodeIndex]);
-      ++ungroupedNodeIndex;
-    }
-  });
-
-  (outNodes as any).hasLabelGroupingNodes = isGroupingNodeCreated;
-  return outNodes;
+  return [node, false];
 }
 
 function doLog(msg: string) {

@@ -135,8 +135,8 @@ describe("LabelGrouping", () => {
           },
           children: [nodes[0], nodes[1]],
         },
-        nodes[2],
         nodes[3],
+        nodes[2],
         nodes[4],
       ] as HierarchyNode[]);
     });
