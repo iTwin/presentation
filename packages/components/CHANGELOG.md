@@ -8,21 +8,20 @@
 
 ### Minor Changes
 
-- [#268](https://github.com/iTwin/presentation/pull/268): `PresentationInstanceFilterDialog`: Added support for quantity values.
-- [#268](https://github.com/iTwin/presentation/pull/268): `PresentationInstanceFilterDialog`: Show error message when value input is invalid.
-- [#268](https://github.com/iTwin/presentation/pull/268): `PresentationInstanceFilterDialog`: Show results count while building instance filter.
-- [#268](https://github.com/iTwin/presentation/pull/268): `PresentationInstanceFilterDialog`: Added unique values value selector when using `Equal` or `Not Equal` operators. It loads unique property values that are associated with node on which filter is placed.
+- [#213](https://github.com/iTwin/presentation/pull/213): `PresentationInstanceFilterDialog`: Added support for quantity values.
+- [#193](https://github.com/iTwin/presentation/pull/193): `PresentationInstanceFilterDialog`: Show error message when value input is invalid.
+- [#222](https://github.com/iTwin/presentation/pull/222): `PresentationInstanceFilterDialog`: Show results count while building instance filter.
+- [#176](https://github.com/iTwin/presentation/pull/176): `PresentationInstanceFilterDialog`: Added unique values value selector when using `Equal` or `Not Equal` operators. It loads unique property values that are associated with node on which filter is placed.
 
   - `null` values are omitted. `"Is Null"` and `"Is Not Null"` operators should be used instead.
   - For empty non `null` values _Empty Value_ option is shown in selector.
 
 - [#296](https://github.com/iTwin/presentation/pull/296): `PresentationInstanceFilterDialog`: Add formatting to dates that are displayed in the property value selector.
-- [#268](https://github.com/iTwin/presentation/pull/268): Reload content and hierarchies when active unit system is changed.
 
 ### Patch Changes
 
 - [#273](https://github.com/iTwin/presentation/pull/273): Fixed property tooltip appearing behind the property selector.
-- [#268](https://github.com/iTwin/presentation/pull/268): Fix filtering when `Like` operator is selected.
+- [#206](https://github.com/iTwin/presentation/pull/206): Fix filtering when `Like` operator is selected.
 
 ## 4.3.0
 
