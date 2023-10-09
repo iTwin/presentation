@@ -1,5 +1,4 @@
 ---
-"@itwin/presentation-opentelemetry": major
 "@itwin/presentation-components": major
 "@itwin/presentation-testing": major
 ---
