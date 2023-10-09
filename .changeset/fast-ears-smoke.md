@@ -2,4 +2,4 @@
 "@itwin/presentation-components": minor
 ---
 
-`InstanceFilterDialog`: Show error message when input is invalid.
+`PresentationInstanceFilterDialog`: Show error message when value input is invalid.
