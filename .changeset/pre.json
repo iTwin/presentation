@@ -1,0 +1,19 @@
+{
+  "mode": "pre",
+  "tag": "dev",
+  "initialVersions": {
+    "@load-tests/backend": "0.0.0",
+    "@load-tests/frontend": "0.0.0",
+    "@test-app/backend": "0.0.0",
+    "@test-app/common": "0.0.0",
+    "@test-app/frontend": "0.0.0",
+    "@itwin/presentation-components": "4.3.0",
+    "@itwin/presentation-core-interop": "0.0.0",
+    "presentation-full-stack-tests": "0.0.0",
+    "@itwin/presentation-hierarchy-builder": "0.0.0",
+    "@itwin/presentation-models-tree": "0.0.0",
+    "@itwin/presentation-opentelemetry": "4.0.2",
+    "@itwin/presentation-testing": "4.1.1"
+  },
+  "changesets": []
+}
