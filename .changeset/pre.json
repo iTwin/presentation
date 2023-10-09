@@ -15,5 +15,15 @@
     "@itwin/presentation-opentelemetry": "4.0.2",
     "@itwin/presentation-testing": "4.1.1"
   },
-  "changesets": []
+  "changesets": [
+    "big-weeks-refuse",
+    "cyan-humans-remember",
+    "fast-ears-smoke",
+    "green-pears-speak",
+    "itchy-dryers-remain",
+    "little-rice-cross",
+    "quiet-wombats-design",
+    "seven-ducks-warn",
+    "unlucky-berries-lick"
+  ]
 }
