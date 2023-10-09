@@ -21,6 +21,7 @@ import { IModelDb } from '@itwin/core-backend';
 import { IModelHostOptions } from '@itwin/core-backend';
 import { InstanceKey } from '@itwin/presentation-common';
 import { KeySet } from '@itwin/presentation-common';
+import { LocalFileName } from '@itwin/core-common';
 import { ModelProps } from '@itwin/core-common';
 import { Omit as Omit_2 } from '@itwin/presentation-common';
 import { PageOptions } from '@itwin/presentation-common';
@@ -148,6 +149,9 @@ export interface PresentationTestingInitProps {
     rpcs?: RpcInterfaceDefinition[];
     testOutputDir?: string;
 }
+
+// @internal
+export function setupOutputFileLocation(fileName: string): LocalFileName;
 
 // @public
 export const terminate: (frontendApp?: typeof IModelApp) => Promise<void>;

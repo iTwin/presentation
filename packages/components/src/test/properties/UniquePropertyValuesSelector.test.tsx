@@ -19,7 +19,6 @@ import {
 } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { waitFor } from "@testing-library/react";
-import { translate } from "../../presentation-components/common/Utils";
 import { UniquePropertyValuesSelector } from "../../presentation-components/properties/UniquePropertyValuesSelector";
 import { createTestECClassInfo, createTestPropertyInfo, createTestRelatedClassInfo, createTestRelationshipPath, render } from "../_helpers/Common";
 import {
@@ -76,7 +75,7 @@ describe("UniquePropertyValuesSelector", () => {
 
   const testImodel = {} as IModelConnection;
 
-  it("invokes `onChange` when item from the menu is selected and then deselected", async () => {
+  it("invokes `onChange` when item from the menu is selected", async () => {
     const spy = sinon.spy();
 
     sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
@@ -87,29 +86,124 @@ describe("UniquePropertyValuesSelector", () => {
       ],
     });
 
-    const { queryByTestId, queryByText, user } = render(
+    const { getByText, user } = render(
       <UniquePropertyValuesSelector property={propertyDescription} onChange={spy} imodel={testImodel} descriptor={descriptor} />,
     );
 
     // open menu
-    const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
-    await user.click(selector!);
+    const selector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+    await user.click(selector);
 
     // click on menu item
-    const menuItem = await waitFor(() => queryByText("TestValue1"));
-    await user.click(menuItem!);
+    const menuItem = await waitFor(() => getByText("TestValue1"));
+    await user.click(menuItem);
     expect(spy).to.be.calledWith({
       valueFormat: PropertyValueFormat.Primitive,
       displayValue: JSON.stringify(["TestValue1"]),
       value: JSON.stringify([["TestValue1"]]),
     });
+  });
 
-    // open menu again
-    await user.click(selector!);
+  it("invokes `onChange` with multiple values when additional item is selected", async () => {
+    const spy = sinon.spy();
+
+    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+      total: 2,
+      items: [
+        { displayValue: "TestValue1", groupedRawValues: ["TestValue1"] },
+        { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
+      ],
+    });
+
+    const displayValue = ["TestValue2"];
+    const groupedRawValues = [["TestValue2"]];
+    const initialValue = convertToPropertyValue(displayValue, groupedRawValues);
+
+    const { getByText, user } = render(
+      <UniquePropertyValuesSelector property={propertyDescription} onChange={spy} imodel={testImodel} descriptor={descriptor} value={initialValue} />,
+    );
+
+    // open menu
+    const selector = await waitFor(() => getByText("TestValue2"));
+    await user.click(selector);
+
+    // click on first menu item
+    const menuItem = await waitFor(() => getByText("TestValue1"));
+    await user.click(menuItem);
+    expect(spy).to.be.calledWith({
+      valueFormat: PropertyValueFormat.Primitive,
+      displayValue: JSON.stringify(["TestValue2", "TestValue1"]),
+      value: JSON.stringify([["TestValue2"], ["TestValue1"]]),
+    });
+  });
+
+  it("invokes `onChange` when item from the menu is deselected", async () => {
+    const spy = sinon.spy();
+
+    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+      total: 2,
+      items: [
+        { displayValue: "TestValue1", groupedRawValues: ["TestValue1"] },
+        { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
+      ],
+    });
+
+    const displayValue = ["TestValue1", "TestValue2"];
+    const groupedRawValues = [["TestValue1"], ["TestValue2"]];
+    const initialValue = convertToPropertyValue(displayValue, groupedRawValues);
+
+    const { getByText, getAllByText, user } = render(
+      <UniquePropertyValuesSelector property={propertyDescription} onChange={spy} imodel={testImodel} descriptor={descriptor} value={initialValue} />,
+    );
+
+    // open menu
+    const selector = await waitFor(() => getByText("TestValue2"));
+    await user.click(selector);
+
+    // click on menu item
+    const menuItem = await waitFor(() => getAllByText("TestValue2"));
+    // first shown in selector, second in dropdown menu
+    expect(menuItem).to.have.lengthOf(2);
+    await user.click(menuItem[1]);
+    expect(spy).to.be.calledWith({
+      valueFormat: PropertyValueFormat.Primitive,
+      displayValue: JSON.stringify(["TestValue1"]),
+      value: JSON.stringify([["TestValue1"]]),
+    });
+  });
+
+  it("invokes `onChange` when selected items are cleared", async () => {
+    const spy = sinon.spy();
+
+    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+      total: 2,
+      items: [
+        { displayValue: "TestValue1", groupedRawValues: ["TestValue1"] },
+        { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
+      ],
+    });
+
+    const displayValue = ["TestValue2"];
+    const groupedRawValues = [["TestValue2"]];
+    const initialValue = convertToPropertyValue(displayValue, groupedRawValues);
+
+    const { container, queryByText, user } = render(
+      <UniquePropertyValuesSelector property={propertyDescription} onChange={spy} imodel={testImodel} descriptor={descriptor} value={initialValue} />,
+    );
+
+    // make sure value is selected
+    await waitFor(() => {
+      expect(queryByText("TestValue2")).to.not.be.null;
+    });
 
     // click on `clear` button
-    const clearIndicator = await waitFor(() => queryByTestId("multi-tag-select-clearIndicator"));
-    await user.click(clearIndicator!);
+    const clearIndicator = await waitFor(() => {
+      const indicators = container.querySelectorAll(".presentation-async-select-input-icon");
+      // expect to have 2 indicators: "Clear" and "Open dropdown"
+      expect(indicators.length).to.be.eq(2);
+      return indicators[0];
+    });
+    await user.click(clearIndicator);
     await waitFor(() =>
       expect(spy).to.be.calledWith({
         valueFormat: PropertyValueFormat.Primitive,
@@ -119,7 +213,7 @@ describe("UniquePropertyValuesSelector", () => {
     );
   });
 
-  it("menu shows `No options` message when there is no `fieldDescriptor`", async () => {
+  it("menu shows `No values` message when there is no `fieldDescriptor`", async () => {
     sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
       total: 2,
       items: [
@@ -140,7 +234,7 @@ describe("UniquePropertyValuesSelector", () => {
     const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
     await user.click(selector!);
 
-    expect(queryByText("No options")).to.not.be.null;
+    expect(queryByText("unique-values-property-editor.no-values")).to.not.be.null;
   });
 
   it("sets provided value", () => {
@@ -182,7 +276,7 @@ describe("UniquePropertyValuesSelector", () => {
   });
 
   it("sets empty value text if provided value is an empty string", async () => {
-    const { container } = render(
+    const { queryByText } = render(
       <UniquePropertyValuesSelector
         property={propertyDescription}
         onChange={() => {}}
@@ -191,37 +285,9 @@ describe("UniquePropertyValuesSelector", () => {
         value={{ valueFormat: PropertyValueFormat.Primitive, displayValue: '[""]', value: '[[""]]' }}
       />,
     );
-    await waitFor(() => expect(container.querySelector(".iui-tag-label")?.innerHTML).to.include(translate("unique-values-property-editor.empty-value")));
-  });
-
-  it("loads two rows and selects one of them `isOptionSelected`", async () => {
-    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
-      total: 2,
-      items: [
-        { displayValue: "TestValue1", groupedRawValues: ["TestValue1"] },
-        { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
-      ],
+    await waitFor(() => {
+      expect(queryByText("unique-values-property-editor.empty-value")).to.not.be.null;
     });
-
-    const { queryByText, container, user } = render(
-      <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
-    );
-
-    // open menu
-    const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
-    await user.click(selector!);
-    await waitFor(() => expect(container.querySelectorAll(".iui-menu-item.iui-active").length).to.be.equal(0));
-
-    // trigger the addition to selected elements.
-    const option = container.querySelector(".iui-menu-item");
-    await user.click(option!);
-    await waitFor(() => expect(container.querySelectorAll(".iui-menu-item.iui-active").length).to.be.equal(0));
-
-    // click on menu item to make it marked as active
-    const menuItem = await waitFor(() => queryByText("TestValue1"));
-    await user.click(menuItem!);
-
-    await waitFor(() => expect(container.querySelectorAll(".iui-menu-item.iui-active").length).to.be.equal(1));
   });
 
   it("does not load a row with undefined values", async () => {
@@ -230,7 +296,7 @@ describe("UniquePropertyValuesSelector", () => {
       items: [{ displayValue: undefined, groupedRawValues: [undefined] }],
     });
 
-    const { queryByText, container, user } = render(
+    const { queryByText, user } = render(
       <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
     );
 
@@ -238,8 +304,9 @@ describe("UniquePropertyValuesSelector", () => {
     const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
     await user.click(selector!);
 
-    // assert that no row is loaded in the dropdown.
-    await waitFor(() => expect(container.querySelectorAll(".iui-menu-item").length).to.be.equal(0));
+    await waitFor(() => {
+      expect(queryByText("unique-values-property-editor.no-values")).to.not.be.null;
+    });
   });
 
   it("does not load a row with a displayLabel but no defined groupedRawValues", async () => {
@@ -248,7 +315,7 @@ describe("UniquePropertyValuesSelector", () => {
       items: [{ displayValue: "TestValue", groupedRawValues: [undefined] }],
     });
 
-    const { queryByText, container, user } = render(
+    const { queryByText, user } = render(
       <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
     );
 
@@ -256,8 +323,9 @@ describe("UniquePropertyValuesSelector", () => {
     const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
     await user.click(selector!);
 
-    // assert that no row is loaded in the dropdown.
-    await waitFor(() => expect(container.querySelectorAll(".iui-menu-item").length).to.be.equal(0));
+    await waitFor(() => {
+      expect(queryByText("unique-values-property-editor.no-values")).to.not.be.null;
+    });
   });
 
   it("loads row with empty string as displayValue and sets it to an 'Empty Value' string", async () => {
@@ -266,7 +334,7 @@ describe("UniquePropertyValuesSelector", () => {
       items: [{ displayValue: "", groupedRawValues: [""] }],
     });
 
-    const { queryByText, container, user } = render(
+    const { queryByText, user } = render(
       <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
     );
 
@@ -275,7 +343,9 @@ describe("UniquePropertyValuesSelector", () => {
     await user.click(selector!);
 
     // assert that the row is loaded
-    await waitFor(() => expect(container.querySelectorAll(".iui-menu-item").length).to.be.equal(1));
+    await waitFor(() => {
+      expect(queryByText("unique-values-property-editor.empty-value")).to.not.be.null;
+    });
   });
 
   it("loads row even if one of the groupedRawValues is undefined ", async () => {
@@ -284,7 +354,7 @@ describe("UniquePropertyValuesSelector", () => {
       items: [{ displayValue: "TestValue", groupedRawValues: [undefined, ""] }],
     });
 
-    const { queryByText, container, user } = render(
+    const { queryByText, user } = render(
       <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
     );
 
@@ -293,7 +363,9 @@ describe("UniquePropertyValuesSelector", () => {
     await user.click(selector!);
 
     // assert that the row is loaded
-    await waitFor(() => expect(container.querySelectorAll(".iui-menu-item").length).to.be.equal(1));
+    await waitFor(() => {
+      expect(queryByText("TestValue")).to.not.be.null;
+    });
   });
 
   describe("Date formatting", () => {
@@ -345,7 +417,86 @@ describe("UniquePropertyValuesSelector", () => {
 
       // assert that row is displayed correctly
       await waitFor(() => {
-        expect(queryByText(translate("unique-values-property-editor.empty-value"))).to.not.be.null;
+        expect(queryByText("unique-values-property-editor.empty-value")).to.not.be.null;
+      });
+    });
+
+    it(`displays date in valid format when typename is 'dateTime'`, async () => {
+      sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+        total: 1,
+        items: [{ displayValue: "1410-07-15T12:34:00Z", groupedRawValues: [""] }],
+      });
+      const datePropertyDescription = {
+        name: "#propertyName",
+        displayLabel: "property",
+        typename: "dateTime",
+        editor: undefined,
+      };
+
+      const { queryByText, getByText, user } = render(
+        <UniquePropertyValuesSelector property={datePropertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+      );
+
+      // open menu
+      const selector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+      await user.click(selector);
+
+      await waitFor(() => {
+        expect(queryByText(new Date("1410-07-15T12:34:00Z").toLocaleString())).to.not.be.null;
+      });
+    });
+  });
+
+  describe("Date formatting", () => {
+    it(`displays date in valid format when typename is 'shortDate'`, async () => {
+      sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+        total: 1,
+        items: [{ displayValue: "1410-07-15", groupedRawValues: [""] }],
+      });
+      const datePropertyDescription = {
+        name: "#propertyName",
+        displayLabel: "property",
+        typename: "shortDate",
+        editor: undefined,
+      };
+
+      const { queryByText, getByText, user } = render(
+        <UniquePropertyValuesSelector property={datePropertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+      );
+
+      // open menu
+      const selector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+      await user.click(selector);
+
+      // assert that row is displayed correctly
+      await waitFor(() => {
+        expect(queryByText(new Date("1410-07-15").toLocaleDateString())).to.not.be.null;
+      });
+    });
+
+    it(`displays empty value string when typename is 'dateTime' but date is set as empty string`, async () => {
+      sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+        total: 1,
+        items: [{ displayValue: "", groupedRawValues: [""] }],
+      });
+      const datePropertyDescription = {
+        name: "#propertyName",
+        displayLabel: "property",
+        typename: "dateTime",
+        editor: undefined,
+      };
+
+      const { queryByText, getByText, user } = render(
+        <UniquePropertyValuesSelector property={datePropertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+      );
+
+      // open menu
+      const selector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+      await user.click(selector);
+
+      // assert that row is displayed correctly
+      await waitFor(() => {
+        expect(queryByText("unique-values-property-editor.empty-value")).to.not.be.null;
       });
     });
 

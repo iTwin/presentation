@@ -31,6 +31,11 @@ export class NumericPropertyEditorBase extends PropertyEditorBase {
     return false;
   }
 
+  // istanbul ignore next
+  public override get containerHandlesTab(): boolean {
+    return false;
+  }
+
   public get reactNode(): React.ReactNode {
     return <NumericPropertyEditor />;
   }

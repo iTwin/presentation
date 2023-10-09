@@ -45,12 +45,28 @@ describe("Learning snippets", async () => {
       const elementKeys: InstanceKey[] = [];
       // eslint-disable-next-line deprecation/deprecation
       const imodel = await buildTestIModel(this, async (builder) => {
-        const categoryKey = insertSpatialCategory({ builder, label: "My Category" });
-        const modelKey = insertPhysicalModelWithPartition({ builder, label: "My Model" });
-        elementKeys.push(insertPhysicalElement({ builder, userLabel: "My Assembly Element", modelId: modelKey.id, categoryId: categoryKey.id })),
+        const categoryKey = insertSpatialCategory({ builder, fullClassNameSeparator: ":", label: "My Category" });
+        const modelKey = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", label: "My Model" });
+        elementKeys.push(
+          insertPhysicalElement({ builder, fullClassNameSeparator: ":", userLabel: "My Assembly Element", modelId: modelKey.id, categoryId: categoryKey.id }),
+        ),
           elementKeys.push(
-            insertPhysicalElement({ builder, userLabel: "My Child Element 1", modelId: modelKey.id, categoryId: categoryKey.id, parentId: elementKeys[0].id }),
-            insertPhysicalElement({ builder, userLabel: "My Child Element 2", modelId: modelKey.id, categoryId: categoryKey.id, parentId: elementKeys[0].id }),
+            insertPhysicalElement({
+              builder,
+              fullClassNameSeparator: ":",
+              userLabel: "My Child Element 1",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+              parentId: elementKeys[0].id,
+            }),
+            insertPhysicalElement({
+              builder,
+              fullClassNameSeparator: ":",
+              userLabel: "My Child Element 2",
+              modelId: modelKey.id,
+              categoryId: categoryKey.id,
+              parentId: elementKeys[0].id,
+            }),
           );
       });
 

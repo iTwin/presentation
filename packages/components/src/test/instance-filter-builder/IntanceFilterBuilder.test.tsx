@@ -71,16 +71,14 @@ describe("InstanceFilterBuilder", () => {
     items: [],
   } as PropertyFilterBuilderRuleGroup;
 
-  it("invokes 'onClassSelected' when non selected class is clicked", () => {
+  it("invokes 'onSelectedClassesChanged' when class is selected", async () => {
     const spy = sinon.spy();
-    const { container, getByTestId } = render(
+    const { getByRole, getAllByRole } = render(
       <InstanceFilterBuilder
         classes={classInfos}
         selectedClasses={[]}
         properties={[]}
-        onClassDeselected={() => {}}
-        onClassSelected={spy}
-        onClearClasses={() => {}}
+        onSelectedClassesChanged={spy}
         actions={testActions}
         rootGroup={testRootGroup}
         imodel={testImodel}
@@ -88,25 +86,23 @@ describe("InstanceFilterBuilder", () => {
       />,
     );
 
-    fireEvent.mouseDown(getByTestId("multi-tag-select-dropdownIndicator"));
+    const selector = getAllByRole("combobox")[0];
+    fireEvent.click(selector);
 
-    const option = container.querySelector(".iui-menu-item");
-    expect(option).to.not.be.null;
+    const option = await waitFor(() => getByRole("option", { name: classInfos[0].label }));
+    fireEvent.click(option);
 
-    fireEvent.click(option!);
-    expect(spy).to.be.calledOnceWith(classInfos[0]);
+    expect(spy).to.be.calledOnceWith([classInfos[0].id]);
   });
 
-  it("invokes 'onClassDeselected' when selected class is clicked", () => {
+  it("invokes 'onSelectedClassesChanged' when class is deselected", async () => {
     const spy = sinon.spy();
-    const { container, getByTestId } = render(
+    const { getByRole, getAllByRole } = render(
       <InstanceFilterBuilder
         classes={classInfos}
         selectedClasses={[classInfos[0]]}
         properties={[]}
-        onClassDeselected={spy}
-        onClassSelected={() => {}}
-        onClearClasses={() => {}}
+        onSelectedClassesChanged={spy}
         actions={testActions}
         rootGroup={testRootGroup}
         imodel={testImodel}
@@ -114,58 +110,13 @@ describe("InstanceFilterBuilder", () => {
       />,
     );
 
-    fireEvent.mouseDown(getByTestId("multi-tag-select-dropdownIndicator"));
+    const selector = getAllByRole("combobox")[0];
+    fireEvent.click(selector);
 
-    const option = container.querySelector(".iui-menu-item");
-    expect(option).to.not.be.null;
+    const option = await waitFor(() => getByRole("option", { name: classInfos[0].label }));
+    fireEvent.click(option);
 
-    fireEvent.click(option!);
-    expect(spy).to.be.calledOnceWith(classInfos[0]);
-  });
-
-  it("invokes 'onClassDeselected' when remove tag button is clicked", () => {
-    const spy = sinon.spy();
-    const { container } = render(
-      <InstanceFilterBuilder
-        classes={classInfos}
-        selectedClasses={[classInfos[0]]}
-        properties={[]}
-        onClassDeselected={spy}
-        onClassSelected={() => {}}
-        onClearClasses={() => {}}
-        actions={testActions}
-        rootGroup={testRootGroup}
-        imodel={testImodel}
-        descriptor={testDescriptor}
-      />,
-    );
-
-    const removeTagButton = container.querySelector(".iui-select-tag .iui-button");
-    expect(removeTagButton).to.not.be.null;
-
-    fireEvent.click(removeTagButton!);
-    expect(spy).to.be.calledOnceWith(classInfos[0]);
-  });
-
-  it("invokes 'onClearClasses' when clear indicator is clicked", () => {
-    const spy = sinon.spy();
-    const { getByTestId } = render(
-      <InstanceFilterBuilder
-        classes={classInfos}
-        selectedClasses={[classInfos[0]]}
-        properties={[]}
-        onClassDeselected={() => {}}
-        onClassSelected={() => {}}
-        onClearClasses={spy}
-        actions={testActions}
-        rootGroup={testRootGroup}
-        imodel={testImodel}
-        descriptor={testDescriptor}
-      />,
-    );
-
-    fireEvent.mouseDown(getByTestId("multi-tag-select-clearIndicator"));
-    expect(spy).to.be.calledOnce;
+    expect(spy).to.be.calledOnceWith([]);
   });
 
   describe("UniqueValuesRenderer", () => {
@@ -194,9 +145,7 @@ describe("InstanceFilterBuilder", () => {
           classes={classInfos}
           selectedClasses={[]}
           properties={[property]}
-          onClassDeselected={() => {}}
-          onClassSelected={() => {}}
-          onClearClasses={() => {}}
+          onSelectedClassesChanged={() => {}}
           actions={testActions}
           rootGroup={rootGroup}
           imodel={testImodel}
@@ -225,9 +174,7 @@ describe("InstanceFilterBuilder", () => {
           classes={classInfos}
           selectedClasses={[]}
           properties={[property]}
-          onClassDeselected={() => {}}
-          onClassSelected={() => {}}
-          onClearClasses={() => {}}
+          onSelectedClassesChanged={() => {}}
           actions={testActions}
           rootGroup={rootGroup}
           imodel={testImodel}
@@ -282,9 +229,7 @@ describe("InstanceFilterBuilder", () => {
           classes={classInfos}
           selectedClasses={[]}
           properties={[property]}
-          onClassDeselected={() => {}}
-          onClassSelected={() => {}}
-          onClearClasses={() => {}}
+          onSelectedClassesChanged={() => {}}
           actions={testActions}
           rootGroup={rootGroup}
           imodel={testImodel}
@@ -307,9 +252,7 @@ describe("InstanceFilterBuilder", () => {
             classes={classInfos}
             selectedClasses={[]}
             properties={[property]}
-            onClassDeselected={() => {}}
-            onClassSelected={() => {}}
-            onClearClasses={() => {}}
+            onSelectedClassesChanged={() => {}}
             actions={testActions}
             rootGroup={rootGroup}
             imodel={testImodel}
@@ -428,47 +371,17 @@ describe("usePresentationInstanceFilteringProps", () => {
     expect(result.current.classes).to.have.lengthOf(1).and.to.containSubset([concreteClass1]);
   });
 
-  it("updates selected classes when 'onClassSelected' is called", async () => {
+  it("updates selected classes when 'onSelectedClassesChange' is called", async () => {
     const { result } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), { initialProps });
 
-    result.current.onClassSelected(concreteClass1);
+    result.current.onSelectedClassesChanged([concreteClass1.id]);
     await waitFor(() => expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([concreteClass1]));
-  });
-
-  it("updates selected classes when 'onClassDeselected' is called", async () => {
-    const { result } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), { initialProps });
-
-    result.current.onClassSelected(concreteClass1);
-    await waitFor(() => expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([concreteClass1]));
-
-    result.current.onClassDeselected(concreteClass1);
-    await waitFor(() => expect(result.current.selectedClasses).to.be.empty);
-  });
-
-  it("does not change selected classes when 'onClassDeselected' is called with not selected class", async () => {
-    const { result } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), { initialProps });
-
-    result.current.onClassSelected(concreteClass1);
-    await waitFor(() => expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([concreteClass1]));
-
-    result.current.onClassDeselected(concreteClass2);
-    await waitFor(() => expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([concreteClass1]));
-  });
-
-  it("clears selected classes when 'onClearClasses' is called", async () => {
-    const { result } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), { initialProps });
-
-    result.current.onClassSelected(concreteClass1);
-    await waitFor(() => expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([concreteClass1]));
-
-    result.current.onClearClasses();
-    await waitFor(() => expect(result.current.selectedClasses).to.be.empty);
   });
 
   it("clears selected classes when new descriptor is provided", async () => {
     const { result, rerender } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), { initialProps });
 
-    result.current.onClassSelected(concreteClass1);
+    result.current.onSelectedClassesChanged([concreteClass1.id]);
     await waitFor(() => expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([concreteClass1]));
 
     const newDescriptor = createTestContentDescriptor({
@@ -485,7 +398,7 @@ describe("usePresentationInstanceFilteringProps", () => {
     it("returns properties only of selected class", async () => {
       const { result } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), { initialProps });
 
-      result.current.onClassSelected(concreteClass2);
+      result.current.onSelectedClassesChanged([concreteClass2.id]);
       await waitFor(() => expect(result.current.properties).to.have.lengthOf(2));
     });
 
@@ -501,7 +414,7 @@ describe("usePresentationInstanceFilteringProps", () => {
 
       await waitFor(() => expect(result.current.properties).to.have.lengthOf(2));
 
-      result.current.onClassSelected(concreteClass1);
+      result.current.onSelectedClassesChanged([concreteClass1.id]);
       await waitFor(() => expect(result.current.properties).to.have.lengthOf(2));
     });
 
@@ -524,7 +437,7 @@ describe("usePresentationInstanceFilteringProps", () => {
     it("does not change selected classes when selected property class is already selected", async () => {
       const { result } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), { initialProps });
 
-      result.current.onClassSelected(concreteClass2);
+      result.current.onSelectedClassesChanged([concreteClass2.id]);
       await waitFor(() => expect(result.current.selectedClasses).to.have.lengthOf(1).and.containSubset([concreteClass2]));
 
       const property = result.current.properties.find((prop) => prop.displayLabel === concretePropertiesField2.label) as PropertyDescription;

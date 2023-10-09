@@ -4,6 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 .property-item-line {
+  height: calc(var(--iui-size-xl) + 1px);
   display: grid;
   grid-template-columns: minmax(50%, auto) minmax(auto, 50%);
   align-items: center;

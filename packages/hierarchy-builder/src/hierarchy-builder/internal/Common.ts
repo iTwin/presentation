@@ -5,28 +5,32 @@
 
 import { merge, Observable } from "rxjs";
 import { assert } from "@itwin/core-bentley";
-import { QueryBinder } from "@itwin/core-common";
-import { ECClass, Schema, SchemaContext, SchemaKey } from "@itwin/ecschema-metadata";
 import { HierarchyNode, HierarchyNodeHandlingParams, HierarchyNodeKey } from "../HierarchyNode";
-import { ECSqlBinding } from "../queries/ECSql";
+import { ECClass, ECSchema, IMetadataProvider, parseFullClassName } from "../Metadata";
 
 /** @internal */
-export async function getClass(schemas: SchemaContext, fullClassName: string) {
-  const [schemaName, className] = fullClassName.split(/[\.:]/);
-  let schema: Schema | undefined;
+export async function getClass(metadata: IMetadataProvider, fullClassName: string): Promise<ECClass> {
+  const { schemaName, className } = parseFullClassName(fullClassName);
+  let schema: ECSchema | undefined;
   try {
-    schema = await schemas.getSchema(new SchemaKey(schemaName));
-  } catch {}
+    schema = await metadata.getSchema(schemaName);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error(e);
+  }
   if (!schema) {
-    throw new Error(`Invalid schema: ${schemaName}`);
+    throw new Error(`Invalid schema "${schemaName}"`);
   }
 
   let nodeClass: ECClass | undefined;
   try {
-    nodeClass = await schema.getItem<ECClass>(className);
-  } catch {}
+    nodeClass = await schema.getClass(className);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error(e);
+  }
   if (!nodeClass) {
-    throw new Error(`Invalid class: ${nodeClass}`);
+    throw new Error(`Invalid class "${className}" in schema "${schemaName}"`);
   }
 
   return nodeClass;
@@ -109,43 +113,6 @@ export function mergeDirectNodeObservables(a: HierarchyNode, b: HierarchyNode, m
   }
   const merged = merge(cachedA, cachedB);
   cache.set(JSON.stringify(m.key), merged);
-}
-
-/** @internal */
-export function bind(bindings: ECSqlBinding[]): QueryBinder {
-  const binder = new QueryBinder();
-  bindings.forEach((b, i) => {
-    switch (b.type) {
-      case "boolean":
-        binder.bindBoolean(i + 1, b.value);
-        break;
-      case "double":
-        binder.bindDouble(i + 1, b.value);
-        break;
-      case "id":
-        binder.bindId(i + 1, b.value);
-        break;
-      case "idset":
-        binder.bindIdSet(i + 1, b.value);
-        break;
-      case "int":
-        binder.bindInt(i + 1, b.value);
-        break;
-      case "long":
-        binder.bindLong(i + 1, b.value);
-        break;
-      case "point2d":
-        binder.bindPoint2d(i + 1, b.value);
-        break;
-      case "point3d":
-        binder.bindPoint3d(i + 1, b.value);
-        break;
-      case "string":
-        binder.bindString(i + 1, b.value);
-        break;
-    }
-  });
-  return binder;
 }
 
 /** @internal */

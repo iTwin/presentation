@@ -23,7 +23,9 @@ import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { DiagnosticsProps } from "@itwin/presentation-components";
-import { HierarchyNode, HierarchyProvider, ModelsTreeQueryBuilder } from "@itwin/presentation-hierarchy-builder";
+import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
+import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
+import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { DiagnosticsSelector } from "../diagnostics-selector/DiagnosticsSelector";
 import { Tree } from "./Tree";
 
@@ -101,10 +103,11 @@ export function ExperimentalModelsTree({ imodel }: { imodel: IModelConnection })
   const dataProvider = useMemo((): TreeDataProvider => {
     const schemas = new SchemaContext();
     schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
+    const metadataProvider = createMetadataProvider(schemas);
     const modelsTreeHierarchyProvider = new HierarchyProvider({
-      schemas,
-      queryBuilder: new ModelsTreeQueryBuilder({ schemas }),
-      queryExecutor: imodel,
+      metadataProvider,
+      hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider }),
+      queryExecutor: createECSqlQueryExecutor(imodel),
     });
     return async (node?: TreeNodeItem): Promise<TreeNodeItem[]> => {
       const parent: HierarchyNode | undefined = node ? (node as any).__internal : undefined;

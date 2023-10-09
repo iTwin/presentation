@@ -12,96 +12,96 @@ import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { InstanceKey, NodeKey, Ruleset } from "@itwin/presentation-common";
 import { isPresentationTreeNodeItem, PresentationTreeDataProvider, PresentationTreeNodeItem } from "@itwin/presentation-components";
-import { HierarchyNode, HierarchyProvider, ModelsTreeQueryBuilder } from "@itwin/presentation-hierarchy-builder";
-import { initialize, terminate } from "../IntegrationTests";
+import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
+import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
+import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
+import { initialize, terminate } from "../../IntegrationTests";
 
 describe("Stateless hierarchy builder", () => {
-  describe("Models tree", () => {
-    let imodel!: IModelConnection;
+  let imodel!: IModelConnection;
 
-    before(async function () {
-      await initialize();
+  before(async function () {
+    await initialize();
 
-      const imodelPath = process.env.TEST_IMODEL_PATH;
-      if (!imodelPath) {
-        this.skip();
+    const imodelPath = process.env.TEST_IMODEL_PATH;
+    if (!imodelPath) {
+      this.skip();
+    }
+
+    imodel = await SnapshotConnection.openFile(imodelPath);
+  });
+
+  after(async () => {
+    if (imodel) {
+      await imodel.close();
+    }
+    await terminate();
+  });
+
+  it("produces the same Models Tree hierarchy as native impl", async function () {
+    const nativeProvider = createNativeProvider(imodel);
+    const statelessProvider = createStatelessProvider(imodel);
+    let nodesCreated = 0;
+
+    function compareNodes({ nativeNode, statelessNode, ...props }: CompareNodesProps) {
+      function createFailureMsg(what: string, compare?: { expected: any; actual: any }) {
+        const msg = `Nodes don't match at ${createNativeAncestorsPath(props.nativeAncestors)}. ${what} are different.`;
+        return compare ? `${msg} Expected: ${JSON.stringify(compare.expected)}. Actual: ${JSON.stringify(compare.actual)}` : msg;
       }
-
-      imodel = await SnapshotConnection.openFile(imodelPath);
-    });
-
-    after(async () => {
-      if (imodel) {
-        await imodel.close();
-      }
-      await terminate();
-    });
-
-    it("produces the same hierarchy as native impl", async function () {
-      const nativeProvider = createNativeProvider(imodel);
-      const statelessProvider = createStatelessProvider(imodel);
-      let nodesCreated = 0;
-
-      function compareNodes({ nativeNode, statelessNode, ...props }: CompareNodesProps) {
-        function createFailureMsg(what: string, compare?: { expected: any; actual: any }) {
-          const msg = `Nodes don't match at ${createNativeAncestorsPath(props.nativeAncestors)}. ${what} are different.`;
-          return compare ? `${msg} Expected: ${JSON.stringify(compare.expected)}. Actual: ${JSON.stringify(compare.actual)}` : msg;
-        }
-        expect((nativeNode.label.value as PrimitiveValue).displayValue).to.eq(statelessNode.label, createFailureMsg("Labels"));
-        expect(!!nativeNode.hasChildren).to.eq(!!statelessNode.children, createFailureMsg("Children flag"));
-        if (NodeKey.isClassGroupingNodeKey(nativeNode.key)) {
-          expect(HierarchyNode.isStandard(statelessNode) && statelessNode.key.type === "class-grouping", createFailureMsg("Key types"));
-          expect(nativeNode.key.className).to.eq((statelessNode.key as any).class.name, createFailureMsg("Key class names"));
-        } else if (NodeKey.isInstancesNodeKey(nativeNode.key)) {
-          expect(HierarchyNode.isStandard(statelessNode) && statelessNode.key.type === "instances", createFailureMsg("Key types"));
-          expect([...nativeNode.key.instanceKeys].sort(compareInstanceKeys)).to.deep.eq(
-            [...(statelessNode.key as any).instanceKeys].sort(compareInstanceKeys),
-            "Instance keys",
-          );
-        }
-      }
-      async function compareHierarchies(props: CompareHierarchiesProps) {
-        let nativeChildren: DelayLoadedTreeNodeItem[];
-        try {
-          nativeChildren = await nativeProvider.getNodes(props.nativeParent);
-        } catch (e) {
-          // eslint-disable-next-line no-console
-          console.error(`Error creating children using native provider: ${e}. At: ${createNativeAncestorsPath(props.nativeAncestors)}`);
-          throw e;
-        }
-
-        let statelessChildren: HierarchyNode[];
-        try {
-          statelessChildren = await statelessProvider.getNodes(props.statelessParent);
-        } catch (e) {
-          // eslint-disable-next-line no-console
-          console.error(`Error creating children using stateless provider: ${e}. At: ${createNativeAncestorsPath(props.nativeAncestors)}`);
-          throw e;
-        }
-
-        expect(nativeChildren.length).to.eq(statelessChildren.length, `Child nodes count don't match at ${createNativeAncestorsPath(props.nativeAncestors)}`);
-        nodesCreated += nativeChildren.length;
-
-        await Promise.all(
-          nativeChildren.map(async (nc, i) => {
-            assert(isPresentationTreeNodeItem(nc));
-            const sc = statelessChildren[i];
-            compareNodes({ nativeNode: nc, nativeAncestors: props.nativeAncestors, statelessNode: sc, statelessAncestors: props.statelessAncestors });
-            if (nc.hasChildren) {
-              await compareHierarchies({
-                nativeParent: nc,
-                nativeAncestors: [...props.nativeAncestors, nc],
-                statelessParent: sc,
-                statelessAncestors: [...props.statelessAncestors, sc],
-              });
-            }
-          }),
+      expect((nativeNode.label.value as PrimitiveValue).displayValue).to.eq(statelessNode.label, createFailureMsg("Labels"));
+      expect(!!nativeNode.hasChildren).to.eq(!!statelessNode.children, createFailureMsg("Children flag"));
+      if (NodeKey.isClassGroupingNodeKey(nativeNode.key)) {
+        expect(HierarchyNode.isStandard(statelessNode) && statelessNode.key.type === "class-grouping", createFailureMsg("Key types"));
+        expect(nativeNode.key.className).to.eq((statelessNode.key as any).class.name, createFailureMsg("Key class names"));
+      } else if (NodeKey.isInstancesNodeKey(nativeNode.key)) {
+        expect(HierarchyNode.isStandard(statelessNode) && statelessNode.key.type === "instances", createFailureMsg("Key types"));
+        expect([...nativeNode.key.instanceKeys].sort(compareInstanceKeys)).to.deep.eq(
+          [...(statelessNode.key as any).instanceKeys].sort(compareInstanceKeys),
+          "Instance keys",
         );
       }
-      await compareHierarchies({ nativeParent: undefined, nativeAncestors: [], statelessParent: undefined, statelessAncestors: [] });
-      // eslint-disable-next-line no-console
-      console.log(`Total nodes created: ${nodesCreated}`);
-    });
+    }
+    async function compareHierarchies(props: CompareHierarchiesProps) {
+      let nativeChildren: DelayLoadedTreeNodeItem[];
+      try {
+        nativeChildren = await nativeProvider.getNodes(props.nativeParent);
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error(`Error creating children using native provider: ${(e as Error).message}. At: ${createNativeAncestorsPath(props.nativeAncestors)}`);
+        throw e;
+      }
+
+      let statelessChildren: HierarchyNode[];
+      try {
+        statelessChildren = await statelessProvider.getNodes(props.statelessParent);
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error(`Error creating children using stateless provider: ${(e as Error).message}. At: ${createNativeAncestorsPath(props.nativeAncestors)}`);
+        throw e;
+      }
+
+      expect(nativeChildren.length).to.eq(statelessChildren.length, `Child nodes count don't match at ${createNativeAncestorsPath(props.nativeAncestors)}`);
+      nodesCreated += nativeChildren.length;
+
+      await Promise.all(
+        nativeChildren.map(async (nc, i) => {
+          assert(isPresentationTreeNodeItem(nc));
+          const sc = statelessChildren[i];
+          compareNodes({ nativeNode: nc, nativeAncestors: props.nativeAncestors, statelessNode: sc, statelessAncestors: props.statelessAncestors });
+          if (nc.hasChildren) {
+            await compareHierarchies({
+              nativeParent: nc,
+              nativeAncestors: [...props.nativeAncestors, nc],
+              statelessParent: sc,
+              statelessAncestors: [...props.statelessAncestors, sc],
+            });
+          }
+        }),
+      );
+    }
+    await compareHierarchies({ nativeParent: undefined, nativeAncestors: [], statelessParent: undefined, statelessAncestors: [] });
+    // eslint-disable-next-line no-console
+    console.log(`Total nodes created: ${nodesCreated}`);
   });
 });
 
@@ -134,10 +134,11 @@ function createNativeProvider(imodel: IModelConnection) {
 function createStatelessProvider(imodel: IModelConnection) {
   const schemas = new SchemaContext();
   schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
+  const metadataProvider = createMetadataProvider(schemas);
   return new HierarchyProvider({
-    schemas,
-    queryBuilder: new ModelsTreeQueryBuilder({ schemas }),
-    queryExecutor: imodel,
+    metadataProvider,
+    hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider }),
+    queryExecutor: createECSqlQueryExecutor(imodel),
   });
 }
 

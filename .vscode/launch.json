@@ -148,7 +148,9 @@
         "--no-timeouts"
       ],
       "outFiles": [
-        "${workspaceFolder}/packages/{components, testing}/lib/**/*.js",
+        "${workspaceFolder}/packages/components/lib/**/*.js",
+        "${workspaceFolder}/packages/hierarchy-builder/lib/**/*.js",
+        "${workspaceFolder}/packages/testing/lib/**/*.js",
         "${workspaceFolder}/packages/full-stack-tests/lib/**/*.js"
       ],
       "env": {

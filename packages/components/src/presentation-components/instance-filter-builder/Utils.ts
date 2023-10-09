@@ -50,6 +50,9 @@ export function getInstanceFilterFieldName(property: PropertyDescription) {
   return fieldName;
 }
 
+/** @internal */
+export const DEFAULT_ROOT_CATEGORY_NAME = "/selected-item/";
+
 function getPropertySourceClassInfo(field: PropertiesField | NestedContentField): ClassInfo {
   if (field.parent) {
     return getPropertySourceClassInfo(field.parent);
@@ -118,13 +121,16 @@ interface CategoryInfo {
 }
 
 function getCategoryInfo(category: CategoryDescription, categoryInfo: CategoryInfo): CategoryInfo {
-  if (!category.parent) {
+  if (category.name === DEFAULT_ROOT_CATEGORY_NAME) {
     return categoryInfo;
   }
-  return getCategoryInfo(category.parent, {
+
+  const newInfo = {
     name: categoryInfo.name ? `${category.name}/${categoryInfo.name}` : `${category.name}`,
     label: categoryInfo.label ? `${category.label} | ${categoryInfo.label}` : `${category.label}`,
-  });
+  };
+
+  return category.parent ? getCategoryInfo(category.parent, newInfo) : newInfo;
 }
 
 function getParentNames(field: Field, name: string): string {

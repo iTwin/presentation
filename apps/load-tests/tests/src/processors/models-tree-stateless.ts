@@ -9,7 +9,9 @@ import { EventEmitter, Next, ScenarioContext } from "artillery";
 import { Guid, StopWatch } from "@itwin/core-bentley";
 import { DbQueryRequest, DbQueryResponse, DbRequestExecutor, ECSqlReader } from "@itwin/core-common";
 import { ISchemaLocater, Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType, SchemaProps } from "@itwin/ecschema-metadata";
-import { HierarchyNode, HierarchyProvider, ModelsTreeQueryBuilder } from "@itwin/presentation-hierarchy-builder";
+import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
+import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
+import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { doRequest, getCurrentIModelName, getCurrentIModelPath, loadNodes, nodeRequestsTracker } from "./common";
 
 console.log(`Frontend PID: ${process.pid}`);
@@ -25,7 +27,7 @@ export function initScenario(context: ScenarioContext, _events: EventEmitter, ne
 }
 
 export function terminateScenario(context: ScenarioContext, _ee: EventEmitter, next: Next) {
-  console.log(`Total hierarchy levels that exceeded nodes limit: ${context.vars.tooLargeHierarchyLevelsCount}`);
+  console.log(`Total hierarchy levels that exceeded nodes limit: ${context.vars.tooLargeHierarchyLevelsCount as number}`);
   context.vars.tooLargeHierarchyLevelsCount = 0;
   clearInterval(context.vars.pendingNodeRequestsLogger as NodeJS.Timeout);
   nodeRequestsTracker.logCount(context, true);
@@ -122,16 +124,17 @@ function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter
 
   const schemas = new SchemaContext();
   schemas.addLocater(schedulingSchemaLocater);
+  const metadataProvider = createMetadataProvider(schemas);
 
   const provider = new HierarchyProvider({
-    schemas,
-    queryBuilder: new ModelsTreeQueryBuilder({ schemas }),
-    queryExecutor: {
+    metadataProvider,
+    hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider }),
+    queryExecutor: createECSqlQueryExecutor({
       createQueryReader(ecsql, bindings, config) {
         // eslint-disable-next-line @itwin/no-internal
         return new ECSqlReader(schedulingQueryExecutor, ecsql, bindings, config);
       },
-    },
+    }),
   });
 
   return async (parent: HierarchyNode | undefined) => {

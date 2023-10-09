@@ -1,0 +1,66 @@
+{
+  "name": "@itwin/presentation-core-interop",
+  "version": "0.0.0",
+  "description": "A package that has peer dependencies on both `@itwin/presentation-hierarchy-builder` and core packages and provides an interop layer between them.",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iTwin/presentation.git",
+    "directory": "packages/core-interop"
+  },
+  "keywords": [
+    "Bentley",
+    "Presentation",
+    "iTwin.js",
+    "Hierarchy",
+    "ECSQL"
+  ],
+  "author": {
+    "name": "Bentley Systems, Inc.",
+    "url": "http://www.bentley.com"
+  },
+  "main": "lib/cjs/core-interop.js",
+  "module": "lib/esm/core-interop.js",
+  "types": "lib/cjs/core-interop.d.ts",
+  "scripts": {
+    "build": "npm run -s build:cjs && npm run -s build:esm",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:watch": "npm run -s build:cjs -- -w",
+    "clean": "rimraf lib",
+    "cover": "nyc npm -s test",
+    "lint": "eslint ./src/**/*.ts",
+    "test": "mocha --config ./.mocharc.json \"./lib/cjs/test/**/*.test.js\"",
+    "extract-api": "betools extract-api --entry=core-interop --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api",
+    "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-core-interop.api.md"
+  },
+  "peerDependencies": {
+    "@itwin/core-bentley": "^4.0.0",
+    "@itwin/core-geometry": "^4.0.0",
+    "@itwin/core-common": "^4.0.0",
+    "@itwin/ecschema-metadata": "^4.0.0",
+    "@itwin/presentation-hierarchy-builder": "workspace:^"
+  },
+  "devDependencies": {
+    "@itwin/build-tools": "^4.1.1",
+    "@itwin/core-bentley": "^4.1.1",
+    "@itwin/core-common": "^4.1.1",
+    "@itwin/core-geometry": "^4.1.1",
+    "@itwin/ecschema-metadata": "^4.1.1",
+    "@itwin/eslint-plugin": "4.0.0-dev.48",
+    "@types/chai": "4.3.1",
+    "@types/chai-as-promised": "^7.1.5",
+    "@types/mocha": "^8.2.3",
+    "@itwin/presentation-hierarchy-builder": "workspace:^",
+    "@types/sinon": "^10.0.16",
+    "@types/sinon-chai": "^3.2.9",
+    "cpx2": "^3.0.2",
+    "eslint": "^8.47.0",
+    "mocha": "^10.2.0",
+    "nyc": "^15.1.0",
+    "sinon": "^15.2.0",
+    "sinon-chai": "^3.7.0",
+    "source-map-support": "^0.5.21",
+    "typescript": "~5.0.4"
+  }
+}
