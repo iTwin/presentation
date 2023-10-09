@@ -2,4 +2,4 @@
 "@itwin/presentation-components": minor
 ---
 
-Show results count while building instance filter.
+`PresentationInstanceFilterDialog`: Show results count while building instance filter.
