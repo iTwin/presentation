@@ -4,7 +4,7 @@
 
 ### Major Changes
 
-- [#299](https://github.com/iTwin/presentation/pull/299): Bumped `AppUI` and `itwinjs-core` peer dependencies.
+- [#299](https://github.com/iTwin/presentation/pull/299): Bumped `AppUI` peer dependencies to `4.6.0`. Bumped `itwinjs-core` peer dependencies to `^4.1.0`.
 
 ### Patch Changes
 
