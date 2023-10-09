@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActionMeta, MultiValue } from "react-select";
 import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ContentSpecificationTypes, Descriptor, DisplayValue, Field, KeySet, Ruleset, RuleTypes, Value } from "@itwin/presentation-common";
+import { ContentSpecificationTypes, Descriptor, DisplayValue, Field, Keys, KeySet, Ruleset, RuleTypes, Value } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { deserializeDisplayValueGroupArray, findField, serializeDisplayValueGroupArray, translate } from "../common/Utils";
 import { getInstanceFilterFieldName } from "../instance-filter-builder/Utils";
@@ -28,6 +28,8 @@ export interface UniquePropertyValuesSelectorProps {
   imodel: IModelConnection;
   /** Current descriptor */
   descriptor: Descriptor;
+  /** Keys that are currently selected for filtering */
+  descriptorInputKeys?: Keys;
 }
 
 interface UniqueValue {
@@ -37,7 +39,7 @@ interface UniqueValue {
 
 /** @internal */
 export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelectorProps) {
-  const { imodel, descriptor, property, onChange, value } = props;
+  const { imodel, descriptor, property, onChange, value, descriptorInputKeys } = props;
   const [field, setField] = useState<Field | undefined>(() => findField(descriptor, getInstanceFilterFieldName(property)));
   const selectedValues = useMemo(() => getUniqueValueFromProperty(value), [value]);
 
@@ -78,8 +80,8 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
 
   const isOptionSelected = (option: UniqueValue): boolean => selectedValues.map((selectedValue) => selectedValue.displayValue).includes(option.displayValue);
 
-  const ruleset = useUniquePropertyValuesRuleset(field);
-  const loadTargets = useUniquePropertyValuesLoader({ imodel, ruleset, field });
+  const ruleset = useUniquePropertyValuesRuleset(descriptor.ruleset, field);
+  const loadTargets = useUniquePropertyValuesLoader({ imodel, ruleset, field, descriptorInputKeys });
 
   return (
     <AsyncSelect
@@ -93,10 +95,25 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
       isSearchable={false}
       closeMenuOnSelect={false}
       tabSelectsValue={false}
-      getOptionLabel={(option) => (option.displayValue === "" ? translate("unique-values-property-editor.empty-value") : option.displayValue)}
+      getOptionLabel={(option) => formatOptionLabel(option.displayValue, property.typename)}
       getOptionValue={(option) => option.displayValue}
     />
   );
+}
+
+function formatOptionLabel(displayValue: string, type: string): string {
+  if (displayValue === "") {
+    return translate("unique-values-property-editor.empty-value");
+  }
+
+  switch (type) {
+    case "dateTime":
+      return new Date(displayValue).toLocaleString();
+    case "shortDate":
+      return new Date(displayValue).toLocaleDateString();
+    default:
+      return displayValue;
+  }
 }
 
 function getUniqueValueFromProperty(property: PropertyValue | undefined): UniqueValue[] {
@@ -115,9 +132,14 @@ function getUniqueValueFromProperty(property: PropertyValue | undefined): Unique
   return [];
 }
 
-function useUniquePropertyValuesRuleset(field?: Field) {
+function useUniquePropertyValuesRuleset(descriptorRuleset?: Ruleset, field?: Field) {
   const [ruleset, setRuleset] = useState<Ruleset>();
   useEffect(() => {
+    if (descriptorRuleset) {
+      setRuleset(descriptorRuleset);
+      return;
+    }
+
     const baseClassInfo = getBaseClassInfo(field);
     if (baseClassInfo === undefined) {
       setRuleset(undefined);
@@ -138,7 +160,7 @@ function useUniquePropertyValuesRuleset(field?: Field) {
         },
       ],
     });
-  }, [field]);
+  }, [field, descriptorRuleset]);
 
   return ruleset;
 }
@@ -161,9 +183,10 @@ interface UseUniquePropertyValuesLoaderProps {
   imodel: IModelConnection;
   ruleset?: Ruleset;
   field?: Field;
+  descriptorInputKeys?: Keys;
 }
 
-function useUniquePropertyValuesLoader({ imodel, ruleset, field }: UseUniquePropertyValuesLoaderProps) {
+function useUniquePropertyValuesLoader({ imodel, ruleset, field, descriptorInputKeys }: UseUniquePropertyValuesLoaderProps) {
   const loadTargets = useCallback(
     async (loadedOptionsCount: number) => {
       if (!ruleset || !field) {
@@ -176,7 +199,7 @@ function useUniquePropertyValuesLoader({ imodel, ruleset, field }: UseUniqueProp
         fieldDescriptor: field.getFieldDescriptor(),
         rulesetOrId: ruleset,
         paging: { start: loadedOptionsCount, size: UNIQUE_PROPERTY_VALUES_BATCH_SIZE },
-        keys: new KeySet(),
+        keys: new KeySet(descriptorInputKeys),
       });
 
       const filteredOptions: UniqueValue[] = [];
@@ -195,7 +218,7 @@ function useUniquePropertyValuesLoader({ imodel, ruleset, field }: UseUniqueProp
         hasMore: content.items.length === UNIQUE_PROPERTY_VALUES_BATCH_SIZE,
       };
     },
-    [imodel, ruleset, field],
+    [imodel, ruleset, field, descriptorInputKeys],
   );
 
   return loadTargets;

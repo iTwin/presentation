@@ -6,7 +6,7 @@
  * @module Tree
  */
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AbstractTreeNodeLoaderWithProvider, TreeNodeRendererProps, TreeRenderer, TreeRendererProps, useDebouncedAsyncValue } from "@itwin/components-react";
 import { NodeKey, PresentationError, PresentationStatus } from "@itwin/presentation-common";
@@ -89,6 +89,7 @@ interface TreeNodeFilterBuilderDialogProps {
 function TreeNodeFilterBuilderDialog(props: TreeNodeFilterBuilderDialogProps) {
   const { onClose, onApply, filterNode, dataProvider } = props;
   const filteringInfo = filterNode.filtering;
+  const descriptorInputKeys = useMemo(() => [filterNode.key], [filterNode.key]);
   const imodel = dataProvider.imodel;
 
   return (
@@ -99,6 +100,7 @@ function TreeNodeFilterBuilderDialog(props: TreeNodeFilterBuilderDialogProps) {
       imodel={imodel}
       descriptor={filteringInfo.descriptor}
       initialFilter={filteringInfo.active}
+      descriptorInputKeys={descriptorInputKeys}
       filterResultsCountRenderer={(filter) => <MatchingInstancesCount dataProvider={dataProvider} filter={filter} parentKey={filterNode.key} />}
     />
   );
