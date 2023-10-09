@@ -496,7 +496,7 @@ describe("UniquePropertyValuesSelector", () => {
 
       // assert that row is displayed correctly
       await waitFor(() => {
-        expect(queryByText(translate("unique-values-property-editor.empty-value"))).to.not.be.null;
+        expect(queryByText("unique-values-property-editor.empty-value")).to.not.be.null;
       });
     });
 
