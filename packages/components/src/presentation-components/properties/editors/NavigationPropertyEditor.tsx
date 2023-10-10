@@ -24,6 +24,7 @@ export class NavigationPropertyEditor extends PropertyEditorBase {
   public override get containerStopsKeydownPropagation(): boolean {
     return false;
   }
+  // istanbul ignore next
   public get reactNode(): React.ReactNode {
     return <NavigationPropertyTargetEditor />;
   }

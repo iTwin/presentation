@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { PropertyDescription, PropertyValueFormat } from "@itwin/appui-abstract";
+import sinon from "sinon";
+import { PropertyDescription, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import {
   PropertyFilter,
   PropertyFilterRule,
@@ -12,13 +13,16 @@ import {
   PropertyFilterRuleGroupOperator,
   PropertyFilterRuleOperator,
 } from "@itwin/components-react";
+import { EmptyLocalization } from "@itwin/core-common";
 import { Field } from "@itwin/presentation-common";
+import { Presentation } from "@itwin/presentation-frontend";
 import { PresentationInstanceFilter } from "../../presentation-components/instance-filter-builder/Types";
 import {
   convertPresentationFilterToPropertyFilter,
   createInstanceFilterPropertyInfos,
   createPresentationInstanceFilter,
   DEFAULT_ROOT_CATEGORY_NAME,
+  filterRuleValidator,
   INSTANCE_FILTER_FIELD_SEPARATOR,
 } from "../../presentation-components/instance-filter-builder/Utils";
 import { createTestECClassInfo } from "../_helpers/Common";
@@ -353,5 +357,91 @@ describe("convertPresentationInstanceFilterToInstanceFilter", () => {
 
     const result = convertPresentationFilterToPropertyFilter(descriptor, presentationFilter);
     expect(result).to.be.undefined;
+  });
+});
+
+describe("filterRuleValidator", () => {
+  const numericProperty: PropertyDescription = {
+    displayLabel: "Numeric Prop",
+    name: "numeric-prop",
+    typename: StandardTypeNames.Double,
+  };
+  const quantityProperty: PropertyDescription = {
+    displayLabel: "Quantity Prop",
+    name: "quantity-prop",
+    typename: StandardTypeNames.Double,
+    quantityType: "TestKOQ",
+  };
+
+  before(() => {
+    sinon.stub(Presentation, "localization").get(() => new EmptyLocalization());
+  });
+
+  after(() => {
+    sinon.restore();
+  });
+
+  it("returns error message for invalid numeric rule", () => {
+    expect(
+      filterRuleValidator({
+        id: "test-id",
+        groupId: "test-group-id",
+        property: numericProperty,
+        operator: PropertyFilterRuleOperator.IsEqual,
+        value: {
+          valueFormat: PropertyValueFormat.Primitive,
+          value: undefined,
+          displayValue: "Invalid",
+        },
+      }),
+    ).to.be.eq("instance-filter-builder.error-messages.not-a-number");
+  });
+
+  it("returns error message for invalid quantity rule", () => {
+    expect(
+      filterRuleValidator({
+        id: "test-id",
+        groupId: "test-group-id",
+        property: quantityProperty,
+        operator: PropertyFilterRuleOperator.IsEqual,
+        value: {
+          valueFormat: PropertyValueFormat.Primitive,
+          value: undefined,
+          displayValue: "Invalid",
+        },
+      }),
+    ).to.be.eq("instance-filter-builder.error-messages.invalid");
+  });
+
+  it("does not return error message for valid numeric rule", () => {
+    expect(
+      filterRuleValidator({
+        id: "test-id",
+        groupId: "test-group-id",
+        property: numericProperty,
+        operator: PropertyFilterRuleOperator.IsEqual,
+        value: {
+          valueFormat: PropertyValueFormat.Primitive,
+          value: 10,
+          displayValue: "10",
+        },
+      }),
+    ).to.be.undefined;
+  });
+
+  it("does not return error message for valid quantity rule", () => {
+    expect(
+      filterRuleValidator({
+        id: "test-id",
+        groupId: "test-group-id",
+        property: quantityProperty,
+        operator: PropertyFilterRuleOperator.IsEqual,
+        value: {
+          valueFormat: PropertyValueFormat.Primitive,
+          value: 10,
+          displayValue: "10 unit",
+        },
+      }),
+    ).to.be.undefined;
   });
 });

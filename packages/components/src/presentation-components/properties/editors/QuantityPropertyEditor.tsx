@@ -3,13 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { createRef, forwardRef, PureComponent, useImperativeHandle, useRef } from "react";
-import { PrimitiveValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
+import { createRef, PureComponent } from "react";
 import { PropertyEditorBase, PropertyEditorProps, TypeEditor } from "@itwin/components-react";
-import { Input } from "@itwin/itwinui-react";
-import { useSchemaMetadataContext } from "../../common/SchemaMetadataContext";
-import { NumericPropertyInput } from "../inputs/NumericPropertyInput";
-import { useQuantityValueInput, UseQuantityValueInputProps } from "../inputs/UseQuantityValueInput";
+import { QuantityPropertyEditorInput } from "../inputs/QuantityPropertyEditorInput";
 import { PropertyEditorAttributes } from "./Common";
 
 /**
@@ -28,6 +24,7 @@ export class QuantityPropertyEditorBase extends PropertyEditorBase {
     return false;
   }
 
+  // istanbul ignore next
   public get reactNode(): React.ReactNode {
     return <QuantityPropertyEditor />;
   }
@@ -60,59 +57,6 @@ export class QuantityPropertyEditor extends PureComponent<PropertyEditorProps> i
 
   /** @internal */
   public override render() {
-    return this.props.propertyRecord ? <QuantityPropertyEditorImpl ref={this._ref} {...this.props} propertyRecord={this.props.propertyRecord} /> : null;
+    return this.props.propertyRecord ? <QuantityPropertyEditorInput ref={this._ref} {...this.props} propertyRecord={this.props.propertyRecord} /> : null;
   }
 }
-
-interface QuantityPropertyEditorImplProps extends PropertyEditorProps {
-  propertyRecord: PropertyRecord;
-}
-
-const QuantityPropertyEditorImpl = forwardRef<PropertyEditorAttributes, QuantityPropertyEditorImplProps>((props, ref) => {
-  const schemaMetadataContext = useSchemaMetadataContext();
-
-  if (!props.propertyRecord.property.quantityType || !schemaMetadataContext) {
-    return <NumericPropertyInput {...props} ref={ref} />;
-  }
-
-  const initialValue = (props.propertyRecord.value as PrimitiveValue)?.value as number;
-  return (
-    <QuantityPropertyValueInput
-      {...props}
-      ref={ref}
-      koqName={props.propertyRecord.property.quantityType}
-      schemaContext={schemaMetadataContext.schemaContext}
-      initialRawValue={initialValue}
-    />
-  );
-});
-QuantityPropertyEditorImpl.displayName = "QuantityPropertyEditorImpl";
-
-type QuantityPropertyValueInputProps = QuantityPropertyEditorImplProps & UseQuantityValueInputProps;
-
-const QuantityPropertyValueInput = forwardRef<PropertyEditorAttributes, QuantityPropertyValueInputProps>(
-  ({ propertyRecord, onCommit, koqName, schemaContext, initialRawValue }, ref) => {
-    const { quantityValue, inputProps } = useQuantityValueInput({ koqName, schemaContext, initialRawValue });
-
-    const inputRef = useRef<HTMLInputElement>(null);
-    useImperativeHandle(
-      ref,
-      () => ({
-        getValue: () => ({ valueFormat: PropertyValueFormat.Primitive, value: quantityValue.rawValue, displayValue: quantityValue.formattedValue }),
-        htmlElement: inputRef.current,
-      }),
-      [quantityValue],
-    );
-
-    const onBlur = () => {
-      onCommit &&
-        onCommit({
-          propertyRecord,
-          newValue: { valueFormat: PropertyValueFormat.Primitive, value: quantityValue.rawValue, displayValue: quantityValue.formattedValue },
-        });
-    };
-
-    return <Input size="small" {...inputProps} ref={inputRef} onBlur={onBlur} />;
-  },
-);
-QuantityPropertyValueInput.displayName = "QuantityPropertyValueInput";

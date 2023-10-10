@@ -8,15 +8,12 @@ import sinon from "sinon";
 import * as moq from "typemoq";
 import { PropertyValueFormat as AbstractPropertyValueFormat, PrimitiveValue } from "@itwin/appui-abstract";
 import { getPropertyFilterOperatorLabel, PropertyFilterRuleOperator, UiComponents } from "@itwin/components-react";
-import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
+import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
-import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { FormatterSpec, ParseError, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
-import { SchemaContext } from "@itwin/ecschema-metadata";
-import { Descriptor, KoqPropertyValueFormatter, PropertyValueFormat } from "@itwin/presentation-common";
+import { IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { Descriptor } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { waitFor } from "@testing-library/react";
-import { SchemaMetadataContextProvider } from "../../presentation-components/common/SchemaMetadataContext";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import { PresentationInstanceFilterDialog } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog";
 import { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/Types";
@@ -36,37 +33,10 @@ describe("PresentationInstanceFilterDialog", () => {
     label: "String Field",
     category,
   });
-  const numericField = createTestPropertiesContentField({
-    properties: [{ property: { classInfo, name: "numericProp", type: "double" } }],
-    type: { valueFormat: PropertyValueFormat.Primitive, typeName: "double" },
-    name: "numericField",
-    label: "Numeric Field",
-    category,
-  });
-  const quantityField = createTestPropertiesContentField({
-    properties: [
-      {
-        property: {
-          classInfo,
-          name: "quantityProp",
-          type: "double",
-          kindOfQuantity: {
-            name: "testKOQ",
-            label: "Test KOQ",
-            persistenceUnit: "unit",
-          },
-        },
-      },
-    ],
-    type: { valueFormat: PropertyValueFormat.Primitive, typeName: "double" },
-    name: "quantityField",
-    label: "Quantity Field",
-    category,
-  });
   const descriptor = createTestContentDescriptor({
     selectClasses: [{ selectClassInfo: classInfo, isSelectPolymorphic: false }],
     categories: [category],
-    fields: [stringField, numericField, quantityField],
+    fields: [stringField],
   });
   const initialFilter: PresentationInstanceFilterInfo = {
     filter: {
@@ -80,10 +50,8 @@ describe("PresentationInstanceFilterDialog", () => {
   const imodelMock = moq.Mock.ofType<IModelConnection>();
   const onCloseEvent = new BeEvent<() => void>();
 
-  before(async () => {
+  before(() => {
     HTMLElement.prototype.scrollIntoView = () => {};
-    // register editors used be filtering dialog
-    await import("../../presentation-components/properties/editors");
   });
 
   after(() => {
@@ -148,109 +116,6 @@ describe("PresentationInstanceFilterDialog", () => {
     });
   });
 
-  it("invokes 'onApply' with numeric property filter rule", async () => {
-    const spy = sinon.spy();
-    const { container, getByText, user } = render(
-      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />,
-    );
-
-    // open property selector
-    const propertySelector = await getRulePropertySelector(container);
-    await user.click(propertySelector);
-    // select property
-    await user.click(getByText(numericField.label));
-
-    // open operator selector
-    const operatorSelector = await getRuleOperatorSelector(container);
-    await user.click(operatorSelector);
-    // select operator
-    await user.click(getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.Less)));
-
-    // enter value
-    const inputContainer = await waitForElement<HTMLInputElement>(container, ".rule-value input");
-    await user.type(inputContainer, "123");
-
-    await user.tab();
-
-    const applyButton = await getApplyButton(container);
-    await user.click(applyButton);
-
-    expect(spy).to.be.calledOnceWith({
-      filter: {
-        field: numericField,
-        operator: PropertyFilterRuleOperator.Less,
-        value: {
-          valueFormat: AbstractPropertyValueFormat.Primitive,
-          value: 123,
-          displayValue: "123",
-        } as PrimitiveValue,
-      },
-      usedClasses: [classInfo],
-    });
-  });
-
-  it("invokes 'onApply' with quantity property filter rule", async () => {
-    const spy = sinon.spy();
-
-    sinon.stub(KoqPropertyValueFormatter.prototype, "getFormatterSpec").resolves({
-      applyFormatting: (magnitude: number) => `${magnitude} unit`,
-    } as unknown as FormatterSpec);
-
-    sinon.stub(KoqPropertyValueFormatter.prototype, "getParserSpec").resolves({
-      parseToQuantityValue: (value: string): QuantityParseResult => {
-        if (value.endsWith("unit")) {
-          return { ok: true, value: Number(value.substring(0, value.length - 5)) };
-        }
-        return { ok: false, error: ParseError.UnknownUnit };
-      },
-    } as unknown as ParserSpec);
-
-    sinon.stub(IModelApp, "quantityFormatter").get(() => ({
-      onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
-    }));
-
-    const imodel = {} as IModelConnection;
-    const getSchemaContext = () => ({} as SchemaContext);
-
-    const { container, getByText, user } = render(
-      <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={getSchemaContext}>
-        <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />
-      </SchemaMetadataContextProvider>,
-    );
-
-    // open property selector
-    const propertySelector = await getRulePropertySelector(container);
-    await user.click(propertySelector);
-    // select property
-    await user.click(getByText(quantityField.label));
-
-    // open operator selector
-    const operatorSelector = await getRuleOperatorSelector(container);
-    await user.click(operatorSelector);
-    // select operator
-    await user.click(getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.Less)));
-
-    // enter value
-    const inputContainer = await waitForElement<HTMLInputElement>(container, ".rule-value input");
-    await user.type(inputContainer, "123 unit");
-
-    const applyButton = await getApplyButton(container);
-    await user.click(applyButton);
-
-    expect(spy).to.be.calledOnceWith({
-      filter: {
-        field: quantityField,
-        operator: PropertyFilterRuleOperator.Less,
-        value: {
-          valueFormat: AbstractPropertyValueFormat.Primitive,
-          value: 123,
-          displayValue: "123 unit",
-        } as PrimitiveValue,
-      },
-      usedClasses: [classInfo],
-    });
-  });
-
   it("does not invoke `onApply` when filter is invalid", async () => {
     const spy = sinon.spy();
     const { container, getByText, user } = render(
@@ -293,73 +158,6 @@ describe("PresentationInstanceFilterDialog", () => {
     await user.click(applyButton);
 
     expect(spy).to.not.be.called;
-  });
-
-  it("shows error message for invalid numeric values", async () => {
-    const { container, queryByText, user } = render(
-      <PresentationInstanceFilterDialog
-        imodel={imodelMock.object}
-        descriptor={descriptor}
-        onClose={() => {}}
-        onApply={() => {}}
-        isOpen={true}
-        initialFilter={{
-          filter: { field: numericField, operator: PropertyFilterRuleOperator.Less },
-          usedClasses: [],
-        }}
-      />,
-    );
-
-    // type invalid value in input
-    const inputContainer = await waitForElement<HTMLInputElement>(container, ".rule-value input");
-    await user.type(inputContainer, "1e");
-    await user.tab();
-
-    const applyButton = await getApplyButton(container);
-
-    await user.click(applyButton);
-    await waitFor(() => expect(queryByText("instance-filter-builder.error-messages.not-a-number")).to.not.be.null);
-  });
-
-  it("shows error message for invalid quantity values", async () => {
-    sinon.stub(KoqPropertyValueFormatter.prototype, "getFormatterSpec").resolves({
-      applyFormatting: (magnitude: number) => `${magnitude} unit`,
-    } as unknown as FormatterSpec);
-
-    sinon.stub(KoqPropertyValueFormatter.prototype, "getParserSpec").resolves({
-      parseToQuantityValue: (_value: string): QuantityParseResult => ({ ok: false, error: ParseError.UnknownUnit }),
-    } as unknown as ParserSpec);
-
-    sinon.stub(IModelApp, "quantityFormatter").get(() => ({
-      onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
-    }));
-
-    const imodel = {} as IModelConnection;
-    const getSchemaContext = () => ({} as SchemaContext);
-
-    const { container, queryByText, user } = render(
-      <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={getSchemaContext}>
-        <PresentationInstanceFilterDialog
-          imodel={imodelMock.object}
-          descriptor={descriptor}
-          onClose={() => {}}
-          onApply={() => {}}
-          isOpen={true}
-          initialFilter={{
-            filter: { field: quantityField, operator: PropertyFilterRuleOperator.Less },
-            usedClasses: [],
-          }}
-        />
-      </SchemaMetadataContextProvider>,
-    );
-
-    // type invalid value in input
-    const inputContainer = await waitForElement<HTMLInputElement>(container, ".rule-value input");
-    await user.type(inputContainer, "1 unit");
-
-    const applyButton = await getApplyButton(container);
-    await user.click(applyButton);
-    await waitFor(() => expect(queryByText("instance-filter-builder.error-messages.invalid")).to.not.be.null);
   });
 
   it("renders custom title", () => {

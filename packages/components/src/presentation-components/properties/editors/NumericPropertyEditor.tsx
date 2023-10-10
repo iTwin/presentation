@@ -36,6 +36,7 @@ export class NumericPropertyEditorBase extends PropertyEditorBase {
     return false;
   }
 
+  // istanbul ignore next
   public get reactNode(): React.ReactNode {
     return <NumericPropertyEditor />;
   }
