@@ -2,6 +2,10 @@
 
 ## 5.0.0-dev.0
 
+The `5.0` release is targeted towards getting instance filtering production-ready and contains a number of bug fixes and enhancements for the `PresentationInstanceFilterDialog` component. 
+
+The release does not contain any breaking API changes and the bump in peer-depenendecies is the only reason this is a major release.
+
 ### Major Changes
 
 - [#299](https://github.com/iTwin/presentation/pull/299): Bumped `AppUI` peer dependencies to `4.6.0`. Bumped `itwinjs-core` peer dependencies to `^4.1.0`.
