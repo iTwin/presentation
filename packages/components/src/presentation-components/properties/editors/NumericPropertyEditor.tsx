@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { createRef, PureComponent } from "react";
-import { StandardTypeNames } from "@itwin/appui-abstract";
-import { PropertyEditorBase, PropertyEditorManager, PropertyEditorProps, TypeEditor } from "@itwin/components-react";
-import { NumericPropertyInput, NumericPropertyInputAttributes } from "./NumericPropertyInput";
+import { PropertyEditorBase, PropertyEditorProps, TypeEditor } from "@itwin/components-react";
+import { NumericPropertyInput } from "../inputs/NumericPropertyInput";
+import { PropertyEditorAttributes } from "./Common";
 
 /**
  * Name for `NumericPropertyEditor`.
@@ -41,18 +41,13 @@ export class NumericPropertyEditorBase extends PropertyEditorBase {
   }
 }
 
-PropertyEditorManager.registerEditor(StandardTypeNames.Number, NumericPropertyEditorBase, NumericEditorName);
-PropertyEditorManager.registerEditor(StandardTypeNames.Int, NumericPropertyEditorBase, NumericEditorName);
-PropertyEditorManager.registerEditor(StandardTypeNames.Float, NumericPropertyEditorBase, NumericEditorName);
-PropertyEditorManager.registerEditor(StandardTypeNames.Double, NumericPropertyEditorBase, NumericEditorName);
-
 /**
  * Component that renders numeric property target input for numeric value editing.
  *
  * @internal
  */
 export class NumericPropertyEditor extends PureComponent<PropertyEditorProps> implements TypeEditor {
-  private _ref = createRef<NumericPropertyInputAttributes>();
+  private _ref = createRef<PropertyEditorAttributes>();
 
   // istanbul ignore next
   public async getPropertyValue() {
@@ -61,15 +56,15 @@ export class NumericPropertyEditor extends PureComponent<PropertyEditorProps> im
 
   // istanbul ignore next
   public get htmlElement() {
-    return this._ref.current?.divElement ?? null;
+    return this._ref.current?.htmlElement ?? null;
   }
 
   // istanbul ignore next
   public get hasFocus() {
-    if (!this._ref.current?.divElement || !document.activeElement) {
+    if (!this._ref.current?.htmlElement || !document.activeElement) {
       return false;
     }
-    return this._ref.current.divElement.contains(document.activeElement);
+    return this._ref.current.htmlElement.contains(document.activeElement);
   }
 
   /** @internal */

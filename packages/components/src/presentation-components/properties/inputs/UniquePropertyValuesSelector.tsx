@@ -9,8 +9,8 @@ import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/
 import { IModelConnection } from "@itwin/core-frontend";
 import { ContentSpecificationTypes, Descriptor, DisplayValue, Field, Keys, KeySet, Ruleset, RuleTypes, Value } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { deserializeDisplayValueGroupArray, findField, serializeDisplayValueGroupArray, translate } from "../common/Utils";
-import { getInstanceFilterFieldName } from "../instance-filter-builder/Utils";
+import { deserializeDisplayValueGroupArray, findField, serializeDisplayValueGroupArray, translate } from "../../common/Utils";
+import { getInstanceFilterFieldName } from "../../instance-filter-builder/Utils";
 import { AsyncSelect } from "./AsyncSelect";
 
 /** @internal */

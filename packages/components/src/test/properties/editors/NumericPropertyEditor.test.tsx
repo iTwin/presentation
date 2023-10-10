@@ -5,29 +5,25 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
+import { StandardTypeNames } from "@itwin/appui-abstract";
 import { EditorContainer } from "@itwin/components-react";
 import { waitFor } from "@testing-library/react";
-import { NumericPropertyEditor } from "../../presentation-components/properties/NumericPropertyEditor";
-import { render } from "../_helpers/Common";
+import { NumericEditorName, NumericPropertyEditor } from "../../../presentation-components/properties/editors/NumericPropertyEditor";
+import { render } from "../../_helpers/Common";
+import { createTestPropertyRecord } from "../../_helpers/UiComponents";
 
-export const createRecord = (initialValue?: number) => {
-  const value: PrimitiveValue = {
-    valueFormat: PropertyValueFormat.Primitive,
-    value: initialValue,
-    displayValue: initialValue?.toString(),
-  };
-  const descr: PropertyDescription = {
-    typename: StandardTypeNames.Double,
-    name: "test_prop",
-    displayLabel: "TestProp",
-  };
-  const record = new PropertyRecord(value, descr);
-  record.property.typename = "number:presentation-numeric-editor";
-  return record;
+const createRecord = (initialValue?: number) => {
+  return createTestPropertyRecord(
+    { value: initialValue, displayValue: initialValue?.toString() },
+    { typename: StandardTypeNames.Double, editor: { name: NumericEditorName } },
+  );
 };
 
 describe("<NumericPropertyEditorBase />", () => {
+  before(async () => {
+    await import("../../../presentation-components/properties/editors");
+  });
+
   afterEach(async () => {
     sinon.restore();
   });

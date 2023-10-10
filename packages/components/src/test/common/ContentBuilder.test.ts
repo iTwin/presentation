@@ -7,7 +7,8 @@ import { expect } from "chai";
 import { ArrayValue, PropertyRecord, StandardTypeNames, StructValue } from "@itwin/appui-abstract";
 import { EnumerationInfo, FieldHierarchy, PropertyValueFormat, traverseContentItem } from "@itwin/presentation-common";
 import { FieldHierarchyRecord, IPropertiesAppender, PropertyRecordsBuilder } from "../../presentation-components/common/ContentBuilder";
-import { NumericEditorName } from "../../presentation-components/properties/NumericPropertyEditor";
+import { NumericEditorName } from "../../presentation-components/properties/editors/NumericPropertyEditor";
+import { QuantityEditorName } from "../../presentation-components/properties/editors/QuantityPropertyEditor";
 import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
 import {
   createTestCategoryDescription,
@@ -139,7 +140,7 @@ describe("PropertyRecordsBuilder", () => {
     });
   });
 
-  it("sets editor name when field info types typeName is Number", () => {
+  it("sets editor name when field typeName is Number", () => {
     const descriptor = createTestContentDescriptor({
       fields: [createTestSimpleContentField({ type: { valueFormat: PropertyValueFormat.Primitive, typeName: StandardTypeNames.Number } })],
     });
@@ -148,6 +149,23 @@ describe("PropertyRecordsBuilder", () => {
     expect(builder.entries.length).to.eq(1);
     expect(builder.entries[0].record.property.editor).to.deep.eq({
       name: NumericEditorName,
+    });
+  });
+
+  it("does not override custom editor when field typeName is Number", () => {
+    const descriptor = createTestContentDescriptor({
+      fields: [
+        createTestSimpleContentField({
+          type: { valueFormat: PropertyValueFormat.Primitive, typeName: StandardTypeNames.Number },
+          editor: { name: "custom-editor" },
+        }),
+      ],
+    });
+    const item = createTestContentItem({ values: {}, displayValues: {} });
+    traverseContentItem(builder, descriptor, item);
+    expect(builder.entries.length).to.eq(1);
+    expect(builder.entries[0].record.property.editor).to.deep.eq({
+      name: "custom-editor",
     });
   });
 
@@ -176,5 +194,62 @@ describe("PropertyRecordsBuilder", () => {
     traverseContentItem(builder, descriptor, item);
     expect(builder.entries.length).to.eq(1);
     expect(builder.entries[0].record.property.quantityType).to.be.eq("testKOQ");
+  });
+
+  it("sets editor name when field has kind of quantity", () => {
+    const descriptor = createTestContentDescriptor({
+      fields: [
+        createTestPropertiesContentField({
+          properties: [
+            {
+              property: {
+                classInfo: createTestECClassInfo(),
+                name: "test-props",
+                type: "string",
+                kindOfQuantity: {
+                  label: "KOQ Label",
+                  name: "testKOQ",
+                  persistenceUnit: "testUnit",
+                },
+              },
+            },
+          ],
+        }),
+      ],
+    });
+    const item = createTestContentItem({ values: {}, displayValues: {} });
+    traverseContentItem(builder, descriptor, item);
+    expect(builder.entries.length).to.eq(1);
+    expect(builder.entries[0].record.property.quantityType).to.be.eq("testKOQ");
+    expect(builder.entries[0].record.property.editor?.name).to.be.eq(QuantityEditorName);
+  });
+
+  it("does not override custom editor when field has kind of quantity", () => {
+    const descriptor = createTestContentDescriptor({
+      fields: [
+        createTestPropertiesContentField({
+          properties: [
+            {
+              property: {
+                classInfo: createTestECClassInfo(),
+                name: "test-props",
+                type: "string",
+                kindOfQuantity: {
+                  label: "KOQ Label",
+                  name: "testKOQ",
+                  persistenceUnit: "testUnit",
+                },
+              },
+            },
+          ],
+          editor: { name: "custom-editor" },
+        }),
+      ],
+    });
+    const item = createTestContentItem({ values: {}, displayValues: {} });
+    traverseContentItem(builder, descriptor, item);
+    expect(builder.entries.length).to.eq(1);
+    expect(builder.entries[0].record.property.quantityType).to.be.eq("testKOQ");
+    expect(builder.entries[0].record.property.editor?.name).to.be.eq("custom-editor");
   });
 });

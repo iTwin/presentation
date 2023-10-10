@@ -19,15 +19,15 @@ import {
 } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { waitFor } from "@testing-library/react";
-import { UniquePropertyValuesSelector } from "../../presentation-components/properties/UniquePropertyValuesSelector";
-import { createTestECClassInfo, createTestPropertyInfo, createTestRelatedClassInfo, createTestRelationshipPath, render } from "../_helpers/Common";
+import { UniquePropertyValuesSelector } from "../../../presentation-components/properties/inputs/UniquePropertyValuesSelector";
+import { createTestECClassInfo, createTestPropertyInfo, createTestRelatedClassInfo, createTestRelationshipPath, render } from "../../_helpers/Common";
 import {
   createTestCategoryDescription,
   createTestContentDescriptor,
   createTestNestedContentField,
   createTestPropertiesContentField,
-} from "../_helpers/Content";
-import { createTestECInstancesNodeKey } from "../_helpers/Hierarchy";
+} from "../../_helpers/Content";
+import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy";
 
 describe("UniquePropertyValuesSelector", () => {
   beforeEach(async () => {

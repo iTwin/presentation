@@ -80,8 +80,10 @@ describe("PresentationInstanceFilterDialog", () => {
   const imodelMock = moq.Mock.ofType<IModelConnection>();
   const onCloseEvent = new BeEvent<() => void>();
 
-  before(() => {
+  before(async () => {
     HTMLElement.prototype.scrollIntoView = () => {};
+    // register editors used be filtering dialog
+    await import("../../presentation-components/properties/editors");
   });
 
   after(() => {

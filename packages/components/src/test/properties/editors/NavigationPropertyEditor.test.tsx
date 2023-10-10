@@ -14,15 +14,15 @@ import { Presentation } from "@itwin/presentation-frontend";
 import { render as renderRTL, waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import userEvent from "@testing-library/user-event";
-import { IContentDataProvider } from "../../presentation-components/common/ContentDataProvider";
+import { IContentDataProvider } from "../../../presentation-components/common/ContentDataProvider";
+import { NavigationPropertyTargetEditor } from "../../../presentation-components/properties/editors/NavigationPropertyEditor";
 import {
   navigationPropertyEditorContext,
   NavigationPropertyEditorContextProps,
-  NavigationPropertyTargetEditor,
   useNavigationPropertyEditingContext,
-} from "../../presentation-components/properties/NavigationPropertyEditor";
-import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField, createTestSimpleContentField } from "../_helpers/Content";
-import { createTestPropertyRecord } from "../_helpers/UiComponents";
+} from "../../../presentation-components/properties/editors/NavigationPropertyEditorContext";
+import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField, createTestSimpleContentField } from "../../_helpers/Content";
+import { createTestPropertyRecord } from "../../_helpers/UiComponents";
 
 function createNavigationPropertyInfo(): NavigationPropertyInfo {
   return {
@@ -48,6 +48,10 @@ describe("<NavigationPropertyEditor />", () => {
     record.property.typename = "navigation";
     return record;
   }
+
+  before(async () => {
+    await import("../../../presentation-components/properties/editors");
+  });
 
   beforeEach(async () => {
     const localization = new EmptyLocalization();
