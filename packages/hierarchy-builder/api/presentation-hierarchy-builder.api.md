@@ -5,6 +5,14 @@
 ```ts
 
 // @beta
+export interface ArrayPropertyAttributes {
+    // (undocumented)
+    maxOccurs?: number;
+    // (undocumented)
+    minOccurs: number;
+}
+
+// @beta
 export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelectClauseFactory {
     constructor(props: BisInstanceLabelSelectClauseFactoryProps);
     // (undocumented)
@@ -33,7 +41,7 @@ export interface ClassBasedHierarchyDefinitionsFactoryProps {
 export type ClassBasedHierarchyLevelDefinition = InstancesNodeChildHierarchyLevelDefinition | CustomNodeChildHierarchyLevelDefinition;
 
 // @beta
-export class ClassBasedHierarchyLevelDefinitionsFactory<TNode extends HierarchyNode = HierarchyNode> implements IHierarchyLevelDefinitionsFactory<TNode> {
+export class ClassBasedHierarchyLevelDefinitionsFactory implements IHierarchyLevelDefinitionsFactory {
     constructor(props: ClassBasedHierarchyDefinitionsFactoryProps);
     defineHierarchyLevel(parentNode: HierarchyNode | undefined): Promise<HierarchyLevelDefinition>;
 }
@@ -62,17 +70,41 @@ export interface ClassBasedLabelSelectClause {
 // @beta
 export interface ClassGroupingNodeKey {
     // (undocumented)
-    class: ClassInfo;
+    class: {
+        name: string;
+        label?: string;
+    };
     // (undocumented)
     type: "class-grouping";
 }
 
 // @beta
-export interface ClassInfo {
-    id: Id64String;
-    label: string;
-    name: string;
+export type ConcatenatedValue = ConcatenatedValuePart | ConcatenatedValuePart[];
+
+// @public (undocumented)
+export namespace ConcatenatedValue {
+    // @beta
+    export function serialize(parts: ConcatenatedValue, partFormatter: (part: ConcatenatedValuePart) => Promise<string>): Promise<string>;
 }
+
+// @beta
+export type ConcatenatedValuePart = PropertyValue | TypedPrimitiveValue | string;
+
+// @public (undocumented)
+export namespace ConcatenatedValuePart {
+    // @beta (undocumented)
+    export function isPrimitive(part: ConcatenatedValuePart): part is TypedPrimitiveValue;
+    // @beta (undocumented)
+    export function isProperty(part: ConcatenatedValuePart): part is PropertyValue;
+    // @beta (undocumented)
+    export function isString(part: ConcatenatedValuePart): part is string;
+}
+
+// @beta
+export function createConcatenatedValueSelector(selectors: ValueSelectClauseProps[], checkSelector?: string): string;
+
+// @beta
+export function createDefaultValueFormatter(): IPrimitiveValueFormatter;
 
 // @beta
 export interface CreateInstanceLabelSelectClauseProps {
@@ -81,8 +113,23 @@ export interface CreateInstanceLabelSelectClauseProps {
 }
 
 // @beta
+export function createNullableSelector(props: {
+    checkSelector: string;
+    valueSelector: string;
+}): string;
+
+// @beta
+export function createPropertyValueSelector(classAlias: string, propertyName: string): string;
+
+// @beta
+export function createPropertyValueSelector(classAlias: string, propertyName: string, specialType: SpecialPropertyType): [string, PrimitiveValueType];
+
+// @beta
+export function createValueSelector(props: ValueSelectClauseProps): string;
+
+// @beta
 export interface CustomHierarchyNodeDefinition {
-    node: HierarchyNode;
+    node: ParsedHierarchyNode;
 }
 
 // @beta
@@ -98,11 +145,138 @@ export class DefaultInstanceLabelSelectClauseFactory implements IInstanceLabelSe
 }
 
 // @beta
+export type ECArrayProperty = ECStructArrayProperty | ECEnumerationArrayProperty | ECPrimitiveArrayProperty;
+
+// @beta
 export interface ECClass extends ECSchemaItem {
+    // (undocumented)
+    getProperty(name: string): Promise<ECProperty | undefined>;
     // (undocumented)
     is(className: string, schemaName: string): Promise<boolean>;
     // (undocumented)
     is(other: ECClass): Promise<boolean>;
+    // (undocumented)
+    isEntityClass(): this is ECEntityClass;
+    // (undocumented)
+    isMixin(): this is ECMixin;
+    // (undocumented)
+    isRelationshipClass(): this is ECRelationshipClass;
+    // (undocumented)
+    isStructClass(): this is ECStructClass;
+}
+
+// @beta
+export type ECEntityClass = ECClass;
+
+// @beta
+export interface ECEnumeration extends ECSchemaItem {
+    // (undocumented)
+    enumerators: Array<ECEnumerator<string | number>>;
+    // (undocumented)
+    isStrict: boolean;
+    // (undocumented)
+    type: "String" | "Number";
+}
+
+// @beta
+export type ECEnumerationArrayProperty = ECEnumerationProperty & ArrayPropertyAttributes;
+
+// @beta
+export interface ECEnumerationProperty extends ECProperty {
+    // (undocumented)
+    enumeration: Promise<ECEnumeration | undefined>;
+    // (undocumented)
+    extendedTypeName?: string;
+}
+
+// @beta
+export interface ECEnumerator<T> {
+    // (undocumented)
+    description?: string;
+    // (undocumented)
+    label?: string;
+    // (undocumented)
+    name: string;
+    // (undocumented)
+    value: T;
+}
+
+// @beta
+export type ECKindOfQuantity = ECSchemaItem;
+
+// @beta
+export type ECMixin = ECClass;
+
+// @beta
+export interface ECNavigationProperty extends ECProperty {
+    // (undocumented)
+    direction: "Forward" | "Backward";
+    // (undocumented)
+    relationshipClass: Promise<ECRelationshipClass>;
+}
+
+// @beta
+export type ECPrimitiveArrayProperty = ECPrimitiveProperty & ArrayPropertyAttributes;
+
+// @beta
+export interface ECPrimitiveProperty extends ECProperty {
+    // (undocumented)
+    extendedTypeName?: string;
+    // (undocumented)
+    primitiveType: ECPrimitiveType;
+}
+
+// @beta
+export type ECPrimitiveType = "Binary" | "Boolean" | "DateTime" | "Double" | "Integer" | "Long" | "Point2d" | "Point3d" | "String" | "IGeometry";
+
+// @beta
+export interface ECProperty {
+    // (undocumented)
+    class: ECClass;
+    // (undocumented)
+    isArray(): this is ECArrayProperty;
+    // (undocumented)
+    isEnumeration(): this is ECEnumerationProperty;
+    // (undocumented)
+    isNavigation(): this is ECNavigationProperty;
+    // (undocumented)
+    isPrimitive(): this is ECPrimitiveProperty;
+    // (undocumented)
+    isStruct(): this is ECStructProperty;
+    // (undocumented)
+    kindOfQuantity: Promise<ECKindOfQuantity | undefined>;
+    // (undocumented)
+    label?: string;
+    // (undocumented)
+    name: string;
+}
+
+// @public (undocumented)
+export interface ECRelationshipClass extends ECClass {
+    // (undocumented)
+    direction: "Forward" | "Backward";
+    // (undocumented)
+    source: ECRelationshipConstraint;
+    // (undocumented)
+    target: ECRelationshipConstraint;
+}
+
+// @beta
+export interface ECRelationshipConstraint {
+    // (undocumented)
+    abstractConstraint: Promise<ECEntityClass | ECMixin | ECRelationshipClass | undefined>;
+    // (undocumented)
+    multiplicity?: ECRelationshipConstraintMultiplicity;
+    // (undocumented)
+    polymorphic: boolean;
+}
+
+// @beta
+export interface ECRelationshipConstraintMultiplicity {
+    // (undocumented)
+    lowerLimit: number;
+    // (undocumented)
+    upperLimit: number;
 }
 
 // @beta
@@ -198,13 +372,25 @@ export interface ECSqlValueSelector {
 }
 
 // @beta
+export type ECStructArrayProperty = ECStructProperty & ArrayPropertyAttributes;
+
+// @beta
+export type ECStructClass = ECClass;
+
+// @beta
+export interface ECStructProperty extends ECProperty {
+    // (undocumented)
+    structClass: ECStructClass;
+}
+
+// @beta
 export function getLogger(): ILogger;
 
 // @beta
 export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
 
 // @beta
-export interface HierarchyNode {
+export interface HierarchyNode<TLabel = string> {
     // (undocumented)
     autoExpand?: boolean;
     // (undocumented)
@@ -216,7 +402,7 @@ export interface HierarchyNode {
     // (undocumented)
     key: HierarchyNodeKey;
     // (undocumented)
-    label: string;
+    label: TLabel;
     // (undocumented)
     params?: HierarchyNodeHandlingParams;
 }
@@ -294,24 +480,21 @@ export namespace HierarchyNodesDefinition {
     export function isInstanceNodesQuery(def: HierarchyNodesDefinition): def is InstanceNodesQueryDefinition;
 }
 
-// @beta (undocumented)
+// @beta
 export class HierarchyProvider {
     constructor(props: HierarchyProviderProps);
     // (undocumented)
     getNodes(parentNode: HierarchyNode | undefined): Promise<HierarchyNode[]>;
 }
 
-// @beta (undocumented)
+// @beta
 export interface HierarchyProviderProps {
-    // (undocumented)
     filtering?: {
         paths: HierarchyNodeIdentifiersPath[];
     };
-    // (undocumented)
+    formatter?: IPrimitiveValueFormatter;
     hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
-    // (undocumented)
     metadataProvider: IMetadataProvider;
-    // (undocumented)
     queryExecutor: IECSqlQueryExecutor;
 }
 
@@ -325,9 +508,9 @@ export interface IECSqlQueryExecutor {
 }
 
 // @beta
-export interface IHierarchyLevelDefinitionsFactory<TNode extends HierarchyNode = HierarchyNode> {
+export interface IHierarchyLevelDefinitionsFactory {
     defineHierarchyLevel(parentNode: HierarchyNode | undefined): Promise<HierarchyLevelDefinition>;
-    parseNode?: INodeParser<TNode>;
+    parseNode?: INodeParser;
     postProcessNode?: INodePostProcessor;
     preProcessNode?: INodePreProcessor;
 }
@@ -356,15 +539,15 @@ export interface IMetadataProvider {
 }
 
 // @beta
-export type INodeParser<TNode extends HierarchyNode> = (row: {
+export type INodeParser = (row: {
     [columnName: string]: any;
-}) => TNode;
+}) => ParsedHierarchyNode;
 
 // @beta
 export type INodePostProcessor = (node: HierarchyNode) => HierarchyNode;
 
 // @beta
-export type INodePreProcessor = (node: HierarchyNode) => HierarchyNode | undefined;
+export type INodePreProcessor = (node: HierarchyNode) => Promise<HierarchyNode | undefined>;
 
 // @beta
 export interface InstanceKey {
@@ -399,6 +582,9 @@ export interface LabelGroupingNodeKey {
     // (undocumented)
     type: "label-grouping";
 }
+
+// @beta
+export type IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise<string>;
 
 // @beta (undocumented)
 export type LogFunction = (category: string, message: string) => void;
@@ -453,16 +639,123 @@ export interface NodeSelectClauseProps {
 }
 
 // @beta
+export type ParsedHierarchyNode = HierarchyNode<string | ConcatenatedValue>;
+
+// @beta
 export function parseFullClassName(fullClassName: string): {
     schemaName: string;
     className: string;
 };
 
 // @beta
+export interface Point2d {
+    // (undocumented)
+    x: number;
+    // (undocumented)
+    y: number;
+}
+
+// @beta
+export interface Point3d {
+    // (undocumented)
+    x: number;
+    // (undocumented)
+    y: number;
+    // (undocumented)
+    z: number;
+}
+
+// @beta
+export type PrimitiveValue = Id64String | string | number | boolean | Date | Point2d | Point3d;
+
+// @public (undocumented)
+export namespace PrimitiveValue {
+    // @beta (undocumented)
+    export function isPoint2d(value: PrimitiveValue): value is Point2d;
+    // @beta (undocumented)
+    export function isPoint3d(value: PrimitiveValue): value is Point3d;
+}
+
+// @beta
+export interface PrimitiveValueSelectorProps {
+    nullValueResult?: "null" | "selector";
+    selector: string;
+    type?: PrimitiveValueType;
+}
+
+// @beta
+export type PrimitiveValueType = "Id" | Exclude<ECPrimitiveType, "Binary" | "IGeometry">;
+
+// @beta
+export interface PropertyValue {
+    // (undocumented)
+    className: string;
+    // (undocumented)
+    propertyName: string;
+    // (undocumented)
+    value: PrimitiveValue;
+}
+
+// @beta
+export interface PropertyValueSelectClauseProps {
+    nullValueResult?: "null" | "selector";
+    propertyClassAlias: string;
+    propertyClassName: string;
+    propertyName: string;
+    specialType?: SpecialPropertyType;
+}
+
+// @beta
 export function setLogger(logger: ILogger | undefined): void;
 
 // @beta
 export type StandardHierarchyNodeKey = InstancesNodeKey | ClassGroupingNodeKey | LabelGroupingNodeKey;
+
+// @beta
+export type SpecialPropertyType = "Navigation" | "Guid" | "Point2d" | "Point3d";
+
+// @beta
+export type TypedPrimitiveValue = ({
+    value: number;
+    type: "Integer" | "Long";
+} | {
+    value: number;
+    type: "Double";
+    koqName?: string;
+} | {
+    value: boolean;
+    type: "Boolean";
+} | {
+    value: Id64String;
+    type: "Id";
+} | {
+    value: string;
+    type: "String";
+} | {
+    value: number | string | Date;
+    type: "DateTime";
+} | {
+    value: Point2d;
+    type: "Point2d";
+} | {
+    value: Point3d;
+    type: "Point3d";
+}) & {
+    extendedType?: string;
+};
+
+// @beta
+export type ValueSelectClauseProps = PropertyValueSelectClauseProps | TypedPrimitiveValue | PrimitiveValueSelectorProps;
+
+// @public (undocumented)
+export namespace ValueSelectClauseProps {
+    // (undocumented)
+    export function isPrimitiveValue(props: ValueSelectClauseProps): props is TypedPrimitiveValue;
+    // (undocumented)
+    export function isPrimitiveValueSelector(props: ValueSelectClauseProps): props is PrimitiveValueSelectorProps;
+    // (undocumented)
+    export function isPropertySelector(props: ValueSelectClauseProps): props is PropertyValueSelectClauseProps;
+}
 
 // (No @packageDocumentation comment for this package)
 

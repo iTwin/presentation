@@ -663,6 +663,9 @@ importers:
       '@itwin/core-geometry':
         specifier: ^4.1.1
         version: 4.1.1
+      '@itwin/core-quantity':
+        specifier: ^4.1.1
+        version: 4.1.1(@itwin/core-bentley@4.1.1)
       '@itwin/ecschema-metadata':
         specifier: ^4.1.1
         version: 4.1.1(@itwin/core-bentley@4.1.1)(@itwin/core-quantity@4.1.1)

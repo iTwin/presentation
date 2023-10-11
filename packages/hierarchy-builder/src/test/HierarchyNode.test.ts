@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { InstanceKey } from "../hierarchy-builder/EC";
 import { HierarchyNode, HierarchyNodeIdentifier } from "../hierarchy-builder/HierarchyNode";
+import { InstanceKey } from "../hierarchy-builder/values/Values";
 
 describe("HierarchyNode", () => {
   const customNode: HierarchyNode = {
@@ -19,7 +19,7 @@ describe("HierarchyNode", () => {
     children: undefined,
   };
   const classGroupingNode: HierarchyNode = {
-    key: { type: "class-grouping", class: { id: "0x1", label: "c", name: "c" } },
+    key: { type: "class-grouping", class: { label: "c", name: "c" } },
     label: "class grouping node",
     children: undefined,
   };

@@ -4,8 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { from, mergeMap, Observable, tap, toArray } from "rxjs";
-import { Id64 } from "@itwin/core-bentley";
-import { ClassInfo } from "../../EC";
 import { HierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
 import { IMetadataProvider } from "../../Metadata";
@@ -38,6 +36,12 @@ export function createClassGroupingOperator(metadata: IMetadataProvider) {
   };
 }
 
+interface ClassInfo {
+  fullName: string;
+  name: string;
+  label?: string;
+}
+
 interface ClassGroupingInformation {
   ungrouped: Array<HierarchyNode>;
   grouped: Map<string, { class: ClassInfo; groupedNodes: Array<HierarchyNode> }>;
@@ -53,7 +57,7 @@ async function createClassGroupingInformation(metadata: IMetadataProvider, nodes
       if (!groupingInfo) {
         const nodeClass = await getClass(metadata, fullClassName);
         groupingInfo = {
-          class: { id: Id64.invalid, name: nodeClass.fullName, label: nodeClass.label ?? nodeClass.name },
+          class: nodeClass,
           groupedNodes: [],
         };
         groupings.grouped.set(fullClassName, groupingInfo);
@@ -70,10 +74,10 @@ function createGroupingNodes(groupings: ClassGroupingInformation): HierarchyNode
   const outNodes = new Array<HierarchyNode>();
   groupings.grouped.forEach((entry) => {
     outNodes.push({
-      label: entry.class.label,
+      label: entry.class.label ?? entry.class.name,
       key: {
         type: "class-grouping",
-        class: entry.class,
+        class: { name: entry.class.fullName, label: entry.class.label },
       },
       children: entry.groupedNodes,
     });

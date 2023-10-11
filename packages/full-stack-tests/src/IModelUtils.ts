@@ -11,6 +11,8 @@ import {
   Code,
   ExternalSourceAspectProps,
   ExternalSourceProps,
+  GeometricElement2dProps,
+  GeometricModel2dProps,
   GeometricModel3dProps,
   IModel,
   InformationPartitionElementProps,
@@ -19,6 +21,7 @@ import {
   SubCategoryProps,
   SubjectProps,
 } from "@itwin/core-common";
+import { IModelConnection } from "@itwin/core-frontend";
 import { buildTestIModel, createFileNameFromString, setupOutputFileLocation, TestIModelBuilder } from "@itwin/presentation-testing";
 
 export async function withECDb<TResult extends {}>(
@@ -46,14 +49,24 @@ export async function withECDb<TResult extends {}>(
   }
 }
 
+export async function buildIModel(
+  mochaContext: Mocha.Context,
+  setup?: (builder: TestIModelBuilder, mochaContext: Mocha.Context) => Promise<void>,
+): Promise<{ imodel: IModelConnection }>;
 export async function buildIModel<TResult extends {}>(
   mochaContext: Mocha.Context,
   setup: (builder: TestIModelBuilder, mochaContext: Mocha.Context) => Promise<TResult>,
+): Promise<{ imodel: IModelConnection } & TResult>;
+export async function buildIModel<TResult extends {} | undefined>(
+  mochaContext: Mocha.Context,
+  setup?: (builder: TestIModelBuilder, mochaContext: Mocha.Context) => Promise<TResult>,
 ) {
   let res!: TResult;
   // eslint-disable-next-line deprecation/deprecation
   const imodel = await buildTestIModel(mochaContext, async (builder) => {
-    res = await setup(builder, mochaContext);
+    if (setup) {
+      res = await setup(builder, mochaContext);
+    }
   });
   return { ...res, imodel };
 }
@@ -68,9 +81,9 @@ export async function importSchema(
   const schemaAlias = `test`;
   const schemaXml = `
     <?xml version="1.0" encoding="UTF-8"?>
-    <ECSchema schemaName="${schemaName}" alias="${schemaAlias}" version="01.00" xmlns="http://www.bentley.com/schemas/Bentley.ECXML.3.1">
-      <ECSchemaReference name="CoreCustomAttributes" version="1.0" alias="CoreCA" />
-      <ECSchemaReference name="ECDbMap" version="2.0" alias="ecdbmap" />
+    <ECSchema schemaName="${schemaName}" alias="${schemaAlias}" version="01.00.00" xmlns="http://www.bentley.com/schemas/Bentley.ECXML.3.2">
+      <ECSchemaReference name="CoreCustomAttributes" version="01.00.03" alias="CoreCA" />
+      <ECSchemaReference name="ECDbMap" version="02.00.01" alias="ecdbmap" />
       ${schemaReferences?.map((referenceXml) => referenceXml).join("\n") ?? ""}
       ${classes.map((classXml) => classXml).join("\n")}
     </ECSchema>
@@ -164,6 +177,47 @@ export function insertPhysicalSubModel(
   return { className, id: modelId };
 }
 
+export function insertDrawingModelWithPartition(props: BaseInstanceInsertProps & { codeValue: string; partitionParentId?: Id64String }) {
+  const { codeValue, partitionParentId, ...baseProps } = props;
+  const partitionKey = insertDrawingPartition({ ...baseProps, codeValue, parentId: partitionParentId ?? IModel.rootSubjectId });
+  return insertDrawingSubModel({ ...baseProps, modeledElementId: partitionKey.id });
+}
+
+export function insertDrawingPartition(
+  props: BaseInstanceInsertProps & { codeValue: string; parentId: Id64String } & Partial<
+      Omit<InformationPartitionElementProps, "id" | "parent" | "code" | "userLabel">
+    >,
+) {
+  const { builder, classFullName, codeValue, parentId, ...partitionProps } = props;
+  const defaultModelClassName = `BisCore${props.fullClassNameSeparator ?? "."}Drawing`;
+  const className = classFullName ?? defaultModelClassName;
+  const partitionId = builder.insertElement({
+    classFullName: className,
+    model: IModel.repositoryModelId,
+    code: builder.createCode(parentId, BisCodeSpec.informationPartitionElement, codeValue),
+    parent: {
+      id: parentId,
+      relClassName: `BisCore${props.fullClassNameSeparator ?? "."}SubjectOwnsPartitionElements`,
+    },
+    ...partitionProps,
+  });
+  return { className, id: partitionId };
+}
+
+export function insertDrawingSubModel(
+  props: BaseInstanceInsertProps & { modeledElementId: Id64String } & Partial<Omit<GeometricModel2dProps, "id" | "modeledElement" | "parentModel">>,
+) {
+  const { builder, classFullName, modeledElementId, ...modelProps } = props;
+  const defaultModelClassName = `BisCore${props.fullClassNameSeparator ?? "."}DrawingModel`;
+  const className = classFullName ?? defaultModelClassName;
+  const modelId = builder.insertModel({
+    classFullName: className,
+    modeledElement: { id: modeledElementId },
+    ...modelProps,
+  });
+  return { className, id: modelId };
+}
+
 export function insertSpatialCategory(
   props: BaseInstanceInsertProps & { codeValue: string; modelId?: Id64String } & Partial<Omit<CategoryProps, "id" | "model" | "parent" | "code">>,
 ) {
@@ -175,6 +229,22 @@ export function insertSpatialCategory(
     classFullName: className,
     model,
     code: builder.createCode(model, BisCodeSpec.spatialCategory, codeValue),
+    ...categoryProps,
+  });
+  return { className, id };
+}
+
+export function insertDrawingCategory(
+  props: BaseInstanceInsertProps & { codeValue: string; modelId?: Id64String } & Partial<Omit<CategoryProps, "id" | "model" | "parent" | "code">>,
+) {
+  const { builder, classFullName, modelId, codeValue, ...categoryProps } = props;
+  const defaultClassName = `BisCore${props.fullClassNameSeparator ?? "."}DrawingCategory`;
+  const className = classFullName ?? defaultClassName;
+  const model = modelId ?? IModel.dictionaryId;
+  const id = builder.insertElement({
+    classFullName: className,
+    model,
+    code: builder.createCode(model, BisCodeSpec.drawingCategory, codeValue),
     ...categoryProps,
   });
   return { className, id };
@@ -211,10 +281,11 @@ export function insertSubCategory(
   return { className, id };
 }
 
-export function insertPhysicalElement(
+export function insertPhysicalElement<TAdditionalProps extends {}>(
   props: BaseInstanceInsertProps & { modelId: Id64String; categoryId: Id64String; parentId?: Id64String } & Partial<
       Omit<PhysicalElementProps, "id" | "model" | "category" | "parent">
-    >,
+    > &
+    TAdditionalProps,
 ) {
   const { builder, classFullName, modelId, categoryId, parentId, ...elementProps } = props;
   const defaultClassName = `Generic${props.fullClassNameSeparator ?? "."}PhysicalObject`;
@@ -234,6 +305,33 @@ export function insertPhysicalElement(
       : undefined),
     ...elementProps,
   } as PhysicalElementProps);
+  return { className, id };
+}
+
+export function insertDrawingGraphic<TAdditionalProps extends {}>(
+  props: BaseInstanceInsertProps & { modelId: Id64String; categoryId: Id64String; parentId?: Id64String } & Partial<
+      Omit<GeometricElement2dProps, "id" | "model" | "category" | "parent">
+    > &
+    TAdditionalProps,
+) {
+  const { builder, classFullName, modelId, categoryId, parentId, ...elementProps } = props;
+  const defaultClassName = `BisCore${props.fullClassNameSeparator ?? "."}DrawingGraphic`;
+  const className = classFullName ?? defaultClassName;
+  const id = builder.insertElement({
+    classFullName: className,
+    model: modelId,
+    category: categoryId,
+    code: Code.createEmpty(),
+    ...(parentId
+      ? {
+          parent: {
+            id: parentId,
+            relClassName: `BisCore${props.fullClassNameSeparator ?? "."}ElementOwnsChildElements`,
+          },
+        }
+      : undefined),
+    ...elementProps,
+  } as GeometricElement2dProps);
   return { className, id };
 }
 
