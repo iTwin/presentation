@@ -5,7 +5,7 @@
 
 import { merge, Observable } from "rxjs";
 import { assert } from "@itwin/core-bentley";
-import { HierarchyNode, HierarchyNodeHandlingParams, HierarchyNodeKey } from "../HierarchyNode";
+import { BaseClassInfo, HierarchyNode, HierarchyNodeHandlingParams, HierarchyNodeKey } from "../HierarchyNode";
 import { ECClass, ECSchema, IMetadataProvider, parseFullClassName } from "../Metadata";
 
 /** @internal */
@@ -46,8 +46,31 @@ function mergeNodeHandlingParams(
   return {
     ...(lhs?.hideIfNoChildren && rhs?.hideIfNoChildren ? { hideIfNoChildren: true } : undefined),
     ...(lhs?.hideInHierarchy && rhs?.hideInHierarchy ? { hideInHierarchy: true } : undefined),
-    ...(lhs?.groupByClass || rhs?.groupByClass ? { groupByClass: true } : undefined),
-    ...(lhs?.groupByLabel || rhs?.groupByLabel ? { groupByLabel: true } : undefined),
+    ...(lhs?.grouping || rhs?.grouping
+      ? {
+          grouping: {
+            ...(lhs?.grouping?.groupByClass || rhs?.grouping?.groupByClass ? { groupByClass: true } : undefined),
+            ...(lhs?.grouping?.groupByLabel || rhs?.grouping?.groupByLabel ? { groupByLabel: true } : undefined),
+            ...(lhs?.grouping?.groupByBaseClass || rhs?.grouping?.groupByBaseClass ? { groupByBaseClass: true } : undefined),
+            ...(lhs?.grouping?.baseClassInfo || rhs?.grouping?.baseClassInfo
+              ? {
+                  // Create an array from both: lhs and rhs baseClassInfo arrays without adding duplicates
+                  baseClassInfo: [...(lhs?.grouping?.baseClassInfo ?? []), ...(rhs?.grouping?.baseClassInfo ?? [])].reduce(
+                    (acc: BaseClassInfo[], curr: BaseClassInfo) => {
+                      if (!acc.some((obj) => obj.className === curr.className && obj.schemaName === curr.schemaName)) {
+                        acc.push(curr);
+                      }
+                      return acc;
+                    },
+                    [],
+                  ),
+                }
+              : undefined),
+            ...(lhs?.grouping?.hideIfSingleNodeInGroup || rhs?.grouping?.hideIfSingleNodeInGroup ? { hideIfSingleNodeInGroup: true } : undefined),
+            ...(lhs?.grouping?.hideIfNoOtherGroups || rhs?.grouping?.hideIfNoOtherGroups ? { hideIfNoOtherGroups: true } : undefined),
+          },
+        }
+      : undefined),
     ...(lhs?.mergeByLabelId ? { mergeByLabelId: lhs.mergeByLabelId } : undefined),
   };
 }

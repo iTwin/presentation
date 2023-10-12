@@ -5,12 +5,12 @@
 
 import { from, mergeMap, Observable, tap, toArray } from "rxjs";
 import { Id64 } from "@itwin/core-bentley";
-import { ClassInfo } from "../../EC";
-import { HierarchyNode } from "../../HierarchyNode";
-import { getLogger } from "../../Logging";
-import { IMetadataProvider } from "../../Metadata";
-import { createOperatorLoggingNamespace, getClass } from "../Common";
-import { sortNodesByLabelOperator } from "./Sorting";
+import { ClassInfo } from "../../../EC";
+import { HierarchyNode } from "../../../HierarchyNode";
+import { getLogger } from "../../../Logging";
+import { IMetadataProvider } from "../../../Metadata";
+import { createOperatorLoggingNamespace, getClass } from "../../Common";
+import { sortNodesByLabelOperator } from "../Sorting";
 
 const OPERATOR_NAME = "Grouping.ByClass";
 /** @internal */
@@ -47,7 +47,7 @@ async function createClassGroupingInformation(metadata: IMetadataProvider, nodes
   const groupings: ClassGroupingInformation = { ungrouped: [], grouped: new Map() };
   for (const node of nodes) {
     // we're only grouping instance nodes
-    if (HierarchyNode.isInstancesNode(node) && node.params?.groupByClass) {
+    if (HierarchyNode.isInstancesNode(node) && node.params?.grouping?.groupByClass) {
       const fullClassName = node.key.instanceKeys[0].className;
       let groupingInfo = groupings.grouped.get(fullClassName);
       if (!groupingInfo) {

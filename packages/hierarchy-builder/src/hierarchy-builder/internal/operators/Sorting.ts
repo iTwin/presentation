@@ -20,3 +20,10 @@ export function sortNodesByLabelOperator(nodes: Observable<HierarchyNode>): Obse
     mergeMap((allNodes) => allNodes.sort((lhs, rhs) => naturalCompare(lhs.label.toLocaleLowerCase(), rhs.label.toLocaleLowerCase()))),
   );
 }
+
+/**
+ * @internal
+ */
+export function sortNodesByLabel(nodes: HierarchyNode[]): HierarchyNode[] {
+  return nodes.sort((lhs, rhs) => naturalCompare(lhs.label.toLocaleLowerCase(), rhs.label.toLocaleLowerCase()));
+}

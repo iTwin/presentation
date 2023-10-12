@@ -5,9 +5,9 @@
 import { expect } from "chai";
 import { from } from "rxjs";
 import { Id64, LogLevel } from "@itwin/core-bentley";
-import { HierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
-import { createLabelGroupingOperator, LOGGING_NAMESPACE } from "../../../hierarchy-builder/internal/operators/LabelGrouping";
-import { createTestNode, getObservableResult, setupLogging } from "../../Utils";
+import { HierarchyNode } from "../../../../hierarchy-builder/HierarchyNode";
+import { createLabelGroupingOperator, LOGGING_NAMESPACE } from "../../../../hierarchy-builder/internal/operators/grouping/LabelGrouping";
+import { createTestNode, getObservableResult, setupLogging } from "../../../Utils";
 
 describe("LabelGrouping", () => {
   before(() => {
@@ -53,7 +53,7 @@ describe("LabelGrouping", () => {
           label: "custom",
           key: "test",
           children: false,
-          params: { groupByLabel: true },
+          params: { grouping: { groupByLabel: true } },
         },
       ];
       const result = await getObservableResult(from(nodes).pipe(createLabelGroupingOperator()));
@@ -64,7 +64,7 @@ describe("LabelGrouping", () => {
       const nodes: HierarchyNode[] = [
         createTestNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema:TestClass", id: "0x1" }] },
-          params: { groupByLabel: true },
+          params: { grouping: { groupByLabel: true } },
         }),
       ];
       const result = await getObservableResult(from(nodes).pipe(createLabelGroupingOperator()));
@@ -77,17 +77,17 @@ describe("LabelGrouping", () => {
           label: "testLabel",
           key: "test1",
           children: false,
-          params: { groupByLabel: true },
+          params: { grouping: { groupByLabel: true } },
         },
         {
           label: "testLabel",
           key: "test2",
           children: false,
-          params: { groupByLabel: true },
+          params: { grouping: { groupByLabel: true } },
         },
         createTestNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema:TestClass", id: "0x1" }] },
-          params: { groupByLabel: true },
+          params: { grouping: { groupByLabel: true } },
           label: "testLabel",
         }),
       ];
@@ -100,18 +100,18 @@ describe("LabelGrouping", () => {
         createTestNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
           label: "1",
-          params: { groupByLabel: true },
+          params: { grouping: { groupByLabel: true } },
         }),
         {
           label: "1",
           key: "custom1",
           children: false,
-          params: { groupByLabel: true },
+          params: { grouping: { groupByLabel: true } },
         },
         createTestNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema:B", id: "0x2" }] },
           label: "2",
-          params: { groupByLabel: true },
+          params: { grouping: { groupByLabel: true } },
         }),
         {
           label: "2",
@@ -122,7 +122,7 @@ describe("LabelGrouping", () => {
           label: "3",
           key: "custom3",
           children: false,
-          params: { groupByLabel: true },
+          params: { grouping: { groupByLabel: true } },
         },
       ];
       const result = await getObservableResult(from(nodes).pipe(createLabelGroupingOperator()));
@@ -146,17 +146,17 @@ describe("LabelGrouping", () => {
         createTestNode({
           key: { type: "instances", instanceKeys: [{ className: "Schema:B", id: "0x2" }] },
           label: "1",
-          params: { groupByLabel: true },
+          params: { grouping: { groupByLabel: true } },
         }),
         createTestNode({
           key: { type: "instances", instanceKeys: [{ className: "Schema:B", id: "0x3" }] },
           label: "1",
-          params: { groupByLabel: true },
+          params: { grouping: { groupByLabel: true } },
         }),
         createTestNode({
           key: { type: "instances", instanceKeys: [{ className: "Schema:B", id: "0x4" }] },
           label: "2",
-          params: { groupByLabel: true },
+          params: { grouping: { groupByLabel: true } },
         }),
       ];
 

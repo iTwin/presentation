@@ -2,7 +2,6 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-
 import { Id64 } from "@itwin/core-bentley";
 import { Id64String } from "../EC";
 
@@ -30,10 +29,8 @@ export enum NodeSelectClauseColumnNames {
   HideIfNoChildren = "HideIfNoChildren",
   /** A flag indicating that a node should be hidden and its children should be displayed instead. Type: `boolean`. */
   HideNodeInHierarchy = "HideNodeInHierarchy",
-  /** A flag indicating the node should be grouped by class. */
-  GroupByClass = "GroupByClass",
-  /** A flag indicating the node should be grouped by label. */
-  GroupByLabel = "GroupByLabel",
+  // /** A serialized JSON object for providing grouping information. */
+  Grouping = "Grouping",
   /**
    * A string indicating a label merge group. Values:
    * - non-empty string puts the node into a label merge group.
@@ -69,9 +66,23 @@ export interface NodeSelectClauseProps {
   hasChildren?: boolean | ECSqlValueSelector;
   hideNodeInHierarchy?: boolean | ECSqlValueSelector;
   hideIfNoChildren?: boolean | ECSqlValueSelector;
-  groupByClass?: boolean | ECSqlValueSelector;
-  groupByLabel?: boolean | ECSqlValueSelector;
+  grouping?: {
+    groupByClass?: boolean | ECSqlValueSelector;
+    groupByLabel?: boolean | ECSqlValueSelector;
+    groupByBaseClass?: boolean | ECSqlValueSelector;
+    baseClassInfo?: BaseClassInfoProps[];
+    hideIfSingleNodeInGroup?: boolean | ECSqlValueSelector;
+    hideIfNoOtherGroups?: boolean | ECSqlValueSelector;
+  };
   mergeByLabelId?: string | ECSqlValueSelector;
+}
+
+/**
+ * @beta
+ */
+export interface BaseClassInfoProps {
+  className: string | ECSqlValueSelector;
+  schemaName: string | ECSqlValueSelector;
 }
 
 /**
@@ -90,15 +101,33 @@ export class NodeSelectClauseFactory {
       CAST(${createECSqlValueSelector(props.hasChildren)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
       CAST(${createECSqlValueSelector(props.hideIfNoChildren)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
       CAST(${createECSqlValueSelector(props.hideNodeInHierarchy)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
-      CAST(${createECSqlValueSelector(props.groupByClass)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.GroupByClass},
-      CAST(${createECSqlValueSelector(props.groupByLabel)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.GroupByLabel},
+      ${
+        props.grouping
+          ? `json_object(${Object.entries(props.grouping)
+              .map(([key, value]) => {
+                if (Array.isArray(value)) {
+                  return `'${key}', json_array(${Object.entries(value)
+                    .map(
+                      ([, objValue]) =>
+                        `json_object('className', ${createECSqlValueSelector(objValue.className)}, 'schemaName', ${createECSqlValueSelector(
+                          objValue.schemaName,
+                        )})`,
+                    )
+                    .join(", ")})`;
+                } else {
+                  return `'${key}', ${createECSqlValueSelector(value)}`;
+                }
+              })
+              .join(", ")})`
+          : "CAST(NULL AS TEXT)"
+      } AS ${NodeSelectClauseColumnNames.Grouping},
       CAST(${createECSqlValueSelector(props.mergeByLabelId)} AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
       ${
         props.extendedData
           ? `json_object(${Object.entries(props.extendedData)
               .map(([key, value]) => `'${key}', ${createECSqlValueSelector(value)}`)
               .join(", ")})`
-          : "NULL"
+          : "CAST(NULL AS TEXT)"
       } AS ${NodeSelectClauseColumnNames.ExtendedData},
       CAST(${createECSqlValueSelector(props.autoExpand)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.AutoExpand}
     `;

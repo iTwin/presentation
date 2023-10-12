@@ -130,6 +130,33 @@ export namespace NodeValidators {
     };
   }
 
+  export function createForBaseClassGroupingNode(props: {
+    baseClassName?: string;
+    label?: string;
+    autoExpand?: boolean;
+    children?: ExpectedHierarchyDef[] | boolean;
+  }): ExpectedHierarchyDef {
+    return {
+      node: (node) => {
+        if (!HierarchyNode.isStandard(node)) {
+          throw new Error(`[${node.label}] Expected a base class grouping node, got a non-standard "${node.key as string}"`);
+        }
+        if (node.key.type !== "base-class-grouping") {
+          throw new Error(`[${node.label}] Expected a base class grouping node, got "${node.key.type}"`);
+        }
+        if (props.baseClassName && node.key.class.name !== props.baseClassName) {
+          throw new Error(`[${node.label}] Expected node to represent class "${props.baseClassName}", got "${node.key.class.name}"`);
+        }
+        validateBaseNodeAttributes(node, {
+          label: props.label,
+          autoExpand: props.autoExpand,
+          children: props.children,
+        });
+      },
+      children: props.children,
+    };
+  }
+
   export function createForLabelGroupingNode(props: {
     label?: string;
     autoExpand?: boolean;

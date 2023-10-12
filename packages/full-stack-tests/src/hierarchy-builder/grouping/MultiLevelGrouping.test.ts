@@ -85,8 +85,10 @@ describe("Stateless hierarchy builder", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.UserLabel` },
-                      groupByClass: true,
-                      groupByLabel: true,
+                      grouping: {
+                        groupByClass: true,
+                        groupByLabel: true,
+                      },
                     })}
                     FROM (
                       SELECT ECClassId, ECInstanceId, UserLabel, Parent

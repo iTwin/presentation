@@ -348,7 +348,9 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                     className: "BisCore.GeometricElement3d",
                   }),
                 },
-                groupByClass: true,
+                grouping: {
+                  groupByClass: true,
+                },
                 hasChildren: {
                   selector: `
                     IFNULL((
@@ -394,7 +396,9 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                     className: "BisCore.GeometricElement3d",
                   }),
                 },
-                groupByClass: true,
+                grouping: {
+                  groupByClass: true,
+                },
                 hasChildren: {
                   selector: `
                     IFNULL((

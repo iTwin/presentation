@@ -70,7 +70,9 @@ describe("Stateless hierarchy builder", () => {
                     ecClassId: { selector: `this.ECClassId` },
                     ecInstanceId: { selector: `this.ECInstanceId` },
                     nodeLabel: { selector: `this.UserLabel` },
-                    groupByLabel: true,
+                    grouping: {
+                      groupByLabel: true,
+                    },
                   })}
                   FROM ${subjectClassName} AS this
                   WHERE this.Parent.Id = (${IModel.rootSubjectId})
