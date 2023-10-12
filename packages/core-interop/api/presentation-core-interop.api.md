@@ -24,7 +24,7 @@ export function createLogger(): ILogger;
 export function createMetadataProvider(schemaContext: SchemaContext): IMetadataProvider;
 
 // @beta
-export function createValueFormatter(schemaContext: SchemaContext, unitSystem?: UnitSystemKey): IPrimitiveValueFormatter;
+export function createValueFormatter(schemaContext: SchemaContext, unitSystem?: UnitSystemKey, baseFormatter?: IPrimitiveValueFormatter): IPrimitiveValueFormatter;
 
 // @beta
 export interface IECSqlReaderFactory {

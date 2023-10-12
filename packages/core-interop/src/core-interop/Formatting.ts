@@ -19,12 +19,16 @@ import { createDefaultValueFormatter, IPrimitiveValueFormatter, parseFullClassNa
 
 /**
  * Creates a formatter that knows how to format values of properties with assigned kind of quantity. In case the property
- * does not have an assigned kind of quantity, the default formatter is used.
+ * does not have an assigned kind of quantity, the base formatter is used.
  *
  * @beta
  */
-export function createValueFormatter(schemaContext: SchemaContext, unitSystem?: UnitSystemKey): IPrimitiveValueFormatter {
-  const baseFormatter = createDefaultValueFormatter();
+export function createValueFormatter(
+  schemaContext: SchemaContext,
+  unitSystem?: UnitSystemKey,
+  // istanbul ignore next
+  baseFormatter = createDefaultValueFormatter(),
+): IPrimitiveValueFormatter {
   const unitsProvider = new SchemaUnitProvider(schemaContext);
   return async function (value: TypedPrimitiveValue): Promise<string> {
     if (value.type === "Double" && !!value.koqName) {

@@ -19,7 +19,7 @@ import {
   Unit,
   UnitSystem,
 } from "@itwin/ecschema-metadata";
-import * as hierarchyBuilder from "@itwin/presentation-hierarchy-builder";
+import { IPrimitiveValueFormatter, TypedPrimitiveValue } from "@itwin/presentation-hierarchy-builder";
 import { createValueFormatter } from "../core-interop/Formatting";
 
 describe("createValueFormatter", () => {
@@ -27,25 +27,19 @@ describe("createValueFormatter", () => {
     getSchema: sinon.stub<[SchemaKey], Schema>(),
   };
   const defaultFormatter = sinon.fake(async () => Promise.resolve("DEFAULT"));
-  let defaultFormatterFactory: sinon.SinonStub<[], hierarchyBuilder.IPrimitiveValueFormatter>;
-  let formatter: hierarchyBuilder.IPrimitiveValueFormatter;
+  let formatter: IPrimitiveValueFormatter;
 
   function initFormatter(unitSystem?: UnitSystemKey) {
-    formatter = createValueFormatter(schemaContext as unknown as SchemaContext, unitSystem);
+    formatter = createValueFormatter(schemaContext as unknown as SchemaContext, unitSystem, defaultFormatter);
   }
 
   beforeEach(() => {
     defaultFormatter.resetHistory();
-    defaultFormatterFactory = sinon.stub(hierarchyBuilder, "createDefaultValueFormatter").returns(defaultFormatter);
     initFormatter();
   });
 
-  afterEach(() => {
-    defaultFormatterFactory.reset();
-  });
-
   it("returns default formatter result when property doesn't have a KoQ", async () => {
-    const prop: hierarchyBuilder.TypedPrimitiveValue = {
+    const prop: TypedPrimitiveValue = {
       type: "Double",
       value: 1.23,
     };
@@ -55,7 +49,7 @@ describe("createValueFormatter", () => {
 
   it("throws when property references non-existing schema in KoQ", async () => {
     schemaContext.getSchema.resolves(undefined);
-    const prop: hierarchyBuilder.TypedPrimitiveValue = {
+    const prop: TypedPrimitiveValue = {
       type: "Double",
       value: 1.23,
       koqName: "X.Y",
@@ -68,7 +62,7 @@ describe("createValueFormatter", () => {
       name: "X",
       getItem: async () => undefined,
     });
-    const prop: hierarchyBuilder.TypedPrimitiveValue = {
+    const prop: TypedPrimitiveValue = {
       type: "Double",
       value: 1.23,
       koqName: "X.Y",
@@ -88,7 +82,7 @@ describe("createValueFormatter", () => {
         return undefined;
       },
     });
-    const prop: hierarchyBuilder.TypedPrimitiveValue = {
+    const prop: TypedPrimitiveValue = {
       type: "Double",
       value: 1.23,
       koqName: "X.Y",
@@ -115,7 +109,7 @@ describe("createValueFormatter", () => {
         return undefined;
       },
     });
-    const prop: hierarchyBuilder.TypedPrimitiveValue = {
+    const prop: TypedPrimitiveValue = {
       type: "Double",
       value: 1.23,
       koqName: "X.Y",
