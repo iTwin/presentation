@@ -38,7 +38,8 @@ import {
   StartStructProps,
   TypeDescription,
 } from "@itwin/presentation-common";
-import { NumericEditorName } from "../properties/NumericPropertyEditor";
+import { NumericEditorName } from "../properties/editors/NumericPropertyEditor";
+import { QuantityEditorName } from "../properties/editors/QuantityPropertyEditor";
 
 /** @internal */
 export interface FieldRecord {
@@ -89,16 +90,16 @@ export function createPropertyDescriptionFromFieldInfo(info: FieldInfo) {
 
   if (info.koqName) {
     descr.quantityType = info.koqName;
+    descr.editor = { name: QuantityEditorName, ...descr.editor };
   }
 
   if (
-    !descr.editor &&
-    (descr.typename === StandardTypeNames.Number ||
-      descr.typename === StandardTypeNames.Int ||
-      descr.typename === StandardTypeNames.Float ||
-      descr.typename === StandardTypeNames.Double)
+    descr.typename === StandardTypeNames.Number ||
+    descr.typename === StandardTypeNames.Int ||
+    descr.typename === StandardTypeNames.Float ||
+    descr.typename === StandardTypeNames.Double
   ) {
-    descr.editor = { name: NumericEditorName };
+    descr.editor = { name: NumericEditorName, ...descr.editor };
   }
 
   if (info.type.valueFormat === PresentationPropertyValueFormat.Primitive && info.enum) {

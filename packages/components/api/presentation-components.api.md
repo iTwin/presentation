@@ -60,17 +60,17 @@ import { PropertyDataChangeEvent } from '@itwin/components-react';
 import { PropertyDataFiltererBase } from '@itwin/components-react';
 import { PropertyDataFilterResult } from '@itwin/components-react';
 import { PropertyDescription } from '@itwin/appui-abstract';
-import { PropertyEditorBase } from '@itwin/components-react';
-import { PropertyEditorProps } from '@itwin/components-react';
 import { PropertyFilterRuleGroupOperator } from '@itwin/components-react';
 import { PropertyFilterRuleOperator } from '@itwin/components-react';
 import { PropertyRecord } from '@itwin/appui-abstract';
-import { PropertyValue } from '@itwin/appui-abstract';
 import { PropertyValueRendererContext } from '@itwin/components-react';
-import { PureComponent } from 'react';
+import { PropsWithChildren } from 'react';
+import { ReactNode } from 'react';
 import { RenderedItemsRange } from '@itwin/components-react';
 import { RendererDescription } from '@itwin/presentation-common';
 import { Ruleset } from '@itwin/presentation-common';
+import { RulesetVariable } from '@itwin/presentation-common';
+import { SchemaContext } from '@itwin/ecschema-metadata';
 import { SelectionChangeType } from '@itwin/presentation-frontend';
 import { SelectionHandler } from '@itwin/presentation-frontend';
 import { SelectionInfo } from '@itwin/presentation-common';
@@ -92,7 +92,7 @@ import { TreeRendererProps } from '@itwin/components-react';
 import { TreeSelectionModificationEventArgs } from '@itwin/components-react';
 import { TreeSelectionReplacementEventArgs } from '@itwin/components-react';
 import { TypeDescription } from '@itwin/presentation-common';
-import { TypeEditor } from '@itwin/components-react';
+import { UnitSystemKey } from '@itwin/core-quantity';
 import { ViewportProps } from '@itwin/imodel-components-react';
 
 // @public
@@ -168,6 +168,7 @@ export function createFieldInfo(field: Field, parentFieldName?: string): {
     editor: EditorDescription | undefined;
     renderer: RendererDescription | undefined;
     enum: EnumerationInfo | undefined;
+    koqName: string | undefined;
 };
 
 // @internal (undocumented)
@@ -248,6 +249,8 @@ export interface FieldInfo {
     // (undocumented)
     isReadonly?: boolean;
     // (undocumented)
+    koqName?: string;
+    // (undocumented)
     label: string;
     // (undocumented)
     name: string;
@@ -265,10 +268,17 @@ export interface FieldRecord {
     record: PropertyRecord;
 }
 
+// @beta
+export type FilterablePresentationTreeNodeItem = PresentationTreeNodeItem & {
+    filtering: PresentationTreeNodeItemFilteringInfo;
+};
+
 // @internal
 export class FilteredPresentationTreeDataProvider implements IFilteredPresentationTreeDataProvider {
     constructor(props: FilteredPresentationTreeDataProviderProps);
     countFilteringResults(nodePaths: ReadonlyArray<Readonly<NodePathElement>>): number;
+    // (undocumented)
+    createRequestOptions(parentKey?: NodeKey, instanceFilter?: InstanceFilterDefinition): HierarchyRequestOptions<IModelConnection, NodeKey, RulesetVariable>;
     // (undocumented)
     dispose(): void;
     // (undocumented)
@@ -307,6 +317,9 @@ export function findBaseExpressionClass(imodel: IModelConnection, propertyClasse
 
 // @internal (undocumented)
 export const getFavoritesCategory: () => CategoryDescription;
+
+// @beta
+export type HierarchyLevelFilteringDescriptor = Descriptor | (() => Promise<Descriptor>);
 
 // @public
 export interface IContentDataProvider extends IPresentationDataProvider {
@@ -360,6 +373,7 @@ export type IPresentationPropertyDataProvider = IPropertyDataProvider & IContent
 
 // @public
 export interface IPresentationTreeDataProvider extends ITreeDataProvider, IPresentationDataProvider {
+    createRequestOptions(parentKey?: NodeKey, instanceFilter?: InstanceFilterDefinition): HierarchyRequestOptions<IModelConnection, NodeKey>;
     getFilteredNodePaths(filter: string): Promise<NodePathElement[]>;
     // @deprecated
     getNodeKey(node: TreeNodeItem): NodeKey;
@@ -372,6 +386,9 @@ export interface IPropertiesAppender {
     // (undocumented)
     item?: Item;
 }
+
+// @beta
+export function isFilterablePresentationTreeNodeItem(item: PresentationTreeNodeItem): item is FilterablePresentationTreeNodeItem;
 
 // @beta
 export function isPresentationInfoTreeNodeItem(item: TreeNodeItem): item is PresentationInfoTreeNodeItem;
@@ -389,59 +406,12 @@ export interface IUnifiedSelectionComponent {
 }
 
 // @beta
-export class NavigationPropertyEditor extends PropertyEditorBase {
-    // (undocumented)
-    get containerHandlesEnter(): boolean;
-    // (undocumented)
-    get containerStopsKeydownPropagation(): boolean;
-    // (undocumented)
-    get reactNode(): React.ReactNode;
-}
-
-// @beta
 export const navigationPropertyEditorContext: Context<NavigationPropertyEditorContextProps | undefined>;
 
 // @beta
 export interface NavigationPropertyEditorContextProps {
     getNavigationPropertyInfo: (property: PropertyDescription) => Promise<NavigationPropertyInfo | undefined>;
     imodel: IModelConnection;
-}
-
-// @beta
-export class NavigationPropertyTargetEditor extends PureComponent<PropertyEditorProps> implements TypeEditor {
-    // (undocumented)
-    getPropertyValue(): Promise<PropertyValue | undefined>;
-    // (undocumented)
-    get hasFocus(): boolean;
-    // (undocumented)
-    get htmlElement(): HTMLDivElement | null;
-    // @internal (undocumented)
-    render(): JSX.Element;
-}
-
-// @internal
-export const NumericEditorName = "presentation-numeric-editor";
-
-// @internal
-export class NumericPropertyEditor extends PureComponent<PropertyEditorProps> implements TypeEditor {
-    // (undocumented)
-    getPropertyValue(): Promise<PropertyValue | undefined>;
-    // (undocumented)
-    get hasFocus(): boolean;
-    // (undocumented)
-    get htmlElement(): HTMLDivElement | null;
-    // (undocumented)
-    render(): JSX.Element | null;
-}
-
-// @internal
-export class NumericPropertyEditorBase extends PropertyEditorBase {
-    // (undocumented)
-    get containerHandlesEnter(): boolean;
-    // (undocumented)
-    get containerStopsKeydownPropagation(): boolean;
-    // (undocumented)
-    get reactNode(): React.ReactNode;
 }
 
 // @public
@@ -463,19 +433,6 @@ export interface PresentationInfoTreeNodeItem extends ImmediatelyLoadedTreeNodeI
 export type PresentationInstanceFilter = PresentationInstanceFilterConditionGroup | PresentationInstanceFilterCondition;
 
 // @beta
-export function PresentationInstanceFilterBuilder(props: PresentationInstanceFilterBuilderProps): JSX.Element;
-
-// @beta
-export interface PresentationInstanceFilterBuilderProps {
-    descriptor: Descriptor;
-    enableUniqueValuesRenderer?: boolean;
-    imodel: IModelConnection;
-    initialFilter?: PresentationInstanceFilterInfo;
-    onInstanceFilterChanged: (filter?: PresentationInstanceFilterInfo) => void;
-    ruleGroupDepthLimit?: number;
-}
-
-// @beta
 export interface PresentationInstanceFilterCondition {
     field: PropertiesField;
     operator: PropertyFilterRuleOperator;
@@ -494,8 +451,8 @@ export function PresentationInstanceFilterDialog(props: PresentationInstanceFilt
 // @beta
 export interface PresentationInstanceFilterDialogProps {
     descriptor: (() => Promise<Descriptor>) | Descriptor;
-    enableUniqueValuesRenderer?: boolean;
-    filterResultCountRenderer?: (filter?: PresentationInstanceFilterInfo) => React.ReactNode;
+    descriptorInputKeys?: Keys;
+    filterResultsCountRenderer?: (filter: PresentationInstanceFilterInfo) => ReactNode;
     imodel: IModelConnection;
     initialFilter?: PresentationInstanceFilterInfo;
     isOpen: boolean;
@@ -563,6 +520,17 @@ export interface PresentationPropertyDataProviderProps extends DiagnosticsProps 
 // @public
 export class PresentationTreeDataProvider implements IPresentationTreeDataProvider, IDisposable {
     constructor(props: PresentationTreeDataProviderProps);
+    createRequestOptions(parentKey: NodeKey | undefined, instanceFilter?: InstanceFilterDefinition): {
+        instanceFilter?: InstanceFilterDefinition | undefined;
+        sizeLimit?: number | undefined;
+        parentKey?: NodeKey | undefined;
+        rulesetOrId: string | Ruleset;
+        rulesetVariables?: RulesetVariable[] | undefined;
+        imodel: IModelConnection;
+        locale?: string | undefined;
+        unitSystem?: UnitSystemKey | undefined;
+        transport?: "unparsed-json" | undefined;
+    };
     // @internal
     createTreeNodeItem(node: Node_2, parentId?: string): PresentationTreeNodeItem;
     dispose(): void;
@@ -615,7 +583,7 @@ export interface PresentationTreeNodeItem extends DelayLoadedTreeNodeItem {
 export interface PresentationTreeNodeItemFilteringInfo {
     active?: PresentationInstanceFilterInfo;
     ancestorFilters: PresentationInstanceFilterInfo[];
-    descriptor: Descriptor | (() => Promise<Descriptor>);
+    descriptor: HierarchyLevelFilteringDescriptor;
 }
 
 // @public
@@ -650,9 +618,7 @@ export function PresentationTreeRenderer(props: PresentationTreeRendererProps): 
 // @beta
 export interface PresentationTreeRendererProps extends TreeRendererProps {
     // (undocumented)
-    imodel: IModelConnection;
-    // (undocumented)
-    modelSource: TreeModelSource;
+    nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
 }
 
 // @public
@@ -699,6 +665,20 @@ export abstract class PropertyRecordsBuilder implements IContentVisitor {
     startItem(props: StartItemProps): boolean;
     // (undocumented)
     startStruct(props: StartStructProps): boolean;
+}
+
+// @beta
+export interface SchemaMetadataContext {
+    schemaContext: SchemaContext;
+}
+
+// @beta
+export function SchemaMetadataContextProvider({ schemaContextProvider, imodel, children }: PropsWithChildren<SchemaMetadataContextProviderProps>): JSX.Element;
+
+// @beta
+export interface SchemaMetadataContextProviderProps {
+    imodel: IModelConnection;
+    schemaContextProvider: (imodel: IModelConnection) => SchemaContext;
 }
 
 // @beta
@@ -866,6 +846,9 @@ export interface UsePropertyDataProviderWithUnifiedSelectionResult {
 
 // @public
 export function useRulesetRegistration(ruleset: Ruleset): void;
+
+// @beta
+export function useSchemaMetadataContext(): SchemaMetadataContext | undefined;
 
 // @beta
 export function useUnifiedSelectionContext(): UnifiedSelectionContext | undefined;
