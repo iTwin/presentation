@@ -75,7 +75,7 @@ export class HierarchyProvider {
       this._queryReader = TreeQueryResultsReader.create(filteringDefinition.parseNode);
     } else {
       this._hierarchyFactory = props.hierarchyDefinition;
-      this._queryReader = TreeQueryResultsReader.create();
+      this._queryReader = TreeQueryResultsReader.create(this._hierarchyFactory.parseNode);
     }
     this._queryExecutor = props.queryExecutor;
     this._valuesFormatter = props?.formatter ?? createDefaultValueFormatter();
