@@ -56,6 +56,6 @@ export namespace ConcatenatedValue {
     if (!Array.isArray(parts)) {
       return partFormatter(parts);
     }
-    return (await Promise.all(parts.map(async (part) => partFormatter(part)))).join("");
+    return (await Promise.all(parts.map(partFormatter))).join("");
   }
 }

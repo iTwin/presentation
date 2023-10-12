@@ -34,7 +34,7 @@ describe("createPropertyValueSelector", () => {
     ]);
   });
 
-  it("returns selector for navigation properties", () => {
+  it("returns selector for point3d properties", () => {
     const propertySelector = "[alias].[property-name]";
     expect(createPropertyValueSelector("alias", "property-name", "Point3d")).to.deep.eq([
       `json_object('x', ${propertySelector}.[x], 'y', ${propertySelector}.[y], 'z', ${propertySelector}.[z])`,
