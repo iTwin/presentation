@@ -34,7 +34,7 @@ import { convertToInstanceFilterDefinition } from "../instance-filter-builder/In
 import { PresentationInstanceFilterInfo } from "../instance-filter-builder/PresentationInstanceFilterBuilder";
 import { PresentationInstanceFilter } from "../instance-filter-builder/Types";
 import { IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider";
-import { isPresentationTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem";
+import { InfoTreeNodeItemType, isPresentationTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem";
 import { createInfoNode, createTreeNodeItem, CreateTreeNodeItemProps, pageOptionsUiToPresentation } from "./Utils";
 
 /**
@@ -252,6 +252,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
         this.createBaseRequestOptions(),
         (node, parentId) => this.createTreeNodeItem(node, parentId),
         parentNode,
+        this.hierarchyLevelSizeLimit,
       );
     },
     { isMatchingKey: MemoizationHelpers.areNodesRequestsEqual as any },
@@ -307,13 +308,14 @@ async function createNodesAndCountResult(
   baseOptions: RequestOptionsWithRuleset<IModelConnection>,
   treeItemFactory: (node: Node, parentId?: string) => PresentationTreeNodeItem,
   parentNode?: TreeNodeItem,
+  hierarchyLevelSizeLimit?: number,
 ) {
   try {
     const result = await resultFactory();
     const { nodes, count } = result;
     const isParentFiltered = parentNode && isPresentationTreeNodeItem(parentNode) && parentNode.filtering?.active;
     if (nodes.length === 0 && isParentFiltered) {
-      return createStatusNodeResult(parentNode, "tree.no-filtered-children");
+      return createStatusNodeResult(parentNode, "tree.no-filtered-children", InfoTreeNodeItemType.NoChildren);
     }
     return { nodes: createTreeItems(nodes, baseOptions, treeItemFactory, parentNode), count };
   } catch (e) {
@@ -322,9 +324,10 @@ async function createNodesAndCountResult(
         case PresentationStatus.Canceled:
           return { nodes: [], count: 0 };
         case PresentationStatus.BackendTimeout:
-          return createStatusNodeResult(parentNode, "tree.timeout");
+          return createStatusNodeResult(parentNode, "tree.timeout", InfoTreeNodeItemType.BackendTimeout);
         case PresentationStatus.ResultSetTooLarge:
-          return createStatusNodeResult(parentNode, "tree.result-set-too-large");
+          const label = hierarchyLevelSizeLimit === undefined ? "tree.result-set-too-large-limit-unknown" : "tree.result-set-too-large-limit-known";
+          return createStatusNodeResult(parentNode, label, InfoTreeNodeItemType.ResultSetTooLarge);
       }
     }
     // istanbul ignore else
@@ -336,9 +339,9 @@ async function createNodesAndCountResult(
   }
 }
 
-function createStatusNodeResult(parentNode: TreeNodeItem | undefined, labelKey: string) {
+function createStatusNodeResult(parentNode: TreeNodeItem | undefined, labelKey: string, type?: InfoTreeNodeItemType) {
   return {
-    nodes: [createInfoNode(parentNode, translate(labelKey))],
+    nodes: [createInfoNode(parentNode, translate(labelKey), type)],
     count: 1,
   };
 }

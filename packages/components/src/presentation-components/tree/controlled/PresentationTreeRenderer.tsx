@@ -43,6 +43,7 @@ export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
       return (
         <PresentationTreeNodeRenderer
           {...nodeProps}
+          modelsSource={props.modelSource}
           onFilterClick={(node) => {
             setFilterNode(node);
           }}
@@ -50,7 +51,7 @@ export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
         />
       );
     },
-    [clearFilter],
+    [props.modelSource, clearFilter],
   );
 
   const divRef = useRef<HTMLDivElement>(null);

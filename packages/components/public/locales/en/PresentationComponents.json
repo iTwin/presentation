@@ -25,7 +25,9 @@
   },
   "tree": {
     "no-filtered-children": "There are no child nodes matching current filter",
-    "result-set-too-large": "The hierarchy level is too large to be displayed - please provide additional filtering",
+    "result-set-too-large-limit-unknown": "There are more nodes than allowed",
+    "result-set-too-large-limit-known": "There are more nodes than allowed limit of",
+    "filtering-needed": "Provide additional filtering",
     "timeout": "Creating the hierarchy level took too long",
     "unknown-error": "Error creating the hierarchy level"
   },

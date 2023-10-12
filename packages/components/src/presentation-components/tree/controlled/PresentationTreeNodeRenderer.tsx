@@ -8,11 +8,12 @@
 
 import "./PresentationTreeNodeRenderer.scss";
 import classnames from "classnames";
-import { TreeNodeRenderer, TreeNodeRendererProps } from "@itwin/components-react";
-import { TreeNode } from "@itwin/core-react";
+import { isTreeModelNode, TreeModelSource, TreeNodeRenderer, TreeNodeRendererProps } from "@itwin/components-react";
+import { TreeNode, UnderlinedButton } from "@itwin/core-react";
 import { SvgCloseSmall, SvgFilter, SvgFilterHollow } from "@itwin/itwinui-icons-react";
 import { ButtonGroup, IconButton, Text } from "@itwin/itwinui-react";
-import { isPresentationInfoTreeNodeItem, isPresentationTreeNodeItem, PresentationTreeNodeItem } from "../PresentationTreeNodeItem";
+import { translate } from "../../common/Utils";
+import { InfoTreeNodeItemType, isPresentationInfoTreeNodeItem, isPresentationTreeNodeItem, PresentationTreeNodeItem } from "../PresentationTreeNodeItem";
 
 /**
  * Props for [[PresentationTreeNodeRenderer]] component.
@@ -21,6 +22,7 @@ import { isPresentationInfoTreeNodeItem, isPresentationTreeNodeItem, Presentatio
 export interface PresentationTreeNodeRendererProps extends TreeNodeRendererProps {
   onFilterClick: (node: PresentationTreeNodeItem) => void;
   onClearFilterClick: (node: PresentationTreeNodeItem) => void;
+  modelsSource?: TreeModelSource;
 }
 
 /**
@@ -30,11 +32,37 @@ export interface PresentationTreeNodeRendererProps extends TreeNodeRendererProps
  * @beta
  */
 export function PresentationTreeNodeRenderer(props: PresentationTreeNodeRendererProps) {
-  const { onFilterClick, onClearFilterClick, ...restProps } = props;
+  const { onFilterClick, onClearFilterClick, modelsSource, ...restProps } = props;
   const nodeItem = props.node.item;
 
   if (isPresentationInfoTreeNodeItem(nodeItem)) {
-    return <TreeNode isLeaf={true} label={<Text isMuted>{nodeItem.message}</Text>} level={props.node.depth} isHoverDisabled={true} />;
+    return (
+      <TreeNode
+        isLeaf={true}
+        label={
+          <span>
+            <Text isMuted className="tree-node-info-item">
+              {nodeItem.type === InfoTreeNodeItemType.ResultSetTooLarge && modelsSource && (
+                <UnderlinedButton
+                  onClick={() => {
+                    const parentNode = modelsSource?.getModel().getNode(nodeItem.parentId);
+                    if (isTreeModelNode(parentNode) && isPresentationTreeNodeItem(parentNode.item)) {
+                      onFilterClick(parentNode.item);
+                    }
+                  }}
+                >
+                  {`${translate("tree.filtering-needed")}. `}
+                </UnderlinedButton>
+              )}
+
+              <span>{nodeItem.message}</span>
+            </Text>
+          </span>
+        }
+        level={props.node.depth}
+        isHoverDisabled={true}
+      />
+    );
   }
 
   if (isPresentationTreeNodeItem(nodeItem)) {

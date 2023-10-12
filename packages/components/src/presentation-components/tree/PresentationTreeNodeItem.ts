@@ -44,6 +44,14 @@ export interface PresentationTreeNodeItem extends DelayLoadedTreeNodeItem {
   filtering?: PresentationTreeNodeItemFilteringInfo;
 }
 
+export enum InfoTreeNodeItemType {
+  ResultSetTooLarge,
+  BackendTimeout,
+  Cancelled,
+  NoChildren,
+  Unset,
+}
+
 /**
  * Data structure that describes tree node item created by [[PresentationTreeDataProvider]]
  * which is used to carry information message.
@@ -56,6 +64,8 @@ export interface PresentationInfoTreeNodeItem extends ImmediatelyLoadedTreeNodeI
   isSelectionDisabled: true;
   /** This type of tree item cannot have children. */
   children: undefined;
+  /** Type of item message */
+  type?: InfoTreeNodeItemType;
 }
 
 /**
