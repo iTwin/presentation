@@ -49,9 +49,10 @@ Array [
                 "property": Object {
                   "displayLabel": "Acres",
                   "editor": Object {
-                    "name": "presentation-numeric-editor",
+                    "name": "presentation-quantity-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_Acres",
+                  "quantityType": "DgnCustomItemTypes_MyProp:AREA_area_Acres",
                   "typename": "double",
                 },
                 "value": Object {
@@ -65,9 +66,10 @@ Array [
                 "property": Object {
                   "displayLabel": "cm2",
                   "editor": Object {
-                    "name": "presentation-numeric-editor",
+                    "name": "presentation-quantity-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_cm2",
+                  "quantityType": "DgnCustomItemTypes_MyProp:AREA_area",
                   "typename": "double",
                 },
                 "value": Object {
@@ -81,9 +83,10 @@ Array [
                 "property": Object {
                   "displayLabel": "ft2",
                   "editor": Object {
-                    "name": "presentation-numeric-editor",
+                    "name": "presentation-quantity-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_ft2",
+                  "quantityType": "DgnCustomItemTypes_MyProp:AREA_area_ft2",
                   "typename": "double",
                 },
                 "value": Object {
@@ -97,9 +100,10 @@ Array [
                 "property": Object {
                   "displayLabel": "ft ft",
                   "editor": Object {
-                    "name": "presentation-numeric-editor",
+                    "name": "presentation-quantity-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_ft__x0020__ft",
+                  "quantityType": "DgnCustomItemTypes_MyProp:SIZE_LENGTH_RATE",
                   "typename": "double",
                 },
                 "value": Object {
@@ -113,9 +117,10 @@ Array [
                 "property": Object {
                   "displayLabel": "ft mi",
                   "editor": Object {
-                    "name": "presentation-numeric-editor",
+                    "name": "presentation-quantity-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_ft__x0020__mi",
+                  "quantityType": "DgnCustomItemTypes_MyProp:SIZE_LENGTH_RATE_area",
                   "typename": "double",
                 },
                 "value": Object {
@@ -129,9 +134,10 @@ Array [
                 "property": Object {
                   "displayLabel": "ha",
                   "editor": Object {
-                    "name": "presentation-numeric-editor",
+                    "name": "presentation-quantity-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_ha",
+                  "quantityType": "DgnCustomItemTypes_MyProp:AREA_area_ha",
                   "typename": "double",
                 },
                 "value": Object {
@@ -145,9 +151,10 @@ Array [
                 "property": Object {
                   "displayLabel": "in2",
                   "editor": Object {
-                    "name": "presentation-numeric-editor",
+                    "name": "presentation-quantity-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_in2",
+                  "quantityType": "DgnCustomItemTypes_MyProp:AREA_area_in2",
                   "typename": "double",
                 },
                 "value": Object {
@@ -161,9 +168,10 @@ Array [
                 "property": Object {
                   "displayLabel": "in ft",
                   "editor": Object {
-                    "name": "presentation-numeric-editor",
+                    "name": "presentation-quantity-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_in__x0020__ft",
+                  "quantityType": "DgnCustomItemTypes_MyProp:SIZE_LENGTH_RATE_area_in__x0020__ft",
                   "typename": "double",
                 },
                 "value": Object {
@@ -177,9 +185,10 @@ Array [
                 "property": Object {
                   "displayLabel": "in m",
                   "editor": Object {
-                    "name": "presentation-numeric-editor",
+                    "name": "presentation-quantity-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_in__x0020__m",
+                  "quantityType": "DgnCustomItemTypes_MyProp:SIZE_LENGTH_RATE_area_in__x0020__m",
                   "typename": "double",
                 },
                 "value": Object {
@@ -193,9 +202,10 @@ Array [
                 "property": Object {
                   "displayLabel": "in mi",
                   "editor": Object {
-                    "name": "presentation-numeric-editor",
+                    "name": "presentation-quantity-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_in__x0020__mi",
+                  "quantityType": "DgnCustomItemTypes_MyProp:SIZE_LENGTH_RATE_area_in__x0020__mi",
                   "typename": "double",
                 },
                 "value": Object {
@@ -209,9 +219,10 @@ Array [
                 "property": Object {
                   "displayLabel": "km2",
                   "editor": Object {
-                    "name": "presentation-numeric-editor",
+                    "name": "presentation-quantity-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_km2",
+                  "quantityType": "DgnCustomItemTypes_MyProp:AREA_area_km2",
                   "typename": "double",
                 },
                 "value": Object {
@@ -225,9 +236,10 @@ Array [
                 "property": Object {
                   "displayLabel": "m2",
                   "editor": Object {
-                    "name": "presentation-numeric-editor",
+                    "name": "presentation-quantity-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_m2",
+                  "quantityType": "DgnCustomItemTypes_MyProp:AREA_area_m2",
                   "typename": "double",
                 },
                 "value": Object {
@@ -241,9 +253,10 @@ Array [
                 "property": Object {
                   "displayLabel": "m km",
                   "editor": Object {
-                    "name": "presentation-numeric-editor",
+                    "name": "presentation-quantity-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_m__x0020__km",
+                  "quantityType": "DgnCustomItemTypes_MyProp:SIZE_LENGTH_RATE_area_m__x0020__km",
                   "typename": "double",
                 },
                 "value": Object {
@@ -257,9 +270,10 @@ Array [
                 "property": Object {
                   "displayLabel": "m m",
                   "editor": Object {
-                    "name": "presentation-numeric-editor",
+                    "name": "presentation-quantity-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_m__x0020__m",
+                  "quantityType": "DgnCustomItemTypes_MyProp:SIZE_LENGTH_RATE_area_m__x0020__m",
                   "typename": "double",
                 },
                 "value": Object {
@@ -273,9 +287,10 @@ Array [
                 "property": Object {
                   "displayLabel": "mi2",
                   "editor": Object {
-                    "name": "presentation-numeric-editor",
+                    "name": "presentation-quantity-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_mi2",
+                  "quantityType": "DgnCustomItemTypes_MyProp:AREA_area_mi2",
                   "typename": "double",
                 },
                 "value": Object {
@@ -289,9 +304,10 @@ Array [
                 "property": Object {
                   "displayLabel": "mm km",
                   "editor": Object {
-                    "name": "presentation-numeric-editor",
+                    "name": "presentation-quantity-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_mm__x0020__km",
+                  "quantityType": "DgnCustomItemTypes_MyProp:SIZE_LENGTH_RATE_area_mm__x0020__km",
                   "typename": "double",
                 },
                 "value": Object {
@@ -305,9 +321,10 @@ Array [
                 "property": Object {
                   "displayLabel": "thousand ft2",
                   "editor": Object {
-                    "name": "presentation-numeric-editor",
+                    "name": "presentation-quantity-editor",
                   },
                   "name": "rc_generic_PhysicalObject_ncc_MyProp_areaElementAspect$pc_MyProp_areaElementAspect_thousand__x0020__ft2",
+                  "quantityType": "DgnCustomItemTypes_MyProp:AREA_area_thousand__x0020__ft2",
                   "typename": "double",
                 },
                 "value": Object {

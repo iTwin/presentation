@@ -21,6 +21,7 @@ import {
 import * as reader from "../../hierarchy-builder/internal/TreeNodesReader";
 import { IMetadataProvider } from "../../hierarchy-builder/Metadata";
 import { NodeSelectClauseColumnNames } from "../../hierarchy-builder/queries/NodeSelectClauseFactory";
+import { ConcatenatedValue } from "../../hierarchy-builder/values/ConcatenatedValue";
 import { trimWhitespace } from "../queries/Utils";
 import { createGetClassStub, createTestInstanceKey, TStubClassFunc } from "../Utils";
 
@@ -66,7 +67,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         [NodeSelectClauseColumnNames.FullClassName]: "",
         [ECSQL_COLUMN_NAME_FilteredChildrenPaths]: JSON.stringify(paths),
       };
-      const node = filteringFactory.parseNode(row);
+      const node: FilteredHierarchyNode<string | ConcatenatedValue> = filteringFactory.parseNode(row);
       expect(node.filteredChildrenIdentifierPaths).to.deep.eq(paths);
     });
 
@@ -102,14 +103,14 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
   });
 
   describe("preProcessNode", () => {
-    it("returns given node when source factory has no pre-processor", () => {
+    it("returns given node when source factory has no pre-processor", async () => {
       const node = createTestNode();
       const filteringFactory = createFilteringHierarchyLevelsFactory();
-      const result = filteringFactory.preProcessNode(node);
+      const result = await filteringFactory.preProcessNode(node);
       expect(result).to.eq(node);
     });
 
-    it("returns node pre-processed by source factory", () => {
+    it("returns node pre-processed by source factory", async () => {
       const inputNode = createTestNode();
       const sourceFactoryNode = createTestNode();
       const sourceFactory = {
@@ -118,12 +119,12 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
       const filteringFactory = createFilteringHierarchyLevelsFactory({
         sourceFactory,
       });
-      const result = filteringFactory.preProcessNode(inputNode);
+      const result = await filteringFactory.preProcessNode(inputNode);
       expect(sourceFactory.preProcessNode).to.be.calledOnceWithExactly(inputNode);
       expect(result).to.eq(sourceFactoryNode);
     });
 
-    it("returns `undefined` when node is filter target and has `hideInHierarchy` flag", () => {
+    it("returns `undefined` when node is filter target and has `hideInHierarchy` flag", async () => {
       const inputNode: FilteredHierarchyNode = {
         ...createTestNode(),
         params: {
@@ -132,7 +133,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         filteredChildrenIdentifierPaths: [],
       };
       const filteringFactory = createFilteringHierarchyLevelsFactory();
-      const result = filteringFactory.preProcessNode(inputNode);
+      const result = await filteringFactory.preProcessNode(inputNode);
       expect(result).to.be.undefined;
     });
 
@@ -202,7 +203,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         ...createTestNode(),
         key: {
           type: "class-grouping",
-          class: { id: "0x1", label: "class label", name: "class name" },
+          class: { label: "class label", name: "class name" },
         },
       };
     }

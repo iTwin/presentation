@@ -6,18 +6,18 @@
  * @module InstancesFilter
  */
 
-import { Primitives, PrimitiveValue, StandardTypeNames } from "@itwin/appui-abstract";
+import { Primitives, PrimitiveValue, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import { isUnaryPropertyFilterOperator, PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo, InstanceFilterDefinition, NestedContentField, PropertiesField, RelationshipPath } from "@itwin/presentation-common";
+import { deserializeDisplayValueGroupArray } from "../common/Utils";
 import { getIModelMetadataProvider } from "./ECMetadataProvider";
 import { PresentationInstanceFilter, PresentationInstanceFilterCondition, PresentationInstanceFilterConditionGroup } from "./Types";
 
 /**
- * Converts [[PresentationInstanceFilter]] built by [[PresentationInstanceFilterBuilder]] component into
- * [InstanceFilterDefinition]($presentation-common) that can be passed to [PresentationManager]($presentation-frontend) through request options
- * in order to filter results.
+ * Converts [[PresentationInstanceFilter]] into [InstanceFilterDefinition]($presentation-common) that can be passed
+ * to [PresentationManager]($presentation-frontend) through request options in order to filter results.
  * @beta
  */
 export async function convertToInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection): Promise<InstanceFilterDefinition> {
@@ -36,6 +36,24 @@ export async function convertToInstanceFilterDefinition(filter: PresentationInst
   };
 }
 
+/** @internal */
+export async function findBaseExpressionClass(imodel: IModelConnection, propertyClasses: ClassInfo[]) {
+  if (propertyClasses.length === 1) {
+    return propertyClasses[0];
+  }
+
+  const metadataProvider = getIModelMetadataProvider(imodel);
+  const [firstClass, ...restClasses] = propertyClasses;
+  let currentBaseClass = firstClass;
+  for (const propClass of restClasses) {
+    const propClassInfo = await metadataProvider.getECClassInfo(propClass.id);
+    if (propClassInfo && propClassInfo.isDerivedFrom(currentBaseClass.id)) {
+      currentBaseClass = propClass;
+    }
+  }
+  return currentBaseClass;
+}
+
 interface RelatedInstanceDescription {
   path: RelationshipPath;
   alias: string;
@@ -50,7 +68,26 @@ function convertFilter(filter: PresentationInstanceFilter, ctx: ConvertContext) 
   if (isFilterConditionGroup(filter)) {
     return convertConditionGroup(filter, ctx);
   }
+  const result = convertUniqueValuesCondition(filter, ctx);
+  if (result !== undefined) {
+    return result;
+  }
   return convertCondition(filter, ctx);
+}
+
+function convertUniqueValuesCondition(filter: PresentationInstanceFilterCondition, ctx: ConvertContext) {
+  // Unique values works only with `IsEqual` and `IsNotEqual` operators.
+  if (filter.operator !== PropertyFilterRuleOperator.IsEqual && filter.operator !== PropertyFilterRuleOperator.IsNotEqual) {
+    return undefined;
+  }
+  if (typeof filter.value?.value !== "string" || typeof filter.value?.displayValue !== "string") {
+    return undefined;
+  }
+  const result = handleStringifiedUniqueValues(filter, filter.value.displayValue, filter.value.value);
+  if (result === undefined) {
+    return undefined;
+  }
+  return convertConditionGroup(result, ctx);
 }
 
 function convertConditionGroup(group: PresentationInstanceFilterConditionGroup, ctx: ConvertContext): string {
@@ -186,21 +223,31 @@ function isFilterConditionGroup(obj: PresentationInstanceFilter): obj is Present
   return (obj as PresentationInstanceFilterConditionGroup).conditions !== undefined;
 }
 
-async function findBaseExpressionClass(imodel: IModelConnection, propertyClasses: ClassInfo[]) {
-  if (propertyClasses.length === 1) {
-    return propertyClasses[0];
+function handleStringifiedUniqueValues(filter: PresentationInstanceFilterCondition, serializedDisplayValues: string, serializedGroupedRawValues: string) {
+  const { field, operator } = filter;
+
+  let selectedValueIndex = 0;
+
+  const { displayValues, groupedRawValues } = deserializeDisplayValueGroupArray(serializedDisplayValues, serializedGroupedRawValues);
+  if (displayValues === undefined || groupedRawValues === undefined) {
+    return undefined;
   }
 
-  const metadataProvider = getIModelMetadataProvider(imodel);
-  const [firstClass, ...restClasses] = propertyClasses;
-  let currentBaseClass = firstClass;
-  for (const propClass of restClasses) {
-    const propClassInfo = await metadataProvider.getECClassInfo(propClass.id);
-    if (propClassInfo && propClassInfo.isDerivedFrom(currentBaseClass.id)) {
-      currentBaseClass = propClass;
+  const conditionGroup: PresentationInstanceFilterConditionGroup = {
+    operator: operator === PropertyFilterRuleOperator.IsEqual ? PropertyFilterRuleGroupOperator.Or : PropertyFilterRuleGroupOperator.And,
+    conditions: [],
+  };
+  for (const displayValue of displayValues) {
+    for (const value of groupedRawValues[selectedValueIndex]) {
+      conditionGroup.conditions.push({
+        field,
+        operator,
+        value: { valueFormat: PropertyValueFormat.Primitive, displayValue, value },
+      });
     }
+    selectedValueIndex++;
   }
-  return currentBaseClass;
+  return conditionGroup;
 }
 
 function createPointComparision(point: { x: number; y: number } | { x: number; y: number; z: number }, operatorExpression: string, propertyAccessor: string) {

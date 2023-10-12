@@ -10,7 +10,7 @@ import { PropertyValue, PropertyValueFormat, StandardTypeNames } from "@itwin/ap
 import { PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ClassInfo, RelationshipPath, PropertyValueFormat as TypeValueFormat } from "@itwin/presentation-common";
+import { ClassInfo, RelationshipPath, PropertyValueFormat as TypeValueFormat, Value } from "@itwin/presentation-common";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import { convertToInstanceFilterDefinition } from "../../presentation-components/instance-filter-builder/InstanceFilterConverter";
 import { PresentationInstanceFilterCondition, PresentationInstanceFilterConditionGroup } from "../../presentation-components/instance-filter-builder/Types";
@@ -126,7 +126,7 @@ describe("convertToInstanceFilterDefinition", () => {
         const filter: PresentationInstanceFilterCondition = {
           field,
           operator: PropertyFilterRuleOperator.Like,
-          value: { valueFormat: PropertyValueFormat.Primitive, value: `someString` },
+          value: { valueFormat: PropertyValueFormat.Primitive, value: `someString`, displayValue: "someString" },
         };
         const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
         expect(expression).to.be.eq(`${propertyAccessor} ~ "%someString%"`);
@@ -556,6 +556,55 @@ describe("convertToInstanceFilterDefinition", () => {
 
       const { selectClassName } = await convertToInstanceFilterDefinition(filter, imodelMock.object);
       expect(selectClassName).to.be.eq(classCInfo.name);
+    });
+  });
+
+  describe("handles unqiue values", () => {
+    const testImodel = {} as IModelConnection;
+    const property = createTestPropertyInfo();
+    const field = createTestPropertiesContentField({ properties: [{ property }] });
+    const propertyAccessor = `this.${property.name}`;
+    const groupedRawValues = [
+      [0.001, 0.00099],
+      [0.002, 0.00199],
+    ];
+    const displayValue = ["0.001", "0.002"];
+
+    const createFilter = (operator: PropertyFilterRuleOperator, customValue?: Value, customDisplayValue?: string): PresentationInstanceFilterCondition => {
+      return {
+        field,
+        operator,
+        value: {
+          valueFormat: PropertyValueFormat.Primitive,
+          value: customValue ?? JSON.stringify(groupedRawValues),
+          displayValue: customDisplayValue ?? JSON.stringify(displayValue),
+        },
+      };
+    };
+
+    it("converts values when operator is `IsEqual`", async () => {
+      const filter = createFilter(PropertyFilterRuleOperator.IsEqual);
+
+      const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+      expect(expression).to.be.eq(
+        `(${propertyAccessor} = ${groupedRawValues[0][0]} OR ${propertyAccessor} = ${groupedRawValues[0][1]} OR ${propertyAccessor} = ${groupedRawValues[1][0]} OR ${propertyAccessor} = ${groupedRawValues[1][1]})`,
+      );
+    });
+
+    it("converts values when operator is `IsNotEqual`", async () => {
+      const filter = createFilter(PropertyFilterRuleOperator.IsNotEqual);
+
+      const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+      expect(expression).to.be.eq(
+        `(${propertyAccessor} <> ${groupedRawValues[0][0]} AND ${propertyAccessor} <> ${groupedRawValues[0][1]} AND ${propertyAccessor} <> ${groupedRawValues[1][0]} AND ${propertyAccessor} <> ${groupedRawValues[1][1]})`,
+      );
+    });
+
+    it("converts values when `deserializeDisplayValueGroupArray` returns `undefined`", async () => {
+      const filter = createFilter(PropertyFilterRuleOperator.IsEqual, "a", "a");
+
+      const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+      expect(expression).to.be.eq(`${propertyAccessor} = "a"`);
     });
   });
 });

@@ -6,14 +6,19 @@
 import { expect } from "chai";
 import { createRef } from "react";
 import sinon from "sinon";
-import { PrimitiveValue } from "@itwin/appui-abstract";
+import { PrimitiveValue, StandardTypeNames } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
-import { fireEvent, render, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { NumericInput, NumericPropertyInput, NumericPropertyInputAttributes } from "../../presentation-components/properties/NumericPropertyInput";
-import { createRecord } from "./NumericPropertyEditor.test";
+import { waitFor } from "@testing-library/react";
+import { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common";
+import { NumericInput, NumericPropertyInput } from "../../../presentation-components/properties/inputs/NumericPropertyInput";
+import { render } from "../../_helpers/Common";
+import { createTestPropertyRecord } from "../../_helpers/UiComponents";
+
+const createRecord = (initialValue?: number) => {
+  return createTestPropertyRecord({ value: initialValue, displayValue: initialValue?.toString() }, { typename: StandardTypeNames.Double });
+};
 
 describe("<NumericPropertyInput />", () => {
   beforeEach(async () => {
@@ -29,10 +34,9 @@ describe("<NumericPropertyInput />", () => {
   });
 
   it("get value from NumericPropertyInput reference", async () => {
-    const user = userEvent.setup();
     const record = createRecord(1);
-    const ref = createRef<NumericPropertyInputAttributes>();
-    const { getByRole } = render(<NumericPropertyInput ref={ref} propertyRecord={record} />);
+    const ref = createRef<PropertyEditorAttributes>();
+    const { getByRole, user } = render(<NumericPropertyInput ref={ref} propertyRecord={record} />);
 
     expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(1);
 
@@ -44,10 +48,9 @@ describe("<NumericPropertyInput />", () => {
   });
 
   it("get value from NumericPropertyInput reference returns undefined when input is not a number", async () => {
-    const user = userEvent.setup();
     const record = createRecord();
-    const ref = createRef<NumericPropertyInputAttributes>();
-    const { getByRole } = render(<NumericPropertyInput ref={ref} propertyRecord={record} onCommit={() => {}} />);
+    const ref = createRef<PropertyEditorAttributes>();
+    const { getByRole, user } = render(<NumericPropertyInput ref={ref} propertyRecord={record} onCommit={() => {}} />);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
@@ -57,10 +60,9 @@ describe("<NumericPropertyInput />", () => {
   });
 
   it("returns new value after typing number", async () => {
-    const user = userEvent.setup();
     const record = createRecord(-10);
-    const ref = createRef<NumericPropertyInputAttributes>();
-    const { getByRole, queryByDisplayValue } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
+    const ref = createRef<PropertyEditorAttributes>();
+    const { getByRole, queryByDisplayValue, user } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
@@ -70,10 +72,9 @@ describe("<NumericPropertyInput />", () => {
   });
 
   it("allows typing `-1`", async () => {
-    const user = userEvent.setup();
     const record = createRecord();
-    const ref = createRef<NumericPropertyInputAttributes>();
-    const { getByRole, queryByDisplayValue } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
+    const ref = createRef<PropertyEditorAttributes>();
+    const { getByRole, queryByDisplayValue, user } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
@@ -83,10 +84,9 @@ describe("<NumericPropertyInput />", () => {
   });
 
   it("allows typing `+1`", async () => {
-    const user = userEvent.setup();
     const record = createRecord();
-    const ref = createRef<NumericPropertyInputAttributes>();
-    const { getByRole, queryByDisplayValue } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
+    const ref = createRef<PropertyEditorAttributes>();
+    const { getByRole, queryByDisplayValue, user } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
@@ -96,10 +96,9 @@ describe("<NumericPropertyInput />", () => {
   });
 
   it("allows typing `.1` ", async () => {
-    const user = userEvent.setup();
     const record = createRecord();
-    const ref = createRef<NumericPropertyInputAttributes>();
-    const { getByRole, queryByDisplayValue } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
+    const ref = createRef<PropertyEditorAttributes>();
+    const { getByRole, queryByDisplayValue, user } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
@@ -109,10 +108,9 @@ describe("<NumericPropertyInput />", () => {
   });
 
   it("allows typing `+.1`", async () => {
-    const user = userEvent.setup();
     const record = createRecord();
-    const ref = createRef<NumericPropertyInputAttributes>();
-    const { getByRole, queryByDisplayValue } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
+    const ref = createRef<PropertyEditorAttributes>();
+    const { getByRole, queryByDisplayValue, user } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
@@ -122,10 +120,9 @@ describe("<NumericPropertyInput />", () => {
   });
 
   it("allows typing `-.1`", async () => {
-    const user = userEvent.setup();
     const record = createRecord();
-    const ref = createRef<NumericPropertyInputAttributes>();
-    const { getByRole, queryByDisplayValue } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
+    const ref = createRef<PropertyEditorAttributes>();
+    const { getByRole, queryByDisplayValue, user } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
@@ -135,10 +132,9 @@ describe("<NumericPropertyInput />", () => {
   });
 
   it("allows typing 1e5", async () => {
-    const user = userEvent.setup();
     const record = createRecord();
-    const ref = createRef<NumericPropertyInputAttributes>();
-    const { getByDisplayValue, getByRole } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
+    const ref = createRef<PropertyEditorAttributes>();
+    const { getByDisplayValue, getByRole, user } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
@@ -148,10 +144,9 @@ describe("<NumericPropertyInput />", () => {
   });
 
   it("allows typing 1e-5", async () => {
-    const user = userEvent.setup();
     const record = createRecord();
-    const ref = createRef<NumericPropertyInputAttributes>();
-    const { getByDisplayValue, getByRole } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
+    const ref = createRef<PropertyEditorAttributes>();
+    const { getByDisplayValue, getByRole, user } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
@@ -168,9 +163,8 @@ describe("<NumericInput />", () => {
   });
 
   it("does not fire `onChange` when input is a letter", async () => {
-    const user = userEvent.setup();
     const spy = sinon.spy();
-    const { getByRole } = render(<NumericInput onChange={spy} value="" />);
+    const { getByRole, user } = render(<NumericInput onChange={spy} value="" />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
     await user.type(inputContainer, "qwertyuiopasdfghjklzxcvbnm");
@@ -179,9 +173,8 @@ describe("<NumericInput />", () => {
   });
 
   it("does not fire `onChange` when number transforms to `Infinity`", async () => {
-    const user = userEvent.setup();
     const spy = sinon.spy();
-    const { getByRole } = render(<NumericInput onChange={spy} value="1e90" />);
+    const { getByRole, user } = render(<NumericInput onChange={spy} value="1e90" />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
     await user.type(inputContainer, "1");
@@ -190,9 +183,8 @@ describe("<NumericInput />", () => {
   });
 
   it("fires `onChange` when input is a number", async () => {
-    const user = userEvent.setup();
     const spy = sinon.spy();
-    const { getByRole } = render(<NumericInput onChange={spy} value="" />);
+    const { getByRole, user } = render(<NumericInput onChange={spy} value="" />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
     await user.type(inputContainer, "1");
@@ -201,9 +193,8 @@ describe("<NumericInput />", () => {
   });
 
   it("fires `onChange` when input is `-`, `+` or `.`", async () => {
-    const user = userEvent.setup();
     const spy = sinon.spy();
-    const { getByRole } = render(<NumericInput onChange={spy} value="" />);
+    const { getByRole, user } = render(<NumericInput onChange={spy} value="" />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
     await user.type(inputContainer, "+");
@@ -217,9 +208,8 @@ describe("<NumericInput />", () => {
   });
 
   it("fires `onChange` when input is `+.`", async () => {
-    const user = userEvent.setup();
     const spy = sinon.spy();
-    const { getByRole } = render(<NumericInput onChange={spy} value="+" />);
+    const { getByRole, user } = render(<NumericInput onChange={spy} value="+" />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
     await user.type(inputContainer, ".");
@@ -228,9 +218,8 @@ describe("<NumericInput />", () => {
   });
 
   it("fires `onChange` when input is `-.`", async () => {
-    const user = userEvent.setup();
     const spy = sinon.spy();
-    const { getByRole } = render(<NumericInput onChange={spy} value="-" />);
+    const { getByRole, user } = render(<NumericInput onChange={spy} value="-" />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
     await user.type(inputContainer, ".");
@@ -239,9 +228,8 @@ describe("<NumericInput />", () => {
   });
 
   it("fires `onChange` when input ends with `e` and input before `e` is a correct number", async () => {
-    const user = userEvent.setup();
     const spy = sinon.spy();
-    const { getByRole } = render(<NumericInput onChange={spy} value="1" />);
+    const { getByRole, user } = render(<NumericInput onChange={spy} value="1" />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
     await user.type(inputContainer, "e");
@@ -250,9 +238,8 @@ describe("<NumericInput />", () => {
   });
 
   it("fires `onChange` when input ends with `e-` and input before `e` is a correct number", async () => {
-    const user = userEvent.setup();
     const spy = sinon.spy();
-    const { getByRole } = render(<NumericInput onChange={spy} value="1e" />);
+    const { getByRole, user } = render(<NumericInput onChange={spy} value="1e" />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
 
     await user.type(inputContainer, "-");
@@ -262,9 +249,10 @@ describe("<NumericInput />", () => {
 
   it("fires `onBlur` when inputContainer becomes blurred", async () => {
     const spy = sinon.spy();
-    const { getByRole } = render(<NumericInput onBlur={spy} onChange={() => {}} value="1" />);
+    const { getByRole, user } = render(<NumericInput onBlur={spy} onChange={() => {}} value="1" />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
-    fireEvent.blur(inputContainer);
+    await user.click(inputContainer);
+    await user.tab();
 
     expect(spy).to.be.be.calledOnce;
   });
@@ -272,10 +260,11 @@ describe("<NumericInput />", () => {
   it("commits undefined value when propertyRecord value is NaN on `onBlur` event", async () => {
     const record = createRecord(Number.NaN);
     const spy = sinon.spy();
-    const ref = createRef<NumericPropertyInputAttributes>();
-    const { getByRole } = render(<NumericPropertyInput ref={ref} propertyRecord={record} onCommit={spy} />);
+    const ref = createRef<PropertyEditorAttributes>();
+    const { getByRole, user } = render(<NumericPropertyInput ref={ref} propertyRecord={record} onCommit={spy} />);
     const inputContainer = await waitFor(() => getByRole("textbox"));
-    fireEvent.blur(inputContainer);
+    await user.click(inputContainer);
+    await user.tab();
 
     expect(spy).to.be.calledWith({ propertyRecord: record, newValue: { valueFormat: 0, value: undefined, displayValue: "NaN" } });
   });

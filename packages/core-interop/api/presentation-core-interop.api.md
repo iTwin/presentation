@@ -8,9 +8,11 @@ import { ECSqlReader } from '@itwin/core-common';
 import { IECSqlQueryExecutor } from '@itwin/presentation-hierarchy-builder';
 import { ILogger } from '@itwin/presentation-hierarchy-builder';
 import { IMetadataProvider } from '@itwin/presentation-hierarchy-builder';
+import { IPrimitiveValueFormatter } from '@itwin/presentation-hierarchy-builder';
 import { QueryBinder } from '@itwin/core-common';
 import { QueryOptions } from '@itwin/core-common';
 import { SchemaContext } from '@itwin/ecschema-metadata';
+import { UnitSystemKey } from '@itwin/core-quantity';
 
 // @beta
 export function createECSqlQueryExecutor(imodel: IECSqlReaderFactory): IECSqlQueryExecutor;
@@ -20,6 +22,9 @@ export function createLogger(): ILogger;
 
 // @beta
 export function createMetadataProvider(schemaContext: SchemaContext): IMetadataProvider;
+
+// @beta
+export function createValueFormatter(schemaContext: SchemaContext, unitSystem?: UnitSystemKey, baseFormatter?: IPrimitiveValueFormatter): IPrimitiveValueFormatter;
 
 // @beta
 export interface IECSqlReaderFactory {

@@ -4,9 +4,9 @@
   "editor.trimAutoWhitespace": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
-  "editor.codeActionsOnSave": [
-    "source.fixAll"
-  ],
+  "editor.codeActionsOnSave": {
+    "source.fixAll": true
+  },
 
   "files.associations": {
     ".nycrc": "json",

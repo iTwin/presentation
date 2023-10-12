@@ -4,12 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-console */
 
-import {
-  catchError, concatAll, concatMap, defaultIfEmpty, filter, from, map, mergeMap, Observable, ObservableInput, of, shareReplay, take, tap,
-} from "rxjs";
-import { Id64 } from "@itwin/core-bentley";
+import { catchError, concatAll, concatMap, defaultIfEmpty, filter, from, map, mergeMap, Observable, ObservableInput, of, shareReplay, take, tap } from "rxjs";
 import { HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
-import { HierarchyNode, HierarchyNodeIdentifiersPath } from "./HierarchyNode";
+import { HierarchyNode, HierarchyNodeIdentifiersPath, ParsedHierarchyNode } from "./HierarchyNode";
+import { getClass } from "./internal/Common";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
 import { createDetermineChildrenOperator } from "./internal/operators/DetermineChildren";
 import { createBaseClassGroupingOperator } from "./internal/operators/grouping/BaseClassGrouping";
@@ -24,24 +22,46 @@ import { QueryScheduler } from "./internal/QueryScheduler";
 import { applyLimit, TreeQueryResultsReader } from "./internal/TreeNodesReader";
 import { IMetadataProvider } from "./Metadata";
 import { IECSqlQueryExecutor } from "./queries/ECSql";
+import { ConcatenatedValue, ConcatenatedValuePart } from "./values/ConcatenatedValue";
+import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "./values/Formatting";
+import { TypedPrimitiveValue } from "./values/Values";
 
-/** @beta */
+/**
+ * Props for [[HierarchyProvider]].
+ * @beta
+ */
 export interface HierarchyProviderProps {
+  /** IModel metadata provider for ECSchemas, ECClasses, ECProperties, etc. */
   metadataProvider: IMetadataProvider;
+  /** IModel ECSQL query executor used to run queries. */
   queryExecutor: IECSqlQueryExecutor;
+  /** A definition that describes how the hierarchy should be created. */
   hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
+
+  /**
+   * A values formatter for formatting node labels. Defaults to the
+   * result of [[createDefaultValueFormatter]] called with default parameters.
+   */
+  formatter?: IPrimitiveValueFormatter;
+
+  /** Props for filtering the hierarchy. */
   filtering?: {
+    /** A list of node identifiers from root to target node. */
     paths: HierarchyNodeIdentifiersPath[];
   };
 }
 
-/** @beta */
+/**
+ * A hierarchy provider that builds a hierarchy according to given hierarchy definition.
+ * @beta
+ */
 export class HierarchyProvider {
   private _metadataProvider: IMetadataProvider;
   private _hierarchyFactory: IHierarchyLevelDefinitionsFactory;
   private _queryExecutor: IECSqlQueryExecutor;
-  private _queryReader: TreeQueryResultsReader<HierarchyNode>;
-  private _scheduler: QueryScheduler<HierarchyNode[]>;
+  private _queryReader: TreeQueryResultsReader;
+  private _valuesFormatter: IPrimitiveValueFormatter;
+  private _scheduler: QueryScheduler<ParsedHierarchyNode[]>;
   private _directNodesCache: Map<string, Observable<HierarchyNode>>;
 
   public constructor(props: HierarchyProviderProps) {
@@ -59,6 +79,7 @@ export class HierarchyProvider {
       this._queryReader = TreeQueryResultsReader.create();
     }
     this._queryExecutor = props.queryExecutor;
+    this._valuesFormatter = props?.formatter ?? createDefaultValueFormatter();
     this._scheduler = new QueryScheduler();
     this._directNodesCache = new Map();
   }
@@ -70,8 +91,8 @@ export class HierarchyProvider {
       concatMap((hierarchyLevelDefinition) => from(hierarchyLevelDefinition)),
     );
     // pipe definitions to nodes
-    const nodes = definitions.pipe(
-      concatMap((def): ObservableInput<HierarchyNode[]> => {
+    return definitions.pipe(
+      concatMap((def): ObservableInput<ParsedHierarchyNode[]> => {
         if (HierarchyNodesDefinition.isCustomNode(def)) {
           return of([def.node]);
         }
@@ -83,8 +104,9 @@ export class HierarchyProvider {
         );
       }),
       concatAll(),
+      concatMap(async (node) => applyLabelsFormatting(node, this._metadataProvider, this._valuesFormatter)),
+      shareReplay(),
     );
-    return nodes.pipe(map(convertECInstanceIdSuffixToBase36), shareReplay());
   }
 
   private ensureDirectChildren(parentNode: HierarchyNode | undefined): Observable<HierarchyNode> {
@@ -110,8 +132,7 @@ export class HierarchyProvider {
 
     const directChildren = this.ensureDirectChildren(parentNode);
     const result = directChildren.pipe(
-      map((n) => (this._hierarchyFactory.preProcessNode ? this._hierarchyFactory.preProcessNode(n) : n)),
-      filter((n): n is HierarchyNode => !!n),
+      preProcessNodes(this._hierarchyFactory),
       createMergeInstanceNodesByLabelOperator(this._directNodesCache),
       createHideIfNoChildrenOperator((n) => this.hasNodesObservable(n), false),
       createHideNodesInHierarchyOperator((n) => this.getNodesObservable(n), this._directNodesCache, false),
@@ -157,8 +178,7 @@ export class HierarchyProvider {
     return directChildren
       .pipe(
         tap((n) => enableLogging && console.log(`HasNodes: partial node before preprocessing: ${JSON.stringify(n)}`)),
-        map((n) => (this._hierarchyFactory.preProcessNode ? this._hierarchyFactory.preProcessNode(n) : n)),
-        filter((n): n is HierarchyNode => !!n),
+        preProcessNodes(this._hierarchyFactory),
       )
       .pipe(
         tap((n) => enableLogging && console.log(`HasNodes: partial node before HideIfNoChildrenOperator: ${JSON.stringify(n)}`)),
@@ -183,21 +203,56 @@ export class HierarchyProvider {
   }
 }
 
-/**
- * This is required because we don't have a way to convert a number to base36 through ECSQL. Need to
- * talk with ECSQL guys.
- */
-function convertECInstanceIdSuffixToBase36<TNode extends { label: string }>(node: TNode): TNode {
-  const m = node.label.match(/\s\[(0x[\w\d]+)\]$/);
-  const suffix = m?.at(1);
-  if (!suffix) {
-    return node;
-  }
+function preProcessNodes(hierarchyFactory: IHierarchyLevelDefinitionsFactory) {
+  return (nodes: Observable<HierarchyNode>): Observable<HierarchyNode> => {
+    return nodes.pipe(
+      concatMap(async (n) => (hierarchyFactory.preProcessNode ? hierarchyFactory.preProcessNode(n) : n)),
+      filter((n): n is HierarchyNode => !!n),
+    );
+  };
+}
 
-  const suffixBase36 = `${Id64.getBriefcaseId(suffix).toString(36).toLocaleUpperCase()}-${Id64.getLocalId(suffix).toString(36).toLocaleUpperCase()}`;
-  const label = `${node.label.substring(0, m!.index)} [${suffixBase36}]`;
+async function applyLabelsFormatting(
+  node: ParsedHierarchyNode,
+  metadata: IMetadataProvider,
+  valueFormatter: (value: TypedPrimitiveValue) => Promise<string>,
+): Promise<HierarchyNode> {
+  if (typeof node.label === "string") {
+    return node as HierarchyNode;
+  }
   return {
     ...node,
-    label,
+    label: await ConcatenatedValue.serialize(node.label, async (part: ConcatenatedValuePart) => {
+      // strings are just returned as-is
+      if (typeof part === "string") {
+        return part;
+      }
+      // for property parts - find property metadata and create `TypedPrimitiveValue` for them.
+      if (ConcatenatedValuePart.isProperty(part)) {
+        const property = await getProperty(part, metadata);
+        if (!property?.isPrimitive()) {
+          throw new Error(`Labels formatter expects a primitive property, but it's not.`);
+        }
+        if (property.primitiveType === "IGeometry") {
+          throw new Error(`Labels formatter does not support "IGeometry" values, but the provided ${part.className}.${part.propertyName} property is.`);
+        }
+        if (property.primitiveType === "Binary") {
+          throw new Error(`Labels formatter does not support "Binary" values, but the provided ${part.className}.${part.propertyName} property is.`);
+        }
+        part = {
+          type: property.primitiveType,
+          extendedType: property.extendedTypeName,
+          koqName: (await property.kindOfQuantity)?.fullName,
+          value: part.value,
+        } as TypedPrimitiveValue;
+      }
+      // finally, use provided value formatter to create a string from `TypedPrimitiveValue`
+      return valueFormatter(part);
+    }),
   };
+}
+
+async function getProperty({ className, propertyName }: { className: string; propertyName: string }, metadata: IMetadataProvider) {
+  const propertyClass = await getClass(metadata, className);
+  return propertyClass.getProperty(propertyName);
 }

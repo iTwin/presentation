@@ -41,9 +41,7 @@ describe("Learning snippets", () => {
 
         // create presentation-specific tree renderer that enables hierarchy
         // level filtering
-        const treeRenderer = (treeRendererProps: TreeRendererProps) => (
-          <PresentationTreeRenderer {...treeRendererProps} imodel={props.imodel} modelSource={nodeLoader.modelSource} />
-        );
+        const treeRenderer = (treeRendererProps: TreeRendererProps) => <PresentationTreeRenderer {...treeRendererProps} nodeLoader={nodeLoader} />;
 
         // width and height should generally we computed using ResizeObserver API or one of its derivatives
         const [width] = useState(400);

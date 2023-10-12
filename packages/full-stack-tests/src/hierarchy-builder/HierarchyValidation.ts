@@ -27,13 +27,14 @@ export namespace NodeValidators {
     },
   ) {
     if (expectations.label) {
+      const nodeLabel = node.label;
       if (typeof expectations.label === "string") {
-        if (node.label !== expectations.label) {
-          throw new Error(`Expected node label to be "${expectations.label}", got "${node.label}"`);
+        if (nodeLabel !== expectations.label) {
+          throw new Error(`Expected node label to be "${expectations.label}", got "${nodeLabel}"`);
         }
       } else {
-        if (!expectations.label.test(node.label)) {
-          throw new Error(`Expected node label to match "${expectations.label.toString()}", got "${node.label}"`);
+        if (!expectations.label.test(nodeLabel)) {
+          throw new Error(`Expected node label to match "${expectations.label.toString()}", got "${nodeLabel}"`);
         }
       }
     }
@@ -50,7 +51,7 @@ export namespace NodeValidators {
   }
 
   export function createForCustomNode(
-    expectedNode: Partial<Omit<HierarchyNode, "children">> & { children?: ExpectedHierarchyDef[] | boolean },
+    expectedNode: Partial<Omit<HierarchyNode, "label" | "children">> & { label?: string; children?: ExpectedHierarchyDef[] | boolean },
   ): ExpectedHierarchyDef {
     return {
       node: (node) => {

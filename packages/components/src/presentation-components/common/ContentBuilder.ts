@@ -38,7 +38,8 @@ import {
   StartStructProps,
   TypeDescription,
 } from "@itwin/presentation-common";
-import { NumericEditorName } from "../properties/NumericPropertyEditor";
+import { NumericEditorName } from "../properties/editors/NumericPropertyEditor";
+import { QuantityEditorName } from "../properties/editors/QuantityPropertyEditor";
 
 /** @internal */
 export interface FieldRecord {
@@ -55,6 +56,7 @@ export interface FieldInfo {
   editor?: EditorDescription;
   enum?: EnumerationInfo;
   isReadonly?: boolean;
+  koqName?: string;
 }
 
 /** @internal */
@@ -66,6 +68,7 @@ export function createFieldInfo(field: Field, parentFieldName?: string) {
     editor: field.editor,
     renderer: field.renderer,
     enum: field.isPropertiesField() ? field.properties[0].property.enumerationInfo : undefined,
+    koqName: field.isPropertiesField() ? field.properties[0].property.kindOfQuantity?.name : undefined,
   };
 }
 
@@ -77,21 +80,26 @@ export function createPropertyDescriptionFromFieldInfo(info: FieldInfo) {
     displayLabel: info.label,
   };
 
-  if (
-    descr.typename === StandardTypeNames.Number ||
-    descr.typename === StandardTypeNames.Int ||
-    descr.typename === StandardTypeNames.Float ||
-    descr.typename === StandardTypeNames.Double
-  ) {
-    descr.editor = { name: NumericEditorName };
-  }
-
   if (info.renderer) {
     descr.renderer = { name: info.renderer.name };
   }
 
   if (info.editor) {
     descr.editor = { name: info.editor.name } as PropertyEditorInfo;
+  }
+
+  if (info.koqName) {
+    descr.quantityType = info.koqName;
+    descr.editor = { name: QuantityEditorName, ...descr.editor };
+  }
+
+  if (
+    descr.typename === StandardTypeNames.Number ||
+    descr.typename === StandardTypeNames.Int ||
+    descr.typename === StandardTypeNames.Float ||
+    descr.typename === StandardTypeNames.Double
+  ) {
+    descr.editor = { name: NumericEditorName, ...descr.editor };
   }
 
   if (info.type.valueFormat === PresentationPropertyValueFormat.Primitive && info.enum) {

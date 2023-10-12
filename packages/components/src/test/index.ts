@@ -36,6 +36,7 @@ chai.use(chaiJestSnapshot);
 chai.use(sinonChai);
 chai.use(chaiSubset);
 
+// get rid of various xhr errors in the console
 jsdomGlobal(undefined, {
   virtualConsole: new jsdom.VirtualConsole().sendTo(console, { omitJSDOMErrors: true }),
 });

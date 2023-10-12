@@ -2,9 +2,6 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/** @packageDocumentation
- * @module Internal
- */
 
 import "./NavigationPropertyTargetSelector.scss";
 import classNames from "classnames";
@@ -17,14 +14,9 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { SvgCaretDownSmall } from "@itwin/itwinui-icons-react";
 import { Input, List, ListItem } from "@itwin/itwinui-react";
 import { InstanceKey, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
-import { translate, useMergedRefs, useResizeObserver } from "../common/Utils";
+import { translate, useMergedRefs, useResizeObserver } from "../../common/Utils";
+import { PropertyEditorAttributes } from "../editors/Common";
 import { NavigationPropertyTarget, useNavigationPropertyTargetsLoader, useNavigationPropertyTargetsRuleset } from "./UseNavigationPropertyTargetsLoader";
-
-/** @internal */
-export interface NavigationPropertyTargetSelectorAttributes {
-  getValue: () => PropertyValue | undefined;
-  divElement: HTMLDivElement | null;
-}
 
 /** @internal */
 export interface NavigationPropertyTargetSelectorProps extends PropertyEditorProps {
@@ -34,7 +26,7 @@ export interface NavigationPropertyTargetSelectorProps extends PropertyEditorPro
 }
 
 /** @internal */
-export const NavigationPropertyTargetSelector = forwardRef<NavigationPropertyTargetSelectorAttributes, NavigationPropertyTargetSelectorProps>((props, ref) => {
+export const NavigationPropertyTargetSelector = forwardRef<PropertyEditorAttributes, NavigationPropertyTargetSelectorProps>((props, ref) => {
   const { imodel, getNavigationPropertyInfo, propertyRecord, onCommit } = props;
   const targetsRuleset = useNavigationPropertyTargetsRuleset(getNavigationPropertyInfo, propertyRecord.property);
   const loadTargets = useNavigationPropertyTargetsLoader({ imodel, ruleset: targetsRuleset });
@@ -55,7 +47,7 @@ export const NavigationPropertyTargetSelector = forwardRef<NavigationPropertyTar
     ref,
     () => ({
       getValue: () => getPropertyValue(selectedTarget),
-      divElement: divRef.current,
+      htmlElement: divRef.current,
     }),
     [selectedTarget],
   );

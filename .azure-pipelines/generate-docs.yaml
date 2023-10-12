@@ -2,12 +2,14 @@ trigger:
   branches:
     include:
       - master
+      - stable
 
 pr:
   drafts: false
   branches:
     include:
       - master
+      - stable
 
 resources:
   repositories:
@@ -82,4 +84,4 @@ stages:
             inputs:
               type: "Build"
               tags: "hasDocs"
-            condition: contains(variables['Build.SourceVersionMessage'], '[publish docs]')
+            condition: and(contains(variables['Build.SourceVersionMessage'], '[publish docs]'), not(contains(variables['Build.SourceVersionMessage'], '(dev)')))

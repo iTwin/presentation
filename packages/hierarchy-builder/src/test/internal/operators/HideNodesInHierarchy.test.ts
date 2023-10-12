@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import { from, Observable } from "rxjs";
 import sinon from "sinon";
-import { Id64, LogLevel } from "@itwin/core-bentley";
+import { LogLevel } from "@itwin/core-bentley";
 import { HierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
 import { createHideNodesInHierarchyOperator, LOGGING_NAMESPACE } from "../../../hierarchy-builder/internal/operators/HideNodesInHierarchy";
 import { createTestInstanceKey, createTestNode, getObservableResult, setupLogging } from "../../Utils";
@@ -190,7 +190,7 @@ describe("HideNodesInHierarchyOperator", () => {
         {
           key: {
             type: "class-grouping",
-            class: { id: Id64.invalid, name: "TestClass", label: "Test class" },
+            class: { name: "TestClass", label: "Test class" },
           },
           label: "Test class",
           params: {
@@ -217,7 +217,7 @@ describe("HideNodesInHierarchyOperator", () => {
         {
           key: {
             type: "class-grouping",
-            class: { id: Id64.invalid, name: "TestClass", label: "Test class" },
+            class: { name: "TestClass", label: "Test class" },
           },
           label: "Test class",
           params: {
@@ -246,7 +246,7 @@ describe("HideNodesInHierarchyOperator", () => {
         {
           key: {
             type: "class-grouping",
-            class: { id: Id64.invalid, name: "TestSchema.X", label: "X" },
+            class: { name: "TestSchema.X", label: "X" },
           },
           label: "a",
           children: undefined,
@@ -257,7 +257,7 @@ describe("HideNodesInHierarchyOperator", () => {
         {
           key: {
             type: "class-grouping",
-            class: { id: Id64.invalid, name: "TestSchema.X", label: "X" },
+            class: { name: "TestSchema.X", label: "X" },
           },
           label: "b",
           children: undefined,
@@ -271,7 +271,7 @@ describe("HideNodesInHierarchyOperator", () => {
       expect(getNodes).to.be.calledOnceWithExactly({
         key: {
           type: "class-grouping",
-          class: { id: Id64.invalid, name: "TestSchema.X", label: "X" },
+          class: { name: "TestSchema.X", label: "X" },
         },
         label: "a",
         children: undefined,

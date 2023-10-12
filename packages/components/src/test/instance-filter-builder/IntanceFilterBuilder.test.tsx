@@ -5,15 +5,24 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import * as moq from "typemoq";
-import { PropertyDescription } from "@itwin/appui-abstract";
-import { BeEvent } from "@itwin/core-bentley";
+import { PropertyDescription, PropertyValueFormat } from "@itwin/appui-abstract";
+import {
+  PropertyFilterBuilderActions,
+  PropertyFilterBuilderRuleGroup,
+  PropertyFilterRuleGroupOperator,
+  PropertyFilterRuleOperator,
+  UiComponents,
+} from "@itwin/components-react";
+import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { ClassInfo, Descriptor, NavigationPropertyInfo } from "@itwin/presentation-common";
+import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { FormatterSpec, ParserSpec } from "@itwin/core-quantity";
+import { SchemaContext } from "@itwin/ecschema-metadata";
+import { ClassInfo, Descriptor, KoqPropertyValueFormatter, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
+import { SchemaMetadataContextProvider } from "../../presentation-components/common/SchemaMetadataContext";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import {
   InstanceFilterBuilder,
@@ -29,29 +38,52 @@ import {
   createTestSimpleContentField,
 } from "../_helpers/Content";
 
-describe("InstanceFilter", () => {
+describe("InstanceFilterBuilder", () => {
   stubRaf();
   const classInfos: ClassInfo[] = [
     { id: "0x1", name: "Schema:Class1", label: "Class1" },
     { id: "0x2", name: "Schema:Class2", label: "Class2" },
   ];
 
-  before(async () => {
+  beforeEach(async () => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
-    await Presentation.initialize();
+
+    sinon.stub(Presentation, "localization").get(() => localization);
+    sinon.stub(UiComponents, "translate").callsFake((key) => key as string);
   });
 
-  after(async () => {
-    Presentation.terminate();
+  afterEach(async () => {
     sinon.restore();
   });
+
+  const testImodel = {} as IModelConnection;
+  const testDescriptor = {} as Descriptor;
+  const testActions = {
+    setRuleProperty: () => {},
+    setRuleOperator: () => {},
+    setRuleValue: () => {},
+  } as unknown as PropertyFilterBuilderActions;
+  const testRootGroup = {
+    operator: PropertyFilterRuleGroupOperator.Or,
+    id: "0",
+    items: [],
+  } as PropertyFilterBuilderRuleGroup;
 
   it("invokes 'onSelectedClassesChanged' when class is selected", async () => {
     const spy = sinon.spy();
     const { getByRole, getAllByRole } = render(
-      <InstanceFilterBuilder classes={classInfos} selectedClasses={[]} properties={[]} onSelectedClassesChanged={spy} onFilterChanged={() => {}} />,
+      <InstanceFilterBuilder
+        classes={classInfos}
+        selectedClasses={[]}
+        properties={[]}
+        onSelectedClassesChanged={spy}
+        actions={testActions}
+        rootGroup={testRootGroup}
+        imodel={testImodel}
+        descriptor={testDescriptor}
+      />,
     );
 
     const selector = getAllByRole("combobox")[0];
@@ -71,7 +103,10 @@ describe("InstanceFilter", () => {
         selectedClasses={[classInfos[0]]}
         properties={[]}
         onSelectedClassesChanged={spy}
-        onFilterChanged={() => {}}
+        actions={testActions}
+        rootGroup={testRootGroup}
+        imodel={testImodel}
+        descriptor={testDescriptor}
       />,
     );
 
@@ -82,6 +117,155 @@ describe("InstanceFilter", () => {
     fireEvent.click(option);
 
     expect(spy).to.be.calledOnceWith([]);
+  });
+
+  describe("UniqueValuesRenderer", () => {
+    const property: PropertyDescription = {
+      displayLabel: "Test Prop",
+      name: "testProp",
+      typename: "double",
+    };
+
+    it("renders <UniquePropertyValuesSelector /> when operator is `IsEqual`", async () => {
+      const rootGroup: PropertyFilterBuilderRuleGroup = {
+        id: "root-id",
+        operator: PropertyFilterRuleGroupOperator.And,
+        items: [
+          {
+            id: "item-id",
+            groupId: "root-id",
+            property,
+            operator: PropertyFilterRuleOperator.IsEqual,
+          },
+        ],
+      };
+
+      const { queryByText } = render(
+        <InstanceFilterBuilder
+          classes={classInfos}
+          selectedClasses={[]}
+          properties={[property]}
+          onSelectedClassesChanged={() => {}}
+          actions={testActions}
+          rootGroup={rootGroup}
+          imodel={testImodel}
+          descriptor={testDescriptor}
+        />,
+      );
+      await waitFor(() => expect(queryByText("unique-values-property-editor.select-values")).to.not.be.null);
+    });
+
+    it("renders <UniquePropertyValuesSelector /> when operator is `IsNotEqual`", async () => {
+      const rootGroup: PropertyFilterBuilderRuleGroup = {
+        id: "root-id",
+        operator: PropertyFilterRuleGroupOperator.And,
+        items: [
+          {
+            id: "item-id",
+            groupId: "root-id",
+            property,
+            operator: PropertyFilterRuleOperator.IsNotEqual,
+          },
+        ],
+      };
+
+      const { queryByText } = render(
+        <InstanceFilterBuilder
+          classes={classInfos}
+          selectedClasses={[]}
+          properties={[property]}
+          onSelectedClassesChanged={() => {}}
+          actions={testActions}
+          rootGroup={rootGroup}
+          imodel={testImodel}
+          descriptor={testDescriptor}
+        />,
+      );
+      await waitFor(() => expect(queryByText("unique-values-property-editor.select-values")).to.not.be.null);
+    });
+  });
+
+  describe("quantity values", () => {
+    const property: PropertyDescription = {
+      displayLabel: "Test Prop",
+      name: "testProp",
+      typename: "double",
+      quantityType: "koqName",
+    };
+
+    const rootGroup: PropertyFilterBuilderRuleGroup = {
+      id: "root-id",
+      operator: PropertyFilterRuleGroupOperator.And,
+      items: [
+        {
+          id: "item-id",
+          groupId: "root-id",
+          property,
+          operator: PropertyFilterRuleOperator.Less,
+          value: { valueFormat: PropertyValueFormat.Primitive, value: 2.5, displayValue: "2.5" },
+        },
+      ],
+    };
+
+    beforeEach(() => {
+      const formatterSpec = {
+        applyFormatting: (raw: number) => `${raw} unit`,
+      };
+      sinon.stub(KoqPropertyValueFormatter.prototype, "getFormatterSpec").resolves(formatterSpec as FormatterSpec);
+
+      const parserSpec = {
+        parseToQuantityValue: (value: string) => ({ ok: true, value: Number(value) }),
+      };
+      sinon.stub(KoqPropertyValueFormatter.prototype, "getParserSpec").resolves(parserSpec as ParserSpec);
+
+      sinon.stub(IModelApp, "quantityFormatter").get(() => ({
+        onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
+      }));
+    });
+
+    it("does not render quantity input if there is no schema metadata context", async () => {
+      const { queryByDisplayValue } = render(
+        <InstanceFilterBuilder
+          classes={classInfos}
+          selectedClasses={[]}
+          properties={[property]}
+          onSelectedClassesChanged={() => {}}
+          actions={testActions}
+          rootGroup={rootGroup}
+          imodel={testImodel}
+          descriptor={testDescriptor}
+        />,
+      );
+
+      await waitFor(() => {
+        expect(queryByDisplayValue(property.displayLabel)).to.not.be.null;
+        expect(queryByDisplayValue("2.5")).to.not.be.null;
+      });
+    });
+
+    it("renders quantity input", async () => {
+      const imodel = {} as IModelConnection;
+      const getSchemaContext = () => ({} as SchemaContext);
+      const { queryByDisplayValue } = render(
+        <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={getSchemaContext}>
+          <InstanceFilterBuilder
+            classes={classInfos}
+            selectedClasses={[]}
+            properties={[property]}
+            onSelectedClassesChanged={() => {}}
+            actions={testActions}
+            rootGroup={rootGroup}
+            imodel={testImodel}
+            descriptor={testDescriptor}
+          />
+        </SchemaMetadataContextProvider>,
+      );
+
+      await waitFor(() => {
+        expect(queryByDisplayValue(property.displayLabel)).to.not.be.null;
+        expect(queryByDisplayValue("2.5 unit")).to.not.be.null;
+      });
+    });
   });
 });
 
@@ -130,19 +314,22 @@ describe("usePresentationInstanceFilteringProps", () => {
   });
 
   const onCloseEvent = new BeEvent<() => void>();
-  const imodelMock = moq.Mock.ofType<IModelConnection>();
+  const imodelStub = {
+    key: "test_imodel",
+    onClose: onCloseEvent,
+  };
   let initialProps: HookProps;
 
   beforeEach(() => {
-    imodelMock.setup((x) => x.key).returns(() => "test_imodel");
-    imodelMock.setup((x) => x.onClose).returns(() => onCloseEvent);
+    const imodel = imodelStub as unknown as IModelConnection;
+
     initialProps = {
       descriptor,
-      imodel: imodelMock.object,
+      imodel,
     };
 
     // stub metadataProvider for test imodel
-    const metadataProvider = getIModelMetadataProvider(imodelMock.object);
+    const metadataProvider = getIModelMetadataProvider(imodel);
     sinon.stub(metadataProvider, "getECClassInfo").callsFake(async (id) => {
       switch (id) {
         case baseClass.id:
@@ -160,8 +347,7 @@ describe("usePresentationInstanceFilteringProps", () => {
 
   afterEach(() => {
     onCloseEvent.raiseEvent();
-    imodelMock.reset();
-    sinon.resetBehavior();
+    sinon.restore();
   });
 
   it("initializes class list from descriptor", () => {

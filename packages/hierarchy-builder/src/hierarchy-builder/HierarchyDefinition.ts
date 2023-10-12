@@ -3,11 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Id64String, InstanceKey } from "./EC";
-import { HierarchyNode } from "./HierarchyNode";
+import { HierarchyNode, ParsedHierarchyNode } from "./HierarchyNode";
 import { getClass } from "./internal/Common";
 import { IMetadataProvider, parseFullClassName } from "./Metadata";
 import { ECSqlQueryDef } from "./queries/ECSql";
+import { Id64String, InstanceKey } from "./values/Values";
 
 /**
  * A nodes definition that returns a single custom defined node.
@@ -15,7 +15,7 @@ import { ECSqlQueryDef } from "./queries/ECSql";
  */
 export interface CustomHierarchyNodeDefinition {
   /** The node to be created in the hierarchy level */
-  node: HierarchyNode;
+  node: ParsedHierarchyNode;
 }
 
 /**
@@ -59,10 +59,10 @@ export namespace HierarchyNodesDefinition {
 export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
 
 /**
- * A type for a function that parses a [[HierarchyNode]] from provided `row` object.
+ * A type for a function that parses a [[ParsedHierarchyNode]] from provided `row` object.
  * @beta
  */
-export type INodeParser<TNode extends HierarchyNode> = (row: { [columnName: string]: any }) => TNode;
+export type INodeParser = (row: { [columnName: string]: any }) => ParsedHierarchyNode;
 
 /**
  * A type for a function that pre-processes given node. Unless the function decides not to make any modifications,
@@ -70,7 +70,7 @@ export type INodeParser<TNode extends HierarchyNode> = (row: { [columnName: stri
  *
  * @beta
  */
-export type INodePreProcessor = (node: HierarchyNode) => HierarchyNode | undefined;
+export type INodePreProcessor = (node: HierarchyNode) => Promise<HierarchyNode | undefined>;
 
 /**
  * A type for a function that post-processes given node. Unless the function decides not to make any modifications,
@@ -84,7 +84,7 @@ export type INodePostProcessor = (node: HierarchyNode) => HierarchyNode;
  * An interface for a factory that knows how define a hierarchy based on a given parent node.
  * @beta
  */
-export interface IHierarchyLevelDefinitionsFactory<TNode extends HierarchyNode = HierarchyNode> {
+export interface IHierarchyLevelDefinitionsFactory {
   /**
    * An optional function for parsing ECInstance node from ECSQL row.
    *
@@ -94,7 +94,7 @@ export interface IHierarchyLevelDefinitionsFactory<TNode extends HierarchyNode =
    *
    * Defaults to a function that parses all [[HierarchyNode]] attributes.
    */
-  parseNode?: INodeParser<TNode>;
+  parseNode?: INodeParser;
 
   /**
    * An optional function for pre-processing nodes.
@@ -198,7 +198,7 @@ export interface ClassBasedHierarchyDefinitionsFactoryProps {
  *
  * @beta
  */
-export class ClassBasedHierarchyLevelDefinitionsFactory<TNode extends HierarchyNode = HierarchyNode> implements IHierarchyLevelDefinitionsFactory<TNode> {
+export class ClassBasedHierarchyLevelDefinitionsFactory implements IHierarchyLevelDefinitionsFactory {
   private _metadataProvider: IMetadataProvider;
   private _definition: ClassBasedHierarchyDefinition;
 

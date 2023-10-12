@@ -3,12 +3,15 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-export * from "./hierarchy-builder/EC";
 export * from "./hierarchy-builder/HierarchyDefinition";
 export * from "./hierarchy-builder/HierarchyNode";
 export * from "./hierarchy-builder/HierarchyProvider";
 export * from "./hierarchy-builder/Logging";
 export * from "./hierarchy-builder/Metadata";
 export * from "./hierarchy-builder/queries/ECSql";
+export * from "./hierarchy-builder/queries/ECSqlUtils";
 export * from "./hierarchy-builder/queries/InstanceLabelSelectClauseFactory";
 export * from "./hierarchy-builder/queries/NodeSelectClauseFactory";
+export * from "./hierarchy-builder/values/ConcatenatedValue";
+export * from "./hierarchy-builder/values/Formatting";
+export * from "./hierarchy-builder/values/Values";

@@ -11,7 +11,7 @@ import { PropertyRecord } from "@itwin/appui-abstract";
 import { ITreeNodeLoader, PropertyFilterRuleOperator, TreeModelNodeInput, TreeModelSource, TreeNodeLoadResult, UiComponents } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { renderHook } from "@testing-library/react-hooks";
-import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/PresentationInstanceFilterBuilder";
+import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/Types";
 import { useHierarchyLevelFiltering } from "../../../presentation-components/tree/controlled/UseHierarchyLevelFiltering";
 import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem";
 import { createTestPropertyInfo } from "../../_helpers/Common";

@@ -6,11 +6,20 @@
  * @module Core
  */
 
-import { LegacyRef, MutableRefObject, RefCallback, useCallback, useRef, useState } from "react";
+import { LegacyRef, MutableRefObject, RefCallback, useCallback, useEffect, useRef, useState } from "react";
 import { Primitives, PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IPropertyValueRenderer, PropertyValueRendererManager } from "@itwin/components-react";
 import { assert, Guid, GuidString, IDisposable } from "@itwin/core-bentley";
-import { Descriptor, Field, LabelCompositeValue, LabelDefinition, parseCombinedFieldNames } from "@itwin/presentation-common";
+import {
+  Descriptor,
+  DisplayValue,
+  DisplayValueGroup,
+  Field,
+  LabelCompositeValue,
+  LabelDefinition,
+  parseCombinedFieldNames,
+  Value,
+} from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { InstanceKeyValueRenderer } from "../properties/InstanceKeyValueRenderer";
 
@@ -210,4 +219,62 @@ export function useErrorState() {
     throw error;
   }
   return setErrorState;
+}
+
+/**
+ * A hook that rerenders component after some time.
+ * @param delayMilliseconds - milliseconds to delay. Default is 250.
+ * @internal
+ */
+export function useDelay(delayMilliseconds: number = 250) {
+  const [passed, setPassed] = useState(false);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setPassed(true);
+    }, delayMilliseconds);
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [delayMilliseconds]);
+
+  return passed;
+}
+
+/**
+ * Function for serializing `DisplayValueGroup`.
+ * Returns an object, which consists of `serializedDisplayValues` and `serializedGroupedRawValues`.
+ */
+export function serializeDisplayValueGroupArray(values: DisplayValueGroup[]) {
+  const displayValues: DisplayValue[] = [];
+  const groupedRawValues: Value[] = [];
+  values.forEach((item) => {
+    displayValues.push(item.displayValue);
+    groupedRawValues.push(item.groupedRawValues);
+  });
+  return { displayValues: JSON.stringify(displayValues), groupedRawValues: JSON.stringify(groupedRawValues) };
+}
+
+/**
+ * Function for deserializing `displayValues` and `groupedRawValues`.
+ * Returns an object, which consists of `displayValues` and `groupedRawValues`.
+ * If values were parsed, then `displayValues` type is string[] and `groupedRawValues` type is Value[][].
+ * If values were not parsed, or they are null or undefined, then field types will be undefined.
+ */
+export function deserializeDisplayValueGroupArray(serializedDisplayValues: string, serializedGroupedRawValues: string) {
+  const tryParseJSON = (value: string) => {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return false;
+    }
+  };
+  const displayValues = tryParseJSON(serializedDisplayValues);
+  const groupedRawValues = tryParseJSON(serializedGroupedRawValues);
+
+  if (!displayValues || !groupedRawValues) {
+    return { displayValues: undefined, groupedRawValues: undefined };
+  }
+
+  return { displayValues: displayValues as string[], groupedRawValues: groupedRawValues as Value[][] };
 }
