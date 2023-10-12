@@ -49,8 +49,7 @@ interface RowDef {
   [NodeSelectClauseColumnNames.HasChildren]?: boolean;
   [NodeSelectClauseColumnNames.HideIfNoChildren]?: boolean;
   [NodeSelectClauseColumnNames.HideNodeInHierarchy]?: boolean;
-  [NodeSelectClauseColumnNames.GroupByClass]?: boolean;
-  [NodeSelectClauseColumnNames.GroupByLabel]?: boolean;
+  [NodeSelectClauseColumnNames.Grouping]?: string;
   [NodeSelectClauseColumnNames.MergeByLabelId]?: string;
   [NodeSelectClauseColumnNames.ExtendedData]?: string;
   [NodeSelectClauseColumnNames.AutoExpand]?: boolean;
@@ -61,6 +60,7 @@ interface RowDef {
 export function defaultNodesParser(row: { [columnName: string]: any }): HierarchyNode {
   const typedRow = row as RowDef;
   const parsedExtendedData = typedRow.ExtendedData ? JSON.parse(typedRow.ExtendedData) : undefined;
+  const parsedGrouping = typedRow.Grouping ? JSON.parse(typedRow.Grouping) : undefined;
   return {
     label: typedRow.DisplayLabel ?? "",
     extendedData: parsedExtendedData,
@@ -72,8 +72,7 @@ export function defaultNodesParser(row: { [columnName: string]: any }): Hierarch
     params: {
       hideIfNoChildren: !!typedRow.HideIfNoChildren,
       hideInHierarchy: !!typedRow.HideNodeInHierarchy,
-      groupByClass: !!typedRow.GroupByClass,
-      groupByLabel: !!typedRow.GroupByLabel,
+      grouping: parsedGrouping,
       mergeByLabelId: typedRow.MergeByLabelId,
     },
   };

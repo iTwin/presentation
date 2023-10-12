@@ -33,10 +33,21 @@ export interface LabelGroupingNodeKey {
 }
 
 /**
+ * A key for a base-class-grouping node.
+ * @beta
+ */
+export interface BaseClassGroupingNodeKey {
+  type: "base-class-grouping";
+  class: ClassInfo;
+}
+
+export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | BaseClassGroupingNodeKey;
+
+/**
  * A key for either an instance node or one of the instance grouping nodes.
  * @beta
  */
-export type StandardHierarchyNodeKey = InstancesNodeKey | ClassGroupingNodeKey | LabelGroupingNodeKey;
+export type StandardHierarchyNodeKey = InstancesNodeKey | GroupingNodeKey;
 
 /**
  * A key that uniquely identifies a node in a hierarchy level.
@@ -67,15 +78,35 @@ export namespace HierarchyNodeKey {
   export function isLabelGrouping(key: HierarchyNodeKey): key is LabelGroupingNodeKey {
     return isStandard(key) && key.type === "label-grouping";
   }
+  /** Checks whether the given node key is a [[BaseClassGroupingNodeKey]]. */
+  export function isBaseClassGrouping(key: HierarchyNodeKey): key is BaseClassGroupingNodeKey {
+    return isStandard(key) && key.type === "base-class-grouping";
+  }
+  /** Checks whether the given node key is a [[GroupingNodeKey]]. */
+  export function isGrouping(key: HierarchyNodeKey): key is GroupingNodeKey {
+    return isClassGrouping(key) || isBaseClassGrouping(key) || isLabelGrouping(key);
+  }
 }
 
 /** @beta */
 export interface HierarchyNodeHandlingParams {
   hideIfNoChildren?: boolean;
   hideInHierarchy?: boolean;
-  groupByClass?: boolean;
-  groupByLabel?: boolean;
+  grouping?: {
+    groupByClass?: boolean;
+    groupByLabel?: boolean;
+    groupByBaseClass?: boolean;
+    baseClassInfo?: BaseClassInfo[];
+    hideIfSingleNodeInGroup?: boolean;
+    hideIfNoOtherGroups?: boolean;
+  };
   mergeByLabelId?: string;
+}
+
+/** @beta */
+export interface BaseClassInfo {
+  className: string;
+  schemaName: string;
 }
 
 /**
@@ -112,6 +143,14 @@ export namespace HierarchyNode {
   /** Checks whether the given node is a label grouping node */
   export function isLabelGroupingNode<TNode extends HierarchyNode>(node: TNode): node is TNode & { key: LabelGroupingNodeKey } {
     return HierarchyNodeKey.isLabelGrouping(node.key);
+  }
+  /** Checks whether the given node is a base class grouping node */
+  export function isBaseClassGroupingNode<TNode extends HierarchyNode>(node: TNode): node is TNode & { key: BaseClassGroupingNodeKey } {
+    return HierarchyNodeKey.isBaseClassGrouping(node.key);
+  }
+  /** Checks whether the given node is a grouping node */
+  export function isGroupingNode<TNode extends HierarchyNode>(node: TNode): node is TNode & { key: GroupingNodeKey } {
+    return HierarchyNodeKey.isGrouping(node.key);
   }
 }
 

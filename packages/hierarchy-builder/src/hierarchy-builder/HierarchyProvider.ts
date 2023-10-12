@@ -4,16 +4,19 @@
  *--------------------------------------------------------------------------------------------*/
 /* eslint-disable no-console */
 
-import { catchError, concatAll, concatMap, defaultIfEmpty, filter, from, map, mergeMap, Observable, ObservableInput, of, shareReplay, take, tap } from "rxjs";
+import {
+  catchError, concatAll, concatMap, defaultIfEmpty, filter, from, map, mergeMap, Observable, ObservableInput, of, shareReplay, take, tap,
+} from "rxjs";
 import { Id64 } from "@itwin/core-bentley";
 import { HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
 import { HierarchyNode, HierarchyNodeIdentifiersPath } from "./HierarchyNode";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
-import { createClassGroupingOperator } from "./internal/operators/ClassGrouping";
 import { createDetermineChildrenOperator } from "./internal/operators/DetermineChildren";
+import { createBaseClassGroupingOperator } from "./internal/operators/grouping/BaseClassGrouping";
+import { createClassGroupingOperator } from "./internal/operators/grouping/ClassGrouping";
+import { createLabelGroupingOperator } from "./internal/operators/grouping/LabelGrouping";
 import { createHideIfNoChildrenOperator } from "./internal/operators/HideIfNoChildren";
 import { createHideNodesInHierarchyOperator } from "./internal/operators/HideNodesInHierarchy";
-import { createLabelGroupingOperator } from "./internal/operators/LabelGrouping";
 import { createMergeInstanceNodesByLabelOperator } from "./internal/operators/MergeInstanceNodesByLabel";
 import { createPersistChildrenOperator } from "./internal/operators/PersistChildren";
 import { sortNodesByLabelOperator } from "./internal/operators/Sorting";
@@ -113,6 +116,7 @@ export class HierarchyProvider {
       createHideIfNoChildrenOperator((n) => this.hasNodesObservable(n), false),
       createHideNodesInHierarchyOperator((n) => this.getNodesObservable(n), this._directNodesCache, false),
       sortNodesByLabelOperator,
+      createBaseClassGroupingOperator(this._metadataProvider),
       createClassGroupingOperator(this._metadataProvider),
       createLabelGroupingOperator(),
     );
