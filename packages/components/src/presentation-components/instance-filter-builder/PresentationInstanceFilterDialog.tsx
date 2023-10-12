@@ -8,24 +8,14 @@
 
 import "./PresentationInstanceFilterDialog.scss";
 import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
-import { PrimitiveValue, PropertyDescription, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
-import {
-  BuildFilterOptions,
-  defaultPropertyFilterBuilderRuleValidator,
-  isPropertyFilterBuilderRuleGroup,
-  isUnaryPropertyFilterOperator,
-  PropertyFilterBuilderRule,
-  PropertyFilterBuilderRuleGroupItem,
-  PropertyFilterRuleOperator,
-  usePropertyFilterBuilder,
-} from "@itwin/components-react";
+import { BuildFilterOptions, isPropertyFilterBuilderRuleGroup, PropertyFilterBuilderRuleGroupItem, usePropertyFilterBuilder } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Button, Dialog, ProgressRadial } from "@itwin/itwinui-react";
 import { Descriptor, Keys } from "@itwin/presentation-common";
 import { translate, useDelay } from "../common/Utils";
 import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder";
 import { PresentationInstanceFilterInfo } from "./Types";
-import { convertPresentationFilterToPropertyFilter, createPresentationInstanceFilter } from "./Utils";
+import { convertPresentationFilterToPropertyFilter, createPresentationInstanceFilter, filterRuleValidator } from "./Utils";
 
 /**
  * Props for [[PresentationInstanceFilterDialog]] component.
@@ -213,83 +203,4 @@ function DelayedCenteredProgressRadial() {
       <ProgressRadial indeterminate={true} size="large" />
     </div>
   );
-}
-
-function filterRuleValidator(item: PropertyFilterBuilderRule) {
-  // skip empty rules and rules that do not require value
-  if (item.property === undefined || item.operator === undefined || isUnaryPropertyFilterOperator(item.operator)) {
-    return undefined;
-  }
-
-  // istanbul ignore if
-  if (item.value !== undefined && item.value.valueFormat !== PropertyValueFormat.Primitive) {
-    return undefined;
-  }
-
-  const error = combineValidators(
-    quantityPropertyValidator,
-    numericPropertyValidator,
-  )({
-    property: item.property,
-    operator: item.operator,
-    value: item.value,
-  });
-
-  if (error) {
-    return error;
-  }
-
-  return defaultPropertyFilterBuilderRuleValidator(item);
-}
-
-function combineValidators(...validators: Array<(ctx: ValidatorContext) => string | undefined>) {
-  return (ctx: ValidatorContext) => {
-    for (const validator of validators) {
-      const error = validator(ctx);
-      if (error) {
-        return error;
-      }
-    }
-    return undefined;
-  };
-}
-
-interface ValidatorContext {
-  property: PropertyDescription;
-  operator: PropertyFilterRuleOperator;
-  value?: PrimitiveValue;
-}
-
-function quantityPropertyValidator({ property, value }: ValidatorContext) {
-  // rules with non quantity properties or without values
-  if (property.quantityType === undefined || value === undefined) {
-    return undefined;
-  }
-  if (isInvalidPrimitiveValue(value)) {
-    return translate("instance-filter-builder.error-messages.invalid");
-  }
-
-  return undefined;
-}
-
-function numericPropertyValidator({ property, value }: ValidatorContext) {
-  if (!isPropertyNumeric(property.typename) || value === undefined) {
-    return undefined;
-  }
-
-  if (isInvalidPrimitiveValue(value)) {
-    return translate("instance-filter-builder.error-messages.not-a-number");
-  }
-
-  return undefined;
-}
-
-function isPropertyNumeric(typename: string) {
-  return (
-    typename === StandardTypeNames.Number || typename === StandardTypeNames.Int || typename === StandardTypeNames.Float || typename === StandardTypeNames.Double
-  );
-}
-
-function isInvalidPrimitiveValue(value: PrimitiveValue) {
-  return value.value === undefined && value.displayValue !== undefined && value.displayValue !== "";
 }

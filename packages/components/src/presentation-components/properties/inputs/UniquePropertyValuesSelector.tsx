@@ -20,9 +20,9 @@ import {
   RuleTypes,
 } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { deserializeDisplayValueGroupArray, findField, serializeDisplayValueGroupArray, translate } from "../common/Utils";
-import { AsyncMultiTagSelect } from "../instance-filter-builder/MultiTagSelect";
-import { getInstanceFilterFieldName } from "../instance-filter-builder/Utils";
+import { deserializeDisplayValueGroupArray, findField, serializeDisplayValueGroupArray, translate } from "../../common/Utils";
+import { getInstanceFilterFieldName } from "../../instance-filter-builder/Utils";
+import { AsyncSelect } from "./AsyncSelect";
 
 /** @internal */
 export const UNIQUE_PROPERTY_VALUES_BATCH_SIZE = 100;
@@ -81,7 +81,7 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
   const loadTargets = useUniquePropertyValuesLoader({ imodel, ruleset, fieldDescriptor: field?.getFieldDescriptor() }, descriptorInputKeys);
 
   return (
-    <AsyncMultiTagSelect
+    <AsyncSelect
       value={selectedValues ?? null}
       loadOptions={async (_, options) => loadTargets(options.length)}
       placeholder={translate("unique-values-property-editor.select-values")}

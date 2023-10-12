@@ -6,14 +6,19 @@
 import { expect } from "chai";
 import { createRef } from "react";
 import sinon from "sinon";
-import { PrimitiveValue } from "@itwin/appui-abstract";
+import { PrimitiveValue, StandardTypeNames } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
 import { waitFor } from "@testing-library/react";
-import { NumericInput, NumericPropertyInput, NumericPropertyInputAttributes } from "../../presentation-components/properties/NumericPropertyInput";
-import { render } from "../_helpers/Common";
-import { createRecord } from "./NumericPropertyEditor.test";
+import { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common";
+import { NumericInput, NumericPropertyInput } from "../../../presentation-components/properties/inputs/NumericPropertyInput";
+import { render } from "../../_helpers/Common";
+import { createTestPropertyRecord } from "../../_helpers/UiComponents";
+
+const createRecord = (initialValue?: number) => {
+  return createTestPropertyRecord({ value: initialValue, displayValue: initialValue?.toString() }, { typename: StandardTypeNames.Double });
+};
 
 describe("<NumericPropertyInput />", () => {
   beforeEach(async () => {
@@ -30,7 +35,7 @@ describe("<NumericPropertyInput />", () => {
 
   it("get value from NumericPropertyInput reference", async () => {
     const record = createRecord(1);
-    const ref = createRef<NumericPropertyInputAttributes>();
+    const ref = createRef<PropertyEditorAttributes>();
     const { getByRole, user } = render(<NumericPropertyInput ref={ref} propertyRecord={record} />);
 
     expect((ref.current?.getValue() as PrimitiveValue).value).to.be.eq(1);
@@ -44,7 +49,7 @@ describe("<NumericPropertyInput />", () => {
 
   it("get value from NumericPropertyInput reference returns undefined when input is not a number", async () => {
     const record = createRecord();
-    const ref = createRef<NumericPropertyInputAttributes>();
+    const ref = createRef<PropertyEditorAttributes>();
     const { getByRole, user } = render(<NumericPropertyInput ref={ref} propertyRecord={record} onCommit={() => {}} />);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
@@ -56,7 +61,7 @@ describe("<NumericPropertyInput />", () => {
 
   it("returns new value after typing number", async () => {
     const record = createRecord(-10);
-    const ref = createRef<NumericPropertyInputAttributes>();
+    const ref = createRef<PropertyEditorAttributes>();
     const { getByRole, queryByDisplayValue, user } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
@@ -68,7 +73,7 @@ describe("<NumericPropertyInput />", () => {
 
   it("allows typing `-1`", async () => {
     const record = createRecord();
-    const ref = createRef<NumericPropertyInputAttributes>();
+    const ref = createRef<PropertyEditorAttributes>();
     const { getByRole, queryByDisplayValue, user } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
@@ -80,7 +85,7 @@ describe("<NumericPropertyInput />", () => {
 
   it("allows typing `+1`", async () => {
     const record = createRecord();
-    const ref = createRef<NumericPropertyInputAttributes>();
+    const ref = createRef<PropertyEditorAttributes>();
     const { getByRole, queryByDisplayValue, user } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
@@ -92,7 +97,7 @@ describe("<NumericPropertyInput />", () => {
 
   it("allows typing `.1` ", async () => {
     const record = createRecord();
-    const ref = createRef<NumericPropertyInputAttributes>();
+    const ref = createRef<PropertyEditorAttributes>();
     const { getByRole, queryByDisplayValue, user } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
@@ -104,7 +109,7 @@ describe("<NumericPropertyInput />", () => {
 
   it("allows typing `+.1`", async () => {
     const record = createRecord();
-    const ref = createRef<NumericPropertyInputAttributes>();
+    const ref = createRef<PropertyEditorAttributes>();
     const { getByRole, queryByDisplayValue, user } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
@@ -116,7 +121,7 @@ describe("<NumericPropertyInput />", () => {
 
   it("allows typing `-.1`", async () => {
     const record = createRecord();
-    const ref = createRef<NumericPropertyInputAttributes>();
+    const ref = createRef<PropertyEditorAttributes>();
     const { getByRole, queryByDisplayValue, user } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
@@ -128,7 +133,7 @@ describe("<NumericPropertyInput />", () => {
 
   it("allows typing 1e5", async () => {
     const record = createRecord();
-    const ref = createRef<NumericPropertyInputAttributes>();
+    const ref = createRef<PropertyEditorAttributes>();
     const { getByDisplayValue, getByRole, user } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
@@ -140,7 +145,7 @@ describe("<NumericPropertyInput />", () => {
 
   it("allows typing 1e-5", async () => {
     const record = createRecord();
-    const ref = createRef<NumericPropertyInputAttributes>();
+    const ref = createRef<PropertyEditorAttributes>();
     const { getByDisplayValue, getByRole, user } = render(<NumericPropertyInput propertyRecord={record} ref={ref} />);
 
     const inputContainer = await waitFor(() => getByRole("textbox"));
@@ -253,8 +258,10 @@ describe("<NumericInput />", () => {
   it("commits undefined value when propertyRecord value is NaN on `onBlur` event", async () => {
     const record = createRecord(Number.NaN);
     const spy = sinon.spy();
-    const ref = createRef<NumericPropertyInputAttributes>();
-    const { user } = render(<NumericPropertyInput ref={ref} propertyRecord={record} onCommit={spy} />);
+    const ref = createRef<PropertyEditorAttributes>();
+    const { getByRole, user } = render(<NumericPropertyInput ref={ref} propertyRecord={record} onCommit={spy} />);
+    const inputContainer = await waitFor(() => getByRole("textbox"));
+    await user.click(inputContainer);
     await user.tab();
 
     expect(spy).to.be.calledWith({ propertyRecord: record, newValue: { valueFormat: 0, value: undefined, displayValue: "NaN" } });

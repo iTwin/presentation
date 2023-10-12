@@ -2,16 +2,13 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/** @packageDocumentation
- * @module Internal
- */
 
 import { ChangeEventHandler, useEffect, useState } from "react";
+import { assert } from "@itwin/core-bentley";
 import { IModelApp } from "@itwin/core-frontend";
 import { FormatterSpec, ParserSpec } from "@itwin/core-quantity";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
-import { assert } from "@itwin/core-bentley";
 
 /**
  * Value of kind of quantity property.

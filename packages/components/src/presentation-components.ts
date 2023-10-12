@@ -34,8 +34,7 @@ export * from "./presentation-components/ComponentsLoggerCategory";
  * Presentation-specific [Properties]($components-react:Properties).
  */
 export * from "./presentation-components/properties/InstanceKeyValueRenderer";
-export * from "./presentation-components/properties/NavigationPropertyEditor";
-export * from "./presentation-components/properties/NumericPropertyEditor";
+export * from "./presentation-components/properties/editors";
 
 /**
  * @module PropertyGrid

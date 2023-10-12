@@ -19,16 +19,15 @@ import {
 } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { waitFor } from "@testing-library/react";
-import { translate } from "../../presentation-components/common/Utils";
-import { UniquePropertyValuesSelector } from "../../presentation-components/properties/UniquePropertyValuesSelector";
-import { createTestECClassInfo, createTestPropertyInfo, createTestRelatedClassInfo, createTestRelationshipPath, render } from "../_helpers/Common";
+import { UniquePropertyValuesSelector } from "../../../presentation-components/properties/inputs/UniquePropertyValuesSelector";
+import { createTestECClassInfo, createTestPropertyInfo, createTestRelatedClassInfo, createTestRelationshipPath, render } from "../../_helpers/Common";
 import {
   createTestCategoryDescription,
   createTestContentDescriptor,
   createTestNestedContentField,
   createTestPropertiesContentField,
-} from "../_helpers/Content";
-import { createTestECInstancesNodeKey } from "../_helpers/Hierarchy";
+} from "../../_helpers/Content";
+import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy";
 
 describe("UniquePropertyValuesSelector", () => {
   beforeEach(async () => {
@@ -191,7 +190,7 @@ describe("UniquePropertyValuesSelector", () => {
         value={{ valueFormat: PropertyValueFormat.Primitive, displayValue: '[""]', value: '[[""]]' }}
       />,
     );
-    await waitFor(() => expect(container.querySelector(".iui-tag-label")?.innerHTML).to.include(translate("unique-values-property-editor.empty-value")));
+    await waitFor(() => expect(container.querySelector(".iui-tag-label")?.innerHTML).to.include("unique-values-property-editor.empty-value"));
   });
 
   it("loads two rows and selects one of them `isOptionSelected`", async () => {
@@ -345,7 +344,7 @@ describe("UniquePropertyValuesSelector", () => {
 
       // assert that row is displayed correctly
       await waitFor(() => {
-        expect(queryByText(translate("unique-values-property-editor.empty-value"))).to.not.be.null;
+        expect(queryByText("unique-values-property-editor.empty-value")).to.not.be.null;
       });
     });
 

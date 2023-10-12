@@ -12,8 +12,8 @@ import { FormatterSpec, ParseError, ParserSpec, QuantityParseResult } from "@itw
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
 import { waitFor } from "@testing-library/react";
-import { QuantityValue, useQuantityValueInput, UseQuantityValueInputProps } from "../../presentation-components/properties/UseQuantityValueInput";
-import { render } from "../_helpers/Common";
+import { QuantityValue, useQuantityValueInput, UseQuantityValueInputProps } from "../../../presentation-components/properties/inputs/UseQuantityValueInput";
+import { render } from "../../_helpers/Common";
 
 function TestInput({ onChange, ...restProps }: UseQuantityValueInputProps & { onChange?: (value: QuantityValue) => void }) {
   const { quantityValue, inputProps } = useQuantityValueInput(restProps);
