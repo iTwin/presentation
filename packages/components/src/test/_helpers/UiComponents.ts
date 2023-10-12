@@ -30,18 +30,20 @@ export function createTestTreeNodeItem(key?: NodeKey, partialNode?: Partial<Dela
   return node;
 }
 
-export function createTestPropertyRecord(): PropertyRecord {
-  const value: PrimitiveValue = {
+export function createTestPropertyRecord(value?: Partial<PrimitiveValue>, property?: Partial<PropertyDescription>): PropertyRecord {
+  const recordValue: PrimitiveValue = {
     valueFormat: PropertyValueFormat.Primitive,
     value: "test_prop_value",
     displayValue: "test_prop_displayValue",
+    ...value,
   };
   const descr: PropertyDescription = {
     typename: "string",
     name: "test_prop",
     displayLabel: "TestProp",
+    ...property,
   };
-  return new PropertyRecord(value, descr);
+  return new PropertyRecord(recordValue, descr);
 }
 
 export function mockPresentationManager() {

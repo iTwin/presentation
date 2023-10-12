@@ -50,6 +50,10 @@ export function SchemaMetadataContextProvider({ schemaContextProvider, imodel, c
   return <schemaMetadataContext.Provider value={state}>{children}</schemaMetadataContext.Provider>;
 }
 
+/**
+ * Returns context provided by [[SchemaMetadataContextProvider]].
+ * @beta
+ */
 export function useSchemaMetadataContext() {
   return useContext(schemaMetadataContext);
 }

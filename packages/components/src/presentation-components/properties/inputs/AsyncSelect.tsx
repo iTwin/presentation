@@ -2,9 +2,6 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/** @packageDocumentation
- * @module Internal
- */
 
 import "./AsyncSelect.scss";
 import classnames from "classnames";
@@ -26,7 +23,7 @@ import {
 import { AsyncPaginate, AsyncPaginateProps } from "react-select-async-paginate";
 import { SvgCaretDownSmall, SvgCheckmarkSmall, SvgCloseSmall } from "@itwin/itwinui-icons-react";
 import { List, ListItem, Tag, TagContainer } from "@itwin/itwinui-react";
-import { translate, useMergedRefs, useResizeObserver } from "../common/Utils";
+import { translate, useMergedRefs, useResizeObserver } from "../../common/Utils";
 
 function SelectContainer<TOption, IsMulti extends boolean = boolean>({ children, ...props }: ContainerProps<TOption, IsMulti>) {
   return (

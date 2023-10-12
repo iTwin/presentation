@@ -17,8 +17,8 @@ import {
   NavigationPropertyTarget,
   useNavigationPropertyTargetsLoader,
   useNavigationPropertyTargetsRuleset,
-} from "../../presentation-components/properties/UseNavigationPropertyTargetsLoader";
-import { createTestContentDescriptor, createTestContentItem } from "../_helpers/Content";
+} from "../../../presentation-components/properties/inputs/UseNavigationPropertyTargetsLoader";
+import { createTestContentDescriptor, createTestContentItem } from "../../_helpers/Content";
 
 describe("useNavigationPropertyTargetsLoader", () => {
   const testImodel = {} as IModelConnection;

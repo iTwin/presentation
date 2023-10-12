@@ -12,13 +12,13 @@ import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { waitFor } from "@testing-library/react";
+import { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common";
 import {
   NavigationPropertyTargetSelector,
-  NavigationPropertyTargetSelectorAttributes,
   NavigationPropertyTargetSelectorProps,
-} from "../../presentation-components/properties/NavigationPropertyTargetSelector";
-import { render } from "../_helpers/Common";
-import { createTestContentDescriptor, createTestContentItem } from "../_helpers/Content";
+} from "../../../presentation-components/properties/inputs/NavigationPropertyTargetSelector";
+import { render } from "../../_helpers/Common";
+import { createTestContentDescriptor, createTestContentItem } from "../../_helpers/Content";
 
 function createNavigationPropertyDescription(): PropertyDescription {
   return {
@@ -101,7 +101,7 @@ describe("NavigationPropertyTargetSelector", () => {
 
   it("get value from target selector reference", async () => {
     sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
-    const ref = createRef<NavigationPropertyTargetSelectorAttributes>();
+    const ref = createRef<PropertyEditorAttributes>();
     const { getByRole, getByText, user } = render(
       <NavigationPropertyTargetSelector
         ref={ref}
@@ -190,12 +190,12 @@ describe("NavigationPropertyTargetSelector", () => {
     const dropdownButton = await waitFor(() => {
       const element = container.querySelector<HTMLDivElement>(".presentation-navigation-property-select-input-icon");
       expect(element).to.not.be.null;
-      return element;
+      return element as HTMLDivElement;
     });
-    await user.click(dropdownButton!);
+    await user.click(dropdownButton);
 
     await waitFor(() => expect(queryByText(contentItem.label.displayValue)).to.not.be.null);
-    await user.click(dropdownButton!);
+    await user.click(dropdownButton);
 
     await waitFor(() => expect(queryByText(contentItem.label.displayValue)).to.be.null);
   });
@@ -220,18 +220,18 @@ describe("NavigationPropertyTargetSelector", () => {
     const dropdownButton = await waitFor(() => {
       const element = container.querySelector<HTMLDivElement>(".presentation-navigation-property-select-input-icon");
       expect(element).to.not.be.null;
-      return element;
+      return element as HTMLDivElement;
     });
 
     // when input value is empty
-    await user.click(dropdownButton!);
+    await user.click(dropdownButton);
     await waitFor(() => expect(queryByText(contentItem.label.displayValue)).to.not.be.null);
-    await user.click(dropdownButton!);
+    await user.click(dropdownButton);
     await waitFor(() => expect(queryByText(contentItem.label.displayValue)).to.be.null);
     expect((getByRole("combobox") as HTMLInputElement).value).to.be.eq("");
 
     // when input value is not empty
-    await user.click(dropdownButton!);
+    await user.click(dropdownButton);
     const menuItem = getByText(contentItem.label.displayValue);
     await user.click(menuItem);
     await waitFor(() => expect(queryByText(contentItem.label.displayValue)).to.be.null);
