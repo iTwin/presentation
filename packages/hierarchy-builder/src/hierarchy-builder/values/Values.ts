@@ -54,6 +54,7 @@ export type PrimitiveValue = Id64String | string | number | boolean | Date | Poi
  */
 export type PrimitiveValueType = "Id" | Exclude<ECPrimitiveType, "Binary" | "IGeometry">;
 
+/** @beta */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace PrimitiveValue {
   /** @beta */

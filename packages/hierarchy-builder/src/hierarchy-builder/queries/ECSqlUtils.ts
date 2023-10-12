@@ -106,14 +106,18 @@ export interface PrimitiveValueSelectorProps {
  */
 export type ValueSelectClauseProps = PropertyValueSelectClauseProps | TypedPrimitiveValue | PrimitiveValueSelectorProps;
 
+/** @beta */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace ValueSelectClauseProps {
+  /** @beta */
   export function isPropertySelector(props: ValueSelectClauseProps): props is PropertyValueSelectClauseProps {
     return !!(props as PropertyValueSelectClauseProps).propertyName;
   }
+  /** @beta */
   export function isPrimitiveValue(props: ValueSelectClauseProps): props is TypedPrimitiveValue {
     return !!(props as TypedPrimitiveValue).value;
   }
+  /** @beta */
   export function isPrimitiveValueSelector(props: ValueSelectClauseProps): props is PrimitiveValueSelectorProps {
     return !!(props as PrimitiveValueSelectorProps).selector;
   }

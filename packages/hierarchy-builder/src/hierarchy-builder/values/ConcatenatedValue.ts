@@ -17,6 +17,7 @@ import { PropertyValue, TypedPrimitiveValue } from "./Values";
  */
 export type ConcatenatedValuePart = PropertyValue | TypedPrimitiveValue | string;
 
+/** @beta */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace ConcatenatedValuePart {
   /** @beta */
@@ -42,6 +43,7 @@ export namespace ConcatenatedValuePart {
  */
 export type ConcatenatedValue = ConcatenatedValuePart | ConcatenatedValuePart[];
 
+/** @beta */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace ConcatenatedValue {
   /**

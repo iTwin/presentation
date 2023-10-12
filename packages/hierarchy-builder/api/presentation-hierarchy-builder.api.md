@@ -81,22 +81,21 @@ export interface ClassGroupingNodeKey {
 // @beta
 export type ConcatenatedValue = ConcatenatedValuePart | ConcatenatedValuePart[];
 
-// @public (undocumented)
+// @beta (undocumented)
 export namespace ConcatenatedValue {
-    // @beta
     export function serialize(parts: ConcatenatedValue, partFormatter: (part: ConcatenatedValuePart) => Promise<string>): Promise<string>;
 }
 
 // @beta
 export type ConcatenatedValuePart = PropertyValue | TypedPrimitiveValue | string;
 
-// @public (undocumented)
+// @beta (undocumented)
 export namespace ConcatenatedValuePart {
-    // @beta (undocumented)
+    // (undocumented)
     export function isPrimitive(part: ConcatenatedValuePart): part is TypedPrimitiveValue;
-    // @beta (undocumented)
+    // (undocumented)
     export function isProperty(part: ConcatenatedValuePart): part is PropertyValue;
-    // @beta (undocumented)
+    // (undocumented)
     export function isString(part: ConcatenatedValuePart): part is string;
 }
 
@@ -251,7 +250,7 @@ export interface ECProperty {
     name: string;
 }
 
-// @public (undocumented)
+// @beta
 export interface ECRelationshipClass extends ECClass {
     // (undocumented)
     direction: "Forward" | "Backward";
@@ -576,15 +575,15 @@ export interface InstancesNodeKey {
 }
 
 // @beta
+export type IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise<string>;
+
+// @beta
 export interface LabelGroupingNodeKey {
     // (undocumented)
     label: string;
     // (undocumented)
     type: "label-grouping";
 }
-
-// @beta
-export type IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise<string>;
 
 // @beta (undocumented)
 export type LogFunction = (category: string, message: string) => void;
@@ -668,11 +667,11 @@ export interface Point3d {
 // @beta
 export type PrimitiveValue = Id64String | string | number | boolean | Date | Point2d | Point3d;
 
-// @public (undocumented)
+// @beta (undocumented)
 export namespace PrimitiveValue {
-    // @beta (undocumented)
+    // (undocumented)
     export function isPoint2d(value: PrimitiveValue): value is Point2d;
-    // @beta (undocumented)
+    // (undocumented)
     export function isPoint3d(value: PrimitiveValue): value is Point3d;
 }
 
@@ -709,10 +708,10 @@ export interface PropertyValueSelectClauseProps {
 export function setLogger(logger: ILogger | undefined): void;
 
 // @beta
-export type StandardHierarchyNodeKey = InstancesNodeKey | ClassGroupingNodeKey | LabelGroupingNodeKey;
+export type SpecialPropertyType = "Navigation" | "Guid" | "Point2d" | "Point3d";
 
 // @beta
-export type SpecialPropertyType = "Navigation" | "Guid" | "Point2d" | "Point3d";
+export type StandardHierarchyNodeKey = InstancesNodeKey | ClassGroupingNodeKey | LabelGroupingNodeKey;
 
 // @beta
 export type TypedPrimitiveValue = ({
@@ -747,7 +746,7 @@ export type TypedPrimitiveValue = ({
 // @beta
 export type ValueSelectClauseProps = PropertyValueSelectClauseProps | TypedPrimitiveValue | PrimitiveValueSelectorProps;
 
-// @public (undocumented)
+// @beta (undocumented)
 export namespace ValueSelectClauseProps {
     // (undocumented)
     export function isPrimitiveValue(props: ValueSelectClauseProps): props is TypedPrimitiveValue;

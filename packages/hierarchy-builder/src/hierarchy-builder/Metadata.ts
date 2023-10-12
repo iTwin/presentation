@@ -104,7 +104,6 @@ export interface ECRelationshipConstraint {
  * @see https://www.itwinjs.org/reference/ecschema-metadata/metadata/relationshipclass/
  * @beta
  */
-/** */
 export interface ECRelationshipClass extends ECClass {
   direction: "Forward" | "Backward";
   source: ECRelationshipConstraint;
