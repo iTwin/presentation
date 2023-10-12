@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import sinon from "sinon";
 import { Component } from "react";
+import sinon from "sinon";
 import { It } from "typemoq";
 import { BeDuration } from "@itwin/core-bentley";
 import {
@@ -17,6 +17,8 @@ import {
   RelatedClassInfoWithOptionalRelationship,
   Ruleset,
 } from "@itwin/presentation-common";
+import { render as renderRTL } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { InstanceFilterPropertyInfo } from "../../presentation-components/instance-filter-builder/Utils";
 import { createTestCategoryDescription, createTestPropertiesContentField } from "./Content";
 
@@ -96,6 +98,20 @@ export const waitForPendingAsyncs = async (handler: { pendingAsyncs: Set<string>
   const recursiveWaitInternal = async (): Promise<void> => recursiveWait(pred, recursiveWaitInternal);
   await recursiveWaitInternal();
 };
+
+/**
+ * Custom render function that wraps around `render` function from `@testing-library/react` and additionally
+ * setup `userEvent` from `@testing-library/user-event`.
+ *
+ * It should be used when test need to do interactions with rendered components.
+ */
+export function render(...args: Parameters<typeof renderRTL>): ReturnType<typeof renderRTL> & { user: ReturnType<(typeof userEvent)["setup"]> } {
+  const user = userEvent.setup();
+  return {
+    ...renderRTL(...args),
+    user,
+  };
+}
 
 /**
  * Stubs global 'requestAnimationFrame' and 'cancelAnimationFrame' functions.

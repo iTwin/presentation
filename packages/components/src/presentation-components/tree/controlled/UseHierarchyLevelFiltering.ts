@@ -6,9 +6,9 @@
  * @module Tree
  */
 
-import { isTreeModelNode, ITreeNodeLoader, Subscription, TreeModelSource, TreeNodeItem } from "@itwin/components-react";
 import { useRef } from "react";
-import { PresentationInstanceFilterInfo } from "../../instance-filter-builder/PresentationInstanceFilterBuilder";
+import { isTreeModelNode, ITreeNodeLoader, Subscription, TreeModelSource, TreeNodeItem } from "@itwin/components-react";
+import { PresentationInstanceFilterInfo } from "../../instance-filter-builder/Types";
 import { isPresentationTreeNodeItem } from "../PresentationTreeNodeItem";
 
 /**

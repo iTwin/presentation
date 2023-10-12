@@ -7,17 +7,25 @@
  */
 
 import "./PresentationInstanceFilterDialog.scss";
-import { useCallback, useEffect, useState } from "react";
+import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { BuildFilterOptions, isPropertyFilterBuilderRuleGroup, PropertyFilterBuilderRuleGroupItem, usePropertyFilterBuilder } from "@itwin/components-react";
+import { IModelConnection } from "@itwin/core-frontend";
 import { Button, Dialog, ProgressRadial } from "@itwin/itwinui-react";
-import { Descriptor } from "@itwin/presentation-common";
-import { translate } from "../common/Utils";
-import { PresentationInstanceFilterBuilder, PresentationInstanceFilterBuilderProps, PresentationInstanceFilterInfo } from "./PresentationInstanceFilterBuilder";
+import { Descriptor, Keys } from "@itwin/presentation-common";
+import { translate, useDelay } from "../common/Utils";
+import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder";
+import { PresentationInstanceFilterInfo } from "./Types";
+import { convertPresentationFilterToPropertyFilter, createPresentationInstanceFilter, filterRuleValidator } from "./Utils";
 
 /**
  * Props for [[PresentationInstanceFilterDialog]] component.
  * @beta
  */
-export interface PresentationInstanceFilterDialogProps extends Omit<PresentationInstanceFilterBuilderProps, "onInstanceFilterChanged" | "descriptor"> {
+export interface PresentationInstanceFilterDialogProps {
+  /** iModel connection to pull data from. */
+  imodel: IModelConnection;
+  /** Specifies how deep rule groups can be nested. */
+  ruleGroupDepthLimit?: number;
   /** Specifies whether dialog is open or not. */
   isOpen: boolean;
   /** Callback that is invoked when 'Apply' button is clicked. */
@@ -25,32 +33,32 @@ export interface PresentationInstanceFilterDialogProps extends Omit<Presentation
   /** Callback that is invoked when 'Close' button is clicked or dialog is closed. */
   onClose: () => void;
   /**
-   * [Descriptor]($presentation-common) that will be used in [[PresentationInstanceFilterBuilder]] component rendered inside this dialog.
+   * [Descriptor]($presentation-common) that will be used in [[InstanceFilterBuilder]] component rendered inside this dialog.
    *
    * This property can be set to function in order to lazy load [Descriptor]($presentation-common) when dialog is opened.
    */
   descriptor: (() => Promise<Descriptor>) | Descriptor;
-  /** Renderer that renders count of results for currently built filter. */
-  filterResultCountRenderer?: (filter?: PresentationInstanceFilterInfo) => React.ReactNode;
+  /** Renders filter results count. */
+  filterResultsCountRenderer?: (filter: PresentationInstanceFilterInfo) => ReactNode;
+  /**
+   * [Keys]($presentation-common) of filterables on which the filter was called.
+   *
+   * These keys should match the keys that were used to create the descriptor.
+   */
+  descriptorInputKeys?: Keys;
   /** Dialog title. */
   title?: React.ReactNode;
+  /** Initial filter that will be show when component is mounted. */
+  initialFilter?: PresentationInstanceFilterInfo;
 }
 
 /**
- * Dialog component that renders [[PresentationInstanceFilterBuilder]] inside.
+ * Dialog component that renders [[InstanceFilterBuilder]] inside.
  * @beta
  */
 export function PresentationInstanceFilterDialog(props: PresentationInstanceFilterDialogProps) {
-  const { isOpen, onApply, onClose, filterResultCountRenderer, title, descriptor, ...restProps } = props;
-  const [filter, setFilter] = useState<PresentationInstanceFilterInfo | undefined>(restProps.initialFilter);
-
-  const onInstanceFilterChanged = useCallback((filterInfo?: PresentationInstanceFilterInfo) => {
-    setFilter(filterInfo);
-  }, []);
-
-  const applyButtonHandle = () => {
-    filter && onApply(filter);
-  };
+  const { isOpen, onClose, title, ...restProps } = props;
+  const descriptor = useDelayLoadedDescriptor(props.descriptor);
 
   return (
     <Dialog
@@ -66,78 +74,130 @@ export function PresentationInstanceFilterDialog(props: PresentationInstanceFilt
       <Dialog.Backdrop />
       <Dialog.Main className="presentation-instance-filter-dialog-content-container">
         <Dialog.TitleBar className="presentation-instance-filter-title" titleText={title ? title : translate("instance-filter-builder.filter")} />
-        <Dialog.Content className="presentation-instance-filter-content">
-          {descriptor instanceof Descriptor ? (
-            <PresentationInstanceFilterBuilder {...restProps} descriptor={descriptor} onInstanceFilterChanged={onInstanceFilterChanged} />
-          ) : (
-            <DelayLoadedPresentationInstanceFilterBuilder {...restProps} onInstanceFilterChanged={onInstanceFilterChanged} descriptorGetter={descriptor} />
-          )}
-        </Dialog.Content>
-        <div className="presentation-instance-filter-dialog-bottom-container">
-          <div>{filterResultCountRenderer && filterResultCountRenderer(filter)}</div>
-          <Dialog.ButtonBar className="presentation-instance-filter-button-bar">
-            <Button className="presentation-instance-filter-dialog-apply-button" styleType="high-visibility" onClick={applyButtonHandle} disabled={!filter}>
-              {translate("instance-filter-builder.apply")}
-            </Button>
-            <Button className="presentation-instance-filter-dialog-close-button" onClick={onClose}>
-              {translate("instance-filter-builder.cancel")}
-            </Button>
-          </Dialog.ButtonBar>
-        </div>
+        {descriptor ? <PresentationInstanceFilterDialogContent {...restProps} descriptor={descriptor} onClose={onClose} /> : <DelayedCenteredProgressRadial />}
       </Dialog.Main>
     </Dialog>
   );
 }
 
-interface DelayLoadedPresentationInstanceFilterBuilderProps extends Omit<PresentationInstanceFilterBuilderProps, "descriptor"> {
-  descriptorGetter: () => Promise<Descriptor>;
-}
-
-function DelayLoadedPresentationInstanceFilterBuilder(props: DelayLoadedPresentationInstanceFilterBuilderProps) {
-  const { descriptorGetter, ...restProps } = props;
-  const descriptor = useDelayLoadedDescriptor(descriptorGetter);
-  if (!descriptor) {
-    return <DelayedCenteredProgressRadial />;
-  }
-
-  return <PresentationInstanceFilterBuilder {...restProps} descriptor={descriptor} />;
-}
-
-function useDelayLoadedDescriptor(descriptorGetter: () => Promise<Descriptor>) {
-  const [descriptor, setDescriptor] = useState<Descriptor>();
+function useDelayLoadedDescriptor(descriptorOrGetter: Descriptor | (() => Promise<Descriptor>)) {
+  const [descriptor, setDescriptor] = useState<Descriptor | undefined>(() => (descriptorOrGetter instanceof Descriptor ? descriptorOrGetter : undefined));
 
   useEffect(() => {
     let disposed = false;
     void (async () => {
-      const newDescriptor = await descriptorGetter();
-      // istanbul ignore else
-      if (!disposed) {
-        setDescriptor(newDescriptor);
+      if (!(descriptorOrGetter instanceof Descriptor)) {
+        const newDescriptor = await descriptorOrGetter();
+        // istanbul ignore else
+        if (!disposed) {
+          setDescriptor(newDescriptor);
+        }
       }
     })();
     return () => {
       disposed = true;
     };
-  }, [descriptorGetter]);
+  }, [descriptorOrGetter]);
 
   return descriptor;
 }
 
-function DelayedCenteredProgressRadial() {
-  const [show, setShow] = useState(false);
+interface PresentationInstanceFilterDialogContentProps extends Omit<PresentationInstanceFilterDialogProps, "isOpen" | "title" | "descriptor"> {
+  descriptor: Descriptor;
+  descriptorInputKeys?: Keys;
+}
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setShow(true);
-    }, 250);
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, []);
+function PresentationInstanceFilterDialogContent(props: PresentationInstanceFilterDialogContentProps) {
+  const { onApply, initialFilter, descriptor, imodel, ruleGroupDepthLimit, filterResultsCountRenderer, onClose, descriptorInputKeys } = props;
+  const [initialPropertyFilter] = useState(() => (initialFilter ? convertPresentationFilterToPropertyFilter(descriptor, initialFilter.filter) : undefined));
+
+  const { rootGroup, actions, buildFilter } = usePropertyFilterBuilder({
+    initialFilter: initialPropertyFilter,
+    ruleValidator: filterRuleValidator,
+  });
+
+  const filteringProps = usePresentationInstanceFilteringProps(descriptor, imodel, initialFilter?.usedClasses);
+  const getFilterInfo = useCallback(
+    (options?: BuildFilterOptions) => {
+      const filter = buildFilter(options);
+      if (!filter) {
+        return undefined;
+      }
+      const presentationInstanceFilter = createPresentationInstanceFilter(descriptor, filter);
+      if (!presentationInstanceFilter) {
+        return undefined;
+      }
+
+      return { filter: presentationInstanceFilter, usedClasses: filteringProps.selectedClasses };
+    },
+    [buildFilter, descriptor, filteringProps.selectedClasses],
+  );
+
+  const applyButtonHandle = () => {
+    const result = getFilterInfo();
+    if (!result) {
+      return;
+    }
+    onApply(result);
+  };
+
+  const hasNonEmptyRule = (item: PropertyFilterBuilderRuleGroupItem) => {
+    if (isPropertyFilterBuilderRuleGroup(item)) {
+      return item.items.some(hasNonEmptyRule);
+    }
+    return item.operator !== undefined;
+  };
+
+  const isDisabled = !hasNonEmptyRule(rootGroup);
+
+  return (
+    <>
+      <Dialog.Content className="presentation-instance-filter-content">
+        <InstanceFilterBuilder
+          {...filteringProps}
+          rootGroup={rootGroup}
+          actions={actions}
+          ruleGroupDepthLimit={ruleGroupDepthLimit}
+          imodel={imodel}
+          descriptor={descriptor}
+          descriptorInputKeys={descriptorInputKeys}
+        />
+      </Dialog.Content>
+      <div className="presentation-instance-filter-dialog-bottom-container">
+        <div>{filterResultsCountRenderer ? <ResultsRenderer buildFilter={getFilterInfo} renderer={filterResultsCountRenderer} /> : null}</div>
+        <Dialog.ButtonBar className="presentation-instance-filter-button-bar">
+          <Button className="presentation-instance-filter-dialog-apply-button" styleType="high-visibility" onClick={applyButtonHandle} disabled={isDisabled}>
+            {translate("instance-filter-builder.apply")}
+          </Button>
+          <Button className="presentation-instance-filter-dialog-close-button" onClick={onClose}>
+            {translate("instance-filter-builder.cancel")}
+          </Button>
+        </Dialog.ButtonBar>
+      </div>
+    </>
+  );
+}
+
+interface ResultsRendererProps {
+  buildFilter: (options?: BuildFilterOptions) => PresentationInstanceFilterInfo | undefined;
+  renderer: (filter: PresentationInstanceFilterInfo) => ReactNode;
+}
+
+function ResultsRenderer({ buildFilter, renderer }: ResultsRendererProps) {
+  const filter = useMemo(() => buildFilter({ ignoreErrors: true }), [buildFilter]);
+  if (!filter) {
+    return null;
+  }
+  return <>{renderer(filter)}</>;
+}
+
+function DelayedCenteredProgressRadial() {
+  const show = useDelay();
 
   if (!show) {
     return null;
   }
+
   return (
     <div className="presentation-instance-filter-dialog-progress">
       <ProgressRadial indeterminate={true} size="large" />

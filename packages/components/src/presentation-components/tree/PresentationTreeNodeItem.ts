@@ -8,7 +8,13 @@
 
 import { DelayLoadedTreeNodeItem, ImmediatelyLoadedTreeNodeItem, TreeNodeItem } from "@itwin/components-react";
 import { Descriptor, NodeKey } from "@itwin/presentation-common";
-import { PresentationInstanceFilterInfo } from "../instance-filter-builder/PresentationInstanceFilterBuilder";
+import { PresentationInstanceFilterInfo } from "../instance-filter-builder/Types";
+
+/**
+ * Describes descriptor used for hierarchy level filtering. It can be lazy loaded.
+ * @beta
+ */
+export type HierarchyLevelFilteringDescriptor = Descriptor | (() => Promise<Descriptor>);
 
 /**
  * Data structure that describes information for tree item hierarchy level filtering.
@@ -17,19 +23,17 @@ import { PresentationInstanceFilterInfo } from "../instance-filter-builder/Prese
 export interface PresentationTreeNodeItemFilteringInfo {
   /**
    * Descriptor that describes instances of this tree node item hierarchy level. It can be used to create instance
-   * filter using [[PresentationInstanceFilterBuilder]].
+   * filter for filtering hierarchy level.
    *
-   * It can be set to a function in order to lazy load it.
+   * If it is set to `undefined` hierarchy level under this node is not filterable.
    */
-  descriptor: Descriptor | (() => Promise<Descriptor>);
+  descriptor: HierarchyLevelFilteringDescriptor;
   /**
    * List of filters applied on ancestor nodes. Some nodes might need to apply ancestor filter to get correct children.
    * For example, grouping node under filtered hierarchy level.
    */
   ancestorFilters: PresentationInstanceFilterInfo[];
-  /**
-   * Currently active filter.
-   */
+  /** Currently active filter for this item hierarchy. */
   active?: PresentationInstanceFilterInfo;
 }
 
@@ -69,6 +73,14 @@ export interface PresentationInfoTreeNodeItem extends ImmediatelyLoadedTreeNodeI
 }
 
 /**
+ * Describes tree node item that supports hierarchy level filtering.
+ * @beta
+ */
+export type FilterablePresentationTreeNodeItem = PresentationTreeNodeItem & {
+  filtering: PresentationTreeNodeItemFilteringInfo;
+};
+
+/**
  * Function that checks if supplied [TreeNodeItem]($components-react) is [[PresentationTreeNodeItem]].
  * @beta
  */
@@ -82,4 +94,12 @@ export function isPresentationTreeNodeItem(item: TreeNodeItem): item is Presenta
  */
 export function isPresentationInfoTreeNodeItem(item: TreeNodeItem): item is PresentationInfoTreeNodeItem {
   return (item as PresentationInfoTreeNodeItem).message !== undefined;
+}
+
+/**
+ * Function that check if supplied [[PresentationTreeNodeItem]] is [[FilterablePresentationTreeNodeItem]].
+ * @beta
+ */
+export function isFilterablePresentationTreeNodeItem(item: PresentationTreeNodeItem): item is FilterablePresentationTreeNodeItem {
+  return item.filtering !== undefined;
 }

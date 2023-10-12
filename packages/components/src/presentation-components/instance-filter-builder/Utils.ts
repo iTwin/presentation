@@ -6,11 +6,20 @@
  * @module InstancesFilter
  */
 
-import { PropertyDescription, PropertyValueFormat } from "@itwin/appui-abstract";
-import { isPropertyFilterRuleGroup, PropertyFilter, PropertyFilterRule, PropertyFilterRuleGroup } from "@itwin/components-react";
+import { PrimitiveValue, PropertyDescription, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
+import {
+  defaultPropertyFilterBuilderRuleValidator,
+  isPropertyFilterRuleGroup,
+  isUnaryPropertyFilterOperator,
+  PropertyFilter,
+  PropertyFilterBuilderRule,
+  PropertyFilterRule,
+  PropertyFilterRuleGroup,
+  PropertyFilterRuleOperator,
+} from "@itwin/components-react";
 import { CategoryDescription, ClassId, ClassInfo, combineFieldNames, Descriptor, Field, NestedContentField, PropertiesField } from "@itwin/presentation-common";
 import { createPropertyDescriptionFromFieldInfo } from "../common/ContentBuilder";
-import { findField } from "../common/Utils";
+import { findField, translate } from "../common/Utils";
 import {
   isPresentationInstanceFilterConditionGroup,
   PresentationInstanceFilter,
@@ -152,6 +161,7 @@ function createPropertyInfoFromPropertiesField(field: PropertiesField): Instance
     enum: field.properties[0].property.enumerationInfo,
     isReadonly: field.isReadonly,
     renderer: field.renderer,
+    koqName: field.properties[0].property.kindOfQuantity?.name,
   });
 
   return {
@@ -202,4 +212,84 @@ export function convertPresentationFilterToPropertyFilter(descriptor: Descriptor
     return convertPresentationInstanceFilterConditionGroup(filter, descriptor);
   }
   return convertPresentationInstanceFilterCondition(filter, descriptor);
+}
+
+/** @internal */
+export function filterRuleValidator(item: PropertyFilterBuilderRule) {
+  // skip empty rules and rules that do not require value
+  if (item.property === undefined || item.operator === undefined || isUnaryPropertyFilterOperator(item.operator)) {
+    return undefined;
+  }
+
+  // istanbul ignore if
+  if (item.value !== undefined && item.value.valueFormat !== PropertyValueFormat.Primitive) {
+    return undefined;
+  }
+
+  const error = combineValidators(
+    quantityPropertyValidator,
+    numericPropertyValidator,
+  )({
+    property: item.property,
+    operator: item.operator,
+    value: item.value,
+  });
+
+  if (error) {
+    return error;
+  }
+
+  return defaultPropertyFilterBuilderRuleValidator(item);
+}
+
+function combineValidators(...validators: Array<(ctx: ValidatorContext) => string | undefined>) {
+  return (ctx: ValidatorContext) => {
+    for (const validator of validators) {
+      const error = validator(ctx);
+      if (error) {
+        return error;
+      }
+    }
+    return undefined;
+  };
+}
+
+interface ValidatorContext {
+  property: PropertyDescription;
+  operator: PropertyFilterRuleOperator;
+  value?: PrimitiveValue;
+}
+
+function quantityPropertyValidator({ property, value }: ValidatorContext) {
+  // rules with non quantity properties or without values
+  if (property.quantityType === undefined || value === undefined) {
+    return undefined;
+  }
+  if (isInvalidNumericValue(value)) {
+    return translate("instance-filter-builder.error-messages.invalid");
+  }
+
+  return undefined;
+}
+
+function numericPropertyValidator({ property, value }: ValidatorContext) {
+  if (!isPropertyNumeric(property.typename) || value === undefined) {
+    return undefined;
+  }
+
+  if (isInvalidNumericValue(value)) {
+    return translate("instance-filter-builder.error-messages.not-a-number");
+  }
+
+  return undefined;
+}
+
+function isPropertyNumeric(typename: string) {
+  return (
+    typename === StandardTypeNames.Number || typename === StandardTypeNames.Int || typename === StandardTypeNames.Float || typename === StandardTypeNames.Double
+  );
+}
+
+function isInvalidNumericValue(value: PrimitiveValue) {
+  return value.displayValue !== undefined && value.displayValue !== "" && isNaN(Number(value.value));
 }

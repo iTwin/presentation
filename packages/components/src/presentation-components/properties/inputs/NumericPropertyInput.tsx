@@ -4,15 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { forwardRef, useImperativeHandle, useRef, useState } from "react";
-import { PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
+import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyEditorProps } from "@itwin/components-react";
 import { Input } from "@itwin/itwinui-react";
-
-/** @internal */
-export interface NumericPropertyInputAttributes {
-  getValue: () => PropertyValue | undefined;
-  divElement: HTMLDivElement | null;
-}
+import { PropertyEditorAttributes } from "../editors/Common";
 
 /** @internal */
 export interface NumericPropertyInputProps extends PropertyEditorProps {
@@ -20,7 +15,7 @@ export interface NumericPropertyInputProps extends PropertyEditorProps {
 }
 
 /** @internal */
-export const NumericPropertyInput = forwardRef<NumericPropertyInputAttributes, NumericPropertyInputProps>((props, ref) => {
+export const NumericPropertyInput = forwardRef<PropertyEditorAttributes, NumericPropertyInputProps>((props, ref) => {
   const { onCommit, propertyRecord } = props;
 
   const [inputValue, setInputValue] = useState<string>(() => getInputTargetFromPropertyRecord(propertyRecord) ?? "");
@@ -34,7 +29,7 @@ export const NumericPropertyInput = forwardRef<NumericPropertyInputAttributes, N
         value: isNaN(Number(inputValue)) ? undefined : Number(inputValue),
         displayValue: inputValue,
       }),
-      divElement: divRef.current,
+      htmlElement: divRef.current,
     }),
     [inputValue],
   );
@@ -58,13 +53,17 @@ export const NumericPropertyInput = forwardRef<NumericPropertyInputAttributes, N
 });
 NumericPropertyInput.displayName = "NumericPropertyInput";
 
-const getInputTargetFromPropertyRecord = (propertyRecord: PropertyRecord) => {
+function getInputTargetFromPropertyRecord(propertyRecord: PropertyRecord) {
   const value = propertyRecord.value;
-  if (value.valueFormat !== PropertyValueFormat.Primitive || typeof value.value === "undefined" || typeof value.displayValue === "undefined") {
+  // istanbul ignore if
+  if (value.valueFormat !== PropertyValueFormat.Primitive) {
     return undefined;
   }
-  return value.displayValue;
-};
+  if (value.displayValue !== undefined) {
+    return value.displayValue;
+  }
+  return value.value?.toString();
+}
 
 /** @internal */
 export interface NumericInputProps {

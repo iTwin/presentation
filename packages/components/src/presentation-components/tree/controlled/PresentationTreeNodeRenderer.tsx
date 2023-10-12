@@ -111,6 +111,7 @@ function PresentationTreeNodeActions(props: PresentationTreeNodeActionsProps) {
               e.stopPropagation();
               onClearFilterClick();
             }}
+            title={translate("tree.clear-hierarchy-level-filter")}
           >
             <SvgCloseSmall />
           </IconButton>
@@ -122,6 +123,7 @@ function PresentationTreeNodeActions(props: PresentationTreeNodeActionsProps) {
             e.stopPropagation();
             onFilterClick();
           }}
+          title={translate("tree.filter-hierarchy-level")}
         >
           {isFiltered ? <SvgFilter /> : <SvgFilterHollow />}
         </IconButton>

@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Id64 } from "@itwin/core-bentley";
-import { Id64String } from "../EC";
+import { Id64String } from "../values/Values";
 
 /**
  * Column names of the SELECT clause created by [[NodeSelectClauseFactory]]. Order of the names matches the order of columns

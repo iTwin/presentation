@@ -6,7 +6,6 @@
 import { expect } from "chai";
 import { Observable } from "rxjs/internal/Observable";
 import * as sinon from "sinon";
-import * as moq from "typemoq";
 import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { DelayLoadedTreeNodeItem, MutableTreeModel, RenderedItemsRange, TreeModelNodeInput, TreeModelSource, UiComponents } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
@@ -27,13 +26,14 @@ describe("reloadTree", () => {
 
   beforeEach(() => {
     dataProvider = {
-      imodel: moq.Mock.ofType<IModelConnection>().object,
+      imodel: {} as IModelConnection,
       rulesetId: "",
       getNodeKey: () => ({ type: "", version: 0, pathFromRoot: [] }),
       getFilteredNodePaths: async () => [],
       getNodesCount: async () => 3,
       getNodes: async (parent, page) => [createDelayLoadedTreeNodeItem(`${parent?.id ?? "root"}-${page?.start ?? 0}`)],
       dispose: () => {},
+      createRequestOptions: () => ({ rulesetOrId: "", imodel: {} as IModelConnection }),
     };
   });
 

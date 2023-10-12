@@ -39,8 +39,16 @@
               "direction": "Forward"
             }
           ],
-          "groupByClass": true,
+          "groupByClass": false,
           "groupByLabel": false
+        }
+      ]
+    },
+    {
+      "ruleType": "Content",
+      "specifications": [
+        {
+          "specType": "SelectedNodeInstances"
         }
       ]
     }

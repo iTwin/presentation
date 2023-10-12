@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { PropertyDescription } from "@itwin/appui-abstract";
-import { EditorContainer, PropertyValueRendererManager } from "@itwin/components-react";
+import { PropertyValueRendererManager } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, KeySet, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
@@ -14,15 +14,15 @@ import { Presentation } from "@itwin/presentation-frontend";
 import { render as renderRTL, waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
 import userEvent from "@testing-library/user-event";
-import { IContentDataProvider } from "../../presentation-components/common/ContentDataProvider";
+import { IContentDataProvider } from "../../../presentation-components/common/ContentDataProvider";
+import { NavigationPropertyTargetEditor } from "../../../presentation-components/properties/editors/NavigationPropertyEditor";
 import {
   navigationPropertyEditorContext,
   NavigationPropertyEditorContextProps,
-  NavigationPropertyTargetEditor,
   useNavigationPropertyEditingContext,
-} from "../../presentation-components/properties/NavigationPropertyEditor";
-import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField, createTestSimpleContentField } from "../_helpers/Content";
-import { createTestPropertyRecord } from "../_helpers/UiComponents";
+} from "../../../presentation-components/properties/editors/NavigationPropertyEditorContext";
+import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField, createTestSimpleContentField } from "../../_helpers/Content";
+import { createTestPropertyRecord } from "../../_helpers/UiComponents";
 
 function createNavigationPropertyInfo(): NavigationPropertyInfo {
   return {
@@ -41,64 +41,6 @@ function render(ui: React.ReactElement, context?: Partial<NavigationPropertyEdit
 
   return renderRTL(<navigationPropertyEditorContext.Provider value={contextValue}>{ui}</navigationPropertyEditorContext.Provider>);
 }
-
-describe("<NavigationPropertyEditor />", () => {
-  function createRecord() {
-    const record = createTestPropertyRecord();
-    record.property.typename = "navigation";
-    return record;
-  }
-
-  beforeEach(async () => {
-    const localization = new EmptyLocalization();
-    sinon.stub(IModelApp, "initialized").get(() => true);
-    sinon.stub(IModelApp, "localization").get(() => localization);
-    await Presentation.initialize();
-  });
-
-  afterEach(async () => {
-    Presentation.terminate();
-    sinon.restore();
-  });
-
-  it("renders editor for 'navigation' type", async () => {
-    const record = createRecord();
-    const { queryByRole } = render(<EditorContainer propertyRecord={record} onCancel={() => {}} onCommit={() => {}} />);
-    await waitFor(() => expect(queryByRole("combobox")).to.not.be.null);
-  });
-
-  it("invokes 'onCommit' when new target is selected changes", async () => {
-    const user = userEvent.setup();
-    const contentItem = createTestContentItem({
-      label: LabelDefinition.fromLabelString("TestLabel"),
-      primaryKeys: [{ id: "1", className: "TestSchema:TestClass" }],
-      values: {},
-      displayValues: {},
-    });
-    sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
-    const record = createRecord();
-    const spy = sinon.spy();
-    const { getByRole, getByText, queryByDisplayValue } = render(<EditorContainer propertyRecord={record} onCancel={() => {}} onCommit={spy} />, {
-      getNavigationPropertyInfo: async () => ({
-        classInfo: { id: "1", label: "Class Label", name: "TestSchema:TestClass" },
-        targetClassInfo: { id: "1", label: "Target Label", name: "TestSchema:TargetClass" },
-        isForwardRelationship: true,
-        isTargetPolymorphic: true,
-      }),
-    });
-
-    // open dropdown
-    const select = await waitFor(() => getByRole("combobox"));
-    await user.click(select);
-
-    // select option from dropdown
-    const target = await waitFor(() => getByText(contentItem.label.displayValue));
-    await user.click(target);
-
-    await waitFor(() => expect(queryByDisplayValue(contentItem.label.displayValue)).to.not.be.null);
-    expect(spy).to.be.calledOnce;
-  });
-});
 
 describe("<NavigationPropertyTargetEditor />", () => {
   const testRecord = createTestPropertyRecord();
@@ -129,6 +71,40 @@ describe("<NavigationPropertyTargetEditor />", () => {
   it("renders nothing when property record is 'undefined'", () => {
     const { container } = render(<NavigationPropertyTargetEditor />, {});
     expect(container.firstChild).to.be.null;
+  });
+
+  it("invokes 'onCommit' when new target is selected changes", async () => {
+    const user = userEvent.setup();
+    const contentItem = createTestContentItem({
+      label: LabelDefinition.fromLabelString("TestLabel"),
+      primaryKeys: [{ id: "1", className: "TestSchema:TestClass" }],
+      values: {},
+      displayValues: {},
+    });
+    sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
+    const spy = sinon.spy();
+    const { getByRole, getByText, queryByDisplayValue } = render(
+      <NavigationPropertyTargetEditor propertyRecord={testRecord} onCancel={() => {}} onCommit={spy} />,
+      {
+        getNavigationPropertyInfo: async () => ({
+          classInfo: { id: "1", label: "Class Label", name: "TestSchema:TestClass" },
+          targetClassInfo: { id: "1", label: "Target Label", name: "TestSchema:TargetClass" },
+          isForwardRelationship: true,
+          isTargetPolymorphic: true,
+        }),
+      },
+    );
+
+    // open dropdown
+    const select = await waitFor(() => getByRole("combobox"));
+    await user.click(select);
+
+    // select option from dropdown
+    const target = await waitFor(() => getByText(contentItem.label.displayValue));
+    await user.click(target);
+
+    await waitFor(() => expect(queryByDisplayValue(contentItem.label.displayValue)).to.not.be.null);
+    expect(spy).to.be.calledOnce;
   });
 });
 

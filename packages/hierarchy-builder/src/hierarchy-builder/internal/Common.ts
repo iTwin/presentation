@@ -64,7 +64,7 @@ function mergeNodeKeys(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): HierarchyN
   }
   if (HierarchyNodeKey.isClassGrouping(lhs)) {
     assert(HierarchyNodeKey.isClassGrouping(rhs));
-    assert(lhs.class.id === rhs.class.id);
+    assert(lhs.class.name === rhs.class.name);
     return { ...lhs };
   }
   if (HierarchyNodeKey.isLabelGrouping(lhs)) {
@@ -124,4 +124,10 @@ export function mergeDirectNodeObservables(a: HierarchyNode, b: HierarchyNode, m
 /** @internal */
 export function createOperatorLoggingNamespace(operatorName: string) {
   return `Presentation.HierarchyBuilder.Operators.${operatorName}`;
+}
+
+/** @internal */
+export function julianToDateTime(julianDate: number): Date {
+  const millis = (julianDate - 2440587.5) * 86400000;
+  return new Date(millis);
 }

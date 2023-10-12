@@ -9,7 +9,7 @@ import * as sinon from "sinon";
 import * as moq from "typemoq";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { PageOptions, PropertyFilterRuleOperator } from "@itwin/components-react";
-import { BeEvent, Logger } from "@itwin/core-bentley";
+import { assert, BeEvent, Logger } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { CheckBoxState } from "@itwin/core-react";
@@ -582,6 +582,7 @@ describe("TreeDataProvider", () => {
 
   describe("filterable nodes", () => {
     async function loadDescriptor(filteringInfo: PresentationTreeNodeItemFilteringInfo) {
+      assert(filteringInfo.descriptor !== undefined);
       if (filteringInfo.descriptor instanceof Descriptor) {
         return filteringInfo.descriptor;
       }
