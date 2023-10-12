@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 import { expect } from "chai";
 import { from } from "rxjs";
-import { Id64, LogLevel } from "@itwin/core-bentley";
+import { LogLevel } from "@itwin/core-bentley";
 import { HierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
 import { createLabelGroupingOperator, LOGGING_NAMESPACE } from "../../../hierarchy-builder/internal/operators/LabelGrouping";
 import { createTestNode, getObservableResult, setupLogging } from "../../Utils";
@@ -165,7 +165,7 @@ describe("LabelGrouping", () => {
           label: "someLabel",
           key: {
             type: "class-grouping",
-            class: { id: Id64.invalid, name: "Schema.B", label: "SomeName" },
+            class: { name: "Schema.B", label: "SomeName" },
           },
           children: classGroupingNodes,
         },
@@ -176,7 +176,7 @@ describe("LabelGrouping", () => {
           label: "someLabel",
           key: {
             type: "class-grouping",
-            class: { id: Id64.invalid, name: "Schema.B", label: "SomeName" },
+            class: { name: "Schema.B", label: "SomeName" },
           },
           children: [
             {

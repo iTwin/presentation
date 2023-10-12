@@ -4,5 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 export function trimWhitespace(str: string): string {
-  return str.replaceAll(/\s+/gm, " ").replaceAll(/\(\s+/g, "(").replaceAll(/\s+\)/g, ")").trim();
+  return str
+    .replaceAll(/\s+/gm, " ") // replace all consecutive spaces with a single space
+    .replaceAll(/\(\s+/g, "(") // remove spaces after opening parentheses
+    .replaceAll(/\s+\)/g, ")") // remove spaces before closing parentheses
+    .replaceAll(/\s+,/g, ",") // remove spaces before comma
+    .trim(); // remove spaces from beginning and end of the string
 }

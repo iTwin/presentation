@@ -5,11 +5,11 @@
 
 import { Observable } from "rxjs";
 import sinon from "sinon";
-import { Id64, Logger, LogLevel } from "@itwin/core-bentley";
-import { Id64String, InstanceKey } from "../hierarchy-builder/EC";
+import { Logger, LogLevel } from "@itwin/core-bentley";
 import { HierarchyNode } from "../hierarchy-builder/HierarchyNode";
 import * as common from "../hierarchy-builder/internal/Common";
 import { ECClass, IMetadataProvider, parseFullClassName } from "../hierarchy-builder/Metadata";
+import { InstanceKey } from "../hierarchy-builder/values/Values";
 
 export function setupLogging(levels: Array<{ namespace: string; level: LogLevel }>) {
   Logger.initializeToConsole();
@@ -61,9 +61,8 @@ export interface TStubClassFuncProps {
   is?: (fullClassName: string) => Promise<boolean>;
 }
 export interface TStubClassFuncReturnType {
-  id: Id64String;
   name: string;
-  label: string;
+  label?: string;
 }
 export type TStubClassFunc = (props: TStubClassFuncProps) => TStubClassFuncReturnType;
 export function createGetClassStub(schemas: IMetadataProvider) {
@@ -91,9 +90,8 @@ export function createGetClassStub(schemas: IMetadataProvider) {
       }),
     } as unknown as ECClass);
     return {
-      id: Id64.invalid,
       name: fullName,
-      label: props.classLabel ?? props.className,
+      label: props.classLabel,
     };
   };
   return { getClass: stub, stubClass };

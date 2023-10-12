@@ -5,6 +5,7 @@
 
 import { expect } from "chai";
 import { IMetadataProvider } from "../../hierarchy-builder/Metadata";
+import { createConcatenatedValueSelector, createPropertyValueSelector, createValueSelector } from "../../hierarchy-builder/queries/ECSqlUtils";
 import {
   BisInstanceLabelSelectClauseFactory,
   ClassBasedInstanceLabelSelectClauseFactory,
@@ -26,7 +27,27 @@ describe("DefaultInstanceLabelSelectClauseFactory", () => {
     });
     expect(trimWhitespace(result)).to.eq(
       trimWhitespace(`(
-        SELECT COALESCE([c].[DisplayLabel], [c].[Name]) || ' ' || '[' || printf('0x%x', [test].[ECInstanceId]) || ']'
+        SELECT ${createConcatenatedValueSelector([
+          {
+            selector: `COALESCE(
+              ${createValueSelector({
+                propertyClassName: "ECDbMeta.ECClassDef",
+                propertyClassAlias: "c",
+                propertyName: "DisplayLabel",
+                nullValueResult: "null",
+              })},
+              ${createValueSelector({
+                propertyClassName: "ECDbMeta.ECClassDef",
+                propertyClassAlias: "c",
+                propertyName: "Name",
+                nullValueResult: "null",
+              })}
+            )`,
+          },
+          { value: ` [`, type: "String" },
+          { selector: `printf('0x%x', ${createPropertyValueSelector("test", "ECInstanceId")})`, type: "Id" },
+          { value: `]`, type: "String" },
+        ])}
         FROM [meta].[ECClassDef] AS [c]
         WHERE [c].[ECInstanceId] = [test].[ECClassId]
       )`),
@@ -220,27 +241,43 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
           IIF(
             [test].[ECClassId] IS (BisCore.GeometricElement),
             COALESCE(
-              [test].[CodeValue],
-              CASE WHEN [test].[UserLabel] IS NOT NULL
-                THEN [test].[UserLabel] || ' ' || '[' || printf('0x%x', [test].[ECInstanceId]) || ']'
-                ELSE NULL
-              END
+              ${createValueSelector({
+                propertyClassName: "BisCore.GeometricElement",
+                propertyClassAlias: "test",
+                propertyName: "CodeValue",
+                nullValueResult: "null",
+              })},
+              ${createConcatenatedValueSelector(
+                [
+                  { propertyClassName: "BisCore.Element", propertyClassAlias: "test", propertyName: "UserLabel" },
+                  { value: ` [`, type: "String" },
+                  { selector: `printf('0x%x', ${createPropertyValueSelector("test", "ECInstanceId")})`, type: "Id" },
+                  { value: `]`, type: "String" },
+                ],
+                createPropertyValueSelector("test", "UserLabel"),
+              )}
             ),
             NULL
           ),
           IIF(
             [test].[ECClassId] IS (BisCore.Element),
             COALESCE(
-              [test].[UserLabel],
-              [test].[CodeValue]
+              ${createValueSelector({
+                propertyClassName: "BisCore.Element",
+                propertyClassAlias: "test",
+                propertyName: "UserLabel",
+                nullValueResult: "null",
+              })},
+              ${createValueSelector({
+                propertyClassName: "BisCore.Element",
+                propertyClassAlias: "test",
+                propertyName: "CodeValue",
+                nullValueResult: "null",
+              })}
             ),
             NULL
           ),
-          (
-            SELECT COALESCE([c].[DisplayLabel], [c].[Name]) || ' ' || '[' || printf('0x%x', [test].[ECInstanceId]) || ']'
-            FROM [meta].[ECClassDef] AS [c]
-            WHERE [c].[ECInstanceId] = [test].[ECClassId]
-          )
+          ${await new DefaultInstanceLabelSelectClauseFactory().createSelectClause({ classAlias: "test" })}
         )
       `),
     );
@@ -257,27 +294,43 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
           IIF(
             [test].[ECClassId] IS (BisCore.GeometricElement),
             COALESCE(
-              [test].[CodeValue],
-              CASE WHEN [test].[UserLabel] IS NOT NULL
-                THEN [test].[UserLabel] || ' ' || '[' || printf('0x%x', [test].[ECInstanceId]) || ']'
-                ELSE NULL
-              END
+              ${createValueSelector({
+                propertyClassName: "BisCore.GeometricElement",
+                propertyClassAlias: "test",
+                propertyName: "CodeValue",
+                nullValueResult: "null",
+              })},
+              ${createConcatenatedValueSelector(
+                [
+                  { propertyClassName: "BisCore.Element", propertyClassAlias: "test", propertyName: "UserLabel" },
+                  { value: ` [`, type: "String" },
+                  { selector: `printf('0x%x', ${createPropertyValueSelector("test", "ECInstanceId")})`, type: "Id" },
+                  { value: `]`, type: "String" },
+                ],
+                createPropertyValueSelector("test", "UserLabel"),
+              )}
             ),
             NULL
           ),
           IIF(
             [test].[ECClassId] IS (BisCore.Element),
             COALESCE(
-              [test].[UserLabel],
-              [test].[CodeValue]
+              ${createValueSelector({
+                propertyClassName: "BisCore.Element",
+                propertyClassAlias: "test",
+                propertyName: "UserLabel",
+                nullValueResult: "null",
+              })},
+              ${createValueSelector({
+                propertyClassName: "BisCore.Element",
+                propertyClassAlias: "test",
+                propertyName: "CodeValue",
+                nullValueResult: "null",
+              })}
             ),
             NULL
           ),
-          (
-            SELECT COALESCE([c].[DisplayLabel], [c].[Name]) || ' ' || '[' || printf('0x%x', [test].[ECInstanceId]) || ']'
-            FROM [meta].[ECClassDef] AS [c]
-            WHERE [c].[ECInstanceId] = [test].[ECClassId]
-          )
+          ${await new DefaultInstanceLabelSelectClauseFactory().createSelectClause({ classAlias: "test" })}
         )
       `),
     );
@@ -294,43 +347,16 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
           IIF(
             [test].[ECClassId] IS (BisCore.Model),
             (
-              SELECT
-                COALESCE(
-                  IIF(
-                    [e].[ECClassId] IS (BisCore.GeometricElement),
-                    COALESCE(
-                      [e].[CodeValue],
-                      CASE WHEN [e].[UserLabel] IS NOT NULL
-                        THEN [e].[UserLabel] || ' ' || '[' || printf('0x%x', [e].[ECInstanceId]) || ']'
-                        ELSE NULL
-                      END
-                    ),
-                    NULL
-                  ),
-                  IIF(
-                    [e].[ECClassId] IS (BisCore.Element),
-                    COALESCE(
-                      [e].[UserLabel],
-                      [e].[CodeValue]
-                    ),
-                    NULL
-                  ),
-                  (
-                    SELECT COALESCE([c].[DisplayLabel], [c].[Name]) || ' ' || '[' || printf('0x%x', [e].[ECInstanceId]) || ']'
-                    FROM [meta].[ECClassDef] AS [c]
-                    WHERE [c].[ECInstanceId] = [e].[ECClassId]
-                  )
-                )
+              SELECT ${await factory.createSelectClause({
+                classAlias: "e",
+                className: "BisCore.Element",
+              })}
               FROM [bis].[Element] AS [e]
               WHERE [e].[ECInstanceId] = [test].[ModeledElement].[Id]
             ),
             NULL
           ),
-          (
-            SELECT COALESCE([c].[DisplayLabel], [c].[Name]) || ' ' || '[' || printf('0x%x', [test].[ECInstanceId]) || ']'
-            FROM [meta].[ECClassDef] AS [c]
-            WHERE [c].[ECInstanceId] = [test].[ECClassId]
-          )
+          ${await new DefaultInstanceLabelSelectClauseFactory().createSelectClause({ classAlias: "test" })}
         )
       `),
     );

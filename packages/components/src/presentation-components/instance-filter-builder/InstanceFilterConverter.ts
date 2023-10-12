@@ -16,9 +16,8 @@ import { getIModelMetadataProvider } from "./ECMetadataProvider";
 import { PresentationInstanceFilter, PresentationInstanceFilterCondition, PresentationInstanceFilterConditionGroup } from "./Types";
 
 /**
- * Converts [[PresentationInstanceFilter]] built by [[PresentationInstanceFilterBuilder]] component into
- * [InstanceFilterDefinition]($presentation-common) that can be passed to [PresentationManager]($presentation-frontend) through request options
- * in order to filter results.
+ * Converts [[PresentationInstanceFilter]] into [InstanceFilterDefinition]($presentation-common) that can be passed
+ * to [PresentationManager]($presentation-frontend) through request options in order to filter results.
  * @beta
  */
 export async function convertToInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection): Promise<InstanceFilterDefinition> {

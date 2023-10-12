@@ -112,6 +112,7 @@ function ClearIndicator<TOption, IsMulti extends boolean = boolean>({ children: 
   );
 }
 
+/** @internal */
 export function AsyncSelect<OptionType, Group extends GroupBase<OptionType>, Additional>(props: AsyncPaginateProps<OptionType, Group, Additional, true>) {
   const divRef = useRef<HTMLDivElement>(null);
   const { ref: resizeRef, width } = useResizeObserver();
