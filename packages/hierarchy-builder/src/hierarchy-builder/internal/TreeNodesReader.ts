@@ -11,12 +11,7 @@ import { ConcatenatedValue } from "../values/ConcatenatedValue";
 import { Id64String } from "../values/Values";
 
 /** @internal */
-export interface ITreeQueryResultsReader {
-  read(executor: IECSqlQueryExecutor, query: ECSqlQueryDef): Promise<ParsedHierarchyNode[]>;
-}
-
-/** @internal */
-export class TreeQueryResultsReader implements ITreeQueryResultsReader {
+export class TreeQueryResultsReader {
   private constructor(private _parser: INodeParser) {}
 
   public static create(nodeParser?: INodeParser) {
