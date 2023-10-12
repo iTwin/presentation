@@ -35,11 +35,11 @@
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-core-interop.api.md"
   },
   "peerDependencies": {
-    "@itwin/core-bentley": "^4.0.0",
-    "@itwin/core-geometry": "^4.0.0",
-    "@itwin/core-common": "^4.0.0",
-    "@itwin/core-quantity": "^4.0.0",
-    "@itwin/ecschema-metadata": "^4.0.0",
+    "@itwin/core-bentley": "^4.1.0",
+    "@itwin/core-geometry": "^4.1.0",
+    "@itwin/core-common": "^4.1.0",
+    "@itwin/core-quantity": "^4.1.0",
+    "@itwin/ecschema-metadata": "^4.1.0",
     "@itwin/presentation-hierarchy-builder": "workspace:^"
   },
   "devDependencies": {

@@ -19,9 +19,12 @@ internal;FAVORITES_CATEGORY_NAME = "Favorite"
 internal;FieldHierarchyRecord
 internal;FieldInfo
 internal;FieldRecord
+beta;FilterablePresentationTreeNodeItem = PresentationTreeNodeItem &
 internal;FilteredPresentationTreeDataProvider 
 internal;FilteredPresentationTreeDataProviderProps
+internal;findBaseExpressionClass(imodel: IModelConnection, propertyClasses: ClassInfo[]): Promise
 internal;getFavoritesCategory: () => CategoryDescription
+beta;HierarchyLevelFilteringDescriptor = Descriptor | (() => Promise
 public;IContentDataProvider 
 public;IFavoritePropertiesDataProvider
 public;IFilteredPresentationTreeDataProvider 
@@ -31,26 +34,20 @@ public;IPresentationLabelsProvider
 public;IPresentationPropertyDataProvider = IPropertyDataProvider & IContentDataProvider
 public;IPresentationTreeDataProvider 
 internal;IPropertiesAppender
+beta;isFilterablePresentationTreeNodeItem(item: PresentationTreeNodeItem): item is FilterablePresentationTreeNodeItem
 beta;isPresentationInfoTreeNodeItem(item: TreeNodeItem): item is PresentationInfoTreeNodeItem
 beta;isPresentationInstanceFilterConditionGroup(filter: PresentationInstanceFilter): filter is PresentationInstanceFilterConditionGroup
 beta;isPresentationTreeNodeItem(item: TreeNodeItem): item is PresentationTreeNodeItem
 public;IUnifiedSelectionComponent
-beta;NavigationPropertyEditor 
 beta;navigationPropertyEditorContext: Context
 beta;NavigationPropertyEditorContextProps
-beta;NavigationPropertyTargetEditor 
-internal;NumericEditorName = "presentation-numeric-editor"
-internal;NumericPropertyEditor 
-internal;NumericPropertyEditorBase 
 public;PresentationComponentsLoggerCategory
 beta;PresentationInfoTreeNodeItem 
 beta;PresentationInstanceFilter = PresentationInstanceFilterConditionGroup | PresentationInstanceFilterCondition
-beta;PresentationInstanceFilterBuilder(props: PresentationInstanceFilterBuilderProps): JSX.Element
-beta;PresentationInstanceFilterBuilderProps
 beta;PresentationInstanceFilterCondition
 beta;PresentationInstanceFilterConditionGroup
 beta;PresentationInstanceFilterDialog(props: PresentationInstanceFilterDialogProps): JSX.Element
-beta;PresentationInstanceFilterDialogProps 
+beta;PresentationInstanceFilterDialogProps
 beta;PresentationInstanceFilterInfo
 public;PresentationLabelsProvider 
 public;PresentationLabelsProviderProps
@@ -69,6 +66,9 @@ beta;PresentationTreeRenderer(props: PresentationTreeRendererProps): JSX.Element
 beta;PresentationTreeRendererProps 
 public;PropertyDataProviderWithUnifiedSelectionProps
 internal;class PropertyRecordsBuilder 
+beta;SchemaMetadataContext
+beta;SchemaMetadataContextProvider({ schemaContextProvider, imodel, children }: PropsWithChildren
+beta;SchemaMetadataContextProviderProps
 beta;TableCellDefinition
 beta;TableCellRenderer(props: TableCellRendererProps): JSX.Element
 beta;TableCellRendererProps
@@ -95,6 +95,7 @@ public;usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderProps): Pr
 public;usePropertyDataProviderWithUnifiedSelection(props: PropertyDataProviderWithUnifiedSelectionProps): UsePropertyDataProviderWithUnifiedSelectionResult
 public;UsePropertyDataProviderWithUnifiedSelectionResult
 public;useRulesetRegistration(ruleset: Ruleset): void
+beta;useSchemaMetadataContext(): SchemaMetadataContext | undefined
 beta;useUnifiedSelectionContext(): UnifiedSelectionContext | undefined
 public;useUnifiedSelectionTreeEventHandler(props: UnifiedSelectionTreeEventHandlerParams): UnifiedSelectionTreeEventHandler
 internal;ViewportSelectionHandler 

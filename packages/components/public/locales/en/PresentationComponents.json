@@ -21,16 +21,30 @@
     "schema": "Schema:",
     "apply": "Apply",
     "cancel": "Cancel",
-    "filter": "Filter"
+    "filter": "Filter",
+    "error-messages": {
+      "not-a-number": "Value must be a number",
+      "invalid": "Value is invalid"
+    }
   },
   "tree": {
     "no-filtered-children": "There are no child nodes matching current filter",
     "result-set-too-large": "The hierarchy level is too large to be displayed - please provide additional filtering",
     "timeout": "Creating the hierarchy level took too long",
-    "unknown-error": "Error creating the hierarchy level"
+    "unknown-error": "Error creating the hierarchy level",
+    "filter-hierarchy-level": "Apply filter",
+    "clear-hierarchy-level-filter": "Clear active filter",
+    "filter-dialog": {
+      "results-count": "Instances matching filter count",
+      "results-count-too-large": "Too many instances match filter"
+    }
   },
   "navigation-property-editor": {
     "select-target-instance": "Select target instance",
     "loading-target-instances": "Loading target instances"
+  },
+  "unique-values-property-editor": {
+    "select-values": "Select provided value(s)",
+    "empty-value": "Empty Value"
   }
 }

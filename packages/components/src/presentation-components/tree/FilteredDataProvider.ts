@@ -16,7 +16,7 @@ import {
   TreeNodeItem,
 } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
-import { Node, NodeKey, NodePathElement } from "@itwin/presentation-common";
+import { InstanceFilterDefinition, Node, NodeKey, NodePathElement } from "@itwin/presentation-common";
 import { PresentationTreeDataProvider } from "./DataProvider";
 import { IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider";
 import { PresentationTreeNodeItem } from "./PresentationTreeNodeItem";
@@ -168,6 +168,10 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
 
   public async getFilteredNodePaths(filter: string): Promise<NodePathElement[]> {
     return this._parentDataProvider.getFilteredNodePaths(filter);
+  }
+
+  public createRequestOptions(parentKey?: NodeKey, instanceFilter?: InstanceFilterDefinition) {
+    return this._parentDataProvider.createRequestOptions(parentKey, instanceFilter);
   }
 
   /** @deprecated in 4.0. Use [[isPresentationTreeNodeItem]] and [[PresentationTreeNodeItem.key]] to get [NodeKey]($presentation-common). */

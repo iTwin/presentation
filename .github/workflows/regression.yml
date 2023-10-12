@@ -2,7 +2,7 @@ name: Regression
 
 on:
   pull_request:
-    branches: ["master"]
+    branches: ["stable"]
     paths:
       - 'packages/**'
     types: [opened, synchronize, reopened, ready_for_review]

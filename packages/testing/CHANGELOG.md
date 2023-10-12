@@ -1,5 +1,16 @@
 # Change Log - @itwin/presentation-testing
 
+## 5.0.0-dev.0
+
+### Major Changes
+
+- [#299](https://github.com/iTwin/presentation/pull/299): Bumped `AppUI` peer dependencies to `4.6.0`. Bumped `itwinjs-core` peer dependencies to `^4.1.0`.
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-components@5.0.0-dev.0
+
 ## 4.1.1
 
 ### Patch Changes

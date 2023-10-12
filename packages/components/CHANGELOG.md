@@ -1,5 +1,32 @@
 # Change Log - @itwin/presentation-components
 
+## 5.0.0-dev.0
+
+The `5.0` release is targeted towards getting instance filtering production-ready and contains a number of bug fixes and enhancements for the `PresentationInstanceFilterDialog` component. 
+
+The release does not contain any breaking API changes and the bump in peer-depenendecies is the only reason this is a major release.
+
+### Major Changes
+
+- [#299](https://github.com/iTwin/presentation/pull/299): Bumped `AppUI` peer dependencies to `4.6.0`. Bumped `itwinjs-core` peer dependencies to `^4.1.0`.
+
+### Minor Changes
+
+- [#213](https://github.com/iTwin/presentation/pull/213): `PresentationInstanceFilterDialog`: Added support for quantity values.
+- [#193](https://github.com/iTwin/presentation/pull/193): `PresentationInstanceFilterDialog`: Show error message when value input is invalid.
+- [#222](https://github.com/iTwin/presentation/pull/222): `PresentationInstanceFilterDialog`: Show results count while building instance filter.
+- [#176](https://github.com/iTwin/presentation/pull/176): `PresentationInstanceFilterDialog`: Added unique values value selector when using `Equal` or `Not Equal` operators. It loads unique property values that are associated with node on which filter is placed.
+
+  - `null` values are omitted. `"Is Null"` and `"Is Not Null"` operators should be used instead.
+  - For empty non `null` values _Empty Value_ option is shown in selector.
+
+- [#296](https://github.com/iTwin/presentation/pull/296): `PresentationInstanceFilterDialog`: Add formatting to dates that are displayed in the property value selector.
+
+### Patch Changes
+
+- [#273](https://github.com/iTwin/presentation/pull/273): Fixed property tooltip appearing behind the property selector.
+- [#206](https://github.com/iTwin/presentation/pull/206): Fix filtering when `Like` operator is selected.
+
 ## 4.3.0
 
 ### Minor Changes

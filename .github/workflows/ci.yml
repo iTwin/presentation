@@ -2,12 +2,12 @@ name: CI
 
 on:
   pull_request:
-    branches: ["master"]
+    branches: ["master", "stable"]
     types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
   check-changeset-files:
-    if: ${{ ! github.event.pull_request.draft && github.event.pull_request.title != 'Release packages [publish docs]' }}
+    if: ${{ !github.event.pull_request.draft && !startsWith(github.event.pull_request.title, 'Release packages [publish docs]') }}
     runs-on: ubuntu-latest
 
     name: Check changesets
@@ -35,7 +35,7 @@ jobs:
         run: pnpm check --since origin/master
 
   build:
-    if: '! github.event.pull_request.draft'
+    if: '!github.event.pull_request.draft'
     runs-on: ubuntu-latest
 
     name: Lint Build and run Tests

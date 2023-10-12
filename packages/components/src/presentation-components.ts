@@ -17,6 +17,7 @@ export * from "./presentation-components/common/ContentBuilder";
 export * from "./presentation-components/common/ContentDataProvider";
 export * from "./presentation-components/hooks/UseRulesetRegistration";
 export * from "./presentation-components/common/Diagnostics";
+export * from "./presentation-components/common/SchemaMetadataContext";
 
 /**
  * @module Logging
@@ -33,8 +34,7 @@ export * from "./presentation-components/ComponentsLoggerCategory";
  * Presentation-specific [Properties]($components-react:Properties).
  */
 export * from "./presentation-components/properties/InstanceKeyValueRenderer";
-export * from "./presentation-components/properties/NavigationPropertyEditor";
-export * from "./presentation-components/properties/NumericPropertyEditor";
+export * from "./presentation-components/properties/editors";
 
 /**
  * @module PropertyGrid
@@ -111,7 +111,6 @@ export * from "./presentation-components/unified-selection/UnifiedSelectionConte
  * @docs-group-description InstancesFilter
  * Utilities for creating filters for filtering presentation data.
  */
-export * from "./presentation-components/instance-filter-builder/PresentationInstanceFilterBuilder";
 export * from "./presentation-components/instance-filter-builder/PresentationInstanceFilterDialog";
 export * from "./presentation-components/instance-filter-builder/InstanceFilterConverter";
 export * from "./presentation-components/instance-filter-builder/Types";

@@ -6,13 +6,17 @@
  * @module Tree
  */
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { TreeModelSource, TreeNodeRendererProps, TreeRenderer, TreeRendererProps } from "@itwin/components-react";
-import { IModelConnection } from "@itwin/core-frontend";
-import { PresentationInstanceFilterInfo } from "../../instance-filter-builder/PresentationInstanceFilterBuilder";
+import { AbstractTreeNodeLoaderWithProvider, TreeNodeRendererProps, TreeRenderer, TreeRendererProps, useDebouncedAsyncValue } from "@itwin/components-react";
+import { NodeKey, PresentationError, PresentationStatus } from "@itwin/presentation-common";
+import { Presentation } from "@itwin/presentation-frontend";
+import { translate } from "../../common/Utils";
+import { convertToInstanceFilterDefinition } from "../../instance-filter-builder/InstanceFilterConverter";
 import { PresentationInstanceFilterDialog } from "../../instance-filter-builder/PresentationInstanceFilterDialog";
-import { PresentationTreeNodeItem, PresentationTreeNodeItemFilteringInfo } from "../PresentationTreeNodeItem";
+import { PresentationInstanceFilterInfo } from "../../instance-filter-builder/Types";
+import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
+import { FilterablePresentationTreeNodeItem, isFilterablePresentationTreeNodeItem, PresentationTreeNodeItem } from "../PresentationTreeNodeItem";
 import { PresentationTreeNodeRenderer } from "./PresentationTreeNodeRenderer";
 import { useHierarchyLevelFiltering } from "./UseHierarchyLevelFiltering";
 
@@ -21,8 +25,7 @@ import { useHierarchyLevelFiltering } from "./UseHierarchyLevelFiltering";
  * @beta
  */
 export interface PresentationTreeRendererProps extends TreeRendererProps {
-  imodel: IModelConnection;
-  modelSource: TreeModelSource;
+  nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
 }
 
 /**
@@ -32,10 +35,9 @@ export interface PresentationTreeRendererProps extends TreeRendererProps {
  * @beta
  */
 export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
-  const { imodel, modelSource, ...restProps } = props;
-  const nodeLoader = restProps.nodeLoader;
+  const nodeLoader = props.nodeLoader;
 
-  const { applyFilter, clearFilter } = useHierarchyLevelFiltering({ nodeLoader, modelSource });
+  const { applyFilter, clearFilter } = useHierarchyLevelFiltering({ nodeLoader, modelSource: nodeLoader.modelSource });
   const [filterNode, setFilterNode] = useState<PresentationTreeNodeItem>();
 
   const filterableNodeRenderer = useCallback(
@@ -56,11 +58,11 @@ export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
   const divRef = useRef<HTMLDivElement>(null);
   return (
     <div ref={divRef}>
-      <TreeRenderer {...restProps} nodeRenderer={filterableNodeRenderer} />
-      {filterNode && filterNode.filtering && divRef.current
+      <TreeRenderer {...props} nodeRenderer={filterableNodeRenderer} />
+      {divRef.current && filterNode && isFilterablePresentationTreeNodeItem(filterNode)
         ? createPortal(
             <TreeNodeFilterBuilderDialog
-              imodel={imodel}
+              dataProvider={nodeLoader.dataProvider}
               onApply={(info) => {
                 applyFilter(filterNode, info);
                 setFilterNode(undefined);
@@ -68,7 +70,7 @@ export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
               onClose={() => {
                 setFilterNode(undefined);
               }}
-              filteringInfo={filterNode.filtering}
+              filterNode={filterNode}
             />,
             divRef.current.ownerDocument.body.querySelector(".iui-root") ?? divRef.current.ownerDocument.body,
           )
@@ -78,14 +80,17 @@ export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
 }
 
 interface TreeNodeFilterBuilderDialogProps {
-  imodel: IModelConnection;
-  filteringInfo: PresentationTreeNodeItemFilteringInfo;
+  dataProvider: IPresentationTreeDataProvider;
+  filterNode: FilterablePresentationTreeNodeItem;
   onClose: () => void;
   onApply: (info: PresentationInstanceFilterInfo) => void;
 }
 
 function TreeNodeFilterBuilderDialog(props: TreeNodeFilterBuilderDialogProps) {
-  const { onClose, onApply, imodel, filteringInfo } = props;
+  const { onClose, onApply, filterNode, dataProvider } = props;
+  const filteringInfo = filterNode.filtering;
+  const descriptorInputKeys = useMemo(() => [filterNode.key], [filterNode.key]);
+  const imodel = dataProvider.imodel;
 
   return (
     <PresentationInstanceFilterDialog
@@ -95,6 +100,37 @@ function TreeNodeFilterBuilderDialog(props: TreeNodeFilterBuilderDialogProps) {
       imodel={imodel}
       descriptor={filteringInfo.descriptor}
       initialFilter={filteringInfo.active}
+      descriptorInputKeys={descriptorInputKeys}
+      filterResultsCountRenderer={(filter) => <MatchingInstancesCount dataProvider={dataProvider} filter={filter} parentKey={filterNode.key} />}
     />
   );
+}
+
+interface MatchingInstancesCountProps {
+  filter: PresentationInstanceFilterInfo;
+  dataProvider: IPresentationTreeDataProvider;
+  parentKey: NodeKey;
+}
+
+function MatchingInstancesCount({ filter, dataProvider, parentKey }: MatchingInstancesCountProps) {
+  const { value, inProgress } = useDebouncedAsyncValue(
+    useCallback(async () => {
+      const instanceFilter = await convertToInstanceFilterDefinition(filter.filter, dataProvider.imodel);
+
+      try {
+        const count = await Presentation.presentation.getNodesCount(dataProvider.createRequestOptions(parentKey, instanceFilter));
+        return `${translate("tree.filter-dialog.results-count")}: ${count}`;
+      } catch (e) {
+        if (e instanceof PresentationError && e.errorNumber === PresentationStatus.ResultSetTooLarge) {
+          return translate("tree.filter-dialog.results-count-too-large");
+        }
+      }
+
+      return undefined;
+    }, [dataProvider, filter, parentKey]),
+  );
+  if (!value || inProgress) {
+    return null;
+  }
+  return <>{value}</>;
 }

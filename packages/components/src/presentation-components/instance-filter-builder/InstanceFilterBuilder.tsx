@@ -11,14 +11,23 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BehaviorSubject, from, of } from "rxjs";
 import { map } from "rxjs/internal/operators/map";
 import { switchAll } from "rxjs/internal/operators/switchAll";
-import { PropertyDescription } from "@itwin/appui-abstract";
-import { PropertyFilter, PropertyFilterBuilder, PropertyFilterBuilderProps } from "@itwin/components-react";
+import { PrimitiveValue, PropertyDescription, PropertyValueFormat } from "@itwin/appui-abstract";
+import {
+  PropertyFilterBuilderRenderer,
+  PropertyFilterBuilderRendererProps,
+  PropertyFilterBuilderRuleValue,
+  PropertyFilterBuilderRuleValueRendererProps,
+  PropertyFilterRuleOperator,
+} from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ComboBox, SelectOption } from "@itwin/itwinui-react";
-import { ClassInfo, Descriptor } from "@itwin/presentation-common";
+import { ComboBox, Input, SelectOption } from "@itwin/itwinui-react";
+import { ClassInfo, Descriptor, Keys } from "@itwin/presentation-common";
+import { useSchemaMetadataContext } from "../common/SchemaMetadataContext";
 import { translate } from "../common/Utils";
-import { NavigationPropertyEditorContextProps } from "../properties/NavigationPropertyEditor";
+import { navigationPropertyEditorContext, NavigationPropertyEditorContextProps } from "../properties/editors/NavigationPropertyEditorContext";
+import { UniquePropertyValuesSelector } from "../properties/inputs/UniquePropertyValuesSelector";
+import { useQuantityValueInput, UseQuantityValueInputProps } from "../properties/inputs/UseQuantityValueInput";
 import { getIModelMetadataProvider } from "./ECMetadataProvider";
 import { PresentationInstanceFilterProperty } from "./PresentationInstanceFilterProperty";
 import { createInstanceFilterPropertyInfos, getInstanceFilterFieldName, InstanceFilterPropertyInfo } from "./Utils";
@@ -27,15 +36,19 @@ import { createInstanceFilterPropertyInfos, getInstanceFilterFieldName, Instance
  * Props for [[InstanceFilterBuilder]] component.
  * @internal
  */
-export interface InstanceFilterBuilderProps extends PropertyFilterBuilderProps {
+export interface InstanceFilterBuilderProps extends PropertyFilterBuilderRendererProps {
   /** Currently selected classes. */
   selectedClasses: ClassInfo[];
   /** List of all available classes. */
   classes: ClassInfo[];
-  /** Callback that is invoked when filter is changed. */
-  onFilterChanged: (filter?: PropertyFilter) => void;
   /** Callback that is invoked when selected classes changes. */
   onSelectedClassesChanged: (classIds: string[]) => void;
+  /** iModel connection that will be used for getting [[navigationPropertyEditorContext]] */
+  imodel: IModelConnection;
+  /** [Descriptor]($presentation-common) that will be used for getting [[navigationPropertyEditorContext]]. */
+  descriptor: Descriptor;
+  /** [Keys]($presentation-common) that will be passed through to [[FilterBuilderValueRenderer]] */
+  descriptorInputKeys?: Keys;
 }
 
 /**
@@ -44,7 +57,9 @@ export interface InstanceFilterBuilderProps extends PropertyFilterBuilderProps {
  * @internal
  */
 export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
-  const { selectedClasses, classes, onSelectedClassesChanged, ...restProps } = props;
+  const { selectedClasses, classes, onSelectedClassesChanged, imodel, descriptor, descriptorInputKeys, ...restProps } = props;
+
+  const navigationPropertyEditorContextValue = useFilterBuilderNavigationPropertyEditorContext(imodel, descriptor);
 
   const options = useMemo(() => classes.map(createOption), [classes]);
   const selectedOptions = useMemo(() => selectedClasses.map((classInfo) => classInfo.id), [selectedClasses]);
@@ -64,7 +79,14 @@ export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
         }}
       />
       <div className="presentation-property-filter-builder">
-        <PropertyFilterBuilder {...restProps} />
+        <navigationPropertyEditorContext.Provider value={navigationPropertyEditorContextValue}>
+          <PropertyFilterBuilderRenderer
+            {...restProps}
+            ruleValueRenderer={(rendererProps: PropertyFilterBuilderRuleValueRendererProps) => (
+              <FilterBuilderValueRenderer {...rendererProps} descriptorInputKeys={descriptorInputKeys} imodel={imodel} descriptor={descriptor} />
+            )}
+          />
+        </navigationPropertyEditorContext.Provider>
       </div>
     </div>
   );
@@ -268,4 +290,49 @@ async function computeClassesByProperty(classes: ClassInfo[], property: Instance
   }
 
   return classesWithProperty;
+}
+
+function FilterBuilderValueRenderer(
+  props: PropertyFilterBuilderRuleValueRendererProps & { imodel: IModelConnection; descriptor: Descriptor; descriptorInputKeys?: Keys },
+) {
+  const schemaMetadataContext = useSchemaMetadataContext();
+  if (props.operator === PropertyFilterRuleOperator.IsEqual || props.operator === PropertyFilterRuleOperator.IsNotEqual) {
+    return <UniquePropertyValuesSelector {...props} />;
+  }
+
+  if (props.property.quantityType && schemaMetadataContext) {
+    const initialValue = (props.value as PrimitiveValue)?.value as number;
+    return (
+      <QuantityPropertyValue
+        onChange={props.onChange}
+        koqName={props.property.quantityType}
+        schemaContext={schemaMetadataContext.schemaContext}
+        initialRawValue={initialValue}
+      />
+    );
+  }
+
+  return <PropertyFilterBuilderRuleValue {...props} />;
+}
+
+function QuantityPropertyValue({
+  onChange,
+  ...koqInputProps
+}: UseQuantityValueInputProps & { onChange: PropertyFilterBuilderRuleValueRendererProps["onChange"] }) {
+  const { quantityValue, inputProps } = useQuantityValueInput(koqInputProps);
+
+  const onChangeRef = useLatestRef(onChange);
+  useEffect(() => {
+    onChangeRef.current({ valueFormat: PropertyValueFormat.Primitive, value: quantityValue.rawValue, displayValue: quantityValue.formattedValue });
+  }, [quantityValue, onChangeRef]);
+
+  return <Input size="small" {...inputProps} />;
+}
+
+function useLatestRef<T>(value: T) {
+  const valueRef = useRef<T>(value);
+  useEffect(() => {
+    valueRef.current = value;
+  }, [value]);
+  return valueRef;
 }

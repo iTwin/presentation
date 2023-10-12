@@ -31,8 +31,7 @@ import { RulesetRegistrationHelper } from "../common/RulesetRegistrationHelper";
 import { translate } from "../common/Utils";
 import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory";
 import { convertToInstanceFilterDefinition } from "../instance-filter-builder/InstanceFilterConverter";
-import { PresentationInstanceFilterInfo } from "../instance-filter-builder/PresentationInstanceFilterBuilder";
-import { PresentationInstanceFilter } from "../instance-filter-builder/Types";
+import { PresentationInstanceFilter, PresentationInstanceFilterInfo } from "../instance-filter-builder/Types";
 import { IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider";
 import { isPresentationTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem";
 import { createInfoNode, createTreeNodeItem, CreateTreeNodeItemProps, pageOptionsUiToPresentation } from "./Utils";
@@ -191,14 +190,21 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
   }
 
   /** Called to get options for node requests */
-  private createRequestOptions<TNodeKey = NodeKey>(parentKey: TNodeKey | undefined, pageOptions?: PageOptions, instanceFilter?: InstanceFilterDefinition) {
-    const isHierarchyLevelLimitingSupported = !!this.hierarchyLevelSizeLimit && parentKey;
+  private createPagedRequestOptions(parentKey: NodeKey | undefined, pageOptions?: PageOptions, instanceFilter?: InstanceFilterDefinition) {
     const isPaging = pageOptions && (pageOptions.start || pageOptions.size !== undefined);
+    return {
+      ...this.createRequestOptions(parentKey, instanceFilter),
+      ...(isPaging ? { paging: pageOptionsUiToPresentation(pageOptions) } : undefined),
+    };
+  }
+
+  /** Creates options for nodes requests. */
+  public createRequestOptions(parentKey: NodeKey | undefined, instanceFilter?: InstanceFilterDefinition) {
+    const isHierarchyLevelLimitingSupported = !!this.hierarchyLevelSizeLimit && parentKey;
     return {
       ...this.createBaseRequestOptions(),
       ...(parentKey ? { parentKey } : undefined),
       ...(isHierarchyLevelLimitingSupported ? { sizeLimit: this.hierarchyLevelSizeLimit } : undefined),
-      ...(isPaging ? { paging: pageOptionsUiToPresentation(pageOptions) } : undefined),
       ...(instanceFilter ? { instanceFilter } : undefined),
     };
   }
@@ -246,7 +252,7 @@ export class PresentationTreeDataProvider implements IPresentationTreeDataProvid
       instanceFilter?: InstanceFilterDefinition,
     ): Promise<{ nodes: TreeNodeItem[]; count: number }> => {
       const parentKey = parentNode && isPresentationTreeNodeItem(parentNode) ? parentNode.key : undefined;
-      const requestOptions = this.createRequestOptions(parentKey, pageOptions, instanceFilter);
+      const requestOptions = this.createPagedRequestOptions(parentKey, pageOptions, instanceFilter);
       return createNodesAndCountResult(
         async () => this._dataSource.getNodesAndCount(requestOptions),
         this.createBaseRequestOptions(),
