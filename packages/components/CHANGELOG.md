@@ -1,8 +1,14 @@
 # Change Log - @itwin/presentation-components
 
+## 5.0.0-dev.1
+
+### Minor Changes
+
+- [#305](https://github.com/iTwin/presentation/pull/305): Added editor for editing quantity property values in property grid. Editor works only if there is `SchemaMetadataContextProvider` in React component tree above property grid components. Otherwise simple numeric editor is used.
+
 ## 5.0.0-dev.0
 
-The `5.0` release is targeted towards getting instance filtering production-ready and contains a number of bug fixes and enhancements for the `PresentationInstanceFilterDialog` component. 
+The `5.0` release is targeted towards getting instance filtering production-ready and contains a number of bug fixes and enhancements for the `PresentationInstanceFilterDialog` component.
 
 The release does not contain any breaking API changes and the bump in peer-depenendecies is the only reason this is a major release.
 
