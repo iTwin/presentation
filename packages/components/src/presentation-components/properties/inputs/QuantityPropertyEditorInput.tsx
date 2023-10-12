@@ -12,10 +12,12 @@ import { PropertyEditorAttributes } from "../editors/Common";
 import { NumericPropertyInput } from "./NumericPropertyInput";
 import { useQuantityValueInput, UseQuantityValueInputProps } from "./UseQuantityValueInput";
 
+/** @internal */
 export interface QuantityPropertyEditorImplProps extends PropertyEditorProps {
   propertyRecord: PropertyRecord;
 }
 
+/** @internal */
 export const QuantityPropertyEditorInput = forwardRef<PropertyEditorAttributes, QuantityPropertyEditorImplProps>((props, ref) => {
   const schemaMetadataContext = useSchemaMetadataContext();
 
