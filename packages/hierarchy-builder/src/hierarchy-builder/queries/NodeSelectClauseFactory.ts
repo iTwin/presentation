@@ -119,7 +119,11 @@ export class NodeSelectClauseFactory {
                 }
               })
               .join(", ")})`
+<<<<<<< HEAD
           : "CAST(NULL AS TEXT)"
+=======
+          : "NULL"
+>>>>>>> 710eae1ed254376dde68d72a64cbd4810d9b2522
       } AS ${NodeSelectClauseColumnNames.Grouping},
       CAST(${createECSqlValueSelector(props.mergeByLabelId)} AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
       ${
