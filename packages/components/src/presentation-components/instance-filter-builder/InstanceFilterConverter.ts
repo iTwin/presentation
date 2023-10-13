@@ -59,7 +59,7 @@ function createExpression(filter: QueryRule | QueryRuleGroup) {
     return createExpressionFromGroup(filter);
   }
 
-  const { propertyName, propertyTypeName, sourceAlias, operator, value } = rule;
+  const { propertyName, propertyTypeName, sourceAlias, operator, value } = filter;
   return createComparison(propertyName, propertyTypeName, sourceAlias, operator, value);
 }
 
