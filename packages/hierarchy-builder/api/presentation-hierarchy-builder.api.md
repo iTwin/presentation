@@ -551,7 +551,7 @@ export type INodeParser = (row: {
 }) => ParsedHierarchyNode;
 
 // @beta
-export type INodePostProcessor = (node: ProcessedHierarchyNode) => ProcessedHierarchyNode;
+export type INodePostProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode | undefined>;
 
 // @beta
 export type INodePreProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode | undefined>;

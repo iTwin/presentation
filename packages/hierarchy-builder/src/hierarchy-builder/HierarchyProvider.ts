@@ -149,7 +149,7 @@ export class HierarchyProvider {
         // finalize before returning
         .pipe(
           createDetermineChildrenOperator((n) => this.hasNodesObservable(n)),
-          map((n) => (this._hierarchyFactory.postProcessNode ? this._hierarchyFactory.postProcessNode(n) : n)),
+          postProcessNodes(this._hierarchyFactory),
         )
         // load all nodes into the array and resolve
         .subscribe({
@@ -202,9 +202,19 @@ export class HierarchyProvider {
 }
 
 function preProcessNodes(hierarchyFactory: IHierarchyLevelDefinitionsFactory) {
+  return hierarchyFactory.preProcessNode ? processNodes(hierarchyFactory.preProcessNode) : noopNodesProcessor;
+}
+
+function postProcessNodes(hierarchyFactory: IHierarchyLevelDefinitionsFactory) {
+  return hierarchyFactory.postProcessNode ? processNodes(hierarchyFactory.postProcessNode) : noopNodesProcessor;
+}
+
+const noopNodesProcessor = (nodes: Observable<ProcessedHierarchyNode>) => nodes;
+
+function processNodes(processor: (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode | undefined>) {
   return (nodes: Observable<ProcessedHierarchyNode>) =>
     nodes.pipe(
-      concatMap(async (n) => (hierarchyFactory.preProcessNode ? hierarchyFactory.preProcessNode(n) : n)),
+      concatMap(processor),
       filter((n): n is ProcessedHierarchyNode => !!n),
     );
 }

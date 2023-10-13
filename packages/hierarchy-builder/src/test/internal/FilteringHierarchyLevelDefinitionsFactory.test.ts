@@ -147,35 +147,48 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
   });
 
   describe("postProcessNode", () => {
-    it("returns given node when source factory has no post-processor", () => {
+    it("returns given node when source factory has no post-processor", async () => {
       const node = createTestNode();
       const filteringFactory = createFilteringHierarchyLevelsFactory();
-      const result = filteringFactory.postProcessNode(node);
+      const result = await filteringFactory.postProcessNode(node);
       expect(result).to.eq(node);
     });
 
-    it("returns node post-processed by source factory", () => {
+    it("returns node post-processed by source factory", async () => {
       const inputNode = createTestNode();
       const sourceFactoryNode = createTestNode();
       const sourceFactory = {
-        postProcessNode: sinon.stub().returns(sourceFactoryNode),
+        postProcessNode: sinon.stub().resolves(sourceFactoryNode),
       } as unknown as IHierarchyLevelDefinitionsFactory;
       const filteringFactory = createFilteringHierarchyLevelsFactory({
         sourceFactory,
       });
-      const result = filteringFactory.postProcessNode(inputNode);
+      const result = await filteringFactory.postProcessNode(inputNode);
       expect(sourceFactory.postProcessNode).to.be.calledOnceWithExactly(inputNode);
       expect(result).to.eq(sourceFactoryNode);
     });
 
-    it("doesn't set auto-expand on class grouping nodes if none of the children have filtered children paths", () => {
-      const inputNode = createClassGroupingNode();
-      const filteringFactory = createFilteringHierarchyLevelsFactory();
-      const result = filteringFactory.postProcessNode(inputNode);
-      expect(result.autoExpand).to.be.undefined;
+    it("returns undefined when source factory post processor returns undefined", async () => {
+      const inputNode = createTestNode();
+      const sourceFactory = {
+        postProcessNode: sinon.stub().resolves(undefined),
+      } as unknown as IHierarchyLevelDefinitionsFactory;
+      const filteringFactory = createFilteringHierarchyLevelsFactory({
+        sourceFactory,
+      });
+      const result = await filteringFactory.postProcessNode(inputNode);
+      expect(sourceFactory.postProcessNode).to.be.calledOnceWithExactly(inputNode);
+      expect(result).to.eq(undefined);
     });
 
-    it("sets auto-expand on class grouping nodes if any child has filtered children paths", () => {
+    it("doesn't set auto-expand on class grouping nodes if none of the children have filtered children paths", async () => {
+      const inputNode = createClassGroupingNode();
+      const filteringFactory = createFilteringHierarchyLevelsFactory();
+      const result = await filteringFactory.postProcessNode(inputNode);
+      expect(result!.autoExpand).to.be.undefined;
+    });
+
+    it("sets auto-expand on class grouping nodes if any child has filtered children paths", async () => {
       const inputNode: HierarchyNode = {
         ...createClassGroupingNode(),
         children: [
@@ -186,8 +199,8 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         ],
       };
       const filteringFactory = createFilteringHierarchyLevelsFactory();
-      const result = filteringFactory.postProcessNode(inputNode);
-      expect(result.autoExpand).to.be.true;
+      const result = await filteringFactory.postProcessNode(inputNode);
+      expect(result!.autoExpand).to.be.true;
     });
 
     function createTestNode(): HierarchyNode {
