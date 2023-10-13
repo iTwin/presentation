@@ -8,7 +8,7 @@
 
 import "./PresentationTreeNodeRenderer.scss";
 import classnames from "classnames";
-import { isTreeModelNode, TreeModelSource, TreeNodeRenderer, TreeNodeRendererProps } from "@itwin/components-react";
+import { isTreeModelNode, TreeModel, TreeNodeRenderer, TreeNodeRendererProps } from "@itwin/components-react";
 import { TreeNode, UnderlinedButton } from "@itwin/core-react";
 import { SvgCloseSmall, SvgFilter, SvgFilterHollow } from "@itwin/itwinui-icons-react";
 import { ButtonGroup, IconButton, Text } from "@itwin/itwinui-react";
@@ -22,7 +22,7 @@ import { InfoTreeNodeItemType, isPresentationInfoTreeNodeItem, isPresentationTre
 export interface PresentationTreeNodeRendererProps extends TreeNodeRendererProps {
   onFilterClick: (node: PresentationTreeNodeItem) => void;
   onClearFilterClick: (node: PresentationTreeNodeItem) => void;
-  modelsSource?: TreeModelSource;
+  getTreeModel?: () => TreeModel;
 }
 
 /**
@@ -32,7 +32,7 @@ export interface PresentationTreeNodeRendererProps extends TreeNodeRendererProps
  * @beta
  */
 export function PresentationTreeNodeRenderer(props: PresentationTreeNodeRendererProps) {
-  const { onFilterClick, onClearFilterClick, modelsSource, ...restProps } = props;
+  const { onFilterClick, onClearFilterClick, getTreeModel, ...restProps } = props;
   const nodeItem = props.node.item;
 
   if (isPresentationInfoTreeNodeItem(nodeItem)) {
@@ -41,11 +41,11 @@ export function PresentationTreeNodeRenderer(props: PresentationTreeNodeRenderer
         isLeaf={true}
         label={
           <span>
-            <Text isMuted className="tree-node-info-item">
-              {nodeItem.type === InfoTreeNodeItemType.ResultSetTooLarge && modelsSource && (
+            <Text isMuted className="info-tree-node-item">
+              {nodeItem.type === InfoTreeNodeItemType.ResultSetTooLarge && getTreeModel && (
                 <UnderlinedButton
                   onClick={() => {
-                    const parentNode = modelsSource?.getModel().getNode(nodeItem.parentId);
+                    const parentNode = getTreeModel().getNode(nodeItem.parentId);
                     if (isTreeModelNode(parentNode) && isPresentationTreeNodeItem(parentNode.item)) {
                       onFilterClick(parentNode.item);
                     }

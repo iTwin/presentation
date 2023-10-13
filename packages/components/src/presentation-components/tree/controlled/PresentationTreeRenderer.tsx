@@ -9,6 +9,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AbstractTreeNodeLoaderWithProvider, TreeNodeRendererProps, TreeRenderer, TreeRendererProps, useDebouncedAsyncValue } from "@itwin/components-react";
+import { Text } from "@itwin/itwinui-react";
 import { NodeKey, PresentationError, PresentationStatus } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { translate } from "../../common/Utils";
@@ -36,7 +37,6 @@ export interface PresentationTreeRendererProps extends TreeRendererProps {
  */
 export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
   const nodeLoader = props.nodeLoader;
-
   const { applyFilter, clearFilter } = useHierarchyLevelFiltering({ nodeLoader, modelSource: nodeLoader.modelSource });
   const [filterNode, setFilterNode] = useState<PresentationTreeNodeItem>();
 
@@ -45,7 +45,7 @@ export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
       return (
         <PresentationTreeNodeRenderer
           {...nodeProps}
-          modelsSource={props.modelSource}
+          getTreeModel={props.visibleNodes.getModel}
           onFilterClick={(node) => {
             setFilterNode(node);
           }}
@@ -53,7 +53,7 @@ export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
         />
       );
     },
-    [props.modelSource, clearFilter],
+    [props.visibleNodes.getModel, clearFilter],
   );
 
   const divRef = useRef<HTMLDivElement>(null);
@@ -120,10 +120,14 @@ function MatchingInstancesCount({ filter, dataProvider, parentKey }: MatchingIns
 
       try {
         const count = await Presentation.presentation.getNodesCount(dataProvider.createRequestOptions(parentKey, instanceFilter));
-        return `${translate("tree.filter-dialog.results-count")}: ${count}`;
+        return <>{`${translate("tree.filter-dialog.results-count")}: ${count}`}</>;
       } catch (e) {
         if (e instanceof PresentationError && e.errorNumber === PresentationStatus.ResultSetTooLarge) {
-          return translate("tree.filter-dialog.results-count-too-large");
+          return (
+            <Text isMuted className="info-tree-node-item">
+              {`${translate("tree.filter-dialog.results-count-too-large")}. ${translate("tree.filtering-needed")}`}
+            </Text>
+          );
         }
       }
 
@@ -133,5 +137,5 @@ function MatchingInstancesCount({ filter, dataProvider, parentKey }: MatchingIns
   if (!value || inProgress) {
     return null;
   }
-  return <>{value}</>;
+  return value;
 }

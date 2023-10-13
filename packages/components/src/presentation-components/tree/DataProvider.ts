@@ -332,8 +332,14 @@ async function createNodesAndCountResult(
         case PresentationStatus.BackendTimeout:
           return createStatusNodeResult(parentNode, "tree.timeout", InfoTreeNodeItemType.BackendTimeout);
         case PresentationStatus.ResultSetTooLarge:
-          const label = hierarchyLevelSizeLimit === undefined ? "tree.result-set-too-large-limit-unknown" : "tree.result-set-too-large-limit-known";
-          return createStatusNodeResult(parentNode, label, InfoTreeNodeItemType.ResultSetTooLarge);
+          const label =
+            hierarchyLevelSizeLimit === undefined
+              ? translate("tree.result-set-too-large-limit-unknown")
+              : `${translate("tree.result-set-too-large-limit-known")} ${hierarchyLevelSizeLimit}`;
+          return {
+            nodes: [createInfoNode(parentNode, label, InfoTreeNodeItemType.ResultSetTooLarge)],
+            count: 1,
+          };
       }
     }
     // istanbul ignore else

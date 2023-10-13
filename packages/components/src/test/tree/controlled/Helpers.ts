@@ -6,7 +6,7 @@
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { TreeModelNode, TreeModelNodeInput, TreeNodeItem } from "@itwin/components-react";
 import { CheckBoxState } from "@itwin/core-react";
-import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem";
+import { PresentationInfoTreeNodeItem, PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem";
 import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy";
 
 export function createTreeNodeItem(item?: Partial<PresentationTreeNodeItem>): PresentationTreeNodeItem {
@@ -15,6 +15,18 @@ export function createTreeNodeItem(item?: Partial<PresentationTreeNodeItem>): Pr
     key: item?.key ?? createTestECInstancesNodeKey(),
     label: item?.label ?? PropertyRecord.fromString("Node Label"),
     ...item,
+  };
+}
+
+export function createInfoTreeNodeItem(item?: Partial<PresentationInfoTreeNodeItem>): PresentationInfoTreeNodeItem {
+  return {
+    id: item?.id ?? "info_node_item",
+    label: item?.label ?? PropertyRecord.fromString("Info Node Label"),
+    message: item?.message ?? "",
+    isSelectionDisabled: true,
+    children: undefined,
+    /** Type of item message */
+    type: item?.type,
   };
 }
 

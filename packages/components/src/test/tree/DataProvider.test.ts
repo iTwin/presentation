@@ -469,45 +469,79 @@ describe("TreeDataProvider", () => {
       expect((actualResult[0] as PresentationInfoTreeNodeItem).message).to.eq(translate("tree.no-filtered-children"));
     });
 
-    it("returns info node if hierarchy level exceeds given limit", async () => {
-      presentationManagerMock
-        .setup(async (x) => x.getNodesAndCount(is({ imodel: imodelMock.object, rulesetOrId: rulesetId })))
-        .returns(async () => {
-          throw new PresentationError(PresentationStatus.ResultSetTooLarge);
-        });
+    it("returns info node if hierarchy level exceeds given limit when hierarchy limit is unknown", async () => {
+      const presentationManager = {
+        getNodesAndCount: sinon
+          .stub<Parameters<PresentationManager["getNodesAndCount"]>, ReturnType<PresentationManager["getNodesAndCount"]>>()
+          .callsFake(async () => {
+            throw new PresentationError(PresentationStatus.ResultSetTooLarge);
+          }),
+      };
+
+      sinon.stub(Presentation, "presentation").get(() => presentationManager);
       const actualResult = await provider.getNodes(undefined);
       expect(actualResult).to.have.lengthOf(1);
-      expect((actualResult[0] as PresentationInfoTreeNodeItem).message).to.eq(translate("tree.result-set-too-large"));
+      expect((actualResult[0] as PresentationInfoTreeNodeItem).message).to.eq(translate("tree.result-set-too-large-limit-unknown"));
+    });
+
+    it("returns info node if hierarchy level exceeds given limit when limit is known", async () => {
+      const presentationManager = {
+        getNodesAndCount: sinon
+          .stub<Parameters<PresentationManager["getNodesAndCount"]>, ReturnType<PresentationManager["getNodesAndCount"]>>()
+          .callsFake(async () => {
+            throw new PresentationError(PresentationStatus.ResultSetTooLarge);
+          }),
+      };
+
+      sinon.stub(Presentation, "presentation").get(() => presentationManager);
+      provider.hierarchyLevelSizeLimit = 5;
+      const actualResult = await provider.getNodes(undefined);
+      expect(actualResult).to.have.lengthOf(1);
+      expect((actualResult[0] as PresentationInfoTreeNodeItem).message).to.eq(
+        `${translate("tree.result-set-too-large-limit-known")} ${provider.hierarchyLevelSizeLimit}`,
+      );
     });
 
     it("returns info node on timeout", async () => {
-      presentationManagerMock
-        .setup(async (x) => x.getNodesAndCount(is({ imodel: imodelMock.object, rulesetOrId: rulesetId })))
-        .returns(async () => {
-          throw new PresentationError(PresentationStatus.BackendTimeout);
-        });
+      const presentationManager = {
+        getNodesAndCount: sinon
+          .stub<Parameters<PresentationManager["getNodesAndCount"]>, ReturnType<PresentationManager["getNodesAndCount"]>>()
+          .callsFake(async () => {
+            throw new PresentationError(PresentationStatus.BackendTimeout);
+          }),
+      };
+
+      sinon.stub(Presentation, "presentation").get(() => presentationManager);
       const actualResult = await provider.getNodes(undefined);
       expect(actualResult).to.have.lengthOf(1);
       expect((actualResult[0] as PresentationInfoTreeNodeItem).message).to.eq(translate("tree.timeout"));
     });
 
     it("returns info node on generic error", async () => {
-      presentationManagerMock
-        .setup(async (x) => x.getNodesAndCount(is({ imodel: imodelMock.object, rulesetOrId: rulesetId })))
-        .returns(async () => {
-          throw new Error("test");
-        });
+      const presentationManager = {
+        getNodesAndCount: sinon
+          .stub<Parameters<PresentationManager["getNodesAndCount"]>, ReturnType<PresentationManager["getNodesAndCount"]>>()
+          .callsFake(async () => {
+            throw new Error("test");
+          }),
+      };
+
+      sinon.stub(Presentation, "presentation").get(() => presentationManager);
       const actualResult = await provider.getNodes(undefined);
       expect(actualResult).to.have.lengthOf(1);
       expect((actualResult[0] as PresentationInfoTreeNodeItem).message).to.eq(translate("tree.unknown-error"));
     });
 
     it("returns empty result on cancellation", async () => {
-      presentationManagerMock
-        .setup(async (x) => x.getNodesAndCount(is({ imodel: imodelMock.object, rulesetOrId: rulesetId })))
-        .returns(async () => {
-          throw new PresentationError(PresentationStatus.Canceled);
-        });
+      const presentationManager = {
+        getNodesAndCount: sinon
+          .stub<Parameters<PresentationManager["getNodesAndCount"]>, ReturnType<PresentationManager["getNodesAndCount"]>>()
+          .callsFake(async () => {
+            throw new PresentationError(PresentationStatus.Canceled);
+          }),
+      };
+
+      sinon.stub(Presentation, "presentation").get(() => presentationManager);
       const actualResult = await provider.getNodes(undefined);
       expect(actualResult).to.have.lengthOf(0);
     });

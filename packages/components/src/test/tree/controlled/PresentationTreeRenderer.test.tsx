@@ -23,6 +23,7 @@ import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { PresentationError, PresentationStatus, PropertyValueFormat } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { waitFor } from "@testing-library/react";
+import { translate } from "../../../presentation-components/common/Utils";
 import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/Types";
 import { PresentationTreeRenderer } from "../../../presentation-components/tree/controlled/PresentationTreeRenderer";
 import { PresentationTreeDataProvider } from "../../../presentation-components/tree/DataProvider";
@@ -258,7 +259,7 @@ describe("PresentationTreeRenderer", () => {
     await openFilterDialog(result);
 
     await waitFor(() => expect(presentationManager.getNodesCount).to.be.calledOnce);
-    expect(queryByText("tree.filter-dialog.results-count-too-large")).to.not.be.null;
+    expect(queryByText(`${translate("tree.filter-dialog.results-count-too-large")}. ${translate("tree.filtering-needed")}`)).to.not.be.null;
   });
 
   it("does not render result if unknown error is encountered", async () => {
