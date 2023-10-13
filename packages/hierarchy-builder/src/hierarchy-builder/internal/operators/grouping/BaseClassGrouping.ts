@@ -4,12 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { from, mergeMap, Observable, tap, toArray } from "rxjs";
-import { Id64 } from "@itwin/core-bentley";
 import { HierarchyNode } from "../../../HierarchyNode";
 import { getLogger } from "../../../Logging";
 import { ECClass, IMetadataProvider } from "../../../Metadata";
 import { createOperatorLoggingNamespace, getClass } from "../../Common";
-import { sortNodesByLabel } from "../Sorting";
+import { sortNodesAndGroupingNodeChildrenByLabel, sortNodesByLabel } from "../Sorting";
+import { applyHidingGroupingParamsToSpecificGroupingType } from "./GroupHiding";
 
 const OPERATOR_NAME = "Grouping.ByBaseClass";
 /** @internal */
@@ -24,7 +24,7 @@ export function createBaseClassGroupingOperator(metadata: IMetadataProvider) {
       toArray(),
       // group all nodes
       mergeMap((resolvedNodes) => from(createBaseClassGrouping(metadata, resolvedNodes))),
-      mergeMap((resolvedNodes) => from(resolvedNodes)),
+      mergeMap((groupedNodes) => from(sortNodesAndGroupingNodeChildrenByLabel(groupedNodes))),
       // convert intermediate format into a nodes observable
       log((n) => `out: ${n.label}`),
     );
@@ -47,44 +47,28 @@ async function createBaseClassGrouping(metadata: IMetadataProvider, nodes: Hiera
   const baseECClassesSorted = await sortByBaseClass(baseECClassesArray);
 
   for (const baseECClass of baseECClassesSorted) {
-    const [newHierarchy, hasChanged] = await createGroupingForSingleBaseClass(metadata, output, baseECClass);
-    if (hasChanged) {
-      output = sortNodesByLabel(newHierarchy);
-    }
+    output = await createGroupingForSingleBaseClass(metadata, output, baseECClass);
   }
   return output;
 }
 
-async function createGroupingForSingleBaseClass(
-  metadata: IMetadataProvider,
-  nodes: HierarchyNode[],
-  baseECClass: ECClass,
-): Promise<[nodes: HierarchyNode[], hasChanged: boolean]> {
-  let hideIfNoOtherNodes = false;
-  let hideIfSingleNodeInGrouping = false;
-  let hasChanged = false;
+async function createGroupingForSingleBaseClass(metadata: IMetadataProvider, nodes: HierarchyNode[], baseECClass: ECClass): Promise<HierarchyNode[]> {
   const finalHierarchy = new Array<HierarchyNode>();
   finalHierarchy.push({
     label: baseECClass.fullName,
     key: {
       type: "base-class-grouping",
-      class: { id: Id64.invalid, name: baseECClass.fullName, label: baseECClass.label ?? baseECClass.name },
+      class: { name: baseECClass.fullName, label: baseECClass.label ?? baseECClass.name },
     },
     children: [],
   });
   for (const node of nodes) {
     // if node is a grouping node, then call this function for its children and update them if necessary
     if (HierarchyNode.isGroupingNode(node) && Array.isArray(node.children)) {
-      const [newChildren, haveChildrenChanged] = await createGroupingForSingleBaseClass(metadata, node.children, baseECClass);
-      if (haveChildrenChanged) {
-        node.children = sortNodesByLabel(newChildren);
-        hasChanged = true;
-      }
+      const newChildren = await createGroupingForSingleBaseClass(metadata, node.children, baseECClass);
+      node.children = sortNodesByLabel(newChildren);
     }
     if (HierarchyNode.isInstancesNode(node) && node.params?.grouping?.groupByBaseClass && node.params.grouping.baseClassInfo) {
-      hideIfNoOtherNodes ||= !!node.params.grouping.hideIfNoOtherGroups;
-      hideIfSingleNodeInGrouping ||= !!node.params.grouping.hideIfSingleNodeInGroup;
-
       let classNameIsInBaseClassInfo = false;
       // check if the node should be grouped by this baseClass
       for (const classInfo of node.params.grouping.baseClassInfo) {
@@ -100,7 +84,6 @@ async function createGroupingForSingleBaseClass(
         if (await currentNodeECClass.is(baseECClass)) {
           if (finalHierarchy.length > 0 && Array.isArray(finalHierarchy[0].children)) {
             finalHierarchy[0].children.push(node);
-            hasChanged = true;
             continue;
           }
         }
@@ -108,16 +91,10 @@ async function createGroupingForSingleBaseClass(
     }
     finalHierarchy.push(node);
   }
-  if (hideIfNoOtherNodes && finalHierarchy.length === 1 && Array.isArray(finalHierarchy[0].children)) {
-    return [finalHierarchy[0].children, hasChanged];
-  }
-  if (hideIfSingleNodeInGrouping && Array.isArray(finalHierarchy[0].children) && finalHierarchy[0].children.length === 1) {
-    return [finalHierarchy.splice(0, 1, finalHierarchy[0].children[0]), hasChanged];
-  }
   if (Array.isArray(finalHierarchy[0].children) && finalHierarchy[0].children.length === 0) {
     finalHierarchy.splice(0, 1);
   }
-  return [finalHierarchy, hasChanged];
+  return applyHidingGroupingParamsToSpecificGroupingType(finalHierarchy, "base-class-grouping");
 }
 
 function getAllBaseClasses(nodes: HierarchyNode[]): Set<string> {

@@ -27,3 +27,36 @@ export function sortNodesByLabelOperator(nodes: Observable<HierarchyNode>): Obse
 export function sortNodesByLabel(nodes: HierarchyNode[]): HierarchyNode[] {
   return nodes.sort((lhs, rhs) => naturalCompare(lhs.label.toLocaleLowerCase(), rhs.label.toLocaleLowerCase()));
 }
+
+/**
+ * @internal
+ */
+export function sortNodesAndGroupingNodeChildrenByLabel(nodes: HierarchyNode[]): HierarchyNode[] {
+  for (const node of nodes) {
+    if (HierarchyNode.isGroupingNode(node) && Array.isArray(node.children)) {
+      const newChildren = sortNodesAndGroupingNodeChildrenByLabel(node.children);
+      node.children = newChildren;
+    }
+  }
+  return sortNodesByLabel(nodes);
+}
+
+/** @internal */
+export function sortNodesAndGroupingNodeChildrenByLabelOperator() {
+  return function (nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
+    return nodes.pipe(
+      toArray(),
+      mergeMap((allNodes) => {
+        for (const node of allNodes) {
+          if (HierarchyNode.isGroupingNode(node) && Array.isArray(node.children)) {
+            const newChildren = sortNodesAndGroupingNodeChildrenByLabel(node.children);
+            node.children = newChildren;
+          }
+        }
+        return allNodes;
+      }),
+      toArray(),
+      mergeMap((allNodes) => allNodes.sort((lhs, rhs) => naturalCompare(lhs.label.toLocaleLowerCase(), rhs.label.toLocaleLowerCase()))),
+    );
+  };
+}

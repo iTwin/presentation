@@ -17,7 +17,7 @@ import { createHideIfNoChildrenOperator } from "./internal/operators/HideIfNoChi
 import { createHideNodesInHierarchyOperator } from "./internal/operators/HideNodesInHierarchy";
 import { createMergeInstanceNodesByLabelOperator } from "./internal/operators/MergeInstanceNodesByLabel";
 import { createPersistChildrenOperator } from "./internal/operators/PersistChildren";
-import { sortNodesByLabelOperator } from "./internal/operators/Sorting";
+import { sortNodesAndGroupingNodeChildrenByLabelOperator, sortNodesByLabelOperator } from "./internal/operators/Sorting";
 import { QueryScheduler } from "./internal/QueryScheduler";
 import { applyLimit, TreeQueryResultsReader } from "./internal/TreeNodesReader";
 import { IMetadataProvider } from "./Metadata";
@@ -140,6 +140,7 @@ export class HierarchyProvider {
       createBaseClassGroupingOperator(this._metadataProvider),
       createClassGroupingOperator(this._metadataProvider),
       createLabelGroupingOperator(),
+      sortNodesAndGroupingNodeChildrenByLabelOperator(),
     );
     return parentNode ? result.pipe(createPersistChildrenOperator(parentNode)) : result;
   }

@@ -43,7 +43,7 @@ describe("Stateless hierarchy builder", () => {
       });
     }
 
-    it("groups by class and label", async function () {
+    it("groups by base class, class and label", async function () {
       const labelGroupName1 = "test1";
       const labelGroupName2 = "test2";
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
@@ -88,6 +88,17 @@ describe("Stateless hierarchy builder", () => {
                       grouping: {
                         groupByClass: true,
                         groupByLabel: true,
+                        groupByBaseClass: true,
+                        baseClassInfo: [
+                          {
+                            schemaName: "BisCore",
+                            className: "InformationContentElement",
+                          },
+                          {
+                            schemaName: "BisCore",
+                            className: "InformationPartitionElement",
+                          },
+                        ],
                       },
                     })}
                     FROM (
@@ -113,38 +124,50 @@ describe("Stateless hierarchy builder", () => {
           NodeValidators.createForInstanceNode({
             instanceKeys: [keys.rootSubject],
             children: [
-              NodeValidators.createForClassGroupingNode({
-                className: physicalPartitionClassName,
+              NodeValidators.createForBaseClassGroupingNode({
+                label: "BisCore.InformationContentElement",
+                baseClassName: "BisCore.InformationContentElement",
                 children: [
-                  NodeValidators.createForLabelGroupingNode({
-                    label: labelGroupName2,
+                  NodeValidators.createForBaseClassGroupingNode({
+                    label: "BisCore.InformationPartitionElement",
+                    baseClassName: "BisCore.InformationPartitionElement",
                     children: [
-                      NodeValidators.createForInstanceNode({
-                        instanceKeys: [keys.childPartition4],
-                        children: false,
-                      }),
-                      NodeValidators.createForInstanceNode({
-                        instanceKeys: [keys.childPartition5],
-                        children: false,
+                      NodeValidators.createForClassGroupingNode({
+                        className: physicalPartitionClassName,
+                        children: [
+                          NodeValidators.createForLabelGroupingNode({
+                            label: labelGroupName2,
+                            children: [
+                              NodeValidators.createForInstanceNode({
+                                instanceKeys: [keys.childPartition4],
+                                children: false,
+                              }),
+                              NodeValidators.createForInstanceNode({
+                                instanceKeys: [keys.childPartition5],
+                                children: false,
+                              }),
+                            ],
+                          }),
+                          NodeValidators.createForInstanceNode({
+                            instanceKeys: [keys.childPartition3],
+                            children: false,
+                          }),
+                        ],
                       }),
                     ],
                   }),
-                  NodeValidators.createForInstanceNode({
-                    instanceKeys: [keys.childPartition3],
-                    children: false,
-                  }),
-                ],
-              }),
-              NodeValidators.createForClassGroupingNode({
-                className: subjectClassName,
-                children: [
-                  NodeValidators.createForInstanceNode({
-                    instanceKeys: [keys.childSubject1],
-                    children: false,
-                  }),
-                  NodeValidators.createForInstanceNode({
-                    instanceKeys: [keys.childSubject2],
-                    children: false,
+                  NodeValidators.createForClassGroupingNode({
+                    className: subjectClassName,
+                    children: [
+                      NodeValidators.createForInstanceNode({
+                        instanceKeys: [keys.childSubject1],
+                        children: false,
+                      }),
+                      NodeValidators.createForInstanceNode({
+                        instanceKeys: [keys.childSubject2],
+                        children: false,
+                      }),
+                    ],
                   }),
                 ],
               }),

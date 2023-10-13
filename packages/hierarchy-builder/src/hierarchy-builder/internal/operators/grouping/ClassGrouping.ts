@@ -50,6 +50,11 @@ interface ClassGroupingInformation {
 async function createClassGroupingInformation(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<ClassGroupingInformation> {
   const groupings: ClassGroupingInformation = { ungrouped: [], grouped: new Map() };
   for (const node of nodes) {
+    if (HierarchyNode.isGroupingNode(node) && Array.isArray(node.children)) {
+      const groupingInformation = await createClassGroupingInformation(metadata, node.children);
+      const groupedNodes = createGroupingNodes(groupingInformation);
+      node.children = groupedNodes;
+    }
     // we're only grouping instance nodes
     if (HierarchyNode.isInstancesNode(node) && node.params?.grouping?.groupByClass) {
       const fullClassName = node.key.instanceKeys[0].className;

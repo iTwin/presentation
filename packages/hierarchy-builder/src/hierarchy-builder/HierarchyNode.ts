@@ -42,7 +42,10 @@ export interface LabelGroupingNodeKey {
  */
 export interface BaseClassGroupingNodeKey {
   type: "base-class-grouping";
-  class: ClassInfo;
+  class: {
+    name: string;
+    label?: string;
+  };
 }
 
 export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | BaseClassGroupingNodeKey;
