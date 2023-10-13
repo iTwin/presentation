@@ -1,0 +1,43 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+.query-builders-dialog-container {
+  width: 100vw;
+  height: 70%;
+}
+
+.query-builders {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.query-builder-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.query-builder {
+  background-color: var(--iui-color-background);
+  border: solid 1px var(--iui-color-border);
+  border-radius: var(--border-radius);
+  padding: 10px;
+}
+
+.query-builder-result {
+}
+
+.query-result {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: 10px;
+}
+
+.query-result-join {
+}
+
+.query-result-where {
+  font-size: large;
+}

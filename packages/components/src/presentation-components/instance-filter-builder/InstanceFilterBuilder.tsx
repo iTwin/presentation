@@ -83,7 +83,7 @@ export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
           <PropertyFilterBuilderRenderer
             {...restProps}
             ruleValueRenderer={(rendererProps: PropertyFilterBuilderRuleValueRendererProps) => (
-              <FilterBuilderValueRenderer {...rendererProps} descriptorInputKeys={descriptorInputKeys} imodel={imodel} descriptor={descriptor} />
+              <PresentationFilterBuilderValueRenderer {...rendererProps} descriptorInputKeys={descriptorInputKeys} imodel={imodel} descriptor={descriptor} />
             )}
           />
         </navigationPropertyEditorContext.Provider>
@@ -106,22 +106,21 @@ function createOption(classInfo: ClassInfo): SelectOption<string> {
 export function usePresentationInstanceFilteringProps(
   descriptor: Descriptor,
   imodel: IModelConnection,
-  initialClasses?: ClassInfo[],
+  initialActiveClasses?: ClassInfo[],
 ): Required<
   Pick<
     InstanceFilterBuilderProps,
     "properties" | "classes" | "selectedClasses" | "onSelectedClassesChanged" | "propertyRenderer" | "onRulePropertySelected" | "isDisabled"
   >
 > {
-  const propertyInfos = useMemo(() => createInstanceFilterPropertyInfos(descriptor), [descriptor]);
-  const classes = useMemo((): ClassInfo[] => {
-    const uniqueClasses = new Map();
-    descriptor.selectClasses.forEach((selectClass) => uniqueClasses.set(selectClass.selectClassInfo.id, selectClass.selectClassInfo));
-    return [...uniqueClasses.values()];
-  }, [descriptor]);
-
-  const { selectedClasses, onSelectedClassesChanged, isFilteringClasses, filterClassesByProperty } = useSelectedClasses(classes, imodel, initialClasses);
-  const { properties, isFilteringProperties } = useProperties(propertyInfos, selectedClasses, imodel);
+  const { propertyInfos, propertyRenderer } = usePropertyInfos({ descriptor });
+  const classes = usePropertyClasses({ descriptor });
+  const { activeClasses, changeActiveClasses, isFilteringClasses, filterClassesByProperty } = useActiveClasses({
+    imodel,
+    availableClasses: classes,
+    initialActiveClasses,
+  });
+  const { properties, isFilteringProperties } = usePropertiesFilteringByClass({ imodel, availableProperties: propertyInfos, activeClasses });
 
   const onRulePropertySelected = useCallback(
     (property: PropertyDescription) => {
@@ -132,6 +131,24 @@ export function usePresentationInstanceFilteringProps(
     },
     [propertyInfos, filterClassesByProperty],
   );
+
+  return {
+    onRulePropertySelected,
+    onSelectedClassesChanged: useCallback((classIds) => changeActiveClasses(classIds), [changeActiveClasses]),
+    propertyRenderer,
+    properties,
+    classes,
+    selectedClasses: activeClasses,
+    isDisabled: isFilteringClasses || isFilteringProperties,
+  };
+}
+
+export interface UsePropertyInfoProps {
+  descriptor: Descriptor;
+}
+
+export function usePropertyInfos({ descriptor }: UsePropertyInfoProps) {
+  const propertyInfos = useMemo(() => createInstanceFilterPropertyInfos(descriptor), [descriptor]);
 
   const propertyRenderer = useCallback(
     (name: string) => {
@@ -149,25 +166,41 @@ export function usePresentationInstanceFilteringProps(
   );
 
   return {
-    onRulePropertySelected,
-    onSelectedClassesChanged,
+    propertyInfos,
     propertyRenderer,
-    properties,
-    classes,
-    selectedClasses,
-    isDisabled: isFilteringClasses || isFilteringProperties,
   };
 }
 
-function useProperties(propertyInfos: InstanceFilterPropertyInfo[], selectedClasses: ClassInfo[], imodel: IModelConnection) {
+export interface UsePropertyClassesProps {
+  descriptor: Descriptor;
+}
+
+export function usePropertyClasses({ descriptor }: UsePropertyClassesProps) {
+  return useMemo((): ClassInfo[] => {
+    const uniqueClasses = new Map();
+    descriptor.selectClasses.forEach((selectClass) => uniqueClasses.set(selectClass.selectClassInfo.id, selectClass.selectClassInfo));
+    return [...uniqueClasses.values()];
+  }, [descriptor]);
+}
+
+interface UsePropertiesFilteringByClassProps {
+  imodel: IModelConnection;
+  availableProperties: InstanceFilterPropertyInfo[];
+  activeClasses: ClassInfo[];
+}
+
+function usePropertiesFilteringByClass({ imodel, availableProperties, activeClasses }: UsePropertiesFilteringByClassProps) {
   const [filteredProperties, setFilteredProperties] = useState<InstanceFilterPropertyInfo[] | undefined>();
   const [isFilteringProperties, setIsFilteringProperties] = useState(false);
-  const properties = useMemo(() => (filteredProperties ?? propertyInfos).map((info) => info.propertyDescription), [propertyInfos, filteredProperties]);
+  const properties = useMemo(
+    () => (filteredProperties ?? availableProperties).map((info) => info.propertyDescription),
+    [availableProperties, filteredProperties],
+  );
 
   const classChanges = useRef(new BehaviorSubject<ClassInfo[]>([]));
   useEffect(() => {
-    classChanges.current.next(selectedClasses);
-  }, [selectedClasses]);
+    classChanges.current.next(activeClasses);
+  }, [activeClasses]);
 
   // filter properties by selected classes
   useEffect(() => {
@@ -178,7 +211,7 @@ function useProperties(propertyInfos: InstanceFilterPropertyInfo[], selectedClas
             return of(undefined);
           }
           setIsFilteringProperties(true);
-          return from(computePropertiesByClasses(propertyInfos, classes, imodel));
+          return from(computePropertiesByClasses(availableProperties, classes, imodel));
         }),
         switchAll(),
       )
@@ -191,7 +224,7 @@ function useProperties(propertyInfos: InstanceFilterPropertyInfo[], selectedClas
     return () => {
       subscription.unsubscribe();
     };
-  }, [imodel, propertyInfos]);
+  }, [imodel, availableProperties]);
 
   return {
     properties,
@@ -199,40 +232,48 @@ function useProperties(propertyInfos: InstanceFilterPropertyInfo[], selectedClas
   };
 }
 
-function useSelectedClasses(classes: ClassInfo[], imodel: IModelConnection, initialClasses?: ClassInfo[]) {
-  const [selectedClasses, setSelectedClasses] = useState<ClassInfo[]>(initialClasses ?? []);
+interface UseActiveClassesProps {
+  imodel: IModelConnection;
+  availableClasses: ClassInfo[];
+  initialActiveClasses?: ClassInfo[];
+}
+
+function useActiveClasses({ imodel, availableClasses, initialActiveClasses }: UseActiveClassesProps) {
+  const [activeClasses, setActiveClasses] = useState<ClassInfo[]>(initialActiveClasses ?? []);
   const [isFilteringClasses, setIsFilteringClasses] = useState(false);
 
   const firstRender = useRef(true);
   useEffect(() => {
     if (!firstRender.current) {
-      setSelectedClasses([]);
+      setActiveClasses([]);
     }
     firstRender.current = false;
-  }, [classes]);
+  }, [availableClasses]);
 
   const filterClassesByProperty = useCallback(
     (property: InstanceFilterPropertyInfo) => {
       setIsFilteringClasses(true);
       void (async () => {
-        const newSelectedClasses = await computeClassesByProperty(selectedClasses.length === 0 ? classes : selectedClasses, property, imodel);
-        setSelectedClasses(newSelectedClasses);
+        const newActiveClasses = await computeClassesByProperty(activeClasses.length === 0 ? availableClasses : activeClasses, property, imodel);
+        setActiveClasses(newActiveClasses);
         setIsFilteringClasses(false);
       })();
     },
-    [selectedClasses, classes, imodel],
+    [activeClasses, availableClasses, imodel],
+  );
+
+  const changeActiveClasses = useCallback(
+    (classIds: string[]) => {
+      const newSelectedClasses = availableClasses.filter((availableClass) => classIds.findIndex((classId) => classId === availableClass.id) !== -1);
+      setActiveClasses(newSelectedClasses);
+    },
+    [availableClasses],
   );
 
   return {
-    selectedClasses,
+    activeClasses,
     isFilteringClasses,
-    onSelectedClassesChanged: useCallback(
-      (classIds: string[]) => {
-        const newSelectedClasses = classes.filter((classInfo) => classIds.findIndex((classId) => classId === classInfo.id) !== -1);
-        setSelectedClasses(newSelectedClasses);
-      },
-      [classes],
-    ),
+    changeActiveClasses,
     filterClassesByProperty,
   };
 }
@@ -292,7 +333,7 @@ async function computeClassesByProperty(classes: ClassInfo[], property: Instance
   return classesWithProperty;
 }
 
-function FilterBuilderValueRenderer(
+export function PresentationFilterBuilderValueRenderer(
   props: PropertyFilterBuilderRuleValueRendererProps & { imodel: IModelConnection; descriptor: Descriptor; descriptorInputKeys?: Keys },
 ) {
   const schemaMetadataContext = useSchemaMetadataContext();

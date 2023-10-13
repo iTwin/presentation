@@ -6,14 +6,14 @@
  * @module InstancesFilter
  */
 
-import { Primitives, PrimitiveValue, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
+import { Primitives, PrimitiveValue, StandardTypeNames } from "@itwin/appui-abstract";
 import { isUnaryPropertyFilterOperator, PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ClassInfo, InstanceFilterDefinition, NestedContentField, PropertiesField, RelationshipPath } from "@itwin/presentation-common";
-import { deserializeDisplayValueGroupArray } from "../common/Utils";
+import { ClassInfo, InstanceFilterDefinition, RelationshipPath } from "@itwin/presentation-common";
 import { getIModelMetadataProvider } from "./ECMetadataProvider";
-import { PresentationInstanceFilter, PresentationInstanceFilterCondition, PresentationInstanceFilterConditionGroup } from "./Types";
+import { createQueryMetadata, QueryRule, QueryRuleGroup } from "./QueryMetadata";
+import { PresentationInstanceFilter } from "./Types";
 
 /**
  * Converts [[PresentationInstanceFilter]] into [InstanceFilterDefinition]($presentation-common) that can be passed
@@ -21,15 +21,15 @@ import { PresentationInstanceFilter, PresentationInstanceFilterCondition, Presen
  * @beta
  */
 export async function convertToInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection): Promise<InstanceFilterDefinition> {
-  const context: ConvertContext = { relatedInstances: [], propertyClasses: [] };
-  const expression = convertFilter(filter, context);
+  const { rules, propertyClasses, relatedInstances } = createQueryMetadata(filter);
+  const expression = createExpression(rules);
 
-  const baseClass = await findBaseExpressionClass(imodel, context.propertyClasses);
+  const baseClass = await findBaseExpressionClass(imodel, propertyClasses);
 
   return {
     expression,
     selectClassName: baseClass.name,
-    relatedInstances: context.relatedInstances.map((related) => ({
+    relatedInstances: relatedInstances.map((related) => ({
       pathFromSelectToPropertyClass: RelationshipPath.strip(related.path),
       alias: related.alias,
     })),
@@ -54,90 +54,18 @@ export async function findBaseExpressionClass(imodel: IModelConnection, property
   return currentBaseClass;
 }
 
-interface RelatedInstanceDescription {
-  path: RelationshipPath;
-  alias: string;
+function createExpression(filter: QueryRule | QueryRuleGroup) {
+  if (isQueryRuleGroup(filter)) {
+    return createExpressionFromGroup(filter);
+  }
+
+  const { propertyName, propertyTypeName, sourceAlias, operator, value } = rule;
+  return createComparison(propertyName, propertyTypeName, sourceAlias, operator, value);
 }
 
-interface ConvertContext {
-  relatedInstances: RelatedInstanceDescription[];
-  propertyClasses: ClassInfo[];
-}
-
-function convertFilter(filter: PresentationInstanceFilter, ctx: ConvertContext) {
-  if (isFilterConditionGroup(filter)) {
-    return convertConditionGroup(filter, ctx);
-  }
-  const result = convertUniqueValuesCondition(filter, ctx);
-  if (result !== undefined) {
-    return result;
-  }
-  return convertCondition(filter, ctx);
-}
-
-function convertUniqueValuesCondition(filter: PresentationInstanceFilterCondition, ctx: ConvertContext) {
-  // Unique values works only with `IsEqual` and `IsNotEqual` operators.
-  if (filter.operator !== PropertyFilterRuleOperator.IsEqual && filter.operator !== PropertyFilterRuleOperator.IsNotEqual) {
-    return undefined;
-  }
-  if (typeof filter.value?.value !== "string" || typeof filter.value?.displayValue !== "string") {
-    return undefined;
-  }
-  const result = handleStringifiedUniqueValues(filter, filter.value.displayValue, filter.value.value);
-  if (result === undefined) {
-    return undefined;
-  }
-  return convertConditionGroup(result, ctx);
-}
-
-function convertConditionGroup(group: PresentationInstanceFilterConditionGroup, ctx: ConvertContext): string {
-  const convertedConditions = group.conditions.map((condition) => convertFilter(condition, ctx));
+function createExpressionFromGroup(group: QueryRuleGroup): string {
+  const convertedConditions = group.rules.map((rule) => createExpression(rule));
   return `(${convertedConditions.join(` ${getGroupOperatorString(group.operator)} `)})`;
-}
-
-function convertCondition(condition: PresentationInstanceFilterCondition, ctx: ConvertContext): string {
-  const { field, operator, value } = condition;
-  const property = field.properties[0].property;
-  const relatedInstance = getRelatedInstanceDescription(field, property.classInfo.name, ctx);
-  addClassInfoToContext(relatedInstance ? relatedInstance.path[0].sourceClassInfo : property.classInfo, ctx);
-  const propertyAlias = relatedInstance?.alias ?? "this";
-
-  return createComparison(property.name, field.type.typeName, propertyAlias, operator, value);
-}
-
-function addClassInfoToContext(classInfo: ClassInfo, ctx: ConvertContext) {
-  if (ctx.propertyClasses.find((existing) => existing.id === classInfo.id)) {
-    return;
-  }
-
-  ctx.propertyClasses.push(classInfo);
-}
-
-function getRelatedInstanceDescription(field: PropertiesField, propClassName: string, ctx: ConvertContext): RelatedInstanceDescription | undefined {
-  if (!field.parent) {
-    return undefined;
-  }
-
-  const pathToProperty = RelationshipPath.reverse(getPathToPrimaryClass(field.parent));
-  const existing = ctx.relatedInstances.find((instance) => RelationshipPath.equals(pathToProperty, instance.path));
-  if (existing) {
-    return existing;
-  }
-
-  const newRelated = {
-    path: pathToProperty,
-    alias: `rel_${propClassName.split(":")[1]}`,
-  };
-
-  ctx.relatedInstances.push(newRelated);
-  return newRelated;
-}
-
-function getPathToPrimaryClass(field: NestedContentField): RelationshipPath {
-  if (field.parent) {
-    return [...field.pathToPrimaryClass, ...getPathToPrimaryClass(field.parent)];
-  }
-  return [...field.pathToPrimaryClass];
 }
 
 function createComparison(propertyName: string, type: string, alias: string, operator: PropertyFilterRuleOperator, propValue?: PrimitiveValue): string {
@@ -219,35 +147,8 @@ function escapeString(str: string) {
   return str.replace(/"/g, `""`);
 }
 
-function isFilterConditionGroup(obj: PresentationInstanceFilter): obj is PresentationInstanceFilterConditionGroup {
-  return (obj as PresentationInstanceFilterConditionGroup).conditions !== undefined;
-}
-
-function handleStringifiedUniqueValues(filter: PresentationInstanceFilterCondition, serializedDisplayValues: string, serializedGroupedRawValues: string) {
-  const { field, operator } = filter;
-
-  let selectedValueIndex = 0;
-
-  const { displayValues, groupedRawValues } = deserializeDisplayValueGroupArray(serializedDisplayValues, serializedGroupedRawValues);
-  if (displayValues === undefined || groupedRawValues === undefined) {
-    return undefined;
-  }
-
-  const conditionGroup: PresentationInstanceFilterConditionGroup = {
-    operator: operator === PropertyFilterRuleOperator.IsEqual ? PropertyFilterRuleGroupOperator.Or : PropertyFilterRuleGroupOperator.And,
-    conditions: [],
-  };
-  for (const displayValue of displayValues) {
-    for (const value of groupedRawValues[selectedValueIndex]) {
-      conditionGroup.conditions.push({
-        field,
-        operator,
-        value: { valueFormat: PropertyValueFormat.Primitive, displayValue, value },
-      });
-    }
-    selectedValueIndex++;
-  }
-  return conditionGroup;
+function isQueryRuleGroup(obj: QueryRule | QueryRuleGroup): obj is QueryRuleGroup {
+  return (obj as QueryRuleGroup).rules !== undefined;
 }
 
 function createPointComparision(point: { x: number; y: number } | { x: number; y: number; z: number }, operatorExpression: string, propertyAccessor: string) {

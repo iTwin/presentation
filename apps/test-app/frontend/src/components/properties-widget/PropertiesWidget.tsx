@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import "./PropertiesWidget.css";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
+import { PropertyDescription } from "@itwin/appui-abstract";
 import {
   ActionButtonRendererProps,
   CompositeFilterType,
@@ -28,7 +29,7 @@ import {
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { ContextMenuItem, ContextMenuItemProps, FillCentered, GlobalContextMenu, Orientation, useDisposable } from "@itwin/core-react";
 import { ToggleSwitch } from "@itwin/itwinui-react";
-import { Field } from "@itwin/presentation-common";
+import { Descriptor, Field } from "@itwin/presentation-common";
 import {
   DiagnosticsProps,
   FavoritePropertiesDataFilterer,
@@ -261,8 +262,11 @@ function PropertiesWidgetContextMenu(props: PropertiesWidgetContextMenuProps) {
     [onCloseContextMenu, imodel],
   );
 
+  const openQueryBuilderContext = useContext(propertyGridQueryBuilderContext);
+
   const asyncItems = useDebouncedAsyncValue(
     useCallback(async () => {
+      const descriptor = await dataProvider.getContentDescriptor();
       const field = await dataProvider.getFieldByPropertyDescription(record.property);
       const items: ContextMenuItemInfo[] = [];
       if (field !== undefined) {
@@ -282,8 +286,31 @@ function PropertiesWidgetContextMenu(props: PropertiesWidgetContextMenuProps) {
           });
         }
       }
+      if (descriptor && openQueryBuilderContext) {
+        items.push({
+          id: "open-query-builder",
+          onSelect: () => openQueryBuilderContext.openQueryBuilder(),
+          title: "Open Query Builder",
+          label: "Open Query Builder",
+        });
+
+        items.push({
+          id: "add-to-query-builder",
+          onSelect: () => openQueryBuilderContext.addToQueryBuilder(descriptor, record.property),
+          title: "Add To Query Builder",
+          label: "Add To Query Builder",
+        });
+
+        items.push({
+          id: "remove-from-query-builder",
+          onSelect: () => openQueryBuilderContext.removeFromQueryBuilder(descriptor, record.property),
+          title: "Remove From Query Builder",
+          label: "Remove From Query Builder",
+        });
+      }
+
       return items;
-    }, [imodel, dataProvider, record, addFavorite, removeFavorite]),
+    }, [imodel, dataProvider, record, addFavorite, removeFavorite, openQueryBuilderContext]),
   );
 
   if (!asyncItems.value || asyncItems.value.length === 0) {
@@ -363,4 +390,23 @@ class AutoExpandingPropertyDataProvider extends PresentationPropertyDataProvider
       }
     });
   }
+}
+
+export type AddToQueryBuilderCallback = (descriptor: Descriptor, property: PropertyDescription) => void;
+export type RemoveFromQueryBuilderCallback = (descriptor: Descriptor, property: PropertyDescription) => void;
+
+export interface PropertyGridQueryBuilderContextProps {
+  openQueryBuilder: () => void;
+  addToQueryBuilder: AddToQueryBuilderCallback;
+  removeFromQueryBuilder: AddToQueryBuilderCallback;
+}
+
+const propertyGridQueryBuilderContext = createContext<PropertyGridQueryBuilderContextProps>({
+  openQueryBuilder: () => {},
+  addToQueryBuilder: () => {},
+  removeFromQueryBuilder: () => {},
+});
+
+export function PropertyGridQueryBuilderContextProvider({ children, contextValue }: PropsWithChildren<{ contextValue: PropertyGridQueryBuilderContextProps }>) {
+  return <propertyGridQueryBuilderContext.Provider value={contextValue}>{children}</propertyGridQueryBuilderContext.Provider>;
 }
