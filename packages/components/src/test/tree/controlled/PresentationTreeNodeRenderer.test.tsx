@@ -171,7 +171,7 @@ describe("PresentationTreeNodeRenderer", () => {
 
     const filterClickSpy = sinon.spy();
 
-    const { queryByText } = render(
+    const { getByText } = render(
       <PresentationTreeNodeRenderer
         treeActions={treeActionsMock.object}
         node={node}
@@ -183,10 +183,9 @@ describe("PresentationTreeNodeRenderer", () => {
       />,
     );
 
-    const infoNode = await waitFor(() => queryByText("tree.filtering-needed", { exact: false }));
-    expect(infoNode).to.not.be.null;
+    const infoNode = await waitFor(() => getByText("tree.filtering-needed", { exact: false }));
 
-    fireEvent.click(infoNode!);
+    fireEvent.click(infoNode);
     expect(filterClickSpy).to.be.called;
   });
 
@@ -196,7 +195,7 @@ describe("PresentationTreeNodeRenderer", () => {
 
     const filterClickSpy = sinon.spy();
 
-    const { queryByText } = render(
+    const { getByText } = render(
       <PresentationTreeNodeRenderer
         treeActions={treeActionsMock.object}
         node={node}
@@ -208,10 +207,9 @@ describe("PresentationTreeNodeRenderer", () => {
       />,
     );
 
-    const infoNode = await waitFor(() => queryByText("tree.filtering-needed", { exact: false }));
-    expect(infoNode).to.not.be.null;
+    const infoNode = await waitFor(() => getByText("tree.filtering-needed", { exact: false }));
 
-    fireEvent.click(infoNode!);
+    fireEvent.click(infoNode);
     expect(filterClickSpy).to.not.be.called;
   });
 
