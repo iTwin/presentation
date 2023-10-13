@@ -73,6 +73,14 @@ function getPropertySourceClassInfo(field: PropertiesField | NestedContentField)
   return field.pathToPrimaryClass[field.pathToPrimaryClass.length - 1].targetClassInfo;
 }
 
+function getPropertyClassInfo(field: PropertiesField): ClassInfo {
+  if (field.parent && field.parent.isNestedContentField()) {
+    return field.parent.contentClassInfo;
+  }
+
+  return field.properties[0].property.classInfo;
+}
+
 function createPresentationInstanceFilterConditionGroup(descriptor: Descriptor, group: PropertyFilterRuleGroup): PresentationInstanceFilter | undefined {
   const conditions = new Array<PresentationInstanceFilter>();
   for (const rule of group.rules) {
@@ -169,7 +177,7 @@ function createPropertyInfoFromPropertiesField(field: PropertiesField): Instance
     sourceClassId: getPropertySourceClassInfo(field).id,
     propertyDescription,
     categoryLabel: categoryInfo.label,
-    className: field.properties[0].property.classInfo.name,
+    className: getPropertyClassInfo(field).name,
   };
 }
 

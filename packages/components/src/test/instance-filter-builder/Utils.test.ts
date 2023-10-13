@@ -119,6 +119,28 @@ describe("createInstanceFilterPropertyInfos", () => {
     const input = createInstanceFilterPropertyInfos(descriptor);
     expect(input).to.matchSnapshot();
   });
+
+  it("creates property info with nested field content class name", () => {
+    const rootCategory = createTestCategoryDescription({ name: "root", label: "Root Category" });
+    const propertyField = createTestPropertiesContentField({
+      properties: [{ property: { classInfo: createTestECClassInfo({ name: "Schema:PropClass " }), name: "prop1", type: "string" } }],
+      category: rootCategory,
+    });
+
+    const descriptor = createTestContentDescriptor({
+      categories: [rootCategory],
+      fields: [
+        createTestNestedContentField({
+          nestedFields: [propertyField],
+          category: rootCategory,
+          contentClassInfo: createTestECClassInfo({ name: "Schema:RelatedClass" }),
+        }),
+      ],
+    });
+
+    const input = createInstanceFilterPropertyInfos(descriptor);
+    expect(input[0].className).to.be.eq("Schema:RelatedClass");
+  });
 });
 
 describe("createPresentationInstanceFilter", () => {
