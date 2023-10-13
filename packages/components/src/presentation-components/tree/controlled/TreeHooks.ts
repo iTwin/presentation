@@ -79,7 +79,6 @@ export function usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderP
       rulesetRegistration: new RulesetRegistrationHelper(dataProviderProps.ruleset),
       dataProvider: new PresentationTreeDataProvider({
         ...dataProviderProps,
-        hierarchyLevelSizeLimit: 5,
         ruleset: typeof dataProviderProps.ruleset === "string" ? dataProviderProps.ruleset : /* istanbul ignore next */ dataProviderProps.ruleset.id,
       }),
     }),

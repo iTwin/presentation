@@ -128,8 +128,8 @@ function MatchingInstancesCount({ filter, dataProvider, parentKey }: MatchingIns
             <Text isMuted className="info-tree-node-item">
               {`${translate("tree.filtering-needed")}. ${
                 requestOptions.sizeLimit === undefined
-                  ? translate("tree.filter-dialog.results-limit-exceeded.limit-unknown")
-                  : `${translate("tree.filter-dialog.results-limit-exceeded.limit-known")} ${requestOptions.sizeLimit}.`
+                  ? translate("tree.filter-dialog.result-limit-exceeded.limit-unknown")
+                  : `${translate("tree.filter-dialog.result-limit-exceeded.limit-known")} ${requestOptions.sizeLimit}.`
               } `}
             </Text>
           );

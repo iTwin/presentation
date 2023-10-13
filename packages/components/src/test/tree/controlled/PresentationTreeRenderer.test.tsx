@@ -259,7 +259,7 @@ describe("PresentationTreeRenderer", () => {
     await openFilterDialog(result);
 
     await waitFor(() => expect(presentationManager.getNodesCount).to.be.calledOnce);
-    expect(queryByText(`${translate("tree.filter-dialog.results-limit-exceeded.limit-unknown")}`, { exact: false })).to.not.be.null;
+    expect(queryByText(translate("tree.filter-dialog.results-limit-exceeded.limit-unknown"), { exact: false })).to.not.be.null;
   });
 
   it("renders `Too many instances match filter` message if results set too large error is thrown", async () => {
@@ -296,7 +296,7 @@ describe("PresentationTreeRenderer", () => {
     await openFilterDialog(result);
 
     await waitFor(() => expect(presentationManager.getNodesCount).to.be.calledOnce);
-    expect(queryByText(`${translate("tree.filter-dialog.results-limit-exceeded.limit-known")}`, { exact: false })).to.not.be.null;
+    expect(queryByText(translate("tree.filter-dialog.results-limit-exceeded.limit-known"), { exact: false })).to.not.be.null;
   });
 
   it("does not render result if unknown error is encountered", async () => {

@@ -25,7 +25,6 @@ export function createInfoTreeNodeItem(item?: Partial<PresentationInfoTreeNodeIt
     message: item?.message ?? "",
     isSelectionDisabled: true,
     children: undefined,
-    /** Type of item message */
     type: item?.type,
   };
 }
