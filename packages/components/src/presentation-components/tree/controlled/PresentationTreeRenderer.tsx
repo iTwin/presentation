@@ -117,15 +117,20 @@ function MatchingInstancesCount({ filter, dataProvider, parentKey }: MatchingIns
   const { value, inProgress } = useDebouncedAsyncValue(
     useCallback(async () => {
       const instanceFilter = await convertToInstanceFilterDefinition(filter.filter, dataProvider.imodel);
+      const requestOptions = dataProvider.createRequestOptions(parentKey, instanceFilter);
 
       try {
-        const count = await Presentation.presentation.getNodesCount(dataProvider.createRequestOptions(parentKey, instanceFilter));
+        const count = await Presentation.presentation.getNodesCount(requestOptions);
         return <>{`${translate("tree.filter-dialog.results-count")}: ${count}`}</>;
       } catch (e) {
         if (e instanceof PresentationError && e.errorNumber === PresentationStatus.ResultSetTooLarge) {
           return (
             <Text isMuted className="info-tree-node-item">
-              {`${translate("tree.filter-dialog.results-count-too-large")}. ${translate("tree.filtering-needed")}`}
+              {`${translate("tree.filtering-needed")}. ${
+                requestOptions.sizeLimit === undefined
+                  ? translate("tree.filter-dialog.results-limit-exceeded.limit-unknown")
+                  : `${translate("tree.filter-dialog.results-limit-exceeded.limit-known")} ${requestOptions.sizeLimit}.`
+              } `}
             </Text>
           );
         }
