@@ -96,6 +96,16 @@ export default function (): Configuration & { devServer?: any } {
       historyApiFallback: true,
       hot: true,
       port: 3000,
+      client: {
+        overlay: {
+          runtimeErrors: (error: Error) => {
+            if (error.message.startsWith("ResizeObserver")) {
+              return false;
+            }
+            return true;
+          },
+        },
+      },
     },
     devtool: "cheap-module-source-map",
   };
