@@ -32,7 +32,7 @@ import { createHiliteSetProvider, enableUnifiedSelectionSyncWithIModel, HiliteSe
 import { UnifiedSelectionContextProvider } from "@itwin/unified-selection-react";
 import { MyAppFrontend, MyAppSettings } from "../../api/MyAppFrontend";
 import { IModelSelector } from "../imodel-selector/IModelSelector";
-import { PropertiesWidget } from "../properties-widget/PropertiesWidget";
+import { ExtendedPropertyGridWidget } from "../properties-widget/ExtendedPropertiesWidget";
 import { RulesetSelector } from "../ruleset-selector/RulesetSelector";
 import { TableWidget } from "../table-widget/TableWidget";
 import { MultiDataSourceTree } from "../tree-widget/MultiDataSourceTree";
@@ -271,7 +271,7 @@ function IModelComponents(props: IModelComponentsProps) {
             {
               id: "properties",
               label: "Properties widget",
-              content: <PropertiesWidget imodel={imodel} rulesetId={rulesetId} />,
+              content: <ExtendedPropertyGridWidget imodel={imodel} rulesetId={rulesetId} />,
               defaultState: WidgetState.Open,
               canPopout: true,
             },
