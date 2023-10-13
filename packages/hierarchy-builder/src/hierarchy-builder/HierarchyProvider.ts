@@ -6,7 +6,7 @@
 
 import { catchError, concatAll, concatMap, defaultIfEmpty, filter, from, map, mergeMap, Observable, ObservableInput, of, shareReplay, take, tap } from "rxjs";
 import { HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
-import { HierarchyNode, HierarchyNodeIdentifiersPath, ParsedHierarchyNode } from "./HierarchyNode";
+import { HierarchyNode, HierarchyNodeIdentifiersPath, ParsedHierarchyNode, ProcessedHierarchyNode } from "./HierarchyNode";
 import { getClass } from "./internal/Common";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
 import { createClassGroupingOperator } from "./internal/operators/ClassGrouping";
@@ -61,7 +61,7 @@ export class HierarchyProvider {
   private _queryReader: TreeQueryResultsReader;
   private _valuesFormatter: IPrimitiveValueFormatter;
   private _scheduler: QueryScheduler<ParsedHierarchyNode[]>;
-  private _directNodesCache: Map<string, Observable<HierarchyNode>>;
+  private _directNodesCache: Map<string, Observable<ProcessedHierarchyNode>>;
 
   public constructor(props: HierarchyProviderProps) {
     this._metadataProvider = props.metadataProvider;
@@ -83,7 +83,7 @@ export class HierarchyProvider {
     this._directNodesCache = new Map();
   }
 
-  private loadDirectNodes(parentNode: HierarchyNode | undefined): Observable<HierarchyNode> {
+  private loadDirectNodes(parentNode: HierarchyNode | undefined): Observable<ProcessedHierarchyNode> {
     const enableLogging = false;
     // stream hierarchy level definitions in order
     const definitions = from(this._hierarchyFactory.defineHierarchyLevel(parentNode)).pipe(
@@ -108,7 +108,7 @@ export class HierarchyProvider {
     );
   }
 
-  private ensureDirectChildren(parentNode: HierarchyNode | undefined): Observable<HierarchyNode> {
+  private ensureDirectChildren(parentNode: HierarchyNode | undefined): Observable<ProcessedHierarchyNode> {
     const enableLogging = false;
     const key = parentNode ? `${JSON.stringify(parentNode.key)}+${JSON.stringify(parentNode.extendedData)}` : "";
 
@@ -124,9 +124,9 @@ export class HierarchyProvider {
     return obs;
   }
 
-  private getNodesObservable(parentNode: HierarchyNode | undefined): Observable<HierarchyNode> {
+  private getNodesObservable(parentNode: HierarchyNode | undefined): Observable<ProcessedHierarchyNode> {
     if (parentNode && Array.isArray(parentNode.children)) {
-      return from(parentNode.children);
+      return from(parentNode.children as ProcessedHierarchyNode[]);
     }
 
     const directChildren = this.ensureDirectChildren(parentNode);
@@ -202,12 +202,11 @@ export class HierarchyProvider {
 }
 
 function preProcessNodes(hierarchyFactory: IHierarchyLevelDefinitionsFactory) {
-  return (nodes: Observable<HierarchyNode>): Observable<HierarchyNode> => {
-    return nodes.pipe(
+  return (nodes: Observable<ProcessedHierarchyNode>) =>
+    nodes.pipe(
       concatMap(async (n) => (hierarchyFactory.preProcessNode ? hierarchyFactory.preProcessNode(n) : n)),
-      filter((n): n is HierarchyNode => !!n),
+      filter((n): n is ProcessedHierarchyNode => !!n),
     );
-  };
 }
 
 async function applyLabelsFormatting<TNode extends { label: string | ConcatenatedValue }>(

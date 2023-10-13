@@ -402,41 +402,35 @@ export interface HierarchyNode<TLabel = string> {
     key: HierarchyNodeKey;
     // (undocumented)
     label: TLabel;
-    // (undocumented)
-    params?: HierarchyNodeHandlingParams;
 }
 
 // @beta (undocumented)
 export namespace HierarchyNode {
-    export function isClassGroupingNode<TNode extends HierarchyNode>(node: TNode): node is TNode & {
+    export function isClassGroupingNode<TNode extends {
+        key: HierarchyNodeKey;
+    }>(node: TNode): node is TNode & {
         key: ClassGroupingNodeKey;
     };
-    export function isCustom<TNode extends HierarchyNode>(node: TNode): node is TNode & {
+    export function isCustom<TNode extends {
+        key: HierarchyNodeKey;
+    }>(node: TNode): node is TNode & {
         key: string;
     };
-    export function isInstancesNode<TNode extends HierarchyNode>(node: TNode): node is TNode & {
+    export function isInstancesNode<TNode extends {
+        key: HierarchyNodeKey;
+    }>(node: TNode): node is TNode & {
         key: InstancesNodeKey;
     };
-    export function isLabelGroupingNode<TNode extends HierarchyNode>(node: TNode): node is TNode & {
+    export function isLabelGroupingNode<TNode extends {
+        key: HierarchyNodeKey;
+    }>(node: TNode): node is TNode & {
         key: LabelGroupingNodeKey;
     };
-    export function isStandard<TNode extends HierarchyNode>(node: TNode): node is TNode & {
+    export function isStandard<TNode extends {
+        key: HierarchyNodeKey;
+    }>(node: TNode): node is TNode & {
         key: StandardHierarchyNodeKey;
     };
-}
-
-// @beta (undocumented)
-export interface HierarchyNodeHandlingParams {
-    // (undocumented)
-    groupByClass?: boolean;
-    // (undocumented)
-    groupByLabel?: boolean;
-    // (undocumented)
-    hideIfNoChildren?: boolean;
-    // (undocumented)
-    hideInHierarchy?: boolean;
-    // (undocumented)
-    mergeByLabelId?: string;
 }
 
 // @beta
@@ -466,6 +460,20 @@ export namespace HierarchyNodeKey {
     export function isInstances(key: HierarchyNodeKey): key is InstancesNodeKey;
     export function isLabelGrouping(key: HierarchyNodeKey): key is LabelGroupingNodeKey;
     export function isStandard(key: HierarchyNodeKey): key is StandardHierarchyNodeKey;
+}
+
+// @beta
+export interface HierarchyNodeProcessingParams {
+    // (undocumented)
+    groupByClass?: boolean;
+    // (undocumented)
+    groupByLabel?: boolean;
+    // (undocumented)
+    hideIfNoChildren?: boolean;
+    // (undocumented)
+    hideInHierarchy?: boolean;
+    // (undocumented)
+    mergeByLabelId?: string;
 }
 
 // @beta
@@ -543,10 +551,10 @@ export type INodeParser = (row: {
 }) => ParsedHierarchyNode;
 
 // @beta
-export type INodePostProcessor = (node: HierarchyNode) => HierarchyNode;
+export type INodePostProcessor = (node: ProcessedHierarchyNode) => ProcessedHierarchyNode;
 
 // @beta
-export type INodePreProcessor = (node: HierarchyNode) => Promise<HierarchyNode | undefined>;
+export type INodePreProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode | undefined>;
 
 // @beta
 export interface InstanceKey {
@@ -638,7 +646,7 @@ export interface NodeSelectClauseProps {
 }
 
 // @beta
-export type ParsedHierarchyNode = HierarchyNode<string | ConcatenatedValue>;
+export type ParsedHierarchyNode = ProcessedHierarchyNode<string | ConcatenatedValue>;
 
 // @beta
 export function parseFullClassName(fullClassName: string): {
@@ -684,6 +692,11 @@ export interface PrimitiveValueSelectorProps {
 
 // @beta
 export type PrimitiveValueType = "Id" | Exclude<ECPrimitiveType, "Binary" | "IGeometry">;
+
+// @beta
+export type ProcessedHierarchyNode<TLabel = string> = HierarchyNode<TLabel> & {
+    processingParams?: HierarchyNodeProcessingParams;
+};
 
 // @beta
 export interface PropertyValue {

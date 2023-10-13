@@ -5,7 +5,7 @@
 
 import { merge, Observable } from "rxjs";
 import { assert } from "@itwin/core-bentley";
-import { HierarchyNode, HierarchyNodeHandlingParams, HierarchyNodeKey } from "../HierarchyNode";
+import { HierarchyNodeKey, HierarchyNodeProcessingParams, ProcessedHierarchyNode } from "../HierarchyNode";
 import { ECClass, ECSchema, IMetadataProvider, parseFullClassName } from "../Metadata";
 
 /** @internal */
@@ -37,9 +37,9 @@ export async function getClass(metadata: IMetadataProvider, fullClassName: strin
 }
 
 function mergeNodeHandlingParams(
-  lhs: HierarchyNodeHandlingParams | undefined,
-  rhs: HierarchyNodeHandlingParams | undefined,
-): HierarchyNodeHandlingParams | undefined {
+  lhs: HierarchyNodeProcessingParams | undefined,
+  rhs: HierarchyNodeProcessingParams | undefined,
+): HierarchyNodeProcessingParams | undefined {
   if (!lhs && !rhs) {
     return undefined;
   }
@@ -76,8 +76,8 @@ function mergeNodeKeys(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): HierarchyN
 }
 
 /** @internal */
-export function mergeNodes(lhs: HierarchyNode, rhs: HierarchyNode): HierarchyNode {
-  const mergedParams = mergeNodeHandlingParams(lhs.params, rhs.params);
+export function mergeNodes(lhs: ProcessedHierarchyNode, rhs: ProcessedHierarchyNode): ProcessedHierarchyNode {
+  const mergedProcessingParams = mergeNodeHandlingParams(lhs.processingParams, rhs.processingParams);
   return {
     label: lhs.label,
     key: mergeNodeKeys(lhs.key, rhs.key),
@@ -89,9 +89,9 @@ export function mergeNodes(lhs: HierarchyNode, rhs: HierarchyNode): HierarchyNod
         : lhs.children === false && rhs.children === false
         ? false
         : undefined,
+    ...(mergedProcessingParams ? { processingParams: mergedProcessingParams } : undefined),
     ...(lhs.autoExpand || rhs.autoExpand ? { autoExpand: lhs.autoExpand || rhs.autoExpand } : undefined),
     ...(lhs.extendedData || rhs.extendedData ? { extendedData: { ...lhs.extendedData, ...rhs.extendedData } } : undefined),
-    ...(mergedParams ? { params: mergedParams } : undefined),
   };
 }
 
@@ -101,14 +101,19 @@ export function hasChildren<TNode extends { children?: boolean | Array<unknown> 
 }
 
 /** @internal */
-export function mergeNodesObs(lhs: HierarchyNode, rhs: HierarchyNode, directNodesCache: Map<string, Observable<HierarchyNode>>) {
+export function mergeNodesObs(lhs: ProcessedHierarchyNode, rhs: ProcessedHierarchyNode, directNodesCache: Map<string, Observable<ProcessedHierarchyNode>>) {
   const merged = mergeNodes(lhs, rhs);
   mergeDirectNodeObservables(lhs, rhs, merged, directNodesCache);
   return merged;
 }
 
 /** @internal */
-export function mergeDirectNodeObservables(a: HierarchyNode, b: HierarchyNode, m: HierarchyNode, cache: Map<string, Observable<HierarchyNode>>) {
+export function mergeDirectNodeObservables(
+  a: ProcessedHierarchyNode,
+  b: ProcessedHierarchyNode,
+  m: ProcessedHierarchyNode,
+  cache: Map<string, Observable<ProcessedHierarchyNode>>,
+) {
   const cachedA = cache.get(JSON.stringify(a.key));
   if (!cachedA) {
     return;

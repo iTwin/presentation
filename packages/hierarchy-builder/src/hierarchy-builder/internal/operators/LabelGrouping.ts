@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { from, mergeMap, Observable, tap, toArray } from "rxjs";
-import { HierarchyNode } from "../../HierarchyNode";
+import { HierarchyNode, ProcessedHierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
 import { createOperatorLoggingNamespace } from "../Common";
 
@@ -14,7 +14,7 @@ export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
 
 /** @internal */
 export function createLabelGroupingOperator() {
-  return function (nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
+  return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
     return nodes.pipe(
       log((n) => `in: ${n.label}`),
       // need all nodes in one place to group them
@@ -29,12 +29,12 @@ export function createLabelGroupingOperator() {
   };
 }
 
-function createLabelGroups(nodes: HierarchyNode[]): HierarchyNode[] {
+function createLabelGroups(nodes: ProcessedHierarchyNode[]): ProcessedHierarchyNode[] {
   if (nodes.length === 0) {
     return nodes;
   }
   const [firstNode, firstHasChanged] = createLabelGroupsIfClassGroupingNode(nodes[0]);
-  const outputNodes: HierarchyNode[] = [firstNode];
+  const outputNodes: ProcessedHierarchyNode[] = [firstNode];
   let hasChanged = firstHasChanged;
 
   for (let i = 1; i < nodes.length; ++i) {
@@ -44,14 +44,14 @@ function createLabelGroups(nodes: HierarchyNode[]): HierarchyNode[] {
     const lastOutputNode = outputNodes[outputNodes.length - 1];
     if (currentNode.label === lastOutputNode.label) {
       if (HierarchyNode.isLabelGroupingNode(lastOutputNode) && Array.isArray(lastOutputNode.children)) {
-        if (currentNode.params?.groupByLabel) {
+        if (currentNode.processingParams?.groupByLabel) {
           lastOutputNode.children.push(currentNode);
         } else {
           outputNodes.splice(outputNodes.length - 1, 0, currentNode);
         }
         continue;
-      } else if (lastOutputNode.params?.groupByLabel) {
-        if (currentNode.params?.groupByLabel) {
+      } else if (lastOutputNode.processingParams?.groupByLabel) {
+        if (currentNode.processingParams?.groupByLabel) {
           outputNodes[outputNodes.length - 1] = {
             label: currentNode.label,
             key: {
@@ -76,11 +76,11 @@ function createLabelGroups(nodes: HierarchyNode[]): HierarchyNode[] {
   return outputNodes;
 }
 
-function createLabelGroupsIfClassGroupingNode(node: HierarchyNode): [node: HierarchyNode, hasChanged: boolean] {
+function createLabelGroupsIfClassGroupingNode(node: ProcessedHierarchyNode): [node: ProcessedHierarchyNode, hasChanged: boolean] {
   if (HierarchyNode.isClassGroupingNode(node) && Array.isArray(node.children)) {
-    const labelGroupings = createLabelGroups(node.children);
+    const labelGroupings = createLabelGroups(node.children as ProcessedHierarchyNode[]);
     if (labelGroupings.length !== node.children.length) {
-      const newClassGroupingNode: HierarchyNode = {
+      const newClassGroupingNode: ProcessedHierarchyNode = {
         ...node,
         children: labelGroupings,
       };

@@ -13,7 +13,7 @@ import {
   INodePreProcessor,
   InstanceNodesQueryDefinition,
 } from "../HierarchyDefinition";
-import { HierarchyNode, HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "../HierarchyNode";
+import { HierarchyNode, HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath, ProcessedHierarchyNode } from "../HierarchyNode";
 import { IMetadataProvider } from "../Metadata";
 import { ConcatenatedValue } from "../values/ConcatenatedValue";
 import { InstanceKey } from "../values/Values";
@@ -28,9 +28,9 @@ export interface FilteringQueryBuilderProps {
 }
 
 /** @internal */
-export interface FilteredHierarchyNode<TLabel = string> extends HierarchyNode<TLabel> {
+export type FilteredHierarchyNode<TNode = ProcessedHierarchyNode> = TNode & {
   filteredChildrenIdentifierPaths?: HierarchyNodeIdentifiersPath[];
-}
+};
 
 /** @internal */
 export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLevelDefinitionsFactory {
@@ -47,7 +47,7 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
   public get preProcessNode(): INodePreProcessor {
     return async (node: FilteredHierarchyNode) => {
       const processedNode = this._source.preProcessNode ? await this._source.preProcessNode(node) : node;
-      if (processedNode?.params?.hideInHierarchy && node.filteredChildrenIdentifierPaths?.length === 0) {
+      if (processedNode?.processingParams?.hideInHierarchy && node.filteredChildrenIdentifierPaths?.length === 0) {
         // an existing empty `node.filteredChildrenIdentifierPaths` means the node is our filter target - we
         // want to hide such nodes if they have `hideInHierarchy` param
         return undefined;
@@ -72,7 +72,7 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
   }
 
   public get parseNode(): INodeParser {
-    return (row: { [columnName: string]: any }): FilteredHierarchyNode<string | ConcatenatedValue> => {
+    return (row: { [columnName: string]: any }): FilteredHierarchyNode<ProcessedHierarchyNode<string | ConcatenatedValue>> => {
       const parsedFilteredChildrenIdentifierPaths = row[ECSQL_COLUMN_NAME_FilteredChildrenPaths]
         ? JSON.parse(row[ECSQL_COLUMN_NAME_FilteredChildrenPaths])
         : undefined;

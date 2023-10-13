@@ -7,7 +7,7 @@ import { expect } from "chai";
 import { from, Observable } from "rxjs";
 import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
-import { HierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
+import { HierarchyNode, ProcessedHierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
 import { createHideNodesInHierarchyOperator, LOGGING_NAMESPACE } from "../../../hierarchy-builder/internal/operators/HideNodesInHierarchy";
 import { createTestInstanceKey, createTestNode, getObservableResult, setupLogging } from "../../Utils";
 
@@ -28,12 +28,12 @@ describe("HideNodesInHierarchyOperator", () => {
   });
 
   it("returns the first hidden node if it has children and operator is created with `stopOnFirstChild = true`", async () => {
-    const nodes: HierarchyNode[] = [
+    const nodes: ProcessedHierarchyNode[] = [
       {
         key: "custom1",
         label: "custom1",
         children: true,
-        params: {
+        processingParams: {
           hideInHierarchy: true,
         },
       },
@@ -41,7 +41,7 @@ describe("HideNodesInHierarchyOperator", () => {
         key: "custom2",
         label: "custom2",
         children: true,
-        params: {
+        processingParams: {
           hideInHierarchy: true,
         },
       },
@@ -51,12 +51,12 @@ describe("HideNodesInHierarchyOperator", () => {
   });
 
   it("returns the first hidden node if it undetermined children evaluating to `true` and operator is created with `stopOnFirstChild = true`", async () => {
-    const nodes: HierarchyNode[] = [
+    const nodes: ProcessedHierarchyNode[] = [
       {
         key: "custom1",
         label: "custom1",
         children: undefined,
-        params: {
+        processingParams: {
           hideInHierarchy: true,
         },
       },
@@ -64,7 +64,7 @@ describe("HideNodesInHierarchyOperator", () => {
         key: "custom2",
         label: "custom2",
         children: undefined,
-        params: {
+        processingParams: {
           hideInHierarchy: true,
         },
       },
@@ -85,7 +85,7 @@ describe("HideNodesInHierarchyOperator", () => {
         {
           ...createTestNode(),
           children: [],
-          params: {
+          processingParams: {
             hideInHierarchy: true,
           },
         },
@@ -95,7 +95,7 @@ describe("HideNodesInHierarchyOperator", () => {
     });
 
     it("hides nodes with undetermined children evaluating to empty array", async () => {
-      const nodes: HierarchyNode[] = [
+      const nodes: ProcessedHierarchyNode[] = [
         {
           key: {
             type: "instances",
@@ -103,7 +103,7 @@ describe("HideNodesInHierarchyOperator", () => {
           },
           label: "test",
           children: undefined,
-          params: {
+          processingParams: {
             hideInHierarchy: true,
           },
         },
@@ -114,7 +114,7 @@ describe("HideNodesInHierarchyOperator", () => {
     });
 
     it("hides nodes with undetermined children evaluating to children array", async () => {
-      const hiddenNodes: HierarchyNode[] = [
+      const hiddenNodes: ProcessedHierarchyNode[] = [
         {
           key: {
             type: "instances",
@@ -122,12 +122,12 @@ describe("HideNodesInHierarchyOperator", () => {
           },
           label: "hidden",
           children: undefined,
-          params: {
+          processingParams: {
             hideInHierarchy: true,
           },
         },
       ];
-      const childNodes: HierarchyNode[] = [
+      const childNodes: ProcessedHierarchyNode[] = [
         {
           key: {
             type: "instances",
@@ -143,7 +143,7 @@ describe("HideNodesInHierarchyOperator", () => {
     });
 
     it("merges similar hidden nodes when requesting children", async () => {
-      const hiddenNodes: HierarchyNode[] = [
+      const hiddenNodes: ProcessedHierarchyNode[] = [
         {
           key: {
             type: "instances",
@@ -151,7 +151,7 @@ describe("HideNodesInHierarchyOperator", () => {
           },
           label: "a",
           children: undefined,
-          params: {
+          processingParams: {
             hideInHierarchy: true,
           },
         },
@@ -162,7 +162,7 @@ describe("HideNodesInHierarchyOperator", () => {
           },
           label: "b",
           children: undefined,
-          params: {
+          processingParams: {
             hideInHierarchy: true,
           },
         },
@@ -176,7 +176,7 @@ describe("HideNodesInHierarchyOperator", () => {
         },
         label: "a",
         children: undefined,
-        params: {
+        processingParams: {
           hideInHierarchy: true,
         },
       });
@@ -186,14 +186,14 @@ describe("HideNodesInHierarchyOperator", () => {
 
   describe("class grouping nodes", () => {
     it("hides nodes with determined children", async () => {
-      const nodes: HierarchyNode[] = [
+      const nodes: ProcessedHierarchyNode[] = [
         {
           key: {
             type: "class-grouping",
             class: { name: "TestClass", label: "Test class" },
           },
           label: "Test class",
-          params: {
+          processingParams: {
             hideInHierarchy: true,
           },
           children: [
@@ -213,20 +213,20 @@ describe("HideNodesInHierarchyOperator", () => {
     });
 
     it("hides nodes with undetermined children", async () => {
-      const nodes: HierarchyNode[] = [
+      const nodes: ProcessedHierarchyNode[] = [
         {
           key: {
             type: "class-grouping",
             class: { name: "TestClass", label: "Test class" },
           },
           label: "Test class",
-          params: {
+          processingParams: {
             hideInHierarchy: true,
           },
           children: undefined,
         },
       ];
-      const childNodes: HierarchyNode[] = [
+      const childNodes: ProcessedHierarchyNode[] = [
         createTestNode({
           label: "a",
           key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] },
@@ -242,7 +242,7 @@ describe("HideNodesInHierarchyOperator", () => {
     });
 
     it("merges similar hidden nodes when requesting children", async () => {
-      const hiddenNodes: HierarchyNode[] = [
+      const hiddenNodes: ProcessedHierarchyNode[] = [
         {
           key: {
             type: "class-grouping",
@@ -250,7 +250,7 @@ describe("HideNodesInHierarchyOperator", () => {
           },
           label: "a",
           children: undefined,
-          params: {
+          processingParams: {
             hideInHierarchy: true,
           },
         },
@@ -261,7 +261,7 @@ describe("HideNodesInHierarchyOperator", () => {
           },
           label: "b",
           children: undefined,
-          params: {
+          processingParams: {
             hideInHierarchy: true,
           },
         },
@@ -275,7 +275,7 @@ describe("HideNodesInHierarchyOperator", () => {
         },
         label: "a",
         children: undefined,
-        params: {
+        processingParams: {
           hideInHierarchy: true,
         },
       });
@@ -285,14 +285,14 @@ describe("HideNodesInHierarchyOperator", () => {
 
   describe("label grouping nodes", () => {
     it("hides nodes with determined children", async () => {
-      const nodes: HierarchyNode[] = [
+      const nodes: ProcessedHierarchyNode[] = [
         {
           key: {
             type: "label-grouping",
             label: "Test class",
           },
           label: "Test class",
-          params: {
+          processingParams: {
             hideInHierarchy: true,
           },
           children: [
@@ -312,20 +312,20 @@ describe("HideNodesInHierarchyOperator", () => {
     });
 
     it("hides nodes with undetermined children", async () => {
-      const nodes: HierarchyNode[] = [
+      const nodes: ProcessedHierarchyNode[] = [
         {
           key: {
             type: "label-grouping",
             label: "Test class",
           },
           label: "Test class",
-          params: {
+          processingParams: {
             hideInHierarchy: true,
           },
           children: undefined,
         },
       ];
-      const childNodes: HierarchyNode[] = [
+      const childNodes: ProcessedHierarchyNode[] = [
         createTestNode({
           label: "a",
           key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] },
@@ -341,7 +341,7 @@ describe("HideNodesInHierarchyOperator", () => {
     });
 
     it("merges similar hidden nodes when requesting children", async () => {
-      const hiddenNodes: HierarchyNode[] = [
+      const hiddenNodes: ProcessedHierarchyNode[] = [
         {
           key: {
             type: "label-grouping",
@@ -349,7 +349,7 @@ describe("HideNodesInHierarchyOperator", () => {
           },
           label: "1",
           children: undefined,
-          params: {
+          processingParams: {
             hideInHierarchy: true,
           },
         },
@@ -360,7 +360,7 @@ describe("HideNodesInHierarchyOperator", () => {
           },
           label: "2",
           children: undefined,
-          params: {
+          processingParams: {
             hideInHierarchy: true,
           },
         },
@@ -374,7 +374,7 @@ describe("HideNodesInHierarchyOperator", () => {
         },
         label: "1",
         children: undefined,
-        params: {
+        processingParams: {
           hideInHierarchy: true,
         },
       });
@@ -384,17 +384,17 @@ describe("HideNodesInHierarchyOperator", () => {
 
   describe("custom nodes", () => {
     it("hides nodes", async () => {
-      const hiddenNodes: HierarchyNode[] = [
+      const hiddenNodes: ProcessedHierarchyNode[] = [
         {
           key: "custom",
           label: "hidden",
           children: undefined,
-          params: {
+          processingParams: {
             hideInHierarchy: true,
           },
         },
       ];
-      const childNodes: HierarchyNode[] = [
+      const childNodes: ProcessedHierarchyNode[] = [
         {
           key: "custom",
           label: "visible",
@@ -407,12 +407,12 @@ describe("HideNodesInHierarchyOperator", () => {
     });
 
     it("merges similar hidden nodes when requesting children", async () => {
-      const hiddenNodes: HierarchyNode[] = [
+      const hiddenNodes: ProcessedHierarchyNode[] = [
         {
           key: "custom",
           label: "a",
           children: undefined,
-          params: {
+          processingParams: {
             hideInHierarchy: true,
           },
         },
@@ -420,7 +420,7 @@ describe("HideNodesInHierarchyOperator", () => {
           key: "custom",
           label: "b",
           children: undefined,
-          params: {
+          processingParams: {
             hideInHierarchy: true,
           },
         },
@@ -431,7 +431,7 @@ describe("HideNodesInHierarchyOperator", () => {
         key: "custom",
         label: "a",
         children: undefined,
-        params: {
+        processingParams: {
           hideInHierarchy: true,
         },
       });

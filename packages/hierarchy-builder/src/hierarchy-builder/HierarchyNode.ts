@@ -73,15 +73,6 @@ export namespace HierarchyNodeKey {
   }
 }
 
-/** @beta */
-export interface HierarchyNodeHandlingParams {
-  hideIfNoChildren?: boolean;
-  hideInHierarchy?: boolean;
-  groupByClass?: boolean;
-  groupByLabel?: boolean;
-  mergeByLabelId?: string;
-}
-
 /**
  * A data structure that represents a single hierarchy node.
  * @beta
@@ -92,40 +83,60 @@ export interface HierarchyNode<TLabel = string> {
   extendedData?: { [key: string]: any };
   children: undefined | boolean | Array<HierarchyNode>;
   autoExpand?: boolean;
-  params?: HierarchyNodeHandlingParams;
 }
 
 /** @beta */
 export namespace HierarchyNode {
   /** Checks whether the given node is a custom node */
-  export function isCustom<TNode extends HierarchyNode>(node: TNode): node is TNode & { key: string } {
+  export function isCustom<TNode extends { key: HierarchyNodeKey }>(node: TNode): node is TNode & { key: string } {
     return HierarchyNodeKey.isCustom(node.key);
   }
   /** Checks whether the given node is a standard (iModel content based) node */
-  export function isStandard<TNode extends HierarchyNode>(node: TNode): node is TNode & { key: StandardHierarchyNodeKey } {
+  export function isStandard<TNode extends { key: HierarchyNodeKey }>(node: TNode): node is TNode & { key: StandardHierarchyNodeKey } {
     return HierarchyNodeKey.isStandard(node.key);
   }
   /** Checks whether the given node is an ECInstances-based node */
-  export function isInstancesNode<TNode extends HierarchyNode>(node: TNode): node is TNode & { key: InstancesNodeKey } {
+  export function isInstancesNode<TNode extends { key: HierarchyNodeKey }>(node: TNode): node is TNode & { key: InstancesNodeKey } {
     return HierarchyNodeKey.isInstances(node.key);
   }
   /** Checks whether the given node is a class grouping node */
-  export function isClassGroupingNode<TNode extends HierarchyNode>(node: TNode): node is TNode & { key: ClassGroupingNodeKey } {
+  export function isClassGroupingNode<TNode extends { key: HierarchyNodeKey }>(node: TNode): node is TNode & { key: ClassGroupingNodeKey } {
     return HierarchyNodeKey.isClassGrouping(node.key);
   }
   /** Checks whether the given node is a label grouping node */
-  export function isLabelGroupingNode<TNode extends HierarchyNode>(node: TNode): node is TNode & { key: LabelGroupingNodeKey } {
+  export function isLabelGroupingNode<TNode extends { key: HierarchyNodeKey }>(node: TNode): node is TNode & { key: LabelGroupingNodeKey } {
     return HierarchyNodeKey.isLabelGrouping(node.key);
   }
 }
 
 /**
- * A [[HierarchyNode]] that possibly has an unformatted label in a form of [[ConcatenatedValue]]. Generally this is
+ * Parameters for hierarchy processor to know how to process each node.
+ * @beta
+ */
+export interface HierarchyNodeProcessingParams {
+  hideIfNoChildren?: boolean;
+  hideInHierarchy?: boolean;
+  groupByClass?: boolean;
+  groupByLabel?: boolean;
+  mergeByLabelId?: string;
+}
+
+/**
+ * A [[HierarchyNode]] that may have processing parameters defining whether it should be hidden under some conditions,
+ * how it should be grouped, sorted, etc.
+ * @beta
+ */
+export type ProcessedHierarchyNode<TLabel = string> = HierarchyNode<TLabel> & {
+  processingParams?: HierarchyNodeProcessingParams;
+};
+
+/**
+ * A [[ProcessedHierarchyNode]] that possibly has an unformatted label in a form of [[ConcatenatedValue]]. Generally this is
  * returned when the node is just parsed from query results.
  *
  * @beta
  */
-export type ParsedHierarchyNode = HierarchyNode<string | ConcatenatedValue>;
+export type ParsedHierarchyNode = ProcessedHierarchyNode<string | ConcatenatedValue>;
 
 /**
  * An identifier that can be used to identify either an ECInstance or a custom node.

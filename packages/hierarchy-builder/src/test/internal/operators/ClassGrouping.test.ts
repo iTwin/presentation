@@ -38,7 +38,7 @@ describe("ClassGrouping", () => {
     const nodes = [
       createTestNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema.TestClass", id: "0x1" }] },
-        params: { groupByClass: true },
+        processingParams: { groupByClass: true },
       }),
     ];
     const classInfo = stubClass({ schemaName: "TestSchema", className: "TestClass" });
@@ -60,17 +60,17 @@ describe("ClassGrouping", () => {
       createTestNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
         label: "1",
-        params: { groupByClass: true },
+        processingParams: { groupByClass: true },
       }),
       createTestNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema.B", id: "0x2" }] },
         label: "2",
-        params: { groupByClass: true },
+        processingParams: { groupByClass: true },
       }),
       createTestNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x3" }] },
         label: "3",
-        params: { groupByClass: true },
+        processingParams: { groupByClass: true },
       }),
     ];
     const classA = stubClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A" });
@@ -101,17 +101,17 @@ describe("ClassGrouping", () => {
       createTestNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
         label: "1",
-        params: { groupByClass: true },
+        processingParams: { groupByClass: true },
       }),
       createTestNode({
         key: "custom",
         label: "custom",
-        params: { groupByClass: true },
+        processingParams: { groupByClass: true },
       }),
       createTestNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x2" }] },
         label: "2",
-        params: { groupByClass: true },
+        processingParams: { groupByClass: true },
       }),
     ];
     const classA = stubClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A" });

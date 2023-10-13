@@ -61,7 +61,7 @@ export function defaultNodesParser(row: { [columnName: string]: any }): ParsedHi
       instanceKeys: [{ className: typedRow.FullClassName.replace(":", "."), id: typedRow.ECInstanceId }],
     },
     children: typedRow.HasChildren === undefined ? undefined : !!typedRow.HasChildren,
-    params: {
+    processingParams: {
       hideIfNoChildren: !!typedRow.HideIfNoChildren,
       hideInHierarchy: !!typedRow.HideNodeInHierarchy,
       groupByClass: !!typedRow.GroupByClass,

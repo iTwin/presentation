@@ -6,7 +6,7 @@
 import { Observable } from "rxjs";
 import sinon from "sinon";
 import { Logger, LogLevel } from "@itwin/core-bentley";
-import { HierarchyNode } from "../hierarchy-builder/HierarchyNode";
+import { HierarchyNode, ProcessedHierarchyNode } from "../hierarchy-builder/HierarchyNode";
 import * as common from "../hierarchy-builder/internal/Common";
 import { ECClass, IMetadataProvider, parseFullClassName } from "../hierarchy-builder/Metadata";
 import { InstanceKey } from "../hierarchy-builder/values/Values";
@@ -34,7 +34,7 @@ export async function getObservableResult<T>(obs: Observable<T>): Promise<Array<
   });
 }
 
-export function createTestNode(src?: Partial<HierarchyNode>): HierarchyNode {
+export function createTestNode(src?: Partial<ProcessedHierarchyNode>): HierarchyNode {
   return {
     label: "test",
     key: {

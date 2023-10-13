@@ -5,7 +5,7 @@
 
 import naturalCompare from "natural-compare-lite";
 import { mergeMap, Observable, toArray } from "rxjs";
-import { HierarchyNode } from "../../HierarchyNode";
+import { ProcessedHierarchyNode } from "../../HierarchyNode";
 
 /**
  * This should accept sorting params in some form:
@@ -14,7 +14,7 @@ import { HierarchyNode } from "../../HierarchyNode";
  *
  * @internal
  */
-export function sortNodesByLabelOperator(nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
+export function sortNodesByLabelOperator(nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
   return nodes.pipe(
     toArray(),
     mergeMap((allNodes) => allNodes.sort((lhs, rhs) => naturalCompare(lhs.label.toLocaleLowerCase(), rhs.label.toLocaleLowerCase()))),

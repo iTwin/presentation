@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { from, mergeMap, Observable, tap, toArray } from "rxjs";
-import { HierarchyNode } from "../../HierarchyNode";
+import { HierarchyNode, ProcessedHierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
 import { IMetadataProvider } from "../../Metadata";
 import { createOperatorLoggingNamespace, getClass } from "../Common";
@@ -16,7 +16,7 @@ export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
 
 /** @internal */
 export function createClassGroupingOperator(metadata: IMetadataProvider) {
-  return function (nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
+  return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
     return nodes.pipe(
       log((n) => `in: ${n.label}`),
       // need all nodes in one place to group them
@@ -43,15 +43,15 @@ interface ClassInfo {
 }
 
 interface ClassGroupingInformation {
-  ungrouped: Array<HierarchyNode>;
-  grouped: Map<string, { class: ClassInfo; groupedNodes: Array<HierarchyNode> }>;
+  ungrouped: Array<ProcessedHierarchyNode>;
+  grouped: Map<string, { class: ClassInfo; groupedNodes: Array<ProcessedHierarchyNode> }>;
 }
 
-async function createClassGroupingInformation(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<ClassGroupingInformation> {
+async function createClassGroupingInformation(metadata: IMetadataProvider, nodes: ProcessedHierarchyNode[]): Promise<ClassGroupingInformation> {
   const groupings: ClassGroupingInformation = { ungrouped: [], grouped: new Map() };
   for (const node of nodes) {
     // we're only grouping instance nodes
-    if (HierarchyNode.isInstancesNode(node) && node.params?.groupByClass) {
+    if (HierarchyNode.isInstancesNode(node) && node.processingParams?.groupByClass) {
       const fullClassName = node.key.instanceKeys[0].className;
       let groupingInfo = groupings.grouped.get(fullClassName);
       if (!groupingInfo) {
@@ -70,8 +70,8 @@ async function createClassGroupingInformation(metadata: IMetadataProvider, nodes
   return groupings;
 }
 
-function createGroupingNodes(groupings: ClassGroupingInformation): HierarchyNode[] & { hasClassGroupingNodes?: boolean } {
-  const outNodes = new Array<HierarchyNode>();
+function createGroupingNodes(groupings: ClassGroupingInformation): ProcessedHierarchyNode[] & { hasClassGroupingNodes?: boolean } {
+  const outNodes = new Array<ProcessedHierarchyNode>();
   groupings.grouped.forEach((entry) => {
     outNodes.push({
       label: entry.class.label ?? entry.class.name,

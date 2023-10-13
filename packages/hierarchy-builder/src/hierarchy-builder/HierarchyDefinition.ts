@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { HierarchyNode, ParsedHierarchyNode } from "./HierarchyNode";
+import { HierarchyNode, ParsedHierarchyNode, ProcessedHierarchyNode } from "./HierarchyNode";
 import { getClass } from "./internal/Common";
 import { IMetadataProvider, parseFullClassName } from "./Metadata";
 import { ECSqlQueryDef } from "./queries/ECSql";
@@ -70,7 +70,7 @@ export type INodeParser = (row: { [columnName: string]: any }) => ParsedHierarch
  *
  * @beta
  */
-export type INodePreProcessor = (node: HierarchyNode) => Promise<HierarchyNode | undefined>;
+export type INodePreProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode | undefined>;
 
 /**
  * A type for a function that post-processes given node. Unless the function decides not to make any modifications,
@@ -78,7 +78,7 @@ export type INodePreProcessor = (node: HierarchyNode) => Promise<HierarchyNode |
  *
  * @beta
  */
-export type INodePostProcessor = (node: HierarchyNode) => HierarchyNode;
+export type INodePostProcessor = (node: ProcessedHierarchyNode) => ProcessedHierarchyNode;
 
 /**
  * An interface for a factory that knows how define a hierarchy based on a given parent node.

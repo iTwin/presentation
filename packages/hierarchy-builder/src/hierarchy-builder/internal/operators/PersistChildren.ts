@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { mergeAll, Observable, reduce, tap } from "rxjs";
-import { HierarchyNode } from "../../HierarchyNode";
+import { HierarchyNode, ProcessedHierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
 import { createOperatorLoggingNamespace } from "../Common";
 
@@ -14,12 +14,12 @@ export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
 
 /** @internal */
 export function createPersistChildrenOperator(parentNode: HierarchyNode) {
-  return function (childNodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
+  return function (childNodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
     if (Array.isArray(parentNode.children)) {
       return childNodes;
     }
     return childNodes.pipe(
-      reduce((acc, childNode) => [...acc, childNode], new Array<HierarchyNode>()),
+      reduce((acc, childNode) => [...acc, childNode], new Array<ProcessedHierarchyNode>()),
       tap((list) => {
         if (Object.isExtensible(parentNode)) {
           parentNode.children = list;

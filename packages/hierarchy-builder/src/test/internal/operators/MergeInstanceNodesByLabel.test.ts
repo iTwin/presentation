@@ -31,8 +31,8 @@ describe("MergeInstanceNodesByLabel", () => {
 
   it("doesn't merge nodes that have empty `mergeByLabelId`", async () => {
     const nodes = [
-      createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] }, params: { mergeByLabelId: "" } }),
-      createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] }, params: { mergeByLabelId: "" } }),
+      createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] }, processingParams: { mergeByLabelId: "" } }),
+      createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] }, processingParams: { mergeByLabelId: "" } }),
     ];
     const result = await getObservableResult(from(nodes).pipe(createMergeInstanceNodesByLabelOperator(directNodesCache)));
     expect(result).to.deep.eq(nodes);
@@ -40,8 +40,8 @@ describe("MergeInstanceNodesByLabel", () => {
 
   it("doesn't merge nodes that have different `mergeByLabelId`", async () => {
     const nodes = [
-      createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] }, params: { mergeByLabelId: "a" } }),
-      createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] }, params: { mergeByLabelId: "b" } }),
+      createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] }, processingParams: { mergeByLabelId: "a" } }),
+      createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] }, processingParams: { mergeByLabelId: "b" } }),
     ];
     const result = await getObservableResult(from(nodes).pipe(createMergeInstanceNodesByLabelOperator(directNodesCache)));
     expect(result).to.deep.eq(nodes);
@@ -49,8 +49,16 @@ describe("MergeInstanceNodesByLabel", () => {
 
   it("doesn't merge nodes that have different labels", async () => {
     const nodes = [
-      createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] }, label: "a", params: { mergeByLabelId: "x" } }),
-      createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] }, label: "b", params: { mergeByLabelId: "x" } }),
+      createTestNode({
+        key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] },
+        label: "a",
+        processingParams: { mergeByLabelId: "x" },
+      }),
+      createTestNode({
+        key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] },
+        label: "b",
+        processingParams: { mergeByLabelId: "x" },
+      }),
     ];
     const result = await getObservableResult(from(nodes).pipe(createMergeInstanceNodesByLabelOperator(directNodesCache)));
     expect(result).to.deep.eq(nodes);
@@ -58,8 +66,8 @@ describe("MergeInstanceNodesByLabel", () => {
 
   it("doesn't merge nodes of different types", async () => {
     const nodes = [
-      createTestNode({ key: "custom", params: { mergeByLabelId: "x" } }),
-      createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] }, params: { mergeByLabelId: "x" } }),
+      createTestNode({ key: "custom", processingParams: { mergeByLabelId: "x" } }),
+      createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] }, processingParams: { mergeByLabelId: "x" } }),
     ];
     const result = await getObservableResult(from(nodes).pipe(createMergeInstanceNodesByLabelOperator(directNodesCache)));
     expect(result).to.deep.eq(nodes);
@@ -67,10 +75,26 @@ describe("MergeInstanceNodesByLabel", () => {
 
   it("merges nodes that have same `mergeByLabelId` and label", async () => {
     const nodes = [
-      createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] }, label: "a", params: { mergeByLabelId: "x" } }),
-      createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] }, label: "b", params: { mergeByLabelId: "y" } }),
-      createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x3" })] }, label: "a", params: { mergeByLabelId: "x" } }),
-      createTestNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x4" })] }, label: "b", params: { mergeByLabelId: "y" } }),
+      createTestNode({
+        key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] },
+        label: "a",
+        processingParams: { mergeByLabelId: "x" },
+      }),
+      createTestNode({
+        key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] },
+        label: "b",
+        processingParams: { mergeByLabelId: "y" },
+      }),
+      createTestNode({
+        key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x3" })] },
+        label: "a",
+        processingParams: { mergeByLabelId: "x" },
+      }),
+      createTestNode({
+        key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x4" })] },
+        label: "b",
+        processingParams: { mergeByLabelId: "y" },
+      }),
     ];
     const result = await getObservableResult(from(nodes).pipe(createMergeInstanceNodesByLabelOperator(directNodesCache)));
     expect(result).to.deep.eq([
@@ -80,7 +104,7 @@ describe("MergeInstanceNodesByLabel", () => {
           instanceKeys: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x3" })],
         },
         label: "a",
-        params: {
+        processingParams: {
           mergeByLabelId: "x",
         },
       }),
@@ -90,7 +114,7 @@ describe("MergeInstanceNodesByLabel", () => {
           instanceKeys: [createTestInstanceKey({ id: "0x2" }), createTestInstanceKey({ id: "0x4" })],
         },
         label: "b",
-        params: {
+        processingParams: {
           mergeByLabelId: "y",
         },
       }),

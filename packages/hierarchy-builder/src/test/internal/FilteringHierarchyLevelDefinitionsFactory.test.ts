@@ -11,7 +11,7 @@ import {
   IHierarchyLevelDefinitionsFactory,
   InstanceNodesQueryDefinition,
 } from "../../hierarchy-builder/HierarchyDefinition";
-import { HierarchyNode, HierarchyNodeIdentifiersPath } from "../../hierarchy-builder/HierarchyNode";
+import { HierarchyNode, HierarchyNodeIdentifiersPath, ProcessedHierarchyNode } from "../../hierarchy-builder/HierarchyNode";
 import {
   applyECInstanceIdsFilter,
   ECSQL_COLUMN_NAME_FilteredChildrenPaths,
@@ -67,7 +67,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         [NodeSelectClauseColumnNames.FullClassName]: "",
         [ECSQL_COLUMN_NAME_FilteredChildrenPaths]: JSON.stringify(paths),
       };
-      const node: FilteredHierarchyNode<string | ConcatenatedValue> = filteringFactory.parseNode(row);
+      const node: FilteredHierarchyNode<ProcessedHierarchyNode<string | ConcatenatedValue>> = filteringFactory.parseNode(row);
       expect(node.filteredChildrenIdentifierPaths).to.deep.eq(paths);
     });
 
@@ -127,7 +127,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
     it("returns `undefined` when node is filter target and has `hideInHierarchy` flag", async () => {
       const inputNode: FilteredHierarchyNode = {
         ...createTestNode(),
-        params: {
+        processingParams: {
           hideInHierarchy: true,
         },
         filteredChildrenIdentifierPaths: [],

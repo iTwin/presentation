@@ -5,7 +5,7 @@
 import { expect } from "chai";
 import { from } from "rxjs";
 import { LogLevel } from "@itwin/core-bentley";
-import { HierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
+import { HierarchyNode, ProcessedHierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
 import { createLabelGroupingOperator, LOGGING_NAMESPACE } from "../../../hierarchy-builder/internal/operators/LabelGrouping";
 import { createTestNode, getObservableResult, setupLogging } from "../../Utils";
 
@@ -16,7 +16,7 @@ describe("LabelGrouping", () => {
 
   describe("groupByLabel is false", () => {
     it("doesn't group non-instance nodes", async () => {
-      const nodes: HierarchyNode[] = [
+      const nodes: ProcessedHierarchyNode[] = [
         {
           label: "custom",
           key: "test",
@@ -33,7 +33,7 @@ describe("LabelGrouping", () => {
     });
 
     it("doesn't group instance nodes", async () => {
-      const nodes: HierarchyNode[] = [
+      const nodes: ProcessedHierarchyNode[] = [
         createTestNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema:TestClass", id: "0x1" }] },
         }),
@@ -48,12 +48,12 @@ describe("LabelGrouping", () => {
 
   describe("groupByLabel is true", () => {
     it("doesn't group one non-instance node", async () => {
-      const nodes: HierarchyNode[] = [
+      const nodes: ProcessedHierarchyNode[] = [
         {
           label: "custom",
           key: "test",
           children: false,
-          params: { groupByLabel: true },
+          processingParams: { groupByLabel: true },
         },
       ];
       const result = await getObservableResult(from(nodes).pipe(createLabelGroupingOperator()));
@@ -61,10 +61,10 @@ describe("LabelGrouping", () => {
     });
 
     it("doesn't group one instance node", async () => {
-      const nodes: HierarchyNode[] = [
+      const nodes: ProcessedHierarchyNode[] = [
         createTestNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema:TestClass", id: "0x1" }] },
-          params: { groupByLabel: true },
+          processingParams: { groupByLabel: true },
         }),
       ];
       const result = await getObservableResult(from(nodes).pipe(createLabelGroupingOperator()));
@@ -72,22 +72,22 @@ describe("LabelGrouping", () => {
     });
 
     it("doesn't group if all nodes have the same label", async () => {
-      const nodes: HierarchyNode[] = [
+      const nodes: ProcessedHierarchyNode[] = [
         {
           label: "testLabel",
           key: "test1",
           children: false,
-          params: { groupByLabel: true },
+          processingParams: { groupByLabel: true },
         },
         {
           label: "testLabel",
           key: "test2",
           children: false,
-          params: { groupByLabel: true },
+          processingParams: { groupByLabel: true },
         },
         createTestNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema:TestClass", id: "0x1" }] },
-          params: { groupByLabel: true },
+          processingParams: { groupByLabel: true },
           label: "testLabel",
         }),
       ];
@@ -96,22 +96,22 @@ describe("LabelGrouping", () => {
     });
 
     it("groups if at least two nodes have the same label and both have groupByLabel set to true", async () => {
-      const nodes: HierarchyNode[] = [
+      const nodes: ProcessedHierarchyNode[] = [
         createTestNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
           label: "1",
-          params: { groupByLabel: true },
+          processingParams: { groupByLabel: true },
         }),
         {
           label: "1",
           key: "custom1",
           children: false,
-          params: { groupByLabel: true },
+          processingParams: { groupByLabel: true },
         },
         createTestNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema:B", id: "0x2" }] },
           label: "2",
-          params: { groupByLabel: true },
+          processingParams: { groupByLabel: true },
         }),
         {
           label: "2",
@@ -122,7 +122,7 @@ describe("LabelGrouping", () => {
           label: "3",
           key: "custom3",
           children: false,
-          params: { groupByLabel: true },
+          processingParams: { groupByLabel: true },
         },
       ];
       const result = await getObservableResult(from(nodes).pipe(createLabelGroupingOperator()));
@@ -142,25 +142,25 @@ describe("LabelGrouping", () => {
     });
 
     it("groups children of class-grouping nodes", async () => {
-      const classGroupingNodes: HierarchyNode[] = [
+      const classGroupingNodes: ProcessedHierarchyNode[] = [
         createTestNode({
           key: { type: "instances", instanceKeys: [{ className: "Schema:B", id: "0x2" }] },
           label: "1",
-          params: { groupByLabel: true },
+          processingParams: { groupByLabel: true },
         }),
         createTestNode({
           key: { type: "instances", instanceKeys: [{ className: "Schema:B", id: "0x3" }] },
           label: "1",
-          params: { groupByLabel: true },
+          processingParams: { groupByLabel: true },
         }),
         createTestNode({
           key: { type: "instances", instanceKeys: [{ className: "Schema:B", id: "0x4" }] },
           label: "2",
-          params: { groupByLabel: true },
+          processingParams: { groupByLabel: true },
         }),
       ];
 
-      const nodes: HierarchyNode[] = [
+      const nodes: ProcessedHierarchyNode[] = [
         {
           label: "someLabel",
           key: {
