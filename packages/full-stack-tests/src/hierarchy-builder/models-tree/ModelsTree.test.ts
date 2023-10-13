@@ -388,7 +388,7 @@ describe("Stateless hierarchy builder", () => {
           </ECEntityClass>
           `,
         ],
-        [`<ECSchemaReference name="BisCore" version="01.00" alias="bis" />`],
+        [`<ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />`],
       );
     }
   });

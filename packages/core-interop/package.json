@@ -38,6 +38,7 @@
     "@itwin/core-bentley": "^4.1.0",
     "@itwin/core-geometry": "^4.1.0",
     "@itwin/core-common": "^4.1.0",
+    "@itwin/core-quantity": "^4.1.0",
     "@itwin/ecschema-metadata": "^4.1.0",
     "@itwin/presentation-hierarchy-builder": "workspace:^"
   },
@@ -46,6 +47,7 @@
     "@itwin/core-bentley": "^4.1.1",
     "@itwin/core-common": "^4.1.1",
     "@itwin/core-geometry": "^4.1.1",
+    "@itwin/core-quantity": "^4.1.1",
     "@itwin/ecschema-metadata": "^4.1.1",
     "@itwin/eslint-plugin": "4.0.0-dev.48",
     "@types/chai": "4.3.1",

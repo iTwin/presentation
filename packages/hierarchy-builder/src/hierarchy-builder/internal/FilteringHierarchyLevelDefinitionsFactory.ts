@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { InstanceKey } from "../EC";
 import {
   CustomHierarchyNodeDefinition,
   HierarchyLevelDefinition,
@@ -16,6 +15,8 @@ import {
 } from "../HierarchyDefinition";
 import { HierarchyNode, HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "../HierarchyNode";
 import { IMetadataProvider } from "../Metadata";
+import { ConcatenatedValue } from "../values/ConcatenatedValue";
+import { InstanceKey } from "../values/Values";
 import { getClass } from "./Common";
 import { defaultNodesParser } from "./TreeNodesReader";
 
@@ -27,12 +28,12 @@ export interface FilteringQueryBuilderProps {
 }
 
 /** @internal */
-export interface FilteredHierarchyNode extends HierarchyNode {
+export interface FilteredHierarchyNode<TLabel = string> extends HierarchyNode<TLabel> {
   filteredChildrenIdentifierPaths?: HierarchyNodeIdentifiersPath[];
 }
 
 /** @internal */
-export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLevelDefinitionsFactory<FilteredHierarchyNode> {
+export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLevelDefinitionsFactory {
   private _metadataProvider: IMetadataProvider;
   private _source: IHierarchyLevelDefinitionsFactory;
   private _nodeIdentifierPaths: HierarchyNodeIdentifiersPath[];
@@ -44,8 +45,8 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
   }
 
   public get preProcessNode(): INodePreProcessor {
-    return (node: FilteredHierarchyNode) => {
-      const processedNode = this._source.preProcessNode ? this._source.preProcessNode(node) : node;
+    return async (node: FilteredHierarchyNode) => {
+      const processedNode = this._source.preProcessNode ? await this._source.preProcessNode(node) : node;
       if (processedNode?.params?.hideInHierarchy && node.filteredChildrenIdentifierPaths?.length === 0) {
         // an existing empty `node.filteredChildrenIdentifierPaths` means the node is our filter target - we
         // want to hide such nodes if they have `hideInHierarchy` param
@@ -70,8 +71,8 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
     };
   }
 
-  public get parseNode(): INodeParser<FilteredHierarchyNode> {
-    return (row: { [columnName: string]: any }): FilteredHierarchyNode => {
+  public get parseNode(): INodeParser {
+    return (row: { [columnName: string]: any }): FilteredHierarchyNode<string | ConcatenatedValue> => {
       const parsedFilteredChildrenIdentifierPaths = row[ECSQL_COLUMN_NAME_FilteredChildrenPaths]
         ? JSON.parse(row[ECSQL_COLUMN_NAME_FilteredChildrenPaths])
         : undefined;

@@ -3,7 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ClassInfo, InstanceKey } from "./EC";
+import { ConcatenatedValue } from "./values/ConcatenatedValue";
+import { InstanceKey } from "./values/Values";
 
 /**
  * A key for a node that represents one or more ECInstances.
@@ -20,7 +21,10 @@ export interface InstancesNodeKey {
  */
 export interface ClassGroupingNodeKey {
   type: "class-grouping";
-  class: ClassInfo;
+  class: {
+    name: string;
+    label?: string;
+  };
 }
 
 /**
@@ -82,9 +86,9 @@ export interface HierarchyNodeHandlingParams {
  * A data structure that represents a single hierarchy node.
  * @beta
  */
-export interface HierarchyNode {
+export interface HierarchyNode<TLabel = string> {
   key: HierarchyNodeKey;
-  label: string;
+  label: TLabel;
   extendedData?: { [key: string]: any };
   children: undefined | boolean | Array<HierarchyNode>;
   autoExpand?: boolean;
@@ -114,6 +118,14 @@ export namespace HierarchyNode {
     return HierarchyNodeKey.isLabelGrouping(node.key);
   }
 }
+
+/**
+ * A [[HierarchyNode]] that possibly has an unformatted label in a form of [[ConcatenatedValue]]. Generally this is
+ * returned when the node is just parsed from query results.
+ *
+ * @beta
+ */
+export type ParsedHierarchyNode = HierarchyNode<string | ConcatenatedValue>;
 
 /**
  * An identifier that can be used to identify either an ECInstance or a custom node.

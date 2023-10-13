@@ -161,7 +161,7 @@ describe("ClassBasedHierarchyLevelDefinitionsFactory", () => {
       const rootNode = createTestNode({
         key: {
           type: "class-grouping",
-          class: { id: "0x1", name: "some.class", label: "X" },
+          class: { name: "some.class", label: "X" },
         },
       });
 

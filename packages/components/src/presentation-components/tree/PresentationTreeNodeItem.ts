@@ -23,7 +23,7 @@ export type HierarchyLevelFilteringDescriptor = Descriptor | (() => Promise<Desc
 export interface PresentationTreeNodeItemFilteringInfo {
   /**
    * Descriptor that describes instances of this tree node item hierarchy level. It can be used to create instance
-   * filter using [[PresentationInstanceFilterBuilder]].
+   * filter for filtering hierarchy level.
    *
    * If it is set to `undefined` hierarchy level under this node is not filterable.
    */
