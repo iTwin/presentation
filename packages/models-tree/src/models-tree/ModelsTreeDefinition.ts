@@ -85,7 +85,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
     this._nodeLabelSelectClauseFactory = new BisInstanceLabelSelectClauseFactory({ metadataProvider: props.metadataProvider });
   }
 
-  public postProcessNode(node: HierarchyNode): HierarchyNode {
+  public async postProcessNode(node: HierarchyNode): Promise<HierarchyNode> {
     if (HierarchyNode.isClassGroupingNode(node)) {
       // `imageId` is assigned to instance nodes at query time, but grouping ones need to
       // be handled during post-processing
