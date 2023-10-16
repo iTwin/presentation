@@ -15,7 +15,7 @@ import { SchemaMetadataContextProvider, UnifiedSelectionContextProvider } from "
 import { Presentation, SelectionChangeEventArgs } from "@itwin/presentation-frontend";
 import { MyAppFrontend, MyAppSettings } from "../../api/MyAppFrontend";
 import { IModelSelector } from "../imodel-selector/IModelSelector";
-import { ExtendedPropertyGridWidget } from "../properties-widget/ExtendedPropertiesWidget";
+import { PropertiesWidget } from "../properties-widget/PropertiesWidget";
 import { RulesetSelector } from "../ruleset-selector/RulesetSelector";
 import { TableWidget } from "../table-widget/TableWidget";
 import { TreeWidget } from "../tree-widget/TreeWidget";
@@ -216,7 +216,7 @@ function IModelComponents(props: IModelComponentsProps) {
               <hr />
               <ElementSeparator orientation={Orientation.Vertical} ratio={panelRatio} movableArea={panelHeight} onRatioChanged={onPanelResize} />
             </div>
-            <ExtendedPropertyGridWidget imodel={imodel} rulesetId={rulesetId} />
+            <PropertiesWidget imodel={imodel} rulesetId={rulesetId} />
           </div>
         </UnifiedSelectionContextProvider>
       </SchemaMetadataContextProvider>
