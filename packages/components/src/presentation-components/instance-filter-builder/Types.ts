@@ -6,9 +6,9 @@
  * @module InstancesFilter
  */
 
-import { PrimitiveValue } from "@itwin/appui-abstract";
+import { PrimitiveValue, PropertyDescription } from "@itwin/appui-abstract";
 import { PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator } from "@itwin/components-react";
-import { ClassInfo, PropertiesField } from "@itwin/presentation-common";
+import { ClassId, ClassInfo, PropertiesField } from "@itwin/presentation-common";
 
 /**
  * Type that describes instance filter based on [Descriptor]($presentation-common) fields. It can be
@@ -58,4 +58,21 @@ export interface PresentationInstanceFilterInfo {
   filter: PresentationInstanceFilter;
   /** Classes of the properties used in filter. */
   usedClasses: ClassInfo[];
+}
+
+/**
+ * Data structure that contains information about property used for building filter.
+ * @beta
+ */
+export interface InstanceFilterPropertyInfo {
+  /** Content descriptor field that represents this property. */
+  field: PropertiesField;
+  /** Property description  */
+  propertyDescription: PropertyDescription;
+  /** Id of the class where this property is defined. */
+  sourceClassId: ClassId;
+  /** Name of the class that was used to access this property. */
+  className: string;
+  /** Label of related property category. */
+  categoryLabel?: string;
 }

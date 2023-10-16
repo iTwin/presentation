@@ -1,43 +1,120 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+/** @packageDocumentation
+ * @module InstancesFilter
+ */
+
 import { PrimitiveValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator } from "@itwin/components-react";
-import { ClassInfo, NestedContentField, PropertiesField, RelationshipPath } from "@itwin/presentation-common";
+import { ClassInfo, NestedContentField, PropertiesField, RelationshipPath, StrippedRelationshipPath } from "@itwin/presentation-common";
 import { deserializeDisplayValueGroupArray } from "../common/Utils";
 import { PresentationInstanceFilter, PresentationInstanceFilterCondition, PresentationInstanceFilterConditionGroup } from "./Types";
 
-export interface QueryMetadata {
-  rules: QueryRule | QueryRuleGroup;
+/**
+ * Contains metadata that is need to convert filter to other formats. E.g. `ECExpression` or `ECSQL` query.
+ * @beta
+ */
+export interface FilterMetadata {
+  /** Single filter rule or multiple rules joined by logical operator. */
+  rules: FilterRule | FilterRuleGroup;
+  /**
+   * Information about related instances that has access to the properties used in filter.
+   * These can be used to create `JOIN` clause when building `ECSQL` query. Each related property
+   * used in rule will have `sourceAlias` that matches `RelatedInstanceDescription.alias`.
+   * If more than one property of same related instance is used they will shared same alias.
+   */
   relatedInstances: RelatedInstanceDescription[];
+  /**
+   * List of classes whose properties are used in rules. Might be used to find common base class when building
+   * filter for instance of different classes.
+   */
   propertyClasses: ClassInfo[];
 }
 
-export interface QueryRule {
+/**
+ * Defines single filter rule.
+ * @beta
+ */
+export interface FilterRule {
+  /**
+   * Alias of the source to access this property. If it is direct property `sourceAlias` is set to `this`.
+   * For related properties `sourceAlias` is created based on related instance class.
+   */
   sourceAlias: string;
+  /**
+   * Property name for accessing property value.
+   */
   propertyName: string;
+  /**
+   * Comparison operator that should be used to compare property value.
+   */
   operator: PropertyFilterRuleOperator;
+  /**
+   * Value to which property values is compared to. For unary operators value is 'undefined'.
+   */
   value?: PrimitiveValue;
+  /**
+   * Type name of the property.
+   */
   propertyTypeName: string;
 }
 
-export interface QueryRuleGroup {
+/**
+ * Group of filter rules joined by logical operator.
+ * @beta
+ */
+export interface FilterRuleGroup {
+  /**
+   * Operator that should be used to join rules.
+   */
   operator: PropertyFilterRuleGroupOperator;
-  rules: Array<QueryRule | QueryRuleGroup>;
+  /**
+   * List of rules or rule groups that should be joined by `operator`.
+   */
+  rules: Array<FilterRule | FilterRuleGroup>;
 }
 
+/**
+ * Describes related instance whose property was used in the filter.
+ * @beta
+ */
 export interface RelatedInstanceDescription {
-  path: RelationshipPath;
+  /**
+   * Describes path that should be used to reach related instance from the source.
+   */
+  path: StrippedRelationshipPath;
+  /**
+   * Related instance alias. This alias match `sourceAlias` in all filter rules where
+   * properties of this related instance is used.
+   */
   alias: string;
 }
 
-interface ConvertContext {
-  relatedInstances: RelatedInstanceDescription[];
-  propertyClasses: ClassInfo[];
-}
-
-export function createQueryMetadata(filter: PresentationInstanceFilter): QueryMetadata {
+/**
+ * Creates metadata that is needed to convert filter into other formats.
+ * @beta
+ */
+export function createFilterMetadata(filter: PresentationInstanceFilter): FilterMetadata {
   const context: ConvertContext = { relatedInstances: [], propertyClasses: [] };
 
   const rules = createMetadataFromFilter(filter, context);
-  return { rules, relatedInstances: context.relatedInstances, propertyClasses: context.propertyClasses };
+  return {
+    rules,
+    relatedInstances: context.relatedInstances.map((instance) => ({ path: RelationshipPath.strip(instance.path), alias: instance.alias })),
+    propertyClasses: context.propertyClasses,
+  };
+}
+
+interface ConvertContext {
+  relatedInstances: RelatedInstance[];
+  propertyClasses: ClassInfo[];
+}
+
+interface RelatedInstance {
+  path: RelationshipPath;
+  alias: string;
 }
 
 function createMetadataFromFilter(filter: PresentationInstanceFilter, ctx: ConvertContext) {
@@ -66,7 +143,7 @@ function traverseUniqueValuesCondition(filter: PresentationInstanceFilterConditi
   return createMetadataFromGroup(result, ctx);
 }
 
-function createMetadataFromGroup(group: PresentationInstanceFilterConditionGroup, ctx: ConvertContext): QueryRuleGroup {
+function createMetadataFromGroup(group: PresentationInstanceFilterConditionGroup, ctx: ConvertContext): FilterRuleGroup {
   const convertedConditions = group.conditions.map((condition) => createMetadataFromFilter(condition, ctx));
   return {
     operator: group.operator,
@@ -74,7 +151,7 @@ function createMetadataFromGroup(group: PresentationInstanceFilterConditionGroup
   };
 }
 
-function createMetadataFromCondition(condition: PresentationInstanceFilterCondition, ctx: ConvertContext): QueryRule {
+function createMetadataFromCondition(condition: PresentationInstanceFilterCondition, ctx: ConvertContext): FilterRule {
   const { field, operator, value } = condition;
   const property = field.properties[0].property;
   const relatedInstance = getRelatedInstanceDescription(field, property.classInfo.name, ctx);
@@ -98,7 +175,7 @@ function addClassInfoToContext(classInfo: ClassInfo, ctx: ConvertContext) {
   ctx.propertyClasses.push(classInfo);
 }
 
-function getRelatedInstanceDescription(field: PropertiesField, propClassName: string, ctx: ConvertContext): RelatedInstanceDescription | undefined {
+function getRelatedInstanceDescription(field: PropertiesField, propClassName: string, ctx: ConvertContext): RelatedInstance | undefined {
   if (!field.parent) {
     return undefined;
   }

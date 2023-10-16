@@ -19,7 +19,7 @@ import {
 } from "@itwin/presentation-common";
 import { render as renderRTL } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { InstanceFilterPropertyInfo } from "../../presentation-components/instance-filter-builder/Utils";
+import { InstanceFilterPropertyInfo } from "../../presentation-components/instance-filter-builder/Types";
 import { createTestCategoryDescription, createTestPropertiesContentField } from "./Content";
 
 export function createTestECInstanceKey(key?: Partial<InstanceKey>): InstanceKey {

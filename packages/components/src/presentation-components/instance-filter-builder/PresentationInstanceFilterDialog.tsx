@@ -14,8 +14,9 @@ import { Button, Dialog, ProgressRadial } from "@itwin/itwinui-react";
 import { Descriptor, Keys } from "@itwin/presentation-common";
 import { translate, useDelay } from "../common/Utils";
 import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder";
+import { convertPresentationFilterToPropertyFilter, createPresentationInstanceFilter } from "./PresentationFilterBuilder";
 import { PresentationInstanceFilterInfo } from "./Types";
-import { convertPresentationFilterToPropertyFilter, createPresentationInstanceFilter, filterRuleValidator } from "./Utils";
+import { filterRuleValidator } from "./Utils";
 
 /**
  * Props for [[PresentationInstanceFilterDialog]] component.

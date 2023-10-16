@@ -10,9 +10,9 @@ import { Primitives, PrimitiveValue, StandardTypeNames } from "@itwin/appui-abst
 import { isUnaryPropertyFilterOperator, PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ClassInfo, InstanceFilterDefinition, RelationshipPath } from "@itwin/presentation-common";
+import { ClassInfo, InstanceFilterDefinition } from "@itwin/presentation-common";
 import { getIModelMetadataProvider } from "./ECMetadataProvider";
-import { createQueryMetadata, QueryRule, QueryRuleGroup } from "./QueryMetadata";
+import { createFilterMetadata, FilterRule, FilterRuleGroup } from "./FilterMetadata";
 import { PresentationInstanceFilter } from "./Types";
 
 /**
@@ -21,7 +21,7 @@ import { PresentationInstanceFilter } from "./Types";
  * @beta
  */
 export async function convertToInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection): Promise<InstanceFilterDefinition> {
-  const { rules, propertyClasses, relatedInstances } = createQueryMetadata(filter);
+  const { rules, propertyClasses, relatedInstances } = createFilterMetadata(filter);
   const expression = createExpression(rules);
 
   const baseClass = await findBaseExpressionClass(imodel, propertyClasses);
@@ -30,14 +30,13 @@ export async function convertToInstanceFilterDefinition(filter: PresentationInst
     expression,
     selectClassName: baseClass.name,
     relatedInstances: relatedInstances.map((related) => ({
-      pathFromSelectToPropertyClass: RelationshipPath.strip(related.path),
+      pathFromSelectToPropertyClass: related.path,
       alias: related.alias,
     })),
   };
 }
 
-/** @internal */
-export async function findBaseExpressionClass(imodel: IModelConnection, propertyClasses: ClassInfo[]) {
+async function findBaseExpressionClass(imodel: IModelConnection, propertyClasses: ClassInfo[]) {
   if (propertyClasses.length === 1) {
     return propertyClasses[0];
   }
@@ -54,8 +53,8 @@ export async function findBaseExpressionClass(imodel: IModelConnection, property
   return currentBaseClass;
 }
 
-function createExpression(filter: QueryRule | QueryRuleGroup) {
-  if (isQueryRuleGroup(filter)) {
+function createExpression(filter: FilterRule | FilterRuleGroup) {
+  if (isFilterRuleGroup(filter)) {
     return createExpressionFromGroup(filter);
   }
 
@@ -63,7 +62,7 @@ function createExpression(filter: QueryRule | QueryRuleGroup) {
   return createComparison(propertyName, propertyTypeName, sourceAlias, operator, value);
 }
 
-function createExpressionFromGroup(group: QueryRuleGroup): string {
+function createExpressionFromGroup(group: FilterRuleGroup): string {
   const convertedConditions = group.rules.map((rule) => createExpression(rule));
   return `(${convertedConditions.join(` ${getGroupOperatorString(group.operator)} `)})`;
 }
@@ -147,8 +146,8 @@ function escapeString(str: string) {
   return str.replace(/"/g, `""`);
 }
 
-function isQueryRuleGroup(obj: QueryRule | QueryRuleGroup): obj is QueryRuleGroup {
-  return (obj as QueryRuleGroup).rules !== undefined;
+function isFilterRuleGroup(obj: FilterRule | FilterRuleGroup): obj is FilterRuleGroup {
+  return (obj as FilterRuleGroup).rules !== undefined;
 }
 
 function createPointComparision(point: { x: number; y: number } | { x: number; y: number; z: number }, operatorExpression: string, propertyAccessor: string) {
