@@ -282,7 +282,6 @@ function PropertiesWidgetContextMenu(props: PropertiesWidgetContextMenuProps) {
           });
         }
       }
-
       return items;
     }, [imodel, dataProvider, record, addFavorite, removeFavorite]),
   );
