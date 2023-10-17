@@ -10,20 +10,20 @@ import { PrimitiveValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator } from "@itwin/components-react";
 import { ClassInfo, NestedContentField, PropertiesField, RelationshipPath, StrippedRelationshipPath } from "@itwin/presentation-common";
 import { deserializeDisplayValueGroupArray } from "../common/Utils";
-import { PresentationInstanceFilter, PresentationInstanceFilterCondition, PresentationInstanceFilterConditionGroup } from "./Types";
+import { PresentationInstanceFilter, PresentationInstanceFilterCondition, PresentationInstanceFilterConditionGroup } from "./PresentationFilterBuilder";
 
 /**
- * Contains metadata that is need to convert filter to other formats. E.g. `ECExpression` or `ECSQL` query.
+ * Generic instance filter that has all the necessary information to build query extracted from presentation data structures.
  * @beta
  */
-export interface FilterMetadata {
+export interface GenericInstanceFilter {
   /** Single filter rule or multiple rules joined by logical operator. */
-  rules: FilterRule | FilterRuleGroup;
+  rules: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup;
   /**
    * Information about related instances that has access to the properties used in filter.
    * These can be used to create `JOIN` clause when building `ECSQL` query. Each related property
    * used in rule will have `sourceAlias` that matches `RelatedInstanceDescription.alias`.
-   * If more than one property of same related instance is used they will shared same alias.
+   * If more than one property of the same related instance is used, they will share the same alias.
    */
   relatedInstances: RelatedInstanceDescription[];
   /**
@@ -33,11 +33,38 @@ export interface FilterMetadata {
   propertyClasses: ClassInfo[];
 }
 
+/** @beta */
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export namespace GenericInstanceFilter {
+  /**
+   * Extracts information from presentation data structures and created generic instance filter for building queries.
+   * @beta
+   */
+  export function fromPresentationInstanceFilter(filter: PresentationInstanceFilter): GenericInstanceFilter {
+    const context: ConvertContext = { relatedInstances: [], propertyClasses: [] };
+
+    const rules = createMetadataFromFilter(filter, context);
+    return {
+      rules,
+      relatedInstances: context.relatedInstances.map((instance) => ({ path: RelationshipPath.strip(instance.path), alias: instance.alias })),
+      propertyClasses: context.propertyClasses,
+    };
+  }
+
+  /**
+   * Function that checks if supplied object is [[GenericInstanceFilterRuleGroup]].
+   * @beta
+   */
+  export function isFilterRuleGroup(obj: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup): obj is GenericInstanceFilterRuleGroup {
+    return (obj as GenericInstanceFilterRuleGroup).rules !== undefined;
+  }
+}
+
 /**
  * Defines single filter rule.
  * @beta
  */
-export interface FilterRule {
+export interface GenericInstanceFilterRule {
   /**
    * Alias of the source to access this property. If it is direct property `sourceAlias` is set to `this`.
    * For related properties `sourceAlias` is created based on related instance class.
@@ -56,7 +83,8 @@ export interface FilterRule {
    */
   value?: PrimitiveValue;
   /**
-   * Type name of the property.
+   * Type name of the property. It matches `extendedTypeName` attribute of `ECPrimitiveProperty` if defined
+   * or `typeName` attribute otherwise.
    */
   propertyTypeName: string;
 }
@@ -65,7 +93,7 @@ export interface FilterRule {
  * Group of filter rules joined by logical operator.
  * @beta
  */
-export interface FilterRuleGroup {
+export interface GenericInstanceFilterRuleGroup {
   /**
    * Operator that should be used to join rules.
    */
@@ -73,7 +101,7 @@ export interface FilterRuleGroup {
   /**
    * List of rules or rule groups that should be joined by `operator`.
    */
-  rules: Array<FilterRule | FilterRuleGroup>;
+  rules: Array<GenericInstanceFilterRule | GenericInstanceFilterRuleGroup>;
 }
 
 /**
@@ -92,21 +120,6 @@ export interface RelatedInstanceDescription {
   alias: string;
 }
 
-/**
- * Creates metadata that is needed to convert filter into other formats.
- * @beta
- */
-export function createFilterMetadata(filter: PresentationInstanceFilter): FilterMetadata {
-  const context: ConvertContext = { relatedInstances: [], propertyClasses: [] };
-
-  const rules = createMetadataFromFilter(filter, context);
-  return {
-    rules,
-    relatedInstances: context.relatedInstances.map((instance) => ({ path: RelationshipPath.strip(instance.path), alias: instance.alias })),
-    propertyClasses: context.propertyClasses,
-  };
-}
-
 interface ConvertContext {
   relatedInstances: RelatedInstance[];
   propertyClasses: ClassInfo[];
@@ -118,14 +131,14 @@ interface RelatedInstance {
 }
 
 function createMetadataFromFilter(filter: PresentationInstanceFilter, ctx: ConvertContext) {
-  if (isFilterConditionGroup(filter)) {
-    return createMetadataFromGroup(filter, ctx);
+  if (PresentationInstanceFilter.isConditionGroup(filter)) {
+    return createGenericInstanceFilterRuleGroup(filter, ctx);
   }
   const result = traverseUniqueValuesCondition(filter, ctx);
   if (result !== undefined) {
     return result;
   }
-  return createMetadataFromCondition(filter, ctx);
+  return createGenericInstanceFilterRule(filter, ctx);
 }
 
 function traverseUniqueValuesCondition(filter: PresentationInstanceFilterCondition, ctx: ConvertContext) {
@@ -140,10 +153,10 @@ function traverseUniqueValuesCondition(filter: PresentationInstanceFilterConditi
   if (result === undefined) {
     return undefined;
   }
-  return createMetadataFromGroup(result, ctx);
+  return createGenericInstanceFilterRuleGroup(result, ctx);
 }
 
-function createMetadataFromGroup(group: PresentationInstanceFilterConditionGroup, ctx: ConvertContext): FilterRuleGroup {
+function createGenericInstanceFilterRuleGroup(group: PresentationInstanceFilterConditionGroup, ctx: ConvertContext): GenericInstanceFilterRuleGroup {
   const convertedConditions = group.conditions.map((condition) => createMetadataFromFilter(condition, ctx));
   return {
     operator: group.operator,
@@ -151,7 +164,7 @@ function createMetadataFromGroup(group: PresentationInstanceFilterConditionGroup
   };
 }
 
-function createMetadataFromCondition(condition: PresentationInstanceFilterCondition, ctx: ConvertContext): FilterRule {
+function createGenericInstanceFilterRule(condition: PresentationInstanceFilterCondition, ctx: ConvertContext): GenericInstanceFilterRule {
   const { field, operator, value } = condition;
   const property = field.properties[0].property;
   const relatedInstance = getRelatedInstanceDescription(field, property.classInfo.name, ctx);
@@ -200,10 +213,6 @@ function getPathToPrimaryClass(field: NestedContentField): RelationshipPath {
     return [...field.pathToPrimaryClass, ...getPathToPrimaryClass(field.parent)];
   }
   return [...field.pathToPrimaryClass];
-}
-
-function isFilterConditionGroup(obj: PresentationInstanceFilter): obj is PresentationInstanceFilterConditionGroup {
-  return (obj as PresentationInstanceFilterConditionGroup).conditions !== undefined;
 }
 
 function handleStringifiedUniqueValues(filter: PresentationInstanceFilterCondition, serializedDisplayValues: string, serializedGroupedRawValues: string) {

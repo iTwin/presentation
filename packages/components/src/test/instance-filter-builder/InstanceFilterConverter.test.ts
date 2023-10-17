@@ -12,12 +12,15 @@ import { BeEvent } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo, RelationshipPath, PropertyValueFormat as TypeValueFormat, Value } from "@itwin/presentation-common";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
-import { convertToInstanceFilterDefinition } from "../../presentation-components/instance-filter-builder/InstanceFilterConverter";
-import { PresentationInstanceFilterCondition, PresentationInstanceFilterConditionGroup } from "../../presentation-components/instance-filter-builder/Types";
 import { createTestPropertyInfo } from "../_helpers/Common";
 import { createTestNestedContentField, createTestPropertiesContentField } from "../_helpers/Content";
+import {
+  PresentationInstanceFilter,
+  PresentationInstanceFilterCondition,
+  PresentationInstanceFilterConditionGroup,
+} from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
 
-describe("convertToInstanceFilterDefinition", () => {
+describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
   describe("converts single condition with", () => {
     const testImodel = {} as IModelConnection;
     const property = createTestPropertyInfo();
@@ -31,7 +34,7 @@ describe("convertToInstanceFilterDefinition", () => {
           field,
           operator: PropertyFilterRuleOperator.IsNull,
         };
-        const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+        const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
         expect(expression).to.be.eq(`${propertyAccessor} = NULL`);
       });
 
@@ -40,7 +43,7 @@ describe("convertToInstanceFilterDefinition", () => {
           field,
           operator: PropertyFilterRuleOperator.IsNotNull,
         };
-        const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+        const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
         expect(expression).to.be.eq(`${propertyAccessor} <> NULL`);
       });
 
@@ -49,7 +52,7 @@ describe("convertToInstanceFilterDefinition", () => {
           field,
           operator: PropertyFilterRuleOperator.IsTrue,
         };
-        const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+        const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
         expect(expression).to.be.eq(`${propertyAccessor} = TRUE`);
       });
 
@@ -58,7 +61,7 @@ describe("convertToInstanceFilterDefinition", () => {
           field,
           operator: PropertyFilterRuleOperator.IsFalse,
         };
-        const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+        const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
         expect(expression).to.be.eq(`${propertyAccessor} = FALSE`);
       });
 
@@ -68,7 +71,7 @@ describe("convertToInstanceFilterDefinition", () => {
           operator: PropertyFilterRuleOperator.IsEqual,
           value,
         };
-        const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+        const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
         expect(expression).to.be.eq(`${propertyAccessor} = 1`);
       });
 
@@ -78,7 +81,7 @@ describe("convertToInstanceFilterDefinition", () => {
           operator: PropertyFilterRuleOperator.IsNotEqual,
           value,
         };
-        const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+        const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
         expect(expression).to.be.eq(`${propertyAccessor} <> 1`);
       });
 
@@ -88,7 +91,7 @@ describe("convertToInstanceFilterDefinition", () => {
           operator: PropertyFilterRuleOperator.Greater,
           value,
         };
-        const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+        const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
         expect(expression).to.be.eq(`${propertyAccessor} > 1`);
       });
 
@@ -98,7 +101,7 @@ describe("convertToInstanceFilterDefinition", () => {
           operator: PropertyFilterRuleOperator.GreaterOrEqual,
           value,
         };
-        const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+        const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
         expect(expression).to.be.eq(`${propertyAccessor} >= 1`);
       });
 
@@ -108,7 +111,7 @@ describe("convertToInstanceFilterDefinition", () => {
           operator: PropertyFilterRuleOperator.Less,
           value,
         };
-        const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+        const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
         expect(expression).to.be.eq(`${propertyAccessor} < 1`);
       });
 
@@ -118,7 +121,7 @@ describe("convertToInstanceFilterDefinition", () => {
           operator: PropertyFilterRuleOperator.LessOrEqual,
           value,
         };
-        const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+        const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
         expect(expression).to.be.eq(`${propertyAccessor} <= 1`);
       });
 
@@ -128,7 +131,7 @@ describe("convertToInstanceFilterDefinition", () => {
           operator: PropertyFilterRuleOperator.Like,
           value: { valueFormat: PropertyValueFormat.Primitive, value: `someString`, displayValue: "someString" },
         };
-        const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+        const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
         expect(expression).to.be.eq(`${propertyAccessor} ~ "%someString%"`);
       });
     });
@@ -139,7 +142,7 @@ describe("convertToInstanceFilterDefinition", () => {
         operator: PropertyFilterRuleOperator.IsEqual,
         value: { ...value, value: `string "with" quotation marks` },
       };
-      const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+      const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(`${propertyAccessor} = "string ""with"" quotation marks"`);
     });
 
@@ -153,7 +156,7 @@ describe("convertToInstanceFilterDefinition", () => {
         operator: PropertyFilterRuleOperator.IsEqual,
         value: { ...value, value: { className: "TestSchema:TestClass", id: "0x1" } },
       };
-      const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+      const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(`${propertyAccessor}.Id = 0x1`);
     });
 
@@ -167,7 +170,7 @@ describe("convertToInstanceFilterDefinition", () => {
         operator: PropertyFilterRuleOperator.IsEqual,
         value: { ...value, value: 1.5 },
       };
-      const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+      const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(`CompareDoubles(${propertyAccessor}, 1.5) = 0`);
     });
 
@@ -181,7 +184,7 @@ describe("convertToInstanceFilterDefinition", () => {
         operator: PropertyFilterRuleOperator.IsEqual,
         value: { ...value, value: "2021-10-12T08:45:41" },
       };
-      const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+      const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(`CompareDateTimes(${propertyAccessor}, "2021-10-12T08:45:41") = 0`);
     });
 
@@ -195,7 +198,7 @@ describe("convertToInstanceFilterDefinition", () => {
         operator: PropertyFilterRuleOperator.IsEqual,
         value: { ...value, value: { x: 10, y: 20 } },
       };
-      const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+      const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(`(CompareDoubles(${propertyAccessor}.x, 10) = 0) AND (CompareDoubles(${propertyAccessor}.y, 20) = 0)`);
     });
 
@@ -209,7 +212,7 @@ describe("convertToInstanceFilterDefinition", () => {
         operator: PropertyFilterRuleOperator.IsEqual,
         value: { ...value, value: { x: 10, y: 20, z: 5 } },
       };
-      const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+      const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(
         `(CompareDoubles(${propertyAccessor}.x, 10) = 0) AND (CompareDoubles(${propertyAccessor}.y, 20) = 0) AND (CompareDoubles(${propertyAccessor}.z, 5) = 0)`,
       );
@@ -225,7 +228,7 @@ describe("convertToInstanceFilterDefinition", () => {
         operator: PropertyFilterRuleOperator.IsNotEqual,
         value: { ...value, value: { x: 10, y: 20, z: 5 } },
       };
-      const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+      const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(
         `(CompareDoubles(${propertyAccessor}.x, 10) <> 0) OR (CompareDoubles(${propertyAccessor}.y, 20) <> 0) OR (CompareDoubles(${propertyAccessor}.z, 5) <> 0)`,
       );
@@ -252,7 +255,7 @@ describe("convertToInstanceFilterDefinition", () => {
           },
         ],
       };
-      const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+      const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(`(${propertyAccessor} = NULL AND ${propertyAccessor} <> NULL)`);
     });
 
@@ -270,7 +273,7 @@ describe("convertToInstanceFilterDefinition", () => {
           },
         ],
       };
-      const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+      const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(`(${propertyAccessor} = NULL OR ${propertyAccessor} <> NULL)`);
     });
 
@@ -297,7 +300,7 @@ describe("convertToInstanceFilterDefinition", () => {
           },
         ],
       };
-      const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+      const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(`(${propertyAccessor} = NULL OR (${propertyAccessor} = NULL AND ${propertyAccessor} <> NULL))`);
     });
   });
@@ -350,7 +353,7 @@ describe("convertToInstanceFilterDefinition", () => {
         field: classCPropertiesField,
         operator: PropertyFilterRuleOperator.IsNull,
       };
-      const { expression, relatedInstances } = await convertToInstanceFilterDefinition(filter, testImodel);
+      const { expression, relatedInstances } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(`${createAlias("C")}.${propertyInfo.name} = NULL`);
       expect(relatedInstances)
         .to.be.lengthOf(1)
@@ -384,7 +387,7 @@ describe("convertToInstanceFilterDefinition", () => {
           },
         ],
       };
-      const { expression, relatedInstances } = await convertToInstanceFilterDefinition(filter, testImodel);
+      const { expression, relatedInstances } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(`(${createAlias("C")}.${propertyInfo.name} = NULL AND ${createAlias("C")}.${propertyInfo.name} <> NULL)`);
       expect(relatedInstances)
         .to.be.lengthOf(1)
@@ -409,7 +412,7 @@ describe("convertToInstanceFilterDefinition", () => {
         field: classCPropertiesField,
         operator: PropertyFilterRuleOperator.IsNull,
       };
-      const { expression, relatedInstances } = await convertToInstanceFilterDefinition(filter, testImodel);
+      const { expression, relatedInstances } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(`${createAlias("C")}.${propertyInfo.name} = NULL`);
       expect(relatedInstances)
         .to.be.lengthOf(1)
@@ -474,7 +477,7 @@ describe("convertToInstanceFilterDefinition", () => {
         operator: PropertyFilterRuleOperator.IsNull,
       };
 
-      const { selectClassName } = await convertToInstanceFilterDefinition(filter, imodelMock.object);
+      const { selectClassName } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, imodelMock.object);
       expect(selectClassName).to.be.eq(classAInfo.name);
     });
 
@@ -493,7 +496,7 @@ describe("convertToInstanceFilterDefinition", () => {
         ],
       };
 
-      const { selectClassName } = await convertToInstanceFilterDefinition(filter, imodelMock.object);
+      const { selectClassName } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, imodelMock.object);
       expect(selectClassName).to.be.eq(classAInfo.name);
     });
 
@@ -512,7 +515,7 @@ describe("convertToInstanceFilterDefinition", () => {
         ],
       };
 
-      const { selectClassName } = await convertToInstanceFilterDefinition(filter, imodelMock.object);
+      const { selectClassName } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, imodelMock.object);
       expect(selectClassName).to.be.eq(classBInfo.name);
     });
 
@@ -531,7 +534,7 @@ describe("convertToInstanceFilterDefinition", () => {
         ],
       };
 
-      const { selectClassName } = await convertToInstanceFilterDefinition(filter, imodelMock.object);
+      const { selectClassName } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, imodelMock.object);
       expect(selectClassName).to.be.eq(classBInfo.name);
     });
 
@@ -554,7 +557,7 @@ describe("convertToInstanceFilterDefinition", () => {
         ],
       };
 
-      const { selectClassName } = await convertToInstanceFilterDefinition(filter, imodelMock.object);
+      const { selectClassName } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, imodelMock.object);
       expect(selectClassName).to.be.eq(classCInfo.name);
     });
   });
@@ -585,7 +588,7 @@ describe("convertToInstanceFilterDefinition", () => {
     it("converts values when operator is `IsEqual`", async () => {
       const filter = createFilter(PropertyFilterRuleOperator.IsEqual);
 
-      const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+      const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(
         `(${propertyAccessor} = ${groupedRawValues[0][0]} OR ${propertyAccessor} = ${groupedRawValues[0][1]} OR ${propertyAccessor} = ${groupedRawValues[1][0]} OR ${propertyAccessor} = ${groupedRawValues[1][1]})`,
       );
@@ -594,7 +597,7 @@ describe("convertToInstanceFilterDefinition", () => {
     it("converts values when operator is `IsNotEqual`", async () => {
       const filter = createFilter(PropertyFilterRuleOperator.IsNotEqual);
 
-      const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+      const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(
         `(${propertyAccessor} <> ${groupedRawValues[0][0]} AND ${propertyAccessor} <> ${groupedRawValues[0][1]} AND ${propertyAccessor} <> ${groupedRawValues[1][0]} AND ${propertyAccessor} <> ${groupedRawValues[1][1]})`,
       );
@@ -603,7 +606,7 @@ describe("convertToInstanceFilterDefinition", () => {
     it("converts values when `deserializeDisplayValueGroupArray` returns `undefined`", async () => {
       const filter = createFilter(PropertyFilterRuleOperator.IsEqual, "a", "a");
 
-      const { expression } = await convertToInstanceFilterDefinition(filter, testImodel);
+      const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(`${propertyAccessor} = "a"`);
     });
   });

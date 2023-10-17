@@ -14,9 +14,8 @@ import { Button, Dialog, ProgressRadial } from "@itwin/itwinui-react";
 import { Descriptor, Keys } from "@itwin/presentation-common";
 import { translate, useDelay } from "../common/Utils";
 import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder";
-import { convertPresentationFilterToPropertyFilter, createPresentationInstanceFilter } from "./PresentationFilterBuilder";
-import { PresentationInstanceFilterInfo } from "./Types";
 import { filterRuleValidator } from "./Utils";
+import { PresentationInstanceFilter, PresentationInstanceFilterInfo } from "./PresentationFilterBuilder";
 
 /**
  * Props for [[PresentationInstanceFilterDialog]] component.
@@ -110,7 +109,16 @@ interface PresentationInstanceFilterDialogContentProps extends Omit<Presentation
 
 function PresentationInstanceFilterDialogContent(props: PresentationInstanceFilterDialogContentProps) {
   const { onApply, initialFilter, descriptor, imodel, ruleGroupDepthLimit, filterResultsCountRenderer, onClose, descriptorInputKeys } = props;
-  const [initialPropertyFilter] = useState(() => (initialFilter ? convertPresentationFilterToPropertyFilter(descriptor, initialFilter.filter) : undefined));
+  const [initialPropertyFilter] = useState(() => {
+    if (!initialFilter) {
+      return undefined;
+    }
+    try {
+      return PresentationInstanceFilter.toComponentsPropertyFilter(descriptor, initialFilter.filter);
+    } catch {}
+    // istanbul ignore next
+    return undefined;
+  });
 
   const { rootGroup, actions, buildFilter } = usePropertyFilterBuilder({
     initialFilter: initialPropertyFilter,
@@ -124,12 +132,11 @@ function PresentationInstanceFilterDialogContent(props: PresentationInstanceFilt
       if (!filter) {
         return undefined;
       }
-      const presentationInstanceFilter = createPresentationInstanceFilter(descriptor, filter);
-      if (!presentationInstanceFilter) {
-        return undefined;
-      }
-
-      return { filter: presentationInstanceFilter, usedClasses: filteringProps.selectedClasses };
+      try {
+        const presentationInstanceFilter = PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, filter);
+        return { filter: presentationInstanceFilter, usedClasses: filteringProps.selectedClasses };
+      } catch {}
+      return undefined;
     },
     [buildFilter, descriptor, filteringProps.selectedClasses],
   );

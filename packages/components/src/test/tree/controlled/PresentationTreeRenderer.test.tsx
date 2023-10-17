@@ -23,7 +23,6 @@ import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { PresentationError, PresentationStatus, PropertyValueFormat } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { waitFor } from "@testing-library/react";
-import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/Types";
 import { PresentationTreeRenderer } from "../../../presentation-components/tree/controlled/PresentationTreeRenderer";
 import { PresentationTreeDataProvider } from "../../../presentation-components/tree/DataProvider";
 import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";
@@ -31,6 +30,7 @@ import { PresentationTreeNodeItem } from "../../../presentation-components/tree/
 import { createTestPropertyInfo, render, stubDOMMatrix, stubRaf } from "../../_helpers/Common";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content";
 import { createTreeModelNodeInput } from "./Helpers";
+import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
 
 describe("PresentationTreeRenderer", () => {
   stubRaf();

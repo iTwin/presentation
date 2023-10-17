@@ -19,8 +19,8 @@ import {
 } from "@itwin/presentation-common";
 import { render as renderRTL } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { InstanceFilterPropertyInfo } from "../../presentation-components/instance-filter-builder/Types";
 import { createTestCategoryDescription, createTestPropertiesContentField } from "./Content";
+import { PresentationInstanceFilterPropertyInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
 
 export function createTestECInstanceKey(key?: Partial<InstanceKey>): InstanceKey {
   return {
@@ -148,7 +148,7 @@ export function stubRaf() {
   });
 }
 
-export const createTestInstanceFilterPropertyInfo = (props?: Partial<InstanceFilterPropertyInfo>) => ({
+export const createTestPresentationInstanceFilterPropertyInfo = (props?: Partial<PresentationInstanceFilterPropertyInfo>) => ({
   sourceClassId: "0x1",
   field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo() }], category: createTestCategoryDescription() }),
   propertyDescription: {

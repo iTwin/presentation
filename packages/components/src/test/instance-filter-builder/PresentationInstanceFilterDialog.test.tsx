@@ -15,11 +15,10 @@ import { Descriptor } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { waitFor } from "@testing-library/react";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
-import * as presentationFilterBuilder from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
 import { PresentationInstanceFilterDialog } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog";
-import { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/Types";
 import { createTestECClassInfo, render, stubDOMMatrix, stubRaf } from "../_helpers/Common";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
+import { PresentationInstanceFilter, PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
 
 describe("PresentationInstanceFilterDialog", () => {
   stubRaf();
@@ -135,7 +134,7 @@ describe("PresentationInstanceFilterDialog", () => {
   });
 
   it("does not invoke `onApply` when filter is missing presentation metadata", async () => {
-    sinon.stub(presentationFilterBuilder, "createPresentationInstanceFilter").returns(undefined);
+    sinon.stub(PresentationInstanceFilter, "fromComponentsPropertyFilter").throws(new Error("Some Error"));
     const spy = sinon.spy();
     const { container, getByText, user } = render(
       <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />,

@@ -18,8 +18,7 @@ import { ComboBox, SelectOption } from "@itwin/itwinui-react";
 import { ClassInfo, Descriptor, Keys } from "@itwin/presentation-common";
 import { translate } from "../common/Utils";
 import { getIModelMetadataProvider } from "./ECMetadataProvider";
-import { PresentationFilterBuilderValueRenderer, usePropertyInfos } from "./PresentationFilterBuilder";
-import { InstanceFilterPropertyInfo } from "./Types";
+import { PresentationFilterBuilderValueRenderer, PresentationInstanceFilterPropertyInfo, useInstanceFilterPropertyInfos } from "./PresentationFilterBuilder";
 
 /**
  * Props for [[InstanceFilterBuilder]] component.
@@ -98,7 +97,7 @@ export function usePresentationInstanceFilteringProps(
     "properties" | "classes" | "selectedClasses" | "onSelectedClassesChanged" | "propertyRenderer" | "onRulePropertySelected" | "isDisabled"
   >
 > {
-  const { propertyInfos, propertyRenderer } = usePropertyInfos({ descriptor });
+  const { propertyInfos, propertyRenderer } = useInstanceFilterPropertyInfos({ descriptor });
   const classes = usePropertyClasses({ descriptor });
   const { activeClasses, changeActiveClasses, isFilteringClasses, filterClassesByProperty } = useActiveClasses({
     imodel,
@@ -141,12 +140,12 @@ function usePropertyClasses({ descriptor }: UsePropertyClassesProps) {
 
 interface UsePropertiesFilteringByClassProps {
   imodel: IModelConnection;
-  availableProperties: InstanceFilterPropertyInfo[];
+  availableProperties: PresentationInstanceFilterPropertyInfo[];
   activeClasses: ClassInfo[];
 }
 
 function usePropertiesFilteringByClass({ imodel, availableProperties, activeClasses }: UsePropertiesFilteringByClassProps) {
-  const [filteredProperties, setFilteredProperties] = useState<InstanceFilterPropertyInfo[] | undefined>();
+  const [filteredProperties, setFilteredProperties] = useState<PresentationInstanceFilterPropertyInfo[] | undefined>();
   const [isFilteringProperties, setIsFilteringProperties] = useState(false);
   const properties = useMemo(
     () => (filteredProperties ?? availableProperties).map((info) => info.propertyDescription),
@@ -172,7 +171,7 @@ function usePropertiesFilteringByClass({ imodel, availableProperties, activeClas
         switchAll(),
       )
       .subscribe({
-        next: (infos: InstanceFilterPropertyInfo[] | undefined) => {
+        next: (infos: PresentationInstanceFilterPropertyInfo[] | undefined) => {
           setFilteredProperties(infos);
           setIsFilteringProperties(false);
         },
@@ -207,7 +206,7 @@ function useActiveClasses({ imodel, availableClasses, initialActiveClasses }: Us
   }, [availableClasses]);
 
   const filterClassesByProperty = useCallback(
-    (property: InstanceFilterPropertyInfo) => {
+    (property: PresentationInstanceFilterPropertyInfo) => {
       setIsFilteringClasses(true);
       void (async () => {
         const newActiveClasses = await computeClassesByProperty(activeClasses.length === 0 ? availableClasses : activeClasses, property, imodel);
@@ -235,13 +234,13 @@ function useActiveClasses({ imodel, availableClasses, initialActiveClasses }: Us
 }
 
 async function computePropertiesByClasses(
-  properties: InstanceFilterPropertyInfo[],
+  properties: PresentationInstanceFilterPropertyInfo[],
   classes: ClassInfo[],
   imodel: IModelConnection,
-): Promise<InstanceFilterPropertyInfo[] | undefined> {
+): Promise<PresentationInstanceFilterPropertyInfo[] | undefined> {
   const metadataProvider = getIModelMetadataProvider(imodel);
   const ecClassInfos = await Promise.all(classes.map(async (info) => metadataProvider.getECClassInfo(info.id)));
-  const filteredProperties: InstanceFilterPropertyInfo[] = [];
+  const filteredProperties: PresentationInstanceFilterPropertyInfo[] = [];
   for (const prop of properties) {
     // property should be shown if all selected classes are derived from property source class
     if (ecClassInfos.every((info) => info && info.isDerivedFrom(prop.sourceClassId))) {
@@ -252,7 +251,11 @@ async function computePropertiesByClasses(
   return filteredProperties.length === properties.length ? undefined : filteredProperties;
 }
 
-async function computeClassesByProperty(classes: ClassInfo[], property: InstanceFilterPropertyInfo, imodel: IModelConnection): Promise<ClassInfo[]> {
+async function computeClassesByProperty(
+  classes: ClassInfo[],
+  property: PresentationInstanceFilterPropertyInfo,
+  imodel: IModelConnection,
+): Promise<ClassInfo[]> {
   const metadataProvider = getIModelMetadataProvider(imodel);
   const propertyClass = await metadataProvider.getECClassInfo(property.sourceClassId);
   // istanbul ignore next

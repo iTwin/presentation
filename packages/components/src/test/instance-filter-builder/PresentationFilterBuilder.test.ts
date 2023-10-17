@@ -12,11 +12,6 @@ import {
   PropertyFilterRuleOperator,
 } from "@itwin/components-react";
 import { Field } from "@itwin/presentation-common";
-import {
-  convertPresentationFilterToPropertyFilter,
-  createPresentationInstanceFilter,
-} from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
-import { PresentationInstanceFilter } from "../../presentation-components/instance-filter-builder/Types";
 import { INSTANCE_FILTER_FIELD_SEPARATOR } from "../../presentation-components/instance-filter-builder/Utils";
 import { createTestECClassInfo } from "../_helpers/Common";
 import {
@@ -25,8 +20,9 @@ import {
   createTestNestedContentField,
   createTestPropertiesContentField,
 } from "../_helpers/Content";
+import { PresentationInstanceFilter } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
 
-describe("createPresentationInstanceFilter", () => {
+describe("PresentationInstanceFilter.fromComponentsPropertyFilter", () => {
   const category = createTestCategoryDescription({ name: "root", label: "Root" });
   const propertyField1 = createTestPropertiesContentField({
     properties: [{ property: { classInfo: createTestECClassInfo(), name: "prop1", type: "string" } }],
@@ -57,7 +53,7 @@ describe("createPresentationInstanceFilter", () => {
         },
       ],
     };
-    expect(createPresentationInstanceFilter(descriptor, filter)).to.containSubset({
+    expect(PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, filter)).to.containSubset({
       operator: PropertyFilterRuleGroupOperator.And,
       conditions: [
         {
@@ -72,32 +68,12 @@ describe("createPresentationInstanceFilter", () => {
     });
   });
 
-  it("returns filter condition when group has only one rule", () => {
-    const filter: PropertyFilterRuleGroup = {
-      operator: PropertyFilterRuleGroupOperator.And,
-      rules: [
-        {
-          property: { name: getPropertyDescriptionName(propertyField1), displayLabel: "Prop1", typename: "string" },
-          operator: PropertyFilterRuleOperator.IsNull,
-        },
-      ],
-    };
-    expect(createPresentationInstanceFilter(descriptor, filter)).to.containSubset({
-      operator: PropertyFilterRuleOperator.IsNull,
-      field: propertyField1,
-    });
-  });
-
-  it("returns undefined if filter group is empty", () => {
-    expect(createPresentationInstanceFilter(descriptor, { operator: PropertyFilterRuleGroupOperator.And, rules: [] })).to.be.undefined;
-  });
-
-  it("returns undefined when rule properties field cannot be found", () => {
+  it("throws if rule properties field cannot be found", () => {
     const property: PropertyDescription = { name: `${INSTANCE_FILTER_FIELD_SEPARATOR}invalidFieldName`, displayLabel: "Prop", typename: "string" };
-    expect(createPresentationInstanceFilter(descriptor, { property, operator: PropertyFilterRuleOperator.IsNull })).to.be.undefined;
+    expect(() => PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, { property, operator: PropertyFilterRuleOperator.IsNull })).to.throw();
   });
 
-  it("returns undefined when group has rule with invalid property field", () => {
+  it("throws if group has rule with invalid property field", () => {
     const filter: PropertyFilterRuleGroup = {
       operator: PropertyFilterRuleGroupOperator.And,
       rules: [
@@ -111,20 +87,20 @@ describe("createPresentationInstanceFilter", () => {
         },
       ],
     };
-    expect(createPresentationInstanceFilter(descriptor, filter)).to.be.undefined;
+    expect(() => PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, filter)).to.throw();
   });
 
-  it("returns undefined when rule has non primitive value", () => {
+  it("throws if rule has non primitive value", () => {
     const filter: PropertyFilterRule = {
       property: { name: getPropertyDescriptionName(propertyField1), displayLabel: "Prop1", typename: "string" },
       operator: PropertyFilterRuleOperator.IsEqual,
       value: { valueFormat: PropertyValueFormat.Array, items: [], itemsTypeName: "number" },
     };
-    expect(createPresentationInstanceFilter(descriptor, filter)).to.be.undefined;
+    expect(() => PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, filter)).to.throw();
   });
 });
 
-describe("convertPresentationInstanceFilterToInstanceFilter", () => {
+describe("PresentationInstanceFilter.toComponentsPropertyFilter", () => {
   const category = createTestCategoryDescription({ name: "root", label: "Root" });
   const propertyField1 = createTestPropertiesContentField({
     properties: [{ property: { classInfo: createTestECClassInfo(), name: "prop1", type: "string" } }],
@@ -179,9 +155,8 @@ describe("convertPresentationInstanceFilterToInstanceFilter", () => {
       ],
     };
 
-    const presentationFilter = createPresentationInstanceFilter(descriptor, filter);
-    expect(presentationFilter).to.not.be.undefined;
-    const result = presentationFilter ? convertPresentationFilterToPropertyFilter(descriptor, presentationFilter) : undefined;
+    const presentationFilter = PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, filter);
+    const result = PresentationInstanceFilter.toComponentsPropertyFilter(descriptor, presentationFilter);
     expect(result).to.be.deep.eq(filter);
   });
 
@@ -218,7 +193,7 @@ describe("convertPresentationInstanceFilterToInstanceFilter", () => {
       ],
     };
 
-    const result = convertPresentationFilterToPropertyFilter(descriptor, presentationFilter);
+    const result = PresentationInstanceFilter.toComponentsPropertyFilter(descriptor, presentationFilter);
     expect(result).to.be.deep.eq(propertyFilter);
   });
 
@@ -249,11 +224,11 @@ describe("convertPresentationInstanceFilterToInstanceFilter", () => {
       ],
     };
 
-    const result = convertPresentationFilterToPropertyFilter(descriptor, presentationFilter);
+    const result = PresentationInstanceFilter.toComponentsPropertyFilter(descriptor, presentationFilter);
     expect(result).to.be.deep.eq(propertyFilter);
   });
 
-  it("returns undefined if property used in filter is not found in descriptor", () => {
+  it("throws if property used in filter is not found in descriptor", () => {
     const propertyField = createTestPropertiesContentField({
       properties: [{ property: { classInfo: createTestECClassInfo(), name: "prop", type: "string" } }],
       category,
@@ -272,8 +247,7 @@ describe("convertPresentationInstanceFilterToInstanceFilter", () => {
       ],
     };
 
-    const result = convertPresentationFilterToPropertyFilter(descriptor, presentationFilter);
-    expect(result).to.be.undefined;
+    expect(() => PresentationInstanceFilter.toComponentsPropertyFilter(descriptor, presentationFilter)).to.throw();
   });
 });
 

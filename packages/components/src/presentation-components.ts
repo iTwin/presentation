@@ -113,9 +113,7 @@ export * from "./presentation-components/unified-selection/UnifiedSelectionConte
  */
 export * from "./presentation-components/instance-filter-builder/PresentationInstanceFilterDialog";
 export * from "./presentation-components/instance-filter-builder/PresentationFilterBuilder";
-export * from "./presentation-components/instance-filter-builder/InstanceFilterConverter";
-export * from "./presentation-components/instance-filter-builder/FilterMetadata";
-export * from "./presentation-components/instance-filter-builder/Types";
+export * from "./presentation-components/instance-filter-builder/GenericInstanceFilter";
 
 /**
  * @module Internal

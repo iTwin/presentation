@@ -19,11 +19,11 @@ import { CategoryDescription, ClassInfo, combineFieldNames, Descriptor, Field, N
 import { createPropertyDescriptionFromFieldInfo } from "../common/ContentBuilder";
 import { translate } from "../common/Utils";
 import { NavigationPropertyEditorContextProps } from "../properties/editors/NavigationPropertyEditorContext";
-import { InstanceFilterPropertyInfo } from "./Types";
+import { PresentationInstanceFilterPropertyInfo } from "./PresentationFilterBuilder";
 
 /** @internal */
-export function createInstanceFilterPropertyInfos(descriptor: Descriptor): InstanceFilterPropertyInfo[] {
-  const propertyInfos = new Array<InstanceFilterPropertyInfo>();
+export function createInstanceFilterPropertyInfos(descriptor: Descriptor): PresentationInstanceFilterPropertyInfo[] {
+  const propertyInfos = new Array<PresentationInstanceFilterPropertyInfo>();
   for (const field of descriptor.fields) {
     propertyInfos.push(...createPropertyInfos(field));
   }
@@ -58,7 +58,7 @@ function getPropertyClassInfo(field: PropertiesField): ClassInfo {
   return field.properties[0].property.classInfo;
 }
 
-function createPropertyInfos(field: Field): InstanceFilterPropertyInfo[] {
+function createPropertyInfos(field: Field): PresentationInstanceFilterPropertyInfo[] {
   if (field.isNestedContentField()) {
     return field.nestedFields.flatMap((nestedField) => createPropertyInfos(nestedField));
   }
@@ -96,7 +96,7 @@ function getParentNames(field: Field, name: string): string {
 }
 
 /** @internal */
-export function createPropertyInfoFromPropertiesField(field: PropertiesField): InstanceFilterPropertyInfo {
+export function createPropertyInfoFromPropertiesField(field: PropertiesField): PresentationInstanceFilterPropertyInfo {
   const categoryInfo = getCategoryInfo(field.category, { name: undefined, label: undefined });
   const name = field.parent ? getParentNames(field.parent, field.name) : field.name;
 

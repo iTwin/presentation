@@ -12,13 +12,12 @@ import { AbstractTreeNodeLoaderWithProvider, TreeNodeRendererProps, TreeRenderer
 import { NodeKey, PresentationError, PresentationStatus } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { translate } from "../../common/Utils";
-import { convertToInstanceFilterDefinition } from "../../instance-filter-builder/InstanceFilterConverter";
 import { PresentationInstanceFilterDialog } from "../../instance-filter-builder/PresentationInstanceFilterDialog";
-import { PresentationInstanceFilterInfo } from "../../instance-filter-builder/Types";
 import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
 import { FilterablePresentationTreeNodeItem, isFilterablePresentationTreeNodeItem, PresentationTreeNodeItem } from "../PresentationTreeNodeItem";
 import { PresentationTreeNodeRenderer } from "./PresentationTreeNodeRenderer";
 import { useHierarchyLevelFiltering } from "./UseHierarchyLevelFiltering";
+import { PresentationInstanceFilter, PresentationInstanceFilterInfo } from "../../instance-filter-builder/PresentationFilterBuilder";
 
 /**
  * Props for [[PresentationTreeRenderer]] component.
@@ -115,7 +114,7 @@ interface MatchingInstancesCountProps {
 function MatchingInstancesCount({ filter, dataProvider, parentKey }: MatchingInstancesCountProps) {
   const { value, inProgress } = useDebouncedAsyncValue(
     useCallback(async () => {
-      const instanceFilter = await convertToInstanceFilterDefinition(filter.filter, dataProvider.imodel);
+      const instanceFilter = await PresentationInstanceFilter.toInstanceFilterDefinition(filter.filter, dataProvider.imodel);
 
       try {
         const count = await Presentation.presentation.getNodesCount(dataProvider.createRequestOptions(parentKey, instanceFilter));
