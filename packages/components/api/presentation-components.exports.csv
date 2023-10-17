@@ -5,12 +5,8 @@ public;CacheInvalidationProps
 public;ContentDataProvider 
 public;ContentDataProviderProps 
 public;ControlledPresentationTreeFilteringProps
-beta;convertPresentationFilterToPropertyFilter(descriptor: Descriptor, filter: PresentationInstanceFilter): PropertyFilter | undefined
-beta;convertToInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection): Promise
 alpha;createDiagnosticsOptions(props: DiagnosticsProps): ClientDiagnosticsOptions | undefined
 internal;createFieldInfo(field: Field, parentFieldName?: string):
-beta;createFilterMetadata(filter: PresentationInstanceFilter): FilterMetadata
-beta;createPresentationInstanceFilter(descriptor: Descriptor, filter: PropertyFilter): PresentationInstanceFilter | undefined
 internal;createPropertyDescriptionFromFieldInfo(info: FieldInfo): PropertyDescription
 public;DEFAULT_PROPERTY_GRID_RULESET: Ruleset
 public;DiagnosticsProps
@@ -25,15 +21,15 @@ internal;FieldRecord
 beta;FilterablePresentationTreeNodeItem = PresentationTreeNodeItem &
 internal;FilteredPresentationTreeDataProvider 
 internal;FilteredPresentationTreeDataProviderProps
-beta;FilterMetadata
-beta;FilterRule
-beta;FilterRuleGroup
+beta;GenericInstanceFilter
+beta;GenericInstanceFilter
+beta;GenericInstanceFilterRule
+beta;GenericInstanceFilterRuleGroup
 internal;getFavoritesCategory: () => CategoryDescription
 beta;HierarchyLevelFilteringDescriptor = Descriptor | (() => Promise
 public;IContentDataProvider 
 public;IFavoritePropertiesDataProvider
 public;IFilteredPresentationTreeDataProvider 
-beta;InstanceFilterPropertyInfo
 beta;InstanceKeyValueRenderer 
 public;IPresentationDataProvider 
 public;IPresentationLabelsProvider
@@ -42,7 +38,6 @@ public;IPresentationTreeDataProvider
 internal;IPropertiesAppender
 beta;isFilterablePresentationTreeNodeItem(item: PresentationTreeNodeItem): item is FilterablePresentationTreeNodeItem
 beta;isPresentationInfoTreeNodeItem(item: TreeNodeItem): item is PresentationInfoTreeNodeItem
-beta;isPresentationInstanceFilterConditionGroup(filter: PresentationInstanceFilter): filter is PresentationInstanceFilterConditionGroup
 beta;isPresentationTreeNodeItem(item: TreeNodeItem): item is PresentationTreeNodeItem
 public;IUnifiedSelectionComponent
 beta;navigationPropertyEditorContext: Context
@@ -52,11 +47,13 @@ beta;PresentationFilterBuilderValueRenderer({ imodel, descriptor, descriptorInpu
 beta;PresentationFilterBuilderValueRendererProps 
 beta;PresentationInfoTreeNodeItem 
 beta;PresentationInstanceFilter = PresentationInstanceFilterConditionGroup | PresentationInstanceFilterCondition
+beta;PresentationInstanceFilter
 beta;PresentationInstanceFilterCondition
 beta;PresentationInstanceFilterConditionGroup
 beta;PresentationInstanceFilterDialog(props: PresentationInstanceFilterDialogProps): JSX.Element
 beta;PresentationInstanceFilterDialogProps
 beta;PresentationInstanceFilterInfo
+beta;PresentationInstanceFilterPropertyInfo
 public;PresentationLabelsProvider 
 public;PresentationLabelsProviderProps
 public;PresentationPropertyDataProvider 
@@ -93,6 +90,8 @@ public;useControlledPresentationTreeFiltering(props: ControlledPresentationTreeF
 internal;useFilteredNodeLoader(dataProvider: IPresentationTreeDataProvider, filter: string | undefined):
 beta;useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProps):
 beta;UseHierarchyLevelFilteringProps
+beta;useInstanceFilterPropertyInfos({ descriptor }: UseInstanceFilterPropertyInfosProps):
+beta;UseInstanceFilterPropertyInfosProps
 beta;useNavigationPropertyEditingContext(imodel: IModelConnection, dataProvider: IContentDataProvider): NavigationPropertyEditorContextProps
 internal;useNodeHighlightingProps(filter: string | undefined, filteredNodeLoader?: ITreeNodeLoaderWithProvider
 beta;usePresentationTable
@@ -103,8 +102,6 @@ beta;UsePresentationTableWithUnifiedSelectionResult
 public;usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderProps): PresentationTreeNodeLoaderResult
 public;usePropertyDataProviderWithUnifiedSelection(props: PropertyDataProviderWithUnifiedSelectionProps): UsePropertyDataProviderWithUnifiedSelectionResult
 public;UsePropertyDataProviderWithUnifiedSelectionResult
-beta;UsePropertyInfoProps
-beta;usePropertyInfos({ descriptor }: UsePropertyInfoProps):
 public;useRulesetRegistration(ruleset: Ruleset): void
 beta;useSchemaMetadataContext(): SchemaMetadataContext | undefined
 beta;useUnifiedSelectionContext(): UnifiedSelectionContext | undefined

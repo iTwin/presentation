@@ -158,12 +158,6 @@ export interface ControlledPresentationTreeFilteringProps {
     nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
 }
 
-// @beta
-export function convertPresentationFilterToPropertyFilter(descriptor: Descriptor, filter: PresentationInstanceFilter): PropertyFilter | undefined;
-
-// @beta
-export function convertToInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection): Promise<InstanceFilterDefinition>;
-
 // @alpha
 export function createDiagnosticsOptions(props: DiagnosticsProps): ClientDiagnosticsOptions | undefined;
 
@@ -177,12 +171,6 @@ export function createFieldInfo(field: Field, parentFieldName?: string): {
     enum: EnumerationInfo | undefined;
     koqName: string | undefined;
 };
-
-// @beta
-export function createFilterMetadata(filter: PresentationInstanceFilter): FilterMetadata;
-
-// @beta
-export function createPresentationInstanceFilter(descriptor: Descriptor, filter: PropertyFilter): PresentationInstanceFilter | undefined;
 
 // @internal (undocumented)
 export function createPropertyDescriptionFromFieldInfo(info: FieldInfo): PropertyDescription;
@@ -326,14 +314,20 @@ export interface FilteredPresentationTreeDataProviderProps {
 }
 
 // @beta
-export interface FilterMetadata {
+export interface GenericInstanceFilter {
     propertyClasses: ClassInfo[];
     relatedInstances: RelatedInstanceDescription[];
-    rules: FilterRule | FilterRuleGroup;
+    rules: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup;
+}
+
+// @beta (undocumented)
+export namespace GenericInstanceFilter {
+    export function fromPresentationInstanceFilter(filter: PresentationInstanceFilter): GenericInstanceFilter;
+    export function isFilterRuleGroup(obj: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup): obj is GenericInstanceFilterRuleGroup;
 }
 
 // @beta
-export interface FilterRule {
+export interface GenericInstanceFilterRule {
     operator: PropertyFilterRuleOperator;
     propertyName: string;
     propertyTypeName: string;
@@ -342,9 +336,9 @@ export interface FilterRule {
 }
 
 // @beta
-export interface FilterRuleGroup {
+export interface GenericInstanceFilterRuleGroup {
     operator: PropertyFilterRuleGroupOperator;
-    rules: Array<FilterRule | FilterRuleGroup>;
+    rules: Array<GenericInstanceFilterRule | GenericInstanceFilterRuleGroup>;
 }
 
 // @internal (undocumented)
@@ -377,15 +371,6 @@ export interface IFilteredPresentationTreeDataProvider extends IPresentationTree
     filter: string;
     getActiveMatch(index: number): ActiveMatchInfo | undefined;
     nodeMatchesFilter(node: TreeNodeItem): boolean;
-}
-
-// @beta
-export interface InstanceFilterPropertyInfo {
-    categoryLabel?: string;
-    className: string;
-    field: PropertiesField;
-    propertyDescription: PropertyDescription;
-    sourceClassId: ClassId;
 }
 
 // @beta
@@ -435,9 +420,6 @@ export function isFilterablePresentationTreeNodeItem(item: PresentationTreeNodeI
 export function isPresentationInfoTreeNodeItem(item: TreeNodeItem): item is PresentationInfoTreeNodeItem;
 
 // @beta
-export function isPresentationInstanceFilterConditionGroup(filter: PresentationInstanceFilter): filter is PresentationInstanceFilterConditionGroup;
-
-// @beta
 export function isPresentationTreeNodeItem(item: TreeNodeItem): item is PresentationTreeNodeItem;
 
 // @public
@@ -483,6 +465,14 @@ export interface PresentationInfoTreeNodeItem extends ImmediatelyLoadedTreeNodeI
 // @beta
 export type PresentationInstanceFilter = PresentationInstanceFilterConditionGroup | PresentationInstanceFilterCondition;
 
+// @beta (undocumented)
+export namespace PresentationInstanceFilter {
+    export function fromComponentsPropertyFilter(descriptor: Descriptor, filter: PropertyFilter): PresentationInstanceFilter;
+    export function isConditionGroup(filter: PresentationInstanceFilter): filter is PresentationInstanceFilterConditionGroup;
+    export function toComponentsPropertyFilter(descriptor: Descriptor, filter: PresentationInstanceFilter): PropertyFilter;
+    export function toInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection): Promise<InstanceFilterDefinition>;
+}
+
 // @beta
 export interface PresentationInstanceFilterCondition {
     field: PropertiesField;
@@ -517,6 +507,15 @@ export interface PresentationInstanceFilterDialogProps {
 export interface PresentationInstanceFilterInfo {
     filter: PresentationInstanceFilter;
     usedClasses: ClassInfo[];
+}
+
+// @beta
+export interface PresentationInstanceFilterPropertyInfo {
+    categoryLabel?: string;
+    className: string;
+    field: PropertiesField;
+    propertyDescription: PropertyDescription;
+    sourceClassId: ClassId;
 }
 
 // @public
@@ -852,6 +851,17 @@ export interface UseHierarchyLevelFilteringProps {
 }
 
 // @beta
+export function useInstanceFilterPropertyInfos({ descriptor }: UseInstanceFilterPropertyInfosProps): {
+    propertyInfos: PresentationInstanceFilterPropertyInfo[];
+    propertyRenderer: (name: string) => JSX.Element;
+};
+
+// @beta
+export interface UseInstanceFilterPropertyInfosProps {
+    descriptor: Descriptor;
+}
+
+// @beta
 export function useNavigationPropertyEditingContext(imodel: IModelConnection, dataProvider: IContentDataProvider): NavigationPropertyEditorContextProps;
 
 // @internal (undocumented)
@@ -900,17 +910,6 @@ export interface UsePropertyDataProviderWithUnifiedSelectionResult {
     isOverLimit: boolean;
     numSelectedElements: number;
 }
-
-// @beta
-export interface UsePropertyInfoProps {
-    descriptor: Descriptor;
-}
-
-// @beta
-export function usePropertyInfos({ descriptor }: UsePropertyInfoProps): {
-    propertyInfos: InstanceFilterPropertyInfo[];
-    propertyRenderer: (name: string) => JSX.Element;
-};
 
 // @public
 export function useRulesetRegistration(ruleset: Ruleset): void;
