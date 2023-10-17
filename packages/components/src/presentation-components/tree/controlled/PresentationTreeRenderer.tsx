@@ -5,7 +5,6 @@
 /** @packageDocumentation
  * @module Tree
  */
-
 import { useCallback, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -138,14 +137,9 @@ function MatchingInstancesCount({ filter, dataProvider, parentKey }: MatchingIns
         return <>{`${translate("tree.filter-dialog.results-count")}: ${count}`}</>;
       } catch (e) {
         if (e instanceof PresentationError && e.errorNumber === PresentationStatus.ResultSetTooLarge) {
+          // ResultSetTooLarge error can't occur if sizeLimit is undefined.
           return (
-            <>
-              {`${
-                requestOptions.sizeLimit === undefined
-                  ? translate("tree.filter-dialog.result-limit-exceeded.limit-unknown")
-                  : `${translate("tree.filter-dialog.result-limit-exceeded.limit-known")} ${requestOptions.sizeLimit}`
-              }. Provide ${translate("tree.additional-filtering")}.`}
-            </>
+            <>{`${translate("tree.filter-dialog.result-limit-exceeded")} ${requestOptions.sizeLimit!}. Provide ${translate("tree.additional-filtering")}.`}</>
           );
         }
       }

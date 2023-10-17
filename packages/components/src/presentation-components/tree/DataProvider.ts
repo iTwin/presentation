@@ -5,7 +5,6 @@
 /** @packageDocumentation
  * @module Tree
  */
-
 import memoize from "micro-memoize";
 import { DelayLoadedTreeNodeItem, PageOptions, PropertyFilterRuleGroupOperator, TreeNodeItem } from "@itwin/components-react";
 import { IDisposable, Logger } from "@itwin/core-bentley";
@@ -332,12 +331,11 @@ async function createNodesAndCountResult(
         case PresentationStatus.BackendTimeout:
           return createStatusNodeResult(parentNode, "tree.timeout", InfoTreeNodeItemType.BackendTimeout);
         case PresentationStatus.ResultSetTooLarge:
-          const label =
-            hierarchyLevelSizeLimit === undefined
-              ? `${translate("tree.result-limit-exceeded.limit-unknown")}.`
-              : `${translate("tree.result-limit-exceeded.limit-known")} ${hierarchyLevelSizeLimit}.`;
+          // ResultSetTooLarge error can't occur if hierarchyLevelSizeLimit is undefined.
           return {
-            nodes: [createInfoNode(parentNode, label, InfoTreeNodeItemType.ResultSetTooLarge)],
+            nodes: [
+              createInfoNode(parentNode, `${translate("tree.result-limit-exceeded")} ${hierarchyLevelSizeLimit!}.`, InfoTreeNodeItemType.ResultSetTooLarge),
+            ],
             count: 1,
           };
       }

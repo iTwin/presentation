@@ -469,22 +469,7 @@ describe("TreeDataProvider", () => {
       expect((actualResult[0] as PresentationInfoTreeNodeItem).message).to.eq(translate("tree.no-filtered-children"));
     });
 
-    it("returns info node if hierarchy level exceeds given limit when hierarchy limit is unknown", async () => {
-      const presentationManager = {
-        getNodesAndCount: sinon
-          .stub<Parameters<PresentationManager["getNodesAndCount"]>, ReturnType<PresentationManager["getNodesAndCount"]>>()
-          .callsFake(async () => {
-            throw new PresentationError(PresentationStatus.ResultSetTooLarge);
-          }),
-      };
-
-      sinon.stub(Presentation, "presentation").get(() => presentationManager);
-      const actualResult = await provider.getNodes(undefined);
-      expect(actualResult).to.have.lengthOf(1);
-      expect((actualResult[0] as PresentationInfoTreeNodeItem).message).to.contain(translate("tree.result-limit-exceeded.limit-unknown"));
-    });
-
-    it("returns info node if hierarchy level exceeds given limit when limit is known", async () => {
+    it("returns info node if hierarchy level exceeds given limit", async () => {
       const presentationManager = {
         getNodesAndCount: sinon
           .stub<Parameters<PresentationManager["getNodesAndCount"]>, ReturnType<PresentationManager["getNodesAndCount"]>>()
@@ -498,7 +483,7 @@ describe("TreeDataProvider", () => {
       const actualResult = await provider.getNodes(undefined);
       expect(actualResult).to.have.lengthOf(1);
       expect((actualResult[0] as PresentationInfoTreeNodeItem).message).to.contain(
-        `${translate("tree.result-limit-exceeded.limit-known")} ${provider.hierarchyLevelSizeLimit}`,
+        `${translate("tree.result-limit-exceeded")} ${provider.hierarchyLevelSizeLimit}`,
       );
     });
 

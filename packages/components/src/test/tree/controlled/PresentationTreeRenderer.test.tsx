@@ -263,37 +263,7 @@ describe("PresentationTreeRenderer", () => {
     expect(presentationManager.getNodesCount).to.be.calledOnce;
   });
 
-  it("renders `Too many instances match filter` message if results set too large error is thrown", async () => {
-    presentationManager.getNodesCount.reset();
-    presentationManager.getNodesCount.callsFake(async () => {
-      throw new PresentationError(PresentationStatus.ResultSetTooLarge, "Results set too large");
-    });
-
-    const { visibleNodes, nodeLoader } = setupTreeModel((model) => {
-      model.setChildren(
-        undefined,
-        [
-          createTreeModelNodeInput({
-            id: "A",
-            item: { filtering: { descriptor: createTestContentDescriptor({ fields: [propertyField] }), active: initialFilter, ancestorFilters: [] } },
-          }),
-        ],
-        0,
-      );
-    });
-
-    const result = render(<PresentationTreeRenderer {...baseTreeProps} visibleNodes={visibleNodes} nodeLoader={nodeLoader} />);
-
-    const { queryByText } = result;
-    await waitFor(() => expect(queryByText("A")).to.not.be.null);
-
-    await openFilterDialog(result);
-
-    await waitFor(() => expect(presentationManager.getNodesCount).to.be.calledOnce);
-    expect(queryByText(translate("tree.filter-dialog.result-limit-exceeded.limit-unknown"), { exact: false })).to.not.be.null;
-  });
-
-  it("renders `Too many instances match filter` message if results set too large error is thrown", async () => {
+  it("renders information message if results set too large error is thrown", async () => {
     presentationManager.getNodesCount.reset();
     presentationManager.getNodesCount.callsFake(async () => {
       throw new PresentationError(PresentationStatus.ResultSetTooLarge, "Results set too large");
@@ -327,7 +297,7 @@ describe("PresentationTreeRenderer", () => {
     await openFilterDialog(result);
 
     await waitFor(() => expect(presentationManager.getNodesCount).to.be.calledOnce);
-    expect(queryByText(translate("tree.filter-dialog.result-limit-exceeded.limit-known"), { exact: false })).to.not.be.null;
+    expect(queryByText(translate("tree.filter-dialog.result-limit-exceeded"), { exact: false })).to.not.be.null;
   });
 
   it("does not render result if unknown error is encountered", async () => {

@@ -29,10 +29,7 @@
   },
   "tree": {
     "no-filtered-children": "There are no child nodes matching current filter",
-    "result-limit-exceeded": {
-      "limit-unknown": "There more items than allowed",
-      "limit-known": "There are more items than allowed limit of"
-    },
+    "result-limit-exceeded": "There are more items than allowed limit of",
     "additional-filtering": "additional filtering",
     "timeout": "Creating the hierarchy level took too long",
     "unknown-error": "Error creating the hierarchy level",
@@ -40,10 +37,7 @@
     "clear-hierarchy-level-filter": "Clear active filter",
     "filter-dialog": {
       "results-count": "Matching items",
-      "result-limit-exceeded": {
-        "limit-unknown": "Too many items match filter",
-        "limit-known": "Exceeded matching item limit of"
-      }
+      "result-limit-exceeded": "Exceeded matching item limit of"
     }
   },
   "navigation-property-editor": {
