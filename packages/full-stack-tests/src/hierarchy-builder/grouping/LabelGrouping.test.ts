@@ -15,32 +15,32 @@ import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
 
 describe("Stateless hierarchy builder", () => {
-  describe("LabelGrouping", () => {
-    let selectClauseFactory: NodeSelectClauseFactory;
-    let subjectClassName: string;
+  let selectClauseFactory: NodeSelectClauseFactory;
+  let subjectClassName: string;
 
-    before(async function () {
-      await initialize();
-      subjectClassName = Subject.classFullName.replace(":", ".");
-      selectClauseFactory = new NodeSelectClauseFactory();
+  before(async function () {
+    await initialize();
+    subjectClassName = Subject.classFullName.replace(":", ".");
+    selectClauseFactory = new NodeSelectClauseFactory();
+  });
+
+  after(async () => {
+    await terminate();
+  });
+
+  function createProvider(props: { imodel: IModelConnection; hierarchy: IHierarchyLevelDefinitionsFactory }) {
+    const { imodel, hierarchy } = props;
+    const schemas = new SchemaContext();
+    schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
+    const metadataProvider = createMetadataProvider(schemas);
+    return new HierarchyProvider({
+      metadataProvider,
+      hierarchyDefinition: hierarchy,
+      queryExecutor: createECSqlQueryExecutor(imodel),
     });
+  }
 
-    after(async () => {
-      await terminate();
-    });
-
-    function createProvider(props: { imodel: IModelConnection; hierarchy: IHierarchyLevelDefinitionsFactory }) {
-      const { imodel, hierarchy } = props;
-      const schemas = new SchemaContext();
-      schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-      const metadataProvider = createMetadataProvider(schemas);
-      return new HierarchyProvider({
-        metadataProvider,
-        hierarchyDefinition: hierarchy,
-        queryExecutor: createECSqlQueryExecutor(imodel),
-      });
-    }
-
+  describe("Label grouping", () => {
     const basicHierarchy: IHierarchyLevelDefinitionsFactory = {
       async defineHierarchyLevel(parentNode) {
         if (!parentNode) {
@@ -229,6 +229,120 @@ describe("Stateless hierarchy builder", () => {
                 ],
               }),
             ],
+          }),
+        ],
+      });
+    });
+  });
+
+  describe("Label merging", () => {
+    it("merges instance nodes with same merge id", async function () {
+      const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+        const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
+        const childSubject1 = insertSubject({ builder, codeValue: "1", parentId: rootSubject.id });
+        const childSubject2 = insertSubject({ builder, codeValue: "2", parentId: rootSubject.id });
+        return { rootSubject, childSubject1, childSubject2 };
+      });
+
+      const hierarchy: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel(parentNode) {
+          if (!parentNode) {
+            return [
+              {
+                fullClassName: subjectClassName,
+                query: {
+                  ecsql: `
+                    SELECT ${await selectClauseFactory.createSelectClause({
+                      ecClassId: { selector: `this.ECClassId` },
+                      ecInstanceId: { selector: `this.ECInstanceId` },
+                      nodeLabel: "merge this",
+                      mergeByLabelId: "merge",
+                    })}
+                    FROM ${subjectClassName} AS this
+                    WHERE this.Parent.Id = (${IModel.rootSubjectId})
+                  `,
+                },
+              },
+            ];
+          }
+          return [];
+        },
+      };
+
+      await validateHierarchy({
+        provider: createProvider({ imodel, hierarchy }),
+        expect: [
+          NodeValidators.createForInstanceNode({
+            instanceKeys: [keys.childSubject1, keys.childSubject2],
+            label: "merge this",
+            children: false,
+          }),
+        ],
+      });
+    });
+
+    it("merges instance nodes from different hidden parent hierarchy levels ", async function () {
+      const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+        const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
+        const visibleSubject1 = insertSubject({ builder, codeValue: "merged", parentId: rootSubject.id });
+        const hiddenSubject = insertSubject({ builder, codeValue: "hide", parentId: rootSubject.id });
+        const visibleSubject2 = insertSubject({ builder, codeValue: "merged", parentId: hiddenSubject.id });
+        return { rootSubject, visibleSubject1, visibleSubject2 };
+      });
+
+      const hierarchy: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel(parentNode) {
+          if (!parentNode) {
+            return [
+              {
+                fullClassName: subjectClassName,
+                query: {
+                  ecsql: `
+                    SELECT ${await selectClauseFactory.createSelectClause({
+                      ecClassId: { selector: `this.ECClassId` },
+                      ecInstanceId: { selector: `this.ECInstanceId` },
+                      nodeLabel: { selector: `this.CodeValue` },
+                      mergeByLabelId: "merge",
+                      hideNodeInHierarchy: { selector: `IIF(this.CodeValue = 'hide', 1, 0)` },
+                    })}
+                    FROM ${subjectClassName} AS this
+                    WHERE this.Parent.Id = (${IModel.rootSubjectId})
+                  `,
+                },
+              },
+            ];
+          }
+          if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "hide") {
+            return [
+              {
+                fullClassName: subjectClassName,
+                query: {
+                  ecsql: `
+                    SELECT ${await selectClauseFactory.createSelectClause({
+                      ecClassId: { selector: `this.ECClassId` },
+                      ecInstanceId: { selector: `this.ECInstanceId` },
+                      nodeLabel: { selector: `this.CodeValue` },
+                      mergeByLabelId: "merge",
+                    })}
+                    FROM ${subjectClassName} AS this
+                    WHERE this.Parent.Id = ?
+                  `,
+                  bindings: parentNode.key.instanceKeys.map((k) => ({ type: "id", value: k.id })),
+                },
+              },
+            ];
+          }
+          return [];
+        },
+      };
+
+      await validateHierarchy({
+        provider: createProvider({ imodel, hierarchy }),
+        expect: [
+          NodeValidators.createForInstanceNode({
+            instanceKeys: [keys.visibleSubject1, keys.visibleSubject2],
+            label: "merged",
+            children: false,
           }),
         ],
       });

@@ -3,9 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { Logger } from "@itwin/core-bentley";
 import { InstanceKey } from "@itwin/presentation-common";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
 import { hasChildren } from "@itwin/presentation-hierarchy-builder/lib/cjs/hierarchy-builder/internal/Common";
+
+const loggingNamespace = `Presentation.HierarchyBuilder.HierarchyValidation`;
 
 export interface HierarchyDef<TNode> {
   node: TNode;
@@ -159,14 +162,12 @@ export namespace NodeValidators {
 }
 
 export async function validateHierarchy(props: { provider: HierarchyProvider; parentNode?: HierarchyNode; expect: ExpectedHierarchyDef[] }) {
+  const parentIdentifier = props.parentNode ? props.parentNode.label : "<root>";
   const nodes = await props.provider.getNodes(props.parentNode);
+  Logger.logInfo(loggingNamespace, `Received ${nodes.length} child nodes for ${parentIdentifier}`);
 
   if (nodes.length !== props.expect.length) {
-    throw new Error(
-      `[${props.parentNode ? props.parentNode.label : "<root>"}] Expected ${props.expect.length} ${props.parentNode ? "child" : "root"} nodes, got ${
-        nodes.length
-      }`,
-    );
+    throw new Error(`[${parentIdentifier}] Expected ${props.expect.length} ${props.parentNode ? "child" : "root"} nodes, got ${nodes.length}`);
   }
 
   const resultHierarchy = new Array<HierarchyDef<HierarchyNode>>();

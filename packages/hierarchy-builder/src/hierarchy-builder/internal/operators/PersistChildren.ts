@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { mergeAll, Observable, reduce, tap } from "rxjs";
+import { mergeAll, Observable, tap, toArray } from "rxjs";
 import { HierarchyNode, ProcessedHierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
 import { createOperatorLoggingNamespace } from "../Common";
@@ -19,7 +19,7 @@ export function createPersistChildrenOperator(parentNode: HierarchyNode) {
       return childNodes;
     }
     return childNodes.pipe(
-      reduce((acc, childNode) => [...acc, childNode], new Array<ProcessedHierarchyNode>()),
+      toArray(),
       tap((list) => {
         if (Object.isExtensible(parentNode)) {
           parentNode.children = list;

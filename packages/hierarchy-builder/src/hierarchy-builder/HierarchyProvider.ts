@@ -132,9 +132,9 @@ export class HierarchyProvider {
     const directChildren = this.ensureDirectChildren(parentNode);
     const result = directChildren.pipe(
       preProcessNodes(this._hierarchyFactory),
-      createMergeInstanceNodesByLabelOperator(this._directNodesCache),
       createHideIfNoChildrenOperator((n) => this.hasNodesObservable(n), false),
       createHideNodesInHierarchyOperator((n) => this.getNodesObservable(n), this._directNodesCache, false),
+      createMergeInstanceNodesByLabelOperator(this._directNodesCache),
       sortNodesByLabelOperator,
       createClassGroupingOperator(this._metadataProvider),
       createLabelGroupingOperator(),
