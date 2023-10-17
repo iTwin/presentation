@@ -41,7 +41,7 @@ export namespace GenericInstanceFilter {
    * @beta
    */
   export function fromPresentationInstanceFilter(filter: PresentationInstanceFilter): GenericInstanceFilter {
-    const context: ConvertContext = { relatedInstances: [], propertyClasses: [] };
+    const context: ConvertContext = { relatedInstances: [], propertyClasses: [], usedRelatedAliases: new Map<string, number>() };
 
     const rules = createMetadataFromFilter(filter, context);
     return {
@@ -123,6 +123,7 @@ export interface RelatedInstanceDescription {
 interface ConvertContext {
   relatedInstances: RelatedInstance[];
   propertyClasses: ClassInfo[];
+  usedRelatedAliases: Map<string, number>;
 }
 
 interface RelatedInstance {
@@ -199,9 +200,11 @@ function getRelatedInstanceDescription(field: PropertiesField, propClassName: st
     return existing;
   }
 
+  const baseAlias = `rel_${propClassName.split(":")[1]}`;
+  const index = getAliasIndex(baseAlias, ctx.usedRelatedAliases);
   const newRelated = {
     path: pathToProperty,
-    alias: `rel_${propClassName.split(":")[1]}`,
+    alias: `rel_${propClassName.split(":")[1]}_${index}`,
   };
 
   ctx.relatedInstances.push(newRelated);
@@ -240,4 +243,10 @@ function handleStringifiedUniqueValues(filter: PresentationInstanceFilterConditi
     selectedValueIndex++;
   }
   return conditionGroup;
+}
+
+function getAliasIndex(alias: string, usedAliases: Map<string, number>) {
+  const index = usedAliases.has(alias) ? usedAliases.get(alias)! + 1 : 0;
+  usedAliases.set(alias, index);
+  return index;
 }

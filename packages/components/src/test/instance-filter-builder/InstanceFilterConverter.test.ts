@@ -305,9 +305,9 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
     });
   });
 
-  describe("handles related property", () => {
-    function createAlias(className: string) {
-      return `rel_${className}`;
+  describe("handles related properties", () => {
+    function createAlias(className: string, index?: number) {
+      return `rel_${className}_${index ?? 0}`;
     }
 
     const testImodel = {} as IModelConnection;
@@ -316,6 +316,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
     const classCInfo: ClassInfo = { id: "0x3", name: "TestSchema:C", label: "C Class" };
     const classAToBInfo: ClassInfo = { id: "0x4", name: "TestSchema:AToB", label: "A To B" };
     const classBToCInfo: ClassInfo = { id: "0x5", name: "TestSchema:BToC", label: "B TO C" };
+    const classAToCInfo: ClassInfo = { id: "0x5", name: "TestSchema:AToC", label: "A TO C" };
     const pathBToA: RelationshipPath = [
       {
         sourceClassInfo: classBInfo,
@@ -336,80 +337,29 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
         isPolymorphicTargetClass: true,
       },
     ];
+    const pathCToA: RelationshipPath = [
+      {
+        sourceClassInfo: classCInfo,
+        targetClassInfo: classAInfo,
+        relationshipInfo: classAToCInfo,
+        isForwardRelationship: false,
+        isPolymorphicRelationship: true,
+        isPolymorphicTargetClass: true,
+      },
+    ];
     const propertyInfo = createTestPropertyInfo({ classInfo: classCInfo });
-    const classCPropertiesField = createTestPropertiesContentField({ properties: [{ property: propertyInfo }] });
-    const classCNestedField = createTestNestedContentField({ nestedFields: [classCPropertiesField], pathToPrimaryClass: pathCToB });
-    const classBNestedField = createTestNestedContentField({ nestedFields: [classCNestedField], pathToPrimaryClass: pathBToA });
+    const classC1PropertiesField = createTestPropertiesContentField({ name: "C1", properties: [{ property: propertyInfo }] });
+    const classC2PropertiesField = createTestPropertiesContentField({ name: "C2", properties: [{ property: propertyInfo }] });
+    const classC1NestedField = createTestNestedContentField({ nestedFields: [classC1PropertiesField], pathToPrimaryClass: pathCToB });
+    // field A to B
+    createTestNestedContentField({ nestedFields: [classC1NestedField], pathToPrimaryClass: pathBToA });
 
-    beforeEach(() => {
-      classCPropertiesField.resetParentship();
-      classCNestedField.resetParentship();
-      classBNestedField.resetParentship();
-    });
+    // field A to C
+    createTestNestedContentField({ nestedFields: [classC2PropertiesField], pathToPrimaryClass: pathCToA });
 
     it("in single condition", async () => {
-      classCPropertiesField.rebuildParentship(classCNestedField);
       const filter: PresentationInstanceFilterCondition = {
-        field: classCPropertiesField,
-        operator: PropertyFilterRuleOperator.IsNull,
-      };
-      const { expression, relatedInstances } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
-      expect(expression).to.be.eq(`${createAlias("C")}.${propertyInfo.name} = NULL`);
-      expect(relatedInstances)
-        .to.be.lengthOf(1)
-        .and.containSubset([
-          {
-            pathFromSelectToPropertyClass: [
-              {
-                sourceClassName: classBInfo.name,
-                targetClassName: classCInfo.name,
-                relationshipName: classBToCInfo.name,
-                isForwardRelationship: true,
-              },
-            ],
-            alias: createAlias("C"),
-          },
-        ]);
-    });
-
-    it("in multiple conditions", async () => {
-      classCPropertiesField.rebuildParentship(classCNestedField);
-      const filter: PresentationInstanceFilterConditionGroup = {
-        operator: PropertyFilterRuleGroupOperator.And,
-        conditions: [
-          {
-            field: classCPropertiesField,
-            operator: PropertyFilterRuleOperator.IsNull,
-          },
-          {
-            field: classCPropertiesField,
-            operator: PropertyFilterRuleOperator.IsNotNull,
-          },
-        ],
-      };
-      const { expression, relatedInstances } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
-      expect(expression).to.be.eq(`(${createAlias("C")}.${propertyInfo.name} = NULL AND ${createAlias("C")}.${propertyInfo.name} <> NULL)`);
-      expect(relatedInstances)
-        .to.be.lengthOf(1)
-        .and.containSubset([
-          {
-            pathFromSelectToPropertyClass: [
-              {
-                sourceClassName: classBInfo.name,
-                targetClassName: classCInfo.name,
-                relationshipName: classBToCInfo.name,
-                isForwardRelationship: true,
-              },
-            ],
-            alias: createAlias("C"),
-          },
-        ]);
-    });
-
-    it("in deeply nested condition field", async () => {
-      classCNestedField.rebuildParentship(classBNestedField);
-      const filter: PresentationInstanceFilterCondition = {
-        field: classCPropertiesField,
+        field: classC1PropertiesField,
         operator: PropertyFilterRuleOperator.IsNull,
       };
       const { expression, relatedInstances } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
@@ -433,6 +383,125 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
               },
             ],
             alias: createAlias("C"),
+          },
+        ]);
+    });
+
+    it("in multiple conditions", async () => {
+      const filter: PresentationInstanceFilterConditionGroup = {
+        operator: PropertyFilterRuleGroupOperator.And,
+        conditions: [
+          {
+            field: classC1PropertiesField,
+            operator: PropertyFilterRuleOperator.IsNull,
+          },
+          {
+            field: classC1PropertiesField,
+            operator: PropertyFilterRuleOperator.IsNotNull,
+          },
+        ],
+      };
+      const { expression, relatedInstances } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
+      expect(expression).to.be.eq(`(${createAlias("C")}.${propertyInfo.name} = NULL AND ${createAlias("C")}.${propertyInfo.name} <> NULL)`);
+      expect(relatedInstances)
+        .to.be.lengthOf(1)
+        .and.containSubset([
+          {
+            pathFromSelectToPropertyClass: [
+              {
+                sourceClassName: classAInfo.name,
+                targetClassName: classBInfo.name,
+                relationshipName: classAToBInfo.name,
+                isForwardRelationship: true,
+              },
+              {
+                sourceClassName: classBInfo.name,
+                targetClassName: classCInfo.name,
+                relationshipName: classBToCInfo.name,
+                isForwardRelationship: true,
+              },
+            ],
+            alias: createAlias("C"),
+          },
+        ]);
+    });
+
+    it("in deeply nested condition field", async () => {
+      const filter: PresentationInstanceFilterCondition = {
+        field: classC1PropertiesField,
+        operator: PropertyFilterRuleOperator.IsNull,
+      };
+      const { expression, relatedInstances } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
+      expect(expression).to.be.eq(`${createAlias("C")}.${propertyInfo.name} = NULL`);
+      expect(relatedInstances)
+        .to.be.lengthOf(1)
+        .and.containSubset([
+          {
+            pathFromSelectToPropertyClass: [
+              {
+                sourceClassName: classAInfo.name,
+                targetClassName: classBInfo.name,
+                relationshipName: classAToBInfo.name,
+                isForwardRelationship: true,
+              },
+              {
+                sourceClassName: classBInfo.name,
+                targetClassName: classCInfo.name,
+                relationshipName: classBToCInfo.name,
+                isForwardRelationship: true,
+              },
+            ],
+            alias: createAlias("C"),
+          },
+        ]);
+    });
+
+    it("from same class with different paths", async () => {
+      const filter: PresentationInstanceFilterConditionGroup = {
+        operator: PropertyFilterRuleGroupOperator.And,
+        conditions: [
+          {
+            field: classC1PropertiesField,
+            operator: PropertyFilterRuleOperator.IsNull,
+          },
+          {
+            field: classC2PropertiesField,
+            operator: PropertyFilterRuleOperator.IsNotNull,
+          },
+        ],
+      };
+      const { expression, relatedInstances } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
+      expect(expression).to.be.eq(`(${createAlias("C", 0)}.${propertyInfo.name} = NULL AND ${createAlias("C", 1)}.${propertyInfo.name} <> NULL)`);
+      expect(relatedInstances)
+        .to.be.lengthOf(2)
+        .and.containSubset([
+          {
+            pathFromSelectToPropertyClass: [
+              {
+                sourceClassName: classAInfo.name,
+                targetClassName: classBInfo.name,
+                relationshipName: classAToBInfo.name,
+                isForwardRelationship: true,
+              },
+              {
+                sourceClassName: classBInfo.name,
+                targetClassName: classCInfo.name,
+                relationshipName: classBToCInfo.name,
+                isForwardRelationship: true,
+              },
+            ],
+            alias: createAlias("C", 0),
+          },
+          {
+            pathFromSelectToPropertyClass: [
+              {
+                sourceClassName: classAInfo.name,
+                targetClassName: classCInfo.name,
+                relationshipName: classAToCInfo.name,
+                isForwardRelationship: true,
+              },
+            ],
+            alias: createAlias("C", 1),
           },
         ]);
     });
