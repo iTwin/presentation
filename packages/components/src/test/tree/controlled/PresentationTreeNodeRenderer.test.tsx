@@ -7,7 +7,7 @@ import { expect } from "chai";
 import sinon from "sinon";
 import * as moq from "typemoq";
 import { PropertyRecord } from "@itwin/appui-abstract";
-import { PropertyFilterRuleOperator, TreeActions, TreeModel, UiComponents } from "@itwin/components-react";
+import { PropertyFilterRuleOperator, TreeActions, UiComponents } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
@@ -76,6 +76,7 @@ describe("PresentationTreeNodeRenderer", () => {
       label: PropertyRecord.fromString("Info Node"),
       children: undefined,
       isSelectionDisabled: true,
+      type: InfoTreeNodeItemType.Unset,
       message,
     };
     const node = createTreeModelNode(undefined, item);
@@ -147,43 +148,23 @@ describe("PresentationTreeNodeRenderer", () => {
     const node = createTreeModelNode(undefined, nodeItem);
 
     const { queryByText } = render(
-      <PresentationTreeNodeRenderer
-        treeActions={treeActionsMock.object}
-        node={node}
-        onFilterClick={() => {}}
-        onClearFilterClick={() => {}}
-        getTreeModel={() => {
-          return {} as unknown as TreeModel;
-        }}
-      />,
+      <PresentationTreeNodeRenderer treeActions={treeActionsMock.object} node={node} onFilterClick={() => {}} onClearFilterClick={() => {}} />,
     );
 
-    const infoNode = await waitFor(() => queryByText("tree.filtering-needed", { exact: false }));
+    const infoNode = await waitFor(() => queryByText("tree.additional-filtering", { exact: false }));
     expect(infoNode).to.not.be.null;
   });
 
   it("calls 'onFilterClick' when additional filtering message is clicked with correct parent", async () => {
-    const nodeInfoItem = createInfoTreeNodeItem({ type: InfoTreeNodeItemType.ResultSetTooLarge });
-    const nodeItem = createTreeNodeItem();
+    const nodeInfoItem = createInfoTreeNodeItem({ type: InfoTreeNodeItemType.ResultSetTooLarge, parentId: "testId" });
     const node = createTreeModelNode(undefined, nodeInfoItem);
-
-    const parentNode = createTreeModelNode(undefined, nodeItem);
-
     const filterClickSpy = sinon.spy();
 
     const { getByText } = render(
-      <PresentationTreeNodeRenderer
-        treeActions={treeActionsMock.object}
-        node={node}
-        onFilterClick={filterClickSpy}
-        onClearFilterClick={() => {}}
-        getTreeModel={() => {
-          return { getNode: sinon.stub().returns(parentNode) } as unknown as TreeModel;
-        }}
-      />,
+      <PresentationTreeNodeRenderer treeActions={treeActionsMock.object} node={node} onFilterClick={filterClickSpy} onClearFilterClick={() => {}} />,
     );
 
-    const infoNode = await waitFor(() => getByText("tree.filtering-needed", { exact: false }));
+    const infoNode = await waitFor(() => getByText("tree.additional-filtering", { exact: false }));
 
     fireEvent.click(infoNode);
     expect(filterClickSpy).to.be.called;
@@ -196,18 +177,10 @@ describe("PresentationTreeNodeRenderer", () => {
     const filterClickSpy = sinon.spy();
 
     const { getByText } = render(
-      <PresentationTreeNodeRenderer
-        treeActions={treeActionsMock.object}
-        node={node}
-        onFilterClick={filterClickSpy}
-        onClearFilterClick={() => {}}
-        getTreeModel={() => {
-          return { getNode: sinon.stub().returns({}) } as unknown as TreeModel;
-        }}
-      />,
+      <PresentationTreeNodeRenderer treeActions={treeActionsMock.object} node={node} onFilterClick={filterClickSpy} onClearFilterClick={() => {}} />,
     );
 
-    const infoNode = await waitFor(() => getByText("tree.filtering-needed", { exact: false }));
+    const infoNode = await waitFor(() => getByText("tree.additional-filtering", { exact: false }));
 
     fireEvent.click(infoNode);
     expect(filterClickSpy).to.not.be.called;

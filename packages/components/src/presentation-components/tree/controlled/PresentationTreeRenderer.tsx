@@ -8,8 +8,14 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AbstractTreeNodeLoaderWithProvider, TreeNodeRendererProps, TreeRenderer, TreeRendererProps, useDebouncedAsyncValue } from "@itwin/components-react";
-import { Text } from "@itwin/itwinui-react";
+import {
+  AbstractTreeNodeLoaderWithProvider,
+  isTreeModelNode,
+  TreeNodeRendererProps,
+  TreeRenderer,
+  TreeRendererProps,
+  useDebouncedAsyncValue,
+} from "@itwin/components-react";
 import { NodeKey, PresentationError, PresentationStatus } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { translate } from "../../common/Utils";
@@ -17,7 +23,12 @@ import { convertToInstanceFilterDefinition } from "../../instance-filter-builder
 import { PresentationInstanceFilterDialog } from "../../instance-filter-builder/PresentationInstanceFilterDialog";
 import { PresentationInstanceFilterInfo } from "../../instance-filter-builder/Types";
 import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
-import { FilterablePresentationTreeNodeItem, isFilterablePresentationTreeNodeItem, PresentationTreeNodeItem } from "../PresentationTreeNodeItem";
+import {
+  FilterablePresentationTreeNodeItem,
+  isFilterablePresentationTreeNodeItem,
+  isPresentationTreeNodeItem,
+  PresentationTreeNodeItem,
+} from "../PresentationTreeNodeItem";
 import { PresentationTreeNodeRenderer } from "./PresentationTreeNodeRenderer";
 import { useHierarchyLevelFiltering } from "./UseHierarchyLevelFiltering";
 
@@ -39,21 +50,24 @@ export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
   const nodeLoader = props.nodeLoader;
   const { applyFilter, clearFilter } = useHierarchyLevelFiltering({ nodeLoader, modelSource: nodeLoader.modelSource });
   const [filterNode, setFilterNode] = useState<PresentationTreeNodeItem>();
+  const treeModel = useMemo(() => props.visibleNodes.getModel(), [props.visibleNodes]);
 
   const filterableNodeRenderer = useCallback(
     (nodeProps: TreeNodeRendererProps) => {
       return (
         <PresentationTreeNodeRenderer
           {...nodeProps}
-          getTreeModel={props.visibleNodes.getModel}
-          onFilterClick={(node) => {
-            setFilterNode(node);
+          onFilterClick={(nodeId) => {
+            const node = treeModel.getNode(nodeId);
+            if (isTreeModelNode(node) && isPresentationTreeNodeItem(node.item)) {
+              setFilterNode(node.item);
+            }
           }}
           onClearFilterClick={clearFilter}
         />
       );
     },
-    [props.visibleNodes.getModel, clearFilter],
+    [clearFilter, treeModel],
   );
 
   const divRef = useRef<HTMLDivElement>(null);
@@ -65,7 +79,7 @@ export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
             <TreeNodeFilterBuilderDialog
               dataProvider={nodeLoader.dataProvider}
               onApply={(info) => {
-                applyFilter(filterNode, info);
+                applyFilter(filterNode.id, info);
                 setFilterNode(undefined);
               }}
               onClose={() => {
@@ -125,13 +139,13 @@ function MatchingInstancesCount({ filter, dataProvider, parentKey }: MatchingIns
       } catch (e) {
         if (e instanceof PresentationError && e.errorNumber === PresentationStatus.ResultSetTooLarge) {
           return (
-            <Text isMuted className="info-tree-node-item">
-              {`${translate("tree.filtering-needed")}. ${
+            <>
+              {`${
                 requestOptions.sizeLimit === undefined
                   ? translate("tree.filter-dialog.result-limit-exceeded.limit-unknown")
-                  : `${translate("tree.filter-dialog.result-limit-exceeded.limit-known")} ${requestOptions.sizeLimit}.`
-              } `}
-            </Text>
+                  : `${translate("tree.filter-dialog.result-limit-exceeded.limit-known")} ${requestOptions.sizeLimit}`
+              }. Provide ${translate("tree.additional-filtering")}.`}
+            </>
           );
         }
       }

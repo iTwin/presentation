@@ -8,21 +8,20 @@
 
 import "./PresentationTreeNodeRenderer.scss";
 import classnames from "classnames";
-import { isTreeModelNode, TreeModel, TreeNodeRenderer, TreeNodeRendererProps } from "@itwin/components-react";
+import { TreeNodeRenderer, TreeNodeRendererProps } from "@itwin/components-react";
 import { TreeNode, UnderlinedButton } from "@itwin/core-react";
 import { SvgCloseSmall, SvgFilter, SvgFilterHollow } from "@itwin/itwinui-icons-react";
 import { ButtonGroup, IconButton, Text } from "@itwin/itwinui-react";
 import { translate } from "../../common/Utils";
-import { InfoTreeNodeItemType, isPresentationInfoTreeNodeItem, isPresentationTreeNodeItem, PresentationTreeNodeItem } from "../PresentationTreeNodeItem";
+import { InfoTreeNodeItemType, isPresentationInfoTreeNodeItem, isPresentationTreeNodeItem } from "../PresentationTreeNodeItem";
 
 /**
  * Props for [[PresentationTreeNodeRenderer]] component.
  * @beta
  */
 export interface PresentationTreeNodeRendererProps extends TreeNodeRendererProps {
-  onFilterClick: (node: PresentationTreeNodeItem) => void;
-  onClearFilterClick: (node: PresentationTreeNodeItem) => void;
-  getTreeModel?: () => TreeModel;
+  onFilterClick: (nodeId: string) => void;
+  onClearFilterClick: (nodeId: string) => void;
 }
 
 /**
@@ -32,7 +31,7 @@ export interface PresentationTreeNodeRendererProps extends TreeNodeRendererProps
  * @beta
  */
 export function PresentationTreeNodeRenderer(props: PresentationTreeNodeRendererProps) {
-  const { onFilterClick, onClearFilterClick, getTreeModel, ...restProps } = props;
+  const { onFilterClick, onClearFilterClick, ...restProps } = props;
   const nodeItem = props.node.item;
 
   if (isPresentationInfoTreeNodeItem(nodeItem)) {
@@ -42,19 +41,21 @@ export function PresentationTreeNodeRenderer(props: PresentationTreeNodeRenderer
         label={
           <span>
             <Text isMuted className="info-tree-node-item">
-              {nodeItem.type === InfoTreeNodeItemType.ResultSetTooLarge && getTreeModel && (
-                <UnderlinedButton
-                  onClick={() => {
-                    const parentNode = getTreeModel().getNode(nodeItem.parentId);
-                    if (isTreeModelNode(parentNode) && isPresentationTreeNodeItem(parentNode.item)) {
-                      onFilterClick(parentNode.item);
-                    }
-                  }}
-                >
-                  {`${translate("tree.filtering-needed")}. `}
-                </UnderlinedButton>
+              {nodeItem.type === InfoTreeNodeItemType.ResultSetTooLarge && (
+                <span>
+                  <span>Provide </span>
+                  <UnderlinedButton
+                    onClick={() => {
+                      if (nodeItem.parentId !== undefined) {
+                        onFilterClick(nodeItem.parentId);
+                      }
+                    }}
+                  >
+                    {`${translate("tree.additional-filtering")}`}
+                  </UnderlinedButton>
+                  <span> - </span>
+                </span>
               )}
-
               <span>{nodeItem.message}</span>
             </Text>
           </span>
@@ -74,10 +75,10 @@ export function PresentationTreeNodeRenderer(props: PresentationTreeNodeRenderer
           isFiltered={nodeItem.filtering?.active !== undefined}
           filteringDisabled={filteringDisabled}
           onClearFilterClick={() => {
-            onClearFilterClick(nodeItem);
+            onClearFilterClick(nodeItem.id);
           }}
           onFilterClick={() => {
-            onFilterClick(nodeItem);
+            onFilterClick(nodeItem.id);
           }}
         />
       </TreeNodeRenderer>

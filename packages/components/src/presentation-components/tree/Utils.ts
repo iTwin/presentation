@@ -8,9 +8,9 @@
 
 import { Observable as RxjsObservable } from "rxjs/internal/Observable";
 import { PropertyRecord } from "@itwin/appui-abstract";
-import { DelayLoadedTreeNodeItem, ItemColorOverrides, ItemStyle, Observable, PageOptions as UiPageOptions, TreeNodeItem } from "@itwin/components-react";
+import { DelayLoadedTreeNodeItem, ItemColorOverrides, ItemStyle, Observable, TreeNodeItem, PageOptions as UiPageOptions } from "@itwin/components-react";
 import { CheckBoxState } from "@itwin/core-react";
-import { LabelDefinition, Node, NodeKey, PageOptions as PresentationPageOptions, PartialNode } from "@itwin/presentation-common";
+import { LabelDefinition, Node, NodeKey, PartialNode, PageOptions as PresentationPageOptions } from "@itwin/presentation-common";
 import { StyleHelper } from "../common/StyleHelper";
 import { createLabelRecord } from "../common/Utils";
 import { InfoTreeNodeItemType, PresentationInfoTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem";
@@ -195,6 +195,6 @@ export function createInfoNode(parentNode: TreeNodeItem | undefined, message: st
     message,
     isSelectionDisabled: true,
     children: undefined,
-    type,
+    type: type ?? InfoTreeNodeItemType.Unset,
   };
 }

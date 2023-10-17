@@ -14,6 +14,7 @@ import {
   MutableTreeModel,
   PropertyFilterRuleOperator,
   TreeActions,
+  TreeModel,
   TreeModelSource,
   TreeNodeLoadResult,
   UiComponents,
@@ -152,6 +153,36 @@ describe("PresentationTreeRenderer", () => {
     expect(dialog).to.be.null;
   });
 
+  it("does not render filter dialog when tree model does not find a matching node", async () => {
+    const { visibleNodes, nodeLoader } = setupTreeModel((model) => {
+      model.setChildren(
+        undefined,
+        [createTreeModelNodeInput({ id: "A", item: { filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [] } } })],
+        0,
+      );
+    });
+
+    // stub getNode method to make it return undefined when onFilterClick() is called.
+    visibleNodes.getModel = () => {
+      return { getNode: sinon.stub().returns(undefined) } as unknown as TreeModel;
+    };
+
+    const { queryByText, baseElement, user, container } = render(
+      <PresentationTreeRenderer {...baseTreeProps} visibleNodes={visibleNodes} nodeLoader={nodeLoader} />,
+    );
+
+    await waitFor(() => expect(queryByText("A")).to.not.be.null);
+
+    const filterButton = container.querySelector(".presentation-components-node-action-buttons button");
+    expect(filterButton).to.not.be.null;
+    await user.click(filterButton!);
+
+    // assert that dialog is not loaded
+    await waitFor(() => {
+      expect(baseElement.querySelector(".presentation-instance-filter-dialog")).to.be.null;
+    });
+  });
+
   it("applies filter and closes dialog", async () => {
     const { visibleNodes, modelSource, nodeLoader } = setupTreeModel((model) => {
       model.setChildren(
@@ -259,7 +290,7 @@ describe("PresentationTreeRenderer", () => {
     await openFilterDialog(result);
 
     await waitFor(() => expect(presentationManager.getNodesCount).to.be.calledOnce);
-    expect(queryByText(translate("tree.filter-dialog.results-limit-exceeded.limit-unknown"), { exact: false })).to.not.be.null;
+    expect(queryByText(translate("tree.filter-dialog.result-limit-exceeded.limit-unknown"), { exact: false })).to.not.be.null;
   });
 
   it("renders `Too many instances match filter` message if results set too large error is thrown", async () => {
@@ -296,7 +327,7 @@ describe("PresentationTreeRenderer", () => {
     await openFilterDialog(result);
 
     await waitFor(() => expect(presentationManager.getNodesCount).to.be.calledOnce);
-    expect(queryByText(translate("tree.filter-dialog.results-limit-exceeded.limit-known"), { exact: false })).to.not.be.null;
+    expect(queryByText(translate("tree.filter-dialog.result-limit-exceeded.limit-known"), { exact: false })).to.not.be.null;
   });
 
   it("does not render result if unknown error is encountered", async () => {

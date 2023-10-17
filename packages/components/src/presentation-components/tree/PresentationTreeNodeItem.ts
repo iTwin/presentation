@@ -69,7 +69,7 @@ export interface PresentationInfoTreeNodeItem extends ImmediatelyLoadedTreeNodeI
   /** This type of tree item cannot have children. */
   children: undefined;
   /** Type of item message */
-  type?: InfoTreeNodeItemType;
+  type: InfoTreeNodeItemType;
 }
 
 /**

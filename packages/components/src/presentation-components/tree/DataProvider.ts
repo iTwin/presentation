@@ -334,8 +334,8 @@ async function createNodesAndCountResult(
         case PresentationStatus.ResultSetTooLarge:
           const label =
             hierarchyLevelSizeLimit === undefined
-              ? translate("tree.result-limit-exceeded.limit-unknown")
-              : `${translate("tree.result-limit-exceeded.limit-known")} ${hierarchyLevelSizeLimit}`;
+              ? `${translate("tree.result-limit-exceeded.limit-unknown")}.`
+              : `${translate("tree.result-limit-exceeded.limit-known")} ${hierarchyLevelSizeLimit}.`;
           return {
             nodes: [createInfoNode(parentNode, label, InfoTreeNodeItemType.ResultSetTooLarge)],
             count: 1,
