@@ -33,19 +33,19 @@
       align-items: center;
       width: inherit;
 
-      .presentation-async-select-value {
-        height: 80%;
-        max-height: calc(var(--iui-size-s) * 3);
-        margin-top: 0px;
-        margin-bottom: 0px;
-      }
-
       .placeholder {
         display: block;
         width: 100%;
         white-space: nowrap;
         text-overflow: ellipsis;
         overflow: hidden;
+      }
+
+      .presentation-async-select-value {
+        height: 80%;
+        max-height: calc(var(--iui-size-s) * 3);
+        margin-top: 0px;
+        margin-bottom: 0px;
       }
     }
   }
