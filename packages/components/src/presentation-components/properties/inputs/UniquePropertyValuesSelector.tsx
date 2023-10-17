@@ -87,7 +87,7 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
     <AsyncSelect
       value={selectedValues}
       loadOptions={async (_, options) => loadTargets(options.length)}
-      placeholder={<span className="placeholder">{translate("unique-values-property-editor.select-values")}</span>}
+      placeholder={translate("unique-values-property-editor.select-values")}
       onChange={onValueChange}
       isOptionSelected={isOptionSelected}
       cacheUniqs={[property]}
