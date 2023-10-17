@@ -79,7 +79,7 @@ export class HierarchyProvider {
     }
     this._queryExecutor = props.queryExecutor;
     this._valuesFormatter = props?.formatter ?? createDefaultValueFormatter();
-    this._scheduler = new QueryScheduler();
+    this._scheduler = new QueryScheduler(QUERY_CONCURRENCY);
     this._directNodesCache = new Map();
   }
 
@@ -200,6 +200,8 @@ export class HierarchyProvider {
       );
   }
 }
+
+const QUERY_CONCURRENCY = 10;
 
 function preProcessNodes(hierarchyFactory: IHierarchyLevelDefinitionsFactory) {
   return hierarchyFactory.preProcessNode ? processNodes(hierarchyFactory.preProcessNode) : noopNodesProcessor;

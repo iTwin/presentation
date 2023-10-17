@@ -14,33 +14,36 @@ import {
   mergeMap,
   Observable,
   observeOn,
-  onErrorResumeNext,
+  onErrorResumeNextWith,
   queueScheduler,
   Subject,
   subscribeOn,
+  tap,
 } from "rxjs";
-
-const QUERY_CONCURRENCY = 10;
 
 /** @internal */
 export class QueryScheduler<T> {
   private _scheduler = new Subject<Connectable<T>>();
-  constructor() {
+  constructor(concurrency: number) {
     this._scheduler
       .pipe(
         mergeMap((sourceObservable) => {
-          // Connect the observable
-          sourceObservable.connect();
           return sourceObservable.pipe(
+            // connect source observable when scheduler subscribes
+            tap({
+              subscribe: () => {
+                sourceObservable.connect();
+              },
+            }),
             // Guard against stack overflow when a lot of observables are scheduled. Without this operation `mergeMap`
             // will process each observable that is present in the pipeline recursively.
             observeOn(queueScheduler),
             // Delay the connection until another event loop task
             subscribeOn(asapScheduler),
             // Ignore errors in this pipeline without suppressing them for other subscribers
-            onErrorResumeNext,
+            onErrorResumeNextWith(),
           );
-        }, QUERY_CONCURRENCY),
+        }, concurrency),
       )
       // Start consuming scheduled observables
       .subscribe();
@@ -57,7 +60,13 @@ export class QueryScheduler<T> {
   public scheduleSubscription(source: Observable<T>): Observable<T> {
     return defer(() => {
       let unsubscribed = false;
-      const connectableObservable = connectable(iif(() => unsubscribed, EMPTY, source));
+      const connectableObservable = connectable(
+        iif(() => unsubscribed, EMPTY, source),
+        {
+          connector: () => new Subject<T>(),
+          resetOnDisconnect: false,
+        },
+      );
       this._scheduler.next(connectableObservable);
       return connectableObservable.pipe(
         finalize(() => {

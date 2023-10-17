@@ -96,3 +96,33 @@ export function createGetClassStub(schemas: IMetadataProvider) {
   };
   return { getClass: stub, stubClass };
 }
+
+/** Creates Promise */
+export class ResolvablePromise<T> implements Promise<T> {
+  private _wrapped: Promise<T>;
+  private _resolve!: (value: T) => void;
+  public constructor() {
+    this._wrapped = new Promise<T>((resolve: (value: T) => void) => {
+      this._resolve = resolve;
+    });
+  }
+  public [Symbol.toStringTag] = "ResolvablePromise";
+  public async then<TResult1 = T, TResult2 = never>(
+    onFulfilled?: ((value: T) => TResult1 | Promise<TResult1>) | undefined | null,
+    onRejected?: ((reason: any) => TResult2 | Promise<TResult2>) | undefined | null,
+  ): Promise<TResult1 | TResult2> {
+    return this._wrapped.then(onFulfilled, onRejected);
+  }
+  public async resolve(result: T) {
+    this._resolve(result);
+    await new Promise<void>((resolve: () => void) => {
+      setImmediate(resolve);
+    });
+  }
+  public async catch<TResult = never>(onRejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null | undefined): Promise<T | TResult> {
+    return this._wrapped.catch(onRejected);
+  }
+  public async finally(onFinally?: (() => void) | null | undefined): Promise<T> {
+    return this._wrapped.finally(onFinally);
+  }
+}
