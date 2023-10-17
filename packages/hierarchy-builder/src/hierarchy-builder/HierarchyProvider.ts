@@ -72,10 +72,10 @@ export class HierarchyProvider {
         nodeIdentifierPaths: props.filtering.paths,
       });
       this._hierarchyFactory = filteringDefinition;
-      this._queryReader = TreeQueryResultsReader.create(filteringDefinition.parseNode);
+      this._queryReader = new TreeQueryResultsReader({ parser: filteringDefinition.parseNode });
     } else {
       this._hierarchyFactory = props.hierarchyDefinition;
-      this._queryReader = TreeQueryResultsReader.create(this._hierarchyFactory.parseNode);
+      this._queryReader = new TreeQueryResultsReader({ parser: this._hierarchyFactory.parseNode });
     }
     this._queryExecutor = props.queryExecutor;
     this._valuesFormatter = props?.formatter ?? createDefaultValueFormatter();
@@ -98,7 +98,7 @@ export class HierarchyProvider {
         return this._scheduler.scheduleSubscription(
           of(def.query).pipe(
             tap(() => enableLogging && console.log(`[loadDirectNodes] Do query for ${parentNode ? JSON.stringify(parentNode) : "<root>"}`)),
-            mergeMap((query) => from(this._queryReader.read(this._queryExecutor, { ...query, ecsql: applyLimit(query.ecsql, query.ctes) }))),
+            mergeMap((query) => from(this._queryReader.read(this._queryExecutor, { ...query, ecsql: applyLimit({ ...query }) }))),
           ),
         );
       }),

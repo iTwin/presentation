@@ -11,29 +11,42 @@ import { ConcatenatedValue } from "../values/ConcatenatedValue";
 import { Id64String } from "../values/Values";
 
 /** @internal */
-export class TreeQueryResultsReader {
-  private constructor(private _parser: INodeParser) {}
+export interface TreeQueryResultsReaderProps {
+  parser?: INodeParser;
+  limit?: number;
+}
 
-  public static create(nodeParser?: INodeParser) {
-    return new TreeQueryResultsReader(nodeParser ?? defaultNodesParser);
+/** @internal */
+export class TreeQueryResultsReader {
+  private _props: Required<TreeQueryResultsReaderProps>;
+
+  public constructor(props?: TreeQueryResultsReaderProps) {
+    // istanbul ignore next
+    this._props = {
+      parser: props?.parser ?? defaultNodesParser,
+      limit: props?.limit ?? DEFAULT_ROWS_LIMIT,
+    };
   }
 
   public async read(executor: IECSqlQueryExecutor, query: ECSqlQueryDef): Promise<ParsedHierarchyNode[]> {
     const reader = executor.createQueryReader(query.ecsql, query.bindings, { rowFormat: "ECSqlPropertyNames" });
     const nodes = new Array<ParsedHierarchyNode>();
     for await (const row of reader) {
-      if (nodes.length >= ROWS_LIMIT) {
+      if (nodes.length >= this._props.limit) {
         throw new Error("rows limit exceeded");
       }
-      nodes.push(this._parser(row.toRow()));
+      nodes.push(this._props.parser(row.toRow()));
     }
     return nodes;
   }
 }
 
-/** The interface should contain a member for each `NodeSelectClauseColumnNames` value. */
+/**
+ * The interface should contain a member for each `NodeSelectClauseColumnNames` value.
+ * @internal
+ */
 /* eslint-disable @typescript-eslint/naming-convention */
-interface RowDef {
+export interface RowDef {
   [NodeSelectClauseColumnNames.FullClassName]: string;
   [NodeSelectClauseColumnNames.ECInstanceId]: Id64String;
   [NodeSelectClauseColumnNames.DisplayLabel]: string;
@@ -61,11 +74,12 @@ export function defaultNodesParser(row: { [columnName: string]: any }): ParsedHi
       instanceKeys: [{ className: typedRow.FullClassName.replace(":", "."), id: typedRow.ECInstanceId }],
     },
     children: typedRow.HasChildren === undefined ? undefined : !!typedRow.HasChildren,
+    autoExpand: typedRow.AutoExpand ? true : undefined,
     processingParams: {
-      hideIfNoChildren: !!typedRow.HideIfNoChildren,
-      hideInHierarchy: !!typedRow.HideNodeInHierarchy,
-      groupByClass: !!typedRow.GroupByClass,
-      groupByLabel: !!typedRow.GroupByLabel,
+      hideIfNoChildren: typedRow.HideIfNoChildren ? true : undefined,
+      hideInHierarchy: typedRow.HideNodeInHierarchy ? true : undefined,
+      groupByClass: typedRow.GroupByClass ? true : undefined,
+      groupByLabel: typedRow.GroupByLabel ? true : undefined,
       mergeByLabelId: typedRow.MergeByLabelId,
     },
   };
@@ -86,15 +100,22 @@ function parseLabel(value: string | undefined): ConcatenatedValue | string {
   return value;
 }
 
-const ROWS_LIMIT = 1000;
+const DEFAULT_ROWS_LIMIT = 1000;
 
 /** @internal */
-export function applyLimit(ecsql: string, ctes?: string[]) {
-  const ctesPrefix = ctes && ctes.length ? `WITH RECURSIVE ${ctes.join(", ")}` : ``;
+export interface ApplyLimitProps {
+  ecsql: string;
+  ctes?: string[];
+  limit?: number;
+}
+
+/** @internal */
+export function applyLimit(props: ApplyLimitProps) {
+  const ctesPrefix = props.ctes && props.ctes.length ? `WITH RECURSIVE ${props.ctes.join(", ")}` : ``;
   return `
     ${ctesPrefix}
     SELECT *
-    FROM (${ecsql})
-    LIMIT ${ROWS_LIMIT + 1}
+    FROM (${props.ecsql})
+    LIMIT ${(props.limit ?? DEFAULT_ROWS_LIMIT) + 1}
   `;
 }
