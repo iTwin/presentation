@@ -11,22 +11,18 @@ describe("HierarchyNode", () => {
   const customNode: HierarchyNode = {
     key: "x",
     label: "custom node",
-    children: undefined,
   };
   const instancesNode: HierarchyNode = {
     key: { type: "instances", instanceKeys: [] },
     label: "instances node",
-    children: undefined,
   };
   const classGroupingNode: HierarchyNode = {
     key: { type: "class-grouping", class: { label: "c", name: "c" } },
     label: "class grouping node",
-    children: undefined,
   };
   const labelGroupingNode: HierarchyNode = {
     key: { type: "label-grouping", label: "c" },
     label: "label grouping node",
-    children: undefined,
   };
 
   describe("isCustom", () => {

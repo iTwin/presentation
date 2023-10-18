@@ -4,10 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { from, Observable } from "rxjs";
+import { from } from "rxjs";
 import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
 import { HierarchyNode, ProcessedHierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
+import { DirectNodesCache } from "../../../hierarchy-builder/internal/Common";
 import { createHideNodesInHierarchyOperator, LOGGING_NAMESPACE } from "../../../hierarchy-builder/internal/operators/HideNodesInHierarchy";
 import { createTestInstanceKey, createTestNode, getObservableResult, setupLogging } from "../../Utils";
 
@@ -16,7 +17,7 @@ describe("HideNodesInHierarchyOperator", () => {
     setupLogging([{ namespace: LOGGING_NAMESPACE, level: LogLevel.Trace }]);
   });
 
-  const directNodesCache = new Map<string, Observable<HierarchyNode>>();
+  const directNodesCache = new DirectNodesCache();
   beforeEach(() => {
     directNodesCache.clear();
   });
@@ -150,7 +151,6 @@ describe("HideNodesInHierarchyOperator", () => {
             instanceKeys: [createTestInstanceKey({ id: "0x1" })],
           },
           label: "a",
-          children: undefined,
           processingParams: {
             hideInHierarchy: true,
           },
@@ -161,7 +161,6 @@ describe("HideNodesInHierarchyOperator", () => {
             instanceKeys: [createTestInstanceKey({ id: "0x2" })],
           },
           label: "b",
-          children: undefined,
           processingParams: {
             hideInHierarchy: true,
           },
@@ -175,7 +174,6 @@ describe("HideNodesInHierarchyOperator", () => {
           instanceKeys: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x2" })],
         },
         label: "a",
-        children: undefined,
         processingParams: {
           hideInHierarchy: true,
         },
@@ -249,7 +247,6 @@ describe("HideNodesInHierarchyOperator", () => {
             class: { name: "TestSchema.X", label: "X" },
           },
           label: "a",
-          children: undefined,
           processingParams: {
             hideInHierarchy: true,
           },
@@ -260,7 +257,6 @@ describe("HideNodesInHierarchyOperator", () => {
             class: { name: "TestSchema.X", label: "X" },
           },
           label: "b",
-          children: undefined,
           processingParams: {
             hideInHierarchy: true,
           },
@@ -274,7 +270,6 @@ describe("HideNodesInHierarchyOperator", () => {
           class: { name: "TestSchema.X", label: "X" },
         },
         label: "a",
-        children: undefined,
         processingParams: {
           hideInHierarchy: true,
         },
@@ -348,7 +343,6 @@ describe("HideNodesInHierarchyOperator", () => {
             label: "1",
           },
           label: "1",
-          children: undefined,
           processingParams: {
             hideInHierarchy: true,
           },
@@ -359,7 +353,6 @@ describe("HideNodesInHierarchyOperator", () => {
             label: "1",
           },
           label: "2",
-          children: undefined,
           processingParams: {
             hideInHierarchy: true,
           },
@@ -373,7 +366,6 @@ describe("HideNodesInHierarchyOperator", () => {
           label: "1",
         },
         label: "1",
-        children: undefined,
         processingParams: {
           hideInHierarchy: true,
         },
@@ -388,7 +380,6 @@ describe("HideNodesInHierarchyOperator", () => {
         {
           key: "custom",
           label: "hidden",
-          children: undefined,
           processingParams: {
             hideInHierarchy: true,
           },
@@ -411,7 +402,6 @@ describe("HideNodesInHierarchyOperator", () => {
         {
           key: "custom",
           label: "a",
-          children: undefined,
           processingParams: {
             hideInHierarchy: true,
           },
@@ -419,7 +409,6 @@ describe("HideNodesInHierarchyOperator", () => {
         {
           key: "custom",
           label: "b",
-          children: undefined,
           processingParams: {
             hideInHierarchy: true,
           },
@@ -430,7 +419,6 @@ describe("HideNodesInHierarchyOperator", () => {
       expect(getNodes).to.be.calledOnceWithExactly({
         key: "custom",
         label: "a",
-        children: undefined,
         processingParams: {
           hideInHierarchy: true,
         },

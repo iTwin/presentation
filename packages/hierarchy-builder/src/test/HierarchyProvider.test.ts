@@ -103,8 +103,8 @@ describe("HierarchyProvider", () => {
   });
 
   it("loads child nodes", async () => {
-    const rootNode = { key: "root", label: "root", children: undefined };
-    const childNode = { key: "child", label: "child", children: undefined };
+    const rootNode: HierarchyNode = { key: "root", label: "root" };
+    const childNode = { key: "child", label: "child" };
     const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
       async defineHierarchyLevel(parentNode) {
         if (!parentNode) {
@@ -294,8 +294,8 @@ describe("HierarchyProvider", () => {
 
   describe("Hiding hierarchy levels", () => {
     it("hides root hierarchy level", async () => {
-      const rootNode = { key: "root", label: "root", children: undefined, processingParams: { hideInHierarchy: true } };
-      const childNode = { key: "visible child", label: "visible child", children: undefined };
+      const rootNode = { key: "root", label: "root", processingParams: { hideInHierarchy: true } };
+      const childNode = { key: "visible child", label: "visible child" };
       const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel(parentNode) {
           if (!parentNode) {
@@ -317,9 +317,9 @@ describe("HierarchyProvider", () => {
     });
 
     it("determines children when immediate child node is hidden", async () => {
-      const rootNode = { key: "root", label: "root", children: undefined };
-      const hiddenChildNode = { key: "hidden child", label: "hidden child", children: undefined, processingParams: { hideInHierarchy: true } };
-      const visibleChildNode = { key: "visible child", label: "visible child", children: undefined };
+      const rootNode = { key: "root", label: "root" };
+      const hiddenChildNode = { key: "hidden child", label: "hidden child", processingParams: { hideInHierarchy: true } };
+      const visibleChildNode = { key: "visible child", label: "visible child" };
       const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel(parentNode) {
           if (!parentNode) {
@@ -348,8 +348,8 @@ describe("HierarchyProvider", () => {
 
   describe("Hiding nodes without children", () => {
     it("hides node without children", async () => {
-      const rootNode = { key: "root", label: "root", children: undefined };
-      const hiddenChildNode = { key: "hidden child", label: "hidden child", children: undefined, processingParams: { hideIfNoChildren: true } };
+      const rootNode = { key: "root", label: "root" };
+      const hiddenChildNode = { key: "hidden child", label: "hidden child", processingParams: { hideIfNoChildren: true } };
       const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel(parentNode) {
           if (!parentNode) {
@@ -373,8 +373,8 @@ describe("HierarchyProvider", () => {
     });
 
     it("doesn't hide node with children", async () => {
-      const rootNode = { key: "root", label: "root", children: undefined };
-      const hiddenChildNode = { key: "hidden child", label: "hidden child", children: undefined, processingParams: { hideIfNoChildren: true } };
+      const rootNode = { key: "root", label: "root" };
+      const hiddenChildNode = { key: "hidden child", label: "hidden child", processingParams: { hideIfNoChildren: true } };
       const grandChildNode = { key: "grand child", label: "grand child", children: false };
       const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel(parentNode) {

@@ -305,14 +305,12 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           node: {
             key: "custom 1",
             label: "custom label 1",
-            children: undefined,
           },
         };
         const sourceDefinition2: CustomHierarchyNodeDefinition = {
           node: {
             key: "custom 2",
             label: "custom label 2",
-            children: undefined,
           },
         };
         const sourceFactory = {
@@ -538,7 +536,6 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
       const result = await filteringFactory.defineHierarchyLevel({
         key: "custom",
         label: "custom node",
-        children: undefined,
         filteredChildrenIdentifierPaths: [[{ className: childFilterClass.name, id: "0x456" }]],
       } as FilteredHierarchyNode);
       expect(result).to.deep.eq([

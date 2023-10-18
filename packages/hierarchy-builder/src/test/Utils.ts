@@ -42,7 +42,6 @@ export function createTestNode(src?: Partial<ProcessedHierarchyNode>): Hierarchy
       type: "instances",
       instanceKeys: [],
     },
-    children: undefined,
     ...src,
   };
 }

@@ -22,7 +22,7 @@ import {
 } from "rxjs";
 import { HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
 import { HierarchyNode, HierarchyNodeIdentifiersPath, ParsedHierarchyNode, ProcessedHierarchyNode } from "./HierarchyNode";
-import { getClass } from "./internal/Common";
+import { LOGGING_NAMESPACE as CommonLoggingNamespace, DirectNodesCache, getClass } from "./internal/Common";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
 import { createClassGroupingOperator } from "./internal/operators/ClassGrouping";
 import { createDetermineChildrenOperator } from "./internal/operators/DetermineChildren";
@@ -42,7 +42,7 @@ import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "./values/
 import { TypedPrimitiveValue } from "./values/Values";
 
 /** @internal */
-export const LOGGING_NAMESPACE = "Presentation.HierarchyBuilder.HierarchyProvider";
+export const LOGGING_NAMESPACE = `${CommonLoggingNamespace}.HierarchyProvider`;
 
 /**
  * Props for [[HierarchyProvider]].
@@ -80,7 +80,7 @@ export class HierarchyProvider {
   private _queryReader: TreeQueryResultsReader;
   private _valuesFormatter: IPrimitiveValueFormatter;
   private _scheduler: QueryScheduler<ParsedHierarchyNode[]>;
-  private _directNodesCache: Map<string, Observable<ProcessedHierarchyNode>>;
+  private _directNodesCache: DirectNodesCache;
 
   public constructor(props: HierarchyProviderProps) {
     this._metadataProvider = props.metadataProvider;
@@ -99,7 +99,7 @@ export class HierarchyProvider {
     this._queryExecutor = props.queryExecutor;
     this._valuesFormatter = props?.formatter ?? createDefaultValueFormatter();
     this._scheduler = new QueryScheduler(QUERY_CONCURRENCY);
-    this._directNodesCache = new Map();
+    this._directNodesCache = new DirectNodesCache();
   }
 
   private loadDirectNodes(parentNode: HierarchyNode | undefined): Observable<ProcessedHierarchyNode> {
@@ -127,16 +127,14 @@ export class HierarchyProvider {
   }
 
   private ensureDirectChildren(parentNode: HierarchyNode | undefined): Observable<ProcessedHierarchyNode> {
-    const key = parentNode ? `${JSON.stringify(parentNode.key)}+${JSON.stringify(parentNode.extendedData)}` : "";
-
-    const cached = this._directNodesCache.get(key);
+    const cached = this._directNodesCache.get(parentNode);
     if (cached) {
       doLog("EnsureDirectChildren", `Found direct nodes observable for ${parentNode ? parentNode.label : "<root>"}`);
       return cached;
     }
 
     const obs = this.loadDirectNodes(parentNode);
-    this._directNodesCache.set(key, obs);
+    this._directNodesCache.set(parentNode, obs);
     doLog("EnsureDirectChildren", `Saved direct nodes observable for ${parentNode ? parentNode.label : "<root>"}`);
     return obs;
   }
