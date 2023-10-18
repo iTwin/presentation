@@ -6,10 +6,12 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { ParsedHierarchyNode } from "../../hierarchy-builder/HierarchyNode";
-import { applyLimit, defaultNodesParser, RowDef, TreeQueryResultsReader } from "../../hierarchy-builder/internal/TreeNodesReader";
-import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow } from "../../hierarchy-builder/queries/ECSql";
+import { applyLimit, defaultNodesParser, RowDef, RowsLimitExceededError, TreeQueryResultsReader } from "../../hierarchy-builder/internal/TreeNodesReader";
+import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions } from "../../hierarchy-builder/queries/ECSql";
+import { NodeSelectClauseColumnNames } from "../../hierarchy-builder/queries/NodeSelectClauseFactory";
 import { ConcatenatedValue } from "../../hierarchy-builder/values/ConcatenatedValue";
 import { trimWhitespace } from "../queries/Utils";
+import { createFakeQueryReader } from "../Utils";
 
 describe("TreeQueryResultsReader", () => {
   const parser = sinon.stub<[{ [columnName: string]: any }], ParsedHierarchyNode>();
@@ -38,40 +40,26 @@ describe("TreeQueryResultsReader", () => {
   it("throws when row limit is exceeded", async () => {
     executor.createQueryReader.returns(createFakeQueryReader([{ id: 1 }, { id: 2 }, { id: 3 }]));
     const reader = new TreeQueryResultsReader({ parser, limit: 2 });
-    await expect(reader.read(executor, { ecsql: "QUERY" })).to.eventually.be.rejected;
+    await expect(reader.read(executor, { ecsql: "QUERY" })).to.eventually.be.rejectedWith(RowsLimitExceededError);
   });
-
-  function createFakeQueryReader(rows: object[]): ECSqlQueryReader {
-    return {
-      async *[Symbol.asyncIterator](): AsyncIterableIterator<ECSqlQueryRow> {
-        for (const row of rows) {
-          yield {
-            ...row,
-            toRow: () => row,
-          } as ECSqlQueryRow;
-        }
-      },
-    };
-  }
 });
 
 describe("defaultNodesParser", () => {
-  /* eslint-disable @typescript-eslint/naming-convention */
   it("parses ecsql row into `ParsedHierarchyNode`", () => {
     const row: RowDef = {
-      FullClassName: "schema.class",
-      ECInstanceId: "0x1",
-      DisplayLabel: "test label",
-      AutoExpand: true,
-      ExtendedData: JSON.stringify({
+      [NodeSelectClauseColumnNames.FullClassName]: "schema.class",
+      [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",
+      [NodeSelectClauseColumnNames.DisplayLabel]: "test label",
+      [NodeSelectClauseColumnNames.HasChildren]: true,
+      [NodeSelectClauseColumnNames.HideIfNoChildren]: true,
+      [NodeSelectClauseColumnNames.HideNodeInHierarchy]: true,
+      [NodeSelectClauseColumnNames.GroupByClass]: true,
+      [NodeSelectClauseColumnNames.GroupByLabel]: true,
+      [NodeSelectClauseColumnNames.MergeByLabelId]: "merge id",
+      [NodeSelectClauseColumnNames.ExtendedData]: JSON.stringify({
         test: 123,
       }),
-      GroupByClass: true,
-      GroupByLabel: true,
-      HasChildren: true,
-      HideIfNoChildren: true,
-      HideNodeInHierarchy: true,
-      MergeByLabelId: "merge id",
+      [NodeSelectClauseColumnNames.AutoExpand]: true,
     };
     const node = defaultNodesParser(row);
     expect(node).to.deep.eq({
@@ -102,9 +90,9 @@ describe("defaultNodesParser", () => {
 
   it("parses empty label", () => {
     const row: RowDef = {
-      FullClassName: "schema.class",
-      ECInstanceId: "0x1",
-      DisplayLabel: "",
+      [NodeSelectClauseColumnNames.FullClassName]: "schema.class",
+      [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",
+      [NodeSelectClauseColumnNames.DisplayLabel]: "",
     };
     const node = defaultNodesParser(row);
     expect(node.label).to.deep.eq([]);
@@ -116,9 +104,9 @@ describe("defaultNodesParser", () => {
       value: true,
     };
     const row: RowDef = {
-      FullClassName: "schema.class",
-      ECInstanceId: "0x1",
-      DisplayLabel: JSON.stringify(labelPart),
+      [NodeSelectClauseColumnNames.FullClassName]: "schema.class",
+      [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",
+      [NodeSelectClauseColumnNames.DisplayLabel]: JSON.stringify(labelPart),
     };
     const node = defaultNodesParser(row);
     expect(node.label).to.deep.eq([labelPart]);
@@ -137,14 +125,13 @@ describe("defaultNodesParser", () => {
       },
     ];
     const row: RowDef = {
-      FullClassName: "schema.class",
-      ECInstanceId: "0x1",
-      DisplayLabel: JSON.stringify(labelParts),
+      [NodeSelectClauseColumnNames.FullClassName]: "schema.class",
+      [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",
+      [NodeSelectClauseColumnNames.DisplayLabel]: JSON.stringify(labelParts),
     };
     const node = defaultNodesParser(row);
     expect(node.label).to.deep.eq(labelParts);
   });
-  /* eslint-enable @typescript-eslint/naming-convention */
 });
 
 describe("applyLimit", () => {

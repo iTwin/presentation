@@ -80,8 +80,8 @@ export namespace HierarchyNodeKey {
 export interface HierarchyNode<TLabel = string> {
   key: HierarchyNodeKey;
   label: TLabel;
+  children?: undefined | boolean | Array<HierarchyNode>;
   extendedData?: { [key: string]: any };
-  children: undefined | boolean | Array<HierarchyNode>;
   autoExpand?: boolean;
 }
 

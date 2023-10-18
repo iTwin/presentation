@@ -8,7 +8,8 @@ import sinon from "sinon";
 import { Logger, LogLevel } from "@itwin/core-bentley";
 import { HierarchyNode, ProcessedHierarchyNode } from "../hierarchy-builder/HierarchyNode";
 import * as common from "../hierarchy-builder/internal/Common";
-import { ECClass, IMetadataProvider, parseFullClassName } from "../hierarchy-builder/Metadata";
+import { ECClass, ECProperty, IMetadataProvider, parseFullClassName } from "../hierarchy-builder/Metadata";
+import { ECSqlQueryReader, ECSqlQueryRow } from "../hierarchy-builder/queries/ECSql";
 import { InstanceKey } from "../hierarchy-builder/values/Values";
 
 export function setupLogging(levels: Array<{ namespace: string; level: LogLevel }>) {
@@ -58,6 +59,7 @@ export interface TStubClassFuncProps {
   schemaName: string;
   className: string;
   classLabel?: string;
+  properties?: ECProperty[];
   is?: (fullClassName: string) => Promise<boolean>;
 }
 export interface TStubClassFuncReturnType {
@@ -77,6 +79,12 @@ export function createGetClassStub(schemas: IMetadataProvider) {
       fullName,
       name: props.className,
       label: props.classLabel,
+      getProperty: async (propertyName: string): Promise<ECProperty | undefined> => {
+        if (!props.properties) {
+          return undefined;
+        }
+        return props.properties.find((p) => p.name === propertyName);
+      },
       is: sinon.fake(async (targetClassOrClassName: ECClass | string, schemaName?: string) => {
         if (!props.is) {
           return false;
@@ -125,4 +133,17 @@ export class ResolvablePromise<T> implements Promise<T> {
   public async finally(onFinally?: (() => void) | null | undefined): Promise<T> {
     return this._wrapped.finally(onFinally);
   }
+}
+
+export function createFakeQueryReader(rows: object[]): ECSqlQueryReader {
+  return {
+    async *[Symbol.asyncIterator](): AsyncIterableIterator<ECSqlQueryRow> {
+      for (const row of rows) {
+        yield {
+          ...row,
+          toRow: () => row,
+        } as ECSqlQueryRow;
+      }
+    },
+  };
 }

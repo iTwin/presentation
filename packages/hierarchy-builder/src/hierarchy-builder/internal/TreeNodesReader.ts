@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { INodeParser } from "../HierarchyDefinition";
-import { ParsedHierarchyNode } from "../HierarchyNode";
+import { HierarchyNodeProcessingParams, ParsedHierarchyNode } from "../HierarchyNode";
 import { ECSqlQueryDef, IECSqlQueryExecutor } from "../queries/ECSql";
 import { NodeSelectClauseColumnNames } from "../queries/NodeSelectClauseFactory";
 import { ConcatenatedValue } from "../values/ConcatenatedValue";
@@ -33,11 +33,18 @@ export class TreeQueryResultsReader {
     const nodes = new Array<ParsedHierarchyNode>();
     for await (const row of reader) {
       if (nodes.length >= this._props.limit) {
-        throw new Error("rows limit exceeded");
+        throw new RowsLimitExceededError(this._props.limit);
       }
       nodes.push(this._props.parser(row.toRow()));
     }
     return nodes;
+  }
+}
+
+/** @internal */
+export class RowsLimitExceededError extends Error {
+  public constructor(public readonly limit: number) {
+    super(`Query rows limit of ${limit} exceeded`);
   }
 }
 
@@ -64,24 +71,24 @@ export interface RowDef {
 /** @internal */
 export function defaultNodesParser(row: { [columnName: string]: any }): ParsedHierarchyNode {
   const typedRow = row as RowDef;
-  const parsedExtendedData = typedRow.ExtendedData ? JSON.parse(typedRow.ExtendedData) : undefined;
+  const processingParams: HierarchyNodeProcessingParams = {
+    ...(typedRow.HideIfNoChildren ? { hideIfNoChildren: true } : undefined),
+    ...(typedRow.HideNodeInHierarchy ? { hideInHierarchy: true } : undefined),
+    ...(typedRow.GroupByClass ? { groupByClass: true } : undefined),
+    ...(typedRow.GroupByLabel ? { groupByLabel: true } : undefined),
+    ...(typedRow.MergeByLabelId ? { mergeByLabelId: typedRow.MergeByLabelId } : undefined),
+  };
   return {
     // don't format the label here - we're going to do that at node pre-processing step to handle both - instance and custom nodes
     label: parseLabel(typedRow.DisplayLabel),
-    extendedData: parsedExtendedData,
     key: {
       type: "instances",
       instanceKeys: [{ className: typedRow.FullClassName.replace(":", "."), id: typedRow.ECInstanceId }],
     },
-    children: typedRow.HasChildren === undefined ? undefined : !!typedRow.HasChildren,
-    autoExpand: typedRow.AutoExpand ? true : undefined,
-    processingParams: {
-      hideIfNoChildren: typedRow.HideIfNoChildren ? true : undefined,
-      hideInHierarchy: typedRow.HideNodeInHierarchy ? true : undefined,
-      groupByClass: typedRow.GroupByClass ? true : undefined,
-      groupByLabel: typedRow.GroupByLabel ? true : undefined,
-      mergeByLabelId: typedRow.MergeByLabelId,
-    },
+    ...(typedRow.HasChildren ? { children: true } : undefined),
+    ...(typedRow.AutoExpand ? { autoExpand: true } : undefined),
+    ...(typedRow.ExtendedData ? { extendedData: JSON.parse(typedRow.ExtendedData) } : undefined),
+    ...(Object.keys(processingParams).length > 0 ? { processingParams } : undefined),
   };
 }
 

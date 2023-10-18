@@ -2,9 +2,24 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/* eslint-disable no-console */
 
-import { catchError, concatAll, concatMap, defaultIfEmpty, filter, from, map, mergeMap, Observable, ObservableInput, of, shareReplay, take, tap } from "rxjs";
+import {
+  catchError,
+  concatAll,
+  concatMap,
+  defaultIfEmpty,
+  filter,
+  from,
+  map,
+  mergeMap,
+  MonoTypeOperatorFunction,
+  Observable,
+  ObservableInput,
+  of,
+  shareReplay,
+  take,
+  tap,
+} from "rxjs";
 import { HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
 import { HierarchyNode, HierarchyNodeIdentifiersPath, ParsedHierarchyNode, ProcessedHierarchyNode } from "./HierarchyNode";
 import { getClass } from "./internal/Common";
@@ -18,12 +33,16 @@ import { createMergeInstanceNodesByLabelOperator } from "./internal/operators/Me
 import { createPersistChildrenOperator } from "./internal/operators/PersistChildren";
 import { sortNodesByLabelOperator } from "./internal/operators/Sorting";
 import { QueryScheduler } from "./internal/QueryScheduler";
-import { applyLimit, TreeQueryResultsReader } from "./internal/TreeNodesReader";
+import { applyLimit, RowsLimitExceededError, TreeQueryResultsReader } from "./internal/TreeNodesReader";
+import { getLogger } from "./Logging";
 import { IMetadataProvider } from "./Metadata";
 import { IECSqlQueryExecutor } from "./queries/ECSql";
 import { ConcatenatedValue, ConcatenatedValuePart } from "./values/ConcatenatedValue";
 import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "./values/Formatting";
 import { TypedPrimitiveValue } from "./values/Values";
+
+/** @internal */
+export const LOGGING_NAMESPACE = "Presentation.HierarchyBuilder.HierarchyProvider";
 
 /**
  * Props for [[HierarchyProvider]].
@@ -84,7 +103,6 @@ export class HierarchyProvider {
   }
 
   private loadDirectNodes(parentNode: HierarchyNode | undefined): Observable<ProcessedHierarchyNode> {
-    const enableLogging = false;
     // stream hierarchy level definitions in order
     const definitions = from(this._hierarchyFactory.defineHierarchyLevel(parentNode)).pipe(
       concatMap((hierarchyLevelDefinition) => from(hierarchyLevelDefinition)),
@@ -97,7 +115,7 @@ export class HierarchyProvider {
         }
         return this._scheduler.scheduleSubscription(
           of(def.query).pipe(
-            tap(() => enableLogging && console.log(`[loadDirectNodes] Do query for ${parentNode ? JSON.stringify(parentNode) : "<root>"}`)),
+            log((query) => `Query direct nodes for parent ${parentNode ? JSON.stringify(parentNode) : "<root>"}: ${query.ecsql}`),
             mergeMap((query) => from(this._queryReader.read(this._queryExecutor, { ...query, ecsql: applyLimit({ ...query }) }))),
           ),
         );
@@ -109,18 +127,17 @@ export class HierarchyProvider {
   }
 
   private ensureDirectChildren(parentNode: HierarchyNode | undefined): Observable<ProcessedHierarchyNode> {
-    const enableLogging = false;
     const key = parentNode ? `${JSON.stringify(parentNode.key)}+${JSON.stringify(parentNode.extendedData)}` : "";
 
     const cached = this._directNodesCache.get(key);
     if (cached) {
-      enableLogging && console.log(`[ensureDirectChildren] Found direct nodes observable for ${parentNode ? parentNode.label : "<root>"}`);
+      doLog("EnsureDirectChildren", `Found direct nodes observable for ${parentNode ? parentNode.label : "<root>"}`);
       return cached;
     }
 
     const obs = this.loadDirectNodes(parentNode);
     this._directNodesCache.set(key, obs);
-    enableLogging && console.log(`[ensureDirectChildren] Saved direct nodes observable for ${parentNode ? parentNode.label : "<root>"}`);
+    doLog("EnsureDirectChildren", `Saved direct nodes observable for ${parentNode ? parentNode.label : "<root>"}`);
     return obs;
   }
 
@@ -167,36 +184,26 @@ export class HierarchyProvider {
   }
 
   private hasNodesObservable(node: HierarchyNode): Observable<boolean> {
-    const enableLogging = false;
-    if (Array.isArray(node.children)) {
-      return of(node.children.length > 0);
-    }
-
     const directChildren = this.ensureDirectChildren(node);
     return directChildren
+      .pipe(preProcessNodes(this._hierarchyFactory))
       .pipe(
-        tap((n) => enableLogging && console.log(`HasNodes: partial node before preprocessing: ${JSON.stringify(n)}`)),
-        preProcessNodes(this._hierarchyFactory),
-      )
-      .pipe(
-        tap((n) => enableLogging && console.log(`HasNodes: partial node before HideIfNoChildrenOperator: ${JSON.stringify(n)}`)),
         createHideIfNoChildrenOperator((n) => this.hasNodesObservable(n), true),
-        tap((n) => enableLogging && console.log(`HasNodes: partial node before HideNodesInHierarchyOperator: ${JSON.stringify(n)}`)),
         createHideNodesInHierarchyOperator((n) => this.getNodesObservable(n), this._directNodesCache, true),
       )
       .pipe(
-        tap((n) => enableLogging && console.log(`HasNodes: partial node before mapping to 'true': ${JSON.stringify(n)}`)),
+        log("HasNodes", (n) => `Node before mapping to 'true': ${JSON.stringify(n)}`),
         map(() => true),
         take(1),
         defaultIfEmpty(false),
         catchError((e: Error) => {
-          enableLogging && console.log(`HasNodes: error while determining children: ${e.message}`);
-          if (e.message === "rows limit exceeded") {
+          doLog("HasNodes", `Error while determining children: ${e.message}`);
+          if (e instanceof RowsLimitExceededError) {
             return of(true);
           }
           throw e;
         }),
-        tap((r) => enableLogging && console.log(`HasNodes: result: ${r}`)),
+        log("HasNodes", (r) => `Result: ${r}`),
       );
   }
 }
@@ -268,4 +275,24 @@ async function applyLabelsFormatting<TNode extends { label: string | Concatenate
 async function getProperty({ className, propertyName }: { className: string; propertyName: string }, metadata: IMetadataProvider) {
   const propertyClass = await getClass(metadata, className);
   return propertyClass.getProperty(propertyName);
+}
+
+function doLog(msg: string): void;
+// eslint-disable-next-line @typescript-eslint/unified-signatures
+function doLog(loggingCategory: string, msg: string): void;
+function doLog(loggingCategoryOrMsg: string, msg?: string) {
+  if (msg) {
+    getLogger().logTrace(`${LOGGING_NAMESPACE}.${loggingCategoryOrMsg}`, msg);
+  } else {
+    getLogger().logTrace(LOGGING_NAMESPACE, loggingCategoryOrMsg);
+  }
+}
+
+function log<T>(msg: (arg: T) => string): MonoTypeOperatorFunction<T>;
+function log<T>(loggingCategory: string, msg: (arg: T) => string): MonoTypeOperatorFunction<T>;
+function log<T>(loggingCategoryOrMsg: string | ((arg: T) => string), msg?: (arg: T) => string) {
+  if (msg) {
+    return tap<T>((n) => doLog(loggingCategoryOrMsg as string, msg(n)));
+  }
+  return tap<T>((n) => doLog((loggingCategoryOrMsg as (arg: T) => string)(n)));
 }
