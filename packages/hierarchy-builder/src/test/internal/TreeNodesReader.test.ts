@@ -88,6 +88,28 @@ describe("defaultNodesParser", () => {
     } as ParsedHierarchyNode);
   });
 
+  it("parses falsy `HasChildren`", () => {
+    const row: RowDef = {
+      [NodeSelectClauseColumnNames.FullClassName]: "schema.class",
+      [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",
+      [NodeSelectClauseColumnNames.DisplayLabel]: "",
+      [NodeSelectClauseColumnNames.HasChildren]: 0 as any,
+    };
+    const node = defaultNodesParser(row);
+    expect(node.children).to.eq(false);
+  });
+
+  it("parses undefined `HasChildren`", () => {
+    const row: RowDef = {
+      [NodeSelectClauseColumnNames.FullClassName]: "schema.class",
+      [NodeSelectClauseColumnNames.ECInstanceId]: "0x1",
+      [NodeSelectClauseColumnNames.DisplayLabel]: "",
+      [NodeSelectClauseColumnNames.HasChildren]: undefined,
+    };
+    const node = defaultNodesParser(row);
+    expect(node.children).to.be.undefined;
+  });
+
   it("parses empty label", () => {
     const row: RowDef = {
       [NodeSelectClauseColumnNames.FullClassName]: "schema.class",

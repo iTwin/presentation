@@ -85,7 +85,7 @@ export function defaultNodesParser(row: { [columnName: string]: any }): ParsedHi
       type: "instances",
       instanceKeys: [{ className: typedRow.FullClassName.replace(":", "."), id: typedRow.ECInstanceId }],
     },
-    ...(typedRow.HasChildren ? { children: true } : undefined),
+    ...(typedRow.HasChildren !== undefined ? { children: !!typedRow.HasChildren } : undefined),
     ...(typedRow.AutoExpand ? { autoExpand: true } : undefined),
     ...(typedRow.ExtendedData ? { extendedData: JSON.parse(typedRow.ExtendedData) } : undefined),
     ...(Object.keys(processingParams).length > 0 ? { processingParams } : undefined),

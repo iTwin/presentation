@@ -472,7 +472,7 @@ describe("Stateless hierarchy builder", () => {
           jsonProperties: { PhysicalPartition: { Model: { Content: true } } },
         });
         const model2 = insertPhysicalSubModel({ builder, modeledElementId: partition2.id });
-        const element2 = insertPhysicalElement({ builder, userLabel: `element1`, modelId: model2.id, categoryId: category2.id });
+        const element2 = insertPhysicalElement({ builder, userLabel: `element2`, modelId: model2.id, categoryId: category2.id });
         return { rootSubject, model1, model2, category1, category2, element1, element2 };
       });
       await validateHierarchy({
