@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import { from } from "rxjs";
 import { LogLevel } from "@itwin/core-bentley";
-import { DirectNodesCache } from "../../../hierarchy-builder/internal/Common";
+import { ChildNodesCache } from "../../../hierarchy-builder/internal/Common";
 import { createMergeInstanceNodesByLabelOperator, LOGGING_NAMESPACE } from "../../../hierarchy-builder/internal/operators/MergeInstanceNodesByLabel";
 import { createTestInstanceKey, createTestNode, getObservableResult, setupLogging } from "../../Utils";
 
@@ -15,7 +15,7 @@ describe("MergeInstanceNodesByLabel", () => {
     setupLogging([{ namespace: LOGGING_NAMESPACE, level: LogLevel.Trace }]);
   });
 
-  const directNodesCache = new DirectNodesCache();
+  const directNodesCache = new ChildNodesCache();
   beforeEach(() => {
     directNodesCache.clear();
   });

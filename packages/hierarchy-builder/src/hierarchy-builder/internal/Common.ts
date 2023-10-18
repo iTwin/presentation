@@ -109,14 +109,14 @@ export function hasChildren<TNode extends { children?: boolean | Array<unknown> 
 }
 
 /** @internal */
-export function mergeNodesObs(lhs: ProcessedHierarchyNode, rhs: ProcessedHierarchyNode, directNodesCache: DirectNodesCache) {
+export function mergeNodesObs(lhs: ProcessedHierarchyNode, rhs: ProcessedHierarchyNode, directNodesCache: ChildNodesCache) {
   const merged = mergeNodes(lhs, rhs);
   mergeDirectNodeObservables(lhs, rhs, merged, directNodesCache);
   return merged;
 }
 
 /** @internal */
-export function mergeDirectNodeObservables(a: ProcessedHierarchyNode, b: ProcessedHierarchyNode, m: ProcessedHierarchyNode, cache: DirectNodesCache) {
+export function mergeDirectNodeObservables(a: ProcessedHierarchyNode, b: ProcessedHierarchyNode, m: ProcessedHierarchyNode, cache: ChildNodesCache) {
   const cachedA = cache.get(a);
   if (!cachedA) {
     return;
@@ -141,7 +141,7 @@ export function julianToDateTime(julianDate: number): Date {
 }
 
 /** @internal */
-export class DirectNodesCache {
+export class ChildNodesCache {
   private _map = new Map<string, Observable<ProcessedHierarchyNode>>();
 
   private createKey(node: HierarchyNode | undefined): string {

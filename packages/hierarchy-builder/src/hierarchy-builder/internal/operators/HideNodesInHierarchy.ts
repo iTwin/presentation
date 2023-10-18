@@ -6,7 +6,7 @@
 import { concat, defer, EMPTY, filter, finalize, from, map, merge, mergeAll, mergeMap, Observable, partition, reduce, shareReplay, take, tap } from "rxjs";
 import { HierarchyNode, HierarchyNodeKey, ProcessedHierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
-import { createOperatorLoggingNamespace, DirectNodesCache, hasChildren, mergeNodesObs } from "../Common";
+import { ChildNodesCache, createOperatorLoggingNamespace, hasChildren, mergeNodesObs } from "../Common";
 
 const OPERATOR_NAME = "HideNodesInHierarchy";
 /** @internal */
@@ -19,7 +19,7 @@ export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
  */
 export function createHideNodesInHierarchyOperator(
   getNodes: (parentNode: HierarchyNode) => Observable<HierarchyNode>,
-  directNodesCache: DirectNodesCache,
+  directNodesCache: ChildNodesCache,
   stopOnFirstChild: boolean,
 ) {
   return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
@@ -80,7 +80,7 @@ function createMergeMapKey<TNode extends { key: HierarchyNodeKey }>(node: TNode)
   }
 }
 
-function addToMergeMap(directNodesCache: DirectNodesCache, list: Map<string, ProcessedHierarchyNode>, node: ProcessedHierarchyNode) {
+function addToMergeMap(directNodesCache: ChildNodesCache, list: Map<string, ProcessedHierarchyNode>, node: ProcessedHierarchyNode) {
   const mergeKey = createMergeMapKey(node);
   const merged = list.get(mergeKey);
   if (merged) {

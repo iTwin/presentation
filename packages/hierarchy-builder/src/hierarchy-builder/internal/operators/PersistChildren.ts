@@ -13,7 +13,10 @@ const OPERATOR_NAME = "PersistChildren";
 export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
 
 /** @internal */
-export function createPersistChildrenOperator(parentNode: HierarchyNode) {
+export function createPersistChildrenOperator(parentNode: HierarchyNode | undefined) {
+  if (!parentNode) {
+    return (childNodes: Observable<ProcessedHierarchyNode>) => childNodes;
+  }
   return function (childNodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
     if (Array.isArray(parentNode.children)) {
       return childNodes;

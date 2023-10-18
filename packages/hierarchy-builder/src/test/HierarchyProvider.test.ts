@@ -122,11 +122,9 @@ describe("HierarchyProvider", () => {
       hierarchyDefinition,
     });
     const nodes = await provider.getNodes(rootNode);
-    expect(nodes).to.deep.eq([{ ...childNode, children: false }]);
-
-    // FIXME: we save child nodes on parent BEFORE we determine their children - this
-    // may cause consumers to think that children are usable, but they're not...
-    expect(rootNode.children).to.deep.eq([childNode]);
+    const expectedNode = { ...childNode, children: false };
+    expect(nodes).to.deep.eq([expectedNode]);
+    expect(rootNode.children).to.deep.eq([expectedNode]);
   });
 
   it("returns loaded child nodes", async () => {

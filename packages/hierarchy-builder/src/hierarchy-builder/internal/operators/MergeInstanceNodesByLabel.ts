@@ -7,7 +7,7 @@ import { from, merge, mergeMap, Observable, partition, reduce, shareReplay, tap 
 import { assert, DuplicatePolicy, SortedArray } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyNodeKey, ProcessedHierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
-import { createOperatorLoggingNamespace, DirectNodesCache, mergeNodesObs } from "../Common";
+import { ChildNodesCache, createOperatorLoggingNamespace, mergeNodesObs } from "../Common";
 
 const OPERATOR_NAME = "MergeInstanceNodesByLabel";
 /** @internal */
@@ -19,7 +19,7 @@ export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
  *
  * @internal
  */
-export function createMergeInstanceNodesByLabelOperator(directNodesCache: DirectNodesCache) {
+export function createMergeInstanceNodesByLabelOperator(directNodesCache: ChildNodesCache) {
   return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
     const sharedNodes = nodes.pipe(
       log((n) => `in: ${serializeNode(n)}`),

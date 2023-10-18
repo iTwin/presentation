@@ -8,7 +8,7 @@ import { from } from "rxjs";
 import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
 import { HierarchyNode, ProcessedHierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
-import { DirectNodesCache } from "../../../hierarchy-builder/internal/Common";
+import { ChildNodesCache } from "../../../hierarchy-builder/internal/Common";
 import { createHideNodesInHierarchyOperator, LOGGING_NAMESPACE } from "../../../hierarchy-builder/internal/operators/HideNodesInHierarchy";
 import { createTestInstanceKey, createTestNode, getObservableResult, setupLogging } from "../../Utils";
 
@@ -17,7 +17,7 @@ describe("HideNodesInHierarchyOperator", () => {
     setupLogging([{ namespace: LOGGING_NAMESPACE, level: LogLevel.Trace }]);
   });
 
-  const directNodesCache = new DirectNodesCache();
+  const directNodesCache = new ChildNodesCache();
   beforeEach(() => {
     directNodesCache.clear();
   });

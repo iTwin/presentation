@@ -7,7 +7,7 @@ import { expect } from "chai";
 import { of } from "rxjs";
 import sinon from "sinon";
 import { HierarchyNode, HierarchyNodeProcessingParams, ProcessedHierarchyNode } from "../../hierarchy-builder/HierarchyNode";
-import { DirectNodesCache, getClass, hasChildren, mergeNodes, mergeNodesObs } from "../../hierarchy-builder/internal/Common";
+import { ChildNodesCache, getClass, hasChildren, mergeNodes, mergeNodesObs } from "../../hierarchy-builder/internal/Common";
 import { getObservableResult } from "../Utils";
 
 describe("getClass", () => {
@@ -242,7 +242,7 @@ describe("mergeNodesObs", () => {
   it("merges nodes and caches merged node children observable", async () => {
     const lhs: ProcessedHierarchyNode = { key: "x", label: "1" };
     const rhs: ProcessedHierarchyNode = { key: "y", label: "2" };
-    const cache = new DirectNodesCache();
+    const cache = new ChildNodesCache();
     cache.set(lhs, of({ key: "3", label: "3" }));
     cache.set(rhs, of({ key: "4", label: "4" }));
 
@@ -257,7 +257,7 @@ describe("mergeNodesObs", () => {
   it("doesn't cache children observable if lhs doesn't have its own children observable cached", () => {
     const lhs: ProcessedHierarchyNode = { key: "x", label: "1" };
     const rhs: ProcessedHierarchyNode = { key: "y", label: "2" };
-    const cache = new DirectNodesCache();
+    const cache = new ChildNodesCache();
     cache.set(lhs, of({ key: "3", label: "3" }));
 
     const result = mergeNodesObs(lhs, rhs, cache);
@@ -267,7 +267,7 @@ describe("mergeNodesObs", () => {
   it("doesn't cache children observable if rhs doesn't have its own children observable cached", () => {
     const lhs: ProcessedHierarchyNode = { key: "x", label: "1" };
     const rhs: ProcessedHierarchyNode = { key: "y", label: "2" };
-    const cache = new DirectNodesCache();
+    const cache = new ChildNodesCache();
     cache.set(rhs, of({ key: "3", label: "3" }));
 
     const result = mergeNodesObs(lhs, rhs, cache);

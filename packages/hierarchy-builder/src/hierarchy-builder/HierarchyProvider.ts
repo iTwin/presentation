@@ -22,7 +22,7 @@ import {
 } from "rxjs";
 import { HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
 import { HierarchyNode, HierarchyNodeIdentifiersPath, ParsedHierarchyNode, ProcessedHierarchyNode } from "./HierarchyNode";
-import { LOGGING_NAMESPACE as CommonLoggingNamespace, DirectNodesCache, getClass } from "./internal/Common";
+import { ChildNodesCache, LOGGING_NAMESPACE as CommonLoggingNamespace, getClass } from "./internal/Common";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
 import { createClassGroupingOperator } from "./internal/operators/ClassGrouping";
 import { createDetermineChildrenOperator } from "./internal/operators/DetermineChildren";
@@ -80,7 +80,8 @@ export class HierarchyProvider {
   private _queryReader: TreeQueryResultsReader;
   private _valuesFormatter: IPrimitiveValueFormatter;
   private _scheduler: QueryScheduler<ParsedHierarchyNode[]>;
-  private _directNodesCache: DirectNodesCache;
+  private _directNodesCache: ChildNodesCache;
+  private _processedNodesCache: ChildNodesCache;
 
   public constructor(props: HierarchyProviderProps) {
     this._metadataProvider = props.metadataProvider;
@@ -99,7 +100,8 @@ export class HierarchyProvider {
     this._queryExecutor = props.queryExecutor;
     this._valuesFormatter = props?.formatter ?? createDefaultValueFormatter();
     this._scheduler = new QueryScheduler(QUERY_CONCURRENCY);
-    this._directNodesCache = new DirectNodesCache();
+    this._directNodesCache = new ChildNodesCache();
+    this._processedNodesCache = new ChildNodesCache();
   }
 
   private loadDirectNodes(parentNode: HierarchyNode | undefined): Observable<ProcessedHierarchyNode> {
@@ -129,6 +131,7 @@ export class HierarchyProvider {
   private ensureDirectChildren(parentNode: HierarchyNode | undefined): Observable<ProcessedHierarchyNode> {
     const cached = this._directNodesCache.get(parentNode);
     if (cached) {
+      // istanbul ignore next
       doLog("EnsureDirectChildren", `Found direct nodes observable for ${parentNode ? parentNode.label : "<root>"}`);
       return cached;
     }
@@ -140,8 +143,9 @@ export class HierarchyProvider {
   }
 
   private getNodesObservable(parentNode: HierarchyNode | undefined): Observable<ProcessedHierarchyNode> {
-    if (parentNode && Array.isArray(parentNode.children)) {
-      return from(parentNode.children as ProcessedHierarchyNode[]);
+    const cached = this._processedNodesCache.get(parentNode);
+    if (cached) {
+      return cached;
     }
 
     const directChildren = this.ensureDirectChildren(parentNode);
@@ -154,10 +158,15 @@ export class HierarchyProvider {
       createClassGroupingOperator(this._metadataProvider),
       createLabelGroupingOperator(),
     );
-    return parentNode ? result.pipe(createPersistChildrenOperator(parentNode)) : result;
+    this._processedNodesCache.set(parentNode, result);
+    return result;
   }
 
   public async getNodes(parentNode: HierarchyNode | undefined): Promise<HierarchyNode[]> {
+    if (parentNode && Array.isArray(parentNode.children)) {
+      return parentNode.children;
+    }
+
     return new Promise((resolve, reject) => {
       const nodes = new Array<HierarchyNode>();
       this.getNodesObservable(parentNode)
@@ -165,6 +174,7 @@ export class HierarchyProvider {
         .pipe(
           createDetermineChildrenOperator((n) => this.hasNodesObservable(n)),
           postProcessNodes(this._hierarchyFactory),
+          createPersistChildrenOperator(parentNode),
         )
         // load all nodes into the array and resolve
         .subscribe({
@@ -182,6 +192,8 @@ export class HierarchyProvider {
   }
 
   private hasNodesObservable(node: HierarchyNode): Observable<boolean> {
+    // Note: We don't need to look at `_processedNodesCache` here, because we only call `hasNodesObservable` when determining children
+    // for a parent node - we never have the children created (and placed into processed nodes cache) at that point.
     const directChildren = this.ensureDirectChildren(node);
     return directChildren
       .pipe(preProcessNodes(this._hierarchyFactory))
