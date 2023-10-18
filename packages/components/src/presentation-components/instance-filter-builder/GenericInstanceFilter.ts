@@ -37,7 +37,7 @@ export interface GenericInstanceFilter {
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace GenericInstanceFilter {
   /**
-   * Extracts information from presentation data structures and created generic instance filter for building queries.
+   * Extracts information from presentation data structures and creates a generic instance filter for building queries.
    * @beta
    */
   export function fromPresentationInstanceFilter(filter: PresentationInstanceFilter): GenericInstanceFilter {
