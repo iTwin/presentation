@@ -48,6 +48,10 @@ export interface PresentationTreeNodeItem extends DelayLoadedTreeNodeItem {
   filtering?: PresentationTreeNodeItemFilteringInfo;
 }
 
+/**
+ * Type that is assigned to a [[PresentationInfoTreeNodeItem]] to determine what type of message an item conveys.
+ * @beta
+ */
 export enum InfoTreeNodeItemType {
   ResultSetTooLarge,
   BackendTimeout,

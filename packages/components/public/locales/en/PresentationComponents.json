@@ -28,8 +28,9 @@
     }
   },
   "tree": {
+    "please-provide": "Please provide",
     "no-filtered-children": "There are no child nodes matching current filter",
-    "result-limit-exceeded": "There are more items than allowed limit of",
+    "result-limit-exceeded": "there are more items than allowed limit of",
     "additional-filtering": "additional filtering",
     "timeout": "Creating the hierarchy level took too long",
     "unknown-error": "Error creating the hierarchy level",

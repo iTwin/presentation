@@ -43,7 +43,7 @@ export function PresentationTreeNodeRenderer(props: PresentationTreeNodeRenderer
             <Text isMuted className="info-tree-node-item">
               {nodeItem.type === InfoTreeNodeItemType.ResultSetTooLarge && (
                 <span>
-                  <span>Provide </span>
+                  <span>{`${translate("tree.please-provide")} `}</span>
                   <UnderlinedButton
                     onClick={() => {
                       if (nodeItem.parentId !== undefined) {

@@ -49,7 +49,6 @@ export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
   const nodeLoader = props.nodeLoader;
   const { applyFilter, clearFilter } = useHierarchyLevelFiltering({ nodeLoader, modelSource: nodeLoader.modelSource });
   const [filterNode, setFilterNode] = useState<PresentationTreeNodeItem>();
-  const treeModel = useMemo(() => props.visibleNodes.getModel(), [props.visibleNodes]);
 
   const filterableNodeRenderer = useCallback(
     (nodeProps: TreeNodeRendererProps) => {
@@ -57,7 +56,7 @@ export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
         <PresentationTreeNodeRenderer
           {...nodeProps}
           onFilterClick={(nodeId) => {
-            const node = treeModel.getNode(nodeId);
+            const node = nodeLoader.modelSource.getModel().getNode(nodeId);
             if (isTreeModelNode(node) && isPresentationTreeNodeItem(node.item)) {
               setFilterNode(node.item);
             }
@@ -66,7 +65,7 @@ export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
         />
       );
     },
-    [clearFilter, treeModel],
+    [clearFilter, nodeLoader.modelSource],
   );
 
   const divRef = useRef<HTMLDivElement>(null);
@@ -134,13 +133,13 @@ function MatchingInstancesCount({ filter, dataProvider, parentKey }: MatchingIns
 
       try {
         const count = await Presentation.presentation.getNodesCount(requestOptions);
-        return <>{`${translate("tree.filter-dialog.results-count")}: ${count}`}</>;
+        return `${translate("tree.filter-dialog.results-count")}: ${count}`;
       } catch (e) {
         if (e instanceof PresentationError && e.errorNumber === PresentationStatus.ResultSetTooLarge) {
           // ResultSetTooLarge error can't occur if sizeLimit is undefined.
-          return (
-            <>{`${translate("tree.filter-dialog.result-limit-exceeded")} ${requestOptions.sizeLimit!}. Provide ${translate("tree.additional-filtering")}.`}</>
-          );
+          return `${translate("tree.filter-dialog.result-limit-exceeded")} ${requestOptions.sizeLimit!}. ${translate("tree.please-provide")} ${translate(
+            "tree.additional-filtering",
+          )}.`;
         }
       }
 
@@ -150,5 +149,5 @@ function MatchingInstancesCount({ filter, dataProvider, parentKey }: MatchingIns
   if (!value || inProgress) {
     return null;
   }
-  return value;
+  return <>{value}</>;
 }

@@ -163,7 +163,7 @@ describe("PresentationTreeRenderer", () => {
     });
 
     // stub getNode method to make it return undefined when onFilterClick() is called.
-    visibleNodes.getModel = () => {
+    nodeLoader.modelSource.getModel = () => {
       return { getNode: sinon.stub().returns(undefined) } as unknown as TreeModel;
     };
 
