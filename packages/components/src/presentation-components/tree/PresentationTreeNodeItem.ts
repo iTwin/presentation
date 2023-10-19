@@ -49,6 +49,18 @@ export interface PresentationTreeNodeItem extends DelayLoadedTreeNodeItem {
 }
 
 /**
+ * Type that is assigned to a [[PresentationInfoTreeNodeItem]] to determine what type of message an item conveys.
+ * @beta
+ */
+export enum InfoTreeNodeItemType {
+  ResultSetTooLarge,
+  BackendTimeout,
+  Cancelled,
+  NoChildren,
+  Unset,
+}
+
+/**
  * Data structure that describes tree node item created by [[PresentationTreeDataProvider]]
  * which is used to carry information message.
  * @beta
@@ -60,6 +72,8 @@ export interface PresentationInfoTreeNodeItem extends ImmediatelyLoadedTreeNodeI
   isSelectionDisabled: true;
   /** This type of tree item cannot have children. */
   children: undefined;
+  /** Type of item message */
+  type: InfoTreeNodeItemType;
 }
 
 /**
