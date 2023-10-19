@@ -43,8 +43,8 @@ describe("NodeSelectClauseFactory", () => {
         CAST(1 AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
         CAST(1 AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
         json_object(
-          'byClass', true,
-          'byLabel', true
+          'byClass', 1,
+          'byLabel', 1
         ) AS ${NodeSelectClauseColumnNames.Grouping},
         CAST('merge id' AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
         json_object(
@@ -111,9 +111,9 @@ describe("NodeSelectClauseFactory", () => {
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
-        NULL AS ${NodeSelectClauseColumnNames.Grouping},
+        CAST(NULL AS TEXT) AS ${NodeSelectClauseColumnNames.Grouping},
         CAST(NULL AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
-        NULL AS ${NodeSelectClauseColumnNames.ExtendedData},
+        CAST(NULL AS TEXT) AS ${NodeSelectClauseColumnNames.ExtendedData},
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.AutoExpand}
       `),
     );

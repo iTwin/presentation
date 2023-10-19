@@ -66,11 +66,8 @@ export async function groupNodes(nodes: HierarchyNode[], groupingHandlers: Group
 }
 
 export async function handlerWrapper(currentHandler: GroupingHandlerType, props: FullGroupingProps): Promise<HierarchyNode[]> {
-  const currentGroupingNodes = await currentHandler(props.nodes);
-  const hidingResult = applyGroupHidingParams(currentGroupingNodes.allNodes);
-  if (hidingResult.hasHidden) {
-    return hidingResult.nodes;
-  }
+  let currentGroupingNodes = await currentHandler(props.nodes);
+  currentGroupingNodes = applyGroupHidingParams(currentGroupingNodes.allNodes);
 
   for (const grouping of currentGroupingNodes.groupedNodes) {
     if (Array.isArray(grouping.children)) {

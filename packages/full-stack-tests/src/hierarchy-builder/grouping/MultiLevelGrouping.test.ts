@@ -15,7 +15,7 @@ import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
 
 describe("Stateless hierarchy builder", () => {
-  describe("Label and Class grouping", () => {
+  describe("Multi level grouping", () => {
     let selectClauseFactory: NodeSelectClauseFactory;
     let subjectClassName: string;
     let physicalPartitionClassName: string;
@@ -137,6 +137,16 @@ describe("Stateless hierarchy builder", () => {
                         className: physicalPartitionClassName,
                         children: [
                           NodeValidators.createForLabelGroupingNode({
+                            label: labelGroupName1,
+                            children: [
+                              NodeValidators.createForInstanceNode({
+                                instanceKeys: [keys.childPartition3],
+                                children: false,
+                              }),
+                            ],
+                          }),
+
+                          NodeValidators.createForLabelGroupingNode({
                             label: labelGroupName2,
                             children: [
                               NodeValidators.createForInstanceNode({
@@ -149,10 +159,6 @@ describe("Stateless hierarchy builder", () => {
                               }),
                             ],
                           }),
-                          NodeValidators.createForInstanceNode({
-                            instanceKeys: [keys.childPartition3],
-                            children: false,
-                          }),
                         ],
                       }),
                     ],
@@ -160,13 +166,18 @@ describe("Stateless hierarchy builder", () => {
                   NodeValidators.createForClassGroupingNode({
                     className: subjectClassName,
                     children: [
-                      NodeValidators.createForInstanceNode({
-                        instanceKeys: [keys.childSubject1],
-                        children: false,
-                      }),
-                      NodeValidators.createForInstanceNode({
-                        instanceKeys: [keys.childSubject2],
-                        children: false,
+                      NodeValidators.createForLabelGroupingNode({
+                        label: labelGroupName1,
+                        children: [
+                          NodeValidators.createForInstanceNode({
+                            instanceKeys: [keys.childSubject1],
+                            children: false,
+                          }),
+                          NodeValidators.createForInstanceNode({
+                            instanceKeys: [keys.childSubject2],
+                            children: false,
+                          }),
+                        ],
                       }),
                     ],
                   }),

@@ -5,7 +5,6 @@
 
 import { expect } from "chai";
 import { from } from "rxjs";
-// import sinon from "sinon";
 import { HierarchyNode } from "../../../../hierarchy-builder/HierarchyNode";
 import { createGroupingOperator } from "../../../../hierarchy-builder/internal/operators/Grouping";
 import { IMetadataProvider } from "../../../../hierarchy-builder/Metadata";

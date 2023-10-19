@@ -4,30 +4,29 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { HierarchyNode } from "../../../HierarchyNode";
+import { GroupingHandlerReturn } from "../Grouping";
 
 /**
  * @internal
  */
-export function applyGroupHidingParams(nodes: HierarchyNode[]): { nodes: HierarchyNode[]; hasHidden: boolean } {
-  const finalHierarchy = new Array<HierarchyNode>();
-  let hasHidden = false;
-  for (const node of nodes) {
-    const currentNode = node;
-    if (HierarchyNode.isGroupingNode(currentNode)) {
-      if (Array.isArray(currentNode.children) && (nodes.length === 1 || currentNode.children.length === 1)) {
-        const [hideIfNoSiblings, hideIfOneGroupedNode] = getGroupingHideOptionsFromParentNode(currentNode);
-        if (hideIfNoSiblings && nodes.length === 1) {
-          return { nodes: currentNode.children, hasHidden: true };
-        } else if (hideIfOneGroupedNode && currentNode.children.length === 1) {
-          finalHierarchy.push(currentNode.children[0]);
-          hasHidden = true;
+export function applyGroupHidingParams(allNodes: HierarchyNode[]): GroupingHandlerReturn {
+  const finalGroupings: GroupingHandlerReturn = { allNodes: [], groupedNodes: [] };
+  for (const node of allNodes) {
+    if (HierarchyNode.isGroupingNode(node)) {
+      if (Array.isArray(node.children) && (allNodes.length === 1 || node.children.length === 1)) {
+        const [hideIfNoSiblings, hideIfOneGroupedNode] = getGroupingHideOptionsFromParentNode(node);
+        if (hideIfNoSiblings && allNodes.length === 1) {
+          return { allNodes: node.children, groupedNodes: [] };
+        } else if (hideIfOneGroupedNode && node.children.length === 1) {
+          finalGroupings.allNodes.push(node.children[0]);
           continue;
         }
       }
+      finalGroupings.groupedNodes.push(node);
     }
-    finalHierarchy.push(currentNode);
+    finalGroupings.allNodes.push(node);
   }
-  return { nodes: finalHierarchy, hasHidden };
+  return finalGroupings;
 }
 
 /**

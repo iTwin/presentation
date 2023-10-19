@@ -63,6 +63,8 @@ export interface TStubClassFuncProps {
   className: string;
   classLabel?: string;
   is?: (fullClassName: string) => Promise<boolean>;
+  isRelationshipClass?: () => boolean;
+  isEntityClass?: () => boolean;
 }
 export interface TStubClassFuncReturnType {
   name: string;
@@ -92,6 +94,8 @@ export function createGetClassStub(schemas: IMetadataProvider) {
         const { schemaName: parsedSchemaName, className: parsedClassName } = parseFullClassName(targetClassOrClassName.fullName);
         return props.is(`${parsedSchemaName}.${parsedClassName}`);
       }),
+      isEntityClass: props.isEntityClass,
+      isRelationshipClass: props.isRelationshipClass,
     } as unknown as ECClass);
     return {
       name: fullName,

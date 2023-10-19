@@ -9,17 +9,19 @@ import { getClass } from "../../Common";
 import { GroupingHandlerReturn } from "../Grouping";
 
 export async function getBaseClassGroupingECClasses(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<ECClass[]> {
-  const baseECClassesArray = new Array<ECClass>();
+  const baseEntityAndRelationshipECClassesArray = new Array<ECClass>();
   // Get all base class names that are provided in the grouping information
   const baseClassesFullClassNames = getAllBaseClasses(nodes);
   if (baseClassesFullClassNames.size === 0) {
-    return baseECClassesArray;
+    return baseEntityAndRelationshipECClassesArray;
   }
   for (const fullName of baseClassesFullClassNames) {
-    const specificClassNode = await getClass(metadata, fullName);
-    baseECClassesArray.push(specificClassNode);
+    const specificNodeClass = await getClass(metadata, fullName);
+    if (specificNodeClass.isRelationshipClass() || specificNodeClass.isEntityClass()) {
+      baseEntityAndRelationshipECClassesArray.push(specificNodeClass);
+    }
   }
-  const baseECClassesSorted = await sortByBaseClass(baseECClassesArray);
+  const baseECClassesSorted = await sortByBaseClass(baseEntityAndRelationshipECClassesArray);
   return baseECClassesSorted;
 }
 

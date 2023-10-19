@@ -15,7 +15,7 @@ import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
 
 describe("Stateless hierarchy builder", () => {
-  describe("Label and Class grouping and hiding", () => {
+  describe("Multi level grouping and hiding", () => {
     let selectClauseFactory: NodeSelectClauseFactory;
     let subjectClassName: string;
     let physicalPartitionClassName: string;
@@ -42,8 +42,8 @@ describe("Stateless hierarchy builder", () => {
         queryExecutor: createECSqlQueryExecutor(imodel),
       });
     }
-
-    it.only("groups by base class, class and label and hides some groups", async function () {
+    // not working??
+    it("groups by base class, class and label and hides some groups", async function () {
       const labelGroupName1 = "test1";
       const labelGroupName2 = "test2";
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {

@@ -123,6 +123,8 @@ export class NodeSelectClauseFactory {
               .map(([key, value]) => {
                 if (typeof value === "boolean") {
                   return `'${key}', ${createECSqlValueSelector(value)}`;
+                } else if (typeof value === "object" && value !== null && value.hasOwnProperty("selector")) {
+                  return `'${key}', ${value.selector}`;
                 }
                 return `'${key}', json_object(${Object.entries(value)
                   .map(([propKey, propValue]) => {
@@ -139,7 +141,7 @@ export class NodeSelectClauseFactory {
                       return `'${propKey}', ${createECSqlValueSelector(propValue)}`;
                     } else if (typeof propValue === "object" && propValue !== null && propValue.hasOwnProperty("selector")) {
                       return `${Object.entries(propValue)
-                        .map(([, selectorValue]) => `'${propKey}', ${createECSqlValueSelector(selectorValue)}`)
+                        .map(([, selectorValue]) => `'${propKey}', ${selectorValue}`)
                         .join(", ")}`;
                     }
                     return "CAST(NULL AS TEXT)";

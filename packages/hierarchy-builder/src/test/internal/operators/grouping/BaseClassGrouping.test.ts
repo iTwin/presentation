@@ -17,7 +17,7 @@ describe("BaseClassGrouping", () => {
     stubClass = createGetClassStub(metadataProvider).stubClass;
   });
 
-  it("doesn't group non-instance nodes", async () => {
+  it("does not group non-instance nodes", async () => {
     const nodes: HierarchyNode[] = [
       {
         label: "custom",
@@ -41,6 +41,36 @@ describe("BaseClassGrouping", () => {
     expect(result).to.deep.eq(nodes);
   });
 
+  it("does not group if not entity or relationship baseClass", async () => {
+    const nodes = [
+      createTestNode({
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.TestClass", id: "0x1" }] },
+        params: {
+          grouping: {
+            byBaseClasses: {
+              baseClassInfo: [
+                {
+                  className: "TestParentClass",
+                  schemaName: "TestSchema",
+                },
+              ],
+            },
+          },
+        },
+      }),
+    ];
+    stubClass({ schemaName: "TestSchema", className: "TestClass", is: isMock });
+    stubClass({
+      schemaName: "TestSchema",
+      className: "TestParentClass",
+      classLabel: "TestSchema.TestParentClass",
+      isEntityClass: () => false,
+      isRelationshipClass: () => false,
+    });
+    const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider, createGroupingHandlers)));
+    expect(result).to.deep.eq(nodes);
+  });
+
   it("groups one instance node", async () => {
     const nodes = [
       createTestNode({
@@ -60,7 +90,13 @@ describe("BaseClassGrouping", () => {
       }),
     ];
     stubClass({ schemaName: "TestSchema", className: "TestClass", is: isMock });
-    const parentClassInfo = stubClass({ schemaName: "TestSchema", className: "TestParentClass", classLabel: "TestSchema.TestParentClass" });
+    const parentClassInfo = stubClass({
+      schemaName: "TestSchema",
+      className: "TestParentClass",
+      classLabel: "TestSchema.TestParentClass",
+      isEntityClass: () => true,
+      isRelationshipClass: () => true,
+    });
     const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider, createGroupingHandlers)));
     expect(result).to.deep.eq([
       {
@@ -127,8 +163,20 @@ describe("BaseClassGrouping", () => {
     ];
     stubClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A", is: isMock });
     stubClass({ schemaName: "TestSchema", className: "B", classLabel: "Class B", is: isMock });
-    const parentClassA = stubClass({ schemaName: "TestSchema", className: "TestParentClassA", classLabel: "TestSchema.TestParentClassA" });
-    const parentClassB = stubClass({ schemaName: "TestSchema", className: "TestParentClassB", classLabel: "TestSchema.TestParentClassB" });
+    const parentClassA = stubClass({
+      schemaName: "TestSchema",
+      className: "TestParentClassA",
+      classLabel: "TestSchema.TestParentClassA",
+      isEntityClass: () => true,
+      isRelationshipClass: () => true,
+    });
+    const parentClassB = stubClass({
+      schemaName: "TestSchema",
+      className: "TestParentClassB",
+      classLabel: "TestSchema.TestParentClassB",
+      isEntityClass: () => true,
+      isRelationshipClass: () => true,
+    });
     const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider, createGroupingHandlers)));
     expect(result).to.deep.eq([
       {
@@ -214,9 +262,22 @@ describe("BaseClassGrouping", () => {
       }),
     ];
     stubClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A", is: isMock });
-    const parentClassA = stubClass({ schemaName: "TestSchema", className: "TestParentClassA", classLabel: "TestSchema.TestParentClassA" });
-    const parentClassAA = stubClass({ schemaName: "TestSchema", className: "TestParentClassAA", classLabel: "TestSchema.TestParentClassAA", is: isMock });
-    stubClass({ schemaName: "TestSchema", className: "TestRandomClassAA" });
+    const parentClassA = stubClass({
+      schemaName: "TestSchema",
+      className: "TestParentClassA",
+      classLabel: "TestSchema.TestParentClassA",
+      isEntityClass: () => true,
+      isRelationshipClass: () => true,
+    });
+    const parentClassAA = stubClass({
+      schemaName: "TestSchema",
+      className: "TestParentClassAA",
+      classLabel: "TestSchema.TestParentClassAA",
+      isEntityClass: () => true,
+      isRelationshipClass: () => true,
+      is: isMock,
+    });
+    stubClass({ schemaName: "TestSchema", className: "TestRandomClassAA", isEntityClass: () => true, isRelationshipClass: () => true });
     const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider, createGroupingHandlers)));
     expect(result).to.deep.eq([
       {

@@ -5,12 +5,17 @@
 
 import { expect } from "chai";
 import { from } from "rxjs";
+import { LogLevel } from "@itwin/core-bentley";
 import { HierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
-import { createGroupingOperator } from "../../../hierarchy-builder/internal/operators/Grouping";
+import { createGroupingOperator, LOGGING_NAMESPACE } from "../../../hierarchy-builder/internal/operators/Grouping";
 import { IMetadataProvider } from "../../../hierarchy-builder/Metadata";
-import { createGetClassStub, createGroupingHandlers, createTestNode, getObservableResult, TStubClassFunc } from "../../Utils";
+import { createGetClassStub, createGroupingHandlers, createTestNode, getObservableResult, setupLogging, TStubClassFunc } from "../../Utils";
 
 describe("Grouping", () => {
+  before(() => {
+    setupLogging([{ namespace: LOGGING_NAMESPACE, level: LogLevel.Trace }]);
+  });
+
   const metadataProvider = {} as unknown as IMetadataProvider;
   let stubClass: TStubClassFunc;
   beforeEach(() => {
@@ -129,10 +134,29 @@ describe("Grouping", () => {
     const classA = stubClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A", is: isMock });
     const classAA = stubClass({ schemaName: "TestSchema", className: "AA", classLabel: "Class AA", is: isMock });
     stubClass({ schemaName: "TestSchema", className: "B", classLabel: "Class B", is: isMock });
-    const parentClassA = stubClass({ schemaName: "TestSchema", className: "TestParentClassA", classLabel: "TestSchema.TestParentClassA" });
-    const parentClassAA = stubClass({ schemaName: "TestSchema", className: "TestParentClassAA", classLabel: "TestSchema.TestParentClassAA", is: isMock });
-    stubClass({ schemaName: "TestSchema", className: "TestParentClassB", classLabel: "TestSchema.TestParentClassB" });
-    stubClass({ schemaName: "TestSchema", className: "TestRandomClassAA" });
+    const parentClassA = stubClass({
+      schemaName: "TestSchema",
+      className: "TestParentClassA",
+      classLabel: "TestSchema.TestParentClassA",
+      isEntityClass: () => true,
+      isRelationshipClass: () => true,
+    });
+    const parentClassAA = stubClass({
+      schemaName: "TestSchema",
+      className: "TestParentClassAA",
+      classLabel: "TestSchema.TestParentClassAA",
+      is: isMock,
+      isEntityClass: () => true,
+      isRelationshipClass: () => true,
+    });
+    stubClass({
+      schemaName: "TestSchema",
+      className: "TestParentClassB",
+      classLabel: "TestSchema.TestParentClassB",
+      isEntityClass: () => true,
+      isRelationshipClass: () => true,
+    });
+    stubClass({ schemaName: "TestSchema", className: "TestRandomClassAA", isEntityClass: () => true, isRelationshipClass: () => true });
     const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider, createGroupingHandlers)));
     expect(result).to.deep.eq([
       nodes[4],

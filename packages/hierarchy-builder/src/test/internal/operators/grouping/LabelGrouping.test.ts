@@ -4,17 +4,20 @@
  *--------------------------------------------------------------------------------------------*/
 import { expect } from "chai";
 import { from } from "rxjs";
-import { LogLevel } from "@itwin/core-bentley";
 import { HierarchyNode } from "../../../../hierarchy-builder/HierarchyNode";
-import { createGroupingOperator, LOGGING_NAMESPACE } from "../../../../hierarchy-builder/internal/operators/Grouping";
+import { createGroupingOperator } from "../../../../hierarchy-builder/internal/operators/Grouping";
 import { IMetadataProvider } from "../../../../hierarchy-builder/Metadata";
-import { createGroupingHandlers, createTestNode, getObservableResult, setupLogging } from "../../../Utils";
+import { createGroupingHandlers, createTestNode, getObservableResult } from "../../../Utils";
 
 describe("LabelGrouping", () => {
-  before(() => {
-    setupLogging([{ namespace: LOGGING_NAMESPACE, level: LogLevel.Trace }]);
-  });
   const metadataProvider = {} as unknown as IMetadataProvider;
+
+  it("does not group if no nodes are present", async () => {
+    const nodes: HierarchyNode[] = [];
+    const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider, createGroupingHandlers)));
+    expect(result).to.deep.eq([] as HierarchyNode[]);
+  });
+
   it("groups nodes which have byLabel set to true", async () => {
     const nodes: HierarchyNode[] = [
       createTestNode({

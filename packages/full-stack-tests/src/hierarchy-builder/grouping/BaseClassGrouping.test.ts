@@ -146,6 +146,94 @@ describe("Stateless hierarchy builder", () => {
           ],
         });
       });
+
+      it("if provided base classes are not of entity or relationship type", async function () {
+        const customHierarchy: IHierarchyLevelDefinitionsFactory = {
+          async defineHierarchyLevel(parentNode) {
+            if (!parentNode) {
+              return [
+                {
+                  fullClassName: subjectClassName,
+                  query: {
+                    ecsql: `
+                    SELECT ${await selectClauseFactory.createSelectClause({
+                      ecClassId: { selector: `this.ECClassId` },
+                      ecInstanceId: { selector: `this.ECInstanceId` },
+                      nodeLabel: "root subject",
+                    })}
+                    FROM ${subjectClassName} AS this
+                    WHERE this.ECInstanceId = (${IModel.rootSubjectId})
+                  `,
+                  },
+                },
+              ];
+            } else if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "root subject") {
+              return [
+                {
+                  fullClassName: `BisCore.InformationContentElement`,
+                  query: {
+                    ecsql: `
+                    SELECT ${await selectClauseFactory.createSelectClause({
+                      ecClassId: { selector: `this.ECClassId` },
+                      ecInstanceId: { selector: `this.ECInstanceId` },
+                      nodeLabel: { selector: `this.UserLabel` },
+                      grouping: {
+                        byBaseClasses: {
+                          baseClassInfo: [
+                            { className: "IParentElement", schemaName: "BisCore" },
+                            { className: "ISubModeledElement", schemaName: "BisCore" },
+                          ],
+                        },
+                      },
+                    })}
+                    FROM (
+                      SELECT ECClassId, ECInstanceId, UserLabel, Parent
+                      FROM ${subjectClassName}
+                      UNION ALL
+                      SELECT ECClassId, ECInstanceId, UserLabel, Parent
+                      FROM ${physicalPartitionClassName}
+                    ) AS this
+                    WHERE this.Parent.Id = (${IModel.rootSubjectId})
+                  `,
+                  },
+                },
+              ];
+            }
+            return [];
+          },
+        };
+
+        await validateHierarchy({
+          provider: createProvider({ imodel: sharedIModel, hierarchy: customHierarchy }),
+          expect: [
+            NodeValidators.createForInstanceNode({
+              instanceKeys: [sharedKeys.rootSubject],
+              children: [
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [sharedKeys.childSubject1],
+                  children: false,
+                }),
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [sharedKeys.childSubject2],
+                  children: false,
+                }),
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [sharedKeys.childPartition3],
+                  children: false,
+                }),
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [sharedKeys.childPartition4],
+                  children: false,
+                }),
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [sharedKeys.childPartition5],
+                  children: false,
+                }),
+              ],
+            }),
+          ],
+        });
+      });
     });
 
     describe("groups", () => {
