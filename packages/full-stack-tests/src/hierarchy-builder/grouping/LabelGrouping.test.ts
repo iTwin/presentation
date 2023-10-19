@@ -85,68 +85,6 @@ describe("Stateless hierarchy builder", () => {
       },
     };
 
-    // it("does not create groups of 1", async function () {
-    //   const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-    //     const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-    //     const childSubject1 = insertSubject({ builder, codeValue: "1", parentId: rootSubject.id, userLabel: "test1" });
-    //     const childSubject2 = insertSubject({ builder, codeValue: "2", parentId: rootSubject.id, userLabel: "test2" });
-    //     return { rootSubject, childSubject1, childSubject2 };
-    //   });
-
-    //   await validateHierarchy({
-    //     provider: createProvider({ imodel, hierarchy: basicHierarchy }),
-    //     expect: [
-    //       NodeValidators.createForInstanceNode({
-    //         instanceKeys: [keys.rootSubject],
-    //         children: [
-    //           NodeValidators.createForInstanceNode({
-    //             instanceKeys: [keys.childSubject1],
-    //             children: false,
-    //           }),
-    //           NodeValidators.createForInstanceNode({
-    //             instanceKeys: [keys.childSubject2],
-    //             children: false,
-    //           }),
-    //         ],
-    //       }),
-    //     ],
-    //   });
-    // });
-
-    // it("does not group if all nodes have the same label", async function () {
-    //   const labelGroupName = "test1";
-    //   const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-    //     const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-    //     const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id, userLabel: labelGroupName });
-    //     const childSubject2 = insertSubject({ builder, codeValue: "test subject 2", parentId: rootSubject.id, userLabel: labelGroupName });
-    //     const childSubject3 = insertSubject({ builder, codeValue: "test subject 3", parentId: rootSubject.id, userLabel: labelGroupName });
-    //     return { rootSubject, childSubject1, childSubject2, childSubject3 };
-    //   });
-
-    //   await validateHierarchy({
-    //     provider: createProvider({ imodel, hierarchy: basicHierarchy }),
-    //     expect: [
-    //       NodeValidators.createForInstanceNode({
-    //         instanceKeys: [keys.rootSubject],
-    //         children: [
-    //           NodeValidators.createForInstanceNode({
-    //             instanceKeys: [keys.childSubject1],
-    //             children: false,
-    //           }),
-    //           NodeValidators.createForInstanceNode({
-    //             instanceKeys: [keys.childSubject2],
-    //             children: false,
-    //           }),
-    //           NodeValidators.createForInstanceNode({
-    //             instanceKeys: [keys.childSubject3],
-    //             children: false,
-    //           }),
-    //         ],
-    //       }),
-    //     ],
-    //   });
-    // });
-
     it("creates different groups for different labels", async function () {
       const labelGroupName1 = "test1";
       const labelGroupName2 = "test2";
