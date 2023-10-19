@@ -48,6 +48,10 @@ export interface BaseClassGroupingNodeKey {
   };
 }
 
+/**
+ * A key for one of the instance grouping nodes.
+ * @beta
+ */
 export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | BaseClassGroupingNodeKey;
 
 /**
@@ -99,15 +103,30 @@ export namespace HierarchyNodeKey {
 export interface HierarchyNodeHandlingParams {
   hideIfNoChildren?: boolean;
   hideInHierarchy?: boolean;
-  grouping?: {
-    groupByClass?: boolean;
-    groupByLabel?: boolean;
-    groupByBaseClass?: boolean;
-    baseClassInfo?: BaseClassInfo[];
-    hideIfSingleNodeInGroup?: boolean;
-    hideIfNoOtherGroups?: boolean;
-  };
+  grouping?: LabelGroupingParams & ClassGroupingParams;
   mergeByLabelId?: string;
+}
+
+/** @beta */
+export interface LabelGroupingParams {
+  byLabel?: boolean | BaseGroupingParams;
+}
+
+/** @beta */
+export interface ClassGroupingParams {
+  byClass?: boolean | BaseGroupingParams;
+  byBaseClasses?: BaseClassGroupingParams;
+}
+
+/** @beta */
+export interface BaseGroupingParams {
+  hideIfNoSiblings?: boolean;
+  hideIfOneGroupedNode?: boolean;
+}
+
+/** @beta */
+export interface BaseClassGroupingParams extends BaseGroupingParams {
+  baseClassInfo: BaseClassInfo[];
 }
 
 /** @beta */

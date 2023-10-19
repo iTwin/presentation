@@ -10,14 +10,15 @@ import { HierarchyNode, HierarchyNodeIdentifiersPath, ParsedHierarchyNode } from
 import { getClass } from "./internal/Common";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
 import { createDetermineChildrenOperator } from "./internal/operators/DetermineChildren";
-import { createBaseClassGroupingOperator } from "./internal/operators/grouping/BaseClassGrouping";
-import { createClassGroupingOperator } from "./internal/operators/grouping/ClassGrouping";
-import { createLabelGroupingOperator } from "./internal/operators/grouping/LabelGrouping";
+import { createGroupingOperator, GroupingHandlerType } from "./internal/operators/Grouping";
+import { createBaseClassGroupsForSingleBaseClass, getBaseClassGroupingECClasses } from "./internal/operators/grouping/BaseClassGrouping";
+import { createClassGroups } from "./internal/operators/grouping/ClassGrouping";
+import { createLabelGroups } from "./internal/operators/grouping/LabelGrouping";
 import { createHideIfNoChildrenOperator } from "./internal/operators/HideIfNoChildren";
 import { createHideNodesInHierarchyOperator } from "./internal/operators/HideNodesInHierarchy";
 import { createMergeInstanceNodesByLabelOperator } from "./internal/operators/MergeInstanceNodesByLabel";
 import { createPersistChildrenOperator } from "./internal/operators/PersistChildren";
-import { sortNodesAndGroupingNodeChildrenByLabelOperator, sortNodesByLabelOperator } from "./internal/operators/Sorting";
+import { sortNodesByLabelOperator } from "./internal/operators/Sorting";
 import { QueryScheduler } from "./internal/QueryScheduler";
 import { applyLimit, TreeQueryResultsReader } from "./internal/TreeNodesReader";
 import { IMetadataProvider } from "./Metadata";
@@ -137,10 +138,7 @@ export class HierarchyProvider {
       createHideIfNoChildrenOperator((n) => this.hasNodesObservable(n), false),
       createHideNodesInHierarchyOperator((n) => this.getNodesObservable(n), this._directNodesCache, false),
       sortNodesByLabelOperator,
-      createBaseClassGroupingOperator(this._metadataProvider),
-      createClassGroupingOperator(this._metadataProvider),
-      createLabelGroupingOperator(),
-      sortNodesAndGroupingNodeChildrenByLabelOperator(),
+      createGroupingOperator(this._metadataProvider, createGroupingHandlers),
     );
     return parentNode ? result.pipe(createPersistChildrenOperator(parentNode)) : result;
   }
@@ -202,6 +200,19 @@ export class HierarchyProvider {
         tap((r) => enableLogging && console.log(`HasNodes: result: ${r}`)),
       );
   }
+}
+
+async function createGroupingHandlers(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<GroupingHandlerType[]> {
+  const groupingHandlers: GroupingHandlerType[] = new Array<GroupingHandlerType>();
+  const baseClassGroupingECClasses = await getBaseClassGroupingECClasses(metadata, nodes);
+  for (const baseECClass of baseClassGroupingECClasses) {
+    groupingHandlers.push(async (allNodes: HierarchyNode[]) => {
+      return createBaseClassGroupsForSingleBaseClass(metadata, allNodes, baseECClass);
+    });
+  }
+  groupingHandlers.push(async (allNodes: HierarchyNode[]) => createClassGroups(metadata, allNodes));
+  groupingHandlers.push(async (allNodes: HierarchyNode[]) => createLabelGroups(allNodes));
+  return groupingHandlers;
 }
 
 function preProcessNodes(hierarchyFactory: IHierarchyLevelDefinitionsFactory) {

@@ -13,6 +13,39 @@ export interface ArrayPropertyAttributes {
 }
 
 // @beta
+export interface BaseClassGroupingNodeKey {
+    // (undocumented)
+    class: {
+        name: string;
+        label?: string;
+    };
+    // (undocumented)
+    type: "base-class-grouping";
+}
+
+// @beta (undocumented)
+export interface BaseClassGroupingParams extends BaseGroupingParams {
+    // (undocumented)
+    baseClassInfo: BaseClassInfo[];
+}
+
+// @beta (undocumented)
+export interface BaseClassInfo {
+    // (undocumented)
+    className: string;
+    // (undocumented)
+    schemaName: string;
+}
+
+// @beta (undocumented)
+export interface BaseGroupingParams {
+    // (undocumented)
+    hideIfNoSiblings?: boolean;
+    // (undocumented)
+    hideIfOneGroupedNode?: boolean;
+}
+
+// @beta
 export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelectClauseFactory {
     constructor(props: BisInstanceLabelSelectClauseFactoryProps);
     // (undocumented)
@@ -76,6 +109,14 @@ export interface ClassGroupingNodeKey {
     };
     // (undocumented)
     type: "class-grouping";
+}
+
+// @beta (undocumented)
+export interface ClassGroupingParams {
+    // (undocumented)
+    byBaseClasses?: BaseClassGroupingParams;
+    // (undocumented)
+    byClass?: boolean | BaseGroupingParams;
 }
 
 // @beta
@@ -386,6 +427,9 @@ export interface ECStructProperty extends ECProperty {
 export function getLogger(): ILogger;
 
 // @beta
+export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | BaseClassGroupingNodeKey;
+
+// @beta
 export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
 
 // @beta
@@ -408,11 +452,17 @@ export interface HierarchyNode<TLabel = string> {
 
 // @beta (undocumented)
 export namespace HierarchyNode {
+    export function isBaseClassGroupingNode<TNode extends HierarchyNode>(node: TNode): node is TNode & {
+        key: BaseClassGroupingNodeKey;
+    };
     export function isClassGroupingNode<TNode extends HierarchyNode>(node: TNode): node is TNode & {
         key: ClassGroupingNodeKey;
     };
     export function isCustom<TNode extends HierarchyNode>(node: TNode): node is TNode & {
         key: string;
+    };
+    export function isGroupingNode<TNode extends HierarchyNode>(node: TNode): node is TNode & {
+        key: GroupingNodeKey;
     };
     export function isInstancesNode<TNode extends HierarchyNode>(node: TNode): node is TNode & {
         key: InstancesNodeKey;
@@ -428,9 +478,7 @@ export namespace HierarchyNode {
 // @beta (undocumented)
 export interface HierarchyNodeHandlingParams {
     // (undocumented)
-    groupByClass?: boolean;
-    // (undocumented)
-    groupByLabel?: boolean;
+    grouping?: LabelGroupingParams & ClassGroupingParams;
     // (undocumented)
     hideIfNoChildren?: boolean;
     // (undocumented)
@@ -461,8 +509,10 @@ export type HierarchyNodeKey = StandardHierarchyNodeKey | string;
 
 // @beta (undocumented)
 export namespace HierarchyNodeKey {
+    export function isBaseClassGrouping(key: HierarchyNodeKey): key is BaseClassGroupingNodeKey;
     export function isClassGrouping(key: HierarchyNodeKey): key is ClassGroupingNodeKey;
     export function isCustom(key: HierarchyNodeKey): key is string;
+    export function isGrouping(key: HierarchyNodeKey): key is GroupingNodeKey;
     export function isInstances(key: HierarchyNodeKey): key is InstancesNodeKey;
     export function isLabelGrouping(key: HierarchyNodeKey): key is LabelGroupingNodeKey;
     export function isStandard(key: HierarchyNodeKey): key is StandardHierarchyNodeKey;
@@ -586,6 +636,12 @@ export interface LabelGroupingNodeKey {
 }
 
 // @beta (undocumented)
+export interface LabelGroupingParams {
+    // (undocumented)
+    byLabel?: boolean | BaseGroupingParams;
+}
+
+// @beta (undocumented)
 export type LogFunction = (category: string, message: string) => void;
 
 // @beta
@@ -595,8 +651,8 @@ export enum NodeSelectClauseColumnNames {
     ECInstanceId = "ECInstanceId",
     ExtendedData = "ExtendedData",
     FullClassName = "FullClassName",
-    GroupByClass = "GroupByClass",
-    GroupByLabel = "GroupByLabel",
+    // (undocumented)
+    Grouping = "Grouping",
     HasChildren = "HasChildren",
     HideIfNoChildren = "HideIfNoChildren",
     HideNodeInHierarchy = "HideNodeInHierarchy",
@@ -622,9 +678,7 @@ export interface NodeSelectClauseProps {
         [key: string]: Id64String | string | number | boolean | ECSqlValueSelector;
     };
     // (undocumented)
-    groupByClass?: boolean | ECSqlValueSelector;
-    // (undocumented)
-    groupByLabel?: boolean | ECSqlValueSelector;
+    grouping?: ECSqlSelectClauseGroupingParams;
     // (undocumented)
     hasChildren?: boolean | ECSqlValueSelector;
     // (undocumented)
@@ -711,7 +765,7 @@ export function setLogger(logger: ILogger | undefined): void;
 export type SpecialPropertyType = "Navigation" | "Guid" | "Point2d" | "Point3d";
 
 // @beta
-export type StandardHierarchyNodeKey = InstancesNodeKey | ClassGroupingNodeKey | LabelGroupingNodeKey;
+export type StandardHierarchyNodeKey = InstancesNodeKey | GroupingNodeKey;
 
 // @beta
 export type TypedPrimitiveValue = ({

@@ -8,6 +8,10 @@ import sinon from "sinon";
 import { Logger, LogLevel } from "@itwin/core-bentley";
 import { HierarchyNode } from "../hierarchy-builder/HierarchyNode";
 import * as common from "../hierarchy-builder/internal/Common";
+import { GroupingHandlerType } from "../hierarchy-builder/internal/operators/Grouping";
+import { createBaseClassGroupsForSingleBaseClass, getBaseClassGroupingECClasses } from "../hierarchy-builder/internal/operators/grouping/BaseClassGrouping";
+import { createClassGroups } from "../hierarchy-builder/internal/operators/grouping/ClassGrouping";
+import { createLabelGroups } from "../hierarchy-builder/internal/operators/grouping/LabelGrouping";
 import { ECClass, IMetadataProvider, parseFullClassName } from "../hierarchy-builder/Metadata";
 import { InstanceKey } from "../hierarchy-builder/values/Values";
 
@@ -95,4 +99,17 @@ export function createGetClassStub(schemas: IMetadataProvider) {
     };
   };
   return { getClass: stub, stubClass };
+}
+
+export async function createGroupingHandlers(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<GroupingHandlerType[]> {
+  const groupingHandlers: GroupingHandlerType[] = new Array<GroupingHandlerType>();
+  const baseClassGroupingECClasses = await getBaseClassGroupingECClasses(metadata, nodes);
+  for (const baseECClass of baseClassGroupingECClasses) {
+    groupingHandlers.push(async (allNodes: HierarchyNode[]) => {
+      return createBaseClassGroupsForSingleBaseClass(metadata, allNodes, baseECClass);
+    });
+  }
+  groupingHandlers.push(async (allNodes: HierarchyNode[]) => createClassGroups(metadata, allNodes));
+  groupingHandlers.push(async (allNodes: HierarchyNode[]) => createLabelGroups(allNodes));
+  return groupingHandlers;
 }

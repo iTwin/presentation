@@ -59,172 +59,6 @@ describe("Stateless hierarchy builder", () => {
         sharedIModel = imodel;
       });
 
-      it("if groupByBaseClass is not provided", async function () {
-        const customHierarchy: IHierarchyLevelDefinitionsFactory = {
-          async defineHierarchyLevel(parentNode) {
-            if (!parentNode) {
-              return [
-                {
-                  fullClassName: subjectClassName,
-                  query: {
-                    ecsql: `
-                    SELECT ${await selectClauseFactory.createSelectClause({
-                      ecClassId: { selector: `this.ECClassId` },
-                      ecInstanceId: { selector: `this.ECInstanceId` },
-                      nodeLabel: "root subject",
-                    })}
-                    FROM ${subjectClassName} AS this
-                    WHERE this.ECInstanceId = (${IModel.rootSubjectId})
-                  `,
-                  },
-                },
-              ];
-            } else if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "root subject") {
-              return [
-                {
-                  fullClassName: `BisCore.InformationContentElement`,
-                  query: {
-                    ecsql: `
-                    SELECT ${await selectClauseFactory.createSelectClause({
-                      ecClassId: { selector: `this.ECClassId` },
-                      ecInstanceId: { selector: `this.ECInstanceId` },
-                      nodeLabel: { selector: `this.UserLabel` },
-                      grouping: {
-                        baseClassInfo: [{ className: "InformationPartitionElement", schemaName: "BisCore" }],
-                      },
-                    })}
-                    FROM (
-                      SELECT ECClassId, ECInstanceId, UserLabel, Parent
-                      FROM ${subjectClassName}
-                      UNION ALL
-                      SELECT ECClassId, ECInstanceId, UserLabel, Parent
-                      FROM ${physicalPartitionClassName}
-                    ) AS this
-                    WHERE this.Parent.Id = (${IModel.rootSubjectId})
-                  `,
-                  },
-                },
-              ];
-            }
-            return [];
-          },
-        };
-
-        await validateHierarchy({
-          provider: createProvider({ imodel: sharedIModel, hierarchy: customHierarchy }),
-          expect: [
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [sharedKeys.rootSubject],
-              children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [sharedKeys.childSubject1],
-                  children: false,
-                }),
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [sharedKeys.childSubject2],
-                  children: false,
-                }),
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [sharedKeys.childPartition3],
-                  children: false,
-                }),
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [sharedKeys.childPartition4],
-                  children: false,
-                }),
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [sharedKeys.childPartition5],
-                  children: false,
-                }),
-              ],
-            }),
-          ],
-        });
-      });
-
-      it("if baseClassInfo is not provided", async function () {
-        const customHierarchy: IHierarchyLevelDefinitionsFactory = {
-          async defineHierarchyLevel(parentNode) {
-            if (!parentNode) {
-              return [
-                {
-                  fullClassName: subjectClassName,
-                  query: {
-                    ecsql: `
-                    SELECT ${await selectClauseFactory.createSelectClause({
-                      ecClassId: { selector: `this.ECClassId` },
-                      ecInstanceId: { selector: `this.ECInstanceId` },
-                      nodeLabel: "root subject",
-                    })}
-                    FROM ${subjectClassName} AS this
-                    WHERE this.ECInstanceId = (${IModel.rootSubjectId})
-                  `,
-                  },
-                },
-              ];
-            } else if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "root subject") {
-              return [
-                {
-                  fullClassName: `BisCore.InformationContentElement`,
-                  query: {
-                    ecsql: `
-                    SELECT ${await selectClauseFactory.createSelectClause({
-                      ecClassId: { selector: `this.ECClassId` },
-                      ecInstanceId: { selector: `this.ECInstanceId` },
-                      nodeLabel: { selector: `this.UserLabel` },
-                      grouping: {
-                        groupByBaseClass: true,
-                      },
-                    })}
-                    FROM (
-                      SELECT ECClassId, ECInstanceId, UserLabel, Parent
-                      FROM ${subjectClassName}
-                      UNION ALL
-                      SELECT ECClassId, ECInstanceId, UserLabel, Parent
-                      FROM ${physicalPartitionClassName}
-                    ) AS this
-                    WHERE this.Parent.Id = (${IModel.rootSubjectId})
-                  `,
-                  },
-                },
-              ];
-            }
-            return [];
-          },
-        };
-
-        await validateHierarchy({
-          provider: createProvider({ imodel: sharedIModel, hierarchy: customHierarchy }),
-          expect: [
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [sharedKeys.rootSubject],
-              children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [sharedKeys.childSubject1],
-                  children: false,
-                }),
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [sharedKeys.childSubject2],
-                  children: false,
-                }),
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [sharedKeys.childPartition3],
-                  children: false,
-                }),
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [sharedKeys.childPartition4],
-                  children: false,
-                }),
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [sharedKeys.childPartition5],
-                  children: false,
-                }),
-              ],
-            }),
-          ],
-        });
-      });
-
       it("if provided base classes are not parents", async function () {
         const customHierarchy: IHierarchyLevelDefinitionsFactory = {
           async defineHierarchyLevel(parentNode) {
@@ -256,11 +90,12 @@ describe("Stateless hierarchy builder", () => {
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.UserLabel` },
                       grouping: {
-                        groupByBaseClass: true,
-                        baseClassInfo: [
-                          { className: "GraphicalPartition3d", schemaName: "BisCore" },
-                          { className: "LinkElement", schemaName: "BisCore" },
-                        ],
+                        byBaseClasses: {
+                          baseClassInfo: [
+                            { className: "GraphicalPartition3d", schemaName: "BisCore" },
+                            { className: "LinkElement", schemaName: "BisCore" },
+                          ],
+                        },
                       },
                     })}
                     FROM (
@@ -357,8 +192,9 @@ describe("Stateless hierarchy builder", () => {
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `this.UserLabel` },
                         grouping: {
-                          groupByBaseClass: true,
-                          baseClassInfo: [{ className: baseClassName, schemaName: baseSchemaName }],
+                          byBaseClasses: {
+                            baseClassInfo: [{ className: baseClassName, schemaName: baseSchemaName }],
+                          },
                         },
                       })}
                       FROM (
@@ -461,12 +297,13 @@ describe("Stateless hierarchy builder", () => {
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `this.UserLabel` },
                         grouping: {
-                          groupByBaseClass: true,
-                          baseClassInfo: [
-                            { className: baseClassName1, schemaName: baseSchemaName },
-                            { className: baseClassName2, schemaName: baseSchemaName },
-                            { className: baseClassName3, schemaName: baseSchemaName },
-                          ],
+                          byBaseClasses: {
+                            baseClassInfo: [
+                              { className: baseClassName1, schemaName: baseSchemaName },
+                              { className: baseClassName2, schemaName: baseSchemaName },
+                              { className: baseClassName3, schemaName: baseSchemaName },
+                            ],
+                          },
                         },
                       })}
                       FROM (
@@ -536,7 +373,7 @@ describe("Stateless hierarchy builder", () => {
         });
       });
 
-      it("differently when grouping by parent+child and only by child class at the same level", async function () {
+      it("into different groups when root base classes are different", async function () {
         const baseClassName1 = "Element";
         const baseClassName2 = "InformationContentElement";
         const baseClassName3 = "InformationPartitionElement";
@@ -582,12 +419,13 @@ describe("Stateless hierarchy builder", () => {
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `this.UserLabel` },
                         grouping: {
-                          groupByBaseClass: true,
-                          baseClassInfo: [
-                            { className: baseClassName1, schemaName: baseSchemaName },
-                            { className: baseClassName2, schemaName: baseSchemaName },
-                            { className: baseClassName3, schemaName: baseSchemaName },
-                          ],
+                          byBaseClasses: {
+                            baseClassInfo: [
+                              { className: baseClassName1, schemaName: baseSchemaName },
+                              { className: baseClassName2, schemaName: baseSchemaName },
+                              { className: baseClassName3, schemaName: baseSchemaName },
+                            ],
+                          },
                         },
                       })}
                       FROM (
@@ -611,11 +449,12 @@ describe("Stateless hierarchy builder", () => {
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `this.UserLabel` },
                         grouping: {
-                          groupByBaseClass: true,
-                          baseClassInfo: [
-                            { className: baseClassName2, schemaName: baseSchemaName },
-                            { className: baseClassName3, schemaName: baseSchemaName },
-                          ],
+                          byBaseClasses: {
+                            baseClassInfo: [
+                              { className: baseClassName2, schemaName: baseSchemaName },
+                              { className: baseClassName3, schemaName: baseSchemaName },
+                            ],
+                          },
                         },
                       })}
                       FROM ${physicalPartitionClassName} AS this
@@ -696,7 +535,7 @@ describe("Stateless hierarchy builder", () => {
         });
       });
 
-      it("differently when grouping by parent+child and only by parent class at the same level", async function () {
+      it("into one root base class when all nodes share the root base class", async function () {
         const baseClassName1 = "Element";
         const baseClassName2 = "InformationContentElement";
         const baseClassName3 = "InformationPartitionElement";
@@ -742,12 +581,13 @@ describe("Stateless hierarchy builder", () => {
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `this.UserLabel` },
                         grouping: {
-                          groupByBaseClass: true,
-                          baseClassInfo: [
-                            { className: baseClassName1, schemaName: baseSchemaName },
-                            { className: baseClassName2, schemaName: baseSchemaName },
-                            { className: baseClassName3, schemaName: baseSchemaName },
-                          ],
+                          byBaseClasses: {
+                            baseClassInfo: [
+                              { className: baseClassName1, schemaName: baseSchemaName },
+                              { className: baseClassName2, schemaName: baseSchemaName },
+                              { className: baseClassName3, schemaName: baseSchemaName },
+                            ],
+                          },
                         },
                       })}
                       FROM (
@@ -771,8 +611,9 @@ describe("Stateless hierarchy builder", () => {
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `this.UserLabel` },
                         grouping: {
-                          groupByBaseClass: true,
-                          baseClassInfo: [{ className: baseClassName1, schemaName: baseSchemaName }],
+                          byBaseClasses: {
+                            baseClassInfo: [{ className: baseClassName1, schemaName: baseSchemaName }],
+                          },
                         },
                       })}
                       FROM ${physicalPartitionClassName} AS this

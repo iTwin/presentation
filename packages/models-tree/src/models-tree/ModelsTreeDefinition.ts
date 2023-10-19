@@ -349,7 +349,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                   }),
                 },
                 grouping: {
-                  groupByClass: true,
+                  byClass: true,
                 },
                 hasChildren: {
                   selector: `
@@ -397,7 +397,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                   }),
                 },
                 grouping: {
-                  groupByClass: true,
+                  byClass: true,
                 },
                 hasChildren: {
                   selector: `

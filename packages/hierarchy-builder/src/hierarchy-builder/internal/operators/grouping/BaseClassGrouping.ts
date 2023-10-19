@@ -3,75 +3,48 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { from, mergeMap, Observable, tap, toArray } from "rxjs";
 import { HierarchyNode } from "../../../HierarchyNode";
-import { getLogger } from "../../../Logging";
 import { ECClass, IMetadataProvider } from "../../../Metadata";
-import { createOperatorLoggingNamespace, getClass } from "../../Common";
-import { sortNodesAndGroupingNodeChildrenByLabel, sortNodesByLabel } from "../Sorting";
-import { applyHidingGroupingParamsToSpecificGroupingType } from "./GroupHiding";
+import { getClass } from "../../Common";
+import { GroupingHandlerReturn } from "../Grouping";
 
-const OPERATOR_NAME = "Grouping.ByBaseClass";
-/** @internal */
-export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
-
-/** @internal */
-export function createBaseClassGroupingOperator(metadata: IMetadataProvider) {
-  return function (nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
-    return nodes.pipe(
-      log((n) => `in: ${n.label}`),
-      // need all nodes in one place to group them
-      toArray(),
-      // group all nodes
-      mergeMap((resolvedNodes) => from(createBaseClassGrouping(metadata, resolvedNodes))),
-      mergeMap((groupedNodes) => from(sortNodesAndGroupingNodeChildrenByLabel(groupedNodes))),
-      // convert intermediate format into a nodes observable
-      log((n) => `out: ${n.label}`),
-    );
-  };
-}
-
-async function createBaseClassGrouping(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<HierarchyNode[]> {
-  let output = nodes;
+export async function getBaseClassGroupingECClasses(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<ECClass[]> {
+  const baseECClassesArray = new Array<ECClass>();
   // Get all base class names that are provided in the grouping information
   const baseClassesFullClassNames = getAllBaseClasses(nodes);
   if (baseClassesFullClassNames.size === 0) {
-    return nodes;
+    return baseECClassesArray;
   }
-
-  const baseECClassesArray = new Array<ECClass>();
   for (const fullName of baseClassesFullClassNames) {
     const specificClassNode = await getClass(metadata, fullName);
     baseECClassesArray.push(specificClassNode);
   }
   const baseECClassesSorted = await sortByBaseClass(baseECClassesArray);
-
-  for (const baseECClass of baseECClassesSorted) {
-    output = await createGroupingForSingleBaseClass(metadata, output, baseECClass);
-  }
-  return output;
+  return baseECClassesSorted;
 }
 
-async function createGroupingForSingleBaseClass(metadata: IMetadataProvider, nodes: HierarchyNode[], baseECClass: ECClass): Promise<HierarchyNode[]> {
-  const finalHierarchy = new Array<HierarchyNode>();
-  finalHierarchy.push({
+export async function createBaseClassGroupsForSingleBaseClass(
+  metadata: IMetadataProvider,
+  nodes: HierarchyNode[],
+  baseECClass: ECClass,
+): Promise<GroupingHandlerReturn> {
+  const finalAllNodeHierarchy = new Array<HierarchyNode>();
+  const finalGroupedNodeHierarchy = new Array<HierarchyNode>();
+  const baseClassGroupingNode: HierarchyNode = {
     label: baseECClass.fullName,
     key: {
       type: "base-class-grouping",
       class: { name: baseECClass.fullName, label: baseECClass.label ?? baseECClass.name },
     },
     children: [],
-  });
+  };
+  finalAllNodeHierarchy.push(baseClassGroupingNode);
+  finalGroupedNodeHierarchy.push(baseClassGroupingNode);
   for (const node of nodes) {
-    // if node is a grouping node, then call this function for its children and update them if necessary
-    if (HierarchyNode.isGroupingNode(node) && Array.isArray(node.children)) {
-      const newChildren = await createGroupingForSingleBaseClass(metadata, node.children, baseECClass);
-      node.children = sortNodesByLabel(newChildren);
-    }
-    if (HierarchyNode.isInstancesNode(node) && node.params?.grouping?.groupByBaseClass && node.params.grouping.baseClassInfo) {
+    if (HierarchyNode.isInstancesNode(node) && node.params?.grouping?.byBaseClasses) {
       let classNameIsInBaseClassInfo = false;
       // check if the node should be grouped by this baseClass
-      for (const classInfo of node.params.grouping.baseClassInfo) {
+      for (const classInfo of node.params.grouping.byBaseClasses.baseClassInfo) {
         const specificClassName = `${classInfo.schemaName}.${classInfo.className}`;
         if (specificClassName === baseECClass.fullName) {
           classNameIsInBaseClassInfo = true;
@@ -82,26 +55,29 @@ async function createGroupingForSingleBaseClass(metadata: IMetadataProvider, nod
         const fullCurrentNodeClassName = node.key.instanceKeys[0].className;
         const currentNodeECClass = await getClass(metadata, fullCurrentNodeClassName);
         if (await currentNodeECClass.is(baseECClass)) {
-          if (finalHierarchy.length > 0 && Array.isArray(finalHierarchy[0].children)) {
-            finalHierarchy[0].children.push(node);
+          if (finalAllNodeHierarchy.length > 0 && Array.isArray(baseClassGroupingNode.children)) {
+            baseClassGroupingNode.children.push(node);
             continue;
           }
         }
       }
     }
-    finalHierarchy.push(node);
+    finalAllNodeHierarchy.push(node);
   }
-  if (Array.isArray(finalHierarchy[0].children) && finalHierarchy[0].children.length === 0) {
-    finalHierarchy.splice(0, 1);
+
+  // remove grouping node if it did not have any children
+  if (Array.isArray(baseClassGroupingNode.children) && baseClassGroupingNode.children.length === 0) {
+    finalAllNodeHierarchy.splice(0, 1);
+    finalGroupedNodeHierarchy.splice(0, 1);
   }
-  return applyHidingGroupingParamsToSpecificGroupingType(finalHierarchy, "base-class-grouping");
+  return { allNodes: finalAllNodeHierarchy, groupedNodes: finalGroupedNodeHierarchy };
 }
 
-function getAllBaseClasses(nodes: HierarchyNode[]): Set<string> {
+export function getAllBaseClasses(nodes: HierarchyNode[]): Set<string> {
   const baseClasses = new Set<string>();
   for (const node of nodes) {
-    if (HierarchyNode.isInstancesNode(node) && node.params?.grouping?.groupByBaseClass && node.params.grouping.baseClassInfo) {
-      for (const classInfo of node.params.grouping.baseClassInfo) {
+    if (HierarchyNode.isInstancesNode(node) && node.params?.grouping?.byBaseClasses) {
+      for (const classInfo of node.params.grouping.byBaseClasses.baseClassInfo) {
         const specificClassName = `${classInfo.schemaName}.${classInfo.className}`;
         baseClasses.add(specificClassName);
       }
@@ -110,7 +86,7 @@ function getAllBaseClasses(nodes: HierarchyNode[]): Set<string> {
   return baseClasses;
 }
 
-async function sortByBaseClass(classes: ECClass[]) {
+export async function sortByBaseClass(classes: ECClass[]) {
   const output: ECClass[] = [];
   const originalAmountOfClasses = classes.length;
   while (output.length < originalAmountOfClasses) {
@@ -135,12 +111,4 @@ async function sortByBaseClass(classes: ECClass[]) {
   }
   // Output has all the classes, but parent classes have been added after their children. So the array has to be reversed.
   return output.reverse();
-}
-
-function doLog(msg: string) {
-  getLogger().logTrace(LOGGING_NAMESPACE, msg);
-}
-
-function log<T>(msg: (arg: T) => string) {
-  return tap<T>((n) => doLog(msg(n)));
 }

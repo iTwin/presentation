@@ -26,8 +26,8 @@ describe("NodeSelectClauseFactory", () => {
         bool: true,
       },
       grouping: {
-        groupByClass: true,
-        groupByLabel: true,
+        byClass: true,
+        byLabel: true,
       },
       hasChildren: true,
       hideIfNoChildren: true,
@@ -43,8 +43,8 @@ describe("NodeSelectClauseFactory", () => {
         CAST(1 AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
         CAST(1 AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
         json_object(
-          'groupByClass', true,
-          'groupByLabel', true
+          'byClass', true,
+          'byLabel', true
         ) AS ${NodeSelectClauseColumnNames.Grouping},
         CAST('merge id' AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
         json_object(
@@ -68,8 +68,8 @@ describe("NodeSelectClauseFactory", () => {
         sel: { selector: "x.ExtendedData" },
       },
       grouping: {
-        groupByClass: { selector: "x.GroupByClass" },
-        groupByLabel: { selector: "x.GroupByLabel" },
+        byClass: { selector: "x.byClass" },
+        byLabel: { selector: "x.byLabel" },
       },
       hasChildren: { selector: "x.HasChildren" },
       hideIfNoChildren: { selector: "x.HideIfNoChildren" },
@@ -85,8 +85,8 @@ describe("NodeSelectClauseFactory", () => {
         CAST(x.HideIfNoChildren AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
         CAST(x.HideNodeInHierarchy AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
         json_object(
-          'groupByClass', x.GroupByClass,
-          'groupByLabel', x.GroupByLabel
+          'byClass', x.byClass,
+          'byLabel', x.byLabel
         ) AS ${NodeSelectClauseColumnNames.Grouping},
         CAST(x.MergeId AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
         json_object(

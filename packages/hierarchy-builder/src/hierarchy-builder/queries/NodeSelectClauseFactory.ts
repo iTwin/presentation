@@ -66,21 +66,37 @@ export interface NodeSelectClauseProps {
   hasChildren?: boolean | ECSqlValueSelector;
   hideNodeInHierarchy?: boolean | ECSqlValueSelector;
   hideIfNoChildren?: boolean | ECSqlValueSelector;
-  grouping?: {
-    groupByClass?: boolean | ECSqlValueSelector;
-    groupByLabel?: boolean | ECSqlValueSelector;
-    groupByBaseClass?: boolean | ECSqlValueSelector;
-    baseClassInfo?: BaseClassInfoProps[];
-    hideIfSingleNodeInGroup?: boolean | ECSqlValueSelector;
-    hideIfNoOtherGroups?: boolean | ECSqlValueSelector;
-  };
+  grouping?: ECSqlSelectClauseGroupingParams;
   mergeByLabelId?: string | ECSqlValueSelector;
 }
 
-/**
- * @beta
- */
-export interface BaseClassInfoProps {
+/** @beta */
+type ECSqlSelectClauseGroupingParams = LabelGroupingParams & ClassGroupingParams;
+
+/** @beta */
+interface LabelGroupingParams {
+  byLabel?: boolean | ECSqlValueSelector | BaseGroupingParams;
+}
+
+/** @beta */
+interface ClassGroupingParams {
+  byClass?: boolean | ECSqlValueSelector | BaseGroupingParams;
+  byBaseClasses?: BaseClassGroupingParams;
+}
+
+/** @beta */
+interface BaseGroupingParams {
+  hideIfNoSiblings?: boolean | ECSqlValueSelector;
+  hideIfOneGroupedNode?: boolean | ECSqlValueSelector;
+}
+
+/** @beta */
+interface BaseClassGroupingParams extends BaseGroupingParams {
+  baseClassInfo: BaseClassInfo[];
+}
+
+/** @beta */
+interface BaseClassInfo {
   className: string | ECSqlValueSelector;
   schemaName: string | ECSqlValueSelector;
 }
@@ -105,18 +121,30 @@ export class NodeSelectClauseFactory {
         props.grouping
           ? `json_object(${Object.entries(props.grouping)
               .map(([key, value]) => {
-                if (Array.isArray(value)) {
-                  return `'${key}', json_array(${Object.entries(value)
-                    .map(
-                      ([, objValue]) =>
-                        `json_object('className', ${createECSqlValueSelector(objValue.className)}, 'schemaName', ${createECSqlValueSelector(
-                          objValue.schemaName,
-                        )})`,
-                    )
-                    .join(", ")})`;
-                } else {
+                if (typeof value === "boolean") {
                   return `'${key}', ${createECSqlValueSelector(value)}`;
                 }
+                return `'${key}', json_object(${Object.entries(value)
+                  .map(([propKey, propValue]) => {
+                    if (Array.isArray(propValue)) {
+                      return `'${propKey}', json_array(${Object.entries(propValue)
+                        .map(
+                          ([_objKey, objValue]) =>
+                            `json_object('className', ${createECSqlValueSelector(objValue.className)}, 'schemaName', ${createECSqlValueSelector(
+                              objValue.schemaName,
+                            )})`,
+                        )
+                        .join(", ")})`;
+                    } else if (typeof propValue === "boolean") {
+                      return `'${propKey}', ${createECSqlValueSelector(propValue)}`;
+                    } else if (typeof propValue === "object" && propValue !== null && propValue.hasOwnProperty("selector")) {
+                      return `${Object.entries(propValue)
+                        .map(([, selectorValue]) => `'${propKey}', ${createECSqlValueSelector(selectorValue)}`)
+                        .join(", ")}`;
+                    }
+                    return "CAST(NULL AS TEXT)";
+                  })
+                  .join(", ")})`;
               })
               .join(", ")})`
           : "CAST(NULL AS TEXT)"

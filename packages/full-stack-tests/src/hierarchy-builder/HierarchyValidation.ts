@@ -146,7 +146,7 @@ export namespace NodeValidators {
           throw new Error(`[${node.label}] Expected a base class grouping node, got "${node.key.type}"`);
         }
         if (props.baseClassName && node.key.class.name !== props.baseClassName) {
-          throw new Error(`[${node.label}] Expected node to represent class "${props.baseClassName}", got "${node.key.class.name}"`);
+          throw new Error(`[${node.label}] Expected node to represent base class "${props.baseClassName}", got "${node.key.class.name}"`);
         }
         validateBaseNodeAttributes(node, {
           label: props.label,

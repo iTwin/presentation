@@ -6,191 +6,72 @@ import { expect } from "chai";
 import { from } from "rxjs";
 import { LogLevel } from "@itwin/core-bentley";
 import { HierarchyNode } from "../../../../hierarchy-builder/HierarchyNode";
-import { createLabelGroupingOperator, LOGGING_NAMESPACE } from "../../../../hierarchy-builder/internal/operators/grouping/LabelGrouping";
-import { createTestNode, getObservableResult, setupLogging } from "../../../Utils";
+import { createGroupingOperator, LOGGING_NAMESPACE } from "../../../../hierarchy-builder/internal/operators/Grouping";
+import { IMetadataProvider } from "../../../../hierarchy-builder/Metadata";
+import { createGroupingHandlers, createTestNode, getObservableResult, setupLogging } from "../../../Utils";
 
 describe("LabelGrouping", () => {
   before(() => {
     setupLogging([{ namespace: LOGGING_NAMESPACE, level: LogLevel.Trace }]);
   });
-
-  describe("groupByLabel is false", () => {
-    it("doesn't group non-instance nodes", async () => {
-      const nodes: HierarchyNode[] = [
-        {
-          label: "custom",
-          key: "test",
-          children: false,
-        },
-        {
-          label: "custom",
-          key: "test2",
-          children: false,
-        },
-      ];
-      const result = await getObservableResult(from(nodes).pipe(createLabelGroupingOperator()));
-      expect(result).to.deep.eq(nodes);
-    });
-
-    it("doesn't group instance nodes", async () => {
-      const nodes: HierarchyNode[] = [
-        createTestNode({
-          key: { type: "instances", instanceKeys: [{ className: "TestSchema:TestClass", id: "0x1" }] },
-        }),
-        createTestNode({
-          key: { type: "instances", instanceKeys: [{ className: "TestSchema:TestClass", id: "0x2" }] },
-        }),
-      ];
-      const result = await getObservableResult(from(nodes).pipe(createLabelGroupingOperator()));
-      expect(result).to.deep.eq(nodes);
-    });
-  });
-
-  describe("groupByLabel is true", () => {
-    it("doesn't group one non-instance node", async () => {
-      const nodes: HierarchyNode[] = [
-        {
-          label: "custom",
-          key: "test",
-          children: false,
-          params: { grouping: { groupByLabel: true } },
-        },
-      ];
-      const result = await getObservableResult(from(nodes).pipe(createLabelGroupingOperator()));
-      expect(result).to.deep.eq(nodes);
-    });
-
-    it("doesn't group one instance node", async () => {
-      const nodes: HierarchyNode[] = [
-        createTestNode({
-          key: { type: "instances", instanceKeys: [{ className: "TestSchema:TestClass", id: "0x1" }] },
-          params: { grouping: { groupByLabel: true } },
-        }),
-      ];
-      const result = await getObservableResult(from(nodes).pipe(createLabelGroupingOperator()));
-      expect(result).to.deep.eq(nodes);
-    });
-
-    it("doesn't group if all nodes have the same label", async () => {
-      const nodes: HierarchyNode[] = [
-        {
-          label: "testLabel",
-          key: "test1",
-          children: false,
-          params: { grouping: { groupByLabel: true } },
-        },
-        {
-          label: "testLabel",
-          key: "test2",
-          children: false,
-          params: { grouping: { groupByLabel: true } },
-        },
-        createTestNode({
-          key: { type: "instances", instanceKeys: [{ className: "TestSchema:TestClass", id: "0x1" }] },
-          params: { grouping: { groupByLabel: true } },
-          label: "testLabel",
-        }),
-      ];
-      const result = await getObservableResult(from(nodes).pipe(createLabelGroupingOperator()));
-      expect(result).to.deep.eq(nodes);
-    });
-
-    it("groups if at least two nodes have the same label and both have groupByLabel set to true", async () => {
-      const nodes: HierarchyNode[] = [
-        createTestNode({
-          key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+  const metadataProvider = {} as unknown as IMetadataProvider;
+  it("groups nodes which have byLabel set to true", async () => {
+    const nodes: HierarchyNode[] = [
+      createTestNode({
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+        label: "1",
+        params: { grouping: { byLabel: true } },
+      }),
+      {
+        label: "1",
+        key: "custom1",
+        children: false,
+        params: { grouping: { byLabel: true } },
+      },
+      createTestNode({
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema:B", id: "0x2" }] },
+        label: "2",
+        params: { grouping: { byLabel: true } },
+      }),
+      {
+        label: "2",
+        key: "custom2",
+        children: false,
+      },
+      {
+        label: "3",
+        key: "custom3",
+        children: false,
+        params: { grouping: { byLabel: true } },
+      },
+    ];
+    const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider, createGroupingHandlers)));
+    expect(result).to.deep.eq([
+      {
+        label: "1",
+        key: {
+          type: "label-grouping",
           label: "1",
-          params: { grouping: { groupByLabel: true } },
-        }),
-        {
-          label: "1",
-          key: "custom1",
-          children: false,
-          params: { grouping: { groupByLabel: true } },
         },
-        createTestNode({
-          key: { type: "instances", instanceKeys: [{ className: "TestSchema:B", id: "0x2" }] },
+        children: [nodes[0], nodes[1]],
+      },
+      nodes[3],
+      {
+        label: "2",
+        key: {
+          type: "label-grouping",
           label: "2",
-          params: { grouping: { groupByLabel: true } },
-        }),
-        {
-          label: "2",
-          key: "custom2",
-          children: false,
         },
-        {
+        children: [nodes[2]],
+      },
+      {
+        label: "3",
+        key: {
+          type: "label-grouping",
           label: "3",
-          key: "custom3",
-          children: false,
-          params: { grouping: { groupByLabel: true } },
         },
-      ];
-      const result = await getObservableResult(from(nodes).pipe(createLabelGroupingOperator()));
-      expect(result).to.deep.eq([
-        {
-          label: "1",
-          key: {
-            type: "label-grouping",
-            label: "1",
-          },
-          children: [nodes[0], nodes[1]],
-        },
-        nodes[3],
-        nodes[2],
-        nodes[4],
-      ] as HierarchyNode[]);
-    });
-
-    it("groups children of class-grouping nodes", async () => {
-      const classGroupingNodes: HierarchyNode[] = [
-        createTestNode({
-          key: { type: "instances", instanceKeys: [{ className: "Schema:B", id: "0x2" }] },
-          label: "1",
-          params: { grouping: { groupByLabel: true } },
-        }),
-        createTestNode({
-          key: { type: "instances", instanceKeys: [{ className: "Schema:B", id: "0x3" }] },
-          label: "1",
-          params: { grouping: { groupByLabel: true } },
-        }),
-        createTestNode({
-          key: { type: "instances", instanceKeys: [{ className: "Schema:B", id: "0x4" }] },
-          label: "2",
-          params: { grouping: { groupByLabel: true } },
-        }),
-      ];
-
-      const nodes: HierarchyNode[] = [
-        {
-          label: "someLabel",
-          key: {
-            type: "class-grouping",
-            class: { name: "Schema.B", label: "SomeName" },
-          },
-          children: classGroupingNodes,
-        },
-      ];
-      const result = await getObservableResult(from(nodes).pipe(createLabelGroupingOperator()));
-      expect(result).to.deep.eq([
-        {
-          label: "someLabel",
-          key: {
-            type: "class-grouping",
-            class: { name: "Schema.B", label: "SomeName" },
-          },
-          children: [
-            {
-              label: "1",
-              key: {
-                type: "label-grouping",
-                label: "1",
-              },
-              children: [classGroupingNodes[0], classGroupingNodes[1]],
-            },
-            classGroupingNodes[2],
-          ],
-        },
-      ] as HierarchyNode[]);
-    });
+        children: [nodes[4]],
+      },
+    ] as HierarchyNode[]);
   });
 });
