@@ -14,10 +14,10 @@ import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/Types";
 import { PresentationTreeNodeRenderer } from "../../../presentation-components/tree/controlled/PresentationTreeNodeRenderer";
-import { PresentationInfoTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem";
+import { InfoTreeNodeItemType, PresentationInfoTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem";
 import { createTestPropertyInfo } from "../../_helpers/Common";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content";
-import { createTreeModelNode, createTreeNodeItem } from "./Helpers";
+import { createInfoTreeNodeItem, createTreeModelNode, createTreeNodeItem } from "./Helpers";
 
 function createFilterInfo(propName: string = "prop"): PresentationInstanceFilterInfo {
   const property = createTestPropertyInfo({ name: propName });
@@ -76,6 +76,7 @@ describe("PresentationTreeNodeRenderer", () => {
       label: PropertyRecord.fromString("Info Node"),
       children: undefined,
       isSelectionDisabled: true,
+      type: InfoTreeNodeItemType.Unset,
       message,
     };
     const node = createTreeModelNode(undefined, item);
@@ -140,6 +141,49 @@ describe("PresentationTreeNodeRenderer", () => {
 
     const buttons = container.querySelectorAll(".presentation-components-node-action-buttons button");
     expect(buttons).to.be.empty;
+  });
+
+  it("renders with option to provide additional filtering, when node is of type 'ResultSetTooLarge'", async () => {
+    const nodeItem = createInfoTreeNodeItem({ type: InfoTreeNodeItemType.ResultSetTooLarge });
+    const node = createTreeModelNode(undefined, nodeItem);
+
+    const { queryByText } = render(
+      <PresentationTreeNodeRenderer treeActions={treeActionsMock.object} node={node} onFilterClick={() => {}} onClearFilterClick={() => {}} />,
+    );
+
+    const infoNode = await waitFor(() => queryByText("tree.additional-filtering", { exact: false }));
+    expect(infoNode).to.not.be.null;
+  });
+
+  it("calls 'onFilterClick' when additional filtering message is clicked with correct parent", async () => {
+    const nodeInfoItem = createInfoTreeNodeItem({ type: InfoTreeNodeItemType.ResultSetTooLarge, parentId: "testId" });
+    const node = createTreeModelNode(undefined, nodeInfoItem);
+    const filterClickSpy = sinon.spy();
+
+    const { getByText } = render(
+      <PresentationTreeNodeRenderer treeActions={treeActionsMock.object} node={node} onFilterClick={filterClickSpy} onClearFilterClick={() => {}} />,
+    );
+
+    const infoNode = await waitFor(() => getByText("tree.additional-filtering", { exact: false }));
+
+    fireEvent.click(infoNode);
+    expect(filterClickSpy).to.be.called;
+  });
+
+  it("does not call 'onFilterClick' when additional filtering message is clicked with empty parent", async () => {
+    const nodeInfoItem = createInfoTreeNodeItem({ type: InfoTreeNodeItemType.ResultSetTooLarge });
+    const node = createTreeModelNode(undefined, nodeInfoItem);
+
+    const filterClickSpy = sinon.spy();
+
+    const { getByText } = render(
+      <PresentationTreeNodeRenderer treeActions={treeActionsMock.object} node={node} onFilterClick={filterClickSpy} onClearFilterClick={() => {}} />,
+    );
+
+    const infoNode = await waitFor(() => getByText("tree.additional-filtering", { exact: false }));
+
+    fireEvent.click(infoNode);
+    expect(filterClickSpy).to.not.be.called;
   });
 
   it("invokes 'onFilterClick' when filter button is clicked", () => {

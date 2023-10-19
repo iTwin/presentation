@@ -5,10 +5,16 @@
 /** @packageDocumentation
  * @module Tree
  */
-
 import { useCallback, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AbstractTreeNodeLoaderWithProvider, TreeNodeRendererProps, TreeRenderer, TreeRendererProps, useDebouncedAsyncValue } from "@itwin/components-react";
+import {
+  AbstractTreeNodeLoaderWithProvider,
+  isTreeModelNode,
+  TreeNodeRendererProps,
+  TreeRenderer,
+  TreeRendererProps,
+  useDebouncedAsyncValue,
+} from "@itwin/components-react";
 import { NodeKey, PresentationError, PresentationStatus } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { translate } from "../../common/Utils";
@@ -16,7 +22,12 @@ import { convertToInstanceFilterDefinition } from "../../instance-filter-builder
 import { PresentationInstanceFilterDialog } from "../../instance-filter-builder/PresentationInstanceFilterDialog";
 import { PresentationInstanceFilterInfo } from "../../instance-filter-builder/Types";
 import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
-import { FilterablePresentationTreeNodeItem, isFilterablePresentationTreeNodeItem, PresentationTreeNodeItem } from "../PresentationTreeNodeItem";
+import {
+  FilterablePresentationTreeNodeItem,
+  isFilterablePresentationTreeNodeItem,
+  isPresentationTreeNodeItem,
+  PresentationTreeNodeItem,
+} from "../PresentationTreeNodeItem";
 import { PresentationTreeNodeRenderer } from "./PresentationTreeNodeRenderer";
 import { useHierarchyLevelFiltering } from "./UseHierarchyLevelFiltering";
 
@@ -36,7 +47,6 @@ export interface PresentationTreeRendererProps extends TreeRendererProps {
  */
 export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
   const nodeLoader = props.nodeLoader;
-
   const { applyFilter, clearFilter } = useHierarchyLevelFiltering({ nodeLoader, modelSource: nodeLoader.modelSource });
   const [filterNode, setFilterNode] = useState<PresentationTreeNodeItem>();
 
@@ -45,14 +55,17 @@ export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
       return (
         <PresentationTreeNodeRenderer
           {...nodeProps}
-          onFilterClick={(node) => {
-            setFilterNode(node);
+          onFilterClick={(nodeId) => {
+            const node = nodeLoader.modelSource.getModel().getNode(nodeId);
+            if (isTreeModelNode(node) && isPresentationTreeNodeItem(node.item)) {
+              setFilterNode(node.item);
+            }
           }}
           onClearFilterClick={clearFilter}
         />
       );
     },
-    [clearFilter],
+    [clearFilter, nodeLoader.modelSource],
   );
 
   const divRef = useRef<HTMLDivElement>(null);
@@ -64,7 +77,7 @@ export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
             <TreeNodeFilterBuilderDialog
               dataProvider={nodeLoader.dataProvider}
               onApply={(info) => {
-                applyFilter(filterNode, info);
+                applyFilter(filterNode.id, info);
                 setFilterNode(undefined);
               }}
               onClose={() => {
@@ -116,13 +129,17 @@ function MatchingInstancesCount({ filter, dataProvider, parentKey }: MatchingIns
   const { value, inProgress } = useDebouncedAsyncValue(
     useCallback(async () => {
       const instanceFilter = await convertToInstanceFilterDefinition(filter.filter, dataProvider.imodel);
+      const requestOptions = dataProvider.createRequestOptions(parentKey, instanceFilter);
 
       try {
-        const count = await Presentation.presentation.getNodesCount(dataProvider.createRequestOptions(parentKey, instanceFilter));
+        const count = await Presentation.presentation.getNodesCount(requestOptions);
         return `${translate("tree.filter-dialog.results-count")}: ${count}`;
       } catch (e) {
         if (e instanceof PresentationError && e.errorNumber === PresentationStatus.ResultSetTooLarge) {
-          return translate("tree.filter-dialog.results-count-too-large");
+          // ResultSetTooLarge error can't occur if sizeLimit is undefined.
+          return `${translate("tree.filter-dialog.result-limit-exceeded")} ${requestOptions.sizeLimit!}. ${translate("tree.please-provide")} ${translate(
+            "tree.additional-filtering",
+          )}.`;
         }
       }
 
