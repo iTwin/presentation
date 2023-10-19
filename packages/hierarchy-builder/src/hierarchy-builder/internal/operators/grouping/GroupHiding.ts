@@ -44,6 +44,7 @@ function getGroupingHideOptionsFromParentNode(parentNode: HierarchyNode): [hideI
       return getHideOptionsFromLabelGroupingNodes(parentNode.children);
     }
   }
+  // istanbul ignore next
   return [false, false];
 }
 

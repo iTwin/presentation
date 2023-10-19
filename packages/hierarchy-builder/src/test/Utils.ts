@@ -117,3 +117,7 @@ export async function createGroupingHandlers(metadata: IMetadataProvider, nodes:
   groupingHandlers.push(async (allNodes: HierarchyNode[]) => createLabelGroups(allNodes));
   return groupingHandlers;
 }
+
+export async function isMock(className: string): Promise<boolean> {
+  return className.includes("Parent");
+}

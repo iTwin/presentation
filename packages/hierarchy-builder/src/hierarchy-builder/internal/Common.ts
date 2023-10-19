@@ -122,6 +122,11 @@ function mergeNodeKeys(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): HierarchyN
     assert(lhs.label === rhs.label);
     return { ...lhs };
   }
+  if (HierarchyNodeKey.isBaseClassGrouping(lhs)) {
+    assert(HierarchyNodeKey.isBaseClassGrouping(rhs));
+    assert(lhs.class.name === rhs.class.name);
+    return { ...lhs };
+  }
   throw new Error(`Unable to merge given node keys`);
 }
 

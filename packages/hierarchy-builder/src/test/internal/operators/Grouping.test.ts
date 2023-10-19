@@ -9,7 +9,7 @@ import { LogLevel } from "@itwin/core-bentley";
 import { HierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
 import { createGroupingOperator, LOGGING_NAMESPACE } from "../../../hierarchy-builder/internal/operators/Grouping";
 import { IMetadataProvider } from "../../../hierarchy-builder/Metadata";
-import { createGetClassStub, createGroupingHandlers, createTestNode, getObservableResult, setupLogging, TStubClassFunc } from "../../Utils";
+import { createGetClassStub, createGroupingHandlers, createTestNode, getObservableResult, isMock, setupLogging, TStubClassFunc } from "../../Utils";
 
 describe("Grouping", () => {
   before(() => {
@@ -131,6 +131,7 @@ describe("Grouping", () => {
         },
       }),
     ];
+
     const classA = stubClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A", is: isMock });
     const classAA = stubClass({ schemaName: "TestSchema", className: "AA", classLabel: "Class AA", is: isMock });
     stubClass({ schemaName: "TestSchema", className: "B", classLabel: "Class B", is: isMock });
@@ -157,6 +158,7 @@ describe("Grouping", () => {
       isRelationshipClass: () => true,
     });
     stubClass({ schemaName: "TestSchema", className: "TestRandomClassAA", isEntityClass: () => true, isRelationshipClass: () => true });
+
     const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider, createGroupingHandlers)));
     expect(result).to.deep.eq([
       nodes[4],
@@ -207,7 +209,3 @@ describe("Grouping", () => {
     ] as HierarchyNode[]);
   });
 });
-
-async function isMock(className: string): Promise<boolean> {
-  return className.includes("Parent");
-}

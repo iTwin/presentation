@@ -8,7 +8,7 @@ import { from } from "rxjs";
 import { HierarchyNode } from "../../../../hierarchy-builder/HierarchyNode";
 import { createGroupingOperator } from "../../../../hierarchy-builder/internal/operators/Grouping";
 import { IMetadataProvider } from "../../../../hierarchy-builder/Metadata";
-import { createGetClassStub, createGroupingHandlers, createTestNode, getObservableResult, TStubClassFunc } from "../../../Utils";
+import { createGetClassStub, createGroupingHandlers, createTestNode, getObservableResult, isMock, TStubClassFunc } from "../../../Utils";
 
 describe("BaseClassGrouping", () => {
   const metadataProvider = {} as unknown as IMetadataProvider;
@@ -308,7 +308,3 @@ describe("BaseClassGrouping", () => {
     ] as HierarchyNode[]);
   });
 });
-
-async function isMock(className: string): Promise<boolean> {
-  return className.includes("Parent");
-}
