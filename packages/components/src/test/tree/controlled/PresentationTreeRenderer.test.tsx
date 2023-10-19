@@ -14,7 +14,6 @@ import {
   MutableTreeModel,
   PropertyFilterRuleOperator,
   TreeActions,
-  TreeModel,
   TreeModelSource,
   TreeNodeLoadResult,
   UiComponents,
@@ -163,9 +162,7 @@ describe("PresentationTreeRenderer", () => {
     });
 
     // stub getNode method to make it return undefined when onFilterClick() is called.
-    nodeLoader.modelSource.getModel = () => {
-      return { getNode: sinon.stub().returns(undefined) } as unknown as TreeModel;
-    };
+    sinon.stub(nodeLoader.modelSource.getModel(), "getNode").returns(undefined);
 
     const { queryByText, baseElement, user, container } = render(
       <PresentationTreeRenderer {...baseTreeProps} visibleNodes={visibleNodes} nodeLoader={nodeLoader} />,
