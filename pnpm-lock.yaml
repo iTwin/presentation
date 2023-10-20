@@ -468,12 +468,12 @@ importers:
       '@itwin/itwinui-icons-react':
         specifier: ^2.4.0
         version: 2.4.0(react-dom@17.0.2)(react@17.0.2)
+      '@itwin/itwinui-illustrations-react':
+        specifier: ^2.1.0
+        version: 2.1.0(react-dom@17.0.2)(react@17.0.2)
       '@itwin/itwinui-react':
         specifier: ^2.12.10
         version: 2.12.10(react-dom@17.0.2)(react@17.0.2)
-      '@itwin/itwinui-variables':
-        specifier: ^2.1.0
-        version: 2.1.0
       classnames:
         specifier: ^2.3.2
         version: 2.3.2
@@ -486,6 +486,9 @@ importers:
       micro-memoize:
         specifier: ^4.1.2
         version: 4.1.2
+      react-error-boundary:
+        specifier: ^4.0.11
+        version: 4.0.11(react@17.0.2)
       react-select:
         specifier: 5.7.0
         version: 5.7.0(@types/react@17.0.64)(react-dom@17.0.2)(react@17.0.2)
@@ -11742,6 +11745,15 @@ packages:
     dependencies:
       '@babel/runtime': 7.22.10
       react: 17.0.2
+
+  /react-error-boundary@4.0.11(react@17.0.2):
+    resolution: {integrity: sha512-U13ul67aP5DOSPNSCWQ/eO0AQEYzEFkVljULQIjMV0KlffTAhxuDoBKdO0pb/JZ8mDhMKFZ9NZi0BmLGUiNphw==}
+    peerDependencies:
+      react: '>=16.13.1'
+    dependencies:
+      '@babel/runtime': 7.22.10
+      react: 17.0.2
+    dev: false
 
   /react-highlight-words@0.17.0(react@17.0.2):
     resolution: {integrity: sha512-uX1Qh5IGjnLuJT0Zok234QDwRC8h4hcVMnB99Cb7aquB1NlPPDiWKm0XpSZOTdSactvnClCk8LOmVlP+75dgHA==}

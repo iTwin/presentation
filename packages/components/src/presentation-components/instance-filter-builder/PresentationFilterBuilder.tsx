@@ -6,6 +6,7 @@
  * @module InstancesFilter
  */
 
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { PrimitiveValue, PropertyDescription, PropertyValueFormat } from "@itwin/appui-abstract";
 import {
   isPropertyFilterRuleGroup,
@@ -17,6 +18,9 @@ import {
   PropertyFilterRuleGroupOperator,
   PropertyFilterRuleOperator,
 } from "@itwin/components-react";
+import { assert } from "@itwin/core-bentley";
+import { IModelConnection } from "@itwin/core-frontend";
+import { Input } from "@itwin/itwinui-react";
 import {
   ClassId,
   ClassInfo,
@@ -27,24 +31,20 @@ import {
   PresentationStatus,
   PropertiesField,
 } from "@itwin/presentation-common";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useSchemaMetadataContext } from "../common/SchemaMetadataContext";
+import { findField } from "../common/Utils";
+import { navigationPropertyEditorContext } from "../properties/editors/NavigationPropertyEditorContext";
+import { UniquePropertyValuesSelector } from "../properties/inputs/UniquePropertyValuesSelector";
+import { useQuantityValueInput, UseQuantityValueInputProps } from "../properties/inputs/UseQuantityValueInput";
+import { GenericInstanceFilter } from "./GenericInstanceFilter";
+import { createExpression, findBaseExpressionClass } from "./InstanceFilterConverter";
+import { PresentationInstanceFilterProperty } from "./PresentationInstanceFilterProperty";
 import {
   createInstanceFilterPropertyInfos,
   createPropertyInfoFromPropertiesField,
   getInstanceFilterFieldName,
   useFilterBuilderNavigationPropertyEditorContext,
 } from "./Utils";
-import { assert } from "@itwin/core-bentley";
-import { PresentationInstanceFilterProperty } from "./PresentationInstanceFilterProperty";
-import { IModelConnection } from "@itwin/core-frontend";
-import { useSchemaMetadataContext } from "../common/SchemaMetadataContext";
-import { UniquePropertyValuesSelector } from "../properties/inputs/UniquePropertyValuesSelector";
-import { navigationPropertyEditorContext } from "../properties/editors/NavigationPropertyEditorContext";
-import { findField } from "../common/Utils";
-import { useQuantityValueInput, UseQuantityValueInputProps } from "../properties/inputs/UseQuantityValueInput";
-import { Input } from "@itwin/itwinui-react";
-import { GenericInstanceFilter } from "./GenericInstanceFilter";
-import { createExpression, findBaseExpressionClass } from "./InstanceFilterConverter";
 
 /**
  * Type that describes instance filter based on [Descriptor]($presentation-common) fields. It can be

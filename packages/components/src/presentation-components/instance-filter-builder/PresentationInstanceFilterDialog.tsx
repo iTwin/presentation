@@ -8,14 +8,16 @@
 
 import "./PresentationInstanceFilterDialog.scss";
 import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 import { BuildFilterOptions, isPropertyFilterBuilderRuleGroup, PropertyFilterBuilderRuleGroupItem, usePropertyFilterBuilder } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
-import { Button, Dialog, ProgressRadial } from "@itwin/itwinui-react";
+import { SvgError } from "@itwin/itwinui-illustrations-react";
+import { Button, Dialog, NonIdealState, ProgressRadial } from "@itwin/itwinui-react";
 import { Descriptor, Keys } from "@itwin/presentation-common";
 import { translate, useDelay } from "../common/Utils";
 import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder";
-import { filterRuleValidator } from "./Utils";
 import { PresentationInstanceFilter, PresentationInstanceFilterInfo } from "./PresentationFilterBuilder";
+import { filterRuleValidator } from "./Utils";
 
 /**
  * Props for [[PresentationInstanceFilterDialog]] component.
@@ -57,14 +59,13 @@ export interface PresentationInstanceFilterDialogProps {
  * @beta
  */
 export function PresentationInstanceFilterDialog(props: PresentationInstanceFilterDialogProps) {
-  const { isOpen, onClose, title, ...restProps } = props;
-  const descriptor = useDelayLoadedDescriptor(props.descriptor);
+  const { isOpen, title, ...restProps } = props;
 
   return (
     <Dialog
       className="presentation-instance-filter-dialog"
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={restProps.onClose}
       closeOnEsc={false}
       preventDocumentScroll={true}
       trapFocus={true}
@@ -74,10 +75,23 @@ export function PresentationInstanceFilterDialog(props: PresentationInstanceFilt
       <Dialog.Backdrop />
       <Dialog.Main className="presentation-instance-filter-dialog-content-container">
         <Dialog.TitleBar className="presentation-instance-filter-title" titleText={title ? title : translate("instance-filter-builder.filter")} />
-        {descriptor ? <PresentationInstanceFilterDialogContent {...restProps} descriptor={descriptor} onClose={onClose} /> : <DelayedCenteredProgressRadial />}
+        <ErrorBoundary fallback={<ErrorState />}>
+          <FilterDialogContent {...restProps} />
+        </ErrorBoundary>
       </Dialog.Main>
     </Dialog>
   );
+}
+
+type FilterDialogContentProps = Omit<PresentationInstanceFilterDialogProps, "isOpen" | "title">;
+
+function FilterDialogContent({ descriptor, ...restProps }: FilterDialogContentProps) {
+  const loadedDescriptor = useDelayLoadedDescriptor(descriptor);
+  if (!loadedDescriptor) {
+    return <DelayedCenteredProgressRadial />;
+  }
+
+  return <LoadedFilterDialogContent {...restProps} descriptor={loadedDescriptor} />;
 }
 
 function useDelayLoadedDescriptor(descriptorOrGetter: Descriptor | (() => Promise<Descriptor>)) {
@@ -85,15 +99,30 @@ function useDelayLoadedDescriptor(descriptorOrGetter: Descriptor | (() => Promis
 
   useEffect(() => {
     let disposed = false;
-    void (async () => {
-      if (!(descriptorOrGetter instanceof Descriptor)) {
-        const newDescriptor = await descriptorOrGetter();
+
+    if (descriptorOrGetter instanceof Descriptor) {
+      setDescriptor(descriptorOrGetter);
+    } else {
+      const updateState = (...params: Parameters<typeof setDescriptor>) => {
         // istanbul ignore else
         if (!disposed) {
-          setDescriptor(newDescriptor);
+          setDescriptor(...params);
         }
-      }
-    })();
+      };
+
+      void (async () => {
+        try {
+          const newDescriptor = await descriptorOrGetter();
+          updateState(newDescriptor);
+        } catch (error) {
+          updateState(() => {
+            // throw error in setSate callback for it to be caught by ErrorBoundary
+            throw error;
+          });
+        }
+      })();
+    }
+
     return () => {
       disposed = true;
     };
@@ -102,22 +131,18 @@ function useDelayLoadedDescriptor(descriptorOrGetter: Descriptor | (() => Promis
   return descriptor;
 }
 
-interface PresentationInstanceFilterDialogContentProps extends Omit<PresentationInstanceFilterDialogProps, "isOpen" | "title" | "descriptor"> {
+interface LoadedFilterDialogContentProps extends Omit<PresentationInstanceFilterDialogProps, "isOpen" | "title" | "descriptor"> {
   descriptor: Descriptor;
   descriptorInputKeys?: Keys;
 }
 
-function PresentationInstanceFilterDialogContent(props: PresentationInstanceFilterDialogContentProps) {
+function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
   const { onApply, initialFilter, descriptor, imodel, ruleGroupDepthLimit, filterResultsCountRenderer, onClose, descriptorInputKeys } = props;
   const [initialPropertyFilter] = useState(() => {
     if (!initialFilter) {
       return undefined;
     }
-    try {
-      return PresentationInstanceFilter.toComponentsPropertyFilter(descriptor, initialFilter.filter);
-    } catch {}
-    // istanbul ignore next
-    return undefined;
+    return PresentationInstanceFilter.toComponentsPropertyFilter(descriptor, initialFilter.filter);
   });
 
   const { rootGroup, actions, buildFilter } = usePropertyFilterBuilder({
@@ -132,21 +157,23 @@ function PresentationInstanceFilterDialogContent(props: PresentationInstanceFilt
       if (!filter) {
         return undefined;
       }
-      try {
-        const presentationInstanceFilter = PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, filter);
-        return { filter: presentationInstanceFilter, usedClasses: filteringProps.selectedClasses };
-      } catch {}
-      return undefined;
+      const presentationInstanceFilter = PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, filter);
+      return { filter: presentationInstanceFilter, usedClasses: filteringProps.selectedClasses };
     },
     [buildFilter, descriptor, filteringProps.selectedClasses],
   );
 
+  const throwError = useThrowError();
   const applyButtonHandle = () => {
-    const result = getFilterInfo();
-    if (!result) {
-      return;
+    try {
+      const result = getFilterInfo();
+      if (!result) {
+        return;
+      }
+      onApply(result);
+    } catch (error) {
+      throwError(error);
     }
-    onApply(result);
   };
 
   const hasNonEmptyRule = (item: PropertyFilterBuilderRuleGroupItem) => {
@@ -211,4 +238,23 @@ function DelayedCenteredProgressRadial() {
       <ProgressRadial indeterminate={true} size="large" />
     </div>
   );
+}
+
+function ErrorState() {
+  return (
+    <div style={{ width: "100%", height: "100%", position: "relative", overflow: "hidden" }}>
+      <NonIdealState svg={<SvgError />} heading={translate("general.error")} description={translate("general.generic-error-description")} />
+    </div>
+  );
+}
+
+// ErrorBoundary only catches errors that are thrown in React lifecycle methods. For event handlers and
+// async function errors can be rethrown from `setState` callback.
+function useThrowError() {
+  const [_, setSate] = useState({});
+  return (error: unknown) => {
+    setSate(() => {
+      throw error;
+    });
+  };
 }
