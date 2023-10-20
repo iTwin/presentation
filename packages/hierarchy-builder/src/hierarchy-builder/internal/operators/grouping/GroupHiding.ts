@@ -4,19 +4,19 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { HierarchyNode } from "../../../HierarchyNode";
-import { GroupingHandlerReturn } from "../Grouping";
+import { GroupingHandlerReturn, GroupingType } from "../Grouping";
 
 /**
  * @internal
  */
-export function applyGroupHidingParams(allNodes: HierarchyNode[]): GroupingHandlerReturn {
-  const finalGroupings: GroupingHandlerReturn = { allNodes: [], groupedNodes: [] };
-  for (const node of allNodes) {
+export function applyGroupHidingParams(props: GroupingHandlerReturn): GroupingHandlerReturn {
+  const finalGroupings: GroupingHandlerReturn = { allNodes: [], groupedNodes: [], groupingType: props.groupingType };
+  for (const node of props.allNodes) {
     if (HierarchyNode.isGroupingNode(node)) {
-      if (Array.isArray(node.children) && (allNodes.length === 1 || node.children.length === 1)) {
-        const [hideIfNoSiblings, hideIfOneGroupedNode] = getGroupingHideOptionsFromParentNode(node);
-        if (hideIfNoSiblings && allNodes.length === 1) {
-          return { allNodes: node.children, groupedNodes: [] };
+      if (Array.isArray(node.children) && (props.allNodes.length === 1 || node.children.length === 1)) {
+        const [hideIfNoSiblings, hideIfOneGroupedNode] = getGroupingHideOptionsFromParentNode(node, props.groupingType);
+        if (hideIfNoSiblings && props.allNodes.length === 1) {
+          return { allNodes: node.children, groupedNodes: [], groupingType: props.groupingType };
         } else if (hideIfOneGroupedNode && node.children.length === 1) {
           finalGroupings.allNodes.push(node.children[0]);
           continue;
@@ -32,15 +32,18 @@ export function applyGroupHidingParams(allNodes: HierarchyNode[]): GroupingHandl
 /**
  * @internal
  */
-function getGroupingHideOptionsFromParentNode(parentNode: HierarchyNode): [hideIfNoSiblings: boolean, hideIfOneGroupedNode: boolean] {
+function getGroupingHideOptionsFromParentNode(
+  parentNode: HierarchyNode,
+  groupingType: GroupingType,
+): [hideIfNoSiblings: boolean, hideIfOneGroupedNode: boolean] {
   if (Array.isArray(parentNode.children)) {
-    if (HierarchyNode.isBaseClassGroupingNode(parentNode)) {
+    if (groupingType === "base-class") {
       return getHideOptionsFromBaseClassGroupingNodes(parentNode.children);
     }
-    if (HierarchyNode.isClassGroupingNode(parentNode)) {
+    if (groupingType === "class") {
       return getHideOptionsFromClassGroupingNodes(parentNode.children);
     }
-    if (HierarchyNode.isLabelGroupingNode(parentNode)) {
+    if (groupingType === "label") {
       return getHideOptionsFromLabelGroupingNodes(parentNode.children);
     }
   }
