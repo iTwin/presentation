@@ -28,15 +28,17 @@
     }
   },
   "tree": {
+    "please-provide": "Please provide",
     "no-filtered-children": "There are no child nodes matching current filter",
-    "result-set-too-large": "The hierarchy level is too large to be displayed - please provide additional filtering",
+    "result-limit-exceeded": "there are more items than allowed limit of",
+    "additional-filtering": "additional filtering",
     "timeout": "Creating the hierarchy level took too long",
     "unknown-error": "Error creating the hierarchy level",
     "filter-hierarchy-level": "Apply filter",
     "clear-hierarchy-level-filter": "Clear active filter",
     "filter-dialog": {
-      "results-count": "Instances matching filter count",
-      "results-count-too-large": "Too many instances match filter"
+      "results-count": "Matching items",
+      "result-limit-exceeded": "Exceeded matching item limit of"
     }
   },
   "navigation-property-editor": {

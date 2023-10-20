@@ -348,6 +348,20 @@ export interface IFilteredPresentationTreeDataProvider extends IPresentationTree
 }
 
 // @beta
+export enum InfoTreeNodeItemType {
+    // (undocumented)
+    BackendTimeout = 1,
+    // (undocumented)
+    Cancelled = 2,
+    // (undocumented)
+    NoChildren = 3,
+    // (undocumented)
+    ResultSetTooLarge = 0,
+    // (undocumented)
+    Unset = 4
+}
+
+// @beta
 export class InstanceKeyValueRenderer implements IPropertyValueRenderer {
     // (undocumented)
     canRender(record: PropertyRecord): boolean;
@@ -427,6 +441,7 @@ export interface PresentationInfoTreeNodeItem extends ImmediatelyLoadedTreeNodeI
     children: undefined;
     isSelectionDisabled: true;
     message: string;
+    type: InfoTreeNodeItemType;
 }
 
 // @beta
@@ -607,9 +622,9 @@ export function PresentationTreeNodeRenderer(props: PresentationTreeNodeRenderer
 // @beta
 export interface PresentationTreeNodeRendererProps extends TreeNodeRendererProps {
     // (undocumented)
-    onClearFilterClick: (node: PresentationTreeNodeItem) => void;
+    onClearFilterClick: (nodeId: string) => void;
     // (undocumented)
-    onFilterClick: (node: PresentationTreeNodeItem) => void;
+    onFilterClick: (nodeId: string) => void;
 }
 
 // @beta
@@ -782,8 +797,8 @@ export function useFilteredNodeLoader(dataProvider: IPresentationTreeDataProvide
 
 // @beta
 export function useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProps): {
-    applyFilter: (node: TreeNodeItem, info: PresentationInstanceFilterInfo) => void;
-    clearFilter: (node: TreeNodeItem) => void;
+    applyFilter: (nodeId: string, info: PresentationInstanceFilterInfo) => void;
+    clearFilter: (nodeId: string) => void;
 };
 
 // @beta
