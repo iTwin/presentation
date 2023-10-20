@@ -30,6 +30,7 @@ beta;HierarchyLevelFilteringDescriptor = Descriptor | (() => Promise
 public;IContentDataProvider 
 public;IFavoritePropertiesDataProvider
 public;IFilteredPresentationTreeDataProvider 
+beta;InfoTreeNodeItemType
 beta;InstanceKeyValueRenderer 
 public;IPresentationDataProvider 
 public;IPresentationLabelsProvider

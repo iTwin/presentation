@@ -9,19 +9,19 @@
 import "./PresentationTreeNodeRenderer.scss";
 import classnames from "classnames";
 import { TreeNodeRenderer, TreeNodeRendererProps } from "@itwin/components-react";
-import { TreeNode } from "@itwin/core-react";
+import { TreeNode, UnderlinedButton } from "@itwin/core-react";
 import { SvgCloseSmall, SvgFilter, SvgFilterHollow } from "@itwin/itwinui-icons-react";
 import { ButtonGroup, IconButton, Text } from "@itwin/itwinui-react";
 import { translate } from "../../common/Utils";
-import { isPresentationInfoTreeNodeItem, isPresentationTreeNodeItem, PresentationTreeNodeItem } from "../PresentationTreeNodeItem";
+import { InfoTreeNodeItemType, isPresentationInfoTreeNodeItem, isPresentationTreeNodeItem } from "../PresentationTreeNodeItem";
 
 /**
  * Props for [[PresentationTreeNodeRenderer]] component.
  * @beta
  */
 export interface PresentationTreeNodeRendererProps extends TreeNodeRendererProps {
-  onFilterClick: (node: PresentationTreeNodeItem) => void;
-  onClearFilterClick: (node: PresentationTreeNodeItem) => void;
+  onFilterClick: (nodeId: string) => void;
+  onClearFilterClick: (nodeId: string) => void;
 }
 
 /**
@@ -35,7 +35,35 @@ export function PresentationTreeNodeRenderer(props: PresentationTreeNodeRenderer
   const nodeItem = props.node.item;
 
   if (isPresentationInfoTreeNodeItem(nodeItem)) {
-    return <TreeNode isLeaf={true} label={<Text isMuted>{nodeItem.message}</Text>} level={props.node.depth} isHoverDisabled={true} />;
+    return (
+      <TreeNode
+        isLeaf={true}
+        label={
+          <span>
+            <Text isMuted className="info-tree-node-item">
+              {nodeItem.type === InfoTreeNodeItemType.ResultSetTooLarge && (
+                <span>
+                  <span>{`${translate("tree.please-provide")} `}</span>
+                  <UnderlinedButton
+                    onClick={() => {
+                      if (nodeItem.parentId !== undefined) {
+                        onFilterClick(nodeItem.parentId);
+                      }
+                    }}
+                  >
+                    {`${translate("tree.additional-filtering")}`}
+                  </UnderlinedButton>
+                  <span> - </span>
+                </span>
+              )}
+              <span>{nodeItem.message}</span>
+            </Text>
+          </span>
+        }
+        level={props.node.depth}
+        isHoverDisabled={true}
+      />
+    );
   }
 
   if (isPresentationTreeNodeItem(nodeItem)) {
@@ -47,10 +75,10 @@ export function PresentationTreeNodeRenderer(props: PresentationTreeNodeRenderer
           isFiltered={nodeItem.filtering?.active !== undefined}
           filteringDisabled={filteringDisabled}
           onClearFilterClick={() => {
-            onClearFilterClick(nodeItem);
+            onClearFilterClick(nodeItem.id);
           }}
           onFilterClick={() => {
-            onFilterClick(nodeItem);
+            onFilterClick(nodeItem.id);
           }}
         />
       </TreeNodeRenderer>

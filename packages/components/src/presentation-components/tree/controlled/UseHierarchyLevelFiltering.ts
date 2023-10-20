@@ -7,9 +7,9 @@
  */
 
 import { useRef } from "react";
-import { isTreeModelNode, ITreeNodeLoader, Subscription, TreeModelSource, TreeNodeItem } from "@itwin/components-react";
-import { isPresentationTreeNodeItem } from "../PresentationTreeNodeItem";
+import { isTreeModelNode, ITreeNodeLoader, Subscription, TreeModelSource } from "@itwin/components-react";
 import { PresentationInstanceFilterInfo } from "../../instance-filter-builder/PresentationFilterBuilder";
+import { isPresentationTreeNodeItem } from "../PresentationTreeNodeItem";
 
 /**
  * Props for [[useHierarchyLevelFiltering]] hook.
@@ -41,8 +41,8 @@ export function useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProp
   };
 
   return {
-    applyFilter: (node: TreeNodeItem, info: PresentationInstanceFilterInfo) => handleFilterAction(node.id, info),
-    clearFilter: (node: TreeNodeItem) => handleFilterAction(node.id),
+    applyFilter: (nodeId: string, info: PresentationInstanceFilterInfo) => handleFilterAction(nodeId, info),
+    clearFilter: (nodeId: string) => handleFilterAction(nodeId),
   };
 }
 

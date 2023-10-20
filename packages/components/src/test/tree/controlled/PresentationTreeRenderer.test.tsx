@@ -23,6 +23,8 @@ import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { PresentationError, PresentationStatus, PropertyValueFormat } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { waitFor } from "@testing-library/react";
+import { translate } from "../../../presentation-components/common/Utils";
+import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
 import { PresentationTreeRenderer } from "../../../presentation-components/tree/controlled/PresentationTreeRenderer";
 import { PresentationTreeDataProvider } from "../../../presentation-components/tree/DataProvider";
 import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";
@@ -30,7 +32,6 @@ import { PresentationTreeNodeItem } from "../../../presentation-components/tree/
 import { createTestPropertyInfo, render, stubDOMMatrix, stubRaf } from "../../_helpers/Common";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content";
 import { createTreeModelNodeInput } from "./Helpers";
-import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
 
 describe("PresentationTreeRenderer", () => {
   stubRaf();
@@ -151,6 +152,34 @@ describe("PresentationTreeRenderer", () => {
     expect(dialog).to.be.null;
   });
 
+  it("does not render filter dialog when tree model does not find a matching node", async () => {
+    const { visibleNodes, nodeLoader } = setupTreeModel((model) => {
+      model.setChildren(
+        undefined,
+        [createTreeModelNodeInput({ id: "A", item: { filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [] } } })],
+        0,
+      );
+    });
+
+    // stub getNode method to make it return undefined when onFilterClick() is called.
+    sinon.stub(nodeLoader.modelSource.getModel(), "getNode").returns(undefined);
+
+    const { queryByText, baseElement, user, container } = render(
+      <PresentationTreeRenderer {...baseTreeProps} visibleNodes={visibleNodes} nodeLoader={nodeLoader} />,
+    );
+
+    await waitFor(() => expect(queryByText("A")).to.not.be.null);
+
+    const filterButton = container.querySelector(".presentation-components-node-action-buttons button");
+    expect(filterButton).to.not.be.null;
+    await user.click(filterButton!);
+
+    // assert that dialog is not loaded
+    await waitFor(() => {
+      expect(baseElement.querySelector(".presentation-instance-filter-dialog")).to.be.null;
+    });
+  });
+
   it("applies filter and closes dialog", async () => {
     const { visibleNodes, modelSource, nodeLoader } = setupTreeModel((model) => {
       model.setChildren(
@@ -231,11 +260,18 @@ describe("PresentationTreeRenderer", () => {
     expect(presentationManager.getNodesCount).to.be.calledOnce;
   });
 
-  it("renders `Too many instances match filter` message if results set too large error is thrown", async () => {
+  it("renders information message if results set too large error is thrown", async () => {
     presentationManager.getNodesCount.reset();
     presentationManager.getNodesCount.callsFake(async () => {
       throw new PresentationError(PresentationStatus.ResultSetTooLarge, "Results set too large");
     });
+    const limit = 5;
+
+    dataProviderStub.createRequestOptions = () => {
+      return {
+        sizeLimit: limit,
+      };
+    };
 
     const { visibleNodes, nodeLoader } = setupTreeModel((model) => {
       model.setChildren(
@@ -258,7 +294,7 @@ describe("PresentationTreeRenderer", () => {
     await openFilterDialog(result);
 
     await waitFor(() => expect(presentationManager.getNodesCount).to.be.calledOnce);
-    expect(queryByText("tree.filter-dialog.results-count-too-large")).to.not.be.null;
+    expect(queryByText(translate("tree.filter-dialog.result-limit-exceeded"), { exact: false })).to.not.be.null;
   });
 
   it("does not render result if unknown error is encountered", async () => {
