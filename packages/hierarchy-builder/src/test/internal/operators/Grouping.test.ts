@@ -165,7 +165,7 @@ describe("Grouping", () => {
       {
         label: "TestSchema.TestParentClassA",
         key: {
-          type: "base-class-grouping",
+          type: "class-grouping",
           class: parentClassA,
         },
         children: [
@@ -192,7 +192,7 @@ describe("Grouping", () => {
       {
         label: "TestSchema.TestParentClassAA",
         key: {
-          type: "base-class-grouping",
+          type: "class-grouping",
           class: parentClassAA,
         },
         children: [

@@ -125,13 +125,13 @@ describe("Stateless hierarchy builder", () => {
           NodeValidators.createForInstanceNode({
             instanceKeys: [keys.rootSubject],
             children: [
-              NodeValidators.createForBaseClassGroupingNode({
+              NodeValidators.createForClassGroupingNode({
                 label: "BisCore.InformationContentElement",
-                baseClassName: "BisCore.InformationContentElement",
+                className: "BisCore.InformationContentElement",
                 children: [
-                  NodeValidators.createForBaseClassGroupingNode({
+                  NodeValidators.createForClassGroupingNode({
                     label: "BisCore.InformationPartitionElement",
-                    baseClassName: "BisCore.InformationPartitionElement",
+                    className: "BisCore.InformationPartitionElement",
                     children: [
                       NodeValidators.createForClassGroupingNode({
                         className: physicalPartitionClassName,

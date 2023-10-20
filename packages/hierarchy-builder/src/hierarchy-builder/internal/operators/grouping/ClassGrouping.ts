@@ -43,7 +43,7 @@ export async function createClassGroups(metadata: IMetadataProvider, nodes: Hier
 }
 
 function createGroupingNodes(groupings: ClassGroupingInformation): GroupingHandlerReturn {
-  const outNodes: GroupingHandlerReturn = { allNodes: new Array<HierarchyNode>(), groupedNodes: [] };
+  const outNodes: GroupingHandlerReturn = { allNodes: new Array<HierarchyNode>(), groupedNodes: [], groupingType: "class" };
   groupings.grouped.forEach((entry) => {
     const groupedNode: HierarchyNode = {
       label: entry.class.label ?? entry.class.name,

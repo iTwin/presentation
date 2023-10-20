@@ -308,9 +308,9 @@ describe("Stateless hierarchy builder", () => {
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.rootSubject],
               children: [
-                NodeValidators.createForBaseClassGroupingNode({
+                NodeValidators.createForClassGroupingNode({
                   label: `${baseSchemaName}.${baseClassName}`,
-                  baseClassName: `${baseSchemaName}.${baseClassName}`,
+                  className: `${baseSchemaName}.${baseClassName}`,
                   children: [
                     NodeValidators.createForInstanceNode({
                       instanceKeys: [keys.childPartition3],
@@ -417,17 +417,17 @@ describe("Stateless hierarchy builder", () => {
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.rootSubject],
               children: [
-                NodeValidators.createForBaseClassGroupingNode({
+                NodeValidators.createForClassGroupingNode({
                   label: `${baseSchemaName}.${baseClassName1}`,
-                  baseClassName: `${baseSchemaName}.${baseClassName1}`,
+                  className: `${baseSchemaName}.${baseClassName1}`,
                   children: [
-                    NodeValidators.createForBaseClassGroupingNode({
+                    NodeValidators.createForClassGroupingNode({
                       label: `${baseSchemaName}.${baseClassName2}`,
-                      baseClassName: `${baseSchemaName}.${baseClassName2}`,
+                      className: `${baseSchemaName}.${baseClassName2}`,
                       children: [
-                        NodeValidators.createForBaseClassGroupingNode({
+                        NodeValidators.createForClassGroupingNode({
                           label: `${baseSchemaName}.${baseClassName3}`,
-                          baseClassName: `${baseSchemaName}.${baseClassName3}`,
+                          className: `${baseSchemaName}.${baseClassName3}`,
                           children: [
                             NodeValidators.createForInstanceNode({
                               instanceKeys: [keys.childPartition3],
@@ -563,17 +563,17 @@ describe("Stateless hierarchy builder", () => {
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.rootSubject],
               children: [
-                NodeValidators.createForBaseClassGroupingNode({
+                NodeValidators.createForClassGroupingNode({
                   label: `${baseSchemaName}.${baseClassName1}`,
-                  baseClassName: `${baseSchemaName}.${baseClassName1}`,
+                  className: `${baseSchemaName}.${baseClassName1}`,
                   children: [
-                    NodeValidators.createForBaseClassGroupingNode({
+                    NodeValidators.createForClassGroupingNode({
                       label: `${baseSchemaName}.${baseClassName2}`,
-                      baseClassName: `${baseSchemaName}.${baseClassName2}`,
+                      className: `${baseSchemaName}.${baseClassName2}`,
                       children: [
-                        NodeValidators.createForBaseClassGroupingNode({
+                        NodeValidators.createForClassGroupingNode({
                           label: `${baseSchemaName}.${baseClassName3}`,
-                          baseClassName: `${baseSchemaName}.${baseClassName3}`,
+                          className: `${baseSchemaName}.${baseClassName3}`,
                           children: [
                             NodeValidators.createForInstanceNode({
                               instanceKeys: [keys.childPartition3],
@@ -601,13 +601,13 @@ describe("Stateless hierarchy builder", () => {
                     }),
                   ],
                 }),
-                NodeValidators.createForBaseClassGroupingNode({
+                NodeValidators.createForClassGroupingNode({
                   label: `${baseSchemaName}.${baseClassName2}`,
-                  baseClassName: `${baseSchemaName}.${baseClassName2}`,
+                  className: `${baseSchemaName}.${baseClassName2}`,
                   children: [
-                    NodeValidators.createForBaseClassGroupingNode({
+                    NodeValidators.createForClassGroupingNode({
                       label: `${baseSchemaName}.${baseClassName3}`,
-                      baseClassName: `${baseSchemaName}.${baseClassName3}`,
+                      className: `${baseSchemaName}.${baseClassName3}`,
                       children: [
                         NodeValidators.createForInstanceNode({
                           instanceKeys: [keys.childPartition6],
@@ -722,17 +722,17 @@ describe("Stateless hierarchy builder", () => {
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.rootSubject],
               children: [
-                NodeValidators.createForBaseClassGroupingNode({
+                NodeValidators.createForClassGroupingNode({
                   label: `${baseSchemaName}.${baseClassName1}`,
-                  baseClassName: `${baseSchemaName}.${baseClassName1}`,
+                  className: `${baseSchemaName}.${baseClassName1}`,
                   children: [
-                    NodeValidators.createForBaseClassGroupingNode({
+                    NodeValidators.createForClassGroupingNode({
                       label: `${baseSchemaName}.${baseClassName2}`,
-                      baseClassName: `${baseSchemaName}.${baseClassName2}`,
+                      className: `${baseSchemaName}.${baseClassName2}`,
                       children: [
-                        NodeValidators.createForBaseClassGroupingNode({
+                        NodeValidators.createForClassGroupingNode({
                           label: `${baseSchemaName}.${baseClassName3}`,
-                          baseClassName: `${baseSchemaName}.${baseClassName3}`,
+                          className: `${baseSchemaName}.${baseClassName3}`,
                           children: [
                             NodeValidators.createForInstanceNode({
                               instanceKeys: [keys.childPartition3],

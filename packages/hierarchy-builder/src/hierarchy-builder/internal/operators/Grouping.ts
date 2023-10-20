@@ -40,7 +40,9 @@ export interface FullGroupingProps {
 export interface GroupingHandlerReturn {
   allNodes: HierarchyNode[];
   groupedNodes: HierarchyNode[];
+  groupingType: GroupingType;
 }
+export type GroupingType = "label" | "class" | "base-class";
 
 export type GroupingHandlerType = (allNodes: HierarchyNode[]) => Promise<GroupingHandlerReturn>;
 
@@ -67,7 +69,7 @@ export async function groupNodes(nodes: HierarchyNode[], groupingHandlers: Group
 
 export async function handlerWrapper(currentHandler: GroupingHandlerType, props: FullGroupingProps): Promise<HierarchyNode[]> {
   let currentGroupingNodes = await currentHandler(props.nodes);
-  currentGroupingNodes = applyGroupHidingParams(currentGroupingNodes.allNodes);
+  currentGroupingNodes = applyGroupHidingParams(currentGroupingNodes);
 
   for (const grouping of currentGroupingNodes.groupedNodes) {
     if (Array.isArray(grouping.children)) {

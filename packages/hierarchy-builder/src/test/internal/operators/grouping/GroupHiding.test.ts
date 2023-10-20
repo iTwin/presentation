@@ -284,7 +284,7 @@ describe("GroupHiding", () => {
         {
           label: "TestSchema.TestParentClassA",
           key: {
-            type: "base-class-grouping",
+            type: "class-grouping",
             class: parentClassA,
           },
           children: [nodes[0], nodes[1]],

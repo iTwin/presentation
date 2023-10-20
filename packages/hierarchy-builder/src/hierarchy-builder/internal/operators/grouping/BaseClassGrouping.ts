@@ -35,7 +35,7 @@ export async function createBaseClassGroupsForSingleBaseClass(
   const baseClassGroupingNode: HierarchyNode = {
     label: baseECClass.fullName,
     key: {
-      type: "base-class-grouping",
+      type: "class-grouping",
       class: { name: baseECClass.fullName, label: baseECClass.label ?? baseECClass.name },
     },
     children: [],
@@ -72,7 +72,7 @@ export async function createBaseClassGroupsForSingleBaseClass(
     finalAllNodeHierarchy.splice(0, 1);
     finalGroupedNodeHierarchy.splice(0, 1);
   }
-  return { allNodes: finalAllNodeHierarchy, groupedNodes: finalGroupedNodeHierarchy };
+  return { allNodes: finalAllNodeHierarchy, groupedNodes: finalGroupedNodeHierarchy, groupingType: "base-class" };
 }
 
 export function getAllBaseClasses(nodes: HierarchyNode[]): Set<string> {
@@ -88,29 +88,24 @@ export function getAllBaseClasses(nodes: HierarchyNode[]): Set<string> {
   return baseClasses;
 }
 
-export async function sortByBaseClass(classes: ECClass[]) {
-  const output: ECClass[] = [];
-  const originalAmountOfClasses = classes.length;
-  while (output.length < originalAmountOfClasses) {
-    // Iterate through array of classes, if the element in the array is not parent class, it can be added to the outputArray and removed from the input array
-    // Repeat this until all classes have been added to the outputArray
-    for (let parentIndex = 0; parentIndex < classes.length; ++parentIndex) {
-      let isParent = false;
-      for (let childIndex = 0; childIndex < classes.length; ++childIndex) {
-        if (childIndex !== parentIndex) {
-          if (await classes[childIndex].is(classes[parentIndex])) {
-            isParent = true;
-            break;
-          }
-        }
-      }
-      if (!isParent) {
-        output.push(classes[parentIndex]);
-        classes.splice(parentIndex, 1);
+export async function sortByBaseClass(classes: ECClass[]): Promise<ECClass[]> {
+  if (classes.length === 0) {
+    return classes;
+  }
+  const output: ECClass[] = [classes[0]];
+  for (let inputIndex = 1; inputIndex < classes.length; ++inputIndex) {
+    let wasAdded = false;
+    for (let outputIndex = output.length - 1; outputIndex >= 0; --outputIndex) {
+      if (await classes[inputIndex].is(output[outputIndex])) {
+        output.splice(outputIndex + 1, 0, classes[inputIndex]);
+        wasAdded = true;
         break;
       }
     }
+    if (!wasAdded) {
+      output.splice(0, 0, classes[inputIndex]);
+    }
   }
-  // Output has all the classes, but parent classes have been added after their children. So the array has to be reversed.
-  return output.reverse();
+
+  return output;
 }

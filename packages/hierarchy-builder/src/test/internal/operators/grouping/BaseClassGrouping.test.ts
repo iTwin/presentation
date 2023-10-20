@@ -102,7 +102,7 @@ describe("BaseClassGrouping", () => {
       {
         label: "TestSchema.TestParentClass",
         key: {
-          type: "base-class-grouping",
+          type: "class-grouping",
           class: parentClassInfo,
         },
         children: nodes,
@@ -182,7 +182,7 @@ describe("BaseClassGrouping", () => {
       {
         label: "TestSchema.TestParentClassA",
         key: {
-          type: "base-class-grouping",
+          type: "class-grouping",
           class: parentClassA,
         },
         children: [nodes[0], nodes[2]],
@@ -190,7 +190,7 @@ describe("BaseClassGrouping", () => {
       {
         label: "TestSchema.TestParentClassB",
         key: {
-          type: "base-class-grouping",
+          type: "class-grouping",
           class: parentClassB,
         },
         children: [nodes[1]],
@@ -283,14 +283,14 @@ describe("BaseClassGrouping", () => {
       {
         label: "TestSchema.TestParentClassA",
         key: {
-          type: "base-class-grouping",
+          type: "class-grouping",
           class: parentClassA,
         },
         children: [
           {
             label: "TestSchema.TestParentClassAA",
             key: {
-              type: "base-class-grouping",
+              type: "lass-grouping",
               class: parentClassAA,
             },
             children: [nodes[0], nodes[1]],
@@ -300,7 +300,7 @@ describe("BaseClassGrouping", () => {
       {
         label: "TestSchema.TestParentClassAA",
         key: {
-          type: "base-class-grouping",
+          type: "class-grouping",
           class: parentClassAA,
         },
         children: [nodes[2]],
