@@ -57,14 +57,13 @@ async function groupNodesFromHandlerCreator(
 
 async function groupNodes(nodes: HierarchyNode[], groupingHandlers: GroupingHandler[]): Promise<HierarchyNode[]> {
   const originalNodes = nodes;
-  let allNodes = nodes;
   for (let i = 0; i < groupingHandlers.length; ++i) {
-    allNodes = await handlerWrapper(groupingHandlers[i], {
-      nodes: allNodes,
+    nodes = await handlerWrapper(groupingHandlers[i], {
+      nodes,
       groupingHandlers: groupingHandlers.slice(i + 1),
     });
   }
-  return originalNodes !== allNodes ? sortNodesByLabel(allNodes) : allNodes;
+  return originalNodes !== nodes ? sortNodesByLabel(nodes) : nodes;
 }
 
 async function createGroupingHandlers(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<GroupingHandler[]> {
