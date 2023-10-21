@@ -1,12 +1,12 @@
-import { GroupingHandler } from "../../../../../lib/cjs/hierarchy-builder/internal/operators/Grouping.d";
 /*---------------------------------------------------------------------------------------------
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+
 import { HierarchyNode } from "../../../HierarchyNode";
 import { ECClass, IMetadataProvider } from "../../../Metadata";
 import { getClass } from "../../Common";
-import { GroupingHandlerResult } from "../Grouping";
+import { GroupingHandler, GroupingHandlerResult } from "../Grouping";
 
 /** @internal */
 export async function getBaseClassGroupingECClasses(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<ECClass[]> {
