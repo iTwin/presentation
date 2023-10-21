@@ -10,18 +10,20 @@ import { GroupingHandlerResult } from "../Grouping";
 
 /** @internal */
 export async function getBaseClassGroupingECClasses(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<ECClass[]> {
-  const baseEntityAndRelationshipECClassesArray = new Array<ECClass>();
   // Get all base class names that are provided in the grouping information
   const baseClassesFullClassNames = getAllBaseClasses(nodes);
   if (baseClassesFullClassNames.size === 0) {
-    return baseEntityAndRelationshipECClassesArray;
+    return [];
   }
-  for (const fullName of baseClassesFullClassNames) {
-    const specificNodeClass = await getClass(metadata, fullName);
-    if (specificNodeClass.isRelationshipClass() || specificNodeClass.isEntityClass()) {
-      baseEntityAndRelationshipECClassesArray.push(specificNodeClass);
+
+  const baseClasses = await Promise.all(Array.from(baseClassesFullClassNames).map(async (fullName) => getClass(metadata, fullName)));
+  const baseEntityAndRelationshipECClassesArray = new Array<ECClass>();
+  for (const baseClass of baseClasses) {
+    if (baseClass.isRelationshipClass() || baseClass.isEntityClass()) {
+      baseEntityAndRelationshipECClassesArray.push(baseClass);
     }
   }
+
   const baseECClassesSorted = await sortByBaseClass(baseEntityAndRelationshipECClassesArray);
   return baseECClassesSorted;
 }
