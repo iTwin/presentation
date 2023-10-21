@@ -43,8 +43,6 @@ async function createBaseClassGroupsForSingleBaseClass(
     },
     children: [],
   };
-  finalAllNodeHierarchy.push(baseClassGroupingNode);
-  finalGroupedNodeHierarchy.push(baseClassGroupingNode);
   for (const node of nodes) {
     if (HierarchyNode.isInstancesNode(node) && node.params?.grouping?.byBaseClasses) {
       let classNameIsInNodeBaseClassList = false;
@@ -55,24 +53,26 @@ async function createBaseClassGroupsForSingleBaseClass(
           break;
         }
       }
-      if (classNameIsInNodeBaseClassList) {
-        const fullCurrentNodeClassName = node.key.instanceKeys[0].className;
-        const currentNodeECClass = await getClass(metadata, fullCurrentNodeClassName);
-        if (await currentNodeECClass.is(baseECClass)) {
-          if (finalAllNodeHierarchy.length > 0 && Array.isArray(baseClassGroupingNode.children)) {
-            baseClassGroupingNode.children.push(node);
-            continue;
-          }
+      if (!classNameIsInNodeBaseClassList) {
+        finalAllNodeHierarchy.push(node);
+        continue;
+      }
+      const fullCurrentNodeClassName = node.key.instanceKeys[0].className;
+      const currentNodeECClass = await getClass(metadata, fullCurrentNodeClassName);
+      if (await currentNodeECClass.is(baseECClass)) {
+        if (finalAllNodeHierarchy.length > 0 && Array.isArray(baseClassGroupingNode.children)) {
+          baseClassGroupingNode.children.push(node);
+          continue;
         }
       }
     }
     finalAllNodeHierarchy.push(node);
   }
 
-  // remove grouping node if it did not have any children
-  if (Array.isArray(baseClassGroupingNode.children) && baseClassGroupingNode.children.length === 0) {
-    finalAllNodeHierarchy.splice(0, 1);
-    finalGroupedNodeHierarchy.splice(0, 1);
+  // push grouping node if it has children
+  if (Array.isArray(baseClassGroupingNode.children) && baseClassGroupingNode.children.length > 0) {
+    finalAllNodeHierarchy.push(baseClassGroupingNode);
+    finalGroupedNodeHierarchy.push(baseClassGroupingNode);
   }
   return { allNodes: finalAllNodeHierarchy, groupedNodes: finalGroupedNodeHierarchy, groupingType: "base-class" };
 }
