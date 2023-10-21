@@ -12,29 +12,10 @@ export interface ArrayPropertyAttributes {
     minOccurs: number;
 }
 
-// @beta
-export interface BaseClassGroupingNodeKey {
-    // (undocumented)
-    class: {
-        name: string;
-        label?: string;
-    };
-    // (undocumented)
-    type: "base-class-grouping";
-}
-
 // @beta (undocumented)
 export interface BaseClassGroupingParams extends BaseGroupingParams {
     // (undocumented)
-    baseClassInfo: BaseClassInfo[];
-}
-
-// @beta (undocumented)
-export interface BaseClassInfo {
-    // (undocumented)
-    className: string;
-    // (undocumented)
-    schemaName: string;
+    fullClassNames: string[];
 }
 
 // @beta (undocumented)
@@ -427,7 +408,10 @@ export interface ECStructProperty extends ECProperty {
 export function getLogger(): ILogger;
 
 // @beta
-export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | BaseClassGroupingNodeKey;
+export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey;
+
+// @beta (undocumented)
+export type GroupingParams = LabelGroupingParams & ClassGroupingParams;
 
 // @beta
 export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
@@ -452,9 +436,6 @@ export interface HierarchyNode<TLabel = string> {
 
 // @beta (undocumented)
 export namespace HierarchyNode {
-    export function isBaseClassGroupingNode<TNode extends HierarchyNode>(node: TNode): node is TNode & {
-        key: BaseClassGroupingNodeKey;
-    };
     export function isClassGroupingNode<TNode extends HierarchyNode>(node: TNode): node is TNode & {
         key: ClassGroupingNodeKey;
     };
@@ -478,7 +459,7 @@ export namespace HierarchyNode {
 // @beta (undocumented)
 export interface HierarchyNodeHandlingParams {
     // (undocumented)
-    grouping?: LabelGroupingParams & ClassGroupingParams;
+    grouping?: GroupingParams;
     // (undocumented)
     hideIfNoChildren?: boolean;
     // (undocumented)
@@ -509,7 +490,6 @@ export type HierarchyNodeKey = StandardHierarchyNodeKey | string;
 
 // @beta (undocumented)
 export namespace HierarchyNodeKey {
-    export function isBaseClassGrouping(key: HierarchyNodeKey): key is BaseClassGroupingNodeKey;
     export function isClassGrouping(key: HierarchyNodeKey): key is ClassGroupingNodeKey;
     export function isCustom(key: HierarchyNodeKey): key is string;
     export function isGrouping(key: HierarchyNodeKey): key is GroupingNodeKey;
@@ -651,7 +631,6 @@ export enum NodeSelectClauseColumnNames {
     ECInstanceId = "ECInstanceId",
     ExtendedData = "ExtendedData",
     FullClassName = "FullClassName",
-    // (undocumented)
     Grouping = "Grouping",
     HasChildren = "HasChildren",
     HideIfNoChildren = "HideIfNoChildren",
