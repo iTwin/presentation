@@ -5,7 +5,7 @@
 
 import { merge, Observable } from "rxjs";
 import { assert } from "@itwin/core-bentley";
-import { HierarchyNode, HierarchyNodeHandlingParams, HierarchyNodeKey } from "../HierarchyNode";
+import { BaseGroupingParams, GroupingParams, HierarchyNode, HierarchyNodeHandlingParams, HierarchyNodeKey } from "../HierarchyNode";
 import { ECClass, ECSchema, IMetadataProvider, parseFullClassName } from "../Metadata";
 
 /** @internal */
@@ -46,59 +46,54 @@ function mergeNodeHandlingParams(
   return {
     ...(lhs?.hideIfNoChildren && rhs?.hideIfNoChildren ? { hideIfNoChildren: true } : undefined),
     ...(lhs?.hideInHierarchy && rhs?.hideInHierarchy ? { hideInHierarchy: true } : undefined),
-    ...(lhs?.grouping || rhs?.grouping
+    ...(lhs?.grouping || rhs?.grouping ? getGroupingParams(lhs?.grouping, rhs?.grouping) : undefined),
+    ...(lhs?.mergeByLabelId ? { mergeByLabelId: lhs.mergeByLabelId } : undefined),
+  };
+}
+
+function getGroupingParams(lhsGrouping: GroupingParams | undefined, rhsGrouping: GroupingParams | undefined): GroupingParams {
+  return {
+    ...(lhsGrouping?.byClass || rhsGrouping?.byClass
       ? {
-          grouping: {
-            ...(lhs?.grouping?.byClass || rhs?.grouping?.byClass
-              ? {
-                  byClass:
-                    typeof lhs?.grouping?.byClass !== "boolean" && typeof rhs?.grouping?.byClass !== "boolean"
-                      ? {
-                          ...(lhs?.grouping?.byClass?.hideIfOneGroupedNode || rhs?.grouping?.byClass?.hideIfOneGroupedNode
-                            ? { hideIfOneGroupedNode: true }
-                            : undefined),
-                          ...(lhs?.grouping?.byClass?.hideIfNoSiblings || rhs?.grouping?.byClass?.hideIfNoSiblings ? { hideIfNoSiblings: true } : undefined),
-                        }
-                      : true,
-                }
-              : undefined),
-            ...(lhs?.grouping?.byLabel || rhs?.grouping?.byLabel
-              ? {
-                  byLabel:
-                    typeof lhs?.grouping?.byLabel !== "boolean" && typeof rhs?.grouping?.byLabel !== "boolean"
-                      ? {
-                          ...(lhs?.grouping?.byLabel?.hideIfOneGroupedNode || rhs?.grouping?.byLabel?.hideIfOneGroupedNode
-                            ? { hideIfOneGroupedNode: true }
-                            : undefined),
-                          ...(lhs?.grouping?.byLabel?.hideIfNoSiblings || rhs?.grouping?.byLabel?.hideIfNoSiblings ? { hideIfNoSiblings: true } : undefined),
-                        }
-                      : true,
-                }
-              : undefined),
-            ...(lhs?.grouping?.byBaseClasses?.fullClassNames || rhs?.grouping?.byBaseClasses?.fullClassNames || undefined
-              ? {
-                  // Create an array from both: lhs and rhs fullClassNames arrays without adding duplicates
-                  fullClassNames: [...(lhs?.grouping?.byBaseClasses?.fullClassNames ?? []), ...(rhs?.grouping?.byBaseClasses?.fullClassNames ?? [])].reduce(
-                    (acc: string[], curr: string) => {
-                      if (!acc.some((obj) => obj === curr)) {
-                        acc.push(curr);
-                      }
-                      return acc;
-                    },
-                    [],
-                  ),
-                  ...(lhs?.grouping?.byBaseClasses?.hideIfOneGroupedNode || rhs?.grouping?.byBaseClasses?.hideIfOneGroupedNode
-                    ? { hideIfOneGroupedNode: true }
-                    : undefined),
-                  ...(lhs?.grouping?.byBaseClasses?.hideIfNoSiblings || rhs?.grouping?.byBaseClasses?.hideIfNoSiblings
-                    ? { hideIfNoSiblings: true }
-                    : undefined),
-                }
-              : undefined),
-          },
+          byClass:
+            typeof lhsGrouping?.byClass !== "boolean" && typeof rhsGrouping?.byClass !== "boolean"
+              ? getHidingParams(lhsGrouping?.byClass, rhsGrouping?.byClass)
+              : true,
         }
       : undefined),
-    ...(lhs?.mergeByLabelId ? { mergeByLabelId: lhs.mergeByLabelId } : undefined),
+    ...(lhsGrouping?.byLabel || rhsGrouping?.byLabel
+      ? {
+          byLabel:
+            typeof lhsGrouping?.byLabel !== "boolean" && typeof rhsGrouping?.byLabel !== "boolean"
+              ? getHidingParams(lhsGrouping?.byLabel, rhsGrouping?.byLabel)
+              : true,
+        }
+      : undefined),
+    ...(lhsGrouping?.byBaseClasses?.fullClassNames || rhsGrouping?.byBaseClasses?.fullClassNames || undefined
+      ? {
+          // Create an array from both: lhs and rhs fullClassNames arrays without adding duplicates
+          fullClassNames: [...(lhsGrouping?.byBaseClasses?.fullClassNames ?? []), ...(rhsGrouping?.byBaseClasses?.fullClassNames ?? [])].reduce(
+            (acc: string[], curr: string) => {
+              if (!acc.some((obj) => obj === curr)) {
+                acc.push(curr);
+              }
+              return acc;
+            },
+            [],
+          ),
+          ...getHidingParams(
+            { hideIfOneGroupedNode: lhsGrouping?.byBaseClasses?.hideIfOneGroupedNode, hideIfNoSiblings: lhsGrouping?.byBaseClasses?.hideIfNoSiblings },
+            { hideIfOneGroupedNode: rhsGrouping?.byBaseClasses?.hideIfOneGroupedNode, hideIfNoSiblings: rhsGrouping?.byBaseClasses?.hideIfNoSiblings },
+          ),
+        }
+      : undefined),
+  };
+}
+
+function getHidingParams(lhsGroupingHiding: BaseGroupingParams | undefined, rhsGroupingHiding: BaseGroupingParams | undefined): BaseGroupingParams {
+  return {
+    ...(lhsGroupingHiding?.hideIfOneGroupedNode || rhsGroupingHiding?.hideIfOneGroupedNode ? { hideIfOneGroupedNode: true } : undefined),
+    ...(lhsGroupingHiding?.hideIfNoSiblings || rhsGroupingHiding?.hideIfNoSiblings ? { hideIfNoSiblings: true } : undefined),
   };
 }
 

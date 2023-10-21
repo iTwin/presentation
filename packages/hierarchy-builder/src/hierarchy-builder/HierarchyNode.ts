@@ -87,7 +87,7 @@ export namespace HierarchyNodeKey {
 export interface HierarchyNodeHandlingParams {
   hideIfNoChildren?: boolean;
   hideInHierarchy?: boolean;
-  grouping?: LabelGroupingParams & ClassGroupingParams;
+  grouping?: GroupingParams;
   mergeByLabelId?: string;
 }
 
@@ -95,6 +95,9 @@ export interface HierarchyNodeHandlingParams {
 export interface LabelGroupingParams {
   byLabel?: boolean | BaseGroupingParams;
 }
+
+/** @beta */
+export type GroupingParams = LabelGroupingParams & ClassGroupingParams;
 
 /** @beta */
 export interface ClassGroupingParams {
