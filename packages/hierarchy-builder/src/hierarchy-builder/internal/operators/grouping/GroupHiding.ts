@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { HierarchyNode } from "../../../HierarchyNode";
+import { BaseGroupingParams, HierarchyNode, HierarchyNodeHandlingParams } from "../../../HierarchyNode";
 import { GroupingHandlerResult, GroupingType } from "../Grouping";
 
 /** @internal */
@@ -32,72 +32,32 @@ function getGroupingHideOptionsFromParentNode(
 ): [hideIfNoSiblings: boolean, hideIfOneGroupedNode: boolean] {
   if (Array.isArray(parentNode.children)) {
     if (groupingType === "base-class") {
-      return getHideOptionsFromBaseClassGroupingNodes(parentNode.children);
+      return getHideOptionsFromNodeProcessingParams(parentNode.children, (p) => p.grouping?.byBaseClasses);
     }
     if (groupingType === "class") {
-      return getHideOptionsFromClassGroupingNodes(parentNode.children);
+      return getHideOptionsFromNodeProcessingParams(parentNode.children, (p) => (typeof p.grouping?.byClass === "object" ? p.grouping.byClass : undefined));
     }
     if (groupingType === "label") {
-      return getHideOptionsFromLabelGroupingNodes(parentNode.children);
+      return getHideOptionsFromNodeProcessingParams(parentNode.children, (p) => (typeof p.grouping?.byLabel === "object" ? p.grouping.byLabel : undefined));
     }
   }
   // istanbul ignore next
   return [false, false];
 }
 
-function getHideOptionsFromBaseClassGroupingNodes(nodes: HierarchyNode[]): [hideIfNoSiblings: boolean, hideIfOneGroupedNode: boolean] {
+function getHideOptionsFromNodeProcessingParams(
+  nodes: HierarchyNode[],
+  hideOptionsAccessor: (params: HierarchyNodeHandlingParams) => BaseGroupingParams | undefined,
+): [hideIfNoSiblings: boolean, hideIfOneGroupedNode: boolean] {
   let hideIfNoSiblings = false;
   let hideIfOneGroupedNode = false;
   for (const node of nodes) {
     if (hideIfNoSiblings && hideIfOneGroupedNode) {
       break;
     }
-    if (node.params?.grouping?.byBaseClasses?.hideIfNoSiblings) {
-      hideIfNoSiblings = true;
-    }
-    if (node.params?.grouping?.byBaseClasses?.hideIfOneGroupedNode) {
-      hideIfOneGroupedNode = true;
-    }
-  }
-  return [hideIfNoSiblings, hideIfOneGroupedNode];
-}
-
-function getHideOptionsFromClassGroupingNodes(nodes: HierarchyNode[]): [hideIfNoSiblings: boolean, hideIfOneGroupedNode: boolean] {
-  let hideIfNoSiblings = false;
-  let hideIfOneGroupedNode = false;
-
-  for (const node of nodes) {
-    if (hideIfNoSiblings && hideIfOneGroupedNode) {
-      break;
-    }
-    if (typeof node.params?.grouping?.byClass !== "boolean") {
-      if (node.params?.grouping?.byClass?.hideIfNoSiblings) {
-        hideIfNoSiblings = true;
-      }
-      if (node.params?.grouping?.byClass?.hideIfOneGroupedNode) {
-        hideIfOneGroupedNode = true;
-      }
-    }
-  }
-  return [hideIfNoSiblings, hideIfOneGroupedNode];
-}
-
-function getHideOptionsFromLabelGroupingNodes(nodes: HierarchyNode[]): [hideIfNoSiblings: boolean, hideIfOneGroupedNode: boolean] {
-  let hideIfNoSiblings = false;
-  let hideIfOneGroupedNode = false;
-
-  for (const node of nodes) {
-    if (hideIfNoSiblings && hideIfOneGroupedNode) {
-      break;
-    }
-    if (typeof node.params?.grouping?.byLabel !== "boolean") {
-      if (node.params?.grouping?.byLabel?.hideIfNoSiblings) {
-        hideIfNoSiblings = true;
-      }
-      if (node.params?.grouping?.byLabel?.hideIfOneGroupedNode) {
-        hideIfOneGroupedNode = true;
-      }
-    }
+    const params = node.params ? hideOptionsAccessor(node.params) : undefined;
+    hideIfNoSiblings = !!params?.hideIfNoSiblings;
+    hideIfOneGroupedNode = !!params?.hideIfOneGroupedNode;
   }
   return [hideIfNoSiblings, hideIfOneGroupedNode];
 }
