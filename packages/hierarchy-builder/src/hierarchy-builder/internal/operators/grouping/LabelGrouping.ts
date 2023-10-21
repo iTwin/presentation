@@ -6,6 +6,7 @@
 import { HierarchyNode } from "../../../HierarchyNode";
 import { GroupingHandlerResult } from "../Grouping";
 
+/** @internal */
 export async function createLabelGroups(nodes: HierarchyNode[]): Promise<GroupingHandlerResult> {
   if (nodes.length === 0) {
     return { allNodes: nodes, groupedNodes: [], groupingType: "label" };

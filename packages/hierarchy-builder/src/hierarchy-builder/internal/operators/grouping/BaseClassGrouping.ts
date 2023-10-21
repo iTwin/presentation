@@ -8,6 +8,7 @@ import { ECClass, IMetadataProvider } from "../../../Metadata";
 import { getClass } from "../../Common";
 import { GroupingHandlerResult } from "../Grouping";
 
+/** @internal */
 export async function getBaseClassGroupingECClasses(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<ECClass[]> {
   const baseEntityAndRelationshipECClassesArray = new Array<ECClass>();
   // Get all base class names that are provided in the grouping information
@@ -25,6 +26,7 @@ export async function getBaseClassGroupingECClasses(metadata: IMetadataProvider,
   return baseECClassesSorted;
 }
 
+/** @internal */
 export async function createBaseClassGroupsForSingleBaseClass(
   metadata: IMetadataProvider,
   nodes: HierarchyNode[],
@@ -74,7 +76,7 @@ export async function createBaseClassGroupsForSingleBaseClass(
   return { allNodes: finalAllNodeHierarchy, groupedNodes: finalGroupedNodeHierarchy, groupingType: "base-class" };
 }
 
-export function getAllBaseClasses(nodes: HierarchyNode[]): Set<string> {
+function getAllBaseClasses(nodes: HierarchyNode[]): Set<string> {
   const baseClasses = new Set<string>();
   for (const node of nodes) {
     if (HierarchyNode.isInstancesNode(node) && node.params?.grouping?.byBaseClasses) {
@@ -86,7 +88,7 @@ export function getAllBaseClasses(nodes: HierarchyNode[]): Set<string> {
   return baseClasses;
 }
 
-export async function sortByBaseClass(classes: ECClass[]): Promise<ECClass[]> {
+async function sortByBaseClass(classes: ECClass[]): Promise<ECClass[]> {
   if (classes.length === 0) {
     return classes;
   }

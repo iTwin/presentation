@@ -21,9 +21,7 @@ export function sortNodesByLabelOperator(nodes: Observable<HierarchyNode>): Obse
   );
 }
 
-/**
- * @internal
- */
+/** @internal */
 export function sortNodesByLabel(nodes: HierarchyNode[]): HierarchyNode[] {
   return nodes.sort((lhs, rhs) => naturalCompare(lhs.label.toLocaleLowerCase(), rhs.label.toLocaleLowerCase()));
 }

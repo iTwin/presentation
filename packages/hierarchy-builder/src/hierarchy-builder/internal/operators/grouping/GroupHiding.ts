@@ -6,9 +6,7 @@
 import { HierarchyNode } from "../../../HierarchyNode";
 import { GroupingHandlerResult, GroupingType } from "../Grouping";
 
-/**
- * @internal
- */
+/** @internal */
 export function applyGroupHidingParams(props: GroupingHandlerResult): GroupingHandlerResult {
   const finalGroupings: GroupingHandlerResult = { allNodes: [], groupedNodes: [], groupingType: props.groupingType };
   for (const node of props.allNodes) {
@@ -29,9 +27,6 @@ export function applyGroupHidingParams(props: GroupingHandlerResult): GroupingHa
   return finalGroupings;
 }
 
-/**
- * @internal
- */
 function getGroupingHideOptionsFromParentNode(
   parentNode: HierarchyNode,
   groupingType: GroupingType,
@@ -51,9 +46,6 @@ function getGroupingHideOptionsFromParentNode(
   return [false, false];
 }
 
-/**
- * @internal
- */
 function getHideOptionsFromBaseClassGroupingNodes(nodes: HierarchyNode[]): [hideIfNoSiblings: boolean, hideIfOneGroupedNode: boolean] {
   let hideIfNoSiblings = false;
   let hideIfOneGroupedNode = false;
@@ -71,9 +63,6 @@ function getHideOptionsFromBaseClassGroupingNodes(nodes: HierarchyNode[]): [hide
   return [hideIfNoSiblings, hideIfOneGroupedNode];
 }
 
-/**
- * @internal
- */
 function getHideOptionsFromClassGroupingNodes(nodes: HierarchyNode[]): [hideIfNoSiblings: boolean, hideIfOneGroupedNode: boolean] {
   let hideIfNoSiblings = false;
   let hideIfOneGroupedNode = false;
@@ -94,9 +83,6 @@ function getHideOptionsFromClassGroupingNodes(nodes: HierarchyNode[]): [hideIfNo
   return [hideIfNoSiblings, hideIfOneGroupedNode];
 }
 
-/**
- * @internal
- */
 function getHideOptionsFromLabelGroupingNodes(nodes: HierarchyNode[]): [hideIfNoSiblings: boolean, hideIfOneGroupedNode: boolean] {
   let hideIfNoSiblings = false;
   let hideIfOneGroupedNode = false;

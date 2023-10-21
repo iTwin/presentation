@@ -19,6 +19,7 @@ interface ClassGroupingInformation {
   grouped: Map<string, { class: ClassInfo; groupedNodes: Array<HierarchyNode> }>;
 }
 
+/** @internal */
 export async function createClassGroups(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<GroupingHandlerResult> {
   const groupings: ClassGroupingInformation = { ungrouped: [], grouped: new Map() };
   for (const node of nodes) {

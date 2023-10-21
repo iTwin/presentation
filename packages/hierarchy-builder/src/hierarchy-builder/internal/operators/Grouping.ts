@@ -32,18 +32,22 @@ export function createGroupingOperator(metadata: IMetadataProvider) {
 
 type GroupingHandlerCreator = (metadata: IMetadataProvider, nodes: HierarchyNode<string>[]) => Promise<GroupingHandler[]>;
 
-export interface FullGroupingProps {
+interface FullGroupingProps {
   nodes: HierarchyNode[];
   groupingHandlers: GroupingHandler[];
 }
 
+/** @internal */
 export interface GroupingHandlerResult {
   allNodes: HierarchyNode[];
   groupedNodes: HierarchyNode[];
   groupingType: GroupingType;
 }
+
+/** @internal */
 export type GroupingType = "label" | "class" | "base-class";
 
+/** @internal */
 export type GroupingHandler = (allNodes: HierarchyNode[]) => Promise<GroupingHandlerResult>;
 
 async function groupNodesFromHandlerCreator(
