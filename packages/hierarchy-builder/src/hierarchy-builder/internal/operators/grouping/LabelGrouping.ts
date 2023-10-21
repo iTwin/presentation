@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { HierarchyNode } from "../../../HierarchyNode";
-import { GroupingHandlerReturn } from "../Grouping";
+import { GroupingHandlerResult } from "../Grouping";
 
-export async function createLabelGroups(nodes: HierarchyNode[]): Promise<GroupingHandlerReturn> {
+export async function createLabelGroups(nodes: HierarchyNode[]): Promise<GroupingHandlerResult> {
   if (nodes.length === 0) {
     return { allNodes: nodes, groupedNodes: [], groupingType: "label" };
   }
@@ -20,7 +20,7 @@ export async function createLabelGroups(nodes: HierarchyNode[]): Promise<Groupin
         children: [nodes[0]],
       }
     : nodes[0];
-  const outputNodes: GroupingHandlerReturn = { allNodes: [firstNode], groupedNodes: [], groupingType: "label" };
+  const outputNodes: GroupingHandlerResult = { allNodes: [firstNode], groupedNodes: [], groupingType: "label" };
 
   for (let i = 1; i < nodes.length; ++i) {
     const currentNode = nodes[i];

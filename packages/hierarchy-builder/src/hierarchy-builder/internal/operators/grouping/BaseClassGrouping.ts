@@ -6,7 +6,7 @@
 import { HierarchyNode } from "../../../HierarchyNode";
 import { ECClass, IMetadataProvider } from "../../../Metadata";
 import { getClass } from "../../Common";
-import { GroupingHandlerReturn } from "../Grouping";
+import { GroupingHandlerResult } from "../Grouping";
 
 export async function getBaseClassGroupingECClasses(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<ECClass[]> {
   const baseEntityAndRelationshipECClassesArray = new Array<ECClass>();
@@ -29,7 +29,7 @@ export async function createBaseClassGroupsForSingleBaseClass(
   metadata: IMetadataProvider,
   nodes: HierarchyNode[],
   baseECClass: ECClass,
-): Promise<GroupingHandlerReturn> {
+): Promise<GroupingHandlerResult> {
   const finalAllNodeHierarchy = new Array<HierarchyNode>();
   const finalGroupedNodeHierarchy = new Array<HierarchyNode>();
   const baseClassGroupingNode: HierarchyNode = {

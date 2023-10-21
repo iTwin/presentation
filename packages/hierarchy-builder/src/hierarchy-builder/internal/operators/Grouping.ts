@@ -37,14 +37,14 @@ export interface FullGroupingProps {
   groupingHandlers: GroupingHandlerType[];
 }
 
-export interface GroupingHandlerReturn {
+export interface GroupingHandlerResult {
   allNodes: HierarchyNode[];
   groupedNodes: HierarchyNode[];
   groupingType: GroupingType;
 }
 export type GroupingType = "label" | "class" | "base-class";
 
-export type GroupingHandlerType = (allNodes: HierarchyNode[]) => Promise<GroupingHandlerReturn>;
+export type GroupingHandlerType = (allNodes: HierarchyNode[]) => Promise<GroupingHandlerResult>;
 
 async function groupNodesFromHandlerCreator(
   metadata: IMetadataProvider,

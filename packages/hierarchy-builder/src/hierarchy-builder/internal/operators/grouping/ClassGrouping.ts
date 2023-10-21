@@ -6,7 +6,7 @@
 import { HierarchyNode } from "../../../HierarchyNode";
 import { IMetadataProvider } from "../../../Metadata";
 import { getClass } from "../../Common";
-import { GroupingHandlerReturn } from "../Grouping";
+import { GroupingHandlerResult } from "../Grouping";
 
 interface ClassInfo {
   fullName: string;
@@ -19,7 +19,7 @@ interface ClassGroupingInformation {
   grouped: Map<string, { class: ClassInfo; groupedNodes: Array<HierarchyNode> }>;
 }
 
-export async function createClassGroups(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<GroupingHandlerReturn> {
+export async function createClassGroups(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<GroupingHandlerResult> {
   const groupings: ClassGroupingInformation = { ungrouped: [], grouped: new Map() };
   for (const node of nodes) {
     // we're only grouping instance nodes
@@ -42,8 +42,8 @@ export async function createClassGroups(metadata: IMetadataProvider, nodes: Hier
   return createGroupingNodes(groupings);
 }
 
-function createGroupingNodes(groupings: ClassGroupingInformation): GroupingHandlerReturn {
-  const outNodes: GroupingHandlerReturn = { allNodes: new Array<HierarchyNode>(), groupedNodes: [], groupingType: "class" };
+function createGroupingNodes(groupings: ClassGroupingInformation): GroupingHandlerResult {
+  const outNodes: GroupingHandlerResult = { allNodes: new Array<HierarchyNode>(), groupedNodes: [], groupingType: "class" };
   groupings.grouped.forEach((entry) => {
     const groupedNode: HierarchyNode = {
       label: entry.class.label ?? entry.class.name,

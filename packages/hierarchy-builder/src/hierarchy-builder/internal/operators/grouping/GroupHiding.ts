@@ -4,13 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { HierarchyNode } from "../../../HierarchyNode";
-import { GroupingHandlerReturn, GroupingType } from "../Grouping";
+import { GroupingHandlerResult, GroupingType } from "../Grouping";
 
 /**
  * @internal
  */
-export function applyGroupHidingParams(props: GroupingHandlerReturn): GroupingHandlerReturn {
-  const finalGroupings: GroupingHandlerReturn = { allNodes: [], groupedNodes: [], groupingType: props.groupingType };
+export function applyGroupHidingParams(props: GroupingHandlerResult): GroupingHandlerResult {
+  const finalGroupings: GroupingHandlerResult = { allNodes: [], groupedNodes: [], groupingType: props.groupingType };
   for (const node of props.allNodes) {
     if (HierarchyNode.isGroupingNode(node)) {
       if (Array.isArray(node.children) && (props.allNodes.length === 1 || node.children.length === 1)) {
