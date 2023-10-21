@@ -60,7 +60,7 @@ async function createBaseClassGroupsForSingleBaseClass(
       const fullCurrentNodeClassName = node.key.instanceKeys[0].className;
       const currentNodeECClass = await getClass(metadata, fullCurrentNodeClassName);
       if (await currentNodeECClass.is(baseECClass)) {
-        if (finalAllNodeHierarchy.length > 0 && Array.isArray(baseClassGroupingNode.children)) {
+        if (Array.isArray(baseClassGroupingNode.children)) {
           baseClassGroupingNode.children.push(node);
           continue;
         }
