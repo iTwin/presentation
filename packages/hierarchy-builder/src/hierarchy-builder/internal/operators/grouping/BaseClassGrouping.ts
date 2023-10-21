@@ -44,16 +44,15 @@ export async function createBaseClassGroupsForSingleBaseClass(
   finalGroupedNodeHierarchy.push(baseClassGroupingNode);
   for (const node of nodes) {
     if (HierarchyNode.isInstancesNode(node) && node.params?.grouping?.byBaseClasses) {
-      let classNameIsInBaseClassInfo = false;
+      let classNameIsInNodeBaseClassList = false;
       // check if the node should be grouped by this baseClass
-      for (const classInfo of node.params.grouping.byBaseClasses.baseClassInfo) {
-        const specificClassName = `${classInfo.schemaName}.${classInfo.className}`;
-        if (specificClassName === baseECClass.fullName) {
-          classNameIsInBaseClassInfo = true;
+      for (const className of node.params.grouping.byBaseClasses.fullClassNames) {
+        if (className === baseECClass.fullName) {
+          classNameIsInNodeBaseClassList = true;
           break;
         }
       }
-      if (classNameIsInBaseClassInfo) {
+      if (classNameIsInNodeBaseClassList) {
         const fullCurrentNodeClassName = node.key.instanceKeys[0].className;
         const currentNodeECClass = await getClass(metadata, fullCurrentNodeClassName);
         if (await currentNodeECClass.is(baseECClass)) {
@@ -79,9 +78,8 @@ export function getAllBaseClasses(nodes: HierarchyNode[]): Set<string> {
   const baseClasses = new Set<string>();
   for (const node of nodes) {
     if (HierarchyNode.isInstancesNode(node) && node.params?.grouping?.byBaseClasses) {
-      for (const classInfo of node.params.grouping.byBaseClasses.baseClassInfo) {
-        const specificClassName = `${classInfo.schemaName}.${classInfo.className}`;
-        baseClasses.add(specificClassName);
+      for (const className of node.params.grouping.byBaseClasses.fullClassNames) {
+        baseClasses.add(className);
       }
     }
   }

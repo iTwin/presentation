@@ -92,13 +92,7 @@ interface BaseGroupingParams {
 
 /** @beta */
 interface BaseClassGroupingParams extends BaseGroupingParams {
-  baseClassInfo: BaseClassInfo[];
-}
-
-/** @beta */
-interface BaseClassInfo {
-  className: string | ECSqlValueSelector;
-  schemaName: string | ECSqlValueSelector;
+  fullClassNames: string[] | ECSqlValueSelector[];
 }
 
 /**
@@ -117,40 +111,7 @@ export class NodeSelectClauseFactory {
       CAST(${createECSqlValueSelector(props.hasChildren)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
       CAST(${createECSqlValueSelector(props.hideIfNoChildren)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
       CAST(${createECSqlValueSelector(props.hideNodeInHierarchy)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
-      ${
-        props.grouping
-          ? `json_object(${Object.entries(props.grouping)
-              .map(([key, value]) => {
-                if (typeof value === "boolean") {
-                  return `'${key}', ${createECSqlValueSelector(value)}`;
-                } else if (typeof value === "object" && value !== null && value.hasOwnProperty("selector")) {
-                  return `'${key}', ${value.selector}`;
-                }
-                return `'${key}', json_object(${Object.entries(value)
-                  .map(([propKey, propValue]) => {
-                    if (Array.isArray(propValue)) {
-                      return `'${propKey}', json_array(${Object.entries(propValue)
-                        .map(
-                          ([_objKey, objValue]) =>
-                            `json_object('className', ${createECSqlValueSelector(objValue.className)}, 'schemaName', ${createECSqlValueSelector(
-                              objValue.schemaName,
-                            )})`,
-                        )
-                        .join(", ")})`;
-                    } else if (typeof propValue === "boolean") {
-                      return `'${propKey}', ${createECSqlValueSelector(propValue)}`;
-                    } else if (typeof propValue === "object" && propValue !== null && propValue.hasOwnProperty("selector")) {
-                      return `${Object.entries(propValue)
-                        .map(([, selectorValue]) => `'${propKey}', ${selectorValue}`)
-                        .join(", ")}`;
-                    }
-                    return "CAST(NULL AS TEXT)";
-                  })
-                  .join(", ")})`;
-              })
-              .join(", ")})`
-          : "CAST(NULL AS TEXT)"
-      } AS ${NodeSelectClauseColumnNames.Grouping},
+      ${props.grouping ? createGroupingSelector(props.grouping) : "CAST(NULL AS TEXT)"} AS ${NodeSelectClauseColumnNames.Grouping},
       CAST(${createECSqlValueSelector(props.mergeByLabelId)} AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
       ${
         props.extendedData
@@ -165,9 +126,6 @@ export class NodeSelectClauseFactory {
 }
 
 function createECSqlValueSelector(input: undefined | Id64String | string | number | boolean | ECSqlValueSelector) {
-  function isSelector(x: any): x is ECSqlValueSelector {
-    return !!x.selector;
-  }
   if (input === undefined) {
     return "NULL";
   }
@@ -182,4 +140,56 @@ function createECSqlValueSelector(input: undefined | Id64String | string | numbe
     case "string":
       return Id64.isId64(input) ? input : `'${input}'`;
   }
+}
+
+function isSelector(x: any): x is ECSqlValueSelector {
+  return !!x.selector;
+}
+
+function createGroupingSelector(grouping: ECSqlSelectClauseGroupingParams): string {
+  const groupingSelectors = new Array<string>();
+  const labelSelector = grouping.byLabel
+    ? `'byLabel', ${
+        typeof grouping.byLabel === "boolean" || isSelector(grouping.byLabel)
+          ? `CAST(${createECSqlValueSelector(grouping.byLabel)} AS BOOLEAN)`
+          : `json_object(${createGroupHideECSqlValueSelector(grouping.byLabel.hideIfNoSiblings, grouping.byLabel.hideIfOneGroupedNode)})`
+      }`
+    : "";
+  groupingSelectors.push(labelSelector);
+
+  const classSelector = grouping.byClass
+    ? `'byClass', ${
+        typeof grouping.byClass === "boolean" || isSelector(grouping.byClass)
+          ? `CAST(${createECSqlValueSelector(grouping.byClass)} AS BOOLEAN)`
+          : `json_object(${createGroupHideECSqlValueSelector(grouping.byClass.hideIfNoSiblings, grouping.byClass.hideIfOneGroupedNode)})`
+      }`
+    : "";
+  groupingSelectors.push(classSelector);
+
+  if (grouping.byBaseClasses) {
+    const baseClassFullClassNamesSelector = `'fullClassNames', json_array(${grouping.byBaseClasses.fullClassNames
+      .map((className) => createECSqlValueSelector(className))
+      .join(", ")})`;
+    const baseClassHidingSelector = createGroupHideECSqlValueSelector(grouping.byBaseClasses.hideIfNoSiblings, grouping.byBaseClasses.hideIfOneGroupedNode);
+    const baseClassObjectSelectors: string[] = [baseClassFullClassNamesSelector, baseClassHidingSelector];
+    groupingSelectors.push(`'byBaseClasses', json_object(${baseClassObjectSelectors.filter((selector) => selector !== "").join(", ")})`);
+  }
+
+  return `json_object(${groupingSelectors.filter((selector) => selector !== "").join(", ")})`;
+}
+
+function createGroupHideECSqlValueSelector(
+  hideIfNoSiblings: boolean | ECSqlValueSelector | undefined,
+  hideIfOneGroupedNode: boolean | ECSqlValueSelector | undefined,
+): string {
+  const hideIfNoSiblingsSelector = createECSqlValueSelector(hideIfNoSiblings);
+  const hideIfOneGroupedNodeSelector = createECSqlValueSelector(hideIfOneGroupedNode);
+  const hideIfNoSiblingsResult = hideIfNoSiblingsSelector !== "NULL" ? `'hideIfNoSiblings', CAST(${hideIfNoSiblingsSelector} AS BOOLEAN)` : "";
+  if (hideIfOneGroupedNodeSelector !== "NULL") {
+    if (hideIfNoSiblingsResult !== "") {
+      return `${hideIfNoSiblingsResult}, 'hideIfOneGroupedNode', CAST(${hideIfOneGroupedNodeSelector} AS BOOLEAN)`;
+    }
+    return `'hideIfOneGroupedNode', CAST(${hideIfOneGroupedNodeSelector} AS BOOLEAN)`;
+  }
+  return hideIfNoSiblingsResult;
 }

@@ -5,7 +5,7 @@
 
 import { merge, Observable } from "rxjs";
 import { assert } from "@itwin/core-bentley";
-import { BaseClassInfo, HierarchyNode, HierarchyNodeHandlingParams, HierarchyNodeKey } from "../HierarchyNode";
+import { HierarchyNode, HierarchyNodeHandlingParams, HierarchyNodeKey } from "../HierarchyNode";
 import { ECClass, ECSchema, IMetadataProvider, parseFullClassName } from "../Metadata";
 
 /** @internal */
@@ -75,12 +75,12 @@ function mergeNodeHandlingParams(
                       : true,
                 }
               : undefined),
-            ...(lhs?.grouping?.byBaseClasses?.baseClassInfo || rhs?.grouping?.byBaseClasses?.baseClassInfo
+            ...(lhs?.grouping?.byBaseClasses?.fullClassNames || rhs?.grouping?.byBaseClasses?.fullClassNames || undefined
               ? {
-                  // Create an array from both: lhs and rhs baseClassInfo arrays without adding duplicates
-                  baseClassInfo: [...(lhs?.grouping?.byBaseClasses?.baseClassInfo ?? []), ...(rhs?.grouping?.byBaseClasses?.baseClassInfo ?? [])].reduce(
-                    (acc: BaseClassInfo[], curr: BaseClassInfo) => {
-                      if (!acc.some((obj) => obj.className === curr.className && obj.schemaName === curr.schemaName)) {
+                  // Create an array from both: lhs and rhs fullClassNames arrays without adding duplicates
+                  fullClassNames: [...(lhs?.grouping?.byBaseClasses?.fullClassNames ?? []), ...(rhs?.grouping?.byBaseClasses?.fullClassNames ?? [])].reduce(
+                    (acc: string[], curr: string) => {
+                      if (!acc.some((obj) => obj === curr)) {
                         acc.push(curr);
                       }
                       return acc;

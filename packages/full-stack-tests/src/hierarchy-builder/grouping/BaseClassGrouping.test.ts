@@ -91,10 +91,7 @@ describe("Stateless hierarchy builder", () => {
                       nodeLabel: { selector: `this.UserLabel` },
                       grouping: {
                         byBaseClasses: {
-                          baseClassInfo: [
-                            { className: "GraphicalPartition3d", schemaName: "BisCore" },
-                            { className: "LinkElement", schemaName: "BisCore" },
-                          ],
+                          fullClassNames: ["BisCore.GraphicalPartition3d", "BisCore.LinkElement"],
                         },
                       },
                     })}
@@ -179,10 +176,7 @@ describe("Stateless hierarchy builder", () => {
                       nodeLabel: { selector: `this.UserLabel` },
                       grouping: {
                         byBaseClasses: {
-                          baseClassInfo: [
-                            { className: "IParentElement", schemaName: "BisCore" },
-                            { className: "ISubModeledElement", schemaName: "BisCore" },
-                          ],
+                          fullClassNames: ["BisCore.IParentElement", "BisCore.ISubModeledElement"],
                         },
                       },
                     })}
@@ -238,8 +232,7 @@ describe("Stateless hierarchy builder", () => {
 
     describe("groups", () => {
       it("when base class is parent", async function () {
-        const baseClassName = "InformationPartitionElement";
-        const baseSchemaName = "BisCore";
+        const baseClassName = "BisCore.InformationPartitionElement";
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
           const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: rootSubject.id });
@@ -281,7 +274,7 @@ describe("Stateless hierarchy builder", () => {
                         nodeLabel: { selector: `this.UserLabel` },
                         grouping: {
                           byBaseClasses: {
-                            baseClassInfo: [{ className: baseClassName, schemaName: baseSchemaName }],
+                            fullClassNames: [baseClassName],
                           },
                         },
                       })}
@@ -309,8 +302,8 @@ describe("Stateless hierarchy builder", () => {
               instanceKeys: [keys.rootSubject],
               children: [
                 NodeValidators.createForClassGroupingNode({
-                  label: `${baseSchemaName}.${baseClassName}`,
-                  className: `${baseSchemaName}.${baseClassName}`,
+                  label: baseClassName,
+                  className: baseClassName,
                   children: [
                     NodeValidators.createForInstanceNode({
                       instanceKeys: [keys.childPartition3],
@@ -386,10 +379,10 @@ describe("Stateless hierarchy builder", () => {
                         nodeLabel: { selector: `this.UserLabel` },
                         grouping: {
                           byBaseClasses: {
-                            baseClassInfo: [
-                              { className: baseClassName1, schemaName: baseSchemaName },
-                              { className: baseClassName2, schemaName: baseSchemaName },
-                              { className: baseClassName3, schemaName: baseSchemaName },
+                            fullClassNames: [
+                              `${baseSchemaName}.${baseClassName1}`,
+                              `${baseSchemaName}.${baseClassName2}`,
+                              `${baseSchemaName}.${baseClassName3}`,
                             ],
                           },
                         },
@@ -508,10 +501,10 @@ describe("Stateless hierarchy builder", () => {
                         nodeLabel: { selector: `this.UserLabel` },
                         grouping: {
                           byBaseClasses: {
-                            baseClassInfo: [
-                              { className: baseClassName1, schemaName: baseSchemaName },
-                              { className: baseClassName2, schemaName: baseSchemaName },
-                              { className: baseClassName3, schemaName: baseSchemaName },
+                            fullClassNames: [
+                              `${baseSchemaName}.${baseClassName1}`,
+                              `${baseSchemaName}.${baseClassName2}`,
+                              `${baseSchemaName}.${baseClassName3}`,
                             ],
                           },
                         },
@@ -538,10 +531,7 @@ describe("Stateless hierarchy builder", () => {
                         nodeLabel: { selector: `this.UserLabel` },
                         grouping: {
                           byBaseClasses: {
-                            baseClassInfo: [
-                              { className: baseClassName2, schemaName: baseSchemaName },
-                              { className: baseClassName3, schemaName: baseSchemaName },
-                            ],
+                            fullClassNames: [`${baseSchemaName}.${baseClassName2}`, `${baseSchemaName}.${baseClassName3}`],
                           },
                         },
                       })}
@@ -670,10 +660,10 @@ describe("Stateless hierarchy builder", () => {
                         nodeLabel: { selector: `this.UserLabel` },
                         grouping: {
                           byBaseClasses: {
-                            baseClassInfo: [
-                              { className: baseClassName1, schemaName: baseSchemaName },
-                              { className: baseClassName2, schemaName: baseSchemaName },
-                              { className: baseClassName3, schemaName: baseSchemaName },
+                            fullClassNames: [
+                              `${baseSchemaName}.${baseClassName1}`,
+                              `${baseSchemaName}.${baseClassName2}`,
+                              `${baseSchemaName}.${baseClassName3}`,
                             ],
                           },
                         },
@@ -700,7 +690,7 @@ describe("Stateless hierarchy builder", () => {
                         nodeLabel: { selector: `this.UserLabel` },
                         grouping: {
                           byBaseClasses: {
-                            baseClassInfo: [{ className: baseClassName1, schemaName: baseSchemaName }],
+                            fullClassNames: [`${baseSchemaName}.${baseClassName1}`],
                           },
                         },
                       })}

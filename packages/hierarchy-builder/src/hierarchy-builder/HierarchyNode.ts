@@ -110,13 +110,7 @@ export interface BaseGroupingParams {
 
 /** @beta */
 export interface BaseClassGroupingParams extends BaseGroupingParams {
-  baseClassInfo: BaseClassInfo[];
-}
-
-/** @beta */
-export interface BaseClassInfo {
-  className: string;
-  schemaName: string;
+  fullClassNames: string[];
 }
 
 /**

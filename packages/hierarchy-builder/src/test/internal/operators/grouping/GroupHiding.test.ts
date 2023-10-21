@@ -209,16 +209,7 @@ describe("GroupHiding", () => {
               byBaseClasses: {
                 hideIfNoSiblings: true,
                 hideIfOneGroupedNode: true,
-                baseClassInfo: [
-                  {
-                    schemaName: "TestSchema",
-                    className: "TestParentClassA",
-                  },
-                  {
-                    schemaName: "TestSchema",
-                    className: "TestParentClassAA",
-                  },
-                ],
+                fullClassNames: ["TestSchema.TestParentClassA", "TestSchema.TestParentClassAA"],
               },
             },
           },
@@ -233,16 +224,7 @@ describe("GroupHiding", () => {
               byBaseClasses: {
                 hideIfNoSiblings: true,
                 hideIfOneGroupedNode: true,
-                baseClassInfo: [
-                  {
-                    schemaName: "TestSchema",
-                    className: "TestParentClassA",
-                  },
-                  {
-                    schemaName: "TestSchema",
-                    className: "TestParentClassAA",
-                  },
-                ],
+                fullClassNames: ["TestSchema.TestParentClassA", "TestSchema.TestParentClassAA"],
               },
             },
           },

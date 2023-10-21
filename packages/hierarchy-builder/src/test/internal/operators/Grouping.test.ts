@@ -30,16 +30,7 @@ describe("Grouping", () => {
         params: {
           grouping: {
             byBaseClasses: {
-              baseClassInfo: [
-                {
-                  className: "TestParentClassA",
-                  schemaName: "TestSchema",
-                },
-                {
-                  className: "TestParentClassAA",
-                  schemaName: "TestSchema",
-                },
-              ],
+              fullClassNames: ["TestSchema.TestParentClassA", "TestSchema.TestParentClassAA"],
             },
             byClass: true,
             byLabel: true,
@@ -52,16 +43,7 @@ describe("Grouping", () => {
         params: {
           grouping: {
             byBaseClasses: {
-              baseClassInfo: [
-                {
-                  className: "TestParentClassA",
-                  schemaName: "TestSchema",
-                },
-                {
-                  className: "TestParentClassAA",
-                  schemaName: "TestSchema",
-                },
-              ],
+              fullClassNames: ["TestSchema.TestParentClassA", "TestSchema.TestParentClassAA"],
               hideIfNoSiblings: true,
             },
             byLabel: true,
@@ -75,20 +57,7 @@ describe("Grouping", () => {
         params: {
           grouping: {
             byBaseClasses: {
-              baseClassInfo: [
-                {
-                  className: "TestParentClassA",
-                  schemaName: "TestSchema",
-                },
-                {
-                  className: "TestParentClassAA",
-                  schemaName: "TestSchema",
-                },
-                {
-                  className: "TestRandomClassAA",
-                  schemaName: "TestSchema",
-                },
-              ],
+              fullClassNames: ["TestSchema.TestParentClassA", "TestSchema.TestParentClassAA", "TestSchema.TestRandomClassAA"],
             },
             byLabel: { hideIfOneGroupedNode: true },
             byClass: true,
@@ -101,12 +70,7 @@ describe("Grouping", () => {
         params: {
           grouping: {
             byBaseClasses: {
-              baseClassInfo: [
-                {
-                  className: "TestParentClassAA",
-                  schemaName: "TestSchema",
-                },
-              ],
+              fullClassNames: ["TestSchema.TestParentClassAA"],
               hideIfNoSiblings: true,
             },
             byClass: true,
@@ -119,12 +83,7 @@ describe("Grouping", () => {
         params: {
           grouping: {
             byBaseClasses: {
-              baseClassInfo: [
-                {
-                  className: "TestParentClassB",
-                  schemaName: "TestSchema",
-                },
-              ],
+              fullClassNames: ["TestSchema.TestParentClassB"],
               hideIfOneGroupedNode: true,
             },
           },

@@ -26,12 +26,7 @@ describe("BaseClassGrouping", () => {
         params: {
           grouping: {
             byBaseClasses: {
-              baseClassInfo: [
-                {
-                  className: "CustomClass",
-                  schemaName: "CustomSchema",
-                },
-              ],
+              fullClassNames: ["CustomSchema.CustomClass"],
             },
           },
         },
@@ -48,12 +43,7 @@ describe("BaseClassGrouping", () => {
         params: {
           grouping: {
             byBaseClasses: {
-              baseClassInfo: [
-                {
-                  className: "TestParentClass",
-                  schemaName: "TestSchema",
-                },
-              ],
+              fullClassNames: ["TestSchema.TestParentClass"],
             },
           },
         },
@@ -78,12 +68,7 @@ describe("BaseClassGrouping", () => {
         params: {
           grouping: {
             byBaseClasses: {
-              baseClassInfo: [
-                {
-                  className: "TestParentClass",
-                  schemaName: "TestSchema",
-                },
-              ],
+              fullClassNames: ["TestSchema.TestParentClass"],
             },
           },
         },
@@ -118,12 +103,7 @@ describe("BaseClassGrouping", () => {
         params: {
           grouping: {
             byBaseClasses: {
-              baseClassInfo: [
-                {
-                  className: "TestParentClassA",
-                  schemaName: "TestSchema",
-                },
-              ],
+              fullClassNames: ["TestSchema.TestParentClassA"],
             },
           },
         },
@@ -134,12 +114,7 @@ describe("BaseClassGrouping", () => {
         params: {
           grouping: {
             byBaseClasses: {
-              baseClassInfo: [
-                {
-                  className: "TestParentClassB",
-                  schemaName: "TestSchema",
-                },
-              ],
+              fullClassNames: ["TestSchema.TestParentClassB"],
             },
           },
         },
@@ -150,12 +125,7 @@ describe("BaseClassGrouping", () => {
         params: {
           grouping: {
             byBaseClasses: {
-              baseClassInfo: [
-                {
-                  className: "TestParentClassA",
-                  schemaName: "TestSchema",
-                },
-              ],
+              fullClassNames: ["TestSchema.TestParentClassA"],
             },
           },
         },
@@ -206,16 +176,7 @@ describe("BaseClassGrouping", () => {
         params: {
           grouping: {
             byBaseClasses: {
-              baseClassInfo: [
-                {
-                  className: "TestParentClassA",
-                  schemaName: "TestSchema",
-                },
-                {
-                  className: "TestParentClassAA",
-                  schemaName: "TestSchema",
-                },
-              ],
+              fullClassNames: ["TestSchema.TestParentClassA", "TestSchema.TestParentClassAA"],
             },
           },
         },
@@ -226,20 +187,7 @@ describe("BaseClassGrouping", () => {
         params: {
           grouping: {
             byBaseClasses: {
-              baseClassInfo: [
-                {
-                  className: "TestParentClassA",
-                  schemaName: "TestSchema",
-                },
-                {
-                  className: "TestParentClassAA",
-                  schemaName: "TestSchema",
-                },
-                {
-                  className: "TestRandomClassAA",
-                  schemaName: "TestSchema",
-                },
-              ],
+              fullClassNames: ["TestSchema.TestParentClassA", "TestSchema.TestParentClassAA", "TestSchema.TestRandomClassAA"],
             },
           },
         },
@@ -250,12 +198,7 @@ describe("BaseClassGrouping", () => {
         params: {
           grouping: {
             byBaseClasses: {
-              baseClassInfo: [
-                {
-                  className: "TestParentClassAA",
-                  schemaName: "TestSchema",
-                },
-              ],
+              fullClassNames: ["TestSchema.TestParentClassAA"],
             },
           },
         },
@@ -290,7 +233,7 @@ describe("BaseClassGrouping", () => {
           {
             label: "TestSchema.TestParentClassAA",
             key: {
-              type: "lass-grouping",
+              type: "class-grouping",
               class: parentClassAA,
             },
             children: [nodes[0], nodes[1]],

@@ -93,20 +93,7 @@ describe("Stateless hierarchy builder", () => {
                           hideIfOneGroupedNode: true,
                         },
                         byBaseClasses: {
-                          baseClassInfo: [
-                            {
-                              schemaName: "BisCore",
-                              className: "InformationReferenceElement",
-                            },
-                            {
-                              schemaName: "BisCore",
-                              className: "InformationPartitionElement",
-                            },
-                            {
-                              schemaName: "BisCore",
-                              className: "Element",
-                            },
-                          ],
+                          fullClassNames: ["BisCore.InformationReferenceElement", "BisCore.InformationPartitionElement", "BisCore.Element"],
                           hideIfNoSiblings: true,
                           hideIfOneGroupedNode: true,
                         },

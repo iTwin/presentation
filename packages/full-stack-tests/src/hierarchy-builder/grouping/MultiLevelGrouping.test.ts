@@ -89,16 +89,7 @@ describe("Stateless hierarchy builder", () => {
                         byClass: true,
                         byLabel: true,
                         byBaseClasses: {
-                          baseClassInfo: [
-                            {
-                              schemaName: "BisCore",
-                              className: "InformationContentElement",
-                            },
-                            {
-                              schemaName: "BisCore",
-                              className: "InformationPartitionElement",
-                            },
-                          ],
+                          fullClassNames: ["BisCore.InformationContentElement", "BisCore.InformationPartitionElement"],
                         },
                       },
                     })}
