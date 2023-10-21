@@ -9,19 +9,18 @@ import { GroupingHandlerResult, GroupingType } from "../Grouping";
 /** @internal */
 export function applyGroupHidingParams(props: GroupingHandlerResult): GroupingHandlerResult {
   const finalGroupings: GroupingHandlerResult = { allNodes: [], groupedNodes: [], groupingType: props.groupingType };
-  for (const node of props.allNodes) {
-    if (HierarchyNode.isGroupingNode(node)) {
-      if (Array.isArray(node.children) && (props.allNodes.length === 1 || node.children.length === 1)) {
-        const [hideIfNoSiblings, hideIfOneGroupedNode] = getGroupingHideOptionsFromParentNode(node, props.groupingType);
-        if (hideIfNoSiblings && props.allNodes.length === 1) {
-          return { allNodes: node.children, groupedNodes: [], groupingType: props.groupingType };
-        } else if (hideIfOneGroupedNode && node.children.length === 1) {
-          finalGroupings.allNodes.push(node.children[0]);
-          continue;
-        }
+  for (const node of props.groupedNodes) {
+    if (Array.isArray(node.children) && (props.allNodes.length === 1 || node.children.length === 1)) {
+      const [hideIfNoSiblings, hideIfOneGroupedNode] = getGroupingHideOptionsFromParentNode(node, props.groupingType);
+      if (hideIfNoSiblings && props.allNodes.length === 1) {
+        return { allNodes: node.children, groupedNodes: [], groupingType: props.groupingType };
       }
-      finalGroupings.groupedNodes.push(node);
+      if (hideIfOneGroupedNode && node.children.length === 1) {
+        finalGroupings.allNodes.push(node.children[0]);
+        continue;
+      }
     }
+    finalGroupings.groupedNodes.push(node);
     finalGroupings.allNodes.push(node);
   }
   return finalGroupings;
