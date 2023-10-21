@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { from, of } from "rxjs";
+import { delay, from, Observable, of } from "rxjs";
 import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
 import { HierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
@@ -38,5 +38,37 @@ describe("DetermineChildren", () => {
     const result = await getObservableResult(from([node]).pipe(createDetermineChildrenOperator(hasNodes)));
     expect(hasNodes).to.be.calledOnceWith(node);
     expect(result).to.deep.eq([{ ...node, children: true }]);
+  });
+
+  it("streams nodes in the same order as input", async () => {
+    const nodes: HierarchyNode[] = [
+      // will determine children of this node asynchronously
+      {
+        key: "1",
+        label: "1",
+        children: undefined,
+      },
+      // will determine children of this node synchronously
+      {
+        key: "2",
+        label: "2",
+        children: undefined,
+      },
+      // this node already has children determined
+      {
+        key: "3",
+        label: "3",
+        children: true,
+      },
+    ];
+    const hasNodes = (parent: HierarchyNode): Observable<boolean> => {
+      const res = of(false);
+      if (parent.key === "1") {
+        return res.pipe(delay(1));
+      }
+      return res;
+    };
+    const result = await getObservableResult(from(nodes).pipe(createDetermineChildrenOperator(hasNodes)));
+    expect(result.map((n) => n.key)).to.deep.eq(["1", "2", "3"]);
   });
 });
