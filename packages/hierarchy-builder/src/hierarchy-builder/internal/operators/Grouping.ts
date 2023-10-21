@@ -30,11 +30,11 @@ export function createGroupingOperator(metadata: IMetadataProvider) {
   };
 }
 
-type GroupingHandlerCreator = (metadata: IMetadataProvider, nodes: HierarchyNode<string>[]) => Promise<GroupingHandlerType[]>;
+type GroupingHandlerCreator = (metadata: IMetadataProvider, nodes: HierarchyNode<string>[]) => Promise<GroupingHandler[]>;
 
 export interface FullGroupingProps {
   nodes: HierarchyNode[];
-  groupingHandlers: GroupingHandlerType[];
+  groupingHandlers: GroupingHandler[];
 }
 
 export interface GroupingHandlerResult {
@@ -44,7 +44,7 @@ export interface GroupingHandlerResult {
 }
 export type GroupingType = "label" | "class" | "base-class";
 
-export type GroupingHandlerType = (allNodes: HierarchyNode[]) => Promise<GroupingHandlerResult>;
+export type GroupingHandler = (allNodes: HierarchyNode[]) => Promise<GroupingHandlerResult>;
 
 async function groupNodesFromHandlerCreator(
   metadata: IMetadataProvider,
@@ -55,7 +55,7 @@ async function groupNodesFromHandlerCreator(
   return groupNodes(nodes, groupingHandlers);
 }
 
-export async function groupNodes(nodes: HierarchyNode[], groupingHandlers: GroupingHandlerType[]): Promise<HierarchyNode[]> {
+export async function groupNodes(nodes: HierarchyNode[], groupingHandlers: GroupingHandler[]): Promise<HierarchyNode[]> {
   const originalNodes = nodes;
   let allNodes = nodes;
   for (let i = 0; i < groupingHandlers.length; ++i) {
@@ -67,8 +67,8 @@ export async function groupNodes(nodes: HierarchyNode[], groupingHandlers: Group
   return originalNodes !== allNodes ? sortNodesByLabel(allNodes) : allNodes;
 }
 
-async function createGroupingHandlers(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<GroupingHandlerType[]> {
-  const groupingHandlers: GroupingHandlerType[] = new Array<GroupingHandlerType>();
+async function createGroupingHandlers(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<GroupingHandler[]> {
+  const groupingHandlers: GroupingHandler[] = new Array<GroupingHandler>();
   const baseClassGroupingECClasses = await getBaseClassGroupingECClasses(metadata, nodes);
   for (const baseECClass of baseClassGroupingECClasses) {
     groupingHandlers.push(async (allNodes: HierarchyNode[]) => {
@@ -80,7 +80,7 @@ async function createGroupingHandlers(metadata: IMetadataProvider, nodes: Hierar
   return groupingHandlers;
 }
 
-export async function handlerWrapper(currentHandler: GroupingHandlerType, props: FullGroupingProps): Promise<HierarchyNode[]> {
+export async function handlerWrapper(currentHandler: GroupingHandler, props: FullGroupingProps): Promise<HierarchyNode[]> {
   let currentGroupingNodes = await currentHandler(props.nodes);
   currentGroupingNodes = applyGroupHidingParams(currentGroupingNodes);
 
