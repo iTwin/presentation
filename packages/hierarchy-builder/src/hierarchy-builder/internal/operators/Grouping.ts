@@ -80,7 +80,7 @@ async function createGroupingHandlers(metadata: IMetadataProvider, nodes: Hierar
   return groupingHandlers;
 }
 
-export async function handlerWrapper(currentHandler: GroupingHandler, props: FullGroupingProps): Promise<HierarchyNode[]> {
+async function handlerWrapper(currentHandler: GroupingHandler, props: FullGroupingProps): Promise<HierarchyNode[]> {
   let currentGroupingNodes = await currentHandler(props.nodes);
   currentGroupingNodes = applyGroupHidingParams(currentGroupingNodes);
 
