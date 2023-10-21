@@ -1,8 +1,8 @@
+import { GroupingHandler } from "../../../../../lib/cjs/hierarchy-builder/internal/operators/Grouping.d";
 /*---------------------------------------------------------------------------------------------
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-
 import { HierarchyNode } from "../../../HierarchyNode";
 import { ECClass, IMetadataProvider } from "../../../Metadata";
 import { getClass } from "../../Common";
@@ -17,19 +17,18 @@ export async function getBaseClassGroupingECClasses(metadata: IMetadataProvider,
   }
 
   const baseClasses = await Promise.all(Array.from(baseClassesFullClassNames).map(async (fullName) => getClass(metadata, fullName)));
-  const baseEntityAndRelationshipECClassesArray = new Array<ECClass>();
+  const classes = new Array<ECClass>();
   for (const baseClass of baseClasses) {
     if (baseClass.isRelationshipClass() || baseClass.isEntityClass()) {
-      baseEntityAndRelationshipECClassesArray.push(baseClass);
+      classes.push(baseClass);
     }
   }
 
-  const baseECClassesSorted = await sortByBaseClass(baseEntityAndRelationshipECClassesArray);
+  const baseECClassesSorted = await sortByBaseClass(classes);
   return baseECClassesSorted;
 }
 
-/** @internal */
-export async function createBaseClassGroupsForSingleBaseClass(
+async function createBaseClassGroupsForSingleBaseClass(
   metadata: IMetadataProvider,
   nodes: HierarchyNode[],
   baseECClass: ECClass,
@@ -110,4 +109,15 @@ async function sortByBaseClass(classes: ECClass[]): Promise<ECClass[]> {
   }
 
   return output;
+}
+
+export async function createBaseClassGroupingHandlers(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<GroupingHandler[]> {
+  const groupingHandlers: GroupingHandler[] = new Array<GroupingHandler>();
+  const baseClassGroupingECClasses = await getBaseClassGroupingECClasses(metadata, nodes);
+  for (const baseECClass of baseClassGroupingECClasses) {
+    groupingHandlers.push(async (allNodes: HierarchyNode[]) => {
+      return createBaseClassGroupsForSingleBaseClass(metadata, allNodes, baseECClass);
+    });
+  }
+  return groupingHandlers;
 }

@@ -8,7 +8,7 @@ import { HierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
 import { IMetadataProvider } from "../../Metadata";
 import { createOperatorLoggingNamespace } from "../Common";
-import { createBaseClassGroupsForSingleBaseClass, getBaseClassGroupingECClasses } from "./grouping/BaseClassGrouping";
+import { createBaseClassGroupingHandlers } from "./grouping/BaseClassGrouping";
 import { createClassGroups } from "./grouping/ClassGrouping";
 import { applyGroupHidingParams } from "./grouping/GroupHiding";
 import { createLabelGroups } from "./grouping/LabelGrouping";
@@ -73,12 +73,7 @@ async function groupNodes(nodes: HierarchyNode[], groupingHandlers: GroupingHand
 
 async function createGroupingHandlers(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<GroupingHandler[]> {
   const groupingHandlers: GroupingHandler[] = new Array<GroupingHandler>();
-  const baseClassGroupingECClasses = await getBaseClassGroupingECClasses(metadata, nodes);
-  for (const baseECClass of baseClassGroupingECClasses) {
-    groupingHandlers.push(async (allNodes: HierarchyNode[]) => {
-      return createBaseClassGroupsForSingleBaseClass(metadata, allNodes, baseECClass);
-    });
-  }
+  groupingHandlers.push(...(await createBaseClassGroupingHandlers(metadata, nodes)));
   groupingHandlers.push(async (allNodes: HierarchyNode[]) => createClassGroups(metadata, allNodes));
   groupingHandlers.push(async (allNodes: HierarchyNode[]) => createLabelGroups(allNodes));
   return groupingHandlers;
