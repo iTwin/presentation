@@ -11,16 +11,7 @@ export async function createLabelGroups(nodes: HierarchyNode[]): Promise<Groupin
   if (nodes.length === 0) {
     return { allNodes: nodes, groupedNodes: [], groupingType: "label" };
   }
-  const firstNode: HierarchyNode = nodes[0].params?.grouping?.byLabel
-    ? {
-        label: nodes[0].label,
-        key: {
-          type: "label-grouping",
-          label: nodes[0].label,
-        },
-        children: [nodes[0]],
-      }
-    : nodes[0];
+  const firstNode: HierarchyNode = nodes[0].params?.grouping?.byLabel ? createLabelGroupingNode(nodes[0]) : nodes[0];
   const outputNodes: GroupingHandlerResult = { allNodes: [firstNode], groupedNodes: [], groupingType: "label" };
 
   for (let i = 1; i < nodes.length; ++i) {
@@ -36,18 +27,22 @@ export async function createLabelGroups(nodes: HierarchyNode[]): Promise<Groupin
         continue;
       }
     } else if (currentNode.params?.grouping?.byLabel) {
-      outputNodes.allNodes.push({
-        label: currentNode.label,
-        key: {
-          type: "label-grouping",
-          label: currentNode.label,
-        },
-        children: [currentNode],
-      });
+      outputNodes.allNodes.push(createLabelGroupingNode(currentNode));
       continue;
     }
     outputNodes.allNodes.push(currentNode);
   }
 
   return outputNodes;
+}
+
+function createLabelGroupingNode(node: HierarchyNode): HierarchyNode {
+  return {
+    label: node.label,
+    key: {
+      type: "label-grouping",
+      label: node.label,
+    },
+    children: [node],
+  };
 }
