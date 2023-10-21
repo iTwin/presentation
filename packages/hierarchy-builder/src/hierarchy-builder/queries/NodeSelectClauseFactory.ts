@@ -30,7 +30,7 @@ export enum NodeSelectClauseColumnNames {
   HideIfNoChildren = "HideIfNoChildren",
   /** A flag indicating that a node should be hidden and its children should be displayed instead. Type: `boolean`. */
   HideNodeInHierarchy = "HideNodeInHierarchy",
-  // /** A serialized JSON object for providing grouping information. */
+  /** A serialized JSON object for providing grouping information. */
   Grouping = "Grouping",
   /**
    * A string indicating a label merge group. Values:
