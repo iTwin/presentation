@@ -55,7 +55,7 @@ async function groupNodesFromHandlerCreator(
   return groupNodes(nodes, groupingHandlers);
 }
 
-export async function groupNodes(nodes: HierarchyNode[], groupingHandlers: GroupingHandler[]): Promise<HierarchyNode[]> {
+async function groupNodes(nodes: HierarchyNode[], groupingHandlers: GroupingHandler[]): Promise<HierarchyNode[]> {
   const originalNodes = nodes;
   let allNodes = nodes;
   for (let i = 0; i < groupingHandlers.length; ++i) {
