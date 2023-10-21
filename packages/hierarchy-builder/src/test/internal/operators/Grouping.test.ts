@@ -9,7 +9,7 @@ import { LogLevel } from "@itwin/core-bentley";
 import { HierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
 import { createGroupingOperator, LOGGING_NAMESPACE } from "../../../hierarchy-builder/internal/operators/Grouping";
 import { IMetadataProvider } from "../../../hierarchy-builder/Metadata";
-import { createGetClassStub, createGroupingHandlers, createTestNode, getObservableResult, isMock, setupLogging, TStubClassFunc } from "../../Utils";
+import { createGetClassStub, createTestNode, getObservableResult, isMock, setupLogging, TStubClassFunc } from "../../Utils";
 
 describe("Grouping", () => {
   before(() => {
@@ -118,7 +118,7 @@ describe("Grouping", () => {
     });
     stubClass({ schemaName: "TestSchema", className: "TestRandomClassAA", isEntityClass: () => true, isRelationshipClass: () => true });
 
-    const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider, createGroupingHandlers)));
+    const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider)));
     expect(result).to.deep.eq([
       nodes[4],
       {

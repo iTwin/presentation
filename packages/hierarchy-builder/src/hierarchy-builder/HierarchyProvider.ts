@@ -10,10 +10,7 @@ import { HierarchyNode, HierarchyNodeIdentifiersPath, ParsedHierarchyNode } from
 import { getClass } from "./internal/Common";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
 import { createDetermineChildrenOperator } from "./internal/operators/DetermineChildren";
-import { createGroupingOperator, GroupingHandlerType } from "./internal/operators/Grouping";
-import { createBaseClassGroupsForSingleBaseClass, getBaseClassGroupingECClasses } from "./internal/operators/grouping/BaseClassGrouping";
-import { createClassGroups } from "./internal/operators/grouping/ClassGrouping";
-import { createLabelGroups } from "./internal/operators/grouping/LabelGrouping";
+import { createGroupingOperator } from "./internal/operators/Grouping";
 import { createHideIfNoChildrenOperator } from "./internal/operators/HideIfNoChildren";
 import { createHideNodesInHierarchyOperator } from "./internal/operators/HideNodesInHierarchy";
 import { createMergeInstanceNodesByLabelOperator } from "./internal/operators/MergeInstanceNodesByLabel";
@@ -138,7 +135,7 @@ export class HierarchyProvider {
       createHideIfNoChildrenOperator((n) => this.hasNodesObservable(n), false),
       createHideNodesInHierarchyOperator((n) => this.getNodesObservable(n), this._directNodesCache, false),
       sortNodesByLabelOperator,
-      createGroupingOperator(this._metadataProvider, createGroupingHandlers),
+      createGroupingOperator(this._metadataProvider),
     );
     return parentNode ? result.pipe(createPersistChildrenOperator(parentNode)) : result;
   }
@@ -200,19 +197,6 @@ export class HierarchyProvider {
         tap((r) => enableLogging && console.log(`HasNodes: result: ${r}`)),
       );
   }
-}
-
-async function createGroupingHandlers(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<GroupingHandlerType[]> {
-  const groupingHandlers: GroupingHandlerType[] = new Array<GroupingHandlerType>();
-  const baseClassGroupingECClasses = await getBaseClassGroupingECClasses(metadata, nodes);
-  for (const baseECClass of baseClassGroupingECClasses) {
-    groupingHandlers.push(async (allNodes: HierarchyNode[]) => {
-      return createBaseClassGroupsForSingleBaseClass(metadata, allNodes, baseECClass);
-    });
-  }
-  groupingHandlers.push(async (allNodes: HierarchyNode[]) => createClassGroups(metadata, allNodes));
-  groupingHandlers.push(async (allNodes: HierarchyNode[]) => createLabelGroups(allNodes));
-  return groupingHandlers;
 }
 
 function preProcessNodes(hierarchyFactory: IHierarchyLevelDefinitionsFactory) {

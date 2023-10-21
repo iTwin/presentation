@@ -8,7 +8,7 @@ import { from } from "rxjs";
 import { HierarchyNode } from "../../../../hierarchy-builder/HierarchyNode";
 import { createGroupingOperator } from "../../../../hierarchy-builder/internal/operators/Grouping";
 import { IMetadataProvider } from "../../../../hierarchy-builder/Metadata";
-import { createGetClassStub, createGroupingHandlers, createTestNode, getObservableResult, TStubClassFunc } from "../../../Utils";
+import { createGetClassStub, createTestNode, getObservableResult, TStubClassFunc } from "../../../Utils";
 
 describe("ClassGrouping", () => {
   const metadataProvider = {} as unknown as IMetadataProvider;
@@ -26,7 +26,7 @@ describe("ClassGrouping", () => {
         params: { grouping: { byClass: true } },
       },
     ];
-    const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider, createGroupingHandlers)));
+    const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider)));
     expect(result).to.deep.eq(nodes);
   });
 
@@ -38,7 +38,7 @@ describe("ClassGrouping", () => {
       }),
     ];
     const classInfo = stubClass({ schemaName: "TestSchema", className: "TestClass" });
-    const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider, createGroupingHandlers)));
+    const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider)));
     expect(result).to.deep.eq([
       {
         label: "TestClass",
@@ -75,7 +75,7 @@ describe("ClassGrouping", () => {
     ];
     const classA = stubClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A" });
     const classB = stubClass({ schemaName: "TestSchema", className: "B", classLabel: "Class B" });
-    const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider, createGroupingHandlers)));
+    const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider)));
     expect(result).to.deep.eq([
       nodes[3],
       {
@@ -116,7 +116,7 @@ describe("ClassGrouping", () => {
       }),
     ];
     const classA = stubClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A" });
-    const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider, createGroupingHandlers)));
+    const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider)));
     expect(result).to.deep.eq([
       {
         label: "Class A",

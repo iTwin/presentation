@@ -7,14 +7,14 @@ import { from } from "rxjs";
 import { HierarchyNode } from "../../../../hierarchy-builder/HierarchyNode";
 import { createGroupingOperator } from "../../../../hierarchy-builder/internal/operators/Grouping";
 import { IMetadataProvider } from "../../../../hierarchy-builder/Metadata";
-import { createGroupingHandlers, createTestNode, getObservableResult } from "../../../Utils";
+import { createTestNode, getObservableResult } from "../../../Utils";
 
 describe("LabelGrouping", () => {
   const metadataProvider = {} as unknown as IMetadataProvider;
 
   it("does not group if no nodes are present", async () => {
     const nodes: HierarchyNode[] = [];
-    const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider, createGroupingHandlers)));
+    const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider)));
     expect(result).to.deep.eq([] as HierarchyNode[]);
   });
 
@@ -48,7 +48,7 @@ describe("LabelGrouping", () => {
         params: { grouping: { byLabel: true } },
       },
     ];
-    const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider, createGroupingHandlers)));
+    const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider)));
     expect(result).to.deep.eq([
       {
         label: "1",

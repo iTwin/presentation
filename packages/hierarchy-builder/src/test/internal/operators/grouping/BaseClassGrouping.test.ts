@@ -8,7 +8,7 @@ import { from } from "rxjs";
 import { HierarchyNode } from "../../../../hierarchy-builder/HierarchyNode";
 import { createGroupingOperator } from "../../../../hierarchy-builder/internal/operators/Grouping";
 import { IMetadataProvider } from "../../../../hierarchy-builder/Metadata";
-import { createGetClassStub, createGroupingHandlers, createTestNode, getObservableResult, isMock, TStubClassFunc } from "../../../Utils";
+import { createGetClassStub, createTestNode, getObservableResult, isMock, TStubClassFunc } from "../../../Utils";
 
 describe("BaseClassGrouping", () => {
   const metadataProvider = {} as unknown as IMetadataProvider;
@@ -32,7 +32,7 @@ describe("BaseClassGrouping", () => {
         },
       },
     ];
-    const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider, createGroupingHandlers)));
+    const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider)));
     expect(result).to.deep.eq(nodes);
   });
 
@@ -57,7 +57,7 @@ describe("BaseClassGrouping", () => {
       isEntityClass: () => false,
       isRelationshipClass: () => false,
     });
-    const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider, createGroupingHandlers)));
+    const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider)));
     expect(result).to.deep.eq(nodes);
   });
 
@@ -82,7 +82,7 @@ describe("BaseClassGrouping", () => {
       isEntityClass: () => true,
       isRelationshipClass: () => true,
     });
-    const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider, createGroupingHandlers)));
+    const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider)));
     expect(result).to.deep.eq([
       {
         label: "TestSchema.TestParentClass",
@@ -147,7 +147,7 @@ describe("BaseClassGrouping", () => {
       isEntityClass: () => true,
       isRelationshipClass: () => true,
     });
-    const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider, createGroupingHandlers)));
+    const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider)));
     expect(result).to.deep.eq([
       {
         label: "TestSchema.TestParentClassA",
@@ -221,7 +221,7 @@ describe("BaseClassGrouping", () => {
       is: isMock,
     });
     stubClass({ schemaName: "TestSchema", className: "TestRandomClassAA", isEntityClass: () => true, isRelationshipClass: () => true });
-    const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider, createGroupingHandlers)));
+    const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider)));
     expect(result).to.deep.eq([
       {
         label: "TestSchema.TestParentClassA",

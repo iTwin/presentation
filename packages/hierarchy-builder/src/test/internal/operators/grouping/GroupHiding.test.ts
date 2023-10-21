@@ -8,7 +8,7 @@ import { from } from "rxjs";
 import { HierarchyNode } from "../../../../hierarchy-builder/HierarchyNode";
 import { createGroupingOperator } from "../../../../hierarchy-builder/internal/operators/Grouping";
 import { IMetadataProvider } from "../../../../hierarchy-builder/Metadata";
-import { createGetClassStub, createGroupingHandlers, createTestNode, getObservableResult, isMock, TStubClassFunc } from "../../../Utils";
+import { createGetClassStub, createTestNode, getObservableResult, isMock, TStubClassFunc } from "../../../Utils";
 
 describe("GroupHiding", () => {
   const metadataProvider = {} as unknown as IMetadataProvider;
@@ -27,7 +27,7 @@ describe("GroupHiding", () => {
           params: { grouping: { byLabel: { hideIfNoSiblings: true } } },
         },
       ];
-      const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider, createGroupingHandlers)));
+      const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider)));
       expect(result).to.deep.eq(nodes);
     });
 
@@ -51,7 +51,7 @@ describe("GroupHiding", () => {
           params: { grouping: { byLabel: true } },
         },
       ];
-      const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider, createGroupingHandlers)));
+      const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider)));
       expect(result).to.deep.eq(nodes);
     });
 
@@ -75,7 +75,7 @@ describe("GroupHiding", () => {
           params: { grouping: { byLabel: true } },
         },
       ];
-      const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider, createGroupingHandlers)));
+      const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider)));
       expect(result).to.deep.eq([
         {
           label: "1",
@@ -111,7 +111,7 @@ describe("GroupHiding", () => {
           params: { grouping: { byLabel: { hideIfOneGroupedNode: true } } },
         }),
       ];
-      const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider, createGroupingHandlers)));
+      const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider)));
       expect(result).to.deep.eq(nodes);
     });
 
@@ -135,7 +135,7 @@ describe("GroupHiding", () => {
           params: { grouping: { byLabel: true } },
         },
       ];
-      const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider, createGroupingHandlers)));
+      const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider)));
       expect(result).to.deep.eq([
         {
           label: "1",
@@ -176,7 +176,7 @@ describe("GroupHiding", () => {
           params: { grouping: { byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true } } },
         }),
       ];
-      const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider, createGroupingHandlers)));
+      const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider)));
       expect(result).to.deep.eq(nodes);
     });
 
@@ -193,7 +193,7 @@ describe("GroupHiding", () => {
           params: { grouping: { byLabel: { hideIfOneGroupedNode: true, hideIfNoSiblings: true } } },
         }),
       ];
-      const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider, createGroupingHandlers)));
+      const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider)));
       expect(result).to.deep.eq(nodes);
     });
 
@@ -259,7 +259,7 @@ describe("GroupHiding", () => {
         is: isMock,
       });
 
-      const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider, createGroupingHandlers)));
+      const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider)));
       expect(result).to.deep.eq([
         nodes[2],
         nodes[3],
