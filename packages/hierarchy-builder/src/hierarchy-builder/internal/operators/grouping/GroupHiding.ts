@@ -8,8 +8,17 @@ import { GroupingHandlerResult, GroupingType } from "../Grouping";
 
 /** @internal */
 export function applyGroupHidingParams(props: GroupingHandlerResult): GroupingHandlerResult {
+  if (props.groupedNodes.length === 0) {
+    return props;
+  }
   const finalGroupings: GroupingHandlerResult = { allNodes: [], groupedNodes: [], groupingType: props.groupingType };
-  for (const node of props.groupedNodes) {
+  let lastGroupingNodeIndex = 0;
+  for (const node of props.allNodes) {
+    if (props.groupedNodes.length <= lastGroupingNodeIndex || node !== props.groupedNodes[lastGroupingNodeIndex]) {
+      finalGroupings.allNodes.push(node);
+      continue;
+    }
+    ++lastGroupingNodeIndex;
     if (Array.isArray(node.children) && (props.allNodes.length === 1 || node.children.length === 1)) {
       const [hideIfNoSiblings, hideIfOneGroupedNode] = getGroupingHideOptionsFromParentNode(node, props.groupingType);
       if (hideIfNoSiblings && props.allNodes.length === 1) {
@@ -56,8 +65,8 @@ function getHideOptionsFromNodeProcessingParams(
       break;
     }
     const params = node.params ? hideOptionsAccessor(node.params) : undefined;
-    hideIfNoSiblings = !!params?.hideIfNoSiblings;
-    hideIfOneGroupedNode = !!params?.hideIfOneGroupedNode;
+    hideIfNoSiblings ||= !!params?.hideIfNoSiblings;
+    hideIfOneGroupedNode ||= !!params?.hideIfOneGroupedNode;
   }
   return [hideIfNoSiblings, hideIfOneGroupedNode];
 }

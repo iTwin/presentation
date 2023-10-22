@@ -33,8 +33,7 @@ async function createBaseClassGroupsForSingleBaseClass(
   nodes: HierarchyNode[],
   baseECClass: ECClass,
 ): Promise<GroupingHandlerResult> {
-  const finalAllNodeHierarchy = new Array<HierarchyNode>();
-  const finalGroupedNodeHierarchy = new Array<HierarchyNode>();
+  const finalResult: GroupingHandlerResult = { allNodes: [], groupedNodes: [], groupingType: "base-class" };
   const baseClassGroupingNode: HierarchyNode = {
     label: baseECClass.fullName,
     key: {
@@ -54,7 +53,7 @@ async function createBaseClassGroupsForSingleBaseClass(
         }
       }
       if (!classNameIsInNodeBaseClassList) {
-        finalAllNodeHierarchy.push(node);
+        finalResult.allNodes.push(node);
         continue;
       }
       const fullCurrentNodeClassName = node.key.instanceKeys[0].className;
@@ -66,15 +65,15 @@ async function createBaseClassGroupsForSingleBaseClass(
         }
       }
     }
-    finalAllNodeHierarchy.push(node);
+    finalResult.allNodes.push(node);
   }
 
   // push grouping node if it has children
   if (Array.isArray(baseClassGroupingNode.children) && baseClassGroupingNode.children.length > 0) {
-    finalAllNodeHierarchy.push(baseClassGroupingNode);
-    finalGroupedNodeHierarchy.push(baseClassGroupingNode);
+    finalResult.allNodes.push(baseClassGroupingNode);
+    finalResult.groupedNodes.push(baseClassGroupingNode);
   }
-  return { allNodes: finalAllNodeHierarchy, groupedNodes: finalGroupedNodeHierarchy, groupingType: "base-class" };
+  return finalResult;
 }
 
 function getAllBaseClasses(nodes: HierarchyNode[]): Set<string> {

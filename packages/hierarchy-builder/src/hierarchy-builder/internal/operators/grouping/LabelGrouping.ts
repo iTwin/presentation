@@ -12,7 +12,11 @@ export async function createLabelGroups(nodes: HierarchyNode[]): Promise<Groupin
     return { allNodes: nodes, groupedNodes: [], groupingType: "label" };
   }
   const firstNode: HierarchyNode = nodes[0].params?.grouping?.byLabel ? createLabelGroupingNode(nodes[0]) : nodes[0];
-  const outputNodes: GroupingHandlerResult = { allNodes: [firstNode], groupedNodes: [], groupingType: "label" };
+  const outputNodes: GroupingHandlerResult = {
+    allNodes: [firstNode],
+    groupedNodes: HierarchyNode.isLabelGroupingNode(firstNode) ? [firstNode] : [],
+    groupingType: "label",
+  };
 
   for (let i = 1; i < nodes.length; ++i) {
     const currentNode = nodes[i];
@@ -27,7 +31,9 @@ export async function createLabelGroups(nodes: HierarchyNode[]): Promise<Groupin
         continue;
       }
     } else if (currentNode.params?.grouping?.byLabel) {
-      outputNodes.allNodes.push(createLabelGroupingNode(currentNode));
+      const labelGroupingNode = createLabelGroupingNode(currentNode);
+      outputNodes.allNodes.push(labelGroupingNode);
+      outputNodes.groupedNodes.push(labelGroupingNode);
       continue;
     }
     outputNodes.allNodes.push(currentNode);

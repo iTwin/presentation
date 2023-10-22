@@ -235,11 +235,11 @@ describe("Stateless hierarchy builder", () => {
         const baseClassName = "BisCore.InformationPartitionElement";
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: rootSubject.id });
-          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: rootSubject.id });
-          const childPartition3 = insertPhysicalPartition({ builder, codeValue: "B3", parentId: rootSubject.id });
-          const childPartition4 = insertPhysicalPartition({ builder, codeValue: "B4", parentId: rootSubject.id });
-          const childPartition5 = insertPhysicalPartition({ builder, codeValue: "B5", parentId: rootSubject.id });
+          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: rootSubject.id, userLabel: "test" });
+          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: rootSubject.id, userLabel: "test" });
+          const childPartition3 = insertPhysicalPartition({ builder, codeValue: "B3", parentId: rootSubject.id, userLabel: "test" });
+          const childPartition4 = insertPhysicalPartition({ builder, codeValue: "B4", parentId: rootSubject.id, userLabel: "test" });
+          const childPartition5 = insertPhysicalPartition({ builder, codeValue: "B5", parentId: rootSubject.id, userLabel: "test" });
           return { rootSubject, childSubject1, childSubject2, childPartition3, childPartition4, childPartition5 };
         });
 
@@ -340,11 +340,11 @@ describe("Stateless hierarchy builder", () => {
         const baseSchemaName = "BisCore";
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: rootSubject.id });
-          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: rootSubject.id });
-          const childPartition3 = insertPhysicalPartition({ builder, codeValue: "B3", parentId: rootSubject.id });
-          const childPartition4 = insertPhysicalPartition({ builder, codeValue: "B4", parentId: rootSubject.id });
-          const childPartition5 = insertPhysicalPartition({ builder, codeValue: "B5", parentId: rootSubject.id });
+          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: rootSubject.id, userLabel: "test" });
+          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: rootSubject.id, userLabel: "test" });
+          const childPartition3 = insertPhysicalPartition({ builder, codeValue: "B3", parentId: rootSubject.id, userLabel: "test" });
+          const childPartition4 = insertPhysicalPartition({ builder, codeValue: "B4", parentId: rootSubject.id, userLabel: "test" });
+          const childPartition5 = insertPhysicalPartition({ builder, codeValue: "B5", parentId: rootSubject.id, userLabel: "test" });
           return { rootSubject, childSubject1, childSubject2, childPartition3, childPartition4, childPartition5 };
         });
 
@@ -461,12 +461,12 @@ describe("Stateless hierarchy builder", () => {
         const baseSchemaName = "BisCore";
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: rootSubject.id });
-          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: rootSubject.id });
-          const childPartition3 = insertPhysicalPartition({ builder, codeValue: "B3", parentId: rootSubject.id });
-          const childPartition4 = insertPhysicalPartition({ builder, codeValue: "B4", parentId: rootSubject.id });
-          const childPartition5 = insertPhysicalPartition({ builder, codeValue: "B5", parentId: rootSubject.id });
-          const childPartition6 = insertPhysicalPartition({ builder, codeValue: "B6", parentId: rootSubject.id });
+          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: rootSubject.id, userLabel: "test" });
+          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: rootSubject.id, userLabel: "test" });
+          const childPartition3 = insertPhysicalPartition({ builder, codeValue: "B3", parentId: rootSubject.id, userLabel: "test" });
+          const childPartition4 = insertPhysicalPartition({ builder, codeValue: "B4", parentId: rootSubject.id, userLabel: "test" });
+          const childPartition5 = insertPhysicalPartition({ builder, codeValue: "B5", parentId: rootSubject.id, userLabel: "test" });
+          const childPartition6 = insertPhysicalPartition({ builder, codeValue: "B6", parentId: rootSubject.id, userLabel: "test" });
           return { rootSubject, childSubject1, childSubject2, childPartition3, childPartition4, childPartition5, childPartition6 };
         });
 
@@ -620,12 +620,12 @@ describe("Stateless hierarchy builder", () => {
         const baseSchemaName = "BisCore";
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
           const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: rootSubject.id });
-          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: rootSubject.id });
-          const childPartition3 = insertPhysicalPartition({ builder, codeValue: "B3", parentId: rootSubject.id });
-          const childPartition4 = insertPhysicalPartition({ builder, codeValue: "B4", parentId: rootSubject.id });
-          const childPartition5 = insertPhysicalPartition({ builder, codeValue: "B5", parentId: rootSubject.id });
-          const childPartition6 = insertPhysicalPartition({ builder, codeValue: "B6", parentId: rootSubject.id });
+          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: rootSubject.id, userLabel: "test" });
+          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: rootSubject.id, userLabel: "test" });
+          const childPartition3 = insertPhysicalPartition({ builder, codeValue: "B3", parentId: rootSubject.id, userLabel: "test" });
+          const childPartition4 = insertPhysicalPartition({ builder, codeValue: "B4", parentId: rootSubject.id, userLabel: "test" });
+          const childPartition5 = insertPhysicalPartition({ builder, codeValue: "B5", parentId: rootSubject.id, userLabel: "test" });
+          const childPartition6 = insertPhysicalPartition({ builder, codeValue: "B6", parentId: rootSubject.id, userLabel: "test" });
           return { rootSubject, childSubject1, childSubject2, childPartition3, childPartition4, childPartition5, childPartition6 };
         });
 
