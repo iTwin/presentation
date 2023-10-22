@@ -42,7 +42,7 @@ describe("Stateless hierarchy builder", () => {
         queryExecutor: createECSqlQueryExecutor(imodel),
       });
     }
-    // not working??
+
     it("groups by base class, class and label and hides some groups", async function () {
       const labelGroupName1 = "test1";
       const labelGroupName2 = "test2";

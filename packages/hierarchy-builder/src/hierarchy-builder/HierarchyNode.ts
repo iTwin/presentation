@@ -63,7 +63,7 @@ export namespace HierarchyNodeKey {
   }
   /** Checks whether the given node key is a [[StandardHierarchyNodeKey]]. */
   export function isStandard(key: HierarchyNodeKey): key is StandardHierarchyNodeKey {
-    return !isCustom(key) && !!key.type;
+    return !!(key as StandardHierarchyNodeKey).type;
   }
   /** Checks whether the given node key is an [[InstancesNodeKey]]. */
   export function isInstances(key: HierarchyNodeKey): key is InstancesNodeKey {
