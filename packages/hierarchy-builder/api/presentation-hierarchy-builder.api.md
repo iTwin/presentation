@@ -442,9 +442,6 @@ export namespace HierarchyNode {
     export function isCustom<TNode extends HierarchyNode>(node: TNode): node is TNode & {
         key: string;
     };
-    export function isGroupingNode<TNode extends HierarchyNode>(node: TNode): node is TNode & {
-        key: GroupingNodeKey;
-    };
     export function isInstancesNode<TNode extends HierarchyNode>(node: TNode): node is TNode & {
         key: InstancesNodeKey;
     };
@@ -492,7 +489,6 @@ export type HierarchyNodeKey = StandardHierarchyNodeKey | string;
 export namespace HierarchyNodeKey {
     export function isClassGrouping(key: HierarchyNodeKey): key is ClassGroupingNodeKey;
     export function isCustom(key: HierarchyNodeKey): key is string;
-    export function isGrouping(key: HierarchyNodeKey): key is GroupingNodeKey;
     export function isInstances(key: HierarchyNodeKey): key is InstancesNodeKey;
     export function isLabelGrouping(key: HierarchyNodeKey): key is LabelGroupingNodeKey;
     export function isStandard(key: HierarchyNodeKey): key is StandardHierarchyNodeKey;

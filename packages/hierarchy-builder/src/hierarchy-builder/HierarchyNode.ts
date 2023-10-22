@@ -77,10 +77,6 @@ export namespace HierarchyNodeKey {
   export function isLabelGrouping(key: HierarchyNodeKey): key is LabelGroupingNodeKey {
     return isStandard(key) && key.type === "label-grouping";
   }
-  /** Checks whether the given node key is a [[GroupingNodeKey]]. */
-  export function isGrouping(key: HierarchyNodeKey): key is GroupingNodeKey {
-    return isClassGrouping(key) || isLabelGrouping(key);
-  }
 }
 
 /** @beta */
@@ -150,10 +146,6 @@ export namespace HierarchyNode {
   /** Checks whether the given node is a label grouping node */
   export function isLabelGroupingNode<TNode extends HierarchyNode>(node: TNode): node is TNode & { key: LabelGroupingNodeKey } {
     return HierarchyNodeKey.isLabelGrouping(node.key);
-  }
-  /** Checks whether the given node is a grouping node */
-  export function isGroupingNode<TNode extends HierarchyNode>(node: TNode): node is TNode & { key: GroupingNodeKey } {
-    return HierarchyNodeKey.isGrouping(node.key);
   }
 }
 
