@@ -46,7 +46,7 @@ function mergeNodeHandlingParams(
   return {
     ...(lhs?.hideIfNoChildren && rhs?.hideIfNoChildren ? { hideIfNoChildren: true } : undefined),
     ...(lhs?.hideInHierarchy && rhs?.hideInHierarchy ? { hideInHierarchy: true } : undefined),
-    ...(lhs?.grouping || rhs?.grouping ? mergeNodeGroupingParams(lhs?.grouping, rhs?.grouping) : undefined),
+    ...(lhs?.grouping || rhs?.grouping ? { grouping: mergeNodeGroupingParams(lhs?.grouping, rhs?.grouping) } : undefined),
     ...(lhs?.mergeByLabelId ? { mergeByLabelId: lhs.mergeByLabelId } : undefined),
   };
 }
