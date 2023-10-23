@@ -103,12 +103,6 @@ async function sortByBaseClass(classes: ECClass[]): Promise<ECClass[]> {
 }
 
 export async function createBaseClassGroupingHandlers(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<GroupingHandler[]> {
-  const groupingHandlers: GroupingHandler[] = new Array<GroupingHandler>();
   const baseClassGroupingECClasses = await getBaseClassGroupingECClasses(metadata, nodes);
-  for (const baseECClass of baseClassGroupingECClasses) {
-    groupingHandlers.push(async (allNodes: HierarchyNode[]) => {
-      return createBaseClassGroupsForSingleBaseClass(metadata, allNodes, baseECClass);
-    });
-  }
-  return groupingHandlers;
+  return baseClassGroupingECClasses.map((baseECClass) => (async (allNodes: HierarchyNode[]) => createBaseClassGroupsForSingleBaseClass(metadata, allNodes, baseECClass)));
 }
