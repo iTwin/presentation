@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { assert } from "@itwin/core-bentley";
 import { HierarchyNode } from "../../../HierarchyNode";
 import { ECClass, IMetadataProvider } from "../../../Metadata";
 import { getClass } from "../../Common";
@@ -34,6 +35,8 @@ async function createBaseClassGroupsForSingleBaseClass(
     },
     children: [],
   };
+  assert(Array.isArray(baseClassGroupingNode.children));
+
   for (const node of nodes) {
     if (HierarchyNode.isInstancesNode(node) && node.params?.grouping?.byBaseClasses) {
       if (!node.params.grouping.byBaseClasses.fullClassNames.some((className) => className === baseECClass.fullName)) {
@@ -44,10 +47,8 @@ async function createBaseClassGroupsForSingleBaseClass(
       const fullCurrentNodeClassName = node.key.instanceKeys[0].className;
       const currentNodeECClass = await getClass(metadata, fullCurrentNodeClassName);
       if (await currentNodeECClass.is(baseECClass)) {
-        if (Array.isArray(baseClassGroupingNode.children)) {
-          baseClassGroupingNode.children.push(node);
-          continue;
-        }
+        baseClassGroupingNode.children.push(node);
+        continue;
       }
     }
     finalResult.allNodes.push(node);
@@ -55,7 +56,7 @@ async function createBaseClassGroupsForSingleBaseClass(
   }
 
   // push grouping node if it has children
-  if (Array.isArray(baseClassGroupingNode.children) && baseClassGroupingNode.children.length > 0) {
+  if (baseClassGroupingNode.children.length > 0) {
     finalResult.allNodes.push(baseClassGroupingNode);
     finalResult.groupedNodes.push(baseClassGroupingNode);
   }
