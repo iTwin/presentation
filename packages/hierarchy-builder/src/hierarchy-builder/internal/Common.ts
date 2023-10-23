@@ -73,10 +73,7 @@ function getGroupingParams(lhsGrouping: GroupingParams | undefined, rhsGrouping:
       ? {
           // Create an array from both: lhs and rhs fullClassNames arrays without adding duplicates
           fullClassNames: [...new Set([...(lhsGrouping?.byBaseClasses?.fullClassNames ?? []), ...(rhsGrouping?.byBaseClasses?.fullClassNames ?? [])])],
-          ...getHidingParams(
-            { hideIfOneGroupedNode: lhsGrouping?.byBaseClasses?.hideIfOneGroupedNode, hideIfNoSiblings: lhsGrouping?.byBaseClasses?.hideIfNoSiblings },
-            { hideIfOneGroupedNode: rhsGrouping?.byBaseClasses?.hideIfOneGroupedNode, hideIfNoSiblings: rhsGrouping?.byBaseClasses?.hideIfNoSiblings },
-          ),
+          ...getHidingParams(lhsGrouping?.byBaseClasses, rhsGrouping?.byBaseClasses),
         }
       : undefined),
   };
