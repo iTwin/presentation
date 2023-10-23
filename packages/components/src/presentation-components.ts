@@ -112,11 +112,8 @@ export * from "./presentation-components/unified-selection/UnifiedSelectionConte
  * Utilities for creating filters for filtering presentation data.
  */
 export * from "./presentation-components/instance-filter-builder/PresentationInstanceFilterDialog";
-export * from "./presentation-components/instance-filter-builder/InstanceFilterConverter";
-export * from "./presentation-components/instance-filter-builder/InstanceFilterBuilder";
-export * from "./presentation-components/instance-filter-builder/QueryMetadata";
-export * from "./presentation-components/instance-filter-builder/Types";
-export * from "./presentation-components/instance-filter-builder/Utils";
+export * from "./presentation-components/instance-filter-builder/PresentationFilterBuilder";
+export * from "./presentation-components/instance-filter-builder/GenericInstanceFilter";
 
 /**
  * @module Internal

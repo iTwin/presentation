@@ -6,51 +6,28 @@
  * @module InstancesFilter
  */
 
+import { useMemo } from "react";
 import { PrimitiveValue, PropertyDescription, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import {
   defaultPropertyFilterBuilderRuleValidator,
-  isPropertyFilterRuleGroup,
   isUnaryPropertyFilterOperator,
-  PropertyFilter,
   PropertyFilterBuilderRule,
-  PropertyFilterRule,
-  PropertyFilterRuleGroup,
   PropertyFilterRuleOperator,
 } from "@itwin/components-react";
-import { CategoryDescription, ClassId, ClassInfo, combineFieldNames, Descriptor, Field, NestedContentField, PropertiesField } from "@itwin/presentation-common";
+import { IModelConnection } from "@itwin/core-frontend";
+import { CategoryDescription, ClassInfo, combineFieldNames, Descriptor, Field, NestedContentField, PropertiesField } from "@itwin/presentation-common";
 import { createPropertyDescriptionFromFieldInfo } from "../common/ContentBuilder";
-import { findField, translate } from "../common/Utils";
-import {
-  isPresentationInstanceFilterConditionGroup,
-  PresentationInstanceFilter,
-  PresentationInstanceFilterCondition,
-  PresentationInstanceFilterConditionGroup,
-} from "./Types";
+import { translate } from "../common/Utils";
+import { NavigationPropertyEditorContextProps } from "../properties/editors/NavigationPropertyEditorContext";
+import { PresentationInstanceFilterPropertyInfo } from "./PresentationFilterBuilder";
 
 /** @internal */
-export interface InstanceFilterPropertyInfo {
-  sourceClassId: ClassId;
-  field: PropertiesField;
-  propertyDescription: PropertyDescription;
-  className: string;
-  categoryLabel?: string;
-}
-
-/** @internal */
-export function createInstanceFilterPropertyInfos(descriptor: Descriptor): InstanceFilterPropertyInfo[] {
-  const propertyInfos = new Array<InstanceFilterPropertyInfo>();
+export function createInstanceFilterPropertyInfos(descriptor: Descriptor): PresentationInstanceFilterPropertyInfo[] {
+  const propertyInfos = new Array<PresentationInstanceFilterPropertyInfo>();
   for (const field of descriptor.fields) {
     propertyInfos.push(...createPropertyInfos(field));
   }
   return propertyInfos;
-}
-
-/** @internal */
-export function createPresentationInstanceFilter(descriptor: Descriptor, filter: PropertyFilter) {
-  if (isPropertyFilterRuleGroup(filter)) {
-    return createPresentationInstanceFilterConditionGroup(descriptor, filter);
-  }
-  return createPresentationInstanceFilterCondition(descriptor, filter);
 }
 
 /** @internal */
@@ -81,46 +58,7 @@ function getPropertyClassInfo(field: PropertiesField): ClassInfo {
   return field.properties[0].property.classInfo;
 }
 
-function createPresentationInstanceFilterConditionGroup(descriptor: Descriptor, group: PropertyFilterRuleGroup): PresentationInstanceFilter | undefined {
-  const conditions = new Array<PresentationInstanceFilter>();
-  for (const rule of group.rules) {
-    const condition = createPresentationInstanceFilter(descriptor, rule);
-    if (!condition) {
-      return undefined;
-    }
-    conditions.push(condition);
-  }
-
-  if (conditions.length === 0) {
-    return undefined;
-  }
-
-  if (conditions.length === 1) {
-    return conditions[0];
-  }
-
-  return {
-    operator: group.operator,
-    conditions,
-  };
-}
-
-function createPresentationInstanceFilterCondition(descriptor: Descriptor, condition: PropertyFilterRule): PresentationInstanceFilterCondition | undefined {
-  const field = findField(descriptor, getInstanceFilterFieldName(condition.property));
-  if (!field || !field.isPropertiesField()) {
-    return undefined;
-  }
-  if (condition.value && condition.value.valueFormat !== PropertyValueFormat.Primitive) {
-    return undefined;
-  }
-  return {
-    operator: condition.operator,
-    field,
-    value: condition.value,
-  };
-}
-
-function createPropertyInfos(field: Field): InstanceFilterPropertyInfo[] {
+function createPropertyInfos(field: Field): PresentationInstanceFilterPropertyInfo[] {
   if (field.isNestedContentField()) {
     return field.nestedFields.flatMap((nestedField) => createPropertyInfos(nestedField));
   }
@@ -157,7 +95,8 @@ function getParentNames(field: Field, name: string): string {
   return getParentNames(field.parent, combineFieldNames(name, field.name));
 }
 
-function createPropertyInfoFromPropertiesField(field: PropertiesField): InstanceFilterPropertyInfo {
+/** @internal */
+export function createPropertyInfoFromPropertiesField(field: PropertiesField): PresentationInstanceFilterPropertyInfo {
   const categoryInfo = getCategoryInfo(field.category, { name: undefined, label: undefined });
   const name = field.parent ? getParentNames(field.parent, field.name) : field.name;
 
@@ -187,39 +126,22 @@ function getCategorizedFieldName(fieldName: string, categoryName?: string) {
   return `${categoryName ?? ""}${INSTANCE_FILTER_FIELD_SEPARATOR}${fieldName}`;
 }
 
-function convertPresentationInstanceFilterCondition(filter: PresentationInstanceFilterCondition, descriptor: Descriptor) {
-  const field = descriptor.getFieldByName(filter.field.name, true);
-  if (!field || !field.isPropertiesField()) {
-    return undefined;
-  }
-  return {
-    property: createPropertyInfoFromPropertiesField(field).propertyDescription,
-    operator: filter.operator,
-    value: filter.value,
-  };
-}
-
-function convertPresentationInstanceFilterConditionGroup(filter: PresentationInstanceFilterConditionGroup, descriptor: Descriptor) {
-  const rules: PropertyFilter[] = [];
-  for (const condition of filter.conditions) {
-    const rule = convertPresentationFilterToPropertyFilter(descriptor, condition);
-    if (!rule) {
-      return undefined;
-    }
-    rules.push(rule);
-  }
-  return {
-    operator: filter.operator,
-    rules,
-  };
-}
-
 /** @internal */
-export function convertPresentationFilterToPropertyFilter(descriptor: Descriptor, filter: PresentationInstanceFilter): PropertyFilter | undefined {
-  if (isPresentationInstanceFilterConditionGroup(filter)) {
-    return convertPresentationInstanceFilterConditionGroup(filter, descriptor);
-  }
-  return convertPresentationInstanceFilterCondition(filter, descriptor);
+export function useFilterBuilderNavigationPropertyEditorContext(imodel: IModelConnection, descriptor: Descriptor) {
+  return useMemo<NavigationPropertyEditorContextProps>(
+    () => ({
+      imodel,
+      getNavigationPropertyInfo: async (property) => {
+        const field = descriptor.getFieldByName(getInstanceFilterFieldName(property));
+        if (!field || !field.isPropertiesField()) {
+          return undefined;
+        }
+
+        return field.properties[0].property.navigationPropertyInfo;
+      },
+    }),
+    [imodel, descriptor],
+  );
 }
 
 /** @internal */

@@ -9,18 +9,15 @@ import {
 } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Dialog, Label } from "@itwin/itwinui-react";
-import { Descriptor, RelationshipPath } from "@itwin/presentation-common";
+import { Descriptor } from "@itwin/presentation-common";
 import {
-  createPresentationInstanceFilter,
-  createQueryMetadata,
-  navigationPropertyEditorContext,
+  GenericInstanceFilter,
+  GenericInstanceFilterRule,
+  GenericInstanceFilterRuleGroup,
   PresentationFilterBuilderValueRenderer,
-  QueryMetadata,
-  QueryRule,
-  QueryRuleGroup,
+  PresentationInstanceFilter,
   RelatedInstanceDescription,
-  useFilterBuilderNavigationPropertyEditorContext,
-  usePropertyInfos,
+  useInstanceFilterPropertyInfos,
 } from "@itwin/presentation-components";
 
 export interface QueryBuilderInput {
@@ -52,7 +49,7 @@ export function QueryBuilderDialog({ onClose, ...props }: QueryBuildersDialogPro
 }
 
 function QueryBuilders({ imodel, inputs }: QueryBuildersProps) {
-  const [queries, setQueries] = useState<Record<string, QueryMetadata | undefined>>({});
+  const [queries, setQueries] = useState<Record<string, GenericInstanceFilter | undefined>>({});
 
   useEffect(() => {
     // eslint-disable-next-line no-console
@@ -81,23 +78,20 @@ function noopValidator() {
 
 interface SingleQueryBuilderProps extends QueryBuilderInput {
   imodel: IModelConnection;
-  onQueryChanged: (query: QueryMetadata | undefined) => void;
+  onQueryChanged: (query: GenericInstanceFilter | undefined) => void;
 }
 
 /** Render query builder for single class. */
 function SingleQueryBuilder({ descriptor, imodel, onQueryChanged }: SingleQueryBuilderProps) {
   // collect direct and related properties from content descriptor.
-  const { propertyInfos, propertyRenderer } = usePropertyInfos({ descriptor });
+  const { propertyInfos, propertyRenderer } = useInstanceFilterPropertyInfos({ descriptor });
   // map presentation property info data structures to `PropertyDescription`.
   const properties = useMemo(() => propertyInfos.map((info) => info.propertyDescription), [propertyInfos]);
   // initialize query builder. Returns current state and actions for building filter.
   const { rootGroup, actions, buildFilter } = usePropertyFilterBuilder({ ruleValidator: noopValidator });
 
-  // create context for input used to enter navigation property value. (in future `PresentationFilterBuilderValueRenderer` can take care of this)
-  const navigationPropertyContextValue = useFilterBuilderNavigationPropertyEditorContext(imodel, descriptor);
-
   // create metadata for building ECSQL query.
-  const queryMetadata = useMemo<QueryMetadata | undefined>(() => {
+  const queryMetadata = useMemo<GenericInstanceFilter | undefined>(() => {
     // get current filter
     const filter = buildFilter();
     if (!filter) {
@@ -108,16 +102,14 @@ function SingleQueryBuilder({ descriptor, imodel, onQueryChanged }: SingleQueryB
     // - property schema name
     // - property class
     // - relationship path from property class to the select class if this property is related.
-    const presentationFilter = createPresentationInstanceFilter(descriptor, filter);
-    if (!presentationFilter) {
-      return undefined;
-    }
+    const presentationFilter = PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, filter);
+
     // create metadata for builder ECSQL query. It simplifies result of `createPresentationInstanceFilter`:
     // - collects relationship paths from all related properties used in filter to the select class (return only unique paths)
     // - creates aliases for related properties and associated relationship paths
     // all this information is available on `PresentationInstanceFilter` returned by `createPresentationInstanceFilter` but this is a helper function
     // to get data structure that is easier to use when building ECSQL query.
-    return createQueryMetadata(presentationFilter);
+    return GenericInstanceFilter.fromPresentationInstanceFilter(presentationFilter);
   }, [buildFilter, descriptor]);
 
   useEffect(() => {
@@ -129,22 +121,20 @@ function SingleQueryBuilder({ descriptor, imodel, onQueryChanged }: SingleQueryB
     <div className="query-builder-container">
       <div className="query-builder">
         <Label>{descriptor.selectClasses[0].selectClassInfo.label}</Label>
-        <navigationPropertyEditorContext.Provider value={navigationPropertyContextValue}>
-          <PropertyFilterBuilderRenderer
-            properties={properties}
-            rootGroup={rootGroup}
-            actions={actions}
-            propertyRenderer={propertyRenderer}
-            ruleGroupDepthLimit={0}
-            ruleValueRenderer={(rendererProps: PropertyFilterBuilderRuleValueRendererProps) => (
-              // custom renderer for value input that utilizes presentation metadata:
-              // - for `=` and `!=` operators renders drop down with unique values
-              // - for kind of quantity properties renders input with units support
-              // otherwise renders default values renderer provided by `component-react` package.
-              <PresentationFilterBuilderValueRenderer {...rendererProps} imodel={imodel} descriptor={descriptor} />
-            )}
-          />
-        </navigationPropertyEditorContext.Provider>
+        <PropertyFilterBuilderRenderer
+          properties={properties}
+          rootGroup={rootGroup}
+          actions={actions}
+          propertyRenderer={propertyRenderer}
+          ruleGroupDepthLimit={0}
+          ruleValueRenderer={(rendererProps: PropertyFilterBuilderRuleValueRendererProps) => (
+            // custom renderer for value input that utilizes presentation metadata:
+            // - for `=` and `!=` operators renders drop down with unique values
+            // - for kind of quantity properties renders input with units support
+            // otherwise renders default values renderer provided by `component-react` package.
+            <PresentationFilterBuilderValueRenderer {...rendererProps} imodel={imodel} descriptor={descriptor} />
+          )}
+        />
       </div>
       <div className="query-builder-result">
         <Label>Query</Label>
@@ -155,7 +145,7 @@ function SingleQueryBuilder({ descriptor, imodel, onQueryChanged }: SingleQueryB
 }
 
 interface QueryBuilderResultProps {
-  queryMetadata: QueryMetadata;
+  queryMetadata: GenericInstanceFilter;
 }
 
 function QueryBuilderResult({ queryMetadata }: QueryBuilderResultProps) {
@@ -173,7 +163,7 @@ function QueryBuilderResult({ queryMetadata }: QueryBuilderResultProps) {
 }
 
 // simple implementation of creating `ECSQL` JOIN and WHERE clause strings from filter built with `PropertyFilterBuilder`.
-function createQuery(metadata: QueryMetadata): {
+function createQuery(metadata: GenericInstanceFilter): {
   joinClauses: string[];
   whereClause: string;
 } {
@@ -191,7 +181,7 @@ function createJoinClause(relatedInstances: RelatedInstanceDescription[]): strin
   for (let j = 0; j < relatedInstances.length; j++) {
     const related = relatedInstances[j];
     const alias = related.alias;
-    const relatedPath = RelationshipPath.strip(related.path);
+    const relatedPath = related.path;
     let prevAlias = "this";
     for (let i = 0; i < relatedPath.length; i++) {
       const step = relatedPath[i];
@@ -206,24 +196,24 @@ function createJoinClause(relatedInstances: RelatedInstanceDescription[]): strin
   return joinClauses;
 }
 
-function createWhereClause(rules: QueryRule | QueryRuleGroup): string {
+function createWhereClause(rules: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup): string {
   return `WHERE ${parseQuery(rules)}`;
 }
 
-function parseQuery(rules: QueryRule | QueryRuleGroup): string {
-  if (isQueryRule(rules)) {
-    return parseQueryRule(rules);
+function parseQuery(rules: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup): string {
+  if (GenericInstanceFilter.isFilterRuleGroup(rules)) {
+    return parseQueryRuleGroup(rules);
   }
 
-  return parseQueryRuleGroup(rules);
+  return parseQueryRule(rules);
 }
 
-function parseQueryRuleGroup(group: QueryRuleGroup) {
+function parseQueryRuleGroup(group: GenericInstanceFilterRuleGroup) {
   const rules = group.rules.map(parseQuery);
   return `(${rules.join(group.operator === PropertyFilterRuleGroupOperator.And ? " AND " : " OR ")})`;
 }
 
-function parseQueryRule(rule: QueryRule) {
+function parseQueryRule(rule: GenericInstanceFilterRule) {
   const accessorBase = `[${rule.sourceAlias}].[${rule.propertyName}]`;
   const operator = getOperatorString(rule.operator);
   if (!rule.value || !rule.value.value) {
@@ -272,8 +262,4 @@ function getOperatorString(operator: PropertyFilterRuleOperator) {
     case PropertyFilterRuleOperator.IsNotNull:
       return "IS NOT NULL";
   }
-}
-
-function isQueryRule(rule: QueryRule | QueryRuleGroup): rule is QueryRule {
-  return (rule as QueryRule).propertyName !== undefined;
 }

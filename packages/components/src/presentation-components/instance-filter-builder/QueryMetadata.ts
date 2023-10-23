@@ -2,7 +2,7 @@ import { PrimitiveValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator } from "@itwin/components-react";
 import { ClassInfo, NestedContentField, PropertiesField, RelationshipPath } from "@itwin/presentation-common";
 import { deserializeDisplayValueGroupArray } from "../common/Utils";
-import { PresentationInstanceFilter, PresentationInstanceFilterCondition, PresentationInstanceFilterConditionGroup } from "./Types";
+import { PresentationInstanceFilter, PresentationInstanceFilterCondition, PresentationInstanceFilterConditionGroup } from "./PresentationFilterBuilder";
 
 export interface QueryMetadata {
   rules: QueryRule | QueryRuleGroup;

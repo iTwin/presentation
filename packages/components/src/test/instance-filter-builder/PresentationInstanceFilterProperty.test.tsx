@@ -11,7 +11,7 @@ import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render } from "@testing-library/react";
 import { PresentationInstanceFilterProperty } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterProperty";
-import { createTestInstanceFilterPropertyInfo, stubRaf } from "../_helpers/Common";
+import { createTestPresentationInstanceFilterPropertyInfo, stubRaf } from "../_helpers/Common";
 
 describe("PresentationInstanceFilterProperty", () => {
   stubRaf();
@@ -34,7 +34,7 @@ describe("PresentationInstanceFilterProperty", () => {
   });
 
   it("renders with badge", () => {
-    const testPropertyInfo = createTestInstanceFilterPropertyInfo({
+    const testPropertyInfo = createTestPresentationInstanceFilterPropertyInfo({
       className: `${schemaName}:${className}`,
       categoryLabel: "TestCategoryLabel",
     });
@@ -55,7 +55,7 @@ describe("PresentationInstanceFilterProperty", () => {
   });
 
   it("renders without badge", () => {
-    const testPropertyInfo = createTestInstanceFilterPropertyInfo({
+    const testPropertyInfo = createTestPresentationInstanceFilterPropertyInfo({
       className: `${schemaName}:${className}`,
     });
     const { container, queryByText } = render(

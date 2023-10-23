@@ -13,7 +13,7 @@ import { CheckBoxState } from "@itwin/core-react";
 import { LabelDefinition, Node, NodeKey, PartialNode, PageOptions as PresentationPageOptions } from "@itwin/presentation-common";
 import { StyleHelper } from "../common/StyleHelper";
 import { createLabelRecord } from "../common/Utils";
-import { PresentationInfoTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem";
+import { InfoTreeNodeItemType, PresentationInfoTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem";
 
 /** @internal */
 export interface CreateTreeNodeItemProps {
@@ -186,13 +186,15 @@ export function toRxjsObservable<T>(source: Observable<T>): RxjsObservable<T> {
   return new RxjsObservable((subscriber) => source.subscribe(subscriber));
 }
 
-export function createInfoNode(parentNode: TreeNodeItem | undefined, message: string): PresentationInfoTreeNodeItem {
+export function createInfoNode(parentNode: TreeNodeItem | undefined, message: string, type?: InfoTreeNodeItemType): PresentationInfoTreeNodeItem {
   const id = parentNode ? `${parentNode.id}/info-node` : `/info-node/${message}`;
   return {
     id,
+    parentId: parentNode?.id,
     label: PropertyRecord.fromString(message),
     message,
     isSelectionDisabled: true,
     children: undefined,
+    type: type ?? InfoTreeNodeItemType.Unset,
   };
 }

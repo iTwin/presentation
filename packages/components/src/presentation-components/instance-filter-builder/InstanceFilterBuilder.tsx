@@ -11,26 +11,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BehaviorSubject, from, of } from "rxjs";
 import { map } from "rxjs/internal/operators/map";
 import { switchAll } from "rxjs/internal/operators/switchAll";
-import { PrimitiveValue, PropertyDescription, PropertyValueFormat } from "@itwin/appui-abstract";
-import {
-  PropertyFilterBuilderRenderer,
-  PropertyFilterBuilderRendererProps,
-  PropertyFilterBuilderRuleValue,
-  PropertyFilterBuilderRuleValueRendererProps,
-  PropertyFilterRuleOperator,
-} from "@itwin/components-react";
-import { assert } from "@itwin/core-bentley";
+import { PropertyDescription } from "@itwin/appui-abstract";
+import { PropertyFilterBuilderRenderer, PropertyFilterBuilderRendererProps, PropertyFilterBuilderRuleValueRendererProps } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ComboBox, Input, SelectOption } from "@itwin/itwinui-react";
+import { ComboBox, SelectOption } from "@itwin/itwinui-react";
 import { ClassInfo, Descriptor, Keys } from "@itwin/presentation-common";
-import { useSchemaMetadataContext } from "../common/SchemaMetadataContext";
 import { translate } from "../common/Utils";
-import { navigationPropertyEditorContext, NavigationPropertyEditorContextProps } from "../properties/editors/NavigationPropertyEditorContext";
-import { UniquePropertyValuesSelector } from "../properties/inputs/UniquePropertyValuesSelector";
-import { useQuantityValueInput, UseQuantityValueInputProps } from "../properties/inputs/UseQuantityValueInput";
 import { getIModelMetadataProvider } from "./ECMetadataProvider";
-import { PresentationInstanceFilterProperty } from "./PresentationInstanceFilterProperty";
-import { createInstanceFilterPropertyInfos, getInstanceFilterFieldName, InstanceFilterPropertyInfo } from "./Utils";
+import { PresentationFilterBuilderValueRenderer, PresentationInstanceFilterPropertyInfo, useInstanceFilterPropertyInfos } from "./PresentationFilterBuilder";
 
 /**
  * Props for [[InstanceFilterBuilder]] component.
@@ -59,8 +47,6 @@ export interface InstanceFilterBuilderProps extends PropertyFilterBuilderRendere
 export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
   const { selectedClasses, classes, onSelectedClassesChanged, imodel, descriptor, descriptorInputKeys, ...restProps } = props;
 
-  const navigationPropertyEditorContextValue = useFilterBuilderNavigationPropertyEditorContext(imodel, descriptor);
-
   const options = useMemo(() => classes.map(createOption), [classes]);
   const selectedOptions = useMemo(() => selectedClasses.map((classInfo) => classInfo.id), [selectedClasses]);
 
@@ -79,14 +65,12 @@ export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
         }}
       />
       <div className="presentation-property-filter-builder">
-        <navigationPropertyEditorContext.Provider value={navigationPropertyEditorContextValue}>
-          <PropertyFilterBuilderRenderer
-            {...restProps}
-            ruleValueRenderer={(rendererProps: PropertyFilterBuilderRuleValueRendererProps) => (
-              <PresentationFilterBuilderValueRenderer {...rendererProps} descriptorInputKeys={descriptorInputKeys} imodel={imodel} descriptor={descriptor} />
-            )}
-          />
-        </navigationPropertyEditorContext.Provider>
+        <PropertyFilterBuilderRenderer
+          {...restProps}
+          ruleValueRenderer={(rendererProps: PropertyFilterBuilderRuleValueRendererProps) => (
+            <PresentationFilterBuilderValueRenderer {...rendererProps} descriptorInputKeys={descriptorInputKeys} imodel={imodel} descriptor={descriptor} />
+          )}
+        />
       </div>
     </div>
   );
@@ -113,7 +97,7 @@ export function usePresentationInstanceFilteringProps(
     "properties" | "classes" | "selectedClasses" | "onSelectedClassesChanged" | "propertyRenderer" | "onRulePropertySelected" | "isDisabled"
   >
 > {
-  const { propertyInfos, propertyRenderer } = usePropertyInfos({ descriptor });
+  const { propertyInfos, propertyRenderer } = useInstanceFilterPropertyInfos({ descriptor });
   const classes = usePropertyClasses({ descriptor });
   const { activeClasses, changeActiveClasses, isFilteringClasses, filterClassesByProperty } = useActiveClasses({
     imodel,
@@ -142,40 +126,11 @@ export function usePresentationInstanceFilteringProps(
     isDisabled: isFilteringClasses || isFilteringProperties,
   };
 }
-
-export interface UsePropertyInfoProps {
+interface UsePropertyClassesProps {
   descriptor: Descriptor;
 }
 
-export function usePropertyInfos({ descriptor }: UsePropertyInfoProps) {
-  const propertyInfos = useMemo(() => createInstanceFilterPropertyInfos(descriptor), [descriptor]);
-
-  const propertyRenderer = useCallback(
-    (name: string) => {
-      const instanceFilterPropertyInfo = propertyInfos.find((info) => info.propertyDescription.name === name);
-      assert(instanceFilterPropertyInfo !== undefined);
-      return (
-        <PresentationInstanceFilterProperty
-          propertyDescription={instanceFilterPropertyInfo.propertyDescription}
-          fullClassName={instanceFilterPropertyInfo.className}
-          categoryLabel={instanceFilterPropertyInfo.categoryLabel}
-        />
-      );
-    },
-    [propertyInfos],
-  );
-
-  return {
-    propertyInfos,
-    propertyRenderer,
-  };
-}
-
-export interface UsePropertyClassesProps {
-  descriptor: Descriptor;
-}
-
-export function usePropertyClasses({ descriptor }: UsePropertyClassesProps) {
+function usePropertyClasses({ descriptor }: UsePropertyClassesProps) {
   return useMemo((): ClassInfo[] => {
     const uniqueClasses = new Map();
     descriptor.selectClasses.forEach((selectClass) => uniqueClasses.set(selectClass.selectClassInfo.id, selectClass.selectClassInfo));
@@ -185,12 +140,12 @@ export function usePropertyClasses({ descriptor }: UsePropertyClassesProps) {
 
 interface UsePropertiesFilteringByClassProps {
   imodel: IModelConnection;
-  availableProperties: InstanceFilterPropertyInfo[];
+  availableProperties: PresentationInstanceFilterPropertyInfo[];
   activeClasses: ClassInfo[];
 }
 
 function usePropertiesFilteringByClass({ imodel, availableProperties, activeClasses }: UsePropertiesFilteringByClassProps) {
-  const [filteredProperties, setFilteredProperties] = useState<InstanceFilterPropertyInfo[] | undefined>();
+  const [filteredProperties, setFilteredProperties] = useState<PresentationInstanceFilterPropertyInfo[] | undefined>();
   const [isFilteringProperties, setIsFilteringProperties] = useState(false);
   const properties = useMemo(
     () => (filteredProperties ?? availableProperties).map((info) => info.propertyDescription),
@@ -216,7 +171,7 @@ function usePropertiesFilteringByClass({ imodel, availableProperties, activeClas
         switchAll(),
       )
       .subscribe({
-        next: (infos: InstanceFilterPropertyInfo[] | undefined) => {
+        next: (infos: PresentationInstanceFilterPropertyInfo[] | undefined) => {
           setFilteredProperties(infos);
           setIsFilteringProperties(false);
         },
@@ -251,7 +206,7 @@ function useActiveClasses({ imodel, availableClasses, initialActiveClasses }: Us
   }, [availableClasses]);
 
   const filterClassesByProperty = useCallback(
-    (property: InstanceFilterPropertyInfo) => {
+    (property: PresentationInstanceFilterPropertyInfo) => {
       setIsFilteringClasses(true);
       void (async () => {
         const newActiveClasses = await computeClassesByProperty(activeClasses.length === 0 ? availableClasses : activeClasses, property, imodel);
@@ -278,32 +233,14 @@ function useActiveClasses({ imodel, availableClasses, initialActiveClasses }: Us
   };
 }
 
-/** @internal */
-export function useFilterBuilderNavigationPropertyEditorContext(imodel: IModelConnection, descriptor: Descriptor) {
-  return useMemo<NavigationPropertyEditorContextProps>(
-    () => ({
-      imodel,
-      getNavigationPropertyInfo: async (property) => {
-        const field = descriptor.getFieldByName(getInstanceFilterFieldName(property));
-        if (!field || !field.isPropertiesField()) {
-          return undefined;
-        }
-
-        return field.properties[0].property.navigationPropertyInfo;
-      },
-    }),
-    [imodel, descriptor],
-  );
-}
-
 async function computePropertiesByClasses(
-  properties: InstanceFilterPropertyInfo[],
+  properties: PresentationInstanceFilterPropertyInfo[],
   classes: ClassInfo[],
   imodel: IModelConnection,
-): Promise<InstanceFilterPropertyInfo[] | undefined> {
+): Promise<PresentationInstanceFilterPropertyInfo[] | undefined> {
   const metadataProvider = getIModelMetadataProvider(imodel);
   const ecClassInfos = await Promise.all(classes.map(async (info) => metadataProvider.getECClassInfo(info.id)));
-  const filteredProperties: InstanceFilterPropertyInfo[] = [];
+  const filteredProperties: PresentationInstanceFilterPropertyInfo[] = [];
   for (const prop of properties) {
     // property should be shown if all selected classes are derived from property source class
     if (ecClassInfos.every((info) => info && info.isDerivedFrom(prop.sourceClassId))) {
@@ -314,7 +251,11 @@ async function computePropertiesByClasses(
   return filteredProperties.length === properties.length ? undefined : filteredProperties;
 }
 
-async function computeClassesByProperty(classes: ClassInfo[], property: InstanceFilterPropertyInfo, imodel: IModelConnection): Promise<ClassInfo[]> {
+async function computeClassesByProperty(
+  classes: ClassInfo[],
+  property: PresentationInstanceFilterPropertyInfo,
+  imodel: IModelConnection,
+): Promise<ClassInfo[]> {
   const metadataProvider = getIModelMetadataProvider(imodel);
   const propertyClass = await metadataProvider.getECClassInfo(property.sourceClassId);
   // istanbul ignore next
@@ -331,49 +272,4 @@ async function computeClassesByProperty(classes: ClassInfo[], property: Instance
   }
 
   return classesWithProperty;
-}
-
-export function PresentationFilterBuilderValueRenderer(
-  props: PropertyFilterBuilderRuleValueRendererProps & { imodel: IModelConnection; descriptor: Descriptor; descriptorInputKeys?: Keys },
-) {
-  const schemaMetadataContext = useSchemaMetadataContext();
-  if (props.operator === PropertyFilterRuleOperator.IsEqual || props.operator === PropertyFilterRuleOperator.IsNotEqual) {
-    return <UniquePropertyValuesSelector {...props} />;
-  }
-
-  if (props.property.quantityType && schemaMetadataContext) {
-    const initialValue = (props.value as PrimitiveValue)?.value as number;
-    return (
-      <QuantityPropertyValue
-        onChange={props.onChange}
-        koqName={props.property.quantityType}
-        schemaContext={schemaMetadataContext.schemaContext}
-        initialRawValue={initialValue}
-      />
-    );
-  }
-
-  return <PropertyFilterBuilderRuleValue {...props} />;
-}
-
-function QuantityPropertyValue({
-  onChange,
-  ...koqInputProps
-}: UseQuantityValueInputProps & { onChange: PropertyFilterBuilderRuleValueRendererProps["onChange"] }) {
-  const { quantityValue, inputProps } = useQuantityValueInput(koqInputProps);
-
-  const onChangeRef = useLatestRef(onChange);
-  useEffect(() => {
-    onChangeRef.current({ valueFormat: PropertyValueFormat.Primitive, value: quantityValue.rawValue, displayValue: quantityValue.formattedValue });
-  }, [quantityValue, onChangeRef]);
-
-  return <Input size="small" {...inputProps} />;
-}
-
-function useLatestRef<T>(value: T) {
-  const valueRef = useRef<T>(value);
-  useEffect(() => {
-    valueRef.current = value;
-  }, [value]);
-  return valueRef;
 }

@@ -10,31 +10,9 @@ import { Primitives, PrimitiveValue, StandardTypeNames } from "@itwin/appui-abst
 import { isUnaryPropertyFilterOperator, PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ClassInfo, InstanceFilterDefinition, RelationshipPath } from "@itwin/presentation-common";
+import { ClassInfo } from "@itwin/presentation-common";
 import { getIModelMetadataProvider } from "./ECMetadataProvider";
-import { createQueryMetadata, QueryRule, QueryRuleGroup } from "./QueryMetadata";
-import { PresentationInstanceFilter } from "./Types";
-
-/**
- * Converts [[PresentationInstanceFilter]] into [InstanceFilterDefinition]($presentation-common) that can be passed
- * to [PresentationManager]($presentation-frontend) through request options in order to filter results.
- * @beta
- */
-export async function convertToInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection): Promise<InstanceFilterDefinition> {
-  const { rules, propertyClasses, relatedInstances } = createQueryMetadata(filter);
-  const expression = createExpression(rules);
-
-  const baseClass = await findBaseExpressionClass(imodel, propertyClasses);
-
-  return {
-    expression,
-    selectClassName: baseClass.name,
-    relatedInstances: relatedInstances.map((related) => ({
-      pathFromSelectToPropertyClass: RelationshipPath.strip(related.path),
-      alias: related.alias,
-    })),
-  };
-}
+import { GenericInstanceFilter, GenericInstanceFilterRule, GenericInstanceFilterRuleGroup } from "./GenericInstanceFilter";
 
 /** @internal */
 export async function findBaseExpressionClass(imodel: IModelConnection, propertyClasses: ClassInfo[]) {
@@ -54,8 +32,9 @@ export async function findBaseExpressionClass(imodel: IModelConnection, property
   return currentBaseClass;
 }
 
-function createExpression(filter: QueryRule | QueryRuleGroup) {
-  if (isQueryRuleGroup(filter)) {
+/** @internal */
+export function createExpression(filter: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup) {
+  if (GenericInstanceFilter.isFilterRuleGroup(filter)) {
     return createExpressionFromGroup(filter);
   }
 
@@ -63,7 +42,7 @@ function createExpression(filter: QueryRule | QueryRuleGroup) {
   return createComparison(propertyName, propertyTypeName, sourceAlias, operator, value);
 }
 
-function createExpressionFromGroup(group: QueryRuleGroup): string {
+function createExpressionFromGroup(group: GenericInstanceFilterRuleGroup): string {
   const convertedConditions = group.rules.map((rule) => createExpression(rule));
   return `(${convertedConditions.join(` ${getGroupOperatorString(group.operator)} `)})`;
 }
@@ -145,10 +124,6 @@ function getRuleOperatorString(operator: PropertyFilterRuleOperator) {
 
 function escapeString(str: string) {
   return str.replace(/"/g, `""`);
-}
-
-function isQueryRuleGroup(obj: QueryRule | QueryRuleGroup): obj is QueryRuleGroup {
-  return (obj as QueryRuleGroup).rules !== undefined;
 }
 
 function createPointComparision(point: { x: number; y: number } | { x: number; y: number; z: number }, operatorExpression: string, propertyAccessor: string) {

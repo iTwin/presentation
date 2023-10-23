@@ -36,6 +36,8 @@ describe("Learning snippets", () => {
         this.skip();
       }
 
+      const hierarchyLevelSizeLimit = 10;
+
       // __PUBLISH_EXTRACT_START__ Presentation.Components.HierarchyLevelLimiting
       function MyTree(props: { imodel: IModelConnection }) {
         const { nodeLoader } = usePresentationTreeNodeLoader({
@@ -43,14 +45,14 @@ describe("Learning snippets", () => {
           ruleset,
           pagingSize: 100,
           // supply the limit of instances to load for a single hierarchy level
-          hierarchyLevelSizeLimit: 10,
+          hierarchyLevelSizeLimit,
         });
 
         // presentation-specific tree renderer should be used when limiting to allow filtering
         // down the results when the limit is exceeded
         const treeRenderer = (treeRendererProps: TreeRendererProps) => <PresentationTreeRenderer {...treeRendererProps} nodeLoader={nodeLoader} />;
 
-        // width and height should generally we computed using ResizeObserver API or one of its derivatives
+        // width and height should generally be computed using ResizeObserver API or one of its derivatives
         const [width] = useState(400);
         const [height] = useState(600);
 
@@ -102,7 +104,7 @@ describe("Learning snippets", () => {
       for (let i = 0; i < 11; ++i) {
         expect(() => getNodeByLabel(container, `B element ${i + 1}`)).to.throw();
       }
-      await waitFor(() => expect(getByText("Thè híêrãr¢hÿ lêvël ìs tõö lårgè tó bê dïspläÿêd - plëâsé prövïdè áddîtïöñàl fïltèríñg")).is.not.null);
+      await waitFor(() => expect(getByText(`thèré ârë möré îtëms thâñ älløwèd límît õf ${hierarchyLevelSizeLimit}`, { exact: false })).is.not.null);
     });
   });
 });

@@ -8,7 +8,7 @@
 
 import { DelayLoadedTreeNodeItem, ImmediatelyLoadedTreeNodeItem, TreeNodeItem } from "@itwin/components-react";
 import { Descriptor, NodeKey } from "@itwin/presentation-common";
-import { PresentationInstanceFilterInfo } from "../instance-filter-builder/Types";
+import { PresentationInstanceFilterInfo } from "../instance-filter-builder/PresentationFilterBuilder";
 
 /**
  * Describes descriptor used for hierarchy level filtering. It can be lazy loaded.
@@ -49,6 +49,18 @@ export interface PresentationTreeNodeItem extends DelayLoadedTreeNodeItem {
 }
 
 /**
+ * Type that is assigned to a [[PresentationInfoTreeNodeItem]] to determine what type of message an item conveys.
+ * @beta
+ */
+export enum InfoTreeNodeItemType {
+  ResultSetTooLarge,
+  BackendTimeout,
+  Cancelled,
+  NoChildren,
+  Unset,
+}
+
+/**
  * Data structure that describes tree node item created by [[PresentationTreeDataProvider]]
  * which is used to carry information message.
  * @beta
@@ -60,6 +72,8 @@ export interface PresentationInfoTreeNodeItem extends ImmediatelyLoadedTreeNodeI
   isSelectionDisabled: true;
   /** This type of tree item cannot have children. */
   children: undefined;
+  /** Type of item message */
+  type: InfoTreeNodeItemType;
 }
 
 /**

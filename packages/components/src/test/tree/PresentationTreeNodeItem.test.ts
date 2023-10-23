@@ -7,6 +7,7 @@ import { expect } from "chai";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { TreeNodeItem } from "@itwin/components-react";
 import {
+  InfoTreeNodeItemType,
   isPresentationInfoTreeNodeItem,
   isPresentationTreeNodeItem,
   PresentationInfoTreeNodeItem,
@@ -38,6 +39,7 @@ describe("isPresentationInfoTreeNodeItem", () => {
       children: undefined,
       isSelectionDisabled: true,
       message: "Info message",
+      type: InfoTreeNodeItemType.Unset,
     };
     const presentationItem: PresentationTreeNodeItem = {
       id: "presentation_item_id",

@@ -114,6 +114,10 @@ describe("Stateless hierarchy builder", () => {
               NodeValidators.createForClassGroupingNode({
                 className: physicalPartitionClassName,
                 children: [
+                  NodeValidators.createForInstanceNode({
+                    instanceKeys: [keys.childPartition3],
+                    children: false,
+                  }),
                   NodeValidators.createForLabelGroupingNode({
                     label: labelGroupName2,
                     children: [
@@ -126,10 +130,6 @@ describe("Stateless hierarchy builder", () => {
                         children: false,
                       }),
                     ],
-                  }),
-                  NodeValidators.createForInstanceNode({
-                    instanceKeys: [keys.childPartition3],
-                    children: false,
                   }),
                 ],
               }),
