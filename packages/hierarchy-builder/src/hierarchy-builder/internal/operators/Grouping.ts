@@ -67,7 +67,7 @@ async function groupNodes(nodes: HierarchyNode[], groupingHandlers: GroupingHand
       groupingHandlers: groupingHandlers.slice(i + 1),
     });
   }
-  // Sorting nodes is needed, because newly added grouping nodes might not be in a valid order
+  // only need to sort if the nodes list changed (e.g. grouping nodes were created)
   return originalNodes !== nodes ? sortNodesByLabel(nodes) : nodes;
 }
 
