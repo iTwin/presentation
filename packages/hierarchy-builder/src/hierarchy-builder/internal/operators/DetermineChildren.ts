@@ -3,10 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { map, merge, mergeMap, Observable, partition, shareReplay, tap } from "rxjs";
+import { concatMap, map, Observable, of, tap } from "rxjs";
 import { HierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
-import { createOperatorLoggingNamespace, hasChildren } from "../Common";
+import { createOperatorLoggingNamespace } from "../Common";
 
 const OPERATOR_NAME = "DetermineChildren";
 /** @internal */
@@ -19,24 +19,19 @@ export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
  */
 export function createDetermineChildrenOperator(hasNodes: (node: HierarchyNode) => Observable<boolean>) {
   return function (nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
-    const sharedNodes = nodes.pipe(
+    return nodes.pipe(
       log((n) => `in: ${n.label}`),
-      // each partitioned observable is going to subscribe to this individually - share and replay to avoid requesting
-      // nodes from source observable multiple times
-      shareReplay(),
+      concatMap((n: HierarchyNode): Observable<HierarchyNode> => {
+        if (n.children !== undefined) {
+          return of(n);
+        }
+        return hasNodes(n).pipe(
+          log((hasChildrenFlag) => `determined children for ${n.label}: ${hasChildrenFlag}`),
+          map((hasChildrenFlag) => ({ ...n, children: hasChildrenFlag })),
+        );
+      }),
+      log((n) => `out: ${n.label}`),
     );
-    const [determined, undetermined] = partition(sharedNodes, (node) => node.children !== undefined);
-    return merge(
-      determined,
-      undetermined.pipe(
-        mergeMap((n) =>
-          hasNodes(n).pipe(
-            log((hasChildrenFlag) => `children for ${n.label}: ${hasChildrenFlag}`),
-            map((hasChildrenFlag) => ({ ...n, children: hasChildrenFlag })),
-          ),
-        ),
-      ),
-    ).pipe(log((n) => `out: ${n.label} / ${hasChildren(n)}`));
   };
 }
 

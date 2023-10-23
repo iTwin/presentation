@@ -29,11 +29,10 @@ import { createDiagnosticsOptions, DiagnosticsProps } from "../common/Diagnostic
 import { RulesetRegistrationHelper } from "../common/RulesetRegistrationHelper";
 import { translate } from "../common/Utils";
 import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory";
-import { convertToInstanceFilterDefinition } from "../instance-filter-builder/InstanceFilterConverter";
-import { PresentationInstanceFilter, PresentationInstanceFilterInfo } from "../instance-filter-builder/Types";
 import { IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider";
 import { InfoTreeNodeItemType, isPresentationTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem";
 import { createInfoNode, createTreeNodeItem, CreateTreeNodeItemProps, pageOptionsUiToPresentation } from "./Utils";
+import { PresentationInstanceFilter, PresentationInstanceFilterInfo } from "../instance-filter-builder/PresentationFilterBuilder";
 
 /**
  * Properties for creating a `PresentationTreeDataProvider` instance.
@@ -305,7 +304,7 @@ async function getFilterDefinition(imodel: IModelConnection, node?: TreeNodeItem
         }
       : appliedFilters[0].filter;
 
-  return convertToInstanceFilterDefinition(filter, imodel);
+  return PresentationInstanceFilter.toInstanceFilterDefinition(filter, imodel);
 }
 
 async function createNodesAndCountResult(
