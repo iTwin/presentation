@@ -7,7 +7,7 @@
 - [#316](https://github.com/iTwin/presentation/pull/316): Added `GenericInstanceFilter` data structure that has all the data needed to convert an instance filter to `ECSQL`, `ECExpression` or other formats. The data structure can be created from `PresentationInstanceFilter` using the `GenericInstanceFilter.fromPresentationInstanceFilter` call.
 - [#316](https://github.com/iTwin/presentation/pull/316): Promoted some instance filtering - related `internal` APIs to `beta`:
 
-  - `useInstanceFilterPropertyInfos` - for creating a property list based on supplied `Descriptor`. The property list is necessary for rendering the `PropertyFilterBuilder` component from `@itwin/component-react` package.
+  - `useInstanceFilterPropertyInfos` - for creating a property list based on supplied `Descriptor`. The property list is necessary for rendering the `PropertyFilterBuilder` component from `@itwin/components-react` package.
   - `PresentationFilterBuilderValueRenderer` - a custom renderer for property value input. It renders unique values selector for `Equal` / `NotEqual` rules and handles unit conversion on top of the general value input.
   - `PresentationInstanceFilter.fromComponentsPropertyFilter` - for adding presentation data to `PropertyFilter` built by `usePropertyFilterBuilder`.
   - `PresentationInstanceFilter.toComponentsPropertyFilter` - for stripping out presentation data from filter for usage with `usePropertyFilterBuilder`.
@@ -19,7 +19,7 @@
   - `isPresentationInstanceFilterConditionGroup` -> `PresentationInstanceFilter.isConditionGroup`.
 
 - [#313](https://github.com/iTwin/presentation/pull/313): Add interactive and more detailed informational messages in tree and instance filter components.
-- d51308c: Added editor for editing quantity property values in property grid. Editor works only if there is `SchemaMetadataContextProvider` in React component tree above property grid components. Otherwise simple numeric editor is used.
+- [#305](https://github.com/iTwin/presentation/pull/305): Added editor for editing quantity property values in property grid. Editor works only if there is `SchemaMetadataContextProvider` in React component tree above property grid components. Otherwise simple numeric editor is used.
 
 ### Patch Changes
 
