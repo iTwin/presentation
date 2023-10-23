@@ -183,7 +183,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
       const inputNode = createClassGroupingNode();
       const filteringFactory = createFilteringHierarchyLevelsFactory();
       const result = await filteringFactory.postProcessNode(inputNode);
-      expect(result!.autoExpand).to.be.undefined;
+      expect(result.autoExpand).to.be.undefined;
     });
 
     it("sets auto-expand on class grouping nodes if any child has filtered children paths", async () => {
@@ -198,7 +198,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
       };
       const filteringFactory = createFilteringHierarchyLevelsFactory();
       const result = await filteringFactory.postProcessNode(inputNode);
-      expect(result!.autoExpand).to.be.true;
+      expect(result.autoExpand).to.be.true;
     });
 
     function createClassGroupingNode(): GroupingProcessedHierarchyNode {

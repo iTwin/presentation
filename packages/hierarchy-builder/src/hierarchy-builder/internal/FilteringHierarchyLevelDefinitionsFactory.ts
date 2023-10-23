@@ -58,9 +58,6 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
   public get postProcessNode(): INodePostProcessor {
     return async (node: ProcessedHierarchyNode) => {
       const processedNode = this._source.postProcessNode ? await this._source.postProcessNode(node) : node;
-      if (!processedNode) {
-        return undefined;
-      }
       if (
         // instance nodes get the auto-expand flag in `parseNode`, but grouping ones need to be handled during post-processing
         HierarchyNode.isClassGroupingNode(node) &&

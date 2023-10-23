@@ -78,8 +78,7 @@ export type INodePreProcessor = (node: ProcessedHierarchyNode) => Promise<Proces
  *
  * @beta
  */
-// FIXME: post-processor should not return undefined
-export type INodePostProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode | undefined>;
+export type INodePostProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode>;
 
 /**
  * An interface for a factory that knows how define a hierarchy based on a given parent node.
