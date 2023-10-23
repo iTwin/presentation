@@ -46,18 +46,18 @@ function mergeNodeHandlingParams(
   return {
     ...(lhs?.hideIfNoChildren && rhs?.hideIfNoChildren ? { hideIfNoChildren: true } : undefined),
     ...(lhs?.hideInHierarchy && rhs?.hideInHierarchy ? { hideInHierarchy: true } : undefined),
-    ...(lhs?.grouping || rhs?.grouping ? getGroupingParams(lhs?.grouping, rhs?.grouping) : undefined),
+    ...(lhs?.grouping || rhs?.grouping ? mergeNodeGroupingParams(lhs?.grouping, rhs?.grouping) : undefined),
     ...(lhs?.mergeByLabelId ? { mergeByLabelId: lhs.mergeByLabelId } : undefined),
   };
 }
 
-function getGroupingParams(lhsGrouping: GroupingParams | undefined, rhsGrouping: GroupingParams | undefined): GroupingParams {
+function mergeNodeGroupingParams(lhsGrouping: GroupingParams | undefined, rhsGrouping: GroupingParams | undefined): GroupingParams {
   return {
     ...(lhsGrouping?.byClass || rhsGrouping?.byClass
       ? {
           byClass:
             typeof lhsGrouping?.byClass !== "boolean" && typeof rhsGrouping?.byClass !== "boolean"
-              ? getHidingParams(lhsGrouping?.byClass, rhsGrouping?.byClass)
+              ? mergeBaseGroupingParams(lhsGrouping?.byClass, rhsGrouping?.byClass)
               : true,
         }
       : undefined),
@@ -65,7 +65,7 @@ function getGroupingParams(lhsGrouping: GroupingParams | undefined, rhsGrouping:
       ? {
           byLabel:
             typeof lhsGrouping?.byLabel !== "boolean" && typeof rhsGrouping?.byLabel !== "boolean"
-              ? getHidingParams(lhsGrouping?.byLabel, rhsGrouping?.byLabel)
+              ? mergeBaseGroupingParams(lhsGrouping?.byLabel, rhsGrouping?.byLabel)
               : true,
         }
       : undefined),
@@ -73,16 +73,19 @@ function getGroupingParams(lhsGrouping: GroupingParams | undefined, rhsGrouping:
       ? {
           // Create an array from both: lhs and rhs fullClassNames arrays without adding duplicates
           fullClassNames: [...new Set([...(lhsGrouping?.byBaseClasses?.fullClassNames ?? []), ...(rhsGrouping?.byBaseClasses?.fullClassNames ?? [])])],
-          ...getHidingParams(lhsGrouping?.byBaseClasses, rhsGrouping?.byBaseClasses),
+          ...mergeBaseGroupingParams(lhsGrouping?.byBaseClasses, rhsGrouping?.byBaseClasses),
         }
       : undefined),
   };
 }
 
-function getHidingParams(lhsGroupingHiding: BaseGroupingParams | undefined, rhsGroupingHiding: BaseGroupingParams | undefined): BaseGroupingParams {
+function mergeBaseGroupingParams(
+  lhsBaseGroupingParams: BaseGroupingParams | undefined,
+  rhsBaseGroupingParams: BaseGroupingParams | undefined,
+): BaseGroupingParams {
   return {
-    ...(lhsGroupingHiding?.hideIfOneGroupedNode || rhsGroupingHiding?.hideIfOneGroupedNode ? { hideIfOneGroupedNode: true } : undefined),
-    ...(lhsGroupingHiding?.hideIfNoSiblings || rhsGroupingHiding?.hideIfNoSiblings ? { hideIfNoSiblings: true } : undefined),
+    ...(lhsBaseGroupingParams?.hideIfOneGroupedNode || rhsBaseGroupingParams?.hideIfOneGroupedNode ? { hideIfOneGroupedNode: true } : undefined),
+    ...(lhsBaseGroupingParams?.hideIfNoSiblings || rhsBaseGroupingParams?.hideIfNoSiblings ? { hideIfNoSiblings: true } : undefined),
   };
 }
 
