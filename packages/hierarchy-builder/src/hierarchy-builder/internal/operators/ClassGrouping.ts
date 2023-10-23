@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { from, mergeMap, Observable, tap, toArray } from "rxjs";
-import { HierarchyNode, ProcessedHierarchyNode } from "../../HierarchyNode";
+import { concatMap, from, mergeMap, Observable, tap, toArray } from "rxjs";
+import { ClassGroupingNodeKey, GroupingProcessedHierarchyNode, HierarchyNode, ProcessedHierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
 import { IMetadataProvider } from "../../Metadata";
 import { createOperatorLoggingNamespace, getClass } from "../Common";
@@ -15,7 +15,7 @@ const OPERATOR_NAME = "Grouping.ByClass";
 export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
 
 /** @internal */
-export function createClassGroupingOperator(metadata: IMetadataProvider) {
+export function createClassGroupingOperator(metadata: IMetadataProvider, onGroupingNodeCreated?: (groupingNode: GroupingProcessedHierarchyNode) => void) {
   return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
     return nodes.pipe(
       log((n) => `in: ${n.label}`),
@@ -24,8 +24,8 @@ export function createClassGroupingOperator(metadata: IMetadataProvider) {
       // group all nodes
       mergeMap((resolvedNodes) => from(createClassGroupingInformation(metadata, resolvedNodes))),
       // convert intermediate format into a nodes observable
-      mergeMap((groupings) => {
-        const grouped = createGroupingNodes(groupings);
+      concatMap((groupings) => {
+        const grouped = createGroupingNodes(groupings, onGroupingNodeCreated);
         const obs = from(grouped);
         // source observable is expected to stream sorted nodes and we're keeping them in order - only
         // need to re-sort if we created grouping nodes
@@ -70,17 +70,25 @@ async function createClassGroupingInformation(metadata: IMetadataProvider, nodes
   return groupings;
 }
 
-function createGroupingNodes(groupings: ClassGroupingInformation): ProcessedHierarchyNode[] & { hasClassGroupingNodes?: boolean } {
+function createGroupingNodes(
+  groupings: ClassGroupingInformation,
+  onGroupingNodeCreated?: (groupingNode: GroupingProcessedHierarchyNode) => void,
+): ProcessedHierarchyNode[] & { hasClassGroupingNodes?: boolean } {
   const outNodes = new Array<ProcessedHierarchyNode>();
   groupings.grouped.forEach((entry) => {
-    outNodes.push({
+    const groupingNodeKey: ClassGroupingNodeKey = {
+      type: "class-grouping",
+      class: { name: entry.class.fullName, label: entry.class.label },
+    };
+    const groupedNodeParentKeys = entry.groupedNodes[0].parentKeys;
+    const groupingNode: GroupingProcessedHierarchyNode = {
       label: entry.class.label ?? entry.class.name,
-      key: {
-        type: "class-grouping",
-        class: { name: entry.class.fullName, label: entry.class.label },
-      },
-      children: entry.groupedNodes,
-    });
+      key: groupingNodeKey,
+      parentKeys: groupedNodeParentKeys,
+      children: entry.groupedNodes.map((gn) => ({ ...gn, parentKeys: [...groupedNodeParentKeys, groupingNodeKey] })),
+    };
+    onGroupingNodeCreated && onGroupingNodeCreated(groupingNode);
+    outNodes.push(groupingNode);
   });
   outNodes.push(...groupings.ungrouped);
   (outNodes as any).hasClassGroupingNodes = groupings.grouped.size > 0;

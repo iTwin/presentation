@@ -7,7 +7,7 @@ import { from, merge, mergeMap, Observable, partition, reduce, shareReplay, tap 
 import { assert, DuplicatePolicy, SortedArray } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyNodeKey, ProcessedHierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
-import { ChildNodesCache, createOperatorLoggingNamespace, mergeNodesObs } from "../Common";
+import { createOperatorLoggingNamespace, mergeNodes } from "../Common";
 
 const OPERATOR_NAME = "MergeInstanceNodesByLabel";
 /** @internal */
@@ -19,7 +19,7 @@ export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
  *
  * @internal
  */
-export function createMergeInstanceNodesByLabelOperator(directNodesCache: ChildNodesCache) {
+export function createMergeInstanceNodesByLabelOperator() {
   return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
     const sharedNodes = nodes.pipe(
       log((n) => `in: ${serializeNode(n)}`),
@@ -37,13 +37,17 @@ export function createMergeInstanceNodesByLabelOperator(directNodesCache: ChildN
     return merge(
       nonMerged,
       merged.pipe(
-        // put all merged nodes into `SortedNodesList`
+        // put all nodes that requested to be merged into `SortedNodesList`
         reduce((acc, node) => {
           doLog(`reduce with ${serializeNode(node)}`);
           const pos = acc.insert(node);
           const nodeAtPos = acc.get(pos)!;
           if (nodeAtPos !== node) {
-            const mergedNode = mergeNodesObs(nodeAtPos, node, directNodesCache) as MergedHierarchyNode;
+            // non-matching nodes means we failed to insert the node, because nodeAtPos already exists in its
+            // place - they need to be merged together
+            // TODO: check if its worth looking up child nodes observables for all merged nodes and creating
+            // merging observables for the merging node
+            const mergedNode = mergeNodes(nodeAtPos, node) as MergedHierarchyNode;
             acc.replace(pos, mergedNode);
           }
           return acc;

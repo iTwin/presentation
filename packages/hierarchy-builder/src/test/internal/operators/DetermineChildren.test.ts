@@ -7,9 +7,9 @@ import { expect } from "chai";
 import { delay, from, Observable, of } from "rxjs";
 import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
-import { HierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
+import { ProcessedHierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
 import { createDetermineChildrenOperator, LOGGING_NAMESPACE } from "../../../hierarchy-builder/internal/operators/DetermineChildren";
-import { getObservableResult, setupLogging } from "../../Utils";
+import { createTestProcessedNode, getObservableResult, setupLogging } from "../../Utils";
 
 describe("DetermineChildren", () => {
   before(() => {
@@ -17,11 +17,9 @@ describe("DetermineChildren", () => {
   });
 
   it("doesn't check children if node has children determined", async () => {
-    const node: HierarchyNode = {
-      key: "custom",
-      label: "custom",
+    const node = createTestProcessedNode({
       children: false,
-    };
+    });
     const hasNodes = sinon.spy();
     const result = await getObservableResult(from([node]).pipe(createDetermineChildrenOperator(hasNodes)));
     expect(hasNodes).to.not.be.called;
@@ -29,11 +27,9 @@ describe("DetermineChildren", () => {
   });
 
   it("determines node children", async () => {
-    const node: HierarchyNode = {
-      key: "custom",
-      label: "custom",
+    const node = createTestProcessedNode({
       children: undefined,
-    };
+    });
     const hasNodes = sinon.stub().returns(of(true));
     const result = await getObservableResult(from([node]).pipe(createDetermineChildrenOperator(hasNodes)));
     expect(hasNodes).to.be.calledOnceWith(node);
@@ -41,32 +37,30 @@ describe("DetermineChildren", () => {
   });
 
   it("streams nodes in the same order as input", async () => {
-    const nodes: HierarchyNode[] = [
+    const nodes = [
       // will determine children of this node asynchronously
-      {
+      createTestProcessedNode({
         key: "1",
         label: "1",
-        children: undefined,
-      },
+      }),
       // will determine children of this node synchronously
-      {
+      createTestProcessedNode({
         key: "2",
         label: "2",
-        children: undefined,
-      },
+      }),
       // this node already has children determined
-      {
+      createTestProcessedNode({
         key: "3",
         label: "3",
         children: true,
-      },
+      }),
     ];
-    const hasNodes = (parent: HierarchyNode): Observable<boolean> => {
+    const hasNodes = (parent: ProcessedHierarchyNode): Observable<boolean> => {
       const res = of(false);
-      if (parent.key === "1") {
-        return res.pipe(delay(1));
+      if (parent.key === "2") {
+        return res;
       }
-      return res;
+      return res.pipe(delay(1));
     };
     const result = await getObservableResult(from(nodes).pipe(createDetermineChildrenOperator(hasNodes)));
     expect(result.map((n) => n.key)).to.deep.eq(["1", "2", "3"]);

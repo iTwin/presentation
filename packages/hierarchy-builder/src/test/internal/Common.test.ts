@@ -4,11 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { of } from "rxjs";
 import sinon from "sinon";
-import { HierarchyNode, HierarchyNodeProcessingParams, ProcessedHierarchyNode } from "../../hierarchy-builder/HierarchyNode";
-import { ChildNodesCache, getClass, hasChildren, mergeNodes, mergeNodesObs } from "../../hierarchy-builder/internal/Common";
-import { getObservableResult } from "../Utils";
+import { HierarchyNodeProcessingParams, ProcessedHierarchyNode } from "../../hierarchy-builder/HierarchyNode";
+import { getClass, hasChildren, mergeNodes } from "../../hierarchy-builder/internal/Common";
+import { createTestProcessedNode } from "../Utils";
 
 describe("getClass", () => {
   const metadata = {
@@ -58,21 +57,18 @@ describe("getClass", () => {
 });
 
 describe("mergeNodes", () => {
-  const base: HierarchyNode = { key: "x", label: "x" };
+  const base = createTestProcessedNode({ key: "x", label: "x" });
 
   it("takes lhs label", () => {
-    const lhs: ProcessedHierarchyNode = {
-      key: "custom",
-      label: "custom1",
-    };
-    const rhs: ProcessedHierarchyNode = {
-      key: "custom",
-      label: "custom2",
-    };
-    expect(mergeNodes(lhs, rhs)).to.deep.eq({
+    const lhs = createTestProcessedNode({
       key: "custom",
       label: "custom1",
     });
+    const rhs = createTestProcessedNode({
+      key: "custom",
+      label: "custom2",
+    });
+    expect(mergeNodes(lhs, rhs).label).to.eq("custom1");
   });
 
   it("merges auto-expand flag", () => {
@@ -140,6 +136,26 @@ describe("mergeNodes", () => {
     });
   });
 
+  describe("merging parent node keys", () => {
+    it("takes from lhs when rhs starts with lhs", () => {
+      const lhsParentKeys = ["1"];
+      const rhsParentKeys = ["1", "2"];
+      expect(mergeNodes({ ...base, parentKeys: lhsParentKeys }, { ...base, parentKeys: rhsParentKeys }).parentKeys).to.deep.eq(["1"]);
+    });
+
+    it("takes from rhs when lhs starts with rhs", () => {
+      const lhsParentKeys = ["1", "2"];
+      const rhsParentKeys = ["1"];
+      expect(mergeNodes({ ...base, parentKeys: lhsParentKeys }, { ...base, parentKeys: rhsParentKeys }).parentKeys).to.deep.eq(["1"]);
+    });
+
+    it("takes common part from the two lists", () => {
+      const lhsParentKeys = ["1", "2"];
+      const rhsParentKeys = ["1", "3"];
+      expect(mergeNodes({ ...base, parentKeys: lhsParentKeys }, { ...base, parentKeys: rhsParentKeys }).parentKeys).to.deep.eq(["1"]);
+    });
+  });
+
   describe("merging processing params", () => {
     it("returns `undefined` if neither node has processing params", () => {
       expect(mergeNodes({ ...base, processingParams: undefined }, { ...base, processingParams: undefined }).processingParams).to.be.undefined;
@@ -199,9 +215,12 @@ describe("mergeNodes", () => {
 
   describe("merging children", () => {
     it("returns merged arrays if both nodes have arrays", () => {
-      expect(mergeNodes({ ...base, children: [{ key: "1", label: "1" }] }, { ...base, children: [{ key: "2", label: "2" }] }).children).to.deep.eq([
-        { key: "1", label: "1" },
-        { key: "2", label: "2" },
+      expect(
+        mergeNodes({ ...base, children: [{ key: "1", label: "1", parentKeys: [] }] }, { ...base, children: [{ key: "2", label: "2", parentKeys: [] }] })
+          .children,
+      ).to.deep.eq([
+        { key: "1", label: "1", parentKeys: [] },
+        { key: "2", label: "2", parentKeys: [] },
       ]);
       expect(mergeNodes({ ...base, children: [] }, { ...base, children: [] }).children).to.deep.eq([]);
     });
@@ -235,42 +254,5 @@ describe("hasChildren", () => {
     expect(hasChildren({ children: [] })).to.be.false;
     expect(hasChildren({ children: true })).to.be.true;
     expect(hasChildren({ children: [1] })).to.be.true;
-  });
-});
-
-describe("mergeNodesObs", () => {
-  it("merges nodes and caches merged node children observable", async () => {
-    const lhs: ProcessedHierarchyNode = { key: "x", label: "1" };
-    const rhs: ProcessedHierarchyNode = { key: "y", label: "2" };
-    const cache = new ChildNodesCache();
-    cache.set(lhs, of({ key: "3", label: "3" }));
-    cache.set(rhs, of({ key: "4", label: "4" }));
-
-    const result = mergeNodesObs(lhs, rhs, cache);
-    expect(result).to.deep.eq(mergeNodes(lhs, rhs));
-    expect(await getObservableResult(cache.get(result)!)).to.deep.eq([
-      { key: "3", label: "3" },
-      { key: "4", label: "4" },
-    ]);
-  });
-
-  it("doesn't cache children observable if lhs doesn't have its own children observable cached", () => {
-    const lhs: ProcessedHierarchyNode = { key: "x", label: "1" };
-    const rhs: ProcessedHierarchyNode = { key: "y", label: "2" };
-    const cache = new ChildNodesCache();
-    cache.set(lhs, of({ key: "3", label: "3" }));
-
-    const result = mergeNodesObs(lhs, rhs, cache);
-    expect(cache.has(result)).to.be.false;
-  });
-
-  it("doesn't cache children observable if rhs doesn't have its own children observable cached", () => {
-    const lhs: ProcessedHierarchyNode = { key: "x", label: "1" };
-    const rhs: ProcessedHierarchyNode = { key: "y", label: "2" };
-    const cache = new ChildNodesCache();
-    cache.set(rhs, of({ key: "3", label: "3" }));
-
-    const result = mergeNodesObs(lhs, rhs, cache);
-    expect(cache.has(result)).to.be.false;
   });
 });

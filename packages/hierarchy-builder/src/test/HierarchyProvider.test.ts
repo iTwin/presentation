@@ -49,7 +49,7 @@ describe("HierarchyProvider", () => {
       hierarchyDefinition,
     });
     const nodes = await provider.getNodes(undefined);
-    expect(nodes).to.deep.eq([node]);
+    expect(nodes).to.deep.eq([{ ...node, parentKeys: [] }]);
   });
 
   it("loads root instance nodes", async () => {
@@ -96,6 +96,7 @@ describe("HierarchyProvider", () => {
           type: "instances",
           instanceKeys: [{ className: "a.b", id: "0x123" }],
         },
+        parentKeys: [],
         label: "test label",
         children: false,
       } as HierarchyNode,
@@ -103,7 +104,7 @@ describe("HierarchyProvider", () => {
   });
 
   it("loads child nodes", async () => {
-    const rootNode: HierarchyNode = { key: "root", label: "root" };
+    const rootNode = { key: "root", label: "root", parentKeys: [] };
     const childNode = { key: "child", label: "child" };
     const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
       async defineHierarchyLevel(parentNode) {
@@ -121,30 +122,10 @@ describe("HierarchyProvider", () => {
       queryExecutor,
       hierarchyDefinition,
     });
-    const nodes = await provider.getNodes(rootNode);
-    const expectedNode = { ...childNode, children: false };
-    expect(nodes).to.deep.eq([expectedNode]);
-    expect(rootNode.children).to.deep.eq([expectedNode]);
-  });
 
-  it("returns loaded child nodes", async () => {
-    const childNode = { key: "child", label: "child", children: false };
-    const rootNode = { key: "root", label: "root", children: [childNode] };
-    const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
-      async defineHierarchyLevel(parentNode) {
-        if (!parentNode) {
-          return [{ node: rootNode }];
-        }
-        return [];
-      },
-    };
-    const provider = new HierarchyProvider({
-      metadataProvider,
-      queryExecutor,
-      hierarchyDefinition,
-    });
     const nodes = await provider.getNodes(rootNode);
-    expect(nodes).to.deep.eq([childNode]);
+    const expectedChild = { ...childNode, parentKeys: [rootNode.key], children: false };
+    expect(nodes).to.deep.eq([expectedChild]);
   });
 
   describe("Custom parsing", async () => {
@@ -178,7 +159,7 @@ describe("HierarchyProvider", () => {
       });
       const nodes = await provider.getNodes(undefined);
       expect(parser).to.be.calledOnceWith(row);
-      expect(nodes).to.deep.eq([node]);
+      expect(nodes).to.deep.eq([{ ...node, parentKeys: [] }]);
     });
   });
 
@@ -205,7 +186,7 @@ describe("HierarchyProvider", () => {
         hierarchyDefinition,
       });
       const nodes = await provider.getNodes(undefined);
-      expect(preprocess).to.be.calledOnceWith(node);
+      expect(preprocess).to.be.calledOnceWith({ ...node, parentKeys: [] });
       expect(nodes).to.deep.eq([{ ...node, isPreprocessed: true }]);
     });
 
@@ -231,7 +212,7 @@ describe("HierarchyProvider", () => {
         hierarchyDefinition,
       });
       const nodes = await provider.getNodes(undefined);
-      expect(preprocess).to.be.calledOnceWith(node);
+      expect(preprocess).to.be.calledOnceWith({ ...node, parentKeys: [] });
       expect(nodes).to.deep.eq([]);
     });
   });
@@ -259,7 +240,7 @@ describe("HierarchyProvider", () => {
         hierarchyDefinition,
       });
       const nodes = await provider.getNodes(undefined);
-      expect(postprocess).to.be.calledOnceWith(node);
+      expect(postprocess).to.be.calledOnceWith({ ...node, parentKeys: [] });
       expect(nodes).to.deep.eq([{ ...node, isPostprocessed: true }]);
     });
 
@@ -285,7 +266,7 @@ describe("HierarchyProvider", () => {
         hierarchyDefinition,
       });
       const nodes = await provider.getNodes(undefined);
-      expect(postprocess).to.be.calledOnceWith(node);
+      expect(postprocess).to.be.calledOnceWith({ ...node, parentKeys: [] });
       expect(nodes).to.deep.eq([]);
     });
   });
@@ -311,7 +292,7 @@ describe("HierarchyProvider", () => {
         hierarchyDefinition,
       });
       const rootNodes = await provider.getNodes(undefined);
-      expect(rootNodes).to.deep.eq([{ ...childNode, children: false }]);
+      expect(rootNodes).to.deep.eq([{ ...childNode, parentKeys: [rootNode.key], children: false }]);
     });
 
     it("determines children when immediate child node is hidden", async () => {
@@ -338,9 +319,9 @@ describe("HierarchyProvider", () => {
         hierarchyDefinition,
       });
       const rootNodes = await provider.getNodes(undefined);
-      expect(rootNodes).to.deep.eq([{ ...rootNode, children: true }]);
+      expect(rootNodes).to.deep.eq([{ ...rootNode, parentKeys: [], children: true }]);
       const childNodes = await provider.getNodes(rootNodes[0]);
-      expect(childNodes).to.deep.eq([{ ...visibleChildNode, children: false }]);
+      expect(childNodes).to.deep.eq([{ ...visibleChildNode, parentKeys: [rootNode.key, hiddenChildNode.key], children: false }]);
     });
   });
 
@@ -365,7 +346,7 @@ describe("HierarchyProvider", () => {
         hierarchyDefinition,
       });
       const rootNodes = await provider.getNodes(undefined);
-      expect(rootNodes).to.deep.eq([{ ...rootNode, children: false }]);
+      expect(rootNodes).to.deep.eq([{ ...rootNode, parentKeys: [], children: false }]);
       const childNodes = await provider.getNodes(rootNodes[0]);
       expect(childNodes).to.deep.eq([]);
     });
@@ -394,11 +375,11 @@ describe("HierarchyProvider", () => {
         hierarchyDefinition,
       });
       const rootNodes = await provider.getNodes(undefined);
-      expect(rootNodes).to.deep.eq([{ ...rootNode, children: true }]);
+      expect(rootNodes).to.deep.eq([{ ...rootNode, parentKeys: [], children: true }]);
       const childNodes = await provider.getNodes(rootNodes[0]);
-      expect(childNodes).to.deep.eq([{ ...hiddenChildNode, children: true }]);
+      expect(childNodes).to.deep.eq([{ ...hiddenChildNode, parentKeys: [rootNode.key], children: true }]);
       const grandChildNodes = await provider.getNodes(childNodes[0]);
-      expect(grandChildNodes).to.deep.eq([grandChildNode]);
+      expect(grandChildNodes).to.deep.eq([{ ...grandChildNode, parentKeys: [rootNode.key, hiddenChildNode.key], children: false }]);
     });
   });
 
@@ -628,6 +609,7 @@ describe("HierarchyProvider", () => {
             type: "instances",
             instanceKeys: [{ className: "a.b", id: "0x123" }],
           },
+          parentKeys: [],
           label: "test label",
           children: false,
           filteredChildrenIdentifierPaths: [[{ className: "c.d", id: "0x456" }]],
@@ -729,7 +711,7 @@ describe("HierarchyProvider", () => {
       });
 
       const rootNodes = await provider.getNodes(undefined);
-      expect(rootNodes).to.deep.eq([{ key: "root", label: "root", children: true }]);
+      expect(rootNodes).to.deep.eq([{ key: "root", label: "root", parentKeys: [], children: true }]);
 
       await expect(provider.getNodes(rootNodes[0])).to.eventually.be.rejectedWith(RowsLimitExceededError);
     });

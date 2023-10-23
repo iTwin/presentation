@@ -6,7 +6,7 @@
 import { Observable } from "rxjs";
 import sinon from "sinon";
 import { Logger, LogLevel } from "@itwin/core-bentley";
-import { HierarchyNode, ProcessedHierarchyNode } from "../hierarchy-builder/HierarchyNode";
+import { ParsedHierarchyNode, ProcessedHierarchyNode } from "../hierarchy-builder/HierarchyNode";
 import * as common from "../hierarchy-builder/internal/Common";
 import { ECClass, ECProperty, IMetadataProvider, parseFullClassName } from "../hierarchy-builder/Metadata";
 import { ECSqlQueryReader, ECSqlQueryRow } from "../hierarchy-builder/queries/ECSql";
@@ -35,13 +35,25 @@ export async function getObservableResult<T>(obs: Observable<T>): Promise<Array<
   });
 }
 
-export function createTestNode(src?: Partial<ProcessedHierarchyNode>): HierarchyNode {
+export function createTestParsedNode(src?: Partial<ParsedHierarchyNode>): ParsedHierarchyNode {
   return {
     label: "test",
     key: {
       type: "instances",
       instanceKeys: [],
     },
+    ...src,
+  };
+}
+
+export function createTestProcessedNode(src?: Partial<ProcessedHierarchyNode>): ProcessedHierarchyNode {
+  return {
+    label: "test",
+    key: {
+      type: "instances",
+      instanceKeys: [],
+    },
+    parentKeys: [],
     ...src,
   };
 }

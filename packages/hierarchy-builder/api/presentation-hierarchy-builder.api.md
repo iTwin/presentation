@@ -43,7 +43,7 @@ export type ClassBasedHierarchyLevelDefinition = InstancesNodeChildHierarchyLeve
 // @beta
 export class ClassBasedHierarchyLevelDefinitionsFactory implements IHierarchyLevelDefinitionsFactory {
     constructor(props: ClassBasedHierarchyDefinitionsFactoryProps);
-    defineHierarchyLevel(parentNode: HierarchyNode | undefined): Promise<HierarchyLevelDefinition>;
+    defineHierarchyLevel(parentNode: Omit<HierarchyNode, "children"> | undefined): Promise<HierarchyLevelDefinition>;
 }
 
 // @beta
@@ -134,7 +134,7 @@ export interface CustomHierarchyNodeDefinition {
 // @beta
 export interface CustomNodeChildHierarchyLevelDefinition {
     customParentNodeKey: string;
-    definitions: (parentNode: HierarchyNode) => Promise<HierarchyLevelDefinition>;
+    definitions: (parentNode: Omit<HierarchyNode, "children">) => Promise<HierarchyLevelDefinition>;
 }
 
 // @beta
@@ -386,6 +386,15 @@ export interface ECStructProperty extends ECProperty {
 export function getLogger(): ILogger;
 
 // @beta
+export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey;
+
+// @beta
+export type GroupingProcessedHierarchyNode = ProcessedHierarchyNode & {
+    key: GroupingNodeKey;
+    children: ProcessedHierarchyNode[];
+};
+
+// @beta
 export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
 
 // @beta
@@ -393,7 +402,7 @@ export interface HierarchyNode<TLabel = string> {
     // (undocumented)
     autoExpand?: boolean;
     // (undocumented)
-    children: undefined | boolean | Array<HierarchyNode>;
+    children?: boolean;
     // (undocumented)
     extendedData?: {
         [key: string]: any;
@@ -402,6 +411,8 @@ export interface HierarchyNode<TLabel = string> {
     key: HierarchyNodeKey;
     // (undocumented)
     label: TLabel;
+    // (undocumented)
+    parentKeys: HierarchyNodeKey[];
 }
 
 // @beta (undocumented)
@@ -410,12 +421,21 @@ export namespace HierarchyNode {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
         key: ClassGroupingNodeKey;
-    };
+    } & (TNode extends ProcessedHierarchyNode ? {
+        children: TNode[];
+    } : {});
     export function isCustom<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
         key: string;
     };
+    export function isGroupingNode<TNode extends {
+        key: HierarchyNodeKey;
+    }>(node: TNode): node is TNode & {
+        key: GroupingNodeKey;
+    } & (TNode extends ProcessedHierarchyNode ? {
+        children: TNode[];
+    } : {});
     export function isInstancesNode<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
@@ -425,7 +445,9 @@ export namespace HierarchyNode {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
         key: LabelGroupingNodeKey;
-    };
+    } & (TNode extends ProcessedHierarchyNode ? {
+        children: TNode[];
+    } : {});
     export function isStandard<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
@@ -455,8 +477,10 @@ export type HierarchyNodeKey = StandardHierarchyNodeKey | string;
 
 // @beta (undocumented)
 export namespace HierarchyNodeKey {
+    export function equals(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): boolean;
     export function isClassGrouping(key: HierarchyNodeKey): key is ClassGroupingNodeKey;
     export function isCustom(key: HierarchyNodeKey): key is string;
+    export function isGrouping(key: HierarchyNodeKey): key is GroupingNodeKey;
     export function isInstances(key: HierarchyNodeKey): key is InstancesNodeKey;
     export function isLabelGrouping(key: HierarchyNodeKey): key is LabelGroupingNodeKey;
     export function isStandard(key: HierarchyNodeKey): key is StandardHierarchyNodeKey;
@@ -516,7 +540,7 @@ export interface IECSqlQueryExecutor {
 
 // @beta
 export interface IHierarchyLevelDefinitionsFactory {
-    defineHierarchyLevel(parentNode: HierarchyNode | undefined): Promise<HierarchyLevelDefinition>;
+    defineHierarchyLevel(parentNode: Omit<HierarchyNode, "children"> | undefined): Promise<HierarchyLevelDefinition>;
     parseNode?: INodeParser;
     postProcessNode?: INodePostProcessor;
     preProcessNode?: INodePreProcessor;
@@ -562,6 +586,11 @@ export interface InstanceKey {
     id: Id64String;
 }
 
+// @beta (undocumented)
+export namespace InstanceKey {
+    export function equals(lhs: InstanceKey, rhs: InstanceKey): boolean;
+}
+
 // @beta
 export interface InstanceNodesQueryDefinition {
     fullClassName: string;
@@ -570,7 +599,7 @@ export interface InstanceNodesQueryDefinition {
 
 // @beta
 export interface InstancesNodeChildHierarchyLevelDefinition {
-    definitions: (instanceIds: Id64String[], parentNode: HierarchyNode) => Promise<HierarchyLevelDefinition>;
+    definitions: (instanceIds: Id64String[], parentNode: Omit<HierarchyNode, "children">) => Promise<HierarchyLevelDefinition>;
     parentNodeClassName: string;
 }
 
@@ -646,7 +675,9 @@ export interface NodeSelectClauseProps {
 }
 
 // @beta
-export type ParsedHierarchyNode = ProcessedHierarchyNode<string | ConcatenatedValue>;
+export type ParsedHierarchyNode = Omit<HierarchyNode<string | ConcatenatedValue>, "parentKeys"> & {
+    processingParams?: HierarchyNodeProcessingParams;
+};
 
 // @beta
 export function parseFullClassName(fullClassName: string): {
@@ -694,7 +725,8 @@ export interface PrimitiveValueSelectorProps {
 export type PrimitiveValueType = "Id" | Exclude<ECPrimitiveType, "Binary" | "IGeometry">;
 
 // @beta
-export type ProcessedHierarchyNode<TLabel = string> = HierarchyNode<TLabel> & {
+export type ProcessedHierarchyNode<TLabel = string> = Omit<HierarchyNode<TLabel>, "children"> & {
+    children?: undefined | boolean | Array<ProcessedHierarchyNode<TLabel>>;
     processingParams?: HierarchyNodeProcessingParams;
 };
 
@@ -724,7 +756,7 @@ export function setLogger(logger: ILogger | undefined): void;
 export type SpecialPropertyType = "Navigation" | "Guid" | "Point2d" | "Point3d";
 
 // @beta
-export type StandardHierarchyNodeKey = InstancesNodeKey | ClassGroupingNodeKey | LabelGroupingNodeKey;
+export type StandardHierarchyNodeKey = InstancesNodeKey | GroupingNodeKey;
 
 // @beta
 export type TypedPrimitiveValue = ({

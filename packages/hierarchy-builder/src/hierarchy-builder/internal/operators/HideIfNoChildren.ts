@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { defer, filter, map, merge, mergeMap, Observable, partition, shareReplay, tap } from "rxjs";
-import { HierarchyNode, ProcessedHierarchyNode } from "../../HierarchyNode";
+import { ProcessedHierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
 import { createOperatorLoggingNamespace, hasChildren } from "../Common";
 
@@ -17,7 +17,7 @@ export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
  *
  * @internal
  */
-export function createHideIfNoChildrenOperator(hasNodes: (node: HierarchyNode) => Observable<boolean>, stopOnFirstChild: boolean) {
+export function createHideIfNoChildrenOperator(hasNodes: (node: ProcessedHierarchyNode) => Observable<boolean>, stopOnFirstChild: boolean) {
   return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
     const sharedNodes = nodes.pipe(
       log((n) => `in: ${n.label}`),

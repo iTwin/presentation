@@ -131,7 +131,7 @@ describe("Stateless hierarchy builder", () => {
       });
     });
 
-    it('hides subjects with `Subject.Model.Type = "Hierarchy"` json property', async function () {
+    it(`hides subjects with \`Subject.Model.Type = "Hierarchy"\` json property`, async function () {
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
         const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
         const childSubject = insertSubject({

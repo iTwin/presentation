@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { assert } from "@itwin/core-bentley";
 import { ConcatenatedValue } from "./values/ConcatenatedValue";
 import { InstanceKey } from "./values/Values";
 
@@ -37,10 +38,16 @@ export interface LabelGroupingNodeKey {
 }
 
 /**
+ * A key for one of the instance grouping nodes.
+ * @beta
+ */
+export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey;
+
+/**
  * A key for either an instance node or one of the instance grouping nodes.
  * @beta
  */
-export type StandardHierarchyNodeKey = InstancesNodeKey | ClassGroupingNodeKey | LabelGroupingNodeKey;
+export type StandardHierarchyNodeKey = InstancesNodeKey | GroupingNodeKey;
 
 /**
  * A key that uniquely identifies a node in a hierarchy level.
@@ -64,12 +71,46 @@ export namespace HierarchyNodeKey {
     return isStandard(key) && key.type === "instances";
   }
   /** Checks whether the given node key is a [[ClassGroupingNodeKey]]. */
+  export function isGrouping(key: HierarchyNodeKey): key is GroupingNodeKey {
+    return isStandard(key) && !isInstances(key);
+  }
+  /** Checks whether the given node key is a [[ClassGroupingNodeKey]]. */
   export function isClassGrouping(key: HierarchyNodeKey): key is ClassGroupingNodeKey {
     return isStandard(key) && key.type === "class-grouping";
   }
   /** Checks whether the given node key is a [[LabelGroupingNodeKey]]. */
   export function isLabelGrouping(key: HierarchyNodeKey): key is LabelGroupingNodeKey {
     return isStandard(key) && key.type === "label-grouping";
+  }
+  /** Checks whether the two given keys are equal. */
+  export function equals(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): boolean {
+    if (typeof lhs !== typeof rhs) {
+      return false;
+    }
+    if (isCustom(lhs)) {
+      return lhs === rhs;
+    }
+    assert(isStandard(rhs));
+    if (lhs.type !== rhs.type) {
+      return false;
+    }
+    switch (lhs.type) {
+      case "instances": {
+        assert(isInstances(rhs));
+        return (
+          lhs.instanceKeys.length === rhs.instanceKeys.length &&
+          lhs.instanceKeys.every((lhsInstanceKey) => rhs.instanceKeys.some((rhsInstanceKey) => InstanceKey.equals(lhsInstanceKey, rhsInstanceKey)))
+        );
+      }
+      case "class-grouping": {
+        assert(isClassGrouping(rhs));
+        return lhs.class.name === rhs.class.name;
+      }
+      case "label-grouping": {
+        assert(isLabelGrouping(rhs));
+        return lhs.label === rhs.label;
+      }
+    }
   }
 }
 
@@ -79,8 +120,9 @@ export namespace HierarchyNodeKey {
  */
 export interface HierarchyNode<TLabel = string> {
   key: HierarchyNodeKey;
+  parentKeys: HierarchyNodeKey[];
   label: TLabel;
-  children?: undefined | boolean | Array<HierarchyNode>;
+  children?: boolean;
   extendedData?: { [key: string]: any };
   autoExpand?: boolean;
 }
@@ -99,12 +141,22 @@ export namespace HierarchyNode {
   export function isInstancesNode<TNode extends { key: HierarchyNodeKey }>(node: TNode): node is TNode & { key: InstancesNodeKey } {
     return HierarchyNodeKey.isInstances(node.key);
   }
+  /** Checks whether the given node is a standard (iModel content based) node */
+  export function isGroupingNode<TNode extends { key: HierarchyNodeKey }>(
+    node: TNode,
+  ): node is TNode & { key: GroupingNodeKey } & (TNode extends ProcessedHierarchyNode ? { children: TNode[] } : {}) {
+    return HierarchyNodeKey.isGrouping(node.key);
+  }
   /** Checks whether the given node is a class grouping node */
-  export function isClassGroupingNode<TNode extends { key: HierarchyNodeKey }>(node: TNode): node is TNode & { key: ClassGroupingNodeKey } {
+  export function isClassGroupingNode<TNode extends { key: HierarchyNodeKey }>(
+    node: TNode,
+  ): node is TNode & { key: ClassGroupingNodeKey } & (TNode extends ProcessedHierarchyNode ? { children: TNode[] } : {}) {
     return HierarchyNodeKey.isClassGrouping(node.key);
   }
   /** Checks whether the given node is a label grouping node */
-  export function isLabelGroupingNode<TNode extends { key: HierarchyNodeKey }>(node: TNode): node is TNode & { key: LabelGroupingNodeKey } {
+  export function isLabelGroupingNode<TNode extends { key: HierarchyNodeKey }>(
+    node: TNode,
+  ): node is TNode & { key: LabelGroupingNodeKey } & (TNode extends ProcessedHierarchyNode ? { children: TNode[] } : {}) {
     return HierarchyNodeKey.isLabelGrouping(node.key);
   }
 }
@@ -126,7 +178,8 @@ export interface HierarchyNodeProcessingParams {
  * how it should be grouped, sorted, etc.
  * @beta
  */
-export type ProcessedHierarchyNode<TLabel = string> = HierarchyNode<TLabel> & {
+export type ProcessedHierarchyNode<TLabel = string> = Omit<HierarchyNode<TLabel>, "children"> & {
+  children?: undefined | boolean | Array<ProcessedHierarchyNode<TLabel>>;
   processingParams?: HierarchyNodeProcessingParams;
 };
 
@@ -136,7 +189,18 @@ export type ProcessedHierarchyNode<TLabel = string> = HierarchyNode<TLabel> & {
  *
  * @beta
  */
-export type ParsedHierarchyNode = ProcessedHierarchyNode<string | ConcatenatedValue>;
+export type ParsedHierarchyNode = Omit<HierarchyNode<string | ConcatenatedValue>, "parentKeys"> & {
+  processingParams?: HierarchyNodeProcessingParams;
+};
+
+/**
+ * A [[HierarchyNode]] that contains grouped child nodes.
+ * @beta
+ */
+export type GroupingProcessedHierarchyNode = ProcessedHierarchyNode & {
+  key: GroupingNodeKey;
+  children: ProcessedHierarchyNode[];
+};
 
 /**
  * An identifier that can be used to identify either an ECInstance or a custom node.

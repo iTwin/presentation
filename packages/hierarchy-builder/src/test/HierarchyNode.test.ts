@@ -4,25 +4,74 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { HierarchyNode, HierarchyNodeIdentifier } from "../hierarchy-builder/HierarchyNode";
+import { HierarchyNode, HierarchyNodeIdentifier, HierarchyNodeKey } from "../hierarchy-builder/HierarchyNode";
 import { InstanceKey } from "../hierarchy-builder/values/Values";
+
+describe("HierarchyNodeKey", () => {
+  describe("equals", () => {
+    it("returns false if key types are different", () => {
+      expect(HierarchyNodeKey.equals("x", { type: "instances", instanceKeys: [] })).to.be.false;
+    });
+
+    it("returns correct results for custom node keys", () => {
+      expect(HierarchyNodeKey.equals("x", "x")).to.be.true;
+      expect(HierarchyNodeKey.equals("x", "y")).to.be.false;
+    });
+
+    it("returns false for standard nodes if types are different", () => {
+      expect(HierarchyNodeKey.equals({ type: "class-grouping", class: { name: "x" } }, { type: "instances", instanceKeys: [] })).to.be.false;
+    });
+
+    it("returns correct results for instance node keys", () => {
+      expect(HierarchyNodeKey.equals({ type: "instances", instanceKeys: [] }, { type: "instances", instanceKeys: [] })).to.be.true;
+      expect(
+        HierarchyNodeKey.equals(
+          { type: "instances", instanceKeys: [{ className: "a", id: "0" }] },
+          { type: "instances", instanceKeys: [{ className: "a", id: "0" }] },
+        ),
+      ).to.be.true;
+      expect(HierarchyNodeKey.equals({ type: "instances", instanceKeys: [] }, { type: "instances", instanceKeys: [{ className: "a", id: "0" }] })).to.be.false;
+      expect(HierarchyNodeKey.equals({ type: "instances", instanceKeys: [{ className: "a", id: "0" }] }, { type: "instances", instanceKeys: [] })).to.be.false;
+      expect(
+        HierarchyNodeKey.equals(
+          { type: "instances", instanceKeys: [{ className: "a", id: "0" }] },
+          { type: "instances", instanceKeys: [{ className: "b", id: "1" }] },
+        ),
+      ).to.be.false;
+    });
+
+    it("returns correct results for class grouping node keys", () => {
+      expect(HierarchyNodeKey.equals({ type: "class-grouping", class: { name: "x" } }, { type: "class-grouping", class: { name: "x" } })).to.be.true;
+      expect(HierarchyNodeKey.equals({ type: "class-grouping", class: { name: "x" } }, { type: "class-grouping", class: { name: "y" } })).to.be.false;
+    });
+
+    it("returns correct results for label grouping node keys", () => {
+      expect(HierarchyNodeKey.equals({ type: "label-grouping", label: "a" }, { type: "label-grouping", label: "a" })).to.be.true;
+      expect(HierarchyNodeKey.equals({ type: "label-grouping", label: "a" }, { type: "label-grouping", label: "b" })).to.be.false;
+    });
+  });
+});
 
 describe("HierarchyNode", () => {
   const customNode: HierarchyNode = {
     key: "x",
     label: "custom node",
+    parentKeys: [],
   };
   const instancesNode: HierarchyNode = {
     key: { type: "instances", instanceKeys: [] },
     label: "instances node",
+    parentKeys: [],
   };
   const classGroupingNode: HierarchyNode = {
     key: { type: "class-grouping", class: { label: "c", name: "c" } },
     label: "class grouping node",
+    parentKeys: [],
   };
   const labelGroupingNode: HierarchyNode = {
     key: { type: "label-grouping", label: "c" },
     label: "label grouping node",
+    parentKeys: [],
   };
 
   describe("isCustom", () => {
@@ -49,6 +98,15 @@ describe("HierarchyNode", () => {
       expect(HierarchyNode.isInstancesNode(instancesNode)).to.be.true;
       expect(HierarchyNode.isInstancesNode(classGroupingNode)).to.be.false;
       expect(HierarchyNode.isInstancesNode(labelGroupingNode)).to.be.false;
+    });
+  });
+
+  describe("isGroupingNode", () => {
+    it("returns correct result for different types of nodes", () => {
+      expect(HierarchyNode.isGroupingNode(customNode)).to.be.false;
+      expect(HierarchyNode.isGroupingNode(instancesNode)).to.be.false;
+      expect(HierarchyNode.isGroupingNode(classGroupingNode)).to.be.true;
+      expect(HierarchyNode.isGroupingNode(labelGroupingNode)).to.be.true;
     });
   });
 

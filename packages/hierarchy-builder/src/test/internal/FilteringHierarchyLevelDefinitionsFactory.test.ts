@@ -11,7 +11,13 @@ import {
   IHierarchyLevelDefinitionsFactory,
   InstanceNodesQueryDefinition,
 } from "../../hierarchy-builder/HierarchyDefinition";
-import { HierarchyNode, HierarchyNodeIdentifiersPath, ProcessedHierarchyNode } from "../../hierarchy-builder/HierarchyNode";
+import {
+  GroupingProcessedHierarchyNode,
+  HierarchyNode,
+  HierarchyNodeIdentifiersPath,
+  ParsedHierarchyNode,
+  ProcessedHierarchyNode,
+} from "../../hierarchy-builder/HierarchyNode";
 import {
   applyECInstanceIdsFilter,
   ECSQL_COLUMN_NAME_FilteredChildrenPaths,
@@ -21,9 +27,8 @@ import {
 import * as reader from "../../hierarchy-builder/internal/TreeNodesReader";
 import { IMetadataProvider } from "../../hierarchy-builder/Metadata";
 import { NodeSelectClauseColumnNames } from "../../hierarchy-builder/queries/NodeSelectClauseFactory";
-import { ConcatenatedValue } from "../../hierarchy-builder/values/ConcatenatedValue";
 import { trimWhitespace } from "../queries/Utils";
-import { createGetClassStub, createTestInstanceKey, TStubClassFunc } from "../Utils";
+import { createGetClassStub, createTestInstanceKey, createTestProcessedNode, TStubClassFunc } from "../Utils";
 
 describe("FilteringHierarchyLevelDefinitionsFactory", () => {
   describe("parseNode", () => {
@@ -67,7 +72,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         [NodeSelectClauseColumnNames.FullClassName]: "",
         [ECSQL_COLUMN_NAME_FilteredChildrenPaths]: JSON.stringify(paths),
       };
-      const node: FilteredHierarchyNode<ProcessedHierarchyNode<string | ConcatenatedValue>> = filteringFactory.parseNode(row);
+      const node: FilteredHierarchyNode<ParsedHierarchyNode> = filteringFactory.parseNode(row);
       expect(node.filteredChildrenIdentifierPaths).to.deep.eq(paths);
     });
 
@@ -104,15 +109,15 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
 
   describe("preProcessNode", () => {
     it("returns given node when source factory has no pre-processor", async () => {
-      const node = createTestNode();
+      const node = createTestProcessedNode();
       const filteringFactory = createFilteringHierarchyLevelsFactory();
       const result = await filteringFactory.preProcessNode(node);
       expect(result).to.eq(node);
     });
 
     it("returns node pre-processed by source factory", async () => {
-      const inputNode = createTestNode();
-      const sourceFactoryNode = createTestNode();
+      const inputNode = createTestProcessedNode();
+      const sourceFactoryNode = createTestProcessedNode();
       const sourceFactory = {
         preProcessNode: sinon.stub().returns(sourceFactoryNode),
       } as unknown as IHierarchyLevelDefinitionsFactory;
@@ -126,37 +131,30 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
 
     it("returns `undefined` when node is filter target and has `hideInHierarchy` flag", async () => {
       const inputNode: FilteredHierarchyNode = {
-        ...createTestNode(),
-        processingParams: {
-          hideInHierarchy: true,
-        },
+        ...createTestProcessedNode({
+          processingParams: {
+            hideInHierarchy: true,
+          },
+        }),
         filteredChildrenIdentifierPaths: [],
       };
       const filteringFactory = createFilteringHierarchyLevelsFactory();
       const result = await filteringFactory.preProcessNode(inputNode);
       expect(result).to.be.undefined;
     });
-
-    function createTestNode(): HierarchyNode {
-      return {
-        key: "test",
-        label: "test node",
-        children: [],
-      };
-    }
   });
 
   describe("postProcessNode", () => {
     it("returns given node when source factory has no post-processor", async () => {
-      const node = createTestNode();
+      const node = createTestProcessedNode();
       const filteringFactory = createFilteringHierarchyLevelsFactory();
       const result = await filteringFactory.postProcessNode(node);
       expect(result).to.eq(node);
     });
 
     it("returns node post-processed by source factory", async () => {
-      const inputNode = createTestNode();
-      const sourceFactoryNode = createTestNode();
+      const inputNode = createTestProcessedNode();
+      const sourceFactoryNode = createTestProcessedNode();
       const sourceFactory = {
         postProcessNode: sinon.stub().resolves(sourceFactoryNode),
       } as unknown as IHierarchyLevelDefinitionsFactory;
@@ -169,7 +167,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
     });
 
     it("returns undefined when source factory post processor returns undefined", async () => {
-      const inputNode = createTestNode();
+      const inputNode = createTestProcessedNode();
       const sourceFactory = {
         postProcessNode: sinon.stub().resolves(undefined),
       } as unknown as IHierarchyLevelDefinitionsFactory;
@@ -189,11 +187,11 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
     });
 
     it("sets auto-expand on class grouping nodes if any child has filtered children paths", async () => {
-      const inputNode: HierarchyNode = {
+      const inputNode: ProcessedHierarchyNode = {
         ...createClassGroupingNode(),
         children: [
           {
-            ...createTestNode(),
+            ...createTestProcessedNode(),
             filteredChildrenIdentifierPaths: [],
           } as FilteredHierarchyNode,
         ],
@@ -203,22 +201,14 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
       expect(result!.autoExpand).to.be.true;
     });
 
-    function createTestNode(): HierarchyNode {
-      return {
-        key: "test",
-        label: "test node",
-        children: [],
-      };
-    }
-
-    function createClassGroupingNode(): HierarchyNode {
-      return {
-        ...createTestNode(),
+    function createClassGroupingNode(): GroupingProcessedHierarchyNode {
+      return createTestProcessedNode({
         key: {
           type: "class-grouping",
           class: { label: "class label", name: "class name" },
         },
-      };
+        children: [],
+      }) as GroupingProcessedHierarchyNode;
     }
   });
 
@@ -326,7 +316,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
             node: {
               ...sourceDefinition2.node,
               filteredChildrenIdentifierPaths: [],
-            } as FilteredHierarchyNode,
+            } as FilteredHierarchyNode<ParsedHierarchyNode>,
           },
         ]);
       });
@@ -537,7 +527,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         key: "custom",
         label: "custom node",
         filteredChildrenIdentifierPaths: [[{ className: childFilterClass.name, id: "0x456" }]],
-      } as FilteredHierarchyNode);
+      } as FilteredHierarchyNode<HierarchyNode>);
       expect(result).to.deep.eq([
         applyECInstanceIdsFilter(sourceDefinition, [{ id: { className: childFilterClass.name, id: "0x456" }, childrenIdentifierPaths: [] }]),
       ]);

@@ -78,6 +78,7 @@ export type INodePreProcessor = (node: ProcessedHierarchyNode) => Promise<Proces
  *
  * @beta
  */
+// FIXME: post-processor should not return undefined
 export type INodePostProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode | undefined>;
 
 /**
@@ -116,7 +117,7 @@ export interface IHierarchyLevelDefinitionsFactory {
   postProcessNode?: INodePostProcessor;
 
   /** A function to create a hierarchy level definition for given parent node. */
-  defineHierarchyLevel(parentNode: HierarchyNode | undefined): Promise<HierarchyLevelDefinition>;
+  defineHierarchyLevel(parentNode: Omit<HierarchyNode, "children"> | undefined): Promise<HierarchyLevelDefinition>;
 }
 
 /**
@@ -138,7 +139,7 @@ export interface InstancesNodeChildHierarchyLevelDefinition {
    * @param instanceIds IDs of instances grouped under the parent instance node.
    * @param parentNode The parent node, which may contain additional context required to define the child hierarchy level.
    */
-  definitions: (instanceIds: Id64String[], parentNode: HierarchyNode) => Promise<HierarchyLevelDefinition>;
+  definitions: (instanceIds: Id64String[], parentNode: Omit<HierarchyNode, "children">) => Promise<HierarchyLevelDefinition>;
 }
 
 /**
@@ -154,7 +155,7 @@ export interface CustomNodeChildHierarchyLevelDefinition {
    * Called to create a hierarchy level definition when the node key check passes (see [[customParentNodeKey]]).
    * @param parentNode The parent node, which may contain additional context required to define the child hierarchy level.
    */
-  definitions: (parentNode: HierarchyNode) => Promise<HierarchyLevelDefinition>;
+  definitions: (parentNode: Omit<HierarchyNode, "children">) => Promise<HierarchyLevelDefinition>;
 }
 
 /**
@@ -211,7 +212,7 @@ export class ClassBasedHierarchyLevelDefinitionsFactory implements IHierarchyLev
    * Create hierarchy level definitions for specific hierarchy level.
    * @param parentNode Parent node to create children definitions for.
    */
-  public async defineHierarchyLevel(parentNode: HierarchyNode | undefined): Promise<HierarchyLevelDefinition> {
+  public async defineHierarchyLevel(parentNode: Omit<HierarchyNode, "children"> | undefined): Promise<HierarchyLevelDefinition> {
     if (!parentNode) {
       return this._definition.rootNodes();
     }
@@ -242,7 +243,7 @@ async function createHierarchyLevelDefinitions(
   defs: InstancesNodeChildHierarchyLevelDefinition[],
   parentNodeClassName: string,
   parentNodeInstanceIds: Id64String[],
-  parentNode: HierarchyNode,
+  parentNode: Omit<HierarchyNode, "children">,
 ) {
   const parentNodeClass = await getClass(metadataProvider, parentNodeClassName);
   return (

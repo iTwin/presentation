@@ -20,6 +20,7 @@ import {
   NodeSelectClauseColumnNames,
   NodeSelectClauseFactory,
   parseFullClassName,
+  ProcessedHierarchyNode,
 } from "@itwin/presentation-hierarchy-builder";
 
 export interface ModelsTreeDefinitionProps {
@@ -85,7 +86,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
     this._nodeLabelSelectClauseFactory = new BisInstanceLabelSelectClauseFactory({ metadataProvider: props.metadataProvider });
   }
 
-  public async postProcessNode(node: HierarchyNode): Promise<HierarchyNode> {
+  public async postProcessNode(node: ProcessedHierarchyNode): Promise<ProcessedHierarchyNode> {
     if (HierarchyNode.isClassGroupingNode(node)) {
       // `imageId` is assigned to instance nodes at query time, but grouping ones need to
       // be handled during post-processing
@@ -328,7 +329,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
     ];
   }
 
-  private async createSpatialCategoryChildrenQuery(categoryIds: Id64String[], parentNode: HierarchyNode): Promise<HierarchyLevelDefinition> {
+  private async createSpatialCategoryChildrenQuery(categoryIds: Id64String[], parentNode: Omit<HierarchyNode, "children">): Promise<HierarchyLevelDefinition> {
     const modelIds: Id64String[] =
       parentNode.extendedData && parentNode.extendedData.hasOwnProperty("modelIds")
         ? (parentNode.extendedData.modelIds as Array<Array<Id64String>>).reduce((arr, ids) => [...arr, ...ids])

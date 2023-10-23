@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { merge, Observable } from "rxjs";
+import { Observable } from "rxjs";
 import { assert } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyNodeKey, HierarchyNodeProcessingParams, ProcessedHierarchyNode } from "../HierarchyNode";
 import { getLogger } from "../Logging";
@@ -82,6 +82,17 @@ function mergeNodeKeys(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): HierarchyN
   return ((x: never) => x)(lhs);
 }
 
+function mergeParentNodeKeys(lhsKeys: HierarchyNodeKey[], rhsKeys: HierarchyNodeKey[]): HierarchyNodeKey[] {
+  const res = new Array<HierarchyNodeKey>();
+  for (let i = 0; i < lhsKeys.length && i < rhsKeys.length; ++i) {
+    if (!HierarchyNodeKey.equals(lhsKeys[i], rhsKeys[i])) {
+      break;
+    }
+    res.push(lhsKeys[i]);
+  }
+  return res;
+}
+
 /** @internal */
 export function mergeNodes(lhs: ProcessedHierarchyNode, rhs: ProcessedHierarchyNode): ProcessedHierarchyNode {
   const mergedProcessingParams = mergeNodeHandlingParams(lhs.processingParams, rhs.processingParams);
@@ -96,6 +107,7 @@ export function mergeNodes(lhs: ProcessedHierarchyNode, rhs: ProcessedHierarchyN
   return {
     label: lhs.label,
     key: mergeNodeKeys(lhs.key, rhs.key),
+    parentKeys: mergeParentNodeKeys(lhs.parentKeys, rhs.parentKeys),
     ...(mergedChildren !== undefined ? { children: mergedChildren } : undefined),
     ...(mergedProcessingParams ? { processingParams: mergedProcessingParams } : undefined),
     ...(lhs.autoExpand || rhs.autoExpand ? { autoExpand: lhs.autoExpand || rhs.autoExpand } : undefined),
@@ -106,27 +118,6 @@ export function mergeNodes(lhs: ProcessedHierarchyNode, rhs: ProcessedHierarchyN
 /** @internal */
 export function hasChildren<TNode extends { children?: boolean | Array<unknown> }>(node: TNode) {
   return node.children === true || (Array.isArray(node.children) && node.children.length > 0);
-}
-
-/** @internal */
-export function mergeNodesObs(lhs: ProcessedHierarchyNode, rhs: ProcessedHierarchyNode, directNodesCache: ChildNodesCache) {
-  const merged = mergeNodes(lhs, rhs);
-  mergeDirectNodeObservables(lhs, rhs, merged, directNodesCache);
-  return merged;
-}
-
-/** @internal */
-export function mergeDirectNodeObservables(a: ProcessedHierarchyNode, b: ProcessedHierarchyNode, m: ProcessedHierarchyNode, cache: ChildNodesCache) {
-  const cachedA = cache.get(a);
-  if (!cachedA) {
-    return;
-  }
-  const cachedB = cache.get(b);
-  if (!cachedB) {
-    return;
-  }
-  const merged = merge(cachedA, cachedB);
-  cache.set(m, merged);
 }
 
 /** @internal */
@@ -141,26 +132,27 @@ export function julianToDateTime(julianDate: number): Date {
 }
 
 /** @internal */
+export interface ChildNodesObservables {
+  processedNodes: Observable<ProcessedHierarchyNode>;
+  finalizedNodes: Observable<HierarchyNode>;
+  hasNodes: Observable<boolean>;
+}
+
+/** @internal */
 export class ChildNodesCache {
-  private _map = new Map<string, Observable<ProcessedHierarchyNode>>();
+  private _map = new Map<string, ChildNodesObservables>();
 
-  private createKey(node: HierarchyNode | undefined): string {
-    return node ? `${JSON.stringify(node.key)}+${JSON.stringify(node.extendedData)}` : "";
+  private createKey(node: ProcessedHierarchyNode | undefined): string {
+    return node ? `${JSON.stringify(node.parentKeys)}+${JSON.stringify(node.key)}` : "";
   }
 
-  public set(parentNode: HierarchyNode | undefined, childrenObservable: Observable<ProcessedHierarchyNode>) {
-    this._map.set(this.createKey(parentNode), childrenObservable);
+  public add(parentNode: ProcessedHierarchyNode | undefined, value: ChildNodesObservables) {
+    const key = this.createKey(parentNode);
+    assert(!this._map.has(key));
+    this._map.set(key, value);
   }
 
-  public get(parentNode: HierarchyNode | undefined): Observable<ProcessedHierarchyNode> | undefined {
+  public get(parentNode: ProcessedHierarchyNode | undefined): ChildNodesObservables | undefined {
     return this._map.get(this.createKey(parentNode));
-  }
-
-  public has(parentNode: HierarchyNode | undefined): boolean {
-    return this._map.has(this.createKey(parentNode));
-  }
-
-  public clear() {
-    this._map.clear();
   }
 }
