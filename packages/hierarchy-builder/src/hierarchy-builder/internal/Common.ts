@@ -69,7 +69,7 @@ function mergeNodeGroupingParams(lhsGrouping: GroupingParams | undefined, rhsGro
               : true,
         }
       : undefined),
-    ...(lhsGrouping?.byBaseClasses?.fullClassNames || rhsGrouping?.byBaseClasses?.fullClassNames || undefined
+    ...(lhsGrouping?.byBaseClasses?.fullClassNames || rhsGrouping?.byBaseClasses?.fullClassNames
       ? {
           // Create an array from both: lhs and rhs fullClassNames arrays without adding duplicates
           fullClassNames: [...new Set([...(lhsGrouping?.byBaseClasses?.fullClassNames ?? []), ...(rhsGrouping?.byBaseClasses?.fullClassNames ?? [])])],
