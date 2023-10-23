@@ -17,15 +17,7 @@ export async function getBaseClassGroupingECClasses(metadata: IMetadataProvider,
   }
 
   const baseClasses = await Promise.all(Array.from(baseClassesFullClassNames).map(async (fullName) => getClass(metadata, fullName)));
-  const classes = new Array<ECClass>();
-  for (const baseClass of baseClasses) {
-    if (baseClass.isRelationshipClass() || baseClass.isEntityClass()) {
-      classes.push(baseClass);
-    }
-  }
-
-  const baseECClassesSorted = await sortByBaseClass(classes);
-  return baseECClassesSorted;
+  return sortByBaseClass(baseClasses.filter((baseClass) => baseClass.isRelationshipClass() || baseClass.isEntityClass()));
 }
 
 async function createBaseClassGroupsForSingleBaseClass(
