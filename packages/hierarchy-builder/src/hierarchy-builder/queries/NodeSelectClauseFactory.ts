@@ -143,49 +143,58 @@ function isSelector(x: any): x is ECSqlValueSelector {
 }
 
 function createGroupingSelector(grouping: ECSqlSelectClauseGroupingParams): string {
-  const groupingSelectors = new Array<string>();
-  const labelSelector = grouping.byLabel
-    ? `'byLabel', ${
+  const groupingSelectors = new Array<{ key: string; selector: string }>();
+
+  grouping.byLabel &&
+    groupingSelectors.push({
+      key: "byLabel",
+      selector:
         typeof grouping.byLabel === "boolean" || isSelector(grouping.byLabel)
           ? `CAST(${createECSqlValueSelector(grouping.byLabel)} AS BOOLEAN)`
-          : `json_object(${createGroupHideECSqlValueSelector(grouping.byLabel.hideIfNoSiblings, grouping.byLabel.hideIfOneGroupedNode)})`
-      }`
-    : "";
-  groupingSelectors.push(labelSelector);
+          : serializeJsonObject(createBaseGroupingParamSelectors(grouping.byLabel)),
+    });
 
-  const classSelector = grouping.byClass
-    ? `'byClass', ${
+  grouping.byClass &&
+    groupingSelectors.push({
+      key: "byClass",
+      selector:
         typeof grouping.byClass === "boolean" || isSelector(grouping.byClass)
           ? `CAST(${createECSqlValueSelector(grouping.byClass)} AS BOOLEAN)`
-          : `json_object(${createGroupHideECSqlValueSelector(grouping.byClass.hideIfNoSiblings, grouping.byClass.hideIfOneGroupedNode)})`
-      }`
-    : "";
-  groupingSelectors.push(classSelector);
+          : serializeJsonObject(createBaseGroupingParamSelectors(grouping.byClass)),
+    });
 
-  if (grouping.byBaseClasses) {
-    const baseClassFullClassNamesSelector = `'fullClassNames', json_array(${grouping.byBaseClasses.fullClassNames
-      .map((className) => createECSqlValueSelector(className))
-      .join(", ")})`;
-    const baseClassHidingSelector = createGroupHideECSqlValueSelector(grouping.byBaseClasses.hideIfNoSiblings, grouping.byBaseClasses.hideIfOneGroupedNode);
-    const baseClassObjectSelectors: string[] = [baseClassFullClassNamesSelector, baseClassHidingSelector];
-    groupingSelectors.push(`'byBaseClasses', json_object(${baseClassObjectSelectors.filter((selector) => selector !== "").join(", ")})`);
-  }
+  grouping.byBaseClasses &&
+    groupingSelectors.push({
+      key: "byBaseClasses",
+      selector: serializeJsonObject([
+        {
+          key: "fullClassNames",
+          selector: `json_array(${grouping.byBaseClasses.fullClassNames.map((className) => createECSqlValueSelector(className)).join(", ")})`,
+        },
+        ...createBaseGroupingParamSelectors(grouping.byBaseClasses),
+      ]),
+    });
 
-  return `json_object(${groupingSelectors.filter((selector) => selector !== "").join(", ")})`;
+  return serializeJsonObject(groupingSelectors);
 }
 
-function createGroupHideECSqlValueSelector(
-  hideIfNoSiblings: boolean | ECSqlValueSelector | undefined,
-  hideIfOneGroupedNode: boolean | ECSqlValueSelector | undefined,
-): string {
-  const hideIfNoSiblingsSelector = createECSqlValueSelector(hideIfNoSiblings);
-  const hideIfOneGroupedNodeSelector = createECSqlValueSelector(hideIfOneGroupedNode);
-  const hideIfNoSiblingsResult = hideIfNoSiblingsSelector !== "NULL" ? `'hideIfNoSiblings', CAST(${hideIfNoSiblingsSelector} AS BOOLEAN)` : "";
-  if (hideIfOneGroupedNodeSelector !== "NULL") {
-    if (hideIfNoSiblingsResult !== "") {
-      return `${hideIfNoSiblingsResult}, 'hideIfOneGroupedNode', CAST(${hideIfOneGroupedNodeSelector} AS BOOLEAN)`;
-    }
-    return `'hideIfOneGroupedNode', CAST(${hideIfOneGroupedNodeSelector} AS BOOLEAN)`;
+function createBaseGroupingParamSelectors(params: BaseGroupingParams) {
+  const selectors = new Array<{ key: string; selector: string }>();
+  if (params.hideIfNoSiblings !== undefined) {
+    selectors.push({
+      key: "hideIfNoSiblings",
+      selector: `CAST(${createECSqlValueSelector(params.hideIfNoSiblings)} AS BOOLEAN)`,
+    });
   }
-  return hideIfNoSiblingsResult;
+  if (params.hideIfOneGroupedNode !== undefined) {
+    selectors.push({
+      key: "hideIfOneGroupedNode",
+      selector: `CAST(${createECSqlValueSelector(params.hideIfOneGroupedNode)} AS BOOLEAN)`,
+    });
+  }
+  return selectors;
+}
+
+function serializeJsonObject(selectors: Array<{ key: string; selector: string }>): string {
+  return `json_object(${selectors.map(({ key, selector }) => `'${key}', ${selector}`).join(", ")})`;
 }
