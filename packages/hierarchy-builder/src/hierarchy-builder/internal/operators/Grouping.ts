@@ -41,6 +41,7 @@ interface FullGroupingProps {
 export interface GroupingHandlerResult {
   allNodes: HierarchyNode[];
   groupedNodes: HierarchyNode[];
+  ungroupedNodes: HierarchyNode[];
   groupingType: GroupingType;
 }
 

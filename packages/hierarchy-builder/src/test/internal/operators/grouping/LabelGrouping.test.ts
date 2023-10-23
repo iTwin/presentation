@@ -59,7 +59,6 @@ describe("LabelGrouping", () => {
         },
         children: [nodes[0], nodes[1]],
       },
-      nodes[3],
       {
         label: "2",
         key: {
@@ -68,6 +67,7 @@ describe("LabelGrouping", () => {
         },
         children: [nodes[2]],
       },
+      nodes[3],
       {
         label: "3",
         key: {

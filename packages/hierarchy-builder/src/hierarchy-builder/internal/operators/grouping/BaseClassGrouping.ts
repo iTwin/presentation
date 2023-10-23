@@ -25,7 +25,7 @@ async function createBaseClassGroupsForSingleBaseClass(
   nodes: HierarchyNode[],
   baseECClass: ECClass,
 ): Promise<GroupingHandlerResult> {
-  const finalResult: GroupingHandlerResult = { allNodes: [], groupedNodes: [], groupingType: "base-class" };
+  const finalResult: GroupingHandlerResult = { allNodes: [], groupedNodes: [], ungroupedNodes: [], groupingType: "base-class" };
   const baseClassGroupingNode: HierarchyNode = {
     label: baseECClass.fullName,
     key: {
@@ -38,6 +38,7 @@ async function createBaseClassGroupsForSingleBaseClass(
     if (HierarchyNode.isInstancesNode(node) && node.params?.grouping?.byBaseClasses) {
       if (!node.params.grouping.byBaseClasses.fullClassNames.some((className) => className === baseECClass.fullName)) {
         finalResult.allNodes.push(node);
+        finalResult.ungroupedNodes.push(node);
         continue;
       }
       const fullCurrentNodeClassName = node.key.instanceKeys[0].className;
@@ -50,6 +51,7 @@ async function createBaseClassGroupsForSingleBaseClass(
       }
     }
     finalResult.allNodes.push(node);
+    finalResult.ungroupedNodes.push(node);
   }
 
   // push grouping node if it has children
