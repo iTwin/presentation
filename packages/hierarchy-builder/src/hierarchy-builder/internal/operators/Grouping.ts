@@ -23,14 +23,14 @@ export function createGroupingOperator(metadata: IMetadataProvider) {
   return function (nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
     return nodes.pipe(
       toArray(),
-      mergeMap((resolvedNodes) => from(groupNodesFromHandlerCreator(metadata, resolvedNodes, createGroupingHandlers))),
+      mergeMap((resolvedNodes) =>
+        from(createGroupingHandlers(metadata, resolvedNodes)).pipe(mergeMap((groupingHandlers) => from(groupNodes(resolvedNodes, groupingHandlers)))),
+      ),
       mergeMap((groupedNodes) => from(groupedNodes)),
       log((n) => `out: ${n.label}`),
     );
   };
 }
-
-type GroupingHandlerCreator = (metadata: IMetadataProvider, nodes: HierarchyNode<string>[]) => Promise<GroupingHandler[]>;
 
 interface FullGroupingProps {
   nodes: HierarchyNode[];
@@ -49,15 +49,6 @@ export type GroupingType = "label" | "class" | "base-class";
 
 /** @internal */
 export type GroupingHandler = (allNodes: HierarchyNode[]) => Promise<GroupingHandlerResult>;
-
-async function groupNodesFromHandlerCreator(
-  metadata: IMetadataProvider,
-  nodes: HierarchyNode[],
-  groupingHandlerCreator: GroupingHandlerCreator,
-): Promise<HierarchyNode[]> {
-  const groupingHandlers = await groupingHandlerCreator(metadata, nodes);
-  return groupNodes(nodes, groupingHandlers);
-}
 
 async function groupNodes(nodes: HierarchyNode[], groupingHandlers: GroupingHandler[]): Promise<HierarchyNode[]> {
   const originalNodes = nodes;
