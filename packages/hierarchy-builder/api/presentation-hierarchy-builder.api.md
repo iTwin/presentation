@@ -56,7 +56,6 @@ export class ClassBasedInstanceLabelSelectClauseFactory implements IInstanceLabe
 // @beta
 export interface ClassBasedInstanceLabelSelectClauseFactoryProps {
     clauses: ClassBasedLabelSelectClause[];
-    // @internal (undocumented)
     defaultClauseFactory?: IInstanceLabelSelectClauseFactory;
     metadataProvider: IMetadataProvider;
 }
