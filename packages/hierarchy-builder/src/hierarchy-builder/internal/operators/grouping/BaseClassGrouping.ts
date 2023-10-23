@@ -36,15 +36,7 @@ async function createBaseClassGroupsForSingleBaseClass(
   };
   for (const node of nodes) {
     if (HierarchyNode.isInstancesNode(node) && node.params?.grouping?.byBaseClasses) {
-      let classNameIsInNodeBaseClassList = false;
-      // check if the node should be grouped by this baseClass
-      for (const className of node.params.grouping.byBaseClasses.fullClassNames) {
-        if (className === baseECClass.fullName) {
-          classNameIsInNodeBaseClassList = true;
-          break;
-        }
-      }
-      if (!classNameIsInNodeBaseClassList) {
+      if (!node.params.grouping.byBaseClasses.fullClassNames.some((className) => className === baseECClass.fullName)) {
         finalResult.allNodes.push(node);
         continue;
       }
