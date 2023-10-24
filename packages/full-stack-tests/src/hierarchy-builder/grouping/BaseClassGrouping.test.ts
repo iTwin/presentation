@@ -6,11 +6,8 @@
 import { PhysicalPartition, Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { SchemaContext } from "@itwin/ecschema-metadata";
-import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import { HierarchyProvider, IHierarchyLevelDefinitionsFactory, NodeSelectClauseFactory } from "@itwin/presentation-hierarchy-builder";
-import { buildIModel, insertPhysicalPartition, insertSubject } from "../../IModelUtils";
+import { IHierarchyLevelDefinitionsFactory, NodeSelectClauseFactory } from "@itwin/presentation-hierarchy-builder";
+import { buildIModel, createProvider, insertPhysicalPartition, insertSubject } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
 
@@ -31,17 +28,6 @@ describe("Stateless hierarchy builder", () => {
       await terminate();
     });
 
-    function createProvider(props: { imodel: IModelConnection; hierarchy: IHierarchyLevelDefinitionsFactory }) {
-      const { imodel, hierarchy } = props;
-      const schemas = new SchemaContext();
-      schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-      const metadataProvider = createMetadataProvider(schemas);
-      return new HierarchyProvider({
-        metadataProvider,
-        hierarchyDefinition: hierarchy,
-        queryExecutor: createECSqlQueryExecutor(imodel),
-      });
-    }
     describe("does not group", () => {
       let sharedIModel: IModelConnection;
       let sharedKeys: any;
@@ -236,7 +222,7 @@ describe("Stateless hierarchy builder", () => {
           provider: createProvider({ imodel, hierarchy: customHierarchy }),
           expect: [
             NodeValidators.createForClassGroupingNode({
-              label: baseClassName,
+              label: "Information Partition",
               className: baseClassName,
               children: [
                 NodeValidators.createForInstanceNode({
@@ -322,15 +308,15 @@ describe("Stateless hierarchy builder", () => {
           provider: createProvider({ imodel, hierarchy: customHierarchy }),
           expect: [
             NodeValidators.createForClassGroupingNode({
-              label: `${baseSchemaName}.${baseClassName1}`,
+              label: "Element",
               className: `${baseSchemaName}.${baseClassName1}`,
               children: [
                 NodeValidators.createForClassGroupingNode({
-                  label: `${baseSchemaName}.${baseClassName2}`,
+                  label: "Information Content Element",
                   className: `${baseSchemaName}.${baseClassName2}`,
                   children: [
                     NodeValidators.createForClassGroupingNode({
-                      label: `${baseSchemaName}.${baseClassName3}`,
+                      label: "Information Partition",
                       className: `${baseSchemaName}.${baseClassName3}`,
                       children: [
                         NodeValidators.createForInstanceNode({
@@ -442,15 +428,15 @@ describe("Stateless hierarchy builder", () => {
           provider: createProvider({ imodel, hierarchy: customHierarchy }),
           expect: [
             NodeValidators.createForClassGroupingNode({
-              label: `${baseSchemaName}.${baseClassName1}`,
+              label: "Element",
               className: `${baseSchemaName}.${baseClassName1}`,
               children: [
                 NodeValidators.createForClassGroupingNode({
-                  label: `${baseSchemaName}.${baseClassName2}`,
+                  label: "Information Content Element",
                   className: `${baseSchemaName}.${baseClassName2}`,
                   children: [
                     NodeValidators.createForClassGroupingNode({
-                      label: `${baseSchemaName}.${baseClassName3}`,
+                      label: "Information Partition",
                       className: `${baseSchemaName}.${baseClassName3}`,
                       children: [
                         NodeValidators.createForInstanceNode({
@@ -480,11 +466,11 @@ describe("Stateless hierarchy builder", () => {
               ],
             }),
             NodeValidators.createForClassGroupingNode({
-              label: `${baseSchemaName}.${baseClassName2}`,
+              label: "Information Content Element",
               className: `${baseSchemaName}.${baseClassName2}`,
               children: [
                 NodeValidators.createForClassGroupingNode({
-                  label: `${baseSchemaName}.${baseClassName3}`,
+                  label: "Information Partition",
                   className: `${baseSchemaName}.${baseClassName3}`,
                   children: [
                     NodeValidators.createForInstanceNode({
@@ -578,15 +564,15 @@ describe("Stateless hierarchy builder", () => {
           provider: createProvider({ imodel, hierarchy: customHierarchy }),
           expect: [
             NodeValidators.createForClassGroupingNode({
-              label: `${baseSchemaName}.${baseClassName1}`,
+              label: "Element",
               className: `${baseSchemaName}.${baseClassName1}`,
               children: [
                 NodeValidators.createForClassGroupingNode({
-                  label: `${baseSchemaName}.${baseClassName2}`,
+                  label: "Information Content Element",
                   className: `${baseSchemaName}.${baseClassName2}`,
                   children: [
                     NodeValidators.createForClassGroupingNode({
-                      label: `${baseSchemaName}.${baseClassName3}`,
+                      label: "Information Partition",
                       className: `${baseSchemaName}.${baseClassName3}`,
                       children: [
                         NodeValidators.createForInstanceNode({

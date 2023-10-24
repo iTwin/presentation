@@ -5,12 +5,8 @@
 
 import { Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
-import { SchemaContext } from "@itwin/ecschema-metadata";
-import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import { HierarchyProvider, IHierarchyLevelDefinitionsFactory, NodeSelectClauseFactory } from "@itwin/presentation-hierarchy-builder";
-import { buildIModel, insertSubject } from "../../IModelUtils";
+import { IHierarchyLevelDefinitionsFactory, NodeSelectClauseFactory } from "@itwin/presentation-hierarchy-builder";
+import { buildIModel, createProvider, insertSubject } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
 
@@ -28,18 +24,6 @@ describe("Stateless hierarchy builder", () => {
     after(async () => {
       await terminate();
     });
-
-    function createProvider(props: { imodel: IModelConnection; hierarchy: IHierarchyLevelDefinitionsFactory }) {
-      const { imodel, hierarchy } = props;
-      const schemas = new SchemaContext();
-      schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-      const metadataProvider = createMetadataProvider(schemas);
-      return new HierarchyProvider({
-        metadataProvider,
-        hierarchyDefinition: hierarchy,
-        queryExecutor: createECSqlQueryExecutor(imodel),
-      });
-    }
 
     const basicHierarchy: IHierarchyLevelDefinitionsFactory = {
       async defineHierarchyLevel(parentNode) {

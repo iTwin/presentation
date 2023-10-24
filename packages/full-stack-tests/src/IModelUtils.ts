@@ -22,6 +22,10 @@ import {
   SubjectProps,
 } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
+import { SchemaContext } from "@itwin/ecschema-metadata";
+import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
+import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
+import { HierarchyProvider, IHierarchyLevelDefinitionsFactory } from "@itwin/presentation-hierarchy-builder";
 import { buildTestIModel, createFileNameFromString, setupOutputFileLocation, TestIModelBuilder } from "@itwin/presentation-testing";
 
 export async function withECDb<TResult extends {}>(
@@ -384,4 +388,16 @@ export function insertExternalSourceAspect(
   } as ExternalSourceAspectProps);
 
   return { className, id };
+}
+
+export function createProvider(props: { imodel: IModelConnection; hierarchy: IHierarchyLevelDefinitionsFactory }) {
+  const { imodel, hierarchy } = props;
+  const schemas = new SchemaContext();
+  schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
+  const metadataProvider = createMetadataProvider(schemas);
+  return new HierarchyProvider({
+    metadataProvider,
+    hierarchyDefinition: hierarchy,
+    queryExecutor: createECSqlQueryExecutor(imodel),
+  });
 }
