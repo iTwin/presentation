@@ -17,7 +17,7 @@ import {
   RelatedClassInfo,
   Ruleset,
 } from "@itwin/presentation-common";
-import { Presentation } from "@itwin/presentation-frontend";
+import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { waitFor } from "@testing-library/react";
 import { UniquePropertyValuesSelector } from "../../../presentation-components/properties/inputs/UniquePropertyValuesSelector";
 import { createTestECClassInfo, createTestPropertyInfo, createTestRelatedClassInfo, createTestRelationshipPath, render } from "../../_helpers/Common";
@@ -30,16 +30,27 @@ import {
 import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy";
 
 describe("UniquePropertyValuesSelector", () => {
-  beforeEach(async () => {
+  const getDistinctValuesStub = sinon.stub<
+    Parameters<PresentationManager["getPagedDistinctValues"]>,
+    ReturnType<PresentationManager["getPagedDistinctValues"]>
+  >();
+
+  before(async () => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
-    await Presentation.initialize();
+    sinon.stub(Presentation, "localization").get(() => localization);
+    sinon.stub(Presentation, "presentation").get(() => ({
+      getPagedDistinctValues: getDistinctValuesStub,
+    }));
   });
 
-  afterEach(async () => {
-    Presentation.terminate();
+  after(async () => {
     sinon.restore();
+  });
+
+  beforeEach(() => {
+    getDistinctValuesStub.reset();
   });
 
   const category = createTestCategoryDescription({ name: "root", label: "Root" });
@@ -78,7 +89,7 @@ describe("UniquePropertyValuesSelector", () => {
   it("invokes `onChange` when item from the menu is selected", async () => {
     const spy = sinon.spy();
 
-    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+    getDistinctValuesStub.resolves({
       total: 2,
       items: [
         { displayValue: "TestValue1", groupedRawValues: ["TestValue1"] },
@@ -106,8 +117,7 @@ describe("UniquePropertyValuesSelector", () => {
 
   it("invokes `onChange` with multiple values when additional item is selected", async () => {
     const spy = sinon.spy();
-
-    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+    getDistinctValuesStub.resolves({
       total: 2,
       items: [
         { displayValue: "TestValue1", groupedRawValues: ["TestValue1"] },
@@ -139,8 +149,7 @@ describe("UniquePropertyValuesSelector", () => {
 
   it("invokes `onChange` when item from the menu is deselected", async () => {
     const spy = sinon.spy();
-
-    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+    getDistinctValuesStub.resolves({
       total: 2,
       items: [
         { displayValue: "TestValue1", groupedRawValues: ["TestValue1"] },
@@ -174,8 +183,7 @@ describe("UniquePropertyValuesSelector", () => {
 
   it("invokes `onChange` when selected items are cleared", async () => {
     const spy = sinon.spy();
-
-    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+    getDistinctValuesStub.resolves({
       total: 2,
       items: [
         { displayValue: "TestValue1", groupedRawValues: ["TestValue1"] },
@@ -214,7 +222,7 @@ describe("UniquePropertyValuesSelector", () => {
   });
 
   it("menu shows `No values` message when there is no `fieldDescriptor`", async () => {
-    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+    getDistinctValuesStub.resolves({
       total: 2,
       items: [
         { displayValue: "TestValue1", groupedRawValues: ["TestValue1"] },
@@ -291,7 +299,7 @@ describe("UniquePropertyValuesSelector", () => {
   });
 
   it("does not load a row with undefined values", async () => {
-    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+    getDistinctValuesStub.resolves({
       total: 1,
       items: [{ displayValue: undefined, groupedRawValues: [undefined] }],
     });
@@ -310,7 +318,7 @@ describe("UniquePropertyValuesSelector", () => {
   });
 
   it("does not load a row with a displayLabel but no defined groupedRawValues", async () => {
-    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+    getDistinctValuesStub.resolves({
       total: 1,
       items: [{ displayValue: "TestValue", groupedRawValues: [undefined] }],
     });
@@ -329,7 +337,7 @@ describe("UniquePropertyValuesSelector", () => {
   });
 
   it("loads row with empty string as displayValue and sets it to an 'Empty Value' string", async () => {
-    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+    getDistinctValuesStub.resolves({
       total: 1,
       items: [{ displayValue: "", groupedRawValues: [""] }],
     });
@@ -349,7 +357,7 @@ describe("UniquePropertyValuesSelector", () => {
   });
 
   it("loads row even if one of the groupedRawValues is undefined ", async () => {
-    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+    getDistinctValuesStub.resolves({
       total: 1,
       items: [{ displayValue: "TestValue", groupedRawValues: [undefined, ""] }],
     });
@@ -370,7 +378,7 @@ describe("UniquePropertyValuesSelector", () => {
 
   describe("Date formatting", () => {
     it(`displays date in valid format when typename is 'shortDate'`, async () => {
-      sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+      getDistinctValuesStub.resolves({
         total: 1,
         items: [{ displayValue: "1410-07-15", groupedRawValues: [""] }],
       });
@@ -396,7 +404,7 @@ describe("UniquePropertyValuesSelector", () => {
     });
 
     it(`displays empty value string when typename is 'dateTime' but date is set as empty string`, async () => {
-      sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+      getDistinctValuesStub.resolves({
         total: 1,
         items: [{ displayValue: "", groupedRawValues: [""] }],
       });
@@ -422,7 +430,7 @@ describe("UniquePropertyValuesSelector", () => {
     });
 
     it(`displays date in valid format when typename is 'dateTime'`, async () => {
-      sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+      getDistinctValuesStub.resolves({
         total: 1,
         items: [{ displayValue: "1410-07-15T12:34:00Z", groupedRawValues: [""] }],
       });
@@ -449,7 +457,7 @@ describe("UniquePropertyValuesSelector", () => {
 
   describe("Date formatting", () => {
     it(`displays date in valid format when typename is 'shortDate'`, async () => {
-      sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+      getDistinctValuesStub.resolves({
         total: 1,
         items: [{ displayValue: "1410-07-15", groupedRawValues: [""] }],
       });
@@ -475,7 +483,7 @@ describe("UniquePropertyValuesSelector", () => {
     });
 
     it(`displays empty value string when typename is 'dateTime' but date is set as empty string`, async () => {
-      sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+      getDistinctValuesStub.resolves({
         total: 1,
         items: [{ displayValue: "", groupedRawValues: [""] }],
       });
@@ -501,7 +509,7 @@ describe("UniquePropertyValuesSelector", () => {
     });
 
     it(`displays date in valid format when typename is 'dateTime'`, async () => {
-      sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+      getDistinctValuesStub.resolves({
         total: 1,
         items: [{ displayValue: "1410-07-15T12:34:00Z", groupedRawValues: [""] }],
       });
@@ -554,8 +562,6 @@ describe("UniquePropertyValuesSelector", () => {
         ruleset: { id: "TestRuleset", rules: [] },
       });
 
-      const spy = sinon.spy(Presentation.presentation, "getPagedDistinctValues");
-
       const { queryByText, user } = render(
         <UniquePropertyValuesSelector
           property={testProperty}
@@ -570,7 +576,7 @@ describe("UniquePropertyValuesSelector", () => {
       const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
       await user.click(selector!);
 
-      const getPagedDistinctValuesCallArguments = spy.firstCall.args[0];
+      const getPagedDistinctValuesCallArguments = getDistinctValuesStub.firstCall.args[0];
       const ruleset = getPagedDistinctValuesCallArguments.rulesetOrId as Ruleset;
       const expectedKeySet = new KeySet([descriptorInputKeys]);
 
@@ -599,8 +605,6 @@ describe("UniquePropertyValuesSelector", () => {
         fields: [parentField],
       });
 
-      const spy = sinon.spy(Presentation.presentation, "getPagedDistinctValues");
-
       const { queryByText, user } = render(
         <UniquePropertyValuesSelector property={testProperty} onChange={() => {}} imodel={testImodel} descriptor={testDescriptor} />,
       );
@@ -610,7 +614,7 @@ describe("UniquePropertyValuesSelector", () => {
       await user.click(selector!);
 
       const [expectedSchemaName, expectedClassName] = lastStepOfRelationshipPath.targetClassInfo.name.split(":");
-      const [actualSchemaName, actualClassName] = getSchemaAndClassNameFromRuleset(spy.firstCall.args[0].rulesetOrId as Ruleset);
+      const [actualSchemaName, actualClassName] = getSchemaAndClassNameFromRuleset(getDistinctValuesStub.firstCall.args[0].rulesetOrId as Ruleset);
 
       expect(actualSchemaName).to.be.equal(expectedSchemaName);
       expect(actualClassName).to.be.equal(expectedClassName);
@@ -642,8 +646,6 @@ describe("UniquePropertyValuesSelector", () => {
         fields: [grandParentField],
       });
 
-      const spy = sinon.spy(Presentation.presentation, "getPagedDistinctValues");
-
       const { queryByText, user } = render(
         <UniquePropertyValuesSelector property={testProperty} onChange={() => {}} imodel={testImodel} descriptor={testDescriptor} />,
       );
@@ -653,7 +655,7 @@ describe("UniquePropertyValuesSelector", () => {
       await user.click(selector!);
 
       const [expectedSchemaName, expectedClassName] = lastStepOfRelationshipPath.targetClassInfo.name.split(":");
-      const [actualSchemaName, actualClassName] = getSchemaAndClassNameFromRuleset(spy.firstCall.args[0].rulesetOrId as Ruleset);
+      const [actualSchemaName, actualClassName] = getSchemaAndClassNameFromRuleset(getDistinctValuesStub.firstCall.args[0].rulesetOrId as Ruleset);
 
       expect(actualSchemaName).to.be.equal(expectedSchemaName);
       expect(actualClassName).to.be.equal(expectedClassName);
@@ -676,8 +678,6 @@ describe("UniquePropertyValuesSelector", () => {
         fields: [testField],
       });
 
-      const spy = sinon.spy(Presentation.presentation, "getPagedDistinctValues");
-
       const { queryByText, user } = render(
         <UniquePropertyValuesSelector property={testProperty} onChange={() => {}} imodel={testImodel} descriptor={testDescriptor} />,
       );
@@ -687,7 +687,7 @@ describe("UniquePropertyValuesSelector", () => {
       await user.click(selector!);
 
       const [expectedSchemaName, expectedClassName] = testClassInfo.name.split(":");
-      const [actualSchemaName, actualClassName] = getSchemaAndClassNameFromRuleset(spy.firstCall.args[0].rulesetOrId as Ruleset);
+      const [actualSchemaName, actualClassName] = getSchemaAndClassNameFromRuleset(getDistinctValuesStub.firstCall.args[0].rulesetOrId as Ruleset);
 
       expect(actualSchemaName).to.be.equal(expectedSchemaName);
       expect(actualClassName).to.be.equal(expectedClassName);
@@ -704,8 +704,6 @@ describe("UniquePropertyValuesSelector", () => {
         fields: [createTestNestedContentField({ name: "testField", nestedFields: [] })],
       });
 
-      const spy = sinon.spy(Presentation.presentation, "getPagedDistinctValues");
-
       const { queryByText, user } = render(
         <UniquePropertyValuesSelector property={testProperty} onChange={() => {}} imodel={testImodel} descriptor={testDescriptor} />,
       );
@@ -714,7 +712,7 @@ describe("UniquePropertyValuesSelector", () => {
       const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
       await user.click(selector!);
 
-      expect(spy).to.not.be.called;
+      expect(getDistinctValuesStub).to.not.be.called;
     });
   });
 });

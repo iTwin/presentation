@@ -8,7 +8,7 @@ import * as moq from "typemoq";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { ISelectionProvider, SelectionChangeEventArgs, SelectionChangeType, SelectionHandler } from "@itwin/presentation-frontend";
-import { renderHook } from "@testing-library/react-hooks";
+import { act, renderHook } from "@testing-library/react";
 import { IPresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider";
 import { usePropertyDataProviderWithUnifiedSelection } from "../../presentation-components/propertygrid/UseUnifiedSelection";
 import { createTestECInstanceKey, isKeySet } from "../_helpers/Common";
@@ -109,7 +109,9 @@ describe("usePropertyDataProviderWithUnifiedSelection", () => {
     expect(result.current.isOverLimit).to.be.false;
     expect(result.current.numSelectedElements).to.be.equal(2);
 
-    selectionHandlerMock.target.onSelect!(selectionEvent, selectionProviderMock.object);
+    act(() => {
+      selectionHandlerMock.target.onSelect!(selectionEvent, selectionProviderMock.object);
+    });
     dataProviderMock.verify((x) => (x.keys = isKeySet(keys2)), moq.Times.once());
   });
 

@@ -32,13 +32,13 @@ import {
   SelectionHelper,
   SelectionManager,
 } from "@itwin/presentation-frontend";
-import { renderHook } from "@testing-library/react-hooks";
-import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";
+import { renderHook } from "@testing-library/react";
 import {
   UnifiedSelectionTreeEventHandler,
   UnifiedSelectionTreeEventHandlerParams,
   useUnifiedSelectionTreeEventHandler,
 } from "../../../presentation-components/tree/controlled/UseUnifiedSelection";
+import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";
 import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem";
 import { createTestECClassGroupingNodeKey, createTestECInstancesNodeKey } from "../../_helpers/Hierarchy";
 import { ResolvablePromise } from "../../_helpers/Promises";

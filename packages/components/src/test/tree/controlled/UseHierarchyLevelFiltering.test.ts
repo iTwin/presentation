@@ -6,17 +6,18 @@
 import { expect } from "chai";
 import { Subject } from "rxjs";
 import { from } from "rxjs/internal/observable/from";
+import sinon from "sinon";
 import * as moq from "typemoq";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { ITreeNodeLoader, PropertyFilterRuleOperator, TreeModelNodeInput, TreeModelSource, TreeNodeLoadResult, UiComponents } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
-import { renderHook } from "@testing-library/react-hooks";
+import { renderHook } from "@testing-library/react";
+import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
 import { useHierarchyLevelFiltering } from "../../../presentation-components/tree/controlled/UseHierarchyLevelFiltering";
 import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem";
 import { createTestPropertyInfo } from "../../_helpers/Common";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content";
 import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy";
-import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
 
 function createTreeModelInput(input?: Partial<TreeModelNodeInput>, treeItem?: Partial<PresentationTreeNodeItem>): TreeModelNodeInput {
   const item: PresentationTreeNodeItem = {
@@ -49,12 +50,12 @@ describe("useHierarchyLevelFiltering", () => {
     usedClasses: [],
   };
 
-  before(async () => {
-    await UiComponents.initialize(new EmptyLocalization());
+  before(() => {
+    sinon.stub(UiComponents, "localization").get(() => new EmptyLocalization());
   });
 
   after(() => {
-    UiComponents.terminate();
+    sinon.restore();
   });
 
   beforeEach(() => {

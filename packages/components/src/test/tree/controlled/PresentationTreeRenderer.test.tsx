@@ -39,7 +39,17 @@ describe("PresentationTreeRenderer", () => {
 
   const baseTreeProps = {
     imodel: {} as IModelConnection,
-    treeActions: {} as TreeActions,
+    treeActions: {
+      onNodeMouseDown: () => {},
+      onNodeMouseMove: () => {},
+      onNodeClicked: () => {},
+      onNodeCheckboxClicked: () => {},
+      onNodeCollapsed: () => {},
+      onNodeEditorActivated: () => {},
+      onNodeExpanded: () => {},
+      onTreeKeyDown: () => {},
+      onTreeKeyUp: () => {},
+    } as TreeActions,
     dataProvider: {} as IPresentationTreeDataProvider,
     height: 100,
     width: 100,

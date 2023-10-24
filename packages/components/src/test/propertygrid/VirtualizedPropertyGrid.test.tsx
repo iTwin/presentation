@@ -23,8 +23,7 @@ import {
 } from "@itwin/components-react";
 import { Orientation } from "@itwin/core-react";
 import { InstanceKey } from "@itwin/presentation-common";
-import { render, waitFor } from "@testing-library/react";
-import { renderHook } from "@testing-library/react-hooks";
+import { render, renderHook, waitFor } from "@testing-library/react";
 import { PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider";
 import { createTestCategoryDescription } from "../_helpers/Content";
 import { createPrimitiveStringProperty } from "../_helpers/Properties";

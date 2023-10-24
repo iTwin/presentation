@@ -25,15 +25,14 @@ describe("InstanceKeyValueRenderer", () => {
     return new PropertyRecord(value, { name: "", displayLabel: "", typename: "navigation" });
   }
 
-  before(async () => {
+  before(() => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
-    await Presentation.initialize();
+    sinon.stub(Presentation, "localization").get(() => localization);
   });
 
   after(async () => {
-    Presentation.terminate();
     sinon.restore();
   });
 

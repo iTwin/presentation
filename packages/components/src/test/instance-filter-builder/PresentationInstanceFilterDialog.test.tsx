@@ -49,15 +49,9 @@ describe("PresentationInstanceFilterDialog", () => {
   const imodelMock = moq.Mock.ofType<IModelConnection>();
   const onCloseEvent = new BeEvent<() => void>();
 
-  before(() => {
+  beforeEach(() => {
     HTMLElement.prototype.scrollIntoView = () => {};
-  });
 
-  after(() => {
-    delete (HTMLElement.prototype as any).scrollIntoView;
-  });
-
-  beforeEach(async () => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
@@ -77,6 +71,7 @@ describe("PresentationInstanceFilterDialog", () => {
     onCloseEvent.raiseEvent();
     imodelMock.reset();
     sinon.restore();
+    delete (HTMLElement.prototype as any).scrollIntoView;
   });
 
   it("invokes 'onApply' with string property filter rule", async () => {
@@ -101,18 +96,20 @@ describe("PresentationInstanceFilterDialog", () => {
     const applyButton = await getApplyButton(container);
     await user.click(applyButton);
 
-    expect(spy).to.be.calledOnceWith({
-      filter: {
-        field: stringField,
-        operator: PropertyFilterRuleOperator.Like,
-        value: {
-          valueFormat: AbstractPropertyValueFormat.Primitive,
-          value: "test value",
-          displayValue: "test value",
-        } as PrimitiveValue,
-      },
-      usedClasses: [classInfo],
-    });
+    await waitFor(() =>
+      expect(spy).to.be.calledOnceWith({
+        filter: {
+          field: stringField,
+          operator: PropertyFilterRuleOperator.Like,
+          value: {
+            valueFormat: AbstractPropertyValueFormat.Primitive,
+            value: "test value",
+            displayValue: "test value",
+          } as PrimitiveValue,
+        },
+        usedClasses: [classInfo],
+      }),
+    );
   });
 
   it("does not invoke `onApply` when filter is invalid", async () => {
@@ -159,7 +156,7 @@ describe("PresentationInstanceFilterDialog", () => {
     await waitFor(() => expect(queryByText("general.error")).to.not.be.null);
   });
 
-  it("renders custom title", () => {
+  it("renders custom title", async () => {
     const spy = sinon.spy();
     const title = "custom title";
 
@@ -175,7 +172,7 @@ describe("PresentationInstanceFilterDialog", () => {
       />,
     );
 
-    expect(queryByText(title)).to.not.be.null;
+    await waitFor(() => expect(queryByText(title)).to.not.be.null);
   });
 
   it("renders results count", async () => {

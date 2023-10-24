@@ -46,13 +46,11 @@ describe("PresentationTreeNodeRenderer", () => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
-    await UiComponents.initialize(localization);
-    await Presentation.initialize();
+    sinon.stub(UiComponents, "localization").get(() => localization);
+    sinon.stub(Presentation, "localization").get(() => localization);
   });
 
   afterEach(() => {
-    UiComponents.terminate();
-    Presentation.terminate();
     treeActionsMock.reset();
     sinon.restore();
   });

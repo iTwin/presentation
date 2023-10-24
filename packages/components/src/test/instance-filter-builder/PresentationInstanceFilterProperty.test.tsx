@@ -18,18 +18,16 @@ describe("PresentationInstanceFilterProperty", () => {
   const className = "TestClassName";
   const schemaName = "TestSchema";
 
-  before(async () => {
+  before(() => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
-    await UiComponents.initialize(new EmptyLocalization());
-    await Presentation.initialize();
+    sinon.stub(UiComponents, "localization").get(() => localization);
+    sinon.stub(Presentation, "localization").get(() => localization);
     Element.prototype.scrollIntoView = sinon.stub();
   });
 
-  after(async () => {
-    Presentation.terminate();
-    UiComponents.terminate();
+  after(() => {
     sinon.restore();
   });
 

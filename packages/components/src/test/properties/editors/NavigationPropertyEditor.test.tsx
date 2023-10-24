@@ -10,9 +10,8 @@ import { PropertyValueRendererManager } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, KeySet, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
-import { Presentation } from "@itwin/presentation-frontend";
-import { render as renderRTL, waitFor } from "@testing-library/react";
-import { renderHook } from "@testing-library/react-hooks";
+import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
+import { renderHook, render as renderRTL, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { IContentDataProvider } from "../../../presentation-components/common/ContentDataProvider";
 import { NavigationPropertyTargetEditor } from "../../../presentation-components/properties/editors/NavigationPropertyEditor";
@@ -43,18 +42,25 @@ function render(ui: React.ReactElement, context?: Partial<NavigationPropertyEdit
 }
 
 describe("<NavigationPropertyTargetEditor />", () => {
+  const getContentStub = sinon.stub<Parameters<PresentationManager["getContent"]>, ReturnType<PresentationManager["getContent"]>>();
   const testRecord = createTestPropertyRecord();
 
-  beforeEach(async () => {
+  before(() => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
-    await Presentation.initialize();
+    sinon.stub(Presentation, "localization").get(() => localization);
+    sinon.stub(Presentation, "presentation").get(() => ({
+      getContent: getContentStub,
+    }));
   });
 
-  afterEach(async () => {
-    Presentation.terminate();
+  after(() => {
     sinon.restore();
+  });
+
+  beforeEach(() => {
+    getContentStub.reset();
   });
 
   it("renders selector when rendered inside context", async () => {
@@ -81,7 +87,7 @@ describe("<NavigationPropertyTargetEditor />", () => {
       values: {},
       displayValues: {},
     });
-    sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
+    getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
     const spy = sinon.spy();
     const { getByRole, getByText, queryByDisplayValue } = render(
       <NavigationPropertyTargetEditor propertyRecord={testRecord} onCancel={() => {}} onCommit={spy} />,

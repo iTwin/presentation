@@ -11,8 +11,7 @@ import { BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, InstanceKey, Item, KeySet } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, SelectionManager } from "@itwin/presentation-frontend";
-import { waitFor } from "@testing-library/react";
-import { renderHook } from "@testing-library/react-hooks";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { TableColumnDefinition, TableRowDefinition } from "../../presentation-components/table/Types";
 import {
   usePresentationTable,
@@ -190,7 +189,9 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     await waitFor(() => expect(result.current.isLoading).to.be.false);
 
     const expectedKeys = result.current.rows.map((row) => JSON.parse(row.key));
-    result.current.onSelect(stringifiedKeys);
+    act(() => {
+      result.current.onSelect(stringifiedKeys);
+    });
     expect(replaceSpy).to.be.calledOnceWith("UnifiedSelectionContext", {}, expectedKeys, 1);
   });
 
@@ -200,7 +201,9 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     await waitFor(() => expect(result.current.isLoading).to.be.false);
 
     const replaceSpy = sinon.stub(Presentation.selection, "replaceSelection");
-    result.current.onSelect(keys);
+    act(() => {
+      result.current.onSelect(keys);
+    });
 
     expect(replaceSpy).to.have.been.calledOnceWithExactly("UnifiedSelectionContext", {}, [], 1);
   });
@@ -212,7 +215,9 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     await waitFor(() => expect(result.current.isLoading).to.be.false);
 
     const replaceSpy = sinon.stub(Presentation.selection, "replaceSelection");
-    result.current.onSelect(stringifiedKeys);
+    act(() => {
+      result.current.onSelect(stringifiedKeys);
+    });
 
     expect(replaceSpy).to.have.been.calledOnceWithExactly("UnifiedSelectionContext", {}, [], 1);
   });
@@ -250,7 +255,9 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     const selectedRowsAfterLoading = result.current.selectedRows;
     expect(selectedRowsAfterLoading.length).to.be.equal(1);
 
-    Presentation.selection.addToSelection("UnifiedSelectionContext", imodel, new KeySet([instanceKey2]), 1);
+    act(() => {
+      Presentation.selection.addToSelection("UnifiedSelectionContext", imodel, new KeySet([instanceKey2]), 1);
+    });
 
     await waitFor(() => expect(result.current.isLoading).to.be.false);
     const selectedRowsAfterAdding = result.current.selectedRows;
@@ -275,7 +282,9 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     expect(selectedRowsAfterLoading.length).to.be.equal(1);
     expect(selectedRowsAfterLoading[0].key).to.be.equal(JSON.stringify(instanceKey1));
 
-    Presentation.selection.replaceSelection("UnifiedSelectionContext", imodel, new KeySet([instanceKey2]), 1);
+    act(() => {
+      Presentation.selection.replaceSelection("UnifiedSelectionContext", imodel, new KeySet([instanceKey2]), 1);
+    });
 
     await waitFor(() => expect(result.current.isLoading).to.be.false);
     const selectedRowsAfterReplacing = result.current.selectedRows;
@@ -299,7 +308,9 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     const selectedRowsAfterLoading = result.current.selectedRows;
     expect(selectedRowsAfterLoading.length).to.be.equal(2);
 
-    Presentation.selection.removeFromSelection("UnifiedSelectionContext", imodel, new KeySet([instanceKey1]), 1);
+    act(() => {
+      Presentation.selection.removeFromSelection("UnifiedSelectionContext", imodel, new KeySet([instanceKey1]), 1);
+    });
 
     await waitFor(() => expect(result.current.isLoading).to.be.false);
     const selectedRowsAfterRemoving = result.current.selectedRows;
@@ -323,7 +334,9 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     const selectedRowsAfterLoading = result.current.selectedRows;
     expect(selectedRowsAfterLoading.length).to.be.equal(2);
 
-    Presentation.selection.clearSelection("UnifiedSelectionContext", imodel, 1);
+    act(() => {
+      Presentation.selection.clearSelection("UnifiedSelectionContext", imodel, 1);
+    });
 
     await waitFor(() => expect(result.current.isLoading).to.be.false);
     const selectedRowsAfterClearing = result.current.selectedRows;
@@ -334,7 +347,10 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
 
     await waitFor(() => expect(result.current.isLoading).to.be.false);
-    Presentation.selection.addToSelection("UnifiedSelectionContext", initialProps.imodel, new KeySet([createTestECInstanceKey()]), 3);
+
+    act(() => {
+      Presentation.selection.addToSelection("UnifiedSelectionContext", initialProps.imodel, new KeySet([createTestECInstanceKey()]), 3);
+    });
 
     await waitFor(() => expect(result.current.isLoading).to.be.false);
     const selectedRowsAfterAdding = result.current.selectedRows;

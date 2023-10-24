@@ -36,6 +36,8 @@ describe("<QuantityPropertyEditorInput />", () => {
   const parserSpec = {
     parseToQuantityValue: sinon.stub<[string], QuantityParseResult>(),
   };
+  const schemaContextProvider = () => schemaContext;
+  const imodel = {} as IModelConnection;
 
   let getFormatterSpecStub: sinon.SinonStub<
     Parameters<KoqPropertyValueFormatter["getFormatterSpec"]>,
@@ -77,17 +79,17 @@ describe("<QuantityPropertyEditorInput />", () => {
     sinon.restore();
   });
 
-  it("renders numeric input if schema context is not available", async () => {
+  it("renders numeric input if schema context is not available", () => {
     const record = createRecord({ initialValue: 10 });
     const { getByDisplayValue } = render(<QuantityPropertyEditorInput propertyRecord={record} />);
 
     expect(getByDisplayValue("10")).to.not.be.null;
   });
 
-  it("renders numeric input if property does not have quantityType", async () => {
+  it("renders numeric input if property does not have quantityType", () => {
     const record = createRecord({ initialValue: 10 });
     const { getByDisplayValue } = render(
-      <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
+      <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={schemaContextProvider}>
         <QuantityPropertyEditorInput propertyRecord={record} />
       </SchemaMetadataContextProvider>,
     );
@@ -98,7 +100,7 @@ describe("<QuantityPropertyEditorInput />", () => {
   it("renders formatted quantity value if schema context is available", async () => {
     const record = createRecord({ initialValue: 10, quantityType: "TestKOQ" });
     const { getByDisplayValue } = render(
-      <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
+      <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={schemaContextProvider}>
         <QuantityPropertyEditorInput propertyRecord={record} />
       </SchemaMetadataContextProvider>,
     );
@@ -109,11 +111,13 @@ describe("<QuantityPropertyEditorInput />", () => {
   it("allows entering number when schema context is not available", async () => {
     const spy = sinon.stub<Parameters<Required<PropertyEditorProps>["onCommit"]>, ReturnType<Required<PropertyEditorProps>["onCommit"]>>();
     const record = createRecord({ initialValue: undefined, quantityType: "TestKOQ" });
-    const { getByRole, user } = render(<QuantityPropertyEditorInput propertyRecord={record} onCommit={spy} />);
+    const { getByRole, getByDisplayValue, user } = render(<QuantityPropertyEditorInput propertyRecord={record} onCommit={spy} />);
 
-    const input = await waitFor(() => getByRole("textbox"));
+    const input = getByRole("textbox");
 
     await user.type(input, "123.4");
+
+    await waitFor(() => getByDisplayValue("123.4"));
     await user.tab();
 
     await waitFor(() => {
@@ -131,15 +135,17 @@ describe("<QuantityPropertyEditorInput />", () => {
   it("allows entering quantity value when schema context is available", async () => {
     const spy = sinon.stub<Parameters<Required<PropertyEditorProps>["onCommit"]>, ReturnType<Required<PropertyEditorProps>["onCommit"]>>();
     const record = createRecord({ initialValue: undefined, quantityType: "TestKOQ" });
-    const { getByRole, user } = render(
-      <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
+    const { getByRole, getByDisplayValue, user } = render(
+      <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={schemaContextProvider}>
         <QuantityPropertyEditorInput propertyRecord={record} onCommit={spy} />
       </SchemaMetadataContextProvider>,
     );
 
-    const input = await waitFor(() => getByRole("textbox"));
-
+    const input = getByRole("textbox") as HTMLInputElement;
+    await waitFor(() => expect(input.disabled).to.be.false);
     await user.type(input, "123.4 unit");
+
+    await waitFor(() => getByDisplayValue("123.4 unit"));
     await user.tab();
 
     await waitFor(() => {
@@ -157,18 +163,23 @@ describe("<QuantityPropertyEditorInput />", () => {
   it("returns property value when `getValue` is called on component `ref`", async () => {
     const ref = createRef<PropertyEditorAttributes>();
     const record = createRecord({ initialValue: undefined, quantityType: "TestKOQ" });
-    const { getByRole, user } = render(
-      <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => schemaContext}>
+    const { getByRole, getByDisplayValue, user } = render(
+      <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={schemaContextProvider}>
         <QuantityPropertyEditorInput ref={ref} propertyRecord={record} />
       </SchemaMetadataContextProvider>,
     );
 
-    const input = await waitFor(() => getByRole("textbox"));
+    const input = getByRole("textbox") as HTMLInputElement;
+    await waitFor(() => expect(input.disabled).to.be.false);
     await user.type(input, "123.4 unit");
-    await user.keyboard("{Enter}");
 
-    const value = ref.current?.getValue() as PrimitiveValue;
-    expect(value.value).to.be.eq(123.4);
-    expect(value.displayValue).to.be.eq("123.4 unit");
+    await waitFor(() => getByDisplayValue("123.4 unit"));
+    await user.tab();
+
+    await waitFor(() => {
+      const value = ref.current?.getValue() as PrimitiveValue;
+      expect(value.value).to.be.eq(123.4);
+      expect(value.displayValue).to.be.eq("123.4 unit");
+    });
   });
 });

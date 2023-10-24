@@ -7,7 +7,7 @@ import sinon from "sinon";
 import * as moq from "typemoq";
 import { RegisteredRuleset, Ruleset } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, RulesetManager } from "@itwin/presentation-frontend";
-import { renderHook } from "@testing-library/react-hooks";
+import { renderHook } from "@testing-library/react";
 import { useRulesetRegistration } from "../../presentation-components/hooks/UseRulesetRegistration";
 import { ResolvablePromise } from "../_helpers/Promises";
 
@@ -30,7 +30,6 @@ describe("useRulesetRegistration", () => {
   });
 
   afterEach(() => {
-    Presentation.terminate();
     sinon.restore();
   });
 
