@@ -87,28 +87,46 @@ export interface HierarchyNodeHandlingParams {
   mergeByLabelId?: string;
 }
 
-/** @beta */
+/**
+ * A data structure that represents label grouping.
+ * @beta
+ */
 export interface LabelGroupingParams {
   byLabel?: boolean | BaseGroupingParams;
 }
 
-/** @beta */
+/**
+ * A type that represents all groupings.
+ * @beta
+ */
 export type GroupingParams = LabelGroupingParams & ClassGroupingParams;
 
-/** @beta */
+/**
+ * A data structure that represents all class groupings.
+ * @beta
+ */
 export interface ClassGroupingParams {
   byClass?: boolean | BaseGroupingParams;
   byBaseClasses?: BaseClassGroupingParams;
 }
 
-/** @beta */
+/**
+ * Parameters that are used for all groupings.
+ * @beta
+ */
 export interface BaseGroupingParams {
+  /** Hiding option that determines whether to hide group nodes which have no siblings at the same hierarchy level. */
   hideIfNoSiblings?: boolean;
+  /** Hiding option that determines whether to hide group nodes which have only one node as its children. */
   hideIfOneGroupedNode?: boolean;
 }
 
-/** @beta */
+/**
+ * A data structure that represents base class grouping.
+ * @beta
+ */
 export interface BaseClassGroupingParams extends BaseGroupingParams {
+  /** Base classes by which the node should be grouped by. */
   fullClassNames: string[];
 }
 

@@ -12,17 +12,14 @@ export interface ArrayPropertyAttributes {
     minOccurs: number;
 }
 
-// @beta (undocumented)
+// @beta
 export interface BaseClassGroupingParams extends BaseGroupingParams {
-    // (undocumented)
     fullClassNames: string[];
 }
 
-// @beta (undocumented)
+// @beta
 export interface BaseGroupingParams {
-    // (undocumented)
     hideIfNoSiblings?: boolean;
-    // (undocumented)
     hideIfOneGroupedNode?: boolean;
 }
 
@@ -92,7 +89,7 @@ export interface ClassGroupingNodeKey {
     type: "class-grouping";
 }
 
-// @beta (undocumented)
+// @beta
 export interface ClassGroupingParams {
     // (undocumented)
     byBaseClasses?: BaseClassGroupingParams;
@@ -410,7 +407,7 @@ export function getLogger(): ILogger;
 // @beta
 export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey;
 
-// @beta (undocumented)
+// @beta
 export type GroupingParams = LabelGroupingParams & ClassGroupingParams;
 
 // @beta
@@ -611,7 +608,7 @@ export interface LabelGroupingNodeKey {
     type: "label-grouping";
 }
 
-// @beta (undocumented)
+// @beta
 export interface LabelGroupingParams {
     // (undocumented)
     byLabel?: boolean | BaseGroupingParams;
