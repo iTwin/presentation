@@ -14,7 +14,7 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { SvgError } from "@itwin/itwinui-illustrations-react";
 import { Button, Dialog, NonIdealState, ProgressRadial } from "@itwin/itwinui-react";
 import { Descriptor, Keys } from "@itwin/presentation-common";
-import { translate, useDelay } from "../common/Utils";
+import { translate, useDelay, useErrorState } from "../common/Utils";
 import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder";
 import { PresentationInstanceFilter, PresentationInstanceFilterInfo } from "./PresentationFilterBuilder";
 import { filterRuleValidator } from "./Utils";
@@ -163,7 +163,7 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
     [buildFilter, descriptor, filteringProps.selectedClasses],
   );
 
-  const throwError = useThrowError();
+  const throwError = useErrorState();
   const applyButtonHandle = () => {
     try {
       const result = getFilterInfo();
@@ -246,15 +246,4 @@ function ErrorState() {
       <NonIdealState svg={<SvgError />} heading={translate("general.error")} description={translate("general.generic-error-description")} />
     </div>
   );
-}
-
-// ErrorBoundary only catches errors that are thrown in React lifecycle methods. For event handlers and
-// async function errors can be rethrown from `setState` callback.
-function useThrowError() {
-  const [_, setSate] = useState({});
-  return (error: unknown) => {
-    setSate(() => {
-      throw error;
-    });
-  };
 }

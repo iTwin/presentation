@@ -206,18 +206,17 @@ export function useMergedRefs<T>(...refs: Array<MutableRefObject<T | null> | Leg
  * A hook that helps components throw errors in React's render loop so they can be captured by React error
  * boundaries.
  *
- * Usage: simply call the returned function with an error and it will be re-thrown on next render.
+ * Usage: simply call the returned function with an error and it will be re-thrown in React render loop.
  *
  * @internal
  */
 export function useErrorState() {
-  const [error, setError] = useState<Error | undefined>(undefined);
+  const [_, setError] = useState(undefined);
   const setErrorState = useCallback((e: unknown) => {
-    setError(e instanceof Error ? e : /* istanbul ignore next */ new Error());
+    setError(() => {
+      throw e instanceof Error ? e : /* istanbul ignore next */ new Error();
+    });
   }, []);
-  if (error) {
-    throw error;
-  }
   return setErrorState;
 }
 

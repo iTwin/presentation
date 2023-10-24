@@ -29,10 +29,10 @@ import { createDiagnosticsOptions, DiagnosticsProps } from "../common/Diagnostic
 import { RulesetRegistrationHelper } from "../common/RulesetRegistrationHelper";
 import { translate } from "../common/Utils";
 import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory";
+import { PresentationInstanceFilter, PresentationInstanceFilterInfo } from "../instance-filter-builder/PresentationFilterBuilder";
 import { IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider";
 import { InfoTreeNodeItemType, isPresentationTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem";
 import { createInfoNode, createTreeNodeItem, CreateTreeNodeItemProps, pageOptionsUiToPresentation } from "./Utils";
-import { PresentationInstanceFilter, PresentationInstanceFilterInfo } from "../instance-filter-builder/PresentationFilterBuilder";
 
 /**
  * Properties for creating a `PresentationTreeDataProvider` instance.
