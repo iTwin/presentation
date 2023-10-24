@@ -20,7 +20,7 @@ import { IModelConnection, SnapshotConnection } from "@itwin/core-frontend";
 import { ChildNodeSpecificationTypes, RuleTypes } from "@itwin/presentation-common";
 import { IPresentationTreeDataProvider, PresentationTreeNodeLoaderProps, usePresentationTreeNodeLoader } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
-import { renderHook } from "@testing-library/react-hooks";
+import { renderHook, waitFor } from "@testing-library/react";
 import { initialize, terminate } from "../../IntegrationTests";
 
 describe("Tree update", () => {
@@ -460,7 +460,7 @@ describe("Tree update", () => {
         };
 
     async function verifyHierarchy(props: PresentationTreeNodeLoaderProps, expectedTree: TreeHierarchy[]): Promise<VerifiedHierarchy> {
-      const { result, waitForNextUpdate } = renderHook((hookProps: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(hookProps).nodeLoader, {
+      const { result } = renderHook((hookProps: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(hookProps).nodeLoader, {
         initialProps: props,
       });
       await expectTree(result.current, expectedTree);
@@ -471,8 +471,7 @@ describe("Tree update", () => {
         }
 
         public async verifyChange(expectedUpdatedTree: TreeHierarchy[]): Promise<void> {
-          await waitForNextUpdate({ timeout: 9999999 });
-          await expectTree(result.current, expectedUpdatedTree);
+          await waitFor(async () => expectTree(result.current, expectedUpdatedTree), { timeout: 9999999 });
         }
       })();
     }
