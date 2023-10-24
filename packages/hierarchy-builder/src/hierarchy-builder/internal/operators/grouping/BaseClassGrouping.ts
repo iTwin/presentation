@@ -28,7 +28,7 @@ async function createBaseClassGroupsForSingleBaseClass(
 ): Promise<GroupingHandlerResult> {
   const finalResult: GroupingHandlerResult = { allNodes: [], groupedNodes: [], ungroupedNodes: [], groupingType: "base-class" };
   const baseClassGroupingNode: HierarchyNode = {
-    label: baseECClass.fullName,
+    label: baseECClass.label ?? baseECClass.name,
     key: {
       type: "class-grouping",
       class: { name: baseECClass.fullName, label: baseECClass.label ?? baseECClass.name },

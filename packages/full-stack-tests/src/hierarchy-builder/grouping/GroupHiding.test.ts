@@ -102,7 +102,7 @@ describe("Stateless hierarchy builder", () => {
         provider: createProvider({ imodel, hierarchy: customHierarchy }),
         expect: [
           NodeValidators.createForClassGroupingNode({
-            label: "BisCore.InformationPartitionElement",
+            label: "Information Partition",
             className: "BisCore.InformationPartitionElement",
             children: [
               NodeValidators.createForClassGroupingNode({
@@ -130,7 +130,7 @@ describe("Stateless hierarchy builder", () => {
             ],
           }),
           NodeValidators.createForClassGroupingNode({
-            label: "BisCore.InformationReferenceElement",
+            label: "Information Reference",
             className: "BisCore.InformationReferenceElement",
             children: [
               NodeValidators.createForClassGroupingNode({
