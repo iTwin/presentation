@@ -15,7 +15,7 @@ import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
 
 describe("Stateless hierarchy builder", () => {
-  describe("ClassGrouping", () => {
+  describe("Class grouping", () => {
     let selectClauseFactory: NodeSelectClauseFactory;
     let subjectClassName: string;
     let physicalPartitionClassName: string;
