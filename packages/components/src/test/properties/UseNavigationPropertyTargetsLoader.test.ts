@@ -10,7 +10,6 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { renderHook, waitFor } from "@testing-library/react";
 import {
   NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE,
   NavigationPropertyTarget,
@@ -18,6 +17,7 @@ import {
   useNavigationPropertyTargetsRuleset,
 } from "../../presentation-components/properties/UseNavigationPropertyTargetsLoader";
 import { createTestContentDescriptor, createTestContentItem } from "../_helpers/Content";
+import { renderHook, waitFor } from "../TestUtils";
 
 describe("useNavigationPropertyTargetsLoader", () => {
   const testImodel = {} as IModelConnection;

@@ -10,7 +10,6 @@ import { TreeModelNode, TreeNodeItem, UiComponents } from "@itwin/components-rea
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { NodePathElement } from "@itwin/presentation-common";
-import { act, renderHook, waitFor } from "@testing-library/react";
 import {
   useFilteredNodeLoader,
   UseFilteredNodeLoaderProps,
@@ -20,6 +19,7 @@ import { FilteredPresentationTreeDataProvider, IFilteredPresentationTreeDataProv
 import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";
 import { ResolvablePromise } from "../../_helpers/Promises";
 import { createTestPropertyRecord, createTestTreeNodeItem } from "../../_helpers/UiComponents";
+import { act, renderHook, waitFor } from "../../TestUtils";
 
 describe("useFilteredNodeLoader", () => {
   const dataProviderMock = moq.Mock.ofType<IPresentationTreeDataProvider>();

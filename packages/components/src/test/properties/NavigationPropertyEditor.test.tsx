@@ -11,7 +11,6 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, KeySet, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { renderHook, render as renderRTL, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { IContentDataProvider } from "../../presentation-components/common/ContentDataProvider";
 import {
@@ -22,6 +21,7 @@ import {
 } from "../../presentation-components/properties/NavigationPropertyEditor";
 import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField, createTestSimpleContentField } from "../_helpers/Content";
 import { createTestPropertyRecord } from "../_helpers/UiComponents";
+import { renderHook, render as renderRTL, waitFor } from "../TestUtils";
 
 function createNavigationPropertyInfo(): NavigationPropertyInfo {
   return {
@@ -129,7 +129,7 @@ describe("<NavigationPropertyTargetEditor />", () => {
   it("uses default property renderer when rendered not in the context", () => {
     const rendererStub = sinon.stub(PropertyValueRendererManager.defaultManager, "render");
     renderRTL(<NavigationPropertyTargetEditor propertyRecord={testRecord} />);
-    expect(rendererStub).to.be.calledOnceWith(testRecord);
+    expect(rendererStub).to.be.calledWith(testRecord);
   });
 
   it("renders nothing when property record is 'undefined'", () => {

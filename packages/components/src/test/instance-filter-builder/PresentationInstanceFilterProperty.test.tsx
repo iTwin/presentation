@@ -9,9 +9,9 @@ import { UiComponents } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
-import { fireEvent, render } from "@testing-library/react";
 import { PresentationInstanceFilterProperty } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterProperty";
 import { createTestInstanceFilterPropertyInfo, stubRaf } from "../_helpers/Common";
+import { fireEvent, render } from "../TestUtils";
 
 describe("PresentationInstanceFilterProperty", () => {
   stubRaf();

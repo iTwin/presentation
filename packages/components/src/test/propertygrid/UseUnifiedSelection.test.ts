@@ -8,10 +8,10 @@ import * as moq from "typemoq";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { ISelectionProvider, SelectionChangeEventArgs, SelectionChangeType, SelectionHandler } from "@itwin/presentation-frontend";
-import { act, renderHook } from "@testing-library/react";
 import { IPresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider";
 import { usePropertyDataProviderWithUnifiedSelection } from "../../presentation-components/propertygrid/UseUnifiedSelection";
 import { createTestECInstanceKey, isKeySet } from "../_helpers/Common";
+import { act, renderHook } from "../TestUtils";
 
 describe("usePropertyDataProviderWithUnifiedSelection", () => {
   const selectionHandlerMock = moq.Mock.ofType<SelectionHandler>();
