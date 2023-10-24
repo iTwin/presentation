@@ -20,11 +20,10 @@ describe("<NumericPropertyInput />", () => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
-    await Presentation.initialize();
+    sinon.stub(Presentation, "localization").get(() => localization);
   });
 
   afterEach(async () => {
-    Presentation.terminate();
     sinon.restore();
   });
 

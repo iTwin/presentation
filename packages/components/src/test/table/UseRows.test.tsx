@@ -10,8 +10,7 @@ import { BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
 import { Content, DescriptorOverrides, KeySet, SortDirection } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { render, waitFor } from "@testing-library/react";
-import { renderHook } from "@testing-library/react-hooks";
+import { act, render, renderHook, waitFor } from "@testing-library/react";
 import { ROWS_RELOAD_PAGE_SIZE, useRows, UseRowsProps } from "../../presentation-components/table/UseRows";
 import { createTestECInstanceKey, createTestPropertyInfo, TestErrorBoundary } from "../_helpers/Common";
 import {
@@ -148,7 +147,10 @@ describe("useRows", () => {
 
     await waitFor(() => expect(result.current.rows).to.have.lengthOf(1));
 
-    result.current.loadMoreRows();
+    act(() => {
+      result.current.loadMoreRows();
+    });
+
     await waitFor(() => expect(result.current.rows).to.have.lengthOf(2));
   });
 
@@ -170,7 +172,11 @@ describe("useRows", () => {
     const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, pageSize: 1 } });
 
     await waitFor(() => expect(result.current.rows).to.have.lengthOf(1));
-    result.current.loadMoreRows();
+
+    act(() => {
+      result.current.loadMoreRows();
+    });
+
     presentationManagerMock.verify(async (x) => x.getContentAndSize(moq.It.isAny()), moq.Times.once());
   });
 
@@ -278,7 +284,9 @@ describe("useRows", () => {
 
     await waitFor(() => expect(result.current.rows).to.have.lengthOf(2));
 
-    onActiveFormattingUnitSystemChanged.raiseEvent({ system: "metric" });
+    act(() => {
+      onActiveFormattingUnitSystemChanged.raiseEvent({ system: "metric" });
+    });
 
     await waitFor(() => {
       expect(result.current.rows).to.have.lengthOf(2);
@@ -302,7 +310,9 @@ describe("useRows", () => {
       expect(result.current.isLoading).to.be.false;
     });
 
-    onActiveFormattingUnitSystemChanged.raiseEvent({ system: "metric" });
+    act(() => {
+      onActiveFormattingUnitSystemChanged.raiseEvent({ system: "metric" });
+    });
 
     await waitFor(() => {
       expect(result.current.rows).to.have.lengthOf(0);
@@ -345,7 +355,9 @@ describe("useRows", () => {
       .returns(async () => ({ content: new Content(descriptor, items.slice(ROWS_RELOAD_PAGE_SIZE)), size: 1 }))
       .verifiable(moq.Times.once());
 
-    onActiveFormattingUnitSystemChanged.raiseEvent({ system: "metric" });
+    act(() => {
+      onActiveFormattingUnitSystemChanged.raiseEvent({ system: "metric" });
+    });
 
     await waitFor(() => {
       expect(result.current.rows).to.have.lengthOf(itemsCount);

@@ -32,7 +32,7 @@ import {
   SelectionHelper,
   SelectionManager,
 } from "@itwin/presentation-frontend";
-import { renderHook } from "@testing-library/react-hooks";
+import { renderHook } from "@testing-library/react";
 import {
   UnifiedSelectionTreeEventHandler,
   UnifiedSelectionTreeEventHandlerParams,

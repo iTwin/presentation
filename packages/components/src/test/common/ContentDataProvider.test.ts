@@ -84,7 +84,6 @@ describe("ContentDataProvider", () => {
     imodelMock.reset();
     provider.dispose();
     sinon.restore();
-    Presentation.terminate();
   });
 
   describe("constructor", () => {

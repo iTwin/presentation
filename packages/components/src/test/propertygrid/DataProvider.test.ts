@@ -93,7 +93,6 @@ describe("PropertyDataProvider", () => {
 
   afterEach(() => {
     provider.dispose();
-    Presentation.terminate();
     sinon.restore();
   });
 

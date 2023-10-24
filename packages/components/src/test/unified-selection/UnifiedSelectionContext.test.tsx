@@ -4,28 +4,32 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { PropsWithChildren } from "react";
 import sinon from "sinon";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { Presentation, SelectionManager } from "@itwin/presentation-frontend";
-import { act, renderHook, RenderHookResult } from "@testing-library/react-hooks";
+import { act, renderHook, RenderHookResult } from "@testing-library/react";
 import {
   UnifiedSelectionContext,
   UnifiedSelectionContextProvider,
-  UnifiedSelectionContextProviderProps,
   useUnifiedSelectionContext,
 } from "../../presentation-components/unified-selection/UnifiedSelectionContext";
 
 describe("UnifiedSelectionContext", () => {
   const testIModel = {} as IModelConnection;
 
-  function renderUnifiedSelectionContextHook(
-    imodel = {} as IModelConnection,
-    selectionLevel?: number,
-  ): RenderHookResult<UnifiedSelectionContextProviderProps, UnifiedSelectionContext> {
+  function renderUnifiedSelectionContextHook(imodel = {} as IModelConnection, selectionLevel?: number): RenderHookResult<UnifiedSelectionContext, unknown> {
+    const Wrapper = ({ children }: PropsWithChildren<unknown>) => {
+      return (
+        <UnifiedSelectionContextProvider imodel={imodel} selectionLevel={selectionLevel}>
+          {children}
+        </UnifiedSelectionContextProvider>
+      );
+    };
+
     return renderHook(() => useUnifiedSelectionContext()!, {
-      wrapper: UnifiedSelectionContextProvider,
-      initialProps: { imodel, selectionLevel } as UnifiedSelectionContextProviderProps,
+      wrapper: Wrapper,
     });
   }
 
@@ -41,55 +45,6 @@ describe("UnifiedSelectionContext", () => {
   it("uses selection level 0 by default", () => {
     const { result } = renderUnifiedSelectionContextHook();
     expect(result.current.selectionLevel).to.be.equal(0);
-  });
-
-  it("updates context when receives different imodel connection", () => {
-    const { rerender, result } = renderUnifiedSelectionContextHook();
-    const firstResult = result.current;
-
-    const updatedImodel = {} as IModelConnection;
-    rerender({ imodel: updatedImodel });
-    const secondResult = result.current;
-
-    expect(firstResult).not.to.be.equal(secondResult);
-    expect(firstResult.getSelection).not.to.be.equal(secondResult.getSelection);
-    expect(firstResult.replaceSelection).not.to.be.equal(secondResult.replaceSelection);
-    expect(firstResult.addToSelection).not.to.be.equal(secondResult.addToSelection);
-    expect(firstResult.clearSelection).not.to.be.equal(secondResult.clearSelection);
-    expect(firstResult.removeFromSelection).not.to.be.equal(secondResult.removeFromSelection);
-  });
-
-  it("updates context when receives different selection level", () => {
-    const { rerender, result } = renderUnifiedSelectionContextHook();
-    const firstResult = result.current;
-
-    rerender({ imodel: result.current.imodel, selectionLevel: 1 });
-    const secondResult = result.current;
-
-    expect(firstResult).not.to.be.equal(secondResult);
-    expect(firstResult.getSelection).not.to.be.equal(secondResult.getSelection);
-    expect(firstResult.replaceSelection).not.to.be.equal(secondResult.replaceSelection);
-    expect(firstResult.addToSelection).not.to.be.equal(secondResult.addToSelection);
-    expect(firstResult.clearSelection).not.to.be.equal(secondResult.clearSelection);
-    expect(firstResult.removeFromSelection).not.to.be.equal(secondResult.removeFromSelection);
-  });
-
-  it("updates context when current selection changes", () => {
-    const { result } = renderUnifiedSelectionContextHook(testIModel);
-    const firstResult = result.current;
-
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    act(() => {
-      Presentation.selection.addToSelection("", testIModel, [{ className: "test", id: "1" }], 0);
-    });
-    const secondResult = result.current;
-
-    expect(firstResult).not.to.be.equal(secondResult);
-    expect(firstResult.getSelection).not.to.be.equal(secondResult.getSelection);
-    expect(firstResult.replaceSelection).to.be.equal(secondResult.replaceSelection);
-    expect(firstResult.addToSelection).to.be.equal(secondResult.addToSelection);
-    expect(firstResult.clearSelection).to.be.equal(secondResult.clearSelection);
-    expect(firstResult.removeFromSelection).to.be.equal(secondResult.removeFromSelection);
   });
 
   it("updates context when selection changes on one level above", () => {

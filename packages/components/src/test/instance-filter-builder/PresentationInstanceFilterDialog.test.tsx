@@ -13,9 +13,9 @@ import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Descriptor } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { fireEvent, render, waitFor } from "@testing-library/react";
-import { PresentationInstanceFilterDialog } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterBuilder";
+import { PresentationInstanceFilterDialog } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog";
 import { createTestECClassInfo, stubRaf } from "../_helpers/Common";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
 
@@ -46,15 +46,9 @@ describe("PresentationInstanceFilterDialog", () => {
   const imodelMock = moq.Mock.ofType<IModelConnection>();
   const onCloseEvent = new BeEvent<() => void>();
 
-  before(() => {
-    HTMLElement.prototype.scrollIntoView = () => {};
-  });
-
-  after(() => {
-    delete (HTMLElement.prototype as any).scrollIntoView;
-  });
-
   beforeEach(async () => {
+    HTMLElement.prototype.scrollIntoView = () => {};
+
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
@@ -75,6 +69,7 @@ describe("PresentationInstanceFilterDialog", () => {
     UiComponents.terminate();
     Presentation.terminate();
     sinon.restore();
+    delete (HTMLElement.prototype as any).scrollIntoView;
   });
 
   it("invokes 'onInstanceFilterApplied' with filter", async () => {
@@ -118,7 +113,7 @@ describe("PresentationInstanceFilterDialog", () => {
     });
   });
 
-  it("renders custom title", () => {
+  it("renders custom title", async () => {
     const spy = sinon.spy();
     const title = "custom title";
 
@@ -134,7 +129,7 @@ describe("PresentationInstanceFilterDialog", () => {
       />,
     );
 
-    expect(queryByText(title)).to.not.be.null;
+    await waitFor(() => expect(queryByText(title)).to.not.be.null);
   });
 
   it("renders filterResultCountRenderer", () => {

@@ -74,7 +74,6 @@ describe("TreeDataProvider", () => {
     rulesetVariablesManagerMock.reset();
     provider.dispose();
     sinon.restore();
-    Presentation.terminate();
   });
 
   describe("dispose", () => {
