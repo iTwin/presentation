@@ -9,7 +9,7 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import { HierarchyNode, HierarchyProvider, IHierarchyLevelDefinitionsFactory, NodeSelectClauseFactory } from "@itwin/presentation-hierarchy-builder";
+import { HierarchyProvider, IHierarchyLevelDefinitionsFactory, NodeSelectClauseFactory } from "@itwin/presentation-hierarchy-builder";
 import { buildIModel, insertPhysicalPartition, insertSubject } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
@@ -48,23 +48,6 @@ describe("Stateless hierarchy builder", () => {
         if (!parentNode) {
           return [
             {
-              fullClassName: subjectClassName,
-              query: {
-                ecsql: `
-                  SELECT ${await selectClauseFactory.createSelectClause({
-                    ecClassId: { selector: `this.ECClassId` },
-                    ecInstanceId: { selector: `this.ECInstanceId` },
-                    nodeLabel: "root subject",
-                  })}
-                  FROM ${subjectClassName} AS this
-                  WHERE this.ECInstanceId = (${IModel.rootSubjectId})
-                `,
-              },
-            },
-          ];
-        } else if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "root subject") {
-          return [
-            {
               fullClassName: `BisCore.InformationContentElement`,
               query: {
                 ecsql: `
@@ -95,43 +78,37 @@ describe("Stateless hierarchy builder", () => {
 
     it("creates different groups for different classes", async function () {
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-        const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-        const childSubject1 = insertSubject({ builder, codeValue: "1", parentId: rootSubject.id });
-        const childPartition2 = insertPhysicalPartition({ builder, codeValue: "2", parentId: rootSubject.id });
-        const childSubject3 = insertSubject({ builder, codeValue: "3", parentId: rootSubject.id });
-        const childPartition4 = insertPhysicalPartition({ builder, codeValue: "4", parentId: rootSubject.id });
-        return { rootSubject, childSubject1, childPartition2, childSubject3, childPartition4 };
+        const childSubject1 = insertSubject({ builder, codeValue: "1", parentId: IModel.rootSubjectId });
+        const childPartition2 = insertPhysicalPartition({ builder, codeValue: "2", parentId: IModel.rootSubjectId });
+        const childSubject3 = insertSubject({ builder, codeValue: "3", parentId: IModel.rootSubjectId });
+        const childPartition4 = insertPhysicalPartition({ builder, codeValue: "4", parentId: IModel.rootSubjectId });
+        return { childSubject1, childPartition2, childSubject3, childPartition4 };
       });
 
       await validateHierarchy({
         provider: createProvider({ imodel, hierarchy: basicHierarchy }),
         expect: [
-          NodeValidators.createForInstanceNode({
-            instanceKeys: [keys.rootSubject],
+          NodeValidators.createForClassGroupingNode({
             children: [
-              NodeValidators.createForClassGroupingNode({
-                children: [
-                  NodeValidators.createForInstanceNode({
-                    instanceKeys: [keys.childPartition2],
-                    children: false,
-                  }),
-                  NodeValidators.createForInstanceNode({
-                    instanceKeys: [keys.childPartition4],
-                    children: false,
-                  }),
-                ],
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [keys.childPartition2],
+                children: false,
               }),
-              NodeValidators.createForClassGroupingNode({
-                children: [
-                  NodeValidators.createForInstanceNode({
-                    instanceKeys: [keys.childSubject1],
-                    children: false,
-                  }),
-                  NodeValidators.createForInstanceNode({
-                    instanceKeys: [keys.childSubject3],
-                    children: false,
-                  }),
-                ],
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [keys.childPartition4],
+                children: false,
+              }),
+            ],
+          }),
+          NodeValidators.createForClassGroupingNode({
+            children: [
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [keys.childSubject1],
+                children: false,
+              }),
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [keys.childSubject3],
+                children: false,
               }),
             ],
           }),

@@ -9,7 +9,7 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import { HierarchyNode, HierarchyProvider, IHierarchyLevelDefinitionsFactory, NodeSelectClauseFactory } from "@itwin/presentation-hierarchy-builder";
+import { HierarchyProvider, IHierarchyLevelDefinitionsFactory, NodeSelectClauseFactory } from "@itwin/presentation-hierarchy-builder";
 import { buildIModel, insertSubject } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
@@ -52,23 +52,6 @@ describe("Stateless hierarchy builder", () => {
                   SELECT ${await selectClauseFactory.createSelectClause({
                     ecClassId: { selector: `this.ECClassId` },
                     ecInstanceId: { selector: `this.ECInstanceId` },
-                    nodeLabel: "root subject",
-                  })}
-                  FROM ${subjectClassName} AS this
-                  WHERE this.ECInstanceId = (${IModel.rootSubjectId})
-                `,
-              },
-            },
-          ];
-        } else if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "root subject") {
-          return [
-            {
-              fullClassName: subjectClassName,
-              query: {
-                ecsql: `
-                  SELECT ${await selectClauseFactory.createSelectClause({
-                    ecClassId: { selector: `this.ECClassId` },
-                    ecInstanceId: { selector: `this.ECInstanceId` },
                     nodeLabel: { selector: `this.UserLabel` },
                     grouping: {
                       byLabel: true,
@@ -89,45 +72,39 @@ describe("Stateless hierarchy builder", () => {
       const labelGroupName1 = "test1";
       const labelGroupName2 = "test2";
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-        const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-        const childSubject1 = insertSubject({ builder, codeValue: "1", parentId: rootSubject.id, userLabel: labelGroupName1 });
-        const childSubject2 = insertSubject({ builder, codeValue: "2", parentId: rootSubject.id, userLabel: labelGroupName2 });
-        const childSubject3 = insertSubject({ builder, codeValue: "3", parentId: rootSubject.id, userLabel: labelGroupName1 });
-        const childSubject4 = insertSubject({ builder, codeValue: "4", parentId: rootSubject.id, userLabel: labelGroupName2 });
-        return { rootSubject, childSubject1, childSubject2, childSubject3, childSubject4 };
+        const childSubject1 = insertSubject({ builder, codeValue: "1", parentId: IModel.rootSubjectId, userLabel: labelGroupName1 });
+        const childSubject2 = insertSubject({ builder, codeValue: "2", parentId: IModel.rootSubjectId, userLabel: labelGroupName2 });
+        const childSubject3 = insertSubject({ builder, codeValue: "3", parentId: IModel.rootSubjectId, userLabel: labelGroupName1 });
+        const childSubject4 = insertSubject({ builder, codeValue: "4", parentId: IModel.rootSubjectId, userLabel: labelGroupName2 });
+        return { childSubject1, childSubject2, childSubject3, childSubject4 };
       });
 
       await validateHierarchy({
         provider: createProvider({ imodel, hierarchy: basicHierarchy }),
         expect: [
-          NodeValidators.createForInstanceNode({
-            instanceKeys: [keys.rootSubject],
+          NodeValidators.createForLabelGroupingNode({
+            label: labelGroupName1,
             children: [
-              NodeValidators.createForLabelGroupingNode({
-                label: labelGroupName1,
-                children: [
-                  NodeValidators.createForInstanceNode({
-                    instanceKeys: [keys.childSubject1],
-                    children: false,
-                  }),
-                  NodeValidators.createForInstanceNode({
-                    instanceKeys: [keys.childSubject3],
-                    children: false,
-                  }),
-                ],
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [keys.childSubject1],
+                children: false,
               }),
-              NodeValidators.createForLabelGroupingNode({
-                label: labelGroupName2,
-                children: [
-                  NodeValidators.createForInstanceNode({
-                    instanceKeys: [keys.childSubject2],
-                    children: false,
-                  }),
-                  NodeValidators.createForInstanceNode({
-                    instanceKeys: [keys.childSubject4],
-                    children: false,
-                  }),
-                ],
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [keys.childSubject3],
+                children: false,
+              }),
+            ],
+          }),
+          NodeValidators.createForLabelGroupingNode({
+            label: labelGroupName2,
+            children: [
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [keys.childSubject2],
+                children: false,
+              }),
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [keys.childSubject4],
+                children: false,
               }),
             ],
           }),

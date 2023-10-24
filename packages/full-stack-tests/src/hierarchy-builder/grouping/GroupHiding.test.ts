@@ -9,7 +9,7 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import { HierarchyNode, HierarchyProvider, IHierarchyLevelDefinitionsFactory, NodeSelectClauseFactory } from "@itwin/presentation-hierarchy-builder";
+import { HierarchyProvider, IHierarchyLevelDefinitionsFactory, NodeSelectClauseFactory } from "@itwin/presentation-hierarchy-builder";
 import { buildIModel, insertPhysicalPartition, insertSubject } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
@@ -47,36 +47,18 @@ describe("Stateless hierarchy builder", () => {
       const labelGroupName1 = "test1";
       const labelGroupName2 = "test2";
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-        const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-        const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: rootSubject.id, userLabel: labelGroupName1 });
-        const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: rootSubject.id, userLabel: labelGroupName1 });
-        const childSubject3 = insertSubject({ builder, codeValue: "A3", parentId: rootSubject.id, userLabel: labelGroupName1 });
-        const childPartition4 = insertPhysicalPartition({ builder, codeValue: "B4", parentId: rootSubject.id, userLabel: labelGroupName1 });
-        const childPartition5 = insertPhysicalPartition({ builder, codeValue: "B5", parentId: rootSubject.id, userLabel: labelGroupName2 });
-        const childPartition6 = insertPhysicalPartition({ builder, codeValue: "B6", parentId: rootSubject.id, userLabel: labelGroupName2 });
-        return { rootSubject, childSubject1, childSubject2, childSubject3, childPartition4, childPartition5, childPartition6 };
+        const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, userLabel: labelGroupName1 });
+        const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId, userLabel: labelGroupName1 });
+        const childSubject3 = insertSubject({ builder, codeValue: "A3", parentId: IModel.rootSubjectId, userLabel: labelGroupName1 });
+        const childPartition4 = insertPhysicalPartition({ builder, codeValue: "B4", parentId: IModel.rootSubjectId, userLabel: labelGroupName1 });
+        const childPartition5 = insertPhysicalPartition({ builder, codeValue: "B5", parentId: IModel.rootSubjectId, userLabel: labelGroupName2 });
+        const childPartition6 = insertPhysicalPartition({ builder, codeValue: "B6", parentId: IModel.rootSubjectId, userLabel: labelGroupName2 });
+        return { childSubject1, childSubject2, childSubject3, childPartition4, childPartition5, childPartition6 };
       });
 
       const customHierarchy: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel(parentNode) {
           if (!parentNode) {
-            return [
-              {
-                fullClassName: subjectClassName,
-                query: {
-                  ecsql: `
-                    SELECT ${await selectClauseFactory.createSelectClause({
-                      ecClassId: { selector: `this.ECClassId` },
-                      ecInstanceId: { selector: `this.ECInstanceId` },
-                      nodeLabel: "root subject",
-                    })}
-                    FROM ${subjectClassName} AS this
-                    WHERE this.ECInstanceId = (${IModel.rootSubjectId})
-                  `,
-                },
-              },
-            ];
-          } else if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "root subject") {
             return [
               {
                 fullClassName: `BisCore.InformationContentElement`,
@@ -119,57 +101,52 @@ describe("Stateless hierarchy builder", () => {
       await validateHierarchy({
         provider: createProvider({ imodel, hierarchy: customHierarchy }),
         expect: [
-          NodeValidators.createForInstanceNode({
-            instanceKeys: [keys.rootSubject],
+          NodeValidators.createForClassGroupingNode({
+            label: "BisCore.InformationPartitionElement",
+            className: "BisCore.InformationPartitionElement",
             children: [
               NodeValidators.createForClassGroupingNode({
-                label: "BisCore.InformationPartitionElement",
-                className: "BisCore.InformationPartitionElement",
+                className: physicalPartitionClassName,
                 children: [
-                  NodeValidators.createForClassGroupingNode({
-                    className: physicalPartitionClassName,
+                  NodeValidators.createForInstanceNode({
+                    instanceKeys: [keys.childPartition4],
+                    children: false,
+                  }),
+                  NodeValidators.createForLabelGroupingNode({
+                    label: labelGroupName2,
                     children: [
                       NodeValidators.createForInstanceNode({
-                        instanceKeys: [keys.childPartition4],
+                        instanceKeys: [keys.childPartition5],
                         children: false,
                       }),
-                      NodeValidators.createForLabelGroupingNode({
-                        label: labelGroupName2,
-                        children: [
-                          NodeValidators.createForInstanceNode({
-                            instanceKeys: [keys.childPartition5],
-                            children: false,
-                          }),
-                          NodeValidators.createForInstanceNode({
-                            instanceKeys: [keys.childPartition6],
-                            children: false,
-                          }),
-                        ],
+                      NodeValidators.createForInstanceNode({
+                        instanceKeys: [keys.childPartition6],
+                        children: false,
                       }),
                     ],
                   }),
                 ],
               }),
+            ],
+          }),
+          NodeValidators.createForClassGroupingNode({
+            label: "BisCore.InformationReferenceElement",
+            className: "BisCore.InformationReferenceElement",
+            children: [
               NodeValidators.createForClassGroupingNode({
-                label: "BisCore.InformationReferenceElement",
-                className: "BisCore.InformationReferenceElement",
+                className: subjectClassName,
                 children: [
-                  NodeValidators.createForClassGroupingNode({
-                    className: subjectClassName,
-                    children: [
-                      NodeValidators.createForInstanceNode({
-                        instanceKeys: [keys.childSubject1],
-                        children: false,
-                      }),
-                      NodeValidators.createForInstanceNode({
-                        instanceKeys: [keys.childSubject2],
-                        children: false,
-                      }),
-                      NodeValidators.createForInstanceNode({
-                        instanceKeys: [keys.childSubject3],
-                        children: false,
-                      }),
-                    ],
+                  NodeValidators.createForInstanceNode({
+                    instanceKeys: [keys.childSubject1],
+                    children: false,
+                  }),
+                  NodeValidators.createForInstanceNode({
+                    instanceKeys: [keys.childSubject2],
+                    children: false,
+                  }),
+                  NodeValidators.createForInstanceNode({
+                    instanceKeys: [keys.childSubject3],
+                    children: false,
                   }),
                 ],
               }),
