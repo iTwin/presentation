@@ -11,12 +11,12 @@ import { PropertyFilterRuleOperator, TreeActions, UiComponents } from "@itwin/co
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
-import { fireEvent, render, waitFor } from "@testing-library/react";
 import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
 import { PresentationTreeNodeRenderer } from "../../../presentation-components/tree/controlled/PresentationTreeNodeRenderer";
 import { InfoTreeNodeItemType, PresentationInfoTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem";
 import { createTestPropertyInfo } from "../../_helpers/Common";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content";
+import { fireEvent, render, waitFor } from "../../TestUtils";
 import { createInfoTreeNodeItem, createTreeModelNode, createTreeNodeItem } from "./Helpers";
 
 function createFilterInfo(propName: string = "prop"): PresentationInstanceFilterInfo {

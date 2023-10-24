@@ -11,7 +11,6 @@ import { BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, InstanceKey, Item, KeySet } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, SelectionManager } from "@itwin/presentation-frontend";
-import { act, renderHook, waitFor } from "@testing-library/react";
 import { TableColumnDefinition, TableRowDefinition } from "../../presentation-components/table/Types";
 import {
   usePresentationTable,
@@ -22,6 +21,7 @@ import { UnifiedSelectionContextProvider } from "../../presentation-components/u
 import { createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
 import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField } from "../_helpers/Content";
 import { mockPresentationManager } from "../_helpers/UiComponents";
+import { act, renderHook, waitFor } from "../TestUtils";
 
 describe("usePresentationTable", () => {
   const imodel = {} as IModelConnection;

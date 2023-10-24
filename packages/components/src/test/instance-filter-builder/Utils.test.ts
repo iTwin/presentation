@@ -11,7 +11,6 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Descriptor, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { renderHook } from "@testing-library/react";
 import {
   createInstanceFilterPropertyInfos,
   DEFAULT_ROOT_CATEGORY_NAME,
@@ -27,6 +26,7 @@ import {
   createTestPropertiesContentField,
   createTestSimpleContentField,
 } from "../_helpers/Content";
+import { renderHook } from "../TestUtils";
 
 describe("createInstanceFilterPropertyInfos", () => {
   it("creates property infos when fields are in root category", () => {

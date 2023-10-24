@@ -18,9 +18,8 @@ import {
   Ruleset,
 } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { waitFor } from "@testing-library/react";
 import { UniquePropertyValuesSelector } from "../../../presentation-components/properties/inputs/UniquePropertyValuesSelector";
-import { createTestECClassInfo, createTestPropertyInfo, createTestRelatedClassInfo, createTestRelationshipPath, render } from "../../_helpers/Common";
+import { createTestECClassInfo, createTestPropertyInfo, createTestRelatedClassInfo, createTestRelationshipPath } from "../../_helpers/Common";
 import {
   createTestCategoryDescription,
   createTestContentDescriptor,
@@ -28,6 +27,7 @@ import {
   createTestPropertiesContentField,
 } from "../../_helpers/Content";
 import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy";
+import { render, waitFor } from "../../TestUtils";
 
 describe("UniquePropertyValuesSelector", () => {
   const getDistinctValuesStub = sinon.stub<
@@ -235,12 +235,12 @@ describe("UniquePropertyValuesSelector", () => {
       typename: "",
       editor: undefined,
     };
-    const { queryByText, user } = render(
+    const { getByText, queryByText, user } = render(
       <UniquePropertyValuesSelector property={description} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
     );
 
-    const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
-    await user.click(selector!);
+    const selector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+    await user.click(selector);
 
     expect(queryByText("unique-values-property-editor.no-values")).to.not.be.null;
   });
@@ -304,13 +304,13 @@ describe("UniquePropertyValuesSelector", () => {
       items: [{ displayValue: undefined, groupedRawValues: [undefined] }],
     });
 
-    const { queryByText, user } = render(
+    const { getByText, queryByText, user } = render(
       <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
     );
 
     // open menu
-    const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
-    await user.click(selector!);
+    const selector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+    await user.click(selector);
 
     await waitFor(() => {
       expect(queryByText("unique-values-property-editor.no-values")).to.not.be.null;
@@ -323,13 +323,13 @@ describe("UniquePropertyValuesSelector", () => {
       items: [{ displayValue: "TestValue", groupedRawValues: [undefined] }],
     });
 
-    const { queryByText, user } = render(
+    const { getByText, queryByText, user } = render(
       <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
     );
 
     // open menu
-    const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
-    await user.click(selector!);
+    const selector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+    await user.click(selector);
 
     await waitFor(() => {
       expect(queryByText("unique-values-property-editor.no-values")).to.not.be.null;
@@ -342,13 +342,13 @@ describe("UniquePropertyValuesSelector", () => {
       items: [{ displayValue: "", groupedRawValues: [""] }],
     });
 
-    const { queryByText, user } = render(
+    const { getByText, queryByText, user } = render(
       <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
     );
 
     // open menu
-    const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
-    await user.click(selector!);
+    const selector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+    await user.click(selector);
 
     // assert that the row is loaded
     await waitFor(() => {
@@ -362,13 +362,13 @@ describe("UniquePropertyValuesSelector", () => {
       items: [{ displayValue: "TestValue", groupedRawValues: [undefined, ""] }],
     });
 
-    const { queryByText, user } = render(
+    const { getByText, queryByText, user } = render(
       <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
     );
 
     // open menu
-    const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
-    await user.click(selector!);
+    const selector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+    await user.click(selector);
 
     // assert that the row is loaded
     await waitFor(() => {
@@ -562,7 +562,7 @@ describe("UniquePropertyValuesSelector", () => {
         ruleset: { id: "TestRuleset", rules: [] },
       });
 
-      const { queryByText, user } = render(
+      const { getByText, user } = render(
         <UniquePropertyValuesSelector
           property={testProperty}
           onChange={() => {}}
@@ -573,8 +573,8 @@ describe("UniquePropertyValuesSelector", () => {
       );
 
       // trigger loadTargets function
-      const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
-      await user.click(selector!);
+      const selector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+      await user.click(selector);
 
       const getPagedDistinctValuesCallArguments = getDistinctValuesStub.firstCall.args[0];
       const ruleset = getPagedDistinctValuesCallArguments.rulesetOrId as Ruleset;
@@ -605,13 +605,13 @@ describe("UniquePropertyValuesSelector", () => {
         fields: [parentField],
       });
 
-      const { queryByText, user } = render(
+      const { getByText, user } = render(
         <UniquePropertyValuesSelector property={testProperty} onChange={() => {}} imodel={testImodel} descriptor={testDescriptor} />,
       );
 
       // trigger loadTargets function
-      const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
-      await user.click(selector!);
+      const selector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+      await user.click(selector);
 
       const [expectedSchemaName, expectedClassName] = lastStepOfRelationshipPath.targetClassInfo.name.split(":");
       const [actualSchemaName, actualClassName] = getSchemaAndClassNameFromRuleset(getDistinctValuesStub.firstCall.args[0].rulesetOrId as Ruleset);
@@ -646,13 +646,13 @@ describe("UniquePropertyValuesSelector", () => {
         fields: [grandParentField],
       });
 
-      const { queryByText, user } = render(
+      const { getByText, user } = render(
         <UniquePropertyValuesSelector property={testProperty} onChange={() => {}} imodel={testImodel} descriptor={testDescriptor} />,
       );
 
       // trigger loadTargets function
-      const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
-      await user.click(selector!);
+      const selector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+      await user.click(selector);
 
       const [expectedSchemaName, expectedClassName] = lastStepOfRelationshipPath.targetClassInfo.name.split(":");
       const [actualSchemaName, actualClassName] = getSchemaAndClassNameFromRuleset(getDistinctValuesStub.firstCall.args[0].rulesetOrId as Ruleset);
@@ -678,13 +678,13 @@ describe("UniquePropertyValuesSelector", () => {
         fields: [testField],
       });
 
-      const { queryByText, user } = render(
+      const { getByText, user } = render(
         <UniquePropertyValuesSelector property={testProperty} onChange={() => {}} imodel={testImodel} descriptor={testDescriptor} />,
       );
 
       // trigger loadTargets function
-      const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
-      await user.click(selector!);
+      const selector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+      await user.click(selector);
 
       const [expectedSchemaName, expectedClassName] = testClassInfo.name.split(":");
       const [actualSchemaName, actualClassName] = getSchemaAndClassNameFromRuleset(getDistinctValuesStub.firstCall.args[0].rulesetOrId as Ruleset);
@@ -704,13 +704,13 @@ describe("UniquePropertyValuesSelector", () => {
         fields: [createTestNestedContentField({ name: "testField", nestedFields: [] })],
       });
 
-      const { queryByText, user } = render(
+      const { getByText, user } = render(
         <UniquePropertyValuesSelector property={testProperty} onChange={() => {}} imodel={testImodel} descriptor={testDescriptor} />,
       );
 
       // trigger loadTargets function
-      const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
-      await user.click(selector!);
+      const selector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+      await user.click(selector);
 
       expect(getDistinctValuesStub).to.not.be.called;
     });

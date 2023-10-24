@@ -10,7 +10,6 @@ import { BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
 import { Content, DescriptorOverrides, KeySet, SortDirection } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { act, render, renderHook, waitFor } from "@testing-library/react";
 import { ROWS_RELOAD_PAGE_SIZE, useRows, UseRowsProps } from "../../presentation-components/table/UseRows";
 import { createTestECInstanceKey, createTestPropertyInfo, TestErrorBoundary } from "../_helpers/Common";
 import {
@@ -21,6 +20,7 @@ import {
   createTestPropertiesContentField,
 } from "../_helpers/Content";
 import { mockPresentationManager } from "../_helpers/UiComponents";
+import { act, render, renderHook, waitFor } from "../TestUtils";
 
 describe("useRows", () => {
   let onActiveFormattingUnitSystemChanged: QuantityFormatter["onActiveFormattingUnitSystemChanged"];

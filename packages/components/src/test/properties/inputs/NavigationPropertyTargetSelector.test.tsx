@@ -11,14 +11,13 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { waitFor } from "@testing-library/react";
 import { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common";
 import {
   NavigationPropertyTargetSelector,
   NavigationPropertyTargetSelectorProps,
 } from "../../../presentation-components/properties/inputs/NavigationPropertyTargetSelector";
-import { render } from "../../_helpers/Common";
 import { createTestContentDescriptor, createTestContentItem } from "../../_helpers/Content";
+import { render, waitFor } from "../../TestUtils";
 
 function createNavigationPropertyDescription(): PropertyDescription {
   return {

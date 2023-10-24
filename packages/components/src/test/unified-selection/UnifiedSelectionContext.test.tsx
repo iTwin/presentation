@@ -9,12 +9,12 @@ import sinon from "sinon";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { Presentation, SelectionManager } from "@itwin/presentation-frontend";
-import { act, renderHook, RenderHookResult } from "@testing-library/react";
 import {
   UnifiedSelectionContext,
   UnifiedSelectionContextProvider,
   useUnifiedSelectionContext,
 } from "../../presentation-components/unified-selection/UnifiedSelectionContext";
+import { act, renderHook, RenderHookResult } from "../TestUtils";
 
 describe("UnifiedSelectionContext", () => {
   const testIModel = {} as IModelConnection;

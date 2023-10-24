@@ -5,10 +5,10 @@
 
 import { expect } from "chai";
 import { FieldDescriptorType, SortDirection } from "@itwin/presentation-common";
-import { act, renderHook, waitFor } from "@testing-library/react";
 import { useTableOptions, UseTableOptionsProps } from "../../presentation-components/table/UseTableOptions";
 import { createTestPropertyInfo } from "../_helpers/Common";
 import { createTestPropertiesContentField } from "../_helpers/Content";
+import { act, renderHook, waitFor } from "../TestUtils";
 
 describe("useTableOptions", () => {
   const propertiesField = createTestPropertiesContentField({ name: "prop_field", label: "Prop Field", properties: [{ property: createTestPropertyInfo() }] });

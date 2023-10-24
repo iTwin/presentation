@@ -22,15 +22,15 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { PresentationError, PresentationStatus, PropertyValueFormat } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { waitFor } from "@testing-library/react";
 import { translate } from "../../../presentation-components/common/Utils";
 import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
 import { PresentationTreeRenderer } from "../../../presentation-components/tree/controlled/PresentationTreeRenderer";
 import { PresentationTreeDataProvider } from "../../../presentation-components/tree/DataProvider";
 import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";
 import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem";
-import { createTestPropertyInfo, render, stubDOMMatrix, stubRaf } from "../../_helpers/Common";
+import { createTestPropertyInfo, stubDOMMatrix, stubRaf } from "../../_helpers/Common";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content";
+import { render, waitFor } from "../../TestUtils";
 import { createTreeModelNodeInput } from "./Helpers";
 
 describe("PresentationTreeRenderer", () => {

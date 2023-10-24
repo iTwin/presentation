@@ -11,11 +11,10 @@ import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@i
 import { FormatterSpec, ParserSpec } from "@itwin/core-quantity";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
-import { waitFor } from "@testing-library/react";
 import { SchemaMetadataContextProvider } from "../../../presentation-components/common/SchemaMetadataContext";
 import { QuantityEditorName, QuantityPropertyEditor } from "../../../presentation-components/properties/editors/QuantityPropertyEditor";
-import { render } from "../../_helpers/Common";
 import { createTestPropertyRecord } from "../../_helpers/UiComponents";
+import { render, waitFor } from "../../TestUtils";
 
 const createRecord = ({ initialValue, quantityType }: { initialValue?: number; quantityType?: string }) => {
   return createTestPropertyRecord(

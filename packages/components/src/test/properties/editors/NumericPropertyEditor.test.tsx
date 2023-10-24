@@ -6,10 +6,9 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { StandardTypeNames } from "@itwin/appui-abstract";
-import { waitFor } from "@testing-library/react";
 import { NumericEditorName, NumericPropertyEditor } from "../../../presentation-components/properties/editors/NumericPropertyEditor";
-import { render } from "../../_helpers/Common";
 import { createTestPropertyRecord } from "../../_helpers/UiComponents";
+import { render, waitFor } from "../../TestUtils";
 
 const createRecord = (initialValue?: number) => {
   return createTestPropertyRecord(
