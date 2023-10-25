@@ -79,7 +79,7 @@ async function handlerWrapper(currentHandler: GroupingHandler, props: FullGroupi
       grouping.children = await groupNodes(grouping.children, props.groupingHandlers);
     }
   }
-  return currentGroupingNodes.grouped.length > 0 ? [...(currentGroupingNodes.grouped ?? []), ...(currentGroupingNodes.ungrouped ?? [])] : props.nodes;
+  return currentGroupingNodes.grouped.length > 0 ? [...currentGroupingNodes.grouped, ...currentGroupingNodes.ungrouped] : props.nodes;
 }
 
 function doLog(msg: string) {
