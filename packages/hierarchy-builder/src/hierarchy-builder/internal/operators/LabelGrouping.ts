@@ -4,7 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { concatMap, from, Observable, tap, toArray } from "rxjs";
-import { GroupingProcessedHierarchyNode, HierarchyNode, LabelGroupingNodeKey, ProcessedHierarchyNode } from "../../HierarchyNode";
+import {
+  HierarchyNode,
+  LabelGroupingNodeKey,
+  ProcessedGroupingHierarchyNode,
+  ProcessedHierarchyNode,
+  ProcessedInstanceHierarchyNode,
+} from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
 import { createOperatorLoggingNamespace } from "../Common";
 
@@ -13,7 +19,7 @@ const OPERATOR_NAME = "Grouping.ByLabel";
 export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
 
 /** @internal */
-export function createLabelGroupingOperator(onGroupingNodeCreated?: (groupingNode: GroupingProcessedHierarchyNode) => void) {
+export function createLabelGroupingOperator(onGroupingNodeCreated?: (groupingNode: ProcessedGroupingHierarchyNode) => void) {
   return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
     return nodes.pipe(
       log((n) => `in: ${n.label}`),
@@ -31,7 +37,7 @@ export function createLabelGroupingOperator(onGroupingNodeCreated?: (groupingNod
 
 function createLabelGroups(
   nodes: ProcessedHierarchyNode[],
-  onGroupingNodeCreated?: (groupingNode: GroupingProcessedHierarchyNode) => void,
+  onGroupingNodeCreated?: (groupingNode: ProcessedGroupingHierarchyNode) => void,
 ): ProcessedHierarchyNode[] {
   if (nodes.length === 0) {
     return nodes;
@@ -47,7 +53,7 @@ function createLabelGroups(
     hasChanged ||= currentHasChanged;
 
     const lastOutputNode = outputNodes[outputNodes.length - 1];
-    if (currentNode.label === lastOutputNode.label) {
+    if (HierarchyNode.isInstancesNode(currentNode) && currentNode.label === lastOutputNode.label) {
       if (HierarchyNode.isLabelGroupingNode(lastOutputNode)) {
         if (currentNode.processingParams?.groupByLabel) {
           lastOutputNode.children.push({ ...currentNode, parentKeys: [...firstNodeParentKeys, lastOutputNode.key] });
@@ -55,7 +61,7 @@ function createLabelGroups(
           outputNodes.splice(outputNodes.length - 1, 0, currentNode);
         }
         continue;
-      } else if (lastOutputNode.processingParams?.groupByLabel) {
+      } else if (HierarchyNode.isInstancesNode(lastOutputNode) && lastOutputNode.processingParams?.groupByLabel) {
         if (currentNode.processingParams?.groupByLabel) {
           const labelGroupingNodeKey: LabelGroupingNodeKey = {
             type: "label-grouping",
@@ -90,13 +96,13 @@ function createLabelGroups(
   return outputNodes;
 }
 
-function createLabelGroupsIfClassGroupingNode(
-  node: ProcessedHierarchyNode,
-  onGroupingNodeCreated?: (groupingNode: GroupingProcessedHierarchyNode) => void,
-): [node: ProcessedHierarchyNode, hasChanged: boolean] {
+function createLabelGroupsIfClassGroupingNode<TNode extends ProcessedHierarchyNode>(
+  node: TNode,
+  onGroupingNodeCreated?: (groupingNode: ProcessedGroupingHierarchyNode) => void,
+): [node: TNode, hasChanged: boolean] {
   if (HierarchyNode.isClassGroupingNode(node)) {
     const parentKeys = [...node.parentKeys, node.key];
-    const labelGroupings = createLabelGroups(node.children, onGroupingNodeCreated);
+    const labelGroupings = createLabelGroups(node.children, onGroupingNodeCreated) as Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
     node.children.splice(0, node.children.length, ...labelGroupings.map((gn) => ({ ...gn, parentKeys })));
   }
   return [node, false];

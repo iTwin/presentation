@@ -5,16 +5,16 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { ParsedHierarchyNode } from "../../hierarchy-builder/HierarchyNode";
+import { ParsedHierarchyNode, ParsedInstanceHierarchyNode } from "../../hierarchy-builder/HierarchyNode";
 import { applyLimit, defaultNodesParser, RowDef, RowsLimitExceededError, TreeQueryResultsReader } from "../../hierarchy-builder/internal/TreeNodesReader";
 import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions } from "../../hierarchy-builder/queries/ECSql";
 import { NodeSelectClauseColumnNames } from "../../hierarchy-builder/queries/NodeSelectClauseFactory";
 import { ConcatenatedValue } from "../../hierarchy-builder/values/ConcatenatedValue";
 import { trimWhitespace } from "../queries/Utils";
-import { createFakeQueryReader } from "../Utils";
+import { createFakeQueryReader, createTestParsedInstanceNode } from "../Utils";
 
 describe("TreeQueryResultsReader", () => {
-  const parser = sinon.stub<[{ [columnName: string]: any }], ParsedHierarchyNode>();
+  const parser = sinon.stub<[{ [columnName: string]: any }], ParsedInstanceHierarchyNode>();
   const executor = {
     createQueryReader: sinon.stub<[string, ECSqlBinding[] | undefined, ECSqlQueryReaderOptions | undefined], ECSqlQueryReader>(),
   };
@@ -26,7 +26,13 @@ describe("TreeQueryResultsReader", () => {
 
   it("returns all rows from executor", async () => {
     const ids = [1, 2, 3];
-    const nodes = ids.map((id) => ({ label: id.toString(), key: id.toString(), children: false }));
+    const nodes = ids.map((id) =>
+      createTestParsedInstanceNode({
+        label: id.toString(),
+        key: { type: "instances", instanceKeys: [{ className: "x", id: id.toString() }] },
+        children: false,
+      }),
+    );
     executor.createQueryReader.returns(createFakeQueryReader(ids.map((id) => ({ id }))));
     ids.forEach((_, i) => parser.onCall(i).returns(nodes[i]));
 

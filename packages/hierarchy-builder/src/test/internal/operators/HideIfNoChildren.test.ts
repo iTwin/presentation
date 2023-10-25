@@ -8,7 +8,7 @@ import { EMPTY, from, of, Subject } from "rxjs";
 import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
 import { createHideIfNoChildrenOperator, LOGGING_NAMESPACE } from "../../../hierarchy-builder/internal/operators/HideIfNoChildren";
-import { createTestProcessedNode, getObservableResult, setupLogging } from "../../Utils";
+import { createTestProcessedCustomNode, getObservableResult, setupLogging } from "../../Utils";
 
 describe("HideIfNoChildrenOperator", () => {
   before(() => {
@@ -16,14 +16,14 @@ describe("HideIfNoChildrenOperator", () => {
   });
 
   it("returns nodes that don't need hiding", async () => {
-    const nodes = [createTestProcessedNode()];
+    const nodes = [createTestProcessedCustomNode()];
     const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenOperator(sinon.spy(), false)));
     expect(result).to.deep.eq(nodes);
   });
 
   it("doesn't return nodes that need hiding and have children determined as `false`", async () => {
     const nodes = [
-      createTestProcessedNode({
+      createTestProcessedCustomNode({
         processingParams: { hideIfNoChildren: true },
         children: false,
       }),
@@ -34,7 +34,7 @@ describe("HideIfNoChildrenOperator", () => {
 
   it("returns nodes that need hiding and have children determined as `true`", async () => {
     const nodes = [
-      createTestProcessedNode({
+      createTestProcessedCustomNode({
         processingParams: { hideIfNoChildren: true },
         children: true,
       }),
@@ -43,31 +43,9 @@ describe("HideIfNoChildrenOperator", () => {
     expect(result).to.deep.eq(nodes);
   });
 
-  it("doesn't return nodes that need hiding and have children determined an empty array", async () => {
-    const nodes = [
-      createTestProcessedNode({
-        processingParams: { hideIfNoChildren: true },
-        children: [],
-      }),
-    ];
-    const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenOperator(sinon.spy(), false)));
-    expect(result).to.deep.eq([]);
-  });
-
-  it("returns nodes that need hiding and have children determined as a non-empty array", async () => {
-    const nodes = [
-      createTestProcessedNode({
-        processingParams: { hideIfNoChildren: true },
-        children: [createTestProcessedNode()],
-      }),
-    ];
-    const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenOperator(sinon.spy(), false)));
-    expect(result).to.deep.eq(nodes);
-  });
-
   it("doesn't return nodes that need hiding, need children determined and don't have children", async () => {
     const nodes = [
-      createTestProcessedNode({
+      createTestProcessedCustomNode({
         processingParams: { hideIfNoChildren: true },
         children: undefined,
       }),
@@ -79,7 +57,7 @@ describe("HideIfNoChildrenOperator", () => {
 
   it("returns nodes that need hiding, need children determined and do have children", async () => {
     const nodes = [
-      createTestProcessedNode({
+      createTestProcessedCustomNode({
         processingParams: { hideIfNoChildren: true },
         children: undefined,
       }),
@@ -90,12 +68,12 @@ describe("HideIfNoChildrenOperator", () => {
   });
 
   it("checks children of all siblings at once when `stopOnFirstChild = false`", async () => {
-    const nodeA = createTestProcessedNode({
+    const nodeA = createTestProcessedCustomNode({
       processingParams: { hideIfNoChildren: true },
       label: "a",
       children: undefined,
     });
-    const nodeB = createTestProcessedNode({
+    const nodeB = createTestProcessedCustomNode({
       processingParams: { hideIfNoChildren: true },
       label: "b",
       children: undefined,
@@ -132,12 +110,12 @@ describe("HideIfNoChildrenOperator", () => {
   });
 
   it("checks children before siblings when `stopOnFirstChild = true`", async () => {
-    const nodeA = createTestProcessedNode({
+    const nodeA = createTestProcessedCustomNode({
       processingParams: { hideIfNoChildren: true },
       label: "a",
       children: undefined,
     });
-    const nodeB = createTestProcessedNode({
+    const nodeB = createTestProcessedCustomNode({
       processingParams: { hideIfNoChildren: true },
       label: "b",
       children: undefined,

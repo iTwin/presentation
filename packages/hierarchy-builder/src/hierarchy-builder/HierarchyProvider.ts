@@ -21,8 +21,17 @@ import {
   tap,
 } from "rxjs";
 import { assert } from "@itwin/core-bentley";
-import { HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
-import { GroupingProcessedHierarchyNode, HierarchyNode, HierarchyNodeIdentifiersPath, ParsedHierarchyNode, ProcessedHierarchyNode } from "./HierarchyNode";
+import { HierarchyDefinitionParentNode, HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
+import {
+  HierarchyNode,
+  HierarchyNodeIdentifiersPath,
+  ParentHierarchyNode,
+  ParsedHierarchyNode,
+  ProcessedCustomHierarchyNode,
+  ProcessedGroupingHierarchyNode,
+  ProcessedHierarchyNode,
+  ProcessedInstanceHierarchyNode,
+} from "./HierarchyNode";
 import { ChildNodesCache, ChildNodesObservables, LOGGING_NAMESPACE as CommonLoggingNamespace, getClass } from "./internal/Common";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
 import { createClassGroupingOperator } from "./internal/operators/ClassGrouping";
@@ -101,7 +110,7 @@ export class HierarchyProvider {
     this._nodesCache = new ChildNodesCache();
   }
 
-  private onGroupingNodeCreated(groupingNode: GroupingProcessedHierarchyNode) {
+  private onGroupingNodeCreated(groupingNode: ProcessedGroupingHierarchyNode) {
     const childNodesObs = from(groupingNode.children);
     this._nodesCache.add(groupingNode, {
       // grouping operators are run on processed, but not finalized nodes, so the child nodes here
@@ -112,7 +121,7 @@ export class HierarchyProvider {
     });
   }
 
-  private createPreProcessedNodesObservable(parentNode: ProcessedHierarchyNode | undefined): Observable<ProcessedHierarchyNode> {
+  private createPreProcessedNodesObservable(parentNode: HierarchyDefinitionParentNode | undefined): Observable<ProcessedHierarchyNode> {
     // stream hierarchy level definitions in order
     const definitions = from(this._hierarchyFactory.defineHierarchyLevel(parentNode)).pipe(
       concatMap((hierarchyLevelDefinition) => from(hierarchyLevelDefinition)),
@@ -189,7 +198,7 @@ export class HierarchyProvider {
     );
   }
 
-  private setupObservables(parentNode: ProcessedHierarchyNode | undefined): ChildNodesObservables {
+  private setupObservables(parentNode: HierarchyDefinitionParentNode | undefined): ChildNodesObservables {
     const initialNodes = this.createPreProcessedNodesObservable(parentNode);
     const processedNodes = this.createProcessedNodesObservable(initialNodes);
     const finalizedNodes = this.createFinalizedNodesObservable(processedNodes);
@@ -197,7 +206,7 @@ export class HierarchyProvider {
     return { processedNodes, finalizedNodes, hasNodes };
   }
 
-  private ensureChildNodesObservables(parentNode: ProcessedHierarchyNode | undefined): ChildNodesObservables {
+  private ensureChildNodesObservables(parentNode: ParentHierarchyNode | undefined): ChildNodesObservables {
     const cached = this._nodesCache.get(parentNode);
     if (cached) {
       // istanbul ignore next
@@ -218,7 +227,7 @@ export class HierarchyProvider {
     return value;
   }
 
-  public async getNodes(parentNode: HierarchyNode | undefined): Promise<HierarchyNode[]> {
+  public async getNodes(parentNode: ParentHierarchyNode | undefined): Promise<HierarchyNode[]> {
     return new Promise((resolve, reject) => {
       const nodes = new Array<HierarchyNode>();
       this.ensureChildNodesObservables(parentNode).finalizedNodes.subscribe({
@@ -239,7 +248,9 @@ export class HierarchyProvider {
 const QUERY_CONCURRENCY = 10;
 
 function preProcessNodes(hierarchyFactory: IHierarchyLevelDefinitionsFactory) {
-  return hierarchyFactory.preProcessNode ? processNodes(hierarchyFactory.preProcessNode) : (o: Observable<ProcessedHierarchyNode>) => o;
+  return hierarchyFactory.preProcessNode
+    ? processNodes(hierarchyFactory.preProcessNode)
+    : (o: Observable<ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode>) => o;
 }
 
 function postProcessNodes(hierarchyFactory: IHierarchyLevelDefinitionsFactory) {
@@ -303,7 +314,7 @@ async function getProperty({ className, propertyName }: { className: string; pro
   return propertyClass.getProperty(propertyName);
 }
 
-function createParentNodeKeysList(parentNode: ProcessedHierarchyNode | undefined) {
+function createParentNodeKeysList(parentNode: ParentHierarchyNode | undefined) {
   if (!parentNode) {
     return [];
   }

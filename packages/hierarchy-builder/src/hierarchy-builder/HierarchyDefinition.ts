@@ -3,7 +3,16 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { HierarchyNode, ParsedHierarchyNode, ProcessedHierarchyNode } from "./HierarchyNode";
+import {
+  HierarchyNode,
+  InstancesNodeKey,
+  ParentHierarchyNode,
+  ParsedCustomHierarchyNode,
+  ParsedInstanceHierarchyNode,
+  ProcessedCustomHierarchyNode,
+  ProcessedHierarchyNode,
+  ProcessedInstanceHierarchyNode,
+} from "./HierarchyNode";
 import { getClass } from "./internal/Common";
 import { IMetadataProvider, parseFullClassName } from "./Metadata";
 import { ECSqlQueryDef } from "./queries/ECSql";
@@ -15,7 +24,7 @@ import { Id64String, InstanceKey } from "./values/Values";
  */
 export interface CustomHierarchyNodeDefinition {
   /** The node to be created in the hierarchy level */
-  node: ParsedHierarchyNode;
+  node: ParsedCustomHierarchyNode;
 }
 
 /**
@@ -59,18 +68,19 @@ export namespace HierarchyNodesDefinition {
 export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
 
 /**
- * A type for a function that parses a [[ParsedHierarchyNode]] from provided `row` object.
+ * A type for a function that parses a [[ParsedInstanceHierarchyNode]] from provided ECSQL `row` object.
  * @beta
  */
-export type INodeParser = (row: { [columnName: string]: any }) => ParsedHierarchyNode;
+export type INodeParser = (row: { [columnName: string]: any }) => ParsedInstanceHierarchyNode;
 
 /**
  * A type for a function that pre-processes given node. Unless the function decides not to make any modifications,
- * it should return a new - modified - node, rather than modifying the given one.
+ * it should return a new - modified - node, rather than modifying the given one. Returning `undefined` omits the node
+ * from the hierarchy.
  *
  * @beta
  */
-export type INodePreProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode | undefined>;
+export type INodePreProcessor = <TNode extends ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode>(node: TNode) => Promise<TNode | undefined>;
 
 /**
  * A type for a function that post-processes given node. Unless the function decides not to make any modifications,
@@ -79,6 +89,15 @@ export type INodePreProcessor = (node: ProcessedHierarchyNode) => Promise<Proces
  * @beta
  */
 export type INodePostProcessor = (node: ProcessedHierarchyNode) => Promise<ProcessedHierarchyNode>;
+
+/**
+ * A type of node that can be passed to [[IHierarchyLevelDefinitionsFactory.defineHierarchyLevel]]. This basically means
+ * a [[HierarchyNode]] that:
+ * - knows nothing about its children,
+ * - is either an instances node (key is of [[InstancesNodeKey]] type) or a custom node (key is of `string` type).
+ * @beta
+ */
+export type HierarchyDefinitionParentNode = ParentHierarchyNode & { key: InstancesNodeKey | string };
 
 /**
  * An interface for a factory that knows how define a hierarchy based on a given parent node.
@@ -116,7 +135,7 @@ export interface IHierarchyLevelDefinitionsFactory {
   postProcessNode?: INodePostProcessor;
 
   /** A function to create a hierarchy level definition for given parent node. */
-  defineHierarchyLevel(parentNode: Omit<HierarchyNode, "children"> | undefined): Promise<HierarchyLevelDefinition>;
+  defineHierarchyLevel(parentNode: HierarchyDefinitionParentNode | undefined): Promise<HierarchyLevelDefinition>;
 }
 
 /**
@@ -138,7 +157,7 @@ export interface InstancesNodeChildHierarchyLevelDefinition {
    * @param instanceIds IDs of instances grouped under the parent instance node.
    * @param parentNode The parent node, which may contain additional context required to define the child hierarchy level.
    */
-  definitions: (instanceIds: Id64String[], parentNode: Omit<HierarchyNode, "children">) => Promise<HierarchyLevelDefinition>;
+  definitions: (instanceIds: Id64String[], parentNode: HierarchyDefinitionParentNode) => Promise<HierarchyLevelDefinition>;
 }
 
 /**
@@ -154,7 +173,7 @@ export interface CustomNodeChildHierarchyLevelDefinition {
    * Called to create a hierarchy level definition when the node key check passes (see [[customParentNodeKey]]).
    * @param parentNode The parent node, which may contain additional context required to define the child hierarchy level.
    */
-  definitions: (parentNode: Omit<HierarchyNode, "children">) => Promise<HierarchyLevelDefinition>;
+  definitions: (parentNode: HierarchyDefinitionParentNode) => Promise<HierarchyLevelDefinition>;
 }
 
 /**
@@ -211,7 +230,7 @@ export class ClassBasedHierarchyLevelDefinitionsFactory implements IHierarchyLev
    * Create hierarchy level definitions for specific hierarchy level.
    * @param parentNode Parent node to create children definitions for.
    */
-  public async defineHierarchyLevel(parentNode: Omit<HierarchyNode, "children"> | undefined): Promise<HierarchyLevelDefinition> {
+  public async defineHierarchyLevel(parentNode: HierarchyDefinitionParentNode | undefined): Promise<HierarchyLevelDefinition> {
     if (!parentNode) {
       return this._definition.rootNodes();
     }
@@ -221,6 +240,7 @@ export class ClassBasedHierarchyLevelDefinitionsFactory implements IHierarchyLev
       return (await Promise.all(defs.map(async (def) => def.definitions(parentNode)))).flat();
     }
 
+    // istanbul ignore else
     if (HierarchyNode.isInstancesNode(parentNode)) {
       const instanceIdsByClass = groupInstanceIdsByClass(parentNode.key.instanceKeys);
       const instancesParentNodeDefs = this._definition.childNodes.filter(isInstancesNodeChildHierarchyLevelDefinition);
@@ -233,6 +253,8 @@ export class ClassBasedHierarchyLevelDefinitionsFactory implements IHierarchyLev
       ).flat();
     }
 
+    // `parentNode` should be `never` here, but for unknown to me reasons it's not - narrowing doesn't work
+    // istanbul ignore next
     return [];
   }
 }
@@ -242,7 +264,7 @@ async function createHierarchyLevelDefinitions(
   defs: InstancesNodeChildHierarchyLevelDefinition[],
   parentNodeClassName: string,
   parentNodeInstanceIds: Id64String[],
-  parentNode: Omit<HierarchyNode, "children">,
+  parentNode: HierarchyDefinitionParentNode,
 ) {
   const parentNodeClass = await getClass(metadataProvider, parentNodeClassName);
   return (

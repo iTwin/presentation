@@ -6,7 +6,13 @@
 import { Observable } from "rxjs";
 import sinon from "sinon";
 import { Logger, LogLevel } from "@itwin/core-bentley";
-import { ParsedHierarchyNode, ProcessedHierarchyNode } from "../hierarchy-builder/HierarchyNode";
+import {
+  ParsedCustomHierarchyNode,
+  ParsedInstanceHierarchyNode,
+  ProcessedCustomHierarchyNode,
+  ProcessedGroupingHierarchyNode,
+  ProcessedInstanceHierarchyNode,
+} from "../hierarchy-builder/HierarchyNode";
 import * as common from "../hierarchy-builder/internal/Common";
 import { ECClass, ECProperty, IMetadataProvider, parseFullClassName } from "../hierarchy-builder/Metadata";
 import { ECSqlQueryReader, ECSqlQueryRow } from "../hierarchy-builder/queries/ECSql";
@@ -35,7 +41,15 @@ export async function getObservableResult<T>(obs: Observable<T>): Promise<Array<
   });
 }
 
-export function createTestParsedNode(src?: Partial<ParsedHierarchyNode>): ParsedHierarchyNode {
+export function createTestParsedCustomNode(src?: Partial<ParsedCustomHierarchyNode>): ParsedCustomHierarchyNode {
+  return {
+    label: "test",
+    key: "test",
+    ...src,
+  };
+}
+
+export function createTestParsedInstanceNode(src?: Partial<ParsedInstanceHierarchyNode>): ParsedInstanceHierarchyNode {
   return {
     label: "test",
     key: {
@@ -46,7 +60,16 @@ export function createTestParsedNode(src?: Partial<ParsedHierarchyNode>): Parsed
   };
 }
 
-export function createTestProcessedNode(src?: Partial<ProcessedHierarchyNode>): ProcessedHierarchyNode {
+export function createTestProcessedCustomNode(src?: Partial<ProcessedCustomHierarchyNode>): ProcessedCustomHierarchyNode {
+  return {
+    label: "test",
+    key: "test",
+    parentKeys: [],
+    ...src,
+  };
+}
+
+export function createTestProcessedInstanceNode(src?: Partial<ProcessedInstanceHierarchyNode>): ProcessedInstanceHierarchyNode {
   return {
     label: "test",
     key: {
@@ -54,6 +77,18 @@ export function createTestProcessedNode(src?: Partial<ProcessedHierarchyNode>): 
       instanceKeys: [],
     },
     parentKeys: [],
+    ...src,
+  };
+}
+export function createTestProcessedGroupingNode(src?: Partial<ProcessedGroupingHierarchyNode>): ProcessedGroupingHierarchyNode {
+  return {
+    label: "test",
+    key: {
+      type: "class-grouping",
+      class: { name: "test class" },
+    },
+    parentKeys: [],
+    children: [],
     ...src,
   };
 }

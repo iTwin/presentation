@@ -5,7 +5,16 @@
 
 import { Observable } from "rxjs";
 import { assert } from "@itwin/core-bentley";
-import { HierarchyNode, HierarchyNodeKey, HierarchyNodeProcessingParams, ProcessedHierarchyNode } from "../HierarchyNode";
+import {
+  HierarchyNode,
+  HierarchyNodeKey,
+  InstanceHierarchyNodeProcessingParams,
+  InstancesNodeKey,
+  ParentHierarchyNode,
+  ProcessedCustomHierarchyNode,
+  ProcessedHierarchyNode,
+  ProcessedInstanceHierarchyNode,
+} from "../HierarchyNode";
 import { getLogger } from "../Logging";
 import { ECClass, ECSchema, IMetadataProvider, parseFullClassName } from "../Metadata";
 
@@ -41,9 +50,9 @@ export async function getClass(metadata: IMetadataProvider, fullClassName: strin
 }
 
 function mergeNodeHandlingParams(
-  lhs: HierarchyNodeProcessingParams | undefined,
-  rhs: HierarchyNodeProcessingParams | undefined,
-): HierarchyNodeProcessingParams | undefined {
+  lhs: InstanceHierarchyNodeProcessingParams | undefined,
+  rhs: InstanceHierarchyNodeProcessingParams | undefined,
+): InstanceHierarchyNodeProcessingParams | undefined {
   if (!lhs && !rhs) {
     return undefined;
   }
@@ -57,26 +66,15 @@ function mergeNodeHandlingParams(
   return Object.keys(params).length > 0 ? params : undefined;
 }
 
-function mergeNodeKeys(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): HierarchyNodeKey {
+function mergeNodeKeys<TKey extends string | InstancesNodeKey>(lhs: TKey, rhs: TKey): TKey {
   if (HierarchyNodeKey.isCustom(lhs)) {
     assert(HierarchyNodeKey.isCustom(rhs));
-    return lhs === rhs ? lhs : `${lhs}+${rhs}`;
-  }
-  assert(HierarchyNodeKey.isStandard(lhs) && HierarchyNodeKey.isStandard(rhs) && lhs.type === rhs.type);
-  if (HierarchyNodeKey.isInstances(lhs)) {
-    assert(HierarchyNodeKey.isInstances(rhs));
-    return { type: "instances", instanceKeys: [...lhs.instanceKeys, ...rhs.instanceKeys] };
-  }
-  if (HierarchyNodeKey.isClassGrouping(lhs)) {
-    assert(HierarchyNodeKey.isClassGrouping(rhs));
-    assert(lhs.class.name === rhs.class.name);
-    return { ...lhs };
+    return lhs === rhs ? lhs : (`${lhs}+${rhs}` as TKey);
   }
   // istanbul ignore else
-  if (HierarchyNodeKey.isLabelGrouping(lhs)) {
-    assert(HierarchyNodeKey.isLabelGrouping(rhs));
-    assert(lhs.label === rhs.label);
-    return { ...lhs };
+  if (HierarchyNodeKey.isInstances(lhs)) {
+    assert(HierarchyNodeKey.isInstances(rhs));
+    return { type: "instances", instanceKeys: [...lhs.instanceKeys, ...rhs.instanceKeys] } as TKey;
   }
   // istanbul ignore next
   return ((x: never) => x)(lhs);
@@ -94,16 +92,10 @@ function mergeParentNodeKeys(lhsKeys: HierarchyNodeKey[], rhsKeys: HierarchyNode
 }
 
 /** @internal */
-export function mergeNodes(lhs: ProcessedHierarchyNode, rhs: ProcessedHierarchyNode): ProcessedHierarchyNode {
+export function mergeNodes<TNode extends ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode>(lhs: TNode, rhs: TNode): TNode {
+  assert(typeof lhs.key === typeof rhs.key);
   const mergedProcessingParams = mergeNodeHandlingParams(lhs.processingParams, rhs.processingParams);
-  const mergedChildren =
-    Array.isArray(lhs.children) && Array.isArray(rhs.children)
-      ? [...lhs.children, ...rhs.children]
-      : lhs.children === true || rhs.children === true
-      ? true
-      : lhs.children === false && rhs.children === false
-      ? false
-      : undefined;
+  const mergedChildren = lhs.children === true || rhs.children === true ? true : lhs.children === false && rhs.children === false ? false : undefined;
   return {
     label: lhs.label,
     key: mergeNodeKeys(lhs.key, rhs.key),
@@ -112,7 +104,7 @@ export function mergeNodes(lhs: ProcessedHierarchyNode, rhs: ProcessedHierarchyN
     ...(mergedProcessingParams ? { processingParams: mergedProcessingParams } : undefined),
     ...(lhs.autoExpand || rhs.autoExpand ? { autoExpand: lhs.autoExpand || rhs.autoExpand } : undefined),
     ...(lhs.extendedData || rhs.extendedData ? { extendedData: { ...lhs.extendedData, ...rhs.extendedData } } : undefined),
-  };
+  } as TNode;
 }
 
 /** @internal */
@@ -142,17 +134,17 @@ export interface ChildNodesObservables {
 export class ChildNodesCache {
   private _map = new Map<string, ChildNodesObservables>();
 
-  private createKey(node: ProcessedHierarchyNode | undefined): string {
+  private createKey(node: ParentHierarchyNode | undefined): string {
     return node ? `${JSON.stringify(node.parentKeys)}+${JSON.stringify(node.key)}` : "";
   }
 
-  public add(parentNode: ProcessedHierarchyNode | undefined, value: ChildNodesObservables) {
+  public add(parentNode: ParentHierarchyNode | undefined, value: ChildNodesObservables) {
     const key = this.createKey(parentNode);
     assert(!this._map.has(key));
     this._map.set(key, value);
   }
 
-  public get(parentNode: ProcessedHierarchyNode | undefined): ChildNodesObservables | undefined {
+  public get(parentNode: ParentHierarchyNode | undefined): ChildNodesObservables | undefined {
     return this._map.get(this.createKey(parentNode));
   }
 }

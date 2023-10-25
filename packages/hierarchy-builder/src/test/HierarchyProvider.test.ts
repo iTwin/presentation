@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { IHierarchyLevelDefinitionsFactory } from "../hierarchy-builder/HierarchyDefinition";
-import { HierarchyNode, ParsedHierarchyNode } from "../hierarchy-builder/HierarchyNode";
+import { HierarchyNode, ParsedCustomHierarchyNode } from "../hierarchy-builder/HierarchyNode";
 import { HierarchyProvider } from "../hierarchy-builder/HierarchyProvider";
 import { ECSQL_COLUMN_NAME_FilteredChildrenPaths, FilteredHierarchyNode } from "../hierarchy-builder/internal/FilteringHierarchyLevelDefinitionsFactory";
 import { RowsLimitExceededError } from "../hierarchy-builder/internal/TreeNodesReader";
@@ -14,7 +14,6 @@ import { ECKindOfQuantity, ECPrimitiveProperty, ECProperty, IMetadataProvider } 
 import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions } from "../hierarchy-builder/queries/ECSql";
 import { NodeSelectClauseColumnNames } from "../hierarchy-builder/queries/NodeSelectClauseFactory";
 import { ConcatenatedValue } from "../hierarchy-builder/values/ConcatenatedValue";
-import { IPrimitiveValueFormatter } from "../hierarchy-builder/values/Formatting";
 import { TypedPrimitiveValue } from "../hierarchy-builder/values/Values";
 import { trimWhitespace } from "./queries/Utils";
 import { createFakeQueryReader, createGetClassStub } from "./Utils";
@@ -392,7 +391,6 @@ describe("HierarchyProvider", () => {
 
     it("returns formatted string label", async () => {
       const { provider } = setupTest({
-        formatter,
         node: createNode("test label"),
       });
       const rootNodes = await provider.getNodes(undefined);
@@ -402,7 +400,6 @@ describe("HierarchyProvider", () => {
 
     it("returns combined strings label", async () => {
       const { provider } = setupTest({
-        formatter,
         node: createNode(["test1", "-", "test2"]),
       });
       const rootNodes = await provider.getNodes(undefined);
@@ -415,7 +412,6 @@ describe("HierarchyProvider", () => {
 
     it("returns formatted typed primitive values label", async () => {
       const { provider } = setupTest({
-        formatter,
         node: createNode([
           { type: "Integer", value: 123 },
           { type: "String", value: "!" },
@@ -444,7 +440,6 @@ describe("HierarchyProvider", () => {
         ],
       });
       const { provider } = setupTest({
-        formatter,
         node: createNode([{ className: "x.y", propertyName: "p", value: "abc" }]),
       });
       const rootNodes = await provider.getNodes(undefined);
@@ -470,7 +465,6 @@ describe("HierarchyProvider", () => {
         ],
       });
       const { provider } = setupTest({
-        formatter,
         node: createNode([{ className: "x.y", propertyName: "p", value: "abc" }]),
       });
       await expect(provider.getNodes(undefined)).to.eventually.be.rejected;
@@ -490,7 +484,6 @@ describe("HierarchyProvider", () => {
         ],
       });
       const { provider } = setupTest({
-        formatter,
         node: createNode([{ className: "x.y", propertyName: "p", value: "abc" }]),
       });
       await expect(provider.getNodes(undefined)).to.eventually.be.rejected;
@@ -510,14 +503,13 @@ describe("HierarchyProvider", () => {
         ],
       });
       const { provider } = setupTest({
-        formatter,
         node: createNode([{ className: "x.y", propertyName: "p", value: "abc" }]),
       });
       await expect(provider.getNodes(undefined)).to.eventually.be.rejected;
     });
 
-    function setupTest(props: { node: ParsedHierarchyNode; formatter: IPrimitiveValueFormatter }) {
-      const { node, formatter } = props;
+    function setupTest(props: { node: ParsedCustomHierarchyNode }) {
+      const { node } = props;
       const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel() {
           return [{ node }];
@@ -532,7 +524,7 @@ describe("HierarchyProvider", () => {
       return { hierarchyDefinition, provider };
     }
 
-    function createNode(label: ConcatenatedValue | string): ParsedHierarchyNode {
+    function createNode(label: ConcatenatedValue | string): ParsedCustomHierarchyNode {
       return { key: "test", label, children: false };
     }
   });

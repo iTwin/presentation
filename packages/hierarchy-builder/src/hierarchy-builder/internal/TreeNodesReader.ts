@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { INodeParser } from "../HierarchyDefinition";
-import { HierarchyNodeProcessingParams, ParsedHierarchyNode } from "../HierarchyNode";
+import { InstanceHierarchyNodeProcessingParams, ParsedHierarchyNode, ParsedInstanceHierarchyNode } from "../HierarchyNode";
 import { ECSqlQueryDef, IECSqlQueryExecutor } from "../queries/ECSql";
 import { NodeSelectClauseColumnNames } from "../queries/NodeSelectClauseFactory";
 import { ConcatenatedValue } from "../values/ConcatenatedValue";
@@ -69,9 +69,9 @@ export interface RowDef {
 /* eslint-enable @typescript-eslint/naming-convention */
 
 /** @internal */
-export function defaultNodesParser(row: { [columnName: string]: any }): ParsedHierarchyNode {
+export function defaultNodesParser(row: { [columnName: string]: any }): ParsedInstanceHierarchyNode {
   const typedRow = row as RowDef;
-  const processingParams: HierarchyNodeProcessingParams = {
+  const processingParams: InstanceHierarchyNodeProcessingParams = {
     ...(typedRow.HideIfNoChildren ? { hideIfNoChildren: true } : undefined),
     ...(typedRow.HideNodeInHierarchy ? { hideInHierarchy: true } : undefined),
     ...(typedRow.GroupByClass ? { groupByClass: true } : undefined),

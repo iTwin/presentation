@@ -4,7 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { concatMap, from, mergeMap, Observable, tap, toArray } from "rxjs";
-import { ClassGroupingNodeKey, GroupingProcessedHierarchyNode, HierarchyNode, ProcessedHierarchyNode } from "../../HierarchyNode";
+import {
+  ClassGroupingNodeKey,
+  HierarchyNode,
+  ProcessedGroupingHierarchyNode,
+  ProcessedHierarchyNode,
+  ProcessedInstanceHierarchyNode,
+} from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
 import { IMetadataProvider } from "../../Metadata";
 import { createOperatorLoggingNamespace, getClass } from "../Common";
@@ -15,7 +21,7 @@ const OPERATOR_NAME = "Grouping.ByClass";
 export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
 
 /** @internal */
-export function createClassGroupingOperator(metadata: IMetadataProvider, onGroupingNodeCreated?: (groupingNode: GroupingProcessedHierarchyNode) => void) {
+export function createClassGroupingOperator(metadata: IMetadataProvider, onGroupingNodeCreated?: (groupingNode: ProcessedGroupingHierarchyNode) => void) {
   return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
     return nodes.pipe(
       log((n) => `in: ${n.label}`),
@@ -44,7 +50,7 @@ interface ClassInfo {
 
 interface ClassGroupingInformation {
   ungrouped: Array<ProcessedHierarchyNode>;
-  grouped: Map<string, { class: ClassInfo; groupedNodes: Array<ProcessedHierarchyNode> }>;
+  grouped: Map<string, { class: ClassInfo; groupedNodes: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode> }>;
 }
 
 async function createClassGroupingInformation(metadata: IMetadataProvider, nodes: ProcessedHierarchyNode[]): Promise<ClassGroupingInformation> {
@@ -72,7 +78,7 @@ async function createClassGroupingInformation(metadata: IMetadataProvider, nodes
 
 function createGroupingNodes(
   groupings: ClassGroupingInformation,
-  onGroupingNodeCreated?: (groupingNode: GroupingProcessedHierarchyNode) => void,
+  onGroupingNodeCreated?: (groupingNode: ProcessedGroupingHierarchyNode) => void,
 ): ProcessedHierarchyNode[] & { hasClassGroupingNodes?: boolean } {
   const outNodes = new Array<ProcessedHierarchyNode>();
   groupings.grouped.forEach((entry) => {
@@ -81,7 +87,7 @@ function createGroupingNodes(
       class: { name: entry.class.fullName, label: entry.class.label },
     };
     const groupedNodeParentKeys = entry.groupedNodes[0].parentKeys;
-    const groupingNode: GroupingProcessedHierarchyNode = {
+    const groupingNode: ProcessedGroupingHierarchyNode = {
       label: entry.class.label ?? entry.class.name,
       key: groupingNodeKey,
       parentKeys: groupedNodeParentKeys,

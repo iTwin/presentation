@@ -7,7 +7,7 @@ import { expect } from "chai";
 import { from } from "rxjs";
 import { LogLevel } from "@itwin/core-bentley";
 import { createMergeInstanceNodesByLabelOperator, LOGGING_NAMESPACE } from "../../../hierarchy-builder/internal/operators/MergeInstanceNodesByLabel";
-import { createTestInstanceKey, createTestProcessedNode, getObservableResult, setupLogging } from "../../Utils";
+import { createTestInstanceKey, createTestProcessedCustomNode, createTestProcessedInstanceNode, getObservableResult, setupLogging } from "../../Utils";
 
 describe("MergeInstanceNodesByLabel", () => {
   before(() => {
@@ -16,8 +16,8 @@ describe("MergeInstanceNodesByLabel", () => {
 
   it("doesn't merge nodes that have `mergeByLabelId = undefined`", async () => {
     const nodes = [
-      createTestProcessedNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] } }),
-      createTestProcessedNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] } }),
+      createTestProcessedInstanceNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] } }),
+      createTestProcessedInstanceNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] } }),
     ];
     const result = await getObservableResult(from(nodes).pipe(createMergeInstanceNodesByLabelOperator()));
     expect(result).to.deep.eq(nodes);
@@ -25,8 +25,14 @@ describe("MergeInstanceNodesByLabel", () => {
 
   it("doesn't merge nodes that have empty `mergeByLabelId`", async () => {
     const nodes = [
-      createTestProcessedNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] }, processingParams: { mergeByLabelId: "" } }),
-      createTestProcessedNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] }, processingParams: { mergeByLabelId: "" } }),
+      createTestProcessedInstanceNode({
+        key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] },
+        processingParams: { mergeByLabelId: "" },
+      }),
+      createTestProcessedInstanceNode({
+        key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] },
+        processingParams: { mergeByLabelId: "" },
+      }),
     ];
     const result = await getObservableResult(from(nodes).pipe(createMergeInstanceNodesByLabelOperator()));
     expect(result).to.deep.eq(nodes);
@@ -34,8 +40,14 @@ describe("MergeInstanceNodesByLabel", () => {
 
   it("doesn't merge nodes that have different `mergeByLabelId`", async () => {
     const nodes = [
-      createTestProcessedNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] }, processingParams: { mergeByLabelId: "a" } }),
-      createTestProcessedNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] }, processingParams: { mergeByLabelId: "b" } }),
+      createTestProcessedInstanceNode({
+        key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] },
+        processingParams: { mergeByLabelId: "a" },
+      }),
+      createTestProcessedInstanceNode({
+        key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] },
+        processingParams: { mergeByLabelId: "b" },
+      }),
     ];
     const result = await getObservableResult(from(nodes).pipe(createMergeInstanceNodesByLabelOperator()));
     expect(result).to.deep.eq(nodes);
@@ -43,12 +55,12 @@ describe("MergeInstanceNodesByLabel", () => {
 
   it("doesn't merge nodes that have different labels", async () => {
     const nodes = [
-      createTestProcessedNode({
+      createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] },
         label: "a",
         processingParams: { mergeByLabelId: "x" },
       }),
-      createTestProcessedNode({
+      createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] },
         label: "b",
         processingParams: { mergeByLabelId: "x" },
@@ -60,8 +72,11 @@ describe("MergeInstanceNodesByLabel", () => {
 
   it("doesn't merge nodes of different types", async () => {
     const nodes = [
-      createTestProcessedNode({ key: "custom", processingParams: { mergeByLabelId: "x" } }),
-      createTestProcessedNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] }, processingParams: { mergeByLabelId: "x" } }),
+      createTestProcessedCustomNode({ key: "custom" }),
+      createTestProcessedInstanceNode({
+        key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] },
+        processingParams: { mergeByLabelId: "x" },
+      }),
     ];
     const result = await getObservableResult(from(nodes).pipe(createMergeInstanceNodesByLabelOperator()));
     expect(result).to.deep.eq(nodes);
@@ -69,22 +84,22 @@ describe("MergeInstanceNodesByLabel", () => {
 
   it("merges nodes that have same `mergeByLabelId` and label", async () => {
     const nodes = [
-      createTestProcessedNode({
+      createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] },
         label: "a",
         processingParams: { mergeByLabelId: "x" },
       }),
-      createTestProcessedNode({
+      createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] },
         label: "b",
         processingParams: { mergeByLabelId: "y" },
       }),
-      createTestProcessedNode({
+      createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x3" })] },
         label: "a",
         processingParams: { mergeByLabelId: "x" },
       }),
-      createTestProcessedNode({
+      createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x4" })] },
         label: "b",
         processingParams: { mergeByLabelId: "y" },
@@ -92,7 +107,7 @@ describe("MergeInstanceNodesByLabel", () => {
     ];
     const result = await getObservableResult(from(nodes).pipe(createMergeInstanceNodesByLabelOperator()));
     expect(result).to.deep.eq([
-      createTestProcessedNode({
+      createTestProcessedInstanceNode({
         key: {
           type: "instances",
           instanceKeys: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x3" })],
@@ -102,7 +117,7 @@ describe("MergeInstanceNodesByLabel", () => {
           mergeByLabelId: "x",
         },
       }),
-      createTestProcessedNode({
+      createTestProcessedInstanceNode({
         key: {
           type: "instances",
           instanceKeys: [createTestInstanceKey({ id: "0x2" }), createTestInstanceKey({ id: "0x4" })],

@@ -5,7 +5,7 @@
 
 import { from, merge, mergeMap, Observable, partition, reduce, shareReplay, tap } from "rxjs";
 import { assert, DuplicatePolicy, SortedArray } from "@itwin/core-bentley";
-import { HierarchyNode, HierarchyNodeKey, ProcessedHierarchyNode } from "../../HierarchyNode";
+import { HierarchyNode, HierarchyNodeKey, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
 import { createOperatorLoggingNamespace, mergeNodes } from "../Common";
 
@@ -59,7 +59,7 @@ export function createMergeInstanceNodesByLabelOperator() {
   };
 }
 
-type MergedHierarchyNode = ProcessedHierarchyNode & { processingParams: { mergeByLabelId: string } };
+type MergedHierarchyNode = ProcessedInstanceHierarchyNode & { processingParams: { mergeByLabelId: string } };
 
 class SortedNodesList extends SortedArray<MergedHierarchyNode> {
   public constructor() {
@@ -82,7 +82,7 @@ function serializeNode(node: ProcessedHierarchyNode) {
   return JSON.stringify({
     label: node.label,
     keys: HierarchyNodeKey.isInstances(node.key) ? node.key.instanceKeys : node.key,
-    mergeId: node.processingParams?.mergeByLabelId,
+    mergeId: (node as ProcessedInstanceHierarchyNode).processingParams?.mergeByLabelId,
   });
 }
 

@@ -9,7 +9,14 @@ import { LogLevel } from "@itwin/core-bentley";
 import { HierarchyNode, ProcessedHierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
 import { createClassGroupingOperator, LOGGING_NAMESPACE } from "../../../hierarchy-builder/internal/operators/ClassGrouping";
 import { IMetadataProvider } from "../../../hierarchy-builder/Metadata";
-import { createGetClassStub, createTestProcessedNode, getObservableResult, setupLogging, TStubClassFunc } from "../../Utils";
+import {
+  createGetClassStub,
+  createTestProcessedCustomNode,
+  createTestProcessedInstanceNode,
+  getObservableResult,
+  setupLogging,
+  TStubClassFunc,
+} from "../../Utils";
 
 describe("ClassGrouping", () => {
   before(() => {
@@ -24,7 +31,7 @@ describe("ClassGrouping", () => {
 
   it("doesn't group non-instance nodes", async () => {
     const nodes = [
-      createTestProcessedNode({
+      createTestProcessedCustomNode({
         label: "custom",
         key: "test",
         children: false,
@@ -36,7 +43,7 @@ describe("ClassGrouping", () => {
 
   it("groups one instance node", async () => {
     const nodes = [
-      createTestProcessedNode({
+      createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema.TestClass", id: "0x1" }] },
         processingParams: { groupByClass: true },
       }),
@@ -59,17 +66,17 @@ describe("ClassGrouping", () => {
 
   it("groups multiple instance nodes", async () => {
     const nodes = [
-      createTestProcessedNode({
+      createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
         label: "1",
         processingParams: { groupByClass: true },
       }),
-      createTestProcessedNode({
+      createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema.B", id: "0x2" }] },
         label: "2",
         processingParams: { groupByClass: true },
       }),
-      createTestProcessedNode({
+      createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x3" }] },
         label: "3",
         processingParams: { groupByClass: true },
@@ -102,19 +109,18 @@ describe("ClassGrouping", () => {
     ] as ProcessedHierarchyNode[]);
   });
 
-  it("groups some input nodes", async () => {
+  it("groups some input nodes when the list contains instance and custom nodes", async () => {
     const nodes = [
-      createTestProcessedNode({
+      createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
         label: "1",
         processingParams: { groupByClass: true },
       }),
-      createTestProcessedNode({
+      createTestProcessedCustomNode({
         key: "custom",
         label: "custom",
-        processingParams: { groupByClass: true },
       }),
-      createTestProcessedNode({
+      createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x2" }] },
         label: "2",
         processingParams: { groupByClass: true },

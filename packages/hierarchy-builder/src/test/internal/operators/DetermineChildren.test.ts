@@ -9,7 +9,7 @@ import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
 import { ProcessedHierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
 import { createDetermineChildrenOperator, LOGGING_NAMESPACE } from "../../../hierarchy-builder/internal/operators/DetermineChildren";
-import { createTestProcessedNode, getObservableResult, setupLogging } from "../../Utils";
+import { createTestProcessedCustomNode, getObservableResult, setupLogging } from "../../Utils";
 
 describe("DetermineChildren", () => {
   before(() => {
@@ -17,7 +17,7 @@ describe("DetermineChildren", () => {
   });
 
   it("doesn't check children if node has children determined", async () => {
-    const node = createTestProcessedNode({
+    const node = createTestProcessedCustomNode({
       children: false,
     });
     const hasNodes = sinon.spy();
@@ -27,7 +27,7 @@ describe("DetermineChildren", () => {
   });
 
   it("determines node children", async () => {
-    const node = createTestProcessedNode({
+    const node = createTestProcessedCustomNode({
       children: undefined,
     });
     const hasNodes = sinon.stub().returns(of(true));
@@ -39,17 +39,17 @@ describe("DetermineChildren", () => {
   it("streams nodes in the same order as input", async () => {
     const nodes = [
       // will determine children of this node asynchronously
-      createTestProcessedNode({
+      createTestProcessedCustomNode({
         key: "1",
         label: "1",
       }),
       // will determine children of this node synchronously
-      createTestProcessedNode({
+      createTestProcessedCustomNode({
         key: "2",
         label: "2",
       }),
       // this node already has children determined
-      createTestProcessedNode({
+      createTestProcessedCustomNode({
         key: "3",
         label: "3",
         children: true,

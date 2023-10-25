@@ -5,6 +5,7 @@
 
 import {
   CustomHierarchyNodeDefinition,
+  HierarchyDefinitionParentNode,
   HierarchyLevelDefinition,
   HierarchyNodesDefinition,
   IHierarchyLevelDefinitionsFactory,
@@ -13,7 +14,7 @@ import {
   INodePreProcessor,
   InstanceNodesQueryDefinition,
 } from "../HierarchyDefinition";
-import { HierarchyNode, HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath, ParsedHierarchyNode, ProcessedHierarchyNode } from "../HierarchyNode";
+import { HierarchyNode, HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath, ParsedInstanceHierarchyNode, ProcessedHierarchyNode } from "../HierarchyNode";
 import { IMetadataProvider } from "../Metadata";
 import { InstanceKey } from "../values/Values";
 import { getClass } from "./Common";
@@ -44,9 +45,9 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
   }
 
   public get preProcessNode(): INodePreProcessor {
-    return async (node: FilteredHierarchyNode) => {
+    return async (node) => {
       const processedNode = this._source.preProcessNode ? await this._source.preProcessNode(node) : node;
-      if (processedNode?.processingParams?.hideInHierarchy && node.filteredChildrenIdentifierPaths?.length === 0) {
+      if (processedNode?.processingParams?.hideInHierarchy && (node as FilteredHierarchyNode).filteredChildrenIdentifierPaths?.length === 0) {
         // an existing empty `node.filteredChildrenIdentifierPaths` means the node is our filter target - we
         // want to hide such nodes if they have `hideInHierarchy` param
         return undefined;
@@ -70,7 +71,7 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
   }
 
   public get parseNode(): INodeParser {
-    return (row: { [columnName: string]: any }): FilteredHierarchyNode<ParsedHierarchyNode> => {
+    return (row: { [columnName: string]: any }): FilteredHierarchyNode<ParsedInstanceHierarchyNode> => {
       const parsedFilteredChildrenIdentifierPaths = row[ECSQL_COLUMN_NAME_FilteredChildrenPaths]
         ? JSON.parse(row[ECSQL_COLUMN_NAME_FilteredChildrenPaths])
         : undefined;
@@ -83,9 +84,9 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
     };
   }
 
-  public async defineHierarchyLevel(parentNode: Omit<HierarchyNode, "children"> | undefined): Promise<HierarchyLevelDefinition> {
+  public async defineHierarchyLevel(parentNode: HierarchyDefinitionParentNode | undefined): Promise<HierarchyLevelDefinition> {
     const sourceDefinitions = await this._source.defineHierarchyLevel(parentNode);
-    const filteredNodePaths = this.getFilteringProps(parentNode);
+    const filteredNodePaths = this.getFilteringProps(parentNode as FilteredHierarchyNode);
     if (!filteredNodePaths || filteredNodePaths.length === 0) {
       return sourceDefinitions;
     }

@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { defer, filter, map, merge, mergeMap, Observable, partition, shareReplay, tap } from "rxjs";
-import { ProcessedHierarchyNode } from "../../HierarchyNode";
+import { HierarchyNode, ProcessedCustomHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
 import { createOperatorLoggingNamespace, hasChildren } from "../Common";
 
@@ -29,7 +29,11 @@ export function createHideIfNoChildrenOperator(hasNodes: (node: ProcessedHierarc
     // - `doesntNeedHide` - nodes without the flag (return no matter if they have children or not)
     // - `determinedChildren` - nodes with the flag and known children
     // - `undeterminedChildren` - nodes with the flag and unknown children
-    const [needsHide, doesntNeedHide] = partition(sharedNodes, (n) => !!n.processingParams?.hideIfNoChildren);
+    const [needsHide, doesntNeedHide] = partition(
+      sharedNodes,
+      (n): n is ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode =>
+        (HierarchyNode.isCustom(n) || HierarchyNode.isInstancesNode(n)) && !!n.processingParams?.hideIfNoChildren,
+    );
     const [determinedChildren, undeterminedChildren] = partition(needsHide, (n) => n.children !== undefined);
     return merge(
       doesntNeedHide.pipe(log((n) => `doesnt need hide: ${n.label}`)),

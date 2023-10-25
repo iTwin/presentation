@@ -7,17 +7,12 @@ import { expect } from "chai";
 import sinon from "sinon";
 import {
   CustomHierarchyNodeDefinition,
+  HierarchyDefinitionParentNode,
   HierarchyLevelDefinition,
   IHierarchyLevelDefinitionsFactory,
   InstanceNodesQueryDefinition,
 } from "../../hierarchy-builder/HierarchyDefinition";
-import {
-  GroupingProcessedHierarchyNode,
-  HierarchyNode,
-  HierarchyNodeIdentifiersPath,
-  ParsedHierarchyNode,
-  ProcessedHierarchyNode,
-} from "../../hierarchy-builder/HierarchyNode";
+import { HierarchyNode, HierarchyNodeIdentifiersPath, ParsedHierarchyNode } from "../../hierarchy-builder/HierarchyNode";
 import {
   applyECInstanceIdsFilter,
   ECSQL_COLUMN_NAME_FilteredChildrenPaths,
@@ -28,7 +23,14 @@ import * as reader from "../../hierarchy-builder/internal/TreeNodesReader";
 import { IMetadataProvider } from "../../hierarchy-builder/Metadata";
 import { NodeSelectClauseColumnNames } from "../../hierarchy-builder/queries/NodeSelectClauseFactory";
 import { trimWhitespace } from "../queries/Utils";
-import { createGetClassStub, createTestInstanceKey, createTestProcessedNode, TStubClassFunc } from "../Utils";
+import {
+  createGetClassStub,
+  createTestInstanceKey,
+  createTestProcessedCustomNode,
+  createTestProcessedGroupingNode,
+  createTestProcessedInstanceNode,
+  TStubClassFunc,
+} from "../Utils";
 
 describe("FilteringHierarchyLevelDefinitionsFactory", () => {
   describe("parseNode", () => {
@@ -109,15 +111,15 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
 
   describe("preProcessNode", () => {
     it("returns given node when source factory has no pre-processor", async () => {
-      const node = createTestProcessedNode();
+      const node = createTestProcessedCustomNode();
       const filteringFactory = createFilteringHierarchyLevelsFactory();
       const result = await filteringFactory.preProcessNode(node);
       expect(result).to.eq(node);
     });
 
     it("returns node pre-processed by source factory", async () => {
-      const inputNode = createTestProcessedNode();
-      const sourceFactoryNode = createTestProcessedNode();
+      const inputNode = createTestProcessedCustomNode();
+      const sourceFactoryNode = createTestProcessedCustomNode();
       const sourceFactory = {
         preProcessNode: sinon.stub().returns(sourceFactoryNode),
       } as unknown as IHierarchyLevelDefinitionsFactory;
@@ -131,7 +133,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
 
     it("returns `undefined` when node is filter target and has `hideInHierarchy` flag", async () => {
       const inputNode: FilteredHierarchyNode = {
-        ...createTestProcessedNode({
+        ...createTestProcessedCustomNode({
           processingParams: {
             hideInHierarchy: true,
           },
@@ -146,15 +148,15 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
 
   describe("postProcessNode", () => {
     it("returns given node when source factory has no post-processor", async () => {
-      const node = createTestProcessedNode();
+      const node = createTestProcessedCustomNode();
       const filteringFactory = createFilteringHierarchyLevelsFactory();
       const result = await filteringFactory.postProcessNode(node);
       expect(result).to.eq(node);
     });
 
     it("returns node post-processed by source factory", async () => {
-      const inputNode = createTestProcessedNode();
-      const sourceFactoryNode = createTestProcessedNode();
+      const inputNode = createTestProcessedCustomNode();
+      const sourceFactoryNode = createTestProcessedCustomNode();
       const sourceFactory = {
         postProcessNode: sinon.stub().resolves(sourceFactoryNode),
       } as unknown as IHierarchyLevelDefinitionsFactory;
@@ -167,7 +169,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
     });
 
     it("returns undefined when source factory post processor returns undefined", async () => {
-      const inputNode = createTestProcessedNode();
+      const inputNode = createTestProcessedCustomNode();
       const sourceFactory = {
         postProcessNode: sinon.stub().resolves(undefined),
       } as unknown as IHierarchyLevelDefinitionsFactory;
@@ -187,13 +189,13 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
     });
 
     it("sets auto-expand on class grouping nodes if any child has filtered children paths", async () => {
-      const inputNode: ProcessedHierarchyNode = {
+      const inputNode = {
         ...createClassGroupingNode(),
         children: [
           {
-            ...createTestProcessedNode(),
+            ...createTestProcessedInstanceNode(),
             filteredChildrenIdentifierPaths: [],
-          } as FilteredHierarchyNode,
+          },
         ],
       };
       const filteringFactory = createFilteringHierarchyLevelsFactory();
@@ -201,14 +203,14 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
       expect(result.autoExpand).to.be.true;
     });
 
-    function createClassGroupingNode(): GroupingProcessedHierarchyNode {
-      return createTestProcessedNode({
+    function createClassGroupingNode() {
+      return createTestProcessedGroupingNode({
         key: {
           type: "class-grouping",
           class: { label: "class label", name: "class name" },
         },
         children: [],
-      }) as GroupingProcessedHierarchyNode;
+      });
     }
   });
 
@@ -527,7 +529,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         key: "custom",
         label: "custom node",
         filteredChildrenIdentifierPaths: [[{ className: childFilterClass.name, id: "0x456" }]],
-      } as FilteredHierarchyNode<HierarchyNode>);
+      } as FilteredHierarchyNode<HierarchyDefinitionParentNode>);
       expect(result).to.deep.eq([
         applyECInstanceIdsFilter(sourceDefinition, [{ id: { className: childFilterClass.name, id: "0x456" }, childrenIdentifierPaths: [] }]),
       ]);
