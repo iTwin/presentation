@@ -98,7 +98,7 @@ export interface GroupingParams {
 }
 
 /**
- * Parameters that are used across all groupings.
+ * Grouping parameters that are shared across all types of groupings.
  * @beta
  */
 export interface BaseGroupingParams {
@@ -113,7 +113,12 @@ export interface BaseGroupingParams {
  * @beta
  */
 export interface BaseClassGroupingParams extends BaseGroupingParams {
-  /** Base classes by which the node should be grouped by. */
+  /** 
+   * Full names of classes, which should be used to group the node. Only has effect if the node 
+   * represents an instance of that class. 
+   *
+   * Full class name format: `SchemaName.ClassName`.
+   */
   fullClassNames: string[];
 }
 
