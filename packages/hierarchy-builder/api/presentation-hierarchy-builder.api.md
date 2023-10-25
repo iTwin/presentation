@@ -100,7 +100,7 @@ export namespace ConcatenatedValuePart {
 }
 
 // @beta
-export function createConcatenatedValueSelector(selectors: ValueSelectClauseProps[], checkSelector?: string): string;
+export function createConcatenatedTypedValueSelector(selectors: TypedValueSelectClauseProps[], checkSelector?: string): string;
 
 // @beta
 export function createDefaultValueFormatter(): IPrimitiveValueFormatter;
@@ -124,7 +124,7 @@ export function createPropertyValueSelector(classAlias: string, propertyName: st
 export function createPropertyValueSelector(classAlias: string, propertyName: string, specialType: SpecialPropertyType): [string, PrimitiveValueType];
 
 // @beta
-export function createValueSelector(props: ValueSelectClauseProps): string;
+export function createTypedValueSelector(props: TypedValueSelectClauseProps): string;
 
 // @beta
 export interface CustomHierarchyNodeDefinition {
@@ -744,16 +744,16 @@ export type TypedPrimitiveValue = ({
 };
 
 // @beta
-export type ValueSelectClauseProps = PropertyValueSelectClauseProps | TypedPrimitiveValue | PrimitiveValueSelectorProps;
+export type TypedValueSelectClauseProps = PropertyValueSelectClauseProps | TypedPrimitiveValue | PrimitiveValueSelectorProps;
 
 // @beta (undocumented)
-export namespace ValueSelectClauseProps {
+export namespace TypedValueSelectClauseProps {
     // (undocumented)
-    export function isPrimitiveValue(props: ValueSelectClauseProps): props is TypedPrimitiveValue;
+    export function isPrimitiveValue(props: TypedValueSelectClauseProps): props is TypedPrimitiveValue;
     // (undocumented)
-    export function isPrimitiveValueSelector(props: ValueSelectClauseProps): props is PrimitiveValueSelectorProps;
+    export function isPrimitiveValueSelector(props: TypedValueSelectClauseProps): props is PrimitiveValueSelectorProps;
     // (undocumented)
-    export function isPropertySelector(props: ValueSelectClauseProps): props is PropertyValueSelectClauseProps;
+    export function isPropertySelector(props: TypedValueSelectClauseProps): props is PropertyValueSelectClauseProps;
 }
 
 // (No @packageDocumentation comment for this package)

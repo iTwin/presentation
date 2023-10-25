@@ -12,7 +12,7 @@ import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createECSqlQueryExecutor, createMetadataProvider, createValueFormatter } from "@itwin/presentation-core-interop";
 import {
-  createConcatenatedValueSelector,
+  createConcatenatedTypedValueSelector,
   createPropertyValueSelector,
   HierarchyProvider,
   IHierarchyLevelDefinitionsFactory,
@@ -152,7 +152,7 @@ describe("Stateless hierarchy builder", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: createConcatenatedValueSelector([
+                        selector: createConcatenatedTypedValueSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: schema.classes.ClassX.fullName, propertyClassAlias: "this", propertyName: "PropX" },
                           { type: "String", value: "]" },
@@ -254,7 +254,7 @@ describe("Stateless hierarchy builder", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: createConcatenatedValueSelector([
+                        selector: createConcatenatedTypedValueSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: "BisCore.Subject", propertyClassAlias: "this", propertyName: "LastMod" },
                           { type: "String", value: "]" },
@@ -382,7 +382,7 @@ describe("Stateless hierarchy builder", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: createConcatenatedValueSelector([
+                        selector: createConcatenatedTypedValueSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: modelClassName, propertyClassAlias: "this", propertyName: "IsPrivate" },
                           { type: "String", value: "]" },
@@ -460,7 +460,7 @@ describe("Stateless hierarchy builder", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: createConcatenatedValueSelector([
+                        selector: createConcatenatedTypedValueSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: category.className, propertyClassAlias: "this", propertyName: "Rank" },
                           { type: "String", value: "]" },
@@ -549,7 +549,7 @@ describe("Stateless hierarchy builder", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: createConcatenatedValueSelector([
+                        selector: createConcatenatedTypedValueSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: element.className, propertyClassAlias: "this", propertyName: "Yaw" },
                           { type: "String", value: "]" },
@@ -636,7 +636,7 @@ describe("Stateless hierarchy builder", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: createConcatenatedValueSelector([
+                        selector: createConcatenatedTypedValueSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: element.className, propertyClassAlias: "this", propertyName: "Origin", specialType: "Point2d" },
                           { type: "String", value: "]" },
@@ -723,7 +723,7 @@ describe("Stateless hierarchy builder", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: createConcatenatedValueSelector([
+                        selector: createConcatenatedTypedValueSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: element.className, propertyClassAlias: "this", propertyName: "Origin", specialType: "Point3d" },
                           { type: "String", value: "]" },
@@ -808,7 +808,7 @@ describe("Stateless hierarchy builder", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: createConcatenatedValueSelector([
+                        selector: createConcatenatedTypedValueSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: element.className, propertyClassAlias: "this", propertyName: "FederationGuid", specialType: "Guid" },
                           { type: "String", value: "]" },
