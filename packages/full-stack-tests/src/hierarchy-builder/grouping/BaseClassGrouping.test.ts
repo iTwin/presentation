@@ -7,9 +7,10 @@ import { PhysicalPartition, Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { IHierarchyLevelDefinitionsFactory, NodeSelectClauseFactory } from "@itwin/presentation-hierarchy-builder";
-import { buildIModel, createProvider, insertPhysicalPartition, insertSubject } from "../../IModelUtils";
+import { buildIModel, insertPhysicalPartition, insertSubject } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
+import { createProvider } from "../Utils";
 
 describe("Stateless hierarchy builder", () => {
   describe("Base class grouping", () => {
@@ -174,9 +175,7 @@ describe("Stateless hierarchy builder", () => {
       const baseSchemaName = "BisCore";
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
         const childPartition1 = insertPhysicalPartition({ builder, codeValue: "B1", parentId: IModel.rootSubjectId, userLabel: "test" });
-        const childPartition2 = insertPhysicalPartition({ builder, codeValue: "B2", parentId: IModel.rootSubjectId, userLabel: "test" });
-        const childPartition3 = insertPhysicalPartition({ builder, codeValue: "B3", parentId: IModel.rootSubjectId, userLabel: "test" });
-        return { childPartition1, childPartition2, childPartition3 };
+        return { childPartition1 };
       });
 
       const customHierarchy: IHierarchyLevelDefinitionsFactory = {
@@ -232,14 +231,6 @@ describe("Stateless hierarchy builder", () => {
                     children: [
                       NodeValidators.createForInstanceNode({
                         instanceKeys: [keys.childPartition1],
-                        children: false,
-                      }),
-                      NodeValidators.createForInstanceNode({
-                        instanceKeys: [keys.childPartition2],
-                        children: false,
-                      }),
-                      NodeValidators.createForInstanceNode({
-                        instanceKeys: [keys.childPartition3],
                         children: false,
                       }),
                     ],

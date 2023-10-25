@@ -6,9 +6,10 @@
 import { PhysicalPartition, Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { IHierarchyLevelDefinitionsFactory, NodeSelectClauseFactory } from "@itwin/presentation-hierarchy-builder";
-import { buildIModel, createProvider, insertPhysicalPartition, insertSubject } from "../../IModelUtils";
+import { buildIModel, insertPhysicalPartition, insertSubject } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
+import { createProvider } from "../Utils";
 
 describe("Stateless hierarchy builder", () => {
   describe("Class grouping", () => {
