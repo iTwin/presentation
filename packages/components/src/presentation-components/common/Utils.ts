@@ -121,6 +121,17 @@ const createPrimitiveCompositeValue = (compositeValue: LabelCompositeValue): Pri
   };
 };
 
+/** @internal */
+export type RulesetOrId = Ruleset | string;
+
+/**
+ * Returns ruleset id from `RulesetOrId`.
+ * @internal
+ */
+export function getRulesetId(ruleset: RulesetOrId) {
+  return typeof ruleset === "string" ? ruleset : ruleset.id;
+}
+
 /**
  * A helper to track ongoing async tasks. Usage:
  * ```
