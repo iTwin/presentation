@@ -5,7 +5,6 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import * as moq from "typemoq";
 import { BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
 import { Content, DescriptorOverrides, KeySet, SortDirection } from "@itwin/presentation-common";
@@ -19,7 +18,6 @@ import {
   createTestNestedContentField,
   createTestPropertiesContentField,
 } from "../_helpers/Content";
-import { mockPresentationManager } from "../_helpers/UiComponents";
 import { act, render, renderHook, waitFor } from "../TestUtils";
 
 describe("useRows", () => {
@@ -33,20 +31,24 @@ describe("useRows", () => {
     options: {},
   };
 
-  let presentationManagerMock: moq.IMock<PresentationManager>;
+  const getContentAndSizeStub = sinon.stub<Parameters<PresentationManager["getContentAndSize"]>, ReturnType<PresentationManager["getContentAndSize"]>>();
 
-  beforeEach(() => {
-    const { presentationManager } = mockPresentationManager();
-    presentationManagerMock = presentationManager;
-    sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
+  before(() => {
+    sinon.stub(Presentation, "presentation").get(() => ({
+      getContentAndSize: getContentAndSizeStub,
+    }));
     onActiveFormattingUnitSystemChanged = new BeUiEvent<FormattingUnitSystemChangedArgs>();
     sinon.stub(IModelApp, "quantityFormatter").get(() => ({
       onActiveFormattingUnitSystemChanged,
     }));
   });
 
-  afterEach(() => {
+  after(() => {
     sinon.restore();
+  });
+
+  afterEach(() => {
+    getContentAndSizeStub.reset();
   });
 
   it("loads rows", async () => {
@@ -60,9 +62,7 @@ describe("useRows", () => {
       values: { [propertiesField.name]: "test_value" },
       displayValues: { [propertiesField.name]: "Test value" },
     });
-    presentationManagerMock
-      .setup(async (x) => x.getContentAndSize(moq.It.isAny()))
-      .returns(async () => ({ content: new Content(descriptor, [item]), size: 1 }));
+    getContentAndSizeStub.resolves({ content: new Content(descriptor, [item]), size: 1 });
 
     const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps });
 
@@ -107,9 +107,7 @@ describe("useRows", () => {
         },
       },
     });
-    presentationManagerMock
-      .setup(async (x) => x.getContentAndSize(moq.It.isAny()))
-      .returns(async () => ({ content: new Content(descriptor, [item]), size: 1 }));
+    getContentAndSizeStub.resolves({ content: new Content(descriptor, [item]), size: 1 });
 
     const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps });
 
@@ -136,12 +134,15 @@ describe("useRows", () => {
       values: { [propertiesField.name]: "test_value_2" },
       displayValues: { [propertiesField.name]: "Test value 2" },
     });
-    presentationManagerMock
-      .setup(async (x) => x.getContentAndSize(moq.It.is((options) => options.paging?.start === 0)))
-      .returns(async () => ({ content: new Content(descriptor, [item1]), size: 2 }));
-    presentationManagerMock
-      .setup(async (x) => x.getContentAndSize(moq.It.is((options) => options.paging?.start === 1)))
-      .returns(async () => ({ content: new Content(descriptor, [item2]), size: 2 }));
+    getContentAndSizeStub.callsFake(async (options) => {
+      if (options.paging?.start === 0) {
+        return { content: new Content(descriptor, [item1]), size: 2 };
+      }
+      if (options.paging?.start === 1) {
+        return { content: new Content(descriptor, [item2]), size: 2 };
+      }
+      return undefined;
+    });
 
     const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, pageSize: 1 } });
 
@@ -165,23 +166,22 @@ describe("useRows", () => {
       values: { [propertiesField.name]: "test_value_1" },
       displayValues: { [propertiesField.name]: "Test value 1" },
     });
-    presentationManagerMock
-      .setup(async (x) => x.getContentAndSize(moq.It.isAny()))
-      .returns(async () => ({ content: new Content(descriptor, [item]), size: 1 }));
+    getContentAndSizeStub.resolves({ content: new Content(descriptor, [item]), size: 1 });
 
     const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, pageSize: 1 } });
 
     await waitFor(() => expect(result.current.rows).to.have.lengthOf(1));
+    getContentAndSizeStub.reset();
 
     act(() => {
       result.current.loadMoreRows();
     });
 
-    presentationManagerMock.verify(async (x) => x.getContentAndSize(moq.It.isAny()), moq.Times.once());
+    expect(getContentAndSizeStub).to.not.be.called;
   });
 
   it("throws in React render loop on failure to get content", async () => {
-    presentationManagerMock.setup(async (x) => x.getContentAndSize(moq.It.isAny())).throws(new Error("Failed to load"));
+    getContentAndSizeStub.throws(new Error("Failed to load"));
 
     const errorSpy = sinon.spy();
     function TestComponent() {
@@ -200,7 +200,7 @@ describe("useRows", () => {
   });
 
   it("returns empty rows list if there are no content", async () => {
-    presentationManagerMock.setup(async (x) => x.getContentAndSize(moq.It.isAny())).returns(async () => undefined);
+    getContentAndSizeStub.resolves(undefined);
     const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps });
 
     await waitFor(() => expect(result.current.isLoading).to.be.false);
@@ -213,22 +213,21 @@ describe("useRows", () => {
 
     await waitFor(() => expect(result.current.isLoading).to.be.false);
     expect(result.current.rows).to.have.lengthOf(0);
-    presentationManagerMock.verify(async (x) => x.getContentAndSize(moq.It.isAny()), moq.Times.never());
+    expect(getContentAndSizeStub).to.not.be.called;
   });
 
   it("applies fields filter expression", async () => {
     const filterExpression = "propField = 1";
-    presentationManagerMock
-      .setup(async (x) => x.getContentAndSize(moq.It.is((options) => options.descriptor.fieldsFilterExpression === filterExpression)))
-      .returns(async () => ({ content: new Content(createTestContentDescriptor({ fields: [] }), []), size: 0 }))
-      .verifiable(moq.Times.once());
+    getContentAndSizeStub.resolves({ content: new Content(createTestContentDescriptor({ fields: [] }), []), size: 0 });
 
     const { result } = renderHook((props: UseRowsProps) => useRows(props), {
       initialProps: { ...initialProps, options: { fieldsFilterExpression: filterExpression } },
     });
 
     await waitFor(() => expect(result.current.isLoading).to.be.false);
-    presentationManagerMock.verifyAll();
+    expect(getContentAndSizeStub).to.be.calledWith(
+      sinon.match((options: Parameters<typeof getContentAndSizeStub>[0]) => options.descriptor.fieldsFilterExpression === filterExpression),
+    );
   });
 
   it("applies sorting", async () => {
@@ -242,17 +241,16 @@ describe("useRows", () => {
       field: fieldDescriptor,
       direction: SortDirection.Descending,
     };
-    presentationManagerMock
-      .setup(async (x) =>
-        x.getContentAndSize(moq.It.is((options) => (options.descriptor as DescriptorOverrides).sorting?.direction === SortDirection.Descending)),
-      )
-      .returns(async () => ({ content: new Content(createTestContentDescriptor({ fields: [] }), []), size: 0 }))
-      .verifiable(moq.Times.once());
+    getContentAndSizeStub.resolves({ content: new Content(createTestContentDescriptor({ fields: [] }), []), size: 0 });
 
     const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, options: { sorting } } });
 
     await waitFor(() => expect(result.current.isLoading).to.be.false);
-    presentationManagerMock.verifyAll();
+    expect(getContentAndSizeStub).to.be.calledWith(
+      sinon.match(
+        (options: Parameters<typeof getContentAndSizeStub>[0]) => (options.descriptor as DescriptorOverrides).sorting?.direction === SortDirection.Descending,
+      ),
+    );
   });
 
   it("reloads rows when active unit system changes", async () => {
@@ -271,18 +269,14 @@ describe("useRows", () => {
       displayValues: { [propertiesField.name]: "Test value 2" },
     });
 
-    presentationManagerMock
-      .setup(async (x) => x.getContentAndSize(moq.It.is(({ paging }) => paging?.start === 0 && paging?.size === 10)))
-      .returns(async () => ({ content: new Content(descriptor, [item1, item2]), size: 2 }));
-
-    // setup presentation manager for reload call. Reload call should setup page options to get only previously loaded rows.
-    presentationManagerMock
-      .setup(async (x) => x.getContentAndSize(moq.It.is(({ paging }) => paging?.start === 0 && paging?.size === 2)))
-      .returns(async () => ({ content: new Content(descriptor, [item1, item2]), size: 2 }));
-
+    getContentAndSizeStub.resolves({ content: new Content(descriptor, [item1, item2]), size: 2 });
     const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, pageSize: 10 } });
 
     await waitFor(() => expect(result.current.rows).to.have.lengthOf(2));
+    // initial rows load request
+    expect(getContentAndSizeStub).to.be.calledWith(
+      sinon.match(({ paging }: Parameters<typeof getContentAndSizeStub>[0]) => paging?.start === 0 && paging?.size === 10),
+    );
 
     act(() => {
       onActiveFormattingUnitSystemChanged.raiseEvent({ system: "metric" });
@@ -290,7 +284,10 @@ describe("useRows", () => {
 
     await waitFor(() => {
       expect(result.current.rows).to.have.lengthOf(2);
-      presentationManagerMock.verify(async (x) => x.getContentAndSize(moq.It.is(({ paging }) => paging?.start === 0 && paging?.size === 2)), moq.Times.once());
+      // reload request should have page options to get only previously loaded rows.
+      expect(getContentAndSizeStub).to.be.calledWith(
+        sinon.match(({ paging }: Parameters<typeof getContentAndSizeStub>[0]) => paging?.start === 0 && paging?.size === 2),
+      );
     });
   });
 
@@ -301,7 +298,7 @@ describe("useRows", () => {
       properties: [{ property: createTestPropertyInfo() }],
     });
     const descriptor = createTestContentDescriptor({ fields: [propertiesField] });
-    presentationManagerMock.setup(async (x) => x.getContentAndSize(moq.It.isAny())).returns(async () => ({ content: new Content(descriptor, []), size: 0 }));
+    getContentAndSizeStub.resolves({ content: new Content(descriptor, []), size: 0 });
 
     const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, pageSize: 10 } });
 
@@ -310,13 +307,19 @@ describe("useRows", () => {
       expect(result.current.isLoading).to.be.false;
     });
 
+    // initial load request
+    expect(getContentAndSizeStub).to.be.calledWith(
+      sinon.match(({ paging }: Parameters<typeof getContentAndSizeStub>[0]) => paging?.start === 0 && paging?.size === 10),
+    );
+    getContentAndSizeStub.resetHistory();
+
     act(() => {
       onActiveFormattingUnitSystemChanged.raiseEvent({ system: "metric" });
     });
 
     await waitFor(() => {
       expect(result.current.rows).to.have.lengthOf(0);
-      presentationManagerMock.verify(async (x) => x.getContentAndSize(moq.It.isAny()), moq.Times.once());
+      expect(getContentAndSizeStub).to.not.be.called;
     });
   });
 
@@ -335,9 +338,7 @@ describe("useRows", () => {
       }),
     );
 
-    presentationManagerMock
-      .setup(async (x) => x.getContentAndSize(moq.It.is(({ paging }) => paging?.start === 0 && paging?.size === itemsCount)))
-      .returns(async () => ({ content: new Content(descriptor, items), size: itemsCount }));
+    getContentAndSizeStub.resolves({ content: new Content(descriptor, items), size: itemsCount });
 
     // all items should be loaded with single request
     const { result } = renderHook((props: UseRowsProps) => useRows(props), { initialProps: { ...initialProps, pageSize: itemsCount } });
@@ -346,14 +347,16 @@ describe("useRows", () => {
     });
 
     // setup presentation manager for rows reload
-    presentationManagerMock
-      .setup(async (x) => x.getContentAndSize(moq.It.is(({ paging }) => paging?.start === 0 && paging?.size === ROWS_RELOAD_PAGE_SIZE)))
-      .returns(async () => ({ content: new Content(descriptor, items.slice(0, ROWS_RELOAD_PAGE_SIZE)), size: ROWS_RELOAD_PAGE_SIZE }))
-      .verifiable(moq.Times.once());
-    presentationManagerMock
-      .setup(async (x) => x.getContentAndSize(moq.It.is(({ paging }) => paging?.start === ROWS_RELOAD_PAGE_SIZE && paging?.size === 1)))
-      .returns(async () => ({ content: new Content(descriptor, items.slice(ROWS_RELOAD_PAGE_SIZE)), size: 1 }))
-      .verifiable(moq.Times.once());
+    getContentAndSizeStub.reset();
+    getContentAndSizeStub.callsFake(async (options) => {
+      if (options.paging?.start === 0 && options.paging?.size === ROWS_RELOAD_PAGE_SIZE) {
+        return { content: new Content(descriptor, items.slice(0, ROWS_RELOAD_PAGE_SIZE)), size: ROWS_RELOAD_PAGE_SIZE };
+      }
+      if (options.paging?.start === ROWS_RELOAD_PAGE_SIZE && options.paging?.size === 1) {
+        return { content: new Content(descriptor, items.slice(ROWS_RELOAD_PAGE_SIZE)), size: 1 };
+      }
+      return undefined;
+    });
 
     act(() => {
       onActiveFormattingUnitSystemChanged.raiseEvent({ system: "metric" });
@@ -361,7 +364,12 @@ describe("useRows", () => {
 
     await waitFor(() => {
       expect(result.current.rows).to.have.lengthOf(itemsCount);
-      presentationManagerMock.verifyAll();
+      expect(getContentAndSizeStub).to.be.calledWith(
+        sinon.match(({ paging }: Parameters<typeof getContentAndSizeStub>[0]) => paging?.start === 0 && paging?.size === ROWS_RELOAD_PAGE_SIZE),
+      );
+      expect(getContentAndSizeStub).to.be.calledWith(
+        sinon.match(({ paging }: Parameters<typeof getContentAndSizeStub>[0]) => paging?.start === ROWS_RELOAD_PAGE_SIZE && paging?.size === 1),
+      );
     });
   });
 });

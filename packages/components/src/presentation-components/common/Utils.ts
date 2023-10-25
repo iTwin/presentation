@@ -18,6 +18,7 @@ import {
   LabelCompositeValue,
   LabelDefinition,
   parseCombinedFieldNames,
+  Ruleset,
   Value,
 } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
@@ -129,6 +130,17 @@ const createPrimitiveCompositeValue = (compositeValue: LabelCompositeValue): Pri
     })),
   };
 };
+
+/** @internal */
+export type RulesetOrId = Ruleset | string;
+
+/**
+ * Returns ruleset id from `RulesetOrId`.
+ * @internal
+ */
+export function getRulesetId(ruleset: RulesetOrId) {
+  return typeof ruleset === "string" ? ruleset : ruleset.id;
+}
 
 /**
  * A helper to track ongoing async tasks. Usage:
@@ -243,6 +255,7 @@ export function useDelay(delayMilliseconds: number = 250) {
 /**
  * Function for serializing `DisplayValueGroup`.
  * Returns an object, which consists of `serializedDisplayValues` and `serializedGroupedRawValues`.
+ * @internal
  */
 export function serializeDisplayValueGroupArray(values: DisplayValueGroup[]) {
   const displayValues: DisplayValue[] = [];
@@ -259,6 +272,7 @@ export function serializeDisplayValueGroupArray(values: DisplayValueGroup[]) {
  * Returns an object, which consists of `displayValues` and `groupedRawValues`.
  * If values were parsed, then `displayValues` type is string[] and `groupedRawValues` type is Value[][].
  * If values were not parsed, or they are null or undefined, then field types will be undefined.
+ * @internal
  */
 export function deserializeDisplayValueGroupArray(serializedDisplayValues: string, serializedGroupedRawValues: string) {
   const tryParseJSON = (value: string) => {

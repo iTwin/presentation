@@ -31,7 +31,7 @@ interface Props {
 }
 
 export function Tree(props: Props) {
-  const { nodeLoader } = usePresentationTreeNodeLoader({
+  const { nodeLoader, onItemsRendered } = usePresentationTreeNodeLoader({
     imodel: props.imodel,
     ruleset: props.rulesetId,
     pagingSize: PAGING_SIZE,
@@ -62,7 +62,7 @@ export function Tree(props: Props) {
       iconsEnabled={true}
       width={props.width}
       height={props.height}
-      treeRenderer={(treeProps) => <PresentationTreeRenderer {...treeProps} nodeLoader={filteredNodeLoader} />}
+      treeRenderer={(treeProps) => <PresentationTreeRenderer {...treeProps} nodeLoader={filteredNodeLoader} onItemsRendered={onItemsRendered} />}
     />
   );
 }

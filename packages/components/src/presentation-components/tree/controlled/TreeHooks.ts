@@ -11,7 +11,6 @@ import { Subscription } from "rxjs/internal/Subscription";
 import { MutableTreeModel, PagedTreeNodeLoader, RenderedItemsRange, TreeModel, TreeModelSource, usePagedTreeNodeLoader } from "@itwin/components-react";
 import { IModelApp } from "@itwin/core-frontend";
 import { IModelHierarchyChangeEventArgs, Presentation } from "@itwin/presentation-frontend";
-import { RulesetRegistrationHelper } from "../../common/RulesetRegistrationHelper";
 import { PresentationTreeDataProvider, PresentationTreeDataProviderProps } from "../DataProvider";
 import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
 import { reloadTree } from "./TreeReloader";
@@ -67,29 +66,28 @@ export interface PresentationTreeNodeLoaderResult {
  */
 export function usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderProps): PresentationTreeNodeLoaderResult {
   const { enableHierarchyAutoUpdate, seedTreeModel, ...rest } = props;
-  const dataProviderProps: PresentationTreeDataProviderProps = useMemo(
-    () => rest,
+
+  const firstRenderRef = useRef(true);
+  const treeNodeLoaderStateProps: TreeNodeLoaderStateProps = useMemo(
+    () => ({ ...rest, seedTreeModel: firstRenderRef.current ? seedTreeModel : undefined }),
     Object.values(rest), // eslint-disable-line react-hooks/exhaustive-deps
   );
 
-  const firstRenderRef = useRef(true);
-  const [{ modelSource, rulesetRegistration, dataProvider }, setTreeNodeLoaderState] = useResettableState<TreeNodeLoaderState>(
-    () => ({
-      modelSource: new TreeModelSource(new MutableTreeModel(firstRenderRef.current ? seedTreeModel : undefined)),
-      rulesetRegistration: new RulesetRegistrationHelper(dataProviderProps.ruleset),
-      dataProvider: new PresentationTreeDataProvider({
-        ...dataProviderProps,
-        ruleset: typeof dataProviderProps.ruleset === "string" ? dataProviderProps.ruleset : /* istanbul ignore next */ dataProviderProps.ruleset.id,
-      }),
-    }),
-    [dataProviderProps],
-  );
+  const [{ modelSource, dataProvider }, setState] = useState<TreeNodeLoaderState>(() => ({
+    modelSource: new TreeModelSource(new MutableTreeModel(treeNodeLoaderStateProps.seedTreeModel)),
+    dataProvider: new PresentationTreeDataProvider({ ...treeNodeLoaderStateProps }),
+  }));
+
   useEffect(() => {
-    return () => rulesetRegistration.dispose();
-  }, [rulesetRegistration]);
-  useEffect(() => {
-    return () => dataProvider.dispose();
-  }, [dataProvider]);
+    const provider = new PresentationTreeDataProvider({ ...treeNodeLoaderStateProps });
+    setState({
+      modelSource: new TreeModelSource(new MutableTreeModel(treeNodeLoaderStateProps.seedTreeModel)),
+      dataProvider: provider,
+    });
+    return () => {
+      provider.dispose();
+    };
+  }, [treeNodeLoaderStateProps]);
 
   const nodeLoader = usePagedTreeNodeLoader(dataProvider, rest.pagingSize, modelSource);
 
@@ -103,9 +101,9 @@ export function usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderP
     enable: !!enableHierarchyAutoUpdate,
     pageSize: rest.pagingSize,
     modelSource,
-    dataProviderProps,
+    dataProviderProps: treeNodeLoaderStateProps,
     rulesetId: dataProvider.rulesetId,
-    setTreeNodeLoaderState,
+    setTreeNodeLoaderState: setState,
     renderedItems,
   };
   useModelSourceUpdateOnIModelHierarchyUpdate(params);
@@ -117,31 +115,11 @@ export function usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderP
   return { nodeLoader, onItemsRendered };
 }
 
+type TreeNodeLoaderStateProps = PresentationTreeDataProviderProps & { seedTreeModel?: TreeModel };
+
 interface TreeNodeLoaderState {
   modelSource: TreeModelSource;
-  rulesetRegistration: RulesetRegistrationHelper;
   dataProvider: IPresentationTreeDataProvider;
-}
-
-/**
- * Resets state to `initialValue` when dependencies change. Avoid using in new places because this hook is only intended
- * for use in poorly designed custom hooks.
- */
-function useResettableState<T>(initialValue: () => T, dependencies: unknown[]): [T, React.Dispatch<React.SetStateAction<T>>] {
-  const stateRef = useRef<T>() as React.MutableRefObject<T>;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useMemo(() => (stateRef.current = initialValue()), dependencies);
-
-  const [_, setState] = useState({});
-  const setNewStateRef = useRef((action: T | ((previousState: T) => T)) => {
-    const newState = action instanceof Function ? action(stateRef.current) : /* istanbul ignore next */ action;
-    // istanbul ignore else
-    if (newState !== stateRef.current) {
-      stateRef.current = newState;
-      setState({});
-    }
-  });
-  return [stateRef.current, setNewStateRef.current];
 }
 
 interface UpdateParams {
@@ -242,10 +220,9 @@ function startTreeReload({ dataProviderProps, rulesetId, modelSource, pageSize, 
   const dataProvider = new PresentationTreeDataProvider({ ...dataProviderProps, ruleset: rulesetId });
   return reloadTree(modelSource.getModel(), dataProvider, pageSize, renderedItems.current).subscribe({
     next: (newModelSource) =>
-      setTreeNodeLoaderState((prevState) => ({
+      setTreeNodeLoaderState({
         modelSource: newModelSource,
-        rulesetRegistration: prevState.rulesetRegistration,
         dataProvider,
-      })),
+      }),
   });
 }

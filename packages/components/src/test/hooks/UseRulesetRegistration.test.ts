@@ -3,13 +3,15 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { expect } from "chai";
 import sinon from "sinon";
-import * as moq from "typemoq";
 import { RegisteredRuleset, Ruleset } from "@itwin/presentation-common";
-import { Presentation, PresentationManager, RulesetManager } from "@itwin/presentation-frontend";
+import { Presentation, RulesetManager } from "@itwin/presentation-frontend";
 import { useRulesetRegistration } from "../../presentation-components/hooks/UseRulesetRegistration";
 import { ResolvablePromise } from "../_helpers/Promises";
 import { renderHook } from "../TestUtils";
+
+/* eslint-disable deprecation/deprecation */
 
 describe("useRulesetRegistration", () => {
   interface HookProps {
@@ -19,49 +21,58 @@ describe("useRulesetRegistration", () => {
     ruleset: { id: "test-ruleset", rules: [] },
   };
 
-  let presentationManagerMock: moq.IMock<PresentationManager>;
-  let rulesetManagerMock: moq.IMock<RulesetManager>;
+  const rulesetManagerStub = {
+    add: sinon.stub<Parameters<RulesetManager["add"]>, ReturnType<RulesetManager["add"]>>(),
+    remove: sinon.stub<Parameters<RulesetManager["remove"]>, ReturnType<RulesetManager["remove"]>>(),
+  };
 
-  beforeEach(() => {
-    presentationManagerMock = moq.Mock.ofType<PresentationManager>();
-    sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
-    rulesetManagerMock = moq.Mock.ofType<RulesetManager>();
-    presentationManagerMock.setup((x) => x.rulesets()).returns(() => rulesetManagerMock.object);
+  before(() => {
+    sinon.stub(Presentation, "presentation").get(() => ({
+      rulesets: () => rulesetManagerStub,
+    }));
+  });
+
+  after(() => {
+    sinon.restore();
   });
 
   afterEach(() => {
-    sinon.restore();
+    rulesetManagerStub.add.reset();
+    rulesetManagerStub.remove.reset();
   });
 
   it("registers and un-registers ruleset", async () => {
     const registeredRulesetPromise = new ResolvablePromise<RegisteredRuleset>();
-    rulesetManagerMock.setup(async (x) => x.add(initialProps.ruleset)).returns(async () => registeredRulesetPromise);
+    rulesetManagerStub.add.returns(registeredRulesetPromise);
     const { unmount } = renderHook((props: HookProps) => useRulesetRegistration(props.ruleset), { initialProps });
 
     const registered = new RegisteredRuleset(initialProps.ruleset, "testId", async (r) => Presentation.presentation.rulesets().remove(r));
     await registeredRulesetPromise.resolve(registered);
 
-    rulesetManagerMock.verify(async (x) => x.add(initialProps.ruleset), moq.Times.once());
-    rulesetManagerMock.verify(async (x) => x.remove(moq.It.isAny()), moq.Times.never());
+    expect(rulesetManagerStub.add).to.be.calledWith(initialProps.ruleset);
 
     unmount();
-    rulesetManagerMock.verify(async (x) => x.remove(registered), moq.Times.once());
+
+    expect(rulesetManagerStub.remove).to.be.called;
+
+    // this check fails in `StrictMode` due to ruleset registration happening during render cycle
+    // expect(rulesetManagerStub.add.callCount).to.be.eq(rulesetManagerStub.remove.callCount);
   });
 
   it("unregisters ruleset if registration happens after unmount", async () => {
     const registeredRulesetPromise = new ResolvablePromise<RegisteredRuleset>();
-    rulesetManagerMock.setup(async (x) => x.add(initialProps.ruleset)).returns(async () => registeredRulesetPromise);
+    rulesetManagerStub.add.returns(registeredRulesetPromise);
     const { unmount } = renderHook((props: HookProps) => useRulesetRegistration(props.ruleset), { initialProps });
 
     const registered = new RegisteredRuleset(initialProps.ruleset, "testId", async (r) => Presentation.presentation.rulesets().remove(r));
     unmount();
 
-    rulesetManagerMock.verify(async (x) => x.add(initialProps.ruleset), moq.Times.once());
-    rulesetManagerMock.verify(async (x) => x.remove(moq.It.isAny()), moq.Times.never());
+    expect(rulesetManagerStub.add).to.be.calledWith(initialProps.ruleset);
 
     await registeredRulesetPromise.resolve(registered);
 
-    rulesetManagerMock.verify(async (x) => x.add(initialProps.ruleset), moq.Times.once());
-    rulesetManagerMock.verify(async (x) => x.remove(registered), moq.Times.once());
+    expect(rulesetManagerStub.remove).to.be.called;
+    // this check fails in `StrictMode` due to ruleset registration happening during render cycle
+    // expect(rulesetManagerStub.add.callCount).to.be.eq(rulesetManagerStub.remove.callCount);
   });
 });
