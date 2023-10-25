@@ -90,14 +90,6 @@ export interface ClassGroupingNodeKey {
 }
 
 // @beta
-export interface ClassGroupingParams {
-    // (undocumented)
-    byBaseClasses?: BaseClassGroupingParams;
-    // (undocumented)
-    byClass?: boolean | BaseGroupingParams;
-}
-
-// @beta
 export type ConcatenatedValue = ConcatenatedValuePart | ConcatenatedValuePart[];
 
 // @beta (undocumented)
@@ -408,7 +400,14 @@ export function getLogger(): ILogger;
 export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey;
 
 // @beta
-export type GroupingParams = LabelGroupingParams & ClassGroupingParams;
+export interface GroupingParams {
+    // (undocumented)
+    byBaseClasses?: BaseClassGroupingParams;
+    // (undocumented)
+    byClass?: boolean | BaseGroupingParams;
+    // (undocumented)
+    byLabel?: boolean | BaseGroupingParams;
+}
 
 // @beta
 export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
@@ -606,12 +605,6 @@ export interface LabelGroupingNodeKey {
     label: string;
     // (undocumented)
     type: "label-grouping";
-}
-
-// @beta
-export interface LabelGroupingParams {
-    // (undocumented)
-    byLabel?: boolean | BaseGroupingParams;
 }
 
 // @beta (undocumented)

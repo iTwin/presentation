@@ -71,13 +71,8 @@ export interface NodeSelectClauseProps {
   mergeByLabelId?: string | ECSqlValueSelector;
 }
 
-type ECSqlSelectClauseGroupingParams = LabelGroupingParams & ClassGroupingParams;
-
-interface LabelGroupingParams {
+interface ECSqlSelectClauseGroupingParams {
   byLabel?: boolean | ECSqlValueSelector | BaseGroupingParams;
-}
-
-interface ClassGroupingParams {
   byClass?: boolean | ECSqlValueSelector | BaseGroupingParams;
   byBaseClasses?: BaseClassGroupingParams;
 }

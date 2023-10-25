@@ -88,24 +88,11 @@ export interface HierarchyNodeHandlingParams {
 }
 
 /**
- * A data structure that represents label grouping.
+ * A data structure for defining nodes' grouping requirements.
  * @beta
  */
-export interface LabelGroupingParams {
+export interface GroupingParams {
   byLabel?: boolean | BaseGroupingParams;
-}
-
-/**
- * A type that represents all groupings.
- * @beta
- */
-export type GroupingParams = LabelGroupingParams & ClassGroupingParams;
-
-/**
- * A data structure that represents all class groupings.
- * @beta
- */
-export interface ClassGroupingParams {
   byClass?: boolean | BaseGroupingParams;
   byBaseClasses?: BaseClassGroupingParams;
 }
