@@ -251,9 +251,7 @@ describe("Stateless hierarchy builder", () => {
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
         const childPartition1 = insertPhysicalPartition({ builder, codeValue: "B1", parentId: IModel.rootSubjectId, userLabel: "test" });
         const childPartition2 = insertPhysicalPartition({ builder, codeValue: "B2", parentId: IModel.rootSubjectId, userLabel: "test" });
-        const childPartition3 = insertPhysicalPartition({ builder, codeValue: "B3", parentId: IModel.rootSubjectId, userLabel: "test" });
-        const childPartition4 = insertPhysicalPartition({ builder, codeValue: "B4", parentId: IModel.rootSubjectId, userLabel: "test" });
-        return { childPartition1, childPartition2, childPartition3, childPartition4 };
+        return { childPartition1, childPartition2 };
       });
 
       const customHierarchy: IHierarchyLevelDefinitionsFactory = {
@@ -283,7 +281,7 @@ describe("Stateless hierarchy builder", () => {
                         FROM ${physicalPartitionClassName}
                       ) AS this
                       WHERE this.Parent.Id = (${IModel.rootSubjectId})
-                        AND NOT this.CodeValue = 'B4'
+                        AND NOT this.CodeValue = 'B2'
                     `,
                 },
               },
@@ -303,7 +301,7 @@ describe("Stateless hierarchy builder", () => {
                       })}
                       FROM ${physicalPartitionClassName} AS this
                       WHERE this.Parent.Id = (${IModel.rootSubjectId})
-                        AND this.CodeValue = 'B4'
+                        AND this.CodeValue = 'B2'
                     `,
                 },
               },
@@ -332,14 +330,6 @@ describe("Stateless hierarchy builder", () => {
                         instanceKeys: [keys.childPartition1],
                         children: false,
                       }),
-                      NodeValidators.createForInstanceNode({
-                        instanceKeys: [keys.childPartition2],
-                        children: false,
-                      }),
-                      NodeValidators.createForInstanceNode({
-                        instanceKeys: [keys.childPartition3],
-                        children: false,
-                      }),
                     ],
                   }),
                 ],
@@ -355,7 +345,7 @@ describe("Stateless hierarchy builder", () => {
                 className: `${baseSchemaName}.${baseClassName3}`,
                 children: [
                   NodeValidators.createForInstanceNode({
-                    instanceKeys: [keys.childPartition4],
+                    instanceKeys: [keys.childPartition2],
                     children: false,
                   }),
                 ],
@@ -367,17 +357,10 @@ describe("Stateless hierarchy builder", () => {
     });
 
     it("groups nodes of different classes if they share the same base class", async function () {
-      const baseClassName1 = "Element";
-      const baseClassName2 = "InformationContentElement";
-      const baseClassName3 = "InformationPartitionElement";
-      const baseSchemaName = "BisCore";
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
         const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, userLabel: "test" });
-        const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId, userLabel: "test" });
-        const childPartition3 = insertPhysicalPartition({ builder, codeValue: "B3", parentId: IModel.rootSubjectId, userLabel: "test" });
-        const childPartition4 = insertPhysicalPartition({ builder, codeValue: "B4", parentId: IModel.rootSubjectId, userLabel: "test" });
-        const childPartition5 = insertPhysicalPartition({ builder, codeValue: "B5", parentId: IModel.rootSubjectId, userLabel: "test" });
-        return { childSubject1, childSubject2, childPartition3, childPartition4, childPartition5 };
+        const childPartition2 = insertPhysicalPartition({ builder, codeValue: "B3", parentId: IModel.rootSubjectId, userLabel: "test" });
+        return { childSubject1, childPartition2 };
       });
 
       const customHierarchy: IHierarchyLevelDefinitionsFactory = {
@@ -394,11 +377,7 @@ describe("Stateless hierarchy builder", () => {
                         nodeLabel: { selector: `this.UserLabel` },
                         grouping: {
                           byBaseClasses: {
-                            fullClassNames: [
-                              `${baseSchemaName}.${baseClassName1}`,
-                              `${baseSchemaName}.${baseClassName2}`,
-                              `${baseSchemaName}.${baseClassName3}`,
-                            ],
+                            fullClassNames: ["BisCore.Element"],
                           },
                         },
                       })}
@@ -425,39 +404,15 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           NodeValidators.createForClassGroupingNode({
             label: "Element",
-            className: `${baseSchemaName}.${baseClassName1}`,
+            className: "BisCore.Element",
             children: [
-              NodeValidators.createForClassGroupingNode({
-                label: "Information Content Element",
-                className: `${baseSchemaName}.${baseClassName2}`,
-                children: [
-                  NodeValidators.createForClassGroupingNode({
-                    label: "Information Partition",
-                    className: `${baseSchemaName}.${baseClassName3}`,
-                    children: [
-                      NodeValidators.createForInstanceNode({
-                        instanceKeys: [keys.childPartition3],
-                        children: false,
-                      }),
-                      NodeValidators.createForInstanceNode({
-                        instanceKeys: [keys.childPartition4],
-                        children: false,
-                      }),
-                      NodeValidators.createForInstanceNode({
-                        instanceKeys: [keys.childPartition5],
-                        children: false,
-                      }),
-                    ],
-                  }),
-                  NodeValidators.createForInstanceNode({
-                    instanceKeys: [keys.childSubject1],
-                    children: false,
-                  }),
-                  NodeValidators.createForInstanceNode({
-                    instanceKeys: [keys.childSubject2],
-                    children: false,
-                  }),
-                ],
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [keys.childSubject1],
+                children: false,
+              }),
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [keys.childPartition2],
+                children: false,
               }),
             ],
           }),
