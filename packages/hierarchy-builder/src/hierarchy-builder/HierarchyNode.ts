@@ -111,7 +111,7 @@ export interface ClassGroupingParams {
 }
 
 /**
- * Parameters that are used for all groupings.
+ * Parameters that are used across all groupings.
  * @beta
  */
 export interface BaseGroupingParams {
