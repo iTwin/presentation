@@ -12,7 +12,7 @@ import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
 import { createProvider } from "../Utils";
 
 describe("Stateless hierarchy builder", () => {
-  describe("Grouping and hiding", () => {
+  describe("Grouping nodes' hiding", () => {
     let selectClauseFactory: NodeSelectClauseFactory;
     let subjectClassName: string;
     let physicalPartitionClassName: string;
