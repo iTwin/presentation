@@ -11,7 +11,7 @@ export function applyGroupHidingParams(props: GroupingHandlerResult): GroupingHa
   if (props.grouped.length === 0) {
     return props;
   }
-  const finalGroupings = { ...props, grouped: [] };
+  const finalGroupings: GroupingHandlerResult = { ...props, grouped: [] };
   for (const node of props.grouped) {
     if (Array.isArray(node.children) && ((props.ungrouped.length === 0 && props.grouped.length === 1) || node.children.length === 1)) {
       const [hideIfNoSiblings, hideIfOneGroupedNode] = getGroupingHideOptionsFromParentNode(node, props.groupingType);
@@ -26,7 +26,6 @@ export function applyGroupHidingParams(props: GroupingHandlerResult): GroupingHa
     finalGroupings.grouped.push(node);
   }
 
-  finalGroupings.ungrouped.push(...props.ungrouped);
   return finalGroupings;
 }
 
