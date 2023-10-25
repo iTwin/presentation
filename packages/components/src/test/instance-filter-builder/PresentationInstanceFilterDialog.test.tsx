@@ -15,9 +15,8 @@ import { Descriptor } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { waitFor } from "@testing-library/react";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
+import { PresentationInstanceFilter, PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
 import { PresentationInstanceFilterDialog } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog";
-import { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/Types";
-import * as instanceFilterBuilderUtils from "../../presentation-components/instance-filter-builder/Utils";
 import { createTestECClassInfo, render, stubDOMMatrix, stubRaf } from "../_helpers/Common";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
 
@@ -134,10 +133,10 @@ describe("PresentationInstanceFilterDialog", () => {
     expect(spy).to.not.be.called;
   });
 
-  it("does not invoke `onApply` when filter is missing presentation metadata", async () => {
-    sinon.stub(instanceFilterBuilderUtils, "createPresentationInstanceFilter").returns(undefined);
+  it("throws error when filter is missing presentation metadata", async () => {
+    sinon.stub(PresentationInstanceFilter, "fromComponentsPropertyFilter").throws(new Error("Some Error"));
     const spy = sinon.spy();
-    const { container, getByText, user } = render(
+    const { container, getByText, queryByText, user } = render(
       <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />,
     );
 
@@ -157,7 +156,7 @@ describe("PresentationInstanceFilterDialog", () => {
     const applyButton = await getApplyButton(container);
     await user.click(applyButton);
 
-    expect(spy).to.not.be.called;
+    await waitFor(() => expect(queryByText("general.error")).to.not.be.null);
   });
 
   it("renders custom title", () => {
@@ -193,6 +192,18 @@ describe("PresentationInstanceFilterDialog", () => {
     );
 
     await waitFor(() => expect(queryByText("Test Results")).to.not.be.null);
+  });
+
+  it("renders error boundary if error is thrown", async () => {
+    const descriptorGetter = async () => {
+      throw new Error("Cannot load descriptor");
+    };
+
+    const { queryByText } = render(
+      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptorGetter} onClose={() => {}} onApply={() => {}} isOpen={true} />,
+    );
+
+    await waitFor(() => expect(queryByText("general.error")).to.not.be.null);
   });
 
   it("renders with lazy-loaded descriptor", async () => {

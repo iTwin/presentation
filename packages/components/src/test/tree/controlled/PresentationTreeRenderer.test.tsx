@@ -24,7 +24,7 @@ import { PresentationError, PresentationStatus, PropertyValueFormat } from "@itw
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { waitFor } from "@testing-library/react";
 import { translate } from "../../../presentation-components/common/Utils";
-import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/Types";
+import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
 import { PresentationTreeRenderer } from "../../../presentation-components/tree/controlled/PresentationTreeRenderer";
 import { PresentationTreeDataProvider } from "../../../presentation-components/tree/DataProvider";
 import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";

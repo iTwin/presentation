@@ -75,16 +75,19 @@ export function defaultNodesParser(row: { [columnName: string]: any }): ParsedHi
   };
 }
 
-function parseLabel(value: string | undefined): ConcatenatedValue {
+function parseLabel(value: string | undefined): ConcatenatedValue | string {
   if (!value) {
-    return [];
+    return "";
   }
-  try {
-    const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed : [parsed];
-  } catch {
-    return [{ type: "String", value }];
+  if ((value.startsWith("[") && value.endsWith("]")) || (value.startsWith("{") && value.endsWith("}"))) {
+    try {
+      return JSON.parse(value);
+    } catch {
+      // fall through
+    }
   }
+  // not a JSON object/array
+  return value;
 }
 
 const ROWS_LIMIT = 1000;

@@ -18,9 +18,8 @@ import {
 import { NodeKey, PresentationError, PresentationStatus } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { translate } from "../../common/Utils";
-import { convertToInstanceFilterDefinition } from "../../instance-filter-builder/InstanceFilterConverter";
+import { PresentationInstanceFilter, PresentationInstanceFilterInfo } from "../../instance-filter-builder/PresentationFilterBuilder";
 import { PresentationInstanceFilterDialog } from "../../instance-filter-builder/PresentationInstanceFilterDialog";
-import { PresentationInstanceFilterInfo } from "../../instance-filter-builder/Types";
 import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
 import {
   FilterablePresentationTreeNodeItem,
@@ -128,7 +127,7 @@ interface MatchingInstancesCountProps {
 function MatchingInstancesCount({ filter, dataProvider, parentKey }: MatchingInstancesCountProps) {
   const { value, inProgress } = useDebouncedAsyncValue(
     useCallback(async () => {
-      const instanceFilter = await convertToInstanceFilterDefinition(filter.filter, dataProvider.imodel);
+      const instanceFilter = await PresentationInstanceFilter.toInstanceFilterDefinition(filter.filter, dataProvider.imodel);
       const requestOptions = dataProvider.createRequestOptions(parentKey, instanceFilter);
 
       try {

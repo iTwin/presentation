@@ -119,7 +119,7 @@ describe("Learning snippets", () => {
 
       // expect 1 element node
       await waitFor(() => getNodeByLabel(container, "My Element 2"));
-      expect(() => getNodeByLabel(container, "My Element 1")).to.throw;
+      expect(() => getNodeByLabel(container, "My Element 1")).to.throw();
     });
   });
 });

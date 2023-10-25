@@ -5,7 +5,6 @@ public;CacheInvalidationProps
 public;ContentDataProvider 
 public;ContentDataProviderProps 
 public;ControlledPresentationTreeFilteringProps
-beta;convertToInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection): Promise
 alpha;createDiagnosticsOptions(props: DiagnosticsProps): ClientDiagnosticsOptions | undefined
 internal;createFieldInfo(field: Field, parentFieldName?: string):
 internal;createPropertyDescriptionFromFieldInfo(info: FieldInfo): PropertyDescription
@@ -22,7 +21,10 @@ internal;FieldRecord
 beta;FilterablePresentationTreeNodeItem = PresentationTreeNodeItem &
 internal;FilteredPresentationTreeDataProvider 
 internal;FilteredPresentationTreeDataProviderProps
-internal;findBaseExpressionClass(imodel: IModelConnection, propertyClasses: ClassInfo[]): Promise
+beta;GenericInstanceFilter
+beta;GenericInstanceFilter
+beta;GenericInstanceFilterRule
+beta;GenericInstanceFilterRuleGroup
 internal;getFavoritesCategory: () => CategoryDescription
 beta;HierarchyLevelFilteringDescriptor = Descriptor | (() => Promise
 public;IContentDataProvider 
@@ -37,19 +39,22 @@ public;IPresentationTreeDataProvider
 internal;IPropertiesAppender
 beta;isFilterablePresentationTreeNodeItem(item: PresentationTreeNodeItem): item is FilterablePresentationTreeNodeItem
 beta;isPresentationInfoTreeNodeItem(item: TreeNodeItem): item is PresentationInfoTreeNodeItem
-beta;isPresentationInstanceFilterConditionGroup(filter: PresentationInstanceFilter): filter is PresentationInstanceFilterConditionGroup
 beta;isPresentationTreeNodeItem(item: TreeNodeItem): item is PresentationTreeNodeItem
 public;IUnifiedSelectionComponent
 beta;navigationPropertyEditorContext: Context
 beta;NavigationPropertyEditorContextProps
 public;PresentationComponentsLoggerCategory
+beta;PresentationFilterBuilderValueRenderer({ imodel, descriptor, descriptorInputKeys, ...props }: PresentationFilterBuilderValueRendererProps): JSX.Element
+beta;PresentationFilterBuilderValueRendererProps 
 beta;PresentationInfoTreeNodeItem 
 beta;PresentationInstanceFilter = PresentationInstanceFilterConditionGroup | PresentationInstanceFilterCondition
+beta;PresentationInstanceFilter
 beta;PresentationInstanceFilterCondition
 beta;PresentationInstanceFilterConditionGroup
 beta;PresentationInstanceFilterDialog(props: PresentationInstanceFilterDialogProps): JSX.Element
 beta;PresentationInstanceFilterDialogProps
 beta;PresentationInstanceFilterInfo
+beta;PresentationInstanceFilterPropertyInfo
 public;PresentationLabelsProvider 
 public;PresentationLabelsProviderProps
 public;PresentationPropertyDataProvider 
@@ -67,6 +72,7 @@ beta;PresentationTreeRenderer(props: PresentationTreeRendererProps): JSX.Element
 beta;PresentationTreeRendererProps 
 public;PropertyDataProviderWithUnifiedSelectionProps
 internal;class PropertyRecordsBuilder 
+beta;RelatedInstanceDescription
 beta;SchemaMetadataContext
 beta;SchemaMetadataContextProvider({ schemaContextProvider, imodel, children }: PropsWithChildren
 beta;SchemaMetadataContextProviderProps
@@ -85,6 +91,8 @@ public;useControlledPresentationTreeFiltering(props: ControlledPresentationTreeF
 internal;useFilteredNodeLoader(dataProvider: IPresentationTreeDataProvider, filter: string | undefined):
 beta;useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProps):
 beta;UseHierarchyLevelFilteringProps
+beta;useInstanceFilterPropertyInfos({ descriptor }: UseInstanceFilterPropertyInfosProps):
+beta;UseInstanceFilterPropertyInfosProps
 beta;useNavigationPropertyEditingContext(imodel: IModelConnection, dataProvider: IContentDataProvider): NavigationPropertyEditorContextProps
 internal;useNodeHighlightingProps(filter: string | undefined, filteredNodeLoader?: ITreeNodeLoaderWithProvider
 beta;usePresentationTable

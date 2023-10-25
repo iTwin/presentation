@@ -208,20 +208,24 @@ function preProcessNodes(hierarchyFactory: IHierarchyLevelDefinitionsFactory) {
   };
 }
 
-async function applyLabelsFormatting(
-  node: ParsedHierarchyNode,
+async function applyLabelsFormatting<TNode extends { label: string | ConcatenatedValue }>(
+  node: TNode,
   metadata: IMetadataProvider,
   valueFormatter: (value: TypedPrimitiveValue) => Promise<string>,
-): Promise<HierarchyNode> {
+): Promise<TNode & { label: string }> {
   if (typeof node.label === "string") {
-    return node as HierarchyNode;
+    const formattedLabel = await valueFormatter({ value: node.label, type: "String" });
+    return { ...node, label: formattedLabel };
   }
   return {
     ...node,
     label: await ConcatenatedValue.serialize(node.label, async (part: ConcatenatedValuePart) => {
-      // strings are just returned as-is
+      // strings are converted to typed strings
       if (typeof part === "string") {
-        return part;
+        part = {
+          value: part,
+          type: "String",
+        };
       }
       // for property parts - find property metadata and create `TypedPrimitiveValue` for them.
       if (ConcatenatedValuePart.isProperty(part)) {

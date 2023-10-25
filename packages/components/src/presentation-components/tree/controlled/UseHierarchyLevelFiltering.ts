@@ -8,7 +8,7 @@
 
 import { useRef } from "react";
 import { isTreeModelNode, ITreeNodeLoader, Subscription, TreeModelSource } from "@itwin/components-react";
-import { PresentationInstanceFilterInfo } from "../../instance-filter-builder/Types";
+import { PresentationInstanceFilterInfo } from "../../instance-filter-builder/PresentationFilterBuilder";
 import { isPresentationTreeNodeItem } from "../PresentationTreeNodeItem";
 
 /**
