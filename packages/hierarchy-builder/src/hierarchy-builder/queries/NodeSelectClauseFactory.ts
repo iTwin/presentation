@@ -71,7 +71,11 @@ export interface NodeSelectClauseProps {
   mergeByLabelId?: string | ECSqlValueSelector;
 }
 
-interface ECSqlSelectClauseGroupingParams {
+/**
+ * A data structure for defining nodes' grouping requirements.
+ * @beta
+ */
+export interface ECSqlSelectClauseGroupingParams {
   byLabel?: boolean | ECSqlValueSelector | BaseGroupingParams;
   byClass?: boolean | ECSqlValueSelector | BaseGroupingParams;
   byBaseClasses?: BaseClassGroupingParams;

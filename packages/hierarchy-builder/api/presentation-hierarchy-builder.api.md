@@ -376,6 +376,16 @@ export interface ECSqlQueryRow {
 export type ECSqlQueryRowFormat = "ECSqlPropertyNames" | "Indexes";
 
 // @beta
+export interface ECSqlSelectClauseGroupingParams {
+    // (undocumented)
+    byBaseClasses?: BaseClassGroupingParams_2;
+    // (undocumented)
+    byClass?: boolean | ECSqlValueSelector | BaseGroupingParams_2;
+    // (undocumented)
+    byLabel?: boolean | ECSqlValueSelector | BaseGroupingParams_2;
+}
+
+// @beta
 export interface ECSqlValueSelector {
     // (undocumented)
     selector: string;
