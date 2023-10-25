@@ -27,10 +27,9 @@ export function applyGroupHidingParams(props: GroupingHandlerResult): GroupingHa
     finalGroupings.groupedNodes.push(node);
     finalGroupings.allNodes.push(node);
   }
-  for (const node of props.ungroupedNodes) {
-    finalGroupings.allNodes.push(node);
-    finalGroupings.ungroupedNodes.push(node);
-  }
+
+  finalGroupings.allNodes.push(...props.ungroupedNodes);
+  finalGroupings.ungroupedNodes.push(...props.ungroupedNodes);
   return finalGroupings;
 }
 
