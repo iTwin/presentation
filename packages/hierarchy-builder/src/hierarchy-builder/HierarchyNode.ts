@@ -113,9 +113,9 @@ export interface BaseGroupingParams {
  * @beta
  */
 export interface BaseClassGroupingParams extends BaseGroupingParams {
-  /** 
-   * Full names of classes, which should be used to group the node. Only has effect if the node 
-   * represents an instance of that class. 
+  /**
+   * Full names of classes, which should be used to group the node. Only has effect if the node
+   * represents an instance of that class.
    *
    * Full class name format: `SchemaName.ClassName`.
    */
