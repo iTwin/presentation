@@ -16,9 +16,11 @@ describe("Stateless hierarchy builder", () => {
     let selectClauseFactory: NodeSelectClauseFactory;
     let subjectClassName: string;
     let physicalPartitionClassName: string;
+    let emptyIModel: IModelConnection;
 
     before(async function () {
       await initialize();
+      emptyIModel = (await buildIModel(this)).imodel;
       subjectClassName = Subject.classFullName.replace(":", ".");
       physicalPartitionClassName = PhysicalPartition.classFullName.replace(":", ".");
       selectClauseFactory = new NodeSelectClauseFactory();
@@ -28,31 +30,15 @@ describe("Stateless hierarchy builder", () => {
       await terminate();
     });
 
-    describe("does not group", () => {
-      let sharedIModel: IModelConnection;
-      let sharedKeys: any;
-      beforeEach(async function () {
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
-          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId });
-          const childPartition3 = insertPhysicalPartition({ builder, codeValue: "B3", parentId: IModel.rootSubjectId });
-          const childPartition4 = insertPhysicalPartition({ builder, codeValue: "B4", parentId: IModel.rootSubjectId });
-          const childPartition5 = insertPhysicalPartition({ builder, codeValue: "B5", parentId: IModel.rootSubjectId });
-          return { childSubject1, childSubject2, childPartition3, childPartition4, childPartition5 };
-        });
-        sharedKeys = keys;
-        sharedIModel = imodel;
-      });
-
-      it("if provided base classes are not parents", async function () {
-        const customHierarchy: IHierarchyLevelDefinitionsFactory = {
-          async defineHierarchyLevel(parentNode) {
-            if (!parentNode) {
-              return [
-                {
-                  fullClassName: `BisCore.InformationContentElement`,
-                  query: {
-                    ecsql: `
+    it("doesn't create grouping nodes if provided classes aren't base for node class", async function () {
+      const customHierarchy: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel(parentNode) {
+          if (!parentNode) {
+            return [
+              {
+                fullClassName: `BisCore.InformationContentElement`,
+                query: {
+                  ecsql: `
                     SELECT ${await selectClauseFactory.createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
@@ -66,56 +52,36 @@ describe("Stateless hierarchy builder", () => {
                     FROM (
                       SELECT ECClassId, ECInstanceId, UserLabel, Parent
                       FROM ${subjectClassName}
-                      UNION ALL
-                      SELECT ECClassId, ECInstanceId, UserLabel, Parent
-                      FROM ${physicalPartitionClassName}
                     ) AS this
-                    WHERE this.Parent.Id = (${IModel.rootSubjectId})
                   `,
-                  },
                 },
-              ];
-            }
-            return [];
-          },
-        };
+              },
+            ];
+          }
+          return [];
+        },
+      };
 
-        await validateHierarchy({
-          provider: createProvider({ imodel: sharedIModel, hierarchy: customHierarchy }),
-          expect: [
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [sharedKeys.childSubject1],
-              children: false,
-            }),
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [sharedKeys.childSubject2],
-              children: false,
-            }),
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [sharedKeys.childPartition3],
-              children: false,
-            }),
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [sharedKeys.childPartition4],
-              children: false,
-            }),
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [sharedKeys.childPartition5],
-              children: false,
-            }),
-          ],
-        });
+      await validateHierarchy({
+        provider: createProvider({ imodel: emptyIModel, hierarchy: customHierarchy }),
+        expect: [
+          NodeValidators.createForInstanceNode({
+            instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
+            children: false,
+          }),
+        ],
       });
+    });
 
-      it("if provided base classes are not of entity or relationship type", async function () {
-        const customHierarchy: IHierarchyLevelDefinitionsFactory = {
-          async defineHierarchyLevel(parentNode) {
-            if (!parentNode) {
-              return [
-                {
-                  fullClassName: `BisCore.InformationContentElement`,
-                  query: {
-                    ecsql: `
+    it("doesn't create grouping nodes if provided classes aren't of entity or relationship type", async function () {
+      const customHierarchy: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel(parentNode) {
+          if (!parentNode) {
+            return [
+              {
+                fullClassName: `BisCore.InformationContentElement`,
+                query: {
+                  ecsql: `
                     SELECT ${await selectClauseFactory.createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
@@ -129,68 +95,38 @@ describe("Stateless hierarchy builder", () => {
                     FROM (
                       SELECT ECClassId, ECInstanceId, UserLabel, Parent
                       FROM ${subjectClassName}
-                      UNION ALL
-                      SELECT ECClassId, ECInstanceId, UserLabel, Parent
-                      FROM ${physicalPartitionClassName}
                     ) AS this
-                    WHERE this.Parent.Id = (${IModel.rootSubjectId})
                   `,
-                  },
                 },
-              ];
-            }
-            return [];
-          },
-        };
+              },
+            ];
+          }
+          return [];
+        },
+      };
 
-        await validateHierarchy({
-          provider: createProvider({ imodel: sharedIModel, hierarchy: customHierarchy }),
-          expect: [
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [sharedKeys.childSubject1],
-              children: false,
-            }),
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [sharedKeys.childSubject2],
-              children: false,
-            }),
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [sharedKeys.childPartition3],
-              children: false,
-            }),
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [sharedKeys.childPartition4],
-              children: false,
-            }),
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [sharedKeys.childPartition5],
-              children: false,
-            }),
-          ],
-        });
+      await validateHierarchy({
+        provider: createProvider({ imodel: emptyIModel, hierarchy: customHierarchy }),
+        expect: [
+          NodeValidators.createForInstanceNode({
+            instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
+            children: false,
+          }),
+        ],
       });
     });
 
-    describe("groups", () => {
-      it("when base class is parent", async function () {
-        const baseClassName = "BisCore.InformationPartitionElement";
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, userLabel: "test" });
-          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId, userLabel: "test" });
-          const childPartition3 = insertPhysicalPartition({ builder, codeValue: "B3", parentId: IModel.rootSubjectId, userLabel: "test" });
-          const childPartition4 = insertPhysicalPartition({ builder, codeValue: "B4", parentId: IModel.rootSubjectId, userLabel: "test" });
-          const childPartition5 = insertPhysicalPartition({ builder, codeValue: "B5", parentId: IModel.rootSubjectId, userLabel: "test" });
-          return { childSubject1, childSubject2, childPartition3, childPartition4, childPartition5 };
-        });
+    it("creates grouping nodes if provided class is base for node class", async function () {
+      const baseClassName = "BisCore.InformationContentElement";
 
-        const customHierarchy: IHierarchyLevelDefinitionsFactory = {
-          async defineHierarchyLevel(parentNode) {
-            if (!parentNode) {
-              return [
-                {
-                  fullClassName: `BisCore.InformationContentElement`,
-                  query: {
-                    ecsql: `
+      const customHierarchy: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel(parentNode) {
+          if (!parentNode) {
+            return [
+              {
+                fullClassName: `BisCore.InformationContentElement`,
+                query: {
+                  ecsql: `
                       SELECT ${await selectClauseFactory.createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
@@ -204,75 +140,53 @@ describe("Stateless hierarchy builder", () => {
                       FROM (
                         SELECT ECClassId, ECInstanceId, UserLabel, Parent
                         FROM ${subjectClassName}
-                        UNION ALL
-                        SELECT ECClassId, ECInstanceId, UserLabel, Parent
-                        FROM ${physicalPartitionClassName}
                       ) AS this
-                      WHERE this.Parent.Id = (${IModel.rootSubjectId})
                     `,
-                  },
                 },
-              ];
-            }
-            return [];
-          },
-        };
+              },
+            ];
+          }
+          return [];
+        },
+      };
 
-        await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: customHierarchy }),
-          expect: [
-            NodeValidators.createForClassGroupingNode({
-              label: "Information Partition",
-              className: baseClassName,
-              children: [
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childPartition3],
-                  children: false,
-                }),
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childPartition4],
-                  children: false,
-                }),
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childPartition5],
-                  children: false,
-                }),
-              ],
-            }),
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [keys.childSubject1],
-              children: false,
-            }),
-            NodeValidators.createForInstanceNode({
-              instanceKeys: [keys.childSubject2],
-              children: false,
-            }),
-          ],
-        });
+      await validateHierarchy({
+        provider: createProvider({ imodel: emptyIModel, hierarchy: customHierarchy }),
+        expect: [
+          NodeValidators.createForClassGroupingNode({
+            label: "Information Content Element",
+            className: baseClassName,
+            children: [
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
+                children: false,
+              }),
+            ],
+          }),
+        ],
+      });
+    });
+
+    it("creates multiple grouping nodes if provided base classes are base for node and for provided other base class", async function () {
+      const baseClassName1 = "Element";
+      const baseClassName2 = "InformationContentElement";
+      const baseClassName3 = "InformationPartitionElement";
+      const baseSchemaName = "BisCore";
+      const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+        const childPartition1 = insertPhysicalPartition({ builder, codeValue: "B1", parentId: IModel.rootSubjectId, userLabel: "test" });
+        const childPartition2 = insertPhysicalPartition({ builder, codeValue: "B2", parentId: IModel.rootSubjectId, userLabel: "test" });
+        const childPartition3 = insertPhysicalPartition({ builder, codeValue: "B3", parentId: IModel.rootSubjectId, userLabel: "test" });
+        return { childPartition1, childPartition2, childPartition3 };
       });
 
-      it("when multiple base classes are parents", async function () {
-        const baseClassName1 = "Element";
-        const baseClassName2 = "InformationContentElement";
-        const baseClassName3 = "InformationPartitionElement";
-        const baseSchemaName = "BisCore";
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, userLabel: "test" });
-          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId, userLabel: "test" });
-          const childPartition3 = insertPhysicalPartition({ builder, codeValue: "B3", parentId: IModel.rootSubjectId, userLabel: "test" });
-          const childPartition4 = insertPhysicalPartition({ builder, codeValue: "B4", parentId: IModel.rootSubjectId, userLabel: "test" });
-          const childPartition5 = insertPhysicalPartition({ builder, codeValue: "B5", parentId: IModel.rootSubjectId, userLabel: "test" });
-          return { childSubject1, childSubject2, childPartition3, childPartition4, childPartition5 };
-        });
-
-        const customHierarchy: IHierarchyLevelDefinitionsFactory = {
-          async defineHierarchyLevel(parentNode) {
-            if (!parentNode) {
-              return [
-                {
-                  fullClassName: `BisCore.InformationContentElement`,
-                  query: {
-                    ecsql: `
+      const customHierarchy: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel(parentNode) {
+          if (!parentNode) {
+            return [
+              {
+                fullClassName: `BisCore.InformationContentElement`,
+                query: {
+                  ecsql: `
                       SELECT ${await selectClauseFactory.createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
@@ -289,89 +203,76 @@ describe("Stateless hierarchy builder", () => {
                       })}
                       FROM (
                         SELECT ECClassId, ECInstanceId, UserLabel, Parent
-                        FROM ${subjectClassName}
-                        UNION ALL
-                        SELECT ECClassId, ECInstanceId, UserLabel, Parent
                         FROM ${physicalPartitionClassName}
                       ) AS this
                       WHERE this.Parent.Id = (${IModel.rootSubjectId})
                     `,
-                  },
                 },
-              ];
-            }
-            return [];
-          },
-        };
+              },
+            ];
+          }
+          return [];
+        },
+      };
 
-        await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: customHierarchy }),
-          expect: [
-            NodeValidators.createForClassGroupingNode({
-              label: "Element",
-              className: `${baseSchemaName}.${baseClassName1}`,
-              children: [
-                NodeValidators.createForClassGroupingNode({
-                  label: "Information Content Element",
-                  className: `${baseSchemaName}.${baseClassName2}`,
-                  children: [
-                    NodeValidators.createForClassGroupingNode({
-                      label: "Information Partition",
-                      className: `${baseSchemaName}.${baseClassName3}`,
-                      children: [
-                        NodeValidators.createForInstanceNode({
-                          instanceKeys: [keys.childPartition3],
-                          children: false,
-                        }),
-                        NodeValidators.createForInstanceNode({
-                          instanceKeys: [keys.childPartition4],
-                          children: false,
-                        }),
-                        NodeValidators.createForInstanceNode({
-                          instanceKeys: [keys.childPartition5],
-                          children: false,
-                        }),
-                      ],
-                    }),
-                    NodeValidators.createForInstanceNode({
-                      instanceKeys: [keys.childSubject1],
-                      children: false,
-                    }),
-                    NodeValidators.createForInstanceNode({
-                      instanceKeys: [keys.childSubject2],
-                      children: false,
-                    }),
-                  ],
-                }),
-              ],
-            }),
-          ],
-        });
+      await validateHierarchy({
+        provider: createProvider({ imodel, hierarchy: customHierarchy }),
+        expect: [
+          NodeValidators.createForClassGroupingNode({
+            label: "Element",
+            className: `${baseSchemaName}.${baseClassName1}`,
+            children: [
+              NodeValidators.createForClassGroupingNode({
+                label: "Information Content Element",
+                className: `${baseSchemaName}.${baseClassName2}`,
+                children: [
+                  NodeValidators.createForClassGroupingNode({
+                    label: "Information Partition",
+                    className: `${baseSchemaName}.${baseClassName3}`,
+                    children: [
+                      NodeValidators.createForInstanceNode({
+                        instanceKeys: [keys.childPartition1],
+                        children: false,
+                      }),
+                      NodeValidators.createForInstanceNode({
+                        instanceKeys: [keys.childPartition2],
+                        children: false,
+                      }),
+                      NodeValidators.createForInstanceNode({
+                        instanceKeys: [keys.childPartition3],
+                        children: false,
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      });
+    });
+
+    it("creates different grouping nodes if nodes of the same class have different base classes provided", async function () {
+      const baseClassName1 = "Element";
+      const baseClassName2 = "InformationContentElement";
+      const baseClassName3 = "InformationPartitionElement";
+      const baseSchemaName = "BisCore";
+      const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+        const childPartition1 = insertPhysicalPartition({ builder, codeValue: "B1", parentId: IModel.rootSubjectId, userLabel: "test" });
+        const childPartition2 = insertPhysicalPartition({ builder, codeValue: "B2", parentId: IModel.rootSubjectId, userLabel: "test" });
+        const childPartition3 = insertPhysicalPartition({ builder, codeValue: "B3", parentId: IModel.rootSubjectId, userLabel: "test" });
+        const childPartition4 = insertPhysicalPartition({ builder, codeValue: "B4", parentId: IModel.rootSubjectId, userLabel: "test" });
+        return { childPartition1, childPartition2, childPartition3, childPartition4 };
       });
 
-      it("into different groups when root base classes are different", async function () {
-        const baseClassName1 = "Element";
-        const baseClassName2 = "InformationContentElement";
-        const baseClassName3 = "InformationPartitionElement";
-        const baseSchemaName = "BisCore";
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, userLabel: "test" });
-          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId, userLabel: "test" });
-          const childPartition3 = insertPhysicalPartition({ builder, codeValue: "B3", parentId: IModel.rootSubjectId, userLabel: "test" });
-          const childPartition4 = insertPhysicalPartition({ builder, codeValue: "B4", parentId: IModel.rootSubjectId, userLabel: "test" });
-          const childPartition5 = insertPhysicalPartition({ builder, codeValue: "B5", parentId: IModel.rootSubjectId, userLabel: "test" });
-          const childPartition6 = insertPhysicalPartition({ builder, codeValue: "B6", parentId: IModel.rootSubjectId, userLabel: "test" });
-          return { childSubject1, childSubject2, childPartition3, childPartition4, childPartition5, childPartition6 };
-        });
-
-        const customHierarchy: IHierarchyLevelDefinitionsFactory = {
-          async defineHierarchyLevel(parentNode) {
-            if (!parentNode) {
-              return [
-                {
-                  fullClassName: `BisCore.InformationContentElement`,
-                  query: {
-                    ecsql: `
+      const customHierarchy: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel(parentNode) {
+          if (!parentNode) {
+            return [
+              {
+                fullClassName: `BisCore.InformationContentElement`,
+                query: {
+                  ecsql: `
                       SELECT ${await selectClauseFactory.createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
@@ -388,20 +289,17 @@ describe("Stateless hierarchy builder", () => {
                       })}
                       FROM (
                         SELECT ECClassId, ECInstanceId, UserLabel, Parent, CodeValue
-                        FROM ${subjectClassName}
-                        UNION ALL
-                        SELECT ECClassId, ECInstanceId, UserLabel, Parent, CodeValue
                         FROM ${physicalPartitionClassName}
                       ) AS this
                       WHERE this.Parent.Id = (${IModel.rootSubjectId})
-                        AND NOT this.CodeValue = 'B6'
+                        AND NOT this.CodeValue = 'B4'
                     `,
-                  },
                 },
-                {
-                  fullClassName: physicalPartitionClassName,
-                  query: {
-                    ecsql: `
+              },
+              {
+                fullClassName: physicalPartitionClassName,
+                query: {
+                  ecsql: `
                       SELECT ${await selectClauseFactory.createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
@@ -414,100 +312,92 @@ describe("Stateless hierarchy builder", () => {
                       })}
                       FROM ${physicalPartitionClassName} AS this
                       WHERE this.Parent.Id = (${IModel.rootSubjectId})
-                        AND this.CodeValue = 'B6'
+                        AND this.CodeValue = 'B4'
                     `,
-                  },
                 },
-              ];
-            }
-            return [];
-          },
-        };
+              },
+            ];
+          }
+          return [];
+        },
+      };
 
-        await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: customHierarchy }),
-          expect: [
-            NodeValidators.createForClassGroupingNode({
-              label: "Element",
-              className: `${baseSchemaName}.${baseClassName1}`,
-              children: [
-                NodeValidators.createForClassGroupingNode({
-                  label: "Information Content Element",
-                  className: `${baseSchemaName}.${baseClassName2}`,
-                  children: [
-                    NodeValidators.createForClassGroupingNode({
-                      label: "Information Partition",
-                      className: `${baseSchemaName}.${baseClassName3}`,
-                      children: [
-                        NodeValidators.createForInstanceNode({
-                          instanceKeys: [keys.childPartition3],
-                          children: false,
-                        }),
-                        NodeValidators.createForInstanceNode({
-                          instanceKeys: [keys.childPartition4],
-                          children: false,
-                        }),
-                        NodeValidators.createForInstanceNode({
-                          instanceKeys: [keys.childPartition5],
-                          children: false,
-                        }),
-                      ],
-                    }),
-                    NodeValidators.createForInstanceNode({
-                      instanceKeys: [keys.childSubject1],
-                      children: false,
-                    }),
-                    NodeValidators.createForInstanceNode({
-                      instanceKeys: [keys.childSubject2],
-                      children: false,
-                    }),
-                  ],
-                }),
-              ],
-            }),
-            NodeValidators.createForClassGroupingNode({
-              label: "Information Content Element",
-              className: `${baseSchemaName}.${baseClassName2}`,
-              children: [
-                NodeValidators.createForClassGroupingNode({
-                  label: "Information Partition",
-                  className: `${baseSchemaName}.${baseClassName3}`,
-                  children: [
-                    NodeValidators.createForInstanceNode({
-                      instanceKeys: [keys.childPartition6],
-                      children: false,
-                    }),
-                  ],
-                }),
-              ],
-            }),
-          ],
-        });
+      await validateHierarchy({
+        provider: createProvider({ imodel, hierarchy: customHierarchy }),
+        expect: [
+          NodeValidators.createForClassGroupingNode({
+            label: "Element",
+            className: `${baseSchemaName}.${baseClassName1}`,
+            children: [
+              NodeValidators.createForClassGroupingNode({
+                label: "Information Content Element",
+                className: `${baseSchemaName}.${baseClassName2}`,
+                children: [
+                  NodeValidators.createForClassGroupingNode({
+                    label: "Information Partition",
+                    className: `${baseSchemaName}.${baseClassName3}`,
+                    children: [
+                      NodeValidators.createForInstanceNode({
+                        instanceKeys: [keys.childPartition1],
+                        children: false,
+                      }),
+                      NodeValidators.createForInstanceNode({
+                        instanceKeys: [keys.childPartition2],
+                        children: false,
+                      }),
+                      NodeValidators.createForInstanceNode({
+                        instanceKeys: [keys.childPartition3],
+                        children: false,
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+            ],
+          }),
+          NodeValidators.createForClassGroupingNode({
+            label: "Information Content Element",
+            className: `${baseSchemaName}.${baseClassName2}`,
+            children: [
+              NodeValidators.createForClassGroupingNode({
+                label: "Information Partition",
+                className: `${baseSchemaName}.${baseClassName3}`,
+                children: [
+                  NodeValidators.createForInstanceNode({
+                    instanceKeys: [keys.childPartition4],
+                    children: false,
+                  }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      });
+    });
+
+    it("groups nodes of different classes if they share the same base class", async function () {
+      const baseClassName1 = "Element";
+      const baseClassName2 = "InformationContentElement";
+      const baseClassName3 = "InformationPartitionElement";
+      const baseSchemaName = "BisCore";
+      const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+        const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, userLabel: "test" });
+        const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId, userLabel: "test" });
+        const childPartition3 = insertPhysicalPartition({ builder, codeValue: "B3", parentId: IModel.rootSubjectId, userLabel: "test" });
+        const childPartition4 = insertPhysicalPartition({ builder, codeValue: "B4", parentId: IModel.rootSubjectId, userLabel: "test" });
+        const childPartition5 = insertPhysicalPartition({ builder, codeValue: "B5", parentId: IModel.rootSubjectId, userLabel: "test" });
+        const childPartition6 = insertPhysicalPartition({ builder, codeValue: "B6", parentId: IModel.rootSubjectId, userLabel: "test" });
+        return { childSubject1, childSubject2, childPartition3, childPartition4, childPartition5, childPartition6 };
       });
 
-      it("into one root base class when all nodes share the root base class", async function () {
-        const baseClassName1 = "Element";
-        const baseClassName2 = "InformationContentElement";
-        const baseClassName3 = "InformationPartitionElement";
-        const baseSchemaName = "BisCore";
-        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, userLabel: "test" });
-          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId, userLabel: "test" });
-          const childPartition3 = insertPhysicalPartition({ builder, codeValue: "B3", parentId: IModel.rootSubjectId, userLabel: "test" });
-          const childPartition4 = insertPhysicalPartition({ builder, codeValue: "B4", parentId: IModel.rootSubjectId, userLabel: "test" });
-          const childPartition5 = insertPhysicalPartition({ builder, codeValue: "B5", parentId: IModel.rootSubjectId, userLabel: "test" });
-          const childPartition6 = insertPhysicalPartition({ builder, codeValue: "B6", parentId: IModel.rootSubjectId, userLabel: "test" });
-          return { childSubject1, childSubject2, childPartition3, childPartition4, childPartition5, childPartition6 };
-        });
-
-        const customHierarchy: IHierarchyLevelDefinitionsFactory = {
-          async defineHierarchyLevel(parentNode) {
-            if (!parentNode) {
-              return [
-                {
-                  fullClassName: `BisCore.InformationContentElement`,
-                  query: {
-                    ecsql: `
+      const customHierarchy: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel(parentNode) {
+          if (!parentNode) {
+            return [
+              {
+                fullClassName: `BisCore.InformationContentElement`,
+                query: {
+                  ecsql: `
                       SELECT ${await selectClauseFactory.createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
@@ -532,12 +422,12 @@ describe("Stateless hierarchy builder", () => {
                       WHERE this.Parent.Id = (${IModel.rootSubjectId})
                         AND NOT this.CodeValue = 'B6'
                     `,
-                  },
                 },
-                {
-                  fullClassName: physicalPartitionClassName,
-                  query: {
-                    ecsql: `
+              },
+              {
+                fullClassName: physicalPartitionClassName,
+                query: {
+                  ecsql: `
                       SELECT ${await selectClauseFactory.createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
@@ -552,61 +442,60 @@ describe("Stateless hierarchy builder", () => {
                       WHERE this.Parent.Id = (${IModel.rootSubjectId})
                         AND this.CodeValue = 'B6'
                     `,
-                  },
                 },
-              ];
-            }
-            return [];
-          },
-        };
+              },
+            ];
+          }
+          return [];
+        },
+      };
 
-        await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: customHierarchy }),
-          expect: [
-            NodeValidators.createForClassGroupingNode({
-              label: "Element",
-              className: `${baseSchemaName}.${baseClassName1}`,
-              children: [
-                NodeValidators.createForClassGroupingNode({
-                  label: "Information Content Element",
-                  className: `${baseSchemaName}.${baseClassName2}`,
-                  children: [
-                    NodeValidators.createForClassGroupingNode({
-                      label: "Information Partition",
-                      className: `${baseSchemaName}.${baseClassName3}`,
-                      children: [
-                        NodeValidators.createForInstanceNode({
-                          instanceKeys: [keys.childPartition3],
-                          children: false,
-                        }),
-                        NodeValidators.createForInstanceNode({
-                          instanceKeys: [keys.childPartition4],
-                          children: false,
-                        }),
-                        NodeValidators.createForInstanceNode({
-                          instanceKeys: [keys.childPartition5],
-                          children: false,
-                        }),
-                      ],
-                    }),
-                    NodeValidators.createForInstanceNode({
-                      instanceKeys: [keys.childSubject1],
-                      children: false,
-                    }),
-                    NodeValidators.createForInstanceNode({
-                      instanceKeys: [keys.childSubject2],
-                      children: false,
-                    }),
-                  ],
-                }),
-                NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childPartition6],
-                  children: false,
-                }),
-              ],
-            }),
-          ],
-        });
+      await validateHierarchy({
+        provider: createProvider({ imodel, hierarchy: customHierarchy }),
+        expect: [
+          NodeValidators.createForClassGroupingNode({
+            label: "Element",
+            className: `${baseSchemaName}.${baseClassName1}`,
+            children: [
+              NodeValidators.createForClassGroupingNode({
+                label: "Information Content Element",
+                className: `${baseSchemaName}.${baseClassName2}`,
+                children: [
+                  NodeValidators.createForClassGroupingNode({
+                    label: "Information Partition",
+                    className: `${baseSchemaName}.${baseClassName3}`,
+                    children: [
+                      NodeValidators.createForInstanceNode({
+                        instanceKeys: [keys.childPartition3],
+                        children: false,
+                      }),
+                      NodeValidators.createForInstanceNode({
+                        instanceKeys: [keys.childPartition4],
+                        children: false,
+                      }),
+                      NodeValidators.createForInstanceNode({
+                        instanceKeys: [keys.childPartition5],
+                        children: false,
+                      }),
+                    ],
+                  }),
+                  NodeValidators.createForInstanceNode({
+                    instanceKeys: [keys.childSubject1],
+                    children: false,
+                  }),
+                  NodeValidators.createForInstanceNode({
+                    instanceKeys: [keys.childSubject2],
+                    children: false,
+                  }),
+                ],
+              }),
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [keys.childPartition6],
+                children: false,
+              }),
+            ],
+          }),
+        ],
       });
     });
   });
