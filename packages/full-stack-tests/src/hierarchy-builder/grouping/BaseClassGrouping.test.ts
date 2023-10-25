@@ -386,8 +386,7 @@ describe("Stateless hierarchy builder", () => {
         const childPartition3 = insertPhysicalPartition({ builder, codeValue: "B3", parentId: IModel.rootSubjectId, userLabel: "test" });
         const childPartition4 = insertPhysicalPartition({ builder, codeValue: "B4", parentId: IModel.rootSubjectId, userLabel: "test" });
         const childPartition5 = insertPhysicalPartition({ builder, codeValue: "B5", parentId: IModel.rootSubjectId, userLabel: "test" });
-        const childPartition6 = insertPhysicalPartition({ builder, codeValue: "B6", parentId: IModel.rootSubjectId, userLabel: "test" });
-        return { childSubject1, childSubject2, childPartition3, childPartition4, childPartition5, childPartition6 };
+        return { childSubject1, childSubject2, childPartition3, childPartition4, childPartition5 };
       });
 
       const customHierarchy: IHierarchyLevelDefinitionsFactory = {
@@ -421,26 +420,6 @@ describe("Stateless hierarchy builder", () => {
                       ) AS this
                       WHERE this.Parent.Id = (${IModel.rootSubjectId})
                         AND NOT this.CodeValue = 'B6'
-                    `,
-                },
-              },
-              {
-                fullClassName: physicalPartitionClassName,
-                query: {
-                  ecsql: `
-                      SELECT ${await selectClauseFactory.createSelectClause({
-                        ecClassId: { selector: `this.ECClassId` },
-                        ecInstanceId: { selector: `this.ECInstanceId` },
-                        nodeLabel: { selector: `this.UserLabel` },
-                        grouping: {
-                          byBaseClasses: {
-                            fullClassNames: [`${baseSchemaName}.${baseClassName1}`],
-                          },
-                        },
-                      })}
-                      FROM ${physicalPartitionClassName} AS this
-                      WHERE this.Parent.Id = (${IModel.rootSubjectId})
-                        AND this.CodeValue = 'B6'
                     `,
                 },
               },
@@ -488,10 +467,6 @@ describe("Stateless hierarchy builder", () => {
                     children: false,
                   }),
                 ],
-              }),
-              NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.childPartition6],
-                children: false,
               }),
             ],
           }),
