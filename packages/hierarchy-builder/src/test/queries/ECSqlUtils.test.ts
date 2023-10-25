@@ -5,11 +5,11 @@
 
 import { expect } from "chai";
 import {
-  createConcatenatedValueSelector,
+  createConcatenatedTypedValueSelector,
   createNullableSelector,
   createPropertyValueSelector,
-  createValueSelector,
-  ValueSelectClauseProps,
+  createTypedValueSelector,
+  TypedValueSelectClauseProps,
 } from "../../hierarchy-builder/queries/ECSqlUtils";
 import { trimWhitespace } from "./Utils";
 
@@ -54,35 +54,35 @@ describe("createNullableSelector", () => {
   });
 });
 
-describe("ValueSelectClauseProps", () => {
+describe("TypedValueSelectClauseProps", () => {
   describe("isPropertySelector", () => {
     it("returns correct result for different types of props", () => {
-      expect(ValueSelectClauseProps.isPropertySelector({ propertyClassName: "s.c", propertyClassAlias: "a", propertyName: "p" })).to.be.true;
-      expect(ValueSelectClauseProps.isPropertySelector({ selector: "x" })).to.be.false;
-      expect(ValueSelectClauseProps.isPropertySelector({ value: 123, type: "Integer" })).to.be.false;
+      expect(TypedValueSelectClauseProps.isPropertySelector({ propertyClassName: "s.c", propertyClassAlias: "a", propertyName: "p" })).to.be.true;
+      expect(TypedValueSelectClauseProps.isPropertySelector({ selector: "x" })).to.be.false;
+      expect(TypedValueSelectClauseProps.isPropertySelector({ value: 123, type: "Integer" })).to.be.false;
     });
   });
   describe("isPrimitiveValueSelector", () => {
     it("returns correct result for different types of props", () => {
-      expect(ValueSelectClauseProps.isPrimitiveValueSelector({ propertyClassName: "s.c", propertyClassAlias: "a", propertyName: "p" })).to.be.false;
-      expect(ValueSelectClauseProps.isPrimitiveValueSelector({ selector: "x" })).to.be.true;
-      expect(ValueSelectClauseProps.isPrimitiveValueSelector({ value: 123, type: "Integer" })).to.be.false;
+      expect(TypedValueSelectClauseProps.isPrimitiveValueSelector({ propertyClassName: "s.c", propertyClassAlias: "a", propertyName: "p" })).to.be.false;
+      expect(TypedValueSelectClauseProps.isPrimitiveValueSelector({ selector: "x" })).to.be.true;
+      expect(TypedValueSelectClauseProps.isPrimitiveValueSelector({ value: 123, type: "Integer" })).to.be.false;
     });
   });
   describe("isPrimitiveValue", () => {
     it("returns correct result for different types of props", () => {
-      expect(ValueSelectClauseProps.isPrimitiveValue({ propertyClassName: "s.c", propertyClassAlias: "a", propertyName: "p" })).to.be.false;
-      expect(ValueSelectClauseProps.isPrimitiveValue({ selector: "x" })).to.be.false;
-      expect(ValueSelectClauseProps.isPrimitiveValue({ value: 123, type: "Integer" })).to.be.true;
+      expect(TypedValueSelectClauseProps.isPrimitiveValue({ propertyClassName: "s.c", propertyClassAlias: "a", propertyName: "p" })).to.be.false;
+      expect(TypedValueSelectClauseProps.isPrimitiveValue({ selector: "x" })).to.be.false;
+      expect(TypedValueSelectClauseProps.isPrimitiveValue({ value: 123, type: "Integer" })).to.be.true;
     });
   });
 });
 
-describe("createValueSelector", () => {
+describe("createTypedValueSelector", () => {
   it("creates selector for special property type", () => {
     expect(
       trimWhitespace(
-        createValueSelector({
+        createTypedValueSelector({
           propertyClassName: "s.c",
           propertyClassAlias: "a",
           propertyName: "p",
@@ -95,7 +95,7 @@ describe("createValueSelector", () => {
   it("creates selector for property", () => {
     expect(
       trimWhitespace(
-        createValueSelector({
+        createTypedValueSelector({
           propertyClassName: "s.c",
           propertyClassAlias: "a",
           propertyName: "p",
@@ -107,7 +107,7 @@ describe("createValueSelector", () => {
   it("creates selector using primitive value selector", () => {
     expect(
       trimWhitespace(
-        createValueSelector({
+        createTypedValueSelector({
           selector: "xxx",
           type: "Integer",
         }),
@@ -118,7 +118,7 @@ describe("createValueSelector", () => {
   it("creates selector using primitive value selector with null check", () => {
     expect(
       trimWhitespace(
-        createValueSelector({
+        createTypedValueSelector({
           selector: "xxx",
           type: "Integer",
           nullValueResult: "null",
@@ -128,63 +128,65 @@ describe("createValueSelector", () => {
   });
 
   it("creates selector using primitive value selector without type", () => {
-    expect(trimWhitespace(createValueSelector({ selector: "xxx" }))).to.eq(trimWhitespace("json_object('value', xxx, 'type', 'String')"));
+    expect(createTypedValueSelector({ selector: "xxx" })).to.eq("xxx");
   });
 
   it("creates selector for primitive Date value", () => {
     const date = new Date();
-    expect(trimWhitespace(createValueSelector({ type: "DateTime", value: date }))).to.eq(
+    expect(trimWhitespace(createTypedValueSelector({ type: "DateTime", value: date }))).to.eq(
       trimWhitespace(`json_object('value', '${date.toISOString()}', 'type', 'DateTime')`),
     );
   });
 
   it("creates selector for primitive Point2d value", () => {
-    expect(trimWhitespace(createValueSelector({ type: "Point2d", value: { x: 1, y: 2 } }))).to.eq(
+    expect(trimWhitespace(createTypedValueSelector({ type: "Point2d", value: { x: 1, y: 2 } }))).to.eq(
       trimWhitespace(`json_object('value', json_object('x', 1, 'y', 2), 'type', 'Point2d')`),
     );
   });
 
   it("creates selector for primitive Point3d value", () => {
-    expect(trimWhitespace(createValueSelector({ type: "Point3d", value: { x: 1, y: 2, z: 3 } }))).to.eq(
+    expect(trimWhitespace(createTypedValueSelector({ type: "Point3d", value: { x: 1, y: 2, z: 3 } }))).to.eq(
       trimWhitespace(`json_object('value', json_object('x', 1, 'y', 2, 'z', 3), 'type', 'Point3d')`),
     );
   });
 
   it("creates selector for primitive string value", () => {
-    expect(trimWhitespace(createValueSelector({ type: "String", value: "test" }))).to.eq(trimWhitespace(`json_object('value', 'test', 'type', 'String')`));
+    expect(trimWhitespace(createTypedValueSelector({ type: "String", value: "test" }))).to.eq(trimWhitespace(`json_object('value', 'test', 'type', 'String')`));
   });
 
   it("creates selector for primitive number value", () => {
-    expect(trimWhitespace(createValueSelector({ type: "Double", value: 456.789 }))).to.eq(trimWhitespace(`json_object('value', 456.789, 'type', 'Double')`));
+    expect(trimWhitespace(createTypedValueSelector({ type: "Double", value: 456.789 }))).to.eq(
+      trimWhitespace(`json_object('value', 456.789, 'type', 'Double')`),
+    );
   });
 
   it("creates selector for primitive boolean value", () => {
-    expect(trimWhitespace(createValueSelector({ type: "Boolean", value: true }))).to.eq(
+    expect(trimWhitespace(createTypedValueSelector({ type: "Boolean", value: true }))).to.eq(
       trimWhitespace(`json_object('value', CAST(1 AS BOOLEAN), 'type', 'Boolean')`),
     );
-    expect(trimWhitespace(createValueSelector({ type: "Boolean", value: false }))).to.eq(
+    expect(trimWhitespace(createTypedValueSelector({ type: "Boolean", value: false }))).to.eq(
       trimWhitespace(`json_object('value', CAST(0 AS BOOLEAN), 'type', 'Boolean')`),
     );
   });
 });
 
-describe("createConcatenatedValueSelector", () => {
+describe("createConcatenatedTypedValueSelector", () => {
   it("creates empty string selector when given an empty selectors list", () => {
-    expect(createConcatenatedValueSelector([])).to.eq("''");
+    expect(createConcatenatedTypedValueSelector([])).to.eq("''");
   });
 
   it("creates selectors array", () => {
     const sel1 = { selector: "x" };
     const sel2 = { selector: "y" };
-    expect(createConcatenatedValueSelector([sel1, sel2])).to.eq(`json_array(${createValueSelector(sel1)}, ${createValueSelector(sel2)})`);
+    expect(createConcatenatedTypedValueSelector([sel1, sel2])).to.eq(`json_array(${createTypedValueSelector(sel1)}, ${createTypedValueSelector(sel2)})`);
   });
 
   it("creates selectors array with check selector", () => {
     const sel1 = { selector: "x" };
     const sel2 = { selector: "y" };
-    expect(createConcatenatedValueSelector([sel1, sel2], "CHECK")).to.eq(
+    expect(createConcatenatedTypedValueSelector([sel1, sel2], "CHECK")).to.eq(
       createNullableSelector({
-        valueSelector: `json_array(${createValueSelector(sel1)}, ${createValueSelector(sel2)})`,
+        valueSelector: `json_array(${createTypedValueSelector(sel1)}, ${createTypedValueSelector(sel2)})`,
         checkSelector: "CHECK",
       }),
     );
