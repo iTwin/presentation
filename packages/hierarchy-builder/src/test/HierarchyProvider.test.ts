@@ -384,30 +384,36 @@ describe("HierarchyProvider", () => {
   });
 
   describe("Labels formatting", () => {
-    it("returns plain unformatted string label", async () => {
-      const formatter = sinon.spy();
+    const formatter = sinon.fake(async (v: TypedPrimitiveValue) => `_${v.value.toString()}_`);
+
+    beforeEach(() => {
+      formatter.resetHistory();
+    });
+
+    it("returns formatted string label", async () => {
       const { provider } = setupTest({
         formatter,
         node: createNode("test label"),
       });
       const rootNodes = await provider.getNodes(undefined);
-      expect(formatter).to.not.be.called;
-      expect(rootNodes[0].label).to.eq("test label");
+      expect(formatter).to.be.calledOnceWith({ value: "test label", type: "String" });
+      expect(rootNodes[0].label).to.eq("_test label_");
     });
 
     it("returns combined strings label", async () => {
-      const formatter = sinon.spy();
       const { provider } = setupTest({
         formatter,
         node: createNode(["test1", "-", "test2"]),
       });
       const rootNodes = await provider.getNodes(undefined);
-      expect(formatter).to.not.be.called;
-      expect(rootNodes[0].label).to.eq("test1-test2");
+      expect(formatter).to.be.calledThrice;
+      expect(formatter.firstCall).to.be.calledWith({ value: "test1", type: "String" });
+      expect(formatter.secondCall).to.be.calledWith({ value: "-", type: "String" });
+      expect(formatter.thirdCall).to.be.calledWith({ value: "test2", type: "String" });
+      expect(rootNodes[0].label).to.eq("_test1__-__test2_");
     });
 
     it("returns formatted typed primitive values label", async () => {
-      const formatter = sinon.fake(async (v: TypedPrimitiveValue) => `_${v.value.toString()}_`);
       const { provider } = setupTest({
         formatter,
         node: createNode([
@@ -437,7 +443,6 @@ describe("HierarchyProvider", () => {
           } as ECPrimitiveProperty,
         ],
       });
-      const formatter = sinon.fake(async (v: TypedPrimitiveValue) => `_${v.value.toString()}_`);
       const { provider } = setupTest({
         formatter,
         node: createNode([{ className: "x.y", propertyName: "p", value: "abc" }]),
@@ -464,7 +469,6 @@ describe("HierarchyProvider", () => {
           } as ECProperty,
         ],
       });
-      const formatter = sinon.fake(async (v: TypedPrimitiveValue) => `_${v.value.toString()}_`);
       const { provider } = setupTest({
         formatter,
         node: createNode([{ className: "x.y", propertyName: "p", value: "abc" }]),
@@ -485,7 +489,6 @@ describe("HierarchyProvider", () => {
           } as ECPrimitiveProperty,
         ],
       });
-      const formatter = sinon.fake(async (v: TypedPrimitiveValue) => `_${v.value.toString()}_`);
       const { provider } = setupTest({
         formatter,
         node: createNode([{ className: "x.y", propertyName: "p", value: "abc" }]),
@@ -506,7 +509,6 @@ describe("HierarchyProvider", () => {
           } as ECPrimitiveProperty,
         ],
       });
-      const formatter = sinon.fake(async (v: TypedPrimitiveValue) => `_${v.value.toString()}_`);
       const { provider } = setupTest({
         formatter,
         node: createNode([{ className: "x.y", propertyName: "p", value: "abc" }]),

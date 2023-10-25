@@ -67,12 +67,7 @@ describe("defaultNodesParser", () => {
         type: "instances",
         instanceKeys: [{ className: "schema.class", id: "0x1" }],
       },
-      label: [
-        {
-          type: "String",
-          value: "test label",
-        },
-      ],
+      label: "test label",
       extendedData: {
         test: 123,
       },
@@ -117,7 +112,7 @@ describe("defaultNodesParser", () => {
       [NodeSelectClauseColumnNames.DisplayLabel]: "",
     };
     const node = defaultNodesParser(row);
-    expect(node.label).to.deep.eq([]);
+    expect(node.label).to.eq("");
   });
 
   it("parses complex label of one part", () => {
@@ -131,7 +126,7 @@ describe("defaultNodesParser", () => {
       [NodeSelectClauseColumnNames.DisplayLabel]: JSON.stringify(labelPart),
     };
     const node = defaultNodesParser(row);
-    expect(node.label).to.deep.eq([labelPart]);
+    expect(node.label).to.deep.eq(labelPart);
   });
 
   it("parses complex label of multiple parts", () => {
