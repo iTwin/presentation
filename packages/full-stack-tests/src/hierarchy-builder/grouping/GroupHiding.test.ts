@@ -101,8 +101,8 @@ describe("Stateless hierarchy builder", () => {
 
       it("hides base class groups when there're no siblings", async function () {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, userLabel: groupName });
-          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId, userLabel: groupName });
+          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
+          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId });
           return { childSubject1, childSubject2 };
         });
 
@@ -123,7 +123,7 @@ describe("Stateless hierarchy builder", () => {
 
       it("hides base class groups when there's only 1 grouped node", async function () {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, userLabel: groupName });
+          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
           return { childSubject1 };
         });
 
@@ -141,7 +141,7 @@ describe("Stateless hierarchy builder", () => {
       it("doesn't hide base class groups when there are siblings", async function () {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
           const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, userLabel: groupName });
-          const childPartition2 = insertPhysicalPartition({ builder, codeValue: "B1", parentId: IModel.rootSubjectId, userLabel: "test" });
+          const childPartition2 = insertPhysicalPartition({ builder, codeValue: "B1", parentId: IModel.rootSubjectId });
           return { childSubject1, childPartition2 };
         });
 
@@ -168,8 +168,8 @@ describe("Stateless hierarchy builder", () => {
 
       it("doesn't hide base class groups when there's more than 1 grouped node", async function () {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, userLabel: groupName });
-          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId, userLabel: groupName });
+          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
+          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId });
           return { childSubject1, childSubject2 };
         });
 
@@ -268,8 +268,8 @@ describe("Stateless hierarchy builder", () => {
 
       it("hides class groups when there're no siblings", async function () {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, userLabel: groupName });
-          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId, userLabel: groupName });
+          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
+          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId });
           return { childSubject1, childSubject2 };
         });
 
@@ -290,7 +290,7 @@ describe("Stateless hierarchy builder", () => {
 
       it("hides class groups when there's only 1 grouped node", async function () {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, userLabel: groupName });
+          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
           return { childSubject1 };
         });
 
@@ -307,8 +307,8 @@ describe("Stateless hierarchy builder", () => {
 
       it("doesn't hide class groups when there are siblings", async function () {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, userLabel: groupName });
-          const childPartition2 = insertPhysicalPartition({ builder, codeValue: "B1", parentId: IModel.rootSubjectId, userLabel: "test" });
+          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
+          const childPartition2 = insertPhysicalPartition({ builder, codeValue: "B1", parentId: IModel.rootSubjectId });
           return { childSubject1, childPartition2 };
         });
 
@@ -339,8 +339,8 @@ describe("Stateless hierarchy builder", () => {
 
       it("doesn't hide class groups when there's more than 1 grouped node", async function () {
         const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, userLabel: groupName });
-          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId, userLabel: groupName });
+          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
+          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId });
           return { childSubject1, childSubject2 };
         });
 

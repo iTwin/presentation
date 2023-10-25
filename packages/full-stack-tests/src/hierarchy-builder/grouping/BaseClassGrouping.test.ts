@@ -174,7 +174,7 @@ describe("Stateless hierarchy builder", () => {
       const baseClassName3 = "InformationPartitionElement";
       const baseSchemaName = "BisCore";
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-        const childPartition1 = insertPhysicalPartition({ builder, codeValue: "B1", parentId: IModel.rootSubjectId, userLabel: "test" });
+        const childPartition1 = insertPhysicalPartition({ builder, codeValue: "B1", parentId: IModel.rootSubjectId });
         return { childPartition1 };
       });
 
@@ -249,8 +249,8 @@ describe("Stateless hierarchy builder", () => {
       const baseClassName3 = "InformationPartitionElement";
       const baseSchemaName = "BisCore";
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-        const childPartition1 = insertPhysicalPartition({ builder, codeValue: "B1", parentId: IModel.rootSubjectId, userLabel: "test" });
-        const childPartition2 = insertPhysicalPartition({ builder, codeValue: "B2", parentId: IModel.rootSubjectId, userLabel: "test" });
+        const childPartition1 = insertPhysicalPartition({ builder, codeValue: "B1", parentId: IModel.rootSubjectId });
+        const childPartition2 = insertPhysicalPartition({ builder, codeValue: "B2", parentId: IModel.rootSubjectId });
         return { childPartition1, childPartition2 };
       });
 
@@ -358,8 +358,8 @@ describe("Stateless hierarchy builder", () => {
 
     it("groups nodes of different classes if they share the same base class", async function () {
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-        const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, userLabel: "test" });
-        const childPartition2 = insertPhysicalPartition({ builder, codeValue: "B3", parentId: IModel.rootSubjectId, userLabel: "test" });
+        const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId });
+        const childPartition2 = insertPhysicalPartition({ builder, codeValue: "B3", parentId: IModel.rootSubjectId });
         return { childSubject1, childPartition2 };
       });
 
