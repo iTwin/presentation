@@ -12,12 +12,17 @@ export async function createLabelGroups(nodes: HierarchyNode[]): Promise<Groupin
     return { grouped: [], ungrouped: nodes, groupingType: "label" };
   }
   const firstNode: HierarchyNode = nodes[0].params?.grouping?.byLabel ? createLabelGroupingNode(nodes[0]) : nodes[0];
-  const isLabelGrouping = HierarchyNode.isLabelGroupingNode(firstNode);
-  const outputNodes: GroupingHandlerResult = {
-    grouped: isLabelGrouping ? [firstNode] : [],
-    ungrouped: isLabelGrouping ? [] : [firstNode],
-    groupingType: "label",
-  };
+  const outputNodes: GroupingHandlerResult = HierarchyNode.isLabelGroupingNode(firstNode)
+    ? {
+        grouped: [firstNode],
+        ungrouped: [],
+        groupingType: "label",
+      }
+    : {
+        grouped: [],
+        ungrouped: [firstNode],
+        groupingType: "label",
+      };
 
   for (let i = 1; i < nodes.length; ++i) {
     const currentNode = nodes[i];
