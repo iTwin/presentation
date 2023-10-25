@@ -39,9 +39,8 @@ interface FullGroupingProps {
 
 /** @internal */
 export interface GroupingHandlerResult {
-  allNodes: HierarchyNode[];
-  groupedNodes: HierarchyNode[];
-  ungroupedNodes: HierarchyNode[];
+  grouped: HierarchyNode[];
+  ungrouped: HierarchyNode[];
   groupingType: GroupingType;
 }
 
@@ -75,12 +74,12 @@ async function handlerWrapper(currentHandler: GroupingHandler, props: FullGroupi
   let currentGroupingNodes = await currentHandler(props.nodes);
   currentGroupingNodes = applyGroupHidingParams(currentGroupingNodes);
 
-  for (const grouping of currentGroupingNodes.groupedNodes) {
+  for (const grouping of currentGroupingNodes.grouped) {
     if (Array.isArray(grouping.children)) {
       grouping.children = await groupNodes(grouping.children, props.groupingHandlers);
     }
   }
-  return currentGroupingNodes.allNodes;
+  return currentGroupingNodes.grouped.length > 0 ? [...(currentGroupingNodes.grouped ?? []), ...(currentGroupingNodes.ungrouped ?? [])] : props.nodes;
 }
 
 function doLog(msg: string) {

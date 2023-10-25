@@ -44,7 +44,7 @@ export async function createClassGroups(metadata: IMetadataProvider, nodes: Hier
 }
 
 function createGroupingNodes(groupings: ClassGroupingInformation): GroupingHandlerResult {
-  const outNodes: GroupingHandlerResult = { allNodes: [], groupedNodes: [], ungroupedNodes: [], groupingType: "class" };
+  const outNodes: GroupingHandlerResult = { grouped: [], ungrouped: [], groupingType: "class" };
   groupings.grouped.forEach((entry) => {
     const groupedNode: HierarchyNode = {
       label: entry.class.label ?? entry.class.name,
@@ -54,10 +54,8 @@ function createGroupingNodes(groupings: ClassGroupingInformation): GroupingHandl
       },
       children: entry.groupedNodes,
     };
-    outNodes.allNodes.push(groupedNode);
-    outNodes.groupedNodes.push(groupedNode);
+    outNodes.grouped.push(groupedNode);
   });
-  outNodes.allNodes.push(...groupings.ungrouped);
-  outNodes.ungroupedNodes.push(...groupings.ungrouped);
+  outNodes.ungrouped.push(...groupings.ungrouped);
   return outNodes;
 }

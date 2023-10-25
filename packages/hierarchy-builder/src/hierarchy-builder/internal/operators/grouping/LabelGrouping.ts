@@ -9,38 +9,34 @@ import { GroupingHandlerResult } from "../Grouping";
 /** @internal */
 export async function createLabelGroups(nodes: HierarchyNode[]): Promise<GroupingHandlerResult> {
   if (nodes.length === 0) {
-    return { allNodes: nodes, groupedNodes: [], ungroupedNodes: nodes, groupingType: "label" };
+    return { grouped: [], ungrouped: nodes, groupingType: "label" };
   }
   const firstNode: HierarchyNode = nodes[0].params?.grouping?.byLabel ? createLabelGroupingNode(nodes[0]) : nodes[0];
   const isLabelGrouping = HierarchyNode.isLabelGroupingNode(firstNode);
   const outputNodes: GroupingHandlerResult = {
-    allNodes: [firstNode],
-    groupedNodes: isLabelGrouping ? [firstNode] : [],
-    ungroupedNodes: isLabelGrouping ? [] : [firstNode],
+    grouped: isLabelGrouping ? [firstNode] : [],
+    ungrouped: isLabelGrouping ? [] : [firstNode],
     groupingType: "label",
   };
 
   for (let i = 1; i < nodes.length; ++i) {
     const currentNode = nodes[i];
-    const lastOutputNode = outputNodes.allNodes[outputNodes.allNodes.length - 1];
-    if (currentNode.label === lastOutputNode.label) {
-      if (HierarchyNode.isLabelGroupingNode(lastOutputNode) && Array.isArray(lastOutputNode.children)) {
-        if (currentNode.params?.grouping?.byLabel) {
-          lastOutputNode.children.push(currentNode);
-        } else {
-          outputNodes.allNodes.splice(outputNodes.allNodes.length - 1, 0, currentNode);
-          outputNodes.ungroupedNodes.push(currentNode);
-        }
-        continue;
-      }
-    } else if (currentNode.params?.grouping?.byLabel) {
-      const labelGroupingNode = createLabelGroupingNode(currentNode);
-      outputNodes.allNodes.push(labelGroupingNode);
-      outputNodes.groupedNodes.push(labelGroupingNode);
+    if (!currentNode.params?.grouping?.byLabel) {
+      outputNodes.ungrouped.push(currentNode);
       continue;
     }
-    outputNodes.allNodes.push(currentNode);
-    outputNodes.ungroupedNodes.push(currentNode);
+
+    if (outputNodes.grouped.length > 0) {
+      const lastGroupedNode = outputNodes.grouped[outputNodes.grouped.length - 1];
+      if (currentNode.label === lastGroupedNode.label) {
+        if (Array.isArray(lastGroupedNode.children)) {
+          lastGroupedNode.children.push(currentNode);
+          continue;
+        }
+      }
+    }
+    const labelGroupingNode = createLabelGroupingNode(currentNode);
+    outputNodes.grouped.push(labelGroupingNode);
   }
 
   return outputNodes;
