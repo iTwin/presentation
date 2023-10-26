@@ -104,6 +104,7 @@ public;usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderProps): Pr
 public;usePropertyDataProviderWithUnifiedSelection(props: PropertyDataProviderWithUnifiedSelectionProps): UsePropertyDataProviderWithUnifiedSelectionResult
 public;UsePropertyDataProviderWithUnifiedSelectionResult
 public;useRulesetRegistration(ruleset: Ruleset): void
+deprecated;useRulesetRegistration(ruleset: Ruleset): void
 beta;useSchemaMetadataContext(): SchemaMetadataContext | undefined
 beta;useUnifiedSelectionContext(): UnifiedSelectionContext | undefined
 public;useUnifiedSelectionTreeEventHandler(props: UnifiedSelectionTreeEventHandlerParams): UnifiedSelectionTreeEventHandler

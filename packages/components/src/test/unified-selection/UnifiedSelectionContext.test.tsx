@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { PropsWithChildren } from "react";
+import { PropsWithChildren, useEffect } from "react";
 import sinon from "sinon";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
@@ -14,7 +14,7 @@ import {
   UnifiedSelectionContextProvider,
   useUnifiedSelectionContext,
 } from "../../presentation-components/unified-selection/UnifiedSelectionContext";
-import { act, renderHook, RenderHookResult } from "../TestUtils";
+import { act, render, renderHook, RenderHookResult, waitFor } from "../TestUtils";
 
 describe("UnifiedSelectionContext", () => {
   const testIModel = {} as IModelConnection;
@@ -51,7 +51,6 @@ describe("UnifiedSelectionContext", () => {
     const { result } = renderUnifiedSelectionContextHook(testIModel, 1);
     const firstResult = result.current;
 
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     act(() => {
       Presentation.selection.addToSelection("", testIModel, [{ className: "test", id: "1" }], 0);
     });
@@ -69,13 +68,50 @@ describe("UnifiedSelectionContext", () => {
     const { result } = renderUnifiedSelectionContextHook(testIModel);
     const firstResult = result.current;
 
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     act(() => {
       Presentation.selection.addToSelection("", testIModel, [{ className: "test", id: "1" }], 1);
     });
     const secondResult = result.current;
 
     expect(firstResult.getSelection).to.be.equal(secondResult.getSelection);
+  });
+
+  it("updates context when receives different imodel connection", async () => {
+    function TestComponent({ onChange }: { onChange: (context: UnifiedSelectionContext | undefined) => void }) {
+      const context = useUnifiedSelectionContext();
+      useEffect(() => {
+        onChange(context);
+      }, [context, onChange]);
+      return <></>;
+    }
+
+    const spy = sinon.stub<[UnifiedSelectionContext | undefined], void>();
+    const { rerender } = render(
+      <UnifiedSelectionContextProvider imodel={testIModel}>
+        <TestComponent onChange={spy} />
+      </UnifiedSelectionContextProvider>,
+    );
+
+    await waitFor(() => expect(spy).to.be.called);
+    const firstResult = spy.args[spy.args.length - 1][0] as UnifiedSelectionContext;
+
+    spy.resetHistory();
+    const newImodel = {} as IModelConnection;
+    rerender(
+      <UnifiedSelectionContextProvider imodel={newImodel}>
+        <TestComponent onChange={spy} />
+      </UnifiedSelectionContextProvider>,
+    );
+
+    await waitFor(() => expect(spy).to.be.called);
+    const secondResult = spy.args[spy.args.length - 1][0] as UnifiedSelectionContext;
+
+    expect(firstResult).not.to.be.equal(secondResult);
+    expect(firstResult.getSelection).not.to.be.equal(secondResult.getSelection);
+    expect(firstResult.replaceSelection).not.to.be.equal(secondResult.replaceSelection);
+    expect(firstResult.addToSelection).not.to.be.equal(secondResult.addToSelection);
+    expect(firstResult.clearSelection).not.to.be.equal(secondResult.clearSelection);
+    expect(firstResult.removeFromSelection).not.to.be.equal(secondResult.removeFromSelection);
   });
 
   describe("context", () => {
@@ -118,7 +154,6 @@ describe("UnifiedSelectionContext", () => {
         const { result } = renderUnifiedSelectionContextHook(testIModel);
         const firstKeySet = result.current.getSelection();
 
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
         act(() => result.current.addToSelection([{ className: "test", id: "1" }]));
         const secondKeySet = result.current.getSelection();
 
@@ -130,7 +165,6 @@ describe("UnifiedSelectionContext", () => {
         const { result } = renderUnifiedSelectionContextHook(testIModel);
 
         const key = { className: "test", id: "1" };
-        // eslint-disable-next-line @typescript-eslint/no-floating-promises
         act(() => result.current.addToSelection([key]));
 
         const returnedKeySet = result.current.getSelection();

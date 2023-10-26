@@ -576,58 +576,47 @@ describe("ContentDataProvider", () => {
   });
 
   describe("reacting to updates", () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       provider.keys = new KeySet([createTestECInstanceKey()]);
       invalidateCacheSpy.resetHistory();
+
+      // make sure that provider setup event listeners
+      await provider.getContent();
     });
 
     it("doesn't react to imodel content updates to unrelated rulesets", async () => {
-      await provider.getContent();
-
       presentationManagerMock.object.onIModelContentChanged.raiseEvent({ rulesetId: "unrelated", updateInfo: "FULL", imodelKey });
       expect(invalidateCacheSpy).to.not.be.called;
     });
 
     it("doesn't react to imodel content updates to unrelated imodels", async () => {
-      await provider.getContent();
-
       presentationManagerMock.object.onIModelContentChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey: "unrelated" });
       expect(invalidateCacheSpy).to.not.be.called;
     });
 
     it("invalidates cache when imodel content change happens to related ruleset", async () => {
-      await provider.getContent();
-
       presentationManagerMock.object.onIModelContentChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey });
       expect(invalidateCacheSpy).to.be.calledOnceWith(CacheInvalidationProps.full());
     });
 
     it("doesn't react to unrelated ruleset modifications", async () => {
-      await provider.getContent();
-
       const ruleset = new RegisteredRuleset(createTestRuleset(), "", () => {});
       rulesetsManagerMock.object.onRulesetModified.raiseEvent(ruleset, { ...ruleset.toJSON() });
       expect(invalidateCacheSpy).to.not.be.called;
     });
 
     it("invalidates cache when related ruleset is modified", async () => {
-      await provider.getContent();
-
       const ruleset = new RegisteredRuleset({ ...createTestRuleset(), id: rulesetId }, "", () => {});
       rulesetsManagerMock.object.onRulesetModified.raiseEvent(ruleset, { ...ruleset.toJSON() });
       expect(invalidateCacheSpy).to.be.calledOnceWith(CacheInvalidationProps.full());
     });
 
     it("invalidates cache when related ruleset variables change", async () => {
-      await provider.getContent();
-
       presentationManagerMock.object.vars("").onVariableChanged.raiseEvent("var_id", "prev", "curr");
       expect(invalidateCacheSpy).to.be.calledOnceWith(CacheInvalidationProps.full());
     });
 
     it("invalidates cache when active unit system change", async () => {
-      await provider.getContent();
-
       onActiveFormattingUnitSystemChanged.raiseEvent({ system: "metric" });
       expect(invalidateCacheSpy).to.be.calledOnceWith({ content: true });
     });

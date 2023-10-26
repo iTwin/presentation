@@ -65,10 +65,10 @@ describe("NavigationPropertyTargetSelector", () => {
 
   beforeEach(() => {
     getContentStub.reset();
+    getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
   });
 
   it("renders selector", async () => {
-    getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
     const { getByRole, queryByText, user } = render(
       <NavigationPropertyTargetSelector imodel={testImodel} getNavigationPropertyInfo={async () => testNavigationPropertyInfo} propertyRecord={testRecord} />,
     );
@@ -81,7 +81,6 @@ describe("NavigationPropertyTargetSelector", () => {
 
   it("invokes onCommit with selected target", async () => {
     const spy = sinon.spy();
-    getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
     const { getByRole, getByText, user } = render(
       <NavigationPropertyTargetSelector
         imodel={testImodel}
@@ -107,7 +106,6 @@ describe("NavigationPropertyTargetSelector", () => {
   });
 
   it("get value from target selector reference", async () => {
-    getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
     const ref = createRef<PropertyEditorAttributes>();
     const { getByRole, getByText, user } = render(
       <NavigationPropertyTargetSelector
@@ -130,7 +128,6 @@ describe("NavigationPropertyTargetSelector", () => {
   });
 
   it("sets initial value from property record", async () => {
-    getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), []));
     const propertyDescription = createNavigationPropertyDescription();
     const value = {
       valueFormat: PropertyValueFormat.Primitive,
@@ -150,7 +147,6 @@ describe("NavigationPropertyTargetSelector", () => {
   });
 
   it("changes value when new record is passed", async () => {
-    getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), []));
     const propertyDescription = createNavigationPropertyDescription();
     const value = {
       valueFormat: PropertyValueFormat.Primitive,
@@ -178,7 +174,6 @@ describe("NavigationPropertyTargetSelector", () => {
   });
 
   it("click on dropdown button closes and opens menu", async () => {
-    getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
     const propertyDescription = createNavigationPropertyDescription();
     const value = {
       valueFormat: PropertyValueFormat.Primitive,
@@ -208,7 +203,6 @@ describe("NavigationPropertyTargetSelector", () => {
   });
 
   it("handles input blur", async () => {
-    getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
     const propertyDescription = createNavigationPropertyDescription();
     const value = {
       valueFormat: PropertyValueFormat.Primitive,
@@ -246,7 +240,6 @@ describe("NavigationPropertyTargetSelector", () => {
   });
 
   it("correctly handles keyDown events", async () => {
-    getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
     const propertyDescription = createNavigationPropertyDescription();
     const value = {
       valueFormat: PropertyValueFormat.Primitive,
@@ -298,7 +291,6 @@ describe("NavigationPropertyTargetSelector", () => {
   });
 
   it("click on input does not close menu when menu is opened", async () => {
-    getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
     const propertyDescription = createNavigationPropertyDescription();
     const value = {
       valueFormat: PropertyValueFormat.Primitive,
