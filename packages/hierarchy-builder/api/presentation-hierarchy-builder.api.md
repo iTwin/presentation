@@ -394,7 +394,7 @@ export function getLogger(): ILogger;
 export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey;
 
 // @beta
-export type HierarchyDefinitionParentNode = ParentHierarchyNode & {
+export type HierarchyDefinitionParentNode = Omit<ParentHierarchyNode, "key"> & {
     key: InstancesNodeKey | string;
 };
 

@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import {
-  HierarchyNode,
+  HierarchyNodeKey,
   InstancesNodeKey,
   ParentHierarchyNode,
   ParsedCustomHierarchyNode,
@@ -97,7 +97,7 @@ export type INodePostProcessor = (node: ProcessedHierarchyNode) => Promise<Proce
  * - is either an instances node (key is of [[InstancesNodeKey]] type) or a custom node (key is of `string` type).
  * @beta
  */
-export type HierarchyDefinitionParentNode = ParentHierarchyNode & { key: InstancesNodeKey | string };
+export type HierarchyDefinitionParentNode = Omit<ParentHierarchyNode, "key"> & { key: InstancesNodeKey | string };
 
 /**
  * An interface for a factory that knows how define a hierarchy based on a given parent node.
@@ -235,14 +235,16 @@ export class ClassBasedHierarchyLevelDefinitionsFactory implements IHierarchyLev
       return this._definition.rootNodes();
     }
 
-    if (HierarchyNode.isCustom(parentNode)) {
-      const defs = this._definition.childNodes.filter(isCustomNodeChildHierarchyLevelDefinition).filter((def) => def.customParentNodeKey === parentNode.key);
+    const parentKey = parentNode.key;
+
+    if (HierarchyNodeKey.isCustom(parentKey)) {
+      const defs = this._definition.childNodes.filter(isCustomNodeChildHierarchyLevelDefinition).filter((def) => def.customParentNodeKey === parentKey);
       return (await Promise.all(defs.map(async (def) => def.definitions(parentNode)))).flat();
     }
 
     // istanbul ignore else
-    if (HierarchyNode.isInstancesNode(parentNode)) {
-      const instanceIdsByClass = groupInstanceIdsByClass(parentNode.key.instanceKeys);
+    if (HierarchyNodeKey.isInstances(parentKey)) {
+      const instanceIdsByClass = groupInstanceIdsByClass(parentKey.instanceKeys);
       const instancesParentNodeDefs = this._definition.childNodes.filter(isInstancesNodeChildHierarchyLevelDefinition);
       return (
         await Promise.all(
@@ -253,9 +255,9 @@ export class ClassBasedHierarchyLevelDefinitionsFactory implements IHierarchyLev
       ).flat();
     }
 
-    // `parentNode` should be `never` here, but for unknown to me reasons it's not - narrowing doesn't work
+    // https://github.com/microsoft/TypeScript/issues/21985
     // istanbul ignore next
-    return [];
+    return ((x: never) => x)(parentKey);
   }
 }
 

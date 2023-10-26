@@ -76,6 +76,7 @@ function mergeNodeKeys<TKey extends string | InstancesNodeKey>(lhs: TKey, rhs: T
     assert(HierarchyNodeKey.isInstances(rhs));
     return { type: "instances", instanceKeys: [...lhs.instanceKeys, ...rhs.instanceKeys] } as TKey;
   }
+  // https://github.com/microsoft/TypeScript/issues/21985
   // istanbul ignore next
   return ((x: never) => x)(lhs);
 }
