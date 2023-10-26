@@ -12,7 +12,6 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo, Descriptor, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { act, fireEvent, render, renderHook, waitFor } from "@testing-library/react";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import {
   InstanceFilterBuilder,
@@ -27,6 +26,7 @@ import {
   createTestPropertiesContentField,
   createTestSimpleContentField,
 } from "../_helpers/Content";
+import { act, fireEvent, render, renderHook, waitFor } from "../TestUtils";
 
 describe("InstanceFilter", () => {
   stubRaf();

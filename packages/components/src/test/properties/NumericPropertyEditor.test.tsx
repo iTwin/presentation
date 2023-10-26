@@ -7,9 +7,9 @@ import { expect } from "chai";
 import sinon from "sinon";
 import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import { EditorContainer } from "@itwin/components-react";
-import { fireEvent, render, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NumericPropertyEditor } from "../../presentation-components/properties/NumericPropertyEditor";
+import { fireEvent, render, waitFor } from "../TestUtils";
 
 export const createRecord = (initialValue?: number) => {
   const value: PrimitiveValue = {

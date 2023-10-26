@@ -21,7 +21,7 @@ import {
 } from "../../presentation-components/properties/NavigationPropertyEditor";
 import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField, createTestSimpleContentField } from "../_helpers/Content";
 import { createTestPropertyRecord } from "../_helpers/UiComponents";
-import { render as renderRTL, renderHook, waitFor } from "../TestUtils";
+import { renderHook, render as renderRTL, waitFor } from "../TestUtils";
 
 function createNavigationPropertyInfo(): NavigationPropertyInfo {
   return {

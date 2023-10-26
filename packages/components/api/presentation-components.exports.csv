@@ -102,6 +102,7 @@ public;UsePresentationTreeStateResult
 public;usePropertyDataProviderWithUnifiedSelection(props: PropertyDataProviderWithUnifiedSelectionProps): UsePropertyDataProviderWithUnifiedSelectionResult
 public;UsePropertyDataProviderWithUnifiedSelectionResult
 public;useRulesetRegistration(ruleset: Ruleset): void
+deprecated;useRulesetRegistration(ruleset: Ruleset): void
 beta;useUnifiedSelectionContext(): UnifiedSelectionContext | undefined
 public;useUnifiedSelectionTreeEventHandler(props: UnifiedSelectionTreeEventHandlerParams): UnifiedSelectionTreeEventHandler
 deprecated;useUnifiedSelectionTreeEventHandler(props: UnifiedSelectionTreeEventHandlerParams): UnifiedSelectionTreeEventHandler

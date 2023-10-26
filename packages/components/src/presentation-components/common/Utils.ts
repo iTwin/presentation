@@ -10,7 +10,7 @@ import { LegacyRef, MutableRefObject, RefCallback, useCallback, useRef, useState
 import { Primitives, PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IPropertyValueRenderer, PropertyValueRendererManager } from "@itwin/components-react";
 import { assert, Guid, GuidString, IDisposable } from "@itwin/core-bentley";
-import { Descriptor, Field, LabelCompositeValue, LabelDefinition, parseCombinedFieldNames } from "@itwin/presentation-common";
+import { Descriptor, Field, LabelCompositeValue, LabelDefinition, parseCombinedFieldNames, Ruleset } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { InstanceKeyValueRenderer } from "../properties/InstanceKeyValueRenderer";
 
