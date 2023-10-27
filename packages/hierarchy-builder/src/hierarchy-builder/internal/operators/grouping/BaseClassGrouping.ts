@@ -21,7 +21,8 @@ export async function getBaseClassGroupingECClasses(metadata: IMetadataProvider,
   return sortByBaseClass(baseClasses.filter((baseClass) => baseClass.isRelationshipClass() || baseClass.isEntityClass()));
 }
 
-async function createBaseClassGroupsForSingleBaseClass(
+/** @internal */
+export async function createBaseClassGroupsForSingleBaseClass(
   metadata: IMetadataProvider,
   nodes: HierarchyNode[],
   baseECClass: ECClass,
@@ -94,6 +95,7 @@ async function sortByBaseClass(classes: ECClass[]): Promise<ECClass[]> {
   return output;
 }
 
+/** @internal */
 export async function createBaseClassGroupingHandlers(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<GroupingHandler[]> {
   const baseClassGroupingECClasses = await getBaseClassGroupingECClasses(metadata, nodes);
   return baseClassGroupingECClasses.map(

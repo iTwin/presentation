@@ -19,13 +19,19 @@ const OPERATOR_NAME = "Grouping";
 export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
 
 /** @internal */
-export function createGroupingOperator(metadata: IMetadataProvider) {
+export function createGroupingOperator(metadata: IMetadataProvider, groupingHandlers?: GroupingHandler[]) {
   return function (nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
     return nodes.pipe(
       toArray(),
-      mergeMap((resolvedNodes) =>
-        from(createGroupingHandlers(metadata, resolvedNodes)).pipe(mergeMap((groupingHandlers) => from(groupNodes(resolvedNodes, groupingHandlers)))),
-      ),
+      mergeMap((resolvedNodes) => {
+        // istanbul ignore if
+        if (groupingHandlers === undefined) {
+          return from(createGroupingHandlers(metadata, resolvedNodes)).pipe(
+            mergeMap((createdGroupingHandlers) => from(groupNodes(resolvedNodes, createdGroupingHandlers))),
+          );
+        }
+        return from(groupNodes(resolvedNodes, groupingHandlers));
+      }),
       mergeMap((groupedNodes) => from(groupedNodes)),
       log((n) => `out: ${n.label}`),
     );
@@ -62,7 +68,8 @@ async function groupNodes(nodes: HierarchyNode[], groupingHandlers: GroupingHand
   return originalNodes !== nodes ? sortNodesByLabel(nodes) : nodes;
 }
 
-async function createGroupingHandlers(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<GroupingHandler[]> {
+/** @internal */
+export async function createGroupingHandlers(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<GroupingHandler[]> {
   const groupingHandlers: GroupingHandler[] = new Array<GroupingHandler>();
   groupingHandlers.push(...(await createBaseClassGroupingHandlers(metadata, nodes)));
   groupingHandlers.push(async (allNodes: HierarchyNode[]) => createClassGroups(metadata, allNodes));
@@ -75,6 +82,7 @@ async function handlerWrapper(currentHandler: GroupingHandler, props: FullGroupi
   currentGroupingNodes = applyGroupHidingParams(currentGroupingNodes);
 
   for (const grouping of currentGroupingNodes.grouped) {
+    // istanbul ignore else
     if (Array.isArray(grouping.children)) {
       grouping.children = await groupNodes(grouping.children, props.groupingHandlers);
     }

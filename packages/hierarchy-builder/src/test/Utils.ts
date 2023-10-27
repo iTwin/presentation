@@ -100,7 +100,3 @@ export function createGetClassStub(schemas: IMetadataProvider) {
   };
   return { getClass: stub, stubClass };
 }
-
-export async function isMock(className: string): Promise<boolean> {
-  return className.includes("Parent");
-}

@@ -4,86 +4,76 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { from } from "rxjs";
 import { HierarchyNode } from "../../../../hierarchy-builder/HierarchyNode";
-import { createGroupingOperator } from "../../../../hierarchy-builder/internal/operators/Grouping";
-import { IMetadataProvider } from "../../../../hierarchy-builder/Metadata";
-import { createGetClassStub, createTestNode, getObservableResult, isMock, TStubClassFunc } from "../../../Utils";
+import { applyGroupHidingParams } from "../../../../hierarchy-builder/internal/operators/grouping/GroupHiding";
+import { createTestNode } from "../../../Utils";
 
 describe("GroupHiding", () => {
-  const metadataProvider = {} as unknown as IMetadataProvider;
   describe("hideIfNoSiblings", () => {
     it("hides if no siblings are in the hierarchy", async () => {
       const nodes: HierarchyNode[] = [
-        createTestNode({
-          key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
-          label: "1",
-          params: { grouping: { byLabel: { hideIfNoSiblings: true } } },
-        }),
-        {
-          label: "1",
-          key: "custom1",
-          children: false,
-          params: { grouping: { byLabel: { hideIfNoSiblings: true } } },
-        },
-      ];
-      const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider)));
-      expect(result).to.deep.eq(nodes);
-    });
-
-    it("hides if no siblings are in the tree and at least one grouping node children has hideIfNoSiblings set to true", async () => {
-      const nodes: HierarchyNode[] = [
-        createTestNode({
-          key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
-          label: "1",
-          params: { grouping: { byLabel: { hideIfNoSiblings: true } } },
-        }),
-        {
-          label: "1",
-          key: "custom1",
-          children: false,
-          params: { grouping: { byLabel: true } },
-        },
-        {
-          label: "1",
-          key: "custom2",
-          children: false,
-          params: { grouping: { byLabel: true } },
-        },
-      ];
-      const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider)));
-      expect(result).to.deep.eq(nodes);
-    });
-
-    it("does not hide if node has siblings", async () => {
-      const nodes: HierarchyNode[] = [
-        createTestNode({
-          key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
-          label: "1",
-          params: { grouping: { byLabel: { hideIfNoSiblings: true } } },
-        }),
-        {
-          label: "1",
-          key: "custom1",
-          children: false,
-          params: { grouping: { byLabel: { hideIfNoSiblings: true } } },
-        },
-        {
-          label: "2",
-          key: "custom2",
-          children: false,
-          params: { grouping: { byLabel: true } },
-        },
-      ];
-      const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider)));
-      expect(result).to.deep.eq([
         {
           label: "1",
           key: {
             type: "label-grouping",
             label: "1",
           },
-          children: [nodes[0], nodes[1]],
+          children: [
+            createTestNode({
+              key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+              label: "1",
+              params: { grouping: { byLabel: { hideIfNoSiblings: true } } },
+            }),
+          ],
+        },
+      ];
+      const result = applyGroupHidingParams({ grouped: nodes, ungrouped: [], groupingType: "label" });
+      expect(result.ungrouped).to.deep.eq(nodes[0].children);
+      expect(result.grouped).to.deep.eq([]);
+    });
+
+    it("hides if no siblings are in the tree and some of grouped nodes have hideIfNoSiblings set to true", async () => {
+      const nodes: HierarchyNode[] = [
+        {
+          label: "1",
+          key: {
+            type: "label-grouping",
+            label: "1",
+          },
+          children: [
+            createTestNode({
+              key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+              label: "1",
+              params: { grouping: { byLabel: true } },
+            }),
+            createTestNode({
+              key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
+              label: "1",
+              params: { grouping: { byLabel: { hideIfNoSiblings: true } } },
+            }),
+          ],
+        },
+      ];
+      const result = applyGroupHidingParams({ grouped: nodes, ungrouped: [], groupingType: "label" });
+      expect(result.ungrouped).to.deep.eq(nodes[0].children);
+      expect(result.grouped).to.deep.eq([]);
+    });
+
+    it("doesn't hide if grouping node has grouping siblings", async () => {
+      const nodes: HierarchyNode[] = [
+        {
+          label: "1",
+          key: {
+            type: "label-grouping",
+            label: "1",
+          },
+          children: [
+            createTestNode({
+              key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+              label: "1",
+              params: { grouping: { byLabel: { hideIfNoSiblings: true } } },
+            }),
+          ],
         },
         {
           label: "2",
@@ -91,9 +81,44 @@ describe("GroupHiding", () => {
             type: "label-grouping",
             label: "2",
           },
-          children: [nodes[2]],
+          children: [
+            createTestNode({
+              key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
+              label: "2",
+              params: { grouping: { byLabel: { hideIfNoSiblings: true } } },
+            }),
+          ],
         },
-      ] as HierarchyNode[]);
+      ];
+      const result = applyGroupHidingParams({ grouped: nodes, ungrouped: [], groupingType: "label" });
+      expect(result.ungrouped).to.deep.eq([]);
+      expect(result.grouped).to.deep.eq(nodes);
+    });
+
+    it("doesn't hide if grouping node has ungrouped siblings", async () => {
+      const nodes: HierarchyNode[] = [
+        {
+          label: "1",
+          key: {
+            type: "label-grouping",
+            label: "1",
+          },
+          children: [
+            createTestNode({
+              key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+              label: "1",
+              params: { grouping: { byLabel: { hideIfNoSiblings: true } } },
+            }),
+          ],
+        },
+        createTestNode({
+          key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
+          label: "2",
+        }),
+      ];
+      const result = applyGroupHidingParams({ grouped: [nodes[0]], ungrouped: [nodes[1]], groupingType: "label" });
+      expect(result.ungrouped).to.deep.eq([nodes[1]]);
+      expect(result.grouped).to.deep.eq([nodes[0]]);
     });
   });
 
@@ -102,176 +127,174 @@ describe("GroupHiding", () => {
       const nodes: HierarchyNode[] = [
         {
           label: "1",
-          key: "custom1",
-          children: false,
+          key: {
+            type: "label-grouping",
+            label: "1",
+          },
+          children: [
+            createTestNode({
+              key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+              label: "1",
+              params: { grouping: { byLabel: { hideIfOneGroupedNode: true } } },
+            }),
+          ],
         },
-        createTestNode({
-          key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
-          label: "1",
-          params: { grouping: { byLabel: { hideIfOneGroupedNode: true } } },
-        }),
       ];
-      const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider)));
-      expect(result).to.deep.eq(nodes);
+      const result = applyGroupHidingParams({ grouped: nodes, ungrouped: [], groupingType: "label" });
+      expect(result.ungrouped).to.deep.eq(nodes[0].children);
+      expect(result.grouped).to.deep.eq([]);
     });
 
-    it("does not hide if group has multiple children", async () => {
+    it("doesn't hide if group has multiple children", async () => {
       const nodes: HierarchyNode[] = [
-        createTestNode({
-          key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
-          label: "1",
-          params: { grouping: { byLabel: { hideIfOneGroupedNode: true } } },
-        }),
-        {
-          label: "1",
-          key: "custom1",
-          children: false,
-          params: { grouping: { byLabel: true } },
-        },
-        {
-          label: "2",
-          key: "custom2",
-          children: false,
-          params: { grouping: { byLabel: true } },
-        },
-      ];
-      const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider)));
-      expect(result).to.deep.eq([
         {
           label: "1",
           key: {
             type: "label-grouping",
             label: "1",
           },
-          children: [nodes[0], nodes[1]],
+          children: [
+            createTestNode({
+              key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+              label: "1",
+              params: { grouping: { byLabel: { hideIfOneGroupedNode: true } } },
+            }),
+            createTestNode({
+              key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
+              label: "1",
+              params: { grouping: { byLabel: { hideIfOneGroupedNode: true } } },
+            }),
+          ],
         },
-        {
-          label: "2",
-          key: {
-            type: "label-grouping",
-            label: "2",
-          },
-          children: [nodes[2]],
-        },
-      ] as HierarchyNode[]);
+      ];
+      const result = applyGroupHidingParams({ grouped: nodes, ungrouped: [], groupingType: "label" });
+      expect(result.ungrouped).to.deep.eq([]);
+      expect(result.grouped).to.deep.eq(nodes);
     });
   });
 
   describe("hideIfOneGroupedNode and hideIfNoSiblings", () => {
-    let stubClass: TStubClassFunc;
-    beforeEach(() => {
-      stubClass = createGetClassStub(metadataProvider).stubClass;
+    it("doesn't hide if there are no grouped nodes", async () => {
+      const nodes: HierarchyNode[] = [
+        createTestNode({
+          key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+          label: "1",
+          params: { grouping: { byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true } } },
+        }),
+      ];
+      const result = applyGroupHidingParams({ grouped: [], ungrouped: nodes, groupingType: "label" });
+      expect(result.ungrouped).to.deep.eq(nodes);
+      expect(result.grouped).to.deep.eq([]);
+    });
+
+    it("doesn't hide if groupingType does not match grouped node", async () => {
+      const nodes: HierarchyNode[] = [
+        {
+          label: "1",
+          key: {
+            type: "label-grouping",
+            label: "1",
+          },
+          children: [
+            createTestNode({
+              key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+              label: "1",
+              params: { grouping: { byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true } } },
+            }),
+          ],
+        },
+      ];
+      const result = applyGroupHidingParams({ grouped: nodes, ungrouped: [], groupingType: "base-class" });
+      expect(result.ungrouped).to.deep.eq([]);
+      expect(result.grouped).to.deep.eq(nodes);
+
+      const result2 = applyGroupHidingParams({ grouped: nodes, ungrouped: [], groupingType: "class" });
+      expect(result2.ungrouped).to.deep.eq([]);
+      expect(result2.grouped).to.deep.eq(nodes);
+    });
+
+    it("doesn't hide if group has siblings and group has more than one node", async () => {
+      const nodes: HierarchyNode[] = [
+        {
+          label: "1",
+          key: {
+            type: "label-grouping",
+            label: "1",
+          },
+          children: [
+            createTestNode({
+              key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+              label: "1",
+              params: { grouping: { byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true } } },
+            }),
+            createTestNode({
+              key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
+              label: "1",
+              params: { grouping: { byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true } } },
+            }),
+          ],
+        },
+        createTestNode({
+          key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x3" }] },
+          label: "2",
+        }),
+      ];
+      const result = applyGroupHidingParams({ grouped: [nodes[0]], ungrouped: [nodes[1]], groupingType: "label" });
+      expect(result.ungrouped).to.deep.eq([nodes[1]]);
+      expect(result.grouped).to.deep.eq([nodes[0]]);
     });
 
     it("hides if no siblings are in the hierarchy", async () => {
       const nodes: HierarchyNode[] = [
-        createTestNode({
-          key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+        {
           label: "1",
-          params: { grouping: { byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true } } },
-        }),
-        createTestNode({
-          key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
-          label: "1",
-          params: { grouping: { byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true } } },
-        }),
+          key: {
+            type: "label-grouping",
+            label: "1",
+          },
+          children: [
+            createTestNode({
+              key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+              label: "1",
+              params: { grouping: { byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true } } },
+            }),
+            createTestNode({
+              key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
+              label: "1",
+              params: { grouping: { byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true } } },
+            }),
+          ],
+        },
       ];
-      const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider)));
-      expect(result).to.deep.eq(nodes);
+      const result = applyGroupHidingParams({ grouped: nodes, ungrouped: [], groupingType: "label" });
+      expect(result.ungrouped).to.deep.eq(nodes[0].children);
+      expect(result.grouped).to.deep.eq([]);
     });
 
     it("hides if group has one child node", async () => {
+      const childNode = createTestNode({
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+        label: "1",
+        params: { grouping: { byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true } } },
+      });
       const nodes: HierarchyNode[] = [
         {
           label: "1",
-          key: "custom1",
-          children: false,
-        },
-        createTestNode({
-          key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
-          label: "1",
-          params: { grouping: { byLabel: { hideIfOneGroupedNode: true, hideIfNoSiblings: true } } },
-        }),
-      ];
-      const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider)));
-      expect(result).to.deep.eq(nodes);
-    });
-
-    it("hides only some groups", async () => {
-      const nodes: HierarchyNode[] = [
-        createTestNode({
-          key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
-          label: "1",
-          params: {
-            grouping: {
-              byClass: { hideIfOneGroupedNode: true, hideIfNoSiblings: true },
-              byLabel: { hideIfOneGroupedNode: true, hideIfNoSiblings: true },
-              byBaseClasses: {
-                hideIfNoSiblings: true,
-                hideIfOneGroupedNode: true,
-                fullClassNames: ["TestSchema.TestParentClassA", "TestSchema.TestParentClassAA"],
-              },
-            },
+          key: {
+            type: "label-grouping",
+            label: "1",
           },
-        }),
+          children: [childNode],
+        },
         createTestNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
           label: "1",
-          params: {
-            grouping: {
-              byClass: { hideIfOneGroupedNode: true, hideIfNoSiblings: true },
-              byLabel: { hideIfOneGroupedNode: true, hideIfNoSiblings: true },
-              byBaseClasses: {
-                hideIfNoSiblings: true,
-                hideIfOneGroupedNode: true,
-                fullClassNames: ["TestSchema.TestParentClassA", "TestSchema.TestParentClassAA"],
-              },
-            },
-          },
+          params: { grouping: { byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true } } },
         }),
-        {
-          label: "1",
-          key: "custom1",
-          children: false,
-          params: { grouping: { byLabel: { hideIfOneGroupedNode: true, hideIfNoSiblings: true } } },
-        },
-        {
-          label: "2",
-          key: "custom2",
-          children: false,
-          params: { grouping: { byLabel: { hideIfOneGroupedNode: true, hideIfNoSiblings: true } } },
-        },
       ];
-      stubClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A", is: isMock });
-      const parentClassA = stubClass({
-        schemaName: "TestSchema",
-        className: "TestParentClassA",
-        classLabel: "TestSchema.TestParentClassA",
-        isEntityClass: () => true,
-        isRelationshipClass: () => true,
-      });
-      stubClass({
-        schemaName: "TestSchema",
-        className: "TestParentClassAA",
-        classLabel: "TestSchema.TestParentClassAA",
-        isEntityClass: () => true,
-        isRelationshipClass: () => true,
-        is: isMock,
-      });
-
-      const result = await getObservableResult(from(nodes).pipe(createGroupingOperator(metadataProvider)));
-      expect(result).to.deep.eq([
-        nodes[2],
-        nodes[3],
-        {
-          label: "TestSchema.TestParentClassA",
-          key: {
-            type: "class-grouping",
-            class: parentClassA,
-          },
-          children: [nodes[0], nodes[1]],
-        },
-      ] as HierarchyNode[]);
+      const result = applyGroupHidingParams({ grouped: [nodes[0]], ungrouped: [nodes[1]], groupingType: "label" });
+      expect(result.ungrouped).to.deep.eq([nodes[1], childNode]);
+      expect(result.grouped).to.deep.eq([]);
     });
   });
 });

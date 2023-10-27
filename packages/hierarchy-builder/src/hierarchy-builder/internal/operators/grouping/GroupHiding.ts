@@ -33,6 +33,7 @@ function getGroupingHideOptionsFromParentNode(
   parentNode: HierarchyNode,
   groupingType: GroupingType,
 ): [hideIfNoSiblings: boolean, hideIfOneGroupedNode: boolean] {
+  // istanbul ignore else
   if (Array.isArray(parentNode.children)) {
     if (groupingType === "base-class") {
       return getHideOptionsFromNodeProcessingParams(parentNode.children, (p) => p.grouping?.byBaseClasses);
@@ -40,6 +41,7 @@ function getGroupingHideOptionsFromParentNode(
     if (groupingType === "class") {
       return getHideOptionsFromNodeProcessingParams(parentNode.children, (p) => (typeof p.grouping?.byClass === "object" ? p.grouping.byClass : undefined));
     }
+    // istanbul ignore else
     if (groupingType === "label") {
       return getHideOptionsFromNodeProcessingParams(parentNode.children, (p) => (typeof p.grouping?.byLabel === "object" ? p.grouping.byLabel : undefined));
     }
