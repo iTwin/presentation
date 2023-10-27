@@ -44,29 +44,10 @@ describe("Grouping", () => {
         createTestNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
           label: "1",
-          params: {
-            grouping: {
-              byBaseClasses: {
-                fullClassNames: ["TestSchema.TestParentClassA", "TestSchema.TestParentClassAA"],
-              },
-              byClass: true,
-              byLabel: true,
-            },
-          },
         }),
         createTestNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x2" }] },
           label: "1",
-          params: {
-            grouping: {
-              byBaseClasses: {
-                fullClassNames: ["TestSchema.TestParentClassA", "TestSchema.TestParentClassAA"],
-                hideIfNoSiblings: true,
-              },
-              byLabel: true,
-              byClass: true,
-            },
-          },
         }),
       ];
 
@@ -87,21 +68,10 @@ describe("Grouping", () => {
         createTestNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
           label: "1",
-          params: {
-            grouping: {
-              byClass: true,
-              byLabel: true,
-            },
-          },
         }),
         createTestNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema.B", id: "0x2" }] },
           label: "1",
-          params: {
-            grouping: {
-              byLabel: true,
-            },
-          },
         }),
       ];
 
