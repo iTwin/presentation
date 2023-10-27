@@ -208,9 +208,17 @@ describe("Grouping", () => {
       createLabelGroupsStub = sinon.stub(labelGrouping, "createLabelGroups");
     });
 
-    it("creates grouping handlers in class -> label grouping order", async () => {
-      const result = await createGroupingHandlers(metadataProvider, []);
+    it.only("creates grouping handlers in class -> label grouping order", async () => {
+      const nodes = [
+        createTestNode({
+          key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
+          label: "1",
+        }),
+      ];
+
+      const result = await createGroupingHandlers(metadataProvider, nodes);
       expect(createBaseClassGroupingHandlersStub.callCount).to.eq(1);
+      expect(createBaseClassGroupingHandlersStub.firstCall).to.be.calledWith(metadataProvider, nodes);
       expect(result.length).to.eq(2);
       expect(createClassGroupsStub.callCount).to.eq(0);
       await result[0]([]);
