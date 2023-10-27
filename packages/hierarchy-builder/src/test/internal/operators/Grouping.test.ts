@@ -208,7 +208,7 @@ describe("Grouping", () => {
       createLabelGroupsStub = sinon.stub(labelGrouping, "createLabelGroups");
     });
 
-    it.only("creates grouping handlers in class -> label grouping order", async () => {
+    it("creates grouping handlers in class -> label grouping order", async () => {
       const nodes = [
         createTestNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
