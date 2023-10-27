@@ -101,7 +101,7 @@ describe("LabelGrouping", () => {
       }),
     ];
     const result = await createLabelGroups(nodes);
-    expect(result.ungrouped).to.deep.eq([nodes[0]]);
+    expect(result.ungrouped).to.deep.eq(nodes);
     expect(result.grouped).to.deep.eq([]);
   });
 });
