@@ -2,8 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-
-import { from, mergeMap, Observable, tap, toArray } from "rxjs";
+import { from, mergeMap, Observable, of, tap, toArray } from "rxjs";
 import { HierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
 import { IMetadataProvider } from "../../Metadata";
@@ -24,13 +23,8 @@ export function createGroupingOperator(metadata: IMetadataProvider, groupingHand
     return nodes.pipe(
       toArray(),
       mergeMap((resolvedNodes) => {
-        // istanbul ignore if
-        if (groupingHandlers === undefined) {
-          return from(createGroupingHandlers(metadata, resolvedNodes)).pipe(
-            mergeMap((createdGroupingHandlers) => from(groupNodes(resolvedNodes, createdGroupingHandlers))),
-          );
-        }
-        return from(groupNodes(resolvedNodes, groupingHandlers));
+        const groupingHandlersObs = groupingHandlers ? of(groupingHandlers) : from(createGroupingHandlers(metadata, resolvedNodes));
+        return groupingHandlersObs.pipe(mergeMap((createdGroupingHandlers) => from(groupNodes(resolvedNodes, createdGroupingHandlers))));
       }),
       mergeMap((groupedNodes) => from(groupedNodes)),
       log((n) => `out: ${n.label}`),
