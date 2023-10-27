@@ -45,8 +45,7 @@ interface RowDef {
   [NodeSelectClauseColumnNames.HasChildren]?: boolean;
   [NodeSelectClauseColumnNames.HideIfNoChildren]?: boolean;
   [NodeSelectClauseColumnNames.HideNodeInHierarchy]?: boolean;
-  [NodeSelectClauseColumnNames.GroupByClass]?: boolean;
-  [NodeSelectClauseColumnNames.GroupByLabel]?: boolean;
+  [NodeSelectClauseColumnNames.Grouping]?: string;
   [NodeSelectClauseColumnNames.MergeByLabelId]?: string;
   [NodeSelectClauseColumnNames.ExtendedData]?: string;
   [NodeSelectClauseColumnNames.AutoExpand]?: boolean;
@@ -57,6 +56,7 @@ interface RowDef {
 export function defaultNodesParser(row: { [columnName: string]: any }): ParsedHierarchyNode {
   const typedRow = row as RowDef;
   const parsedExtendedData = typedRow.ExtendedData ? JSON.parse(typedRow.ExtendedData) : undefined;
+  const parsedGrouping = typedRow.Grouping ? JSON.parse(typedRow.Grouping) : undefined;
   return {
     // don't format the label here - we're going to do that at node pre-processing step to handle both - instance and custom nodes
     label: parseLabel(typedRow.DisplayLabel),
@@ -69,8 +69,7 @@ export function defaultNodesParser(row: { [columnName: string]: any }): ParsedHi
     params: {
       hideIfNoChildren: !!typedRow.HideIfNoChildren,
       hideInHierarchy: !!typedRow.HideNodeInHierarchy,
-      groupByClass: !!typedRow.GroupByClass,
-      groupByLabel: !!typedRow.GroupByLabel,
+      grouping: parsedGrouping,
       mergeByLabelId: typedRow.MergeByLabelId,
     },
   };

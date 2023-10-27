@@ -25,8 +25,15 @@ describe("NodeSelectClauseFactory", () => {
         num: 1.23,
         bool: true,
       },
-      groupByClass: true,
-      groupByLabel: true,
+      grouping: {
+        byClass: true,
+        byLabel: { hideIfOneGroupedNode: false },
+        byBaseClasses: {
+          fullClassNames: ["testSchema.testName"],
+          hideIfNoSiblings: false,
+          hideIfOneGroupedNode: true,
+        },
+      },
       hasChildren: true,
       hideIfNoChildren: true,
       hideNodeInHierarchy: true,
@@ -40,8 +47,11 @@ describe("NodeSelectClauseFactory", () => {
         CAST(1 AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
         CAST(1 AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
         CAST(1 AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
-        CAST(1 AS BOOLEAN) AS ${NodeSelectClauseColumnNames.GroupByClass},
-        CAST(1 AS BOOLEAN) AS ${NodeSelectClauseColumnNames.GroupByLabel},
+        json_object(
+          'byLabel', json_object('hideIfOneGroupedNode',  CAST(0 AS BOOLEAN)),
+          'byClass', CAST(1 AS BOOLEAN),
+          'byBaseClasses', json_object('fullClassNames', json_array('testSchema.testName'), 'hideIfNoSiblings', CAST(0 AS BOOLEAN), 'hideIfOneGroupedNode', CAST(1 AS BOOLEAN))
+        ) AS ${NodeSelectClauseColumnNames.Grouping},
         CAST('merge id' AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
         json_object(
           'id', 0x3,
@@ -63,8 +73,15 @@ describe("NodeSelectClauseFactory", () => {
       extendedData: {
         sel: { selector: "x.ExtendedData" },
       },
-      groupByClass: { selector: "x.GroupByClass" },
-      groupByLabel: { selector: "x.GroupByLabel" },
+      grouping: {
+        byClass: { hideIfNoSiblings: { selector: "x.classGroupHideIfNoSiblings" } },
+        byLabel: { selector: "x.byLabel" },
+        byBaseClasses: {
+          fullClassNames: [{ selector: "x.baseClassFullGroupClassName" }],
+          hideIfNoSiblings: { selector: "x.baseClassGroupHideIfNoSiblings" },
+          hideIfOneGroupedNode: { selector: "x.baseClassGroupHideIfOneGroupedNode" },
+        },
+      },
       hasChildren: { selector: "x.HasChildren" },
       hideIfNoChildren: { selector: "x.HideIfNoChildren" },
       hideNodeInHierarchy: { selector: "x.HideNodeInHierarchy" },
@@ -78,8 +95,11 @@ describe("NodeSelectClauseFactory", () => {
         CAST(x.HasChildren AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
         CAST(x.HideIfNoChildren AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
         CAST(x.HideNodeInHierarchy AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
-        CAST(x.GroupByClass AS BOOLEAN) AS ${NodeSelectClauseColumnNames.GroupByClass},
-        CAST(x.GroupByLabel AS BOOLEAN) AS ${NodeSelectClauseColumnNames.GroupByLabel},
+        json_object(
+          'byLabel', CAST(x.byLabel AS BOOLEAN),
+          'byClass', json_object('hideIfNoSiblings', CAST(x.classGroupHideIfNoSiblings AS BOOLEAN)),
+          'byBaseClasses', json_object('fullClassNames', json_array(x.baseClassFullGroupClassName), 'hideIfNoSiblings', CAST(x.baseClassGroupHideIfNoSiblings AS BOOLEAN), 'hideIfOneGroupedNode', CAST(x.baseClassGroupHideIfOneGroupedNode AS BOOLEAN))
+        ) AS ${NodeSelectClauseColumnNames.Grouping},
         CAST(x.MergeId AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
         json_object(
           'sel', x.ExtendedData
@@ -103,10 +123,38 @@ describe("NodeSelectClauseFactory", () => {
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
-        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.GroupByClass},
-        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.GroupByLabel},
+        CAST(NULL AS TEXT) AS ${NodeSelectClauseColumnNames.Grouping},
         CAST(NULL AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
-        NULL AS ${NodeSelectClauseColumnNames.ExtendedData},
+        CAST(NULL AS TEXT) AS ${NodeSelectClauseColumnNames.ExtendedData},
+        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.AutoExpand}
+      `),
+    );
+  });
+
+  it("creates valid clause with when only one of the groupings is set", async () => {
+    const result = await factory.createSelectClause({
+      ecClassId: "0x1",
+      ecInstanceId: "0x2",
+      nodeLabel: "label",
+      grouping: {
+        byBaseClasses: {
+          fullClassNames: ["testSchema.testName"],
+        },
+      },
+    });
+    expect(trimWhitespace(result)).to.eq(
+      trimWhitespace(`
+        ec_ClassName(0x1) AS ${NodeSelectClauseColumnNames.FullClassName},
+        0x2 AS ${NodeSelectClauseColumnNames.ECInstanceId},
+        'label' AS ${NodeSelectClauseColumnNames.DisplayLabel},
+        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
+        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
+        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
+        json_object(
+          'byBaseClasses', json_object('fullClassNames', json_array('testSchema.testName'))
+        ) AS ${NodeSelectClauseColumnNames.Grouping},
+        CAST(NULL AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
+        CAST(NULL AS TEXT) AS ${NodeSelectClauseColumnNames.ExtendedData},
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.AutoExpand}
       `),
     );

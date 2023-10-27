@@ -40,6 +40,9 @@ describe("ClassBasedHierarchyLevelDefinitionsFactory", () => {
   beforeEach(() => {
     stubClass = createGetClassStub(metadataProvider).stubClass;
   });
+  afterEach(() => {
+    sinon.restore();
+  });
 
   it("returns root hierarchy level definition", async () => {
     const rootHierarchyLevel: HierarchyLevelDefinition = [createCustomNodeDefinition(), createInstanceNodesQueryDefinition()];

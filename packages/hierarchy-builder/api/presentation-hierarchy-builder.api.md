@@ -13,6 +13,17 @@ export interface ArrayPropertyAttributes {
 }
 
 // @beta
+export interface BaseClassGroupingParams extends BaseGroupingParams {
+    fullClassNames: string[];
+}
+
+// @beta
+export interface BaseGroupingParams {
+    hideIfNoSiblings?: boolean;
+    hideIfOneGroupedNode?: boolean;
+}
+
+// @beta
 export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelectClauseFactory {
     constructor(props: BisInstanceLabelSelectClauseFactoryProps);
     // (undocumented)
@@ -365,6 +376,16 @@ export interface ECSqlQueryRow {
 export type ECSqlQueryRowFormat = "ECSqlPropertyNames" | "Indexes";
 
 // @beta
+export interface ECSqlSelectClauseGroupingParams {
+    // (undocumented)
+    byBaseClasses?: BaseClassGroupingParams_2;
+    // (undocumented)
+    byClass?: boolean | ECSqlValueSelector | BaseGroupingParams_2;
+    // (undocumented)
+    byLabel?: boolean | ECSqlValueSelector | BaseGroupingParams_2;
+}
+
+// @beta
 export interface ECSqlValueSelector {
     // (undocumented)
     selector: string;
@@ -384,6 +405,19 @@ export interface ECStructProperty extends ECProperty {
 
 // @beta
 export function getLogger(): ILogger;
+
+// @beta
+export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey;
+
+// @beta
+export interface GroupingParams {
+    // (undocumented)
+    byBaseClasses?: BaseClassGroupingParams;
+    // (undocumented)
+    byClass?: boolean | BaseGroupingParams;
+    // (undocumented)
+    byLabel?: boolean | BaseGroupingParams;
+}
 
 // @beta
 export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
@@ -428,9 +462,7 @@ export namespace HierarchyNode {
 // @beta (undocumented)
 export interface HierarchyNodeHandlingParams {
     // (undocumented)
-    groupByClass?: boolean;
-    // (undocumented)
-    groupByLabel?: boolean;
+    grouping?: GroupingParams;
     // (undocumented)
     hideIfNoChildren?: boolean;
     // (undocumented)
@@ -595,8 +627,7 @@ export enum NodeSelectClauseColumnNames {
     ECInstanceId = "ECInstanceId",
     ExtendedData = "ExtendedData",
     FullClassName = "FullClassName",
-    GroupByClass = "GroupByClass",
-    GroupByLabel = "GroupByLabel",
+    Grouping = "Grouping",
     HasChildren = "HasChildren",
     HideIfNoChildren = "HideIfNoChildren",
     HideNodeInHierarchy = "HideNodeInHierarchy",
@@ -622,9 +653,7 @@ export interface NodeSelectClauseProps {
         [key: string]: Id64String | string | number | boolean | ECSqlValueSelector;
     };
     // (undocumented)
-    groupByClass?: boolean | ECSqlValueSelector;
-    // (undocumented)
-    groupByLabel?: boolean | ECSqlValueSelector;
+    grouping?: ECSqlSelectClauseGroupingParams;
     // (undocumented)
     hasChildren?: boolean | ECSqlValueSelector;
     // (undocumented)
@@ -711,7 +740,7 @@ export function setLogger(logger: ILogger | undefined): void;
 export type SpecialPropertyType = "Navigation" | "Guid" | "Point2d" | "Point3d";
 
 // @beta
-export type StandardHierarchyNodeKey = InstancesNodeKey | ClassGroupingNodeKey | LabelGroupingNodeKey;
+export type StandardHierarchyNodeKey = InstancesNodeKey | GroupingNodeKey;
 
 // @beta
 export type TypedPrimitiveValue = ({

@@ -9,11 +9,10 @@ import { HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./H
 import { HierarchyNode, HierarchyNodeIdentifiersPath, ParsedHierarchyNode } from "./HierarchyNode";
 import { getClass } from "./internal/Common";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
-import { createClassGroupingOperator } from "./internal/operators/ClassGrouping";
 import { createDetermineChildrenOperator } from "./internal/operators/DetermineChildren";
+import { createGroupingOperator } from "./internal/operators/Grouping";
 import { createHideIfNoChildrenOperator } from "./internal/operators/HideIfNoChildren";
 import { createHideNodesInHierarchyOperator } from "./internal/operators/HideNodesInHierarchy";
-import { createLabelGroupingOperator } from "./internal/operators/LabelGrouping";
 import { createMergeInstanceNodesByLabelOperator } from "./internal/operators/MergeInstanceNodesByLabel";
 import { createPersistChildrenOperator } from "./internal/operators/PersistChildren";
 import { sortNodesByLabelOperator } from "./internal/operators/Sorting";
@@ -136,8 +135,7 @@ export class HierarchyProvider {
       createHideIfNoChildrenOperator((n) => this.hasNodesObservable(n), false),
       createHideNodesInHierarchyOperator((n) => this.getNodesObservable(n), this._directNodesCache, false),
       sortNodesByLabelOperator,
-      createClassGroupingOperator(this._metadataProvider),
-      createLabelGroupingOperator(),
+      createGroupingOperator(this._metadataProvider),
     );
     return parentNode ? result.pipe(createPersistChildrenOperator(parentNode)) : result;
   }

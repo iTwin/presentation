@@ -17,6 +17,11 @@ import { HierarchyNode } from "../../HierarchyNode";
 export function sortNodesByLabelOperator(nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
   return nodes.pipe(
     toArray(),
-    mergeMap((allNodes) => allNodes.sort((lhs, rhs) => naturalCompare(lhs.label.toLocaleLowerCase(), rhs.label.toLocaleLowerCase()))),
+    mergeMap((allNodes) => sortNodesByLabel(allNodes)),
   );
+}
+
+/** @internal */
+export function sortNodesByLabel(nodes: HierarchyNode[]): HierarchyNode[] {
+  return nodes.sort((lhs, rhs) => naturalCompare(lhs.label.toLocaleLowerCase(), rhs.label.toLocaleLowerCase()));
 }
