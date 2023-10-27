@@ -11,7 +11,6 @@ import { HierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
 import {
   createGroupingHandlers,
   createGroupingOperator,
-  GroupingHandler,
   GroupingHandlerResult,
   LOGGING_NAMESPACE,
 } from "../../../hierarchy-builder/internal/operators/Grouping";
@@ -23,7 +22,7 @@ import { IMetadataProvider } from "../../../hierarchy-builder/Metadata";
 import { createTestNode, getObservableResult, setupLogging } from "../../Utils";
 
 describe("Grouping", () => {
-  const metadata = {} as unknown as IMetadataProvider;
+  const metadataProvider = {} as unknown as IMetadataProvider;
 
   before(() => {
     setupLogging([{ namespace: LOGGING_NAMESPACE, level: LogLevel.Trace }]);
@@ -53,13 +52,15 @@ describe("Grouping", () => {
 
       const result = await getObservableResult(
         from(nodes).pipe(
-          createGroupingOperator(metadata, [
+          createGroupingOperator(metadataProvider, [
             async (allNodes) => ({ grouped: [], ungrouped: allNodes, groupingType: "label" }),
             async (allNodes) => ({ grouped: [], ungrouped: allNodes, groupingType: "class" }),
           ]),
         ),
       );
       expect(applyGroupingHidingParamsStub.callCount).to.eq(2);
+      expect(applyGroupingHidingParamsStub.firstCall).to.be.calledWith({ grouped: [], ungrouped: nodes, groupingType: "label" });
+      expect(applyGroupingHidingParamsStub.secondCall).to.be.calledWith({ grouped: [], ungrouped: nodes, groupingType: "class" });
       expect(result).to.deep.eq(nodes);
     });
 
@@ -74,28 +75,27 @@ describe("Grouping", () => {
           label: "1",
         }),
       ];
+      const classGroupingResult = {
+        grouped: [
+          {
+            label: "TestSchema A",
+            key: {
+              type: "class-grouping",
+              class: {
+                name: "TestSchema A",
+              },
+            },
+            children: [nodes[0]],
+          },
+        ],
+        ungrouped: [nodes[1]],
+        groupingType: "class",
+      } as GroupingHandlerResult;
 
       const result = await getObservableResult(
         from(nodes).pipe(
-          createGroupingOperator(metadata, [
-            async (allNodes) => {
-              return {
-                grouped: [
-                  {
-                    label: "TestSchema A",
-                    key: {
-                      type: "class-grouping",
-                      class: {
-                        name: "TestSchema A",
-                      },
-                    },
-                    children: [allNodes[0]],
-                  },
-                ],
-                ungrouped: [allNodes[1]],
-                groupingType: "class",
-              } as GroupingHandlerResult;
-            },
+          createGroupingOperator(metadataProvider, [
+            async () => classGroupingResult,
             async (allNodes) => {
               return {
                 grouped: [
@@ -116,6 +116,56 @@ describe("Grouping", () => {
         ),
       );
       expect(applyGroupingHidingParamsStub.callCount).to.eq(3);
+      expect(applyGroupingHidingParamsStub.firstCall).to.be.calledWith(classGroupingResult);
+      expect(applyGroupingHidingParamsStub.secondCall).to.be.calledWith({
+        grouped: [
+          {
+            label: "1",
+            key: {
+              type: "label-grouping",
+              label: "1",
+            },
+            children: [nodes[0]],
+          },
+        ],
+        ungrouped: [],
+        groupingType: "label",
+      });
+      expect(applyGroupingHidingParamsStub.thirdCall).to.be.calledWith({
+        grouped: [
+          {
+            label: "1",
+            key: {
+              type: "label-grouping",
+              label: "1",
+            },
+            children: [nodes[1]],
+          },
+        ],
+        ungrouped: [
+          {
+            label: "TestSchema A",
+            key: {
+              type: "class-grouping",
+              class: {
+                name: "TestSchema A",
+              },
+            },
+            children: [
+              {
+                label: "1",
+                key: {
+                  type: "label-grouping",
+                  label: "1",
+                },
+                children: [nodes[0]],
+              },
+            ],
+          },
+        ],
+        groupingType: "label",
+      });
+
       expect(result).to.deep.eq([
         {
           label: "1",
@@ -153,13 +203,13 @@ describe("Grouping", () => {
     let createClassGroupsStub: sinon.SinonStub;
     let createLabelGroupsStub: sinon.SinonStub;
     before(() => {
-      createBaseClassGroupingHandlersStub = sinon.stub(baseClassGrouping, "createBaseClassGroupingHandlers").resolves([] as GroupingHandler[]);
-      createClassGroupsStub = sinon.stub(classGrouping, "createClassGroups").resolves({ grouped: [], ungrouped: [], groupingType: "class" });
-      createLabelGroupsStub = sinon.stub(labelGrouping, "createLabelGroups").resolves({ grouped: [], ungrouped: [], groupingType: "label" });
+      createBaseClassGroupingHandlersStub = sinon.stub(baseClassGrouping, "createBaseClassGroupingHandlers").resolves([]);
+      createClassGroupsStub = sinon.stub(classGrouping, "createClassGroups");
+      createLabelGroupsStub = sinon.stub(labelGrouping, "createLabelGroups");
     });
 
     it("creates grouping handlers in class -> label grouping order", async () => {
-      const result = await createGroupingHandlers(metadata, []);
+      const result = await createGroupingHandlers(metadataProvider, []);
       expect(createBaseClassGroupingHandlersStub.callCount).to.eq(1);
       expect(result.length).to.eq(2);
       expect(createClassGroupsStub.callCount).to.eq(0);

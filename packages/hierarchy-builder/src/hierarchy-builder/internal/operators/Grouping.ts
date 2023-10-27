@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 import { from, mergeMap, Observable, of, tap, toArray } from "rxjs";
+import { assert } from "@itwin/core-bentley";
 import { HierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
 import { IMetadataProvider } from "../../Metadata";
@@ -75,13 +76,14 @@ async function handlerWrapper(currentHandler: GroupingHandler, props: FullGroupi
   let currentGroupingNodes = await currentHandler(props.nodes);
   currentGroupingNodes = applyGroupHidingParams(currentGroupingNodes);
 
-  for (const grouping of currentGroupingNodes.grouped) {
-    // istanbul ignore else
-    if (Array.isArray(grouping.children)) {
-      grouping.children = await groupNodes(grouping.children, props.groupingHandlers);
-    }
-  }
-  return currentGroupingNodes.grouped.length > 0 ? [...currentGroupingNodes.grouped, ...currentGroupingNodes.ungrouped] : props.nodes;
+  const grouped = await Promise.all(
+    currentGroupingNodes.grouped.map(async (grouping) => {
+      assert(Array.isArray(grouping.children));
+      return { ...grouping, children: await groupNodes(grouping.children, props.groupingHandlers) };
+    }),
+  );
+
+  return grouped.length > 0 ? [...grouped, ...currentGroupingNodes.ungrouped] : props.nodes;
 }
 
 function doLog(msg: string) {
