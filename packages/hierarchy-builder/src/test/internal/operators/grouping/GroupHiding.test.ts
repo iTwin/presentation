@@ -126,21 +126,24 @@ describe("GroupHiding", () => {
     it("hides if group has one child node", async () => {
       const nodes: HierarchyNode[] = [
         {
-          label: "1",
+          label: "A",
           key: {
-            type: "label-grouping",
-            label: "1",
+            type: "class-grouping",
+            class: {
+              name: "TestSchema:A",
+              label: "A",
+            },
           },
           children: [
             createTestNode({
               key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
               label: "1",
-              params: { grouping: { byLabel: { hideIfOneGroupedNode: true } } },
+              params: { grouping: { byClass: { hideIfOneGroupedNode: true } } },
             }),
           ],
         },
       ];
-      const result = applyGroupHidingParams({ grouped: nodes, ungrouped: [], groupingType: "label" });
+      const result = applyGroupHidingParams({ grouped: nodes, ungrouped: [], groupingType: "class" });
       expect(result.ungrouped).to.deep.eq(nodes[0].children);
       expect(result.grouped).to.deep.eq([]);
     });
