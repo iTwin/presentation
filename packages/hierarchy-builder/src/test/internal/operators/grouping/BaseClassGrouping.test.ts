@@ -12,10 +12,6 @@ import { createGetClassStub, createTestNode, TStubClassFunc } from "../../../Uti
 
 describe("BaseClassGrouping", () => {
   const metadataProvider = {} as unknown as IMetadataProvider;
-  const ecClass = {
-    fullName: "TestSchema.TestParentClass",
-    label: "TestParentClass",
-  } as unknown as ECClass;
   let stubClass: TStubClassFunc;
   beforeEach(() => {
     stubClass = createGetClassStub(metadataProvider).stubClass;
@@ -116,6 +112,7 @@ describe("BaseClassGrouping", () => {
           },
         },
       ];
+      const ecClass = { fullName: "TestSchema.TestParentClass", label: "TestParentClass" } as unknown as ECClass;
 
       const result = await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(metadataProvider, nodes, ecClass);
       expect(result.grouped).to.deep.eq([]);
@@ -135,6 +132,7 @@ describe("BaseClassGrouping", () => {
           },
         }),
       ];
+      const ecClass = { fullName: "TestSchema.TestParentClass", label: "TestParentClass" } as unknown as ECClass;
 
       const result = await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(metadataProvider, nodes, ecClass);
       expect(result.grouped).to.deep.eq([]);
@@ -154,19 +152,19 @@ describe("BaseClassGrouping", () => {
           },
         }),
       ];
-      const specificECClass = { fullName: "TestSchema.TestParentClass", name: "Test Parent Class" } as unknown as ECClass;
+      const eCClass = { fullName: "TestSchema.TestParentClass", name: "Test Parent Class" } as unknown as ECClass;
 
       stubClass({ schemaName: "TestSchema", className: "TestClass", is: async () => true });
 
-      const result = await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(metadataProvider, nodes, specificECClass);
+      const result = await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(metadataProvider, nodes, eCClass);
       expect(result.grouped).to.deep.eq([
         {
-          label: specificECClass.name,
+          label: eCClass.name,
           key: {
             type: "class-grouping",
             class: {
-              name: specificECClass.fullName,
-              label: specificECClass.name,
+              name: eCClass.fullName,
+              label: eCClass.name,
             },
           },
           children: nodes,
@@ -203,6 +201,7 @@ describe("BaseClassGrouping", () => {
 
       stubClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A", is: async () => true });
       stubClass({ schemaName: "TestSchema", className: "B", classLabel: "Class B", is: async () => true });
+      const ecClass = { fullName: "TestSchema.TestParentClass", label: "TestParentClass" } as unknown as ECClass;
 
       const result = await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(metadataProvider, nodes, ecClass);
       expect(result.grouped).to.deep.eq([
@@ -248,6 +247,7 @@ describe("BaseClassGrouping", () => {
       ];
       stubClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A", is: async () => true });
       stubClass({ schemaName: "TestSchema", className: "B", classLabel: "Class B", is: async () => false });
+      const ecClass = { fullName: "TestSchema.TestParentClass", label: "TestParentClass" } as unknown as ECClass;
 
       const result = await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(metadataProvider, nodes, ecClass);
       expect(result.grouped).to.deep.eq([
