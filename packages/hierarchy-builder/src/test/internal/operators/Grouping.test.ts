@@ -73,12 +73,8 @@ describe("Grouping", () => {
       const result = await getObservableResult(
         from(nodes).pipe(
           createGroupingOperator(metadata, [
-            async (allNodes) => {
-              return { grouped: [], ungrouped: allNodes, groupingType: "label" } as GroupingHandlerResult;
-            },
-            async (allNodes) => {
-              return { grouped: [], ungrouped: allNodes, groupingType: "class" } as GroupingHandlerResult;
-            },
+            async (allNodes) => ({ grouped: [], ungrouped: allNodes, groupingType: "label" }),
+            async (allNodes) => ({ grouped: [], ungrouped: allNodes, groupingType: "class" }),
           ]),
         ),
       );
