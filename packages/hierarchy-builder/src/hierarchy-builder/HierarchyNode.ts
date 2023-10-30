@@ -106,6 +106,8 @@ export interface BaseGroupingParams {
   hideIfNoSiblings?: boolean;
   /** Hiding option that determines whether to hide group nodes which have only one node as its children. */
   hideIfOneGroupedNode?: boolean;
+  /** Option which auto expands grouping nodes' children when it has single child or always. */
+  autoExpand?: "single-child" | "always";
 }
 
 /**

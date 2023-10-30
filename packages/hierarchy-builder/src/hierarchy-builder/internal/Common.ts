@@ -86,6 +86,11 @@ function mergeBaseGroupingParams(
   return {
     ...(lhsBaseGroupingParams?.hideIfOneGroupedNode || rhsBaseGroupingParams?.hideIfOneGroupedNode ? { hideIfOneGroupedNode: true } : undefined),
     ...(lhsBaseGroupingParams?.hideIfNoSiblings || rhsBaseGroupingParams?.hideIfNoSiblings ? { hideIfNoSiblings: true } : undefined),
+    ...(lhsBaseGroupingParams?.autoExpand || rhsBaseGroupingParams?.autoExpand
+      ? {
+          autoExpand: lhsBaseGroupingParams?.autoExpand === "always" || rhsBaseGroupingParams?.autoExpand === "always" ? "always" : "single-child",
+        }
+      : undefined),
   };
 }
 

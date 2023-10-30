@@ -19,6 +19,7 @@ export interface BaseClassGroupingParams extends BaseGroupingParams {
 
 // @beta
 export interface BaseGroupingParams {
+    autoExpand?: "single-child" | "always";
     hideIfNoSiblings?: boolean;
     hideIfOneGroupedNode?: boolean;
 }

@@ -14,6 +14,7 @@ import {
   GroupingHandlerResult,
   LOGGING_NAMESPACE,
 } from "../../../hierarchy-builder/internal/operators/Grouping";
+import * as autoExpand from "../../../hierarchy-builder/internal/operators/grouping/AutoExpand";
 import * as baseClassGrouping from "../../../hierarchy-builder/internal/operators/grouping/BaseClassGrouping";
 import * as classGrouping from "../../../hierarchy-builder/internal/operators/grouping/ClassGrouping";
 import * as groupHiding from "../../../hierarchy-builder/internal/operators/grouping/GroupHiding";
@@ -34,8 +35,10 @@ describe("Grouping", () => {
 
   describe("createGroupingOperator", () => {
     let applyGroupingHidingParamsStub: sinon.SinonStub;
+    let assignAutoExpandStub: sinon.SinonStub;
     beforeEach(() => {
       applyGroupingHidingParamsStub = sinon.stub(groupHiding, "applyGroupHidingParams").callsFake((props) => props);
+      assignAutoExpandStub = sinon.stub(autoExpand, "assignAutoExpand").callsFake((props) => props);
     });
 
     it("doesn't change input nodes when grouping handlers don't group", async () => {
@@ -61,6 +64,9 @@ describe("Grouping", () => {
       expect(applyGroupingHidingParamsStub.callCount).to.eq(2);
       expect(applyGroupingHidingParamsStub.firstCall).to.be.calledWith({ grouped: [], ungrouped: nodes, groupingType: "label" });
       expect(applyGroupingHidingParamsStub.secondCall).to.be.calledWith({ grouped: [], ungrouped: nodes, groupingType: "class" });
+      expect(assignAutoExpandStub.callCount).to.eq(2);
+      expect(assignAutoExpandStub.firstCall).to.be.calledWith({ grouped: [], ungrouped: nodes, groupingType: "label" });
+      expect(assignAutoExpandStub.secondCall).to.be.calledWith({ grouped: [], ungrouped: nodes, groupingType: "class" });
       expect(result).to.deep.eq(nodes);
     });
 
@@ -115,6 +121,7 @@ describe("Grouping", () => {
           ]),
         ),
       );
+      expect(assignAutoExpandStub.callCount).to.eq(3);
       expect(applyGroupingHidingParamsStub.callCount).to.eq(3);
       expect(applyGroupingHidingParamsStub.firstCall).to.be.calledWith(classGroupingResult);
       expect(applyGroupingHidingParamsStub.secondCall).to.be.calledWith({

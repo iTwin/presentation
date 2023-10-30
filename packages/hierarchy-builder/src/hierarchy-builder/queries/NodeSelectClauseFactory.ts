@@ -84,6 +84,7 @@ export interface ECSqlSelectClauseGroupingParams {
 interface BaseGroupingParams {
   hideIfNoSiblings?: boolean | ECSqlValueSelector;
   hideIfOneGroupedNode?: boolean | ECSqlValueSelector;
+  autoExpand?: string | ECSqlValueSelector;
 }
 
 interface BaseClassGroupingParams extends BaseGroupingParams {
@@ -189,6 +190,12 @@ function createBaseGroupingParamSelectors(params: BaseGroupingParams) {
     selectors.push({
       key: "hideIfOneGroupedNode",
       selector: `CAST(${createECSqlValueSelector(params.hideIfOneGroupedNode)} AS BOOLEAN)`,
+    });
+  }
+  if (params.autoExpand !== undefined) {
+    selectors.push({
+      key: "autoExpand",
+      selector: `CAST(${createECSqlValueSelector(params.autoExpand)} AS TEXT)`,
     });
   }
   return selectors;

@@ -2,12 +2,14 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+
 import { from, mergeMap, Observable, of, tap, toArray } from "rxjs";
 import { assert } from "@itwin/core-bentley";
 import { HierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
 import { IMetadataProvider } from "../../Metadata";
 import { createOperatorLoggingNamespace } from "../Common";
+import { assignAutoExpand } from "./grouping/AutoExpand";
 import { createBaseClassGroupingHandlers } from "./grouping/BaseClassGrouping";
 import { createClassGroups } from "./grouping/ClassGrouping";
 import { applyGroupHidingParams } from "./grouping/GroupHiding";
@@ -75,6 +77,7 @@ export async function createGroupingHandlers(metadata: IMetadataProvider, nodes:
 async function handlerWrapper(currentHandler: GroupingHandler, props: FullGroupingProps): Promise<HierarchyNode[]> {
   let currentGroupingNodes = await currentHandler(props.nodes);
   currentGroupingNodes = applyGroupHidingParams(currentGroupingNodes);
+  currentGroupingNodes = assignAutoExpand(currentGroupingNodes);
 
   const grouped = await Promise.all(
     currentGroupingNodes.grouped.map(async (grouping) => {
