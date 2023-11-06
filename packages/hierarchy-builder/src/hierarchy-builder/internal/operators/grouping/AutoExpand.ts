@@ -11,7 +11,7 @@ export function assignAutoExpand(props: GroupingHandlerResult): GroupingHandlerR
   for (const node of props.grouped) {
     if (Array.isArray(node.children)) {
       const autoExpand = getGroupingAutoExpandOptionsFromParentNode(node, props.groupingType);
-      if (autoExpand === "always" || (node.children.length === 1 && !!autoExpand)) {
+      if (autoExpand === "always" || (autoExpand === "single-child" && node.children.length === 1)) {
         node.autoExpand = true;
       }
     }
