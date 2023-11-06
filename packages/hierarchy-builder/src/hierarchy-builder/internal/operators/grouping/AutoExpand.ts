@@ -46,13 +46,11 @@ function getAutoExpandOptionsFromNodeProcessingParams(
   nodes: HierarchyNode[],
   autoExpandOptionsAccessor: (params: HierarchyNodeHandlingParams) => BaseGroupingParams | undefined,
 ): string | undefined {
-  let autoExpand: string | undefined;
   for (const node of nodes) {
-    if (autoExpand === "always") {
-      break;
-    }
     const params = node.params ? autoExpandOptionsAccessor(node.params) : undefined;
-    autoExpand = !!params?.autoExpand ? params.autoExpand : autoExpand;
+    if (params?.autoExpand) {
+      return params.autoExpand;
+    }
   }
-  return autoExpand;
+  return undefined;
 }
