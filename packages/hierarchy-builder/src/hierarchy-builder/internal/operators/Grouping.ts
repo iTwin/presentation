@@ -46,7 +46,7 @@ export interface GroupingHandlerResult {
 }
 
 /** @internal */
-export type GroupingType = "label" | "class" | "base-class";
+export type GroupingType = "label" | "class" | "base-class" | "property";
 
 /** @internal */
 export type GroupingHandler = (allNodes: HierarchyNode[]) => Promise<GroupingHandlerResult>;

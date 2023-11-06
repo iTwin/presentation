@@ -37,6 +37,19 @@ export interface LabelGroupingNodeKey {
 }
 
 /**
+ * A key for a property-grouping node.
+ * @beta
+ */
+export interface PropertyGroupingNodeKey {
+  type: "property-grouping";
+  property: {
+    name: string;
+    fullClassName: string;
+    groupingValues: (string | number | boolean)[];
+  };
+}
+
+/**
  * A key for one of the instance grouping nodes.
  * @beta
  */
@@ -95,6 +108,7 @@ export interface GroupingParams {
   byLabel?: boolean | BaseGroupingParams;
   byClass?: boolean | BaseGroupingParams;
   byBaseClasses?: BaseClassGroupingParams;
+  byProperties?: PropertiesGroupingParams;
 }
 
 /**
@@ -120,6 +134,58 @@ export interface BaseClassGroupingParams extends BaseGroupingParams {
    * Full class name format: `SchemaName.ClassName`.
    */
   fullClassNames: string[];
+}
+
+/**
+ * A data structure that represents properties grouping.
+ * @beta
+ */
+export interface PropertiesGroupingParams extends BaseGroupingParams {
+  /**
+   * Full name of class, which should be used to group the node. Only has effect if the node
+   * represents an instance of that class.
+   *
+   * Full class name format: `SchemaName.ClassName`.
+   */
+  fullClassName: string;
+  /**
+   * Properties of the specified class, by which the nodes should be grouped. Each property can be:
+   * 1) A string representing the property name, implying grouping by the exact values of the property.
+   * 2) An object with the following properties:
+   *    - propertyName (required): A string indicating the name of the property to group by.
+   *    - ranges (optional): An array of objects specifying the bounds within which the property values should fit.
+   *      - fromValue and toValue define the bounds of the range and can be numbers (for numeric ranges) or strings
+   *        (for other types of ranges).
+   *      - rangeLabel (optional): Label for the specific ranges' grouping node. Default grouping nodes' label is '`fullClassName`:`propertyName`: `fromValue` - `toValue`'.
+   *
+   * Example usage:
+   * ```tsx
+   * propertyGroups: [
+   *   "status", // Group by the 'status' property value
+   *   {
+   *     propertyName: "type" // Group by the 'type' property value
+   *   },
+   *   {
+   *     propertyName: "length",
+   *     ranges: [
+   *       { fromValue: 1, toValue: 10, rangeLabel: "Small" },
+   *       { fromValue: 11, toValue: 20, rangeLabel: "Medium" }
+   *     ] // Group by 'length' property within specified numeric ranges. Nodes in the range '1 <= length <= 10' will be grouped and group will be labeled "`fullClassName`:`propertyName`:Small" and nodes in the range '11 <= length <= 20' will be grouped and group will be labeled "`fullClassName`:`propertyName`:Medium".
+   *   },
+   *   {
+   *     propertyName: "creationDate",
+   *     ranges: [{ fromValue: "2020-01-01", toValue: "2020-12-31" }] // Group by 'creationDate' property within specified date ranges. Nodes in the range '2020-01-01 <= creationDate <= 2020-12-31' will be grouped.
+   *   }
+   * ]
+   * ```
+   */
+  propertyGroups: Array<
+    | string
+    | {
+        propertyName: string;
+        ranges?: Array<{ fromValue: number; toValue: number; rangeLabel?: string }> | Array<{ fromValue: string; toValue: string; rangeLabel?: string }>;
+      }
+  >;
 }
 
 /**
