@@ -44,10 +44,7 @@ describe("Stateless hierarchy builder", () => {
                     nodeLabel: { selector: `this.UserLabel` },
                     grouping: specifiedGrouping,
                   })}
-                  FROM (
-                    SELECT ECClassId, ECInstanceId, UserLabel, Parent
-                    FROM ${subjectClassName}
-                  ) AS this
+                  FROM ${subjectClassName} this
                 `,
                 },
               },
