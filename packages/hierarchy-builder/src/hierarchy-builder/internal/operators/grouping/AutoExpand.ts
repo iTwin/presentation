@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { BaseGroupingParams, HierarchyNode, HierarchyNodeHandlingParams } from "../../../HierarchyNode";
+import { AutoExpand, BaseGroupingParams, HierarchyNode, HierarchyNodeHandlingParams } from "../../../HierarchyNode";
 import { GroupingHandlerResult, GroupingType } from "../Grouping";
 
 /** @internal */
@@ -20,7 +20,7 @@ export function assignAutoExpand(props: GroupingHandlerResult): GroupingHandlerR
   return props;
 }
 
-function getGroupingAutoExpandOptionsFromParentNode(parentNode: HierarchyNode, groupingType: GroupingType): string | undefined {
+function getGroupingAutoExpandOptionsFromParentNode(parentNode: HierarchyNode, groupingType: GroupingType): AutoExpand | undefined {
   // istanbul ignore else
   if (Array.isArray(parentNode.children)) {
     if (groupingType === "base-class") {
@@ -45,7 +45,7 @@ function getGroupingAutoExpandOptionsFromParentNode(parentNode: HierarchyNode, g
 function getAutoExpandOptionsFromNodeProcessingParams(
   nodes: HierarchyNode[],
   autoExpandOptionsAccessor: (params: HierarchyNodeHandlingParams) => BaseGroupingParams | undefined,
-): string | undefined {
+): AutoExpand | undefined {
   for (const node of nodes) {
     const params = node.params ? autoExpandOptionsAccessor(node.params) : undefined;
     if (params?.autoExpand) {
