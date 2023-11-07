@@ -5,10 +5,15 @@
 
 import "./TreeWidget.css";
 import { useCallback, useEffect } from "react";
-import { ControlledTree, ControlledTreeProps, SelectionMode, TreeModelSource, useTreeModel } from "@itwin/components-react";
+import { SelectionMode } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
-  DiagnosticsProps, PresentationTreeRenderer, TreeEventHandlerProps, UnifiedSelectionTreeEventHandler, usePresentationTree,
+  DiagnosticsProps,
+  PresentationTree,
+  PresentationTreeRenderer,
+  TreeEventHandlerProps,
+  UnifiedSelectionTreeEventHandler,
+  usePresentationTree,
 } from "@itwin/presentation-components";
 
 const PAGING_SIZE = 10;
@@ -55,22 +60,21 @@ export function Tree(props: Props) {
   }
 
   return (
-    <LoadedTree
-      modelSource={state.nodeLoader.modelSource}
-      eventsHandler={state.eventHandler}
-      nodeLoader={state.nodeLoader}
+    <PresentationTree
+      state={state}
       selectionMode={SelectionMode.Extended}
       iconsEnabled={true}
       width={props.width}
       height={props.height}
-      treeRenderer={(treeProps) => <PresentationTreeRenderer {...treeProps} imodel={props.imodel} modelSource={state.nodeLoader.modelSource} nodeLoader={state.nodeLoader} onItemsRendered={state.onItemsRendered} />}
-      nodeHighlightingProps={state.filteringResult?.highlightProps}
+      treeRenderer={(treeProps) => (
+        <PresentationTreeRenderer
+          {...treeProps}
+          imodel={props.imodel}
+          modelSource={state.nodeLoader.modelSource}
+          nodeLoader={state.nodeLoader}
+          onItemsRendered={state.onItemsRendered}
+        />
+      )}
     />
   );
-}
-
-function LoadedTree({ modelSource, ...props }: Omit<ControlledTreeProps, "model"> & { modelSource: TreeModelSource }) {
-  const treeModel = useTreeModel(modelSource);
-
-  return <ControlledTree {...props} model={treeModel} selectionMode={SelectionMode.Extended} iconsEnabled={true} />;
 }

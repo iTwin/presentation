@@ -8,7 +8,13 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  AbstractTreeNodeLoaderWithProvider, HighlightableTreeProps, MutableTreeModel, PagedTreeNodeLoader, RenderedItemsRange, TreeEventHandler, TreeModel,
+  AbstractTreeNodeLoaderWithProvider,
+  HighlightableTreeProps,
+  MutableTreeModel,
+  PagedTreeNodeLoader,
+  RenderedItemsRange,
+  TreeEventHandler,
+  TreeModel,
   TreeModelSource,
 } from "@itwin/components-react";
 import { PresentationTreeDataProvider, PresentationTreeDataProviderProps } from "../DataProvider";
@@ -114,7 +120,7 @@ interface TreeState {
 }
 
 /**
- * Custom hooks that creates and manages state for [ControlledTree]($components-react) component based on presentation data.
+ * Custom hook that creates and manages state for [ControlledTree]($components-react) component based on presentation data.
  * @public
  */
 export function usePresentationTree<TEventHandler extends TreeEventHandler = TreeEventHandler>({

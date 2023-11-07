@@ -6,11 +6,11 @@
 import { expect } from "chai";
 import { useState } from "react";
 import sinon from "sinon";
-import { ControlledTree, SelectionMode, TreeRendererProps, UiComponents, useTreeModel } from "@itwin/components-react";
+import { SelectionMode, TreeRendererProps, UiComponents } from "@itwin/components-react";
 import { Guid } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Ruleset } from "@itwin/presentation-common";
-import { PresentationTreeRenderer, usePresentationTreeNodeLoader, useUnifiedSelectionTreeEventHandler } from "@itwin/presentation-components";
+import { PresentationTree, PresentationTreeRenderer, usePresentationTree } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { getByRole, render, waitFor } from "@testing-library/react";
@@ -36,32 +36,26 @@ describe("Learning snippets", () => {
     it("handles errors", async function () {
       // __PUBLISH_EXTRACT_START__ Presentation.Components.Tree.ErrorHandling
       function MyTree(props: { imodel: IModelConnection }) {
-        const { nodeLoader } = usePresentationTreeNodeLoader({
+        const state = usePresentationTree({
           imodel: props.imodel,
           ruleset,
           pagingSize: 100,
         });
 
-        // presentation-specific tree renderer takes care of handling errors when requesting nodes
-        const treeRenderer = (treeRendererProps: TreeRendererProps) => (
-          <PresentationTreeRenderer {...treeRendererProps} imodel={props.imodel} modelSource={nodeLoader.modelSource} />
-        );
-
         // width and height should generally we computed using ResizeObserver API or one of its derivatives
         const [width] = useState(400);
         const [height] = useState(600);
 
-        return (
-          <ControlledTree
-            width={width}
-            height={height}
-            selectionMode={SelectionMode.Extended}
-            nodeLoader={nodeLoader}
-            eventsHandler={useUnifiedSelectionTreeEventHandler({ nodeLoader })}
-            model={useTreeModel(nodeLoader.modelSource)}
-            treeRenderer={treeRenderer}
-          />
+        if (!state) {
+          return null;
+        }
+
+        // presentation-specific tree renderer takes care of handling errors when requesting nodes
+        const treeRenderer = (treeRendererProps: TreeRendererProps) => (
+          <PresentationTreeRenderer {...treeRendererProps} imodel={props.imodel} modelSource={state.nodeLoader.modelSource} />
         );
+
+        return <PresentationTree width={width} height={height} state={state} selectionMode={SelectionMode.Extended} treeRenderer={treeRenderer} />;
       }
       // __PUBLISH_EXTRACT_END__
 

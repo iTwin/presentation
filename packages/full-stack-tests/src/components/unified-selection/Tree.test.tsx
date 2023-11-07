@@ -4,11 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { useState } from "react";
-import { ControlledTree, SelectionMode, UiComponents, useTreeModel } from "@itwin/components-react";
+import { useCallback, useState } from "react";
+import { SelectionMode, UiComponents } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { InstanceKey, KeySet, Ruleset, RuleTypes } from "@itwin/presentation-common";
-import { usePresentationTreeNodeLoader, useUnifiedSelectionTreeEventHandler } from "@itwin/presentation-components";
+import { PresentationTree, TreeEventHandlerProps, UnifiedSelectionTreeEventHandler, usePresentationTree } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { act, fireEvent, render, waitFor } from "@testing-library/react";
@@ -33,28 +33,26 @@ describe("Learning snippets", async () => {
       // __PUBLISH_EXTRACT_START__ Presentation.Components.UnifiedSelection.Tree
       function MyTree(props: { imodel: IModelConnection }) {
         // create a node loader for given iModel and ruleset
-        const { nodeLoader } = usePresentationTreeNodeLoader({ imodel: props.imodel, ruleset, pagingSize: 10 });
-
-        // get tree model to be rendered based on nodes loaded by the tree node loader
-        const treeModel = useTreeModel(nodeLoader.modelSource);
-
-        // create a tree events handler that synchronizes tree nodes' selection with unified selection
-        const treeEventsHandler = useUnifiedSelectionTreeEventHandler({ nodeLoader });
+        const state = usePresentationTree({
+          imodel: props.imodel,
+          ruleset,
+          pagingSize: 10,
+          // create a tree events handler that synchronizes tree nodes' selection with unified selection
+          eventHandlerFactory: useCallback(
+            (eventHandlerProps: TreeEventHandlerProps) => new UnifiedSelectionTreeEventHandler({ nodeLoader: eventHandlerProps.nodeLoader }),
+            [],
+          ),
+        });
 
         // width and height should generally we computed using ResizeObserver API or one of its derivatives
         const [width] = useState(400);
         const [height] = useState(600);
 
-        return (
-          <ControlledTree
-            nodeLoader={nodeLoader}
-            model={treeModel}
-            eventsHandler={treeEventsHandler}
-            width={width}
-            height={height}
-            selectionMode={SelectionMode.Extended}
-          />
-        );
+        if (!state) {
+          return null;
+        }
+
+        return <PresentationTree width={width} height={height} state={state} selectionMode={SelectionMode.Extended} />;
       }
       // __PUBLISH_EXTRACT_END__
 
