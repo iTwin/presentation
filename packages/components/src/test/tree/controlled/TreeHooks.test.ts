@@ -24,6 +24,8 @@ import { IPresentationTreeDataProvider } from "../../../presentation-components/
 import { createTreeNodeItem } from "../../../presentation-components/tree/Utils";
 import { mockPresentationManager } from "../../_helpers/UiComponents";
 
+/* eslint-disable deprecation/deprecation */
+
 describe("usePresentationNodeLoader", () => {
   let onIModelHierarchyChanged: PresentationManager["onIModelHierarchyChanged"];
   let onRulesetModified: RulesetManager["onRulesetModified"];
