@@ -74,6 +74,7 @@ beta;TableCellRenderer(props: TableCellRendererProps): JSX.Element
 beta;TableCellRendererProps
 beta;TableColumnDefinition
 beta;TableRowDefinition
+public;TreeEventHandlerProps
 beta;UnifiedSelectionContext
 beta;UnifiedSelectionContextProvider(props: UnifiedSelectionContextProviderProps): React.ReactElement
 beta;UnifiedSelectionContextProviderProps
@@ -81,17 +82,18 @@ beta;UnifiedSelectionState = (selectionLevel?: number) => Readonly
 public;UnifiedSelectionTreeEventHandler 
 public;UnifiedSelectionTreeEventHandlerParams
 public;useControlledPresentationTreeFiltering(props: ControlledPresentationTreeFilteringProps):
-internal;useFilteredNodeLoader(dataProvider: IPresentationTreeDataProvider, filter: string | undefined):
 beta;useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProps):
 beta;UseHierarchyLevelFilteringProps
 beta;useNavigationPropertyEditingContext(imodel: IModelConnection, dataProvider: IContentDataProvider): NavigationPropertyEditorContextProps
-internal;useNodeHighlightingProps(filter: string | undefined, filteredNodeLoader?: ITreeNodeLoaderWithProvider
 beta;usePresentationTable
 beta;UsePresentationTableProps
 beta;UsePresentationTableResult
 beta;usePresentationTableWithUnifiedSelection
 beta;UsePresentationTableWithUnifiedSelectionResult
+public;usePresentationTree
 public;usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderProps): PresentationTreeNodeLoaderResult
+public;UsePresentationTreeProps
+public;UsePresentationTreeResult
 public;usePropertyDataProviderWithUnifiedSelection(props: PropertyDataProviderWithUnifiedSelectionProps): UsePropertyDataProviderWithUnifiedSelectionResult
 public;UsePropertyDataProviderWithUnifiedSelectionResult
 public;useRulesetRegistration(ruleset: Ruleset): void

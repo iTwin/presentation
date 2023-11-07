@@ -38,7 +38,6 @@ import { IPropertyValueRenderer } from '@itwin/components-react';
 import { Item } from '@itwin/presentation-common';
 import { ITreeDataProvider } from '@itwin/components-react';
 import { ITreeNodeLoader } from '@itwin/components-react';
-import { ITreeNodeLoaderWithProvider } from '@itwin/components-react';
 import { Keys } from '@itwin/presentation-common';
 import { KeySet } from '@itwin/presentation-common';
 import { Memoized } from 'micro-memoize';
@@ -720,6 +719,12 @@ export interface TableRowDefinition {
     key: string;
 }
 
+// @public
+export interface TreeEventHandlerProps {
+    modelSource: TreeModelSource;
+    nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
+}
+
 // @beta
 export interface UnifiedSelectionContext {
     addToSelection(keys: Keys, level?: number): void;
@@ -784,14 +789,6 @@ export function useControlledPresentationTreeFiltering(props: ControlledPresenta
     matchesCount: number | undefined;
 };
 
-// @internal (undocumented)
-export function useFilteredNodeLoader(dataProvider: IPresentationTreeDataProvider, filter: string | undefined): {
-    filteredNodeLoader: AbstractTreeNodeLoaderWithProvider<IFilteredPresentationTreeDataProvider> | undefined;
-    isFiltering: boolean;
-    filterApplied: string | undefined;
-    matchesCount: number | undefined;
-};
-
 // @beta
 export function useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProps): {
     applyFilter: (node: TreeNodeItem, info: PresentationInstanceFilterInfo) => void;
@@ -808,9 +805,6 @@ export interface UseHierarchyLevelFilteringProps {
 
 // @beta
 export function useNavigationPropertyEditingContext(imodel: IModelConnection, dataProvider: IContentDataProvider): NavigationPropertyEditorContextProps;
-
-// @internal (undocumented)
-export function useNodeHighlightingProps(filter: string | undefined, filteredNodeLoader?: ITreeNodeLoaderWithProvider<IFilteredPresentationTreeDataProvider>, activeMatchIndex?: number): HighlightableTreeProps | undefined;
 
 // @beta
 export function usePresentationTable<TColumn, TRow>(props: UsePresentationTableProps<TColumn, TRow>): UsePresentationTableResult<TColumn, TRow>;
@@ -845,7 +839,37 @@ export interface UsePresentationTableWithUnifiedSelectionResult<TColumns, TRow> 
 }
 
 // @public
+export function usePresentationTree<TEventHandler extends TreeEventHandler = TreeEventHandler>({ eventHandlerFactory, seedTreeModel, enableHierarchyAutoUpdate, filteringParams, ...dataProviderProps }: UsePresentationTreeProps<TEventHandler>): UsePresentationTreeResult<TEventHandler> | undefined;
+
+// @public
 export function usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderProps): PresentationTreeNodeLoaderResult;
+
+// @public
+export interface UsePresentationTreeProps<TEventHandler extends TreeEventHandler = TreeEventHandler> extends PresentationTreeDataProviderProps {
+    // @alpha
+    enableHierarchyAutoUpdate?: boolean;
+    eventHandlerFactory?: (props: TreeEventHandlerProps) => TEventHandler | undefined;
+    filteringParams?: {
+        filter: string;
+        activeMatchIndex?: number;
+    };
+    pagingSize: number;
+    seedTreeModel?: TreeModel;
+}
+
+// @public
+export interface UsePresentationTreeResult<TEventHandler extends TreeEventHandler = TreeEventHandler> {
+    eventHandler: TEventHandler;
+    filteringResult?: {
+        isFiltering: boolean;
+        filteredProvider?: IFilteredPresentationTreeDataProvider;
+        highlightProps?: HighlightableTreeProps;
+        matchesCount?: number;
+    };
+    nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
+    // @alpha
+    onItemsRendered: (items: RenderedItemsRange) => void;
+}
 
 // @public
 export function usePropertyDataProviderWithUnifiedSelection(props: PropertyDataProviderWithUnifiedSelectionProps): UsePropertyDataProviderWithUnifiedSelectionResult;

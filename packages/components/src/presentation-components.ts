@@ -65,7 +65,6 @@ export * from "./presentation-components/tree/IPresentationTreeDataProvider";
 export * from "./presentation-components/tree/FilteredDataProvider";
 export * from "./presentation-components/tree/PresentationTreeNodeItem";
 export * from "./presentation-components/tree/controlled/UseUnifiedSelection";
-export * from "./presentation-components/tree/controlled/UseControlledTreeFiltering";
 export * from "./presentation-components/tree/controlled/TreeHooks";
 export * from "./presentation-components/tree/controlled/UsePresentationTree";
 export * from "./presentation-components/tree/controlled/PresentationTreeNodeRenderer";

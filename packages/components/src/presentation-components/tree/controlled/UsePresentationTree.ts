@@ -8,8 +8,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  AbstractTreeNodeLoaderWithProvider, HighlightableTreeNodeProps, MutableTreeModel, PagedTreeNodeLoader, RenderedItemsRange, TreeEventHandler,
-  TreeModel, TreeModelSource,
+  AbstractTreeNodeLoaderWithProvider, HighlightableTreeProps, MutableTreeModel, PagedTreeNodeLoader, RenderedItemsRange, TreeEventHandler, TreeModel,
+  TreeModelSource,
 } from "@itwin/components-react";
 import { PresentationTreeDataProvider, PresentationTreeDataProviderProps } from "../DataProvider";
 import { IFilteredPresentationTreeDataProvider } from "../FilteredDataProvider";
@@ -45,7 +45,7 @@ export interface UsePresentationTreeProps<TEventHandler extends TreeEventHandler
   seedTreeModel?: TreeModel;
 
   /**
-   * Factory function for creating custom tree events handler.
+   * Factory function for creating custom tree events handler. Defaults to creating [TreeEventHandler]($components-react).
    *
    * Note: Must be memoized.
    */
@@ -86,7 +86,7 @@ export interface UsePresentationTreeResult<TEventHandler extends TreeEventHandle
     /** Filtered data provider used when loading nodes. */
     filteredProvider?: IFilteredPresentationTreeDataProvider;
     /** Props for highlighting filter matches in node label. */
-    highlightProps?: HighlightableTreeNodeProps;
+    highlightProps?: HighlightableTreeProps;
     /** Total count of filter matches. */
     matchesCount?: number;
   };

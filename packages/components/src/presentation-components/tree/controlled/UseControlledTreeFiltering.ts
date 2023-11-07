@@ -9,10 +9,12 @@
 import { useCallback, useMemo } from "react";
 import { of } from "rxjs";
 import { Observable } from "rxjs/internal/Observable";
-import { AbstractTreeNodeLoaderWithProvider, LoadedNodeHierarchy, PagedTreeNodeLoader, TreeModelSource, useDebouncedAsyncValue } from "@itwin/components-react";
+import {
+  AbstractTreeNodeLoaderWithProvider, HighlightableTreeProps, LoadedNodeHierarchy, PagedTreeNodeLoader, TreeModelSource, useDebouncedAsyncValue,
+} from "@itwin/components-react";
+import { assert } from "@itwin/core-bentley";
 import { FilteredPresentationTreeDataProvider, IFilteredPresentationTreeDataProvider } from "../FilteredDataProvider";
 import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
-import { assert } from "@itwin/core-bentley";
 
 const FILTERED_DATA_PAGE_SIZE = 20;
 
@@ -62,7 +64,7 @@ export function useFilteredNodeLoader({ dataProvider, filter }: UseFilteredNodeL
 }
 
 /** @internal */
-export function useNodeHighlightingProps(filter?: string, dataProvider?: IFilteredPresentationTreeDataProvider, activeMatchIndex?: number) {
+export function useNodeHighlightingProps(filter?: string, dataProvider?: IFilteredPresentationTreeDataProvider, activeMatchIndex?: number): HighlightableTreeProps | undefined {
   return useMemo(() => {
     if (!filter || !dataProvider) {
       return undefined;
