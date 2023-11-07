@@ -166,13 +166,6 @@ export function julianToDateTime(julianDate: number): Date {
 }
 
 /** @internal */
-// export function omit<T extends {}>(obj: T, attrs: Array<keyof T>) {
-//   const copy = { ...obj };
-//   attrs.forEach((attr) => delete copy[attr]);
-//   return copy;
-// }
-
-/** @internal */
 export interface ChildNodesObservables {
   processedNodes: Observable<ProcessedHierarchyNode>;
   finalizedNodes: Observable<HierarchyNode>;
