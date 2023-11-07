@@ -1,14 +1,27 @@
 {
-  "check-coverage": false,
+  "check-coverage": true,
   "statements": 100,
   "functions": 100,
   "branches": 100,
   "lines": 100,
   "all": true,
-  "include": ["src/**/*", "lib/cjs/**/*"],
-  "exclude": ["src/hierarchy-builder.ts", "src/test/**", "lib/cjs/test/**"],
-  "extension": [".ts"],
+  "include": [
+    "src/**/*",
+    "lib/cjs/**/*"
+  ],
+  "exclude": [
+    "src/hierarchy-builder.ts",
+    "src/test/**",
+    "lib/cjs/test/**"
+  ],
+  "extension": [
+    ".ts"
+  ],
   "temp-dir": "./lib/test/coverage/.nyc_output",
   "report-dir": "./lib/test/coverage",
-  "reporter": ["text-summary", "lcov", "cobertura"]
+  "reporter": [
+    "text-summary",
+    "lcov",
+    "cobertura"
+  ]
 }
