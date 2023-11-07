@@ -80,6 +80,7 @@ export function createTestProcessedInstanceNode(src?: Partial<ProcessedInstanceH
     ...src,
   };
 }
+
 export function createTestProcessedGroupingNode<TChild = ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>(
   src?: Partial<Omit<ProcessedGroupingHierarchyNode, "children">> & { children?: TChild[] },
 ): Omit<ProcessedGroupingHierarchyNode, "children"> & { children: TChild[] } {

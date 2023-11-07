@@ -70,7 +70,7 @@ export namespace HierarchyNodeKey {
   export function isInstances(key: HierarchyNodeKey): key is InstancesNodeKey {
     return isStandard(key) && key.type === "instances";
   }
-  /** Checks whether the given node key is a [[ClassGroupingNodeKey]]. */
+  /** Checks whether the given node key is a [[GroupingNodeKey]]. */
   export function isGrouping(key: HierarchyNodeKey): key is GroupingNodeKey {
     return isStandard(key) && !isInstances(key);
   }
@@ -151,7 +151,7 @@ export namespace HierarchyNode {
   ): node is TNode & { key: InstancesNodeKey } & (TNode extends ProcessedHierarchyNode ? { processingParams?: InstanceHierarchyNodeProcessingParams } : {}) {
     return HierarchyNodeKey.isInstances(node.key);
   }
-  /** Checks whether the given node is a standard (iModel content based) node */
+  /** Checks whether the given node is a grouping node */
   export function isGroupingNode<TNode extends { key: HierarchyNodeKey }>(
     node: TNode,
   ): node is TNode & { key: GroupingNodeKey } & (TNode extends ProcessedHierarchyNode
