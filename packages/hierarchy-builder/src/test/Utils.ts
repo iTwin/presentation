@@ -80,7 +80,9 @@ export function createTestProcessedInstanceNode(src?: Partial<ProcessedInstanceH
     ...src,
   };
 }
-export function createTestProcessedGroupingNode(src?: Partial<ProcessedGroupingHierarchyNode>): ProcessedGroupingHierarchyNode {
+export function createTestProcessedGroupingNode<TChild = ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>(
+  src?: Partial<Omit<ProcessedGroupingHierarchyNode, "children">> & { children?: TChild[] },
+): Omit<ProcessedGroupingHierarchyNode, "children"> & { children: TChild[] } {
   return {
     label: "test",
     key: {
@@ -88,7 +90,7 @@ export function createTestProcessedGroupingNode(src?: Partial<ProcessedGroupingH
       class: { name: "test class" },
     },
     parentKeys: [],
-    children: [],
+    children: new Array<TChild>(),
     ...src,
   };
 }
@@ -107,6 +109,8 @@ export interface TStubClassFuncProps {
   classLabel?: string;
   properties?: ECProperty[];
   is?: (fullClassName: string) => Promise<boolean>;
+  isRelationshipClass?: () => boolean;
+  isEntityClass?: () => boolean;
 }
 export interface TStubClassFuncReturnType {
   name: string;
@@ -142,6 +146,8 @@ export function createGetClassStub(schemas: IMetadataProvider) {
         const { schemaName: parsedSchemaName, className: parsedClassName } = parseFullClassName(targetClassOrClassName.fullName);
         return props.is(`${parsedSchemaName}.${parsedClassName}`);
       }),
+      isEntityClass: props.isEntityClass,
+      isRelationshipClass: props.isRelationshipClass,
     } as unknown as ECClass);
     return {
       name: fullName,

@@ -30,10 +30,8 @@ export enum NodeSelectClauseColumnNames {
   HideIfNoChildren = "HideIfNoChildren",
   /** A flag indicating that a node should be hidden and its children should be displayed instead. Type: `boolean`. */
   HideNodeInHierarchy = "HideNodeInHierarchy",
-  /** A flag indicating the node should be grouped by class. */
-  GroupByClass = "GroupByClass",
-  /** A flag indicating the node should be grouped by label. */
-  GroupByLabel = "GroupByLabel",
+  /** A serialized JSON object for providing grouping information. */
+  Grouping = "Grouping",
   /**
    * A string indicating a label merge group. Values:
    * - non-empty string puts the node into a label merge group.
@@ -69,9 +67,27 @@ export interface NodeSelectClauseProps {
   hasChildren?: boolean | ECSqlValueSelector;
   hideNodeInHierarchy?: boolean | ECSqlValueSelector;
   hideIfNoChildren?: boolean | ECSqlValueSelector;
-  groupByClass?: boolean | ECSqlValueSelector;
-  groupByLabel?: boolean | ECSqlValueSelector;
+  grouping?: ECSqlSelectClauseGroupingParams;
   mergeByLabelId?: string | ECSqlValueSelector;
+}
+
+/**
+ * A data structure for defining nodes' grouping requirements.
+ * @beta
+ */
+export interface ECSqlSelectClauseGroupingParams {
+  byLabel?: boolean | ECSqlValueSelector | BaseGroupingParams;
+  byClass?: boolean | ECSqlValueSelector | BaseGroupingParams;
+  byBaseClasses?: BaseClassGroupingParams;
+}
+
+interface BaseGroupingParams {
+  hideIfNoSiblings?: boolean | ECSqlValueSelector;
+  hideIfOneGroupedNode?: boolean | ECSqlValueSelector;
+}
+
+interface BaseClassGroupingParams extends BaseGroupingParams {
+  fullClassNames: string[] | ECSqlValueSelector[];
 }
 
 /**
@@ -90,15 +106,14 @@ export class NodeSelectClauseFactory {
       CAST(${createECSqlValueSelector(props.hasChildren)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HasChildren},
       CAST(${createECSqlValueSelector(props.hideIfNoChildren)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
       CAST(${createECSqlValueSelector(props.hideNodeInHierarchy)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
-      CAST(${createECSqlValueSelector(props.groupByClass)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.GroupByClass},
-      CAST(${createECSqlValueSelector(props.groupByLabel)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.GroupByLabel},
+      ${props.grouping ? createGroupingSelector(props.grouping) : "CAST(NULL AS TEXT)"} AS ${NodeSelectClauseColumnNames.Grouping},
       CAST(${createECSqlValueSelector(props.mergeByLabelId)} AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
       ${
         props.extendedData
           ? `json_object(${Object.entries(props.extendedData)
               .map(([key, value]) => `'${key}', ${createECSqlValueSelector(value)}`)
               .join(", ")})`
-          : "NULL"
+          : "CAST(NULL AS TEXT)"
       } AS ${NodeSelectClauseColumnNames.ExtendedData},
       CAST(${createECSqlValueSelector(props.autoExpand)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.AutoExpand}
     `;
@@ -106,9 +121,6 @@ export class NodeSelectClauseFactory {
 }
 
 function createECSqlValueSelector(input: undefined | Id64String | string | number | boolean | ECSqlValueSelector) {
-  function isSelector(x: any): x is ECSqlValueSelector {
-    return !!x.selector;
-  }
   if (input === undefined) {
     return "NULL";
   }
@@ -123,4 +135,65 @@ function createECSqlValueSelector(input: undefined | Id64String | string | numbe
     case "string":
       return Id64.isId64(input) ? input : `'${input}'`;
   }
+}
+
+function isSelector(x: any): x is ECSqlValueSelector {
+  return !!x.selector;
+}
+
+function createGroupingSelector(grouping: ECSqlSelectClauseGroupingParams): string {
+  const groupingSelectors = new Array<{ key: string; selector: string }>();
+
+  grouping.byLabel &&
+    groupingSelectors.push({
+      key: "byLabel",
+      selector:
+        typeof grouping.byLabel === "boolean" || isSelector(grouping.byLabel)
+          ? `CAST(${createECSqlValueSelector(grouping.byLabel)} AS BOOLEAN)`
+          : serializeJsonObject(createBaseGroupingParamSelectors(grouping.byLabel)),
+    });
+
+  grouping.byClass &&
+    groupingSelectors.push({
+      key: "byClass",
+      selector:
+        typeof grouping.byClass === "boolean" || isSelector(grouping.byClass)
+          ? `CAST(${createECSqlValueSelector(grouping.byClass)} AS BOOLEAN)`
+          : serializeJsonObject(createBaseGroupingParamSelectors(grouping.byClass)),
+    });
+
+  grouping.byBaseClasses &&
+    groupingSelectors.push({
+      key: "byBaseClasses",
+      selector: serializeJsonObject([
+        {
+          key: "fullClassNames",
+          selector: `json_array(${grouping.byBaseClasses.fullClassNames.map((className) => createECSqlValueSelector(className)).join(", ")})`,
+        },
+        ...createBaseGroupingParamSelectors(grouping.byBaseClasses),
+      ]),
+    });
+
+  return serializeJsonObject(groupingSelectors);
+}
+
+function createBaseGroupingParamSelectors(params: BaseGroupingParams) {
+  const selectors = new Array<{ key: string; selector: string }>();
+  if (params.hideIfNoSiblings !== undefined) {
+    selectors.push({
+      key: "hideIfNoSiblings",
+      selector: `CAST(${createECSqlValueSelector(params.hideIfNoSiblings)} AS BOOLEAN)`,
+    });
+  }
+  if (params.hideIfOneGroupedNode !== undefined) {
+    selectors.push({
+      key: "hideIfOneGroupedNode",
+      selector: `CAST(${createECSqlValueSelector(params.hideIfOneGroupedNode)} AS BOOLEAN)`,
+    });
+  }
+  return selectors;
+}
+
+function serializeJsonObject(selectors: Array<{ key: string; selector: string }>): string {
+  return `json_object(${selectors.map(({ key, selector }) => `'${key}', ${selector}`).join(", ")})`;
 }

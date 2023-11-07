@@ -20,7 +20,7 @@ import {
   take,
   tap,
 } from "rxjs";
-import { assert } from "@itwin/core-bentley";
+import { assert, omit } from "@itwin/core-bentley";
 import { HierarchyDefinitionParentNode, HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
 import {
   HierarchyNode,
@@ -32,13 +32,12 @@ import {
   ProcessedHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "./HierarchyNode";
-import { ChildNodesCache, ChildNodesObservables, LOGGING_NAMESPACE as CommonLoggingNamespace, getClass } from "./internal/Common";
+import { ChildNodesCache, ChildNodesObservables, LOGGING_NAMESPACE as CommonLoggingNamespace, getClass, hasChildren } from "./internal/Common";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
-import { createClassGroupingOperator } from "./internal/operators/ClassGrouping";
 import { createDetermineChildrenOperator } from "./internal/operators/DetermineChildren";
+import { createGroupingOperator } from "./internal/operators/Grouping";
 import { createHideIfNoChildrenOperator } from "./internal/operators/HideIfNoChildren";
 import { createHideNodesInHierarchyOperator } from "./internal/operators/HideNodesInHierarchy";
-import { createLabelGroupingOperator } from "./internal/operators/LabelGrouping";
 import { createMergeInstanceNodesByLabelOperator } from "./internal/operators/MergeInstanceNodesByLabel";
 import { sortNodesByLabelOperator } from "./internal/operators/Sorting";
 import { QueryScheduler } from "./internal/QueryScheduler";
@@ -166,8 +165,7 @@ export class HierarchyProvider {
     return preprocessedNodesObservable.pipe(
       createMergeInstanceNodesByLabelOperator(),
       sortNodesByLabelOperator,
-      createClassGroupingOperator(this._metadataProvider, (gn) => this.onGroupingNodeCreated(gn)),
-      createLabelGroupingOperator((gn) => this.onGroupingNodeCreated(gn)),
+      createGroupingOperator(this._metadataProvider, (gn) => this.onGroupingNodeCreated(gn)),
       // cache to avoid expensive processing more than once
       shareReplay(),
     );
@@ -177,7 +175,10 @@ export class HierarchyProvider {
     return processedNodesObservable.pipe(
       createDetermineChildrenOperator((n) => this.ensureChildNodesObservables(n).hasNodes),
       postProcessNodes(this._hierarchyFactory),
-      map((n): HierarchyNode => ({ ...n, children: !!n.children })),
+      map((n): HierarchyNode => {
+        const node = { ...n, children: hasChildren(n) };
+        return HierarchyNode.isGroupingNode(node) ? node : omit(node, ["processingParams"]);
+      }),
     );
   }
 

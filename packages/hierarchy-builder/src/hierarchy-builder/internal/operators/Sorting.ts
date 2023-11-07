@@ -15,8 +15,10 @@ import { ProcessedHierarchyNode } from "../../HierarchyNode";
  * @internal
  */
 export function sortNodesByLabelOperator(nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
-  return nodes.pipe(
-    toArray(),
-    concatMap((allNodes) => allNodes.sort((lhs, rhs) => naturalCompare(lhs.label.toLocaleLowerCase(), rhs.label.toLocaleLowerCase()))),
-  );
+  return nodes.pipe(toArray(), concatMap(sortNodesByLabel));
+}
+
+/** @internal */
+export function sortNodesByLabel<TNode extends { label: string }>(nodes: TNode[]): TNode[] {
+  return nodes.sort((lhs, rhs) => naturalCompare(lhs.label.toLocaleLowerCase(), rhs.label.toLocaleLowerCase()));
 }

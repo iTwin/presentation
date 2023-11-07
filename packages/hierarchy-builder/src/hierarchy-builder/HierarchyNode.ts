@@ -126,7 +126,7 @@ export interface HierarchyNode {
   /** Node's display label. */
   label: string;
   /** A flag indicating whether the node has children or not. */
-  children?: boolean;
+  children: boolean;
   /** A flag indicating whether this node should be auto-expanded in the UI. */
   autoExpand?: boolean;
   /** Additional data that may be assigned to this node. */
@@ -188,12 +188,43 @@ export interface BaseHierarchyNodeProcessingParams {
   hideInHierarchy?: boolean;
 }
 /**
+ * A data structure for defining nodes' grouping requirements.
+ * @beta
+ */
+export interface GroupingParams {
+  byLabel?: boolean | BaseGroupingParams;
+  byClass?: boolean | BaseGroupingParams;
+  byBaseClasses?: BaseClassGroupingParams;
+}
+/**
+ * Grouping parameters that are shared across all types of groupings.
+ * @beta
+ */
+export interface BaseGroupingParams {
+  /** Hiding option that determines whether to hide group nodes which have no siblings at the same hierarchy level. */
+  hideIfNoSiblings?: boolean;
+  /** Hiding option that determines whether to hide group nodes which have only one node as its children. */
+  hideIfOneGroupedNode?: boolean;
+}
+/**
+ * A data structure that represents base class grouping.
+ * @beta
+ */
+export interface BaseClassGroupingParams extends BaseGroupingParams {
+  /**
+   * Full names of classes, which should be used to group the node. Only has effect if the node
+   * represents an instance of that class.
+   *
+   * Full class name format: `SchemaName.ClassName`.
+   */
+  fullClassNames: string[];
+}
+/**
  * Processing parameters that apply to instance nodes.
  * @beta
  */
 export interface InstanceHierarchyNodeProcessingParams extends BaseHierarchyNodeProcessingParams {
-  groupByClass?: boolean;
-  groupByLabel?: boolean;
+  grouping?: GroupingParams;
   mergeByLabelId?: string;
 }
 
@@ -201,16 +232,18 @@ export interface InstanceHierarchyNodeProcessingParams extends BaseHierarchyNode
  * A custom (not based on data in an iModel) node that has processing parameters.
  * @beta
  */
-export type ProcessedCustomHierarchyNode = Omit<HierarchyNode, "key"> & {
+export type ProcessedCustomHierarchyNode = Omit<HierarchyNode, "key" | "children"> & {
   key: string;
+  children?: boolean;
   processingParams?: BaseHierarchyNodeProcessingParams;
 };
 /**
  * An instances' (based on data in an iModel) node that has processing parameters.
  * @beta
  */
-export type ProcessedInstanceHierarchyNode = Omit<HierarchyNode, "key"> & {
+export type ProcessedInstanceHierarchyNode = Omit<HierarchyNode, "key" | "children"> & {
   key: InstancesNodeKey;
+  children?: boolean;
   processingParams?: InstanceHierarchyNodeProcessingParams;
 };
 /**

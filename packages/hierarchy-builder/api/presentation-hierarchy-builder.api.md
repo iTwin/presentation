@@ -13,6 +13,17 @@ export interface ArrayPropertyAttributes {
 }
 
 // @beta
+export interface BaseClassGroupingParams extends BaseGroupingParams {
+    fullClassNames: string[];
+}
+
+// @beta
+export interface BaseGroupingParams {
+    hideIfNoSiblings?: boolean;
+    hideIfOneGroupedNode?: boolean;
+}
+
+// @beta
 export interface BaseHierarchyNodeProcessingParams {
     hideIfNoChildren?: boolean;
     hideInHierarchy?: boolean;
@@ -370,6 +381,16 @@ export interface ECSqlQueryRow {
 export type ECSqlQueryRowFormat = "ECSqlPropertyNames" | "Indexes";
 
 // @beta
+export interface ECSqlSelectClauseGroupingParams {
+    // (undocumented)
+    byBaseClasses?: BaseClassGroupingParams_2;
+    // (undocumented)
+    byClass?: boolean | ECSqlValueSelector | BaseGroupingParams_2;
+    // (undocumented)
+    byLabel?: boolean | ECSqlValueSelector | BaseGroupingParams_2;
+}
+
+// @beta
 export interface ECSqlValueSelector {
     // (undocumented)
     selector: string;
@@ -394,6 +415,16 @@ export function getLogger(): ILogger;
 export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey;
 
 // @beta
+export interface GroupingParams {
+    // (undocumented)
+    byBaseClasses?: BaseClassGroupingParams;
+    // (undocumented)
+    byClass?: boolean | BaseGroupingParams;
+    // (undocumented)
+    byLabel?: boolean | BaseGroupingParams;
+}
+
+// @beta
 export type HierarchyDefinitionParentNode = Omit<ParentHierarchyNode, "key"> & {
     key: InstancesNodeKey | string;
 };
@@ -404,7 +435,7 @@ export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
 // @beta
 export interface HierarchyNode {
     autoExpand?: boolean;
-    children?: boolean;
+    children: boolean;
     extendedData?: {
         [key: string]: any;
     };
@@ -571,9 +602,7 @@ export type INodePreProcessor = <TNode extends ProcessedCustomHierarchyNode | Pr
 // @beta
 export interface InstanceHierarchyNodeProcessingParams extends BaseHierarchyNodeProcessingParams {
     // (undocumented)
-    groupByClass?: boolean;
-    // (undocumented)
-    groupByLabel?: boolean;
+    grouping?: GroupingParams;
     // (undocumented)
     mergeByLabelId?: string;
 }
@@ -630,8 +659,7 @@ export enum NodeSelectClauseColumnNames {
     ECInstanceId = "ECInstanceId",
     ExtendedData = "ExtendedData",
     FullClassName = "FullClassName",
-    GroupByClass = "GroupByClass",
-    GroupByLabel = "GroupByLabel",
+    Grouping = "Grouping",
     HasChildren = "HasChildren",
     HideIfNoChildren = "HideIfNoChildren",
     HideNodeInHierarchy = "HideNodeInHierarchy",
@@ -657,9 +685,7 @@ export interface NodeSelectClauseProps {
         [key: string]: Id64String | string | number | boolean | ECSqlValueSelector;
     };
     // (undocumented)
-    groupByClass?: boolean | ECSqlValueSelector;
-    // (undocumented)
-    groupByLabel?: boolean | ECSqlValueSelector;
+    grouping?: ECSqlSelectClauseGroupingParams;
     // (undocumented)
     hasChildren?: boolean | ECSqlValueSelector;
     // (undocumented)
@@ -734,8 +760,9 @@ export interface PrimitiveValueSelectorProps {
 export type PrimitiveValueType = "Id" | Exclude<ECPrimitiveType, "Binary" | "IGeometry">;
 
 // @beta
-export type ProcessedCustomHierarchyNode = Omit<HierarchyNode, "key"> & {
+export type ProcessedCustomHierarchyNode = Omit<HierarchyNode, "key" | "children"> & {
     key: string;
+    children?: boolean;
     processingParams?: BaseHierarchyNodeProcessingParams;
 };
 
@@ -749,8 +776,9 @@ export type ProcessedGroupingHierarchyNode = Omit<HierarchyNode, "key" | "childr
 export type ProcessedHierarchyNode = ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode | ProcessedGroupingHierarchyNode;
 
 // @beta
-export type ProcessedInstanceHierarchyNode = Omit<HierarchyNode, "key"> & {
+export type ProcessedInstanceHierarchyNode = Omit<HierarchyNode, "key" | "children"> & {
     key: InstancesNodeKey;
+    children?: boolean;
     processingParams?: InstanceHierarchyNodeProcessingParams;
 };
 

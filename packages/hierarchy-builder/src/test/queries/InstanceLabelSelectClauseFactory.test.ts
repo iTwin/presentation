@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import sinon from "sinon";
 import { IMetadataProvider } from "../../hierarchy-builder/Metadata";
 import { createConcatenatedTypedValueSelector, createPropertyValueSelector } from "../../hierarchy-builder/queries/ECSqlUtils";
 import {
@@ -55,6 +56,9 @@ describe("ClassBasedInstanceLabelSelectClauseFactory", () => {
   let stubClass: TStubClassFunc;
   beforeEach(() => {
     stubClass = createGetClassStub(metadataProvider).stubClass;
+  });
+  afterEach(() => {
+    sinon.restore();
   });
 
   it("returns default clause when given an empty list of clauses", async () => {
@@ -218,6 +222,10 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
     });
     stubClass({ schemaName: "BisCore", className: "Element", is: async (other) => other === "BisCore.Element" });
     stubClass({ schemaName: "BisCore", className: "Model", is: async (other) => other === "BisCore.Model" });
+  });
+
+  afterEach(() => {
+    sinon.restore();
   });
 
   it("returns valid clause for geometric elements", async () => {

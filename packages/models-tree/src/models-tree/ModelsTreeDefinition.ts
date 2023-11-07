@@ -8,6 +8,7 @@ import {
   ClassBasedHierarchyLevelDefinitionsFactory,
   ECSchema,
   ECSqlBinding,
+  HierarchyDefinitionParentNode,
   HierarchyLevelDefinition,
   HierarchyNode,
   HierarchyNodeIdentifiersPath,
@@ -95,7 +96,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
     return node;
   }
 
-  public async defineHierarchyLevel(parentNode: HierarchyNode | undefined) {
+  public async defineHierarchyLevel(parentNode: HierarchyDefinitionParentNode | undefined) {
     return this._impl.defineHierarchyLevel(parentNode);
   }
 
@@ -349,7 +350,9 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                     className: "BisCore.GeometricElement3d",
                   }),
                 },
-                groupByClass: true,
+                grouping: {
+                  byClass: true,
+                },
                 hasChildren: {
                   selector: `
                     IFNULL((
@@ -395,7 +398,9 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                     className: "BisCore.GeometricElement3d",
                   }),
                 },
-                groupByClass: true,
+                grouping: {
+                  byClass: true,
+                },
                 hasChildren: {
                   selector: `
                     IFNULL((

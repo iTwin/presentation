@@ -33,6 +33,10 @@ import {
 } from "../Utils";
 
 describe("FilteringHierarchyLevelDefinitionsFactory", () => {
+  afterEach(() => {
+    sinon.restore();
+  });
+
   describe("parseNode", () => {
     it("uses `defaultNodeParser` when source definitions factory doesn't have one", () => {
       const filteringFactory = createFilteringHierarchyLevelsFactory();

@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { InstanceHierarchyNodeProcessingParams } from "../../hierarchy-builder/HierarchyNode";
+import { BaseClassGroupingParams, BaseGroupingParams, InstanceHierarchyNodeProcessingParams } from "../../hierarchy-builder/HierarchyNode";
 import { getClass, hasChildren, mergeNodes } from "../../hierarchy-builder/internal/Common";
 import { createTestProcessedCustomNode, createTestProcessedInstanceNode } from "../Utils";
 
@@ -146,15 +146,31 @@ describe("mergeNodes", () => {
       ).to.be.undefined;
     });
 
-    it("merges hide if no children flag", () => testFlagMerging("hideIfNoChildren"));
+    it("merges hide if no children flag", () => testProcessingParamsFlagMerging("hideIfNoChildren"));
 
-    it("merges hide in hierarchy flag", () => testFlagMerging("hideInHierarchy"));
+    it("merges hide in hierarchy flag", () => testProcessingParamsFlagMerging("hideInHierarchy"));
 
-    it("merges group by class flag", () => testFlagMerging("groupByClass"));
+    function traverseOptionalBooleanMergeExpectations(cb: (lhsValue: boolean | undefined, rhsValue: boolean | undefined, expect: boolean | undefined) => void) {
+      cb(undefined, undefined, undefined);
+      cb(undefined, false, undefined);
+      cb(undefined, true, true);
+      cb(false, undefined, undefined);
+      cb(false, false, undefined);
+      cb(false, true, true);
+      cb(true, undefined, true);
+      cb(true, false, true);
+      cb(true, true, true);
+    }
 
-    it("merges group by label flag", () => testFlagMerging("groupByLabel"));
-
-    function testFlagMerging(flag: keyof InstanceHierarchyNodeProcessingParams) {
+    function testProcessingParamsFlagMerging(flag: keyof InstanceHierarchyNodeProcessingParams) {
+      traverseOptionalBooleanMergeExpectations((lhs, rhs, expectedMergedValue) => {
+        const mergedParams = mergeNodes(
+          createTestProcessedInstanceNode({ processingParams: { [flag]: lhs } }),
+          createTestProcessedInstanceNode({ processingParams: { [flag]: rhs } }),
+        ).processingParams;
+        const actualValue = mergedParams ? mergedParams[flag] : undefined;
+        expect(actualValue).to.eq(expectedMergedValue);
+      });
       expect(
         mergeNodes(
           createTestProcessedInstanceNode({ processingParams: { [flag]: undefined } }),
@@ -162,41 +178,9 @@ describe("mergeNodes", () => {
         ).processingParams,
       ).to.be.undefined;
       expect(
-        mergeNodes(
-          createTestProcessedInstanceNode({ processingParams: { [flag]: undefined } }),
-          createTestProcessedInstanceNode({ processingParams: { [flag]: undefined } }),
-        ).processingParams,
+        mergeNodes(createTestProcessedInstanceNode({ processingParams: { [flag]: false } }), createTestProcessedInstanceNode({ processingParams: undefined }))
+          .processingParams,
       ).to.be.undefined;
-      expect(
-        mergeNodes(
-          createTestProcessedInstanceNode({ processingParams: { [flag]: false } }),
-          createTestProcessedInstanceNode({ processingParams: { [flag]: false } }),
-        ).processingParams,
-      ).to.be.undefined;
-      expect(
-        mergeNodes(
-          createTestProcessedInstanceNode({ processingParams: { [flag]: false } }),
-          createTestProcessedInstanceNode({ processingParams: { [flag]: true } }),
-        ).processingParams![flag],
-      ).to.be.true;
-      expect(
-        mergeNodes(
-          createTestProcessedInstanceNode({ processingParams: { [flag]: true } }),
-          createTestProcessedInstanceNode({ processingParams: { [flag]: true } }),
-        ).processingParams![flag],
-      ).to.be.true;
-      expect(
-        mergeNodes(
-          createTestProcessedInstanceNode({ processingParams: { [flag]: true } }),
-          createTestProcessedInstanceNode({ processingParams: { [flag]: false } }),
-        ).processingParams![flag],
-      ).to.be.true;
-      expect(
-        mergeNodes(
-          createTestProcessedInstanceNode({ processingParams: { [flag]: true } }),
-          createTestProcessedInstanceNode({ processingParams: { [flag]: undefined } }),
-        ).processingParams![flag],
-      ).to.be.true;
       expect(
         mergeNodes(createTestProcessedInstanceNode({ processingParams: { [flag]: true } }), createTestProcessedInstanceNode({ processingParams: undefined }))
           .processingParams![flag],
@@ -252,6 +236,150 @@ describe("mergeNodes", () => {
           createTestProcessedInstanceNode({ processingParams: { mergeByLabelId: "y" } }),
         ).processingParams!.mergeByLabelId,
       ).to.eq("x");
+    });
+
+    describe("merging grouping params", () => {
+      it("returns `undefined` if neither processing params have grouping params", () => {
+        expect(
+          mergeNodes(
+            createTestProcessedInstanceNode({ processingParams: { grouping: undefined } }),
+            createTestProcessedInstanceNode({ processingParams: { grouping: undefined } }),
+          ).processingParams?.grouping,
+        ).to.be.undefined;
+      });
+
+      it("merges class grouping params", () => {
+        traverseOptionalBooleanMergeExpectations((lhs, rhs, expectedMergedValue) => {
+          expect(
+            mergeNodes(
+              createTestProcessedInstanceNode({ processingParams: { grouping: { byClass: lhs } } }),
+              createTestProcessedInstanceNode({ processingParams: { grouping: { byClass: rhs } } }),
+            ).processingParams?.grouping?.byClass,
+          ).to.eq(expectedMergedValue);
+        });
+        expect(
+          mergeNodes(
+            createTestProcessedInstanceNode({ processingParams: { grouping: { byClass: {} } } }),
+            createTestProcessedInstanceNode({ processingParams: { grouping: { byClass: false } } }),
+          ).processingParams?.grouping?.byClass,
+        ).to.eq(true);
+        expect(
+          mergeNodes(
+            createTestProcessedInstanceNode({ processingParams: { grouping: { byClass: {} } } }),
+            createTestProcessedInstanceNode({ processingParams: { grouping: { byClass: {} } } }),
+          ).processingParams?.grouping?.byClass,
+        ).to.deep.eq({});
+        traverseOptionalBooleanMergeExpectations((lhs, rhs, expectedMergedValue) => {
+          expect(
+            (
+              mergeNodes(
+                createTestProcessedInstanceNode({ processingParams: { grouping: { byClass: { hideIfNoSiblings: lhs } } } }),
+                createTestProcessedInstanceNode({ processingParams: { grouping: { byClass: { hideIfNoSiblings: rhs } } } }),
+              ).processingParams?.grouping?.byClass as BaseGroupingParams
+            ).hideIfNoSiblings,
+          ).to.eq(expectedMergedValue);
+        });
+        traverseOptionalBooleanMergeExpectations((lhs, rhs, expectedMergedValue) => {
+          expect(
+            (
+              mergeNodes(
+                createTestProcessedInstanceNode({ processingParams: { grouping: { byClass: { hideIfOneGroupedNode: lhs } } } }),
+                createTestProcessedInstanceNode({ processingParams: { grouping: { byClass: { hideIfOneGroupedNode: rhs } } } }),
+              ).processingParams?.grouping?.byClass as BaseGroupingParams
+            ).hideIfOneGroupedNode,
+          ).to.eq(expectedMergedValue);
+        });
+      });
+
+      it("merges label grouping params", () => {
+        traverseOptionalBooleanMergeExpectations((lhs, rhs, expectedMergedValue) => {
+          expect(
+            mergeNodes(
+              createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: lhs } } }),
+              createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: rhs } } }),
+            ).processingParams?.grouping?.byLabel,
+          ).to.eq(expectedMergedValue);
+        });
+        expect(
+          mergeNodes(
+            createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: {} } } }),
+            createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: false } } }),
+          ).processingParams?.grouping?.byLabel,
+        ).to.eq(true);
+        expect(
+          mergeNodes(
+            createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: {} } } }),
+            createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: {} } } }),
+          ).processingParams?.grouping?.byLabel,
+        ).to.deep.eq({});
+        traverseOptionalBooleanMergeExpectations((lhs, rhs, expectedMergedValue) => {
+          expect(
+            (
+              mergeNodes(
+                createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { hideIfNoSiblings: lhs } } } }),
+                createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { hideIfNoSiblings: rhs } } } }),
+              ).processingParams?.grouping?.byLabel as BaseGroupingParams
+            ).hideIfNoSiblings,
+          ).to.eq(expectedMergedValue);
+        });
+        traverseOptionalBooleanMergeExpectations((lhs, rhs, expectedMergedValue) => {
+          expect(
+            (
+              mergeNodes(
+                createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { hideIfOneGroupedNode: lhs } } } }),
+                createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { hideIfOneGroupedNode: rhs } } } }),
+              ).processingParams?.grouping?.byLabel as BaseGroupingParams
+            ).hideIfOneGroupedNode,
+          ).to.eq(expectedMergedValue);
+        });
+      });
+
+      it("merges base class grouping params", () => {
+        expect(
+          mergeNodes(
+            createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: [] } } } }),
+            createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: [] } } } }),
+          ).processingParams?.grouping?.byBaseClasses,
+        ).to.deep.eq({ fullClassNames: [] });
+        expect(
+          mergeNodes(
+            createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: ["a"] } } } }),
+            createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: undefined } } }),
+          ).processingParams?.grouping?.byBaseClasses,
+        ).to.deep.eq({ fullClassNames: ["a"] });
+        expect(
+          mergeNodes(
+            createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: undefined } } }),
+            createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: ["a"] } } } }),
+          ).processingParams?.grouping?.byBaseClasses,
+        ).to.deep.eq({ fullClassNames: ["a"] });
+        expect(
+          mergeNodes(
+            createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: ["a", "b"] } } } }),
+            createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: ["b", "c"] } } } }),
+          ).processingParams?.grouping?.byBaseClasses,
+        ).to.deep.eq({ fullClassNames: ["a", "b", "c"] });
+        traverseOptionalBooleanMergeExpectations((lhs, rhs, expectedMergedValue) => {
+          expect(
+            (
+              mergeNodes(
+                createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: [], hideIfNoSiblings: lhs } } } }),
+                createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: [], hideIfNoSiblings: rhs } } } }),
+              ).processingParams?.grouping?.byBaseClasses as BaseClassGroupingParams
+            ).hideIfNoSiblings,
+          ).to.eq(expectedMergedValue);
+        });
+        traverseOptionalBooleanMergeExpectations((lhs, rhs, expectedMergedValue) => {
+          expect(
+            (
+              mergeNodes(
+                createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: [], hideIfOneGroupedNode: lhs } } } }),
+                createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: [], hideIfOneGroupedNode: rhs } } } }),
+              ).processingParams?.grouping?.byBaseClasses as BaseClassGroupingParams
+            ).hideIfOneGroupedNode,
+          ).to.eq(expectedMergedValue);
+        });
+      });
     });
   });
 

@@ -5,8 +5,9 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
+import { omit } from "@itwin/core-bentley";
 import { IHierarchyLevelDefinitionsFactory } from "../hierarchy-builder/HierarchyDefinition";
-import { HierarchyNode, ParsedCustomHierarchyNode } from "../hierarchy-builder/HierarchyNode";
+import { GroupingParams, HierarchyNode, ParsedCustomHierarchyNode } from "../hierarchy-builder/HierarchyNode";
 import { HierarchyProvider } from "../hierarchy-builder/HierarchyProvider";
 import { ECSQL_COLUMN_NAME_FilteredChildrenPaths, FilteredHierarchyNode } from "../hierarchy-builder/internal/FilteringHierarchyLevelDefinitionsFactory";
 import { RowsLimitExceededError } from "../hierarchy-builder/internal/TreeNodesReader";
@@ -26,6 +27,10 @@ describe("HierarchyProvider", () => {
 
   beforeEach(() => {
     queryExecutor.createQueryReader.reset();
+  });
+
+  afterEach(() => {
+    sinon.restore();
   });
 
   it("loads root custom nodes", async () => {
@@ -270,6 +275,67 @@ describe("HierarchyProvider", () => {
     });
   });
 
+  describe("Grouping", () => {
+    it("returns grouping node children", async () => {
+      queryExecutor.createQueryReader.returns(
+        createFakeQueryReader([
+          {
+            [NodeSelectClauseColumnNames.FullClassName]: "a.b",
+            [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
+            [NodeSelectClauseColumnNames.DisplayLabel]: "test label",
+            [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({
+              byLabel: true,
+            } as GroupingParams),
+          },
+        ]),
+      );
+      const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel(parentNode) {
+          if (!parentNode) {
+            return [
+              {
+                fullClassName: "a.b",
+                query: { ecsql: "QUERY" },
+              },
+            ];
+          }
+          return [];
+        },
+      };
+      const provider = new HierarchyProvider({
+        metadataProvider,
+        queryExecutor,
+        hierarchyDefinition,
+      });
+
+      const rootNodes = await provider.getNodes(undefined);
+      expect(rootNodes).to.deep.eq([
+        {
+          key: {
+            type: "label-grouping",
+            label: "test label",
+          },
+          parentKeys: [],
+          label: "test label",
+          children: true,
+        } as HierarchyNode,
+      ]);
+
+      const childNodes = await provider.getNodes(rootNodes[0]);
+      expect(childNodes).to.deep.eq([
+        {
+          key: {
+            type: "instances",
+            instanceKeys: [{ className: "a.b", id: "0x123" }],
+          },
+          parentKeys: [rootNodes[0].key],
+          label: "test label",
+          children: false,
+        } as HierarchyNode,
+      ]);
+    });
+  });
+
   describe("Hiding hierarchy levels", () => {
     it("hides root hierarchy level", async () => {
       const rootNode = { key: "root", label: "root", processingParams: { hideInHierarchy: true } };
@@ -376,7 +442,7 @@ describe("HierarchyProvider", () => {
       const rootNodes = await provider.getNodes(undefined);
       expect(rootNodes).to.deep.eq([{ ...rootNode, parentKeys: [], children: true }]);
       const childNodes = await provider.getNodes(rootNodes[0]);
-      expect(childNodes).to.deep.eq([{ ...hiddenChildNode, parentKeys: [rootNode.key], children: true }]);
+      expect(childNodes).to.deep.eq([omit({ ...hiddenChildNode, parentKeys: [rootNode.key], children: true }, ["processingParams"])]);
       const grandChildNodes = await provider.getNodes(childNodes[0]);
       expect(grandChildNodes).to.deep.eq([{ ...grandChildNode, parentKeys: [rootNode.key, hiddenChildNode.key], children: false }]);
     });

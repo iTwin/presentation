@@ -60,8 +60,7 @@ export interface RowDef {
   [NodeSelectClauseColumnNames.HasChildren]?: boolean;
   [NodeSelectClauseColumnNames.HideIfNoChildren]?: boolean;
   [NodeSelectClauseColumnNames.HideNodeInHierarchy]?: boolean;
-  [NodeSelectClauseColumnNames.GroupByClass]?: boolean;
-  [NodeSelectClauseColumnNames.GroupByLabel]?: boolean;
+  [NodeSelectClauseColumnNames.Grouping]?: string;
   [NodeSelectClauseColumnNames.MergeByLabelId]?: string;
   [NodeSelectClauseColumnNames.ExtendedData]?: string;
   [NodeSelectClauseColumnNames.AutoExpand]?: boolean;
@@ -74,8 +73,7 @@ export function defaultNodesParser(row: { [columnName: string]: any }): ParsedIn
   const processingParams: InstanceHierarchyNodeProcessingParams = {
     ...(typedRow.HideIfNoChildren ? { hideIfNoChildren: true } : undefined),
     ...(typedRow.HideNodeInHierarchy ? { hideInHierarchy: true } : undefined),
-    ...(typedRow.GroupByClass ? { groupByClass: true } : undefined),
-    ...(typedRow.GroupByLabel ? { groupByLabel: true } : undefined),
+    ...(typedRow.Grouping ? { grouping: JSON.parse(typedRow.Grouping) } : undefined),
     ...(typedRow.MergeByLabelId ? { mergeByLabelId: typedRow.MergeByLabelId } : undefined),
   };
   return {

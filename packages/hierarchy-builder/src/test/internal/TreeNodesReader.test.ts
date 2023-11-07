@@ -59,8 +59,15 @@ describe("defaultNodesParser", () => {
       [NodeSelectClauseColumnNames.HasChildren]: true,
       [NodeSelectClauseColumnNames.HideIfNoChildren]: true,
       [NodeSelectClauseColumnNames.HideNodeInHierarchy]: true,
-      [NodeSelectClauseColumnNames.GroupByClass]: true,
-      [NodeSelectClauseColumnNames.GroupByLabel]: true,
+      [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({
+        byBaseClasses: {
+          fullClassNames: [],
+          hideIfNoSiblings: true,
+          hideIfOneGroupedNode: true,
+        },
+        byClass: true,
+        byLabel: true,
+      }),
       [NodeSelectClauseColumnNames.MergeByLabelId]: "merge id",
       [NodeSelectClauseColumnNames.ExtendedData]: JSON.stringify({
         test: 123,
@@ -82,9 +89,16 @@ describe("defaultNodesParser", () => {
       processingParams: {
         hideIfNoChildren: true,
         hideInHierarchy: true,
-        groupByClass: true,
-        groupByLabel: true,
         mergeByLabelId: "merge id",
+        grouping: {
+          byBaseClasses: {
+            fullClassNames: [],
+            hideIfNoSiblings: true,
+            hideIfOneGroupedNode: true,
+          },
+          byClass: true,
+          byLabel: true,
+        },
       },
     } as ParsedHierarchyNode);
   });
