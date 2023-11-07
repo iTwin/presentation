@@ -8,13 +8,16 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Subscription } from "rxjs/internal/Subscription";
-import { MutableTreeModel, PagedTreeNodeLoader, RenderedItemsRange, TreeModel, TreeModelSource, usePagedTreeNodeLoader } from "@itwin/components-react";
+import {
+  AbstractTreeNodeLoaderWithProvider, MutableTreeModel, PagedTreeNodeLoader, RenderedItemsRange, TreeModel, TreeModelSource, usePagedTreeNodeLoader,
+} from "@itwin/components-react";
 import { IModelApp } from "@itwin/core-frontend";
 import { IModelHierarchyChangeEventArgs, Presentation } from "@itwin/presentation-frontend";
 import { RulesetRegistrationHelper } from "../../common/RulesetRegistrationHelper";
 import { PresentationTreeDataProvider, PresentationTreeDataProviderProps } from "../DataProvider";
 import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
 import { reloadTree } from "./TreeReloader";
+import { useFilteredNodeLoader, useNodeHighlightingProps } from "./UseControlledTreeFiltering";
 
 /**
  * Properties for [[usePresentationTreeNodeLoader]] hook.
@@ -115,6 +118,38 @@ export function usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderP
 
   firstRenderRef.current = false;
   return { nodeLoader, onItemsRendered };
+}
+
+/**
+ * Parameters for [[useControlledPresentationTreeFiltering]] hook
+ * @public
+ */
+export interface ControlledPresentationTreeFilteringProps {
+  nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
+  filter?: string;
+  activeMatchIndex?: number;
+}
+
+/**
+ * A custom hook that creates filtered model source and node loader for supplied filter.
+ * If filter string is not provided or filtering is still in progress it returns supplied
+ * model source and node loader.
+ *
+ * @public
+ */
+export function useControlledPresentationTreeFiltering(props: ControlledPresentationTreeFilteringProps) {
+  const { filteredNodeLoader, filteredProvider, isFiltering, matchesCount } = useFilteredNodeLoader({
+    dataProvider: props.nodeLoader.dataProvider,
+    filter: props.filter,
+  });
+  const nodeHighlightingProps = useNodeHighlightingProps(props.filter, filteredProvider, props.activeMatchIndex);
+  return {
+    nodeHighlightingProps,
+    filteredNodeLoader: filteredNodeLoader || props.nodeLoader,
+    filteredModelSource: filteredNodeLoader?.modelSource || props.nodeLoader.modelSource,
+    isFiltering,
+    matchesCount,
+  };
 }
 
 interface TreeNodeLoaderState {

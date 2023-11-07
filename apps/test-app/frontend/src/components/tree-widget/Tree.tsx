@@ -4,15 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import "./TreeWidget.css";
-import { useEffect } from "react";
-import { ControlledTree, SelectionMode, useTreeModel } from "@itwin/components-react";
+import { useCallback, useEffect } from "react";
+import { ControlledTree, ControlledTreeProps, SelectionMode, TreeModelSource, useTreeModel } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
-  DiagnosticsProps,
-  PresentationTreeRenderer,
-  useControlledPresentationTreeFiltering,
-  usePresentationTreeNodeLoader,
-  useUnifiedSelectionTreeEventHandler,
+  DiagnosticsProps, PresentationTreeRenderer, TreeEventHandlerProps, UnifiedSelectionTreeEventHandler, usePresentationTree,
 } from "@itwin/presentation-components";
 
 const PAGING_SIZE = 10;
@@ -31,38 +27,50 @@ interface Props {
 }
 
 export function Tree(props: Props) {
-  const { nodeLoader } = usePresentationTreeNodeLoader({
+  const { filter, onFilteringStateChange, activeMatchIndex } = props.filtering;
+  const state = usePresentationTree({
     imodel: props.imodel,
     ruleset: props.rulesetId,
     pagingSize: PAGING_SIZE,
+    eventHandlerFactory: useCallback(
+      (handlerProps: TreeEventHandlerProps) =>
+        new UnifiedSelectionTreeEventHandler({ nodeLoader: handlerProps.nodeLoader, collapsedChildrenDisposalEnabled: false, name: "TestAppTree" }),
+      [],
+    ),
+    filteringParams: {
+      filter,
+      activeMatchIndex,
+    },
     ...props.diagnostics,
   });
 
-  const { filteredModelSource, filteredNodeLoader, isFiltering, matchesCount, nodeHighlightingProps } = useControlledPresentationTreeFiltering({
-    nodeLoader,
-    filter: props.filtering.filter,
-    activeMatchIndex: props.filtering.activeMatchIndex,
-  });
-
-  const { onFilteringStateChange } = props.filtering;
+  const isFiltering = state?.filteringResult?.isFiltering ?? false;
+  const matchesCount = state?.filteringResult?.matchesCount;
   useEffect(() => {
     onFilteringStateChange(isFiltering, matchesCount);
   }, [isFiltering, matchesCount, onFilteringStateChange]);
 
-  const eventHandler = useUnifiedSelectionTreeEventHandler({ nodeLoader: filteredNodeLoader, collapsedChildrenDisposalEnabled: true, name: "TreeWithHooks" });
-  const treeModel = useTreeModel(filteredModelSource);
+  if (!state) {
+    return null;
+  }
 
   return (
-    <ControlledTree
-      model={treeModel}
-      eventsHandler={eventHandler}
-      nodeLoader={filteredNodeLoader}
+    <LoadedTree
+      modelSource={state.nodeLoader.modelSource}
+      eventsHandler={state.eventHandler}
+      nodeLoader={state.nodeLoader}
       selectionMode={SelectionMode.Extended}
-      nodeHighlightingProps={nodeHighlightingProps}
       iconsEnabled={true}
       width={props.width}
       height={props.height}
-      treeRenderer={(treeProps) => <PresentationTreeRenderer {...treeProps} imodel={props.imodel} modelSource={filteredModelSource} />}
+      treeRenderer={(treeProps) => <PresentationTreeRenderer {...treeProps} imodel={props.imodel} modelSource={state.nodeLoader.modelSource} nodeLoader={state.nodeLoader} onItemsRendered={state.onItemsRendered} />}
+      nodeHighlightingProps={state.filteringResult?.highlightProps}
     />
   );
+}
+
+function LoadedTree({ modelSource, ...props }: Omit<ControlledTreeProps, "model"> & { modelSource: TreeModelSource }) {
+  const treeModel = useTreeModel(modelSource);
+
+  return <ControlledTree {...props} model={treeModel} selectionMode={SelectionMode.Extended} iconsEnabled={true} />;
 }

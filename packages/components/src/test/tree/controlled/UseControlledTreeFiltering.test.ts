@@ -6,24 +6,23 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import * as moq from "typemoq";
-import { AbstractTreeNodeLoaderWithProvider, TreeModelNode, TreeModelSource, TreeNodeItem, UiComponents } from "@itwin/components-react";
+import { TreeModelNode, TreeNodeItem, UiComponents } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { NodePathElement } from "@itwin/presentation-common";
 import { waitFor } from "@testing-library/react";
-import { renderHook } from "@testing-library/react-hooks";
+import { act, renderHook } from "@testing-library/react-hooks";
 import {
-  ControlledPresentationTreeFilteringProps,
-  useControlledPresentationTreeFiltering,
+  useFilteredNodeLoader, UseFilteredNodeLoaderProps, useNodeHighlightingProps,
 } from "../../../presentation-components/tree/controlled/UseControlledTreeFiltering";
-import { FilteredPresentationTreeDataProvider } from "../../../presentation-components/tree/FilteredDataProvider";
+import {
+  FilteredPresentationTreeDataProvider, IFilteredPresentationTreeDataProvider,
+} from "../../../presentation-components/tree/FilteredDataProvider";
 import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";
 import { ResolvablePromise } from "../../_helpers/Promises";
 import { createTestPropertyRecord, createTestTreeNodeItem } from "../../_helpers/UiComponents";
 
-describe("useControlledPresentationTreeFiltering", () => {
-  const nodeLoaderMock = moq.Mock.ofType<AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>>();
-  const modelSourceMock = moq.Mock.ofType<TreeModelSource>();
+describe("useFilteredNodeLoader", () => {
   const dataProviderMock = moq.Mock.ofType<IPresentationTreeDataProvider>();
   const imodelMock = moq.Mock.ofType<IModelConnection>();
 
@@ -38,17 +37,13 @@ describe("useControlledPresentationTreeFiltering", () => {
   beforeEach(() => {
     imodelMock.reset();
 
-    nodeLoaderMock.reset();
-    nodeLoaderMock.setup((x) => x.dataProvider).returns(() => dataProviderMock.object);
-    nodeLoaderMock.setup((x) => x.modelSource).returns(() => modelSourceMock.object);
-
     dataProviderMock.reset();
     dataProviderMock.setup((x) => x.imodel).returns(() => imodelMock.object);
     dataProviderMock.setup((x) => x.rulesetId).returns(() => "rulesetId");
   });
 
   it("does not start filtering if filter is not provided", () => {
-    const { result } = renderHook(useControlledPresentationTreeFiltering, { initialProps: { nodeLoader: nodeLoaderMock.object } });
+    const { result } = renderHook(useFilteredNodeLoader, { initialProps: { dataProvider: dataProviderMock.object } });
     expect(result.current.isFiltering).to.be.false;
   });
 
@@ -56,8 +51,8 @@ describe("useControlledPresentationTreeFiltering", () => {
     const pathsResult1 = new ResolvablePromise<NodePathElement[]>();
     dataProviderMock.setup(async (x) => x.getFilteredNodePaths("test")).returns(async () => pathsResult1);
 
-    const { result } = renderHook(useControlledPresentationTreeFiltering, {
-      initialProps: { nodeLoader: nodeLoaderMock.object, filter: "test", activeMatchIndex: 0 },
+    const { result } = renderHook(useFilteredNodeLoader, {
+      initialProps: { dataProvider: dataProviderMock.object, filter: "test", activeMatchIndex: 0 },
     });
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.true;
@@ -65,7 +60,6 @@ describe("useControlledPresentationTreeFiltering", () => {
     await pathsResult1.resolve([]);
 
     await waitFor(() => expect(result.current.isFiltering).to.be.false);
-    expect(result.current.filteredNodeLoader).to.not.eq(nodeLoaderMock.object);
   });
 
   it("does not start new filtering request while previous is still in progress", async () => {
@@ -75,14 +69,16 @@ describe("useControlledPresentationTreeFiltering", () => {
     dataProviderMock.setup(async (x) => x.getFilteredNodePaths("test")).returns(async () => pathsResult1);
     dataProviderMock.setup(async (x) => x.getFilteredNodePaths("last")).returns(async () => pathsResult2);
 
-    const initialProps: ControlledPresentationTreeFilteringProps = {
-      nodeLoader: nodeLoaderMock.object,
+    const initialProps: UseFilteredNodeLoaderProps = {
+      dataProvider: dataProviderMock.object,
       filter: "test",
     };
-    const { result, rerender } = renderHook(useControlledPresentationTreeFiltering, { initialProps });
+    const { result, rerender } = renderHook(useFilteredNodeLoader, { initialProps });
 
     // give time to start request
-    await clock.tickAsync(1);
+    await act(async () => {
+      await clock.tickAsync(1);
+    });
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.once());
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.true;
@@ -91,7 +87,9 @@ describe("useControlledPresentationTreeFiltering", () => {
     rerender({ ...initialProps, filter: "changed" });
 
     // give time to start request if necessary
-    await clock.tickAsync(1);
+    await act(async () => {
+      await clock.tickAsync(1);
+    });
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.once());
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.true;
@@ -100,7 +98,9 @@ describe("useControlledPresentationTreeFiltering", () => {
     rerender({ ...initialProps, filter: "last" });
 
     // give time to start request if necessary
-    await clock.tickAsync(1);
+    await act(async () => {
+      await clock.tickAsync(1);
+    });
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.once());
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.true;
@@ -120,7 +120,7 @@ describe("useControlledPresentationTreeFiltering", () => {
 
     await waitFor(() => expect(result.current.isFiltering).to.be.false);
     expect(result.current.filteredNodeLoader).to.not.be.undefined;
-    const filteredProvider = result.current.filteredNodeLoader.dataProvider;
+    const filteredProvider = result.current.filteredProvider;
     expect(filteredProvider).to.be.instanceOf(FilteredPresentationTreeDataProvider);
     expect((filteredProvider as FilteredPresentationTreeDataProvider).filter).to.be.eq("last");
   });
@@ -130,14 +130,16 @@ describe("useControlledPresentationTreeFiltering", () => {
     const pathsResult = new ResolvablePromise<NodePathElement[]>();
     dataProviderMock.setup(async (x) => x.getFilteredNodePaths("test")).returns(async () => pathsResult);
 
-    const initialProps: ControlledPresentationTreeFilteringProps = {
-      nodeLoader: nodeLoaderMock.object,
+    const initialProps: UseFilteredNodeLoaderProps = {
+      dataProvider: dataProviderMock.object,
       filter: "test",
     };
-    const { result, rerender } = renderHook(useControlledPresentationTreeFiltering, { initialProps });
+    const { result, rerender } = renderHook(useFilteredNodeLoader, { initialProps });
 
     // give time to start request if necessary
-    await clock.tickAsync(1);
+    await act(async () => {
+      await clock.tickAsync(1);
+    });
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.once());
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.true;
@@ -146,7 +148,9 @@ describe("useControlledPresentationTreeFiltering", () => {
     rerender({ ...initialProps, filter: "" });
 
     // give time to start request if necessary
-    await clock.tickAsync(1);
+    await act(async () => {
+      await clock.tickAsync(1);
+    });
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.once());
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.false;
@@ -157,7 +161,7 @@ describe("useControlledPresentationTreeFiltering", () => {
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.exactly(1));
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.false;
-    expect(result.current.filteredNodeLoader).to.be.deep.eq(nodeLoaderMock.object);
+    expect(result.current.filteredNodeLoader).to.be.undefined;
     expect(result.current.matchesCount).to.be.undefined;
   });
 
@@ -166,11 +170,11 @@ describe("useControlledPresentationTreeFiltering", () => {
     const filter = "test";
     dataProviderMock.setup(async (x) => x.getFilteredNodePaths(filter)).returns(async () => pathsResult);
 
-    const initialProps: ControlledPresentationTreeFilteringProps = {
-      nodeLoader: nodeLoaderMock.object,
+    const initialProps: UseFilteredNodeLoaderProps = {
+      dataProvider: dataProviderMock.object,
       filter,
     };
-    const { result, rerender } = renderHook(useControlledPresentationTreeFiltering, { initialProps });
+    const { result, rerender } = renderHook(useFilteredNodeLoader, { initialProps });
 
     await pathsResult.resolve([]);
     await waitFor(() => expect(result.current.isFiltering).to.be.false);
@@ -178,44 +182,15 @@ describe("useControlledPresentationTreeFiltering", () => {
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths(filter), moq.Times.once());
 
     const newProvider = moq.Mock.ofType<IPresentationTreeDataProvider>();
-    const newNodeLoader = moq.Mock.ofType<AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>>();
-    newNodeLoader.setup((x) => x.dataProvider).returns(() => newProvider.object);
     const newPathsResult = new ResolvablePromise<NodePathElement[]>();
     newProvider.setup(async (x) => x.getFilteredNodePaths(moq.It.isAnyString())).returns(async () => newPathsResult);
 
-    rerender({ ...initialProps, nodeLoader: newNodeLoader.object });
+    rerender({ ...initialProps, dataProvider: newProvider.object });
 
     await newPathsResult.resolve([]);
     await waitFor(() => expect(result.current.isFiltering).to.be.false);
     expect(result.current.filteredNodeLoader).to.not.be.undefined;
     newProvider.verify(async (x) => x.getFilteredNodePaths(filter), moq.Times.once());
-  });
-
-  it("filters node loader with FilteredPresentationTreeDataProvider", async () => {
-    const pathsResult = new ResolvablePromise<NodePathElement[]>();
-    dataProviderMock.setup(async (x) => x.getFilteredNodePaths(moq.It.isAny())).returns(async () => pathsResult);
-
-    const initialProps: ControlledPresentationTreeFilteringProps = {
-      nodeLoader: nodeLoaderMock.object,
-      filter: "test",
-    };
-    const { result, rerender } = renderHook(useControlledPresentationTreeFiltering, { initialProps });
-
-    await pathsResult.resolve([]);
-    await waitFor(() => expect(result.current.isFiltering).to.be.false);
-
-    const filteredNodeLoader = result.current.filteredNodeLoader;
-    expect(filteredNodeLoader.dataProvider).to.be.instanceOf(FilteredPresentationTreeDataProvider);
-    rerender({ ...initialProps, filter: "changed", nodeLoader: filteredNodeLoader });
-
-    await pathsResult.resolve([]);
-    await waitFor(() => expect(result.current.isFiltering).to.be.false);
-    expect(result.current.filteredNodeLoader).to.not.eq(filteredNodeLoader);
-
-    // make sure that FilteredPresentationTreeDataProvider was not wrapped into another FilteredPresentationTreeDataProvider
-    const provider = result.current.filteredNodeLoader.dataProvider;
-    expect(provider).to.be.instanceOf(FilteredPresentationTreeDataProvider);
-    expect((provider as FilteredPresentationTreeDataProvider).parentDataProvider).to.not.be.instanceOf(FilteredPresentationTreeDataProvider);
   });
 
   it("returns `filteredNodeLoader` with model whose root node's `numRootNodes` is undefined and `loadNode` method returns result with an empty `loadedNodes` array when filtering", async () => {
@@ -235,21 +210,31 @@ describe("useControlledPresentationTreeFiltering", () => {
       numChildren: 3,
       parentId: "parentId",
     };
-    const initialProps: ControlledPresentationTreeFilteringProps = {
-      nodeLoader: nodeLoaderMock.object,
+    const initialProps: UseFilteredNodeLoaderProps = {
+      dataProvider: dataProviderMock.object,
       filter: "test",
     };
-    const { result } = renderHook(useControlledPresentationTreeFiltering, { initialProps });
 
-    const nodeLoader = result.current.filteredNodeLoader;
-    expect(result.current.isFiltering).to.be.true;
-    expect(nodeLoader.modelSource.getModel().getRootNode().numChildren).to.be.undefined;
+    dataProviderMock.setup(async (x) => x.getFilteredNodePaths("test")).returns(async () => []);
+    const { result } = renderHook(useFilteredNodeLoader, { initialProps });
+
+    const nodeLoader = await waitFor(() => {
+      expect(result.current.isFiltering).to.be.true;
+      expect(result.current.filteredNodeLoader).to.not.be.undefined;
+      expect(result.current.filteredNodeLoader!.modelSource.getModel().getRootNode().numChildren).to.be.undefined;
+      return result.current.filteredNodeLoader!;
+    });
 
     let loadedNodes: TreeNodeItem[] | undefined;
-    nodeLoader.loadNode(testModelNode, 0).subscribe((res) => {
-      loadedNodes = res.loadedNodes;
+    nodeLoader.loadNode(testModelNode, 0).subscribe({
+      next: (res) => {
+        loadedNodes = res.loadedNodes;
+      },
     });
-    await waitFor(() => expect(loadedNodes).to.have.lengthOf(0));
+    await waitFor(() => {
+      expect(loadedNodes).to.not.be.undefined;
+      expect(loadedNodes).to.have.lengthOf(0);
+    });
   });
 
   it("resets filtered node loader when filter changes", async () => {
@@ -258,30 +243,89 @@ describe("useControlledPresentationTreeFiltering", () => {
     const changedPathsResult = new ResolvablePromise<NodePathElement[]>();
     dataProviderMock.setup(async (x) => x.getFilteredNodePaths("changed")).returns(async () => changedPathsResult);
 
-    const initialProps: ControlledPresentationTreeFilteringProps = {
-      nodeLoader: nodeLoaderMock.object,
+    const initialProps: UseFilteredNodeLoaderProps = {
+      dataProvider: dataProviderMock.object,
       filter: "test",
     };
-    const { result, rerender } = renderHook(useControlledPresentationTreeFiltering, { initialProps });
+    const { result, rerender } = renderHook(useFilteredNodeLoader, { initialProps });
 
     await initialPathsResult.resolve([]);
     await waitFor(() => expect(result.current.isFiltering).to.be.false);
 
-    expect(result.current.filteredNodeLoader.dataProvider).to.be.instanceOf(FilteredPresentationTreeDataProvider);
+    expect(result.current.filteredProvider).to.be.instanceOf(FilteredPresentationTreeDataProvider);
 
     rerender({ ...initialProps, filter: "changed" });
-    expect(result.current.filteredNodeLoader.dataProvider).to.be.instanceOf(FilteredPresentationTreeDataProvider);
+    expect(result.current.filteredProvider).to.be.instanceOf(FilteredPresentationTreeDataProvider);
 
     // wait until filtered node loader is reset
     await waitFor(() => {
-      expect(result.current.filteredNodeLoader.dataProvider).to.not.be.instanceOf(FilteredPresentationTreeDataProvider);
-      expect(result.current.filteredModelSource.getModel().getRootNode().numChildren).to.be.undefined;
       expect(result.current.isFiltering).to.be.true;
+      expect(result.current.filteredNodeLoader!).to.not.be.undefined;
+      expect(result.current.filteredNodeLoader!.modelSource.getModel().getRootNode().numChildren).to.be.undefined;
     });
 
     await changedPathsResult.resolve([]);
     await waitFor(() => expect(result.current.isFiltering).to.be.false);
 
-    expect(result.current.filteredNodeLoader.dataProvider).to.be.instanceOf(FilteredPresentationTreeDataProvider);
+    expect(result.current.filteredProvider).to.be.instanceOf(FilteredPresentationTreeDataProvider);
+  });
+});
+
+describe("useNodeHighlightingProps", () => {
+  interface Props {
+    filter?: string;
+    dataProvider?: IFilteredPresentationTreeDataProvider;
+    activeMatchIndex?: number;
+  }
+  const getActiveMatchStub = sinon.stub<
+    Parameters<IFilteredPresentationTreeDataProvider["getActiveMatch"]>,
+    ReturnType<IFilteredPresentationTreeDataProvider["getActiveMatch"]>
+  >();
+  const provider = {
+    getActiveMatch: getActiveMatchStub,
+  } as unknown as IFilteredPresentationTreeDataProvider;
+
+  beforeEach(() => {
+    getActiveMatchStub.reset();
+  });
+
+  it("returns `undefined` if data provider is not supplied", () => {
+    const { result } = renderHook((props: Props) => useNodeHighlightingProps(props.filter, props.dataProvider, props.activeMatchIndex), {
+      initialProps: { filter: "test", activeMatchIndex: 1 },
+    });
+    expect(result.current).to.be.undefined;
+  });
+
+  it("returns `undefined` if filter is not supplied", () => {
+    const { result } = renderHook((props: Props) => useNodeHighlightingProps(props.filter, props.dataProvider, props.activeMatchIndex), {
+      initialProps: { dataProvider: provider, activeMatchIndex: 1 },
+    });
+    expect(result.current).to.be.undefined;
+  });
+
+  it("returns highlighting props with active match `undefined` if active match index is not supplied", () => {
+    const { result } = renderHook((props: Props) => useNodeHighlightingProps(props.filter, props.dataProvider, props.activeMatchIndex), {
+      initialProps: { filter: "test", dataProvider: provider },
+    });
+    expect(result.current).to.not.be.undefined;
+    expect(result.current!.activeMatch).to.be.undefined;
+    expect(result.current!.searchText).to.be.eq("test");
+  });
+
+  it("returns highlighting props", () => {
+    getActiveMatchStub.returns({
+      matchIndex: 2,
+      nodeId: "test-node",
+    });
+
+    const { result } = renderHook((props: Props) => useNodeHighlightingProps(props.filter, props.dataProvider, props.activeMatchIndex), {
+      initialProps: { filter: "test", dataProvider: provider, activeMatchIndex: 1 },
+    });
+    expect(result.current).to.not.be.undefined;
+    expect(result.current!.activeMatch).to.be.deep.eq({
+      matchIndex: 2,
+      nodeId: "test-node",
+    });
+    expect(result.current!.searchText).to.be.eq("test");
   });
 });
