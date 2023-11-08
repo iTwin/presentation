@@ -14,7 +14,6 @@ describe("AutoExpand", () => {
     {
       testName: "Base class grouping",
       testParams: {
-        label: "Test label",
         groupingNodeKey: {
           type: "class-grouping",
           class: {
@@ -31,7 +30,6 @@ describe("AutoExpand", () => {
     {
       testName: "Class grouping",
       testParams: {
-        label: "Test label",
         groupingNodeKey: {
           type: "class-grouping",
           class: {
@@ -48,7 +46,6 @@ describe("AutoExpand", () => {
     {
       testName: "Label grouping",
       testParams: {
-        label: "Test label",
         groupingNodeKey: {
           type: "label-grouping",
           label: "1",
@@ -64,7 +61,7 @@ describe("AutoExpand", () => {
       it("sets autoExpand to true when grouping node has one node child and it has autoExpand set to 'single-child'", async () => {
         const nodes: ProcessedInstancesGroupingHierarchyNode[] = [
           createTestProcessedGroupingNode({
-            label: testParams.label,
+            label: "Test label",
             key: testParams.groupingNodeKey as GroupingNodeKey,
             children: [
               createTestProcessedInstanceNode({
@@ -85,7 +82,7 @@ describe("AutoExpand", () => {
       it("sets autoExpand to true when some child nodes have autoExpand set to 'always'", async () => {
         const nodes: ProcessedInstancesGroupingHierarchyNode[] = [
           createTestProcessedGroupingNode({
-            label: testParams.label,
+            label: "Test label",
             key: testParams.groupingNodeKey as GroupingNodeKey,
             children: [
               createTestProcessedInstanceNode({
@@ -116,7 +113,7 @@ describe("AutoExpand", () => {
       it("doesn't set autoExpand when grouping node has more than one child node and none of them have autoExpand set to 'always'", async () => {
         const nodes: ProcessedInstancesGroupingHierarchyNode[] = [
           createTestProcessedGroupingNode({
-            label: testParams.label,
+            label: "Test label",
             key: testParams.groupingNodeKey as GroupingNodeKey,
             children: [
               createTestProcessedInstanceNode({
@@ -141,7 +138,7 @@ describe("AutoExpand", () => {
       it("doesn't set autoExpand when child nodes don't have autoExpand option set", async () => {
         const nodes: ProcessedInstancesGroupingHierarchyNode[] = [
           createTestProcessedGroupingNode({
-            label: testParams.label,
+            label: "Test label",
             key: testParams.groupingNodeKey as GroupingNodeKey,
             children: [
               createTestProcessedInstanceNode({
