@@ -60,6 +60,7 @@ public;PresentationTree
 public;PresentationTreeDataProvider 
 beta;PresentationTreeDataProviderDataSourceEntryPoints
 public;PresentationTreeDataProviderProps 
+public;PresentationTreeEventHandlerProps
 beta;PresentationTreeNodeItem 
 beta;PresentationTreeNodeItemFilteringInfo
 public;PresentationTreeNodeLoaderProps 
@@ -78,7 +79,6 @@ beta;TableCellRenderer(props: TableCellRendererProps): JSX.Element
 beta;TableCellRendererProps
 beta;TableColumnDefinition
 beta;TableRowDefinition
-public;TreeEventHandlerProps
 beta;UnifiedSelectionContext
 beta;UnifiedSelectionContextProvider(props: UnifiedSelectionContextProviderProps): React.ReactElement
 beta;UnifiedSelectionContextProviderProps
@@ -94,11 +94,11 @@ beta;UsePresentationTableProps
 beta;UsePresentationTableResult
 beta;usePresentationTableWithUnifiedSelection
 beta;UsePresentationTableWithUnifiedSelectionResult
-public;usePresentationTree
 public;usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderProps): PresentationTreeNodeLoaderResult
 deprecated;usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderProps): PresentationTreeNodeLoaderResult
-public;UsePresentationTreeProps
-public;UsePresentationTreeResult
+public;usePresentationTreeState
+public;UsePresentationTreeStateProps
+public;UsePresentationTreeStateResult
 public;usePropertyDataProviderWithUnifiedSelection(props: PropertyDataProviderWithUnifiedSelectionProps): UsePropertyDataProviderWithUnifiedSelectionResult
 public;UsePropertyDataProviderWithUnifiedSelectionResult
 public;useRulesetRegistration(ruleset: Ruleset): void

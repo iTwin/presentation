@@ -600,6 +600,12 @@ export interface PresentationTreeDataProviderProps extends DiagnosticsProps {
     ruleset: string | Ruleset;
 }
 
+// @public
+export interface PresentationTreeEventHandlerProps {
+    modelSource: TreeModelSource;
+    nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
+}
+
 // @beta
 export interface PresentationTreeNodeItem extends DelayLoadedTreeNodeItem {
     filtering?: PresentationTreeNodeItemFilteringInfo;
@@ -641,7 +647,7 @@ export interface PresentationTreeNodeRendererProps extends TreeNodeRendererProps
 
 // @public
 export type PresentationTreeProps<TEventHandler extends TreeEventHandler> = Omit<ControlledTreeProps, "model" | "nodeLoader" | "eventsHandler" | "onItemsRendered" | "nodeHighlightingProps"> & {
-    state: UsePresentationTreeResult<TEventHandler>;
+    state: UsePresentationTreeStateResult<TEventHandler>;
 };
 
 // @beta
@@ -726,12 +732,6 @@ export interface TableColumnDefinition {
 export interface TableRowDefinition {
     cells: TableCellDefinition[];
     key: string;
-}
-
-// @public
-export interface TreeEventHandlerProps {
-    modelSource: TreeModelSource;
-    nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
 }
 
 // @beta
@@ -847,17 +847,17 @@ export interface UsePresentationTableWithUnifiedSelectionResult<TColumns, TRow> 
     selectedRows: TRow[];
 }
 
-// @public
-export function usePresentationTree<TEventHandler extends TreeEventHandler = TreeEventHandler>({ eventHandlerFactory, seedTreeModel, enableHierarchyAutoUpdate, filteringParams, ...dataProviderProps }: UsePresentationTreeProps<TEventHandler>): UsePresentationTreeResult<TEventHandler> | undefined;
-
 // @public @deprecated
 export function usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderProps): PresentationTreeNodeLoaderResult;
 
 // @public
-export interface UsePresentationTreeProps<TEventHandler extends TreeEventHandler = TreeEventHandler> extends PresentationTreeDataProviderProps {
+export function usePresentationTreeState<TEventHandler extends TreeEventHandler = TreeEventHandler>({ eventHandlerFactory, seedTreeModel, enableHierarchyAutoUpdate, filteringParams, ...dataProviderProps }: UsePresentationTreeStateProps<TEventHandler>): UsePresentationTreeStateResult<TEventHandler> | undefined;
+
+// @public
+export interface UsePresentationTreeStateProps<TEventHandler extends TreeEventHandler = TreeEventHandler> extends PresentationTreeDataProviderProps {
     // @alpha
     enableHierarchyAutoUpdate?: boolean;
-    eventHandlerFactory?: (props: TreeEventHandlerProps) => TEventHandler | undefined;
+    eventHandlerFactory?: (props: PresentationTreeEventHandlerProps) => TEventHandler | undefined;
     filteringParams?: {
         filter: string;
         activeMatchIndex?: number;
@@ -867,7 +867,7 @@ export interface UsePresentationTreeProps<TEventHandler extends TreeEventHandler
 }
 
 // @public
-export interface UsePresentationTreeResult<TEventHandler extends TreeEventHandler = TreeEventHandler> {
+export interface UsePresentationTreeStateResult<TEventHandler extends TreeEventHandler = TreeEventHandler> {
     eventHandler: TEventHandler;
     filteringResult?: {
         isFiltering: boolean;
