@@ -4,71 +4,73 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { GroupingNodeKey, HierarchyNode, InstanceHierarchyNodeProcessingParams } from "../../../../hierarchy-builder/HierarchyNode";
+import { AutoExpand, GroupingNodeKey, HierarchyNode, InstanceHierarchyNodeProcessingParams } from "../../../../hierarchy-builder/HierarchyNode";
 import { GroupingType, ProcessedInstancesGroupingHierarchyNode } from "../../../../hierarchy-builder/internal/operators/Grouping";
 import { assignAutoExpand } from "../../../../hierarchy-builder/internal/operators/grouping/AutoExpand";
 import { createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils";
 
 describe("AutoExpand", () => {
-  const baseClassGroupingParams = {
-    testName: "Base class grouping",
-    label: "Base Class",
-    key: {
-      type: "class-grouping",
-      class: {
-        name: "TestSchema:BaseClass",
-        label: "Base Class",
+  [
+    {
+      testName: "Base class grouping",
+      testParams: {
+        label: "Test label",
+        groupingNodeKey: {
+          type: "class-grouping",
+          class: {
+            name: "TestSchema:BaseClass",
+            label: "Base Class",
+          },
+        },
+        groupingType: "base-class",
+        createGroupedNodeProcessingParams: (autoExpand: AutoExpand | undefined): InstanceHierarchyNodeProcessingParams => {
+          return { grouping: { byBaseClasses: { fullClassNames: ["TestSchema:BaseClass"], autoExpand } } };
+        },
       },
     },
-    groupingType: "base-class",
-  };
-  const classGroupingParams = {
-    testName: "Class grouping",
-    label: "A",
-    key: {
-      type: "class-grouping",
-      class: {
-        name: "TestSchema:A",
-        label: "A",
+    {
+      testName: "Class grouping",
+      testParams: {
+        label: "Test label",
+        groupingNodeKey: {
+          type: "class-grouping",
+          class: {
+            name: "TestSchema:A",
+            label: "A",
+          },
+        },
+        groupingType: "class",
+        createGroupedNodeProcessingParams: (autoExpand: AutoExpand | undefined): InstanceHierarchyNodeProcessingParams => {
+          return { grouping: { byClass: autoExpand ? { autoExpand } : true } };
+        },
       },
     },
-    groupingType: "class",
-  };
-  const labelGroupingParams = {
-    testName: "Label grouping",
-    label: "1",
-    key: {
-      type: "label-grouping",
-      label: "1",
+    {
+      testName: "Label grouping",
+      testParams: {
+        label: "Test label",
+        groupingNodeKey: {
+          type: "label-grouping",
+          label: "1",
+        },
+        groupingType: "label",
+        createGroupedNodeProcessingParams: (autoExpand: AutoExpand | undefined): InstanceHierarchyNodeProcessingParams => {
+          return { grouping: { byLabel: autoExpand ? { autoExpand } : true } };
+        },
+      },
     },
-    groupingType: "label",
-  };
-
-  describe("sets autoExpand to true when grouping node has one node child and it has autoExpand set to 'single-child'", () => {
-    [
-      {
-        testParams: baseClassGroupingParams,
-        processingParams: { grouping: { byBaseClasses: { fullClassNames: ["TestSchema:BaseClass"], autoExpand: "single-child" } } },
-      },
-      {
-        testParams: classGroupingParams,
-        processingParams: { grouping: { byClass: { autoExpand: "single-child" } } },
-      },
-      {
-        testParams: labelGroupingParams,
-        processingParams: { grouping: { byLabel: { autoExpand: "single-child" } } },
-      },
-    ].forEach(({ testParams, processingParams }) => {
-      it(testParams.testName, async () => {
+  ].forEach(({ testName, testParams }) => {
+    describe(testName, () => {
+      it("sets autoExpand to true when grouping node has one node child and it has autoExpand set to 'single-child'", async () => {
         const nodes: ProcessedInstancesGroupingHierarchyNode[] = [
           createTestProcessedGroupingNode({
             label: testParams.label,
-            key: testParams.key as GroupingNodeKey,
+            key: testParams.groupingNodeKey as GroupingNodeKey,
             children: [
               createTestProcessedInstanceNode({
                 key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
                 label: "1",
-                processingParams: processingParams as InstanceHierarchyNodeProcessingParams,
+                processingParams: testParams.createGroupedNodeProcessingParams("single-child"),
               }),
             ],
           }),
@@ -79,50 +81,27 @@ describe("AutoExpand", () => {
         expect(result.grouped[0].children).to.deep.eq(nodes[0].children);
         expect(result.grouped[0].autoExpand).to.eq(true);
       });
-    });
-  });
 
-  describe("sets autoExpand to true when some child nodes have autoExpand set to 'always'", () => {
-    [
-      {
-        testParams: baseClassGroupingParams,
-        processingParams1: { grouping: { byBaseClasses: { fullClassNames: ["TestSchema:BaseClass"], autoExpand: "single-child" } } },
-        processingParams2: { grouping: { byBaseClasses: { fullClassNames: ["TestSchema:BaseClass"], autoExpand: "always" } } },
-        processingParams3: { grouping: { byBaseClasses: { fullClassNames: ["TestSchema:BaseClass"], autoExpand: "single-child" } } },
-      },
-      {
-        testParams: classGroupingParams,
-        processingParams1: { grouping: { byClass: { autoExpand: "single-child" } } },
-        processingParams2: { grouping: { byClass: { autoExpand: "always" } } },
-        processingParams3: { grouping: { byClass: { autoExpand: "single-child" } } },
-      },
-      {
-        testParams: labelGroupingParams,
-        processingParams1: { grouping: { byLabel: { autoExpand: "single-child" } } },
-        processingParams2: { grouping: { byLabel: { autoExpand: "always" } } },
-        processingParams3: { grouping: { byLabel: { autoExpand: "single-child" } } },
-      },
-    ].forEach(({ testParams, processingParams1, processingParams2, processingParams3 }) => {
-      it(testParams.testName, async () => {
+      it("sets autoExpand to true when some child nodes have autoExpand set to 'always'", async () => {
         const nodes: ProcessedInstancesGroupingHierarchyNode[] = [
           createTestProcessedGroupingNode({
             label: testParams.label,
-            key: testParams.key as GroupingNodeKey,
+            key: testParams.groupingNodeKey as GroupingNodeKey,
             children: [
               createTestProcessedInstanceNode({
                 key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
                 label: "1",
-                processingParams: processingParams1 as InstanceHierarchyNodeProcessingParams,
+                processingParams: testParams.createGroupedNodeProcessingParams("single-child"),
               }),
               createTestProcessedInstanceNode({
                 key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
                 label: "1",
-                processingParams: processingParams2 as InstanceHierarchyNodeProcessingParams,
+                processingParams: testParams.createGroupedNodeProcessingParams("always"),
               }),
               createTestProcessedInstanceNode({
                 key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x3" }] },
                 label: "1",
-                processingParams: processingParams3 as InstanceHierarchyNodeProcessingParams,
+                processingParams: testParams.createGroupedNodeProcessingParams("single-child"),
               }),
             ],
           }),
@@ -133,29 +112,12 @@ describe("AutoExpand", () => {
         expect(result.grouped[0].children).to.deep.eq(nodes[0].children);
         expect(result.grouped[0].autoExpand).to.eq(true);
       });
-    });
-  });
 
-  describe("doesn't set autoExpand when grouping node has more than one child node and none of them have autoExpand set to 'always'", () => {
-    [
-      {
-        testParams: baseClassGroupingParams,
-        processingParams: { grouping: { byBaseClasses: { fullClassNames: ["TestSchema:BaseClass"], autoExpand: "single-child" } } },
-      },
-      {
-        testParams: classGroupingParams,
-        processingParams: { grouping: { byClass: { autoExpand: "single-child" } } },
-      },
-      {
-        testParams: labelGroupingParams,
-        processingParams: { grouping: { byLabel: { autoExpand: "single-child" } } },
-      },
-    ].forEach(({ testParams, processingParams }) => {
-      it(testParams.testName, async () => {
+      it("doesn't set autoExpand when grouping node has more than one child node and none of them have autoExpand set to 'always'", async () => {
         const nodes: ProcessedInstancesGroupingHierarchyNode[] = [
           createTestProcessedGroupingNode({
             label: testParams.label,
-            key: testParams.key as GroupingNodeKey,
+            key: testParams.groupingNodeKey as GroupingNodeKey,
             children: [
               createTestProcessedInstanceNode({
                 key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
@@ -164,7 +126,7 @@ describe("AutoExpand", () => {
               createTestProcessedInstanceNode({
                 key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
                 label: "1",
-                processingParams: processingParams as InstanceHierarchyNodeProcessingParams,
+                processingParams: testParams.createGroupedNodeProcessingParams("single-child"),
               }),
             ],
           }),
@@ -175,34 +137,17 @@ describe("AutoExpand", () => {
         expect(result.grouped[0].children).to.deep.eq(nodes[0].children);
         expect(result.grouped[0].autoExpand).to.eq(undefined);
       });
-    });
-  });
 
-  describe("doesn't set autoExpand when child nodes don't have autoExpand option set", () => {
-    [
-      {
-        testParams: baseClassGroupingParams,
-        processingParams: { grouping: { byBaseClasses: { fullClassNames: ["TestSchema:BaseClass"] } } },
-      },
-      {
-        testParams: classGroupingParams,
-        processingParams: { grouping: { byClass: true } },
-      },
-      {
-        testParams: labelGroupingParams,
-        processingParams: { grouping: { byLabel: true } },
-      },
-    ].forEach(({ testParams, processingParams }) => {
-      it(testParams.testName, async () => {
+      it("doesn't set autoExpand when child nodes don't have autoExpand option set", async () => {
         const nodes: ProcessedInstancesGroupingHierarchyNode[] = [
           createTestProcessedGroupingNode({
             label: testParams.label,
-            key: testParams.key as GroupingNodeKey,
+            key: testParams.groupingNodeKey as GroupingNodeKey,
             children: [
               createTestProcessedInstanceNode({
                 key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
                 label: "1",
-                processingParams: processingParams as InstanceHierarchyNodeProcessingParams,
+                processingParams: testParams.createGroupedNodeProcessingParams(undefined),
               }),
             ],
           }),
