@@ -10,7 +10,7 @@ import { SelectionMode, TreeRendererProps, UiComponents } from "@itwin/component
 import { Guid } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Ruleset } from "@itwin/presentation-common";
-import { PresentationTree, PresentationTreeRenderer, usePresentationTree } from "@itwin/presentation-components";
+import { PresentationTree, PresentationTreeRenderer, usePresentationTreeState } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { getByRole, render, waitFor } from "@testing-library/react";
@@ -36,7 +36,7 @@ describe("Learning snippets", () => {
     it("handles errors", async function () {
       // __PUBLISH_EXTRACT_START__ Presentation.Components.Tree.ErrorHandling
       function MyTree(props: { imodel: IModelConnection }) {
-        const state = usePresentationTree({
+        const state = usePresentationTreeState({
           imodel: props.imodel,
           ruleset,
           pagingSize: 100,

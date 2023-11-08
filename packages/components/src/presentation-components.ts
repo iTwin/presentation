@@ -69,7 +69,7 @@ export * from "./presentation-components/tree/controlled/PresentationTreeNodeRen
 export * from "./presentation-components/tree/controlled/PresentationTreeRenderer";
 export * from "./presentation-components/tree/controlled/TreeHooks";
 export * from "./presentation-components/tree/controlled/UseHierarchyLevelFiltering";
-export * from "./presentation-components/tree/controlled/UsePresentationTree";
+export * from "./presentation-components/tree/controlled/UsePresentationTreeState";
 export * from "./presentation-components/tree/controlled/UseUnifiedSelection";
 
 /**

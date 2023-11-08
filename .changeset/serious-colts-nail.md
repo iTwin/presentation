@@ -2,7 +2,7 @@
 "@itwin/presentation-components": minor
 ---
 
-Added `usePresentationTree` and `PresentationTree` for using presentation data with `ControlledTree`. This is a replacement for `usePresentationTreeNodeLoader` which is not fully compatible with React 18 and now is deprecated.
+Added `usePresentationTreeState` and `PresentationTree` for using presentation data with `ControlledTree`. This is a replacement for `usePresentationTreeNodeLoader` which is not fully compatible with React 18 and now is deprecated.
 
 Old API:
 
@@ -20,7 +20,7 @@ New API:
 
 ```tsx
 function Tree(props) {
-  const state = usePresentationTree({
+  const state = usePresentationTreeState({
     imodel: props.imodel,
     ruleset: TREE_RULESET,
     pagingSize: PAGING_SIZE,

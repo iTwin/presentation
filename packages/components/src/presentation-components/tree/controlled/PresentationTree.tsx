@@ -7,7 +7,7 @@
  */
 
 import { ControlledTree, ControlledTreeProps, TreeEventHandler, useTreeModel } from "@itwin/components-react";
-import { UsePresentationTreeResult } from "./UsePresentationTree";
+import { UsePresentationTreeStateResult } from "./UsePresentationTreeState";
 
 /**
  * Props for [[PresentationTree]] component.
@@ -17,15 +17,15 @@ import { UsePresentationTreeResult } from "./UsePresentationTree";
 export type PresentationTreeProps<TEventHandler extends TreeEventHandler> = Omit<
   ControlledTreeProps,
   "model" | "nodeLoader" | "eventsHandler" | "onItemsRendered" | "nodeHighlightingProps"
-> & { state: UsePresentationTreeResult<TEventHandler> };
+> & { state: UsePresentationTreeStateResult<TEventHandler> };
 
 /**
- * Component that provides a convenient API for using [[usePresentationTree]] hook with [ControlledTree]($components-react).
+ * Component that provides a convenient API for using [[usePresentationTreeState]] hook with [ControlledTree]($components-react).
  *
  * Usage example:
  * ```tsx
  * function Tree(props) {
- *   const state = usePresentationTree({ imodel: props.imodel, ruleset: TREE_RULESET, pagingSize: PAGING_SIZE });
+ *   const state = usePresentationTreeState({ imodel: props.imodel, ruleset: TREE_RULESET, pagingSize: PAGING_SIZE });
  *   if (!state) {
  *     return null;
  *   }

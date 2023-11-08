@@ -13,11 +13,11 @@ import { NodePathElement } from "@itwin/presentation-common";
 import { waitFor } from "@testing-library/react";
 import { act, renderHook } from "@testing-library/react-hooks";
 import {
-  useFilteredNodeLoader, UseFilteredNodeLoaderProps, useNodeHighlightingProps,
+  useFilteredNodeLoader,
+  UseFilteredNodeLoaderProps,
+  useNodeHighlightingProps,
 } from "../../../presentation-components/tree/controlled/UseControlledTreeFiltering";
-import {
-  FilteredPresentationTreeDataProvider, IFilteredPresentationTreeDataProvider,
-} from "../../../presentation-components/tree/FilteredDataProvider";
+import { FilteredPresentationTreeDataProvider, IFilteredPresentationTreeDataProvider } from "../../../presentation-components/tree/FilteredDataProvider";
 import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";
 import { ResolvablePromise } from "../../_helpers/Promises";
 import { createTestPropertyRecord, createTestTreeNodeItem } from "../../_helpers/UiComponents";

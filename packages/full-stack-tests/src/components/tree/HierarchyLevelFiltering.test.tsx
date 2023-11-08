@@ -9,7 +9,7 @@ import sinon from "sinon";
 import { SelectionMode, TreeRendererProps, UiComponents } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Ruleset } from "@itwin/presentation-common";
-import { PresentationTree, PresentationTreeRenderer, usePresentationTree } from "@itwin/presentation-components";
+import { PresentationTree, PresentationTreeRenderer, usePresentationTreeState } from "@itwin/presentation-components";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { fireEvent, getByRole, getByText, render, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -37,7 +37,7 @@ describe("Learning snippets", () => {
     it("renders tree with hierarchy level filtering", async function () {
       // __PUBLISH_EXTRACT_START__ Presentation.Components.HierarchyLevelFiltering
       function MyTree(props: { imodel: IModelConnection }) {
-        const state = usePresentationTree({ imodel: props.imodel, ruleset, pagingSize: 10 });
+        const state = usePresentationTreeState({ imodel: props.imodel, ruleset, pagingSize: 10 });
 
         // width and height should generally we computed using ResizeObserver API or one of its derivatives
         const [width] = useState(400);

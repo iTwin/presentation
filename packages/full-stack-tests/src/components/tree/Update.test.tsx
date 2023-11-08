@@ -18,7 +18,7 @@ import {
 } from "@itwin/components-react";
 import { IModelConnection, SnapshotConnection } from "@itwin/core-frontend";
 import { ChildNodeSpecificationTypes, RuleTypes } from "@itwin/presentation-common";
-import { IPresentationTreeDataProvider, usePresentationTree, UsePresentationTreeProps } from "@itwin/presentation-components";
+import { IPresentationTreeDataProvider, usePresentationTreeState, UsePresentationTreeStateProps } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { waitFor } from "@testing-library/react";
 import { renderHook } from "@testing-library/react-hooks";
@@ -45,7 +45,7 @@ describe("Tree update", () => {
   });
 
   describe("detection", () => {
-    let defaultProps: Omit<UsePresentationTreeProps, "ruleset">;
+    let defaultProps: Omit<UsePresentationTreeStateProps, "ruleset">;
 
     beforeEach(() => {
       defaultProps = {
@@ -460,8 +460,8 @@ describe("Tree update", () => {
           color?: number;
         };
 
-    async function verifyHierarchy(props: UsePresentationTreeProps, expectedTree: TreeHierarchy[]): Promise<VerifiedHierarchy> {
-      const { result } = renderHook((hookProps: UsePresentationTreeProps) => usePresentationTree(hookProps), {
+    async function verifyHierarchy(props: UsePresentationTreeStateProps, expectedTree: TreeHierarchy[]): Promise<VerifiedHierarchy> {
+      const { result } = renderHook((hookProps: UsePresentationTreeStateProps) => usePresentationTreeState(hookProps), {
         initialProps: props,
       });
 

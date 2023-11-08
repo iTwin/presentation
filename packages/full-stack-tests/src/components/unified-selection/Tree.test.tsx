@@ -8,7 +8,12 @@ import { useCallback, useState } from "react";
 import { SelectionMode, UiComponents } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { InstanceKey, KeySet, Ruleset, RuleTypes } from "@itwin/presentation-common";
-import { PresentationTree, TreeEventHandlerProps, UnifiedSelectionTreeEventHandler, usePresentationTree } from "@itwin/presentation-components";
+import {
+  PresentationTree,
+  PresentationTreeEventHandlerProps,
+  UnifiedSelectionTreeEventHandler,
+  usePresentationTreeState,
+} from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { act, fireEvent, render, waitFor } from "@testing-library/react";
@@ -33,13 +38,13 @@ describe("Learning snippets", async () => {
       // __PUBLISH_EXTRACT_START__ Presentation.Components.UnifiedSelection.Tree
       function MyTree(props: { imodel: IModelConnection }) {
         // create a node loader for given iModel and ruleset
-        const state = usePresentationTree({
+        const state = usePresentationTreeState({
           imodel: props.imodel,
           ruleset,
           pagingSize: 10,
           // create a tree events handler that synchronizes tree nodes' selection with unified selection
           eventHandlerFactory: useCallback(
-            (eventHandlerProps: TreeEventHandlerProps) => new UnifiedSelectionTreeEventHandler({ nodeLoader: eventHandlerProps.nodeLoader }),
+            (eventHandlerProps: PresentationTreeEventHandlerProps) => new UnifiedSelectionTreeEventHandler({ nodeLoader: eventHandlerProps.nodeLoader }),
             [],
           ),
         });

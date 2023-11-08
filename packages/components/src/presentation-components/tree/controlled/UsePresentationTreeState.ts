@@ -24,10 +24,10 @@ import { useFilteredNodeLoader, useNodeHighlightingProps } from "./UseControlled
 import { ReloadedTree, useTreeReload } from "./UseTreeReload";
 
 /**
- * Properties for [[usePresentationTreeNodeLoader]] hook.
+ * Properties for [[usePresentationTreeState]] hook.
  * @public
  */
-export interface UsePresentationTreeProps<TEventHandler extends TreeEventHandler = TreeEventHandler> extends PresentationTreeDataProviderProps {
+export interface UsePresentationTreeStateProps<TEventHandler extends TreeEventHandler = TreeEventHandler> extends PresentationTreeDataProviderProps {
   /**
    * Number of nodes in a single page. The created loader always requests at least
    * a page nodes, so it should be optimized for usability vs performance (using
@@ -55,7 +55,7 @@ export interface UsePresentationTreeProps<TEventHandler extends TreeEventHandler
    *
    * Note: Must be memoized.
    */
-  eventHandlerFactory?: (props: TreeEventHandlerProps) => TEventHandler | undefined;
+  eventHandlerFactory?: (props: PresentationTreeEventHandlerProps) => TEventHandler | undefined;
 
   /**
    * Parameters for filtering tree.
@@ -69,10 +69,10 @@ export interface UsePresentationTreeProps<TEventHandler extends TreeEventHandler
 }
 
 /**
- * Return type of [[usePresentationTree]] hook.
+ * Return type of [[usePresentationTreeState]] hook.
  * @public
  */
-export interface UsePresentationTreeResult<TEventHandler extends TreeEventHandler = TreeEventHandler> {
+export interface UsePresentationTreeStateResult<TEventHandler extends TreeEventHandler = TreeEventHandler> {
   /** Tree node loader to be used with a tree component. */
   nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
   /** Event handler to be used with a tree component. */
@@ -99,10 +99,10 @@ export interface UsePresentationTreeResult<TEventHandler extends TreeEventHandle
 }
 
 /**
- * Props passed to [[UsePresentationTreeProps.eventHandlerFactory]] when creating event handler.
+ * Props passed to [[UsePresentationTreeStateProps.eventHandlerFactory]] when creating event handler.
  * @public
  */
-export interface TreeEventHandlerProps {
+export interface PresentationTreeEventHandlerProps {
   /** Node loader used to load nodes. */
   nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
   /** Model source containing tree model. */
@@ -123,13 +123,13 @@ interface TreeState {
  * Custom hook that creates and manages state for [ControlledTree]($components-react) component based on presentation data.
  * @public
  */
-export function usePresentationTree<TEventHandler extends TreeEventHandler = TreeEventHandler>({
+export function usePresentationTreeState<TEventHandler extends TreeEventHandler = TreeEventHandler>({
   eventHandlerFactory,
   seedTreeModel,
   enableHierarchyAutoUpdate,
   filteringParams,
   ...dataProviderProps
-}: UsePresentationTreeProps<TEventHandler>): UsePresentationTreeResult<TEventHandler> | undefined {
+}: UsePresentationTreeStateProps<TEventHandler>): UsePresentationTreeStateResult<TEventHandler> | undefined {
   const firstRenderRef = useRef(true);
   const treeStateProps = useMemo(
     (): TreeStateProps => ({ ...dataProviderProps, treeModel: firstRenderRef.current ? seedTreeModel : undefined }),
@@ -225,7 +225,7 @@ function useTreeState(props: TreeStateProps) {
 }
 
 function useEventHandler<TEventHandler extends TreeEventHandler>(
-  factory?: (params: TreeEventHandlerProps) => TEventHandler | undefined,
+  factory?: (params: PresentationTreeEventHandlerProps) => TEventHandler | undefined,
   nodeLoader?: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>,
 ) {
   const [state, setState] = useState<TEventHandler>();
@@ -234,7 +234,7 @@ function useEventHandler<TEventHandler extends TreeEventHandler>(
     if (!nodeLoader) {
       return;
     }
-    const params: TreeEventHandlerProps = { modelSource: nodeLoader.modelSource, nodeLoader };
+    const params: PresentationTreeEventHandlerProps = { modelSource: nodeLoader.modelSource, nodeLoader };
     const newHandler = factory ? factory(params) : new TreeEventHandler(params);
     setState(newHandler as TEventHandler);
 

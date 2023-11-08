@@ -10,10 +10,10 @@ import { IModelConnection } from "@itwin/core-frontend";
 import {
   DiagnosticsProps,
   PresentationTree,
+  PresentationTreeEventHandlerProps,
   PresentationTreeRenderer,
-  TreeEventHandlerProps,
   UnifiedSelectionTreeEventHandler,
-  usePresentationTree,
+  usePresentationTreeState,
 } from "@itwin/presentation-components";
 
 const PAGING_SIZE = 10;
@@ -33,12 +33,12 @@ interface Props {
 
 export function Tree(props: Props) {
   const { filter, onFilteringStateChange, activeMatchIndex } = props.filtering;
-  const state = usePresentationTree({
+  const state = usePresentationTreeState({
     imodel: props.imodel,
     ruleset: props.rulesetId,
     pagingSize: PAGING_SIZE,
     eventHandlerFactory: useCallback(
-      (handlerProps: TreeEventHandlerProps) =>
+      (handlerProps: PresentationTreeEventHandlerProps) =>
         new UnifiedSelectionTreeEventHandler({ nodeLoader: handlerProps.nodeLoader, collapsedChildrenDisposalEnabled: false, name: "TestAppTree" }),
       [],
     ),

@@ -8,7 +8,7 @@ import { useState } from "react";
 import { SelectionMode, TreeRendererProps, UiComponents } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { PresentationRpcInterface, Ruleset } from "@itwin/presentation-common";
-import { PresentationTree, PresentationTreeRenderer, usePresentationTree } from "@itwin/presentation-components";
+import { PresentationTree, PresentationTreeRenderer, usePresentationTreeState } from "@itwin/presentation-components";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { getByRole, render, waitFor } from "@testing-library/react";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "../../IModelUtils";
@@ -38,7 +38,7 @@ describe("Learning snippets", () => {
 
       // __PUBLISH_EXTRACT_START__ Presentation.Components.HierarchyLevelLimiting
       function MyTree(props: { imodel: IModelConnection }) {
-        const state = usePresentationTree({
+        const state = usePresentationTreeState({
           imodel: props.imodel,
           ruleset,
           pagingSize: 100,
