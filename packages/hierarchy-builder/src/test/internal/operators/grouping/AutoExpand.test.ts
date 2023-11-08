@@ -86,17 +86,23 @@ describe("AutoExpand", () => {
     [
       {
         testParams: baseClassGroupingParams,
-        processingParams: { grouping: { byBaseClasses: { fullClassNames: ["TestSchema:BaseClass"], autoExpand: "always" } } },
+        processingParams1: { grouping: { byBaseClasses: { fullClassNames: ["TestSchema:BaseClass"], autoExpand: "single-child" } } },
+        processingParams2: { grouping: { byBaseClasses: { fullClassNames: ["TestSchema:BaseClass"], autoExpand: "always" } } },
+        processingParams3: { grouping: { byBaseClasses: { fullClassNames: ["TestSchema:BaseClass"], autoExpand: "single-child" } } },
       },
       {
         testParams: classGroupingParams,
-        processingParams: { grouping: { byClass: { autoExpand: "always" } } },
+        processingParams1: { grouping: { byClass: { autoExpand: "single-child" } } },
+        processingParams2: { grouping: { byClass: { autoExpand: "always" } } },
+        processingParams3: { grouping: { byClass: { autoExpand: "single-child" } } },
       },
       {
         testParams: labelGroupingParams,
-        processingParams: { grouping: { byLabel: { autoExpand: "always" } } },
+        processingParams1: { grouping: { byLabel: { autoExpand: "single-child" } } },
+        processingParams2: { grouping: { byLabel: { autoExpand: "always" } } },
+        processingParams3: { grouping: { byLabel: { autoExpand: "single-child" } } },
       },
-    ].forEach(({ testParams, processingParams }) => {
+    ].forEach(({ testParams, processingParams1, processingParams2, processingParams3 }) => {
       it(testParams.testName, async () => {
         const nodes: ProcessedInstancesGroupingHierarchyNode[] = [
           createTestProcessedGroupingNode({
@@ -106,11 +112,17 @@ describe("AutoExpand", () => {
               createTestProcessedInstanceNode({
                 key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
                 label: "1",
-                processingParams: processingParams as InstanceHierarchyNodeProcessingParams,
+                processingParams: processingParams1 as InstanceHierarchyNodeProcessingParams,
               }),
               createTestProcessedInstanceNode({
                 key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
                 label: "1",
+                processingParams: processingParams2 as InstanceHierarchyNodeProcessingParams,
+              }),
+              createTestProcessedInstanceNode({
+                key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x3" }] },
+                label: "1",
+                processingParams: processingParams3 as InstanceHierarchyNodeProcessingParams,
               }),
             ],
           }),

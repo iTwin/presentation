@@ -37,11 +37,13 @@ function getAutoExpandOptionsFromNodeProcessingParams(
   nodes: ProcessedInstanceHierarchyNode[],
   autoExpandOptionsAccessor: (processingParams: InstanceHierarchyNodeProcessingParams) => BaseGroupingParams | undefined,
 ): AutoExpand | undefined {
+  let autoExpand: AutoExpand | undefined;
   for (const node of nodes) {
-    const processingParams = node.processingParams ? autoExpandOptionsAccessor(node.processingParams) : undefined;
-    if (processingParams?.autoExpand) {
-      return processingParams.autoExpand;
+    if (autoExpand === "always") {
+      break;
     }
+    const params = node.processingParams ? autoExpandOptionsAccessor(node.processingParams) : undefined;
+    autoExpand = !!params?.autoExpand ? params.autoExpand : autoExpand;
   }
-  return undefined;
+  return autoExpand;
 }
