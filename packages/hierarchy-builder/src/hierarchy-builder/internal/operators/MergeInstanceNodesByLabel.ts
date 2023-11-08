@@ -5,9 +5,9 @@
 
 import { from, merge, mergeMap, Observable, partition, reduce, shareReplay, tap } from "rxjs";
 import { assert, DuplicatePolicy, SortedArray } from "@itwin/core-bentley";
-import { HierarchyNode, HierarchyNodeKey } from "../../HierarchyNode";
+import { HierarchyNode, HierarchyNodeKey, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
-import { createOperatorLoggingNamespace, mergeNodesObs } from "../Common";
+import { createOperatorLoggingNamespace, mergeNodes } from "../Common";
 
 const OPERATOR_NAME = "MergeInstanceNodesByLabel";
 /** @internal */
@@ -19,8 +19,8 @@ export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
  *
  * @internal
  */
-export function createMergeInstanceNodesByLabelOperator(directNodesCache: Map<string, Observable<HierarchyNode>>) {
-  return function (nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
+export function createMergeInstanceNodesByLabelOperator() {
+  return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
     const sharedNodes = nodes.pipe(
       log((n) => `in: ${serializeNode(n)}`),
       // each partitioned observable is going to subscribe to this individually - share and replay to avoid requesting
@@ -30,18 +30,25 @@ export function createMergeInstanceNodesByLabelOperator(directNodesCache: Map<st
     // split input into 3 pieces:
     // - `merged` - instance nodes that requested to be merged (have `mergeByLabelId`)
     // - `nonMerged` - nodes that don't need to be merged
-    const [merged, nonMerged] = partition(sharedNodes, (node) => HierarchyNode.isInstancesNode(node) && !!node.params?.mergeByLabelId);
+    const [merged, nonMerged] = partition(
+      sharedNodes,
+      (node): node is MergedHierarchyNode => HierarchyNode.isInstancesNode(node) && !!node.processingParams?.mergeByLabelId,
+    );
     return merge(
       nonMerged,
-      (merged as Observable<MergingHierarchyNode>).pipe(
-        // put all merged nodes into `SortedNodesList`
+      merged.pipe(
+        // put all nodes that requested to be merged into `SortedNodesList`
         reduce((acc, node) => {
           doLog(`reduce with ${serializeNode(node)}`);
           const pos = acc.insert(node);
           const nodeAtPos = acc.get(pos)!;
           if (nodeAtPos !== node) {
-            const mergedNode = mergeNodesObs(nodeAtPos, node, directNodesCache);
-            acc.replace(pos, mergedNode as MergingHierarchyNode);
+            // non-matching nodes means we failed to insert the node, because nodeAtPos already exists in its
+            // place - they need to be merged together
+            // TODO: check if its worth looking up child nodes observables for all merged nodes and creating
+            // merging observables for the merging node
+            const mergedNode = mergeNodes(nodeAtPos, node) as MergedHierarchyNode;
+            acc.replace(pos, mergedNode);
           }
           return acc;
         }, new SortedNodesList()),
@@ -52,29 +59,30 @@ export function createMergeInstanceNodesByLabelOperator(directNodesCache: Map<st
   };
 }
 
-type MergingHierarchyNode = HierarchyNode & { params: { mergeByLabelId: string } };
-class SortedNodesList extends SortedArray<MergingHierarchyNode> {
+type MergedHierarchyNode = ProcessedInstanceHierarchyNode & { processingParams: { mergeByLabelId: string } };
+
+class SortedNodesList extends SortedArray<MergedHierarchyNode> {
   public constructor() {
-    const comp = (lhs: MergingHierarchyNode, rhs: MergingHierarchyNode): number => {
+    const comp = (lhs: MergedHierarchyNode, rhs: MergedHierarchyNode): number => {
       const labelCompare = lhs.label.localeCompare(rhs.label);
       if (labelCompare !== 0) {
         return labelCompare;
       }
-      return lhs.params.mergeByLabelId.localeCompare(rhs.params.mergeByLabelId);
+      return lhs.processingParams.mergeByLabelId.localeCompare(rhs.processingParams.mergeByLabelId);
     };
     super(comp, DuplicatePolicy.Retain);
   }
-  public replace(pos: number, replacement: MergingHierarchyNode) {
+  public replace(pos: number, replacement: MergedHierarchyNode) {
     assert(this._compare(this._array[pos], replacement) === 0);
     this._array[pos] = replacement;
   }
 }
 
-function serializeNode(node: HierarchyNode) {
+function serializeNode(node: ProcessedHierarchyNode) {
   return JSON.stringify({
     label: node.label,
     keys: HierarchyNodeKey.isInstances(node.key) ? node.key.instanceKeys : node.key,
-    mergeId: node.params?.mergeByLabelId,
+    mergeId: (node as ProcessedInstanceHierarchyNode).processingParams?.mergeByLabelId,
   });
 }
 

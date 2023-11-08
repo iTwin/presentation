@@ -5,6 +5,7 @@
 
 import {
   CustomHierarchyNodeDefinition,
+  HierarchyDefinitionParentNode,
   HierarchyLevelDefinition,
   HierarchyNodesDefinition,
   IHierarchyLevelDefinitionsFactory,
@@ -13,9 +14,8 @@ import {
   INodePreProcessor,
   InstanceNodesQueryDefinition,
 } from "../HierarchyDefinition";
-import { HierarchyNode, HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "../HierarchyNode";
+import { HierarchyNode, HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath, ParsedInstanceHierarchyNode, ProcessedHierarchyNode } from "../HierarchyNode";
 import { IMetadataProvider } from "../Metadata";
-import { ConcatenatedValue } from "../values/ConcatenatedValue";
 import { InstanceKey } from "../values/Values";
 import { getClass } from "./Common";
 import { defaultNodesParser } from "./TreeNodesReader";
@@ -28,9 +28,9 @@ export interface FilteringQueryBuilderProps {
 }
 
 /** @internal */
-export interface FilteredHierarchyNode<TLabel = string> extends HierarchyNode<TLabel> {
+export type FilteredHierarchyNode<TNode = ProcessedHierarchyNode> = TNode & {
   filteredChildrenIdentifierPaths?: HierarchyNodeIdentifiersPath[];
-}
+};
 
 /** @internal */
 export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLevelDefinitionsFactory {
@@ -45,9 +45,9 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
   }
 
   public get preProcessNode(): INodePreProcessor {
-    return async (node: FilteredHierarchyNode) => {
+    return async (node) => {
       const processedNode = this._source.preProcessNode ? await this._source.preProcessNode(node) : node;
-      if (processedNode?.params?.hideInHierarchy && node.filteredChildrenIdentifierPaths?.length === 0) {
+      if (processedNode?.processingParams?.hideInHierarchy && (node as FilteredHierarchyNode).filteredChildrenIdentifierPaths?.length === 0) {
         // an existing empty `node.filteredChildrenIdentifierPaths` means the node is our filter target - we
         // want to hide such nodes if they have `hideInHierarchy` param
         return undefined;
@@ -57,12 +57,11 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
   }
 
   public get postProcessNode(): INodePostProcessor {
-    return (node: HierarchyNode) => {
-      const processedNode = this._source.postProcessNode ? this._source.postProcessNode(node) : node;
+    return async (node: ProcessedHierarchyNode) => {
+      const processedNode = this._source.postProcessNode ? await this._source.postProcessNode(node) : node;
       if (
         // instance nodes get the auto-expand flag in `parseNode`, but grouping ones need to be handled during post-processing
         HierarchyNode.isClassGroupingNode(node) &&
-        Array.isArray(node.children) &&
         node.children.some((child: FilteredHierarchyNode) => !!child.filteredChildrenIdentifierPaths)
       ) {
         return { ...processedNode, autoExpand: true };
@@ -72,7 +71,7 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
   }
 
   public get parseNode(): INodeParser {
-    return (row: { [columnName: string]: any }): FilteredHierarchyNode<string | ConcatenatedValue> => {
+    return (row: { [columnName: string]: any }): FilteredHierarchyNode<ParsedInstanceHierarchyNode> => {
       const parsedFilteredChildrenIdentifierPaths = row[ECSQL_COLUMN_NAME_FilteredChildrenPaths]
         ? JSON.parse(row[ECSQL_COLUMN_NAME_FilteredChildrenPaths])
         : undefined;
@@ -85,9 +84,9 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
     };
   }
 
-  public async defineHierarchyLevel(parentNode: HierarchyNode | undefined): Promise<HierarchyLevelDefinition> {
+  public async defineHierarchyLevel(parentNode: HierarchyDefinitionParentNode | undefined): Promise<HierarchyLevelDefinition> {
     const sourceDefinitions = await this._source.defineHierarchyLevel(parentNode);
-    const filteredNodePaths = this.getFilteringProps(parentNode);
+    const filteredNodePaths = this.getFilteringProps(parentNode as FilteredHierarchyNode);
     if (!filteredNodePaths || filteredNodePaths.length === 0) {
       return sourceDefinitions;
     }
@@ -116,7 +115,7 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
                   ...def.node,
                   ...(filteredChildrenIdentifierPaths.length > 0 ? { autoExpand: true } : undefined),
                   filteredChildrenIdentifierPaths,
-                } as FilteredHierarchyNode,
+                },
               };
             },
           );

@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import naturalCompare from "natural-compare-lite";
-import { mergeMap, Observable, toArray } from "rxjs";
-import { HierarchyNode } from "../../HierarchyNode";
+import { concatMap, Observable, toArray } from "rxjs";
+import { ProcessedHierarchyNode } from "../../HierarchyNode";
 
 /**
  * This should accept sorting params in some form:
@@ -14,14 +14,11 @@ import { HierarchyNode } from "../../HierarchyNode";
  *
  * @internal
  */
-export function sortNodesByLabelOperator(nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
-  return nodes.pipe(
-    toArray(),
-    mergeMap((allNodes) => sortNodesByLabel(allNodes)),
-  );
+export function sortNodesByLabelOperator(nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
+  return nodes.pipe(toArray(), concatMap(sortNodesByLabel));
 }
 
 /** @internal */
-export function sortNodesByLabel(nodes: HierarchyNode[]): HierarchyNode[] {
+export function sortNodesByLabel<TNode extends { label: string }>(nodes: TNode[]): TNode[] {
   return nodes.sort((lhs, rhs) => naturalCompare(lhs.label.toLocaleLowerCase(), rhs.label.toLocaleLowerCase()));
 }
