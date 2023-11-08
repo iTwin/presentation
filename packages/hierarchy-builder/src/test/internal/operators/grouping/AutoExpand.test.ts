@@ -10,50 +10,60 @@ import { assignAutoExpand } from "../../../../hierarchy-builder/internal/operato
 import { createTestNode } from "../../../Utils";
 
 describe("AutoExpand", () => {
+  const baseClassGroupingParams = {
+    testName: "Base class grouping",
+    label: "Base Class",
+    key: {
+      type: "class-grouping",
+      class: {
+        name: "TestSchema:BaseClass",
+        label: "Base Class",
+      },
+    },
+    groupingType: "base-class",
+  };
+  const classGroupingParams = {
+    testName: "Class grouping",
+    label: "A",
+    key: {
+      type: "class-grouping",
+      class: {
+        name: "TestSchema:A",
+        label: "A",
+      },
+    },
+    groupingType: "class",
+  };
+  const labelGroupingParams = {
+    testName: "Label grouping",
+    label: "1",
+    key: {
+      type: "label-grouping",
+      label: "1",
+    },
+    groupingType: "label",
+  };
+
   [
     {
-      testName: "Base class grouping",
-      label: "Base Class",
-      key: {
-        type: "class-grouping",
-        class: {
-          name: "TestSchema:BaseClass",
-          label: "Base Class",
-        },
-      },
+      testParams: baseClassGroupingParams,
       params: { grouping: { byBaseClasses: { fullClassNames: ["TestSchema:BaseClass"], autoExpand: "single-child" } } },
-      groupingType: "base-class",
     },
     {
-      testName: "Class grouping",
-      label: "A",
-      key: {
-        type: "class-grouping",
-        class: {
-          name: "TestSchema:A",
-          label: "A",
-        },
-      },
+      testParams: classGroupingParams,
       params: { grouping: { byClass: { autoExpand: "single-child" } } },
-      groupingType: "class",
     },
     {
-      testName: "Label grouping",
-      label: "1",
-      key: {
-        type: "label-grouping",
-        label: "1",
-      },
+      testParams: labelGroupingParams,
       params: { grouping: { byLabel: { autoExpand: "single-child" } } },
-      groupingType: "label",
     },
-  ].forEach(({ testName, label, key, params, groupingType }) => {
+  ].forEach(({ testParams, params }) => {
     describe("sets autoExpand to true when grouping node has one node child and it has autoExpand set to 'single-child'", () => {
-      it(testName, async () => {
+      it(testParams.testName, async () => {
         const nodes: HierarchyNode[] = [
           {
-            label,
-            key: key as HierarchyNodeKey,
+            label: testParams.label,
+            key: testParams.key as HierarchyNodeKey,
             children: [
               createTestNode({
                 key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
@@ -63,7 +73,7 @@ describe("AutoExpand", () => {
             ],
           },
         ];
-        const result = assignAutoExpand({ grouped: nodes, ungrouped: [], groupingType: groupingType as GroupingType });
+        const result = assignAutoExpand({ grouped: nodes, ungrouped: [], groupingType: testParams.groupingType as GroupingType });
         expect(result.ungrouped).to.deep.eq([]);
         expect(HierarchyNode.isGroupingNode(result.grouped[0])).to.eq(true);
         expect(result.grouped[0].children).to.deep.eq(nodes[0].children);
@@ -74,48 +84,24 @@ describe("AutoExpand", () => {
 
   [
     {
-      testName: "Base class grouping",
-      label: "Base Class",
-      key: {
-        type: "class-grouping",
-        class: {
-          name: "TestSchema:BaseClass",
-          label: "Base Class",
-        },
-      },
+      testParams: baseClassGroupingParams,
       params: { grouping: { byBaseClasses: { fullClassNames: ["TestSchema:BaseClass"], autoExpand: "always" } } },
-      groupingType: "base-class",
     },
     {
-      testName: "Class grouping",
-      label: "A",
-      key: {
-        type: "class-grouping",
-        class: {
-          name: "TestSchema:A",
-          label: "A",
-        },
-      },
+      testParams: classGroupingParams,
       params: { grouping: { byClass: { autoExpand: "always" } } },
-      groupingType: "class",
     },
     {
-      testName: "Label grouping",
-      label: "1",
-      key: {
-        type: "label-grouping",
-        label: "1",
-      },
+      testParams: labelGroupingParams,
       params: { grouping: { byLabel: { autoExpand: "always" } } },
-      groupingType: "label",
     },
-  ].forEach(({ testName, label, key, params, groupingType }) => {
+  ].forEach(({ testParams, params }) => {
     describe("sets autoExpand to true when some child nodes have autoExpand set to 'always'", () => {
-      it(testName, async () => {
+      it(testParams.testName, async () => {
         const nodes: HierarchyNode[] = [
           {
-            label,
-            key: key as HierarchyNodeKey,
+            label: testParams.label,
+            key: testParams.key as HierarchyNodeKey,
             children: [
               createTestNode({
                 key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
@@ -129,7 +115,7 @@ describe("AutoExpand", () => {
             ],
           },
         ];
-        const result = assignAutoExpand({ grouped: nodes, ungrouped: [], groupingType: groupingType as GroupingType });
+        const result = assignAutoExpand({ grouped: nodes, ungrouped: [], groupingType: testParams.groupingType as GroupingType });
         expect(result.ungrouped).to.deep.eq([]);
         expect(HierarchyNode.isGroupingNode(result.grouped[0])).to.eq(true);
         expect(result.grouped[0].children).to.deep.eq(nodes[0].children);
@@ -140,48 +126,24 @@ describe("AutoExpand", () => {
 
   [
     {
-      testName: "Base class grouping",
-      label: "Base Class",
-      key: {
-        type: "class-grouping",
-        class: {
-          name: "TestSchema:BaseClass",
-          label: "Base Class",
-        },
-      },
+      testParams: baseClassGroupingParams,
       params: { grouping: { byBaseClasses: { fullClassNames: ["TestSchema:BaseClass"], autoExpand: "single-child" } } },
-      groupingType: "base-class",
     },
     {
-      testName: "Class grouping",
-      label: "A",
-      key: {
-        type: "class-grouping",
-        class: {
-          name: "TestSchema:A",
-          label: "A",
-        },
-      },
+      testParams: classGroupingParams,
       params: { grouping: { byClass: { autoExpand: "single-child" } } },
-      groupingType: "class",
     },
     {
-      testName: "Label grouping",
-      label: "1",
-      key: {
-        type: "label-grouping",
-        label: "1",
-      },
+      testParams: labelGroupingParams,
       params: { grouping: { byLabel: { autoExpand: "single-child" } } },
-      groupingType: "label",
     },
-  ].forEach(({ testName, label, key, params, groupingType }) => {
+  ].forEach(({ testParams, params }) => {
     describe("doesn't set autoExpand when grouping node has more than one child node and none of them have autoExpand set to 'always'", () => {
-      it(testName, async () => {
+      it(testParams.testName, async () => {
         const nodes: HierarchyNode[] = [
           {
-            label,
-            key: key as HierarchyNodeKey,
+            label: testParams.label,
+            key: testParams.key as HierarchyNodeKey,
             children: [
               createTestNode({
                 key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
@@ -195,7 +157,7 @@ describe("AutoExpand", () => {
             ],
           },
         ];
-        const result = assignAutoExpand({ grouped: nodes, ungrouped: [], groupingType: groupingType as GroupingType });
+        const result = assignAutoExpand({ grouped: nodes, ungrouped: [], groupingType: testParams.groupingType as GroupingType });
         expect(result.ungrouped).to.deep.eq([]);
         expect(HierarchyNode.isGroupingNode(result.grouped[0])).to.eq(true);
         expect(result.grouped[0].children).to.deep.eq(nodes[0].children);
@@ -206,45 +168,21 @@ describe("AutoExpand", () => {
 
   [
     {
-      testName: "Base class grouping",
-      label: "Base Class",
-      key: {
-        type: "class-grouping",
-        class: {
-          name: "TestSchema:BaseClass",
-          label: "Base Class",
-        },
-      },
-      groupingType: "base-class",
+      testParams: baseClassGroupingParams,
     },
     {
-      testName: "Class grouping",
-      label: "A",
-      key: {
-        type: "class-grouping",
-        class: {
-          name: "TestSchema:A",
-          label: "A",
-        },
-      },
-      groupingType: "class",
+      testParams: classGroupingParams,
     },
     {
-      testName: "Label grouping",
-      label: "1",
-      key: {
-        type: "label-grouping",
-        label: "1",
-      },
-      groupingType: "label",
+      testParams: labelGroupingParams,
     },
-  ].forEach(({ testName, label, key, groupingType }) => {
+  ].forEach(({ testParams }) => {
     describe("doesn't set autoExpand when child nodes don't have autoExpand option set", () => {
-      it(testName, async () => {
+      it(testParams.testName, async () => {
         const nodes: HierarchyNode[] = [
           {
-            label,
-            key: key as HierarchyNodeKey,
+            label: testParams.label,
+            key: testParams.key as HierarchyNodeKey,
             children: [
               createTestNode({
                 key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
@@ -253,7 +191,7 @@ describe("AutoExpand", () => {
             ],
           },
         ];
-        const result = assignAutoExpand({ grouped: nodes, ungrouped: [], groupingType: groupingType as GroupingType });
+        const result = assignAutoExpand({ grouped: nodes, ungrouped: [], groupingType: testParams.groupingType as GroupingType });
         expect(result.ungrouped).to.deep.eq([]);
         expect(HierarchyNode.isGroupingNode(result.grouped[0])).to.eq(true);
         expect(result.grouped[0].children).to.deep.eq(nodes[0].children);
