@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert } from "@itwin/core-bentley";
-import { HierarchyNode } from "../../../HierarchyNode";
+import { HierarchyNode, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
 import { ECClass, IMetadataProvider } from "../../../Metadata";
 import { getClass } from "../../Common";
 import { GroupingHandler, GroupingHandlerResult } from "../Grouping";
@@ -23,7 +23,7 @@ import { GroupingHandler, GroupingHandlerResult } from "../Grouping";
 /** @internal */
 export async function createPropertyGrouping(
   metadata: IMetadataProvider,
-  nodes: HierarchyNode[],
+  nodes: ProcessedInstanceHierarchyNode[],
   propertyInfo: PropertyGroupInfo,
 ): Promise<GroupingHandlerResult> {
   const finalResult: GroupingHandlerResult = { grouped: [], ungrouped: [], groupingType: "property" };
@@ -38,7 +38,7 @@ export async function createPropertyGrouping(
   assert(Array.isArray(baseClassGroupingNode.children));
 
   for (const node of nodes) {
-    if (HierarchyNode.isInstancesNode(node) && node.params?.grouping?.byBaseClasses) {
+    if (node.processingParams?.grouping?.byBaseClasses) {
       if (!node.params.grouping.byBaseClasses.fullClassNames.some((className) => className === baseECClass.fullName)) {
         finalResult.ungrouped.push(node);
         continue;
@@ -61,25 +61,29 @@ export async function createPropertyGrouping(
 }
 
 interface PropertyGroupInfo {
-  propertyClass: ECClass;
+  fullClassName: string;
+  previousPropertiesNames: string[];
   propertyName: string;
-  range?: { fromValue: string; toValue: string; rangeLabel?: string } | { fromValue: number; toValue: number; rangeLabel?: string };
+  ranges?: Array<{ fromValue: string; toValue: string; rangeLabel?: string }>;
 }
 
-async function getPropertyInfoFromNodesPropertiesGrouping(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<Set<PropertyGroupInfo>> {
+async function getPropertyInfoFromNodesPropertiesGrouping(metadata: IMetadataProvider, nodes: ProcessedInstanceHierarchyNode[]): Promise<Set<PropertyGroupInfo>> {
   const propertyGroupInfo = new Set<PropertyGroupInfo>();
   for (const node of nodes) {
-    if (HierarchyNode.isInstancesNode(node) && node.params?.grouping?.byProperties) {
-      const propertyClass = await getClass(metadata, node.params.grouping.byProperties.fullClassName);
-      const nodeClass = await getClass(metadata, node.key.instanceKeys[0].className);
-      if (!(await nodeClass.is(propertyClass))) {
-        continue;
-      }
-      for (const propertyGroup of node.params.grouping.byProperties.propertyGroups) {
+    const byProperties = node.processingParams?.grouping?.byProperties;
+    if (byProperties) {
+      for (const propertyGroup of byProperties.propertyGroups) {
+        const specificNodePropertyGroupInfo = new Map();
         if (typeof propertyGroup === "string") {
-          if (!!(await propertyClass.getProperty(propertyGroup))) {
-            propertyGroupInfo.add({ propertyClass, propertyName: propertyGroup });
+          let groupingInfo = propertyGroupInfo.get(`${byProperties.fullClassName}:${propertyGroup}`);
+          if (!groupingInfo) {
+            groupingInfo = {
+              fullClassName: byProperties.fullClassName,
+              previousPropertyName
+            }
+            propertyGroupInfo.set(`${byProperties.fullClassName}:${propertyGroup}`, groupingInfo);
           }
+          propertyGroupInfo.add({ `${node.processingParams.grouping.byProperties.fullClassName}:${propertyGroup}`, propertyName: propertyGroup });
           continue;
         }
         if (!!(await propertyClass.getProperty(propertyGroup.propertyName))) {
@@ -120,7 +124,8 @@ async function sortByBaseClass(classes: ECClass[]): Promise<ECClass[]> {
 }
 
 /** @internal */
-export async function createBaseClassGroupingHandlers(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<GroupingHandler[]> {
+export async function createPropertiesGroupingHandlers(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<GroupingHandler[]> {
+  const propertiesInfo =
   const baseClassGroupingECClasses = await getBaseClassGroupingECClasses(metadata, nodes);
   return baseClassGroupingECClasses.map(
     (baseECClass) => async (allNodes: HierarchyNode[]) => createBaseClassGroupsForSingleBaseClass(metadata, allNodes, baseECClass),
