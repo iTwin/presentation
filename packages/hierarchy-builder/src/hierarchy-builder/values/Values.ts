@@ -23,6 +23,17 @@ export interface InstanceKey {
   id: Id64String;
 }
 
+/** @beta */
+export namespace InstanceKey {
+  /**
+   * Checks whether the two given instance keys are equal.
+   * @beta
+   */
+  export function equals(lhs: InstanceKey, rhs: InstanceKey): boolean {
+    return lhs.className === rhs.className && lhs.id === rhs.id;
+  }
+}
+
 /**
  * A data structure for a 2d point.
  * @beta

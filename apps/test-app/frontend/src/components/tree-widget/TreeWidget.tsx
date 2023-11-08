@@ -151,13 +151,12 @@ function parseTreeNodeItem(node: HierarchyNode): DelayLoadedTreeNodeItem {
   if (node.children === undefined) {
     throw new Error("Invalid node: children not determined");
   }
-  const hasChildren = typeof node.children === "boolean" ? node.children : Array.isArray(node.children) ? node.children.length > 0 : undefined;
   return {
     __internal: node,
     id: JSON.stringify(node.key),
     label: PropertyRecord.fromString(node.label, "Label"),
     icon: node.extendedData?.imageId,
-    hasChildren,
+    hasChildren: !!node.children,
     autoExpand: node.autoExpand,
   } as DelayLoadedTreeNodeItem;
 }

@@ -31,7 +31,7 @@ if (!fs.existsSync(apiSummaryPath)) {
   process.exit(1);
 }
 
-const re = /^\/\/ @internal/gm;
+const re = /^\s*\/\/ @internal/gm;
 const content = fs.readFileSync(apiSummaryPath, { encoding: "utf8" });
 if (re.test(content)) {
   console.error(`Fail! Detected exposed @internal APIs - please make sure they're not exported through barrel file and re-generate API summary`);

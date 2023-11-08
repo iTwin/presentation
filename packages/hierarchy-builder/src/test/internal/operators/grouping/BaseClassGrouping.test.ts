@@ -5,10 +5,10 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { HierarchyNode } from "../../../../hierarchy-builder/HierarchyNode";
+import { GroupingNodeKey } from "../../../../hierarchy-builder/HierarchyNode";
 import * as baseClassGrouping from "../../../../hierarchy-builder/internal/operators/grouping/BaseClassGrouping";
 import { ECClass, IMetadataProvider } from "../../../../hierarchy-builder/Metadata";
-import { createGetClassStub, createTestNode, TStubClassFunc } from "../../../Utils";
+import { createGetClassStub, createTestProcessedGroupingNode, createTestProcessedInstanceNode, TStubClassFunc } from "../../../Utils";
 
 describe("BaseClassGrouping", () => {
   const metadataProvider = {} as unknown as IMetadataProvider;
@@ -23,10 +23,10 @@ describe("BaseClassGrouping", () => {
 
   describe("getBaseClassGroupingECClasses", () => {
     it("extracts ECClasses in the order: the most base -> lesser base -> least base ECClass", async () => {
-      const nodes: HierarchyNode[] = [
-        createTestNode({
+      const nodes = [
+        createTestProcessedInstanceNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema.TestClass", id: "0x1" }] },
-          params: {
+          processingParams: {
             grouping: {
               byBaseClasses: {
                 fullClassNames: ["TestSchema.Class2", "TestSchema.Class1", "TestSchema.Class3"],
@@ -63,10 +63,10 @@ describe("BaseClassGrouping", () => {
     });
 
     it("doesn't extract ECClasses that are not of entity or relationship type", async () => {
-      const nodes: HierarchyNode[] = [
-        createTestNode({
+      const nodes = [
+        createTestProcessedInstanceNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema.TestClass", id: "0x1" }] },
-          params: {
+          processingParams: {
             grouping: {
               byBaseClasses: {
                 fullClassNames: ["TestSchema.Class"],
@@ -86,8 +86,8 @@ describe("BaseClassGrouping", () => {
     });
 
     it("returns empty array if base classes aren't provided", async () => {
-      const nodes: HierarchyNode[] = [
-        createTestNode({
+      const nodes = [
+        createTestProcessedInstanceNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema.TestClass", id: "0x1" }] },
         }),
       ];
@@ -97,33 +97,12 @@ describe("BaseClassGrouping", () => {
   });
 
   describe("createBaseClassGroupsForSingleBaseClass", async () => {
-    it("doesn't group non-instance nodes", async () => {
-      const nodes: HierarchyNode[] = [
-        {
-          label: "custom",
-          key: "test",
-          children: false,
-          params: {
-            grouping: {
-              byBaseClasses: {
-                fullClassNames: ["TestSchema.ParentClass"],
-              },
-            },
-          },
-        },
-      ];
-      const ecClass = { fullName: "TestSchema.ParentClass", label: "ParentClass" } as unknown as ECClass;
-
-      const result = await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(metadataProvider, nodes, ecClass);
-      expect(result.grouped).to.deep.eq([]);
-      expect(result.ungrouped).to.deep.eq(nodes);
-    });
-
     it("doesn't group if provided ECClass is not in the nodes' grouping base class list", async () => {
       const nodes = [
-        createTestNode({
+        createTestProcessedInstanceNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema.TestClass", id: "0x1" }] },
-          params: {
+          parentKeys: ["x"],
+          processingParams: {
             grouping: {
               byBaseClasses: {
                 fullClassNames: ["TestSchema.Class"],
@@ -133,17 +112,19 @@ describe("BaseClassGrouping", () => {
         }),
       ];
       const ecClass = { fullName: "TestSchema.ParentClass", label: "ParentClass" } as unknown as ECClass;
-
-      const result = await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(metadataProvider, nodes, ecClass);
-      expect(result.grouped).to.deep.eq([]);
-      expect(result.ungrouped).to.deep.eq(nodes);
+      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(metadataProvider, nodes, ecClass)).to.deep.eq({
+        groupingType: "base-class",
+        grouped: [],
+        ungrouped: nodes,
+      });
     });
 
     it("groups one instance node", async () => {
       const nodes = [
-        createTestNode({
+        createTestProcessedInstanceNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema.TestClass", id: "0x1" }] },
-          params: {
+          parentKeys: ["x"],
+          processingParams: {
             grouping: {
               byBaseClasses: {
                 fullClassNames: ["TestSchema.ParentClass"],
@@ -156,29 +137,34 @@ describe("BaseClassGrouping", () => {
 
       stubClass({ schemaName: "TestSchema", className: "TestClass", is: async () => true });
 
-      const result = await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(metadataProvider, nodes, eCClass);
-      expect(result.grouped).to.deep.eq([
-        {
+      const expectedGroupingNodeKey: GroupingNodeKey = {
+        type: "class-grouping",
+        class: {
+          name: eCClass.fullName,
           label: eCClass.name,
-          key: {
-            type: "class-grouping",
-            class: {
-              name: eCClass.fullName,
-              label: eCClass.name,
-            },
-          },
-          children: nodes,
         },
-      ] as HierarchyNode[]);
-      expect(result.ungrouped).to.deep.eq([]);
+      };
+      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(metadataProvider, nodes, eCClass)).to.deep.eq({
+        groupingType: "base-class",
+        grouped: [
+          createTestProcessedGroupingNode({
+            label: eCClass.name,
+            key: expectedGroupingNodeKey,
+            parentKeys: ["x"],
+            children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
+          }),
+        ],
+        ungrouped: [],
+      });
     });
 
     it("groups multiple instance nodes", async () => {
       const nodes = [
-        createTestNode({
+        createTestProcessedInstanceNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
+          parentKeys: ["x"],
           label: "1",
-          params: {
+          processingParams: {
             grouping: {
               byBaseClasses: {
                 fullClassNames: ["TestSchema.ParentClass"],
@@ -186,10 +172,11 @@ describe("BaseClassGrouping", () => {
             },
           },
         }),
-        createTestNode({
+        createTestProcessedInstanceNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema.B", id: "0x2" }] },
+          parentKeys: ["x"],
           label: "2",
-          params: {
+          processingParams: {
             grouping: {
               byBaseClasses: {
                 fullClassNames: ["TestSchema.ParentClass"],
@@ -203,29 +190,35 @@ describe("BaseClassGrouping", () => {
       stubClass({ schemaName: "TestSchema", className: "B", classLabel: "Class B", is: async () => true });
       const ecClass = { fullName: "TestSchema.ParentClass", label: "ParentClass" } as unknown as ECClass;
 
-      const result = await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(metadataProvider, nodes, ecClass);
-      expect(result.grouped).to.deep.eq([
-        {
+      const expectedGroupingNodeKey: GroupingNodeKey = {
+        type: "class-grouping",
+        class: {
+          name: ecClass.fullName,
           label: ecClass.label,
-          key: {
-            type: "class-grouping",
-            class: {
-              name: ecClass.fullName,
-              label: ecClass.label,
-            },
-          },
-          children: [nodes[0], nodes[1]],
         },
-      ] as HierarchyNode[]);
-      expect(result.ungrouped).to.deep.eq([]);
+      };
+
+      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(metadataProvider, nodes, ecClass)).to.deep.eq({
+        groupingType: "base-class",
+        grouped: [
+          createTestProcessedGroupingNode({
+            label: ecClass.label,
+            key: expectedGroupingNodeKey,
+            parentKeys: ["x"],
+            children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
+          }),
+        ],
+        ungrouped: [],
+      });
     });
 
     it("groups only nodes for which ECClass is base", async () => {
       const nodes = [
-        createTestNode({
+        createTestProcessedInstanceNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
+          parentKeys: ["x"],
           label: "1",
-          params: {
+          processingParams: {
             grouping: {
               byBaseClasses: {
                 fullClassNames: ["TestSchema.ParentClass"],
@@ -233,10 +226,11 @@ describe("BaseClassGrouping", () => {
             },
           },
         }),
-        createTestNode({
+        createTestProcessedInstanceNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema.B", id: "0x2" }] },
+          parentKeys: ["x"],
           label: "2",
-          params: {
+          processingParams: {
             grouping: {
               byBaseClasses: {
                 fullClassNames: ["TestSchema.ParentClass"],
@@ -249,30 +243,35 @@ describe("BaseClassGrouping", () => {
       stubClass({ schemaName: "TestSchema", className: "B", classLabel: "Class B", is: async () => false });
       const ecClass = { fullName: "TestSchema.ParentClass", label: "ParentClass" } as unknown as ECClass;
 
-      const result = await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(metadataProvider, nodes, ecClass);
-      expect(result.grouped).to.deep.eq([
-        {
+      const expectedGroupingNodeKey: GroupingNodeKey = {
+        type: "class-grouping",
+        class: {
+          name: ecClass.fullName,
           label: ecClass.label,
-          key: {
-            type: "class-grouping",
-            class: {
-              name: ecClass.fullName,
-              label: ecClass.label,
-            },
-          },
-          children: [nodes[0]],
         },
-      ] as HierarchyNode[]);
-      expect(result.ungrouped).to.deep.eq([nodes[1]]);
+      };
+
+      expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(metadataProvider, nodes, ecClass)).to.deep.eq({
+        groupingType: "base-class",
+        grouped: [
+          createTestProcessedGroupingNode({
+            label: ecClass.label,
+            key: expectedGroupingNodeKey,
+            parentKeys: ["x"],
+            children: [nodes[0]].map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
+          }),
+        ],
+        ungrouped: [nodes[1]],
+      });
     });
   });
 
   describe("createBaseClassGroupingHandlers", () => {
     it("creates base class grouping handlers from the provided fullClassNames", async () => {
-      const nodes: HierarchyNode[] = [
-        createTestNode({
+      const nodes = [
+        createTestProcessedInstanceNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema.TestClass", id: "0x1" }] },
-          params: {
+          processingParams: {
             grouping: {
               byBaseClasses: {
                 fullClassNames: ["TestSchema.Class"],

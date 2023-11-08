@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { HierarchyNode } from "../../../HierarchyNode";
+import { ClassGroupingNodeKey, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
 import { IMetadataProvider } from "../../../Metadata";
 import { getClass } from "../../Common";
 import { GroupingHandlerResult } from "../Grouping";
@@ -15,16 +15,16 @@ interface ClassInfo {
 }
 
 interface ClassGroupingInformation {
-  ungrouped: Array<HierarchyNode>;
-  grouped: Map<string, { class: ClassInfo; groupedNodes: Array<HierarchyNode> }>;
+  ungrouped: ProcessedInstanceHierarchyNode[];
+  grouped: Map<string, { class: ClassInfo; groupedNodes: ProcessedInstanceHierarchyNode[] }>;
 }
 
 /** @internal */
-export async function createClassGroups(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<GroupingHandlerResult> {
+export async function createClassGroups(metadata: IMetadataProvider, nodes: ProcessedInstanceHierarchyNode[]): Promise<GroupingHandlerResult> {
   const groupings: ClassGroupingInformation = { ungrouped: [], grouped: new Map() };
   for (const node of nodes) {
     // we're only grouping instance nodes
-    if (HierarchyNode.isInstancesNode(node) && node.params?.grouping?.byClass) {
+    if (node.processingParams?.grouping?.byClass) {
       const fullClassName = node.key.instanceKeys[0].className;
       let groupingInfo = groupings.grouped.get(fullClassName);
       if (!groupingInfo) {
@@ -46,15 +46,17 @@ export async function createClassGroups(metadata: IMetadataProvider, nodes: Hier
 function createGroupingNodes(groupings: ClassGroupingInformation): GroupingHandlerResult {
   const outNodes: GroupingHandlerResult = { grouped: [], ungrouped: [], groupingType: "class" };
   groupings.grouped.forEach((entry) => {
-    const groupedNode: HierarchyNode = {
-      label: entry.class.label ?? entry.class.name,
-      key: {
-        type: "class-grouping",
-        class: { name: entry.class.fullName, label: entry.class.label },
-      },
-      children: entry.groupedNodes,
+    const groupingNodeKey: ClassGroupingNodeKey = {
+      type: "class-grouping",
+      class: { name: entry.class.fullName, label: entry.class.label },
     };
-    outNodes.grouped.push(groupedNode);
+    const groupedNodeParentKeys = entry.groupedNodes[0].parentKeys;
+    outNodes.grouped.push({
+      label: entry.class.label ?? entry.class.name,
+      key: groupingNodeKey,
+      parentKeys: groupedNodeParentKeys,
+      children: entry.groupedNodes.map((gn) => ({ ...gn, parentKeys: [...groupedNodeParentKeys, groupingNodeKey] })),
+    });
   });
   outNodes.ungrouped.push(...groupings.ungrouped);
   return outNodes;

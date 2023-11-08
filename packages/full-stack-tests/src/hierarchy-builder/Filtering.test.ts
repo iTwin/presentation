@@ -246,7 +246,7 @@ describe("Stateless hierarchy builder", () => {
                     key: "custom",
                     label: "custom",
                     children: undefined,
-                    params: {
+                    processingParams: {
                       hideInHierarchy: true,
                     },
                     extendedData: {
@@ -332,7 +332,7 @@ describe("Stateless hierarchy builder", () => {
                     key: "custom",
                     label: "custom",
                     children: undefined,
-                    params: {
+                    processingParams: {
                       hideInHierarchy: true,
                     },
                     extendedData: {

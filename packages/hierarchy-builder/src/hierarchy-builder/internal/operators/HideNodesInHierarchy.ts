@@ -3,10 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { concat, defer, EMPTY, filter, finalize, from, merge, mergeAll, mergeMap, Observable, partition, reduce, shareReplay, take, tap } from "rxjs";
-import { HierarchyNode } from "../../HierarchyNode";
+import { concat, defer, EMPTY, filter, finalize, map, merge, mergeAll, mergeMap, Observable, partition, reduce, shareReplay, take, tap } from "rxjs";
+import { HierarchyNode, InstancesNodeKey, ProcessedCustomHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
-import { createOperatorLoggingNamespace, hasChildren, mergeNodesObs } from "../Common";
+import { createOperatorLoggingNamespace, hasChildren, mergeNodes } from "../Common";
 
 const OPERATOR_NAME = "HideNodesInHierarchy";
 /** @internal */
@@ -18,34 +18,36 @@ export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
  * @internal
  */
 export function createHideNodesInHierarchyOperator(
-  getNodes: (parentNode: HierarchyNode) => Observable<HierarchyNode>,
-  directNodesCache: Map<string, Observable<HierarchyNode>>,
+  getNodes: (parentNode: ProcessedHierarchyNode) => Observable<ProcessedHierarchyNode>,
   stopOnFirstChild: boolean,
 ) {
-  return function (nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
+  return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
     const sharedNodes = nodes.pipe(
       log((n) => `in: ${n.label}`),
       shareReplay(),
     );
-    const [withFlag, withoutFlag] = partition(sharedNodes, (node) => !!node.params?.hideInHierarchy);
-    const [withChildren, withoutChildren] = partition(withFlag, (node) => Array.isArray(node.children));
-    const withLoadedChildren = withoutChildren.pipe(
+    const [withFlag, withoutFlag] = partition(
+      sharedNodes,
+      (n): n is ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode =>
+        (HierarchyNode.isCustom(n) || HierarchyNode.isInstancesNode(n)) && !!n.processingParams?.hideInHierarchy,
+    );
+    const withLoadedChildren = withFlag.pipe(
       log((n) => `${n.label} needs hide and needs children to be loaded`),
       filter((node) => node.children !== false),
       reduce((acc, node) => {
-        addToMergeMap(directNodesCache, acc, node);
+        addToMergeMap(acc, node);
         return acc;
-      }, new Map<string, HierarchyNode>()),
+      }, new Map() as LabelMergeMap),
       log((mm) => `created a merge map of size ${mm.size}`),
-      mergeMap((mergedNodes) => [...mergedNodes.values()].map((mergedNode) => defer(() => getNodes(mergedNode)))),
+      tap((_mm: LabelMergeMap) => {
+        // TODO: check if it's worth looking for merged nodes' observables in cache and merging them for parent node
+      }),
+      mergeMap((mm) => [...mm.values()].map((v) => defer(() => getNodes(v.merged)))),
       mergeAll(),
+      map((n): ProcessedHierarchyNode => n),
     );
     return merge(
       withoutFlag.pipe(log((n) => `${n.label} doesn't need hide, return the node`)),
-      withChildren.pipe(
-        log((n) => `${n.label} needs hide and has ${(n.children as Array<any>).length} loaded children, return them`),
-        mergeMap((parent) => from(parent.children as HierarchyNode[])),
-      ),
       stopOnFirstChild
         ? concat(
             // a small hack to handle situation when we're here to only check if parent node has children and one of them has `hideIfNoChildren` flag
@@ -62,27 +64,24 @@ export function createHideNodesInHierarchyOperator(
   };
 }
 
-function createMergeMapKey(node: HierarchyNode): string {
+function createMergeMapKey<TNode extends { key: InstancesNodeKey | string }>(node: TNode): string {
   if (typeof node.key === "string") {
     return node.key;
   }
-  switch (node.key.type) {
-    case "instances":
-      return node.key.instanceKeys[0].className;
-    case "class-grouping":
-      return node.key.class.name;
-    case "label-grouping":
-      return node.key.label;
-  }
+  return node.key.instanceKeys[0].className;
 }
 
-function addToMergeMap(directNodesCache: Map<string, Observable<HierarchyNode>>, list: Map<string, HierarchyNode>, node: HierarchyNode) {
+type LabelMergeMap = Map<
+  string,
+  { merged: ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode; nodes: Array<ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode> }
+>;
+function addToMergeMap(list: LabelMergeMap, node: ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode) {
   const mergeKey = createMergeMapKey(node);
-  const merged = list.get(mergeKey);
-  if (merged) {
-    list.set(mergeKey, mergeNodesObs(merged, node, directNodesCache));
+  const res = list.get(mergeKey);
+  if (res) {
+    list.set(mergeKey, { merged: mergeNodes(res.merged, node), nodes: [...res.nodes, node] });
   } else {
-    list.set(mergeKey, node);
+    list.set(mergeKey, { merged: node, nodes: [node] });
   }
 }
 

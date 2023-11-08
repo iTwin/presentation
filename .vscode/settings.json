@@ -7,6 +7,13 @@
   "editor.codeActionsOnSave": {
     "source.fixAll": true
   },
+  
+  "eslint.experimental.useFlatConfig": true,
+  "eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
+  ],
 
   "files.associations": {
     ".nycrc": "json",
@@ -52,10 +59,14 @@
       "orderLevel": 30
     }
   ],
-  "eslint.experimental.useFlatConfig": true,
-  "eslint.workingDirectories": [
-    {
-      "mode": "auto"
-    }
-  ]
+
+  "terminal.integrated.env.linux": {
+    "NODE_ENV": "development"
+  },
+  "terminal.integrated.env.osx": {
+    "NODE_ENV": "development"
+  },
+  "terminal.integrated.env.windows": {
+    "NODE_ENV": "development"
+  }
 }

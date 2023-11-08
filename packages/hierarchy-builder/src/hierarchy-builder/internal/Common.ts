@@ -3,10 +3,25 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { merge, Observable } from "rxjs";
+import { Observable } from "rxjs";
 import { assert } from "@itwin/core-bentley";
-import { BaseGroupingParams, GroupingParams, HierarchyNode, HierarchyNodeHandlingParams, HierarchyNodeKey } from "../HierarchyNode";
+import {
+  BaseGroupingParams,
+  GroupingParams,
+  HierarchyNode,
+  HierarchyNodeKey,
+  InstanceHierarchyNodeProcessingParams,
+  InstancesNodeKey,
+  ParentHierarchyNode,
+  ProcessedCustomHierarchyNode,
+  ProcessedHierarchyNode,
+  ProcessedInstanceHierarchyNode,
+} from "../HierarchyNode";
+import { getLogger } from "../Logging";
 import { ECClass, ECSchema, IMetadataProvider, parseFullClassName } from "../Metadata";
+
+/** @internal */
+export const LOGGING_NAMESPACE = "Presentation.HierarchyBuilder";
 
 /** @internal */
 export async function getClass(metadata: IMetadataProvider, fullClassName: string): Promise<ECClass> {
@@ -15,8 +30,8 @@ export async function getClass(metadata: IMetadataProvider, fullClassName: strin
   try {
     schema = await metadata.getSchema(schemaName);
   } catch (e) {
-    // eslint-disable-next-line no-console
-    console.error(e);
+    assert(e instanceof Error);
+    getLogger().logError(`${LOGGING_NAMESPACE}`, `Failed to get schema "${schemaName} with error ${e.message}."`);
   }
   if (!schema) {
     throw new Error(`Invalid schema "${schemaName}"`);
@@ -26,8 +41,8 @@ export async function getClass(metadata: IMetadataProvider, fullClassName: strin
   try {
     nodeClass = await schema.getClass(className);
   } catch (e) {
-    // eslint-disable-next-line no-console
-    console.error(e);
+    assert(e instanceof Error);
+    getLogger().logError(`${LOGGING_NAMESPACE}`, `Failed to get schema "${schemaName} with error ${e.message}."`);
   }
   if (!nodeClass) {
     throw new Error(`Invalid class "${className}" in schema "${schemaName}"`);
@@ -37,18 +52,19 @@ export async function getClass(metadata: IMetadataProvider, fullClassName: strin
 }
 
 function mergeNodeHandlingParams(
-  lhs: HierarchyNodeHandlingParams | undefined,
-  rhs: HierarchyNodeHandlingParams | undefined,
-): HierarchyNodeHandlingParams | undefined {
+  lhs: InstanceHierarchyNodeProcessingParams | undefined,
+  rhs: InstanceHierarchyNodeProcessingParams | undefined,
+): InstanceHierarchyNodeProcessingParams | undefined {
   if (!lhs && !rhs) {
     return undefined;
   }
-  return {
-    ...(lhs?.hideIfNoChildren && rhs?.hideIfNoChildren ? { hideIfNoChildren: true } : undefined),
-    ...(lhs?.hideInHierarchy && rhs?.hideInHierarchy ? { hideInHierarchy: true } : undefined),
+  const params = {
+    ...(lhs?.hideIfNoChildren || rhs?.hideIfNoChildren ? { hideIfNoChildren: true } : undefined),
+    ...(lhs?.hideInHierarchy || rhs?.hideInHierarchy ? { hideInHierarchy: true } : undefined),
     ...(lhs?.grouping || rhs?.grouping ? { grouping: mergeNodeGroupingParams(lhs?.grouping, rhs?.grouping) } : undefined),
-    ...(lhs?.mergeByLabelId ? { mergeByLabelId: lhs.mergeByLabelId } : undefined),
+    ...(lhs?.mergeByLabelId || rhs?.mergeByLabelId ? { mergeByLabelId: lhs?.mergeByLabelId ?? rhs?.mergeByLabelId } : undefined),
   };
+  return Object.keys(params).length > 0 ? params : undefined;
 }
 
 function mergeNodeGroupingParams(lhsGrouping: GroupingParams | undefined, rhsGrouping: GroupingParams | undefined): GroupingParams {
@@ -69,11 +85,13 @@ function mergeNodeGroupingParams(lhsGrouping: GroupingParams | undefined, rhsGro
               : true,
         }
       : undefined),
-    ...(lhsGrouping?.byBaseClasses?.fullClassNames || rhsGrouping?.byBaseClasses?.fullClassNames
+    ...(lhsGrouping?.byBaseClasses || rhsGrouping?.byBaseClasses
       ? {
-          // Create an array from both: lhs and rhs fullClassNames arrays without adding duplicates
-          fullClassNames: [...new Set([...(lhsGrouping?.byBaseClasses?.fullClassNames ?? []), ...(rhsGrouping?.byBaseClasses?.fullClassNames ?? [])])],
-          ...mergeBaseGroupingParams(lhsGrouping?.byBaseClasses, rhsGrouping?.byBaseClasses),
+          byBaseClasses: {
+            // Create an array from both: lhs and rhs fullClassNames arrays without adding duplicates
+            fullClassNames: [...new Set([...(lhsGrouping?.byBaseClasses?.fullClassNames ?? []), ...(rhsGrouping?.byBaseClasses?.fullClassNames ?? [])])],
+            ...mergeBaseGroupingParams(lhsGrouping?.byBaseClasses, rhsGrouping?.byBaseClasses),
+          },
         }
       : undefined),
   };
@@ -89,47 +107,46 @@ function mergeBaseGroupingParams(
   };
 }
 
-function mergeNodeKeys(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): HierarchyNodeKey {
-  if (HierarchyNodeKey.isCustom(lhs) && HierarchyNodeKey.isCustom(rhs)) {
-    assert(lhs === rhs);
-    return lhs;
+function mergeNodeKeys<TKey extends string | InstancesNodeKey>(lhs: TKey, rhs: TKey): TKey {
+  if (HierarchyNodeKey.isCustom(lhs)) {
+    assert(HierarchyNodeKey.isCustom(rhs));
+    return lhs === rhs ? lhs : (`${lhs}+${rhs}` as TKey);
   }
-  assert(HierarchyNodeKey.isStandard(lhs) && HierarchyNodeKey.isStandard(rhs) && lhs.type === rhs.type);
+  // istanbul ignore else
   if (HierarchyNodeKey.isInstances(lhs)) {
     assert(HierarchyNodeKey.isInstances(rhs));
-    return { type: "instances", instanceKeys: [...lhs.instanceKeys, ...rhs.instanceKeys] };
+    return { type: "instances", instanceKeys: [...lhs.instanceKeys, ...rhs.instanceKeys] } as TKey;
   }
-  if (HierarchyNodeKey.isClassGrouping(lhs)) {
-    assert(HierarchyNodeKey.isClassGrouping(rhs));
-    assert(lhs.class.name === rhs.class.name);
-    return { ...lhs };
+  // https://github.com/microsoft/TypeScript/issues/21985
+  // istanbul ignore next
+  return ((x: never) => x)(lhs);
+}
+
+function mergeParentNodeKeys(lhsKeys: HierarchyNodeKey[], rhsKeys: HierarchyNodeKey[]): HierarchyNodeKey[] {
+  const res = new Array<HierarchyNodeKey>();
+  for (let i = 0; i < lhsKeys.length && i < rhsKeys.length; ++i) {
+    if (!HierarchyNodeKey.equals(lhsKeys[i], rhsKeys[i])) {
+      break;
+    }
+    res.push(lhsKeys[i]);
   }
-  if (HierarchyNodeKey.isLabelGrouping(lhs)) {
-    assert(HierarchyNodeKey.isLabelGrouping(rhs));
-    assert(lhs.label === rhs.label);
-    return { ...lhs };
-  }
-  throw new Error(`Unable to merge given node keys`);
+  return res;
 }
 
 /** @internal */
-export function mergeNodes(lhs: HierarchyNode, rhs: HierarchyNode): HierarchyNode {
-  const mergedParams = mergeNodeHandlingParams(lhs.params, rhs.params);
+export function mergeNodes<TNode extends ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode>(lhs: TNode, rhs: TNode): TNode {
+  assert(typeof lhs.key === typeof rhs.key);
+  const mergedProcessingParams = mergeNodeHandlingParams(lhs.processingParams, rhs.processingParams);
+  const mergedChildren = lhs.children === true || rhs.children === true ? true : lhs.children === false && rhs.children === false ? false : undefined;
   return {
     label: lhs.label,
     key: mergeNodeKeys(lhs.key, rhs.key),
-    children:
-      Array.isArray(lhs.children) && Array.isArray(rhs.children)
-        ? [...lhs.children, ...rhs.children]
-        : lhs.children === true || rhs.children === true
-        ? true
-        : lhs.children === false && rhs.children === false
-        ? false
-        : undefined,
+    parentKeys: mergeParentNodeKeys(lhs.parentKeys, rhs.parentKeys),
+    ...(mergedChildren !== undefined ? { children: mergedChildren } : undefined),
+    ...(mergedProcessingParams ? { processingParams: mergedProcessingParams } : undefined),
     ...(lhs.autoExpand || rhs.autoExpand ? { autoExpand: lhs.autoExpand || rhs.autoExpand } : undefined),
     ...(lhs.extendedData || rhs.extendedData ? { extendedData: { ...lhs.extendedData, ...rhs.extendedData } } : undefined),
-    ...(mergedParams ? { params: mergedParams } : undefined),
-  };
+  } as TNode;
 }
 
 /** @internal */
@@ -138,33 +155,38 @@ export function hasChildren<TNode extends { children?: boolean | Array<unknown> 
 }
 
 /** @internal */
-export function mergeNodesObs(lhs: HierarchyNode, rhs: HierarchyNode, directNodesCache: Map<string, Observable<HierarchyNode>>) {
-  const merged = mergeNodes(lhs, rhs);
-  mergeDirectNodeObservables(lhs, rhs, merged, directNodesCache);
-  return merged;
-}
-
-/** @internal */
-export function mergeDirectNodeObservables(a: HierarchyNode, b: HierarchyNode, m: HierarchyNode, cache: Map<string, Observable<HierarchyNode>>) {
-  const cachedA = cache.get(JSON.stringify(a.key));
-  if (!cachedA) {
-    return;
-  }
-  const cachedB = cache.get(JSON.stringify(b.key));
-  if (!cachedB) {
-    return;
-  }
-  const merged = merge(cachedA, cachedB);
-  cache.set(JSON.stringify(m.key), merged);
-}
-
-/** @internal */
 export function createOperatorLoggingNamespace(operatorName: string) {
-  return `Presentation.HierarchyBuilder.Operators.${operatorName}`;
+  return `${LOGGING_NAMESPACE}.Operators.${operatorName}`;
 }
 
 /** @internal */
 export function julianToDateTime(julianDate: number): Date {
   const millis = (julianDate - 2440587.5) * 86400000;
   return new Date(millis);
+}
+
+/** @internal */
+export interface ChildNodesObservables {
+  processedNodes: Observable<ProcessedHierarchyNode>;
+  finalizedNodes: Observable<HierarchyNode>;
+  hasNodes: Observable<boolean>;
+}
+
+/** @internal */
+export class ChildNodesCache {
+  private _map = new Map<string, ChildNodesObservables>();
+
+  private createKey(node: ParentHierarchyNode | undefined): string {
+    return node ? `${JSON.stringify(node.parentKeys)}+${JSON.stringify(node.key)}` : "";
+  }
+
+  public add(parentNode: ParentHierarchyNode | undefined, value: ChildNodesObservables) {
+    const key = this.createKey(parentNode);
+    assert(!this._map.has(key));
+    this._map.set(key, value);
+  }
+
+  public get(parentNode: ParentHierarchyNode | undefined): ChildNodesObservables | undefined {
+    return this._map.get(this.createKey(parentNode));
+  }
 }

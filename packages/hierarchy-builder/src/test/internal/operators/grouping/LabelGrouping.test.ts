@@ -4,98 +4,118 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { HierarchyNode } from "../../../../hierarchy-builder/HierarchyNode";
+import { GroupingNodeKey } from "../../../../hierarchy-builder/HierarchyNode";
+import { GroupingHandlerResult } from "../../../../hierarchy-builder/internal/operators/Grouping";
 import { createLabelGroups } from "../../../../hierarchy-builder/internal/operators/grouping/LabelGrouping";
-import { createTestNode } from "../../../Utils";
+import { createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils";
 
 describe("LabelGrouping", () => {
   it("groups one node", async () => {
-    const nodes: HierarchyNode[] = [
-      createTestNode({
+    const nodes = [
+      createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+        parentKeys: ["x"],
         label: "1",
-        params: { grouping: { byLabel: true } },
+        processingParams: { grouping: { byLabel: true } },
       }),
     ];
-    const result = await createLabelGroups(nodes);
-    expect(result.ungrouped).to.deep.equal([]);
-    expect(result.grouped).to.deep.eq([
-      {
-        label: "1",
-        key: {
-          type: "label-grouping",
+    const expectedGroupingNodeKey: GroupingNodeKey = {
+      type: "label-grouping",
+      label: "1",
+    };
+    expect(await createLabelGroups(nodes)).to.deep.eq({
+      groupingType: "label",
+      grouped: [
+        createTestProcessedGroupingNode({
           label: "1",
-        },
-        children: nodes,
-      },
-    ] as HierarchyNode[]);
+          key: expectedGroupingNodeKey,
+          parentKeys: ["x"],
+          children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
+        }),
+      ],
+      ungrouped: [],
+    } as GroupingHandlerResult);
   });
 
   it("groups multiple nodes", async () => {
-    const nodes: HierarchyNode[] = [
-      createTestNode({
+    const nodes = [
+      createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+        parentKeys: ["x"],
         label: "1",
-        params: { grouping: { byLabel: true } },
+        processingParams: { grouping: { byLabel: true } },
       }),
-      createTestNode({
+      createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
+        parentKeys: ["x"],
         label: "1",
-        params: { grouping: { byLabel: true } },
+        processingParams: { grouping: { byLabel: true } },
       }),
     ];
-    const result = await createLabelGroups(nodes);
-    expect(result.ungrouped).to.deep.eq([]);
-    expect(result.grouped).to.deep.eq([
-      {
-        label: "1",
-        key: {
-          type: "label-grouping",
+    const expectedGroupingNodeKey: GroupingNodeKey = {
+      type: "label-grouping",
+      label: "1",
+    };
+    expect(await createLabelGroups(nodes)).to.deep.eq({
+      groupingType: "label",
+      grouped: [
+        createTestProcessedGroupingNode({
           label: "1",
-        },
-        children: nodes,
-      },
-    ] as HierarchyNode[]);
+          key: expectedGroupingNodeKey,
+          parentKeys: ["x"],
+          children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
+        }),
+      ],
+      ungrouped: [],
+    });
   });
 
   it("creates different groups for differently labeled nodes", async () => {
-    const nodes: HierarchyNode[] = [
-      createTestNode({
+    const nodes = [
+      createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
+        parentKeys: ["x"],
         label: "1",
-        params: { grouping: { byLabel: true } },
+        processingParams: { grouping: { byLabel: true } },
       }),
-      createTestNode({
+      createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
+        parentKeys: ["x"],
         label: "2",
-        params: { grouping: { byLabel: true } },
+        processingParams: { grouping: { byLabel: true } },
       }),
     ];
-    const result = await createLabelGroups(nodes);
-    expect(result.ungrouped).to.deep.eq([]);
-    expect(result.grouped).to.deep.eq([
-      {
-        label: "1",
-        key: {
-          type: "label-grouping",
+    const expectedGroupingNodeKey1: GroupingNodeKey = {
+      type: "label-grouping",
+      label: "1",
+    };
+    const expectedGroupingNodeKey2: GroupingNodeKey = {
+      type: "label-grouping",
+      label: "2",
+    };
+    expect(await createLabelGroups(nodes)).to.deep.eq({
+      groupingType: "label",
+      grouped: [
+        createTestProcessedGroupingNode({
           label: "1",
-        },
-        children: [nodes[0]],
-      },
-      {
-        label: "2",
-        key: {
-          type: "label-grouping",
+          key: expectedGroupingNodeKey1,
+          parentKeys: ["x"],
+          children: [nodes[0]].map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey1] })),
+        }),
+        createTestProcessedGroupingNode({
           label: "2",
-        },
-        children: [nodes[1]],
-      },
-    ] as HierarchyNode[]);
+          key: expectedGroupingNodeKey2,
+          parentKeys: ["x"],
+          children: [nodes[1]].map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey2] })),
+        }),
+      ],
+      ungrouped: [],
+    } as GroupingHandlerResult);
   });
 
   it("doesn't group nodes with byLabel set to false", async () => {
-    const nodes: HierarchyNode[] = [
-      createTestNode({
+    const nodes = [
+      createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
         label: "1",
       }),

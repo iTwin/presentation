@@ -106,7 +106,7 @@ describe("Stateless hierarchy builder", () => {
         key: "hidden child",
         label: "hc",
         children: undefined,
-        params: {
+        processingParams: {
           hideInHierarchy: true,
         },
       };
@@ -149,7 +149,7 @@ describe("Stateless hierarchy builder", () => {
         key: "hidden child",
         label: "hc",
         children: undefined,
-        params: {
+        processingParams: {
           hideIfNoChildren: true,
         },
       };
