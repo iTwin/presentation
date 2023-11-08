@@ -27,11 +27,12 @@ describe("NodeSelectClauseFactory", () => {
       },
       grouping: {
         byClass: true,
-        byLabel: { hideIfOneGroupedNode: false },
+        byLabel: { hideIfOneGroupedNode: false, autoExpand: "single-child" },
         byBaseClasses: {
           fullClassNames: ["testSchema.testName"],
           hideIfNoSiblings: false,
           hideIfOneGroupedNode: true,
+          autoExpand: "always",
         },
       },
       hasChildren: true,
@@ -48,9 +49,9 @@ describe("NodeSelectClauseFactory", () => {
         CAST(1 AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
         CAST(1 AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
         json_object(
-          'byLabel', json_object('hideIfOneGroupedNode',  CAST(0 AS BOOLEAN)),
+          'byLabel', json_object('hideIfOneGroupedNode',  CAST(0 AS BOOLEAN), 'autoExpand', CAST('single-child' AS TEXT)),
           'byClass', CAST(1 AS BOOLEAN),
-          'byBaseClasses', json_object('fullClassNames', json_array('testSchema.testName'), 'hideIfNoSiblings', CAST(0 AS BOOLEAN), 'hideIfOneGroupedNode', CAST(1 AS BOOLEAN))
+          'byBaseClasses', json_object('fullClassNames', json_array('testSchema.testName'), 'hideIfNoSiblings', CAST(0 AS BOOLEAN), 'hideIfOneGroupedNode', CAST(1 AS BOOLEAN), 'autoExpand', CAST('always' AS TEXT))
         ) AS ${NodeSelectClauseColumnNames.Grouping},
         CAST('merge id' AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
         json_object(
@@ -74,12 +75,13 @@ describe("NodeSelectClauseFactory", () => {
         sel: { selector: "x.ExtendedData" },
       },
       grouping: {
-        byClass: { hideIfNoSiblings: { selector: "x.classGroupHideIfNoSiblings" } },
+        byClass: { hideIfNoSiblings: { selector: "x.classGroupHideIfNoSiblings" }, autoExpand: { selector: "x.classGroupAutoExpand" } },
         byLabel: { selector: "x.byLabel" },
         byBaseClasses: {
           fullClassNames: [{ selector: "x.baseClassFullGroupClassName" }],
           hideIfNoSiblings: { selector: "x.baseClassGroupHideIfNoSiblings" },
           hideIfOneGroupedNode: { selector: "x.baseClassGroupHideIfOneGroupedNode" },
+          autoExpand: { selector: "x.baseClassGroupAutoExpand" },
         },
       },
       hasChildren: { selector: "x.HasChildren" },
@@ -97,8 +99,8 @@ describe("NodeSelectClauseFactory", () => {
         CAST(x.HideNodeInHierarchy AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
         json_object(
           'byLabel', CAST(x.byLabel AS BOOLEAN),
-          'byClass', json_object('hideIfNoSiblings', CAST(x.classGroupHideIfNoSiblings AS BOOLEAN)),
-          'byBaseClasses', json_object('fullClassNames', json_array(x.baseClassFullGroupClassName), 'hideIfNoSiblings', CAST(x.baseClassGroupHideIfNoSiblings AS BOOLEAN), 'hideIfOneGroupedNode', CAST(x.baseClassGroupHideIfOneGroupedNode AS BOOLEAN))
+          'byClass', json_object('hideIfNoSiblings', CAST(x.classGroupHideIfNoSiblings AS BOOLEAN), 'autoExpand', CAST(x.classGroupAutoExpand AS TEXT)),
+          'byBaseClasses', json_object('fullClassNames', json_array(x.baseClassFullGroupClassName), 'hideIfNoSiblings', CAST(x.baseClassGroupHideIfNoSiblings AS BOOLEAN), 'hideIfOneGroupedNode', CAST(x.baseClassGroupHideIfOneGroupedNode AS BOOLEAN), 'autoExpand', CAST(x.baseClassGroupAutoExpand AS TEXT))
         ) AS ${NodeSelectClauseColumnNames.Grouping},
         CAST(x.MergeId AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
         json_object(

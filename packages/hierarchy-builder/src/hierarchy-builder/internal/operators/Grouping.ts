@@ -8,6 +8,7 @@ import { HierarchyNode, HierarchyNodeKey, ProcessedGroupingHierarchyNode, Proces
 import { getLogger } from "../../Logging";
 import { IMetadataProvider } from "../../Metadata";
 import { createOperatorLoggingNamespace } from "../Common";
+import { assignAutoExpand } from "./grouping/AutoExpand";
 import { createBaseClassGroupingHandlers } from "./grouping/BaseClassGrouping";
 import { createClassGroups } from "./grouping/ClassGrouping";
 import { applyGroupHidingParams } from "./grouping/GroupHiding";
@@ -84,7 +85,7 @@ async function groupInstanceNodes(
   for (let i = 0; i < groupingHandlers.length; ++i) {
     const currentHandler = groupingHandlers[i];
     const nextHandlers = groupingHandlers.slice(i + 1);
-    const groupings = applyGroupHidingParams(await currentHandler(curr?.ungrouped ?? nodes), extraSiblings);
+    const groupings = assignAutoExpand(applyGroupHidingParams(await currentHandler(curr?.ungrouped ?? nodes), extraSiblings));
     curr = {
       groupingType: groupings.groupingType,
       grouped: [

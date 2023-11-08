@@ -13,12 +13,16 @@ export interface ArrayPropertyAttributes {
 }
 
 // @beta
+export type AutoExpand = "single-child" | "always";
+
+// @beta
 export interface BaseClassGroupingParams extends BaseGroupingParams {
     fullClassNames: string[];
 }
 
 // @beta
 export interface BaseGroupingParams {
+    autoExpand?: AutoExpand;
     hideIfNoSiblings?: boolean;
     hideIfOneGroupedNode?: boolean;
 }
