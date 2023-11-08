@@ -205,7 +205,17 @@ export interface BaseGroupingParams {
   hideIfNoSiblings?: boolean;
   /** Hiding option that determines whether to hide group nodes which have only one node as its children. */
   hideIfOneGroupedNode?: boolean;
+  /** Option which auto expands grouping nodes' children when it has single child or always. */
+  autoExpand?: AutoExpand;
 }
+/**
+ * Defines possible values for [[BaseGroupingParams.autoExpand]] attribute:
+ * - `single-child` - set the grouping node to auto-expand if it groups a single node.
+ * - `always` - always set the grouping node to auto-expand.
+ * @beta
+ */
+export type AutoExpand = "single-child" | "always";
+
 /**
  * A data structure that represents base class grouping.
  * @beta
