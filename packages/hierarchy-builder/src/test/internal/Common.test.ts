@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { BaseClassGroupingParams, BaseGroupingParams, InstanceHierarchyNodeProcessingParams } from "../../hierarchy-builder/HierarchyNode";
+import { AutoExpand, BaseClassGroupingParams, BaseGroupingParams, InstanceHierarchyNodeProcessingParams } from "../../hierarchy-builder/HierarchyNode";
 import { getClass, hasChildren, mergeNodes } from "../../hierarchy-builder/internal/Common";
 import { createTestProcessedCustomNode, createTestProcessedInstanceNode } from "../Utils";
 
@@ -162,6 +162,21 @@ describe("mergeNodes", () => {
       cb(true, true, true);
     }
 
+    function traverseOptionalAutoExpandMergeExpectations(
+      cb: (lhsValue: AutoExpand | undefined, rhsValue: AutoExpand | undefined, expect: AutoExpand | undefined) => void,
+    ) {
+      cb(undefined, undefined, undefined);
+      cb(undefined, "single-child", "single-child");
+      cb(undefined, "always", "always");
+      cb("single-child", undefined, "single-child");
+      cb("single-child", "single-child", "single-child");
+      cb("single-child", "always", "always");
+      cb("single-child", undefined, "single-child");
+      cb("always", undefined, "always");
+      cb("always", "single-child", "always");
+      cb("always", "always", "always");
+    }
+
     function testProcessingParamsFlagMerging(flag: keyof InstanceHierarchyNodeProcessingParams) {
       traverseOptionalBooleanMergeExpectations((lhs, rhs, expectedMergedValue) => {
         const mergedParams = mergeNodes(
@@ -289,6 +304,16 @@ describe("mergeNodes", () => {
             ).hideIfOneGroupedNode,
           ).to.eq(expectedMergedValue);
         });
+        traverseOptionalAutoExpandMergeExpectations((lhs, rhs, expectedMergedValue) => {
+          expect(
+            (
+              mergeNodes(
+                createTestProcessedInstanceNode({ processingParams: { grouping: { byClass: { autoExpand: lhs } } } }),
+                createTestProcessedInstanceNode({ processingParams: { grouping: { byClass: { autoExpand: rhs } } } }),
+              ).processingParams?.grouping?.byClass as BaseGroupingParams
+            ).autoExpand,
+          ).to.eq(expectedMergedValue);
+        });
       });
 
       it("merges label grouping params", () => {
@@ -330,6 +355,16 @@ describe("mergeNodes", () => {
                 createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { hideIfOneGroupedNode: rhs } } } }),
               ).processingParams?.grouping?.byLabel as BaseGroupingParams
             ).hideIfOneGroupedNode,
+          ).to.eq(expectedMergedValue);
+        });
+        traverseOptionalAutoExpandMergeExpectations((lhs, rhs, expectedMergedValue) => {
+          expect(
+            (
+              mergeNodes(
+                createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { autoExpand: lhs } } } }),
+                createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { autoExpand: rhs } } } }),
+              ).processingParams?.grouping?.byLabel as BaseGroupingParams
+            ).autoExpand,
           ).to.eq(expectedMergedValue);
         });
       });
@@ -377,6 +412,16 @@ describe("mergeNodes", () => {
                 createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: [], hideIfOneGroupedNode: rhs } } } }),
               ).processingParams?.grouping?.byBaseClasses as BaseClassGroupingParams
             ).hideIfOneGroupedNode,
+          ).to.eq(expectedMergedValue);
+        });
+        traverseOptionalAutoExpandMergeExpectations((lhs, rhs, expectedMergedValue) => {
+          expect(
+            (
+              mergeNodes(
+                createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: [], autoExpand: lhs } } } }),
+                createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: [], autoExpand: rhs } } } }),
+              ).processingParams?.grouping?.byBaseClasses as BaseGroupingParams
+            ).autoExpand,
           ).to.eq(expectedMergedValue);
         });
       });
