@@ -209,7 +209,9 @@ export interface BaseGroupingParams {
   autoExpand?: AutoExpand;
 }
 /**
- * A [[BaseGroupingParams]] autoExpand option used to expand grouping nodes' children.
+ * Defines possible values for [[BaseGroupingParams.autoExpand]] attribute:
+ * - `single-child` - set the grouping node to auto-expand if it groups a single node.
+ * - `always` - always set the grouping node to auto-expand.
  * @beta
  */
 export type AutoExpand = "single-child" | "always";
