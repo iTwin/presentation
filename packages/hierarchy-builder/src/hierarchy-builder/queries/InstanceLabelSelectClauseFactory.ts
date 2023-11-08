@@ -91,16 +91,19 @@ export interface ClassBasedLabelSelectClause {
 export interface ClassBasedInstanceLabelSelectClauseFactoryProps {
   /** Access to iModel metadata */
   metadataProvider: IMetadataProvider;
+
   /** A list of instance label selectors associated to classes they should be applied to */
   clauses: ClassBasedLabelSelectClause[];
-  /** @internal */
+
+  /**
+   * A fallback label clause factory for when [[ClassBasedInstanceLabelSelectClauseFactory]] doesn't produce a label.
+   * Defaults to [[DefaultInstanceLabelSelectClauseFactory]].
+   */
   defaultClauseFactory?: IInstanceLabelSelectClauseFactory;
 }
 
 /**
- * Creates an instance label select clause based on its class. Uses [[DefaultInstanceLabelSelectClauseFactory]]
- * to create a fallback selector.
- *
+ * Creates an instance label select clause based on its class.
  * @beta
  */
 export class ClassBasedInstanceLabelSelectClauseFactory implements IInstanceLabelSelectClauseFactory {

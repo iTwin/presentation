@@ -5,10 +5,11 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { HierarchyNode } from "../../../../hierarchy-builder/HierarchyNode";
+import { GroupingNodeKey } from "../../../../hierarchy-builder/HierarchyNode";
+import { GroupingHandlerResult } from "../../../../hierarchy-builder/internal/operators/Grouping";
 import { createClassGroups } from "../../../../hierarchy-builder/internal/operators/grouping/ClassGrouping";
 import { IMetadataProvider } from "../../../../hierarchy-builder/Metadata";
-import { createGetClassStub, createTestNode, TStubClassFunc } from "../../../Utils";
+import { createGetClassStub, createTestProcessedInstanceNode, TStubClassFunc } from "../../../Utils";
 
 describe("ClassGrouping", () => {
   const metadataProvider = {} as unknown as IMetadataProvider;
@@ -20,104 +21,109 @@ describe("ClassGrouping", () => {
     sinon.restore();
   });
 
-  it("doesn't group non-instance nodes", async () => {
-    const nodes: HierarchyNode[] = [
-      {
-        label: "custom",
-        key: "test",
-        children: false,
-        params: { grouping: { byClass: true } },
-      },
-    ];
-    const result = await createClassGroups(metadataProvider, nodes);
-    expect(result.grouped).to.deep.eq([]);
-    expect(result.ungrouped).to.deep.eq(nodes);
-  });
-
   it("groups one instance node", async () => {
     const nodes = [
-      createTestNode({
+      createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema.TestClass", id: "0x1" }] },
-        params: { grouping: { byClass: true } },
+        parentKeys: ["x"],
+        processingParams: { grouping: { byClass: true } },
       }),
     ];
     const classInfo = stubClass({ schemaName: "TestSchema", className: "TestClass" });
-    const result = await createClassGroups(metadataProvider, nodes);
-    expect(result.ungrouped).to.deep.eq([]);
-    expect(result.grouped).to.deep.eq([
-      {
-        label: "TestClass",
-        key: {
-          type: "class-grouping",
-          class: classInfo,
+    const expectedClassGroupingNodeKey: GroupingNodeKey = {
+      type: "class-grouping",
+      class: classInfo,
+    };
+    expect(await createClassGroups(metadataProvider, nodes)).to.deep.eq({
+      groupingType: "class",
+      grouped: [
+        {
+          label: "TestClass",
+          key: expectedClassGroupingNodeKey,
+          parentKeys: ["x"],
+          children: nodes.map((gn) => ({ ...gn, parentKeys: [...gn.parentKeys, expectedClassGroupingNodeKey] })),
         },
-        children: nodes,
-      },
-    ] as HierarchyNode[]);
+      ],
+      ungrouped: [],
+    } as GroupingHandlerResult);
   });
 
   it("groups multiple instance nodes", async () => {
     const nodes = [
-      createTestNode({
+      createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
+        parentKeys: ["x"],
         label: "1",
-        params: { grouping: { byClass: true } },
+        processingParams: { grouping: { byClass: true } },
       }),
-      createTestNode({
+      createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x2" }] },
+        parentKeys: ["x"],
         label: "2",
-        params: { grouping: { byClass: true } },
+        processingParams: { grouping: { byClass: true } },
       }),
     ];
     const classA = stubClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A" });
-    const result = await createClassGroups(metadataProvider, nodes);
-    expect(result.ungrouped).to.deep.eq([]);
-    expect(result.grouped).to.deep.eq([
-      {
-        label: "Class A",
-        key: {
-          type: "class-grouping",
-          class: classA,
+    const expectedClassGroupingNodeKey: GroupingNodeKey = {
+      type: "class-grouping",
+      class: classA,
+    };
+    expect(await createClassGroups(metadataProvider, nodes)).to.deep.eq({
+      groupingType: "class",
+      grouped: [
+        {
+          label: "Class A",
+          key: expectedClassGroupingNodeKey,
+          parentKeys: ["x"],
+          children: nodes.map((gn) => ({ ...gn, parentKeys: [...gn.parentKeys, expectedClassGroupingNodeKey] })),
         },
-        children: nodes,
-      },
-    ] as HierarchyNode[]);
+      ],
+      ungrouped: [],
+    });
   });
 
   it("creates different groups for nodes of different classes", async () => {
     const nodes = [
-      createTestNode({
+      createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
+        parentKeys: ["x"],
         label: "1",
-        params: { grouping: { byClass: true } },
+        processingParams: { grouping: { byClass: true } },
       }),
-      createTestNode({
+      createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema.B", id: "0x2" }] },
+        parentKeys: ["x"],
         label: "2",
-        params: { grouping: { byClass: true } },
+        processingParams: { grouping: { byClass: true } },
       }),
     ];
     const classA = stubClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A" });
+    const expectedClassAGroupingNodeKey: GroupingNodeKey = {
+      type: "class-grouping",
+      class: classA,
+    };
     const classB = stubClass({ schemaName: "TestSchema", className: "B", classLabel: "Class B" });
-    const result = await createClassGroups(metadataProvider, nodes);
-    expect(result.ungrouped).to.deep.eq([]);
-    expect(result.grouped).to.deep.eq([
-      {
-        label: "Class A",
-        key: {
-          type: "class-grouping",
-          class: classA,
+    const expectedClassBGroupingNodeKey: GroupingNodeKey = {
+      type: "class-grouping",
+      class: classB,
+    };
+    expect(await createClassGroups(metadataProvider, nodes)).to.deep.eq({
+      groupingType: "class",
+      grouped: [
+        {
+          label: "Class A",
+          key: expectedClassAGroupingNodeKey,
+          parentKeys: ["x"],
+          children: [nodes[0]].map((gn) => ({ ...gn, parentKeys: [...gn.parentKeys, expectedClassAGroupingNodeKey] })),
         },
-        children: [nodes[0]],
-      },
-      {
-        label: "Class B",
-        key: {
-          type: "class-grouping",
-          class: classB,
+        {
+          label: "Class B",
+          key: expectedClassBGroupingNodeKey,
+          parentKeys: ["x"],
+          children: [nodes[1]].map((gn) => ({ ...gn, parentKeys: [...gn.parentKeys, expectedClassBGroupingNodeKey] })),
         },
-        children: [nodes[1]],
-      },
-    ] as HierarchyNode[]);
+      ],
+      ungrouped: [],
+    });
   });
 });

@@ -3,14 +3,13 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { assert } from "@itwin/core-bentley";
-import { HierarchyNode } from "../../../HierarchyNode";
+import { ClassGroupingNodeKey, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
 import { ECClass, IMetadataProvider } from "../../../Metadata";
 import { getClass } from "../../Common";
 import { GroupingHandler, GroupingHandlerResult } from "../Grouping";
 
 /** @internal */
-export async function getBaseClassGroupingECClasses(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<ECClass[]> {
+export async function getBaseClassGroupingECClasses(metadata: IMetadataProvider, nodes: ProcessedInstanceHierarchyNode[]): Promise<ECClass[]> {
   // Get all base class names that are provided in the grouping information
   const baseClassesFullClassNames = getAllBaseClasses(nodes);
   if (baseClassesFullClassNames.size === 0) {
@@ -24,48 +23,49 @@ export async function getBaseClassGroupingECClasses(metadata: IMetadataProvider,
 /** @internal */
 export async function createBaseClassGroupsForSingleBaseClass(
   metadata: IMetadataProvider,
-  nodes: HierarchyNode[],
+  nodes: ProcessedInstanceHierarchyNode[],
   baseECClass: ECClass,
 ): Promise<GroupingHandlerResult> {
-  const finalResult: GroupingHandlerResult = { grouped: [], ungrouped: [], groupingType: "base-class" };
-  const baseClassGroupingNode: HierarchyNode = {
-    label: baseECClass.label ?? baseECClass.name,
-    key: {
+  const groupedNodes = new Array<ProcessedInstanceHierarchyNode>();
+  const ungroupedNodes = new Array<ProcessedInstanceHierarchyNode>();
+  for (const node of nodes) {
+    if (
+      !node.processingParams?.grouping?.byBaseClasses ||
+      !node.processingParams.grouping.byBaseClasses.fullClassNames.some((className) => className === baseECClass.fullName)
+    ) {
+      ungroupedNodes.push(node);
+      continue;
+    }
+    const fullCurrentNodeClassName = node.key.instanceKeys[0].className;
+    const currentNodeECClass = await getClass(metadata, fullCurrentNodeClassName);
+    if (await currentNodeECClass.is(baseECClass)) {
+      groupedNodes.push(node);
+    } else {
+      ungroupedNodes.push(node);
+    }
+  }
+
+  const result: GroupingHandlerResult = { grouped: [], ungrouped: ungroupedNodes, groupingType: "base-class" };
+  if (groupedNodes.length > 0) {
+    const groupingNodeKey: ClassGroupingNodeKey = {
       type: "class-grouping",
       class: { name: baseECClass.fullName, label: baseECClass.label ?? baseECClass.name },
-    },
-    children: [],
-  };
-  assert(Array.isArray(baseClassGroupingNode.children));
-
-  for (const node of nodes) {
-    if (HierarchyNode.isInstancesNode(node) && node.params?.grouping?.byBaseClasses) {
-      if (!node.params.grouping.byBaseClasses.fullClassNames.some((className) => className === baseECClass.fullName)) {
-        finalResult.ungrouped.push(node);
-        continue;
-      }
-      const fullCurrentNodeClassName = node.key.instanceKeys[0].className;
-      const currentNodeECClass = await getClass(metadata, fullCurrentNodeClassName);
-      if (await currentNodeECClass.is(baseECClass)) {
-        baseClassGroupingNode.children.push(node);
-        continue;
-      }
-    }
-    finalResult.ungrouped.push(node);
+    };
+    result.grouped.push({
+      label: baseECClass.label ?? baseECClass.name,
+      key: groupingNodeKey,
+      parentKeys: [...groupedNodes[0].parentKeys],
+      children: groupedNodes.map((gn) => ({ ...gn, parentKeys: [...gn.parentKeys, groupingNodeKey] })),
+    });
   }
-
-  // push grouping node if it has children
-  if (baseClassGroupingNode.children.length > 0) {
-    finalResult.grouped.push(baseClassGroupingNode);
-  }
-  return finalResult;
+  return result;
 }
 
-function getAllBaseClasses(nodes: HierarchyNode[]): Set<string> {
+function getAllBaseClasses(nodes: ProcessedInstanceHierarchyNode[]): Set<string> {
   const baseClasses = new Set<string>();
   for (const node of nodes) {
-    if (HierarchyNode.isInstancesNode(node) && node.params?.grouping?.byBaseClasses) {
-      for (const className of node.params.grouping.byBaseClasses.fullClassNames) {
+    if (node.processingParams?.grouping?.byBaseClasses) {
+      for (const className of node.processingParams.grouping.byBaseClasses.fullClassNames) {
         baseClasses.add(className);
       }
     }
@@ -96,9 +96,7 @@ async function sortByBaseClass(classes: ECClass[]): Promise<ECClass[]> {
 }
 
 /** @internal */
-export async function createBaseClassGroupingHandlers(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<GroupingHandler[]> {
+export async function createBaseClassGroupingHandlers(metadata: IMetadataProvider, nodes: ProcessedInstanceHierarchyNode[]): Promise<GroupingHandler[]> {
   const baseClassGroupingECClasses = await getBaseClassGroupingECClasses(metadata, nodes);
-  return baseClassGroupingECClasses.map(
-    (baseECClass) => async (allNodes: HierarchyNode[]) => createBaseClassGroupsForSingleBaseClass(metadata, allNodes, baseECClass),
-  );
+  return baseClassGroupingECClasses.map((baseECClass) => async (allNodes) => createBaseClassGroupsForSingleBaseClass(metadata, allNodes, baseECClass));
 }

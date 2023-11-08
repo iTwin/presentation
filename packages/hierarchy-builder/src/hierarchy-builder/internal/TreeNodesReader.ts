@@ -4,41 +4,56 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { INodeParser } from "../HierarchyDefinition";
-import { ParsedHierarchyNode } from "../HierarchyNode";
+import { InstanceHierarchyNodeProcessingParams, ParsedHierarchyNode, ParsedInstanceHierarchyNode } from "../HierarchyNode";
 import { ECSqlQueryDef, IECSqlQueryExecutor } from "../queries/ECSql";
 import { NodeSelectClauseColumnNames } from "../queries/NodeSelectClauseFactory";
 import { ConcatenatedValue } from "../values/ConcatenatedValue";
 import { Id64String } from "../values/Values";
 
 /** @internal */
-export interface ITreeQueryResultsReader {
-  read(executor: IECSqlQueryExecutor, query: ECSqlQueryDef): Promise<ParsedHierarchyNode[]>;
+export interface TreeQueryResultsReaderProps {
+  parser?: INodeParser;
+  limit?: number;
 }
 
 /** @internal */
-export class TreeQueryResultsReader implements ITreeQueryResultsReader {
-  private constructor(private _parser: INodeParser) {}
+export class TreeQueryResultsReader {
+  private _props: Required<TreeQueryResultsReaderProps>;
 
-  public static create(nodeParser?: INodeParser) {
-    return new TreeQueryResultsReader(nodeParser ?? defaultNodesParser);
+  public constructor(props?: TreeQueryResultsReaderProps) {
+    // istanbul ignore next
+    this._props = {
+      parser: props?.parser ?? defaultNodesParser,
+      limit: props?.limit ?? DEFAULT_ROWS_LIMIT,
+    };
   }
 
   public async read(executor: IECSqlQueryExecutor, query: ECSqlQueryDef): Promise<ParsedHierarchyNode[]> {
     const reader = executor.createQueryReader(query.ecsql, query.bindings, { rowFormat: "ECSqlPropertyNames" });
     const nodes = new Array<ParsedHierarchyNode>();
     for await (const row of reader) {
-      if (nodes.length >= ROWS_LIMIT) {
-        throw new Error("rows limit exceeded");
+      if (nodes.length >= this._props.limit) {
+        throw new RowsLimitExceededError(this._props.limit);
       }
-      nodes.push(this._parser(row.toRow()));
+      nodes.push(this._props.parser(row.toRow()));
     }
     return nodes;
   }
 }
 
-/** The interface should contain a member for each `NodeSelectClauseColumnNames` value. */
+/** @internal */
+export class RowsLimitExceededError extends Error {
+  public constructor(public readonly limit: number) {
+    super(`Query rows limit of ${limit} exceeded`);
+  }
+}
+
+/**
+ * The interface should contain a member for each `NodeSelectClauseColumnNames` value.
+ * @internal
+ */
 /* eslint-disable @typescript-eslint/naming-convention */
-interface RowDef {
+export interface RowDef {
   [NodeSelectClauseColumnNames.FullClassName]: string;
   [NodeSelectClauseColumnNames.ECInstanceId]: Id64String;
   [NodeSelectClauseColumnNames.DisplayLabel]: string;
@@ -53,25 +68,25 @@ interface RowDef {
 /* eslint-enable @typescript-eslint/naming-convention */
 
 /** @internal */
-export function defaultNodesParser(row: { [columnName: string]: any }): ParsedHierarchyNode {
+export function defaultNodesParser(row: { [columnName: string]: any }): ParsedInstanceHierarchyNode {
   const typedRow = row as RowDef;
-  const parsedExtendedData = typedRow.ExtendedData ? JSON.parse(typedRow.ExtendedData) : undefined;
-  const parsedGrouping = typedRow.Grouping ? JSON.parse(typedRow.Grouping) : undefined;
+  const processingParams: InstanceHierarchyNodeProcessingParams = {
+    ...(typedRow.HideIfNoChildren ? { hideIfNoChildren: true } : undefined),
+    ...(typedRow.HideNodeInHierarchy ? { hideInHierarchy: true } : undefined),
+    ...(typedRow.Grouping ? { grouping: JSON.parse(typedRow.Grouping) } : undefined),
+    ...(typedRow.MergeByLabelId ? { mergeByLabelId: typedRow.MergeByLabelId } : undefined),
+  };
   return {
     // don't format the label here - we're going to do that at node pre-processing step to handle both - instance and custom nodes
     label: parseLabel(typedRow.DisplayLabel),
-    extendedData: parsedExtendedData,
     key: {
       type: "instances",
       instanceKeys: [{ className: typedRow.FullClassName.replace(":", "."), id: typedRow.ECInstanceId }],
     },
-    children: typedRow.HasChildren === undefined ? undefined : !!typedRow.HasChildren,
-    params: {
-      hideIfNoChildren: !!typedRow.HideIfNoChildren,
-      hideInHierarchy: !!typedRow.HideNodeInHierarchy,
-      grouping: parsedGrouping,
-      mergeByLabelId: typedRow.MergeByLabelId,
-    },
+    ...(typedRow.HasChildren !== undefined ? { children: !!typedRow.HasChildren } : undefined),
+    ...(typedRow.AutoExpand ? { autoExpand: true } : undefined),
+    ...(typedRow.ExtendedData ? { extendedData: JSON.parse(typedRow.ExtendedData) } : undefined),
+    ...(Object.keys(processingParams).length > 0 ? { processingParams } : undefined),
   };
 }
 
@@ -90,15 +105,22 @@ function parseLabel(value: string | undefined): ConcatenatedValue | string {
   return value;
 }
 
-const ROWS_LIMIT = 1000;
+const DEFAULT_ROWS_LIMIT = 1000;
 
 /** @internal */
-export function applyLimit(ecsql: string, ctes?: string[]) {
-  const ctesPrefix = ctes && ctes.length ? `WITH RECURSIVE ${ctes.join(", ")}` : ``;
+export interface ApplyLimitProps {
+  ecsql: string;
+  ctes?: string[];
+  limit?: number;
+}
+
+/** @internal */
+export function applyLimit(props: ApplyLimitProps) {
+  const ctesPrefix = props.ctes && props.ctes.length ? `WITH RECURSIVE ${props.ctes.join(", ")}` : ``;
   return `
     ${ctesPrefix}
     SELECT *
-    FROM (${ecsql})
-    LIMIT ${ROWS_LIMIT + 1}
+    FROM (${props.ecsql})
+    LIMIT ${(props.limit ?? DEFAULT_ROWS_LIMIT) + 1}
   `;
 }
