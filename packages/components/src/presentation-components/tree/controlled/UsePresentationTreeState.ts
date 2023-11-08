@@ -8,13 +8,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  AbstractTreeNodeLoaderWithProvider,
-  HighlightableTreeProps,
-  MutableTreeModel,
-  PagedTreeNodeLoader,
-  RenderedItemsRange,
-  TreeEventHandler,
-  TreeModel,
+  AbstractTreeNodeLoaderWithProvider, HighlightableTreeProps, MutableTreeModel, PagedTreeNodeLoader, RenderedItemsRange, TreeEventHandler, TreeModel,
   TreeModelSource,
 } from "@itwin/components-react";
 import { PresentationTreeDataProvider, PresentationTreeDataProviderProps } from "../DataProvider";
@@ -30,7 +24,7 @@ import { ReloadedTree, useTreeReload } from "./UseTreeReload";
 export interface UsePresentationTreeStateProps<TEventHandler extends TreeEventHandler = TreeEventHandler> extends PresentationTreeDataProviderProps {
   /**
    * Number of nodes in a single page. The created loader always requests at least
-   * a page nodes, so it should be optimized for usability vs performance (using
+   * a page of nodes, so it should be optimized for usability vs performance (using
    * smaller pages gives better responsiveness, but makes overall performance
    * slightly worse).
    *
