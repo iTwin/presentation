@@ -24,13 +24,13 @@ import { useFilteredNodeLoader, useNodeHighlightingProps } from "./UseControlled
 import { ReloadedTree, useTreeReload } from "./UseTreeReload";
 
 /**
- * Properties for [[usePresentationTreeNodeLoader]] hook.
+ * Properties for [[usePresentationTree]] hook.
  * @public
  */
 export interface UsePresentationTreeProps<TEventHandler extends TreeEventHandler = TreeEventHandler> extends PresentationTreeDataProviderProps {
   /**
    * Number of nodes in a single page. The created loader always requests at least
-   * a page nodes, so it should be optimized for usability vs performance (using
+   * a page of nodes, so it should be optimized for usability vs performance (using
    * smaller pages gives better responsiveness, but makes overall performance
    * slightly worse).
    *

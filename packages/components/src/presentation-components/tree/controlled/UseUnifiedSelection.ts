@@ -260,7 +260,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
 /**
  * A custom hook which creates and disposes [[UnifiedSelectionTreeEventHandler]]
  * @public
- * @deprecated in 4.x. This hooks is not compatible with React 18 `StrictMode`. Use [[usePresentationTree]] and
+ * @deprecated in 4.x. This hook is not compatible with React 18 `StrictMode`. Use [[usePresentationTree]] and
  * [[UsePresentationTreeProps.eventHandlerFactory]] instead or manually create and dispose [[UnifiedSelectionTreeEventHandler]].
  */
 export function useUnifiedSelectionTreeEventHandler(props: UnifiedSelectionTreeEventHandlerParams) {
