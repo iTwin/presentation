@@ -1,9 +1,17 @@
 name: Performance benchmark
+
 on:
   pull_request:
 #  push:
 #    branches:
 #      - master
+
+permissions:
+  # deployments permission to deploy GitHub pages website
+  deployments: write
+  # contents permission to update benchmark contents in gh-pages branch
+  contents: write
+
 jobs:
   benchmark:
     name: Benchmark performance
@@ -43,5 +51,9 @@ jobs:
         with:
           tool: 'customSmallerIsBetter'
           output-file-path: ./apps/load-tests/tests/benchmark.json
-          external-data-json-path: ./.cache/benchmark-data.json
-          save-data-file: true
+          # external-data-json-path: ./.cache/benchmark-data.json
+          # save-data-file: true
+          # Access token to deploy GitHub Pages branch
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # Push and deploy GitHub pages branch automatically
+          auto-push: true
