@@ -14,7 +14,9 @@
     "start:initial-models-tree": "artillery run ./scenarios/initial-models-tree.yml",
     "start:full-models-tree": "artillery run ./scenarios/full-models-tree.yml",
     "start:initial-models-tree-stateless": "artillery run ./scenarios/initial-models-tree-stateless.yml",
-    "start:full-models-tree-stateless": "artillery run ./scenarios/full-models-tree-stateless.yml"
+    "start:full-models-tree-stateless": "artillery run ./scenarios/full-models-tree-stateless.yml",
+    "benchmark": "artillery run ./scenarios/benchmark.yml -o ./artillery-output.json && node ./scripts/extract-benchmark-results.js --in ./artillery-output.json --out ./benchmark.json",
+    "benchmark:setup": "node ./scripts/setup-benchmark-datasets.js --datasetsDir ./datasets --csv ./scenarios/datasets.csv"
   },
   "dependencies": {
     "@itwin/build-tools": "^4.1.1",

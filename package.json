@@ -24,7 +24,8 @@
     "change": "changeset add",
     "change:empty": "changeset add --empty",
     "check": "changeset status",
-    "release": "npm run build:all && changeset publish"
+    "release": "npm run build:all && changeset publish",
+    "benchmark": "node ./scripts/runBenchmarkTests.js"
   },
   "dependencies": {
     "@changesets/cli": "^2.26.2",
