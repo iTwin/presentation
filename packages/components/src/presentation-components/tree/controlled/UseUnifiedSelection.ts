@@ -11,16 +11,8 @@ import { takeUntil } from "rxjs/internal/operators/takeUntil";
 import { tap } from "rxjs/internal/operators/tap";
 import { Subject } from "rxjs/internal/Subject";
 import {
-  AbstractTreeNodeLoaderWithProvider,
-  MutableTreeModel,
-  MutableTreeModelNode,
-  TreeEditingParams,
-  TreeEventHandler,
-  TreeModelChanges,
-  TreeModelSource,
-  TreeNodeItem,
-  TreeSelectionModificationEventArgs,
-  TreeSelectionReplacementEventArgs,
+  AbstractTreeNodeLoaderWithProvider, MutableTreeModel, MutableTreeModelNode, TreeEditingParams, TreeEventHandler, TreeModelChanges, TreeModelSource,
+  TreeNodeItem, TreeSelectionModificationEventArgs, TreeSelectionReplacementEventArgs,
 } from "@itwin/components-react";
 import { Guid, IDisposable } from "@itwin/core-bentley";
 import { useDisposable } from "@itwin/core-react";
@@ -260,7 +252,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
 /**
  * A custom hook which creates and disposes [[UnifiedSelectionTreeEventHandler]]
  * @public
- * @deprecated in 4.x. This hook is not compatible with React 18 `StrictMode`. Use [[usePresentationTree]] and
+ * @deprecated in 4.x. This hook is not compatible with React 18 `StrictMode`. Use [[usePresentationTreeState]] and
  * [[UsePresentationTreeProps.eventHandlerFactory]] instead or manually create and dispose [[UnifiedSelectionTreeEventHandler]].
  */
 export function useUnifiedSelectionTreeEventHandler(props: UnifiedSelectionTreeEventHandlerParams) {
