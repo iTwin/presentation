@@ -39,24 +39,26 @@ describe("PresentationTreeRenderer", () => {
     visibleNodes: visibleNodesMock.object,
   };
 
-  beforeEach(async () => {
+  before(async () => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
+    sinon.stub(Presentation, "localization").get(() => localization);
     await UiComponents.initialize(localization);
-    await Presentation.initialize();
     HTMLElement.prototype.scrollIntoView = () => {};
   });
 
-  afterEach(() => {
+  after(() => {
     UiComponents.terminate();
-    Presentation.terminate();
+    sinon.restore();
+    delete (HTMLElement.prototype as any).scrollIntoView;
+  });
+
+  afterEach(() => {
     treeActionsMock.reset();
     visibleNodesMock.reset();
     nodeLoaderMock.reset();
     modelSourceMock.reset();
-    sinon.restore();
-    delete (HTMLElement.prototype as any).scrollIntoView;
   });
 
   it("renders default tree node", async () => {

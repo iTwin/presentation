@@ -35,15 +35,14 @@ describe("InstanceFilter", () => {
     { id: "0x2", name: "Schema:Class2", label: "Class2" },
   ];
 
-  before(async () => {
+  before(() => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
-    await Presentation.initialize();
+    sinon.stub(Presentation, "localization").get(() => localization);
   });
 
-  after(async () => {
-    Presentation.terminate();
+  after(() => {
     sinon.restore();
   });
 

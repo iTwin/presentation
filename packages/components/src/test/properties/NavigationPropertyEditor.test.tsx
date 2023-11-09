@@ -48,15 +48,19 @@ describe("<NavigationPropertyEditor />", () => {
     return record;
   }
 
-  beforeEach(async () => {
+  const getContentStub = sinon.stub<Parameters<PresentationManager["getContent"]>, ReturnType<PresentationManager["getContent"]>>();
+
+  before(() => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
-    await Presentation.initialize();
+    sinon.stub(Presentation, "localization").get(() => localization);
+    sinon.stub(Presentation, "presentation").get(() => ({
+      getContent: getContentStub,
+    }));
   });
 
-  afterEach(async () => {
-    Presentation.terminate();
+  after(() => {
     sinon.restore();
   });
 
@@ -74,7 +78,7 @@ describe("<NavigationPropertyEditor />", () => {
       values: {},
       displayValues: {},
     });
-    sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
+    getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
     const record = createRecord();
     const spy = sinon.spy();
     const { getByRole, getByText, queryByDisplayValue } = render(<EditorContainer propertyRecord={record} onCancel={() => {}} onCommit={spy} />, {

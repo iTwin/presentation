@@ -48,7 +48,7 @@ describe("usePresentationNodeLoader", () => {
     pagingSize: 5,
   };
 
-  before(() => {
+  before(async () => {
     const mocks = mockPresentationManager();
     onIModelHierarchyChanged = mocks.presentationManager.object.onIModelHierarchyChanged;
     onRulesetModified = mocks.rulesetsManager.object.onRulesetModified;
@@ -59,10 +59,11 @@ describe("usePresentationNodeLoader", () => {
     sinon.stub(IModelApp, "quantityFormatter").get(() => ({
       onActiveFormattingUnitSystemChanged,
     }));
-    sinon.stub(UiComponents, "localization").get(() => new EmptyLocalization());
+    await UiComponents.initialize(new EmptyLocalization());
   });
 
   after(() => {
+    UiComponents.terminate();
     sinon.restore();
   });
 

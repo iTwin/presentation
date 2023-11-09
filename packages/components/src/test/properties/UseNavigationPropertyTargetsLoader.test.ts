@@ -23,7 +23,7 @@ describe("useNavigationPropertyTargetsLoader", () => {
   const testImodel = {} as IModelConnection;
   const getContentStub = sinon.stub<Parameters<PresentationManager["getContent"]>, ReturnType<PresentationManager["getContent"]>>();
 
-  before(async () => {
+  before(() => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
@@ -33,7 +33,7 @@ describe("useNavigationPropertyTargetsLoader", () => {
     }));
   });
 
-  after(async () => {
+  after(() => {
     sinon.restore();
   });
 
