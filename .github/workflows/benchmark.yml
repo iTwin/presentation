@@ -54,6 +54,6 @@ jobs:
           # external-data-json-path: ./.cache/benchmark-data.json
           # save-data-file: true
           # Access token to deploy GitHub Pages branch
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.IMJS_ADMIN_GH_TOKEN }}
           # Push and deploy GitHub pages branch automatically
           auto-push: true
