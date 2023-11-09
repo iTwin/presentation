@@ -9,7 +9,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Subscription } from "rxjs/internal/Subscription";
 import {
-  AbstractTreeNodeLoaderWithProvider, MutableTreeModel, PagedTreeNodeLoader, RenderedItemsRange, TreeModel, TreeModelSource, usePagedTreeNodeLoader,
+  AbstractTreeNodeLoaderWithProvider,
+  MutableTreeModel,
+  PagedTreeNodeLoader,
+  RenderedItemsRange,
+  TreeModel,
+  TreeModelSource,
+  usePagedTreeNodeLoader,
 } from "@itwin/components-react";
 import { IModelApp } from "@itwin/core-frontend";
 import { IModelHierarchyChangeEventArgs, Presentation } from "@itwin/presentation-frontend";
