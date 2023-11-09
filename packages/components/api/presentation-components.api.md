@@ -14,6 +14,7 @@ import { ClientDiagnosticsHandler } from '@itwin/presentation-common';
 import { ClientDiagnosticsOptions } from '@itwin/presentation-common';
 import { Content } from '@itwin/presentation-common';
 import { Context } from 'react';
+import { ControlledTreeProps } from '@itwin/components-react';
 import { DelayLoadedTreeNodeItem } from '@itwin/components-react';
 import { Descriptor } from '@itwin/presentation-common';
 import { DescriptorOverrides } from '@itwin/presentation-common';
@@ -38,7 +39,6 @@ import { IPropertyValueRenderer } from '@itwin/components-react';
 import { Item } from '@itwin/presentation-common';
 import { ITreeDataProvider } from '@itwin/components-react';
 import { ITreeNodeLoader } from '@itwin/components-react';
-import { ITreeNodeLoaderWithProvider } from '@itwin/components-react';
 import { Keys } from '@itwin/presentation-common';
 import { KeySet } from '@itwin/presentation-common';
 import { Memoized } from 'micro-memoize';
@@ -553,6 +553,9 @@ export interface PresentationPropertyDataProviderProps extends DiagnosticsProps 
 }
 
 // @public
+export function PresentationTree<TEventHandler extends TreeEventHandler>({ state, ...props }: PresentationTreeProps<TEventHandler>): JSX.Element;
+
+// @public
 export class PresentationTreeDataProvider implements IPresentationTreeDataProvider, IDisposable {
     constructor(props: PresentationTreeDataProviderProps);
     // @internal
@@ -597,6 +600,12 @@ export interface PresentationTreeDataProviderProps extends DiagnosticsProps {
     ruleset: string | Ruleset;
 }
 
+// @public
+export interface PresentationTreeEventHandlerProps {
+    modelSource: TreeModelSource;
+    nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
+}
+
 // @beta
 export interface PresentationTreeNodeItem extends DelayLoadedTreeNodeItem {
     filtering?: PresentationTreeNodeItemFilteringInfo;
@@ -610,7 +619,7 @@ export interface PresentationTreeNodeItemFilteringInfo {
     descriptor: Descriptor | (() => Promise<Descriptor>);
 }
 
-// @public
+// @public @deprecated
 export interface PresentationTreeNodeLoaderProps extends PresentationTreeDataProviderProps {
     // @alpha
     enableHierarchyAutoUpdate?: boolean;
@@ -618,7 +627,7 @@ export interface PresentationTreeNodeLoaderProps extends PresentationTreeDataPro
     seedTreeModel?: TreeModel;
 }
 
-// @public
+// @public @deprecated
 export interface PresentationTreeNodeLoaderResult {
     nodeLoader: PagedTreeNodeLoader<IPresentationTreeDataProvider>;
     // @alpha
@@ -635,6 +644,11 @@ export interface PresentationTreeNodeRendererProps extends TreeNodeRendererProps
     // (undocumented)
     onFilterClick: (node: PresentationTreeNodeItem) => void;
 }
+
+// @public
+export type PresentationTreeProps<TEventHandler extends TreeEventHandler> = Omit<ControlledTreeProps, "model" | "nodeLoader" | "eventsHandler" | "onItemsRendered" | "nodeHighlightingProps"> & {
+    state: UsePresentationTreeStateResult<TEventHandler>;
+};
 
 // @beta
 export function PresentationTreeRenderer(props: PresentationTreeRendererProps): JSX.Element;
@@ -784,14 +798,6 @@ export function useControlledPresentationTreeFiltering(props: ControlledPresenta
     matchesCount: number | undefined;
 };
 
-// @internal (undocumented)
-export function useFilteredNodeLoader(dataProvider: IPresentationTreeDataProvider, filter: string | undefined): {
-    filteredNodeLoader: AbstractTreeNodeLoaderWithProvider<IFilteredPresentationTreeDataProvider> | undefined;
-    isFiltering: boolean;
-    filterApplied: string | undefined;
-    matchesCount: number | undefined;
-};
-
 // @beta
 export function useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProps): {
     applyFilter: (node: TreeNodeItem, info: PresentationInstanceFilterInfo) => void;
@@ -808,9 +814,6 @@ export interface UseHierarchyLevelFilteringProps {
 
 // @beta
 export function useNavigationPropertyEditingContext(imodel: IModelConnection, dataProvider: IContentDataProvider): NavigationPropertyEditorContextProps;
-
-// @internal (undocumented)
-export function useNodeHighlightingProps(filter: string | undefined, filteredNodeLoader?: ITreeNodeLoaderWithProvider<IFilteredPresentationTreeDataProvider>, activeMatchIndex?: number): HighlightableTreeProps | undefined;
 
 // @beta
 export function usePresentationTable<TColumn, TRow>(props: UsePresentationTableProps<TColumn, TRow>): UsePresentationTableResult<TColumn, TRow>;
@@ -844,8 +847,38 @@ export interface UsePresentationTableWithUnifiedSelectionResult<TColumns, TRow> 
     selectedRows: TRow[];
 }
 
-// @public
+// @public @deprecated
 export function usePresentationTreeNodeLoader(props: PresentationTreeNodeLoaderProps): PresentationTreeNodeLoaderResult;
+
+// @public
+export function usePresentationTreeState<TEventHandler extends TreeEventHandler = TreeEventHandler>({ eventHandlerFactory, seedTreeModel, enableHierarchyAutoUpdate, filteringParams, ...dataProviderProps }: UsePresentationTreeStateProps<TEventHandler>): UsePresentationTreeStateResult<TEventHandler> | undefined;
+
+// @public
+export interface UsePresentationTreeStateProps<TEventHandler extends TreeEventHandler = TreeEventHandler> extends PresentationTreeDataProviderProps {
+    // @alpha
+    enableHierarchyAutoUpdate?: boolean;
+    eventHandlerFactory?: (props: PresentationTreeEventHandlerProps) => TEventHandler | undefined;
+    filteringParams?: {
+        filter: string;
+        activeMatchIndex?: number;
+    };
+    pagingSize: number;
+    seedTreeModel?: TreeModel;
+}
+
+// @public
+export interface UsePresentationTreeStateResult<TEventHandler extends TreeEventHandler = TreeEventHandler> {
+    eventHandler: TEventHandler;
+    filteringResult?: {
+        isFiltering: boolean;
+        filteredProvider?: IFilteredPresentationTreeDataProvider;
+        highlightProps?: HighlightableTreeProps;
+        matchesCount?: number;
+    };
+    nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
+    // @alpha
+    onItemsRendered: (items: RenderedItemsRange) => void;
+}
 
 // @public
 export function usePropertyDataProviderWithUnifiedSelection(props: PropertyDataProviderWithUnifiedSelectionProps): UsePropertyDataProviderWithUnifiedSelectionResult;
@@ -862,7 +895,7 @@ export function useRulesetRegistration(ruleset: Ruleset): void;
 // @beta
 export function useUnifiedSelectionContext(): UnifiedSelectionContext | undefined;
 
-// @public
+// @public @deprecated
 export function useUnifiedSelectionTreeEventHandler(props: UnifiedSelectionTreeEventHandlerParams): UnifiedSelectionTreeEventHandler;
 
 // @internal

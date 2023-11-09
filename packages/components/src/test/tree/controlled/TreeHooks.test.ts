@@ -7,7 +7,15 @@ import { expect } from "chai";
 import sinon from "sinon";
 import * as moq from "typemoq";
 import { PrimitiveValue } from "@itwin/appui-abstract";
-import { MutableTreeModel, TreeModel, TreeModelNode, TreeModelNodeEditingInfo, TreeModelNodeInput, UiComponents } from "@itwin/components-react";
+import {
+  AbstractTreeNodeLoaderWithProvider,
+  MutableTreeModel,
+  TreeModel,
+  TreeModelNode,
+  TreeModelNodeEditingInfo,
+  TreeModelNodeInput,
+  UiComponents,
+} from "@itwin/components-react";
 import { BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
@@ -18,10 +26,14 @@ import { cleanup, renderHook } from "@testing-library/react-hooks";
 import {
   PresentationTreeNodeLoaderProps,
   PresentationTreeNodeLoaderResult,
+  useControlledPresentationTreeFiltering,
   usePresentationTreeNodeLoader,
 } from "../../../presentation-components/tree/controlled/TreeHooks";
+import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";
 import { createTreeNodeItem } from "../../../presentation-components/tree/Utils";
 import { mockPresentationManager } from "../../_helpers/UiComponents";
+
+/* eslint-disable deprecation/deprecation */
 
 describe("usePresentationNodeLoader", () => {
   let onIModelHierarchyChanged: PresentationManager["onIModelHierarchyChanged"];
@@ -210,6 +222,41 @@ describe("usePresentationNodeLoader", () => {
         initialProps: { ...initialProps, seedTreeModel },
       });
       expectTree(result.current.nodeLoader.modelSource.getModel(), treeHierarchy);
+    });
+  });
+});
+
+describe("useControlledPresentationTreeFiltering", () => {
+  const getFilteredNodePathsStub = sinon.stub<
+    Parameters<IPresentationTreeDataProvider["getFilteredNodePaths"]>,
+    ReturnType<IPresentationTreeDataProvider["getFilteredNodePaths"]>
+  >();
+  const dataProvider = {
+    getFilteredNodePaths: getFilteredNodePathsStub,
+  } as unknown as IPresentationTreeDataProvider;
+  const nodeLoader = {
+    dataProvider,
+  } as AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
+
+  beforeEach(() => {
+    getFilteredNodePathsStub.reset();
+  });
+
+  it("returns original node loader if filter is not provided", () => {
+    const { result } = renderHook(useControlledPresentationTreeFiltering, { initialProps: { nodeLoader } });
+    expect(result.current.filteredNodeLoader).to.be.eq(nodeLoader);
+  });
+
+  it("returns filtered node loader when tree is filtered", async () => {
+    const node = createNode("root");
+    getFilteredNodePathsStub.resolves([{ children: [], index: 0, node, filteringData: { matchesCount: 1, childMatchesCount: 0 }, isMarked: true }]);
+
+    const { result } = renderHook(useControlledPresentationTreeFiltering, { initialProps: { nodeLoader, filter: "test" } });
+
+    await waitFor(() => {
+      expect(result.current.isFiltering).to.be.false;
+      expect(result.current.filteredNodeLoader).to.not.be.eq(nodeLoader);
+      expect(result.current.matchesCount).to.be.eq(1);
     });
   });
 });

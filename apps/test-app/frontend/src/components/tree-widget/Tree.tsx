@@ -4,15 +4,16 @@
  *--------------------------------------------------------------------------------------------*/
 
 import "./TreeWidget.css";
-import { useEffect } from "react";
-import { ControlledTree, SelectionMode, useTreeModel } from "@itwin/components-react";
+import { useCallback, useEffect } from "react";
+import { SelectionMode } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
   DiagnosticsProps,
+  PresentationTree,
+  PresentationTreeEventHandlerProps,
   PresentationTreeRenderer,
-  useControlledPresentationTreeFiltering,
-  usePresentationTreeNodeLoader,
-  useUnifiedSelectionTreeEventHandler,
+  UnifiedSelectionTreeEventHandler,
+  usePresentationTreeState,
 } from "@itwin/presentation-components";
 
 const PAGING_SIZE = 10;
@@ -31,38 +32,49 @@ interface Props {
 }
 
 export function Tree(props: Props) {
-  const { nodeLoader } = usePresentationTreeNodeLoader({
+  const { filter, onFilteringStateChange, activeMatchIndex } = props.filtering;
+  const state = usePresentationTreeState({
     imodel: props.imodel,
     ruleset: props.rulesetId,
     pagingSize: PAGING_SIZE,
+    eventHandlerFactory: useCallback(
+      (handlerProps: PresentationTreeEventHandlerProps) =>
+        new UnifiedSelectionTreeEventHandler({ nodeLoader: handlerProps.nodeLoader, collapsedChildrenDisposalEnabled: false, name: "TestAppTree" }),
+      [],
+    ),
+    filteringParams: {
+      filter,
+      activeMatchIndex,
+    },
     ...props.diagnostics,
   });
 
-  const { filteredModelSource, filteredNodeLoader, isFiltering, matchesCount, nodeHighlightingProps } = useControlledPresentationTreeFiltering({
-    nodeLoader,
-    filter: props.filtering.filter,
-    activeMatchIndex: props.filtering.activeMatchIndex,
-  });
-
-  const { onFilteringStateChange } = props.filtering;
+  const isFiltering = state?.filteringResult?.isFiltering ?? false;
+  const matchesCount = state?.filteringResult?.matchesCount;
   useEffect(() => {
     onFilteringStateChange(isFiltering, matchesCount);
   }, [isFiltering, matchesCount, onFilteringStateChange]);
 
-  const eventHandler = useUnifiedSelectionTreeEventHandler({ nodeLoader: filteredNodeLoader, collapsedChildrenDisposalEnabled: true, name: "TreeWithHooks" });
-  const treeModel = useTreeModel(filteredModelSource);
+  if (!state) {
+    return null;
+  }
 
   return (
-    <ControlledTree
-      model={treeModel}
-      eventsHandler={eventHandler}
-      nodeLoader={filteredNodeLoader}
+    <PresentationTree
+      state={state}
       selectionMode={SelectionMode.Extended}
-      nodeHighlightingProps={nodeHighlightingProps}
       iconsEnabled={true}
       width={props.width}
       height={props.height}
-      treeRenderer={(treeProps) => <PresentationTreeRenderer {...treeProps} imodel={props.imodel} modelSource={filteredModelSource} />}
+      treeRenderer={(treeProps) => (
+        <PresentationTreeRenderer
+          {...treeProps}
+          imodel={props.imodel}
+          modelSource={state.nodeLoader.modelSource}
+          nodeLoader={state.nodeLoader}
+          onItemsRendered={state.onItemsRendered}
+        />
+      )}
     />
   );
 }

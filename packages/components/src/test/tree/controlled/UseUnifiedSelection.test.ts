@@ -33,12 +33,12 @@ import {
   SelectionManager,
 } from "@itwin/presentation-frontend";
 import { renderHook } from "@testing-library/react-hooks";
-import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";
 import {
   UnifiedSelectionTreeEventHandler,
   UnifiedSelectionTreeEventHandlerParams,
   useUnifiedSelectionTreeEventHandler,
 } from "../../../presentation-components/tree/controlled/UseUnifiedSelection";
+import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";
 import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem";
 import { createTestECClassGroupingNodeKey, createTestECInstancesNodeKey } from "../../_helpers/Hierarchy";
 import { ResolvablePromise } from "../../_helpers/Promises";
@@ -394,6 +394,7 @@ describe("useUnifiedSelectionTreeEventHandler", () => {
   it("creates and disposes UnifiedSelectionTreeEventHandler", () => {
     const selectionHandlerMock = moq.Mock.ofType<SelectionHandler>();
 
+    // eslint-disable-next-line deprecation/deprecation
     const { result, unmount } = renderHook((props: UnifiedSelectionTreeEventHandlerParams) => useUnifiedSelectionTreeEventHandler(props), {
       initialProps: { nodeLoader: nodeLoaderMock.object, selectionHandler: selectionHandlerMock.object },
     });
