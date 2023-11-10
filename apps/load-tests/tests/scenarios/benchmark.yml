@@ -14,10 +14,11 @@ config:
   processor: "../lib/processors/models-tree-stateless.js"
 
 scenarios:
-  - name: Initial Models Tree (stateless)
+  - name: Stateless hierarchy builder performance benchmark
     beforeScenario: "initScenario"
     afterScenario: "terminateScenario"
     flow:
       - loop:
           - function: "loadInitialHierarchy"
+          - function: "loadFullHierarchy"
         over: iModels

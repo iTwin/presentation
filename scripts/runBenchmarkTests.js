@@ -71,7 +71,7 @@ async function main() {
       shell: true,
       stdio: "inherit",
     });
-    console.log(`tests complete`);
+    console.log(`Tests complete`);
   } catch (e) {
     console.error(`TESTS ERROR: ${err.message}`);
     process.exitCode = 1;
