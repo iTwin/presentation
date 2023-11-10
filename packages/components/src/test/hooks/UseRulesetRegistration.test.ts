@@ -13,7 +13,7 @@ import { renderHook } from "../TestUtils";
 
 /* eslint-disable deprecation/deprecation */
 
-describe("useRulesetRegistration", () => {
+describe("[deprecated] useRulesetRegistration", () => {
   interface HookProps {
     ruleset: Ruleset;
   }
