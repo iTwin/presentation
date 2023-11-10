@@ -10,11 +10,10 @@ import { PrimitiveValue, StandardTypeNames } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
-import { waitFor } from "@testing-library/react";
 import { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common";
 import { NumericInput, NumericPropertyInput } from "../../../presentation-components/properties/inputs/NumericPropertyInput";
-import { render } from "../../_helpers/Common";
 import { createTestPropertyRecord } from "../../_helpers/UiComponents";
+import { render, waitFor } from "../../TestUtils";
 
 const createRecord = (initialValue?: number) => {
   return createTestPropertyRecord({ value: initialValue, displayValue: initialValue?.toString() }, { typename: StandardTypeNames.Double });
@@ -25,11 +24,10 @@ describe("<NumericPropertyInput />", () => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
-    await Presentation.initialize();
+    sinon.stub(Presentation, "localization").get(() => localization);
   });
 
   afterEach(async () => {
-    Presentation.terminate();
     sinon.restore();
   });
 

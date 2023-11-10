@@ -8,9 +8,9 @@ import * as sinon from "sinon";
 import { PrimitiveValue } from "@itwin/appui-abstract";
 import {
   AbstractTreeNodeLoader,
+  AbstractTreeNodeLoaderWithProvider,
   DelayLoadedTreeNodeItem,
   MutableTreeModelNode,
-  PagedTreeNodeLoader,
   Subscription,
   TreeModelNode,
   TreeModelRootNode,
@@ -18,9 +18,9 @@ import {
 } from "@itwin/components-react";
 import { IModelConnection, SnapshotConnection } from "@itwin/core-frontend";
 import { ChildNodeSpecificationTypes, RuleTypes } from "@itwin/presentation-common";
-import { IPresentationTreeDataProvider, PresentationTreeNodeLoaderProps, usePresentationTreeNodeLoader } from "@itwin/presentation-components";
+import { IPresentationTreeDataProvider, usePresentationTreeState, UsePresentationTreeStateProps } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
-import { renderHook } from "@testing-library/react-hooks";
+import { renderHook, waitFor } from "@testing-library/react";
 import { initialize, terminate } from "../../IntegrationTests";
 
 describe("Tree update", () => {
@@ -44,7 +44,7 @@ describe("Tree update", () => {
   });
 
   describe("detection", () => {
-    let defaultProps: Omit<PresentationTreeNodeLoaderProps, "ruleset">;
+    let defaultProps: Omit<UsePresentationTreeStateProps, "ruleset">;
 
     beforeEach(() => {
       defaultProps = {
@@ -459,25 +459,36 @@ describe("Tree update", () => {
           color?: number;
         };
 
-    async function verifyHierarchy(props: PresentationTreeNodeLoaderProps, expectedTree: TreeHierarchy[]): Promise<VerifiedHierarchy> {
-      const { result, waitForNextUpdate } = renderHook((hookProps: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(hookProps).nodeLoader, {
+    async function verifyHierarchy(props: UsePresentationTreeStateProps, expectedTree: TreeHierarchy[]): Promise<VerifiedHierarchy> {
+      const { result } = renderHook((hookProps: UsePresentationTreeStateProps) => usePresentationTreeState(hookProps), {
         initialProps: props,
       });
-      await expectTree(result.current, expectedTree);
+
+      await waitFor(() => {
+        expect(result.current).to.not.be.undefined;
+      });
+      await expectTree(result.current!.nodeLoader, expectedTree);
 
       return new (class implements VerifiedHierarchy {
         public getModelSource(): TreeModelSource {
-          return result.current.modelSource;
+          return result.current!.nodeLoader.modelSource;
         }
 
         public async verifyChange(expectedUpdatedTree: TreeHierarchy[]): Promise<void> {
-          await waitForNextUpdate({ timeout: 9999999 });
-          await expectTree(result.current, expectedUpdatedTree);
+          await waitFor(
+            async () => {
+              await expectTree(result.current!.nodeLoader, expectedUpdatedTree);
+            },
+            { timeout: 9999999 },
+          );
         }
       })();
     }
 
-    async function expectTree(nodeLoader: PagedTreeNodeLoader<IPresentationTreeDataProvider>, expectedHierarchy: TreeHierarchy[]): Promise<void> {
+    async function expectTree(
+      nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>,
+      expectedHierarchy: TreeHierarchy[],
+    ): Promise<void> {
       await loadHierarchy(nodeLoader);
 
       const model = nodeLoader.modelSource.getModel();
