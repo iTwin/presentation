@@ -53,6 +53,6 @@ jobs:
           tool: 'customSmallerIsBetter'
           output-file-path: ./apps/load-tests/tests/benchmark.json
           external-data-json-path: ./.cache/benchmark-data.json
-          # github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           save-data-file: false
           comment-on-pull-request: true
