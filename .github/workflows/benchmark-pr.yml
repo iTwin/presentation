@@ -1,25 +1,21 @@
-name: Performance benchmark
+name: PR performance benchmark
 
 on:
   pull_request:
-#  push:
-#    branches:
-#      - master
+    branches:
+      - master
+      - stable
     paths:
       - apps/load-tests/**
       - packages/core-interop/**
       - packages/hierarchy-builder/**
       - packages/models-tree/**
-
-permissions:
-  # deployments permission to deploy GitHub pages website
-  deployments: write
-  # contents permission to update benchmark contents in gh-pages branch
-  contents: write
+    types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
   benchmark:
     name: Benchmark performance
+    if: '!github.event.pull_request.draft'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -45,12 +41,11 @@ jobs:
       - name: Run benchmark tests
         run: npm run benchmark
 
-      - name: Store benchmark result
+      - name: Post benchmark summary
         uses: benchmark-action/github-action-benchmark@v1
         with:
           tool: 'customSmallerIsBetter'
           output-file-path: ./apps/load-tests/tests/benchmark.json
-          # Access token to deploy GitHub Pages branch
-          github-token: ${{ secrets.IMJS_ADMIN_GH_TOKEN }}
-          # Push and deploy GitHub pages branch automatically
-          auto-push: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          save-data-file: false
+          summary-always: true
