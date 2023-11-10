@@ -14,7 +14,7 @@ import { RulesetRegistrationHelper } from "../common/RulesetRegistrationHelper";
 /**
  * Custom hook which registers supplied Ruleset on mount and removes on unmount.
  * @public
- * @deprecated in 4.3. It is not compatible with React 18 StrictMode. Use `Presentation.presentation.rulesets().add(ruleset)` directly.
+ * @deprecated in 4.x. It is not compatible with React 18 StrictMode. Use `Presentation.presentation.rulesets().add(ruleset)` directly.
  */
 export function useRulesetRegistration(ruleset: Ruleset) {
   useDisposable(useCallback(() => new RulesetRegistrationHelper(ruleset), [ruleset]));
