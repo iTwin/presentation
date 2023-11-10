@@ -10,16 +10,15 @@ on:
       - packages/hierarchy-builder/**
       - packages/models-tree/**
 
-permissions:
-  # deployments permission to deploy GitHub pages website
-  deployments: write
-  # contents permission to update benchmark contents in gh-pages branch
-  contents: write
-
 jobs:
   benchmark:
     name: Benchmark performance
     runs-on: ubuntu-latest
+    # permissions:
+    #   # deployments permission to deploy GitHub pages website
+    #   deployments: write
+    #   # contents permission to update benchmark contents in gh-pages branch
+    #   contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -44,12 +43,19 @@ jobs:
       - name: Run benchmark tests
         run: npm run benchmark
 
+      - name: Download previous benchmark data
+        uses: actions/cache@v3
+        with:
+          path: ./.cache
+          key: benchmark-data.json
+
       - name: Store benchmark result
         uses: benchmark-action/github-action-benchmark@v1
         with:
           tool: 'customSmallerIsBetter'
-          output-file-path: ./apps/load-tests/tests/benchmark.json
-          # Access token to deploy GitHub Pages branch
-          github-token: ${{ secrets.IMJS_ADMIN_GH_TOKEN }}
-          # Push and deploy GitHub pages branch automatically
-          auto-push: true
+          output-file-path: ./apps/load-tests/tests/benchmark-data.json
+          external-data-json-path: ./.cache/benchmark.json
+          # # Access token to deploy GitHub Pages branch
+          # github-token: ${{ secrets.IMJS_ADMIN_GH_TOKEN }}
+          # # Push and deploy GitHub pages branch automatically
+          # auto-push: true
