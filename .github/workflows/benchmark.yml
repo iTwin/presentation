@@ -1,10 +1,9 @@
 name: Performance benchmark
 
 on:
-  pull_request:
-#  push:
-#    branches:
-#      - master
+  push:
+    branches:
+      - master
     paths:
       - apps/load-tests/**
       - packages/core-interop/**
