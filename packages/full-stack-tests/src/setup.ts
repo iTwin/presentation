@@ -3,31 +3,13 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-// Node 15+ using MessageChannel prevents node.js process from exiting
-// This becomes an issue when testing React code within JSDOM environment, as the test process cannot exit properly.
-// https://github.com/facebook/react/issues/20756
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const commonjsGlobal: { MessageChannel?: any } =
-  typeof globalThis !== "undefined"
-    ? globalThis
-    : typeof window !== "undefined"
-    ? window
-    : typeof global !== "undefined"
-    ? global
-    : typeof self !== "undefined"
-    ? self
-    : {};
-if (commonjsGlobal.MessageChannel) {
-  delete commonjsGlobal.MessageChannel;
-}
-
 import * as chai from "chai";
 import chaiJestSnapshot from "chai-jest-snapshot";
 import { execFileSync } from "child_process";
 import * as cpx from "cpx2";
 import * as fs from "fs";
+import globalJsdom from "global-jsdom";
 import * as jsdom from "jsdom";
-import jsdomGlobal from "jsdom-global";
 import * as path from "path";
 import ResizeObserver from "resize-observer-polyfill";
 import sinonChai from "sinon-chai";
@@ -42,7 +24,7 @@ sourceMapSupport.install({
 });
 
 // get rid of various xhr errors in the console
-jsdomGlobal(undefined, {
+globalJsdom(undefined, {
   virtualConsole: new jsdom.VirtualConsole().sendTo(console, { omitJSDOMErrors: true }),
 });
 global.ResizeObserver = ResizeObserver;
@@ -57,6 +39,8 @@ before(function () {
   cpx.copySync(`assets/**/*`, "lib/assets");
   copyITwinFrontendAssets("lib/public");
   pseudoLocalize("lib/public/locales");
+
+  getGlobalThis().IS_REACT_ACT_ENVIRONMENT = true;
 });
 
 beforeEach(function () {
@@ -68,6 +52,32 @@ beforeEach(function () {
   chaiJestSnapshot.setFilename(snapPath);
   chaiJestSnapshot.setTestName(currentTest.fullTitle());
 });
+
+after(function () {
+  delete getGlobalThis().IS_REACT_ACT_ENVIRONMENT;
+});
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
+function getGlobalThis(): typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean } {
+  /* istanbul ignore else */
+  if (typeof globalThis !== "undefined") {
+    return globalThis;
+  }
+  /* istanbul ignore next */
+  if (typeof self !== "undefined") {
+    return self;
+  }
+  /* istanbul ignore next */
+  if (typeof window !== "undefined") {
+    return window;
+  }
+  /* istanbul ignore next */
+  if (typeof global !== "undefined") {
+    return global;
+  }
+  /* istanbul ignore next */
+  throw new Error("unable to locate global object");
+}
 
 function copyITwinFrontendAssets(outputDir: string) {
   const iTwinPackagesPath = "node_modules/@itwin";

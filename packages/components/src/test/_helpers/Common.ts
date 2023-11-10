@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import sinon from "sinon";
 import { Component } from "react";
+import sinon from "sinon";
 import { It } from "typemoq";
 import { BeDuration } from "@itwin/core-bentley";
 import {

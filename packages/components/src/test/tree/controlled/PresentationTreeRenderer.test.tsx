@@ -13,10 +13,10 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { PropertyValueFormat } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { fireEvent, render, RenderResult, waitFor } from "@testing-library/react";
 import { PresentationTreeRenderer, PresentationTreeRendererProps } from "../../../presentation-components/tree/controlled/PresentationTreeRenderer";
 import { createTestPropertyInfo, stubDOMMatrix, stubRaf } from "../../_helpers/Common";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content";
+import { fireEvent, render, RenderResult, waitFor } from "../../TestUtils";
 import { createTreeModelNode, createTreeNodeItem } from "./Helpers";
 
 describe("PresentationTreeRenderer", () => {
@@ -39,24 +39,26 @@ describe("PresentationTreeRenderer", () => {
     visibleNodes: visibleNodesMock.object,
   };
 
-  beforeEach(async () => {
+  before(async () => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
+    sinon.stub(Presentation, "localization").get(() => localization);
     await UiComponents.initialize(localization);
-    await Presentation.initialize();
     HTMLElement.prototype.scrollIntoView = () => {};
   });
 
-  afterEach(() => {
+  after(() => {
     UiComponents.terminate();
-    Presentation.terminate();
+    sinon.restore();
+    delete (HTMLElement.prototype as any).scrollIntoView;
+  });
+
+  afterEach(() => {
     treeActionsMock.reset();
     visibleNodesMock.reset();
     nodeLoaderMock.reset();
     modelSourceMock.reset();
-    sinon.restore();
-    delete (HTMLElement.prototype as any).scrollIntoView;
   });
 
   it("renders default tree node", async () => {

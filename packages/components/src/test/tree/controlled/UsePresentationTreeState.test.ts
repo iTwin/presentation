@@ -21,8 +21,6 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
 import { LabelDefinition, Node, RegisteredRuleset, StandardNodeTypes } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
-import { waitFor } from "@testing-library/react";
-import { renderHook } from "@testing-library/react-hooks";
 import {
   PresentationTreeEventHandlerProps,
   usePresentationTreeState,
@@ -32,6 +30,7 @@ import {
 import { PresentationTreeDataProvider } from "../../../presentation-components/tree/DataProvider";
 import { createTreeNodeItem } from "../../../presentation-components/tree/Utils";
 import { mockPresentationManager } from "../../_helpers/UiComponents";
+import { renderHook, waitFor } from "../../TestUtils";
 
 describe("usePresentationTreeState", () => {
   let onIModelHierarchyChanged: PresentationManager["onIModelHierarchyChanged"];
@@ -59,7 +58,6 @@ describe("usePresentationTreeState", () => {
     sinon.stub(IModelApp, "quantityFormatter").get(() => ({
       onActiveFormattingUnitSystemChanged,
     }));
-    sinon.stub(UiComponents, "localization").get(() => new EmptyLocalization());
     await UiComponents.initialize(new EmptyLocalization());
   });
 

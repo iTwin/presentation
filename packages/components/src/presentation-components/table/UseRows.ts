@@ -52,7 +52,7 @@ export function useRows(props: UseRowsProps): UseRowsResult {
   const loaderRef = useRef<RowsLoader>(noopRowsLoader);
 
   useEffect(() => {
-    setState((prev) => ({ ...prev, rows: [] }));
+    setState((prev) => ({ ...prev, rows: [], total: 0 }));
     const { observable, ...loader } = createRowsLoader({
       imodel,
       ruleset,
@@ -79,7 +79,6 @@ export function useRows(props: UseRowsProps): UseRowsResult {
       },
       error: (err) => {
         setErrorState(err);
-        setState((prev) => ({ ...prev, rows: [], isLoading: false, total: 0 }));
       },
     });
 

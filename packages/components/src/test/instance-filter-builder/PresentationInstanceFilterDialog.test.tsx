@@ -5,22 +5,22 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import * as moq from "typemoq";
 import { getPropertyFilterOperatorLabel, PropertyFilterRuleOperator, UiComponents } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Descriptor } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { fireEvent, render, waitFor } from "@testing-library/react";
-import { PresentationInstanceFilterDialog } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterBuilder";
-import { createTestECClassInfo, stubRaf } from "../_helpers/Common";
+import { PresentationInstanceFilterDialog } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog";
+import { createTestECClassInfo, stubDOMMatrix, stubRaf } from "../_helpers/Common";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
+import { fireEvent, render, waitFor } from "../TestUtils";
 
 describe("PresentationInstanceFilterDialog", () => {
   stubRaf();
+  stubDOMMatrix();
   const category = createTestCategoryDescription({ name: "root", label: "Root" });
   const classInfo = createTestECClassInfo();
   const propertiesField = createTestPropertiesContentField({
@@ -43,44 +43,37 @@ describe("PresentationInstanceFilterDialog", () => {
     usedClasses: [classInfo],
   };
 
-  const imodelMock = moq.Mock.ofType<IModelConnection>();
   const onCloseEvent = new BeEvent<() => void>();
+  const imodel = {
+    key: "test_imodel",
+    onClose: onCloseEvent,
+  } as IModelConnection;
 
   before(() => {
     HTMLElement.prototype.scrollIntoView = () => {};
-  });
 
-  after(() => {
-    delete (HTMLElement.prototype as any).scrollIntoView;
-  });
-
-  beforeEach(async () => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
-    await UiComponents.initialize(localization);
-    await Presentation.initialize();
+    sinon.stub(Presentation, "localization").get(() => localization);
+    sinon.stub(UiComponents, "translate").callsFake((key) => key as string);
 
-    imodelMock.setup((x) => x.key).returns(() => "test_imodel");
-    imodelMock.setup((x) => x.onClose).returns(() => onCloseEvent);
-    const metadataProvider = getIModelMetadataProvider(imodelMock.object);
+    const metadataProvider = getIModelMetadataProvider(imodel);
     sinon.stub(metadataProvider, "getECClassInfo").callsFake(async () => {
       return new ECClassInfo(classInfo.id, classInfo.name, classInfo.label, new Set(), new Set());
     });
   });
 
-  afterEach(() => {
+  after(() => {
     onCloseEvent.raiseEvent();
-    imodelMock.reset();
-    UiComponents.terminate();
-    Presentation.terminate();
     sinon.restore();
+    delete (HTMLElement.prototype as any).scrollIntoView;
   });
 
   it("invokes 'onInstanceFilterApplied' with filter", async () => {
     const spy = sinon.spy();
     const { container, getByText, getByDisplayValue } = render(
-      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />,
+      <PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />,
     );
 
     const applyButton = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
@@ -118,13 +111,13 @@ describe("PresentationInstanceFilterDialog", () => {
     });
   });
 
-  it("renders custom title", () => {
+  it("renders custom title", async () => {
     const spy = sinon.spy();
     const title = "custom title";
 
     const { queryByText } = render(
       <PresentationInstanceFilterDialog
-        imodel={imodelMock.object}
+        imodel={imodel}
         descriptor={descriptor}
         onClose={() => {}}
         title={<div>{title}</div>}
@@ -134,7 +127,7 @@ describe("PresentationInstanceFilterDialog", () => {
       />,
     );
 
-    expect(queryByText(title)).to.not.be.null;
+    await waitFor(() => expect(queryByText(title)).to.not.be.null);
   });
 
   it("renders filterResultCountRenderer", () => {
@@ -143,7 +136,7 @@ describe("PresentationInstanceFilterDialog", () => {
 
     const { queryByText } = render(
       <PresentationInstanceFilterDialog
-        imodel={imodelMock.object}
+        imodel={imodel}
         descriptor={descriptor}
         onClose={() => {}}
         filterResultCountRenderer={() => {
@@ -162,7 +155,7 @@ describe("PresentationInstanceFilterDialog", () => {
     const descriptorGetter = async () => descriptor;
 
     const { container } = render(
-      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptorGetter} onClose={() => {}} onApply={spy} isOpen={true} />,
+      <PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptorGetter} onClose={() => {}} onApply={spy} isOpen={true} />,
     );
 
     await waitFor(() => {
@@ -177,7 +170,7 @@ describe("PresentationInstanceFilterDialog", () => {
     const descriptorGetter = async () => undefined as unknown as Descriptor;
 
     const { container } = render(
-      <PresentationInstanceFilterDialog imodel={imodelMock.object} descriptor={descriptorGetter} onClose={() => {}} onApply={spy} isOpen={true} />,
+      <PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptorGetter} onClose={() => {}} onApply={spy} isOpen={true} />,
     );
 
     await waitFor(() => {

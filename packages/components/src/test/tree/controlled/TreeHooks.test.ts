@@ -17,21 +17,19 @@ import {
   UiComponents,
 } from "@itwin/components-react";
 import { BeUiEvent } from "@itwin/core-bentley";
+import { EmptyLocalization } from "@itwin/core-common";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
-import { ITwinLocalization } from "@itwin/core-i18n";
 import { LabelDefinition, Node, RegisteredRuleset, StandardNodeTypes } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
-import { waitFor } from "@testing-library/react";
-import { cleanup, renderHook } from "@testing-library/react-hooks";
 import {
   PresentationTreeNodeLoaderProps,
-  PresentationTreeNodeLoaderResult,
   useControlledPresentationTreeFiltering,
   usePresentationTreeNodeLoader,
 } from "../../../presentation-components/tree/controlled/TreeHooks";
 import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";
 import { createTreeNodeItem } from "../../../presentation-components/tree/Utils";
 import { mockPresentationManager } from "../../_helpers/UiComponents";
+import { renderHook, waitFor } from "../../TestUtils";
 
 /* eslint-disable deprecation/deprecation */
 
@@ -40,17 +38,17 @@ describe("usePresentationNodeLoader", () => {
   let onRulesetModified: RulesetManager["onRulesetModified"];
   let onRulesetVariableChanged: RulesetVariablesManager["onVariableChanged"];
   let onActiveFormattingUnitSystemChanged: QuantityFormatter["onActiveFormattingUnitSystemChanged"];
-  const imodelMock = moq.Mock.ofType<IModelConnection>();
+  const imodel = {
+    key: "test-imodel-key",
+  } as IModelConnection;
   const rulesetId = "test-ruleset-id";
-  const imodelKey = "test-imodel-key";
   const initialProps: PresentationTreeNodeLoaderProps = {
-    imodel: imodelMock.object,
+    imodel,
     ruleset: rulesetId,
     pagingSize: 5,
   };
 
-  beforeEach(async () => {
-    imodelMock.setup((x) => x.key).returns(() => imodelKey);
+  before(async () => {
     const mocks = mockPresentationManager();
     onIModelHierarchyChanged = mocks.presentationManager.object.onIModelHierarchyChanged;
     onRulesetModified = mocks.rulesetsManager.object.onRulesetModified;
@@ -61,13 +59,12 @@ describe("usePresentationNodeLoader", () => {
     sinon.stub(IModelApp, "quantityFormatter").get(() => ({
       onActiveFormattingUnitSystemChanged,
     }));
-    await UiComponents.initialize(new ITwinLocalization());
+    await UiComponents.initialize(new EmptyLocalization());
   });
 
-  afterEach(async () => {
-    await cleanup();
-    imodelMock.reset();
+  after(() => {
     UiComponents.terminate();
+    sinon.restore();
   });
 
   it("creates node loader", () => {
@@ -80,8 +77,8 @@ describe("usePresentationNodeLoader", () => {
     const { result, rerender } = renderHook((props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props), { initialProps });
     const oldNodeLoader = result.current.nodeLoader;
 
-    const newImodelMock = moq.Mock.ofType<IModelConnection>();
-    rerender({ ...initialProps, imodel: newImodelMock.object });
+    const newImodel = { key: "new-imodel-key" } as IModelConnection;
+    rerender({ ...initialProps, imodel: newImodel });
 
     expect(result.current.nodeLoader).to.not.eq(oldNodeLoader);
   });
@@ -113,7 +110,7 @@ describe("usePresentationNodeLoader", () => {
       const { result } = renderHook((props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props), { initialProps });
       const oldNodeLoader = result.current.nodeLoader;
 
-      onIModelHierarchyChanged.raiseEvent({ rulesetId: "unrelated", updateInfo: "FULL", imodelKey });
+      onIModelHierarchyChanged.raiseEvent({ rulesetId: "unrelated", updateInfo: "FULL", imodelKey: imodel.key });
 
       await waitFor(() => expect(result.current.nodeLoader).to.eq(oldNodeLoader));
     });
@@ -133,7 +130,7 @@ describe("usePresentationNodeLoader", () => {
       });
       const oldNodeLoader = result.current.nodeLoader;
 
-      onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey });
+      onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey: imodel.key });
 
       await waitFor(() => expect(result.current.nodeLoader).to.not.eq(oldNodeLoader));
     });
@@ -201,14 +198,13 @@ describe("usePresentationNodeLoader", () => {
 
     it("creates a fresh `TreeModelSource` when nodeLoader changes", async () => {
       const seedTreeModel = createTreeModel(["test"]);
-      const { result, rerender } = renderHook<PresentationTreeNodeLoaderProps, PresentationTreeNodeLoaderResult>(
-        (props) => usePresentationTreeNodeLoader(props),
-        { initialProps: { ...initialProps, ruleset: "initial", seedTreeModel } },
-      );
+      const { result, rerender } = renderHook((props) => usePresentationTreeNodeLoader(props), {
+        initialProps: { ...initialProps, ruleset: "initial", seedTreeModel },
+      });
 
       await waitFor(() => expectTree(result.current.nodeLoader.modelSource.getModel(), ["test"]));
 
-      rerender({ ...initialProps, ruleset: "updated" });
+      rerender({ ...initialProps, ruleset: "updated", seedTreeModel });
       const newModelSource = result.current.nodeLoader.modelSource;
       await waitFor(() => expectTree(newModelSource.getModel(), []));
     });

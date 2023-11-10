@@ -11,12 +11,12 @@ import { PropertyFilterRuleOperator, TreeActions, UiComponents } from "@itwin/co
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
-import { fireEvent, render, waitFor } from "@testing-library/react";
 import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/PresentationInstanceFilterBuilder";
 import { PresentationTreeNodeRenderer } from "../../../presentation-components/tree/controlled/PresentationTreeNodeRenderer";
 import { PresentationInfoTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem";
 import { createTestPropertyInfo } from "../../_helpers/Common";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content";
+import { fireEvent, render, waitFor } from "../../TestUtils";
 import { createTreeModelNode, createTreeNodeItem } from "./Helpers";
 
 function createFilterInfo(propName: string = "prop"): PresentationInstanceFilterInfo {
@@ -46,13 +46,11 @@ describe("PresentationTreeNodeRenderer", () => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
-    await UiComponents.initialize(localization);
-    await Presentation.initialize();
+    sinon.stub(UiComponents, "localization").get(() => localization);
+    sinon.stub(Presentation, "localization").get(() => localization);
   });
 
   afterEach(() => {
-    UiComponents.terminate();
-    Presentation.terminate();
     treeActionsMock.reset();
     sinon.restore();
   });

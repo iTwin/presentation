@@ -10,9 +10,7 @@ import { EditorContainer, PropertyValueRendererManager } from "@itwin/components
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, KeySet, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
-import { Presentation } from "@itwin/presentation-frontend";
-import { render as renderRTL, waitFor } from "@testing-library/react";
-import { renderHook } from "@testing-library/react-hooks";
+import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import userEvent from "@testing-library/user-event";
 import { IContentDataProvider } from "../../presentation-components/common/ContentDataProvider";
 import {
@@ -23,6 +21,7 @@ import {
 } from "../../presentation-components/properties/NavigationPropertyEditor";
 import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField, createTestSimpleContentField } from "../_helpers/Content";
 import { createTestPropertyRecord } from "../_helpers/UiComponents";
+import { renderHook, render as renderRTL, waitFor } from "../TestUtils";
 
 function createNavigationPropertyInfo(): NavigationPropertyInfo {
   return {
@@ -49,15 +48,19 @@ describe("<NavigationPropertyEditor />", () => {
     return record;
   }
 
-  beforeEach(async () => {
+  const getContentStub = sinon.stub<Parameters<PresentationManager["getContent"]>, ReturnType<PresentationManager["getContent"]>>();
+
+  before(() => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
-    await Presentation.initialize();
+    sinon.stub(Presentation, "localization").get(() => localization);
+    sinon.stub(Presentation, "presentation").get(() => ({
+      getContent: getContentStub,
+    }));
   });
 
-  afterEach(async () => {
-    Presentation.terminate();
+  after(() => {
     sinon.restore();
   });
 
@@ -75,7 +78,7 @@ describe("<NavigationPropertyEditor />", () => {
       values: {},
       displayValues: {},
     });
-    sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
+    getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
     const record = createRecord();
     const spy = sinon.spy();
     const { getByRole, getByText, queryByDisplayValue } = render(<EditorContainer propertyRecord={record} onCancel={() => {}} onCommit={spy} />, {
@@ -101,18 +104,25 @@ describe("<NavigationPropertyEditor />", () => {
 });
 
 describe("<NavigationPropertyTargetEditor />", () => {
+  const getContentStub = sinon.stub<Parameters<PresentationManager["getContent"]>, ReturnType<PresentationManager["getContent"]>>();
   const testRecord = createTestPropertyRecord();
 
-  beforeEach(async () => {
+  before(() => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
-    await Presentation.initialize();
+    sinon.stub(Presentation, "localization").get(() => localization);
+    sinon.stub(Presentation, "presentation").get(() => ({
+      getContent: getContentStub,
+    }));
   });
 
-  afterEach(async () => {
-    Presentation.terminate();
+  after(() => {
     sinon.restore();
+  });
+
+  beforeEach(() => {
+    getContentStub.reset();
   });
 
   it("renders selector when rendered inside context", async () => {
@@ -123,7 +133,7 @@ describe("<NavigationPropertyTargetEditor />", () => {
   it("uses default property renderer when rendered not in the context", () => {
     const rendererStub = sinon.stub(PropertyValueRendererManager.defaultManager, "render");
     renderRTL(<NavigationPropertyTargetEditor propertyRecord={testRecord} />);
-    expect(rendererStub).to.be.calledOnceWith(testRecord);
+    expect(rendererStub).to.be.calledWith(testRecord);
   });
 
   it("renders nothing when property record is 'undefined'", () => {

@@ -10,9 +10,9 @@ import { PrimitiveValue } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
-import { fireEvent, render, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NumericInput, NumericPropertyInput, NumericPropertyInputAttributes } from "../../presentation-components/properties/NumericPropertyInput";
+import { fireEvent, render, waitFor } from "../TestUtils";
 import { createRecord } from "./NumericPropertyEditor.test";
 
 describe("<NumericPropertyInput />", () => {
@@ -20,11 +20,10 @@ describe("<NumericPropertyInput />", () => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
-    await Presentation.initialize();
+    sinon.stub(Presentation, "localization").get(() => localization);
   });
 
   afterEach(async () => {
-    Presentation.terminate();
     sinon.restore();
   });
 

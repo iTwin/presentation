@@ -32,7 +32,6 @@ import {
   SelectionHelper,
   SelectionManager,
 } from "@itwin/presentation-frontend";
-import { renderHook } from "@testing-library/react-hooks";
 import {
   UnifiedSelectionTreeEventHandler,
   UnifiedSelectionTreeEventHandlerParams,
@@ -43,6 +42,7 @@ import { PresentationTreeNodeItem } from "../../../presentation-components/tree/
 import { createTestECClassGroupingNodeKey, createTestECInstancesNodeKey } from "../../_helpers/Hierarchy";
 import { ResolvablePromise } from "../../_helpers/Promises";
 import { createTestTreeNodeItem } from "../../_helpers/UiComponents";
+import { renderHook } from "../../TestUtils";
 
 const awaitableObservable = <T>(input: ObservableInput<T>) => {
   const promise = new ResolvablePromise<void>();

@@ -10,15 +10,14 @@ import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValue, Pro
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
-import { Presentation } from "@itwin/presentation-frontend";
-import { render, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import {
   NavigationPropertyTargetSelector,
   NavigationPropertyTargetSelectorAttributes,
   NavigationPropertyTargetSelectorProps,
 } from "../../presentation-components/properties/NavigationPropertyTargetSelector";
 import { createTestContentDescriptor, createTestContentItem } from "../_helpers/Content";
+import { render, waitFor } from "../TestUtils";
 
 function createNavigationPropertyDescription(): PropertyDescription {
   return {
@@ -48,22 +47,29 @@ describe("NavigationPropertyTargetSelector", () => {
     values: {},
   });
 
-  beforeEach(async () => {
+  const getContentStub = sinon.stub<Parameters<PresentationManager["getContent"]>, ReturnType<PresentationManager["getContent"]>>();
+
+  before(() => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
-    await Presentation.initialize();
+    sinon.stub(Presentation, "localization").get(() => localization);
+    sinon.stub(Presentation, "presentation").get(() => ({
+      getContent: getContentStub,
+    }));
   });
 
-  afterEach(async () => {
-    Presentation.terminate();
+  after(() => {
     sinon.restore();
   });
 
+  beforeEach(() => {
+    getContentStub.reset();
+    getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
+  });
+
   it("renders selector", async () => {
-    const user = userEvent.setup();
-    sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
-    const { getByRole, queryByText } = render(
+    const { getByRole, queryByText, user } = render(
       <NavigationPropertyTargetSelector imodel={testImodel} getNavigationPropertyInfo={async () => testNavigationPropertyInfo} propertyRecord={testRecord} />,
     );
 
@@ -74,10 +80,8 @@ describe("NavigationPropertyTargetSelector", () => {
   });
 
   it("invokes onCommit with selected target", async () => {
-    const user = userEvent.setup();
     const spy = sinon.spy();
-    sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
-    const { getByRole, getByText } = render(
+    const { getByRole, getByText, user } = render(
       <NavigationPropertyTargetSelector
         imodel={testImodel}
         getNavigationPropertyInfo={async () => testNavigationPropertyInfo}
@@ -102,10 +106,8 @@ describe("NavigationPropertyTargetSelector", () => {
   });
 
   it("get value from target selector reference", async () => {
-    const user = userEvent.setup();
-    sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
     const ref = createRef<NavigationPropertyTargetSelectorAttributes>();
-    const { getByRole, getByText } = render(
+    const { getByRole, getByText, user } = render(
       <NavigationPropertyTargetSelector
         ref={ref}
         imodel={testImodel}
@@ -126,7 +128,6 @@ describe("NavigationPropertyTargetSelector", () => {
   });
 
   it("sets initial value from property record", async () => {
-    sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), []));
     const propertyDescription = createNavigationPropertyDescription();
     const value = {
       valueFormat: PropertyValueFormat.Primitive,
@@ -146,7 +147,6 @@ describe("NavigationPropertyTargetSelector", () => {
   });
 
   it("changes value when new record is passed", async () => {
-    sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), []));
     const propertyDescription = createNavigationPropertyDescription();
     const value = {
       valueFormat: PropertyValueFormat.Primitive,
@@ -174,8 +174,6 @@ describe("NavigationPropertyTargetSelector", () => {
   });
 
   it("click on dropdown button closes and opens menu", async () => {
-    const user = userEvent.setup();
-    sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
     const propertyDescription = createNavigationPropertyDescription();
     const value = {
       valueFormat: PropertyValueFormat.Primitive,
@@ -189,7 +187,7 @@ describe("NavigationPropertyTargetSelector", () => {
       getNavigationPropertyInfo: async () => testNavigationPropertyInfo,
       propertyRecord,
     };
-    const { container, queryByText } = render(<NavigationPropertyTargetSelector {...initialProps} />);
+    const { container, queryByText, user } = render(<NavigationPropertyTargetSelector {...initialProps} />);
 
     const dropdownButton = await waitFor(() => {
       const element = container.querySelector<HTMLDivElement>(".presentation-navigation-property-select-input-icon");
@@ -205,8 +203,6 @@ describe("NavigationPropertyTargetSelector", () => {
   });
 
   it("handles input blur", async () => {
-    const user = userEvent.setup();
-    sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
     const propertyDescription = createNavigationPropertyDescription();
     const value = {
       valueFormat: PropertyValueFormat.Primitive,
@@ -220,7 +216,7 @@ describe("NavigationPropertyTargetSelector", () => {
       getNavigationPropertyInfo: async () => testNavigationPropertyInfo,
       propertyRecord,
     };
-    const { container, getByRole, getByText, queryByText } = render(<NavigationPropertyTargetSelector {...initialProps} />);
+    const { container, getByRole, getByText, queryByText, user } = render(<NavigationPropertyTargetSelector {...initialProps} />);
 
     const dropdownButton = await waitFor(() => {
       const element = container.querySelector<HTMLDivElement>(".presentation-navigation-property-select-input-icon");
@@ -244,8 +240,6 @@ describe("NavigationPropertyTargetSelector", () => {
   });
 
   it("correctly handles keyDown events", async () => {
-    const user = userEvent.setup();
-    sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
     const propertyDescription = createNavigationPropertyDescription();
     const value = {
       valueFormat: PropertyValueFormat.Primitive,
@@ -259,7 +253,7 @@ describe("NavigationPropertyTargetSelector", () => {
       getNavigationPropertyInfo: async () => testNavigationPropertyInfo,
       propertyRecord,
     };
-    const { getByDisplayValue, getByRole, queryByText } = render(<NavigationPropertyTargetSelector {...initialProps} />);
+    const { getByDisplayValue, getByRole, queryByText, user } = render(<NavigationPropertyTargetSelector {...initialProps} />);
 
     const inputContainer = await waitFor(() => getByRole("combobox"));
 
@@ -292,9 +286,7 @@ describe("NavigationPropertyTargetSelector", () => {
     await waitFor(() => expect(getByDisplayValue(`${contentItem.label.displayValue}E`)).to.not.be.null);
   });
 
-  it("click on input does not close menu when menu is openned", async () => {
-    const user = userEvent.setup();
-    sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), [contentItem]));
+  it("click on input does not close menu when menu is opened", async () => {
     const propertyDescription = createNavigationPropertyDescription();
     const value = {
       valueFormat: PropertyValueFormat.Primitive,
@@ -308,7 +300,7 @@ describe("NavigationPropertyTargetSelector", () => {
       getNavigationPropertyInfo: async () => testNavigationPropertyInfo,
       propertyRecord,
     };
-    const { getByRole, queryByText } = render(<NavigationPropertyTargetSelector {...initialProps} />);
+    const { getByRole, queryByText, user } = render(<NavigationPropertyTargetSelector {...initialProps} />);
 
     const inputContainer = await waitFor(() => getByRole("combobox"));
 

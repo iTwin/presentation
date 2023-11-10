@@ -889,7 +889,7 @@ export interface UsePropertyDataProviderWithUnifiedSelectionResult {
     numSelectedElements: number;
 }
 
-// @public
+// @public @deprecated
 export function useRulesetRegistration(ruleset: Ruleset): void;
 
 // @beta

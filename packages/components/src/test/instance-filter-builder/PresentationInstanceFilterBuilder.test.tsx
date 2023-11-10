@@ -5,13 +5,11 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import * as moq from "typemoq";
 import { getPropertyFilterOperatorLabel, PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator, UiComponents } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
-import { fireEvent, render, waitFor } from "@testing-library/react";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import {
   PresentationInstanceFilterBuilder,
@@ -19,6 +17,7 @@ import {
 } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterBuilder";
 import { createTestECClassInfo, stubDOMMatrix, stubRaf } from "../_helpers/Common";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
+import { fireEvent, render, waitFor } from "../TestUtils";
 
 describe("PresentationInstanceFilter", () => {
   stubRaf();
@@ -68,45 +67,37 @@ describe("PresentationInstanceFilter", () => {
     usedClasses: [classInfo],
   };
 
-  const imodelMock = moq.Mock.ofType<IModelConnection>();
   const onCloseEvent = new BeEvent<() => void>();
+  const imodel = {
+    key: "test_imodel",
+    onClose: onCloseEvent,
+  } as IModelConnection;
 
   before(() => {
     HTMLElement.prototype.scrollIntoView = () => {};
-  });
 
-  after(() => {
-    delete (HTMLElement.prototype as any).scrollIntoView;
-  });
-
-  beforeEach(async () => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
-    await UiComponents.initialize(localization);
-    await Presentation.initialize();
-    Element.prototype.scrollIntoView = sinon.stub();
+    sinon.stub(UiComponents, "translate").callsFake((key) => key as string);
+    sinon.stub(Presentation, "localization").get(() => localization);
 
-    imodelMock.setup((x) => x.key).returns(() => "test_imodel");
-    imodelMock.setup((x) => x.onClose).returns(() => onCloseEvent);
-    const metadataProvider = getIModelMetadataProvider(imodelMock.object);
+    const metadataProvider = getIModelMetadataProvider(imodel);
     sinon.stub(metadataProvider, "getECClassInfo").callsFake(async () => {
       return new ECClassInfo(classInfo.id, classInfo.name, classInfo.label, new Set(), new Set());
     });
   });
 
-  afterEach(() => {
+  after(() => {
     onCloseEvent.raiseEvent();
-    imodelMock.reset();
-    UiComponents.terminate();
-    Presentation.terminate();
     sinon.restore();
+    delete (HTMLElement.prototype as any).scrollIntoView;
   });
 
   it("invokes 'onInstanceFilterChanged' with filter", async () => {
     const spy = sinon.spy();
     const { container, getByText, getByDisplayValue } = render(
-      <PresentationInstanceFilterBuilder imodel={imodelMock.object} descriptor={descriptor} onInstanceFilterChanged={spy} />,
+      <PresentationInstanceFilterBuilder imodel={imodel} descriptor={descriptor} onInstanceFilterChanged={spy} />,
     );
 
     // open property selector
@@ -131,20 +122,22 @@ describe("PresentationInstanceFilter", () => {
     // wait until operator is selected
     await waitFor(() => getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.IsNotNull)));
 
-    expect(spy).to.be.calledWith({
-      filter: {
-        field: propertiesField,
-        operator: PropertyFilterRuleOperator.IsNotNull,
-        value: undefined,
-      },
-      usedClasses: [classInfo],
-    });
+    await waitFor(() =>
+      expect(spy).to.be.calledWith({
+        filter: {
+          field: propertiesField,
+          operator: PropertyFilterRuleOperator.IsNotNull,
+          value: undefined,
+        },
+        usedClasses: [classInfo],
+      }),
+    );
   });
 
   it("renders with initial filter", () => {
     const spy = sinon.spy();
     const { container, queryByDisplayValue } = render(
-      <PresentationInstanceFilterBuilder imodel={imodelMock.object} descriptor={descriptor} onInstanceFilterChanged={spy} initialFilter={initialFilter} />,
+      <PresentationInstanceFilterBuilder imodel={imodel} descriptor={descriptor} onInstanceFilterChanged={spy} initialFilter={initialFilter} />,
     );
 
     const rules = container.querySelectorAll(".rule-property");

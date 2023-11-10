@@ -10,7 +10,7 @@ import { LegacyRef, MutableRefObject, RefCallback, useCallback, useRef, useState
 import { Primitives, PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IPropertyValueRenderer, PropertyValueRendererManager } from "@itwin/components-react";
 import { assert, Guid, GuidString, IDisposable } from "@itwin/core-bentley";
-import { Descriptor, Field, LabelCompositeValue, LabelDefinition, parseCombinedFieldNames } from "@itwin/presentation-common";
+import { Descriptor, Field, LabelCompositeValue, LabelDefinition, parseCombinedFieldNames, Ruleset } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { InstanceKeyValueRenderer } from "../properties/InstanceKeyValueRenderer";
 
@@ -121,6 +121,17 @@ const createPrimitiveCompositeValue = (compositeValue: LabelCompositeValue): Pri
   };
 };
 
+/** @internal */
+export type RulesetOrId = Ruleset | string;
+
+/**
+ * Returns ruleset id from `RulesetOrId`.
+ * @internal
+ */
+export function getRulesetId(ruleset: RulesetOrId) {
+  return typeof ruleset === "string" ? ruleset : ruleset.id;
+}
+
 /**
  * A helper to track ongoing async tasks. Usage:
  * ```
@@ -197,17 +208,16 @@ export function useMergedRefs<T>(...refs: Array<MutableRefObject<T | null> | Leg
  * A hook that helps components throw errors in React's render loop so they can be captured by React error
  * boundaries.
  *
- * Usage: simply call the returned function with an error and it will be re-thrown on next render.
+ * Usage: simply call the returned function with an error and it will be re-thrown in React render loop.
  *
  * @internal
  */
 export function useErrorState() {
-  const [error, setError] = useState<Error | undefined>(undefined);
+  const [_, setError] = useState(undefined);
   const setErrorState = useCallback((e: unknown) => {
-    setError(e instanceof Error ? e : /* istanbul ignore next */ new Error());
+    setError(() => {
+      throw e instanceof Error ? e : /* istanbul ignore next */ new Error();
+    });
   }, []);
-  if (error) {
-    throw error;
-  }
   return setErrorState;
 }
