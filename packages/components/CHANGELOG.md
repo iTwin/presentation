@@ -2,6 +2,8 @@
 
 ## 4.4.0
 
+This release brings official React 18 support. Components and hooks provided by this package were updated to work with [`StrictMode` in React 18](https://react.dev/blog/2022/03/08/react-18-upgrade-guide#updates-to-strict-mode).
+
 ### Minor Changes
 
 - [#333](https://github.com/iTwin/presentation/pull/333): Deprecated `useRulesetRegistration` because it is not compatible with React 18
