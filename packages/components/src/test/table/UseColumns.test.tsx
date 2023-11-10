@@ -9,12 +9,11 @@ import * as moq from "typemoq";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { render, waitFor } from "@testing-library/react";
-import { renderHook } from "@testing-library/react-hooks";
 import { useColumns, UseColumnsProps } from "../../presentation-components/table/UseColumns";
 import { createTestECInstanceKey, TestErrorBoundary } from "../_helpers/Common";
 import { createTestContentDescriptor, createTestNestedContentField, createTestPropertiesContentField } from "../_helpers/Content";
 import { mockPresentationManager } from "../_helpers/UiComponents";
+import { render, renderHook, waitFor } from "../TestUtils";
 
 describe("useColumns", () => {
   const imodel = {} as IModelConnection;

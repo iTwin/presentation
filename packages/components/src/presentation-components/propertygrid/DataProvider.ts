@@ -94,7 +94,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
   private _includeFieldsWithNoValues: boolean;
   private _includeFieldsWithCompositeValues: boolean;
   private _isNestedPropertyCategoryGroupingEnabled: boolean;
-  private _onFavoritesChangedRemoveListener: () => void;
+  private _onFavoritesChangedRemoveListener?: () => void;
   private _shouldCreateFavoritesCategory: boolean;
 
   /**
@@ -112,7 +112,6 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     this._includeFieldsWithNoValues = true;
     this._includeFieldsWithCompositeValues = true;
     this._isNestedPropertyCategoryGroupingEnabled = true;
-    this._onFavoritesChangedRemoveListener = Presentation.favoriteProperties.onFavoritesChanged.addListener(() => this.invalidateCache({}));
     this._shouldCreateFavoritesCategory = !props.disableFavoritesCategory;
   }
 
@@ -121,7 +120,11 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
    */
   public override dispose() {
     super.dispose();
-    this._onFavoritesChangedRemoveListener();
+
+    if (this._onFavoritesChangedRemoveListener) {
+      this._onFavoritesChangedRemoveListener();
+      this._onFavoritesChangedRemoveListener = undefined;
+    }
   }
 
   /**
@@ -234,6 +237,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
    */
   // eslint-disable-next-line @typescript-eslint/naming-convention
   protected getMemoizedData = memoize(async (): Promise<PropertyData> => {
+    this.setupFavoritePropertiesListener();
     const content = await this.getContent();
     if (!content || 0 === content.contentSet.length) {
       return createDefaultPropertyData();
@@ -304,6 +308,14 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
       keys.push(...curr.primaryKeys);
       return keys;
     }, new Array<InstanceKey>());
+  }
+
+  private setupFavoritePropertiesListener() {
+    // istanbul ignore if
+    if (this._onFavoritesChangedRemoveListener) {
+      return;
+    }
+    this._onFavoritesChangedRemoveListener = Presentation.favoriteProperties.onFavoritesChanged.addListener(() => this.invalidateCache({}));
   }
 }
 

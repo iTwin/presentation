@@ -21,10 +21,10 @@ import {
   Paged,
   PresentationError,
   PresentationStatus,
-  RegisteredRuleset,
   RulesetVariable,
+  VariableValue,
 } from "@itwin/presentation-common";
-import { Presentation, PresentationManager, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
+import { Presentation, PresentationManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
 import { translate } from "../../presentation-components/common/Utils";
 import { PresentationTreeDataProvider } from "../../presentation-components/tree/DataProvider";
 import {
@@ -33,11 +33,11 @@ import {
   PresentationTreeNodeItemFilteringInfo,
 } from "../../presentation-components/tree/PresentationTreeNodeItem";
 import { pageOptionsUiToPresentation } from "../../presentation-components/tree/Utils";
-import { createTestECInstanceKey, createTestPropertyInfo, createTestRuleset } from "../_helpers/Common";
+import { createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
 import { createTestECClassGroupingNodeKey, createTestECInstancesNode, createTestECInstancesNodeKey, createTestNodePathElement } from "../_helpers/Hierarchy";
 import { createTestLabelDefinition } from "../_helpers/LabelDefinition";
-import { PromiseContainer, ResolvablePromise } from "../_helpers/Promises";
+import { PromiseContainer } from "../_helpers/Promises";
 import { createTestTreeNodeItem } from "../_helpers/UiComponents";
 
 function createTestECInstancesNodeKeyWithId(id?: string) {
@@ -74,25 +74,6 @@ describe("TreeDataProvider", () => {
     rulesetVariablesManagerMock.reset();
     provider.dispose();
     sinon.restore();
-    Presentation.terminate();
-  });
-
-  describe("dispose", () => {
-    it("disposes registered ruleset", async () => {
-      const registerPromise = new ResolvablePromise<RegisteredRuleset>();
-      const rulesetsManagerMock = moq.Mock.ofType<RulesetManager>();
-      rulesetsManagerMock.setup(async (x) => x.add(moq.It.isAny())).returns(async () => registerPromise);
-      presentationManagerMock.setup((x) => x.rulesets()).returns(() => rulesetsManagerMock.object);
-
-      const ruleset = createTestRuleset();
-      const p = new PresentationTreeDataProvider({ imodel: imodelMock.object, ruleset });
-      const rulesetDisposeSpy = sinon.spy();
-      await registerPromise.resolve(new RegisteredRuleset(ruleset, "test", rulesetDisposeSpy));
-
-      expect(rulesetDisposeSpy).to.not.be.called;
-      p.dispose();
-      expect(rulesetDisposeSpy).to.be.calledOnce;
-    });
   });
 
   describe("rulesetId", () => {
@@ -476,6 +457,9 @@ describe("TreeDataProvider", () => {
           .callsFake(async () => {
             throw new PresentationError(PresentationStatus.ResultSetTooLarge);
           }),
+        vars: () => ({
+          onVariableChanged: new BeEvent<(variableId: string, prevValue: VariableValue | undefined, currValue: VariableValue | undefined) => void>(),
+        }),
       };
 
       sinon.stub(Presentation, "presentation").get(() => presentationManager);
@@ -494,6 +478,9 @@ describe("TreeDataProvider", () => {
           .callsFake(async () => {
             throw new PresentationError(PresentationStatus.BackendTimeout);
           }),
+        vars: () => ({
+          onVariableChanged: new BeEvent<(variableId: string, prevValue: VariableValue | undefined, currValue: VariableValue | undefined) => void>(),
+        }),
       };
 
       sinon.stub(Presentation, "presentation").get(() => presentationManager);
@@ -509,6 +496,9 @@ describe("TreeDataProvider", () => {
           .callsFake(async () => {
             throw new Error("test");
           }),
+        vars: () => ({
+          onVariableChanged: new BeEvent<(variableId: string, prevValue: VariableValue | undefined, currValue: VariableValue | undefined) => void>(),
+        }),
       };
 
       sinon.stub(Presentation, "presentation").get(() => presentationManager);
@@ -524,6 +514,9 @@ describe("TreeDataProvider", () => {
           .callsFake(async () => {
             throw new PresentationError(PresentationStatus.Canceled);
           }),
+        vars: () => ({
+          onVariableChanged: new BeEvent<(variableId: string, prevValue: VariableValue | undefined, currValue: VariableValue | undefined) => void>(),
+        }),
       };
 
       sinon.stub(Presentation, "presentation").get(() => presentationManager);
