@@ -41,18 +41,11 @@ jobs:
       - name: Run benchmark tests
         run: npm run benchmark
 
-      - name: Download previous benchmark data
-        uses: actions/cache@v3
-        with:
-          path: ./.cache
-          key: benchmark-data.json
-
       - name: Post benchmark summary
         uses: jalextowle/github-action-benchmark@35e54a2ea34188ca73481c2a0ce5919907978f4f
         with:
           tool: 'customSmallerIsBetter'
           output-file-path: ./apps/load-tests/tests/benchmark.json
-          external-data-json-path: ./.cache/benchmark-data.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           save-data-file: false
           comment-on-pull-request: true
