@@ -48,11 +48,11 @@ jobs:
           key: benchmark-data.json
 
       - name: Post benchmark summary
-        uses: benchmark-action/github-action-benchmark@v1
+        uses: jalextowle/github-action-benchmark@35e54a2ea34188ca73481c2a0ce5919907978f4f
         with:
           tool: 'customSmallerIsBetter'
           output-file-path: ./apps/load-tests/tests/benchmark.json
           external-data-json-path: ./.cache/benchmark-data.json
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # github-token: ${{ secrets.GITHUB_TOKEN }}
           save-data-file: false
-          comment-always: true
+          comment-on-pull-request: true
