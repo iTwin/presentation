@@ -4,12 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 /**
- * Purpose of this script is to detect @internal APIs exposed through the barrel file of the given package.
- * That's a problem because:
- * - @internal APIs may expose dependencies that don't need to be specified as peer dependencies, making it difficult
- *   to identify whether a specific import should be a peer dependency or not.
- * - Consumers import contents of our package through the barrel file. Including @internal APIs there causes consumers
- *   to see those APIs as available for them to use.
+ * Purpose of this script is to run performance benchmark tests. This is done through a script because:
+ * 1. The tests need some initial setup (download required iModels and set up configuration).
+ * 2. Start a backend process and keep it running until performance tests complete.
  */
 
 "use strict";
