@@ -25,14 +25,13 @@ import { HierarchyDefinitionParentNode, HierarchyNodesDefinition, IHierarchyLeve
 import {
   HierarchyNode,
   HierarchyNodeIdentifiersPath,
-  ParentHierarchyNode,
   ParsedHierarchyNode,
   ProcessedCustomHierarchyNode,
   ProcessedGroupingHierarchyNode,
   ProcessedHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "./HierarchyNode";
-import { ChildNodesCache, ChildNodesObservables, LOGGING_NAMESPACE as CommonLoggingNamespace, getClass, hasChildren } from "./internal/Common";
+import { LOGGING_NAMESPACE as CommonLoggingNamespace, getClass, hasChildren } from "./internal/Common";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
 import { createDetermineChildrenOperator } from "./internal/operators/DetermineChildren";
 import { createGroupingOperator } from "./internal/operators/Grouping";
@@ -50,6 +49,14 @@ import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "./values/
 import { TypedPrimitiveValue } from "./values/Values";
 
 const LOGGING_NAMESPACE = `${CommonLoggingNamespace}.HierarchyProvider`;
+
+/**
+ * A type of [[HierarchyNode]] that doesn't know about its children and is an input when requesting
+ * them using [[HierarchyProvider.getNodes]].
+ *
+ * @beta
+ */
+export type ParentHierarchyNode = Omit<HierarchyNode, "children">;
 
 /**
  * Props for [[HierarchyProvider]].
@@ -320,6 +327,29 @@ function createParentNodeKeysList(parentNode: ParentHierarchyNode | undefined) {
     return [];
   }
   return [...parentNode.parentKeys, parentNode.key];
+}
+
+interface ChildNodesObservables {
+  processedNodes: Observable<ProcessedHierarchyNode>;
+  finalizedNodes: Observable<HierarchyNode>;
+  hasNodes: Observable<boolean>;
+}
+class ChildNodesCache {
+  private _map = new Map<string, ChildNodesObservables>();
+
+  private createKey(node: ParentHierarchyNode | undefined): string {
+    return node ? `${JSON.stringify(node.parentKeys)}+${JSON.stringify(node.key)}` : "";
+  }
+
+  public add(parentNode: ParentHierarchyNode | undefined, value: ChildNodesObservables) {
+    const key = this.createKey(parentNode);
+    assert(!this._map.has(key));
+    this._map.set(key, value);
+  }
+
+  public get(parentNode: ParentHierarchyNode | undefined): ChildNodesObservables | undefined {
+    return this._map.get(this.createKey(parentNode));
+  }
 }
 
 function doLog(msg: string): void;

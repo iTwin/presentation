@@ -293,12 +293,6 @@ export type ParsedInstanceHierarchyNode = Omit<ProcessedInstanceHierarchyNode, "
 };
 
 /**
- * A type of [[HierarchyNode]] that doesn't know about its children.
- * @beta
- */
-export type ParentHierarchyNode = Omit<HierarchyNode, "children">;
-
-/**
  * An identifier that can be used to identify either an ECInstance or a custom node.
  *
  * This is different from [[HierarchyNodeKey]] - the key can represent more types of nodes and,
