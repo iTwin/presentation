@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { RelationshipPath } from "./Metadata";
-import { PrimitiveValue } from "./values/Values";
+import { InstanceKey, PrimitiveValue } from "./values/Values";
 
 /**
  * A data structure that has all the necessary information to build an instance filter for a query.
@@ -41,6 +41,30 @@ export namespace GenericInstanceFilter {
    */
   export function isFilterRuleGroup(obj: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup): obj is GenericInstanceFilterRuleGroup {
     return (obj as GenericInstanceFilterRuleGroup).rules !== undefined;
+  }
+}
+
+/**
+ * Defines possible values used in [[GenericInstanceFilter]].
+ * @beta
+ */
+export type PropertyFilterValue = PrimitiveValue | InstanceKey;
+/** @beta */
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export namespace PropertyFilterValue {
+  /**
+   * Function that checks if supplied value is an [[InstanceKey]].
+   * @beta
+   */
+  export function isInstanceKey(value: PropertyFilterValue): value is InstanceKey {
+    return typeof value === "object" && !!(value as InstanceKey).className && !!(value as InstanceKey).id;
+  }
+  /**
+   * Function that checks if supplied value is a [[PrimitiveValue]].
+   * @beta
+   */
+  export function isPrimitive(value: PropertyFilterValue): value is PrimitiveValue {
+    return !isInstanceKey(value);
   }
 }
 
@@ -115,12 +139,7 @@ export interface GenericInstanceFilterRule {
   /**
    * Value to which property values is compared to. For unary operators the value is `undefined`.
    */
-  value?: PrimitiveValue;
-  /**
-   * Type name of the property. It matches `extendedTypeName` attribute of `ECPrimitiveProperty` if defined
-   * or `typeName` attribute otherwise.
-   */
-  propertyTypeName: string;
+  value?: PropertyFilterValue;
 }
 
 /**
