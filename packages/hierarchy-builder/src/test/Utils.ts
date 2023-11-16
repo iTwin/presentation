@@ -6,6 +6,7 @@
 import { Observable } from "rxjs";
 import sinon from "sinon";
 import { Logger, LogLevel } from "@itwin/core-bentley";
+import { ECClass, ECProperty, IMetadataProvider } from "../hierarchy-builder/ECMetadata";
 import {
   ParsedCustomHierarchyNode,
   ParsedInstanceHierarchyNode,
@@ -14,8 +15,8 @@ import {
   ProcessedInstanceHierarchyNode,
 } from "../hierarchy-builder/HierarchyNode";
 import * as common from "../hierarchy-builder/internal/Common";
-import { ECClass, ECProperty, IMetadataProvider, parseFullClassName } from "../hierarchy-builder/Metadata";
-import { ECSqlQueryReader, ECSqlQueryRow } from "../hierarchy-builder/queries/ECSql";
+import { parseFullClassName } from "../hierarchy-builder/Metadata";
+import { ECSqlQueryReader, ECSqlQueryRow } from "../hierarchy-builder/queries/ECSqlCore";
 import { InstanceKey } from "../hierarchy-builder/values/Values";
 
 export function setupLogging(levels: Array<{ namespace: string; level: LogLevel }>) {

@@ -5,15 +5,14 @@
 
 import { PhysicalPartition, Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
-import { IHierarchyLevelDefinitionsFactory, NodeSelectClauseFactory } from "@itwin/presentation-hierarchy-builder";
+import { IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchy-builder";
 import { buildIModel, insertPhysicalPartition, insertSubject } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
-import { createProvider } from "../Utils";
+import { createMetadataProvider, createProvider } from "../Utils";
 
 describe("Stateless hierarchy builder", () => {
   describe("Class grouping", () => {
-    let selectClauseFactory: NodeSelectClauseFactory;
     let subjectClassName: string;
     let physicalPartitionClassName: string;
 
@@ -21,45 +20,11 @@ describe("Stateless hierarchy builder", () => {
       await initialize();
       subjectClassName = Subject.classFullName.replace(":", ".");
       physicalPartitionClassName = PhysicalPartition.classFullName.replace(":", ".");
-      selectClauseFactory = new NodeSelectClauseFactory();
     });
 
     after(async () => {
       await terminate();
     });
-
-    const basicHierarchy: IHierarchyLevelDefinitionsFactory = {
-      async defineHierarchyLevel(parentNode) {
-        if (!parentNode) {
-          return [
-            {
-              fullClassName: `BisCore.InformationContentElement`,
-              query: {
-                ecsql: `
-                  SELECT ${await selectClauseFactory.createSelectClause({
-                    ecClassId: { selector: `this.ECClassId` },
-                    ecInstanceId: { selector: `this.ECInstanceId` },
-                    nodeLabel: { selector: `this.UserLabel` },
-                    grouping: {
-                      byClass: true,
-                    },
-                  })}
-                  FROM (
-                    SELECT ECClassId, ECInstanceId, UserLabel, Parent
-                    FROM ${subjectClassName}
-                    UNION ALL
-                    SELECT ECClassId, ECInstanceId, UserLabel, Parent
-                    FROM ${physicalPartitionClassName}
-                  ) AS this
-                  WHERE this.Parent.Id = (${IModel.rootSubjectId})
-                `,
-              },
-            },
-          ];
-        }
-        return [];
-      },
-    };
 
     it("creates different groups for different classes", async function () {
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
@@ -70,8 +35,42 @@ describe("Stateless hierarchy builder", () => {
         return { childSubject1, childPartition2, childSubject3, childPartition4 };
       });
 
+      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+      const hierarchy: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel({ parentNode }) {
+          if (!parentNode) {
+            return [
+              {
+                fullClassName: `BisCore.InformationContentElement`,
+                query: {
+                  ecsql: `
+                    SELECT ${await selectQueryFactory.createSelectClause({
+                      ecClassId: { selector: `this.ECClassId` },
+                      ecInstanceId: { selector: `this.ECInstanceId` },
+                      nodeLabel: { selector: `this.UserLabel` },
+                      grouping: {
+                        byClass: true,
+                      },
+                    })}
+                    FROM (
+                      SELECT ECClassId, ECInstanceId, UserLabel, Parent
+                      FROM ${subjectClassName}
+                      UNION ALL
+                      SELECT ECClassId, ECInstanceId, UserLabel, Parent
+                      FROM ${physicalPartitionClassName}
+                    ) AS this
+                    WHERE this.Parent.Id = (${IModel.rootSubjectId})
+                  `,
+                },
+              },
+            ];
+          }
+          return [];
+        },
+      };
+
       await validateHierarchy({
-        provider: createProvider({ imodel, hierarchy: basicHierarchy }),
+        provider: createProvider({ imodel, hierarchy }),
         expect: [
           NodeValidators.createForClassGroupingNode({
             children: [

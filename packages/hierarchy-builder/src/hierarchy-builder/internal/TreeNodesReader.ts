@@ -5,8 +5,8 @@
 
 import { INodeParser } from "../HierarchyDefinition";
 import { InstanceHierarchyNodeProcessingParams, ParsedHierarchyNode, ParsedInstanceHierarchyNode } from "../HierarchyNode";
-import { ECSqlQueryDef, IECSqlQueryExecutor } from "../queries/ECSql";
-import { NodeSelectClauseColumnNames } from "../queries/NodeSelectClauseFactory";
+import { ECSqlQueryDef, IECSqlQueryExecutor } from "../queries/ECSqlCore";
+import { NodeSelectClauseColumnNames } from "../queries/NodeSelectQueryFactory";
 import { ConcatenatedValue } from "../values/ConcatenatedValue";
 import { Id64String } from "../values/Values";
 

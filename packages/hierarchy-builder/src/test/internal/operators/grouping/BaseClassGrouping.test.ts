@@ -5,9 +5,9 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
+import { ECClass, IMetadataProvider } from "../../../../hierarchy-builder/ECMetadata";
 import { GroupingNodeKey } from "../../../../hierarchy-builder/HierarchyNode";
 import * as baseClassGrouping from "../../../../hierarchy-builder/internal/operators/grouping/BaseClassGrouping";
-import { ECClass, IMetadataProvider } from "../../../../hierarchy-builder/Metadata";
 import { createGetClassStub, createTestProcessedGroupingNode, createTestProcessedInstanceNode, TStubClassFunc } from "../../../Utils";
 
 describe("BaseClassGrouping", () => {

@@ -4,9 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert } from "@itwin/core-bentley";
+import { ECClass, ECSchema, IMetadataProvider } from "../ECMetadata";
 import {
-  BaseGroupingParams,
-  GroupingParams,
+  HierarchyNodeGroupingParams,
+  HierarchyNodeGroupingParamsBase,
   HierarchyNodeKey,
   InstanceHierarchyNodeProcessingParams,
   InstancesNodeKey,
@@ -14,7 +15,7 @@ import {
   ProcessedInstanceHierarchyNode,
 } from "../HierarchyNode";
 import { getLogger } from "../Logging";
-import { ECClass, ECSchema, IMetadataProvider, parseFullClassName } from "../Metadata";
+import { parseFullClassName } from "../Metadata";
 
 /** @internal */
 export const LOGGING_NAMESPACE = "Presentation.HierarchyBuilder";
@@ -63,7 +64,10 @@ function mergeNodeHandlingParams(
   return Object.keys(params).length > 0 ? params : undefined;
 }
 
-function mergeNodeGroupingParams(lhsGrouping: GroupingParams | undefined, rhsGrouping: GroupingParams | undefined): GroupingParams {
+function mergeNodeGroupingParams(
+  lhsGrouping: HierarchyNodeGroupingParams | undefined,
+  rhsGrouping: HierarchyNodeGroupingParams | undefined,
+): HierarchyNodeGroupingParams {
   return {
     ...(lhsGrouping?.byClass || rhsGrouping?.byClass
       ? {
@@ -94,9 +98,9 @@ function mergeNodeGroupingParams(lhsGrouping: GroupingParams | undefined, rhsGro
 }
 
 function mergeBaseGroupingParams(
-  lhsBaseGroupingParams: BaseGroupingParams | undefined,
-  rhsBaseGroupingParams: BaseGroupingParams | undefined,
-): BaseGroupingParams {
+  lhsBaseGroupingParams: HierarchyNodeGroupingParamsBase | undefined,
+  rhsBaseGroupingParams: HierarchyNodeGroupingParamsBase | undefined,
+): HierarchyNodeGroupingParamsBase {
   return {
     ...(lhsBaseGroupingParams?.hideIfOneGroupedNode || rhsBaseGroupingParams?.hideIfOneGroupedNode ? { hideIfOneGroupedNode: true } : undefined),
     ...(lhsBaseGroupingParams?.hideIfNoSiblings || rhsBaseGroupingParams?.hideIfNoSiblings ? { hideIfNoSiblings: true } : undefined),

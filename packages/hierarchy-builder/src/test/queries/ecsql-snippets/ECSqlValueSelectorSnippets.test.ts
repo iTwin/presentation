@@ -10,8 +10,8 @@ import {
   createPropertyValueSelector,
   createTypedValueSelector,
   TypedValueSelectClauseProps,
-} from "../../hierarchy-builder/queries/ECSqlUtils";
-import { trimWhitespace } from "./Utils";
+} from "../../../hierarchy-builder/queries/ecsql-snippets/ECSqlValueSelectorSnippets";
+import { trimWhitespace } from "../Utils";
 
 describe("createPropertyValueSelector", () => {
   it("returns selector for simple properties", () => {
@@ -161,12 +161,8 @@ describe("createTypedValueSelector", () => {
   });
 
   it("creates selector for primitive boolean value", () => {
-    expect(trimWhitespace(createTypedValueSelector({ type: "Boolean", value: true }))).to.eq(
-      trimWhitespace(`json_object('value', CAST(1 AS BOOLEAN), 'type', 'Boolean')`),
-    );
-    expect(trimWhitespace(createTypedValueSelector({ type: "Boolean", value: false }))).to.eq(
-      trimWhitespace(`json_object('value', CAST(0 AS BOOLEAN), 'type', 'Boolean')`),
-    );
+    expect(trimWhitespace(createTypedValueSelector({ type: "Boolean", value: true }))).to.eq(trimWhitespace(`json_object('value', TRUE, 'type', 'Boolean')`));
+    expect(trimWhitespace(createTypedValueSelector({ type: "Boolean", value: false }))).to.eq(trimWhitespace(`json_object('value', FALSE, 'type', 'Boolean')`));
   });
 });
 

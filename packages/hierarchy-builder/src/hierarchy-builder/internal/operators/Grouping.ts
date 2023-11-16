@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { concatMap, from, Observable, of, tap, toArray } from "rxjs";
+import { IMetadataProvider } from "../../ECMetadata";
 import { HierarchyNode, HierarchyNodeKey, ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
-import { IMetadataProvider } from "../../Metadata";
 import { createOperatorLoggingNamespace } from "../Common";
 import { assignAutoExpand } from "./grouping/AutoExpand";
 import { createBaseClassGroupingHandlers } from "./grouping/BaseClassGrouping";

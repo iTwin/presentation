@@ -5,6 +5,7 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
+import { IMetadataProvider } from "../hierarchy-builder/ECMetadata";
 import {
   ClassBasedHierarchyLevelDefinitionsFactory,
   CustomHierarchyNodeDefinition,
@@ -13,7 +14,6 @@ import {
   HierarchyNodesDefinition,
   InstanceNodesQueryDefinition,
 } from "../hierarchy-builder/HierarchyDefinition";
-import { IMetadataProvider } from "../hierarchy-builder/Metadata";
 import { createGetClassStub, createTestParsedCustomNode, TStubClassFunc } from "./Utils";
 
 describe("HierarchyNodesDefinition", () => {
@@ -54,7 +54,7 @@ describe("ClassBasedHierarchyLevelDefinitionsFactory", () => {
         childNodes: [],
       },
     });
-    const result = await factory.defineHierarchyLevel(undefined);
+    const result = await factory.defineHierarchyLevel({ parentNode: undefined });
     expect(result).to.deep.eq(rootHierarchyLevel);
   });
 
@@ -100,7 +100,7 @@ describe("ClassBasedHierarchyLevelDefinitionsFactory", () => {
       },
     });
 
-    const result = await factory.defineHierarchyLevel(rootNode);
+    const result = await factory.defineHierarchyLevel({ parentNode: rootNode });
     expect(result).to.deep.eq([...def2, ...def4]);
   });
 
@@ -156,7 +156,7 @@ describe("ClassBasedHierarchyLevelDefinitionsFactory", () => {
       },
     });
 
-    const result = await factory.defineHierarchyLevel(rootNode);
+    const result = await factory.defineHierarchyLevel({ parentNode: rootNode });
     expect(result).to.deep.eq([...def2]);
   });
 
@@ -187,8 +187,8 @@ describe("ClassBasedHierarchyLevelDefinitionsFactory", () => {
       },
     });
 
-    const result = await factory.defineHierarchyLevel(rootNode);
-    expect(spy).to.be.calledOnceWithExactly(["0x1", "0x2"], rootNode);
+    const result = await factory.defineHierarchyLevel({ parentNode: rootNode });
+    expect(spy).to.be.calledOnceWithExactly({ parentNodeInstanceIds: ["0x1", "0x2"], parentNode: rootNode });
     expect(result).to.deep.eq([]);
   });
 });

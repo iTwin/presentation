@@ -163,7 +163,7 @@ export namespace NodeValidators {
 
 export async function validateHierarchy(props: { provider: HierarchyProvider; parentNode?: HierarchyNode; expect: ExpectedHierarchyDef[] }) {
   const parentIdentifier = props.parentNode ? props.parentNode.label : "<root>";
-  const nodes = await props.provider.getNodes(props.parentNode);
+  const nodes = await props.provider.getNodes({ parentNode: props.parentNode });
   Logger.logInfo(loggingNamespace, `Received ${nodes.length} child nodes for ${parentIdentifier}`);
 
   if (nodes.length !== props.expect.length) {

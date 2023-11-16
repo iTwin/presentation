@@ -5,8 +5,8 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { IMetadataProvider } from "../../hierarchy-builder/Metadata";
-import { createConcatenatedTypedValueSelector, createPropertyValueSelector } from "../../hierarchy-builder/queries/ECSqlUtils";
+import { IMetadataProvider } from "../../hierarchy-builder/ECMetadata";
+import { createConcatenatedTypedValueSelector, createPropertyValueSelector } from "../../hierarchy-builder/queries/ecsql-snippets/ECSqlValueSelectorSnippets";
 import {
   BisInstanceLabelSelectClauseFactory,
   ClassBasedInstanceLabelSelectClauseFactory,

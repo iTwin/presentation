@@ -4,13 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IModelConnection } from "@itwin/core-frontend";
-import { SchemaContext } from "@itwin/ecschema-metadata";
-import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import { HierarchyProvider, IHierarchyLevelDefinitionsFactory } from "@itwin/presentation-hierarchy-builder";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "./HierarchyValidation";
+import { createProvider } from "./Utils";
 
 describe("Stateless hierarchy builder", () => {
   describe("Custom nodes", () => {
@@ -26,17 +23,6 @@ describe("Stateless hierarchy builder", () => {
       await terminate();
     });
 
-    function createProvider(definition: IHierarchyLevelDefinitionsFactory) {
-      const schemas = new SchemaContext();
-      schemas.addLocater(new ECSchemaRpcLocater(emptyIModel.getRpcProps()));
-      const metadataProvider = createMetadataProvider(schemas);
-      return new HierarchyProvider({
-        metadataProvider,
-        hierarchyDefinition: definition,
-        queryExecutor: createECSqlQueryExecutor(emptyIModel),
-      });
-    }
-
     it("creates custom root nodes", async () => {
       const node1 = {
         key: "custom-1",
@@ -49,12 +35,15 @@ describe("Stateless hierarchy builder", () => {
         children: undefined,
       };
       const provider = createProvider({
-        async defineHierarchyLevel(parent) {
-          switch (parent?.key) {
-            case undefined:
-              return [{ node: node1 }, { node: node2 }];
-          }
-          return [];
+        imodel: emptyIModel,
+        hierarchy: {
+          async defineHierarchyLevel({ parentNode }) {
+            switch (parentNode?.key) {
+              case undefined:
+                return [{ node: node1 }, { node: node2 }];
+            }
+            return [];
+          },
         },
       });
       await validateHierarchy({
@@ -75,14 +64,17 @@ describe("Stateless hierarchy builder", () => {
         children: undefined,
       };
       const provider = createProvider({
-        async defineHierarchyLevel(parent) {
-          switch (parent?.key) {
-            case undefined:
-              return [{ node: root }];
-            case "root":
-              return [{ node: child }];
-          }
-          return [];
+        imodel: emptyIModel,
+        hierarchy: {
+          async defineHierarchyLevel({ parentNode }) {
+            switch (parentNode?.key) {
+              case undefined:
+                return [{ node: root }];
+              case "root":
+                return [{ node: child }];
+            }
+            return [];
+          },
         },
       });
       await validateHierarchy({
@@ -116,16 +108,19 @@ describe("Stateless hierarchy builder", () => {
         children: undefined,
       };
       const provider = createProvider({
-        async defineHierarchyLevel(parent) {
-          switch (parent?.key) {
-            case undefined:
-              return [{ node: root }];
-            case "root":
-              return [{ node: hiddenChild }];
-            case "hidden child":
-              return [{ node: visibleChild }];
-          }
-          return [];
+        imodel: emptyIModel,
+        hierarchy: {
+          async defineHierarchyLevel({ parentNode }) {
+            switch (parentNode?.key) {
+              case undefined:
+                return [{ node: root }];
+              case "root":
+                return [{ node: hiddenChild }];
+              case "hidden child":
+                return [{ node: visibleChild }];
+            }
+            return [];
+          },
         },
       });
       await validateHierarchy({
@@ -154,16 +149,19 @@ describe("Stateless hierarchy builder", () => {
         },
       };
       const provider = createProvider({
-        async defineHierarchyLevel(parent) {
-          switch (parent?.key) {
-            case undefined:
-              return [{ node: root }];
-            case "root":
-              return [{ node: hiddenChild }];
-            case "hidden child":
-              return [];
-          }
-          return [];
+        imodel: emptyIModel,
+        hierarchy: {
+          async defineHierarchyLevel({ parentNode }) {
+            switch (parentNode?.key) {
+              case undefined:
+                return [{ node: root }];
+              case "root":
+                return [{ node: hiddenChild }];
+              case "hidden child":
+                return [];
+            }
+            return [];
+          },
         },
       });
       await validateHierarchy({

@@ -6,15 +6,14 @@
 import { PhysicalPartition, Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { IHierarchyLevelDefinitionsFactory, NodeSelectClauseFactory } from "@itwin/presentation-hierarchy-builder";
+import { IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchy-builder";
 import { buildIModel, insertPhysicalPartition, insertSubject } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
-import { createProvider } from "../Utils";
+import { createMetadataProvider, createProvider } from "../Utils";
 
 describe("Stateless hierarchy builder", () => {
   describe("Base class grouping", () => {
-    let selectClauseFactory: NodeSelectClauseFactory;
     let subjectClassName: string;
     let physicalPartitionClassName: string;
     let emptyIModel: IModelConnection;
@@ -24,7 +23,6 @@ describe("Stateless hierarchy builder", () => {
       emptyIModel = (await buildIModel(this)).imodel;
       subjectClassName = Subject.classFullName.replace(":", ".");
       physicalPartitionClassName = PhysicalPartition.classFullName.replace(":", ".");
-      selectClauseFactory = new NodeSelectClauseFactory();
     });
 
     after(async () => {
@@ -32,15 +30,16 @@ describe("Stateless hierarchy builder", () => {
     });
 
     it("doesn't create grouping nodes if provided classes aren't base for node class", async function () {
+      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(emptyIModel));
       const customHierarchy: IHierarchyLevelDefinitionsFactory = {
-        async defineHierarchyLevel(parentNode) {
+        async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
             return [
               {
                 fullClassName: `BisCore.InformationContentElement`,
                 query: {
                   ecsql: `
-                    SELECT ${await selectClauseFactory.createSelectClause({
+                    SELECT ${await selectQueryFactory.createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.UserLabel` },
@@ -75,15 +74,16 @@ describe("Stateless hierarchy builder", () => {
     });
 
     it("doesn't create grouping nodes if provided classes aren't of entity or relationship type", async function () {
+      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(emptyIModel));
       const customHierarchy: IHierarchyLevelDefinitionsFactory = {
-        async defineHierarchyLevel(parentNode) {
+        async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
             return [
               {
                 fullClassName: `BisCore.InformationContentElement`,
                 query: {
                   ecsql: `
-                    SELECT ${await selectClauseFactory.createSelectClause({
+                    SELECT ${await selectQueryFactory.createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.UserLabel` },
@@ -119,16 +119,16 @@ describe("Stateless hierarchy builder", () => {
 
     it("creates grouping nodes if provided class is base for node class", async function () {
       const baseClassName = "BisCore.InformationContentElement";
-
+      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(emptyIModel));
       const customHierarchy: IHierarchyLevelDefinitionsFactory = {
-        async defineHierarchyLevel(parentNode) {
+        async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
             return [
               {
                 fullClassName: `BisCore.InformationContentElement`,
                 query: {
                   ecsql: `
-                      SELECT ${await selectClauseFactory.createSelectClause({
+                      SELECT ${await selectQueryFactory.createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `this.UserLabel` },
@@ -178,15 +178,16 @@ describe("Stateless hierarchy builder", () => {
         return { childPartition1 };
       });
 
+      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
       const customHierarchy: IHierarchyLevelDefinitionsFactory = {
-        async defineHierarchyLevel(parentNode) {
+        async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
             return [
               {
                 fullClassName: `BisCore.InformationContentElement`,
                 query: {
                   ecsql: `
-                      SELECT ${await selectClauseFactory.createSelectClause({
+                      SELECT ${await selectQueryFactory.createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `this.UserLabel` },
@@ -254,15 +255,16 @@ describe("Stateless hierarchy builder", () => {
         return { childPartition1, childPartition2 };
       });
 
+      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
       const customHierarchy: IHierarchyLevelDefinitionsFactory = {
-        async defineHierarchyLevel(parentNode) {
+        async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
             return [
               {
                 fullClassName: `BisCore.InformationContentElement`,
                 query: {
                   ecsql: `
-                      SELECT ${await selectClauseFactory.createSelectClause({
+                      SELECT ${await selectQueryFactory.createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `this.UserLabel` },
@@ -289,7 +291,7 @@ describe("Stateless hierarchy builder", () => {
                 fullClassName: physicalPartitionClassName,
                 query: {
                   ecsql: `
-                      SELECT ${await selectClauseFactory.createSelectClause({
+                      SELECT ${await selectQueryFactory.createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `this.UserLabel` },
@@ -363,15 +365,16 @@ describe("Stateless hierarchy builder", () => {
         return { childSubject1, childPartition2 };
       });
 
+      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
       const customHierarchy: IHierarchyLevelDefinitionsFactory = {
-        async defineHierarchyLevel(parentNode) {
+        async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
             return [
               {
                 fullClassName: `BisCore.InformationContentElement`,
                 query: {
                   ecsql: `
-                      SELECT ${await selectClauseFactory.createSelectClause({
+                      SELECT ${await selectQueryFactory.createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `this.UserLabel` },

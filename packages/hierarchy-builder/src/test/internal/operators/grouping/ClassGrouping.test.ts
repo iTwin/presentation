@@ -5,10 +5,10 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
+import { IMetadataProvider } from "../../../../hierarchy-builder/ECMetadata";
 import { GroupingNodeKey } from "../../../../hierarchy-builder/HierarchyNode";
 import { GroupingHandlerResult } from "../../../../hierarchy-builder/internal/operators/Grouping";
 import { createClassGroups } from "../../../../hierarchy-builder/internal/operators/grouping/ClassGrouping";
-import { IMetadataProvider } from "../../../../hierarchy-builder/Metadata";
 import { createGetClassStub, createTestProcessedInstanceNode, TStubClassFunc } from "../../../Utils";
 
 describe("ClassGrouping", () => {

@@ -8,17 +8,8 @@ import { Subject } from "@itwin/core-backend";
 import { Guid, Id64 } from "@itwin/core-bentley";
 import { IModel, Rank } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { SchemaContext } from "@itwin/ecschema-metadata";
-import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-import { createECSqlQueryExecutor, createMetadataProvider, createValueFormatter } from "@itwin/presentation-core-interop";
-import {
-  createConcatenatedTypedValueSelector,
-  createPropertyValueSelector,
-  HierarchyProvider,
-  IHierarchyLevelDefinitionsFactory,
-  IPrimitiveValueFormatter,
-  NodeSelectClauseFactory,
-} from "@itwin/presentation-hierarchy-builder";
+import { createValueFormatter } from "@itwin/presentation-core-interop";
+import { ECSqlSnippets, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchy-builder";
 import { julianToDateTime } from "@itwin/presentation-hierarchy-builder/lib/cjs/hierarchy-builder/internal/Common";
 import {
   buildIModel,
@@ -34,45 +25,27 @@ import {
 } from "../IModelUtils";
 import { initialize, terminate } from "../IntegrationTests";
 import { validateHierarchy } from "./HierarchyValidation";
+import { createMetadataProvider, createProvider } from "./Utils";
 
 describe("Stateless hierarchy builder", () => {
   describe("Labels formatting", () => {
     let emptyIModel: IModelConnection;
     let subjectClassName: string;
-    let selectClauseFactory: NodeSelectClauseFactory;
 
     before(async function () {
       await initialize();
       emptyIModel = (await buildIModel(this)).imodel;
       subjectClassName = Subject.classFullName.replace(":", ".");
-      selectClauseFactory = new NodeSelectClauseFactory();
     });
 
     after(async () => {
       await terminate();
     });
 
-    function createProvider(props: {
-      imodel: IModelConnection;
-      hierarchy: IHierarchyLevelDefinitionsFactory;
-      formatterFactory?: (schemas: SchemaContext) => IPrimitiveValueFormatter;
-    }) {
-      const { imodel, hierarchy } = props;
-      const schemas = new SchemaContext();
-      schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-      const metadataProvider = createMetadataProvider(schemas);
-      return new HierarchyProvider({
-        metadataProvider,
-        hierarchyDefinition: hierarchy,
-        queryExecutor: createECSqlQueryExecutor(imodel),
-        formatter: props.formatterFactory ? props.formatterFactory(schemas) : undefined,
-      });
-    }
-
     it("formats labels with parts of different types", async function () {
       const date = new Date();
       const hierarchy: IHierarchyLevelDefinitionsFactory = {
-        async defineHierarchyLevel(parentNode) {
+        async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
             return [
               {
@@ -140,19 +113,21 @@ describe("Stateless hierarchy builder", () => {
           });
           return { schema, model, category, element };
         });
+
+        const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
-          async defineHierarchyLevel(parentNode) {
+          async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
               return [
                 {
                   fullClassName: schema.classes.ClassX.fullName,
                   query: {
                     ecsql: `
-                    SELECT ${await selectClauseFactory.createSelectClause({
+                    SELECT ${await selectQueryFactory.createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: createConcatenatedTypedValueSelector([
+                        selector: ECSqlSnippets.createConcatenatedTypedValueSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: schema.classes.ClassX.fullName, propertyClassAlias: "this", propertyName: "PropX" },
                           { type: "String", value: "]" },
@@ -206,7 +181,7 @@ describe("Stateless hierarchy builder", () => {
     describe("Id", () => {
       it("formats custom node labels", async function () {
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
-          async defineHierarchyLevel(parentNode) {
+          async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
               return [
                 {
@@ -242,26 +217,27 @@ describe("Stateless hierarchy builder", () => {
 
     describe("DateTime", () => {
       it("formats instance node labels", async function () {
+        const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(emptyIModel));
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
-          async defineHierarchyLevel(parentNode) {
+          async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
               return [
                 {
                   fullClassName: subjectClassName,
                   query: {
                     ecsql: `
-                    SELECT ${await selectClauseFactory.createSelectClause({
+                    SELECT ${await selectQueryFactory.createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: createConcatenatedTypedValueSelector([
+                        selector: ECSqlSnippets.createConcatenatedTypedValueSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: "BisCore.Subject", propertyClassAlias: "this", propertyName: "LastMod" },
                           { type: "String", value: "]" },
                         ]),
                       },
                       extendedData: {
-                        lastMod: { selector: createPropertyValueSelector("this", "LastMod") },
+                        lastMod: { selector: ECSqlSnippets.createPropertyValueSelector("this", "LastMod") },
                       },
                     })}
                     FROM ${subjectClassName} AS this
@@ -291,7 +267,7 @@ describe("Stateless hierarchy builder", () => {
       it("formats custom node labels", async function () {
         const date = new Date();
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
-          async defineHierarchyLevel(parentNode) {
+          async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
               return [
                 {
@@ -327,7 +303,7 @@ describe("Stateless hierarchy builder", () => {
       it("formats using short date format", async function () {
         const date = new Date();
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
-          async defineHierarchyLevel(parentNode) {
+          async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
               return [
                 {
@@ -370,19 +346,21 @@ describe("Stateless hierarchy builder", () => {
           const m2 = insertPhysicalSubModel({ builder, modeledElementId: p2.id, isPrivate: true });
           return { modelClassName: m2.className };
         });
+
+        const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
-          async defineHierarchyLevel(parentNode) {
+          async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
               return [
                 {
                   fullClassName: modelClassName,
                   query: {
                     ecsql: `
-                    SELECT ${await selectClauseFactory.createSelectClause({
+                    SELECT ${await selectQueryFactory.createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: createConcatenatedTypedValueSelector([
+                        selector: ECSqlSnippets.createConcatenatedTypedValueSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: modelClassName, propertyClassAlias: "this", propertyName: "IsPrivate" },
                           { type: "String", value: "]" },
@@ -413,7 +391,7 @@ describe("Stateless hierarchy builder", () => {
 
       it("formats custom node labels", async function () {
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
-          async defineHierarchyLevel(parentNode) {
+          async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
               return [
                 {
@@ -448,19 +426,21 @@ describe("Stateless hierarchy builder", () => {
         const { imodel, category } = await buildIModel(this, async (builder) => {
           return { category: insertSpatialCategory({ builder, codeValue: "category", rank: Rank.Application }) };
         });
+
+        const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
-          async defineHierarchyLevel(parentNode) {
+          async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
               return [
                 {
                   fullClassName: category.className,
                   query: {
                     ecsql: `
-                    SELECT ${await selectClauseFactory.createSelectClause({
+                    SELECT ${await selectQueryFactory.createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: createConcatenatedTypedValueSelector([
+                        selector: ECSqlSnippets.createConcatenatedTypedValueSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: category.className, propertyClassAlias: "this", propertyName: "Rank" },
                           { type: "String", value: "]" },
@@ -485,10 +465,9 @@ describe("Stateless hierarchy builder", () => {
           ],
         });
       });
-
       it("formats custom node labels", async function () {
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
-          async defineHierarchyLevel(parentNode) {
+          async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
               return [
                 {
@@ -537,19 +516,20 @@ describe("Stateless hierarchy builder", () => {
           });
           return { model, category, element };
         });
+        const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
-          async defineHierarchyLevel(parentNode) {
+          async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
               return [
                 {
                   fullClassName: element.className,
                   query: {
                     ecsql: `
-                    SELECT ${await selectClauseFactory.createSelectClause({
+                    SELECT ${await selectQueryFactory.createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: createConcatenatedTypedValueSelector([
+                        selector: ECSqlSnippets.createConcatenatedTypedValueSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: element.className, propertyClassAlias: "this", propertyName: "Yaw" },
                           { type: "String", value: "]" },
@@ -577,7 +557,7 @@ describe("Stateless hierarchy builder", () => {
 
       it("formats custom node labels", async function () {
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
-          async defineHierarchyLevel(parentNode) {
+          async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
               return [
                 {
@@ -624,19 +604,20 @@ describe("Stateless hierarchy builder", () => {
           });
           return { model, category, element };
         });
+        const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
-          async defineHierarchyLevel(parentNode) {
+          async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
               return [
                 {
                   fullClassName: element.className,
                   query: {
                     ecsql: `
-                    SELECT ${await selectClauseFactory.createSelectClause({
+                    SELECT ${await selectQueryFactory.createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: createConcatenatedTypedValueSelector([
+                        selector: ECSqlSnippets.createConcatenatedTypedValueSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: element.className, propertyClassAlias: "this", propertyName: "Origin", specialType: "Point2d" },
                           { type: "String", value: "]" },
@@ -664,7 +645,7 @@ describe("Stateless hierarchy builder", () => {
 
       it("formats custom node labels", async function () {
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
-          async defineHierarchyLevel(parentNode) {
+          async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
               return [
                 {
@@ -711,19 +692,20 @@ describe("Stateless hierarchy builder", () => {
           });
           return { model, category, element };
         });
+        const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
-          async defineHierarchyLevel(parentNode) {
+          async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
               return [
                 {
                   fullClassName: element.className,
                   query: {
                     ecsql: `
-                    SELECT ${await selectClauseFactory.createSelectClause({
+                    SELECT ${await selectQueryFactory.createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: createConcatenatedTypedValueSelector([
+                        selector: ECSqlSnippets.createConcatenatedTypedValueSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: element.className, propertyClassAlias: "this", propertyName: "Origin", specialType: "Point3d" },
                           { type: "String", value: "]" },
@@ -751,7 +733,7 @@ describe("Stateless hierarchy builder", () => {
 
       it("formats custom node labels", async function () {
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
-          async defineHierarchyLevel(parentNode) {
+          async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
               return [
                 {
@@ -796,19 +778,20 @@ describe("Stateless hierarchy builder", () => {
           });
           return { model, category, element };
         });
+        const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
-          async defineHierarchyLevel(parentNode) {
+          async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
               return [
                 {
                   fullClassName: element.className,
                   query: {
                     ecsql: `
-                    SELECT ${await selectClauseFactory.createSelectClause({
+                    SELECT ${await selectQueryFactory.createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: createConcatenatedTypedValueSelector([
+                        selector: ECSqlSnippets.createConcatenatedTypedValueSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: element.className, propertyClassAlias: "this", propertyName: "FederationGuid", specialType: "Guid" },
                           { type: "String", value: "]" },

@@ -6,17 +6,36 @@
 import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import { HierarchyProvider, IHierarchyLevelDefinitionsFactory } from "@itwin/presentation-hierarchy-builder";
+import { createECSqlQueryExecutor, createMetadataProvider as createMetadataProviderInterop } from "@itwin/presentation-core-interop";
+import {
+  HierarchyNodeIdentifiersPath,
+  HierarchyProvider,
+  IHierarchyLevelDefinitionsFactory,
+  IPrimitiveValueFormatter,
+} from "@itwin/presentation-hierarchy-builder";
 
-export function createProvider(props: { imodel: IModelConnection; hierarchy: IHierarchyLevelDefinitionsFactory }) {
-  const { imodel, hierarchy } = props;
+function createSchemaContext(imodel: IModelConnection) {
   const schemas = new SchemaContext();
   schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-  const metadataProvider = createMetadataProvider(schemas);
+  return schemas;
+}
+
+export function createMetadataProvider(imodel: IModelConnection) {
+  return createMetadataProviderInterop(createSchemaContext(imodel));
+}
+
+export function createProvider(props: {
+  imodel: IModelConnection;
+  hierarchy: IHierarchyLevelDefinitionsFactory;
+  formatterFactory?: (schemas: SchemaContext) => IPrimitiveValueFormatter;
+  filteredNodePaths?: HierarchyNodeIdentifiersPath[];
+}) {
+  const { imodel, hierarchy, formatterFactory, filteredNodePaths } = props;
   return new HierarchyProvider({
-    metadataProvider,
+    metadataProvider: createMetadataProvider(imodel),
     hierarchyDefinition: hierarchy,
     queryExecutor: createECSqlQueryExecutor(imodel),
+    formatter: formatterFactory ? formatterFactory(createSchemaContext(imodel)) : undefined,
+    filtering: filteredNodePaths ? { paths: filteredNodePaths } : undefined,
   });
 }

@@ -7,6 +7,7 @@ import { expect } from "chai";
 import { from } from "rxjs";
 import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
+import { IMetadataProvider } from "../../../hierarchy-builder/ECMetadata";
 import { ClassGroupingNodeKey, GroupingNodeKey, LabelGroupingNodeKey, ProcessedInstanceHierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
 import {
   createGroupingHandlers,
@@ -19,7 +20,6 @@ import * as baseClassGrouping from "../../../hierarchy-builder/internal/operator
 import * as classGrouping from "../../../hierarchy-builder/internal/operators/grouping/ClassGrouping";
 import * as groupHiding from "../../../hierarchy-builder/internal/operators/grouping/GroupHiding";
 import * as labelGrouping from "../../../hierarchy-builder/internal/operators/grouping/LabelGrouping";
-import { IMetadataProvider } from "../../../hierarchy-builder/Metadata";
 import { createTestProcessedGroupingNode, createTestProcessedInstanceNode, getObservableResult, setupLogging } from "../../Utils";
 
 describe("Grouping", () => {
