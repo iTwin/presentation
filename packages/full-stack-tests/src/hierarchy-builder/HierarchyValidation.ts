@@ -26,6 +26,7 @@ export namespace NodeValidators {
     expectations: {
       label?: string | RegExp;
       autoExpand?: boolean;
+      supportsFiltering?: boolean;
       children?: ExpectedHierarchyDef[] | boolean;
     },
   ) {
@@ -48,6 +49,13 @@ export namespace NodeValidators {
         )}`,
       );
     }
+    if (expectations.supportsFiltering !== undefined && !!node.supportsFiltering !== !!expectations.supportsFiltering) {
+      throw new Error(
+        `[${node.label}] Expected node's \`supportsFiltering\` flag to be ${optionalBooleanToString(
+          expectations.supportsFiltering,
+        )}, got ${optionalBooleanToString(node.supportsFiltering)}`,
+      );
+    }
     if (expectations.children !== undefined && hasChildren(expectations) !== hasChildren(node)) {
       throw new Error(`[${node.label}] Expected node to ${hasChildren(expectations) ? "" : "not "}have children but it does ${hasChildren(node) ? "" : "not"}`);
     }
@@ -67,6 +75,7 @@ export namespace NodeValidators {
         validateBaseNodeAttributes(node, {
           label: expectedNode.label,
           autoExpand: expectedNode.autoExpand,
+          supportsFiltering: expectedNode.supportsFiltering,
           children: expectedNode.children,
         });
       },
@@ -78,6 +87,7 @@ export namespace NodeValidators {
     instanceKeys?: InstanceKey[];
     label?: string | RegExp;
     autoExpand?: boolean;
+    supportsFiltering?: boolean;
     children?: ExpectedHierarchyDef[] | boolean;
   }): ExpectedHierarchyDef {
     return {
@@ -85,7 +95,7 @@ export namespace NodeValidators {
         if (!HierarchyNode.isStandard(node)) {
           throw new Error(`[${node.label}] Expected an instance node, got a non-standard "${node.key as string}"`);
         }
-        if (node.key.type !== "instances") {
+        if (!HierarchyNode.isInstancesNode(node)) {
           throw new Error(`[${node.label}] Expected an instance node, got "${node.key.type}"`);
         }
         if (
@@ -100,6 +110,7 @@ export namespace NodeValidators {
         validateBaseNodeAttributes(node, {
           label: props.label,
           autoExpand: props.autoExpand,
+          supportsFiltering: props.supportsFiltering,
           children: props.children,
         });
       },
@@ -118,7 +129,7 @@ export namespace NodeValidators {
         if (!HierarchyNode.isStandard(node)) {
           throw new Error(`[${node.label}] Expected a class grouping node, got a non-standard "${node.key as string}"`);
         }
-        if (node.key.type !== "class-grouping") {
+        if (!HierarchyNode.isClassGroupingNode(node)) {
           throw new Error(`[${node.label}] Expected a class grouping node, got "${node.key.type}"`);
         }
         if (props.className && node.key.class.name !== props.className) {
@@ -144,7 +155,7 @@ export namespace NodeValidators {
         if (!HierarchyNode.isStandard(node)) {
           throw new Error(`[${node.label}] Expected a label grouping node, got a non-standard "${node.key as string}"`);
         }
-        if (node.key.type !== "label-grouping") {
+        if (!HierarchyNode.isLabelGroupingNode(node)) {
           throw new Error(`[${node.label}] Expected a label grouping node, got "${node.key.type}"`);
         }
         if (props.label && node.key.label !== props.label) {

@@ -64,6 +64,7 @@ export interface RowDef {
   [NodeSelectClauseColumnNames.MergeByLabelId]?: string;
   [NodeSelectClauseColumnNames.ExtendedData]?: string;
   [NodeSelectClauseColumnNames.AutoExpand]?: boolean;
+  [NodeSelectClauseColumnNames.SupportsFiltering]?: boolean;
 }
 /* eslint-enable @typescript-eslint/naming-convention */
 
@@ -85,6 +86,7 @@ export function defaultNodesParser(row: { [columnName: string]: any }): ParsedIn
     },
     ...(typedRow.HasChildren !== undefined ? { children: !!typedRow.HasChildren } : undefined),
     ...(typedRow.AutoExpand ? { autoExpand: true } : undefined),
+    ...(typedRow.SupportsFiltering ? { supportsFiltering: true } : undefined),
     ...(typedRow.ExtendedData ? { extendedData: JSON.parse(typedRow.ExtendedData) } : undefined),
     ...(Object.keys(processingParams).length > 0 ? { processingParams } : undefined),
   };

@@ -151,6 +151,7 @@ export function mergeNodes<TNode extends ProcessedCustomHierarchyNode | Processe
     ...(mergedProcessingParams ? { processingParams: mergedProcessingParams } : undefined),
     ...(lhs.autoExpand || rhs.autoExpand ? { autoExpand: lhs.autoExpand || rhs.autoExpand } : undefined),
     ...(lhs.extendedData || rhs.extendedData ? { extendedData: { ...lhs.extendedData, ...rhs.extendedData } } : undefined),
+    ...(lhs.supportsFiltering && rhs.supportsFiltering ? { supportsFiltering: true } : undefined),
   } as TNode;
 }
 

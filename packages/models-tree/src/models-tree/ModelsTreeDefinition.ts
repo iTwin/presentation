@@ -126,6 +126,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                   imageId: "icon-imodel-hollow-2",
                 },
                 autoExpand: true,
+                supportsFiltering: true,
               })}
             FROM ${instanceFilterClauses?.from ?? "BisCore.Subject"} this
             ${instanceFilterClauses?.joins ?? ""}
@@ -178,6 +179,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
               extendedData: {
                 imageId: "icon-folder",
               },
+              supportsFiltering: true,
             })},
             this.Parent.Id ParentId
           FROM
@@ -243,6 +245,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                 extendedData: {
                   imageId: "icon-model",
                 },
+                supportsFiltering: true,
               })}
             FROM  ${modelFilterClauses?.from ?? "BisCore.GeometricModel3d"} this
             JOIN bis.InformationPartitionElement partition ON partition.ECInstanceId = this.ModeledElement.Id
@@ -349,6 +352,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                   imageId: "icon-layers",
                   modelIds: { selector: createModelIdsSelector() },
                 },
+                supportsFiltering: true,
               })}
             FROM ${instanceFilterClauses?.from ?? "BisCore.SpatialCategory"} this
             ${instanceFilterClauses?.joins ?? ""}
@@ -416,6 +420,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                 extendedData: {
                   imageId: "icon-item",
                 },
+                supportsFiltering: true,
               })}
             FROM ${instanceFilterClauses?.from ?? "BisCore.GeometricElement3d"} this
             ${instanceFilterClauses?.joins ?? ""}
@@ -473,6 +478,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                 extendedData: {
                   imageId: "icon-item",
                 },
+                supportsFiltering: true,
               })}
             FROM ${instanceFilterClauses?.from ?? "BisCore.GeometricElement3d"} this
             ${instanceFilterClauses?.joins ?? ""}

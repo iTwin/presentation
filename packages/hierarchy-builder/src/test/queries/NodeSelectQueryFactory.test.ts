@@ -21,6 +21,7 @@ describe("NodeSelectQueryFactory", () => {
       ecInstanceId: "0x2",
       nodeLabel: "label",
       autoExpand: false,
+      supportsFiltering: false,
       extendedData: {
         id: "0x3",
         str: "test",
@@ -62,7 +63,8 @@ describe("NodeSelectQueryFactory", () => {
           'num', 1.23,
           'bool', TRUE
         ) AS ${NodeSelectClauseColumnNames.ExtendedData},
-        CAST(FALSE AS BOOLEAN) AS ${NodeSelectClauseColumnNames.AutoExpand}
+        CAST(FALSE AS BOOLEAN) AS ${NodeSelectClauseColumnNames.AutoExpand},
+        CAST(FALSE AS BOOLEAN) AS ${NodeSelectClauseColumnNames.SupportsFiltering}
       `),
     );
   });
@@ -73,6 +75,7 @@ describe("NodeSelectQueryFactory", () => {
       ecInstanceId: { selector: "x.ECInstanceId" },
       nodeLabel: { selector: "x.Label" },
       autoExpand: { selector: "x.AutoExpand" },
+      supportsFiltering: { selector: "x.SupportsFiltering" },
       extendedData: {
         sel: { selector: "x.ExtendedData" },
       },
@@ -108,7 +111,8 @@ describe("NodeSelectQueryFactory", () => {
         json_object(
           'sel', x.ExtendedData
         ) AS ${NodeSelectClauseColumnNames.ExtendedData},
-        CAST(x.AutoExpand AS BOOLEAN) AS ${NodeSelectClauseColumnNames.AutoExpand}
+        CAST(x.AutoExpand AS BOOLEAN) AS ${NodeSelectClauseColumnNames.AutoExpand},
+        CAST(x.SupportsFiltering AS BOOLEAN) AS ${NodeSelectClauseColumnNames.SupportsFiltering}
       `),
     );
   });
@@ -130,7 +134,8 @@ describe("NodeSelectQueryFactory", () => {
         CAST(NULL AS TEXT) AS ${NodeSelectClauseColumnNames.Grouping},
         CAST(NULL AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
         CAST(NULL AS TEXT) AS ${NodeSelectClauseColumnNames.ExtendedData},
-        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.AutoExpand}
+        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.AutoExpand},
+        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.SupportsFiltering}
       `),
     );
   });
@@ -159,7 +164,8 @@ describe("NodeSelectQueryFactory", () => {
         ) AS ${NodeSelectClauseColumnNames.Grouping},
         CAST(NULL AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
         CAST(NULL AS TEXT) AS ${NodeSelectClauseColumnNames.ExtendedData},
-        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.AutoExpand}
+        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.AutoExpand},
+        CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.SupportsFiltering}
       `),
     );
   });

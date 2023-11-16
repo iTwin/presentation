@@ -54,6 +54,8 @@ export enum NodeSelectClauseColumnNames {
   ExtendedData = "ExtendedData",
   /** A flag indicating the node should be auto-expanded when it's loaded. */
   AutoExpand = "AutoExpand",
+  /** A flag indicating the node supports child hierarchy level filtering. */
+  SupportsFiltering = "SupportsFiltering",
 }
 
 /**
@@ -76,6 +78,7 @@ export interface NodeSelectClauseProps {
     [key: string]: Id64String | string | number | boolean | ECSqlValueSelector;
   };
   autoExpand?: boolean | ECSqlValueSelector;
+  supportsFiltering?: boolean | ECSqlValueSelector;
   hasChildren?: boolean | ECSqlValueSelector;
   hideNodeInHierarchy?: boolean | ECSqlValueSelector;
   hideIfNoChildren?: boolean | ECSqlValueSelector;
@@ -137,7 +140,8 @@ export class NodeSelectQueryFactory {
               .join(", ")})`
           : "CAST(NULL AS TEXT)"
       } AS ${NodeSelectClauseColumnNames.ExtendedData},
-      CAST(${createECSqlValueSelector(props.autoExpand)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.AutoExpand}
+      CAST(${createECSqlValueSelector(props.autoExpand)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.AutoExpand},
+      CAST(${createECSqlValueSelector(props.supportsFiltering)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.SupportsFiltering}
     `;
   }
 

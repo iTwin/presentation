@@ -129,6 +129,11 @@ export interface HierarchyNode {
   children: boolean;
   /** A flag indicating whether this node should be auto-expanded in the UI. */
   autoExpand?: boolean;
+  /**
+   * Identifies whether the hierarchy level below this node supports filtering. If not, supplying an instance
+   * filter when requesting child hierarchy level will have no effect.
+   */
+  supportsFiltering?: boolean;
   /** Additional data that may be assigned to this node. */
   extendedData?: { [key: string]: any };
 }
@@ -154,7 +159,7 @@ export namespace HierarchyNode {
   /** Checks whether the given node is a grouping node */
   export function isGroupingNode<TNode extends { key: HierarchyNodeKey }>(
     node: TNode,
-  ): node is TNode & { key: GroupingNodeKey } & (TNode extends ProcessedHierarchyNode
+  ): node is TNode & { key: GroupingNodeKey; supportsFiltering?: undefined } & (TNode extends ProcessedHierarchyNode
       ? { children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode> }
       : {}) {
     return HierarchyNodeKey.isGrouping(node.key);
@@ -162,7 +167,7 @@ export namespace HierarchyNode {
   /** Checks whether the given node is a class grouping node */
   export function isClassGroupingNode<TNode extends { key: HierarchyNodeKey }>(
     node: TNode,
-  ): node is TNode & { key: ClassGroupingNodeKey } & (TNode extends ProcessedHierarchyNode
+  ): node is TNode & { key: ClassGroupingNodeKey; supportsFiltering?: undefined } & (TNode extends ProcessedHierarchyNode
       ? { children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode> }
       : {}) {
     return HierarchyNodeKey.isClassGrouping(node.key);
@@ -170,7 +175,7 @@ export namespace HierarchyNode {
   /** Checks whether the given node is a label grouping node */
   export function isLabelGroupingNode<TNode extends { key: HierarchyNodeKey }>(
     node: TNode,
-  ): node is TNode & { key: LabelGroupingNodeKey } & (TNode extends ProcessedHierarchyNode
+  ): node is TNode & { key: LabelGroupingNodeKey; supportsFiltering?: undefined } & (TNode extends ProcessedHierarchyNode
       ? { children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode> }
       : {}) {
     return HierarchyNodeKey.isLabelGrouping(node.key);
@@ -263,6 +268,7 @@ export type ProcessedInstanceHierarchyNode = Omit<HierarchyNode, "key" | "childr
 export type ProcessedGroupingHierarchyNode = Omit<HierarchyNode, "key" | "children"> & {
   key: GroupingNodeKey;
   children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
+  supportsFiltering?: undefined;
 };
 /**
  * A [[HierarchyNode]] that may have processing parameters defining whether it should be hidden under some conditions,
