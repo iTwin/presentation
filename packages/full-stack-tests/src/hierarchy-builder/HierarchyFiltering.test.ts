@@ -12,7 +12,7 @@ import { NodeValidators, validateHierarchy } from "./HierarchyValidation";
 import { createMetadataProvider, createProvider } from "./Utils";
 
 describe("Stateless hierarchy builder", () => {
-  describe("Filtering", () => {
+  describe("Hierarchy filtering", () => {
     let subjectClassName: string;
 
     before(async function () {
