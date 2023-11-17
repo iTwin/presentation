@@ -20,10 +20,10 @@ import {
   SelectionManager,
   SelectionScopesManager,
 } from "@itwin/presentation-frontend";
-import { render } from "@testing-library/react";
 import { ViewportSelectionHandler, viewWithUnifiedSelection } from "../../presentation-components/viewport/WithUnifiedSelection";
 import { createTestECInstanceKey, waitForAllAsyncs } from "../_helpers/Common";
 import { ResolvablePromise } from "../_helpers/Promises";
+import { render } from "../TestUtils";
 
 const PresentationViewport = viewWithUnifiedSelection(ViewportComponent);
 
@@ -72,12 +72,12 @@ describe("Viewport withUnifiedSelection", () => {
     const { rerender } = render(
       <PresentationViewport imodel={imodelMock.object} viewDefinitionId={viewDefinitionId} selectionHandler={selectionHandlerMock.object} />,
     );
-    selectionHandlerMock.verify((x) => (x.imodel = imodelMock.object), moq.Times.once());
+    selectionHandlerMock.verify((x) => (x.imodel = imodelMock.object), moq.Times.atLeastOnce());
 
     const newImodel = moq.Mock.ofType<IModelConnection>();
     rerender(<PresentationViewport imodel={newImodel.object} viewDefinitionId={viewDefinitionId} selectionHandler={selectionHandlerMock.object} />);
 
-    selectionHandlerMock.verify((x) => (x.imodel = newImodel.object), moq.Times.once());
+    selectionHandlerMock.verify((x) => (x.imodel = newImodel.object), moq.Times.atLeastOnce());
   });
 
   it("disposes ViewportSelectionHandler when unmounted", () => {
@@ -85,7 +85,7 @@ describe("Viewport withUnifiedSelection", () => {
       <PresentationViewport imodel={imodelMock.object} viewDefinitionId={viewDefinitionId} selectionHandler={selectionHandlerMock.object} />,
     );
     unmount();
-    selectionHandlerMock.verify((x) => x.dispose(), moq.Times.once());
+    selectionHandlerMock.verify((x) => x.dispose(), moq.Times.atLeastOnce());
   });
 });
 

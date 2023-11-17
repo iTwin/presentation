@@ -24,7 +24,8 @@
     "change": "changeset add",
     "change:empty": "changeset add --empty",
     "check": "changeset status",
-    "release": "npm run build:all && changeset publish"
+    "release": "npm run build:all && changeset publish",
+    "benchmark": "node ./scripts/runBenchmarkTests.js"
   },
   "dependencies": {
     "@changesets/cli": "^2.26.2",
@@ -59,7 +60,7 @@
       "semver@>=7.0.0 <7.5.2": "^7.5.4",
       "semver@>=6.0.0 <6.3.1": "^6.3.1",
       "semver@>=5.0.0 <5.7.2": "^5.7.2",
-      "xml2js@<0.5.0": "0.5.0"
+      "posthog-node@^2": "^3.1.3"
     }
   }
 }

@@ -18,9 +18,8 @@ import {
   Ruleset,
 } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { waitFor } from "@testing-library/react";
 import { UniquePropertyValuesSelector } from "../../../presentation-components/properties/inputs/UniquePropertyValuesSelector";
-import { createTestECClassInfo, createTestPropertyInfo, createTestRelatedClassInfo, createTestRelationshipPath, render } from "../../_helpers/Common";
+import { createTestECClassInfo, createTestPropertyInfo, createTestRelatedClassInfo, createTestRelationshipPath } from "../../_helpers/Common";
 import {
   createTestCategoryDescription,
   createTestContentDescriptor,
@@ -28,6 +27,7 @@ import {
   createTestPropertiesContentField,
 } from "../../_helpers/Content";
 import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy";
+import { render, waitFor } from "../../TestUtils";
 
 describe("UniquePropertyValuesSelector", () => {
   beforeEach(async () => {

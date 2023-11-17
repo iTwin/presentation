@@ -7,38 +7,48 @@ import { expect } from "chai";
 import sinon from "sinon";
 import * as moq from "typemoq";
 import { PrimitiveValue } from "@itwin/appui-abstract";
-import { MutableTreeModel, TreeModel, TreeModelNode, TreeModelNodeEditingInfo, TreeModelNodeInput, UiComponents } from "@itwin/components-react";
+import {
+  AbstractTreeNodeLoaderWithProvider,
+  MutableTreeModel,
+  TreeModel,
+  TreeModelNode,
+  TreeModelNodeEditingInfo,
+  TreeModelNodeInput,
+  UiComponents,
+} from "@itwin/components-react";
 import { BeUiEvent } from "@itwin/core-bentley";
+import { EmptyLocalization } from "@itwin/core-common";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
-import { ITwinLocalization } from "@itwin/core-i18n";
 import { LabelDefinition, Node, RegisteredRuleset, StandardNodeTypes } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
-import { waitFor } from "@testing-library/react";
-import { cleanup, renderHook } from "@testing-library/react-hooks";
 import {
   PresentationTreeNodeLoaderProps,
-  PresentationTreeNodeLoaderResult,
+  useControlledPresentationTreeFiltering,
   usePresentationTreeNodeLoader,
 } from "../../../presentation-components/tree/controlled/TreeHooks";
+import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";
 import { createTreeNodeItem } from "../../../presentation-components/tree/Utils";
 import { mockPresentationManager } from "../../_helpers/UiComponents";
+import { renderHook, waitFor } from "../../TestUtils";
+
+/* eslint-disable deprecation/deprecation */
 
 describe("usePresentationNodeLoader", () => {
   let onIModelHierarchyChanged: PresentationManager["onIModelHierarchyChanged"];
   let onRulesetModified: RulesetManager["onRulesetModified"];
   let onRulesetVariableChanged: RulesetVariablesManager["onVariableChanged"];
   let onActiveFormattingUnitSystemChanged: QuantityFormatter["onActiveFormattingUnitSystemChanged"];
-  const imodelMock = moq.Mock.ofType<IModelConnection>();
+  const imodel = {
+    key: "test-imodel-key",
+  } as IModelConnection;
   const rulesetId = "test-ruleset-id";
-  const imodelKey = "test-imodel-key";
   const initialProps: PresentationTreeNodeLoaderProps = {
-    imodel: imodelMock.object,
+    imodel,
     ruleset: rulesetId,
     pagingSize: 5,
   };
 
-  beforeEach(async () => {
-    imodelMock.setup((x) => x.key).returns(() => imodelKey);
+  before(async () => {
     const mocks = mockPresentationManager();
     onIModelHierarchyChanged = mocks.presentationManager.object.onIModelHierarchyChanged;
     onRulesetModified = mocks.rulesetsManager.object.onRulesetModified;
@@ -49,13 +59,12 @@ describe("usePresentationNodeLoader", () => {
     sinon.stub(IModelApp, "quantityFormatter").get(() => ({
       onActiveFormattingUnitSystemChanged,
     }));
-    await UiComponents.initialize(new ITwinLocalization());
+    await UiComponents.initialize(new EmptyLocalization());
   });
 
-  afterEach(async () => {
-    await cleanup();
-    imodelMock.reset();
+  after(() => {
     UiComponents.terminate();
+    sinon.restore();
   });
 
   it("creates node loader", () => {
@@ -68,8 +77,8 @@ describe("usePresentationNodeLoader", () => {
     const { result, rerender } = renderHook((props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props), { initialProps });
     const oldNodeLoader = result.current.nodeLoader;
 
-    const newImodelMock = moq.Mock.ofType<IModelConnection>();
-    rerender({ ...initialProps, imodel: newImodelMock.object });
+    const newImodel = { key: "new-imodel-key" } as IModelConnection;
+    rerender({ ...initialProps, imodel: newImodel });
 
     expect(result.current.nodeLoader).to.not.eq(oldNodeLoader);
   });
@@ -101,7 +110,7 @@ describe("usePresentationNodeLoader", () => {
       const { result } = renderHook((props: PresentationTreeNodeLoaderProps) => usePresentationTreeNodeLoader(props), { initialProps });
       const oldNodeLoader = result.current.nodeLoader;
 
-      onIModelHierarchyChanged.raiseEvent({ rulesetId: "unrelated", updateInfo: "FULL", imodelKey });
+      onIModelHierarchyChanged.raiseEvent({ rulesetId: "unrelated", updateInfo: "FULL", imodelKey: imodel.key });
 
       await waitFor(() => expect(result.current.nodeLoader).to.eq(oldNodeLoader));
     });
@@ -121,7 +130,7 @@ describe("usePresentationNodeLoader", () => {
       });
       const oldNodeLoader = result.current.nodeLoader;
 
-      onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey });
+      onIModelHierarchyChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey: imodel.key });
 
       await waitFor(() => expect(result.current.nodeLoader).to.not.eq(oldNodeLoader));
     });
@@ -189,14 +198,13 @@ describe("usePresentationNodeLoader", () => {
 
     it("creates a fresh `TreeModelSource` when nodeLoader changes", async () => {
       const seedTreeModel = createTreeModel(["test"]);
-      const { result, rerender } = renderHook<PresentationTreeNodeLoaderProps, PresentationTreeNodeLoaderResult>(
-        (props) => usePresentationTreeNodeLoader(props),
-        { initialProps: { ...initialProps, ruleset: "initial", seedTreeModel } },
-      );
+      const { result, rerender } = renderHook((props) => usePresentationTreeNodeLoader(props), {
+        initialProps: { ...initialProps, ruleset: "initial", seedTreeModel },
+      });
 
       await waitFor(() => expectTree(result.current.nodeLoader.modelSource.getModel(), ["test"]));
 
-      rerender({ ...initialProps, ruleset: "updated" });
+      rerender({ ...initialProps, ruleset: "updated", seedTreeModel });
       const newModelSource = result.current.nodeLoader.modelSource;
       await waitFor(() => expectTree(newModelSource.getModel(), []));
     });
@@ -210,6 +218,41 @@ describe("usePresentationNodeLoader", () => {
         initialProps: { ...initialProps, seedTreeModel },
       });
       expectTree(result.current.nodeLoader.modelSource.getModel(), treeHierarchy);
+    });
+  });
+});
+
+describe("useControlledPresentationTreeFiltering", () => {
+  const getFilteredNodePathsStub = sinon.stub<
+    Parameters<IPresentationTreeDataProvider["getFilteredNodePaths"]>,
+    ReturnType<IPresentationTreeDataProvider["getFilteredNodePaths"]>
+  >();
+  const dataProvider = {
+    getFilteredNodePaths: getFilteredNodePathsStub,
+  } as unknown as IPresentationTreeDataProvider;
+  const nodeLoader = {
+    dataProvider,
+  } as AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
+
+  beforeEach(() => {
+    getFilteredNodePathsStub.reset();
+  });
+
+  it("returns original node loader if filter is not provided", () => {
+    const { result } = renderHook(useControlledPresentationTreeFiltering, { initialProps: { nodeLoader } });
+    expect(result.current.filteredNodeLoader).to.be.eq(nodeLoader);
+  });
+
+  it("returns filtered node loader when tree is filtered", async () => {
+    const node = createNode("root");
+    getFilteredNodePathsStub.resolves([{ children: [], index: 0, node, filteringData: { matchesCount: 1, childMatchesCount: 0 }, isMarked: true }]);
+
+    const { result } = renderHook(useControlledPresentationTreeFiltering, { initialProps: { nodeLoader, filter: "test" } });
+
+    await waitFor(() => {
+      expect(result.current.isFiltering).to.be.false;
+      expect(result.current.filteredNodeLoader).to.not.be.eq(nodeLoader);
+      expect(result.current.matchesCount).to.be.eq(1);
     });
   });
 });

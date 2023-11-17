@@ -44,7 +44,7 @@ export function loadInitialHierarchy(context: ScenarioContext, events: EventEmit
     (node) => (node.children === true || (Array.isArray(node.children) && node.children.length > 0)) && !!node.autoExpand,
   )
     .then(() => {
-      events.emit("histogram", `initial-load-${getCurrentIModelName(context)}`, timer.current.milliseconds);
+      events.emit("histogram", `Initial Models Tree Load: ${getCurrentIModelName(context)}`, timer.current.milliseconds);
     })
     .then(() => {
       next();
@@ -60,7 +60,7 @@ export function loadFullHierarchy(context: ScenarioContext, events: EventEmitter
     (node) => node.children === true || (Array.isArray(node.children) && node.children.length > 0),
   )
     .then(() => {
-      events.emit("histogram", `full-load-${getCurrentIModelName(context)}`, timer.current.milliseconds);
+      events.emit("histogram", `Full Models Tree Load: ${getCurrentIModelName(context)}`, timer.current.milliseconds);
     })
     .then(() => {
       next();

@@ -28,7 +28,6 @@ describe("PresentationLabelsProvider", () => {
   afterEach(() => {
     presentationManagerMock.reset();
     sinon.restore();
-    Presentation.terminate();
   });
 
   describe("getLabel", () => {

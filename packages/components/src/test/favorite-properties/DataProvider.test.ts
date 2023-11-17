@@ -54,7 +54,6 @@ describe("FavoritePropertiesDataProvider", () => {
     presentationPropertyDataProviderMock.reset();
     favoritePropertiesManagerMock.reset();
     sinon.restore();
-    Presentation.terminate();
   });
 
   describe("constructor", () => {
