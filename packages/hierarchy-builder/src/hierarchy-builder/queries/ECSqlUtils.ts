@@ -3,7 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { PrimitiveValue, PrimitiveValueType, TypedPrimitiveValue } from "../values/Values";
+import { PrimitiveValueType, TypedPrimitiveValue } from "../values/Values";
+import { createECSqlValueSelector } from "./NodeSelectClauseFactory";
 
 /**
  * A union of property types that need special handling when creating a property value selector.
@@ -186,7 +187,7 @@ export function createTypedValueSelector(props: TypedValueSelectClauseProps): st
   }
   return `
     json_object(
-      'value', ${createPrimitiveValueSelector(props.value)},
+      'value', ${typeof props.value === "boolean" ? `CAST(${createECSqlValueSelector(props.value)} AS BOOLEAN)` : createECSqlValueSelector(props.value)},
       'type', '${props.type}'
     )
   `;
@@ -195,24 +196,4 @@ export function createTypedValueSelector(props: TypedValueSelectClauseProps): st
 function withNullSelectorHandling(props: { nullValueResult?: "null" | "selector"; valueSelector: string; checkSelector: string }) {
   const { checkSelector, valueSelector, nullValueResult } = props;
   return nullValueResult === "null" ? createNullableSelector({ valueSelector, checkSelector }) : valueSelector;
-}
-
-function createPrimitiveValueSelector(value: PrimitiveValue) {
-  if (value instanceof Date) {
-    return `'${value.toISOString()}'`;
-  }
-  if (PrimitiveValue.isPoint3d(value)) {
-    return `json_object('x', ${value.x}, 'y', ${value.y}, 'z', ${value.z})`;
-  }
-  if (PrimitiveValue.isPoint2d(value)) {
-    return `json_object('x', ${value.x}, 'y', ${value.y})`;
-  }
-  switch (typeof value) {
-    case "string":
-      return `'${value}'`;
-    case "number":
-      return value.toString();
-    case "boolean":
-      return `CAST(${value ? "1" : "0"} AS BOOLEAN)`;
-  }
 }

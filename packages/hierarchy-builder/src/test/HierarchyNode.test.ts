@@ -49,6 +49,141 @@ describe("HierarchyNodeKey", () => {
       expect(HierarchyNodeKey.equals({ type: "label-grouping", label: "a" }, { type: "label-grouping", label: "a" })).to.be.true;
       expect(HierarchyNodeKey.equals({ type: "label-grouping", label: "a" }, { type: "label-grouping", label: "b" })).to.be.false;
     });
+
+    it("returns correct results for other property grouping node keys", () => {
+      expect(
+        HierarchyNodeKey.equals(
+          { type: "other-property-grouping", groupingInfo: { fullClassName: "Schema.ClassName", propertyName: "property name" } },
+          { type: "other-property-grouping", groupingInfo: { fullClassName: "Schema.ClassName", propertyName: "property name" } },
+        ),
+      ).to.be.true;
+      expect(
+        HierarchyNodeKey.equals(
+          { type: "other-property-grouping", groupingInfo: { fullClassName: "Schema.ClassName", propertyName: "property name" } },
+          { type: "other-property-grouping", groupingInfo: { fullClassName: "Schema.ClassName", propertyName: "other name" } },
+        ),
+      ).to.be.false;
+      expect(
+        HierarchyNodeKey.equals(
+          { type: "other-property-grouping", groupingInfo: { fullClassName: "Schema.ClassName", propertyName: "property name" } },
+          { type: "other-property-grouping", groupingInfo: { fullClassName: "Schema.Other", propertyName: "property name" } },
+        ),
+      ).to.be.false;
+    });
+
+    it("returns correct results for formatted property grouping node keys", () => {
+      expect(
+        HierarchyNodeKey.equals(
+          {
+            type: "formatted-property-grouping",
+            groupingInfo: { fullClassName: "Schema.ClassName", propertyName: "property name", formattedPropertyValue: "value" },
+          },
+          {
+            type: "formatted-property-grouping",
+            groupingInfo: { fullClassName: "Schema.ClassName", propertyName: "property name", formattedPropertyValue: "value" },
+          },
+        ),
+      ).to.be.true;
+      expect(
+        HierarchyNodeKey.equals(
+          {
+            type: "formatted-property-grouping",
+            groupingInfo: { fullClassName: "Schema.ClassName", propertyName: "property name", formattedPropertyValue: "value" },
+          },
+          {
+            type: "formatted-property-grouping",
+            groupingInfo: { fullClassName: "Schema.ClassName", propertyName: "property name", formattedPropertyValue: "value2" },
+          },
+        ),
+      ).to.be.false;
+      expect(
+        HierarchyNodeKey.equals(
+          {
+            type: "formatted-property-grouping",
+            groupingInfo: { fullClassName: "Schema.ClassName", propertyName: "property name", formattedPropertyValue: "value" },
+          },
+          {
+            type: "formatted-property-grouping",
+            groupingInfo: { fullClassName: "Schema.ClassName", propertyName: "other name", formattedPropertyValue: "value" },
+          },
+        ),
+      ).to.be.false;
+      expect(
+        HierarchyNodeKey.equals(
+          {
+            type: "formatted-property-grouping",
+            groupingInfo: { fullClassName: "Schema.ClassName", propertyName: "property name", formattedPropertyValue: "value" },
+          },
+          {
+            type: "formatted-property-grouping",
+            groupingInfo: { fullClassName: "Schema.Other", propertyName: "property name", formattedPropertyValue: "value" },
+          },
+        ),
+      ).to.be.false;
+    });
+
+    it("returns correct results for ranged property grouping node keys", () => {
+      expect(
+        HierarchyNodeKey.equals(
+          {
+            type: "ranged-property-grouping",
+            groupingInfo: { fullClassName: "Schema.ClassName", propertyName: "property name", fromValue: 1, toValue: 2 },
+          },
+          {
+            type: "ranged-property-grouping",
+            groupingInfo: { fullClassName: "Schema.ClassName", propertyName: "property name", fromValue: 1, toValue: 2 },
+          },
+        ),
+      ).to.be.true;
+      expect(
+        HierarchyNodeKey.equals(
+          {
+            type: "ranged-property-grouping",
+            groupingInfo: { fullClassName: "Schema.ClassName", propertyName: "property name", fromValue: 1, toValue: 2 },
+          },
+          {
+            type: "ranged-property-grouping",
+            groupingInfo: { fullClassName: "Schema.ClassName", propertyName: "property name", fromValue: 1, toValue: 3 },
+          },
+        ),
+      ).to.be.false;
+      expect(
+        HierarchyNodeKey.equals(
+          {
+            type: "ranged-property-grouping",
+            groupingInfo: { fullClassName: "Schema.ClassName", propertyName: "property name", fromValue: 1, toValue: 3 },
+          },
+          {
+            type: "ranged-property-grouping",
+            groupingInfo: { fullClassName: "Schema.ClassName", propertyName: "property name", fromValue: 2, toValue: 3 },
+          },
+        ),
+      ).to.be.false;
+      expect(
+        HierarchyNodeKey.equals(
+          {
+            type: "ranged-property-grouping",
+            groupingInfo: { fullClassName: "Schema.ClassName", propertyName: "property name", fromValue: 1, toValue: 2 },
+          },
+          {
+            type: "ranged-property-grouping",
+            groupingInfo: { fullClassName: "Schema.ClassName", propertyName: "other name", fromValue: 1, toValue: 2 },
+          },
+        ),
+      ).to.be.false;
+      expect(
+        HierarchyNodeKey.equals(
+          {
+            type: "ranged-property-grouping",
+            groupingInfo: { fullClassName: "Schema.ClassName", propertyName: "property name", fromValue: 1, toValue: 2 },
+          },
+          {
+            type: "ranged-property-grouping",
+            groupingInfo: { fullClassName: "Schema.Other", propertyName: "property name", fromValue: 1, toValue: 2 },
+          },
+        ),
+      ).to.be.false;
+    });
   });
 });
 
@@ -77,6 +212,27 @@ describe("HierarchyNode", () => {
     parentKeys: [],
     children: false,
   };
+  const otherPropertyGroupingNode: HierarchyNode = {
+    key: { type: "other-property-grouping", groupingInfo: { fullClassName: "Schema.ClassName", propertyName: "property name" } },
+    label: "other property grouping node",
+    parentKeys: [],
+    children: false,
+  };
+  const formattedPropertyGroupingNode: HierarchyNode = {
+    key: {
+      type: "formatted-property-grouping",
+      groupingInfo: { fullClassName: "Schema.ClassName", propertyName: "property name", formattedPropertyValue: "value" },
+    },
+    label: "formatted property grouping node",
+    parentKeys: [],
+    children: false,
+  };
+  const rangedPropertyGroupingNode: HierarchyNode = {
+    key: { type: "ranged-property-grouping", groupingInfo: { fullClassName: "Schema.ClassName", propertyName: "property name", fromValue: 1, toValue: 2 } },
+    label: "ranged property grouping node",
+    parentKeys: [],
+    children: false,
+  };
 
   describe("isCustom", () => {
     it("returns correct result for different types of nodes", () => {
@@ -84,6 +240,9 @@ describe("HierarchyNode", () => {
       expect(HierarchyNode.isCustom(instancesNode)).to.be.false;
       expect(HierarchyNode.isCustom(classGroupingNode)).to.be.false;
       expect(HierarchyNode.isCustom(labelGroupingNode)).to.be.false;
+      expect(HierarchyNode.isCustom(otherPropertyGroupingNode)).to.be.false;
+      expect(HierarchyNode.isCustom(formattedPropertyGroupingNode)).to.be.false;
+      expect(HierarchyNode.isCustom(rangedPropertyGroupingNode)).to.be.false;
     });
   });
 
@@ -93,6 +252,9 @@ describe("HierarchyNode", () => {
       expect(HierarchyNode.isStandard(instancesNode)).to.be.true;
       expect(HierarchyNode.isStandard(classGroupingNode)).to.be.true;
       expect(HierarchyNode.isStandard(labelGroupingNode)).to.be.true;
+      expect(HierarchyNode.isStandard(otherPropertyGroupingNode)).to.be.true;
+      expect(HierarchyNode.isStandard(formattedPropertyGroupingNode)).to.be.true;
+      expect(HierarchyNode.isStandard(rangedPropertyGroupingNode)).to.be.true;
     });
   });
 
@@ -102,6 +264,9 @@ describe("HierarchyNode", () => {
       expect(HierarchyNode.isInstancesNode(instancesNode)).to.be.true;
       expect(HierarchyNode.isInstancesNode(classGroupingNode)).to.be.false;
       expect(HierarchyNode.isInstancesNode(labelGroupingNode)).to.be.false;
+      expect(HierarchyNode.isInstancesNode(otherPropertyGroupingNode)).to.be.false;
+      expect(HierarchyNode.isInstancesNode(formattedPropertyGroupingNode)).to.be.false;
+      expect(HierarchyNode.isInstancesNode(rangedPropertyGroupingNode)).to.be.false;
     });
   });
 
@@ -111,6 +276,9 @@ describe("HierarchyNode", () => {
       expect(HierarchyNode.isGroupingNode(instancesNode)).to.be.false;
       expect(HierarchyNode.isGroupingNode(classGroupingNode)).to.be.true;
       expect(HierarchyNode.isGroupingNode(labelGroupingNode)).to.be.true;
+      expect(HierarchyNode.isGroupingNode(otherPropertyGroupingNode)).to.be.true;
+      expect(HierarchyNode.isGroupingNode(formattedPropertyGroupingNode)).to.be.true;
+      expect(HierarchyNode.isGroupingNode(rangedPropertyGroupingNode)).to.be.true;
     });
   });
 
@@ -120,6 +288,9 @@ describe("HierarchyNode", () => {
       expect(HierarchyNode.isClassGroupingNode(instancesNode)).to.be.false;
       expect(HierarchyNode.isClassGroupingNode(classGroupingNode)).to.be.true;
       expect(HierarchyNode.isClassGroupingNode(labelGroupingNode)).to.be.false;
+      expect(HierarchyNode.isClassGroupingNode(otherPropertyGroupingNode)).to.be.false;
+      expect(HierarchyNode.isClassGroupingNode(formattedPropertyGroupingNode)).to.be.false;
+      expect(HierarchyNode.isClassGroupingNode(rangedPropertyGroupingNode)).to.be.false;
     });
   });
 
@@ -129,6 +300,45 @@ describe("HierarchyNode", () => {
       expect(HierarchyNode.isLabelGroupingNode(instancesNode)).to.be.false;
       expect(HierarchyNode.isLabelGroupingNode(classGroupingNode)).to.be.false;
       expect(HierarchyNode.isLabelGroupingNode(labelGroupingNode)).to.be.true;
+      expect(HierarchyNode.isLabelGroupingNode(otherPropertyGroupingNode)).to.be.false;
+      expect(HierarchyNode.isLabelGroupingNode(formattedPropertyGroupingNode)).to.be.false;
+      expect(HierarchyNode.isLabelGroupingNode(rangedPropertyGroupingNode)).to.be.false;
+    });
+  });
+
+  describe("isOtherPropertyGroupingNode", () => {
+    it("returns correct result for different types of nodes", () => {
+      expect(HierarchyNode.isOtherPropertyGroupingNode(customNode)).to.be.false;
+      expect(HierarchyNode.isOtherPropertyGroupingNode(instancesNode)).to.be.false;
+      expect(HierarchyNode.isOtherPropertyGroupingNode(classGroupingNode)).to.be.false;
+      expect(HierarchyNode.isOtherPropertyGroupingNode(labelGroupingNode)).to.be.false;
+      expect(HierarchyNode.isOtherPropertyGroupingNode(otherPropertyGroupingNode)).to.be.true;
+      expect(HierarchyNode.isOtherPropertyGroupingNode(formattedPropertyGroupingNode)).to.be.false;
+      expect(HierarchyNode.isOtherPropertyGroupingNode(rangedPropertyGroupingNode)).to.be.false;
+    });
+  });
+
+  describe("isFormattedPropertyGroupingNode", () => {
+    it("returns correct result for different types of nodes", () => {
+      expect(HierarchyNode.isFormattedPropertyGroupingNode(customNode)).to.be.false;
+      expect(HierarchyNode.isFormattedPropertyGroupingNode(instancesNode)).to.be.false;
+      expect(HierarchyNode.isFormattedPropertyGroupingNode(classGroupingNode)).to.be.false;
+      expect(HierarchyNode.isFormattedPropertyGroupingNode(labelGroupingNode)).to.be.false;
+      expect(HierarchyNode.isFormattedPropertyGroupingNode(otherPropertyGroupingNode)).to.be.false;
+      expect(HierarchyNode.isFormattedPropertyGroupingNode(formattedPropertyGroupingNode)).to.be.true;
+      expect(HierarchyNode.isFormattedPropertyGroupingNode(rangedPropertyGroupingNode)).to.be.false;
+    });
+  });
+
+  describe("isRangedPropertyGroupingNode", () => {
+    it("returns correct result for different types of nodes", () => {
+      expect(HierarchyNode.isRangedPropertyGroupingNode(customNode)).to.be.false;
+      expect(HierarchyNode.isRangedPropertyGroupingNode(instancesNode)).to.be.false;
+      expect(HierarchyNode.isRangedPropertyGroupingNode(classGroupingNode)).to.be.false;
+      expect(HierarchyNode.isRangedPropertyGroupingNode(labelGroupingNode)).to.be.false;
+      expect(HierarchyNode.isRangedPropertyGroupingNode(otherPropertyGroupingNode)).to.be.false;
+      expect(HierarchyNode.isRangedPropertyGroupingNode(formattedPropertyGroupingNode)).to.be.false;
+      expect(HierarchyNode.isRangedPropertyGroupingNode(rangedPropertyGroupingNode)).to.be.true;
     });
   });
 });

@@ -13,6 +13,7 @@ import { createBaseClassGroupingHandlers } from "./grouping/BaseClassGrouping";
 import { createClassGroups } from "./grouping/ClassGrouping";
 import { applyGroupHidingParams } from "./grouping/GroupHiding";
 import { createLabelGroups } from "./grouping/LabelGrouping";
+import { createPropertiesGroupingHandlers } from "./grouping/PropertiesGrouping";
 import { sortNodesByLabel } from "./Sorting";
 
 const OPERATOR_NAME = "Grouping";
@@ -119,6 +120,12 @@ export async function createGroupingHandlers(metadata: IMetadataProvider, nodes:
     )),
   );
   groupingHandlers.push(async (allNodes) => createClassGroups(metadata, allNodes));
+  groupingHandlers.push(
+    ...(await createPropertiesGroupingHandlers(
+      metadata,
+      nodes.filter((n): n is ProcessedInstanceHierarchyNode => HierarchyNode.isInstancesNode(n)),
+    )),
+  );
   groupingHandlers.push(async (allNodes) => createLabelGroups(allNodes));
   return groupingHandlers;
 }

@@ -19,6 +19,7 @@ import * as baseClassGrouping from "../../../hierarchy-builder/internal/operator
 import * as classGrouping from "../../../hierarchy-builder/internal/operators/grouping/ClassGrouping";
 import * as groupHiding from "../../../hierarchy-builder/internal/operators/grouping/GroupHiding";
 import * as labelGrouping from "../../../hierarchy-builder/internal/operators/grouping/LabelGrouping";
+import * as propertiesGrouping from "../../../hierarchy-builder/internal/operators/grouping/PropertiesGrouping";
 import { IMetadataProvider } from "../../../hierarchy-builder/Metadata";
 import { createTestProcessedGroupingNode, createTestProcessedInstanceNode, getObservableResult, setupLogging } from "../../Utils";
 
@@ -323,10 +324,12 @@ describe("Grouping", () => {
 
   describe("createGroupingHandlers", () => {
     let createBaseClassGroupingHandlersStub: sinon.SinonStub;
+    let createPropertiesGroupingHandlersStub: sinon.SinonStub;
     let createClassGroupsStub: sinon.SinonStub;
     let createLabelGroupsStub: sinon.SinonStub;
     before(() => {
       createBaseClassGroupingHandlersStub = sinon.stub(baseClassGrouping, "createBaseClassGroupingHandlers").resolves([]);
+      createPropertiesGroupingHandlersStub = sinon.stub(propertiesGrouping, "createPropertiesGroupingHandlers").resolves([]);
       createClassGroupsStub = sinon.stub(classGrouping, "createClassGroups");
       createLabelGroupsStub = sinon.stub(labelGrouping, "createLabelGroups");
     });
@@ -342,6 +345,8 @@ describe("Grouping", () => {
       const result = await createGroupingHandlers(metadataProvider, nodes);
       expect(createBaseClassGroupingHandlersStub.callCount).to.eq(1);
       expect(createBaseClassGroupingHandlersStub.firstCall).to.be.calledWith(metadataProvider, nodes);
+      expect(createPropertiesGroupingHandlersStub.callCount).to.eq(1);
+      expect(createPropertiesGroupingHandlersStub.firstCall).to.be.calledWith(metadataProvider, nodes);
       expect(result.length).to.eq(2);
       expect(createClassGroupsStub.callCount).to.eq(0);
       await result[0]([]);

@@ -34,6 +34,22 @@ describe("NodeSelectClauseFactory", () => {
           hideIfOneGroupedNode: true,
           autoExpand: "always",
         },
+        byProperties: {
+          fullClassName: "testSchema.testName",
+          propertyGroups: [
+            {
+              propertyName: "property name",
+              propertyValue: 1,
+              ranges: [
+                {
+                  fromValue: 1,
+                  toValue: 2,
+                  rangeLabel: "range label",
+                },
+              ],
+            },
+          ],
+        },
       },
       hasChildren: true,
       hideIfNoChildren: true,
@@ -51,7 +67,8 @@ describe("NodeSelectClauseFactory", () => {
         json_object(
           'byLabel', json_object('hideIfOneGroupedNode',  CAST(0 AS BOOLEAN), 'autoExpand', CAST('single-child' AS TEXT)),
           'byClass', CAST(1 AS BOOLEAN),
-          'byBaseClasses', json_object('fullClassNames', json_array('testSchema.testName'), 'hideIfNoSiblings', CAST(0 AS BOOLEAN), 'hideIfOneGroupedNode', CAST(1 AS BOOLEAN), 'autoExpand', CAST('always' AS TEXT))
+          'byBaseClasses', json_object('fullClassNames', json_array('testSchema.testName'), 'hideIfNoSiblings', CAST(0 AS BOOLEAN), 'hideIfOneGroupedNode', CAST(1 AS BOOLEAN), 'autoExpand', CAST('always' AS TEXT)),
+          'byProperties', json_object('fullClassName', 'testSchema.testName', 'propertyGroups', json_array(json_object('propertyName', 'property name', 'propertyValue', 1, 'ranges', json_array(json_object('fromValue', 1, 'toValue', 2, 'rangeLabel', 'range label')))))
         ) AS ${NodeSelectClauseColumnNames.Grouping},
         CAST('merge id' AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
         json_object(
@@ -83,6 +100,21 @@ describe("NodeSelectClauseFactory", () => {
           hideIfOneGroupedNode: { selector: "x.baseClassGroupHideIfOneGroupedNode" },
           autoExpand: { selector: "x.baseClassGroupAutoExpand" },
         },
+        byProperties: {
+          fullClassName: { selector: "x.propertyGroupFullClassName" },
+          propertyGroups: [
+            {
+              propertyName: { selector: "x.propertyName" },
+              propertyValue: { selector: "x.propertyValue" },
+              ranges: [
+                {
+                  fromValue: { selector: "x.propertyFromValue" },
+                  toValue: { selector: "x.propertyToValue" },
+                },
+              ],
+            },
+          ],
+        },
       },
       hasChildren: { selector: "x.HasChildren" },
       hideIfNoChildren: { selector: "x.HideIfNoChildren" },
@@ -100,7 +132,8 @@ describe("NodeSelectClauseFactory", () => {
         json_object(
           'byLabel', CAST(x.byLabel AS BOOLEAN),
           'byClass', json_object('hideIfNoSiblings', CAST(x.classGroupHideIfNoSiblings AS BOOLEAN), 'autoExpand', CAST(x.classGroupAutoExpand AS TEXT)),
-          'byBaseClasses', json_object('fullClassNames', json_array(x.baseClassFullGroupClassName), 'hideIfNoSiblings', CAST(x.baseClassGroupHideIfNoSiblings AS BOOLEAN), 'hideIfOneGroupedNode', CAST(x.baseClassGroupHideIfOneGroupedNode AS BOOLEAN), 'autoExpand', CAST(x.baseClassGroupAutoExpand AS TEXT))
+          'byBaseClasses', json_object('fullClassNames', json_array(x.baseClassFullGroupClassName), 'hideIfNoSiblings', CAST(x.baseClassGroupHideIfNoSiblings AS BOOLEAN), 'hideIfOneGroupedNode', CAST(x.baseClassGroupHideIfOneGroupedNode AS BOOLEAN), 'autoExpand', CAST(x.baseClassGroupAutoExpand AS TEXT)),
+          'byProperties', json_object('fullClassName', x.propertyGroupFullClassName, 'propertyGroups', json_array(json_object('propertyName', x.propertyName, 'propertyValue', x.propertyValue, 'ranges', json_array(json_object('fromValue', x.propertyFromValue, 'toValue', x.propertyToValue)))))
         ) AS ${NodeSelectClauseColumnNames.Grouping},
         CAST(x.MergeId AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
         json_object(
@@ -133,7 +166,7 @@ describe("NodeSelectClauseFactory", () => {
     );
   });
 
-  it("creates valid clause with when only one of the groupings is set", async () => {
+  it("creates valid clause with when some of the groupings are set", async () => {
     const result = await factory.createSelectClause({
       ecClassId: "0x1",
       ecInstanceId: "0x2",
@@ -141,6 +174,15 @@ describe("NodeSelectClauseFactory", () => {
       grouping: {
         byBaseClasses: {
           fullClassNames: ["testSchema.testName"],
+        },
+        byProperties: {
+          fullClassName: "testSchema.testName",
+          propertyGroups: [
+            {
+              propertyName: "property name",
+              propertyValue: true,
+            },
+          ],
         },
       },
     });
@@ -153,7 +195,8 @@ describe("NodeSelectClauseFactory", () => {
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
         json_object(
-          'byBaseClasses', json_object('fullClassNames', json_array('testSchema.testName'))
+          'byBaseClasses', json_object('fullClassNames', json_array('testSchema.testName')),
+          'byProperties', json_object('fullClassName', 'testSchema.testName', 'propertyGroups', json_array(json_object('propertyName', 'property name', 'propertyValue', CAST(1 AS BOOLEAN))))
         ) AS ${NodeSelectClauseColumnNames.Grouping},
         CAST(NULL AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
         CAST(NULL AS TEXT) AS ${NodeSelectClauseColumnNames.ExtendedData},

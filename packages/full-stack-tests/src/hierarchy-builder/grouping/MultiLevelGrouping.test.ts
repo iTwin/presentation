@@ -28,15 +28,47 @@ describe("Stateless hierarchy builder", () => {
       await terminate();
     });
 
-    it("groups by base class, class and label", async function () {
+    it("groups by base class, class, property and label", async function () {
       const labelGroupName1 = "test1";
       const labelGroupName2 = "test2";
+      const description1 = "test description1";
+      const description2 = "test description2";
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-        const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, userLabel: labelGroupName1 });
-        const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId, userLabel: labelGroupName1 });
-        const childPartition3 = insertPhysicalPartition({ builder, codeValue: "B3", parentId: IModel.rootSubjectId, userLabel: labelGroupName1 });
-        const childPartition4 = insertPhysicalPartition({ builder, codeValue: "B4", parentId: IModel.rootSubjectId, userLabel: labelGroupName2 });
-        const childPartition5 = insertPhysicalPartition({ builder, codeValue: "B5", parentId: IModel.rootSubjectId, userLabel: labelGroupName2 });
+        const childSubject1 = insertSubject({
+          builder,
+          codeValue: "A1",
+          parentId: IModel.rootSubjectId,
+          userLabel: labelGroupName1,
+          description: description1,
+        });
+        const childSubject2 = insertSubject({
+          builder,
+          codeValue: "A2",
+          parentId: IModel.rootSubjectId,
+          userLabel: labelGroupName1,
+          description: description1,
+        });
+        const childPartition3 = insertPhysicalPartition({
+          builder,
+          codeValue: "B3",
+          parentId: IModel.rootSubjectId,
+          userLabel: labelGroupName1,
+          description: description1,
+        });
+        const childPartition4 = insertPhysicalPartition({
+          builder,
+          codeValue: "B4",
+          parentId: IModel.rootSubjectId,
+          userLabel: labelGroupName2,
+          description: description1,
+        });
+        const childPartition5 = insertPhysicalPartition({
+          builder,
+          codeValue: "B5",
+          parentId: IModel.rootSubjectId,
+          userLabel: labelGroupName2,
+          description: description2,
+        });
         return { childSubject1, childSubject2, childPartition3, childPartition4, childPartition5 };
       });
 
@@ -58,13 +90,52 @@ describe("Stateless hierarchy builder", () => {
                         byBaseClasses: {
                           fullClassNames: ["BisCore.InformationContentElement", "BisCore.InformationPartitionElement"],
                         },
+                        byProperties: {
+                          fullClassName: "BisCore.Subject",
+                          propertyGroups: [
+                            {
+                              propertyName: "Description",
+                              propertyValue: { selector: `this.Description` },
+                            },
+                          ],
+                        },
                       },
                     })}
                     FROM (
-                      SELECT ECClassId, ECInstanceId, UserLabel, Parent
+                      SELECT ECClassId, ECInstanceId, UserLabel, Parent, Description
                       FROM ${subjectClassName}
-                      UNION ALL
-                      SELECT ECClassId, ECInstanceId, UserLabel, Parent
+                    ) AS this
+                    WHERE this.Parent.Id = (${IModel.rootSubjectId})
+                  `,
+                },
+              },
+              {
+                fullClassName: `BisCore.InformationContentElement`,
+                query: {
+                  ecsql: `
+                    SELECT ${await selectClauseFactory.createSelectClause({
+                      ecClassId: { selector: `this.ECClassId` },
+                      ecInstanceId: { selector: `this.ECInstanceId` },
+                      nodeLabel: { selector: `this.UserLabel` },
+                      grouping: {
+                        byClass: true,
+                        byLabel: true,
+                        byBaseClasses: {
+                          fullClassNames: ["BisCore.InformationContentElement", "BisCore.InformationPartitionElement"],
+                        },
+                        byProperties: {
+                          fullClassName: "BisCore.PhysicalPartition",
+                          propertyGroups: [
+                            {
+                              propertyName: "Description",
+                              propertyValue: { selector: `this.Description` },
+                            },
+                          ],
+                        },
+                      },
+                    })}
+                    FROM (
+                      SELECT ECClassId, ECInstanceId, UserLabel, Parent, Description
                       FROM ${physicalPartitionClassName}
                     ) AS this
                     WHERE this.Parent.Id = (${IModel.rootSubjectId})
@@ -91,26 +162,46 @@ describe("Stateless hierarchy builder", () => {
                   NodeValidators.createForClassGroupingNode({
                     className: physicalPartitionClassName,
                     children: [
-                      NodeValidators.createForLabelGroupingNode({
-                        label: labelGroupName1,
+                      NodeValidators.createForFormattedPropertyGroupingNode({
+                        label: description1,
+                        fullClassName: "BisCore.PhysicalPartition",
+                        propertyName: "UserLabel",
+                        formattedPropertyValue: description1,
                         children: [
-                          NodeValidators.createForInstanceNode({
-                            instanceKeys: [keys.childPartition3],
-                            children: false,
+                          NodeValidators.createForLabelGroupingNode({
+                            label: labelGroupName1,
+                            children: [
+                              NodeValidators.createForInstanceNode({
+                                instanceKeys: [keys.childPartition3],
+                                children: false,
+                              }),
+                            ],
+                          }),
+                          NodeValidators.createForLabelGroupingNode({
+                            label: labelGroupName2,
+                            children: [
+                              NodeValidators.createForInstanceNode({
+                                instanceKeys: [keys.childPartition4],
+                                children: false,
+                              }),
+                            ],
                           }),
                         ],
                       }),
-
-                      NodeValidators.createForLabelGroupingNode({
-                        label: labelGroupName2,
+                      NodeValidators.createForFormattedPropertyGroupingNode({
+                        label: description2,
+                        fullClassName: "BisCore.PhysicalPartition",
+                        formattedPropertyValue: description2,
+                        propertyName: "UserLabel",
                         children: [
-                          NodeValidators.createForInstanceNode({
-                            instanceKeys: [keys.childPartition4],
-                            children: false,
-                          }),
-                          NodeValidators.createForInstanceNode({
-                            instanceKeys: [keys.childPartition5],
-                            children: false,
+                          NodeValidators.createForLabelGroupingNode({
+                            label: labelGroupName2,
+                            children: [
+                              NodeValidators.createForInstanceNode({
+                                instanceKeys: [keys.childPartition5],
+                                children: false,
+                              }),
+                            ],
                           }),
                         ],
                       }),
@@ -121,16 +212,24 @@ describe("Stateless hierarchy builder", () => {
               NodeValidators.createForClassGroupingNode({
                 className: subjectClassName,
                 children: [
-                  NodeValidators.createForLabelGroupingNode({
-                    label: labelGroupName1,
+                  NodeValidators.createForFormattedPropertyGroupingNode({
+                    label: description1,
+                    fullClassName: "BisCore.Subject",
+                    formattedPropertyValue: description1,
+                    propertyName: "UserLabel",
                     children: [
-                      NodeValidators.createForInstanceNode({
-                        instanceKeys: [keys.childSubject1],
-                        children: false,
-                      }),
-                      NodeValidators.createForInstanceNode({
-                        instanceKeys: [keys.childSubject2],
-                        children: false,
+                      NodeValidators.createForLabelGroupingNode({
+                        label: labelGroupName1,
+                        children: [
+                          NodeValidators.createForInstanceNode({
+                            instanceKeys: [keys.childSubject1],
+                            children: false,
+                          }),
+                          NodeValidators.createForInstanceNode({
+                            instanceKeys: [keys.childSubject2],
+                            children: false,
+                          }),
+                        ],
                       }),
                     ],
                   }),

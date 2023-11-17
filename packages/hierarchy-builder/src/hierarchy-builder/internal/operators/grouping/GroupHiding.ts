@@ -51,6 +51,8 @@ function getGroupingHideOptionsFromParentNode(
       return getHideOptionsFromNodeProcessingParams(parentNode.children, (p) => (typeof p.grouping?.byClass === "object" ? p.grouping.byClass : undefined));
     case "label":
       return getHideOptionsFromNodeProcessingParams(parentNode.children, (p) => (typeof p.grouping?.byLabel === "object" ? p.grouping.byLabel : undefined));
+    case "property":
+      return getHideOptionsFromNodeProcessingParams(parentNode.children, (p) => p.grouping?.byProperties);
   }
 }
 

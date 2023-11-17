@@ -5,7 +5,7 @@
 
 import { assert } from "@itwin/core-bentley";
 import { ConcatenatedValue } from "./values/ConcatenatedValue";
-import { InstanceKey } from "./values/Values";
+import { InstanceKey, PrimitiveValue } from "./values/Values";
 
 /**
  * A key for a node that represents one or more ECInstances.
@@ -38,23 +38,55 @@ export interface LabelGroupingNodeKey {
 }
 
 /**
+ * A key for a other-property-grouping node.
+ * @beta
+ */
+export interface OtherPropertyGroupingNodeKey {
+  type: "other-property-grouping";
+  groupingInfo: {
+    propertyName: string;
+    fullClassName: string;
+  };
+}
+
+/**
+ * A key for a formatted-property-grouping node.
+ * @beta
+ */
+export interface FormattedPropertyGroupingNodeKey {
+  type: "formatted-property-grouping";
+  groupingInfo: {
+    propertyName: string;
+    fullClassName: string;
+    formattedPropertyValue: string;
+  };
+}
+
+/**
+ * A key for a ranged-property-grouping node.
+ * @beta
+ */
+export interface RangedPropertyGroupingNodeKey {
+  type: "ranged-property-grouping";
+  groupingInfo: {
+    propertyName: string;
+    fullClassName: string;
+    fromValue: number;
+    toValue: number;
+  };
+}
+
+/**
  * A key for a property-grouping node.
  * @beta
  */
-export interface PropertyGroupingNodeKey {
-  type: "property-grouping";
-  property: {
-    name: string;
-    fullClassName: string;
-    groupingValues: (string | number | boolean)[];
-  };
-}
+export type PropertyGroupingNodeKey = RangedPropertyGroupingNodeKey | FormattedPropertyGroupingNodeKey | OtherPropertyGroupingNodeKey;
 
 /**
  * A key for one of the instance grouping nodes.
  * @beta
  */
-export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey;
+export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | PropertyGroupingNodeKey;
 
 /**
  * A key for either an instance node or one of the instance grouping nodes.
@@ -95,6 +127,18 @@ export namespace HierarchyNodeKey {
   export function isLabelGrouping(key: HierarchyNodeKey): key is LabelGroupingNodeKey {
     return isStandard(key) && key.type === "label-grouping";
   }
+  /** Checks whether the given node key is a [[OtherPropertyGroupingNodeKey]]. */
+  export function isOtherPropertyGrouping(key: HierarchyNodeKey): key is OtherPropertyGroupingNodeKey {
+    return isStandard(key) && key.type === "other-property-grouping";
+  }
+  /** Checks whether the given node key is a [[RangedPropertyGroupingNodeKey]]. */
+  export function isRangedPropertyGrouping(key: HierarchyNodeKey): key is RangedPropertyGroupingNodeKey {
+    return isStandard(key) && key.type === "ranged-property-grouping";
+  }
+  /** Checks whether the given node key is a [[FormattedPropertyGroupingNodeKey]]. */
+  export function isFormattedPropertyGrouping(key: HierarchyNodeKey): key is FormattedPropertyGroupingNodeKey {
+    return isStandard(key) && key.type === "formatted-property-grouping";
+  }
   /** Checks whether the two given keys are equal. */
   export function equals(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): boolean {
     if (typeof lhs !== typeof rhs) {
@@ -122,6 +166,27 @@ export namespace HierarchyNodeKey {
       case "label-grouping": {
         assert(isLabelGrouping(rhs));
         return lhs.label === rhs.label;
+      }
+      case "other-property-grouping": {
+        assert(isOtherPropertyGrouping(rhs));
+        return lhs.groupingInfo.fullClassName === rhs.groupingInfo.fullClassName && lhs.groupingInfo.propertyName === rhs.groupingInfo.propertyName;
+      }
+      case "formatted-property-grouping": {
+        assert(isFormattedPropertyGrouping(rhs));
+        return (
+          lhs.groupingInfo.fullClassName === rhs.groupingInfo.fullClassName &&
+          lhs.groupingInfo.propertyName === rhs.groupingInfo.propertyName &&
+          lhs.groupingInfo.formattedPropertyValue === rhs.groupingInfo.formattedPropertyValue
+        );
+      }
+      case "ranged-property-grouping": {
+        assert(isRangedPropertyGrouping(rhs));
+        return (
+          lhs.groupingInfo.fullClassName === rhs.groupingInfo.fullClassName &&
+          lhs.groupingInfo.propertyName === rhs.groupingInfo.propertyName &&
+          lhs.groupingInfo.fromValue === rhs.groupingInfo.fromValue &&
+          lhs.groupingInfo.toValue === rhs.groupingInfo.toValue
+        );
       }
     }
   }
@@ -187,6 +252,30 @@ export namespace HierarchyNode {
       ? { children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode> }
       : {}) {
     return HierarchyNodeKey.isLabelGrouping(node.key);
+  }
+  /** Checks whether the given node is other property grouping node */
+  export function isOtherPropertyGroupingNode<TNode extends { key: HierarchyNodeKey }>(
+    node: TNode,
+  ): node is TNode & { key: OtherPropertyGroupingNodeKey } & (TNode extends ProcessedHierarchyNode
+      ? { children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode> }
+      : {}) {
+    return HierarchyNodeKey.isOtherPropertyGrouping(node.key);
+  }
+  /** Checks whether the given node is a formatted property grouping node */
+  export function isFormattedPropertyGroupingNode<TNode extends { key: HierarchyNodeKey }>(
+    node: TNode,
+  ): node is TNode & { key: FormattedPropertyGroupingNodeKey } & (TNode extends ProcessedHierarchyNode
+      ? { children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode> }
+      : {}) {
+    return HierarchyNodeKey.isFormattedPropertyGrouping(node.key);
+  }
+  /** Checks whether the given node is a ranged property grouping node */
+  export function isRangedPropertyGroupingNode<TNode extends { key: HierarchyNodeKey }>(
+    node: TNode,
+  ): node is TNode & { key: RangedPropertyGroupingNodeKey } & (TNode extends ProcessedHierarchyNode
+      ? { children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode> }
+      : {}) {
+    return HierarchyNodeKey.isRangedPropertyGrouping(node.key);
   }
 }
 
@@ -257,38 +346,44 @@ export interface PropertiesGroupingParams extends BaseGroupingParams {
    */
   fullClassName: string;
   /**
-   * Properties of the specified class, by which the nodes should be grouped. Each property can be:
-   * 1) A string representing the property name, implying grouping by the exact values of the property.
-   * 2) An object with the following properties:
-   *    - propertyName (required): A string indicating the name of the property to group by.
-   *    - ranges (optional): An array of objects specifying the bounds within which the property values should fit.
-   *      - fromValue and toValue define the bounds of the range
-   *      - rangeLabel (optional): Label for the specific ranges' grouping node.
+   * Properties of the specified class, by which the nodes should be grouped. PropertyGroups is an object with the following properties:
+   *   - propertyName (required): A string indicating the name of the property to group by.
+   *   - propertyValue (required): Value of the property, which will be used to group the node.
+   *   - ranges (optional): An array of objects with the following properties:
+   *     - fromValue and toValue define the bounds of the range
+   *     - rangeLabel (optional): Label for the specific ranges' grouping node.
    *
    * Example usage:
    * ```tsx
    * propertyGroups: [
-   *   "status", // Group by the 'status' property value
    *   {
-   *     propertyName: "type" // Group by the 'type' property value
+   *     propertyName: "type",
+   *     propertyValue: "Wall"
    *   },
    *   {
    *     propertyName: "length",
+   *     propertyValue: 15,
    *     ranges: [
    *       { fromValue: 1, toValue: 10, rangeLabel: "Small" },
    *       { fromValue: 11, toValue: 20, rangeLabel: "Medium" }
-   *     ] // Group by 'length' property within specified numeric ranges. Nodes in the range '1 <= length <= 10' will be grouped and group will be labeled "Small" and nodes in the range '11 <= length <= 20' will be grouped and group will be labeled "Medium".
+   *     ]
    *   },
    * ]
    * ```
    */
-  propertyGroups: Array<
-    | string
-    | {
-        propertyName: string;
-        ranges?: Array<{ fromValue: number; toValue: number; rangeLabel?: string }>;
-      }
-  >;
+  propertyGroups: Array<PropertyGroup>;
+}
+
+export interface PropertyGroup {
+  propertyName: string;
+  propertyValue: PrimitiveValue;
+  ranges?: Array<Range>;
+}
+
+export interface Range {
+  fromValue: number;
+  toValue: number;
+  rangeLabel?: string;
 }
 
 /**

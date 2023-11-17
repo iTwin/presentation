@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Id64 } from "@itwin/core-bentley";
-import { Id64String } from "../values/Values";
+import { Id64String, PrimitiveValue } from "../values/Values";
 
 /**
  * Column names of the SELECT clause created by [[NodeSelectClauseFactory]]. Order of the names matches the order of columns
@@ -79,12 +79,30 @@ export interface ECSqlSelectClauseGroupingParams {
   byLabel?: boolean | ECSqlValueSelector | BaseGroupingParams;
   byClass?: boolean | ECSqlValueSelector | BaseGroupingParams;
   byBaseClasses?: BaseClassGroupingParams;
+  byProperties?: PropertiesGroupingParams;
 }
 
 interface BaseGroupingParams {
   hideIfNoSiblings?: boolean | ECSqlValueSelector;
   hideIfOneGroupedNode?: boolean | ECSqlValueSelector;
   autoExpand?: string | ECSqlValueSelector;
+}
+
+interface PropertiesGroupingParams extends BaseGroupingParams {
+  fullClassName: string | ECSqlValueSelector;
+  propertyGroups: Array<PropertyGroup>;
+}
+
+interface PropertyGroup {
+  propertyName: string | ECSqlValueSelector;
+  propertyValue: PrimitiveValue | ECSqlValueSelector;
+  ranges?: Array<Range>;
+}
+
+interface Range {
+  fromValue: number | ECSqlValueSelector;
+  toValue: number | ECSqlValueSelector;
+  rangeLabel?: string | ECSqlValueSelector;
 }
 
 interface BaseClassGroupingParams extends BaseGroupingParams {
@@ -121,12 +139,21 @@ export class NodeSelectClauseFactory {
   }
 }
 
-function createECSqlValueSelector(input: undefined | Id64String | string | number | boolean | ECSqlValueSelector) {
+export function createECSqlValueSelector(input: undefined | PrimitiveValue | ECSqlValueSelector) {
   if (input === undefined) {
     return "NULL";
   }
   if (isSelector(input)) {
     return input.selector;
+  }
+  if (input instanceof Date) {
+    return `'${input.toISOString()}'`;
+  }
+  if (PrimitiveValue.isPoint3d(input)) {
+    return `json_object('x', ${input.x}, 'y', ${input.y}, 'z', ${input.z})`;
+  }
+  if (PrimitiveValue.isPoint2d(input)) {
+    return `json_object('x', ${input.x}, 'y', ${input.y})`;
   }
   switch (typeof input) {
     case "boolean":
@@ -175,7 +202,77 @@ function createGroupingSelector(grouping: ECSqlSelectClauseGroupingParams): stri
       ]),
     });
 
+  grouping.byProperties &&
+    groupingSelectors.push({
+      key: "byProperties",
+      selector: serializeJsonObject([
+        {
+          key: "fullClassName",
+          selector: `${createECSqlValueSelector(grouping.byProperties.fullClassName)}`,
+        },
+        {
+          key: "propertyGroups",
+          selector: `json_array(${grouping.byProperties.propertyGroups
+            .map((propertyGroup) => {
+              return serializeJsonObject(createPropertyGroupSelectors(propertyGroup));
+            })
+            .join(", ")})`,
+        },
+        ...createBaseGroupingParamSelectors(grouping.byProperties),
+      ]),
+    });
+
   return serializeJsonObject(groupingSelectors);
+}
+
+function createPropertyGroupSelectors(propertyGroup: PropertyGroup) {
+  const selectors = new Array<{ key: string; selector: string }>();
+  selectors.push(
+    {
+      key: "propertyName",
+      selector: `${createECSqlValueSelector(propertyGroup.propertyName)}`,
+    },
+    {
+      key: "propertyValue",
+      selector:
+        typeof propertyGroup.propertyValue === "boolean"
+          ? `CAST(${createECSqlValueSelector(propertyGroup.propertyValue)} AS BOOLEAN)`
+          : createECSqlValueSelector(propertyGroup.propertyValue),
+    },
+  );
+  if (propertyGroup.ranges) {
+    selectors.push(createRangeParamSelectors(propertyGroup.ranges));
+  }
+  return selectors;
+}
+
+function createRangeParamSelectors(ranges: Range[]) {
+  const selector = {
+    key: "ranges",
+    selector: `json_array(${ranges
+      .map((range) => {
+        return serializeJsonObject([
+          {
+            key: "fromValue",
+            selector: createECSqlValueSelector(range.fromValue),
+          },
+          {
+            key: "toValue",
+            selector: createECSqlValueSelector(range.toValue),
+          },
+          ...(range.rangeLabel
+            ? [
+                {
+                  key: "rangeLabel",
+                  selector: `${createECSqlValueSelector(range.rangeLabel)}`,
+                },
+              ]
+            : []),
+        ]);
+      })
+      .join(", ")})`,
+  };
+  return selector;
 }
 
 function createBaseGroupingParamSelectors(params: BaseGroupingParams) {

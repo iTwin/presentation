@@ -4,130 +4,329 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert } from "@itwin/core-bentley";
-import { HierarchyNode, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
+import { ProcessedInstanceHierarchyNode, PropertiesGroupingParams, PropertyGroup, PropertyGroupingNodeKey, Range } from "../../../HierarchyNode";
 import { ECClass, IMetadataProvider } from "../../../Metadata";
+import { createDefaultValueFormatter } from "../../../values/Formatting";
+import { TypedPrimitiveValue } from "../../../values/Values";
 import { getClass } from "../../Common";
 import { GroupingHandler, GroupingHandlerResult } from "../Grouping";
 
-// /** @internal */
-// export async function getPropertiesGroupingECClasses(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<ECClass[]> {
-//   // Get all base class names that are provided in the grouping information
-//   const propertyClasses = await getAllPropertyClasses(metadata, nodes);
-//   if (propertyClasses.size === 0) {
-//     return [];
-//   }
+interface PropertyInfo {
+  label: string;
+  propertyName: string;
+  fullClassName: string;
+  extraValues?:
+    | { formattedValue: string }
+    | {
+        fromValue: number;
+        toValue: number;
+      };
+}
 
-//   return sortByBaseClass(propertyClasses.filter((baseClass) => baseClass.isRelationshipClass() || baseClass.isEntityClass()));
-// }
+interface PropertyGroupingInformation {
+  ungrouped: ProcessedInstanceHierarchyNode[];
+  grouped: Map<string, { property: PropertyInfo; groupedNodes: ProcessedInstanceHierarchyNode[] }>;
+}
 
 /** @internal */
-export async function createPropertyGrouping(
+export interface PropertyGroupInfo {
+  ecClass: ECClass;
+  previousPropertiesGroupingInfo: PreviousPropertiesGroupingInfo;
+  propertyGroup: Omit<PropertyGroup, "propertyValue">;
+}
+
+/** @internal */
+export type PreviousPropertiesGroupingInfo = Array<{ fullClassName: string; propertyGroup: Omit<PropertyGroup, "propertyValue"> }>;
+
+/** @internal */
+export async function createPropertyGroups(
   metadata: IMetadataProvider,
   nodes: ProcessedInstanceHierarchyNode[],
   propertyInfo: PropertyGroupInfo,
 ): Promise<GroupingHandlerResult> {
-  const finalResult: GroupingHandlerResult = { grouped: [], ungrouped: [], groupingType: "property" };
-  const baseClassGroupingNode: HierarchyNode = {
-    label: propertyInfo.range ? propertyInfo.range.rangeLabel ?? `${propertyInfo.range.fromValue} - ${propertyInfo.range.toValue}` : "",
-    key: {
-      type: "property-grouping",
-      property: { name: baseECClass.fullName, label: baseECClass.label ?? baseECClass.name },
-    },
-    children: [],
-  };
-  assert(Array.isArray(baseClassGroupingNode.children));
-
-  for (const node of nodes) {
-    if (node.processingParams?.grouping?.byBaseClasses) {
-      if (!node.params.grouping.byBaseClasses.fullClassNames.some((className) => className === baseECClass.fullName)) {
-        finalResult.ungrouped.push(node);
-        continue;
-      }
-      const fullCurrentNodeClassName = node.key.instanceKeys[0].className;
-      const currentNodeECClass = await getClass(metadata, fullCurrentNodeClassName);
-      if (await currentNodeECClass.is(baseECClass)) {
-        baseClassGroupingNode.children.push(node);
-        continue;
-      }
-    }
-    finalResult.ungrouped.push(node);
-  }
-
-  // push grouping node if it has children
-  if (baseClassGroupingNode.children.length > 0) {
-    finalResult.grouped.push(baseClassGroupingNode);
-  }
-  return finalResult;
-}
-
-interface PropertyGroupInfo {
-  fullClassName: string;
-  previousPropertiesNames: string[];
-  propertyName: string;
-  ranges?: Array<{ fromValue: string; toValue: string; rangeLabel?: string }>;
-}
-
-async function getPropertyInfoFromNodesPropertiesGrouping(metadata: IMetadataProvider, nodes: ProcessedInstanceHierarchyNode[]): Promise<Set<PropertyGroupInfo>> {
-  const propertyGroupInfo = new Set<PropertyGroupInfo>();
+  const groupings: PropertyGroupingInformation = { ungrouped: [], grouped: new Map() };
   for (const node of nodes) {
     const byProperties = node.processingParams?.grouping?.byProperties;
-    if (byProperties) {
-      for (const propertyGroup of byProperties.propertyGroups) {
-        const specificNodePropertyGroupInfo = new Map();
-        if (typeof propertyGroup === "string") {
-          let groupingInfo = propertyGroupInfo.get(`${byProperties.fullClassName}:${propertyGroup}`);
-          if (!groupingInfo) {
-            groupingInfo = {
-              fullClassName: byProperties.fullClassName,
-              previousPropertyName
-            }
-            propertyGroupInfo.set(`${byProperties.fullClassName}:${propertyGroup}`, groupingInfo);
-          }
-          propertyGroupInfo.add({ `${node.processingParams.grouping.byProperties.fullClassName}:${propertyGroup}`, propertyName: propertyGroup });
-          continue;
-        }
-        if (!!(await propertyClass.getProperty(propertyGroup.propertyName))) {
-          if (!propertyGroup.ranges) {
-            propertyGroupInfo.add({ propertyClass, propertyName: propertyGroup.propertyName });
-            continue;
-          }
-          for (const range of propertyGroup.ranges) {
-            propertyGroupInfo.add({ propertyClass, propertyName: propertyGroup.propertyName, range });
-          }
-        }
+    if (!byProperties) {
+      groupings.ungrouped.push(node);
+      continue;
+    }
+    if (!(await shouldCreatePropertyGroup(metadata, propertyInfo, byProperties, node.key.instanceKeys[0].className))) {
+      groupings.ungrouped.push(node);
+      continue;
+    }
+    const currentProperty = byProperties.propertyGroups[propertyInfo.previousPropertiesGroupingInfo.length];
+    const propertyToGroup = {
+      propertyName: currentProperty.propertyName,
+      fullClassName: byProperties.fullClassName,
+    };
+
+    if (currentProperty.ranges) {
+      if (typeof currentProperty.propertyValue !== "number") {
+        addGroupingToMap(
+          groupings.grouped,
+          `${currentProperty.propertyName}:Other`,
+          {
+            label: "Other",
+            ...propertyToGroup,
+          },
+          node,
+        );
+        continue;
+      }
+      const propValue = currentProperty.propertyValue;
+      const matchingRange = currentProperty.ranges.find((range) => propValue >= range.fromValue && propValue <= range.toValue);
+
+      if (matchingRange) {
+        const rangeLabel = matchingRange.rangeLabel ?? `${matchingRange.fromValue} - ${matchingRange.toValue}`;
+        addGroupingToMap(
+          groupings.grouped,
+          `${currentProperty.propertyName}:${matchingRange.fromValue} - ${matchingRange.toValue}(${rangeLabel})`,
+          {
+            label: rangeLabel,
+            ...propertyToGroup,
+            extraValues: {
+              fromValue: matchingRange.fromValue,
+              toValue: matchingRange.toValue,
+            },
+          },
+          node,
+        );
+        continue;
       }
     }
+
+    const propertyClass = await getClass(metadata, byProperties.fullClassName);
+    const property = await propertyClass.getProperty(currentProperty.propertyName);
+    if (!property?.isPrimitive()) {
+      addGroupingToMap(
+        groupings.grouped,
+        `${currentProperty.propertyName}:Other`,
+        {
+          label: "Other",
+          ...propertyToGroup,
+        },
+        node,
+      );
+      continue;
+    }
+    const part = {
+      type: property.primitiveType,
+      extendedType: property.extendedTypeName,
+      koqName: (await property.kindOfQuantity)?.fullName,
+      value: currentProperty.propertyValue,
+    } as TypedPrimitiveValue;
+    const valueFormatter = createDefaultValueFormatter();
+    const formattedValue = await valueFormatter(part);
+
+    addGroupingToMap(
+      groupings.grouped,
+      `${currentProperty.propertyName}:${formattedValue}`,
+      {
+        label: formattedValue,
+        ...propertyToGroup,
+        extraValues: {
+          formattedValue,
+        },
+      },
+      node,
+    );
   }
-  return propertyGroupInfo;
+  return createGroupingNodes(groupings);
 }
 
-async function sortByBaseClass(classes: ECClass[]): Promise<ECClass[]> {
-  if (classes.length === 0) {
-    return classes;
+function addGroupingToMap(
+  groupingMap: Map<string, { property: PropertyInfo; groupedNodes: ProcessedInstanceHierarchyNode[] }>,
+  mapKey: string,
+  propertyToAdd: PropertyInfo,
+  node: ProcessedInstanceHierarchyNode,
+): void {
+  let groupingInfo = groupingMap.get(mapKey);
+  if (!groupingInfo) {
+    groupingInfo = {
+      property: propertyToAdd,
+      groupedNodes: [node],
+    };
+    groupingMap.set(mapKey, groupingInfo);
+    return;
   }
-  const output: ECClass[] = [classes[0]];
-  for (let inputIndex = 1; inputIndex < classes.length; ++inputIndex) {
-    let wasAdded = false;
-    for (let outputIndex = output.length - 1; outputIndex >= 0; --outputIndex) {
-      if (await classes[inputIndex].is(output[outputIndex])) {
-        output.splice(outputIndex + 1, 0, classes[inputIndex]);
-        wasAdded = true;
-        break;
+  groupingInfo.groupedNodes.push(node);
+}
+
+function createGroupingNodes(groupings: PropertyGroupingInformation): GroupingHandlerResult {
+  const outNodes: GroupingHandlerResult = { grouped: [], ungrouped: [], groupingType: "property" };
+  groupings.grouped.forEach((entry) => {
+    let groupingNodeKey: PropertyGroupingNodeKey = {
+      type: "other-property-grouping",
+      groupingInfo: {
+        fullClassName: entry.property.fullClassName,
+        propertyName: entry.property.propertyName,
+      },
+    };
+    const extraValues = entry.property.extraValues;
+    if (extraValues) {
+      if ("formattedValue" in extraValues) {
+        groupingNodeKey = {
+          type: "formatted-property-grouping",
+          groupingInfo: {
+            fullClassName: entry.property.fullClassName,
+            propertyName: entry.property.propertyName,
+            formattedPropertyValue: extraValues.formattedValue,
+          },
+        };
+      } else {
+        groupingNodeKey = {
+          type: "ranged-property-grouping",
+          groupingInfo: {
+            fullClassName: entry.property.fullClassName,
+            propertyName: entry.property.propertyName,
+            fromValue: extraValues.fromValue,
+            toValue: extraValues.toValue,
+          },
+        };
       }
     }
-    if (!wasAdded) {
-      output.splice(0, 0, classes[inputIndex]);
-    }
-  }
-
-  return output;
+    const groupedNodeParentKeys = entry.groupedNodes[0].parentKeys;
+    outNodes.grouped.push({
+      label: entry.property.label,
+      key: groupingNodeKey,
+      parentKeys: groupedNodeParentKeys,
+      children: entry.groupedNodes.map((gn) => ({ ...gn, parentKeys: [...groupedNodeParentKeys, groupingNodeKey] })),
+    });
+  });
+  outNodes.ungrouped.push(...groupings.ungrouped);
+  return outNodes;
 }
 
 /** @internal */
-export async function createPropertiesGroupingHandlers(metadata: IMetadataProvider, nodes: HierarchyNode[]): Promise<GroupingHandler[]> {
-  const propertiesInfo =
-  const baseClassGroupingECClasses = await getBaseClassGroupingECClasses(metadata, nodes);
-  return baseClassGroupingECClasses.map(
-    (baseECClass) => async (allNodes: HierarchyNode[]) => createBaseClassGroupsForSingleBaseClass(metadata, allNodes, baseECClass),
+export async function getUniquePropertiesGroupInfo(metadata: IMetadataProvider, nodes: ProcessedInstanceHierarchyNode[]): Promise<Array<PropertyGroupInfo>> {
+  const uniqueProperties = new Map<string, PropertyGroupInfo>();
+  for (const node of nodes) {
+    const byProperties = node.processingParams?.grouping?.byProperties;
+    if (!byProperties) {
+      continue;
+    }
+
+    const previousPropertiesInfo = new Array<{ propertyGroup: PropertyGroup; propertyGroupKey: string }>();
+    for (const propertyGroup of byProperties.propertyGroups) {
+      const lastKey = previousPropertiesInfo.length > 0 ? `[${previousPropertiesInfo[previousPropertiesInfo.length - 1].propertyGroupKey}]` : "[]";
+
+      const mapKeyRanges = getRangesAsString(propertyGroup.ranges);
+      const mapKey = `${byProperties.fullClassName}:${lastKey}:${propertyGroup.propertyName}:${mapKeyRanges}`;
+      if (uniqueProperties.get(mapKey)) {
+        addToPreviousPropertiesInfo(previousPropertiesInfo, propertyGroup);
+        continue;
+      }
+      uniqueProperties.set(mapKey, {
+        ecClass: await getClass(metadata, byProperties.fullClassName),
+        propertyGroup: {
+          propertyName: propertyGroup.propertyName,
+          ranges: propertyGroup.ranges,
+        },
+        previousPropertiesGroupingInfo: [
+          ...previousPropertiesInfo.map((groupingInfo) => {
+            return { fullClassName: byProperties.fullClassName, propertyGroup: groupingInfo.propertyGroup };
+          }),
+        ],
+      });
+      addToPreviousPropertiesInfo(previousPropertiesInfo, propertyGroup);
+    }
+  }
+  return [...uniqueProperties.values()];
+}
+
+function addToPreviousPropertiesInfo(
+  previousPropertiesInfo: Array<{ propertyGroup: PropertyGroup; propertyGroupKey: string }>,
+  propertyGroup: PropertyGroup,
+): void {
+  previousPropertiesInfo.push({
+    propertyGroup,
+    propertyGroupKey:
+      previousPropertiesInfo.length > 0
+        ? `${previousPropertiesInfo[previousPropertiesInfo.length - 1].propertyGroupKey}, ${propertyGroup.propertyName}(${getRangesAsString(
+            propertyGroup.ranges,
+          )})`
+        : "",
+  });
+}
+
+function getRangesAsString(ranges?: Range[]): string {
+  return ranges
+    ? ranges
+        .map((range) => {
+          return `${range.fromValue}-${range.toValue}(${range.rangeLabel ? `${range.rangeLabel}` : ""})`;
+        })
+        .sort()
+        .join(";")
+    : "undefined";
+}
+
+async function shouldCreatePropertyGroup(
+  metadata: IMetadataProvider,
+  propertyInfo: PropertyGroupInfo,
+  byProperties: PropertiesGroupingParams,
+  nodeFullClassName: string,
+): Promise<boolean> {
+  if (
+    byProperties.fullClassName !== propertyInfo.ecClass.fullName ||
+    byProperties.propertyGroups.length < propertyInfo.previousPropertiesGroupingInfo.length + 1
+  ) {
+    return false;
+  }
+  const currentProperty = byProperties.propertyGroups[propertyInfo.previousPropertiesGroupingInfo.length];
+  if (currentProperty.propertyName !== propertyInfo.propertyGroup.propertyName || !doRangesMatch(currentProperty.ranges, propertyInfo.propertyGroup.ranges)) {
+    return false;
+  }
+  if (!doPreviousPropertiesMatch(propertyInfo.previousPropertiesGroupingInfo, byProperties)) {
+    return false;
+  }
+  const nodeClass = await getClass(metadata, nodeFullClassName);
+  if (!(await nodeClass.is(propertyInfo.ecClass))) {
+    return false;
+  }
+  return true;
+}
+
+/** @internal */
+export function doPreviousPropertiesMatch(previousPropertiesGroupingInfo: PreviousPropertiesGroupingInfo, nodesProperties: PropertiesGroupingParams): boolean {
+  return previousPropertiesGroupingInfo.every(
+    (groupingInfo, index) =>
+      groupingInfo.fullClassName === nodesProperties.fullClassName &&
+      groupingInfo.propertyGroup.propertyName === nodesProperties.propertyGroups[index].propertyName &&
+      doRangesMatch(groupingInfo.propertyGroup.ranges, nodesProperties.propertyGroups[index].ranges),
   );
+}
+
+/** @internal */
+export function doRangesMatch(ranges1: Range[] | undefined, ranges2: Range[] | undefined): boolean {
+  if (typeof ranges1 !== typeof ranges2) {
+    return false;
+  }
+  if (!ranges1) {
+    return true;
+  }
+  assert(typeof ranges2 === "object");
+  if (ranges1.length !== ranges2.length) {
+    return false;
+  }
+  return (
+    ranges1.every((firstRange) =>
+      ranges2.some(
+        (secondRange) =>
+          firstRange.fromValue === secondRange.fromValue && firstRange.toValue === secondRange.toValue && firstRange.rangeLabel === secondRange.rangeLabel,
+      ),
+    ) &&
+    ranges2.every((firstRange) =>
+      ranges1.some(
+        (secondRange) =>
+          firstRange.fromValue === secondRange.fromValue && firstRange.toValue === secondRange.toValue && firstRange.rangeLabel === secondRange.rangeLabel,
+      ),
+    )
+  );
+}
+
+/** @internal */
+export async function createPropertiesGroupingHandlers(metadata: IMetadataProvider, nodes: ProcessedInstanceHierarchyNode[]): Promise<GroupingHandler[]> {
+  const propertiesGroupInfo = await getUniquePropertiesGroupInfo(metadata, nodes);
+  return propertiesGroupInfo.map((propertyInfo) => async (allNodes) => createPropertyGroups(metadata, allNodes, propertyInfo));
 }

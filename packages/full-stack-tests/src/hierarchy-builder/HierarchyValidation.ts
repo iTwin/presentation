@@ -159,6 +159,115 @@ export namespace NodeValidators {
       children: props.children,
     };
   }
+
+  export function createForOtherPropertyGroupingNode(props: {
+    propertyName?: string;
+    fullClassName?: string;
+    autoExpand?: boolean;
+    children?: ExpectedHierarchyDef[] | boolean;
+  }): ExpectedHierarchyDef {
+    return {
+      node: (node) => {
+        if (!HierarchyNode.isStandard(node)) {
+          throw new Error(`[${node.label}] Expected other property grouping node, got a non-standard "${node.key as string}"`);
+        }
+        if (node.key.type !== "other-property-grouping") {
+          throw new Error(`[${node.label}] Expected other property grouping node, got "${node.key.type}"`);
+        }
+        if (props.propertyName && node.key.groupingInfo.propertyName !== props.propertyName) {
+          throw new Error(`[${node.label}] Expected node to have property name "${props.propertyName}", got "${node.key.groupingInfo.propertyName}"`);
+        }
+        if (props.fullClassName && node.key.groupingInfo.fullClassName !== props.fullClassName) {
+          throw new Error(`[${node.label}] Expected node to have fullClassName "${props.fullClassName}", got "${node.key.groupingInfo.fullClassName}"`);
+        }
+
+        validateBaseNodeAttributes(node, {
+          label: "Other",
+          autoExpand: props.autoExpand,
+          children: props.children,
+        });
+      },
+      children: props.children,
+    };
+  }
+
+  export function createForRangedPropertyGroupingNode(props: {
+    label?: string;
+    propertyName?: string;
+    fullClassName?: string;
+    fromValue?: number;
+    toValue?: number;
+    autoExpand?: boolean;
+    children?: ExpectedHierarchyDef[] | boolean;
+  }): ExpectedHierarchyDef {
+    return {
+      node: (node) => {
+        if (!HierarchyNode.isStandard(node)) {
+          throw new Error(`[${node.label}] Expected a ranged property grouping node, got a non-standard "${node.key as string}"`);
+        }
+        if (node.key.type !== "ranged-property-grouping") {
+          throw new Error(`[${node.label}] Expected a ranged property grouping node, got "${node.key.type}"`);
+        }
+        if (props.propertyName && node.key.groupingInfo.propertyName !== props.propertyName) {
+          throw new Error(`[${node.label}] Expected node to have property name "${props.propertyName}", got "${node.key.groupingInfo.propertyName}"`);
+        }
+        if (props.fullClassName && node.key.groupingInfo.fullClassName !== props.fullClassName) {
+          throw new Error(`[${node.label}] Expected node to have fullClassName "${props.fullClassName}", got "${node.key.groupingInfo.fullClassName}"`);
+        }
+        if (props.fromValue && node.key.groupingInfo.fromValue !== props.fromValue) {
+          throw new Error(`[${node.label}] Expected node to have fromValue "${props.fromValue}", got "${node.key.groupingInfo.fromValue}"`);
+        }
+        if (props.toValue && node.key.groupingInfo.toValue !== props.toValue) {
+          throw new Error(`[${node.label}] Expected node to have toValue "${props.toValue}", got "${node.key.groupingInfo.toValue}"`);
+        }
+
+        validateBaseNodeAttributes(node, {
+          label: props.label,
+          autoExpand: props.autoExpand,
+          children: props.children,
+        });
+      },
+      children: props.children,
+    };
+  }
+
+  export function createForFormattedPropertyGroupingNode(props: {
+    label?: string;
+    propertyName?: string;
+    fullClassName?: string;
+    formattedPropertyValue?: string;
+    autoExpand?: boolean;
+    children?: ExpectedHierarchyDef[] | boolean;
+  }): ExpectedHierarchyDef {
+    return {
+      node: (node) => {
+        if (!HierarchyNode.isStandard(node)) {
+          throw new Error(`[${node.label}] Expected a formatted property grouping node, got a non-standard "${node.key as string}"`);
+        }
+        if (node.key.type !== "formatted-property-grouping") {
+          throw new Error(`[${node.label}] Expected a formatted property grouping node, got "${node.key.type}"`);
+        }
+        if (props.propertyName && node.key.groupingInfo.propertyName !== props.propertyName) {
+          throw new Error(`[${node.label}] Expected node to have property name "${props.propertyName}", got "${node.key.groupingInfo.propertyName}"`);
+        }
+        if (props.fullClassName && node.key.groupingInfo.fullClassName !== props.fullClassName) {
+          throw new Error(`[${node.label}] Expected node to have fullClassName "${props.fullClassName}", got "${node.key.groupingInfo.fullClassName}"`);
+        }
+        if (props.formattedPropertyValue && node.key.groupingInfo.formattedPropertyValue !== props.formattedPropertyValue) {
+          throw new Error(
+            `[${node.label}] Expected node to have formattedPropertyValue "${props.formattedPropertyValue}", got "${node.key.groupingInfo.formattedPropertyValue}"`,
+          );
+        }
+
+        validateBaseNodeAttributes(node, {
+          label: props.label,
+          autoExpand: props.autoExpand,
+          children: props.children,
+        });
+      },
+      children: props.children,
+    };
+  }
 }
 
 export async function validateHierarchy(props: { provider: HierarchyProvider; parentNode?: HierarchyNode; expect: ExpectedHierarchyDef[] }) {

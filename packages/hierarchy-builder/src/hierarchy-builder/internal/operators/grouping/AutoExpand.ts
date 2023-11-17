@@ -30,6 +30,8 @@ function getGroupingAutoExpandOptionsFromParentNode(parentNode: ProcessedInstanc
       return getAutoExpandOptionsFromNodeProcessingParams(parentNode.children, (p) =>
         typeof p.grouping?.byLabel === "object" ? p.grouping.byLabel : undefined,
       );
+    case "property":
+      return getAutoExpandOptionsFromNodeProcessingParams(parentNode.children, (p) => p.grouping?.byProperties);
   }
 }
 

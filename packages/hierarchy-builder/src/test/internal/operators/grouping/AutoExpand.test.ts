@@ -44,6 +44,25 @@ describe("AutoExpand", () => {
       },
     },
     {
+      testName: "Properties grouping",
+      testParams: {
+        groupingNodeKey: {
+          type: "other-property-grouping",
+          label: "1",
+          property: {
+            propertyName: "length",
+            fullClassName: "TestSchema:BaseClass",
+          },
+        },
+        groupingType: "property",
+        createGroupedNodeProcessingParams: (autoExpand: AutoExpand | undefined): InstanceHierarchyNodeProcessingParams => {
+          return {
+            grouping: { byProperties: { fullClassName: "TestSchema:BaseClass", autoExpand, propertyGroups: [{ propertyName: "length", propertyValue: 1 }] } },
+          };
+        },
+      },
+    },
+    {
       testName: "Label grouping",
       testParams: {
         groupingNodeKey: {
