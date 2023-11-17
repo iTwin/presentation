@@ -139,6 +139,11 @@ export class NodeSelectClauseFactory {
   }
 }
 
+/**
+ * ECSql value formatting function, which converts input into string selector.
+ *
+ * @beta
+ */
 export function createECSqlValueSelector(input: undefined | PrimitiveValue | ECSqlValueSelector) {
   if (input === undefined) {
     return "NULL";

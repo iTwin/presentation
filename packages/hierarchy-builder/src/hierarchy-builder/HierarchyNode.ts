@@ -374,12 +374,20 @@ export interface PropertiesGroupingParams extends BaseGroupingParams {
   propertyGroups: Array<PropertyGroup>;
 }
 
+/**
+ * A data structure that represents specific property grouping params
+ * @beta
+ */
 export interface PropertyGroup {
   propertyName: string;
   propertyValue: PrimitiveValue;
   ranges?: Array<Range>;
 }
 
+/**
+ * A data structure that represents boundaries for a value
+ * @beta
+ */
 export interface Range {
   fromValue: number;
   toValue: number;
