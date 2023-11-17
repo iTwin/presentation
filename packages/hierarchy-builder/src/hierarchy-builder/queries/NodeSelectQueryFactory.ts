@@ -158,7 +158,10 @@ export class NodeSelectQueryFactory {
    * Note: In case the provided content class doesn't intersect with the property class in provided filter, a special result
    * is returned to make sure the resulting query is valid and doesn't return anything.
    */
-  public async createFilterClauses(def: GenericInstanceFilter, contentClass: { fullName: string; alias: string }) {
+  public async createFilterClauses(
+    def: GenericInstanceFilter,
+    contentClass: { fullName: string; alias: string },
+  ): Promise<{ from?: string; where?: string; joins?: string }> {
     const from = await specializeContentClass({
       metadata: this._metadataProvider,
       contentClassName: contentClass.fullName,

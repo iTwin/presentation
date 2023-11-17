@@ -438,9 +438,8 @@ export namespace GenericInstanceFilter {
 export interface GenericInstanceFilterRule {
     operator: PropertyFilterRuleOperator;
     propertyName: string;
-    propertyTypeName: string;
     sourceAlias?: string;
-    value?: PrimitiveValue;
+    value?: PropertyFilterValue;
 }
 
 // @beta
@@ -479,6 +478,7 @@ export interface HierarchyNode {
     key: HierarchyNodeKey;
     label: string;
     parentKeys: HierarchyNodeKey[];
+    supportsFiltering?: boolean;
 }
 
 // @beta (undocumented)
@@ -487,6 +487,7 @@ export namespace HierarchyNode {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
         key: ClassGroupingNodeKey;
+        supportsFiltering?: undefined;
     } & (TNode extends ProcessedHierarchyNode ? {
         children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
     } : {});
@@ -501,6 +502,7 @@ export namespace HierarchyNode {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
         key: GroupingNodeKey;
+        supportsFiltering?: undefined;
     } & (TNode extends ProcessedHierarchyNode ? {
         children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
     } : {});
@@ -515,6 +517,7 @@ export namespace HierarchyNode {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
         key: LabelGroupingNodeKey;
+        supportsFiltering?: undefined;
     } & (TNode extends ProcessedHierarchyNode ? {
         children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
     } : {});
@@ -731,7 +734,8 @@ export enum NodeSelectClauseColumnNames {
     HasChildren = "HasChildren",
     HideIfNoChildren = "HideIfNoChildren",
     HideNodeInHierarchy = "HideNodeInHierarchy",
-    MergeByLabelId = "MergeByLabelId"
+    MergeByLabelId = "MergeByLabelId",
+    SupportsFiltering = "SupportsFiltering"
 }
 
 // @beta
@@ -758,6 +762,8 @@ export interface NodeSelectClauseProps {
     mergeByLabelId?: string | ECSqlValueSelector;
     // (undocumented)
     nodeLabel: string | ECSqlValueSelector;
+    // (undocumented)
+    supportsFiltering?: boolean | ECSqlValueSelector;
 }
 
 // @beta
@@ -767,9 +773,9 @@ export class NodeSelectQueryFactory {
         fullName: string;
         alias: string;
     }): Promise<{
-        from: string;
-        joins: string;
-        where: string;
+        from?: string;
+        where?: string;
+        joins?: string;
     }>;
     createSelectClause(props: NodeSelectClauseProps): Promise<string>;
 }
@@ -839,6 +845,7 @@ export type ProcessedCustomHierarchyNode = Omit<HierarchyNode, "key" | "children
 export type ProcessedGroupingHierarchyNode = Omit<HierarchyNode, "key" | "children"> & {
     key: GroupingNodeKey;
     children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
+    supportsFiltering?: undefined;
 };
 
 // @beta
@@ -872,6 +879,15 @@ export namespace PropertyFilterRuleOperator {
 export type PropertyFilterRuleUnaryOperator = "True" | "False" | "Null" | "NotNull";
 
 // @beta
+export type PropertyFilterValue = PrimitiveValue | InstanceKey;
+
+// @beta (undocumented)
+export namespace PropertyFilterValue {
+    export function isInstanceKey(value: PropertyFilterValue): value is InstanceKey;
+    export function isPrimitive(value: PropertyFilterValue): value is PrimitiveValue;
+}
+
+// @beta
 export interface PropertyValue {
     // (undocumented)
     className: string;
@@ -892,13 +908,9 @@ export type RelationshipPath<TStep extends RelationshipPathStep = RelationshipPa
 
 // @beta
 export interface RelationshipPathStep {
-    // (undocumented)
-    direction: "Forward" | "Backward";
-    // (undocumented)
     relationshipName: string;
-    // (undocumented)
+    relationshipReverse?: boolean;
     sourceClassName: string;
-    // (undocumented)
     targetClassName: string;
 }
 

@@ -132,7 +132,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
             ${instanceFilterClauses?.joins ?? ""}
             WHERE
               this.Parent IS NULL
-              ${instanceFilterClauses ? `AND ${instanceFilterClauses.where}` : ""}
+              ${instanceFilterClauses?.where ? `AND ${instanceFilterClauses.where}` : ""}
           `,
         },
       },
@@ -210,7 +210,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
             WHERE
               this.RootId IN (${subjectIds.map(() => "?").join(",")})
               AND NOT this.${NodeSelectClauseColumnNames.HideNodeInHierarchy}
-              ${subjectFilterClauses ? `AND ${subjectFilterClauses.where}` : ""}
+              ${subjectFilterClauses?.where ? `AND ${subjectFilterClauses.where}` : ""}
           `,
           bindings: [...subjectIds.map((id): ECSqlBinding => ({ type: "id", value: id }))],
         },
@@ -267,7 +267,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                   WHERE s.RootId IN (${subjectIds.map(() => "?").join(",")}) AND s.${NodeSelectClauseColumnNames.HideNodeInHierarchy}
                 )
               )
-              ${modelFilterClauses ? `AND ${modelFilterClauses.where}` : ""}
+              ${modelFilterClauses?.where ? `AND ${modelFilterClauses.where}` : ""}
           `,
           bindings: [
             ...subjectIds.map((id): ECSqlBinding => ({ type: "id", value: id })),
@@ -303,7 +303,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
               this.ModeledElement.Id IN (${elementIds.map(() => "?").join(",")})
               AND NOT this.IsPrivate
               AND this.ECInstanceId IN (SELECT Model.Id FROM bis.GeometricElement3d)
-              ${instanceFilterClauses ? `AND ${instanceFilterClauses.where}` : ""}
+              ${instanceFilterClauses?.where ? `AND ${instanceFilterClauses.where}` : ""}
           `,
           bindings: [...elementIds.map((id): ECSqlBinding => ({ type: "id", value: id }))],
         },
@@ -365,7 +365,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                   AND element.Category.Id = +this.ECInstanceId
                   AND element.Parent IS NULL
               )
-              ${instanceFilterClauses ? `AND ${instanceFilterClauses.where}` : ""}
+              ${instanceFilterClauses?.where ? `AND ${instanceFilterClauses.where}` : ""}
           `,
           bindings: modelIds.map((id) => ({ type: "id", value: id })),
         },
@@ -428,7 +428,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
               this.Category.Id IN (${categoryIds.map(() => "?").join(",")})
               AND this.Model.Id IN (${modelIds.map(() => "?").join(",")})
               AND this.Parent IS NULL
-              ${instanceFilterClauses ? `AND ${instanceFilterClauses.where}` : ""}
+              ${instanceFilterClauses?.where ? `AND ${instanceFilterClauses.where}` : ""}
           `,
           bindings: [...categoryIds.map((id) => ({ type: "id", value: id })), ...modelIds.map((id) => ({ type: "id", value: id }))] as ECSqlBinding[],
         },
@@ -484,7 +484,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
             ${instanceFilterClauses?.joins ?? ""}
             WHERE
               this.Parent.Id IN (${elementIds.map(() => "?").join(",")})
-              ${instanceFilterClauses ? `AND ${instanceFilterClauses.where}` : ""}
+              ${instanceFilterClauses?.where ? `AND ${instanceFilterClauses.where}` : ""}
           `,
           bindings: elementIds.map((id) => ({ type: "id", value: id })),
         },
