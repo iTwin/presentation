@@ -73,6 +73,7 @@ export interface ECSqlValueSelector {
  * @beta
  */
 export interface NodeSelectClauseProps {
+  // TODO: `ecClassId` and `ecInstanceId` will nearly always be equal to `this.ECClassId` and `this.ECInstanceId` - should make them optional here
   ecClassId: Id64String | ECSqlValueSelector;
   ecInstanceId: Id64String | ECSqlValueSelector;
   nodeLabel: string | ECSqlValueSelector;
@@ -165,7 +166,7 @@ export class NodeSelectQueryFactory {
     });
     if (!from) {
       // filter class doesn't intersect with content class - make sure the query returns nothing by returning a `FALSE` WHERE clause
-      return { from: contentClass.fullName, joins: "", where: "FALSE" };
+      return { from: undefined, joins: undefined, where: "FALSE" };
     }
 
     /**
@@ -190,15 +191,25 @@ export class NodeSelectQueryFactory {
       ),
     );
 
-    const propertiesClass = await getClass(this._metadataProvider, def.propertyClassName);
-    const whereConditions = [(await createWhereClause(propertiesClass, def.rules, contentClass.alias)) ?? ""];
+    const whereConditions = new Array<string>();
     if (def.filterClassNames && def.filterClassNames.length > 0) {
       whereConditions.push(`${createPropertyValueSelector(contentClass.alias, "ECClassId")} IS (${def.filterClassNames.join(", ")})`);
     }
+    const classAliasMap = new Map<string, string>([[contentClass.alias, contentClass.fullName]]);
+    def.relatedInstances.forEach(({ path, alias }) => path.length > 0 && classAliasMap.set(alias, path[path.length - 1].targetClassName));
+    const propertiesFilter = await createWhereClause(
+      async (alias) => getClass(this._metadataProvider, classAliasMap.get(alias) ?? ""),
+      contentClass.alias,
+      def.rules,
+    );
+    if (propertiesFilter) {
+      whereConditions.push(propertiesFilter);
+    }
+
     return {
       from,
-      joins: joins.join("\n"),
-      where: whereConditions.join(" AND "),
+      joins: joins.length > 0 ? joins.join("\n") : undefined,
+      where: whereConditions.length > 0 ? whereConditions.join(" AND ") : undefined,
     };
   }
 }
@@ -281,12 +292,12 @@ function serializeJsonObject(selectors: Array<{ key: string; selector: string }>
 }
 
 async function createWhereClause(
-  propertiesClass: ECClass,
-  rule: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup,
+  classLoader: (alias: string) => Promise<ECClass | undefined>,
   contentClassAlias: string,
+  rule: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup,
 ): Promise<string | undefined> {
   if (GenericInstanceFilter.isFilterRuleGroup(rule)) {
-    const clause = (await Promise.all(rule.rules.map(async (r) => createWhereClause(propertiesClass, r, contentClassAlias))))
+    const clause = (await Promise.all(rule.rules.map(async (r) => createWhereClause(classLoader, contentClassAlias, r))))
       .filter((c) => !!c)
       .join(` ${getECSqlLogicalOperator(rule.operator)} `);
     return clause ? (rule.operator === "Or" ? `(${clause})` : clause) : undefined;
@@ -307,9 +318,17 @@ async function createWhereClause(
   }
   const ecsqlOperator = getECSqlComparisonOperator(rule.operator);
   if (rule.operator === "Like" && typeof rule.value === "string") {
-    return `${propertyValueSelector} ${ecsqlOperator} '%${rule.value}%'`;
+    return `${propertyValueSelector} ${ecsqlOperator} '${rule.value}' ESCAPE '\\'`;
   }
-  const property = (await propertiesClass.getProperty(rule.propertyName))!;
+  const propertyClassAlias = rule.sourceAlias ?? contentClassAlias;
+  const propertyClass = await classLoader(propertyClassAlias);
+  if (!propertyClass) {
+    throw new Error(`Class with alias "${propertyClassAlias}" not found.`);
+  }
+  const property = await propertyClass.getProperty(rule.propertyName);
+  if (!property) {
+    throw new Error(`Property "${rule.propertyName}" not found in ECClass "${propertyClass.fullName}".`);
+  }
   if (property.isNavigation()) {
     assert(rule.value !== undefined && PropertyFilterValue.isInstanceKey(rule.value));
     return `${propertyValueSelector}.[Id] ${ecsqlOperator} ${createPrimitiveValueSelector(rule.value.id)}`;
@@ -324,19 +343,21 @@ async function createWhereClause(
       case "Point2d": {
         assert(rule.operator === "Equal" || rule.operator === "NotEqual");
         assert(PrimitiveValue.isPoint2d(rule.value));
-        return `
-          ${createFloatingPointEqualityClause(`${propertyValueSelector}.[x]`, rule.operator, rule.value.x)}
-          AND ${createFloatingPointEqualityClause(`${propertyValueSelector}.[y]`, rule.operator, rule.value.y)}
+        const condition = `
+          ${createFloatingPointEqualityClause(`${propertyValueSelector}.[x]`, "Equal", rule.value.x)}
+          AND ${createFloatingPointEqualityClause(`${propertyValueSelector}.[y]`, "Equal", rule.value.y)}
         `;
+        return rule.operator === "Equal" ? condition : `NOT (${condition})`;
       }
       case "Point3d": {
         assert(rule.operator === "Equal" || rule.operator === "NotEqual");
         assert(PrimitiveValue.isPoint3d(rule.value));
-        return `
-          ${createFloatingPointEqualityClause(`${propertyValueSelector}.[x]`, rule.operator, rule.value.x)}
-          AND ${createFloatingPointEqualityClause(`${propertyValueSelector}.[y]`, rule.operator, rule.value.y)}
-          AND ${createFloatingPointEqualityClause(`${propertyValueSelector}.[z]`, rule.operator, rule.value.z)}
+        const condition = `
+          ${createFloatingPointEqualityClause(`${propertyValueSelector}.[x]`, "Equal", rule.value.x)}
+          AND ${createFloatingPointEqualityClause(`${propertyValueSelector}.[y]`, "Equal", rule.value.y)}
+          AND ${createFloatingPointEqualityClause(`${propertyValueSelector}.[z]`, "Equal", rule.value.z)}
         `;
+        return rule.operator === "Equal" ? condition : `NOT (${condition})`;
       }
       case "DateTime": {
         assert(rule.value instanceof Date);
@@ -396,7 +417,7 @@ function getECSqlComparisonOperator(op: PropertyFilterRuleBinaryOperator) {
 
 function assignRelationshipPathAliases(path: RelationshipPath, pathIndex: number, sourceAlias: string, targetAlias: string): JoinRelationshipPath {
   function createAlias(fullClassName: string, index: number) {
-    return `rel_${pathIndex}_${fullClassName.replaceAll(/\.:/, "_")}_${index}`;
+    return `rel_${pathIndex}_${fullClassName.replaceAll(/[\.:]/g, "_")}_${index}`;
   }
   const result: JoinRelationshipPath = [];
   path.forEach((step, i) => {
@@ -404,7 +425,7 @@ function assignRelationshipPathAliases(path: RelationshipPath, pathIndex: number
       ...step,
       sourceAlias: i === 0 ? sourceAlias : result[i - 1].targetAlias,
       relationshipAlias: createAlias(step.relationshipName, i),
-      targetAlias: i === path.length ? targetAlias : createAlias(step.targetClassName, i),
+      targetAlias: i === path.length - 1 ? targetAlias : createAlias(step.targetClassName, i),
       joinType: "inner",
     });
   });

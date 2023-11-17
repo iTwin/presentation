@@ -73,6 +73,7 @@ describe("defaultNodesParser", () => {
         test: 123,
       }),
       [NodeSelectClauseColumnNames.AutoExpand]: true,
+      [NodeSelectClauseColumnNames.SupportsFiltering]: true,
     };
     const node = defaultNodesParser(row);
     expect(node).to.deep.eq({
@@ -86,6 +87,7 @@ describe("defaultNodesParser", () => {
       },
       children: true,
       autoExpand: true,
+      supportsFiltering: true,
       processingParams: {
         hideIfNoChildren: true,
         hideInHierarchy: true,

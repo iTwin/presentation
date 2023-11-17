@@ -20,7 +20,7 @@ import {
   take,
   tap,
 } from "rxjs";
-import { assert, omit } from "@itwin/core-bentley";
+import { assert, LRUCache, LRUMap, omit } from "@itwin/core-bentley";
 import { IMetadataProvider } from "./ECMetadata";
 import { GenericInstanceFilter } from "./GenericInstanceFilter";
 import { DefineHierarchyLevelProps, HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
@@ -351,27 +351,37 @@ interface ChildNodesObservables {
   hasNodes: Observable<boolean>;
 }
 class ChildNodesCache {
-  private _map = new Map<string, ChildNodesObservables>();
+  private _map = new Map<string, { primary: ChildNodesObservables | undefined; variations: LRUCache<string, ChildNodesObservables> }>();
 
-  private createKey(requestProps: GetHierarchyNodesProps): string {
-    /**
-     * TODO: We may want to limit the number of filter variations we store for the same parent node. Maybe always store
-     * the no-filter observables a LRU cache of just a few filtered ones.
-     */
-    const { parentNode: node, instanceFilter } = requestProps;
-    const nodeIdentifier = node ? `${JSON.stringify(node.parentKeys)}+${JSON.stringify(node.key)}` : "";
-    const instanceFilterSuffix = instanceFilter ? `:${JSON.stringify(instanceFilter)}` : "";
-    return `${nodeIdentifier}${instanceFilterSuffix}`;
+  private parseRequestProps(requestProps: GetHierarchyNodesProps) {
+    const { parentNode: node } = requestProps;
+    const primaryKey = node ? `${JSON.stringify(node.parentKeys)}+${JSON.stringify(node.key)}` : "";
+    const variationKey = requestProps.instanceFilter ? JSON.stringify(requestProps.instanceFilter) : undefined;
+    return { primaryKey, variationKey };
   }
 
   public add(requestProps: GetHierarchyNodesProps, value: ChildNodesObservables) {
-    const key = this.createKey(requestProps);
-    assert(!this._map.has(key));
-    this._map.set(key, value);
+    const { primaryKey, variationKey } = this.parseRequestProps(requestProps);
+    let entry = this._map.get(primaryKey);
+    if (!entry) {
+      entry = { primary: undefined, variations: new LRUMap(5) };
+      this._map.set(primaryKey, entry);
+    }
+    if (variationKey) {
+      entry.variations.set(variationKey, value);
+    } else {
+      assert(!entry.primary);
+      entry.primary = value;
+    }
   }
 
   public get(requestProps: GetHierarchyNodesProps): ChildNodesObservables | undefined {
-    return this._map.get(this.createKey(requestProps));
+    const { primaryKey, variationKey } = this.parseRequestProps(requestProps);
+    const entry = this._map.get(primaryKey);
+    if (variationKey) {
+      return entry?.variations.get(variationKey);
+    }
+    return entry?.primary;
   }
 }
 

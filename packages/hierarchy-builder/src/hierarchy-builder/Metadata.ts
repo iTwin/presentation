@@ -16,10 +16,18 @@ export type PrimitiveValueType = "Id" | Exclude<ECPrimitiveType, "Binary" | "IGe
  * @beta
  */
 export interface RelationshipPathStep {
+  /** Full name of the source ECClass */
   sourceClassName: string;
+  /** Full name of the target ECClass */
   targetClassName: string;
+  /** Full name of the ECRelationshipClass */
   relationshipName: string;
-  direction: "Forward" | "Backward";
+  /**
+   * Indicates that the relationship direction be reversed. This should be set to `true` when step direction
+   * doesn't match relationship direction, e.g. relationship is from source `A` to target `B` and the step
+   * describes a step from `B` to `A`.
+   */
+  relationshipReverse?: boolean;
 }
 
 /**

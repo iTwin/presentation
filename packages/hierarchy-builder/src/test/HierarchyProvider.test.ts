@@ -7,6 +7,7 @@ import { expect } from "chai";
 import sinon from "sinon";
 import { omit } from "@itwin/core-bentley";
 import { ECKindOfQuantity, ECPrimitiveProperty, ECProperty, IMetadataProvider } from "../hierarchy-builder/ECMetadata";
+import { GenericInstanceFilter } from "../hierarchy-builder/GenericInstanceFilter";
 import { IHierarchyLevelDefinitionsFactory } from "../hierarchy-builder/HierarchyDefinition";
 import { HierarchyNode, ParsedCustomHierarchyNode } from "../hierarchy-builder/HierarchyNode";
 import { HierarchyProvider } from "../hierarchy-builder/HierarchyProvider";
@@ -17,7 +18,7 @@ import { ECSqlSelectClauseGroupingParams, NodeSelectClauseColumnNames } from "..
 import { ConcatenatedValue } from "../hierarchy-builder/values/ConcatenatedValue";
 import { TypedPrimitiveValue } from "../hierarchy-builder/values/Values";
 import { trimWhitespace } from "./queries/Utils";
-import { createFakeQueryReader, createGetClassStub } from "./Utils";
+import { ClassStubs, createClassStubs, createFakeQueryReader } from "./Utils";
 
 describe("HierarchyProvider", () => {
   const metadataProvider = {} as unknown as IMetadataProvider;
@@ -450,9 +451,14 @@ describe("HierarchyProvider", () => {
 
   describe("Labels formatting", () => {
     const formatter = sinon.fake(async (v: TypedPrimitiveValue) => `_${v.value.toString()}_`);
+    let classStubs: ClassStubs;
 
     beforeEach(() => {
+      classStubs = createClassStubs(metadataProvider);
+    });
+    afterEach(() => {
       formatter.resetHistory();
+      classStubs.restore();
     });
 
     it("returns formatted string label", async () => {
@@ -491,8 +497,7 @@ describe("HierarchyProvider", () => {
     });
 
     it("returns formatted primitive property values label", async () => {
-      const stubClass = createGetClassStub(metadataProvider).stubClass;
-      stubClass({
+      classStubs.stubEntityClass({
         schemaName: "x",
         className: "y",
         properties: [
@@ -519,8 +524,7 @@ describe("HierarchyProvider", () => {
     });
 
     it("throws when label includes non-primitive property values", async () => {
-      const stubClass = createGetClassStub(metadataProvider).stubClass;
-      stubClass({
+      classStubs.stubEntityClass({
         schemaName: "x",
         className: "y",
         properties: [
@@ -537,8 +541,7 @@ describe("HierarchyProvider", () => {
     });
 
     it("throws when label includes `IGeometry` property values", async () => {
-      const stubClass = createGetClassStub(metadataProvider).stubClass;
-      stubClass({
+      classStubs.stubEntityClass({
         schemaName: "x",
         className: "y",
         properties: [
@@ -556,8 +559,7 @@ describe("HierarchyProvider", () => {
     });
 
     it("throws when label includes `Binary` property values", async () => {
-      const stubClass = createGetClassStub(metadataProvider).stubClass;
-      stubClass({
+      classStubs.stubEntityClass({
         schemaName: "x",
         className: "y",
         properties: [
@@ -596,9 +598,16 @@ describe("HierarchyProvider", () => {
   });
 
   describe("Filtering", () => {
+    let classStubs: ClassStubs;
+    beforeEach(() => {
+      classStubs = createClassStubs(metadataProvider);
+    });
+    afterEach(() => {
+      classStubs.restore();
+    });
+
     it("applies filtering on query definitions", async () => {
-      const stubClass = createGetClassStub(metadataProvider).stubClass;
-      stubClass({
+      classStubs.stubEntityClass({
         schemaName: "a",
         className: "b",
         is: async (fullClassName) => fullClassName === "a.b",
@@ -831,6 +840,32 @@ describe("HierarchyProvider", () => {
       await provider.getNodes({ parentNode: rootNodes[0] });
       await provider.getNodes({ parentNode: rootNodes[0] });
       expect(queryExecutor.createQueryReader).to.be.calledOnce;
+    });
+
+    it("queries variations of the same hierarchy level", async () => {
+      queryExecutor.createQueryReader.returns(createFakeQueryReader([]));
+      const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel({ parentNode }) {
+          if (!parentNode) {
+            return [
+              {
+                fullClassName: "x.y",
+                query: { ecsql: "QUERY" },
+              },
+            ];
+          }
+          return [];
+        },
+      };
+      const provider = new HierarchyProvider({
+        metadataProvider,
+        queryExecutor,
+        hierarchyDefinition,
+      });
+      await provider.getNodes({ parentNode: undefined });
+      await provider.getNodes({ parentNode: undefined, instanceFilter: {} as GenericInstanceFilter }); // variation of previous, so should cause a query
+      await provider.getNodes({ parentNode: undefined, instanceFilter: {} as GenericInstanceFilter }); // same as previous, so this one one shouldn't cause a query
+      expect(queryExecutor.createQueryReader).to.be.calledTwice;
     });
   });
 });

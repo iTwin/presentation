@@ -7,6 +7,7 @@ import { expect } from "chai";
 import {
   createConcatenatedTypedValueSelector,
   createNullableSelector,
+  createPrimitiveValueSelector,
   createPropertyValueSelector,
   createTypedValueSelector,
   TypedValueSelectClauseProps,
@@ -186,5 +187,40 @@ describe("createConcatenatedTypedValueSelector", () => {
         checkSelector: "CHECK",
       }),
     );
+  });
+});
+
+describe("createPrimitiveValueSelector", () => {
+  it("returns NULL when value is `undefined`", () => {
+    expect(createPrimitiveValueSelector(undefined)).to.eq("NULL");
+  });
+
+  it("returns Date ISO string", () => {
+    const now = new Date();
+    expect(createPrimitiveValueSelector(now)).to.eq(`'${now.toISOString()}'`);
+  });
+
+  it("returns point2d object", () => {
+    expect(createPrimitiveValueSelector({ x: 1.23, y: 4.56 })).to.eq(`json_object('x', 1.23, 'y', 4.56)`);
+  });
+
+  it("returns point3d object", () => {
+    expect(createPrimitiveValueSelector({ x: 1.23, y: 4.56, z: 7.89 })).to.eq(`json_object('x', 1.23, 'y', 4.56, 'z', 7.89)`);
+  });
+
+  it("returns string selector", () => {
+    expect(createPrimitiveValueSelector("test")).to.eq(`'test'`);
+  });
+
+  it("returns Id selector", () => {
+    expect(createPrimitiveValueSelector("0x123")).to.eq(`0x123`);
+  });
+
+  it("returns numeric selector", () => {
+    expect(createPrimitiveValueSelector(1.23)).to.eq(`1.23`);
+  });
+
+  it("returns boolean selector", () => {
+    expect(createPrimitiveValueSelector(true)).to.eq(`TRUE`);
   });
 });

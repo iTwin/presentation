@@ -58,6 +58,9 @@ export interface CreateRelationshipPathJoinClauseProps {
  * @beta
  */
 export async function createRelationshipPathJoinClause(props: CreateRelationshipPathJoinClauseProps) {
+  if (props.path.length === 0) {
+    return "";
+  }
   let prev = {
     alias: props.path[0].sourceAlias,
     joinPropertyName: "ECInstanceId",
@@ -68,16 +71,16 @@ export async function createRelationshipPathJoinClause(props: CreateRelationship
     const step = await getRelationshipPathStepClasses(props.metadata, stepDef);
     const navigationProperty = await getNavigationProperty(step);
     if (navigationProperty) {
-      const joinDirectionMatchesRelationshipDirection = step.direction === navigationProperty.direction;
+      const propertyDirectionMatchesRelationshipDirection = navigationProperty.direction === step.relationship.direction;
       clause += `
         ${getJoinClause(step.joinType)} ${getClassSelectClause(step.target, step.targetAlias)}
         ON ${
-          joinDirectionMatchesRelationshipDirection
+          propertyDirectionMatchesRelationshipDirection
             ? createPropertyValueSelector(step.targetAlias, "ECInstanceId")
             : createPropertyValueSelector(step.targetAlias, navigationProperty.name, "Navigation")[0]
         }
           = ${
-            joinDirectionMatchesRelationshipDirection
+            propertyDirectionMatchesRelationshipDirection
               ? createPropertyValueSelector(prev.alias, navigationProperty.name, "Navigation")[0]
               : createPropertyValueSelector(prev.alias, prev.joinPropertyName)
           }
@@ -88,8 +91,9 @@ export async function createRelationshipPathJoinClause(props: CreateRelationship
         joinPropertyName: "ECInstanceId",
       };
     } else {
-      const relationshipJoinPropertyNames =
-        step.direction === "Forward" ? { this: "SourceECInstanceId", next: "TargetECInstanceId" } : { this: "TargetECInstanceId", next: "SourceECInstanceId" };
+      const relationshipJoinPropertyNames = !step.relationshipReverse
+        ? { this: "SourceECInstanceId", next: "TargetECInstanceId" }
+        : { this: "TargetECInstanceId", next: "SourceECInstanceId" };
       if (step.joinType === "outer") {
         clause += `
           ${getJoinClause("outer")} (
@@ -141,14 +145,16 @@ async function getRelationshipPathStepClasses(metadata: IMetadataProvider, step:
 }
 
 async function getNavigationProperty(step: ResolvedRelationshipPathStep): Promise<ECNavigationProperty | undefined> {
-  const source = step.direction === "Forward" ? step.source : step.target;
-  const target = step.direction === "Forward" ? step.target : step.source;
+  const source = !step.relationshipReverse ? step.source : step.target;
+  const target = !step.relationshipReverse ? step.target : step.source;
   for (const prop of await source.getProperties()) {
+    // istanbul ignore else
     if (prop.isNavigation() && prop.direction === "Forward" && (await prop.relationshipClass).fullName === step.relationship.fullName) {
       return prop;
     }
   }
   for (const prop of await target.getProperties()) {
+    // istanbul ignore else
     if (prop.isNavigation() && prop.direction === "Backward" && (await prop.relationshipClass).fullName === step.relationship.fullName) {
       return prop;
     }
@@ -163,7 +169,7 @@ function getJoinClause(type: "inner" | "outer" | undefined) {
   return "INNER JOIN";
 }
 
-function getClassSelectClause(ecClass: ECClass, alias?: string) {
+function getClassSelectClause(ecClass: ECClass, alias: string) {
   const classSelector = `[${ecClass.schema.name}].[${ecClass.name}]`;
-  return alias ? `${classSelector} [${alias}]` : classSelector;
+  return `${classSelector} [${alias}]`;
 }
