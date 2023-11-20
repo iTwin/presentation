@@ -79,7 +79,7 @@ export interface ECSqlSelectClauseGroupingParams {
   byLabel?: boolean | ECSqlValueSelector | BaseGroupingParams;
   byClass?: boolean | ECSqlValueSelector | BaseGroupingParams;
   byBaseClasses?: BaseClassGroupingParams;
-  byProperties?: PropertiesGroupingParams;
+  byProperties?: HierarchyNodePropertiesGroupingParams;
 }
 
 interface BaseGroupingParams {
@@ -88,7 +88,7 @@ interface BaseGroupingParams {
   autoExpand?: string | ECSqlValueSelector;
 }
 
-interface PropertiesGroupingParams extends BaseGroupingParams {
+interface HierarchyNodePropertiesGroupingParams extends BaseGroupingParams {
   fullClassName: string | ECSqlValueSelector;
   propertyGroups: Array<PropertyGroup>;
 }
@@ -218,7 +218,7 @@ function createGroupingSelector(grouping: ECSqlSelectClauseGroupingParams): stri
         {
           key: "propertyGroups",
           selector: `json_array(${grouping.byProperties.propertyGroups
-            .map((propertyGroup) => serializeJsonObject(createPropertyGroupSelectors(propertyGroup))
+            .map((propertyGroup) => serializeJsonObject(createPropertyGroupSelectors(propertyGroup)))
             .join(", ")})`,
         },
         ...createBaseGroupingParamSelectors(grouping.byProperties),

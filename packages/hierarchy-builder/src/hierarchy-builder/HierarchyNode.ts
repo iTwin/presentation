@@ -41,7 +41,7 @@ export interface LabelGroupingNodeKey {
  * A key property grouping node that groups nodes whose values don't fall into any other property group in the hierarchy level.
  * @beta
  */
-export interface OtherPropertyGroupingNodeKey {
+export interface PropertyOtherValuesGroupingNodeKey {
   type: "property-grouping:other";
   groupingInfo: {
     propertyName: string;
@@ -80,7 +80,7 @@ export interface PropertyValueRangeGroupingNodeKey {
  * A key for a property grouping node.
  * @beta
  */
-export type PropertyGroupingNodeKey = RangedPropertyGroupingNodeKey | FormattedPropertyGroupingNodeKey | OtherPropertyGroupingNodeKey;
+export type PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | PropertyValueGroupingNodeKey | PropertyOtherValuesGroupingNodeKey;
 
 /**
  * A key for one of the instance grouping nodes.
@@ -127,17 +127,17 @@ export namespace HierarchyNodeKey {
   export function isLabelGrouping(key: HierarchyNodeKey): key is LabelGroupingNodeKey {
     return isStandard(key) && key.type === "label-grouping";
   }
-  /** Checks whether the given node key is a [[OtherPropertyGroupingNodeKey]]. */
-  export function isOtherPropertyGrouping(key: HierarchyNodeKey): key is OtherPropertyGroupingNodeKey {
-    return isStandard(key) && key.type === "other-property-grouping";
+  /** Checks whether the given node key is a [[PropertyOtherValuesGroupingNodeKey]]. */
+  export function isPropertyOtherValuesGrouping(key: HierarchyNodeKey): key is PropertyOtherValuesGroupingNodeKey {
+    return isStandard(key) && key.type === "property-grouping:other";
   }
-  /** Checks whether the given node key is a [[RangedPropertyGroupingNodeKey]]. */
-  export function isRangedPropertyGrouping(key: HierarchyNodeKey): key is RangedPropertyGroupingNodeKey {
-    return isStandard(key) && key.type === "ranged-property-grouping";
+  /** Checks whether the given node key is a [[PropertyValueRangeGroupingNodeKey]]. */
+  export function isPropertyValueRangeGrouping(key: HierarchyNodeKey): key is PropertyValueRangeGroupingNodeKey {
+    return isStandard(key) && key.type === "property-grouping:range";
   }
-  /** Checks whether the given node key is a [[FormattedPropertyGroupingNodeKey]]. */
-  export function isFormattedPropertyGrouping(key: HierarchyNodeKey): key is FormattedPropertyGroupingNodeKey {
-    return isStandard(key) && key.type === "formatted-property-grouping";
+  /** Checks whether the given node key is a [[PropertyValueGroupingNodeKey]]. */
+  export function isPropertyValueGrouping(key: HierarchyNodeKey): key is PropertyValueGroupingNodeKey {
+    return isStandard(key) && key.type === "property-grouping:value";
   }
   /** Checks whether the two given keys are equal. */
   export function equals(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): boolean {
@@ -167,20 +167,20 @@ export namespace HierarchyNodeKey {
         assert(isLabelGrouping(rhs));
         return lhs.label === rhs.label;
       }
-      case "other-property-grouping": {
-        assert(isOtherPropertyGrouping(rhs));
+      case "property-grouping:other": {
+        assert(isPropertyOtherValuesGrouping(rhs));
         return lhs.groupingInfo.fullClassName === rhs.groupingInfo.fullClassName && lhs.groupingInfo.propertyName === rhs.groupingInfo.propertyName;
       }
-      case "formatted-property-grouping": {
-        assert(isFormattedPropertyGrouping(rhs));
+      case "property-grouping:value": {
+        assert(isPropertyValueGrouping(rhs));
         return (
           lhs.groupingInfo.fullClassName === rhs.groupingInfo.fullClassName &&
           lhs.groupingInfo.propertyName === rhs.groupingInfo.propertyName &&
           lhs.groupingInfo.formattedPropertyValue === rhs.groupingInfo.formattedPropertyValue
         );
       }
-      case "ranged-property-grouping": {
-        assert(isRangedPropertyGrouping(rhs));
+      case "property-grouping:range": {
+        assert(isPropertyValueRangeGrouping(rhs));
         return (
           lhs.groupingInfo.fullClassName === rhs.groupingInfo.fullClassName &&
           lhs.groupingInfo.propertyName === rhs.groupingInfo.propertyName &&
@@ -256,26 +256,26 @@ export namespace HierarchyNode {
   /** Checks whether the given node is property grouping node for other values  */
   export function isPropertyOtherValuesGroupingNode<TNode extends { key: HierarchyNodeKey }>(
     node: TNode,
-  ): node is TNode & { key: OtherPropertyGroupingNodeKey } & (TNode extends ProcessedHierarchyNode
+  ): node is TNode & { key: PropertyOtherValuesGroupingNodeKey } & (TNode extends ProcessedHierarchyNode
       ? { children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode> }
       : {}) {
-    return HierarchyNodeKey.isOtherPropertyGrouping(node.key);
+    return HierarchyNodeKey.isPropertyOtherValuesGrouping(node.key);
   }
   /** Checks whether the given node is a property value grouping node */
   export function isPropertyValueGroupingNode<TNode extends { key: HierarchyNodeKey }>(
     node: TNode,
-  ): node is TNode & { key: FormattedPropertyGroupingNodeKey } & (TNode extends ProcessedHierarchyNode
+  ): node is TNode & { key: PropertyValueGroupingNodeKey } & (TNode extends ProcessedHierarchyNode
       ? { children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode> }
       : {}) {
-    return HierarchyNodeKey.isFormattedPropertyGrouping(node.key);
+    return HierarchyNodeKey.isPropertyValueGrouping(node.key);
   }
   /** Checks whether the given node is a property value range grouping node */
   export function isPropertyValueRangeGroupingNode<TNode extends { key: HierarchyNodeKey }>(
     node: TNode,
-  ): node is TNode & { key: RangedPropertyGroupingNodeKey } & (TNode extends ProcessedHierarchyNode
+  ): node is TNode & { key: PropertyValueRangeGroupingNodeKey } & (TNode extends ProcessedHierarchyNode
       ? { children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode> }
       : {}) {
-    return HierarchyNodeKey.isRangedPropertyGrouping(node.key);
+    return HierarchyNodeKey.isPropertyValueRangeGrouping(node.key);
   }
 }
 
@@ -297,7 +297,7 @@ export interface GroupingParams {
   byLabel?: boolean | BaseGroupingParams;
   byClass?: boolean | BaseGroupingParams;
   byBaseClasses?: BaseClassGroupingParams;
-  byProperties?: PropertiesGroupingParams;
+  byProperties?: HierarchyNodePropertiesGroupingParams;
 }
 /**
  * Grouping parameters that are shared across all types of groupings.

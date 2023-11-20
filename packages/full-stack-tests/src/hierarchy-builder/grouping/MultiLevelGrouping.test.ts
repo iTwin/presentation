@@ -162,7 +162,7 @@ describe("Stateless hierarchy builder", () => {
                   NodeValidators.createForClassGroupingNode({
                     className: physicalPartitionClassName,
                     children: [
-                      NodeValidators.createForFormattedPropertyGroupingNode({
+                      NodeValidators.createForPropertyValueGroupingNode({
                         label: description1,
                         fullClassName: "BisCore.PhysicalPartition",
                         propertyName: "UserLabel",
@@ -188,7 +188,7 @@ describe("Stateless hierarchy builder", () => {
                           }),
                         ],
                       }),
-                      NodeValidators.createForFormattedPropertyGroupingNode({
+                      NodeValidators.createForPropertyValueGroupingNode({
                         label: description2,
                         fullClassName: "BisCore.PhysicalPartition",
                         formattedPropertyValue: description2,
@@ -212,7 +212,7 @@ describe("Stateless hierarchy builder", () => {
               NodeValidators.createForClassGroupingNode({
                 className: subjectClassName,
                 children: [
-                  NodeValidators.createForFormattedPropertyGroupingNode({
+                  NodeValidators.createForPropertyValueGroupingNode({
                     label: description1,
                     fullClassName: "BisCore.Subject",
                     formattedPropertyValue: description1,

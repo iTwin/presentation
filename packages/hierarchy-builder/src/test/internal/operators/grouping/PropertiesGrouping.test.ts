@@ -617,7 +617,7 @@ describe("PropertiesGrouping", () => {
           propertyGroup: { propertyName: "PropertyName" },
         };
         const expectedGroupingNodeKey: GroupingNodeKey = {
-          type: "other-property-grouping",
+          type: "property-grouping:other",
           groupingInfo: {
             propertyName: "PropertyName",
             fullClassName: "TestSchema.Class",
@@ -659,7 +659,7 @@ describe("PropertiesGrouping", () => {
           propertyGroup: { propertyName: "PropertyName" },
         };
         const expectedGroupingNodeKey: GroupingNodeKey = {
-          type: "formatted-property-grouping",
+          type: "property-grouping:value",
           groupingInfo: {
             propertyName: "PropertyName",
             fullClassName: "TestSchema.Class",
@@ -713,7 +713,7 @@ describe("PropertiesGrouping", () => {
           propertyGroup: { propertyName: "PropertyName" },
         };
         const expectedGroupingNodeKey: GroupingNodeKey = {
-          type: "formatted-property-grouping",
+          type: "property-grouping:value",
           groupingInfo: {
             propertyName: "PropertyName",
             fullClassName: "TestSchema.Class",
@@ -767,7 +767,7 @@ describe("PropertiesGrouping", () => {
           propertyGroup: { propertyName: "PropertyName" },
         };
         const expectedGroupingNodeKey1: GroupingNodeKey = {
-          type: "formatted-property-grouping",
+          type: "property-grouping:value",
           groupingInfo: {
             propertyName: "PropertyName",
             fullClassName: "TestSchema.Class",
@@ -775,7 +775,7 @@ describe("PropertiesGrouping", () => {
           },
         };
         const expectedGroupingNodeKey2: GroupingNodeKey = {
-          type: "formatted-property-grouping",
+          type: "property-grouping:value",
           groupingInfo: {
             propertyName: "PropertyName",
             fullClassName: "TestSchema.Class",
@@ -834,7 +834,7 @@ describe("PropertiesGrouping", () => {
           propertyGroup: { propertyName: "PropertyName1" },
         };
         const expectedGroupingNodeKey: GroupingNodeKey = {
-          type: "formatted-property-grouping",
+          type: "property-grouping:value",
           groupingInfo: {
             propertyName: "PropertyName1",
             fullClassName: "TestSchema.Class",
@@ -878,7 +878,7 @@ describe("PropertiesGrouping", () => {
           propertyGroup: { propertyName: "PropertyName", ranges: [{ fromValue: 1, toValue: 5 }] },
         };
         const expectedGroupingNodeKey: GroupingNodeKey = {
-          type: "other-property-grouping",
+          type: "property-grouping:other",
           groupingInfo: {
             propertyName: "PropertyName",
             fullClassName: "TestSchema.Class",
@@ -919,7 +919,7 @@ describe("PropertiesGrouping", () => {
           propertyGroup: { propertyName: "PropertyName", ranges: [{ fromValue: 1, toValue: 5 }] },
         };
         const expectedGroupingNodeKey: GroupingNodeKey = {
-          type: "other-property-grouping",
+          type: "property-grouping:other",
           groupingInfo: {
             propertyName: "PropertyName",
             fullClassName: "TestSchema.Class",
@@ -960,7 +960,7 @@ describe("PropertiesGrouping", () => {
           propertyGroup: { propertyName: "PropertyName", ranges: [{ fromValue: 1, toValue: 5 }] },
         };
         const expectedGroupingNodeKey: GroupingNodeKey = {
-          type: "ranged-property-grouping",
+          type: "property-grouping:range",
           groupingInfo: {
             propertyName: "PropertyName",
             fullClassName: "TestSchema.Class",
@@ -1003,7 +1003,7 @@ describe("PropertiesGrouping", () => {
           propertyGroup: { propertyName: "PropertyName", ranges: [{ fromValue: 1, toValue: 5, rangeLabel: "rangeLabel" }] },
         };
         const expectedGroupingNodeKey: GroupingNodeKey = {
-          type: "ranged-property-grouping",
+          type: "property-grouping:range",
           groupingInfo: {
             propertyName: "PropertyName",
             fullClassName: "TestSchema.Class",
@@ -1057,7 +1057,7 @@ describe("PropertiesGrouping", () => {
           propertyGroup: { propertyName: "PropertyName", ranges: [{ fromValue: 1, toValue: 5, rangeLabel: "rangeLabel" }] },
         };
         const expectedGroupingNodeKey: GroupingNodeKey = {
-          type: "ranged-property-grouping",
+          type: "property-grouping:range",
           groupingInfo: {
             propertyName: "PropertyName",
             fullClassName: "TestSchema.Class",
@@ -1111,7 +1111,7 @@ describe("PropertiesGrouping", () => {
           propertyGroup: { propertyName: "PropertyName", ranges: [{ fromValue: 1, toValue: 5, rangeLabel: "rangeLabel" }] },
         };
         const expectedGroupingNodeKey: GroupingNodeKey = {
-          type: "ranged-property-grouping",
+          type: "property-grouping:range",
           groupingInfo: {
             propertyName: "PropertyName",
             fullClassName: "TestSchema.Class",
@@ -1169,7 +1169,7 @@ describe("PropertiesGrouping", () => {
           },
         };
         const expectedGroupingNodeKey: GroupingNodeKey = {
-          type: "ranged-property-grouping",
+          type: "property-grouping:range",
           groupingInfo: {
             propertyName: "PropertyName",
             fullClassName: "TestSchema.Class",
@@ -1247,7 +1247,7 @@ describe("PropertiesGrouping", () => {
           },
         };
         const expectedGroupingNodeKey1: GroupingNodeKey = {
-          type: "ranged-property-grouping",
+          type: "property-grouping:range",
           groupingInfo: {
             propertyName: "PropertyName",
             fullClassName: "TestSchema.Class",
@@ -1256,7 +1256,7 @@ describe("PropertiesGrouping", () => {
           },
         };
         const expectedGroupingNodeKey2: GroupingNodeKey = {
-          type: "ranged-property-grouping",
+          type: "property-grouping:range",
           groupingInfo: {
             propertyName: "PropertyName",
             fullClassName: "TestSchema.Class",

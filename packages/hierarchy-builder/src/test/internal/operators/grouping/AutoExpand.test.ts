@@ -47,7 +47,7 @@ describe("AutoExpand", () => {
       testName: "Properties grouping",
       testParams: {
         groupingNodeKey: {
-          type: "other-property-grouping",
+          type: "property-grouping:other",
           label: "1",
           property: {
             propertyName: "length",

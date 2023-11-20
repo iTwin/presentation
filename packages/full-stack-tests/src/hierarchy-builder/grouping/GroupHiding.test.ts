@@ -463,7 +463,7 @@ describe("Stateless hierarchy builder", () => {
         await validateHierarchy({
           provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(propertiesHideIfNoSiblingsGrouping) }),
           expect: [
-            NodeValidators.createForFormattedPropertyGroupingNode({
+            NodeValidators.createForPropertyValueGroupingNode({
               label: groupName,
               fullClassName: "BisCore.Element",
               formattedPropertyValue: groupName,
@@ -474,7 +474,7 @@ describe("Stateless hierarchy builder", () => {
                 }),
               ],
             }),
-            NodeValidators.createForFormattedPropertyGroupingNode({
+            NodeValidators.createForPropertyValueGroupingNode({
               label: `${groupName}2`,
               fullClassName: "BisCore.Element",
               formattedPropertyValue: `${groupName}2`,
@@ -499,7 +499,7 @@ describe("Stateless hierarchy builder", () => {
         await validateHierarchy({
           provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(propertiesHideIfOneGroupedNodeGrouping) }),
           expect: [
-            NodeValidators.createForFormattedPropertyGroupingNode({
+            NodeValidators.createForPropertyValueGroupingNode({
               label: groupName,
               fullClassName: "BisCore.Element",
               formattedPropertyValue: groupName,

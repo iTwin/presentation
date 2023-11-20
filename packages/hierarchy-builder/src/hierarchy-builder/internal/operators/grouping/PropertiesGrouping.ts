@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert } from "@itwin/core-bentley";
-import { ProcessedInstanceHierarchyNode, PropertiesGroupingParams, PropertyGroup, PropertyGroupingNodeKey, Range } from "../../../HierarchyNode";
+import { HierarchyNodePropertiesGroupingParams, ProcessedInstanceHierarchyNode, PropertyGroup, PropertyGroupingNodeKey, Range } from "../../../HierarchyNode";
 import { ECClass, IMetadataProvider } from "../../../Metadata";
 import { createDefaultValueFormatter } from "../../../values/Formatting";
 import { TypedPrimitiveValue } from "../../../values/Values";
@@ -157,7 +157,7 @@ function createGroupingNodes(groupings: PropertyGroupingInformation): GroupingHa
   const outNodes: GroupingHandlerResult = { grouped: [], ungrouped: [], groupingType: "property" };
   groupings.grouped.forEach((entry) => {
     let groupingNodeKey: PropertyGroupingNodeKey = {
-      type: "other-property-grouping",
+      type: "property-grouping:other",
       groupingInfo: {
         fullClassName: entry.property.fullClassName,
         propertyName: entry.property.propertyName,
@@ -167,7 +167,7 @@ function createGroupingNodes(groupings: PropertyGroupingInformation): GroupingHa
     if (extraValues) {
       if ("formattedValue" in extraValues) {
         groupingNodeKey = {
-          type: "formatted-property-grouping",
+          type: "property-grouping:value",
           groupingInfo: {
             fullClassName: entry.property.fullClassName,
             propertyName: entry.property.propertyName,
@@ -176,7 +176,7 @@ function createGroupingNodes(groupings: PropertyGroupingInformation): GroupingHa
         };
       } else {
         groupingNodeKey = {
-          type: "ranged-property-grouping",
+          type: "property-grouping:range",
           groupingInfo: {
             fullClassName: entry.property.fullClassName,
             propertyName: entry.property.propertyName,
@@ -262,20 +262,20 @@ function getRangesAsString(ranges?: Range[]): string {
 async function shouldCreatePropertyGroup(
   metadata: IMetadataProvider,
   propertyInfo: PropertyGroupInfo,
-  nodePropertyGroupingParams: PropertiesGroupingParams,
+  nodePropertyGroupingParams: HierarchyNodePropertiesGroupingParams,
   nodeFullClassName: string,
 ): Promise<boolean> {
   if (
-    byProperties.fullClassName !== propertyInfo.ecClass.fullName ||
-    byProperties.propertyGroups.length < propertyInfo.previousPropertiesGroupingInfo.length + 1
+    nodePropertyGroupingParams.fullClassName !== propertyInfo.ecClass.fullName ||
+    nodePropertyGroupingParams.propertyGroups.length < propertyInfo.previousPropertiesGroupingInfo.length + 1
   ) {
     return false;
   }
-  const currentProperty = byProperties.propertyGroups[propertyInfo.previousPropertiesGroupingInfo.length];
+  const currentProperty = nodePropertyGroupingParams.propertyGroups[propertyInfo.previousPropertiesGroupingInfo.length];
   if (currentProperty.propertyName !== propertyInfo.propertyGroup.propertyName || !doRangesMatch(currentProperty.ranges, propertyInfo.propertyGroup.ranges)) {
     return false;
   }
-  if (!doPreviousPropertiesMatch(propertyInfo.previousPropertiesGroupingInfo, byProperties)) {
+  if (!doPreviousPropertiesMatch(propertyInfo.previousPropertiesGroupingInfo, nodePropertyGroupingParams)) {
     return false;
   }
   const nodeClass = await getClass(metadata, nodeFullClassName);
@@ -286,7 +286,10 @@ async function shouldCreatePropertyGroup(
 }
 
 /** @internal */
-export function doPreviousPropertiesMatch(previousPropertiesGroupingInfo: PreviousPropertiesGroupingInfo, nodesProperties: PropertiesGroupingParams): boolean {
+export function doPreviousPropertiesMatch(
+  previousPropertiesGroupingInfo: PreviousPropertiesGroupingInfo,
+  nodesProperties: HierarchyNodePropertiesGroupingParams,
+): boolean {
   return previousPropertiesGroupingInfo.every(
     (groupingInfo, index) =>
       groupingInfo.fullClassName === nodesProperties.fullClassName &&

@@ -396,7 +396,7 @@ export interface ECSqlSelectClauseGroupingParams {
     // (undocumented)
     byLabel?: boolean | ECSqlValueSelector | BaseGroupingParams_2;
     // (undocumented)
-    byProperties?: PropertiesGroupingParams_2;
+    byProperties?: HierarchyNodePropertiesGroupingParams_2;
 }
 
 // @beta
@@ -418,18 +418,6 @@ export interface ECStructProperty extends ECProperty {
 }
 
 // @beta
-export interface FormattedPropertyGroupingNodeKey {
-    // (undocumented)
-    groupingInfo: {
-        propertyName: string;
-        fullClassName: string;
-        formattedPropertyValue: string;
-    };
-    // (undocumented)
-    type: "formatted-property-grouping";
-}
-
-// @beta
 export function getLogger(): ILogger;
 
 // @beta
@@ -444,7 +432,7 @@ export interface GroupingParams {
     // (undocumented)
     byLabel?: boolean | BaseGroupingParams;
     // (undocumented)
-    byProperties?: PropertiesGroupingParams;
+    byProperties?: HierarchyNodePropertiesGroupingParams;
 }
 
 // @beta
@@ -483,13 +471,6 @@ export namespace HierarchyNode {
     } & (TNode extends ProcessedHierarchyNode ? {
         processingParams?: BaseHierarchyNodeProcessingParams;
     } : {});
-    export function isFormattedPropertyGroupingNode<TNode extends {
-        key: HierarchyNodeKey;
-    }>(node: TNode): node is TNode & {
-        key: FormattedPropertyGroupingNodeKey;
-    } & (TNode extends ProcessedHierarchyNode ? {
-        children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
-    } : {});
     export function isGroupingNode<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
@@ -511,17 +492,24 @@ export namespace HierarchyNode {
     } & (TNode extends ProcessedHierarchyNode ? {
         children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
     } : {});
-    export function isOtherPropertyGroupingNode<TNode extends {
+    export function isPropertyOtherValuesGroupingNode<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
         key: OtherPropertyGroupingNodeKey;
     } & (TNode extends ProcessedHierarchyNode ? {
         children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
     } : {});
-    export function isRangedPropertyGroupingNode<TNode extends {
+    export function isPropertyValueGroupingNode<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
-        key: RangedPropertyGroupingNodeKey;
+        key: PropertyValueGroupingNodeKey;
+    } & (TNode extends ProcessedHierarchyNode ? {
+        children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
+    } : {});
+    export function isPropertyValueRangeGroupingNode<TNode extends {
+        key: HierarchyNodeKey;
+    }>(node: TNode): node is TNode & {
+        key: PropertyValueRangeGroupingNodeKey;
     } & (TNode extends ProcessedHierarchyNode ? {
         children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
     } : {});
@@ -557,13 +545,19 @@ export namespace HierarchyNodeKey {
     export function equals(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): boolean;
     export function isClassGrouping(key: HierarchyNodeKey): key is ClassGroupingNodeKey;
     export function isCustom(key: HierarchyNodeKey): key is string;
-    export function isFormattedPropertyGrouping(key: HierarchyNodeKey): key is FormattedPropertyGroupingNodeKey;
+    export function isFormattedPropertyGrouping(key: HierarchyNodeKey): key is PropertyValueGroupingNodeKey;
     export function isGrouping(key: HierarchyNodeKey): key is GroupingNodeKey;
     export function isInstances(key: HierarchyNodeKey): key is InstancesNodeKey;
     export function isLabelGrouping(key: HierarchyNodeKey): key is LabelGroupingNodeKey;
     export function isOtherPropertyGrouping(key: HierarchyNodeKey): key is OtherPropertyGroupingNodeKey;
-    export function isRangedPropertyGrouping(key: HierarchyNodeKey): key is RangedPropertyGroupingNodeKey;
+    export function isRangedPropertyGrouping(key: HierarchyNodeKey): key is PropertyValueRangeGroupingNodeKey;
     export function isStandard(key: HierarchyNodeKey): key is StandardHierarchyNodeKey;
+}
+
+// @beta
+export interface HierarchyNodePropertiesGroupingParams extends BaseGroupingParams {
+    fullClassName: string;
+    propertyGroups: Array<PropertyGroup>;
 }
 
 // @beta
@@ -753,7 +747,7 @@ export interface OtherPropertyGroupingNodeKey {
         fullClassName: string;
     };
     // (undocumented)
-    type: "other-property-grouping";
+    type: "property-grouping:other";
 }
 
 // @beta
@@ -841,12 +835,6 @@ export type ProcessedInstanceHierarchyNode = Omit<HierarchyNode, "key" | "childr
 };
 
 // @beta
-export interface PropertiesGroupingParams extends BaseGroupingParams {
-    fullClassName: string;
-    propertyGroups: Array<PropertyGroup>;
-}
-
-// @beta
 export interface PropertyGroup {
     // (undocumented)
     propertyName: string;
@@ -857,7 +845,7 @@ export interface PropertyGroup {
 }
 
 // @beta
-export type PropertyGroupingNodeKey = RangedPropertyGroupingNodeKey | FormattedPropertyGroupingNodeKey | OtherPropertyGroupingNodeKey;
+export type PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | PropertyValueGroupingNodeKey | OtherPropertyGroupingNodeKey;
 
 // @beta
 export interface PropertyValue {
@@ -867,6 +855,31 @@ export interface PropertyValue {
     propertyName: string;
     // (undocumented)
     value: PrimitiveValue;
+}
+
+// @beta
+export interface PropertyValueGroupingNodeKey {
+    // (undocumented)
+    groupingInfo: {
+        propertyName: string;
+        fullClassName: string;
+        formattedPropertyValue: string;
+    };
+    // (undocumented)
+    type: "property-grouping:value";
+}
+
+// @beta
+export interface PropertyValueRangeGroupingNodeKey {
+    // (undocumented)
+    groupingInfo: {
+        propertyName: string;
+        fullClassName: string;
+        fromValue: number;
+        toValue: number;
+    };
+    // (undocumented)
+    type: "property-grouping:range";
 }
 
 // @beta
@@ -886,19 +899,6 @@ export interface Range {
     rangeLabel?: string;
     // (undocumented)
     toValue: number;
-}
-
-// @beta
-export interface RangedPropertyGroupingNodeKey {
-    // (undocumented)
-    groupingInfo: {
-        propertyName: string;
-        fullClassName: string;
-        fromValue: number;
-        toValue: number;
-    };
-    // (undocumented)
-    type: "ranged-property-grouping";
 }
 
 // @beta

@@ -160,7 +160,7 @@ export namespace NodeValidators {
     };
   }
 
-  export function createForOtherPropertyGroupingNode(props: {
+  export function createForPropertyOtherValuesGroupingNode(props: {
     propertyName?: string;
     fullClassName?: string;
     autoExpand?: boolean;
@@ -169,10 +169,10 @@ export namespace NodeValidators {
     return {
       node: (node) => {
         if (!HierarchyNode.isStandard(node)) {
-          throw new Error(`[${node.label}] Expected other property grouping node, got a non-standard "${node.key as string}"`);
+          throw new Error(`[${node.label}] Expected a property other values grouping node, got a non-standard "${node.key as string}"`);
         }
-        if (node.key.type !== "other-property-grouping") {
-          throw new Error(`[${node.label}] Expected other property grouping node, got "${node.key.type}"`);
+        if (node.key.type !== "property-grouping:other") {
+          throw new Error(`[${node.label}] Expected a property other values grouping node, got "${node.key.type}"`);
         }
         if (props.propertyName && node.key.groupingInfo.propertyName !== props.propertyName) {
           throw new Error(`[${node.label}] Expected node to have property name "${props.propertyName}", got "${node.key.groupingInfo.propertyName}"`);
@@ -191,7 +191,7 @@ export namespace NodeValidators {
     };
   }
 
-  export function createForRangedPropertyGroupingNode(props: {
+  export function createForPropertyValueRangeGroupingNode(props: {
     label?: string;
     propertyName?: string;
     fullClassName?: string;
@@ -203,10 +203,10 @@ export namespace NodeValidators {
     return {
       node: (node) => {
         if (!HierarchyNode.isStandard(node)) {
-          throw new Error(`[${node.label}] Expected a ranged property grouping node, got a non-standard "${node.key as string}"`);
+          throw new Error(`[${node.label}] Expected a property value range grouping node, got a non-standard "${node.key as string}"`);
         }
-        if (node.key.type !== "ranged-property-grouping") {
-          throw new Error(`[${node.label}] Expected a ranged property grouping node, got "${node.key.type}"`);
+        if (node.key.type !== "property-grouping:range") {
+          throw new Error(`[${node.label}] Expected a property value range grouping node, got "${node.key.type}"`);
         }
         if (props.propertyName && node.key.groupingInfo.propertyName !== props.propertyName) {
           throw new Error(`[${node.label}] Expected node to have property name "${props.propertyName}", got "${node.key.groupingInfo.propertyName}"`);
@@ -231,7 +231,7 @@ export namespace NodeValidators {
     };
   }
 
-  export function createForFormattedPropertyGroupingNode(props: {
+  export function createForPropertyValueGroupingNode(props: {
     label?: string;
     propertyName?: string;
     fullClassName?: string;
@@ -242,10 +242,10 @@ export namespace NodeValidators {
     return {
       node: (node) => {
         if (!HierarchyNode.isStandard(node)) {
-          throw new Error(`[${node.label}] Expected a formatted property grouping node, got a non-standard "${node.key as string}"`);
+          throw new Error(`[${node.label}] Expected a property value grouping node, got a non-standard "${node.key as string}"`);
         }
-        if (node.key.type !== "formatted-property-grouping") {
-          throw new Error(`[${node.label}] Expected a formatted property grouping node, got "${node.key.type}"`);
+        if (node.key.type !== "property-grouping:value") {
+          throw new Error(`[${node.label}] Expected a property value grouping node, got "${node.key.type}"`);
         }
         if (props.propertyName && node.key.groupingInfo.propertyName !== props.propertyName) {
           throw new Error(`[${node.label}] Expected node to have property name "${props.propertyName}", got "${node.key.groupingInfo.propertyName}"`);
