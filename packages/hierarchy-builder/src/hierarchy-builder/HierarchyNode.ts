@@ -337,7 +337,7 @@ export interface BaseClassGroupingParams extends BaseGroupingParams {
  * A data structure that represents properties grouping.
  * @beta
  */
-export interface PropertiesGroupingParams extends BaseGroupingParams {
+export interface HierarchyNodePropertiesGroupingParams extends BaseGroupingParams {
   /**
    * Full name of a class whose properties are used to group the node. Only has effect if the node
    * represents an instance of that class.
