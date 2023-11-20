@@ -66,7 +66,7 @@ export interface PropertyValueGroupingNodeKey {
  * A key for a property grouping node that groups nodes by a range of property values.
  * @beta
  */
-export interface RangedPropertyGroupingNodeKey {
+export interface PropertyValueRangeGroupingNodeKey {
   type: "ranged-property-grouping";
   groupingInfo: {
     propertyName: string;
