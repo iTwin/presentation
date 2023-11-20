@@ -303,7 +303,7 @@ export function doRangesMatch(ranges1: Range[] | undefined, ranges2: Range[] | u
   if (!ranges1) {
     return true;
   }
-  assert(typeof ranges2 === "object");
+  assert(Array.isArray(ranges2));
   if (ranges1.length !== ranges2.length) {
     return false;
   }
