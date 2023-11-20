@@ -21,12 +21,15 @@ import * as groupHiding from "../../../hierarchy-builder/internal/operators/grou
 import * as labelGrouping from "../../../hierarchy-builder/internal/operators/grouping/LabelGrouping";
 import * as propertiesGrouping from "../../../hierarchy-builder/internal/operators/grouping/PropertiesGrouping";
 import { IMetadataProvider } from "../../../hierarchy-builder/Metadata";
+import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "../../../hierarchy-builder/values/Formatting";
 import { createTestProcessedGroupingNode, createTestProcessedInstanceNode, getObservableResult, setupLogging } from "../../Utils";
 
 describe("Grouping", () => {
   const metadataProvider = {} as unknown as IMetadataProvider;
+  let formatter: IPrimitiveValueFormatter;
 
   before(() => {
+    formatter = createDefaultValueFormatter();
     setupLogging([{ namespace: LOGGING_NAMESPACE, level: LogLevel.Trace }]);
   });
 
@@ -56,7 +59,7 @@ describe("Grouping", () => {
 
       const result = await getObservableResult(
         from(nodes).pipe(
-          createGroupingOperator(metadataProvider, undefined, [
+          createGroupingOperator(metadataProvider, formatter, undefined, [
             async (allNodes) => ({ grouped: [], ungrouped: allNodes, groupingType: "label" }),
             async (allNodes) => ({ grouped: [], ungrouped: allNodes, groupingType: "class" }),
           ]),
@@ -127,7 +130,7 @@ describe("Grouping", () => {
 
       const result = await getObservableResult(
         from(classGroupingInput).pipe(
-          createGroupingOperator(metadataProvider, undefined, [async () => classGroupingResult, async (input) => createLabelGroupingResult(input)]),
+          createGroupingOperator(metadataProvider, formatter, undefined, [async () => classGroupingResult, async (input) => createLabelGroupingResult(input)]),
         ),
       );
       expect(assignAutoExpandStub.callCount).to.eq(3);
@@ -201,7 +204,7 @@ describe("Grouping", () => {
       });
       const result = await getObservableResult(
         from([groupedNode, ungroupedNode]).pipe(
-          createGroupingOperator(metadataProvider, undefined, [
+          createGroupingOperator(metadataProvider, formatter, undefined, [
             async () => ({
               groupingType: "class",
               grouped: [classGroupingNode],
@@ -240,7 +243,7 @@ describe("Grouping", () => {
       });
       const result = await getObservableResult(
         from([ungroupedNode, groupedNode]).pipe(
-          createGroupingOperator(metadataProvider, undefined, [
+          createGroupingOperator(metadataProvider, formatter, undefined, [
             async () => ({
               groupingType: "class",
               grouped: [classGroupingNode],
@@ -279,7 +282,7 @@ describe("Grouping", () => {
       const onGroupingNodeCreated = sinon.spy();
       const result = await getObservableResult(
         from([groupedNode]).pipe(
-          createGroupingOperator(metadataProvider, onGroupingNodeCreated, [
+          createGroupingOperator(metadataProvider, formatter, onGroupingNodeCreated, [
             async () => ({
               groupingType: "class",
               grouped: [classGroupingNode],
@@ -342,11 +345,11 @@ describe("Grouping", () => {
         }),
       ];
 
-      const result = await createGroupingHandlers(metadataProvider, nodes);
+      const result = await createGroupingHandlers(metadataProvider, nodes, formatter);
       expect(createBaseClassGroupingHandlersStub.callCount).to.eq(1);
       expect(createBaseClassGroupingHandlersStub.firstCall).to.be.calledWith(metadataProvider, nodes);
       expect(createPropertiesGroupingHandlersStub.callCount).to.eq(1);
-      expect(createPropertiesGroupingHandlersStub.firstCall).to.be.calledWith(metadataProvider, nodes);
+      expect(createPropertiesGroupingHandlersStub.firstCall).to.be.calledWith(metadataProvider, nodes, formatter);
       expect(result.length).to.eq(2);
       expect(createClassGroupsStub.callCount).to.eq(0);
       await result[0]([]);

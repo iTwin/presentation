@@ -8,12 +8,16 @@ import sinon from "sinon";
 import { GroupingNodeKey, PropertyGroup } from "../../../../hierarchy-builder/HierarchyNode";
 import * as propertiesGrouping from "../../../../hierarchy-builder/internal/operators/grouping/PropertiesGrouping";
 import { ECClass, ECProperty, IMetadataProvider } from "../../../../hierarchy-builder/Metadata";
+import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "../../../../hierarchy-builder/values/Formatting";
 import { createGetClassStub, createTestProcessedGroupingNode, createTestProcessedInstanceNode, TStubClassFunc } from "../../../Utils";
 
 describe("PropertiesGrouping", () => {
   const metadataProvider = {} as unknown as IMetadataProvider;
   let stubClass: TStubClassFunc;
+  let formatter: IPrimitiveValueFormatter;
+
   beforeEach(() => {
+    formatter = createDefaultValueFormatter();
     stubClass = createGetClassStub(metadataProvider).stubClass;
   });
 
@@ -417,7 +421,7 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName" },
         };
-        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [],
           ungrouped: nodes,
@@ -444,7 +448,7 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [{ fullClassName: "TestSchema.Class", propertyGroup: { propertyName: "PropertyName2" } }],
           propertyGroup: { propertyName: "PropertyName" },
         };
-        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [],
           ungrouped: nodes,
@@ -471,7 +475,7 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "Other" },
         };
-        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [],
           ungrouped: nodes,
@@ -498,7 +502,7 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName", ranges: [{ fromValue: 1, toValue: 5 }] },
         };
-        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [],
           ungrouped: nodes,
@@ -526,7 +530,7 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName" },
         };
-        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [],
           ungrouped: nodes,
@@ -557,7 +561,7 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [{ fullClassName: "TestSchema.Class", propertyGroup: { propertyName: "Other" } }],
           propertyGroup: { propertyName: "PropertyName2" },
         };
-        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [],
           ungrouped: nodes,
@@ -577,7 +581,7 @@ describe("PropertiesGrouping", () => {
         previousPropertiesGroupingInfo: [],
         propertyGroup: { propertyName: "PropertyName" },
       };
-      expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
+      expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
         groupingType: "property",
         grouped: [],
         ungrouped: nodes,
@@ -612,7 +616,7 @@ describe("PropertiesGrouping", () => {
           propertyName: "PropertyName",
           fullClassName: "TestSchema.Class",
         };
-        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -653,7 +657,7 @@ describe("PropertiesGrouping", () => {
           fullClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue",
         };
-        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -705,7 +709,7 @@ describe("PropertiesGrouping", () => {
           fullClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue",
         };
-        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -763,7 +767,7 @@ describe("PropertiesGrouping", () => {
           fullClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue2",
         };
-        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -820,7 +824,7 @@ describe("PropertiesGrouping", () => {
           fullClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue",
         };
-        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -861,7 +865,7 @@ describe("PropertiesGrouping", () => {
           propertyName: "PropertyName",
           fullClassName: "TestSchema.Class",
         };
-        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -900,7 +904,7 @@ describe("PropertiesGrouping", () => {
           propertyName: "PropertyName",
           fullClassName: "TestSchema.Class",
         };
-        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -941,7 +945,7 @@ describe("PropertiesGrouping", () => {
           fromValue: 1,
           toValue: 5,
         };
-        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -982,7 +986,7 @@ describe("PropertiesGrouping", () => {
           fromValue: 1,
           toValue: 5,
         };
-        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1034,7 +1038,7 @@ describe("PropertiesGrouping", () => {
           fromValue: 1,
           toValue: 5,
         };
-        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1086,7 +1090,7 @@ describe("PropertiesGrouping", () => {
           fromValue: 1,
           toValue: 5,
         };
-        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1142,7 +1146,7 @@ describe("PropertiesGrouping", () => {
           fromValue: 3,
           toValue: 10,
         };
-        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1225,7 +1229,7 @@ describe("PropertiesGrouping", () => {
           fromValue: 1,
           toValue: 4,
         };
-        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
+        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
@@ -1270,7 +1274,7 @@ describe("PropertiesGrouping", () => {
         className: "Class",
       });
 
-      const result = await propertiesGrouping.createPropertiesGroupingHandlers(metadataProvider, nodes);
+      const result = await propertiesGrouping.createPropertiesGroupingHandlers(metadataProvider, nodes, formatter);
       expect(result.length).to.eq(1);
       const handlerResult = await result[0](nodes);
       expect(handlerResult.groupingType).to.eq("property");

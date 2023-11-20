@@ -7,6 +7,7 @@ import { concatMap, from, Observable, of, tap, toArray } from "rxjs";
 import { HierarchyNode, HierarchyNodeKey, ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
 import { IMetadataProvider } from "../../Metadata";
+import { IPrimitiveValueFormatter } from "../../values/Formatting";
 import { createOperatorLoggingNamespace } from "../Common";
 import { assignAutoExpand } from "./grouping/AutoExpand";
 import { createBaseClassGroupingHandlers } from "./grouping/BaseClassGrouping";
@@ -23,6 +24,7 @@ export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
 /** @internal */
 export function createGroupingOperator(
   metadata: IMetadataProvider,
+  valueFormatter: IPrimitiveValueFormatter,
   onGroupingNodeCreated?: (groupingNode: ProcessedGroupingHierarchyNode) => void,
   groupingHandlers?: GroupingHandler[],
 ) {
@@ -30,7 +32,7 @@ export function createGroupingOperator(
     return nodes.pipe(
       toArray(),
       concatMap((resolvedNodes) => {
-        const groupingHandlersObs = groupingHandlers ? of(groupingHandlers) : from(createGroupingHandlers(metadata, resolvedNodes));
+        const groupingHandlersObs = groupingHandlers ? of(groupingHandlers) : from(createGroupingHandlers(metadata, resolvedNodes, valueFormatter));
         return groupingHandlersObs.pipe(
           concatMap(async (createdGroupingHandlers) => {
             const { instanceNodes, restNodes } = partitionInstanceNodes(resolvedNodes);
@@ -111,7 +113,11 @@ async function groupInstanceNodes(
 }
 
 /** @internal */
-export async function createGroupingHandlers(metadata: IMetadataProvider, nodes: ProcessedHierarchyNode[]): Promise<GroupingHandler[]> {
+export async function createGroupingHandlers(
+  metadata: IMetadataProvider,
+  nodes: ProcessedHierarchyNode[],
+  valueFormatter: IPrimitiveValueFormatter,
+): Promise<GroupingHandler[]> {
   const groupingHandlers: GroupingHandler[] = new Array<GroupingHandler>();
   groupingHandlers.push(
     ...(await createBaseClassGroupingHandlers(
@@ -124,6 +130,7 @@ export async function createGroupingHandlers(metadata: IMetadataProvider, nodes:
     ...(await createPropertiesGroupingHandlers(
       metadata,
       nodes.filter((n): n is ProcessedInstanceHierarchyNode => HierarchyNode.isInstancesNode(n)),
+      valueFormatter,
     )),
   );
   groupingHandlers.push(async (allNodes) => createLabelGroups(allNodes));

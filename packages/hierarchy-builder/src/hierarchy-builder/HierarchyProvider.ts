@@ -165,7 +165,7 @@ export class HierarchyProvider {
     return preprocessedNodesObservable.pipe(
       createMergeInstanceNodesByLabelOperator(),
       sortNodesByLabelOperator,
-      createGroupingOperator(this._metadataProvider, (gn) => this.onGroupingNodeCreated(gn)),
+      createGroupingOperator(this._metadataProvider, this._valuesFormatter, (gn) => this.onGroupingNodeCreated(gn)),
       // cache to avoid expensive processing more than once
       shareReplay(),
     );

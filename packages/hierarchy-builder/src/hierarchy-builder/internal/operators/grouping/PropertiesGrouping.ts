@@ -8,7 +8,7 @@ import { assert } from "@itwin/core-bentley";
 import { translate } from "../../../../../../components/src/presentation-components/common/Utils";
 import { HierarchyNodePropertiesGroupingParams, ProcessedInstanceHierarchyNode, PropertyGroup, PropertyGroupingNodeKey, Range } from "../../../HierarchyNode";
 import { ECClass, IMetadataProvider } from "../../../Metadata";
-import { createDefaultValueFormatter } from "../../../values/Formatting";
+import { IPrimitiveValueFormatter } from "../../../values/Formatting";
 import { TypedPrimitiveValue } from "../../../values/Values";
 import { getClass } from "../../Common";
 import { GroupingHandler, GroupingHandlerResult } from "../Grouping";
@@ -45,6 +45,7 @@ export async function createPropertyGroups(
   metadata: IMetadataProvider,
   nodes: ProcessedInstanceHierarchyNode[],
   propertyInfo: PropertyGroupInfo,
+  valueFormatter: IPrimitiveValueFormatter,
 ): Promise<GroupingHandlerResult> {
   const groupings: PropertyGroupingInformation = { ungrouped: [], grouped: new Map() };
   for (const node of nodes) {
@@ -86,7 +87,16 @@ export async function createPropertyGroups(
         const matchingRange = currentProperty.ranges.find((range) => propValue >= range.fromValue && propValue <= range.toValue);
 
         if (matchingRange) {
-          const rangeLabel = matchingRange.rangeLabel ?? `${matchingRange.fromValue} - ${matchingRange.toValue}`;
+          const fromValueTypedPrimitive = {
+            type: Number.isInteger(matchingRange.fromValue) ? "Integer" : "Double",
+            value: matchingRange.fromValue,
+          } as TypedPrimitiveValue;
+          const toValueTypedPrimitive = {
+            type: Number.isInteger(matchingRange.toValue) ? "Integer" : "Double",
+            value: matchingRange.toValue,
+          } as TypedPrimitiveValue;
+
+          const rangeLabel = matchingRange.rangeLabel ?? `${await valueFormatter(fromValueTypedPrimitive)} - ${await valueFormatter(toValueTypedPrimitive)}`;
           addGroupingToMap(
             groupings.grouped,
             `${currentProperty.propertyName}:${matchingRange.fromValue} - ${matchingRange.toValue}(${rangeLabel})`,
@@ -139,7 +149,6 @@ export async function createPropertyGroups(
       koqName: (await property.kindOfQuantity)?.fullName,
       value: currentProperty.propertyValue,
     } as TypedPrimitiveValue;
-    const valueFormatter = createDefaultValueFormatter();
     const formattedValue = await valueFormatter(part);
 
     addGroupingToMap(
@@ -332,7 +341,11 @@ export function doRangesMatch(ranges1: Range[] | undefined, ranges2: Range[] | u
 }
 
 /** @internal */
-export async function createPropertiesGroupingHandlers(metadata: IMetadataProvider, nodes: ProcessedInstanceHierarchyNode[]): Promise<GroupingHandler[]> {
+export async function createPropertiesGroupingHandlers(
+  metadata: IMetadataProvider,
+  nodes: ProcessedInstanceHierarchyNode[],
+  valueFormatter: IPrimitiveValueFormatter,
+): Promise<GroupingHandler[]> {
   const propertiesGroupInfo = await getUniquePropertiesGroupInfo(metadata, nodes);
-  return propertiesGroupInfo.map((propertyInfo) => async (allNodes) => createPropertyGroups(metadata, allNodes, propertyInfo));
+  return propertiesGroupInfo.map((propertyInfo) => async (allNodes) => createPropertyGroups(metadata, allNodes, propertyInfo, valueFormatter));
 }
