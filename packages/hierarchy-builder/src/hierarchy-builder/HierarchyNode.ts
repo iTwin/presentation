@@ -269,8 +269,8 @@ export namespace HierarchyNode {
       : {}) {
     return HierarchyNodeKey.isFormattedPropertyGrouping(node.key);
   }
-  /** Checks whether the given node is a ranged property grouping node */
-  export function isRangedPropertyGroupingNode<TNode extends { key: HierarchyNodeKey }>(
+  /** Checks whether the given node is a property value range grouping node */
+  export function isPropertyValueRangeGroupingNode<TNode extends { key: HierarchyNodeKey }>(
     node: TNode,
   ): node is TNode & { key: RangedPropertyGroupingNodeKey } & (TNode extends ProcessedHierarchyNode
       ? { children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode> }
