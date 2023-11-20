@@ -253,9 +253,7 @@ function addToPreviousPropertiesInfo(
 function getRangesAsString(ranges?: Range[]): string {
   return ranges
     ? ranges
-        .map((range) => {
-          return `${range.fromValue}-${range.toValue}(${range.rangeLabel ? `${range.rangeLabel}` : ""})`;
-        })
+        .map((range) => `${range.fromValue}-${range.toValue}(${range.rangeLabel ? `${range.rangeLabel}` : ""})`)
         .sort()
         .join(";")
     : "undefined";
