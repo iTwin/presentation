@@ -54,7 +54,7 @@ export interface OtherPropertyGroupingNodeKey {
  * @beta
  */
 export interface PropertyValueGroupingNodeKey {
-  type: "formatted-property-grouping";
+  type: "property-grouping:value";
   groupingInfo: {
     propertyName: string;
     fullClassName: string;
