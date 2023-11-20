@@ -43,10 +43,8 @@ export interface LabelGroupingNodeKey {
  */
 export interface PropertyOtherValuesGroupingNodeKey {
   type: "property-grouping:other";
-  groupingInfo: {
-    propertyName: string;
-    fullClassName: string;
-  };
+  propertyName: string;
+  fullClassName: string;
 }
 
 /**
@@ -55,11 +53,9 @@ export interface PropertyOtherValuesGroupingNodeKey {
  */
 export interface PropertyValueGroupingNodeKey {
   type: "property-grouping:value";
-  groupingInfo: {
-    propertyName: string;
-    fullClassName: string;
-    formattedPropertyValue: string;
-  };
+  propertyName: string;
+  fullClassName: string;
+  formattedPropertyValue: string;
 }
 
 /**
@@ -68,12 +64,10 @@ export interface PropertyValueGroupingNodeKey {
  */
 export interface PropertyValueRangeGroupingNodeKey {
   type: "property-grouping:range";
-  groupingInfo: {
-    propertyName: string;
-    fullClassName: string;
-    fromValue: number;
-    toValue: number;
-  };
+  propertyName: string;
+  fullClassName: string;
+  fromValue: number;
+  toValue: number;
 }
 
 /**
@@ -169,23 +163,16 @@ export namespace HierarchyNodeKey {
       }
       case "property-grouping:other": {
         assert(isPropertyOtherValuesGrouping(rhs));
-        return lhs.groupingInfo.fullClassName === rhs.groupingInfo.fullClassName && lhs.groupingInfo.propertyName === rhs.groupingInfo.propertyName;
+        return lhs.fullClassName === rhs.fullClassName && lhs.propertyName === rhs.propertyName;
       }
       case "property-grouping:value": {
         assert(isPropertyValueGrouping(rhs));
-        return (
-          lhs.groupingInfo.fullClassName === rhs.groupingInfo.fullClassName &&
-          lhs.groupingInfo.propertyName === rhs.groupingInfo.propertyName &&
-          lhs.groupingInfo.formattedPropertyValue === rhs.groupingInfo.formattedPropertyValue
-        );
+        return lhs.fullClassName === rhs.fullClassName && lhs.propertyName === rhs.propertyName && lhs.formattedPropertyValue === rhs.formattedPropertyValue;
       }
       case "property-grouping:range": {
         assert(isPropertyValueRangeGrouping(rhs));
         return (
-          lhs.groupingInfo.fullClassName === rhs.groupingInfo.fullClassName &&
-          lhs.groupingInfo.propertyName === rhs.groupingInfo.propertyName &&
-          lhs.groupingInfo.fromValue === rhs.groupingInfo.fromValue &&
-          lhs.groupingInfo.toValue === rhs.groupingInfo.toValue
+          lhs.fullClassName === rhs.fullClassName && lhs.propertyName === rhs.propertyName && lhs.fromValue === rhs.fromValue && lhs.toValue === rhs.toValue
         );
       }
     }
@@ -347,12 +334,30 @@ export interface HierarchyNodePropertiesGroupingParams extends BaseGroupingParam
   fullClassName: string;
   /**
    * Properties of the specified class, by which the nodes should be grouped.
+   *
+   * Example usage:
+   * ```tsx
+   * propertyGroups: [
+   *   {
+   *     propertyName: "type",
+   *     propertyValue: "Wall"
+   *   },
+   *   {
+   *     propertyName: "length",
+   *     propertyValue: 15,
+   *     ranges: [
+   *       { fromValue: 1, toValue: 10, rangeLabel: "Small" },
+   *       { fromValue: 11, toValue: 20, rangeLabel: "Medium" }
+   *     ]
+   *   },
+   * ]
+   * ```
    */
   propertyGroups: Array<PropertyGroup>;
 }
 
 /**
- * A data structure that represents specific property grouping params
+ * A data structure that represents specific properties' grouping params.
  * @beta
  */
 export interface PropertyGroup {
@@ -365,7 +370,7 @@ export interface PropertyGroup {
 }
 
 /**
- * A data structure that represents boundaries for a value
+ * A data structure that represents boundaries for a value.
  * @beta
  */
 export interface Range {

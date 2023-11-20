@@ -609,10 +609,8 @@ describe("PropertiesGrouping", () => {
         };
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:other",
-          groupingInfo: {
-            propertyName: "PropertyName",
-            fullClassName: "TestSchema.Class",
-          },
+          propertyName: "PropertyName",
+          fullClassName: "TestSchema.Class",
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
           groupingType: "property",
@@ -651,11 +649,9 @@ describe("PropertiesGrouping", () => {
         };
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:value",
-          groupingInfo: {
-            propertyName: "PropertyName",
-            fullClassName: "TestSchema.Class",
-            formattedPropertyValue: "PropertyValue",
-          },
+          propertyName: "PropertyName",
+          fullClassName: "TestSchema.Class",
+          formattedPropertyValue: "PropertyValue",
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
           groupingType: "property",
@@ -705,11 +701,9 @@ describe("PropertiesGrouping", () => {
         };
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:value",
-          groupingInfo: {
-            propertyName: "PropertyName",
-            fullClassName: "TestSchema.Class",
-            formattedPropertyValue: "PropertyValue",
-          },
+          propertyName: "PropertyName",
+          fullClassName: "TestSchema.Class",
+          formattedPropertyValue: "PropertyValue",
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
           groupingType: "property",
@@ -759,19 +753,15 @@ describe("PropertiesGrouping", () => {
         };
         const expectedGroupingNodeKey1: GroupingNodeKey = {
           type: "property-grouping:value",
-          groupingInfo: {
-            propertyName: "PropertyName",
-            fullClassName: "TestSchema.Class",
-            formattedPropertyValue: "PropertyValue1",
-          },
+          propertyName: "PropertyName",
+          fullClassName: "TestSchema.Class",
+          formattedPropertyValue: "PropertyValue1",
         };
         const expectedGroupingNodeKey2: GroupingNodeKey = {
           type: "property-grouping:value",
-          groupingInfo: {
-            propertyName: "PropertyName",
-            fullClassName: "TestSchema.Class",
-            formattedPropertyValue: "PropertyValue2",
-          },
+          propertyName: "PropertyName",
+          fullClassName: "TestSchema.Class",
+          formattedPropertyValue: "PropertyValue2",
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
           groupingType: "property",
@@ -826,11 +816,9 @@ describe("PropertiesGrouping", () => {
         };
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:value",
-          groupingInfo: {
-            propertyName: "PropertyName1",
-            fullClassName: "TestSchema.Class",
-            formattedPropertyValue: "PropertyValue",
-          },
+          propertyName: "PropertyName1",
+          fullClassName: "TestSchema.Class",
+          formattedPropertyValue: "PropertyValue",
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
           groupingType: "property",
@@ -870,10 +858,8 @@ describe("PropertiesGrouping", () => {
         };
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:other",
-          groupingInfo: {
-            propertyName: "PropertyName",
-            fullClassName: "TestSchema.Class",
-          },
+          propertyName: "PropertyName",
+          fullClassName: "TestSchema.Class",
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
           groupingType: "property",
@@ -911,10 +897,8 @@ describe("PropertiesGrouping", () => {
         };
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:other",
-          groupingInfo: {
-            propertyName: "PropertyName",
-            fullClassName: "TestSchema.Class",
-          },
+          propertyName: "PropertyName",
+          fullClassName: "TestSchema.Class",
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
           groupingType: "property",
@@ -952,12 +936,10 @@ describe("PropertiesGrouping", () => {
         };
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:range",
-          groupingInfo: {
-            propertyName: "PropertyName",
-            fullClassName: "TestSchema.Class",
-            fromValue: 1,
-            toValue: 5,
-          },
+          propertyName: "PropertyName",
+          fullClassName: "TestSchema.Class",
+          fromValue: 1,
+          toValue: 5,
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
           groupingType: "property",
@@ -995,12 +977,10 @@ describe("PropertiesGrouping", () => {
         };
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:range",
-          groupingInfo: {
-            propertyName: "PropertyName",
-            fullClassName: "TestSchema.Class",
-            fromValue: 1,
-            toValue: 5,
-          },
+          propertyName: "PropertyName",
+          fullClassName: "TestSchema.Class",
+          fromValue: 1,
+          toValue: 5,
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
           groupingType: "property",
@@ -1049,12 +1029,10 @@ describe("PropertiesGrouping", () => {
         };
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:range",
-          groupingInfo: {
-            propertyName: "PropertyName",
-            fullClassName: "TestSchema.Class",
-            fromValue: 1,
-            toValue: 5,
-          },
+          propertyName: "PropertyName",
+          fullClassName: "TestSchema.Class",
+          fromValue: 1,
+          toValue: 5,
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
           groupingType: "property",
@@ -1103,12 +1081,10 @@ describe("PropertiesGrouping", () => {
         };
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:range",
-          groupingInfo: {
-            propertyName: "PropertyName",
-            fullClassName: "TestSchema.Class",
-            fromValue: 1,
-            toValue: 5,
-          },
+          propertyName: "PropertyName",
+          fullClassName: "TestSchema.Class",
+          fromValue: 1,
+          toValue: 5,
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
           groupingType: "property",
@@ -1161,12 +1137,10 @@ describe("PropertiesGrouping", () => {
         };
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:range",
-          groupingInfo: {
-            propertyName: "PropertyName",
-            fullClassName: "TestSchema.Class",
-            fromValue: 3,
-            toValue: 10,
-          },
+          propertyName: "PropertyName",
+          fullClassName: "TestSchema.Class",
+          fromValue: 3,
+          toValue: 10,
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
           groupingType: "property",
@@ -1239,21 +1213,17 @@ describe("PropertiesGrouping", () => {
         };
         const expectedGroupingNodeKey1: GroupingNodeKey = {
           type: "property-grouping:range",
-          groupingInfo: {
-            propertyName: "PropertyName",
-            fullClassName: "TestSchema.Class",
-            fromValue: 5,
-            toValue: 10,
-          },
+          propertyName: "PropertyName",
+          fullClassName: "TestSchema.Class",
+          fromValue: 5,
+          toValue: 10,
         };
         const expectedGroupingNodeKey2: GroupingNodeKey = {
           type: "property-grouping:range",
-          groupingInfo: {
-            propertyName: "PropertyName",
-            fullClassName: "TestSchema.Class",
-            fromValue: 1,
-            toValue: 4,
-          },
+          propertyName: "PropertyName",
+          fullClassName: "TestSchema.Class",
+          fromValue: 1,
+          toValue: 4,
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo)).to.deep.eq({
           groupingType: "property",

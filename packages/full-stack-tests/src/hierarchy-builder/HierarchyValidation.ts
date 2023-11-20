@@ -174,11 +174,11 @@ export namespace NodeValidators {
         if (node.key.type !== "property-grouping:other") {
           throw new Error(`[${node.label}] Expected a property other values grouping node, got "${node.key.type}"`);
         }
-        if (props.propertyName && node.key.groupingInfo.propertyName !== props.propertyName) {
-          throw new Error(`[${node.label}] Expected node to have property name "${props.propertyName}", got "${node.key.groupingInfo.propertyName}"`);
+        if (props.propertyName && node.key.propertyName !== props.propertyName) {
+          throw new Error(`[${node.label}] Expected node to have property name "${props.propertyName}", got "${node.key.propertyName}"`);
         }
-        if (props.fullClassName && node.key.groupingInfo.fullClassName !== props.fullClassName) {
-          throw new Error(`[${node.label}] Expected node to have fullClassName "${props.fullClassName}", got "${node.key.groupingInfo.fullClassName}"`);
+        if (props.fullClassName && node.key.fullClassName !== props.fullClassName) {
+          throw new Error(`[${node.label}] Expected node to have fullClassName "${props.fullClassName}", got "${node.key.fullClassName}"`);
         }
 
         validateBaseNodeAttributes(node, {
@@ -208,17 +208,17 @@ export namespace NodeValidators {
         if (node.key.type !== "property-grouping:range") {
           throw new Error(`[${node.label}] Expected a property value range grouping node, got "${node.key.type}"`);
         }
-        if (props.propertyName && node.key.groupingInfo.propertyName !== props.propertyName) {
-          throw new Error(`[${node.label}] Expected node to have property name "${props.propertyName}", got "${node.key.groupingInfo.propertyName}"`);
+        if (props.propertyName && node.key.propertyName !== props.propertyName) {
+          throw new Error(`[${node.label}] Expected node to have property name "${props.propertyName}", got "${node.key.propertyName}"`);
         }
-        if (props.fullClassName && node.key.groupingInfo.fullClassName !== props.fullClassName) {
-          throw new Error(`[${node.label}] Expected node to have fullClassName "${props.fullClassName}", got "${node.key.groupingInfo.fullClassName}"`);
+        if (props.fullClassName && node.key.fullClassName !== props.fullClassName) {
+          throw new Error(`[${node.label}] Expected node to have fullClassName "${props.fullClassName}", got "${node.key.fullClassName}"`);
         }
-        if (props.fromValue && node.key.groupingInfo.fromValue !== props.fromValue) {
-          throw new Error(`[${node.label}] Expected node to have fromValue "${props.fromValue}", got "${node.key.groupingInfo.fromValue}"`);
+        if (props.fromValue && node.key.fromValue !== props.fromValue) {
+          throw new Error(`[${node.label}] Expected node to have fromValue "${props.fromValue}", got "${node.key.fromValue}"`);
         }
-        if (props.toValue && node.key.groupingInfo.toValue !== props.toValue) {
-          throw new Error(`[${node.label}] Expected node to have toValue "${props.toValue}", got "${node.key.groupingInfo.toValue}"`);
+        if (props.toValue && node.key.toValue !== props.toValue) {
+          throw new Error(`[${node.label}] Expected node to have toValue "${props.toValue}", got "${node.key.toValue}"`);
         }
 
         validateBaseNodeAttributes(node, {
@@ -247,15 +247,15 @@ export namespace NodeValidators {
         if (node.key.type !== "property-grouping:value") {
           throw new Error(`[${node.label}] Expected a property value grouping node, got "${node.key.type}"`);
         }
-        if (props.propertyName && node.key.groupingInfo.propertyName !== props.propertyName) {
-          throw new Error(`[${node.label}] Expected node to have property name "${props.propertyName}", got "${node.key.groupingInfo.propertyName}"`);
+        if (props.propertyName && node.key.propertyName !== props.propertyName) {
+          throw new Error(`[${node.label}] Expected node to have property name "${props.propertyName}", got "${node.key.propertyName}"`);
         }
-        if (props.fullClassName && node.key.groupingInfo.fullClassName !== props.fullClassName) {
-          throw new Error(`[${node.label}] Expected node to have fullClassName "${props.fullClassName}", got "${node.key.groupingInfo.fullClassName}"`);
+        if (props.fullClassName && node.key.fullClassName !== props.fullClassName) {
+          throw new Error(`[${node.label}] Expected node to have fullClassName "${props.fullClassName}", got "${node.key.fullClassName}"`);
         }
-        if (props.formattedPropertyValue && node.key.groupingInfo.formattedPropertyValue !== props.formattedPropertyValue) {
+        if (props.formattedPropertyValue && node.key.formattedPropertyValue !== props.formattedPropertyValue) {
           throw new Error(
-            `[${node.label}] Expected node to have formattedPropertyValue "${props.formattedPropertyValue}", got "${node.key.groupingInfo.formattedPropertyValue}"`,
+            `[${node.label}] Expected node to have formattedPropertyValue "${props.formattedPropertyValue}", got "${node.key.formattedPropertyValue}"`,
           );
         }
 

@@ -88,17 +88,29 @@ interface BaseGroupingParams {
   autoExpand?: string | ECSqlValueSelector;
 }
 
+/**
+ * A data structure for defining properties grouping.
+ * @beta
+ */
 export interface ECSqlSelectClausePropertiesGroupingParams extends BaseGroupingParams {
   fullClassName: string | ECSqlValueSelector;
   propertyGroups: Array<ECSqlSelectClausePropertyGroup>;
 }
 
+/**
+ * A data structure for defining specific properties' grouping params.
+ * @beta
+ */
 export interface ECSqlSelectClausePropertyGroup {
   propertyName: string | ECSqlValueSelector;
   propertyValue: PrimitiveValue | ECSqlValueSelector;
   ranges?: Array<ECSqlSelectClauseRange>;
 }
 
+/**
+ * A data structure for defining boundaries for a value.
+ * @beta
+ */
 export interface ECSqlSelectClauseRange {
   fromValue: number | ECSqlValueSelector;
   toValue: number | ECSqlValueSelector;

@@ -158,31 +158,25 @@ function createGroupingNodes(groupings: PropertyGroupingInformation): GroupingHa
   groupings.grouped.forEach((entry) => {
     let groupingNodeKey: PropertyGroupingNodeKey = {
       type: "property-grouping:other",
-      groupingInfo: {
-        fullClassName: entry.property.fullClassName,
-        propertyName: entry.property.propertyName,
-      },
+      fullClassName: entry.property.fullClassName,
+      propertyName: entry.property.propertyName,
     };
     const extraValues = entry.property.extraValues;
     if (extraValues) {
       if ("formattedValue" in extraValues) {
         groupingNodeKey = {
           type: "property-grouping:value",
-          groupingInfo: {
-            fullClassName: entry.property.fullClassName,
-            propertyName: entry.property.propertyName,
-            formattedPropertyValue: extraValues.formattedValue,
-          },
+          fullClassName: entry.property.fullClassName,
+          propertyName: entry.property.propertyName,
+          formattedPropertyValue: extraValues.formattedValue,
         };
       } else {
         groupingNodeKey = {
           type: "property-grouping:range",
-          groupingInfo: {
-            fullClassName: entry.property.fullClassName,
-            propertyName: entry.property.propertyName,
-            fromValue: extraValues.fromValue,
-            toValue: extraValues.toValue,
-          },
+          fullClassName: entry.property.fullClassName,
+          propertyName: entry.property.propertyName,
+          fromValue: extraValues.fromValue,
+          toValue: extraValues.toValue,
         };
       }
     }
