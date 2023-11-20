@@ -346,30 +346,7 @@ export interface HierarchyNodePropertiesGroupingParams extends BaseGroupingParam
    */
   fullClassName: string;
   /**
-   * Properties of the specified class, by which the nodes should be grouped. PropertyGroups is an object with the following properties:
-   *   - propertyName (required): A string indicating the name of the property to group by.
-   *   - propertyValue (required): Value of the property, which will be used to group the node.
-   *   - ranges (optional): An array of objects with the following properties:
-   *     - fromValue and toValue define the bounds of the range
-   *     - rangeLabel (optional): Label for the specific ranges' grouping node.
-   *
-   * Example usage:
-   * ```tsx
-   * propertyGroups: [
-   *   {
-   *     propertyName: "type",
-   *     propertyValue: "Wall"
-   *   },
-   *   {
-   *     propertyName: "length",
-   *     propertyValue: 15,
-   *     ranges: [
-   *       { fromValue: 1, toValue: 10, rangeLabel: "Small" },
-   *       { fromValue: 11, toValue: 20, rangeLabel: "Medium" }
-   *     ]
-   *   },
-   * ]
-   * ```
+   * Properties of the specified class, by which the nodes should be grouped.
    */
   propertyGroups: Array<PropertyGroup>;
 }
@@ -379,8 +356,11 @@ export interface HierarchyNodePropertiesGroupingParams extends BaseGroupingParam
  * @beta
  */
 export interface PropertyGroup {
+  /** A string indicating the name of the property to group by. */
   propertyName: string;
+  /**  Value of the property, which will be used to group the node. */
   propertyValue: PrimitiveValue;
+  /** Ranges are used to group nodes by numeric properties which are within specified bounds. */
   ranges?: Array<Range>;
 }
 
@@ -389,8 +369,11 @@ export interface PropertyGroup {
  * @beta
  */
 export interface Range {
+  /** Defines the lower bound of the range. */
   fromValue: number;
+  /** Defines the upper bound of the range. */
   toValue: number;
+  /** Defines the range label. Will be used as [[PropertyValueRangeGroupingNode]] node's display label. */
   rangeLabel?: string;
 }
 
