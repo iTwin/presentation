@@ -218,9 +218,7 @@ function createGroupingSelector(grouping: ECSqlSelectClauseGroupingParams): stri
         {
           key: "propertyGroups",
           selector: `json_array(${grouping.byProperties.propertyGroups
-            .map((propertyGroup) => {
-              return serializeJsonObject(createPropertyGroupSelectors(propertyGroup));
-            })
+            .map((propertyGroup) => serializeJsonObject(createPropertyGroupSelectors(propertyGroup))
             .join(", ")})`,
         },
         ...createBaseGroupingParamSelectors(grouping.byProperties),
