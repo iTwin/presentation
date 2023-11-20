@@ -79,7 +79,7 @@ export interface ECSqlSelectClauseGroupingParams {
   byLabel?: boolean | ECSqlValueSelector | BaseGroupingParams;
   byClass?: boolean | ECSqlValueSelector | BaseGroupingParams;
   byBaseClasses?: BaseClassGroupingParams;
-  byProperties?: HierarchyNodePropertiesGroupingParams;
+  byProperties?: ECSqlSelectClausePropertiesGroupingParams;
 }
 
 interface BaseGroupingParams {
@@ -88,18 +88,18 @@ interface BaseGroupingParams {
   autoExpand?: string | ECSqlValueSelector;
 }
 
-interface HierarchyNodePropertiesGroupingParams extends BaseGroupingParams {
+export interface ECSqlSelectClausePropertiesGroupingParams extends BaseGroupingParams {
   fullClassName: string | ECSqlValueSelector;
-  propertyGroups: Array<PropertyGroup>;
+  propertyGroups: Array<ECSqlSelectClausePropertyGroup>;
 }
 
-interface PropertyGroup {
+export interface ECSqlSelectClausePropertyGroup {
   propertyName: string | ECSqlValueSelector;
   propertyValue: PrimitiveValue | ECSqlValueSelector;
-  ranges?: Array<Range>;
+  ranges?: Array<ECSqlSelectClauseRange>;
 }
 
-interface Range {
+export interface ECSqlSelectClauseRange {
   fromValue: number | ECSqlValueSelector;
   toValue: number | ECSqlValueSelector;
   rangeLabel?: string | ECSqlValueSelector;
@@ -228,7 +228,7 @@ function createGroupingSelector(grouping: ECSqlSelectClauseGroupingParams): stri
   return serializeJsonObject(groupingSelectors);
 }
 
-function createPropertyGroupSelectors(propertyGroup: PropertyGroup) {
+function createPropertyGroupSelectors(propertyGroup: ECSqlSelectClausePropertyGroup) {
   const selectors = new Array<{ key: string; selector: string }>();
   selectors.push(
     {
@@ -249,7 +249,7 @@ function createPropertyGroupSelectors(propertyGroup: PropertyGroup) {
   return selectors;
 }
 
-function createRangeParamSelectors(ranges: Range[]) {
+function createRangeParamSelectors(ranges: ECSqlSelectClauseRange[]) {
   return {
     key: "ranges",
     selector: `json_array(${ranges
