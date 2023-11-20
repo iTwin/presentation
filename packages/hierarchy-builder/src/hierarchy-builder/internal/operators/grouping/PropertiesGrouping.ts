@@ -262,7 +262,7 @@ function getRangesAsString(ranges?: Range[]): string {
 async function shouldCreatePropertyGroup(
   metadata: IMetadataProvider,
   propertyInfo: PropertyGroupInfo,
-  byProperties: PropertiesGroupingParams,
+  nodePropertyGroupingParams: PropertiesGroupingParams,
   nodeFullClassName: string,
 ): Promise<boolean> {
   if (
