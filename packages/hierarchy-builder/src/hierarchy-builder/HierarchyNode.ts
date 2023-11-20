@@ -253,8 +253,8 @@ export namespace HierarchyNode {
       : {}) {
     return HierarchyNodeKey.isLabelGrouping(node.key);
   }
-  /** Checks whether the given node is other property grouping node */
-  export function isOtherPropertyGroupingNode<TNode extends { key: HierarchyNodeKey }>(
+  /** Checks whether the given node is property grouping node for other values  */
+  export function isPropertyOtherValuesGroupingNode<TNode extends { key: HierarchyNodeKey }>(
     node: TNode,
   ): node is TNode & { key: OtherPropertyGroupingNodeKey } & (TNode extends ProcessedHierarchyNode
       ? { children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode> }
