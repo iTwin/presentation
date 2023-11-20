@@ -333,6 +333,19 @@ export interface HierarchyNodePropertiesGroupingParams extends BaseGroupingParam
    */
   fullClassName: string;
   /**
+   * Property grouping option that determines whether to group nodes whose grouping value is not set or is set to an empty string.
+   *
+   * Label of the created grouping node will be `Not Specified`.
+   */
+  createGroupForUnspecifiedValues?: boolean;
+  /**
+   * Property grouping option that determines whether to group nodes whose grouping value doesn't fit within any of the provided
+   * ranges, or is not a numeric value.
+   *
+   * Label of the created grouping node will be `Other`.
+   */
+  createGroupForOutOfRangeValues?: boolean;
+  /**
    * Properties of the specified class, by which the nodes should be grouped.
    *
    * Example usage:
@@ -364,7 +377,7 @@ export interface PropertyGroup {
   /** A string indicating the name of the property to group by. */
   propertyName: string;
   /**  Value of the property, which will be used to group the node. */
-  propertyValue: PrimitiveValue;
+  propertyValue?: PrimitiveValue;
   /** Ranges are used to group nodes by numeric properties which are within specified bounds. */
   ranges?: Array<Range>;
 }

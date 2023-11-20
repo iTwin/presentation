@@ -4,6 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert } from "@itwin/core-bentley";
+// eslint-disable-next-line @itwin/import-within-package
+import { translate } from "../../../../../../components/src/presentation-components/common/Utils";
 import { HierarchyNodePropertiesGroupingParams, ProcessedInstanceHierarchyNode, PropertyGroup, PropertyGroupingNodeKey, Range } from "../../../HierarchyNode";
 import { ECClass, IMetadataProvider } from "../../../Metadata";
 import { createDefaultValueFormatter } from "../../../values/Formatting";
@@ -61,39 +63,60 @@ export async function createPropertyGroups(
       fullClassName: byProperties.fullClassName,
     };
 
+    if (currentProperty.propertyValue === undefined || currentProperty.propertyValue === "") {
+      if (byProperties.createGroupForUnspecifiedValues) {
+        addGroupingToMap(
+          groupings.grouped,
+          `${currentProperty.propertyName}:Unspecified`,
+          {
+            label: translate("grouping.unspecified-node-label"),
+            ...propertyToGroup,
+          },
+          node,
+        );
+        continue;
+      }
+      groupings.ungrouped.push(node);
+      continue;
+    }
+
     if (currentProperty.ranges) {
-      if (typeof currentProperty.propertyValue !== "number") {
+      if (typeof currentProperty.propertyValue === "number") {
+        const propValue = currentProperty.propertyValue;
+        const matchingRange = currentProperty.ranges.find((range) => propValue >= range.fromValue && propValue <= range.toValue);
+
+        if (matchingRange) {
+          const rangeLabel = matchingRange.rangeLabel ?? `${matchingRange.fromValue} - ${matchingRange.toValue}`;
+          addGroupingToMap(
+            groupings.grouped,
+            `${currentProperty.propertyName}:${matchingRange.fromValue} - ${matchingRange.toValue}(${rangeLabel})`,
+            {
+              label: rangeLabel,
+              ...propertyToGroup,
+              extraValues: {
+                fromValue: matchingRange.fromValue,
+                toValue: matchingRange.toValue,
+              },
+            },
+            node,
+          );
+          continue;
+        }
+      }
+      if (byProperties.createGroupForOutOfRangeValues) {
         addGroupingToMap(
           groupings.grouped,
           `${currentProperty.propertyName}:Other`,
           {
-            label: "Other",
+            label: translate("grouping.other-node-label"),
             ...propertyToGroup,
           },
           node,
         );
         continue;
       }
-      const propValue = currentProperty.propertyValue;
-      const matchingRange = currentProperty.ranges.find((range) => propValue >= range.fromValue && propValue <= range.toValue);
-
-      if (matchingRange) {
-        const rangeLabel = matchingRange.rangeLabel ?? `${matchingRange.fromValue} - ${matchingRange.toValue}`;
-        addGroupingToMap(
-          groupings.grouped,
-          `${currentProperty.propertyName}:${matchingRange.fromValue} - ${matchingRange.toValue}(${rangeLabel})`,
-          {
-            label: rangeLabel,
-            ...propertyToGroup,
-            extraValues: {
-              fromValue: matchingRange.fromValue,
-              toValue: matchingRange.toValue,
-            },
-          },
-          node,
-        );
-        continue;
-      }
+      groupings.ungrouped.push(node);
+      continue;
     }
 
     const propertyClass = await getClass(metadata, byProperties.fullClassName);
@@ -103,7 +126,7 @@ export async function createPropertyGroups(
         groupings.grouped,
         `${currentProperty.propertyName}:Other`,
         {
-          label: "Other",
+          label: translate("grouping.other-node-label"),
           ...propertyToGroup,
         },
         node,

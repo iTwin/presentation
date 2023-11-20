@@ -162,7 +162,7 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
     },
     [buildFilter, descriptor, filteringProps.selectedClasses],
   );
-  // here
+
   const throwError = useThrowError();
   const applyButtonHandle = () => {
     try {

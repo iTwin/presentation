@@ -94,6 +94,8 @@ interface BaseGroupingParams {
  */
 export interface ECSqlSelectClausePropertiesGroupingParams extends BaseGroupingParams {
   fullClassName: string | ECSqlValueSelector;
+  createGroupForUnspecifiedValues?: boolean;
+  createGroupForOutOfRangeValues?: boolean;
   propertyGroups: Array<ECSqlSelectClausePropertyGroup>;
 }
 
