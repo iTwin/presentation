@@ -38,7 +38,7 @@ export interface LabelGroupingNodeKey {
 }
 
 /**
- * A key for a other-property-grouping node.
+ * A key property grouping node that groups nodes whose values don't fall into any other property group in the hierarchy level.
  * @beta
  */
 export interface OtherPropertyGroupingNodeKey {
