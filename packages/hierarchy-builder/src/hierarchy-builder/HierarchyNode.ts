@@ -339,7 +339,7 @@ export interface BaseClassGroupingParams extends BaseGroupingParams {
  */
 export interface PropertiesGroupingParams extends BaseGroupingParams {
   /**
-   * Full name of class, which should be used to group the node. Only has effect if the node
+   * Full name of a class whose properties are used to group the node. Only has effect if the node
    * represents an instance of that class.
    *
    * Full class name format: `SchemaName.ClassName`.
