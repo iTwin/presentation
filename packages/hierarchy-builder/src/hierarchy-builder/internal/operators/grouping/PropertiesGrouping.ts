@@ -300,16 +300,15 @@ export function doRangesMatch(ranges1: Range[] | undefined, ranges2: Range[] | u
     return false;
   }
   return (
-    ranges1.every((firstRange) =>
+    // Check twice, to validate if both ranges have the same elements (elements can be in a different order)
+    ranges1.every((lhsRange) =>
       ranges2.some(
-        (secondRange) =>
-          firstRange.fromValue === secondRange.fromValue && firstRange.toValue === secondRange.toValue && firstRange.rangeLabel === secondRange.rangeLabel,
+        (rhsRange) => lhsRange.fromValue === rhsRange.fromValue && lhsRange.toValue === rhsRange.toValue && lhsRange.rangeLabel === rhsRange.rangeLabel,
       ),
     ) &&
-    ranges2.every((firstRange) =>
+    ranges2.every((lhsRange) =>
       ranges1.some(
-        (secondRange) =>
-          firstRange.fromValue === secondRange.fromValue && firstRange.toValue === secondRange.toValue && firstRange.rangeLabel === secondRange.rangeLabel,
+        (rhsRange) => lhsRange.fromValue === rhsRange.fromValue && lhsRange.toValue === rhsRange.toValue && lhsRange.rangeLabel === rhsRange.rangeLabel,
       ),
     )
   );

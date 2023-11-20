@@ -241,37 +241,31 @@ describe("PropertiesGrouping", () => {
   describe("doRangesMatch", async () => {
     [
       {
-        testCase: "undefined, undefined",
         ranges1: undefined,
         ranges2: undefined,
         expectedResult: true,
       },
       {
-        testCase: "undefined, [{ fromValue: 1, toValue: 2 }]",
         ranges1: undefined,
         ranges2: [{ fromValue: 1, toValue: 2 }],
         expectedResult: false,
       },
       {
-        testCase: " [{ fromValue: 1, toValue: 2 }], undefined",
         ranges1: [{ fromValue: 1, toValue: 2 }],
         ranges2: undefined,
         expectedResult: false,
       },
       {
-        testCase: " [{ fromValue: 1, toValue: 2 }], [{ fromValue: 1, toValue: 3 }]",
         ranges1: [{ fromValue: 1, toValue: 2 }],
         ranges2: [{ fromValue: 1, toValue: 3 }],
         expectedResult: false,
       },
       {
-        testCase: " [{ fromValue: 2, toValue: 3 }], [{ fromValue: 1, toValue: 3 }]",
         ranges1: [{ fromValue: 2, toValue: 3 }],
         ranges2: [{ fromValue: 1, toValue: 3 }],
         expectedResult: false,
       },
       {
-        testCase: " [{ fromValue: 1, toValue: 2 }, { fromValue: 3, toValue: 4 }], [{ fromValue: 1, toValue: 2 }]",
         ranges1: [
           { fromValue: 1, toValue: 2 },
           { fromValue: 3, toValue: 4 },
@@ -280,31 +274,28 @@ describe("PropertiesGrouping", () => {
         expectedResult: false,
       },
       {
-        testCase: " [{ fromValue: 1, toValue: 2, rangeLabel: 'label' }], [{ fromValue: 2, toValue: 3 }]",
         ranges1: [{ fromValue: 1, toValue: 3, rangeLabel: "label" }],
         ranges2: [{ fromValue: 1, toValue: 3 }],
         expectedResult: false,
       },
       {
-        testCase: " [{ fromValue: 1, toValue: 2 }], [{ fromValue: 1, toValue: 2, rangeLabel: 'label' }]",
         ranges1: [{ fromValue: 1, toValue: 2 }],
         ranges2: [{ fromValue: 1, toValue: 2, rangeLabel: "label" }],
         expectedResult: false,
       },
       {
-        testCase: " [{ fromValue: 1, toValue: 2, rangeLabel: 'label' }], [{ fromValue: 1, toValue: 2, rangeLabel: 'label' }]",
         ranges1: [{ fromValue: 1, toValue: 2, rangeLabel: "label" }],
         ranges2: [{ fromValue: 1, toValue: 2, rangeLabel: "label" }],
         expectedResult: true,
       },
       {
-        testCase: " [{ fromValue: 1, toValue: 2 }], [{ fromValue: 1, toValue: 2 }]",
+        testCase: [[{ fromValue: 1, toValue: 2 }], [{ fromValue: 1, toValue: 2 }]],
         ranges1: [{ fromValue: 1, toValue: 2 }],
         ranges2: [{ fromValue: 1, toValue: 2 }],
         expectedResult: true,
       },
-    ].forEach(({ testCase, ranges1, ranges2, expectedResult }) => {
-      it(`returns ${expectedResult} when ranges1 and ranges2 are '${testCase}' respectively`, async () => {
+    ].forEach(({ ranges1, ranges2, expectedResult }) => {
+      it(`returns ${expectedResult} when ranges1 is: '${JSON.stringify(ranges1)} and ranges2 is: '${JSON.stringify(ranges2)}'`, async () => {
         expect(propertiesGrouping.doRangesMatch(ranges1, ranges2)).to.eq(expectedResult);
       });
     });
