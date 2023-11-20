@@ -67,7 +67,7 @@ export interface PropertyValueGroupingNodeKey {
  * @beta
  */
 export interface PropertyValueRangeGroupingNodeKey {
-  type: "ranged-property-grouping";
+  type: "property-grouping:range";
   groupingInfo: {
     propertyName: string;
     fullClassName: string;
