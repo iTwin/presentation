@@ -77,7 +77,7 @@ export interface PropertyValueRangeGroupingNodeKey {
 }
 
 /**
- * A key for a property-grouping node.
+ * A key for a property grouping node.
  * @beta
  */
 export type PropertyGroupingNodeKey = RangedPropertyGroupingNodeKey | FormattedPropertyGroupingNodeKey | OtherPropertyGroupingNodeKey;
