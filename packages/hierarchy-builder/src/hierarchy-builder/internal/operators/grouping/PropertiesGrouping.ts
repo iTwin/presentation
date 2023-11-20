@@ -209,18 +209,16 @@ export async function getUniquePropertiesGroupInfo(metadata: IMetadataProvider, 
 
     const previousPropertiesInfo = new Array<{ propertyGroup: PropertyGroup; propertyGroupKey: string }>();
     for (const propertyGroup of byProperties.propertyGroups) {
+      const mapKeyRanges = getRangesAsString(propertyGroup.ranges);
       previousPropertiesInfo.push({
         propertyGroup,
         propertyGroupKey:
           previousPropertiesInfo.length > 0
-            ? `${previousPropertiesInfo[previousPropertiesInfo.length - 1].propertyGroupKey}, ${propertyGroup.propertyName}(${getRangesAsString(
-                propertyGroup.ranges,
-              )})`
+            ? `${previousPropertiesInfo[previousPropertiesInfo.length - 1].propertyGroupKey}, ${propertyGroup.propertyName}(${mapKeyRanges})`
             : "",
       });
 
       const lastKey = previousPropertiesInfo.length > 0 ? `[${previousPropertiesInfo[previousPropertiesInfo.length - 1].propertyGroupKey}]` : "[]";
-      const mapKeyRanges = getRangesAsString(propertyGroup.ranges);
       const mapKey = `${byProperties.fullClassName}:${lastKey}:${propertyGroup.propertyName}:${mapKeyRanges}`;
       if (uniqueProperties.get(mapKey)) {
         continue;
@@ -231,11 +229,10 @@ export async function getUniquePropertiesGroupInfo(metadata: IMetadataProvider, 
           propertyName: propertyGroup.propertyName,
           ranges: propertyGroup.ranges,
         },
-        previousPropertiesGroupingInfo: [
-          ...previousPropertiesInfo.map((groupingInfo) => {
-            return { fullClassName: byProperties.fullClassName, propertyGroup: groupingInfo.propertyGroup };
-          }),
-        ],
+        previousPropertiesGroupingInfo: previousPropertiesInfo.map((groupingInfo) => ({
+          fullClassName: byProperties.fullClassName,
+          propertyGroup: groupingInfo.propertyGroup,
+        })),
       });
     }
   }
@@ -248,7 +245,7 @@ function getRangesAsString(ranges?: Range[]): string {
         .map((range) => `${range.fromValue}-${range.toValue}(${range.rangeLabel ? `${range.rangeLabel}` : ""})`)
         .sort()
         .join(";")
-    : "undefined";
+    : "";
 }
 
 async function shouldCreatePropertyGroup(
