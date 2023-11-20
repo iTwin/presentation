@@ -209,12 +209,20 @@ export async function getUniquePropertiesGroupInfo(metadata: IMetadataProvider, 
 
     const previousPropertiesInfo = new Array<{ propertyGroup: PropertyGroup; propertyGroupKey: string }>();
     for (const propertyGroup of byProperties.propertyGroups) {
-      const lastKey = previousPropertiesInfo.length > 0 ? `[${previousPropertiesInfo[previousPropertiesInfo.length - 1].propertyGroupKey}]` : "[]";
+      previousPropertiesInfo.push({
+        propertyGroup,
+        propertyGroupKey:
+          previousPropertiesInfo.length > 0
+            ? `${previousPropertiesInfo[previousPropertiesInfo.length - 1].propertyGroupKey}, ${propertyGroup.propertyName}(${getRangesAsString(
+                propertyGroup.ranges,
+              )})`
+            : "",
+      });
 
+      const lastKey = previousPropertiesInfo.length > 0 ? `[${previousPropertiesInfo[previousPropertiesInfo.length - 1].propertyGroupKey}]` : "[]";
       const mapKeyRanges = getRangesAsString(propertyGroup.ranges);
       const mapKey = `${byProperties.fullClassName}:${lastKey}:${propertyGroup.propertyName}:${mapKeyRanges}`;
       if (uniqueProperties.get(mapKey)) {
-        addToPreviousPropertiesInfo(previousPropertiesInfo, propertyGroup);
         continue;
       }
       uniqueProperties.set(mapKey, {
@@ -229,25 +237,9 @@ export async function getUniquePropertiesGroupInfo(metadata: IMetadataProvider, 
           }),
         ],
       });
-      addToPreviousPropertiesInfo(previousPropertiesInfo, propertyGroup);
     }
   }
   return [...uniqueProperties.values()];
-}
-
-function addToPreviousPropertiesInfo(
-  previousPropertiesInfo: Array<{ propertyGroup: PropertyGroup; propertyGroupKey: string }>,
-  propertyGroup: PropertyGroup,
-): void {
-  previousPropertiesInfo.push({
-    propertyGroup,
-    propertyGroupKey:
-      previousPropertiesInfo.length > 0
-        ? `${previousPropertiesInfo[previousPropertiesInfo.length - 1].propertyGroupKey}, ${propertyGroup.propertyName}(${getRangesAsString(
-            propertyGroup.ranges,
-          )})`
-        : "",
-  });
 }
 
 function getRangesAsString(ranges?: Range[]): string {
