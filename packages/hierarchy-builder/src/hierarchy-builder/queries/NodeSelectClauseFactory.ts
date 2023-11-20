@@ -250,11 +250,11 @@ function createPropertyGroupSelectors(propertyGroup: PropertyGroup) {
 }
 
 function createRangeParamSelectors(ranges: Range[]) {
-  const selector = {
+  return {
     key: "ranges",
     selector: `json_array(${ranges
-      .map((range) => {
-        return serializeJsonObject([
+      .map((range) =>
+        serializeJsonObject([
           {
             key: "fromValue",
             selector: createECSqlValueSelector(range.fromValue),
@@ -271,11 +271,10 @@ function createRangeParamSelectors(ranges: Range[]) {
                 },
               ]
             : []),
-        ]);
-      })
+        ]),
+      )
       .join(", ")})`,
   };
-  return selector;
 }
 
 function createBaseGroupingParamSelectors(params: BaseGroupingParams) {
