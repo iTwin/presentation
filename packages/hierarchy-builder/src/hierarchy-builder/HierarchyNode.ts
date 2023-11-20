@@ -53,7 +53,7 @@ export interface OtherPropertyGroupingNodeKey {
  * A key for a property grouping node that groups nodes by formatted property value.
  * @beta
  */
-export interface FormattedPropertyGroupingNodeKey {
+export interface PropertyValueGroupingNodeKey {
   type: "formatted-property-grouping";
   groupingInfo: {
     propertyName: string;
