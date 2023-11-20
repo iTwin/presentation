@@ -42,7 +42,7 @@ export interface LabelGroupingNodeKey {
  * @beta
  */
 export interface OtherPropertyGroupingNodeKey {
-  type: "other-property-grouping";
+  type: "property-grouping:other";
   groupingInfo: {
     propertyName: string;
     fullClassName: string;
