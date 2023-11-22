@@ -1,0 +1,121 @@
+sep=;
+Release Tag;API Item
+beta;ArrayPropertyAttributes
+beta;AutoExpand = "single-child" | "always"
+beta;BaseClassGroupingParams 
+beta;BaseGroupingParams
+beta;BaseHierarchyNodeProcessingParams
+beta;BisInstanceLabelSelectClauseFactory 
+beta;BisInstanceLabelSelectClauseFactoryProps
+beta;ClassBasedHierarchyDefinition
+beta;ClassBasedHierarchyDefinitionsFactoryProps
+beta;ClassBasedHierarchyLevelDefinition = InstancesNodeChildHierarchyLevelDefinition | CustomNodeChildHierarchyLevelDefinition
+beta;ClassBasedHierarchyLevelDefinitionsFactory 
+beta;ClassBasedInstanceLabelSelectClauseFactory 
+beta;ClassBasedInstanceLabelSelectClauseFactoryProps
+beta;ClassBasedLabelSelectClause
+beta;ClassGroupingNodeKey
+beta;ConcatenatedValue = ConcatenatedValuePart | ConcatenatedValuePart[]
+beta;ConcatenatedValue
+beta;ConcatenatedValuePart = PropertyValue | TypedPrimitiveValue | string
+beta;ConcatenatedValuePart
+beta;createConcatenatedTypedValueSelector(selectors: TypedValueSelectClauseProps[], checkSelector?: string): string
+beta;createDefaultValueFormatter(): IPrimitiveValueFormatter
+beta;CreateInstanceLabelSelectClauseProps
+beta;createNullableSelector(props:
+beta;createPropertyValueSelector(classAlias: string, propertyName: string): string
+beta;createPropertyValueSelector(classAlias: string, propertyName: string, specialType: SpecialPropertyType): [string, PrimitiveValueType]
+beta;createTypedValueSelector(props: TypedValueSelectClauseProps): string
+beta;CustomHierarchyNodeDefinition
+beta;CustomNodeChildHierarchyLevelDefinition
+beta;DefaultInstanceLabelSelectClauseFactory 
+beta;ECArrayProperty = ECStructArrayProperty | ECEnumerationArrayProperty | ECPrimitiveArrayProperty
+beta;ECClass 
+beta;ECEntityClass = ECClass
+beta;ECEnumeration 
+beta;ECEnumerationArrayProperty = ECEnumerationProperty & ArrayPropertyAttributes
+beta;ECEnumerationProperty 
+beta;ECEnumerator
+beta;ECKindOfQuantity = ECSchemaItem
+beta;ECMixin = ECClass
+beta;ECNavigationProperty 
+beta;ECPrimitiveArrayProperty = ECPrimitiveProperty & ArrayPropertyAttributes
+beta;ECPrimitiveProperty 
+beta;ECPrimitiveType = "Binary" | "Boolean" | "DateTime" | "Double" | "Integer" | "Long" | "Point2d" | "Point3d" | "String" | "IGeometry"
+beta;ECProperty
+beta;ECRelationshipClass 
+beta;ECRelationshipConstraint
+beta;ECRelationshipConstraintMultiplicity
+beta;ECSchema
+beta;ECSchemaItem
+beta;ECSqlBinding =
+beta;ECSqlBindingType = "boolean" | "double" | "id" | "idset" | "int" | "long" | "string" | "point2d" | "point3d"
+beta;ECSqlQueryDef
+beta;ECSqlQueryReader
+beta;ECSqlQueryReaderOptions
+beta;ECSqlQueryRow
+beta;ECSqlQueryRowFormat = "ECSqlPropertyNames" | "Indexes"
+beta;ECSqlSelectClauseGroupingParams
+beta;ECSqlValueSelector
+beta;ECStructArrayProperty = ECStructProperty & ArrayPropertyAttributes
+beta;ECStructClass = ECClass
+beta;ECStructProperty 
+beta;getLogger(): ILogger
+beta;GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey
+beta;GroupingParams
+beta;HierarchyDefinitionParentNode = Omit
+beta;HierarchyLevelDefinition = HierarchyNodesDefinition[]
+beta;HierarchyNode
+beta;HierarchyNode
+beta;HierarchyNodeIdentifier = InstanceKey |
+beta;HierarchyNodeIdentifier
+beta;HierarchyNodeIdentifiersPath = HierarchyNodeIdentifier[]
+beta;HierarchyNodeKey = StandardHierarchyNodeKey | string
+beta;HierarchyNodeKey
+beta;HierarchyNodesDefinition = CustomHierarchyNodeDefinition | InstanceNodesQueryDefinition
+beta;HierarchyNodesDefinition
+beta;HierarchyProvider
+beta;HierarchyProviderProps
+beta;Id64String = string
+beta;IECSqlQueryExecutor
+beta;IHierarchyLevelDefinitionsFactory
+beta;IInstanceLabelSelectClauseFactory
+beta;ILogger
+beta;IMetadataProvider
+beta;INodeParser = (row:
+beta;INodePostProcessor = (node: ProcessedHierarchyNode) => Promise
+beta;INodePreProcessor = 
+beta;InstanceHierarchyNodeProcessingParams 
+beta;InstanceKey
+beta;InstanceKey
+beta;InstanceNodesQueryDefinition
+beta;InstancesNodeChildHierarchyLevelDefinition
+beta;InstancesNodeKey
+beta;IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise
+beta;LabelGroupingNodeKey
+beta;LogFunction = (category: string, message: string) => void
+beta;NodeSelectClauseColumnNames
+beta;NodeSelectClauseFactory
+beta;NodeSelectClauseProps
+beta;ParentHierarchyNode = Omit
+beta;ParsedCustomHierarchyNode = Omit
+beta;ParsedHierarchyNode = ParsedCustomHierarchyNode | ParsedInstanceHierarchyNode
+beta;ParsedInstanceHierarchyNode = Omit
+beta;parseFullClassName(fullClassName: string):
+beta;Point2d
+beta;Point3d
+beta;PrimitiveValue = Id64String | string | number | boolean | Date | Point2d | Point3d
+beta;PrimitiveValue
+beta;PrimitiveValueSelectorProps
+beta;PrimitiveValueType = "Id" | Exclude
+beta;ProcessedCustomHierarchyNode = Omit
+beta;ProcessedGroupingHierarchyNode = Omit
+beta;ProcessedHierarchyNode = ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode | ProcessedGroupingHierarchyNode
+beta;ProcessedInstanceHierarchyNode = Omit
+beta;PropertyValue
+beta;PropertyValueSelectClauseProps
+beta;setLogger(logger: ILogger | undefined): void
+beta;SpecialPropertyType = "Navigation" | "Guid" | "Point2d" | "Point3d"
+beta;StandardHierarchyNodeKey = InstancesNodeKey | GroupingNodeKey
+beta;TypedValueSelectClauseProps = PropertyValueSelectClauseProps | TypedPrimitiveValue | PrimitiveValueSelectorProps
+beta;TypedValueSelectClauseProps
