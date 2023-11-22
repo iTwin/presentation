@@ -6,7 +6,6 @@
  * @module Helpers
  */
 
-import { tmpdir } from "os";
 import { join } from "path";
 import * as rimraf from "rimraf";
 import { IModelHost, IModelHostOptions } from "@itwin/core-backend";
@@ -16,6 +15,7 @@ import { IModelApp, IModelAppOptions, NoRenderApp } from "@itwin/core-frontend";
 import { HierarchyCacheMode, Presentation as PresentationBackend, PresentationManagerProps as PresentationBackendProps } from "@itwin/presentation-backend";
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { Presentation as PresentationFrontend, PresentationProps as PresentationFrontendProps } from "@itwin/presentation-frontend";
+import { setTestOutputDir } from "./InternalUtils";
 
 function initializeRpcInterfaces(interfaces: RpcInterfaceDefinition[]) {
   const config = class extends RpcDefaultConfiguration {
@@ -37,14 +37,6 @@ function initializeRpcInterfaces(interfaces: RpcInterfaceDefinition[]) {
 }
 
 let isInitialized = false;
-
-const defaultTestOutputDir = tmpdir();
-let testOutputDir: string | undefined;
-
-/** @internal */
-export const getTestOutputDir = (): string => {
-  return testOutputDir ?? defaultTestOutputDir;
-};
 
 export { HierarchyCacheMode, PresentationBackendProps };
 
@@ -111,7 +103,7 @@ export const initialize = async (props?: PresentationTestingInitProps) => {
     },
   };
   await PresentationFrontend.initialize({ ...defaultFrontendProps, ...props.frontendProps });
-  testOutputDir = props.testOutputDir;
+  setTestOutputDir(props.testOutputDir);
 
   isInitialized = true;
 };

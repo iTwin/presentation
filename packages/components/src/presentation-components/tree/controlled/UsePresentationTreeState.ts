@@ -18,8 +18,7 @@ import {
   TreeModelSource,
 } from "@itwin/components-react";
 import { PresentationTreeDataProvider, PresentationTreeDataProviderProps } from "../DataProvider";
-import { IFilteredPresentationTreeDataProvider } from "../FilteredDataProvider";
-import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
+import { IFilteredPresentationTreeDataProvider, IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
 import { useFilteredNodeLoader, useNodeHighlightingProps } from "./UseControlledTreeFiltering";
 import { ReloadedTree, useTreeReload } from "./UseTreeReload";
 
