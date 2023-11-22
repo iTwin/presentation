@@ -7,7 +7,7 @@
 const NOOP_LOCALIZATION_FUNCTION = (input: string) => input;
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-let g_localization_function = NOOP_LOCALIZATION_FUNCTION;
+let g_localizationFunction = NOOP_LOCALIZATION_FUNCTION;
 
 /**
  * An type for a localization function used by this package.
