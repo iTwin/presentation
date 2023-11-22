@@ -26,7 +26,7 @@ export const LOCALIZATION_NAMESPACE = "PresentationHierarchyBuilder";
  * @beta
  */
 export function setLocalizationFunction(localizationFunction?: LocalizationFunction) {
-  g_localization_function = localizationFunction || NOOP_LOCALIZATION_FUNCTION;
+  g_localizationFunction = localizationFunction || NOOP_LOCALIZATION_FUNCTION;
 }
 
 /**
@@ -34,5 +34,5 @@ export function setLocalizationFunction(localizationFunction?: LocalizationFunct
  * @internal
  */
 export function translate(input: string) {
-  return g_localization_function(`${LOCALIZATION_NAMESPACE}:${input}`);
+  return g_localizationFunction(`${LOCALIZATION_NAMESPACE}:${input}`);
 }

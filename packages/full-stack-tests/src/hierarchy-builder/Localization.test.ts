@@ -12,21 +12,19 @@ import { initialize, terminate } from "../IntegrationTests";
 
 describe("Stateless hierarchy builder", () => {
   describe("Localization", () => {
-    describe("translate", () => {
-      beforeEach(async () => {
-        await initialize();
-      });
+    beforeEach(async () => {
+      await initialize();
+    });
 
-      afterEach(async () => {
-        await terminate();
-      });
+    afterEach(async () => {
+      await terminate();
+    });
 
-      it("translates strings using `IModelApp.localization`", async function () {
-        const localizationFunction = await createLocalizationFunction(IModelApp.localization);
-        setLocalizationFunction(localizationFunction);
-        const result = translate("grouping.other-label");
-        expect(result).to.be.eq("Òthér");
-      });
+    it("translates strings using `IModelApp.localization`", async function () {
+      const localizationFunction = await createLocalizationFunction(IModelApp.localization);
+      setLocalizationFunction(localizationFunction);
+      const result = translate("grouping.other-label");
+      expect(result).to.be.eq("Òthér");
     });
   });
 });
