@@ -22,7 +22,8 @@ import {
   SubjectProps,
 } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { buildTestIModel, createFileNameFromString, setupOutputFileLocation, TestIModelBuilder } from "@itwin/presentation-testing";
+import { buildTestIModel, TestIModelBuilder } from "@itwin/presentation-testing";
+import { createFileNameFromString, setupOutputFileLocation } from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils";
 
 export async function withECDb<TResult extends {}>(
   mochaContext: Mocha.Context,
