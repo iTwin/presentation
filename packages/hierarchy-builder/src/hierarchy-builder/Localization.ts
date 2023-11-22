@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 /** A translator implementation returns the same input. */
+// eslint-disable-next-line @typescript-eslint/naming-convention
 const NOOP_Translator = (input: string) => input;
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
