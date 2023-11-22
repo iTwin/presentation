@@ -22,7 +22,7 @@ import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { PresentationProps as PresentationFrontendProps } from "@itwin/presentation-frontend";
 import { initialize as initializePresentation, PresentationTestingInitProps, terminate as terminatePresentation } from "@itwin/presentation-testing";
 
-export class IntegrationTestsApp extends NoRenderApp {
+class IntegrationTestsApp extends NoRenderApp {
   public static override async startup(opts?: IModelAppOptions): Promise<void> {
     await NoRenderApp.startup(opts);
     await IModelApp.localization.changeLanguage("en-PSEUDO");
