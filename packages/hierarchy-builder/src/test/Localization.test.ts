@@ -11,6 +11,11 @@ describe("translate", () => {
     expect(translate("Test")).to.eq(`${LOCALIZATION_NAMESPACE}:Test`);
   });
 
+  it("returns same input with namespace appended when localizationFunction is set to undefined", () => {
+    setLocalizationFunction();
+    expect(translate("Test")).to.eq(`${LOCALIZATION_NAMESPACE}:Test`);
+  });
+
   it("returns input modified by custom localizationFunction with namespace appended when localizationFunction is set", () => {
     setLocalizationFunction((input) => `${input}_translated`);
     expect(translate("Test")).to.eq(`${LOCALIZATION_NAMESPACE}:Test_translated`);
