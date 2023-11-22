@@ -66,6 +66,7 @@ public;PresentationTreeProps
 beta;PresentationTreeRenderer(props: PresentationTreeRendererProps): JSX.Element
 beta;PresentationTreeRendererProps 
 public;PropertyDataProviderWithUnifiedSelectionProps
+public;PropertyRecordsBuilder 
 beta;RelatedInstanceDescription
 beta;SchemaMetadataContext
 beta;SchemaMetadataContextProvider({ schemaContextProvider, imodel, children }: PropsWithChildren

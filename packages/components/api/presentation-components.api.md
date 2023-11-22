@@ -25,6 +25,7 @@ import { Field } from '@itwin/presentation-common';
 import { FilterByTextHierarchyRequestOptions } from '@itwin/presentation-common';
 import { HierarchyRequestOptions } from '@itwin/presentation-common';
 import { HighlightableTreeProps } from '@itwin/components-react';
+import { IContentVisitor } from '@itwin/presentation-common';
 import { Id64Arg } from '@itwin/core-bentley';
 import { IDisposable } from '@itwin/core-bentley';
 import { ImmediatelyLoadedTreeNodeItem } from '@itwin/components-react';
@@ -47,6 +48,9 @@ import { PagedTreeNodeLoader } from '@itwin/components-react';
 import { PageOptions } from '@itwin/presentation-common';
 import { PageOptions as PageOptions_2 } from '@itwin/components-react';
 import { PrimitiveValue } from '@itwin/appui-abstract';
+import { ProcessFieldHierarchiesProps } from '@itwin/presentation-common';
+import { ProcessMergedValueProps } from '@itwin/presentation-common';
+import { ProcessPrimitiveValueProps } from '@itwin/presentation-common';
 import { PropertiesField } from '@itwin/presentation-common';
 import { PropertyData } from '@itwin/components-react';
 import { PropertyDataChangeEvent } from '@itwin/components-react';
@@ -68,6 +72,12 @@ import { SchemaContext } from '@itwin/ecschema-metadata';
 import { SelectionChangeType } from '@itwin/presentation-frontend';
 import { SelectionHandler } from '@itwin/presentation-frontend';
 import { SelectionInfo } from '@itwin/presentation-common';
+import { StartArrayProps } from '@itwin/presentation-common';
+import { StartCategoryProps } from '@itwin/presentation-common';
+import { StartContentProps } from '@itwin/presentation-common';
+import { StartFieldProps } from '@itwin/presentation-common';
+import { StartItemProps } from '@itwin/presentation-common';
+import { StartStructProps } from '@itwin/presentation-common';
 import { StrippedRelationshipPath } from '@itwin/presentation-common';
 import { Subscription } from '@itwin/components-react';
 import { TreeEditingParams } from '@itwin/components-react';
@@ -587,6 +597,41 @@ export interface PropertyDataProviderWithUnifiedSelectionProps {
     requestedContentInstancesLimit?: number;
     // @internal (undocumented)
     selectionHandler?: SelectionHandler;
+}
+
+// @public
+export class PropertyRecordsBuilder implements IContentVisitor {
+    constructor(visitPropertyRecord: (record: PropertyRecord) => void);
+    // (undocumented)
+    finishArray(): void;
+    // (undocumented)
+    finishCategory(): void;
+    // (undocumented)
+    finishContent(): void;
+    // (undocumented)
+    finishField(): void;
+    // (undocumented)
+    finishItem(): void;
+    // (undocumented)
+    finishStruct(): void;
+    // (undocumented)
+    processFieldHierarchies(props: ProcessFieldHierarchiesProps): void;
+    // (undocumented)
+    processMergedValue(props: ProcessMergedValueProps): void;
+    // (undocumented)
+    processPrimitiveValue(props: ProcessPrimitiveValueProps): void;
+    // (undocumented)
+    startArray(props: StartArrayProps): boolean;
+    // (undocumented)
+    startCategory(props: StartCategoryProps): boolean;
+    // (undocumented)
+    startContent(props: StartContentProps): boolean;
+    // (undocumented)
+    startField(props: StartFieldProps): boolean;
+    // (undocumented)
+    startItem(props: StartItemProps): boolean;
+    // (undocumented)
+    startStruct(props: StartStructProps): boolean;
 }
 
 // @beta

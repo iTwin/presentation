@@ -11,10 +11,11 @@ import { initializeLocalization, initializePropertyValueRenderers } from "./pres
  * @docs-group-description Core
  * Common types used all across ($presentation-components) package.
  */
-export * from "./presentation-components/common/IPresentationDataProvider";
-export * from "./presentation-components/common/IUnifiedSelectionComponent";
 export * from "./presentation-components/common/ContentDataProvider";
 export * from "./presentation-components/common/Diagnostics";
+export * from "./presentation-components/common/IPresentationDataProvider";
+export * from "./presentation-components/common/IUnifiedSelectionComponent";
+export * from "./presentation-components/common/PropertyRecordsBuilder";
 export * from "./presentation-components/common/SchemaMetadataContext";
 export * from "./presentation-components/hooks/UseRulesetRegistration";
 
