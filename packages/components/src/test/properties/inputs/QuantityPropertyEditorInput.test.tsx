@@ -137,6 +137,7 @@ describe("<QuantityPropertyEditorInput />", () => {
     );
 
     const input = await waitFor(() => getByRole("textbox"));
+    await waitFor(() => expect((input as HTMLInputElement).disabled).to.be.false);
 
     await user.type(input, "123.4 unit");
     await user.tab();
