@@ -31,7 +31,7 @@ import {
 } from "@itwin/presentation-common";
 import { FavoritePropertiesManager, FavoritePropertiesScope, Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { CacheInvalidationProps } from "../../presentation-components/common/ContentDataProvider";
-import { FAVORITES_CATEGORY_NAME } from "../../presentation-components/favorite-properties/DataProvider";
+import { FAVORITES_CATEGORY_NAME } from "../../presentation-components/favorite-properties/Utils";
 import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider";
 import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
 import {

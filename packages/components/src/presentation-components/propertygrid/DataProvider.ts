@@ -41,7 +41,7 @@ import { FieldHierarchyRecord, IPropertiesAppender, PropertyRecordsBuilder } fro
 import { CacheInvalidationProps, ContentDataProvider, IContentDataProvider } from "../common/ContentDataProvider";
 import { DiagnosticsProps } from "../common/Diagnostics";
 import { createLabelRecord, findField } from "../common/Utils";
-import { FAVORITES_CATEGORY_NAME, getFavoritesCategory } from "../favorite-properties/DataProvider";
+import { FAVORITES_CATEGORY_NAME, getFavoritesCategory } from "../favorite-properties/Utils";
 
 const labelsComparer = new Intl.Collator(undefined, { sensitivity: "base" }).compare;
 

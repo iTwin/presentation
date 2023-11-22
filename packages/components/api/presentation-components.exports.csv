@@ -2,41 +2,31 @@ sep=;
 Release Tag;API Item
 public;CacheInvalidationProps
 public;CacheInvalidationProps
-public;ContentDataProvider
-public;ContentDataProviderProps
+public;ContentDataProvider 
+public;ContentDataProviderProps 
 public;ControlledPresentationTreeFilteringProps
 alpha;createDiagnosticsOptions(props: DiagnosticsProps): ClientDiagnosticsOptions | undefined
-internal;createFieldInfo(field: Field, parentFieldName?: string):
-internal;createPropertyDescriptionFromFieldInfo(info: FieldInfo): PropertyDescription
 public;DEFAULT_PROPERTY_GRID_RULESET: Ruleset
 public;DiagnosticsProps
-public;FavoritePropertiesDataFilterer
+public;FavoritePropertiesDataFilterer 
 public;FavoritePropertiesDataFiltererProps
-public;FavoritePropertiesDataProvider
+public;FavoritePropertiesDataProvider 
 public;FavoritePropertiesDataProviderProps
-internal;FAVORITES_CATEGORY_NAME = "Favorite"
-internal;FieldHierarchyRecord
-internal;FieldInfo
-internal;FieldRecord
 beta;FilterablePresentationTreeNodeItem = PresentationTreeNodeItem &
-internal;FilteredPresentationTreeDataProvider
-internal;FilteredPresentationTreeDataProviderProps
 beta;GenericInstanceFilter
 beta;GenericInstanceFilter
 beta;GenericInstanceFilterRule
 beta;GenericInstanceFilterRuleGroup
-internal;getFavoritesCategory: () => CategoryDescription
 beta;HierarchyLevelFilteringDescriptor = Descriptor | (() => Promise
-public;IContentDataProvider
+public;IContentDataProvider 
 public;IFavoritePropertiesDataProvider
-public;IFilteredPresentationTreeDataProvider
+public;IFilteredPresentationTreeDataProvider 
 beta;InfoTreeNodeItemType
-beta;InstanceKeyValueRenderer
-public;IPresentationDataProvider
+beta;InstanceKeyValueRenderer 
+public;IPresentationDataProvider 
 public;IPresentationLabelsProvider
 public;IPresentationPropertyDataProvider = IPropertyDataProvider & IContentDataProvider
-public;IPresentationTreeDataProvider
-internal;IPropertiesAppender
+public;IPresentationTreeDataProvider 
 beta;isFilterablePresentationTreeNodeItem(item: PresentationTreeNodeItem): item is FilterablePresentationTreeNodeItem
 beta;isPresentationInfoTreeNodeItem(item: TreeNodeItem): item is PresentationInfoTreeNodeItem
 beta;isPresentationTreeNodeItem(item: TreeNodeItem): item is PresentationTreeNodeItem
@@ -45,8 +35,8 @@ beta;navigationPropertyEditorContext: Context
 beta;NavigationPropertyEditorContextProps
 public;PresentationComponentsLoggerCategory
 beta;PresentationFilterBuilderValueRenderer({ imodel, descriptor, descriptorInputKeys, ...props }: PresentationFilterBuilderValueRendererProps): JSX.Element
-beta;PresentationFilterBuilderValueRendererProps
-beta;PresentationInfoTreeNodeItem
+beta;PresentationFilterBuilderValueRendererProps 
+beta;PresentationInfoTreeNodeItem 
 beta;PresentationInstanceFilter = PresentationInstanceFilterConditionGroup | PresentationInstanceFilterCondition
 beta;PresentationInstanceFilter
 beta;PresentationInstanceFilterCondition
@@ -55,28 +45,27 @@ beta;PresentationInstanceFilterDialog(props: PresentationInstanceFilterDialogPro
 beta;PresentationInstanceFilterDialogProps
 beta;PresentationInstanceFilterInfo
 beta;PresentationInstanceFilterPropertyInfo
-public;PresentationLabelsProvider
+public;PresentationLabelsProvider 
 public;PresentationLabelsProviderProps
-public;PresentationPropertyDataProvider
-public;PresentationPropertyDataProviderProps
+public;PresentationPropertyDataProvider 
+public;PresentationPropertyDataProviderProps 
 public;PresentationTree
-public;PresentationTreeDataProvider
+public;PresentationTreeDataProvider 
 beta;PresentationTreeDataProviderDataSourceEntryPoints
-public;PresentationTreeDataProviderProps
+public;PresentationTreeDataProviderProps 
 public;PresentationTreeEventHandlerProps
-beta;PresentationTreeNodeItem
+beta;PresentationTreeNodeItem 
 beta;PresentationTreeNodeItemFilteringInfo
-public;PresentationTreeNodeLoaderProps
-deprecated;PresentationTreeNodeLoaderProps
+public;PresentationTreeNodeLoaderProps 
+deprecated;PresentationTreeNodeLoaderProps 
 public;PresentationTreeNodeLoaderResult
 deprecated;PresentationTreeNodeLoaderResult
 beta;PresentationTreeNodeRenderer(props: PresentationTreeNodeRendererProps): JSX.Element
-beta;PresentationTreeNodeRendererProps
+beta;PresentationTreeNodeRendererProps 
 public;PresentationTreeProps
 beta;PresentationTreeRenderer(props: PresentationTreeRendererProps): JSX.Element
-beta;PresentationTreeRendererProps
+beta;PresentationTreeRendererProps 
 public;PropertyDataProviderWithUnifiedSelectionProps
-internal;class PropertyRecordsBuilder
 beta;RelatedInstanceDescription
 beta;SchemaMetadataContext
 beta;SchemaMetadataContextProvider({ schemaContextProvider, imodel, children }: PropsWithChildren
@@ -90,7 +79,7 @@ beta;UnifiedSelectionContext
 beta;UnifiedSelectionContextProvider(props: UnifiedSelectionContextProviderProps): React.ReactElement
 beta;UnifiedSelectionContextProviderProps
 beta;UnifiedSelectionState = (selectionLevel?: number) => Readonly
-public;UnifiedSelectionTreeEventHandler
+public;UnifiedSelectionTreeEventHandler 
 public;UnifiedSelectionTreeEventHandlerParams
 public;useControlledPresentationTreeFiltering(props: ControlledPresentationTreeFilteringProps):
 beta;useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProps):
@@ -110,12 +99,11 @@ public;UsePresentationTreeStateProps
 public;UsePresentationTreeStateResult
 public;usePropertyDataProviderWithUnifiedSelection(props: PropertyDataProviderWithUnifiedSelectionProps): UsePropertyDataProviderWithUnifiedSelectionResult
 public;UsePropertyDataProviderWithUnifiedSelectionResult
+public;useRulesetRegistration(ruleset: Ruleset): void
 deprecated;useRulesetRegistration(ruleset: Ruleset): void
 beta;useSchemaMetadataContext(): SchemaMetadataContext | undefined
 beta;useUnifiedSelectionContext(): UnifiedSelectionContext | undefined
 public;useUnifiedSelectionTreeEventHandler(props: UnifiedSelectionTreeEventHandlerParams): UnifiedSelectionTreeEventHandler
 deprecated;useUnifiedSelectionTreeEventHandler(props: UnifiedSelectionTreeEventHandlerParams): UnifiedSelectionTreeEventHandler
-internal;ViewportSelectionHandler
-internal;ViewportSelectionHandlerProps
 public;viewWithUnifiedSelection
 public;ViewWithUnifiedSelectionProps

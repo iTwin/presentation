@@ -20,7 +20,8 @@ import {
   SelectionManager,
   SelectionScopesManager,
 } from "@itwin/presentation-frontend";
-import { FavoritePropertiesDataProvider, getFavoritesCategory } from "../../presentation-components/favorite-properties/DataProvider";
+import { FavoritePropertiesDataProvider } from "../../presentation-components/favorite-properties/DataProvider";
+import { getFavoritesCategory } from "../../presentation-components/favorite-properties/Utils";
 import { PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider";
 
 describe("FavoritePropertiesDataProvider", () => {
