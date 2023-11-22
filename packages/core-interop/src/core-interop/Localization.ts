@@ -4,11 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Localization } from "@itwin/core-common";
+import { LOCALIZATION_NAMESPACE, LocalizationFunction } from "@itwin/presentation-hierarchy-builder";
 
 /**
- * Create a `Translator` that uses [Localization]($core-common) API to create a localized string.
+ * Create a `LocalizationFunction` that uses [Localization]($core-common) API to register the namespace and create a localized string.
  * @beta
  */
-export function createTranslator(localization: Localization): (input: string) => string {
+export async function createLocalizationFunction(localization: Localization): Promise<LocalizationFunction> {
+  await localization.registerNamespace(LOCALIZATION_NAMESPACE);
   return (input) => localization.getLocalizedString(input);
 }

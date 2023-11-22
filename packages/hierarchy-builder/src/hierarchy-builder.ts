@@ -6,6 +6,7 @@
 export * from "./hierarchy-builder/HierarchyDefinition";
 export * from "./hierarchy-builder/HierarchyNode";
 export * from "./hierarchy-builder/HierarchyProvider";
+export { LOCALIZATION_NAMESPACE, LocalizationFunction, setLocalizationFunction } from "./hierarchy-builder/Localization";
 export * from "./hierarchy-builder/Logging";
 export * from "./hierarchy-builder/Metadata";
 export * from "./hierarchy-builder/queries/ECSql";
