@@ -21,7 +21,7 @@ describe("Stateless hierarchy builder", () => {
         await terminate();
       });
 
-      it("translates input based on localization", async function () {
+      it("translates strings using `IModelApp.localization`", async function () {
         const localizationFunction = await createLocalizationFunction(IModelApp.localization);
         setLocalizationFunction(localizationFunction);
         const result = translate("grouping.other-label");
