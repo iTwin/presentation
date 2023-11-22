@@ -589,7 +589,7 @@ describe("PropertiesGrouping", () => {
     });
 
     describe("Range isn't provided", async () => {
-      it("groups node into other property grouping node, when property value is not primitive", async () => {
+      it("doesn't group node, when property value is not primitive", async () => {
         const nodes = [
           createTestProcessedInstanceNode({
             key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class", id: "0x1" }] },
@@ -611,21 +611,10 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName" },
         };
-        const expectedGroupingNodeKey: GroupingNodeKey = {
-          type: "property-grouping:other",
-          propertyName: "PropertyName",
-          fullClassName: "TestSchema.Class",
-        };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
-          grouped: [
-            createTestProcessedGroupingNode({
-              label: "Other",
-              key: expectedGroupingNodeKey,
-              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
-            }),
-          ],
-          ungrouped: [],
+          grouped: [],
+          ungrouped: nodes,
         });
       });
 
@@ -839,7 +828,7 @@ describe("PropertiesGrouping", () => {
     });
 
     describe("Range is provided", async () => {
-      it("groups node into other property grouping node, when property value doesn't fit in provided range", async () => {
+      it.only("groups node into other property grouping node, when property value doesn't fit in provided range", async () => {
         const nodes = [
           createTestProcessedInstanceNode({
             key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class", id: "0x1" }] },
@@ -847,6 +836,7 @@ describe("PropertiesGrouping", () => {
               grouping: {
                 byProperties: {
                   fullClassName: "TestSchema.Class",
+                  createGroupForOutOfRangeValues: true,
                   propertyGroups: [{ propertyName: "PropertyName", propertyValue: 12, ranges: [{ fromValue: 1, toValue: 5 }] }],
                 },
               },

@@ -4,8 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert } from "@itwin/core-bentley";
-// eslint-disable-next-line @itwin/import-within-package
-import { translate } from "../../../../../../components/src/presentation-components/common/Utils";
 import { HierarchyNodePropertiesGroupingParams, ProcessedInstanceHierarchyNode, PropertyGroup, PropertyGroupingNodeKey, Range } from "../../../HierarchyNode";
 import { ECClass, IMetadataProvider } from "../../../Metadata";
 import { IPrimitiveValueFormatter } from "../../../values/Formatting";
@@ -70,7 +68,7 @@ export async function createPropertyGroups(
           groupings.grouped,
           `${currentProperty.propertyName}:Unspecified`,
           {
-            label: translate("grouping.unspecified-node-label"),
+            label: "Not specified",
             ...propertyToGroup,
           },
           node,
@@ -118,7 +116,7 @@ export async function createPropertyGroups(
           groupings.grouped,
           `${currentProperty.propertyName}:Other`,
           {
-            label: translate("grouping.other-node-label"),
+            label: "Other",
             ...propertyToGroup,
           },
           node,
@@ -132,15 +130,7 @@ export async function createPropertyGroups(
     const propertyClass = await getClass(metadata, byProperties.fullClassName);
     const property = await propertyClass.getProperty(currentProperty.propertyName);
     if (!property?.isPrimitive()) {
-      addGroupingToMap(
-        groupings.grouped,
-        `${currentProperty.propertyName}:Other`,
-        {
-          label: translate("grouping.other-node-label"),
-          ...propertyToGroup,
-        },
-        node,
-      );
+      groupings.ungrouped.push(node);
       continue;
     }
     const part = {
@@ -236,33 +226,32 @@ export async function getUniquePropertiesGroupInfo(metadata: IMetadataProvider, 
     const previousPropertiesInfo = new Array<{ propertyGroup: PropertyGroup; propertyGroupKey: string }>();
     for (const propertyGroup of byProperties.propertyGroups) {
       const mapKeyRanges = getRangesAsString(propertyGroup.ranges);
+      const lastKey = previousPropertiesInfo.length > 0 ? previousPropertiesInfo[previousPropertiesInfo.length - 1].propertyGroupKey : "";
+      const propertyGroupKey = `${lastKey}:${propertyGroup.propertyName}(${mapKeyRanges})`;
+      const mapKey = `${byProperties.fullClassName}:${propertyGroupKey}`;
+
+      if (!uniqueProperties.get(mapKey)) {
+        uniqueProperties.set(mapKey, {
+          ecClass: await getClass(metadata, byProperties.fullClassName),
+          propertyGroup: {
+            propertyName: propertyGroup.propertyName,
+            ranges: propertyGroup.ranges,
+          },
+          previousPropertiesGroupingInfo: previousPropertiesInfo.map((groupingInfo) => ({
+            fullClassName: byProperties.fullClassName,
+            propertyGroup: groupingInfo.propertyGroup,
+          })),
+        });
+      }
+
       previousPropertiesInfo.push({
         propertyGroup,
-        propertyGroupKey:
-          previousPropertiesInfo.length > 0
-            ? `${previousPropertiesInfo[previousPropertiesInfo.length - 1].propertyGroupKey}, ${propertyGroup.propertyName}(${mapKeyRanges})`
-            : "",
-      });
-
-      const lastKey = previousPropertiesInfo.length > 0 ? `[${previousPropertiesInfo[previousPropertiesInfo.length - 1].propertyGroupKey}]` : "[]";
-      const mapKey = `${byProperties.fullClassName}:${lastKey}:${propertyGroup.propertyName}:${mapKeyRanges}`;
-      if (uniqueProperties.get(mapKey)) {
-        continue;
-      }
-      uniqueProperties.set(mapKey, {
-        ecClass: await getClass(metadata, byProperties.fullClassName),
-        propertyGroup: {
-          propertyName: propertyGroup.propertyName,
-          ranges: propertyGroup.ranges,
-        },
-        previousPropertiesGroupingInfo: previousPropertiesInfo.map((groupingInfo) => ({
-          fullClassName: byProperties.fullClassName,
-          propertyGroup: groupingInfo.propertyGroup,
-        })),
+        propertyGroupKey,
       });
     }
   }
-  return [...uniqueProperties.values()];
+  // Order might change in uniqueProperties, resorting to make sure that property order remains the same
+  return [...uniqueProperties.values()].sort((lhs, rhs) => lhs.previousPropertiesGroupingInfo.length - rhs.previousPropertiesGroupingInfo.length);
 }
 
 function getRangesAsString(ranges?: Range[]): string {
