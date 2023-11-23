@@ -9,18 +9,14 @@ beta;buildTestIModel(mochaContext: Mocha.Context, cb: (builder: TestIModelBuilde
 public;ContentBuilder
 public;ContentBuilderProps
 public;ContentBuilderResult
-internal;createFileNameFromString(str: string): string
 public;defaultNodeMappingFunc: NodeMappingFunc
-internal;getTestOutputDir: () => string
 public;HierarchyBuilder
 public;HierarchyBuilderProps
 public;HierarchyNode 
 public;IContentBuilderDataProvider
-internal;IModelBuilder 
 public;initialize: (props?: PresentationTestingInitProps) => Promise
 public;MappedNode
 public;NodeMappingFunc = (node: TreeNodeItem) => MappedNode
 public;PresentationTestingInitProps
-internal;setupOutputFileLocation(fileName: string): LocalFileName
 public;terminate: (frontendApp?: typeof IModelApp) => Promise
 beta;TestIModelBuilder
