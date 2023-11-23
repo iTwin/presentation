@@ -18,7 +18,7 @@ import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
 import { createProvider } from "../Utils";
 
-describe.only("Stateless hierarchy builder", () => {
+describe("Stateless hierarchy builder", () => {
   describe("Properties grouping", () => {
     let selectClauseFactory: NodeSelectClauseFactory;
     let subjectClassName: string;
