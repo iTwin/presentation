@@ -5,10 +5,12 @@
 
 import { INodeParser } from "../HierarchyDefinition";
 import { InstanceHierarchyNodeProcessingParams, ParsedHierarchyNode, ParsedInstanceHierarchyNode } from "../HierarchyNode";
-import { ECSqlQueryDef, IECSqlQueryExecutor } from "../queries/ECSql";
-import { NodeSelectClauseColumnNames } from "../queries/NodeSelectClauseFactory";
+import { getLogger } from "../Logging";
+import { ECSqlQueryDef, IECSqlQueryExecutor } from "../queries/ECSqlCore";
+import { NodeSelectClauseColumnNames } from "../queries/NodeSelectQueryFactory";
 import { ConcatenatedValue } from "../values/ConcatenatedValue";
 import { Id64String } from "../values/Values";
+import { LOGGING_NAMESPACE } from "./Common";
 
 /** @internal */
 export interface TreeQueryResultsReaderProps {
@@ -28,7 +30,8 @@ export class TreeQueryResultsReader {
     };
   }
 
-  public async read(executor: IECSqlQueryExecutor, query: ECSqlQueryDef): Promise<ParsedHierarchyNode[]> {
+  public async read(executor: IECSqlQueryExecutor, query: Omit<ECSqlQueryDef, "ctes">): Promise<ParsedHierarchyNode[]> {
+    getLogger().logInfo(`${LOGGING_NAMESPACE}.TreeQueryResultsReader`, `Executing query: ${query.ecsql}`);
     const reader = executor.createQueryReader(query.ecsql, query.bindings, { rowFormat: "ECSqlPropertyNames" });
     const nodes = new Array<ParsedHierarchyNode>();
     for await (const row of reader) {
@@ -64,6 +67,7 @@ export interface RowDef {
   [NodeSelectClauseColumnNames.MergeByLabelId]?: string;
   [NodeSelectClauseColumnNames.ExtendedData]?: string;
   [NodeSelectClauseColumnNames.AutoExpand]?: boolean;
+  [NodeSelectClauseColumnNames.SupportsFiltering]?: boolean;
 }
 /* eslint-enable @typescript-eslint/naming-convention */
 
@@ -85,6 +89,7 @@ export function defaultNodesParser(row: { [columnName: string]: any }): ParsedIn
     },
     ...(typedRow.HasChildren !== undefined ? { children: !!typedRow.HasChildren } : undefined),
     ...(typedRow.AutoExpand ? { autoExpand: true } : undefined),
+    ...(typedRow.SupportsFiltering ? { supportsFiltering: true } : undefined),
     ...(typedRow.ExtendedData ? { extendedData: JSON.parse(typedRow.ExtendedData) } : undefined),
     ...(Object.keys(processingParams).length > 0 ? { processingParams } : undefined),
   };

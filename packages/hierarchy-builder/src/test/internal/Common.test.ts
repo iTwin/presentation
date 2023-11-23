@@ -79,6 +79,27 @@ describe("mergeNodes", () => {
     expect(mergeNodes(createTestProcessedCustomNode({ autoExpand: true }), createTestProcessedCustomNode({ autoExpand: undefined })).autoExpand).to.be.true;
   });
 
+  it("merges supports-filtering flag", () => {
+    expect(
+      mergeNodes(createTestProcessedCustomNode({ supportsFiltering: undefined }), createTestProcessedCustomNode({ supportsFiltering: undefined }))
+        .supportsFiltering,
+    ).to.be.undefined;
+    expect(
+      mergeNodes(createTestProcessedCustomNode({ supportsFiltering: false }), createTestProcessedCustomNode({ supportsFiltering: false })).supportsFiltering,
+    ).to.be.undefined;
+    expect(
+      mergeNodes(createTestProcessedCustomNode({ supportsFiltering: false }), createTestProcessedCustomNode({ supportsFiltering: true })).supportsFiltering,
+    ).to.be.undefined;
+    expect(mergeNodes(createTestProcessedCustomNode({ supportsFiltering: true }), createTestProcessedCustomNode({ supportsFiltering: true })).supportsFiltering)
+      .to.be.true;
+    expect(
+      mergeNodes(createTestProcessedCustomNode({ supportsFiltering: true }), createTestProcessedCustomNode({ supportsFiltering: false })).supportsFiltering,
+    ).to.be.undefined;
+    expect(
+      mergeNodes(createTestProcessedCustomNode({ supportsFiltering: true }), createTestProcessedCustomNode({ supportsFiltering: undefined })).supportsFiltering,
+    ).to.be.undefined;
+  });
+
   it("merges extended data", () => {
     expect(mergeNodes(createTestProcessedCustomNode({ extendedData: undefined }), createTestProcessedCustomNode({ extendedData: undefined })).extendedData).to
       .be.undefined;

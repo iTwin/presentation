@@ -7,8 +7,8 @@ import { expect } from "chai";
 import sinon from "sinon";
 import { ParsedHierarchyNode, ParsedInstanceHierarchyNode } from "../../hierarchy-builder/HierarchyNode";
 import { applyLimit, defaultNodesParser, RowDef, RowsLimitExceededError, TreeQueryResultsReader } from "../../hierarchy-builder/internal/TreeNodesReader";
-import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions } from "../../hierarchy-builder/queries/ECSql";
-import { NodeSelectClauseColumnNames } from "../../hierarchy-builder/queries/NodeSelectClauseFactory";
+import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions } from "../../hierarchy-builder/queries/ECSqlCore";
+import { NodeSelectClauseColumnNames } from "../../hierarchy-builder/queries/NodeSelectQueryFactory";
 import { ConcatenatedValue } from "../../hierarchy-builder/values/ConcatenatedValue";
 import { trimWhitespace } from "../queries/Utils";
 import { createFakeQueryReader, createTestParsedInstanceNode } from "../Utils";
@@ -73,6 +73,7 @@ describe("defaultNodesParser", () => {
         test: 123,
       }),
       [NodeSelectClauseColumnNames.AutoExpand]: true,
+      [NodeSelectClauseColumnNames.SupportsFiltering]: true,
     };
     const node = defaultNodesParser(row);
     expect(node).to.deep.eq({
@@ -86,6 +87,7 @@ describe("defaultNodesParser", () => {
       },
       children: true,
       autoExpand: true,
+      supportsFiltering: true,
       processingParams: {
         hideIfNoChildren: true,
         hideInHierarchy: true,

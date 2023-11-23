@@ -5,20 +5,18 @@
 
 import { Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
-import { HierarchyNode, IHierarchyLevelDefinitionsFactory, NodeSelectClauseFactory } from "@itwin/presentation-hierarchy-builder";
+import { HierarchyNode, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchy-builder";
 import { buildIModel, insertSubject } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
-import { createProvider } from "../Utils";
+import { createMetadataProvider, createProvider } from "../Utils";
 
 describe("Stateless hierarchy builder", () => {
-  let selectClauseFactory: NodeSelectClauseFactory;
   let subjectClassName: string;
 
   before(async function () {
     await initialize();
     subjectClassName = Subject.classFullName.replace(":", ".");
-    selectClauseFactory = new NodeSelectClauseFactory();
   });
 
   after(async () => {
@@ -26,33 +24,6 @@ describe("Stateless hierarchy builder", () => {
   });
 
   describe("Label grouping", () => {
-    const basicHierarchy: IHierarchyLevelDefinitionsFactory = {
-      async defineHierarchyLevel(parentNode) {
-        if (!parentNode) {
-          return [
-            {
-              fullClassName: subjectClassName,
-              query: {
-                ecsql: `
-                  SELECT ${await selectClauseFactory.createSelectClause({
-                    ecClassId: { selector: `this.ECClassId` },
-                    ecInstanceId: { selector: `this.ECInstanceId` },
-                    nodeLabel: { selector: `this.UserLabel` },
-                    grouping: {
-                      byLabel: true,
-                    },
-                  })}
-                  FROM ${subjectClassName} AS this
-                  WHERE this.Parent.Id = (${IModel.rootSubjectId})
-                `,
-              },
-            },
-          ];
-        }
-        return [];
-      },
-    };
-
     it("creates different groups for different labels", async function () {
       const labelGroupName1 = "test1";
       const labelGroupName2 = "test2";
@@ -64,8 +35,36 @@ describe("Stateless hierarchy builder", () => {
         return { childSubject1, childSubject2, childSubject3, childSubject4 };
       });
 
+      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+      const hierarchy: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel(props) {
+          if (!props.parentNode) {
+            return [
+              {
+                fullClassName: subjectClassName,
+                query: {
+                  ecsql: `
+                  SELECT ${await selectQueryFactory.createSelectClause({
+                    ecClassId: { selector: `this.ECClassId` },
+                    ecInstanceId: { selector: `this.ECInstanceId` },
+                    nodeLabel: { selector: `this.UserLabel` },
+                    grouping: {
+                      byLabel: true,
+                    },
+                  })}
+                  FROM ${subjectClassName} AS this
+                  WHERE this.Parent.Id = (${IModel.rootSubjectId})
+                `,
+                },
+              },
+            ];
+          }
+          return [];
+        },
+      };
+
       await validateHierarchy({
-        provider: createProvider({ imodel, hierarchy: basicHierarchy }),
+        provider: createProvider({ imodel, hierarchy }),
         expect: [
           NodeValidators.createForLabelGroupingNode({
             label: labelGroupName1,
@@ -107,15 +106,16 @@ describe("Stateless hierarchy builder", () => {
         return { rootSubject, childSubject1, childSubject2 };
       });
 
+      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
       const hierarchy: IHierarchyLevelDefinitionsFactory = {
-        async defineHierarchyLevel(parentNode) {
-          if (!parentNode) {
+        async defineHierarchyLevel(props) {
+          if (!props.parentNode) {
             return [
               {
                 fullClassName: subjectClassName,
                 query: {
                   ecsql: `
-                    SELECT ${await selectClauseFactory.createSelectClause({
+                    SELECT ${await selectQueryFactory.createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: "merge this",
@@ -153,15 +153,16 @@ describe("Stateless hierarchy builder", () => {
         return { rootSubject, visibleSubject1, visibleSubject2 };
       });
 
+      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
       const hierarchy: IHierarchyLevelDefinitionsFactory = {
-        async defineHierarchyLevel(parentNode) {
-          if (!parentNode) {
+        async defineHierarchyLevel(props) {
+          if (!props.parentNode) {
             return [
               {
                 fullClassName: subjectClassName,
                 query: {
                   ecsql: `
-                    SELECT ${await selectClauseFactory.createSelectClause({
+                    SELECT ${await selectQueryFactory.createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.CodeValue` },
@@ -175,13 +176,13 @@ describe("Stateless hierarchy builder", () => {
               },
             ];
           }
-          if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "hide") {
+          if (HierarchyNode.isInstancesNode(props.parentNode) && props.parentNode.label === "hide") {
             return [
               {
                 fullClassName: subjectClassName,
                 query: {
                   ecsql: `
-                    SELECT ${await selectClauseFactory.createSelectClause({
+                    SELECT ${await selectQueryFactory.createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.CodeValue` },
@@ -190,7 +191,7 @@ describe("Stateless hierarchy builder", () => {
                     FROM ${subjectClassName} AS this
                     WHERE this.Parent.Id = ?
                   `,
-                  bindings: parentNode.key.instanceKeys.map((k) => ({ type: "id", value: k.id })),
+                  bindings: props.parentNode.key.instanceKeys.map((k) => ({ type: "id", value: k.id })),
                 },
               },
             ];

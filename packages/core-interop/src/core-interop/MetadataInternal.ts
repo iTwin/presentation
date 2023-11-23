@@ -121,6 +121,10 @@ abstract class ECClassImpl<TCoreClass extends CoreClass> extends ECSchemaItemImp
     const coreProperty = await this._coreSchemaItem.getProperty(name, true);
     return coreProperty ? createECProperty(coreProperty, this) : undefined;
   }
+  public async getProperties(): Promise<Array<ECProperty>> {
+    const coreProperties = await this._coreSchemaItem.getProperties();
+    return coreProperties.map((coreProperty) => createECProperty(coreProperty, this));
+  }
 }
 
 class ECEntityClassImpl extends ECClassImpl<CoreEntityClass> implements ECEntityClass {

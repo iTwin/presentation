@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { IMetadataProvider } from "../../../ECMetadata";
 import { ClassGroupingNodeKey, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
-import { IMetadataProvider } from "../../../Metadata";
 import { getClass } from "../../Common";
 import { GroupingHandlerResult } from "../Grouping";
 

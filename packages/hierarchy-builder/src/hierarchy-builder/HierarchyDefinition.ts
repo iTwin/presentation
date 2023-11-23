@@ -3,10 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { IMetadataProvider } from "./ECMetadata";
+import { GenericInstanceFilter } from "./GenericInstanceFilter";
 import {
+  HierarchyNode,
   HierarchyNodeKey,
   InstancesNodeKey,
-  ParentHierarchyNode,
   ParsedCustomHierarchyNode,
   ParsedInstanceHierarchyNode,
   ProcessedCustomHierarchyNode,
@@ -14,8 +16,8 @@ import {
   ProcessedInstanceHierarchyNode,
 } from "./HierarchyNode";
 import { getClass } from "./internal/Common";
-import { IMetadataProvider, parseFullClassName } from "./Metadata";
-import { ECSqlQueryDef } from "./queries/ECSql";
+import { parseFullClassName } from "./Metadata";
+import { ECSqlQueryDef } from "./queries/ECSqlCore";
 import { Id64String, InstanceKey } from "./values/Values";
 
 /**
@@ -97,7 +99,18 @@ export type INodePostProcessor = (node: ProcessedHierarchyNode) => Promise<Proce
  * - is either an instances node (key is of [[InstancesNodeKey]] type) or a custom node (key is of `string` type).
  * @beta
  */
-export type HierarchyDefinitionParentNode = Omit<ParentHierarchyNode, "key"> & { key: InstancesNodeKey | string };
+export type HierarchyDefinitionParentNode = Omit<HierarchyNode, "children" | "key"> & { key: InstancesNodeKey | string };
+
+/**
+ * Props for [[IHierarchyLevelDefinitionsFactory.defineHierarchyLevel]].
+ * @beta
+ */
+export interface DefineHierarchyLevelProps {
+  /** Parent node to get children for. Pass `undefined` to get root nodes. */
+  parentNode: HierarchyDefinitionParentNode | undefined;
+  /** Optional hierarchy level filter. */
+  instanceFilter?: GenericInstanceFilter;
+}
 
 /**
  * An interface for a factory that knows how define a hierarchy based on a given parent node.
@@ -135,8 +148,17 @@ export interface IHierarchyLevelDefinitionsFactory {
   postProcessNode?: INodePostProcessor;
 
   /** A function to create a hierarchy level definition for given parent node. */
-  defineHierarchyLevel(parentNode: HierarchyDefinitionParentNode | undefined): Promise<HierarchyLevelDefinition>;
+  defineHierarchyLevel(props: DefineHierarchyLevelProps): Promise<HierarchyLevelDefinition>;
 }
+
+/**
+ * Props for [[InstancesNodeChildHierarchyLevelDefinition.definitions]] call.
+ * @beta
+ */
+export type DefineInstanceNodeChildHierarchyLevelProps = DefineHierarchyLevelProps & {
+  parentNodeInstanceIds: Id64String[];
+  parentNode: HierarchyDefinitionParentNode;
+};
 
 /**
  * A definition of a hierarchy level for that should be used for specific class of parent instance nodes.
@@ -154,10 +176,9 @@ export interface InstancesNodeChildHierarchyLevelDefinition {
 
   /**
    * Called to create a hierarchy level definition when the class check passes (see [[parentNodeClassName]]).
-   * @param instanceIds IDs of instances grouped under the parent instance node.
-   * @param parentNode The parent node, which may contain additional context required to define the child hierarchy level.
+   * @param requestProps Props for creating the hierarchy level definition.
    */
-  definitions: (instanceIds: Id64String[], parentNode: HierarchyDefinitionParentNode) => Promise<HierarchyLevelDefinition>;
+  definitions: (requestProps: DefineInstanceNodeChildHierarchyLevelProps) => Promise<HierarchyLevelDefinition>;
 }
 
 /**
@@ -171,9 +192,9 @@ export interface CustomNodeChildHierarchyLevelDefinition {
   customParentNodeKey: string;
   /**
    * Called to create a hierarchy level definition when the node key check passes (see [[customParentNodeKey]]).
-   * @param parentNode The parent node, which may contain additional context required to define the child hierarchy level.
+   * @param requestProps Props for creating the hierarchy level definition.
    */
-  definitions: (parentNode: HierarchyDefinitionParentNode) => Promise<HierarchyLevelDefinition>;
+  definitions: (requestProps: DefineHierarchyLevelProps) => Promise<HierarchyLevelDefinition>;
 }
 
 /**
@@ -185,12 +206,18 @@ export interface CustomNodeChildHierarchyLevelDefinition {
 export type ClassBasedHierarchyLevelDefinition = InstancesNodeChildHierarchyLevelDefinition | CustomNodeChildHierarchyLevelDefinition;
 
 /**
+ * Props for [[ClassBasedHierarchyDefinition.rootNodes]] call.
+ * @beta
+ */
+export type DefineRootHierarchyLevelProps = Omit<DefineHierarchyLevelProps, "parentNode">;
+
+/**
  * Defines a hierarchy based on parent instance node's class or custom node's key.
  * @beta
  */
 export interface ClassBasedHierarchyDefinition {
   /** Called to create the root hierarchy level definition. */
-  rootNodes: () => Promise<HierarchyLevelDefinition>;
+  rootNodes: (props: DefineRootHierarchyLevelProps) => Promise<HierarchyLevelDefinition>;
 
   /**
    * Called to get child hierarchy level definitions based on parent instance node's class
@@ -230,16 +257,17 @@ export class ClassBasedHierarchyLevelDefinitionsFactory implements IHierarchyLev
    * Create hierarchy level definitions for specific hierarchy level.
    * @param parentNode Parent node to create children definitions for.
    */
-  public async defineHierarchyLevel(parentNode: HierarchyDefinitionParentNode | undefined): Promise<HierarchyLevelDefinition> {
+  public async defineHierarchyLevel(props: DefineHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
+    const { parentNode } = props;
     if (!parentNode) {
-      return this._definition.rootNodes();
+      return this._definition.rootNodes(props);
     }
 
     const parentKey = parentNode.key;
 
     if (HierarchyNodeKey.isCustom(parentKey)) {
       const defs = this._definition.childNodes.filter(isCustomNodeChildHierarchyLevelDefinition).filter((def) => def.customParentNodeKey === parentKey);
-      return (await Promise.all(defs.map(async (def) => def.definitions(parentNode)))).flat();
+      return (await Promise.all(defs.map(async (def) => def.definitions(props)))).flat();
     }
 
     // istanbul ignore else
@@ -249,7 +277,10 @@ export class ClassBasedHierarchyLevelDefinitionsFactory implements IHierarchyLev
       return (
         await Promise.all(
           [...instanceIdsByClass.entries()].map(async ([parentNodeClassName, parentNodeInstanceIds]) =>
-            createHierarchyLevelDefinitions(this._metadataProvider, instancesParentNodeDefs, parentNodeClassName, parentNodeInstanceIds, parentNode),
+            createHierarchyLevelDefinitions(this._metadataProvider, instancesParentNodeDefs, parentNodeClassName, parentNodeInstanceIds, {
+              ...props,
+              parentNode,
+            }),
           ),
         )
       ).flat();
@@ -266,7 +297,7 @@ async function createHierarchyLevelDefinitions(
   defs: InstancesNodeChildHierarchyLevelDefinition[],
   parentNodeClassName: string,
   parentNodeInstanceIds: Id64String[],
-  parentNode: HierarchyDefinitionParentNode,
+  requestProps: DefineHierarchyLevelProps & { parentNode: HierarchyDefinitionParentNode },
 ) {
   const parentNodeClass = await getClass(metadataProvider, parentNodeClassName);
   return (
@@ -274,7 +305,7 @@ async function createHierarchyLevelDefinitions(
       defs.map(async (def) => {
         const { schemaName, className } = parseFullClassName(def.parentNodeClassName);
         if (await parentNodeClass.is(className, schemaName)) {
-          return def.definitions(parentNodeInstanceIds, parentNode);
+          return def.definitions({ ...requestProps, parentNodeInstanceIds });
         }
         return [];
       }),

@@ -3,8 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { PrimitiveValueType, TypedPrimitiveValue } from "../values/Values";
-import { createECSqlValueSelector } from "./NodeSelectClauseFactory";
+import { Id64 } from "@itwin/core-bentley";
+import { PrimitiveValueType } from "../../Metadata";
+import { PrimitiveValue, TypedPrimitiveValue } from "../../values/Values";
 
 /**
  * A union of property types that need special handling when creating a property value selector.
@@ -187,7 +188,7 @@ export function createTypedValueSelector(props: TypedValueSelectClauseProps): st
   }
   return `
     json_object(
-      'value', ${typeof props.value === "boolean" ? `CAST(${createECSqlValueSelector(props.value)} AS BOOLEAN)` : createECSqlValueSelector(props.value)},
+      'value', ${createPrimitiveValueSelector(props.value)},
       'type', '${props.type}'
     )
   `;
@@ -196,4 +197,31 @@ export function createTypedValueSelector(props: TypedValueSelectClauseProps): st
 function withNullSelectorHandling(props: { nullValueResult?: "null" | "selector"; valueSelector: string; checkSelector: string }) {
   const { checkSelector, valueSelector, nullValueResult } = props;
   return nullValueResult === "null" ? createNullableSelector({ valueSelector, checkSelector }) : valueSelector;
+}
+
+/**
+ * Creates a selector for the given primitive value.
+ * @beta
+ */
+export function createPrimitiveValueSelector(value: PrimitiveValue | undefined) {
+  if (value === undefined) {
+    return "NULL";
+  }
+  if (value instanceof Date) {
+    return `'${value.toISOString()}'`;
+  }
+  if (PrimitiveValue.isPoint3d(value)) {
+    return `json_object('x', ${value.x}, 'y', ${value.y}, 'z', ${value.z})`;
+  }
+  if (PrimitiveValue.isPoint2d(value)) {
+    return `json_object('x', ${value.x}, 'y', ${value.y})`;
+  }
+  switch (typeof value) {
+    case "string":
+      return Id64.isId64(value) ? value : `'${value}'`;
+    case "number":
+      return value.toString();
+    case "boolean":
+      return value ? "TRUE" : "FALSE";
+  }
 }

@@ -4,7 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { AutoExpand, GroupingNodeKey, HierarchyNode, InstanceHierarchyNodeProcessingParams } from "../../../../hierarchy-builder/HierarchyNode";
+import {
+  GroupingNodeKey,
+  HierarchyNode,
+  HierarchyNodeAutoExpandProp,
+  InstanceHierarchyNodeProcessingParams,
+} from "../../../../hierarchy-builder/HierarchyNode";
 import { GroupingType, ProcessedInstancesGroupingHierarchyNode } from "../../../../hierarchy-builder/internal/operators/Grouping";
 import { assignAutoExpand } from "../../../../hierarchy-builder/internal/operators/grouping/AutoExpand";
 import { createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils";
@@ -22,7 +27,7 @@ describe("AutoExpand", () => {
           },
         },
         groupingType: "base-class",
-        createGroupedNodeProcessingParams: (autoExpand: AutoExpand | undefined): InstanceHierarchyNodeProcessingParams => {
+        createGroupedNodeProcessingParams: (autoExpand: HierarchyNodeAutoExpandProp | undefined): InstanceHierarchyNodeProcessingParams => {
           return { grouping: { byBaseClasses: { fullClassNames: ["TestSchema:BaseClass"], autoExpand } } };
         },
       },
@@ -38,7 +43,7 @@ describe("AutoExpand", () => {
           },
         },
         groupingType: "class",
-        createGroupedNodeProcessingParams: (autoExpand: AutoExpand | undefined): InstanceHierarchyNodeProcessingParams => {
+        createGroupedNodeProcessingParams: (autoExpand: HierarchyNodeAutoExpandProp | undefined): InstanceHierarchyNodeProcessingParams => {
           return { grouping: { byClass: autoExpand ? { autoExpand } : true } };
         },
       },
@@ -70,7 +75,7 @@ describe("AutoExpand", () => {
           label: "1",
         },
         groupingType: "label",
-        createGroupedNodeProcessingParams: (autoExpand: AutoExpand | undefined): InstanceHierarchyNodeProcessingParams => {
+        createGroupedNodeProcessingParams: (autoExpand: HierarchyNodeAutoExpandProp | undefined): InstanceHierarchyNodeProcessingParams => {
           return { grouping: { byLabel: autoExpand ? { autoExpand } : true } };
         },
       },

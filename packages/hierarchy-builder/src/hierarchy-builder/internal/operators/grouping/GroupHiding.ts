@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import {
-  BaseGroupingParams,
+  HierarchyNodeGroupingParamsBase,
   InstanceHierarchyNodeProcessingParams,
   ProcessedGroupingHierarchyNode,
   ProcessedInstanceHierarchyNode,
@@ -58,7 +58,7 @@ function getGroupingHideOptionsFromParentNode(
 
 function getHideOptionsFromNodeProcessingParams(
   nodes: ProcessedInstanceHierarchyNode[],
-  hideOptionsAccessor: (params: InstanceHierarchyNodeProcessingParams) => BaseGroupingParams | undefined,
+  hideOptionsAccessor: (params: InstanceHierarchyNodeProcessingParams) => HierarchyNodeGroupingParamsBase | undefined,
 ): { hideIfNoSiblings: boolean; hideIfOneGroupedNode: boolean } {
   let hideIfNoSiblings = false;
   let hideIfOneGroupedNode = false;
