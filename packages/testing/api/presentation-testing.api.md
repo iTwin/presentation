@@ -17,11 +17,9 @@ import { Id64String } from '@itwin/core-bentley';
 import { IModelApp } from '@itwin/core-frontend';
 import { IModelAppOptions } from '@itwin/core-frontend';
 import { IModelConnection } from '@itwin/core-frontend';
-import { IModelDb } from '@itwin/core-backend';
 import { IModelHostOptions } from '@itwin/core-backend';
 import { InstanceKey } from '@itwin/presentation-common';
 import { KeySet } from '@itwin/presentation-common';
-import { LocalFileName } from '@itwin/core-common';
 import { ModelProps } from '@itwin/core-common';
 import { Omit as Omit_2 } from '@itwin/presentation-common';
 import { PageOptions } from '@itwin/presentation-common';
@@ -69,14 +67,8 @@ export interface ContentBuilderResult {
     records: PropertyRecord[];
 }
 
-// @internal (undocumented)
-export function createFileNameFromString(str: string): string;
-
 // @public
 export const defaultNodeMappingFunc: NodeMappingFunc;
-
-// @internal (undocumented)
-export const getTestOutputDir: () => string;
 
 // @public
 export class HierarchyBuilder {
@@ -102,23 +94,6 @@ export interface IContentBuilderDataProvider {
     getContent: (options?: PageOptions) => Promise<Readonly<Content> | undefined>;
     getContentSetSize: () => Promise<number>;
     keys: Readonly<KeySet>;
-}
-
-// @internal
-export class IModelBuilder implements TestIModelBuilder {
-    constructor(iModel: IModelDb);
-    // (undocumented)
-    createCode(scopeModelId: CodeScopeProps, codeSpecName: BisCodeSpec, codeValue: string): Code;
-    // (undocumented)
-    importSchema(schemaXml: string): Promise<void>;
-    // (undocumented)
-    insertAspect<TProps extends ElementAspectProps>(props: TProps): Id64String;
-    // (undocumented)
-    insertElement<TProps extends ElementProps>(props: TProps): Id64String;
-    // (undocumented)
-    insertModel<TProps extends ModelProps>(props: TProps): Id64String;
-    // (undocumented)
-    insertRelationship<TProps extends RelationshipProps>(props: TProps): Id64String;
 }
 
 // @public
@@ -149,9 +124,6 @@ export interface PresentationTestingInitProps {
     rpcs?: RpcInterfaceDefinition[];
     testOutputDir?: string;
 }
-
-// @internal
-export function setupOutputFileLocation(fileName: string): LocalFileName;
 
 // @public
 export const terminate: (frontendApp?: typeof IModelApp) => Promise<void>;

@@ -6,7 +6,7 @@
   "lines": 100,
   "all": true,
   "include": ["src/**/*", "lib/cjs/**/*"],
-  "exclude": ["src/core-interop.ts", "src/test/**", "lib/cjs/test/**"],
+  "exclude": ["src/presentation-core-interop.ts", "src/test/**", "lib/cjs/test/**"],
   "extension": [".ts"],
   "temp-dir": "./lib/test/coverage/.nyc_output",
   "report-dir": "./lib/test/coverage",

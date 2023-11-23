@@ -402,6 +402,10 @@ export interface ECSqlSelectClauseGroupingParams {
 // @beta
 export interface ECSqlSelectClausePropertiesGroupingParams extends BaseGroupingParams_2 {
     // (undocumented)
+    createGroupForOutOfRangeValues?: boolean;
+    // (undocumented)
+    createGroupForUnspecifiedValues?: boolean;
+    // (undocumented)
     fullClassName: string | ECSqlValueSelector;
     // (undocumented)
     propertyGroups: Array<ECSqlSelectClausePropertyGroup>;
@@ -584,6 +588,8 @@ export namespace HierarchyNodeKey {
 
 // @beta
 export interface HierarchyNodePropertiesGroupingParams extends BaseGroupingParams {
+    createGroupForOutOfRangeValues?: boolean;
+    createGroupForUnspecifiedValues?: boolean;
     fullClassName: string;
     propertyGroups: Array<PropertyGroup>;
 }
@@ -717,6 +723,12 @@ export interface LabelGroupingNodeKey {
     // (undocumented)
     type: "label-grouping";
 }
+
+// @beta
+export const LOCALIZATION_NAMESPACE = "PresentationHierarchyBuilder";
+
+// @beta
+export type LocalizationFunction = (input: string) => string;
 
 // @beta (undocumented)
 export type LogFunction = (category: string, message: string) => void;
@@ -854,7 +866,7 @@ export type ProcessedInstanceHierarchyNode = Omit<HierarchyNode, "key" | "childr
 // @beta
 export interface PropertyGroup {
     propertyName: string;
-    propertyValue: PrimitiveValue;
+    propertyValue?: PrimitiveValue;
     ranges?: Array<Range>;
 }
 
@@ -922,6 +934,9 @@ export interface Range {
     rangeLabel?: string;
     toValue: number;
 }
+
+// @beta
+export function setLocalizationFunction(localizationFunction?: LocalizationFunction): void;
 
 // @beta
 export function setLogger(logger: ILogger | undefined): void;

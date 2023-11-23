@@ -24,7 +24,7 @@ import {
   Value,
   ValuesMap,
 } from "@itwin/presentation-common";
-import { ContentDataProvider, FieldHierarchyRecord, PropertyRecordsBuilder } from "@itwin/presentation-components";
+import { ContentDataProvider, PropertyRecordsBuilder } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 
 /**
@@ -201,20 +201,14 @@ class PropertyRecordsAccumulator extends PropertyRecordsBuilder {
   private _decimalPrecision?: number;
 
   public constructor(decimalPrecision?: number) {
-    super();
+    super((record) => {
+      this._records.push(record);
+    });
     this._decimalPrecision = decimalPrecision;
   }
 
   public get records(): PropertyRecord[] {
     return this._records;
-  }
-
-  protected createRootPropertiesAppender() {
-    return {
-      append: (record: FieldHierarchyRecord) => {
-        this._records.push(record.record);
-      },
-    };
   }
 
   private processRawValue(value: Value): Value {

@@ -2,9 +2,6 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/** @packageDocumentation
- * @module Core
- */
 
 import {
   ArrayValue,
@@ -42,12 +39,6 @@ import { NumericEditorName } from "../properties/editors/NumericPropertyEditor";
 import { QuantityEditorName } from "../properties/editors/QuantityPropertyEditor";
 
 /** @internal */
-export interface FieldRecord {
-  record: PropertyRecord;
-  field: Field;
-}
-
-/** @internal */
 export interface FieldInfo {
   type: TypeDescription;
   name: string;
@@ -59,8 +50,7 @@ export interface FieldInfo {
   koqName?: string;
 }
 
-/** @internal */
-export function createFieldInfo(field: Field, parentFieldName?: string) {
+function createFieldInfo(field: Field, parentFieldName?: string) {
   return {
     type: field.isNestedContentField() ? field.type : { ...field.type, typeName: field.type.typeName.toLowerCase() },
     name: combineFieldNames(field.name, parentFieldName),
@@ -119,13 +109,21 @@ export interface FieldHierarchyRecord {
 
 /** @internal */
 export interface IPropertiesAppender {
-  item?: Item;
   append(record: FieldHierarchyRecord): void;
 }
-interface INestedPropertiesAppender extends IPropertiesAppender {
+/** @internal */
+export interface IRootPropertiesAppender extends IPropertiesAppender {
+  item: Item;
+}
+/** @internal */
+export interface INestedPropertiesAppender extends IPropertiesAppender {
   finish(): void;
 }
-namespace IPropertiesAppender {
+/** @internal */
+export namespace IPropertiesAppender {
+  export function isRoot(appender: IPropertiesAppender): appender is IRootPropertiesAppender {
+    return (appender as IRootPropertiesAppender).item !== undefined;
+  }
   export function isNested(appender: IPropertiesAppender): appender is INestedPropertiesAppender {
     return (appender as INestedPropertiesAppender).finish !== undefined;
   }
@@ -142,7 +140,12 @@ class StructMembersAppender implements INestedPropertiesAppender {
       members: this._members,
     };
     const record = new PropertyRecord(value, createPropertyDescriptionFromFieldInfo(this._fieldInfo));
-    applyPropertyRecordAttributes(record, this._fieldHierarchy.field, undefined, this._parentAppender.item?.extendedData);
+    applyPropertyRecordAttributes(
+      record,
+      this._fieldHierarchy.field,
+      undefined,
+      IPropertiesAppender.isRoot(this._parentAppender) ? this._parentAppender.item.extendedData : undefined,
+    );
     this._parentAppender.append({ record, fieldHierarchy: this._fieldHierarchy });
   }
 }
@@ -160,16 +163,25 @@ class ArrayItemsAppender implements INestedPropertiesAppender {
       items: this._items,
     };
     const record = new PropertyRecord(value, createPropertyDescriptionFromFieldInfo(this._fieldInfo));
-    applyPropertyRecordAttributes(record, this._fieldHierarchy.field, undefined, this._parentAppender.item?.extendedData);
+    applyPropertyRecordAttributes(
+      record,
+      this._fieldHierarchy.field,
+      undefined,
+      IPropertiesAppender.isRoot(this._parentAppender) ? this._parentAppender.item.extendedData : undefined,
+    );
     this._parentAppender.append({ record, fieldHierarchy: this._fieldHierarchy });
   }
 }
 
 /** @internal */
-export abstract class PropertyRecordsBuilder implements IContentVisitor {
+export class InternalPropertyRecordsBuilder implements IContentVisitor {
   private _appendersStack: Array<IPropertiesAppender> = [];
+  private _rootAppenderFactory: (item: Item) => IRootPropertiesAppender;
 
-  protected abstract createRootPropertiesAppender(): IPropertiesAppender;
+  public constructor(rootPropertiesAppenderFactory: (item: Item) => IRootPropertiesAppender) {
+    this._rootAppenderFactory = rootPropertiesAppenderFactory;
+  }
+
   protected get currentPropertiesAppender(): IPropertiesAppender {
     const appender = this._appendersStack[this._appendersStack.length - 1];
     assert(appender !== undefined);
@@ -182,8 +194,7 @@ export abstract class PropertyRecordsBuilder implements IContentVisitor {
   public finishContent(): void {}
 
   public startItem(props: StartItemProps): boolean {
-    const appender = this.createRootPropertiesAppender();
-    appender.item = props.item;
+    const appender = this._rootAppenderFactory(props.item);
     this._appendersStack.push(appender);
     return true;
   }
@@ -254,7 +265,12 @@ export abstract class PropertyRecordsBuilder implements IContentVisitor {
       value,
       createPropertyDescriptionFromFieldInfo({ ...createFieldInfo(props.field, props.parentFieldName), type: props.valueType }),
     );
-    applyPropertyRecordAttributes(record, props.field, props.displayValue?.toString(), appender.item?.extendedData);
+    applyPropertyRecordAttributes(
+      record,
+      props.field,
+      props.displayValue?.toString(),
+      IPropertiesAppender.isRoot(appender) ? appender.item.extendedData : undefined,
+    );
     appender.append({ record, fieldHierarchy: { field: props.field, childFields: [] } });
   }
 }
