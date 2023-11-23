@@ -213,8 +213,8 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                   selector: `
                     CASE
                       WHEN (
-                        json_extract(partition.JsonProperties, '$.PhysicalPartition.Model.Content') IS NOT NULL
-                        OR json_extract(partition.JsonProperties, '$.GraphicalPartition3d.Model.Content') IS NOT NULL
+                        json_extract([partition].JsonProperties, '$.PhysicalPartition.Model.Content') IS NOT NULL
+                        OR json_extract([partition].JsonProperties, '$.GraphicalPartition3d.Model.Content') IS NOT NULL
                       ) THEN 1
                       ELSE 0
                     END
@@ -226,8 +226,8 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                 },
               })}
             FROM bis.GeometricModel3d this
-            JOIN bis.InformationPartitionElement partition ON partition.ECInstanceId = this.ModeledElement.Id
-            JOIN bis.Subject subject ON subject.ECInstanceId = partition.Parent.Id OR json_extract(subject.JsonProperties,'$.Subject.Model.TargetPartition') = printf('0x%x', partition.ECInstanceId)
+            JOIN bis.InformationPartitionElement [partition] ON [partition].ECInstanceId = this.ModeledElement.Id
+            JOIN bis.Subject [subject] ON [subject].ECInstanceId = [partition].Parent.Id OR json_extract([subject].JsonProperties,'$.Subject.Model.TargetPartition') = printf('0x%x', [partition].ECInstanceId)
             WHERE
               NOT this.IsPrivate
               AND EXISTS (
@@ -237,8 +237,8 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                 WHERE a.SourceECInstanceId = +this.ECInstanceId
               )
               AND (
-                subject.ECInstanceId IN (${subjectIds.map(() => "?").join(",")})
-                OR subject.ECInstanceId IN (
+                [subject].ECInstanceId IN (${subjectIds.map(() => "?").join(",")})
+                OR [subject].ECInstanceId IN (
                   SELECT s.ECInstanceId
                   FROM child_subjects s
                   WHERE s.RootId IN (${subjectIds.map(() => "?").join(",")}) AND s.${NodeSelectClauseColumnNames.HideNodeInHierarchy}
