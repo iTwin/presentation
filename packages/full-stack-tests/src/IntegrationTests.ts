@@ -7,20 +7,20 @@ import * as fs from "fs";
 import Backend from "i18next-http-backend";
 import * as path from "path";
 import { Guid, Logger, LogLevel } from "@itwin/core-bentley";
+import { IModelReadRpcInterface, SnapshotIModelRpcInterface } from "@itwin/core-common";
 import { IModelApp, IModelAppOptions, NoRenderApp } from "@itwin/core-frontend";
 import { ITwinLocalization } from "@itwin/core-i18n";
+import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
+import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import {
   HierarchyCacheMode,
   Presentation as PresentationBackend,
   PresentationBackendNativeLoggerCategory,
   PresentationProps as PresentationBackendProps,
 } from "@itwin/presentation-backend";
+import { PresentationRpcInterface } from "@itwin/presentation-common";
 import { PresentationProps as PresentationFrontendProps } from "@itwin/presentation-frontend";
 import { initialize as initializePresentation, PresentationTestingInitProps, terminate as terminatePresentation } from "@itwin/presentation-testing";
-import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
-import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
-import { IModelReadRpcInterface, SnapshotIModelRpcInterface } from "@itwin/core-common";
-import { PresentationRpcInterface } from "@itwin/presentation-common";
 
 class IntegrationTestsApp extends NoRenderApp {
   public static override async startup(opts?: IModelAppOptions): Promise<void> {
