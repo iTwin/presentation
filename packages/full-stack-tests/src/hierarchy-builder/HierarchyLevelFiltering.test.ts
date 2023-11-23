@@ -3,25 +3,16 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Element, InformationPartitionElement, Subject } from "@itwin/core-backend";
-import { IModel } from "@itwin/core-common";
 import { IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchy-builder";
-import { buildIModel, insertExternalSourceAspect, insertPhysicalPartition, insertSubject } from "../IModelUtils";
+import { importSchema, withECDb } from "../IModelUtils";
 import { initialize, terminate } from "../IntegrationTests";
 import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation";
 import { createMetadataProvider, createProvider } from "./Utils";
 
 describe("Stateless hierarchy builder", () => {
-  describe("Hierarchy filtering", () => {
-    let elementClassName: string;
-    let subjectClassName: string;
-    let partitionClassName: string;
-
+  describe("Hierarchy level filtering", () => {
     before(async () => {
       await initialize();
-      elementClassName = Element.classFullName.replace(":", ".");
-      subjectClassName = Subject.classFullName.replace(":", ".");
-      partitionClassName = InformationPartitionElement.classFullName.replace(":", ".");
     });
 
     after(async () => {
@@ -29,331 +20,441 @@ describe("Stateless hierarchy builder", () => {
     });
 
     it("filters root hierarchy level", async function () {
-      const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-        const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-        const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id });
-        const childSubject2 = insertSubject({ builder, codeValue: "test subject 2", parentId: rootSubject.id });
-        return { rootSubject, childSubject1, childSubject2 };
-      });
-
-      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
-      const hierarchy: IHierarchyLevelDefinitionsFactory = {
-        async defineHierarchyLevel({ instanceFilter }) {
-          const filterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: subjectClassName, alias: "this" });
-          return [
-            {
-              fullClassName: subjectClassName,
-              query: {
-                ecsql: `
-                  SELECT ${await selectQueryFactory.createSelectClause({
-                    ecClassId: { selector: `this.ECClassId` },
-                    ecInstanceId: { selector: `this.ECInstanceId` },
-                    nodeLabel: { selector: `this.CodeValue` },
-                  })}
-                  FROM ${filterClauses.from} AS this
-                  ${filterClauses.joins}
-                  ${filterClauses.where ? `WHERE ${filterClauses?.where}` : ""}
-                `,
-              },
+      await withECDb(
+        this,
+        async (db) => {
+          const schema = importSchema(
+            this,
+            db,
+            `
+              <ECEntityClass typeName="X">
+                <ECProperty propertyName="Prop" typeName="string" />
+              </ECEntityClass>
+            `,
+          );
+          const x1 = db.insertInstance(schema.items.X.fullName, { prop: "one" });
+          const x2 = db.insertInstance(schema.items.X.fullName, { prop: "two" });
+          return { schema, x1, x2 };
+        },
+        async (imodel, { schema, x1, x2 }) => {
+          const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+          const hierarchy: IHierarchyLevelDefinitionsFactory = {
+            async defineHierarchyLevel({ instanceFilter }) {
+              const filterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: schema.items.X.fullName, alias: "this" });
+              return [
+                {
+                  fullClassName: schema.items.X.fullName,
+                  query: {
+                    ecsql: `
+                      SELECT ${await selectQueryFactory.createSelectClause({
+                        ecClassId: { selector: `this.ECClassId` },
+                        ecInstanceId: { selector: `this.ECInstanceId` },
+                        nodeLabel: { selector: `this.Prop` },
+                      })}
+                      FROM ${filterClauses.from} AS this
+                      ${filterClauses.joins}
+                      ${filterClauses.where ? `WHERE ${filterClauses.where}` : ""}
+                    `,
+                  },
+                },
+              ];
             },
-          ];
+          };
+          const provider = createProvider({ imodel, hierarchy });
+          validateHierarchyLevel({
+            nodes: await provider.getNodes({
+              parentNode: undefined,
+            }),
+            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x1] }), NodeValidators.createForInstanceNode({ instanceKeys: [x2] })],
+          });
+          validateHierarchyLevel({
+            nodes: await provider.getNodes({
+              parentNode: undefined,
+              instanceFilter: {
+                propertyClassName: schema.items.X.fullName,
+                relatedInstances: [],
+                rules: {
+                  propertyName: `Prop`,
+                  operator: "Equal",
+                  value: `one`,
+                },
+              },
+            }),
+            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x1] })],
+          });
         },
-      };
-
-      const provider = createProvider({ imodel, hierarchy });
-      const nodes = await provider.getNodes({
-        parentNode: undefined,
-        instanceFilter: {
-          propertyClassName: subjectClassName,
-          relatedInstances: [],
-          rules: {
-            propertyName: `CodeValue`,
-            operator: "Like",
-            value: `test%`,
-          },
-        },
-      });
-      validateHierarchyLevel({
-        nodes,
-        expect: [
-          NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1] }),
-          NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject2] }),
-        ],
-      });
+      );
     });
 
     it("filters child hierarchy level", async function () {
-      const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-        const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-        const childSubject1 = insertSubject({ builder, codeValue: "test subject 1", parentId: rootSubject.id });
-        const childSubject2 = insertSubject({ builder, codeValue: "test subject 2", parentId: rootSubject.id });
-        return { rootSubject, childSubject1, childSubject2 };
-      });
-
-      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
-      const hierarchy: IHierarchyLevelDefinitionsFactory = {
-        async defineHierarchyLevel({ instanceFilter }) {
-          const filterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: subjectClassName, alias: "this" });
-          return [
-            {
-              fullClassName: subjectClassName,
-              query: {
-                ecsql: `
-                  SELECT ${await selectQueryFactory.createSelectClause({
-                    ecClassId: { selector: `this.ECClassId` },
-                    ecInstanceId: { selector: `this.ECInstanceId` },
-                    nodeLabel: { selector: `this.CodeValue` },
-                  })}
-                  FROM ${filterClauses.from} AS this
-                  ${filterClauses.joins}
-                  WHERE
-                    this.Parent.Id = 0x1
-                    ${filterClauses.where ? `AND ${filterClauses.where}` : ""}
-                `,
-              },
+      await withECDb(
+        this,
+        async (db) => {
+          const schema = importSchema(
+            this,
+            db,
+            `
+              <ECEntityClass typeName="X" />
+              <ECEntityClass typeName="Y">
+                <ECProperty propertyName="Prop" typeName="string" />
+              </ECEntityClass>
+            `,
+          );
+          const x = db.insertInstance(schema.items.X.fullName);
+          const y1 = db.insertInstance(schema.items.Y.fullName, { prop: "one" });
+          const y2 = db.insertInstance(schema.items.Y.fullName, { prop: "two" });
+          return { schema, x, y1, y2 };
+        },
+        async (imodel, { schema, x, y1, y2 }) => {
+          const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+          const hierarchy: IHierarchyLevelDefinitionsFactory = {
+            async defineHierarchyLevel({ instanceFilter }) {
+              const filterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: schema.items.Y.fullName, alias: "this" });
+              return [
+                {
+                  fullClassName: schema.items.Y.fullName,
+                  query: {
+                    ecsql: `
+                      SELECT ${await selectQueryFactory.createSelectClause({
+                        ecClassId: { selector: `this.ECClassId` },
+                        ecInstanceId: { selector: `this.ECInstanceId` },
+                        nodeLabel: "doesnt matter",
+                      })}
+                      FROM ${filterClauses.from} AS this
+                      ${filterClauses.joins}
+                      ${filterClauses.where ? `WHERE ${filterClauses.where}` : ""}
+                    `,
+                  },
+                },
+              ];
             },
-          ];
+          };
+          const provider = createProvider({ imodel, hierarchy });
+          validateHierarchyLevel({
+            nodes: await provider.getNodes({
+              parentNode: {
+                key: { type: "instances", instanceKeys: [x] },
+                parentKeys: [],
+                label: "",
+              },
+            }),
+            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [y1] }), NodeValidators.createForInstanceNode({ instanceKeys: [y2] })],
+          });
+          validateHierarchyLevel({
+            nodes: await provider.getNodes({
+              parentNode: {
+                key: { type: "instances", instanceKeys: [x] },
+                parentKeys: [],
+                label: "",
+              },
+              instanceFilter: {
+                propertyClassName: schema.items.Y.fullName,
+                relatedInstances: [],
+                rules: {
+                  propertyName: `Prop`,
+                  operator: "Equal",
+                  value: `two`,
+                },
+              },
+            }),
+            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [y2] })],
+          });
         },
-      };
-
-      const provider = createProvider({ imodel, hierarchy });
-      const nodes = await provider.getNodes({
-        parentNode: {
-          key: { type: "instances", instanceKeys: [{ className: subjectClassName, id: "0x1" }] },
-          parentKeys: [],
-          label: "",
-        },
-        instanceFilter: {
-          propertyClassName: subjectClassName,
-          relatedInstances: [],
-          rules: {
-            propertyName: `CodeValue`,
-            operator: "Like",
-            value: `%1`,
-          },
-        },
-      });
-      validateHierarchyLevel({
-        nodes,
-        expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject1] })],
-      });
+      );
     });
 
     it("filters by property class", async function () {
-      const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-        const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-        const childSubject = insertSubject({ builder, codeValue: "test subject", parentId: rootSubject.id });
-        const childPartition = insertPhysicalPartition({ builder, codeValue: "test partition", parentId: rootSubject.id });
-        return { rootSubject, childSubject, childPartition };
-      });
-
-      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
-      const hierarchy: IHierarchyLevelDefinitionsFactory = {
-        async defineHierarchyLevel({ instanceFilter }) {
-          const subjectFilterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: elementClassName, alias: "this" });
-          return [
-            {
-              fullClassName: elementClassName,
-              query: {
-                ecsql: `
-                  SELECT ${await selectQueryFactory.createSelectClause({
-                    ecClassId: { selector: `this.ECClassId` },
-                    ecInstanceId: { selector: `this.ECInstanceId` },
-                    nodeLabel: { selector: `this.CodeValue` },
-                  })}
-                  FROM ${subjectFilterClauses.from} AS this
-                  ${subjectFilterClauses.joins}
-                  ${subjectFilterClauses.where ? `WHERE ${subjectFilterClauses.where}` : ""}
-                `,
-              },
+      await withECDb(
+        this,
+        async (db) => {
+          const schema = importSchema(
+            this,
+            db,
+            `
+              <ECEntityClass typeName="X" />
+              <ECEntityClass typeName="Y">
+                <BaseClass>X</BaseClass>
+              </ECEntityClass>
+            `,
+          );
+          const x = db.insertInstance(schema.items.X.fullName);
+          const y = db.insertInstance(schema.items.Y.fullName);
+          return { schema, x, y };
+        },
+        async (imodel, { schema, x, y }) => {
+          const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+          const hierarchy: IHierarchyLevelDefinitionsFactory = {
+            async defineHierarchyLevel({ instanceFilter }) {
+              const subjectFilterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: schema.items.X.fullName, alias: "this" });
+              return [
+                {
+                  fullClassName: schema.items.X.fullName,
+                  query: {
+                    ecsql: `
+                      SELECT ${await selectQueryFactory.createSelectClause({
+                        ecClassId: { selector: `this.ECClassId` },
+                        ecInstanceId: { selector: `this.ECInstanceId` },
+                        nodeLabel: "doesnt matter",
+                      })}
+                      FROM ${subjectFilterClauses.from} AS this
+                      ${subjectFilterClauses.joins}
+                      ${subjectFilterClauses.where ? `WHERE ${subjectFilterClauses.where}` : ""}
+                    `,
+                  },
+                },
+              ];
             },
-          ];
+          };
+          const provider = createProvider({ imodel, hierarchy });
+          validateHierarchyLevel({
+            nodes: await provider.getNodes({
+              parentNode: undefined,
+            }),
+            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x] }), NodeValidators.createForInstanceNode({ instanceKeys: [y] })],
+          });
+          validateHierarchyLevel({
+            nodes: await provider.getNodes({
+              parentNode: undefined,
+              instanceFilter: {
+                propertyClassName: schema.items.Y.fullName,
+                relatedInstances: [],
+                rules: {
+                  operator: "And",
+                  rules: [],
+                },
+              },
+            }),
+            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [y] })],
+          });
         },
-      };
-
-      const provider = createProvider({ imodel, hierarchy });
-      const nodes = await provider.getNodes({
-        parentNode: undefined,
-        instanceFilter: {
-          propertyClassName: "BisCore.PhysicalPartition",
-          relatedInstances: [],
-          rules: {
-            operator: "And",
-            rules: [],
-          },
-        },
-      });
-      validateHierarchyLevel({
-        nodes,
-        expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition] })],
-      });
+      );
     });
 
     it("filters by filter class", async function () {
-      const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-        const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-        const childSubject = insertSubject({ builder, codeValue: "test subject", parentId: rootSubject.id });
-        const childPartition = insertPhysicalPartition({ builder, codeValue: "test partition", parentId: rootSubject.id });
-        return { rootSubject, childSubject, childPartition };
-      });
-
-      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
-      const hierarchy: IHierarchyLevelDefinitionsFactory = {
-        async defineHierarchyLevel({ instanceFilter }) {
-          const subjectFilterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: elementClassName, alias: "this" });
-          return [
-            {
-              fullClassName: elementClassName,
-              query: {
-                ecsql: `
-                  SELECT ${await selectQueryFactory.createSelectClause({
-                    ecClassId: { selector: `this.ECClassId` },
-                    ecInstanceId: { selector: `this.ECInstanceId` },
-                    nodeLabel: { selector: `this.CodeValue` },
-                  })}
-                  FROM ${subjectFilterClauses.from} AS this
-                  ${subjectFilterClauses.joins}
-                  ${subjectFilterClauses.where ? `WHERE ${subjectFilterClauses.where}` : ""}
-                `,
-              },
+      await withECDb(
+        this,
+        async (db) => {
+          const schema = importSchema(
+            this,
+            db,
+            `
+              <ECEntityClass typeName="X" />
+              <ECEntityClass typeName="Y">
+                <BaseClass>X</BaseClass>
+              </ECEntityClass>
+            `,
+          );
+          const x = db.insertInstance(schema.items.X.fullName);
+          const y = db.insertInstance(schema.items.Y.fullName);
+          return { schema, x, y };
+        },
+        async (imodel, { schema, x, y }) => {
+          const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+          const hierarchy: IHierarchyLevelDefinitionsFactory = {
+            async defineHierarchyLevel({ instanceFilter }) {
+              const subjectFilterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: schema.items.X.fullName, alias: "this" });
+              return [
+                {
+                  fullClassName: schema.items.X.fullName,
+                  query: {
+                    ecsql: `
+                      SELECT ${await selectQueryFactory.createSelectClause({
+                        ecClassId: { selector: `this.ECClassId` },
+                        ecInstanceId: { selector: `this.ECInstanceId` },
+                        nodeLabel: "doesnt matter",
+                      })}
+                      FROM ${subjectFilterClauses.from} AS this
+                      ${subjectFilterClauses.joins}
+                      ${subjectFilterClauses.where ? `WHERE ${subjectFilterClauses.where}` : ""}
+                    `,
+                  },
+                },
+              ];
             },
-          ];
+          };
+          const provider = createProvider({ imodel, hierarchy });
+          validateHierarchyLevel({
+            nodes: await provider.getNodes({
+              parentNode: undefined,
+            }),
+            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x] }), NodeValidators.createForInstanceNode({ instanceKeys: [y] })],
+          });
+          validateHierarchyLevel({
+            nodes: await provider.getNodes({
+              parentNode: undefined,
+              instanceFilter: {
+                propertyClassName: schema.items.X.fullName,
+                filterClassNames: [schema.items.Y.fullName],
+                relatedInstances: [],
+                rules: {
+                  operator: "And",
+                  rules: [],
+                },
+              },
+            }),
+            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [y] })],
+          });
         },
-      };
-
-      const provider = createProvider({ imodel, hierarchy });
-      const nodes = await provider.getNodes({
-        parentNode: undefined,
-        instanceFilter: {
-          propertyClassName: elementClassName,
-          filterClassNames: ["BisCore.PhysicalPartition"],
-          relatedInstances: [],
-          rules: {
-            operator: "And",
-            rules: [],
-          },
-        },
-      });
-      validateHierarchyLevel({
-        nodes,
-        expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition] })],
-      });
+      );
     });
 
     it("filters by direct property", async function () {
-      const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-        const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-        const childPartition1 = insertPhysicalPartition({ builder, codeValue: "test partition 1", parentId: rootSubject.id });
-        const childPartition2 = insertPhysicalPartition({ builder, codeValue: "test partition 2", parentId: rootSubject.id });
-        return { rootSubject, childPartition1, childPartition2 };
-      });
-
-      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
-      const hierarchy: IHierarchyLevelDefinitionsFactory = {
-        async defineHierarchyLevel({ instanceFilter }) {
-          const subjectFilterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: partitionClassName, alias: "this" });
-          return [
-            {
-              fullClassName: partitionClassName,
-              query: {
-                ecsql: `
-                  SELECT ${await selectQueryFactory.createSelectClause({
-                    ecClassId: { selector: `this.ECClassId` },
-                    ecInstanceId: { selector: `this.ECInstanceId` },
-                    nodeLabel: { selector: `this.CodeValue` },
-                  })}
-                  FROM ${subjectFilterClauses.from} AS this
-                  ${subjectFilterClauses.joins}
-                  ${subjectFilterClauses.where ? `WHERE ${subjectFilterClauses.where}` : ""}
-                `,
-              },
+      await withECDb(
+        this,
+        async (db) => {
+          const schema = importSchema(
+            this,
+            db,
+            `
+              <ECEntityClass typeName="X">
+                <ECProperty propertyName="Prop" typeName="Int" />
+              </ECEntityClass>
+            `,
+          );
+          const x1 = db.insertInstance(schema.items.X.fullName, { prop: 123 });
+          const x2 = db.insertInstance(schema.items.X.fullName, { prop: 456 });
+          return { schema, x1, x2 };
+        },
+        async (imodel, { schema, x1, x2 }) => {
+          const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+          const hierarchy: IHierarchyLevelDefinitionsFactory = {
+            async defineHierarchyLevel({ instanceFilter }) {
+              const subjectFilterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: schema.items.X.fullName, alias: "this" });
+              return [
+                {
+                  fullClassName: schema.items.X.fullName,
+                  query: {
+                    ecsql: `
+                      SELECT ${await selectQueryFactory.createSelectClause({
+                        ecClassId: { selector: `this.ECClassId` },
+                        ecInstanceId: { selector: `this.ECInstanceId` },
+                        nodeLabel: "doesnt matter",
+                      })}
+                      FROM ${subjectFilterClauses.from} AS this
+                      ${subjectFilterClauses.joins}
+                      ${subjectFilterClauses.where ? `WHERE ${subjectFilterClauses.where}` : ""}
+                    `,
+                  },
+                },
+              ];
             },
-          ];
+          };
+          const provider = createProvider({ imodel, hierarchy });
+          validateHierarchyLevel({
+            nodes: await provider.getNodes({
+              parentNode: undefined,
+            }),
+            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x1] }), NodeValidators.createForInstanceNode({ instanceKeys: [x2] })],
+          });
+          validateHierarchyLevel({
+            nodes: await provider.getNodes({
+              parentNode: undefined,
+              instanceFilter: {
+                propertyClassName: schema.items.X.fullName,
+                relatedInstances: [],
+                rules: {
+                  propertyName: "Prop",
+                  operator: "Less",
+                  value: 200,
+                },
+              },
+            }),
+            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x1] })],
+          });
         },
-      };
-
-      const provider = createProvider({ imodel, hierarchy });
-      const nodes = await provider.getNodes({
-        parentNode: undefined,
-        instanceFilter: {
-          propertyClassName: partitionClassName,
-          relatedInstances: [],
-          rules: {
-            propertyName: "CodeValue",
-            operator: "Like",
-            value: "test % 1",
-          },
-        },
-      });
-      validateHierarchyLevel({
-        nodes,
-        expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition1] })],
-      });
+      );
     });
 
     it("filters by related property", async function () {
-      const { imodel, ...keys } = await buildIModel(this, async (builder) => {
-        const rootSubject = { className: subjectClassName, id: IModel.rootSubjectId };
-        const childPartition1 = insertPhysicalPartition({ builder, codeValue: "test partition 1", parentId: rootSubject.id });
-        insertExternalSourceAspect({ builder, elementId: childPartition1.id, identifier: "first" });
-        const childPartition2 = insertPhysicalPartition({ builder, codeValue: "test partition 2", parentId: rootSubject.id });
-        insertExternalSourceAspect({ builder, elementId: childPartition2.id, identifier: "second" });
-        return { rootSubject, childPartition1, childPartition2 };
-      });
-
-      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
-      const hierarchy: IHierarchyLevelDefinitionsFactory = {
-        async defineHierarchyLevel({ instanceFilter }) {
-          const subjectFilterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: partitionClassName, alias: "this" });
-          return [
-            {
-              fullClassName: partitionClassName,
-              query: {
-                ecsql: `
-                  SELECT ${await selectQueryFactory.createSelectClause({
-                    ecClassId: { selector: `this.ECClassId` },
-                    ecInstanceId: { selector: `this.ECInstanceId` },
-                    nodeLabel: { selector: `this.CodeValue` },
-                  })}
-                  FROM ${subjectFilterClauses.from} AS this
-                  ${subjectFilterClauses.joins}
-                  ${subjectFilterClauses.where ? `WHERE ${subjectFilterClauses.where}` : ""}
-                `,
-              },
-            },
-          ];
+      await withECDb(
+        this,
+        async (db) => {
+          const schema = importSchema(
+            this,
+            db,
+            `
+              <ECEntityClass typeName="X" />
+              <ECEntityClass typeName="Y">
+                <ECProperty propertyName="Prop" typeName="Int" />
+              </ECEntityClass>
+              <ECRelationshipClass typeName="XY"  strength="referencing" strengthDirection="forward" modifier="None">
+                  <Source multiplicity="(0..1)" roleLabel="xy" polymorphic="False">
+                      <Class class="X" />
+                  </Source>
+                  <Target multiplicity="(0..1)" roleLabel="yx" polymorphic="True">
+                      <Class class="Y" />
+                  </Target>
+              </ECRelationshipClass>
+            `,
+          );
+          const x1 = db.insertInstance(schema.items.X.fullName);
+          const x2 = db.insertInstance(schema.items.X.fullName);
+          const y1 = db.insertInstance(schema.items.Y.fullName, { prop: 123 });
+          const y2 = db.insertInstance(schema.items.Y.fullName, { prop: 456 });
+          db.insertRelationship(schema.items.XY.fullName, x1.id, y1.id);
+          db.insertRelationship(schema.items.XY.fullName, x2.id, y2.id);
+          return { schema, x1, x2 };
         },
-      };
-
-      const provider = createProvider({ imodel, hierarchy });
-      const nodes = await provider.getNodes({
-        parentNode: undefined,
-        instanceFilter: {
-          propertyClassName: partitionClassName,
-          relatedInstances: [
-            {
-              path: [
+        async (imodel, { schema, x1, x2 }) => {
+          const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+          const hierarchy: IHierarchyLevelDefinitionsFactory = {
+            async defineHierarchyLevel({ instanceFilter }) {
+              const subjectFilterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: schema.items.X.fullName, alias: "this" });
+              return [
                 {
-                  sourceClassName: partitionClassName,
-                  relationshipName: "BisCore.ElementOwnsMultiAspects",
-                  targetClassName: "BisCore.ExternalSourceAspect",
+                  fullClassName: schema.items.X.fullName,
+                  query: {
+                    ecsql: `
+                      SELECT ${await selectQueryFactory.createSelectClause({
+                        ecClassId: { selector: `this.ECClassId` },
+                        ecInstanceId: { selector: `this.ECInstanceId` },
+                        nodeLabel: "doesnt matter",
+                      })}
+                      FROM ${subjectFilterClauses.from} AS this
+                      ${subjectFilterClauses.joins}
+                      ${subjectFilterClauses.where ? `WHERE ${subjectFilterClauses.where}` : ""}
+                    `,
+                  },
                 },
-              ],
-              alias: "external-source-aspect",
+              ];
             },
-          ],
-          rules: {
-            sourceAlias: "external-source-aspect",
-            propertyName: "Identifier",
-            operator: "Equal",
-            value: "second",
-          },
+          };
+          const provider = createProvider({ imodel, hierarchy });
+          validateHierarchyLevel({
+            nodes: await provider.getNodes({
+              parentNode: undefined,
+            }),
+            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x1] }), NodeValidators.createForInstanceNode({ instanceKeys: [x2] })],
+          });
+          validateHierarchyLevel({
+            nodes: await provider.getNodes({
+              parentNode: undefined,
+              instanceFilter: {
+                propertyClassName: schema.items.X.fullName,
+                relatedInstances: [
+                  {
+                    path: [
+                      {
+                        sourceClassName: schema.items.X.fullName,
+                        relationshipName: schema.items.XY.fullName,
+                        targetClassName: schema.items.Y.fullName,
+                      },
+                    ],
+                    alias: "related-y",
+                  },
+                ],
+                rules: {
+                  sourceAlias: "related-y",
+                  propertyName: "Prop",
+                  operator: "Equal",
+                  value: 123,
+                },
+              },
+            }),
+            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x1] })],
+          });
         },
-      });
-      validateHierarchyLevel({
-        nodes,
-        expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childPartition2] })],
-      });
+      );
     });
   });
 });

@@ -37,7 +37,7 @@ describe("Stateless hierarchy builder", () => {
 
     it("creates Subject - Model - Category - Element hierarchy", async function () {
       const { imodel, ...keys } = await buildIModel(this, async (builder, mochaContext) => {
-        const { classes } = await importTestSchema(mochaContext, builder);
+        const { items } = await importTestSchema(mochaContext, builder);
         const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
         const childSubject = insertSubject({ builder, codeValue: "child subject", parentId: rootSubject.id });
         const model = insertPhysicalModelWithPartition({ builder, codeValue: `model`, partitionParentId: childSubject.id });
@@ -52,7 +52,7 @@ describe("Stateless hierarchy builder", () => {
         });
         const rootElement2 = insertPhysicalElement({
           builder,
-          classFullName: classes.PhysicalObject.fullName,
+          classFullName: items.PhysicalObject.fullName,
           userLabel: `root element 2`,
           modelId: model.id,
           categoryId: category.id,
@@ -558,15 +558,13 @@ describe("Stateless hierarchy builder", () => {
       return importSchema(
         mochaContext,
         builder,
-        [
-          `
+        `
+          <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
           <ECEntityClass typeName="PhysicalObject" displayLabel="Physical Object" modifier="Sealed" description="Similar to generic:PhysicalObject but also sub-modelable.">
             <BaseClass>bis:PhysicalElement</BaseClass>
             <BaseClass>bis:ISubModeledElement</BaseClass>
           </ECEntityClass>
-          `,
-        ],
-        [`<ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />`],
+        `,
       );
     }
   });

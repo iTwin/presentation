@@ -82,31 +82,25 @@ describe("Stateless hierarchy builder", () => {
       it("formats instance node labels", async function () {
         const { imodel, schema } = await buildIModel(this, async (builder, mochaContext) => {
           // eslint-disable-next-line @typescript-eslint/no-shadow
-          const schema = await importSchema(
+          const schema = importSchema(
             mochaContext,
             builder,
-            [
-              `
+            `
+              <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
+              <ECSchemaReference name="Units" version="01.00.07" alias="u" />
+              <ECSchemaReference name="Formats" version="01.00.00" alias="f" />
               <KindOfQuantity typeName="LENGTH" persistenceUnit="u:M" presentationUnits="f:DefaultRealU(1)[u:M];f:DefaultRealU(1)[u:FT];f:DefaultRealU(2)[u:US_SURVEY_FT];f:AmerFI" relativeError="0.0001" />
-              `,
-              `
               <ECEntityClass typeName="ClassX">
                 <BaseClass>bis:PhysicalElement</BaseClass>
                 <ECProperty propertyName="PropX" typeName="double" kindOfQuantity="LENGTH" />
               </ECEntityClass>
-              `,
-            ],
-            [
-              `<ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />`,
-              `<ECSchemaReference name="Units" version="01.00.07" alias="u" />`,
-              `<ECSchemaReference name="Formats" version="01.00.00" alias="f" />`,
-            ],
+            `,
           );
           const model = insertPhysicalModelWithPartition({ builder, codeValue: "model" });
           const category = insertSpatialCategory({ builder, codeValue: "category" });
           const element = insertPhysicalElement({
             builder,
-            classFullName: schema.classes.ClassX.fullName,
+            classFullName: schema.items.ClassX.fullName,
             modelId: model.id,
             categoryId: category.id,
             ["PropX"]: 123.456,
@@ -120,7 +114,7 @@ describe("Stateless hierarchy builder", () => {
             if (!parentNode) {
               return [
                 {
-                  fullClassName: schema.classes.ClassX.fullName,
+                  fullClassName: schema.items.ClassX.fullName,
                   query: {
                     ecsql: `
                     SELECT ${await selectQueryFactory.createSelectClause({
@@ -129,12 +123,12 @@ describe("Stateless hierarchy builder", () => {
                       nodeLabel: {
                         selector: ECSqlSnippets.createConcatenatedTypedValueSelector([
                           { type: "String", value: "[" },
-                          { propertyClassName: schema.classes.ClassX.fullName, propertyClassAlias: "this", propertyName: "PropX" },
+                          { propertyClassName: schema.items.ClassX.fullName, propertyClassAlias: "this", propertyName: "PropX" },
                           { type: "String", value: "]" },
                         ]),
                       },
                     })}
-                    FROM ${schema.classes.ClassX.fullName} AS this
+                    FROM ${schema.items.ClassX.fullName} AS this
                   `,
                   },
                 },
