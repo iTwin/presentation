@@ -769,13 +769,13 @@ export interface NodeSelectClauseProps {
 // @beta
 export class NodeSelectQueryFactory {
     constructor(_metadataProvider: IMetadataProvider);
-    createFilterClauses(def: GenericInstanceFilter, contentClass: {
+    createFilterClauses(def: GenericInstanceFilter | undefined, contentClass: {
         fullName: string;
         alias: string;
     }): Promise<{
-        from?: string;
-        where?: string;
-        joins?: string;
+        from: string;
+        where: string;
+        joins: string;
     }>;
     createSelectClause(props: NodeSelectClauseProps): Promise<string>;
 }
