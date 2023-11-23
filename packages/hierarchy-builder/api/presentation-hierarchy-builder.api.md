@@ -720,6 +720,12 @@ export interface LabelGroupingNodeKey {
     type: "label-grouping";
 }
 
+// @beta
+export const LOCALIZATION_NAMESPACE = "PresentationHierarchyBuilder";
+
+// @beta
+export type LocalizationFunction = (input: string) => string;
+
 // @beta (undocumented)
 export type LogFunction = (category: string, message: string) => void;
 
@@ -913,6 +919,9 @@ export interface RelationshipPathStep {
     sourceClassName: string;
     targetClassName: string;
 }
+
+// @beta
+export function setLocalizationFunction(localizationFunction?: LocalizationFunction): void;
 
 // @beta
 export function setLogger(logger: ILogger | undefined): void;

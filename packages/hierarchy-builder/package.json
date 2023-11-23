@@ -23,10 +23,11 @@
   "module": "lib/esm/presentation-hierarchy-builder.js",
   "types": "lib/cjs/presentation-hierarchy-builder.d.ts",
   "scripts": {
-    "build": "npm run -s build:cjs && npm run -s build:esm",
+    "build": "npm run -s copy:locale && npm run -s build:cjs && npm run -s build:esm",
     "build:cjs": "tsc -p tsconfig.cjs.json",
     "build:esm": "tsc -p tsconfig.esm.json",
-    "build:watch": "npm run -s build:cjs -- -w",
+    "build:watch": "npm run -s copy:locale && npm run -s build:cjs -- -w",
+    "copy:locale": "cpx \"./public/**/*\" ./lib/public",
     "clean": "rimraf lib",
     "cover": "nyc npm -s test",
     "lint": "eslint ./src/**/*.ts",
@@ -35,12 +36,12 @@
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-hierarchy-builder.api.md"
   },
   "dependencies": {
-    "@itwin/core-bentley": "^4.1.1",
+    "@itwin/core-bentley": "^4.3.0-dev.30",
     "natural-compare-lite": "^1.4.0",
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
-    "@itwin/build-tools": "^4.1.1",
+    "@itwin/build-tools": "^4.3.0-dev.30",
     "@itwin/eslint-plugin": "4.0.0-dev.48",
     "@types/chai": "4.3.1",
     "@types/chai-as-promised": "^7.1.5",
