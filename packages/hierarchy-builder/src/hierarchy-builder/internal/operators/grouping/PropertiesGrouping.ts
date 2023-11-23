@@ -5,6 +5,7 @@
 
 import { assert } from "@itwin/core-bentley";
 import { HierarchyNodePropertiesGroupingParams, ProcessedInstanceHierarchyNode, PropertyGroup, PropertyGroupingNodeKey, Range } from "../../../HierarchyNode";
+import { translate } from "../../../Localization";
 import { ECClass, IMetadataProvider } from "../../../Metadata";
 import { IPrimitiveValueFormatter } from "../../../values/Formatting";
 import { TypedPrimitiveValue } from "../../../values/Values";
@@ -61,7 +62,7 @@ export async function createPropertyGroups(
           groupings.grouped,
           `${currentProperty.propertyName}:Unspecified`,
           {
-            label: "Not specified",
+            label: translate("grouping.unspecified-label"),
             propertyGroupingNodeKey: {
               ...partialPropertyNodeKeyToAdd,
               type: "property-grouping:value",
@@ -114,7 +115,7 @@ export async function createPropertyGroups(
           groupings.grouped,
           `${currentProperty.propertyName}:Other`,
           {
-            label: "Other",
+            label: translate("grouping.other-label"),
             propertyGroupingNodeKey: {
               ...partialPropertyNodeKeyToAdd,
               type: "property-grouping:other",
