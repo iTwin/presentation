@@ -402,9 +402,9 @@ export interface ECSqlSelectClauseGroupingParams {
 // @beta
 export interface ECSqlSelectClausePropertiesGroupingParams extends BaseGroupingParams_2 {
     // (undocumented)
-    createGroupForOutOfRangeValues?: boolean;
+    createGroupForOutOfRangeValues?: boolean | ECSqlValueSelector;
     // (undocumented)
-    createGroupForUnspecifiedValues?: boolean;
+    createGroupForUnspecifiedValues?: boolean | ECSqlValueSelector;
     // (undocumented)
     fullClassName: string | ECSqlValueSelector;
     // (undocumented)
@@ -416,7 +416,7 @@ export interface ECSqlSelectClausePropertyGroup {
     // (undocumented)
     propertyName: string | ECSqlValueSelector;
     // (undocumented)
-    propertyValue: PrimitiveValue | ECSqlValueSelector;
+    propertyValue?: PrimitiveValue | ECSqlValueSelector;
     // (undocumented)
     ranges?: Array<ECSqlSelectClauseRange>;
 }
