@@ -37,7 +37,7 @@ describe("Stateless hierarchy builder", () => {
 
     it("creates Subject - Model - Category - Element hierarchy", async function () {
       const { imodel, ...keys } = await buildIModel(this, async (builder, mochaContext) => {
-        const { classes } = await importTestSchema(mochaContext, builder);
+        const { items } = await importTestSchema(mochaContext, builder);
         const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
         const childSubject = insertSubject({ builder, codeValue: "child subject", parentId: rootSubject.id });
         const model = insertPhysicalModelWithPartition({ builder, codeValue: `model`, partitionParentId: childSubject.id });
@@ -52,7 +52,7 @@ describe("Stateless hierarchy builder", () => {
         });
         const rootElement2 = insertPhysicalElement({
           builder,
-          classFullName: classes.PhysicalObject.fullName,
+          classFullName: items.PhysicalObject.fullName,
           userLabel: `root element 2`,
           modelId: model.id,
           categoryId: category.id,
@@ -66,27 +66,34 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           NodeValidators.createForInstanceNode({
             instanceKeys: [keys.rootSubject],
+            autoExpand: true,
+            supportsFiltering: true,
             children: [
               NodeValidators.createForInstanceNode({
                 instanceKeys: [keys.childSubject],
+                supportsFiltering: true,
                 children: [
                   NodeValidators.createForInstanceNode({
                     instanceKeys: [keys.model],
+                    supportsFiltering: true,
                     children: [
                       NodeValidators.createForInstanceNode({
                         instanceKeys: [keys.category],
+                        supportsFiltering: true,
                         children: [
                           NodeValidators.createForClassGroupingNode({
                             className: keys.rootElement1.className,
                             children: [
                               NodeValidators.createForInstanceNode({
                                 instanceKeys: [keys.rootElement1],
+                                supportsFiltering: true,
                                 children: [
                                   NodeValidators.createForClassGroupingNode({
                                     className: keys.childElement.className,
                                     children: [
                                       NodeValidators.createForInstanceNode({
                                         instanceKeys: [keys.childElement],
+                                        supportsFiltering: true,
                                         children: false,
                                       }),
                                     ],
@@ -100,15 +107,18 @@ describe("Stateless hierarchy builder", () => {
                             children: [
                               NodeValidators.createForInstanceNode({
                                 instanceKeys: [keys.rootElement2],
+                                supportsFiltering: true,
                                 children: [
                                   NodeValidators.createForInstanceNode({
                                     instanceKeys: [keys.category],
+                                    supportsFiltering: true,
                                     children: [
                                       NodeValidators.createForClassGroupingNode({
                                         className: keys.modelingElement.className,
                                         children: [
                                           NodeValidators.createForInstanceNode({
                                             instanceKeys: [keys.modelingElement],
+                                            supportsFiltering: true,
                                             children: false,
                                           }),
                                         ],
@@ -151,16 +161,20 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           NodeValidators.createForInstanceNode({
             instanceKeys: [keys.rootSubject],
+            autoExpand: true,
+            supportsFiltering: true,
             children: [
               NodeValidators.createForInstanceNode({
                 instanceKeys: [keys.model],
+                supportsFiltering: true,
                 children: [
                   NodeValidators.createForInstanceNode({
                     instanceKeys: [keys.category],
+                    supportsFiltering: true,
                     children: [
                       NodeValidators.createForClassGroupingNode({
                         className: keys.element.className,
-                        children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.element], children: false })],
+                        children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.element], supportsFiltering: true, children: false })],
                       }),
                     ],
                   }),
@@ -183,6 +197,8 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           NodeValidators.createForInstanceNode({
             instanceKeys: [keys.rootSubject],
+            autoExpand: true,
+            supportsFiltering: true,
             children: false,
           }),
         ],
@@ -201,6 +217,8 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           NodeValidators.createForInstanceNode({
             instanceKeys: [keys.rootSubject],
+            autoExpand: true,
+            supportsFiltering: true,
             children: false,
           }),
         ],
@@ -228,19 +246,24 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           NodeValidators.createForInstanceNode({
             instanceKeys: [keys.rootSubject],
+            autoExpand: true,
+            supportsFiltering: true,
             children: [
               NodeValidators.createForInstanceNode({
                 instanceKeys: [keys.childSubject1],
+                supportsFiltering: true,
                 children: [
                   NodeValidators.createForInstanceNode({
                     instanceKeys: [keys.model],
+                    supportsFiltering: true,
                     children: [
                       NodeValidators.createForInstanceNode({
                         instanceKeys: [keys.category],
+                        supportsFiltering: true,
                         children: [
                           NodeValidators.createForClassGroupingNode({
                             className: keys.element.className,
-                            children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.element], children: false })],
+                            children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.element], supportsFiltering: true, children: false })],
                           }),
                         ],
                       }),
@@ -250,16 +273,19 @@ describe("Stateless hierarchy builder", () => {
               }),
               NodeValidators.createForInstanceNode({
                 instanceKeys: [keys.childSubject2],
+                supportsFiltering: true,
                 children: [
                   NodeValidators.createForInstanceNode({
                     instanceKeys: [keys.model],
+                    supportsFiltering: true,
                     children: [
                       NodeValidators.createForInstanceNode({
                         instanceKeys: [keys.category],
+                        supportsFiltering: true,
                         children: [
                           NodeValidators.createForClassGroupingNode({
                             className: keys.element.className,
-                            children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.element], children: false })],
+                            children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.element], supportsFiltering: true, children: false })],
                           }),
                         ],
                       }),
@@ -293,13 +319,16 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           NodeValidators.createForInstanceNode({
             instanceKeys: [keys.rootSubject],
+            autoExpand: true,
+            supportsFiltering: true,
             children: [
               NodeValidators.createForInstanceNode({
                 instanceKeys: [keys.category],
+                supportsFiltering: true,
                 children: [
                   NodeValidators.createForClassGroupingNode({
                     className: keys.element.className,
-                    children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.element], children: false })],
+                    children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.element], supportsFiltering: true, children: false })],
                   }),
                 ],
               }),
@@ -329,13 +358,16 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           NodeValidators.createForInstanceNode({
             instanceKeys: [keys.rootSubject],
+            autoExpand: true,
+            supportsFiltering: true,
             children: [
               NodeValidators.createForInstanceNode({
                 instanceKeys: [keys.category],
+                supportsFiltering: true,
                 children: [
                   NodeValidators.createForClassGroupingNode({
                     className: keys.element.className,
-                    children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.element], children: false })],
+                    children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.element], supportsFiltering: true, children: false })],
                   }),
                 ],
               }),
@@ -359,6 +391,8 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           NodeValidators.createForInstanceNode({
             instanceKeys: [keys.rootSubject],
+            autoExpand: true,
+            supportsFiltering: true,
             children: false,
           }),
         ],
@@ -396,19 +430,24 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           NodeValidators.createForInstanceNode({
             instanceKeys: [keys.rootSubject],
+            autoExpand: true,
+            supportsFiltering: true,
             children: [
               NodeValidators.createForInstanceNode({
                 instanceKeys: [keys.mergedSubject1, keys.mergedSubject2],
+                supportsFiltering: true,
                 children: [
                   NodeValidators.createForInstanceNode({
                     instanceKeys: [keys.model1],
+                    supportsFiltering: true,
                     children: [
                       NodeValidators.createForInstanceNode({
                         instanceKeys: [keys.category],
+                        supportsFiltering: true,
                         children: [
                           NodeValidators.createForClassGroupingNode({
                             className: keys.element1.className,
-                            children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.element1], children: false })],
+                            children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.element1], supportsFiltering: true, children: false })],
                           }),
                         ],
                       }),
@@ -416,13 +455,15 @@ describe("Stateless hierarchy builder", () => {
                   }),
                   NodeValidators.createForInstanceNode({
                     instanceKeys: [keys.model2],
+                    supportsFiltering: true,
                     children: [
                       NodeValidators.createForInstanceNode({
                         instanceKeys: [keys.category],
+                        supportsFiltering: true,
                         children: [
                           NodeValidators.createForClassGroupingNode({
                             className: keys.element2.className,
-                            children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.element2], children: false })],
+                            children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.element2], supportsFiltering: true, children: false })],
                           }),
                         ],
                       }),
@@ -480,15 +521,18 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           NodeValidators.createForInstanceNode({
             instanceKeys: [keys.rootSubject],
+            autoExpand: true,
+            supportsFiltering: true,
             children: [
               NodeValidators.createForInstanceNode({
                 instanceKeys: [keys.category1, keys.category2],
+                supportsFiltering: true,
                 children: [
                   NodeValidators.createForClassGroupingNode({
                     className: keys.element1.className,
                     children: [
-                      NodeValidators.createForInstanceNode({ instanceKeys: [keys.element1], children: false }),
-                      NodeValidators.createForInstanceNode({ instanceKeys: [keys.element2], children: false }),
+                      NodeValidators.createForInstanceNode({ instanceKeys: [keys.element1], supportsFiltering: true, children: false }),
+                      NodeValidators.createForInstanceNode({ instanceKeys: [keys.element2], supportsFiltering: true, children: false }),
                     ],
                   }),
                 ],
@@ -514,15 +558,13 @@ describe("Stateless hierarchy builder", () => {
       return importSchema(
         mochaContext,
         builder,
-        [
-          `
+        `
+          <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
           <ECEntityClass typeName="PhysicalObject" displayLabel="Physical Object" modifier="Sealed" description="Similar to generic:PhysicalObject but also sub-modelable.">
             <BaseClass>bis:PhysicalElement</BaseClass>
             <BaseClass>bis:ISubModeledElement</BaseClass>
           </ECEntityClass>
-          `,
-        ],
-        [`<ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />`],
+        `,
       );
     }
   });

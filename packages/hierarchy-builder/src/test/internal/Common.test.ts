@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { AutoExpand, BaseClassGroupingParams, BaseGroupingParams, InstanceHierarchyNodeProcessingParams } from "../../hierarchy-builder/HierarchyNode";
+import { HierarchyNodeAutoExpandProp, HierarchyNodeGroupingParamsBase, InstanceHierarchyNodeProcessingParams } from "../../hierarchy-builder/HierarchyNode";
 import { getClass, hasChildren, mergeNodes } from "../../hierarchy-builder/internal/Common";
 import { createTestProcessedCustomNode, createTestProcessedInstanceNode } from "../Utils";
 
@@ -77,6 +77,27 @@ describe("mergeNodes", () => {
     expect(mergeNodes(createTestProcessedCustomNode({ autoExpand: true }), createTestProcessedCustomNode({ autoExpand: true })).autoExpand).to.be.true;
     expect(mergeNodes(createTestProcessedCustomNode({ autoExpand: true }), createTestProcessedCustomNode({ autoExpand: false })).autoExpand).to.be.true;
     expect(mergeNodes(createTestProcessedCustomNode({ autoExpand: true }), createTestProcessedCustomNode({ autoExpand: undefined })).autoExpand).to.be.true;
+  });
+
+  it("merges supports-filtering flag", () => {
+    expect(
+      mergeNodes(createTestProcessedCustomNode({ supportsFiltering: undefined }), createTestProcessedCustomNode({ supportsFiltering: undefined }))
+        .supportsFiltering,
+    ).to.be.undefined;
+    expect(
+      mergeNodes(createTestProcessedCustomNode({ supportsFiltering: false }), createTestProcessedCustomNode({ supportsFiltering: false })).supportsFiltering,
+    ).to.be.undefined;
+    expect(
+      mergeNodes(createTestProcessedCustomNode({ supportsFiltering: false }), createTestProcessedCustomNode({ supportsFiltering: true })).supportsFiltering,
+    ).to.be.undefined;
+    expect(mergeNodes(createTestProcessedCustomNode({ supportsFiltering: true }), createTestProcessedCustomNode({ supportsFiltering: true })).supportsFiltering)
+      .to.be.true;
+    expect(
+      mergeNodes(createTestProcessedCustomNode({ supportsFiltering: true }), createTestProcessedCustomNode({ supportsFiltering: false })).supportsFiltering,
+    ).to.be.undefined;
+    expect(
+      mergeNodes(createTestProcessedCustomNode({ supportsFiltering: true }), createTestProcessedCustomNode({ supportsFiltering: undefined })).supportsFiltering,
+    ).to.be.undefined;
   });
 
   it("merges extended data", () => {
@@ -163,7 +184,11 @@ describe("mergeNodes", () => {
     }
 
     function traverseOptionalAutoExpandMergeExpectations(
-      cb: (lhsValue: AutoExpand | undefined, rhsValue: AutoExpand | undefined, expect: AutoExpand | undefined) => void,
+      cb: (
+        lhsValue: HierarchyNodeAutoExpandProp | undefined,
+        rhsValue: HierarchyNodeAutoExpandProp | undefined,
+        expect: HierarchyNodeAutoExpandProp | undefined,
+      ) => void,
     ) {
       cb(undefined, undefined, undefined);
       cb(undefined, "single-child", "single-child");
@@ -290,7 +315,7 @@ describe("mergeNodes", () => {
               mergeNodes(
                 createTestProcessedInstanceNode({ processingParams: { grouping: { byClass: { hideIfNoSiblings: lhs } } } }),
                 createTestProcessedInstanceNode({ processingParams: { grouping: { byClass: { hideIfNoSiblings: rhs } } } }),
-              ).processingParams?.grouping?.byClass as BaseGroupingParams
+              ).processingParams?.grouping?.byClass as HierarchyNodeGroupingParamsBase
             ).hideIfNoSiblings,
           ).to.eq(expectedMergedValue);
         });
@@ -300,7 +325,7 @@ describe("mergeNodes", () => {
               mergeNodes(
                 createTestProcessedInstanceNode({ processingParams: { grouping: { byClass: { hideIfOneGroupedNode: lhs } } } }),
                 createTestProcessedInstanceNode({ processingParams: { grouping: { byClass: { hideIfOneGroupedNode: rhs } } } }),
-              ).processingParams?.grouping?.byClass as BaseGroupingParams
+              ).processingParams?.grouping?.byClass as HierarchyNodeGroupingParamsBase
             ).hideIfOneGroupedNode,
           ).to.eq(expectedMergedValue);
         });
@@ -310,7 +335,7 @@ describe("mergeNodes", () => {
               mergeNodes(
                 createTestProcessedInstanceNode({ processingParams: { grouping: { byClass: { autoExpand: lhs } } } }),
                 createTestProcessedInstanceNode({ processingParams: { grouping: { byClass: { autoExpand: rhs } } } }),
-              ).processingParams?.grouping?.byClass as BaseGroupingParams
+              ).processingParams?.grouping?.byClass as HierarchyNodeGroupingParamsBase
             ).autoExpand,
           ).to.eq(expectedMergedValue);
         });
@@ -343,7 +368,7 @@ describe("mergeNodes", () => {
               mergeNodes(
                 createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { hideIfNoSiblings: lhs } } } }),
                 createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { hideIfNoSiblings: rhs } } } }),
-              ).processingParams?.grouping?.byLabel as BaseGroupingParams
+              ).processingParams?.grouping?.byLabel as HierarchyNodeGroupingParamsBase
             ).hideIfNoSiblings,
           ).to.eq(expectedMergedValue);
         });
@@ -353,7 +378,7 @@ describe("mergeNodes", () => {
               mergeNodes(
                 createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { hideIfOneGroupedNode: lhs } } } }),
                 createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { hideIfOneGroupedNode: rhs } } } }),
-              ).processingParams?.grouping?.byLabel as BaseGroupingParams
+              ).processingParams?.grouping?.byLabel as HierarchyNodeGroupingParamsBase
             ).hideIfOneGroupedNode,
           ).to.eq(expectedMergedValue);
         });
@@ -363,7 +388,7 @@ describe("mergeNodes", () => {
               mergeNodes(
                 createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { autoExpand: lhs } } } }),
                 createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { autoExpand: rhs } } } }),
-              ).processingParams?.grouping?.byLabel as BaseGroupingParams
+              ).processingParams?.grouping?.byLabel as HierarchyNodeGroupingParamsBase
             ).autoExpand,
           ).to.eq(expectedMergedValue);
         });
@@ -374,54 +399,48 @@ describe("mergeNodes", () => {
           mergeNodes(
             createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: [] } } } }),
             createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: [] } } } }),
-          ).processingParams?.grouping?.byBaseClasses,
+          ).processingParams!.grouping!.byBaseClasses,
         ).to.deep.eq({ fullClassNames: [] });
         expect(
           mergeNodes(
             createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: ["a"] } } } }),
             createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: undefined } } }),
-          ).processingParams?.grouping?.byBaseClasses,
+          ).processingParams!.grouping!.byBaseClasses,
         ).to.deep.eq({ fullClassNames: ["a"] });
         expect(
           mergeNodes(
             createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: undefined } } }),
             createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: ["a"] } } } }),
-          ).processingParams?.grouping?.byBaseClasses,
+          ).processingParams!.grouping!.byBaseClasses,
         ).to.deep.eq({ fullClassNames: ["a"] });
         expect(
           mergeNodes(
             createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: ["a", "b"] } } } }),
             createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: ["b", "c"] } } } }),
-          ).processingParams?.grouping?.byBaseClasses,
+          ).processingParams!.grouping!.byBaseClasses,
         ).to.deep.eq({ fullClassNames: ["a", "b", "c"] });
         traverseOptionalBooleanMergeExpectations((lhs, rhs, expectedMergedValue) => {
           expect(
-            (
-              mergeNodes(
-                createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: [], hideIfNoSiblings: lhs } } } }),
-                createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: [], hideIfNoSiblings: rhs } } } }),
-              ).processingParams?.grouping?.byBaseClasses as BaseClassGroupingParams
-            ).hideIfNoSiblings,
+            mergeNodes(
+              createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: [], hideIfNoSiblings: lhs } } } }),
+              createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: [], hideIfNoSiblings: rhs } } } }),
+            ).processingParams!.grouping!.byBaseClasses!.hideIfNoSiblings,
           ).to.eq(expectedMergedValue);
         });
         traverseOptionalBooleanMergeExpectations((lhs, rhs, expectedMergedValue) => {
           expect(
-            (
-              mergeNodes(
-                createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: [], hideIfOneGroupedNode: lhs } } } }),
-                createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: [], hideIfOneGroupedNode: rhs } } } }),
-              ).processingParams?.grouping?.byBaseClasses as BaseClassGroupingParams
-            ).hideIfOneGroupedNode,
+            mergeNodes(
+              createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: [], hideIfOneGroupedNode: lhs } } } }),
+              createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: [], hideIfOneGroupedNode: rhs } } } }),
+            ).processingParams!.grouping!.byBaseClasses!.hideIfOneGroupedNode,
           ).to.eq(expectedMergedValue);
         });
         traverseOptionalAutoExpandMergeExpectations((lhs, rhs, expectedMergedValue) => {
           expect(
-            (
-              mergeNodes(
-                createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: [], autoExpand: lhs } } } }),
-                createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: [], autoExpand: rhs } } } }),
-              ).processingParams?.grouping?.byBaseClasses as BaseGroupingParams
-            ).autoExpand,
+            mergeNodes(
+              createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: [], autoExpand: lhs } } } }),
+              createTestProcessedInstanceNode({ processingParams: { grouping: { byBaseClasses: { fullClassNames: [], autoExpand: rhs } } } }),
+            ).processingParams!.grouping!.byBaseClasses!.autoExpand,
           ).to.eq(expectedMergedValue);
         });
       });

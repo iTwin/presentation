@@ -3,7 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { PrimitiveValue, PrimitiveValueType, TypedPrimitiveValue } from "../values/Values";
+import { Id64 } from "@itwin/core-bentley";
+import { PrimitiveValueType } from "../../Metadata";
+import { PrimitiveValue, TypedPrimitiveValue } from "../../values/Values";
 
 /**
  * A union of property types that need special handling when creating a property value selector.
@@ -197,7 +199,14 @@ function withNullSelectorHandling(props: { nullValueResult?: "null" | "selector"
   return nullValueResult === "null" ? createNullableSelector({ valueSelector, checkSelector }) : valueSelector;
 }
 
-function createPrimitiveValueSelector(value: PrimitiveValue) {
+/**
+ * Creates a selector for the given primitive value.
+ * @beta
+ */
+export function createPrimitiveValueSelector(value: PrimitiveValue | undefined) {
+  if (value === undefined) {
+    return "NULL";
+  }
   if (value instanceof Date) {
     return `'${value.toISOString()}'`;
   }
@@ -209,10 +218,10 @@ function createPrimitiveValueSelector(value: PrimitiveValue) {
   }
   switch (typeof value) {
     case "string":
-      return `'${value}'`;
+      return Id64.isId64(value) ? value : `'${value}'`;
     case "number":
       return value.toString();
     case "boolean":
-      return `CAST(${value ? "1" : "0"} AS BOOLEAN)`;
+      return value ? "TRUE" : "FALSE";
   }
 }

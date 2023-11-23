@@ -3,9 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { IMetadataProvider } from "../ECMetadata";
 import { getClass } from "../internal/Common";
-import { IMetadataProvider } from "../Metadata";
-import { createConcatenatedTypedValueSelector, createPropertyValueSelector, TypedValueSelectClauseProps } from "./ECSqlUtils";
+import { createConcatenatedTypedValueSelector, createPropertyValueSelector, TypedValueSelectClauseProps } from "./ecsql-snippets/ECSqlValueSelectorSnippets";
 
 /**
  * Props for [[IInstanceLabelSelectClauseFactory.createSelectClause]].

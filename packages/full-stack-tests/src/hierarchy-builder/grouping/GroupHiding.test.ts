@@ -5,15 +5,15 @@
 
 import { PhysicalPartition, Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
-import { ECSqlSelectClauseGroupingParams, IHierarchyLevelDefinitionsFactory, NodeSelectClauseFactory } from "@itwin/presentation-hierarchy-builder";
+import { IModelConnection } from "@itwin/core-frontend";
+import { ECSqlSelectClauseGroupingParams, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchy-builder";
 import { buildIModel, insertPhysicalPartition, insertSubject } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
-import { createProvider } from "../Utils";
+import { createMetadataProvider, createProvider } from "../Utils";
 
 describe("Stateless hierarchy builder", () => {
   describe("Grouping nodes' hiding", () => {
-    let selectClauseFactory: NodeSelectClauseFactory;
     let subjectClassName: string;
     let physicalPartitionClassName: string;
     const groupName = "test1";
@@ -22,37 +22,40 @@ describe("Stateless hierarchy builder", () => {
       await initialize();
       subjectClassName = Subject.classFullName.replace(":", ".");
       physicalPartitionClassName = PhysicalPartition.classFullName.replace(":", ".");
-      selectClauseFactory = new NodeSelectClauseFactory();
     });
 
     after(async () => {
       await terminate();
     });
 
-    function createHierarchyWithSpecifiedGrouping(specifiedGrouping: ECSqlSelectClauseGroupingParams): IHierarchyLevelDefinitionsFactory {
+    function createHierarchyWithSpecifiedGrouping(
+      imodel: IModelConnection,
+      specifiedGrouping: ECSqlSelectClauseGroupingParams,
+    ): IHierarchyLevelDefinitionsFactory {
+      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
       return {
-        async defineHierarchyLevel(parentNode) {
+        async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
             return [
               {
                 fullClassName: `BisCore.InformationContentElement`,
                 query: {
                   ecsql: `
-                  SELECT ${await selectClauseFactory.createSelectClause({
-                    ecClassId: { selector: `this.ECClassId` },
-                    ecInstanceId: { selector: `this.ECInstanceId` },
-                    nodeLabel: { selector: `this.UserLabel` },
-                    grouping: specifiedGrouping,
-                  })}
-                  FROM (
-                    SELECT ECClassId, ECInstanceId, UserLabel, Parent
-                    FROM ${subjectClassName}
-                    UNION ALL
-                    SELECT ECClassId, ECInstanceId, UserLabel, Parent
-                    FROM ${physicalPartitionClassName}
-                  ) AS this
-                  WHERE this.Parent.Id = (${IModel.rootSubjectId})
-                `,
+                    SELECT ${await selectQueryFactory.createSelectClause({
+                      ecClassId: { selector: `this.ECClassId` },
+                      ecInstanceId: { selector: `this.ECInstanceId` },
+                      nodeLabel: { selector: `this.UserLabel` },
+                      grouping: specifiedGrouping,
+                    })}
+                    FROM (
+                      SELECT ECClassId, ECInstanceId, UserLabel, Parent
+                      FROM ${subjectClassName}
+                      UNION ALL
+                      SELECT ECClassId, ECInstanceId, UserLabel, Parent
+                      FROM ${physicalPartitionClassName}
+                    ) AS this
+                    WHERE this.Parent.Id = (${IModel.rootSubjectId})
+                  `,
                 },
               },
             ];
@@ -85,7 +88,7 @@ describe("Stateless hierarchy builder", () => {
         });
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(baseClassHideIfNoSiblingsGrouping) }),
+          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, baseClassHideIfNoSiblingsGrouping) }),
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.childSubject1],
@@ -106,7 +109,7 @@ describe("Stateless hierarchy builder", () => {
         });
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(baseClassHideIfOneGroupedNodeGrouping) }),
+          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, baseClassHideIfOneGroupedNodeGrouping) }),
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.childSubject1],
@@ -124,7 +127,7 @@ describe("Stateless hierarchy builder", () => {
         });
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(baseClassHideIfNoSiblingsGrouping) }),
+          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, baseClassHideIfNoSiblingsGrouping) }),
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.childPartition2],
@@ -152,7 +155,7 @@ describe("Stateless hierarchy builder", () => {
         });
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(baseClassHideIfOneGroupedNodeGrouping) }),
+          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, baseClassHideIfOneGroupedNodeGrouping) }),
           expect: [
             NodeValidators.createForClassGroupingNode({
               label: "Information Reference",
@@ -194,7 +197,7 @@ describe("Stateless hierarchy builder", () => {
         });
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(classHideIfNoSiblingsGrouping) }),
+          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, classHideIfNoSiblingsGrouping) }),
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.childSubject1],
@@ -215,7 +218,7 @@ describe("Stateless hierarchy builder", () => {
         });
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(classHideIfOneGroupedNodeGrouping) }),
+          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, classHideIfOneGroupedNodeGrouping) }),
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.childSubject1],
@@ -233,7 +236,7 @@ describe("Stateless hierarchy builder", () => {
         });
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(classHideIfNoSiblingsGrouping) }),
+          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, classHideIfNoSiblingsGrouping) }),
           expect: [
             NodeValidators.createForClassGroupingNode({
               className: "BisCore.PhysicalPartition",
@@ -265,7 +268,7 @@ describe("Stateless hierarchy builder", () => {
         });
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(classHideIfOneGroupedNodeGrouping) }),
+          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, classHideIfOneGroupedNodeGrouping) }),
           expect: [
             NodeValidators.createForClassGroupingNode({
               className: "BisCore.Subject",
@@ -306,7 +309,7 @@ describe("Stateless hierarchy builder", () => {
         });
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(labelHideIfNoSiblingsGrouping) }),
+          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, labelHideIfNoSiblingsGrouping) }),
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.childSubject1],
@@ -327,7 +330,7 @@ describe("Stateless hierarchy builder", () => {
         });
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(labelHideIfOneGroupedNodeGrouping) }),
+          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, labelHideIfOneGroupedNodeGrouping) }),
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.childSubject1],
@@ -345,7 +348,7 @@ describe("Stateless hierarchy builder", () => {
         });
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(labelHideIfNoSiblingsGrouping) }),
+          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, labelHideIfNoSiblingsGrouping) }),
           expect: [
             NodeValidators.createForLabelGroupingNode({
               label: groupName,
@@ -377,7 +380,7 @@ describe("Stateless hierarchy builder", () => {
         });
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(labelHideIfOneGroupedNodeGrouping) }),
+          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, labelHideIfOneGroupedNodeGrouping) }),
           expect: [
             NodeValidators.createForLabelGroupingNode({
               label: groupName,

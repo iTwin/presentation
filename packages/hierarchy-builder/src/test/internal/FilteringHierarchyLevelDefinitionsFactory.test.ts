@@ -5,6 +5,7 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
+import { IMetadataProvider } from "../../hierarchy-builder/ECMetadata";
 import {
   CustomHierarchyNodeDefinition,
   HierarchyDefinitionParentNode,
@@ -20,16 +21,15 @@ import {
   FilteringHierarchyLevelDefinitionsFactory,
 } from "../../hierarchy-builder/internal/FilteringHierarchyLevelDefinitionsFactory";
 import * as reader from "../../hierarchy-builder/internal/TreeNodesReader";
-import { IMetadataProvider } from "../../hierarchy-builder/Metadata";
-import { NodeSelectClauseColumnNames } from "../../hierarchy-builder/queries/NodeSelectClauseFactory";
+import { NodeSelectClauseColumnNames } from "../../hierarchy-builder/queries/NodeSelectQueryFactory";
 import { trimWhitespace } from "../queries/Utils";
 import {
-  createGetClassStub,
+  ClassStubs,
+  createClassStubs,
   createTestInstanceKey,
   createTestProcessedCustomNode,
   createTestProcessedGroupingNode,
   createTestProcessedInstanceNode,
-  TStubClassFunc,
 } from "../Utils";
 
 describe("FilteringHierarchyLevelDefinitionsFactory", () => {
@@ -220,9 +220,9 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
 
   describe("defineHierarchyLevel", () => {
     const metadataProvider = {} as unknown as IMetadataProvider;
-    let stubClass: TStubClassFunc;
+    let classStubs: ClassStubs;
     beforeEach(() => {
-      stubClass = createGetClassStub(metadataProvider).stubClass;
+      classStubs = createClassStubs(metadataProvider);
     });
 
     it("returns source definitions when filtered instance paths list is empty", async () => {
@@ -233,13 +233,13 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
       const filteringFactory = createFilteringHierarchyLevelsFactory({
         sourceFactory,
       });
-      const result = await filteringFactory.defineHierarchyLevel(undefined);
+      const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
       expect(result).to.eq(sourceDefinitions);
     });
 
     describe("filtering custom node definitions", () => {
       it("omits source custom node definition when using instance key filter", async () => {
-        const filterClass = stubClass({ schemaName: "BisCore", className: "FilterClassName", is: async () => false });
+        const filterClass = classStubs.stubEntityClass({ schemaName: "BisCore", className: "FilterClassName", is: async () => false });
         const sourceDefinition: CustomHierarchyNodeDefinition = {
           node: {
             key: "custom",
@@ -252,9 +252,9 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           sourceFactory,
-          nodeIdentifierPaths: [[{ className: filterClass.name, id: "0x123" }]],
+          nodeIdentifierPaths: [[{ className: filterClass.fullName, id: "0x123" }]],
         });
-        const result = await filteringFactory.defineHierarchyLevel(undefined);
+        const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
         expect(result).to.be.empty;
       });
 
@@ -273,7 +273,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           sourceFactory,
           nodeIdentifierPaths: [[{ key: "xxx" }]],
         });
-        const result = await filteringFactory.defineHierarchyLevel(undefined);
+        const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
         expect(result).to.be.empty;
       });
 
@@ -292,7 +292,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           sourceFactory,
           nodeIdentifierPaths: [[]],
         });
-        const result = await filteringFactory.defineHierarchyLevel(undefined);
+        const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
         expect(result).to.deep.eq([sourceDefinition]);
       });
 
@@ -316,7 +316,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           sourceFactory,
           nodeIdentifierPaths: [[{ key: "custom 2" }]],
         });
-        const result = await filteringFactory.defineHierarchyLevel(undefined);
+        const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
         expect(result).to.deep.eq([
           {
             node: {
@@ -345,7 +345,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
             [{ key: "custom" }, { key: "456" }],
           ],
         });
-        const result = await filteringFactory.defineHierarchyLevel(undefined);
+        const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
         expect(result).to.deep.eq([
           {
             node: {
@@ -360,9 +360,9 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
 
     describe("filtering instance node query definitions", () => {
       it("omits source instance node query definition when using custom node filter", async () => {
-        const queryClass = stubClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
+        const queryClass = classStubs.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
         const sourceDefinition: InstanceNodesQueryDefinition = {
-          fullClassName: queryClass.name,
+          fullClassName: queryClass.fullName,
           query: {
             ecsql: "SOURCE_QUERY",
           },
@@ -374,15 +374,15 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           sourceFactory,
           nodeIdentifierPaths: [[{ key: "xxx" }]],
         });
-        const result = await filteringFactory.defineHierarchyLevel(undefined);
+        const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
         expect(result).to.be.empty;
       });
 
       it("omits source instance node query definition if filter class doesn't match query class", async () => {
-        const queryClass = stubClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
-        const filterPathClass = stubClass({ schemaName: "BisCore", className: "FilterPathClassName", is: async () => false });
+        const queryClass = classStubs.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
+        const filterPathClass = classStubs.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName", is: async () => false });
         const sourceDefinition: InstanceNodesQueryDefinition = {
-          fullClassName: queryClass.name,
+          fullClassName: queryClass.fullName,
           query: {
             ecsql: "SOURCE_QUERY",
           },
@@ -392,16 +392,16 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           sourceFactory,
-          nodeIdentifierPaths: [[{ className: filterPathClass.name, id: "0x123" }]],
+          nodeIdentifierPaths: [[{ className: filterPathClass.fullName, id: "0x123" }]],
         });
-        const result = await filteringFactory.defineHierarchyLevel(undefined);
+        const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
         expect(result).to.be.empty;
       });
 
       it("returns source instance node query definition when filter filtering by empty path", async () => {
-        const queryClass = stubClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
+        const queryClass = classStubs.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
         const sourceDefinition: InstanceNodesQueryDefinition = {
-          fullClassName: queryClass.name,
+          fullClassName: queryClass.fullName,
           query: {
             ecsql: "SOURCE_QUERY",
           },
@@ -413,16 +413,20 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           sourceFactory,
           nodeIdentifierPaths: [[]],
         });
-        const result = await filteringFactory.defineHierarchyLevel(undefined);
+        const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
         expect(result).to.deep.eq([sourceDefinition]);
       });
 
       it("returns filtered source instance node query definitions when filter class matches query class", async () => {
-        const queryClass = stubClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
-        const filterPathClass1 = stubClass({ schemaName: "BisCore", className: "FilterPathClassName1", is: async (other) => other === queryClass.name });
-        const filterPathClass2 = stubClass({ schemaName: "BisCore", className: "FilterPathClassName2", is: async () => false });
+        const queryClass = classStubs.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
+        const filterPathClass1 = classStubs.stubEntityClass({
+          schemaName: "BisCore",
+          className: "FilterPathClassName1",
+          is: async (other) => other === queryClass.fullName,
+        });
+        const filterPathClass2 = classStubs.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName2", is: async () => false });
         const sourceDefinition: InstanceNodesQueryDefinition = {
-          fullClassName: queryClass.name,
+          fullClassName: queryClass.fullName,
           query: {
             ecsql: "SOURCE_QUERY",
           },
@@ -434,25 +438,33 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           sourceFactory,
           nodeIdentifierPaths: [
             [
-              { className: filterPathClass1.name, id: "0x123" },
-              { className: filterPathClass2.name, id: "0x456" },
+              { className: filterPathClass1.fullName, id: "0x123" },
+              { className: filterPathClass2.fullName, id: "0x456" },
             ],
           ],
         });
-        const result = await filteringFactory.defineHierarchyLevel(undefined);
+        const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
         expect(result).to.deep.eq([
           applyECInstanceIdsFilter(sourceDefinition, [
-            { id: { className: filterPathClass1.name, id: "0x123" }, childrenIdentifierPaths: [[{ className: filterPathClass2.name, id: "0x456" }]] },
+            { id: { className: filterPathClass1.fullName, id: "0x123" }, childrenIdentifierPaths: [[{ className: filterPathClass2.fullName, id: "0x456" }]] },
           ]),
         ]);
       });
 
       it("returns source instance node query definition filtered with multiple matching paths", async () => {
-        const queryClass = stubClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
-        const filterPathClass1 = stubClass({ schemaName: "BisCore", className: "FilterPathClassName1", is: async (other) => other === queryClass.name });
-        const filterPathClass2 = stubClass({ schemaName: "BisCore", className: "FilterPathClassName2", is: async (other) => other === queryClass.name });
+        const queryClass = classStubs.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
+        const filterPathClass1 = classStubs.stubEntityClass({
+          schemaName: "BisCore",
+          className: "FilterPathClassName1",
+          is: async (other) => other === queryClass.fullName,
+        });
+        const filterPathClass2 = classStubs.stubEntityClass({
+          schemaName: "BisCore",
+          className: "FilterPathClassName2",
+          is: async (other) => other === queryClass.fullName,
+        });
         const sourceDefinition: InstanceNodesQueryDefinition = {
-          fullClassName: queryClass.name,
+          fullClassName: queryClass.fullName,
           query: {
             ecsql: "SOURCE_QUERY",
           },
@@ -462,24 +474,28 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         } as unknown as IHierarchyLevelDefinitionsFactory;
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           sourceFactory,
-          nodeIdentifierPaths: [[{ className: filterPathClass1.name, id: "0x123" }], [{ className: filterPathClass2.name, id: "0x456" }]],
+          nodeIdentifierPaths: [[{ className: filterPathClass1.fullName, id: "0x123" }], [{ className: filterPathClass2.fullName, id: "0x456" }]],
         });
-        const result = await filteringFactory.defineHierarchyLevel(undefined);
+        const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
         expect(result).to.deep.eq([
           applyECInstanceIdsFilter(sourceDefinition, [
-            { id: { className: filterPathClass1.name, id: "0x123" }, childrenIdentifierPaths: [] },
-            { id: { className: filterPathClass2.name, id: "0x456" }, childrenIdentifierPaths: [] },
+            { id: { className: filterPathClass1.fullName, id: "0x123" }, childrenIdentifierPaths: [] },
+            { id: { className: filterPathClass2.fullName, id: "0x456" }, childrenIdentifierPaths: [] },
           ]),
         ]);
       });
 
       it("returns source instance node query definition filtered with multiple matching paths having same beginning", async () => {
-        const queryClass = stubClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
-        const filterPathClass0 = stubClass({ schemaName: "BisCore", className: "FilterPathClassName0", is: async (other) => other === queryClass.name });
-        const filterPathClass1 = stubClass({ schemaName: "BisCore", className: "FilterPathClassName1", is: async () => false });
-        const filterPathClass2 = stubClass({ schemaName: "BisCore", className: "FilterPathClassName2", is: async () => false });
+        const queryClass = classStubs.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
+        const filterPathClass0 = classStubs.stubEntityClass({
+          schemaName: "BisCore",
+          className: "FilterPathClassName0",
+          is: async (other) => other === queryClass.fullName,
+        });
+        const filterPathClass1 = classStubs.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName1", is: async () => false });
+        const filterPathClass2 = classStubs.stubEntityClass({ schemaName: "BisCore", className: "FilterPathClassName2", is: async () => false });
         const sourceDefinition: InstanceNodesQueryDefinition = {
-          fullClassName: queryClass.name,
+          fullClassName: queryClass.fullName,
           query: {
             ecsql: "SOURCE_QUERY",
           },
@@ -491,21 +507,21 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           sourceFactory,
           nodeIdentifierPaths: [
             [
-              { className: filterPathClass0.name, id: "0x123" },
-              { className: filterPathClass1.name, id: "0x456" },
+              { className: filterPathClass0.fullName, id: "0x123" },
+              { className: filterPathClass1.fullName, id: "0x456" },
             ],
             [
-              { className: filterPathClass0.name, id: "0x123" },
-              { className: filterPathClass2.name, id: "0x789" },
+              { className: filterPathClass0.fullName, id: "0x123" },
+              { className: filterPathClass2.fullName, id: "0x789" },
             ],
           ],
         });
-        const result = await filteringFactory.defineHierarchyLevel(undefined);
+        const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
         expect(result).to.deep.eq([
           applyECInstanceIdsFilter(sourceDefinition, [
             {
-              id: { className: filterPathClass0.name, id: "0x123" },
-              childrenIdentifierPaths: [[{ className: filterPathClass1.name, id: "0x456" }], [{ className: filterPathClass2.name, id: "0x789" }]],
+              id: { className: filterPathClass0.fullName, id: "0x123" },
+              childrenIdentifierPaths: [[{ className: filterPathClass1.fullName, id: "0x456" }], [{ className: filterPathClass2.fullName, id: "0x789" }]],
             },
           ]),
         ]);
@@ -513,11 +529,19 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
     });
 
     it("uses filtering paths from parent node", async () => {
-      const queryClass = stubClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
-      const rootFilterClass = stubClass({ schemaName: "BisCore", className: "RootFilterClass", is: async (other) => other === queryClass.name });
-      const childFilterClass = stubClass({ schemaName: "BisCore", className: "ChildFilterClass", is: async (other) => other === queryClass.name });
+      const queryClass = classStubs.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
+      const rootFilterClass = classStubs.stubEntityClass({
+        schemaName: "BisCore",
+        className: "RootFilterClass",
+        is: async (other) => other === queryClass.fullName,
+      });
+      const childFilterClass = classStubs.stubEntityClass({
+        schemaName: "BisCore",
+        className: "ChildFilterClass",
+        is: async (other) => other === queryClass.fullName,
+      });
       const sourceDefinition: InstanceNodesQueryDefinition = {
-        fullClassName: queryClass.name,
+        fullClassName: queryClass.fullName,
         query: {
           ecsql: "SOURCE_QUERY",
         },
@@ -527,15 +551,17 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
       } as unknown as IHierarchyLevelDefinitionsFactory;
       const filteringFactory = createFilteringHierarchyLevelsFactory({
         sourceFactory,
-        nodeIdentifierPaths: [[{ className: rootFilterClass.name, id: "0x123" }]],
+        nodeIdentifierPaths: [[{ className: rootFilterClass.fullName, id: "0x123" }]],
       });
       const result = await filteringFactory.defineHierarchyLevel({
-        key: "custom",
-        label: "custom node",
-        filteredChildrenIdentifierPaths: [[{ className: childFilterClass.name, id: "0x456" }]],
-      } as FilteredHierarchyNode<HierarchyDefinitionParentNode>);
+        parentNode: {
+          key: "custom",
+          label: "custom node",
+          filteredChildrenIdentifierPaths: [[{ className: childFilterClass.fullName, id: "0x456" }]],
+        } as FilteredHierarchyNode<HierarchyDefinitionParentNode>,
+      });
       expect(result).to.deep.eq([
-        applyECInstanceIdsFilter(sourceDefinition, [{ id: { className: childFilterClass.name, id: "0x456" }, childrenIdentifierPaths: [] }]),
+        applyECInstanceIdsFilter(sourceDefinition, [{ id: { className: childFilterClass.fullName, id: "0x456" }, childrenIdentifierPaths: [] }]),
       ]);
     });
   });

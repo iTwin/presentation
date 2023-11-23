@@ -3,9 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { IMetadataProvider } from "../ECMetadata";
 import {
   CustomHierarchyNodeDefinition,
-  HierarchyDefinitionParentNode,
+  DefineHierarchyLevelProps,
   HierarchyLevelDefinition,
   HierarchyNodesDefinition,
   IHierarchyLevelDefinitionsFactory,
@@ -15,7 +16,6 @@ import {
   InstanceNodesQueryDefinition,
 } from "../HierarchyDefinition";
 import { HierarchyNode, HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath, ParsedInstanceHierarchyNode, ProcessedHierarchyNode } from "../HierarchyNode";
-import { IMetadataProvider } from "../Metadata";
 import { InstanceKey } from "../values/Values";
 import { getClass } from "./Common";
 import { defaultNodesParser } from "./TreeNodesReader";
@@ -84,9 +84,9 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
     };
   }
 
-  public async defineHierarchyLevel(parentNode: HierarchyDefinitionParentNode | undefined): Promise<HierarchyLevelDefinition> {
-    const sourceDefinitions = await this._source.defineHierarchyLevel(parentNode);
-    const filteredNodePaths = this.getFilteringProps(parentNode as FilteredHierarchyNode);
+  public async defineHierarchyLevel(props: DefineHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
+    const sourceDefinitions = await this._source.defineHierarchyLevel(props);
+    const filteredNodePaths = this.getFilteringProps(props.parentNode as FilteredHierarchyNode | undefined);
     if (!filteredNodePaths || filteredNodePaths.length === 0) {
       return sourceDefinitions;
     }

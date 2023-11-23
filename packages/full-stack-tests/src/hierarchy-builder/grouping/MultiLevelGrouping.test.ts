@@ -5,15 +5,14 @@
 
 import { PhysicalPartition, Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
-import { IHierarchyLevelDefinitionsFactory, NodeSelectClauseFactory } from "@itwin/presentation-hierarchy-builder";
+import { IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchy-builder";
 import { buildIModel, insertPhysicalPartition, insertSubject } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
-import { createProvider } from "../Utils";
+import { createMetadataProvider, createProvider } from "../Utils";
 
 describe("Stateless hierarchy builder", () => {
   describe("Multi level grouping", () => {
-    let selectClauseFactory: NodeSelectClauseFactory;
     let subjectClassName: string;
     let physicalPartitionClassName: string;
 
@@ -21,7 +20,6 @@ describe("Stateless hierarchy builder", () => {
       await initialize();
       subjectClassName = Subject.classFullName.replace(":", ".");
       physicalPartitionClassName = PhysicalPartition.classFullName.replace(":", ".");
-      selectClauseFactory = new NodeSelectClauseFactory();
     });
 
     after(async () => {
@@ -40,15 +38,16 @@ describe("Stateless hierarchy builder", () => {
         return { childSubject1, childSubject2, childPartition3, childPartition4, childPartition5 };
       });
 
+      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
       const customHierarchy: IHierarchyLevelDefinitionsFactory = {
-        async defineHierarchyLevel(parentNode) {
+        async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
             return [
               {
                 fullClassName: `BisCore.InformationContentElement`,
                 query: {
                   ecsql: `
-                    SELECT ${await selectClauseFactory.createSelectClause({
+                    SELECT ${await selectQueryFactory.createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.UserLabel` },

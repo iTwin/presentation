@@ -129,6 +129,11 @@ export interface HierarchyNode {
   children: boolean;
   /** A flag indicating whether this node should be auto-expanded in the UI. */
   autoExpand?: boolean;
+  /**
+   * Identifies whether the hierarchy level below this node supports filtering. If not, supplying an instance
+   * filter when requesting child hierarchy level will have no effect.
+   */
+  supportsFiltering?: boolean;
   /** Additional data that may be assigned to this node. */
   extendedData?: { [key: string]: any };
 }
@@ -138,7 +143,7 @@ export namespace HierarchyNode {
   /** Checks whether the given node is a custom node */
   export function isCustom<TNode extends { key: HierarchyNodeKey }>(
     node: TNode,
-  ): node is TNode & { key: string } & (TNode extends ProcessedHierarchyNode ? { processingParams?: BaseHierarchyNodeProcessingParams } : {}) {
+  ): node is TNode & { key: string } & (TNode extends ProcessedHierarchyNode ? { processingParams?: HierarchyNodeProcessingParamsBase } : {}) {
     return HierarchyNodeKey.isCustom(node.key);
   }
   /** Checks whether the given node is a standard (iModel content based) node */
@@ -154,7 +159,7 @@ export namespace HierarchyNode {
   /** Checks whether the given node is a grouping node */
   export function isGroupingNode<TNode extends { key: HierarchyNodeKey }>(
     node: TNode,
-  ): node is TNode & { key: GroupingNodeKey } & (TNode extends ProcessedHierarchyNode
+  ): node is TNode & { key: GroupingNodeKey; supportsFiltering?: undefined } & (TNode extends ProcessedHierarchyNode
       ? { children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode> }
       : {}) {
     return HierarchyNodeKey.isGrouping(node.key);
@@ -162,7 +167,7 @@ export namespace HierarchyNode {
   /** Checks whether the given node is a class grouping node */
   export function isClassGroupingNode<TNode extends { key: HierarchyNodeKey }>(
     node: TNode,
-  ): node is TNode & { key: ClassGroupingNodeKey } & (TNode extends ProcessedHierarchyNode
+  ): node is TNode & { key: ClassGroupingNodeKey; supportsFiltering?: undefined } & (TNode extends ProcessedHierarchyNode
       ? { children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode> }
       : {}) {
     return HierarchyNodeKey.isClassGrouping(node.key);
@@ -170,7 +175,7 @@ export namespace HierarchyNode {
   /** Checks whether the given node is a label grouping node */
   export function isLabelGroupingNode<TNode extends { key: HierarchyNodeKey }>(
     node: TNode,
-  ): node is TNode & { key: LabelGroupingNodeKey } & (TNode extends ProcessedHierarchyNode
+  ): node is TNode & { key: LabelGroupingNodeKey; supportsFiltering?: undefined } & (TNode extends ProcessedHierarchyNode
       ? { children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode> }
       : {}) {
     return HierarchyNodeKey.isLabelGrouping(node.key);
@@ -181,7 +186,7 @@ export namespace HierarchyNode {
  * Base processing parameters that apply to every node.
  * @beta
  */
-export interface BaseHierarchyNodeProcessingParams {
+export interface HierarchyNodeProcessingParamsBase {
   /** Indicates if this node should be hidden if it has no child nodes. */
   hideIfNoChildren?: boolean;
   /** Indicates that this node should always be hidden and its children should be loaded in its place. */
@@ -191,22 +196,22 @@ export interface BaseHierarchyNodeProcessingParams {
  * A data structure for defining nodes' grouping requirements.
  * @beta
  */
-export interface GroupingParams {
-  byLabel?: boolean | BaseGroupingParams;
-  byClass?: boolean | BaseGroupingParams;
-  byBaseClasses?: BaseClassGroupingParams;
+export interface HierarchyNodeGroupingParams {
+  byLabel?: boolean | HierarchyNodeGroupingParamsBase;
+  byClass?: boolean | HierarchyNodeGroupingParamsBase;
+  byBaseClasses?: HierarchyNodeBaseClassGroupingParams;
 }
 /**
  * Grouping parameters that are shared across all types of groupings.
  * @beta
  */
-export interface BaseGroupingParams {
+export interface HierarchyNodeGroupingParamsBase {
   /** Hiding option that determines whether to hide group nodes which have no siblings at the same hierarchy level. */
   hideIfNoSiblings?: boolean;
   /** Hiding option that determines whether to hide group nodes which have only one node as its children. */
   hideIfOneGroupedNode?: boolean;
   /** Option which auto expands grouping nodes' children when it has single child or always. */
-  autoExpand?: AutoExpand;
+  autoExpand?: HierarchyNodeAutoExpandProp;
 }
 /**
  * Defines possible values for [[BaseGroupingParams.autoExpand]] attribute:
@@ -214,13 +219,13 @@ export interface BaseGroupingParams {
  * - `always` - always set the grouping node to auto-expand.
  * @beta
  */
-export type AutoExpand = "single-child" | "always";
+export type HierarchyNodeAutoExpandProp = "single-child" | "always";
 
 /**
  * A data structure that represents base class grouping.
  * @beta
  */
-export interface BaseClassGroupingParams extends BaseGroupingParams {
+export interface HierarchyNodeBaseClassGroupingParams extends HierarchyNodeGroupingParamsBase {
   /**
    * Full names of classes, which should be used to group the node. Only has effect if the node
    * represents an instance of that class.
@@ -233,8 +238,8 @@ export interface BaseClassGroupingParams extends BaseGroupingParams {
  * Processing parameters that apply to instance nodes.
  * @beta
  */
-export interface InstanceHierarchyNodeProcessingParams extends BaseHierarchyNodeProcessingParams {
-  grouping?: GroupingParams;
+export interface InstanceHierarchyNodeProcessingParams extends HierarchyNodeProcessingParamsBase {
+  grouping?: HierarchyNodeGroupingParams;
   mergeByLabelId?: string;
 }
 
@@ -245,7 +250,7 @@ export interface InstanceHierarchyNodeProcessingParams extends BaseHierarchyNode
 export type ProcessedCustomHierarchyNode = Omit<HierarchyNode, "key" | "children"> & {
   key: string;
   children?: boolean;
-  processingParams?: BaseHierarchyNodeProcessingParams;
+  processingParams?: HierarchyNodeProcessingParamsBase;
 };
 /**
  * An instances' (based on data in an iModel) node that has processing parameters.
@@ -263,6 +268,7 @@ export type ProcessedInstanceHierarchyNode = Omit<HierarchyNode, "key" | "childr
 export type ProcessedGroupingHierarchyNode = Omit<HierarchyNode, "key" | "children"> & {
   key: GroupingNodeKey;
   children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
+  supportsFiltering?: undefined;
 };
 /**
  * A [[HierarchyNode]] that may have processing parameters defining whether it should be hidden under some conditions,
@@ -291,12 +297,6 @@ export type ParsedCustomHierarchyNode = Omit<ProcessedCustomHierarchyNode, "labe
 export type ParsedInstanceHierarchyNode = Omit<ProcessedInstanceHierarchyNode, "label" | "parentKeys"> & {
   label: string | ConcatenatedValue;
 };
-
-/**
- * A type of [[HierarchyNode]] that doesn't know about its children.
- * @beta
- */
-export type ParentHierarchyNode = Omit<HierarchyNode, "children">;
 
 /**
  * An identifier that can be used to identify either an ECInstance or a custom node.

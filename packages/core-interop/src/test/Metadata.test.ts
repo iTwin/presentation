@@ -265,6 +265,32 @@ describe("createECClass", () => {
     });
   });
 
+  describe("getProperties", () => {
+    it("returns properties from core class", async () => {
+      const coreClass = {
+        schemaItemType: SchemaItemType.EntityClass,
+        fullName: "s.c",
+        name: "c",
+        label: "C",
+        getProperties: sinon.stub().resolves([
+          {
+            isArray: () => false,
+            isStruct: () => false,
+            isEnumeration: () => false,
+            isNavigation: () => false,
+            isPrimitive: () => true,
+          },
+        ]),
+      } as unknown as CoreClass;
+      const ecClass = createECClass(coreClass, schema);
+      const properties = await ecClass.getProperties();
+
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(coreClass.getProperties).to.be.calledOnce;
+      expect(properties).to.not.be.empty;
+    });
+  });
+
   describe("getProperty", () => {
     it("returns property from core class", async () => {
       const coreClass = {

@@ -3,22 +3,19 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Observable } from "rxjs";
 import { assert } from "@itwin/core-bentley";
+import { ECClass, ECSchema, IMetadataProvider } from "../ECMetadata";
 import {
-  BaseGroupingParams,
-  GroupingParams,
-  HierarchyNode,
+  HierarchyNodeGroupingParams,
+  HierarchyNodeGroupingParamsBase,
   HierarchyNodeKey,
   InstanceHierarchyNodeProcessingParams,
   InstancesNodeKey,
-  ParentHierarchyNode,
   ProcessedCustomHierarchyNode,
-  ProcessedHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "../HierarchyNode";
 import { getLogger } from "../Logging";
-import { ECClass, ECSchema, IMetadataProvider, parseFullClassName } from "../Metadata";
+import { parseFullClassName } from "../Metadata";
 
 /** @internal */
 export const LOGGING_NAMESPACE = "Presentation.HierarchyBuilder";
@@ -67,7 +64,10 @@ function mergeNodeHandlingParams(
   return Object.keys(params).length > 0 ? params : undefined;
 }
 
-function mergeNodeGroupingParams(lhsGrouping: GroupingParams | undefined, rhsGrouping: GroupingParams | undefined): GroupingParams {
+function mergeNodeGroupingParams(
+  lhsGrouping: HierarchyNodeGroupingParams | undefined,
+  rhsGrouping: HierarchyNodeGroupingParams | undefined,
+): HierarchyNodeGroupingParams {
   return {
     ...(lhsGrouping?.byClass || rhsGrouping?.byClass
       ? {
@@ -98,9 +98,9 @@ function mergeNodeGroupingParams(lhsGrouping: GroupingParams | undefined, rhsGro
 }
 
 function mergeBaseGroupingParams(
-  lhsBaseGroupingParams: BaseGroupingParams | undefined,
-  rhsBaseGroupingParams: BaseGroupingParams | undefined,
-): BaseGroupingParams {
+  lhsBaseGroupingParams: HierarchyNodeGroupingParamsBase | undefined,
+  rhsBaseGroupingParams: HierarchyNodeGroupingParamsBase | undefined,
+): HierarchyNodeGroupingParamsBase {
   return {
     ...(lhsBaseGroupingParams?.hideIfOneGroupedNode || rhsBaseGroupingParams?.hideIfOneGroupedNode ? { hideIfOneGroupedNode: true } : undefined),
     ...(lhsBaseGroupingParams?.hideIfNoSiblings || rhsBaseGroupingParams?.hideIfNoSiblings ? { hideIfNoSiblings: true } : undefined),
@@ -151,6 +151,7 @@ export function mergeNodes<TNode extends ProcessedCustomHierarchyNode | Processe
     ...(mergedProcessingParams ? { processingParams: mergedProcessingParams } : undefined),
     ...(lhs.autoExpand || rhs.autoExpand ? { autoExpand: lhs.autoExpand || rhs.autoExpand } : undefined),
     ...(lhs.extendedData || rhs.extendedData ? { extendedData: { ...lhs.extendedData, ...rhs.extendedData } } : undefined),
+    ...(lhs.supportsFiltering && rhs.supportsFiltering ? { supportsFiltering: true } : undefined),
   } as TNode;
 }
 
@@ -168,30 +169,4 @@ export function createOperatorLoggingNamespace(operatorName: string) {
 export function julianToDateTime(julianDate: number): Date {
   const millis = (julianDate - 2440587.5) * 86400000;
   return new Date(millis);
-}
-
-/** @internal */
-export interface ChildNodesObservables {
-  processedNodes: Observable<ProcessedHierarchyNode>;
-  finalizedNodes: Observable<HierarchyNode>;
-  hasNodes: Observable<boolean>;
-}
-
-/** @internal */
-export class ChildNodesCache {
-  private _map = new Map<string, ChildNodesObservables>();
-
-  private createKey(node: ParentHierarchyNode | undefined): string {
-    return node ? `${JSON.stringify(node.parentKeys)}+${JSON.stringify(node.key)}` : "";
-  }
-
-  public add(parentNode: ParentHierarchyNode | undefined, value: ChildNodesObservables) {
-    const key = this.createKey(parentNode);
-    assert(!this._map.has(key));
-    this._map.set(key, value);
-  }
-
-  public get(parentNode: ParentHierarchyNode | undefined): ChildNodesObservables | undefined {
-    return this._map.get(this.createKey(parentNode));
-  }
 }

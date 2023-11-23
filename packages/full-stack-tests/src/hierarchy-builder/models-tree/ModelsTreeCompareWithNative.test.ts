@@ -73,7 +73,7 @@ describe("Stateless hierarchy builder", () => {
 
       let statelessChildren: HierarchyNode[];
       try {
-        statelessChildren = await statelessProvider.getNodes(props.statelessParent);
+        statelessChildren = await statelessProvider.getNodes({ parentNode: props.statelessParent });
       } catch (e) {
         // eslint-disable-next-line no-console
         console.error(`Error creating children using stateless provider: ${(e as Error).message}. At: ${createNativeAncestorsPath(props.nativeAncestors)}`);

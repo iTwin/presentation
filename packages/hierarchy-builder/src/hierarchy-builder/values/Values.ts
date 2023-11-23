@@ -3,8 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ECPrimitiveType } from "../Metadata";
-
 /**
  * A string representing a 64 bit number in hex.
  * @see [Id64String]($core-bentley)
@@ -58,12 +56,6 @@ export interface Point3d {
  * @beta
  */
 export type PrimitiveValue = Id64String | string | number | boolean | Date | Point2d | Point3d;
-
-/**
- * An identifiers' union of all supported primitive value types.
- * @beta
- */
-export type PrimitiveValueType = "Id" | Exclude<ECPrimitiveType, "Binary" | "IGeometry">;
 
 /** @beta */
 // eslint-disable-next-line @typescript-eslint/no-redeclare

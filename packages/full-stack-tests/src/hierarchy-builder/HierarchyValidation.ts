@@ -26,6 +26,7 @@ export namespace NodeValidators {
     expectations: {
       label?: string | RegExp;
       autoExpand?: boolean;
+      supportsFiltering?: boolean;
       children?: ExpectedHierarchyDef[] | boolean;
     },
   ) {
@@ -48,16 +49,23 @@ export namespace NodeValidators {
         )}`,
       );
     }
+    if (expectations.supportsFiltering !== undefined && !!node.supportsFiltering !== !!expectations.supportsFiltering) {
+      throw new Error(
+        `[${node.label}] Expected node's \`supportsFiltering\` flag to be ${optionalBooleanToString(
+          expectations.supportsFiltering,
+        )}, got ${optionalBooleanToString(node.supportsFiltering)}`,
+      );
+    }
     if (expectations.children !== undefined && hasChildren(expectations) !== hasChildren(node)) {
       throw new Error(`[${node.label}] Expected node to ${hasChildren(expectations) ? "" : "not "}have children but it does ${hasChildren(node) ? "" : "not"}`);
     }
   }
 
-  export function createForCustomNode(
-    expectedNode: Partial<Omit<HierarchyNode, "label" | "children">> & { label?: string; children?: ExpectedHierarchyDef[] | boolean },
-  ): ExpectedHierarchyDef {
+  export function createForCustomNode<TChildren extends ExpectedHierarchyDef[] | boolean>(
+    expectedNode: Partial<Omit<HierarchyNode, "label" | "children">> & { label?: string; children?: TChildren },
+  ) {
     return {
-      node: (node) => {
+      node: (node: HierarchyNode) => {
         if (HierarchyNode.isStandard(node)) {
           throw new Error(`[${node.label}] Expected a custom node, got a standard "${node.key.type}" one`);
         }
@@ -67,6 +75,7 @@ export namespace NodeValidators {
         validateBaseNodeAttributes(node, {
           label: expectedNode.label,
           autoExpand: expectedNode.autoExpand,
+          supportsFiltering: expectedNode.supportsFiltering,
           children: expectedNode.children,
         });
       },
@@ -74,18 +83,19 @@ export namespace NodeValidators {
     };
   }
 
-  export function createForInstanceNode(props: {
+  export function createForInstanceNode<TChildren extends ExpectedHierarchyDef[] | boolean>(props: {
     instanceKeys?: InstanceKey[];
     label?: string | RegExp;
     autoExpand?: boolean;
-    children?: ExpectedHierarchyDef[] | boolean;
-  }): ExpectedHierarchyDef {
+    supportsFiltering?: boolean;
+    children?: TChildren;
+  }) {
     return {
-      node: (node) => {
+      node: (node: HierarchyNode) => {
         if (!HierarchyNode.isStandard(node)) {
           throw new Error(`[${node.label}] Expected an instance node, got a non-standard "${node.key as string}"`);
         }
-        if (node.key.type !== "instances") {
+        if (!HierarchyNode.isInstancesNode(node)) {
           throw new Error(`[${node.label}] Expected an instance node, got "${node.key.type}"`);
         }
         if (
@@ -100,6 +110,7 @@ export namespace NodeValidators {
         validateBaseNodeAttributes(node, {
           label: props.label,
           autoExpand: props.autoExpand,
+          supportsFiltering: props.supportsFiltering,
           children: props.children,
         });
       },
@@ -107,18 +118,18 @@ export namespace NodeValidators {
     };
   }
 
-  export function createForClassGroupingNode(props: {
+  export function createForClassGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(props: {
     className?: string;
     label?: string;
     autoExpand?: boolean;
-    children?: ExpectedHierarchyDef[] | boolean;
-  }): ExpectedHierarchyDef {
+    children?: TChildren;
+  }) {
     return {
-      node: (node) => {
+      node: (node: HierarchyNode) => {
         if (!HierarchyNode.isStandard(node)) {
           throw new Error(`[${node.label}] Expected a class grouping node, got a non-standard "${node.key as string}"`);
         }
-        if (node.key.type !== "class-grouping") {
+        if (!HierarchyNode.isClassGroupingNode(node)) {
           throw new Error(`[${node.label}] Expected a class grouping node, got "${node.key.type}"`);
         }
         if (props.className && node.key.class.name !== props.className) {
@@ -134,17 +145,17 @@ export namespace NodeValidators {
     };
   }
 
-  export function createForLabelGroupingNode(props: {
+  export function createForLabelGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(props: {
     label?: string;
     autoExpand?: boolean;
-    children?: ExpectedHierarchyDef[] | boolean;
-  }): ExpectedHierarchyDef {
+    children?: TChildren;
+  }) {
     return {
-      node: (node) => {
+      node: (node: HierarchyNode) => {
         if (!HierarchyNode.isStandard(node)) {
           throw new Error(`[${node.label}] Expected a label grouping node, got a non-standard "${node.key as string}"`);
         }
-        if (node.key.type !== "label-grouping") {
+        if (!HierarchyNode.isLabelGroupingNode(node)) {
           throw new Error(`[${node.label}] Expected a label grouping node, got "${node.key.type}"`);
         }
         if (props.label && node.key.label !== props.label) {
@@ -163,7 +174,7 @@ export namespace NodeValidators {
 
 export async function validateHierarchy(props: { provider: HierarchyProvider; parentNode?: HierarchyNode; expect: ExpectedHierarchyDef[] }) {
   const parentIdentifier = props.parentNode ? props.parentNode.label : "<root>";
-  const nodes = await props.provider.getNodes(props.parentNode);
+  const nodes = await props.provider.getNodes({ parentNode: props.parentNode });
   Logger.logInfo(loggingNamespace, `Received ${nodes.length} child nodes for ${parentIdentifier}`);
 
   if (nodes.length !== props.expect.length) {
@@ -189,4 +200,15 @@ export async function validateHierarchy(props: { provider: HierarchyProvider; pa
   }
 
   return resultHierarchy;
+}
+
+export function validateHierarchyLevel(props: { nodes: HierarchyNode[]; expect: Array<Omit<ExpectedHierarchyDef, "children"> & { children?: boolean }> }) {
+  const { nodes, expect } = props;
+  if (nodes.length !== expect.length) {
+    throw new Error(`Expected ${expect.length} nodes, got ${nodes.length}`);
+  }
+  for (let i = 0; i < nodes.length; ++i) {
+    const expectation = expect[i];
+    expectation.node(nodes[i]);
+  }
 }

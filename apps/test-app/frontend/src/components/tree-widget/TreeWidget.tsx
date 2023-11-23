@@ -112,7 +112,7 @@ export function ExperimentalModelsTree({ imodel }: { imodel: IModelConnection })
     return async (node?: TreeNodeItem): Promise<TreeNodeItem[]> => {
       const parent: HierarchyNode | undefined = node ? (node as any).__internal : undefined;
       try {
-        return (await modelsTreeHierarchyProvider.getNodes(parent)).map(parseTreeNodeItem);
+        return (await modelsTreeHierarchyProvider.getNodes({ parentNode: parent })).map(parseTreeNodeItem);
       } catch (e) {
         // eslint-disable-next-line no-console
         console.error(e);
