@@ -18,8 +18,8 @@ import {
   useDebouncedAsyncValue,
 } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
-import { FilteredPresentationTreeDataProvider, IFilteredPresentationTreeDataProvider } from "../FilteredDataProvider";
-import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
+import { FilteredPresentationTreeDataProvider } from "../FilteredDataProvider";
+import { IFilteredPresentationTreeDataProvider, IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
 
 const FILTERED_DATA_PAGE_SIZE = 20;
 

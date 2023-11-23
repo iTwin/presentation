@@ -37,11 +37,11 @@ import {
   ValuesMap,
 } from "@itwin/presentation-common";
 import { FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
-import { FieldHierarchyRecord, IPropertiesAppender, PropertyRecordsBuilder } from "../common/ContentBuilder";
+import { FieldHierarchyRecord, InternalPropertyRecordsBuilder, IPropertiesAppender } from "../common/ContentBuilder";
 import { CacheInvalidationProps, ContentDataProvider, IContentDataProvider } from "../common/ContentDataProvider";
 import { DiagnosticsProps } from "../common/Diagnostics";
 import { createLabelRecord, findField } from "../common/Utils";
-import { FAVORITES_CATEGORY_NAME, getFavoritesCategory } from "../favorite-properties/DataProvider";
+import { FAVORITES_CATEGORY_NAME, getFavoritesCategory } from "../favorite-properties/Utils";
 
 const labelsComparer = new Intl.Collator(undefined, { sensitivity: "base" }).compare;
 
@@ -337,7 +337,7 @@ interface PropertyDataBuilderProps {
   callbacks: PropertyPaneCallbacks;
   wantNestedCategories: boolean;
 }
-class PropertyDataBuilder extends PropertyRecordsBuilder {
+class PropertyDataBuilder extends InternalPropertyRecordsBuilder {
   private _props: PropertyDataBuilderProps;
   private _result: PropertyData | undefined;
   private _categoriesCache: PropertyCategoriesCache;
@@ -345,18 +345,8 @@ class PropertyDataBuilder extends PropertyRecordsBuilder {
   private _favoriteFieldHierarchies: FieldHierarchy[] = [];
 
   constructor(props: PropertyDataBuilderProps) {
-    super();
-    this._props = props;
-    this._categoriesCache = new PropertyCategoriesCache(props.wantNestedCategories);
-  }
-
-  public getPropertyData(): PropertyData {
-    assert(this._result !== undefined);
-    return this._result;
-  }
-
-  protected createRootPropertiesAppender(): IPropertiesAppender {
-    return {
+    super((item) => ({
+      item,
       append: (record: FieldHierarchyRecord): void => {
         const category = record.fieldHierarchy.field.category;
         let records = this._categorizedRecords.get(category.name);
@@ -366,7 +356,14 @@ class PropertyDataBuilder extends PropertyRecordsBuilder {
         }
         records.push(record);
       },
-    };
+    }));
+    this._props = props;
+    this._categoriesCache = new PropertyCategoriesCache(props.wantNestedCategories);
+  }
+
+  public getPropertyData(): PropertyData {
+    assert(this._result !== undefined);
+    return this._result;
   }
 
   public override startContent(props: StartContentProps): boolean {
@@ -386,8 +383,8 @@ class PropertyDataBuilder extends PropertyRecordsBuilder {
         categorizedRecords[categoryName] = sortedFields.map((field) => recs.find((r) => r.fieldHierarchy.field === field)!.record);
       }
     });
+    assert(IPropertiesAppender.isRoot(this.currentPropertiesAppender));
     const item = this.currentPropertiesAppender.item;
-    assert(item !== undefined);
     this._result = {
       label: createLabelRecord(item.label, "label"),
       description: item.classInfo ? item.classInfo.label : undefined,

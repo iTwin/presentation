@@ -11,13 +11,13 @@ import { initializeLocalization, initializePropertyValueRenderers } from "./pres
  * @docs-group-description Core
  * Common types used all across ($presentation-components) package.
  */
+export * from "./presentation-components/common/ContentDataProvider";
+export * from "./presentation-components/common/Diagnostics";
 export * from "./presentation-components/common/IPresentationDataProvider";
 export * from "./presentation-components/common/IUnifiedSelectionComponent";
-export * from "./presentation-components/common/ContentBuilder";
-export * from "./presentation-components/common/ContentDataProvider";
-export * from "./presentation-components/hooks/UseRulesetRegistration";
-export * from "./presentation-components/common/Diagnostics";
+export * from "./presentation-components/common/PropertyRecordsBuilder";
 export * from "./presentation-components/common/SchemaMetadataContext";
+export * from "./presentation-components/hooks/UseRulesetRegistration";
 
 /**
  * @module Logging
@@ -62,7 +62,6 @@ export * from "./presentation-components/favorite-properties/DataProvider";
  */
 export * from "./presentation-components/tree/DataProvider";
 export * from "./presentation-components/tree/IPresentationTreeDataProvider";
-export * from "./presentation-components/tree/FilteredDataProvider";
 export * from "./presentation-components/tree/PresentationTreeNodeItem";
 export * from "./presentation-components/tree/controlled/PresentationTree";
 export * from "./presentation-components/tree/controlled/PresentationTreeNodeRenderer";

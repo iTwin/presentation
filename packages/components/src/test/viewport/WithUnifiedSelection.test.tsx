@@ -20,7 +20,8 @@ import {
   SelectionManager,
   SelectionScopesManager,
 } from "@itwin/presentation-frontend";
-import { ViewportSelectionHandler, viewWithUnifiedSelection } from "../../presentation-components/viewport/WithUnifiedSelection";
+import { ViewportSelectionHandler } from "../../presentation-components/viewport/ViewportSelectionHandler";
+import { viewWithUnifiedSelection } from "../../presentation-components/viewport/WithUnifiedSelection";
 import { createTestECInstanceKey, waitForAllAsyncs } from "../_helpers/Common";
 import { ResolvablePromise } from "../_helpers/Promises";
 import { render } from "../TestUtils";
