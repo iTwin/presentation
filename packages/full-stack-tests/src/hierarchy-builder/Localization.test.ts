@@ -7,7 +7,7 @@ import { expect } from "chai";
 import { IModelApp } from "@itwin/core-frontend";
 import { createLocalizationFunction } from "@itwin/presentation-core-interop";
 import { setLocalizationFunction } from "@itwin/presentation-hierarchy-builder";
-import { translate } from "@itwin/presentation-hierarchy-builder/lib/cjs/hierarchy-builder/Localization";
+import { LOCALIZATION_NAMESPACE, translate } from "@itwin/presentation-hierarchy-builder/lib/cjs/hierarchy-builder/Localization";
 import { initialize, terminate } from "../IntegrationTests";
 
 describe("Stateless hierarchy builder", () => {
@@ -17,6 +17,7 @@ describe("Stateless hierarchy builder", () => {
     });
 
     afterEach(async () => {
+      IModelApp.localization.unregisterNamespace(LOCALIZATION_NAMESPACE);
       await terminate();
     });
 
