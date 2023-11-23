@@ -7,6 +7,7 @@ import { expect } from "chai";
 import sinon from "sinon";
 import { GroupingNodeKey, PropertyGroup } from "../../../../hierarchy-builder/HierarchyNode";
 import * as propertiesGrouping from "../../../../hierarchy-builder/internal/operators/grouping/PropertiesGrouping";
+import { LOCALIZATION_NAMESPACE } from "../../../../hierarchy-builder/Localization";
 import { ECClass, ECProperty, IMetadataProvider } from "../../../../hierarchy-builder/Metadata";
 import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "../../../../hierarchy-builder/values/Formatting";
 import { createGetClassStub, createTestProcessedGroupingNode, createTestProcessedInstanceNode, TStubClassFunc } from "../../../Utils";
@@ -618,7 +619,76 @@ describe("PropertiesGrouping", () => {
         });
       });
 
-      it("groups node into formatted property grouping node", async () => {
+      it("doesn't group, when property value isn't set and createGroupForUnspecifiedValues isn't set", async () => {
+        const nodes = [
+          createTestProcessedInstanceNode({
+            key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class", id: "0x1" }] },
+            processingParams: {
+              grouping: {
+                byProperties: {
+                  fullClassName: "TestSchema.Class",
+                  propertyGroups: [{ propertyName: "PropertyName" }],
+                },
+              },
+            },
+          }),
+        ];
+        const ecClass = { fullName: "TestSchema.Class" } as unknown as ECClass;
+        stubClass({ schemaName: "TestSchema", className: "Class", is: async () => true });
+        const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
+          ecClass,
+          previousPropertiesGroupingInfo: [],
+          propertyGroup: { propertyName: "PropertyName" },
+        };
+        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
+          groupingType: "property",
+          grouped: [],
+          ungrouped: nodes,
+        });
+      });
+
+      it("groups node into value property grouping node, when property value isn't set and createGroupForUnspecifiedValues is true", async () => {
+        const nodes = [
+          createTestProcessedInstanceNode({
+            key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class", id: "0x1" }] },
+            processingParams: {
+              grouping: {
+                byProperties: {
+                  fullClassName: "TestSchema.Class",
+                  createGroupForUnspecifiedValues: true,
+                  propertyGroups: [{ propertyName: "PropertyName" }],
+                },
+              },
+            },
+          }),
+        ];
+        const ecClass = { fullName: "TestSchema.Class" } as unknown as ECClass;
+        stubClass({ schemaName: "TestSchema", className: "Class", is: async () => true });
+        const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
+          ecClass,
+          previousPropertiesGroupingInfo: [],
+          propertyGroup: { propertyName: "PropertyName" },
+        };
+        const expectedGroupingNodeKey: GroupingNodeKey = {
+          type: "property-grouping:value",
+          propertyName: "PropertyName",
+          fullClassName: "TestSchema.Class",
+          formattedPropertyValue: "",
+        };
+        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
+          groupingType: "property",
+          grouped: [
+            createTestProcessedGroupingNode({
+              label: `${LOCALIZATION_NAMESPACE}:grouping.unspecified-label`,
+              key: expectedGroupingNodeKey,
+              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
+            }),
+          ],
+          ungrouped: [],
+        });
+      });
+
+      it("groups node into property value grouping node", async () => {
         const nodes = [
           createTestProcessedInstanceNode({
             key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class", id: "0x1" }] },
@@ -659,7 +729,7 @@ describe("PropertiesGrouping", () => {
         });
       });
 
-      it("groups multiple nodes when they have the same property value into formatted property grouping node", async () => {
+      it("groups multiple nodes when they have the same property value into property value grouping node", async () => {
         const nodes = [
           createTestProcessedInstanceNode({
             key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class", id: "0x1" }] },
@@ -711,7 +781,7 @@ describe("PropertiesGrouping", () => {
         });
       });
 
-      it("creates different formatted property groups for nodes with different property values", async () => {
+      it("creates different property value groups for nodes with different property values", async () => {
         const nodes = [
           createTestProcessedInstanceNode({
             key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class", id: "0x1" }] },
@@ -828,7 +898,35 @@ describe("PropertiesGrouping", () => {
     });
 
     describe("Range is provided", async () => {
-      it.only("groups node into other property grouping node, when property value doesn't fit in provided range", async () => {
+      it("doesn't group, when property value doesn't fit in provided range and createGroupForOutOfRangeValues isn't set", async () => {
+        const nodes = [
+          createTestProcessedInstanceNode({
+            key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class", id: "0x1" }] },
+            processingParams: {
+              grouping: {
+                byProperties: {
+                  fullClassName: "TestSchema.Class",
+                  propertyGroups: [{ propertyName: "PropertyName", propertyValue: 12, ranges: [{ fromValue: 1, toValue: 5 }] }],
+                },
+              },
+            },
+          }),
+        ];
+        const ecClass = { fullName: "TestSchema.Class" } as unknown as ECClass;
+        stubClass({ schemaName: "TestSchema", className: "Class", is: async () => true });
+        const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
+          ecClass,
+          previousPropertiesGroupingInfo: [],
+          propertyGroup: { propertyName: "PropertyName", ranges: [{ fromValue: 1, toValue: 5 }] },
+        };
+        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
+          groupingType: "property",
+          grouped: [],
+          ungrouped: nodes,
+        });
+      });
+
+      it("groups node into other property grouping node, when property value doesn't fit in provided range and createGroupForOutOfRangeValues is true", async () => {
         const nodes = [
           createTestProcessedInstanceNode({
             key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class", id: "0x1" }] },
@@ -859,7 +957,7 @@ describe("PropertiesGrouping", () => {
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
-              label: "Other",
+              label: `${LOCALIZATION_NAMESPACE}:grouping.other-label`,
               key: expectedGroupingNodeKey,
               children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
             }),
@@ -868,7 +966,7 @@ describe("PropertiesGrouping", () => {
         });
       });
 
-      it("groups node into other property grouping node, when property value isn't a number", async () => {
+      it("doesn't group, when property value isn't a number and createGroupForOutOfRangeValues isn't set", async () => {
         const nodes = [
           createTestProcessedInstanceNode({
             key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class", id: "0x1" }] },
@@ -876,6 +974,35 @@ describe("PropertiesGrouping", () => {
               grouping: {
                 byProperties: {
                   fullClassName: "TestSchema.Class",
+                  propertyGroups: [{ propertyName: "PropertyName", propertyValue: "someValue", ranges: [{ fromValue: 1, toValue: 5 }] }],
+                },
+              },
+            },
+          }),
+        ];
+        const ecClass = { fullName: "TestSchema.Class" } as unknown as ECClass;
+        stubClass({ schemaName: "TestSchema", className: "Class", is: async () => true });
+        const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
+          ecClass,
+          previousPropertiesGroupingInfo: [],
+          propertyGroup: { propertyName: "PropertyName", ranges: [{ fromValue: 1, toValue: 5 }] },
+        };
+        expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
+          groupingType: "property",
+          grouped: [],
+          ungrouped: nodes,
+        });
+      });
+
+      it("groups node into other property grouping node, when property value isn't a number and createGroupForOutOfRangeValues is true", async () => {
+        const nodes = [
+          createTestProcessedInstanceNode({
+            key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class", id: "0x1" }] },
+            processingParams: {
+              grouping: {
+                byProperties: {
+                  fullClassName: "TestSchema.Class",
+                  createGroupForOutOfRangeValues: true,
                   propertyGroups: [{ propertyName: "PropertyName", propertyValue: "someValue", ranges: [{ fromValue: 1, toValue: 5 }] }],
                 },
               },
@@ -898,7 +1025,7 @@ describe("PropertiesGrouping", () => {
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
-              label: "Other",
+              label: `${LOCALIZATION_NAMESPACE}:grouping.other-label`,
               key: expectedGroupingNodeKey,
               children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
             }),
@@ -956,7 +1083,7 @@ describe("PropertiesGrouping", () => {
               grouping: {
                 byProperties: {
                   fullClassName: "TestSchema.Class",
-                  propertyGroups: [{ propertyName: "PropertyName", propertyValue: 5, ranges: [{ fromValue: 1, toValue: 5, rangeLabel: "rangeLabel" }] }],
+                  propertyGroups: [{ propertyName: "PropertyName", propertyValue: 5, ranges: [{ fromValue: 1.5, toValue: 5.5, rangeLabel: "rangeLabel" }] }],
                 },
               },
             },
@@ -967,14 +1094,14 @@ describe("PropertiesGrouping", () => {
         const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
           ecClass,
           previousPropertiesGroupingInfo: [],
-          propertyGroup: { propertyName: "PropertyName", ranges: [{ fromValue: 1, toValue: 5, rangeLabel: "rangeLabel" }] },
+          propertyGroup: { propertyName: "PropertyName", ranges: [{ fromValue: 1.5, toValue: 5.5, rangeLabel: "rangeLabel" }] },
         };
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:range",
           propertyName: "PropertyName",
           fullClassName: "TestSchema.Class",
-          fromValue: 1,
-          toValue: 5,
+          fromValue: 1.5,
+          toValue: 5.5,
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
