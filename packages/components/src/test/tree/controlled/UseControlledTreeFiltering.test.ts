@@ -15,8 +15,8 @@ import {
   UseFilteredNodeLoaderProps,
   useNodeHighlightingProps,
 } from "../../../presentation-components/tree/controlled/UseControlledTreeFiltering";
-import { FilteredPresentationTreeDataProvider, IFilteredPresentationTreeDataProvider } from "../../../presentation-components/tree/FilteredDataProvider";
-import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";
+import { FilteredPresentationTreeDataProvider } from "../../../presentation-components/tree/FilteredDataProvider";
+import { IFilteredPresentationTreeDataProvider, IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";
 import { ResolvablePromise } from "../../_helpers/Promises";
 import { createTestPropertyRecord, createTestTreeNodeItem } from "../../_helpers/UiComponents";
 import { act, renderHook, waitFor } from "../../TestUtils";

@@ -44,7 +44,7 @@
     "docs:reference": "betools docs --includes=./build/docs/extract --json=./build/docs/reference/presentation-components/file.json --tsIndexFile=presentation-components.ts --onlyJson",
     "docs:extract": "betools extract --fileExt=ts,tsx --extractFrom=./src/test --recursive --out=./build/docs/extract",
     "extract-api": "betools extract-api --entry=presentation-components --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api",
-    "check-internal": ""
+    "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-components.api.md"
   },
   "dependencies": {
     "@itwin/itwinui-icons-react": "^2.4.0",
