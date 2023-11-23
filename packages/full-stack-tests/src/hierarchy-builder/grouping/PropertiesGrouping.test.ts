@@ -5,14 +5,20 @@
 
 import { Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
-import { ECSqlSelectClausePropertiesGroupingParams, IHierarchyLevelDefinitionsFactory, NodeSelectClauseFactory } from "@itwin/presentation-hierarchy-builder";
+import { IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { createLocalizationFunction } from "@itwin/presentation-core-interop";
+import {
+  ECSqlSelectClausePropertiesGroupingParams,
+  IHierarchyLevelDefinitionsFactory,
+  NodeSelectClauseFactory,
+  setLocalizationFunction,
+} from "@itwin/presentation-hierarchy-builder";
 import { buildIModel, insertSubject } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
 import { createProvider } from "../Utils";
 
-describe("Stateless hierarchy builder", () => {
+describe.only("Stateless hierarchy builder", () => {
   describe("Properties grouping", () => {
     let selectClauseFactory: NodeSelectClauseFactory;
     let subjectClassName: string;
@@ -154,12 +160,75 @@ describe("Stateless hierarchy builder", () => {
       });
     });
 
-    it("creates other property grouping nodes if provided properties don't fit in the range", async function () {
+    it("doesn't create grouping nodes if provided property values are not defined and createGroupForUnspecifiedValues isn't set", async function () {
+      const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
+        fullClassName: "BisCore.Subject",
+        propertyGroups: [{ propertyName: "description" }],
+      };
+
+      await validateHierarchy({
+        provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(groupingParams) }),
+        expect: [
+          NodeValidators.createForInstanceNode({
+            instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
+            children: false,
+          }),
+        ],
+      });
+    });
+
+    it("creates other property grouping nodes if provided property values are not defined and createGroupForOutOfRangeValues is true", async function () {
+      const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
+        fullClassName: "BisCore.Subject",
+        createGroupForUnspecifiedValues: true,
+        propertyGroups: [{ propertyName: "description" }],
+      };
+      const localizationFunction = await createLocalizationFunction(IModelApp.localization);
+      setLocalizationFunction(localizationFunction);
+      await validateHierarchy({
+        provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(groupingParams) }),
+        expect: [
+          NodeValidators.createForPropertyValueGroupingNode({
+            fullClassName: "BisCore.Subject",
+            propertyName: "description",
+            formattedPropertyValue: "",
+            label: "Ñót spêçìfíêd",
+            children: [
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
+                children: false,
+              }),
+            ],
+          }),
+        ],
+      });
+    });
+
+    it("doesn't create grouping nodes if provided properties don't fit in the range and createGroupForOutOfRangeValues isn't set", async function () {
       const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
         fullClassName: "BisCore.Subject",
         propertyGroups: [{ propertyName: "description", propertyValue: 2.5, ranges: [{ fromValue: 1, toValue: 2, rangeLabel: "TestLabel" }] }],
       };
 
+      await validateHierarchy({
+        provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(groupingParams) }),
+        expect: [
+          NodeValidators.createForInstanceNode({
+            instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
+            children: false,
+          }),
+        ],
+      });
+    });
+
+    it("creates other property grouping nodes if provided properties don't fit in the range and createGroupForOutOfRangeValues is true", async function () {
+      const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
+        fullClassName: "BisCore.Subject",
+        createGroupForOutOfRangeValues: true,
+        propertyGroups: [{ propertyName: "description", propertyValue: 2.5, ranges: [{ fromValue: 1, toValue: 2, rangeLabel: "TestLabel" }] }],
+      };
+      const localizationFunction = await createLocalizationFunction(IModelApp.localization);
+      setLocalizationFunction(localizationFunction);
       await validateHierarchy({
         provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(groupingParams) }),
         expect: [

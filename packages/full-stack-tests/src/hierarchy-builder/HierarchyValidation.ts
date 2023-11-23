@@ -182,7 +182,7 @@ export namespace NodeValidators {
         }
 
         validateBaseNodeAttributes(node, {
-          label: "Other",
+          label: "Òthér",
           autoExpand: props.autoExpand,
           children: props.children,
         });
