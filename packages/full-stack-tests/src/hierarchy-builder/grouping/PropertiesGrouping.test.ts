@@ -6,7 +6,7 @@
 import { Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { HierarchyNodePropertiesGroupingParams, IHierarchyLevelDefinitionsFactory, NodeSelectClauseFactory } from "@itwin/presentation-hierarchy-builder";
+import { ECSqlSelectClausePropertiesGroupingParams, IHierarchyLevelDefinitionsFactory, NodeSelectClauseFactory } from "@itwin/presentation-hierarchy-builder";
 import { buildIModel, insertSubject } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
@@ -29,7 +29,7 @@ describe("Stateless hierarchy builder", () => {
       await terminate();
     });
 
-    function createHierarchyWithSpecifiedGrouping(specifiedGrouping: HierarchyNodePropertiesGroupingParams): IHierarchyLevelDefinitionsFactory {
+    function createHierarchyWithSpecifiedGrouping(specifiedGrouping: ECSqlSelectClausePropertiesGroupingParams): IHierarchyLevelDefinitionsFactory {
       return {
         async defineHierarchyLevel(parentNode) {
           if (!parentNode) {
@@ -61,7 +61,7 @@ describe("Stateless hierarchy builder", () => {
     }
 
     it("doesn't create grouping nodes if provided properties class isn't base of nodes class", async function () {
-      const groupingParams: HierarchyNodePropertiesGroupingParams = {
+      const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
         fullClassName: "BisCore.PhysicalPartition",
         propertyGroups: [{ propertyName: "description", propertyValue: "description" }],
       };
@@ -78,7 +78,7 @@ describe("Stateless hierarchy builder", () => {
     });
 
     it("creates formatted property grouping nodes if provided properties grouping without range", async function () {
-      const groupingParams: HierarchyNodePropertiesGroupingParams = {
+      const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
         fullClassName: "BisCore.Subject",
         propertyGroups: [{ propertyName: "description", propertyValue: "TestDescription" }],
       };
@@ -103,7 +103,7 @@ describe("Stateless hierarchy builder", () => {
     });
 
     it("creates ranged property grouping nodes if provided properties grouping with range", async function () {
-      const groupingParams: HierarchyNodePropertiesGroupingParams = {
+      const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
         fullClassName: "BisCore.Subject",
         propertyGroups: [{ propertyName: "description", propertyValue: 1.5, ranges: [{ fromValue: 1, toValue: 2 }] }],
       };
@@ -129,7 +129,7 @@ describe("Stateless hierarchy builder", () => {
     });
 
     it("creates ranged property grouping nodes and applies range label if provided properties grouping with range and range label", async function () {
-      const groupingParams: HierarchyNodePropertiesGroupingParams = {
+      const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
         fullClassName: "BisCore.Subject",
         propertyGroups: [{ propertyName: "description", propertyValue: 1.5, ranges: [{ fromValue: 1, toValue: 2, rangeLabel: "TestLabel" }] }],
       };
@@ -155,7 +155,7 @@ describe("Stateless hierarchy builder", () => {
     });
 
     it("creates other property grouping nodes if provided properties don't fit in the range", async function () {
-      const groupingParams: HierarchyNodePropertiesGroupingParams = {
+      const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
         fullClassName: "BisCore.Subject",
         propertyGroups: [{ propertyName: "description", propertyValue: 2.5, ranges: [{ fromValue: 1, toValue: 2, rangeLabel: "TestLabel" }] }],
       };
@@ -178,7 +178,7 @@ describe("Stateless hierarchy builder", () => {
     });
 
     it("creates multiple grouping nodes if node has multiple property groupings", async function () {
-      const groupingParams: HierarchyNodePropertiesGroupingParams = {
+      const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
         fullClassName: "BisCore.Subject",
         propertyGroups: [
           { propertyName: "UserLabel", propertyValue: "TestLabel" },
