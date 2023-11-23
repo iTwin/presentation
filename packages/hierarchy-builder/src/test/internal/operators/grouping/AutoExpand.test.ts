@@ -60,7 +60,7 @@ describe("AutoExpand", () => {
           },
         },
         groupingType: "property",
-        createGroupedNodeProcessingParams: (autoExpand: AutoExpand | undefined): InstanceHierarchyNodeProcessingParams => {
+        createGroupedNodeProcessingParams: (autoExpand: HierarchyNodeAutoExpandProp | undefined): InstanceHierarchyNodeProcessingParams => {
           return {
             grouping: { byProperties: { fullClassName: "TestSchema:BaseClass", autoExpand, propertyGroups: [{ propertyName: "length", propertyValue: 1 }] } },
           };

@@ -97,6 +97,7 @@ export interface ECSqlSelectClauseGroupingParams {
   byLabel?: boolean | ECSqlSelectClauseGroupingParamsBase | ECSqlValueSelector;
   byClass?: boolean | ECSqlSelectClauseGroupingParamsBase | ECSqlValueSelector;
   byBaseClasses?: ECSqlSelectClauseBaseClassGroupingParams;
+  byProperties?: ECSqlSelectClausePropertiesGroupingParams;
 }
 
 /**
@@ -107,6 +108,37 @@ export interface ECSqlSelectClauseGroupingParamsBase {
   hideIfNoSiblings?: boolean | ECSqlValueSelector;
   hideIfOneGroupedNode?: boolean | ECSqlValueSelector;
   autoExpand?: string | ECSqlValueSelector;
+}
+
+/**
+ * A data structure for defining properties grouping.
+ * @beta
+ */
+export interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
+  fullClassName: string | ECSqlValueSelector;
+  createGroupForUnspecifiedValues?: boolean | ECSqlValueSelector;
+  createGroupForOutOfRangeValues?: boolean | ECSqlValueSelector;
+  propertyGroups: Array<ECSqlSelectClausePropertyGroup>;
+}
+
+/**
+ * A data structure for defining specific properties' grouping params.
+ * @beta
+ */
+export interface ECSqlSelectClausePropertyGroup {
+  propertyName: string | ECSqlValueSelector;
+  propertyValue?: PrimitiveValue | ECSqlValueSelector;
+  ranges?: Array<ECSqlSelectClauseRange>;
+}
+
+/**
+ * A data structure for defining boundaries for a value.
+ * @beta
+ */
+export interface ECSqlSelectClauseRange {
+  fromValue: number | ECSqlValueSelector;
+  toValue: number | ECSqlValueSelector;
+  rangeLabel?: string | ECSqlValueSelector;
 }
 
 /**
@@ -224,7 +256,12 @@ export class NodeSelectQueryFactory {
   }
 }
 
-function createECSqlValueSelector(input: undefined | Id64String | string | number | boolean | ECSqlValueSelector) {
+/**
+ * ECSql value formatting function, which converts input into string selector.
+ *
+ * @beta
+ */
+function createECSqlValueSelector(input: undefined | PrimitiveValue | ECSqlValueSelector) {
   if (input === undefined) {
     return "NULL";
   }
@@ -271,7 +308,94 @@ function createGroupingSelector(grouping: ECSqlSelectClauseGroupingParams): stri
       ]),
     });
 
+  grouping.byProperties &&
+    groupingSelectors.push({
+      key: "byProperties",
+      selector: serializeJsonObject([
+        {
+          key: "fullClassName",
+          selector: `${createECSqlValueSelector(grouping.byProperties.fullClassName)}`,
+        },
+        {
+          key: "propertyGroups",
+          selector: `json_array(${grouping.byProperties.propertyGroups
+            .map((propertyGroup) => serializeJsonObject(createPropertyGroupSelectors(propertyGroup)))
+            .join(", ")})`,
+        },
+        ...(grouping.byProperties.createGroupForOutOfRangeValues !== undefined
+          ? [
+              {
+                key: "createGroupForOutOfRangeValues",
+                selector: `CAST(${createECSqlValueSelector(grouping.byProperties.createGroupForOutOfRangeValues)} AS BOOLEAN)`,
+              },
+            ]
+          : []),
+        ...(grouping.byProperties.createGroupForUnspecifiedValues !== undefined
+          ? [
+              {
+                key: "createGroupForUnspecifiedValues",
+                selector: `CAST(${createECSqlValueSelector(grouping.byProperties.createGroupForUnspecifiedValues)} AS BOOLEAN)`,
+              },
+            ]
+          : []),
+        ...createBaseGroupingParamSelectors(grouping.byProperties),
+      ]),
+    });
+
   return serializeJsonObject(groupingSelectors);
+}
+
+function createPropertyGroupSelectors(propertyGroup: ECSqlSelectClausePropertyGroup) {
+  const selectors = new Array<{ key: string; selector: string }>();
+  selectors.push(
+    {
+      key: "propertyName",
+      selector: `${createECSqlValueSelector(propertyGroup.propertyName)}`,
+    },
+    ...(propertyGroup.propertyValue !== undefined
+      ? [
+          {
+            key: "propertyValue",
+            selector:
+              typeof propertyGroup.propertyValue === "boolean"
+                ? `CAST(${createECSqlValueSelector(propertyGroup.propertyValue)} AS BOOLEAN)`
+                : createECSqlValueSelector(propertyGroup.propertyValue),
+          },
+        ]
+      : []),
+  );
+  if (propertyGroup.ranges) {
+    selectors.push(createRangeParamSelectors(propertyGroup.ranges));
+  }
+  return selectors;
+}
+
+function createRangeParamSelectors(ranges: ECSqlSelectClauseRange[]) {
+  return {
+    key: "ranges",
+    selector: `json_array(${ranges
+      .map((range) =>
+        serializeJsonObject([
+          {
+            key: "fromValue",
+            selector: createECSqlValueSelector(range.fromValue),
+          },
+          {
+            key: "toValue",
+            selector: createECSqlValueSelector(range.toValue),
+          },
+          ...(range.rangeLabel
+            ? [
+                {
+                  key: "rangeLabel",
+                  selector: `${createECSqlValueSelector(range.rangeLabel)}`,
+                },
+              ]
+            : []),
+        ]),
+      )
+      .join(", ")})`,
+  };
 }
 
 function createBaseGroupingParamSelectors(params: ECSqlSelectClauseGroupingParamsBase) {

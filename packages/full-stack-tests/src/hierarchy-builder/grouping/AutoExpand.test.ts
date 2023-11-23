@@ -331,7 +331,7 @@ describe("Stateless hierarchy builder", () => {
 
       it("grouping nodes' autoExpand option is true when some child has autoExpand set to 'always'", async function () {
         await validateHierarchy({
-          provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(propertiesAutoExpandAlways) }),
+          provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, propertiesAutoExpandAlways) }),
           expect: [
             NodeValidators.createForPropertyValueGroupingNode({
               label: "test1",
@@ -351,7 +351,7 @@ describe("Stateless hierarchy builder", () => {
 
       it("grouping nodes' autoExpand option is true when it has one child with autoExpand set to 'single-child'", async function () {
         await validateHierarchy({
-          provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(propertiesAutoExpandSingleChild) }),
+          provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, propertiesAutoExpandSingleChild) }),
           expect: [
             NodeValidators.createForPropertyValueGroupingNode({
               label: "test1",
@@ -377,7 +377,7 @@ describe("Stateless hierarchy builder", () => {
         });
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(propertiesAutoExpandSingleChild) }),
+          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, propertiesAutoExpandSingleChild) }),
           expect: [
             NodeValidators.createForPropertyValueGroupingNode({
               label: "test1",

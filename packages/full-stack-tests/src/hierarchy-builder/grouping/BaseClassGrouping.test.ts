@@ -28,7 +28,7 @@ describe("Stateless hierarchy builder", () => {
     after(async () => {
       await terminate();
     });
-
+    //
     it("doesn't create grouping nodes if provided classes aren't base for node class", async function () {
       const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(emptyIModel));
       const customHierarchy: IHierarchyLevelDefinitionsFactory = {

@@ -11,17 +11,16 @@ import {
   ECSqlSelectClausePropertiesGroupingParams,
   IHierarchyLevelDefinitionsFactory,
   LOCALIZATION_NAMESPACE,
-  NodeSelectClauseFactory,
+  NodeSelectQueryFactory,
   setLocalizationFunction,
 } from "@itwin/presentation-hierarchy-builder";
 import { buildIModel, insertSubject } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
-import { createProvider } from "../Utils";
+import { createMetadataProvider, createProvider } from "../Utils";
 
 describe("Stateless hierarchy builder", () => {
   describe("Properties grouping", () => {
-    let selectClauseFactory: NodeSelectClauseFactory;
     let subjectClassName: string;
     let emptyIModel: IModelConnection;
 
@@ -29,7 +28,6 @@ describe("Stateless hierarchy builder", () => {
       await initialize();
       emptyIModel = (await buildIModel(this)).imodel;
       subjectClassName = Subject.classFullName.replace(":", ".");
-      selectClauseFactory = new NodeSelectClauseFactory();
     });
 
     after(async () => {
@@ -37,16 +35,20 @@ describe("Stateless hierarchy builder", () => {
       await terminate();
     });
 
-    function createHierarchyWithSpecifiedGrouping(specifiedGrouping: ECSqlSelectClausePropertiesGroupingParams): IHierarchyLevelDefinitionsFactory {
+    function createHierarchyWithSpecifiedGrouping(
+      imodel: IModelConnection,
+      specifiedGrouping: ECSqlSelectClausePropertiesGroupingParams,
+    ): IHierarchyLevelDefinitionsFactory {
+      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
       return {
-        async defineHierarchyLevel(parentNode) {
+        async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
             return [
               {
                 fullClassName: `BisCore.InformationContentElement`,
                 query: {
                   ecsql: `
-                  SELECT ${await selectClauseFactory.createSelectClause({
+                  SELECT ${await selectQueryFactory.createSelectClause({
                     ecClassId: { selector: `this.ECClassId` },
                     ecInstanceId: { selector: `this.ECInstanceId` },
                     nodeLabel: { selector: `this.UserLabel` },
@@ -75,7 +77,7 @@ describe("Stateless hierarchy builder", () => {
       };
 
       await validateHierarchy({
-        provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(groupingParams) }),
+        provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, groupingParams) }),
         expect: [
           NodeValidators.createForInstanceNode({
             instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
@@ -92,7 +94,7 @@ describe("Stateless hierarchy builder", () => {
       };
 
       await validateHierarchy({
-        provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(groupingParams) }),
+        provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, groupingParams) }),
         expect: [
           NodeValidators.createForPropertyValueGroupingNode({
             label: "TestDescription",
@@ -117,7 +119,7 @@ describe("Stateless hierarchy builder", () => {
       };
 
       await validateHierarchy({
-        provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(groupingParams) }),
+        provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, groupingParams) }),
         expect: [
           NodeValidators.createForPropertyValueRangeGroupingNode({
             label: "1 - 2",
@@ -143,7 +145,7 @@ describe("Stateless hierarchy builder", () => {
       };
 
       await validateHierarchy({
-        provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(groupingParams) }),
+        provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, groupingParams) }),
         expect: [
           NodeValidators.createForPropertyValueRangeGroupingNode({
             label: "TestLabel",
@@ -169,7 +171,7 @@ describe("Stateless hierarchy builder", () => {
       };
 
       await validateHierarchy({
-        provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(groupingParams) }),
+        provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, groupingParams) }),
         expect: [
           NodeValidators.createForInstanceNode({
             instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
@@ -188,7 +190,7 @@ describe("Stateless hierarchy builder", () => {
       const localizationFunction = await createLocalizationFunction(IModelApp.localization);
       setLocalizationFunction(localizationFunction);
       await validateHierarchy({
-        provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(groupingParams) }),
+        provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, groupingParams) }),
         expect: [
           NodeValidators.createForPropertyValueGroupingNode({
             fullClassName: "BisCore.Subject",
@@ -213,7 +215,7 @@ describe("Stateless hierarchy builder", () => {
       };
 
       await validateHierarchy({
-        provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(groupingParams) }),
+        provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, groupingParams) }),
         expect: [
           NodeValidators.createForInstanceNode({
             instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
@@ -232,7 +234,7 @@ describe("Stateless hierarchy builder", () => {
       const localizationFunction = await createLocalizationFunction(IModelApp.localization);
       setLocalizationFunction(localizationFunction);
       await validateHierarchy({
-        provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(groupingParams) }),
+        provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, groupingParams) }),
         expect: [
           NodeValidators.createForPropertyOtherValuesGroupingNode({
             fullClassName: "BisCore.Subject",
@@ -258,7 +260,7 @@ describe("Stateless hierarchy builder", () => {
       };
 
       await validateHierarchy({
-        provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(groupingParams) }),
+        provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, groupingParams) }),
         expect: [
           NodeValidators.createForPropertyValueGroupingNode({
             label: "TestLabel",
@@ -291,15 +293,16 @@ describe("Stateless hierarchy builder", () => {
         return { childSubject1, childSubject2 };
       });
 
+      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
       const customHierarchy: IHierarchyLevelDefinitionsFactory = {
-        async defineHierarchyLevel(parentNode) {
+        async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
             return [
               {
                 fullClassName: `BisCore.InformationContentElement`,
                 query: {
                   ecsql: `
-                      SELECT ${await selectClauseFactory.createSelectClause({
+                      SELECT ${await selectQueryFactory.createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `this.UserLabel` },
@@ -361,15 +364,16 @@ describe("Stateless hierarchy builder", () => {
         return { childSubject1 };
       });
 
+      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
       const customHierarchy: IHierarchyLevelDefinitionsFactory = {
-        async defineHierarchyLevel(parentNode) {
+        async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
             return [
               {
                 fullClassName: `BisCore.InformationContentElement`,
                 query: {
                   ecsql: `
-                      SELECT ${await selectClauseFactory.createSelectClause({
+                      SELECT ${await selectQueryFactory.createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `this.UserLabel` },
@@ -401,7 +405,7 @@ describe("Stateless hierarchy builder", () => {
                 fullClassName: `BisCore.InformationContentElement`,
                 query: {
                   ecsql: `
-                      SELECT ${await selectClauseFactory.createSelectClause({
+                      SELECT ${await selectQueryFactory.createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
                         nodeLabel: { selector: `this.UserLabel` },

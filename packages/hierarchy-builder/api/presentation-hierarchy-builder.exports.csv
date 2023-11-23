@@ -1,13 +1,13 @@
 sep=;
 Release Tag;API Item
 beta;ArrayPropertyAttributes
-beta;BisInstanceLabelSelectClauseFactory
+beta;BisInstanceLabelSelectClauseFactory 
 beta;BisInstanceLabelSelectClauseFactoryProps
 beta;ClassBasedHierarchyDefinition
 beta;ClassBasedHierarchyDefinitionsFactoryProps
 beta;ClassBasedHierarchyLevelDefinition = InstancesNodeChildHierarchyLevelDefinition | CustomNodeChildHierarchyLevelDefinition
-beta;ClassBasedHierarchyLevelDefinitionsFactory
-beta;ClassBasedInstanceLabelSelectClauseFactory
+beta;ClassBasedHierarchyLevelDefinitionsFactory 
+beta;ClassBasedInstanceLabelSelectClauseFactory 
 beta;ClassBasedInstanceLabelSelectClauseFactoryProps
 beta;ClassBasedLabelSelectClause
 beta;ClassGroupingNodeKey
@@ -16,29 +16,28 @@ beta;ConcatenatedValue
 beta;ConcatenatedValuePart = PropertyValue | TypedPrimitiveValue | string
 beta;ConcatenatedValuePart
 beta;createDefaultValueFormatter(): IPrimitiveValueFormatter
-beta;createECSqlValueSelector(input: undefined | PrimitiveValue | ECSqlValueSelector): string
 beta;CreateInstanceLabelSelectClauseProps
 beta;CustomHierarchyNodeDefinition
 beta;CustomNodeChildHierarchyLevelDefinition
-beta;DefaultInstanceLabelSelectClauseFactory
+beta;DefaultInstanceLabelSelectClauseFactory 
 beta;DefineHierarchyLevelProps
 beta;DefineInstanceNodeChildHierarchyLevelProps = DefineHierarchyLevelProps &
 beta;DefineRootHierarchyLevelProps = Omit
 beta;ECArrayProperty = ECStructArrayProperty | ECEnumerationArrayProperty | ECPrimitiveArrayProperty
-beta;ECClass
+beta;ECClass 
 beta;ECEntityClass = ECClass
-beta;ECEnumeration
+beta;ECEnumeration 
 beta;ECEnumerationArrayProperty = ECEnumerationProperty & ArrayPropertyAttributes
-beta;ECEnumerationProperty
+beta;ECEnumerationProperty 
 beta;ECEnumerator
 beta;ECKindOfQuantity = ECSchemaItem
 beta;ECMixin = ECClass
-beta;ECNavigationProperty
+beta;ECNavigationProperty 
 beta;ECPrimitiveArrayProperty = ECPrimitiveProperty & ArrayPropertyAttributes
-beta;ECPrimitiveProperty
+beta;ECPrimitiveProperty 
 beta;ECPrimitiveType = "Binary" | "Boolean" | "DateTime" | "Double" | "Integer" | "Long" | "Point2d" | "Point3d" | "String" | "IGeometry"
 beta;ECProperty
-beta;ECRelationshipClass
+beta;ECRelationshipClass 
 beta;ECRelationshipConstraint
 beta;ECRelationshipConstraintMultiplicity
 beta;ECSchema
@@ -50,27 +49,30 @@ beta;ECSqlQueryReader
 beta;ECSqlQueryReaderOptions
 beta;ECSqlQueryRow
 beta;ECSqlQueryRowFormat = "ECSqlPropertyNames" | "Indexes"
-beta;ECSqlSelectClauseBaseClassGroupingParams
+beta;ECSqlSelectClauseBaseClassGroupingParams 
 beta;ECSqlSelectClauseGroupingParams
 beta;ECSqlSelectClauseGroupingParamsBase
+beta;ECSqlSelectClausePropertiesGroupingParams 
+beta;ECSqlSelectClausePropertyGroup
+beta;ECSqlSelectClauseRange
 beta;ECSqlSnippets:
 beta;ECSqlValueSelector
 beta;ECStructArrayProperty = ECStructProperty & ArrayPropertyAttributes
 beta;ECStructClass = ECClass
-beta;ECStructProperty
+beta;ECStructProperty 
 beta;GenericInstanceFilter
 beta;GenericInstanceFilter
 beta;GenericInstanceFilterRule
 beta;GenericInstanceFilterRuleGroup
 beta;GetHierarchyNodesProps
 beta;getLogger(): ILogger
-beta;GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey
+beta;GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | PropertyGroupingNodeKey
 beta;HierarchyDefinitionParentNode = Omit
 beta;HierarchyLevelDefinition = HierarchyNodesDefinition[]
 beta;HierarchyNode
 beta;HierarchyNode
 beta;HierarchyNodeAutoExpandProp = "single-child" | "always"
-beta;HierarchyNodeBaseClassGroupingParams
+beta;HierarchyNodeBaseClassGroupingParams 
 beta;HierarchyNodeGroupingParams
 beta;HierarchyNodeGroupingParamsBase
 beta;HierarchyNodeIdentifier = InstanceKey |
@@ -79,6 +81,7 @@ beta;HierarchyNodeIdentifiersPath = HierarchyNodeIdentifier[]
 beta;HierarchyNodeKey = StandardHierarchyNodeKey | string
 beta;HierarchyNodeKey
 beta;HierarchyNodeProcessingParamsBase
+beta;HierarchyNodePropertiesGroupingParams 
 beta;HierarchyNodesDefinition = CustomHierarchyNodeDefinition | InstanceNodesQueryDefinition
 beta;HierarchyNodesDefinition
 beta;HierarchyProvider
@@ -91,8 +94,8 @@ beta;ILogger
 beta;IMetadataProvider
 beta;INodeParser = (row:
 beta;INodePostProcessor = (node: ProcessedHierarchyNode) => Promise
-beta;INodePreProcessor =
-beta;InstanceHierarchyNodeProcessingParams
+beta;INodePreProcessor = 
+beta;InstanceHierarchyNodeProcessingParams 
 beta;InstanceKey
 beta;InstanceKey
 beta;InstanceNodesQueryDefinition
@@ -127,9 +130,16 @@ beta;PropertyFilterRuleOperator
 beta;PropertyFilterRuleUnaryOperator = "True" | "False" | "Null" | "NotNull"
 beta;PropertyFilterValue = PrimitiveValue | InstanceKey
 beta;PropertyFilterValue
+beta;PropertyGroup
+beta;PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | PropertyValueGroupingNodeKey | PropertyOtherValuesGroupingNodeKey
+beta;PropertyOtherValuesGroupingNodeKey
 beta;PropertyValue
+beta;PropertyValueGroupingNodeKey
+beta;PropertyValueRangeGroupingNodeKey
+beta;Range
 beta;RelatedInstanceDescription
 beta;RelationshipPath
 beta;RelationshipPathStep
+beta;setLocalizationFunction(localizationFunction?: LocalizationFunction): void
 beta;setLogger(logger: ILogger | undefined): void
 beta;StandardHierarchyNodeKey = InstancesNodeKey | GroupingNodeKey

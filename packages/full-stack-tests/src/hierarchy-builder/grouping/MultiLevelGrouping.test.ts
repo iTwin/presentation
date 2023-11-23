@@ -112,7 +112,7 @@ describe("Stateless hierarchy builder", () => {
                 fullClassName: `BisCore.InformationContentElement`,
                 query: {
                   ecsql: `
-                    SELECT ${await selectClauseFactory.createSelectClause({
+                    SELECT ${await selectQueryFactory.createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.UserLabel` },

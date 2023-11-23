@@ -425,7 +425,7 @@ describe("Stateless hierarchy builder", () => {
         });
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(propertiesHideIfNoSiblingsGrouping) }),
+          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, propertiesHideIfNoSiblingsGrouping) }),
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.childSubject1],
@@ -446,7 +446,7 @@ describe("Stateless hierarchy builder", () => {
         });
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(propertiesHideIfOneGroupedNodeGrouping) }),
+          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, propertiesHideIfOneGroupedNodeGrouping) }),
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.childSubject1],
@@ -464,7 +464,7 @@ describe("Stateless hierarchy builder", () => {
         });
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(propertiesHideIfNoSiblingsGrouping) }),
+          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, propertiesHideIfNoSiblingsGrouping) }),
           expect: [
             NodeValidators.createForPropertyValueGroupingNode({
               label: groupName,
@@ -500,7 +500,7 @@ describe("Stateless hierarchy builder", () => {
         });
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(propertiesHideIfOneGroupedNodeGrouping) }),
+          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, propertiesHideIfOneGroupedNodeGrouping) }),
           expect: [
             NodeValidators.createForPropertyValueGroupingNode({
               label: groupName,

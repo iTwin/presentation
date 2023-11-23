@@ -102,9 +102,6 @@ export namespace ConcatenatedValuePart {
 export function createDefaultValueFormatter(): IPrimitiveValueFormatter;
 
 // @beta
-export function createECSqlValueSelector(input: undefined | PrimitiveValue | ECSqlValueSelector): string;
-
-// @beta
 export interface CreateInstanceLabelSelectClauseProps {
     classAlias: string;
     className?: string;
@@ -379,6 +376,8 @@ export interface ECSqlSelectClauseGroupingParams {
     byClass?: boolean | ECSqlSelectClauseGroupingParamsBase | ECSqlValueSelector;
     // (undocumented)
     byLabel?: boolean | ECSqlSelectClauseGroupingParamsBase | ECSqlValueSelector;
+    // (undocumented)
+    byProperties?: ECSqlSelectClausePropertiesGroupingParams;
 }
 
 // @beta
@@ -389,6 +388,38 @@ export interface ECSqlSelectClauseGroupingParamsBase {
     hideIfNoSiblings?: boolean | ECSqlValueSelector;
     // (undocumented)
     hideIfOneGroupedNode?: boolean | ECSqlValueSelector;
+}
+
+// @beta
+export interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
+    // (undocumented)
+    createGroupForOutOfRangeValues?: boolean | ECSqlValueSelector;
+    // (undocumented)
+    createGroupForUnspecifiedValues?: boolean | ECSqlValueSelector;
+    // (undocumented)
+    fullClassName: string | ECSqlValueSelector;
+    // (undocumented)
+    propertyGroups: Array<ECSqlSelectClausePropertyGroup>;
+}
+
+// @beta
+export interface ECSqlSelectClausePropertyGroup {
+    // (undocumented)
+    propertyName: string | ECSqlValueSelector;
+    // (undocumented)
+    propertyValue?: PrimitiveValue | ECSqlValueSelector;
+    // (undocumented)
+    ranges?: Array<ECSqlSelectClauseRange>;
+}
+
+// @beta
+export interface ECSqlSelectClauseRange {
+    // (undocumented)
+    fromValue: number | ECSqlValueSelector;
+    // (undocumented)
+    rangeLabel?: string | ECSqlValueSelector;
+    // (undocumented)
+    toValue: number | ECSqlValueSelector;
 }
 
 // @beta
@@ -568,6 +599,8 @@ export interface HierarchyNodeGroupingParams {
     byClass?: boolean | HierarchyNodeGroupingParamsBase;
     // (undocumented)
     byLabel?: boolean | HierarchyNodeGroupingParamsBase;
+    // (undocumented)
+    byProperties?: HierarchyNodePropertiesGroupingParams;
 }
 
 // @beta
@@ -615,6 +648,14 @@ export namespace HierarchyNodeKey {
 export interface HierarchyNodeProcessingParamsBase {
     hideIfNoChildren?: boolean;
     hideInHierarchy?: boolean;
+}
+
+// @beta
+export interface HierarchyNodePropertiesGroupingParams extends HierarchyNodeGroupingParamsBase {
+    createGroupForOutOfRangeValues?: boolean;
+    createGroupForUnspecifiedValues?: boolean;
+    fullClassName: string;
+    propertyGroups: Array<PropertyGroup>;
 }
 
 // @beta
@@ -921,6 +962,26 @@ export namespace PropertyFilterValue {
 }
 
 // @beta
+export interface PropertyGroup {
+    propertyName: string;
+    propertyValue?: PrimitiveValue;
+    ranges?: Array<Range>;
+}
+
+// @beta
+export type PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | PropertyValueGroupingNodeKey | PropertyOtherValuesGroupingNodeKey;
+
+// @beta
+export interface PropertyOtherValuesGroupingNodeKey {
+    // (undocumented)
+    fullClassName: string;
+    // (undocumented)
+    propertyName: string;
+    // (undocumented)
+    type: "property-grouping:other";
+}
+
+// @beta
 export interface PropertyValue {
     // (undocumented)
     className: string;
@@ -928,6 +989,39 @@ export interface PropertyValue {
     propertyName: string;
     // (undocumented)
     value: PrimitiveValue;
+}
+
+// @beta
+export interface PropertyValueGroupingNodeKey {
+    // (undocumented)
+    formattedPropertyValue: string;
+    // (undocumented)
+    fullClassName: string;
+    // (undocumented)
+    propertyName: string;
+    // (undocumented)
+    type: "property-grouping:value";
+}
+
+// @beta
+export interface PropertyValueRangeGroupingNodeKey {
+    // (undocumented)
+    fromValue: number;
+    // (undocumented)
+    fullClassName: string;
+    // (undocumented)
+    propertyName: string;
+    // (undocumented)
+    toValue: number;
+    // (undocumented)
+    type: "property-grouping:range";
+}
+
+// @beta
+export interface Range {
+    fromValue: number;
+    rangeLabel?: string;
+    toValue: number;
 }
 
 // @beta
@@ -945,13 +1039,6 @@ export interface RelationshipPathStep {
     relationshipReverse?: boolean;
     sourceClassName: string;
     targetClassName: string;
-}
-
-// @beta
-export interface Range {
-    fromValue: number;
-    rangeLabel?: string;
-    toValue: number;
 }
 
 // @beta

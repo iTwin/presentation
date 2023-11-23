@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert } from "@itwin/core-bentley";
+import { ECClass, IMetadataProvider } from "../../../ECMetadata";
 import { HierarchyNodePropertiesGroupingParams, ProcessedInstanceHierarchyNode, PropertyGroup, PropertyGroupingNodeKey, Range } from "../../../HierarchyNode";
 import { translate } from "../../../Localization";
-import { ECClass, IMetadataProvider } from "../../../Metadata";
 import { IPrimitiveValueFormatter } from "../../../values/Formatting";
 import { TypedPrimitiveValue } from "../../../values/Values";
 import { getClass } from "../../Common";
