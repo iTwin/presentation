@@ -104,9 +104,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
   }
 
   private async createRootHierarchyLevelDefinition(props: DefineRootHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
-    const instanceFilterClauses = props.instanceFilter
-      ? await this._selectQueryFactory.createFilterClauses(props.instanceFilter, { fullName: "BisCore.Subject", alias: "this" })
-      : undefined;
+    const instanceFilterClauses = await this._selectQueryFactory.createFilterClauses(props.instanceFilter, { fullName: "BisCore.Subject", alias: "this" });
     return [
       {
         fullClassName: "BisCore.Subject",
@@ -128,11 +126,11 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                 autoExpand: true,
                 supportsFiltering: true,
               })}
-            FROM ${instanceFilterClauses?.from ?? "BisCore.Subject"} this
-            ${instanceFilterClauses?.joins ?? ""}
+            FROM ${instanceFilterClauses.from} this
+            ${instanceFilterClauses.joins}
             WHERE
               this.Parent IS NULL
-              ${instanceFilterClauses?.where ? `AND ${instanceFilterClauses.where}` : ""}
+              ${instanceFilterClauses.where ? `AND ${instanceFilterClauses.where}` : ""}
           `,
         },
       },
@@ -144,12 +142,8 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
     instanceFilter,
   }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
     const selectColumnNames = Object.values(NodeSelectClauseColumnNames).join(", ");
-    const subjectFilterClauses = instanceFilter
-      ? await this._selectQueryFactory.createFilterClauses(instanceFilter, { fullName: "BisCore.Subject", alias: "this" })
-      : undefined;
-    const modelFilterClauses = instanceFilter
-      ? await this._selectQueryFactory.createFilterClauses(instanceFilter, { fullName: "BisCore.GeometricModel3d", alias: "this" })
-      : undefined;
+    const subjectFilterClauses = await this._selectQueryFactory.createFilterClauses(instanceFilter, { fullName: "BisCore.Subject", alias: "this" });
+    const modelFilterClauses = await this._selectQueryFactory.createFilterClauses(instanceFilter, { fullName: "BisCore.GeometricModel3d", alias: "this" });
     const ctes = [
       `
         subjects(${selectColumnNames}, ParentId) AS (
@@ -183,7 +177,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
             })},
             this.Parent.Id ParentId
           FROM
-            ${subjectFilterClauses?.from ?? "BisCore.Subject"} this
+            ${subjectFilterClauses.from} this
         )
       `,
       `
@@ -206,11 +200,11 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
             SELECT
             ${selectColumnNames}, ParentId
             FROM child_subjects this
-            ${subjectFilterClauses?.joins ?? ""}
+            ${subjectFilterClauses.joins}
             WHERE
               this.RootId IN (${subjectIds.map(() => "?").join(",")})
               AND NOT this.${NodeSelectClauseColumnNames.HideNodeInHierarchy}
-              ${subjectFilterClauses?.where ? `AND ${subjectFilterClauses.where}` : ""}
+              ${subjectFilterClauses.where ? `AND ${subjectFilterClauses.where}` : ""}
           `,
           bindings: [...subjectIds.map((id): ECSqlBinding => ({ type: "id", value: id }))],
         },
@@ -247,10 +241,10 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                 },
                 supportsFiltering: true,
               })}
-            FROM  ${modelFilterClauses?.from ?? "BisCore.GeometricModel3d"} this
+            FROM  ${modelFilterClauses.from} this
             JOIN bis.InformationPartitionElement partition ON partition.ECInstanceId = this.ModeledElement.Id
             JOIN bis.Subject subject ON subject.ECInstanceId = partition.Parent.Id OR json_extract(subject.JsonProperties,'$.Subject.Model.TargetPartition') = printf('0x%x', partition.ECInstanceId)
-            ${modelFilterClauses?.joins ?? ""}
+            ${modelFilterClauses.joins}
             WHERE
               NOT this.IsPrivate
               AND EXISTS (
@@ -267,7 +261,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                   WHERE s.RootId IN (${subjectIds.map(() => "?").join(",")}) AND s.${NodeSelectClauseColumnNames.HideNodeInHierarchy}
                 )
               )
-              ${modelFilterClauses?.where ? `AND ${modelFilterClauses.where}` : ""}
+              ${modelFilterClauses.where ? `AND ${modelFilterClauses.where}` : ""}
           `,
           bindings: [
             ...subjectIds.map((id): ECSqlBinding => ({ type: "id", value: id })),
@@ -282,9 +276,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
     parentNodeInstanceIds: elementIds,
     instanceFilter,
   }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
-    const instanceFilterClauses = instanceFilter
-      ? await this._selectQueryFactory.createFilterClauses(instanceFilter, { fullName: "BisCore.GeometricModel3d", alias: "this" })
-      : undefined;
+    const instanceFilterClauses = await this._selectQueryFactory.createFilterClauses(instanceFilter, { fullName: "BisCore.GeometricModel3d", alias: "this" });
     return [
       {
         fullClassName: "BisCore.GeometricModel3d",
@@ -297,13 +289,13 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                 nodeLabel: "", // doesn't matter - the node is always hidden
                 hideNodeInHierarchy: true,
               })}
-            FROM ${instanceFilterClauses?.from ?? "BisCore.GeometricModel3d"} this
-            ${instanceFilterClauses?.joins ?? ""}
+            FROM ${instanceFilterClauses.from} this
+            ${instanceFilterClauses.joins}
             WHERE
               this.ModeledElement.Id IN (${elementIds.map(() => "?").join(",")})
               AND NOT this.IsPrivate
               AND this.ECInstanceId IN (SELECT Model.Id FROM bis.GeometricElement3d)
-              ${instanceFilterClauses?.where ? `AND ${instanceFilterClauses.where}` : ""}
+              ${instanceFilterClauses.where ? `AND ${instanceFilterClauses.where}` : ""}
           `,
           bindings: [...elementIds.map((id): ECSqlBinding => ({ type: "id", value: id }))],
         },
@@ -328,9 +320,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
       }
       return `json_array(${slices.map((sliceIds) => `json_array(${sliceIds.map((id) => `'${id}'`).join(",")})`).join(",")})`;
     }
-    const instanceFilterClauses = instanceFilter
-      ? await this._selectQueryFactory.createFilterClauses(instanceFilter, { fullName: "BisCore.SpatialCategory", alias: "this" })
-      : undefined;
+    const instanceFilterClauses = await this._selectQueryFactory.createFilterClauses(instanceFilter, { fullName: "BisCore.SpatialCategory", alias: "this" });
     return [
       {
         fullClassName: "BisCore.SpatialCategory",
@@ -354,8 +344,8 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                 },
                 supportsFiltering: true,
               })}
-            FROM ${instanceFilterClauses?.from ?? "BisCore.SpatialCategory"} this
-            ${instanceFilterClauses?.joins ?? ""}
+            FROM ${instanceFilterClauses.from} this
+            ${instanceFilterClauses.joins}
             WHERE
               EXISTS (
                 SELECT 1
@@ -365,7 +355,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                   AND element.Category.Id = +this.ECInstanceId
                   AND element.Parent IS NULL
               )
-              ${instanceFilterClauses?.where ? `AND ${instanceFilterClauses.where}` : ""}
+              ${instanceFilterClauses.where ? `AND ${instanceFilterClauses.where}` : ""}
           `,
           bindings: modelIds.map((id) => ({ type: "id", value: id })),
         },
@@ -382,9 +372,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
       parentNode.extendedData && parentNode.extendedData.hasOwnProperty("modelIds")
         ? (parentNode.extendedData.modelIds as Array<Array<Id64String>>).reduce((arr, ids) => [...arr, ...ids])
         : [];
-    const instanceFilterClauses = instanceFilter
-      ? await this._selectQueryFactory.createFilterClauses(instanceFilter, { fullName: "BisCore.GeometricElement3d", alias: "this" })
-      : undefined;
+    const instanceFilterClauses = await this._selectQueryFactory.createFilterClauses(instanceFilter, { fullName: "BisCore.GeometricElement3d", alias: "this" });
     return [
       {
         fullClassName: "BisCore.GeometricElement3d",
@@ -422,13 +410,13 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                 },
                 supportsFiltering: true,
               })}
-            FROM ${instanceFilterClauses?.from ?? "BisCore.GeometricElement3d"} this
-            ${instanceFilterClauses?.joins ?? ""}
+            FROM ${instanceFilterClauses.from} this
+            ${instanceFilterClauses.joins}
             WHERE
               this.Category.Id IN (${categoryIds.map(() => "?").join(",")})
               AND this.Model.Id IN (${modelIds.map(() => "?").join(",")})
               AND this.Parent IS NULL
-              ${instanceFilterClauses?.where ? `AND ${instanceFilterClauses.where}` : ""}
+              ${instanceFilterClauses.where ? `AND ${instanceFilterClauses.where}` : ""}
           `,
           bindings: [...categoryIds.map((id) => ({ type: "id", value: id })), ...modelIds.map((id) => ({ type: "id", value: id }))] as ECSqlBinding[],
         },
@@ -440,9 +428,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
     parentNodeInstanceIds: elementIds,
     instanceFilter,
   }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
-    const instanceFilterClauses = instanceFilter
-      ? await this._selectQueryFactory.createFilterClauses(instanceFilter, { fullName: "BisCore.GeometricElement3d", alias: "this" })
-      : undefined;
+    const instanceFilterClauses = await this._selectQueryFactory.createFilterClauses(instanceFilter, { fullName: "BisCore.GeometricElement3d", alias: "this" });
     return [
       {
         fullClassName: "BisCore.GeometricElement3d",
@@ -480,11 +466,11 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                 },
                 supportsFiltering: true,
               })}
-            FROM ${instanceFilterClauses?.from ?? "BisCore.GeometricElement3d"} this
-            ${instanceFilterClauses?.joins ?? ""}
+            FROM ${instanceFilterClauses.from} this
+            ${instanceFilterClauses.joins}
             WHERE
               this.Parent.Id IN (${elementIds.map(() => "?").join(",")})
-              ${instanceFilterClauses?.where ? `AND ${instanceFilterClauses.where}` : ""}
+              ${instanceFilterClauses.where ? `AND ${instanceFilterClauses.where}` : ""}
           `,
           bindings: elementIds.map((id) => ({ type: "id", value: id })),
         },

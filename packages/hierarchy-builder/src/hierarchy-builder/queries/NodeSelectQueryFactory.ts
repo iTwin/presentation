@@ -152,16 +152,23 @@ export class NodeSelectQueryFactory {
    * Creates the necessary ECSQL snippets to create an instance filter described by the `def` argument.
    * - `from` is set to either the `contentClass.fullName` or `def.propertyClassName`, depending on which is more specific.
    * - `joins` is set to a number of `JOIN` clauses required to join all relationships described by `def.relatedInstances`.
-   * - `where` is set to a `WHERE` clause that filters instances by classes on `def.filterClassNames` and by properties
-   * as described by `def.rules`.
+   * - `where` is set to a `WHERE` clause (without the `WHERE` keyword) that filters instances by classes on
+   * `def.filterClassNames` and by properties as described by `def.rules`.
    *
-   * Note: In case the provided content class doesn't intersect with the property class in provided filter, a special result
+   * Special cases:
+   * - If `def` is `undefined`, `joins` and `where` are set to empty strings and `from` is set to `contentClass.fullName`.
+   * - If the provided content class doesn't intersect with the property class in provided filter, a special result
    * is returned to make sure the resulting query is valid and doesn't return anything.
    */
   public async createFilterClauses(
-    def: GenericInstanceFilter,
+    def: GenericInstanceFilter | undefined,
     contentClass: { fullName: string; alias: string },
-  ): Promise<{ from?: string; where?: string; joins?: string }> {
+  ): Promise<{ from: string; where: string; joins: string }> {
+    if (!def) {
+      // undefined filter means we don't want any filtering to be applied
+      return { from: contentClass.fullName, joins: "", where: "" };
+    }
+
     const from = await specializeContentClass({
       metadata: this._metadataProvider,
       contentClassName: contentClass.fullName,
@@ -169,7 +176,7 @@ export class NodeSelectQueryFactory {
     });
     if (!from) {
       // filter class doesn't intersect with content class - make sure the query returns nothing by returning a `FALSE` WHERE clause
-      return { from: undefined, joins: undefined, where: "FALSE" };
+      return { from: contentClass.fullName, joins: "", where: "FALSE" };
     }
 
     /**
@@ -211,8 +218,8 @@ export class NodeSelectQueryFactory {
 
     return {
       from,
-      joins: joins.length > 0 ? joins.join("\n") : undefined,
-      where: whereConditions.length > 0 ? whereConditions.join(" AND ") : undefined,
+      joins: joins.join("\n"),
+      where: whereConditions.join(" AND "),
     };
   }
 }

@@ -39,9 +39,7 @@ describe("Stateless hierarchy builder", () => {
       const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
       const hierarchy: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ instanceFilter }) {
-          const filterClauses = instanceFilter
-            ? await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: subjectClassName, alias: "this" })
-            : undefined;
+          const filterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: subjectClassName, alias: "this" });
           return [
             {
               fullClassName: subjectClassName,
@@ -52,9 +50,9 @@ describe("Stateless hierarchy builder", () => {
                     ecInstanceId: { selector: `this.ECInstanceId` },
                     nodeLabel: { selector: `this.CodeValue` },
                   })}
-                  FROM ${filterClauses?.from ?? subjectClassName} AS this
-                  ${filterClauses?.joins ?? ""}
-                  ${filterClauses?.where ? `WHERE ${filterClauses?.where}` : ""}
+                  FROM ${filterClauses.from} AS this
+                  ${filterClauses.joins}
+                  ${filterClauses.where ? `WHERE ${filterClauses?.where}` : ""}
                 `,
               },
             },
@@ -95,9 +93,7 @@ describe("Stateless hierarchy builder", () => {
       const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
       const hierarchy: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ instanceFilter }) {
-          const filterClauses = instanceFilter
-            ? await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: subjectClassName, alias: "this" })
-            : undefined;
+          const filterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: subjectClassName, alias: "this" });
           return [
             {
               fullClassName: subjectClassName,
@@ -108,11 +104,11 @@ describe("Stateless hierarchy builder", () => {
                     ecInstanceId: { selector: `this.ECInstanceId` },
                     nodeLabel: { selector: `this.CodeValue` },
                   })}
-                  FROM ${filterClauses?.from ?? subjectClassName} AS this
-                  ${filterClauses?.joins ?? ""}
+                  FROM ${filterClauses.from} AS this
+                  ${filterClauses.joins}
                   WHERE
                     this.Parent.Id = 0x1
-                    ${filterClauses?.where ? `AND ${filterClauses?.where}` : ""}
+                    ${filterClauses.where ? `AND ${filterClauses.where}` : ""}
                 `,
               },
             },
@@ -154,9 +150,7 @@ describe("Stateless hierarchy builder", () => {
       const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
       const hierarchy: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ instanceFilter }) {
-          const subjectFilterClauses = instanceFilter
-            ? await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: elementClassName, alias: "this" })
-            : undefined;
+          const subjectFilterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: elementClassName, alias: "this" });
           return [
             {
               fullClassName: elementClassName,
@@ -167,9 +161,9 @@ describe("Stateless hierarchy builder", () => {
                     ecInstanceId: { selector: `this.ECInstanceId` },
                     nodeLabel: { selector: `this.CodeValue` },
                   })}
-                  FROM ${subjectFilterClauses?.from ?? elementClassName} AS this
-                  ${subjectFilterClauses?.joins ?? ""}
-                  ${subjectFilterClauses?.where ? `WHERE ${subjectFilterClauses?.where}` : ""}
+                  FROM ${subjectFilterClauses.from} AS this
+                  ${subjectFilterClauses.joins}
+                  ${subjectFilterClauses.where ? `WHERE ${subjectFilterClauses.where}` : ""}
                 `,
               },
             },
@@ -206,9 +200,7 @@ describe("Stateless hierarchy builder", () => {
       const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
       const hierarchy: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ instanceFilter }) {
-          const subjectFilterClauses = instanceFilter
-            ? await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: elementClassName, alias: "this" })
-            : undefined;
+          const subjectFilterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: elementClassName, alias: "this" });
           return [
             {
               fullClassName: elementClassName,
@@ -219,9 +211,9 @@ describe("Stateless hierarchy builder", () => {
                     ecInstanceId: { selector: `this.ECInstanceId` },
                     nodeLabel: { selector: `this.CodeValue` },
                   })}
-                  FROM ${subjectFilterClauses?.from ?? elementClassName} AS this
-                  ${subjectFilterClauses?.joins ?? ""}
-                  ${subjectFilterClauses?.where ? `WHERE ${subjectFilterClauses?.where}` : ""}
+                  FROM ${subjectFilterClauses.from} AS this
+                  ${subjectFilterClauses.joins}
+                  ${subjectFilterClauses.where ? `WHERE ${subjectFilterClauses.where}` : ""}
                 `,
               },
             },
@@ -259,9 +251,7 @@ describe("Stateless hierarchy builder", () => {
       const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
       const hierarchy: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ instanceFilter }) {
-          const subjectFilterClauses = instanceFilter
-            ? await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: partitionClassName, alias: "this" })
-            : undefined;
+          const subjectFilterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: partitionClassName, alias: "this" });
           return [
             {
               fullClassName: partitionClassName,
@@ -272,9 +262,9 @@ describe("Stateless hierarchy builder", () => {
                     ecInstanceId: { selector: `this.ECInstanceId` },
                     nodeLabel: { selector: `this.CodeValue` },
                   })}
-                  FROM ${subjectFilterClauses?.from ?? partitionClassName} AS this
-                  ${subjectFilterClauses?.joins ?? ""}
-                  ${subjectFilterClauses?.where ? `WHERE ${subjectFilterClauses?.where}` : ""}
+                  FROM ${subjectFilterClauses.from} AS this
+                  ${subjectFilterClauses.joins}
+                  ${subjectFilterClauses.where ? `WHERE ${subjectFilterClauses.where}` : ""}
                 `,
               },
             },
@@ -314,9 +304,7 @@ describe("Stateless hierarchy builder", () => {
       const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
       const hierarchy: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ instanceFilter }) {
-          const subjectFilterClauses = instanceFilter
-            ? await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: partitionClassName, alias: "this" })
-            : undefined;
+          const subjectFilterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: partitionClassName, alias: "this" });
           return [
             {
               fullClassName: partitionClassName,
@@ -327,9 +315,9 @@ describe("Stateless hierarchy builder", () => {
                     ecInstanceId: { selector: `this.ECInstanceId` },
                     nodeLabel: { selector: `this.CodeValue` },
                   })}
-                  FROM ${subjectFilterClauses?.from ?? partitionClassName} AS this
-                  ${subjectFilterClauses?.joins ?? ""}
-                  ${subjectFilterClauses?.where ? `WHERE ${subjectFilterClauses?.where}` : ""}
+                  FROM ${subjectFilterClauses.from} AS this
+                  ${subjectFilterClauses.joins}
+                  ${subjectFilterClauses.where ? `WHERE ${subjectFilterClauses.where}` : ""}
                 `,
               },
             },

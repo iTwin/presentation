@@ -213,6 +213,15 @@ describe("NodeSelectQueryFactory", () => {
       sinon.restore();
     });
 
+    it("creates valid result when filter is undefined", async () => {
+      classStubs.stubEntityClass({ schemaName: "x", className: "y" });
+      expect(await factory.createFilterClauses(undefined, { fullName: "x.y", alias: "content-class" })).to.deep.eq({
+        from: "x.y",
+        joins: "",
+        where: "",
+      });
+    });
+
     it("creates valid result when content and property classes don't intersect", async () => {
       classStubs.stubEntityClass({ schemaName: "x", className: "a" });
       classStubs.stubEntityClass({ schemaName: "x", className: "b" });
@@ -225,8 +234,8 @@ describe("NodeSelectQueryFactory", () => {
         },
       };
       expect(await factory.createFilterClauses(filter, { fullName: "x.b", alias: "content-class" })).to.deep.eq({
-        from: undefined,
-        joins: undefined,
+        from: "x.b",
+        joins: "",
         where: "FALSE",
       });
     });
@@ -245,8 +254,8 @@ describe("NodeSelectQueryFactory", () => {
         };
         expect(await factory.createFilterClauses(filter, { fullName: "x.a", alias: "content-class" })).to.deep.eq({
           from: "x.b",
-          joins: undefined,
-          where: undefined,
+          joins: "",
+          where: "",
         });
       });
 
@@ -263,8 +272,8 @@ describe("NodeSelectQueryFactory", () => {
         };
         expect(await factory.createFilterClauses(filter, { fullName: "x.a", alias: "content-class" })).to.deep.eq({
           from: "x.a",
-          joins: undefined,
-          where: undefined,
+          joins: "",
+          where: "",
         });
       });
     });
@@ -284,7 +293,7 @@ describe("NodeSelectQueryFactory", () => {
           };
           expect(await factory.createFilterClauses(filter, { fullName: "x.y", alias: "content-class" })).to.deep.eq({
             from: "x.y",
-            joins: undefined,
+            joins: "",
             where: "[content-class].[ECClassId] IS (x.a, x.b)",
           });
         });
