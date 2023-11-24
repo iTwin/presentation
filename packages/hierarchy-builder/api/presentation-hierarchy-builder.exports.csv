@@ -54,7 +54,7 @@ beta;ECSqlSelectClauseGroupingParams
 beta;ECSqlSelectClauseGroupingParamsBase
 beta;ECSqlSelectClausePropertiesGroupingParams 
 beta;ECSqlSelectClausePropertyGroup
-beta;ECSqlSelectClauseRange
+beta;ECSqlSelectClausePropertyValueRange
 beta;ECSqlSnippets:
 beta;ECSqlValueSelector
 beta;ECStructArrayProperty = ECStructProperty & ArrayPropertyAttributes

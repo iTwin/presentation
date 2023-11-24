@@ -128,7 +128,7 @@ export interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectCl
 export interface ECSqlSelectClausePropertyGroup {
   propertyName: string | ECSqlValueSelector;
   propertyValue?: PrimitiveValue | ECSqlValueSelector;
-  ranges?: Array<ECSqlSelectClauseRange>;
+  ranges?: Array<ECSqlSelectClausePropertyValueRange>;
 }
 
 /**
@@ -370,7 +370,7 @@ function createPropertyGroupSelectors(propertyGroup: ECSqlSelectClausePropertyGr
   return selectors;
 }
 
-function createRangeParamSelectors(ranges: ECSqlSelectClauseRange[]) {
+function createRangeParamSelectors(ranges: ECSqlSelectClausePropertyValueRange[]) {
   return {
     key: "ranges",
     selector: `json_array(${ranges

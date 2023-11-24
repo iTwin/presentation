@@ -409,11 +409,11 @@ export interface ECSqlSelectClausePropertyGroup {
     // (undocumented)
     propertyValue?: PrimitiveValue | ECSqlValueSelector;
     // (undocumented)
-    ranges?: Array<ECSqlSelectClauseRange>;
+    ranges?: Array<ECSqlSelectClausePropertyValueRange>;
 }
 
 // @beta
-export interface ECSqlSelectClauseRange {
+export interface ECSqlSelectClausePropertyValueRange {
     // (undocumented)
     fromValue: number | ECSqlValueSelector;
     // (undocumented)
