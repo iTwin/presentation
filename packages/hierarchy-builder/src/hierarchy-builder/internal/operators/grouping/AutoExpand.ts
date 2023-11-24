@@ -3,19 +3,15 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import {
-  HierarchyNodeAutoExpandProp,
-  HierarchyNodeGroupingParamsBase,
-  InstanceHierarchyNodeProcessingParams,
-  ProcessedInstanceHierarchyNode,
-} from "../../../HierarchyNode";
-import { GroupingHandlerResult, GroupingType, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
+import { HierarchyNodeAutoExpandProp, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
+import { GroupingHandlerResult } from "../Grouping";
+import { getGroupingBaseParamsOptionsFromParentNode, OptionsAccessor } from "./Shared";
 
 /** @internal */
 export function assignAutoExpand(props: GroupingHandlerResult): GroupingHandlerResult {
   for (const node of props.grouped) {
-    const autoExpand = getGroupingAutoExpandOptionsFromParentNode(node, props.groupingType);
-    if (autoExpand === "always" || (autoExpand === "single-child" && node.children.length === 1)) {
+    const baseParams = getGroupingBaseParamsOptionsFromParentNode(node, props.groupingType, getAutoExpandOptionsFromNodeProcessingParams);
+    if (baseParams === "always" || (baseParams === "single-child" && node.children.length === 1)) {
       node.autoExpand = true;
     }
   }
@@ -23,29 +19,9 @@ export function assignAutoExpand(props: GroupingHandlerResult): GroupingHandlerR
   return props;
 }
 
-function getGroupingAutoExpandOptionsFromParentNode(
-  parentNode: ProcessedInstancesGroupingHierarchyNode,
-  groupingType: GroupingType,
-): HierarchyNodeAutoExpandProp | undefined {
-  switch (groupingType) {
-    case "base-class":
-      return getAutoExpandOptionsFromNodeProcessingParams(parentNode.children, (p) => p.grouping?.byBaseClasses);
-    case "class":
-      return getAutoExpandOptionsFromNodeProcessingParams(parentNode.children, (p) =>
-        typeof p.grouping?.byClass === "object" ? p.grouping.byClass : undefined,
-      );
-    case "label":
-      return getAutoExpandOptionsFromNodeProcessingParams(parentNode.children, (p) =>
-        typeof p.grouping?.byLabel === "object" ? p.grouping.byLabel : undefined,
-      );
-    case "property":
-      return getAutoExpandOptionsFromNodeProcessingParams(parentNode.children, (p) => p.grouping?.byProperties);
-  }
-}
-
 function getAutoExpandOptionsFromNodeProcessingParams(
   nodes: ProcessedInstanceHierarchyNode[],
-  autoExpandOptionsAccessor: (processingParams: InstanceHierarchyNodeProcessingParams) => HierarchyNodeGroupingParamsBase | undefined,
+  autoExpandOptionsAccessor: OptionsAccessor,
 ): HierarchyNodeAutoExpandProp | undefined {
   let autoExpand: HierarchyNodeAutoExpandProp | undefined;
   for (const node of nodes) {
