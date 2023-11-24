@@ -56,7 +56,7 @@ describe("PropertiesGrouping", () => {
           processingParams: {
             grouping: {
               byProperties: {
-                fullClassName: "TestSchema.Class",
+                propertiesClassName: "TestSchema.Class",
                 propertyGroups: [
                   {
                     propertyName: "PropertyName",
@@ -95,7 +95,7 @@ describe("PropertiesGrouping", () => {
           processingParams: {
             grouping: {
               byProperties: {
-                fullClassName: className,
+                propertiesClassName: className,
                 propertyGroups: [propertyGroup1, propertyGroup2],
               },
             },
@@ -110,7 +110,7 @@ describe("PropertiesGrouping", () => {
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(metadataProvider, nodes);
       expect(result.length).to.eq(2);
       checkPropertyGroupInfo(result[0], className, [], propertyGroup1);
-      checkPropertyGroupInfo(result[1], className, [{ fullClassName: className, propertyGroup: propertyGroup1 }], propertyGroup2);
+      checkPropertyGroupInfo(result[1], className, [{ propertiesClassName: className, propertyGroup: propertyGroup1 }], propertyGroup2);
     });
 
     it("extracts propertiesGroupInfo from multiple nodes in the order which different properties were provided", async () => {
@@ -131,7 +131,7 @@ describe("PropertiesGrouping", () => {
           processingParams: {
             grouping: {
               byProperties: {
-                fullClassName: className,
+                propertiesClassName: className,
                 propertyGroups: [propertyGroup1],
               },
             },
@@ -142,7 +142,7 @@ describe("PropertiesGrouping", () => {
           processingParams: {
             grouping: {
               byProperties: {
-                fullClassName: className,
+                propertiesClassName: className,
                 propertyGroups: [propertyGroup2],
               },
             },
@@ -184,7 +184,7 @@ describe("PropertiesGrouping", () => {
           processingParams: {
             grouping: {
               byProperties: {
-                fullClassName: className,
+                propertiesClassName: className,
                 propertyGroups: [propertyGroup1, propertyGroup2, propertyGroup3],
               },
             },
@@ -195,7 +195,7 @@ describe("PropertiesGrouping", () => {
           processingParams: {
             grouping: {
               byProperties: {
-                fullClassName: className,
+                propertiesClassName: className,
                 propertyGroups: [propertyGroup1, propertyGroup2, propertyGroup4, propertyGroup3],
               },
             },
@@ -211,13 +211,13 @@ describe("PropertiesGrouping", () => {
       const result = await propertiesGrouping.getUniquePropertiesGroupInfo(metadataProvider, nodes);
       expect(result.length).to.eq(5);
       checkPropertyGroupInfo(result[0], className, [], propertyGroup1);
-      checkPropertyGroupInfo(result[1], className, [{ fullClassName: className, propertyGroup: propertyGroup1 }], propertyGroup2);
+      checkPropertyGroupInfo(result[1], className, [{ propertiesClassName: className, propertyGroup: propertyGroup1 }], propertyGroup2);
       checkPropertyGroupInfo(
         result[2],
         className,
         [
-          { fullClassName: className, propertyGroup: propertyGroup1 },
-          { fullClassName: className, propertyGroup: propertyGroup2 },
+          { propertiesClassName: className, propertyGroup: propertyGroup1 },
+          { propertiesClassName: className, propertyGroup: propertyGroup2 },
         ],
         propertyGroup3,
       );
@@ -225,8 +225,8 @@ describe("PropertiesGrouping", () => {
         result[3],
         className,
         [
-          { fullClassName: className, propertyGroup: propertyGroup1 },
-          { fullClassName: className, propertyGroup: propertyGroup2 },
+          { propertiesClassName: className, propertyGroup: propertyGroup1 },
+          { propertiesClassName: className, propertyGroup: propertyGroup2 },
         ],
         propertyGroup4,
       );
@@ -234,9 +234,9 @@ describe("PropertiesGrouping", () => {
         result[4],
         className,
         [
-          { fullClassName: className, propertyGroup: propertyGroup1 },
-          { fullClassName: className, propertyGroup: propertyGroup2 },
-          { fullClassName: className, propertyGroup: propertyGroup4 },
+          { propertiesClassName: className, propertyGroup: propertyGroup1 },
+          { propertiesClassName: className, propertyGroup: propertyGroup2 },
+          { propertiesClassName: className, propertyGroup: propertyGroup4 },
         ],
         propertyGroup3,
       );
@@ -312,14 +312,14 @@ describe("PropertiesGrouping", () => {
         testCase: "full class names don't match",
         previousPropertiesGroupingInfo: [
           {
-            fullClassName: "TestSchema.other",
+            propertiesClassName: "TestSchema.other",
             propertyGroup: {
               propertyName: "PropertyName",
             },
           },
         ],
         nodesProperties: {
-          fullClassName: "TestSchema.Name",
+          propertiesClassName: "TestSchema.Name",
           propertyGroups: [
             {
               propertyName: "PropertyName",
@@ -333,14 +333,14 @@ describe("PropertiesGrouping", () => {
         testCase: "property names don't match",
         previousPropertiesGroupingInfo: [
           {
-            fullClassName: "TestSchema.Name",
+            propertiesClassName: "TestSchema.Name",
             propertyGroup: {
               propertyName: "OtherName",
             },
           },
         ],
         nodesProperties: {
-          fullClassName: "TestSchema.Name",
+          propertiesClassName: "TestSchema.Name",
           propertyGroups: [
             {
               propertyName: "PropertyName",
@@ -354,7 +354,7 @@ describe("PropertiesGrouping", () => {
         testCase: "ranged properties don't match",
         previousPropertiesGroupingInfo: [
           {
-            fullClassName: "TestSchema.Name",
+            propertiesClassName: "TestSchema.Name",
             propertyGroup: {
               propertyName: "PropertyName",
               ranges: [{ fromValue: 1, toValue: 2 }],
@@ -362,7 +362,7 @@ describe("PropertiesGrouping", () => {
           },
         ],
         nodesProperties: {
-          fullClassName: "TestSchema.Name",
+          propertiesClassName: "TestSchema.Name",
           propertyGroups: [
             {
               propertyName: "PropertyName",
@@ -376,14 +376,14 @@ describe("PropertiesGrouping", () => {
         testCase: "when all properties match",
         previousPropertiesGroupingInfo: [
           {
-            fullClassName: "TestSchema.Name",
+            propertiesClassName: "TestSchema.Name",
             propertyGroup: {
               propertyName: "PropertyName",
             },
           },
         ],
         nodesProperties: {
-          fullClassName: "TestSchema.Name",
+          propertiesClassName: "TestSchema.Name",
           propertyGroups: [
             {
               propertyName: "PropertyName",
@@ -409,7 +409,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  fullClassName: "TestSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   propertyGroups: [{ propertyName: "PropertyName", propertyValue: "PropertyValue" }],
                 },
               },
@@ -436,7 +436,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  fullClassName: "TestSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   propertyGroups: [{ propertyName: "PropertyName", propertyValue: "PropertyValue" }],
                 },
               },
@@ -446,7 +446,7 @@ describe("PropertiesGrouping", () => {
         const ecClass = { fullName: "TestSchema.Class" } as unknown as ECClass;
         const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
           ecClass,
-          previousPropertiesGroupingInfo: [{ fullClassName: "TestSchema.Class", propertyGroup: { propertyName: "PropertyName2" } }],
+          previousPropertiesGroupingInfo: [{ propertiesClassName: "TestSchema.Class", propertyGroup: { propertyName: "PropertyName2" } }],
           propertyGroup: { propertyName: "PropertyName" },
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
@@ -463,7 +463,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  fullClassName: "TestSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   propertyGroups: [{ propertyName: "PropertyName", propertyValue: "PropertyValue" }],
                 },
               },
@@ -490,7 +490,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  fullClassName: "TestSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   propertyGroups: [{ propertyName: "PropertyName", propertyValue: "PropertyValue" }],
                 },
               },
@@ -517,7 +517,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  fullClassName: "TestSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   propertyGroups: [{ propertyName: "PropertyName", propertyValue: "PropertyValue" }],
                 },
               },
@@ -550,7 +550,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  fullClassName: "TestSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   propertyGroups: [
                     { propertyName: "PropertyName1", propertyValue: "PropertyValue1" },
                     { propertyName: "PropertyName2", propertyValue: "PropertyValue2" },
@@ -568,7 +568,7 @@ describe("PropertiesGrouping", () => {
         });
         const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
           ecClass,
-          previousPropertiesGroupingInfo: [{ fullClassName: "TestSchema.Class", propertyGroup: { propertyName: "Other" } }],
+          previousPropertiesGroupingInfo: [{ propertiesClassName: "TestSchema.Class", propertyGroup: { propertyName: "Other" } }],
           propertyGroup: { propertyName: "PropertyName2" },
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
@@ -606,7 +606,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  fullClassName: "TestSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   propertyGroups: [{ propertyName: "PropertyName", propertyValue: "PropertyValue" }],
                 },
               },
@@ -640,7 +640,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  fullClassName: "TestSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   propertyGroups: [{ propertyName: "PropertyName" }],
                 },
               },
@@ -672,7 +672,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  fullClassName: "TestSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   createGroupForUnspecifiedValues: true,
                   propertyGroups: [{ propertyName: "PropertyName" }],
                 },
@@ -694,7 +694,7 @@ describe("PropertiesGrouping", () => {
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:value",
           propertyName: "PropertyName",
-          fullClassName: "TestSchema.Class",
+          propertiesClassName: "TestSchema.Class",
           formattedPropertyValue: "",
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
@@ -717,7 +717,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  fullClassName: "TestSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   propertyGroups: [{ propertyName: "PropertyName", propertyValue: "PropertyValue" }],
                 },
               },
@@ -740,7 +740,7 @@ describe("PropertiesGrouping", () => {
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:value",
           propertyName: "PropertyName",
-          fullClassName: "TestSchema.Class",
+          propertiesClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue",
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
@@ -763,7 +763,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  fullClassName: "TestSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   propertyGroups: [{ propertyName: "PropertyName", propertyValue: "PropertyValue" }],
                 },
               },
@@ -774,7 +774,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  fullClassName: "TestSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   propertyGroups: [{ propertyName: "PropertyName", propertyValue: "PropertyValue" }],
                 },
               },
@@ -797,7 +797,7 @@ describe("PropertiesGrouping", () => {
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:value",
           propertyName: "PropertyName",
-          fullClassName: "TestSchema.Class",
+          propertiesClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue",
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
@@ -820,7 +820,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  fullClassName: "TestSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   propertyGroups: [{ propertyName: "PropertyName", propertyValue: "PropertyValue1" }],
                 },
               },
@@ -831,7 +831,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  fullClassName: "TestSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   propertyGroups: [{ propertyName: "PropertyName", propertyValue: "PropertyValue2" }],
                 },
               },
@@ -854,13 +854,13 @@ describe("PropertiesGrouping", () => {
         const expectedGroupingNodeKey1: GroupingNodeKey = {
           type: "property-grouping:value",
           propertyName: "PropertyName",
-          fullClassName: "TestSchema.Class",
+          propertiesClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue1",
         };
         const expectedGroupingNodeKey2: GroupingNodeKey = {
           type: "property-grouping:value",
           propertyName: "PropertyName",
-          fullClassName: "TestSchema.Class",
+          propertiesClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue2",
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
@@ -888,7 +888,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  fullClassName: "TestSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   propertyGroups: [{ propertyName: "PropertyName1", propertyValue: "PropertyValue" }],
                 },
               },
@@ -899,7 +899,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  fullClassName: "TestSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   propertyGroups: [{ propertyName: "PropertyName2", propertyValue: "PropertyValue" }],
                 },
               },
@@ -922,7 +922,7 @@ describe("PropertiesGrouping", () => {
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:value",
           propertyName: "PropertyName1",
-          fullClassName: "TestSchema.Class",
+          propertiesClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue",
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
@@ -947,7 +947,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  fullClassName: "TestSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   propertyGroups: [{ propertyName: "PropertyName", propertyValue: 12, ranges: [{ fromValue: 1, toValue: 5 }] }],
                 },
               },
@@ -979,7 +979,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  fullClassName: "TestSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   createGroupForOutOfRangeValues: true,
                   propertyGroups: [{ propertyName: "PropertyName", propertyValue: 12, ranges: [{ fromValue: 1, toValue: 5 }] }],
                 },
@@ -1001,7 +1001,7 @@ describe("PropertiesGrouping", () => {
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:other",
           propertyName: "PropertyName",
-          fullClassName: "TestSchema.Class",
+          propertiesClassName: "TestSchema.Class",
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
@@ -1023,7 +1023,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  fullClassName: "TestSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   propertyGroups: [{ propertyName: "PropertyName", propertyValue: "someValue", ranges: [{ fromValue: 1, toValue: 5 }] }],
                 },
               },
@@ -1055,7 +1055,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  fullClassName: "TestSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   createGroupForOutOfRangeValues: true,
                   propertyGroups: [{ propertyName: "PropertyName", propertyValue: "someValue", ranges: [{ fromValue: 1, toValue: 5 }] }],
                 },
@@ -1077,7 +1077,7 @@ describe("PropertiesGrouping", () => {
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:other",
           propertyName: "PropertyName",
-          fullClassName: "TestSchema.Class",
+          propertiesClassName: "TestSchema.Class",
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
@@ -1099,7 +1099,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  fullClassName: "TestSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   propertyGroups: [{ propertyName: "PropertyName", propertyValue: 5, ranges: [{ fromValue: 1, toValue: 5 }] }],
                 },
               },
@@ -1120,7 +1120,7 @@ describe("PropertiesGrouping", () => {
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:range",
           propertyName: "PropertyName",
-          fullClassName: "TestSchema.Class",
+          propertiesClassName: "TestSchema.Class",
           fromValue: 1,
           toValue: 5,
         };
@@ -1144,7 +1144,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  fullClassName: "TestSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   propertyGroups: [{ propertyName: "PropertyName", propertyValue: 5, ranges: [{ fromValue: 1.5, toValue: 5.5, rangeLabel: "rangeLabel" }] }],
                 },
               },
@@ -1165,7 +1165,7 @@ describe("PropertiesGrouping", () => {
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:range",
           propertyName: "PropertyName",
-          fullClassName: "TestSchema.Class",
+          propertiesClassName: "TestSchema.Class",
           fromValue: 1.5,
           toValue: 5.5,
         };
@@ -1189,7 +1189,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  fullClassName: "TestSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   propertyGroups: [{ propertyName: "PropertyName", propertyValue: 5, ranges: [{ fromValue: 1, toValue: 5, rangeLabel: "rangeLabel" }] }],
                 },
               },
@@ -1200,7 +1200,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  fullClassName: "TestSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   propertyGroups: [{ propertyName: "PropertyName", propertyValue: 5, ranges: [{ fromValue: 1, toValue: 4, rangeLabel: "rangeLabel" }] }],
                 },
               },
@@ -1221,7 +1221,7 @@ describe("PropertiesGrouping", () => {
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:range",
           propertyName: "PropertyName",
-          fullClassName: "TestSchema.Class",
+          propertiesClassName: "TestSchema.Class",
           fromValue: 1,
           toValue: 5,
         };
@@ -1245,7 +1245,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  fullClassName: "TestSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   propertyGroups: [{ propertyName: "PropertyName", propertyValue: 5, ranges: [{ fromValue: 1, toValue: 5, rangeLabel: "rangeLabel" }] }],
                 },
               },
@@ -1256,7 +1256,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  fullClassName: "TestSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   propertyGroups: [{ propertyName: "PropertyName", propertyValue: 5, ranges: [{ fromValue: 1, toValue: 5, rangeLabel: "rangeLabel" }] }],
                 },
               },
@@ -1277,7 +1277,7 @@ describe("PropertiesGrouping", () => {
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:range",
           propertyName: "PropertyName",
-          fullClassName: "TestSchema.Class",
+          propertiesClassName: "TestSchema.Class",
           fromValue: 1,
           toValue: 5,
         };
@@ -1301,7 +1301,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  fullClassName: "TestSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   propertyGroups: [
                     {
                       propertyName: "PropertyName",
@@ -1337,7 +1337,7 @@ describe("PropertiesGrouping", () => {
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:range",
           propertyName: "PropertyName",
-          fullClassName: "TestSchema.Class",
+          propertiesClassName: "TestSchema.Class",
           fromValue: 3,
           toValue: 10,
         };
@@ -1361,7 +1361,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  fullClassName: "TestSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   propertyGroups: [
                     {
                       propertyName: "PropertyName",
@@ -1381,7 +1381,7 @@ describe("PropertiesGrouping", () => {
             processingParams: {
               grouping: {
                 byProperties: {
-                  fullClassName: "TestSchema.Class",
+                  propertiesClassName: "TestSchema.Class",
                   propertyGroups: [
                     {
                       propertyName: "PropertyName",
@@ -1417,14 +1417,14 @@ describe("PropertiesGrouping", () => {
         const expectedGroupingNodeKey1: GroupingNodeKey = {
           type: "property-grouping:range",
           propertyName: "PropertyName",
-          fullClassName: "TestSchema.Class",
+          propertiesClassName: "TestSchema.Class",
           fromValue: 5,
           toValue: 10,
         };
         const expectedGroupingNodeKey2: GroupingNodeKey = {
           type: "property-grouping:range",
           propertyName: "PropertyName",
-          fullClassName: "TestSchema.Class",
+          propertiesClassName: "TestSchema.Class",
           fromValue: 1,
           toValue: 4,
         };
@@ -1456,7 +1456,7 @@ describe("PropertiesGrouping", () => {
           processingParams: {
             grouping: {
               byProperties: {
-                fullClassName: "TestSchema.Class",
+                propertiesClassName: "TestSchema.Class",
                 propertyGroups: [
                   {
                     propertyName: "PropertyName",

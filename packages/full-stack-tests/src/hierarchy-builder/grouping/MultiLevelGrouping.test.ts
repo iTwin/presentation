@@ -90,7 +90,7 @@ describe("Stateless hierarchy builder", () => {
                           fullClassNames: ["BisCore.InformationContentElement", "BisCore.InformationPartitionElement"],
                         },
                         byProperties: {
-                          fullClassName: "BisCore.Subject",
+                          propertiesClassName: "BisCore.Subject",
                           propertyGroups: [
                             {
                               propertyName: "Description",
@@ -123,7 +123,7 @@ describe("Stateless hierarchy builder", () => {
                           fullClassNames: ["BisCore.InformationContentElement", "BisCore.InformationPartitionElement"],
                         },
                         byProperties: {
-                          fullClassName: "BisCore.PhysicalPartition",
+                          propertiesClassName: "BisCore.PhysicalPartition",
                           propertyGroups: [
                             {
                               propertyName: "Description",
@@ -163,7 +163,7 @@ describe("Stateless hierarchy builder", () => {
                     children: [
                       NodeValidators.createForPropertyValueGroupingNode({
                         label: description1,
-                        fullClassName: "BisCore.PhysicalPartition",
+                        propertiesClassName: "BisCore.PhysicalPartition",
                         propertyName: "Description",
                         formattedPropertyValue: description1,
                         children: [
@@ -189,7 +189,7 @@ describe("Stateless hierarchy builder", () => {
                       }),
                       NodeValidators.createForPropertyValueGroupingNode({
                         label: description2,
-                        fullClassName: "BisCore.PhysicalPartition",
+                        propertiesClassName: "BisCore.PhysicalPartition",
                         formattedPropertyValue: description2,
                         propertyName: "Description",
                         children: [
@@ -213,7 +213,7 @@ describe("Stateless hierarchy builder", () => {
                 children: [
                   NodeValidators.createForPropertyValueGroupingNode({
                     label: description1,
-                    fullClassName: "BisCore.Subject",
+                    propertiesClassName: "BisCore.Subject",
                     formattedPropertyValue: description1,
                     propertyName: "Description",
                     children: [

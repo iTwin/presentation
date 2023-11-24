@@ -397,7 +397,7 @@ export interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectCl
     // (undocumented)
     createGroupForUnspecifiedValues?: boolean | ECSqlValueSelector;
     // (undocumented)
-    fullClassName: string | ECSqlValueSelector;
+    propertiesClassName: string | ECSqlValueSelector;
     // (undocumented)
     propertyGroups: Array<ECSqlSelectClausePropertyGroup>;
 }
@@ -654,7 +654,7 @@ export interface HierarchyNodeProcessingParamsBase {
 export interface HierarchyNodePropertiesGroupingParams extends HierarchyNodeGroupingParamsBase {
     createGroupForOutOfRangeValues?: boolean;
     createGroupForUnspecifiedValues?: boolean;
-    fullClassName: string;
+    propertiesClassName: string;
     propertyGroups: Array<HierarchyNodePropertyGroup>;
 }
 
@@ -662,7 +662,14 @@ export interface HierarchyNodePropertiesGroupingParams extends HierarchyNodeGrou
 export interface HierarchyNodePropertyGroup {
     propertyName: string;
     propertyValue?: PrimitiveValue;
-    ranges?: Array<Range>;
+    ranges?: Array<HierarchyNodePropertyValueRange>;
+}
+
+// @beta
+export interface HierarchyNodePropertyValueRange {
+    fromValue: number;
+    rangeLabel?: string;
+    toValue: number;
 }
 
 // @beta
@@ -974,7 +981,7 @@ export type PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | Proper
 // @beta
 export interface PropertyOtherValuesGroupingNodeKey {
     // (undocumented)
-    fullClassName: string;
+    propertiesClassName: string;
     // (undocumented)
     propertyName: string;
     // (undocumented)
@@ -996,7 +1003,7 @@ export interface PropertyValueGroupingNodeKey {
     // (undocumented)
     formattedPropertyValue: string;
     // (undocumented)
-    fullClassName: string;
+    propertiesClassName: string;
     // (undocumented)
     propertyName: string;
     // (undocumented)
@@ -1008,20 +1015,13 @@ export interface PropertyValueRangeGroupingNodeKey {
     // (undocumented)
     fromValue: number;
     // (undocumented)
-    fullClassName: string;
+    propertiesClassName: string;
     // (undocumented)
     propertyName: string;
     // (undocumented)
     toValue: number;
     // (undocumented)
     type: "property-grouping:range";
-}
-
-// @beta
-export interface Range {
-    fromValue: number;
-    rangeLabel?: string;
-    toValue: number;
 }
 
 // @beta

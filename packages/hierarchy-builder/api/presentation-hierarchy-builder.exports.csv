@@ -83,6 +83,7 @@ beta;HierarchyNodeKey
 beta;HierarchyNodeProcessingParamsBase
 beta;HierarchyNodePropertiesGroupingParams 
 beta;HierarchyNodePropertyGroup
+beta;HierarchyNodePropertyValueRange
 beta;HierarchyNodesDefinition = CustomHierarchyNodeDefinition | InstanceNodesQueryDefinition
 beta;HierarchyNodesDefinition
 beta;HierarchyProvider
@@ -136,7 +137,6 @@ beta;PropertyOtherValuesGroupingNodeKey
 beta;PropertyValue
 beta;PropertyValueGroupingNodeKey
 beta;PropertyValueRangeGroupingNodeKey
-beta;Range
 beta;RelatedInstanceDescription
 beta;RelationshipPath
 beta;RelationshipPathStep

@@ -315,7 +315,7 @@ describe("Stateless hierarchy builder", () => {
     describe("Properties grouping", () => {
       const propertiesAutoExpandAlways: ECSqlSelectClauseGroupingParams = {
         byProperties: {
-          fullClassName: "BisCore.Element",
+          propertiesClassName: "BisCore.Element",
           propertyGroups: [{ propertyName: "UserLabel", propertyValue: "test1" }],
           autoExpand: "always",
         },
@@ -323,7 +323,7 @@ describe("Stateless hierarchy builder", () => {
 
       const propertiesAutoExpandSingleChild: ECSqlSelectClauseGroupingParams = {
         byProperties: {
-          fullClassName: "BisCore.Element",
+          propertiesClassName: "BisCore.Element",
           propertyGroups: [{ propertyName: "UserLabel", propertyValue: "test1" }],
           autoExpand: "always",
         },
@@ -335,7 +335,7 @@ describe("Stateless hierarchy builder", () => {
           expect: [
             NodeValidators.createForPropertyValueGroupingNode({
               label: "test1",
-              fullClassName: "BisCore.Element",
+              propertiesClassName: "BisCore.Element",
               formattedPropertyValue: "test1",
               autoExpand: true,
               children: [
@@ -355,7 +355,7 @@ describe("Stateless hierarchy builder", () => {
           expect: [
             NodeValidators.createForPropertyValueGroupingNode({
               label: "test1",
-              fullClassName: "BisCore.Element",
+              propertiesClassName: "BisCore.Element",
               formattedPropertyValue: "test1",
               autoExpand: true,
               children: [
@@ -381,7 +381,7 @@ describe("Stateless hierarchy builder", () => {
           expect: [
             NodeValidators.createForPropertyValueGroupingNode({
               label: "test1",
-              fullClassName: "BisCore.Element",
+              propertiesClassName: "BisCore.Element",
               formattedPropertyValue: "test1",
               autoExpand: undefined,
               children: [

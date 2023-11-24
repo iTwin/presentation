@@ -72,7 +72,7 @@ describe("Stateless hierarchy builder", () => {
 
     it("doesn't create grouping nodes if provided properties class isn't base of nodes class", async function () {
       const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
-        fullClassName: "BisCore.PhysicalPartition",
+        propertiesClassName: "BisCore.PhysicalPartition",
         propertyGroups: [{ propertyName: "description", propertyValue: "description" }],
       };
 
@@ -89,7 +89,7 @@ describe("Stateless hierarchy builder", () => {
 
     it("creates formatted property grouping nodes if provided properties grouping without range", async function () {
       const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
-        fullClassName: "BisCore.Subject",
+        propertiesClassName: "BisCore.Subject",
         propertyGroups: [{ propertyName: "description", propertyValue: "TestDescription" }],
       };
 
@@ -98,7 +98,7 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           NodeValidators.createForPropertyValueGroupingNode({
             label: "TestDescription",
-            fullClassName: "BisCore.Subject",
+            propertiesClassName: "BisCore.Subject",
             propertyName: "description",
             formattedPropertyValue: "TestDescription",
             children: [
@@ -114,7 +114,7 @@ describe("Stateless hierarchy builder", () => {
 
     it("creates ranged property grouping nodes if provided properties grouping with range", async function () {
       const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
-        fullClassName: "BisCore.Subject",
+        propertiesClassName: "BisCore.Subject",
         propertyGroups: [{ propertyName: "description", propertyValue: 1.5, ranges: [{ fromValue: 1, toValue: 2 }] }],
       };
 
@@ -123,7 +123,7 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           NodeValidators.createForPropertyValueRangeGroupingNode({
             label: "1 - 2",
-            fullClassName: "BisCore.Subject",
+            propertiesClassName: "BisCore.Subject",
             propertyName: "description",
             fromValue: 1,
             toValue: 2,
@@ -140,7 +140,7 @@ describe("Stateless hierarchy builder", () => {
 
     it("creates ranged property grouping nodes and applies range label if provided properties grouping with range and range label", async function () {
       const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
-        fullClassName: "BisCore.Subject",
+        propertiesClassName: "BisCore.Subject",
         propertyGroups: [{ propertyName: "description", propertyValue: 1.5, ranges: [{ fromValue: 1, toValue: 2, rangeLabel: "TestLabel" }] }],
       };
 
@@ -149,7 +149,7 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           NodeValidators.createForPropertyValueRangeGroupingNode({
             label: "TestLabel",
-            fullClassName: "BisCore.Subject",
+            propertiesClassName: "BisCore.Subject",
             propertyName: "description",
             fromValue: 1,
             toValue: 2,
@@ -166,7 +166,7 @@ describe("Stateless hierarchy builder", () => {
 
     it("doesn't create grouping nodes if provided property values are not defined and createGroupForUnspecifiedValues isn't set", async function () {
       const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
-        fullClassName: "BisCore.Subject",
+        propertiesClassName: "BisCore.Subject",
         propertyGroups: [{ propertyName: "description" }],
       };
 
@@ -183,7 +183,7 @@ describe("Stateless hierarchy builder", () => {
 
     it("creates other property grouping nodes if provided property values are not defined and createGroupForOutOfRangeValues is true", async function () {
       const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
-        fullClassName: "BisCore.Subject",
+        propertiesClassName: "BisCore.Subject",
         createGroupForUnspecifiedValues: true,
         propertyGroups: [{ propertyName: "description" }],
       };
@@ -193,7 +193,7 @@ describe("Stateless hierarchy builder", () => {
         provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, groupingParams) }),
         expect: [
           NodeValidators.createForPropertyValueGroupingNode({
-            fullClassName: "BisCore.Subject",
+            propertiesClassName: "BisCore.Subject",
             propertyName: "description",
             formattedPropertyValue: "",
             label: "Ñót spêçìfíêd",
@@ -210,7 +210,7 @@ describe("Stateless hierarchy builder", () => {
 
     it("doesn't create grouping nodes if provided properties don't fit in the range and createGroupForOutOfRangeValues isn't set", async function () {
       const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
-        fullClassName: "BisCore.Subject",
+        propertiesClassName: "BisCore.Subject",
         propertyGroups: [{ propertyName: "description", propertyValue: 2.5, ranges: [{ fromValue: 1, toValue: 2, rangeLabel: "TestLabel" }] }],
       };
 
@@ -227,7 +227,7 @@ describe("Stateless hierarchy builder", () => {
 
     it("creates other property grouping nodes if provided properties don't fit in the range and createGroupForOutOfRangeValues is true", async function () {
       const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
-        fullClassName: "BisCore.Subject",
+        propertiesClassName: "BisCore.Subject",
         createGroupForOutOfRangeValues: true,
         propertyGroups: [{ propertyName: "description", propertyValue: 2.5, ranges: [{ fromValue: 1, toValue: 2, rangeLabel: "TestLabel" }] }],
       };
@@ -237,7 +237,7 @@ describe("Stateless hierarchy builder", () => {
         provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, groupingParams) }),
         expect: [
           NodeValidators.createForPropertyOtherValuesGroupingNode({
-            fullClassName: "BisCore.Subject",
+            propertiesClassName: "BisCore.Subject",
             propertyName: "description",
             children: [
               NodeValidators.createForInstanceNode({
@@ -252,7 +252,7 @@ describe("Stateless hierarchy builder", () => {
 
     it("creates multiple grouping nodes if node has multiple property groupings", async function () {
       const groupingParams: ECSqlSelectClausePropertiesGroupingParams = {
-        fullClassName: "BisCore.Subject",
+        propertiesClassName: "BisCore.Subject",
         propertyGroups: [
           { propertyName: "UserLabel", propertyValue: "TestLabel" },
           { propertyName: "Description", propertyValue: "TestDescription" },
@@ -264,13 +264,13 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           NodeValidators.createForPropertyValueGroupingNode({
             label: "TestLabel",
-            fullClassName: "BisCore.Subject",
+            propertiesClassName: "BisCore.Subject",
             propertyName: "UserLabel",
             formattedPropertyValue: "TestLabel",
             children: [
               NodeValidators.createForPropertyValueGroupingNode({
                 label: "TestDescription",
-                fullClassName: "BisCore.Subject",
+                propertiesClassName: "BisCore.Subject",
                 propertyName: "Description",
                 formattedPropertyValue: "TestDescription",
                 children: [
@@ -308,7 +308,7 @@ describe("Stateless hierarchy builder", () => {
                         nodeLabel: { selector: `this.UserLabel` },
                         grouping: {
                           byProperties: {
-                            fullClassName: "BisCore.Subject",
+                            propertiesClassName: "BisCore.Subject",
                             propertyGroups: [{ propertyName: "UserLabel", propertyValue: { selector: "this.UserLabel" } }],
                           },
                         },
@@ -332,7 +332,7 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           NodeValidators.createForPropertyValueGroupingNode({
             label: "Test1",
-            fullClassName: "BisCore.Subject",
+            propertiesClassName: "BisCore.Subject",
             propertyName: "UserLabel",
             formattedPropertyValue: "Test1",
             children: [
@@ -344,7 +344,7 @@ describe("Stateless hierarchy builder", () => {
           }),
           NodeValidators.createForPropertyValueGroupingNode({
             label: "Test2",
-            fullClassName: "BisCore.Subject",
+            propertiesClassName: "BisCore.Subject",
             propertyName: "UserLabel",
             formattedPropertyValue: "Test2",
             children: [
@@ -379,7 +379,7 @@ describe("Stateless hierarchy builder", () => {
                         nodeLabel: { selector: `this.UserLabel` },
                         grouping: {
                           byProperties: {
-                            fullClassName: "BisCore.Subject",
+                            propertiesClassName: "BisCore.Subject",
                             propertyGroups: [
                               {
                                 propertyName: "UserLabel",
@@ -411,7 +411,7 @@ describe("Stateless hierarchy builder", () => {
                         nodeLabel: { selector: `this.UserLabel` },
                         grouping: {
                           byProperties: {
-                            fullClassName: "BisCore.Subject",
+                            propertiesClassName: "BisCore.Subject",
                             propertyGroups: [
                               {
                                 propertyName: "UserLabel",
@@ -444,7 +444,7 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           NodeValidators.createForPropertyValueRangeGroupingNode({
             label: "0 - 2",
-            fullClassName: "BisCore.Subject",
+            propertiesClassName: "BisCore.Subject",
             propertyName: "UserLabel",
             fromValue: 0,
             toValue: 2,
@@ -457,7 +457,7 @@ describe("Stateless hierarchy builder", () => {
           }),
           NodeValidators.createForPropertyValueRangeGroupingNode({
             label: "3 - 5",
-            fullClassName: "BisCore.Subject",
+            propertiesClassName: "BisCore.Subject",
             propertyName: "UserLabel",
             fromValue: 3,
             toValue: 5,

@@ -403,7 +403,7 @@ describe("Stateless hierarchy builder", () => {
     describe("Properties grouping", () => {
       const propertiesHideIfNoSiblingsGrouping: ECSqlSelectClauseGroupingParams = {
         byProperties: {
-          fullClassName: "BisCore.Element",
+          propertiesClassName: "BisCore.Element",
           propertyGroups: [{ propertyName: "UserLabel", propertyValue: { selector: `this.UserLabel` } }],
           hideIfNoSiblings: true,
         },
@@ -411,7 +411,7 @@ describe("Stateless hierarchy builder", () => {
 
       const propertiesHideIfOneGroupedNodeGrouping: ECSqlSelectClauseGroupingParams = {
         byProperties: {
-          fullClassName: "BisCore.Element",
+          propertiesClassName: "BisCore.Element",
           propertyGroups: [{ propertyName: "UserLabel", propertyValue: { selector: `this.UserLabel` } }],
           hideIfOneGroupedNode: true,
         },
@@ -468,7 +468,7 @@ describe("Stateless hierarchy builder", () => {
           expect: [
             NodeValidators.createForPropertyValueGroupingNode({
               label: groupName,
-              fullClassName: "BisCore.Element",
+              propertiesClassName: "BisCore.Element",
               formattedPropertyValue: groupName,
               children: [
                 NodeValidators.createForInstanceNode({
@@ -479,7 +479,7 @@ describe("Stateless hierarchy builder", () => {
             }),
             NodeValidators.createForPropertyValueGroupingNode({
               label: `${groupName}2`,
-              fullClassName: "BisCore.Element",
+              propertiesClassName: "BisCore.Element",
               formattedPropertyValue: `${groupName}2`,
               children: [
                 NodeValidators.createForInstanceNode({
@@ -504,7 +504,7 @@ describe("Stateless hierarchy builder", () => {
           expect: [
             NodeValidators.createForPropertyValueGroupingNode({
               label: groupName,
-              fullClassName: "BisCore.Element",
+              propertiesClassName: "BisCore.Element",
               formattedPropertyValue: groupName,
               children: [
                 NodeValidators.createForInstanceNode({

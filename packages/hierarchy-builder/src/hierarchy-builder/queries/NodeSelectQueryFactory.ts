@@ -115,7 +115,7 @@ export interface ECSqlSelectClauseGroupingParamsBase {
  * @beta
  */
 export interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
-  fullClassName: string | ECSqlValueSelector;
+  propertiesClassName: string | ECSqlValueSelector;
   createGroupForUnspecifiedValues?: boolean | ECSqlValueSelector;
   createGroupForOutOfRangeValues?: boolean | ECSqlValueSelector;
   propertyGroups: Array<ECSqlSelectClausePropertyGroup>;
@@ -313,8 +313,8 @@ function createGroupingSelector(grouping: ECSqlSelectClauseGroupingParams): stri
       key: "byProperties",
       selector: serializeJsonObject([
         {
-          key: "fullClassName",
-          selector: `${createECSqlValueSelector(grouping.byProperties.fullClassName)}`,
+          key: "propertiesClassName",
+          selector: `${createECSqlValueSelector(grouping.byProperties.propertiesClassName)}`,
         },
         {
           key: "propertyGroups",

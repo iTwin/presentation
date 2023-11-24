@@ -53,20 +53,20 @@ describe("HierarchyNodeKey", () => {
     it("returns correct results for other property grouping node keys", () => {
       expect(
         HierarchyNodeKey.equals(
-          { type: "property-grouping:other", fullClassName: "Schema.ClassName", propertyName: "property name" },
-          { type: "property-grouping:other", fullClassName: "Schema.ClassName", propertyName: "property name" },
+          { type: "property-grouping:other", propertiesClassName: "Schema.ClassName", propertyName: "property name" },
+          { type: "property-grouping:other", propertiesClassName: "Schema.ClassName", propertyName: "property name" },
         ),
       ).to.be.true;
       expect(
         HierarchyNodeKey.equals(
-          { type: "property-grouping:other", fullClassName: "Schema.ClassName", propertyName: "property name" },
-          { type: "property-grouping:other", fullClassName: "Schema.ClassName", propertyName: "other name" },
+          { type: "property-grouping:other", propertiesClassName: "Schema.ClassName", propertyName: "property name" },
+          { type: "property-grouping:other", propertiesClassName: "Schema.ClassName", propertyName: "other name" },
         ),
       ).to.be.false;
       expect(
         HierarchyNodeKey.equals(
-          { type: "property-grouping:other", fullClassName: "Schema.ClassName", propertyName: "property name" },
-          { type: "property-grouping:other", fullClassName: "Schema.Other", propertyName: "property name" },
+          { type: "property-grouping:other", propertiesClassName: "Schema.ClassName", propertyName: "property name" },
+          { type: "property-grouping:other", propertiesClassName: "Schema.Other", propertyName: "property name" },
         ),
       ).to.be.false;
     });
@@ -76,13 +76,13 @@ describe("HierarchyNodeKey", () => {
         HierarchyNodeKey.equals(
           {
             type: "property-grouping:value",
-            fullClassName: "Schema.ClassName",
+            propertiesClassName: "Schema.ClassName",
             propertyName: "property name",
             formattedPropertyValue: "value",
           },
           {
             type: "property-grouping:value",
-            fullClassName: "Schema.ClassName",
+            propertiesClassName: "Schema.ClassName",
             propertyName: "property name",
             formattedPropertyValue: "value",
           },
@@ -92,13 +92,13 @@ describe("HierarchyNodeKey", () => {
         HierarchyNodeKey.equals(
           {
             type: "property-grouping:value",
-            fullClassName: "Schema.ClassName",
+            propertiesClassName: "Schema.ClassName",
             propertyName: "property name",
             formattedPropertyValue: "value",
           },
           {
             type: "property-grouping:value",
-            fullClassName: "Schema.ClassName",
+            propertiesClassName: "Schema.ClassName",
             propertyName: "property name",
             formattedPropertyValue: "value2",
           },
@@ -108,13 +108,13 @@ describe("HierarchyNodeKey", () => {
         HierarchyNodeKey.equals(
           {
             type: "property-grouping:value",
-            fullClassName: "Schema.ClassName",
+            propertiesClassName: "Schema.ClassName",
             propertyName: "property name",
             formattedPropertyValue: "value",
           },
           {
             type: "property-grouping:value",
-            fullClassName: "Schema.ClassName",
+            propertiesClassName: "Schema.ClassName",
             propertyName: "other name",
             formattedPropertyValue: "value",
           },
@@ -124,13 +124,13 @@ describe("HierarchyNodeKey", () => {
         HierarchyNodeKey.equals(
           {
             type: "property-grouping:value",
-            fullClassName: "Schema.ClassName",
+            propertiesClassName: "Schema.ClassName",
             propertyName: "property name",
             formattedPropertyValue: "value",
           },
           {
             type: "property-grouping:value",
-            fullClassName: "Schema.Other",
+            propertiesClassName: "Schema.Other",
             propertyName: "property name",
             formattedPropertyValue: "value",
           },
@@ -143,14 +143,14 @@ describe("HierarchyNodeKey", () => {
         HierarchyNodeKey.equals(
           {
             type: "property-grouping:range",
-            fullClassName: "Schema.ClassName",
+            propertiesClassName: "Schema.ClassName",
             propertyName: "property name",
             fromValue: 1,
             toValue: 2,
           },
           {
             type: "property-grouping:range",
-            fullClassName: "Schema.ClassName",
+            propertiesClassName: "Schema.ClassName",
             propertyName: "property name",
             fromValue: 1,
             toValue: 2,
@@ -161,14 +161,14 @@ describe("HierarchyNodeKey", () => {
         HierarchyNodeKey.equals(
           {
             type: "property-grouping:range",
-            fullClassName: "Schema.ClassName",
+            propertiesClassName: "Schema.ClassName",
             propertyName: "property name",
             fromValue: 1,
             toValue: 2,
           },
           {
             type: "property-grouping:range",
-            fullClassName: "Schema.ClassName",
+            propertiesClassName: "Schema.ClassName",
             propertyName: "property name",
             fromValue: 1,
             toValue: 3,
@@ -179,14 +179,14 @@ describe("HierarchyNodeKey", () => {
         HierarchyNodeKey.equals(
           {
             type: "property-grouping:range",
-            fullClassName: "Schema.ClassName",
+            propertiesClassName: "Schema.ClassName",
             propertyName: "property name",
             fromValue: 1,
             toValue: 3,
           },
           {
             type: "property-grouping:range",
-            fullClassName: "Schema.ClassName",
+            propertiesClassName: "Schema.ClassName",
             propertyName: "property name",
             fromValue: 2,
             toValue: 3,
@@ -197,14 +197,14 @@ describe("HierarchyNodeKey", () => {
         HierarchyNodeKey.equals(
           {
             type: "property-grouping:range",
-            fullClassName: "Schema.ClassName",
+            propertiesClassName: "Schema.ClassName",
             propertyName: "property name",
             fromValue: 1,
             toValue: 2,
           },
           {
             type: "property-grouping:range",
-            fullClassName: "Schema.ClassName",
+            propertiesClassName: "Schema.ClassName",
             propertyName: "other name",
             fromValue: 1,
             toValue: 2,
@@ -215,14 +215,14 @@ describe("HierarchyNodeKey", () => {
         HierarchyNodeKey.equals(
           {
             type: "property-grouping:range",
-            fullClassName: "Schema.ClassName",
+            propertiesClassName: "Schema.ClassName",
             propertyName: "property name",
             fromValue: 1,
             toValue: 2,
           },
           {
             type: "property-grouping:range",
-            fullClassName: "Schema.Other",
+            propertiesClassName: "Schema.Other",
             propertyName: "property name",
             fromValue: 1,
             toValue: 2,
@@ -259,7 +259,7 @@ describe("HierarchyNode", () => {
     children: false,
   };
   const propertyOtherValuesGroupingNode: HierarchyNode = {
-    key: { type: "property-grouping:other", fullClassName: "Schema.ClassName", propertyName: "property name" },
+    key: { type: "property-grouping:other", propertiesClassName: "Schema.ClassName", propertyName: "property name" },
     label: "other property grouping node",
     parentKeys: [],
     children: false,
@@ -267,7 +267,7 @@ describe("HierarchyNode", () => {
   const propertyValueGroupingNode: HierarchyNode = {
     key: {
       type: "property-grouping:value",
-      fullClassName: "Schema.ClassName",
+      propertiesClassName: "Schema.ClassName",
       propertyName: "property name",
       formattedPropertyValue: "value",
     },
@@ -276,7 +276,7 @@ describe("HierarchyNode", () => {
     children: false,
   };
   const propertyValueRangeGroupingNode: HierarchyNode = {
-    key: { type: "property-grouping:range", fullClassName: "Schema.ClassName", propertyName: "property name", fromValue: 1, toValue: 2 },
+    key: { type: "property-grouping:range", propertiesClassName: "Schema.ClassName", propertyName: "property name", fromValue: 1, toValue: 2 },
     label: "ranged property grouping node",
     parentKeys: [],
     children: false,

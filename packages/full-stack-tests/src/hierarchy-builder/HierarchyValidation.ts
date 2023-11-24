@@ -173,7 +173,7 @@ export namespace NodeValidators {
 
   export function createForPropertyOtherValuesGroupingNode(props: {
     propertyName?: string;
-    fullClassName?: string;
+    propertiesClassName?: string;
     autoExpand?: boolean;
     children?: ExpectedHierarchyDef[] | boolean;
   }): ExpectedHierarchyDef {
@@ -188,8 +188,8 @@ export namespace NodeValidators {
         if (props.propertyName && node.key.propertyName !== props.propertyName) {
           throw new Error(`[${node.label}] Expected node to have property name "${props.propertyName}", got "${node.key.propertyName}"`);
         }
-        if (props.fullClassName && node.key.fullClassName !== props.fullClassName) {
-          throw new Error(`[${node.label}] Expected node to have fullClassName "${props.fullClassName}", got "${node.key.fullClassName}"`);
+        if (props.propertiesClassName && node.key.propertiesClassName !== props.propertiesClassName) {
+          throw new Error(`[${node.label}] Expected node to have propertiesClassName "${props.propertiesClassName}", got "${node.key.propertiesClassName}"`);
         }
 
         validateBaseNodeAttributes(node, {
@@ -205,7 +205,7 @@ export namespace NodeValidators {
   export function createForPropertyValueRangeGroupingNode(props: {
     label?: string;
     propertyName?: string;
-    fullClassName?: string;
+    propertiesClassName?: string;
     fromValue?: number;
     toValue?: number;
     autoExpand?: boolean;
@@ -222,8 +222,8 @@ export namespace NodeValidators {
         if (props.propertyName && node.key.propertyName !== props.propertyName) {
           throw new Error(`[${node.label}] Expected node to have property name "${props.propertyName}", got "${node.key.propertyName}"`);
         }
-        if (props.fullClassName && node.key.fullClassName !== props.fullClassName) {
-          throw new Error(`[${node.label}] Expected node to have fullClassName "${props.fullClassName}", got "${node.key.fullClassName}"`);
+        if (props.propertiesClassName && node.key.propertiesClassName !== props.propertiesClassName) {
+          throw new Error(`[${node.label}] Expected node to have propertiesClassName "${props.propertiesClassName}", got "${node.key.propertiesClassName}"`);
         }
         if (props.fromValue && node.key.fromValue !== props.fromValue) {
           throw new Error(`[${node.label}] Expected node to have fromValue "${props.fromValue}", got "${node.key.fromValue}"`);
@@ -245,7 +245,7 @@ export namespace NodeValidators {
   export function createForPropertyValueGroupingNode(props: {
     label?: string;
     propertyName?: string;
-    fullClassName?: string;
+    propertiesClassName?: string;
     formattedPropertyValue?: string;
     autoExpand?: boolean;
     children?: ExpectedHierarchyDef[] | boolean;
@@ -261,8 +261,8 @@ export namespace NodeValidators {
         if (props.propertyName && node.key.propertyName !== props.propertyName) {
           throw new Error(`[${node.label}] Expected node to have property name "${props.propertyName}", got "${node.key.propertyName}"`);
         }
-        if (props.fullClassName && node.key.fullClassName !== props.fullClassName) {
-          throw new Error(`[${node.label}] Expected node to have fullClassName "${props.fullClassName}", got "${node.key.fullClassName}"`);
+        if (props.propertiesClassName && node.key.propertiesClassName !== props.propertiesClassName) {
+          throw new Error(`[${node.label}] Expected node to have propertiesClassName "${props.propertiesClassName}", got "${node.key.propertiesClassName}"`);
         }
         if (props.formattedPropertyValue && node.key.formattedPropertyValue !== props.formattedPropertyValue) {
           throw new Error(

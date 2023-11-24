@@ -55,7 +55,7 @@ describe("NodeSelectQueryFactory", () => {
             autoExpand: "always",
           },
           byProperties: {
-            fullClassName: "testSchema.testName",
+            propertiesClassName: "testSchema.testName",
             createGroupForOutOfRangeValues: false,
             createGroupForUnspecifiedValues: true,
             propertyGroups: [
@@ -90,7 +90,7 @@ describe("NodeSelectQueryFactory", () => {
           'byLabel', json_object('hideIfOneGroupedNode', FALSE, 'autoExpand', 'single-child'),
           'byClass', TRUE,
           'byBaseClasses', json_object('fullClassNames', json_array('testSchema.testName'), 'hideIfNoSiblings', FALSE, 'hideIfOneGroupedNode', TRUE, 'autoExpand', 'always'),
-          'byProperties', json_object('fullClassName', 'testSchema.testName', 'propertyGroups', json_array(json_object('propertyName', 'property name', 'propertyValue', 1, 'ranges', json_array(json_object('fromValue', 1, 'toValue', 2, 'rangeLabel', 'range label')))), 'createGroupForOutOfRangeValues', CAST(FALSE AS BOOLEAN), 'createGroupForUnspecifiedValues', CAST(TRUE AS BOOLEAN))
+          'byProperties', json_object('propertiesClassName', 'testSchema.testName', 'propertyGroups', json_array(json_object('propertyName', 'property name', 'propertyValue', 1, 'ranges', json_array(json_object('fromValue', 1, 'toValue', 2, 'rangeLabel', 'range label')))), 'createGroupForOutOfRangeValues', CAST(FALSE AS BOOLEAN), 'createGroupForUnspecifiedValues', CAST(TRUE AS BOOLEAN))
         ) AS ${NodeSelectClauseColumnNames.Grouping},
         CAST('merge id' AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
         json_object(
@@ -125,7 +125,7 @@ describe("NodeSelectQueryFactory", () => {
             autoExpand: { selector: "x.baseClassGroupAutoExpand" },
           },
           byProperties: {
-            fullClassName: { selector: "x.propertyGroupFullClassName" },
+            propertiesClassName: { selector: "x.propertyGroupFullClassName" },
             createGroupForOutOfRangeValues: { selector: "x.propertyGroupCreateGroupForOutOfRangeValues" },
             createGroupForUnspecifiedValues: { selector: "x.propertyGroupCreateGroupForUnspecifiedValues" },
             propertyGroups: [
@@ -159,7 +159,7 @@ describe("NodeSelectQueryFactory", () => {
           'byLabel', x.byLabel,
           'byClass', json_object('hideIfNoSiblings', x.classGroupHideIfNoSiblings, 'autoExpand', x.classGroupAutoExpand),
           'byBaseClasses', json_object('fullClassNames', json_array(x.baseClassFullGroupClassName), 'hideIfNoSiblings', x.baseClassGroupHideIfNoSiblings, 'hideIfOneGroupedNode', x.baseClassGroupHideIfOneGroupedNode, 'autoExpand', x.baseClassGroupAutoExpand),
-          'byProperties', json_object('fullClassName', x.propertyGroupFullClassName, 'propertyGroups', json_array(json_object('propertyName', x.propertyName, 'propertyValue', x.propertyValue, 'ranges', json_array(json_object('fromValue', x.propertyFromValue, 'toValue', x.propertyToValue)))), 'createGroupForOutOfRangeValues', CAST(x.propertyGroupCreateGroupForOutOfRangeValues AS BOOLEAN), 'createGroupForUnspecifiedValues', CAST(x.propertyGroupCreateGroupForUnspecifiedValues AS BOOLEAN))
+          'byProperties', json_object('propertiesClassName', x.propertyGroupFullClassName, 'propertyGroups', json_array(json_object('propertyName', x.propertyName, 'propertyValue', x.propertyValue, 'ranges', json_array(json_object('fromValue', x.propertyFromValue, 'toValue', x.propertyToValue)))), 'createGroupForOutOfRangeValues', CAST(x.propertyGroupCreateGroupForOutOfRangeValues AS BOOLEAN), 'createGroupForUnspecifiedValues', CAST(x.propertyGroupCreateGroupForUnspecifiedValues AS BOOLEAN))
         ) AS ${NodeSelectClauseColumnNames.Grouping},
         CAST(x.MergeId AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
         json_object(
@@ -204,7 +204,7 @@ describe("NodeSelectQueryFactory", () => {
             fullClassNames: ["testSchema.testName"],
           },
           byProperties: {
-            fullClassName: "testSchema.testName",
+            propertiesClassName: "testSchema.testName",
             propertyGroups: [
               {
                 propertyName: "property name1",
@@ -227,7 +227,7 @@ describe("NodeSelectQueryFactory", () => {
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
         json_object(
           'byBaseClasses', json_object('fullClassNames', json_array('testSchema.testName')),
-          'byProperties', json_object('fullClassName', 'testSchema.testName', 'propertyGroups', json_array(json_object('propertyName', 'property name1', 'propertyValue', CAST(TRUE AS BOOLEAN)), json_object('propertyName', 'property name2')))
+          'byProperties', json_object('propertiesClassName', 'testSchema.testName', 'propertyGroups', json_array(json_object('propertyName', 'property name1', 'propertyValue', CAST(TRUE AS BOOLEAN)), json_object('propertyName', 'property name2')))
         ) AS ${NodeSelectClauseColumnNames.Grouping},
         CAST(NULL AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
         CAST(NULL AS TEXT) AS ${NodeSelectClauseColumnNames.ExtendedData},

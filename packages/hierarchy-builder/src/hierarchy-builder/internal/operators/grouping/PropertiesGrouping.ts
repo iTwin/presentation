@@ -36,7 +36,7 @@ export interface PropertyGroupInfo {
 }
 
 /** @internal */
-export type PreviousPropertiesGroupingInfo = Array<{ fullClassName: string; propertyGroup: Omit<HierarchyNodePropertyGroup, "propertyValue"> }>;
+export type PreviousPropertiesGroupingInfo = Array<{ propertiesClassName: string; propertyGroup: Omit<HierarchyNodePropertyGroup, "propertyValue"> }>;
 
 /** @internal */
 export async function createPropertyGroups(
@@ -59,7 +59,7 @@ export async function createPropertyGroups(
     const currentProperty = byProperties.propertyGroups[extractedPropertyInfo.previousPropertiesGroupingInfo.length];
     const partialPropertyNodeKeyToAdd = {
       propertyName: currentProperty.propertyName,
-      fullClassName: byProperties.fullClassName,
+      propertiesClassName: byProperties.propertiesClassName,
     };
 
     if (currentProperty.propertyValue === undefined || currentProperty.propertyValue === "") {
@@ -135,7 +135,7 @@ export async function createPropertyGroups(
       continue;
     }
 
-    const propertyClass = await getClass(metadata, byProperties.fullClassName);
+    const propertyClass = await getClass(metadata, byProperties.propertiesClassName);
     const property = await propertyClass.getProperty(currentProperty.propertyName);
     if (!property?.isPrimitive()) {
       groupings.ungrouped.push(node);
@@ -213,17 +213,17 @@ export async function getUniquePropertiesGroupInfo(metadata: IMetadataProvider, 
       const mapKeyRanges = getRangesAsString(propertyGroup.ranges);
       const lastKey = previousPropertiesInfo.length > 0 ? previousPropertiesInfo[previousPropertiesInfo.length - 1].propertyGroupKey : "";
       const propertyGroupKey = `${lastKey}:${propertyGroup.propertyName}(${mapKeyRanges})`;
-      const mapKey = `${byProperties.fullClassName}:${propertyGroupKey}`;
+      const mapKey = `${byProperties.propertiesClassName}:${propertyGroupKey}`;
 
       if (!uniqueProperties.get(mapKey)) {
         uniqueProperties.set(mapKey, {
-          ecClass: await getClass(metadata, byProperties.fullClassName),
+          ecClass: await getClass(metadata, byProperties.propertiesClassName),
           propertyGroup: {
             propertyName: propertyGroup.propertyName,
             ranges: propertyGroup.ranges,
           },
           previousPropertiesGroupingInfo: previousPropertiesInfo.map((groupingInfo) => ({
-            fullClassName: byProperties.fullClassName,
+            propertiesClassName: byProperties.propertiesClassName,
             propertyGroup: groupingInfo.propertyGroup,
           })),
         });
@@ -255,7 +255,7 @@ async function shouldCreatePropertyGroup(
   nodeFullClassName: string,
 ): Promise<boolean> {
   if (
-    nodePropertyGroupingParams.fullClassName !== extractedPropertyInfo.ecClass.fullName ||
+    nodePropertyGroupingParams.propertiesClassName !== extractedPropertyInfo.ecClass.fullName ||
     nodePropertyGroupingParams.propertyGroups.length < extractedPropertyInfo.previousPropertiesGroupingInfo.length + 1
   ) {
     return false;
@@ -284,7 +284,7 @@ export function doPreviousPropertiesMatch(
 ): boolean {
   return previousPropertiesGroupingInfo.every(
     (groupingInfo, index) =>
-      groupingInfo.fullClassName === nodesProperties.fullClassName &&
+      groupingInfo.propertiesClassName === nodesProperties.propertiesClassName &&
       groupingInfo.propertyGroup.propertyName === nodesProperties.propertyGroups[index].propertyName &&
       doRangesMatch(groupingInfo.propertyGroup.ranges, nodesProperties.propertyGroups[index].ranges),
   );

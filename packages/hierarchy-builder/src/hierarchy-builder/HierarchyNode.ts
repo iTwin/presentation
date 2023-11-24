@@ -44,7 +44,7 @@ export interface LabelGroupingNodeKey {
 export interface PropertyOtherValuesGroupingNodeKey {
   type: "property-grouping:other";
   propertyName: string;
-  fullClassName: string;
+  propertiesClassName: string;
 }
 
 /**
@@ -54,7 +54,7 @@ export interface PropertyOtherValuesGroupingNodeKey {
 export interface PropertyValueGroupingNodeKey {
   type: "property-grouping:value";
   propertyName: string;
-  fullClassName: string;
+  propertiesClassName: string;
   formattedPropertyValue: string;
 }
 
@@ -65,7 +65,7 @@ export interface PropertyValueGroupingNodeKey {
 export interface PropertyValueRangeGroupingNodeKey {
   type: "property-grouping:range";
   propertyName: string;
-  fullClassName: string;
+  propertiesClassName: string;
   fromValue: number;
   toValue: number;
 }
@@ -163,16 +163,23 @@ export namespace HierarchyNodeKey {
       }
       case "property-grouping:other": {
         assert(isPropertyOtherValuesGrouping(rhs));
-        return lhs.fullClassName === rhs.fullClassName && lhs.propertyName === rhs.propertyName;
+        return lhs.propertiesClassName === rhs.propertiesClassName && lhs.propertyName === rhs.propertyName;
       }
       case "property-grouping:value": {
         assert(isPropertyValueGrouping(rhs));
-        return lhs.fullClassName === rhs.fullClassName && lhs.propertyName === rhs.propertyName && lhs.formattedPropertyValue === rhs.formattedPropertyValue;
+        return (
+          lhs.propertiesClassName === rhs.propertiesClassName &&
+          lhs.propertyName === rhs.propertyName &&
+          lhs.formattedPropertyValue === rhs.formattedPropertyValue
+        );
       }
       case "property-grouping:range": {
         assert(isPropertyValueRangeGrouping(rhs));
         return (
-          lhs.fullClassName === rhs.fullClassName && lhs.propertyName === rhs.propertyName && lhs.fromValue === rhs.fromValue && lhs.toValue === rhs.toValue
+          lhs.propertiesClassName === rhs.propertiesClassName &&
+          lhs.propertyName === rhs.propertyName &&
+          lhs.fromValue === rhs.fromValue &&
+          lhs.toValue === rhs.toValue
         );
       }
     }
@@ -336,7 +343,7 @@ export interface HierarchyNodePropertiesGroupingParams extends HierarchyNodeGrou
    *
    * Full class name format: `SchemaName.ClassName`.
    */
-  fullClassName: string;
+  propertiesClassName: string;
   /**
    * Property grouping option that determines whether to group nodes whose grouping value is not set or is set to an empty string.
    *
