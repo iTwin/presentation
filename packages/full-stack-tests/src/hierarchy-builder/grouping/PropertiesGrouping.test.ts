@@ -56,10 +56,7 @@ describe("Stateless hierarchy builder", () => {
                       byProperties: specifiedGrouping,
                     },
                   })}
-                  FROM (
-                    SELECT ECClassId, ECInstanceId, UserLabel, Parent
-                    FROM ${subjectClassName}
-                  ) AS this
+                  FROM ${subjectClassName} AS this
                 `,
                 },
               },
