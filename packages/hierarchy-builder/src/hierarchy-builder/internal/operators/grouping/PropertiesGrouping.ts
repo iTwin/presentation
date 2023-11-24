@@ -62,6 +62,13 @@ export async function createPropertyGroups(
       propertiesClassName: byProperties.propertiesClassName,
     };
 
+    const propertyClass = await getClass(metadata, byProperties.propertiesClassName);
+    const property = await propertyClass.getProperty(currentProperty.propertyName);
+    if (!property?.isPrimitive()) {
+      groupings.ungrouped.push(node);
+      continue;
+    }
+
     if (currentProperty.propertyValue === undefined || currentProperty.propertyValue === "") {
       if (byProperties.createGroupForUnspecifiedValues) {
         addGroupingToMap(
@@ -91,10 +98,14 @@ export async function createPropertyGroups(
         if (matchingRange) {
           const fromValueTypedPrimitive = {
             type: Number.isInteger(matchingRange.fromValue) ? "Integer" : "Double",
+            extendedType: property.extendedTypeName,
+            koqName: (await property.kindOfQuantity)?.fullName,
             value: matchingRange.fromValue,
           } as TypedPrimitiveValue;
           const toValueTypedPrimitive = {
             type: Number.isInteger(matchingRange.toValue) ? "Integer" : "Double",
+            extendedType: property.extendedTypeName,
+            koqName: (await property.kindOfQuantity)?.fullName,
             value: matchingRange.toValue,
           } as TypedPrimitiveValue;
 
@@ -135,12 +146,6 @@ export async function createPropertyGroups(
       continue;
     }
 
-    const propertyClass = await getClass(metadata, byProperties.propertiesClassName);
-    const property = await propertyClass.getProperty(currentProperty.propertyName);
-    if (!property?.isPrimitive()) {
-      groupings.ungrouped.push(node);
-      continue;
-    }
     const formattedValue = await valueFormatter({
       type: property.primitiveType,
       extendedType: property.extendedTypeName,
