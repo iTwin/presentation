@@ -373,7 +373,7 @@ describe("PropertiesGrouping", () => {
         expectedResult: false,
       },
       {
-        testCase: "when all properties match",
+        testCase: "all properties match",
         previousPropertiesGroupingInfo: [
           {
             propertiesClassName: "TestSchema.Name",
