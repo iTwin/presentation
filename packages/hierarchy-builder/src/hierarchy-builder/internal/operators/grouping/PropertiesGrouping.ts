@@ -135,13 +135,12 @@ export async function createPropertyGroups(
       groupings.ungrouped.push(node);
       continue;
     }
-    const part = {
+    const formattedValue = await valueFormatter({
       type: property.primitiveType,
       extendedType: property.extendedTypeName,
       koqName: (await property.kindOfQuantity)?.fullName,
       value: currentProperty.propertyValue,
-    } as TypedPrimitiveValue;
-    const formattedValue = await valueFormatter(part);
+    });
 
     addGroupingToMap(
       groupings.grouped,
