@@ -5,7 +5,13 @@
 
 import { assert } from "@itwin/core-bentley";
 import { ECClass, IMetadataProvider } from "../../../ECMetadata";
-import { HierarchyNodePropertiesGroupingParams, ProcessedInstanceHierarchyNode, PropertyGroup, PropertyGroupingNodeKey, Range } from "../../../HierarchyNode";
+import {
+  HierarchyNodePropertiesGroupingParams,
+  HierarchyNodePropertyGroup,
+  ProcessedInstanceHierarchyNode,
+  PropertyGroupingNodeKey,
+  Range,
+} from "../../../HierarchyNode";
 import { translate } from "../../../Localization";
 import { IPrimitiveValueFormatter } from "../../../values/Formatting";
 import { TypedPrimitiveValue } from "../../../values/Values";
@@ -26,11 +32,11 @@ interface PropertyGroupingInformation {
 export interface PropertyGroupInfo {
   ecClass: ECClass;
   previousPropertiesGroupingInfo: PreviousPropertiesGroupingInfo;
-  propertyGroup: Omit<PropertyGroup, "propertyValue">;
+  propertyGroup: Omit<HierarchyNodePropertyGroup, "propertyValue">;
 }
 
 /** @internal */
-export type PreviousPropertiesGroupingInfo = Array<{ fullClassName: string; propertyGroup: Omit<PropertyGroup, "propertyValue"> }>;
+export type PreviousPropertiesGroupingInfo = Array<{ fullClassName: string; propertyGroup: Omit<HierarchyNodePropertyGroup, "propertyValue"> }>;
 
 /** @internal */
 export async function createPropertyGroups(
@@ -140,7 +146,7 @@ export async function createPropertyGroups(
       extendedType: property.extendedTypeName,
       koqName: (await property.kindOfQuantity)?.fullName,
       value: currentProperty.propertyValue,
-    });
+    } as TypedPrimitiveValue);
 
     addGroupingToMap(
       groupings.grouped,
@@ -202,7 +208,7 @@ export async function getUniquePropertiesGroupInfo(metadata: IMetadataProvider, 
       continue;
     }
 
-    const previousPropertiesInfo = new Array<{ propertyGroup: PropertyGroup; propertyGroupKey: string }>();
+    const previousPropertiesInfo = new Array<{ propertyGroup: HierarchyNodePropertyGroup; propertyGroupKey: string }>();
     for (const propertyGroup of byProperties.propertyGroups) {
       const mapKeyRanges = getRangesAsString(propertyGroup.ranges);
       const lastKey = previousPropertiesInfo.length > 0 ? previousPropertiesInfo[previousPropertiesInfo.length - 1].propertyGroupKey : "";

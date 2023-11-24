@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { ECClass, ECProperty, IMetadataProvider } from "../../../../hierarchy-builder/ECMetadata";
-import { GroupingNodeKey, PropertyGroup } from "../../../../hierarchy-builder/HierarchyNode";
+import { GroupingNodeKey, HierarchyNodePropertyGroup } from "../../../../hierarchy-builder/HierarchyNode";
 import * as propertiesGrouping from "../../../../hierarchy-builder/internal/operators/grouping/PropertiesGrouping";
 import { LOCALIZATION_NAMESPACE } from "../../../../hierarchy-builder/Localization";
 import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "../../../../hierarchy-builder/values/Formatting";
@@ -31,7 +31,7 @@ describe("PropertiesGrouping", () => {
       received: propertiesGrouping.PropertyGroupInfo,
       expectedECClassName: string,
       expectedPreviousPropertiesGroupingInfo: propertiesGrouping.PreviousPropertiesGroupingInfo,
-      expectedPropertyGroup: Omit<PropertyGroup, "propertyValue">,
+      expectedPropertyGroup: Omit<HierarchyNodePropertyGroup, "propertyValue">,
     ) {
       expect(received.ecClass.fullName).to.eq(expectedECClassName);
       expect(received.previousPropertiesGroupingInfo).to.deep.eq(expectedPreviousPropertiesGroupingInfo);
@@ -78,12 +78,12 @@ describe("PropertiesGrouping", () => {
     });
 
     it("extracts propertiesGroupInfo from single node in the order which properties were provided", async () => {
-      const propertyGroup1: PropertyGroup = {
+      const propertyGroup1: HierarchyNodePropertyGroup = {
         propertyName: "PropertyName1",
         propertyValue: 1,
         ranges: [{ fromValue: 1, toValue: 5, rangeLabel: "RangeLabel1" }],
       };
-      const propertyGroup2: PropertyGroup = {
+      const propertyGroup2: HierarchyNodePropertyGroup = {
         propertyName: "PropertyName2",
         propertyValue: 2,
         ranges: [{ fromValue: 1, toValue: 5 }],
@@ -114,12 +114,12 @@ describe("PropertiesGrouping", () => {
     });
 
     it("extracts propertiesGroupInfo from multiple nodes in the order which different properties were provided", async () => {
-      const propertyGroup1: PropertyGroup = {
+      const propertyGroup1: HierarchyNodePropertyGroup = {
         propertyName: "PropertyName1",
         propertyValue: 1,
         ranges: [{ fromValue: 1, toValue: 5, rangeLabel: "RangeLabel1" }],
       };
-      const propertyGroup2: PropertyGroup = {
+      const propertyGroup2: HierarchyNodePropertyGroup = {
         propertyName: "PropertyName2",
         propertyValue: 2,
         ranges: [{ fromValue: 1, toValue: 5 }],
@@ -161,19 +161,19 @@ describe("PropertiesGrouping", () => {
     });
 
     it("doesn't extract duplicate properties from multiple nodes", async () => {
-      const propertyGroup1: PropertyGroup = {
+      const propertyGroup1: HierarchyNodePropertyGroup = {
         propertyName: "PropertyName1",
         propertyValue: 1,
       };
-      const propertyGroup2: PropertyGroup = {
+      const propertyGroup2: HierarchyNodePropertyGroup = {
         propertyName: "PropertyName2",
         propertyValue: 2,
       };
-      const propertyGroup3: PropertyGroup = {
+      const propertyGroup3: HierarchyNodePropertyGroup = {
         propertyName: "PropertyName3",
         propertyValue: 3,
       };
-      const propertyGroup4: PropertyGroup = {
+      const propertyGroup4: HierarchyNodePropertyGroup = {
         propertyName: "PropertyName4",
         propertyValue: 4,
       };

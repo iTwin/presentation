@@ -371,14 +371,14 @@ export interface HierarchyNodePropertiesGroupingParams extends HierarchyNodeGrou
    * ]
    * ```
    */
-  propertyGroups: Array<PropertyGroup>;
+  propertyGroups: Array<HierarchyNodePropertyGroup>;
 }
 
 /**
  * A data structure that represents specific properties' grouping params.
  * @beta
  */
-export interface PropertyGroup {
+export interface HierarchyNodePropertyGroup {
   /** A string indicating the name of the property to group by. */
   propertyName: string;
   /**  Value of the property, which will be used to group the node. */
