@@ -62,7 +62,7 @@ export async function createPropertyGroups(
       propertiesClassName: byProperties.propertiesClassName,
     };
 
-    const propertyClass = await getClass(metadata, byProperties.propertiesClassName);
+    const propertyClass = handlerGroupingParams.ecClass;
     const property = await propertyClass.getProperty(currentProperty.propertyName);
     if (!property?.isPrimitive()) {
       groupings.ungrouped.push(node);
