@@ -8,9 +8,9 @@ import { ECClass, IMetadataProvider } from "../../../ECMetadata";
 import {
   HierarchyNodePropertiesGroupingParams,
   HierarchyNodePropertyGroup,
+  HierarchyNodePropertyValueRange,
   ProcessedInstanceHierarchyNode,
   PropertyGroupingNodeKey,
-  Range,
 } from "../../../HierarchyNode";
 import { translate } from "../../../Localization";
 import { IPrimitiveValueFormatter } from "../../../values/Formatting";
@@ -239,7 +239,7 @@ export async function getUniquePropertiesGroupInfo(metadata: IMetadataProvider, 
   return [...uniqueProperties.values()].sort((lhs, rhs) => lhs.previousPropertiesGroupingInfo.length - rhs.previousPropertiesGroupingInfo.length);
 }
 
-function getRangesAsString(ranges?: Range[]): string {
+function getRangesAsString(ranges?: HierarchyNodePropertyValueRange[]): string {
   return ranges
     ? ranges
         .map((range) => `${range.fromValue}-${range.toValue}(${range.rangeLabel ?? ""})`)
@@ -291,7 +291,7 @@ export function doPreviousPropertiesMatch(
 }
 
 /** @internal */
-export function doRangesMatch(ranges1: Range[] | undefined, ranges2: Range[] | undefined): boolean {
+export function doRangesMatch(ranges1: HierarchyNodePropertyValueRange[] | undefined, ranges2: HierarchyNodePropertyValueRange[] | undefined): boolean {
   if (typeof ranges1 !== typeof ranges2) {
     return false;
   }

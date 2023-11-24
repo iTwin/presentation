@@ -384,14 +384,14 @@ export interface HierarchyNodePropertyGroup {
   /**  Value of the property, which will be used to group the node. */
   propertyValue?: PrimitiveValue;
   /** Ranges are used to group nodes by numeric properties which are within specified bounds. */
-  ranges?: Array<Range>;
+  ranges?: Array<HierarchyNodePropertyValueRange>;
 }
 
 /**
  * A data structure that represents boundaries for a value.
  * @beta
  */
-export interface Range {
+export interface HierarchyNodePropertyValueRange {
   /** Defines the lower bound of the range. */
   fromValue: number;
   /** Defines the upper bound of the range. */
