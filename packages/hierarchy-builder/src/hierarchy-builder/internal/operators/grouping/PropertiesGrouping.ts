@@ -236,7 +236,7 @@ export async function getUniquePropertiesGroupInfo(metadata: IMetadataProvider, 
 function getRangesAsString(ranges?: Range[]): string {
   return ranges
     ? ranges
-        .map((range) => `${range.fromValue}-${range.toValue}(${range.rangeLabel ? `${range.rangeLabel}` : ""})`)
+        .map((range) => `${range.fromValue}-${range.toValue}(${range.rangeLabel ?? ""})`)
         .sort()
         .join(";")
     : "";
