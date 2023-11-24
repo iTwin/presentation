@@ -115,9 +115,47 @@ export interface ECSqlSelectClauseGroupingParamsBase {
  * @beta
  */
 export interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
+  /**
+   * Full name of a class whose properties are used to group the node. Only has effect if the node
+   * represents an instance of that class.
+   *
+   * Full class name format: `SchemaName.ClassName`.
+   */
   propertiesClassName: string | ECSqlValueSelector;
+  /**
+   * Property grouping option that determines whether to group nodes whose grouping value is not set or is set to an empty string.
+   *
+   * Label of the created grouping node will be `Not Specified`.
+   */
   createGroupForUnspecifiedValues?: boolean | ECSqlValueSelector;
+  /**
+   * Property grouping option that determines whether to group nodes whose grouping value doesn't fit within any of the provided
+   * ranges, or is not a numeric value.
+   *
+   * Label of the created grouping node will be `Other`.
+   */
   createGroupForOutOfRangeValues?: boolean | ECSqlValueSelector;
+  /**
+   * Properties of the specified class, by which the nodes should be grouped.
+   *
+   * Example usage:
+   * ```tsx
+   * propertyGroups: [
+   *   {
+   *     propertyName: "type",
+   *     propertyValue: "Wall"
+   *   },
+   *   {
+   *     propertyName: "length",
+   *     propertyValue: 15,
+   *     ranges: [
+   *       { fromValue: 1, toValue: 10, rangeLabel: "Small" },
+   *       { fromValue: 11, toValue: 20, rangeLabel: "Medium" }
+   *     ]
+   *   },
+   * ]
+   * ```
+   */
   propertyGroups: Array<ECSqlSelectClausePropertyGroup>;
 }
 
@@ -126,8 +164,11 @@ export interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectCl
  * @beta
  */
 export interface ECSqlSelectClausePropertyGroup {
+  /** A string indicating the name of the property to group by. */
   propertyName: string | ECSqlValueSelector;
+  /**  Value of the property, which will be used to group the node. */
   propertyValue?: PrimitiveValue | ECSqlValueSelector;
+  /** Ranges are used to group nodes by numeric properties which are within specified bounds. */
   ranges?: Array<ECSqlSelectClausePropertyValueRange>;
 }
 
@@ -136,8 +177,11 @@ export interface ECSqlSelectClausePropertyGroup {
  * @beta
  */
 export interface ECSqlSelectClausePropertyValueRange {
+  /** Defines the lower bound of the range. */
   fromValue: number | ECSqlValueSelector;
+  /** Defines the upper bound of the range. */
   toValue: number | ECSqlValueSelector;
+  /** Defines the range label. Will be used as grouping node's display label. */
   rangeLabel?: string | ECSqlValueSelector;
 }
 
