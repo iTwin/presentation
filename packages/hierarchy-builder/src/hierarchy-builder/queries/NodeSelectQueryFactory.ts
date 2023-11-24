@@ -135,7 +135,7 @@ export interface ECSqlSelectClausePropertyGroup {
  * A data structure for defining boundaries for a value.
  * @beta
  */
-export interface ECSqlSelectClauseRange {
+export interface ECSqlSelectClausePropertyValueRange {
   fromValue: number | ECSqlValueSelector;
   toValue: number | ECSqlValueSelector;
   rangeLabel?: string | ECSqlValueSelector;
