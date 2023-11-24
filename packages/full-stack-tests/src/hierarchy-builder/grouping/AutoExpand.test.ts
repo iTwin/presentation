@@ -325,7 +325,7 @@ describe("Stateless hierarchy builder", () => {
         byProperties: {
           fullClassName: "BisCore.Element",
           propertyGroups: [{ propertyName: "UserLabel", propertyValue: "test1" }],
-          autoExpand: "always",
+          autoExpand: "single-child",
         },
       };
 
