@@ -655,7 +655,14 @@ export interface HierarchyNodePropertiesGroupingParams extends HierarchyNodeGrou
     createGroupForOutOfRangeValues?: boolean;
     createGroupForUnspecifiedValues?: boolean;
     fullClassName: string;
-    propertyGroups: Array<PropertyGroup>;
+    propertyGroups: Array<HierarchyNodePropertyGroup>;
+}
+
+// @beta
+export interface HierarchyNodePropertyGroup {
+    propertyName: string;
+    propertyValue?: PrimitiveValue;
+    ranges?: Array<Range>;
 }
 
 // @beta
@@ -959,13 +966,6 @@ export type PropertyFilterValue = PrimitiveValue | InstanceKey;
 export namespace PropertyFilterValue {
     export function isInstanceKey(value: PropertyFilterValue): value is InstanceKey;
     export function isPrimitive(value: PropertyFilterValue): value is PrimitiveValue;
-}
-
-// @beta
-export interface PropertyGroup {
-    propertyName: string;
-    propertyValue?: PrimitiveValue;
-    ranges?: Array<Range>;
 }
 
 // @beta

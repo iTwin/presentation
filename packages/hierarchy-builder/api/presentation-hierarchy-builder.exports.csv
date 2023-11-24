@@ -82,6 +82,7 @@ beta;HierarchyNodeKey = StandardHierarchyNodeKey | string
 beta;HierarchyNodeKey
 beta;HierarchyNodeProcessingParamsBase
 beta;HierarchyNodePropertiesGroupingParams 
+beta;HierarchyNodePropertyGroup
 beta;HierarchyNodesDefinition = CustomHierarchyNodeDefinition | InstanceNodesQueryDefinition
 beta;HierarchyNodesDefinition
 beta;HierarchyProvider
@@ -130,7 +131,6 @@ beta;PropertyFilterRuleOperator
 beta;PropertyFilterRuleUnaryOperator = "True" | "False" | "Null" | "NotNull"
 beta;PropertyFilterValue = PrimitiveValue | InstanceKey
 beta;PropertyFilterValue
-beta;PropertyGroup
 beta;PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | PropertyValueGroupingNodeKey | PropertyOtherValuesGroupingNodeKey
 beta;PropertyOtherValuesGroupingNodeKey
 beta;PropertyValue
