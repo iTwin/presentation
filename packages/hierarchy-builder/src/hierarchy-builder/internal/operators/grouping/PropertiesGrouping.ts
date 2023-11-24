@@ -42,7 +42,7 @@ export type PreviousPropertiesGroupingInfo = Array<{ propertiesClassName: string
 export async function createPropertyGroups(
   metadata: IMetadataProvider,
   nodes: ProcessedInstanceHierarchyNode[],
-  extractedPropertyInfo: PropertyGroupInfo,
+  handlerGroupingParams: PropertyGroupInfo,
   valueFormatter: IPrimitiveValueFormatter,
 ): Promise<GroupingHandlerResult> {
   const groupings: PropertyGroupingInformation = { ungrouped: [], grouped: new Map() };
@@ -52,11 +52,11 @@ export async function createPropertyGroups(
       groupings.ungrouped.push(node);
       continue;
     }
-    if (!(await shouldCreatePropertyGroup(metadata, extractedPropertyInfo, byProperties, node.key.instanceKeys[0].className))) {
+    if (!(await shouldCreatePropertyGroup(metadata, handlerGroupingParams, byProperties, node.key.instanceKeys[0].className))) {
       groupings.ungrouped.push(node);
       continue;
     }
-    const currentProperty = byProperties.propertyGroups[extractedPropertyInfo.previousPropertiesGroupingInfo.length];
+    const currentProperty = byProperties.propertyGroups[handlerGroupingParams.previousPropertiesGroupingInfo.length];
     const partialPropertyNodeKeyToAdd = {
       propertyName: currentProperty.propertyName,
       propertiesClassName: byProperties.propertiesClassName,
@@ -250,28 +250,28 @@ function getRangesAsString(ranges?: HierarchyNodePropertyValueRange[]): string {
 
 async function shouldCreatePropertyGroup(
   metadata: IMetadataProvider,
-  extractedPropertyInfo: PropertyGroupInfo,
+  handlerGroupingParams: PropertyGroupInfo,
   nodePropertyGroupingParams: HierarchyNodePropertiesGroupingParams,
   nodeFullClassName: string,
 ): Promise<boolean> {
   if (
-    nodePropertyGroupingParams.propertiesClassName !== extractedPropertyInfo.ecClass.fullName ||
-    nodePropertyGroupingParams.propertyGroups.length < extractedPropertyInfo.previousPropertiesGroupingInfo.length + 1
+    nodePropertyGroupingParams.propertiesClassName !== handlerGroupingParams.ecClass.fullName ||
+    nodePropertyGroupingParams.propertyGroups.length < handlerGroupingParams.previousPropertiesGroupingInfo.length + 1
   ) {
     return false;
   }
-  const currentProperty = nodePropertyGroupingParams.propertyGroups[extractedPropertyInfo.previousPropertiesGroupingInfo.length];
+  const currentProperty = nodePropertyGroupingParams.propertyGroups[handlerGroupingParams.previousPropertiesGroupingInfo.length];
   if (
-    currentProperty.propertyName !== extractedPropertyInfo.propertyGroup.propertyName ||
-    !doRangesMatch(currentProperty.ranges, extractedPropertyInfo.propertyGroup.ranges)
+    currentProperty.propertyName !== handlerGroupingParams.propertyGroup.propertyName ||
+    !doRangesMatch(currentProperty.ranges, handlerGroupingParams.propertyGroup.ranges)
   ) {
     return false;
   }
-  if (!doPreviousPropertiesMatch(extractedPropertyInfo.previousPropertiesGroupingInfo, nodePropertyGroupingParams)) {
+  if (!doPreviousPropertiesMatch(handlerGroupingParams.previousPropertiesGroupingInfo, nodePropertyGroupingParams)) {
     return false;
   }
   const nodeClass = await getClass(metadata, nodeFullClassName);
-  if (!(await nodeClass.is(extractedPropertyInfo.ecClass))) {
+  if (!(await nodeClass.is(handlerGroupingParams.ecClass))) {
     return false;
   }
   return true;
