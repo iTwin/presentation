@@ -123,7 +123,7 @@ describe("Stateless hierarchy builder", () => {
             NodeValidators.createForClassGroupingNode({
               label: "Information Reference",
               className: "BisCore.InformationReferenceElement",
-              autoExpand: undefined,
+              autoExpand: false,
               children: [
                 NodeValidators.createForInstanceNode({
                   instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
@@ -205,7 +205,7 @@ describe("Stateless hierarchy builder", () => {
           expect: [
             NodeValidators.createForClassGroupingNode({
               className: "BisCore.Subject",
-              autoExpand: undefined,
+              autoExpand: false,
               children: [
                 NodeValidators.createForInstanceNode({
                   instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
@@ -295,7 +295,7 @@ describe("Stateless hierarchy builder", () => {
             }),
             NodeValidators.createForLabelGroupingNode({
               label: groupName,
-              autoExpand: undefined,
+              autoExpand: false,
               children: [
                 NodeValidators.createForInstanceNode({
                   instanceKeys: [keys.childSubject1],
@@ -325,7 +325,7 @@ describe("Stateless hierarchy builder", () => {
         byProperties: {
           propertiesClassName: "BisCore.Element",
           propertyGroups: [{ propertyName: "UserLabel", propertyValue: "test1" }],
-          autoExpand: "always",
+          autoExpand: "single-child",
         },
       };
 
@@ -383,7 +383,7 @@ describe("Stateless hierarchy builder", () => {
               label: "test1",
               propertiesClassName: "BisCore.Element",
               formattedPropertyValue: "test1",
-              autoExpand: undefined,
+              autoExpand: false,
               children: [
                 NodeValidators.createForInstanceNode({
                   instanceKeys: [{ className: "BisCore.Subject", id: IModel.rootSubjectId }],
