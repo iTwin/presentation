@@ -598,7 +598,7 @@ describe("PropertiesGrouping", () => {
       });
     });
 
-    describe("Range isn't provided", async () => {
+    describe("value grouping", async () => {
       it("doesn't group node, when property value is not primitive", async () => {
         const nodes = [
           createTestProcessedInstanceNode({
@@ -640,7 +640,7 @@ describe("PropertiesGrouping", () => {
               grouping: {
                 byProperties: {
                   propertiesClassName: "TestSchema.Class",
-                  propertyGroups: [{ propertyName: "PropertyName" }],
+                  propertyGroups: [{ propertyName: "PropertyName", propertyValue: undefined }],
                 },
               },
             },
@@ -936,7 +936,7 @@ describe("PropertiesGrouping", () => {
       });
     });
 
-    describe("Range is provided", async () => {
+    describe("range grouping", async () => {
       it("doesn't group, when property value doesn't fit in provided range and createGroupForOutOfRangeValues isn't set", async () => {
         const nodes = [
           createTestProcessedInstanceNode({
@@ -1261,7 +1261,7 @@ describe("PropertiesGrouping", () => {
               grouping: {
                 byProperties: {
                   propertiesClassName: "TestSchema.Class",
-                  propertyGroups: [{ propertyName: "PropertyName", propertyValue: 5, ranges: [{ fromValue: 1, toValue: 5, rangeLabel: "rangeLabel" }] }],
+                  propertyGroups: [{ propertyName: "PropertyName", propertyValue: 2, ranges: [{ fromValue: 1, toValue: 5, rangeLabel: "rangeLabel" }] }],
                 },
               },
             },
@@ -1310,7 +1310,7 @@ describe("PropertiesGrouping", () => {
                   propertyGroups: [
                     {
                       propertyName: "PropertyName",
-                      propertyValue: 6,
+                      propertyValue: 3.5,
                       ranges: [
                         { fromValue: 1, toValue: 4 },
                         { fromValue: 3, toValue: 10 },
@@ -1344,14 +1344,14 @@ describe("PropertiesGrouping", () => {
           type: "property-grouping:range",
           propertyName: "PropertyName",
           propertiesClassName: "TestSchema.Class",
-          fromValue: 3,
-          toValue: 10,
+          fromValue: 1,
+          toValue: 4,
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
-              label: "3 - 10",
+              label: "1 - 4",
               key: expectedGroupingNodeKey,
               children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, expectedGroupingNodeKey] }],
             }),

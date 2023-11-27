@@ -328,16 +328,20 @@ describe("Grouping", () => {
   describe("createGroupingHandlers", () => {
     let createBaseClassGroupingHandlersStub: sinon.SinonStub;
     let createPropertiesGroupingHandlersStub: sinon.SinonStub;
+    let baseClassHandlerStub: sinon.SinonStub;
+    let propertyHandlerStub: sinon.SinonStub;
     let createClassGroupsStub: sinon.SinonStub;
     let createLabelGroupsStub: sinon.SinonStub;
     before(() => {
-      createBaseClassGroupingHandlersStub = sinon.stub(baseClassGrouping, "createBaseClassGroupingHandlers").resolves([]);
-      createPropertiesGroupingHandlersStub = sinon.stub(propertiesGrouping, "createPropertiesGroupingHandlers").resolves([]);
+      baseClassHandlerStub = sinon.stub();
+      propertyHandlerStub = sinon.stub();
+      createBaseClassGroupingHandlersStub = sinon.stub(baseClassGrouping, "createBaseClassGroupingHandlers").resolves([baseClassHandlerStub]);
+      createPropertiesGroupingHandlersStub = sinon.stub(propertiesGrouping, "createPropertiesGroupingHandlers").resolves([propertyHandlerStub]);
       createClassGroupsStub = sinon.stub(classGrouping, "createClassGroups");
       createLabelGroupsStub = sinon.stub(labelGrouping, "createLabelGroups");
     });
 
-    it("creates grouping handlers in class -> label grouping order", async () => {
+    it("creates grouping handlers in class -> property -> label grouping order", async () => {
       const nodes = [
         createTestProcessedInstanceNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
@@ -350,12 +354,18 @@ describe("Grouping", () => {
       expect(createBaseClassGroupingHandlersStub.firstCall).to.be.calledWith(metadataProvider, nodes);
       expect(createPropertiesGroupingHandlersStub.callCount).to.eq(1);
       expect(createPropertiesGroupingHandlersStub.firstCall).to.be.calledWith(metadataProvider, nodes, formatter);
-      expect(result.length).to.eq(2);
-      expect(createClassGroupsStub.callCount).to.eq(0);
+      expect(result.length).to.eq(4);
+      expect(baseClassHandlerStub.callCount).to.eq(0);
       await result[0]([]);
-      expect(createClassGroupsStub.callCount).to.eq(1);
-      expect(createLabelGroupsStub.callCount).to.eq(0);
+      expect(baseClassHandlerStub.callCount).to.eq(1);
+      expect(createClassGroupsStub.callCount).to.eq(0);
       await result[1]([]);
+      expect(createClassGroupsStub.callCount).to.eq(1);
+      expect(propertyHandlerStub.callCount).to.eq(0);
+      await result[2]([]);
+      expect(propertyHandlerStub.callCount).to.eq(1);
+      expect(createLabelGroupsStub.callCount).to.eq(0);
+      await result[3]([]);
       expect(createLabelGroupsStub.callCount).to.eq(1);
     });
   });
