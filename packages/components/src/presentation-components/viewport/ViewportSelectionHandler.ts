@@ -73,17 +73,16 @@ export class ViewportSelectionHandler implements IDisposable {
   private applyUnifiedSelection(imodel: IModelConnection) {
     this._cancelOngoingChanges.next();
 
-    let firstEmit = true;
+    using(Presentation.selection.suspendIModelToolSelectionSync(this._imodel), (_) => {
+      imodel.hilited.clear();
+      imodel.selectionSet.emptyAll();
+    });
+
     from(Presentation.selection.getHiliteSetIterator(imodel))
       .pipe(takeUntil(this._cancelOngoingChanges))
       .subscribe({
         next: (ids) => {
           using(Presentation.selection.suspendIModelToolSelectionSync(this._imodel), (_) => {
-            if (firstEmit) {
-              imodel.hilited.clear();
-              imodel.selectionSet.emptyAll();
-            }
-
             if (ids.models && ids.models.length) {
               imodel.hilited.models.addIds(ids.models);
             }
@@ -94,8 +93,6 @@ export class ViewportSelectionHandler implements IDisposable {
               imodel.hilited.elements.addIds(ids.elements);
               imodel.selectionSet.add(ids.elements);
             }
-
-            firstEmit = false;
           });
         },
       });

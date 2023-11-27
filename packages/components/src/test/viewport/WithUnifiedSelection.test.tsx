@@ -29,7 +29,11 @@ describe("Viewport withUnifiedSelection", () => {
   const imodel = {
     views,
     hilited: {
+      clear: () => {},
       wantSyncWithSelectionSet: false,
+    },
+    selectionSet: {
+      emptyAll: () => {},
     },
   } as unknown as IModelConnection;
 
@@ -259,14 +263,13 @@ describe("ViewportSelectionHandler", () => {
     });
 
     it("clears selection set when hilite list is empty", async () => {
-      async function* generator() {
-        yield {} as HiliteSet;
-      }
+      async function* generator() {}
       selectionManager.getHiliteSetIterator.callsFake(() => generator());
       // trigger the selection change and wait for event handler to finish
       triggerSelectionChange();
 
       await waitFor(() => {
+        expect(hilited.clear).to.be.calledOnce;
         // verify selection set was replaced
         expect(selectionSet.emptyAll).to.be.calledOnce;
       });
@@ -392,17 +395,18 @@ describe("ViewportSelectionHandler", () => {
 
       // verify hilite set was not updated while waiting for first batch
       await waitFor(() => {
-        expect(hilited.clear).to.not.be.called;
+        expect(hilited.clear).to.be.called;
         expect(hilited.models.addIds).to.not.be.called;
         expect(hilited.subcategories.addIds).to.not.be.called;
         expect(hilited.elements.addIds).to.not.be.called;
       });
+      resetHilitedStub();
 
       await firstResult.resolve({ elements: [firstElementId] });
 
       // verify hilite set was updated with first batch result
       await waitFor(() => {
-        expect(hilited.clear).to.be.called;
+        expect(hilited.clear).to.not.be.called;
         expect(hilited.models.addIds).to.not.be.called;
         expect(hilited.subcategories.addIds).to.not.be.called;
         expect(hilited.elements.addIds).to.be.calledOnceWith([firstElementId]);
