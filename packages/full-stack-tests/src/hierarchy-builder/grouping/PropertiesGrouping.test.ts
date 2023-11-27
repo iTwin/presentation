@@ -264,7 +264,7 @@ describe("Stateless hierarchy builder", () => {
       };
 
       await validateHierarchy({
-        provider: createProvider({ imodel: imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, groupingParams) }),
+        provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, groupingParams) }),
         expect: [
           NodeValidators.createForInstanceNode({
             instanceKeys: [keys.childSubject1],
