@@ -392,33 +392,23 @@ export interface ECSqlSelectClauseGroupingParamsBase {
 
 // @beta
 export interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
-    // (undocumented)
     createGroupForOutOfRangeValues?: boolean | ECSqlValueSelector;
-    // (undocumented)
     createGroupForUnspecifiedValues?: boolean | ECSqlValueSelector;
-    // (undocumented)
     propertiesClassName: string | ECSqlValueSelector;
-    // (undocumented)
     propertyGroups: Array<ECSqlSelectClausePropertyGroup>;
 }
 
 // @beta
 export interface ECSqlSelectClausePropertyGroup {
-    // (undocumented)
-    propertyName: string | ECSqlValueSelector;
-    // (undocumented)
-    propertyValue?: PrimitiveValue | ECSqlValueSelector;
-    // (undocumented)
+    propertyClassAlias: string;
+    propertyName: string;
     ranges?: Array<ECSqlSelectClausePropertyValueRange>;
 }
 
 // @beta
 export interface ECSqlSelectClausePropertyValueRange {
-    // (undocumented)
     fromValue: number | ECSqlValueSelector;
-    // (undocumented)
     rangeLabel?: string | ECSqlValueSelector;
-    // (undocumented)
     toValue: number | ECSqlValueSelector;
 }
 
