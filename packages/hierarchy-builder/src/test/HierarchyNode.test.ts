@@ -4,7 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { HierarchyNode, HierarchyNodeIdentifier, HierarchyNodeKey } from "../hierarchy-builder/HierarchyNode";
+import {
+  HierarchyNode,
+  HierarchyNodeIdentifier,
+  HierarchyNodeKey,
+  PropertyOtherValuesGroupingNodeKey,
+  PropertyValueGroupingNodeKey,
+  PropertyValueRangeGroupingNodeKey,
+} from "../hierarchy-builder/HierarchyNode";
 import { InstanceKey } from "../hierarchy-builder/values/Values";
 
 describe("HierarchyNodeKey", () => {
@@ -50,185 +57,68 @@ describe("HierarchyNodeKey", () => {
       expect(HierarchyNodeKey.equals({ type: "label-grouping", label: "a" }, { type: "label-grouping", label: "b" })).to.be.false;
     });
 
-    it("returns correct results for other property grouping node keys", () => {
+    it("returns correct results for property other values grouping node keys", () => {
+      const baseOtherValues: PropertyOtherValuesGroupingNodeKey = {
+        type: "property-grouping:other",
+        propertiesClassName: "Schema.ClassName",
+        propertyName: "property name",
+      };
+      expect(HierarchyNodeKey.equals(baseOtherValues, baseOtherValues)).to.be.true;
+      expect(HierarchyNodeKey.equals(baseOtherValues, { ...baseOtherValues, propertyName: "other name" })).to.be.false;
+      expect(HierarchyNodeKey.equals(baseOtherValues, { ...baseOtherValues, propertiesClassName: "Schema.Other" })).to.be.false;
+    });
+
+    it("returns correct results for property value grouping node keys", () => {
+      const baseValue: PropertyValueGroupingNodeKey = {
+        type: "property-grouping:value",
+        propertiesClassName: "Schema.ClassName",
+        propertyName: "property name",
+        formattedPropertyValue: "value",
+      };
+      expect(HierarchyNodeKey.equals(baseValue, baseValue)).to.be.true;
       expect(
-        HierarchyNodeKey.equals(
-          { type: "property-grouping:other", propertiesClassName: "Schema.ClassName", propertyName: "property name" },
-          { type: "property-grouping:other", propertiesClassName: "Schema.ClassName", propertyName: "property name" },
-        ),
-      ).to.be.true;
-      expect(
-        HierarchyNodeKey.equals(
-          { type: "property-grouping:other", propertiesClassName: "Schema.ClassName", propertyName: "property name" },
-          { type: "property-grouping:other", propertiesClassName: "Schema.ClassName", propertyName: "other name" },
-        ),
+        HierarchyNodeKey.equals(baseValue, {
+          ...baseValue,
+          formattedPropertyValue: "value2",
+        }),
       ).to.be.false;
       expect(
-        HierarchyNodeKey.equals(
-          { type: "property-grouping:other", propertiesClassName: "Schema.ClassName", propertyName: "property name" },
-          { type: "property-grouping:other", propertiesClassName: "Schema.Other", propertyName: "property name" },
-        ),
+        HierarchyNodeKey.equals(baseValue, {
+          ...baseValue,
+          propertyName: "other name",
+        }),
+      ).to.be.false;
+      expect(
+        HierarchyNodeKey.equals(baseValue, {
+          ...baseValue,
+          propertiesClassName: "Schema.Other",
+        }),
       ).to.be.false;
     });
 
-    it("returns correct results for formatted property grouping node keys", () => {
+    it("returns correct results for property value range grouping node keys", () => {
+      const baseValueRange: PropertyValueRangeGroupingNodeKey = {
+        type: "property-grouping:range",
+        propertiesClassName: "Schema.ClassName",
+        propertyName: "property name",
+        fromValue: 1,
+        toValue: 2,
+      };
+      expect(HierarchyNodeKey.equals(baseValueRange, baseValueRange)).to.be.true;
       expect(
-        HierarchyNodeKey.equals(
-          {
-            type: "property-grouping:value",
-            propertiesClassName: "Schema.ClassName",
-            propertyName: "property name",
-            formattedPropertyValue: "value",
-          },
-          {
-            type: "property-grouping:value",
-            propertiesClassName: "Schema.ClassName",
-            propertyName: "property name",
-            formattedPropertyValue: "value",
-          },
-        ),
-      ).to.be.true;
-      expect(
-        HierarchyNodeKey.equals(
-          {
-            type: "property-grouping:value",
-            propertiesClassName: "Schema.ClassName",
-            propertyName: "property name",
-            formattedPropertyValue: "value",
-          },
-          {
-            type: "property-grouping:value",
-            propertiesClassName: "Schema.ClassName",
-            propertyName: "property name",
-            formattedPropertyValue: "value2",
-          },
-        ),
+        HierarchyNodeKey.equals(baseValueRange, {
+          ...baseValueRange,
+          toValue: 3,
+        }),
       ).to.be.false;
       expect(
-        HierarchyNodeKey.equals(
-          {
-            type: "property-grouping:value",
-            propertiesClassName: "Schema.ClassName",
-            propertyName: "property name",
-            formattedPropertyValue: "value",
-          },
-          {
-            type: "property-grouping:value",
-            propertiesClassName: "Schema.ClassName",
-            propertyName: "other name",
-            formattedPropertyValue: "value",
-          },
-        ),
+        HierarchyNodeKey.equals(baseValueRange, {
+          ...baseValueRange,
+          fromValue: 2,
+        }),
       ).to.be.false;
-      expect(
-        HierarchyNodeKey.equals(
-          {
-            type: "property-grouping:value",
-            propertiesClassName: "Schema.ClassName",
-            propertyName: "property name",
-            formattedPropertyValue: "value",
-          },
-          {
-            type: "property-grouping:value",
-            propertiesClassName: "Schema.Other",
-            propertyName: "property name",
-            formattedPropertyValue: "value",
-          },
-        ),
-      ).to.be.false;
-    });
-
-    it("returns correct results for ranged property grouping node keys", () => {
-      expect(
-        HierarchyNodeKey.equals(
-          {
-            type: "property-grouping:range",
-            propertiesClassName: "Schema.ClassName",
-            propertyName: "property name",
-            fromValue: 1,
-            toValue: 2,
-          },
-          {
-            type: "property-grouping:range",
-            propertiesClassName: "Schema.ClassName",
-            propertyName: "property name",
-            fromValue: 1,
-            toValue: 2,
-          },
-        ),
-      ).to.be.true;
-      expect(
-        HierarchyNodeKey.equals(
-          {
-            type: "property-grouping:range",
-            propertiesClassName: "Schema.ClassName",
-            propertyName: "property name",
-            fromValue: 1,
-            toValue: 2,
-          },
-          {
-            type: "property-grouping:range",
-            propertiesClassName: "Schema.ClassName",
-            propertyName: "property name",
-            fromValue: 1,
-            toValue: 3,
-          },
-        ),
-      ).to.be.false;
-      expect(
-        HierarchyNodeKey.equals(
-          {
-            type: "property-grouping:range",
-            propertiesClassName: "Schema.ClassName",
-            propertyName: "property name",
-            fromValue: 1,
-            toValue: 3,
-          },
-          {
-            type: "property-grouping:range",
-            propertiesClassName: "Schema.ClassName",
-            propertyName: "property name",
-            fromValue: 2,
-            toValue: 3,
-          },
-        ),
-      ).to.be.false;
-      expect(
-        HierarchyNodeKey.equals(
-          {
-            type: "property-grouping:range",
-            propertiesClassName: "Schema.ClassName",
-            propertyName: "property name",
-            fromValue: 1,
-            toValue: 2,
-          },
-          {
-            type: "property-grouping:range",
-            propertiesClassName: "Schema.ClassName",
-            propertyName: "other name",
-            fromValue: 1,
-            toValue: 2,
-          },
-        ),
-      ).to.be.false;
-      expect(
-        HierarchyNodeKey.equals(
-          {
-            type: "property-grouping:range",
-            propertiesClassName: "Schema.ClassName",
-            propertyName: "property name",
-            fromValue: 1,
-            toValue: 2,
-          },
-          {
-            type: "property-grouping:range",
-            propertiesClassName: "Schema.Other",
-            propertyName: "property name",
-            fromValue: 1,
-            toValue: 2,
-          },
-        ),
-      ).to.be.false;
+      expect(HierarchyNodeKey.equals(baseValueRange, { ...baseValueRange, propertyName: "other name" })).to.be.false;
+      expect(HierarchyNodeKey.equals(baseValueRange, { ...baseValueRange, propertiesClassName: "Schema.Other" })).to.be.false;
     });
   });
 });
