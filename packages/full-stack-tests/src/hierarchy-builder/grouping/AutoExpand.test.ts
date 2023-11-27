@@ -316,7 +316,8 @@ describe("Stateless hierarchy builder", () => {
       const propertiesAutoExpandAlways: ECSqlSelectClauseGroupingParams = {
         byProperties: {
           propertiesClassName: "BisCore.Element",
-          propertyGroups: [{ propertyName: "UserLabel", propertyValue: "test1" }],
+          createGroupForUnspecifiedValues: true,
+          propertyGroups: [{ propertyName: "UserLabel", propertyClassAlias: "this" }],
           autoExpand: "always",
         },
       };
@@ -324,7 +325,8 @@ describe("Stateless hierarchy builder", () => {
       const propertiesAutoExpandSingleChild: ECSqlSelectClauseGroupingParams = {
         byProperties: {
           propertiesClassName: "BisCore.Element",
-          propertyGroups: [{ propertyName: "UserLabel", propertyValue: "test1" }],
+          createGroupForUnspecifiedValues: true,
+          propertyGroups: [{ propertyName: "UserLabel", propertyClassAlias: "this" }],
           autoExpand: "single-child",
         },
       };
@@ -334,9 +336,6 @@ describe("Stateless hierarchy builder", () => {
           provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, propertiesAutoExpandAlways) }),
           expect: [
             NodeValidators.createForPropertyValueGroupingNode({
-              label: "test1",
-              propertiesClassName: "BisCore.Element",
-              formattedPropertyValue: "test1",
               autoExpand: true,
               children: [
                 NodeValidators.createForInstanceNode({
@@ -354,9 +353,6 @@ describe("Stateless hierarchy builder", () => {
           provider: createProvider({ imodel: emptyIModel, hierarchy: createHierarchyWithSpecifiedGrouping(emptyIModel, propertiesAutoExpandSingleChild) }),
           expect: [
             NodeValidators.createForPropertyValueGroupingNode({
-              label: "test1",
-              propertiesClassName: "BisCore.Element",
-              formattedPropertyValue: "test1",
               autoExpand: true,
               children: [
                 NodeValidators.createForInstanceNode({
@@ -380,9 +376,6 @@ describe("Stateless hierarchy builder", () => {
           provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, propertiesAutoExpandSingleChild) }),
           expect: [
             NodeValidators.createForPropertyValueGroupingNode({
-              label: "test1",
-              propertiesClassName: "BisCore.Element",
-              formattedPropertyValue: "test1",
               autoExpand: false,
               children: [
                 NodeValidators.createForInstanceNode({

@@ -165,9 +165,9 @@ export interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectCl
  */
 export interface ECSqlSelectClausePropertyGroup {
   /** A string indicating the name of the property to group by. */
-  propertyName: string | ECSqlValueSelector;
-  /**  Value of the property, which will be used to group the node. */
-  propertyValue?: PrimitiveValue | ECSqlValueSelector;
+  propertyName: string;
+  /** Alias to use to when selecting propertyValue. */
+  propertyClassAlias: string;
   /** Ranges are used to group nodes by numeric properties which are within specified bounds. */
   ranges?: Array<ECSqlSelectClausePropertyValueRange>;
 }
@@ -391,17 +391,10 @@ function createPropertyGroupSelectors(propertyGroup: ECSqlSelectClausePropertyGr
       key: "propertyName",
       selector: `${createECSqlValueSelector(propertyGroup.propertyName)}`,
     },
-    ...(propertyGroup.propertyValue !== undefined
-      ? [
-          {
-            key: "propertyValue",
-            selector:
-              typeof propertyGroup.propertyValue === "boolean"
-                ? `CAST(${createECSqlValueSelector(propertyGroup.propertyValue)} AS BOOLEAN)`
-                : createECSqlValueSelector(propertyGroup.propertyValue),
-          },
-        ]
-      : []),
+    {
+      key: "propertyValue",
+      selector: `[${propertyGroup.propertyClassAlias}].[${propertyGroup.propertyName}]`,
+    },
   );
   if (propertyGroup.ranges) {
     selectors.push(createRangeParamSelectors(propertyGroup.ranges));

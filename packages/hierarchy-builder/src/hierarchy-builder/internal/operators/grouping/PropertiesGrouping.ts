@@ -69,7 +69,7 @@ export async function createPropertyGroups(
       continue;
     }
 
-    if (currentProperty.propertyValue === undefined || currentProperty.propertyValue === "") {
+    if (!currentProperty.propertyValue) {
       if (byProperties.createGroupForUnspecifiedValues) {
         addGroupingToMap(
           groupings.grouped,

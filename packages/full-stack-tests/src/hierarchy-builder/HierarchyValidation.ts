@@ -171,14 +171,14 @@ export namespace NodeValidators {
     };
   }
 
-  export function createForPropertyOtherValuesGroupingNode(props: {
+  export function createForPropertyOtherValuesGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(props: {
     propertyName?: string;
     propertiesClassName?: string;
     autoExpand?: boolean;
-    children?: ExpectedHierarchyDef[] | boolean;
-  }): ExpectedHierarchyDef {
+    children?: TChildren;
+  }) {
     return {
-      node: (node) => {
+      node: (node: HierarchyNode) => {
         if (!HierarchyNode.isStandard(node)) {
           throw new Error(`[${node.label}] Expected a property other values grouping node, got a non-standard "${node.key as string}"`);
         }
@@ -202,17 +202,17 @@ export namespace NodeValidators {
     };
   }
 
-  export function createForPropertyValueRangeGroupingNode(props: {
+  export function createForPropertyValueRangeGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(props: {
     label?: string;
     propertyName?: string;
     propertiesClassName?: string;
     fromValue?: number;
     toValue?: number;
     autoExpand?: boolean;
-    children?: ExpectedHierarchyDef[] | boolean;
-  }): ExpectedHierarchyDef {
+    children?: TChildren;
+  }) {
     return {
-      node: (node) => {
+      node: (node: HierarchyNode) => {
         if (!HierarchyNode.isStandard(node)) {
           throw new Error(`[${node.label}] Expected a property value range grouping node, got a non-standard "${node.key as string}"`);
         }
@@ -242,16 +242,16 @@ export namespace NodeValidators {
     };
   }
 
-  export function createForPropertyValueGroupingNode(props: {
+  export function createForPropertyValueGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(props: {
     label?: string;
     propertyName?: string;
     propertiesClassName?: string;
     formattedPropertyValue?: string;
     autoExpand?: boolean;
-    children?: ExpectedHierarchyDef[] | boolean;
-  }): ExpectedHierarchyDef {
+    children?: TChildren;
+  }) {
     return {
-      node: (node) => {
+      node: (node: HierarchyNode) => {
         if (!HierarchyNode.isStandard(node)) {
           throw new Error(`[${node.label}] Expected a property value grouping node, got a non-standard "${node.key as string}"`);
         }

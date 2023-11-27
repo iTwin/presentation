@@ -90,11 +90,11 @@ describe("Stateless hierarchy builder", () => {
                           propertyGroups: [
                             {
                               propertyName: "Description",
-                              propertyValue: { selector: `this.Description` },
+                              propertyClassAlias: "this",
                             },
                             {
                               propertyName: "UserLabel",
-                              propertyValue: { selector: `this.UserLabel` },
+                              propertyClassAlias: "this",
                             },
                           ],
                         },

@@ -404,7 +404,7 @@ describe("Stateless hierarchy builder", () => {
       const propertiesHideIfNoSiblingsGrouping: ECSqlSelectClauseGroupingParams = {
         byProperties: {
           propertiesClassName: "BisCore.Element",
-          propertyGroups: [{ propertyName: "UserLabel", propertyValue: { selector: `this.UserLabel` } }],
+          propertyGroups: [{ propertyName: "UserLabel", propertyClassAlias: "this" }],
           hideIfNoSiblings: true,
         },
       };
@@ -412,7 +412,7 @@ describe("Stateless hierarchy builder", () => {
       const propertiesHideIfOneGroupedNodeGrouping: ECSqlSelectClauseGroupingParams = {
         byProperties: {
           propertiesClassName: "BisCore.Element",
-          propertyGroups: [{ propertyName: "UserLabel", propertyValue: { selector: `this.UserLabel` } }],
+          propertyGroups: [{ propertyName: "UserLabel", propertyClassAlias: "this" }],
           hideIfOneGroupedNode: true,
         },
       };
