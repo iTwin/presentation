@@ -5,161 +5,180 @@
 
 import { expect } from "chai";
 import * as sinon from "sinon";
-import * as moq from "typemoq";
 import { Id64, Id64Arg, Id64String } from "@itwin/core-bentley";
 import { Code, ElementProps } from "@itwin/core-common";
-import { IModelApp, IModelConnection, HiliteSet as IModelHiliteSet, SelectionSet, ViewState3d } from "@itwin/core-frontend";
+import { IModelApp, IModelConnection, ViewState3d } from "@itwin/core-frontend";
 import { ViewportComponent } from "@itwin/imodel-components-react";
 import { KeySet } from "@itwin/presentation-common";
-import {
-  HiliteSet,
-  Presentation,
-  SelectionChangeEvent,
-  SelectionChangeEventArgs,
-  SelectionChangeType,
-  SelectionManager,
-  SelectionScopesManager,
-} from "@itwin/presentation-frontend";
+import { HiliteSet, Presentation, SelectionChangeEvent, SelectionChangeEventArgs, SelectionChangeType, SelectionManager } from "@itwin/presentation-frontend";
 import { ViewportSelectionHandler } from "../../presentation-components/viewport/ViewportSelectionHandler";
 import { viewWithUnifiedSelection } from "../../presentation-components/viewport/WithUnifiedSelection";
-import { createTestECInstanceKey, waitForAllAsyncs } from "../_helpers/Common";
+import { createTestECInstanceKey } from "../_helpers/Common";
 import { ResolvablePromise } from "../_helpers/Promises";
-import { render } from "../TestUtils";
+import { render, waitFor } from "../TestUtils";
 
 const PresentationViewport = viewWithUnifiedSelection(ViewportComponent);
 
 describe("Viewport withUnifiedSelection", () => {
-  let viewDefinitionId: Id64String;
-  const imodelMock = moq.Mock.ofType<IModelConnection>();
-  const selectionHandlerMock = moq.Mock.ofType<ViewportSelectionHandler>();
+  const viewDefinitionId = "0x1";
+
+  const views = {
+    load: sinon.stub<Parameters<IModelConnection.Views["load"]>, ReturnType<IModelConnection.Views["load"]>>(),
+  };
+
+  const imodel = {
+    views,
+    hilited: {
+      wantSyncWithSelectionSet: false,
+    },
+  } as unknown as IModelConnection;
+
+  const selectionHandler = {
+    imodel: {} as IModelConnection,
+    applyCurrentSelection: () => {},
+  } as ViewportSelectionHandler;
 
   beforeEach(() => {
-    viewDefinitionId = "0x1";
-
-    selectionHandlerMock.reset();
-    imodelMock.reset();
-    mockIModel(imodelMock);
-
-    const viewsMock = moq.Mock.ofType<IModelConnection.Views>();
-    viewsMock.setup(async (views) => views.load(moq.It.isAny())).returns(async () => moq.Mock.ofType<ViewState3d>().object);
-    imodelMock.setup((imodel) => imodel.views).returns(() => viewsMock.object);
+    views.load.resolves({} as ViewState3d);
   });
 
   afterEach(() => {
+    views.load.reset();
     sinon.restore();
   });
 
   it("renders", () => {
-    render(<PresentationViewport imodel={imodelMock.object} viewDefinitionId={viewDefinitionId} selectionHandler={selectionHandlerMock.object} />);
+    render(<PresentationViewport imodel={imodel} viewDefinitionId={viewDefinitionId} selectionHandler={selectionHandler} />);
   });
 
   it("creates default ViewportSelectionHandler implementation when not provided through props", () => {
-    const selectionManagerMock = moq.Mock.ofType<SelectionManager>();
     const selectionChangeEvent = new SelectionChangeEvent();
-    selectionManagerMock.setup((x) => x.selectionChange).returns(() => selectionChangeEvent);
-    selectionManagerMock.setup((x) => x.suspendIModelToolSelectionSync(imodelMock.object)).returns(() => ({ dispose: () => {} }));
-    selectionManagerMock.setup(async (x) => x.getHiliteSet(imodelMock.object)).returns(async () => ({}));
-    sinon.stub(Presentation, "selection").get(() => selectionManagerMock.object);
+    const selectionManagerMock = {
+      selectionChange: selectionChangeEvent,
+      suspendIModelToolSelectionSync: () => ({ dispose: () => {} }),
+      *getHiliteSetIterator() {},
+      setSyncWithIModelToolSelection: () => {},
+    };
+    sinon.stub(Presentation, "selection").get(() => selectionManagerMock);
 
     expect(selectionChangeEvent.numberOfListeners).to.be.eq(0);
 
-    render(<PresentationViewport imodel={imodelMock.object} viewDefinitionId={viewDefinitionId} />);
+    render(<PresentationViewport imodel={imodel} viewDefinitionId={viewDefinitionId} />);
 
     // new 'ViewportSelectionHandler' should be listening to selection change event
     expect(selectionChangeEvent.numberOfListeners).to.be.eq(1);
   });
 
   it("sets ViewportSelectionHandler.imodel property when rendered with new imodel", () => {
-    const { rerender } = render(
-      <PresentationViewport imodel={imodelMock.object} viewDefinitionId={viewDefinitionId} selectionHandler={selectionHandlerMock.object} />,
-    );
-    selectionHandlerMock.verify((x) => (x.imodel = imodelMock.object), moq.Times.atLeastOnce());
+    const { rerender } = render(<PresentationViewport imodel={imodel} viewDefinitionId={viewDefinitionId} selectionHandler={selectionHandler} />);
+    expect(selectionHandler.imodel).to.be.eq(imodel);
 
-    const newImodel = moq.Mock.ofType<IModelConnection>();
-    rerender(<PresentationViewport imodel={newImodel.object} viewDefinitionId={viewDefinitionId} selectionHandler={selectionHandlerMock.object} />);
-
-    selectionHandlerMock.verify((x) => (x.imodel = newImodel.object), moq.Times.atLeastOnce());
-  });
-
-  it("disposes ViewportSelectionHandler when unmounted", () => {
-    const { unmount } = render(
-      <PresentationViewport imodel={imodelMock.object} viewDefinitionId={viewDefinitionId} selectionHandler={selectionHandlerMock.object} />,
-    );
-    unmount();
-    selectionHandlerMock.verify((x) => x.dispose(), moq.Times.atLeastOnce());
+    const newImodel = {} as IModelConnection;
+    rerender(<PresentationViewport imodel={newImodel} viewDefinitionId={viewDefinitionId} selectionHandler={selectionHandler} />);
+    expect(selectionHandler.imodel).to.be.eq(newImodel);
   });
 });
 
 describe("ViewportSelectionHandler", () => {
   let handler: ViewportSelectionHandler;
-  const imodelMock = moq.Mock.ofType<IModelConnection>();
-  let getHiliteSet: sinon.SinonStub<[IModelConnection], Promise<HiliteSet>>;
+
+  const hilited = {
+    clear: sinon.stub<[], void>(),
+    elements: {
+      addIds: sinon.stub<[Id64Arg], void>(),
+    },
+    models: {
+      addIds: sinon.stub<[Id64Arg], void>(),
+    },
+    subcategories: {
+      addIds: sinon.stub<[Id64Arg], void>(),
+    },
+  };
+
+  const selectionSet = {
+    emptyAll: sinon.stub<[], void>(),
+    add: sinon.stub<[Id64Arg], void>(),
+  };
+
+  const imodelElements: IModelConnection.Elements = {
+    getProps: sinon.stub().callsFake(async (ids: Id64Arg) => createElementProps(ids)),
+  } as unknown as IModelConnection.Elements;
+
+  const imodel = {
+    hilited,
+    selectionSet,
+    elements: imodelElements,
+  };
+
+  const selectionManager = {
+    selectionChange: new SelectionChangeEvent(),
+    setSyncWithIModelToolSelection: () => {},
+    suspendIModelToolSelectionSync: () => ({
+      dispose: () => {},
+    }),
+    getHiliteSetIterator: sinon.stub<Parameters<SelectionManager["getHiliteSetIterator"]>, ReturnType<SelectionManager["getHiliteSetIterator"]>>(),
+  };
+
+  function resetHilitedStub() {
+    hilited.clear.reset();
+    hilited.elements.addIds.reset();
+    hilited.models.addIds.reset();
+    hilited.subcategories.addIds.reset();
+  }
 
   beforeEach(() => {
-    mockIModel(imodelMock);
     sinon.stub(IModelApp, "viewManager").get(() => ({ onSelectionSetChanged: () => {} }));
     sinon.stub(Presentation, "selection").get(() => selectionManager);
-    const selectionManager = new SelectionManager({ scopes: moq.Mock.ofType<SelectionScopesManager>().object });
 
-    getHiliteSet = sinon.stub(Presentation.selection, "getHiliteSet").resolves({});
-    handler = new ViewportSelectionHandler({ imodel: imodelMock.object });
+    async function* emptyGenerator() {}
+    selectionManager.getHiliteSetIterator.callsFake(() => emptyGenerator());
+    handler = new ViewportSelectionHandler({ imodel: imodel as unknown as IModelConnection });
   });
 
   afterEach(() => {
+    selectionManager.selectionChange.clear();
+
+    resetHilitedStub();
+
+    selectionSet.emptyAll.reset();
+    selectionSet.add.reset();
+
+    selectionManager.getHiliteSetIterator.reset();
+
     handler.dispose();
     sinon.restore();
   });
 
   describe("imodel", () => {
     it("returns imodel handler is created with", () => {
-      expect(handler.imodel).to.eq(imodelMock.object);
+      expect(handler.imodel).to.eq(imodel);
     });
 
     it("does nothing when setting the same imodel", () => {
       const spy = sinon.spy(Presentation.selection, "setSyncWithIModelToolSelection");
-      handler.imodel = imodelMock.object;
+      handler.imodel = imodel as unknown as IModelConnection;
       expect(spy).to.not.be.called;
     });
 
     it("sets a different imodel", () => {
-      const newConnection = moq.Mock.ofType<IModelConnection>();
-      mockIModel(newConnection);
-      handler.imodel = newConnection.object;
-      expect(handler.imodel).to.eq(newConnection.object);
+      const newImodel = {
+        hilited,
+        selectionSet,
+        elements: imodelElements,
+      } as unknown as IModelConnection;
+      handler.imodel = newImodel;
+      expect(handler.imodel).to.eq(newImodel);
     });
   });
 
   describe("reacting to unified selection changes", () => {
-    interface HiliteSpies {
-      clear: sinon.SinonSpy<[], void>;
-      elements: sinon.SinonSpy<[Id64Arg], void>;
-      models: sinon.SinonSpy<[Id64Arg], void>;
-      subcategories: sinon.SinonSpy<[Id64Arg], void>;
-      resetHistory: () => void;
-    }
-
-    interface SelectionSetSpies {
-      emptyAll: sinon.SinonSpy<[], void>;
-      replace: sinon.SinonSpy<[Id64Arg], void>;
-      onChanged: sinon.SinonSpy<any[], any>;
-      resetHistory: () => void;
-    }
-
-    let spies: { hilite: HiliteSpies; selectionSet: SelectionSetSpies };
-
-    beforeEach(() => {
-      // ensure there's something in the selection set
-      imodelMock.target.selectionSet.replace("0x1");
-      spies = createIModelSpies(imodelMock);
-    });
-
     const triggerSelectionChange = ({
       sourceName = "",
       selectionLevel = 0,
-      imodel = imodelMock.object,
-    }: { sourceName?: string; selectionLevel?: number; imodel?: IModelConnection } = {}) => {
+      selectionImodel = imodel as unknown as IModelConnection,
+    }: { sourceName?: string; selectionLevel?: number; selectionImodel?: IModelConnection } = {}) => {
       const selectionChangeArgs: SelectionChangeEventArgs = {
-        imodel,
+        imodel: selectionImodel,
         changeType: SelectionChangeType.Add,
         level: selectionLevel,
         source: sourceName,
@@ -171,262 +190,295 @@ describe("ViewportSelectionHandler", () => {
 
     it("applies hilite on current selection", async () => {
       const instanceKey = createTestECInstanceKey();
-      Presentation.selection.addToSelection("test", imodelMock.object, new KeySet([instanceKey]));
-      await waitForAllAsyncs([handler]);
-      spies.hilite.resetHistory();
-      spies.selectionSet.resetHistory();
 
-      getHiliteSet.resetBehavior();
-      getHiliteSet.resolves({
-        elements: [instanceKey.id],
+      async function* generator() {
+        yield {
+          elements: [instanceKey.id],
+        } as HiliteSet;
+      }
+      selectionManager.getHiliteSetIterator.callsFake(() => generator());
+
+      handler.applyCurrentSelection();
+
+      await waitFor(() => {
+        // verify hilite was changed with expected ids
+        expect(hilited.clear).to.be.calledOnce;
+        expect(hilited.elements.addIds).to.be.calledOnceWith([instanceKey.id]);
+
+        // verify selection set was replaced
+        expect(selectionSet.emptyAll).to.be.called;
+        expect(selectionSet.add).to.be.calledOnceWith([instanceKey.id]);
       });
-
-      await handler.applyCurrentSelection();
-      await waitForAllAsyncs([handler]);
-
-      // verify hilite was changed with expected ids
-      expect(spies.hilite.clear).to.be.calledOnce;
-      expect(spies.hilite.elements).to.be.calledOnceWith([instanceKey.id]);
-
-      // verify selection set was replaced
-      expect(spies.selectionSet.emptyAll).to.not.be.called;
-      expect(spies.selectionSet.replace).to.be.calledOnceWith([instanceKey.id]);
-      expect(spies.selectionSet.onChanged).to.be.calledOnce;
     });
 
     it("ignores selection changes to other imodels", async () => {
-      const otherImodel = moq.Mock.ofType<IModelConnection>();
-      triggerSelectionChange({ imodel: otherImodel.object });
-      expect(getHiliteSet).to.not.be.called;
-      expect(spies.hilite.clear).to.not.be.called;
-      expect(spies.hilite.models).to.not.be.called;
-      expect(spies.hilite.subcategories).to.not.be.called;
-      expect(spies.hilite.elements).to.not.be.called;
+      const newImodel = {} as IModelConnection;
+      triggerSelectionChange({ selectionImodel: newImodel });
+      expect(selectionManager.getHiliteSetIterator).to.not.be.called;
+      expect(hilited.clear).to.not.be.called;
+      expect(hilited.models.addIds).to.not.be.called;
+      expect(hilited.subcategories.addIds).to.not.be.called;
+      expect(hilited.elements.addIds).to.not.be.called;
     });
 
     it("applies hilite on current selection after changing target imodel", async () => {
-      const otherIModelMock = moq.Mock.ofType<IModelConnection>();
-      mockIModel(otherIModelMock);
+      const newImodel = {
+        hilited,
+        selectionSet,
+        elements: imodelElements,
+      } as unknown as IModelConnection;
       const instanceKey = createTestECInstanceKey();
-      Presentation.selection.addToSelection("test", otherIModelMock.object, new KeySet([instanceKey]));
 
-      getHiliteSet.resetBehavior();
-      getHiliteSet.resolves({
-        elements: [instanceKey.id],
+      async function* generator() {
+        yield {
+          elements: [instanceKey.id],
+        } as HiliteSet;
+      }
+      selectionManager.getHiliteSetIterator.callsFake(() => generator());
+
+      handler.imodel = newImodel;
+
+      await waitFor(() => {
+        // verify hilite was changed with expected ids
+        expect(hilited.clear).to.be.calledOnce;
+        expect(hilited.elements.addIds).to.be.calledOnceWith([instanceKey.id]);
+
+        // verify selection set was replaced
+        expect(selectionSet.emptyAll).to.be.called;
+        expect(selectionSet.add).to.be.calledOnceWith([instanceKey.id]);
       });
-      spies = createIModelSpies(otherIModelMock);
-
-      handler.imodel = otherIModelMock.object;
-      await waitForAllAsyncs([handler]);
-
-      // verify hilite was changed with expected ids
-      expect(spies.hilite.clear).to.be.calledOnce;
-      expect(spies.hilite.elements).to.be.calledOnceWith([instanceKey.id]);
-
-      // verify selection set was replaced
-      expect(spies.selectionSet.emptyAll).to.not.be.called;
-      expect(spies.selectionSet.replace).to.be.calledOnceWith([instanceKey.id]);
-      expect(spies.selectionSet.onChanged).to.be.calledOnce;
     });
 
     it("ignores selection changes to selection levels other than 0", async () => {
       triggerSelectionChange({ selectionLevel: 1 });
-      expect(getHiliteSet).to.not.be.called;
-      expect(spies.hilite.clear).to.not.be.called;
-      expect(spies.hilite.models).to.not.be.called;
-      expect(spies.hilite.subcategories).to.not.be.called;
-      expect(spies.hilite.elements).to.not.be.called;
+      expect(selectionManager.getHiliteSetIterator).to.not.be.called;
+      expect(hilited.clear).to.not.be.called;
+      expect(hilited.models.addIds).to.not.be.called;
+      expect(hilited.subcategories.addIds).to.not.be.called;
+      expect(hilited.elements.addIds).to.not.be.called;
     });
 
     it("clears selection set when hilite list is empty", async () => {
-      getHiliteSet.resetBehavior();
-      getHiliteSet.resolves({});
-
+      async function* generator() {
+        yield {} as HiliteSet;
+      }
+      selectionManager.getHiliteSetIterator.callsFake(() => generator());
       // trigger the selection change and wait for event handler to finish
       triggerSelectionChange();
-      await waitForAllAsyncs([handler]);
 
-      // verify selection set was replaced
-      expect(spies.selectionSet.emptyAll).to.be.calledOnce;
-      expect(spies.selectionSet.replace).to.not.be.called;
-      expect(spies.selectionSet.onChanged).to.be.calledOnce;
+      await waitFor(() => {
+        // verify selection set was replaced
+        expect(selectionSet.emptyAll).to.be.calledOnce;
+      });
     });
 
     it("sets elements hilite", async () => {
       const id = "0x2";
-      getHiliteSet.resetBehavior();
-      getHiliteSet.resolves({
-        elements: [id],
-      });
+      async function* generator() {
+        yield {
+          elements: [id],
+        } as HiliteSet;
+      }
+      selectionManager.getHiliteSetIterator.callsFake(() => generator());
 
       // trigger the selection change and wait for event handler to finish
       triggerSelectionChange();
-      await waitForAllAsyncs([handler]);
+      // await waitForAllAsyncs([handler]);
 
-      // verify hilite was changed with expected ids
-      expect(spies.hilite.clear).to.be.calledOnce;
-      expect(spies.hilite.elements).to.be.calledOnceWith([id]);
+      await waitFor(() => {
+        // verify hilite was changed with expected ids
+        expect(hilited.clear).to.be.calledOnce;
+        expect(hilited.elements.addIds).to.be.calledOnceWith([id]);
 
-      // verify selection set was replaced
-      expect(spies.selectionSet.emptyAll).to.not.be.called;
-      expect(spies.selectionSet.replace).to.be.calledOnceWith([id]);
-      expect(spies.selectionSet.onChanged).to.be.calledOnce;
+        // verify selection set was replaced
+        expect(selectionSet.emptyAll).to.be.called;
+        expect(selectionSet.add).to.be.calledOnceWith([id]);
+      });
     });
 
     it("sets models hilite", async () => {
       const id = "0x1";
-      getHiliteSet.resetBehavior();
-      getHiliteSet.resolves({
-        models: [id],
-      });
+      async function* generator() {
+        yield {
+          models: [id],
+        } as HiliteSet;
+      }
+      selectionManager.getHiliteSetIterator.callsFake(() => generator());
 
       // trigger the selection change and wait for event handler to finish
       triggerSelectionChange();
-      await waitForAllAsyncs([handler]);
+      // await waitForAllAsyncs([handler]);
 
-      // verify hilite was changed with expected ids
-      expect(spies.hilite.clear).to.be.calledOnce;
-      expect(spies.hilite.models).to.be.calledOnceWith([id]);
+      await waitFor(() => {
+        // verify hilite was changed with expected ids
+        expect(hilited.clear).to.be.calledOnce;
+        expect(hilited.models.addIds).to.be.calledOnceWith([id]);
 
-      // verify selection set was cleared
-      expect(spies.selectionSet.emptyAll).to.be.calledOnce;
-      expect(spies.selectionSet.onChanged).to.be.calledOnce;
+        // verify selection set was cleared
+        expect(selectionSet.emptyAll).to.be.calledOnce;
+        expect(selectionSet.add).to.not.be.calledOnce;
+      });
     });
 
     it("sets subcategories hilite", async () => {
       const id = "0x1";
-      getHiliteSet.resetBehavior();
-      getHiliteSet.resolves({
-        subCategories: [id],
-      });
+      async function* generator() {
+        yield {
+          subCategories: [id],
+        } as HiliteSet;
+      }
+      selectionManager.getHiliteSetIterator.callsFake(() => generator());
 
       // trigger the selection change and wait for event handler to finish
       triggerSelectionChange();
-      await waitForAllAsyncs([handler]);
+      // await waitForAllAsyncs([handler]);
 
-      // verify hilite was changed with expected ids
-      expect(spies.hilite.clear).to.be.calledOnce;
-      expect(spies.hilite.subcategories).to.be.calledOnceWith([id]);
+      await waitFor(() => {
+        // verify hilite was changed with expected ids
+        expect(hilited.clear).to.be.calledOnce;
+        expect(hilited.subcategories.addIds).to.be.calledOnceWith([id]);
 
-      // verify selection set was cleared
-      expect(spies.selectionSet.emptyAll).to.be.calledOnce;
-      expect(spies.selectionSet.onChanged).to.be.calledOnce;
+        // verify selection set was cleared
+        expect(selectionSet.emptyAll).to.be.calledOnce;
+        expect(selectionSet.add).to.not.be.calledOnce;
+      });
     });
 
     it("sets combined hilite", async () => {
       const modelId = "0x1";
       const subCategoryId = "0x2";
       const elementId = "0x3";
-      getHiliteSet.resetBehavior();
-      getHiliteSet.resolves({
-        models: [modelId],
-        subCategories: [subCategoryId],
-        elements: [elementId],
-      });
+      async function* generator() {
+        yield {
+          models: [modelId],
+          subCategories: [subCategoryId],
+          elements: [elementId],
+        } as HiliteSet;
+      }
+      selectionManager.getHiliteSetIterator.callsFake(() => generator());
 
       // trigger the selection change and wait for event handler to finish
       triggerSelectionChange();
-      await waitForAllAsyncs([handler]);
+      // await waitForAllAsyncs([handler]);
 
-      // verify hilite was changed with expected ids
-      expect(spies.hilite.clear).to.be.calledOnce;
-      expect(spies.hilite.models).to.be.calledOnceWith([modelId]);
-      expect(spies.hilite.subcategories).to.be.calledOnceWith([subCategoryId]);
-      expect(spies.hilite.elements).to.be.calledOnceWith([elementId]);
+      await waitFor(() => {
+        // verify hilite was changed with expected ids
+        expect(hilited.clear).to.be.calledOnce;
+        expect(hilited.models.addIds).to.be.calledOnceWith([modelId]);
+        expect(hilited.subcategories.addIds).to.be.calledOnceWith([subCategoryId]);
+        expect(hilited.elements.addIds).to.be.calledOnceWith([elementId]);
 
-      // verify selection set was replaced
-      expect(spies.selectionSet.emptyAll).to.not.be.called;
-      expect(spies.selectionSet.replace).to.be.calledOnceWith([elementId]);
+        // verify selection set was replaced
+        expect(selectionSet.emptyAll).to.be.called;
+        expect(selectionSet.add).to.be.calledOnceWith([elementId]);
+      });
     });
 
-    it("ignores intermediate unified selection changes", async () => {
-      getHiliteSet.resetBehavior();
-      const hiliteSetRequests = [0, 1].map((callIndex) => {
-        const result = new ResolvablePromise<HiliteSet>();
-        getHiliteSet.onCall(callIndex).returns(result as any); // wants Promise<Hilite>, missing catch(), finally(), [Symbol.toStringTag].
-        return result;
+    it("handles hilite set in batches", async () => {
+      const firstElementId = "0x1";
+      const firstResult = new ResolvablePromise<HiliteSet>();
+      const secondElementId = "0x2";
+      const secondResult = new ResolvablePromise<HiliteSet>();
+
+      async function* generator() {
+        yield await firstResult;
+        yield await secondResult;
+      }
+      selectionManager.getHiliteSetIterator.reset();
+      selectionManager.getHiliteSetIterator.callsFake(() => generator());
+
+      // trigger the selection change
+      triggerSelectionChange();
+
+      // verify hilite set was not updated while waiting for first batch
+      await waitFor(() => {
+        expect(hilited.clear).to.not.be.called;
+        expect(hilited.models.addIds).to.not.be.called;
+        expect(hilited.subcategories.addIds).to.not.be.called;
+        expect(hilited.elements.addIds).to.not.be.called;
       });
+
+      await firstResult.resolve({ elements: [firstElementId] });
+
+      // verify hilite set was updated with first batch result
+      await waitFor(() => {
+        expect(hilited.clear).to.be.called;
+        expect(hilited.models.addIds).to.not.be.called;
+        expect(hilited.subcategories.addIds).to.not.be.called;
+        expect(hilited.elements.addIds).to.be.calledOnceWith([firstElementId]);
+      });
+      resetHilitedStub();
+
+      await secondResult.resolve({ elements: [secondElementId] });
+
+      // verify hilite set was updated with second batch result
+      await waitFor(() => {
+        expect(hilited.clear).to.not.be.called;
+        expect(hilited.models.addIds).to.not.be.called;
+        expect(hilited.subcategories.addIds).to.not.be.called;
+        expect(hilited.elements.addIds).to.be.calledOnceWith([secondElementId]);
+      });
+    });
+
+    it("cancels ongoing selection change handling when selection changes again", async () => {
+      const initialElementId = "0x1";
+      const result = new ResolvablePromise<HiliteSet>();
+      async function* initialGenerator() {
+        yield {
+          elements: [initialElementId],
+        } as HiliteSet;
+        yield await result;
+      }
+      selectionManager.getHiliteSetIterator.reset();
+      selectionManager.getHiliteSetIterator.callsFake(() => initialGenerator());
 
       // trigger the selection change
       triggerSelectionChange({ sourceName: "initial" });
+      expect(selectionManager.getHiliteSetIterator).to.be.calledOnce;
 
-      // handler should now be waiting for the first hilite set request to resolve
-      expect(getHiliteSet).to.be.calledOnce;
-      // ensure viewport selection was not replaced yet
-      expect(spies.hilite.clear).to.not.be.called;
-      expect(spies.hilite.models).to.not.be.called;
-      expect(spies.hilite.subcategories).to.not.be.called;
-      expect(spies.hilite.elements).to.not.be.called;
+      await waitFor(() => {
+        // ensure second selection handling is started
+        expect(hilited.clear).to.be.called;
+        expect(hilited.models.addIds).to.not.be.called;
+        expect(hilited.subcategories.addIds).to.not.be.called;
+        expect(hilited.elements.addIds).to.be.calledOnceWith([initialElementId]);
+      });
+      resetHilitedStub();
 
-      // trigger some intermediate selection changes
-      for (let i = 1; i <= 10; ++i) {
-        triggerSelectionChange({ sourceName: i.toString() });
+      const newElementId = "0x3";
+      async function* secondGenerator() {
+        yield {
+          elements: [newElementId],
+        } as HiliteSet;
       }
+      selectionManager.getHiliteSetIterator.reset();
+      selectionManager.getHiliteSetIterator.callsFake(() => secondGenerator());
+      triggerSelectionChange({ sourceName: "next" });
 
-      // ensure new hilite set requests were not triggered - we're still
-      // waiting for the first one to resolve
-      expect(getHiliteSet).to.be.calledOnce;
+      expect(selectionManager.getHiliteSetIterator).to.be.calledOnce;
 
-      // now resolve the first hilite set request
-      await hiliteSetRequests[0].resolve({ elements: ["0x1"] });
+      // ensure second selection was handled
+      await waitFor(() => {
+        // ensure second selection was handled
+        expect(hilited.clear).to.be.called;
+        expect(hilited.models.addIds).to.not.be.called;
+        expect(hilited.subcategories.addIds).to.not.be.called;
+        expect(hilited.elements.addIds).to.be.calledOnceWith([newElementId]);
+      });
+      resetHilitedStub();
 
-      // ensure viewport selection change was made
-      expect(spies.hilite.clear).to.be.calledOnce;
-      expect(spies.hilite.elements).to.be.calledOnce;
-      spies.hilite.resetHistory();
-
-      // ensure a new content request was made for the last selection change
-      expect(getHiliteSet).to.be.calledTwice;
-      await hiliteSetRequests[1].resolve({ models: ["0x2"] });
-      await waitForAllAsyncs([handler]);
-      expect(spies.hilite.clear).to.be.calledOnce;
-      expect(spies.hilite.models).to.be.calledOnce;
+      // finish first selection
+      await result.resolve({ elements: ["0x2"] });
+      await waitFor(() => {
+        // ensure nothing changed
+        expect(hilited.clear).to.not.be.called;
+        expect(hilited.models.addIds).to.not.be.called;
+        expect(hilited.subcategories.addIds).to.not.be.called;
+        expect(hilited.elements.addIds).to.not.be.called;
+      });
     });
   });
 });
-
-const createIModelSpies = (mock: moq.IMock<IModelConnection>) => {
-  const hilite = {
-    clear: sinon.spy(mock.target.hilited, "clear"),
-    elements: sinon.spy(mock.target.hilited.elements, "addIds"),
-    models: sinon.spy(mock.target.hilited.models, "addIds"),
-    subcategories: sinon.spy(mock.target.hilited.subcategories, "addIds"),
-    resetHistory: () => {
-      hilite.clear.resetHistory();
-      hilite.elements.resetHistory();
-      hilite.models.resetHistory();
-      hilite.subcategories.resetHistory();
-    },
-  };
-
-  const selectionSet = {
-    emptyAll: sinon.spy(mock.target.selectionSet, "emptyAll"),
-    replace: sinon.spy(mock.target.selectionSet, "replace"),
-    onChanged: sinon.spy(),
-    resetHistory: () => {
-      selectionSet.emptyAll.resetHistory();
-      selectionSet.replace.resetHistory();
-      selectionSet.onChanged.resetHistory();
-    },
-  };
-
-  mock.target.selectionSet.onChanged.addListener(selectionSet.onChanged);
-
-  return { hilite, selectionSet };
-};
-
-const mockIModel = (mock: moq.IMock<IModelConnection>) => {
-  const imodelElementsMock = moq.Mock.ofType<IModelConnection.Elements>();
-  imodelElementsMock.setup(async (x) => x.getProps(moq.It.isAny())).returns(async (ids: Id64Arg) => createElementProps(ids));
-
-  const hiliteSet = new IModelHiliteSet(mock.object, false);
-  mock.reset();
-  mock.setup((imodel) => imodel.hilited).returns(() => hiliteSet);
-  mock.setup((imodel) => imodel.elements).returns(() => imodelElementsMock.object);
-
-  const selectionSet = new SelectionSet(mock.object);
-  mock.setup((imodel) => imodel.selectionSet).returns(() => selectionSet);
-};
 
 const createElementProps = (ids: Id64Arg): ElementProps[] => {
   return [...Id64.toIdSet(ids)].map(

@@ -3,11 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { from, Subject, takeUntil } from "rxjs";
 import { IDisposable, using } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
-import { KeySet, SelectionInfo } from "@itwin/presentation-common";
-import { ISelectionProvider, Presentation, SelectionChangeEventArgs, SelectionHandler } from "@itwin/presentation-frontend";
-import { AsyncTasksTracker } from "../common/Utils";
+import { Presentation, SelectionChangeEventArgs, SelectionHandler } from "@itwin/presentation-frontend";
 
 /** @internal */
 export interface ViewportSelectionHandlerProps {
@@ -26,8 +25,7 @@ export interface ViewportSelectionHandlerProps {
 export class ViewportSelectionHandler implements IDisposable {
   private _imodel: IModelConnection;
   private _selectionHandler: SelectionHandler;
-  private _lastPendingSelectionChange?: { info: SelectionInfo; selection: Readonly<KeySet> };
-  private _asyncsTracker = new AsyncTasksTracker();
+  private _cancelOngoingChanges = new Subject<void>();
 
   public constructor(props: ViewportSelectionHandlerProps) {
     this._imodel = props.imodel;
@@ -51,10 +49,6 @@ export class ViewportSelectionHandler implements IDisposable {
     this._selectionHandler.dispose();
   }
 
-  public get selectionHandler() {
-    return this._selectionHandler;
-  }
-
   public get imodel() {
     return this._imodel;
   }
@@ -69,54 +63,45 @@ export class ViewportSelectionHandler implements IDisposable {
     this._imodel.hilited.wantSyncWithSelectionSet = false;
     this._selectionHandler.imodel = value;
 
-    void this.applyCurrentSelection();
+    this.applyCurrentSelection();
   }
 
-  /** note: used only it tests */
-  public get pendingAsyncs() {
-    return this._asyncsTracker.pendingAsyncs;
+  public applyCurrentSelection() {
+    this.applyUnifiedSelection(this._imodel);
   }
 
-  public async applyCurrentSelection() {
-    await this.applyUnifiedSelection(this._imodel, { providerName: "" }, this.selectionHandler.getSelection());
-  }
+  private applyUnifiedSelection(imodel: IModelConnection) {
+    this._cancelOngoingChanges.next();
 
-  private async applyUnifiedSelection(imodel: IModelConnection, selectionInfo: SelectionInfo, selection: Readonly<KeySet>) {
-    if (this._asyncsTracker.pendingAsyncs.size > 0) {
-      this._lastPendingSelectionChange = { info: selectionInfo, selection };
-      return;
-    }
+    let firstEmit = true;
+    from(Presentation.selection.getHiliteSetIterator(imodel))
+      .pipe(takeUntil(this._cancelOngoingChanges))
+      .subscribe({
+        next: (ids) => {
+          using(Presentation.selection.suspendIModelToolSelectionSync(this._imodel), (_) => {
+            if (firstEmit) {
+              imodel.hilited.clear();
+              imodel.selectionSet.emptyAll();
+            }
 
-    await using(this._asyncsTracker.trackAsyncTask(), async (_r) => {
-      const ids = await Presentation.selection.getHiliteSet(this._imodel);
-      using(Presentation.selection.suspendIModelToolSelectionSync(this._imodel), (_) => {
-        imodel.hilited.clear();
-        let shouldClearSelectionSet = true;
-        if (ids.models && ids.models.length) {
-          imodel.hilited.models.addIds(ids.models);
-        }
-        if (ids.subCategories && ids.subCategories.length) {
-          imodel.hilited.subcategories.addIds(ids.subCategories);
-        }
-        if (ids.elements && ids.elements.length) {
-          imodel.hilited.elements.addIds(ids.elements);
-          imodel.selectionSet.replace(ids.elements);
-          shouldClearSelectionSet = false;
-        }
-        if (shouldClearSelectionSet) {
-          imodel.selectionSet.emptyAll();
-        }
+            if (ids.models && ids.models.length) {
+              imodel.hilited.models.addIds(ids.models);
+            }
+            if (ids.subCategories && ids.subCategories.length) {
+              imodel.hilited.subcategories.addIds(ids.subCategories);
+            }
+            if (ids.elements && ids.elements.length) {
+              imodel.hilited.elements.addIds(ids.elements);
+              imodel.selectionSet.add(ids.elements);
+            }
+
+            firstEmit = false;
+          });
+        },
       });
-    });
-
-    if (this._lastPendingSelectionChange) {
-      const change = this._lastPendingSelectionChange;
-      this._lastPendingSelectionChange = undefined;
-      await this.applyUnifiedSelection(imodel, change.info, change.selection);
-    }
   }
 
-  private onUnifiedSelectionChanged = async (args: SelectionChangeEventArgs, provider: ISelectionProvider): Promise<void> => {
+  private onUnifiedSelectionChanged = (args: SelectionChangeEventArgs) => {
     // this component only cares about its own imodel
     if (args.imodel !== this._imodel) {
       return;
@@ -128,12 +113,7 @@ export class ViewportSelectionHandler implements IDisposable {
       return;
     }
 
-    const selection = provider.getSelection(args.imodel, 0);
-    const info: SelectionInfo = {
-      providerName: args.source,
-      level: args.level,
-    };
-    await this.applyUnifiedSelection(args.imodel, info, selection);
+    this.applyUnifiedSelection(args.imodel);
   };
 }
 

@@ -34,19 +34,30 @@ export function viewWithUnifiedSelection<P extends ViewportProps>(
   const WithUnifiedSelection = memo<CombinedProps>((props) => {
     const { selectionHandler, ...restProps } = props;
     const imodel = restProps.imodel;
-    const [viewportSelectionHandler] = useState(() => selectionHandler ?? new ViewportSelectionHandler({ imodel }));
+    const [viewportSelectionHandler, setViewportSelectionHandler] = useState<ViewportSelectionHandler>();
 
     // apply currentSelection when 'viewportSelectionHandler' is initialized (set to handler from props or new is created)
     // 'viewportSelectionHandler' should never change because setter is not used.
     useEffect(() => {
-      void viewportSelectionHandler.applyCurrentSelection();
+      if (selectionHandler) {
+        selectionHandler.applyCurrentSelection();
+        setViewportSelectionHandler(selectionHandler);
+        return;
+      }
+
+      const handler = new ViewportSelectionHandler({ imodel });
+      handler.applyCurrentSelection();
+      setViewportSelectionHandler(handler);
       return () => {
-        viewportSelectionHandler.dispose();
+        handler.dispose();
       };
-    }, [viewportSelectionHandler]);
+    }, [selectionHandler, imodel]);
 
     // set new imodel on 'viewportSelectionHandler' when it changes
     useEffect(() => {
+      if (!viewportSelectionHandler) {
+        return;
+      }
       viewportSelectionHandler.imodel = imodel;
     }, [viewportSelectionHandler, imodel]);
 

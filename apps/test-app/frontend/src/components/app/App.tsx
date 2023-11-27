@@ -6,6 +6,8 @@
 import "./App.css";
 import "@bentley/icons-generic-webfont/dist/bentley-icons-generic-webfont.css";
 import { useEffect, useRef, useState } from "react";
+import { from, Subject, takeUntil } from "rxjs";
+import { Id64String } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Geometry } from "@itwin/core-geometry";
 import { UnitSystemKey } from "@itwin/core-quantity";
@@ -65,7 +67,9 @@ export function App() {
   };
 
   useEffect(() => {
-    return Presentation.selection.selectionChange.addListener(async (args: SelectionChangeEventArgs) => {
+    const cancel = new Subject<void>();
+    const removeListener = Presentation.selection.selectionChange.addListener(async (args: SelectionChangeEventArgs) => {
+      cancel.next();
       if (!IModelApp.viewManager.selectedView) {
         // no viewport to zoom in
         return;
@@ -77,13 +81,28 @@ export function App() {
       }
 
       // determine what the viewport is hiliting
-      const hiliteSet = await Presentation.selection.getHiliteSet(args.imodel);
-      if (hiliteSet.elements) {
-        // note: the hilite list may contain models and subcategories as well - we don't
-        // care about them at this moment
-        await IModelApp.viewManager.selectedView.zoomToElements(hiliteSet.elements);
-      }
+      const selectedView = IModelApp.viewManager.selectedView;
+      const elementIds: Id64String[] = [];
+      from(Presentation.selection.getHiliteSetIterator(args.imodel))
+        .pipe(takeUntil(cancel))
+        .subscribe({
+          next: (set) => {
+            if (!set.elements) {
+              // note: the hilite list may contain models and subcategories as well - we don't
+              // care about them at this moment
+              return;
+            }
+
+            elementIds.push(...set.elements);
+            void selectedView.zoomToElements(elementIds);
+          },
+        });
     });
+
+    return () => {
+      cancel.next();
+      removeListener();
+    };
   }, []);
 
   return (
