@@ -37,7 +37,6 @@ export function viewWithUnifiedSelection<P extends ViewportProps>(
     const [viewportSelectionHandler, setViewportSelectionHandler] = useState<ViewportSelectionHandler>();
 
     // apply currentSelection when 'viewportSelectionHandler' is initialized (set to handler from props or new is created)
-    // 'viewportSelectionHandler' should never change because setter is not used.
     useEffect(() => {
       if (selectionHandler) {
         selectionHandler.applyCurrentSelection();
