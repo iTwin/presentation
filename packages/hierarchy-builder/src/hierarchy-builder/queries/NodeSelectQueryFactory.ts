@@ -166,7 +166,7 @@ export interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectCl
 export interface ECSqlSelectClausePropertyGroup {
   /** A string indicating the name of the property to group by. */
   propertyName: string;
-  /** Alias to use to when selecting propertyValue. */
+  /** Alias to of the class containing the property. Used to select the property value. */
   propertyClassAlias: string;
   /** Ranges are used to group nodes by numeric properties which are within specified bounds. */
   ranges?: Array<ECSqlSelectClausePropertyValueRange>;
