@@ -55,7 +55,7 @@ describe("Viewport withUnifiedSelection", () => {
     render(<PresentationViewport imodel={imodel} viewDefinitionId={viewDefinitionId} selectionHandler={selectionHandler} />);
   });
 
-  it("creates default ViewportSelectionHandler implementation when not provided through props", () => {
+  it("creates and disposes default ViewportSelectionHandler implementation when not provided through props", () => {
     const selectionChangeEvent = new SelectionChangeEvent();
     const selectionManagerMock = {
       selectionChange: selectionChangeEvent,
@@ -67,10 +67,14 @@ describe("Viewport withUnifiedSelection", () => {
 
     expect(selectionChangeEvent.numberOfListeners).to.be.eq(0);
 
-    render(<PresentationViewport imodel={imodel} viewDefinitionId={viewDefinitionId} />);
+    const { unmount } = render(<PresentationViewport imodel={imodel} viewDefinitionId={viewDefinitionId} />);
 
     // new 'ViewportSelectionHandler' should be listening to selection change event
     expect(selectionChangeEvent.numberOfListeners).to.be.eq(1);
+    unmount();
+
+    // 'ViewportSelectionHandler' should not be listening to selection change event anymore
+    expect(selectionChangeEvent.numberOfListeners).to.be.eq(0);
   });
 
   it("sets ViewportSelectionHandler.imodel property when rendered with new imodel", () => {
