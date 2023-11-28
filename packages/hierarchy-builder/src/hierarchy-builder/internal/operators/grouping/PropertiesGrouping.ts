@@ -287,11 +287,14 @@ export function doPreviousPropertiesMatch(
   previousPropertiesGroupingInfo: PreviousPropertiesGroupingInfo,
   nodesProperties: HierarchyNodePropertiesGroupingParams,
 ): boolean {
-  return previousPropertiesGroupingInfo.every(
-    (groupingInfo, index) =>
-      groupingInfo.propertiesClassName === nodesProperties.propertiesClassName &&
-      groupingInfo.propertyGroup.propertyName === nodesProperties.propertyGroups[index].propertyName &&
-      doRangesMatch(groupingInfo.propertyGroup.ranges, nodesProperties.propertyGroups[index].ranges),
+  return (
+    previousPropertiesGroupingInfo.length <= nodesProperties.propertyGroups.length &&
+    previousPropertiesGroupingInfo.every(
+      (groupingInfo, index) =>
+        groupingInfo.propertiesClassName === nodesProperties.propertiesClassName &&
+        groupingInfo.propertyGroup.propertyName === nodesProperties.propertyGroups[index].propertyName &&
+        doRangesMatch(groupingInfo.propertyGroup.ranges, nodesProperties.propertyGroups[index].ranges),
+    )
   );
 }
 
