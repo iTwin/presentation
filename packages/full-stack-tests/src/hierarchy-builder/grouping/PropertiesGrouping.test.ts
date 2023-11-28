@@ -506,10 +506,7 @@ describe("Stateless hierarchy builder", () => {
                           },
                         },
                       })}
-                      FROM (
-                        SELECT ECClassId, ECInstanceId, UserLabel, Parent, Description
-                        FROM ${subjectClassName}
-                      ) AS this
+                      FROM ${subjectClassName} AS this
                       WHERE this.Parent.Id = (${IModel.rootSubjectId})
                     `,
                 },
