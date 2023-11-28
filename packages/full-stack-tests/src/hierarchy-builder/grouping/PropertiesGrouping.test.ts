@@ -105,7 +105,7 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           NodeValidators.createForPropertyValueGroupingNode({
             label: "TestDescription",
-            propertiesClassName: "BisCore.Subject",
+            propertyClassName: "BisCore.Subject",
             propertyName: "Description",
             formattedPropertyValue: "TestDescription",
             children: [
@@ -173,7 +173,7 @@ describe("Stateless hierarchy builder", () => {
             expect: [
               NodeValidators.createForPropertyValueRangeGroupingNode({
                 label: "1 - 5",
-                propertiesClassName: schema.items.X.fullName,
+                propertyClassName: schema.items.X.fullName,
                 propertyName: "Prop",
                 fromValue: 1,
                 toValue: 5,
@@ -240,7 +240,7 @@ describe("Stateless hierarchy builder", () => {
             expect: [
               NodeValidators.createForPropertyValueRangeGroupingNode({
                 label: "TestLabel",
-                propertiesClassName: schema.items.X.fullName,
+                propertyClassName: schema.items.X.fullName,
                 propertyName: "Prop",
                 fromValue: 1,
                 toValue: 2,
@@ -292,7 +292,7 @@ describe("Stateless hierarchy builder", () => {
         provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, groupingParams) }),
         expect: [
           NodeValidators.createForPropertyValueGroupingNode({
-            propertiesClassName: "BisCore.Subject",
+            propertyClassName: "BisCore.Subject",
             propertyName: "Description",
             formattedPropertyValue: "",
             label: "Ñót spêçìfíêd",
@@ -423,7 +423,7 @@ describe("Stateless hierarchy builder", () => {
             provider,
             expect: [
               NodeValidators.createForPropertyOtherValuesGroupingNode({
-                propertiesClassName: schema.items.X.fullName,
+                propertyClassName: schema.items.X.fullName,
                 propertyName: "Prop",
                 children: [NodeValidators.createForInstanceNode({ instanceKeys: [x1] }), NodeValidators.createForInstanceNode({ instanceKeys: [x2] })],
               }),
@@ -457,13 +457,13 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           NodeValidators.createForPropertyValueGroupingNode({
             label: "TestLabel",
-            propertiesClassName: "BisCore.Subject",
+            propertyClassName: "BisCore.Subject",
             propertyName: "UserLabel",
             formattedPropertyValue: "TestLabel",
             children: [
               NodeValidators.createForPropertyValueGroupingNode({
                 label: "TestDescription",
-                propertiesClassName: "BisCore.Subject",
+                propertyClassName: "BisCore.Subject",
                 propertyName: "Description",
                 formattedPropertyValue: "TestDescription",
                 children: [
@@ -525,7 +525,7 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           NodeValidators.createForPropertyValueGroupingNode({
             label: "Test1",
-            propertiesClassName: "BisCore.Subject",
+            propertyClassName: "BisCore.Subject",
             propertyName: "UserLabel",
             formattedPropertyValue: "Test1",
             children: [
@@ -537,7 +537,7 @@ describe("Stateless hierarchy builder", () => {
           }),
           NodeValidators.createForPropertyValueGroupingNode({
             label: "Test2",
-            propertiesClassName: "BisCore.Subject",
+            propertyClassName: "BisCore.Subject",
             propertyName: "UserLabel",
             formattedPropertyValue: "Test2",
             children: [
@@ -615,7 +615,7 @@ describe("Stateless hierarchy builder", () => {
             expect: [
               NodeValidators.createForPropertyValueRangeGroupingNode({
                 label: "0 - 2",
-                propertiesClassName: schema.items.X.fullName,
+                propertyClassName: schema.items.X.fullName,
                 propertyName: "Prop",
                 fromValue: 0,
                 toValue: 2,
@@ -623,7 +623,7 @@ describe("Stateless hierarchy builder", () => {
               }),
               NodeValidators.createForPropertyValueRangeGroupingNode({
                 label: "3 - 5",
-                propertiesClassName: schema.items.X.fullName,
+                propertyClassName: schema.items.X.fullName,
                 propertyName: "Prop",
                 fromValue: 3,
                 toValue: 5,

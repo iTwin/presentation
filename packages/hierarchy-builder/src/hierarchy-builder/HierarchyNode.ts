@@ -44,7 +44,7 @@ export interface LabelGroupingNodeKey {
 export interface PropertyOtherValuesGroupingNodeKey {
   type: "property-grouping:other";
   propertyName: string;
-  propertiesClassName: string;
+  propertyClassName: string;
 }
 
 /**
@@ -54,7 +54,7 @@ export interface PropertyOtherValuesGroupingNodeKey {
 export interface PropertyValueGroupingNodeKey {
   type: "property-grouping:value";
   propertyName: string;
-  propertiesClassName: string;
+  propertyClassName: string;
   formattedPropertyValue: string;
 }
 
@@ -65,7 +65,7 @@ export interface PropertyValueGroupingNodeKey {
 export interface PropertyValueRangeGroupingNodeKey {
   type: "property-grouping:range";
   propertyName: string;
-  propertiesClassName: string;
+  propertyClassName: string;
   fromValue: number;
   toValue: number;
 }
@@ -163,20 +163,18 @@ export namespace HierarchyNodeKey {
       }
       case "property-grouping:other": {
         assert(isPropertyOtherValuesGrouping(rhs));
-        return lhs.propertiesClassName === rhs.propertiesClassName && lhs.propertyName === rhs.propertyName;
+        return lhs.propertyClassName === rhs.propertyClassName && lhs.propertyName === rhs.propertyName;
       }
       case "property-grouping:value": {
         assert(isPropertyValueGrouping(rhs));
         return (
-          lhs.propertiesClassName === rhs.propertiesClassName &&
-          lhs.propertyName === rhs.propertyName &&
-          lhs.formattedPropertyValue === rhs.formattedPropertyValue
+          lhs.propertyClassName === rhs.propertyClassName && lhs.propertyName === rhs.propertyName && lhs.formattedPropertyValue === rhs.formattedPropertyValue
         );
       }
       case "property-grouping:range": {
         assert(isPropertyValueRangeGrouping(rhs));
         return (
-          lhs.propertiesClassName === rhs.propertiesClassName &&
+          lhs.propertyClassName === rhs.propertyClassName &&
           lhs.propertyName === rhs.propertyName &&
           lhs.fromValue === rhs.fromValue &&
           lhs.toValue === rhs.toValue

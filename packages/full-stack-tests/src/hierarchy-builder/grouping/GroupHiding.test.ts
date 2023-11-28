@@ -468,7 +468,7 @@ describe("Stateless hierarchy builder", () => {
           expect: [
             NodeValidators.createForPropertyValueGroupingNode({
               label: groupName,
-              propertiesClassName: "BisCore.Element",
+              propertyClassName: "BisCore.Element",
               formattedPropertyValue: groupName,
               children: [
                 NodeValidators.createForInstanceNode({
@@ -479,7 +479,7 @@ describe("Stateless hierarchy builder", () => {
             }),
             NodeValidators.createForPropertyValueGroupingNode({
               label: `${groupName}2`,
-              propertiesClassName: "BisCore.Element",
+              propertyClassName: "BisCore.Element",
               formattedPropertyValue: `${groupName}2`,
               children: [
                 NodeValidators.createForInstanceNode({
@@ -504,7 +504,7 @@ describe("Stateless hierarchy builder", () => {
           expect: [
             NodeValidators.createForPropertyValueGroupingNode({
               label: groupName,
-              propertiesClassName: "BisCore.Element",
+              propertyClassName: "BisCore.Element",
               formattedPropertyValue: groupName,
               children: [
                 NodeValidators.createForInstanceNode({

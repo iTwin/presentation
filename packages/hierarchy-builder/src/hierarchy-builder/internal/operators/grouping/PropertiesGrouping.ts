@@ -59,7 +59,7 @@ export async function createPropertyGroups(
     const currentProperty = byProperties.propertyGroups[handlerGroupingParams.previousPropertiesGroupingInfo.length];
     const partialPropertyNodeKeyToAdd = {
       propertyName: currentProperty.propertyName,
-      propertiesClassName: byProperties.propertiesClassName,
+      propertyClassName: byProperties.propertiesClassName,
     };
 
     const propertyClass = handlerGroupingParams.ecClass;

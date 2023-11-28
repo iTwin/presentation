@@ -695,7 +695,7 @@ describe("PropertiesGrouping", () => {
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:value",
           propertyName: "PropertyName",
-          propertiesClassName: "TestSchema.Class",
+          propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "",
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
@@ -740,7 +740,7 @@ describe("PropertiesGrouping", () => {
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:value",
           propertyName: "PropertyName",
-          propertiesClassName: "TestSchema.Class",
+          propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue",
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
@@ -796,7 +796,7 @@ describe("PropertiesGrouping", () => {
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:value",
           propertyName: "PropertyName",
-          propertiesClassName: "TestSchema.Class",
+          propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue",
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
@@ -852,13 +852,13 @@ describe("PropertiesGrouping", () => {
         const expectedGroupingNodeKey1: GroupingNodeKey = {
           type: "property-grouping:value",
           propertyName: "PropertyName",
-          propertiesClassName: "TestSchema.Class",
+          propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue1",
         };
         const expectedGroupingNodeKey2: GroupingNodeKey = {
           type: "property-grouping:value",
           propertyName: "PropertyName",
-          propertiesClassName: "TestSchema.Class",
+          propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue2",
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
@@ -919,7 +919,7 @@ describe("PropertiesGrouping", () => {
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:value",
           propertyName: "PropertyName1",
-          propertiesClassName: "TestSchema.Class",
+          propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue",
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
@@ -1000,7 +1000,7 @@ describe("PropertiesGrouping", () => {
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:other",
           propertyName: "PropertyName",
-          propertiesClassName: "TestSchema.Class",
+          propertyClassName: "TestSchema.Class",
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
@@ -1078,7 +1078,7 @@ describe("PropertiesGrouping", () => {
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:other",
           propertyName: "PropertyName",
-          propertiesClassName: "TestSchema.Class",
+          propertyClassName: "TestSchema.Class",
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
@@ -1122,7 +1122,7 @@ describe("PropertiesGrouping", () => {
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:range",
           propertyName: "PropertyName",
-          propertiesClassName: "TestSchema.Class",
+          propertyClassName: "TestSchema.Class",
           fromValue: 1,
           toValue: 5,
         };
@@ -1168,7 +1168,7 @@ describe("PropertiesGrouping", () => {
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:range",
           propertyName: "PropertyName",
-          propertiesClassName: "TestSchema.Class",
+          propertyClassName: "TestSchema.Class",
           fromValue: 1.5,
           toValue: 5.5,
         };
@@ -1225,7 +1225,7 @@ describe("PropertiesGrouping", () => {
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:range",
           propertyName: "PropertyName",
-          propertiesClassName: "TestSchema.Class",
+          propertyClassName: "TestSchema.Class",
           fromValue: 1,
           toValue: 5,
         };
@@ -1282,7 +1282,7 @@ describe("PropertiesGrouping", () => {
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:range",
           propertyName: "PropertyName",
-          propertiesClassName: "TestSchema.Class",
+          propertyClassName: "TestSchema.Class",
           fromValue: 1,
           toValue: 5,
         };
@@ -1343,7 +1343,7 @@ describe("PropertiesGrouping", () => {
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:range",
           propertyName: "PropertyName",
-          propertiesClassName: "TestSchema.Class",
+          propertyClassName: "TestSchema.Class",
           fromValue: 1,
           toValue: 4,
         };
@@ -1424,14 +1424,14 @@ describe("PropertiesGrouping", () => {
         const expectedGroupingNodeKey1: GroupingNodeKey = {
           type: "property-grouping:range",
           propertyName: "PropertyName",
-          propertiesClassName: "TestSchema.Class",
+          propertyClassName: "TestSchema.Class",
           fromValue: 5,
           toValue: 10,
         };
         const expectedGroupingNodeKey2: GroupingNodeKey = {
           type: "property-grouping:range",
           propertyName: "PropertyName",
-          propertiesClassName: "TestSchema.Class",
+          propertyClassName: "TestSchema.Class",
           fromValue: 1,
           toValue: 4,
         };

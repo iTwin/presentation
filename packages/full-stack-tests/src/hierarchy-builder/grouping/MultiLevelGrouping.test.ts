@@ -177,13 +177,13 @@ describe("Stateless hierarchy builder", () => {
                 children: [
                   NodeValidators.createForPropertyValueGroupingNode({
                     label: description1,
-                    propertiesClassName: "BisCore.Subject",
+                    propertyClassName: "BisCore.Subject",
                     formattedPropertyValue: description1,
                     propertyName: "Description",
                     children: [
                       NodeValidators.createForPropertyValueGroupingNode({
                         label: labelGroupName1,
-                        propertiesClassName: "BisCore.Subject",
+                        propertyClassName: "BisCore.Subject",
                         formattedPropertyValue: labelGroupName1,
                         propertyName: "UserLabel",
                         children: [
