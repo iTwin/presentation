@@ -6,7 +6,8 @@
 import { from, Subject, takeUntil } from "rxjs";
 import { IDisposable, using } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
-import { Presentation, SelectionChangeEventArgs, SelectionHandler } from "@itwin/presentation-frontend";
+import { KeySet } from "@itwin/presentation-common";
+import { HiliteSet, HiliteSetProvider, Presentation, SelectionChangeEventArgs, SelectionChangeType, SelectionHandler } from "@itwin/presentation-frontend";
 
 /** @internal */
 export interface ViewportSelectionHandlerProps {
@@ -68,33 +69,45 @@ export class ViewportSelectionHandler implements IDisposable {
   }
 
   public applyCurrentSelection() {
-    this.applyUnifiedSelection(this._imodel);
+    this._cancelOngoingChanges.next();
+    this.applyCurrentHiliteSet(this._imodel);
   }
 
-  private applyUnifiedSelection(imodel: IModelConnection) {
-    this._cancelOngoingChanges.next();
+  private handleUnifiedSelectionChange(imodel: IModelConnection, changeType: SelectionChangeType, keys: Readonly<KeySet>) {
+    if (changeType === SelectionChangeType.Clear || changeType === SelectionChangeType.Replace) {
+      this.applyCurrentHiliteSet(imodel);
+      return;
+    }
 
-    using(Presentation.selection.suspendIModelToolSelectionSync(this._imodel), (_) => {
-      imodel.hilited.clear();
-      imodel.selectionSet.emptyAll();
-    });
+    const hiliteSetProvider = HiliteSetProvider.create({ imodel });
+    if (changeType === SelectionChangeType.Add) {
+      from(hiliteSetProvider.getHiliteSetIterator(keys))
+        .pipe(takeUntil(this._cancelOngoingChanges))
+        .subscribe({
+          next: (set) => {
+            this.applyHiliteSet(imodel, set);
+          },
+        });
+      return;
+    }
 
-    from(Presentation.selection.getHiliteSetIterator(imodel))
+    from(hiliteSetProvider.getHiliteSetIterator(keys))
       .pipe(takeUntil(this._cancelOngoingChanges))
       .subscribe({
-        next: (ids) => {
-          using(Presentation.selection.suspendIModelToolSelectionSync(this._imodel), (_) => {
-            if (ids.models && ids.models.length) {
-              imodel.hilited.models.addIds(ids.models);
-            }
-            if (ids.subCategories && ids.subCategories.length) {
-              imodel.hilited.subcategories.addIds(ids.subCategories);
-            }
-            if (ids.elements && ids.elements.length) {
-              imodel.hilited.elements.addIds(ids.elements);
-              imodel.selectionSet.add(ids.elements);
-            }
-          });
+        next: (set) => {
+          if (set.models?.length) {
+            imodel.hilited.models.deleteIds(set.models);
+          }
+          if (set.subCategories?.length) {
+            imodel.hilited.subcategories.deleteIds(set.subCategories);
+          }
+          if (set.elements?.length) {
+            imodel.hilited.elements.deleteIds(set.elements);
+            imodel.selectionSet.remove(set.elements);
+          }
+        },
+        complete: () => {
+          this.applyCurrentHiliteSet(imodel, false);
         },
       });
   }
@@ -111,8 +124,41 @@ export class ViewportSelectionHandler implements IDisposable {
       return;
     }
 
-    this.applyUnifiedSelection(args.imodel);
+    this._cancelOngoingChanges.next();
+    this.handleUnifiedSelectionChange(args.imodel, args.changeType, args.keys);
   };
+
+  private applyCurrentHiliteSet(imodel: IModelConnection, clearBefore = true) {
+    if (clearBefore) {
+      using(Presentation.selection.suspendIModelToolSelectionSync(this._imodel), (_) => {
+        imodel.hilited.clear();
+        imodel.selectionSet.emptyAll();
+      });
+    }
+
+    from(Presentation.selection.getHiliteSetIterator(imodel))
+      .pipe(takeUntil(this._cancelOngoingChanges))
+      .subscribe({
+        next: (ids) => {
+          this.applyHiliteSet(imodel, ids);
+        },
+      });
+  }
+
+  private applyHiliteSet(imodel: IModelConnection, set: HiliteSet) {
+    using(Presentation.selection.suspendIModelToolSelectionSync(this._imodel), (_) => {
+      if (set.models && set.models.length) {
+        imodel.hilited.models.addIds(set.models);
+      }
+      if (set.subCategories && set.subCategories.length) {
+        imodel.hilited.subcategories.addIds(set.subCategories);
+      }
+      if (set.elements && set.elements.length) {
+        imodel.hilited.elements.addIds(set.elements);
+        imodel.selectionSet.add(set.elements);
+      }
+    });
+  }
 }
 
 let counter = 1;
