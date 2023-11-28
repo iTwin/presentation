@@ -121,7 +121,7 @@ export interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectCl
    *
    * Full class name format: `SchemaName.ClassName`.
    */
-  propertiesClassName: string | ECSqlValueSelector;
+  propertiesClassName: string;
   /**
    * Property grouping option that determines whether to group nodes whose grouping value is not set or is set to an empty string.
    *

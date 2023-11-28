@@ -3,33 +3,24 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { HierarchyNodeAutoExpandProp, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
+import { HierarchyNodeAutoExpandProp } from "../../../HierarchyNode";
 import { GroupingHandlerResult } from "../Grouping";
-import { getGroupingBaseParamsOptionsFromParentNode, OptionsAccessor } from "./Shared";
+import { iterateChildNodeGroupingParams } from "./Shared";
 
 /** @internal */
 export function assignAutoExpand(props: GroupingHandlerResult): GroupingHandlerResult {
   for (const node of props.grouped) {
-    const baseParams = getGroupingBaseParamsOptionsFromParentNode(node, props.groupingType, getAutoExpandOptionsFromNodeProcessingParams);
-    if (baseParams === "always" || (baseParams === "single-child" && node.children.length === 1)) {
+    let autoExpandProp: HierarchyNodeAutoExpandProp | undefined;
+    iterateChildNodeGroupingParams(node, props.groupingType, (groupingProps) => {
+      if (autoExpandProp === "always") {
+        return true;
+      }
+      autoExpandProp = groupingProps?.autoExpand ? groupingProps.autoExpand : autoExpandProp;
+      return;
+    });
+    if (autoExpandProp === "always" || (autoExpandProp === "single-child" && node.children.length === 1)) {
       node.autoExpand = true;
     }
   }
-
   return props;
-}
-
-function getAutoExpandOptionsFromNodeProcessingParams(
-  nodes: ProcessedInstanceHierarchyNode[],
-  autoExpandOptionsAccessor: OptionsAccessor,
-): HierarchyNodeAutoExpandProp | undefined {
-  let autoExpand: HierarchyNodeAutoExpandProp | undefined;
-  for (const node of nodes) {
-    if (autoExpand === "always") {
-      break;
-    }
-    const params = node.processingParams ? autoExpandOptionsAccessor(node.processingParams) : undefined;
-    autoExpand = !!params?.autoExpand ? params.autoExpand : autoExpand;
-  }
-  return autoExpand;
 }

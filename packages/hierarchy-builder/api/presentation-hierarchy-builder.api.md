@@ -394,7 +394,7 @@ export interface ECSqlSelectClauseGroupingParamsBase {
 export interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
     createGroupForOutOfRangeValues?: boolean | ECSqlValueSelector;
     createGroupForUnspecifiedValues?: boolean | ECSqlValueSelector;
-    propertiesClassName: string | ECSqlValueSelector;
+    propertiesClassName: string;
     propertyGroups: Array<ECSqlSelectClausePropertyGroup>;
 }
 
@@ -971,10 +971,6 @@ export type PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | Proper
 // @beta
 export interface PropertyOtherValuesGroupingNodeKey {
     // (undocumented)
-    propertiesClassName: string;
-    // (undocumented)
-    propertyName: string;
-    // (undocumented)
     type: "property-grouping:other";
 }
 
@@ -993,7 +989,7 @@ export interface PropertyValueGroupingNodeKey {
     // (undocumented)
     formattedPropertyValue: string;
     // (undocumented)
-    propertiesClassName: string;
+    propertyClassName: string;
     // (undocumented)
     propertyName: string;
     // (undocumented)
@@ -1005,7 +1001,7 @@ export interface PropertyValueRangeGroupingNodeKey {
     // (undocumented)
     fromValue: number;
     // (undocumented)
-    propertiesClassName: string;
+    propertyClassName: string;
     // (undocumented)
     propertyName: string;
     // (undocumented)
