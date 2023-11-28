@@ -356,7 +356,7 @@ export interface HierarchyNodePropertiesGroupingParams extends HierarchyNodeGrou
    * Properties of the specified class, by which the nodes should be grouped.
    *
    * Example usage:
-   * ```tsx
+   * ```ts
    * propertyGroups: [
    *   {
    *     propertyName: "type",

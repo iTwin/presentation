@@ -139,15 +139,15 @@ export interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectCl
    * Properties of the specified class, by which the nodes should be grouped.
    *
    * Example usage:
-   * ```tsx
+   * ```ts
    * propertyGroups: [
    *   {
    *     propertyName: "type",
-   *     propertyValue: "Wall"
+   *     propertyClassAlias: "this"
    *   },
    *   {
    *     propertyName: "length",
-   *     propertyValue: 15,
+   *     propertyClassAlias: "x",
    *     ranges: [
    *       { fromValue: 1, toValue: 10, rangeLabel: "Small" },
    *       { fromValue: 11, toValue: 20, rangeLabel: "Medium" }
