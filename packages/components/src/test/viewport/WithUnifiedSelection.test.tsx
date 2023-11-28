@@ -286,7 +286,6 @@ describe("ViewportSelectionHandler", () => {
 
       // trigger the selection change and wait for event handler to finish
       triggerSelectionChange();
-      // await waitForAllAsyncs([handler]);
 
       await waitFor(() => {
         // verify hilite was changed with expected ids
@@ -310,7 +309,6 @@ describe("ViewportSelectionHandler", () => {
 
       // trigger the selection change and wait for event handler to finish
       triggerSelectionChange();
-      // await waitForAllAsyncs([handler]);
 
       await waitFor(() => {
         // verify hilite was changed with expected ids
@@ -334,7 +332,6 @@ describe("ViewportSelectionHandler", () => {
 
       // trigger the selection change and wait for event handler to finish
       triggerSelectionChange();
-      // await waitForAllAsyncs([handler]);
 
       await waitFor(() => {
         // verify hilite was changed with expected ids
@@ -362,7 +359,6 @@ describe("ViewportSelectionHandler", () => {
 
       // trigger the selection change and wait for event handler to finish
       triggerSelectionChange();
-      // await waitForAllAsyncs([handler]);
 
       await waitFor(() => {
         // verify hilite was changed with expected ids
