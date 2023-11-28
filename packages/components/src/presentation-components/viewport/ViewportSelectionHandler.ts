@@ -45,6 +45,7 @@ export class ViewportSelectionHandler implements IDisposable {
   }
 
   public dispose() {
+    this._cancelOngoingChanges.next();
     this._selectionHandler.manager.setSyncWithIModelToolSelection(this._imodel, false);
     this._selectionHandler.dispose();
   }
