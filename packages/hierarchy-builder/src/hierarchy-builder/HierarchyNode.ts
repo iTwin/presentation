@@ -43,8 +43,6 @@ export interface LabelGroupingNodeKey {
  */
 export interface PropertyOtherValuesGroupingNodeKey {
   type: "property-grouping:other";
-  propertyName: string;
-  propertyClassName: string;
 }
 
 /**
@@ -162,8 +160,7 @@ export namespace HierarchyNodeKey {
         return lhs.label === rhs.label;
       }
       case "property-grouping:other": {
-        assert(isPropertyOtherValuesGrouping(rhs));
-        return lhs.propertyClassName === rhs.propertyClassName && lhs.propertyName === rhs.propertyName;
+        return true;
       }
       case "property-grouping:value": {
         assert(isPropertyValueGrouping(rhs));

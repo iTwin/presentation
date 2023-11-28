@@ -8,7 +8,6 @@ import {
   HierarchyNode,
   HierarchyNodeIdentifier,
   HierarchyNodeKey,
-  PropertyOtherValuesGroupingNodeKey,
   PropertyValueGroupingNodeKey,
   PropertyValueRangeGroupingNodeKey,
 } from "../hierarchy-builder/HierarchyNode";
@@ -58,14 +57,13 @@ describe("HierarchyNodeKey", () => {
     });
 
     it("returns correct results for property other values grouping node keys", () => {
-      const baseOtherValues: PropertyOtherValuesGroupingNodeKey = {
-        type: "property-grouping:other",
-        propertyClassName: "Schema.ClassName",
-        propertyName: "property name",
-      };
-      expect(HierarchyNodeKey.equals(baseOtherValues, baseOtherValues)).to.be.true;
-      expect(HierarchyNodeKey.equals(baseOtherValues, { ...baseOtherValues, propertyName: "other name" })).to.be.false;
-      expect(HierarchyNodeKey.equals(baseOtherValues, { ...baseOtherValues, propertyClassName: "Schema.Other" })).to.be.false;
+      expect(HierarchyNodeKey.equals({ type: "property-grouping:other" }, { type: "property-grouping:other" })).to.be.true;
+      expect(
+        HierarchyNodeKey.equals(
+          { type: "property-grouping:other" },
+          { type: "property-grouping:value", propertyClassName: "", propertyName: "", formattedPropertyValue: "" },
+        ),
+      ).to.be.false;
     });
 
     it("returns correct results for property value grouping node keys", () => {
@@ -149,7 +147,7 @@ describe("HierarchyNode", () => {
     children: false,
   };
   const propertyOtherValuesGroupingNode: HierarchyNode = {
-    key: { type: "property-grouping:other", propertyClassName: "Schema.ClassName", propertyName: "property name" },
+    key: { type: "property-grouping:other" },
     label: "other property grouping node",
     parentKeys: [],
     children: false,

@@ -172,8 +172,6 @@ export namespace NodeValidators {
   }
 
   export function createForPropertyOtherValuesGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(props: {
-    propertyName?: string;
-    propertyClassName?: string;
     autoExpand?: boolean;
     children?: TChildren;
   }) {
@@ -184,12 +182,6 @@ export namespace NodeValidators {
         }
         if (node.key.type !== "property-grouping:other") {
           throw new Error(`[${node.label}] Expected a property other values grouping node, got "${node.key.type}"`);
-        }
-        if (props.propertyName && node.key.propertyName !== props.propertyName) {
-          throw new Error(`[${node.label}] Expected node to have property name "${props.propertyName}", got "${node.key.propertyName}"`);
-        }
-        if (props.propertyClassName && node.key.propertyClassName !== props.propertyClassName) {
-          throw new Error(`[${node.label}] Expected node to have propertyClassName "${props.propertyClassName}", got "${node.key.propertyClassName}"`);
         }
 
         validateBaseNodeAttributes(node, {

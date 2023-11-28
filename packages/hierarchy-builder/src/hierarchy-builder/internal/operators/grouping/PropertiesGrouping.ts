@@ -130,11 +130,10 @@ export async function createPropertyGroups(
       if (byProperties.createGroupForOutOfRangeValues) {
         addGroupingToMap(
           groupings.grouped,
-          `${currentProperty.propertyName}:Other`,
+          "Other",
           {
             label: translate("grouping.other-label"),
             propertyGroupingNodeKey: {
-              ...partialPropertyNodeKeyToAdd,
               type: "property-grouping:other",
             },
           },

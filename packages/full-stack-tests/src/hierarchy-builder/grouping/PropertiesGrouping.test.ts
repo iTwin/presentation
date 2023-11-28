@@ -423,8 +423,6 @@ describe("Stateless hierarchy builder", () => {
             provider,
             expect: [
               NodeValidators.createForPropertyOtherValuesGroupingNode({
-                propertyClassName: schema.items.X.fullName,
-                propertyName: "Prop",
                 children: [NodeValidators.createForInstanceNode({ instanceKeys: [x1] }), NodeValidators.createForInstanceNode({ instanceKeys: [x2] })],
               }),
             ],
