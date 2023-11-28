@@ -194,12 +194,14 @@ describe("NodeSelectQueryFactory", () => {
       );
     });
 
-    it("creates valid clause with when some of the groupings are set", async () => {
+    it("creates valid clause with complex grouping params", async () => {
       const result = await factory.createSelectClause({
         ecClassId: "0x1",
         ecInstanceId: "0x2",
         nodeLabel: "label",
         grouping: {
+          byLabel: { autoExpand: "single-child", hideIfNoSiblings: true, hideIfOneGroupedNode: true },
+          byClass: { autoExpand: "always", hideIfNoSiblings: false, hideIfOneGroupedNode: false },
           byBaseClasses: {
             fullClassNames: ["testSchema.testName"],
           },
@@ -223,6 +225,8 @@ describe("NodeSelectQueryFactory", () => {
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
         json_object(
+          'byLabel', json_object('hideIfNoSiblings', TRUE, 'hideIfOneGroupedNode', TRUE, 'autoExpand', 'single-child'),
+          'byClass', json_object('hideIfNoSiblings', FALSE, 'hideIfOneGroupedNode', FALSE, 'autoExpand', 'always'),
           'byBaseClasses', json_object('fullClassNames', json_array('testSchema.testName')),
           'byProperties', json_object('propertiesClassName', 'testSchema.testName', 'propertyGroups', json_array(json_object('propertyName', 'PropertyName', 'propertyValue', [this].[PropertyName])))
         ) AS ${NodeSelectClauseColumnNames.Grouping},
