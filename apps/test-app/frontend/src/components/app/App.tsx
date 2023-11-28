@@ -6,7 +6,7 @@
 import "./App.css";
 import "@bentley/icons-generic-webfont/dist/bentley-icons-generic-webfont.css";
 import { useEffect, useRef, useState } from "react";
-import { from, Subject, takeUntil } from "rxjs";
+import { from, reduce, Subject, takeUntil } from "rxjs";
 import { Id64String } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Geometry } from "@itwin/core-geometry";
@@ -14,7 +14,7 @@ import { UnitSystemKey } from "@itwin/core-quantity";
 import { ElementSeparator, Orientation } from "@itwin/core-react";
 import { ThemeProvider, ToggleSwitch } from "@itwin/itwinui-react";
 import { SchemaMetadataContextProvider, UnifiedSelectionContextProvider } from "@itwin/presentation-components";
-import { Presentation, SelectionChangeEventArgs } from "@itwin/presentation-frontend";
+import { HiliteSet, Presentation, SelectionChangeEventArgs } from "@itwin/presentation-frontend";
 import { MyAppFrontend, MyAppSettings } from "../../api/MyAppFrontend";
 import { IModelSelector } from "../imodel-selector/IModelSelector";
 import { PropertiesWidget } from "../properties-widget/PropertiesWidget";
@@ -82,19 +82,22 @@ export function App() {
 
       // determine what the viewport is hiliting
       const selectedView = IModelApp.viewManager.selectedView;
-      const elementIds: Id64String[] = [];
       from(Presentation.selection.getHiliteSetIterator(args.imodel))
-        .pipe(takeUntil(cancel))
-        .subscribe({
-          next: (set) => {
-            if (!set.elements) {
+        .pipe(
+          takeUntil(cancel),
+          reduce<HiliteSet, { elements: Id64String[] }>(
+            (acc, curr) => {
               // note: the hilite list may contain models and subcategories as well - we don't
               // care about them at this moment
-              return;
-            }
-
-            elementIds.push(...set.elements);
-            void selectedView.zoomToElements(elementIds);
+              acc.elements.push(...(curr.elements ?? []));
+              return acc;
+            },
+            { elements: [] },
+          ),
+        )
+        .subscribe({
+          next: (set) => {
+            void selectedView.zoomToElements(set.elements);
           },
         });
     });
