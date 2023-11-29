@@ -3,11 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { from, Subject, takeUntil } from "rxjs";
 import { IDisposable, using } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
-import { KeySet, SelectionInfo } from "@itwin/presentation-common";
-import { ISelectionProvider, Presentation, SelectionChangeEventArgs, SelectionHandler } from "@itwin/presentation-frontend";
-import { AsyncTasksTracker } from "../common/Utils";
+import { KeySet } from "@itwin/presentation-common";
+import { HiliteSet, HiliteSetProvider, Presentation, SelectionChangeEventArgs, SelectionChangeType, SelectionHandler } from "@itwin/presentation-frontend";
 
 /** @internal */
 export interface ViewportSelectionHandlerProps {
@@ -26,8 +26,7 @@ export interface ViewportSelectionHandlerProps {
 export class ViewportSelectionHandler implements IDisposable {
   private _imodel: IModelConnection;
   private _selectionHandler: SelectionHandler;
-  private _lastPendingSelectionChange?: { info: SelectionInfo; selection: Readonly<KeySet> };
-  private _asyncsTracker = new AsyncTasksTracker();
+  private _cancelOngoingChanges = new Subject<void>();
 
   public constructor(props: ViewportSelectionHandlerProps) {
     this._imodel = props.imodel;
@@ -47,12 +46,9 @@ export class ViewportSelectionHandler implements IDisposable {
   }
 
   public dispose() {
+    this._cancelOngoingChanges.next();
     this._selectionHandler.manager.setSyncWithIModelToolSelection(this._imodel, false);
     this._selectionHandler.dispose();
-  }
-
-  public get selectionHandler() {
-    return this._selectionHandler;
   }
 
   public get imodel() {
@@ -69,54 +65,54 @@ export class ViewportSelectionHandler implements IDisposable {
     this._imodel.hilited.wantSyncWithSelectionSet = false;
     this._selectionHandler.imodel = value;
 
-    void this.applyCurrentSelection();
+    this.applyCurrentSelection();
   }
 
-  /** note: used only it tests */
-  public get pendingAsyncs() {
-    return this._asyncsTracker.pendingAsyncs;
+  public applyCurrentSelection() {
+    this._cancelOngoingChanges.next();
+    this.applyCurrentHiliteSet(this._imodel);
   }
 
-  public async applyCurrentSelection() {
-    await this.applyUnifiedSelection(this._imodel, { providerName: "" }, this.selectionHandler.getSelection());
-  }
-
-  private async applyUnifiedSelection(imodel: IModelConnection, selectionInfo: SelectionInfo, selection: Readonly<KeySet>) {
-    if (this._asyncsTracker.pendingAsyncs.size > 0) {
-      this._lastPendingSelectionChange = { info: selectionInfo, selection };
+  private handleUnifiedSelectionChange(imodel: IModelConnection, changeType: SelectionChangeType, keys: Readonly<KeySet>) {
+    if (changeType === SelectionChangeType.Clear || changeType === SelectionChangeType.Replace) {
+      this.applyCurrentHiliteSet(imodel);
       return;
     }
 
-    await using(this._asyncsTracker.trackAsyncTask(), async (_r) => {
-      const ids = await Presentation.selection.getHiliteSet(this._imodel);
-      using(Presentation.selection.suspendIModelToolSelectionSync(this._imodel), (_) => {
-        imodel.hilited.clear();
-        let shouldClearSelectionSet = true;
-        if (ids.models && ids.models.length) {
-          imodel.hilited.models.addIds(ids.models);
-        }
-        if (ids.subCategories && ids.subCategories.length) {
-          imodel.hilited.subcategories.addIds(ids.subCategories);
-        }
-        if (ids.elements && ids.elements.length) {
-          imodel.hilited.elements.addIds(ids.elements);
-          imodel.selectionSet.replace(ids.elements);
-          shouldClearSelectionSet = false;
-        }
-        if (shouldClearSelectionSet) {
-          imodel.selectionSet.emptyAll();
-        }
-      });
-    });
-
-    if (this._lastPendingSelectionChange) {
-      const change = this._lastPendingSelectionChange;
-      this._lastPendingSelectionChange = undefined;
-      await this.applyUnifiedSelection(imodel, change.info, change.selection);
+    const hiliteSetProvider = HiliteSetProvider.create({ imodel });
+    if (changeType === SelectionChangeType.Add) {
+      from(hiliteSetProvider.getHiliteSetIterator(keys))
+        .pipe(takeUntil(this._cancelOngoingChanges))
+        .subscribe({
+          next: (set) => {
+            this.applyHiliteSet(imodel, set);
+          },
+        });
+      return;
     }
+
+    from(hiliteSetProvider.getHiliteSetIterator(keys))
+      .pipe(takeUntil(this._cancelOngoingChanges))
+      .subscribe({
+        next: (set) => {
+          if (set.models?.length) {
+            imodel.hilited.models.deleteIds(set.models);
+          }
+          if (set.subCategories?.length) {
+            imodel.hilited.subcategories.deleteIds(set.subCategories);
+          }
+          if (set.elements?.length) {
+            imodel.hilited.elements.deleteIds(set.elements);
+            imodel.selectionSet.remove(set.elements);
+          }
+        },
+        complete: () => {
+          this.applyCurrentHiliteSet(imodel, false);
+        },
+      });
   }
 
-  private onUnifiedSelectionChanged = async (args: SelectionChangeEventArgs, provider: ISelectionProvider): Promise<void> => {
+  private onUnifiedSelectionChanged = (args: SelectionChangeEventArgs) => {
     // this component only cares about its own imodel
     if (args.imodel !== this._imodel) {
       return;
@@ -128,13 +124,41 @@ export class ViewportSelectionHandler implements IDisposable {
       return;
     }
 
-    const selection = provider.getSelection(args.imodel, 0);
-    const info: SelectionInfo = {
-      providerName: args.source,
-      level: args.level,
-    };
-    await this.applyUnifiedSelection(args.imodel, info, selection);
+    this._cancelOngoingChanges.next();
+    this.handleUnifiedSelectionChange(args.imodel, args.changeType, args.keys);
   };
+
+  private applyCurrentHiliteSet(imodel: IModelConnection, clearBefore = true) {
+    if (clearBefore) {
+      using(Presentation.selection.suspendIModelToolSelectionSync(this._imodel), (_) => {
+        imodel.hilited.clear();
+        imodel.selectionSet.emptyAll();
+      });
+    }
+
+    from(Presentation.selection.getHiliteSetIterator(imodel))
+      .pipe(takeUntil(this._cancelOngoingChanges))
+      .subscribe({
+        next: (ids) => {
+          this.applyHiliteSet(imodel, ids);
+        },
+      });
+  }
+
+  private applyHiliteSet(imodel: IModelConnection, set: HiliteSet) {
+    using(Presentation.selection.suspendIModelToolSelectionSync(this._imodel), (_) => {
+      if (set.models && set.models.length) {
+        imodel.hilited.models.addIds(set.models);
+      }
+      if (set.subCategories && set.subCategories.length) {
+        imodel.hilited.subcategories.addIds(set.subCategories);
+      }
+      if (set.elements && set.elements.length) {
+        imodel.hilited.elements.addIds(set.elements);
+        imodel.selectionSet.add(set.elements);
+      }
+    });
+  }
 }
 
 let counter = 1;
