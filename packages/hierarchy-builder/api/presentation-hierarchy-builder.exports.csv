@@ -143,3 +143,4 @@ beta;RelationshipPathStep
 beta;setLocalizationFunction(localizationFunction?: LocalizationFunction): void
 beta;setLogger(logger: ILogger | undefined): void
 beta;StandardHierarchyNodeKey = InstancesNodeKey | GroupingNodeKey
+beta;TypedPrimitiveValue

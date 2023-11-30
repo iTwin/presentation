@@ -64,11 +64,11 @@ export async function createPropertyGroups(
 
     const propertyClass = handlerGroupingParams.ecClass;
     const property = await propertyClass.getProperty(currentProperty.propertyName);
-    if (!property?.isPrimitive()) {
+    if (!property?.isPrimitive() || property.primitiveType === "Binary" || property.primitiveType === "IGeometry") {
       groupings.ungrouped.push(node);
       continue;
     }
-
+    const koqName = (await property.kindOfQuantity)?.fullName;
     if (!currentProperty.propertyValue) {
       if (byProperties.createGroupForUnspecifiedValues) {
         addGroupingToMap(
@@ -96,18 +96,18 @@ export async function createPropertyGroups(
         const matchingRange = currentProperty.ranges.find((range) => propValue >= range.fromValue && propValue <= range.toValue);
 
         if (matchingRange) {
-          const fromValueTypedPrimitive = {
+          const fromValueTypedPrimitive: TypedPrimitiveValue = {
             type: Number.isInteger(matchingRange.fromValue) ? "Integer" : "Double",
             extendedType: property.extendedTypeName,
-            koqName: (await property.kindOfQuantity)?.fullName,
+            koqName,
             value: matchingRange.fromValue,
-          } as TypedPrimitiveValue;
-          const toValueTypedPrimitive = {
+          };
+          const toValueTypedPrimitive: TypedPrimitiveValue = {
             type: Number.isInteger(matchingRange.toValue) ? "Integer" : "Double",
             extendedType: property.extendedTypeName,
-            koqName: (await property.kindOfQuantity)?.fullName,
+            koqName,
             value: matchingRange.toValue,
-          } as TypedPrimitiveValue;
+          };
 
           const rangeLabel = matchingRange.rangeLabel ?? `${await valueFormatter(fromValueTypedPrimitive)} - ${await valueFormatter(toValueTypedPrimitive)}`;
           addGroupingToMap(
@@ -145,12 +145,9 @@ export async function createPropertyGroups(
       continue;
     }
 
-    const formattedValue = await valueFormatter({
-      type: property.primitiveType,
-      extendedType: property.extendedTypeName,
-      koqName: (await property.kindOfQuantity)?.fullName,
-      value: currentProperty.propertyValue,
-    } as TypedPrimitiveValue);
+    const formattedValue = await valueFormatter(
+      TypedPrimitiveValue.create(currentProperty.propertyValue, property.primitiveType, koqName, property.extendedTypeName),
+    );
 
     addGroupingToMap(
       groupings.grouped,

@@ -1066,6 +1066,11 @@ export type TypedPrimitiveValue = ({
     extendedType?: string;
 };
 
+// @beta
+export namespace TypedPrimitiveValue {
+    export function create(value: PrimitiveValue, type: PrimitiveValueType, koqName?: string, extendedType?: string): TypedPrimitiveValue;
+}
+
 // (No @packageDocumentation comment for this package)
 
 ```
