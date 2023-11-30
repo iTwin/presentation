@@ -10,7 +10,6 @@ import { createLocalizationFunction } from "@itwin/presentation-core-interop";
 import {
   ECSqlSelectClausePropertiesGroupingParams,
   IHierarchyLevelDefinitionsFactory,
-  LOCALIZATION_NAMESPACE,
   NodeSelectQueryFactory,
   setLocalizationFunction,
 } from "@itwin/presentation-hierarchy-builder";
@@ -29,7 +28,6 @@ describe("Stateless hierarchy builder", () => {
     });
 
     after(async () => {
-      IModelApp.localization.unregisterNamespace(LOCALIZATION_NAMESPACE);
       await terminate();
     });
 
