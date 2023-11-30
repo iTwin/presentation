@@ -170,6 +170,107 @@ export namespace NodeValidators {
       children: props.children,
     };
   }
+
+  export function createForPropertyOtherValuesGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(props: {
+    autoExpand?: boolean;
+    children?: TChildren;
+  }) {
+    return {
+      node: (node: HierarchyNode) => {
+        if (!HierarchyNode.isStandard(node)) {
+          throw new Error(`[${node.label}] Expected a property other values grouping node, got a non-standard "${node.key as string}"`);
+        }
+        if (node.key.type !== "property-grouping:other") {
+          throw new Error(`[${node.label}] Expected a property other values grouping node, got "${node.key.type}"`);
+        }
+
+        validateBaseNodeAttributes(node, {
+          label: "Òthér",
+          autoExpand: props.autoExpand,
+          children: props.children,
+        });
+      },
+      children: props.children,
+    };
+  }
+
+  export function createForPropertyValueRangeGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(props: {
+    label?: string;
+    propertyName?: string;
+    propertyClassName?: string;
+    fromValue?: number;
+    toValue?: number;
+    autoExpand?: boolean;
+    children?: TChildren;
+  }) {
+    return {
+      node: (node: HierarchyNode) => {
+        if (!HierarchyNode.isStandard(node)) {
+          throw new Error(`[${node.label}] Expected a property value range grouping node, got a non-standard "${node.key as string}"`);
+        }
+        if (node.key.type !== "property-grouping:range") {
+          throw new Error(`[${node.label}] Expected a property value range grouping node, got "${node.key.type}"`);
+        }
+        if (props.propertyName && node.key.propertyName !== props.propertyName) {
+          throw new Error(`[${node.label}] Expected node to have property name "${props.propertyName}", got "${node.key.propertyName}"`);
+        }
+        if (props.propertyClassName && node.key.propertyClassName !== props.propertyClassName) {
+          throw new Error(`[${node.label}] Expected node to have propertyClassName "${props.propertyClassName}", got "${node.key.propertyClassName}"`);
+        }
+        if (props.fromValue && node.key.fromValue !== props.fromValue) {
+          throw new Error(`[${node.label}] Expected node to have fromValue "${props.fromValue}", got "${node.key.fromValue}"`);
+        }
+        if (props.toValue && node.key.toValue !== props.toValue) {
+          throw new Error(`[${node.label}] Expected node to have toValue "${props.toValue}", got "${node.key.toValue}"`);
+        }
+
+        validateBaseNodeAttributes(node, {
+          label: props.label,
+          autoExpand: props.autoExpand,
+          children: props.children,
+        });
+      },
+      children: props.children,
+    };
+  }
+
+  export function createForPropertyValueGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(props: {
+    label?: string;
+    propertyName?: string;
+    propertyClassName?: string;
+    formattedPropertyValue?: string;
+    autoExpand?: boolean;
+    children?: TChildren;
+  }) {
+    return {
+      node: (node: HierarchyNode) => {
+        if (!HierarchyNode.isStandard(node)) {
+          throw new Error(`[${node.label}] Expected a property value grouping node, got a non-standard "${node.key as string}"`);
+        }
+        if (node.key.type !== "property-grouping:value") {
+          throw new Error(`[${node.label}] Expected a property value grouping node, got "${node.key.type}"`);
+        }
+        if (props.propertyName && node.key.propertyName !== props.propertyName) {
+          throw new Error(`[${node.label}] Expected node to have property name "${props.propertyName}", got "${node.key.propertyName}"`);
+        }
+        if (props.propertyClassName && node.key.propertyClassName !== props.propertyClassName) {
+          throw new Error(`[${node.label}] Expected node to have propertyClassName "${props.propertyClassName}", got "${node.key.propertyClassName}"`);
+        }
+        if (props.formattedPropertyValue && node.key.formattedPropertyValue !== props.formattedPropertyValue) {
+          throw new Error(
+            `[${node.label}] Expected node to have formattedPropertyValue "${props.formattedPropertyValue}", got "${node.key.formattedPropertyValue}"`,
+          );
+        }
+
+        validateBaseNodeAttributes(node, {
+          label: props.label,
+          autoExpand: props.autoExpand,
+          children: props.children,
+        });
+      },
+      children: props.children,
+    };
+  }
 }
 
 export async function validateHierarchy(props: { provider: HierarchyProvider; parentNode?: HierarchyNode; expect: ExpectedHierarchyDef[] }) {

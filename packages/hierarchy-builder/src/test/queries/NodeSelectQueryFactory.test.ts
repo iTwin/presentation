@@ -54,6 +54,24 @@ describe("NodeSelectQueryFactory", () => {
             hideIfOneGroupedNode: true,
             autoExpand: "always",
           },
+          byProperties: {
+            propertiesClassName: "testSchema.testName",
+            createGroupForOutOfRangeValues: false,
+            createGroupForUnspecifiedValues: true,
+            propertyGroups: [
+              {
+                propertyName: "PropertyName",
+                propertyClassAlias: "this",
+                ranges: [
+                  {
+                    fromValue: 1,
+                    toValue: 2,
+                    rangeLabel: "range label",
+                  },
+                ],
+              },
+            ],
+          },
         },
         hasChildren: true,
         hideIfNoChildren: true,
@@ -71,7 +89,8 @@ describe("NodeSelectQueryFactory", () => {
         json_object(
           'byLabel', json_object('hideIfOneGroupedNode', FALSE, 'autoExpand', 'single-child'),
           'byClass', TRUE,
-          'byBaseClasses', json_object('fullClassNames', json_array('testSchema.testName'), 'hideIfNoSiblings', FALSE, 'hideIfOneGroupedNode', TRUE, 'autoExpand', 'always')
+          'byBaseClasses', json_object('fullClassNames', json_array('testSchema.testName'), 'hideIfNoSiblings', FALSE, 'hideIfOneGroupedNode', TRUE, 'autoExpand', 'always'),
+          'byProperties', json_object('propertiesClassName', 'testSchema.testName', 'propertyGroups', json_array(json_object('propertyName', 'PropertyName', 'propertyValue', [this].[PropertyName], 'ranges', json_array(json_object('fromValue', 1, 'toValue', 2, 'rangeLabel', 'range label')))), 'createGroupForOutOfRangeValues', CAST(FALSE AS BOOLEAN), 'createGroupForUnspecifiedValues', CAST(TRUE AS BOOLEAN))
         ) AS ${NodeSelectClauseColumnNames.Grouping},
         CAST('merge id' AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
         json_object(
@@ -105,6 +124,23 @@ describe("NodeSelectQueryFactory", () => {
             hideIfOneGroupedNode: { selector: "x.baseClassGroupHideIfOneGroupedNode" },
             autoExpand: { selector: "x.baseClassGroupAutoExpand" },
           },
+          byProperties: {
+            propertiesClassName: "testSchema.testName",
+            createGroupForOutOfRangeValues: { selector: "x.propertyGroupCreateGroupForOutOfRangeValues" },
+            createGroupForUnspecifiedValues: { selector: "x.propertyGroupCreateGroupForUnspecifiedValues" },
+            propertyGroups: [
+              {
+                propertyName: "PropertyName",
+                propertyClassAlias: "x",
+                ranges: [
+                  {
+                    fromValue: { selector: "x.propertyFromValue" },
+                    toValue: { selector: "x.propertyToValue" },
+                  },
+                ],
+              },
+            ],
+          },
         },
         hasChildren: { selector: "x.HasChildren" },
         hideIfNoChildren: { selector: "x.HideIfNoChildren" },
@@ -122,7 +158,8 @@ describe("NodeSelectQueryFactory", () => {
         json_object(
           'byLabel', x.byLabel,
           'byClass', json_object('hideIfNoSiblings', x.classGroupHideIfNoSiblings, 'autoExpand', x.classGroupAutoExpand),
-          'byBaseClasses', json_object('fullClassNames', json_array(x.baseClassFullGroupClassName), 'hideIfNoSiblings', x.baseClassGroupHideIfNoSiblings, 'hideIfOneGroupedNode', x.baseClassGroupHideIfOneGroupedNode, 'autoExpand', x.baseClassGroupAutoExpand)
+          'byBaseClasses', json_object('fullClassNames', json_array(x.baseClassFullGroupClassName), 'hideIfNoSiblings', x.baseClassGroupHideIfNoSiblings, 'hideIfOneGroupedNode', x.baseClassGroupHideIfOneGroupedNode, 'autoExpand', x.baseClassGroupAutoExpand),
+          'byProperties', json_object('propertiesClassName', 'testSchema.testName', 'propertyGroups', json_array(json_object('propertyName', 'PropertyName', 'propertyValue', [x].[PropertyName], 'ranges', json_array(json_object('fromValue', x.propertyFromValue, 'toValue', x.propertyToValue)))), 'createGroupForOutOfRangeValues', CAST(x.propertyGroupCreateGroupForOutOfRangeValues AS BOOLEAN), 'createGroupForUnspecifiedValues', CAST(x.propertyGroupCreateGroupForUnspecifiedValues AS BOOLEAN))
         ) AS ${NodeSelectClauseColumnNames.Grouping},
         CAST(x.MergeId AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
         json_object(
@@ -157,14 +194,25 @@ describe("NodeSelectQueryFactory", () => {
       );
     });
 
-    it("creates valid clause with when only one of the groupings is set", async () => {
+    it("creates valid clause with complex grouping params", async () => {
       const result = await factory.createSelectClause({
         ecClassId: "0x1",
         ecInstanceId: "0x2",
         nodeLabel: "label",
         grouping: {
+          byLabel: { autoExpand: "single-child", hideIfNoSiblings: true, hideIfOneGroupedNode: true },
+          byClass: { autoExpand: "always", hideIfNoSiblings: false, hideIfOneGroupedNode: false },
           byBaseClasses: {
             fullClassNames: ["testSchema.testName"],
+          },
+          byProperties: {
+            propertiesClassName: "testSchema.testName",
+            propertyGroups: [
+              {
+                propertyName: "PropertyName",
+                propertyClassAlias: "this",
+              },
+            ],
           },
         },
       });
@@ -177,7 +225,10 @@ describe("NodeSelectQueryFactory", () => {
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
         CAST(NULL AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
         json_object(
-          'byBaseClasses', json_object('fullClassNames', json_array('testSchema.testName'))
+          'byLabel', json_object('hideIfNoSiblings', TRUE, 'hideIfOneGroupedNode', TRUE, 'autoExpand', 'single-child'),
+          'byClass', json_object('hideIfNoSiblings', FALSE, 'hideIfOneGroupedNode', FALSE, 'autoExpand', 'always'),
+          'byBaseClasses', json_object('fullClassNames', json_array('testSchema.testName')),
+          'byProperties', json_object('propertiesClassName', 'testSchema.testName', 'propertyGroups', json_array(json_object('propertyName', 'PropertyName', 'propertyValue', [this].[PropertyName])))
         ) AS ${NodeSelectClauseColumnNames.Grouping},
         CAST(NULL AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
         CAST(NULL AS TEXT) AS ${NodeSelectClauseColumnNames.ExtendedData},

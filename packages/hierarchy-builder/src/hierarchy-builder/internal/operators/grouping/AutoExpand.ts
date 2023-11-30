@@ -3,55 +3,24 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import {
-  HierarchyNodeAutoExpandProp,
-  HierarchyNodeGroupingParamsBase,
-  InstanceHierarchyNodeProcessingParams,
-  ProcessedInstanceHierarchyNode,
-} from "../../../HierarchyNode";
-import { GroupingHandlerResult, GroupingType, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
+import { HierarchyNodeAutoExpandProp } from "../../../HierarchyNode";
+import { GroupingHandlerResult } from "../Grouping";
+import { iterateChildNodeGroupingParams } from "./Shared";
 
 /** @internal */
 export function assignAutoExpand(props: GroupingHandlerResult): GroupingHandlerResult {
   for (const node of props.grouped) {
-    const autoExpand = getGroupingAutoExpandOptionsFromParentNode(node, props.groupingType);
-    if (autoExpand === "always" || (autoExpand === "single-child" && node.children.length === 1)) {
+    let autoExpandProp: HierarchyNodeAutoExpandProp | undefined;
+    iterateChildNodeGroupingParams(node, props.groupingType, (groupingProps) => {
+      if (autoExpandProp === "always") {
+        return true;
+      }
+      autoExpandProp = groupingProps?.autoExpand ? groupingProps.autoExpand : autoExpandProp;
+      return;
+    });
+    if (autoExpandProp === "always" || (autoExpandProp === "single-child" && node.children.length === 1)) {
       node.autoExpand = true;
     }
   }
-
   return props;
-}
-
-function getGroupingAutoExpandOptionsFromParentNode(
-  parentNode: ProcessedInstancesGroupingHierarchyNode,
-  groupingType: GroupingType,
-): HierarchyNodeAutoExpandProp | undefined {
-  switch (groupingType) {
-    case "base-class":
-      return getAutoExpandOptionsFromNodeProcessingParams(parentNode.children, (p) => p.grouping?.byBaseClasses);
-    case "class":
-      return getAutoExpandOptionsFromNodeProcessingParams(parentNode.children, (p) =>
-        typeof p.grouping?.byClass === "object" ? p.grouping.byClass : undefined,
-      );
-    case "label":
-      return getAutoExpandOptionsFromNodeProcessingParams(parentNode.children, (p) =>
-        typeof p.grouping?.byLabel === "object" ? p.grouping.byLabel : undefined,
-      );
-  }
-}
-
-function getAutoExpandOptionsFromNodeProcessingParams(
-  nodes: ProcessedInstanceHierarchyNode[],
-  autoExpandOptionsAccessor: (processingParams: InstanceHierarchyNodeProcessingParams) => HierarchyNodeGroupingParamsBase | undefined,
-): HierarchyNodeAutoExpandProp | undefined {
-  let autoExpand: HierarchyNodeAutoExpandProp | undefined;
-  for (const node of nodes) {
-    if (autoExpand === "always") {
-      break;
-    }
-    const params = node.processingParams ? autoExpandOptionsAccessor(node.processingParams) : undefined;
-    autoExpand = !!params?.autoExpand ? params.autoExpand : autoExpand;
-  }
-  return autoExpand;
 }

@@ -97,6 +97,7 @@ export interface ECSqlSelectClauseGroupingParams {
   byLabel?: boolean | ECSqlSelectClauseGroupingParamsBase | ECSqlValueSelector;
   byClass?: boolean | ECSqlSelectClauseGroupingParamsBase | ECSqlValueSelector;
   byBaseClasses?: ECSqlSelectClauseBaseClassGroupingParams;
+  byProperties?: ECSqlSelectClausePropertiesGroupingParams;
 }
 
 /**
@@ -107,6 +108,81 @@ export interface ECSqlSelectClauseGroupingParamsBase {
   hideIfNoSiblings?: boolean | ECSqlValueSelector;
   hideIfOneGroupedNode?: boolean | ECSqlValueSelector;
   autoExpand?: string | ECSqlValueSelector;
+}
+
+/**
+ * A data structure for defining properties grouping.
+ * @beta
+ */
+export interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
+  /**
+   * Full name of a class whose properties are used to group the node. Only has effect if the node
+   * represents an instance of that class.
+   *
+   * Full class name format: `SchemaName.ClassName`.
+   */
+  propertiesClassName: string;
+  /**
+   * Property grouping option that determines whether to group nodes whose grouping value is not set or is set to an empty string.
+   *
+   * Label of the created grouping node will be `Not Specified`.
+   */
+  createGroupForUnspecifiedValues?: boolean | ECSqlValueSelector;
+  /**
+   * Property grouping option that determines whether to group nodes whose grouping value doesn't fit within any of the provided
+   * ranges, or is not a numeric value.
+   *
+   * Label of the created grouping node will be `Other`.
+   */
+  createGroupForOutOfRangeValues?: boolean | ECSqlValueSelector;
+  /**
+   * Properties of the specified class, by which the nodes should be grouped.
+   *
+   * Example usage:
+   * ```ts
+   * propertyGroups: [
+   *   {
+   *     propertyName: "type",
+   *     propertyClassAlias: "this"
+   *   },
+   *   {
+   *     propertyName: "length",
+   *     propertyClassAlias: "x",
+   *     ranges: [
+   *       { fromValue: 1, toValue: 10, rangeLabel: "Small" },
+   *       { fromValue: 11, toValue: 20, rangeLabel: "Medium" }
+   *     ]
+   *   },
+   * ]
+   * ```
+   */
+  propertyGroups: Array<ECSqlSelectClausePropertyGroup>;
+}
+
+/**
+ * A data structure for defining specific properties' grouping params.
+ * @beta
+ */
+export interface ECSqlSelectClausePropertyGroup {
+  /** A string indicating the name of the property to group by. */
+  propertyName: string;
+  /** Alias to of the class containing the property. Used to select the property value. */
+  propertyClassAlias: string;
+  /** Ranges are used to group nodes by numeric properties which are within specified bounds. */
+  ranges?: Array<ECSqlSelectClausePropertyValueRange>;
+}
+
+/**
+ * A data structure for defining boundaries for a value.
+ * @beta
+ */
+export interface ECSqlSelectClausePropertyValueRange {
+  /** Defines the lower bound of the range. */
+  fromValue: number | ECSqlValueSelector;
+  /** Defines the upper bound of the range. */
+  toValue: number | ECSqlValueSelector;
+  /** Defines the range label. Will be used as grouping node's display label. */
+  rangeLabel?: string | ECSqlValueSelector;
 }
 
 /**
@@ -224,7 +300,7 @@ export class NodeSelectQueryFactory {
   }
 }
 
-function createECSqlValueSelector(input: undefined | Id64String | string | number | boolean | ECSqlValueSelector) {
+function createECSqlValueSelector(input: undefined | PrimitiveValue | ECSqlValueSelector) {
   if (input === undefined) {
     return "NULL";
   }
@@ -271,7 +347,87 @@ function createGroupingSelector(grouping: ECSqlSelectClauseGroupingParams): stri
       ]),
     });
 
+  grouping.byProperties &&
+    groupingSelectors.push({
+      key: "byProperties",
+      selector: serializeJsonObject([
+        {
+          key: "propertiesClassName",
+          selector: `${createECSqlValueSelector(grouping.byProperties.propertiesClassName)}`,
+        },
+        {
+          key: "propertyGroups",
+          selector: `json_array(${grouping.byProperties.propertyGroups
+            .map((propertyGroup) => serializeJsonObject(createPropertyGroupSelectors(propertyGroup)))
+            .join(", ")})`,
+        },
+        ...(grouping.byProperties.createGroupForOutOfRangeValues !== undefined
+          ? [
+              {
+                key: "createGroupForOutOfRangeValues",
+                selector: `CAST(${createECSqlValueSelector(grouping.byProperties.createGroupForOutOfRangeValues)} AS BOOLEAN)`,
+              },
+            ]
+          : []),
+        ...(grouping.byProperties.createGroupForUnspecifiedValues !== undefined
+          ? [
+              {
+                key: "createGroupForUnspecifiedValues",
+                selector: `CAST(${createECSqlValueSelector(grouping.byProperties.createGroupForUnspecifiedValues)} AS BOOLEAN)`,
+              },
+            ]
+          : []),
+        ...createBaseGroupingParamSelectors(grouping.byProperties),
+      ]),
+    });
+
   return serializeJsonObject(groupingSelectors);
+}
+
+function createPropertyGroupSelectors(propertyGroup: ECSqlSelectClausePropertyGroup) {
+  const selectors = new Array<{ key: string; selector: string }>();
+  selectors.push(
+    {
+      key: "propertyName",
+      selector: `${createECSqlValueSelector(propertyGroup.propertyName)}`,
+    },
+    {
+      key: "propertyValue",
+      selector: `[${propertyGroup.propertyClassAlias}].[${propertyGroup.propertyName}]`,
+    },
+  );
+  if (propertyGroup.ranges) {
+    selectors.push(createRangeParamSelectors(propertyGroup.ranges));
+  }
+  return selectors;
+}
+
+function createRangeParamSelectors(ranges: ECSqlSelectClausePropertyValueRange[]) {
+  return {
+    key: "ranges",
+    selector: `json_array(${ranges
+      .map((range) =>
+        serializeJsonObject([
+          {
+            key: "fromValue",
+            selector: createECSqlValueSelector(range.fromValue),
+          },
+          {
+            key: "toValue",
+            selector: createECSqlValueSelector(range.toValue),
+          },
+          ...(range.rangeLabel
+            ? [
+                {
+                  key: "rangeLabel",
+                  selector: `${createECSqlValueSelector(range.rangeLabel)}`,
+                },
+              ]
+            : []),
+        ]),
+      )
+      .join(", ")})`,
+  };
 }
 
 function createBaseGroupingParamSelectors(params: ECSqlSelectClauseGroupingParamsBase) {

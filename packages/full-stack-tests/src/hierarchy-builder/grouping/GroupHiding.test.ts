@@ -399,5 +399,127 @@ describe("Stateless hierarchy builder", () => {
         });
       });
     });
+
+    describe("Properties grouping", () => {
+      const propertiesHideIfNoSiblingsGrouping: ECSqlSelectClauseGroupingParams = {
+        byProperties: {
+          propertiesClassName: "BisCore.Element",
+          propertyGroups: [{ propertyName: "UserLabel", propertyClassAlias: "this" }],
+          hideIfNoSiblings: true,
+        },
+      };
+
+      const propertiesHideIfOneGroupedNodeGrouping: ECSqlSelectClauseGroupingParams = {
+        byProperties: {
+          propertiesClassName: "BisCore.Element",
+          propertyGroups: [{ propertyName: "UserLabel", propertyClassAlias: "this" }],
+          hideIfOneGroupedNode: true,
+        },
+      };
+
+      it("hides property groups when there're no siblings", async function () {
+        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, userLabel: groupName });
+          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId, userLabel: groupName });
+          return { childSubject1, childSubject2 };
+        });
+
+        await validateHierarchy({
+          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, propertiesHideIfNoSiblingsGrouping) }),
+          expect: [
+            NodeValidators.createForInstanceNode({
+              instanceKeys: [keys.childSubject1],
+              children: false,
+            }),
+            NodeValidators.createForInstanceNode({
+              instanceKeys: [keys.childSubject2],
+              children: false,
+            }),
+          ],
+        });
+      });
+
+      it("hides property groups when there's only 1 grouped node", async function () {
+        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, userLabel: groupName });
+          return { childSubject1 };
+        });
+
+        await validateHierarchy({
+          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, propertiesHideIfOneGroupedNodeGrouping) }),
+          expect: [
+            NodeValidators.createForInstanceNode({
+              instanceKeys: [keys.childSubject1],
+              children: false,
+            }),
+          ],
+        });
+      });
+
+      it("doesn't hide property groups when there are siblings", async function () {
+        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, userLabel: groupName });
+          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId, userLabel: `${groupName}2` });
+          return { childSubject1, childSubject2 };
+        });
+
+        await validateHierarchy({
+          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, propertiesHideIfNoSiblingsGrouping) }),
+          expect: [
+            NodeValidators.createForPropertyValueGroupingNode({
+              label: groupName,
+              propertyClassName: "BisCore.Element",
+              formattedPropertyValue: groupName,
+              children: [
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [keys.childSubject1],
+                  children: false,
+                }),
+              ],
+            }),
+            NodeValidators.createForPropertyValueGroupingNode({
+              label: `${groupName}2`,
+              propertyClassName: "BisCore.Element",
+              formattedPropertyValue: `${groupName}2`,
+              children: [
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [keys.childSubject2],
+                  children: false,
+                }),
+              ],
+            }),
+          ],
+        });
+      });
+
+      it("doesn't hide base class groups when there's more than 1 grouped node", async function () {
+        const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+          const childSubject1 = insertSubject({ builder, codeValue: "A1", parentId: IModel.rootSubjectId, userLabel: groupName });
+          const childSubject2 = insertSubject({ builder, codeValue: "A2", parentId: IModel.rootSubjectId, userLabel: groupName });
+          return { childSubject1, childSubject2 };
+        });
+
+        await validateHierarchy({
+          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, propertiesHideIfOneGroupedNodeGrouping) }),
+          expect: [
+            NodeValidators.createForPropertyValueGroupingNode({
+              label: groupName,
+              propertyClassName: "BisCore.Element",
+              formattedPropertyValue: groupName,
+              children: [
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [keys.childSubject1],
+                  children: false,
+                }),
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [keys.childSubject2],
+                  children: false,
+                }),
+              ],
+            }),
+          ],
+        });
+      });
+    });
   });
 });

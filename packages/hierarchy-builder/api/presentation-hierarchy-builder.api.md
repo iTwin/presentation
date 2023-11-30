@@ -376,6 +376,8 @@ export interface ECSqlSelectClauseGroupingParams {
     byClass?: boolean | ECSqlSelectClauseGroupingParamsBase | ECSqlValueSelector;
     // (undocumented)
     byLabel?: boolean | ECSqlSelectClauseGroupingParamsBase | ECSqlValueSelector;
+    // (undocumented)
+    byProperties?: ECSqlSelectClausePropertiesGroupingParams;
 }
 
 // @beta
@@ -386,6 +388,28 @@ export interface ECSqlSelectClauseGroupingParamsBase {
     hideIfNoSiblings?: boolean | ECSqlValueSelector;
     // (undocumented)
     hideIfOneGroupedNode?: boolean | ECSqlValueSelector;
+}
+
+// @beta
+export interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
+    createGroupForOutOfRangeValues?: boolean | ECSqlValueSelector;
+    createGroupForUnspecifiedValues?: boolean | ECSqlValueSelector;
+    propertiesClassName: string;
+    propertyGroups: Array<ECSqlSelectClausePropertyGroup>;
+}
+
+// @beta
+export interface ECSqlSelectClausePropertyGroup {
+    propertyClassAlias: string;
+    propertyName: string;
+    ranges?: Array<ECSqlSelectClausePropertyValueRange>;
+}
+
+// @beta
+export interface ECSqlSelectClausePropertyValueRange {
+    fromValue: number | ECSqlValueSelector;
+    rangeLabel?: string | ECSqlValueSelector;
+    toValue: number | ECSqlValueSelector;
 }
 
 // @beta
@@ -458,7 +482,7 @@ export interface GetHierarchyNodesProps {
 export function getLogger(): ILogger;
 
 // @beta
-export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey;
+export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | PropertyGroupingNodeKey;
 
 // @beta
 export type HierarchyDefinitionParentNode = Omit<HierarchyNode, "children" | "key"> & {
@@ -521,6 +545,27 @@ export namespace HierarchyNode {
     } & (TNode extends ProcessedHierarchyNode ? {
         children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
     } : {});
+    export function isPropertyOtherValuesGroupingNode<TNode extends {
+        key: HierarchyNodeKey;
+    }>(node: TNode): node is TNode & {
+        key: PropertyOtherValuesGroupingNodeKey;
+    } & (TNode extends ProcessedHierarchyNode ? {
+        children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
+    } : {});
+    export function isPropertyValueGroupingNode<TNode extends {
+        key: HierarchyNodeKey;
+    }>(node: TNode): node is TNode & {
+        key: PropertyValueGroupingNodeKey;
+    } & (TNode extends ProcessedHierarchyNode ? {
+        children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
+    } : {});
+    export function isPropertyValueRangeGroupingNode<TNode extends {
+        key: HierarchyNodeKey;
+    }>(node: TNode): node is TNode & {
+        key: PropertyValueRangeGroupingNodeKey;
+    } & (TNode extends ProcessedHierarchyNode ? {
+        children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
+    } : {});
     export function isStandard<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
@@ -544,6 +589,8 @@ export interface HierarchyNodeGroupingParams {
     byClass?: boolean | HierarchyNodeGroupingParamsBase;
     // (undocumented)
     byLabel?: boolean | HierarchyNodeGroupingParamsBase;
+    // (undocumented)
+    byProperties?: HierarchyNodePropertiesGroupingParams;
 }
 
 // @beta
@@ -581,6 +628,9 @@ export namespace HierarchyNodeKey {
     export function isGrouping(key: HierarchyNodeKey): key is GroupingNodeKey;
     export function isInstances(key: HierarchyNodeKey): key is InstancesNodeKey;
     export function isLabelGrouping(key: HierarchyNodeKey): key is LabelGroupingNodeKey;
+    export function isPropertyOtherValuesGrouping(key: HierarchyNodeKey): key is PropertyOtherValuesGroupingNodeKey;
+    export function isPropertyValueGrouping(key: HierarchyNodeKey): key is PropertyValueGroupingNodeKey;
+    export function isPropertyValueRangeGrouping(key: HierarchyNodeKey): key is PropertyValueRangeGroupingNodeKey;
     export function isStandard(key: HierarchyNodeKey): key is StandardHierarchyNodeKey;
 }
 
@@ -588,6 +638,28 @@ export namespace HierarchyNodeKey {
 export interface HierarchyNodeProcessingParamsBase {
     hideIfNoChildren?: boolean;
     hideInHierarchy?: boolean;
+}
+
+// @beta
+export interface HierarchyNodePropertiesGroupingParams extends HierarchyNodeGroupingParamsBase {
+    createGroupForOutOfRangeValues?: boolean;
+    createGroupForUnspecifiedValues?: boolean;
+    propertiesClassName: string;
+    propertyGroups: Array<HierarchyNodePropertyGroup>;
+}
+
+// @beta
+export interface HierarchyNodePropertyGroup {
+    propertyName: string;
+    propertyValue?: PrimitiveValue;
+    ranges?: Array<HierarchyNodePropertyValueRange>;
+}
+
+// @beta
+export interface HierarchyNodePropertyValueRange {
+    fromValue: number;
+    rangeLabel?: string;
+    toValue: number;
 }
 
 // @beta
@@ -894,6 +966,15 @@ export namespace PropertyFilterValue {
 }
 
 // @beta
+export type PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | PropertyValueGroupingNodeKey | PropertyOtherValuesGroupingNodeKey;
+
+// @beta
+export interface PropertyOtherValuesGroupingNodeKey {
+    // (undocumented)
+    type: "property-grouping:other";
+}
+
+// @beta
 export interface PropertyValue {
     // (undocumented)
     className: string;
@@ -901,6 +982,32 @@ export interface PropertyValue {
     propertyName: string;
     // (undocumented)
     value: PrimitiveValue;
+}
+
+// @beta
+export interface PropertyValueGroupingNodeKey {
+    // (undocumented)
+    formattedPropertyValue: string;
+    // (undocumented)
+    propertyClassName: string;
+    // (undocumented)
+    propertyName: string;
+    // (undocumented)
+    type: "property-grouping:value";
+}
+
+// @beta
+export interface PropertyValueRangeGroupingNodeKey {
+    // (undocumented)
+    fromValue: number;
+    // (undocumented)
+    propertyClassName: string;
+    // (undocumented)
+    propertyName: string;
+    // (undocumented)
+    toValue: number;
+    // (undocumented)
+    type: "property-grouping:range";
 }
 
 // @beta
@@ -958,6 +1065,11 @@ export type TypedPrimitiveValue = ({
 }) & {
     extendedType?: string;
 };
+
+// @beta
+export namespace TypedPrimitiveValue {
+    export function create(value: PrimitiveValue, type: PrimitiveValueType, koqName?: string, extendedType?: string): TypedPrimitiveValue;
+}
 
 // (No @packageDocumentation comment for this package)
 

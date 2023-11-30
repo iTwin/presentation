@@ -52,6 +52,9 @@ beta;ECSqlQueryRowFormat = "ECSqlPropertyNames" | "Indexes"
 beta;ECSqlSelectClauseBaseClassGroupingParams 
 beta;ECSqlSelectClauseGroupingParams
 beta;ECSqlSelectClauseGroupingParamsBase
+beta;ECSqlSelectClausePropertiesGroupingParams 
+beta;ECSqlSelectClausePropertyGroup
+beta;ECSqlSelectClausePropertyValueRange
 beta;ECSqlSnippets:
 beta;ECSqlValueSelector
 beta;ECStructArrayProperty = ECStructProperty & ArrayPropertyAttributes
@@ -63,7 +66,7 @@ beta;GenericInstanceFilterRule
 beta;GenericInstanceFilterRuleGroup
 beta;GetHierarchyNodesProps
 beta;getLogger(): ILogger
-beta;GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey
+beta;GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | PropertyGroupingNodeKey
 beta;HierarchyDefinitionParentNode = Omit
 beta;HierarchyLevelDefinition = HierarchyNodesDefinition[]
 beta;HierarchyNode
@@ -78,6 +81,9 @@ beta;HierarchyNodeIdentifiersPath = HierarchyNodeIdentifier[]
 beta;HierarchyNodeKey = StandardHierarchyNodeKey | string
 beta;HierarchyNodeKey
 beta;HierarchyNodeProcessingParamsBase
+beta;HierarchyNodePropertiesGroupingParams 
+beta;HierarchyNodePropertyGroup
+beta;HierarchyNodePropertyValueRange
 beta;HierarchyNodesDefinition = CustomHierarchyNodeDefinition | InstanceNodesQueryDefinition
 beta;HierarchyNodesDefinition
 beta;HierarchyProvider
@@ -99,6 +105,8 @@ beta;InstancesNodeChildHierarchyLevelDefinition
 beta;InstancesNodeKey
 beta;IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise
 beta;LabelGroupingNodeKey
+beta;LOCALIZATION_NAMESPACE = "PresentationHierarchyBuilder"
+beta;LocalizationFunction = (input: string) => string
 beta;LogFunction = (category: string, message: string) => void
 beta;NodeSelectClauseColumnNames
 beta;NodeSelectClauseProps
@@ -124,9 +132,15 @@ beta;PropertyFilterRuleOperator
 beta;PropertyFilterRuleUnaryOperator = "True" | "False" | "Null" | "NotNull"
 beta;PropertyFilterValue = PrimitiveValue | InstanceKey
 beta;PropertyFilterValue
+beta;PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | PropertyValueGroupingNodeKey | PropertyOtherValuesGroupingNodeKey
+beta;PropertyOtherValuesGroupingNodeKey
 beta;PropertyValue
+beta;PropertyValueGroupingNodeKey
+beta;PropertyValueRangeGroupingNodeKey
 beta;RelatedInstanceDescription
 beta;RelationshipPath
 beta;RelationshipPathStep
+beta;setLocalizationFunction(localizationFunction?: LocalizationFunction): void
 beta;setLogger(logger: ILogger | undefined): void
 beta;StandardHierarchyNodeKey = InstancesNodeKey | GroupingNodeKey
+beta;TypedPrimitiveValue
