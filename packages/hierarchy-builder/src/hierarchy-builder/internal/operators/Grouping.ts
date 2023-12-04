@@ -110,7 +110,7 @@ async function groupInstanceNodes(
       onGroupingNodeCreated && curr.grouped.forEach(onGroupingNodeCreated);
       return sortNodesByLabel([...curr.grouped, ...curr.ungrouped]);
     }
-    return curr.ungrouped;
+    return sortNodesByLabel(curr.ungrouped);
   }
   return nodes;
 }
