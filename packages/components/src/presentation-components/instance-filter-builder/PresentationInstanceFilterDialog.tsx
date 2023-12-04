@@ -9,7 +9,7 @@
 import "./PresentationInstanceFilterDialog.scss";
 import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { BuildFilterOptions, isPropertyFilterBuilderRuleGroup, PropertyFilterBuilderRuleGroupItem, usePropertyFilterBuilder } from "@itwin/components-react";
+import { BuildFilterOptions, usePropertyFilterBuilder } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { SvgError } from "@itwin/itwinui-illustrations-react";
 import { Button, Dialog, NonIdealState, ProgressRadial } from "@itwin/itwinui-react";
@@ -31,9 +31,13 @@ export interface PresentationInstanceFilterDialogProps {
   /** Specifies whether dialog is open or not. */
   isOpen: boolean;
   /** Callback that is invoked when 'Apply' button is clicked. */
-  onApply: (filter: PresentationInstanceFilterInfo) => void;
+  onApply: (filter?: PresentationInstanceFilterInfo) => void;
   /** Callback that is invoked when 'Close' button is clicked or dialog is closed. */
   onClose: () => void;
+  /** Callback that is invoked when 'Reset' button is clicked. */
+  onReset: () => void;
+  /** Renderer that will be used to render a custom toolbar instead of the default one. */
+  toolbarRenderer?: (toolbarHandlers: ToolbarHandlers) => ReactNode;
   /**
    * [Descriptor]($presentation-common) that will be used in [[InstanceFilterBuilder]] component rendered inside this dialog.
    *
@@ -54,6 +58,13 @@ export interface PresentationInstanceFilterDialogProps {
   initialFilter?: PresentationInstanceFilterInfo;
 }
 
+/** Set of custom handlers that will additionally be called on each action respectively. */
+export interface ToolbarHandlers {
+  onApplyHandler: () => void;
+  onCloseHandler: () => void;
+  onResetHandler: () => void;
+}
+
 /**
  * Dialog component that renders [[InstanceFilterBuilder]] inside.
  * @beta
@@ -65,7 +76,7 @@ export function PresentationInstanceFilterDialog(props: PresentationInstanceFilt
     <Dialog
       className="presentation-instance-filter-dialog"
       isOpen={isOpen}
-      onClose={restProps.onClose}
+      onClose={props.onClose}
       closeOnEsc={false}
       preventDocumentScroll={true}
       trapFocus={true}
@@ -137,7 +148,18 @@ interface LoadedFilterDialogContentProps extends Omit<PresentationInstanceFilter
 }
 
 function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
-  const { onApply, initialFilter, descriptor, imodel, ruleGroupDepthLimit, filterResultsCountRenderer, onClose, descriptorInputKeys } = props;
+  const {
+    initialFilter,
+    descriptor,
+    imodel,
+    ruleGroupDepthLimit,
+    filterResultsCountRenderer,
+    descriptorInputKeys,
+    onApply,
+    onReset,
+    onClose,
+    toolbarRenderer,
+  } = props;
   const [initialPropertyFilter] = useState(() => {
     if (!initialFilter) {
       return undefined;
@@ -163,11 +185,23 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
     [buildFilter, descriptor, filteringProps.selectedClasses],
   );
 
+  const onResetHandler = () => {
+    filteringProps.selectedClasses = [];
+    filteringProps.onSelectedClassesChanged([]);
+    rootGroup.items.forEach((item) => {
+      actions.removeItem([item.id]);
+    });
+    onReset();
+  };
+
   const throwError = useThrowError();
-  const applyButtonHandle = () => {
+  const onApplyHandler = () => {
     try {
       const result = getFilterInfo();
-      if (!result) {
+      if (
+        (result === undefined && rootGroup.items.length > 1) ||
+        (result === undefined && rootGroup.items.length === 1 && rootGroup.items[0].operator !== undefined)
+      ) {
         return;
       }
       onApply(result);
@@ -175,15 +209,6 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
       throwError(error);
     }
   };
-
-  const hasNonEmptyRule = (item: PropertyFilterBuilderRuleGroupItem) => {
-    if (isPropertyFilterBuilderRuleGroup(item)) {
-      return item.items.some(hasNonEmptyRule);
-    }
-    return item.operator !== undefined;
-  };
-
-  const isDisabled = !hasNonEmptyRule(rootGroup);
 
   return (
     <>
@@ -199,16 +224,51 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
         />
       </Dialog.Content>
       <div className="presentation-instance-filter-dialog-bottom-container">
-        <div>{filterResultsCountRenderer ? <ResultsRenderer buildFilter={getFilterInfo} renderer={filterResultsCountRenderer} /> : null}</div>
-        <Dialog.ButtonBar className="presentation-instance-filter-button-bar">
-          <Button className="presentation-instance-filter-dialog-apply-button" styleType="high-visibility" onClick={applyButtonHandle} disabled={isDisabled}>
-            {translate("instance-filter-builder.apply")}
-          </Button>
-          <Button className="presentation-instance-filter-dialog-close-button" onClick={onClose}>
-            {translate("instance-filter-builder.cancel")}
-          </Button>
-        </Dialog.ButtonBar>
+        {toolbarRenderer === undefined ? (
+          <ToolbarRenderer
+            toolbarHandlers={{ onApplyHandler, onResetHandler, onCloseHandler: onClose }}
+            getFilterInfo={getFilterInfo}
+            filterResultsCountRenderer={filterResultsCountRenderer}
+          ></ToolbarRenderer>
+        ) : (
+          toolbarRenderer({ onApplyHandler, onResetHandler, onCloseHandler: onClose })
+        )}
       </div>
+    </>
+  );
+}
+
+function ToolbarButtonsRenderer({ onApplyHandler, onCloseHandler, onResetHandler }: ToolbarHandlers) {
+  return (
+    <Dialog.ButtonBar className="presentation-instance-filter-button-bar">
+      <Button className="presentation-instance-filter-dialog-apply-button" styleType="high-visibility" onClick={onApplyHandler}>
+        {translate("instance-filter-builder.apply")}
+      </Button>
+      <Button className="presentation-instance-filter-dialog-close-button" onClick={onCloseHandler}>
+        {translate("instance-filter-builder.cancel")}
+      </Button>
+      <Button className="presentation-instance-filter-dialog-reset-button" onClick={onResetHandler}>
+        {translate("instance-filter-builder.reset")}
+      </Button>
+    </Dialog.ButtonBar>
+  );
+}
+
+interface ToolbarRendererProps {
+  toolbarHandlers: ToolbarHandlers;
+  getFilterInfo: (options?: BuildFilterOptions | undefined) => PresentationInstanceFilterInfo | undefined;
+  filterResultsCountRenderer?: (filter: PresentationInstanceFilterInfo) => ReactNode | undefined;
+}
+
+function ToolbarRenderer({
+  toolbarHandlers: { onApplyHandler, onCloseHandler, onResetHandler },
+  getFilterInfo,
+  filterResultsCountRenderer,
+}: ToolbarRendererProps) {
+  return (
+    <>
+      <div>{filterResultsCountRenderer ? <ResultsRenderer buildFilter={getFilterInfo} renderer={filterResultsCountRenderer} /> : null}</div>
+      <ToolbarButtonsRenderer onApplyHandler={onApplyHandler} onResetHandler={onResetHandler} onCloseHandler={onCloseHandler}></ToolbarButtonsRenderer>
     </>
   );
 }

@@ -23,6 +23,7 @@
     "schema": "Schema:",
     "apply": "Apply",
     "cancel": "Cancel",
+    "reset": "Reset",
     "filter": "Filter",
     "error-messages": {
       "not-a-number": "Value must be a number",
