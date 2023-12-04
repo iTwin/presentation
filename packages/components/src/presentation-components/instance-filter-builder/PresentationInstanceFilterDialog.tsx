@@ -204,6 +204,8 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
   const onApplyHandler = () => {
     try {
       const result = getFilterInfo();
+
+      // we need to check whether the filter was invalid or empty.
       if (result === undefined && isFilterInvalid(rootGroup)) {
         return;
       }
