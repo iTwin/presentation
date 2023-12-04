@@ -9,7 +9,7 @@
 import "./PresentationInstanceFilterDialog.scss";
 import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { BuildFilterOptions, usePropertyFilterBuilder } from "@itwin/components-react";
+import { BuildFilterOptions, PropertyFilterBuilderRuleGroup, usePropertyFilterBuilder } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { SvgError } from "@itwin/itwinui-illustrations-react";
 import { Button, Dialog, NonIdealState, ProgressRadial } from "@itwin/itwinui-react";
@@ -37,7 +37,7 @@ export interface PresentationInstanceFilterDialogProps {
   /** Callback that is invoked when 'Reset' button is clicked. */
   onReset: () => void;
   /** Renderer that will be used to render a custom toolbar instead of the default one. */
-  toolbarRenderer?: (toolbarHandlers: ToolbarHandlers) => ReactNode;
+  toolbarRenderer?: (toolbarHandlers: ToolbarRendererProps) => ReactNode;
   /**
    * [Descriptor]($presentation-common) that will be used in [[InstanceFilterBuilder]] component rendered inside this dialog.
    *
@@ -63,6 +63,12 @@ export interface ToolbarHandlers {
   onApplyHandler: () => void;
   onCloseHandler: () => void;
   onResetHandler: () => void;
+}
+
+/** Props required for rendering a toolbar */
+export interface ToolbarRendererProps {
+  toolbarHandlers: ToolbarHandlers;
+  getFilterInfo: (options?: BuildFilterOptions | undefined) => PresentationInstanceFilterInfo | undefined;
 }
 
 /**
@@ -198,10 +204,7 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
   const onApplyHandler = () => {
     try {
       const result = getFilterInfo();
-      if (
-        (result === undefined && rootGroup.items.length > 1) ||
-        (result === undefined && rootGroup.items.length === 1 && rootGroup.items[0].operator !== undefined)
-      ) {
+      if (result === undefined && isFilterInvalid(rootGroup)) {
         return;
       }
       onApply(result);
@@ -225,13 +228,12 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
       </Dialog.Content>
       <div className="presentation-instance-filter-dialog-bottom-container">
         {toolbarRenderer === undefined ? (
-          <ToolbarRenderer
-            toolbarHandlers={{ onApplyHandler, onResetHandler, onCloseHandler: onClose }}
-            getFilterInfo={getFilterInfo}
-            filterResultsCountRenderer={filterResultsCountRenderer}
-          ></ToolbarRenderer>
+          <>
+            <div>{filterResultsCountRenderer ? <ResultsRenderer buildFilter={getFilterInfo} renderer={filterResultsCountRenderer} /> : null}</div>
+            <ToolbarButtonsRenderer onApplyHandler={onApplyHandler} onResetHandler={onResetHandler} onCloseHandler={onClose}></ToolbarButtonsRenderer>
+          </>
         ) : (
-          toolbarRenderer({ onApplyHandler, onResetHandler, onCloseHandler: onClose })
+          toolbarRenderer({ toolbarHandlers: { onApplyHandler, onResetHandler, onCloseHandler: onClose }, getFilterInfo })
         )}
       </div>
     </>
@@ -254,24 +256,8 @@ function ToolbarButtonsRenderer({ onApplyHandler, onCloseHandler, onResetHandler
   );
 }
 
-interface ToolbarRendererProps {
-  toolbarHandlers: ToolbarHandlers;
-  getFilterInfo: (options?: BuildFilterOptions | undefined) => PresentationInstanceFilterInfo | undefined;
-  filterResultsCountRenderer?: (filter: PresentationInstanceFilterInfo) => ReactNode | undefined;
-}
-
-function ToolbarRenderer({
-  toolbarHandlers: { onApplyHandler, onCloseHandler, onResetHandler },
-  getFilterInfo,
-  filterResultsCountRenderer,
-}: ToolbarRendererProps) {
-  return (
-    <>
-      <div>{filterResultsCountRenderer ? <ResultsRenderer buildFilter={getFilterInfo} renderer={filterResultsCountRenderer} /> : null}</div>
-      <ToolbarButtonsRenderer onApplyHandler={onApplyHandler} onResetHandler={onResetHandler} onCloseHandler={onCloseHandler}></ToolbarButtonsRenderer>
-    </>
-  );
-}
+const isFilterInvalid = (rootGroup: PropertyFilterBuilderRuleGroup) =>
+  rootGroup.items.length > 1 || (rootGroup.items.length === 1 && rootGroup.items[0].operator !== undefined);
 
 interface ResultsRendererProps {
   buildFilter: (options?: BuildFilterOptions) => PresentationInstanceFilterInfo | undefined;
