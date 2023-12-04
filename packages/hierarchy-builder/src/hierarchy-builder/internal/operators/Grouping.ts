@@ -105,11 +105,11 @@ async function groupInstanceNodes(
       ungrouped: groupings.ungrouped,
     };
   }
-  if (curr && curr.grouped.length > 0) {
-    onGroupingNodeCreated && curr.grouped.forEach(onGroupingNodeCreated);
-    return sortNodesByLabel([...curr.grouped, ...curr.ungrouped]);
-  }
-  if (curr && curr.ungrouped.length !== nodes.length) {
+  if (curr) {
+    if (curr.grouped.length > 0) {
+      onGroupingNodeCreated && curr.grouped.forEach(onGroupingNodeCreated);
+      return sortNodesByLabel([...curr.grouped, ...curr.ungrouped]);
+    }
     return curr.ungrouped;
   }
   return nodes;
