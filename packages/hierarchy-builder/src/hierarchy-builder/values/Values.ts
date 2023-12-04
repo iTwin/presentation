@@ -3,6 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { Id64 } from "@itwin/core-bentley";
+import { PrimitiveValueType } from "../Metadata";
+
 /**
  * A string representing a 64 bit number in hex.
  * @see [Id64String]($core-bentley)
@@ -119,6 +122,98 @@ export type TypedPrimitiveValue = (
 ) & {
   extendedType?: string;
 };
+
+/**
+ * A namespace for a primitive value.
+ * @beta
+ */
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export namespace TypedPrimitiveValue {
+  /**
+   * A function for a creating a [[TypedPrimitiveValue]] object. Throws if primitive type and value is incompatible.
+   * @beta
+   */
+  export function create(value: PrimitiveValue, type: PrimitiveValueType, koqName?: string, extendedType?: string): TypedPrimitiveValue {
+    switch (type) {
+      case "Integer":
+      case "Long":
+        if (typeof value === "number") {
+          return {
+            type,
+            extendedType,
+            value,
+          };
+        }
+        break;
+      case "Double":
+        if (typeof value === "number") {
+          return {
+            type,
+            koqName,
+            extendedType,
+            value,
+          };
+        }
+        break;
+      case "Boolean":
+        if (typeof value === "boolean") {
+          return {
+            type,
+            extendedType,
+            value,
+          };
+        }
+        break;
+      case "Id":
+        if (typeof value === "string" && Id64.isId64(value)) {
+          return {
+            type,
+            extendedType,
+            value,
+          };
+        }
+        break;
+      case "String":
+        if (typeof value === "string") {
+          return {
+            type,
+            extendedType,
+            value,
+          };
+        }
+        break;
+      case "DateTime":
+        if (typeof value === "string" || typeof value === "number" || value instanceof Date) {
+          return {
+            type,
+            extendedType,
+            value,
+          };
+        }
+        break;
+      case "Point2d":
+        if (PrimitiveValue.isPoint2d(value)) {
+          return {
+            type,
+            extendedType,
+            value,
+          };
+        }
+        break;
+      case "Point3d":
+        if (PrimitiveValue.isPoint3d(value)) {
+          return {
+            type,
+            extendedType,
+            value,
+          };
+        }
+        break;
+    }
+
+    throw new Error(`primitiveType: '${type}' isn't compatible with value: '${JSON.stringify(value)}'`);
+  }
+}
 
 /**
  * A type for a primitive property value and its metadata - property name and its class full name.

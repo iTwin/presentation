@@ -6,8 +6,6 @@
 import { assert } from "@itwin/core-bentley";
 import { ECClass, ECSchema, IMetadataProvider } from "../ECMetadata";
 import {
-  HierarchyNodeGroupingParams,
-  HierarchyNodeGroupingParamsBase,
   HierarchyNodeKey,
   InstanceHierarchyNodeProcessingParams,
   InstancesNodeKey,
@@ -58,58 +56,9 @@ function mergeNodeHandlingParams(
   const params = {
     ...(lhs?.hideIfNoChildren || rhs?.hideIfNoChildren ? { hideIfNoChildren: true } : undefined),
     ...(lhs?.hideInHierarchy || rhs?.hideInHierarchy ? { hideInHierarchy: true } : undefined),
-    ...(lhs?.grouping || rhs?.grouping ? { grouping: mergeNodeGroupingParams(lhs?.grouping, rhs?.grouping) } : undefined),
     ...(lhs?.mergeByLabelId || rhs?.mergeByLabelId ? { mergeByLabelId: lhs?.mergeByLabelId ?? rhs?.mergeByLabelId } : undefined),
   };
   return Object.keys(params).length > 0 ? params : undefined;
-}
-
-function mergeNodeGroupingParams(
-  lhsGrouping: HierarchyNodeGroupingParams | undefined,
-  rhsGrouping: HierarchyNodeGroupingParams | undefined,
-): HierarchyNodeGroupingParams {
-  return {
-    ...(lhsGrouping?.byClass || rhsGrouping?.byClass
-      ? {
-          byClass:
-            typeof lhsGrouping?.byClass !== "boolean" && typeof rhsGrouping?.byClass !== "boolean"
-              ? mergeBaseGroupingParams(lhsGrouping?.byClass, rhsGrouping?.byClass)
-              : true,
-        }
-      : undefined),
-    ...(lhsGrouping?.byLabel || rhsGrouping?.byLabel
-      ? {
-          byLabel:
-            typeof lhsGrouping?.byLabel !== "boolean" && typeof rhsGrouping?.byLabel !== "boolean"
-              ? mergeBaseGroupingParams(lhsGrouping?.byLabel, rhsGrouping?.byLabel)
-              : true,
-        }
-      : undefined),
-    ...(lhsGrouping?.byBaseClasses || rhsGrouping?.byBaseClasses
-      ? {
-          byBaseClasses: {
-            // Create an array from both: lhs and rhs fullClassNames arrays without adding duplicates
-            fullClassNames: [...new Set([...(lhsGrouping?.byBaseClasses?.fullClassNames ?? []), ...(rhsGrouping?.byBaseClasses?.fullClassNames ?? [])])],
-            ...mergeBaseGroupingParams(lhsGrouping?.byBaseClasses, rhsGrouping?.byBaseClasses),
-          },
-        }
-      : undefined),
-  };
-}
-
-function mergeBaseGroupingParams(
-  lhsBaseGroupingParams: HierarchyNodeGroupingParamsBase | undefined,
-  rhsBaseGroupingParams: HierarchyNodeGroupingParamsBase | undefined,
-): HierarchyNodeGroupingParamsBase {
-  return {
-    ...(lhsBaseGroupingParams?.hideIfOneGroupedNode || rhsBaseGroupingParams?.hideIfOneGroupedNode ? { hideIfOneGroupedNode: true } : undefined),
-    ...(lhsBaseGroupingParams?.hideIfNoSiblings || rhsBaseGroupingParams?.hideIfNoSiblings ? { hideIfNoSiblings: true } : undefined),
-    ...(lhsBaseGroupingParams?.autoExpand || rhsBaseGroupingParams?.autoExpand
-      ? {
-          autoExpand: lhsBaseGroupingParams?.autoExpand === "always" || rhsBaseGroupingParams?.autoExpand === "always" ? "always" : "single-child",
-        }
-      : undefined),
-  };
 }
 
 function mergeNodeKeys<TKey extends string | InstancesNodeKey>(lhs: TKey, rhs: TKey): TKey {

@@ -288,6 +288,9 @@ describe("GroupHiding", () => {
       const baseClassParams: GroupingHandlerResult = { ...nodes, groupingType: "base-class" };
       expect(applyGroupHidingParams(baseClassParams, 0)).to.deep.eq(baseClassParams);
 
+      const propertyParams: GroupingHandlerResult = { ...nodes, groupingType: "property" };
+      expect(applyGroupHidingParams(propertyParams, 0)).to.deep.eq(propertyParams);
+
       const classParams: GroupingHandlerResult = { ...nodes, groupingType: "class" };
       expect(applyGroupHidingParams(classParams, 0)).to.deep.eq(classParams);
     });
