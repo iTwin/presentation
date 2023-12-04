@@ -13,7 +13,7 @@ import { sortNodesByLabel } from "../Sorting";
 export async function createLabelGroups(nodes: ProcessedInstanceHierarchyNode[]): Promise<GroupingHandlerResult> {
   const grouped = new Array<ProcessedInstancesGroupingHierarchyNode>();
   const ungrouped = new Array<ProcessedInstanceHierarchyNode>();
-  const mergeInstanceNodes = new SortedNodesList();
+  const mergedInstanceNodes = new SortedNodesList();
   for (const node of nodes) {
     const byLabel = node.processingParams?.grouping?.byLabel;
     if (!byLabel) {
@@ -26,13 +26,13 @@ export async function createLabelGroups(nodes: ProcessedInstanceHierarchyNode[])
         continue;
       }
       const mergedInstanceNode = { ...node, processingParams: { mergeByLabelId: byLabel.mergeId } };
-      const pos = mergeInstanceNodes.insert(mergedInstanceNode);
-      const nodeAtPos = mergeInstanceNodes.get(pos)!;
+      const pos = mergedInstanceNodes.insert(mergedInstanceNode);
+      const nodeAtPos = mergedInstanceNodes.get(pos)!;
       if (nodeAtPos !== mergedInstanceNode) {
         // non-matching nodes means we failed to insert the node, because nodeAtPos already exists in its
         // place - they need to be merged together
         const mergedNode = mergeNodes(nodeAtPos, mergedInstanceNode) as MergedHierarchyNode;
-        mergeInstanceNodes.replace(pos, mergedNode);
+        mergedInstanceNodes.replace(pos, mergedNode);
       }
       continue;
     }
@@ -57,7 +57,7 @@ export async function createLabelGroups(nodes: ProcessedInstanceHierarchyNode[])
 
   return {
     grouped,
-    ungrouped: sortNodesByLabel([...ungrouped, ...mergeInstanceNodes]),
+    ungrouped: sortNodesByLabel([...ungrouped, ...mergedInstanceNodes]),
     groupingType: "label",
   };
 }
