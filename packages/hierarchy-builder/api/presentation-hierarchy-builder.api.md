@@ -375,7 +375,7 @@ export interface ECSqlSelectClauseGroupingParams {
     // (undocumented)
     byClass?: boolean | ECSqlSelectClauseGroupingParamsBase | ECSqlValueSelector;
     // (undocumented)
-    byLabel?: boolean | ECSqlSelectClauseGroupingParamsBase | ECSqlValueSelector;
+    byLabel?: ECSqlSelectClauseLabelGroupingParams;
     // (undocumented)
     byProperties?: ECSqlSelectClausePropertiesGroupingParams;
 }
@@ -389,6 +389,11 @@ export interface ECSqlSelectClauseGroupingParamsBase {
     // (undocumented)
     hideIfOneGroupedNode?: boolean | ECSqlValueSelector;
 }
+
+// @beta
+export type ECSqlSelectClauseLabelGroupingParams = {
+    mergeId: string | ECSqlValueSelector;
+} | boolean | ECSqlSelectClauseGroupingParamsBase | ECSqlValueSelector;
 
 // @beta
 export interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
@@ -588,7 +593,7 @@ export interface HierarchyNodeGroupingParams {
     // (undocumented)
     byClass?: boolean | HierarchyNodeGroupingParamsBase;
     // (undocumented)
-    byLabel?: boolean | HierarchyNodeGroupingParamsBase;
+    byLabel?: HierarchyNodeLabelGroupingParams;
     // (undocumented)
     byProperties?: HierarchyNodePropertiesGroupingParams;
 }
@@ -633,6 +638,11 @@ export namespace HierarchyNodeKey {
     export function isPropertyValueRangeGrouping(key: HierarchyNodeKey): key is PropertyValueRangeGroupingNodeKey;
     export function isStandard(key: HierarchyNodeKey): key is StandardHierarchyNodeKey;
 }
+
+// @beta
+export type HierarchyNodeLabelGroupingParams = {
+    mergeId: string;
+} | boolean | HierarchyNodeGroupingParamsBase;
 
 // @beta
 export interface HierarchyNodeProcessingParamsBase {
@@ -812,7 +822,6 @@ export enum NodeSelectClauseColumnNames {
     HasChildren = "HasChildren",
     HideIfNoChildren = "HideIfNoChildren",
     HideNodeInHierarchy = "HideNodeInHierarchy",
-    MergeByLabelId = "MergeByLabelId",
     SupportsFiltering = "SupportsFiltering"
 }
 
@@ -836,8 +845,6 @@ export interface NodeSelectClauseProps {
     hideIfNoChildren?: boolean | ECSqlValueSelector;
     // (undocumented)
     hideNodeInHierarchy?: boolean | ECSqlValueSelector;
-    // (undocumented)
-    mergeByLabelId?: string | ECSqlValueSelector;
     // (undocumented)
     nodeLabel: string | ECSqlValueSelector;
     // (undocumented)

@@ -288,11 +288,18 @@ export interface HierarchyNodeProcessingParamsBase {
  * @beta
  */
 export interface HierarchyNodeGroupingParams {
-  byLabel?: boolean | HierarchyNodeGroupingParamsBase;
+  byLabel?: HierarchyNodeLabelGroupingParams;
   byClass?: boolean | HierarchyNodeGroupingParamsBase;
   byBaseClasses?: HierarchyNodeBaseClassGroupingParams;
   byProperties?: HierarchyNodePropertiesGroupingParams;
 }
+
+/**
+ * A data structure that represents label grouping.
+ * @beta
+ */
+export type HierarchyNodeLabelGroupingParams = { mergeId: string } | boolean | HierarchyNodeGroupingParamsBase;
+
 /**
  * Grouping parameters that are shared across all types of groupings.
  * @beta

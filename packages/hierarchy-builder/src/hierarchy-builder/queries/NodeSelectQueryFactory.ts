@@ -46,12 +46,6 @@ export enum NodeSelectClauseColumnNames {
   HideNodeInHierarchy = "HideNodeInHierarchy",
   /** A serialized JSON object for providing grouping information. */
   Grouping = "Grouping",
-  /**
-   * A string indicating a label merge group. Values:
-   * - non-empty string puts the node into a label merge group.
-   * - NULL or empty string doesn't merge node by label.
-   */
-  MergeByLabelId = "MergeByLabelId",
   /** A serialized JSON object for associating a node with additional data. */
   ExtendedData = "ExtendedData",
   /** A flag indicating the node should be auto-expanded when it's loaded. */
@@ -86,7 +80,6 @@ export interface NodeSelectClauseProps {
   hideNodeInHierarchy?: boolean | ECSqlValueSelector;
   hideIfNoChildren?: boolean | ECSqlValueSelector;
   grouping?: ECSqlSelectClauseGroupingParams;
-  mergeByLabelId?: string | ECSqlValueSelector;
 }
 
 /**
@@ -94,11 +87,21 @@ export interface NodeSelectClauseProps {
  * @beta
  */
 export interface ECSqlSelectClauseGroupingParams {
-  byLabel?: boolean | ECSqlSelectClauseGroupingParamsBase | ECSqlValueSelector;
+  byLabel?: ECSqlSelectClauseLabelGroupingParams;
   byClass?: boolean | ECSqlSelectClauseGroupingParamsBase | ECSqlValueSelector;
   byBaseClasses?: ECSqlSelectClauseBaseClassGroupingParams;
   byProperties?: ECSqlSelectClausePropertiesGroupingParams;
 }
+
+/**
+ * A data structure for defining label grouping.
+ * @beta
+ */
+export type ECSqlSelectClauseLabelGroupingParams =
+  | { mergeId: string | ECSqlValueSelector }
+  | boolean
+  | ECSqlSelectClauseGroupingParamsBase
+  | ECSqlValueSelector;
 
 /**
  * A data structure for defining base grouping parameters shared across all types of grouping.
@@ -211,7 +214,6 @@ export class NodeSelectQueryFactory {
       CAST(${createECSqlValueSelector(props.hideIfNoChildren)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
       CAST(${createECSqlValueSelector(props.hideNodeInHierarchy)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
       ${props.grouping ? createGroupingSelector(props.grouping) : "CAST(NULL AS TEXT)"} AS ${NodeSelectClauseColumnNames.Grouping},
-      CAST(${createECSqlValueSelector(props.mergeByLabelId)} AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
       ${
         props.extendedData
           ? `json_object(${Object.entries(props.extendedData)
@@ -323,6 +325,8 @@ function createGroupingSelector(grouping: ECSqlSelectClauseGroupingParams): stri
       selector:
         typeof grouping.byLabel === "boolean" || isSelector(grouping.byLabel)
           ? createECSqlValueSelector(grouping.byLabel)
+          : "mergeId" in grouping.byLabel
+          ? serializeJsonObject([{ key: "mergeId", selector: createECSqlValueSelector(grouping.byLabel.mergeId) }])
           : serializeJsonObject(createBaseGroupingParamSelectors(grouping.byLabel)),
     });
 

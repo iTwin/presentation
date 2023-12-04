@@ -119,7 +119,7 @@ describe("Stateless hierarchy builder", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: "merge this",
-                      mergeByLabelId: "merge",
+                      grouping: { byLabel: { mergeId: "merge" } },
                     })}
                     FROM ${subjectClassName} AS this
                     WHERE this.Parent.Id = (${IModel.rootSubjectId})
@@ -166,7 +166,7 @@ describe("Stateless hierarchy builder", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.CodeValue` },
-                      mergeByLabelId: "merge",
+                      grouping: { byLabel: { mergeId: "merge" } },
                       hideNodeInHierarchy: { selector: `IIF(this.CodeValue = 'hide', 1, 0)` },
                     })}
                     FROM ${subjectClassName} AS this
@@ -186,7 +186,7 @@ describe("Stateless hierarchy builder", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: { selector: `this.CodeValue` },
-                      mergeByLabelId: "merge",
+                      grouping: { byLabel: { mergeId: "merge" } },
                     })}
                     FROM ${subjectClassName} AS this
                     WHERE this.Parent.Id = ?

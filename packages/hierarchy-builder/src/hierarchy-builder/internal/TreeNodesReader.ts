@@ -64,7 +64,6 @@ export interface RowDef {
   [NodeSelectClauseColumnNames.HideIfNoChildren]?: boolean;
   [NodeSelectClauseColumnNames.HideNodeInHierarchy]?: boolean;
   [NodeSelectClauseColumnNames.Grouping]?: string;
-  [NodeSelectClauseColumnNames.MergeByLabelId]?: string;
   [NodeSelectClauseColumnNames.ExtendedData]?: string;
   [NodeSelectClauseColumnNames.AutoExpand]?: boolean;
   [NodeSelectClauseColumnNames.SupportsFiltering]?: boolean;
@@ -78,7 +77,6 @@ export function defaultNodesParser(row: { [columnName: string]: any }): ParsedIn
     ...(typedRow.HideIfNoChildren ? { hideIfNoChildren: true } : undefined),
     ...(typedRow.HideNodeInHierarchy ? { hideInHierarchy: true } : undefined),
     ...(typedRow.Grouping ? { grouping: JSON.parse(typedRow.Grouping) } : undefined),
-    ...(typedRow.MergeByLabelId ? { mergeByLabelId: typedRow.MergeByLabelId } : undefined),
   };
   return {
     // don't format the label here - we're going to do that at node pre-processing step to handle both - instance and custom nodes

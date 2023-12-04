@@ -7,7 +7,7 @@ import { expect } from "chai";
 import { GroupingNodeKey } from "../../../../hierarchy-builder/HierarchyNode";
 import { GroupingHandlerResult } from "../../../../hierarchy-builder/internal/operators/Grouping";
 import { createLabelGroups } from "../../../../hierarchy-builder/internal/operators/grouping/LabelGrouping";
-import { createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils";
+import { createTestInstanceKey, createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils";
 
 describe("LabelGrouping", () => {
   it("groups one node", async () => {
@@ -122,6 +122,121 @@ describe("LabelGrouping", () => {
     ];
     const result = await createLabelGroups(nodes);
     expect(result.ungrouped).to.deep.eq(nodes);
+    expect(result.grouped).to.deep.eq([]);
+  });
+
+  it("doesn't merge nodes that don't have `mergeId` set", async () => {
+    const nodes = [
+      createTestProcessedInstanceNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] } }),
+      createTestProcessedInstanceNode({ key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] } }),
+    ];
+    const result = await createLabelGroups(nodes);
+    expect(result.ungrouped).to.deep.eq(nodes);
+    expect(result.grouped).to.deep.eq([]);
+  });
+
+  it("doesn't merge nodes that have empty `mergeId`", async () => {
+    const nodes = [
+      createTestProcessedInstanceNode({
+        key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] },
+        processingParams: { grouping: { byLabel: { mergeId: "" } } },
+      }),
+      createTestProcessedInstanceNode({
+        key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] },
+        processingParams: { grouping: { byLabel: { mergeId: "" } } },
+      }),
+    ];
+    const result = await createLabelGroups(nodes);
+    expect(result.ungrouped).to.deep.eq(nodes);
+    expect(result.grouped).to.deep.eq([]);
+  });
+
+  it("doesn't merge nodes that have different `mergeId`", async () => {
+    const nodes = [
+      createTestProcessedInstanceNode({
+        key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] },
+        processingParams: { grouping: { byLabel: { mergeId: "a" } } },
+      }),
+      createTestProcessedInstanceNode({
+        key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] },
+        processingParams: { grouping: { byLabel: { mergeId: "b" } } },
+      }),
+    ];
+    const result = await createLabelGroups(nodes);
+    expect(result.ungrouped).to.deep.eq([
+      { ...nodes[0], processingParams: { mergeByLabelId: "a" } },
+      { ...nodes[1], processingParams: { mergeByLabelId: "b" } },
+    ]);
+    expect(result.grouped).to.deep.eq([]);
+  });
+
+  it("doesn't merge nodes that have different labels", async () => {
+    const nodes = [
+      createTestProcessedInstanceNode({
+        key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] },
+        label: "a",
+        processingParams: { grouping: { byLabel: { mergeId: "x" } } },
+      }),
+      createTestProcessedInstanceNode({
+        key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] },
+        label: "b",
+        processingParams: { grouping: { byLabel: { mergeId: "x" } } },
+      }),
+    ];
+    const result = await createLabelGroups(nodes);
+    expect(result.ungrouped).to.deep.eq([
+      { ...nodes[0], processingParams: { mergeByLabelId: "x" } },
+      { ...nodes[1], processingParams: { mergeByLabelId: "x" } },
+    ]);
+    expect(result.grouped).to.deep.eq([]);
+  });
+
+  it("merges nodes that have same `mergeId` and label", async () => {
+    const nodes = [
+      createTestProcessedInstanceNode({
+        key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] },
+        label: "a",
+        processingParams: { grouping: { byLabel: { mergeId: "x" } } },
+      }),
+      createTestProcessedInstanceNode({
+        key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x2" })] },
+        label: "b",
+        processingParams: { grouping: { byLabel: { mergeId: "y" } } },
+      }),
+      createTestProcessedInstanceNode({
+        key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x3" })] },
+        label: "a",
+        processingParams: { grouping: { byLabel: { mergeId: "x" } } },
+      }),
+      createTestProcessedInstanceNode({
+        key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x4" })] },
+        label: "b",
+        processingParams: { grouping: { byLabel: { mergeId: "y" } } },
+      }),
+    ];
+    const result = await createLabelGroups(nodes);
+    expect(result.ungrouped).to.deep.eq([
+      createTestProcessedInstanceNode({
+        key: {
+          type: "instances",
+          instanceKeys: [createTestInstanceKey({ id: "0x1" }), createTestInstanceKey({ id: "0x3" })],
+        },
+        label: "a",
+        processingParams: {
+          mergeByLabelId: "x",
+        },
+      }),
+      createTestProcessedInstanceNode({
+        key: {
+          type: "instances",
+          instanceKeys: [createTestInstanceKey({ id: "0x2" }), createTestInstanceKey({ id: "0x4" })],
+        },
+        label: "b",
+        processingParams: {
+          mergeByLabelId: "y",
+        },
+      }),
+    ]);
     expect(result.grouped).to.deep.eq([]);
   });
 });

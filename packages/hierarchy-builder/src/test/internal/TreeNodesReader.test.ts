@@ -68,7 +68,6 @@ describe("defaultNodesParser", () => {
         byClass: true,
         byLabel: true,
       }),
-      [NodeSelectClauseColumnNames.MergeByLabelId]: "merge id",
       [NodeSelectClauseColumnNames.ExtendedData]: JSON.stringify({
         test: 123,
       }),
@@ -91,7 +90,6 @@ describe("defaultNodesParser", () => {
       processingParams: {
         hideIfNoChildren: true,
         hideInHierarchy: true,
-        mergeByLabelId: "merge id",
         grouping: {
           byBaseClasses: {
             fullClassNames: [],
