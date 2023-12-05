@@ -37,7 +37,7 @@ export interface PresentationInstanceFilterDialogProps {
   /** Callback that is invoked when 'Reset' button is clicked. */
   onReset: () => void;
   /** Renderer that will be used to render a custom toolbar instead of the default one. */
-  toolbarRenderer?: (toolbarHandlers: ToolbarRendererProps) => ReactNode;
+  toolbarRenderer?: (toolbarHandlers: FilteringDialogToolbarRendererProps) => ReactNode;
   /**
    * [Descriptor]($presentation-common) that will be used in [[InstanceFilterBuilder]] component rendered inside this dialog.
    *
@@ -58,16 +58,22 @@ export interface PresentationInstanceFilterDialogProps {
   initialFilter?: PresentationInstanceFilterInfo;
 }
 
-/** Set of custom handlers that will additionally be called on each action respectively. */
-export interface ToolbarHandlers {
+/**
+ * Set of custom handlers that will additionally be called on each action respectively.
+ * @beta
+ */
+export interface FilteringDialogToolbarHandlers {
   onApplyHandler: () => void;
   onCloseHandler: () => void;
   onResetHandler: () => void;
 }
 
-/** Props required for rendering a toolbar */
-export interface ToolbarRendererProps {
-  toolbarHandlers: ToolbarHandlers;
+/**
+ * Props required for rendering a toolbar.
+ * @beta
+ */
+export interface FilteringDialogToolbarRendererProps {
+  toolbarHandlers: FilteringDialogToolbarHandlers;
   getFilterInfo: (options?: BuildFilterOptions | undefined) => PresentationInstanceFilterInfo | undefined;
 }
 
@@ -242,7 +248,7 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
   );
 }
 
-function ToolbarButtonsRenderer({ onApplyHandler, onCloseHandler, onResetHandler }: ToolbarHandlers) {
+function ToolbarButtonsRenderer({ onApplyHandler, onCloseHandler, onResetHandler }: FilteringDialogToolbarHandlers) {
   return (
     <Dialog.ButtonBar className="presentation-instance-filter-button-bar">
       <Button className="presentation-instance-filter-dialog-apply-button" styleType="high-visibility" onClick={onApplyHandler}>
