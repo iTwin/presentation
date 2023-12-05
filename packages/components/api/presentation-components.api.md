@@ -8,6 +8,7 @@
 
 import { AbstractTreeNodeLoaderWithProvider } from '@itwin/components-react';
 import { ActiveMatchInfo } from '@itwin/components-react';
+import { BuildFilterOptions } from '@itwin/components-react';
 import { CategoryDescription } from '@itwin/presentation-common';
 import { ClassId } from '@itwin/presentation-common';
 import { ClassInfo } from '@itwin/presentation-common';
@@ -216,6 +217,24 @@ export type FilterablePresentationTreeNodeItem = PresentationTreeNodeItem & {
 };
 
 // @beta
+export interface FilteringDialogToolbarHandlers {
+    // (undocumented)
+    onApplyHandler: () => void;
+    // (undocumented)
+    onCloseHandler: () => void;
+    // (undocumented)
+    onResetHandler: () => void;
+}
+
+// @beta
+export interface FilteringDialogToolbarRendererProps {
+    // (undocumented)
+    getFilterInfo: (options?: BuildFilterOptions | undefined) => PresentationInstanceFilterInfo | undefined;
+    // (undocumented)
+    toolbarHandlers: FilteringDialogToolbarHandlers;
+}
+
+// @beta
 export interface GenericInstanceFilter {
     propertyClasses: ClassInfo[];
     relatedInstances: RelatedInstanceDescription[];
@@ -403,10 +422,12 @@ export interface PresentationInstanceFilterDialogProps {
     imodel: IModelConnection;
     initialFilter?: PresentationInstanceFilterInfo;
     isOpen: boolean;
-    onApply: (filter: PresentationInstanceFilterInfo) => void;
+    onApply: (filter?: PresentationInstanceFilterInfo) => void;
     onClose: () => void;
+    onReset: () => void;
     ruleGroupDepthLimit?: number;
     title?: React.ReactNode;
+    toolbarRenderer?: (toolbarHandlers: FilteringDialogToolbarRendererProps) => ReactNode;
 }
 
 // @beta
