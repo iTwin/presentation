@@ -13,8 +13,14 @@ import { HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { TestIModelBuilder } from "@itwin/presentation-testing";
 import {
-  buildIModel, importSchema, insertPhysicalElement, insertPhysicalModelWithPartition, insertPhysicalPartition, insertPhysicalSubModel,
-  insertSpatialCategory, insertSubject,
+  buildIModel,
+  importSchema,
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertPhysicalPartition,
+  insertPhysicalSubModel,
+  insertSpatialCategory,
+  insertSubject,
 } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
