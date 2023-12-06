@@ -94,14 +94,41 @@ export interface ECSqlSelectClauseGroupingParams {
 }
 
 /**
+ * A data structure for defining label grouping params.
+ * @beta
+ */
+export interface ECSqlSelectClauseLabelGroupingBaseParams {
+  /** Label grouping option that determines whether to group nodes or to merge them. Defaults to "group".*/
+  action?: "group" | "merge";
+  /** Id that needs to match for nodes to be grouped or merged.*/
+  groupId?: string | ECSqlValueSelector;
+}
+
+/**
+ * A data structure for defining label merging.
+ * @beta
+ */
+export interface ECSqlSelectClauseLabelGroupingMergeParams extends ECSqlSelectClauseLabelGroupingBaseParams {
+  action: "merge";
+}
+
+/**
  * A data structure for defining label grouping.
  * @beta
  */
+export interface ECSqlSelectClauseLabelGroupingGroupParams extends ECSqlSelectClauseLabelGroupingBaseParams, ECSqlSelectClauseGroupingParamsBase {
+  action?: "group";
+}
+
+/**
+ * A data structure for defining possible label grouping types.
+ * @beta
+ */
 export type ECSqlSelectClauseLabelGroupingParams =
-  | { mergeId: string | ECSqlValueSelector }
   | boolean
-  | ECSqlSelectClauseGroupingParamsBase
-  | ECSqlValueSelector;
+  | ECSqlValueSelector
+  | ECSqlSelectClauseLabelGroupingMergeParams
+  | ECSqlSelectClauseLabelGroupingGroupParams;
 
 /**
  * A data structure for defining base grouping parameters shared across all types of grouping.
@@ -325,9 +352,9 @@ function createGroupingSelector(grouping: ECSqlSelectClauseGroupingParams): stri
       selector:
         typeof grouping.byLabel === "boolean" || isSelector(grouping.byLabel)
           ? createECSqlValueSelector(grouping.byLabel)
-          : "mergeId" in grouping.byLabel
-          ? serializeJsonObject([{ key: "mergeId", selector: createECSqlValueSelector(grouping.byLabel.mergeId) }])
-          : serializeJsonObject(createBaseGroupingParamSelectors(grouping.byLabel)),
+          : "action" in grouping.byLabel && grouping.byLabel.action === "merge"
+          ? serializeJsonObject(createLabelGroupingBaseParamsSelectors(grouping.byLabel))
+          : serializeJsonObject([...createLabelGroupingBaseParamsSelectors(grouping.byLabel), ...createBaseGroupingParamSelectors(grouping.byLabel)]),
     });
 
   grouping.byClass &&
@@ -386,6 +413,23 @@ function createGroupingSelector(grouping: ECSqlSelectClauseGroupingParams): stri
     });
 
   return serializeJsonObject(groupingSelectors);
+}
+
+function createLabelGroupingBaseParamsSelectors(byLabel: ECSqlSelectClauseLabelGroupingBaseParams) {
+  const selectors = new Array<{ key: string; selector: string }>();
+  if (byLabel.action !== undefined) {
+    selectors.push({
+      key: "action",
+      selector: `${createECSqlValueSelector(byLabel.action)}`,
+    });
+  }
+  if (byLabel.groupId !== undefined) {
+    selectors.push({
+      key: "groupId",
+      selector: createECSqlValueSelector(byLabel.groupId),
+    });
+  }
+  return selectors;
 }
 
 function createPropertyGroupSelectors(propertyGroup: ECSqlSelectClausePropertyGroup) {

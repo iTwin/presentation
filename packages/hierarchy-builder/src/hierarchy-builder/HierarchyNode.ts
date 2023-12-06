@@ -35,6 +35,7 @@ export interface ClassGroupingNodeKey {
 export interface LabelGroupingNodeKey {
   type: "label-grouping";
   label: string;
+  groupId?: string;
 }
 
 /**
@@ -157,7 +158,7 @@ export namespace HierarchyNodeKey {
       }
       case "label-grouping": {
         assert(isLabelGrouping(rhs));
-        return lhs.label === rhs.label;
+        return lhs.label === rhs.label && lhs.groupId === rhs.groupId;
       }
       case "property-grouping:other": {
         return true;
@@ -295,10 +296,37 @@ export interface HierarchyNodeGroupingParams {
 }
 
 /**
- * A data structure that represents label grouping.
+ * A data structure for defining params specifically used for label grouping.
  * @beta
  */
-export type HierarchyNodeLabelGroupingParams = { mergeId: string } | boolean | HierarchyNodeGroupingParamsBase;
+export interface HierarchyNodeLabelGroupingBaseParams {
+  /** Label grouping option that determines whether to group nodes or to merge them. Defaults to "group".*/
+  action?: "group" | "merge";
+  /** Value that needs to match in order for nodes to be grouped or merged.*/
+  groupId?: string;
+}
+
+/**
+ * A data structure for defining label merging.
+ * @beta
+ */
+export interface HierarchyNodeLabelGroupingMergeParams extends HierarchyNodeLabelGroupingBaseParams {
+  action: "merge";
+}
+
+/**
+ * A data structure for defining label grouping with additional parameters.
+ * @beta
+ */
+export interface HierarchyNodeLabelGroupingGroupParams extends HierarchyNodeLabelGroupingBaseParams, HierarchyNodeGroupingParamsBase {
+  action?: "group";
+}
+
+/**
+ * A data structure for defining possible label grouping types.
+ * @beta
+ */
+export type HierarchyNodeLabelGroupingParams = boolean | HierarchyNodeLabelGroupingMergeParams | HierarchyNodeLabelGroupingGroupParams;
 
 /**
  * Grouping parameters that are shared across all types of groupings.
@@ -415,7 +443,6 @@ export interface HierarchyNodePropertyValueRange {
  */
 export interface InstanceHierarchyNodeProcessingParams extends HierarchyNodeProcessingParamsBase {
   grouping?: HierarchyNodeGroupingParams;
-  mergeByLabelId?: string;
 }
 
 /**

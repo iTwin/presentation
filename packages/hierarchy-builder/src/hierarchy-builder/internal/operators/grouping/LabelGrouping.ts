@@ -3,80 +3,66 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { assert, DuplicatePolicy, SortedArray } from "@itwin/core-bentley";
-import { GroupingNodeKey, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
+import { LabelGroupingNodeKey, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
 import { mergeNodes } from "../../Common";
 import { GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
 import { mergeArraysByLabel } from "../Merging";
+import { sortNodesByLabel } from "../Sorting";
 
 /** @internal */
 export async function createLabelGroups(nodes: ProcessedInstanceHierarchyNode[]): Promise<GroupingHandlerResult> {
-  const grouped = new Array<ProcessedInstancesGroupingHierarchyNode>();
   const ungrouped = new Array<ProcessedInstanceHierarchyNode>();
-  const mergedInstanceNodes = new SortedNodesList();
+  const nodesToMergeMap = new Map<string, ProcessedInstanceHierarchyNode[]>();
+  const nodesToGroupMap = new Map<string, ProcessedInstanceHierarchyNode[]>();
   for (const node of nodes) {
     const byLabel = node.processingParams?.grouping?.byLabel;
     if (!byLabel) {
       ungrouped.push(node);
       continue;
     }
-    if (typeof byLabel === "object" && "mergeId" in byLabel) {
-      if (byLabel.mergeId === "") {
-        ungrouped.push(node);
+    const nodeMapKeyIdentifier = `label: '${node.label}'${typeof byLabel === "object" && byLabel.groupId ? `, groupId: '${byLabel.groupId}'` : ""}`;
+    if (typeof byLabel === "object" && byLabel.action === "merge") {
+      const nodesThatNeedToBeMerged = nodesToMergeMap.get(nodeMapKeyIdentifier);
+      if (!nodesThatNeedToBeMerged) {
+        nodesToMergeMap.set(nodeMapKeyIdentifier, [node]);
         continue;
       }
-      const mergedInstanceNode = { ...node, processingParams: { mergeByLabelId: byLabel.mergeId, grouping: { byLabel: { mergeId: byLabel.mergeId } } } };
-      const pos = mergedInstanceNodes.insert(mergedInstanceNode);
-      const nodeAtPos = mergedInstanceNodes.get(pos)!;
-      if (nodeAtPos !== mergedInstanceNode) {
-        // non-matching nodes means we failed to insert the node, because nodeAtPos already exists in its
-        // place - they need to be merged together
-        const mergedNode = mergeNodes(nodeAtPos, mergedInstanceNode) as MergedHierarchyNode;
-        mergedInstanceNodes.replace(pos, mergedNode);
-      }
+      nodesThatNeedToBeMerged.push(node);
       continue;
     }
-    if (grouped.length > 0) {
-      const lastGroupedNode = grouped[grouped.length - 1];
-      if (node.label === lastGroupedNode.label) {
-        lastGroupedNode.children.push({ ...node, parentKeys: [...node.parentKeys, lastGroupedNode.key] });
-        continue;
-      }
+    const nodesThatNeedToBeGrouped = nodesToGroupMap.get(nodeMapKeyIdentifier);
+    if (!nodesThatNeedToBeGrouped) {
+      nodesToGroupMap.set(nodeMapKeyIdentifier, [node]);
+      continue;
     }
-    const groupingNodeKey: GroupingNodeKey = {
-      type: "label-grouping",
-      label: node.label,
-    };
-    grouped.push({
-      label: node.label,
-      key: groupingNodeKey,
-      parentKeys: [...node.parentKeys],
-      children: [{ ...node, parentKeys: [...node.parentKeys, groupingNodeKey] }],
-    });
+    nodesThatNeedToBeGrouped.push(node);
   }
+  const mergedNodes = new Array<ProcessedInstanceHierarchyNode>();
+  nodesToMergeMap.forEach((entry) => {
+    let finalNode = entry[0];
+    for (let i = 1; i < entry.length; ++i) {
+      finalNode = mergeNodes(finalNode, entry[i]);
+    }
+    mergedNodes.push(finalNode);
+  });
+
+  const groupedNodes = new Array<ProcessedInstancesGroupingHierarchyNode>();
+  nodesToGroupMap.forEach((entry) => {
+    const byLabel = entry[0].processingParams?.grouping?.byLabel;
+    const groupId = typeof byLabel === "object" ? byLabel.groupId : undefined;
+    const groupingNodeKey: LabelGroupingNodeKey = { type: "label-grouping", label: entry[0].label, groupId };
+    const groupedNodeParentKeys = entry[0].parentKeys;
+    groupedNodes.push({
+      label: entry[0].label,
+      key: groupingNodeKey,
+      parentKeys: groupedNodeParentKeys,
+      children: entry.map((gn) => ({ ...gn, parentKeys: [...groupedNodeParentKeys, groupingNodeKey] })),
+    });
+  });
 
   return {
-    grouped,
-    ungrouped: mergeArraysByLabel(ungrouped, [...mergedInstanceNodes]),
+    grouped: sortNodesByLabel(groupedNodes),
+    ungrouped: mergeArraysByLabel(ungrouped, sortNodesByLabel(mergedNodes)),
     groupingType: "label",
   };
-}
-
-type MergedHierarchyNode = ProcessedInstanceHierarchyNode & { processingParams: { mergeByLabelId: string; grouping: { byLabel: { mergeId: string } } } };
-
-class SortedNodesList extends SortedArray<MergedHierarchyNode> {
-  public constructor() {
-    const comp = (lhs: MergedHierarchyNode, rhs: MergedHierarchyNode): number => {
-      const labelCompare = lhs.label.localeCompare(rhs.label);
-      if (labelCompare !== 0) {
-        return labelCompare;
-      }
-      return lhs.processingParams.mergeByLabelId.localeCompare(rhs.processingParams.mergeByLabelId);
-    };
-    super(comp, DuplicatePolicy.Retain);
-  }
-  public replace(pos: number, replacement: MergedHierarchyNode) {
-    assert(this._compare(this._array[pos], replacement) === 0);
-    this._array[pos] = replacement;
-  }
 }

@@ -391,9 +391,25 @@ export interface ECSqlSelectClauseGroupingParamsBase {
 }
 
 // @beta
-export type ECSqlSelectClauseLabelGroupingParams = {
-    mergeId: string | ECSqlValueSelector;
-} | boolean | ECSqlSelectClauseGroupingParamsBase | ECSqlValueSelector;
+export interface ECSqlSelectClauseLabelGroupingBaseParams {
+    action?: "group" | "merge";
+    groupId?: string | ECSqlValueSelector;
+}
+
+// @beta
+export interface ECSqlSelectClauseLabelGroupingGroupParams extends ECSqlSelectClauseLabelGroupingBaseParams, ECSqlSelectClauseGroupingParamsBase {
+    // (undocumented)
+    action?: "group";
+}
+
+// @beta
+export interface ECSqlSelectClauseLabelGroupingMergeParams extends ECSqlSelectClauseLabelGroupingBaseParams {
+    // (undocumented)
+    action: "merge";
+}
+
+// @beta
+export type ECSqlSelectClauseLabelGroupingParams = boolean | ECSqlValueSelector | ECSqlSelectClauseLabelGroupingMergeParams | ECSqlSelectClauseLabelGroupingGroupParams;
 
 // @beta
 export interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
@@ -640,9 +656,25 @@ export namespace HierarchyNodeKey {
 }
 
 // @beta
-export type HierarchyNodeLabelGroupingParams = {
-    mergeId: string;
-} | boolean | HierarchyNodeGroupingParamsBase;
+export interface HierarchyNodeLabelGroupingBaseParams {
+    action?: "group" | "merge";
+    groupId?: string;
+}
+
+// @beta
+export interface HierarchyNodeLabelGroupingGroupParams extends HierarchyNodeLabelGroupingBaseParams, HierarchyNodeGroupingParamsBase {
+    // (undocumented)
+    action?: "group";
+}
+
+// @beta
+export interface HierarchyNodeLabelGroupingMergeParams extends HierarchyNodeLabelGroupingBaseParams {
+    // (undocumented)
+    action: "merge";
+}
+
+// @beta
+export type HierarchyNodeLabelGroupingParams = boolean | HierarchyNodeLabelGroupingMergeParams | HierarchyNodeLabelGroupingGroupParams;
 
 // @beta
 export interface HierarchyNodeProcessingParamsBase {
@@ -756,8 +788,6 @@ export type INodePreProcessor = <TNode extends ProcessedCustomHierarchyNode | Pr
 export interface InstanceHierarchyNodeProcessingParams extends HierarchyNodeProcessingParamsBase {
     // (undocumented)
     grouping?: HierarchyNodeGroupingParams;
-    // (undocumented)
-    mergeByLabelId?: string;
 }
 
 // @beta
@@ -796,6 +826,8 @@ export type IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise<s
 
 // @beta
 export interface LabelGroupingNodeKey {
+    // (undocumented)
+    groupId?: string;
     // (undocumented)
     label: string;
     // (undocumented)

@@ -169,7 +169,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                 `,
               },
               hideIfNoChildren: true,
-              grouping: { byLabel: { mergeId: "subject" } },
+              grouping: { byLabel: { action: "merge", groupId: "subject" } },
               extendedData: {
                 imageId: "icon-folder",
               },
@@ -336,7 +336,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                     className: "BisCore.SpatialCategory",
                   }),
                 },
-                grouping: { byLabel: { mergeId: "category" } },
+                grouping: { byLabel: { action: "merge", groupId: "category" } },
                 hasChildren: true,
                 extendedData: {
                   imageId: "icon-layers",

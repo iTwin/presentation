@@ -315,6 +315,7 @@ describe("HierarchyProvider", () => {
           key: {
             type: "label-grouping",
             label: "test label",
+            groupId: undefined,
           },
           parentKeys: [],
           label: "test label",

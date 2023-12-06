@@ -7,6 +7,7 @@ import { assert } from "@itwin/core-bentley";
 import { ECClass, ECSchema, IMetadataProvider } from "../ECMetadata";
 import {
   HierarchyNodeKey,
+  HierarchyNodeLabelGroupingParams,
   InstanceHierarchyNodeProcessingParams,
   InstancesNodeKey,
   ProcessedCustomHierarchyNode,
@@ -56,9 +57,21 @@ function mergeNodeHandlingParams(
   const params = {
     ...(lhs?.hideIfNoChildren || rhs?.hideIfNoChildren ? { hideIfNoChildren: true } : undefined),
     ...(lhs?.hideInHierarchy || rhs?.hideInHierarchy ? { hideInHierarchy: true } : undefined),
-    ...(lhs?.mergeByLabelId || rhs?.mergeByLabelId ? { mergeByLabelId: lhs?.mergeByLabelId ?? rhs?.mergeByLabelId } : undefined),
+    ...mergeByLabelParams(lhs?.grouping?.byLabel, rhs?.grouping?.byLabel),
   };
   return Object.keys(params).length > 0 ? params : undefined;
+}
+
+function mergeByLabelParams(
+  lhs: HierarchyNodeLabelGroupingParams | undefined,
+  rhs: HierarchyNodeLabelGroupingParams | undefined,
+): InstanceHierarchyNodeProcessingParams | undefined {
+  if (lhs && typeof lhs === "object" && lhs.action === "merge" && rhs && typeof rhs === "object" && rhs.action === "merge" && lhs.groupId === rhs.groupId) {
+    return {
+      grouping: { byLabel: lhs },
+    };
+  }
+  return undefined;
 }
 
 function mergeNodeKeys<TKey extends string | InstancesNodeKey>(lhs: TKey, rhs: TKey): TKey {

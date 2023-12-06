@@ -52,7 +52,10 @@ beta;ECSqlQueryRowFormat = "ECSqlPropertyNames" | "Indexes"
 beta;ECSqlSelectClauseBaseClassGroupingParams 
 beta;ECSqlSelectClauseGroupingParams
 beta;ECSqlSelectClauseGroupingParamsBase
-beta;ECSqlSelectClauseLabelGroupingParams =
+beta;ECSqlSelectClauseLabelGroupingBaseParams
+beta;ECSqlSelectClauseLabelGroupingGroupParams 
+beta;ECSqlSelectClauseLabelGroupingMergeParams 
+beta;ECSqlSelectClauseLabelGroupingParams = boolean | ECSqlValueSelector | ECSqlSelectClauseLabelGroupingMergeParams | ECSqlSelectClauseLabelGroupingGroupParams
 beta;ECSqlSelectClausePropertiesGroupingParams 
 beta;ECSqlSelectClausePropertyGroup
 beta;ECSqlSelectClausePropertyValueRange
@@ -81,7 +84,10 @@ beta;HierarchyNodeIdentifier
 beta;HierarchyNodeIdentifiersPath = HierarchyNodeIdentifier[]
 beta;HierarchyNodeKey = StandardHierarchyNodeKey | string
 beta;HierarchyNodeKey
-beta;HierarchyNodeLabelGroupingParams =
+beta;HierarchyNodeLabelGroupingBaseParams
+beta;HierarchyNodeLabelGroupingGroupParams 
+beta;HierarchyNodeLabelGroupingMergeParams 
+beta;HierarchyNodeLabelGroupingParams = boolean | HierarchyNodeLabelGroupingMergeParams | HierarchyNodeLabelGroupingGroupParams
 beta;HierarchyNodeProcessingParamsBase
 beta;HierarchyNodePropertiesGroupingParams 
 beta;HierarchyNodePropertyGroup

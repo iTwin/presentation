@@ -147,6 +147,7 @@ export namespace NodeValidators {
 
   export function createForLabelGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(props: {
     label?: string;
+    groupId?: string;
     autoExpand?: boolean;
     children?: TChildren;
   }) {
@@ -160,6 +161,9 @@ export namespace NodeValidators {
         }
         if (props.label && node.key.label !== props.label) {
           throw new Error(`[${node.label}] Expected node to represent label "${props.label}", got "${node.key.label}"`);
+        }
+        if (node.key.groupId !== props.groupId) {
+          throw new Error(`[${node.label}] Expected node to represent groupId " ${JSON.stringify(props.groupId)}", got "${node.key.groupId}"`);
         }
         validateBaseNodeAttributes(node, {
           label: props.label,
