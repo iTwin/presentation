@@ -163,7 +163,11 @@ export namespace NodeValidators {
           throw new Error(`[${node.label}] Expected node to represent label "${props.label}", got "${node.key.label}"`);
         }
         if (node.key.groupId !== props.groupId) {
-          throw new Error(`[${node.label}] Expected node to represent groupId " ${JSON.stringify(props.groupId)}", got "${node.key.groupId}"`);
+          throw new Error(
+            `[${node.label}] Expected node to represent groupId "${props.groupId ? props.groupId : "undefined"}", got "${
+              node.key.groupId ? node.key.groupId : "undefined"
+            }"`,
+          );
         }
         validateBaseNodeAttributes(node, {
           label: props.label,
