@@ -7,7 +7,7 @@ import { assert, DuplicatePolicy, SortedArray } from "@itwin/core-bentley";
 import { GroupingNodeKey, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
 import { mergeNodes } from "../../Common";
 import { GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
-import { sortNodesByLabel } from "../Sorting";
+import { mergeArraysByLabel } from "../Merging";
 
 /** @internal */
 export async function createLabelGroups(nodes: ProcessedInstanceHierarchyNode[]): Promise<GroupingHandlerResult> {
@@ -25,7 +25,7 @@ export async function createLabelGroups(nodes: ProcessedInstanceHierarchyNode[])
         ungrouped.push(node);
         continue;
       }
-      const mergedInstanceNode = { ...node, processingParams: { mergeByLabelId: byLabel.mergeId } };
+      const mergedInstanceNode = { ...node, processingParams: { mergeByLabelId: byLabel.mergeId, grouping: { byLabel: { mergeId: byLabel.mergeId } } } };
       const pos = mergedInstanceNodes.insert(mergedInstanceNode);
       const nodeAtPos = mergedInstanceNodes.get(pos)!;
       if (nodeAtPos !== mergedInstanceNode) {
@@ -57,12 +57,12 @@ export async function createLabelGroups(nodes: ProcessedInstanceHierarchyNode[])
 
   return {
     grouped,
-    ungrouped: sortNodesByLabel([...ungrouped, ...mergedInstanceNodes]),
+    ungrouped: mergeArraysByLabel(ungrouped, [...mergedInstanceNodes]),
     groupingType: "label",
   };
 }
 
-type MergedHierarchyNode = ProcessedInstanceHierarchyNode & { processingParams: { mergeByLabelId: string } };
+type MergedHierarchyNode = ProcessedInstanceHierarchyNode & { processingParams: { mergeByLabelId: string; grouping: { byLabel: { mergeId: string } } } };
 
 class SortedNodesList extends SortedArray<MergedHierarchyNode> {
   public constructor() {

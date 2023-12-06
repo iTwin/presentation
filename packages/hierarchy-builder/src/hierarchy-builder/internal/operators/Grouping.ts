@@ -15,7 +15,7 @@ import { createClassGroups } from "./grouping/ClassGrouping";
 import { applyGroupHidingParams } from "./grouping/GroupHiding";
 import { createLabelGroups } from "./grouping/LabelGrouping";
 import { createPropertiesGroupingHandlers } from "./grouping/PropertiesGrouping";
-import { sortNodesByLabel } from "./Sorting";
+import { mergeArraysByLabel } from "./Merging";
 
 const OPERATOR_NAME = "Grouping";
 /** @internal */
@@ -52,7 +52,9 @@ export type ProcessedInstancesGroupingHierarchyNode = Omit<ProcessedGroupingHier
 
 /** @internal */
 export interface GroupingHandlerResult<TGroupingNode = ProcessedInstancesGroupingHierarchyNode> {
+  /** Expected to be sorted by label. */
   grouped: Array<TGroupingNode>;
+  /** Expected to be sorted by label. */
   ungrouped: ProcessedInstanceHierarchyNode[];
   groupingType: GroupingType;
 }
@@ -91,26 +93,26 @@ async function groupInstanceNodes(
     const groupings = assignAutoExpand(applyGroupHidingParams(await currentHandler(curr?.ungrouped ?? nodes), extraSiblings));
     curr = {
       groupingType: groupings.groupingType,
-      grouped: [
-        ...(curr?.grouped ?? []),
-        ...(await Promise.all(
+      grouped: mergeArraysByLabel(
+        curr?.grouped ?? [],
+        await Promise.all(
           groupings.grouped.map(
             async (grouping): Promise<ProcessedGroupingHierarchyNode> => ({
               ...grouping,
               children: await groupInstanceNodes(grouping.children, 0, nextHandlers, onGroupingNodeCreated),
             }),
           ),
-        )),
-      ],
+        ),
+      ),
       ungrouped: groupings.ungrouped,
     };
   }
   if (curr) {
     if (curr.grouped.length > 0) {
       onGroupingNodeCreated && curr.grouped.forEach(onGroupingNodeCreated);
-      return sortNodesByLabel([...curr.grouped, ...curr.ungrouped]);
+      return mergeArraysByLabel(curr.grouped, curr.ungrouped);
     }
-    return sortNodesByLabel(curr.ungrouped);
+    return curr.ungrouped;
   }
   return nodes;
 }

@@ -16,7 +16,8 @@ import { translate } from "../../../Localization";
 import { IPrimitiveValueFormatter } from "../../../values/Formatting";
 import { TypedPrimitiveValue } from "../../../values/Values";
 import { getClass } from "../../Common";
-import { GroupingHandler, GroupingHandlerResult } from "../Grouping";
+import { GroupingHandler, GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
+import { sortNodesByLabel } from "../Sorting";
 
 interface DisplayablePropertyGroupingInfo {
   label: string;
@@ -185,19 +186,18 @@ function addGroupingToMap(
 }
 
 function createGroupingNodes(groupings: PropertyGroupingInformation): GroupingHandlerResult {
-  const outNodes: GroupingHandlerResult = { grouped: [], ungrouped: [], groupingType: "property" };
+  const groupedNodes = new Array<ProcessedInstancesGroupingHierarchyNode>();
   groupings.grouped.forEach((entry) => {
     const groupingNodeKey = entry.displayablePropertyGroupingInfo.propertyGroupingNodeKey;
     const groupedNodeParentKeys = entry.groupedNodes[0].parentKeys;
-    outNodes.grouped.push({
+    groupedNodes.push({
       label: entry.displayablePropertyGroupingInfo.label,
       key: groupingNodeKey,
       parentKeys: groupedNodeParentKeys,
       children: entry.groupedNodes.map((gn) => ({ ...gn, parentKeys: [...groupedNodeParentKeys, groupingNodeKey] })),
     });
   });
-  outNodes.ungrouped.push(...groupings.ungrouped);
-  return outNodes;
+  return { grouped: sortNodesByLabel(groupedNodes), ungrouped: groupings.ungrouped, groupingType: "property" };
 }
 
 /** @internal */
