@@ -7,7 +7,11 @@ import naturalCompare from "natural-compare-lite";
 import { assert } from "@itwin/core-bentley";
 import { ECClass, ECSchema, IMetadataProvider } from "../ECMetadata";
 import {
-  HierarchyNodeKey, HierarchyNodeLabelGroupingParams, InstanceHierarchyNodeProcessingParams, InstancesNodeKey, ProcessedCustomHierarchyNode,
+  HierarchyNodeKey,
+  HierarchyNodeLabelGroupingParams,
+  InstanceHierarchyNodeProcessingParams,
+  InstancesNodeKey,
+  ProcessedCustomHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "../HierarchyNode";
 import { getLogger } from "../Logging";

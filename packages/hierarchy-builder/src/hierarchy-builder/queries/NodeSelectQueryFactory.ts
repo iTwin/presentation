@@ -6,8 +6,13 @@
 import { assert } from "@itwin/core-bentley";
 import { ECClass, IMetadataProvider } from "../ECMetadata";
 import {
-  GenericInstanceFilter, GenericInstanceFilterRule, GenericInstanceFilterRuleGroup, PropertyFilterRuleBinaryOperator, PropertyFilterRuleGroupOperator,
-  PropertyFilterRuleOperator, PropertyFilterValue,
+  GenericInstanceFilter,
+  GenericInstanceFilterRule,
+  GenericInstanceFilterRuleGroup,
+  PropertyFilterRuleBinaryOperator,
+  PropertyFilterRuleGroupOperator,
+  PropertyFilterRuleOperator,
+  PropertyFilterValue,
 } from "../GenericInstanceFilter";
 import { getClass } from "../internal/Common";
 import { RelationshipPath } from "../Metadata";
