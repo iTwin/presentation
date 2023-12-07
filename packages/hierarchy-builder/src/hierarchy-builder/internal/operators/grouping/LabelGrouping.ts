@@ -4,9 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { LabelGroupingNodeKey, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
-import { mergeNodes } from "../../Common";
+import { compareNodesByLabel, mergeNodes, mergeSortedArrays } from "../../Common";
 import { GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
-import { mergeArraysByLabel } from "../Merging";
 import { sortNodesByLabel } from "../Sorting";
 
 /** @internal */
@@ -62,7 +61,7 @@ export async function createLabelGroups(nodes: ProcessedInstanceHierarchyNode[])
 
   return {
     grouped: sortNodesByLabel(groupedNodes),
-    ungrouped: mergeArraysByLabel(ungrouped, sortNodesByLabel(mergedNodes)),
+    ungrouped: mergeSortedArrays(ungrouped, sortNodesByLabel(mergedNodes), compareNodesByLabel),
     groupingType: "label",
   };
 }

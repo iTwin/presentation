@@ -5,17 +5,18 @@
 
 import { concatMap, from, Observable, of, tap, toArray } from "rxjs";
 import { IMetadataProvider } from "../../ECMetadata";
-import { HierarchyNode, HierarchyNodeKey, ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../../HierarchyNode";
+import {
+  HierarchyNode, HierarchyNodeKey, ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode,
+} from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
 import { IPrimitiveValueFormatter } from "../../values/Formatting";
-import { createOperatorLoggingNamespace } from "../Common";
+import { compareNodesByLabel, createOperatorLoggingNamespace, mergeSortedArrays } from "../Common";
 import { assignAutoExpand } from "./grouping/AutoExpand";
 import { createBaseClassGroupingHandlers } from "./grouping/BaseClassGrouping";
 import { createClassGroups } from "./grouping/ClassGrouping";
 import { applyGroupHidingParams } from "./grouping/GroupHiding";
 import { createLabelGroups } from "./grouping/LabelGrouping";
 import { createPropertiesGroupingHandlers } from "./grouping/PropertiesGrouping";
-import { mergeArraysByLabel } from "./Merging";
 
 const OPERATOR_NAME = "Grouping";
 /** @internal */
@@ -93,7 +94,7 @@ async function groupInstanceNodes(
     const groupings = assignAutoExpand(applyGroupHidingParams(await currentHandler(curr?.ungrouped ?? nodes), extraSiblings));
     curr = {
       groupingType: groupings.groupingType,
-      grouped: mergeArraysByLabel(
+      grouped: mergeSortedArrays(
         curr?.grouped ?? [],
         await Promise.all(
           groupings.grouped.map(
@@ -103,6 +104,7 @@ async function groupInstanceNodes(
             }),
           ),
         ),
+        compareNodesByLabel,
       ),
       ungrouped: groupings.ungrouped,
     };
@@ -110,7 +112,7 @@ async function groupInstanceNodes(
   if (curr) {
     if (curr.grouped.length > 0) {
       onGroupingNodeCreated && curr.grouped.forEach(onGroupingNodeCreated);
-      return mergeArraysByLabel(curr.grouped, curr.ungrouped);
+      return mergeSortedArrays(curr.grouped, curr.ungrouped, compareNodesByLabel);
     }
     return curr.ungrouped;
   }

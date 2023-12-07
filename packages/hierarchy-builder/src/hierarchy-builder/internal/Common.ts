@@ -3,14 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import naturalCompare from "natural-compare-lite";
 import { assert } from "@itwin/core-bentley";
 import { ECClass, ECSchema, IMetadataProvider } from "../ECMetadata";
 import {
-  HierarchyNodeKey,
-  HierarchyNodeLabelGroupingParams,
-  InstanceHierarchyNodeProcessingParams,
-  InstancesNodeKey,
-  ProcessedCustomHierarchyNode,
+  HierarchyNodeKey, HierarchyNodeLabelGroupingParams, InstanceHierarchyNodeProcessingParams, InstancesNodeKey, ProcessedCustomHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "../HierarchyNode";
 import { getLogger } from "../Logging";
@@ -131,4 +128,34 @@ export function createOperatorLoggingNamespace(operatorName: string) {
 export function julianToDateTime(julianDate: number): Date {
   const millis = (julianDate - 2440587.5) * 86400000;
   return new Date(millis);
+}
+
+/** @internal */
+export function mergeSortedArrays<TLhsItem, TRhsItem>(
+  lhs: TLhsItem[],
+  rhs: TRhsItem[],
+  comparer: (lhs: TLhsItem, rhs: TRhsItem) => number,
+): Array<TLhsItem | TRhsItem> {
+  const sorted = new Array<TLhsItem | TRhsItem>();
+  let indexLhs = 0;
+  let indexRhs = 0;
+  while (indexLhs < lhs.length && indexRhs < rhs.length) {
+    if (comparer(lhs[indexLhs], rhs[indexRhs]) > 0) {
+      sorted.push(rhs[indexRhs]);
+      ++indexRhs;
+      continue;
+    }
+    sorted.push(lhs[indexLhs]);
+    ++indexLhs;
+  }
+
+  if (indexRhs < rhs.length) {
+    return sorted.concat(rhs.slice(indexRhs));
+  }
+  return sorted.concat(lhs.slice(indexLhs));
+}
+
+/** @internal */
+export function compareNodesByLabel<TLhsNode extends { label: string }, TRhsNode extends { label: string }>(lhs: TLhsNode, rhs: TRhsNode): number {
+  return naturalCompare(lhs.label.toLocaleLowerCase(), rhs.label.toLocaleLowerCase());
 }
