@@ -23,9 +23,8 @@ export async function createLabelGroups(nodes: ProcessedInstanceHierarchyNode[])
     const map = typeof byLabel === "object" && byLabel.action === "merge" ? nodesToMergeMap : nodesToGroupMap;
     let list = map.get(nodeMapKeyIdentifier);
     if (!list) {
-      list = [node];
+      list = [];
       map.set(nodeMapKeyIdentifier, list);
-      continue;
     }
     list.push(node);
   }
