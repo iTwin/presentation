@@ -3,10 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import naturalCompare from "natural-compare-lite";
 import { assert } from "@itwin/core-bentley";
 import { ECClass, ECSchema, IMetadataProvider } from "../ECMetadata";
 import {
   HierarchyNodeKey,
+  HierarchyNodeLabelGroupingParams,
   InstanceHierarchyNodeProcessingParams,
   InstancesNodeKey,
   ProcessedCustomHierarchyNode,
@@ -56,9 +58,21 @@ function mergeNodeHandlingParams(
   const params = {
     ...(lhs?.hideIfNoChildren || rhs?.hideIfNoChildren ? { hideIfNoChildren: true } : undefined),
     ...(lhs?.hideInHierarchy || rhs?.hideInHierarchy ? { hideInHierarchy: true } : undefined),
-    ...(lhs?.mergeByLabelId || rhs?.mergeByLabelId ? { mergeByLabelId: lhs?.mergeByLabelId ?? rhs?.mergeByLabelId } : undefined),
+    ...mergeByLabelParams(lhs?.grouping?.byLabel, rhs?.grouping?.byLabel),
   };
   return Object.keys(params).length > 0 ? params : undefined;
+}
+
+function mergeByLabelParams(
+  lhs: HierarchyNodeLabelGroupingParams | undefined,
+  rhs: HierarchyNodeLabelGroupingParams | undefined,
+): InstanceHierarchyNodeProcessingParams | undefined {
+  if (lhs && typeof lhs === "object" && lhs.action === "merge" && rhs && typeof rhs === "object" && rhs.action === "merge" && lhs.groupId === rhs.groupId) {
+    return {
+      grouping: { byLabel: lhs },
+    };
+  }
+  return undefined;
 }
 
 function mergeNodeKeys<TKey extends string | InstancesNodeKey>(lhs: TKey, rhs: TKey): TKey {
@@ -118,4 +132,34 @@ export function createOperatorLoggingNamespace(operatorName: string) {
 export function julianToDateTime(julianDate: number): Date {
   const millis = (julianDate - 2440587.5) * 86400000;
   return new Date(millis);
+}
+
+/** @internal */
+export function mergeSortedArrays<TLhsItem, TRhsItem>(
+  lhs: TLhsItem[],
+  rhs: TRhsItem[],
+  comparer: (lhs: TLhsItem, rhs: TRhsItem) => number,
+): Array<TLhsItem | TRhsItem> {
+  const sorted = new Array<TLhsItem | TRhsItem>();
+  let indexLhs = 0;
+  let indexRhs = 0;
+  while (indexLhs < lhs.length && indexRhs < rhs.length) {
+    if (comparer(lhs[indexLhs], rhs[indexRhs]) > 0) {
+      sorted.push(rhs[indexRhs]);
+      ++indexRhs;
+      continue;
+    }
+    sorted.push(lhs[indexLhs]);
+    ++indexLhs;
+  }
+
+  if (indexRhs < rhs.length) {
+    return sorted.concat(rhs.slice(indexRhs));
+  }
+  return sorted.concat(lhs.slice(indexLhs));
+}
+
+/** @internal */
+export function compareNodesByLabel<TLhsNode extends { label: string }, TRhsNode extends { label: string }>(lhs: TLhsNode, rhs: TRhsNode): number {
+  return naturalCompare(lhs.label.toLocaleLowerCase(), rhs.label.toLocaleLowerCase());
 }

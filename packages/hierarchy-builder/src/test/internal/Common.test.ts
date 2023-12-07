@@ -208,55 +208,49 @@ describe("mergeNodes", () => {
       ).to.be.true;
     }
 
-    it("merges merge by label id", () => {
+    it("merges 'byLabel' params only when they match", () => {
       expect(
         mergeNodes(
-          createTestProcessedInstanceNode({ processingParams: { mergeByLabelId: undefined } }),
+          createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { action: "merge", groupId: "y" } } } }),
           createTestProcessedInstanceNode({ processingParams: undefined }),
         ).processingParams,
       ).to.be.undefined;
       expect(
         mergeNodes(
-          createTestProcessedInstanceNode({ processingParams: { mergeByLabelId: undefined } }),
-          createTestProcessedInstanceNode({ processingParams: { mergeByLabelId: undefined } }),
+          createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { action: "merge", groupId: "y" } } } }),
+          createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { action: "merge", groupId: "x" } } } }),
         ).processingParams,
       ).to.be.undefined;
       expect(
         mergeNodes(
-          createTestProcessedInstanceNode({ processingParams: { mergeByLabelId: "x" } }),
+          createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { action: "merge", groupId: "x" } } } }),
+          createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { action: "group", groupId: "x" } } } }),
+        ).processingParams,
+      ).to.be.undefined;
+      expect(
+        mergeNodes(
+          createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { groupId: "x" } } } }),
+          createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { groupId: "x" } } } }),
+        ).processingParams,
+      ).to.be.undefined;
+      expect(
+        mergeNodes(
+          createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: {} } } }),
+          createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: {} } } }),
+        ).processingParams,
+      ).to.be.undefined;
+      expect(
+        mergeNodes(
           createTestProcessedInstanceNode({ processingParams: undefined }),
-        ).processingParams?.mergeByLabelId,
-      ).to.eq("x");
+          createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { action: "merge", groupId: "x" } } } }),
+        ).processingParams,
+      ).to.be.undefined;
       expect(
         mergeNodes(
-          createTestProcessedInstanceNode({ processingParams: { mergeByLabelId: "x" } }),
-          createTestProcessedInstanceNode({ processingParams: { mergeByLabelId: undefined } }),
-        ).processingParams?.mergeByLabelId,
-      ).to.eq("x");
-      expect(
-        mergeNodes(
-          createTestProcessedInstanceNode({ processingParams: undefined }),
-          createTestProcessedInstanceNode({ processingParams: { mergeByLabelId: "x" } }),
-        ).processingParams?.mergeByLabelId,
-      ).to.eq("x");
-      expect(
-        mergeNodes(
-          createTestProcessedInstanceNode({ processingParams: { mergeByLabelId: undefined } }),
-          createTestProcessedInstanceNode({ processingParams: { mergeByLabelId: "x" } }),
-        ).processingParams?.mergeByLabelId,
-      ).to.eq("x");
-      expect(
-        mergeNodes(
-          createTestProcessedInstanceNode({ processingParams: { mergeByLabelId: "x" } }),
-          createTestProcessedInstanceNode({ processingParams: { mergeByLabelId: "x" } }),
-        ).processingParams?.mergeByLabelId,
-      ).to.eq("x");
-      expect(
-        mergeNodes(
-          createTestProcessedInstanceNode({ processingParams: { mergeByLabelId: "x" } }),
-          createTestProcessedInstanceNode({ processingParams: { mergeByLabelId: "y" } }),
-        ).processingParams!.mergeByLabelId,
-      ).to.eq("x");
+          createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { action: "merge", groupId: "x" } } } }),
+          createTestProcessedInstanceNode({ processingParams: { grouping: { byLabel: { action: "merge", groupId: "x" } } } }),
+        ).processingParams,
+      ).to.deep.eq({ grouping: { byLabel: { action: "merge", groupId: "x" } } });
     });
 
     describe("merging grouping params", () => {

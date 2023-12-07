@@ -39,7 +39,6 @@ import { createDetermineChildrenOperator } from "./internal/operators/DetermineC
 import { createGroupingOperator } from "./internal/operators/Grouping";
 import { createHideIfNoChildrenOperator } from "./internal/operators/HideIfNoChildren";
 import { createHideNodesInHierarchyOperator } from "./internal/operators/HideNodesInHierarchy";
-import { createMergeInstanceNodesByLabelOperator } from "./internal/operators/MergeInstanceNodesByLabel";
 import { sortNodesByLabelOperator } from "./internal/operators/Sorting";
 import { QueryScheduler } from "./internal/QueryScheduler";
 import { applyLimit, RowsLimitExceededError, TreeQueryResultsReader } from "./internal/TreeNodesReader";
@@ -186,7 +185,6 @@ export class HierarchyProvider {
     props: DefineHierarchyLevelProps,
   ): Observable<ProcessedHierarchyNode> {
     return preprocessedNodesObservable.pipe(
-      createMergeInstanceNodesByLabelOperator(),
       sortNodesByLabelOperator,
       createGroupingOperator(this._metadataProvider, this._valuesFormatter, (gn) => this.onGroupingNodeCreated(gn, props)),
       // cache to avoid expensive processing more than once

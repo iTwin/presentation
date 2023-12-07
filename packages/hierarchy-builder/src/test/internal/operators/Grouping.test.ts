@@ -216,45 +216,6 @@ describe("Grouping", () => {
       expect(result).to.deep.eq([ungroupedNode, classGroupingNode]);
     });
 
-    it("returns nodes in sorted order when grouping nodes are created and hidden", async () => {
-      const ungroupedNode = createTestProcessedInstanceNode({
-        key: { type: "instances", instanceKeys: [{ className: "A", id: "0x1" }] },
-        label: "1",
-      });
-      const groupedNode = createTestProcessedInstanceNode({
-        key: { type: "instances", instanceKeys: [{ className: "B", id: "0x2" }] },
-        label: "2",
-      });
-      const classGroupingNode = createTestProcessedGroupingNode({
-        label: "B",
-        key: {
-          type: "class-grouping",
-          class: {
-            name: "B",
-          },
-        } as ClassGroupingNodeKey,
-        children: [groupedNode],
-      });
-      applyGroupingHidingParamsStub.resetBehavior();
-      applyGroupingHidingParamsStub.returns({
-        groupingType: "class",
-        grouped: [],
-        ungrouped: [groupedNode, ungroupedNode], // return in wrong order
-      });
-      const result = await getObservableResult(
-        from([ungroupedNode, groupedNode]).pipe(
-          createGroupingOperator(metadataProvider, formatter, undefined, [
-            async () => ({
-              groupingType: "class",
-              grouped: [classGroupingNode],
-              ungrouped: [ungroupedNode],
-            }),
-          ]),
-        ),
-      );
-      expect(result).to.deep.eq([ungroupedNode, groupedNode]);
-    });
-
     it("calls `onGroupingNodeCreated` callback argument for each grouping node", async () => {
       const groupedNode = createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },

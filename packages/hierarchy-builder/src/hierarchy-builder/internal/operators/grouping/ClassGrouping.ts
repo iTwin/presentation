@@ -6,7 +6,8 @@
 import { IMetadataProvider } from "../../../ECMetadata";
 import { ClassGroupingNodeKey, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
 import { getClass } from "../../Common";
-import { GroupingHandlerResult } from "../Grouping";
+import { GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
+import { sortNodesByLabel } from "../Sorting";
 
 interface ClassInfo {
   fullName: string;
@@ -44,20 +45,19 @@ export async function createClassGroups(metadata: IMetadataProvider, nodes: Proc
 }
 
 function createGroupingNodes(groupings: ClassGroupingInformation): GroupingHandlerResult {
-  const outNodes: GroupingHandlerResult = { grouped: [], ungrouped: [], groupingType: "class" };
+  const groupedNodes = new Array<ProcessedInstancesGroupingHierarchyNode>();
   groupings.grouped.forEach((entry) => {
     const groupingNodeKey: ClassGroupingNodeKey = {
       type: "class-grouping",
       class: { name: entry.class.fullName, label: entry.class.label },
     };
     const groupedNodeParentKeys = entry.groupedNodes[0].parentKeys;
-    outNodes.grouped.push({
+    groupedNodes.push({
       label: entry.class.label ?? entry.class.name,
       key: groupingNodeKey,
       parentKeys: groupedNodeParentKeys,
       children: entry.groupedNodes.map((gn) => ({ ...gn, parentKeys: [...groupedNodeParentKeys, groupingNodeKey] })),
     });
   });
-  outNodes.ungrouped.push(...groupings.ungrouped);
-  return outNodes;
+  return { grouped: sortNodesByLabel(groupedNodes), ungrouped: groupings.ungrouped, groupingType: "class" };
 }
