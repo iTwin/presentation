@@ -314,7 +314,7 @@ describe("LabelGrouping", () => {
     expect(result.grouped).to.deep.eq([]);
   });
 
-  it("merges nodes that have same `mergeId` and label", async () => {
+  it("merges nodes that have `grouping.byLabel.action` set to `merge` and that have the same `groupId` and label", async () => {
     const nodes = [
       createTestProcessedInstanceNode({
         key: { type: "instances", instanceKeys: [createTestInstanceKey({ id: "0x1" })] },
