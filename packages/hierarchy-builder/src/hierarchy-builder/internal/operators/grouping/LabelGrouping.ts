@@ -20,21 +20,14 @@ export async function createLabelGroups(nodes: ProcessedInstanceHierarchyNode[])
       continue;
     }
     const nodeMapKeyIdentifier = `label:"${node.label}";groupId:${JSON.stringify(typeof byLabel === "object" ? byLabel.groupId : undefined)}`;
-    if (typeof byLabel === "object" && byLabel.action === "merge") {
-      const nodesThatNeedToBeMerged = nodesToMergeMap.get(nodeMapKeyIdentifier);
-      if (!nodesThatNeedToBeMerged) {
-        nodesToMergeMap.set(nodeMapKeyIdentifier, [node]);
-        continue;
-      }
-      nodesThatNeedToBeMerged.push(node);
+    const map = typeof byLabel === "object" && byLabel.action === "merge" ? nodesToMergeMap : nodesToGroupMap;
+    let list = map.get(nodeMapKeyIdentifier);
+    if (!list) {
+      list = [node];
+      map.set(nodeMapKeyIdentifier, list);
       continue;
     }
-    const nodesThatNeedToBeGrouped = nodesToGroupMap.get(nodeMapKeyIdentifier);
-    if (!nodesThatNeedToBeGrouped) {
-      nodesToGroupMap.set(nodeMapKeyIdentifier, [node]);
-      continue;
-    }
-    nodesThatNeedToBeGrouped.push(node);
+    list.push(node);
   }
   const mergedNodes = new Array<ProcessedInstanceHierarchyNode>();
   nodesToMergeMap.forEach((entry) => {
