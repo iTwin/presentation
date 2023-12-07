@@ -22,6 +22,7 @@ import {
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
+import { Tab, Tabs } from "@itwin/itwinui-react";
 import { DiagnosticsProps } from "@itwin/presentation-components";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
@@ -35,6 +36,24 @@ interface Props {
 }
 
 export function TreeWidget(props: Props) {
+  const [openTab, setOpenTab] = useState(0);
+  return (
+    <Tabs
+      labels={[
+        <Tab key={1} label={IModelApp.localization.getLocalizedString("Sample:controls.rules-driven-tree")} />,
+        <Tab key={2} label={IModelApp.localization.getLocalizedString("Sample:controls.stateless-tree")} />,
+      ]}
+      onTabSelected={setOpenTab}
+      contentClassName="tree-widget-tabs"
+    >
+      <div className="treewidget">
+        {openTab === 0 ? <RulesDrivenTreeWidget imodel={props.imodel} rulesetId={props.rulesetId} /> : <StatelessTreeWidget imodel={props.imodel} />}
+      </div>
+    </Tabs>
+  );
+}
+
+export function RulesDrivenTreeWidget(props: Props) {
   const { rulesetId, imodel } = props;
   const [diagnosticsOptions, setDiagnosticsOptions] = useState<DiagnosticsProps>({ ruleDiagnostics: undefined, devDiagnostics: undefined });
   const [filter, setFilter] = useState("");
@@ -56,10 +75,8 @@ export function TreeWidget(props: Props) {
   const { width, height, ref } = useResizeDetector();
 
   return (
-    <div className="treewidget">
+    <>
       <div className="treewidget-header">
-        <h3>{IModelApp.localization.getLocalizedString("Sample:controls.tree")}</h3>
-        <DiagnosticsSelector onDiagnosticsOptionsChanged={setDiagnosticsOptions} />
         {rulesetId ? (
           <FilteringInput
             status={filteringStatus}
@@ -78,6 +95,7 @@ export function TreeWidget(props: Props) {
             }}
           />
         ) : null}
+        <DiagnosticsSelector onDiagnosticsOptionsChanged={setDiagnosticsOptions} />
       </div>
       <div ref={ref} className="filteredTree">
         {rulesetId && width && height ? (
@@ -94,11 +112,11 @@ export function TreeWidget(props: Props) {
           </>
         ) : null}
       </div>
-    </div>
+    </>
   );
 }
 
-export function ExperimentalModelsTree({ imodel }: { imodel: IModelConnection }) {
+export function StatelessTreeWidget({ imodel }: { imodel: IModelConnection }) {
   const { width, height, ref } = useResizeDetector();
   const dataProvider = useMemo((): TreeDataProvider => {
     const schemas = new SchemaContext();
@@ -126,23 +144,18 @@ export function ExperimentalModelsTree({ imodel }: { imodel: IModelConnection })
   const treeModel = useTreeModel(modelSource);
 
   return (
-    <div className="treewidget">
-      <div className="treewidget-header">
-        <h3>{IModelApp.localization.getLocalizedString("Sample:controls.tree")}</h3>
-      </div>
-      <div ref={ref} className="filteredTree">
-        {width && height ? (
-          <ControlledTree
-            model={treeModel}
-            eventsHandler={eventHandler}
-            nodeLoader={nodeLoader}
-            selectionMode={SelectionMode.Extended}
-            iconsEnabled={true}
-            width={width}
-            height={height}
-          />
-        ) : null}
-      </div>
+    <div ref={ref} className="filteredTree">
+      {width && height ? (
+        <ControlledTree
+          model={treeModel}
+          eventsHandler={eventHandler}
+          nodeLoader={nodeLoader}
+          selectionMode={SelectionMode.Extended}
+          iconsEnabled={true}
+          width={width}
+          height={height}
+        />
+      ) : null}
     </div>
   );
 }
