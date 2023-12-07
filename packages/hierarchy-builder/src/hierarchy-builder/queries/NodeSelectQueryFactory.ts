@@ -6,13 +6,8 @@
 import { assert } from "@itwin/core-bentley";
 import { ECClass, IMetadataProvider } from "../ECMetadata";
 import {
-  GenericInstanceFilter,
-  GenericInstanceFilterRule,
-  GenericInstanceFilterRuleGroup,
-  PropertyFilterRuleBinaryOperator,
-  PropertyFilterRuleGroupOperator,
-  PropertyFilterRuleOperator,
-  PropertyFilterValue,
+  GenericInstanceFilter, GenericInstanceFilterRule, GenericInstanceFilterRuleGroup, PropertyFilterRuleBinaryOperator, PropertyFilterRuleGroupOperator,
+  PropertyFilterRuleOperator, PropertyFilterValue,
 } from "../GenericInstanceFilter";
 import { getClass } from "../internal/Common";
 import { RelationshipPath } from "../Metadata";
@@ -352,9 +347,7 @@ function createGroupingSelector(grouping: ECSqlSelectClauseGroupingParams): stri
       selector:
         typeof grouping.byLabel === "boolean" || isSelector(grouping.byLabel)
           ? createECSqlValueSelector(grouping.byLabel)
-          : "action" in grouping.byLabel && grouping.byLabel.action === "merge"
-          ? serializeJsonObject(createLabelGroupingBaseParamsSelectors(grouping.byLabel))
-          : serializeJsonObject([...createLabelGroupingBaseParamsSelectors(grouping.byLabel), ...createBaseGroupingParamSelectors(grouping.byLabel)]),
+          : serializeJsonObject(createLabelGroupingBaseParamsSelectors(grouping.byLabel)),
     });
 
   grouping.byClass &&
@@ -415,7 +408,7 @@ function createGroupingSelector(grouping: ECSqlSelectClauseGroupingParams): stri
   return serializeJsonObject(groupingSelectors);
 }
 
-function createLabelGroupingBaseParamsSelectors(byLabel: ECSqlSelectClauseLabelGroupingBaseParams) {
+function createLabelGroupingBaseParamsSelectors(byLabel: ECSqlSelectClauseLabelGroupingMergeParams | ECSqlSelectClauseLabelGroupingGroupParams) {
   const selectors = new Array<{ key: string; selector: string }>();
   if (byLabel.action !== undefined) {
     selectors.push({
@@ -429,6 +422,10 @@ function createLabelGroupingBaseParamsSelectors(byLabel: ECSqlSelectClauseLabelG
       selector: createECSqlValueSelector(byLabel.groupId),
     });
   }
+  if (byLabel.action !== "merge") {
+    selectors.push(...createBaseGroupingParamSelectors(byLabel));
+  }
+
   return selectors;
 }
 
