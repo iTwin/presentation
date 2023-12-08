@@ -415,6 +415,27 @@ describe("usePresentationInstanceFilteringProps", () => {
       await waitFor(() => expect(result.current.properties).to.have.lengthOf(2));
     });
 
+    it("returns union of properties that are derived from two selected classes", async () => {
+      const testDescriptor = createTestContentDescriptor({
+        selectClasses: [
+          { selectClassInfo: concreteClass1, isSelectPolymorphic: false },
+          { selectClassInfo: concreteClass2, isSelectPolymorphic: false },
+        ],
+        categories: [category],
+        fields: [basePropertiesField, concretePropertiesField1, concretePropertiesField2],
+      });
+
+      const { result } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), {
+        initialProps: { ...initialProps, descriptor: testDescriptor },
+      });
+
+      act(() => {
+        result.current.onSelectedClassesChanged([concreteClass1.id, concreteClass2.id]);
+      });
+
+      await waitFor(() => expect(result.current.properties).to.have.lengthOf(3));
+    });
+
     it("selects classes that have selected property", async () => {
       const { result } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), { initialProps });
 
