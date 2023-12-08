@@ -242,7 +242,7 @@ async function computePropertiesByClasses(
   const ecClassInfos = await Promise.all(classes.map(async (info) => metadataProvider.getECClassInfo(info.id)));
   const filteredProperties: PresentationInstanceFilterPropertyInfo[] = [];
   for (const prop of properties) {
-    // property should be shown if all selected classes are derived from property source class
+    // property should be shown if at least one of selected classes is derived from property source class
     if (ecClassInfos.some((info) => info && info.isDerivedFrom(prop.sourceClassId))) {
       filteredProperties.push(prop);
     }
