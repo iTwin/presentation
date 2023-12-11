@@ -19,8 +19,8 @@
         }
       }
     },
-    "rules-driven-tree": "Rules-Driven Tree Widget",
-    "stateless-tree": "Stateless Tree Widget",
+    "rules-driven-tree": "Rules-driven tree",
+    "stateless-tree": "Stateless tree",
     "find-similar": {
       "results": "Similar Instances",
       "dismiss-button": {
