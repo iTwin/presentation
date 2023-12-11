@@ -375,7 +375,7 @@ export interface ECSqlSelectClauseGroupingParams {
     // (undocumented)
     byClass?: boolean | ECSqlSelectClauseGroupingParamsBase | ECSqlValueSelector;
     // (undocumented)
-    byLabel?: boolean | ECSqlSelectClauseGroupingParamsBase | ECSqlValueSelector;
+    byLabel?: ECSqlSelectClauseLabelGroupingParams;
     // (undocumented)
     byProperties?: ECSqlSelectClausePropertiesGroupingParams;
 }
@@ -389,6 +389,27 @@ export interface ECSqlSelectClauseGroupingParamsBase {
     // (undocumented)
     hideIfOneGroupedNode?: boolean | ECSqlValueSelector;
 }
+
+// @beta
+export interface ECSqlSelectClauseLabelGroupingBaseParams {
+    action?: "group" | "merge";
+    groupId?: string | ECSqlValueSelector;
+}
+
+// @beta
+export interface ECSqlSelectClauseLabelGroupingGroupParams extends ECSqlSelectClauseLabelGroupingBaseParams, ECSqlSelectClauseGroupingParamsBase {
+    // (undocumented)
+    action?: "group";
+}
+
+// @beta
+export interface ECSqlSelectClauseLabelGroupingMergeParams extends ECSqlSelectClauseLabelGroupingBaseParams {
+    // (undocumented)
+    action: "merge";
+}
+
+// @beta
+export type ECSqlSelectClauseLabelGroupingParams = boolean | ECSqlValueSelector | ECSqlSelectClauseLabelGroupingMergeParams | ECSqlSelectClauseLabelGroupingGroupParams;
 
 // @beta
 export interface ECSqlSelectClausePropertiesGroupingParams extends ECSqlSelectClauseGroupingParamsBase {
@@ -588,7 +609,7 @@ export interface HierarchyNodeGroupingParams {
     // (undocumented)
     byClass?: boolean | HierarchyNodeGroupingParamsBase;
     // (undocumented)
-    byLabel?: boolean | HierarchyNodeGroupingParamsBase;
+    byLabel?: HierarchyNodeLabelGroupingParams;
     // (undocumented)
     byProperties?: HierarchyNodePropertiesGroupingParams;
 }
@@ -633,6 +654,27 @@ export namespace HierarchyNodeKey {
     export function isPropertyValueRangeGrouping(key: HierarchyNodeKey): key is PropertyValueRangeGroupingNodeKey;
     export function isStandard(key: HierarchyNodeKey): key is StandardHierarchyNodeKey;
 }
+
+// @beta
+export interface HierarchyNodeLabelGroupingBaseParams {
+    action?: "group" | "merge";
+    groupId?: string;
+}
+
+// @beta
+export interface HierarchyNodeLabelGroupingGroupParams extends HierarchyNodeLabelGroupingBaseParams, HierarchyNodeGroupingParamsBase {
+    // (undocumented)
+    action?: "group";
+}
+
+// @beta
+export interface HierarchyNodeLabelGroupingMergeParams extends HierarchyNodeLabelGroupingBaseParams {
+    // (undocumented)
+    action: "merge";
+}
+
+// @beta
+export type HierarchyNodeLabelGroupingParams = boolean | HierarchyNodeLabelGroupingMergeParams | HierarchyNodeLabelGroupingGroupParams;
 
 // @beta
 export interface HierarchyNodeProcessingParamsBase {
@@ -746,8 +788,6 @@ export type INodePreProcessor = <TNode extends ProcessedCustomHierarchyNode | Pr
 export interface InstanceHierarchyNodeProcessingParams extends HierarchyNodeProcessingParamsBase {
     // (undocumented)
     grouping?: HierarchyNodeGroupingParams;
-    // (undocumented)
-    mergeByLabelId?: string;
 }
 
 // @beta
@@ -787,6 +827,8 @@ export type IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise<s
 // @beta
 export interface LabelGroupingNodeKey {
     // (undocumented)
+    groupId?: string;
+    // (undocumented)
     label: string;
     // (undocumented)
     type: "label-grouping";
@@ -812,7 +854,6 @@ export enum NodeSelectClauseColumnNames {
     HasChildren = "HasChildren",
     HideIfNoChildren = "HideIfNoChildren",
     HideNodeInHierarchy = "HideNodeInHierarchy",
-    MergeByLabelId = "MergeByLabelId",
     SupportsFiltering = "SupportsFiltering"
 }
 
@@ -836,8 +877,6 @@ export interface NodeSelectClauseProps {
     hideIfNoChildren?: boolean | ECSqlValueSelector;
     // (undocumented)
     hideNodeInHierarchy?: boolean | ECSqlValueSelector;
-    // (undocumented)
-    mergeByLabelId?: string | ECSqlValueSelector;
     // (undocumented)
     nodeLabel: string | ECSqlValueSelector;
     // (undocumented)

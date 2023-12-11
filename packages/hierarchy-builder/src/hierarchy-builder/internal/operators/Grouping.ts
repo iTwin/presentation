@@ -8,14 +8,13 @@ import { IMetadataProvider } from "../../ECMetadata";
 import { HierarchyNode, HierarchyNodeKey, ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
 import { IPrimitiveValueFormatter } from "../../values/Formatting";
-import { createOperatorLoggingNamespace } from "../Common";
+import { compareNodesByLabel, createOperatorLoggingNamespace, mergeSortedArrays } from "../Common";
 import { assignAutoExpand } from "./grouping/AutoExpand";
 import { createBaseClassGroupingHandlers } from "./grouping/BaseClassGrouping";
 import { createClassGroups } from "./grouping/ClassGrouping";
 import { applyGroupHidingParams } from "./grouping/GroupHiding";
 import { createLabelGroups } from "./grouping/LabelGrouping";
 import { createPropertiesGroupingHandlers } from "./grouping/PropertiesGrouping";
-import { sortNodesByLabel } from "./Sorting";
 
 const OPERATOR_NAME = "Grouping";
 /** @internal */
@@ -52,7 +51,9 @@ export type ProcessedInstancesGroupingHierarchyNode = Omit<ProcessedGroupingHier
 
 /** @internal */
 export interface GroupingHandlerResult<TGroupingNode = ProcessedInstancesGroupingHierarchyNode> {
+  /** Expected to be sorted by label. */
   grouped: Array<TGroupingNode>;
+  /** Expected to be sorted by label. */
   ungrouped: ProcessedInstanceHierarchyNode[];
   groupingType: GroupingType;
 }
@@ -91,23 +92,27 @@ async function groupInstanceNodes(
     const groupings = assignAutoExpand(applyGroupHidingParams(await currentHandler(curr?.ungrouped ?? nodes), extraSiblings));
     curr = {
       groupingType: groupings.groupingType,
-      grouped: [
-        ...(curr?.grouped ?? []),
-        ...(await Promise.all(
+      grouped: mergeSortedArrays(
+        curr?.grouped ?? [],
+        await Promise.all(
           groupings.grouped.map(
             async (grouping): Promise<ProcessedGroupingHierarchyNode> => ({
               ...grouping,
               children: await groupInstanceNodes(grouping.children, 0, nextHandlers, onGroupingNodeCreated),
             }),
           ),
-        )),
-      ],
+        ),
+        compareNodesByLabel,
+      ),
       ungrouped: groupings.ungrouped,
     };
   }
-  if (curr && curr.grouped.length > 0) {
-    onGroupingNodeCreated && curr.grouped.forEach(onGroupingNodeCreated);
-    return sortNodesByLabel([...curr.grouped, ...curr.ungrouped]);
+  if (curr) {
+    if (curr.grouped.length > 0) {
+      onGroupingNodeCreated && curr.grouped.forEach(onGroupingNodeCreated);
+      return mergeSortedArrays(curr.grouped, curr.ungrouped, compareNodesByLabel);
+    }
+    return curr.ungrouped;
   }
   return nodes;
 }
