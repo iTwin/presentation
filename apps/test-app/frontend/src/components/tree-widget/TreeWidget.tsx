@@ -186,7 +186,7 @@ function parseTreeNodeItem(node: HierarchyNode): DelayLoadedTreeNodeItem {
   }
   return {
     __internal: node,
-    id: JSON.stringify(node.key),
+    id: JSON.stringify([...node.parentKeys, node.key]),
     label: PropertyRecord.fromString(node.label, "Label"),
     icon: node.extendedData?.imageId,
     hasChildren: !!node.children,
