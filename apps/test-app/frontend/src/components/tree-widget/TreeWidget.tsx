@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import {
@@ -34,18 +34,20 @@ interface Props {
   imodel: IModelConnection;
   rulesetId?: string;
   height?: number;
+  width?: number;
 }
 
-export function TreeWidget(props: Props) {
+export function TreeWidget(props: Omit<Props, "height" | "width">) {
   const [openTab, setOpenTab] = useState(0);
-  const { height, ref } = useResizeDetector();
+  const { width, height, ref } = useResizeDetector<HTMLDivElement>();
   const tabsClassName = "tree-widget-tabs";
   const [heightOfTreeWidget, setHeightOfTreeWidget] = useState(0);
-  const tabElements = document.getElementsByClassName(tabsClassName);
   useEffect(() => {
-    const heightOfTab = tabElements.length > 0 ? tabElements[0].clientHeight : 0;
+    const tabElements = ref.current?.getElementsByClassName(tabsClassName);
+    const heightOfTab = tabElements && tabElements.length > 0 ? tabElements[0].clientHeight : 0;
     setHeightOfTreeWidget(height ? height - heightOfTab : 0);
-  }, [tabElements, height]);
+    // When width changes tab height might change, so it needs to be included in dependency list
+  }, [height, ref, width]);
 
   return (
     <div ref={ref}>
@@ -60,9 +62,9 @@ export function TreeWidget(props: Props) {
       >
         <div className="treewidget">
           {openTab === 0 ? (
-            <RulesDrivenTreeWidget imodel={props.imodel} rulesetId={props.rulesetId} height={heightOfTreeWidget} />
+            <RulesDrivenTreeWidget imodel={props.imodel} rulesetId={props.rulesetId} height={heightOfTreeWidget} width={width} />
           ) : (
-            <StatelessTreeWidget imodel={props.imodel} height={heightOfTreeWidget} />
+            <StatelessTreeWidget imodel={props.imodel} height={heightOfTreeWidget} width={width} />
           )}
         </div>
       </Tabs>
@@ -87,17 +89,16 @@ export function RulesDrivenTreeWidget(props: Props) {
     );
     setMatchesCount(newMatchesCount);
   }, []);
-  const { width, height, ref } = useResizeDetector();
   const [heightToUse, setHeightToUse] = useState(0);
-  const treeWidgetHeaderElements = document.getElementsByClassName("treewidget-header");
+  const treeWidgetHeaderRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const heightOfHeader = treeWidgetHeaderElements.length > 0 ? treeWidgetHeaderElements[0].clientHeight : 0;
-    const heightToSet = props.height ? props.height - heightOfHeader : height;
+    const heightOfHeader = treeWidgetHeaderRef.current?.clientHeight ?? 0;
+    const heightToSet = props.height ? props.height - heightOfHeader : 0;
     setHeightToUse(heightToSet ?? 0);
-  }, [treeWidgetHeaderElements, props.height, height]);
+  }, [props.height]);
   return (
     <>
-      <div className="treewidget-header">
+      <div ref={treeWidgetHeaderRef} className="treewidget-header">
         {rulesetId ? (
           <FilteringInput
             status={filteringStatus}
@@ -118,15 +119,15 @@ export function RulesDrivenTreeWidget(props: Props) {
         ) : null}
         <DiagnosticsSelector onDiagnosticsOptionsChanged={setDiagnosticsOptions} />
       </div>
-      <div ref={ref} className="filteredTree">
-        {rulesetId && width && heightToUse ? (
+      <div className="filteredTree">
+        {rulesetId && props.width && heightToUse ? (
           <>
             <Tree
               imodel={imodel}
               rulesetId={rulesetId}
               diagnostics={diagnosticsOptions}
               filtering={{ filter, activeMatchIndex, onFilteringStateChange }}
-              width={width}
+              width={props.width}
               height={heightToUse}
             />
             {filteringStatus === FilteringInputStatus.FilteringInProgress ? <div className="filteredTreeOverlay" /> : null}
@@ -138,7 +139,6 @@ export function RulesDrivenTreeWidget(props: Props) {
 }
 
 export function StatelessTreeWidget(props: Omit<Props, "rulesetId">) {
-  const { width, height, ref } = useResizeDetector();
   const dataProvider = useMemo((): TreeDataProvider => {
     const schemas = new SchemaContext();
     schemas.addLocater(new ECSchemaRpcLocater(props.imodel.getRpcProps()));
@@ -163,21 +163,17 @@ export function StatelessTreeWidget(props: Omit<Props, "rulesetId">) {
   const nodeLoader = useTreeNodeLoader(dataProvider, modelSource);
   const eventHandler = useMemo(() => new TreeEventHandler({ nodeLoader, modelSource }), [nodeLoader, modelSource]);
   const treeModel = useTreeModel(modelSource);
-  const [heightToUse, setHeightToUse] = useState(0);
-  useEffect(() => {
-    setHeightToUse(props.height ?? height ?? 0);
-  }, [props.height, height]);
   return (
-    <div ref={ref} className="filteredTree">
-      {heightToUse && width ? (
+    <div className="filteredTree">
+      {props.height && props.width ? (
         <ControlledTree
           model={treeModel}
           eventsHandler={eventHandler}
           nodeLoader={nodeLoader}
           selectionMode={SelectionMode.Extended}
           iconsEnabled={true}
-          width={width}
-          height={heightToUse}
+          width={props.width}
+          height={props.height}
         />
       ) : null}
     </div>
