@@ -12,13 +12,13 @@ import { BeEvent } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo, RelationshipPath, PropertyValueFormat as TypeValueFormat, Value } from "@itwin/presentation-common";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
-import { createTestPropertyInfo } from "../_helpers/Common";
-import { createTestNestedContentField, createTestPropertiesContentField } from "../_helpers/Content";
 import {
   PresentationInstanceFilter,
   PresentationInstanceFilterCondition,
   PresentationInstanceFilterConditionGroup,
 } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
+import { createTestECClassInfo, createTestPropertyInfo } from "../_helpers/Common";
+import { createTestNestedContentField, createTestPropertiesContentField } from "../_helpers/Content";
 
 describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
   describe("converts single condition with", () => {
@@ -631,7 +631,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
     });
   });
 
-  describe("handles unqiue values", () => {
+  describe("handles unique values", () => {
     const testImodel = {} as IModelConnection;
     const property = createTestPropertyInfo();
     const field = createTestPropertiesContentField({ properties: [{ property }] });
@@ -677,6 +677,41 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
 
       const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(`${propertyAccessor} = "a"`);
+    });
+  });
+
+  describe("handles passed `filteredClasses`", () => {
+    const testImodel = {} as IModelConnection;
+    const classInfo1 = createTestECClassInfo({ id: "0x1" });
+    const classInfo2 = createTestECClassInfo({ id: "0x2" });
+
+    const filter: PresentationInstanceFilterCondition = {
+      field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classInfo1 }) }] }),
+      operator: PropertyFilterRuleOperator.IsNull,
+    };
+
+    it(`returns expression with no classes in it when filteredClasses is undefined`, async () => {
+      const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
+
+      expect(expression).to.be.eq("this.PropertyName = NULL");
+    });
+
+    it("returns expression with no classes in it when filteredClasses is an empty array", async () => {
+      const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel, []);
+
+      expect(expression).to.be.eq("this.PropertyName = NULL");
+    });
+
+    it("returns expression appended with additional check for classes when one classInfo is passed in", async () => {
+      const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel, [classInfo1]);
+
+      expect(expression).to.be.eq(`this.PropertyName = NULL AND (this.IsOfClass(${classInfo1.id}))`);
+    });
+
+    it("returns expression appended with additional check for classes when array of multiple classInfo's is passed in", async () => {
+      const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel, [classInfo1, classInfo2]);
+
+      expect(expression).to.be.eq(`this.PropertyName = NULL AND (this.IsOfClass(${classInfo1.id}) OR this.IsOfClass(${classInfo2.id}))`);
     });
   });
 });

@@ -11,6 +11,7 @@ import { IDisposable, Logger } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
   BaseNodeKey,
+  ClassInfo,
   ClientDiagnosticsOptions,
   FilterByTextHierarchyRequestOptions,
   HierarchyRequestOptions,
@@ -28,10 +29,10 @@ import { Presentation } from "@itwin/presentation-frontend";
 import { createDiagnosticsOptions, DiagnosticsProps } from "../common/Diagnostics";
 import { getRulesetId, RulesetOrId, translate } from "../common/Utils";
 import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory";
+import { PresentationInstanceFilter, PresentationInstanceFilterInfo } from "../instance-filter-builder/PresentationFilterBuilder";
 import { IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider";
 import { InfoTreeNodeItemType, isPresentationTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem";
 import { createInfoNode, createTreeNodeItem, CreateTreeNodeItemProps, pageOptionsUiToPresentation } from "./Utils";
-import { PresentationInstanceFilter, PresentationInstanceFilterInfo } from "../instance-filter-builder/PresentationFilterBuilder";
 
 /**
  * Properties for creating a `PresentationTreeDataProvider` instance.
@@ -302,17 +303,22 @@ async function getFilterDefinition(imodel: IModelConnection, node?: TreeNodeItem
     return undefined;
   }
 
+  const initialClasses: ClassInfo[] = [];
+
   // if there are more than one filter applied, combine them using `AND` operator
   // otherwise apply filter directly
-  const filter: PresentationInstanceFilter =
+  const filter: PresentationInstanceFilterInfo =
     appliedFilters.length > 1
       ? {
-          operator: PropertyFilterRuleGroupOperator.And,
-          conditions: appliedFilters.map((ancestorFilter) => ancestorFilter.filter),
+          filter: {
+            operator: PropertyFilterRuleGroupOperator.And,
+            conditions: appliedFilters.map((ancestorFilter) => ancestorFilter.filter),
+          },
+          usedClasses: appliedFilters.reduce((accumulator, ancestorFilter) => [...accumulator, ...ancestorFilter.usedClasses], initialClasses),
         }
-      : appliedFilters[0].filter;
+      : appliedFilters[0];
 
-  return PresentationInstanceFilter.toInstanceFilterDefinition(filter, imodel);
+  return PresentationInstanceFilter.toInstanceFilterDefinition(filter.filter, imodel, filter.usedClasses);
 }
 
 async function createNodesAndCountResult(
