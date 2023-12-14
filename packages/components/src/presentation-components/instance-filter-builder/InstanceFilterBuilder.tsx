@@ -58,7 +58,9 @@ export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
         options={options}
         value={selectedOptions}
         inputProps={{
-          placeholder: translate("instance-filter-builder.select-class"),
+          placeholder: selectedClasses.length
+            ? translate("instance-filter-builder.selected-classes")
+            : translate("instance-filter-builder.select-classes-optional"),
         }}
         onChange={(selectedIds) => {
           onSelectedClassesChanged(selectedIds);
