@@ -10,7 +10,7 @@ import { PropertyValue, PropertyValueFormat, StandardTypeNames } from "@itwin/ap
 import { PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ClassInfo, PropertyValueFormat as TypeValueFormat, RelationshipPath, Value } from "@itwin/presentation-common";
+import { ClassInfo, RelationshipPath, PropertyValueFormat as TypeValueFormat, Value } from "@itwin/presentation-common";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import {
   PresentationInstanceFilter,
