@@ -14,20 +14,29 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { CheckBoxState } from "@itwin/core-react";
 import {
-  ClassInfo, Descriptor, HierarchyRequestOptions, Node, NodeKey, Paged, PresentationError, PresentationStatus, RulesetVariable, VariableValue,
+  ClassInfo,
+  Descriptor,
+  HierarchyRequestOptions,
+  Node,
+  NodeKey,
+  Paged,
+  PresentationError,
+  PresentationStatus,
+  RulesetVariable,
+  VariableValue,
 } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
 import { translate } from "../../presentation-components/common/Utils";
 import { PresentationTreeDataProvider } from "../../presentation-components/tree/DataProvider";
 import {
-  PresentationInfoTreeNodeItem, PresentationTreeNodeItem, PresentationTreeNodeItemFilteringInfo,
+  PresentationInfoTreeNodeItem,
+  PresentationTreeNodeItem,
+  PresentationTreeNodeItemFilteringInfo,
 } from "../../presentation-components/tree/PresentationTreeNodeItem";
 import { pageOptionsUiToPresentation } from "../../presentation-components/tree/Utils";
 import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
-import {
-  createTestECClassGroupingNodeKey, createTestECInstancesNode, createTestECInstancesNodeKey, createTestNodePathElement,
-} from "../_helpers/Hierarchy";
+import { createTestECClassGroupingNodeKey, createTestECInstancesNode, createTestECInstancesNodeKey, createTestNodePathElement } from "../_helpers/Hierarchy";
 import { createTestLabelDefinition } from "../_helpers/LabelDefinition";
 import { PromiseContainer } from "../_helpers/Promises";
 import { createTestTreeNodeItem } from "../_helpers/UiComponents";
