@@ -347,7 +347,7 @@ describe("TreeDataProvider", () => {
       presentationManagerMock.verifyAll();
     });
 
-    it("passes instance filter with redundant usedClasses and call getNodes with expression that has no redundant class checks", async () => {
+    it("passes instance filter with redundant usedClasses and calls getNodes with expression that has no redundant class checks", async () => {
       const nodeKey = createTestECInstancesNodeKey();
       const nodeItem = createTestTreeNodeItem(nodeKey);
       const classId = "0x1";
