@@ -54,11 +54,7 @@ function createExpressionFromGroup(group: GenericInstanceFilterRuleGroup): strin
 }
 
 function createClassExpression(usedClasses: ClassInfo[]) {
-  return usedClasses.reduce(
-    (queryExpression, classInfo, index) =>
-      (queryExpression += index !== usedClasses.length - 1 ? `this.IsOfClass(${classInfo.id}) OR ` : `this.IsOfClass(${classInfo.id})`),
-    "",
-  );
+  return usedClasses.reduce((queryExpression, classInfo) => `${queryExpression}${queryExpression ? " OR " : ""}this.IsOfClass(${classInfo.id})`, "");
 }
 
 function createComparison(propertyName: string, type: string, alias: string, operator: PropertyFilterRuleOperator, propValue?: PrimitiveValue): string {

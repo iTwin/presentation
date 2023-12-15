@@ -10,20 +10,8 @@ import { DelayLoadedTreeNodeItem, PageOptions, PropertyFilterRuleGroupOperator, 
 import { IDisposable, Logger } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
-  BaseNodeKey,
-  ClassInfo,
-  ClientDiagnosticsOptions,
-  FilterByTextHierarchyRequestOptions,
-  HierarchyRequestOptions,
-  InstanceFilterDefinition,
-  Node,
-  NodeKey,
-  NodePathElement,
-  Paged,
-  PresentationError,
-  PresentationStatus,
-  RequestOptionsWithRuleset,
-  Ruleset,
+  BaseNodeKey, ClassInfo, ClientDiagnosticsOptions, FilterByTextHierarchyRequestOptions, HierarchyRequestOptions, InstanceFilterDefinition, Node,
+  NodeKey, NodePathElement, Paged, PresentationError, PresentationStatus, RequestOptionsWithRuleset, Ruleset,
 } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { createDiagnosticsOptions, DiagnosticsProps } from "../common/Diagnostics";
@@ -303,8 +291,6 @@ async function getFilterDefinition(imodel: IModelConnection, node?: TreeNodeItem
     return undefined;
   }
 
-  const initialClasses: ClassInfo[] = [];
-
   // if there are more than one filter applied, combine them using `AND` operator
   // otherwise apply filter directly
   const filter: PresentationInstanceFilterInfo =
@@ -314,15 +300,16 @@ async function getFilterDefinition(imodel: IModelConnection, node?: TreeNodeItem
             operator: PropertyFilterRuleGroupOperator.And,
             conditions: appliedFilters.map((ancestorFilter) => ancestorFilter.filter),
           },
-          usedClasses: [
-            ...new Map(
-              appliedFilters.reduce((accumulator, value) => [...accumulator, ...value.usedClasses], initialClasses).map((item) => [item.id, item]),
-            ).values(),
-          ],
+          usedClasses: getConcatenatedDistinctClassInfos(appliedFilters),
         }
       : appliedFilters[0];
 
   return PresentationInstanceFilter.toInstanceFilterDefinition(filter.filter, imodel, filter.usedClasses);
+}
+
+function getConcatenatedDistinctClassInfos(appliedFilters: PresentationInstanceFilterInfo[]) {
+  const concatenatedClassInfos = appliedFilters.reduce((accumulator, value) => [...accumulator, ...value.usedClasses], [] as ClassInfo[]);
+  return [...new Map(concatenatedClassInfos.map((item) => [item.id, item])).values()];
 }
 
 async function createNodesAndCountResult(
