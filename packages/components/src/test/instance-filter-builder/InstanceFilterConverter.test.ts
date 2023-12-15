@@ -10,12 +10,10 @@ import { PropertyValue, PropertyValueFormat, StandardTypeNames } from "@itwin/ap
 import { PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ClassInfo, RelationshipPath, PropertyValueFormat as TypeValueFormat, Value } from "@itwin/presentation-common";
+import { ClassInfo, PropertyValueFormat as TypeValueFormat, RelationshipPath, Value } from "@itwin/presentation-common";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import {
-  PresentationInstanceFilter,
-  PresentationInstanceFilterCondition,
-  PresentationInstanceFilterConditionGroup,
+  PresentationInstanceFilter, PresentationInstanceFilterCondition, PresentationInstanceFilterConditionGroup,
 } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
 import { createTestECClassInfo, createTestPropertyInfo } from "../_helpers/Common";
 import { createTestNestedContentField, createTestPropertiesContentField } from "../_helpers/Content";
@@ -712,6 +710,25 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
       const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel, [classInfo1, classInfo2]);
 
       expect(expression).to.be.eq(`this.PropertyName = NULL AND (this.IsOfClass(${classInfo1.id}) OR this.IsOfClass(${classInfo2.id}))`);
+    });
+
+    it("returns appropriate expression with conditionGroup and usedClasses", async () => {
+      const groupedFilter: PresentationInstanceFilterConditionGroup = {
+        operator: PropertyFilterRuleGroupOperator.Or,
+        conditions: [
+          {
+            field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ name: "Prop1" }) }] }),
+            operator: PropertyFilterRuleOperator.IsNull,
+          },
+          {
+            field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ name: "Prop2" }) }] }),
+            operator: PropertyFilterRuleOperator.IsNull,
+          },
+        ],
+      };
+      const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(groupedFilter, testImodel, [classInfo1, classInfo2]);
+
+      expect(expression).to.be.eq(`(this.Prop1 = NULL OR this.Prop2 = NULL) AND (this.IsOfClass(${classInfo1.id}) OR this.IsOfClass(${classInfo2.id}))`);
     });
   });
 });

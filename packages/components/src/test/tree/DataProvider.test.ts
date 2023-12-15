@@ -14,28 +14,20 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { CheckBoxState } from "@itwin/core-react";
 import {
-  Descriptor,
-  HierarchyRequestOptions,
-  Node,
-  NodeKey,
-  Paged,
-  PresentationError,
-  PresentationStatus,
-  RulesetVariable,
-  VariableValue,
+  ClassInfo, Descriptor, HierarchyRequestOptions, Node, NodeKey, Paged, PresentationError, PresentationStatus, RulesetVariable, VariableValue,
 } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
 import { translate } from "../../presentation-components/common/Utils";
 import { PresentationTreeDataProvider } from "../../presentation-components/tree/DataProvider";
 import {
-  PresentationInfoTreeNodeItem,
-  PresentationTreeNodeItem,
-  PresentationTreeNodeItemFilteringInfo,
+  PresentationInfoTreeNodeItem, PresentationTreeNodeItem, PresentationTreeNodeItemFilteringInfo,
 } from "../../presentation-components/tree/PresentationTreeNodeItem";
 import { pageOptionsUiToPresentation } from "../../presentation-components/tree/Utils";
-import { createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
+import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
-import { createTestECClassGroupingNodeKey, createTestECInstancesNode, createTestECInstancesNodeKey, createTestNodePathElement } from "../_helpers/Hierarchy";
+import {
+  createTestECClassGroupingNodeKey, createTestECInstancesNode, createTestECInstancesNodeKey, createTestNodePathElement,
+} from "../_helpers/Hierarchy";
 import { createTestLabelDefinition } from "../_helpers/LabelDefinition";
 import { PromiseContainer } from "../_helpers/Promises";
 import { createTestTreeNodeItem } from "../_helpers/UiComponents";
@@ -353,6 +345,35 @@ describe("TreeDataProvider", () => {
       expect(actualResult).to.have.lengthOf(1);
 
       presentationManagerMock.verifyAll();
+    });
+
+    it("passes instance filter with redundant usedClasses and call getNodes with expression that has no redundant class checks", async () => {
+      const nodeKey = createTestECInstancesNodeKey();
+      const nodeItem = createTestTreeNodeItem(nodeKey);
+      const classId = "0x1";
+      const { filteringInfo } = createInstanceFilteringInfo(
+        undefined,
+        ["filter1", "filter2"],
+        [createTestECClassInfo({ id: classId }), createTestECClassInfo({ id: classId })],
+      );
+      nodeItem.filtering = filteringInfo;
+      const presentationManager = {
+        getNodesAndCount: sinon
+          .stub<Parameters<PresentationManager["getNodesAndCount"]>, ReturnType<PresentationManager["getNodesAndCount"]>>()
+          .returns({ nodes: [] } as any),
+        vars: () => ({
+          onVariableChanged: new BeEvent<(variableId: string, prevValue: VariableValue | undefined, currValue: VariableValue | undefined) => void>(),
+        }),
+      };
+      sinon.stub(Presentation, "presentation").get(() => presentationManager);
+      await provider.getNodes(nodeItem, { start: 0, size: 2 });
+      expect(presentationManager.getNodesAndCount).to.be.calledWithMatch({
+        instanceFilter: {
+          expression: `(this.filter1 = NULL AND this.filter2 = NULL) AND (this.IsOfClass(${classId}))`,
+          selectClassName: "SchemaName:ClassName",
+          relatedInstances: [],
+        },
+      });
     });
 
     it("passes combined parent and current node instance filter to presentation manager", async () => {
@@ -805,7 +826,7 @@ function is(expected: Paged<HierarchyRequestOptions<IModelConnection, NodeKey, R
   });
 }
 
-function createFilterInfo(propName: string) {
+function createFilterInfo(propName: string, usedClasses?: ClassInfo[]) {
   const property = createTestPropertyInfo({ name: propName });
   const field = createTestPropertiesContentField({ properties: [{ property }], name: property.name });
   return {
@@ -814,15 +835,15 @@ function createFilterInfo(propName: string) {
         field,
         operator: PropertyFilterRuleOperator.IsNull,
       },
-      usedClasses: [],
+      usedClasses: usedClasses ?? [],
     },
     property,
   };
 }
 
-function createInstanceFilteringInfo(currentFilterPropName: string | undefined, ancestorFilterPropNames: string[] = []) {
-  const currentFilter = currentFilterPropName !== undefined ? createFilterInfo(currentFilterPropName) : undefined;
-  const ancestorFilters = ancestorFilterPropNames.map((propName) => createFilterInfo(propName));
+function createInstanceFilteringInfo(currentFilterPropName: string | undefined, ancestorFilterPropNames: string[] = [], usedClasses?: ClassInfo[]) {
+  const currentFilter = currentFilterPropName !== undefined ? createFilterInfo(currentFilterPropName, usedClasses) : undefined;
+  const ancestorFilters = ancestorFilterPropNames.map((propName) => createFilterInfo(propName, usedClasses));
 
   const filteringInfo = {
     descriptor: createTestContentDescriptor({ fields: [] }),

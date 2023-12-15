@@ -314,7 +314,11 @@ async function getFilterDefinition(imodel: IModelConnection, node?: TreeNodeItem
             operator: PropertyFilterRuleGroupOperator.And,
             conditions: appliedFilters.map((ancestorFilter) => ancestorFilter.filter),
           },
-          usedClasses: appliedFilters.reduce((accumulator, ancestorFilter) => [...accumulator, ...ancestorFilter.usedClasses], initialClasses),
+          usedClasses: [
+            ...new Map(
+              appliedFilters.reduce((accumulator, value) => [...accumulator, ...value.usedClasses], initialClasses).map((item) => [item.id, item]),
+            ).values(),
+          ],
         }
       : appliedFilters[0];
 
