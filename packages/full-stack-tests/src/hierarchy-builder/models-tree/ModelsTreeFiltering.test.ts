@@ -18,6 +18,7 @@ import {
   importSchema,
   insertPhysicalElement,
   insertPhysicalModelWithPartition,
+  insertPhysicalPartition,
   insertPhysicalSubModel,
   insertSpatialCategory,
   insertSubject,
@@ -634,6 +635,53 @@ describe("Stateless hierarchy builder", () => {
                         ],
                       }),
                     ],
+                  }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      ),
+      TreeFilteringTestCaseDefinition.create(
+        "Element node through hidden ancestors",
+        async (builder) => {
+          const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
+          const hiddenChildSubject = insertSubject({
+            builder,
+            codeValue: `hidden-subject`,
+            parentId: rootSubject.id,
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            jsonProperties: { Subject: { Job: { Bridge: "Test" } } },
+          });
+          const partition = insertPhysicalPartition({
+            builder,
+            codeValue: `hidden-model`,
+            parentId: hiddenChildSubject.id,
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            jsonProperties: { PhysicalPartition: { Model: { Content: true } } },
+          });
+          const model = insertPhysicalSubModel({ builder, modeledElementId: partition.id });
+          const category = insertSpatialCategory({ builder, codeValue: "category" });
+          const element1 = insertPhysicalElement({ builder, userLabel: `matching element 1`, modelId: model.id, categoryId: category.id });
+          const element2 = insertPhysicalElement({ builder, userLabel: `element 2`, modelId: model.id, categoryId: category.id });
+          return { rootSubject, model, category, element1, element2 };
+        },
+        (x) => [[x.rootSubject, x.model, x.category, x.element1]],
+        (x) => [x.element1],
+        (_x) => "matching",
+        (x) => [
+          NodeValidators.createForInstanceNode({
+            instanceKeys: [x.rootSubject],
+            autoExpand: true,
+            children: [
+              NodeValidators.createForInstanceNode({
+                label: "category",
+                autoExpand: true,
+                children: [
+                  NodeValidators.createForClassGroupingNode({
+                    label: "Physical Object",
+                    autoExpand: true,
+                    children: [NodeValidators.createForInstanceNode({ label: /^matching element 1/, autoExpand: false, children: false })],
                   }),
                 ],
               }),

@@ -21,6 +21,7 @@ import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ClassInfo, Descriptor, KoqPropertyValueFormatter } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { SchemaMetadataContextProvider } from "../../presentation-components/common/SchemaMetadataContext";
+import { translate } from "../../presentation-components/common/Utils";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "../../presentation-components/instance-filter-builder/InstanceFilterBuilder";
 import { createTestECClassInfo, stubRaf } from "../_helpers/Common";
@@ -82,6 +83,40 @@ describe("InstanceFilterBuilder", () => {
     fireEvent.click(option);
 
     expect(spy).to.be.calledOnceWith([classInfos[0].id]);
+  });
+
+  it("renders appropriate text in class selector when no class is selected", async () => {
+    const { getByPlaceholderText } = render(
+      <InstanceFilterBuilder
+        classes={classInfos}
+        selectedClasses={[]}
+        properties={[]}
+        onSelectedClassesChanged={() => {}}
+        actions={testActions}
+        rootGroup={testRootGroup}
+        imodel={testImodel}
+        descriptor={testDescriptor}
+      />,
+    );
+
+    await waitFor(() => getByPlaceholderText(translate("instance-filter-builder.select-classes-optional")));
+  });
+
+  it("renders appropriate text in class selector when class is selected", async () => {
+    const { getByPlaceholderText } = render(
+      <InstanceFilterBuilder
+        classes={classInfos}
+        selectedClasses={[createTestECClassInfo()]}
+        properties={[]}
+        onSelectedClassesChanged={() => {}}
+        actions={testActions}
+        rootGroup={testRootGroup}
+        imodel={testImodel}
+        descriptor={testDescriptor}
+      />,
+    );
+
+    await waitFor(() => getByPlaceholderText(translate("instance-filter-builder.selected-classes")));
   });
 
   it("invokes 'onSelectedClassesChanged' when class is deselected", async () => {

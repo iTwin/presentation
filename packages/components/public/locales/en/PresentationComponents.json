@@ -17,7 +17,8 @@
     "select-instance": "Select element"
   },
   "instance-filter-builder": {
-    "select-class": "Select class...",
+    "select-classes-optional": "Select classes (optional)",
+    "selected-classes": "Selected classes",
     "category": "Category:",
     "class": "Class:",
     "schema": "Schema:",
