@@ -7,8 +7,18 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import {
-  ControlledTree, DelayLoadedTreeNodeItem, FilteringInput, FilteringInputStatus, SelectionMode, TreeDataProvider, TreeEventHandler, TreeNodeItem,
-  useDebouncedAsyncValue, useTreeModel, useTreeModelSource, useTreeNodeLoader,
+  ControlledTree,
+  DelayLoadedTreeNodeItem,
+  FilteringInput,
+  FilteringInputStatus,
+  SelectionMode,
+  TreeDataProvider,
+  TreeEventHandler,
+  TreeNodeItem,
+  useDebouncedAsyncValue,
+  useTreeModel,
+  useTreeModelSource,
+  useTreeNodeLoader,
 } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
