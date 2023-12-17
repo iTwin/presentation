@@ -7,17 +7,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import {
-  ControlledTree,
-  DelayLoadedTreeNodeItem,
-  FilteringInput,
-  FilteringInputStatus,
-  SelectionMode,
-  TreeDataProvider,
-  TreeEventHandler,
-  TreeNodeItem,
-  useTreeModel,
-  useTreeModelSource,
-  useTreeNodeLoader,
+  ControlledTree, DelayLoadedTreeNodeItem, FilteringInput, FilteringInputStatus, SelectionMode, TreeDataProvider, TreeEventHandler, TreeNodeItem,
+  useDebouncedAsyncValue, useTreeModel, useTreeModelSource, useTreeNodeLoader,
 } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
@@ -25,7 +16,7 @@ import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { Tab, Tabs } from "@itwin/itwinui-react";
 import { DiagnosticsProps } from "@itwin/presentation-components";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
+import { HierarchyNode, HierarchyProvider, IECSqlQueryExecutor, IMetadataProvider } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { DiagnosticsSelector } from "../diagnostics-selector/DiagnosticsSelector";
 import { Tree } from "./Tree";
@@ -60,7 +51,7 @@ export function TreeWidget(props: Omit<Props, "height" | "width">) {
         contentClassName="tree-widget-tabs-content"
         tabsClassName={tabsClassName}
       >
-        <div className="treewidget">
+        <div className="tree-widget">
           {openTab === 0 ? (
             <RulesDrivenTreeWidget imodel={props.imodel} rulesetId={props.rulesetId} height={heightOfTreeWidget} width={width} />
           ) : (
@@ -98,28 +89,16 @@ export function RulesDrivenTreeWidget(props: Props) {
   }, [props.height]);
   return (
     <>
-      <div ref={treeWidgetHeaderRef} className="treewidget-header">
-        {rulesetId ? (
-          <FilteringInput
-            status={filteringStatus}
-            onFilterCancel={() => {
-              setFilter("");
-            }}
-            onFilterClear={() => {
-              setFilter("");
-            }}
-            onFilterStart={(newFilter) => {
-              setFilter(newFilter);
-            }}
-            resultSelectorProps={{
-              onSelectedChanged: (index) => setActiveMatchIndex(index),
-              resultCount: matchesCount || 0,
-            }}
-          />
-        ) : null}
-        <DiagnosticsSelector onDiagnosticsOptionsChanged={setDiagnosticsOptions} />
-      </div>
-      <div className="filteredTree">
+      <TreeWidgetHeader
+        setFilter={setFilter}
+        filteringStatus={filteringStatus}
+        showFilteringInput={!!rulesetId}
+        ref={treeWidgetHeaderRef}
+        setActiveMatchIndex={setActiveMatchIndex}
+        matchesCount={matchesCount}
+        setDiagnosticsOptions={setDiagnosticsOptions}
+      />
+      <div className="filtered-tree">
         {rulesetId && props.width && heightToUse ? (
           <>
             <Tree
@@ -130,7 +109,7 @@ export function RulesDrivenTreeWidget(props: Props) {
               width={props.width}
               height={heightToUse}
             />
-            {filteringStatus === FilteringInputStatus.FilteringInProgress ? <div className="filteredTreeOverlay" /> : null}
+            {filteringStatus === FilteringInputStatus.FilteringInProgress ? <div className="filtered-tree-overlay" /> : null}
           </>
         ) : null}
       </div>
@@ -139,43 +118,136 @@ export function RulesDrivenTreeWidget(props: Props) {
 }
 
 export function StatelessTreeWidget(props: Omit<Props, "rulesetId">) {
-  const dataProvider = useMemo((): TreeDataProvider => {
+  const [filter, setFilter] = useState("");
+  const [filteringStatus, setFilteringStatus] = useState(FilteringInputStatus.ReadyToFilter);
+  const [queryExecutor, setQueryExecutor] = useState<IECSqlQueryExecutor>();
+  const [metadataProvider, setMetadataProvider] = useState<IMetadataProvider>();
+  const [modelsTreeHierarchyProvider, setModelsTreeHierarchyProvider] = useState<HierarchyProvider>();
+  useEffect(() => {
     const schemas = new SchemaContext();
     schemas.addLocater(new ECSchemaRpcLocater(props.imodel.getRpcProps()));
-    const metadataProvider = createMetadataProvider(schemas);
-    const modelsTreeHierarchyProvider = new HierarchyProvider({
-      metadataProvider,
-      hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider }),
-      queryExecutor: createECSqlQueryExecutor(props.imodel),
-    });
+    setQueryExecutor(createECSqlQueryExecutor(props.imodel));
+    setMetadataProvider(createMetadataProvider(schemas));
+  }, [props.imodel]);
+
+  const { value } = useDebouncedAsyncValue(
+    useCallback(async () => {
+      if (metadataProvider && queryExecutor && filter !== "") {
+        setFilteringStatus(FilteringInputStatus.FilteringInProgress);
+        return ModelsTreeDefinition.createInstanceKeyPaths({ metadataProvider, queryExecutor, label: filter });
+      }
+      return [];
+    }, [metadataProvider, queryExecutor, filter]),
+  );
+
+  useEffect(() => {
+    if (metadataProvider && queryExecutor) {
+      const sharedProps = {
+        metadataProvider,
+        hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider }),
+        queryExecutor,
+      };
+      if (value) {
+        setFilteringStatus(FilteringInputStatus.FilteringFinished);
+        setModelsTreeHierarchyProvider(
+          new HierarchyProvider({
+            ...sharedProps,
+            filtering: {
+              paths: value,
+            },
+          }),
+        );
+      } else {
+        setModelsTreeHierarchyProvider(new HierarchyProvider(sharedProps));
+      }
+    }
+  }, [queryExecutor, metadataProvider, value]);
+
+  const dataProvider = useMemo((): TreeDataProvider => {
     return async (node?: TreeNodeItem): Promise<TreeNodeItem[]> => {
       const parent: HierarchyNode | undefined = node ? (node as any).__internal : undefined;
       try {
-        return (await modelsTreeHierarchyProvider.getNodes({ parentNode: parent })).map(parseTreeNodeItem);
+        if (modelsTreeHierarchyProvider) {
+          return (await modelsTreeHierarchyProvider.getNodes({ parentNode: parent })).map(parseTreeNodeItem);
+        }
+        return [];
       } catch (e) {
         // eslint-disable-next-line no-console
         console.error(e);
         return [];
       }
     };
-  }, [props.imodel]);
+  }, [modelsTreeHierarchyProvider]);
   const modelSource = useTreeModelSource(dataProvider);
   const nodeLoader = useTreeNodeLoader(dataProvider, modelSource);
   const eventHandler = useMemo(() => new TreeEventHandler({ nodeLoader, modelSource }), [nodeLoader, modelSource]);
   const treeModel = useTreeModel(modelSource);
+
+  const [heightToUse, setHeightToUse] = useState(0);
+  const treeWidgetHeaderRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const heightOfHeader = treeWidgetHeaderRef.current?.clientHeight ?? 0;
+    const heightToSet = props.height ? props.height - heightOfHeader : 0;
+    setHeightToUse(heightToSet ?? 0);
+  }, [props.height]);
   return (
-    <div className="filteredTree">
-      {props.height && props.width ? (
-        <ControlledTree
-          model={treeModel}
-          eventsHandler={eventHandler}
-          nodeLoader={nodeLoader}
-          selectionMode={SelectionMode.Extended}
-          iconsEnabled={true}
-          width={props.width}
-          height={props.height}
+    <>
+      <TreeWidgetHeader setFilter={setFilter} filteringStatus={filteringStatus} showFilteringInput={true} ref={treeWidgetHeaderRef} />
+      <div className="filtered-tree">
+        {heightToUse && props.width && (
+          <ControlledTree
+            model={treeModel}
+            eventsHandler={eventHandler}
+            nodeLoader={nodeLoader}
+            selectionMode={SelectionMode.Extended}
+            iconsEnabled={true}
+            width={props.width}
+            height={heightToUse}
+          />
+        )}
+        {filteringStatus === FilteringInputStatus.FilteringInProgress ? <div className="filtered-tree-overlay" /> : null}
+      </div>
+    </>
+  );
+}
+
+interface HeaderProps {
+  setFilter: React.Dispatch<React.SetStateAction<string>>;
+  filteringStatus: FilteringInputStatus;
+  showFilteringInput: boolean;
+  ref: React.RefObject<HTMLDivElement>;
+  setActiveMatchIndex?: React.Dispatch<React.SetStateAction<number>>;
+  matchesCount?: number;
+  setDiagnosticsOptions?: React.Dispatch<React.SetStateAction<DiagnosticsProps>>;
+}
+
+export function TreeWidgetHeader(props: HeaderProps) {
+  const { setFilter, filteringStatus, showFilteringInput, ref } = props;
+  return (
+    <div ref={ref} className="tree-widget-header">
+      {showFilteringInput && (
+        <FilteringInput
+          status={filteringStatus}
+          onFilterCancel={() => {
+            setFilter("");
+          }}
+          onFilterClear={() => {
+            setFilter("");
+          }}
+          onFilterStart={(newFilter) => {
+            setFilter(newFilter);
+          }}
+          resultSelectorProps={
+            props.setActiveMatchIndex || props.matchesCount
+              ? {
+                  onSelectedChanged: (index) => (props.setActiveMatchIndex ? props.setActiveMatchIndex(index) : {}),
+                  resultCount: props.matchesCount || 0,
+                }
+              : undefined
+          }
         />
-      ) : null}
+      )}
+      {props.setDiagnosticsOptions && <DiagnosticsSelector onDiagnosticsOptionsChanged={props.setDiagnosticsOptions} />}
     </div>
   );
 }
