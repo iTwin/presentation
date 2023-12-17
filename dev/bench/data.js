@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1701942666818,
+  "lastUpdate": 1702804251246,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -286,6 +286,42 @@ window.BENCHMARK_DATA = {
             "value": 1786,
             "unit": "ms",
             "extra": "min: 1786\nmax: 1786\ncount: 1\nmean: 1786\np50: 1790.4\nmedian: 1790.4\np75: 1790.4\np90: 1790.4\np95: 1790.4\np99: 1790.4\np999: 1790.4"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35135765+grigasp@users.noreply.github.com",
+            "name": "Grigas",
+            "username": "grigasp"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fb70af84c1b9655ff661015088267c9c0b85982f",
+          "message": "Fixed models tree definition not handling hidden subjects appropriately (#364)",
+          "timestamp": "2023-12-17T11:09:43+02:00",
+          "tree_id": "1bc9ec5d498f8670914124c418b821998ed4ebc5",
+          "url": "https://github.com/iTwin/presentation/commit/fb70af84c1b9655ff661015088267c9c0b85982f"
+        },
+        "date": 1702804250253,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Initial Models Tree Load: Baytown.bim",
+            "value": 593,
+            "unit": "ms",
+            "extra": "min: 593\nmax: 593\ncount: 1\nmean: 593\np50: 596\nmedian: 596\np75: 596\np90: 596\np95: 596\np99: 596\np999: 596"
+          },
+          {
+            "name": "Full Models Tree Load: Baytown.bim",
+            "value": 1817,
+            "unit": "ms",
+            "extra": "min: 1817\nmax: 1817\ncount: 1\nmean: 1817\np50: 1826.6\nmedian: 1826.6\np75: 1826.6\np90: 1826.6\np95: 1826.6\np99: 1826.6\np999: 1826.6"
           }
         ]
       }
