@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import {
@@ -225,14 +225,13 @@ interface HeaderProps {
   setFilter: React.Dispatch<React.SetStateAction<string>>;
   filteringStatus: FilteringInputStatus;
   showFilteringInput: boolean;
-  ref: React.RefObject<HTMLDivElement>;
   setActiveMatchIndex?: React.Dispatch<React.SetStateAction<number>>;
   matchesCount?: number;
   setDiagnosticsOptions?: React.Dispatch<React.SetStateAction<DiagnosticsProps>>;
 }
 
-export function TreeWidgetHeader(props: HeaderProps) {
-  const { setFilter, filteringStatus, showFilteringInput, ref } = props;
+const TreeWidgetHeader = forwardRef(function TreeWidgetHeader(props: HeaderProps, ref: React.ForwardedRef<HTMLDivElement>) {
+  const { setFilter, filteringStatus, showFilteringInput } = props;
   return (
     <div ref={ref} className="tree-widget-header">
       {showFilteringInput && (
@@ -260,7 +259,7 @@ export function TreeWidgetHeader(props: HeaderProps) {
       {props.setDiagnosticsOptions && <DiagnosticsSelector onDiagnosticsOptionsChanged={props.setDiagnosticsOptions} />}
     </div>
   );
-}
+});
 
 function parseTreeNodeItem(node: HierarchyNode): DelayLoadedTreeNodeItem {
   if (node.children === undefined) {
