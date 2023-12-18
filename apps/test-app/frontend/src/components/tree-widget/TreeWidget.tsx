@@ -90,26 +90,20 @@ export function RulesDrivenTreeWidget(props: Props) {
     );
     setMatchesCount(newMatchesCount);
   }, []);
-  const [heightToUse, setHeightToUse] = useState(0);
-  const treeWidgetHeaderRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const heightOfHeader = treeWidgetHeaderRef.current?.clientHeight ?? 0;
-    const heightToSet = props.height ? props.height - heightOfHeader : 0;
-    setHeightToUse(heightToSet ?? 0);
-  }, [props.height]);
+  const { headerRef, treeHeight } = useTreeHeight(props.height);
   return (
     <>
       <TreeWidgetHeader
-        setFilter={setFilter}
+        onFilterChange={setFilter}
         filteringStatus={filteringStatus}
         showFilteringInput={!!rulesetId}
-        ref={treeWidgetHeaderRef}
-        setActiveMatchIndex={setActiveMatchIndex}
+        ref={headerRef}
+        onActiveMatchIndexChange={setActiveMatchIndex}
         matchesCount={matchesCount}
-        setDiagnosticsOptions={setDiagnosticsOptions}
+        onDiagnosticsOptionsChange={setDiagnosticsOptions}
       />
       <div className="filtered-tree">
-        {rulesetId && props.width && heightToUse ? (
+        {rulesetId && props.width && treeHeight ? (
           <>
             <Tree
               imodel={imodel}
@@ -117,7 +111,7 @@ export function RulesDrivenTreeWidget(props: Props) {
               diagnostics={diagnosticsOptions}
               filtering={{ filter, activeMatchIndex, onFilteringStateChange }}
               width={props.width}
-              height={heightToUse}
+              height={treeHeight}
             />
             {filteringStatus === FilteringInputStatus.FilteringInProgress ? <div className="filtered-tree-overlay" /> : null}
           </>
@@ -193,18 +187,12 @@ export function StatelessTreeWidget(props: Omit<Props, "rulesetId">) {
   const eventHandler = useMemo(() => new TreeEventHandler({ nodeLoader, modelSource }), [nodeLoader, modelSource]);
   const treeModel = useTreeModel(modelSource);
 
-  const [heightToUse, setHeightToUse] = useState(0);
-  const treeWidgetHeaderRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const heightOfHeader = treeWidgetHeaderRef.current?.clientHeight ?? 0;
-    const heightToSet = props.height ? props.height - heightOfHeader : 0;
-    setHeightToUse(heightToSet ?? 0);
-  }, [props.height]);
+  const { headerRef, treeHeight } = useTreeHeight(props.height);
   return (
     <>
-      <TreeWidgetHeader setFilter={setFilter} filteringStatus={filteringStatus} showFilteringInput={true} ref={treeWidgetHeaderRef} />
+      <TreeWidgetHeader onFilterChange={setFilter} filteringStatus={filteringStatus} showFilteringInput={true} ref={headerRef} />
       <div className="filtered-tree">
-        {heightToUse && props.width && (
+        {treeHeight && props.width && (
           <ControlledTree
             model={treeModel}
             eventsHandler={eventHandler}
@@ -212,7 +200,7 @@ export function StatelessTreeWidget(props: Omit<Props, "rulesetId">) {
             selectionMode={SelectionMode.Extended}
             iconsEnabled={true}
             width={props.width}
-            height={heightToUse}
+            height={treeHeight}
           />
         )}
         {filteringStatus === FilteringInputStatus.FilteringInProgress ? <div className="filtered-tree-overlay" /> : null}
@@ -221,42 +209,53 @@ export function StatelessTreeWidget(props: Omit<Props, "rulesetId">) {
   );
 }
 
+function useTreeHeight(height?: number) {
+  const [treeHeight, setTreeHeight] = useState(0);
+  const headerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const heightOfHeader = headerRef.current?.clientHeight ?? 0;
+    const heightToSet = height ? height - heightOfHeader : 0;
+    setTreeHeight(heightToSet);
+  }, [height, headerRef]);
+  return { headerRef, treeHeight };
+}
+
 interface HeaderProps {
-  setFilter: React.Dispatch<React.SetStateAction<string>>;
+  onFilterChange: (newFilter: string) => void;
   filteringStatus: FilteringInputStatus;
   showFilteringInput: boolean;
-  setActiveMatchIndex?: React.Dispatch<React.SetStateAction<number>>;
+  onActiveMatchIndexChange?: (index: number) => void;
   matchesCount?: number;
-  setDiagnosticsOptions?: React.Dispatch<React.SetStateAction<DiagnosticsProps>>;
+  onDiagnosticsOptionsChange?: (options: DiagnosticsProps) => void;
 }
 
 const TreeWidgetHeader = forwardRef(function TreeWidgetHeader(props: HeaderProps, ref: React.ForwardedRef<HTMLDivElement>) {
-  const { setFilter, filteringStatus, showFilteringInput } = props;
+  const { onFilterChange, filteringStatus, showFilteringInput } = props;
   return (
     <div ref={ref} className="tree-widget-header">
       {showFilteringInput && (
         <FilteringInput
           status={filteringStatus}
           onFilterCancel={() => {
-            setFilter("");
+            onFilterChange("");
           }}
           onFilterClear={() => {
-            setFilter("");
+            onFilterChange("");
           }}
           onFilterStart={(newFilter) => {
-            setFilter(newFilter);
+            onFilterChange(newFilter);
           }}
           resultSelectorProps={
-            props.setActiveMatchIndex || props.matchesCount
+            props.onActiveMatchIndexChange || props.matchesCount
               ? {
-                  onSelectedChanged: (index) => (props.setActiveMatchIndex ? props.setActiveMatchIndex(index) : {}),
+                  onSelectedChanged: (index) => (props.onActiveMatchIndexChange ? props.onActiveMatchIndexChange(index) : {}),
                   resultCount: props.matchesCount || 0,
                 }
               : undefined
           }
         />
       )}
-      {props.setDiagnosticsOptions && <DiagnosticsSelector onDiagnosticsOptionsChanged={props.setDiagnosticsOptions} />}
+      {props.onDiagnosticsOptionsChange && <DiagnosticsSelector onDiagnosticsOptionsChanged={props.onDiagnosticsOptionsChange} />}
     </div>
   );
 });
