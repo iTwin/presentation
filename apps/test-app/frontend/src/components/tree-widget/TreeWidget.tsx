@@ -216,7 +216,7 @@ function useTreeHeight(height?: number) {
     const heightOfHeader = headerRef.current?.clientHeight ?? 0;
     const heightToSet = height ? height - heightOfHeader : 0;
     setTreeHeight(heightToSet);
-  }, [height, headerRef]);
+  }, [height]);
   return { headerRef, treeHeight };
 }
 
