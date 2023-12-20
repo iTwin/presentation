@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
-.treewidget {
+.tree-widget {
   display: flex;
   flex-direction: column;
 }
@@ -12,7 +12,7 @@
   padding: unset;
 }
 
-.treewidget-header {
+.tree-widget-header {
   box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.25);
   padding: 0.5em;
   margin-bottom: 5px;
@@ -20,15 +20,15 @@
   gap: 0.5em;
 }
 
-.treewidget-header .components-filtering-input {
+.tree-widget-header .components-filtering-input {
   flex-grow: 4;
   margin: 0;
 }
-.treewidget-header .diagnostics-button {
+.tree-widget-header .diagnostics-button {
   flex-grow: 1;
 }
 
-.treewidget .filteredTree {
+.tree-widget .filtered-tree {
   flex-grow: 1;
   min-height: 50px;
 }
