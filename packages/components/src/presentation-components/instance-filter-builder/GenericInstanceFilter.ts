@@ -31,6 +31,10 @@ export interface GenericInstanceFilter {
    * filter for instance of different classes.
    */
   propertyClasses: ClassInfo[];
+  /**
+   * List of classes which will be used for additionally only querying items of passed classes
+   */
+  filteredClasses?: ClassInfo[];
 }
 
 /** @beta */
@@ -40,7 +44,7 @@ export namespace GenericInstanceFilter {
    * Extracts information from presentation data structures and creates a generic instance filter for building queries.
    * @beta
    */
-  export function fromPresentationInstanceFilter(filter: PresentationInstanceFilter): GenericInstanceFilter {
+  export function fromPresentationInstanceFilter(filter: PresentationInstanceFilter, filteredClasses?: ClassInfo[]): GenericInstanceFilter {
     const context: ConvertContext = { relatedInstances: [], propertyClasses: [], usedRelatedAliases: new Map<string, number>() };
 
     const rules = createMetadataFromFilter(filter, context);
@@ -48,6 +52,7 @@ export namespace GenericInstanceFilter {
       rules,
       relatedInstances: context.relatedInstances.map((instance) => ({ path: RelationshipPath.strip(instance.path), alias: instance.alias })),
       propertyClasses: context.propertyClasses,
+      filteredClasses,
     };
   }
 

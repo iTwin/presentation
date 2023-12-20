@@ -111,9 +111,13 @@ export namespace PresentationInstanceFilter {
    * to [PresentationManager]($presentation-frontend) through request options in order to filter results.
    * @beta
    */
-  export async function toInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection): Promise<InstanceFilterDefinition> {
+  export async function toInstanceFilterDefinition(
+    filter: PresentationInstanceFilter,
+    imodel: IModelConnection,
+    filteredClasses?: ClassInfo[],
+  ): Promise<InstanceFilterDefinition> {
     const { rules, propertyClasses, relatedInstances } = GenericInstanceFilter.fromPresentationInstanceFilter(filter);
-    const expression = createExpression(rules);
+    const expression = createExpression(rules, filteredClasses);
 
     const baseClass = await findBaseExpressionClass(imodel, propertyClasses);
 
