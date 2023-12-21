@@ -19,6 +19,8 @@
         }
       }
     },
+    "result-limit-exceeded": "There are more items than allowed limit of",
+    "reset-hierarchy-level-limit": "reset limit to default",
     "rules-driven-tree": "Rules-driven tree",
     "stateless-tree": "Stateless tree",
     "find-similar": {
