@@ -33,7 +33,13 @@ export async function findBaseExpressionClass(imodel: IModelConnection, property
 }
 
 /** @internal */
-export function createExpression(filter: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup) {
+export function createExpression(filter: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup, filteredClasses?: ClassInfo[]) {
+  return `${createComparisonExpression(filter)}${
+    Array.isArray(filteredClasses) && filteredClasses.length ? ` AND (${createClassExpression(filteredClasses)})` : ""
+  }`;
+}
+
+function createComparisonExpression(filter: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup) {
   if (GenericInstanceFilter.isFilterRuleGroup(filter)) {
     return createExpressionFromGroup(filter);
   }
@@ -43,8 +49,12 @@ export function createExpression(filter: GenericInstanceFilterRule | GenericInst
 }
 
 function createExpressionFromGroup(group: GenericInstanceFilterRuleGroup): string {
-  const convertedConditions = group.rules.map((rule) => createExpression(rule));
+  const convertedConditions = group.rules.map((rule) => createComparisonExpression(rule));
   return `(${convertedConditions.join(` ${getGroupOperatorString(group.operator)} `)})`;
+}
+
+function createClassExpression(usedClasses: ClassInfo[]) {
+  return usedClasses.reduce((queryExpression, classInfo) => `${queryExpression}${queryExpression ? " OR " : ""}this.IsOfClass(${classInfo.id})`, "");
 }
 
 function createComparison(propertyName: string, type: string, alias: string, operator: PropertyFilterRuleOperator, propValue?: PrimitiveValue): string {

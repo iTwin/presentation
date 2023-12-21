@@ -127,7 +127,7 @@ interface MatchingInstancesCountProps {
 function MatchingInstancesCount({ filter, dataProvider, parentKey }: MatchingInstancesCountProps) {
   const { value, inProgress } = useDebouncedAsyncValue(
     useCallback(async () => {
-      const instanceFilter = await PresentationInstanceFilter.toInstanceFilterDefinition(filter.filter, dataProvider.imodel);
+      const instanceFilter = await PresentationInstanceFilter.toInstanceFilterDefinition(filter.filter, dataProvider.imodel, filter.usedClasses);
       const requestOptions = dataProvider.createRequestOptions(parentKey, instanceFilter);
 
       try {
