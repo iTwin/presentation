@@ -15,18 +15,22 @@ import {
   TreeDataProvider,
   TreeEventHandler,
   TreeNodeItem,
+  TreeNodeRenderer,
+  TreeNodeRendererProps,
+  TreeRenderer,
   useDebouncedAsyncValue,
   useTreeModel,
   useTreeModelSource,
   useTreeNodeLoader,
 } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { TreeNode, UnderlinedButton } from "@itwin/core-react";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-import { Tab, Tabs } from "@itwin/itwinui-react";
-import { DiagnosticsProps } from "@itwin/presentation-components";
+import { Tab, Tabs, Text } from "@itwin/itwinui-react";
+import { DiagnosticsProps, InfoTreeNodeItemType, isPresentationInfoTreeNodeItem, PresentationInfoTreeNodeItem } from "@itwin/presentation-components";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import { HierarchyNode, HierarchyProvider, IECSqlQueryExecutor, IMetadataProvider } from "@itwin/presentation-hierarchy-builder";
+import { ErrorTypeChecker, HierarchyNode, HierarchyProvider, IECSqlQueryExecutor, IMetadataProvider } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { DiagnosticsSelector } from "../diagnostics-selector/DiagnosticsSelector";
 import { Tree } from "./Tree";
@@ -127,6 +131,7 @@ export function StatelessTreeWidget(props: Omit<Props, "rulesetId">) {
   const [queryExecutor, setQueryExecutor] = useState<IECSqlQueryExecutor>();
   const [metadataProvider, setMetadataProvider] = useState<IMetadataProvider>();
   const [modelsTreeHierarchyProvider, setModelsTreeHierarchyProvider] = useState<HierarchyProvider>();
+  const [hierarchyLevelSizeLimit, setHierarchyLevelSizeLimit] = useState<number>();
   useEffect(() => {
     const schemas = new SchemaContext();
     schemas.addLocater(new ECSchemaRpcLocater(props.imodel.getRpcProps()));
@@ -172,21 +177,32 @@ export function StatelessTreeWidget(props: Omit<Props, "rulesetId">) {
       const parent: HierarchyNode | undefined = node ? (node as any).__internal : undefined;
       try {
         if (modelsTreeHierarchyProvider) {
-          return (await modelsTreeHierarchyProvider.getNodes({ parentNode: parent })).map(parseTreeNodeItem);
+          return (await modelsTreeHierarchyProvider.getNodes({ parentNode: parent, hierarchyLevelSizeLimit })).map(parseTreeNodeItem);
         }
         return [];
       } catch (e) {
         // eslint-disable-next-line no-console
         console.error(e);
+        if (ErrorTypeChecker.isRowsLimitExceededError(e)) {
+          return [
+            createInfoNode(
+              node,
+              `${IModelApp.localization.getLocalizedString("Sample:controls.result-limit-exceeded")} ${hierarchyLevelSizeLimit!}`,
+              InfoTreeNodeItemType.ResultSetTooLarge,
+            ),
+          ];
+        }
         return [];
       }
     };
-  }, [modelsTreeHierarchyProvider]);
+  }, [modelsTreeHierarchyProvider, hierarchyLevelSizeLimit]);
   const modelSource = useTreeModelSource(dataProvider);
   const nodeLoader = useTreeNodeLoader(dataProvider, modelSource);
   const eventHandler = useMemo(() => new TreeEventHandler({ nodeLoader, modelSource }), [nodeLoader, modelSource]);
   const treeModel = useTreeModel(modelSource);
-
+  const nodeRenderer = useCallback((nodeProps: TreeNodeRendererProps) => {
+    return <StatelessTreeNodeRenderer {...nodeProps} onLimitReset={() => setHierarchyLevelSizeLimit(undefined)} />;
+  }, []);
   const { headerRef, treeHeight } = useTreeHeight(props.height);
   return (
     <>
@@ -197,6 +213,7 @@ export function StatelessTreeWidget(props: Omit<Props, "rulesetId">) {
             model={treeModel}
             eventsHandler={eventHandler}
             nodeLoader={nodeLoader}
+            treeRenderer={(treeProps) => <TreeRenderer {...treeProps} nodeRenderer={nodeRenderer} />}
             selectionMode={SelectionMode.Extended}
             iconsEnabled={true}
             width={props.width}
@@ -272,4 +289,52 @@ function parseTreeNodeItem(node: HierarchyNode): DelayLoadedTreeNodeItem {
     hasChildren: !!node.children,
     autoExpand: node.autoExpand,
   } as DelayLoadedTreeNodeItem;
+}
+
+function createInfoNode(parentNode: TreeNodeItem | undefined, message: string, type?: InfoTreeNodeItemType): PresentationInfoTreeNodeItem {
+  const id = parentNode ? `${parentNode.id}/info-node` : `/info-node/${message}`;
+  return {
+    id,
+    parentId: parentNode?.id,
+    label: PropertyRecord.fromString(message),
+    message,
+    isSelectionDisabled: true,
+    children: undefined,
+    type: type ?? InfoTreeNodeItemType.Unset,
+  };
+}
+
+interface StatelessTreeNodeRendererProps extends TreeNodeRendererProps {
+  onLimitReset: () => void;
+}
+
+function StatelessTreeNodeRenderer(props: StatelessTreeNodeRendererProps) {
+  const nodeItem = props.node.item;
+
+  if (isPresentationInfoTreeNodeItem(nodeItem)) {
+    return (
+      <TreeNode
+        isLeaf={true}
+        label={
+          <span>
+            <Text isMuted>
+              <span>{nodeItem.message}</span>
+              {nodeItem.type === InfoTreeNodeItemType.ResultSetTooLarge && (
+                <span>
+                  <span> - </span>
+                  <UnderlinedButton onClick={() => props.onLimitReset()}>
+                    {` ${IModelApp.localization.getLocalizedString("Sample:controls.reset-hierarchy-level-limit")}.`}
+                  </UnderlinedButton>
+                </span>
+              )}
+            </Text>
+          </span>
+        }
+        level={props.node.depth}
+        isHoverDisabled={true}
+      />
+    );
+  }
+
+  return <TreeNodeRenderer {...props} />;
 }
