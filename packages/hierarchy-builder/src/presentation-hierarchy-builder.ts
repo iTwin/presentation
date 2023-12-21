@@ -17,6 +17,7 @@ import * as ECSqlValueSnippets from "./hierarchy-builder/queries/ecsql-snippets/
 export const ECSqlSnippets = { ...ECSqlJoinSnippets, ...ECSqlValueSnippets };
 
 export * from "./hierarchy-builder/ECMetadata";
+export * from "./hierarchy-builder/ErrorTypeChecker";
 export * from "./hierarchy-builder/GenericInstanceFilter";
 export * from "./hierarchy-builder/HierarchyDefinition";
 export * from "./hierarchy-builder/HierarchyNode";

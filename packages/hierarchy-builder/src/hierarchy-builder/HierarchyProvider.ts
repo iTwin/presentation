@@ -92,6 +92,8 @@ export interface GetHierarchyNodesProps {
   parentNode: ParentHierarchyNode | undefined;
   /** Optional hierarchy level filter. */
   instanceFilter?: GenericInstanceFilter;
+  /** Optional hierarchy level size limit. Default limit is 1000. */
+  hierarchyLevelSizeLimit?: number;
 }
 
 /**
@@ -153,7 +155,15 @@ export class HierarchyProvider {
         return this._scheduler.scheduleSubscription(
           of(def.query).pipe(
             log((query) => `Query direct nodes for parent ${props.parentNode ? JSON.stringify(props.parentNode) : "<root>"}: ${query.ecsql}`),
-            mergeMap((query) => from(this._queryReader.read(this._queryExecutor, { ...query, ecsql: applyLimit({ ...query }) }))),
+            mergeMap((query) =>
+              from(
+                this._queryReader.read(
+                  this._queryExecutor,
+                  { ...query, ecsql: applyLimit({ ...query, limit: props.hierarchyLevelSizeLimit }) },
+                  props.hierarchyLevelSizeLimit,
+                ),
+              ),
+            ),
           ),
         );
       }),
@@ -353,7 +363,7 @@ class ChildNodesCache {
 
   private parseRequestProps(requestProps: GetHierarchyNodesProps) {
     const { parentNode: node } = requestProps;
-    const primaryKey = node ? `${JSON.stringify(node.parentKeys)}+${JSON.stringify(node.key)}` : "";
+    const primaryKey = node ? `${JSON.stringify(node.parentKeys)}+${JSON.stringify(node.key)}+${JSON.stringify(requestProps.hierarchyLevelSizeLimit)}` : "";
     const variationKey = requestProps.instanceFilter ? JSON.stringify(requestProps.instanceFilter) : undefined;
     return { primaryKey, variationKey };
   }

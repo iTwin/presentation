@@ -45,8 +45,8 @@ describe("TreeQueryResultsReader", () => {
 
   it("throws when row limit is exceeded", async () => {
     executor.createQueryReader.returns(createFakeQueryReader([{ id: 1 }, { id: 2 }, { id: 3 }]));
-    const reader = new TreeQueryResultsReader({ parser, limit: 2 });
-    await expect(reader.read(executor, { ecsql: "QUERY" })).to.eventually.be.rejectedWith(RowsLimitExceededError);
+    const reader = new TreeQueryResultsReader({ parser });
+    await expect(reader.read(executor, { ecsql: "QUERY" }, 2)).to.eventually.be.rejectedWith(RowsLimitExceededError);
   });
 });
 

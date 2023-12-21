@@ -64,6 +64,7 @@ beta;ECSqlValueSelector
 beta;ECStructArrayProperty = ECStructProperty & ArrayPropertyAttributes
 beta;ECStructClass = ECClass
 beta;ECStructProperty 
+beta;ErrorTypeChecker
 beta;GenericInstanceFilter
 beta;GenericInstanceFilter
 beta;GenericInstanceFilterRule

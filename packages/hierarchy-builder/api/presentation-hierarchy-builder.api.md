@@ -126,6 +126,7 @@ export class DefaultInstanceLabelSelectClauseFactory implements IInstanceLabelSe
 
 // @beta
 export interface DefineHierarchyLevelProps {
+    hierarchyLevelSizeLimit?: number;
     instanceFilter?: GenericInstanceFilter;
     parentNode: HierarchyDefinitionParentNode | undefined;
 }
@@ -467,6 +468,11 @@ export interface ECStructProperty extends ECProperty {
 }
 
 // @beta
+export namespace ErrorTypeChecker {
+    export function isRowsLimitExceededError(err: any): err is RowsLimitExceededError;
+}
+
+// @beta
 export interface GenericInstanceFilter {
     filterClassNames?: string[];
     propertyClassName: string;
@@ -495,6 +501,7 @@ export interface GenericInstanceFilterRuleGroup {
 
 // @beta
 export interface GetHierarchyNodesProps {
+    hierarchyLevelSizeLimit?: number;
     instanceFilter?: GenericInstanceFilter;
     parentNode: ParentHierarchyNode | undefined;
 }

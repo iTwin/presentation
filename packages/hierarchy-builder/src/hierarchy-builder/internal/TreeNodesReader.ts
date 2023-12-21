@@ -15,7 +15,6 @@ import { LOGGING_NAMESPACE } from "./Common";
 /** @internal */
 export interface TreeQueryResultsReaderProps {
   parser?: INodeParser;
-  limit?: number;
 }
 
 /** @internal */
@@ -26,17 +25,17 @@ export class TreeQueryResultsReader {
     // istanbul ignore next
     this._props = {
       parser: props?.parser ?? defaultNodesParser,
-      limit: props?.limit ?? DEFAULT_ROWS_LIMIT,
     };
   }
 
-  public async read(executor: IECSqlQueryExecutor, query: Omit<ECSqlQueryDef, "ctes">): Promise<ParsedHierarchyNode[]> {
+  public async read(executor: IECSqlQueryExecutor, query: Omit<ECSqlQueryDef, "ctes">, limit?: number): Promise<ParsedHierarchyNode[]> {
+    const nodeLimit = limit ?? DEFAULT_ROWS_LIMIT;
     getLogger().logInfo(`${LOGGING_NAMESPACE}.TreeQueryResultsReader`, `Executing query: ${query.ecsql}`);
     const reader = executor.createQueryReader(query.ecsql, query.bindings, { rowFormat: "ECSqlPropertyNames" });
     const nodes = new Array<ParsedHierarchyNode>();
     for await (const row of reader) {
-      if (nodes.length >= this._props.limit) {
-        throw new RowsLimitExceededError(this._props.limit);
+      if (nodes.length >= nodeLimit) {
+        throw new RowsLimitExceededError(nodeLimit);
       }
       nodes.push(this._props.parser(row.toRow()));
     }
