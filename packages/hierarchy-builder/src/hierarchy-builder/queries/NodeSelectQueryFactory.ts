@@ -46,12 +46,6 @@ export enum NodeSelectClauseColumnNames {
   HideNodeInHierarchy = "HideNodeInHierarchy",
   /** A serialized JSON object for providing grouping information. */
   Grouping = "Grouping",
-  /**
-   * A string indicating a label merge group. Values:
-   * - non-empty string puts the node into a label merge group.
-   * - NULL or empty string doesn't merge node by label.
-   */
-  MergeByLabelId = "MergeByLabelId",
   /** A serialized JSON object for associating a node with additional data. */
   ExtendedData = "ExtendedData",
   /** A flag indicating the node should be auto-expanded when it's loaded. */
@@ -86,7 +80,6 @@ export interface NodeSelectClauseProps {
   hideNodeInHierarchy?: boolean | ECSqlValueSelector;
   hideIfNoChildren?: boolean | ECSqlValueSelector;
   grouping?: ECSqlSelectClauseGroupingParams;
-  mergeByLabelId?: string | ECSqlValueSelector;
 }
 
 /**
@@ -94,11 +87,48 @@ export interface NodeSelectClauseProps {
  * @beta
  */
 export interface ECSqlSelectClauseGroupingParams {
-  byLabel?: boolean | ECSqlSelectClauseGroupingParamsBase | ECSqlValueSelector;
+  byLabel?: ECSqlSelectClauseLabelGroupingParams;
   byClass?: boolean | ECSqlSelectClauseGroupingParamsBase | ECSqlValueSelector;
   byBaseClasses?: ECSqlSelectClauseBaseClassGroupingParams;
   byProperties?: ECSqlSelectClausePropertiesGroupingParams;
 }
+
+/**
+ * A data structure for defining label grouping params.
+ * @beta
+ */
+export interface ECSqlSelectClauseLabelGroupingBaseParams {
+  /** Label grouping option that determines whether to group nodes or to merge them. Defaults to "group".*/
+  action?: "group" | "merge";
+  /** Id that needs to match for nodes to be grouped or merged.*/
+  groupId?: string | ECSqlValueSelector;
+}
+
+/**
+ * A data structure for defining label merging.
+ * @beta
+ */
+export interface ECSqlSelectClauseLabelGroupingMergeParams extends ECSqlSelectClauseLabelGroupingBaseParams {
+  action: "merge";
+}
+
+/**
+ * A data structure for defining label grouping.
+ * @beta
+ */
+export interface ECSqlSelectClauseLabelGroupingGroupParams extends ECSqlSelectClauseLabelGroupingBaseParams, ECSqlSelectClauseGroupingParamsBase {
+  action?: "group";
+}
+
+/**
+ * A data structure for defining possible label grouping types.
+ * @beta
+ */
+export type ECSqlSelectClauseLabelGroupingParams =
+  | boolean
+  | ECSqlValueSelector
+  | ECSqlSelectClauseLabelGroupingMergeParams
+  | ECSqlSelectClauseLabelGroupingGroupParams;
 
 /**
  * A data structure for defining base grouping parameters shared across all types of grouping.
@@ -211,7 +241,6 @@ export class NodeSelectQueryFactory {
       CAST(${createECSqlValueSelector(props.hideIfNoChildren)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideIfNoChildren},
       CAST(${createECSqlValueSelector(props.hideNodeInHierarchy)} AS BOOLEAN) AS ${NodeSelectClauseColumnNames.HideNodeInHierarchy},
       ${props.grouping ? createGroupingSelector(props.grouping) : "CAST(NULL AS TEXT)"} AS ${NodeSelectClauseColumnNames.Grouping},
-      CAST(${createECSqlValueSelector(props.mergeByLabelId)} AS TEXT) AS ${NodeSelectClauseColumnNames.MergeByLabelId},
       ${
         props.extendedData
           ? `json_object(${Object.entries(props.extendedData)
@@ -323,7 +352,7 @@ function createGroupingSelector(grouping: ECSqlSelectClauseGroupingParams): stri
       selector:
         typeof grouping.byLabel === "boolean" || isSelector(grouping.byLabel)
           ? createECSqlValueSelector(grouping.byLabel)
-          : serializeJsonObject(createBaseGroupingParamSelectors(grouping.byLabel)),
+          : serializeJsonObject(createLabelGroupingBaseParamsSelectors(grouping.byLabel)),
     });
 
   grouping.byClass &&
@@ -382,6 +411,27 @@ function createGroupingSelector(grouping: ECSqlSelectClauseGroupingParams): stri
     });
 
   return serializeJsonObject(groupingSelectors);
+}
+
+function createLabelGroupingBaseParamsSelectors(byLabel: ECSqlSelectClauseLabelGroupingMergeParams | ECSqlSelectClauseLabelGroupingGroupParams) {
+  const selectors = new Array<{ key: string; selector: string }>();
+  if (byLabel.action !== undefined) {
+    selectors.push({
+      key: "action",
+      selector: `${createECSqlValueSelector(byLabel.action)}`,
+    });
+  }
+  if (byLabel.groupId !== undefined) {
+    selectors.push({
+      key: "groupId",
+      selector: createECSqlValueSelector(byLabel.groupId),
+    });
+  }
+  if (byLabel.action !== "merge") {
+    selectors.push(...createBaseGroupingParamSelectors(byLabel));
+  }
+
+  return selectors;
 }
 
 function createPropertyGroupSelectors(propertyGroup: ECSqlSelectClausePropertyGroup) {

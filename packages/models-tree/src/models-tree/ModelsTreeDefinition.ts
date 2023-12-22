@@ -169,7 +169,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                 `,
               },
               hideIfNoChildren: true,
-              mergeByLabelId: "subject",
+              grouping: { byLabel: { action: "merge", groupId: "subject" } },
               extendedData: {
                 imageId: "icon-folder",
               },
@@ -336,7 +336,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                     className: "BisCore.SpatialCategory",
                   }),
                 },
-                mergeByLabelId: "category",
+                grouping: { byLabel: { action: "merge", groupId: "category" } },
                 hasChildren: true,
                 extendedData: {
                   imageId: "icon-layers",
@@ -507,7 +507,7 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
         e.Parent.Id,
         e.Model.Id,
         e.Category.Id,
-        ${createECInstanceKeySelectClause({ alias: "e" })}
+        json_array(${createECInstanceKeySelectClause({ alias: "e" })})
       FROM bis.GeometricElement3d e
       UNION ALL
       SELECT
@@ -518,7 +518,7 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
         p.Parent.Id,
         p.Model.Id,
         p.Category.Id,
-        c.Path || ',' || ${createECInstanceKeySelectClause({ alias: "p" })}
+        json_insert(c.Path, '$[#]', ${createECInstanceKeySelectClause({ alias: "p" })})
       FROM GeometricElementsHierarchy c
       JOIN bis.GeometricElement3d p on p.ECInstanceId = c.ParentId
     )`,
@@ -552,10 +552,17 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
         m.ECInstanceId,
         m.HexId,
         m.ModeledElementParentId,
-        e.Path || ',' || ${createECInstanceKeySelectClause({
-          classIdAlias: "c",
-          instanceHexIdSelector: "c.HexId",
-        })} || ',' || ${createECInstanceKeySelectClause({ classIdAlias: "m", instanceHexIdSelector: "m.HexId" })}
+        json_insert(
+          e.Path,
+          '$[#]', ${createECInstanceKeySelectClause({
+            classIdAlias: "c",
+            instanceHexIdSelector: "c.HexId",
+          })},
+          '$[#]', ${createECInstanceKeySelectClause({
+            classIdAlias: "m",
+            instanceHexIdSelector: "m.HexId",
+          })}
+        )
       FROM GeometricElements e
       JOIN Categories c ON c.ECInstanceId = e.CategoryId
       JOIN Models m ON m.ECInstanceId = e.ModelId
@@ -566,10 +573,18 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
         m.ECInstanceId,
         m.HexId,
         m.ModeledElementParentId,
-        mce.Path || ',' || e.Path || ',' || ${createECInstanceKeySelectClause({
-          classIdAlias: "c",
-          instanceHexIdSelector: "c.HexId",
-        })} || ',' || ${createECInstanceKeySelectClause({ classIdAlias: "m", instanceHexIdSelector: "m.HexId" })}
+        json_insert(
+          mce.Path,
+          '$[#]', json(e.Path),
+          '$[#]', ${createECInstanceKeySelectClause({
+            classIdAlias: "c",
+            instanceHexIdSelector: "c.HexId",
+          })},
+          '$[#]', ${createECInstanceKeySelectClause({
+            classIdAlias: "m",
+            instanceHexIdSelector: "m.HexId",
+          })}
+        )
       FROM ModelsCategoriesElementsHierarchy mce
       JOIN GeometricElements e on e.TargetId = mce.ModelId
       JOIN Categories c ON c.ECInstanceId = e.CategoryId
@@ -583,7 +598,16 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
         s.ECInstanceId,
         s.Parent.Id,
         s.JsonProperties,
-        ${createECInstanceKeySelectClause({ alias: "s" })}
+        CASE
+          WHEN (
+            json_extract(s.JsonProperties, '$.Subject.Job.Bridge') IS NOT NULL
+            OR json_extract(s.JsonProperties, '$.Subject.Model.Type') = 'Hierarchy'
+          )
+          THEN
+            json_array()
+          ELSE
+            json_array(${createECInstanceKeySelectClause({ alias: "s" })})
+        END
       FROM bis.Subject s
       UNION ALL
       SELECT
@@ -593,7 +617,16 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
         p.ECInstanceId,
         p.Parent.Id,
         p.JsonProperties,
-        c.Path || ',' || ${createECInstanceKeySelectClause({ alias: "p" })}
+        CASE
+          WHEN (
+            json_extract(p.JsonProperties, '$.Subject.Job.Bridge') IS NOT NULL
+            OR json_extract(p.JsonProperties, '$.Subject.Model.Type') = 'Hierarchy'
+          )
+          THEN
+            c.Path
+          ELSE
+            json_insert(c.Path, '$[#]', ${createECInstanceKeySelectClause({ alias: "p" })})
+        END
       FROM SubjectsHierarchy c
       JOIN bis.Element p on p.ECInstanceId = c.ParentId
     )`,
@@ -635,7 +668,7 @@ async function createInstanceKeyPathsFromInstanceKeys(props: ModelsTreeInstanceK
   const queries = [];
   if (ids.elements.length > 0) {
     queries.push(`
-      SELECT mce.Path || ',' || s.Path
+      SELECT json_insert(mce.Path, '$[#]', json(s.Path))
       FROM ModelsCategoriesElementsHierarchy mce
       JOIN Subjects s ON s.TargetId = mce.ModelParentId OR json_extract(s.JsonProperties,'$.Subject.Model.TargetPartition') = mce.ModelHexId
       WHERE mce.TargetElementId IN (${ids.elements.map(() => "?").join(",")})
@@ -644,9 +677,11 @@ async function createInstanceKeyPathsFromInstanceKeys(props: ModelsTreeInstanceK
   if (ids.categories.length > 0) {
     queries.push(`
       SELECT
-      ${createECInstanceKeySelectClause({ classIdAlias: "c", instanceHexIdSelector: "c.HexId" })}
-          || ',' || ${createECInstanceKeySelectClause({ classIdAlias: "m", instanceHexIdSelector: "m.HexId" })}
-          || ',' || s.Path
+        json_array(
+          ${createECInstanceKeySelectClause({ classIdAlias: "c", instanceHexIdSelector: "c.HexId" })},
+          ${createECInstanceKeySelectClause({ classIdAlias: "m", instanceHexIdSelector: "m.HexId" })},
+          json(s.Path)
+        )
       FROM Categories c,
            Models m
       JOIN Subjects s ON s.TargetId = m.ModeledElementParentId OR json_extract(s.JsonProperties,'$.Subject.Model.TargetPartition') = m.HexId
@@ -658,7 +693,10 @@ async function createInstanceKeyPathsFromInstanceKeys(props: ModelsTreeInstanceK
   if (ids.models.length > 0) {
     queries.push(`
       SELECT
-        ${createECInstanceKeySelectClause({ classIdAlias: "m", instanceHexIdSelector: "m.HexId" })} || ',' || s.Path
+        json_array(
+          ${createECInstanceKeySelectClause({ classIdAlias: "m", instanceHexIdSelector: "m.HexId" })},
+          json(s.Path)
+        )
       FROM Models m
       JOIN Subjects s ON s.TargetId = m.ModeledElementParentId OR json_extract(s.JsonProperties,'$.Subject.Model.TargetPartition') = m.HexId
       WHERE m.ECInstanceId IN (${ids.models.map(() => "?").join(",")})
@@ -690,7 +728,7 @@ async function createInstanceKeyPathsFromInstanceKeys(props: ModelsTreeInstanceK
   const reader = props.queryExecutor.createQueryReader(ecsql, bindings, { rowFormat: "Indexes" });
   const paths = new Array<HierarchyNodeIdentifiersPath>();
   for await (const row of reader) {
-    paths.push(JSON.parse(`[${row.toArray()[0]}]`).reverse());
+    paths.push(flatten<InstanceKey>(JSON.parse(row.toArray()[0])).reverse());
   }
   return paths;
 }
@@ -700,16 +738,18 @@ async function createInstanceKeyPathsFromInstanceLabel(
 ) {
   const queries = [];
   queries.push(`
-    SELECT mce.TargetElementLabel AS Label, mce.Path || ',' || s.Path AS Path
+    SELECT mce.TargetElementLabel AS Label, json_insert(mce.Path, '$[#]', json(s.Path)) AS Path
     FROM ModelsCategoriesElementsHierarchy mce
     JOIN Subjects s ON s.TargetId = mce.ModelParentId OR json_extract(s.JsonProperties,'$.Subject.Model.TargetPartition') = mce.ModelHexId
   `);
   queries.push(`
     SELECT
       c.Label AS Label,
-      ${createECInstanceKeySelectClause({ classIdAlias: "c", instanceHexIdSelector: "c.HexId" })}
-        || ',' || ${createECInstanceKeySelectClause({ classIdAlias: "m", instanceHexIdSelector: "m.HexId" })}
-        || ',' || s.Path AS Path
+      json_array(
+        ${createECInstanceKeySelectClause({ classIdAlias: "c", instanceHexIdSelector: "c.HexId" })},
+        ${createECInstanceKeySelectClause({ classIdAlias: "m", instanceHexIdSelector: "m.HexId" })},
+        json(s.Path)
+      ) AS Path
     FROM Categories c,
          Models m
     JOIN Subjects s ON s.TargetId = m.ModeledElementParentId OR json_extract(s.JsonProperties,'$.Subject.Model.TargetPartition') = m.HexId
@@ -719,7 +759,10 @@ async function createInstanceKeyPathsFromInstanceLabel(
   queries.push(`
     SELECT
       m.Label AS Label,
-      ${createECInstanceKeySelectClause({ classIdAlias: "m", instanceHexIdSelector: "m.HexId" })} || ',' || s.Path AS Path
+      json_array(
+        ${createECInstanceKeySelectClause({ classIdAlias: "m", instanceHexIdSelector: "m.HexId" })},
+        json(s.Path)
+      ) AS Path
     FROM Models m
     JOIN Subjects s ON s.TargetId = m.ModeledElementParentId OR json_extract(s.JsonProperties,'$.Subject.Model.TargetPartition') = m.HexId
   `);
@@ -741,9 +784,16 @@ async function createInstanceKeyPathsFromInstanceLabel(
   const reader = props.queryExecutor.createQueryReader(ecsql, [{ type: "string", value: props.label }], { rowFormat: "Indexes" });
   const paths = new Array<HierarchyNodeIdentifiersPath>();
   for await (const row of reader) {
-    paths.push(JSON.parse(`[${row.toArray()[0]}]`).reverse());
+    paths.push(flatten<InstanceKey>(JSON.parse(row.toArray()[0])).reverse());
   }
   return paths;
+}
+
+type ArrayOrValue<T> = T | Array<ArrayOrValue<T>>;
+function flatten<T>(source: Array<ArrayOrValue<T>>): T[] {
+  return source.reduce<T[]>((flat, item): T[] => {
+    return [...flat, ...(Array.isArray(item) ? flatten(item) : [item])];
+  }, new Array<T>());
 }
 
 async function getClass(metadata: IMetadataProvider, fullClassName: string) {

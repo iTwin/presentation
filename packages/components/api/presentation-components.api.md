@@ -236,6 +236,7 @@ export interface FilteringDialogToolbarRendererProps {
 
 // @beta
 export interface GenericInstanceFilter {
+    filteredClasses?: ClassInfo[];
     propertyClasses: ClassInfo[];
     relatedInstances: RelatedInstanceDescription[];
     rules: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup;
@@ -243,7 +244,7 @@ export interface GenericInstanceFilter {
 
 // @beta (undocumented)
 export namespace GenericInstanceFilter {
-    export function fromPresentationInstanceFilter(filter: PresentationInstanceFilter): GenericInstanceFilter;
+    export function fromPresentationInstanceFilter(filter: PresentationInstanceFilter, filteredClasses?: ClassInfo[]): GenericInstanceFilter;
     export function isFilterRuleGroup(obj: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup): obj is GenericInstanceFilterRuleGroup;
 }
 
@@ -395,7 +396,7 @@ export namespace PresentationInstanceFilter {
     export function fromComponentsPropertyFilter(descriptor: Descriptor, filter: PropertyFilter): PresentationInstanceFilter;
     export function isConditionGroup(filter: PresentationInstanceFilter): filter is PresentationInstanceFilterConditionGroup;
     export function toComponentsPropertyFilter(descriptor: Descriptor, filter: PresentationInstanceFilter): PropertyFilter;
-    export function toInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection): Promise<InstanceFilterDefinition>;
+    export function toInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection, filteredClasses?: ClassInfo[]): Promise<InstanceFilterDefinition>;
 }
 
 // @beta

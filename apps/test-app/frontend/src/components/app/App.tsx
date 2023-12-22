@@ -233,7 +233,6 @@ function IModelComponents(props: IModelComponentsProps) {
             }}
           >
             <TreeWidget imodel={imodel} rulesetId={rulesetId} />
-            {/* <ExperimentalModelsTree imodel={imodel} /> */}
             <div className="app-content-right-separator">
               <hr />
               <ElementSeparator orientation={Orientation.Vertical} ratio={panelRatio} movableArea={panelHeight} onRatioChanged={onPanelResize} />

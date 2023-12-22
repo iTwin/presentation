@@ -3,7 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
+import { compareNodesByLabel, mergeSortedArrays } from "../../Common";
 import { GroupingHandlerResult, GroupingType, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
+import { sortNodesByLabel } from "../Sorting";
 import { iterateChildNodeGroupingParams } from "./Shared";
 
 /** @internal */
@@ -21,18 +24,23 @@ export function applyGroupHidingParams(props: GroupingHandlerResult, extraSiblin
   }
 
   // handle the "no children" case
-  const finalGroupings: GroupingHandlerResult = { ...props, ungrouped: [...props.ungrouped], grouped: [] };
+  const grouped = new Array<ProcessedInstancesGroupingHierarchyNode>();
+  const newUngroupedNodes = new Array<ProcessedInstanceHierarchyNode>();
   for (const node of props.grouped) {
     if (node.children.length === 1) {
       const hideParams = getHideOptionsFromNodeProcessingParams(node, props.groupingType);
       if (hideParams.hideIfOneGroupedNode) {
-        finalGroupings.ungrouped.push(node.children[0]);
+        newUngroupedNodes.push(node.children[0]);
         continue;
       }
     }
-    finalGroupings.grouped.push(node);
+    grouped.push(node);
   }
-  return finalGroupings;
+  return {
+    groupingType: props.groupingType,
+    ungrouped: mergeSortedArrays(props.ungrouped, sortNodesByLabel(newUngroupedNodes), compareNodesByLabel),
+    grouped,
+  };
 }
 
 function getHideOptionsFromNodeProcessingParams(
