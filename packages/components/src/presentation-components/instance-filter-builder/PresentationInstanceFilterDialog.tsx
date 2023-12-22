@@ -200,9 +200,7 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
   const onResetHandler = () => {
     filteringProps.selectedClasses = [];
     filteringProps.onSelectedClassesChanged([]);
-    rootGroup.items.forEach((item) => {
-      actions.removeItem([item.id]);
-    });
+    actions.removeAllItems();
     onReset();
   };
 
