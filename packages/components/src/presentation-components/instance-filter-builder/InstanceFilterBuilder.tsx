@@ -12,7 +12,12 @@ import { BehaviorSubject, from, of } from "rxjs";
 import { map } from "rxjs/internal/operators/map";
 import { switchAll } from "rxjs/internal/operators/switchAll";
 import { PropertyDescription } from "@itwin/appui-abstract";
-import { PropertyFilterBuilderRenderer, PropertyFilterBuilderRendererProps, PropertyFilterBuilderRuleValueRendererProps } from "@itwin/components-react";
+import {
+  PropertyFilterBuilderActions,
+  PropertyFilterBuilderRenderer,
+  PropertyFilterBuilderRendererProps,
+  PropertyFilterBuilderRuleValueRendererProps,
+} from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ComboBox, SelectOption } from "@itwin/itwinui-react";
 import { ClassInfo, Descriptor, Keys } from "@itwin/presentation-common";
@@ -92,6 +97,7 @@ function createOption(classInfo: ClassInfo): SelectOption<string> {
 export function usePresentationInstanceFilteringProps(
   descriptor: Descriptor,
   imodel: IModelConnection,
+  actions?: PropertyFilterBuilderActions,
   initialActiveClasses?: ClassInfo[],
 ): Required<
   Pick<
@@ -118,9 +124,17 @@ export function usePresentationInstanceFilteringProps(
     [propertyInfos, filterClassesByProperty],
   );
 
+  const onSelectedClassesChanged = useCallback(
+    (classIds: string[]) => {
+      changeActiveClasses(classIds);
+      actions?.removeAllItems();
+    },
+    [changeActiveClasses, actions],
+  );
+
   return {
     onRulePropertySelected,
-    onSelectedClassesChanged: useCallback((classIds) => changeActiveClasses(classIds), [changeActiveClasses]),
+    onSelectedClassesChanged,
     propertyRenderer,
     properties,
     classes,

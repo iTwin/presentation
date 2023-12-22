@@ -150,7 +150,7 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
     ruleValidator: filterRuleValidator,
   });
 
-  const filteringProps = usePresentationInstanceFilteringProps(descriptor, imodel, initialFilter?.usedClasses);
+  const filteringProps = usePresentationInstanceFilteringProps(descriptor, imodel, actions, initialFilter?.usedClasses);
   const getFilterInfo = useCallback(
     (options?: BuildFilterOptions) => {
       const filter = buildFilter(options);
