@@ -150,7 +150,7 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
     ruleValidator: filterRuleValidator,
   });
 
-  const filteringProps = usePresentationInstanceFilteringProps(descriptor, imodel, actions, initialFilter?.usedClasses);
+  const filteringProps = usePresentationInstanceFilteringProps(descriptor, imodel, initialFilter?.usedClasses);
   const getFilterInfo = useCallback(
     (options?: BuildFilterOptions) => {
       const filter = buildFilter(options);
@@ -162,6 +162,11 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
     },
     [buildFilter, descriptor, filteringProps.selectedClasses],
   );
+
+  const onSelectedClassesChanged = (classIds: string[]) => {
+    filteringProps.onSelectedClassesChanged(classIds);
+    actions.removeAllItems();
+  };
 
   const throwError = useThrowError();
   const applyButtonHandle = () => {
@@ -190,6 +195,7 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
       <Dialog.Content className="presentation-instance-filter-content">
         <InstanceFilterBuilder
           {...filteringProps}
+          onSelectedClassesChanged={onSelectedClassesChanged}
           rootGroup={rootGroup}
           actions={actions}
           ruleGroupDepthLimit={ruleGroupDepthLimit}

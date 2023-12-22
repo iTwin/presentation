@@ -432,22 +432,6 @@ describe("usePresentationInstanceFilteringProps", () => {
       await waitFor(() => expect(result.current.properties).to.have.lengthOf(2));
     });
 
-    it("calls 'removeAllItems' when `onSelectedClassesChanged` is called", async () => {
-      const removeAllItemsSpy = sinon.spy();
-
-      const { result } = renderHook(
-        (props: HookProps) =>
-          usePresentationInstanceFilteringProps(props.descriptor, props.imodel, { removeAllItems: removeAllItemsSpy } as any as PropertyFilterBuilderActions),
-        { initialProps },
-      );
-
-      act(() => {
-        result.current.onSelectedClassesChanged([]);
-      });
-
-      await waitFor(() => expect(removeAllItemsSpy).to.be.calledOnce);
-    });
-
     it("return all properties when selected class contains all available properties", async () => {
       const testDescriptor = createTestContentDescriptor({
         selectClasses: [{ selectClassInfo: concreteClass1, isSelectPolymorphic: false }],
