@@ -3,15 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { RowsLimitExceededError } from "./internal/TreeNodesReader";
-
 /**
- * Namespace which can be used to determine error type.
+ * Error that is thrown when rows amount exceed hierarchy level limit.
  * @beta
  */
-export namespace ErrorTypeChecker {
-  /** Checks if the error is a RowsLimitExceededError. */
-  export function isRowsLimitExceededError(err: any): err is RowsLimitExceededError {
-    return err instanceof RowsLimitExceededError;
+export class RowsLimitExceededError extends Error {
+  public constructor(public readonly limit: number) {
+    super(`Query rows limit of ${limit} exceeded`);
   }
 }

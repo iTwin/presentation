@@ -5,8 +5,9 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
+import { RowsLimitExceededError } from "../../hierarchy-builder/HierarchyErrors";
 import { ParsedHierarchyNode, ParsedInstanceHierarchyNode } from "../../hierarchy-builder/HierarchyNode";
-import { applyLimit, defaultNodesParser, RowDef, RowsLimitExceededError, TreeQueryResultsReader } from "../../hierarchy-builder/internal/TreeNodesReader";
+import { applyLimit, defaultNodesParser, RowDef, TreeQueryResultsReader } from "../../hierarchy-builder/internal/TreeNodesReader";
 import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions } from "../../hierarchy-builder/queries/ECSqlCore";
 import { NodeSelectClauseColumnNames } from "../../hierarchy-builder/queries/NodeSelectQueryFactory";
 import { ConcatenatedValue } from "../../hierarchy-builder/values/ConcatenatedValue";

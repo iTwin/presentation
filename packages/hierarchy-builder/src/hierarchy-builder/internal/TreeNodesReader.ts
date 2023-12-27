@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { INodeParser } from "../HierarchyDefinition";
+import { RowsLimitExceededError } from "../HierarchyErrors";
 import { InstanceHierarchyNodeProcessingParams, ParsedHierarchyNode, ParsedInstanceHierarchyNode } from "../HierarchyNode";
 import { getLogger } from "../Logging";
 import { ECSqlQueryDef, IECSqlQueryExecutor } from "../queries/ECSqlCore";
@@ -41,13 +42,6 @@ export class TreeQueryResultsReader {
       nodes.push(this._props.parser(row.toRow()));
     }
     return nodes;
-  }
-}
-
-/** @internal */
-export class RowsLimitExceededError extends Error {
-  public constructor(public readonly limit: number) {
-    super(`Query rows limit of ${limit} exceeded`);
   }
 }
 

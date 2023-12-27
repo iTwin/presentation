@@ -126,7 +126,6 @@ export class DefaultInstanceLabelSelectClauseFactory implements IInstanceLabelSe
 
 // @beta
 export interface DefineHierarchyLevelProps {
-    hierarchyLevelSizeLimit?: number;
     instanceFilter?: GenericInstanceFilter;
     parentNode: HierarchyDefinitionParentNode | undefined;
 }
@@ -501,7 +500,7 @@ export interface GenericInstanceFilterRuleGroup {
 
 // @beta
 export interface GetHierarchyNodesProps {
-    hierarchyLevelSizeLimit?: number;
+    hierarchyLevelSizeLimit?: number | "unbounded";
     instanceFilter?: GenericInstanceFilter;
     parentNode: ParentHierarchyNode | undefined;
 }
