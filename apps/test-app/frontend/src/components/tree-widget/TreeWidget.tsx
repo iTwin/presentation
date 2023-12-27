@@ -323,7 +323,7 @@ function StatelessTreeNodeRenderer(props: StatelessTreeNodeRendererProps) {
                 <span>
                   <span> - </span>
                   <UnderlinedButton onClick={() => props.onLimitReset()}>
-                    {` ${IModelApp.localization.getLocalizedString("Sample:controls.reset-hierarchy-level-limit")}.`}
+                    {`${IModelApp.localization.getLocalizedString("Sample:controls.reset-hierarchy-level-limit")}.`}
                   </UnderlinedButton>
                 </span>
               )}
