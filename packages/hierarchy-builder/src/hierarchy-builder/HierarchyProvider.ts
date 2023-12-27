@@ -93,7 +93,7 @@ export interface GetHierarchyNodesProps {
   /** Optional hierarchy level filter. */
   instanceFilter?: GenericInstanceFilter;
   /** Optional hierarchy level size limit. Default limit is 1000. */
-  hierarchyLevelSizeLimit?: number;
+  hierarchyLevelSizeLimit?: number | "unbounded";
 }
 
 /**
@@ -143,7 +143,9 @@ export class HierarchyProvider {
     );
   }
 
-  private createPreProcessedNodesObservable(props: DefineHierarchyLevelProps): Observable<ProcessedHierarchyNode> {
+  private createPreProcessedNodesObservable(
+    props: DefineHierarchyLevelProps & { hierarchyLevelSizeLimit?: number | "unbounded" },
+  ): Observable<ProcessedHierarchyNode> {
     // stream hierarchy level definitions in order
     const definitions = from(this._hierarchyFactory.defineHierarchyLevel(props)).pipe(concatMap((hierarchyLevelDefinition) => from(hierarchyLevelDefinition)));
     // pipe definitions to nodes
@@ -230,7 +232,7 @@ export class HierarchyProvider {
     );
   }
 
-  private setupObservables(props: DefineHierarchyLevelProps): ChildNodesObservables {
+  private setupObservables(props: DefineHierarchyLevelProps & { hierarchyLevelSizeLimit?: number | "unbounded" }): ChildNodesObservables {
     const initialNodes = this.createPreProcessedNodesObservable(props);
     const processedNodes = this.createProcessedNodesObservable(initialNodes, props);
     const finalizedNodes = this.createFinalizedNodesObservable(processedNodes);

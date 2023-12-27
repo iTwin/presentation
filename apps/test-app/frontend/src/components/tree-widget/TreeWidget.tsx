@@ -131,7 +131,7 @@ export function StatelessTreeWidget(props: Omit<Props, "rulesetId">) {
   const [queryExecutor, setQueryExecutor] = useState<IECSqlQueryExecutor>();
   const [metadataProvider, setMetadataProvider] = useState<IMetadataProvider>();
   const [modelsTreeHierarchyProvider, setModelsTreeHierarchyProvider] = useState<HierarchyProvider>();
-  const [hierarchyLevelSizeLimit, setHierarchyLevelSizeLimit] = useState<number>();
+  const [hierarchyLevelSizeLimit, setHierarchyLevelSizeLimit] = useState<number | "unbounded" | undefined>();
   useEffect(() => {
     const schemas = new SchemaContext();
     schemas.addLocater(new ECSchemaRpcLocater(props.imodel.getRpcProps()));
@@ -201,7 +201,7 @@ export function StatelessTreeWidget(props: Omit<Props, "rulesetId">) {
   const eventHandler = useMemo(() => new TreeEventHandler({ nodeLoader, modelSource }), [nodeLoader, modelSource]);
   const treeModel = useTreeModel(modelSource);
   const nodeRenderer = useCallback((nodeProps: TreeNodeRendererProps) => {
-    return <StatelessTreeNodeRenderer {...nodeProps} onLimitReset={() => setHierarchyLevelSizeLimit(undefined)} />;
+    return <StatelessTreeNodeRenderer {...nodeProps} onLimitReset={() => setHierarchyLevelSizeLimit("unbounded")} />;
   }, []);
   const { headerRef, treeHeight } = useTreeHeight(props.height);
   return (
