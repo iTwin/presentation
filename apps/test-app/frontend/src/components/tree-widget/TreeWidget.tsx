@@ -30,7 +30,14 @@ import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { Tab, Tabs, Text } from "@itwin/itwinui-react";
 import { DiagnosticsProps, InfoTreeNodeItemType, isPresentationInfoTreeNodeItem, PresentationInfoTreeNodeItem } from "@itwin/presentation-components";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import { ErrorTypeChecker, HierarchyNode, HierarchyProvider, IECSqlQueryExecutor, IMetadataProvider } from "@itwin/presentation-hierarchy-builder";
+import {
+  ErrorTypeChecker,
+  HierarchyNode,
+  HierarchyNodeKey,
+  HierarchyProvider,
+  IECSqlQueryExecutor,
+  IMetadataProvider,
+} from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { DiagnosticsSelector } from "../diagnostics-selector/DiagnosticsSelector";
 import { Tree } from "./Tree";
@@ -131,7 +138,7 @@ export function StatelessTreeWidget(props: Omit<Props, "rulesetId">) {
   const [queryExecutor, setQueryExecutor] = useState<IECSqlQueryExecutor>();
   const [metadataProvider, setMetadataProvider] = useState<IMetadataProvider>();
   const [modelsTreeHierarchyProvider, setModelsTreeHierarchyProvider] = useState<HierarchyProvider>();
-  const [hierarchyLevelSizeLimit, setHierarchyLevelSizeLimit] = useState<number | "unbounded" | undefined>();
+  const [hierarchyLevelSizeLimit, setHierarchyLevelSizeLimit] = useState<Map<string | undefined, { limit?: number | "unbounded" }>>(new Map());
   useEffect(() => {
     const schemas = new SchemaContext();
     schemas.addLocater(new ECSchemaRpcLocater(props.imodel.getRpcProps()));
@@ -175,9 +182,37 @@ export function StatelessTreeWidget(props: Omit<Props, "rulesetId">) {
   const dataProvider = useMemo((): TreeDataProvider => {
     return async (node?: TreeNodeItem): Promise<TreeNodeItem[]> => {
       const parent: HierarchyNode | undefined = node ? (node as any).__internal : undefined;
+      let lastNonGroupingNodeId: string | undefined;
+      // Retrieve Id of last non grouping node
+      if (parent) {
+        let nodeKey = parent.key;
+        if (HierarchyNode.isGroupingNode(parent)) {
+          for (let i = parent.parentKeys.length - 1; i >= 0; --i) {
+            if (!HierarchyNodeKey.isGrouping(parent.parentKeys[i])) {
+              nodeKey = parent.parentKeys[i];
+              break;
+            }
+          }
+        }
+        if (!HierarchyNodeKey.isGrouping(nodeKey)) {
+          if (typeof nodeKey === "string") {
+            lastNonGroupingNodeId = nodeKey;
+          } else {
+            lastNonGroupingNodeId = nodeKey.instanceKeys[0].id;
+          }
+        }
+      }
+      // Get limit that is set for lastNonGroupingNodeId
+      const mapKeyValue = hierarchyLevelSizeLimit.get(lastNonGroupingNodeId);
+      let limit: undefined | number | "unbounded";
+      if (mapKeyValue === undefined) {
+        hierarchyLevelSizeLimit.set(lastNonGroupingNodeId, { limit });
+      } else {
+        limit = mapKeyValue.limit;
+      }
       try {
         if (modelsTreeHierarchyProvider) {
-          return (await modelsTreeHierarchyProvider.getNodes({ parentNode: parent, hierarchyLevelSizeLimit })).map(parseTreeNodeItem);
+          return (await modelsTreeHierarchyProvider.getNodes({ parentNode: parent, hierarchyLevelSizeLimit: limit })).map(parseTreeNodeItem);
         }
         return [];
       } catch (e) {
@@ -185,7 +220,7 @@ export function StatelessTreeWidget(props: Omit<Props, "rulesetId">) {
           return [
             createInfoNode(
               node,
-              `${IModelApp.localization.getLocalizedString("Sample:controls.result-limit-exceeded")} ${hierarchyLevelSizeLimit!}`,
+              `${IModelApp.localization.getLocalizedString("Sample:controls.result-limit-exceeded")} ${limit!}`,
               InfoTreeNodeItemType.ResultSetTooLarge,
             ),
           ];
@@ -201,7 +236,18 @@ export function StatelessTreeWidget(props: Omit<Props, "rulesetId">) {
   const eventHandler = useMemo(() => new TreeEventHandler({ nodeLoader, modelSource }), [nodeLoader, modelSource]);
   const treeModel = useTreeModel(modelSource);
   const nodeRenderer = useCallback((nodeProps: TreeNodeRendererProps) => {
-    return <StatelessTreeNodeRenderer {...nodeProps} onLimitReset={() => setHierarchyLevelSizeLimit("unbounded")} />;
+    return (
+      <StatelessTreeNodeRenderer
+        {...nodeProps}
+        onLimitReset={(parentId?: string) =>
+          setHierarchyLevelSizeLimit((map) => {
+            const newMap = new Map(map);
+            newMap.set(parentId, { limit: "unbounded" });
+            return newMap;
+          })
+        }
+      />
+    );
   }, []);
   const { headerRef, treeHeight } = useTreeHeight(props.height);
   return (
@@ -305,12 +351,13 @@ function createInfoNode(parentNode: TreeNodeItem | undefined, message: string, t
 }
 
 interface StatelessTreeNodeRendererProps extends TreeNodeRendererProps {
-  onLimitReset: () => void;
+  onLimitReset: (parentId?: string) => void;
 }
 
 function StatelessTreeNodeRenderer(props: StatelessTreeNodeRendererProps) {
   const nodeItem = props.node.item;
-
+  const parsedParentIds = nodeItem.parentId ? JSON.parse(nodeItem.parentId) : undefined;
+  const parentId = parsedParentIds ? parsedParentIds[parsedParentIds.length - 1].instanceKeys[0].id : undefined;
   if (isPresentationInfoTreeNodeItem(nodeItem)) {
     return (
       <TreeNode
@@ -322,8 +369,8 @@ function StatelessTreeNodeRenderer(props: StatelessTreeNodeRendererProps) {
               {nodeItem.type === InfoTreeNodeItemType.ResultSetTooLarge && (
                 <span>
                   <span> - </span>
-                  <UnderlinedButton onClick={() => props.onLimitReset()}>
-                    {`${IModelApp.localization.getLocalizedString("Sample:controls.reset-hierarchy-level-limit")}.`}
+                  <UnderlinedButton onClick={() => props.onLimitReset(parentId)}>
+                    {`${IModelApp.localization.getLocalizedString("Sample:controls.remove-hierarchy-level-limit")}.`}
                   </UnderlinedButton>
                 </span>
               )}
