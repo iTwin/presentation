@@ -39,7 +39,7 @@ describe("TreeQueryResultsReader", () => {
 
     const reader = new TreeQueryResultsReader({ parser });
     const result = await reader.read(executor, { ecsql: "QUERY" });
-    expect(executor.createQueryReader).to.be.calledOnceWith("QUERY");
+    expect(executor.createQueryReader).to.be.calledOnceWith(sinon.match((ecsql) => trimWhitespace(ecsql) === "SELECT * FROM (QUERY) LIMIT 1001"));
     expect(parser).to.be.calledThrice;
     expect(result).to.deep.eq(nodes);
   });
@@ -175,6 +175,10 @@ describe("defaultNodesParser", () => {
 describe("applyLimit", () => {
   it("applies default limit on given query", () => {
     expect(trimWhitespace(applyLimit({ ecsql: "QUERY" }))).to.eq("SELECT * FROM (QUERY) LIMIT 1001");
+  });
+
+  it("doesn't apply limit when limit is unbounded", () => {
+    expect(trimWhitespace(applyLimit({ ecsql: "QUERY", limit: "unbounded" }))).to.eq("SELECT * FROM (QUERY)");
   });
 
   it("applies custom limit +1 on given query", () => {

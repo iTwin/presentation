@@ -31,12 +31,12 @@ import { Tab, Tabs, Text } from "@itwin/itwinui-react";
 import { DiagnosticsProps, InfoTreeNodeItemType, isPresentationInfoTreeNodeItem, PresentationInfoTreeNodeItem } from "@itwin/presentation-components";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import {
-  ErrorTypeChecker,
   HierarchyNode,
   HierarchyNodeKey,
   HierarchyProvider,
   IECSqlQueryExecutor,
   IMetadataProvider,
+  RowsLimitExceededError,
 } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { DiagnosticsSelector } from "../diagnostics-selector/DiagnosticsSelector";
@@ -216,7 +216,7 @@ export function StatelessTreeWidget(props: Omit<Props, "rulesetId">) {
         }
         return [];
       } catch (e) {
-        if (ErrorTypeChecker.isRowsLimitExceededError(e)) {
+        if (e instanceof RowsLimitExceededError) {
           return [
             createInfoNode(
               node,

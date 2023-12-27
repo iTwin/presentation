@@ -467,11 +467,6 @@ export interface ECStructProperty extends ECProperty {
 }
 
 // @beta
-export namespace ErrorTypeChecker {
-    export function isRowsLimitExceededError(err: any): err is RowsLimitExceededError;
-}
-
-// @beta
 export interface GenericInstanceFilter {
     filterClassNames?: string[];
     propertyClassName: string;
@@ -1070,6 +1065,13 @@ export interface RelationshipPathStep {
     relationshipReverse?: boolean;
     sourceClassName: string;
     targetClassName: string;
+}
+
+// @beta
+export class RowsLimitExceededError extends Error {
+    constructor(limit: number);
+    // (undocumented)
+    readonly limit: number;
 }
 
 // @beta

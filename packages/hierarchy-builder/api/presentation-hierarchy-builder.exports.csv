@@ -64,7 +64,6 @@ beta;ECSqlValueSelector
 beta;ECStructArrayProperty = ECStructProperty & ArrayPropertyAttributes
 beta;ECStructClass = ECClass
 beta;ECStructProperty 
-beta;ErrorTypeChecker
 beta;GenericInstanceFilter
 beta;GenericInstanceFilter
 beta;GenericInstanceFilterRule
@@ -149,6 +148,7 @@ beta;PropertyValueRangeGroupingNodeKey
 beta;RelatedInstanceDescription
 beta;RelationshipPath
 beta;RelationshipPathStep
+beta;RowsLimitExceededError 
 beta;setLocalizationFunction(localizationFunction?: LocalizationFunction): void
 beta;setLogger(logger: ILogger | undefined): void
 beta;StandardHierarchyNodeKey = InstancesNodeKey | GroupingNodeKey
