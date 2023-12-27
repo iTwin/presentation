@@ -41,7 +41,7 @@ import { createHideIfNoChildrenOperator } from "./internal/operators/HideIfNoChi
 import { createHideNodesInHierarchyOperator } from "./internal/operators/HideNodesInHierarchy";
 import { sortNodesByLabelOperator } from "./internal/operators/Sorting";
 import { QueryScheduler } from "./internal/QueryScheduler";
-import { applyLimit, RowsLimitExceededError, TreeQueryResultsReader } from "./internal/TreeNodesReader";
+import { RowsLimitExceededError, TreeQueryResultsReader } from "./internal/TreeNodesReader";
 import { getLogger } from "./Logging";
 import { IECSqlQueryExecutor } from "./queries/ECSqlCore";
 import { ConcatenatedValue, ConcatenatedValuePart } from "./values/ConcatenatedValue";
@@ -157,15 +157,7 @@ export class HierarchyProvider {
         return this._scheduler.scheduleSubscription(
           of(def.query).pipe(
             log((query) => `Query direct nodes for parent ${props.parentNode ? JSON.stringify(props.parentNode) : "<root>"}: ${query.ecsql}`),
-            mergeMap((query) =>
-              from(
-                this._queryReader.read(
-                  this._queryExecutor,
-                  { ...query, ecsql: applyLimit({ ...query, limit: props.hierarchyLevelSizeLimit }) },
-                  props.hierarchyLevelSizeLimit,
-                ),
-              ),
-            ),
+            mergeMap((query) => from(this._queryReader.read(this._queryExecutor, query, props.hierarchyLevelSizeLimit))),
           ),
         );
       }),
