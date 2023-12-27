@@ -181,8 +181,6 @@ export function StatelessTreeWidget(props: Omit<Props, "rulesetId">) {
         }
         return [];
       } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error(e);
         if (ErrorTypeChecker.isRowsLimitExceededError(e)) {
           return [
             createInfoNode(
@@ -192,6 +190,8 @@ export function StatelessTreeWidget(props: Omit<Props, "rulesetId">) {
             ),
           ];
         }
+        // eslint-disable-next-line no-console
+        console.error(e);
         return [];
       }
     };
