@@ -422,6 +422,18 @@ describe("usePresentationInstanceFilteringProps", () => {
     expect(result.current.selectedClasses).to.be.empty;
   });
 
+  it("does not clear selected classes on rerender descriptor does not change", async () => {
+    const { result, rerender } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), { initialProps });
+
+    act(() => {
+      result.current.onSelectedClassesChanged([concreteClass1.id]);
+    });
+    await waitFor(() => expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([concreteClass1]));
+
+    rerender({ descriptor: initialProps.descriptor, imodel: initialProps.imodel });
+    expect(result.current.selectedClasses).to.have.lengthOf(1).and.to.containSubset([concreteClass1]);
+  });
+
   describe("properties filtering", () => {
     it("returns properties only of selected class", async () => {
       const { result } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), { initialProps });
