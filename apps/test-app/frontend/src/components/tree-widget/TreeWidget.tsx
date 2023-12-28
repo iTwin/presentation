@@ -356,8 +356,6 @@ interface StatelessTreeNodeRendererProps extends TreeNodeRendererProps {
 
 function StatelessTreeNodeRenderer(props: StatelessTreeNodeRendererProps) {
   const nodeItem = props.node.item;
-  const parsedParentIds = nodeItem.parentId ? JSON.parse(nodeItem.parentId) : undefined;
-  const parentId = parsedParentIds ? parsedParentIds[parsedParentIds.length - 1].instanceKeys[0].id : undefined;
   if (isPresentationInfoTreeNodeItem(nodeItem)) {
     return (
       <TreeNode
@@ -369,7 +367,13 @@ function StatelessTreeNodeRenderer(props: StatelessTreeNodeRendererProps) {
               {nodeItem.type === InfoTreeNodeItemType.ResultSetTooLarge && (
                 <span>
                   <span> - </span>
-                  <UnderlinedButton onClick={() => props.onLimitReset(parentId)}>
+                  <UnderlinedButton
+                    onClick={() => {
+                      const parsedParentIds = nodeItem.parentId ? JSON.parse(nodeItem.parentId) : undefined;
+                      const parentId = parsedParentIds ? parsedParentIds[parsedParentIds.length - 1].instanceKeys[0].id : undefined;
+                      props.onLimitReset(parentId);
+                    }}
+                  >
                     {`${IModelApp.localization.getLocalizedString("Sample:controls.remove-hierarchy-level-limit")}.`}
                   </UnderlinedButton>
                 </span>
