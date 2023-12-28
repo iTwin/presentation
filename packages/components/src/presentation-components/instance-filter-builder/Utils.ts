@@ -221,5 +221,19 @@ function isPropertyNumeric(typename: string) {
 }
 
 function isInvalidNumericValue(value: PrimitiveValue) {
-  return value.displayValue !== undefined && value.displayValue !== "" && isNaN(Number(value.value));
+  if (typeof value.value !== "string") {
+    return value.displayValue && isNaN(Number(value.value));
+  }
+
+  const parsedValue = JSON.parse(value.value);
+  let isInvalid = false;
+  parsedValue.array &&
+    parsedValue.array.forEach((element: any) => {
+      if (isNaN(Number(element))) {
+        isInvalid = true;
+        return;
+      }
+    });
+
+  return value.displayValue && isInvalid;
 }

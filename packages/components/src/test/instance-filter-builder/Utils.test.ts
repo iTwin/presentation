@@ -155,20 +155,27 @@ describe("filterRuleValidator", () => {
     sinon.restore();
   });
 
-  it("returns error message for invalid numeric rule", () => {
-    expect(
-      filterRuleValidator({
-        id: "test-id",
-        groupId: "test-group-id",
-        property: numericProperty,
-        operator: PropertyFilterRuleOperator.IsEqual,
-        value: {
-          valueFormat: PropertyValueFormat.Primitive,
-          value: undefined,
-          displayValue: "Invalid",
-        },
-      }),
-    ).to.be.eq("instance-filter-builder.error-messages.not-a-number");
+  [
+    { val: "invalid", testCase: "string" },
+    { val: '[[1], ["invalid"]]', testCase: "mixed array" },
+    { val: undefined, testCase: "undefined" },
+    { val: "", testCase: "empty string" },
+  ].forEach(({ val, testCase }) => {
+    it.only(`returns error message for invalid ${testCase}`, () => {
+      expect(
+        filterRuleValidator({
+          id: "test-id",
+          groupId: "test-group-id",
+          property: numericProperty,
+          operator: PropertyFilterRuleOperator.IsEqual,
+          value: {
+            valueFormat: PropertyValueFormat.Primitive,
+            value: val,
+            displayValue: "Invalid",
+          },
+        }),
+      ).to.be.eq("instance-filter-builder.error-messages.not-a-number");
+    });
   });
 
   it("returns error message for invalid quantity rule", () => {
@@ -187,20 +194,31 @@ describe("filterRuleValidator", () => {
     ).to.be.eq("instance-filter-builder.error-messages.invalid");
   });
 
-  it("does not return error message for valid numeric rule", () => {
-    expect(
-      filterRuleValidator({
-        id: "test-id",
-        groupId: "test-group-id",
-        property: numericProperty,
-        operator: PropertyFilterRuleOperator.IsEqual,
-        value: {
-          valueFormat: PropertyValueFormat.Primitive,
-          value: 10,
-          displayValue: "10",
-        },
-      }),
-    ).to.be.undefined;
+  [
+    { val: 10, testCase: "number" },
+    { val: [10], testCase: "number array" },
+    { val: [[10]], testCase: "nested number array" },
+    { val: [[10], [10]], testCase: "nested number arrays" },
+    { val: "10", testCase: "number as string" },
+    { val: "[10]", testCase: "number array as string" },
+    { val: "[[10]]", testCase: "nested number array as string" },
+    { val: "[[10], [10]]", testCase: "nested number arrays as string" },
+  ].forEach(({ val, testCase }) => {
+    it.only(`does not return error message for valid ${testCase}`, () => {
+      expect(
+        filterRuleValidator({
+          id: "test-id",
+          groupId: "test-group-id",
+          property: numericProperty,
+          operator: PropertyFilterRuleOperator.IsEqual,
+          value: {
+            valueFormat: PropertyValueFormat.Primitive,
+            value: val,
+            displayValue: "Valid",
+          },
+        }),
+      ).to.be.undefined;
+    });
   });
 
   it("does not return error message for valid quantity rule", () => {
