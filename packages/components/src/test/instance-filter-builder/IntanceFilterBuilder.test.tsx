@@ -422,7 +422,7 @@ describe("usePresentationInstanceFilteringProps", () => {
     expect(result.current.selectedClasses).to.be.empty;
   });
 
-  it("does not clear selected classes on rerender descriptor does not change", async () => {
+  it("does not clear selected classes on rerender when descriptor does not change", async () => {
     const { result, rerender } = renderHook((props: HookProps) => usePresentationInstanceFilteringProps(props.descriptor, props.imodel), { initialProps });
 
     act(() => {
