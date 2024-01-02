@@ -155,7 +155,7 @@ describe("filterRuleValidator", () => {
     sinon.restore();
   });
 
-  it.only(`returns error message for undefined`, () => {
+  it(`returns error message for undefined`, () => {
     expect(
       filterRuleValidator({
         id: "test-id",
@@ -195,7 +195,7 @@ describe("filterRuleValidator", () => {
     { val: "[[10]]", testCase: "nested number array as string" },
     { val: "[[10], [10]]", testCase: "nested number arrays as string" },
   ].forEach(({ val, testCase }) => {
-    it.only(`does not return error message for valid ${testCase}`, () => {
+    it(`does not return error message for valid ${testCase}`, () => {
       expect(
         filterRuleValidator({
           id: "test-id",
