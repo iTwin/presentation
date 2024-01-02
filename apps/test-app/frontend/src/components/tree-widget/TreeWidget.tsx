@@ -338,7 +338,7 @@ function parseTreeNodeItem(node: HierarchyNode): DelayLoadedTreeNodeItem {
 }
 
 function createInfoNode(parentNode: TreeNodeItem | undefined, message: string, type?: InfoTreeNodeItemType): PresentationInfoTreeNodeItem {
-  const id = parentNode ? `${parentNode.id}/info-node` : `/info-node/${message}`;
+  const id = `${parentNode ? parentNode.id : ""}/info-node/${message}`;
   return {
     id,
     parentId: parentNode?.id,
