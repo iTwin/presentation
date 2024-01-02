@@ -229,16 +229,18 @@ function isInvalidNumericValue(value: PrimitiveValue) {
     return isNaN(Number(value.value));
   }
 
-  const deserialized = deserializeDisplayValueGroupArray(value.displayValue, value.value);
+  // This is handling our implementation of the IN operator without introducing breaking changes into the "@itwin/components-react".
+  // That is why we need to check for values in a serialized JSON object.
+  const { groupedRawValues } = deserializeDisplayValueGroupArray(value.displayValue, value.value);
 
   let isInvalid = false;
-  deserialized.groupedRawValues &&
-    deserialized.groupedRawValues.forEach((element: Value[]) => {
+  groupedRawValues &&
+    groupedRawValues.forEach((element: Value[]) => {
       if (isNaN(Number(element))) {
         isInvalid = true;
         return;
       }
     });
 
-  return deserialized.groupedRawValues && isInvalid;
+  return groupedRawValues && isInvalid;
 }

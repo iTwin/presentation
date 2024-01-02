@@ -155,7 +155,7 @@ describe("filterRuleValidator", () => {
     sinon.restore();
   });
 
-  it(`returns error message for undefined`, () => {
+  it("returns error message for numeric rule value set as undefined", () => {
     expect(
       filterRuleValidator({
         id: "test-id",
@@ -165,13 +165,13 @@ describe("filterRuleValidator", () => {
         value: {
           valueFormat: PropertyValueFormat.Primitive,
           value: undefined,
-          displayValue: "[{}]",
+          displayValue: "Invalid",
         },
       }),
     ).to.be.eq("instance-filter-builder.error-messages.not-a-number");
   });
 
-  it(`returns error message for invalid array elements`, () => {
+  it("returns error message for numeric value set as an array of non-numeric values", () => {
     expect(
       filterRuleValidator({
         id: "test-id",
@@ -205,11 +205,13 @@ describe("filterRuleValidator", () => {
 
   [
     { val: 10, testCase: "number" },
+    { val: 10.003, testCase: "float" },
     { val: [10], testCase: "number array" },
     { val: [[10]], testCase: "nested number array" },
-    { val: "[10]", testCase: "number array as string" },
-    { val: "[[10]]", testCase: "nested number array as string" },
-    { val: "[[10], [10]]", testCase: "nested number arrays as string" },
+    { val: "[10]", testCase: "serialized array of numbers" },
+    { val: "{10}", testCase: "serialized struct" },
+    { val: "[10.003]", testCase: "serialized array of float numbers" },
+    { val: "[[10], [10]]", testCase: "serialized array of arrays of numbers" },
   ].forEach(({ val, testCase }) => {
     it(`does not return error message for valid ${testCase}`, () => {
       expect(
