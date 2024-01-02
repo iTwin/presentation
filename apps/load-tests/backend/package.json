@@ -9,6 +9,7 @@
     "lint": "eslint ./src/**/*.ts"
   },
   "dependencies": {
+    "@itwin/appui-abstract": "^4.3.0-dev.39",
     "@itwin/build-tools": "^4.3.0-dev.39",
     "@itwin/core-backend": "^4.3.0-dev.39",
     "@itwin/core-bentley": "^4.3.0-dev.39",
@@ -26,6 +27,7 @@
     "@itwin/presentation-common": "^4.3.0-dev.39",
     "@itwin/webgl-compatibility": "^4.3.0-dev.39",
     "@opentelemetry/api": "^1.4.1",
+    "@types/node": "^18.17.7",
     "eslint": "^8.47.0",
     "rimraf": "^5.0.1",
     "typescript": "~5.0.4"
