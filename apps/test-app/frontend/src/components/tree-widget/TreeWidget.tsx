@@ -138,7 +138,7 @@ export function StatelessTreeWidget(props: Omit<Props, "rulesetId">) {
   const [queryExecutor, setQueryExecutor] = useState<IECSqlQueryExecutor>();
   const [metadataProvider, setMetadataProvider] = useState<IMetadataProvider>();
   const [modelsTreeHierarchyProvider, setModelsTreeHierarchyProvider] = useState<HierarchyProvider>();
-  const [hierarchyLevelSizeLimit, setHierarchyLevelSizeLimit] = useState<Map<string | undefined, { limit?: number | "unbounded" }>>(new Map());
+  const [hierarchyLevelSizeLimit, setHierarchyLevelSizeLimit] = useState<{ [parentId: string]: number | "unbounded" | undefined }>({});
   useEffect(() => {
     const schemas = new SchemaContext();
     schemas.addLocater(new ECSchemaRpcLocater(props.imodel.getRpcProps()));
@@ -203,12 +203,11 @@ export function StatelessTreeWidget(props: Omit<Props, "rulesetId">) {
         }
       }
       // Get limit that is set for lastNonGroupingNodeId
-      const mapKeyValue = hierarchyLevelSizeLimit.get(lastNonGroupingNodeId);
+      const mapKeyValue = hierarchyLevelSizeLimit[lastNonGroupingNodeId ?? ""];
       let limit: undefined | number | "unbounded";
-      if (mapKeyValue === undefined) {
-        hierarchyLevelSizeLimit.set(lastNonGroupingNodeId, { limit });
-      } else {
-        limit = mapKeyValue.limit;
+      if (mapKeyValue !== undefined) {
+        setHierarchyLevelSizeLimit((map) => ({ ...map, [lastNonGroupingNodeId ?? ""]: limit }));
+        limit = mapKeyValue;
       }
       try {
         if (modelsTreeHierarchyProvider) {
@@ -239,13 +238,7 @@ export function StatelessTreeWidget(props: Omit<Props, "rulesetId">) {
     return (
       <StatelessTreeNodeRenderer
         {...nodeProps}
-        onLimitReset={(parentId?: string) =>
-          setHierarchyLevelSizeLimit((map) => {
-            const newMap = new Map(map);
-            newMap.set(parentId, { limit: "unbounded" });
-            return newMap;
-          })
-        }
+        onLimitReset={(parentId?: string) => setHierarchyLevelSizeLimit((map) => ({ ...map, [parentId ?? ""]: "unbounded" }))}
       />
     );
   }, []);
