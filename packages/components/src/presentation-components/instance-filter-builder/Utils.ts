@@ -17,7 +17,7 @@ import {
 import { IModelConnection } from "@itwin/core-frontend";
 import { CategoryDescription, ClassInfo, combineFieldNames, Descriptor, Field, NestedContentField, PropertiesField } from "@itwin/presentation-common";
 import { createPropertyDescriptionFromFieldInfo } from "../common/ContentBuilder";
-import { translate } from "../common/Utils";
+import { deserializeDisplayValueGroupArray, translate } from "../common/Utils";
 import { NavigationPropertyEditorContextProps } from "../properties/editors/NavigationPropertyEditorContext";
 import { PresentationInstanceFilterPropertyInfo } from "./PresentationFilterBuilder";
 
@@ -225,10 +225,11 @@ function isInvalidNumericValue(value: PrimitiveValue) {
     return value.displayValue && isNaN(Number(value.value));
   }
 
-  const parsedValue = JSON.parse(value.value);
+  const deserialized = deserializeDisplayValueGroupArray(value.displayValue ?? "", value.value);
+
   let isInvalid = false;
-  parsedValue.array &&
-    parsedValue.array.forEach((element: any) => {
+  deserialized.groupedRawValues &&
+    deserialized.groupedRawValues.forEach((element: any) => {
       if (isNaN(Number(element))) {
         isInvalid = true;
         return;
