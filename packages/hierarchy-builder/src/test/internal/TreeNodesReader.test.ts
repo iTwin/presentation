@@ -38,8 +38,10 @@ describe("TreeQueryResultsReader", () => {
     ids.forEach((_, i) => parser.onCall(i).returns(nodes[i]));
 
     const reader = new TreeQueryResultsReader({ parser });
-    const result = await reader.read(executor, { ecsql: "QUERY" });
-    expect(executor.createQueryReader).to.be.calledOnceWith(sinon.match((ecsql) => trimWhitespace(ecsql) === "SELECT * FROM (QUERY) LIMIT 1001"));
+    const result = await reader.read(executor, { ecsql: "QUERY", ctes: ["CTE1, CTE2"] });
+    expect(executor.createQueryReader).to.be.calledOnceWith(
+      sinon.match((ecsql) => trimWhitespace(ecsql) === "WITH RECURSIVE CTE1, CTE2 SELECT * FROM (QUERY) LIMIT 1001"),
+    );
     expect(parser).to.be.calledThrice;
     expect(result).to.deep.eq(nodes);
   });
@@ -183,9 +185,5 @@ describe("applyLimit", () => {
 
   it("applies custom limit +1 on given query", () => {
     expect(trimWhitespace(applyLimit({ ecsql: "QUERY", limit: 123 }))).to.eq("SELECT * FROM (QUERY) LIMIT 124");
-  });
-
-  it("applies limit on query with ctes", () => {
-    expect(trimWhitespace(applyLimit({ ecsql: "QUERY", ctes: ["CTE1, CTE2"] }))).to.eq("WITH RECURSIVE CTE1, CTE2 SELECT * FROM (QUERY) LIMIT 1001");
   });
 });

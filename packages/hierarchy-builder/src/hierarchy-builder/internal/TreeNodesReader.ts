@@ -29,11 +29,12 @@ export class TreeQueryResultsReader {
     };
   }
 
-  public async read(executor: IECSqlQueryExecutor, query: Omit<ECSqlQueryDef, "ctes">, limit?: number | "unbounded"): Promise<ParsedHierarchyNode[]> {
+  public async read(executor: IECSqlQueryExecutor, query: ECSqlQueryDef, limit?: number | "unbounded"): Promise<ParsedHierarchyNode[]> {
     const nodeLimit = limit ?? DEFAULT_ROWS_LIMIT;
     getLogger().logInfo(`${LOGGING_NAMESPACE}.TreeQueryResultsReader`, `Executing query: ${query.ecsql}`);
-    query.ecsql = applyLimit({ ...query, limit: nodeLimit });
-    const reader = executor.createQueryReader(query.ecsql, query.bindings, { rowFormat: "ECSqlPropertyNames" });
+    const ctesPrefix = query.ctes && query.ctes.length ? `WITH RECURSIVE ${query.ctes.join(", ")}` : "";
+    const ecsql = `${ctesPrefix} ${applyLimit({ ecsql: query.ecsql, limit: nodeLimit })}`;
+    const reader = executor.createQueryReader(ecsql, query.bindings, { rowFormat: "ECSqlPropertyNames" });
     const nodes = new Array<ParsedHierarchyNode>();
     for await (const row of reader) {
       if (nodeLimit !== "unbounded" && nodes.length >= nodeLimit) {
@@ -107,15 +108,12 @@ const DEFAULT_ROWS_LIMIT = 1000;
 /** @internal */
 export interface ApplyLimitProps {
   ecsql: string;
-  ctes?: string[];
   limit?: number | "unbounded";
 }
 
 /** @internal */
 export function applyLimit(props: ApplyLimitProps) {
-  const ctesPrefix = props.ctes && props.ctes.length ? `WITH RECURSIVE ${props.ctes.join(", ")}` : ``;
   return `
-    ${ctesPrefix}
     SELECT *
     FROM (${props.ecsql})
     ${props.limit !== "unbounded" ? `LIMIT ${(props.limit ?? DEFAULT_ROWS_LIMIT) + 1}` : ""}
