@@ -206,7 +206,6 @@ export function StatelessTreeWidget(props: Omit<Props, "rulesetId">) {
       const mapKeyValue = hierarchyLevelSizeLimit[lastNonGroupingNodeId ?? ""];
       let limit: undefined | number | "unbounded";
       if (mapKeyValue !== undefined) {
-        setHierarchyLevelSizeLimit((map) => ({ ...map, [lastNonGroupingNodeId ?? ""]: limit }));
         limit = mapKeyValue;
       }
       try {
