@@ -15,7 +15,7 @@ import {
   PropertyFilterRuleOperator,
 } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
-import { CategoryDescription, ClassInfo, combineFieldNames, Descriptor, Field, NestedContentField, PropertiesField } from "@itwin/presentation-common";
+import { CategoryDescription, ClassInfo, combineFieldNames, Descriptor, Field, NestedContentField, PropertiesField, Value } from "@itwin/presentation-common";
 import { createPropertyDescriptionFromFieldInfo } from "../common/ContentBuilder";
 import { deserializeDisplayValueGroupArray, translate } from "../common/Utils";
 import { NavigationPropertyEditorContextProps } from "../properties/editors/NavigationPropertyEditorContext";
@@ -221,20 +221,24 @@ function isPropertyNumeric(typename: string) {
 }
 
 function isInvalidNumericValue(value: PrimitiveValue) {
-  if (typeof value.value !== "string") {
-    return value.displayValue && isNaN(Number(value.value));
+  if (!value.displayValue || !value.value) {
+    return true;
   }
 
-  const deserialized = deserializeDisplayValueGroupArray(value.displayValue ?? "", value.value);
+  if (typeof value.value !== "string") {
+    return isNaN(Number(value.value));
+  }
+
+  const deserialized = deserializeDisplayValueGroupArray(value.displayValue, value.value);
 
   let isInvalid = false;
   deserialized.groupedRawValues &&
-    deserialized.groupedRawValues.forEach((element: any) => {
+    deserialized.groupedRawValues.forEach((element: Value[]) => {
       if (isNaN(Number(element))) {
         isInvalid = true;
         return;
       }
     });
 
-  return value.displayValue && isInvalid;
+  return deserialized.groupedRawValues && isInvalid;
 }

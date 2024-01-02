@@ -165,7 +165,23 @@ describe("filterRuleValidator", () => {
         value: {
           valueFormat: PropertyValueFormat.Primitive,
           value: undefined,
-          displayValue: "undefined",
+          displayValue: "[{}]",
+        },
+      }),
+    ).to.be.eq("instance-filter-builder.error-messages.not-a-number");
+  });
+
+  it(`returns error message for invalid array elements`, () => {
+    expect(
+      filterRuleValidator({
+        id: "test-id",
+        groupId: "test-group-id",
+        property: numericProperty,
+        operator: PropertyFilterRuleOperator.IsEqual,
+        value: {
+          valueFormat: PropertyValueFormat.Primitive,
+          value: "[[10], [{}]]",
+          displayValue: "[[10], [{}]]",
         },
       }),
     ).to.be.eq("instance-filter-builder.error-messages.not-a-number");
