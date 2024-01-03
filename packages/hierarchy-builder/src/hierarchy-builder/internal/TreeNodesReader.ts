@@ -113,9 +113,11 @@ export interface ApplyLimitProps {
 
 /** @internal */
 export function applyLimit(props: ApplyLimitProps) {
-  return `
+  return props.limit === "unbounded"
+    ? props.ecsql
+    : `
     SELECT *
     FROM (${props.ecsql})
-    ${props.limit !== "unbounded" ? `LIMIT ${(props.limit ?? DEFAULT_ROWS_LIMIT) + 1}` : ""}
+    LIMIT ${(props.limit ?? DEFAULT_ROWS_LIMIT) + 1}
   `;
 }
