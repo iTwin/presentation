@@ -180,7 +180,7 @@ describe("applyLimit", () => {
   });
 
   it("doesn't apply limit when limit is unbounded", () => {
-    expect(trimWhitespace(applyLimit({ ecsql: "QUERY", limit: "unbounded" }))).to.eq("SELECT * FROM (QUERY)");
+    expect(trimWhitespace(applyLimit({ ecsql: "QUERY", limit: "unbounded" }))).to.eq("QUERY");
   });
 
   it("applies custom limit +1 on given query", () => {
