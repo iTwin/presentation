@@ -36,6 +36,7 @@ import { IPropertyDataProvider } from '@itwin/components-react';
 import { IPropertyValueRenderer } from '@itwin/components-react';
 import { ITreeDataProvider } from '@itwin/components-react';
 import { ITreeNodeLoader } from '@itwin/components-react';
+import { JSX as JSX_2 } from 'react/jsx-runtime';
 import { Keys } from '@itwin/presentation-common';
 import { KeySet } from '@itwin/presentation-common';
 import { Memoized } from 'micro-memoize';
@@ -292,7 +293,7 @@ export class InstanceKeyValueRenderer implements IPropertyValueRenderer {
     // (undocumented)
     canRender(record: PropertyRecord): boolean;
     // (undocumented)
-    render(record: PropertyRecord, context?: PropertyValueRendererContext): JSX.Element;
+    render(record: PropertyRecord, context?: PropertyValueRendererContext): JSX_2.Element;
 }
 
 // @public
@@ -352,7 +353,7 @@ export enum PresentationComponentsLoggerCategory {
 }
 
 // @beta
-export function PresentationFilterBuilderValueRenderer({ imodel, descriptor, descriptorInputKeys, ...props }: PresentationFilterBuilderValueRendererProps): JSX.Element;
+export function PresentationFilterBuilderValueRenderer({ imodel, descriptor, descriptorInputKeys, ...props }: PresentationFilterBuilderValueRendererProps): JSX_2.Element;
 
 // @beta
 export interface PresentationFilterBuilderValueRendererProps extends PropertyFilterBuilderRuleValueRendererProps {
@@ -394,7 +395,7 @@ export interface PresentationInstanceFilterConditionGroup {
 }
 
 // @beta
-export function PresentationInstanceFilterDialog(props: PresentationInstanceFilterDialogProps): JSX.Element;
+export function PresentationInstanceFilterDialog(props: PresentationInstanceFilterDialogProps): JSX_2.Element;
 
 // @beta
 export interface PresentationInstanceFilterDialogProps {
@@ -475,7 +476,7 @@ export interface PresentationPropertyDataProviderProps extends DiagnosticsProps 
 }
 
 // @public
-export function PresentationTree<TEventHandler extends TreeEventHandler>({ state, ...props }: PresentationTreeProps<TEventHandler>): JSX.Element;
+export function PresentationTree<TEventHandler extends TreeEventHandler>({ state, ...props }: PresentationTreeProps<TEventHandler>): JSX_2.Element;
 
 // @public
 export class PresentationTreeDataProvider implements IPresentationTreeDataProvider, IDisposable {
@@ -568,7 +569,7 @@ export interface PresentationTreeNodeLoaderResult {
 }
 
 // @beta
-export function PresentationTreeNodeRenderer(props: PresentationTreeNodeRendererProps): JSX.Element;
+export function PresentationTreeNodeRenderer(props: PresentationTreeNodeRendererProps): JSX_2.Element;
 
 // @beta
 export interface PresentationTreeNodeRendererProps extends TreeNodeRendererProps {
@@ -584,7 +585,7 @@ export type PresentationTreeProps<TEventHandler extends TreeEventHandler> = Omit
 };
 
 // @beta
-export function PresentationTreeRenderer(props: PresentationTreeRendererProps): JSX.Element;
+export function PresentationTreeRenderer(props: PresentationTreeRendererProps): JSX_2.Element;
 
 // @beta
 export interface PresentationTreeRendererProps extends TreeRendererProps {
@@ -647,7 +648,7 @@ export interface SchemaMetadataContext {
 }
 
 // @beta
-export function SchemaMetadataContextProvider({ schemaContextProvider, imodel, children }: PropsWithChildren<SchemaMetadataContextProviderProps>): JSX.Element;
+export function SchemaMetadataContextProvider({ schemaContextProvider, imodel, children }: PropsWithChildren<SchemaMetadataContextProviderProps>): JSX_2.Element;
 
 // @beta
 export interface SchemaMetadataContextProviderProps {
@@ -662,7 +663,7 @@ export interface TableCellDefinition {
 }
 
 // @beta
-export function TableCellRenderer(props: TableCellRendererProps): JSX.Element;
+export function TableCellRenderer(props: TableCellRendererProps): JSX_2.Element;
 
 // @beta
 export interface TableCellRendererProps {
@@ -763,7 +764,7 @@ export interface UseHierarchyLevelFilteringProps {
 // @beta
 export function useInstanceFilterPropertyInfos({ descriptor }: UseInstanceFilterPropertyInfosProps): {
     propertyInfos: PresentationInstanceFilterPropertyInfo[];
-    propertyRenderer: (name: string) => JSX.Element;
+    propertyRenderer: (name: string) => JSX_2.Element;
 };
 
 // @beta
