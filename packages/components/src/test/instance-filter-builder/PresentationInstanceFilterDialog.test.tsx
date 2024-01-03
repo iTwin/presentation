@@ -251,7 +251,7 @@ describe("PresentationInstanceFilterDialog", () => {
   });
 
   it("renders with passed in `toolbarRenderer`", async () => {
-    const toolbarRenderer = () => {
+    const toolbarButtonsRenderer = () => {
       return <button>Click Me!</button>;
     };
 
@@ -263,7 +263,7 @@ describe("PresentationInstanceFilterDialog", () => {
         onReset={() => {}}
         onApply={() => {}}
         isOpen={true}
-        toolbarRenderer={toolbarRenderer}
+        toolbarButtonsRenderer={toolbarButtonsRenderer}
       />,
     );
 

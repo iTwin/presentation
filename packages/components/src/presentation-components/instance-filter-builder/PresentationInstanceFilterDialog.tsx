@@ -37,7 +37,7 @@ export interface PresentationInstanceFilterDialogProps {
   /** Callback that is invoked when 'Reset' button is clicked. */
   onReset: () => void;
   /** Renderer that will be used to render a custom toolbar instead of the default one. */
-  toolbarRenderer?: (toolbarHandlers: FilteringDialogToolbarRendererProps) => ReactNode;
+  toolbarButtonsRenderer?: (toolbarHandlers: FilteringDialogToolbarHandlers) => ReactNode;
   /**
    * [Descriptor]($presentation-common) that will be used in [[InstanceFilterBuilder]] component rendered inside this dialog.
    *
@@ -63,18 +63,9 @@ export interface PresentationInstanceFilterDialogProps {
  * @beta
  */
 export interface FilteringDialogToolbarHandlers {
-  onApplyHandler: () => void;
-  onCloseHandler: () => void;
-  onResetHandler: () => void;
-}
-
-/**
- * Props required for rendering a toolbar.
- * @beta
- */
-export interface FilteringDialogToolbarRendererProps {
-  toolbarHandlers: FilteringDialogToolbarHandlers;
-  getFilterInfo: (options?: BuildFilterOptions | undefined) => PresentationInstanceFilterInfo | undefined;
+  handleApply: () => void;
+  handleClose: () => void;
+  handleReset: () => void;
 }
 
 /**
@@ -170,7 +161,7 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
     onApply,
     onReset,
     onClose,
-    toolbarRenderer,
+    toolbarButtonsRenderer,
   } = props;
   const [initialPropertyFilter] = useState(() => {
     if (!initialFilter) {
@@ -197,20 +188,20 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
     [buildFilter, descriptor, filteringProps.selectedClasses],
   );
 
-  const onResetHandler = () => {
+  const handleReset = () => {
     filteringProps.selectedClasses = [];
     filteringProps.onSelectedClassesChanged([]);
     actions.removeAllItems();
-    onReset();
+    onReset && onReset();
   };
 
   const throwError = useThrowError();
-  const onApplyHandler = () => {
+  const handleApply = () => {
     try {
       const result = getFilterInfo();
 
       // we need to check whether the filter was invalid or empty.
-      if (result === undefined && isFilterInvalid(rootGroup)) {
+      if (result === undefined && isFilterNonEmpty(rootGroup)) {
         return;
       }
       onApply(result);
@@ -233,36 +224,36 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
         />
       </Dialog.Content>
       <div className="presentation-instance-filter-dialog-bottom-container">
-        {toolbarRenderer === undefined ? (
-          <>
-            <div>{filterResultsCountRenderer ? <ResultsRenderer buildFilter={getFilterInfo} renderer={filterResultsCountRenderer} /> : null}</div>
-            <ToolbarButtonsRenderer onApplyHandler={onApplyHandler} onResetHandler={onResetHandler} onCloseHandler={onClose}></ToolbarButtonsRenderer>
-          </>
-        ) : (
-          toolbarRenderer({ toolbarHandlers: { onApplyHandler, onResetHandler, onCloseHandler: onClose }, getFilterInfo })
-        )}
+        <div>{filterResultsCountRenderer ? <ResultsRenderer buildFilter={getFilterInfo} renderer={filterResultsCountRenderer} /> : null}</div>
+        <Dialog.ButtonBar className="presentation-instance-filter-button-bar">
+          {toolbarButtonsRenderer ? (
+            toolbarButtonsRenderer({ handleApply, handleReset, handleClose: onClose })
+          ) : (
+            <ToolbarButtonsRenderer handleApply={handleApply} handleReset={handleReset} handleClose={onClose}></ToolbarButtonsRenderer>
+          )}
+        </Dialog.ButtonBar>
       </div>
     </>
   );
 }
 
-function ToolbarButtonsRenderer({ onApplyHandler, onCloseHandler, onResetHandler }: FilteringDialogToolbarHandlers) {
+function ToolbarButtonsRenderer({ handleApply, handleClose, handleReset }: FilteringDialogToolbarHandlers) {
   return (
     <Dialog.ButtonBar className="presentation-instance-filter-button-bar">
-      <Button className="presentation-instance-filter-dialog-apply-button" styleType="high-visibility" onClick={onApplyHandler}>
+      <Button className="presentation-instance-filter-dialog-apply-button" styleType="high-visibility" onClick={handleApply}>
         {translate("instance-filter-builder.apply")}
       </Button>
-      <Button className="presentation-instance-filter-dialog-close-button" onClick={onCloseHandler}>
+      <Button className="presentation-instance-filter-dialog-close-button" onClick={handleClose}>
         {translate("instance-filter-builder.cancel")}
       </Button>
-      <Button className="presentation-instance-filter-dialog-reset-button" onClick={onResetHandler}>
+      <Button className="presentation-instance-filter-dialog-reset-button" onClick={handleReset}>
         {translate("instance-filter-builder.reset")}
       </Button>
     </Dialog.ButtonBar>
   );
 }
 
-const isFilterInvalid = (rootGroup: PropertyFilterBuilderRuleGroup) =>
+const isFilterNonEmpty = (rootGroup: PropertyFilterBuilderRuleGroup) =>
   rootGroup.items.length > 1 || (rootGroup.items.length === 1 && rootGroup.items[0].operator !== undefined);
 
 interface ResultsRendererProps {
