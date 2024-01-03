@@ -202,14 +202,12 @@ export function StatelessTreeWidget(props: Omit<Props, "rulesetId">) {
   const nodeLoader = useTreeNodeLoader(dataProvider, modelSource);
   const eventHandler = useMemo(() => new TreeEventHandler({ nodeLoader, modelSource }), [nodeLoader, modelSource]);
   const treeModel = useTreeModel(modelSource);
-  const nodeRenderer = useCallback((nodeProps: TreeNodeRendererProps) => {
-    return (
-      <StatelessTreeNodeRenderer
-        {...nodeProps}
-        onLimitReset={(parentId?: string) => setHierarchyLevelSizeLimit((map) => ({ ...map, [parentId ?? ""]: "unbounded" }))}
-      />
-    );
-  }, []);
+  const nodeRenderer = (nodeProps: TreeNodeRendererProps) => (
+    <StatelessTreeNodeRenderer
+      {...nodeProps}
+      onLimitReset={(parentId?: string) => setHierarchyLevelSizeLimit((map) => ({ ...map, [parentId ?? ""]: "unbounded" }))}
+    />
+  );
   const { headerRef, treeHeight } = useTreeHeight(props.height);
   return (
     <>
