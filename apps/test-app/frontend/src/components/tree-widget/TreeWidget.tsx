@@ -176,11 +176,7 @@ export function StatelessTreeWidget(props: Omit<Props, "rulesetId">) {
     return async (node?: TreeNodeItem): Promise<TreeNodeItem[]> => {
       const parent: HierarchyNode | undefined = node ? (node as any).__internal : undefined;
       const parentId = node?.id;
-      const levelLimit = hierarchyLevelSizeLimit[parentId ?? ""];
-      let limit: undefined | number | "unbounded";
-      if (levelLimit !== undefined) {
-        limit = levelLimit;
-      }
+      const limit = hierarchyLevelSizeLimit[parentId ?? ""];
       try {
         if (modelsTreeHierarchyProvider) {
           return (await modelsTreeHierarchyProvider.getNodes({ parentNode: parent, hierarchyLevelSizeLimit: limit })).map(parseTreeNodeItem);

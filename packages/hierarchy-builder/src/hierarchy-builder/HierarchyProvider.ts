@@ -91,9 +91,9 @@ export interface HierarchyProviderProps {
 export interface GetHierarchyNodesProps {
   /** Parent node to get children for. Pass `undefined` to get root nodes. */
   parentNode: ParentHierarchyNode | undefined;
-  /** Optional hierarchy level filter. */
+  /** Optional hierarchy level filter. Isn't applied if `parentNode` is a [[GroupingNode]]. */
   instanceFilter?: GenericInstanceFilter;
-  /** Optional hierarchy level size limit. Default limit is `1000`. */
+  /** Optional hierarchy level size limit. Default limit is `1000`. Isn't applied if `parentNode` is a [[GroupingNode]]. */
   hierarchyLevelSizeLimit?: number | "unbounded";
 }
 
