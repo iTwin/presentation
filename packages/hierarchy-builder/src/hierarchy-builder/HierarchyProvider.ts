@@ -93,7 +93,7 @@ export interface GetHierarchyNodesProps {
   parentNode: ParentHierarchyNode | undefined;
   /** Optional hierarchy level filter. */
   instanceFilter?: GenericInstanceFilter;
-  /** Optional hierarchy level size limit. Default limit is 1000. */
+  /** Optional hierarchy level size limit. Default limit is `1000`. */
   hierarchyLevelSizeLimit?: number | "unbounded";
 }
 
