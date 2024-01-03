@@ -14,7 +14,6 @@ public;FavoritePropertiesDataProvider
 public;FavoritePropertiesDataProviderProps
 beta;FilterablePresentationTreeNodeItem = PresentationTreeNodeItem &
 beta;FilteringDialogToolbarHandlers
-beta;FilteringDialogToolbarRendererProps
 beta;GenericInstanceFilter
 beta;GenericInstanceFilter
 beta;GenericInstanceFilterRule

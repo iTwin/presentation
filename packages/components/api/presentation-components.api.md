@@ -8,7 +8,6 @@
 
 import { AbstractTreeNodeLoaderWithProvider } from '@itwin/components-react';
 import { ActiveMatchInfo } from '@itwin/components-react';
-import { BuildFilterOptions } from '@itwin/components-react';
 import { CategoryDescription } from '@itwin/presentation-common';
 import { ClassId } from '@itwin/presentation-common';
 import { ClassInfo } from '@itwin/presentation-common';
@@ -220,19 +219,11 @@ export type FilterablePresentationTreeNodeItem = PresentationTreeNodeItem & {
 // @beta
 export interface FilteringDialogToolbarHandlers {
     // (undocumented)
-    onApplyHandler: () => void;
+    handleApply: () => void;
     // (undocumented)
-    onCloseHandler: () => void;
+    handleClose: () => void;
     // (undocumented)
-    onResetHandler: () => void;
-}
-
-// @beta
-export interface FilteringDialogToolbarRendererProps {
-    // (undocumented)
-    getFilterInfo: (options?: BuildFilterOptions | undefined) => PresentationInstanceFilterInfo | undefined;
-    // (undocumented)
-    toolbarHandlers: FilteringDialogToolbarHandlers;
+    handleReset: () => void;
 }
 
 // @beta
@@ -429,7 +420,7 @@ export interface PresentationInstanceFilterDialogProps {
     onReset: () => void;
     ruleGroupDepthLimit?: number;
     title?: React.ReactNode;
-    toolbarRenderer?: (toolbarHandlers: FilteringDialogToolbarRendererProps) => ReactNode;
+    toolbarButtonsRenderer?: (toolbarHandlers: FilteringDialogToolbarHandlers) => ReactNode;
 }
 
 // @beta
