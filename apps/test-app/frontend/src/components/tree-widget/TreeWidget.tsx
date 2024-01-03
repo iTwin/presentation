@@ -30,14 +30,7 @@ import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { Tab, Tabs, Text } from "@itwin/itwinui-react";
 import { DiagnosticsProps, InfoTreeNodeItemType, isPresentationInfoTreeNodeItem, PresentationInfoTreeNodeItem } from "@itwin/presentation-components";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import {
-  HierarchyNode,
-  HierarchyNodeKey,
-  HierarchyProvider,
-  IECSqlQueryExecutor,
-  IMetadataProvider,
-  RowsLimitExceededError,
-} from "@itwin/presentation-hierarchy-builder";
+import { HierarchyNode, HierarchyProvider, IECSqlQueryExecutor, IMetadataProvider, RowsLimitExceededError } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { DiagnosticsSelector } from "../diagnostics-selector/DiagnosticsSelector";
 import { Tree } from "./Tree";
@@ -182,31 +175,11 @@ export function StatelessTreeWidget(props: Omit<Props, "rulesetId">) {
   const dataProvider = useMemo((): TreeDataProvider => {
     return async (node?: TreeNodeItem): Promise<TreeNodeItem[]> => {
       const parent: HierarchyNode | undefined = node ? (node as any).__internal : undefined;
-      let lastNonGroupingNodeId: string | undefined;
-      // Retrieve Id of last non grouping node
-      if (parent) {
-        let nodeKey = parent.key;
-        if (HierarchyNode.isGroupingNode(parent)) {
-          for (let i = parent.parentKeys.length - 1; i >= 0; --i) {
-            if (!HierarchyNodeKey.isGrouping(parent.parentKeys[i])) {
-              nodeKey = parent.parentKeys[i];
-              break;
-            }
-          }
-        }
-        if (!HierarchyNodeKey.isGrouping(nodeKey)) {
-          if (typeof nodeKey === "string") {
-            lastNonGroupingNodeId = nodeKey;
-          } else {
-            lastNonGroupingNodeId = nodeKey.instanceKeys[0].id;
-          }
-        }
-      }
-      // Get limit that is set for lastNonGroupingNodeId
-      const mapKeyValue = hierarchyLevelSizeLimit[lastNonGroupingNodeId ?? ""];
+      const parentId = node?.id;
+      const levelLimit = hierarchyLevelSizeLimit[parentId ?? ""];
       let limit: undefined | number | "unbounded";
-      if (mapKeyValue !== undefined) {
-        limit = mapKeyValue;
+      if (levelLimit !== undefined) {
+        limit = levelLimit;
       }
       try {
         if (modelsTreeHierarchyProvider) {
@@ -361,9 +334,7 @@ function StatelessTreeNodeRenderer(props: StatelessTreeNodeRendererProps) {
                   <span> - </span>
                   <UnderlinedButton
                     onClick={() => {
-                      const parsedParentIds = nodeItem.parentId ? JSON.parse(nodeItem.parentId) : undefined;
-                      const parentId = parsedParentIds ? parsedParentIds[parsedParentIds.length - 1].instanceKeys[0].id : undefined;
-                      props.onLimitReset(parentId);
+                      props.onLimitReset(nodeItem.parentId);
                     }}
                   >
                     {`${IModelApp.localization.getLocalizedString("Sample:controls.remove-hierarchy-level-limit")}.`}

@@ -358,7 +358,11 @@ class ChildNodesCache {
 
   private parseRequestProps(requestProps: GetHierarchyNodesProps) {
     const { parentNode: node } = requestProps;
-    const primaryKey = node ? `${JSON.stringify(node.parentKeys)}+${JSON.stringify(node.key)}+${JSON.stringify(requestProps.hierarchyLevelSizeLimit)}` : "";
+    const primaryKey = node
+      ? `${JSON.stringify(node.parentKeys)}+${JSON.stringify(node.key)}+${
+          !HierarchyNode.isGroupingNode(node) ? JSON.stringify(requestProps.hierarchyLevelSizeLimit) : ""
+        }`
+      : "";
     const variationKey = requestProps.instanceFilter ? JSON.stringify(requestProps.instanceFilter) : undefined;
     return { primaryKey, variationKey };
   }
