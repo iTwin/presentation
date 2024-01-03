@@ -59,13 +59,13 @@ export interface PresentationInstanceFilterDialogProps {
 }
 
 /**
- * Set of custom handlers that will additionally be called on each action respectively.
+ * Set of action handlers that are passed to [[PresentationInstanceFilterDialogProps.toolbarButtonsRenderer]] for rendering custom buttons.
  * @beta
  */
 export interface FilteringDialogToolbarHandlers {
   handleApply: () => void;
-  handleClose?: () => void;
-  handleReset?: () => void;
+  handleClose: () => void;
+  handleReset: () => void;
 }
 
 /**
@@ -210,6 +210,10 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
     }
   };
 
+  const handleClose = () => {
+    onClose && onClose();
+  };
+
   return (
     <>
       <Dialog.Content className="presentation-instance-filter-content">
@@ -227,9 +231,9 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
         <div>{filterResultsCountRenderer ? <ResultsRenderer buildFilter={getFilterInfo} renderer={filterResultsCountRenderer} /> : null}</div>
         <Dialog.ButtonBar className="presentation-instance-filter-button-bar">
           {toolbarButtonsRenderer ? (
-            toolbarButtonsRenderer({ handleApply, handleReset, handleClose: onClose })
+            toolbarButtonsRenderer({ handleApply, handleReset, handleClose })
           ) : (
-            <ToolbarButtonsRenderer handleApply={handleApply} handleReset={handleReset} handleClose={onClose}></ToolbarButtonsRenderer>
+            <ToolbarButtonsRenderer handleApply={handleApply} handleReset={handleReset} handleClose={handleClose}></ToolbarButtonsRenderer>
           )}
         </Dialog.ButtonBar>
       </div>
@@ -239,7 +243,7 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
 
 function ToolbarButtonsRenderer({ handleApply, handleClose, handleReset }: FilteringDialogToolbarHandlers) {
   return (
-    <Dialog.ButtonBar className="presentation-instance-filter-button-bar">
+    <>
       <Button className="presentation-instance-filter-dialog-apply-button" styleType="high-visibility" onClick={handleApply}>
         {translate("instance-filter-builder.apply")}
       </Button>
@@ -249,7 +253,7 @@ function ToolbarButtonsRenderer({ handleApply, handleClose, handleReset }: Filte
       <Button className="presentation-instance-filter-dialog-reset-button" onClick={handleReset}>
         {translate("instance-filter-builder.reset")}
       </Button>
-    </Dialog.ButtonBar>
+    </>
   );
 }
 

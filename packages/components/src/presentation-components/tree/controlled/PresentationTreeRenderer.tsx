@@ -75,7 +75,6 @@ export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
         ? createPortal(
             <TreeNodeFilterBuilderDialog
               dataProvider={nodeLoader.dataProvider}
-              onReset={() => {}}
               onApply={(info) => {
                 info === undefined ? clearFilter(filterNode.id) : applyFilter(filterNode.id, info);
                 setFilterNode(undefined);
@@ -97,7 +96,6 @@ interface TreeNodeFilterBuilderDialogProps {
   filterNode: FilterablePresentationTreeNodeItem;
   onClose: () => void;
   onApply: (info?: PresentationInstanceFilterInfo) => void;
-  onReset: () => void;
 }
 
 function TreeNodeFilterBuilderDialog(props: TreeNodeFilterBuilderDialogProps) {
