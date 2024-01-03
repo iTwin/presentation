@@ -221,9 +221,9 @@ export interface FilteringDialogToolbarHandlers {
     // (undocumented)
     handleApply: () => void;
     // (undocumented)
-    handleClose: () => void;
+    handleClose?: () => void;
     // (undocumented)
-    handleReset: () => void;
+    handleReset?: () => void;
 }
 
 // @beta
@@ -416,8 +416,8 @@ export interface PresentationInstanceFilterDialogProps {
     initialFilter?: PresentationInstanceFilterInfo;
     isOpen: boolean;
     onApply: (filter?: PresentationInstanceFilterInfo) => void;
-    onClose: () => void;
-    onReset: () => void;
+    onClose?: () => void;
+    onReset?: () => void;
     ruleGroupDepthLimit?: number;
     title?: React.ReactNode;
     toolbarButtonsRenderer?: (toolbarHandlers: FilteringDialogToolbarHandlers) => ReactNode;

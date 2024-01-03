@@ -33,9 +33,9 @@ export interface PresentationInstanceFilterDialogProps {
   /** Callback that is invoked when 'Apply' button is clicked. */
   onApply: (filter?: PresentationInstanceFilterInfo) => void;
   /** Callback that is invoked when 'Close' button is clicked or dialog is closed. */
-  onClose: () => void;
+  onClose?: () => void;
   /** Callback that is invoked when 'Reset' button is clicked. */
-  onReset: () => void;
+  onReset?: () => void;
   /** Renderer that will be used to render a custom toolbar instead of the default one. */
   toolbarButtonsRenderer?: (toolbarHandlers: FilteringDialogToolbarHandlers) => ReactNode;
   /**
@@ -64,8 +64,8 @@ export interface PresentationInstanceFilterDialogProps {
  */
 export interface FilteringDialogToolbarHandlers {
   handleApply: () => void;
-  handleClose: () => void;
-  handleReset: () => void;
+  handleClose?: () => void;
+  handleReset?: () => void;
 }
 
 /**
