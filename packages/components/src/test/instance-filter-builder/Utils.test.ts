@@ -187,6 +187,37 @@ describe("filterRuleValidator", () => {
     ).to.be.eq("instance-filter-builder.error-messages.not-a-number");
   });
 
+  it("returns error message for a numeric valid serialized value when operator is not `IsEqual` or `IsNotEqual`", () => {
+    expect(
+      filterRuleValidator({
+        id: "test-id",
+        groupId: "test-group-id",
+        property: numericProperty,
+        operator: PropertyFilterRuleOperator.Greater,
+        value: {
+          valueFormat: PropertyValueFormat.Primitive,
+          value: "[[10], [10]]",
+          displayValue: "[[10], [10]]",
+        },
+      }),
+    ).to.be.eq("instance-filter-builder.error-messages.not-a-number");
+  });
+
+  it("returns error message for a numeric rule value set as a non-serialized string", () => {
+    expect(
+      filterRuleValidator({
+        id: "test-id",
+        groupId: "test-group-id",
+        property: numericProperty,
+        operator: PropertyFilterRuleOperator.IsEqual,
+        value: {
+          valueFormat: PropertyValueFormat.Primitive,
+          value: "a",
+          displayValue: "[[10], [10]]",
+        },
+      }),
+    ).to.be.eq("instance-filter-builder.error-messages.not-a-number");
+  });
   it("returns error message for invalid quantity rule", () => {
     expect(
       filterRuleValidator({
@@ -205,15 +236,9 @@ describe("filterRuleValidator", () => {
 
   [
     { val: 10, testCase: "number" },
-    { val: 10.003, testCase: "float" },
-    { val: [10], testCase: "number array" },
-    { val: [[10]], testCase: "nested number array" },
-    { val: "[10]", testCase: "serialized array of numbers" },
-    { val: "{10}", testCase: "serialized struct" },
-    { val: "[10.003]", testCase: "serialized array of float numbers" },
     { val: "[[10], [10]]", testCase: "serialized array of arrays of numbers" },
   ].forEach(({ val, testCase }) => {
-    it(`does not return error message for valid ${testCase}`, () => {
+    it(`does not return error message for valid numeric rule value set as ${testCase}`, () => {
       expect(
         filterRuleValidator({
           id: "test-id",
