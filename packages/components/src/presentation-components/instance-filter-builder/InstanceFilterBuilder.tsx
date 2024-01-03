@@ -199,12 +199,12 @@ function useActiveClasses({ imodel, availableClasses, initialActiveClasses }: Us
   const [activeClasses, setActiveClasses] = useState<ClassInfo[]>(initialActiveClasses ?? []);
   const [isFilteringClasses, setIsFilteringClasses] = useState(false);
 
-  const firstRender = useRef(true);
+  const availableClassesRef = useRef(availableClasses);
   useEffect(() => {
-    if (!firstRender.current) {
+    if (availableClassesRef.current !== availableClasses) {
       setActiveClasses([]);
+      availableClassesRef.current = availableClasses;
     }
-    firstRender.current = false;
   }, [availableClasses]);
 
   const filterClassesByProperty = useCallback(
