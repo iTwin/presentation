@@ -32,8 +32,8 @@ export class TreeQueryResultsReader {
   public async read(executor: IECSqlQueryExecutor, query: ECSqlQueryDef, limit?: number | "unbounded"): Promise<ParsedHierarchyNode[]> {
     const nodeLimit = limit ?? DEFAULT_ROWS_LIMIT;
     getLogger().logInfo(`${LOGGING_NAMESPACE}.TreeQueryResultsReader`, `Executing query: ${query.ecsql}`);
-    const ctesPrefix = query.ctes && query.ctes.length ? `WITH RECURSIVE ${query.ctes.join(", ")}` : "";
-    const ecsql = `${ctesPrefix} ${applyLimit({ ecsql: query.ecsql, limit: nodeLimit })}`;
+    const ctesPrefix = query.ctes && query.ctes.length ? `WITH RECURSIVE ${query.ctes.join(", ")} ` : "";
+    const ecsql = `${ctesPrefix}${applyLimit({ ecsql: query.ecsql, limit: nodeLimit })}`;
     const reader = executor.createQueryReader(ecsql, query.bindings, { rowFormat: "ECSqlPropertyNames" });
     const nodes = new Array<ParsedHierarchyNode>();
     for await (const row of reader) {
