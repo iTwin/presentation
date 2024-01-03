@@ -93,7 +93,7 @@ export interface GetHierarchyNodesProps {
   parentNode: ParentHierarchyNode | undefined;
   /** Optional hierarchy level filter. Has no effect if `parentNode` is a [[GroupingNode]]. */
   instanceFilter?: GenericInstanceFilter;
-  /** Optional hierarchy level size limit. Default limit is `1000`. Isn't applied if `parentNode` is a [[GroupingNode]]. */
+  /** Optional hierarchy level size limit. Default limit is `1000`. Has no effect if `parentNode` is a [[GroupingNode]]. */
   hierarchyLevelSizeLimit?: number | "unbounded";
 }
 
