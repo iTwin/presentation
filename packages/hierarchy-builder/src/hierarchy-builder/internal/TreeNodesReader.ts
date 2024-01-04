@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { INodeParser } from "../HierarchyDefinition";
+import { RowsLimitExceededError } from "../HierarchyErrors";
 import { InstanceHierarchyNodeProcessingParams, ParsedHierarchyNode, ParsedInstanceHierarchyNode } from "../HierarchyNode";
 import { getLogger } from "../Logging";
 import { ECSqlQueryDef, IECSqlQueryExecutor } from "../queries/ECSqlCore";
@@ -15,7 +16,6 @@ import { LOGGING_NAMESPACE } from "./Common";
 /** @internal */
 export interface TreeQueryResultsReaderProps {
   parser?: INodeParser;
-  limit?: number;
 }
 
 /** @internal */
@@ -26,28 +26,23 @@ export class TreeQueryResultsReader {
     // istanbul ignore next
     this._props = {
       parser: props?.parser ?? defaultNodesParser,
-      limit: props?.limit ?? DEFAULT_ROWS_LIMIT,
     };
   }
 
-  public async read(executor: IECSqlQueryExecutor, query: Omit<ECSqlQueryDef, "ctes">): Promise<ParsedHierarchyNode[]> {
+  public async read(executor: IECSqlQueryExecutor, query: ECSqlQueryDef, limit?: number | "unbounded"): Promise<ParsedHierarchyNode[]> {
+    const nodeLimit = limit ?? DEFAULT_ROWS_LIMIT;
     getLogger().logInfo(`${LOGGING_NAMESPACE}.TreeQueryResultsReader`, `Executing query: ${query.ecsql}`);
-    const reader = executor.createQueryReader(query.ecsql, query.bindings, { rowFormat: "ECSqlPropertyNames" });
+    const ctesPrefix = query.ctes && query.ctes.length ? `WITH RECURSIVE ${query.ctes.join(", ")} ` : "";
+    const ecsql = `${ctesPrefix}${applyLimit({ ecsql: query.ecsql, limit: nodeLimit })}`;
+    const reader = executor.createQueryReader(ecsql, query.bindings, { rowFormat: "ECSqlPropertyNames" });
     const nodes = new Array<ParsedHierarchyNode>();
     for await (const row of reader) {
-      if (nodes.length >= this._props.limit) {
-        throw new RowsLimitExceededError(this._props.limit);
+      if (nodeLimit !== "unbounded" && nodes.length >= nodeLimit) {
+        throw new RowsLimitExceededError(nodeLimit);
       }
       nodes.push(this._props.parser(row.toRow()));
     }
     return nodes;
-  }
-}
-
-/** @internal */
-export class RowsLimitExceededError extends Error {
-  public constructor(public readonly limit: number) {
-    super(`Query rows limit of ${limit} exceeded`);
   }
 }
 
@@ -113,15 +108,14 @@ const DEFAULT_ROWS_LIMIT = 1000;
 /** @internal */
 export interface ApplyLimitProps {
   ecsql: string;
-  ctes?: string[];
-  limit?: number;
+  limit?: number | "unbounded";
 }
 
 /** @internal */
 export function applyLimit(props: ApplyLimitProps) {
-  const ctesPrefix = props.ctes && props.ctes.length ? `WITH RECURSIVE ${props.ctes.join(", ")}` : ``;
-  return `
-    ${ctesPrefix}
+  return props.limit === "unbounded"
+    ? props.ecsql
+    : `
     SELECT *
     FROM (${props.ecsql})
     LIMIT ${(props.limit ?? DEFAULT_ROWS_LIMIT) + 1}

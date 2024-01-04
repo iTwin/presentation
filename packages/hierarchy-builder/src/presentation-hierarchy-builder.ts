@@ -19,6 +19,7 @@ export const ECSqlSnippets = { ...ECSqlJoinSnippets, ...ECSqlValueSnippets };
 export * from "./hierarchy-builder/ECMetadata";
 export * from "./hierarchy-builder/GenericInstanceFilter";
 export * from "./hierarchy-builder/HierarchyDefinition";
+export * from "./hierarchy-builder/HierarchyErrors";
 export * from "./hierarchy-builder/HierarchyNode";
 export * from "./hierarchy-builder/HierarchyProvider";
 export { LOCALIZATION_NAMESPACE, LocalizationFunction, setLocalizationFunction } from "./hierarchy-builder/Localization";
