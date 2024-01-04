@@ -148,6 +148,7 @@ beta;PropertyValueRangeGroupingNodeKey
 beta;RelatedInstanceDescription
 beta;RelationshipPath
 beta;RelationshipPathStep
+beta;RowsLimitExceededError 
 beta;setLocalizationFunction(localizationFunction?: LocalizationFunction): void
 beta;setLogger(logger: ILogger | undefined): void
 beta;StandardHierarchyNodeKey = InstancesNodeKey | GroupingNodeKey

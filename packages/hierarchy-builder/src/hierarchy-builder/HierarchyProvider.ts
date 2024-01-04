@@ -24,6 +24,7 @@ import { assert, LRUCache, LRUMap, omit } from "@itwin/core-bentley";
 import { IMetadataProvider } from "./ECMetadata";
 import { GenericInstanceFilter } from "./GenericInstanceFilter";
 import { DefineHierarchyLevelProps, HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
+import { RowsLimitExceededError } from "./HierarchyErrors";
 import {
   HierarchyNode,
   HierarchyNodeIdentifiersPath,
@@ -41,7 +42,7 @@ import { createHideIfNoChildrenOperator } from "./internal/operators/HideIfNoChi
 import { createHideNodesInHierarchyOperator } from "./internal/operators/HideNodesInHierarchy";
 import { sortNodesByLabelOperator } from "./internal/operators/Sorting";
 import { QueryScheduler } from "./internal/QueryScheduler";
-import { applyLimit, RowsLimitExceededError, TreeQueryResultsReader } from "./internal/TreeNodesReader";
+import { TreeQueryResultsReader } from "./internal/TreeNodesReader";
 import { getLogger } from "./Logging";
 import { IECSqlQueryExecutor } from "./queries/ECSqlCore";
 import { ConcatenatedValue, ConcatenatedValuePart } from "./values/ConcatenatedValue";
@@ -90,8 +91,10 @@ export interface HierarchyProviderProps {
 export interface GetHierarchyNodesProps {
   /** Parent node to get children for. Pass `undefined` to get root nodes. */
   parentNode: ParentHierarchyNode | undefined;
-  /** Optional hierarchy level filter. */
+  /** Optional hierarchy level filter. Has no effect if `parentNode` is a [[GroupingNode]]. */
   instanceFilter?: GenericInstanceFilter;
+  /** Optional hierarchy level size limit. Default limit is `1000`. Has no effect if `parentNode` is a [[GroupingNode]]. */
+  hierarchyLevelSizeLimit?: number | "unbounded";
 }
 
 /**
@@ -141,7 +144,9 @@ export class HierarchyProvider {
     );
   }
 
-  private createPreProcessedNodesObservable(props: DefineHierarchyLevelProps): Observable<ProcessedHierarchyNode> {
+  private createPreProcessedNodesObservable(
+    props: DefineHierarchyLevelProps & { hierarchyLevelSizeLimit?: number | "unbounded" },
+  ): Observable<ProcessedHierarchyNode> {
     // stream hierarchy level definitions in order
     const definitions = from(this._hierarchyFactory.defineHierarchyLevel(props)).pipe(concatMap((hierarchyLevelDefinition) => from(hierarchyLevelDefinition)));
     // pipe definitions to nodes
@@ -153,7 +158,7 @@ export class HierarchyProvider {
         return this._scheduler.scheduleSubscription(
           of(def.query).pipe(
             log((query) => `Query direct nodes for parent ${props.parentNode ? JSON.stringify(props.parentNode) : "<root>"}: ${query.ecsql}`),
-            mergeMap((query) => from(this._queryReader.read(this._queryExecutor, { ...query, ecsql: applyLimit({ ...query }) }))),
+            mergeMap((query) => from(this._queryReader.read(this._queryExecutor, query, props.hierarchyLevelSizeLimit))),
           ),
         );
       }),
@@ -220,7 +225,7 @@ export class HierarchyProvider {
     );
   }
 
-  private setupObservables(props: DefineHierarchyLevelProps): ChildNodesObservables {
+  private setupObservables(props: DefineHierarchyLevelProps & { hierarchyLevelSizeLimit?: number | "unbounded" }): ChildNodesObservables {
     const initialNodes = this.createPreProcessedNodesObservable(props);
     const processedNodes = this.createProcessedNodesObservable(initialNodes, props);
     const finalizedNodes = this.createFinalizedNodesObservable(processedNodes);
@@ -353,7 +358,11 @@ class ChildNodesCache {
 
   private parseRequestProps(requestProps: GetHierarchyNodesProps) {
     const { parentNode: node } = requestProps;
-    const primaryKey = node ? `${JSON.stringify(node.parentKeys)}+${JSON.stringify(node.key)}` : "";
+    const primaryKey = node
+      ? `${JSON.stringify(node.parentKeys)}+${JSON.stringify(node.key)}+${
+          !HierarchyNode.isGroupingNode(node) ? JSON.stringify(requestProps.hierarchyLevelSizeLimit) : ""
+        }`
+      : "";
     const variationKey = requestProps.instanceFilter ? JSON.stringify(requestProps.instanceFilter) : undefined;
     return { primaryKey, variationKey };
   }
