@@ -155,7 +155,7 @@ describe("filterRuleValidator", () => {
     sinon.restore();
   });
 
-  it("returns error message for numeric rule value set as undefined", () => {
+  it("returns error message for invalid numeric rule", () => {
     expect(
       filterRuleValidator({
         id: "test-id",
@@ -203,7 +203,7 @@ describe("filterRuleValidator", () => {
     ).to.be.eq("instance-filter-builder.error-messages.invalid");
   });
 
-  it(`does not return error message for valid numeric rule value set as number`, () => {
+  it("does not return error message for valid numeric rule", () => {
     expect(
       filterRuleValidator({
         id: "test-id",

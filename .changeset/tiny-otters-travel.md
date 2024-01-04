@@ -2,4 +2,4 @@
 "@itwin/presentation-components": patch
 ---
 
-Fix for false negative error messages in filter dialog number selector
+`PresentationInstanceFilterDialog`: Fix false positive error messagesshown when selecting numeric values in unique values selector.

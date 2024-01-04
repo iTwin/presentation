@@ -203,20 +203,19 @@ function quantityPropertyValidator({ property, value }: ValidatorContext) {
 }
 
 function numericPropertyValidator({ property, value, operator }: ValidatorContext) {
-  if (!isPropertyNumeric(property.typename) || value === undefined) {
+  // If equality operator is set the value should not be validated since it is supplied by the `UniquePropertyValuesSelector`.
+  if (!isPropertyNumeric(property.typename) || value === undefined || isEqualityOperator(operator)) {
     return undefined;
   }
 
-  // don't validate values that we supply ourselves
-  if (isInvalidNumericValue(value) && !isValuePickedFromSelector(operator)) {
+  if (isInvalidNumericValue(value)) {
     return translate("instance-filter-builder.error-messages.not-a-number");
   }
 
   return undefined;
 }
 
-/** If `IsEqual` or `IsNotEqual` operators are set the value will be supplied from the `UniquePropertyValuesSelector`. */
-function isValuePickedFromSelector(operator: PropertyFilterRuleOperator) {
+function isEqualityOperator(operator: PropertyFilterRuleOperator) {
   return operator === PropertyFilterRuleOperator.IsEqual || operator === PropertyFilterRuleOperator.IsNotEqual;
 }
 
