@@ -495,6 +495,7 @@ export interface GenericInstanceFilterRuleGroup {
 
 // @beta
 export interface GetHierarchyNodesProps {
+    hierarchyLevelSizeLimit?: number | "unbounded";
     instanceFilter?: GenericInstanceFilter;
     parentNode: ParentHierarchyNode | undefined;
 }
@@ -1064,6 +1065,13 @@ export interface RelationshipPathStep {
     relationshipReverse?: boolean;
     sourceClassName: string;
     targetClassName: string;
+}
+
+// @beta
+export class RowsLimitExceededError extends Error {
+    constructor(limit: number);
+    // (undocumented)
+    readonly limit: number;
 }
 
 // @beta
