@@ -257,8 +257,9 @@ function ToolbarButtonsRenderer({ handleApply, handleClose, handleReset }: Filte
   );
 }
 
-const isFilterNonEmpty = (rootGroup: PropertyFilterBuilderRuleGroup) =>
-  rootGroup.items.length > 1 || (rootGroup.items.length === 1 && rootGroup.items[0].operator !== undefined);
+function isFilterNonEmpty(rootGroup: PropertyFilterBuilderRuleGroup) {
+  return rootGroup.items.length > 1 || (rootGroup.items.length === 1 && rootGroup.items[0].operator !== undefined);
+}
 
 interface ResultsRendererProps {
   buildFilter: (options?: BuildFilterOptions) => PresentationInstanceFilterInfo | undefined;
