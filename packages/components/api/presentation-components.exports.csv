@@ -13,6 +13,7 @@ public;FavoritePropertiesDataFiltererProps
 public;FavoritePropertiesDataProvider 
 public;FavoritePropertiesDataProviderProps
 beta;FilterablePresentationTreeNodeItem = PresentationTreeNodeItem &
+beta;FilteringDialogToolbarHandlers
 beta;GenericInstanceFilter
 beta;GenericInstanceFilter
 beta;GenericInstanceFilterRule
@@ -34,14 +35,14 @@ public;IUnifiedSelectionComponent
 beta;navigationPropertyEditorContext: Context
 beta;NavigationPropertyEditorContextProps
 public;PresentationComponentsLoggerCategory
-beta;PresentationFilterBuilderValueRenderer({ imodel, descriptor, descriptorInputKeys, ...props }: PresentationFilterBuilderValueRendererProps): JSX.Element
+beta;PresentationFilterBuilderValueRenderer({ imodel, descriptor, descriptorInputKeys, ...props }: PresentationFilterBuilderValueRendererProps): JSX_2.Element
 beta;PresentationFilterBuilderValueRendererProps 
 beta;PresentationInfoTreeNodeItem 
 beta;PresentationInstanceFilter = PresentationInstanceFilterConditionGroup | PresentationInstanceFilterCondition
 beta;PresentationInstanceFilter
 beta;PresentationInstanceFilterCondition
 beta;PresentationInstanceFilterConditionGroup
-beta;PresentationInstanceFilterDialog(props: PresentationInstanceFilterDialogProps): JSX.Element
+beta;PresentationInstanceFilterDialog(props: PresentationInstanceFilterDialogProps): JSX_2.Element
 beta;PresentationInstanceFilterDialogProps
 beta;PresentationInstanceFilterInfo
 beta;PresentationInstanceFilterPropertyInfo
@@ -60,10 +61,10 @@ public;PresentationTreeNodeLoaderProps
 deprecated;PresentationTreeNodeLoaderProps 
 public;PresentationTreeNodeLoaderResult
 deprecated;PresentationTreeNodeLoaderResult
-beta;PresentationTreeNodeRenderer(props: PresentationTreeNodeRendererProps): JSX.Element
+beta;PresentationTreeNodeRenderer(props: PresentationTreeNodeRendererProps): JSX_2.Element
 beta;PresentationTreeNodeRendererProps 
 public;PresentationTreeProps
-beta;PresentationTreeRenderer(props: PresentationTreeRendererProps): JSX.Element
+beta;PresentationTreeRenderer(props: PresentationTreeRendererProps): JSX_2.Element
 beta;PresentationTreeRendererProps 
 public;PropertyDataProviderWithUnifiedSelectionProps
 public;PropertyRecordsBuilder 
@@ -72,7 +73,7 @@ beta;SchemaMetadataContext
 beta;SchemaMetadataContextProvider({ schemaContextProvider, imodel, children }: PropsWithChildren
 beta;SchemaMetadataContextProviderProps
 beta;TableCellDefinition
-beta;TableCellRenderer(props: TableCellRendererProps): JSX.Element
+beta;TableCellRenderer(props: TableCellRendererProps): JSX_2.Element
 beta;TableCellRendererProps
 beta;TableColumnDefinition
 beta;TableRowDefinition

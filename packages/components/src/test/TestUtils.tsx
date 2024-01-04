@@ -7,8 +7,14 @@ import { createElement, Fragment, PropsWithChildren, ReactElement, StrictMode } 
 import { RenderHookOptions, RenderHookResult, renderHook as renderHookRTL, RenderOptions, RenderResult, render as renderRTL } from "@testing-library/react";
 import userEvent, { UserEvent } from "@testing-library/user-event";
 
-// if `DISABLE_STRICT_MODE` is set do not wrap components into `StrictMode` component
-const StrictModeWrapper = process.env.DISABLE_STRICT_MODE ? Fragment : StrictMode;
+function createWrapper(wrapper?: React.JSXElementConstructor<{ children: React.ReactElement }>, disableStrictMode?: boolean) {
+  // if `DISABLE_STRICT_MODE` is set do not wrap components into `StrictMode` component
+  const StrictModeWrapper = process.env.DISABLE_STRICT_MODE || disableStrictMode ? Fragment : StrictMode;
+
+  return wrapper
+    ? ({ children }: PropsWithChildren<unknown>) => <StrictModeWrapper>{createElement(wrapper, undefined, children)}</StrictModeWrapper>
+    : StrictModeWrapper;
+}
 
 /**
  * Custom render function that wraps around `render` function from `@testing-library/react` and additionally
@@ -16,26 +22,19 @@ const StrictModeWrapper = process.env.DISABLE_STRICT_MODE ? Fragment : StrictMod
  *
  * It should be used when test need to do interactions with rendered components.
  */
-function customRender(ui: ReactElement, options?: RenderOptions): RenderResult & { user: UserEvent } {
-  const user = userEvent.setup();
-
-  const CustomWrapper = options?.wrapper;
-  const wrapper = CustomWrapper
-    ? ({ children }: PropsWithChildren<unknown>) => <StrictModeWrapper>{createElement(CustomWrapper, undefined, children)}</StrictModeWrapper>
-    : StrictModeWrapper;
-
+function customRender(ui: ReactElement, options?: RenderOptions & { disableStrictMode?: boolean }): RenderResult & { user: UserEvent } {
+  const wrapper = createWrapper(options?.wrapper, options?.disableStrictMode);
   return {
     ...renderRTL(ui, { ...options, wrapper }),
-    user,
+    user: userEvent.setup(),
   };
 }
 
-function customRenderHook<Result, Props>(render: (initialProps: Props) => Result, options?: RenderHookOptions<Props>): RenderHookResult<Result, Props> {
-  const CustomWrapper = options?.wrapper;
-  const wrapper = CustomWrapper
-    ? ({ children }: PropsWithChildren<unknown>) => <StrictModeWrapper>{createElement(CustomWrapper, undefined, children)}</StrictModeWrapper>
-    : StrictModeWrapper;
-
+function customRenderHook<Result, Props>(
+  render: (initialProps: Props) => Result,
+  options?: RenderHookOptions<Props> & { disableStrictMode?: boolean },
+): RenderHookResult<Result, Props> {
+  const wrapper = createWrapper(options?.wrapper, options?.disableStrictMode);
   return renderHookRTL(render, { ...options, wrapper });
 }
 
