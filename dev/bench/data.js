@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1702804251246,
+  "lastUpdate": 1704352722227,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -322,6 +322,42 @@ window.BENCHMARK_DATA = {
             "value": 1817,
             "unit": "ms",
             "extra": "min: 1817\nmax: 1817\ncount: 1\nmean: 1817\np50: 1826.6\nmedian: 1826.6\np75: 1826.6\np90: 1826.6\np95: 1826.6\np99: 1826.6\np999: 1826.6"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "100586436+JonasDov@users.noreply.github.com",
+            "name": "JonasDov",
+            "username": "JonasDov"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "20fbd7d5cec780240055d392d640f6b0adeab1f1",
+          "message": "Option to override hierarchy level size limit for each hierarchy level (#366)\n\n* Add localization text\r\n\r\n* Add error type checker\r\n\r\n* Change backend to allow reseting size limit\r\n\r\n* Update tree widget\r\n\r\n* Add changeset\r\n\r\n* Remove space\r\n\r\n* Log error if it is not RowsLimitExceededError\r\n\r\n* Allow level limit to be unbounded\r\n\r\n* Move applyLimit usage to read()\r\n\r\n* Allow setting limit for specific hierarchy level\r\n\r\n* Export RowsLimitExceededError\r\n\r\n* Final fixes\r\n\r\n* Update Sample.json\r\n\r\n* Retrieve parentId only when it is needed\r\n\r\n* Update packages/hierarchy-builder/src/hierarchy-builder/HierarchyProvider.ts\r\n\r\nCo-authored-by: Grigas <35135765+grigasp@users.noreply.github.com>\r\n\r\n* Apply ctes\r\n\r\n* Include message\r\n\r\n* Change hierarchyLevelSizeLimit map to object\r\n\r\n* Remove limit setting\r\n\r\n* Use parentId to set/remove limit\r\n\r\n* applyLimit cleanup\r\n\r\n* Update packages/hierarchy-builder/src/hierarchy-builder/internal/TreeNodesReader.ts\r\n\r\nCo-authored-by: Grigas <35135765+grigasp@users.noreply.github.com>\r\n\r\n* simplify limit assignment; add comments to GetHierarchyNodesProps\r\n\r\n* Remove useCallback for nodeRenderer\r\n\r\n* Move stateless tree widget to a separate file\r\n\r\n* Fix test\r\n\r\n* Update packages/hierarchy-builder/src/hierarchy-builder/HierarchyProvider.ts\r\n\r\nCo-authored-by: Grigas <35135765+grigasp@users.noreply.github.com>\r\n\r\n* Update packages/hierarchy-builder/src/hierarchy-builder/HierarchyProvider.ts\r\n\r\nCo-authored-by: Grigas <35135765+grigasp@users.noreply.github.com>\r\n\r\n---------\r\n\r\nCo-authored-by: Grigas <35135765+grigasp@users.noreply.github.com>",
+          "timestamp": "2024-01-04T09:16:58+02:00",
+          "tree_id": "816c085ea19f91a9303f4e39c5c94483b411ad2d",
+          "url": "https://github.com/iTwin/presentation/commit/20fbd7d5cec780240055d392d640f6b0adeab1f1"
+        },
+        "date": 1704352721263,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Initial Models Tree Load: Baytown.bim",
+            "value": 339,
+            "unit": "ms",
+            "extra": "min: 339\nmax: 339\ncount: 1\nmean: 339\np50: 340.4\nmedian: 340.4\np75: 340.4\np90: 340.4\np95: 340.4\np99: 340.4\np999: 340.4"
+          },
+          {
+            "name": "Full Models Tree Load: Baytown.bim",
+            "value": 1860,
+            "unit": "ms",
+            "extra": "min: 1860\nmax: 1860\ncount: 1\nmean: 1860\np50: 1863.5\nmedian: 1863.5\np75: 1863.5\np90: 1863.5\np95: 1863.5\np99: 1863.5\np999: 1863.5"
           }
         ]
       }
