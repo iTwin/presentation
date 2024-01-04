@@ -397,6 +397,7 @@ describe("useUnifiedSelectionTreeEventHandler", () => {
     // eslint-disable-next-line deprecation/deprecation
     const { result, unmount } = renderHook((props: UnifiedSelectionTreeEventHandlerParams) => useUnifiedSelectionTreeEventHandler(props), {
       initialProps: { nodeLoader: nodeLoaderMock.object, selectionHandler: selectionHandlerMock.object },
+      disableStrictMode: true,
     });
 
     expect(result.current).to.not.be.undefined;
