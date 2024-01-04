@@ -17,7 +17,7 @@ import {
 import { IModelConnection } from "@itwin/core-frontend";
 import { CategoryDescription, ClassInfo, combineFieldNames, Descriptor, Field, NestedContentField, PropertiesField } from "@itwin/presentation-common";
 import { createPropertyDescriptionFromFieldInfo } from "../common/ContentBuilder";
-import { deserializeDisplayValueGroupArray, translate } from "../common/Utils";
+import { translate } from "../common/Utils";
 import { NavigationPropertyEditorContextProps } from "../properties/editors/NavigationPropertyEditorContext";
 import { PresentationInstanceFilterPropertyInfo } from "./PresentationFilterBuilder";
 
@@ -207,15 +207,18 @@ function numericPropertyValidator({ property, value, operator }: ValidatorContex
     return undefined;
   }
 
-  if (isInvalidNumericValue(value) && (!isOperatorValidForSerialization(operator) || isInvalidSerializedNumericValue(value))) {
+  // don't validate values that we supply ourselves
+  if (isInvalidNumericValue(value) && !isValuePickedFromSelector(operator)) {
     return translate("instance-filter-builder.error-messages.not-a-number");
   }
 
   return undefined;
 }
 
-const isOperatorValidForSerialization = (operator: PropertyFilterRuleOperator) =>
-  operator === PropertyFilterRuleOperator.IsEqual || operator === PropertyFilterRuleOperator.IsNotEqual;
+/** If `IsEqual` or `IsNotEqual` operators are set the value will be supplied from the `UniquePropertyValuesSelector`. */
+function isValuePickedFromSelector(operator: PropertyFilterRuleOperator) {
+  return operator === PropertyFilterRuleOperator.IsEqual || operator === PropertyFilterRuleOperator.IsNotEqual;
+}
 
 function isPropertyNumeric(typename: string) {
   return (
@@ -225,26 +228,4 @@ function isPropertyNumeric(typename: string) {
 
 function isInvalidNumericValue(value: PrimitiveValue) {
   return value.displayValue && isNaN(Number(value.value));
-}
-
-function isInvalidSerializedNumericValue(value: PrimitiveValue) {
-  // This is handling our implementation of the IN operator without introducing breaking changes into the "@itwin/components-react".
-  // That is why we need to check for values in a serialized JSON object.
-  if (!value.displayValue || typeof value.value !== "string") {
-    return true;
-  }
-
-  const { groupedRawValues } = deserializeDisplayValueGroupArray(value.displayValue, value.value);
-
-  if (!groupedRawValues) {
-    return true;
-  }
-
-  for (const groupedValue of groupedRawValues) {
-    if (isNaN(Number(groupedValue))) {
-      return true;
-    }
-  }
-
-  return false;
 }

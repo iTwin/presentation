@@ -161,7 +161,7 @@ describe("filterRuleValidator", () => {
         id: "test-id",
         groupId: "test-group-id",
         property: numericProperty,
-        operator: PropertyFilterRuleOperator.IsEqual,
+        operator: PropertyFilterRuleOperator.Less,
         value: {
           valueFormat: PropertyValueFormat.Primitive,
           value: undefined,
@@ -171,7 +171,7 @@ describe("filterRuleValidator", () => {
     ).to.be.eq("instance-filter-builder.error-messages.not-a-number");
   });
 
-  it("returns error message for numeric value set as an array of non-numeric values", () => {
+  it("does not return error message for invalid numeric value if operator is 'IsEqual' or 'IsNotEqual'", () => {
     expect(
       filterRuleValidator({
         id: "test-id",
@@ -180,44 +180,13 @@ describe("filterRuleValidator", () => {
         operator: PropertyFilterRuleOperator.IsEqual,
         value: {
           valueFormat: PropertyValueFormat.Primitive,
-          value: "[[10], [{}]]",
-          displayValue: "[[10], [{}]]",
+          value: "[Invalid]",
+          displayValue: "[Invalid]",
         },
       }),
-    ).to.be.eq("instance-filter-builder.error-messages.not-a-number");
+    ).to.be.undefined;
   });
 
-  it("returns error message for a numeric valid serialized value when operator is not `IsEqual` or `IsNotEqual`", () => {
-    expect(
-      filterRuleValidator({
-        id: "test-id",
-        groupId: "test-group-id",
-        property: numericProperty,
-        operator: PropertyFilterRuleOperator.Greater,
-        value: {
-          valueFormat: PropertyValueFormat.Primitive,
-          value: "[[10], [10]]",
-          displayValue: "[[10], [10]]",
-        },
-      }),
-    ).to.be.eq("instance-filter-builder.error-messages.not-a-number");
-  });
-
-  it("returns error message for a numeric rule value set as a non-serialized string", () => {
-    expect(
-      filterRuleValidator({
-        id: "test-id",
-        groupId: "test-group-id",
-        property: numericProperty,
-        operator: PropertyFilterRuleOperator.IsEqual,
-        value: {
-          valueFormat: PropertyValueFormat.Primitive,
-          value: "a",
-          displayValue: "[[10], [10]]",
-        },
-      }),
-    ).to.be.eq("instance-filter-builder.error-messages.not-a-number");
-  });
   it("returns error message for invalid quantity rule", () => {
     expect(
       filterRuleValidator({
@@ -234,25 +203,20 @@ describe("filterRuleValidator", () => {
     ).to.be.eq("instance-filter-builder.error-messages.invalid");
   });
 
-  [
-    { val: 10, testCase: "number" },
-    { val: "[[10], [10]]", testCase: "serialized array of arrays of numbers" },
-  ].forEach(({ val, testCase }) => {
-    it(`does not return error message for valid numeric rule value set as ${testCase}`, () => {
-      expect(
-        filterRuleValidator({
-          id: "test-id",
-          groupId: "test-group-id",
-          property: numericProperty,
-          operator: PropertyFilterRuleOperator.IsEqual,
-          value: {
-            valueFormat: PropertyValueFormat.Primitive,
-            value: val,
-            displayValue: "[10]",
-          },
-        }),
-      ).to.be.undefined;
-    });
+  it(`does not return error message for valid numeric rule value set as number`, () => {
+    expect(
+      filterRuleValidator({
+        id: "test-id",
+        groupId: "test-group-id",
+        property: numericProperty,
+        operator: PropertyFilterRuleOperator.Greater,
+        value: {
+          valueFormat: PropertyValueFormat.Primitive,
+          value: 10,
+          displayValue: "10",
+        },
+      }),
+    ).to.be.undefined;
   });
 
   it("does not return error message for valid quantity rule", () => {
