@@ -52,7 +52,6 @@ export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
   const options = useMemo(() => classes.map(createOption), [classes]);
   const selectedOptions = useMemo(() => selectedClasses.map((classInfo) => classInfo.id), [selectedClasses]);
 
-  // style={{ minWidth: "min(100%, 350px)", marginBottom: "8px" }}
   return (
     <>
       {showClearAlert && (
