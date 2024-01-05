@@ -59,6 +59,7 @@ import { PropertyDataFiltererBase } from '@itwin/components-react';
 import { PropertyDataFilterResult } from '@itwin/components-react';
 import { PropertyDescription } from '@itwin/appui-abstract';
 import { PropertyFilter } from '@itwin/components-react';
+import { PropertyFilterBuilderRuleGroup } from '@itwin/components-react';
 import { PropertyFilterBuilderRuleValueRendererProps } from '@itwin/components-react';
 import { PropertyFilterRuleGroupOperator } from '@itwin/components-react';
 import { PropertyFilterRuleOperator } from '@itwin/components-react';
@@ -332,6 +333,9 @@ export interface IPresentationTreeDataProvider extends ITreeDataProvider, IPrese
 
 // @beta
 export function isFilterablePresentationTreeNodeItem(item: PresentationTreeNodeItem): item is FilterablePresentationTreeNodeItem;
+
+// @internal (undocumented)
+export function isFilterNonEmpty(rootGroup: PropertyFilterBuilderRuleGroup): boolean;
 
 // @beta
 export function isPresentationInfoTreeNodeItem(item: TreeNodeItem): item is PresentationInfoTreeNodeItem;
