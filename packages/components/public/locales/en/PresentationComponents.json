@@ -29,7 +29,8 @@
     "error-messages": {
       "not-a-number": "Value must be a number",
       "invalid": "Value is invalid"
-    }
+    },
+    "class-selection-warning": "All filtering rules will be lost if class list is edited."
   },
   "tree": {
     "please-provide": "Please provide",

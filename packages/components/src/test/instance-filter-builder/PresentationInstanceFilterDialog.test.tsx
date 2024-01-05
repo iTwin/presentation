@@ -12,6 +12,7 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Descriptor } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
+import { translate } from "../../presentation-components/common/Utils";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import { PresentationInstanceFilter, PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
 import { PresentationInstanceFilterDialog } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog";
@@ -69,6 +70,57 @@ describe("PresentationInstanceFilterDialog", () => {
     onCloseEvent.raiseEvent();
     sinon.restore();
     delete (HTMLElement.prototype as any).scrollIntoView;
+  });
+
+  it("displays warning message on class selector opening if filtering rules are set ", async () => {
+    const { container, getByText, queryByDisplayValue, user, queryByText } = render(
+      <PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptor} onApply={() => {}} isOpen={true} />,
+    );
+
+    // open property selector
+    const propertySelector = await getRulePropertySelector(container);
+    await user.click(propertySelector);
+    // select property
+    await user.click(getByText(stringField.label));
+
+    // enter value
+    const inputContainer = await waitForElement<HTMLInputElement>(container, ".rule-value input");
+    await user.type(inputContainer, "test value");
+    await waitFor(() => expect(queryByDisplayValue("test value")).to.not.be.null);
+
+    // expand class selector
+    const clickable = container.querySelector(".iui-actionable");
+    await user.click(clickable!);
+
+    expect(queryByText(translate("instance-filter-builder.class-selection-warning"))).to.not.be.null;
+  });
+
+  it("clears all filtering options on class list changing ", async () => {
+    const { container, getByText, queryByDisplayValue, user } = render(
+      <PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptor} onApply={() => {}} isOpen={true} />,
+    );
+
+    // open property selector
+    const propertySelector = await getRulePropertySelector(container);
+    await user.click(propertySelector);
+    // select property
+    await user.click(getByText(stringField.label));
+
+    // enter value
+    const inputContainer = await waitForElement<HTMLInputElement>(container, ".rule-value input");
+    await user.type(inputContainer, "test value");
+    await waitFor(() => expect(queryByDisplayValue("test value")).to.not.be.null);
+
+    // expand class selector
+    const expander = container.querySelector(".iui-actionable");
+    await user.click(expander!);
+
+    // deselect class item from dropdown
+    const classItem = document.querySelector('li[label="Class Label"]');
+    await user.click(classItem!);
+
+    // assert that filtering rule was cleared
+    await waitFor(() => expect(queryByDisplayValue("test value")).to.be.null);
   });
 
   it("invokes 'onApply' with string property filter rule", async () => {

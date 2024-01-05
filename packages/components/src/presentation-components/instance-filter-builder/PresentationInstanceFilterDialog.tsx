@@ -263,7 +263,7 @@ function ToolbarButtonsRenderer({ handleApply, handleClose, handleReset }: Filte
   );
 }
 
-function isFilterNonEmpty(rootGroup: PropertyFilterBuilderRuleGroup) {
+export function isFilterNonEmpty(rootGroup: PropertyFilterBuilderRuleGroup) {
   return rootGroup.items.length > 1 || (rootGroup.items.length === 1 && rootGroup.items[0].operator !== undefined);
 }
 
