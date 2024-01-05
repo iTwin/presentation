@@ -48,13 +48,13 @@ export interface InstanceFilterBuilderProps extends PropertyFilterBuilderRendere
 export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
   const { selectedClasses, classes, onSelectedClassesChanged, imodel, descriptor, descriptorInputKeys, ...restProps } = props;
 
-  const [showClearAlert, setShowClearAlert] = useState(false);
+  const [showClassSelectionWarning, setShowClassSelectionWarning] = useState(false);
   const options = useMemo(() => classes.map(createOption), [classes]);
   const selectedOptions = useMemo(() => selectedClasses.map((classInfo) => classInfo.id), [selectedClasses]);
 
   return (
     <>
-      {showClearAlert && (
+      {showClassSelectionWarning && (
         <Alert type="warning" className="class-selection-warning">
           {translate("instance-filter-builder.class-selection-warning")}
         </Alert>
@@ -70,8 +70,8 @@ export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
               ? translate("instance-filter-builder.selected-classes")
               : translate("instance-filter-builder.select-classes-optional"),
           }}
-          onShow={() => setShowClearAlert(!!selectedOptions.length && isFilterNonEmpty(props.rootGroup))}
-          onHide={() => setShowClearAlert(false)}
+          onShow={() => setShowClassSelectionWarning(!!selectedOptions.length && isFilterNonEmpty(props.rootGroup))}
+          onHide={() => setShowClassSelectionWarning(false)}
           onChange={(selectedIds) => {
             onSelectedClassesChanged(selectedIds);
           }}
