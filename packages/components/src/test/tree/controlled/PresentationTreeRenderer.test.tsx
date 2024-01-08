@@ -331,6 +331,58 @@ describe("PresentationTreeRenderer", () => {
     await waitFor(() => expect(presentationManager.getNodesCount).to.be.calledOnce);
     expect(queryByText(/tree.filter-dialog/i)).to.be.null;
   });
+
+  it("clears filter if apply button is pressed after filtering rules are cleared", async () => {
+    const { visibleNodes, modelSource, nodeLoader } = setupTreeModel((model) => {
+      model.setChildren(
+        undefined,
+        [
+          createTreeModelNodeInput({
+            id: "A",
+            item: { filtering: { descriptor: createTestContentDescriptor({ fields: [propertyField] }), ancestorFilters: [] } },
+          }),
+        ],
+        0,
+      );
+    });
+
+    const result = render(<PresentationTreeRenderer {...baseTreeProps} visibleNodes={visibleNodes} nodeLoader={nodeLoader} />);
+
+    const { queryByText, user } = result;
+    await waitFor(() => expect(queryByText("A")).to.not.be.null);
+
+    await applyFilter(result, propertyField.label);
+
+    // ensure that initially the filter is enabled
+    let nodeItem = modelSource.getModel().getNode("A")?.item as PresentationTreeNodeItem;
+    expect(nodeItem.filtering?.active).to.not.be.undefined;
+
+    await openFilterDialog(result);
+
+    const { baseElement } = result;
+
+    // clear all filter selections
+    const resetButton = await waitFor(() => {
+      const button = baseElement.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-reset-button");
+      expect(button?.disabled).to.be.false;
+      return button;
+    });
+    await user.click(resetButton!);
+
+    // pressing apply on empty filter clears it
+    const applyButton = await waitFor(() => {
+      const button = baseElement.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
+      return button;
+    });
+    await user.click(applyButton!);
+
+    await waitFor(() => {
+      expect(baseElement.querySelector(".presentation-instance-filter-dialog")).to.be.null;
+    });
+
+    nodeItem = modelSource.getModel().getNode("A")?.item as PresentationTreeNodeItem;
+    expect(nodeItem.filtering?.active).to.be.undefined;
+  });
 });
 
 async function openFilterDialog({ getByRole, baseElement, user }: ReturnType<typeof render>) {

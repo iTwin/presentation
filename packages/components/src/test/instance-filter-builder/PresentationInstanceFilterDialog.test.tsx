@@ -74,7 +74,7 @@ describe("PresentationInstanceFilterDialog", () => {
   it("invokes 'onApply' with string property filter rule", async () => {
     const spy = sinon.spy();
     const { container, getByText, queryByDisplayValue, user } = render(
-      <PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />,
+      <PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptor} onApply={spy} isOpen={true} />,
     );
 
     // open property selector
@@ -107,11 +107,21 @@ describe("PresentationInstanceFilterDialog", () => {
     });
   });
 
+  it("does not invoke `onApply` when there two empty rules", async () => {
+    const spy = sinon.spy();
+    const { container, user, getByTestId } = render(<PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptor} onApply={spy} isOpen={true} />);
+
+    await user.click(getByTestId("rule-group-add-rule"));
+
+    const applyButton = await getApplyButton(container);
+    await user.click(applyButton);
+
+    expect(spy).to.not.be.called;
+  });
+
   it("does not invoke `onApply` when filter is invalid", async () => {
     const spy = sinon.spy();
-    const { container, getByText, user } = render(
-      <PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />,
-    );
+    const { container, getByText, user } = render(<PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptor} onApply={spy} isOpen={true} />);
 
     // open property selector
     const propertySelector = await getRulePropertySelector(container);
@@ -125,11 +135,33 @@ describe("PresentationInstanceFilterDialog", () => {
     expect(spy).to.not.be.called;
   });
 
+  it("invokes `onApply` when there are no items selected", async () => {
+    const spy = sinon.spy();
+    const { container, user } = render(<PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptor} onApply={spy} isOpen={true} />);
+
+    const applyButton = await getApplyButton(container);
+    await user.click(applyButton);
+
+    expect(spy).to.be.called;
+  });
+
+  it("invokes `onReset` when reset is clicked.", async () => {
+    const spy = sinon.spy();
+    const { container, user } = render(
+      <PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptor} onReset={spy} onApply={() => {}} isOpen={true} />,
+    );
+
+    const resetButton = await getResetButton(container);
+    await user.click(resetButton);
+
+    expect(spy).to.be.called;
+  });
+
   it("throws error when filter is missing presentation metadata", async () => {
     const fromComponentsPropertyFilterStub = sinon.stub(PresentationInstanceFilter, "fromComponentsPropertyFilter").throws(new Error("Some Error"));
     const spy = sinon.spy();
     const { container, getByText, queryByText, user } = render(
-      <PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptor} onClose={() => {}} onApply={spy} isOpen={true} />,
+      <PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptor} onApply={spy} isOpen={true} />,
     );
 
     // open property selector
@@ -160,7 +192,6 @@ describe("PresentationInstanceFilterDialog", () => {
       <PresentationInstanceFilterDialog
         imodel={imodel}
         descriptor={descriptor}
-        onClose={() => {}}
         title={<div>{title}</div>}
         onApply={spy}
         isOpen={true}
@@ -176,7 +207,6 @@ describe("PresentationInstanceFilterDialog", () => {
       <PresentationInstanceFilterDialog
         imodel={imodel}
         descriptor={descriptor}
-        onClose={() => {}}
         onApply={() => {}}
         isOpen={true}
         initialFilter={initialFilter}
@@ -192,9 +222,7 @@ describe("PresentationInstanceFilterDialog", () => {
       throw new Error("Cannot load descriptor");
     };
 
-    const { queryByText } = render(
-      <PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptorGetter} onClose={() => {}} onApply={() => {}} isOpen={true} />,
-    );
+    const { queryByText } = render(<PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptorGetter} onApply={() => {}} isOpen={true} />);
 
     await waitFor(() => expect(queryByText("general.error")).to.not.be.null);
   });
@@ -203,11 +231,27 @@ describe("PresentationInstanceFilterDialog", () => {
     const spy = sinon.spy();
     const descriptorGetter = async () => descriptor;
 
-    const { container } = render(
-      <PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptorGetter} onClose={() => {}} onApply={spy} isOpen={true} />,
-    );
+    const { container } = render(<PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptorGetter} onApply={spy} isOpen={true} />);
 
     await getRulePropertySelector(container);
+  });
+
+  it("renders with passed in `toolbarRenderer`", async () => {
+    const toolbarButtonsRenderer = () => {
+      return <button>Click Me!</button>;
+    };
+
+    const { queryByText } = render(
+      <PresentationInstanceFilterDialog
+        imodel={imodel}
+        descriptor={descriptor}
+        onApply={() => {}}
+        isOpen={true}
+        toolbarButtonsRenderer={toolbarButtonsRenderer}
+      />,
+    );
+
+    await waitFor(() => expect(queryByText("Click Me!")).to.not.be.null);
   });
 
   it("renders spinner while loading descriptor", async () => {
@@ -215,9 +259,7 @@ describe("PresentationInstanceFilterDialog", () => {
     // simulate long loading descriptor
     const descriptorGetter = async () => undefined as unknown as Descriptor;
 
-    const { container } = render(
-      <PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptorGetter} onClose={() => {}} onApply={spy} isOpen={true} />,
-    );
+    const { container } = render(<PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptorGetter} onApply={spy} isOpen={true} />);
 
     await waitFor(() => {
       const progressIndicator = container.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-progress");
@@ -243,6 +285,12 @@ describe("PresentationInstanceFilterDialog", () => {
 
   async function getRuleOperatorSelector(container: HTMLElement) {
     return waitForElement<HTMLDivElement>(container, `.rule-operator [role="combobox"]`);
+  }
+
+  async function getResetButton(container: HTMLElement) {
+    return waitForElement<HTMLButtonElement>(container, ".presentation-instance-filter-dialog-reset-button", (e) => {
+      expect(e).to.not.be.null;
+    });
   }
 
   async function getApplyButton(container: HTMLElement, enabled: boolean = false) {

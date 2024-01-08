@@ -76,7 +76,7 @@ export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
             <TreeNodeFilterBuilderDialog
               dataProvider={nodeLoader.dataProvider}
               onApply={(info) => {
-                applyFilter(filterNode.id, info);
+                info === undefined ? clearFilter(filterNode.id) : applyFilter(filterNode.id, info);
                 setFilterNode(undefined);
               }}
               onClose={() => {
@@ -95,20 +95,19 @@ interface TreeNodeFilterBuilderDialogProps {
   dataProvider: IPresentationTreeDataProvider;
   filterNode: FilterablePresentationTreeNodeItem;
   onClose: () => void;
-  onApply: (info: PresentationInstanceFilterInfo) => void;
+  onApply: (info?: PresentationInstanceFilterInfo) => void;
 }
 
 function TreeNodeFilterBuilderDialog(props: TreeNodeFilterBuilderDialogProps) {
-  const { onClose, onApply, filterNode, dataProvider } = props;
+  const { filterNode, dataProvider, ...restProps } = props;
   const filteringInfo = filterNode.filtering;
   const descriptorInputKeys = useMemo(() => [filterNode.key], [filterNode.key]);
   const imodel = dataProvider.imodel;
 
   return (
     <PresentationInstanceFilterDialog
+      {...restProps}
       isOpen={true}
-      onClose={onClose}
-      onApply={onApply}
       imodel={imodel}
       descriptor={filteringInfo.descriptor}
       initialFilter={filteringInfo.active}

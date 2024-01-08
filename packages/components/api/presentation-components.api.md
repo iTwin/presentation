@@ -217,6 +217,16 @@ export type FilterablePresentationTreeNodeItem = PresentationTreeNodeItem & {
 };
 
 // @beta
+export interface FilteringDialogToolbarHandlers {
+    // (undocumented)
+    handleApply: () => void;
+    // (undocumented)
+    handleClose: () => void;
+    // (undocumented)
+    handleReset: () => void;
+}
+
+// @beta
 export interface GenericInstanceFilter {
     filteredClasses?: ClassInfo[];
     propertyClasses: ClassInfo[];
@@ -405,10 +415,12 @@ export interface PresentationInstanceFilterDialogProps {
     imodel: IModelConnection;
     initialFilter?: PresentationInstanceFilterInfo;
     isOpen: boolean;
-    onApply: (filter: PresentationInstanceFilterInfo) => void;
-    onClose: () => void;
+    onApply: (filter?: PresentationInstanceFilterInfo) => void;
+    onClose?: () => void;
+    onReset?: () => void;
     ruleGroupDepthLimit?: number;
     title?: React.ReactNode;
+    toolbarButtonsRenderer?: (toolbarHandlers: FilteringDialogToolbarHandlers) => ReactNode;
 }
 
 // @beta
