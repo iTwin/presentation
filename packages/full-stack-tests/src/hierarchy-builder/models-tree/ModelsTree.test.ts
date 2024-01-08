@@ -4,17 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IModel } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
-import { SchemaContext } from "@itwin/ecschema-metadata";
-import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { InstanceKey } from "@itwin/presentation-common";
-import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import { HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
-import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
-import { TestIModelBuilder } from "@itwin/presentation-testing";
 import {
   buildIModel,
-  importSchema,
   insertPhysicalElement,
   insertPhysicalModelWithPartition,
   insertPhysicalPartition,
@@ -24,6 +16,7 @@ import {
 } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
+import { createModelsTreeProvider, importTestSchema } from "./ModelsTreeTestUtils";
 
 describe("Stateless hierarchy builder", () => {
   describe("Models tree", () => {
@@ -542,30 +535,5 @@ describe("Stateless hierarchy builder", () => {
         ],
       });
     });
-
-    function createModelsTreeProvider(imodel: IModelConnection) {
-      const schemas = new SchemaContext();
-      schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-      const metadataProvider = createMetadataProvider(schemas);
-      return new HierarchyProvider({
-        metadataProvider,
-        queryExecutor: createECSqlQueryExecutor(imodel),
-        hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider }),
-      });
-    }
-
-    async function importTestSchema(mochaContext: Mocha.Context, builder: TestIModelBuilder) {
-      return importSchema(
-        mochaContext,
-        builder,
-        `
-          <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
-          <ECEntityClass typeName="PhysicalObject" displayLabel="Physical Object" modifier="Sealed" description="Similar to generic:PhysicalObject but also sub-modelable.">
-            <BaseClass>bis:PhysicalElement</BaseClass>
-            <BaseClass>bis:ISubModeledElement</BaseClass>
-          </ECEntityClass>
-        `,
-      );
-    }
   });
 });

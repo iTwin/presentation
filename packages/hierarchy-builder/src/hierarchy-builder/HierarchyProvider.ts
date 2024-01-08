@@ -107,7 +107,7 @@ export class HierarchyProvider {
   private _queryExecutor: IECSqlQueryExecutor;
   private _queryReader: TreeQueryResultsReader;
   private _valuesFormatter: IPrimitiveValueFormatter;
-  private _scheduler: QueryScheduler<ParsedHierarchyNode[]>;
+  private _scheduler: QueryScheduler;
   private _nodesCache: ChildNodesCache;
 
   public constructor(props: HierarchyProviderProps) {
@@ -128,6 +128,24 @@ export class HierarchyProvider {
     this._valuesFormatter = props?.formatter ?? createDefaultValueFormatter();
     this._scheduler = new QueryScheduler(QUERY_CONCURRENCY);
     this._nodesCache = new ChildNodesCache();
+  }
+
+  /** @internal */
+  // istanbul ignore next
+  public get queryExecutor() {
+    return this._queryExecutor;
+  }
+
+  /** @internal */
+  // istanbul ignore next
+  public get queryScheduler() {
+    return this._scheduler;
+  }
+
+  /** @internal */
+  // istanbul ignore next
+  public get hierarchyFactory() {
+    return this._hierarchyFactory;
   }
 
   private onGroupingNodeCreated(groupingNode: ProcessedGroupingHierarchyNode, props: GetHierarchyNodesProps) {

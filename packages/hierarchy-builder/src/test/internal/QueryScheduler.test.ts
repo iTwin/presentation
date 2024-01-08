@@ -23,7 +23,7 @@ import { ResolvablePromise } from "../Utils";
 
 describe("QueryScheduler", () => {
   const concurrentSubscriptions = 3;
-  let queryScheduler: QueryScheduler<number>;
+  let queryScheduler: QueryScheduler;
 
   beforeEach(() => {
     queryScheduler = new QueryScheduler(concurrentSubscriptions);

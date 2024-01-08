@@ -122,7 +122,7 @@
       "cwd": "${workspaceFolder}/packages/hierarchy-builder",
       "type": "node",
       "request": "launch",
-      "program": "${workspaceFolder}/packages/testing/node_modules/mocha/bin/_mocha",
+      "program": "${workspaceFolder}/packages/hierarchy-builder/node_modules/mocha/bin/_mocha",
       "args": [
         "--config",
         "./.mocharc.json",
@@ -131,6 +131,25 @@
       ],
       "outFiles": [
         "${workspaceFolder}/packages/hierarchy-builder/lib/**/*.js"
+      ],
+      "env": {
+        "NODE_ENV": "development"
+      }
+    },
+    {
+      "name": "Tests: Core interop",
+      "cwd": "${workspaceFolder}/packages/core-interop",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/packages/core-interop/node_modules/mocha/bin/_mocha",
+      "args": [
+        "--config",
+        "./.mocharc.json",
+        "--no-timeouts",
+        "lib/cjs/test/**/*.test.js"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/packages/core-interop/lib/**/*.js"
       ],
       "env": {
         "NODE_ENV": "development"
@@ -149,7 +168,9 @@
       ],
       "outFiles": [
         "${workspaceFolder}/packages/components/lib/**/*.js",
+        "${workspaceFolder}/packages/core-interop/lib/**/*.js",
         "${workspaceFolder}/packages/hierarchy-builder/lib/**/*.js",
+        "${workspaceFolder}/packages/models-tree/lib/**/*.js",
         "${workspaceFolder}/packages/testing/lib/**/*.js",
         "${workspaceFolder}/packages/full-stack-tests/lib/**/*.js"
       ],

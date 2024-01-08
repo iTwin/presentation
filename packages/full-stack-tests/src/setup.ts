@@ -5,6 +5,7 @@
 
 import * as chai from "chai";
 import chaiJestSnapshot from "chai-jest-snapshot";
+import chaiSubset from "chai-subset";
 import { execFileSync } from "child_process";
 import * as cpx from "cpx2";
 import * as fs from "fs";
@@ -32,6 +33,7 @@ global.ResizeObserver = ResizeObserver;
 // setup chai
 chai.use(chaiJestSnapshot);
 chai.use(sinonChai);
+chai.use(chaiSubset);
 
 before(function () {
   chaiJestSnapshot.resetSnapshotRegistry();

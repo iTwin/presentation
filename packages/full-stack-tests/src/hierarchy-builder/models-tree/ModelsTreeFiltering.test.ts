@@ -11,11 +11,10 @@ import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { InstanceKey } from "@itwin/presentation-common";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
+import { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { buildTestIModel, TestIModelBuilder } from "@itwin/presentation-testing";
 import {
-  importSchema,
   insertPhysicalElement,
   insertPhysicalModelWithPartition,
   insertPhysicalPartition,
@@ -25,6 +24,7 @@ import {
 } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { ExpectedHierarchyDef, NodeValidators, validateHierarchy } from "../HierarchyValidation";
+import { createModelsTreeProvider, importTestSchema } from "./ModelsTreeTestUtils";
 
 interface TreeFilteringTestCaseDefinition<TIModelSetupResult> {
   name: string;
@@ -718,7 +718,7 @@ describe("Stateless hierarchy builder", () => {
 
         it("filters hierarchy by instance key paths", async function () {
           await validateHierarchy({
-            provider: await createFilteredModelsTreeProvider(imodel, instanceKeyPaths),
+            provider: createModelsTreeProvider(imodel, instanceKeyPaths),
             expect: expectedHierarchy,
           });
         });
@@ -754,32 +754,6 @@ describe("Stateless hierarchy builder", () => {
         });
       });
     });
-
-    async function createFilteredModelsTreeProvider(imodel: IModelConnection, nodePaths: HierarchyNodeIdentifiersPath[]) {
-      const schemas = new SchemaContext();
-      schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-      const metadataProvider = createMetadataProvider(schemas);
-      return new HierarchyProvider({
-        metadataProvider,
-        queryExecutor: createECSqlQueryExecutor(imodel),
-        hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider }),
-        filtering: { paths: nodePaths },
-      });
-    }
-
-    async function importTestSchema(mochaContext: Mocha.Context, builder: TestIModelBuilder) {
-      return importSchema(
-        mochaContext,
-        builder,
-        `
-          <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
-          <ECEntityClass typeName="PhysicalObject" displayLabel="Physical Object" modifier="Sealed" description="Similar to generic:PhysicalObject but also sub-modelable.">
-            <BaseClass>bis:PhysicalElement</BaseClass>
-            <BaseClass>bis:ISubModeledElement</BaseClass>
-          </ECEntityClass>
-        `,
-      );
-    }
 
     function insertModelWithElements(builder: TestIModelBuilder, modelNo: number, elementsCategoryId: Id64String, parentId?: Id64String) {
       const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: `model-${modelNo}`, partitionParentId: parentId });

@@ -198,7 +198,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
           ctes,
           ecsql: `
             SELECT
-            ${selectColumnNames}, ParentId
+              ${selectColumnNames}, ParentId
             FROM child_subjects this
             ${subjectFilterClauses.joins}
             WHERE
@@ -369,9 +369,15 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
     instanceFilter,
   }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
     const modelIds: Id64String[] =
-      parentNode.extendedData && parentNode.extendedData.hasOwnProperty("modelIds")
-        ? (parentNode.extendedData.modelIds as Array<Array<Id64String>>).reduce((arr, ids) => [...arr, ...ids])
+      parentNode.extendedData && parentNode.extendedData.hasOwnProperty("modelIds") && Array.isArray(parentNode.extendedData.modelIds)
+        ? parentNode.extendedData.modelIds.reduce(
+            (arr, ids: Id64String | Id64String[]) => [...arr, ...(Array.isArray(ids) ? ids : [ids])],
+            new Array<Id64String>(),
+          )
         : [];
+    if (modelIds.length === 0) {
+      throw new Error(`Invalid category node "${parentNode.label}" - missing model information.`);
+    }
     const instanceFilterClauses = await this._selectQueryFactory.createFilterClauses(instanceFilter, { fullName: "BisCore.GeometricElement3d", alias: "this" });
     return [
       {

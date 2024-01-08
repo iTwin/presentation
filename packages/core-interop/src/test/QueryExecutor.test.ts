@@ -9,6 +9,7 @@ import { QueryBinder, QueryOptions, QueryRowFormat } from "@itwin/core-common";
 import { Point2d, Point3d } from "@itwin/core-geometry";
 import { ECSqlBinding } from "@itwin/presentation-hierarchy-builder";
 import { createECSqlQueryExecutor, IECSqlReaderFactory } from "../core-interop/QueryExecutor";
+import { createECSqlReaderStub } from "./Utils";
 
 describe("createECSqlQueryExecutor", () => {
   describe("createQueryReader", () => {
@@ -154,16 +155,3 @@ describe("createECSqlQueryExecutor", () => {
     });
   });
 });
-
-function createECSqlReaderStub(rows: object[]) {
-  let curr = -1;
-  return {
-    step: sinon.fake(async () => {
-      ++curr;
-      return curr < rows.length;
-    }),
-    get current() {
-      return rows[curr];
-    },
-  };
-}

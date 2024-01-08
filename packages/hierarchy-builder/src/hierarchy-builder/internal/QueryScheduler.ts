@@ -22,8 +22,8 @@ import {
 } from "rxjs";
 
 /** @internal */
-export class QueryScheduler<T> {
-  private _scheduler = new Subject<Connectable<T>>();
+export class QueryScheduler {
+  private _scheduler = new Subject<Connectable<unknown>>();
   constructor(concurrency: number) {
     this._scheduler
       .pipe(
@@ -57,7 +57,7 @@ export class QueryScheduler<T> {
    * @param source Input observable for which to schedule a subscription.
    * @returns Hot observable which starts emitting `source` values after subscription.
    */
-  public scheduleSubscription(source: Observable<T>): Observable<T> {
+  public scheduleSubscription<T>(source: Observable<T>): Observable<T> {
     return defer(() => {
       let unsubscribed = false;
       const connectableObservable = connectable(
