@@ -19,7 +19,7 @@ import { ClassInfo, Descriptor, Keys } from "@itwin/presentation-common";
 import { translate } from "../common/Utils";
 import { getIModelMetadataProvider } from "./ECMetadataProvider";
 import { PresentationFilterBuilderValueRenderer, PresentationInstanceFilterPropertyInfo, useInstanceFilterPropertyInfos } from "./PresentationFilterBuilder";
-import { isFilterNonEmpty } from "./PresentationInstanceFilterDialog";
+import { isFilterNonEmpty } from "./Utils";
 
 /**
  * Props for [[InstanceFilterBuilder]] component.
