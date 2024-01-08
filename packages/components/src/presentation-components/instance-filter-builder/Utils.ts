@@ -12,6 +12,7 @@ import {
   defaultPropertyFilterBuilderRuleValidator,
   isUnaryPropertyFilterOperator,
   PropertyFilterBuilderRule,
+  PropertyFilterBuilderRuleGroup,
   PropertyFilterRuleOperator,
 } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -118,6 +119,11 @@ export function createPropertyInfoFromPropertiesField(field: PropertiesField): P
     categoryLabel: categoryInfo.label,
     className: getPropertyClassInfo(field).name,
   };
+}
+
+/** @internal */
+export function isFilterNonEmpty(rootGroup: PropertyFilterBuilderRuleGroup) {
+  return rootGroup.items.length > 1 || (rootGroup.items.length === 1 && rootGroup.items[0].operator !== undefined);
 }
 
 /** @internal */

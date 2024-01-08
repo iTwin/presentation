@@ -9,7 +9,7 @@
 import "./PresentationInstanceFilterDialog.scss";
 import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { BuildFilterOptions, PropertyFilterBuilderRuleGroup, usePropertyFilterBuilder } from "@itwin/components-react";
+import { BuildFilterOptions, usePropertyFilterBuilder } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { SvgError } from "@itwin/itwinui-illustrations-react";
 import { Button, Dialog, NonIdealState, ProgressRadial } from "@itwin/itwinui-react";
@@ -17,7 +17,7 @@ import { Descriptor, Keys } from "@itwin/presentation-common";
 import { translate, useDelay } from "../common/Utils";
 import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder";
 import { PresentationInstanceFilter, PresentationInstanceFilterInfo } from "./PresentationFilterBuilder";
-import { filterRuleValidator } from "./Utils";
+import { filterRuleValidator, isFilterNonEmpty } from "./Utils";
 
 /**
  * Props for [[PresentationInstanceFilterDialog]] component.
@@ -195,6 +195,11 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
     onReset && onReset();
   };
 
+  const onSelectedClassesChanged = (classIds: string[]) => {
+    filteringProps.onSelectedClassesChanged(classIds);
+    actions.removeAllItems();
+  };
+
   const throwError = useThrowError();
   const handleApply = () => {
     try {
@@ -219,6 +224,7 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
       <Dialog.Content className="presentation-instance-filter-content">
         <InstanceFilterBuilder
           {...filteringProps}
+          onSelectedClassesChanged={onSelectedClassesChanged}
           rootGroup={rootGroup}
           actions={actions}
           ruleGroupDepthLimit={ruleGroupDepthLimit}
@@ -255,10 +261,6 @@ function ToolbarButtonsRenderer({ handleApply, handleClose, handleReset }: Filte
       </Button>
     </>
   );
-}
-
-function isFilterNonEmpty(rootGroup: PropertyFilterBuilderRuleGroup) {
-  return rootGroup.items.length > 1 || (rootGroup.items.length === 1 && rootGroup.items[0].operator !== undefined);
 }
 
 interface ResultsRendererProps {

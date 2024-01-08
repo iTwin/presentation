@@ -14,11 +14,12 @@ import { switchAll } from "rxjs/internal/operators/switchAll";
 import { PropertyDescription } from "@itwin/appui-abstract";
 import { PropertyFilterBuilderRenderer, PropertyFilterBuilderRendererProps, PropertyFilterBuilderRuleValueRendererProps } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ComboBox, SelectOption } from "@itwin/itwinui-react";
+import { Alert, ComboBox, SelectOption } from "@itwin/itwinui-react";
 import { ClassInfo, Descriptor, Keys } from "@itwin/presentation-common";
 import { translate } from "../common/Utils";
 import { getIModelMetadataProvider } from "./ECMetadataProvider";
 import { PresentationFilterBuilderValueRenderer, PresentationInstanceFilterPropertyInfo, useInstanceFilterPropertyInfos } from "./PresentationFilterBuilder";
+import { isFilterNonEmpty } from "./Utils";
 
 /**
  * Props for [[InstanceFilterBuilder]] component.
@@ -47,34 +48,44 @@ export interface InstanceFilterBuilderProps extends PropertyFilterBuilderRendere
 export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
   const { selectedClasses, classes, onSelectedClassesChanged, imodel, descriptor, descriptorInputKeys, ...restProps } = props;
 
+  const [showClassSelectionWarning, setShowClassSelectionWarning] = useState(false);
   const options = useMemo(() => classes.map(createOption), [classes]);
   const selectedOptions = useMemo(() => selectedClasses.map((classInfo) => classInfo.id), [selectedClasses]);
 
   return (
-    <div className="presentation-instance-filter">
-      <ComboBox
-        enableVirtualization={true}
-        multiple={true}
-        options={options}
-        value={selectedOptions}
-        inputProps={{
-          placeholder: selectedClasses.length
-            ? translate("instance-filter-builder.selected-classes")
-            : translate("instance-filter-builder.select-classes-optional"),
-        }}
-        onChange={(selectedIds) => {
-          onSelectedClassesChanged(selectedIds);
-        }}
-      />
-      <div className="presentation-property-filter-builder">
-        <PropertyFilterBuilderRenderer
-          {...restProps}
-          ruleValueRenderer={(rendererProps: PropertyFilterBuilderRuleValueRendererProps) => (
-            <PresentationFilterBuilderValueRenderer {...rendererProps} descriptorInputKeys={descriptorInputKeys} imodel={imodel} descriptor={descriptor} />
-          )}
+    <>
+      {showClassSelectionWarning && (
+        <Alert type="warning" className="class-selection-warning">
+          {translate("instance-filter-builder.class-selection-warning")}
+        </Alert>
+      )}
+      <div className="presentation-instance-filter">
+        <ComboBox
+          enableVirtualization={true}
+          multiple={true}
+          options={options}
+          value={selectedOptions}
+          inputProps={{
+            placeholder: selectedClasses.length
+              ? translate("instance-filter-builder.selected-classes")
+              : translate("instance-filter-builder.select-classes-optional"),
+          }}
+          onShow={() => setShowClassSelectionWarning(!!selectedOptions.length && isFilterNonEmpty(props.rootGroup))}
+          onHide={() => setShowClassSelectionWarning(false)}
+          onChange={(selectedIds) => {
+            onSelectedClassesChanged(selectedIds);
+          }}
         />
+        <div className="presentation-property-filter-builder">
+          <PropertyFilterBuilderRenderer
+            {...restProps}
+            ruleValueRenderer={(rendererProps: PropertyFilterBuilderRuleValueRendererProps) => (
+              <PresentationFilterBuilderValueRenderer {...rendererProps} descriptorInputKeys={descriptorInputKeys} imodel={imodel} descriptor={descriptor} />
+            )}
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
