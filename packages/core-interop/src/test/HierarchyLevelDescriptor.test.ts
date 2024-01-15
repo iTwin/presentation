@@ -5,12 +5,57 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { ContentDescriptorRequestOptions, ContentRule, DefaultContentDisplayTypes, Descriptor, KeySet, Ruleset } from "@itwin/presentation-common";
+import {
+  ContentDescriptorRequestOptions,
+  ContentRule,
+  DefaultContentDisplayTypes,
+  Descriptor,
+  DescriptorSource,
+  KeySet,
+  Ruleset,
+} from "@itwin/presentation-common";
 import { DefineHierarchyLevelProps, HierarchyNode, HierarchyProvider, InstanceKey, InstancesNodeKey } from "@itwin/presentation-hierarchy-builder";
 import { createHierarchyLevelDescriptor } from "../core-interop/HierarchyLevelDescriptor";
 import { createECSqlReaderStub } from "./Utils";
 
 describe("createHierarchyLevelDescriptor", () => {
+  it("returns `undefined` from descriptor builder", async () => {
+    const hierarchyDefinition = {
+      defineHierarchyLevel: sinon.stub().resolves([]),
+    };
+    const imodel = {
+      createQueryReader: sinon.stub(),
+    };
+    const hierarchyProvider = new HierarchyProvider({
+      metadataProvider: {
+        getSchema: async (_schemaName) => undefined,
+      },
+      queryExecutor: imodel,
+      hierarchyDefinition,
+    });
+    const descriptorBuilder = {
+      getContentDescriptor: sinon.stub().resolves(undefined),
+    };
+    const descriptor = await createHierarchyLevelDescriptor({
+      imodel: imodel as any,
+      hierarchyProvider,
+      descriptorBuilder,
+      parentNode: undefined,
+    });
+    expect(hierarchyDefinition.defineHierarchyLevel).to.be.calledOnceWith(
+      sinon.match((props: DefineHierarchyLevelProps) => {
+        return props.parentNode === undefined;
+      }),
+    );
+    expect(imodel.createQueryReader).to.not.be.called;
+    expect(descriptorBuilder.getContentDescriptor).to.be.calledOnceWith(
+      sinon.match((props: ContentDescriptorRequestOptions<any, KeySet, any>) => {
+        return props.keys.isEmpty;
+      }),
+    );
+    expect(descriptor).to.be.undefined;
+  });
+
   it("requests descriptor for hierarchy level instances", async () => {
     const hierarchyDefinition = {
       defineHierarchyLevel: sinon.stub().resolves([
@@ -46,7 +91,7 @@ describe("createHierarchyLevelDescriptor", () => {
       queryExecutor: imodel,
       hierarchyDefinition,
     });
-    const descriptorResponse = {} as unknown as Descriptor;
+    const descriptorResponse = createTestDescriptorSource() as Descriptor;
     const descriptorBuilder = {
       getContentDescriptor: sinon.stub().resolves(descriptorResponse),
     };
@@ -78,8 +123,9 @@ describe("createHierarchyLevelDescriptor", () => {
           props.displayType === DefaultContentDisplayTypes.PropertyPane
         );
       }),
-    ),
-      expect(descriptor).to.eq(descriptorResponse);
+    );
+    expect(descriptor).to.be.instanceOf(Descriptor);
+    expect(descriptor?.ruleset).to.eq(descriptorBuilder.getContentDescriptor.firstCall.args[0].rulesetOrId);
   });
 
   it("requests descriptor for hierarchy level instances with hidden intermediate hierarchy levels", async () => {
@@ -123,7 +169,7 @@ describe("createHierarchyLevelDescriptor", () => {
       queryExecutor: imodel,
       hierarchyDefinition,
     });
-    const descriptorResponse = {} as unknown as Descriptor;
+    const descriptorResponse = createTestDescriptorSource() as Descriptor;
     const descriptorBuilder = {
       getContentDescriptor: sinon.stub().resolves(descriptorResponse),
     };
@@ -158,7 +204,8 @@ describe("createHierarchyLevelDescriptor", () => {
         );
       }),
     );
-    expect(descriptor).to.eq(descriptorResponse);
+    expect(descriptor).to.be.instanceOf(Descriptor);
+    expect(descriptor?.ruleset).to.eq(descriptorBuilder.getContentDescriptor.firstCall.args[0].rulesetOrId);
   });
 
   it("merges instance keys of hidden hierarchy levels by class when requesting child instance keys", async () => {
@@ -209,7 +256,7 @@ describe("createHierarchyLevelDescriptor", () => {
       queryExecutor: imodel,
       hierarchyDefinition,
     });
-    const descriptorResponse = {} as unknown as Descriptor;
+    const descriptorResponse = createTestDescriptorSource() as Descriptor;
     const descriptorBuilder = {
       getContentDescriptor: sinon.stub().resolves(descriptorResponse),
     };
@@ -260,6 +307,17 @@ describe("createHierarchyLevelDescriptor", () => {
         );
       }),
     );
-    expect(descriptor).to.eq(descriptorResponse);
+    expect(descriptor).to.be.instanceOf(Descriptor);
+    expect(descriptor?.ruleset).to.eq(descriptorBuilder.getContentDescriptor.firstCall.args[0].rulesetOrId);
   });
 });
+
+function createTestDescriptorSource(): DescriptorSource {
+  return {
+    displayType: "",
+    categories: [],
+    contentFlags: 0,
+    fields: [],
+    selectClasses: [],
+  };
+}

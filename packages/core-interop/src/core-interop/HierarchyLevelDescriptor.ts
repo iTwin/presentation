@@ -67,13 +67,7 @@ export async function createHierarchyLevelDescriptor<TIModel extends ICoreECSqlR
     keys,
     displayType: DefaultContentDisplayTypes.PropertyPane,
   });
-
-  // FIXME:
-  // if (descriptor) {
-  //   descriptor.ruleset = ruleset;
-  // }
-
-  return descriptor;
+  return descriptor ? new Descriptor({ ...descriptor, ruleset }) : undefined;
 }
 
 function recursivelyGetInstanceKeys(
