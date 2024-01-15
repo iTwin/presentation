@@ -158,13 +158,13 @@ describe("HierarchyProvider", () => {
 
       queryExecutor.createQueryReader.onThirdCall().returns(createFakeQueryReader([]));
 
-      provider.queryScheduler.schedule("1").next();
+      void provider.queryScheduler.schedule("1").next();
       await waitFor(() => expect(queryExecutor.createQueryReader).to.be.calledOnce);
 
-      provider.queryScheduler.schedule("2").next();
+      void provider.queryScheduler.schedule("2").next();
       await waitFor(() => expect(queryExecutor.createQueryReader).to.be.calledTwice);
 
-      provider.queryScheduler.schedule("3").next();
+      void provider.queryScheduler.schedule("3").next();
       // not called for the third time until one of the first queries complete
       await waitFor(() => expect(queryExecutor.createQueryReader).to.be.calledTwice, 100);
 
