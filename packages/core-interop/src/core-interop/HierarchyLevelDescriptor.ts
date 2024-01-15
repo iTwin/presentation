@@ -11,19 +11,18 @@ import {
   HierarchyNodesDefinition,
   HierarchyProvider,
   Id64String,
-  IECSqlQueryExecutor,
   InstanceKey,
   InstanceNodesQueryDefinition,
   InstancesNodeKey,
   NodeSelectClauseColumnNames,
 } from "@itwin/presentation-hierarchy-builder";
-import { IECSqlReaderFactory } from "./QueryExecutor";
+import { ICoreECSqlReaderFactory } from "./QueryExecutor";
 
 /**
  * Props for [[createHierarchyLevelDescriptor]].
  * @beta
  */
-export interface CreateHierarchyLevelDescriptorProps<TIModel> {
+export interface CreateHierarchyLevelDescriptorProps<TIModel extends ICoreECSqlReaderFactory> {
   imodel: TIModel;
   parentNode: (Omit<HierarchyNode, "children"> & { key: InstancesNodeKey | string }) | undefined;
   hierarchyProvider: HierarchyProvider;
@@ -41,7 +40,7 @@ export interface CreateHierarchyLevelDescriptorProps<TIModel> {
  *
  * @beta
  */
-export async function createHierarchyLevelDescriptor<TIModel extends IECSqlReaderFactory>(
+export async function createHierarchyLevelDescriptor<TIModel extends ICoreECSqlReaderFactory>(
   props: CreateHierarchyLevelDescriptorProps<TIModel>,
 ): Promise<Descriptor | undefined> {
   // convert instance keys stream into a KeySet
@@ -82,7 +81,7 @@ function recursivelyGetInstanceKeys(
   hierarchyProvider: HierarchyProvider,
 ): Observable<InstanceKey> {
   // stream hierarchy level definitions
-  const definitions: Observable<InstanceNodesQueryDefinition> = from(hierarchyProvider.hierarchyFactory.defineHierarchyLevel({ parentNode })).pipe(
+  const definitions: Observable<InstanceNodesQueryDefinition> = from(hierarchyProvider.hierarchyDefinition.defineHierarchyLevel({ parentNode })).pipe(
     mergeAll(),
     filter((def): def is InstanceNodesQueryDefinition => HierarchyNodesDefinition.isInstanceNodesQuery(def)),
   );
@@ -90,7 +89,7 @@ function recursivelyGetInstanceKeys(
   const [visible, hidden] = partition(
     // pipe definitions to instance keys
     definitions.pipe(
-      mergeMap((def) => hierarchyProvider.queryScheduler.scheduleSubscription(readInstanceKeys(hierarchyProvider.queryExecutor, def.query))),
+      mergeMap((def) => readInstanceKeys(hierarchyProvider, def.query)),
       shareReplay(),
     ),
     ({ hide }) => !hide,
@@ -135,7 +134,7 @@ function addToMergeMap(list: InstanceClassMergeMap, key: InstanceKey) {
   ids.push(key.id);
 }
 
-function readInstanceKeys(executor: IECSqlQueryExecutor, nodesQuery: ECSqlQueryDef): Observable<{ key: InstanceKey; hide: boolean }> {
+function readInstanceKeys(hierarchyProvider: HierarchyProvider, nodesQuery: ECSqlQueryDef): Observable<{ key: InstanceKey; hide: boolean }> {
   const ecsql = `
     ${/* istanbul ignore next */ nodesQuery.ctes?.length ? `WITH RECURSIVE ${nodesQuery.ctes.join(", ")}` : ``}
     SELECT ${NodeSelectClauseColumnNames.FullClassName}, ${NodeSelectClauseColumnNames.ECInstanceId}, ${NodeSelectClauseColumnNames.HideNodeInHierarchy}
@@ -143,8 +142,7 @@ function readInstanceKeys(executor: IECSqlQueryExecutor, nodesQuery: ECSqlQueryD
       ${nodesQuery.ecsql}
     )
   `;
-  const reader = executor.createQueryReader(ecsql, nodesQuery.bindings, { rowFormat: "Indexes" });
-  return from(reader).pipe(
+  return from(hierarchyProvider.queryScheduler.schedule(ecsql, nodesQuery.bindings, { rowFormat: "Indexes" })).pipe(
     map((row) => ({
       key: {
         className: row[0],

@@ -88,7 +88,6 @@ export interface ECSqlQueryReaderOptions {
  * @beta
  */
 export interface ECSqlQueryRow {
-  toRow(): any;
   [propertyName: string]: any;
   [propertyIndex: number]: any;
 }

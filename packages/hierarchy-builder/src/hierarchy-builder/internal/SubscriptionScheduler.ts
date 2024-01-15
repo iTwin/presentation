@@ -22,7 +22,7 @@ import {
 } from "rxjs";
 
 /** @internal */
-export class QueryScheduler {
+export class SubscriptionScheduler {
   private _scheduler = new Subject<Connectable<unknown>>();
   constructor(concurrency: number) {
     this._scheduler

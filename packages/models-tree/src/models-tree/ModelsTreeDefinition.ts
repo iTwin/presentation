@@ -734,7 +734,7 @@ async function createInstanceKeyPathsFromInstanceKeys(props: ModelsTreeInstanceK
   const reader = props.queryExecutor.createQueryReader(ecsql, bindings, { rowFormat: "Indexes" });
   const paths = new Array<HierarchyNodeIdentifiersPath>();
   for await (const row of reader) {
-    paths.push(flatten<InstanceKey>(JSON.parse(row.toArray()[0])).reverse());
+    paths.push(flatten<InstanceKey>(JSON.parse(row[0])).reverse());
   }
   return paths;
 }
@@ -790,7 +790,7 @@ async function createInstanceKeyPathsFromInstanceLabel(
   const reader = props.queryExecutor.createQueryReader(ecsql, [{ type: "string", value: props.label }], { rowFormat: "Indexes" });
   const paths = new Array<HierarchyNodeIdentifiersPath>();
   for await (const row of reader) {
-    paths.push(flatten<InstanceKey>(JSON.parse(row.toArray()[0])).reverse());
+    paths.push(flatten<InstanceKey>(JSON.parse(row[0])).reverse());
   }
   return paths;
 }

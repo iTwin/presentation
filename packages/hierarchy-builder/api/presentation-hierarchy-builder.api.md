@@ -355,8 +355,6 @@ export interface ECSqlQueryRow {
     [propertyName: string]: any;
     // (undocumented)
     [propertyIndex: number]: any;
-    // (undocumented)
-    toRow(): any;
 }
 
 // @beta
@@ -721,6 +719,12 @@ export class HierarchyProvider {
     constructor(props: HierarchyProviderProps);
     // (undocumented)
     getNodes(props: GetHierarchyNodesProps): Promise<HierarchyNode[]>;
+    readonly hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
+    readonly queryExecutor: IECSqlQueryExecutor;
+    // @internal (undocumented)
+    get queryScheduler(): {
+        schedule: (ecsql: string, bindings?: ECSqlBinding[], options?: ECSqlQueryReaderOptions) => AsyncIterableIterator<ECSqlQueryRow>;
+    };
 }
 
 // @beta
@@ -731,6 +735,7 @@ export interface HierarchyProviderProps {
     formatter?: IPrimitiveValueFormatter;
     hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
     metadataProvider: IMetadataProvider;
+    queryConcurrency?: number;
     queryExecutor: IECSqlQueryExecutor;
 }
 
