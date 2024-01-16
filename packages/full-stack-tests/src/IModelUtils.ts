@@ -6,7 +6,9 @@
 import { XMLParser } from "fast-xml-parser";
 import * as fs from "fs";
 import hash from "object-hash";
-import { ECDb, ECSqlStatement } from "@itwin/core-backend";
+import { tmpdir } from "os";
+import path from "path";
+import { ECDb, ECSqlStatement, IModelJsFs } from "@itwin/core-backend";
 import { BentleyError, DbResult, Id64, Id64String, OrderedId64Iterable } from "@itwin/core-bentley";
 import {
   BisCodeSpec,
@@ -19,6 +21,7 @@ import {
   GeometricModel3dProps,
   IModel,
   InformationPartitionElementProps,
+  LocalFileName,
   PhysicalElementProps,
   RepositoryLinkProps,
   SubCategoryProps,
@@ -27,7 +30,7 @@ import {
 import { IModelConnection } from "@itwin/core-frontend";
 import { ECSqlBinding, parseFullClassName, Point2d, Point3d, PrimitiveValue } from "@itwin/presentation-hierarchy-builder";
 import { buildTestIModel, TestIModelBuilder } from "@itwin/presentation-testing";
-import { createFileNameFromString, setupOutputFileLocation } from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils";
+import { createFileNameFromString } from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils";
 
 function isBinding(value: ECSqlBinding | PrimitiveValue): value is ECSqlBinding {
   return typeof value === "object" && (value as ECSqlBinding).type !== undefined && (value as ECSqlBinding).value !== undefined;
@@ -525,4 +528,28 @@ export function insertExternalSourceAspect(
   } as ExternalSourceAspectProps);
 
   return { className, id };
+}
+
+const defaultTestOutputDir = tmpdir();
+export function setupOutputFileLocation(fileName: string): LocalFileName {
+  const testOutputDir = path.join(defaultTestOutputDir, ".imodels");
+  !IModelJsFs.existsSync(testOutputDir) && IModelJsFs.mkdirSync(testOutputDir);
+
+  const ext = ".bim";
+  let allowedFileNameLength: number | undefined;
+  if (process.platform === "win32") {
+    allowedFileNameLength = 260 - 12 - 1 - ext.length - (testOutputDir.length + 1);
+  }
+  if (allowedFileNameLength) {
+    if (allowedFileNameLength <= 0) {
+      throw new Error("Trying to create an iModel too deep in the directory structure, file name is going to be too long");
+    }
+
+    const pieceLength = (allowedFileNameLength - 3) / 2;
+    fileName = `${fileName.slice(0, pieceLength)}...${fileName.slice(fileName.length - pieceLength)}`;
+  }
+  const outputFilePath = path.join(testOutputDir, `${fileName}${ext}`);
+
+  IModelJsFs.existsSync(outputFilePath) && IModelJsFs.unlinkSync(outputFilePath);
+  return outputFilePath;
 }
