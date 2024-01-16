@@ -48,7 +48,7 @@ export class ECDbBuilder {
   public importSchema(schemaXml: string) {
     // sadly, there's no API to import schema from string, so we have to save the XML into a file first...
     // eslint-disable-next-line @itwin/no-internal
-    const schemaFilePath = `${this._ecdb.nativeDb.getFilePath()}-${hash(schemaXml)}`;
+    const schemaFilePath = limitFilePathLength(`${this._ecdb.nativeDb.getFilePath()}-${hash(schemaXml)}`);
     fs.writeFileSync(schemaFilePath, schemaXml);
     this._ecdb.importSchema(schemaFilePath);
   }
@@ -530,26 +530,28 @@ export function insertExternalSourceAspect(
   return { className, id };
 }
 
+function limitFilePathLength(filePath: string) {
+  const { dir, name, ext } = path.parse(filePath);
+
+  const allowedFileNameLength = 260 - 12 - 1 - (dir.length + 1) - ext.length;
+  if (allowedFileNameLength <= 0) {
+    throw new Error(`File path "${filePath}" is too long.`);
+  }
+  if (name.length < allowedFileNameLength) {
+    return filePath;
+  }
+
+  const pieceLength = (allowedFileNameLength - 3) / 2;
+  const shortenedName = `${name.slice(0, pieceLength)}...${name.slice(name.length - pieceLength)}`;
+  return path.join(dir, `${shortenedName}${ext}`);
+}
+
 const defaultTestOutputDir = tmpdir();
 export function setupOutputFileLocation(fileName: string): LocalFileName {
   const testOutputDir = path.join(defaultTestOutputDir, ".imodels");
   !IModelJsFs.existsSync(testOutputDir) && IModelJsFs.mkdirSync(testOutputDir);
 
-  const ext = ".bim";
-  let allowedFileNameLength: number | undefined;
-  if (process.platform === "win32") {
-    allowedFileNameLength = 260 - 12 - 1 - ext.length - (testOutputDir.length + 1);
-  }
-  if (allowedFileNameLength) {
-    if (allowedFileNameLength <= 0) {
-      throw new Error("Trying to create an iModel too deep in the directory structure, file name is going to be too long");
-    }
-
-    const pieceLength = (allowedFileNameLength - 3) / 2;
-    fileName = `${fileName.slice(0, pieceLength)}...${fileName.slice(fileName.length - pieceLength)}`;
-  }
-  const outputFilePath = path.join(testOutputDir, `${fileName}${ext}`);
-
+  const outputFilePath = limitFilePathLength(path.join(testOutputDir, `${fileName}.bim`));
   IModelJsFs.existsSync(outputFilePath) && IModelJsFs.unlinkSync(outputFilePath);
   return outputFilePath;
 }
