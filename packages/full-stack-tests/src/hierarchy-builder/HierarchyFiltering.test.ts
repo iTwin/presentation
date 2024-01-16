@@ -431,7 +431,7 @@ describe("Stateless hierarchy builder", () => {
         });
       });
 
-      it("doesn't return hidden instance node when targeting both the node and its parent, when parent has visible children", async function () {
+      it("doesn't return hidden instance node when targeting both the node and its parent, when parent has visible children from other hierarchy level definitions", async function () {
         await withECDb(
           this,
           async (db) => {
@@ -514,6 +514,88 @@ describe("Stateless hierarchy builder", () => {
                   children: [
                     NodeValidators.createForInstanceNode({
                       instanceKeys: [z],
+                      autoExpand: false,
+                      children: false,
+                    }),
+                  ],
+                }),
+              ],
+            });
+          },
+        );
+      });
+
+      it("doesn't return hidden instance node when targeting both the node and its parent, when parent has visible children from the same hierarchy level definition", async function () {
+        await withECDb(
+          this,
+          async (db) => {
+            const schema = importSchema(
+              this,
+              db,
+              `
+                <ECEntityClass typeName="X" />
+                <ECEntityClass typeName="Y">
+                  <ECProperty propertyName="IsHidden" typeName="boolean" />
+                </ECEntityClass>
+              `,
+            );
+            const x = db.insertInstance(schema.items.X.fullName);
+            const y1 = db.insertInstance(schema.items.Y.fullName, { isHidden: true });
+            const y2 = db.insertInstance(schema.items.Y.fullName, { isHidden: false });
+            return { schema, x, y1, y2 };
+          },
+          async (imodel, { schema, x, y1, y2 }) => {
+            const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+            const hierarchy: IHierarchyLevelDefinitionsFactory = {
+              async defineHierarchyLevel({ parentNode }) {
+                if (!parentNode) {
+                  return [
+                    {
+                      fullClassName: schema.items.X.fullName,
+                      query: {
+                        ecsql: `
+                          SELECT ${await selectQueryFactory.createSelectClause({
+                            ecClassId: { selector: `this.ECClassId` },
+                            ecInstanceId: { selector: `this.ECInstanceId` },
+                            nodeLabel: "x",
+                          })}
+                          FROM ${schema.items.X.fullName} AS this
+                        `,
+                      },
+                    },
+                  ];
+                }
+                if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "x") {
+                  return [
+                    {
+                      fullClassName: schema.items.Y.fullName,
+                      query: {
+                        ecsql: `
+                          SELECT ${await selectQueryFactory.createSelectClause({
+                            ecClassId: { selector: `this.ECClassId` },
+                            ecInstanceId: { selector: `this.ECInstanceId` },
+                            nodeLabel: "y",
+                            hideNodeInHierarchy: { selector: `this.IsHidden` },
+                          })}
+                          FROM ${schema.items.Y.fullName} AS this
+                        `,
+                      },
+                    },
+                  ];
+                }
+                return [];
+              },
+            };
+
+            await validateHierarchy({
+              provider: createProvider({ imodel, hierarchy, filteredNodePaths: [[x], [x, y1]] }),
+              expect: [
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [x],
+                  autoExpand: true,
+                  children: [
+                    NodeValidators.createForInstanceNode({
+                      instanceKeys: [y2],
                       autoExpand: false,
                       children: false,
                     }),

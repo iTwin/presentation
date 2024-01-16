@@ -102,7 +102,7 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
         if (HierarchyNodesDefinition.isCustomNode(definition)) {
           matchedDefinition = await matchFilters<{ key: string }>(
             definition,
-            filteredNodePaths,
+            { filteredNodePaths, isParentFilterTarget },
             async (id) => {
               if (!HierarchyNodeIdentifier.isCustomNodeIdentifier(id)) {
                 return false;
@@ -124,7 +124,7 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
           const queryClass = await getClass(this._metadataProvider, definition.fullClassName);
           matchedDefinition = await matchFilters<InstanceKey>(
             definition,
-            filteredNodePaths,
+            { filteredNodePaths, isParentFilterTarget },
             async (id) => {
               if (!HierarchyNodeIdentifier.isInstanceNodeIdentifier(id)) {
                 return false;
@@ -132,16 +132,11 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
               const pathClass = await getClass(this._metadataProvider, id.className);
               return pathClass.is(queryClass);
             },
-            (def, matchingFilters, isFilterTarget) => applyECInstanceIdsFilter(def, matchingFilters, isFilterTarget),
+            (def, matchingFilters, isFilterTarget) => applyECInstanceIdsFilter(def, matchingFilters, isFilterTarget, !!isParentFilterTarget),
           );
         }
         if (matchedDefinition) {
           filteredDefinitions.push(matchedDefinition);
-        } else if (isParentFilterTarget) {
-          // Note: in case parent node is a filter target, we want to return all its definitions, but the ones that match
-          // children filters should still be adjusted to account for those filters. The ones that don't match any children
-          // filter should be added as-is.
-          filteredDefinitions.push(definition);
         }
       }),
     );
@@ -161,7 +156,7 @@ async function matchFilters<
   TDefinition = TIdentifier extends InstanceKey ? InstanceNodesQueryDefinition : CustomHierarchyNodeDefinition,
 >(
   definition: TDefinition,
-  filterPaths: HierarchyNodeIdentifiersPath[],
+  filteringProps: { filteredNodePaths: HierarchyNodeIdentifiersPath[]; isParentFilterTarget?: boolean },
   predicate: (id: HierarchyNodeIdentifier) => Promise<boolean>,
   matchedDefinitionProcessor: (
     def: TDefinition,
@@ -169,20 +164,24 @@ async function matchFilters<
     isFilterTarget: boolean,
   ) => TDefinition,
 ): Promise<TDefinition | undefined> {
+  const { filteredNodePaths, isParentFilterTarget } = filteringProps;
   let isFilterTarget = false;
   const matchingFilters: Array<{ id: TIdentifier; childrenIdentifierPaths: HierarchyNodeIdentifiersPath[] }> = [];
-  for (const path of filterPaths) {
+  for (const path of filteredNodePaths) {
     if (path.length === 0) {
       continue;
     }
     const nodeId = path[0];
     if (await predicate(nodeId)) {
-      let childrenIdentifierPaths = matchingFilters.find(({ id }) => HierarchyNodeIdentifier.equal(id, path[0]))?.childrenIdentifierPaths;
+      let childrenIdentifierPaths = matchingFilters.find(({ id }) => HierarchyNodeIdentifier.equal(id, nodeId))?.childrenIdentifierPaths;
       if (!childrenIdentifierPaths) {
         childrenIdentifierPaths = [];
-        // ideally, `predicate` would act as a type guard to guarantee that `id` is `TIdentifier`, but at the moment
-        // async type guards aren't supported
-        matchingFilters.push({ id: nodeId as TIdentifier, childrenIdentifierPaths });
+        matchingFilters.push({
+          // ideally, `predicate` would act as a type guard to guarantee that `id` is `TIdentifier`, but at the moment
+          // async type guards aren't supported
+          id: nodeId as TIdentifier,
+          childrenIdentifierPaths,
+        });
       }
       const remainingPath = path.slice(1);
       if (remainingPath.length > 0) {
@@ -192,7 +191,7 @@ async function matchFilters<
       }
     }
   }
-  if (matchingFilters.length > 0) {
+  if (isParentFilterTarget || matchingFilters.length > 0) {
     return matchedDefinitionProcessor(definition, matchingFilters, isFilterTarget);
   }
   return undefined;
@@ -225,8 +224,11 @@ export function applyECInstanceIdsFilter(
   def: InstanceNodesQueryDefinition,
   matchingFilters: Array<{ id: InstanceKey; childrenIdentifierPaths: HierarchyNodeIdentifiersPath[] }>,
   isFilterTarget: boolean,
+  isParentFilterTarget: boolean,
 ): InstanceNodesQueryDefinition {
-  // return the filtered query
+  if (matchingFilters.length === 0) {
+    return def;
+  }
   return {
     ...def,
     query: {
@@ -249,7 +251,7 @@ export function applyECInstanceIdsFilter(
         FROM (
           ${def.query.ecsql}
         ) [q]
-        JOIN FilteringInfo [f] ON [f].[ECInstanceId] = [q].[ECInstanceId]
+        ${isParentFilterTarget ? "LEFT " : ""} JOIN FilteringInfo [f] ON [f].[ECInstanceId] = [q].[ECInstanceId]
       `,
     },
   };
