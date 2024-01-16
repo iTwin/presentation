@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1705414227274,
+  "lastUpdate": 1705415721793,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -394,6 +394,42 @@ window.BENCHMARK_DATA = {
             "value": 1818,
             "unit": "ms",
             "extra": "min: 1818\nmax: 1818\ncount: 1\nmean: 1818\np50: 1826.6\nmedian: 1826.6\np75: 1826.6\np90: 1826.6\np95: 1826.6\np99: 1826.6\np999: 1826.6"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35135765+grigasp@users.noreply.github.com",
+            "name": "Grigas",
+            "username": "grigasp"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f6ae78f6cafd8eecaee5c186b8cb6cdcb57e54e6",
+          "message": "Creating hierarchy level descriptors for filtering stateless hierarchies (#378)\n\n* Add a way to create hierarchy level descriptor for filtering stateless hierarchies\r\n\r\n* changeset\r\n\r\n* Avoid exposing `rxjs` APIs through out barrel\r\n\r\n* Assign ruleset to hierarchy level descriptor\r\n\r\n* lint\r\n\r\n* Add missing docs",
+          "timestamp": "2024-01-16T14:33:49Z",
+          "tree_id": "fed960b018a942a34e62fac07d80283dc8b5a5b9",
+          "url": "https://github.com/iTwin/presentation/commit/f6ae78f6cafd8eecaee5c186b8cb6cdcb57e54e6"
+        },
+        "date": 1705415721256,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Initial Models Tree Load: Baytown.bim",
+            "value": 355,
+            "unit": "ms",
+            "extra": "min: 355\nmax: 355\ncount: 1\nmean: 355\np50: 354.3\nmedian: 354.3\np75: 354.3\np90: 354.3\np95: 354.3\np99: 354.3\np999: 354.3"
+          },
+          {
+            "name": "Full Models Tree Load: Baytown.bim",
+            "value": 1842,
+            "unit": "ms",
+            "extra": "min: 1842\nmax: 1842\ncount: 1\nmean: 1842\np50: 1826.6\nmedian: 1826.6\np75: 1826.6\np90: 1826.6\np95: 1826.6\np99: 1826.6\np999: 1826.6"
           }
         ]
       }
