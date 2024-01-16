@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1704352722227,
+  "lastUpdate": 1705414227274,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -358,6 +358,42 @@ window.BENCHMARK_DATA = {
             "value": 1860,
             "unit": "ms",
             "extra": "min: 1860\nmax: 1860\ncount: 1\nmean: 1860\np50: 1863.5\nmedian: 1863.5\np75: 1863.5\np90: 1863.5\np95: 1863.5\np99: 1863.5\np999: 1863.5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35135765+grigasp@users.noreply.github.com",
+            "name": "Grigas",
+            "username": "grigasp"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "21c32ad173f02df9fea97b53d0a53cf10b9cbb0c",
+          "message": "Hierarchy builder: Fix visible child nodes not loaded when hierarchy filter matches parent node and hidden child nodes (#379)\n\n* Fix visible child nodes not loaded when hierarchy filter matches parent node and hidden child nodes\r\n\r\n* Add some handling for very long test dataset paths\r\n\r\n* Fix non-matching child nodes not loaded from a matching hierarchy level definition when parent is a filter target\r\n\r\n* Fixup header filtering input status\r\n\r\n* Attempt to shorten temp schema file path as well\r\n\r\n* Child nodes of filter target should always be returned",
+          "timestamp": "2024-01-16T16:08:53+02:00",
+          "tree_id": "1b09b7a80cbe0b0860ba5be21cf7b6f2fb3086d2",
+          "url": "https://github.com/iTwin/presentation/commit/21c32ad173f02df9fea97b53d0a53cf10b9cbb0c"
+        },
+        "date": 1705414226252,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Initial Models Tree Load: Baytown.bim",
+            "value": 533,
+            "unit": "ms",
+            "extra": "min: 533\nmax: 533\ncount: 1\nmean: 533\np50: 528.6\nmedian: 528.6\np75: 528.6\np90: 528.6\np95: 528.6\np99: 528.6\np999: 528.6"
+          },
+          {
+            "name": "Full Models Tree Load: Baytown.bim",
+            "value": 1818,
+            "unit": "ms",
+            "extra": "min: 1818\nmax: 1818\ncount: 1\nmean: 1818\np50: 1826.6\nmedian: 1826.6\np75: 1826.6\np90: 1826.6\np95: 1826.6\np99: 1826.6\np999: 1826.6"
           }
         ]
       }
