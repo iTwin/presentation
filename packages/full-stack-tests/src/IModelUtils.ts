@@ -6,7 +6,9 @@
 import { XMLParser } from "fast-xml-parser";
 import * as fs from "fs";
 import hash from "object-hash";
-import { ECDb, ECSqlStatement } from "@itwin/core-backend";
+import { tmpdir } from "os";
+import path from "path";
+import { ECDb, ECSqlStatement, IModelJsFs } from "@itwin/core-backend";
 import { BentleyError, DbResult, Id64, Id64String, OrderedId64Iterable } from "@itwin/core-bentley";
 import {
   BisCodeSpec,
@@ -19,6 +21,7 @@ import {
   GeometricModel3dProps,
   IModel,
   InformationPartitionElementProps,
+  LocalFileName,
   PhysicalElementProps,
   RepositoryLinkProps,
   SubCategoryProps,
@@ -27,7 +30,7 @@ import {
 import { IModelConnection } from "@itwin/core-frontend";
 import { ECSqlBinding, parseFullClassName, Point2d, Point3d, PrimitiveValue } from "@itwin/presentation-hierarchy-builder";
 import { buildTestIModel, TestIModelBuilder } from "@itwin/presentation-testing";
-import { createFileNameFromString, setupOutputFileLocation } from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils";
+import { createFileNameFromString } from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils";
 
 function isBinding(value: ECSqlBinding | PrimitiveValue): value is ECSqlBinding {
   return typeof value === "object" && (value as ECSqlBinding).type !== undefined && (value as ECSqlBinding).value !== undefined;
@@ -45,7 +48,7 @@ export class ECDbBuilder {
   public importSchema(schemaXml: string) {
     // sadly, there's no API to import schema from string, so we have to save the XML into a file first...
     // eslint-disable-next-line @itwin/no-internal
-    const schemaFilePath = `${this._ecdb.nativeDb.getFilePath()}-${hash(schemaXml)}`;
+    const schemaFilePath = limitFilePathLength(`${this._ecdb.nativeDb.getFilePath()}-${hash(schemaXml)}`);
     fs.writeFileSync(schemaFilePath, schemaXml);
     this._ecdb.importSchema(schemaFilePath);
   }
@@ -525,4 +528,30 @@ export function insertExternalSourceAspect(
   } as ExternalSourceAspectProps);
 
   return { className, id };
+}
+
+function limitFilePathLength(filePath: string) {
+  const { dir, name, ext } = path.parse(filePath);
+
+  const allowedFileNameLength = 260 - 12 - 1 - (dir.length + 1) - ext.length;
+  if (allowedFileNameLength <= 0) {
+    throw new Error(`File path "${filePath}" is too long.`);
+  }
+  if (name.length < allowedFileNameLength) {
+    return filePath;
+  }
+
+  const pieceLength = (allowedFileNameLength - 3) / 2;
+  const shortenedName = `${name.slice(0, pieceLength)}...${name.slice(name.length - pieceLength)}`;
+  return path.join(dir, `${shortenedName}${ext}`);
+}
+
+const defaultTestOutputDir = tmpdir();
+export function setupOutputFileLocation(fileName: string): LocalFileName {
+  const testOutputDir = path.join(defaultTestOutputDir, ".imodels");
+  !IModelJsFs.existsSync(testOutputDir) && IModelJsFs.mkdirSync(testOutputDir);
+
+  const outputFilePath = limitFilePathLength(path.join(testOutputDir, `${fileName}.bim`));
+  IModelJsFs.existsSync(outputFilePath) && IModelJsFs.unlinkSync(outputFilePath);
+  return outputFilePath;
 }
