@@ -117,7 +117,8 @@ export class HierarchyProvider {
    * Hierarchy level definitions factory used by this provider.
    *
    * @note This does not necessarily match the `hierarchyDefinition` passed through props when constructing
-   * the provider. For example,
+   * the provider. For example, it may a factory that decorates given `hierarchyDefinition` with filtering
+   * features.
    */
   public readonly hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
 
