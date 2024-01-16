@@ -115,14 +115,15 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
   );
   const { headerRef, treeHeight } = useTreeHeight(props.height);
   const noDataRenderer = filter ? () => <NoFilterMatchesRenderer filter={filter} /> : undefined;
+  const filteringInputStatus =
+    filteringStatus === "filtering"
+      ? FilteringInputStatus.FilteringInProgress
+      : filter
+      ? FilteringInputStatus.FilteringFinished
+      : FilteringInputStatus.ReadyToFilter;
   return (
     <>
-      <TreeWidgetHeader
-        onFilterChange={setFilter}
-        filteringStatus={filteringStatus === "filtering" ? FilteringInputStatus.FilteringInProgress : FilteringInputStatus.ReadyToFilter}
-        showFilteringInput={true}
-        ref={headerRef}
-      />
+      <TreeWidgetHeader onFilterChange={setFilter} filteringStatus={filteringInputStatus} showFilteringInput={true} ref={headerRef} />
       <div className="filtered-tree">
         {treeHeight && props.width && (
           <ControlledTree
