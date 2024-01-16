@@ -19,10 +19,13 @@
         }
       }
     },
+    "tree-widget": {
+      "rules-driven-tree": "Rules-driven tree",
+      "stateless-models-tree": "Stateless Models tree",
+      "remove-hierarchy-level-limit": "remove limit for this hierarchy level",
+      "no-matches-for-provided-filter": "No matches found for provided filter"
+    },
     "result-limit-exceeded": "There are more items than allowed limit of",
-    "remove-hierarchy-level-limit": "remove limit for this hierarchy level",
-    "rules-driven-tree": "Rules-driven tree",
-    "stateless-tree": "Stateless tree",
     "find-similar": {
       "results": "Similar Instances",
       "dismiss-button": {

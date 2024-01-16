@@ -12,7 +12,11 @@ import { IHierarchyLevelDefinitionsFactory } from "../hierarchy-builder/Hierarch
 import { RowsLimitExceededError } from "../hierarchy-builder/HierarchyErrors";
 import { HierarchyNode, ParsedCustomHierarchyNode } from "../hierarchy-builder/HierarchyNode";
 import { HierarchyProvider } from "../hierarchy-builder/HierarchyProvider";
-import { ECSQL_COLUMN_NAME_FilteredChildrenPaths, FilteredHierarchyNode } from "../hierarchy-builder/internal/FilteringHierarchyLevelDefinitionsFactory";
+import {
+  ECSQL_COLUMN_NAME_FilteredChildrenPaths,
+  ECSQL_COLUMN_NAME_IsFilterTarget,
+  FilteredHierarchyNode,
+} from "../hierarchy-builder/internal/FilteringHierarchyLevelDefinitionsFactory";
 import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions } from "../hierarchy-builder/queries/ECSqlCore";
 import { ECSqlSelectClauseGroupingParams, NodeSelectClauseColumnNames } from "../hierarchy-builder/queries/NodeSelectQueryFactory";
 import { ConcatenatedValue } from "../hierarchy-builder/values/ConcatenatedValue";
@@ -662,7 +666,8 @@ describe("HierarchyProvider", () => {
                 SELECT * FROM (
                   SELECT
                     [q].*,
-                    [f].[FilteredChildrenPaths] AS [FilteredChildrenPaths]
+                    0 AS [${ECSQL_COLUMN_NAME_IsFilterTarget}],
+                    [f].[FilteredChildrenPaths] AS [${ECSQL_COLUMN_NAME_FilteredChildrenPaths}]
                   FROM (QUERY) [q]
                   JOIN FilteringInfo [f] ON [f].[ECInstanceId] = [q].[ECInstanceId]
                 )

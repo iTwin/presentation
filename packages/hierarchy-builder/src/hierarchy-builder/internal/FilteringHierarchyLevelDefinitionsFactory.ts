@@ -15,7 +15,14 @@ import {
   INodePreProcessor,
   InstanceNodesQueryDefinition,
 } from "../HierarchyDefinition";
-import { HierarchyNode, HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath, ParsedInstanceHierarchyNode, ProcessedHierarchyNode } from "../HierarchyNode";
+import {
+  HierarchyNode,
+  HierarchyNodeIdentifier,
+  HierarchyNodeIdentifiersPath,
+  ParsedHierarchyNode,
+  ParsedInstanceHierarchyNode,
+  ProcessedHierarchyNode,
+} from "../HierarchyNode";
 import { InstanceKey } from "../values/Values";
 import { getClass } from "./Common";
 import { defaultNodesParser } from "./TreeNodesReader";
@@ -29,6 +36,7 @@ export interface FilteringQueryBuilderProps {
 
 /** @internal */
 export type FilteredHierarchyNode<TNode = ProcessedHierarchyNode> = TNode & {
+  isFilterTarget?: boolean;
   filteredChildrenIdentifierPaths?: HierarchyNodeIdentifiersPath[];
 };
 
@@ -47,9 +55,8 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
   public get preProcessNode(): INodePreProcessor {
     return async (node) => {
       const processedNode = this._source.preProcessNode ? await this._source.preProcessNode(node) : node;
-      if (processedNode?.processingParams?.hideInHierarchy && (node as FilteredHierarchyNode).filteredChildrenIdentifierPaths?.length === 0) {
-        // an existing empty `node.filteredChildrenIdentifierPaths` means the node is our filter target - we
-        // want to hide such nodes if they have `hideInHierarchy` param
+      if (processedNode?.processingParams?.hideInHierarchy && (node as FilteredHierarchyNode).isFilterTarget) {
+        // we want to hide target nodes if they have `hideInHierarchy` param
         return undefined;
       }
       return processedNode;
@@ -62,7 +69,7 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
       if (
         // instance nodes get the auto-expand flag in `parseNode`, but grouping ones need to be handled during post-processing
         HierarchyNode.isClassGroupingNode(node) &&
-        node.children.some((child: FilteredHierarchyNode) => !!child.filteredChildrenIdentifierPaths)
+        node.children.some((child: FilteredHierarchyNode) => child.isFilterTarget || child.filteredChildrenIdentifierPaths)
       ) {
         return { ...processedNode, autoExpand: true };
       }
@@ -72,22 +79,19 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
 
   public get parseNode(): INodeParser {
     return (row: { [columnName: string]: any }): FilteredHierarchyNode<ParsedInstanceHierarchyNode> => {
-      const parsedFilteredChildrenIdentifierPaths = row[ECSQL_COLUMN_NAME_FilteredChildrenPaths]
+      const isFilterTarget: boolean = !!row[ECSQL_COLUMN_NAME_IsFilterTarget];
+      const parsedFilteredChildrenIdentifierPaths: HierarchyNodeIdentifiersPath[] | undefined = row[ECSQL_COLUMN_NAME_FilteredChildrenPaths]
         ? JSON.parse(row[ECSQL_COLUMN_NAME_FilteredChildrenPaths])
         : undefined;
       const defaultNode = (this._source.parseNode ?? defaultNodesParser)(row);
-      return {
-        ...defaultNode,
-        ...(parsedFilteredChildrenIdentifierPaths?.length ? { autoExpand: true } : undefined),
-        filteredChildrenIdentifierPaths: parsedFilteredChildrenIdentifierPaths,
-      };
+      return applyFilterAttributes(defaultNode, parsedFilteredChildrenIdentifierPaths, isFilterTarget);
     };
   }
 
   public async defineHierarchyLevel(props: DefineHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
     const sourceDefinitions = await this._source.defineHierarchyLevel(props);
-    const filteredNodePaths = this.getFilteringProps(props.parentNode as FilteredHierarchyNode | undefined);
-    if (!filteredNodePaths || filteredNodePaths.length === 0) {
+    const { filteredNodePaths, isParentFilterTarget } = this.getFilteringProps(props.parentNode as FilteredHierarchyNode | undefined);
+    if (!filteredNodePaths) {
       return sourceDefinitions;
     }
 
@@ -105,17 +109,14 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
               }
               return id.key === definition.node.key;
             },
-            (def, matchingFilters) => {
+            (def, matchingFilters, isFilterTarget) => {
               const filteredChildrenIdentifierPaths = matchingFilters.reduce(
                 (r, c) => [...r, ...c.childrenIdentifierPaths],
                 new Array<HierarchyNodeIdentifiersPath>(),
               );
               return {
-                node: {
-                  ...def.node,
-                  ...(filteredChildrenIdentifierPaths.length > 0 ? { autoExpand: true } : undefined),
-                  filteredChildrenIdentifierPaths,
-                },
+                ...def,
+                node: applyFilterAttributes(def.node, filteredChildrenIdentifierPaths, isFilterTarget),
               };
             },
           );
@@ -131,22 +132,27 @@ export class FilteringHierarchyLevelDefinitionsFactory implements IHierarchyLeve
               const pathClass = await getClass(this._metadataProvider, id.className);
               return pathClass.is(queryClass);
             },
-            (def, matchingFilters) => applyECInstanceIdsFilter(def, matchingFilters),
+            (def, matchingFilters, isFilterTarget) => applyECInstanceIdsFilter(def, matchingFilters, isFilterTarget),
           );
         }
         if (matchedDefinition) {
           filteredDefinitions.push(matchedDefinition);
+        } else if (isParentFilterTarget) {
+          // Note: in case parent node is a filter target, we want to return all its definitions, but the ones that match
+          // children filters should still be adjusted to account for those filters. The ones that don't match any children
+          // filter should be added as-is.
+          filteredDefinitions.push(definition);
         }
       }),
     );
     return filteredDefinitions;
   }
 
-  private getFilteringProps(parentNode: FilteredHierarchyNode | undefined): HierarchyNodeIdentifiersPath[] | undefined {
+  private getFilteringProps(parentNode: FilteredHierarchyNode | undefined) {
     if (!parentNode) {
-      return this._nodeIdentifierPaths;
+      return { filteredNodePaths: this._nodeIdentifierPaths, isParentFilterTarget: false };
     }
-    return parentNode.filteredChildrenIdentifierPaths;
+    return { filteredNodePaths: parentNode.filteredChildrenIdentifierPaths, isParentFilterTarget: parentNode.isFilterTarget };
   }
 }
 
@@ -160,13 +166,13 @@ async function matchFilters<
   matchedDefinitionProcessor: (
     def: TDefinition,
     matchingFilters: Array<{ id: TIdentifier; childrenIdentifierPaths: HierarchyNodeIdentifiersPath[] }>,
+    isFilterTarget: boolean,
   ) => TDefinition,
 ): Promise<TDefinition | undefined> {
   let isFilterTarget = false;
   const matchingFilters: Array<{ id: TIdentifier; childrenIdentifierPaths: HierarchyNodeIdentifiersPath[] }> = [];
   for (const path of filterPaths) {
     if (path.length === 0) {
-      isFilterTarget = true;
       continue;
     }
     const nodeId = path[0];
@@ -181,16 +187,29 @@ async function matchFilters<
       const remainingPath = path.slice(1);
       if (remainingPath.length > 0) {
         childrenIdentifierPaths.push(remainingPath);
+      } else {
+        isFilterTarget = true;
       }
     }
   }
   if (matchingFilters.length > 0) {
-    return matchedDefinitionProcessor(definition, matchingFilters);
-  }
-  if (isFilterTarget) {
-    return definition;
+    return matchedDefinitionProcessor(definition, matchingFilters, isFilterTarget);
   }
   return undefined;
+}
+
+function applyFilterAttributes<TNode extends ParsedHierarchyNode>(
+  node: TNode,
+  filteredChildrenIdentifierPaths: HierarchyNodeIdentifiersPath[] | undefined,
+  isFilterTarget: boolean,
+): TNode {
+  const shouldAutoExpand = !!filteredChildrenIdentifierPaths?.some((path) => !!path.length);
+  return {
+    ...node,
+    ...(isFilterTarget ? { isFilterTarget } : undefined),
+    ...(shouldAutoExpand ? { autoExpand: true } : undefined),
+    ...(!!filteredChildrenIdentifierPaths?.length ? { filteredChildrenIdentifierPaths } : undefined),
+  };
 }
 
 /** @internal */
@@ -198,9 +217,14 @@ async function matchFilters<
 export const ECSQL_COLUMN_NAME_FilteredChildrenPaths = "FilteredChildrenPaths";
 
 /** @internal */
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const ECSQL_COLUMN_NAME_IsFilterTarget = "IsFilterTarget";
+
+/** @internal */
 export function applyECInstanceIdsFilter(
   def: InstanceNodesQueryDefinition,
   matchingFilters: Array<{ id: InstanceKey; childrenIdentifierPaths: HierarchyNodeIdentifiersPath[] }>,
+  isFilterTarget: boolean,
 ): InstanceNodesQueryDefinition {
   // return the filtered query
   return {
@@ -220,6 +244,7 @@ export function applyECInstanceIdsFilter(
       ecsql: `
         SELECT
           [q].*,
+          ${isFilterTarget ? "1" : "0"} AS [${ECSQL_COLUMN_NAME_IsFilterTarget}],
           [f].[FilteredChildrenPaths] AS [${ECSQL_COLUMN_NAME_FilteredChildrenPaths}]
         FROM (
           ${def.query.ecsql}

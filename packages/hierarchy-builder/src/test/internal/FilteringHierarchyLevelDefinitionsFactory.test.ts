@@ -13,10 +13,11 @@ import {
   IHierarchyLevelDefinitionsFactory,
   InstanceNodesQueryDefinition,
 } from "../../hierarchy-builder/HierarchyDefinition";
-import { HierarchyNode, HierarchyNodeIdentifiersPath, ParsedHierarchyNode } from "../../hierarchy-builder/HierarchyNode";
+import { HierarchyNode, HierarchyNodeIdentifiersPath, ParsedCustomHierarchyNode, ParsedHierarchyNode } from "../../hierarchy-builder/HierarchyNode";
 import {
   applyECInstanceIdsFilter,
   ECSQL_COLUMN_NAME_FilteredChildrenPaths,
+  ECSQL_COLUMN_NAME_IsFilterTarget,
   FilteredHierarchyNode,
   FilteringHierarchyLevelDefinitionsFactory,
 } from "../../hierarchy-builder/internal/FilteringHierarchyLevelDefinitionsFactory";
@@ -27,6 +28,7 @@ import {
   ClassStubs,
   createClassStubs,
   createTestInstanceKey,
+  createTestParsedCustomNode,
   createTestProcessedCustomNode,
   createTestProcessedGroupingNode,
   createTestProcessedInstanceNode,
@@ -142,7 +144,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
             hideInHierarchy: true,
           },
         }),
-        filteredChildrenIdentifierPaths: [],
+        isFilterTarget: true,
       };
       const filteringFactory = createFilteringHierarchyLevelsFactory();
       const result = await filteringFactory.preProcessNode(inputNode);
@@ -225,16 +227,37 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
       classStubs = createClassStubs(metadataProvider);
     });
 
-    it("returns source definitions when filtered instance paths list is empty", async () => {
-      const sourceDefinitions: HierarchyLevelDefinition = [];
-      const sourceFactory = {
+    it("returns source definitions when filtered instance paths is undefined", async () => {
+      const sourceDefinitions: HierarchyLevelDefinition = [
+        {
+          node: {} as unknown as ParsedCustomHierarchyNode,
+        },
+      ];
+      const sourceFactory: IHierarchyLevelDefinitionsFactory = {
         defineHierarchyLevel: async () => sourceDefinitions,
-      } as unknown as IHierarchyLevelDefinitionsFactory;
+      };
+      const filteringFactory = createFilteringHierarchyLevelsFactory({
+        sourceFactory,
+      });
+      const result = await filteringFactory.defineHierarchyLevel({
+        parentNode: { filteredChildrenIdentifierPaths: undefined } as unknown as HierarchyDefinitionParentNode,
+      });
+      expect(result).to.eq(sourceDefinitions);
+    });
+
+    it("returns no definitions when filtered instance paths list is empty", async () => {
+      const sourceFactory: IHierarchyLevelDefinitionsFactory = {
+        defineHierarchyLevel: async () => [
+          {
+            node: {} as unknown as ParsedCustomHierarchyNode,
+          },
+        ],
+      };
       const filteringFactory = createFilteringHierarchyLevelsFactory({
         sourceFactory,
       });
       const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
-      expect(result).to.eq(sourceDefinitions);
+      expect(result).to.be.empty;
     });
 
     describe("filtering custom node definitions", () => {
@@ -277,7 +300,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         expect(result).to.be.empty;
       });
 
-      it("returns source custom node definition when filter filtering by empty path", async () => {
+      it("omits source custom node definition when filter filtering by empty path", async () => {
         const sourceDefinition: CustomHierarchyNodeDefinition = {
           node: {
             key: "custom",
@@ -293,7 +316,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           nodeIdentifierPaths: [[]],
         });
         const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
-        expect(result).to.deep.eq([sourceDefinition]);
+        expect(result).to.be.empty;
       });
 
       it("returns filtered source custom node definitions when filter type matches node's key", async () => {
@@ -309,9 +332,9 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
             label: "custom label 2",
           },
         };
-        const sourceFactory = {
-          defineHierarchyLevel: sinon.stub().resolves([sourceDefinition1, sourceDefinition2]),
-        } as unknown as IHierarchyLevelDefinitionsFactory;
+        const sourceFactory: IHierarchyLevelDefinitionsFactory = {
+          defineHierarchyLevel: async () => [sourceDefinition1, sourceDefinition2],
+        };
         const filteringFactory = createFilteringHierarchyLevelsFactory({
           sourceFactory,
           nodeIdentifierPaths: [[{ key: "custom 2" }]],
@@ -321,7 +344,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           {
             node: {
               ...sourceDefinition2.node,
-              filteredChildrenIdentifierPaths: [],
+              isFilterTarget: true,
             } as FilteredHierarchyNode<ParsedHierarchyNode>,
           },
         ]);
@@ -398,7 +421,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         expect(result).to.be.empty;
       });
 
-      it("returns source instance node query definition when filter filtering by empty path", async () => {
+      it("omits source instance node query definition when filter filtering by empty path", async () => {
         const queryClass = classStubs.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
         const sourceDefinition: InstanceNodesQueryDefinition = {
           fullClassName: queryClass.fullName,
@@ -414,7 +437,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           nodeIdentifierPaths: [[]],
         });
         const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
-        expect(result).to.deep.eq([sourceDefinition]);
+        expect(result).to.be.empty;
       });
 
       it("returns filtered source instance node query definitions when filter class matches query class", async () => {
@@ -445,9 +468,11 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         });
         const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
         expect(result).to.deep.eq([
-          applyECInstanceIdsFilter(sourceDefinition, [
-            { id: { className: filterPathClass1.fullName, id: "0x123" }, childrenIdentifierPaths: [[{ className: filterPathClass2.fullName, id: "0x456" }]] },
-          ]),
+          applyECInstanceIdsFilter(
+            sourceDefinition,
+            [{ id: { className: filterPathClass1.fullName, id: "0x123" }, childrenIdentifierPaths: [[{ className: filterPathClass2.fullName, id: "0x456" }]] }],
+            false,
+          ),
         ]);
       });
 
@@ -478,10 +503,14 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         });
         const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
         expect(result).to.deep.eq([
-          applyECInstanceIdsFilter(sourceDefinition, [
-            { id: { className: filterPathClass1.fullName, id: "0x123" }, childrenIdentifierPaths: [] },
-            { id: { className: filterPathClass2.fullName, id: "0x456" }, childrenIdentifierPaths: [] },
-          ]),
+          applyECInstanceIdsFilter(
+            sourceDefinition,
+            [
+              { id: { className: filterPathClass1.fullName, id: "0x123" }, childrenIdentifierPaths: [] },
+              { id: { className: filterPathClass2.fullName, id: "0x456" }, childrenIdentifierPaths: [] },
+            ],
+            true,
+          ),
         ]);
       });
 
@@ -518,23 +547,22 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         });
         const result = await filteringFactory.defineHierarchyLevel({ parentNode: undefined });
         expect(result).to.deep.eq([
-          applyECInstanceIdsFilter(sourceDefinition, [
-            {
-              id: { className: filterPathClass0.fullName, id: "0x123" },
-              childrenIdentifierPaths: [[{ className: filterPathClass1.fullName, id: "0x456" }], [{ className: filterPathClass2.fullName, id: "0x789" }]],
-            },
-          ]),
+          applyECInstanceIdsFilter(
+            sourceDefinition,
+            [
+              {
+                id: { className: filterPathClass0.fullName, id: "0x123" },
+                childrenIdentifierPaths: [[{ className: filterPathClass1.fullName, id: "0x456" }], [{ className: filterPathClass2.fullName, id: "0x789" }]],
+              },
+            ],
+            false,
+          ),
         ]);
       });
     });
 
     it("uses filtering paths from parent node", async () => {
       const queryClass = classStubs.stubEntityClass({ schemaName: "BisCore", className: "SourceQueryClassName", is: async () => false });
-      const rootFilterClass = classStubs.stubEntityClass({
-        schemaName: "BisCore",
-        className: "RootFilterClass",
-        is: async (other) => other === queryClass.fullName,
-      });
       const childFilterClass = classStubs.stubEntityClass({
         schemaName: "BisCore",
         className: "ChildFilterClass",
@@ -546,12 +574,12 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
           ecsql: "SOURCE_QUERY",
         },
       };
-      const sourceFactory = {
+      const sourceFactory: IHierarchyLevelDefinitionsFactory = {
         defineHierarchyLevel: async () => [sourceDefinition],
-      } as unknown as IHierarchyLevelDefinitionsFactory;
+      };
       const filteringFactory = createFilteringHierarchyLevelsFactory({
         sourceFactory,
-        nodeIdentifierPaths: [[{ className: rootFilterClass.fullName, id: "0x123" }]],
+        nodeIdentifierPaths: [], // this doesn't matter as we're going to look at what's in the parent node
       });
       const result = await filteringFactory.defineHierarchyLevel({
         parentNode: {
@@ -561,7 +589,42 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         } as FilteredHierarchyNode<HierarchyDefinitionParentNode>,
       });
       expect(result).to.deep.eq([
-        applyECInstanceIdsFilter(sourceDefinition, [{ id: { className: childFilterClass.fullName, id: "0x456" }, childrenIdentifierPaths: [] }]),
+        applyECInstanceIdsFilter(sourceDefinition, [{ id: { className: childFilterClass.fullName, id: "0x456" }, childrenIdentifierPaths: [] }], true),
+      ]);
+    });
+
+    it("returns all definitions for a filter target parent node", async () => {
+      const matchingSourceDefinition: CustomHierarchyNodeDefinition = {
+        node: createTestParsedCustomNode({ key: "matches" }),
+      };
+      const nonMatchingSourceDefinition: CustomHierarchyNodeDefinition = {
+        node: createTestParsedCustomNode({ key: "doesn't match" }),
+      };
+      const sourceFactory: IHierarchyLevelDefinitionsFactory = {
+        defineHierarchyLevel: async () => [matchingSourceDefinition, nonMatchingSourceDefinition],
+      };
+      const filteringFactory = createFilteringHierarchyLevelsFactory({
+        sourceFactory,
+        nodeIdentifierPaths: [], // this doesn't matter as we're going to look at what's in the parent node
+      });
+      const result = await filteringFactory.defineHierarchyLevel({
+        parentNode: {
+          key: "parent",
+          label: "parent",
+          isFilterTarget: true,
+          filteredChildrenIdentifierPaths: [[{ key: "matches" }]],
+        } as FilteredHierarchyNode<HierarchyDefinitionParentNode>,
+      });
+      expect(result).to.deep.eq([
+        // this definition is added with modifications to account for parent's `filteredChildrenIdentifierPaths`
+        {
+          node: {
+            ...matchingSourceDefinition.node,
+            isFilterTarget: true,
+          },
+        },
+        // this definition doesn't match parent's `filteredChildrenIdentifierPaths`, but is added because parent is a filter target
+        nonMatchingSourceDefinition,
       ]);
     });
   });
@@ -593,6 +656,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
             childrenIdentifierPaths: [[{ className: "d", id: "0x6" }]],
           },
         ],
+        true,
       );
       expect(result.fullClassName).to.eq("full-class-name");
       expect(result.query.ctes?.map(trimWhitespace)).to.deep.eq([
@@ -615,6 +679,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         trimWhitespace(`
           SELECT
             [q].*,
+            1 AS [${ECSQL_COLUMN_NAME_IsFilterTarget}],
             [f].[FilteredChildrenPaths] AS [${ECSQL_COLUMN_NAME_FilteredChildrenPaths}]
           FROM (
             source query

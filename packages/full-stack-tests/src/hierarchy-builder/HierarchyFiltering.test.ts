@@ -6,7 +6,7 @@
 import { Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { ECSqlBinding, HierarchyNode, Id64String, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchy-builder";
-import { buildIModel, insertSubject } from "../IModelUtils";
+import { buildIModel, importSchema, insertSubject, withECDb } from "../IModelUtils";
 import { initialize, terminate } from "../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "./HierarchyValidation";
 import { createMetadataProvider, createProvider } from "./Utils";
@@ -429,6 +429,100 @@ describe("Stateless hierarchy builder", () => {
             }),
           ],
         });
+      });
+
+      it("doesn't return hidden instance node when targeting both the node and its parent, when parent has visible children", async function () {
+        await withECDb(
+          this,
+          async (db) => {
+            const schema = importSchema(
+              this,
+              db,
+              `
+                <ECEntityClass typeName="X" />
+                <ECEntityClass typeName="Y" />
+                <ECEntityClass typeName="Z" />
+              `,
+            );
+            const x = db.insertInstance(schema.items.X.fullName);
+            const y = db.insertInstance(schema.items.Y.fullName);
+            const z = db.insertInstance(schema.items.Z.fullName);
+            return { schema, x, y, z };
+          },
+          async (imodel, { schema, x, y, z }) => {
+            const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+            const hierarchy: IHierarchyLevelDefinitionsFactory = {
+              async defineHierarchyLevel({ parentNode }) {
+                if (!parentNode) {
+                  return [
+                    {
+                      fullClassName: schema.items.X.fullName,
+                      query: {
+                        ecsql: `
+                          SELECT ${await selectQueryFactory.createSelectClause({
+                            ecClassId: { selector: `this.ECClassId` },
+                            ecInstanceId: { selector: `this.ECInstanceId` },
+                            nodeLabel: "x",
+                          })}
+                          FROM ${schema.items.X.fullName} AS this
+                        `,
+                      },
+                    },
+                  ];
+                }
+                if (HierarchyNode.isInstancesNode(parentNode) && parentNode.label === "x") {
+                  return [
+                    {
+                      fullClassName: schema.items.Y.fullName,
+                      query: {
+                        ecsql: `
+                          SELECT ${await selectQueryFactory.createSelectClause({
+                            ecClassId: { selector: `this.ECClassId` },
+                            ecInstanceId: { selector: `this.ECInstanceId` },
+                            nodeLabel: "y",
+                            hideNodeInHierarchy: true,
+                          })}
+                          FROM ${schema.items.Y.fullName} AS this
+                        `,
+                      },
+                    },
+                    {
+                      fullClassName: schema.items.Z.fullName,
+                      query: {
+                        ecsql: `
+                          SELECT ${await selectQueryFactory.createSelectClause({
+                            ecClassId: { selector: `this.ECClassId` },
+                            ecInstanceId: { selector: `this.ECInstanceId` },
+                            nodeLabel: "z",
+                          })}
+                          FROM ${schema.items.Z.fullName} AS this
+                        `,
+                      },
+                    },
+                  ];
+                }
+                return [];
+              },
+            };
+
+            await validateHierarchy({
+              provider: createProvider({ imodel, hierarchy, filteredNodePaths: [[x], [x, y]] }),
+              expect: [
+                NodeValidators.createForInstanceNode({
+                  instanceKeys: [x],
+                  autoExpand: true,
+                  children: [
+                    NodeValidators.createForInstanceNode({
+                      instanceKeys: [z],
+                      autoExpand: false,
+                      children: false,
+                    }),
+                  ],
+                }),
+              ],
+            });
+          },
+        );
       });
     });
   });
