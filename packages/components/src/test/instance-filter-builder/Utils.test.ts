@@ -161,7 +161,7 @@ describe("filterRuleValidator", () => {
         id: "test-id",
         groupId: "test-group-id",
         property: numericProperty,
-        operator: PropertyFilterRuleOperator.IsEqual,
+        operator: PropertyFilterRuleOperator.Less,
         value: {
           valueFormat: PropertyValueFormat.Primitive,
           value: undefined,
@@ -169,6 +169,22 @@ describe("filterRuleValidator", () => {
         },
       }),
     ).to.be.eq("instance-filter-builder.error-messages.not-a-number");
+  });
+
+  it("does not return error message for invalid numeric value if operator is 'IsEqual' or 'IsNotEqual'", () => {
+    expect(
+      filterRuleValidator({
+        id: "test-id",
+        groupId: "test-group-id",
+        property: numericProperty,
+        operator: PropertyFilterRuleOperator.IsEqual,
+        value: {
+          valueFormat: PropertyValueFormat.Primitive,
+          value: "[Invalid]",
+          displayValue: "[Invalid]",
+        },
+      }),
+    ).to.be.undefined;
   });
 
   it("returns error message for invalid quantity rule", () => {
@@ -193,7 +209,7 @@ describe("filterRuleValidator", () => {
         id: "test-id",
         groupId: "test-group-id",
         property: numericProperty,
-        operator: PropertyFilterRuleOperator.IsEqual,
+        operator: PropertyFilterRuleOperator.Greater,
         value: {
           valueFormat: PropertyValueFormat.Primitive,
           value: 10,
