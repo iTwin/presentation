@@ -221,17 +221,17 @@ describe("Stateless hierarchy builder", () => {
           const intermediateSubject1 = insertSubject({ builder, codeValue: `matching intermediate subject 1`, parentId: rootSubject.id });
           const intermediateSubject2 = insertSubject({ builder, codeValue: `intermediate subject 2`, parentId: rootSubject.id });
           insertModelWithElements(builder, 1, category.id, intermediateSubject2.id);
-          const childSubject1 = insertSubject({ builder, codeValue: "subject 1", parentId: intermediateSubject1.id });
-          const childSubject2 = insertSubject({ builder, codeValue: "matching subject 2", parentId: intermediateSubject1.id });
+          const childSubject1 = insertSubject({ builder, codeValue: "matching subject 1", parentId: intermediateSubject1.id });
+          const childSubject2 = insertSubject({ builder, codeValue: "subject 2", parentId: intermediateSubject1.id });
           insertModelWithElements(builder, 1, category.id, childSubject1.id);
           insertModelWithElements(builder, 2, category.id, childSubject2.id);
           return { rootSubject, intermediateSubject1, intermediateSubject2, childSubject1, childSubject2 };
         },
         (x) => [
           [x.rootSubject, x.intermediateSubject1],
-          [x.rootSubject, x.intermediateSubject1, x.childSubject2],
+          [x.rootSubject, x.intermediateSubject1, x.childSubject1],
         ],
-        (x) => [x.intermediateSubject1, x.childSubject2],
+        (x) => [x.intermediateSubject1, x.childSubject1],
         (_x) => "matching",
         (x) => [
           NodeValidators.createForInstanceNode({
@@ -244,8 +244,29 @@ describe("Stateless hierarchy builder", () => {
                 autoExpand: true,
                 children: [
                   NodeValidators.createForInstanceNode({
+                    instanceKeys: [x.childSubject1],
+                    label: "matching subject 1",
+                    autoExpand: false,
+                    children: [
+                      NodeValidators.createForInstanceNode({
+                        label: "model-1",
+                        children: [
+                          NodeValidators.createForInstanceNode({
+                            label: "category",
+                            children: [
+                              NodeValidators.createForClassGroupingNode({
+                                label: "Physical Object",
+                                children: [NodeValidators.createForInstanceNode({ label: /^element-1/, children: false })],
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  NodeValidators.createForInstanceNode({
                     instanceKeys: [x.childSubject2],
-                    label: "matching subject 2",
+                    label: "subject 2",
                     autoExpand: false,
                     children: [
                       NodeValidators.createForInstanceNode({
