@@ -23,10 +23,10 @@ import {
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-import { Tab, Tabs } from "@itwin/itwinui-react";
+import { Button, Tab, Tabs } from "@itwin/itwinui-react";
 import { DiagnosticsProps } from "@itwin/presentation-components";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import { HierarchyNode, HierarchyProvider, IECSqlQueryExecutor, IMetadataProvider } from "@itwin/presentation-hierarchy-builder";
+import { HierarchyNode, HierarchyProvider, IECSqlQueryExecutor, IMetadataProvider, TypedPrimitiveValue } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { DiagnosticsSelector } from "../diagnostics-selector/DiagnosticsSelector";
 import { Tree } from "./Tree";
@@ -127,6 +127,7 @@ export function StatelessTreeWidget(props: Omit<Props, "rulesetId">) {
   const [queryExecutor, setQueryExecutor] = useState<IECSqlQueryExecutor>();
   const [metadataProvider, setMetadataProvider] = useState<IMetadataProvider>();
   const [modelsTreeHierarchyProvider, setModelsTreeHierarchyProvider] = useState<HierarchyProvider>();
+  const [formatter, setFormatter] = useState<boolean>(false);
   useEffect(() => {
     const schemas = new SchemaContext();
     schemas.addLocater(new ECSchemaRpcLocater(props.imodel.getRpcProps()));
@@ -151,7 +152,7 @@ export function StatelessTreeWidget(props: Omit<Props, "rulesetId">) {
         hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider }),
         queryExecutor,
       };
-      if (value) {
+      if (value && value.length > 0) {
         setFilteringStatus(FilteringInputStatus.FilteringFinished);
         setModelsTreeHierarchyProvider(
           new HierarchyProvider({
@@ -186,10 +187,17 @@ export function StatelessTreeWidget(props: Omit<Props, "rulesetId">) {
   const nodeLoader = useTreeNodeLoader(dataProvider, modelSource);
   const eventHandler = useMemo(() => new TreeEventHandler({ nodeLoader, modelSource }), [nodeLoader, modelSource]);
   const treeModel = useTreeModel(modelSource);
-
   const { headerRef, treeHeight } = useTreeHeight(props.height);
+  useEffect(() => {
+    if (modelsTreeHierarchyProvider) {
+      modelsTreeHierarchyProvider.setFormatter(formatter ? async (val: TypedPrimitiveValue) => `_${val ? JSON.stringify(val.value) : ""}` : undefined);
+      // reloadTree(treeModel, dataProvider, 100);
+      modelSource.modifyModel((model) => model.clearChildren(undefined));
+    }
+  }, [formatter, modelsTreeHierarchyProvider, modelSource]);
   return (
     <>
+      <Button onClick={() => setFormatter((state) => !state)}>Change formatter</Button>
       <TreeWidgetHeader onFilterChange={setFilter} filteringStatus={filteringStatus} showFilteringInput={true} ref={headerRef} />
       <div className="filtered-tree">
         {treeHeight && props.width && (

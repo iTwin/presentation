@@ -43,7 +43,7 @@ import { sortNodesByLabelOperator } from "./internal/operators/Sorting";
 import { QueryScheduler } from "./internal/QueryScheduler";
 import { applyLimit, RowsLimitExceededError, TreeQueryResultsReader } from "./internal/TreeNodesReader";
 import { getLogger } from "./Logging";
-import { IECSqlQueryExecutor } from "./queries/ECSqlCore";
+import { ECSqlQueryDef, IECSqlQueryExecutor } from "./queries/ECSqlCore";
 import { ConcatenatedValue, ConcatenatedValuePart } from "./values/ConcatenatedValue";
 import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "./values/Formatting";
 import { TypedPrimitiveValue } from "./values/Values";
@@ -106,6 +106,7 @@ export class HierarchyProvider {
   private _valuesFormatter: IPrimitiveValueFormatter;
   private _scheduler: QueryScheduler<ParsedHierarchyNode[]>;
   private _nodesCache: ChildNodesCache;
+  private _queriesCache: QueriesCache;
 
   public constructor(props: HierarchyProviderProps) {
     this._metadataProvider = props.metadataProvider;
@@ -124,6 +125,12 @@ export class HierarchyProvider {
     this._queryExecutor = props.queryExecutor;
     this._valuesFormatter = props?.formatter ?? createDefaultValueFormatter();
     this._scheduler = new QueryScheduler(QUERY_CONCURRENCY);
+    this._nodesCache = new ChildNodesCache();
+    this._queriesCache = new QueriesCache();
+  }
+
+  public setFormatter(formatter?: IPrimitiveValueFormatter) {
+    this._valuesFormatter = formatter ?? createDefaultValueFormatter();
     this._nodesCache = new ChildNodesCache();
   }
 
@@ -150,12 +157,18 @@ export class HierarchyProvider {
         if (HierarchyNodesDefinition.isCustomNode(def)) {
           return of([def.node]);
         }
-        return this._scheduler.scheduleSubscription(
+        const cached = this._queriesCache.get(def.query);
+        if (cached) {
+          return cached;
+        }
+        const parsedHierarchyNodesObservable = this._scheduler.scheduleSubscription(
           of(def.query).pipe(
             log((query) => `Query direct nodes for parent ${props.parentNode ? JSON.stringify(props.parentNode) : "<root>"}: ${query.ecsql}`),
             mergeMap((query) => from(this._queryReader.read(this._queryExecutor, { ...query, ecsql: applyLimit({ ...query }) }))),
           ),
         );
+        this._queriesCache.add(def.query, parsedHierarchyNodesObservable);
+        return parsedHierarchyNodesObservable;
       }),
       concatAll(),
     );
@@ -380,6 +393,31 @@ class ChildNodesCache {
       return entry?.variations.get(variationKey);
     }
     return entry?.primary;
+  }
+}
+
+class QueriesCache {
+  private _map = new Map<string, Observable<ParsedHierarchyNode[]>>();
+
+  private parseRequestProps(query: ECSqlQueryDef) {
+    const primaryKey = JSON.stringify(query);
+    return primaryKey;
+  }
+
+  public add(query: ECSqlQueryDef, value: Observable<ParsedHierarchyNode[]>) {
+    const primaryKey = this.parseRequestProps(query);
+    let entry = this._map.get(primaryKey);
+    if (!entry) {
+      this._map.set(primaryKey, value);
+    } else {
+      entry = value;
+    }
+  }
+
+  public get(query: ECSqlQueryDef): Observable<ParsedHierarchyNode[]> | undefined {
+    const primaryKey = this.parseRequestProps(query);
+    const entry = this._map.get(primaryKey);
+    return entry;
   }
 }
 
