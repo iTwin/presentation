@@ -18,15 +18,15 @@ import {
   throwError,
 } from "rxjs";
 import sinon from "sinon";
-import { QueryScheduler } from "../../hierarchy-builder/internal/QueryScheduler";
+import { SubscriptionScheduler } from "../../hierarchy-builder/internal/SubscriptionScheduler";
 import { ResolvablePromise } from "../Utils";
 
-describe("QueryScheduler", () => {
+describe("SubscriptionScheduler", () => {
   const concurrentSubscriptions = 3;
-  let queryScheduler: QueryScheduler<number>;
+  let subscriptionScheduler: SubscriptionScheduler;
 
   beforeEach(() => {
-    queryScheduler = new QueryScheduler(concurrentSubscriptions);
+    subscriptionScheduler = new SubscriptionScheduler(concurrentSubscriptions);
   });
 
   describe("scheduleSubscription", () => {
@@ -45,18 +45,18 @@ describe("QueryScheduler", () => {
         it("schedules source observable and subscribes to it", async () => {
           const source = createScheduledObservable(sequence, scheduler);
           const subscriptionSpy = sinon.spy(source, "subscribe");
-          await expectSequence(sequence, queryScheduler.scheduleSubscription(source));
+          await expectSequence(sequence, subscriptionScheduler.scheduleSubscription(source));
           expect(subscriptionSpy).to.have.been.calledOnce;
         });
 
         it("schedules source observables in subscription order", async () => {
           const firstSource = createScheduledObservable(sequence, scheduler);
           const firstSubscriptionSpy = sinon.spy(firstSource, "subscribe");
-          const firstScheduledObservable = queryScheduler.scheduleSubscription(firstSource);
+          const firstScheduledObservable = subscriptionScheduler.scheduleSubscription(firstSource);
 
           const secondSource = createScheduledObservable(sequence, scheduler);
           const secondSubscriptionSpy = sinon.spy(secondSource, "subscribe");
-          const secondScheduledObservable = queryScheduler.scheduleSubscription(secondSource);
+          const secondScheduledObservable = subscriptionScheduler.scheduleSubscription(secondSource);
 
           expect(firstSubscriptionSpy).to.have.not.been.called;
           expect(secondSubscriptionSpy).to.have.not.been.called;
@@ -75,10 +75,10 @@ describe("QueryScheduler", () => {
           const source = createScheduledObservable(sequence, scheduler);
           const subscriptionSpy = sinon.spy(source, "subscribe");
 
-          const firstScheduledObservable = queryScheduler.scheduleSubscription(source);
+          const firstScheduledObservable = subscriptionScheduler.scheduleSubscription(source);
           await waitForUnsubscription(firstScheduledObservable.subscribe());
 
-          const secondScheduledObservable = queryScheduler.scheduleSubscription(source);
+          const secondScheduledObservable = subscriptionScheduler.scheduleSubscription(source);
           await waitForUnsubscription(secondScheduledObservable.subscribe());
 
           expect(subscriptionSpy).to.have.been.calledTwice;
@@ -87,11 +87,11 @@ describe("QueryScheduler", () => {
         it("does not subscribe to the next observable until the started ones are resolved", async () => {
           const initialPromises = Array.from({ length: concurrentSubscriptions + 1 }).map(() => new ResolvablePromise<number>());
           const initialSources = initialPromises.map((p) => createScheduledObservable(p, scheduler));
-          const initialSubscriptions = initialSources.map((initialSource) => queryScheduler.scheduleSubscription(initialSource).subscribe());
+          const initialSubscriptions = initialSources.map((initialSource) => subscriptionScheduler.scheduleSubscription(initialSource).subscribe());
 
           const checkSource = createScheduledObservable(sequence, scheduler);
           const checkSourceSpy = sinon.spy(checkSource, "subscribe");
-          queryScheduler.scheduleSubscription(checkSource).subscribe();
+          subscriptionScheduler.scheduleSubscription(checkSource).subscribe();
 
           expect(checkSourceSpy).to.not.have.been.called;
 
@@ -118,7 +118,7 @@ describe("QueryScheduler", () => {
           );
           const errorSpy = sinon.spy();
 
-          const scheduledObservable = queryScheduler.scheduleSubscription(source);
+          const scheduledObservable = subscriptionScheduler.scheduleSubscription(source);
           await waitForUnsubscription(scheduledObservable.subscribe({ error: errorSpy }));
 
           expect(errorSpy).to.have.been.calledOnceWithExactly(error);
@@ -133,10 +133,10 @@ describe("QueryScheduler", () => {
           const secondSource = createScheduledObservable(sequence, scheduler);
 
           const errorSpy = sinon.spy();
-          const firstSubscription = queryScheduler.scheduleSubscription(firstSource).subscribe({ error: errorSpy });
+          const firstSubscription = subscriptionScheduler.scheduleSubscription(firstSource).subscribe({ error: errorSpy });
           const nextSpy = sinon.spy();
           const completeSpy = sinon.spy();
-          const secondSubscription = queryScheduler.scheduleSubscription(secondSource).subscribe({ next: nextSpy, complete: completeSpy });
+          const secondSubscription = subscriptionScheduler.scheduleSubscription(secondSource).subscribe({ next: nextSpy, complete: completeSpy });
 
           await waitForUnsubscription(firstSubscription);
           await waitForUnsubscription(secondSubscription);
@@ -150,7 +150,7 @@ describe("QueryScheduler", () => {
         it("does not subscribe to source observable after schedule cancellation", async () => {
           const onSubscribe = sinon.fake(() => createScheduledObservable(sequence, scheduler));
           const source = defer<Observable<number>>(onSubscribe);
-          queryScheduler.scheduleSubscription(source).subscribe().unsubscribe();
+          subscriptionScheduler.scheduleSubscription(source).subscribe().unsubscribe();
           await Promise.resolve();
           expect(onSubscribe).not.to.have.been.called;
         });

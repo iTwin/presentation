@@ -42,7 +42,7 @@ export interface InstanceNodesQueryDefinition {
   fullClassName: string;
   /**
    * An ECSQL query that selects nodes from an iModel. `SELECT` clause of the query is expected
-   * to be built using [[NodeSelectClauseFactory]].
+   * to be built using [[NodeSelectQueryFactory.createSelectClause]].
    */
   query: ECSqlQueryDef;
 }
