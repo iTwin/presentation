@@ -105,6 +105,7 @@ export function createDefaultValueFormatter(): IPrimitiveValueFormatter;
 export interface CreateInstanceLabelSelectClauseProps {
     classAlias: string;
     className?: string;
+    selectorsConcatenator?: (selectors: TypedValueSelectClauseProps[], checkSelector?: string) => string;
 }
 
 // @beta
@@ -433,15 +434,14 @@ export interface ECSqlSelectClausePropertyValueRange {
 
 // @beta
 export const ECSqlSnippets: {
-    createPropertyValueSelector(classAlias: string, propertyName: string): string;
-    createPropertyValueSelector(classAlias: string, propertyName: string, specialType: ECSqlValueSnippets.SpecialPropertyType): [string, PrimitiveValueType];
+    createRawPropertyValueSelector(classAlias: string, propertyName: string, componentName?: string | undefined): string;
+    createRawPrimitiveValueSelector(value: PrimitiveValue | undefined): string;
     createNullableSelector(props: {
         checkSelector: string;
         valueSelector: string;
     }): string;
-    createConcatenatedTypedValueSelector(selectors: ECSqlValueSnippets.TypedValueSelectClauseProps[], checkSelector?: string | undefined): string;
-    createTypedValueSelector(props: ECSqlValueSnippets.TypedValueSelectClauseProps): string;
-    createPrimitiveValueSelector(value: PrimitiveValue | undefined): string;
+    createConcatenatedValueJsonSelector(selectors: ECSqlValueSnippets.TypedValueSelectClauseProps[], checkSelector?: string | undefined): string;
+    createConcatenatedValueStringSelector(selectors: ECSqlValueSnippets.TypedValueSelectClauseProps[], checkSelector?: string | undefined): string;
     TypedValueSelectClauseProps: typeof ECSqlValueSnippets.TypedValueSelectClauseProps;
     createRelationshipPathJoinClause(props: ECSqlJoinSnippets.CreateRelationshipPathJoinClauseProps): Promise<string>;
 };
