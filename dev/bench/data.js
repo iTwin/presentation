@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1705415721793,
+  "lastUpdate": 1705563881083,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -430,6 +430,42 @@ window.BENCHMARK_DATA = {
             "value": 1842,
             "unit": "ms",
             "extra": "min: 1842\nmax: 1842\ncount: 1\nmean: 1842\np50: 1826.6\nmedian: 1826.6\np75: 1826.6\np90: 1826.6\np95: 1826.6\np99: 1826.6\np999: 1826.6"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35135765+grigasp@users.noreply.github.com",
+            "name": "Grigas",
+            "username": "grigasp"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9d0bad0c74e37d07401b418779abcd0c4c63c5ac",
+          "message": "Hierarchy builder: Add ability to filter hierarchy by Element's ECInstanceId suffix (#380)\n\n* Add ability to filter hierarchy by Element's ECInstanceId suffix\r\n\r\n* extract-api",
+          "timestamp": "2024-01-18T09:43:29+02:00",
+          "tree_id": "f2349bebe4479c7f2e6a448e450cef8fdf02ac91",
+          "url": "https://github.com/iTwin/presentation/commit/9d0bad0c74e37d07401b418779abcd0c4c63c5ac"
+        },
+        "date": 1705563880038,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Initial Models Tree Load: Baytown.bim",
+            "value": 385,
+            "unit": "ms",
+            "extra": "min: 385\nmax: 385\ncount: 1\nmean: 385\np50: 383.8\nmedian: 383.8\np75: 383.8\np90: 383.8\np95: 383.8\np99: 383.8\np999: 383.8"
+          },
+          {
+            "name": "Full Models Tree Load: Baytown.bim",
+            "value": 1864,
+            "unit": "ms",
+            "extra": "min: 1864\nmax: 1864\ncount: 1\nmean: 1864\np50: 1863.5\nmedian: 1863.5\np75: 1863.5\np90: 1863.5\np95: 1863.5\np99: 1863.5\np999: 1863.5"
           }
         ]
       }
