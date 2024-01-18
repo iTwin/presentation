@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { Id64String } from "@itwin/core-bentley";
+import { Id64, Id64String } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
@@ -15,6 +15,7 @@ import { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "@itwin/pr
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { buildTestIModel, TestIModelBuilder } from "@itwin/presentation-testing";
 import {
+  buildIModel,
   insertPhysicalElement,
   insertPhysicalModelWithPartition,
   insertPhysicalPartition,
@@ -774,6 +775,34 @@ describe("Stateless hierarchy builder", () => {
           expect(actualInstanceKeyPaths).to.deep.eq(instanceKeyPaths);
         });
       });
+    });
+
+    it("finds elements by base36 ECInstanceId suffix", async function () {
+      const { imodel, expectedPaths, formattedECInstanceId } = await buildIModel(this, async (builder) => {
+        const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
+        const model = insertPhysicalModelWithPartition({ builder, codeValue: `model`, partitionParentId: rootSubject.id });
+        const category = insertSpatialCategory({ builder, codeValue: "category" });
+        const element = insertPhysicalElement({ builder, userLabel: `element 21`, modelId: model.id, categoryId: category.id });
+        const elementBriefcaseId = Id64.getBriefcaseId(element.id).toString(36).toLocaleUpperCase();
+        const elementLocalId = Id64.getLocalId(element.id).toString(36).toLocaleUpperCase();
+        return {
+          formattedECInstanceId: `[${elementBriefcaseId}-${elementLocalId}]`,
+          expectedPaths: [[rootSubject, model, category, element]].sort(instanceKeyPathSorter),
+        };
+      });
+
+      const schemas = new SchemaContext();
+      schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
+      const metadataProvider = createMetadataProvider(schemas);
+
+      const actualInstanceKeyPaths = (
+        await ModelsTreeDefinition.createInstanceKeyPaths({
+          metadataProvider,
+          queryExecutor: createECSqlQueryExecutor(imodel),
+          label: formattedECInstanceId,
+        })
+      ).sort(instanceKeyPathSorter);
+      expect(actualInstanceKeyPaths).to.deep.eq(expectedPaths);
     });
 
     function insertModelWithElements(builder: TestIModelBuilder, modelNo: number, elementsCategoryId: Id64String, parentId?: Id64String) {

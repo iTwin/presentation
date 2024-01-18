@@ -18,7 +18,7 @@ import { getClass } from "../internal/Common";
 import { RelationshipPath } from "../Metadata";
 import { Id64String, PrimitiveValue } from "../values/Values";
 import { createRelationshipPathJoinClause, JoinRelationshipPath } from "./ecsql-snippets/ECSqlJoinSnippets";
-import { createPrimitiveValueSelector, createPropertyValueSelector } from "./ecsql-snippets/ECSqlValueSelectorSnippets";
+import { createRawPrimitiveValueSelector, createRawPropertyValueSelector } from "./ecsql-snippets/ECSqlValueSelectorSnippets";
 
 /**
  * Column names of the SELECT clause created by [[NodeSelectClauseFactory]]. Order of the names matches the order of columns
@@ -308,7 +308,7 @@ export class NodeSelectQueryFactory {
 
     const whereConditions = new Array<string>();
     if (def.filterClassNames && def.filterClassNames.length > 0) {
-      whereConditions.push(`${createPropertyValueSelector(contentClass.alias, "ECClassId")} IS (${def.filterClassNames.join(", ")})`);
+      whereConditions.push(`${createRawPropertyValueSelector(contentClass.alias, "ECClassId")} IS (${def.filterClassNames.join(", ")})`);
     }
     const classAliasMap = new Map<string, string>([[contentClass.alias, contentClass.fullName]]);
     def.relatedInstances.forEach(({ path, alias }) => path.length > 0 && classAliasMap.set(alias, path[path.length - 1].targetClassName));
@@ -336,7 +336,7 @@ function createECSqlValueSelector(input: undefined | PrimitiveValue | ECSqlValue
   if (isSelector(input)) {
     return input.selector;
   }
-  return createPrimitiveValueSelector(input);
+  return createRawPrimitiveValueSelector(input);
 }
 
 function isSelector(x: any): x is ECSqlValueSelector {
@@ -519,7 +519,7 @@ async function createWhereClause(
     return clause ? (rule.operator === "Or" ? `(${clause})` : clause) : undefined;
   }
   const sourceAlias = rule.sourceAlias ?? contentClassAlias;
-  const propertyValueSelector = createPropertyValueSelector(sourceAlias, rule.propertyName);
+  const propertyValueSelector = createRawPropertyValueSelector(sourceAlias, rule.propertyName);
   if (PropertyFilterRuleOperator.isUnary(rule.operator)) {
     switch (rule.operator) {
       case "True":
@@ -547,11 +547,11 @@ async function createWhereClause(
   }
   if (property.isNavigation()) {
     assert(rule.value !== undefined && PropertyFilterValue.isInstanceKey(rule.value));
-    return `${propertyValueSelector}.[Id] ${ecsqlOperator} ${createPrimitiveValueSelector(rule.value.id)}`;
+    return `${propertyValueSelector}.[Id] ${ecsqlOperator} ${createRawPrimitiveValueSelector(rule.value.id)}`;
   }
   if (property.isEnumeration()) {
     assert(rule.value !== undefined && PropertyFilterValue.isPrimitive(rule.value));
-    return `${propertyValueSelector} ${ecsqlOperator} ${createPrimitiveValueSelector(rule.value)}`;
+    return `${propertyValueSelector} ${ecsqlOperator} ${createRawPrimitiveValueSelector(rule.value)}`;
   }
   if (property.isPrimitive()) {
     assert(rule.value !== undefined && PropertyFilterValue.isPrimitive(rule.value));
@@ -575,19 +575,15 @@ async function createWhereClause(
         `;
         return rule.operator === "Equal" ? condition : `NOT (${condition})`;
       }
-      case "DateTime": {
-        assert(rule.value instanceof Date);
-        return `${propertyValueSelector} ${ecsqlOperator} julianday(${createPrimitiveValueSelector(rule.value.toISOString())})`;
-      }
       case "Double": {
         assert(typeof rule.value === "number");
         if (rule.operator === "Equal" || rule.operator === "NotEqual") {
           return `${createFloatingPointEqualityClause(propertyValueSelector, rule.operator, rule.value)}`;
         }
-        return `${propertyValueSelector} ${ecsqlOperator} ${createPrimitiveValueSelector(rule.value)}`;
+        return `${propertyValueSelector} ${ecsqlOperator} ${createRawPrimitiveValueSelector(rule.value)}`;
       }
       default: {
-        return `${propertyValueSelector} ${ecsqlOperator} ${createPrimitiveValueSelector(rule.value)}`;
+        return `${propertyValueSelector} ${ecsqlOperator} ${createRawPrimitiveValueSelector(rule.value)}`;
       }
     }
   }

@@ -112,7 +112,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
           ecsql: `
             SELECT
               ${await this._selectQueryFactory.createSelectClause({
-                ecClassId: { selector: ECSqlSnippets.createPropertyValueSelector("this", "ECClassId") },
+                ecClassId: { selector: ECSqlSnippets.createRawPropertyValueSelector("this", "ECClassId") },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: {
                   selector: await this._nodeLabelSelectClauseFactory.createSelectClause({
@@ -507,7 +507,12 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
     `GeometricElementsHierarchy(TargetId, TargetLabel, ECClassId, ECInstanceId, ParentId, ModelId, CategoryId, Path) AS (
       SELECT
         e.ECInstanceId,
-        ${await labelsFactory.createSelectClause({ classAlias: "e", className: "BisCore.GeometricElement3d" })},
+        ${await labelsFactory.createSelectClause({
+          classAlias: "e",
+          className: "BisCore.GeometricElement3d",
+          // eslint-disable-next-line @typescript-eslint/unbound-method
+          selectorsConcatenator: ECSqlSnippets.createConcatenatedValueStringSelector,
+        })},
         e.ECClassId,
         e.ECInstanceId,
         e.Parent.Id,
@@ -538,7 +543,12 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
         c.ECClassId,
         c.ECInstanceId,
         printf('0x%x', c.ECInstanceId) HexId,
-        ${await labelsFactory.createSelectClause({ classAlias: "c", className: "BisCore.SpatialCategory" })}
+        ${await labelsFactory.createSelectClause({
+          classAlias: "c",
+          className: "BisCore.SpatialCategory",
+          // eslint-disable-next-line @typescript-eslint/unbound-method
+          selectorsConcatenator: ECSqlSnippets.createConcatenatedValueStringSelector,
+        })}
       FROM bis.SpatialCategory c
     )`,
     `Models(ECClassId, ECInstanceId, HexId, ModeledElementParentId, Label) AS (
@@ -547,8 +557,13 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
         m.ECInstanceId,
         printf('0x%x', m.ECInstanceId) HexId,
         p.Parent.Id,
-        ${await labelsFactory.createSelectClause({ classAlias: "p", className: "BisCore.Element" })}
-      FROM bis.Model m
+        ${await labelsFactory.createSelectClause({
+          classAlias: "p",
+          className: "BisCore.Element",
+          // eslint-disable-next-line @typescript-eslint/unbound-method
+          selectorsConcatenator: ECSqlSnippets.createConcatenatedValueStringSelector,
+        })}
+      FROM bis.GeometricModel3d m
       JOIN bis.Element p on p.ECInstanceId = m.ModeledElement.Id
     )`,
     `ModelsCategoriesElementsHierarchy(TargetElementId, TargetElementLabel, ModelId, ModelHexId, ModelParentId, Path) AS (
@@ -599,7 +614,12 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
     `SubjectsHierarchy(TargetId, TargetLabel, ECClassId, ECInstanceId, ParentId, JsonProperties, Path) AS (
       SELECT
         s.ECInstanceId,
-        ${await labelsFactory.createSelectClause({ classAlias: "s", className: "BisCore.Subject" })},
+        ${await labelsFactory.createSelectClause({
+          classAlias: "s",
+          className: "BisCore.Subject",
+          // eslint-disable-next-line @typescript-eslint/unbound-method
+          selectorsConcatenator: ECSqlSnippets.createConcatenatedValueStringSelector,
+        })},
         s.ECClassId,
         s.ECInstanceId,
         s.Parent.Id,
@@ -780,7 +800,7 @@ async function createInstanceKeyPathsFromInstanceLabel(
   const ecsql = `
     WITH RECURSIVE
       ${(await createInstanceKeyPathsCTEs(props.labelsFactory)).join(", ")}
-    SELECT Path
+    SELECT DISTINCT Path
     FROM (
       ${queries.join(" UNION ALL ")}
     )

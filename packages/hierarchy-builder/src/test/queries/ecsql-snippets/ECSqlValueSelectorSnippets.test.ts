@@ -5,55 +5,14 @@
 
 import { expect } from "chai";
 import {
-  createConcatenatedTypedValueSelector,
+  createConcatenatedValueJsonSelector,
+  createConcatenatedValueStringSelector,
   createNullableSelector,
-  createPrimitiveValueSelector,
-  createPropertyValueSelector,
-  createTypedValueSelector,
+  createRawPrimitiveValueSelector,
+  createRawPropertyValueSelector,
   TypedValueSelectClauseProps,
 } from "../../../hierarchy-builder/queries/ecsql-snippets/ECSqlValueSelectorSnippets";
 import { trimWhitespace } from "../Utils";
-
-describe("createPropertyValueSelector", () => {
-  it("returns selector for simple properties", () => {
-    expect(createPropertyValueSelector("alias", "property-name")).to.eq("[alias].[property-name]");
-  });
-
-  it("returns selector for navigation properties", () => {
-    expect(createPropertyValueSelector("alias", "property-name", "Navigation")).to.deep.eq(["[alias].[property-name].[Id]", "Id"]);
-  });
-
-  it("returns selector for guid properties", () => {
-    expect(createPropertyValueSelector("alias", "property-name", "Guid")).to.deep.eq(["GuidToStr([alias].[property-name])", "String"]);
-  });
-
-  it("returns selector for point2d properties", () => {
-    const propertySelector = "[alias].[property-name]";
-    expect(createPropertyValueSelector("alias", "property-name", "Point2d")).to.deep.eq([
-      `json_object('x', ${propertySelector}.[x], 'y', ${propertySelector}.[y])`,
-      "Point2d",
-    ]);
-  });
-
-  it("returns selector for point3d properties", () => {
-    const propertySelector = "[alias].[property-name]";
-    expect(createPropertyValueSelector("alias", "property-name", "Point3d")).to.deep.eq([
-      `json_object('x', ${propertySelector}.[x], 'y', ${propertySelector}.[y], 'z', ${propertySelector}.[z])`,
-      "Point3d",
-    ]);
-  });
-});
-
-describe("createNullableSelector", () => {
-  it("creates valid selector", () => {
-    expect(
-      createNullableSelector({
-        checkSelector: "CHECK",
-        valueSelector: "VALUE",
-      }),
-    ).to.deep.eq("IIF(CHECK IS NOT NULL, VALUE, NULL)");
-  });
-});
 
 describe("TypedValueSelectClauseProps", () => {
   describe("isPropertySelector", () => {
@@ -79,148 +38,292 @@ describe("TypedValueSelectClauseProps", () => {
   });
 });
 
-describe("createTypedValueSelector", () => {
-  it("creates selector for special property type", () => {
-    expect(
-      trimWhitespace(
-        createTypedValueSelector({
-          propertyClassName: "s.c",
-          propertyClassAlias: "a",
-          propertyName: "p",
-          specialType: "Navigation",
-        }),
-      ),
-    ).to.eq(trimWhitespace("json_object('value', [a].[p].[Id], 'type', 'Id')"));
+describe("createRawPropertyValueSelector", () => {
+  it("returns selector for a property", () => {
+    expect(createRawPropertyValueSelector("alias", "property-name")).to.eq("[alias].[property-name]");
   });
 
-  it("creates selector for property", () => {
-    expect(
-      trimWhitespace(
-        createTypedValueSelector({
-          propertyClassName: "s.c",
-          propertyClassAlias: "a",
-          propertyName: "p",
-        }),
-      ),
-    ).to.eq(trimWhitespace("json_object('className', 's.c', 'propertyName', 'p', 'value', [a].[p])"));
-  });
-
-  it("creates selector using primitive value selector", () => {
-    expect(
-      trimWhitespace(
-        createTypedValueSelector({
-          selector: "xxx",
-          type: "Integer",
-        }),
-      ),
-    ).to.eq(trimWhitespace("json_object('value', xxx, 'type', 'Integer')"));
-  });
-
-  it("creates selector using primitive value selector with null check", () => {
-    expect(
-      trimWhitespace(
-        createTypedValueSelector({
-          selector: "xxx",
-          type: "Integer",
-          nullValueResult: "null",
-        }),
-      ),
-    ).to.eq(trimWhitespace("IIF(xxx IS NOT NULL, json_object('value', xxx, 'type', 'Integer'), NULL)"));
-  });
-
-  it("creates selector using primitive value selector without type", () => {
-    expect(createTypedValueSelector({ selector: "xxx" })).to.eq("xxx");
-  });
-
-  it("creates selector for primitive Date value", () => {
-    const date = new Date();
-    expect(trimWhitespace(createTypedValueSelector({ type: "DateTime", value: date }))).to.eq(
-      trimWhitespace(`json_object('value', '${date.toISOString()}', 'type', 'DateTime')`),
-    );
-  });
-
-  it("creates selector for primitive Point2d value", () => {
-    expect(trimWhitespace(createTypedValueSelector({ type: "Point2d", value: { x: 1, y: 2 } }))).to.eq(
-      trimWhitespace(`json_object('value', json_object('x', 1, 'y', 2), 'type', 'Point2d')`),
-    );
-  });
-
-  it("creates selector for primitive Point3d value", () => {
-    expect(trimWhitespace(createTypedValueSelector({ type: "Point3d", value: { x: 1, y: 2, z: 3 } }))).to.eq(
-      trimWhitespace(`json_object('value', json_object('x', 1, 'y', 2, 'z', 3), 'type', 'Point3d')`),
-    );
-  });
-
-  it("creates selector for primitive string value", () => {
-    expect(trimWhitespace(createTypedValueSelector({ type: "String", value: "test" }))).to.eq(trimWhitespace(`json_object('value', 'test', 'type', 'String')`));
-  });
-
-  it("creates selector for primitive number value", () => {
-    expect(trimWhitespace(createTypedValueSelector({ type: "Double", value: 456.789 }))).to.eq(
-      trimWhitespace(`json_object('value', 456.789, 'type', 'Double')`),
-    );
-  });
-
-  it("creates selector for primitive boolean value", () => {
-    expect(trimWhitespace(createTypedValueSelector({ type: "Boolean", value: true }))).to.eq(trimWhitespace(`json_object('value', TRUE, 'type', 'Boolean')`));
-    expect(trimWhitespace(createTypedValueSelector({ type: "Boolean", value: false }))).to.eq(trimWhitespace(`json_object('value', FALSE, 'type', 'Boolean')`));
+  it("returns selector for a property with component", () => {
+    expect(createRawPropertyValueSelector("alias", "property-name", "component")).to.eq("[alias].[property-name].[component]");
   });
 });
 
-describe("createConcatenatedTypedValueSelector", () => {
-  it("creates empty string selector when given an empty selectors list", () => {
-    expect(createConcatenatedTypedValueSelector([])).to.eq("''");
-  });
-
-  it("creates selectors array", () => {
-    const sel1 = { selector: "x" };
-    const sel2 = { selector: "y" };
-    expect(createConcatenatedTypedValueSelector([sel1, sel2])).to.eq(`json_array(${createTypedValueSelector(sel1)}, ${createTypedValueSelector(sel2)})`);
-  });
-
-  it("creates selectors array with check selector", () => {
-    const sel1 = { selector: "x" };
-    const sel2 = { selector: "y" };
-    expect(createConcatenatedTypedValueSelector([sel1, sel2], "CHECK")).to.eq(
-      createNullableSelector({
-        valueSelector: `json_array(${createTypedValueSelector(sel1)}, ${createTypedValueSelector(sel2)})`,
-        checkSelector: "CHECK",
-      }),
-    );
-  });
-});
-
-describe("createPrimitiveValueSelector", () => {
+describe("createRawPrimitiveValueSelector", () => {
   it("returns NULL when value is `undefined`", () => {
-    expect(createPrimitiveValueSelector(undefined)).to.eq("NULL");
+    expect(createRawPrimitiveValueSelector(undefined)).to.eq("NULL");
   });
 
-  it("returns Date ISO string", () => {
+  it("returns julian day selector", () => {
     const now = new Date();
-    expect(createPrimitiveValueSelector(now)).to.eq(`'${now.toISOString()}'`);
+    expect(createRawPrimitiveValueSelector(now)).to.eq(`julianday('${now.toISOString()}')`);
   });
 
   it("returns point2d object", () => {
-    expect(createPrimitiveValueSelector({ x: 1.23, y: 4.56 })).to.eq(`json_object('x', 1.23, 'y', 4.56)`);
+    expect(createRawPrimitiveValueSelector({ x: 1.23, y: 4.56 })).to.eq(`json_object('x', 1.23, 'y', 4.56)`);
   });
 
   it("returns point3d object", () => {
-    expect(createPrimitiveValueSelector({ x: 1.23, y: 4.56, z: 7.89 })).to.eq(`json_object('x', 1.23, 'y', 4.56, 'z', 7.89)`);
+    expect(createRawPrimitiveValueSelector({ x: 1.23, y: 4.56, z: 7.89 })).to.eq(`json_object('x', 1.23, 'y', 4.56, 'z', 7.89)`);
   });
 
   it("returns string selector", () => {
-    expect(createPrimitiveValueSelector("test")).to.eq(`'test'`);
+    expect(createRawPrimitiveValueSelector("test")).to.eq(`'test'`);
   });
 
   it("returns Id selector", () => {
-    expect(createPrimitiveValueSelector("0x123")).to.eq(`0x123`);
+    expect(createRawPrimitiveValueSelector("0x123")).to.eq(`0x123`);
   });
 
   it("returns numeric selector", () => {
-    expect(createPrimitiveValueSelector(1.23)).to.eq(`1.23`);
+    expect(createRawPrimitiveValueSelector(1.23)).to.eq(`1.23`);
   });
 
   it("returns boolean selector", () => {
-    expect(createPrimitiveValueSelector(true)).to.eq(`TRUE`);
+    expect(createRawPrimitiveValueSelector(true)).to.eq(`TRUE`);
+  });
+});
+
+describe("createNullableSelector", () => {
+  it("creates valid selector", () => {
+    expect(
+      createNullableSelector({
+        checkSelector: "CHECK",
+        valueSelector: "VALUE",
+      }),
+    ).to.deep.eq("IIF(CHECK, VALUE, NULL)");
+  });
+});
+
+const testDate = new Date();
+const CONCATENATED_VALUE_TEST_CASES = [
+  {
+    name: "adds check selector",
+    input: {
+      selectors: [],
+      checkSelector: "CHECK",
+    },
+    expectations: {
+      json: `IIF(CHECK, json_array(), NULL)`,
+      str: `IIF(CHECK, '', NULL)`,
+    },
+  },
+  {
+    name: "concatenates selectors",
+    input: {
+      selectors: [{ selector: "a" }, { selector: "b" }],
+    },
+    expectations: {
+      json: `json_array(a, b)`,
+      str: `a || b`,
+    },
+  },
+  {
+    name: "serializes simple property selector",
+    input: {
+      selectors: [
+        {
+          propertyClassName: "s.c",
+          propertyClassAlias: "alias",
+          propertyName: "prop",
+        },
+      ],
+    },
+    expectations: {
+      json: `json_array(json_object('className', 's.c', 'propertyName', 'prop', 'value', [alias].[prop]))`,
+      str: `[alias].[prop]`,
+    },
+  },
+  {
+    name: "serializes Navigation property selector",
+    input: {
+      selectors: [
+        {
+          propertyClassName: "s.c",
+          propertyClassAlias: "alias",
+          propertyName: "prop",
+          specialType: "Navigation" as const,
+        },
+      ],
+    },
+    expectations: {
+      json: `json_array(json_object('value', [alias].[prop].[Id], 'type', 'Id'))`,
+      str: `CAST([alias].[prop].[Id] AS TEXT)`,
+    },
+  },
+  {
+    name: "serializes Guid property selector",
+    input: {
+      selectors: [
+        {
+          propertyClassName: "s.c",
+          propertyClassAlias: "alias",
+          propertyName: "prop",
+          specialType: "Guid" as const,
+        },
+      ],
+    },
+    expectations: {
+      json: `json_array(json_object('value', GuidToStr([alias].[prop]), 'type', 'String'))`,
+      str: `GuidToStr([alias].[prop])`,
+    },
+  },
+  {
+    name: "serializes Point2d property selector",
+    input: {
+      selectors: [
+        {
+          propertyClassName: "s.c",
+          propertyClassAlias: "alias",
+          propertyName: "prop",
+          specialType: "Point2d" as const,
+        },
+      ],
+    },
+    expectations: {
+      json: `json_array(json_object('value', json_object('x', [alias].[prop].[x], 'y', [alias].[prop].[y]), 'type', 'Point2d'))`,
+      str: `'(' || [alias].[prop].[x] || ', ' || [alias].[prop].[y] || ')'`,
+    },
+  },
+  {
+    name: "serializes Point3d property selector",
+    input: {
+      selectors: [
+        {
+          propertyClassName: "s.c",
+          propertyClassAlias: "alias",
+          propertyName: "prop",
+          specialType: "Point3d" as const,
+        },
+      ],
+    },
+    expectations: {
+      json: `json_array(json_object('value', json_object('x', [alias].[prop].[x], 'y', [alias].[prop].[y], 'z', [alias].[prop].[z]), 'type', 'Point3d'))`,
+      str: `'(' || [alias].[prop].[x] || ', ' || [alias].[prop].[y] || ', ' || [alias].[prop].[z] || ')'`,
+    },
+  },
+  {
+    name: "serializes primitive value selector without type",
+    input: {
+      selectors: [
+        {
+          selector: "xxx",
+        },
+      ],
+    },
+    expectations: {
+      json: `json_array(xxx)`,
+      str: `xxx`,
+    },
+  },
+  {
+    name: "serializes primitive value selector with type",
+    input: {
+      selectors: [
+        {
+          selector: "xxx",
+          type: "Integer" as const,
+        },
+      ],
+    },
+    expectations: {
+      json: `json_array(json_object('value', xxx, 'type', 'Integer'))`,
+      str: `xxx`,
+    },
+  },
+  {
+    name: "serializes primitive Date value",
+    input: {
+      selectors: [{ type: "DateTime" as const, value: testDate }],
+    },
+    expectations: {
+      json: `json_array(json_object('value', '${testDate.toISOString()}', 'type', 'DateTime'))`,
+      str: `'${testDate.toLocaleString()}'`,
+    },
+  },
+  {
+    name: "serializes primitive Point2d value",
+    input: {
+      selectors: [{ type: "Point2d" as const, value: { x: 1, y: 2 } }],
+    },
+    expectations: {
+      json: `json_array(json_object('value', json_object('x', 1, 'y', 2), 'type', 'Point2d'))`,
+      str: `'(1, 2)'`,
+    },
+  },
+  {
+    name: "serializes primitive Point3d value",
+    input: {
+      selectors: [{ type: "Point3d" as const, value: { x: 1, y: 2, z: 3 } }],
+    },
+    expectations: {
+      json: `json_array(json_object('value', json_object('x', 1, 'y', 2, 'z', 3), 'type', 'Point3d'))`,
+      str: `'(1, 2, 3)'`,
+    },
+  },
+  {
+    name: "serializes primitive Id64 value",
+    input: {
+      selectors: [{ type: "Id" as const, value: "0x123" }],
+    },
+    expectations: {
+      json: `json_array(json_object('value', 0x123, 'type', 'Id'))`,
+      str: `'0x123'`,
+    },
+  },
+  {
+    name: "serializes primitive String value",
+    input: {
+      selectors: [{ type: "String" as const, value: "test" }],
+    },
+    expectations: {
+      json: `json_array(json_object('value', 'test', 'type', 'String'))`,
+      str: `'test'`,
+    },
+  },
+  {
+    name: "serializes primitive Double value",
+    input: {
+      selectors: [{ type: "Double" as const, value: 456.789 }],
+    },
+    expectations: {
+      json: `json_array(json_object('value', 456.789, 'type', 'Double'))`,
+      str: `'456.789'`,
+    },
+  },
+  {
+    name: "serializes primitive Boolean value: false",
+    input: {
+      selectors: [{ type: "Boolean" as const, value: false }],
+    },
+    expectations: {
+      json: `json_array(json_object('value', FALSE, 'type', 'Boolean'))`,
+      str: `'false'`,
+    },
+  },
+  {
+    name: "serializes primitive Boolean value: true",
+    input: {
+      selectors: [{ type: "Boolean" as const, value: true }],
+    },
+    expectations: {
+      json: `json_array(json_object('value', TRUE, 'type', 'Boolean'))`,
+      str: `'true'`,
+    },
+  },
+];
+
+describe("createConcatenatedValueJsonSelector", () => {
+  CONCATENATED_VALUE_TEST_CASES.forEach(({ name, input, expectations }) => {
+    it(name, () => {
+      expect(trimWhitespace(createConcatenatedValueJsonSelector(input.selectors, input.checkSelector))).to.eq(trimWhitespace(expectations.json));
+    });
+  });
+});
+
+describe("createConcatenatedValueStringSelector", () => {
+  CONCATENATED_VALUE_TEST_CASES.forEach(({ name, input, expectations }) => {
+    it(name, () => {
+      expect(trimWhitespace(createConcatenatedValueStringSelector(input.selectors, input.checkSelector))).to.eq(trimWhitespace(expectations.str));
+    });
   });
 });
