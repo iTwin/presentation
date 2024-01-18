@@ -9,57 +9,12 @@ import { PrimitiveValue, TypedPrimitiveValue } from "../../values/Values";
 
 /**
  * A union of property types that need special handling when creating a property value selector.
- * @see [[createPropertyValueSelector]]
+ * For example, Guid values are stored as binary and need to be selected with `GuidToStr` function to
+ * get a meaningful value.
+ *
  * @beta
  */
 export type SpecialPropertyType = "Navigation" | "Guid" | "Point2d" | "Point3d";
-
-/**
- * Creates a value selector, given class alias and property name. Example result: `[classAlias].[PropertyName]`.
- * @beta
- */
-export function createPropertyValueSelector(classAlias: string, propertyName: string): string;
-/**
- * Creates a value selector for special property types:
- * - `Navigation`: `["[classAlias].[PropertyName].[Id]", "Id"]`.
- * - `Guid`: `["GuidToStr([classAlias].[PropertyName])", "String"]`.
- * - `Point2d`: `["json_object('x': [classAlias].[PropertyName].[x], 'y': [classAlias].[PropertyName].[y])", "Point2d"]`.
- * - `Point3d`: `["json_object('x': [classAlias].[PropertyName].[x], 'y': [classAlias].[PropertyName].[y], 'z': [classAlias].[PropertyName].[z])", "Point3d"]`.
- *
- * @beta
- */
-export function createPropertyValueSelector(classAlias: string, propertyName: string, specialType: SpecialPropertyType): [string, PrimitiveValueType];
-/** @beta */
-export function createPropertyValueSelector(
-  classAlias: string,
-  propertyName: string,
-  specialType?: SpecialPropertyType,
-): string | [string, PrimitiveValueType] {
-  const propertySelector = `[${classAlias}].[${propertyName}]`;
-  if (!specialType) {
-    return propertySelector;
-  }
-  switch (specialType) {
-    case "Navigation":
-      return [`${propertySelector}.[Id]`, "Id"];
-    case "Guid":
-      return [`GuidToStr(${propertySelector})`, "String"];
-    case "Point2d":
-      return [`json_object('x', ${propertySelector}.[x], 'y', ${propertySelector}.[y])`, "Point2d"];
-    case "Point3d":
-      return [`json_object('x', ${propertySelector}.[x], 'y', ${propertySelector}.[y], 'z', ${propertySelector}.[z])`, "Point3d"];
-  }
-}
-
-/**
- * Creates a clause for returning `NULL` when `checkSelector` returns `NULL`, or result of `valueSelector`
- * otherwise. Example result: `IIF(CHECK_SELECTOR IS NOT NULL, VALUE_SELECTOR, NULL)`.
- *
- * @beta
- */
-export function createNullableSelector(props: { checkSelector: string; valueSelector: string }): string {
-  return `IIF(${props.checkSelector} IS NOT NULL, ${props.valueSelector}, NULL)`;
-}
 
 /**
  * Props for selecting property value along with its metadata.
@@ -78,12 +33,6 @@ export interface PropertyValueSelectClauseProps {
   propertyName: string;
   /** Special type of the property if it matches any. */
   specialType?: SpecialPropertyType;
-  /**
-   * Indication of how `NULL` property values should be handled:
-   * - `null` means that selector will result in `NULL` value if the property value is `NULL`.
-   * - `selector` means that selector will return a valid JSON object with `NULL` property value stored inside it.
-   */
-  nullValueResult?: "null" | "selector";
 }
 
 /**
@@ -95,14 +44,6 @@ export interface PrimitiveValueSelectorProps {
   selector: string;
   /** Type of the value. Defaults to `String`. */
   type?: PrimitiveValueType;
-  /**
-   * Indication of how `NULL` property values should be handled:
-   * - `null` means that selector will result in `NULL` value if the property value is `NULL`.
-   * - `selector` means that selector will return a valid JSON object with `NULL` property value stored inside it.
-   *
-   * Defaults to `null`.
-   */
-  nullValueResult?: "null" | "selector";
 }
 
 /**
@@ -130,7 +71,66 @@ export namespace TypedValueSelectClauseProps {
 }
 
 /**
- * Create a selector combined of multiple typed value selectors in a form of a JSON array. This allows handling results
+ * Creates an ECSQL selector for raw property value, or, optionally - it's component. Example result:
+ * `[classAlias].[propertyName].[componentName]`.
+ *
+ * @beta
+ */
+export function createRawPropertyValueSelector(classAlias: string, propertyName: string, componentName?: string): string {
+  let propertySelector = `[${classAlias}].[${propertyName}]`;
+  if (componentName) {
+    propertySelector += `.[${componentName}]`;
+  }
+  return propertySelector;
+}
+
+/**
+ * Creates an ECSQL selector for a raw primitive value.
+ * - `undefined` is selected as `NULL`.
+ * - `Date` values are selected in julian day format.
+ * - `Point2d` and `Point3d` values are selected as serialized JSON objects, e.g. `{ x: 1, y: 2, z: 3 }`.
+ * - Other kinds of values are selected as-is.
+ *
+ * @beta
+ */
+export function createRawPrimitiveValueSelector(value: PrimitiveValue | undefined) {
+  if (value === undefined) {
+    return "NULL";
+  }
+  if (value instanceof Date) {
+    return `julianday('${value.toISOString()}')`;
+  }
+  if (PrimitiveValue.isPoint3d(value)) {
+    return `json_object('x', ${value.x}, 'y', ${value.y}, 'z', ${value.z})`;
+  }
+  if (PrimitiveValue.isPoint2d(value)) {
+    return `json_object('x', ${value.x}, 'y', ${value.y})`;
+  }
+  switch (typeof value) {
+    case "string":
+      return Id64.isId64(value) ? value : `'${value}'`;
+    case "number":
+      return value.toString();
+    case "boolean":
+      return value ? "TRUE" : "FALSE";
+  }
+}
+
+/**
+ * Creates a clause for returning `NULL` when `checkSelector` returns a falsy value, or result of `valueSelector`
+ * otherwise. Example result: `IIF(CHECK_SELECTOR, VALUE_SELECTOR, NULL)`.
+ *
+ * @note In SQL `NULL` is not considered falsy, so when checking for `NULL` values, the `checkSelector` should
+ * be like `{selector} IS NOT NULL`.
+ *
+ * @beta
+ */
+export function createNullableSelector(props: { checkSelector: string; valueSelector: string }): string {
+  return `IIF(${props.checkSelector}, ${props.valueSelector}, NULL)`;
+}
+
+/**
+ * Create an ECSQL selector combined of multiple typed value selectors in a form of a JSON array. This allows handling results
  * of each value selector individually when parsing query result.
  *
  * Example result: `json_array(VALUE_SELECTOR_1, VALUE_SELECTOR_2, ...)`.
@@ -139,74 +139,67 @@ export namespace TypedValueSelectClauseProps {
  * `NULL` result when the argument selector results in `NULL`. Example result with `checkSelector`:
  * `IIF(CHECK_SELECTOR, json_array(VALUE_SELECTOR_1, VALUE_SELECTOR_2, ...), NULL)`.
  *
+ * @note The resulting JSON is of [[ConcatenatedValue]] type and it's recommended to use [[ConcatenatedValue.serialize]] to
+ * handle each individual part.
+ *
+ * @see ConcatenatedValue
+ *
  * @beta
  */
-export function createConcatenatedTypedValueSelector(selectors: TypedValueSelectClauseProps[], checkSelector?: string) {
-  if (selectors.length === 0) {
-    return "''";
-  }
-  const combinedSelectors = `json_array(${selectors.map(createTypedValueSelector).join(", ")})`;
+export function createConcatenatedValueJsonSelector(selectors: TypedValueSelectClauseProps[], checkSelector?: string) {
+  const combinedSelectors = `json_array(${selectors.map((sel) => createTypedValueJsonSelector(sel)).join(", ")})`;
   if (checkSelector) {
     return createNullableSelector({ checkSelector, valueSelector: combinedSelectors });
   }
   return combinedSelectors;
 }
-
-/**
- * Creates an ECSQL selector for a value and its metadata based on given props.
- * @beta
- */
-export function createTypedValueSelector(props: TypedValueSelectClauseProps): string {
+function createTypedValueJsonSelector(props: TypedValueSelectClauseProps): string {
   if (TypedValueSelectClauseProps.isPropertySelector(props)) {
     if (props.specialType) {
       // eslint-disable-next-line @typescript-eslint/no-shadow
-      const [valueSelector, typeOverride] = createPropertyValueSelector(props.propertyClassAlias, props.propertyName, props.specialType);
-      return createTypedValueSelector({ selector: valueSelector, type: typeOverride, nullValueResult: props.nullValueResult });
+      const [valueSelector, typeOverride] = createSpecialPropertyValueJsonSelector(props.propertyClassAlias, props.propertyName, props.specialType);
+      return createTypedValueJsonSelector({ selector: valueSelector, type: typeOverride });
     }
-    const valueSelector = createPropertyValueSelector(props.propertyClassAlias, props.propertyName);
-    // note: json object's structure must match `PropertyValue` interface
-    const typedSelector = `
+    return `
       json_object(
         'className', '${props.propertyClassName}',
         'propertyName', '${props.propertyName}',
-        'value', ${valueSelector}
+        'value', ${createRawPropertyValueSelector(props.propertyClassAlias, props.propertyName)}
       )
     `;
-    return withNullSelectorHandling({ nullValueResult: props.nullValueResult, valueSelector: typedSelector, checkSelector: valueSelector });
   }
   if (TypedValueSelectClauseProps.isPrimitiveValueSelector(props)) {
     if (props.type) {
-      const typedSelector = `
+      return `
         json_object(
           'value', ${props.selector},
           'type', '${props.type}'
         )
       `;
-      return withNullSelectorHandling({ nullValueResult: props.nullValueResult, valueSelector: typedSelector, checkSelector: props.selector });
     }
     return props.selector;
   }
   return `
     json_object(
-      'value', ${createPrimitiveValueSelector(props.value)},
+      'value', ${createPrimitiveValueJsonSelector(props.value)},
       'type', '${props.type}'
     )
   `;
 }
-
-function withNullSelectorHandling(props: { nullValueResult?: "null" | "selector"; valueSelector: string; checkSelector: string }) {
-  const { checkSelector, valueSelector, nullValueResult } = props;
-  return nullValueResult === "null" ? createNullableSelector({ valueSelector, checkSelector }) : valueSelector;
-}
-
-/**
- * Creates a selector for the given primitive value.
- * @beta
- */
-export function createPrimitiveValueSelector(value: PrimitiveValue | undefined) {
-  if (value === undefined) {
-    return "NULL";
+function createSpecialPropertyValueJsonSelector(classAlias: string, propertyName: string, specialType: SpecialPropertyType): [string, PrimitiveValueType] {
+  const propertySelector = `[${classAlias}].[${propertyName}]`;
+  switch (specialType) {
+    case "Navigation":
+      return [`${propertySelector}.[Id]`, "Id"];
+    case "Guid":
+      return [`GuidToStr(${propertySelector})`, "String"];
+    case "Point2d":
+      return [`json_object('x', ${propertySelector}.[x], 'y', ${propertySelector}.[y])`, "Point2d"];
+    case "Point3d":
+      return [`json_object('x', ${propertySelector}.[x], 'y', ${propertySelector}.[y], 'z', ${propertySelector}.[z])`, "Point3d"];
   }
+}
+function createPrimitiveValueJsonSelector(value: PrimitiveValue) {
   if (value instanceof Date) {
     return `'${value.toISOString()}'`;
   }
@@ -224,4 +217,69 @@ export function createPrimitiveValueSelector(value: PrimitiveValue | undefined) 
     case "boolean":
       return value ? "TRUE" : "FALSE";
   }
+}
+
+/**
+ * Create an ECSQL selector combined of multiple typed value selectors in a form of a string.
+ *
+ * Example result: `VALUE_SELECTOR_1 || VALUE_SELECTOR_2 || ...`.
+ *
+ * Optionally, the function also accepts a `checkSelector` argument, which can be used to make the selector return
+ * `NULL` result when `checkSelector` results in a falsy value. Example result with `checkSelector`:
+ * `IIF(CHECK_SELECTOR, VALUE_SELECTOR_1 || VALUE_SELECTOR_2 || ..., NULL)`.
+ *
+ * @note Not all types of [[TypedValueSelectClauseProps]] can be serialized to a user-friendly string, e.g. when
+ * selecting a numeric value with units, this function is going to select the raw value. To create properly formatted
+ * concatenated values:
+ * 1. They should be selected with [[createConcatenatedValueJsonSelector]], which returns a serialized JSON object.
+ * 2. The JSON should be parsed from resulting string and passed to [[ConcatenatedValue.serialize]], which additionally
+ *    takes a formatter. One can be created using [[createDefaultValueFormatter]].
+ *
+ * @beta
+ */
+export function createConcatenatedValueStringSelector(selectors: TypedValueSelectClauseProps[], checkSelector?: string) {
+  const combinedSelectors = selectors.length ? selectors.map((sel) => createTypedValueStringSelector(sel)).join(" || ") : "''";
+  if (checkSelector) {
+    return createNullableSelector({ checkSelector, valueSelector: combinedSelectors });
+  }
+  return combinedSelectors;
+}
+function createTypedValueStringSelector(props: TypedValueSelectClauseProps): string {
+  if (TypedValueSelectClauseProps.isPropertySelector(props)) {
+    if (props.specialType) {
+      // eslint-disable-next-line @typescript-eslint/no-shadow
+      const [valueSelector, typeOverride] = createSpecialPropertyValueStringSelector(props.propertyClassAlias, props.propertyName, props.specialType);
+      return createTypedValueStringSelector({ selector: valueSelector, type: typeOverride });
+    }
+    return createRawPropertyValueSelector(props.propertyClassAlias, props.propertyName);
+  }
+  if (TypedValueSelectClauseProps.isPrimitiveValueSelector(props)) {
+    return props.selector;
+  }
+  return createPrimitiveValueStringSelector(props.value);
+}
+function createSpecialPropertyValueStringSelector(classAlias: string, propertyName: string, specialType: SpecialPropertyType): [string, PrimitiveValueType] {
+  const propertySelector = createRawPropertyValueSelector(classAlias, propertyName);
+  switch (specialType) {
+    case "Navigation":
+      return [`CAST(${propertySelector}.[Id] AS TEXT)`, "Id"];
+    case "Guid":
+      return [`GuidToStr(${propertySelector})`, "String"];
+    case "Point2d":
+      return [`'(' || ${propertySelector}.[x] || ', ' || ${propertySelector}.[y] || ')'`, "Point2d"];
+    case "Point3d":
+      return [`'(' || ${propertySelector}.[x] || ', ' || ${propertySelector}.[y] || ', ' || ${propertySelector}.[z] || ')'`, "Point3d"];
+  }
+}
+function createPrimitiveValueStringSelector(value: PrimitiveValue) {
+  if (value instanceof Date) {
+    return `'${value.toLocaleString()}'`;
+  }
+  if (PrimitiveValue.isPoint3d(value)) {
+    return `'(${value.x}, ${value.y}, ${value.z})'`;
+  }
+  if (PrimitiveValue.isPoint2d(value)) {
+    return `'(${value.x}, ${value.y})'`;
+  }
+  return `'${value.toString()}'`;
 }

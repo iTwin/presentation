@@ -14,10 +14,6 @@ describe("createDefaultValueFormatter", () => {
     formatter = createDefaultValueFormatter();
   });
 
-  it("formats id values", async () => {
-    expect(await formatter({ type: "Id", value: "0x123" })).to.eq("0-83");
-  });
-
   it("formats boolean values", async () => {
     expect(await formatter({ type: "Boolean", value: false })).to.eq("false");
     expect(await formatter({ type: "Boolean", value: true })).to.eq("true");
@@ -60,6 +56,10 @@ describe("createDefaultValueFormatter", () => {
     expect(await formatter({ type: "Point3d", value: { x: 1, y: 2, z: 3 } })).to.eq(
       `(${await formatter({ type: "Double", value: 1 })}, ${await formatter({ type: "Double", value: 2 })}, ${await formatter({ type: "Double", value: 3 })})`,
     );
+  });
+
+  it("returns id values as-is", async () => {
+    expect(await formatter({ type: "Id", value: "0x123" })).to.eq("0x123");
   });
 
   it("returns string values as-is", async () => {
