@@ -4,6 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { EMPTY, from, map, mergeMap, range, throwError } from "rxjs";
+import { eachValueFrom } from "rxjs-for-await";
 import sinon from "sinon";
 import { omit } from "@itwin/core-bentley";
 import { ECKindOfQuantity, ECPrimitiveProperty, ECProperty, IMetadataProvider } from "../hierarchy-builder/ECMetadata";
@@ -147,28 +149,20 @@ describe("HierarchyProvider", () => {
       });
 
       const queryTimeout1 = new ResolvablePromise();
-      queryExecutor.createQueryReader.onFirstCall().returns({
-        async *[Symbol.asyncIterator](): AsyncIterableIterator<ECSqlQueryRow> {
-          await queryTimeout1;
-        },
-      });
+      queryExecutor.createQueryReader.onFirstCall().returns(eachValueFrom<ECSqlQueryRow>(from(queryTimeout1).pipe(mergeMap(() => EMPTY))));
 
       const queryTimeout2 = new ResolvablePromise();
-      queryExecutor.createQueryReader.onSecondCall().returns({
-        async *[Symbol.asyncIterator](): AsyncIterableIterator<ECSqlQueryRow> {
-          await queryTimeout2;
-        },
-      });
+      queryExecutor.createQueryReader.onSecondCall().returns(eachValueFrom<ECSqlQueryRow>(from(queryTimeout2).pipe(mergeMap(() => EMPTY))));
 
       queryExecutor.createQueryReader.onThirdCall().returns(createFakeQueryReader([]));
 
-      void provider.queryScheduler.schedule("1").next();
+      void provider.queryScheduler.schedule({ ecsql: "1" }).next();
       await waitFor(() => expect(queryExecutor.createQueryReader).to.be.calledOnce);
 
-      void provider.queryScheduler.schedule("2").next();
+      void provider.queryScheduler.schedule({ ecsql: "2" }).next();
       await waitFor(() => expect(queryExecutor.createQueryReader).to.be.calledTwice);
 
-      void provider.queryScheduler.schedule("3").next();
+      void provider.queryScheduler.schedule({ ecsql: "3" }).next();
       // not called for the third time until one of the first queries complete
       await waitFor(() => expect(queryExecutor.createQueryReader).to.be.calledTwice, 100);
 
@@ -755,11 +749,7 @@ describe("HierarchyProvider", () => {
     });
 
     it("rethrows query executor errors", async () => {
-      queryExecutor.createQueryReader.returns({
-        async *[Symbol.asyncIterator]() {
-          throw new Error("test error");
-        },
-      });
+      queryExecutor.createQueryReader.returns(eachValueFrom<ECSqlQueryRow>(throwError(() => new Error("test error"))));
       const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel() {
           return [
@@ -779,11 +769,7 @@ describe("HierarchyProvider", () => {
     });
 
     it("rethrows query executor errors thrown while determining children", async () => {
-      queryExecutor.createQueryReader.returns({
-        async *[Symbol.asyncIterator]() {
-          throw new Error("test error");
-        },
-      });
+      queryExecutor.createQueryReader.returns(eachValueFrom<ECSqlQueryRow>(throwError(() => new Error("test error"))));
       const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
@@ -806,11 +792,17 @@ describe("HierarchyProvider", () => {
     });
 
     it("sets children flag on parent node to `true` when determining children throws with `rows limit exceeded` error", async () => {
-      queryExecutor.createQueryReader.returns({
-        async *[Symbol.asyncIterator]() {
-          throw new RowsLimitExceededError(999);
-        },
-      });
+      queryExecutor.createQueryReader.returns(
+        eachValueFrom<ECSqlQueryRow>(
+          range(1, 1001).pipe(
+            map((index) => ({
+              [NodeSelectClauseColumnNames.FullClassName]: `ClassName-${index}`,
+              [NodeSelectClauseColumnNames.ECInstanceId]: `0x${index}`,
+              [NodeSelectClauseColumnNames.DisplayLabel]: `Label-${index}`,
+            })),
+          ),
+        ),
+      );
       const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {

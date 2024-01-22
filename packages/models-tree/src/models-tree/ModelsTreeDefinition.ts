@@ -16,9 +16,9 @@ import {
   HierarchyNode,
   HierarchyNodeIdentifiersPath,
   Id64String,
-  IECSqlQueryExecutor,
   IHierarchyLevelDefinitionsFactory,
   IInstanceLabelSelectClauseFactory,
+  ILimitingECSqlQueryExecutor,
   IMetadataProvider,
   InstanceKey,
   NodeSelectClauseColumnNames,
@@ -33,13 +33,13 @@ export interface ModelsTreeDefinitionProps {
 
 export interface ModelsTreeInstanceKeyPathsFromInstanceKeysProps {
   metadataProvider: IMetadataProvider;
-  queryExecutor: IECSqlQueryExecutor;
+  queryExecutor: ILimitingECSqlQueryExecutor;
   keys: InstanceKey[];
 }
 
 export interface ModelsTreeInstanceKeyPathsFromInstanceLabelProps {
   metadataProvider: IMetadataProvider;
-  queryExecutor: IECSqlQueryExecutor;
+  queryExecutor: ILimitingECSqlQueryExecutor;
   label: string;
 }
 
@@ -678,18 +678,20 @@ async function createInstanceKeyPathsFromInstanceKeys(props: ModelsTreeInstanceK
   const subjectClass = await getSchemaClass(bisSchema, "Subject");
   const modelClass = await getSchemaClass(bisSchema, "Model");
   const categoryClass = await getSchemaClass(bisSchema, "SpatialCategory");
-  for (const key of props.keys) {
-    const keyClass = await getClass(props.metadataProvider, key.className);
-    if (await keyClass.is(subjectClass)) {
-      ids.subjects.push(key.id);
-    } else if (await keyClass.is(modelClass)) {
-      ids.models.push(key.id);
-    } else if (await keyClass.is(categoryClass)) {
-      ids.categories.push(key.id);
-    } else {
-      ids.elements.push(key.id);
-    }
-  }
+  await Promise.all(
+    props.keys.map(async (key) => {
+      const keyClass = await getClass(props.metadataProvider, key.className);
+      if (await keyClass.is(subjectClass)) {
+        ids.subjects.push(key.id);
+      } else if (await keyClass.is(modelClass)) {
+        ids.models.push(key.id);
+      } else if (await keyClass.is(categoryClass)) {
+        ids.categories.push(key.id);
+      } else {
+        ids.elements.push(key.id);
+      }
+    }),
+  );
 
   const queries = [];
   if (ids.elements.length > 0) {
@@ -739,19 +741,20 @@ async function createInstanceKeyPathsFromInstanceKeys(props: ModelsTreeInstanceK
     return [];
   }
 
-  const ecsql = `
-    WITH RECURSIVE
-      ${(await createInstanceKeyPathsCTEs({ createSelectClause: async () => "''" })).join(", ")}
-    ${queries.join(" UNION ALL ")}
-  `;
-
   const bindings: ECSqlBinding[] = [];
   ids.elements.forEach((id) => bindings.push({ type: "id", value: id }));
   ids.categories.forEach((id) => bindings.push({ type: "id", value: id }));
   ids.models.forEach((id) => bindings.push({ type: "id", value: id }));
   ids.subjects.forEach((id) => bindings.push({ type: "id", value: id }));
 
-  const reader = props.queryExecutor.createQueryReader(ecsql, bindings, { rowFormat: "Indexes" });
+  const reader = props.queryExecutor.createQueryReader(
+    {
+      ctes: await createInstanceKeyPathsCTEs({ createSelectClause: async () => "''" }),
+      ecsql: queries.join(" UNION ALL "),
+      bindings,
+    },
+    { rowFormat: "Indexes" },
+  );
   const paths = new Array<HierarchyNodeIdentifiersPath>();
   for await (const row of reader) {
     paths.push(flatten<InstanceKey>(JSON.parse(row[0])).reverse());
@@ -797,17 +800,20 @@ async function createInstanceKeyPathsFromInstanceLabel(
     FROM Subjects s
   `);
 
-  const ecsql = `
-    WITH RECURSIVE
-      ${(await createInstanceKeyPathsCTEs(props.labelsFactory)).join(", ")}
-    SELECT DISTINCT Path
-    FROM (
-      ${queries.join(" UNION ALL ")}
-    )
-    WHERE Label LIKE '%' || ? || '%'
-  `;
-
-  const reader = props.queryExecutor.createQueryReader(ecsql, [{ type: "string", value: props.label }], { rowFormat: "Indexes" });
+  const reader = props.queryExecutor.createQueryReader(
+    {
+      ctes: await createInstanceKeyPathsCTEs(props.labelsFactory),
+      ecsql: `
+        SELECT DISTINCT Path
+        FROM (
+          ${queries.join(" UNION ALL ")}
+        )
+        WHERE Label LIKE '%' || ? || '%'
+      `,
+      bindings: [{ type: "string", value: props.label }],
+    },
+    { rowFormat: "Indexes" },
+  );
   const paths = new Array<HierarchyNodeIdentifiersPath>();
   for await (const row of reader) {
     paths.push(flatten<InstanceKey>(JSON.parse(row[0])).reverse());

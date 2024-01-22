@@ -3,7 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Observable } from "rxjs";
+import { from, Observable } from "rxjs";
+import { eachValueFrom } from "rxjs-for-await";
 import sinon from "sinon";
 import { BeDuration, Logger, LogLevel, StopWatch } from "@itwin/core-bentley";
 import { ECClass, ECEntityClass, ECProperty, ECRelationshipClass, ECRelationshipConstraint, IMetadataProvider } from "../hierarchy-builder/ECMetadata";
@@ -16,7 +17,7 @@ import {
 } from "../hierarchy-builder/HierarchyNode";
 import * as common from "../hierarchy-builder/internal/Common";
 import { parseFullClassName } from "../hierarchy-builder/Metadata";
-import { ECSqlQueryReader, ECSqlQueryRow } from "../hierarchy-builder/queries/ECSqlCore";
+import { ECSqlQueryReader } from "../hierarchy-builder/queries/ECSqlCore";
 import { InstanceKey } from "../hierarchy-builder/values/Values";
 
 export function setupLogging(levels: Array<{ namespace: string; level: LogLevel }>) {
@@ -40,6 +41,14 @@ export async function getObservableResult<T>(obs: Observable<T>): Promise<Array<
       },
     });
   });
+}
+
+export async function toArray<T>(asyncIter: AsyncIterableIterator<T>): Promise<Array<T>> {
+  const arr = [];
+  for await (const item of asyncIter) {
+    arr.push(item);
+  }
+  return arr;
 }
 
 export function createTestParsedCustomNode(src?: Partial<ParsedCustomHierarchyNode>): ParsedCustomHierarchyNode {
@@ -241,11 +250,5 @@ export async function waitFor(check: () => void, timeout?: number) {
 }
 
 export function createFakeQueryReader(rows: object[]): ECSqlQueryReader {
-  return {
-    async *[Symbol.asyncIterator](): AsyncIterableIterator<ECSqlQueryRow> {
-      for (const row of rows) {
-        yield row as ECSqlQueryRow;
-      }
-    },
-  };
+  return eachValueFrom(from(rows));
 }

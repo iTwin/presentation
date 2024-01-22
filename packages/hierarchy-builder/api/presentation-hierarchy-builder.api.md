@@ -339,15 +339,12 @@ export interface ECSqlQueryDef {
 }
 
 // @beta
-export interface ECSqlQueryReader {
-    // (undocumented)
-    [Symbol.asyncIterator](): AsyncIterableIterator<ECSqlQueryRow>;
-}
+export type ECSqlQueryReader = AsyncIterableIterator<ECSqlQueryRow>;
 
 // @beta
 export interface ECSqlQueryReaderOptions {
     // (undocumented)
-    rowFormat: ECSqlQueryRowFormat;
+    rowFormat?: ECSqlQueryRowFormat;
 }
 
 // @beta
@@ -720,10 +717,10 @@ export class HierarchyProvider {
     // (undocumented)
     getNodes(props: GetHierarchyNodesProps): Promise<HierarchyNode[]>;
     readonly hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
-    readonly queryExecutor: IECSqlQueryExecutor;
+    readonly limitingQueryExecutor: ILimitingECSqlQueryExecutor;
     // @internal (undocumented)
     get queryScheduler(): {
-        schedule: (ecsql: string, bindings?: ECSqlBinding[], options?: ECSqlQueryReaderOptions) => AsyncIterableIterator<ECSqlQueryRow>;
+        schedule: ILimitingECSqlQueryExecutor["createQueryReader"];
     };
 }
 
@@ -759,6 +756,13 @@ export interface IHierarchyLevelDefinitionsFactory {
 // @beta
 export interface IInstanceLabelSelectClauseFactory {
     createSelectClause(props: CreateInstanceLabelSelectClauseProps): Promise<string>;
+}
+
+// @beta
+export interface ILimitingECSqlQueryExecutor {
+    createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions & {
+        limit?: number | "unbounded";
+    }): ECSqlQueryReader;
 }
 
 // @beta

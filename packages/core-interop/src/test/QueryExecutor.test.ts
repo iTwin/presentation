@@ -9,13 +9,12 @@ import { QueryBinder, QueryOptions, QueryRowFormat } from "@itwin/core-common";
 import { Point2d, Point3d } from "@itwin/core-geometry";
 import { ECSqlBinding } from "@itwin/presentation-hierarchy-builder";
 import { createECSqlQueryExecutor, ICoreECSqlReaderFactory } from "../core-interop/QueryExecutor";
-import { createECSqlReaderStub } from "./Utils";
 
 describe("createECSqlQueryExecutor", () => {
   describe("createQueryReader", () => {
     it("calls IModel's `createQueryReader` with default params", async () => {
       const imodel = {
-        createQueryReader: sinon.stub().returns(createECSqlReaderStub([{}, {}])),
+        createQueryReader: sinon.stub().returns(createCoreECSqlReaderStub([{}, {}])),
       } as unknown as ICoreECSqlReaderFactory;
 
       const executor = createECSqlQueryExecutor(imodel);
@@ -33,7 +32,7 @@ describe("createECSqlQueryExecutor", () => {
 
     it("calls IModel's `createQueryReader` with ECSqlPropertyNames row format", async () => {
       const imodel = {
-        createQueryReader: sinon.stub().returns(createECSqlReaderStub([])),
+        createQueryReader: sinon.stub().returns(createCoreECSqlReaderStub([])),
       } as unknown as ICoreECSqlReaderFactory;
 
       const executor = createECSqlQueryExecutor(imodel);
@@ -51,7 +50,7 @@ describe("createECSqlQueryExecutor", () => {
 
     it("calls IModel's `createQueryReader` with Indexes row format", async () => {
       const imodel = {
-        createQueryReader: sinon.stub().returns(createECSqlReaderStub([])),
+        createQueryReader: sinon.stub().returns(createCoreECSqlReaderStub([])),
       } as unknown as ICoreECSqlReaderFactory;
 
       const executor = createECSqlQueryExecutor(imodel);
@@ -69,7 +68,7 @@ describe("createECSqlQueryExecutor", () => {
 
     it("calls IModel's `createQueryReader` with different bindings", async () => {
       const imodel = {
-        createQueryReader: sinon.stub().returns(createECSqlReaderStub([])),
+        createQueryReader: sinon.stub().returns(createCoreECSqlReaderStub([])),
       } as unknown as ICoreECSqlReaderFactory;
 
       const bindings: ECSqlBinding[] = [
@@ -140,7 +139,7 @@ describe("createECSqlQueryExecutor", () => {
     it("creates iterable reader for rows as objects", async () => {
       const rows = [{ x: 1 }, { y: 2 }];
       const imodel = {
-        createQueryReader: sinon.stub().returns(createECSqlReaderStub(rows)),
+        createQueryReader: sinon.stub().returns(createCoreECSqlReaderStub(rows)),
       } as unknown as ICoreECSqlReaderFactory;
 
       const executor = createECSqlQueryExecutor(imodel);
@@ -160,7 +159,7 @@ describe("createECSqlQueryExecutor", () => {
         [3, 4],
       ];
       const imodel = {
-        createQueryReader: sinon.stub().returns(createECSqlReaderStub(rows)),
+        createQueryReader: sinon.stub().returns(createCoreECSqlReaderStub(rows)),
       } as unknown as ICoreECSqlReaderFactory;
 
       const executor = createECSqlQueryExecutor(imodel);
@@ -175,3 +174,30 @@ describe("createECSqlQueryExecutor", () => {
     });
   });
 });
+
+function createCoreECSqlReaderStub(rows: object[]) {
+  let curr = -1;
+  const reader = {
+    next: sinon.fake(async () => {
+      ++curr;
+      if (curr < rows.length) {
+        return { done: false, value: createQueryRowProxy(rows[curr]) };
+      }
+      return { done: true, value: undefined };
+    }),
+  };
+  return {
+    ...reader,
+    async *[Symbol.asyncIterator]() {
+      return reader;
+    },
+  };
+}
+
+function createQueryRowProxy(data: object) {
+  return {
+    ...data,
+    toArray: () => data,
+    toRow: () => data,
+  };
+}

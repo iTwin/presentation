@@ -723,6 +723,9 @@ importers:
       nyc:
         specifier: ^15.1.0
         version: 15.1.0
+      rxjs-for-await:
+        specifier: ^1.0.0
+        version: 1.0.0(rxjs@7.8.1)
       sinon:
         specifier: ^15.2.0
         version: 15.2.0
@@ -6606,8 +6609,8 @@ packages:
       - supports-color
     dev: false
 
-  /artillery-engine-playwright@1.1.0:
-    resolution: {integrity: sha512-AZrM5FbETHcBBOgBDCCTOkpSBwT6r0LqqSwoZQx/X/fHvBcxintf/OrIK/VFarUH3cCEu3ZiCqoT6j/Ydy5dnA==}
+  /artillery-engine-playwright@1.2.0:
+    resolution: {integrity: sha512-38oC+5ftIijo03wwGhZ0ObzzPzOKcsPQ4dY7/6JJxnXT3xrssRf4TDyYPftHuG21TQvW+Du0oc+ibokpVq+CXw==}
     dependencies:
       '@playwright/browser-chromium': 1.39.0
       debug: 4.3.4(supports-color@8.1.1)
@@ -6650,8 +6653,8 @@ packages:
       - supports-color
     dev: false
 
-  /artillery-plugin-publish-metrics@2.9.0:
-    resolution: {integrity: sha512-IKWoGrBdR5+XQ82W9HYUNuO89f8y4aCDiqFHLVqMYCq4avqS9WsBKr49mCmLV0lhbUWA3qMcVfNZnuTdZLnHew==}
+  /artillery-plugin-publish-metrics@2.10.0:
+    resolution: {integrity: sha512-oG94cLOvFztca6qJX8ifz9ofHTd+Kc4UQBk5CGQPA4AGQH/6F+WDeaDVOU0fawcFRz/q5MAHl6XwZW60m8I7dw==}
     dependencies:
       '@aws-sdk/client-cloudwatch': 3.481.0
       '@opentelemetry/api': 1.7.0
@@ -6699,12 +6702,12 @@ packages:
       '@oclif/plugin-help': 5.2.17(@types/node@18.17.7)(typescript@5.0.4)
       '@oclif/plugin-not-found': 2.3.37(@types/node@18.17.7)(typescript@5.0.4)
       archiver: 5.3.2
-      artillery-engine-playwright: 1.1.0
+      artillery-engine-playwright: 1.2.0
       artillery-plugin-apdex: 1.0.1
       artillery-plugin-ensure: 1.3.0
       artillery-plugin-expect: 2.3.3
       artillery-plugin-metrics-by-endpoint: 1.2.0
-      artillery-plugin-publish-metrics: 2.9.0
+      artillery-plugin-publish-metrics: 2.10.0
       async: 2.6.4
       aws-sdk: 2.1441.0
       chalk: 2.4.2
