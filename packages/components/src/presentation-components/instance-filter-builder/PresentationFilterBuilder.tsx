@@ -141,6 +141,27 @@ export namespace PresentationInstanceFilter {
 }
 
 /**
+ * Function that checks if supplied [[PresentationInstanceFilter]] is [[PresentationInstanceFilterConditionGroup]].
+ * @beta
+ * @deprecated in 5.0. Use `PresentationInstanceFilter.isConditionGroup` instead.
+ */
+// istanbul ignore next
+export function isPresentationInstanceFilterConditionGroup(filter: PresentationInstanceFilter): filter is PresentationInstanceFilterConditionGroup {
+  return PresentationInstanceFilter.isConditionGroup(filter);
+}
+
+/**
+ * Converts [[PresentationInstanceFilter]] into [InstanceFilterDefinition]($presentation-common) that can be passed
+ * to [PresentationManager]($presentation-frontend) through request options in order to filter results.
+ * @beta
+ * @deprecated in 5.0. Use `PresentationInstanceFilter.toInstanceFilterDefinition` instead.
+ */
+// istanbul ignore next
+export async function convertToInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection): Promise<InstanceFilterDefinition> {
+  return PresentationInstanceFilter.toInstanceFilterDefinition(filter, imodel);
+}
+
+/**
  * Data structure that stores information about filter built by [[PresentationInstanceFilterDialog]].
  * @beta
  */
