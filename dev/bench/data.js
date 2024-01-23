@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1705649772199,
+  "lastUpdate": 1706006721808,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -500,6 +500,42 @@ window.BENCHMARK_DATA = {
             "value": 2558,
             "unit": "ms",
             "extra": "min: 2558\nmax: 2558\ncount: 1\nmean: 2558\np50: 2566.3\nmedian: 2566.3\np75: 2566.3\np90: 2566.3\np95: 2566.3\np99: 2566.3\np999: 2566.3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35135765+grigasp@users.noreply.github.com",
+            "name": "Grigas",
+            "username": "grigasp"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e0c915134acc25f2643ce6271a90d726eba09ab6",
+          "message": "Hierarchy builder: Unified selection support (#381)\n\n* Grouping nodes now know what instances they group\r\n\r\n* Add unified selection support to test app\r\n\r\n* change",
+          "timestamp": "2024-01-23T12:44:14+02:00",
+          "tree_id": "0939bb0dc7dcbe8c010a404a43fe475cccbb48d7",
+          "url": "https://github.com/iTwin/presentation/commit/e0c915134acc25f2643ce6271a90d726eba09ab6"
+        },
+        "date": 1706006721091,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Initial Models Tree Load: Baytown.bim",
+            "value": 342,
+            "unit": "ms",
+            "extra": "min: 342\nmax: 342\ncount: 1\nmean: 342\np50: 340.4\nmedian: 340.4\np75: 340.4\np90: 340.4\np95: 340.4\np99: 340.4\np999: 340.4"
+          },
+          {
+            "name": "Full Models Tree Load: Baytown.bim",
+            "value": 2522,
+            "unit": "ms",
+            "extra": "min: 2522\nmax: 2522\ncount: 1\nmean: 2522\np50: 2515.5\nmedian: 2515.5\np75: 2515.5\np90: 2515.5\np95: 2515.5\np99: 2515.5\np999: 2515.5"
           }
         ]
       }
