@@ -2,4 +2,4 @@
 "@itwin/presentation-components": minor
 ---
 
-PresentationTreeRenderer: Add ability to render custom `nodeRenderer`.
+PresentationTreeRenderer: separate filtering logic from rendering logic by putting it to the newly added useFilterablePresentationTree.

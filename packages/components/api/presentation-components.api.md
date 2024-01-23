@@ -66,8 +66,6 @@ import { PropertyRecord } from '@itwin/appui-abstract';
 import { PropertyValueRendererContext } from '@itwin/components-react';
 import { PropsWithChildren } from 'react';
 import { ReactNode } from 'react';
-import { ReactPortal } from 'react';
-import { RefObject } from 'react';
 import { RenderedItemsRange } from '@itwin/components-react';
 import { Ruleset } from '@itwin/presentation-common';
 import { RulesetVariable } from '@itwin/presentation-common';
@@ -219,9 +217,14 @@ export type FilterablePresentationTreeNodeItem = PresentationTreeNodeItem & {
 };
 
 // @beta
-export interface FilterablePresentationTreeProps {
+export interface FilterableTreeProps {
+    documentBodyRef: React.RefObject<HTMLDivElement>;
     // (undocumented)
-    nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
+    filterDialog: React.ReactPortal | null;
+    // (undocumented)
+    onClearFilterClick: (nodeId: string) => void;
+    // (undocumented)
+    onFilterClick: (nodeId: string) => void;
 }
 
 // @beta
@@ -768,12 +771,13 @@ export function useControlledPresentationTreeFiltering(props: ControlledPresenta
 };
 
 // @beta
-export function useFilterablePresentationTree({ nodeLoader }: FilterablePresentationTreeProps): {
-    onFilterClick: (nodeId: string) => void;
-    onClearFilterClick: (nodeId: string) => void;
-    ref: RefObject<HTMLDivElement>;
-    filterDialog: ReactPortal | null;
-};
+export function useFilterablePresentationTree({ nodeLoader }: useFilterablePresentationTreeProps): FilterableTreeProps;
+
+// @beta
+export interface useFilterablePresentationTreeProps {
+    // (undocumented)
+    nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
+}
 
 // @beta
 export function useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProps): {
