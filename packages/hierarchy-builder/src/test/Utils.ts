@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { from, Observable } from "rxjs";
-import { eachValueFrom } from "rxjs-for-await";
+import { Observable } from "rxjs";
 import sinon from "sinon";
 import { BeDuration, Logger, LogLevel, StopWatch } from "@itwin/core-bentley";
 import { ECClass, ECEntityClass, ECProperty, ECRelationshipClass, ECRelationshipConstraint, IMetadataProvider } from "../hierarchy-builder/ECMetadata";
@@ -230,25 +229,28 @@ export class ResolvablePromise<T> implements Promise<T> {
   }
 }
 
-export async function waitFor(check: () => void, timeout?: number) {
+export async function waitFor<T>(check: () => Promise<T> | T, timeout?: number): Promise<T> {
   if (timeout === undefined) {
     timeout = 5000;
   }
   const timer = new StopWatch(undefined, true);
-  let succeeded = false;
-  while (!succeeded && timer.current.milliseconds < timeout) {
+  let lastError: unknown;
+  do {
     try {
-      check();
-      succeeded = true;
-    } catch {
+      const res = check();
+      return res instanceof Promise ? await res : res;
+    } catch (e) {
+      lastError = e;
       await BeDuration.wait(0);
     }
-  }
-  if (!succeeded) {
-    throw new Error("Timeout");
-  }
+  } while (timer.current.milliseconds < timeout);
+  throw lastError;
 }
 
 export function createFakeQueryReader(rows: object[]): ECSqlQueryReader {
-  return eachValueFrom(from(rows));
+  return (async function* () {
+    for (const row of rows) {
+      yield row;
+    }
+  })();
 }

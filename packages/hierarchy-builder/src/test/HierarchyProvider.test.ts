@@ -4,8 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { EMPTY, from, map, mergeMap, range, throwError } from "rxjs";
-import { eachValueFrom } from "rxjs-for-await";
 import sinon from "sinon";
 import { omit } from "@itwin/core-bentley";
 import { ECKindOfQuantity, ECPrimitiveProperty, ECProperty, IMetadataProvider } from "../hierarchy-builder/ECMetadata";
@@ -19,7 +17,7 @@ import {
   ECSQL_COLUMN_NAME_IsFilterTarget,
   FilteredHierarchyNode,
 } from "../hierarchy-builder/internal/FilteringHierarchyLevelDefinitionsFactory";
-import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow } from "../hierarchy-builder/queries/ECSqlCore";
+import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions } from "../hierarchy-builder/queries/ECSqlCore";
 import { ECSqlSelectClauseGroupingParams, NodeSelectClauseColumnNames } from "../hierarchy-builder/queries/NodeSelectQueryFactory";
 import { ConcatenatedValue } from "../hierarchy-builder/values/ConcatenatedValue";
 import { TypedPrimitiveValue } from "../hierarchy-builder/values/Values";
@@ -149,10 +147,20 @@ describe("HierarchyProvider", () => {
       });
 
       const queryTimeout1 = new ResolvablePromise();
-      queryExecutor.createQueryReader.onFirstCall().returns(eachValueFrom<ECSqlQueryRow>(from(queryTimeout1).pipe(mergeMap(() => EMPTY))));
+      queryExecutor.createQueryReader.onFirstCall().returns(
+        (async function* (): ECSqlQueryReader {
+          // the reader yields nothing, but waits for queryTimeout2 to resolve
+          await queryTimeout1;
+        })(),
+      );
 
       const queryTimeout2 = new ResolvablePromise();
-      queryExecutor.createQueryReader.onSecondCall().returns(eachValueFrom<ECSqlQueryRow>(from(queryTimeout2).pipe(mergeMap(() => EMPTY))));
+      queryExecutor.createQueryReader.onSecondCall().returns(
+        (async function* (): ECSqlQueryReader {
+          // the reader yields nothing, but waits for queryTimeout2 to resolve
+          await queryTimeout2;
+        })(),
+      );
 
       queryExecutor.createQueryReader.onThirdCall().returns(createFakeQueryReader([]));
 
@@ -749,7 +757,11 @@ describe("HierarchyProvider", () => {
     });
 
     it("rethrows query executor errors", async () => {
-      queryExecutor.createQueryReader.returns(eachValueFrom<ECSqlQueryRow>(throwError(() => new Error("test error"))));
+      queryExecutor.createQueryReader.returns(
+        (async function* () {
+          throw new Error("test error");
+        })(),
+      );
       const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel() {
           return [
@@ -769,7 +781,11 @@ describe("HierarchyProvider", () => {
     });
 
     it("rethrows query executor errors thrown while determining children", async () => {
-      queryExecutor.createQueryReader.returns(eachValueFrom<ECSqlQueryRow>(throwError(() => new Error("test error"))));
+      queryExecutor.createQueryReader.returns(
+        (async function* () {
+          throw new Error("test error");
+        })(),
+      );
       const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
@@ -793,15 +809,15 @@ describe("HierarchyProvider", () => {
 
     it("sets children flag on parent node to `true` when determining children throws with `rows limit exceeded` error", async () => {
       queryExecutor.createQueryReader.returns(
-        eachValueFrom<ECSqlQueryRow>(
-          range(1, 1001).pipe(
-            map((index) => ({
-              [NodeSelectClauseColumnNames.FullClassName]: `ClassName-${index}`,
-              [NodeSelectClauseColumnNames.ECInstanceId]: `0x${index}`,
-              [NodeSelectClauseColumnNames.DisplayLabel]: `Label-${index}`,
-            })),
-          ),
-        ),
+        (async function* () {
+          for (let i = 1; i <= 1001; ++i) {
+            yield {
+              [NodeSelectClauseColumnNames.FullClassName]: `ClassName-${i}`,
+              [NodeSelectClauseColumnNames.ECInstanceId]: `0x${i}`,
+              [NodeSelectClauseColumnNames.DisplayLabel]: `Label-${i}`,
+            };
+          }
+        })(),
       );
       const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
