@@ -50,6 +50,7 @@ function createGroupingNodes(groupings: ClassGroupingInformation): GroupingHandl
     const groupingNodeKey: ClassGroupingNodeKey = {
       type: "class-grouping",
       class: { name: entry.class.fullName, label: entry.class.label },
+      groupedInstanceKeys: entry.groupedNodes.flatMap((groupedInstanceNode) => groupedInstanceNode.key.instanceKeys),
     };
     const groupedNodeParentKeys = entry.groupedNodes[0].parentKeys;
     groupedNodes.push({

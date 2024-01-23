@@ -14,11 +14,6 @@ describe("GroupHiding", () => {
       const nodes: GroupingHandlerResult = {
         grouped: [
           createTestProcessedGroupingNode({
-            label: "1",
-            key: {
-              type: "label-grouping",
-              label: "1",
-            },
             children: [
               createTestProcessedInstanceNode({
                 key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
@@ -42,11 +37,6 @@ describe("GroupHiding", () => {
       const nodes: GroupingHandlerResult = {
         grouped: [
           createTestProcessedGroupingNode({
-            label: "1",
-            key: {
-              type: "label-grouping",
-              label: "1",
-            },
             children: [
               createTestProcessedInstanceNode({
                 key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
@@ -75,11 +65,6 @@ describe("GroupHiding", () => {
       const nodes: GroupingHandlerResult = {
         grouped: [
           createTestProcessedGroupingNode({
-            label: "1",
-            key: {
-              type: "label-grouping",
-              label: "1",
-            },
             children: [
               createTestProcessedInstanceNode({
                 key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
@@ -89,11 +74,6 @@ describe("GroupHiding", () => {
             ],
           }),
           createTestProcessedGroupingNode({
-            label: "2",
-            key: {
-              type: "label-grouping",
-              label: "2",
-            },
             children: [
               createTestProcessedInstanceNode({
                 key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
@@ -113,11 +93,6 @@ describe("GroupHiding", () => {
       const nodes: GroupingHandlerResult = {
         grouped: [
           createTestProcessedGroupingNode({
-            label: "1",
-            key: {
-              type: "label-grouping",
-              label: "1",
-            },
             children: [
               createTestProcessedInstanceNode({
                 key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
@@ -142,11 +117,6 @@ describe("GroupHiding", () => {
       const nodes: GroupingHandlerResult = {
         grouped: [
           createTestProcessedGroupingNode({
-            label: "1",
-            key: {
-              type: "label-grouping",
-              label: "1",
-            },
             children: [
               createTestProcessedInstanceNode({
                 key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
@@ -168,14 +138,6 @@ describe("GroupHiding", () => {
       const nodes: GroupingHandlerResult = {
         grouped: [
           createTestProcessedGroupingNode({
-            label: "A",
-            key: {
-              type: "class-grouping",
-              class: {
-                name: "TestSchema:A",
-                label: "A",
-              },
-            },
             children: [
               createTestProcessedInstanceNode({
                 key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
@@ -199,11 +161,6 @@ describe("GroupHiding", () => {
       const nodes: GroupingHandlerResult = {
         grouped: [
           createTestProcessedGroupingNode({
-            label: "1",
-            key: {
-              type: "label-grouping",
-              label: "1",
-            },
             children: [
               createTestProcessedInstanceNode({
                 key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
@@ -231,11 +188,6 @@ describe("GroupHiding", () => {
         groupingType: "label",
         grouped: [
           createTestProcessedGroupingNode({
-            label: "1",
-            key: {
-              type: "label-grouping",
-              label: "1",
-            },
             children: [
               createTestProcessedInstanceNode({
                 key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
@@ -268,11 +220,6 @@ describe("GroupHiding", () => {
       const nodes = {
         grouped: [
           createTestProcessedGroupingNode({
-            label: "1",
-            key: {
-              type: "label-grouping",
-              label: "1",
-            },
             children: [
               createTestProcessedInstanceNode({
                 key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
@@ -299,11 +246,6 @@ describe("GroupHiding", () => {
       const nodes: GroupingHandlerResult = {
         grouped: [
           createTestProcessedGroupingNode({
-            label: "1",
-            key: {
-              type: "label-grouping",
-              label: "1",
-            },
             children: [
               createTestProcessedInstanceNode({
                 key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
@@ -333,11 +275,6 @@ describe("GroupHiding", () => {
       const nodes: GroupingHandlerResult = {
         grouped: [
           createTestProcessedGroupingNode({
-            label: "1",
-            key: {
-              type: "label-grouping",
-              label: "1",
-            },
             children: [
               createTestProcessedInstanceNode({
                 key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x1" }] },
@@ -371,11 +308,6 @@ describe("GroupHiding", () => {
       const nodes: GroupingHandlerResult = {
         grouped: [
           createTestProcessedGroupingNode({
-            label: "1",
-            key: {
-              type: "label-grouping",
-              label: "1",
-            },
             children: [childNode],
           }),
         ],

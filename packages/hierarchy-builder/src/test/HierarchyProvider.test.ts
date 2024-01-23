@@ -365,6 +365,7 @@ describe("HierarchyProvider", () => {
             type: "label-grouping",
             label: "test label",
             groupId: undefined,
+            groupedInstanceKeys: [{ className: "a.b", id: "0x123" }],
           },
           parentKeys: [],
           label: "test label",

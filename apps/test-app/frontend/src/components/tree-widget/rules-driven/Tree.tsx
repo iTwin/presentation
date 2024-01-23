@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import "./TreeWidget.css";
+import "../TreeWidget.css";
 import { useCallback, useEffect } from "react";
 import { SelectionMode } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
