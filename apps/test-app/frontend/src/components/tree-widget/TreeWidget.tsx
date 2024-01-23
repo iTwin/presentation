@@ -10,8 +10,8 @@ import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Tab, Tabs } from "@itwin/itwinui-react";
 import { DiagnosticsProps } from "@itwin/presentation-components";
 import { DiagnosticsSelector } from "../diagnostics-selector/DiagnosticsSelector";
-import { StatelessTreeWidget } from "./StatelessTreeWidget";
-import { Tree } from "./Tree";
+import { Tree } from "./rules-driven/Tree";
+import { StatelessTreeWidget } from "./stateless/Tree";
 
 export interface TreeWidgetProps {
   imodel: IModelConnection;

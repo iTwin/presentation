@@ -8,7 +8,7 @@ import { from } from "rxjs";
 import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
 import { IMetadataProvider } from "../../../hierarchy-builder/ECMetadata";
-import { ClassGroupingNodeKey, GroupingNodeKey, LabelGroupingNodeKey, ProcessedInstanceHierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
+import { ProcessedInstanceHierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
 import {
   createGroupingHandlers,
   createGroupingOperator,
@@ -82,7 +82,7 @@ describe("Grouping", () => {
         }),
         createTestProcessedInstanceNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema.B", id: "0x2" }] },
-          label: "1",
+          label: "2",
         }),
       ];
       const labelGroupingInput1 = [
@@ -94,7 +94,7 @@ describe("Grouping", () => {
       const labelGroupingInput2 = [
         createTestProcessedInstanceNode({
           key: { type: "instances", instanceKeys: [{ className: "TestSchema.B", id: "0x2" }] },
-          label: "1",
+          label: "2",
         }),
       ];
       const classGroupingResult: GroupingHandlerResult = {
@@ -107,6 +107,7 @@ describe("Grouping", () => {
               class: {
                 name: "TestSchema A",
               },
+              groupedInstanceKeys: labelGroupingInput1.flatMap((n) => n.key.instanceKeys),
             },
             children: labelGroupingInput1,
           }),
@@ -119,9 +120,10 @@ describe("Grouping", () => {
           createTestProcessedGroupingNode({
             label: "1",
             key: {
-              type: "label-grouping",
+              type: "label-grouping" as const,
               label: "1",
-            } as GroupingNodeKey,
+              groupedInstanceKeys: childNodes.flatMap((n) => n.key.instanceKeys),
+            },
             children: childNodes,
           }),
         ],
@@ -145,6 +147,7 @@ describe("Grouping", () => {
             key: {
               type: "label-grouping",
               label: "1",
+              groupedInstanceKeys: labelGroupingInput2.flatMap((n) => n.key.instanceKeys),
             },
             children: labelGroupingInput2,
           }),
@@ -158,6 +161,7 @@ describe("Grouping", () => {
           key: {
             type: "label-grouping",
             label: "1",
+            groupedInstanceKeys: labelGroupingInput2.flatMap((n) => n.key.instanceKeys),
           },
           children: labelGroupingInput2,
         }),
@@ -168,6 +172,7 @@ describe("Grouping", () => {
             class: {
               name: "TestSchema A",
             },
+            groupedInstanceKeys: labelGroupingInput1.flatMap((n) => n.key.instanceKeys),
           },
           children: [
             createTestProcessedGroupingNode({
@@ -175,6 +180,7 @@ describe("Grouping", () => {
               key: {
                 type: "label-grouping",
                 label: "1",
+                groupedInstanceKeys: labelGroupingInput1.flatMap((n) => n.key.instanceKeys),
               },
               children: labelGroupingInput1,
             }),
@@ -195,11 +201,12 @@ describe("Grouping", () => {
       const classGroupingNode = createTestProcessedGroupingNode({
         label: "A",
         key: {
-          type: "class-grouping",
+          type: "class-grouping" as const,
           class: {
             name: "A",
           },
-        } as ClassGroupingNodeKey,
+          groupedInstanceKeys: groupedNode.key.instanceKeys,
+        },
         children: [groupedNode],
       });
       const result = await getObservableResult(
@@ -224,19 +231,21 @@ describe("Grouping", () => {
       const classGroupingNode = createTestProcessedGroupingNode({
         label: "TestSchema A",
         key: {
-          type: "class-grouping",
+          type: "class-grouping" as const,
           class: {
             name: "TestSchema A",
           },
-        } as ClassGroupingNodeKey,
+          groupedInstanceKeys: groupedNode.key.instanceKeys,
+        },
         children: [groupedNode],
       });
       const labelGroupingNode = createTestProcessedGroupingNode({
         label: "1",
         key: {
-          type: "label-grouping",
+          type: "label-grouping" as const,
           label: "1",
-        } as LabelGroupingNodeKey,
+          groupedInstanceKeys: groupedNode.key.instanceKeys,
+        },
         children: [groupedNode],
       });
 
@@ -270,6 +279,7 @@ describe("Grouping", () => {
             class: {
               name: "TestSchema A",
             },
+            groupedInstanceKeys: groupedNode.key.instanceKeys,
           },
           children: [
             createTestProcessedGroupingNode({
@@ -277,6 +287,7 @@ describe("Grouping", () => {
               key: {
                 type: "label-grouping",
                 label: "1",
+                groupedInstanceKeys: groupedNode.key.instanceKeys,
               },
               children: [groupedNode],
             }),
