@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1706006721808,
+  "lastUpdate": 1706008688766,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -536,6 +536,42 @@ window.BENCHMARK_DATA = {
             "value": 2522,
             "unit": "ms",
             "extra": "min: 2522\nmax: 2522\ncount: 1\nmean: 2522\np50: 2515.5\nmedian: 2515.5\np75: 2515.5\np90: 2515.5\np95: 2515.5\np99: 2515.5\np999: 2515.5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35135765+grigasp@users.noreply.github.com",
+            "name": "Grigas",
+            "username": "grigasp"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f2bf5afa09915c3dcc20e845e91d15edce7bea81",
+          "message": "Hierarchy builder: Add results count limiting to hierarchy filtering (#383)\n\n* Add results count limiting to hierarchy filtering\r\n\r\n* Fixup test app\r\n\r\n* Avoid using `rxjs` and `rxjs-for-await` just for creating async iterators",
+          "timestamp": "2024-01-23T11:16:32Z",
+          "tree_id": "16d565e189cad0f439cf35e7bd83a0622bd766e4",
+          "url": "https://github.com/iTwin/presentation/commit/f2bf5afa09915c3dcc20e845e91d15edce7bea81"
+        },
+        "date": 1706008687725,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Full Models Tree Load: Baytown.bim",
+            "value": 2540,
+            "unit": "ms",
+            "extra": "min: 2540\nmax: 2540\ncount: 1\nmean: 2540\np50: 2515.5\nmedian: 2515.5\np75: 2515.5\np90: 2515.5\np95: 2515.5\np99: 2515.5\np999: 2515.5"
+          },
+          {
+            "name": "Initial Models Tree Load: Baytown.bim",
+            "value": 387,
+            "unit": "ms",
+            "extra": "min: 387\nmax: 387\ncount: 1\nmean: 387\np50: 383.8\nmedian: 383.8\np75: 383.8\np90: 383.8\np95: 383.8\np99: 383.8\np999: 383.8"
           }
         ]
       }
