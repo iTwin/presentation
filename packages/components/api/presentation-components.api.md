@@ -600,9 +600,11 @@ export type PresentationTreeProps<TEventHandler extends TreeEventHandler> = Omit
 export function PresentationTreeRenderer(props: PresentationTreeRendererProps): JSX_2.Element;
 
 // @beta
-export interface PresentationTreeRendererProps extends TreeRendererProps {
+export interface PresentationTreeRendererProps extends Omit<TreeRendererProps, "nodeRenderer"> {
     // (undocumented)
     nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
+    // (undocumented)
+    nodeRenderer?: (props: PresentationTreeNodeRendererProps) => React.ReactNode;
 }
 
 // @public
