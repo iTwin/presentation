@@ -3,33 +3,26 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import "./StatelessTreeWidget.css";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import {
-  ControlledTree,
-  DelayLoadedTreeNodeItem,
-  FilteringInputStatus,
-  SelectionMode,
-  TreeDataProvider,
-  TreeEventHandler,
-  TreeNodeItem,
-  TreeNodeRenderer,
-  TreeNodeRendererProps,
-  TreeRenderer,
-  useDebouncedAsyncValue,
-  useTreeModel,
-  useTreeModelSource,
-  useTreeNodeLoader,
+  ControlledTree, DelayLoadedTreeNodeItem, FilteringInputStatus, SelectionMode, TreeDataProvider, TreeNodeItem, TreeNodeRenderer,
+  TreeNodeRendererProps, TreeRenderer, useDebouncedAsyncValue, useTreeModel,
 } from "@itwin/components-react";
 import { IModelApp } from "@itwin/core-frontend";
 import { TreeNode, UnderlinedButton } from "@itwin/core-react";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-import { Text } from "@itwin/itwinui-react";
+import { DropdownMenu, IconButton, MenuItem, Text } from "@itwin/itwinui-react";
+import { SvgMoreVertical } from "@itwin/itwinui-react/cjs/core/utils";
 import { InfoTreeNodeItemType, isPresentationInfoTreeNodeItem, PresentationInfoTreeNodeItem } from "@itwin/presentation-components";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import { HierarchyNode, HierarchyProvider, IECSqlQueryExecutor, IMetadataProvider, RowsLimitExceededError } from "@itwin/presentation-hierarchy-builder";
+import {
+  HierarchyNode, HierarchyProvider, IECSqlQueryExecutor, IMetadataProvider, RowsLimitExceededError, TypedPrimitiveValue,
+} from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
+import { useControlledTreeComponentsState, useFormatter } from "./CustomHooks";
 import { TreeWidgetHeader, TreeWidgetProps, useTreeHeight } from "./TreeWidget";
 
 export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
@@ -105,27 +98,66 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
       }
     };
   }, [modelsTreeHierarchyProvider, hierarchyLevelSizeLimit]);
-  const modelSource = useTreeModelSource(dataProvider);
-  const nodeLoader = useTreeNodeLoader(dataProvider, modelSource);
-  const eventHandler = useMemo(() => new TreeEventHandler({ nodeLoader, modelSource }), [nodeLoader, modelSource]);
-  const treeModel = useTreeModel(modelSource);
+
   const nodeRenderer = (nodeProps: TreeNodeRendererProps) => (
     <StatelessTreeNodeRenderer
       {...nodeProps}
       onLimitReset={(parentId?: string) => setHierarchyLevelSizeLimit((map) => ({ ...map, [parentId ?? ""]: "unbounded" }))}
     />
   );
+
+  const { componentsState, onReload } = useControlledTreeComponentsState(dataProvider);
+  const treeModel = useTreeModel(componentsState.modelSource);
+  const [shouldUseCustomFormatter, setShouldUseCustomFormatter] = useState<boolean>(false);
+  const onItemsRendered = useFormatter({
+    formatter: shouldUseCustomFormatter ? customFormatter : undefined,
+    dataProvider,
+    modelSource: componentsState.modelSource,
+    modelsTreeHierarchyProvider,
+    onReload,
+  });
+
   const { headerRef, treeHeight } = useTreeHeight(props.height);
+  const dropdownMenuItems = (close: () => void) => [
+    <MenuItem
+      key={1}
+      onClick={() => {
+        setShouldUseCustomFormatter(true);
+        close();
+      }}
+      style={shouldUseCustomFormatter ? { display: "none" } : {}}
+    >
+      Show custom formatter
+    </MenuItem>,
+    <MenuItem
+      key={2}
+      onClick={() => {
+        setShouldUseCustomFormatter(false);
+        close();
+      }}
+      style={!shouldUseCustomFormatter ? { display: "none" } : {}}
+    >
+      Show default formatter
+    </MenuItem>,
+  ];
   return (
     <>
-      <TreeWidgetHeader onFilterChange={setFilter} filteringStatus={filteringStatus} showFilteringInput={true} ref={headerRef} />
+      <div className="tree-widget-header-wrapper">
+        <TreeWidgetHeader onFilterChange={setFilter} filteringStatus={filteringStatus} showFilteringInput={true} ref={headerRef} />
+        <DropdownMenu menuItems={dropdownMenuItems}>
+          <IconButton styleType="borderless" size="small" className="formatter-setter-dropdown">
+            <SvgMoreVertical />
+          </IconButton>
+        </DropdownMenu>
+      </div>
       <div className="filtered-tree">
         {treeHeight && props.width && (
           <ControlledTree
             model={treeModel}
-            eventsHandler={eventHandler}
-            nodeLoader={nodeLoader}
+            eventsHandler={componentsState.eventHandler}
+            nodeLoader={componentsState.nodeLoader}
             treeRenderer={(treeProps) => <TreeRenderer {...treeProps} nodeRenderer={nodeRenderer} />}
+            onItemsRendered={onItemsRendered}
             selectionMode={SelectionMode.Extended}
             iconsEnabled={true}
             width={props.width}
@@ -201,4 +233,7 @@ function StatelessTreeNodeRenderer(props: StatelessTreeNodeRendererProps) {
   }
 
   return <TreeNodeRenderer {...props} />;
+}
+async function customFormatter(val: TypedPrimitiveValue) {
+  return `THIS_IS_FORMATTED_${val ? JSON.stringify(val.value) : ""}_THIS_IS_FORMATTED`;
 }

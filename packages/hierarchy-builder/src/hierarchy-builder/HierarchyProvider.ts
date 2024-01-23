@@ -170,6 +170,7 @@ export class HierarchyProvider {
           of(def.query).pipe(
             log((query) => `Query direct nodes for parent ${props.parentNode ? JSON.stringify(props.parentNode) : "<root>"}: ${query.ecsql}`),
             mergeMap((query) => from(this._queryReader.read(this._queryExecutor, query, props.hierarchyLevelSizeLimit))),
+            shareReplay(),
           ),
         );
         this._queriesCache.add(def.query, parsedHierarchyNodesObservable);
