@@ -4,8 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Logger } from "@itwin/core-bentley";
-import { InstanceKey } from "@itwin/presentation-common";
-import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
+import { HierarchyNode, HierarchyProvider, InstanceKey } from "@itwin/presentation-hierarchy-builder";
 import { hasChildren } from "@itwin/presentation-hierarchy-builder/lib/cjs/hierarchy-builder/internal/Common";
 
 const loggingNamespace = `Presentation.HierarchyBuilder.HierarchyValidation`;
@@ -101,7 +100,7 @@ export namespace NodeValidators {
         if (
           props.instanceKeys &&
           (node.key.instanceKeys.length !== props.instanceKeys.length ||
-            !node.key.instanceKeys.every((nk) => props.instanceKeys!.some((ek) => 0 === InstanceKey.compare(nk, ek))))
+            !node.key.instanceKeys.every((nk) => props.instanceKeys!.some((ek) => InstanceKey.equals(nk, ek))))
         ) {
           throw new Error(
             `[${node.label}] Expected node to represent instance keys ${JSON.stringify(props.instanceKeys)}, got ${JSON.stringify(node.key.instanceKeys)}`,

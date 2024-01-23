@@ -12,13 +12,17 @@ import { IHierarchyLevelDefinitionsFactory } from "../hierarchy-builder/Hierarch
 import { RowsLimitExceededError } from "../hierarchy-builder/HierarchyErrors";
 import { HierarchyNode, ParsedCustomHierarchyNode } from "../hierarchy-builder/HierarchyNode";
 import { HierarchyProvider } from "../hierarchy-builder/HierarchyProvider";
-import { ECSQL_COLUMN_NAME_FilteredChildrenPaths, FilteredHierarchyNode } from "../hierarchy-builder/internal/FilteringHierarchyLevelDefinitionsFactory";
-import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions } from "../hierarchy-builder/queries/ECSqlCore";
+import {
+  ECSQL_COLUMN_NAME_FilteredChildrenPaths,
+  ECSQL_COLUMN_NAME_IsFilterTarget,
+  FilteredHierarchyNode,
+} from "../hierarchy-builder/internal/FilteringHierarchyLevelDefinitionsFactory";
+import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow } from "../hierarchy-builder/queries/ECSqlCore";
 import { ECSqlSelectClauseGroupingParams, NodeSelectClauseColumnNames } from "../hierarchy-builder/queries/NodeSelectQueryFactory";
 import { ConcatenatedValue } from "../hierarchy-builder/values/ConcatenatedValue";
 import { TypedPrimitiveValue } from "../hierarchy-builder/values/Values";
 import { trimWhitespace } from "./queries/Utils";
-import { ClassStubs, createClassStubs, createFakeQueryReader } from "./Utils";
+import { ClassStubs, createClassStubs, createFakeQueryReader, ResolvablePromise, waitFor } from "./Utils";
 
 describe("HierarchyProvider", () => {
   const metadataProvider = {} as unknown as IMetadataProvider;
@@ -131,6 +135,51 @@ describe("HierarchyProvider", () => {
     const nodes = await provider.getNodes({ parentNode: rootNode });
     const expectedChild = { ...childNode, parentKeys: [rootNode.key], children: false };
     expect(nodes).to.deep.eq([expectedChild]);
+  });
+
+  describe("Query scheduling", () => {
+    it("executes configured amount of queries in parallel", async () => {
+      const provider = new HierarchyProvider({
+        hierarchyDefinition: {} as unknown as IHierarchyLevelDefinitionsFactory,
+        metadataProvider,
+        queryExecutor,
+        queryConcurrency: 2,
+      });
+
+      const queryTimeout1 = new ResolvablePromise();
+      queryExecutor.createQueryReader.onFirstCall().returns({
+        async *[Symbol.asyncIterator](): AsyncIterableIterator<ECSqlQueryRow> {
+          await queryTimeout1;
+        },
+      });
+
+      const queryTimeout2 = new ResolvablePromise();
+      queryExecutor.createQueryReader.onSecondCall().returns({
+        async *[Symbol.asyncIterator](): AsyncIterableIterator<ECSqlQueryRow> {
+          await queryTimeout2;
+        },
+      });
+
+      queryExecutor.createQueryReader.onThirdCall().returns(createFakeQueryReader([]));
+
+      void provider.queryScheduler.schedule("1").next();
+      await waitFor(() => expect(queryExecutor.createQueryReader).to.be.calledOnce);
+
+      void provider.queryScheduler.schedule("2").next();
+      await waitFor(() => expect(queryExecutor.createQueryReader).to.be.calledTwice);
+
+      void provider.queryScheduler.schedule("3").next();
+      // not called for the third time until one of the first queries complete
+      await waitFor(() => expect(queryExecutor.createQueryReader).to.be.calledTwice, 100);
+
+      await queryTimeout2.resolve(undefined);
+      // now called
+      await waitFor(() => expect(queryExecutor.createQueryReader).to.be.calledThrice);
+
+      await queryTimeout1.resolve(undefined);
+      // but not called anymore, since all queries are already scheduled
+      await waitFor(() => expect(queryExecutor.createQueryReader).to.be.calledThrice, 100);
+    });
   });
 
   describe("Custom parsing", async () => {
@@ -662,7 +711,8 @@ describe("HierarchyProvider", () => {
                 SELECT * FROM (
                   SELECT
                     [q].*,
-                    [f].[FilteredChildrenPaths] AS [FilteredChildrenPaths]
+                    0 AS [${ECSQL_COLUMN_NAME_IsFilterTarget}],
+                    [f].[FilteredChildrenPaths] AS [${ECSQL_COLUMN_NAME_FilteredChildrenPaths}]
                   FROM (QUERY) [q]
                   JOIN FilteringInfo [f] ON [f].[ECInstanceId] = [q].[ECInstanceId]
                 )

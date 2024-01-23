@@ -11,7 +11,7 @@ import {
   TreeNodeRendererProps, TreeRenderer, useDebouncedAsyncValue, useTreeModel,
 } from "@itwin/components-react";
 import { IModelApp } from "@itwin/core-frontend";
-import { TreeNode, UnderlinedButton } from "@itwin/core-react";
+import { FillCentered, TreeNode, UnderlinedButton } from "@itwin/core-react";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { DropdownMenu, IconButton, MenuItem, Text } from "@itwin/itwinui-react";
@@ -27,7 +27,7 @@ import { TreeWidgetHeader, TreeWidgetProps, useTreeHeight } from "./TreeWidget";
 
 export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
   const [filter, setFilter] = useState("");
-  const [filteringStatus, setFilteringStatus] = useState(FilteringInputStatus.ReadyToFilter);
+  const [filteringStatus, setFilteringStatus] = useState<"ready" | "filtering">("ready");
   const [queryExecutor, setQueryExecutor] = useState<IECSqlQueryExecutor>();
   const [metadataProvider, setMetadataProvider] = useState<IMetadataProvider>();
   const [modelsTreeHierarchyProvider, setModelsTreeHierarchyProvider] = useState<HierarchyProvider>();
@@ -39,49 +39,48 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
     setMetadataProvider(createMetadataProvider(schemas));
   }, [props.imodel]);
 
-  const { value } = useDebouncedAsyncValue(
+  const { value: filteredPaths } = useDebouncedAsyncValue(
     useCallback(async () => {
-      if (metadataProvider && queryExecutor && filter !== "") {
-        setFilteringStatus(FilteringInputStatus.FilteringInProgress);
+      if (!metadataProvider || !queryExecutor) {
+        return undefined;
+      }
+      if (filter !== "") {
+        setFilteringStatus("filtering");
         return ModelsTreeDefinition.createInstanceKeyPaths({ metadataProvider, queryExecutor, label: filter });
       }
-      return [];
+      setFilteringStatus("ready");
+      return undefined;
     }, [metadataProvider, queryExecutor, filter]),
   );
 
   useEffect(() => {
-    if (metadataProvider && queryExecutor) {
-      const sharedProps = {
+    if (!metadataProvider || !queryExecutor) {
+      return;
+    }
+    setModelsTreeHierarchyProvider(
+      new HierarchyProvider({
         metadataProvider,
         hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider }),
         queryExecutor,
-      };
-      if (value) {
-        setFilteringStatus(FilteringInputStatus.FilteringFinished);
-        setModelsTreeHierarchyProvider(
-          new HierarchyProvider({
-            ...sharedProps,
-            filtering: {
-              paths: value,
-            },
-          }),
-        );
-      } else {
-        setModelsTreeHierarchyProvider(new HierarchyProvider(sharedProps));
-      }
-    }
-  }, [queryExecutor, metadataProvider, value]);
+        filtering: filteredPaths
+          ? {
+              paths: filteredPaths,
+            }
+          : undefined,
+      }),
+    );
+  }, [queryExecutor, metadataProvider, filteredPaths]);
 
   const dataProvider = useMemo((): TreeDataProvider => {
     return async (node?: TreeNodeItem): Promise<TreeNodeItem[]> => {
+      if (!modelsTreeHierarchyProvider) {
+        return [];
+      }
       const parent: HierarchyNode | undefined = node ? (node as any).__internal : undefined;
       const parentId = node?.id;
       const limit = hierarchyLevelSizeLimit[parentId ?? ""];
       try {
-        if (modelsTreeHierarchyProvider) {
-          return (await modelsTreeHierarchyProvider.getNodes({ parentNode: parent, hierarchyLevelSizeLimit: limit })).map(parseTreeNodeItem);
-        }
-        return [];
+        return (await modelsTreeHierarchyProvider.getNodes({ parentNode: parent, hierarchyLevelSizeLimit: limit })).map(parseTreeNodeItem);
       } catch (e) {
         if (e instanceof RowsLimitExceededError) {
           return [
@@ -92,9 +91,7 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
             ),
           ];
         }
-        // eslint-disable-next-line no-console
-        console.error(e);
-        return [];
+        throw e;
       }
     };
   }, [modelsTreeHierarchyProvider, hierarchyLevelSizeLimit]);
@@ -140,10 +137,17 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
       Show default formatter
     </MenuItem>,
   ];
+  const noDataRenderer = filter ? () => <NoFilterMatchesRenderer filter={filter} /> : undefined;
+  const filteringInputStatus =
+    filteringStatus === "filtering"
+      ? FilteringInputStatus.FilteringInProgress
+      : filter
+      ? FilteringInputStatus.FilteringFinished
+      : FilteringInputStatus.ReadyToFilter;
   return (
     <>
       <div className="tree-widget-header-wrapper">
-        <TreeWidgetHeader onFilterChange={setFilter} filteringStatus={filteringStatus} showFilteringInput={true} ref={headerRef} />
+        <TreeWidgetHeader onFilterChange={setFilter} filteringStatus={filteringInputStatus} showFilteringInput={true} ref={headerRef} />
         <DropdownMenu menuItems={dropdownMenuItems}>
           <IconButton styleType="borderless" size="small" className="formatter-setter-dropdown">
             <SvgMoreVertical />
@@ -157,14 +161,18 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
             eventsHandler={componentsState.eventHandler}
             nodeLoader={componentsState.nodeLoader}
             treeRenderer={(treeProps) => <TreeRenderer {...treeProps} nodeRenderer={nodeRenderer} />}
-            onItemsRendered={onItemsRendered}
+            onItemsRendered={(items) => {
+              setFilteringStatus("ready");
+              onItemsRendered(items);
+            }}
+            noDataRenderer={noDataRenderer}
             selectionMode={SelectionMode.Extended}
             iconsEnabled={true}
             width={props.width}
             height={treeHeight}
           />
         )}
-        {filteringStatus === FilteringInputStatus.FilteringInProgress ? <div className="filtered-tree-overlay" /> : null}
+        {filteringStatus === "filtering" ? <div className="filtered-tree-overlay" /> : null}
       </div>
     </>
   );
@@ -219,7 +227,7 @@ function StatelessTreeNodeRenderer(props: StatelessTreeNodeRendererProps) {
                       props.onLimitReset(nodeItem.parentId);
                     }}
                   >
-                    {`${IModelApp.localization.getLocalizedString("Sample:controls.remove-hierarchy-level-limit")}.`}
+                    {`${IModelApp.localization.getLocalizedString("Sample:controls.tree-widget.remove-hierarchy-level-limit")}.`}
                   </UnderlinedButton>
                 </span>
               )}
@@ -236,4 +244,15 @@ function StatelessTreeNodeRenderer(props: StatelessTreeNodeRendererProps) {
 }
 async function customFormatter(val: TypedPrimitiveValue) {
   return `THIS_IS_FORMATTED_${val ? JSON.stringify(val.value) : ""}_THIS_IS_FORMATTED`;
+}
+
+function NoFilterMatchesRenderer(props: { filter: string }) {
+  const { filter } = props;
+  return (
+    <FillCentered>
+      <p className="components-controlledTree-errorMessage">
+        {IModelApp.localization.getLocalizedString("Sample:controls.tree-widget.no-matches-for-provided-filter")}: {filter}
+      </p>
+    </FillCentered>
+  );
 }

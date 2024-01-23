@@ -4,18 +4,18 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { Id64String } from "@itwin/core-bentley";
+import { Id64, Id64String } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { InstanceKey } from "@itwin/presentation-common";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
+import { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { buildTestIModel, TestIModelBuilder } from "@itwin/presentation-testing";
 import {
-  importSchema,
+  buildIModel,
   insertPhysicalElement,
   insertPhysicalModelWithPartition,
   insertPhysicalPartition,
@@ -25,6 +25,7 @@ import {
 } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { ExpectedHierarchyDef, NodeValidators, validateHierarchy } from "../HierarchyValidation";
+import { createModelsTreeProvider, importTestSchema } from "./ModelsTreeTestUtils";
 
 interface TreeFilteringTestCaseDefinition<TIModelSetupResult> {
   name: string;
@@ -221,17 +222,17 @@ describe("Stateless hierarchy builder", () => {
           const intermediateSubject1 = insertSubject({ builder, codeValue: `matching intermediate subject 1`, parentId: rootSubject.id });
           const intermediateSubject2 = insertSubject({ builder, codeValue: `intermediate subject 2`, parentId: rootSubject.id });
           insertModelWithElements(builder, 1, category.id, intermediateSubject2.id);
-          const childSubject1 = insertSubject({ builder, codeValue: "subject 1", parentId: intermediateSubject1.id });
-          const childSubject2 = insertSubject({ builder, codeValue: "matching subject 2", parentId: intermediateSubject1.id });
+          const childSubject1 = insertSubject({ builder, codeValue: "matching subject 1", parentId: intermediateSubject1.id });
+          const childSubject2 = insertSubject({ builder, codeValue: "subject 2", parentId: intermediateSubject1.id });
           insertModelWithElements(builder, 1, category.id, childSubject1.id);
           insertModelWithElements(builder, 2, category.id, childSubject2.id);
           return { rootSubject, intermediateSubject1, intermediateSubject2, childSubject1, childSubject2 };
         },
         (x) => [
           [x.rootSubject, x.intermediateSubject1],
-          [x.rootSubject, x.intermediateSubject1, x.childSubject2],
+          [x.rootSubject, x.intermediateSubject1, x.childSubject1],
         ],
-        (x) => [x.intermediateSubject1, x.childSubject2],
+        (x) => [x.intermediateSubject1, x.childSubject1],
         (_x) => "matching",
         (x) => [
           NodeValidators.createForInstanceNode({
@@ -244,8 +245,29 @@ describe("Stateless hierarchy builder", () => {
                 autoExpand: true,
                 children: [
                   NodeValidators.createForInstanceNode({
+                    instanceKeys: [x.childSubject1],
+                    label: "matching subject 1",
+                    autoExpand: false,
+                    children: [
+                      NodeValidators.createForInstanceNode({
+                        label: "model-1",
+                        children: [
+                          NodeValidators.createForInstanceNode({
+                            label: "category",
+                            children: [
+                              NodeValidators.createForClassGroupingNode({
+                                label: "Physical Object",
+                                children: [NodeValidators.createForInstanceNode({ label: /^element-1/, children: false })],
+                              }),
+                            ],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  NodeValidators.createForInstanceNode({
                     instanceKeys: [x.childSubject2],
-                    label: "matching subject 2",
+                    label: "subject 2",
                     autoExpand: false,
                     children: [
                       NodeValidators.createForInstanceNode({
@@ -718,7 +740,7 @@ describe("Stateless hierarchy builder", () => {
 
         it("filters hierarchy by instance key paths", async function () {
           await validateHierarchy({
-            provider: await createFilteredModelsTreeProvider(imodel, instanceKeyPaths),
+            provider: createModelsTreeProvider(imodel, instanceKeyPaths),
             expect: expectedHierarchy,
           });
         });
@@ -755,31 +777,33 @@ describe("Stateless hierarchy builder", () => {
       });
     });
 
-    async function createFilteredModelsTreeProvider(imodel: IModelConnection, nodePaths: HierarchyNodeIdentifiersPath[]) {
+    it("finds elements by base36 ECInstanceId suffix", async function () {
+      const { imodel, expectedPaths, formattedECInstanceId } = await buildIModel(this, async (builder) => {
+        const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
+        const model = insertPhysicalModelWithPartition({ builder, codeValue: `model`, partitionParentId: rootSubject.id });
+        const category = insertSpatialCategory({ builder, codeValue: "category" });
+        const element = insertPhysicalElement({ builder, userLabel: `element 21`, modelId: model.id, categoryId: category.id });
+        const elementBriefcaseId = Id64.getBriefcaseId(element.id).toString(36).toLocaleUpperCase();
+        const elementLocalId = Id64.getLocalId(element.id).toString(36).toLocaleUpperCase();
+        return {
+          formattedECInstanceId: `[${elementBriefcaseId}-${elementLocalId}]`,
+          expectedPaths: [[rootSubject, model, category, element]].sort(instanceKeyPathSorter),
+        };
+      });
+
       const schemas = new SchemaContext();
       schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
       const metadataProvider = createMetadataProvider(schemas);
-      return new HierarchyProvider({
-        metadataProvider,
-        queryExecutor: createECSqlQueryExecutor(imodel),
-        hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider }),
-        filtering: { paths: nodePaths },
-      });
-    }
 
-    async function importTestSchema(mochaContext: Mocha.Context, builder: TestIModelBuilder) {
-      return importSchema(
-        mochaContext,
-        builder,
-        `
-          <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
-          <ECEntityClass typeName="PhysicalObject" displayLabel="Physical Object" modifier="Sealed" description="Similar to generic:PhysicalObject but also sub-modelable.">
-            <BaseClass>bis:PhysicalElement</BaseClass>
-            <BaseClass>bis:ISubModeledElement</BaseClass>
-          </ECEntityClass>
-        `,
-      );
-    }
+      const actualInstanceKeyPaths = (
+        await ModelsTreeDefinition.createInstanceKeyPaths({
+          metadataProvider,
+          queryExecutor: createECSqlQueryExecutor(imodel),
+          label: formattedECInstanceId,
+        })
+      ).sort(instanceKeyPathSorter);
+      expect(actualInstanceKeyPaths).to.deep.eq(expectedPaths);
+    });
 
     function insertModelWithElements(builder: TestIModelBuilder, modelNo: number, elementsCategoryId: Id64String, parentId?: Id64String) {
       const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: `model-${modelNo}`, partitionParentId: parentId });

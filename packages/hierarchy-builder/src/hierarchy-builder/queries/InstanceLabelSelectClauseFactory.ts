@@ -5,7 +5,7 @@
 
 import { IMetadataProvider } from "../ECMetadata";
 import { getClass } from "../internal/Common";
-import { createConcatenatedTypedValueSelector, createPropertyValueSelector, TypedValueSelectClauseProps } from "./ecsql-snippets/ECSqlValueSelectorSnippets";
+import { createConcatenatedValueJsonSelector, createRawPropertyValueSelector, TypedValueSelectClauseProps } from "./ecsql-snippets/ECSqlValueSelectorSnippets";
 
 /**
  * Props for [[IInstanceLabelSelectClauseFactory.createSelectClause]].
@@ -34,6 +34,30 @@ export interface CreateInstanceLabelSelectClauseProps {
    * that don't apply for given class).
    */
   className?: string;
+
+  /**
+   * An optional function for concatenating multiple [[TypedValueSelectClauseProps]]. Selectors' concatenation
+   * is used when a label consists of multiple pieces, e.g.:
+   * - `[` - string,
+   * - `this.PropertyX` - property value selector,
+   * - `]` - string.
+   *
+   * It's concatenator's job to serialize those pieces into a single selector and, depending on the use case,
+   * it may do that in multiple ways.
+   *
+   * - [[createConcatenatedValueJsonSelector]] serializes parts into a JSON array. This allows the array to
+   *   be parsed after the query is run, where each part can be handled individually without losing its metadata.
+   *   This is the default value.
+   *
+   * - [[createConcatenatedValueStringSelector]] concatenates parts into a string using SQLite's `||` operator. While
+   *   this way of concatenation looses metadata (thus disabling formatting of the values), it tries to produce the
+   *   value to be as close as possible to the formatted one. This concatenator may be used to create a label for using
+   *   in the query `WHERE` clause, for example.
+   *
+   * @see createConcatenatedValueJsonSelector
+   * @see createConcatenatedValueStringSelector
+   */
+  selectorsConcatenator?: (selectors: TypedValueSelectClauseProps[], checkSelector?: string) => string;
 }
 
 /**
@@ -48,8 +72,8 @@ export interface IInstanceLabelSelectClauseFactory {
 /**
  * Creates a label select clause in a format `Class label [base36(briefcase id)-base36(local id)]`, where
  * local and briefcase IDs are calculated based on ECInstance ID:
- * - briefcase id = ECInstance ID >> 40
- * - local id = ECInstance ID & (1 << 40 - 1)
+ * - `{briefcase id} = ECInstanceId >> 40`
+ * - `{local id} = ECInstanceId & (1 << 40 - 1)`
  *
  * @see https://www.itwinjs.org/presentation/advanced/defaultbisrules/#label-overrides
  * @beta
@@ -58,17 +82,17 @@ export class DefaultInstanceLabelSelectClauseFactory implements IInstanceLabelSe
   public async createSelectClause(props: CreateInstanceLabelSelectClauseProps): Promise<string> {
     return `(
       SELECT
-        ${createConcatenatedTypedValueSelector([
+        ${concatenate(props, [
           {
             selector: `COALESCE(
-              ${createPropertyValueSelector("c", "DisplayLabel")},
-              ${createPropertyValueSelector("c", "Name")}
+              ${createRawPropertyValueSelector("c", "DisplayLabel")},
+              ${createRawPropertyValueSelector("c", "Name")}
             )`,
           },
           ...createECInstanceIdSuffixSelectors(props.classAlias),
         ])}
       FROM [meta].[ECClassDef] AS [c]
-      WHERE [c].[ECInstanceId] = ${createPropertyValueSelector(props.classAlias, "ECClassId")}
+      WHERE [c].[ECInstanceId] = ${createRawPropertyValueSelector(props.classAlias, "ECClassId")}
     )`;
   }
 }
@@ -140,7 +164,7 @@ export class ClassBasedInstanceLabelSelectClauseFactory implements IInstanceLabe
         .map(({ className, clause }) =>
           `
             IIF(
-              ${createPropertyValueSelector(props.classAlias, "ECClassId")} IS (${className}),
+              ${createRawPropertyValueSelector(props.classAlias, "ECClassId")} IS (${className}),
               ${clause.trim()},
               NULL
             )
@@ -198,12 +222,13 @@ export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelect
       clauses: [
         {
           className: "BisCore.GeometricElement",
-          clause: async ({ classAlias }) => `
+          clause: async ({ classAlias, ...rest }) => `
             COALESCE(
-              ${createPropertyValueSelector(classAlias, "CodeValue")},
-              ${createConcatenatedTypedValueSelector(
-                [{ selector: createPropertyValueSelector(classAlias, "UserLabel") }, ...createECInstanceIdSuffixSelectors(classAlias)],
-                createPropertyValueSelector(classAlias, "UserLabel"),
+              ${createRawPropertyValueSelector(classAlias, "CodeValue")},
+              ${concatenate(
+                rest,
+                [{ selector: createRawPropertyValueSelector(classAlias, "UserLabel") }, ...createECInstanceIdSuffixSelectors(classAlias)],
+                `${createRawPropertyValueSelector(classAlias, "UserLabel")} IS NOT NULL`,
               )}
             )
           `,
@@ -212,17 +237,17 @@ export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelect
           className: "BisCore.Element",
           clause: async ({ classAlias }) => `
             COALESCE(
-              ${createPropertyValueSelector(classAlias, "UserLabel")},
-              ${createPropertyValueSelector(classAlias, "CodeValue")}
+              ${createRawPropertyValueSelector(classAlias, "UserLabel")},
+              ${createRawPropertyValueSelector(classAlias, "CodeValue")}
             )
           `,
         },
         {
           className: "BisCore.Model",
-          clause: async ({ classAlias }) => `(
-            SELECT ${await this.createSelectClause({ classAlias: "e", className: "BisCore.Element" })}
+          clause: async ({ classAlias, ...rest }) => `(
+            SELECT ${await this.createSelectClause({ ...rest, classAlias: "e", className: "BisCore.Element" })}
             FROM [bis].[Element] AS [e]
-            WHERE [e].[ECInstanceId] = ${createPropertyValueSelector(classAlias, "ModeledElement", "Navigation")[0]}
+            WHERE [e].[ECInstanceId] = ${createRawPropertyValueSelector(classAlias, "ModeledElement", "Id")}
           )`,
         },
       ],
@@ -237,7 +262,17 @@ export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelect
 function createECInstanceIdSuffixSelectors(classAlias: string): TypedValueSelectClauseProps[] {
   return [
     { value: ` [`, type: "String" },
-    { selector: `printf('0x%x', ${createPropertyValueSelector(classAlias, "ECInstanceId")})`, type: "Id" },
+    { selector: `CAST(base36(${createRawPropertyValueSelector(classAlias, "ECInstanceId")} >> 40) AS TEXT)` },
+    { value: `-`, type: "String" },
+    { selector: `CAST(base36(${createRawPropertyValueSelector(classAlias, "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)` },
     { value: `]`, type: "String" },
   ];
+}
+
+function concatenate(
+  props: { selectorsConcatenator?: (selectors: TypedValueSelectClauseProps[], checkSelector?: string) => string },
+  selectors: TypedValueSelectClauseProps[],
+  checkSelector?: string,
+): string {
+  return (props.selectorsConcatenator ?? createConcatenatedValueJsonSelector)(selectors, checkSelector);
 }

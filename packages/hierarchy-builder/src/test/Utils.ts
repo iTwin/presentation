@@ -5,7 +5,7 @@
 
 import { Observable } from "rxjs";
 import sinon from "sinon";
-import { Logger, LogLevel } from "@itwin/core-bentley";
+import { BeDuration, Logger, LogLevel, StopWatch } from "@itwin/core-bentley";
 import { ECClass, ECEntityClass, ECProperty, ECRelationshipClass, ECRelationshipConstraint, IMetadataProvider } from "../hierarchy-builder/ECMetadata";
 import {
   ParsedCustomHierarchyNode,
@@ -221,14 +221,30 @@ export class ResolvablePromise<T> implements Promise<T> {
   }
 }
 
+export async function waitFor(check: () => void, timeout?: number) {
+  if (timeout === undefined) {
+    timeout = 5000;
+  }
+  const timer = new StopWatch(undefined, true);
+  let succeeded = false;
+  while (!succeeded && timer.current.milliseconds < timeout) {
+    try {
+      check();
+      succeeded = true;
+    } catch {
+      await BeDuration.wait(0);
+    }
+  }
+  if (!succeeded) {
+    throw new Error("Timeout");
+  }
+}
+
 export function createFakeQueryReader(rows: object[]): ECSqlQueryReader {
   return {
     async *[Symbol.asyncIterator](): AsyncIterableIterator<ECSqlQueryRow> {
       for (const row of rows) {
-        yield {
-          ...row,
-          toRow: () => row,
-        } as ECSqlQueryRow;
+        yield row as ECSqlQueryRow;
       }
     },
   };

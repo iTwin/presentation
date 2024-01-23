@@ -54,7 +54,7 @@ describe("Stateless hierarchy builder", () => {
                   label: [
                     { type: "DateTime", value: date },
                     { type: "String", value: "|" },
-                    { type: "Id", value: Id64.fromLocalAndBriefcaseIds(1, 2) },
+                    { type: "Double", value: 0.123 },
                   ],
                   children: false,
                 },
@@ -69,7 +69,7 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           {
             node: (node) => {
-              const expectedLabel = `${date.toLocaleString()}|2-1`;
+              const expectedLabel = `${date.toLocaleString()}|0.12`;
               const actualLabel = node.label;
               expect(actualLabel).to.eq(expectedLabel);
             },
@@ -121,7 +121,7 @@ describe("Stateless hierarchy builder", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: ECSqlSnippets.createConcatenatedTypedValueSelector([
+                        selector: ECSqlSnippets.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: schema.items.ClassX.fullName, propertyClassAlias: "this", propertyName: "PropX" },
                           { type: "String", value: "]" },
@@ -174,6 +174,7 @@ describe("Stateless hierarchy builder", () => {
 
     describe("Id", () => {
       it("formats custom node labels", async function () {
+        const id = Id64.fromLocalAndBriefcaseIds(1, 2);
         const hierarchy: IHierarchyLevelDefinitionsFactory = {
           async defineHierarchyLevel({ parentNode }) {
             if (!parentNode) {
@@ -183,7 +184,7 @@ describe("Stateless hierarchy builder", () => {
                     key: "custom",
                     label: [
                       { type: "String", value: "[" },
-                      { type: "Id", value: Id64.fromLocalAndBriefcaseIds(1, 2) },
+                      { type: "Id", value: id },
                       { type: "String", value: "]" },
                     ],
                     children: false,
@@ -199,7 +200,7 @@ describe("Stateless hierarchy builder", () => {
           expect: [
             {
               node: (node) => {
-                const expectedLabel = `[2-1]`;
+                const expectedLabel = `[${id}]`;
                 const actualLabel = node.label;
                 expect(actualLabel).to.eq(expectedLabel);
               },
@@ -224,14 +225,14 @@ describe("Stateless hierarchy builder", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: ECSqlSnippets.createConcatenatedTypedValueSelector([
+                        selector: ECSqlSnippets.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: "BisCore.Subject", propertyClassAlias: "this", propertyName: "LastMod" },
                           { type: "String", value: "]" },
                         ]),
                       },
                       extendedData: {
-                        lastMod: { selector: ECSqlSnippets.createPropertyValueSelector("this", "LastMod") },
+                        lastMod: { selector: ECSqlSnippets.createRawPropertyValueSelector("this", "LastMod") },
                       },
                     })}
                     FROM ${subjectClassName} AS this
@@ -354,7 +355,7 @@ describe("Stateless hierarchy builder", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: ECSqlSnippets.createConcatenatedTypedValueSelector([
+                        selector: ECSqlSnippets.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: modelClassName, propertyClassAlias: "this", propertyName: "IsPrivate" },
                           { type: "String", value: "]" },
@@ -434,7 +435,7 @@ describe("Stateless hierarchy builder", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: ECSqlSnippets.createConcatenatedTypedValueSelector([
+                        selector: ECSqlSnippets.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: category.className, propertyClassAlias: "this", propertyName: "Rank" },
                           { type: "String", value: "]" },
@@ -523,7 +524,7 @@ describe("Stateless hierarchy builder", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: ECSqlSnippets.createConcatenatedTypedValueSelector([
+                        selector: ECSqlSnippets.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: element.className, propertyClassAlias: "this", propertyName: "Yaw" },
                           { type: "String", value: "]" },
@@ -611,7 +612,7 @@ describe("Stateless hierarchy builder", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: ECSqlSnippets.createConcatenatedTypedValueSelector([
+                        selector: ECSqlSnippets.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: element.className, propertyClassAlias: "this", propertyName: "Origin", specialType: "Point2d" },
                           { type: "String", value: "]" },
@@ -699,7 +700,7 @@ describe("Stateless hierarchy builder", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: ECSqlSnippets.createConcatenatedTypedValueSelector([
+                        selector: ECSqlSnippets.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: element.className, propertyClassAlias: "this", propertyName: "Origin", specialType: "Point3d" },
                           { type: "String", value: "]" },
@@ -785,7 +786,7 @@ describe("Stateless hierarchy builder", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: ECSqlSnippets.createConcatenatedTypedValueSelector([
+                        selector: ECSqlSnippets.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: element.className, propertyClassAlias: "this", propertyName: "FederationGuid", specialType: "Guid" },
                           { type: "String", value: "]" },

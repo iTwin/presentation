@@ -8,14 +8,11 @@ import { PrimitiveValue } from "@itwin/appui-abstract";
 import { DelayLoadedTreeNodeItem } from "@itwin/components-react";
 import { assert, OrderedId64Iterable } from "@itwin/core-bentley";
 import { IModelConnection, SnapshotConnection } from "@itwin/core-frontend";
-import { SchemaContext } from "@itwin/ecschema-metadata";
-import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { InstanceKey, NodeKey, Ruleset } from "@itwin/presentation-common";
 import { isPresentationTreeNodeItem, PresentationTreeDataProvider, PresentationTreeNodeItem } from "@itwin/presentation-components";
-import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
-import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
+import { HierarchyNode } from "@itwin/presentation-hierarchy-builder";
 import { initialize, terminate } from "../../IntegrationTests";
+import { createModelsTreeProvider } from "./ModelsTreeTestUtils";
 
 describe("Stateless hierarchy builder", () => {
   let imodel!: IModelConnection;
@@ -40,7 +37,7 @@ describe("Stateless hierarchy builder", () => {
 
   it("produces the same Models Tree hierarchy as native impl", async function () {
     const nativeProvider = createNativeProvider(imodel);
-    const statelessProvider = createStatelessProvider(imodel);
+    const statelessProvider = createModelsTreeProvider(imodel);
     let nodesCreated = 0;
 
     function compareNodes({ nativeNode, statelessNode, ...props }: CompareNodesProps) {
@@ -128,17 +125,6 @@ function createNativeProvider(imodel: IModelConnection) {
     ruleset: MODELS_TREE_RULESET,
     pagingSize: 1000,
     hierarchyLevelSizeLimit: 1000,
-  });
-}
-
-function createStatelessProvider(imodel: IModelConnection) {
-  const schemas = new SchemaContext();
-  schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-  const metadataProvider = createMetadataProvider(schemas);
-  return new HierarchyProvider({
-    metadataProvider,
-    hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider }),
-    queryExecutor: createECSqlQueryExecutor(imodel),
   });
 }
 

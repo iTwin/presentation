@@ -36,8 +36,8 @@ export function TreeWidget(props: Omit<TreeWidgetProps, "height" | "width">) {
     <div ref={ref}>
       <Tabs
         labels={[
-          <Tab key={1} label={IModelApp.localization.getLocalizedString("Sample:controls.rules-driven-tree")} />,
-          <Tab key={2} label={IModelApp.localization.getLocalizedString("Sample:controls.stateless-tree")} />,
+          <Tab key={1} label={IModelApp.localization.getLocalizedString("Sample:controls.tree-widget.rules-driven-tree")} />,
+          <Tab key={2} label={IModelApp.localization.getLocalizedString("Sample:controls.tree-widget.stateless-models-tree")} />,
         ]}
         onTabSelected={setOpenTab}
         contentClassName="tree-widget-tabs-content"

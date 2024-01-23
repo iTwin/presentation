@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { IMetadataProvider } from "../../hierarchy-builder/ECMetadata";
-import { createConcatenatedTypedValueSelector, createPropertyValueSelector } from "../../hierarchy-builder/queries/ecsql-snippets/ECSqlValueSelectorSnippets";
+import { createConcatenatedValueJsonSelector, createRawPropertyValueSelector } from "../../hierarchy-builder/queries/ecsql-snippets/ECSqlValueSelectorSnippets";
 import {
   BisInstanceLabelSelectClauseFactory,
   ClassBasedInstanceLabelSelectClauseFactory,
@@ -28,15 +28,17 @@ describe("DefaultInstanceLabelSelectClauseFactory", () => {
     });
     expect(trimWhitespace(result)).to.eq(
       trimWhitespace(`(
-        SELECT ${createConcatenatedTypedValueSelector([
+        SELECT ${createConcatenatedValueJsonSelector([
           {
             selector: `COALESCE(
-              ${createPropertyValueSelector("c", "DisplayLabel")},
-              ${createPropertyValueSelector("c", "Name")}
+              ${createRawPropertyValueSelector("c", "DisplayLabel")},
+              ${createRawPropertyValueSelector("c", "Name")}
             )`,
           },
           { value: ` [`, type: "String" },
-          { selector: `printf('0x%x', ${createPropertyValueSelector("test", "ECInstanceId")})`, type: "Id" },
+          { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} >> 40) AS TEXT)` },
+          { value: `-`, type: "String" },
+          { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)` },
           { value: `]`, type: "String" },
         ])}
         FROM [meta].[ECClassDef] AS [c]
@@ -239,15 +241,17 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
           IIF(
             [test].[ECClassId] IS (BisCore.GeometricElement),
             COALESCE(
-              ${createPropertyValueSelector("test", "CodeValue")},
-              ${createConcatenatedTypedValueSelector(
+              ${createRawPropertyValueSelector("test", "CodeValue")},
+              ${createConcatenatedValueJsonSelector(
                 [
-                  { selector: createPropertyValueSelector("test", "UserLabel") },
+                  { selector: createRawPropertyValueSelector("test", "UserLabel") },
                   { value: ` [`, type: "String" },
-                  { selector: `printf('0x%x', ${createPropertyValueSelector("test", "ECInstanceId")})`, type: "Id" },
+                  { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} >> 40) AS TEXT)` },
+                  { value: `-`, type: "String" },
+                  { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)` },
                   { value: `]`, type: "String" },
                 ],
-                createPropertyValueSelector("test", "UserLabel"),
+                `${createRawPropertyValueSelector("test", "UserLabel")} IS NOT NULL`,
               )}
             ),
             NULL
@@ -255,8 +259,8 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
           IIF(
             [test].[ECClassId] IS (BisCore.Element),
             COALESCE(
-              ${createPropertyValueSelector("test", "UserLabel")},
-              ${createPropertyValueSelector("test", "CodeValue")}
+              ${createRawPropertyValueSelector("test", "UserLabel")},
+              ${createRawPropertyValueSelector("test", "CodeValue")}
             ),
             NULL
           ),
@@ -277,15 +281,17 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
           IIF(
             [test].[ECClassId] IS (BisCore.GeometricElement),
             COALESCE(
-              ${createPropertyValueSelector("test", "CodeValue")},
-              ${createConcatenatedTypedValueSelector(
+              ${createRawPropertyValueSelector("test", "CodeValue")},
+              ${createConcatenatedValueJsonSelector(
                 [
-                  { selector: createPropertyValueSelector("test", "UserLabel") },
+                  { selector: createRawPropertyValueSelector("test", "UserLabel") },
                   { value: ` [`, type: "String" },
-                  { selector: `printf('0x%x', ${createPropertyValueSelector("test", "ECInstanceId")})`, type: "Id" },
+                  { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} >> 40) AS TEXT)` },
+                  { value: `-`, type: "String" },
+                  { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)` },
                   { value: `]`, type: "String" },
                 ],
-                createPropertyValueSelector("test", "UserLabel"),
+                `${createRawPropertyValueSelector("test", "UserLabel")} IS NOT NULL`,
               )}
             ),
             NULL
@@ -293,8 +299,8 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
           IIF(
             [test].[ECClassId] IS (BisCore.Element),
             COALESCE(
-              ${createPropertyValueSelector("test", "UserLabel")},
-              ${createPropertyValueSelector("test", "CodeValue")}
+              ${createRawPropertyValueSelector("test", "UserLabel")},
+              ${createRawPropertyValueSelector("test", "CodeValue")}
             ),
             NULL
           ),

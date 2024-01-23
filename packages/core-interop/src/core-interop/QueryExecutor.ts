@@ -14,17 +14,17 @@ import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions, IECSqlQueryExe
  *
  * @beta
  */
-export interface IECSqlReaderFactory {
+export interface ICoreECSqlReaderFactory {
   createQueryReader(ecsql: string, binder?: QueryBinder, options?: QueryOptions): ECSqlReader;
 }
 
 /**
- * Create an `IECSqlQueryExecutor` using given `IECSqlReaderFactory`, which, generally, is either [IModelDb]($core-backend)
+ * Create an `IECSqlQueryExecutor` using given `ICoreECSqlReaderFactory`, which, generally, is either [IModelDb]($core-backend)
  * or [IModelConnection]($core-frontend).
  *
  * @beta
  */
-export function createECSqlQueryExecutor(imodel: IECSqlReaderFactory): IECSqlQueryExecutor {
+export function createECSqlQueryExecutor(imodel: ICoreECSqlReaderFactory): IECSqlQueryExecutor {
   return {
     createQueryReader(ecsql: string, bindings?: ECSqlBinding[], config?: ECSqlQueryReaderOptions): ECSqlQueryReader {
       return {
@@ -40,7 +40,9 @@ export function createECSqlQueryExecutor(imodel: IECSqlReaderFactory): IECSqlQue
           }
           const reader = imodel.createQueryReader(ecsql, bind(bindings ?? []), opts.getOptions());
           while (await reader.step()) {
-            yield reader.current;
+            // can't return `reader.current` in async fashion, because it may become invalid while the loop
+            // continues - need to convert it to an immutable object
+            yield config?.rowFormat === "Indexes" ? reader.current.toArray() : reader.current.toRow();
           }
         },
       };

@@ -6,7 +6,7 @@
 import { ECClass, ECNavigationProperty, ECRelationshipClass, IMetadataProvider } from "../../ECMetadata";
 import { getClass } from "../../internal/Common";
 import { RelationshipPath, RelationshipPathStep } from "../../Metadata";
-import { createPropertyValueSelector } from "./ECSqlValueSelectorSnippets";
+import { createRawPropertyValueSelector } from "./ECSqlValueSelectorSnippets";
 
 /**
  * Describes a single JOIN step from source to target through a relationship.
@@ -76,13 +76,13 @@ export async function createRelationshipPathJoinClause(props: CreateRelationship
         ${getJoinClause(step.joinType)} ${getClassSelectClause(step.target, step.targetAlias)}
         ON ${
           propertyDirectionMatchesRelationshipDirection
-            ? createPropertyValueSelector(step.targetAlias, "ECInstanceId")
-            : createPropertyValueSelector(step.targetAlias, navigationProperty.name, "Navigation")[0]
+            ? createRawPropertyValueSelector(step.targetAlias, "ECInstanceId")
+            : createRawPropertyValueSelector(step.targetAlias, navigationProperty.name, "Id")
         }
           = ${
             propertyDirectionMatchesRelationshipDirection
-              ? createPropertyValueSelector(prev.alias, navigationProperty.name, "Navigation")[0]
-              : createPropertyValueSelector(prev.alias, prev.joinPropertyName)
+              ? createRawPropertyValueSelector(prev.alias, navigationProperty.name, "Id")
+              : createRawPropertyValueSelector(prev.alias, prev.joinPropertyName)
           }
       `;
       prev = {
@@ -100,23 +100,23 @@ export async function createRelationshipPathJoinClause(props: CreateRelationship
             SELECT [${step.relationshipAlias}].*
             FROM ${getClassSelectClause(step.relationship, step.relationshipAlias)}
             ${getJoinClause("inner")} ${getClassSelectClause(step.target, step.targetAlias)}
-              ON ${createPropertyValueSelector(step.targetAlias, "ECInstanceId")}
-                = ${createPropertyValueSelector(step.relationshipAlias, relationshipJoinPropertyNames.next)}
+              ON ${createRawPropertyValueSelector(step.targetAlias, "ECInstanceId")}
+                = ${createRawPropertyValueSelector(step.relationshipAlias, relationshipJoinPropertyNames.next)}
           ) [${step.relationshipAlias}]
-          ON ${createPropertyValueSelector(step.relationshipAlias, relationshipJoinPropertyNames.this)}
-            = ${createPropertyValueSelector(prev.alias, prev.joinPropertyName)}
+          ON ${createRawPropertyValueSelector(step.relationshipAlias, relationshipJoinPropertyNames.this)}
+            = ${createRawPropertyValueSelector(prev.alias, prev.joinPropertyName)}
         `;
       } else {
         clause += `
           ${getJoinClause("inner")} ${getClassSelectClause(step.relationship, step.relationshipAlias)}
-            ON ${createPropertyValueSelector(step.relationshipAlias, relationshipJoinPropertyNames.this)}
-              = ${createPropertyValueSelector(prev.alias, prev.joinPropertyName)}
+            ON ${createRawPropertyValueSelector(step.relationshipAlias, relationshipJoinPropertyNames.this)}
+              = ${createRawPropertyValueSelector(prev.alias, prev.joinPropertyName)}
         `;
       }
       clause += `
         ${getJoinClause(step.joinType)} ${getClassSelectClause(step.target, step.targetAlias)}
-          ON ${createPropertyValueSelector(step.targetAlias, "ECInstanceId")}
-            = ${createPropertyValueSelector(step.relationshipAlias, relationshipJoinPropertyNames.next)}
+          ON ${createRawPropertyValueSelector(step.targetAlias, "ECInstanceId")}
+            = ${createRawPropertyValueSelector(step.relationshipAlias, relationshipJoinPropertyNames.next)}
       `;
       prev = {
         alias: step.targetAlias,

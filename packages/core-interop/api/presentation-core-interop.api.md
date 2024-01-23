@@ -4,20 +4,46 @@
 
 ```ts
 
+import { ContentDescriptorRequestOptions } from '@itwin/presentation-common';
+import { Descriptor } from '@itwin/presentation-common';
 import { ECSqlReader } from '@itwin/core-common';
+import { HierarchyNode } from '@itwin/presentation-hierarchy-builder';
+import { HierarchyProvider } from '@itwin/presentation-hierarchy-builder';
 import { IECSqlQueryExecutor } from '@itwin/presentation-hierarchy-builder';
 import { ILogger } from '@itwin/presentation-hierarchy-builder';
 import { IMetadataProvider } from '@itwin/presentation-hierarchy-builder';
+import { InstancesNodeKey } from '@itwin/presentation-hierarchy-builder';
 import { IPrimitiveValueFormatter } from '@itwin/presentation-hierarchy-builder';
+import { KeySet } from '@itwin/presentation-common';
 import { Localization } from '@itwin/core-common';
 import { LocalizationFunction } from '@itwin/presentation-hierarchy-builder';
 import { QueryBinder } from '@itwin/core-common';
 import { QueryOptions } from '@itwin/core-common';
+import { RulesetVariable } from '@itwin/presentation-common';
 import { SchemaContext } from '@itwin/ecschema-metadata';
 import { UnitSystemKey } from '@itwin/core-quantity';
 
 // @beta
-export function createECSqlQueryExecutor(imodel: IECSqlReaderFactory): IECSqlQueryExecutor;
+export function createECSqlQueryExecutor(imodel: ICoreECSqlReaderFactory): IECSqlQueryExecutor;
+
+// @beta
+export function createHierarchyLevelDescriptor<TIModel extends ICoreECSqlReaderFactory>(props: CreateHierarchyLevelDescriptorProps<TIModel>): Promise<Descriptor | undefined>;
+
+// @beta
+export interface CreateHierarchyLevelDescriptorProps<TIModel extends ICoreECSqlReaderFactory> {
+    // (undocumented)
+    descriptorBuilder: {
+        getContentDescriptor: (requestOptions: ContentDescriptorRequestOptions<TIModel, KeySet, RulesetVariable>) => Promise<Descriptor | undefined>;
+    };
+    // (undocumented)
+    hierarchyProvider: HierarchyProvider;
+    // (undocumented)
+    imodel: TIModel;
+    // (undocumented)
+    parentNode: (Omit<HierarchyNode, "children"> & {
+        key: InstancesNodeKey | string;
+    }) | undefined;
+}
 
 // @beta
 export function createLocalizationFunction(localization: Localization): Promise<LocalizationFunction>;
@@ -32,7 +58,7 @@ export function createMetadataProvider(schemaContext: SchemaContext): IMetadataP
 export function createValueFormatter(schemaContext: SchemaContext, unitSystem?: UnitSystemKey, baseFormatter?: IPrimitiveValueFormatter): IPrimitiveValueFormatter;
 
 // @beta
-export interface IECSqlReaderFactory {
+export interface ICoreECSqlReaderFactory {
     // (undocumented)
     createQueryReader(ecsql: string, binder?: QueryBinder, options?: QueryOptions): ECSqlReader;
 }

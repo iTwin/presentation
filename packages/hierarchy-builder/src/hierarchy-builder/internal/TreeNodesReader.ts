@@ -40,7 +40,7 @@ export class TreeQueryResultsReader {
       if (nodeLimit !== "unbounded" && nodes.length >= nodeLimit) {
         throw new RowsLimitExceededError(nodeLimit);
       }
-      nodes.push(this._props.parser(row.toRow()));
+      nodes.push(this._props.parser(row));
     }
     return nodes;
   }
