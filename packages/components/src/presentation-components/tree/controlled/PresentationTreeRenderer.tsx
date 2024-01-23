@@ -27,16 +27,76 @@ import {
   isPresentationTreeNodeItem,
   PresentationTreeNodeItem,
 } from "../PresentationTreeNodeItem";
-import { PresentationTreeNodeRenderer, PresentationTreeNodeRendererProps } from "./PresentationTreeNodeRenderer";
+import { PresentationTreeNodeRenderer } from "./PresentationTreeNodeRenderer";
 import { useHierarchyLevelFiltering } from "./UseHierarchyLevelFiltering";
 
 /**
  * Props for [[PresentationTreeRenderer]] component.
  * @beta
  */
-export interface PresentationTreeRendererProps extends Omit<TreeRendererProps, "nodeRenderer"> {
+export interface PresentationTreeRendererProps extends TreeRendererProps {
   nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
-  nodeRenderer?: (props: PresentationTreeNodeRendererProps) => React.ReactNode;
+}
+
+/**
+ * Return type of [[useFilterablePresentationTree]] hook.
+ * @beta
+ */
+export interface FilterableTreeProps {
+  onFilterClick: (nodeId: string) => void;
+  onClearFilterClick: (nodeId: string) => void;
+  /** Reference of the document body. Needs to be passed to the to the root of the tree for the filter dialog to be placed separately from the tree context. */
+  documentBodyRef: React.RefObject<HTMLDivElement>;
+  filterDialog: React.ReactPortal | null;
+}
+
+/**
+ * Props for [[useFilterablePresentationTree]] hook.
+ * @beta
+ */
+export interface useFilterablePresentationTreeProps {
+  nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
+}
+
+/**
+ * Hook that enables hierarchy level filtering with action handlers for setting and clearing filters.
+ * @beta
+ */
+export function useFilterablePresentationTree({ nodeLoader }: useFilterablePresentationTreeProps): FilterableTreeProps {
+  const { applyFilter, clearFilter } = useHierarchyLevelFiltering({ nodeLoader, modelSource: nodeLoader.modelSource });
+  const [filterNode, setFilterNode] = useState<PresentationTreeNodeItem>();
+
+  const ref = useRef<HTMLDivElement>(null);
+
+  const filterDialog =
+    ref.current && filterNode && isFilterablePresentationTreeNodeItem(filterNode)
+      ? createPortal(
+          <TreeNodeFilterBuilderDialog
+            dataProvider={nodeLoader.dataProvider}
+            onApply={(info) => {
+              info === undefined ? clearFilter(filterNode.id) : applyFilter(filterNode.id, info);
+              setFilterNode(undefined);
+            }}
+            onClose={() => {
+              setFilterNode(undefined);
+            }}
+            filterNode={filterNode}
+          />,
+          ref.current.ownerDocument.body.querySelector(".iui-root") ?? ref.current.ownerDocument.body,
+        )
+      : null;
+
+  return {
+    onFilterClick: (nodeId: string) => {
+      const node = nodeLoader.modelSource.getModel().getNode(nodeId);
+      if (isTreeModelNode(node) && isPresentationTreeNodeItem(node.item)) {
+        setFilterNode(node.item);
+      }
+    },
+    onClearFilterClick: clearFilter,
+    documentBodyRef: ref,
+    filterDialog,
+  };
 }
 
 /**
@@ -46,48 +106,15 @@ export interface PresentationTreeRendererProps extends Omit<TreeRendererProps, "
  * @beta
  */
 export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
-  const { nodeLoader, nodeRenderer } = props;
-  const { applyFilter, clearFilter } = useHierarchyLevelFiltering({ nodeLoader, modelSource: nodeLoader.modelSource });
-  const [filterNode, setFilterNode] = useState<PresentationTreeNodeItem>();
+  const { onClearFilterClick, onFilterClick, documentBodyRef, filterDialog } = useFilterablePresentationTree({ nodeLoader: props.nodeLoader });
+  const filterableNodeRenderer = (nodeProps: TreeNodeRendererProps) => {
+    return <PresentationTreeNodeRenderer {...nodeProps} onFilterClick={onFilterClick} onClearFilterClick={onClearFilterClick} />;
+  };
 
-  const filterableNodeRenderer = useCallback(
-    (nodeProps: TreeNodeRendererProps) => {
-      const nodeRendererParams = {
-        ...nodeProps,
-        onFilterClick: (nodeId: string) => {
-          const node = nodeLoader.modelSource.getModel().getNode(nodeId);
-          if (isTreeModelNode(node) && isPresentationTreeNodeItem(node.item)) {
-            setFilterNode(node.item);
-          }
-        },
-        onClearFilterClick: clearFilter,
-      };
-
-      return nodeRenderer ? nodeRenderer(nodeRendererParams) : <PresentationTreeNodeRenderer {...nodeRendererParams} />;
-    },
-    [clearFilter, nodeLoader.modelSource, nodeRenderer],
-  );
-
-  const divRef = useRef<HTMLDivElement>(null);
   return (
-    <div ref={divRef}>
+    <div ref={documentBodyRef}>
       <TreeRenderer {...props} nodeRenderer={filterableNodeRenderer} />
-      {divRef.current && filterNode && isFilterablePresentationTreeNodeItem(filterNode)
-        ? createPortal(
-            <TreeNodeFilterBuilderDialog
-              dataProvider={nodeLoader.dataProvider}
-              onApply={(info) => {
-                info === undefined ? clearFilter(filterNode.id) : applyFilter(filterNode.id, info);
-                setFilterNode(undefined);
-              }}
-              onClose={() => {
-                setFilterNode(undefined);
-              }}
-              filterNode={filterNode}
-            />,
-            divRef.current.ownerDocument.body.querySelector(".iui-root") ?? divRef.current.ownerDocument.body,
-          )
-        : null}
+      {filterDialog}
     </div>
   );
 }

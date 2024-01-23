@@ -66,6 +66,8 @@ import { PropertyRecord } from '@itwin/appui-abstract';
 import { PropertyValueRendererContext } from '@itwin/components-react';
 import { PropsWithChildren } from 'react';
 import { ReactNode } from 'react';
+import { ReactPortal } from 'react';
+import { RefObject } from 'react';
 import { RenderedItemsRange } from '@itwin/components-react';
 import { Ruleset } from '@itwin/presentation-common';
 import { RulesetVariable } from '@itwin/presentation-common';
@@ -215,6 +217,12 @@ export interface FavoritePropertiesDataProviderProps {
 export type FilterablePresentationTreeNodeItem = PresentationTreeNodeItem & {
     filtering: PresentationTreeNodeItemFilteringInfo;
 };
+
+// @beta
+export interface FilterablePresentationTreeProps {
+    // (undocumented)
+    nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
+}
 
 // @beta
 export interface FilteringDialogToolbarHandlers {
@@ -600,11 +608,9 @@ export type PresentationTreeProps<TEventHandler extends TreeEventHandler> = Omit
 export function PresentationTreeRenderer(props: PresentationTreeRendererProps): JSX_2.Element;
 
 // @beta
-export interface PresentationTreeRendererProps extends Omit<TreeRendererProps, "nodeRenderer"> {
+export interface PresentationTreeRendererProps extends TreeRendererProps {
     // (undocumented)
     nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
-    // (undocumented)
-    nodeRenderer?: (props: PresentationTreeNodeRendererProps) => React.ReactNode;
 }
 
 // @public
@@ -759,6 +765,14 @@ export function useControlledPresentationTreeFiltering(props: ControlledPresenta
     filteredModelSource: TreeModelSource;
     isFiltering: boolean;
     matchesCount: number | undefined;
+};
+
+// @beta
+export function useFilterablePresentationTree({ nodeLoader }: FilterablePresentationTreeProps): {
+    onFilterClick: (nodeId: string) => void;
+    onClearFilterClick: (nodeId: string) => void;
+    ref: RefObject<HTMLDivElement>;
+    filterDialog: ReactPortal | null;
 };
 
 // @beta
