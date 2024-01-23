@@ -13,6 +13,11 @@ export interface ArrayPropertyAttributes {
 }
 
 // @beta
+export interface BaseGroupingNodeKey {
+    groupedInstanceKeys: InstanceKey[];
+}
+
+// @beta
 export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelectClauseFactory {
     constructor(props: BisInstanceLabelSelectClauseFactoryProps);
     // (undocumented)
@@ -67,13 +72,11 @@ export interface ClassBasedLabelSelectClause {
 }
 
 // @beta
-export interface ClassGroupingNodeKey {
-    // (undocumented)
+export interface ClassGroupingNodeKey extends BaseGroupingNodeKey {
     class: {
         name: string;
         label?: string;
     };
-    // (undocumented)
     type: "class-grouping";
 }
 
@@ -339,15 +342,12 @@ export interface ECSqlQueryDef {
 }
 
 // @beta
-export interface ECSqlQueryReader {
-    // (undocumented)
-    [Symbol.asyncIterator](): AsyncIterableIterator<ECSqlQueryRow>;
-}
+export type ECSqlQueryReader = AsyncIterableIterator<ECSqlQueryRow>;
 
 // @beta
 export interface ECSqlQueryReaderOptions {
     // (undocumented)
-    rowFormat: ECSqlQueryRowFormat;
+    rowFormat?: ECSqlQueryRowFormat;
 }
 
 // @beta
@@ -720,10 +720,10 @@ export class HierarchyProvider {
     // (undocumented)
     getNodes(props: GetHierarchyNodesProps): Promise<HierarchyNode[]>;
     readonly hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
-    readonly queryExecutor: IECSqlQueryExecutor;
+    readonly limitingQueryExecutor: ILimitingECSqlQueryExecutor;
     // @internal (undocumented)
     get queryScheduler(): {
-        schedule: (ecsql: string, bindings?: ECSqlBinding[], options?: ECSqlQueryReaderOptions) => AsyncIterableIterator<ECSqlQueryRow>;
+        schedule: ILimitingECSqlQueryExecutor["createQueryReader"];
     };
 }
 
@@ -759,6 +759,13 @@ export interface IHierarchyLevelDefinitionsFactory {
 // @beta
 export interface IInstanceLabelSelectClauseFactory {
     createSelectClause(props: CreateInstanceLabelSelectClauseProps): Promise<string>;
+}
+
+// @beta
+export interface ILimitingECSqlQueryExecutor {
+    createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions & {
+        limit?: number | "unbounded";
+    }): ECSqlQueryReader;
 }
 
 // @beta
@@ -821,9 +828,7 @@ export interface InstancesNodeChildHierarchyLevelDefinition {
 
 // @beta
 export interface InstancesNodeKey {
-    // (undocumented)
     instanceKeys: InstanceKey[];
-    // (undocumented)
     type: "instances";
 }
 
@@ -831,12 +836,9 @@ export interface InstancesNodeKey {
 export type IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise<string>;
 
 // @beta
-export interface LabelGroupingNodeKey {
-    // (undocumented)
+export interface LabelGroupingNodeKey extends BaseGroupingNodeKey {
     groupId?: string;
-    // (undocumented)
     label: string;
-    // (undocumented)
     type: "label-grouping";
 }
 
@@ -1014,8 +1016,7 @@ export namespace PropertyFilterValue {
 export type PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | PropertyValueGroupingNodeKey | PropertyOtherValuesGroupingNodeKey;
 
 // @beta
-export interface PropertyOtherValuesGroupingNodeKey {
-    // (undocumented)
+export interface PropertyOtherValuesGroupingNodeKey extends BaseGroupingNodeKey {
     type: "property-grouping:other";
 }
 
@@ -1030,28 +1031,19 @@ export interface PropertyValue {
 }
 
 // @beta
-export interface PropertyValueGroupingNodeKey {
-    // (undocumented)
+export interface PropertyValueGroupingNodeKey extends BaseGroupingNodeKey {
     formattedPropertyValue: string;
-    // (undocumented)
     propertyClassName: string;
-    // (undocumented)
     propertyName: string;
-    // (undocumented)
     type: "property-grouping:value";
 }
 
 // @beta
-export interface PropertyValueRangeGroupingNodeKey {
-    // (undocumented)
+export interface PropertyValueRangeGroupingNodeKey extends BaseGroupingNodeKey {
     fromValue: number;
-    // (undocumented)
     propertyClassName: string;
-    // (undocumented)
     propertyName: string;
-    // (undocumented)
     toValue: number;
-    // (undocumented)
     type: "property-grouping:range";
 }
 

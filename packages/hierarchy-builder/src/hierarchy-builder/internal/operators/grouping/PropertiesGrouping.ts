@@ -19,9 +19,11 @@ import { getClass } from "../../Common";
 import { GroupingHandler, GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
 import { sortNodesByLabel } from "../Sorting";
 
+type OmitOverUnion<T, K extends PropertyKey> = T extends T ? Omit<T, K> : never;
+
 interface DisplayablePropertyGroupingInfo {
   label: string;
-  propertyGroupingNodeKey: PropertyGroupingNodeKey;
+  propertyGroupingNodeKey: OmitOverUnion<PropertyGroupingNodeKey, "groupedInstanceKeys">;
 }
 
 interface PropertyGroupingInformation {
@@ -78,8 +80,8 @@ export async function createPropertyGroups(
           {
             label: translate("grouping.unspecified-label"),
             propertyGroupingNodeKey: {
-              ...partialPropertyNodeKeyToAdd,
               type: "property-grouping:value",
+              ...partialPropertyNodeKeyToAdd,
               formattedPropertyValue: "",
             },
           },
@@ -188,7 +190,10 @@ function addGroupingToMap(
 function createGroupingNodes(groupings: PropertyGroupingInformation): GroupingHandlerResult {
   const groupedNodes = new Array<ProcessedInstancesGroupingHierarchyNode>();
   groupings.grouped.forEach((entry) => {
-    const groupingNodeKey = entry.displayablePropertyGroupingInfo.propertyGroupingNodeKey;
+    const groupingNodeKey = {
+      ...entry.displayablePropertyGroupingInfo.propertyGroupingNodeKey,
+      groupedInstanceKeys: entry.groupedNodes.flatMap((groupedInstanceNode) => groupedInstanceNode.key.instanceKeys),
+    };
     const groupedNodeParentKeys = entry.groupedNodes[0].parentKeys;
     groupedNodes.push({
       label: entry.displayablePropertyGroupingInfo.label,

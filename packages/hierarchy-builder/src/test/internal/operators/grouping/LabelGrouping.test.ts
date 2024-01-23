@@ -23,6 +23,7 @@ describe("LabelGrouping", () => {
       type: "label-grouping",
       label: "1",
       groupId: undefined,
+      groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
     };
     expect(await createLabelGroups(nodes)).to.deep.eq({
       groupingType: "label",
@@ -51,6 +52,7 @@ describe("LabelGrouping", () => {
       type: "label-grouping",
       label: "1",
       groupId: undefined,
+      groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
     };
     expect(await createLabelGroups(nodes)).to.deep.eq({
       groupingType: "label",
@@ -79,6 +81,7 @@ describe("LabelGrouping", () => {
       type: "label-grouping",
       label: "1",
       groupId: undefined,
+      groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
     };
     expect(await createLabelGroups(nodes)).to.deep.eq({
       groupingType: "label",
@@ -113,11 +116,13 @@ describe("LabelGrouping", () => {
       type: "label-grouping",
       label: "1",
       groupId: "groupId1",
+      groupedInstanceKeys: nodes[0].key.instanceKeys,
     };
     const expectedGroupingNodeKey2: GroupingNodeKey = {
       type: "label-grouping",
       label: "1",
       groupId: "groupId2",
+      groupedInstanceKeys: nodes[1].key.instanceKeys,
     };
     expect(await createLabelGroups(nodes)).to.deep.eq({
       groupingType: "label",
@@ -158,6 +163,7 @@ describe("LabelGrouping", () => {
       type: "label-grouping",
       label: "1",
       groupId: "groupId1",
+      groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
     };
     expect(await createLabelGroups(nodes)).to.deep.eq({
       groupingType: "label",
@@ -192,6 +198,7 @@ describe("LabelGrouping", () => {
       type: "label-grouping",
       label: "1",
       groupId: undefined,
+      groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
     };
     expect(await createLabelGroups(nodes)).to.deep.eq({
       groupingType: "label",
@@ -226,11 +233,13 @@ describe("LabelGrouping", () => {
       type: "label-grouping",
       label: "1",
       groupId: undefined,
+      groupedInstanceKeys: nodes[0].key.instanceKeys,
     };
     const expectedGroupingNodeKey2: GroupingNodeKey = {
       type: "label-grouping",
       label: "2",
       groupId: undefined,
+      groupedInstanceKeys: nodes[1].key.instanceKeys,
     };
     expect(await createLabelGroups(nodes)).to.deep.eq({
       groupingType: "label",

@@ -50,6 +50,7 @@ export async function createBaseClassGroupsForSingleBaseClass(
     const groupingNodeKey: ClassGroupingNodeKey = {
       type: "class-grouping",
       class: { name: baseECClass.fullName, label: baseECClass.label ?? baseECClass.name },
+      groupedInstanceKeys: groupedNodes.flatMap((groupedInstanceNode) => groupedInstanceNode.key.instanceKeys),
     };
     result.grouped.push({
       label: baseECClass.label ?? baseECClass.name,

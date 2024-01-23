@@ -12,16 +12,37 @@ import { InstanceKey, PrimitiveValue } from "./values/Values";
  * @beta
  */
 export interface InstancesNodeKey {
+  /** Type of the node */
   type: "instances";
+
+  /**
+   * Keys of ECInstances that are represented by the node. Generally, one node represents a single
+   * ECInstance, but in some cases (e.g. node merging) there could be more.
+   */
   instanceKeys: InstanceKey[];
+}
+
+/**
+ * Contains attributes shared across all grouping node keys.
+ * @beta
+ */
+export interface BaseGroupingNodeKey {
+  /**
+   * Keys of all instances grouped by this node, including deeply nested under
+   * other grouping nodes.
+   */
+  groupedInstanceKeys: InstanceKey[];
 }
 
 /**
  * A key for a class-grouping node.
  * @beta
  */
-export interface ClassGroupingNodeKey {
+export interface ClassGroupingNodeKey extends BaseGroupingNodeKey {
+  /** Type of the node */
   type: "class-grouping";
+
+  /** Information about the ECClass that this grouping node is grouping by. */
   class: {
     name: string;
     label?: string;
@@ -32,17 +53,28 @@ export interface ClassGroupingNodeKey {
  * A key for a label-grouping node.
  * @beta
  */
-export interface LabelGroupingNodeKey {
+export interface LabelGroupingNodeKey extends BaseGroupingNodeKey {
+  /** Type of the node */
   type: "label-grouping";
+
+  /** Node label that this grouping node is grouping by. */
   label: string;
+
+  /**
+   * Optional group identifier that is assigned to the node key when multiple nodes
+   * with the same label shouldn't be grouped together.
+   */
   groupId?: string;
 }
 
 /**
- * A key property grouping node that groups nodes whose values don't fall into any other property group in the hierarchy level.
+ * A key property grouping node that groups nodes whose values don't fall into any other
+ * property group in the hierarchy level.
+ *
  * @beta
  */
-export interface PropertyOtherValuesGroupingNodeKey {
+export interface PropertyOtherValuesGroupingNodeKey extends BaseGroupingNodeKey {
+  /** Type of the node */
   type: "property-grouping:other";
 }
 
@@ -50,10 +82,17 @@ export interface PropertyOtherValuesGroupingNodeKey {
  * A key for a property grouping node that groups nodes by formatted property value.
  * @beta
  */
-export interface PropertyValueGroupingNodeKey {
+export interface PropertyValueGroupingNodeKey extends BaseGroupingNodeKey {
+  /** Type of the node */
   type: "property-grouping:value";
+
+  /** Name of the property that is used for grouping nodes. */
   propertyName: string;
+
+  /** Full name of the ECClass containing the property. */
   propertyClassName: string;
+
+  /** Formatted property value that this node is grouping by. */
   formattedPropertyValue: string;
 }
 
@@ -61,11 +100,20 @@ export interface PropertyValueGroupingNodeKey {
  * A key for a property grouping node that groups nodes by a range of property values.
  * @beta
  */
-export interface PropertyValueRangeGroupingNodeKey {
+export interface PropertyValueRangeGroupingNodeKey extends BaseGroupingNodeKey {
+  /** Type of the node */
   type: "property-grouping:range";
+
+  /** Name of the property that is used for grouping nodes. */
   propertyName: string;
+
+  /** Full name of the ECClass containing the property. */
   propertyClassName: string;
+
+  /** Defines the start of the values' range that this node is grouping by. */
   fromValue: number;
+
+  /** Defines the end of the values' range that this node is grouping by. */
   toValue: number;
 }
 

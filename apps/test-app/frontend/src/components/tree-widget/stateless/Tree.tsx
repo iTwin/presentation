@@ -4,10 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { PropertyRecord } from "@itwin/appui-abstract";
 import {
   ControlledTree,
-  DelayLoadedTreeNodeItem,
   FilteringInputStatus,
   SelectionMode,
   TreeDataProvider,
@@ -26,11 +24,13 @@ import { FillCentered, TreeNode, UnderlinedButton } from "@itwin/core-react";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { Text } from "@itwin/itwinui-react";
-import { InfoTreeNodeItemType, isPresentationInfoTreeNodeItem, PresentationInfoTreeNodeItem } from "@itwin/presentation-components";
+import { InfoTreeNodeItemType, isPresentationInfoTreeNodeItem } from "@itwin/presentation-components";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import { HierarchyNode, HierarchyProvider, IECSqlQueryExecutor, IMetadataProvider, RowsLimitExceededError } from "@itwin/presentation-hierarchy-builder";
+import { HierarchyProvider, IECSqlQueryExecutor, IMetadataProvider, RowsLimitExceededError } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
-import { TreeWidgetHeader, TreeWidgetProps, useTreeHeight } from "./TreeWidget";
+import { TreeWidgetHeader, TreeWidgetProps, useTreeHeight } from "../TreeWidget";
+import { createInfoNode, createTreeNodeItem, getHierarchyNode } from "./TreeNodeItemUtils";
+import { UnifiedSelectionTreeEventHandler } from "./UnifiedSelectionTreeEventHandler";
 
 export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
   const [filter, setFilter] = useState("");
@@ -48,16 +48,20 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
 
   const { value: filteredPaths } = useDebouncedAsyncValue(
     useCallback(async () => {
-      if (!metadataProvider || !queryExecutor) {
+      if (!metadataProvider || !modelsTreeHierarchyProvider) {
         return undefined;
       }
       if (filter !== "") {
         setFilteringStatus("filtering");
-        return ModelsTreeDefinition.createInstanceKeyPaths({ metadataProvider, queryExecutor, label: filter });
+        return ModelsTreeDefinition.createInstanceKeyPaths({
+          metadataProvider,
+          queryExecutor: modelsTreeHierarchyProvider.limitingQueryExecutor,
+          label: filter,
+        });
       }
       setFilteringStatus("ready");
       return undefined;
-    }, [metadataProvider, queryExecutor, filter]),
+    }, [metadataProvider, modelsTreeHierarchyProvider, filter]),
   );
 
   useEffect(() => {
@@ -83,11 +87,11 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
       if (!modelsTreeHierarchyProvider) {
         return [];
       }
-      const parent: HierarchyNode | undefined = node ? (node as any).__internal : undefined;
+      const parent = node ? getHierarchyNode(node) : undefined;
       const parentId = node?.id;
       const limit = hierarchyLevelSizeLimit[parentId ?? ""];
       try {
-        return (await modelsTreeHierarchyProvider.getNodes({ parentNode: parent, hierarchyLevelSizeLimit: limit })).map(parseTreeNodeItem);
+        return (await modelsTreeHierarchyProvider.getNodes({ parentNode: parent, hierarchyLevelSizeLimit: limit })).map(createTreeNodeItem);
       } catch (e) {
         if (e instanceof RowsLimitExceededError) {
           return [
@@ -104,9 +108,16 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
   }, [modelsTreeHierarchyProvider, hierarchyLevelSizeLimit]);
 
   const modelSource = useTreeModelSource(dataProvider);
-  const nodeLoader = useTreeNodeLoader(dataProvider, modelSource);
-  const eventHandler = useMemo(() => new TreeEventHandler({ nodeLoader, modelSource }), [nodeLoader, modelSource]);
   const treeModel = useTreeModel(modelSource);
+  const nodeLoader = useTreeNodeLoader(dataProvider, modelSource);
+
+  const [eventHandler, setEventHandler] = useState<TreeEventHandler>();
+  useEffect(() => {
+    const handler = new UnifiedSelectionTreeEventHandler({ imodel: props.imodel, nodeLoader, collapsedChildrenDisposalEnabled: true });
+    setEventHandler(handler);
+    return () => handler.dispose();
+  }, [props.imodel, nodeLoader, modelSource]);
+
   const nodeRenderer = (nodeProps: TreeNodeRendererProps) => (
     <StatelessTreeNodeRenderer
       {...nodeProps}
@@ -121,6 +132,11 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
       : filter
       ? FilteringInputStatus.FilteringFinished
       : FilteringInputStatus.ReadyToFilter;
+
+  if (!eventHandler) {
+    return null;
+  }
+
   return (
     <>
       <TreeWidgetHeader onFilterChange={setFilter} filteringStatus={filteringInputStatus} showFilteringInput={true} ref={headerRef} />
@@ -143,33 +159,6 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
       </div>
     </>
   );
-}
-
-function parseTreeNodeItem(node: HierarchyNode): DelayLoadedTreeNodeItem {
-  if (node.children === undefined) {
-    throw new Error("Invalid node: children not determined");
-  }
-  return {
-    __internal: node,
-    id: JSON.stringify([...node.parentKeys, node.key]),
-    label: PropertyRecord.fromString(node.label, "Label"),
-    icon: node.extendedData?.imageId,
-    hasChildren: !!node.children,
-    autoExpand: node.autoExpand,
-  } as DelayLoadedTreeNodeItem;
-}
-
-function createInfoNode(parentNode: TreeNodeItem | undefined, message: string, type?: InfoTreeNodeItemType): PresentationInfoTreeNodeItem {
-  const id = `${parentNode ? parentNode.id : ""}/info-node/${message}`;
-  return {
-    id,
-    parentId: parentNode?.id,
-    label: PropertyRecord.fromString(message),
-    message,
-    isSelectionDisabled: true,
-    children: undefined,
-    type: type ?? InfoTreeNodeItemType.Unset,
-  };
 }
 
 interface StatelessTreeNodeRendererProps extends TreeNodeRendererProps {
