@@ -36,8 +36,12 @@ beta;isPresentationInstanceFilterConditionGroup(filter: PresentationInstanceFilt
 deprecated;isPresentationInstanceFilterConditionGroup(filter: PresentationInstanceFilter): filter is PresentationInstanceFilterConditionGroup
 beta;isPresentationTreeNodeItem(item: TreeNodeItem): item is PresentationTreeNodeItem
 public;IUnifiedSelectionComponent
+beta;NavigationPropertyEditor: typeof NavigationPropertyEditor_2
+deprecated;NavigationPropertyEditor: typeof NavigationPropertyEditor_2
 beta;navigationPropertyEditorContext: Context
 beta;NavigationPropertyEditorContextProps
+beta;NavigationPropertyTargetEditor: typeof NavigationPropertyTargetEditor_2
+deprecated;NavigationPropertyTargetEditor: typeof NavigationPropertyTargetEditor_2
 public;PresentationComponentsLoggerCategory
 beta;PresentationFilterBuilderValueRenderer({ imodel, descriptor, descriptorInputKeys, ...props }: PresentationFilterBuilderValueRendererProps): JSX_2.Element
 beta;PresentationFilterBuilderValueRendererProps 
