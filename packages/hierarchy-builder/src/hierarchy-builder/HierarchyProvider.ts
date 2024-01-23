@@ -27,7 +27,7 @@ import { sortNodesByLabelOperator } from "./internal/operators/Sorting";
 import { SubscriptionScheduler } from "./internal/SubscriptionScheduler";
 import { TreeQueryResultsReader } from "./internal/TreeNodesReader";
 import { getLogger } from "./Logging";
-import { ECSqlBinding, ECSqlQueryReaderOptions, IECSqlQueryExecutor } from "./queries/ECSqlCore";
+import { ECSqlBinding, ECSqlQueryDef, ECSqlQueryReaderOptions, IECSqlQueryExecutor } from "./queries/ECSqlCore";
 import { ConcatenatedValue, ConcatenatedValuePart } from "./values/ConcatenatedValue";
 import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "./values/Formatting";
 import { TypedPrimitiveValue } from "./values/Values";
