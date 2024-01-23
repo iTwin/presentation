@@ -27,15 +27,16 @@ import {
   isPresentationTreeNodeItem,
   PresentationTreeNodeItem,
 } from "../PresentationTreeNodeItem";
-import { PresentationTreeNodeRenderer } from "./PresentationTreeNodeRenderer";
+import { PresentationTreeNodeRenderer, PresentationTreeNodeRendererProps } from "./PresentationTreeNodeRenderer";
 import { useHierarchyLevelFiltering } from "./UseHierarchyLevelFiltering";
 
 /**
  * Props for [[PresentationTreeRenderer]] component.
  * @beta
  */
-export interface PresentationTreeRendererProps extends TreeRendererProps {
+export interface PresentationTreeRendererProps extends Omit<TreeRendererProps, "nodeRenderer"> {
   nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
+  nodeRenderer?: (props: PresentationTreeNodeRendererProps) => React.ReactNode;
 }
 
 /**
@@ -45,26 +46,26 @@ export interface PresentationTreeRendererProps extends TreeRendererProps {
  * @beta
  */
 export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
-  const nodeLoader = props.nodeLoader;
+  const { nodeLoader, nodeRenderer } = props;
   const { applyFilter, clearFilter } = useHierarchyLevelFiltering({ nodeLoader, modelSource: nodeLoader.modelSource });
   const [filterNode, setFilterNode] = useState<PresentationTreeNodeItem>();
 
   const filterableNodeRenderer = useCallback(
     (nodeProps: TreeNodeRendererProps) => {
-      return (
-        <PresentationTreeNodeRenderer
-          {...nodeProps}
-          onFilterClick={(nodeId) => {
-            const node = nodeLoader.modelSource.getModel().getNode(nodeId);
-            if (isTreeModelNode(node) && isPresentationTreeNodeItem(node.item)) {
-              setFilterNode(node.item);
-            }
-          }}
-          onClearFilterClick={clearFilter}
-        />
-      );
+      const nodeRendererParams = {
+        ...nodeProps,
+        onFilterClick: (nodeId: string) => {
+          const node = nodeLoader.modelSource.getModel().getNode(nodeId);
+          if (isTreeModelNode(node) && isPresentationTreeNodeItem(node.item)) {
+            setFilterNode(node.item);
+          }
+        },
+        onClearFilterClick: clearFilter,
+      };
+
+      return nodeRenderer ? nodeRenderer(nodeRendererParams) : <PresentationTreeNodeRenderer {...nodeRendererParams} />;
     },
-    [clearFilter, nodeLoader.modelSource],
+    [clearFilter, nodeLoader.modelSource, nodeRenderer],
   );
 
   const divRef = useRef<HTMLDivElement>(null);

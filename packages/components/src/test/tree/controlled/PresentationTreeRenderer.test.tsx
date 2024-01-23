@@ -24,6 +24,7 @@ import { PresentationError, PresentationStatus, PropertyValueFormat } from "@itw
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { translate } from "../../../presentation-components/common/Utils";
 import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
+import { PresentationTreeNodeRenderer } from "../../../presentation-components/tree/controlled/PresentationTreeNodeRenderer";
 import { PresentationTreeRenderer } from "../../../presentation-components/tree/controlled/PresentationTreeRenderer";
 import { PresentationTreeDataProvider } from "../../../presentation-components/tree/DataProvider";
 import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";
@@ -119,6 +120,22 @@ describe("PresentationTreeRenderer", () => {
     });
 
     const { queryByText, container } = render(<PresentationTreeRenderer {...baseTreeProps} visibleNodes={visibleNodes} nodeLoader={nodeLoader} />);
+
+    await waitFor(() => expect(queryByText("A")).to.not.be.null);
+    expect(container.querySelector(".presentation-components-node")).to.be.null;
+  });
+
+  it("renders default tree node with passed in nodeRenderer", async () => {
+    const { visibleNodes, nodeLoader } = setupTreeModel((model) => {
+      const input = createTreeModelNodeInput({ id: "A" });
+      // use non presentation tree node item
+      (input as any).item = { id: "A", label: input.label };
+      model.setChildren(undefined, [input], 0);
+    });
+
+    const { queryByText, container } = render(
+      <PresentationTreeRenderer {...baseTreeProps} visibleNodes={visibleNodes} nodeLoader={nodeLoader} nodeRenderer={PresentationTreeNodeRenderer} />,
+    );
 
     await waitFor(() => expect(queryByText("A")).to.not.be.null);
     expect(container.querySelector(".presentation-components-node")).to.be.null;
