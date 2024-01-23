@@ -4,6 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { from } from "rxjs";
+import { eachValueFrom } from "rxjs-for-await";
 import sinon from "sinon";
 import {
   ContentDescriptorRequestOptions,
@@ -16,7 +18,6 @@ import {
 } from "@itwin/presentation-common";
 import { DefineHierarchyLevelProps, HierarchyNode, HierarchyProvider, InstanceKey, InstancesNodeKey } from "@itwin/presentation-hierarchy-builder";
 import { createHierarchyLevelDescriptor } from "../core-interop/HierarchyLevelDescriptor";
-import { createECSqlReaderStub } from "./Utils";
 
 describe("createHierarchyLevelDescriptor", () => {
   it("returns `undefined` from descriptor builder", async () => {
@@ -76,12 +77,12 @@ describe("createHierarchyLevelDescriptor", () => {
     const imodel = {
       createQueryReader: sinon.fake((ecsql: string) => {
         if (ecsql.includes("query 1")) {
-          return createECSqlReaderStub([["schema.class1", "0x123", false]]);
+          return eachValueFrom(from([["schema.class1", "0x123", false]]));
         }
         if (ecsql.includes("query 2")) {
-          return createECSqlReaderStub([["schema.class2", "0x456", false]]);
+          return eachValueFrom(from([["schema.class2", "0x456", false]]));
         }
-        return createECSqlReaderStub([]);
+        return eachValueFrom(from([]));
       }),
     };
     const hierarchyProvider = new HierarchyProvider({
@@ -154,12 +155,12 @@ describe("createHierarchyLevelDescriptor", () => {
     const imodel = {
       createQueryReader: sinon.fake((ecsql: string) => {
         if (ecsql.includes("hidden nodes query")) {
-          return createECSqlReaderStub([["schema.class1", "0x111", true]]);
+          return eachValueFrom(from([["schema.class1", "0x111", true]]));
         }
         if (ecsql.includes("visible nodes query")) {
-          return createECSqlReaderStub([["schema.class2", "0x999", false]]);
+          return eachValueFrom(from([["schema.class2", "0x999", false]]));
         }
-        return createECSqlReaderStub([]);
+        return eachValueFrom(from([]));
       }),
     };
     const hierarchyProvider = new HierarchyProvider({
@@ -234,19 +235,21 @@ describe("createHierarchyLevelDescriptor", () => {
     const imodel = {
       createQueryReader: sinon.fake((ecsql: string) => {
         if (ecsql.includes("hidden nodes query")) {
-          return createECSqlReaderStub([
-            ["schema.class1", "0x111", true],
-            ["schema.class1", "0x222", true],
-            ["schema.class2", "0x333", true],
-          ]);
+          return eachValueFrom(
+            from([
+              ["schema.class1", "0x111", true],
+              ["schema.class1", "0x222", true],
+              ["schema.class2", "0x333", true],
+            ]),
+          );
         }
         if (ecsql.includes("visible nodes query 1")) {
-          return createECSqlReaderStub([["schema.class3", "0x333", false]]);
+          return eachValueFrom(from([["schema.class3", "0x333", false]]));
         }
         if (ecsql.includes("visible nodes query 2")) {
-          return createECSqlReaderStub([["schema.class4", "0x444", false]]);
+          return eachValueFrom(from([["schema.class4", "0x444", false]]));
         }
-        return createECSqlReaderStub([]);
+        return eachValueFrom(from([]));
       }),
     };
     const hierarchyProvider = new HierarchyProvider({

@@ -6,7 +6,7 @@
 import { OrderedId64Iterable } from "@itwin/core-bentley";
 import { ECSqlReader, QueryBinder, QueryOptions, QueryOptionsBuilder, QueryRowFormat } from "@itwin/core-common";
 import { Point2d, Point3d } from "@itwin/core-geometry";
-import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions, IECSqlQueryExecutor } from "@itwin/presentation-hierarchy-builder";
+import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow, IECSqlQueryExecutor } from "@itwin/presentation-hierarchy-builder";
 
 /**
  * An interface for something that knows how to create an `ECSqlReader`. Generally, this represents either [IModelDb]($core-backend)
@@ -27,27 +27,38 @@ export interface ICoreECSqlReaderFactory {
 export function createECSqlQueryExecutor(imodel: ICoreECSqlReaderFactory): IECSqlQueryExecutor {
   return {
     createQueryReader(ecsql: string, bindings?: ECSqlBinding[], config?: ECSqlQueryReaderOptions): ECSqlQueryReader {
-      return {
-        async *[Symbol.asyncIterator]() {
-          const opts = new QueryOptionsBuilder();
-          switch (config?.rowFormat) {
-            case "ECSqlPropertyNames":
-              opts.setRowFormat(QueryRowFormat.UseECSqlPropertyNames);
-              break;
-            case "Indexes":
-              opts.setRowFormat(QueryRowFormat.UseECSqlPropertyIndexes);
-              break;
-          }
-          const reader = imodel.createQueryReader(ecsql, bind(bindings ?? []), opts.getOptions());
-          while (await reader.step()) {
-            // can't return `reader.current` in async fashion, because it may become invalid while the loop
-            // continues - need to convert it to an immutable object
-            yield config?.rowFormat === "Indexes" ? reader.current.toArray() : reader.current.toRow();
-          }
-        },
-      };
+      const opts = new QueryOptionsBuilder();
+      switch (config?.rowFormat) {
+        case "ECSqlPropertyNames":
+          opts.setRowFormat(QueryRowFormat.UseECSqlPropertyNames);
+          break;
+        case "Indexes":
+          opts.setRowFormat(QueryRowFormat.UseECSqlPropertyIndexes);
+          break;
+      }
+      return new ECSqlQueryReaderImpl(
+        imodel.createQueryReader(ecsql, bind(bindings ?? []), opts.getOptions()),
+        config?.rowFormat === "Indexes" ? "array" : "object",
+      );
     },
   };
+}
+
+class ECSqlQueryReaderImpl implements ECSqlQueryReader {
+  public constructor(private _coreReader: ECSqlReader, private _format: "array" | "object") {}
+  public [Symbol.asyncIterator](): AsyncIterableIterator<ECSqlQueryRow> {
+    return this;
+  }
+  public async next(): Promise<IteratorResult<ECSqlQueryRow>> {
+    const res = await this._coreReader.next();
+    if (res.done) {
+      return { done: true, value: undefined };
+    }
+    return {
+      done: false,
+      value: this._format === "array" ? res.value.toArray() : res.value.toRow(),
+    };
+  }
 }
 
 function bind(bindings: ECSqlBinding[]): QueryBinder {

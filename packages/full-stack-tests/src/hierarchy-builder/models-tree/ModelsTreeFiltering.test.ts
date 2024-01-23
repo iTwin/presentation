@@ -11,7 +11,8 @@ import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { InstanceKey } from "@itwin/presentation-common";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath } from "@itwin/presentation-hierarchy-builder";
+import { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
+import { addCTEs } from "@itwin/presentation-hierarchy-builder/lib/cjs/hierarchy-builder/internal/LimitingECSqlQueryExecutor";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { buildTestIModel, TestIModelBuilder } from "@itwin/presentation-testing";
 import {
@@ -721,6 +722,8 @@ describe("Stateless hierarchy builder", () => {
         let targetInstanceLabel!: string;
         let expectedHierarchy!: ExpectedHierarchyDef[];
 
+        let hierarchyProvider: HierarchyProvider;
+
         before(async function () {
           // eslint-disable-next-line @typescript-eslint/no-this-alias
           const mochaContext = this;
@@ -734,13 +737,17 @@ describe("Stateless hierarchy builder", () => {
           });
         });
 
+        beforeEach(() => {
+          hierarchyProvider = createModelsTreeProvider(imodel, instanceKeyPaths);
+        });
+
         after(async function () {
           await imodel.close();
         });
 
         it("filters hierarchy by instance key paths", async function () {
           await validateHierarchy({
-            provider: createModelsTreeProvider(imodel, instanceKeyPaths),
+            provider: hierarchyProvider,
             expect: expectedHierarchy,
           });
         });
@@ -753,7 +760,7 @@ describe("Stateless hierarchy builder", () => {
           const actualInstanceKeyPaths = (
             await ModelsTreeDefinition.createInstanceKeyPaths({
               metadataProvider,
-              queryExecutor: createECSqlQueryExecutor(imodel),
+              queryExecutor: hierarchyProvider.limitingQueryExecutor,
               keys: targetInstanceKeys,
             })
           ).sort(instanceKeyPathSorter);
@@ -768,7 +775,7 @@ describe("Stateless hierarchy builder", () => {
           const actualInstanceKeyPaths = (
             await ModelsTreeDefinition.createInstanceKeyPaths({
               metadataProvider,
-              queryExecutor: createECSqlQueryExecutor(imodel),
+              queryExecutor: hierarchyProvider.limitingQueryExecutor,
               label: targetInstanceLabel,
             })
           ).sort(instanceKeyPathSorter);
@@ -798,7 +805,11 @@ describe("Stateless hierarchy builder", () => {
       const actualInstanceKeyPaths = (
         await ModelsTreeDefinition.createInstanceKeyPaths({
           metadataProvider,
-          queryExecutor: createECSqlQueryExecutor(imodel),
+          queryExecutor: {
+            createQueryReader(query, config) {
+              return createECSqlQueryExecutor(imodel).createQueryReader(addCTEs(query.ecsql, query.ctes), query.bindings, config);
+            },
+          },
           label: formattedECInstanceId,
         })
       ).sort(instanceKeyPathSorter);

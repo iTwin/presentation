@@ -48,16 +48,20 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
 
   const { value: filteredPaths } = useDebouncedAsyncValue(
     useCallback(async () => {
-      if (!metadataProvider || !queryExecutor) {
+      if (!metadataProvider || !modelsTreeHierarchyProvider) {
         return undefined;
       }
       if (filter !== "") {
         setFilteringStatus("filtering");
-        return ModelsTreeDefinition.createInstanceKeyPaths({ metadataProvider, queryExecutor, label: filter });
+        return ModelsTreeDefinition.createInstanceKeyPaths({
+          metadataProvider,
+          queryExecutor: modelsTreeHierarchyProvider.limitingQueryExecutor,
+          label: filter,
+        });
       }
       setFilteringStatus("ready");
       return undefined;
-    }, [metadataProvider, queryExecutor, filter]),
+    }, [metadataProvider, modelsTreeHierarchyProvider, filter]),
   );
 
   useEffect(() => {
