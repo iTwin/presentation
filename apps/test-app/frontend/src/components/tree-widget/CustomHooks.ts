@@ -5,7 +5,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { RenderedItemsRange, TreeDataProvider, TreeEventHandler, TreeModelSource, TreeNodeLoader } from "@itwin/components-react";
-import { HierarchyProvider, TypedPrimitiveValue } from "@itwin/presentation-hierarchy-builder";
+import { HierarchyProvider, IPrimitiveValueFormatter } from "@itwin/presentation-hierarchy-builder";
 import { startTreeReload } from "./TreeReloader";
 
 interface ControlledTreeComponents {
@@ -48,7 +48,7 @@ interface ReloadedTree {
 }
 
 interface FormatterProps {
-  formatter?: (value: TypedPrimitiveValue) => Promise<string>;
+  formatter?: IPrimitiveValueFormatter;
   modelsTreeHierarchyProvider?: HierarchyProvider;
   dataProvider: TreeDataProvider;
   modelSource: TreeModelSource;
