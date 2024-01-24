@@ -4,8 +4,22 @@
  *--------------------------------------------------------------------------------------------*/
 
 import {
-  catchError, concatAll, concatMap, defaultIfEmpty, defer, filter, from, map, mergeMap, MonoTypeOperatorFunction, Observable, ObservableInput, of,
-  shareReplay, take, tap,
+  catchError,
+  concatAll,
+  concatMap,
+  defaultIfEmpty,
+  defer,
+  filter,
+  from,
+  map,
+  mergeMap,
+  MonoTypeOperatorFunction,
+  Observable,
+  ObservableInput,
+  of,
+  shareReplay,
+  take,
+  tap,
 } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
 import { assert, LRUCache, LRUMap, omit } from "@itwin/core-bentley";
@@ -14,10 +28,15 @@ import { GenericInstanceFilter } from "./GenericInstanceFilter";
 import { DefineHierarchyLevelProps, HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
 import { RowsLimitExceededError } from "./HierarchyErrors";
 import {
-  HierarchyNode, HierarchyNodeIdentifiersPath, ParsedHierarchyNode, ProcessedCustomHierarchyNode, ProcessedGroupingHierarchyNode,
-  ProcessedHierarchyNode, ProcessedInstanceHierarchyNode,
+  HierarchyNode,
+  HierarchyNodeIdentifiersPath,
+  ParsedHierarchyNode,
+  ProcessedCustomHierarchyNode,
+  ProcessedGroupingHierarchyNode,
+  ProcessedHierarchyNode,
+  ProcessedInstanceHierarchyNode,
 } from "./HierarchyNode";
-import { getClass, hasChildren, LOGGING_NAMESPACE as CommonLoggingNamespace } from "./internal/Common";
+import { LOGGING_NAMESPACE as CommonLoggingNamespace, getClass, hasChildren } from "./internal/Common";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
 import { createDetermineChildrenOperator } from "./internal/operators/DetermineChildren";
 import { createGroupingOperator } from "./internal/operators/Grouping";

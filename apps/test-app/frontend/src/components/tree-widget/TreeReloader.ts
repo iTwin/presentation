@@ -20,8 +20,20 @@ import { mergeMap } from "rxjs/internal/operators/mergeMap";
 import { take } from "rxjs/internal/operators/take";
 import { tap } from "rxjs/internal/operators/tap";
 import {
-  computeVisibleNodes, isTreeModelNode, isTreeModelNodePlaceholder, Observable as ObservableComponentsReact, RenderedItemsRange, TreeDataProvider,
-  TreeModel, TreeModelNode, TreeModelNodePlaceholder, TreeModelRootNode, TreeModelSource, TreeNodeLoader, TreeNodeLoadResult, VisibleTreeNodes,
+  Observable as ComponentsReactObservable,
+  computeVisibleNodes,
+  isTreeModelNode,
+  isTreeModelNodePlaceholder,
+  RenderedItemsRange,
+  TreeDataProvider,
+  TreeModel,
+  TreeModelNode,
+  TreeModelNodePlaceholder,
+  TreeModelRootNode,
+  TreeModelSource,
+  TreeNodeLoader,
+  TreeNodeLoadResult,
+  VisibleTreeNodes,
 } from "@itwin/components-react";
 import { assert, isIDisposable } from "@itwin/core-bentley";
 
@@ -215,7 +227,7 @@ function getVisibleRange(itemsRange: RenderedItemsRange, visibleNodes: VisibleTr
   };
 }
 
-function toRxjsObservable<T>(source: ObservableComponentsReact<T>): Observable<T> {
+function toRxjsObservable<T>(source: ComponentsReactObservable<T>): Observable<T> {
   return new Observable((subscriber) => source.subscribe(subscriber));
 }
 
