@@ -16,7 +16,7 @@ import {
 } from "../hierarchy-builder/HierarchyNode";
 import * as common from "../hierarchy-builder/internal/Common";
 import { parseFullClassName } from "../hierarchy-builder/Metadata";
-import { ECSqlQueryReader, ECSqlQueryRow } from "../hierarchy-builder/queries/ECSqlCore";
+import { ECSqlQueryReader } from "../hierarchy-builder/queries/ECSqlCore";
 import { InstanceKey } from "../hierarchy-builder/values/Values";
 
 export function setupLogging(levels: Array<{ namespace: string; level: LogLevel }>) {
@@ -40,6 +40,14 @@ export async function getObservableResult<T>(obs: Observable<T>): Promise<Array<
       },
     });
   });
+}
+
+export async function toArray<T>(asyncIter: AsyncIterableIterator<T>): Promise<Array<T>> {
+  const arr = [];
+  for await (const item of asyncIter) {
+    arr.push(item);
+  }
+  return arr;
 }
 
 export function createTestParsedCustomNode(src?: Partial<ParsedCustomHierarchyNode>): ParsedCustomHierarchyNode {
@@ -90,6 +98,7 @@ export function createTestProcessedGroupingNode<TChild = ProcessedGroupingHierar
     key: {
       type: "class-grouping",
       class: { name: "test class" },
+      groupedInstanceKeys: [],
     },
     parentKeys: [],
     children: new Array<TChild>(),
@@ -221,31 +230,28 @@ export class ResolvablePromise<T> implements Promise<T> {
   }
 }
 
-export async function waitFor(check: () => void, timeout?: number) {
+export async function waitFor<T>(check: () => Promise<T> | T, timeout?: number): Promise<T> {
   if (timeout === undefined) {
     timeout = 5000;
   }
   const timer = new StopWatch(undefined, true);
-  let succeeded = false;
-  while (!succeeded && timer.current.milliseconds < timeout) {
+  let lastError: unknown;
+  do {
     try {
-      check();
-      succeeded = true;
-    } catch {
+      const res = check();
+      return res instanceof Promise ? await res : res;
+    } catch (e) {
+      lastError = e;
       await BeDuration.wait(0);
     }
-  }
-  if (!succeeded) {
-    throw new Error("Timeout");
-  }
+  } while (timer.current.milliseconds < timeout);
+  throw lastError;
 }
 
 export function createFakeQueryReader(rows: object[]): ECSqlQueryReader {
-  return {
-    async *[Symbol.asyncIterator](): AsyncIterableIterator<ECSqlQueryRow> {
-      for (const row of rows) {
-        yield row as ECSqlQueryRow;
-      }
-    },
-  };
+  return (async function* () {
+    for (const row of rows) {
+      yield row;
+    }
+  })();
 }

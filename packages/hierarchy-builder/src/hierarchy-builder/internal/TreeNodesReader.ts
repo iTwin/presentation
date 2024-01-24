@@ -4,10 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { INodeParser } from "../HierarchyDefinition";
-import { RowsLimitExceededError } from "../HierarchyErrors";
 import { InstanceHierarchyNodeProcessingParams, ParsedHierarchyNode, ParsedInstanceHierarchyNode } from "../HierarchyNode";
 import { getLogger } from "../Logging";
-import { ECSqlQueryDef, IECSqlQueryExecutor } from "../queries/ECSqlCore";
+import { ECSqlQueryDef, ILimitingECSqlQueryExecutor } from "../queries/ECSqlCore";
 import { NodeSelectClauseColumnNames } from "../queries/NodeSelectQueryFactory";
 import { ConcatenatedValue } from "../values/ConcatenatedValue";
 import { Id64String } from "../values/Values";
@@ -29,20 +28,11 @@ export class TreeQueryResultsReader {
     };
   }
 
-  public async read(executor: IECSqlQueryExecutor, query: ECSqlQueryDef, limit?: number | "unbounded"): Promise<ParsedHierarchyNode[]> {
-    const nodeLimit = limit ?? DEFAULT_ROWS_LIMIT;
+  public async *read(queryExecutor: ILimitingECSqlQueryExecutor, query: ECSqlQueryDef, limit?: number | "unbounded"): AsyncGenerator<ParsedHierarchyNode> {
     getLogger().logInfo(`${LOGGING_NAMESPACE}.TreeQueryResultsReader`, `Executing query: ${query.ecsql}`);
-    const ctesPrefix = query.ctes && query.ctes.length ? `WITH RECURSIVE ${query.ctes.join(", ")} ` : "";
-    const ecsql = `${ctesPrefix}${applyLimit({ ecsql: query.ecsql, limit: nodeLimit })}`;
-    const reader = executor.createQueryReader(ecsql, query.bindings, { rowFormat: "ECSqlPropertyNames" });
-    const nodes = new Array<ParsedHierarchyNode>();
-    for await (const row of reader) {
-      if (nodeLimit !== "unbounded" && nodes.length >= nodeLimit) {
-        throw new RowsLimitExceededError(nodeLimit);
-      }
-      nodes.push(this._props.parser(row));
+    for await (const row of queryExecutor.createQueryReader(query, { rowFormat: "ECSqlPropertyNames", limit })) {
+      yield this._props.parser(row);
     }
-    return nodes;
   }
 }
 
@@ -101,23 +91,4 @@ function parseLabel(value: string | undefined): ConcatenatedValue | string {
   }
   // not a JSON object/array
   return value;
-}
-
-const DEFAULT_ROWS_LIMIT = 1000;
-
-/** @internal */
-export interface ApplyLimitProps {
-  ecsql: string;
-  limit?: number | "unbounded";
-}
-
-/** @internal */
-export function applyLimit(props: ApplyLimitProps) {
-  return props.limit === "unbounded"
-    ? props.ecsql
-    : `
-    SELECT *
-    FROM (${props.ecsql})
-    LIMIT ${(props.limit ?? DEFAULT_ROWS_LIMIT) + 1}
-  `;
 }

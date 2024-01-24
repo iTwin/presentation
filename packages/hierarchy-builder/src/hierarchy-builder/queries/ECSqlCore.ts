@@ -79,7 +79,7 @@ export type ECSqlQueryRowFormat = "ECSqlPropertyNames" | "Indexes";
  * @beta
  */
 export interface ECSqlQueryReaderOptions {
-  rowFormat: ECSqlQueryRowFormat;
+  rowFormat?: ECSqlQueryRowFormat;
 }
 
 /**
@@ -97,9 +97,7 @@ export interface ECSqlQueryRow {
  * @see [ECSqlReader]($core-common)
  * @beta
  */
-export interface ECSqlQueryReader {
-  [Symbol.asyncIterator](): AsyncIterableIterator<ECSqlQueryRow>;
-}
+export type ECSqlQueryReader = AsyncIterableIterator<ECSqlQueryRow>;
 
 /**
  * An interface for something that knows how to create an ECSQL query reader.
@@ -107,4 +105,16 @@ export interface ECSqlQueryReader {
  */
 export interface IECSqlQueryExecutor {
   createQueryReader(ecsql: string, bindings?: ECSqlBinding[], config?: ECSqlQueryReaderOptions): ECSqlQueryReader;
+}
+
+/**
+ * An interface for something that knows how to create a limiting ECSQL query reader.
+ * @beta
+ */
+export interface ILimitingECSqlQueryExecutor {
+  /**
+   * Creates an `ECSqlQueryReader` for given query, but makes sure it doesn't return more than the configured
+   * limit of rows. In case that happens, a `RowsLimitExceededError` is thrown during async iteration.
+   */
+  createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions & { limit?: number | "unbounded" }): ECSqlQueryReader;
 }

@@ -5,19 +5,17 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { RowsLimitExceededError } from "../../hierarchy-builder/HierarchyErrors";
 import { ParsedHierarchyNode, ParsedInstanceHierarchyNode } from "../../hierarchy-builder/HierarchyNode";
-import { applyLimit, defaultNodesParser, RowDef, TreeQueryResultsReader } from "../../hierarchy-builder/internal/TreeNodesReader";
-import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions } from "../../hierarchy-builder/queries/ECSqlCore";
+import { defaultNodesParser, RowDef, TreeQueryResultsReader } from "../../hierarchy-builder/internal/TreeNodesReader";
+import { ILimitingECSqlQueryExecutor } from "../../hierarchy-builder/queries/ECSqlCore";
 import { NodeSelectClauseColumnNames } from "../../hierarchy-builder/queries/NodeSelectQueryFactory";
 import { ConcatenatedValue } from "../../hierarchy-builder/values/ConcatenatedValue";
-import { trimWhitespace } from "../queries/Utils";
-import { createFakeQueryReader, createTestParsedInstanceNode } from "../Utils";
+import { createFakeQueryReader, createTestParsedInstanceNode, toArray } from "../Utils";
 
 describe("TreeQueryResultsReader", () => {
   const parser = sinon.stub<[{ [columnName: string]: any }], ParsedInstanceHierarchyNode>();
   const executor = {
-    createQueryReader: sinon.stub<[string, ECSqlBinding[] | undefined, ECSqlQueryReaderOptions | undefined], ECSqlQueryReader>(),
+    createQueryReader: sinon.stub<Parameters<ILimitingECSqlQueryExecutor["createQueryReader"]>, ReturnType<ILimitingECSqlQueryExecutor["createQueryReader"]>>(),
   };
 
   beforeEach(() => {
@@ -38,18 +36,11 @@ describe("TreeQueryResultsReader", () => {
     ids.forEach((_, i) => parser.onCall(i).returns(nodes[i]));
 
     const reader = new TreeQueryResultsReader({ parser });
-    const result = await reader.read(executor, { ecsql: "QUERY", ctes: ["CTE1, CTE2"] });
-    expect(executor.createQueryReader).to.be.calledOnceWith(
-      sinon.match((ecsql) => trimWhitespace(ecsql) === "WITH RECURSIVE CTE1, CTE2 SELECT * FROM (QUERY) LIMIT 1001"),
-    );
+    const query = { ecsql: "QUERY", ctes: ["CTE1, CTE2"] };
+    const result = await toArray(reader.read(executor, query));
+    expect(executor.createQueryReader).to.be.calledOnceWith(query, { rowFormat: "ECSqlPropertyNames", limit: undefined });
     expect(parser).to.be.calledThrice;
     expect(result).to.deep.eq(nodes);
-  });
-
-  it("throws when row limit is exceeded", async () => {
-    executor.createQueryReader.returns(createFakeQueryReader([{ id: 1 }, { id: 2 }, { id: 3 }]));
-    const reader = new TreeQueryResultsReader({ parser });
-    await expect(reader.read(executor, { ecsql: "QUERY" }, 2)).to.eventually.be.rejectedWith(RowsLimitExceededError);
   });
 });
 
@@ -171,19 +162,5 @@ describe("defaultNodesParser", () => {
     };
     const node = defaultNodesParser(row);
     expect(node.label).to.deep.eq(labelParts);
-  });
-});
-
-describe("applyLimit", () => {
-  it("applies default limit on given query", () => {
-    expect(trimWhitespace(applyLimit({ ecsql: "QUERY" }))).to.eq("SELECT * FROM (QUERY) LIMIT 1001");
-  });
-
-  it("doesn't apply limit when limit is unbounded", () => {
-    expect(trimWhitespace(applyLimit({ ecsql: "QUERY", limit: "unbounded" }))).to.eq("QUERY");
-  });
-
-  it("applies custom limit +1 on given query", () => {
-    expect(trimWhitespace(applyLimit({ ecsql: "QUERY", limit: 123 }))).to.eq("SELECT * FROM (QUERY) LIMIT 124");
   });
 });

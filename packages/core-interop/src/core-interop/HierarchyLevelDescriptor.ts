@@ -130,13 +130,12 @@ function addToMergeMap(list: InstanceClassMergeMap, key: InstanceKey) {
 
 function readInstanceKeys(hierarchyProvider: HierarchyProvider, nodesQuery: ECSqlQueryDef): Observable<{ key: InstanceKey; hide: boolean }> {
   const ecsql = `
-    ${/* istanbul ignore next */ nodesQuery.ctes?.length ? `WITH RECURSIVE ${nodesQuery.ctes.join(", ")}` : ``}
     SELECT ${NodeSelectClauseColumnNames.FullClassName}, ${NodeSelectClauseColumnNames.ECInstanceId}, ${NodeSelectClauseColumnNames.HideNodeInHierarchy}
     FROM (
       ${nodesQuery.ecsql}
     )
   `;
-  return from(hierarchyProvider.queryScheduler.schedule(ecsql, nodesQuery.bindings, { rowFormat: "Indexes" })).pipe(
+  return from(hierarchyProvider.queryScheduler.schedule({ ...nodesQuery, ecsql }, { rowFormat: "Indexes" })).pipe(
     map((row) => ({
       key: {
         className: row[0],

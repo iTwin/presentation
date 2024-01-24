@@ -17,7 +17,7 @@ import {
   ECSQL_COLUMN_NAME_IsFilterTarget,
   FilteredHierarchyNode,
 } from "../hierarchy-builder/internal/FilteringHierarchyLevelDefinitionsFactory";
-import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow } from "../hierarchy-builder/queries/ECSqlCore";
+import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions } from "../hierarchy-builder/queries/ECSqlCore";
 import { ECSqlSelectClauseGroupingParams, NodeSelectClauseColumnNames } from "../hierarchy-builder/queries/NodeSelectQueryFactory";
 import { ConcatenatedValue } from "../hierarchy-builder/values/ConcatenatedValue";
 import { TypedPrimitiveValue } from "../hierarchy-builder/values/Values";
@@ -147,28 +147,30 @@ describe("HierarchyProvider", () => {
       });
 
       const queryTimeout1 = new ResolvablePromise();
-      queryExecutor.createQueryReader.onFirstCall().returns({
-        async *[Symbol.asyncIterator](): AsyncIterableIterator<ECSqlQueryRow> {
+      queryExecutor.createQueryReader.onFirstCall().returns(
+        (async function* (): ECSqlQueryReader {
+          // the reader yields nothing, but waits for queryTimeout2 to resolve
           await queryTimeout1;
-        },
-      });
+        })(),
+      );
 
       const queryTimeout2 = new ResolvablePromise();
-      queryExecutor.createQueryReader.onSecondCall().returns({
-        async *[Symbol.asyncIterator](): AsyncIterableIterator<ECSqlQueryRow> {
+      queryExecutor.createQueryReader.onSecondCall().returns(
+        (async function* (): ECSqlQueryReader {
+          // the reader yields nothing, but waits for queryTimeout2 to resolve
           await queryTimeout2;
-        },
-      });
+        })(),
+      );
 
       queryExecutor.createQueryReader.onThirdCall().returns(createFakeQueryReader([]));
 
-      void provider.queryScheduler.schedule("1").next();
+      void provider.queryScheduler.schedule({ ecsql: "1" }).next();
       await waitFor(() => expect(queryExecutor.createQueryReader).to.be.calledOnce);
 
-      void provider.queryScheduler.schedule("2").next();
+      void provider.queryScheduler.schedule({ ecsql: "2" }).next();
       await waitFor(() => expect(queryExecutor.createQueryReader).to.be.calledTwice);
 
-      void provider.queryScheduler.schedule("3").next();
+      void provider.queryScheduler.schedule({ ecsql: "3" }).next();
       // not called for the third time until one of the first queries complete
       await waitFor(() => expect(queryExecutor.createQueryReader).to.be.calledTwice, 100);
 
@@ -365,6 +367,7 @@ describe("HierarchyProvider", () => {
             type: "label-grouping",
             label: "test label",
             groupId: undefined,
+            groupedInstanceKeys: [{ className: "a.b", id: "0x123" }],
           },
           parentKeys: [],
           label: "test label",
@@ -755,11 +758,11 @@ describe("HierarchyProvider", () => {
     });
 
     it("rethrows query executor errors", async () => {
-      queryExecutor.createQueryReader.returns({
-        async *[Symbol.asyncIterator]() {
+      queryExecutor.createQueryReader.returns(
+        (async function* () {
           throw new Error("test error");
-        },
-      });
+        })(),
+      );
       const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel() {
           return [
@@ -779,11 +782,11 @@ describe("HierarchyProvider", () => {
     });
 
     it("rethrows query executor errors thrown while determining children", async () => {
-      queryExecutor.createQueryReader.returns({
-        async *[Symbol.asyncIterator]() {
+      queryExecutor.createQueryReader.returns(
+        (async function* () {
           throw new Error("test error");
-        },
-      });
+        })(),
+      );
       const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
@@ -806,11 +809,17 @@ describe("HierarchyProvider", () => {
     });
 
     it("sets children flag on parent node to `true` when determining children throws with `rows limit exceeded` error", async () => {
-      queryExecutor.createQueryReader.returns({
-        async *[Symbol.asyncIterator]() {
-          throw new RowsLimitExceededError(999);
-        },
-      });
+      queryExecutor.createQueryReader.returns(
+        (async function* () {
+          for (let i = 1; i <= 1001; ++i) {
+            yield {
+              [NodeSelectClauseColumnNames.FullClassName]: `ClassName-${i}`,
+              [NodeSelectClauseColumnNames.ECInstanceId]: `0x${i}`,
+              [NodeSelectClauseColumnNames.DisplayLabel]: `Label-${i}`,
+            };
+          }
+        })(),
+      );
       const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {

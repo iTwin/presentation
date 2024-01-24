@@ -135,6 +135,7 @@ describe("BaseClassGrouping", () => {
           name: eCClass.fullName,
           label: eCClass.name,
         },
+        groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
       };
       expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(metadataProvider, nodes, eCClass)).to.deep.eq({
         groupingType: "base-class",
@@ -188,6 +189,7 @@ describe("BaseClassGrouping", () => {
           name: ecClass.fullName,
           label: ecClass.label,
         },
+        groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
       };
 
       expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(metadataProvider, nodes, ecClass)).to.deep.eq({
@@ -241,6 +243,7 @@ describe("BaseClassGrouping", () => {
           name: ecClass.fullName,
           label: ecClass.label,
         },
+        groupedInstanceKeys: nodes[0].key.instanceKeys,
       };
 
       expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(metadataProvider, nodes, ecClass)).to.deep.eq({

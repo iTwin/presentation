@@ -214,6 +214,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
         key: {
           type: "class-grouping",
           class: { label: "class label", name: "class name" },
+          groupedInstanceKeys: [],
         },
         children: [],
       });
