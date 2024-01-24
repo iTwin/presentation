@@ -725,6 +725,8 @@ export class HierarchyProvider {
     get queryScheduler(): {
         schedule: (ecsql: string, bindings?: ECSqlBinding[], options?: ECSqlQueryReaderOptions) => AsyncIterableIterator<ECSqlQueryRow>;
     };
+    // (undocumented)
+    setFormatter(formatter?: IPrimitiveValueFormatter): void;
 }
 
 // @beta
