@@ -4,44 +4,36 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import sinon from "sinon";
 import { Subject } from "@itwin/core-backend";
 import { Guid, Id64 } from "@itwin/core-bentley";
 import { IModel, Rank } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { createValueFormatter } from "@itwin/presentation-core-interop";
-import { ECSqlSnippets, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchy-builder";
+import { ECSqlSnippets, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory, TypedPrimitiveValue } from "@itwin/presentation-hierarchy-builder";
 import { julianToDateTime } from "@itwin/presentation-hierarchy-builder/lib/cjs/hierarchy-builder/internal/Common";
 import {
-  buildIModel,
-  importSchema,
-  insertDrawingCategory,
-  insertDrawingGraphic,
-  insertDrawingModelWithPartition,
-  insertPhysicalElement,
-  insertPhysicalModelWithPartition,
-  insertPhysicalPartition,
-  insertPhysicalSubModel,
-  insertSpatialCategory,
+  buildIModel, importSchema, insertDrawingCategory, insertDrawingGraphic, insertDrawingModelWithPartition, insertPhysicalElement,
+  insertPhysicalModelWithPartition, insertPhysicalPartition, insertPhysicalSubModel, insertSpatialCategory,
 } from "../IModelUtils";
 import { initialize, terminate } from "../IntegrationTests";
 import { validateHierarchy } from "./HierarchyValidation";
 import { createMetadataProvider, createProvider } from "./Utils";
 
 describe("Stateless hierarchy builder", () => {
+  let emptyIModel: IModelConnection;
+  let subjectClassName: string;
+
+  before(async function () {
+    await initialize();
+    emptyIModel = (await buildIModel(this)).imodel;
+    subjectClassName = Subject.classFullName.replace(":", ".");
+  });
+
+  after(async () => {
+    await terminate();
+  });
   describe("Labels formatting", () => {
-    let emptyIModel: IModelConnection;
-    let subjectClassName: string;
-
-    before(async function () {
-      await initialize();
-      emptyIModel = (await buildIModel(this)).imodel;
-      subjectClassName = Subject.classFullName.replace(":", ".");
-    });
-
-    after(async () => {
-      await terminate();
-    });
-
     it("formats labels with parts of different types", async function () {
       const date = new Date();
       const hierarchy: IHierarchyLevelDefinitionsFactory = {
@@ -811,6 +803,128 @@ describe("Stateless hierarchy builder", () => {
           ],
         });
       });
+    });
+  });
+
+  describe("Changing formatter", () => {
+    after(() => {
+      sinon.restore();
+    });
+
+    it("formats labels with provided formatter", async function () {
+      const date = new Date();
+      const hierarchy: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel({ parentNode }) {
+          if (!parentNode) {
+            return [
+              {
+                node: {
+                  key: "custom",
+                  label: { type: "DateTime", value: date },
+                  children: false,
+                },
+              },
+            ];
+          }
+          return [];
+        },
+      };
+      const provider = createProvider({ imodel: emptyIModel, hierarchy });
+      await validateHierarchy({
+        provider,
+        expect: [
+          {
+            node: (node) => {
+              const expectedLabel = date.toLocaleString();
+              const actualLabel = node.label;
+              expect(actualLabel).to.eq(expectedLabel);
+            },
+          },
+        ],
+      });
+      provider.setFormatter(async (val: TypedPrimitiveValue) => `_formatted_${JSON.stringify(val.value)}`);
+      await validateHierarchy({
+        provider,
+        expect: [
+          {
+            node: (node) => {
+              const expectedLabel = `_formatted_"${date.toJSON()}"`;
+              const actualLabel = node.label;
+              expect(actualLabel).to.eq(expectedLabel);
+            },
+          },
+        ],
+      });
+    });
+
+    it("doesn't requery with different formatter", async function () {
+      const { imodel, modelClassName } = await buildIModel(this, async (builder) => {
+        const p1 = insertPhysicalPartition({ builder, codeValue: "p1", parentId: IModel.rootSubjectId });
+        insertPhysicalSubModel({ builder, modeledElementId: p1.id, isPrivate: false });
+        const p2 = insertPhysicalPartition({ builder, codeValue: "p2", parentId: IModel.rootSubjectId });
+        const m2 = insertPhysicalSubModel({ builder, modeledElementId: p2.id, isPrivate: true });
+        return { modelClassName: m2.className };
+      });
+
+      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+      const hierarchy: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel({ parentNode }) {
+          if (!parentNode) {
+            return [
+              {
+                fullClassName: modelClassName,
+                query: {
+                  ecsql: `
+                  SELECT ${await selectQueryFactory.createSelectClause({
+                    ecClassId: { selector: `this.ECClassId` },
+                    ecInstanceId: { selector: `this.ECInstanceId` },
+                    nodeLabel: {
+                      selector: ECSqlSnippets.createConcatenatedValueJsonSelector([
+                        { type: "String", value: "[" },
+                        { propertyClassName: modelClassName, propertyClassAlias: "this", propertyName: "IsPrivate" },
+                        { type: "String", value: "]" },
+                      ]),
+                    },
+                  })}
+                  FROM ${modelClassName} AS this
+                `,
+                },
+              },
+            ];
+          }
+          return [];
+        },
+      };
+
+      const provider = createProvider({ imodel, hierarchy });
+      const queryReaderSpy = sinon.spy(provider.queryExecutor, "createQueryReader");
+      await validateHierarchy({
+        provider,
+        expect: [
+          {
+            node: (node) => expect(node.label).to.eq(`[false]`),
+          },
+          {
+            node: (node) => expect(node.label).to.eq(`[true]`),
+          },
+        ],
+      });
+      expect(queryReaderSpy).to.be.calledOnce;
+      queryReaderSpy.resetHistory();
+      const newFormatter = async (val: TypedPrimitiveValue) => `_${JSON.stringify(val.value)}_`;
+      provider.setFormatter(newFormatter);
+      await validateHierarchy({
+        provider,
+        expect: [
+          {
+            node: (node) => expect(node.label).to.eq('_"["__0__"]"_'),
+          },
+          {
+            node: (node) => expect(node.label).to.eq('_"["__1__"]"_'),
+          },
+        ],
+      });
+      expect(queryReaderSpy).to.not.be.called;
     });
   });
 });
