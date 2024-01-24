@@ -48,6 +48,8 @@ beta;PresentationFilterBuilderValueRendererProps
 beta;PresentationInfoTreeNodeItem 
 beta;PresentationInstanceFilter = PresentationInstanceFilterConditionGroup | PresentationInstanceFilterCondition
 beta;PresentationInstanceFilter
+beta;PresentationInstanceFilterBuilder(props: PresentationInstanceFilterBuilderProps): JSX_2.Element
+beta;PresentationInstanceFilterBuilderProps
 beta;PresentationInstanceFilterCondition
 beta;PresentationInstanceFilterConditionGroup
 beta;PresentationInstanceFilterDialog(props: PresentationInstanceFilterDialogProps): JSX_2.Element

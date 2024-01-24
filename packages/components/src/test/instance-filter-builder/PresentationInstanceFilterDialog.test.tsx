@@ -18,7 +18,7 @@ import { PresentationInstanceFilter, PresentationInstanceFilterInfo } from "../.
 import { PresentationInstanceFilterDialog } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog";
 import { createTestECClassInfo, stubDOMMatrix, stubRaf } from "../_helpers/Common";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
-import { render, waitFor } from "../TestUtils";
+import { render, waitFor, waitForElement } from "../TestUtils";
 
 describe("PresentationInstanceFilterDialog", () => {
   stubRaf();
@@ -318,18 +318,6 @@ describe("PresentationInstanceFilterDialog", () => {
       expect(progressIndicator).to.not.be.null;
     });
   });
-
-  async function waitForElement<T extends HTMLElement>(container: HTMLElement, selector: string, condition?: (e: T | null) => void): Promise<T> {
-    return waitFor(() => {
-      const element = container.querySelector<T>(selector);
-      if (condition) {
-        condition(element);
-      } else {
-        expect(element, `Failed to find element. Selector: "${selector}"`).to.not.be.null;
-      }
-      return element as T;
-    });
-  }
 
   async function getRulePropertySelector(container: HTMLElement) {
     return waitForElement<HTMLInputElement>(container, ".rule-property input");

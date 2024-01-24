@@ -3,8 +3,17 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { expect } from "chai";
 import { createElement, Fragment, PropsWithChildren, ReactElement, StrictMode } from "react";
-import { RenderHookOptions, RenderHookResult, renderHook as renderHookRTL, RenderOptions, RenderResult, render as renderRTL } from "@testing-library/react";
+import {
+  RenderHookOptions,
+  RenderHookResult,
+  renderHook as renderHookRTL,
+  RenderOptions,
+  RenderResult,
+  render as renderRTL,
+  waitFor,
+} from "@testing-library/react";
 import userEvent, { UserEvent } from "@testing-library/user-event";
 
 function createWrapper(wrapper?: React.JSXElementConstructor<{ children: React.ReactElement }>, disableStrictMode?: boolean) {
@@ -14,6 +23,18 @@ function createWrapper(wrapper?: React.JSXElementConstructor<{ children: React.R
   return wrapper
     ? ({ children }: PropsWithChildren<unknown>) => <StrictModeWrapper>{createElement(wrapper, undefined, children)}</StrictModeWrapper>
     : StrictModeWrapper;
+}
+
+export async function waitForElement<T extends HTMLElement>(container: HTMLElement, selector: string, condition?: (e: T | null) => void): Promise<T> {
+  return waitFor(() => {
+    const element = container.querySelector<T>(selector);
+    if (condition) {
+      condition(element);
+    } else {
+      expect(element, `Failed to find element. Selector: "${selector}"`).to.not.be.null;
+    }
+    return element as T;
+  });
 }
 
 /**

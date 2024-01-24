@@ -409,6 +409,19 @@ export namespace PresentationInstanceFilter {
 }
 
 // @beta
+export function PresentationInstanceFilterBuilder(props: PresentationInstanceFilterBuilderProps): JSX_2.Element;
+
+// @beta
+export interface PresentationInstanceFilterBuilderProps {
+    descriptor: Descriptor;
+    imodel: IModelConnection;
+    initialFilter?: PresentationInstanceFilterInfo;
+    onInstanceFilterChanged: (filter?: PresentationInstanceFilterInfo) => void;
+    // @deprecated
+    ruleGroupDepthLimit?: number;
+}
+
+// @beta
 export interface PresentationInstanceFilterCondition {
     field: PropertiesField;
     operator: PropertyFilterRuleOperator;
