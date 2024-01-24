@@ -4,14 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { RenderedItemsRange, TreeDataProvider, TreeEventHandler, TreeModelSource, TreeNodeLoader } from "@itwin/components-react";
+import { RenderedItemsRange, TreeDataProvider, TreeModelSource, TreeNodeLoader } from "@itwin/components-react";
 import { HierarchyProvider, IPrimitiveValueFormatter } from "@itwin/presentation-hierarchy-builder";
 import { startTreeReload } from "./TreeReloader";
 
 interface ControlledTreeComponents {
   nodeLoader: TreeNodeLoader<TreeDataProvider>;
   modelSource: TreeModelSource;
-  eventHandler: TreeEventHandler;
 }
 
 /** @internal */
@@ -19,8 +18,7 @@ export function useControlledTreeComponentsState(dataProvider: TreeDataProvider)
   function createNewComponents(newDataProvider: TreeDataProvider): ControlledTreeComponents {
     const modelSource = new TreeModelSource();
     const nodeLoader = new TreeNodeLoader(newDataProvider, modelSource);
-    const eventHandler = new TreeEventHandler({ nodeLoader, modelSource });
-    return { modelSource, nodeLoader, eventHandler };
+    return { modelSource, nodeLoader };
   }
 
   const [componentsState, setComponentsState] = useState<ControlledTreeComponents>(createNewComponents(dataProvider));
@@ -31,11 +29,9 @@ export function useControlledTreeComponentsState(dataProvider: TreeDataProvider)
 
   const onReload = useCallback((reloadedTree: ReloadedTree) => {
     const nodeLoader = new TreeNodeLoader(reloadedTree.dataProvider, reloadedTree.modelSource);
-    const eventHandler = new TreeEventHandler({ nodeLoader, modelSource: reloadedTree.modelSource });
     setComponentsState({
       modelSource: reloadedTree.modelSource,
       nodeLoader,
-      eventHandler,
     });
   }, []);
 

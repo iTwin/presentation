@@ -187,7 +187,7 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
         {treeHeight && props.width && (
           <ControlledTree
             model={treeModel}
-            eventsHandler={componentsState.eventHandler}
+            eventsHandler={eventHandler}
             nodeLoader={componentsState.nodeLoader}
             treeRenderer={(treeProps) => <TreeRenderer {...treeProps} nodeRenderer={nodeRenderer} />}
             onItemsRendered={(items) => {
