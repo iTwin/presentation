@@ -300,6 +300,9 @@ export class HierarchyProvider {
     return value;
   }
 
+  /**
+   * Creates and runs a query based on provided props, then processes retrieved nodes and returns them.
+   */
   public async getNodes(props: GetHierarchyNodesProps): Promise<HierarchyNode[]> {
     return new Promise((resolve, reject) => {
       const nodes = new Array<HierarchyNode>();
