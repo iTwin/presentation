@@ -43,9 +43,9 @@ Includes 2 breaking `@beta` API changes:
   ```tsx
   const { applyFilter } = useHierarchyLevelFiltering({ nodeLoader, modelSource });
   const [filterNode, setFilterNode] = useState<PresentationTreeNodeItem>();
-  const onFilterButtonClick = () => {
+  const onFilterChanged = (filter:  PresentationInstanceFilterInfo) => {
     if (filterNode) {
-      applyFilter(filterNode);
+      applyFilter(filterNode, filter);
     }
   }
   ```
@@ -55,9 +55,9 @@ Includes 2 breaking `@beta` API changes:
   ```tsx
   const { applyFilter } = useHierarchyLevelFiltering({ nodeLoader, modelSource });
   const [filterNodeId, setFilterNodeId] = useState<string>();
-  const onFilterButtonClick = () => {
+  const onFilterChanged = (filter:  PresentationInstanceFilterInfo) => {
     if (filterNodeId) {
-      applyFilter(filterNodeId);
+      applyFilter(filterNodeId, filter);
     }
   }
   ```
