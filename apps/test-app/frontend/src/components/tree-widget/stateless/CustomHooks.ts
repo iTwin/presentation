@@ -13,14 +13,14 @@ interface ControlledTreeComponents {
   modelSource: TreeModelSource;
 }
 
+function createNewComponents(newDataProvider: TreeDataProvider): ControlledTreeComponents {
+  const modelSource = new TreeModelSource();
+  const nodeLoader = new TreeNodeLoader(newDataProvider, modelSource);
+  return { modelSource, nodeLoader };
+}
+
 /** @internal */
 export function useControlledTreeComponentsState(dataProvider: TreeDataProvider) {
-  function createNewComponents(newDataProvider: TreeDataProvider): ControlledTreeComponents {
-    const modelSource = new TreeModelSource();
-    const nodeLoader = new TreeNodeLoader(newDataProvider, modelSource);
-    return { modelSource, nodeLoader };
-  }
-
   const [componentsState, setComponentsState] = useState<ControlledTreeComponents>(() => createNewComponents(dataProvider));
 
   useEffect(() => {
