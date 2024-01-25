@@ -143,22 +143,11 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
     <MenuItem
       key={1}
       onClick={() => {
-        setShouldUseCustomFormatter(true);
+        setShouldUseCustomFormatter((state) => !state);
         close();
       }}
-      style={shouldUseCustomFormatter ? { display: "none" } : {}}
     >
-      Show custom formatter
-    </MenuItem>,
-    <MenuItem
-      key={2}
-      onClick={() => {
-        setShouldUseCustomFormatter(false);
-        close();
-      }}
-      style={!shouldUseCustomFormatter ? { display: "none" } : {}}
-    >
-      Show default formatter
+      {shouldUseCustomFormatter ? "Show custom formatter" : "Show default formatter"}
     </MenuItem>,
   ];
   const noDataRenderer = filter ? () => <NoFilterMatchesRenderer filter={filter} /> : undefined;
