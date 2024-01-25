@@ -14,10 +14,11 @@ Includes 2 breaking `@beta` API changes:
   *before*
 
   ```tsx
+  const [clickedNode, setClickedNode] = useState<PresentationTreeNodeItem>();
   <PresentationTreeNodeRenderer
     {...nodeProps}
     onFilterClick={(node: PresentationTreeNodeItem) => {
-      applyFilter(node);
+      setClickedNode(node);
     }}
   />
   ```
@@ -25,12 +26,13 @@ Includes 2 breaking `@beta` API changes:
   *after*
 
   ```tsx
+  const [clickedNode, setClickedNode] = useState<PresentationTreeNodeItem>();
   <PresentationTreeNodeRenderer
     {...nodeProps}
     onFilterClick={(nodeId: string) => {
       const node = modelSource.getModel().getNode(nodeId);
       if (isTreeModelNode(node) && isPresentationTreeNodeItem(node.item)) {
-        applyFilter(node.item);
+        setClickedNode(node.item);
       }
     }}
   />
