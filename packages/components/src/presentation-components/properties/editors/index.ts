@@ -2,6 +2,10 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+/**
+ * @packageDocumentation
+ * @module Properties
+ */
 
 import { StandardTypeNames } from "@itwin/appui-abstract";
 import { PropertyEditorManager } from "@itwin/components-react";
