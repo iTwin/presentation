@@ -16,7 +16,6 @@ import {
   Observable,
   ObservableInput,
   of,
-  shareReplay,
   take,
   tap,
 } from "rxjs";
@@ -200,7 +199,7 @@ export class HierarchyProvider {
           of(def.query).pipe(
             log((query) => `Query direct nodes for parent ${props.parentNode ? JSON.stringify(props.parentNode) : "<root>"}: ${query.ecsql}`),
             mergeMap((query) => defer(() => from(this._queryReader.read(this.limitingQueryExecutor, query, props.hierarchyLevelSizeLimit)))),
-            shareReplay(),
+            shareReplayWithErrors(),
           ),
         );
         this._queriesCache.add(def.query, parsedHierarchyNodesObservable);
