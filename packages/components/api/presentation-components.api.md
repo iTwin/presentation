@@ -225,6 +225,17 @@ export type FilterablePresentationTreeNodeItem = PresentationTreeNodeItem & {
 };
 
 // @beta
+export interface FilterableTreeProps {
+    documentBodyRef: React.RefObject<HTMLDivElement>;
+    // (undocumented)
+    filterDialog: React.ReactPortal | null;
+    // (undocumented)
+    onClearFilterClick: (nodeId: string) => void;
+    // (undocumented)
+    onFilterClick: (nodeId: string) => void;
+}
+
+// @beta
 export interface FilteringDialogToolbarHandlers {
     // (undocumented)
     handleApply: () => void;
@@ -788,6 +799,15 @@ export function useControlledPresentationTreeFiltering(props: ControlledPresenta
     isFiltering: boolean;
     matchesCount: number | undefined;
 };
+
+// @beta
+export function useFilterablePresentationTree({ nodeLoader }: useFilterablePresentationTreeProps): FilterableTreeProps;
+
+// @beta
+export interface useFilterablePresentationTreeProps {
+    // (undocumented)
+    nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
+}
 
 // @beta
 export function useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProps): {
