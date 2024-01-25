@@ -1,5 +1,5 @@
 ---
-"@itwin/presentation-components": minor
+"@itwin/presentation-components": patch
 ---
 
-`PresentationInstanceFilterDialog`: Add formatting to dates that are displayed in the property value selector.
+Instance filter builder / dialog: Format date values in the property value selector.

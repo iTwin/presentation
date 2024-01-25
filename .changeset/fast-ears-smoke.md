@@ -2,4 +2,4 @@
 "@itwin/presentation-components": minor
 ---
 
-`PresentationInstanceFilterDialog`: Show error message when value input is invalid.
+Instance filter builder / dialog: Show a validation error message when entered property value is invalid.

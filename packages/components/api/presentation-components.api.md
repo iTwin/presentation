@@ -58,13 +58,17 @@ import { PropertyDataChangeEvent } from '@itwin/components-react';
 import { PropertyDataFiltererBase } from '@itwin/components-react';
 import { PropertyDataFilterResult } from '@itwin/components-react';
 import { PropertyDescription } from '@itwin/appui-abstract';
+import { PropertyEditorBase } from '@itwin/components-react';
+import { PropertyEditorProps } from '@itwin/components-react';
 import { PropertyFilter } from '@itwin/components-react';
 import { PropertyFilterBuilderRuleValueRendererProps } from '@itwin/components-react';
 import { PropertyFilterRuleGroupOperator } from '@itwin/components-react';
 import { PropertyFilterRuleOperator } from '@itwin/components-react';
 import { PropertyRecord } from '@itwin/appui-abstract';
+import { PropertyValue } from '@itwin/appui-abstract';
 import { PropertyValueRendererContext } from '@itwin/components-react';
 import { PropsWithChildren } from 'react';
+import { PureComponent } from 'react';
 import { ReactNode } from 'react';
 import { RenderedItemsRange } from '@itwin/components-react';
 import { Ruleset } from '@itwin/presentation-common';
@@ -91,6 +95,7 @@ import { TreeNodeRendererProps } from '@itwin/components-react';
 import { TreeRendererProps } from '@itwin/components-react';
 import { TreeSelectionModificationEventArgs } from '@itwin/components-react';
 import { TreeSelectionReplacementEventArgs } from '@itwin/components-react';
+import { TypeEditor } from '@itwin/components-react';
 import { UnitSystemKey } from '@itwin/core-quantity';
 import { ViewportProps } from '@itwin/imodel-components-react';
 
@@ -152,6 +157,9 @@ export interface ControlledPresentationTreeFilteringProps {
     // (undocumented)
     nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
 }
+
+// @beta @deprecated
+export function convertToInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection): Promise<InstanceFilterDefinition>;
 
 // @alpha
 export function createDiagnosticsOptions(props: DiagnosticsProps): ClientDiagnosticsOptions | undefined;
@@ -336,6 +344,9 @@ export function isFilterablePresentationTreeNodeItem(item: PresentationTreeNodeI
 // @beta
 export function isPresentationInfoTreeNodeItem(item: TreeNodeItem): item is PresentationInfoTreeNodeItem;
 
+// @beta @deprecated
+export function isPresentationInstanceFilterConditionGroup(filter: PresentationInstanceFilter): filter is PresentationInstanceFilterConditionGroup;
+
 // @beta
 export function isPresentationTreeNodeItem(item: TreeNodeItem): item is PresentationTreeNodeItem;
 
@@ -345,6 +356,9 @@ export interface IUnifiedSelectionComponent {
     readonly selectionHandler?: SelectionHandler;
 }
 
+// @beta @deprecated
+export const NavigationPropertyEditor: typeof NavigationPropertyEditor_2;
+
 // @beta
 export const navigationPropertyEditorContext: Context<NavigationPropertyEditorContextProps | undefined>;
 
@@ -353,6 +367,9 @@ export interface NavigationPropertyEditorContextProps {
     getNavigationPropertyInfo: (property: PropertyDescription) => Promise<NavigationPropertyInfo | undefined>;
     imodel: IModelConnection;
 }
+
+// @beta @deprecated
+export const NavigationPropertyTargetEditor: typeof NavigationPropertyTargetEditor_2;
 
 // @public
 export enum PresentationComponentsLoggerCategory {
@@ -389,6 +406,19 @@ export namespace PresentationInstanceFilter {
     export function isConditionGroup(filter: PresentationInstanceFilter): filter is PresentationInstanceFilterConditionGroup;
     export function toComponentsPropertyFilter(descriptor: Descriptor, filter: PresentationInstanceFilter): PropertyFilter;
     export function toInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection, filteredClasses?: ClassInfo[]): Promise<InstanceFilterDefinition>;
+}
+
+// @beta
+export function PresentationInstanceFilterBuilder(props: PresentationInstanceFilterBuilderProps): JSX_2.Element;
+
+// @beta
+export interface PresentationInstanceFilterBuilderProps {
+    descriptor: Descriptor;
+    imodel: IModelConnection;
+    initialFilter?: PresentationInstanceFilterInfo;
+    onInstanceFilterChanged: (filter?: PresentationInstanceFilterInfo) => void;
+    // @deprecated
+    ruleGroupDepthLimit?: number;
 }
 
 // @beta
