@@ -45,7 +45,7 @@ interface ReloadedTree {
 
 interface FormatterProps {
   formatter?: IPrimitiveValueFormatter;
-  modelsTreeHierarchyProvider?: HierarchyProvider;
+  hierarchyProvider?: HierarchyProvider;
   dataProvider: TreeDataProvider;
   modelSource: TreeModelSource;
   onReload: (reloadedTree: ReloadedTree) => void;
@@ -53,7 +53,7 @@ interface FormatterProps {
 
 /** @internal */
 export function useFormatter(props: FormatterProps) {
-  const { formatter, modelsTreeHierarchyProvider, dataProvider, modelSource, onReload } = props;
+  const { formatter, hierarchyProvider, dataProvider, modelSource, onReload } = props;
   const renderedItems = useRef<RenderedItemsRange | undefined>(undefined);
   const onItemsRendered = useCallback((items: RenderedItemsRange) => {
     renderedItems.current = items;
@@ -66,11 +66,11 @@ export function useFormatter(props: FormatterProps) {
   }, [dataProvider, modelSource, renderedItems, onReload]);
 
   useEffect(() => {
-    if (modelsTreeHierarchyProvider) {
-      modelsTreeHierarchyProvider.setFormatter(formatter);
+    if (hierarchyProvider) {
+      hierarchyProvider.setFormatter(formatter);
       startTreeReload(startReloadProps.current);
     }
-  }, [formatter, modelsTreeHierarchyProvider]);
+  }, [formatter, hierarchyProvider]);
 
   return onItemsRendered;
 }

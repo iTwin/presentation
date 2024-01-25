@@ -38,7 +38,7 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
   const [filteringStatus, setFilteringStatus] = useState<"ready" | "filtering">("ready");
   const [queryExecutor, setQueryExecutor] = useState<IECSqlQueryExecutor>();
   const [metadataProvider, setMetadataProvider] = useState<IMetadataProvider>();
-  const [modelsTreeHierarchyProvider, setModelsTreeHierarchyProvider] = useState<HierarchyProvider>();
+  const [hierarchyProvider, setHierarchyProvider] = useState<HierarchyProvider>();
   const [hierarchyLevelSizeLimit, setHierarchyLevelSizeLimit] = useState<{ [parentId: string]: number | "unbounded" | undefined }>({});
   useEffect(() => {
     const schemas = new SchemaContext();
@@ -49,27 +49,27 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
 
   const { value: filteredPaths } = useDebouncedAsyncValue(
     useCallback(async () => {
-      if (!metadataProvider || !modelsTreeHierarchyProvider) {
+      if (!metadataProvider || !hierarchyProvider) {
         return undefined;
       }
       if (filter !== "") {
         setFilteringStatus("filtering");
         return ModelsTreeDefinition.createInstanceKeyPaths({
           metadataProvider,
-          queryExecutor: modelsTreeHierarchyProvider.limitingQueryExecutor,
+          queryExecutor: hierarchyProvider.limitingQueryExecutor,
           label: filter,
         });
       }
       setFilteringStatus("ready");
       return undefined;
-    }, [metadataProvider, modelsTreeHierarchyProvider, filter]),
+    }, [metadataProvider, hierarchyProvider, filter]),
   );
 
   useEffect(() => {
     if (!metadataProvider || !queryExecutor) {
       return;
     }
-    setModelsTreeHierarchyProvider(
+    setHierarchyProvider(
       new HierarchyProvider({
         metadataProvider,
         hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider }),
@@ -85,14 +85,14 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
 
   const dataProvider = useMemo((): TreeDataProvider => {
     return async (node?: TreeNodeItem): Promise<TreeNodeItem[]> => {
-      if (!modelsTreeHierarchyProvider) {
+      if (!hierarchyProvider) {
         return [];
       }
       const parent = node ? getHierarchyNode(node) : undefined;
       const parentId = node?.id;
       const limit = hierarchyLevelSizeLimit[parentId ?? ""];
       try {
-        return (await modelsTreeHierarchyProvider.getNodes({ parentNode: parent, hierarchyLevelSizeLimit: limit })).map(createTreeNodeItem);
+        return (await hierarchyProvider.getNodes({ parentNode: parent, hierarchyLevelSizeLimit: limit })).map(createTreeNodeItem);
       } catch (e) {
         if (e instanceof RowsLimitExceededError) {
           return [
@@ -106,7 +106,7 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
         throw e;
       }
     };
-  }, [modelsTreeHierarchyProvider, hierarchyLevelSizeLimit]);
+  }, [hierarchyProvider, hierarchyLevelSizeLimit]);
 
   const { componentsState, onReload } = useControlledTreeComponentsState(dataProvider);
   const treeModel = useTreeModel(componentsState.modelSource);
@@ -134,7 +134,7 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
     formatter: shouldUseCustomFormatter ? customFormatter : undefined,
     dataProvider,
     modelSource: componentsState.modelSource,
-    modelsTreeHierarchyProvider,
+    hierarchyProvider,
     onReload,
   });
 
