@@ -9,7 +9,7 @@ import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
 import { ProcessedHierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
 import { createHideNodesInHierarchyOperator, LOGGING_NAMESPACE } from "../../../hierarchy-builder/internal/operators/HideNodesInHierarchy";
-import { createTestInstanceKey, createTestProcessedCustomNode, createTestProcessedInstanceNode, getObservableResult, setupLogging } from "../../Utils";
+import { createTestInstanceKey, createTestProcessedCustomNode, createTestProcessedInstanceNode, getObservableResult, setupLogging, waitFor } from "../../Utils";
 
 describe("HideNodesInHierarchyOperator", () => {
   before(() => {
@@ -223,6 +223,13 @@ describe("HideNodesInHierarchyOperator", () => {
         },
       });
       expect(result).to.deep.eq([]);
+    });
+    it("hideNodesInHierarchy observable is subscribed once", async () => {
+      const processedHierarchyNodesObservable = from([]);
+      const subscriptionSpy = sinon.spy(processedHierarchyNodesObservable, "subscribe");
+      const promise = processedHierarchyNodesObservable.pipe(createHideNodesInHierarchyOperator(() => from([]), false));
+      promise.subscribe();
+      await waitFor(() => expect(subscriptionSpy).to.have.been.calledOnce);
     });
   });
 });

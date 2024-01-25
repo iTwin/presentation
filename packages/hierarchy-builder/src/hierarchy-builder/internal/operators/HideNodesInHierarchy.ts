@@ -3,7 +3,25 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { concat, defer, EMPTY, filter, finalize, map, merge, mergeAll, mergeMap, Observable, partition, reduce, shareReplay, take, tap } from "rxjs";
+import {
+  asapScheduler,
+  concat,
+  defer,
+  EMPTY,
+  filter,
+  finalize,
+  map,
+  merge,
+  mergeAll,
+  mergeMap,
+  Observable,
+  partition,
+  reduce,
+  share,
+  subscribeOn,
+  take,
+  tap,
+} from "rxjs";
 import { HierarchyNode, InstancesNodeKey, ProcessedCustomHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
 import { createOperatorLoggingNamespace, hasChildren, mergeNodes } from "../Common";
@@ -24,7 +42,8 @@ export function createHideNodesInHierarchyOperator(
   return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
     const sharedNodes = nodes.pipe(
       log((n) => `in: ${n.label}`),
-      shareReplay(),
+      subscribeOn(asapScheduler),
+      share(),
     );
     const [withFlag, withoutFlag] = partition(
       sharedNodes,
