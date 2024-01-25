@@ -42,11 +42,11 @@ export interface PresentationTreeRendererProps extends TreeRendererProps {
  * Return type of [[useFilterablePresentationTree]] hook.
  * @beta
  */
-export interface FilterableTreeProps {
+export interface FilterableTreeProps<T> {
   onFilterClick: (nodeId: string) => void;
   onClearFilterClick: (nodeId: string) => void;
   /** Reference of the document body. Needs to be passed to the root of the tree for the filter dialog to be placed separately from the tree context. */
-  containerRef: React.Ref<HTMLDivElement>;
+  containerRef: React.Ref<T>;
   filterDialog: React.ReactPortal | null;
 }
 
@@ -62,11 +62,11 @@ export interface useFilterablePresentationTreeProps {
  * Hook that enables hierarchy level filtering with action handlers for setting and clearing filters.
  * @beta
  */
-export function useFilterablePresentationTree({ nodeLoader }: useFilterablePresentationTreeProps): FilterableTreeProps {
+export function useFilterablePresentationTree<T extends HTMLElement>({ nodeLoader }: useFilterablePresentationTreeProps): FilterableTreeProps<T> {
   const { applyFilter, clearFilter } = useHierarchyLevelFiltering({ nodeLoader, modelSource: nodeLoader.modelSource });
   const [filterNode, setFilterNode] = useState<PresentationTreeNodeItem>();
 
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<T>(null);
 
   const filterDialog =
     ref.current && filterNode && isFilterablePresentationTreeNodeItem(filterNode)
@@ -106,7 +106,7 @@ export function useFilterablePresentationTree({ nodeLoader }: useFilterablePrese
  * @beta
  */
 export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
-  const { onClearFilterClick, onFilterClick, containerRef, filterDialog } = useFilterablePresentationTree({ nodeLoader: props.nodeLoader });
+  const { onClearFilterClick, onFilterClick, containerRef, filterDialog } = useFilterablePresentationTree<HTMLDivElement>({ nodeLoader: props.nodeLoader });
   const filterableNodeRenderer = (nodeProps: TreeNodeRendererProps) => {
     return <PresentationTreeNodeRenderer {...nodeProps} onFilterClick={onFilterClick} onClearFilterClick={onClearFilterClick} />;
   };
