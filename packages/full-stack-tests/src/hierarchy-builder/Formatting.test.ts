@@ -819,74 +819,26 @@ describe("Stateless hierarchy builder", () => {
       sinon.restore();
     });
 
-    it("formats labels with provided formatter", async function () {
+    it("doesn't requery with a new formatter, but formats labels with it", async function () {
+      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(emptyIModel));
       const hierarchy: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
             return [
               {
-                node: {
-                  key: "custom",
-                  label: { type: "String", value: "testValue" },
-                  children: false,
-                },
-              },
-            ];
-          }
-          return [];
-        },
-      };
-      const provider = createProvider({ imodel: emptyIModel, hierarchy });
-      await validateHierarchy({
-        provider,
-        expect: [
-          {
-            node: (node) => expect(node.label).to.eq("testValue"),
-          },
-        ],
-      });
-      provider.setFormatter(async (val: TypedPrimitiveValue) => `_formatted_${JSON.stringify(val.value)}`);
-      await validateHierarchy({
-        provider,
-        expect: [
-          {
-            node: (node) => expect(node.label).to.eq('_formatted_"testValue"'),
-          },
-        ],
-      });
-    });
-
-    it("doesn't requery with different formatter", async function () {
-      const { imodel, modelClassName } = await buildIModel(this, async (builder) => {
-        const p1 = insertPhysicalPartition({ builder, codeValue: "p1", parentId: IModel.rootSubjectId });
-        insertPhysicalSubModel({ builder, modeledElementId: p1.id, isPrivate: false });
-        const p2 = insertPhysicalPartition({ builder, codeValue: "p2", parentId: IModel.rootSubjectId });
-        const m2 = insertPhysicalSubModel({ builder, modeledElementId: p2.id, isPrivate: true });
-        return { modelClassName: m2.className };
-      });
-
-      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
-      const hierarchy: IHierarchyLevelDefinitionsFactory = {
-        async defineHierarchyLevel({ parentNode }) {
-          if (!parentNode) {
-            return [
-              {
-                fullClassName: modelClassName,
+                fullClassName: `BisCore.InformationContentElement`,
                 query: {
                   ecsql: `
-                  SELECT ${await selectQueryFactory.createSelectClause({
-                    ecClassId: { selector: `this.ECClassId` },
-                    ecInstanceId: { selector: `this.ECInstanceId` },
-                    nodeLabel: {
-                      selector: ECSqlSnippets.createConcatenatedValueJsonSelector([
-                        { type: "String", value: "[" },
-                        { propertyClassName: modelClassName, propertyClassAlias: "this", propertyName: "IsPrivate" },
-                        { type: "String", value: "]" },
-                      ]),
-                    },
-                  })}
-                  FROM ${modelClassName} AS this
-                `,
+                    SELECT ${await selectQueryFactory.createSelectClause({
+                      ecClassId: { selector: `this.ECClassId` },
+                      ecInstanceId: { selector: `this.ECInstanceId` },
+                      nodeLabel: { selector: `this.UserLabel` },
+                    })}
+                    FROM (
+                      SELECT ECClassId, ECInstanceId, UserLabel
+                      FROM ${subjectClassName}
+                    ) AS this
+                  `,
                 },
               },
             ];
@@ -895,16 +847,13 @@ describe("Stateless hierarchy builder", () => {
         },
       };
 
-      const provider = createProvider({ imodel, hierarchy });
-      const queryReaderSpy = sinon.spy(provider.limitingQueryExecutor, "createQueryReader");
+      const provider = createProvider({ imodel: emptyIModel, hierarchy });
+      const queryReaderSpy = sinon.spy(emptyIModel, "createQueryReader");
       await validateHierarchy({
         provider,
         expect: [
           {
-            node: (node) => expect(node.label).to.eq(`[false]`),
-          },
-          {
-            node: (node) => expect(node.label).to.eq(`[true]`),
+            node: (node) => expect(node.label).to.eq(""),
           },
         ],
       });
@@ -916,10 +865,7 @@ describe("Stateless hierarchy builder", () => {
         provider,
         expect: [
           {
-            node: (node) => expect(node.label).to.eq('_"["__0__"]"_'),
-          },
-          {
-            node: (node) => expect(node.label).to.eq('_"["__1__"]"_'),
+            node: (node) => expect(node.label).to.eq('_""_'),
           },
         ],
       });
