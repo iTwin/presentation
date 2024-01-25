@@ -820,7 +820,6 @@ describe("Stateless hierarchy builder", () => {
     });
 
     it("formats labels with provided formatter", async function () {
-      const date = new Date();
       const hierarchy: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
@@ -828,7 +827,7 @@ describe("Stateless hierarchy builder", () => {
               {
                 node: {
                   key: "custom",
-                  label: { type: "DateTime", value: date },
+                  label: { type: "String", value: "testValue" },
                   children: false,
                 },
               },
@@ -842,11 +841,7 @@ describe("Stateless hierarchy builder", () => {
         provider,
         expect: [
           {
-            node: (node) => {
-              const expectedLabel = date.toLocaleString();
-              const actualLabel = node.label;
-              expect(actualLabel).to.eq(expectedLabel);
-            },
+            node: (node) => expect(node.label).to.eq("testValue"),
           },
         ],
       });
@@ -855,11 +850,7 @@ describe("Stateless hierarchy builder", () => {
         provider,
         expect: [
           {
-            node: (node) => {
-              const expectedLabel = `_formatted_"${date.toJSON()}"`;
-              const actualLabel = node.label;
-              expect(actualLabel).to.eq(expectedLabel);
-            },
+            node: (node) => expect(node.label).to.eq('_formatted_"testValue"'),
           },
         ],
       });
