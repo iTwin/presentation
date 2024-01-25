@@ -152,7 +152,7 @@ export class HierarchyProvider {
     this.limitingQueryExecutor = createLimitingECSqlQueryExecutor(props.queryExecutor, DEFAULT_ROWS_LIMIT);
   }
 
-  public setFormatter(formatter?: IPrimitiveValueFormatter) {
+  public setFormatter(formatter: IPrimitiveValueFormatter | undefined) {
     this._valuesFormatter = formatter ?? createDefaultValueFormatter();
     this._nodesCache = new ChildNodesCache();
   }
