@@ -139,17 +139,6 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
   });
 
   const { headerRef, treeHeight } = useTreeHeight(props.height);
-  const dropdownMenuItems = (close: () => void) => [
-    <MenuItem
-      key={1}
-      onClick={() => {
-        setShouldUseCustomFormatter((state) => !state);
-        close();
-      }}
-    >
-      {shouldUseCustomFormatter ? "Show custom formatter" : "Show default formatter"}
-    </MenuItem>,
-  ];
   const noDataRenderer = filter ? () => <NoFilterMatchesRenderer filter={filter} /> : undefined;
   const filteringInputStatus =
     filteringStatus === "filtering"
@@ -166,11 +155,7 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
     <>
       <div className="tree-widget-header-wrapper">
         <TreeWidgetHeader onFilterChange={setFilter} filteringStatus={filteringInputStatus} showFilteringInput={true} ref={headerRef} />
-        <DropdownMenu menuItems={dropdownMenuItems}>
-          <IconButton styleType="borderless" size="small" className="formatter-setter-dropdown">
-            <SvgMoreVertical />
-          </IconButton>
-        </DropdownMenu>
+        <FormatterSetterDropdown shouldUseCustomFormatter={shouldUseCustomFormatter} setShouldUseCustomFormatter={setShouldUseCustomFormatter} />
       </div>
       <div className="filtered-tree">
         {treeHeight && props.width && (
@@ -193,6 +178,32 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
         {filteringStatus === "filtering" ? <div className="filtered-tree-overlay" /> : null}
       </div>
     </>
+  );
+}
+
+interface FormatterSetterDropdownProps {
+  shouldUseCustomFormatter: boolean;
+  setShouldUseCustomFormatter: (value: React.SetStateAction<boolean>) => void;
+}
+
+function FormatterSetterDropdown(props: FormatterSetterDropdownProps) {
+  const dropdownMenuItems = (close: () => void) => [
+    <MenuItem
+      key={1}
+      onClick={() => {
+        props.setShouldUseCustomFormatter((state) => !state);
+        close();
+      }}
+    >
+      {props.shouldUseCustomFormatter ? "Show custom formatter" : "Show default formatter"}
+    </MenuItem>,
+  ];
+  return (
+    <DropdownMenu menuItems={dropdownMenuItems}>
+      <IconButton styleType="borderless" size="small" className="formatter-setter-dropdown">
+        <SvgMoreVertical />
+      </IconButton>
+    </DropdownMenu>
   );
 }
 
