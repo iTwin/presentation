@@ -5,8 +5,7 @@
 /** @packageDocumentation
  * @module Tree
  */
-import { useCallback, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { useCallback, useMemo, useState } from "react";
 import {
   AbstractTreeNodeLoaderWithProvider,
   isTreeModelNode,
@@ -46,8 +45,8 @@ export interface FilterableTreeProps {
   onFilterClick: (nodeId: string) => void;
   onClearFilterClick: (nodeId: string) => void;
   /** Reference of the document body. Needs to be passed to the root of the tree for the filter dialog to be placed separately from the tree context. */
-  documentBodyRef: React.RefObject<HTMLDivElement>;
-  filterDialog: React.ReactPortal | null;
+  // documentBodyRef: React.RefObject<HTMLDivElement>;
+  filterDialog: React.ReactNode | null;
 }
 
 /**
@@ -66,25 +65,20 @@ export function useFilterablePresentationTree({ nodeLoader }: useFilterablePrese
   const { applyFilter, clearFilter } = useHierarchyLevelFiltering({ nodeLoader, modelSource: nodeLoader.modelSource });
   const [filterNode, setFilterNode] = useState<PresentationTreeNodeItem>();
 
-  const ref = useRef<HTMLDivElement>(null);
-
   const filterDialog =
-    ref.current && filterNode && isFilterablePresentationTreeNodeItem(filterNode)
-      ? createPortal(
-          <TreeNodeFilterBuilderDialog
-            dataProvider={nodeLoader.dataProvider}
-            onApply={(info) => {
-              info === undefined ? clearFilter(filterNode.id) : applyFilter(filterNode.id, info);
-              setFilterNode(undefined);
-            }}
-            onClose={() => {
-              setFilterNode(undefined);
-            }}
-            filterNode={filterNode}
-          />,
-          ref.current.ownerDocument.body.querySelector(".iui-root") ?? ref.current.ownerDocument.body,
-        )
-      : null;
+    filterNode && isFilterablePresentationTreeNodeItem(filterNode) ? (
+      <TreeNodeFilterBuilderDialog
+        dataProvider={nodeLoader.dataProvider}
+        onApply={(info) => {
+          info === undefined ? clearFilter(filterNode.id) : applyFilter(filterNode.id, info);
+          setFilterNode(undefined);
+        }}
+        onClose={() => {
+          setFilterNode(undefined);
+        }}
+        filterNode={filterNode}
+      />
+    ) : null;
 
   return {
     onFilterClick: (nodeId: string) => {
@@ -94,7 +88,6 @@ export function useFilterablePresentationTree({ nodeLoader }: useFilterablePrese
       }
     },
     onClearFilterClick: clearFilter,
-    documentBodyRef: ref,
     filterDialog,
   };
 }
@@ -106,13 +99,13 @@ export function useFilterablePresentationTree({ nodeLoader }: useFilterablePrese
  * @beta
  */
 export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
-  const { onClearFilterClick, onFilterClick, documentBodyRef, filterDialog } = useFilterablePresentationTree({ nodeLoader: props.nodeLoader });
+  const { onClearFilterClick, onFilterClick, filterDialog } = useFilterablePresentationTree({ nodeLoader: props.nodeLoader });
   const filterableNodeRenderer = (nodeProps: TreeNodeRendererProps) => {
     return <PresentationTreeNodeRenderer {...nodeProps} onFilterClick={onFilterClick} onClearFilterClick={onClearFilterClick} />;
   };
 
   return (
-    <div ref={documentBodyRef}>
+    <div>
       <TreeRenderer {...props} nodeRenderer={filterableNodeRenderer} />
       {filterDialog}
     </div>

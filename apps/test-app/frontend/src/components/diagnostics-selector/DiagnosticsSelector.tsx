@@ -75,7 +75,7 @@ export function DiagnosticsSelector(props: DiagnosticsSelectorProps) {
   ];
 
   return (
-    <DropdownMenu menuItems={menuItems} onClickOutside={() => {}} onHide={() => onDiagnosticsOptionsChanged(result)}>
+    <DropdownMenu menuItems={menuItems}>
       <Button size="small" className="diagnostics-button">
         Diagnostics
       </Button>

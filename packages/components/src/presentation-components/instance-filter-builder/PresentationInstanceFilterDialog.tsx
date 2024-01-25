@@ -85,13 +85,16 @@ export function PresentationInstanceFilterDialog(props: PresentationInstanceFilt
       trapFocus={true}
       isDraggable
       isResizable
+      portal={true}
     >
       <Dialog.Backdrop />
       <Dialog.Main className="presentation-instance-filter-dialog-content-container">
         <Dialog.TitleBar className="presentation-instance-filter-title" titleText={title ? title : translate("instance-filter-builder.filter")} />
-        <ErrorBoundary fallback={<ErrorState />}>
-          <FilterDialogContent {...restProps} />
-        </ErrorBoundary>
+        <Dialog.Content>
+          <ErrorBoundary fallback={<ErrorState />}>
+            <FilterDialogContent {...restProps} />
+          </ErrorBoundary>
+        </Dialog.Content>
       </Dialog.Main>
     </Dialog>
   );

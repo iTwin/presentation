@@ -72,7 +72,7 @@ function NoOptionsMessage<TOption, IsMulti extends boolean = boolean>({ children
 
 function ValueContainer<TOption, IsMulti extends boolean = boolean>({ children, ...props }: ValueContainerProps<TOption, IsMulti>) {
   return (
-    <TagContainer {...props.innerProps} className="presentation-async-select-values-container">
+    <TagContainer {...props} className="presentation-async-select-values-container">
       {children}
     </TagContainer>
   );
@@ -82,7 +82,7 @@ function MultiValue<TOption, IsMulti extends boolean = boolean>({ children: _, .
   const label = props.selectProps.getOptionLabel && props.selectProps.getOptionLabel(props.data);
 
   return (
-    <Tag {...props.innerProps} className="presentation-async-select-value">
+    <Tag {...props} className="presentation-async-select-value">
       {label}
     </Tag>
   );

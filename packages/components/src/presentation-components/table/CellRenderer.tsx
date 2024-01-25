@@ -10,7 +10,7 @@ import { useState } from "react";
 import { ArrayValue, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { NonPrimitivePropertyRenderer, PropertyValueRendererManager } from "@itwin/components-react";
 import { Orientation, UnderlinedButton } from "@itwin/core-react";
-import { Modal } from "@itwin/itwinui-react";
+import { Modal, ModalContent } from "@itwin/itwinui-react";
 
 /**
  * Props for [[TableCellRenderer]] component.
@@ -74,27 +74,27 @@ function NonPrimitiveCellRenderer(props: NonPrimitiveCellRendererProps) {
   const { record, dialogLabel, buttonLabel, uniqueKey } = props;
   const [isOpen, setIsOpen] = useState(false);
 
-  return (
-    <>
-      <UnderlinedButton
-        onClick={() => {
-          setIsOpen(true);
-        }}
-      >
-        {buttonLabel}
-      </UnderlinedButton>
-      <Modal
-        isOpen={isOpen}
-        title={dialogLabel}
-        onClose={
-          /* istanbul ignore next */ () => {
-            setIsOpen(false);
-          }
+  return (<>
+    <UnderlinedButton
+      onClick={() => {
+        setIsOpen(true);
+      }}
+    >
+      {buttonLabel}
+    </UnderlinedButton>
+    <Modal
+      isOpen={isOpen}
+      title={dialogLabel}
+      onClose={
+        /* istanbul ignore next */ () => {
+          setIsOpen(false);
         }
-        className="presentation-components-non-primitive-value"
-      >
+      }
+      className="presentation-components-non-primitive-value"
+    >
+            <ModalContent>
         <NonPrimitivePropertyRenderer uniqueKey={uniqueKey} propertyRecord={record} orientation={Orientation.Horizontal} />
-      </Modal>
-    </>
-  );
+      </ModalContent>
+            </Modal>
+  </>);
 }

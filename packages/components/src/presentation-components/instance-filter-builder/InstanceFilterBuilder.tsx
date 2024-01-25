@@ -75,6 +75,7 @@ export function InstanceFilterBuilder(props: InstanceFilterBuilderProps) {
           onChange={(selectedIds) => {
             onSelectedClassesChanged(selectedIds);
           }}
+          className={"class-selector"}
         />
         <div className="presentation-property-filter-builder">
           <PropertyFilterBuilderRenderer

@@ -368,11 +368,11 @@ importers:
         specifier: ^4.8.0
         version: 4.8.0(@itwin/appui-abstract@4.3.0-dev.39)(@itwin/components-react@4.8.0)(@itwin/core-bentley@4.3.0-dev.39)(@itwin/core-common@4.3.0-dev.39)(@itwin/core-frontend@4.3.0-dev.39)(@itwin/core-geometry@4.3.0-dev.39)(@itwin/core-quantity@4.3.0-dev.39)(@itwin/core-react@4.8.0)(react-dom@18.2.0)(react@18.2.0)
       '@itwin/itwinui-react':
-        specifier: ^2.12.10
-        version: 2.12.10(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^3.3.0
+        version: 3.3.0(react-dom@18.2.0)(react@18.2.0)
       '@itwin/itwinui-variables':
-        specifier: ^2.1.0
-        version: 2.1.0
+        specifier: ^3.0.0
+        version: 3.0.0
       '@itwin/presentation-common':
         specifier: ^4.3.0-dev.39
         version: 4.3.0-dev.39(@itwin/core-bentley@4.3.0-dev.39)(@itwin/core-common@4.3.0-dev.39)(@itwin/core-quantity@4.3.0-dev.39)(@itwin/ecschema-metadata@4.3.0-dev.39)
@@ -476,14 +476,14 @@ importers:
   packages/components:
     dependencies:
       '@itwin/itwinui-icons-react':
-        specifier: ^2.4.0
-        version: 2.4.0(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.8.0
+        version: 2.8.0(react-dom@18.2.0)(react@18.2.0)
       '@itwin/itwinui-illustrations-react':
         specifier: ^2.1.0
         version: 2.1.0(react-dom@18.2.0)(react@18.2.0)
       '@itwin/itwinui-react':
-        specifier: ^2.12.10
-        version: 2.12.10(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^3.3.0
+        version: 3.3.0(react-dom@18.2.0)(react@18.2.0)
       classnames:
         specifier: ^2.3.2
         version: 2.3.2
@@ -3075,6 +3075,12 @@ packages:
       '@floating-ui/utils': 0.1.1
     dev: false
 
+  /@floating-ui/core@1.5.3:
+    resolution: {integrity: sha512-O0WKDOo0yhJuugCx6trZQj5jVJ9yR0ystG2JaNAemYUWce+pmM6WUEFIibnWyEJKdrDxhm75NoSRME35FNaM/Q==}
+    dependencies:
+      '@floating-ui/utils': 0.2.1
+    dev: false
+
   /@floating-ui/dom@1.5.1:
     resolution: {integrity: sha512-KwvVcPSXg6mQygvA1TjbN/gh///36kKtllIF8SUm0qpFj8+rvYrpvlYdL1JoA71SHpDqgSSdGOSoQ0Mp3uY5aw==}
     dependencies:
@@ -3082,8 +3088,43 @@ packages:
       '@floating-ui/utils': 0.1.1
     dev: false
 
+  /@floating-ui/dom@1.5.4:
+    resolution: {integrity: sha512-jByEsHIY+eEdCjnTVu+E3ephzTOzkQ8hgUfGwos+bg7NlH33Zc5uO+QHz1mrQUOgIKKDD1RtS201P9NvAfq3XQ==}
+    dependencies:
+      '@floating-ui/core': 1.5.3
+      '@floating-ui/utils': 0.2.1
+    dev: false
+
+  /@floating-ui/react-dom@2.0.6(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-IB8aCRFxr8nFkdYZgH+Otd9EVQPJoynxeFRGTB8voPoZMRWo8XjYuCRgpI1btvuKY69XMiLnW+ym7zoBHM90Rw==}
+    peerDependencies:
+      react: '>=16.8.0'
+      react-dom: '>=16.8.0'
+    dependencies:
+      '@floating-ui/dom': 1.5.4
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+    dev: false
+
+  /@floating-ui/react@0.26.6(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-FFDAuSlRwb8CY4/VvYio/wwk/0339B257yRpKwNOjcHWNYL/fgjl1KUvT3K6ZZ4WDbBWYc7Km4ITMuPZrS8omg==}
+    peerDependencies:
+      react: '>=16.8.0'
+      react-dom: '>=16.8.0'
+    dependencies:
+      '@floating-ui/react-dom': 2.0.6(react-dom@18.2.0)(react@18.2.0)
+      '@floating-ui/utils': 0.2.1
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+      tabbable: 6.2.0
+    dev: false
+
   /@floating-ui/utils@0.1.1:
     resolution: {integrity: sha512-m0G6wlnhm/AX0H12IOWtK8gASEMffnX08RtKkCgTdHb9JpHKGloI7icFfLg9ZmQeavcvR0PKmzxClyuFPSjKWw==}
+    dev: false
+
+  /@floating-ui/utils@0.2.1:
+    resolution: {integrity: sha512-9TANp6GPoMtYzQdt54kfAyMmz1+osLlXdg2ENroU7zzrtflTLrrC/lgrIfaSe+Wu0b89GKccT7vxXA0MoAIO+Q==}
     dev: false
 
   /@grpc/grpc-js@1.9.0:
@@ -3577,8 +3618,28 @@ packages:
       react-transition-group: 4.4.5(react-dom@18.2.0)(react@18.2.0)
       tippy.js: 6.3.7
 
+  /@itwin/itwinui-react@3.3.0(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-YkVSh4elEuHiRMv1IFWX6+N//bwklGy9m7bDeJO6BnIf7WNNTf8ora5cEnF0//vPBhJYQEipbO/9oML1zGKNEw==}
+    peerDependencies:
+      react: '>= 17.0.0 < 19.0.0'
+      react-dom: '>=17.0.0 < 19.0.0'
+    dependencies:
+      '@floating-ui/react': 0.26.6(react-dom@18.2.0)(react@18.2.0)
+      '@itwin/itwinui-illustrations-react': 2.1.0(react-dom@18.2.0)(react@18.2.0)
+      classnames: 2.3.2
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+      react-table: 7.8.0(react@18.2.0)
+      react-transition-group: 4.4.5(react-dom@18.2.0)(react@18.2.0)
+      tslib: 2.6.2
+    dev: false
+
   /@itwin/itwinui-variables@2.1.0:
     resolution: {integrity: sha512-aQHziuXDTLLZeJCB8gJD3tRKlY/2J/IhSZB5K2E6UeUOcEr1Gnc/j6tdV5VLFx+B2omxAdZyUSqpxlHvHHf+Vg==}
+
+  /@itwin/itwinui-variables@3.0.0:
+    resolution: {integrity: sha512-ChoCstGTJYkQoGG5U/WCg1y+1q40hOjiLDxOnmpf6ijv2y3WMO1HyVxpsbKDim9SzcyuA+fV75uNQEB4+BeerQ==}
+    dev: false
 
   /@itwin/object-storage-azure@2.2.1(inversify@6.0.1)(reflect-metadata@0.1.13):
     resolution: {integrity: sha512-THPSJ/nuVpujS95HCbEpbwFCDOLpHkh6Y2DuzGXChpA39B8zAXN4R2Ma33ckoZAmJeewTDhBE8YSr2yGisYBKA==}
@@ -12968,7 +13029,7 @@ packages:
       react: '>=16.6.0'
       react-dom: '>=16.6.0'
     dependencies:
-      '@babel/runtime': 7.22.10
+      '@babel/runtime': 7.23.6
       dom-helpers: 5.2.1
       loose-envify: 1.4.0
       prop-types: 15.8.1
@@ -14203,6 +14264,10 @@ packages:
 
   /symbol-tree@3.2.4:
     resolution: {integrity: sha512-9QNk5KwDF+Bvz+PyObkmSYjI5ksVUYtjW7AU22r2NKcfLJcXp96hkDWU3+XndOsUb+AQ9QhfzfCT2O+CNWT5Tw==}
+
+  /tabbable@6.2.0:
+    resolution: {integrity: sha512-Cat63mxsVJlzYvN51JmVXIgNoUokrIaT2zLclCXjRd8boZ0004U4KCs/sToJ75C6sdlByWxpYnb5Boif1VSFew==}
+    dev: false
 
   /tapable@2.2.1:
     resolution: {integrity: sha512-GNzQvQTOIP6RyTfE2Qxb8ZVlNmw0n88vp1szwWRimP02mnTsx3Wtn5qRdqY9w2XduFNUgvOwhNnQsjwCp+kqaQ==}
