@@ -15,6 +15,7 @@ public;FavoritePropertiesDataFiltererProps
 public;FavoritePropertiesDataProvider 
 public;FavoritePropertiesDataProviderProps
 beta;FilterablePresentationTreeNodeItem = PresentationTreeNodeItem &
+beta;FilterableTreeProps
 beta;FilteringDialogToolbarHandlers
 beta;GenericInstanceFilter
 beta;GenericInstanceFilter
@@ -94,6 +95,8 @@ beta;UnifiedSelectionState = (selectionLevel?: number) => Readonly
 public;UnifiedSelectionTreeEventHandler 
 public;UnifiedSelectionTreeEventHandlerParams
 public;useControlledPresentationTreeFiltering(props: ControlledPresentationTreeFilteringProps):
+beta;useFilterablePresentationTree
+beta;useFilterablePresentationTreeProps
 beta;useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProps):
 beta;UseHierarchyLevelFilteringProps
 beta;useInstanceFilterPropertyInfos({ descriptor }: UseInstanceFilterPropertyInfosProps):
