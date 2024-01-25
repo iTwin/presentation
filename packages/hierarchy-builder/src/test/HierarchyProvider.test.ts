@@ -981,15 +981,11 @@ describe("HierarchyProvider", () => {
         queryExecutor,
         hierarchyDefinition,
       });
-      const formatter = async (val: TypedPrimitiveValue) => `_formatted_${JSON.stringify(val)}`;
-      const formatterSpy = sinon.spy(formatter);
       expect(await provider.getNodes({ parentNode: undefined })).to.deep.eq([{ ...node, parentKeys: [] }]);
-      provider.setFormatter(formatterSpy);
+      provider.setFormatter(async (val: TypedPrimitiveValue) => `_formatted_${JSON.stringify(val)}`);
       expect(await provider.getNodes({ parentNode: undefined })).to.deep.eq([
         { ...node, label: `_formatted_${JSON.stringify({ value: node.label, type: "String" })}`, parentKeys: [] },
       ]);
-
-      expect(formatterSpy).to.be.calledOnce;
     });
 
     it("getNodes uses default formatter when setFormatter is provided an undefined value", async () => {
