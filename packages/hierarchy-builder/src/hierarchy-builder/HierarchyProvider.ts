@@ -443,13 +443,7 @@ class QueriesCache {
 
   public add(query: ECSqlQueryDef, value: Observable<ParsedHierarchyNode>) {
     const primaryKey = this.parseRequestProps(query);
-    let entry = this._map.get(primaryKey);
-    // istanbul ignore else
-    if (!entry) {
-      this._map.set(primaryKey, value);
-    } else {
-      entry = value;
-    }
+    this._map.set(primaryKey, value);
   }
 
   public get(query: ECSqlQueryDef): Observable<ParsedHierarchyNode> | undefined {
