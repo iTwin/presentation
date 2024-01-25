@@ -2,4 +2,4 @@
 "@itwin/presentation-components": patch
 ---
 
-Fix selected class information in filter dialog not being retained when using React 18 strict mode.
+Instance filter builder / dialog: Fix selected class information not being retained when using React 18 strict mode.

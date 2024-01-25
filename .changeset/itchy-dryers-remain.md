@@ -2,7 +2,7 @@
 "@itwin/presentation-components": major
 ---
 
-Show the size of filtered tree hierarchy level while building a filter.
+Tree: Show the size of filtered tree hierarchy level while building a filter.
 
 Includes breaking `@beta` API change in `PresentationTreeRenderer` - instead of taking `IModelConnection`, `TreeModelSource` and `ITreeNodeLoader` as 3 separate props, it now takes a single `AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>` prop. Implementing the feature required adding an `IPresentationTreeDataProvider` to props, however requesting a single, more specific, node loader instead of 4 different props that are tightly coupled was a much cleaner solution, especially since using `PresentationTreeRenderer` with node loaders other than `AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>` made little sense.
 

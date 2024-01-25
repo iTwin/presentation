@@ -3,4 +3,7 @@
 "@itwin/presentation-testing": major
 ---
 
-Bumped `AppUI` peer dependencies to `4.6.0`. Bumped `itwinjs-core` peer dependencies to `^4.1.0`.
+Peer depenendecies' update:
+
+- `itwinjs-core` packages to `^4.1.0`.
+- `AppUI` packages to `^4.8.0`.

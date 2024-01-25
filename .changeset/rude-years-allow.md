@@ -2,7 +2,7 @@
 "@itwin/presentation-components": major
 ---
 
-Add interactive and more detailed informational messages in the tree and its hierarchy level filtering components:
+Tree: Added interactive and more detailed informational messages in the tree and its hierarchy level filtering components:
 
 - When a hierarchy level size exceeds given limit, a message is displayed, suggesting the results should be filtered to reduce the result set.
 - The hierarchy level filtering dialog informs whether provided filters reduce the result set to a small enough size to be displayed in the tree.
