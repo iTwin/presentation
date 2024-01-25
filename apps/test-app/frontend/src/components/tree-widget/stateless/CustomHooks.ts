@@ -21,7 +21,7 @@ export function useControlledTreeComponentsState(dataProvider: TreeDataProvider)
     return { modelSource, nodeLoader };
   }
 
-  const [componentsState, setComponentsState] = useState<ControlledTreeComponents>(createNewComponents(dataProvider));
+  const [componentsState, setComponentsState] = useState<ControlledTreeComponents>(() => createNewComponents(dataProvider));
 
   useEffect(() => {
     setComponentsState(createNewComponents(dataProvider));
