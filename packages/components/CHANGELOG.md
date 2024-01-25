@@ -1,5 +1,27 @@
 # Change Log - @itwin/presentation-components
 
+## 5.0.0-dev.2
+
+### Minor Changes
+
+- [#358](https://github.com/iTwin/presentation/pull/358): Instance filter builder / dialog: Show a union of properties of selected classes rather than intersection.
+- [#356](https://github.com/iTwin/presentation/pull/356): Instance filter builder / dialog: UX enhancements.
+
+  - Changed the "Apply" button to always be enabled, even when no filtering rules are selected. In such situations, `PresentationTreeRenderer` clears the hierarchy level filter.
+  - Added a "Reset" button which clears all the filtering rules in the dialog.
+  - Added a `toolbarButtonsRenderer` prop to allow rendering custom toolbar buttons at the bottom of the dialog.
+
+- [#363](https://github.com/iTwin/presentation/pull/363): Instance filter builder / dialog: Include selected classes' information in the `GenericInstanceFilter` data structure to allow filtering by them. Use this information when building hierararchy level filters to allow users filter-out instances of specific class(es).
+- [#388](https://github.com/iTwin/presentation/pull/388): Adjust API of `PresentationTreeRenderer` by separating `PresentationTreeRenderer` hierarchy level filtering logic into `useFilterablePresentationTree` hook.
+
+### Patch Changes
+
+- [#354](https://github.com/iTwin/presentation/pull/354): Unified selection: Cancel ongoing hilite set request when unified selection changes.
+- [#362](https://github.com/iTwin/presentation/pull/362): Instance filter builder / dialog: Change class selector placeholder value to emphasize the fact that selecting a class is optional.
+- [#371](https://github.com/iTwin/presentation/pull/371): Instance filter builder / dialog: Clear all property filtering rules when selected class list changes.
+- [#348](https://github.com/iTwin/presentation/pull/348): Clean up `@internal` APIs exposed through the barrel exports file.
+- [#373](https://github.com/iTwin/presentation/pull/373): Instance filter builder / dialog: Fix selected class information not being retained when using React 18 strict mode.
+
 ## 4.4.0
 
 This release brings official React 18 support. Components and hooks provided by this package were updated to work with [`StrictMode` in React 18](https://react.dev/blog/2022/03/08/react-18-upgrade-guide#updates-to-strict-mode).
