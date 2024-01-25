@@ -225,8 +225,8 @@ export type FilterablePresentationTreeNodeItem = PresentationTreeNodeItem & {
 };
 
 // @beta
-export interface FilterableTreeProps {
-    documentBodyRef: React.RefObject<HTMLDivElement>;
+export interface FilterableTreeProps<T> {
+    containerRef: React.Ref<T>;
     // (undocumented)
     filterDialog: React.ReactPortal | null;
     // (undocumented)
@@ -801,7 +801,7 @@ export function useControlledPresentationTreeFiltering(props: ControlledPresenta
 };
 
 // @beta
-export function useFilterablePresentationTree({ nodeLoader }: useFilterablePresentationTreeProps): FilterableTreeProps;
+export function useFilterablePresentationTree<T extends HTMLElement>({ nodeLoader }: useFilterablePresentationTreeProps): FilterableTreeProps<T>;
 
 // @beta
 export interface useFilterablePresentationTreeProps {

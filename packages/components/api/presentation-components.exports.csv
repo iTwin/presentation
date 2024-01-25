@@ -95,7 +95,7 @@ beta;UnifiedSelectionState = (selectionLevel?: number) => Readonly
 public;UnifiedSelectionTreeEventHandler 
 public;UnifiedSelectionTreeEventHandlerParams
 public;useControlledPresentationTreeFiltering(props: ControlledPresentationTreeFilteringProps):
-beta;useFilterablePresentationTree({ nodeLoader }: useFilterablePresentationTreeProps): FilterableTreeProps
+beta;useFilterablePresentationTree
 beta;useFilterablePresentationTreeProps
 beta;useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProps):
 beta;UseHierarchyLevelFilteringProps
