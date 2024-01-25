@@ -151,6 +151,10 @@ export class HierarchyProvider {
     this.limitingQueryExecutor = createLimitingECSqlQueryExecutor(props.queryExecutor, DEFAULT_ROWS_LIMIT);
   }
 
+  /**
+   * Sets [[HierarchyProvider]] values formatter that formats nodes' labels. If provided undefined, then defaults to the
+   * result of [[createDefaultValueFormatter]] called with default parameters.
+   */
   public setFormatter(formatter: IPrimitiveValueFormatter | undefined) {
     this._valuesFormatter = formatter ?? createDefaultValueFormatter();
     this._nodesCache = new ChildNodesCache();

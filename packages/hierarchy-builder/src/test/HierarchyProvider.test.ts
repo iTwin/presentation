@@ -1011,7 +1011,7 @@ describe("HierarchyProvider", () => {
       expect(await provider.getNodes({ parentNode: undefined })).to.deep.eq([
         { ...node, label: `_formatted_${JSON.stringify({ value: node.label, type: "String" })}`, parentKeys: [] },
       ]);
-      provider.setFormatter();
+      provider.setFormatter(undefined);
       expect(await provider.getNodes({ parentNode: undefined })).to.deep.eq([{ ...node, parentKeys: [] }]);
     });
   });
