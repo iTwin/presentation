@@ -46,7 +46,7 @@ export interface FilterableTreeProps {
   onFilterClick: (nodeId: string) => void;
   onClearFilterClick: (nodeId: string) => void;
   /** Reference of the document body. Needs to be passed to the root of the tree for the filter dialog to be placed separately from the tree context. */
-  documentBodyRef: React.RefObject<HTMLDivElement>;
+  containerRef: React.Ref<HTMLDivElement>;
   filterDialog: React.ReactPortal | null;
 }
 
@@ -94,7 +94,7 @@ export function useFilterablePresentationTree({ nodeLoader }: useFilterablePrese
       }
     },
     onClearFilterClick: clearFilter,
-    documentBodyRef: ref,
+    containerRef: ref,
     filterDialog,
   };
 }
@@ -106,13 +106,13 @@ export function useFilterablePresentationTree({ nodeLoader }: useFilterablePrese
  * @beta
  */
 export function PresentationTreeRenderer(props: PresentationTreeRendererProps) {
-  const { onClearFilterClick, onFilterClick, documentBodyRef, filterDialog } = useFilterablePresentationTree({ nodeLoader: props.nodeLoader });
+  const { onClearFilterClick, onFilterClick, containerRef, filterDialog } = useFilterablePresentationTree({ nodeLoader: props.nodeLoader });
   const filterableNodeRenderer = (nodeProps: TreeNodeRendererProps) => {
     return <PresentationTreeNodeRenderer {...nodeProps} onFilterClick={onFilterClick} onClearFilterClick={onClearFilterClick} />;
   };
 
   return (
-    <div ref={documentBodyRef}>
+    <div ref={containerRef}>
       <TreeRenderer {...props} nodeRenderer={filterableNodeRenderer} />
       {filterDialog}
     </div>
