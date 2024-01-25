@@ -225,7 +225,7 @@ export type FilterablePresentationTreeNodeItem = PresentationTreeNodeItem & {
 };
 
 // @beta
-export interface FilterableTreeProps<T> {
+export interface FilterableTreeProps<T extends HTMLElement> {
     containerRef: React.Ref<T>;
     // (undocumented)
     filterDialog: React.ReactPortal | null;
