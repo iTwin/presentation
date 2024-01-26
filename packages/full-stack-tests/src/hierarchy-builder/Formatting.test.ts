@@ -10,19 +10,11 @@ import { Guid, Id64 } from "@itwin/core-bentley";
 import { IModel, Rank } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { createValueFormatter } from "@itwin/presentation-core-interop";
-import { ECSqlSnippets, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory, TypedPrimitiveValue } from "@itwin/presentation-hierarchy-builder";
+import { ECSqlSnippets, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchy-builder";
 import { julianToDateTime } from "@itwin/presentation-hierarchy-builder/lib/cjs/hierarchy-builder/internal/Common";
 import {
-  buildIModel,
-  importSchema,
-  insertDrawingCategory,
-  insertDrawingGraphic,
-  insertDrawingModelWithPartition,
-  insertPhysicalElement,
-  insertPhysicalModelWithPartition,
-  insertPhysicalPartition,
-  insertPhysicalSubModel,
-  insertSpatialCategory,
+  buildIModel, importSchema, insertDrawingCategory, insertDrawingGraphic, insertDrawingModelWithPartition, insertPhysicalElement,
+  insertPhysicalModelWithPartition, insertPhysicalPartition, insertPhysicalSubModel, insertSpatialCategory,
 } from "../IModelUtils";
 import { initialize, terminate } from "../IntegrationTests";
 import { validateHierarchy } from "./HierarchyValidation";
