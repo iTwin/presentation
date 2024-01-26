@@ -856,13 +856,12 @@ describe("Stateless hierarchy builder", () => {
       });
       expect(queryReaderSpy).to.be.calledOnce;
       queryReaderSpy.resetHistory();
-      const newFormatter = async (val: TypedPrimitiveValue) => `_${JSON.stringify(val.value)}_`;
-      provider.setFormatter(newFormatter);
+      provider.setFormatter(async () => "formatted");
       await validateHierarchy({
         provider,
         expect: [
           {
-            node: (node) => expect(node.label).to.eq('_""_'),
+            node: (node) => expect(node.label).to.eq("formatted"),
           },
         ],
       });
