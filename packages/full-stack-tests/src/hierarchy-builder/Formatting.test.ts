@@ -819,7 +819,7 @@ describe("Stateless hierarchy builder", () => {
       sinon.restore();
     });
 
-    it("doesn't requery with a new formatter, but formats labels with it", async function () {
+    it("reacts to changed formatter without running queries", async function () {
       const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(emptyIModel));
       const hierarchy: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
