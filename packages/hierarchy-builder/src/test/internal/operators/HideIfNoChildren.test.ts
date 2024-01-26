@@ -148,7 +148,8 @@ describe("HideIfNoChildrenOperator", () => {
       { ...nodeB, children: true },
     ]);
   });
-  it("hideIfNoChildren observable is subscribed once", async () => {
+
+  it("subscribes to input observable once", async () => {
     const processedHierarchyNodesObservable = from([]);
     const subscriptionSpy = sinon.spy(processedHierarchyNodesObservable, "subscribe");
     const promise = processedHierarchyNodesObservable.pipe(createHideIfNoChildrenOperator(() => of(false), true));
