@@ -826,7 +826,7 @@ describe("Stateless hierarchy builder", () => {
           if (!parentNode) {
             return [
               {
-                fullClassName: `BisCore.InformationContentElement`,
+                fullClassName: subjectClassName,
                 query: {
                   ecsql: `
                     SELECT ${await selectQueryFactory.createSelectClause({
