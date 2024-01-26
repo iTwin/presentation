@@ -411,7 +411,6 @@ class ChildNodesCache {
     if (variationKey) {
       entry.variations.set(variationKey, value);
     } else {
-      assert(!entry.primary);
       entry.primary = value;
     }
   }
