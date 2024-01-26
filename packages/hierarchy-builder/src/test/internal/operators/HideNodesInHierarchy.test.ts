@@ -224,7 +224,8 @@ describe("HideNodesInHierarchyOperator", () => {
       });
       expect(result).to.deep.eq([]);
     });
-    it("hideNodesInHierarchy observable is subscribed once", async () => {
+
+    it("subscribes to input observable once", async () => {
       const processedHierarchyNodesObservable = from([]);
       const subscriptionSpy = sinon.spy(processedHierarchyNodesObservable, "subscribe");
       const promise = processedHierarchyNodesObservable.pipe(createHideNodesInHierarchyOperator(() => from([]), false));
