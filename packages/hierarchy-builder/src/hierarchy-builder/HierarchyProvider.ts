@@ -150,7 +150,7 @@ export class HierarchyProvider {
   }
 
   /**
-   * Sets [[HierarchyProvider]] values formatter that formats nodes' labels. If provided undefined, then defaults to the
+   * Sets [[HierarchyProvider]] values formatter that formats nodes' labels. If provided `undefined`, then defaults to the
    * result of [[createDefaultValueFormatter]] called with default parameters.
    */
   public setFormatter(formatter: IPrimitiveValueFormatter | undefined) {
