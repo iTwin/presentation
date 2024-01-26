@@ -17,6 +17,7 @@ import {
   PropertyFilterRuleGroup,
   PropertyFilterRuleGroupOperator,
   PropertyFilterRuleOperator,
+  usePropertyFilterBuilder,
 } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -37,6 +38,7 @@ import { navigationPropertyEditorContext } from "../properties/editors/Navigatio
 import { UniquePropertyValuesSelector } from "../properties/inputs/UniquePropertyValuesSelector";
 import { useQuantityValueInput, UseQuantityValueInputProps } from "../properties/inputs/UseQuantityValueInput";
 import { GenericInstanceFilter } from "./GenericInstanceFilter";
+import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder";
 import { createExpression, findBaseExpressionClass } from "./InstanceFilterConverter";
 import { PresentationInstanceFilterProperty } from "./PresentationInstanceFilterProperty";
 import {
@@ -138,6 +140,27 @@ export namespace PresentationInstanceFilter {
   export function isConditionGroup(filter: PresentationInstanceFilter): filter is PresentationInstanceFilterConditionGroup {
     return (filter as any).conditions !== undefined;
   }
+}
+
+/**
+ * Function that checks if supplied [[PresentationInstanceFilter]] is [[PresentationInstanceFilterConditionGroup]].
+ * @beta
+ * @deprecated in 5.0. Use `PresentationInstanceFilter.isConditionGroup` instead.
+ */
+// istanbul ignore next
+export function isPresentationInstanceFilterConditionGroup(filter: PresentationInstanceFilter): filter is PresentationInstanceFilterConditionGroup {
+  return PresentationInstanceFilter.isConditionGroup(filter);
+}
+
+/**
+ * Converts [[PresentationInstanceFilter]] into [InstanceFilterDefinition]($presentation-common) that can be passed
+ * to [PresentationManager]($presentation-frontend) through request options in order to filter results.
+ * @beta
+ * @deprecated in 5.0. Use `PresentationInstanceFilter.toInstanceFilterDefinition` instead.
+ */
+// istanbul ignore next
+export async function convertToInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection): Promise<InstanceFilterDefinition> {
+  return PresentationInstanceFilter.toInstanceFilterDefinition(filter, imodel);
 }
 
 /**
@@ -313,4 +336,58 @@ function useLatestRef<T>(value: T) {
     valueRef.current = value;
   }, [value]);
   return valueRef;
+}
+
+/**
+ * Props for [[PresentationInstanceFilterBuilder]] component.
+ * @beta
+ */
+export interface PresentationInstanceFilterBuilderProps {
+  /** iModel connection to pull data from. */
+  imodel: IModelConnection;
+  /** Descriptor containing properties and classes that should be available for building filter. */
+  descriptor: Descriptor;
+  /** Callback that is invoked when filter changes. */
+  onInstanceFilterChanged: (filter?: PresentationInstanceFilterInfo) => void;
+  /**
+   * Specifies how deep rule groups can be nested.
+   * @deprecated in 5.0. The component doesn't support multi-level nesting anymore.
+   */
+  ruleGroupDepthLimit?: number;
+  /** Initial filter that will be show when component is mounted. */
+  initialFilter?: PresentationInstanceFilterInfo;
+}
+
+/**
+ * Component for building complex instance filters for filtering content and nodes produced
+ * by [PresentationManager]($presentation-frontend).
+ *
+ * @beta
+ */
+export function PresentationInstanceFilterBuilder(props: PresentationInstanceFilterBuilderProps) {
+  const { imodel, descriptor, onInstanceFilterChanged, initialFilter } = props;
+  const { rootGroup, actions, buildFilter } = usePropertyFilterBuilder({
+    initialFilter: initialFilter ? PresentationInstanceFilter.toComponentsPropertyFilter(descriptor, initialFilter.filter) : undefined,
+  });
+  const filteringProps = usePresentationInstanceFilteringProps(descriptor, imodel, initialFilter?.usedClasses);
+  useEffect(() => {
+    const filter = buildFilter({ ignoreErrors: true });
+    onInstanceFilterChanged(
+      filter ? { filter: PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, filter), usedClasses: filteringProps.selectedClasses } : undefined,
+    );
+  }, [descriptor, buildFilter, onInstanceFilterChanged, filteringProps.selectedClasses]);
+  const onSelectedClassesChanged = (classIds: string[]) => {
+    filteringProps.onSelectedClassesChanged(classIds);
+    actions.removeAllItems();
+  };
+  return (
+    <InstanceFilterBuilder
+      {...filteringProps}
+      onSelectedClassesChanged={onSelectedClassesChanged}
+      rootGroup={rootGroup}
+      actions={actions}
+      imodel={imodel}
+      descriptor={descriptor}
+    />
+  );
 }

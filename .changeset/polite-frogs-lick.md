@@ -2,4 +2,4 @@
 "@itwin/presentation-components": minor
 ---
 
-Add ability to additionally filter by selected classes in instance filter
+Instance filter builder / dialog: Include selected classes' information in the `GenericInstanceFilter` data structure to allow filtering by them. Use this information when building hierararchy level filters to allow users filter-out instances of specific class(es).

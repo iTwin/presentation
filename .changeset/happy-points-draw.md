@@ -2,4 +2,4 @@
 "@itwin/presentation-components": minor
 ---
 
-Show union of properties of selected classes in filtering dialog instead of intersection.
+Instance filter builder / dialog: Show a union of properties of selected classes rather than intersection.

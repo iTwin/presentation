@@ -5,6 +5,8 @@ public;CacheInvalidationProps
 public;ContentDataProvider 
 public;ContentDataProviderProps 
 public;ControlledPresentationTreeFilteringProps
+beta;convertToInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection): Promise
+deprecated;convertToInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection): Promise
 alpha;createDiagnosticsOptions(props: DiagnosticsProps): ClientDiagnosticsOptions | undefined
 public;DEFAULT_PROPERTY_GRID_RULESET: Ruleset
 public;DiagnosticsProps
@@ -13,6 +15,7 @@ public;FavoritePropertiesDataFiltererProps
 public;FavoritePropertiesDataProvider 
 public;FavoritePropertiesDataProviderProps
 beta;FilterablePresentationTreeNodeItem = PresentationTreeNodeItem &
+beta;FilterableTreeProps
 beta;FilteringDialogToolbarHandlers
 beta;GenericInstanceFilter
 beta;GenericInstanceFilter
@@ -30,16 +33,24 @@ public;IPresentationPropertyDataProvider = IPropertyDataProvider & IContentDataP
 public;IPresentationTreeDataProvider 
 beta;isFilterablePresentationTreeNodeItem(item: PresentationTreeNodeItem): item is FilterablePresentationTreeNodeItem
 beta;isPresentationInfoTreeNodeItem(item: TreeNodeItem): item is PresentationInfoTreeNodeItem
+beta;isPresentationInstanceFilterConditionGroup(filter: PresentationInstanceFilter): filter is PresentationInstanceFilterConditionGroup
+deprecated;isPresentationInstanceFilterConditionGroup(filter: PresentationInstanceFilter): filter is PresentationInstanceFilterConditionGroup
 beta;isPresentationTreeNodeItem(item: TreeNodeItem): item is PresentationTreeNodeItem
 public;IUnifiedSelectionComponent
+beta;NavigationPropertyEditor: typeof NavigationPropertyEditor_2
+deprecated;NavigationPropertyEditor: typeof NavigationPropertyEditor_2
 beta;navigationPropertyEditorContext: Context
 beta;NavigationPropertyEditorContextProps
+beta;NavigationPropertyTargetEditor: typeof NavigationPropertyTargetEditor_2
+deprecated;NavigationPropertyTargetEditor: typeof NavigationPropertyTargetEditor_2
 public;PresentationComponentsLoggerCategory
 beta;PresentationFilterBuilderValueRenderer({ imodel, descriptor, descriptorInputKeys, ...props }: PresentationFilterBuilderValueRendererProps): JSX_2.Element
 beta;PresentationFilterBuilderValueRendererProps 
 beta;PresentationInfoTreeNodeItem 
 beta;PresentationInstanceFilter = PresentationInstanceFilterConditionGroup | PresentationInstanceFilterCondition
 beta;PresentationInstanceFilter
+beta;PresentationInstanceFilterBuilder(props: PresentationInstanceFilterBuilderProps): JSX_2.Element
+beta;PresentationInstanceFilterBuilderProps
 beta;PresentationInstanceFilterCondition
 beta;PresentationInstanceFilterConditionGroup
 beta;PresentationInstanceFilterDialog(props: PresentationInstanceFilterDialogProps): JSX_2.Element
@@ -84,6 +95,8 @@ beta;UnifiedSelectionState = (selectionLevel?: number) => Readonly
 public;UnifiedSelectionTreeEventHandler 
 public;UnifiedSelectionTreeEventHandlerParams
 public;useControlledPresentationTreeFiltering(props: ControlledPresentationTreeFilteringProps):
+beta;useFilterablePresentationTree
+beta;useFilterablePresentationTreeProps
 beta;useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProps):
 beta;UseHierarchyLevelFilteringProps
 beta;useInstanceFilterPropertyInfos({ descriptor }: UseInstanceFilterPropertyInfosProps):
