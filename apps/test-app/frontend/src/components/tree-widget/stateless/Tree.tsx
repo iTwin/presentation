@@ -155,7 +155,10 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
     <>
       <div className="tree-widget-header-wrapper">
         <TreeWidgetHeader onFilterChange={setFilter} filteringStatus={filteringInputStatus} showFilteringInput={true} ref={headerRef} />
-        <FormatterSetterDropdown shouldUseCustomFormatter={shouldUseCustomFormatter} setShouldUseCustomFormatter={setShouldUseCustomFormatter} />
+        <FormatterTogglerDropdown
+          shouldUseCustomFormatter={shouldUseCustomFormatter}
+          toggleCustomFormatter={() => setShouldUseCustomFormatter((state) => !state)}
+        />
       </div>
       <div className="filtered-tree">
         {treeHeight && props.width && (
@@ -181,21 +184,21 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
   );
 }
 
-interface FormatterSetterDropdownProps {
+interface FormatterTogglerDropdownProps {
   shouldUseCustomFormatter: boolean;
-  setShouldUseCustomFormatter: (value: React.SetStateAction<boolean>) => void;
+  toggleCustomFormatter: () => void;
 }
 
-function FormatterSetterDropdown(props: FormatterSetterDropdownProps) {
+function FormatterTogglerDropdown(props: FormatterTogglerDropdownProps) {
   const dropdownMenuItems = (close: () => void) => [
     <MenuItem
       key={1}
       onClick={() => {
-        props.setShouldUseCustomFormatter((state) => !state);
+        props.toggleCustomFormatter();
         close();
       }}
     >
-      {props.shouldUseCustomFormatter ? "Show custom formatter" : "Show default formatter"}
+      {props.shouldUseCustomFormatter ? "Show default formatter" : "Show custom formatter"}
     </MenuItem>,
   ];
   return (
