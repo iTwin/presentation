@@ -75,7 +75,9 @@ describe("useFilteredNodeLoader", () => {
     const { result, rerender } = renderHook(useFilteredNodeLoader, { initialProps });
 
     // give time to start request
-    await act(async () => clock.tickAsync(1));
+    await act(async () => {
+      await clock.tickAsync(1);
+    });
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.once());
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.true;
@@ -84,7 +86,9 @@ describe("useFilteredNodeLoader", () => {
     rerender({ ...initialProps, filter: "changed" });
 
     // give time to start request if necessary
-    await act(async () => clock.tickAsync(1));
+    await act(async () => {
+      await clock.tickAsync(1);
+    });
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.once());
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.true;
@@ -93,20 +97,26 @@ describe("useFilteredNodeLoader", () => {
     rerender({ ...initialProps, filter: "last" });
 
     // give time to start request if necessary
-    await act(async () => clock.tickAsync(1));
+    await act(async () => {
+      await clock.tickAsync(1);
+    });
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.once());
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.true;
 
     clock.restore();
     // resolve first request and verify that new filtering request started
-    await act(async () => pathsResult1.resolve([]));
+    await act(async () => {
+      await pathsResult1.resolve([]);
+    });
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.exactly(2));
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.true;
 
     // resolve second request and verify state
-    await act(async () => pathsResult2.resolve([]));
+    await act(async () => {
+      await pathsResult2.resolve([]);
+    });
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.exactly(2));
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths("test"), moq.Times.once());
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths("last"), moq.Times.once());
@@ -130,7 +140,9 @@ describe("useFilteredNodeLoader", () => {
     const { result, rerender } = renderHook(useFilteredNodeLoader, { initialProps });
 
     // give time to start request if necessary
-    await act(async () => clock.tickAsync(1));
+    await act(async () => {
+      await clock.tickAsync(1);
+    });
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.once());
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.true;
@@ -139,7 +151,9 @@ describe("useFilteredNodeLoader", () => {
     rerender({ ...initialProps, filter: "" });
 
     // give time to start request if necessary
-    await act(async () => clock.tickAsync(1));
+    await act(async () => {
+      await clock.tickAsync(1);
+    });
     dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.once());
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.false;

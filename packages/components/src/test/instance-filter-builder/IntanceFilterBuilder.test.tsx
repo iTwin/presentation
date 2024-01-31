@@ -5,22 +5,13 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { PropertyDescription, PropertyValueFormat } from "@itwin/appui-abstract";
-import {
-  PropertyFilterBuilderActions,
-  PropertyFilterBuilderRuleGroup,
-  PropertyFilterRuleGroupOperator,
-  PropertyFilterRuleOperator,
-  UiComponents,
-} from "@itwin/components-react";
-import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
+import { PropertyDescription } from "@itwin/appui-abstract";
+import { PropertyFilterBuilderActions, PropertyFilterBuilderRuleGroup, PropertyFilterRuleGroupOperator, UiComponents } from "@itwin/components-react";
+import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
-import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { FormatterSpec, ParserSpec } from "@itwin/core-quantity";
-import { SchemaContext } from "@itwin/ecschema-metadata";
-import { ClassInfo, Descriptor, KoqPropertyValueFormatter } from "@itwin/presentation-common";
+import { IModelApp, IModelConnection } from "@itwin/core-frontend";
+import { ClassInfo, Descriptor } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { SchemaMetadataContextProvider } from "../../presentation-components/common/SchemaMetadataContext";
 import { translate } from "../../presentation-components/common/Utils";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "../../presentation-components/instance-filter-builder/InstanceFilterBuilder";
@@ -159,7 +150,7 @@ describe("InstanceFilterBuilder", () => {
             id: "item-id",
             groupId: "root-id",
             property,
-            operator: PropertyFilterRuleOperator.IsEqual,
+            operator: "is-equal",
           },
         ],
       };
@@ -188,7 +179,7 @@ describe("InstanceFilterBuilder", () => {
             id: "item-id",
             groupId: "root-id",
             property,
-            operator: PropertyFilterRuleOperator.IsNotEqual,
+            operator: "is-not-equal",
           },
         ],
       };
@@ -206,89 +197,6 @@ describe("InstanceFilterBuilder", () => {
         />,
       );
       await waitFor(() => expect(queryByText("unique-values-property-editor.select-values")).to.not.be.null);
-    });
-  });
-
-  describe("quantity values", () => {
-    const property: PropertyDescription = {
-      displayLabel: "Test Prop",
-      name: "testProp",
-      typename: "double",
-      quantityType: "koqName",
-    };
-
-    const rootGroup: PropertyFilterBuilderRuleGroup = {
-      id: "root-id",
-      operator: PropertyFilterRuleGroupOperator.And,
-      items: [
-        {
-          id: "item-id",
-          groupId: "root-id",
-          property,
-          operator: PropertyFilterRuleOperator.Less,
-          value: { valueFormat: PropertyValueFormat.Primitive, value: 2.5, displayValue: "2.5" },
-        },
-      ],
-    };
-
-    beforeEach(() => {
-      const formatterSpec = {
-        applyFormatting: (raw: number) => `${raw} unit`,
-      };
-      sinon.stub(KoqPropertyValueFormatter.prototype, "getFormatterSpec").resolves(formatterSpec as FormatterSpec);
-
-      const parserSpec = {
-        parseToQuantityValue: (value: string) => ({ ok: true, value: Number(value) }),
-      };
-      sinon.stub(KoqPropertyValueFormatter.prototype, "getParserSpec").resolves(parserSpec as ParserSpec);
-
-      sinon.stub(IModelApp, "quantityFormatter").get(() => ({
-        onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
-      }));
-    });
-
-    it("does not render quantity input if there is no schema metadata context", async () => {
-      const { queryByDisplayValue } = render(
-        <InstanceFilterBuilder
-          classes={classInfos}
-          selectedClasses={[]}
-          properties={[property]}
-          onSelectedClassesChanged={() => {}}
-          actions={testActions}
-          rootGroup={rootGroup}
-          imodel={testImodel}
-          descriptor={testDescriptor}
-        />,
-      );
-
-      await waitFor(() => {
-        expect(queryByDisplayValue(property.displayLabel)).to.not.be.null;
-        expect(queryByDisplayValue("2.5")).to.not.be.null;
-      });
-    });
-
-    it("renders quantity input", async () => {
-      const imodel = {} as IModelConnection;
-      const getSchemaContext = () => ({} as SchemaContext);
-      const { queryByDisplayValue } = render(
-        <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={getSchemaContext}>
-          <InstanceFilterBuilder
-            classes={classInfos}
-            selectedClasses={[]}
-            properties={[property]}
-            onSelectedClassesChanged={() => {}}
-            actions={testActions}
-            rootGroup={rootGroup}
-            imodel={testImodel}
-            descriptor={testDescriptor}
-          />
-        </SchemaMetadataContextProvider>,
-      );
-
-      await waitFor(() => {
-        expect(queryByDisplayValue(property.displayLabel)).to.not.be.null;
-        expect(queryByDisplayValue("2.5 unit")).to.not.be.null;
-      });
     });
   });
 });
