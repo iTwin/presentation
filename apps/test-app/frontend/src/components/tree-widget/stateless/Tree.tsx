@@ -111,7 +111,13 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
   const { componentsState, onReload } = useControlledTreeComponentsState(dataProvider);
   const treeModel = useTreeModel(componentsState.modelSource);
 
-  const [eventHandler, setEventHandler] = useState<TreeEventHandler>();
+  const [eventHandler, setEventHandler] = useState<TreeEventHandler>(
+    new UnifiedSelectionTreeEventHandler({
+      imodel: props.imodel,
+      nodeLoader: componentsState.nodeLoader,
+      collapsedChildrenDisposalEnabled: true,
+    }),
+  );
   useEffect(() => {
     const handler = new UnifiedSelectionTreeEventHandler({
       imodel: props.imodel,
@@ -146,11 +152,6 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
       : filter
       ? FilteringInputStatus.FilteringFinished
       : FilteringInputStatus.ReadyToFilter;
-
-  if (!eventHandler) {
-    return null;
-  }
-
   return (
     <>
       <div className="tree-widget-header-wrapper">
