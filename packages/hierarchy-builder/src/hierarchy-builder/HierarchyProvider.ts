@@ -52,7 +52,8 @@ import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "./values/
 import { TypedPrimitiveValue } from "./values/Values";
 
 const LOGGING_NAMESPACE = `${CommonLoggingNamespace}.HierarchyProvider`;
-const DEFAULT_ROWS_LIMIT = 1000;
+const DEFAULT_QUERY_CONCURRENCY = 10;
+const DEFAULT_QUERY_ROWS_LIMIT = 1000;
 
 /**
  * A type of [[HierarchyNode]] that doesn't know about its children and is an input when requesting
@@ -76,6 +77,12 @@ export interface HierarchyProviderProps {
   queryExecutor: IECSqlQueryExecutor;
   /** Maximum number of queries that the provider attempts to execute in parallel. Defaults to `10`. */
   queryConcurrency?: number;
+  /**
+   * Default limit for query rows - when a query exceeds this limit, a `RowsLimitExceededError` is thrown.
+   * The limit also applies to
+   * Defaults to `1000`.
+   */
+  queryRowsLimit?: number | "unbounded";
 
   /**
    * A values formatter for formatting node labels. Defaults to the
@@ -99,7 +106,10 @@ export interface GetHierarchyNodesProps {
   parentNode: ParentHierarchyNode | undefined;
   /** Optional hierarchy level filter. Has no effect if `parentNode` is a [[GroupingNode]]. */
   instanceFilter?: GenericInstanceFilter;
-  /** Optional hierarchy level size limit. Default limit is `1000`. Has no effect if `parentNode` is a [[GroupingNode]]. */
+  /**
+   * Optional hierarchy level size limit override. Defaults to `queryRowsLimit` that was provided when creating `HierarchyProvider`
+   * or `1000`, if none was provided. Has no effect if `parentNode` is a [[GroupingNode]].
+   */
   hierarchyLevelSizeLimit?: number | "unbounded";
 }
 
@@ -146,7 +156,7 @@ export class HierarchyProvider {
     this._valuesFormatter = props?.formatter ?? createDefaultValueFormatter();
     this._queryScheduler = new SubscriptionScheduler(props.queryConcurrency ?? DEFAULT_QUERY_CONCURRENCY);
     this._nodesCache = new ChildNodesCache();
-    this.limitingQueryExecutor = createLimitingECSqlQueryExecutor(props.queryExecutor, DEFAULT_ROWS_LIMIT);
+    this.limitingQueryExecutor = createLimitingECSqlQueryExecutor(props.queryExecutor, props.queryRowsLimit ?? DEFAULT_QUERY_ROWS_LIMIT);
   }
 
   /**
@@ -305,8 +315,6 @@ export class HierarchyProvider {
     });
   }
 }
-
-const DEFAULT_QUERY_CONCURRENCY = 10;
 
 function preProcessNodes(hierarchyFactory: IHierarchyLevelDefinitionsFactory) {
   return hierarchyFactory.preProcessNode

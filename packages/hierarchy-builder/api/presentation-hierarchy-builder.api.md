@@ -737,6 +737,7 @@ export interface HierarchyProviderProps {
     metadataProvider: IMetadataProvider;
     queryConcurrency?: number;
     queryExecutor: IECSqlQueryExecutor;
+    queryRowsLimit?: number | "unbounded";
 }
 
 // @beta
