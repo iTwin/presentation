@@ -50,21 +50,25 @@ export function createHideNodesInHierarchyOperator(
       (n): n is ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode =>
         (HierarchyNode.isCustom(n) || HierarchyNode.isInstancesNode(n)) && !!n.processingParams?.hideInHierarchy,
     );
-    const withLoadedChildren = withFlag.pipe(
-      log((n) => `${n.label} needs hide and needs children to be loaded`),
-      filter((node) => node.children !== false),
-      reduce((acc, node) => {
-        addToMergeMap(acc, node);
-        return acc;
-      }, new Map() as LabelMergeMap),
-      log((mm) => `created a merge map of size ${mm.size}`),
-      tap((_mm: LabelMergeMap) => {
-        // TODO: check if it's worth looking for merged nodes' observables in cache and merging them for parent node
-      }),
-      mergeMap((mm) => [...mm.values()].map((v) => defer(() => getNodes(v.merged)))),
-      mergeAll(),
-      map((n): ProcessedHierarchyNode => n),
+    // Defer to create a new seed for reduce on every subscribe
+    const withLoadedChildren = defer(() =>
+      withFlag.pipe(
+        log((n) => `${n.label} needs hide and needs children to be loaded`),
+        filter((node) => node.children !== false),
+        reduce((acc, node) => {
+          addToMergeMap(acc, node);
+          return acc;
+        }, new Map() as LabelMergeMap),
+        log((mm) => `created a merge map of size ${mm.size}`),
+        tap((_mm: LabelMergeMap) => {
+          // TODO: check if it's worth looking for merged nodes' observables in cache and merging them for parent node
+        }),
+        mergeMap((mm) => [...mm.values()].map((v) => defer(() => getNodes(v.merged)))),
+        mergeAll(),
+        map((n): ProcessedHierarchyNode => n),
+      ),
     );
+
     return merge(
       withoutFlag.pipe(log((n) => `${n.label} doesn't need hide, return the node`)),
       stopOnFirstChild
