@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1706008688766,
+  "lastUpdate": 1706774728800,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -572,6 +572,42 @@ window.BENCHMARK_DATA = {
             "value": 387,
             "unit": "ms",
             "extra": "min: 387\nmax: 387\ncount: 1\nmean: 387\np50: 383.8\nmedian: 383.8\np75: 383.8\np90: 383.8\np95: 383.8\np99: 383.8\np999: 383.8"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "100586436+JonasDov@users.noreply.github.com",
+            "name": "JonasDov",
+            "username": "JonasDov"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "84a3924f274f45c82ab57abf694229bd2c889060",
+          "message": "Allow changing formatter without requerying. (#386)\n\n* Implement formatter setter\r\n\r\n* Add option to set formatter in test app\r\n\r\n* Add import\r\n\r\n* Add tests\r\n\r\n* Fix import order\r\n\r\n* Update api and add changeset\r\n\r\n* Minor styling changes\r\n\r\n* Move files to stateless folder\r\n\r\n* Remove event handler from useControlledTreeComponentsState\r\n\r\n* Fix test to use limitingQueryExecutor instead of queryExecutor\r\n\r\n* Change shareReplay to shareReplayWithErrors\r\n\r\n* Remove this.map.get from QueriesCache.add function\r\n\r\n* Remove formatter spy\r\n\r\n* Update packages/hierarchy-builder/src/hierarchy-builder/HierarchyProvider.ts\r\n\r\nCo-authored-by: Grigas <35135765+grigasp@users.noreply.github.com>\r\n\r\n* Add docs to setFormatter and fix test\r\n\r\n* Use string in test instead of Date\r\n\r\n* Simplify and merge full stack tests\r\n\r\n* Rename modelsTreeHierarchyProvider to hierarchyProvider\r\n\r\n* Update apps/test-app/frontend/src/components/tree-widget/stateless/CustomHooks.ts\r\n\r\nCo-authored-by: Saulius Skliutas <24278440+saskliutas@users.noreply.github.com>\r\n\r\n* Move createNewComponents outside useControlledTreeComponentsState\r\n\r\n* Use single menuItem\r\n\r\n* Add documentation for getNodes\r\n\r\n* Extract formatter dropdown menu to a separate component\r\n\r\n* Remove queryCache and add tests\r\n\r\n* Run extract api\r\n\r\n* Update packages/full-stack-tests/src/hierarchy-builder/Formatting.test.ts\r\n\r\nCo-authored-by: Grigas <35135765+grigasp@users.noreply.github.com>\r\n\r\n* Update packages/full-stack-tests/src/hierarchy-builder/Formatting.test.ts\r\n\r\nCo-authored-by: Grigas <35135765+grigasp@users.noreply.github.com>\r\n\r\n* Update packages/full-stack-tests/src/hierarchy-builder/Formatting.test.ts\r\n\r\nCo-authored-by: Grigas <35135765+grigasp@users.noreply.github.com>\r\n\r\n* Update packages/hierarchy-builder/src/test/internal/operators/HideIfNoChildren.test.ts\r\n\r\nCo-authored-by: Grigas <35135765+grigasp@users.noreply.github.com>\r\n\r\n* Update packages/full-stack-tests/src/hierarchy-builder/Formatting.test.ts\r\n\r\nCo-authored-by: Grigas <35135765+grigasp@users.noreply.github.com>\r\n\r\n* Update packages/hierarchy-builder/src/hierarchy-builder/HierarchyProvider.ts\r\n\r\nCo-authored-by: Grigas <35135765+grigasp@users.noreply.github.com>\r\n\r\n* Update packages/hierarchy-builder/src/test/internal/operators/HideNodesInHierarchy.test.ts\r\n\r\nCo-authored-by: Grigas <35135765+grigasp@users.noreply.github.com>\r\n\r\n* Change FormatterTogglerDropdownProps and fix the displayed text\r\n\r\n* Remove assert\r\n\r\n* Remove unused import\r\n\r\n* Fix import order\r\n\r\n* Set event handler\r\n\r\n* Add ...lhs to mergeNodes result\r\n\r\n* Create a new seed on each subscribe\r\n\r\n* Wrap useState initialization inside a callback\r\n\r\n---------\r\n\r\nCo-authored-by: Grigas <35135765+grigasp@users.noreply.github.com>\r\nCo-authored-by: Saulius Skliutas <24278440+saskliutas@users.noreply.github.com>",
+          "timestamp": "2024-02-01T10:03:54+02:00",
+          "tree_id": "112f0e7efa3c89a9190dfbdf77be8b1245bd7e3b",
+          "url": "https://github.com/iTwin/presentation/commit/84a3924f274f45c82ab57abf694229bd2c889060"
+        },
+        "date": 1706774728213,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Full Models Tree Load: Baytown.bim",
+            "value": 2554,
+            "unit": "ms",
+            "extra": "min: 2554\nmax: 2554\ncount: 1\nmean: 2554\np50: 2566.3\nmedian: 2566.3\np75: 2566.3\np90: 2566.3\np95: 2566.3\np99: 2566.3\np999: 2566.3"
+          },
+          {
+            "name": "Initial Models Tree Load: Baytown.bim",
+            "value": 406,
+            "unit": "ms",
+            "extra": "min: 406\nmax: 406\ncount: 1\nmean: 406\np50: 407.5\nmedian: 407.5\np75: 407.5\np90: 407.5\np95: 407.5\np99: 407.5\np999: 407.5"
           }
         ]
       }
