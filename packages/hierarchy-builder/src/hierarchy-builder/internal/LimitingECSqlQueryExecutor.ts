@@ -3,8 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { StopWatch } from "@itwin/core-bentley";
 import { RowsLimitExceededError } from "../HierarchyErrors";
-import { ECSqlQueryDef, ECSqlQueryReaderOptions, ECSqlQueryRow, IECSqlQueryExecutor, ILimitingECSqlQueryExecutor } from "../queries/ECSqlCore";
+import { getLogger } from "../Logging";
+import { ECSqlBinding, ECSqlQueryDef, ECSqlQueryReaderOptions, ECSqlQueryRow, IECSqlQueryExecutor, ILimitingECSqlQueryExecutor } from "../queries/ECSqlCore";
+import { LOGGING_NAMESPACE as CommonLoggingNamespace } from "./Common";
 
 /** @internal */
 export function createLimitingECSqlQueryExecutor(baseExecutor: IECSqlQueryExecutor, defaultLimit: number | "unbounded"): ILimitingECSqlQueryExecutor {
@@ -13,23 +16,34 @@ export function createLimitingECSqlQueryExecutor(baseExecutor: IECSqlQueryExecut
       const { limit: configLimit, ...restConfig } = config ?? {};
       const limit = configLimit ?? defaultLimit;
       const ecsql = addCTEs(addLimit(query.ecsql, limit), query.ctes);
+      const perfLogger = createQueryPerformanceLogger(ecsql, query.bindings);
 
       // handle "unbounded" case without a buffer
       const reader = baseExecutor.createQueryReader(ecsql, query.bindings, restConfig);
       if (limit === "unbounded") {
-        for await (const row of reader) {
-          yield row;
+        try {
+          for await (const row of reader) {
+            perfLogger.onStep();
+            yield row;
+          }
+        } finally {
+          perfLogger.onComplete();
         }
         return;
       }
 
       // avoid streaming until we know the number of rows is okay
       const buffer: ECSqlQueryRow[] = [];
-      for await (const row of reader) {
-        buffer.push(row);
-        if (buffer.length > limit) {
-          throw new RowsLimitExceededError(limit);
+      try {
+        for await (const row of reader) {
+          perfLogger.onStep();
+          buffer.push(row);
+          if (buffer.length > limit) {
+            throw new RowsLimitExceededError(limit);
+          }
         }
+      } finally {
+        perfLogger.onComplete();
       }
       for (const row of buffer) {
         yield row;
@@ -53,4 +67,28 @@ function addLimit(ecsql: string, limit: number | "unbounded") {
     FROM (${ecsql})
     LIMIT ${limit + 1}
   `;
+}
+
+const LOGGING_NAMESPACE = `${CommonLoggingNamespace}.QueryPerformance`;
+function createQueryPerformanceLogger(query: string, bindings: ECSqlBinding[] | undefined, firstStepWarningThreshold = 3000, allRowsWarningThreshold = 5000) {
+  const serializedQuery = `Query: "${query}".\nBindings: ${JSON.stringify(bindings ?? [])}.`;
+  let firstStep = true;
+  let rowsCount = 0;
+  const timer = new StopWatch(undefined, true);
+  return {
+    onStep() {
+      if (firstStep) {
+        // istanbul ignore next
+        const logFunc = timer.current.milliseconds >= firstStepWarningThreshold ? getLogger().logWarning : getLogger().logTrace;
+        logFunc(LOGGING_NAMESPACE, `First step took ${timer.currentSeconds} s.\n${serializedQuery}`);
+        firstStep = false;
+      }
+      ++rowsCount;
+    },
+    onComplete() {
+      // istanbul ignore next
+      const logFunc = timer.current.milliseconds >= allRowsWarningThreshold ? getLogger().logWarning : getLogger().logTrace;
+      logFunc(LOGGING_NAMESPACE, `Query took ${timer.currentSeconds} s. for ${rowsCount} rows.\n${serializedQuery}`);
+    },
+  };
 }
