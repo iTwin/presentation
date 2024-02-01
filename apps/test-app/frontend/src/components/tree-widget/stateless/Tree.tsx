@@ -51,7 +51,6 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
   useEffect(() => {
     limitingQueryExecutor.current = hierarchyProvider?.limitingQueryExecutor;
   }, [hierarchyProvider]);
-
   const { value: filteredPaths } = useDebouncedAsyncValue(
     useCallback(async () => {
       if (!metadataProvider || !limitingQueryExecutor.current) {
