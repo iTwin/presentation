@@ -149,6 +149,14 @@ export class HierarchyProvider {
     this.limitingQueryExecutor = createLimitingECSqlQueryExecutor(props.queryExecutor, DEFAULT_ROWS_LIMIT);
   }
 
+  /**
+   * Sets [[HierarchyProvider]] values formatter that formats nodes' labels. If provided `undefined`, then defaults to the
+   * result of [[createDefaultValueFormatter]] called with default parameters.
+   */
+  public setFormatter(formatter: IPrimitiveValueFormatter | undefined) {
+    this._valuesFormatter = formatter ?? createDefaultValueFormatter();
+  }
+
   /** @internal */
   public get queryScheduler(): { schedule: ILimitingECSqlQueryExecutor["createQueryReader"] } {
     return {
@@ -191,6 +199,7 @@ export class HierarchyProvider {
           ),
         );
       }),
+      shareReplayWithErrors(),
     );
     // pre-process
     const preProcessedNodes = directNodes.pipe(
@@ -206,11 +215,7 @@ export class HierarchyProvider {
       createHideIfNoChildrenOperator((n) => this.ensureChildNodesObservables({ ...props, parentNode: n }).hasNodes, false),
       createHideNodesInHierarchyOperator((n) => this.ensureChildNodesObservables({ ...props, parentNode: n }).processedNodes, false),
     );
-    // cache observable result & return
-    return nodesAfterHiding.pipe(
-      // cache to avoid querying and pre-processing more than once
-      shareReplayWithErrors(),
-    );
+    return nodesAfterHiding;
   }
 
   private createProcessedNodesObservable(
@@ -220,8 +225,6 @@ export class HierarchyProvider {
     return preprocessedNodesObservable.pipe(
       sortNodesByLabelOperator,
       createGroupingOperator(this._metadataProvider, this._valuesFormatter, (gn) => this.onGroupingNodeCreated(gn, props)),
-      // cache to avoid expensive processing more than once
-      shareReplayWithErrors(),
     );
   }
 
@@ -282,6 +285,9 @@ export class HierarchyProvider {
     return value;
   }
 
+  /**
+   * Creates and runs a query based on provided props, then processes retrieved nodes and returns them.
+   */
   public async getNodes(props: GetHierarchyNodesProps): Promise<HierarchyNode[]> {
     return new Promise((resolve, reject) => {
       const nodes = new Array<HierarchyNode>();
@@ -405,7 +411,6 @@ class ChildNodesCache {
     if (variationKey) {
       entry.variations.set(variationKey, value);
     } else {
-      assert(!entry.primary);
       entry.primary = value;
     }
   }

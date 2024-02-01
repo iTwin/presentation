@@ -717,7 +717,6 @@ export namespace HierarchyNodesDefinition {
 // @beta
 export class HierarchyProvider {
     constructor(props: HierarchyProviderProps);
-    // (undocumented)
     getNodes(props: GetHierarchyNodesProps): Promise<HierarchyNode[]>;
     readonly hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
     readonly limitingQueryExecutor: ILimitingECSqlQueryExecutor;
@@ -725,6 +724,7 @@ export class HierarchyProvider {
     get queryScheduler(): {
         schedule: ILimitingECSqlQueryExecutor["createQueryReader"];
     };
+    setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
 }
 
 // @beta

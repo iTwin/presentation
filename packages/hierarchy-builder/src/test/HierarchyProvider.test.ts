@@ -905,6 +905,38 @@ describe("HierarchyProvider", () => {
     it("queries variations of the same hierarchy level", async () => {
       queryExecutor.createQueryReader.returns(createFakeQueryReader([]));
       const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel({ parentNode, instanceFilter }) {
+          if (!parentNode) {
+            return [
+              {
+                fullClassName: "x.y",
+                query: { ecsql: `QUERY WHERE ${JSON.stringify(instanceFilter)}` },
+              },
+            ];
+          }
+          return [];
+        },
+      };
+      const provider = new HierarchyProvider({
+        metadataProvider,
+        queryExecutor,
+        hierarchyDefinition,
+      });
+      await provider.getNodes({ parentNode: undefined });
+      await provider.getNodes({ parentNode: undefined, instanceFilter: {} as GenericInstanceFilter }); // variation of previous, so should cause a query
+      await provider.getNodes({ parentNode: undefined, instanceFilter: {} as GenericInstanceFilter }); // same as previous, so this one one shouldn't cause a query
+      expect(queryExecutor.createQueryReader).to.be.calledTwice;
+    });
+  });
+
+  describe("setFormatter", () => {
+    after(() => {
+      sinon.restore();
+    });
+
+    it("getNodes doesn't requery with same props and a different formatter", async () => {
+      queryExecutor.createQueryReader.returns(createFakeQueryReader([]));
+      const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
             return [
@@ -922,10 +954,65 @@ describe("HierarchyProvider", () => {
         queryExecutor,
         hierarchyDefinition,
       });
+
       await provider.getNodes({ parentNode: undefined });
-      await provider.getNodes({ parentNode: undefined, instanceFilter: {} as GenericInstanceFilter }); // variation of previous, so should cause a query
-      await provider.getNodes({ parentNode: undefined, instanceFilter: {} as GenericInstanceFilter }); // same as previous, so this one one shouldn't cause a query
-      expect(queryExecutor.createQueryReader).to.be.calledTwice;
+      provider.setFormatter(async (val: TypedPrimitiveValue) => `_formatted_${JSON.stringify(val)}`);
+
+      await provider.getNodes({ parentNode: undefined });
+      expect(queryExecutor.createQueryReader).to.be.calledOnce;
+    });
+
+    it("getNodes uses formatter that is provided to setFormatter", async () => {
+      const node = { key: "custom", label: "custom", children: false };
+      const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel({ parentNode }) {
+          if (!parentNode) {
+            return [
+              {
+                node,
+              },
+            ];
+          }
+          return [];
+        },
+      };
+      const provider = new HierarchyProvider({
+        metadataProvider,
+        queryExecutor,
+        hierarchyDefinition,
+      });
+      expect(await provider.getNodes({ parentNode: undefined })).to.deep.eq([{ ...node, parentKeys: [] }]);
+      provider.setFormatter(async (val: TypedPrimitiveValue) => `_formatted_${JSON.stringify(val)}`);
+      expect(await provider.getNodes({ parentNode: undefined })).to.deep.eq([
+        { ...node, label: `_formatted_${JSON.stringify({ value: node.label, type: "String" })}`, parentKeys: [] },
+      ]);
+    });
+
+    it("getNodes uses default formatter when setFormatter is provided an undefined value", async () => {
+      const node = { key: "custom", label: "custom", children: false };
+      const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel({ parentNode }) {
+          if (!parentNode) {
+            return [
+              {
+                node,
+              },
+            ];
+          }
+          return [];
+        },
+      };
+      const provider = new HierarchyProvider({
+        metadataProvider,
+        queryExecutor,
+        hierarchyDefinition,
+        formatter: async (val: TypedPrimitiveValue) => `_formatted_${JSON.stringify(val)}`,
+      });
+      expect(await provider.getNodes({ parentNode: undefined })).to.deep.eq([
+        { ...node, label: `_formatted_${JSON.stringify({ value: node.label, type: "String" })}`, parentKeys: [] },
+      ]);
+      provider.setFormatter(undefined);
+      expect(await provider.getNodes({ parentNode: undefined })).to.deep.eq([{ ...node, parentKeys: [] }]);
     });
   });
 });

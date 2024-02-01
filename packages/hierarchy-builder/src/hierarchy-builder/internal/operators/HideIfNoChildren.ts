@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { defer, filter, map, merge, mergeMap, Observable, partition, shareReplay, tap } from "rxjs";
+import { asapScheduler, defer, filter, map, merge, mergeMap, Observable, partition, share, subscribeOn, tap } from "rxjs";
 import { HierarchyNode, ProcessedCustomHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
 import { createOperatorLoggingNamespace, hasChildren } from "../Common";
@@ -21,9 +21,10 @@ export function createHideIfNoChildrenOperator(hasNodes: (node: ProcessedHierarc
   return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
     const sharedNodes = nodes.pipe(
       log((n) => `in: ${n.label}`),
-      // each partitioned observable is going to subscribe to this individually - share and replay to avoid requesting
+      // each partitioned observable is going to subscribe to this individually - share to avoid requesting
       // nodes from source observable multiple times
-      shareReplay(),
+      subscribeOn(asapScheduler),
+      share(),
     );
     // split input into 3 pieces:
     // - `doesntNeedHide` - nodes without the flag (return no matter if they have children or not)
