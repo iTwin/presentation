@@ -112,11 +112,12 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
   const treeModel = useTreeModel(componentsState.modelSource);
 
   const [eventHandler, setEventHandler] = useState<TreeEventHandler>(
-    new UnifiedSelectionTreeEventHandler({
-      imodel: props.imodel,
-      nodeLoader: componentsState.nodeLoader,
-      collapsedChildrenDisposalEnabled: true,
-    }),
+    () =>
+      new UnifiedSelectionTreeEventHandler({
+        imodel: props.imodel,
+        nodeLoader: componentsState.nodeLoader,
+        collapsedChildrenDisposalEnabled: true,
+      }),
   );
   useEffect(() => {
     const handler = new UnifiedSelectionTreeEventHandler({
