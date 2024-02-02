@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1706774728800,
+  "lastUpdate": 1706877882369,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -608,6 +608,42 @@ window.BENCHMARK_DATA = {
             "value": 406,
             "unit": "ms",
             "extra": "min: 406\nmax: 406\ncount: 1\nmean: 406\np50: 407.5\nmedian: 407.5\np75: 407.5\np90: 407.5\np95: 407.5\np99: 407.5\np999: 407.5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35135765+grigasp@users.noreply.github.com",
+            "name": "Grigas",
+            "username": "grigasp"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ebb4047479a216ca590d459457c283b63acbc828",
+          "message": "Presentation: Misc. cleanup in hierarchy builder (#394)\n\n* Add query performance logging\r\n\r\n* Add an option to set query rows limit when creating a HierarchyProvider\r\n\r\n* Don't unnecessarily store node observables\r\n\r\n* Request consumers to provide `ILimitingECSqlQueryExecutor` rather than creating it internally\r\n\r\n* changeset",
+          "timestamp": "2024-02-02T14:43:35+02:00",
+          "tree_id": "32691ef86c397eea982acffef3dbfdd16c9e6866",
+          "url": "https://github.com/iTwin/presentation/commit/ebb4047479a216ca590d459457c283b63acbc828"
+        },
+        "date": 1706877881749,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Initial Models Tree Load: Baytown.bim",
+            "value": 395,
+            "unit": "ms",
+            "extra": "min: 395\nmax: 395\ncount: 1\nmean: 395\np50: 391.6\nmedian: 391.6\np75: 391.6\np90: 391.6\np95: 391.6\np99: 391.6\np999: 391.6"
+          },
+          {
+            "name": "Full Models Tree Load: Baytown.bim",
+            "value": 2586,
+            "unit": "ms",
+            "extra": "min: 2586\nmax: 2586\ncount: 1\nmean: 2586\np50: 2566.3\nmedian: 2566.3\np75: 2566.3\np90: 2566.3\np95: 2566.3\np99: 2566.3\np999: 2566.3"
           }
         ]
       }
