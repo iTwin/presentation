@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1706888130908,
+  "lastUpdate": 1706888410665,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -678,6 +678,42 @@ window.BENCHMARK_DATA = {
             "value": 2575,
             "unit": "ms",
             "extra": "min: 2575\nmax: 2575\ncount: 1\nmean: 2575\np50: 2566.3\nmedian: 2566.3\np75: 2566.3\np90: 2566.3\np95: 2566.3\np99: 2566.3\np999: 2566.3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "24278440+saskliutas@users.noreply.github.com",
+            "name": "Saulius Skliutas",
+            "username": "saskliutas"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4373fd23a19204c879c7fde04f0b0a7eb55f04d6",
+          "message": "Bump dev dependencies (#395)\n\n* Bump dev dependencies\r\n\r\n* Run prettier\r\n\r\n* change",
+          "timestamp": "2024-02-02T17:38:38+02:00",
+          "tree_id": "9aa7f807b22428301277eef0a4d643fce4aff250",
+          "url": "https://github.com/iTwin/presentation/commit/4373fd23a19204c879c7fde04f0b0a7eb55f04d6"
+        },
+        "date": 1706888409681,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Initial Models Tree Load: Baytown.bim",
+            "value": 320,
+            "unit": "ms",
+            "extra": "min: 320\nmax: 320\ncount: 1\nmean: 320\np50: 320.6\nmedian: 320.6\np75: 320.6\np90: 320.6\np95: 320.6\np99: 320.6\np999: 320.6"
+          },
+          {
+            "name": "Full Models Tree Load: Baytown.bim",
+            "value": 2574,
+            "unit": "ms",
+            "extra": "min: 2574\nmax: 2574\ncount: 1\nmean: 2574\np50: 2566.3\nmedian: 2566.3\np75: 2566.3\np90: 2566.3\np95: 2566.3\np99: 2566.3\np999: 2566.3"
           }
         ]
       }
