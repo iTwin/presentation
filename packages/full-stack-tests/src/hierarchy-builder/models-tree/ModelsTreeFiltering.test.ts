@@ -12,7 +12,7 @@ import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { InstanceKey } from "@itwin/presentation-common";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
-import { addCTEs } from "@itwin/presentation-hierarchy-builder/lib/cjs/hierarchy-builder/internal/LimitingECSqlQueryExecutor";
+import { addCTEs } from "@itwin/presentation-hierarchy-builder/lib/cjs/hierarchy-builder/queries/LimitingECSqlQueryExecutor";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { buildTestIModel, TestIModelBuilder } from "@itwin/presentation-testing";
 import {
@@ -760,7 +760,7 @@ describe("Stateless hierarchy builder", () => {
           const actualInstanceKeyPaths = (
             await ModelsTreeDefinition.createInstanceKeyPaths({
               metadataProvider,
-              queryExecutor: hierarchyProvider.limitingQueryExecutor,
+              queryExecutor: hierarchyProvider.queryExecutor,
               keys: targetInstanceKeys,
             })
           ).sort(instanceKeyPathSorter);
@@ -775,7 +775,7 @@ describe("Stateless hierarchy builder", () => {
           const actualInstanceKeyPaths = (
             await ModelsTreeDefinition.createInstanceKeyPaths({
               metadataProvider,
-              queryExecutor: hierarchyProvider.limitingQueryExecutor,
+              queryExecutor: hierarchyProvider.queryExecutor,
               label: targetInstanceLabel,
             })
           ).sort(instanceKeyPathSorter);

@@ -6,7 +6,8 @@
 import { INodeParser } from "../HierarchyDefinition";
 import { InstanceHierarchyNodeProcessingParams, ParsedHierarchyNode, ParsedInstanceHierarchyNode } from "../HierarchyNode";
 import { getLogger } from "../Logging";
-import { ECSqlQueryDef, ILimitingECSqlQueryExecutor } from "../queries/ECSqlCore";
+import { ECSqlQueryDef } from "../queries/ECSqlCore";
+import { ILimitingECSqlQueryExecutor } from "../queries/LimitingECSqlQueryExecutor";
 import { NodeSelectClauseColumnNames } from "../queries/NodeSelectQueryFactory";
 import { ConcatenatedValue } from "../values/ConcatenatedValue";
 import { Id64String } from "../values/Values";
@@ -30,7 +31,7 @@ export class TreeQueryResultsReader {
 
   public async *read(queryExecutor: ILimitingECSqlQueryExecutor, query: ECSqlQueryDef, limit?: number | "unbounded"): AsyncGenerator<ParsedHierarchyNode> {
     getLogger().logInfo(`${LOGGING_NAMESPACE}.TreeQueryResultsReader`, `Executing query: ${query.ecsql}`);
-    for await (const row of queryExecutor.createQueryReader(query, { rowFormat: "ECSqlPropertyNames", limit })) {
+    for await (const row of queryExecutor.createQueryReader(query, { rowFormat: "ECSqlPropertyNames", ...(limit !== undefined ? { limit } : undefined) })) {
       yield this._props.parser(row);
     }
   }

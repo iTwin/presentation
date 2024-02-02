@@ -18,6 +18,7 @@ beta;ConcatenatedValuePart = PropertyValue | TypedPrimitiveValue | string
 beta;ConcatenatedValuePart
 beta;createDefaultValueFormatter(): IPrimitiveValueFormatter
 beta;CreateInstanceLabelSelectClauseProps
+beta;createLimitingECSqlQueryExecutor(baseExecutor: IECSqlQueryExecutor, defaultLimit: number | "unbounded"): ILimitingECSqlQueryExecutor
 beta;CustomHierarchyNodeDefinition
 beta;CustomNodeChildHierarchyLevelDefinition
 beta;DefaultInstanceLabelSelectClauseFactory 

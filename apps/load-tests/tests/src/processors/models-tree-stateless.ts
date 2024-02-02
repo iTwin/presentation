@@ -10,7 +10,7 @@ import { Guid, StopWatch } from "@itwin/core-bentley";
 import { DbQueryRequest, DbQueryResponse, DbRequestExecutor, ECSqlReader } from "@itwin/core-common";
 import { ISchemaLocater, Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType, SchemaProps } from "@itwin/ecschema-metadata";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
+import { createLimitingECSqlQueryExecutor, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { doRequest, getCurrentIModelName, getCurrentIModelPath, loadNodes, nodeRequestsTracker } from "./common";
 
@@ -129,12 +129,15 @@ function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter
   const provider = new HierarchyProvider({
     metadataProvider,
     hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider }),
-    queryExecutor: createECSqlQueryExecutor({
-      createQueryReader(ecsql, bindings, config) {
-        // eslint-disable-next-line @itwin/no-internal
-        return new ECSqlReader(schedulingQueryExecutor, ecsql, bindings, config);
-      },
-    }),
+    queryExecutor: createLimitingECSqlQueryExecutor(
+      createECSqlQueryExecutor({
+        createQueryReader(ecsql, bindings, config) {
+          // eslint-disable-next-line @itwin/no-internal
+          return new ECSqlReader(schedulingQueryExecutor, ecsql, bindings, config);
+        },
+      }),
+      1000,
+    ),
   });
 
   return async (parent: HierarchyNode | undefined) => {
