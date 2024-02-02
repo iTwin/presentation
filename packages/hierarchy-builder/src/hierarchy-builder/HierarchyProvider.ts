@@ -176,28 +176,17 @@ export class HierarchyProvider {
   }
 
   private onGroupingNodeCreated(groupingNode: ProcessedGroupingHierarchyNode, props: GetHierarchyNodesProps) {
-    const childNodesObs = from(groupingNode.children);
-    this._nodesCache.add(
-      { ...props, parentNode: groupingNode },
-      {
-        // grouping operators are run on processed, but not finalized nodes, so the child nodes here
-        // are processed, but not finalized
-        processedNodes: childNodesObs,
-        finalizedNodes: this.createFinalizedNodesObservable(childNodesObs),
-        hasNodes: of(groupingNode.children.length > 0),
-      },
-    );
+    doLog("OnGroupingNodeCreated", `Cached grouped nodes observable for ${groupingNode.label}`);
+    this._nodesCache.add({ ...props, parentNode: groupingNode }, { observable: from(groupingNode.children), needsProcessing: false });
   }
 
-  private createPreProcessedNodesObservable(
-    props: DefineHierarchyLevelProps & { hierarchyLevelSizeLimit?: number | "unbounded" },
-  ): Observable<ProcessedHierarchyNode> {
+  private createParsedQueryNodesObservable(props: DefineHierarchyLevelProps & { hierarchyLevelSizeLimit?: number | "unbounded" }): ParsedQueryNodesObservable {
     // stream hierarchy level definitions in order
     const definitions = from(this.hierarchyDefinition.defineHierarchyLevel(props)).pipe(
       concatMap((hierarchyLevelDefinition) => from(hierarchyLevelDefinition)),
     );
-    // pipe definitions to nodes
-    const directNodes = definitions.pipe(
+    // pipe definitions to nodes and put "share replay" on it
+    return definitions.pipe(
       concatMap((def): ObservableInput<ParsedHierarchyNode> => {
         if (HierarchyNodesDefinition.isCustomNode(def)) {
           return of(def.node);
@@ -211,8 +200,14 @@ export class HierarchyProvider {
       }),
       shareReplayWithErrors(),
     );
+  }
+
+  private createPreProcessedNodesObservable(
+    queryNodesObservable: ParsedQueryNodesObservable,
+    props: GetHierarchyNodesProps,
+  ): Observable<ProcessedHierarchyNode> {
     // pre-process
-    const preProcessedNodes = directNodes.pipe(
+    const preProcessedNodes = queryNodesObservable.pipe(
       // set parent node keys on the parsed node
       map((node) => ({ ...node, parentKeys: createParentNodeKeysList(props.parentNode) })),
       // format `ConcatenatedValue` labels into string labels
@@ -222,15 +217,15 @@ export class HierarchyProvider {
     );
     // handle nodes' hiding
     const nodesAfterHiding = preProcessedNodes.pipe(
-      createHideIfNoChildrenOperator((n) => this.ensureChildNodesObservables({ ...props, parentNode: n }).hasNodes, false),
-      createHideNodesInHierarchyOperator((n) => this.ensureChildNodesObservables({ ...props, parentNode: n }).processedNodes, false),
+      createHideIfNoChildrenOperator((n) => this.getChildNodesObservables({ ...props, parentNode: n }).hasNodes, false),
+      createHideNodesInHierarchyOperator((n) => this.getChildNodesObservables({ ...props, parentNode: n }).processedNodes, false),
     );
     return nodesAfterHiding;
   }
 
   private createProcessedNodesObservable(
     preprocessedNodesObservable: Observable<ProcessedHierarchyNode>,
-    props: DefineHierarchyLevelProps,
+    props: GetHierarchyNodesProps,
   ): Observable<ProcessedHierarchyNode> {
     return preprocessedNodesObservable.pipe(
       sortNodesByLabelOperator,
@@ -240,7 +235,7 @@ export class HierarchyProvider {
 
   private createFinalizedNodesObservable(processedNodesObservable: Observable<ProcessedHierarchyNode>): Observable<HierarchyNode> {
     return processedNodesObservable.pipe(
-      createDetermineChildrenOperator((n) => this.ensureChildNodesObservables({ parentNode: n }).hasNodes),
+      createDetermineChildrenOperator((n) => this.getChildNodesObservables({ parentNode: n }).hasNodes),
       postProcessNodes(this.hierarchyDefinition),
       map((n): HierarchyNode => {
         const node = { ...n, children: hasChildren(n) };
@@ -266,33 +261,44 @@ export class HierarchyProvider {
     );
   }
 
-  private setupObservables(props: DefineHierarchyLevelProps & { hierarchyLevelSizeLimit?: number | "unbounded" }): ChildNodesObservables {
-    const initialNodes = this.createPreProcessedNodesObservable(props);
-    const processedNodes = this.createProcessedNodesObservable(initialNodes, props);
-    const finalizedNodes = this.createFinalizedNodesObservable(processedNodes);
-    const hasNodes = this.createHasNodesObservable(initialNodes);
-    return { processedNodes, finalizedNodes, hasNodes };
-  }
-
-  private ensureChildNodesObservables(props: GetHierarchyNodesProps): ChildNodesObservables {
+  private getCachedObservableEntry(props: GetHierarchyNodesProps): CachedNodesObservableEntry {
     const { parentNode, ...restProps } = props;
     const parentNodeLabel = parentNode ? parentNode.label : "<root>";
     const cached = this._nodesCache.get(props);
     if (cached) {
       // istanbul ignore next
-      doLog("EnsureChildNodesObservables", `Found nodes observables for ${parentNodeLabel}`);
+      doLog("GetCachedObservableEntry", `Found query nodes observable for ${parentNodeLabel}`);
       return cached;
     }
 
     assert(
       !parentNode || HierarchyNode.isCustom(parentNode) || HierarchyNode.isInstancesNode(parentNode),
-      `Grouping nodes are expected to always have their children cached as soon as they're created. Offending node: "${parentNodeLabel}".`,
+      `Grouping nodes are expected to always have their children cached as soon as they're created. Offending node: ${JSON.stringify(parentNode)}.`,
     );
 
-    const value = this.setupObservables({ ...restProps, parentNode });
+    const value = { observable: this.createParsedQueryNodesObservable({ ...restProps, parentNode }), needsProcessing: true as const };
     this._nodesCache.add(props, value);
-    doLog("EnsureChildNodesObservables", `Saved nodes observables for ${parentNodeLabel}`);
+    doLog("GetCachedObservableEntry", `Saved query nodes observable for ${parentNodeLabel}`);
     return value;
+  }
+
+  private getChildNodesObservables(props: GetHierarchyNodesProps & { hierarchyLevelSizeLimit?: number | "unbounded" }) {
+    const entry = this.getCachedObservableEntry(props);
+    const processed = entry.needsProcessing
+      ? (() => {
+          const pre = this.createPreProcessedNodesObservable(entry.observable, props);
+          const post = this.createProcessedNodesObservable(pre, props);
+          return { pre, post };
+        })()
+      : {
+          pre: entry.observable,
+          post: entry.observable,
+        };
+    return {
+      processedNodes: processed.post,
+      hasNodes: this.createHasNodesObservable(processed.pre),
+      finalizedNodes: this.createFinalizedNodesObservable(processed.post),
+    };
   }
 
   /**
@@ -301,7 +307,7 @@ export class HierarchyProvider {
   public async getNodes(props: GetHierarchyNodesProps): Promise<HierarchyNode[]> {
     return new Promise((resolve, reject) => {
       const nodes = new Array<HierarchyNode>();
-      this.ensureChildNodesObservables(props).finalizedNodes.subscribe({
+      this.getChildNodesObservables(props).finalizedNodes.subscribe({
         next(node) {
           nodes.push(node);
         },
@@ -390,26 +396,40 @@ function createParentNodeKeysList(parentNode: ParentHierarchyNode | undefined) {
   return [...parentNode.parentKeys, parentNode.key];
 }
 
-interface ChildNodesObservables {
-  processedNodes: Observable<ProcessedHierarchyNode>;
-  finalizedNodes: Observable<HierarchyNode>;
-  hasNodes: Observable<boolean>;
+type ParsedQueryNodesObservable = Observable<ParsedHierarchyNode>;
+type ProcessedNodesObservable = Observable<ProcessedHierarchyNode>;
+type CachedNodesObservableEntry =
+  | { observable: ParsedQueryNodesObservable; needsProcessing: true }
+  | { observable: ProcessedNodesObservable; needsProcessing: false };
+interface ChildNodesCacheEntry {
+  /** Stores observables for the default case - no instance filter or custom limit for the hierarchy level. */
+  primary: CachedNodesObservableEntry | undefined;
+  /** Stores a limited number of variations with custom instance filter and/or custom limit for the hierarchy level. */
+  variations: LRUCache<string, CachedNodesObservableEntry>;
 }
 class ChildNodesCache {
-  private _map = new Map<string, { primary: ChildNodesObservables | undefined; variations: LRUCache<string, ChildNodesObservables> }>();
+  private _map = new Map<string, ChildNodesCacheEntry>();
+
+  private createVariationKey(props: GetHierarchyNodesProps) {
+    const { instanceFilter, parentNode } = props;
+    let { hierarchyLevelSizeLimit } = props;
+    if (parentNode && HierarchyNode.isGroupingNode(parentNode)) {
+      hierarchyLevelSizeLimit = undefined;
+    }
+    if (instanceFilter === undefined && hierarchyLevelSizeLimit === undefined) {
+      return undefined;
+    }
+    return JSON.stringify({ instanceFilter, hierarchyLevelSizeLimit });
+  }
 
   private parseRequestProps(requestProps: GetHierarchyNodesProps) {
     const { parentNode: node } = requestProps;
-    const primaryKey = node
-      ? `${JSON.stringify(node.parentKeys)}+${JSON.stringify(node.key)}+${
-          !HierarchyNode.isGroupingNode(node) ? JSON.stringify(requestProps.hierarchyLevelSizeLimit) : ""
-        }`
-      : "";
-    const variationKey = requestProps.instanceFilter ? JSON.stringify(requestProps.instanceFilter) : undefined;
+    const primaryKey = node ? `${JSON.stringify(node.parentKeys)}+${JSON.stringify(node.key)}` : "";
+    const variationKey = this.createVariationKey(requestProps);
     return { primaryKey, variationKey };
   }
 
-  public add(requestProps: GetHierarchyNodesProps, value: ChildNodesObservables) {
+  public add(requestProps: GetHierarchyNodesProps, value: CachedNodesObservableEntry) {
     const { primaryKey, variationKey } = this.parseRequestProps(requestProps);
     let entry = this._map.get(primaryKey);
     if (!entry) {
@@ -423,13 +443,13 @@ class ChildNodesCache {
     }
   }
 
-  public get(requestProps: GetHierarchyNodesProps): ChildNodesObservables | undefined {
+  public get(requestProps: GetHierarchyNodesProps): CachedNodesObservableEntry | undefined {
     const { primaryKey, variationKey } = this.parseRequestProps(requestProps);
     const entry = this._map.get(primaryKey);
-    if (variationKey) {
-      return entry?.variations.get(variationKey);
+    if (!entry) {
+      return undefined;
     }
-    return entry?.primary;
+    return variationKey ? entry.variations.get(variationKey) : entry.primary;
   }
 }
 
