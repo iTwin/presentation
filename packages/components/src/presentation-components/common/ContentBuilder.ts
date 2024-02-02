@@ -130,7 +130,11 @@ export namespace IPropertiesAppender {
 }
 class StructMembersAppender implements INestedPropertiesAppender {
   private _members: { [name: string]: PropertyRecord } = {};
-  constructor(private _parentAppender: IPropertiesAppender, private _fieldHierarchy: FieldHierarchy, private _fieldInfo: FieldInfo) {}
+  constructor(
+    private _parentAppender: IPropertiesAppender,
+    private _fieldHierarchy: FieldHierarchy,
+    private _fieldInfo: FieldInfo,
+  ) {}
   public append(record: FieldHierarchyRecord): void {
     this._members[record.fieldHierarchy.field.name] = record.record;
   }
@@ -151,7 +155,11 @@ class StructMembersAppender implements INestedPropertiesAppender {
 }
 class ArrayItemsAppender implements INestedPropertiesAppender {
   private _items: PropertyRecord[] = [];
-  constructor(private _parentAppender: IPropertiesAppender, private _fieldHierarchy: FieldHierarchy, private _fieldInfo: FieldInfo) {}
+  constructor(
+    private _parentAppender: IPropertiesAppender,
+    private _fieldHierarchy: FieldHierarchy,
+    private _fieldInfo: FieldInfo,
+  ) {}
   public append(record: FieldHierarchyRecord): void {
     this._items.push(record.record);
   }

@@ -158,8 +158,8 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
     filteringStatus === "filtering"
       ? FilteringInputStatus.FilteringInProgress
       : filter
-      ? FilteringInputStatus.FilteringFinished
-      : FilteringInputStatus.ReadyToFilter;
+        ? FilteringInputStatus.FilteringFinished
+        : FilteringInputStatus.ReadyToFilter;
   return (
     <>
       <div className="tree-widget-header-wrapper">

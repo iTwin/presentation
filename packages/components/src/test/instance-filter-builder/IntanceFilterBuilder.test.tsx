@@ -269,7 +269,7 @@ describe("InstanceFilterBuilder", () => {
 
     it("renders quantity input", async () => {
       const imodel = {} as IModelConnection;
-      const getSchemaContext = () => ({} as SchemaContext);
+      const getSchemaContext = () => ({}) as SchemaContext;
       const { queryByDisplayValue } = render(
         <SchemaMetadataContextProvider imodel={imodel} schemaContextProvider={getSchemaContext}>
           <InstanceFilterBuilder
