@@ -6,7 +6,7 @@
     "esModuleInterop": true,
     "isolatedModules": true,
     "lib": ["dom"],
-    "outDir": "./lib"
+    "outDir": "./lib",
   },
-  "include": ["src", "webpack.config.ts"]
+  "include": ["src", "webpack.config.ts"],
 }
