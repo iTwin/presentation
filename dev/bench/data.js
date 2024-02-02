@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1706877882369,
+  "lastUpdate": 1706888130908,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -644,6 +644,40 @@ window.BENCHMARK_DATA = {
             "value": 2586,
             "unit": "ms",
             "extra": "min: 2586\nmax: 2586\ncount: 1\nmean: 2586\np50: 2566.3\nmedian: 2566.3\np75: 2566.3\np90: 2566.3\np95: 2566.3\np99: 2566.3\np999: 2566.3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Saulius Skliutas",
+            "username": "saskliutas",
+            "email": "24278440+saskliutas@users.noreply.github.com"
+          },
+          "committer": {
+            "name": "Saulius Skliutas",
+            "username": "saskliutas",
+            "email": "24278440+saskliutas@users.noreply.github.com"
+          },
+          "id": "81d4ee2166694fce796365bee04d16052334c84b",
+          "message": "change",
+          "timestamp": "2024-02-02T15:12:09Z",
+          "url": "https://github.com/iTwin/presentation/commit/81d4ee2166694fce796365bee04d16052334c84b"
+        },
+        "date": 1706888130261,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Initial Models Tree Load: Baytown.bim",
+            "value": 379,
+            "unit": "ms",
+            "extra": "min: 379\nmax: 379\ncount: 1\nmean: 379\np50: 376.2\nmedian: 376.2\np75: 376.2\np90: 376.2\np95: 376.2\np99: 376.2\np999: 376.2"
+          },
+          {
+            "name": "Full Models Tree Load: Baytown.bim",
+            "value": 2575,
+            "unit": "ms",
+            "extra": "min: 2575\nmax: 2575\ncount: 1\nmean: 2575\np50: 2566.3\nmedian: 2566.3\np75: 2566.3\np90: 2566.3\np95: 2566.3\np99: 2566.3\np999: 2566.3"
           }
         ]
       }
