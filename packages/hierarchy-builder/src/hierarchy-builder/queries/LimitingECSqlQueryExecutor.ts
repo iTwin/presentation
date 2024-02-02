@@ -5,11 +5,26 @@
 
 import { StopWatch } from "@itwin/core-bentley";
 import { RowsLimitExceededError } from "../HierarchyErrors";
+import { LOGGING_NAMESPACE as CommonLoggingNamespace } from "../internal/Common";
 import { getLogger } from "../Logging";
-import { ECSqlBinding, ECSqlQueryDef, ECSqlQueryReaderOptions, ECSqlQueryRow, IECSqlQueryExecutor, ILimitingECSqlQueryExecutor } from "../queries/ECSqlCore";
-import { LOGGING_NAMESPACE as CommonLoggingNamespace } from "./Common";
+import { ECSqlBinding, ECSqlQueryDef, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow, IECSqlQueryExecutor } from "../queries/ECSqlCore";
 
-/** @internal */
+/**
+ * An interface for something that knows how to create a limiting ECSQL query reader.
+ * @beta
+ */
+export interface ILimitingECSqlQueryExecutor {
+  /**
+   * Creates an `ECSqlQueryReader` for given query, but makes sure it doesn't return more than the configured
+   * limit of rows. In case that happens, a `RowsLimitExceededError` is thrown during async iteration.
+   */
+  createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions & { limit?: number | "unbounded" }): ECSqlQueryReader;
+}
+
+/**
+ * Creates an `ILimitingECSqlQueryExecutor` that throws `RowsLimitExceededError` if the query exceeds given amount of rows.
+ * @beta
+ */
 export function createLimitingECSqlQueryExecutor(baseExecutor: IECSqlQueryExecutor, defaultLimit: number | "unbounded"): ILimitingECSqlQueryExecutor {
   return {
     async *createQueryReader(query: ECSqlQueryDef, config?: ECSqlQueryReaderOptions & { limit?: number | "unbounded" }) {

@@ -6,8 +6,8 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { RowsLimitExceededError } from "../../hierarchy-builder/HierarchyErrors";
-import { createLimitingECSqlQueryExecutor } from "../../hierarchy-builder/internal/LimitingECSqlQueryExecutor";
 import { IECSqlQueryExecutor } from "../../hierarchy-builder/queries/ECSqlCore";
+import { createLimitingECSqlQueryExecutor } from "../../hierarchy-builder/queries/LimitingECSqlQueryExecutor";
 import { trimWhitespace } from "../queries/Utils";
 import { createFakeQueryReader, toArray } from "../Utils";
 

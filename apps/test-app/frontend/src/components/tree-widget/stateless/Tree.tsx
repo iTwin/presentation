@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import "./StatelessTreeWidget.css";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ControlledTree,
   FilteringInputStatus,
@@ -26,7 +26,14 @@ import { DropdownMenu, IconButton, MenuItem, Text } from "@itwin/itwinui-react";
 import { SvgMoreVertical } from "@itwin/itwinui-react/cjs/core/utils";
 import { InfoTreeNodeItemType, isPresentationInfoTreeNodeItem } from "@itwin/presentation-components";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import { HierarchyProvider, IECSqlQueryExecutor, IMetadataProvider, RowsLimitExceededError, TypedPrimitiveValue } from "@itwin/presentation-hierarchy-builder";
+import {
+  createLimitingECSqlQueryExecutor,
+  HierarchyProvider,
+  ILimitingECSqlQueryExecutor,
+  IMetadataProvider,
+  RowsLimitExceededError,
+  TypedPrimitiveValue,
+} from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { TreeWidgetHeader, TreeWidgetProps, useTreeHeight } from "../TreeWidget";
 import { useControlledTreeComponentsState, useFormatter } from "./CustomHooks";
@@ -36,37 +43,33 @@ import { UnifiedSelectionTreeEventHandler } from "./UnifiedSelectionTreeEventHan
 export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
   const [filter, setFilter] = useState("");
   const [filteringStatus, setFilteringStatus] = useState<"ready" | "filtering">("ready");
-  const [queryExecutor, setQueryExecutor] = useState<IECSqlQueryExecutor>();
+  const [queryExecutor, setQueryExecutor] = useState<ILimitingECSqlQueryExecutor>();
   const [metadataProvider, setMetadataProvider] = useState<IMetadataProvider>();
   const [hierarchyProvider, setHierarchyProvider] = useState<HierarchyProvider>();
   const [hierarchyLevelSizeLimit, setHierarchyLevelSizeLimit] = useState<{ [parentId: string]: number | "unbounded" | undefined }>({});
   useEffect(() => {
     const schemas = new SchemaContext();
     schemas.addLocater(new ECSchemaRpcLocater(props.imodel.getRpcProps()));
-    setQueryExecutor(createECSqlQueryExecutor(props.imodel));
+    setQueryExecutor(createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(props.imodel), 1000));
     setMetadataProvider(createMetadataProvider(schemas));
   }, [props.imodel]);
 
-  const limitingQueryExecutor = useRef(hierarchyProvider?.limitingQueryExecutor);
-  useEffect(() => {
-    limitingQueryExecutor.current = hierarchyProvider?.limitingQueryExecutor;
-  }, [hierarchyProvider]);
   const { value: filteredPaths } = useDebouncedAsyncValue(
     useCallback(async () => {
-      if (!metadataProvider || !limitingQueryExecutor.current) {
+      if (!metadataProvider || !queryExecutor) {
         return undefined;
       }
       if (filter !== "") {
         setFilteringStatus("filtering");
         return ModelsTreeDefinition.createInstanceKeyPaths({
           metadataProvider,
-          queryExecutor: limitingQueryExecutor.current,
+          queryExecutor,
           label: filter,
         });
       }
       setFilteringStatus("ready");
       return undefined;
-    }, [metadataProvider, filter]),
+    }, [metadataProvider, queryExecutor, filter]),
   );
 
   useEffect(() => {

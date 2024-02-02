@@ -9,6 +9,7 @@ import { Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createECSqlQueryExecutor, createMetadataProvider as createMetadataProviderInterop } from "@itwin/presentation-core-interop";
 import {
+  createLimitingECSqlQueryExecutor,
   HierarchyNodeIdentifiersPath,
   HierarchyProvider,
   IHierarchyLevelDefinitionsFactory,
@@ -57,7 +58,7 @@ export function createProvider(props: {
   return new HierarchyProvider({
     metadataProvider: createMetadataProvider(imodel),
     hierarchyDefinition: hierarchy,
-    queryExecutor: createECSqlQueryExecutor(imodel),
+    queryExecutor: createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 123),
     formatter: formatterFactory ? formatterFactory(createSchemaContext(imodel)) : undefined,
     filtering: filteredNodePaths ? { paths: filteredNodePaths } : undefined,
   });

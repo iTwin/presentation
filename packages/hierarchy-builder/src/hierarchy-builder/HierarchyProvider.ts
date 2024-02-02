@@ -36,7 +36,6 @@ import {
 } from "./HierarchyNode";
 import { LOGGING_NAMESPACE as CommonLoggingNamespace, getClass, hasChildren } from "./internal/Common";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
-import { createLimitingECSqlQueryExecutor } from "./internal/LimitingECSqlQueryExecutor";
 import { createDetermineChildrenOperator } from "./internal/operators/DetermineChildren";
 import { createGroupingOperator } from "./internal/operators/Grouping";
 import { createHideIfNoChildrenOperator } from "./internal/operators/HideIfNoChildren";
@@ -46,14 +45,13 @@ import { shareReplayWithErrors } from "./internal/Rxjs";
 import { SubscriptionScheduler } from "./internal/SubscriptionScheduler";
 import { TreeQueryResultsReader } from "./internal/TreeNodesReader";
 import { getLogger } from "./Logging";
-import { IECSqlQueryExecutor, ILimitingECSqlQueryExecutor } from "./queries/ECSqlCore";
+import { ILimitingECSqlQueryExecutor } from "./queries/LimitingECSqlQueryExecutor";
 import { ConcatenatedValue, ConcatenatedValuePart } from "./values/ConcatenatedValue";
 import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "./values/Formatting";
 import { TypedPrimitiveValue } from "./values/Values";
 
 const LOGGING_NAMESPACE = `${CommonLoggingNamespace}.HierarchyProvider`;
 const DEFAULT_QUERY_CONCURRENCY = 10;
-const DEFAULT_QUERY_ROWS_LIMIT = 1000;
 
 /**
  * A type of [[HierarchyNode]] that doesn't know about its children and is an input when requesting
@@ -73,16 +71,13 @@ export interface HierarchyProviderProps {
   /** A definition that describes how the hierarchy should be created. */
   hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
 
-  /** IModel ECSQL query executor used to run queries. */
-  queryExecutor: IECSqlQueryExecutor;
+  /**
+   * IModel ECSQL query executor used to run queries.
+   * @see createLimitingECSqlQueryExecutor
+   */
+  queryExecutor: ILimitingECSqlQueryExecutor;
   /** Maximum number of queries that the provider attempts to execute in parallel. Defaults to `10`. */
   queryConcurrency?: number;
-  /**
-   * Default limit for query rows - when a query exceeds this limit, a `RowsLimitExceededError` is thrown.
-   * The limit also applies to
-   * Defaults to `1000`.
-   */
-  queryRowsLimit?: number | "unbounded";
 
   /**
    * A values formatter for formatting node labels. Defaults to the
@@ -107,8 +102,11 @@ export interface GetHierarchyNodesProps {
   /** Optional hierarchy level filter. Has no effect if `parentNode` is a [[GroupingNode]]. */
   instanceFilter?: GenericInstanceFilter;
   /**
-   * Optional hierarchy level size limit override. Defaults to `queryRowsLimit` that was provided when creating `HierarchyProvider`
-   * or `1000`, if none was provided. Has no effect if `parentNode` is a [[GroupingNode]].
+   * Optional hierarchy level size limit override. This value is passed to `ILimitingECSqlQueryExecutor` used
+   * by this provider to override query rows limit per hierarchy level. If not provided, defaults to whatever
+   * is used by the limiting query executor.
+   *
+   * Has no effect if `parentNode` is a [[GroupingNode]].
    */
   hierarchyLevelSizeLimit?: number | "unbounded";
 }
@@ -134,10 +132,10 @@ export class HierarchyProvider {
   public readonly hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
 
   /**
-   * A limiting ECSQL query executor used by this provider. The executor is configured to use the default
-   * rows limit of `1000`.
+   * A limiting ECSQL query executor used by this provider.
+   * @see HierarchyProviderProps.queryExecutor
    */
-  public readonly limitingQueryExecutor: ILimitingECSqlQueryExecutor;
+  public readonly queryExecutor: ILimitingECSqlQueryExecutor;
 
   public constructor(props: HierarchyProviderProps) {
     this._metadataProvider = props.metadataProvider;
@@ -156,7 +154,7 @@ export class HierarchyProvider {
     this._valuesFormatter = props?.formatter ?? createDefaultValueFormatter();
     this._queryScheduler = new SubscriptionScheduler(props.queryConcurrency ?? DEFAULT_QUERY_CONCURRENCY);
     this._nodesCache = new ChildNodesCache();
-    this.limitingQueryExecutor = createLimitingECSqlQueryExecutor(props.queryExecutor, props.queryRowsLimit ?? DEFAULT_QUERY_ROWS_LIMIT);
+    this.queryExecutor = props.queryExecutor;
   }
 
   /**
@@ -171,7 +169,7 @@ export class HierarchyProvider {
   public get queryScheduler(): { schedule: ILimitingECSqlQueryExecutor["createQueryReader"] } {
     return {
       schedule: (query, config) =>
-        eachValueFrom(this._queryScheduler.scheduleSubscription(defer(() => from(this.limitingQueryExecutor.createQueryReader(query, config))))),
+        eachValueFrom(this._queryScheduler.scheduleSubscription(defer(() => from(this.queryExecutor.createQueryReader(query, config))))),
     };
   }
 
@@ -194,7 +192,7 @@ export class HierarchyProvider {
         return this._queryScheduler.scheduleSubscription(
           of(def.query).pipe(
             log((query) => `Query direct nodes for parent ${props.parentNode ? JSON.stringify(props.parentNode) : "<root>"}: ${query.ecsql}`),
-            mergeMap((query) => defer(() => from(this._queryReader.read(this.limitingQueryExecutor, query, props.hierarchyLevelSizeLimit)))),
+            mergeMap((query) => defer(() => from(this._queryReader.read(this.queryExecutor, query, props.hierarchyLevelSizeLimit)))),
           ),
         );
       }),

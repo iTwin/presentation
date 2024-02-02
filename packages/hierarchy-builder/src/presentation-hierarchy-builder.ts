@@ -27,6 +27,7 @@ export * from "./hierarchy-builder/Logging";
 export * from "./hierarchy-builder/Metadata";
 export * from "./hierarchy-builder/queries/ECSqlCore";
 export * from "./hierarchy-builder/queries/InstanceLabelSelectClauseFactory";
+export { createLimitingECSqlQueryExecutor, ILimitingECSqlQueryExecutor } from "./hierarchy-builder/queries/LimitingECSqlQueryExecutor";
 export * from "./hierarchy-builder/queries/NodeSelectQueryFactory";
 export * from "./hierarchy-builder/values/ConcatenatedValue";
 export * from "./hierarchy-builder/values/Formatting";

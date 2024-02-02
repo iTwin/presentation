@@ -112,6 +112,9 @@ export interface CreateInstanceLabelSelectClauseProps {
 }
 
 // @beta
+export function createLimitingECSqlQueryExecutor(baseExecutor: IECSqlQueryExecutor, defaultLimit: number | "unbounded"): ILimitingECSqlQueryExecutor;
+
+// @beta
 export interface CustomHierarchyNodeDefinition {
     node: ParsedCustomHierarchyNode;
 }
@@ -719,7 +722,7 @@ export class HierarchyProvider {
     constructor(props: HierarchyProviderProps);
     getNodes(props: GetHierarchyNodesProps): Promise<HierarchyNode[]>;
     readonly hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
-    readonly limitingQueryExecutor: ILimitingECSqlQueryExecutor;
+    readonly queryExecutor: ILimitingECSqlQueryExecutor;
     // @internal (undocumented)
     get queryScheduler(): {
         schedule: ILimitingECSqlQueryExecutor["createQueryReader"];
@@ -736,8 +739,7 @@ export interface HierarchyProviderProps {
     hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
     metadataProvider: IMetadataProvider;
     queryConcurrency?: number;
-    queryExecutor: IECSqlQueryExecutor;
-    queryRowsLimit?: number | "unbounded";
+    queryExecutor: ILimitingECSqlQueryExecutor;
 }
 
 // @beta
