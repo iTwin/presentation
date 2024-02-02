@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import "./StatelessTreeWidget.css";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ControlledTree,
   FilteringInputStatus,
@@ -47,22 +47,26 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
     setMetadataProvider(createMetadataProvider(schemas));
   }, [props.imodel]);
 
+  const limitingQueryExecutor = useRef(hierarchyProvider?.limitingQueryExecutor);
+  useEffect(() => {
+    limitingQueryExecutor.current = hierarchyProvider?.limitingQueryExecutor;
+  }, [hierarchyProvider]);
   const { value: filteredPaths } = useDebouncedAsyncValue(
     useCallback(async () => {
-      if (!metadataProvider || !hierarchyProvider) {
+      if (!metadataProvider || !limitingQueryExecutor.current) {
         return undefined;
       }
       if (filter !== "") {
         setFilteringStatus("filtering");
         return ModelsTreeDefinition.createInstanceKeyPaths({
           metadataProvider,
-          queryExecutor: hierarchyProvider.limitingQueryExecutor,
+          queryExecutor: limitingQueryExecutor.current,
           label: filter,
         });
       }
       setFilteringStatus("ready");
       return undefined;
-    }, [metadataProvider, hierarchyProvider, filter]),
+    }, [metadataProvider, filter]),
   );
 
   useEffect(() => {
