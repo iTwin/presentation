@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1706888410665,
+  "lastUpdate": 1707133520396,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -714,6 +714,42 @@ window.BENCHMARK_DATA = {
             "value": 2574,
             "unit": "ms",
             "extra": "min: 2574\nmax: 2574\ncount: 1\nmean: 2574\np50: 2566.3\nmedian: 2566.3\np75: 2566.3\np90: 2566.3\np95: 2566.3\np99: 2566.3\np999: 2566.3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35135765+grigasp@users.noreply.github.com",
+            "name": "Grigas",
+            "username": "grigasp"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "53893a975dce944a356ff7597103466c0fa8ff25",
+          "message": "Updating hierarchies upon imodel data change (#396)\n\n* Updating hierarchies upon imodel data change\r\n\r\n* lint",
+          "timestamp": "2024-02-05T13:44:12+02:00",
+          "tree_id": "b4566a5f231b8f438a983f7d35e23e8bec6ae748",
+          "url": "https://github.com/iTwin/presentation/commit/53893a975dce944a356ff7597103466c0fa8ff25"
+        },
+        "date": 1707133519432,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Full Models Tree Load: Baytown.bim",
+            "value": 2599,
+            "unit": "ms",
+            "extra": "min: 2599\nmax: 2599\ncount: 1\nmean: 2599\np50: 2618.1\nmedian: 2618.1\np75: 2618.1\np90: 2618.1\np95: 2618.1\np99: 2618.1\np999: 2618.1"
+          },
+          {
+            "name": "Initial Models Tree Load: Baytown.bim",
+            "value": 236,
+            "unit": "ms",
+            "extra": "min: 236\nmax: 236\ncount: 1\nmean: 236\np50: 237.5\nmedian: 237.5\np75: 237.5\np90: 237.5\np95: 237.5\np99: 237.5\np999: 237.5"
           }
         ]
       }
