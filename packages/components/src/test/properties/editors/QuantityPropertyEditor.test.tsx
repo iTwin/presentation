@@ -59,7 +59,7 @@ describe("<QuantityPropertyEditor />", () => {
   it("renders quantity input if schema context is available", async () => {
     const record = createRecord({ initialValue: 10, quantityType: "TestKOQ" });
     const { getByDisplayValue } = render(
-      <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => ({} as SchemaContext)}>
+      <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => ({}) as SchemaContext}>
         <QuantityPropertyEditor propertyRecord={record} />
       </SchemaMetadataContextProvider>,
     );

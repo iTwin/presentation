@@ -43,17 +43,14 @@ interface ReloadedTree {
   modelSource: TreeModelSource;
 }
 
-interface FormatterProps {
-  formatter?: IPrimitiveValueFormatter;
+interface UseReloadProps {
   hierarchyProvider?: HierarchyProvider;
   dataProvider: TreeDataProvider;
   modelSource: TreeModelSource;
   onReload: (reloadedTree: ReloadedTree) => void;
 }
-
-/** @internal */
-export function useFormatter(props: FormatterProps) {
-  const { formatter, hierarchyProvider, dataProvider, modelSource, onReload } = props;
+export function useReload(props: UseReloadProps) {
+  const { hierarchyProvider, dataProvider, modelSource, onReload } = props;
   const renderedItems = useRef<RenderedItemsRange | undefined>(undefined);
   const onItemsRendered = useCallback((items: RenderedItemsRange) => {
     renderedItems.current = items;
@@ -65,12 +62,27 @@ export function useFormatter(props: FormatterProps) {
     startReloadProps.current = { dataProvider, modelSource, renderedItems, onReload };
   }, [dataProvider, modelSource, renderedItems, onReload]);
 
+  const doReload = useCallback(() => {
+    if (hierarchyProvider) {
+      startTreeReload(startReloadProps.current);
+    }
+  }, [hierarchyProvider]);
+
+  return { doReload, onItemsRendered };
+}
+
+interface FormatterProps {
+  hierarchyProvider?: HierarchyProvider;
+  reloadAction: () => void;
+  formatter?: IPrimitiveValueFormatter;
+}
+export function useFormatter(props: FormatterProps) {
+  const { formatter, hierarchyProvider, reloadAction } = props;
+
   useEffect(() => {
     if (hierarchyProvider) {
       hierarchyProvider.setFormatter(formatter);
-      startTreeReload(startReloadProps.current);
+      reloadAction();
     }
-  }, [formatter, hierarchyProvider]);
-
-  return onItemsRendered;
+  }, [formatter, hierarchyProvider, reloadAction]);
 }

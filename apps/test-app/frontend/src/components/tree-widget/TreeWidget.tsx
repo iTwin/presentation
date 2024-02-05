@@ -67,8 +67,8 @@ export function RulesDrivenTreeWidget(props: TreeWidgetProps) {
       isFiltering
         ? FilteringInputStatus.FilteringInProgress
         : undefined !== newMatchesCount
-        ? FilteringInputStatus.FilteringFinished
-        : FilteringInputStatus.ReadyToFilter,
+          ? FilteringInputStatus.FilteringFinished
+          : FilteringInputStatus.ReadyToFilter,
     );
     setMatchesCount(newMatchesCount);
   }, []);

@@ -18,14 +18,14 @@ import {
   useDebouncedAsyncValue,
   useTreeModel,
 } from "@itwin/components-react";
-import { IModelApp } from "@itwin/core-frontend";
+import { BriefcaseConnection, IModelApp } from "@itwin/core-frontend";
 import { FillCentered, TreeNode, UnderlinedButton } from "@itwin/core-react";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { DropdownMenu, IconButton, MenuItem, Text } from "@itwin/itwinui-react";
 import { SvgMoreVertical } from "@itwin/itwinui-react/cjs/core/utils";
 import { InfoTreeNodeItemType, isPresentationInfoTreeNodeItem } from "@itwin/presentation-components";
-import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
+import { createECSqlQueryExecutor, createMetadataProvider, registerTxnListeners } from "@itwin/presentation-core-interop";
 import {
   createLimitingECSqlQueryExecutor,
   HierarchyProvider,
@@ -36,7 +36,7 @@ import {
 } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { TreeWidgetHeader, TreeWidgetProps, useTreeHeight } from "../TreeWidget";
-import { useControlledTreeComponentsState, useFormatter } from "./CustomHooks";
+import { useControlledTreeComponentsState, useFormatter, useReload } from "./CustomHooks";
 import { createInfoNode, createTreeNodeItem, getHierarchyNode } from "./TreeNodeItemUtils";
 import { UnifiedSelectionTreeEventHandler } from "./UnifiedSelectionTreeEventHandler";
 
@@ -143,13 +143,28 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
     />
   );
 
-  const [shouldUseCustomFormatter, setShouldUseCustomFormatter] = useState<boolean>(false);
-  const onItemsRendered = useFormatter({
-    formatter: shouldUseCustomFormatter ? customFormatter : undefined,
+  const { onItemsRendered, doReload } = useReload({
     dataProvider,
     modelSource: componentsState.modelSource,
     hierarchyProvider,
     onReload,
+  });
+
+  useEffect(() => {
+    if (hierarchyProvider && props.imodel instanceof BriefcaseConnection) {
+      return registerTxnListeners(props.imodel.txns, () => {
+        hierarchyProvider.notifyDataSourceChanged();
+        doReload();
+      });
+    }
+    return undefined;
+  }, [hierarchyProvider, props.imodel, doReload]);
+
+  const [shouldUseCustomFormatter, setShouldUseCustomFormatter] = useState<boolean>(false);
+  useFormatter({
+    hierarchyProvider,
+    formatter: shouldUseCustomFormatter ? customFormatter : undefined,
+    reloadAction: doReload,
   });
 
   const { headerRef, treeHeight } = useTreeHeight(props.height);
@@ -158,8 +173,8 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
     filteringStatus === "filtering"
       ? FilteringInputStatus.FilteringInProgress
       : filter
-      ? FilteringInputStatus.FilteringFinished
-      : FilteringInputStatus.ReadyToFilter;
+        ? FilteringInputStatus.FilteringFinished
+        : FilteringInputStatus.ReadyToFilter;
   return (
     <>
       <div className="tree-widget-header-wrapper">

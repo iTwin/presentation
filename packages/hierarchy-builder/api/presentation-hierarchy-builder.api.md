@@ -723,6 +723,7 @@ export class HierarchyProvider {
     constructor(props: HierarchyProviderProps);
     getNodes(props: GetHierarchyNodesProps): Promise<HierarchyNode[]>;
     readonly hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
+    notifyDataSourceChanged(): void;
     readonly queryExecutor: ILimitingECSqlQueryExecutor;
     // @internal (undocumented)
     get queryScheduler(): {

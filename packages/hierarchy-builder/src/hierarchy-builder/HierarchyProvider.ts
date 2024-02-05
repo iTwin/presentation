@@ -319,6 +319,16 @@ export class HierarchyProvider {
       });
     });
   }
+
+  /**
+   * A function that should be called when the underlying data source, used by `HierarchyProviderProps.metadataProvider`,
+   * `HierarchyProviderProps.queryExecutor` or `HierarchyProviderProps.hierarchyDefinition`, changes.
+   *
+   * Calling the function invalidates internal caches to make sure fresh data is retrieved on new requests.
+   */
+  public notifyDataSourceChanged() {
+    this._nodesCache.clear();
+  }
 }
 
 function preProcessNodes(hierarchyFactory: IHierarchyLevelDefinitionsFactory) {
@@ -463,6 +473,10 @@ class ChildNodesCache {
       return undefined;
     }
     return variationKey ? entry.variations.get(variationKey) : entry.primary;
+  }
+
+  public clear() {
+    this._map.clear();
   }
 }
 

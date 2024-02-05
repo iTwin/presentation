@@ -20,8 +20,8 @@
     "@itwin/ecschema-rpcinterface-common": "^4.3.0-dev.39",
     "@itwin/eslint-plugin": "4.0.0-dev.48",
     "@itwin/presentation-common": "^4.3.0-dev.39",
-    "eslint": "^8.47.0",
-    "rimraf": "^5.0.1",
+    "eslint": "^8.56.0",
+    "rimraf": "^5.0.5",
     "typescript": "~5.0.4"
   }
 }

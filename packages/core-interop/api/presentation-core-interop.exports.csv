@@ -8,3 +8,5 @@ beta;createLogger(): ILogger
 beta;createMetadataProvider(schemaContext: SchemaContext): IMetadataProvider
 beta;createValueFormatter(schemaContext: SchemaContext, unitSystem?: UnitSystemKey, baseFormatter?: IPrimitiveValueFormatter): IPrimitiveValueFormatter
 beta;ICoreECSqlReaderFactory
+beta;ICoreTxnManager
+beta;registerTxnListeners(txns: ICoreTxnManager, onChanged: () => void): () => void

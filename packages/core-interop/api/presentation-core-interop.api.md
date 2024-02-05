@@ -58,10 +58,29 @@ export function createMetadataProvider(schemaContext: SchemaContext): IMetadataP
 export function createValueFormatter(schemaContext: SchemaContext, unitSystem?: UnitSystemKey, baseFormatter?: IPrimitiveValueFormatter): IPrimitiveValueFormatter;
 
 // @beta
+interface Event_2<TListener extends () => void = () => void> {
+    // (undocumented)
+    addListener(listener: TListener): () => void;
+    // (undocumented)
+    removeListener(listener: TListener): void;
+}
+export { Event_2 as Event }
+
+// @beta
 export interface ICoreECSqlReaderFactory {
     // (undocumented)
     createQueryReader(ecsql: string, binder?: QueryBinder, options?: QueryOptions): ECSqlReader;
 }
+
+// @beta
+export interface ICoreTxnManager {
+    onChangesApplied: Event_2;
+    onCommit: Event_2;
+    onCommitted: Event_2;
+}
+
+// @beta
+export function registerTxnListeners(txns: ICoreTxnManager, onChanged: () => void): () => void;
 
 // (No @packageDocumentation comment for this package)
 

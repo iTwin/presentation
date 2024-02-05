@@ -33,9 +33,9 @@
     "@itwin/presentation-models-tree": "workspace:*",
     "@types/artillery": "^1.7.0",
     "@types/node": "^18.17.7",
-    "artillery": "2.0.0-38",
-    "eslint": "^8.47.0",
-    "rimraf": "^5.0.1",
+    "artillery": "2.0.4",
+    "eslint": "^8.56.0",
+    "rimraf": "^5.0.5",
     "typescript": "~5.0.4"
   }
 }
