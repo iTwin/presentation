@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { assert } from "@itwin/core-bentley";
+import { assert, compareStrings, compareStringsOrUndefined } from "@itwin/core-bentley";
 import { ConcatenatedValue } from "./values/ConcatenatedValue";
 import { InstanceKey, PrimitiveValue } from "./values/Values";
 
@@ -236,10 +236,6 @@ export namespace HierarchyNodeKey {
    *- `positive value` if lhs key is more than rhs key
    */
   export function compare(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): number {
-    // This compare is quicker than String.localeCompare
-    function compareStrings(lhsStr: string, rhsStr: string): number {
-      return lhsStr < rhsStr ? -1 : lhsStr > rhsStr ? 1 : 0;
-    }
     if (isCustom(lhs)) {
       if (!isCustom(rhs)) {
         return 1;
@@ -262,15 +258,9 @@ export namespace HierarchyNodeKey {
           return lhs.instanceKeys.length > rhs.instanceKeys.length ? 1 : -1;
         }
         for (let i = 0; i < lhs.instanceKeys.length; ++i) {
-          const lhsInstanceKey = lhs.instanceKeys[i];
-          const rhsInstanceKey = rhs.instanceKeys[i];
-          const classNameComparResult = compareStrings(lhsInstanceKey.className, rhsInstanceKey.className);
-          if (classNameComparResult !== 0) {
-            return classNameComparResult;
-          }
-          const idCompareResult = compareStrings(lhsInstanceKey.id, rhsInstanceKey.id);
-          if (idCompareResult !== 0) {
-            return idCompareResult;
+          const instanceKeyCompareResult = InstanceKey.compare(lhs.instanceKeys[i], rhs.instanceKeys[i]);
+          if (instanceKeyCompareResult !== 0) {
+            return instanceKeyCompareResult;
           }
         }
         return 0;
@@ -285,11 +275,7 @@ export namespace HierarchyNodeKey {
         if (labelCompareResult !== 0) {
           return labelCompareResult;
         }
-        // Have to do this check in case one of them is `undefined` and the other is ""
-        if (typeof lhs.groupId !== typeof rhs.groupId) {
-          return lhs.groupId !== undefined ? 1 : -1;
-        }
-        return compareStrings(lhs.groupId ?? "", rhs.groupId ?? "");
+        return compareStringsOrUndefined(lhs.groupId, rhs.groupId);
       }
       case "property-grouping:other": {
         return 0;

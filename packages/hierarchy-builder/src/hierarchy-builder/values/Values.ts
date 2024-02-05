@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Id64 } from "@itwin/core-bentley";
+import { compareStrings, Id64 } from "@itwin/core-bentley";
 import { PrimitiveValueType } from "../Metadata";
 
 /**
@@ -32,6 +32,20 @@ export namespace InstanceKey {
    */
   export function equals(lhs: InstanceKey, rhs: InstanceKey): boolean {
     return lhs.className === rhs.className && lhs.id === rhs.id;
+  }
+  /**
+   * Compares two given instance keys.
+   * @returns
+   *- `0` if they are equal
+   *- `negative value` if lhs key is less than rhs key
+   *- `positive value` if lhs key is more than rhs key
+   */
+  export function compare(lhs: InstanceKey, rhs: InstanceKey): number {
+    const classNameCompareResult = compareStrings(lhs.className, rhs.className);
+    if (classNameCompareResult !== 0) {
+      return classNameCompareResult;
+    }
+    return compareStrings(lhs.id, rhs.id);
   }
 }
 

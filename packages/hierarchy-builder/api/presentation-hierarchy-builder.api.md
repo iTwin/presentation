@@ -816,6 +816,7 @@ export interface InstanceKey {
 
 // @beta (undocumented)
 export namespace InstanceKey {
+    export function compare(lhs: InstanceKey, rhs: InstanceKey): number;
     export function equals(lhs: InstanceKey, rhs: InstanceKey): boolean;
 }
 
