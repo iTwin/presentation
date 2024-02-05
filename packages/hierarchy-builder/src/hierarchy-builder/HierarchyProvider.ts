@@ -34,7 +34,7 @@ import {
   ProcessedHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "./HierarchyNode";
-import { getClass, hasChildren, LOGGING_NAMESPACE as CommonLoggingNamespace } from "./internal/Common";
+import { LOGGING_NAMESPACE as CommonLoggingNamespace, getClass, hasChildren } from "./internal/Common";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
 import { createDetermineChildrenOperator } from "./internal/operators/DetermineChildren";
 import { createGroupingOperator } from "./internal/operators/Grouping";
