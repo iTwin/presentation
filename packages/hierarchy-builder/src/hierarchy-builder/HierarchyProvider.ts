@@ -433,7 +433,7 @@ class ChildNodesCache {
 
   private compareHierarchyNodeKeys(lhs: HierarchyNodeKey[], rhs: HierarchyNodeKey[]) {
     if (lhs.length !== rhs.length) {
-      return lhs.length > rhs.length ? 1 : -1;
+      return lhs.length - rhs.length;
     }
     for (let i = 0; i < lhs.length; ++i) {
       const keysCompareResult = HierarchyNodeKey.compare(lhs[i], rhs[i]);

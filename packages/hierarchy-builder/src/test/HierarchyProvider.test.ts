@@ -849,7 +849,6 @@ describe("HierarchyProvider", () => {
                 fullClassName: "x.y",
                 query: { ecsql: "QUERY" },
               },
-              { node: { key: "root", label: "root" } },
             ];
           }
           return [];
