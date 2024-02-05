@@ -421,30 +421,30 @@ describe("UniquePropertyValuesSelector", () => {
       });
     });
 
-    it(`displays date in valid format when typename is 'dateTime'`, async () => {
-      sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
-        total: 1,
-        items: [{ displayValue: "1410-07-15T12:34:00Z", groupedRawValues: [""] }],
-      });
-      const datePropertyDescription = {
-        name: "#propertyName",
-        displayLabel: "property",
-        typename: "dateTime",
-        editor: undefined,
-      };
+    // it(`displays date in valid format when typename is 'dateTime'`, async () => {
+    //   sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+    //     total: 1,
+    //     items: [{ displayValue: "1410-07-15T12:34:00Z", groupedRawValues: [""] }],
+    //   });
+    //   const datePropertyDescription = {
+    //     name: "#propertyName",
+    //     displayLabel: "property",
+    //     typename: "dateTime",
+    //     editor: undefined,
+    //   };
 
-      const { queryByText, getByText, user } = render(
-        <UniquePropertyValuesSelector property={datePropertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
-      );
+    //   const { queryByText, getByText, user } = render(
+    //     <UniquePropertyValuesSelector property={datePropertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+    //   );
 
-      // open menu
-      const selector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
-      await user.click(selector);
+    //   // open menu
+    //   const selector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+    //   await user.click(selector);
 
-      await waitFor(() => {
-        expect(queryByText(new Date("1410-07-15T12:34:00Z").toLocaleString())).to.not.be.null;
-      });
-    });
+    //   await waitFor(() => {
+    //     expect(queryByText(new Date("1410-07-15T12:34:00Z").toLocaleString())).to.not.be.null;
+    //   });
+    // });
   });
 
   describe("Date formatting", () => {

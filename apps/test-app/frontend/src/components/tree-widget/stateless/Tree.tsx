@@ -22,8 +22,8 @@ import { IModelApp } from "@itwin/core-frontend";
 import { FillCentered, TreeNode, UnderlinedButton } from "@itwin/core-react";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
+import { SvgMoreVertical } from "@itwin/itwinui-icons-react";
 import { DropdownMenu, IconButton, MenuItem, Text } from "@itwin/itwinui-react";
-import { SvgMoreVertical } from "@itwin/itwinui-react/cjs/core/utils";
 import { InfoTreeNodeItemType, isPresentationInfoTreeNodeItem } from "@itwin/presentation-components";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import {

@@ -54,7 +54,10 @@ export function DiagnosticsSelector(props: DiagnosticsSelectorProps) {
           { value: "info", label: "Info" },
         ]}
         value={editorSeverity}
-        onChange={(newValue: string) => setEditorSeverity(newValue)}
+        onChange={(newValue: string) => {
+          setEditorSeverity(newValue);
+          onDiagnosticsOptionsChanged(result);
+        }}
         size="small"
       />
       <LabeledSelect
@@ -67,7 +70,10 @@ export function DiagnosticsSelector(props: DiagnosticsSelectorProps) {
           { value: "trace", label: "Trace" },
         ]}
         value={devSeverity}
-        onChange={(newValue: string) => setDevSeverity(newValue)}
+        onChange={(newValue: string) => {
+          setDevSeverity(newValue);
+          onDiagnosticsOptionsChanged(result);
+        }}
         size="small"
       />
       <ToggleSwitch label="Measure performance" labelPosition="right" checked={shouldMeasurePerformance} onChange={handleMeasurePerformanceChange} />
@@ -75,7 +81,7 @@ export function DiagnosticsSelector(props: DiagnosticsSelectorProps) {
   ];
 
   return (
-    <DropdownMenu menuItems={menuItems} onClickOutside={() => {}} onHide={() => onDiagnosticsOptionsChanged(result)}>
+    <DropdownMenu menuItems={menuItems}>
       <Button size="small" className="diagnostics-button">
         Diagnostics
       </Button>

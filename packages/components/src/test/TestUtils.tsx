@@ -3,8 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import "@itwin/itwinui-react/styles.css";
 import { expect } from "chai";
 import { createElement, Fragment, PropsWithChildren, ReactElement, StrictMode } from "react";
+import { ThemeProvider } from "@itwin/itwinui-react";
 import {
   RenderHookOptions,
   RenderHookResult,
@@ -43,10 +45,14 @@ export async function waitForElement<T extends HTMLElement>(container: HTMLEleme
  *
  * It should be used when test need to do interactions with rendered components.
  */
-function customRender(ui: ReactElement, options?: RenderOptions & { disableStrictMode?: boolean }): RenderResult & { user: UserEvent } {
+function customRender(
+  ui: ReactElement,
+  options?: RenderOptions & { disableStrictMode?: boolean; addThemeProvider?: boolean },
+): RenderResult & { user: UserEvent } {
   const wrapper = createWrapper(options?.wrapper, options?.disableStrictMode);
+
   return {
-    ...renderRTL(ui, { ...options, wrapper }),
+    ...renderRTL(options?.addThemeProvider ? <ThemeProvider>{ui}</ThemeProvider> : ui, { ...options, wrapper }),
     user: userEvent.setup(),
   };
 }
