@@ -20,7 +20,7 @@ import {
   tap,
 } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
-import { assert, LRUCache, LRUMap, omit } from "@itwin/core-bentley";
+import { assert, Dictionary, LRUCache, LRUMap, omit } from "@itwin/core-bentley";
 import { IMetadataProvider } from "./ECMetadata";
 import { GenericInstanceFilter } from "./GenericInstanceFilter";
 import { DefineHierarchyLevelProps, HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
@@ -28,13 +28,14 @@ import { RowsLimitExceededError } from "./HierarchyErrors";
 import {
   HierarchyNode,
   HierarchyNodeIdentifiersPath,
+  HierarchyNodeKey,
   ParsedHierarchyNode,
   ProcessedCustomHierarchyNode,
   ProcessedGroupingHierarchyNode,
   ProcessedHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "./HierarchyNode";
-import { LOGGING_NAMESPACE as CommonLoggingNamespace, getClass, hasChildren } from "./internal/Common";
+import { getClass, hasChildren, LOGGING_NAMESPACE as CommonLoggingNamespace } from "./internal/Common";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
 import { createDetermineChildrenOperator } from "./internal/operators/DetermineChildren";
 import { createGroupingOperator } from "./internal/operators/Grouping";
@@ -406,7 +407,7 @@ interface ChildNodesCacheEntry {
   variations: LRUCache<string, CachedNodesObservableEntry>;
 }
 class ChildNodesCache {
-  private _map = new Map<string, ChildNodesCacheEntry>();
+  private _map = new Dictionary<HierarchyNodeKey[], ChildNodesCacheEntry>((lhs, rhs) => this.compareHierarchyNodeKeys(lhs, rhs));
 
   private createVariationKey(props: GetHierarchyNodesProps) {
     const { instanceFilter, parentNode } = props;
@@ -420,9 +421,23 @@ class ChildNodesCache {
     return JSON.stringify({ instanceFilter, hierarchyLevelSizeLimit });
   }
 
+  private compareHierarchyNodeKeys(lhs: HierarchyNodeKey[], rhs: HierarchyNodeKey[]) {
+    if (lhs.length !== rhs.length) {
+      return lhs.length > rhs.length ? 1 : -1;
+    }
+    for (let i = 0; i < lhs.length; ++i) {
+      const keysCompareResult = HierarchyNodeKey.compare(lhs[i], rhs[i]);
+      // istanbul ignore if
+      if (keysCompareResult !== 0) {
+        return keysCompareResult;
+      }
+    }
+    return 0;
+  }
+
   private parseRequestProps(requestProps: GetHierarchyNodesProps) {
     const { parentNode: node } = requestProps;
-    const primaryKey = node ? `${JSON.stringify(node.parentKeys)}+${JSON.stringify(node.key)}` : "";
+    const primaryKey = node ? [...node.parentKeys, node.key] : [];
     const variationKey = this.createVariationKey(requestProps);
     return { primaryKey, variationKey };
   }

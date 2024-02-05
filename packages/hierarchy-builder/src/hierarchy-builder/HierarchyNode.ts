@@ -228,6 +228,101 @@ export namespace HierarchyNodeKey {
       }
     }
   }
+  /**
+   * Compares two given keys.
+   * @returns
+   *- `0` if they are equal
+   *- `negative value` if lhs key is less than rhs key
+   *- `positive value` if lhs key is more than rhs key
+   */
+  export function compare(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): number {
+    // This compare is quicker than String.localeCompare
+    function compareStrings(lhsStr: string, rhsStr: string): number {
+      return lhsStr < rhsStr ? -1 : lhsStr > rhsStr ? 1 : 0;
+    }
+    if (isCustom(lhs)) {
+      if (!isCustom(rhs)) {
+        return 1;
+      }
+      return compareStrings(lhs, rhs);
+    }
+    if (isCustom(rhs)) {
+      return -1;
+    }
+
+    const typeCompareResult = compareStrings(lhs.type, rhs.type);
+    if (typeCompareResult !== 0) {
+      return typeCompareResult;
+    }
+
+    switch (lhs.type) {
+      case "instances": {
+        assert(isInstances(rhs));
+        if (lhs.instanceKeys.length !== rhs.instanceKeys.length) {
+          return lhs.instanceKeys.length > rhs.instanceKeys.length ? 1 : -1;
+        }
+        for (let i = 0; i < lhs.instanceKeys.length; ++i) {
+          const lhsInstanceKey = lhs.instanceKeys[i];
+          const rhsInstanceKey = rhs.instanceKeys[i];
+          const classNameComparResult = compareStrings(lhsInstanceKey.className, rhsInstanceKey.className);
+          if (classNameComparResult !== 0) {
+            return classNameComparResult;
+          }
+          const idCompareResult = compareStrings(lhsInstanceKey.id, rhsInstanceKey.id);
+          if (idCompareResult !== 0) {
+            return idCompareResult;
+          }
+        }
+        return 0;
+      }
+      case "class-grouping": {
+        assert(isClassGrouping(rhs));
+        return compareStrings(lhs.class.name, rhs.class.name);
+      }
+      case "label-grouping": {
+        assert(isLabelGrouping(rhs));
+        const labelCompareResult = compareStrings(lhs.label, rhs.label);
+        if (labelCompareResult !== 0) {
+          return labelCompareResult;
+        }
+        // Have to do this check in case one of them is `undefined` and the other is ""
+        if (typeof lhs.groupId !== typeof rhs.groupId) {
+          return lhs.groupId !== undefined ? 1 : -1;
+        }
+        return compareStrings(lhs.groupId ?? "", rhs.groupId ?? "");
+      }
+      case "property-grouping:other": {
+        return 0;
+      }
+      case "property-grouping:value": {
+        assert(isPropertyValueGrouping(rhs));
+        const propertyClassNameCompareResult = compareStrings(lhs.propertyClassName, rhs.propertyClassName);
+        if (propertyClassNameCompareResult !== 0) {
+          return propertyClassNameCompareResult;
+        }
+        const propertyNameCompareResult = compareStrings(lhs.propertyName, rhs.propertyName);
+        if (propertyNameCompareResult !== 0) {
+          return propertyNameCompareResult;
+        }
+        return compareStrings(lhs.formattedPropertyValue, rhs.formattedPropertyValue);
+      }
+      case "property-grouping:range": {
+        assert(isPropertyValueRangeGrouping(rhs));
+        const propertyClassNameCompareResult = compareStrings(lhs.propertyClassName, rhs.propertyClassName);
+        if (propertyClassNameCompareResult !== 0) {
+          return propertyClassNameCompareResult;
+        }
+        const propertyNameCompareResult = compareStrings(lhs.propertyName, rhs.propertyName);
+        if (propertyNameCompareResult !== 0) {
+          return propertyNameCompareResult;
+        }
+        if (lhs.fromValue !== rhs.fromValue) {
+          return lhs.fromValue > rhs.fromValue ? 1 : -1;
+        }
+        return lhs.toValue > rhs.toValue ? 1 : lhs.toValue < rhs.toValue ? -1 : 0;
+      }
+    }
+  }
 }
 
 /**
