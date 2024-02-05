@@ -14,6 +14,7 @@ import {
   HierarchyProvider,
   IHierarchyLevelDefinitionsFactory,
   IPrimitiveValueFormatter,
+  parseFullClassName,
 } from "@itwin/presentation-hierarchy-builder";
 
 function createSchemaContext(imodel: IModelConnection | IModelDb | ECDb) {
@@ -62,4 +63,9 @@ export function createProvider(props: {
     formatter: formatterFactory ? formatterFactory(createSchemaContext(imodel)) : undefined,
     filtering: filteredNodePaths ? { paths: filteredNodePaths } : undefined,
   });
+}
+
+export function createClassECSqlSelector(fullClassName: string) {
+  const { schemaName, className } = parseFullClassName(fullClassName);
+  return `[${schemaName}].[${className}]`;
 }

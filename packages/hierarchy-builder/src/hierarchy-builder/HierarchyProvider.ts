@@ -34,7 +34,7 @@ import {
   ProcessedHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "./HierarchyNode";
-import { LOGGING_NAMESPACE as CommonLoggingNamespace, getClass, hasChildren } from "./internal/Common";
+import { getClass, hasChildren, LOGGING_NAMESPACE as CommonLoggingNamespace } from "./internal/Common";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
 import { createDetermineChildrenOperator } from "./internal/operators/DetermineChildren";
 import { createGroupingOperator } from "./internal/operators/Grouping";
@@ -318,6 +318,16 @@ export class HierarchyProvider {
       });
     });
   }
+
+  /**
+   * A function that should be called when the underlying data source, used by `HierarchyProviderProps.metadataProvider`,
+   * `HierarchyProviderProps.queryExecutor` or `HierarchyProviderProps.hierarchyDefinition`, changes.
+   *
+   * Calling the function invalidates internal caches to make sure fresh data is retrieved on new requests.
+   */
+  public notifyDataSourceChanged() {
+    this._nodesCache.clear();
+  }
 }
 
 function preProcessNodes(hierarchyFactory: IHierarchyLevelDefinitionsFactory) {
@@ -448,6 +458,10 @@ class ChildNodesCache {
       return undefined;
     }
     return variationKey ? entry.variations.get(variationKey) : entry.primary;
+  }
+
+  public clear() {
+    this._map.clear();
   }
 }
 
