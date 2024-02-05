@@ -1008,4 +1008,35 @@ describe("HierarchyProvider", () => {
       expect(await provider.getNodes({ parentNode: undefined })).to.deep.eq([{ ...node, parentKeys: [] }]);
     });
   });
+
+  describe("notifyDataSourceChanged", () => {
+    it("getNodes clears cache on data source change", async () => {
+      queryExecutor.createQueryReader.returns(createFakeQueryReader([]));
+      const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel() {
+          return [
+            {
+              fullClassName: "x.y",
+              query: { ecsql: "QUERY" },
+            },
+          ];
+        },
+      };
+      const provider = new HierarchyProvider({
+        metadataProvider,
+        queryExecutor,
+        hierarchyDefinition,
+      });
+      expect(await provider.getNodes({ parentNode: undefined })).to.deep.eq([]);
+      expect(queryExecutor.createQueryReader).to.be.calledOnce;
+      expect(await provider.getNodes({ parentNode: undefined })).to.deep.eq([]);
+      expect(queryExecutor.createQueryReader).to.be.calledOnce;
+
+      provider.notifyDataSourceChanged();
+      expect(await provider.getNodes({ parentNode: undefined })).to.deep.eq([]);
+      expect(queryExecutor.createQueryReader).to.be.calledTwice;
+      expect(await provider.getNodes({ parentNode: undefined })).to.deep.eq([]);
+      expect(queryExecutor.createQueryReader).to.be.calledTwice;
+    });
+  });
 });

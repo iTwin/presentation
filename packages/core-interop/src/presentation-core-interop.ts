@@ -9,3 +9,4 @@ export * from "./core-interop/Localization";
 export * from "./core-interop/Logging";
 export * from "./core-interop/Metadata";
 export * from "./core-interop/QueryExecutor";
+export * from "./core-interop/Transactions";
