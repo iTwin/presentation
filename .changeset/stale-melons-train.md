@@ -2,4 +2,4 @@
 "@itwin/presentation-components": major
 ---
 
-Bumped AppUI peed dependency to `^4.9.0`.
+Bumped AppUI peer dependency to `^4.9.0`.
