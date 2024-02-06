@@ -11,11 +11,10 @@ import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@i
 import { FormatterSpec, ParserSpec } from "@itwin/core-quantity";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
-import { waitFor } from "@testing-library/react";
 import { SchemaMetadataContextProvider } from "../../../presentation-components/common/SchemaMetadataContext";
 import { QuantityEditorName, QuantityPropertyEditor } from "../../../presentation-components/properties/editors/QuantityPropertyEditor";
-import { render } from "../../_helpers/Common";
 import { createTestPropertyRecord } from "../../_helpers/UiComponents";
+import { render, waitFor } from "../../TestUtils";
 
 const createRecord = ({ initialValue, quantityType }: { initialValue?: number; quantityType?: string }) => {
   return createTestPropertyRecord(
@@ -60,7 +59,7 @@ describe("<QuantityPropertyEditor />", () => {
   it("renders quantity input if schema context is available", async () => {
     const record = createRecord({ initialValue: 10, quantityType: "TestKOQ" });
     const { getByDisplayValue } = render(
-      <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => ({} as SchemaContext)}>
+      <SchemaMetadataContextProvider imodel={{} as IModelConnection} schemaContextProvider={() => ({}) as SchemaContext}>
         <QuantityPropertyEditor propertyRecord={record} />
       </SchemaMetadataContextProvider>,
     );

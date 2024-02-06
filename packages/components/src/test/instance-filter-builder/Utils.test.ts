@@ -11,7 +11,6 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Descriptor, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { renderHook } from "@testing-library/react-hooks";
 import {
   createInstanceFilterPropertyInfos,
   DEFAULT_ROOT_CATEGORY_NAME,
@@ -27,6 +26,7 @@ import {
   createTestPropertiesContentField,
   createTestSimpleContentField,
 } from "../_helpers/Content";
+import { renderHook } from "../TestUtils";
 
 describe("createInstanceFilterPropertyInfos", () => {
   it("creates property infos when fields are in root category", () => {
@@ -161,7 +161,7 @@ describe("filterRuleValidator", () => {
         id: "test-id",
         groupId: "test-group-id",
         property: numericProperty,
-        operator: PropertyFilterRuleOperator.IsEqual,
+        operator: PropertyFilterRuleOperator.Less,
         value: {
           valueFormat: PropertyValueFormat.Primitive,
           value: undefined,
@@ -169,6 +169,22 @@ describe("filterRuleValidator", () => {
         },
       }),
     ).to.be.eq("instance-filter-builder.error-messages.not-a-number");
+  });
+
+  it("does not return error message for invalid numeric value if operator is 'IsEqual' or 'IsNotEqual'", () => {
+    expect(
+      filterRuleValidator({
+        id: "test-id",
+        groupId: "test-group-id",
+        property: numericProperty,
+        operator: PropertyFilterRuleOperator.IsEqual,
+        value: {
+          valueFormat: PropertyValueFormat.Primitive,
+          value: "[Invalid]",
+          displayValue: "[Invalid]",
+        },
+      }),
+    ).to.be.undefined;
   });
 
   it("returns error message for invalid quantity rule", () => {
@@ -193,7 +209,7 @@ describe("filterRuleValidator", () => {
         id: "test-id",
         groupId: "test-group-id",
         property: numericProperty,
-        operator: PropertyFilterRuleOperator.IsEqual,
+        operator: PropertyFilterRuleOperator.Greater,
         value: {
           valueFormat: PropertyValueFormat.Primitive,
           value: 10,

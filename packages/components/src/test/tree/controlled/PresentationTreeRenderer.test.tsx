@@ -22,15 +22,15 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { PresentationError, PresentationStatus, PropertyValueFormat } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
-import { waitFor } from "@testing-library/react";
 import { translate } from "../../../presentation-components/common/Utils";
 import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
 import { PresentationTreeRenderer } from "../../../presentation-components/tree/controlled/PresentationTreeRenderer";
 import { PresentationTreeDataProvider } from "../../../presentation-components/tree/DataProvider";
 import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";
 import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem";
-import { createTestPropertyInfo, render, stubDOMMatrix, stubRaf } from "../../_helpers/Common";
+import { createTestPropertyInfo, stubDOMMatrix, stubRaf } from "../../_helpers/Common";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content";
+import { render, waitFor } from "../../TestUtils";
 import { createTreeModelNodeInput } from "./Helpers";
 
 describe("PresentationTreeRenderer", () => {
@@ -62,7 +62,7 @@ describe("PresentationTreeRenderer", () => {
     getNodesCount: sinon.stub<Parameters<PresentationManager["getNodesCount"]>, ReturnType<PresentationManager["getNodesCount"]>>(),
   };
 
-  beforeEach(async () => {
+  before(async () => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "localization").get(() => localization);
     sinon.stub(Presentation, "presentation").get(() => presentationManager);
@@ -71,7 +71,15 @@ describe("PresentationTreeRenderer", () => {
     // need to initialize for immer patches to be enabled.
     await UiComponents.initialize(localization);
     HTMLElement.prototype.scrollIntoView = () => {};
+  });
 
+  after(() => {
+    sinon.restore();
+    UiComponents.terminate();
+    delete (HTMLElement.prototype as any).scrollIntoView;
+  });
+
+  beforeEach(() => {
     nodeLoaderStub.loadNode.returns(EMPTY);
     presentationManager.getNodesCount.resolves(15);
   });
@@ -79,9 +87,6 @@ describe("PresentationTreeRenderer", () => {
   afterEach(() => {
     nodeLoaderStub.loadNode.reset();
     presentationManager.getNodesCount.reset();
-    sinon.restore();
-    UiComponents.terminate();
-    delete (HTMLElement.prototype as any).scrollIntoView;
   });
 
   const property = createTestPropertyInfo({ name: "TestProperty", type: StandardTypeNames.Bool });
@@ -325,6 +330,58 @@ describe("PresentationTreeRenderer", () => {
 
     await waitFor(() => expect(presentationManager.getNodesCount).to.be.calledOnce);
     expect(queryByText(/tree.filter-dialog/i)).to.be.null;
+  });
+
+  it("clears filter if apply button is pressed after filtering rules are cleared", async () => {
+    const { visibleNodes, modelSource, nodeLoader } = setupTreeModel((model) => {
+      model.setChildren(
+        undefined,
+        [
+          createTreeModelNodeInput({
+            id: "A",
+            item: { filtering: { descriptor: createTestContentDescriptor({ fields: [propertyField] }), ancestorFilters: [] } },
+          }),
+        ],
+        0,
+      );
+    });
+
+    const result = render(<PresentationTreeRenderer {...baseTreeProps} visibleNodes={visibleNodes} nodeLoader={nodeLoader} />);
+
+    const { queryByText, user } = result;
+    await waitFor(() => expect(queryByText("A")).to.not.be.null);
+
+    await applyFilter(result, propertyField.label);
+
+    // ensure that initially the filter is enabled
+    let nodeItem = modelSource.getModel().getNode("A")?.item as PresentationTreeNodeItem;
+    expect(nodeItem.filtering?.active).to.not.be.undefined;
+
+    await openFilterDialog(result);
+
+    const { baseElement } = result;
+
+    // clear all filter selections
+    const resetButton = await waitFor(() => {
+      const button = baseElement.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-reset-button");
+      expect(button?.disabled).to.be.false;
+      return button;
+    });
+    await user.click(resetButton!);
+
+    // pressing apply on empty filter clears it
+    const applyButton = await waitFor(() => {
+      const button = baseElement.querySelector<HTMLInputElement>(".presentation-instance-filter-dialog-apply-button");
+      return button;
+    });
+    await user.click(applyButton!);
+
+    await waitFor(() => {
+      expect(baseElement.querySelector(".presentation-instance-filter-dialog")).to.be.null;
+    });
+
+    nodeItem = modelSource.getModel().getNode("A")?.item as PresentationTreeNodeItem;
+    expect(nodeItem.filtering?.active).to.be.undefined;
   });
 });
 

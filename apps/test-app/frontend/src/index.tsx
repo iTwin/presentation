@@ -5,7 +5,7 @@
 
 import "./index.css";
 import { StrictMode } from "react";
-import { render } from "react-dom";
+import { createRoot } from "react-dom/client";
 import { UiComponents } from "@itwin/components-react";
 import { Logger, LogLevel, ProcessDetector } from "@itwin/core-bentley";
 import { BentleyCloudRpcManager } from "@itwin/core-common";
@@ -82,11 +82,10 @@ async function initializePresentation() {
 void (async () => {
   await initializeApp();
 
-  const rootElement = document.getElementById("root");
-  render(
+  const root = createRoot(document.getElementById("root")!);
+  root.render(
     <StrictMode>
       <App />
     </StrictMode>,
-    rootElement,
   );
 })();

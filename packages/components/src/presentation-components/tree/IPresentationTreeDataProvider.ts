@@ -6,10 +6,10 @@
  * @module Tree
  */
 
-import { ITreeDataProvider, TreeNodeItem } from "@itwin/components-react";
+import { ActiveMatchInfo, ITreeDataProvider, TreeNodeItem } from "@itwin/components-react";
+import { IModelConnection } from "@itwin/core-frontend";
 import { HierarchyRequestOptions, InstanceFilterDefinition, NodeKey, NodePathElement } from "@itwin/presentation-common";
 import { IPresentationDataProvider } from "../common/IPresentationDataProvider";
-import { IModelConnection } from "@itwin/core-frontend";
 
 /**
  * Presentation tree data provider.
@@ -32,4 +32,27 @@ export interface IPresentationTreeDataProvider extends ITreeDataProvider, IPrese
    * Creates options for nodes request.
    */
   createRequestOptions(parentKey?: NodeKey, instanceFilter?: InstanceFilterDefinition): HierarchyRequestOptions<IModelConnection, NodeKey>;
+}
+
+/**
+ * Filtered presentation tree data provider.
+ * @public
+ */
+export interface IFilteredPresentationTreeDataProvider extends IPresentationTreeDataProvider {
+  /**
+   * Applied filter.
+   */
+  filter: string;
+  /**
+   * Returns active match for given index.
+   */
+  getActiveMatch(index: number): ActiveMatchInfo | undefined;
+  /**
+   * Counts all filter matches.
+   */
+  countFilteringResults(nodePaths: ReadonlyArray<Readonly<NodePathElement>>): number;
+  /**
+   * Checks whether node matches applied filter or not.
+   */
+  nodeMatchesFilter(node: TreeNodeItem): boolean;
 }

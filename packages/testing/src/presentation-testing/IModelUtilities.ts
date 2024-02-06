@@ -6,23 +6,12 @@
  * @module IModel
  */
 
-import path from "path";
-import sanitize from "sanitize-filename";
-import { IModelDb, IModelJsFs, SnapshotDb } from "@itwin/core-backend";
+import { SnapshotDb } from "@itwin/core-backend";
 import { Id64String } from "@itwin/core-bentley";
-import {
-  BisCodeSpec,
-  Code,
-  CodeScopeProps,
-  CodeSpec,
-  ElementAspectProps,
-  ElementProps,
-  LocalFileName,
-  ModelProps,
-  RelationshipProps,
-} from "@itwin/core-common";
+import { BisCodeSpec, Code, CodeScopeProps, ElementAspectProps, ElementProps, ModelProps, RelationshipProps } from "@itwin/core-common";
 import { IModelConnection, SnapshotConnection } from "@itwin/core-frontend";
-import { getTestOutputDir } from "./Helpers";
+import { TestIModelBuilderImpl } from "./IModelBuilderImpl";
+import { createFileNameFromString, setupOutputFileLocation } from "./InternalUtils";
 
 /**
  * Interface for IModel builder pattern. Used for building IModels to test rulesets.
@@ -88,7 +77,7 @@ export async function buildTestIModel(nameParam: string | Mocha.Context, cb: (bu
   const name = typeof nameParam === "string" ? nameParam : createFileNameFromString(nameParam.test!.fullTitle());
   const outputFile = setupOutputFileLocation(name);
   const db = SnapshotDb.createEmpty(outputFile, { rootSubject: { name } });
-  const builder = new IModelBuilder(db);
+  const builder = new TestIModelBuilderImpl(db);
   try {
     await cb(builder);
   } finally {
@@ -96,64 +85,4 @@ export async function buildTestIModel(nameParam: string | Mocha.Context, cb: (bu
     db.close();
   }
   return SnapshotConnection.openFile(outputFile);
-}
-
-/**
- * Default implementation of IModel builder pattern. Used for building IModels to test rulesets.
- *
- * @internal
- */
-export class IModelBuilder implements TestIModelBuilder {
-  private _iModel: IModelDb;
-
-  constructor(iModel: IModelDb) {
-    this._iModel = iModel;
-  }
-
-  public insertModel<TProps extends ModelProps>(props: TProps): Id64String {
-    return this._iModel.models.insertModel(props);
-  }
-
-  public insertElement<TProps extends ElementProps>(props: TProps): Id64String {
-    return this._iModel.elements.insertElement(props);
-  }
-
-  public insertAspect<TProps extends ElementAspectProps>(props: TProps): Id64String {
-    return this._iModel.elements.insertAspect(props);
-  }
-
-  public insertRelationship<TProps extends RelationshipProps>(props: TProps): Id64String {
-    return this._iModel.relationships.insertInstance(props);
-  }
-
-  public createCode(scopeModelId: CodeScopeProps, codeSpecName: BisCodeSpec, codeValue: string): Code {
-    const codeSpec: CodeSpec = this._iModel.codeSpecs.getByName(codeSpecName);
-    return new Code({ spec: codeSpec.id, scope: scopeModelId, value: codeValue });
-  }
-
-  public async importSchema(schemaXml: string) {
-    await this._iModel.importSchemaStrings([schemaXml]);
-  }
-}
-
-/**
- * Prepare for an output file by:
- * - Resolving the output file name under the known test output directory
- * - Making directories as necessary
- * - Removing a previous copy of the output file
- * @param fileName Name of output file
- * @internal
- */
-export function setupOutputFileLocation(fileName: string): LocalFileName {
-  const testOutputDir = getTestOutputDir();
-  !IModelJsFs.existsSync(testOutputDir) && IModelJsFs.mkdirSync(testOutputDir);
-
-  const outputFile = path.join(testOutputDir, `${fileName}.bim`);
-  IModelJsFs.existsSync(outputFile) && IModelJsFs.unlinkSync(outputFile);
-  return outputFile;
-}
-
-/** @internal */
-export function createFileNameFromString(str: string) {
-  return sanitize(str.replace(/[ ]+/g, "-")).toLocaleLowerCase();
 }

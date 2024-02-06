@@ -2,13 +2,12 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-
 import { expect } from "chai";
 import { EMPTY, from, of, Subject } from "rxjs";
 import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
 import { createHideIfNoChildrenOperator, LOGGING_NAMESPACE } from "../../../hierarchy-builder/internal/operators/HideIfNoChildren";
-import { createTestNode, getObservableResult, setupLogging } from "../../Utils";
+import { createTestProcessedCustomNode, getObservableResult, setupLogging, waitFor } from "../../Utils";
 
 describe("HideIfNoChildrenOperator", () => {
   before(() => {
@@ -16,15 +15,15 @@ describe("HideIfNoChildrenOperator", () => {
   });
 
   it("returns nodes that don't need hiding", async () => {
-    const nodes = [createTestNode()];
+    const nodes = [createTestProcessedCustomNode()];
     const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenOperator(sinon.spy(), false)));
     expect(result).to.deep.eq(nodes);
   });
 
   it("doesn't return nodes that need hiding and have children determined as `false`", async () => {
     const nodes = [
-      createTestNode({
-        params: { hideIfNoChildren: true },
+      createTestProcessedCustomNode({
+        processingParams: { hideIfNoChildren: true },
         children: false,
       }),
     ];
@@ -34,31 +33,9 @@ describe("HideIfNoChildrenOperator", () => {
 
   it("returns nodes that need hiding and have children determined as `true`", async () => {
     const nodes = [
-      createTestNode({
-        params: { hideIfNoChildren: true },
+      createTestProcessedCustomNode({
+        processingParams: { hideIfNoChildren: true },
         children: true,
-      }),
-    ];
-    const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenOperator(sinon.spy(), false)));
-    expect(result).to.deep.eq(nodes);
-  });
-
-  it("doesn't return nodes that need hiding and have children determined an empty array", async () => {
-    const nodes = [
-      createTestNode({
-        params: { hideIfNoChildren: true },
-        children: [],
-      }),
-    ];
-    const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenOperator(sinon.spy(), false)));
-    expect(result).to.deep.eq([]);
-  });
-
-  it("returns nodes that need hiding and have children determined as a non-empty array", async () => {
-    const nodes = [
-      createTestNode({
-        params: { hideIfNoChildren: true },
-        children: [createTestNode()],
       }),
     ];
     const result = await getObservableResult(from(nodes).pipe(createHideIfNoChildrenOperator(sinon.spy(), false)));
@@ -67,8 +44,8 @@ describe("HideIfNoChildrenOperator", () => {
 
   it("doesn't return nodes that need hiding, need children determined and don't have children", async () => {
     const nodes = [
-      createTestNode({
-        params: { hideIfNoChildren: true },
+      createTestProcessedCustomNode({
+        processingParams: { hideIfNoChildren: true },
         children: undefined,
       }),
     ];
@@ -79,8 +56,8 @@ describe("HideIfNoChildrenOperator", () => {
 
   it("returns nodes that need hiding, need children determined and do have children", async () => {
     const nodes = [
-      createTestNode({
-        params: { hideIfNoChildren: true },
+      createTestProcessedCustomNode({
+        processingParams: { hideIfNoChildren: true },
         children: undefined,
       }),
     ];
@@ -90,13 +67,13 @@ describe("HideIfNoChildrenOperator", () => {
   });
 
   it("checks children of all siblings at once when `stopOnFirstChild = false`", async () => {
-    const nodeA = createTestNode({
-      params: { hideIfNoChildren: true },
+    const nodeA = createTestProcessedCustomNode({
+      processingParams: { hideIfNoChildren: true },
       label: "a",
       children: undefined,
     });
-    const nodeB = createTestNode({
-      params: { hideIfNoChildren: true },
+    const nodeB = createTestProcessedCustomNode({
+      processingParams: { hideIfNoChildren: true },
       label: "b",
       children: undefined,
     });
@@ -113,8 +90,7 @@ describe("HideIfNoChildrenOperator", () => {
     });
 
     const promise = getObservableResult(from([nodeA, nodeB]).pipe(createHideIfNoChildrenOperator(hasNodes, false)));
-
-    expect(hasNodes).to.be.calledTwice;
+    await waitFor(() => expect(hasNodes).to.be.calledTwice);
     expect(hasNodes.firstCall).to.be.calledWithExactly(nodeA);
     expect(hasNodes.secondCall).to.be.calledWithExactly(nodeB);
 
@@ -132,13 +108,13 @@ describe("HideIfNoChildrenOperator", () => {
   });
 
   it("checks children before siblings when `stopOnFirstChild = true`", async () => {
-    const nodeA = createTestNode({
-      params: { hideIfNoChildren: true },
+    const nodeA = createTestProcessedCustomNode({
+      processingParams: { hideIfNoChildren: true },
       label: "a",
       children: undefined,
     });
-    const nodeB = createTestNode({
-      params: { hideIfNoChildren: true },
+    const nodeB = createTestProcessedCustomNode({
+      processingParams: { hideIfNoChildren: true },
       label: "b",
       children: undefined,
     });
@@ -156,7 +132,7 @@ describe("HideIfNoChildrenOperator", () => {
 
     const promise = getObservableResult(from([nodeA, nodeB]).pipe(createHideIfNoChildrenOperator(hasNodes, true)));
 
-    expect(hasNodes).to.be.calledOnce;
+    await waitFor(() => expect(hasNodes).to.be.calledOnce);
     expect(hasNodes.firstCall).to.be.calledWithExactly(nodeA);
     aHasNodesSubject.next(true);
     aHasNodesSubject.complete();
@@ -171,5 +147,13 @@ describe("HideIfNoChildrenOperator", () => {
       { ...nodeA, children: true },
       { ...nodeB, children: true },
     ]);
+  });
+
+  it("subscribes to input observable once", async () => {
+    const processedHierarchyNodesObservable = from([]);
+    const subscriptionSpy = sinon.spy(processedHierarchyNodesObservable, "subscribe");
+    const promise = processedHierarchyNodesObservable.pipe(createHideIfNoChildrenOperator(() => of(false), true));
+    promise.subscribe();
+    await waitFor(() => expect(subscriptionSpy).to.have.been.calledOnce);
   });
 });

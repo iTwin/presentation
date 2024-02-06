@@ -6,20 +6,25 @@
 import {
   BisInstanceLabelSelectClauseFactory,
   ClassBasedHierarchyLevelDefinitionsFactory,
+  DefineHierarchyLevelProps,
+  DefineInstanceNodeChildHierarchyLevelProps,
+  DefineRootHierarchyLevelProps,
   ECSchema,
   ECSqlBinding,
+  ECSqlSnippets,
   HierarchyLevelDefinition,
   HierarchyNode,
   HierarchyNodeIdentifiersPath,
   Id64String,
-  IECSqlQueryExecutor,
   IHierarchyLevelDefinitionsFactory,
   IInstanceLabelSelectClauseFactory,
+  ILimitingECSqlQueryExecutor,
   IMetadataProvider,
   InstanceKey,
   NodeSelectClauseColumnNames,
-  NodeSelectClauseFactory,
+  NodeSelectQueryFactory,
   parseFullClassName,
+  ProcessedHierarchyNode,
 } from "@itwin/presentation-hierarchy-builder";
 
 export interface ModelsTreeDefinitionProps {
@@ -28,13 +33,13 @@ export interface ModelsTreeDefinitionProps {
 
 export interface ModelsTreeInstanceKeyPathsFromInstanceKeysProps {
   metadataProvider: IMetadataProvider;
-  queryExecutor: IECSqlQueryExecutor;
+  queryExecutor: ILimitingECSqlQueryExecutor;
   keys: InstanceKey[];
 }
 
 export interface ModelsTreeInstanceKeyPathsFromInstanceLabelProps {
   metadataProvider: IMetadataProvider;
-  queryExecutor: IECSqlQueryExecutor;
+  queryExecutor: ILimitingECSqlQueryExecutor;
   label: string;
 }
 
@@ -49,43 +54,43 @@ export namespace ModelsTreeInstanceKeyPathsProps {
 
 export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
   private _impl: ClassBasedHierarchyLevelDefinitionsFactory;
-  private _selectClauseFactory: NodeSelectClauseFactory;
+  private _selectQueryFactory: NodeSelectQueryFactory;
   private _nodeLabelSelectClauseFactory: BisInstanceLabelSelectClauseFactory;
 
   public constructor(props: ModelsTreeDefinitionProps) {
     this._impl = new ClassBasedHierarchyLevelDefinitionsFactory({
       metadataProvider: props.metadataProvider,
       hierarchy: {
-        rootNodes: async () => this.createRootHierarchyLevelDefinition(),
+        rootNodes: async (requestProps) => this.createRootHierarchyLevelDefinition(requestProps),
         childNodes: [
           {
             parentNodeClassName: "BisCore.Subject",
-            definitions: async (ids: Id64String[]) => this.createSubjectChildrenQuery(ids),
+            definitions: async (requestProps: DefineInstanceNodeChildHierarchyLevelProps) => this.createSubjectChildrenQuery(requestProps),
           },
           {
             parentNodeClassName: "BisCore.ISubModeledElement",
-            definitions: async (ids: Id64String[]) => this.createISubModeledElementChildrenQuery(ids),
+            definitions: async (requestProps: DefineInstanceNodeChildHierarchyLevelProps) => this.createISubModeledElementChildrenQuery(requestProps),
           },
           {
             parentNodeClassName: "BisCore.GeometricModel3d",
-            definitions: async (ids: Id64String[]) => this.createGeometricModel3dChildrenQuery(ids),
+            definitions: async (requestProps: DefineInstanceNodeChildHierarchyLevelProps) => this.createGeometricModel3dChildrenQuery(requestProps),
           },
           {
             parentNodeClassName: "BisCore.SpatialCategory",
-            definitions: async (ids: Id64String[], parentNode) => this.createSpatialCategoryChildrenQuery(ids, parentNode),
+            definitions: async (requestProps: DefineInstanceNodeChildHierarchyLevelProps) => this.createSpatialCategoryChildrenQuery(requestProps),
           },
           {
             parentNodeClassName: "BisCore.GeometricElement3d",
-            definitions: async (ids: Id64String[]) => this.createGeometricElement3dChildrenQuery(ids),
+            definitions: async (requestProps: DefineInstanceNodeChildHierarchyLevelProps) => this.createGeometricElement3dChildrenQuery(requestProps),
           },
         ],
       },
     });
-    this._selectClauseFactory = new NodeSelectClauseFactory();
+    this._selectQueryFactory = new NodeSelectQueryFactory(props.metadataProvider);
     this._nodeLabelSelectClauseFactory = new BisInstanceLabelSelectClauseFactory({ metadataProvider: props.metadataProvider });
   }
 
-  public postProcessNode(node: HierarchyNode): HierarchyNode {
+  public async postProcessNode(node: ProcessedHierarchyNode): Promise<ProcessedHierarchyNode> {
     if (HierarchyNode.isClassGroupingNode(node)) {
       // `imageId` is assigned to instance nodes at query time, but grouping ones need to
       // be handled during post-processing
@@ -94,19 +99,20 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
     return node;
   }
 
-  public async defineHierarchyLevel(parentNode: HierarchyNode | undefined) {
-    return this._impl.defineHierarchyLevel(parentNode);
+  public async defineHierarchyLevel(props: DefineHierarchyLevelProps) {
+    return this._impl.defineHierarchyLevel(props);
   }
 
-  private async createRootHierarchyLevelDefinition(): Promise<HierarchyLevelDefinition> {
+  private async createRootHierarchyLevelDefinition(props: DefineRootHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
+    const instanceFilterClauses = await this._selectQueryFactory.createFilterClauses(props.instanceFilter, { fullName: "BisCore.Subject", alias: "this" });
     return [
       {
         fullClassName: "BisCore.Subject",
         query: {
           ecsql: `
             SELECT
-              ${await this._selectClauseFactory.createSelectClause({
-                ecClassId: { selector: "this.ECClassId" },
+              ${await this._selectQueryFactory.createSelectClause({
+                ecClassId: { selector: ECSqlSnippets.createRawPropertyValueSelector("this", "ECClassId") },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: {
                   selector: await this._nodeLabelSelectClauseFactory.createSelectClause({
@@ -118,22 +124,31 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                   imageId: "icon-imodel-hollow-2",
                 },
                 autoExpand: true,
+                supportsFiltering: true,
               })}
-            FROM bis.Subject this
-            WHERE this.Parent IS NULL
+            FROM ${instanceFilterClauses.from} this
+            ${instanceFilterClauses.joins}
+            WHERE
+              this.Parent IS NULL
+              ${instanceFilterClauses.where ? `AND ${instanceFilterClauses.where}` : ""}
           `,
         },
       },
     ];
   }
 
-  private async createSubjectChildrenQuery(subjectIds: Id64String[]): Promise<HierarchyLevelDefinition> {
+  private async createSubjectChildrenQuery({
+    parentNodeInstanceIds: subjectIds,
+    instanceFilter,
+  }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
     const selectColumnNames = Object.values(NodeSelectClauseColumnNames).join(", ");
+    const subjectFilterClauses = await this._selectQueryFactory.createFilterClauses(instanceFilter, { fullName: "BisCore.Subject", alias: "this" });
+    const modelFilterClauses = await this._selectQueryFactory.createFilterClauses(instanceFilter, { fullName: "BisCore.GeometricModel3d", alias: "this" });
     const ctes = [
       `
         subjects(${selectColumnNames}, ParentId) AS (
           SELECT
-            ${await this._selectClauseFactory.createSelectClause({
+            ${await this._selectQueryFactory.createSelectClause({
               ecClassId: { selector: "this.ECClassId" },
               ecInstanceId: { selector: "this.ECInstanceId" },
               nodeLabel: {
@@ -154,14 +169,15 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                 `,
               },
               hideIfNoChildren: true,
-              mergeByLabelId: "subject",
+              grouping: { byLabel: { action: "merge", groupId: "subject" } },
               extendedData: {
                 imageId: "icon-folder",
               },
+              supportsFiltering: true,
             })},
             this.Parent.Id ParentId
           FROM
-            bis.Subject this
+            ${subjectFilterClauses.from} this
         )
       `,
       `
@@ -182,12 +198,13 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
           ctes,
           ecsql: `
             SELECT
-            ${selectColumnNames}, ParentId
-            FROM
-              child_subjects this
+              ${selectColumnNames}, ParentId
+            FROM child_subjects this
+            ${subjectFilterClauses.joins}
             WHERE
               this.RootId IN (${subjectIds.map(() => "?").join(",")})
               AND NOT this.${NodeSelectClauseColumnNames.HideNodeInHierarchy}
+              ${subjectFilterClauses.where ? `AND ${subjectFilterClauses.where}` : ""}
           `,
           bindings: [...subjectIds.map((id): ECSqlBinding => ({ type: "id", value: id }))],
         },
@@ -198,7 +215,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
           ctes,
           ecsql: `
             SELECT
-              ${await this._selectClauseFactory.createSelectClause({
+              ${await this._selectQueryFactory.createSelectClause({
                 ecClassId: { selector: "this.ECClassId" },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: {
@@ -211,8 +228,8 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                   selector: `
                     CASE
                       WHEN (
-                        json_extract(partition.JsonProperties, '$.PhysicalPartition.Model.Content') IS NOT NULL
-                        OR json_extract(partition.JsonProperties, '$.GraphicalPartition3d.Model.Content') IS NOT NULL
+                        json_extract([partition].JsonProperties, '$.PhysicalPartition.Model.Content') IS NOT NULL
+                        OR json_extract([partition].JsonProperties, '$.GraphicalPartition3d.Model.Content') IS NOT NULL
                       ) THEN 1
                       ELSE 0
                     END
@@ -222,10 +239,12 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                 extendedData: {
                   imageId: "icon-model",
                 },
+                supportsFiltering: true,
               })}
-            FROM bis.GeometricModel3d this
-            JOIN bis.InformationPartitionElement partition ON partition.ECInstanceId = this.ModeledElement.Id
-            JOIN bis.Subject subject ON subject.ECInstanceId = partition.Parent.Id OR json_extract(subject.JsonProperties,'$.Subject.Model.TargetPartition') = printf('0x%x', partition.ECInstanceId)
+            FROM  ${modelFilterClauses.from} this
+            JOIN bis.InformationPartitionElement [partition] ON [partition].ECInstanceId = this.ModeledElement.Id
+            JOIN bis.Subject [subject] ON [subject].ECInstanceId = [partition].Parent.Id OR json_extract([subject].JsonProperties,'$.Subject.Model.TargetPartition') = printf('0x%x', [partition].ECInstanceId)
+            ${modelFilterClauses.joins}
             WHERE
               NOT this.IsPrivate
               AND EXISTS (
@@ -235,13 +254,14 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                 WHERE a.SourceECInstanceId = +this.ECInstanceId
               )
               AND (
-                subject.ECInstanceId IN (${subjectIds.map(() => "?").join(",")})
-                OR subject.ECInstanceId IN (
+                [subject].ECInstanceId IN (${subjectIds.map(() => "?").join(",")})
+                OR [subject].ECInstanceId IN (
                   SELECT s.ECInstanceId
                   FROM child_subjects s
                   WHERE s.RootId IN (${subjectIds.map(() => "?").join(",")}) AND s.${NodeSelectClauseColumnNames.HideNodeInHierarchy}
                 )
               )
+              ${modelFilterClauses.where ? `AND ${modelFilterClauses.where}` : ""}
           `,
           bindings: [
             ...subjectIds.map((id): ECSqlBinding => ({ type: "id", value: id })),
@@ -252,23 +272,30 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
     ];
   }
 
-  private async createISubModeledElementChildrenQuery(elementIds: Id64String[]): Promise<HierarchyLevelDefinition> {
+  private async createISubModeledElementChildrenQuery({
+    parentNodeInstanceIds: elementIds,
+    instanceFilter,
+  }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
+    const instanceFilterClauses = await this._selectQueryFactory.createFilterClauses(instanceFilter, { fullName: "BisCore.GeometricModel3d", alias: "this" });
     return [
       {
         fullClassName: "BisCore.GeometricModel3d",
         query: {
           ecsql: `
             SELECT
-              ${await this._selectClauseFactory.createSelectClause({
+              ${await this._selectQueryFactory.createSelectClause({
                 ecClassId: { selector: "this.ECClassId" },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: "", // doesn't matter - the node is always hidden
                 hideNodeInHierarchy: true,
               })}
-            FROM bis.GeometricModel3d this
-            WHERE this.ModeledElement.Id IN (${elementIds.map(() => "?").join(",")})
+            FROM ${instanceFilterClauses.from} this
+            ${instanceFilterClauses.joins}
+            WHERE
+              this.ModeledElement.Id IN (${elementIds.map(() => "?").join(",")})
               AND NOT this.IsPrivate
               AND this.ECInstanceId IN (SELECT Model.Id FROM bis.GeometricElement3d)
+              ${instanceFilterClauses.where ? `AND ${instanceFilterClauses.where}` : ""}
           `,
           bindings: [...elementIds.map((id): ECSqlBinding => ({ type: "id", value: id }))],
         },
@@ -276,7 +303,10 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
     ];
   }
 
-  private async createGeometricModel3dChildrenQuery(modelIds: Id64String[]): Promise<HierarchyLevelDefinition> {
+  private async createGeometricModel3dChildrenQuery({
+    parentNodeInstanceIds: modelIds,
+    instanceFilter,
+  }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
     function createModelIdsSelector(): string {
       // Note: `json_array` function only accepts up to 128 arguments and we may have more `modelIds` than that. As a workaround,
       // we're creating an array of arrays
@@ -290,13 +320,14 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
       }
       return `json_array(${slices.map((sliceIds) => `json_array(${sliceIds.map((id) => `'${id}'`).join(",")})`).join(",")})`;
     }
+    const instanceFilterClauses = await this._selectQueryFactory.createFilterClauses(instanceFilter, { fullName: "BisCore.SpatialCategory", alias: "this" });
     return [
       {
         fullClassName: "BisCore.SpatialCategory",
         query: {
           ecsql: `
             SELECT
-              ${await this._selectClauseFactory.createSelectClause({
+              ${await this._selectQueryFactory.createSelectClause({
                 ecClassId: { selector: "this.ECClassId" },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: {
@@ -305,22 +336,26 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                     className: "BisCore.SpatialCategory",
                   }),
                 },
-                mergeByLabelId: "category",
+                grouping: { byLabel: { action: "merge", groupId: "category" } },
                 hasChildren: true,
                 extendedData: {
                   imageId: "icon-layers",
                   modelIds: { selector: createModelIdsSelector() },
                 },
+                supportsFiltering: true,
               })}
-            FROM bis.SpatialCategory this
-            WHERE EXISTS (
-              SELECT 1
-              FROM bis.GeometricElement3d element
-              WHERE
-                element.Model.Id IN (${modelIds.map(() => "?").join(",")})
-                AND element.Category.Id = +this.ECInstanceId
-                AND element.Parent IS NULL
-            )
+            FROM ${instanceFilterClauses.from} this
+            ${instanceFilterClauses.joins}
+            WHERE
+              EXISTS (
+                SELECT 1
+                FROM bis.GeometricElement3d element
+                WHERE
+                  element.Model.Id IN (${modelIds.map(() => "?").join(",")})
+                  AND element.Category.Id = +this.ECInstanceId
+                  AND element.Parent IS NULL
+              )
+              ${instanceFilterClauses.where ? `AND ${instanceFilterClauses.where}` : ""}
           `,
           bindings: modelIds.map((id) => ({ type: "id", value: id })),
         },
@@ -328,18 +363,29 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
     ];
   }
 
-  private async createSpatialCategoryChildrenQuery(categoryIds: Id64String[], parentNode: HierarchyNode): Promise<HierarchyLevelDefinition> {
+  private async createSpatialCategoryChildrenQuery({
+    parentNodeInstanceIds: categoryIds,
+    parentNode,
+    instanceFilter,
+  }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
     const modelIds: Id64String[] =
-      parentNode.extendedData && parentNode.extendedData.hasOwnProperty("modelIds")
-        ? (parentNode.extendedData.modelIds as Array<Array<Id64String>>).reduce((arr, ids) => [...arr, ...ids])
+      parentNode.extendedData && parentNode.extendedData.hasOwnProperty("modelIds") && Array.isArray(parentNode.extendedData.modelIds)
+        ? parentNode.extendedData.modelIds.reduce(
+            (arr, ids: Id64String | Id64String[]) => [...arr, ...(Array.isArray(ids) ? ids : [ids])],
+            new Array<Id64String>(),
+          )
         : [];
+    if (modelIds.length === 0) {
+      throw new Error(`Invalid category node "${parentNode.label}" - missing model information.`);
+    }
+    const instanceFilterClauses = await this._selectQueryFactory.createFilterClauses(instanceFilter, { fullName: "BisCore.GeometricElement3d", alias: "this" });
     return [
       {
         fullClassName: "BisCore.GeometricElement3d",
         query: {
           ecsql: `
             SELECT
-              ${await this._selectClauseFactory.createSelectClause({
+              ${await this._selectQueryFactory.createSelectClause({
                 ecClassId: { selector: "this.ECClassId" },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: {
@@ -348,7 +394,9 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                     className: "BisCore.GeometricElement3d",
                   }),
                 },
-                groupByClass: true,
+                grouping: {
+                  byClass: true,
+                },
                 hasChildren: {
                   selector: `
                     IFNULL((
@@ -366,11 +414,15 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                 extendedData: {
                   imageId: "icon-item",
                 },
+                supportsFiltering: true,
               })}
-            FROM bis.GeometricElement3d this
-            WHERE this.Category.Id IN (${categoryIds.map(() => "?").join(",")})
+            FROM ${instanceFilterClauses.from} this
+            ${instanceFilterClauses.joins}
+            WHERE
+              this.Category.Id IN (${categoryIds.map(() => "?").join(",")})
               AND this.Model.Id IN (${modelIds.map(() => "?").join(",")})
               AND this.Parent IS NULL
+              ${instanceFilterClauses.where ? `AND ${instanceFilterClauses.where}` : ""}
           `,
           bindings: [...categoryIds.map((id) => ({ type: "id", value: id })), ...modelIds.map((id) => ({ type: "id", value: id }))] as ECSqlBinding[],
         },
@@ -378,14 +430,18 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
     ];
   }
 
-  private async createGeometricElement3dChildrenQuery(elementIds: Id64String[]): Promise<HierarchyLevelDefinition> {
+  private async createGeometricElement3dChildrenQuery({
+    parentNodeInstanceIds: elementIds,
+    instanceFilter,
+  }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
+    const instanceFilterClauses = await this._selectQueryFactory.createFilterClauses(instanceFilter, { fullName: "BisCore.GeometricElement3d", alias: "this" });
     return [
       {
         fullClassName: "BisCore.GeometricElement3d",
         query: {
           ecsql: `
             SELECT
-              ${await this._selectClauseFactory.createSelectClause({
+              ${await this._selectQueryFactory.createSelectClause({
                 ecClassId: { selector: "this.ECClassId" },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: {
@@ -394,7 +450,9 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                     className: "BisCore.GeometricElement3d",
                   }),
                 },
-                groupByClass: true,
+                grouping: {
+                  byClass: true,
+                },
                 hasChildren: {
                   selector: `
                     IFNULL((
@@ -412,9 +470,13 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                 extendedData: {
                   imageId: "icon-item",
                 },
+                supportsFiltering: true,
               })}
-            FROM bis.GeometricElement3d this
-            WHERE this.Parent.Id IN (${elementIds.map(() => "?").join(",")})
+            FROM ${instanceFilterClauses.from} this
+            ${instanceFilterClauses.joins}
+            WHERE
+              this.Parent.Id IN (${elementIds.map(() => "?").join(",")})
+              ${instanceFilterClauses.where ? `AND ${instanceFilterClauses.where}` : ""}
           `,
           bindings: elementIds.map((id) => ({ type: "id", value: id })),
         },
@@ -445,13 +507,18 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
     `GeometricElementsHierarchy(TargetId, TargetLabel, ECClassId, ECInstanceId, ParentId, ModelId, CategoryId, Path) AS (
       SELECT
         e.ECInstanceId,
-        ${await labelsFactory.createSelectClause({ classAlias: "e", className: "BisCore.GeometricElement3d" })},
+        ${await labelsFactory.createSelectClause({
+          classAlias: "e",
+          className: "BisCore.GeometricElement3d",
+          // eslint-disable-next-line @typescript-eslint/unbound-method
+          selectorsConcatenator: ECSqlSnippets.createConcatenatedValueStringSelector,
+        })},
         e.ECClassId,
         e.ECInstanceId,
         e.Parent.Id,
         e.Model.Id,
         e.Category.Id,
-        ${createECInstanceKeySelectClause({ alias: "e" })}
+        json_array(${createECInstanceKeySelectClause({ alias: "e" })})
       FROM bis.GeometricElement3d e
       UNION ALL
       SELECT
@@ -462,7 +529,7 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
         p.Parent.Id,
         p.Model.Id,
         p.Category.Id,
-        c.Path || ',' || ${createECInstanceKeySelectClause({ alias: "p" })}
+        json_insert(c.Path, '$[#]', ${createECInstanceKeySelectClause({ alias: "p" })})
       FROM GeometricElementsHierarchy c
       JOIN bis.GeometricElement3d p on p.ECInstanceId = c.ParentId
     )`,
@@ -476,7 +543,12 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
         c.ECClassId,
         c.ECInstanceId,
         printf('0x%x', c.ECInstanceId) HexId,
-        ${await labelsFactory.createSelectClause({ classAlias: "c", className: "BisCore.SpatialCategory" })}
+        ${await labelsFactory.createSelectClause({
+          classAlias: "c",
+          className: "BisCore.SpatialCategory",
+          // eslint-disable-next-line @typescript-eslint/unbound-method
+          selectorsConcatenator: ECSqlSnippets.createConcatenatedValueStringSelector,
+        })}
       FROM bis.SpatialCategory c
     )`,
     `Models(ECClassId, ECInstanceId, HexId, ModeledElementParentId, Label) AS (
@@ -485,8 +557,13 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
         m.ECInstanceId,
         printf('0x%x', m.ECInstanceId) HexId,
         p.Parent.Id,
-        ${await labelsFactory.createSelectClause({ classAlias: "p", className: "BisCore.Element" })}
-      FROM bis.Model m
+        ${await labelsFactory.createSelectClause({
+          classAlias: "p",
+          className: "BisCore.Element",
+          // eslint-disable-next-line @typescript-eslint/unbound-method
+          selectorsConcatenator: ECSqlSnippets.createConcatenatedValueStringSelector,
+        })}
+      FROM bis.GeometricModel3d m
       JOIN bis.Element p on p.ECInstanceId = m.ModeledElement.Id
     )`,
     `ModelsCategoriesElementsHierarchy(TargetElementId, TargetElementLabel, ModelId, ModelHexId, ModelParentId, Path) AS (
@@ -496,10 +573,17 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
         m.ECInstanceId,
         m.HexId,
         m.ModeledElementParentId,
-        e.Path || ',' || ${createECInstanceKeySelectClause({
-          classIdAlias: "c",
-          instanceHexIdSelector: "c.HexId",
-        })} || ',' || ${createECInstanceKeySelectClause({ classIdAlias: "m", instanceHexIdSelector: "m.HexId" })}
+        json_insert(
+          e.Path,
+          '$[#]', ${createECInstanceKeySelectClause({
+            classIdAlias: "c",
+            instanceHexIdSelector: "c.HexId",
+          })},
+          '$[#]', ${createECInstanceKeySelectClause({
+            classIdAlias: "m",
+            instanceHexIdSelector: "m.HexId",
+          })}
+        )
       FROM GeometricElements e
       JOIN Categories c ON c.ECInstanceId = e.CategoryId
       JOIN Models m ON m.ECInstanceId = e.ModelId
@@ -510,10 +594,18 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
         m.ECInstanceId,
         m.HexId,
         m.ModeledElementParentId,
-        mce.Path || ',' || e.Path || ',' || ${createECInstanceKeySelectClause({
-          classIdAlias: "c",
-          instanceHexIdSelector: "c.HexId",
-        })} || ',' || ${createECInstanceKeySelectClause({ classIdAlias: "m", instanceHexIdSelector: "m.HexId" })}
+        json_insert(
+          mce.Path,
+          '$[#]', json(e.Path),
+          '$[#]', ${createECInstanceKeySelectClause({
+            classIdAlias: "c",
+            instanceHexIdSelector: "c.HexId",
+          })},
+          '$[#]', ${createECInstanceKeySelectClause({
+            classIdAlias: "m",
+            instanceHexIdSelector: "m.HexId",
+          })}
+        )
       FROM ModelsCategoriesElementsHierarchy mce
       JOIN GeometricElements e on e.TargetId = mce.ModelId
       JOIN Categories c ON c.ECInstanceId = e.CategoryId
@@ -522,12 +614,26 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
     `SubjectsHierarchy(TargetId, TargetLabel, ECClassId, ECInstanceId, ParentId, JsonProperties, Path) AS (
       SELECT
         s.ECInstanceId,
-        ${await labelsFactory.createSelectClause({ classAlias: "s", className: "BisCore.Subject" })},
+        ${await labelsFactory.createSelectClause({
+          classAlias: "s",
+          className: "BisCore.Subject",
+          // eslint-disable-next-line @typescript-eslint/unbound-method
+          selectorsConcatenator: ECSqlSnippets.createConcatenatedValueStringSelector,
+        })},
         s.ECClassId,
         s.ECInstanceId,
         s.Parent.Id,
         s.JsonProperties,
-        ${createECInstanceKeySelectClause({ alias: "s" })}
+        CASE
+          WHEN (
+            json_extract(s.JsonProperties, '$.Subject.Job.Bridge') IS NOT NULL
+            OR json_extract(s.JsonProperties, '$.Subject.Model.Type') = 'Hierarchy'
+          )
+          THEN
+            json_array()
+          ELSE
+            json_array(${createECInstanceKeySelectClause({ alias: "s" })})
+        END
       FROM bis.Subject s
       UNION ALL
       SELECT
@@ -537,7 +643,16 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
         p.ECInstanceId,
         p.Parent.Id,
         p.JsonProperties,
-        c.Path || ',' || ${createECInstanceKeySelectClause({ alias: "p" })}
+        CASE
+          WHEN (
+            json_extract(p.JsonProperties, '$.Subject.Job.Bridge') IS NOT NULL
+            OR json_extract(p.JsonProperties, '$.Subject.Model.Type') = 'Hierarchy'
+          )
+          THEN
+            c.Path
+          ELSE
+            json_insert(c.Path, '$[#]', ${createECInstanceKeySelectClause({ alias: "p" })})
+        END
       FROM SubjectsHierarchy c
       JOIN bis.Element p on p.ECInstanceId = c.ParentId
     )`,
@@ -563,23 +678,25 @@ async function createInstanceKeyPathsFromInstanceKeys(props: ModelsTreeInstanceK
   const subjectClass = await getSchemaClass(bisSchema, "Subject");
   const modelClass = await getSchemaClass(bisSchema, "Model");
   const categoryClass = await getSchemaClass(bisSchema, "SpatialCategory");
-  for (const key of props.keys) {
-    const keyClass = await getClass(props.metadataProvider, key.className);
-    if (await keyClass.is(subjectClass)) {
-      ids.subjects.push(key.id);
-    } else if (await keyClass.is(modelClass)) {
-      ids.models.push(key.id);
-    } else if (await keyClass.is(categoryClass)) {
-      ids.categories.push(key.id);
-    } else {
-      ids.elements.push(key.id);
-    }
-  }
+  await Promise.all(
+    props.keys.map(async (key) => {
+      const keyClass = await getClass(props.metadataProvider, key.className);
+      if (await keyClass.is(subjectClass)) {
+        ids.subjects.push(key.id);
+      } else if (await keyClass.is(modelClass)) {
+        ids.models.push(key.id);
+      } else if (await keyClass.is(categoryClass)) {
+        ids.categories.push(key.id);
+      } else {
+        ids.elements.push(key.id);
+      }
+    }),
+  );
 
   const queries = [];
   if (ids.elements.length > 0) {
     queries.push(`
-      SELECT mce.Path || ',' || s.Path
+      SELECT json_insert(mce.Path, '$[#]', json(s.Path))
       FROM ModelsCategoriesElementsHierarchy mce
       JOIN Subjects s ON s.TargetId = mce.ModelParentId OR json_extract(s.JsonProperties,'$.Subject.Model.TargetPartition') = mce.ModelHexId
       WHERE mce.TargetElementId IN (${ids.elements.map(() => "?").join(",")})
@@ -588,9 +705,11 @@ async function createInstanceKeyPathsFromInstanceKeys(props: ModelsTreeInstanceK
   if (ids.categories.length > 0) {
     queries.push(`
       SELECT
-      ${createECInstanceKeySelectClause({ classIdAlias: "c", instanceHexIdSelector: "c.HexId" })}
-          || ',' || ${createECInstanceKeySelectClause({ classIdAlias: "m", instanceHexIdSelector: "m.HexId" })}
-          || ',' || s.Path
+        json_array(
+          ${createECInstanceKeySelectClause({ classIdAlias: "c", instanceHexIdSelector: "c.HexId" })},
+          ${createECInstanceKeySelectClause({ classIdAlias: "m", instanceHexIdSelector: "m.HexId" })},
+          json(s.Path)
+        )
       FROM Categories c,
            Models m
       JOIN Subjects s ON s.TargetId = m.ModeledElementParentId OR json_extract(s.JsonProperties,'$.Subject.Model.TargetPartition') = m.HexId
@@ -602,7 +721,10 @@ async function createInstanceKeyPathsFromInstanceKeys(props: ModelsTreeInstanceK
   if (ids.models.length > 0) {
     queries.push(`
       SELECT
-        ${createECInstanceKeySelectClause({ classIdAlias: "m", instanceHexIdSelector: "m.HexId" })} || ',' || s.Path
+        json_array(
+          ${createECInstanceKeySelectClause({ classIdAlias: "m", instanceHexIdSelector: "m.HexId" })},
+          json(s.Path)
+        )
       FROM Models m
       JOIN Subjects s ON s.TargetId = m.ModeledElementParentId OR json_extract(s.JsonProperties,'$.Subject.Model.TargetPartition') = m.HexId
       WHERE m.ECInstanceId IN (${ids.models.map(() => "?").join(",")})
@@ -619,22 +741,23 @@ async function createInstanceKeyPathsFromInstanceKeys(props: ModelsTreeInstanceK
     return [];
   }
 
-  const ecsql = `
-    WITH RECURSIVE
-      ${(await createInstanceKeyPathsCTEs({ createSelectClause: async () => "''" })).join(", ")}
-    ${queries.join(" UNION ALL ")}
-  `;
-
   const bindings: ECSqlBinding[] = [];
   ids.elements.forEach((id) => bindings.push({ type: "id", value: id }));
   ids.categories.forEach((id) => bindings.push({ type: "id", value: id }));
   ids.models.forEach((id) => bindings.push({ type: "id", value: id }));
   ids.subjects.forEach((id) => bindings.push({ type: "id", value: id }));
 
-  const reader = props.queryExecutor.createQueryReader(ecsql, bindings, { rowFormat: "Indexes" });
+  const reader = props.queryExecutor.createQueryReader(
+    {
+      ctes: await createInstanceKeyPathsCTEs({ createSelectClause: async () => "''" }),
+      ecsql: queries.join(" UNION ALL "),
+      bindings,
+    },
+    { rowFormat: "Indexes" },
+  );
   const paths = new Array<HierarchyNodeIdentifiersPath>();
   for await (const row of reader) {
-    paths.push(JSON.parse(`[${row.toArray()[0]}]`).reverse());
+    paths.push(flatten<InstanceKey>(JSON.parse(row[0])).reverse());
   }
   return paths;
 }
@@ -644,16 +767,18 @@ async function createInstanceKeyPathsFromInstanceLabel(
 ) {
   const queries = [];
   queries.push(`
-    SELECT mce.TargetElementLabel AS Label, mce.Path || ',' || s.Path AS Path
+    SELECT mce.TargetElementLabel AS Label, json_insert(mce.Path, '$[#]', json(s.Path)) AS Path
     FROM ModelsCategoriesElementsHierarchy mce
     JOIN Subjects s ON s.TargetId = mce.ModelParentId OR json_extract(s.JsonProperties,'$.Subject.Model.TargetPartition') = mce.ModelHexId
   `);
   queries.push(`
     SELECT
       c.Label AS Label,
-      ${createECInstanceKeySelectClause({ classIdAlias: "c", instanceHexIdSelector: "c.HexId" })}
-        || ',' || ${createECInstanceKeySelectClause({ classIdAlias: "m", instanceHexIdSelector: "m.HexId" })}
-        || ',' || s.Path AS Path
+      json_array(
+        ${createECInstanceKeySelectClause({ classIdAlias: "c", instanceHexIdSelector: "c.HexId" })},
+        ${createECInstanceKeySelectClause({ classIdAlias: "m", instanceHexIdSelector: "m.HexId" })},
+        json(s.Path)
+      ) AS Path
     FROM Categories c,
          Models m
     JOIN Subjects s ON s.TargetId = m.ModeledElementParentId OR json_extract(s.JsonProperties,'$.Subject.Model.TargetPartition') = m.HexId
@@ -663,7 +788,10 @@ async function createInstanceKeyPathsFromInstanceLabel(
   queries.push(`
     SELECT
       m.Label AS Label,
-      ${createECInstanceKeySelectClause({ classIdAlias: "m", instanceHexIdSelector: "m.HexId" })} || ',' || s.Path AS Path
+      json_array(
+        ${createECInstanceKeySelectClause({ classIdAlias: "m", instanceHexIdSelector: "m.HexId" })},
+        json(s.Path)
+      ) AS Path
     FROM Models m
     JOIN Subjects s ON s.TargetId = m.ModeledElementParentId OR json_extract(s.JsonProperties,'$.Subject.Model.TargetPartition') = m.HexId
   `);
@@ -672,22 +800,32 @@ async function createInstanceKeyPathsFromInstanceLabel(
     FROM Subjects s
   `);
 
-  const ecsql = `
-    WITH RECURSIVE
-      ${(await createInstanceKeyPathsCTEs(props.labelsFactory)).join(", ")}
-    SELECT Path
-    FROM (
-      ${queries.join(" UNION ALL ")}
-    )
-    WHERE Label LIKE '%' || ? || '%'
-  `;
-
-  const reader = props.queryExecutor.createQueryReader(ecsql, [{ type: "string", value: props.label }], { rowFormat: "Indexes" });
+  const reader = props.queryExecutor.createQueryReader(
+    {
+      ctes: await createInstanceKeyPathsCTEs(props.labelsFactory),
+      ecsql: `
+        SELECT DISTINCT Path
+        FROM (
+          ${queries.join(" UNION ALL ")}
+        )
+        WHERE Label LIKE '%' || ? || '%'
+      `,
+      bindings: [{ type: "string", value: props.label }],
+    },
+    { rowFormat: "Indexes" },
+  );
   const paths = new Array<HierarchyNodeIdentifiersPath>();
   for await (const row of reader) {
-    paths.push(JSON.parse(`[${row.toArray()[0]}]`).reverse());
+    paths.push(flatten<InstanceKey>(JSON.parse(row[0])).reverse());
   }
   return paths;
+}
+
+type ArrayOrValue<T> = T | Array<ArrayOrValue<T>>;
+function flatten<T>(source: Array<ArrayOrValue<T>>): T[] {
+  return source.reduce<T[]>((flat, item): T[] => {
+    return [...flat, ...(Array.isArray(item) ? flatten(item) : [item])];
+  }, new Array<T>());
 }
 
 async function getClass(metadata: IMetadataProvider, fullClassName: string) {

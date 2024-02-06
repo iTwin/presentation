@@ -1,7 +1,7 @@
 {
   "require": ["ignore-styles"],
   "checkLeaks": true,
-  "globals": ["requestAnimationFrame"],
+  "globals": ["requestAnimationFrame", "IS_REACT_ACT_ENVIRONMENT"],
   "timeout": 60000,
   "slow": 500,
   "file": ["./lib/setup.js"],

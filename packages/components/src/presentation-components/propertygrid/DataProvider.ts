@@ -37,11 +37,11 @@ import {
   ValuesMap,
 } from "@itwin/presentation-common";
 import { FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
-import { FieldHierarchyRecord, IPropertiesAppender, PropertyRecordsBuilder } from "../common/ContentBuilder";
+import { FieldHierarchyRecord, InternalPropertyRecordsBuilder, IPropertiesAppender } from "../common/ContentBuilder";
 import { CacheInvalidationProps, ContentDataProvider, IContentDataProvider } from "../common/ContentDataProvider";
 import { DiagnosticsProps } from "../common/Diagnostics";
 import { createLabelRecord, findField } from "../common/Utils";
-import { FAVORITES_CATEGORY_NAME, getFavoritesCategory } from "../favorite-properties/DataProvider";
+import { FAVORITES_CATEGORY_NAME, getFavoritesCategory } from "../favorite-properties/Utils";
 
 const labelsComparer = new Intl.Collator(undefined, { sensitivity: "base" }).compare;
 
@@ -94,7 +94,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
   private _includeFieldsWithNoValues: boolean;
   private _includeFieldsWithCompositeValues: boolean;
   private _isNestedPropertyCategoryGroupingEnabled: boolean;
-  private _onFavoritesChangedRemoveListener: () => void;
+  private _onFavoritesChangedRemoveListener?: () => void;
   private _shouldCreateFavoritesCategory: boolean;
 
   /**
@@ -112,7 +112,6 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
     this._includeFieldsWithNoValues = true;
     this._includeFieldsWithCompositeValues = true;
     this._isNestedPropertyCategoryGroupingEnabled = true;
-    this._onFavoritesChangedRemoveListener = Presentation.favoriteProperties.onFavoritesChanged.addListener(() => this.invalidateCache({}));
     this._shouldCreateFavoritesCategory = !props.disableFavoritesCategory;
   }
 
@@ -121,7 +120,11 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
    */
   public override dispose() {
     super.dispose();
-    this._onFavoritesChangedRemoveListener();
+
+    if (this._onFavoritesChangedRemoveListener) {
+      this._onFavoritesChangedRemoveListener();
+      this._onFavoritesChangedRemoveListener = undefined;
+    }
   }
 
   /**
@@ -234,6 +237,7 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
    */
   // eslint-disable-next-line @typescript-eslint/naming-convention
   protected getMemoizedData = memoize(async (): Promise<PropertyData> => {
+    this.setupFavoritePropertiesListener();
     const content = await this.getContent();
     if (!content || 0 === content.contentSet.length) {
       return createDefaultPropertyData();
@@ -305,6 +309,14 @@ export class PresentationPropertyDataProvider extends ContentDataProvider implem
       return keys;
     }, new Array<InstanceKey>());
   }
+
+  private setupFavoritePropertiesListener() {
+    // istanbul ignore if
+    if (this._onFavoritesChangedRemoveListener) {
+      return;
+    }
+    this._onFavoritesChangedRemoveListener = Presentation.favoriteProperties.onFavoritesChanged.addListener(() => this.invalidateCache({}));
+  }
 }
 
 const createDefaultPropertyData = (): PropertyData => ({
@@ -325,7 +337,7 @@ interface PropertyDataBuilderProps {
   callbacks: PropertyPaneCallbacks;
   wantNestedCategories: boolean;
 }
-class PropertyDataBuilder extends PropertyRecordsBuilder {
+class PropertyDataBuilder extends InternalPropertyRecordsBuilder {
   private _props: PropertyDataBuilderProps;
   private _result: PropertyData | undefined;
   private _categoriesCache: PropertyCategoriesCache;
@@ -333,18 +345,8 @@ class PropertyDataBuilder extends PropertyRecordsBuilder {
   private _favoriteFieldHierarchies: FieldHierarchy[] = [];
 
   constructor(props: PropertyDataBuilderProps) {
-    super();
-    this._props = props;
-    this._categoriesCache = new PropertyCategoriesCache(props.wantNestedCategories);
-  }
-
-  public getPropertyData(): PropertyData {
-    assert(this._result !== undefined);
-    return this._result;
-  }
-
-  protected createRootPropertiesAppender(): IPropertiesAppender {
-    return {
+    super((item) => ({
+      item,
       append: (record: FieldHierarchyRecord): void => {
         const category = record.fieldHierarchy.field.category;
         let records = this._categorizedRecords.get(category.name);
@@ -354,7 +356,14 @@ class PropertyDataBuilder extends PropertyRecordsBuilder {
         }
         records.push(record);
       },
-    };
+    }));
+    this._props = props;
+    this._categoriesCache = new PropertyCategoriesCache(props.wantNestedCategories);
+  }
+
+  public getPropertyData(): PropertyData {
+    assert(this._result !== undefined);
+    return this._result;
   }
 
   public override startContent(props: StartContentProps): boolean {
@@ -374,8 +383,8 @@ class PropertyDataBuilder extends PropertyRecordsBuilder {
         categorizedRecords[categoryName] = sortedFields.map((field) => recs.find((r) => r.fieldHierarchy.field === field)!.record);
       }
     });
+    assert(IPropertiesAppender.isRoot(this.currentPropertiesAppender));
     const item = this.currentPropertiesAppender.item;
-    assert(item !== undefined);
     this._result = {
       label: createLabelRecord(item.label, "label"),
       description: item.classInfo ? item.classInfo.label : undefined,

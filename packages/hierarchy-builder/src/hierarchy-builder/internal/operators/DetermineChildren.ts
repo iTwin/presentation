@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { concatMap, map, Observable, of, tap } from "rxjs";
-import { HierarchyNode } from "../../HierarchyNode";
+import { ProcessedHierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
 import { createOperatorLoggingNamespace } from "../Common";
 
@@ -17,11 +17,11 @@ export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
  *
  * @internal
  */
-export function createDetermineChildrenOperator(hasNodes: (node: HierarchyNode) => Observable<boolean>) {
-  return function (nodes: Observable<HierarchyNode>): Observable<HierarchyNode> {
+export function createDetermineChildrenOperator(hasNodes: (node: ProcessedHierarchyNode) => Observable<boolean>) {
+  return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
     return nodes.pipe(
       log((n) => `in: ${n.label}`),
-      concatMap((n: HierarchyNode): Observable<HierarchyNode> => {
+      concatMap((n: ProcessedHierarchyNode): Observable<ProcessedHierarchyNode> => {
         if (n.children !== undefined) {
           return of(n);
         }

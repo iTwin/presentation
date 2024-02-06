@@ -1,0 +1,54 @@
+name: PR performance benchmark
+
+on:
+  pull_request:
+    branches:
+      - master
+      - stable
+    paths:
+      - apps/load-tests/**
+      - packages/core-interop/**
+      - packages/hierarchy-builder/**
+      - packages/models-tree/**
+      - pnpm-lock.yaml
+      - scripts/runBenchmarkTests.js
+      - .github/workflows/benchmark-pr.yaml
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  benchmark:
+    name: Benchmark performance
+    if: '!github.event.pull_request.draft'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2.2.4
+        with:
+          version: 8.6.2
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build benchmark tests
+        run: pnpm lage build --to @load-tests/backend @load-tests/frontend
+
+      - name: Run benchmark tests
+        run: pnpm benchmark
+
+      - name: Post benchmark summary
+        uses: jalextowle/github-action-benchmark@35e54a2ea34188ca73481c2a0ce5919907978f4f
+        with:
+          tool: 'customSmallerIsBetter'
+          output-file-path: ./apps/load-tests/tests/benchmark.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          save-data-file: false
+          comment-on-pull-request: true

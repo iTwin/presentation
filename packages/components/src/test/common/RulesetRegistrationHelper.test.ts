@@ -24,7 +24,6 @@ describe("RulesetRegistrationHelper", () => {
   });
 
   afterEach(() => {
-    Presentation.terminate();
     sinon.restore();
   });
 

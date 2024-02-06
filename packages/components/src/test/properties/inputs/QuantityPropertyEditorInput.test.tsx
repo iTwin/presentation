@@ -13,13 +13,12 @@ import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@i
 import { FormatterSpec, ParseError, ParserSpec, QuantityParseResult } from "@itwin/core-quantity";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { KoqPropertyValueFormatter } from "@itwin/presentation-common";
-import { waitFor } from "@testing-library/react";
 import { SchemaMetadataContextProvider } from "../../../presentation-components/common/SchemaMetadataContext";
 import { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common";
 import { QuantityEditorName } from "../../../presentation-components/properties/editors/QuantityPropertyEditor";
 import { QuantityPropertyEditorInput } from "../../../presentation-components/properties/inputs/QuantityPropertyEditorInput";
-import { render } from "../../_helpers/Common";
 import { createTestPropertyRecord } from "../../_helpers/UiComponents";
+import { render, waitFor } from "../../TestUtils";
 
 const createRecord = ({ initialValue, quantityType }: { initialValue?: number; quantityType?: string }) => {
   return createTestPropertyRecord(
@@ -112,6 +111,7 @@ describe("<QuantityPropertyEditorInput />", () => {
     const { getByRole, user } = render(<QuantityPropertyEditorInput propertyRecord={record} onCommit={spy} />);
 
     const input = await waitFor(() => getByRole("textbox"));
+    await waitFor(() => expect((input as HTMLInputElement).disabled).to.be.false);
 
     await user.type(input, "123.4");
     await user.tab();
@@ -138,6 +138,7 @@ describe("<QuantityPropertyEditorInput />", () => {
     );
 
     const input = await waitFor(() => getByRole("textbox"));
+    await waitFor(() => expect((input as HTMLInputElement).disabled).to.be.false);
 
     await user.type(input, "123.4 unit");
     await user.tab();
@@ -164,11 +165,15 @@ describe("<QuantityPropertyEditorInput />", () => {
     );
 
     const input = await waitFor(() => getByRole("textbox"));
+    await waitFor(() => expect((input as HTMLInputElement).disabled).to.be.false);
+
     await user.type(input, "123.4 unit");
     await user.keyboard("{Enter}");
 
-    const value = ref.current?.getValue() as PrimitiveValue;
-    expect(value.value).to.be.eq(123.4);
-    expect(value.displayValue).to.be.eq("123.4 unit");
+    await waitFor(() => {
+      const value = ref.current?.getValue() as PrimitiveValue;
+      expect(value.value).to.be.eq(123.4);
+      expect(value.displayValue).to.be.eq("123.4 unit");
+    });
   });
 });

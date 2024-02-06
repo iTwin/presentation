@@ -4,15 +4,16 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { IMetadataProvider } from "../../hierarchy-builder/Metadata";
-import { createConcatenatedValueSelector, createPropertyValueSelector, createValueSelector } from "../../hierarchy-builder/queries/ECSqlUtils";
+import sinon from "sinon";
+import { IMetadataProvider } from "../../hierarchy-builder/ECMetadata";
+import { createConcatenatedValueJsonSelector, createRawPropertyValueSelector } from "../../hierarchy-builder/queries/ecsql-snippets/ECSqlValueSelectorSnippets";
 import {
   BisInstanceLabelSelectClauseFactory,
   ClassBasedInstanceLabelSelectClauseFactory,
   DefaultInstanceLabelSelectClauseFactory,
   IInstanceLabelSelectClauseFactory,
 } from "../../hierarchy-builder/queries/InstanceLabelSelectClauseFactory";
-import { createGetClassStub, TStubClassFunc } from "../Utils";
+import { ClassStubs, createClassStubs } from "../Utils";
 import { trimWhitespace } from "./Utils";
 
 describe("DefaultInstanceLabelSelectClauseFactory", () => {
@@ -27,25 +28,17 @@ describe("DefaultInstanceLabelSelectClauseFactory", () => {
     });
     expect(trimWhitespace(result)).to.eq(
       trimWhitespace(`(
-        SELECT ${createConcatenatedValueSelector([
+        SELECT ${createConcatenatedValueJsonSelector([
           {
             selector: `COALESCE(
-              ${createValueSelector({
-                propertyClassName: "ECDbMeta.ECClassDef",
-                propertyClassAlias: "c",
-                propertyName: "DisplayLabel",
-                nullValueResult: "null",
-              })},
-              ${createValueSelector({
-                propertyClassName: "ECDbMeta.ECClassDef",
-                propertyClassAlias: "c",
-                propertyName: "Name",
-                nullValueResult: "null",
-              })}
+              ${createRawPropertyValueSelector("c", "DisplayLabel")},
+              ${createRawPropertyValueSelector("c", "Name")}
             )`,
           },
           { value: ` [`, type: "String" },
-          { selector: `printf('0x%x', ${createPropertyValueSelector("test", "ECInstanceId")})`, type: "Id" },
+          { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} >> 40) AS TEXT)` },
+          { value: `-`, type: "String" },
+          { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)` },
           { value: `]`, type: "String" },
         ])}
         FROM [meta].[ECClassDef] AS [c]
@@ -62,9 +55,12 @@ describe("ClassBasedInstanceLabelSelectClauseFactory", () => {
     },
   };
   const metadataProvider = {} as unknown as IMetadataProvider;
-  let stubClass: TStubClassFunc;
+  let classStubs: ClassStubs;
   beforeEach(() => {
-    stubClass = createGetClassStub(metadataProvider).stubClass;
+    classStubs = createClassStubs(metadataProvider);
+  });
+  afterEach(() => {
+    sinon.restore();
   });
 
   it("returns default clause when given an empty list of clauses", async () => {
@@ -94,9 +90,9 @@ describe("ClassBasedInstanceLabelSelectClauseFactory", () => {
         },
       ],
     });
-    stubClass({ schemaName: "Schema", className: "QueryClass", is: async () => false });
-    stubClass({ schemaName: "Schema", className: "ClassA", is: async () => false });
-    stubClass({ schemaName: "Schema", className: "ClassB", is: async () => false });
+    classStubs.stubEntityClass({ schemaName: "Schema", className: "QueryClass", is: async () => false });
+    classStubs.stubEntityClass({ schemaName: "Schema", className: "ClassA", is: async () => false });
+    classStubs.stubEntityClass({ schemaName: "Schema", className: "ClassB", is: async () => false });
     const result = await factory.createSelectClause({
       classAlias: "class-alias",
       className: "Schema.QueryClass",
@@ -156,9 +152,9 @@ describe("ClassBasedInstanceLabelSelectClauseFactory", () => {
         },
       ],
     });
-    stubClass({ schemaName: "Schema", className: "QueryClass", is: async () => false });
-    stubClass({ schemaName: "Schema", className: "ClassA", is: async (other) => other === "Schema.QueryClass" });
-    stubClass({ schemaName: "Schema", className: "ClassB", is: async () => false });
+    classStubs.stubEntityClass({ schemaName: "Schema", className: "QueryClass", is: async () => false });
+    classStubs.stubEntityClass({ schemaName: "Schema", className: "ClassA", is: async (other) => other === "Schema.QueryClass" });
+    classStubs.stubEntityClass({ schemaName: "Schema", className: "ClassB", is: async () => false });
     const result = await factory.createSelectClause({
       classAlias: "class-alias",
       className: "Schema.QueryClass",
@@ -192,9 +188,9 @@ describe("ClassBasedInstanceLabelSelectClauseFactory", () => {
         },
       ],
     });
-    stubClass({ schemaName: "Schema", className: "QueryClass", is: async (other) => other === "Schema.ClassB" });
-    stubClass({ schemaName: "Schema", className: "ClassA", is: async () => false });
-    stubClass({ schemaName: "Schema", className: "ClassB", is: async () => false });
+    classStubs.stubEntityClass({ schemaName: "Schema", className: "QueryClass", is: async (other) => other === "Schema.ClassB" });
+    classStubs.stubEntityClass({ schemaName: "Schema", className: "ClassA", is: async () => false });
+    classStubs.stubEntityClass({ schemaName: "Schema", className: "ClassB", is: async () => false });
     const result = await factory.createSelectClause({
       classAlias: "class-alias",
       className: "Schema.QueryClass",
@@ -216,18 +212,22 @@ describe("ClassBasedInstanceLabelSelectClauseFactory", () => {
 
 describe("BisInstanceLabelSelectClauseFactory", () => {
   const metadataProvider = {} as unknown as IMetadataProvider;
-  let stubClass: TStubClassFunc;
+  let classStubs: ClassStubs;
   let factory: BisInstanceLabelSelectClauseFactory;
   beforeEach(() => {
-    stubClass = createGetClassStub(metadataProvider).stubClass;
+    classStubs = createClassStubs(metadataProvider);
     factory = new BisInstanceLabelSelectClauseFactory({ metadataProvider });
-    stubClass({
+    classStubs.stubEntityClass({
       schemaName: "BisCore",
       className: "GeometricElement",
       is: async (other) => other === "BisCore.Element" || other === "BisCore.GeometricElement",
     });
-    stubClass({ schemaName: "BisCore", className: "Element", is: async (other) => other === "BisCore.Element" });
-    stubClass({ schemaName: "BisCore", className: "Model", is: async (other) => other === "BisCore.Model" });
+    classStubs.stubEntityClass({ schemaName: "BisCore", className: "Element", is: async (other) => other === "BisCore.Element" });
+    classStubs.stubEntityClass({ schemaName: "BisCore", className: "Model", is: async (other) => other === "BisCore.Model" });
+  });
+
+  afterEach(() => {
+    sinon.restore();
   });
 
   it("returns valid clause for geometric elements", async () => {
@@ -241,20 +241,17 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
           IIF(
             [test].[ECClassId] IS (BisCore.GeometricElement),
             COALESCE(
-              ${createValueSelector({
-                propertyClassName: "BisCore.GeometricElement",
-                propertyClassAlias: "test",
-                propertyName: "CodeValue",
-                nullValueResult: "null",
-              })},
-              ${createConcatenatedValueSelector(
+              ${createRawPropertyValueSelector("test", "CodeValue")},
+              ${createConcatenatedValueJsonSelector(
                 [
-                  { propertyClassName: "BisCore.Element", propertyClassAlias: "test", propertyName: "UserLabel" },
+                  { selector: createRawPropertyValueSelector("test", "UserLabel") },
                   { value: ` [`, type: "String" },
-                  { selector: `printf('0x%x', ${createPropertyValueSelector("test", "ECInstanceId")})`, type: "Id" },
+                  { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} >> 40) AS TEXT)` },
+                  { value: `-`, type: "String" },
+                  { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)` },
                   { value: `]`, type: "String" },
                 ],
-                createPropertyValueSelector("test", "UserLabel"),
+                `${createRawPropertyValueSelector("test", "UserLabel")} IS NOT NULL`,
               )}
             ),
             NULL
@@ -262,18 +259,8 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
           IIF(
             [test].[ECClassId] IS (BisCore.Element),
             COALESCE(
-              ${createValueSelector({
-                propertyClassName: "BisCore.Element",
-                propertyClassAlias: "test",
-                propertyName: "UserLabel",
-                nullValueResult: "null",
-              })},
-              ${createValueSelector({
-                propertyClassName: "BisCore.Element",
-                propertyClassAlias: "test",
-                propertyName: "CodeValue",
-                nullValueResult: "null",
-              })}
+              ${createRawPropertyValueSelector("test", "UserLabel")},
+              ${createRawPropertyValueSelector("test", "CodeValue")}
             ),
             NULL
           ),
@@ -294,20 +281,17 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
           IIF(
             [test].[ECClassId] IS (BisCore.GeometricElement),
             COALESCE(
-              ${createValueSelector({
-                propertyClassName: "BisCore.GeometricElement",
-                propertyClassAlias: "test",
-                propertyName: "CodeValue",
-                nullValueResult: "null",
-              })},
-              ${createConcatenatedValueSelector(
+              ${createRawPropertyValueSelector("test", "CodeValue")},
+              ${createConcatenatedValueJsonSelector(
                 [
-                  { propertyClassName: "BisCore.Element", propertyClassAlias: "test", propertyName: "UserLabel" },
+                  { selector: createRawPropertyValueSelector("test", "UserLabel") },
                   { value: ` [`, type: "String" },
-                  { selector: `printf('0x%x', ${createPropertyValueSelector("test", "ECInstanceId")})`, type: "Id" },
+                  { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} >> 40) AS TEXT)` },
+                  { value: `-`, type: "String" },
+                  { selector: `CAST(base36(${createRawPropertyValueSelector("test", "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)` },
                   { value: `]`, type: "String" },
                 ],
-                createPropertyValueSelector("test", "UserLabel"),
+                `${createRawPropertyValueSelector("test", "UserLabel")} IS NOT NULL`,
               )}
             ),
             NULL
@@ -315,18 +299,8 @@ describe("BisInstanceLabelSelectClauseFactory", () => {
           IIF(
             [test].[ECClassId] IS (BisCore.Element),
             COALESCE(
-              ${createValueSelector({
-                propertyClassName: "BisCore.Element",
-                propertyClassAlias: "test",
-                propertyName: "UserLabel",
-                nullValueResult: "null",
-              })},
-              ${createValueSelector({
-                propertyClassName: "BisCore.Element",
-                propertyClassAlias: "test",
-                propertyName: "CodeValue",
-                nullValueResult: "null",
-              })}
+              ${createRawPropertyValueSelector("test", "UserLabel")},
+              ${createRawPropertyValueSelector("test", "CodeValue")}
             ),
             NULL
           ),

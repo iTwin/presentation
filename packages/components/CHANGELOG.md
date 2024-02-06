@@ -1,8 +1,100 @@
 # Change Log - @itwin/presentation-components
 
+## 5.0.0-dev.2
+
+### Minor Changes
+
+- [#358](https://github.com/iTwin/presentation/pull/358): Instance filter builder / dialog: Show a union of properties of selected classes rather than intersection.
+- [#356](https://github.com/iTwin/presentation/pull/356): Instance filter builder / dialog: UX enhancements.
+
+  - Changed the "Apply" button to always be enabled, even when no filtering rules are selected. In such situations, `PresentationTreeRenderer` clears the hierarchy level filter.
+  - Added a "Reset" button which clears all the filtering rules in the dialog.
+  - Added a `toolbarButtonsRenderer` prop to allow rendering custom toolbar buttons at the bottom of the dialog.
+
+- [#363](https://github.com/iTwin/presentation/pull/363): Instance filter builder / dialog: Include selected classes' information in the `GenericInstanceFilter` data structure to allow filtering by them. Use this information when building hierararchy level filters to allow users filter-out instances of specific class(es).
+- [#388](https://github.com/iTwin/presentation/pull/388): Adjust API of `PresentationTreeRenderer` by separating `PresentationTreeRenderer` hierarchy level filtering logic into `useFilterablePresentationTree` hook.
+
+### Patch Changes
+
+- [#354](https://github.com/iTwin/presentation/pull/354): Unified selection: Cancel ongoing hilite set request when unified selection changes.
+- [#362](https://github.com/iTwin/presentation/pull/362): Instance filter builder / dialog: Change class selector placeholder value to emphasize the fact that selecting a class is optional.
+- [#371](https://github.com/iTwin/presentation/pull/371): Instance filter builder / dialog: Clear all property filtering rules when selected class list changes.
+- [#348](https://github.com/iTwin/presentation/pull/348): Clean up `@internal` APIs exposed through the barrel exports file.
+- [#373](https://github.com/iTwin/presentation/pull/373): Instance filter builder / dialog: Fix selected class information not being retained when using React 18 strict mode.
+
+## 4.4.0
+
+This release brings official React 18 support. Components and hooks provided by this package were updated to work with [`StrictMode` in React 18](https://react.dev/blog/2022/03/08/react-18-upgrade-guide#updates-to-strict-mode).
+
+### Minor Changes
+
+- [#333](https://github.com/iTwin/presentation/pull/333): Deprecated `useRulesetRegistration` because it is not compatible with React 18
+- [#328](https://github.com/iTwin/presentation/pull/328): Added `usePresentationTreeState` and `PresentationTree` for using presentation data with `ControlledTree`. This is a replacement for `usePresentationTreeNodeLoader` which is not fully compatible with React 18 and now is deprecated.
+
+  Old API:
+
+  ```tsx
+  function Tree(props) {
+    const { nodeLoader } = usePresentationTreeNodeLoader({ imodel: props.imodel, ruleset: TREE_RULESET, pagingSize: PAGING_SIZE });
+    const eventHandler = useUnifiedSelectionTreeEventHandler({ nodeLoader });
+    const treeModel = useTreeModel(nodeLoader.modelSource);
+
+    return (
+      <ControlledTree width={200} height={400} model={treeModel} nodeLoader={nodeLoader} eventsHandler={eventHandler} selectionMode={SelectionMode.Single} />
+    );
+  }
+  ```
+
+  New API:
+
+  ```tsx
+  function Tree(props) {
+    const state = usePresentationTreeState({
+      imodel: props.imodel,
+      ruleset: TREE_RULESET,
+      pagingSize: PAGING_SIZE,
+      eventHandlerFactory: useCallback(
+        (handlerProps: TreeEventHandlerProps) => new UnifiedSelectionTreeEventHandler({ nodeLoader: handlerProps.nodeLoader }),
+        [],
+      ),
+    });
+    if (!state) {
+      return null;
+    }
+
+    return <PresentationTree width={200} height={400} state={state} selectionMode={SelectionMode.Single} />;
+  }
+  ```
+
+## 5.0.0-dev.1
+
+### Minor Changes
+
+- [#316](https://github.com/iTwin/presentation/pull/316): Added `GenericInstanceFilter` data structure that has all the data needed to convert an instance filter to `ECSQL`, `ECExpression` or other formats. The data structure can be created from `PresentationInstanceFilter` using the `GenericInstanceFilter.fromPresentationInstanceFilter` call.
+- [#316](https://github.com/iTwin/presentation/pull/316): Promoted some instance filtering - related `internal` APIs to `beta`:
+
+  - `useInstanceFilterPropertyInfos` - for creating a property list based on supplied `Descriptor`. The property list is necessary for rendering the `PropertyFilterBuilder` component from `@itwin/components-react` package.
+  - `PresentationFilterBuilderValueRenderer` - a custom renderer for property value input. It renders unique values selector for `Equal` / `NotEqual` rules and handles unit conversion on top of the general value input.
+  - `PresentationInstanceFilter.fromComponentsPropertyFilter` - for adding presentation data to `PropertyFilter` built by `usePropertyFilterBuilder`.
+  - `PresentationInstanceFilter.toComponentsPropertyFilter` - for stripping out presentation data from filter for usage with `usePropertyFilterBuilder`.
+  - `PresentationInstanceFilterPropertyInfo` - data structure defining a property used in instance filter.
+
+  Also, moved a couple of beta APIs to a common namespace to make them more discoverable:
+
+  - `convertToInstanceFilterDefinition` -> `PresentationInstanceFilter.toInstanceFilterDefinition`,
+  - `isPresentationInstanceFilterConditionGroup` -> `PresentationInstanceFilter.isConditionGroup`.
+
+- [#313](https://github.com/iTwin/presentation/pull/313): Add interactive and more detailed informational messages in tree and instance filter components.
+- [#305](https://github.com/iTwin/presentation/pull/305): Added editor for editing quantity property values in property grid. Editor works only if there is `SchemaMetadataContextProvider` in React component tree above property grid components. Otherwise simple numeric editor is used.
+
+### Patch Changes
+
+- [#317](https://github.com/iTwin/presentation/pull/317): Fix unique value selector placeholder formatting in instance filter builder.
+- [#312](https://github.com/iTwin/presentation/pull/312): Fixed class name shown in tooltip for related properties when building filter. It now shows name of related class that was used to access that property instead of class where that property is defined.
+
 ## 5.0.0-dev.0
 
-The `5.0` release is targeted towards getting instance filtering production-ready and contains a number of bug fixes and enhancements for the `PresentationInstanceFilterDialog` component. 
+The `5.0` release is targeted towards getting instance filtering production-ready and contains a number of bug fixes and enhancements for the `PresentationInstanceFilterDialog` component.
 
 The release does not contain any breaking API changes and the bump in peer-depenendecies is the only reason this is a major release.
 

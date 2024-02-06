@@ -17,10 +17,8 @@ import {
   RelatedClassInfoWithOptionalRelationship,
   Ruleset,
 } from "@itwin/presentation-common";
-import { render as renderRTL } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { createTestCategoryDescription, createTestPropertiesContentField } from "./Content";
 import { PresentationInstanceFilterPropertyInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
+import { createTestCategoryDescription, createTestPropertiesContentField } from "./Content";
 
 export function createTestECInstanceKey(key?: Partial<InstanceKey>): InstanceKey {
   return {
@@ -98,20 +96,6 @@ export const waitForPendingAsyncs = async (handler: { pendingAsyncs: Set<string>
   const recursiveWaitInternal = async (): Promise<void> => recursiveWait(pred, recursiveWaitInternal);
   await recursiveWaitInternal();
 };
-
-/**
- * Custom render function that wraps around `render` function from `@testing-library/react` and additionally
- * setup `userEvent` from `@testing-library/user-event`.
- *
- * It should be used when test need to do interactions with rendered components.
- */
-export function render(...args: Parameters<typeof renderRTL>): ReturnType<typeof renderRTL> & { user: ReturnType<(typeof userEvent)["setup"]> } {
-  const user = userEvent.setup();
-  return {
-    ...renderRTL(...args),
-    user,
-  };
-}
 
 /**
  * Stubs global 'requestAnimationFrame' and 'cancelAnimationFrame' functions.

@@ -16,6 +16,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "forceConsistentCasingInFileNames": true,
-    "useDefineForClassFields": true
-  }
+    "useDefineForClassFields": true,
+  },
 }

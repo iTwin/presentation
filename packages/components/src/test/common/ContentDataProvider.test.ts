@@ -31,7 +31,7 @@ import {
   createTestPropertiesContentField,
   createTestSimpleContentField,
 } from "../_helpers/Content";
-import { PromiseContainer, ResolvablePromise } from "../_helpers/Promises";
+import { PromiseContainer } from "../_helpers/Promises";
 import { mockPresentationManager } from "../_helpers/UiComponents";
 
 /**
@@ -84,7 +84,6 @@ describe("ContentDataProvider", () => {
     imodelMock.reset();
     provider.dispose();
     sinon.restore();
-    Presentation.terminate();
   });
 
   describe("constructor", () => {
@@ -98,43 +97,6 @@ describe("ContentDataProvider", () => {
       const pagingSize = 50;
       const p = new Provider({ imodel: imodelMock.object, ruleset: rulesetId, displayType, pagingSize });
       expect(p.pagingSize).to.be.eq(pagingSize);
-    });
-
-    it("registers ruleset", () => {
-      rulesetsManagerMock.setup(async (x) => x.add(moq.It.isAny())).returns(async (r) => new RegisteredRuleset(r, "test", () => {}));
-      const ruleset = createTestRuleset();
-      const p = new Provider({ imodel: imodelMock.object, ruleset, displayType });
-      expect(p.rulesetId).to.eq(ruleset.id);
-      rulesetsManagerMock.verify(async (x) => x.add(ruleset), moq.Times.once());
-    });
-
-    it("disposes registered ruleset after provided is disposed before registration completes", async () => {
-      const registerPromise = new ResolvablePromise<RegisteredRuleset>();
-      rulesetsManagerMock.setup(async (x) => x.add(moq.It.isAny())).returns(async () => registerPromise);
-
-      const ruleset = createTestRuleset();
-      const p = new Provider({ imodel: imodelMock.object, ruleset, displayType });
-      p.dispose();
-
-      const rulesetDisposeSpy = sinon.spy();
-      await registerPromise.resolve(new RegisteredRuleset(ruleset, "test", rulesetDisposeSpy));
-      expect(rulesetDisposeSpy).to.be.calledOnce;
-    });
-  });
-
-  describe("dispose", () => {
-    it("disposes registered ruleset", async () => {
-      const registerPromise = new ResolvablePromise<RegisteredRuleset>();
-      rulesetsManagerMock.setup(async (x) => x.add(moq.It.isAny())).returns(async () => registerPromise);
-
-      const ruleset = createTestRuleset();
-      const p = new Provider({ imodel: imodelMock.object, ruleset, displayType });
-      const rulesetDisposeSpy = sinon.spy();
-      await registerPromise.resolve(new RegisteredRuleset(ruleset, "test", rulesetDisposeSpy));
-
-      expect(rulesetDisposeSpy).to.not.be.called;
-      p.dispose();
-      expect(rulesetDisposeSpy).to.be.calledOnce;
     });
   });
 
@@ -614,39 +576,47 @@ describe("ContentDataProvider", () => {
   });
 
   describe("reacting to updates", () => {
-    it("doesn't react to imodel content updates to unrelated rulesets", () => {
+    beforeEach(async () => {
+      provider.keys = new KeySet([createTestECInstanceKey()]);
+      invalidateCacheSpy.resetHistory();
+
+      // make sure that provider setup event listeners
+      await provider.getContent();
+    });
+
+    it("doesn't react to imodel content updates to unrelated rulesets", async () => {
       presentationManagerMock.object.onIModelContentChanged.raiseEvent({ rulesetId: "unrelated", updateInfo: "FULL", imodelKey });
       expect(invalidateCacheSpy).to.not.be.called;
     });
 
-    it("doesn't react to imodel content updates to unrelated imodels", () => {
+    it("doesn't react to imodel content updates to unrelated imodels", async () => {
       presentationManagerMock.object.onIModelContentChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey: "unrelated" });
       expect(invalidateCacheSpy).to.not.be.called;
     });
 
-    it("invalidates cache when imodel content change happens to related ruleset", () => {
+    it("invalidates cache when imodel content change happens to related ruleset", async () => {
       presentationManagerMock.object.onIModelContentChanged.raiseEvent({ rulesetId, updateInfo: "FULL", imodelKey });
       expect(invalidateCacheSpy).to.be.calledOnceWith(CacheInvalidationProps.full());
     });
 
-    it("doesn't react to unrelated ruleset modifications", () => {
+    it("doesn't react to unrelated ruleset modifications", async () => {
       const ruleset = new RegisteredRuleset(createTestRuleset(), "", () => {});
       rulesetsManagerMock.object.onRulesetModified.raiseEvent(ruleset, { ...ruleset.toJSON() });
       expect(invalidateCacheSpy).to.not.be.called;
     });
 
-    it("invalidates cache when related ruleset is modified", () => {
+    it("invalidates cache when related ruleset is modified", async () => {
       const ruleset = new RegisteredRuleset({ ...createTestRuleset(), id: rulesetId }, "", () => {});
       rulesetsManagerMock.object.onRulesetModified.raiseEvent(ruleset, { ...ruleset.toJSON() });
       expect(invalidateCacheSpy).to.be.calledOnceWith(CacheInvalidationProps.full());
     });
 
-    it("invalidates cache when related ruleset variables change", () => {
+    it("invalidates cache when related ruleset variables change", async () => {
       presentationManagerMock.object.vars("").onVariableChanged.raiseEvent("var_id", "prev", "curr");
       expect(invalidateCacheSpy).to.be.calledOnceWith(CacheInvalidationProps.full());
     });
 
-    it("invalidates cache when active unit system change", () => {
+    it("invalidates cache when active unit system change", async () => {
       onActiveFormattingUnitSystemChanged.raiseEvent({ system: "metric" });
       expect(invalidateCacheSpy).to.be.calledOnceWith({ content: true });
     });

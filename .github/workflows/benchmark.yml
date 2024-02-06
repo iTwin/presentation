@@ -1,0 +1,55 @@
+name: Performance benchmark
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - apps/load-tests/**
+      - packages/core-interop/**
+      - packages/hierarchy-builder/**
+      - packages/models-tree/**
+
+jobs:
+  benchmark:
+    name: Benchmark performance
+    runs-on: ubuntu-latest
+    permissions:
+      # deployments permission to deploy GitHub pages website
+      deployments: write
+      # contents permission to update benchmark contents in gh-pages branch
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2.2.4
+        with:
+          version: 8.6.2
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build benchmark tests
+        run: pnpm lage build --to @load-tests/backend @load-tests/frontend
+
+      - name: Run benchmark tests
+        run: pnpm benchmark
+
+      - name: Store benchmark result
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          tool: 'customSmallerIsBetter'
+          output-file-path: ./apps/load-tests/tests/benchmark.json
+          # Access token to deploy GitHub Pages branch
+          github-token: ${{ secrets.IMJS_ADMIN_GH_TOKEN }}
+          # Push and deploy GitHub pages branch automatically
+          auto-push: true

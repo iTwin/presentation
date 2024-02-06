@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "./lib",
     "sourceMap": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
   },
-  "include": ["src"]
+  "include": ["src"],
 }

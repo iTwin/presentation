@@ -10,9 +10,9 @@ import { TypeConverter, TypeConverterManager } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Presentation, SelectionManager } from "@itwin/presentation-frontend";
-import { act, cleanup, render } from "@testing-library/react";
 import { InstanceKeyValueRenderer } from "../../presentation-components/properties/InstanceKeyValueRenderer";
 import { UnifiedSelectionContextProvider } from "../../presentation-components/unified-selection/UnifiedSelectionContext";
+import { act, cleanup, render } from "../TestUtils";
 
 describe("InstanceKeyValueRenderer", () => {
   const renderer = new InstanceKeyValueRenderer();
@@ -25,15 +25,14 @@ describe("InstanceKeyValueRenderer", () => {
     return new PropertyRecord(value, { name: "", displayLabel: "", typename: "navigation" });
   }
 
-  before(async () => {
+  before(() => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
-    await Presentation.initialize();
+    sinon.stub(Presentation, "localization").get(() => localization);
   });
 
   after(async () => {
-    Presentation.terminate();
     sinon.restore();
   });
 

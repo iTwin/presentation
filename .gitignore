@@ -5,5 +5,10 @@ node_modules
 
 /packages/*/api/temp
 
+/apps/load-tests/tests/datasets
+/apps/load-tests/tests/scenarios/datasets.csv
+/apps/load-tests/tests/artillery-output.json
+/apps/load-tests/tests/benchmark.json
+
 npm-debug.log*
 pnpm-debug.log*

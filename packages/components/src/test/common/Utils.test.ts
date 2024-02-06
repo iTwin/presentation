@@ -97,7 +97,6 @@ describe("Utils", () => {
     });
 
     afterEach(() => {
-      Presentation.terminate();
       sinon.restore();
     });
 

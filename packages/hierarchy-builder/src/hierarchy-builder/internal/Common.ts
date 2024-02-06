@@ -3,10 +3,22 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { merge, Observable } from "rxjs";
+import naturalCompare from "natural-compare-lite";
 import { assert } from "@itwin/core-bentley";
-import { HierarchyNode, HierarchyNodeHandlingParams, HierarchyNodeKey } from "../HierarchyNode";
-import { ECClass, ECSchema, IMetadataProvider, parseFullClassName } from "../Metadata";
+import { ECClass, ECSchema, IMetadataProvider } from "../ECMetadata";
+import {
+  HierarchyNodeKey,
+  HierarchyNodeLabelGroupingParams,
+  InstanceHierarchyNodeProcessingParams,
+  InstancesNodeKey,
+  ProcessedCustomHierarchyNode,
+  ProcessedInstanceHierarchyNode,
+} from "../HierarchyNode";
+import { getLogger } from "../Logging";
+import { parseFullClassName } from "../Metadata";
+
+/** @internal */
+export const LOGGING_NAMESPACE = "Presentation.HierarchyBuilder";
 
 /** @internal */
 export async function getClass(metadata: IMetadataProvider, fullClassName: string): Promise<ECClass> {
@@ -15,8 +27,8 @@ export async function getClass(metadata: IMetadataProvider, fullClassName: strin
   try {
     schema = await metadata.getSchema(schemaName);
   } catch (e) {
-    // eslint-disable-next-line no-console
-    console.error(e);
+    assert(e instanceof Error);
+    getLogger().logError(`${LOGGING_NAMESPACE}`, `Failed to get schema "${schemaName} with error ${e.message}."`);
   }
   if (!schema) {
     throw new Error(`Invalid schema "${schemaName}"`);
@@ -26,8 +38,8 @@ export async function getClass(metadata: IMetadataProvider, fullClassName: strin
   try {
     nodeClass = await schema.getClass(className);
   } catch (e) {
-    // eslint-disable-next-line no-console
-    console.error(e);
+    assert(e instanceof Error);
+    getLogger().logError(`${LOGGING_NAMESPACE}`, `Failed to get schema "${schemaName} with error ${e.message}."`);
   }
   if (!nodeClass) {
     throw new Error(`Invalid class "${className}" in schema "${schemaName}"`);
@@ -37,62 +49,77 @@ export async function getClass(metadata: IMetadataProvider, fullClassName: strin
 }
 
 function mergeNodeHandlingParams(
-  lhs: HierarchyNodeHandlingParams | undefined,
-  rhs: HierarchyNodeHandlingParams | undefined,
-): HierarchyNodeHandlingParams | undefined {
+  lhs: InstanceHierarchyNodeProcessingParams | undefined,
+  rhs: InstanceHierarchyNodeProcessingParams | undefined,
+): InstanceHierarchyNodeProcessingParams | undefined {
   if (!lhs && !rhs) {
     return undefined;
   }
-  return {
-    ...(lhs?.hideIfNoChildren && rhs?.hideIfNoChildren ? { hideIfNoChildren: true } : undefined),
-    ...(lhs?.hideInHierarchy && rhs?.hideInHierarchy ? { hideInHierarchy: true } : undefined),
-    ...(lhs?.groupByClass || rhs?.groupByClass ? { groupByClass: true } : undefined),
-    ...(lhs?.groupByLabel || rhs?.groupByLabel ? { groupByLabel: true } : undefined),
-    ...(lhs?.mergeByLabelId ? { mergeByLabelId: lhs.mergeByLabelId } : undefined),
+  const params = {
+    ...(lhs?.hideIfNoChildren || rhs?.hideIfNoChildren ? { hideIfNoChildren: true } : undefined),
+    ...(lhs?.hideInHierarchy || rhs?.hideInHierarchy ? { hideInHierarchy: true } : undefined),
+    ...mergeByLabelParams(lhs?.grouping?.byLabel, rhs?.grouping?.byLabel),
   };
+  return Object.keys(params).length > 0 ? params : undefined;
 }
 
-function mergeNodeKeys(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): HierarchyNodeKey {
-  if (HierarchyNodeKey.isCustom(lhs) && HierarchyNodeKey.isCustom(rhs)) {
-    assert(lhs === rhs);
-    return lhs;
+function mergeByLabelParams(
+  lhs: HierarchyNodeLabelGroupingParams | undefined,
+  rhs: HierarchyNodeLabelGroupingParams | undefined,
+): InstanceHierarchyNodeProcessingParams | undefined {
+  if (lhs && typeof lhs === "object" && lhs.action === "merge" && rhs && typeof rhs === "object" && rhs.action === "merge" && lhs.groupId === rhs.groupId) {
+    return {
+      grouping: { byLabel: lhs },
+    };
   }
-  assert(HierarchyNodeKey.isStandard(lhs) && HierarchyNodeKey.isStandard(rhs) && lhs.type === rhs.type);
+  return undefined;
+}
+
+function mergeNodeKeys<TKey extends string | InstancesNodeKey>(lhs: TKey, rhs: TKey): TKey {
+  if (HierarchyNodeKey.isCustom(lhs)) {
+    assert(HierarchyNodeKey.isCustom(rhs));
+    return lhs === rhs ? lhs : (`${lhs}+${rhs}` as TKey);
+  }
+  // istanbul ignore else
   if (HierarchyNodeKey.isInstances(lhs)) {
     assert(HierarchyNodeKey.isInstances(rhs));
-    return { type: "instances", instanceKeys: [...lhs.instanceKeys, ...rhs.instanceKeys] };
+    return { type: "instances", instanceKeys: [...lhs.instanceKeys, ...rhs.instanceKeys] } as TKey;
   }
-  if (HierarchyNodeKey.isClassGrouping(lhs)) {
-    assert(HierarchyNodeKey.isClassGrouping(rhs));
-    assert(lhs.class.name === rhs.class.name);
-    return { ...lhs };
+  // https://github.com/microsoft/TypeScript/issues/21985
+  // istanbul ignore next
+  return ((x: never) => x)(lhs);
+}
+
+function mergeParentNodeKeys(lhsKeys: HierarchyNodeKey[], rhsKeys: HierarchyNodeKey[]): HierarchyNodeKey[] {
+  const res = new Array<HierarchyNodeKey>();
+  for (let i = 0; i < lhsKeys.length && i < rhsKeys.length; ++i) {
+    if (!HierarchyNodeKey.equals(lhsKeys[i], rhsKeys[i])) {
+      break;
+    }
+    res.push(lhsKeys[i]);
   }
-  if (HierarchyNodeKey.isLabelGrouping(lhs)) {
-    assert(HierarchyNodeKey.isLabelGrouping(rhs));
-    assert(lhs.label === rhs.label);
-    return { ...lhs };
-  }
-  throw new Error(`Unable to merge given node keys`);
+  return res;
 }
 
 /** @internal */
-export function mergeNodes(lhs: HierarchyNode, rhs: HierarchyNode): HierarchyNode {
-  const mergedParams = mergeNodeHandlingParams(lhs.params, rhs.params);
-  return {
+export function mergeNodes<TNode extends ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode>(lhs: TNode, rhs: TNode): TNode {
+  assert(typeof lhs.key === typeof rhs.key);
+  const mergedProcessingParams = mergeNodeHandlingParams(lhs.processingParams, rhs.processingParams);
+  const mergedChildren = lhs.children === true || rhs.children === true ? true : lhs.children === false && rhs.children === false ? false : undefined;
+  const mergedNode = {
+    ...lhs,
+    ...rhs,
     label: lhs.label,
     key: mergeNodeKeys(lhs.key, rhs.key),
-    children:
-      Array.isArray(lhs.children) && Array.isArray(rhs.children)
-        ? [...lhs.children, ...rhs.children]
-        : lhs.children === true || rhs.children === true
-        ? true
-        : lhs.children === false && rhs.children === false
-        ? false
-        : undefined,
-    ...(lhs.autoExpand || rhs.autoExpand ? { autoExpand: lhs.autoExpand || rhs.autoExpand } : undefined),
-    ...(lhs.extendedData || rhs.extendedData ? { extendedData: { ...lhs.extendedData, ...rhs.extendedData } } : undefined),
-    ...(mergedParams ? { params: mergedParams } : undefined),
-  };
+    parentKeys: mergeParentNodeKeys(lhs.parentKeys, rhs.parentKeys),
+  } as TNode;
+  // Remove specific properties or change their values based on lhs and rhs nodes
+  mergedChildren !== undefined ? (mergedNode.children = mergedChildren) : delete mergedNode.children;
+  mergedProcessingParams ? (mergedNode.processingParams = mergedProcessingParams) : delete mergedNode.processingParams;
+  lhs.autoExpand || rhs.autoExpand ? (mergedNode.autoExpand = true) : delete mergedNode.autoExpand;
+  lhs.extendedData || rhs.extendedData ? (mergedNode.extendedData = { ...lhs.extendedData, ...rhs.extendedData }) : delete mergedNode.extendedData;
+  lhs.supportsFiltering && rhs.supportsFiltering ? (mergedNode.supportsFiltering = true) : delete mergedNode.supportsFiltering;
+  return mergedNode;
 }
 
 /** @internal */
@@ -101,33 +128,42 @@ export function hasChildren<TNode extends { children?: boolean | Array<unknown> 
 }
 
 /** @internal */
-export function mergeNodesObs(lhs: HierarchyNode, rhs: HierarchyNode, directNodesCache: Map<string, Observable<HierarchyNode>>) {
-  const merged = mergeNodes(lhs, rhs);
-  mergeDirectNodeObservables(lhs, rhs, merged, directNodesCache);
-  return merged;
-}
-
-/** @internal */
-export function mergeDirectNodeObservables(a: HierarchyNode, b: HierarchyNode, m: HierarchyNode, cache: Map<string, Observable<HierarchyNode>>) {
-  const cachedA = cache.get(JSON.stringify(a.key));
-  if (!cachedA) {
-    return;
-  }
-  const cachedB = cache.get(JSON.stringify(b.key));
-  if (!cachedB) {
-    return;
-  }
-  const merged = merge(cachedA, cachedB);
-  cache.set(JSON.stringify(m.key), merged);
-}
-
-/** @internal */
 export function createOperatorLoggingNamespace(operatorName: string) {
-  return `Presentation.HierarchyBuilder.Operators.${operatorName}`;
+  return `${LOGGING_NAMESPACE}.Operators.${operatorName}`;
 }
 
 /** @internal */
 export function julianToDateTime(julianDate: number): Date {
   const millis = (julianDate - 2440587.5) * 86400000;
   return new Date(millis);
+}
+
+/** @internal */
+export function mergeSortedArrays<TLhsItem, TRhsItem>(
+  lhs: TLhsItem[],
+  rhs: TRhsItem[],
+  comparer: (lhs: TLhsItem, rhs: TRhsItem) => number,
+): Array<TLhsItem | TRhsItem> {
+  const sorted = new Array<TLhsItem | TRhsItem>();
+  let indexLhs = 0;
+  let indexRhs = 0;
+  while (indexLhs < lhs.length && indexRhs < rhs.length) {
+    if (comparer(lhs[indexLhs], rhs[indexRhs]) > 0) {
+      sorted.push(rhs[indexRhs]);
+      ++indexRhs;
+      continue;
+    }
+    sorted.push(lhs[indexLhs]);
+    ++indexLhs;
+  }
+
+  if (indexRhs < rhs.length) {
+    return sorted.concat(rhs.slice(indexRhs));
+  }
+  return sorted.concat(lhs.slice(indexLhs));
+}
+
+/** @internal */
+export function compareNodesByLabel<TLhsNode extends { label: string }, TRhsNode extends { label: string }>(lhs: TLhsNode, rhs: TRhsNode): number {
+  return naturalCompare(lhs.label.toLocaleLowerCase(), rhs.label.toLocaleLowerCase());
 }

@@ -31,7 +31,7 @@ import {
 } from "@itwin/presentation-common";
 import { FavoritePropertiesManager, FavoritePropertiesScope, Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { CacheInvalidationProps } from "../../presentation-components/common/ContentDataProvider";
-import { FAVORITES_CATEGORY_NAME } from "../../presentation-components/favorite-properties/DataProvider";
+import { FAVORITES_CATEGORY_NAME } from "../../presentation-components/favorite-properties/Utils";
 import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider";
 import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
 import {
@@ -93,7 +93,6 @@ describe("PropertyDataProvider", () => {
 
   afterEach(() => {
     provider.dispose();
-    Presentation.terminate();
     sinon.restore();
   });
 
@@ -114,22 +113,27 @@ describe("PropertyDataProvider", () => {
       expect(provider.includeFieldsWithCompositeValues).to.be.true;
     });
 
-    it("subscribes to `Presentation.favoriteProperties.onFavoritesChanged` to invalidate cache", () => {
+    it("subscribes to `Presentation.favoriteProperties.onFavoritesChanged` to invalidate cache", async () => {
       const onFavoritesChanged = new BeEvent<() => void>();
+      favoritePropertiesManagerMock.reset();
       favoritePropertiesManagerMock.setup((x) => x.onFavoritesChanged).returns(() => onFavoritesChanged);
       provider = new Provider({ imodel: imodelMock.object, ruleset: rulesetId });
+      await provider.getData();
 
       const s = sinon.spy(provider, "invalidateCache");
+
       onFavoritesChanged.raiseEvent();
       expect(s).to.be.calledOnce;
     });
   });
 
   describe("dispose", () => {
-    it("unsubscribes from `Presentation.favoriteProperties.onFavoritesChanged` event", () => {
+    it("unsubscribes from `Presentation.favoriteProperties.onFavoritesChanged` event", async () => {
       const onFavoritesChanged = new BeEvent<() => void>();
+      favoritePropertiesManagerMock.reset();
       favoritePropertiesManagerMock.setup((x) => x.onFavoritesChanged).returns(() => onFavoritesChanged);
       provider = new Provider({ imodel: imodelMock.object, ruleset: rulesetId });
+      await provider.getData();
 
       expect(onFavoritesChanged.numberOfListeners).to.eq(1);
       provider.dispose();

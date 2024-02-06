@@ -27,9 +27,31 @@ The scenarios we currently have load the datasets from the `{load-tests}/tests/s
 
 ### Test scenarios
 
-#### Full Models tree load
+All scenarios, by default, are configured to simulate 1 user. They can be modified to simulate multiple users by editing one of the scenario configurations at `{load-tests}/tests/scenarios` directory.
 
-The scenario simulates 10 users simultaneously fully loading the Models Tree hierarchy. Each user waits 100 after making a request, requests are made in random order.
+#### Full Models tree load - native implementation
+
+The scenario simulates 1 user fully loading the Models Tree hierarchy using the `PresentationRpcInterface-getNodes` RPC calls to our native presentation manager.
+
+Script to run the scenario: `npm run start:full-models-tree`.
+
+#### Full Models tree load - stateless implementation
+
+The scenario simulates 1 user fully loading the Models Tree hierarchy using the `@itwin/presentation-hierarchy-builder` package that makes `IModelReadRpcInterface-queryRows` RPC calls to execute ECSQL queries.
+
+Script to run the scenario: `npm run start:full-models-tree-stateless`.
+
+#### Initial Models tree load - native implementation
+
+The scenario simulates 1 user loading 2 first levels of the Models Tree hierarchy using the `PresentationRpcInterface-getNodes` RPC calls to our native presentation manager.
+
+Script to run the scenario: `npm run start:initial-models-tree`.
+
+#### Initial Models tree load - stateless implementation
+
+The scenario simulates 1 user loading 2 first levels of Models Tree hierarchy using the `@itwin/presentation-hierarchy-builder` package that makes `IModelReadRpcInterface-queryRows` RPC calls to execute ECSQL queries.
+
+Script to run the scenario: `npm run start:initial-models-tree-stateless`.
 
 ## Usage
 
@@ -53,31 +75,61 @@ Typical test running scenario:
 
    3.2. `cd` to `{load-tests}/tests`.
 
-   3.3 `npm start`.
+   3.3 Run one of the scenario scripts, e.g. `npm run start:initial-models-tree-stateless`.
 
 ## Output
 
 The test output looks like this:
 
 ```txt
-http.codes.200: ................................................................ 20183
-http.request_rate: ............................................................. 60/sec
-http.requests: ................................................................. 20183
+full-load-BayTownProcessPlant.bim:
+  min: ......................................................................... 1914
+  max: ......................................................................... 1914
+  mean: ........................................................................ 1914
+  median: ...................................................................... 1901.1
+  p95: ......................................................................... 1901.1
+  p99: ......................................................................... 1901.1
+http.request_rate: ............................................................. 366/sec
+http.requests: ................................................................. 911
 http.response_time:
-  min: ......................................................................... 8
-  max: ......................................................................... 5019
-  median: ...................................................................... 18
-  p95: ......................................................................... 242.3
-  p99: ......................................................................... 561.2
-http.responses: ................................................................ 20183
-vusers.completed: .............................................................. 10
-vusers.created: ................................................................ 10
-vusers.created_by_name.Full Models Tree: ....................................... 10
+  min: ......................................................................... 2
+  max: ......................................................................... 115
+  mean: ........................................................................ 17.9
+  median: ...................................................................... 13.1
+  p95: ......................................................................... 71.5
+  p99: ......................................................................... 92.8
+itwin.nodes_request:
+  min: ......................................................................... 0
+  max: ......................................................................... 918
+  mean: ........................................................................ 223.4
+  median: ...................................................................... 1
+  p95: ......................................................................... 837.3
+  p99: ......................................................................... 889.1
+itwin.query_rows.requests: ..................................................... 902
+itwin.query_rows.response_time:
+  min: ......................................................................... 3
+  max: ......................................................................... 115
+  mean: ........................................................................ 17.9
+  median: ...................................................................... 13.1
+  p95: ......................................................................... 71.5
+  p99: ......................................................................... 92.8
+itwin.schema_json.requests: .................................................... 9
+itwin.schema_json.response_time:
+  min: ......................................................................... 2
+  max: ......................................................................... 72
+  mean: ........................................................................ 23.7
+  median: ...................................................................... 16.9
+  p95: ......................................................................... 58.6
+  p99: ......................................................................... 58.6
+vusers.completed: .............................................................. 1
+vusers.created: ................................................................ 1
+vusers.created_by_name.Full Models Tree (stateless): ........................... 1
 vusers.failed: ................................................................. 0
 vusers.session_length:
-  min: ......................................................................... 320781.1
-  max: ......................................................................... 333165.9
-  median: ...................................................................... 331165.6
-  p95: ......................................................................... 331165.6
-  p99: ......................................................................... 331165.6
+  min: ......................................................................... 1918
+  max: ......................................................................... 1918
+  mean: ........................................................................ 1918
+  median: ...................................................................... 1901.1
+  p95: ......................................................................... 1901.1
+  p99: ......................................................................... 1901.1
 ```

@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Id64 } from "@itwin/core-bentley";
 import { julianToDateTime } from "../internal/Common";
 import { TypedPrimitiveValue } from "./Values";
 
@@ -26,10 +25,11 @@ export type IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise<s
  *   formatted as locale date + time string.
  * - `Point2d` values are formatted in `(x, y)` format.
  * - `Point3d` values are formatted in `(x, y, z)` format.
+ * - `String` and `Id` values are turned as-is.
  * @beta
  */
 export function createDefaultValueFormatter(): IPrimitiveValueFormatter {
-  const formatters = [convertECInstanceIdSuffixToBase36, applyBooleanFormatting, applyNumericFormatting, applyDatesFormatting, applyPointsFormatting];
+  const formatters = [applyBooleanFormatting, applyNumericFormatting, applyDatesFormatting, applyPointsFormatting];
   return async function (value: TypedPrimitiveValue): Promise<string> {
     for (const formatter of formatters) {
       const result = formatter(value);
@@ -39,17 +39,6 @@ export function createDefaultValueFormatter(): IPrimitiveValueFormatter {
     }
     return value.value.toString();
   };
-}
-
-/**
- * This is required because we don't have a way to convert a number to base36 through ECSQL. The function
- * has been added and will be available with 4.2 release.
- */
-function convertECInstanceIdSuffixToBase36(value: TypedPrimitiveValue) {
-  if (value.type !== "Id") {
-    return undefined;
-  }
-  return `${Id64.getBriefcaseId(value.value).toString(36).toLocaleUpperCase()}-${Id64.getLocalId(value.value).toString(36).toLocaleUpperCase()}`;
 }
 
 function applyBooleanFormatting(value: TypedPrimitiveValue) {

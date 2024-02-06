@@ -61,4 +61,6 @@ jobs:
         run: pnpm prettier
 
       - name: Build, Lint, Test
+        env:
+          NODE_ENV: "development"
         run: pnpm lage build lint cover

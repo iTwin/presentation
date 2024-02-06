@@ -10,7 +10,7 @@ import { Guid, StopWatch } from "@itwin/core-bentley";
 import { DbQueryRequest, DbQueryResponse, DbRequestExecutor, ECSqlReader } from "@itwin/core-common";
 import { ISchemaLocater, Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType, SchemaProps } from "@itwin/ecschema-metadata";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
+import { createLimitingECSqlQueryExecutor, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { doRequest, getCurrentIModelName, getCurrentIModelPath, loadNodes, nodeRequestsTracker } from "./common";
 
@@ -44,7 +44,7 @@ export function loadInitialHierarchy(context: ScenarioContext, events: EventEmit
     (node) => (node.children === true || (Array.isArray(node.children) && node.children.length > 0)) && !!node.autoExpand,
   )
     .then(() => {
-      events.emit("histogram", `initial-load-${getCurrentIModelName(context)}`, timer.current.milliseconds);
+      events.emit("histogram", `Initial Models Tree Load: ${getCurrentIModelName(context)}`, timer.current.milliseconds);
     })
     .then(() => {
       next();
@@ -60,7 +60,7 @@ export function loadFullHierarchy(context: ScenarioContext, events: EventEmitter
     (node) => node.children === true || (Array.isArray(node.children) && node.children.length > 0),
   )
     .then(() => {
-      events.emit("histogram", `full-load-${getCurrentIModelName(context)}`, timer.current.milliseconds);
+      events.emit("histogram", `Full Models Tree Load: ${getCurrentIModelName(context)}`, timer.current.milliseconds);
     })
     .then(() => {
       next();
@@ -129,17 +129,20 @@ function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter
   const provider = new HierarchyProvider({
     metadataProvider,
     hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider }),
-    queryExecutor: createECSqlQueryExecutor({
-      createQueryReader(ecsql, bindings, config) {
-        // eslint-disable-next-line @itwin/no-internal
-        return new ECSqlReader(schedulingQueryExecutor, ecsql, bindings, config);
-      },
-    }),
+    queryExecutor: createLimitingECSqlQueryExecutor(
+      createECSqlQueryExecutor({
+        createQueryReader(ecsql, bindings, config) {
+          // eslint-disable-next-line @itwin/no-internal
+          return new ECSqlReader(schedulingQueryExecutor, ecsql, bindings, config);
+        },
+      }),
+      1000,
+    ),
   });
 
   return async (parent: HierarchyNode | undefined) => {
     try {
-      const nodes = await provider.getNodes(parent);
+      const nodes = await provider.getNodes({ parentNode: parent });
       return nodes;
     } catch (e) {
       if (e instanceof Error && e.message === "rows limit exceeded") {

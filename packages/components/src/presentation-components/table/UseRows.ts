@@ -12,7 +12,7 @@ import { assert } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, DefaultContentDisplayTypes, KeySet, PageOptions, Ruleset, StartItemProps, traverseContent } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { FieldHierarchyRecord, PropertyRecordsBuilder } from "../common/ContentBuilder";
+import { FieldHierarchyRecord, InternalPropertyRecordsBuilder } from "../common/ContentBuilder";
 import { useErrorState } from "../common/Utils";
 import { TableRowDefinition } from "./Types";
 import { TableOptions } from "./UseTableOptions";
@@ -52,7 +52,7 @@ export function useRows(props: UseRowsProps): UseRowsResult {
   const loaderRef = useRef<RowsLoader>(noopRowsLoader);
 
   useEffect(() => {
-    setState((prev) => ({ ...prev, rows: [] }));
+    setState((prev) => ({ ...prev, rows: [], total: 0 }));
     const { observable, ...loader } = createRowsLoader({
       imodel,
       ruleset,
@@ -79,7 +79,6 @@ export function useRows(props: UseRowsProps): UseRowsResult {
       },
       error: (err) => {
         setErrorState(err);
-        setState((prev) => ({ ...prev, rows: [], isLoading: false, total: 0 }));
       },
     });
 
@@ -237,16 +236,13 @@ function createRows(content: Content) {
   return rowsBuilder.rows;
 }
 
-class RowsBuilder extends PropertyRecordsBuilder {
-  private _rows: TableRowDefinition[] = [];
+class RowsBuilder extends InternalPropertyRecordsBuilder {
+  public readonly rows: TableRowDefinition[] = [];
   private _currentRow: TableRowDefinition | undefined = undefined;
 
-  public get rows(): TableRowDefinition[] {
-    return this._rows;
-  }
-
-  protected createRootPropertiesAppender() {
-    return {
+  public constructor() {
+    super((item) => ({
+      item,
       append: (record: FieldHierarchyRecord) => {
         if (record.fieldHierarchy.field.isNestedContentField()) {
           return;
@@ -258,7 +254,7 @@ class RowsBuilder extends PropertyRecordsBuilder {
           record: record.record,
         });
       },
-    };
+    }));
   }
 
   public override startItem(props: StartItemProps): boolean {
@@ -269,7 +265,7 @@ class RowsBuilder extends PropertyRecordsBuilder {
 
   public override finishItem(): void {
     assert(this._currentRow !== undefined);
-    this._rows.push(this._currentRow);
+    this.rows.push(this._currentRow);
     this._currentRow = undefined;
     super.finishItem();
   }

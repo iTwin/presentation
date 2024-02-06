@@ -14,6 +14,7 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { CheckBoxState } from "@itwin/core-react";
 import {
+  ClassInfo,
   Descriptor,
   HierarchyRequestOptions,
   Node,
@@ -21,10 +22,10 @@ import {
   Paged,
   PresentationError,
   PresentationStatus,
-  RegisteredRuleset,
   RulesetVariable,
+  VariableValue,
 } from "@itwin/presentation-common";
-import { Presentation, PresentationManager, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
+import { Presentation, PresentationManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
 import { translate } from "../../presentation-components/common/Utils";
 import { PresentationTreeDataProvider } from "../../presentation-components/tree/DataProvider";
 import {
@@ -33,11 +34,11 @@ import {
   PresentationTreeNodeItemFilteringInfo,
 } from "../../presentation-components/tree/PresentationTreeNodeItem";
 import { pageOptionsUiToPresentation } from "../../presentation-components/tree/Utils";
-import { createTestECInstanceKey, createTestPropertyInfo, createTestRuleset } from "../_helpers/Common";
+import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
 import { createTestECClassGroupingNodeKey, createTestECInstancesNode, createTestECInstancesNodeKey, createTestNodePathElement } from "../_helpers/Hierarchy";
 import { createTestLabelDefinition } from "../_helpers/LabelDefinition";
-import { PromiseContainer, ResolvablePromise } from "../_helpers/Promises";
+import { PromiseContainer } from "../_helpers/Promises";
 import { createTestTreeNodeItem } from "../_helpers/UiComponents";
 
 function createTestECInstancesNodeKeyWithId(id?: string) {
@@ -74,25 +75,6 @@ describe("TreeDataProvider", () => {
     rulesetVariablesManagerMock.reset();
     provider.dispose();
     sinon.restore();
-    Presentation.terminate();
-  });
-
-  describe("dispose", () => {
-    it("disposes registered ruleset", async () => {
-      const registerPromise = new ResolvablePromise<RegisteredRuleset>();
-      const rulesetsManagerMock = moq.Mock.ofType<RulesetManager>();
-      rulesetsManagerMock.setup(async (x) => x.add(moq.It.isAny())).returns(async () => registerPromise);
-      presentationManagerMock.setup((x) => x.rulesets()).returns(() => rulesetsManagerMock.object);
-
-      const ruleset = createTestRuleset();
-      const p = new PresentationTreeDataProvider({ imodel: imodelMock.object, ruleset });
-      const rulesetDisposeSpy = sinon.spy();
-      await registerPromise.resolve(new RegisteredRuleset(ruleset, "test", rulesetDisposeSpy));
-
-      expect(rulesetDisposeSpy).to.not.be.called;
-      p.dispose();
-      expect(rulesetDisposeSpy).to.be.calledOnce;
-    });
   });
 
   describe("rulesetId", () => {
@@ -374,6 +356,35 @@ describe("TreeDataProvider", () => {
       presentationManagerMock.verifyAll();
     });
 
+    it("passes instance filter with redundant usedClasses and calls getNodes with expression that has no redundant class checks", async () => {
+      const nodeKey = createTestECInstancesNodeKey();
+      const nodeItem = createTestTreeNodeItem(nodeKey);
+      const classId = "0x1";
+      const { filteringInfo } = createInstanceFilteringInfo(
+        undefined,
+        ["filter1", "filter2"],
+        [createTestECClassInfo({ id: classId }), createTestECClassInfo({ id: classId })],
+      );
+      nodeItem.filtering = filteringInfo;
+      const presentationManager = {
+        getNodesAndCount: sinon
+          .stub<Parameters<PresentationManager["getNodesAndCount"]>, ReturnType<PresentationManager["getNodesAndCount"]>>()
+          .returns({ nodes: [] } as any),
+        vars: () => ({
+          onVariableChanged: new BeEvent<(variableId: string, prevValue: VariableValue | undefined, currValue: VariableValue | undefined) => void>(),
+        }),
+      };
+      sinon.stub(Presentation, "presentation").get(() => presentationManager);
+      await provider.getNodes(nodeItem, { start: 0, size: 2 });
+      expect(presentationManager.getNodesAndCount).to.be.calledWithMatch({
+        instanceFilter: {
+          expression: `(this.filter1 = NULL AND this.filter2 = NULL) AND (this.IsOfClass(${classId}))`,
+          selectClassName: "SchemaName:ClassName",
+          relatedInstances: [],
+        },
+      });
+    });
+
     it("passes combined parent and current node instance filter to presentation manager", async () => {
       const nodeKey = createTestECInstancesNodeKey();
       const nodeItem = createTestTreeNodeItem(nodeKey);
@@ -476,6 +487,9 @@ describe("TreeDataProvider", () => {
           .callsFake(async () => {
             throw new PresentationError(PresentationStatus.ResultSetTooLarge);
           }),
+        vars: () => ({
+          onVariableChanged: new BeEvent<(variableId: string, prevValue: VariableValue | undefined, currValue: VariableValue | undefined) => void>(),
+        }),
       };
 
       sinon.stub(Presentation, "presentation").get(() => presentationManager);
@@ -494,6 +508,9 @@ describe("TreeDataProvider", () => {
           .callsFake(async () => {
             throw new PresentationError(PresentationStatus.BackendTimeout);
           }),
+        vars: () => ({
+          onVariableChanged: new BeEvent<(variableId: string, prevValue: VariableValue | undefined, currValue: VariableValue | undefined) => void>(),
+        }),
       };
 
       sinon.stub(Presentation, "presentation").get(() => presentationManager);
@@ -509,6 +526,9 @@ describe("TreeDataProvider", () => {
           .callsFake(async () => {
             throw new Error("test");
           }),
+        vars: () => ({
+          onVariableChanged: new BeEvent<(variableId: string, prevValue: VariableValue | undefined, currValue: VariableValue | undefined) => void>(),
+        }),
       };
 
       sinon.stub(Presentation, "presentation").get(() => presentationManager);
@@ -524,6 +544,9 @@ describe("TreeDataProvider", () => {
           .callsFake(async () => {
             throw new PresentationError(PresentationStatus.Canceled);
           }),
+        vars: () => ({
+          onVariableChanged: new BeEvent<(variableId: string, prevValue: VariableValue | undefined, currValue: VariableValue | undefined) => void>(),
+        }),
       };
 
       sinon.stub(Presentation, "presentation").get(() => presentationManager);
@@ -812,7 +835,7 @@ function is(expected: Paged<HierarchyRequestOptions<IModelConnection, NodeKey, R
   });
 }
 
-function createFilterInfo(propName: string) {
+function createFilterInfo(propName: string, usedClasses?: ClassInfo[]) {
   const property = createTestPropertyInfo({ name: propName });
   const field = createTestPropertiesContentField({ properties: [{ property }], name: property.name });
   return {
@@ -821,15 +844,15 @@ function createFilterInfo(propName: string) {
         field,
         operator: PropertyFilterRuleOperator.IsNull,
       },
-      usedClasses: [],
+      usedClasses: usedClasses ?? [],
     },
     property,
   };
 }
 
-function createInstanceFilteringInfo(currentFilterPropName: string | undefined, ancestorFilterPropNames: string[] = []) {
-  const currentFilter = currentFilterPropName !== undefined ? createFilterInfo(currentFilterPropName) : undefined;
-  const ancestorFilters = ancestorFilterPropNames.map((propName) => createFilterInfo(propName));
+function createInstanceFilteringInfo(currentFilterPropName: string | undefined, ancestorFilterPropNames: string[] = [], usedClasses?: ClassInfo[]) {
+  const currentFilter = currentFilterPropName !== undefined ? createFilterInfo(currentFilterPropName, usedClasses) : undefined;
+  const ancestorFilters = ancestorFilterPropNames.map((propName) => createFilterInfo(propName, usedClasses));
 
   const filteringInfo = {
     descriptor: createTestContentDescriptor({ fields: [] }),

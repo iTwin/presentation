@@ -3,7 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-export function trimWhitespace(str: string): string {
+export function trimWhitespace(str: string): string;
+export function trimWhitespace(str: string | undefined): string | undefined;
+export function trimWhitespace(str: string | undefined): string | undefined {
+  if (!str) {
+    return str;
+  }
   return str
     .replaceAll(/\s+/gm, " ") // replace all consecutive spaces with a single space
     .replaceAll(/\(\s+/g, "(") // remove spaces after opening parentheses

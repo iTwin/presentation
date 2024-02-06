@@ -12,6 +12,7 @@ import {
   defaultPropertyFilterBuilderRuleValidator,
   isUnaryPropertyFilterOperator,
   PropertyFilterBuilderRule,
+  PropertyFilterBuilderRuleGroup,
   PropertyFilterRuleOperator,
 } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -121,6 +122,11 @@ export function createPropertyInfoFromPropertiesField(field: PropertiesField): P
 }
 
 /** @internal */
+export function isFilterNonEmpty(rootGroup: PropertyFilterBuilderRuleGroup) {
+  return rootGroup.items.length > 1 || (rootGroup.items.length === 1 && rootGroup.items[0].operator !== undefined);
+}
+
+/** @internal */
 export const INSTANCE_FILTER_FIELD_SEPARATOR = "#";
 function getCategorizedFieldName(fieldName: string, categoryName?: string) {
   return `${categoryName ?? ""}${INSTANCE_FILTER_FIELD_SEPARATOR}${fieldName}`;
@@ -202,8 +208,9 @@ function quantityPropertyValidator({ property, value }: ValidatorContext) {
   return undefined;
 }
 
-function numericPropertyValidator({ property, value }: ValidatorContext) {
-  if (!isPropertyNumeric(property.typename) || value === undefined) {
+function numericPropertyValidator({ property, value, operator }: ValidatorContext) {
+  // If equality operator is set the value should not be validated since it is supplied by the `UniquePropertyValuesSelector`.
+  if (!isPropertyNumeric(property.typename) || value === undefined || isEqualityOperator(operator)) {
     return undefined;
   }
 
@@ -214,6 +221,10 @@ function numericPropertyValidator({ property, value }: ValidatorContext) {
   return undefined;
 }
 
+function isEqualityOperator(operator: PropertyFilterRuleOperator) {
+  return operator === PropertyFilterRuleOperator.IsEqual || operator === PropertyFilterRuleOperator.IsNotEqual;
+}
+
 function isPropertyNumeric(typename: string) {
   return (
     typename === StandardTypeNames.Number || typename === StandardTypeNames.Int || typename === StandardTypeNames.Float || typename === StandardTypeNames.Double
@@ -221,5 +232,5 @@ function isPropertyNumeric(typename: string) {
 }
 
 function isInvalidNumericValue(value: PrimitiveValue) {
-  return value.displayValue !== undefined && value.displayValue !== "" && isNaN(Number(value.value));
+  return value.displayValue && isNaN(Number(value.value));
 }

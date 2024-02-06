@@ -3,161 +3,153 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { useCallback, useMemo, useState } from "react";
+import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
-import { PropertyRecord } from "@itwin/appui-abstract";
-import {
-  ControlledTree,
-  DelayLoadedTreeNodeItem,
-  FilteringInput,
-  FilteringInputStatus,
-  SelectionMode,
-  TreeDataProvider,
-  TreeEventHandler,
-  TreeNodeItem,
-  useTreeModel,
-  useTreeModelSource,
-  useTreeNodeLoader,
-} from "@itwin/components-react";
+import { FilteringInput, FilteringInputStatus } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { SchemaContext } from "@itwin/ecschema-metadata";
-import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
+import { Tab, Tabs } from "@itwin/itwinui-react";
 import { DiagnosticsProps } from "@itwin/presentation-components";
-import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
-import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { DiagnosticsSelector } from "../diagnostics-selector/DiagnosticsSelector";
-import { Tree } from "./Tree";
+import { Tree } from "./rules-driven/Tree";
+import { StatelessTreeWidget } from "./stateless/Tree";
 
-interface Props {
+export interface TreeWidgetProps {
   imodel: IModelConnection;
   rulesetId?: string;
+  height?: number;
+  width?: number;
 }
 
-export function TreeWidget(props: Props) {
+export function TreeWidget(props: Omit<TreeWidgetProps, "height" | "width">) {
+  const [openTab, setOpenTab] = useState(0);
+  const { width, height, ref } = useResizeDetector<HTMLDivElement>();
+  const tabsClassName = "tree-widget-tabs";
+  const [heightOfTreeWidget, setHeightOfTreeWidget] = useState(0);
+  useEffect(() => {
+    const tabElements = ref.current?.getElementsByClassName(tabsClassName);
+    const heightOfTab = tabElements && tabElements.length > 0 ? tabElements[0].clientHeight : 0;
+    setHeightOfTreeWidget(height ? height - heightOfTab : 0);
+    // When width changes tab height might change, so it needs to be included in dependency list
+  }, [height, ref, width]);
+
+  return (
+    <div ref={ref}>
+      <Tabs
+        labels={[
+          <Tab key={1} label={IModelApp.localization.getLocalizedString("Sample:controls.tree-widget.rules-driven-tree")} />,
+          <Tab key={2} label={IModelApp.localization.getLocalizedString("Sample:controls.tree-widget.stateless-models-tree")} />,
+        ]}
+        onTabSelected={setOpenTab}
+        contentClassName="tree-widget-tabs-content"
+        tabsClassName={tabsClassName}
+      >
+        <div className="tree-widget">
+          {openTab === 0 ? (
+            <RulesDrivenTreeWidget imodel={props.imodel} rulesetId={props.rulesetId} height={heightOfTreeWidget} width={width} />
+          ) : (
+            <StatelessTreeWidget imodel={props.imodel} height={heightOfTreeWidget} width={width} />
+          )}
+        </div>
+      </Tabs>
+    </div>
+  );
+}
+
+export function RulesDrivenTreeWidget(props: TreeWidgetProps) {
   const { rulesetId, imodel } = props;
   const [diagnosticsOptions, setDiagnosticsOptions] = useState<DiagnosticsProps>({ ruleDiagnostics: undefined, devDiagnostics: undefined });
   const [filter, setFilter] = useState("");
   const [filteringStatus, setFilteringStatus] = useState(FilteringInputStatus.ReadyToFilter);
   const [matchesCount, setMatchesCount] = useState<number>();
   const [activeMatchIndex, setActiveMatchIndex] = useState(0);
-
   const onFilteringStateChange = useCallback((isFiltering: boolean, newMatchesCount: number | undefined) => {
     setFilteringStatus(
       isFiltering
         ? FilteringInputStatus.FilteringInProgress
         : undefined !== newMatchesCount
-        ? FilteringInputStatus.FilteringFinished
-        : FilteringInputStatus.ReadyToFilter,
+          ? FilteringInputStatus.FilteringFinished
+          : FilteringInputStatus.ReadyToFilter,
     );
     setMatchesCount(newMatchesCount);
   }, []);
-
-  const { width, height, ref } = useResizeDetector();
-
+  const { headerRef, treeHeight } = useTreeHeight(props.height);
   return (
-    <div className="treewidget">
-      <div className="treewidget-header">
-        <h3>{IModelApp.localization.getLocalizedString("Sample:controls.tree")}</h3>
-        <DiagnosticsSelector onDiagnosticsOptionsChanged={setDiagnosticsOptions} />
-        {rulesetId ? (
-          <FilteringInput
-            status={filteringStatus}
-            onFilterCancel={() => {
-              setFilter("");
-            }}
-            onFilterClear={() => {
-              setFilter("");
-            }}
-            onFilterStart={(newFilter) => {
-              setFilter(newFilter);
-            }}
-            resultSelectorProps={{
-              onSelectedChanged: (index) => setActiveMatchIndex(index),
-              resultCount: matchesCount || 0,
-            }}
-          />
-        ) : null}
-      </div>
-      <div ref={ref} className="filteredTree">
-        {rulesetId && width && height ? (
+    <>
+      <TreeWidgetHeader
+        onFilterChange={setFilter}
+        filteringStatus={filteringStatus}
+        showFilteringInput={!!rulesetId}
+        ref={headerRef}
+        onActiveMatchIndexChange={setActiveMatchIndex}
+        matchesCount={matchesCount}
+        onDiagnosticsOptionsChange={setDiagnosticsOptions}
+      />
+      <div className="filtered-tree">
+        {rulesetId && props.width && treeHeight ? (
           <>
             <Tree
               imodel={imodel}
               rulesetId={rulesetId}
               diagnostics={diagnosticsOptions}
               filtering={{ filter, activeMatchIndex, onFilteringStateChange }}
-              width={width}
-              height={height}
+              width={props.width}
+              height={treeHeight}
             />
-            {filteringStatus === FilteringInputStatus.FilteringInProgress ? <div className="filteredTreeOverlay" /> : null}
+            {filteringStatus === FilteringInputStatus.FilteringInProgress ? <div className="filtered-tree-overlay" /> : null}
           </>
         ) : null}
       </div>
-    </div>
+    </>
   );
 }
 
-export function ExperimentalModelsTree({ imodel }: { imodel: IModelConnection }) {
-  const { width, height, ref } = useResizeDetector();
-  const dataProvider = useMemo((): TreeDataProvider => {
-    const schemas = new SchemaContext();
-    schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-    const metadataProvider = createMetadataProvider(schemas);
-    const modelsTreeHierarchyProvider = new HierarchyProvider({
-      metadataProvider,
-      hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider }),
-      queryExecutor: createECSqlQueryExecutor(imodel),
-    });
-    return async (node?: TreeNodeItem): Promise<TreeNodeItem[]> => {
-      const parent: HierarchyNode | undefined = node ? (node as any).__internal : undefined;
-      try {
-        return (await modelsTreeHierarchyProvider.getNodes(parent)).map(parseTreeNodeItem);
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error(e);
-        return [];
-      }
-    };
-  }, [imodel]);
-  const modelSource = useTreeModelSource(dataProvider);
-  const nodeLoader = useTreeNodeLoader(dataProvider, modelSource);
-  const eventHandler = useMemo(() => new TreeEventHandler({ nodeLoader, modelSource }), [nodeLoader, modelSource]);
-  const treeModel = useTreeModel(modelSource);
+export function useTreeHeight(height?: number) {
+  const [treeHeight, setTreeHeight] = useState(0);
+  const headerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const heightOfHeader = headerRef.current?.clientHeight ?? 0;
+    const heightToSet = height ? height - heightOfHeader : 0;
+    setTreeHeight(heightToSet);
+  }, [height]);
+  return { headerRef, treeHeight };
+}
 
+interface HeaderProps {
+  onFilterChange: (newFilter: string) => void;
+  filteringStatus: FilteringInputStatus;
+  showFilteringInput: boolean;
+  onActiveMatchIndexChange?: (index: number) => void;
+  matchesCount?: number;
+  onDiagnosticsOptionsChange?: (options: DiagnosticsProps) => void;
+}
+
+export const TreeWidgetHeader = forwardRef(function TreeWidgetHeader(props: HeaderProps, ref: React.ForwardedRef<HTMLDivElement>) {
+  const { onFilterChange, filteringStatus, showFilteringInput } = props;
   return (
-    <div className="treewidget">
-      <div className="treewidget-header">
-        <h3>{IModelApp.localization.getLocalizedString("Sample:controls.tree")}</h3>
-      </div>
-      <div ref={ref} className="filteredTree">
-        {width && height ? (
-          <ControlledTree
-            model={treeModel}
-            eventsHandler={eventHandler}
-            nodeLoader={nodeLoader}
-            selectionMode={SelectionMode.Extended}
-            iconsEnabled={true}
-            width={width}
-            height={height}
-          />
-        ) : null}
-      </div>
+    <div ref={ref} className="tree-widget-header">
+      {showFilteringInput && (
+        <FilteringInput
+          status={filteringStatus}
+          onFilterCancel={() => {
+            onFilterChange("");
+          }}
+          onFilterClear={() => {
+            onFilterChange("");
+          }}
+          onFilterStart={(newFilter) => {
+            onFilterChange(newFilter);
+          }}
+          resultSelectorProps={
+            props.onActiveMatchIndexChange || props.matchesCount
+              ? {
+                  onSelectedChanged: (index) => (props.onActiveMatchIndexChange ? props.onActiveMatchIndexChange(index) : {}),
+                  resultCount: props.matchesCount || 0,
+                }
+              : undefined
+          }
+        />
+      )}
+      {props.onDiagnosticsOptionsChange && <DiagnosticsSelector onDiagnosticsOptionsChanged={props.onDiagnosticsOptionsChange} />}
     </div>
   );
-}
-
-function parseTreeNodeItem(node: HierarchyNode): DelayLoadedTreeNodeItem {
-  if (node.children === undefined) {
-    throw new Error("Invalid node: children not determined");
-  }
-  const hasChildren = typeof node.children === "boolean" ? node.children : Array.isArray(node.children) ? node.children.length > 0 : undefined;
-  return {
-    __internal: node,
-    id: JSON.stringify(node.key),
-    label: PropertyRecord.fromString(node.label, "Label"),
-    icon: node.extendedData?.imageId,
-    hasChildren,
-    autoExpand: node.autoExpand,
-  } as DelayLoadedTreeNodeItem;
-}
+});

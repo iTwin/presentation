@@ -1,5 +1,5 @@
 {
-  "require": ["jsdom-global/register", "ignore-styles"],
+  "require": ["global-jsdom/register", "ignore-styles"],
   "checkLeaks": true,
   "timeout": 60000,
   "file": ["./lib/cjs/test/index.js"],

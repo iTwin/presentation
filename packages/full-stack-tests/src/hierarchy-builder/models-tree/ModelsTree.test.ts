@@ -4,17 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IModel } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
-import { SchemaContext } from "@itwin/ecschema-metadata";
-import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { InstanceKey } from "@itwin/presentation-common";
-import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import { HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
-import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
-import { TestIModelBuilder } from "@itwin/presentation-testing";
 import {
   buildIModel,
-  importSchema,
   insertPhysicalElement,
   insertPhysicalModelWithPartition,
   insertPhysicalPartition,
@@ -24,6 +16,7 @@ import {
 } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
+import { createModelsTreeProvider, importTestSchema } from "./ModelsTreeTestUtils";
 
 describe("Stateless hierarchy builder", () => {
   describe("Models tree", () => {
@@ -37,7 +30,7 @@ describe("Stateless hierarchy builder", () => {
 
     it("creates Subject - Model - Category - Element hierarchy", async function () {
       const { imodel, ...keys } = await buildIModel(this, async (builder, mochaContext) => {
-        const { classes } = await importTestSchema(mochaContext, builder);
+        const { items } = await importTestSchema(mochaContext, builder);
         const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
         const childSubject = insertSubject({ builder, codeValue: "child subject", parentId: rootSubject.id });
         const model = insertPhysicalModelWithPartition({ builder, codeValue: `model`, partitionParentId: childSubject.id });
@@ -52,7 +45,7 @@ describe("Stateless hierarchy builder", () => {
         });
         const rootElement2 = insertPhysicalElement({
           builder,
-          classFullName: classes.PhysicalObject.fullName,
+          classFullName: items.PhysicalObject.fullName,
           userLabel: `root element 2`,
           modelId: model.id,
           categoryId: category.id,
@@ -66,27 +59,34 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           NodeValidators.createForInstanceNode({
             instanceKeys: [keys.rootSubject],
+            autoExpand: true,
+            supportsFiltering: true,
             children: [
               NodeValidators.createForInstanceNode({
                 instanceKeys: [keys.childSubject],
+                supportsFiltering: true,
                 children: [
                   NodeValidators.createForInstanceNode({
                     instanceKeys: [keys.model],
+                    supportsFiltering: true,
                     children: [
                       NodeValidators.createForInstanceNode({
                         instanceKeys: [keys.category],
+                        supportsFiltering: true,
                         children: [
                           NodeValidators.createForClassGroupingNode({
                             className: keys.rootElement1.className,
                             children: [
                               NodeValidators.createForInstanceNode({
                                 instanceKeys: [keys.rootElement1],
+                                supportsFiltering: true,
                                 children: [
                                   NodeValidators.createForClassGroupingNode({
                                     className: keys.childElement.className,
                                     children: [
                                       NodeValidators.createForInstanceNode({
                                         instanceKeys: [keys.childElement],
+                                        supportsFiltering: true,
                                         children: false,
                                       }),
                                     ],
@@ -100,15 +100,18 @@ describe("Stateless hierarchy builder", () => {
                             children: [
                               NodeValidators.createForInstanceNode({
                                 instanceKeys: [keys.rootElement2],
+                                supportsFiltering: true,
                                 children: [
                                   NodeValidators.createForInstanceNode({
                                     instanceKeys: [keys.category],
+                                    supportsFiltering: true,
                                     children: [
                                       NodeValidators.createForClassGroupingNode({
                                         className: keys.modelingElement.className,
                                         children: [
                                           NodeValidators.createForInstanceNode({
                                             instanceKeys: [keys.modelingElement],
+                                            supportsFiltering: true,
                                             children: false,
                                           }),
                                         ],
@@ -131,7 +134,7 @@ describe("Stateless hierarchy builder", () => {
       });
     });
 
-    it('hides subjects with `Subject.Model.Type = "Hierarchy"` json property', async function () {
+    it(`hides subjects with \`Subject.Model.Type = "Hierarchy"\` json property`, async function () {
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
         const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
         const childSubject = insertSubject({
@@ -151,16 +154,20 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           NodeValidators.createForInstanceNode({
             instanceKeys: [keys.rootSubject],
+            autoExpand: true,
+            supportsFiltering: true,
             children: [
               NodeValidators.createForInstanceNode({
                 instanceKeys: [keys.model],
+                supportsFiltering: true,
                 children: [
                   NodeValidators.createForInstanceNode({
                     instanceKeys: [keys.category],
+                    supportsFiltering: true,
                     children: [
                       NodeValidators.createForClassGroupingNode({
                         className: keys.element.className,
-                        children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.element], children: false })],
+                        children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.element], supportsFiltering: true, children: false })],
                       }),
                     ],
                   }),
@@ -183,6 +190,8 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           NodeValidators.createForInstanceNode({
             instanceKeys: [keys.rootSubject],
+            autoExpand: true,
+            supportsFiltering: true,
             children: false,
           }),
         ],
@@ -201,6 +210,8 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           NodeValidators.createForInstanceNode({
             instanceKeys: [keys.rootSubject],
+            autoExpand: true,
+            supportsFiltering: true,
             children: false,
           }),
         ],
@@ -228,19 +239,24 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           NodeValidators.createForInstanceNode({
             instanceKeys: [keys.rootSubject],
+            autoExpand: true,
+            supportsFiltering: true,
             children: [
               NodeValidators.createForInstanceNode({
                 instanceKeys: [keys.childSubject1],
+                supportsFiltering: true,
                 children: [
                   NodeValidators.createForInstanceNode({
                     instanceKeys: [keys.model],
+                    supportsFiltering: true,
                     children: [
                       NodeValidators.createForInstanceNode({
                         instanceKeys: [keys.category],
+                        supportsFiltering: true,
                         children: [
                           NodeValidators.createForClassGroupingNode({
                             className: keys.element.className,
-                            children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.element], children: false })],
+                            children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.element], supportsFiltering: true, children: false })],
                           }),
                         ],
                       }),
@@ -250,16 +266,19 @@ describe("Stateless hierarchy builder", () => {
               }),
               NodeValidators.createForInstanceNode({
                 instanceKeys: [keys.childSubject2],
+                supportsFiltering: true,
                 children: [
                   NodeValidators.createForInstanceNode({
                     instanceKeys: [keys.model],
+                    supportsFiltering: true,
                     children: [
                       NodeValidators.createForInstanceNode({
                         instanceKeys: [keys.category],
+                        supportsFiltering: true,
                         children: [
                           NodeValidators.createForClassGroupingNode({
                             className: keys.element.className,
-                            children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.element], children: false })],
+                            children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.element], supportsFiltering: true, children: false })],
                           }),
                         ],
                       }),
@@ -293,13 +312,16 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           NodeValidators.createForInstanceNode({
             instanceKeys: [keys.rootSubject],
+            autoExpand: true,
+            supportsFiltering: true,
             children: [
               NodeValidators.createForInstanceNode({
                 instanceKeys: [keys.category],
+                supportsFiltering: true,
                 children: [
                   NodeValidators.createForClassGroupingNode({
                     className: keys.element.className,
-                    children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.element], children: false })],
+                    children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.element], supportsFiltering: true, children: false })],
                   }),
                 ],
               }),
@@ -329,13 +351,16 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           NodeValidators.createForInstanceNode({
             instanceKeys: [keys.rootSubject],
+            autoExpand: true,
+            supportsFiltering: true,
             children: [
               NodeValidators.createForInstanceNode({
                 instanceKeys: [keys.category],
+                supportsFiltering: true,
                 children: [
                   NodeValidators.createForClassGroupingNode({
                     className: keys.element.className,
-                    children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.element], children: false })],
+                    children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.element], supportsFiltering: true, children: false })],
                   }),
                 ],
               }),
@@ -359,37 +384,156 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           NodeValidators.createForInstanceNode({
             instanceKeys: [keys.rootSubject],
+            autoExpand: true,
+            supportsFiltering: true,
             children: false,
           }),
         ],
       });
     });
 
-    function createModelsTreeProvider(imodel: IModelConnection) {
-      const schemas = new SchemaContext();
-      schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-      const metadataProvider = createMetadataProvider(schemas);
-      return new HierarchyProvider({
-        metadataProvider,
-        queryExecutor: createECSqlQueryExecutor(imodel),
-        hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider }),
+    it("merges subjects from different parts of hierarchy", async function () {
+      const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+        const category = insertSpatialCategory({ builder, codeValue: "category" });
+        const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
+        const hiddenSubject1 = insertSubject({
+          builder,
+          codeValue: "hidden subject 1",
+          parentId: rootSubject.id,
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          jsonProperties: { Subject: { Model: { Type: "Hierarchy" } } },
+        });
+        const hiddenSubject2 = insertSubject({
+          builder,
+          codeValue: "hidden subject 2",
+          parentId: rootSubject.id,
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          jsonProperties: { Subject: { Model: { Type: "Hierarchy" } } },
+        });
+        const mergedSubject1 = insertSubject({ builder, codeValue: "merged subject", parentId: hiddenSubject1.id });
+        const mergedSubject2 = insertSubject({ builder, codeValue: "merged subject", parentId: hiddenSubject2.id });
+        const model1 = insertPhysicalModelWithPartition({ builder, codeValue: `model1`, partitionParentId: mergedSubject1.id });
+        const element1 = insertPhysicalElement({ builder, userLabel: `element1`, modelId: model1.id, categoryId: category.id });
+        const model2 = insertPhysicalModelWithPartition({ builder, codeValue: `model2`, partitionParentId: mergedSubject2.id });
+        const element2 = insertPhysicalElement({ builder, userLabel: `element1`, modelId: model2.id, categoryId: category.id });
+        return { rootSubject, mergedSubject1, mergedSubject2, model1, model2, category, element1, element2 };
       });
-    }
-
-    async function importTestSchema(mochaContext: Mocha.Context, builder: TestIModelBuilder) {
-      return importSchema(
-        mochaContext,
-        builder,
-        [
-          `
-          <ECEntityClass typeName="PhysicalObject" displayLabel="Physical Object" modifier="Sealed" description="Similar to generic:PhysicalObject but also sub-modelable.">
-            <BaseClass>bis:PhysicalElement</BaseClass>
-            <BaseClass>bis:ISubModeledElement</BaseClass>
-          </ECEntityClass>
-          `,
+      await validateHierarchy({
+        provider: createModelsTreeProvider(imodel),
+        expect: [
+          NodeValidators.createForInstanceNode({
+            instanceKeys: [keys.rootSubject],
+            autoExpand: true,
+            supportsFiltering: true,
+            children: [
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [keys.mergedSubject1, keys.mergedSubject2],
+                supportsFiltering: true,
+                children: [
+                  NodeValidators.createForInstanceNode({
+                    instanceKeys: [keys.model1],
+                    supportsFiltering: true,
+                    children: [
+                      NodeValidators.createForInstanceNode({
+                        instanceKeys: [keys.category],
+                        supportsFiltering: true,
+                        children: [
+                          NodeValidators.createForClassGroupingNode({
+                            className: keys.element1.className,
+                            children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.element1], supportsFiltering: true, children: false })],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                  NodeValidators.createForInstanceNode({
+                    instanceKeys: [keys.model2],
+                    supportsFiltering: true,
+                    children: [
+                      NodeValidators.createForInstanceNode({
+                        instanceKeys: [keys.category],
+                        supportsFiltering: true,
+                        children: [
+                          NodeValidators.createForClassGroupingNode({
+                            className: keys.element2.className,
+                            children: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.element2], supportsFiltering: true, children: false })],
+                          }),
+                        ],
+                      }),
+                    ],
+                  }),
+                ],
+              }),
+            ],
+          }),
         ],
-        [`<ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />`],
-      );
-    }
+      });
+    });
+
+    it("merges categories from different parts of hierarchy", async function () {
+      const { imodel, ...keys } = await buildIModel(this, async (builder) => {
+        const category1 = insertSpatialCategory({ builder, codeValue: "category1", userLabel: "merged category" });
+        const category2 = insertSpatialCategory({ builder, codeValue: "category2", userLabel: "merged category" });
+        const rootSubject: InstanceKey = { className: "BisCore.Subject", id: IModel.rootSubjectId };
+        const hiddenSubject1 = insertSubject({
+          builder,
+          codeValue: "hidden subject 1",
+          parentId: rootSubject.id,
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          jsonProperties: { Subject: { Model: { Type: "Hierarchy" } } },
+        });
+        const hiddenSubject2 = insertSubject({
+          builder,
+          codeValue: "hidden subject 2",
+          parentId: rootSubject.id,
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          jsonProperties: { Subject: { Model: { Type: "Hierarchy" } } },
+        });
+        const partition1 = insertPhysicalPartition({
+          builder,
+          codeValue: "model1",
+          parentId: hiddenSubject1.id,
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          jsonProperties: { PhysicalPartition: { Model: { Content: true } } },
+        });
+        const model1 = insertPhysicalSubModel({ builder, modeledElementId: partition1.id });
+        const element1 = insertPhysicalElement({ builder, userLabel: `element1`, modelId: model1.id, categoryId: category1.id });
+        const partition2 = insertPhysicalPartition({
+          builder,
+          codeValue: "model2",
+          parentId: hiddenSubject2.id,
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          jsonProperties: { PhysicalPartition: { Model: { Content: true } } },
+        });
+        const model2 = insertPhysicalSubModel({ builder, modeledElementId: partition2.id });
+        const element2 = insertPhysicalElement({ builder, userLabel: `element2`, modelId: model2.id, categoryId: category2.id });
+        return { rootSubject, model1, model2, category1, category2, element1, element2 };
+      });
+      await validateHierarchy({
+        provider: createModelsTreeProvider(imodel),
+        expect: [
+          NodeValidators.createForInstanceNode({
+            instanceKeys: [keys.rootSubject],
+            autoExpand: true,
+            supportsFiltering: true,
+            children: [
+              NodeValidators.createForInstanceNode({
+                instanceKeys: [keys.category1, keys.category2],
+                supportsFiltering: true,
+                children: [
+                  NodeValidators.createForClassGroupingNode({
+                    className: keys.element1.className,
+                    children: [
+                      NodeValidators.createForInstanceNode({ instanceKeys: [keys.element1], supportsFiltering: true, children: false }),
+                      NodeValidators.createForInstanceNode({ instanceKeys: [keys.element2], supportsFiltering: true, children: false }),
+                    ],
+                  }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      });
+    });
   });
 });

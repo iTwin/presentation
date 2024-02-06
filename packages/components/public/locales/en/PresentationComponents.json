@@ -17,17 +17,20 @@
     "select-instance": "Select element"
   },
   "instance-filter-builder": {
-    "select-class": "Select class...",
+    "select-classes-optional": "Select classes (optional)",
+    "selected-classes": "Selected classes",
     "category": "Category:",
     "class": "Class:",
     "schema": "Schema:",
     "apply": "Apply",
     "cancel": "Cancel",
+    "reset": "Reset",
     "filter": "Filter",
     "error-messages": {
       "not-a-number": "Value must be a number",
       "invalid": "Value is invalid"
-    }
+    },
+    "class-selection-warning": "Changing the class list clears all property filtering rules."
   },
   "tree": {
     "please-provide": "Please provide",

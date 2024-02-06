@@ -9,9 +9,7 @@ import { PropertyDescription } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
-import { Presentation } from "@itwin/presentation-frontend";
-import { waitFor } from "@testing-library/react";
-import { renderHook } from "@testing-library/react-hooks";
+import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import {
   NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE,
   NavigationPropertyTarget,
@@ -19,25 +17,31 @@ import {
   useNavigationPropertyTargetsRuleset,
 } from "../../../presentation-components/properties/inputs/UseNavigationPropertyTargetsLoader";
 import { createTestContentDescriptor, createTestContentItem } from "../../_helpers/Content";
+import { renderHook, waitFor } from "../../TestUtils";
 
 describe("useNavigationPropertyTargetsLoader", () => {
   const testImodel = {} as IModelConnection;
+  const getContentStub = sinon.stub<Parameters<PresentationManager["getContent"]>, ReturnType<PresentationManager["getContent"]>>();
 
-  beforeEach(async () => {
+  before(() => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
-    await Presentation.initialize();
+    sinon.stub(Presentation, "localization").get(() => localization);
+    sinon.stub(Presentation, "presentation").get(() => ({
+      getContent: getContentStub,
+    }));
   });
 
-  afterEach(async () => {
-    Presentation.terminate();
+  after(() => {
     sinon.restore();
   });
 
-  it("returns empty targets array if ruleset is undefined", async () => {
-    const getContentStub = sinon.stub(Presentation.presentation, "getContent");
+  beforeEach(() => {
+    getContentStub.reset();
+  });
 
+  it("returns empty targets array if ruleset is undefined", async () => {
     const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel } });
 
     const { options, hasMore } = await result.current("", 0);
@@ -53,7 +57,7 @@ describe("useNavigationPropertyTargetsLoader", () => {
       displayValues: {},
       values: {},
     });
-    sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [] }), [contentItem]));
+    getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [] }), [contentItem]));
 
     const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
 
@@ -64,8 +68,6 @@ describe("useNavigationPropertyTargetsLoader", () => {
   });
 
   it("loads targets with offset", async () => {
-    const getContentStub = sinon.stub(Presentation.presentation, "getContent");
-
     const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
 
     const loadedTargets: NavigationPropertyTarget[] = [
@@ -79,7 +81,7 @@ describe("useNavigationPropertyTargetsLoader", () => {
 
   it("loads full batch of targets and sets 'hasMore' flag to true", async () => {
     const contentItems = Array.from({ length: NAVIGATION_PROPERTY_TARGETS_BATCH_SIZE }, () => createTestContentItem({ displayValues: {}, values: {} }));
-    sinon.stub(Presentation.presentation, "getContent").resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), contentItems));
+    getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), contentItems));
 
     const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
 
@@ -89,9 +91,7 @@ describe("useNavigationPropertyTargetsLoader", () => {
   });
 
   it("loads targets using provided filter string", async () => {
-    const getContentStub = sinon
-      .stub(Presentation.presentation, "getContent")
-      .resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), []));
+    getContentStub.resolves(new Content(createTestContentDescriptor({ fields: [], categories: [] }), []));
 
     const { result } = renderHook(useNavigationPropertyTargetsLoader, { initialProps: { imodel: testImodel, ruleset: { id: "testRuleset", rules: [] } } });
 

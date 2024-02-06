@@ -1,5 +1,27 @@
 # Change Log - @itwin/presentation-testing
 
+## 5.0.0-dev.2
+
+### Patch Changes
+
+- [#348](https://github.com/iTwin/presentation/pull/348): Clean up `@internal` APIs exposed through the barrel exports file.
+- Updated dependencies:
+  - @itwin/presentation-components@5.0.0-dev.2
+
+## 4.1.2
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-components@4.4.0
+
+## 5.0.0-dev.1
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-components@5.0.0-dev.1
+
 ## 5.0.0-dev.0
 
 ### Major Changes

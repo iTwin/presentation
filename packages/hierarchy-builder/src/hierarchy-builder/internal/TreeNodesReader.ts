@@ -4,99 +4,92 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { INodeParser } from "../HierarchyDefinition";
-import { ParsedHierarchyNode } from "../HierarchyNode";
-import { ECSqlQueryDef, IECSqlQueryExecutor } from "../queries/ECSql";
-import { NodeSelectClauseColumnNames } from "../queries/NodeSelectClauseFactory";
+import { InstanceHierarchyNodeProcessingParams, ParsedHierarchyNode, ParsedInstanceHierarchyNode } from "../HierarchyNode";
+import { getLogger } from "../Logging";
+import { ECSqlQueryDef } from "../queries/ECSqlCore";
+import { ILimitingECSqlQueryExecutor } from "../queries/LimitingECSqlQueryExecutor";
+import { NodeSelectClauseColumnNames } from "../queries/NodeSelectQueryFactory";
 import { ConcatenatedValue } from "../values/ConcatenatedValue";
 import { Id64String } from "../values/Values";
+import { LOGGING_NAMESPACE } from "./Common";
 
 /** @internal */
-export interface ITreeQueryResultsReader {
-  read(executor: IECSqlQueryExecutor, query: ECSqlQueryDef): Promise<ParsedHierarchyNode[]>;
+export interface TreeQueryResultsReaderProps {
+  parser?: INodeParser;
 }
 
 /** @internal */
-export class TreeQueryResultsReader implements ITreeQueryResultsReader {
-  private constructor(private _parser: INodeParser) {}
+export class TreeQueryResultsReader {
+  private _props: Required<TreeQueryResultsReaderProps>;
 
-  public static create(nodeParser?: INodeParser) {
-    return new TreeQueryResultsReader(nodeParser ?? defaultNodesParser);
+  public constructor(props?: TreeQueryResultsReaderProps) {
+    // istanbul ignore next
+    this._props = {
+      parser: props?.parser ?? defaultNodesParser,
+    };
   }
 
-  public async read(executor: IECSqlQueryExecutor, query: ECSqlQueryDef): Promise<ParsedHierarchyNode[]> {
-    const reader = executor.createQueryReader(query.ecsql, query.bindings, { rowFormat: "ECSqlPropertyNames" });
-    const nodes = new Array<ParsedHierarchyNode>();
-    for await (const row of reader) {
-      if (nodes.length >= ROWS_LIMIT) {
-        throw new Error("rows limit exceeded");
-      }
-      nodes.push(this._parser(row.toRow()));
+  public async *read(queryExecutor: ILimitingECSqlQueryExecutor, query: ECSqlQueryDef, limit?: number | "unbounded"): AsyncGenerator<ParsedHierarchyNode> {
+    getLogger().logInfo(`${LOGGING_NAMESPACE}.TreeQueryResultsReader`, `Executing query: ${query.ecsql}`);
+    for await (const row of queryExecutor.createQueryReader(query, { rowFormat: "ECSqlPropertyNames", ...(limit !== undefined ? { limit } : undefined) })) {
+      yield this._props.parser(row);
     }
-    return nodes;
   }
 }
 
-/** The interface should contain a member for each `NodeSelectClauseColumnNames` value. */
+/**
+ * The interface should contain a member for each `NodeSelectClauseColumnNames` value.
+ * @internal
+ */
 /* eslint-disable @typescript-eslint/naming-convention */
-interface RowDef {
+export interface RowDef {
   [NodeSelectClauseColumnNames.FullClassName]: string;
   [NodeSelectClauseColumnNames.ECInstanceId]: Id64String;
   [NodeSelectClauseColumnNames.DisplayLabel]: string;
   [NodeSelectClauseColumnNames.HasChildren]?: boolean;
   [NodeSelectClauseColumnNames.HideIfNoChildren]?: boolean;
   [NodeSelectClauseColumnNames.HideNodeInHierarchy]?: boolean;
-  [NodeSelectClauseColumnNames.GroupByClass]?: boolean;
-  [NodeSelectClauseColumnNames.GroupByLabel]?: boolean;
-  [NodeSelectClauseColumnNames.MergeByLabelId]?: string;
+  [NodeSelectClauseColumnNames.Grouping]?: string;
   [NodeSelectClauseColumnNames.ExtendedData]?: string;
   [NodeSelectClauseColumnNames.AutoExpand]?: boolean;
+  [NodeSelectClauseColumnNames.SupportsFiltering]?: boolean;
 }
 /* eslint-enable @typescript-eslint/naming-convention */
 
 /** @internal */
-export function defaultNodesParser(row: { [columnName: string]: any }): ParsedHierarchyNode {
+export function defaultNodesParser(row: { [columnName: string]: any }): ParsedInstanceHierarchyNode {
   const typedRow = row as RowDef;
-  const parsedExtendedData = typedRow.ExtendedData ? JSON.parse(typedRow.ExtendedData) : undefined;
+  const processingParams: InstanceHierarchyNodeProcessingParams = {
+    ...(typedRow.HideIfNoChildren ? { hideIfNoChildren: true } : undefined),
+    ...(typedRow.HideNodeInHierarchy ? { hideInHierarchy: true } : undefined),
+    ...(typedRow.Grouping ? { grouping: JSON.parse(typedRow.Grouping) } : undefined),
+  };
   return {
     // don't format the label here - we're going to do that at node pre-processing step to handle both - instance and custom nodes
     label: parseLabel(typedRow.DisplayLabel),
-    extendedData: parsedExtendedData,
     key: {
       type: "instances",
       instanceKeys: [{ className: typedRow.FullClassName.replace(":", "."), id: typedRow.ECInstanceId }],
     },
-    children: typedRow.HasChildren === undefined ? undefined : !!typedRow.HasChildren,
-    params: {
-      hideIfNoChildren: !!typedRow.HideIfNoChildren,
-      hideInHierarchy: !!typedRow.HideNodeInHierarchy,
-      groupByClass: !!typedRow.GroupByClass,
-      groupByLabel: !!typedRow.GroupByLabel,
-      mergeByLabelId: typedRow.MergeByLabelId,
-    },
+    ...(typedRow.HasChildren !== undefined ? { children: !!typedRow.HasChildren } : undefined),
+    ...(typedRow.AutoExpand ? { autoExpand: true } : undefined),
+    ...(typedRow.SupportsFiltering ? { supportsFiltering: true } : undefined),
+    ...(typedRow.ExtendedData ? { extendedData: JSON.parse(typedRow.ExtendedData) } : undefined),
+    ...(Object.keys(processingParams).length > 0 ? { processingParams } : undefined),
   };
 }
 
-function parseLabel(value: string | undefined): ConcatenatedValue {
+function parseLabel(value: string | undefined): ConcatenatedValue | string {
   if (!value) {
-    return [];
+    return "";
   }
-  try {
-    const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed : [parsed];
-  } catch {
-    return [{ type: "String", value }];
+  if ((value.startsWith("[") && value.endsWith("]")) || (value.startsWith("{") && value.endsWith("}"))) {
+    try {
+      return JSON.parse(value);
+    } catch {
+      // fall through
+    }
   }
-}
-
-const ROWS_LIMIT = 1000;
-
-/** @internal */
-export function applyLimit(ecsql: string, ctes?: string[]) {
-  const ctesPrefix = ctes && ctes.length ? `WITH RECURSIVE ${ctes.join(", ")}` : ``;
-  return `
-    ${ctesPrefix}
-    SELECT *
-    FROM (${ecsql})
-    LIMIT ${ROWS_LIMIT + 1}
-  `;
+  // not a JSON object/array
+  return value;
 }

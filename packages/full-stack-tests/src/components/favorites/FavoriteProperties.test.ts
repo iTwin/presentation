@@ -9,7 +9,8 @@ import { PropertyRecord } from "@itwin/appui-abstract";
 import { PropertyData } from "@itwin/components-react";
 import { IModelApp, IModelConnection, ITwinIdArg, PreferenceArg, PreferenceKeyArg, SnapshotConnection, TokenArg } from "@itwin/core-frontend";
 import { Field, KeySet } from "@itwin/presentation-common";
-import { DEFAULT_PROPERTY_GRID_RULESET, FAVORITES_CATEGORY_NAME, PresentationPropertyDataProvider } from "@itwin/presentation-components";
+import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider } from "@itwin/presentation-components";
+import { FAVORITES_CATEGORY_NAME } from "@itwin/presentation-components/lib/cjs/presentation-components/favorite-properties/Utils";
 import { createFavoritePropertiesStorage, DefaultFavoritePropertiesStorageTypes, FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
 import { initialize, terminate } from "../../IntegrationTests";
 

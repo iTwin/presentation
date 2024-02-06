@@ -29,8 +29,7 @@ import { IModelContentChangeEventArgs, Presentation } from "@itwin/presentation-
 import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory";
 import { createDiagnosticsOptions, DiagnosticsProps } from "./Diagnostics";
 import { IPresentationDataProvider } from "./IPresentationDataProvider";
-import { RulesetRegistrationHelper } from "./RulesetRegistrationHelper";
-import { findField } from "./Utils";
+import { findField, getRulesetId, RulesetOrId } from "./Utils";
 
 /**
  * Properties for invalidating content cache.
@@ -161,7 +160,7 @@ export interface ContentDataProviderProps extends DiagnosticsProps {
  */
 export class ContentDataProvider implements IContentDataProvider {
   private _imodel: IModelConnection;
-  private _rulesetRegistration: RulesetRegistrationHelper;
+  private _ruleset: RulesetOrId;
   private _displayType: string;
   private _keys: KeySet;
   private _previousKeysGuid: string;
@@ -169,22 +168,18 @@ export class ContentDataProvider implements IContentDataProvider {
   private _pagingSize?: number;
   private _diagnosticsOptions?: ClientDiagnosticsOptions;
   private _listeners: Array<() => void> = [];
+  private _autoUpdateEnabled?: boolean;
 
   /** Constructor. */
   constructor(props: ContentDataProviderProps) {
-    this._rulesetRegistration = new RulesetRegistrationHelper(props.ruleset);
     this._displayType = props.displayType;
     this._imodel = props.imodel;
+    this._ruleset = props.ruleset;
     this._keys = new KeySet();
     this._previousKeysGuid = this._keys.guid;
     this._pagingSize = props.pagingSize;
     this._diagnosticsOptions = createDiagnosticsOptions(props);
-    if (props.enableContentAutoUpdate) {
-      this._listeners.push(Presentation.presentation.onIModelContentChanged.addListener(this.onIModelContentChanged));
-      this._listeners.push(Presentation.presentation.rulesets().onRulesetModified.addListener(this.onRulesetModified));
-      this._listeners.push(Presentation.presentation.vars(this._rulesetRegistration.rulesetId).onVariableChanged.addListener(this.onRulesetVariableChanged));
-    }
-    this._listeners.push(IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(this.onUnitSystemChanged));
+    this._autoUpdateEnabled = props.enableContentAutoUpdate;
   }
 
   /** Destructor. Must be called to clean up.  */
@@ -192,7 +187,7 @@ export class ContentDataProvider implements IContentDataProvider {
     for (const removeListener of this._listeners) {
       removeListener();
     }
-    this._rulesetRegistration.dispose();
+    this._listeners = [];
   }
 
   /** Display type used to format content */
@@ -226,14 +221,14 @@ export class ContentDataProvider implements IContentDataProvider {
 
   /** Id of the ruleset to use when requesting content */
   public get rulesetId(): string {
-    return this._rulesetRegistration.rulesetId;
+    return getRulesetId(this._ruleset);
   }
   public set rulesetId(value: string) {
     if (this.rulesetId === value) {
       return;
     }
 
-    this._rulesetRegistration = new RulesetRegistrationHelper(value);
+    this._ruleset = value;
     this.invalidateCache(CacheInvalidationProps.full());
   }
 
@@ -285,9 +280,22 @@ export class ContentDataProvider implements IContentDataProvider {
   private createRequestOptions(): RequestOptionsWithRuleset<IModelConnection, RulesetVariable> {
     return {
       imodel: this._imodel,
-      rulesetOrId: this._rulesetRegistration.rulesetId,
+      rulesetOrId: this._ruleset,
       ...(this._diagnosticsOptions ? { diagnostics: this._diagnosticsOptions } : undefined),
     };
+  }
+
+  private setupListeners() {
+    if (this._listeners.length > 0) {
+      return;
+    }
+
+    if (this._autoUpdateEnabled) {
+      this._listeners.push(Presentation.presentation.onIModelContentChanged.addListener(this.onIModelContentChanged));
+      this._listeners.push(Presentation.presentation.rulesets().onRulesetModified.addListener(this.onRulesetModified));
+      this._listeners.push(Presentation.presentation.vars(getRulesetId(this._ruleset)).onVariableChanged.addListener(this.onRulesetVariableChanged));
+    }
+    this._listeners.push(IModelApp.quantityFormatter.onActiveFormattingUnitSystemChanged.addListener(this.onUnitSystemChanged));
   }
 
   /**
@@ -311,6 +319,7 @@ export class ContentDataProvider implements IContentDataProvider {
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
   private getDefaultContentDescriptor = memoize(async (): Promise<Descriptor | undefined> => {
+    this.setupListeners();
     // istanbul ignore if
     if (this.keys.size > DEFAULT_KEYS_BATCH_SIZE) {
       const msg = `ContentDataProvider.getContentDescriptor requesting descriptor with ${this.keys.size} keys which
@@ -388,6 +397,7 @@ export class ContentDataProvider implements IContentDataProvider {
         return undefined;
       }
 
+      this.setupListeners();
       const descriptorOverrides = await this.getDescriptorOverrides();
 
       // istanbul ignore if

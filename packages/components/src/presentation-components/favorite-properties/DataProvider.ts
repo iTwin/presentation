@@ -9,24 +9,10 @@
 import { PropertyData } from "@itwin/components-react";
 import { Id64Arg, using } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
-import { CategoryDescription, KeySet, Ruleset } from "@itwin/presentation-common";
+import { KeySet, Ruleset } from "@itwin/presentation-common";
 import { createSelectionScopeProps, Presentation } from "@itwin/presentation-frontend";
-import { translate } from "../common/Utils";
 import { PresentationPropertyDataProvider } from "../propertygrid/DataProvider";
-
-/** @internal */
-export const FAVORITES_CATEGORY_NAME = "Favorite";
-
-/** @internal */
-export const getFavoritesCategory = (): CategoryDescription => {
-  return {
-    name: FAVORITES_CATEGORY_NAME,
-    label: translate("categories.favorite.label"),
-    description: translate("categories.favorite.description"),
-    priority: Number.MAX_VALUE,
-    expand: true,
-  };
-};
+import { getFavoritesCategory } from "./Utils";
 
 /**
  * An data provider interface for returning favorite properties for the given elements

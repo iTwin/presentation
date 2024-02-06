@@ -2,9 +2,6 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/** @packageDocumentation
- * @module Tree
- */
 
 import memoize from "micro-memoize";
 import {
@@ -18,32 +15,9 @@ import {
 import { IModelConnection } from "@itwin/core-frontend";
 import { InstanceFilterDefinition, Node, NodeKey, NodePathElement } from "@itwin/presentation-common";
 import { PresentationTreeDataProvider } from "./DataProvider";
-import { IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider";
+import { IFilteredPresentationTreeDataProvider, IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider";
 import { PresentationTreeNodeItem } from "./PresentationTreeNodeItem";
 import { createTreeNodeItem } from "./Utils";
-
-/**
- * Filtered presentation tree data provider.
- * @public
- */
-export interface IFilteredPresentationTreeDataProvider extends IPresentationTreeDataProvider {
-  /**
-   * Applied filter.
-   */
-  filter: string;
-  /**
-   * Returns active match for given index.
-   */
-  getActiveMatch(index: number): ActiveMatchInfo | undefined;
-  /**
-   * Counts all filter matches.
-   */
-  countFilteringResults(nodePaths: ReadonlyArray<Readonly<NodePathElement>>): number;
-  /**
-   * Checks whether node matches applied filter or not.
-   */
-  nodeMatchesFilter(node: TreeNodeItem): boolean;
-}
 
 /** @internal */
 export interface FilteredPresentationTreeDataProviderProps {
