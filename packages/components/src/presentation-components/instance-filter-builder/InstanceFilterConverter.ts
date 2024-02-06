@@ -57,7 +57,7 @@ function createClassExpression(usedClasses: ClassInfo[]) {
   return usedClasses.reduce((queryExpression, classInfo) => `${queryExpression}${queryExpression ? " OR " : ""}this.IsOfClass(${classInfo.id})`, "");
 }
 
-function createComparison(propertyName: string, type: string, alias: string, operator: PropertyFilterRuleOperator, propValue?: PrimitiveValue): string {
+function createComparison(propertyName: string, type: string, alias: string, operator: `${PropertyFilterRuleOperator}`, propValue?: PrimitiveValue): string {
   const propertyAccessor = `${alias}.${propertyName}`;
   const operatorExpression = getRuleOperatorString(operator);
   if (propValue === undefined || isUnaryPropertyFilterOperator(operator)) {
@@ -65,7 +65,7 @@ function createComparison(propertyName: string, type: string, alias: string, ope
   }
 
   const value = propValue.value;
-  if (operator === PropertyFilterRuleOperator.Like && typeof value === "string") {
+  if (operator === "like" && typeof value === "string") {
     return `${propertyAccessor} ${operatorExpression} "%${escapeString(value)}%"`;
   }
 
@@ -96,39 +96,39 @@ function createComparison(propertyName: string, type: string, alias: string, ope
   return `${propertyAccessor} ${operatorExpression} ${valueExpression}`;
 }
 
-function getGroupOperatorString(operator: PropertyFilterRuleGroupOperator) {
+function getGroupOperatorString(operator: `${PropertyFilterRuleGroupOperator}`): string {
   switch (operator) {
-    case PropertyFilterRuleGroupOperator.And:
+    case "and":
       return "AND";
-    case PropertyFilterRuleGroupOperator.Or:
+    case "or":
       return "OR";
   }
 }
 
-function getRuleOperatorString(operator: PropertyFilterRuleOperator) {
+function getRuleOperatorString(operator: `${PropertyFilterRuleOperator}`): string {
   switch (operator) {
-    case PropertyFilterRuleOperator.Greater:
-      return ">";
-    case PropertyFilterRuleOperator.GreaterOrEqual:
-      return ">=";
-    case PropertyFilterRuleOperator.IsEqual:
-      return "=";
-    case PropertyFilterRuleOperator.IsFalse:
-      return "= FALSE";
-    case PropertyFilterRuleOperator.IsNotEqual:
-      return "<>";
-    case PropertyFilterRuleOperator.IsNotNull:
-      return "<> NULL";
-    case PropertyFilterRuleOperator.IsNull:
-      return "= NULL";
-    case PropertyFilterRuleOperator.IsTrue:
+    case "is-true":
       return "= TRUE";
-    case PropertyFilterRuleOperator.Less:
+    case "is-false":
+      return "= FALSE";
+    case "is-equal":
+      return "=";
+    case "is-not-equal":
+      return "<>";
+    case "greater":
+      return ">";
+    case "greater-or-equal":
+      return ">=";
+    case "less":
       return "<";
-    case PropertyFilterRuleOperator.LessOrEqual:
+    case "less-or-equal":
       return "<=";
-    case PropertyFilterRuleOperator.Like:
+    case "like":
       return "~";
+    case "is-null":
+      return "= NULL";
+    case "is-not-null":
+      return "<> NULL";
   }
 }
 

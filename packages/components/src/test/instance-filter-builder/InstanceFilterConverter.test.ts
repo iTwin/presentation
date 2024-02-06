@@ -32,7 +32,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
       it("'IsNull'", async () => {
         const filter: PresentationInstanceFilterCondition = {
           field,
-          operator: PropertyFilterRuleOperator.IsNull,
+          operator: "is-null",
         };
         const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
         expect(expression).to.be.eq(`${propertyAccessor} = NULL`);
@@ -41,7 +41,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
       it("'IsNotNull'", async () => {
         const filter: PresentationInstanceFilterCondition = {
           field,
-          operator: PropertyFilterRuleOperator.IsNotNull,
+          operator: "is-not-null",
         };
         const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
         expect(expression).to.be.eq(`${propertyAccessor} <> NULL`);
@@ -50,7 +50,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
       it("'IsTrue'", async () => {
         const filter: PresentationInstanceFilterCondition = {
           field,
-          operator: PropertyFilterRuleOperator.IsTrue,
+          operator: "is-true",
         };
         const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
         expect(expression).to.be.eq(`${propertyAccessor} = TRUE`);
@@ -59,7 +59,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
       it("'IsFalse'", async () => {
         const filter: PresentationInstanceFilterCondition = {
           field,
-          operator: PropertyFilterRuleOperator.IsFalse,
+          operator: "is-false",
         };
         const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
         expect(expression).to.be.eq(`${propertyAccessor} = FALSE`);
@@ -68,7 +68,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
       it("'='", async () => {
         const filter: PresentationInstanceFilterCondition = {
           field,
-          operator: PropertyFilterRuleOperator.IsEqual,
+          operator: "is-equal",
           value,
         };
         const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
@@ -78,7 +78,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
       it("'!='", async () => {
         const filter: PresentationInstanceFilterCondition = {
           field,
-          operator: PropertyFilterRuleOperator.IsNotEqual,
+          operator: "is-not-equal",
           value,
         };
         const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
@@ -88,7 +88,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
       it("'>'", async () => {
         const filter: PresentationInstanceFilterCondition = {
           field,
-          operator: PropertyFilterRuleOperator.Greater,
+          operator: "greater",
           value,
         };
         const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
@@ -98,7 +98,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
       it("'>='", async () => {
         const filter: PresentationInstanceFilterCondition = {
           field,
-          operator: PropertyFilterRuleOperator.GreaterOrEqual,
+          operator: "greater-or-equal",
           value,
         };
         const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
@@ -108,7 +108,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
       it("'<'", async () => {
         const filter: PresentationInstanceFilterCondition = {
           field,
-          operator: PropertyFilterRuleOperator.Less,
+          operator: "less",
           value,
         };
         const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
@@ -118,7 +118,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
       it("'<='", async () => {
         const filter: PresentationInstanceFilterCondition = {
           field,
-          operator: PropertyFilterRuleOperator.LessOrEqual,
+          operator: "less-or-equal",
           value,
         };
         const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
@@ -128,7 +128,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
       it("'Like'", async () => {
         const filter: PresentationInstanceFilterCondition = {
           field,
-          operator: PropertyFilterRuleOperator.Like,
+          operator: "like",
           value: { valueFormat: PropertyValueFormat.Primitive, value: `someString`, displayValue: "someString" },
         };
         const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
@@ -139,7 +139,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
     it("quoted string value", async () => {
       const filter: PresentationInstanceFilterCondition = {
         field,
-        operator: PropertyFilterRuleOperator.IsEqual,
+        operator: "is-equal",
         value: { ...value, value: `string "with" quotation marks` },
       };
       const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
@@ -153,7 +153,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
           properties: [{ property: propertyInfo }],
           type: { valueFormat: TypeValueFormat.Primitive, typeName: "navigation" },
         }),
-        operator: PropertyFilterRuleOperator.IsEqual,
+        operator: "is-equal",
         value: { ...value, value: { className: "TestSchema:TestClass", id: "0x1" } },
       };
       const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
@@ -167,7 +167,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
           properties: [{ property: propertyInfo }],
           type: { valueFormat: TypeValueFormat.Primitive, typeName: "double" },
         }),
-        operator: PropertyFilterRuleOperator.IsEqual,
+        operator: "is-equal",
         value: { ...value, value: 1.5 },
       };
       const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
@@ -181,7 +181,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
           properties: [{ property: propertyInfo }],
           type: { valueFormat: TypeValueFormat.Primitive, typeName: "dateTime" },
         }),
-        operator: PropertyFilterRuleOperator.IsEqual,
+        operator: "is-equal",
         value: { ...value, value: "2021-10-12T08:45:41" },
       };
       const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
@@ -195,7 +195,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
           properties: [{ property: propertyInfo }],
           type: { valueFormat: TypeValueFormat.Primitive, typeName: StandardTypeNames.Point2d },
         }),
-        operator: PropertyFilterRuleOperator.IsEqual,
+        operator: "is-equal",
         value: { ...value, value: { x: 10, y: 20 } },
       };
       const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
@@ -209,7 +209,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
           properties: [{ property: propertyInfo }],
           type: { valueFormat: TypeValueFormat.Primitive, typeName: StandardTypeNames.Point3d },
         }),
-        operator: PropertyFilterRuleOperator.IsEqual,
+        operator: "is-equal",
         value: { ...value, value: { x: 10, y: 20, z: 5 } },
       };
       const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
@@ -225,7 +225,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
           properties: [{ property: propertyInfo }],
           type: { valueFormat: TypeValueFormat.Primitive, typeName: StandardTypeNames.Point3d },
         }),
-        operator: PropertyFilterRuleOperator.IsNotEqual,
+        operator: "is-not-equal",
         value: { ...value, value: { x: 10, y: 20, z: 5 } },
       };
       const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
@@ -247,11 +247,11 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
         conditions: [
           {
             field,
-            operator: PropertyFilterRuleOperator.IsNull,
+            operator: "is-null",
           },
           {
             field,
-            operator: PropertyFilterRuleOperator.IsNotNull,
+            operator: "is-not-null",
           },
         ],
       };
@@ -265,11 +265,11 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
         conditions: [
           {
             field,
-            operator: PropertyFilterRuleOperator.IsNull,
+            operator: "is-null",
           },
           {
             field,
-            operator: PropertyFilterRuleOperator.IsNotNull,
+            operator: "is-not-null",
           },
         ],
       };
@@ -283,18 +283,18 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
         conditions: [
           {
             field,
-            operator: PropertyFilterRuleOperator.IsNull,
+            operator: "is-null",
           },
           {
             operator: PropertyFilterRuleGroupOperator.And,
             conditions: [
               {
                 field,
-                operator: PropertyFilterRuleOperator.IsNull,
+                operator: "is-null",
               },
               {
                 field,
-                operator: PropertyFilterRuleOperator.IsNotNull,
+                operator: "is-not-null",
               },
             ],
           },
@@ -360,7 +360,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
     it("in single condition", async () => {
       const filter: PresentationInstanceFilterCondition = {
         field: classC1PropertiesField,
-        operator: PropertyFilterRuleOperator.IsNull,
+        operator: "is-null",
       };
       const { expression, relatedInstances } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(`${createAlias("C")}.${propertyInfo.name} = NULL`);
@@ -393,11 +393,11 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
         conditions: [
           {
             field: classC1PropertiesField,
-            operator: PropertyFilterRuleOperator.IsNull,
+            operator: "is-null",
           },
           {
             field: classC1PropertiesField,
-            operator: PropertyFilterRuleOperator.IsNotNull,
+            operator: "is-not-null",
           },
         ],
       };
@@ -429,7 +429,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
     it("in deeply nested condition field", async () => {
       const filter: PresentationInstanceFilterCondition = {
         field: classC1PropertiesField,
-        operator: PropertyFilterRuleOperator.IsNull,
+        operator: "is-null",
       };
       const { expression, relatedInstances } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(`${createAlias("C")}.${propertyInfo.name} = NULL`);
@@ -462,11 +462,11 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
         conditions: [
           {
             field: classC1PropertiesField,
-            operator: PropertyFilterRuleOperator.IsNull,
+            operator: "is-null",
           },
           {
             field: classC2PropertiesField,
-            operator: PropertyFilterRuleOperator.IsNotNull,
+            operator: "is-not-null",
           },
         ],
       };
@@ -543,7 +543,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
     it("when one property is used", async () => {
       const filter: PresentationInstanceFilterCondition = {
         field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classAInfo, name: "PropA" }) }] }),
-        operator: PropertyFilterRuleOperator.IsNull,
+        operator: "is-null",
       };
 
       const { selectClassName } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, imodelMock.object);
@@ -556,11 +556,11 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
         conditions: [
           {
             field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classAInfo, name: "PropA1" }) }] }),
-            operator: PropertyFilterRuleOperator.IsNull,
+            operator: "is-null",
           },
           {
             field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classAInfo, name: "PropA2" }) }] }),
-            operator: PropertyFilterRuleOperator.IsNull,
+            operator: "is-null",
           },
         ],
       };
@@ -575,11 +575,11 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
         conditions: [
           {
             field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classAInfo, name: "PropA" }) }] }),
-            operator: PropertyFilterRuleOperator.IsNull,
+            operator: "is-null",
           },
           {
             field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classBInfo, name: "PropB" }) }] }),
-            operator: PropertyFilterRuleOperator.IsNull,
+            operator: "is-null",
           },
         ],
       };
@@ -594,11 +594,11 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
         conditions: [
           {
             field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classBInfo, name: "PropB" }) }] }),
-            operator: PropertyFilterRuleOperator.IsNull,
+            operator: "is-null",
           },
           {
             field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classAInfo, name: "PropA" }) }] }),
-            operator: PropertyFilterRuleOperator.IsNull,
+            operator: "is-null",
           },
         ],
       };
@@ -613,15 +613,15 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
         conditions: [
           {
             field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classAInfo, name: "PropA" }) }] }),
-            operator: PropertyFilterRuleOperator.IsNull,
+            operator: "is-null",
           },
           {
             field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classCInfo, name: "PropC" }) }] }),
-            operator: PropertyFilterRuleOperator.IsNull,
+            operator: "is-null",
           },
           {
             field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classBInfo, name: "PropB" }) }] }),
-            operator: PropertyFilterRuleOperator.IsNull,
+            operator: "is-null",
           },
         ],
       };
@@ -642,7 +642,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
     ];
     const displayValue = ["0.001", "0.002"];
 
-    const createFilter = (operator: PropertyFilterRuleOperator, customValue?: Value, customDisplayValue?: string): PresentationInstanceFilterCondition => {
+    const createFilter = (operator: `${PropertyFilterRuleOperator}`, customValue?: Value, customDisplayValue?: string): PresentationInstanceFilterCondition => {
       return {
         field,
         operator,
@@ -655,7 +655,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
     };
 
     it("converts values when operator is `IsEqual`", async () => {
-      const filter = createFilter(PropertyFilterRuleOperator.IsEqual);
+      const filter = createFilter("is-equal");
 
       const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(
@@ -664,7 +664,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
     });
 
     it("converts values when operator is `IsNotEqual`", async () => {
-      const filter = createFilter(PropertyFilterRuleOperator.IsNotEqual);
+      const filter = createFilter("is-not-equal");
 
       const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(
@@ -673,7 +673,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
     });
 
     it("converts values when `deserializeDisplayValueGroupArray` returns `undefined`", async () => {
-      const filter = createFilter(PropertyFilterRuleOperator.IsEqual, "a", "a");
+      const filter = createFilter("is-equal", "a", "a");
 
       const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(`${propertyAccessor} = "a"`);
@@ -687,7 +687,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
 
     const filter: PresentationInstanceFilterCondition = {
       field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ classInfo: classInfo1 }) }] }),
-      operator: PropertyFilterRuleOperator.IsNull,
+      operator: "is-null",
     };
 
     it(`returns expression with no classes in it when filteredClasses is undefined`, async () => {
@@ -720,11 +720,11 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
         conditions: [
           {
             field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ name: "Prop1" }) }] }),
-            operator: PropertyFilterRuleOperator.IsNull,
+            operator: "is-null",
           },
           {
             field: createTestPropertiesContentField({ properties: [{ property: createTestPropertyInfo({ name: "Prop2" }) }] }),
-            operator: PropertyFilterRuleOperator.IsNull,
+            operator: "is-null",
           },
         ],
       };
