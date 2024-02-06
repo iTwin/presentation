@@ -9,7 +9,7 @@ import { from } from "rxjs/internal/observable/from";
 import sinon from "sinon";
 import * as moq from "typemoq";
 import { PropertyRecord } from "@itwin/appui-abstract";
-import { ITreeNodeLoader, PropertyFilterRuleOperator, TreeModelNodeInput, TreeModelSource, TreeNodeLoadResult, UiComponents } from "@itwin/components-react";
+import { ITreeNodeLoader, TreeModelNodeInput, TreeModelSource, TreeNodeLoadResult, UiComponents } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
 import { useHierarchyLevelFiltering } from "../../../presentation-components/tree/controlled/UseHierarchyLevelFiltering";
@@ -45,7 +45,7 @@ describe("useHierarchyLevelFiltering", () => {
   const filterInfo: PresentationInstanceFilterInfo = {
     filter: {
       field,
-      operator: PropertyFilterRuleOperator.IsNull,
+      operator: "is-null",
     },
     usedClasses: [],
   };

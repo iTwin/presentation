@@ -8,7 +8,7 @@ import equal from "fast-deep-equal";
 import * as sinon from "sinon";
 import * as moq from "typemoq";
 import { PropertyRecord } from "@itwin/appui-abstract";
-import { PageOptions, PropertyFilterRuleOperator } from "@itwin/components-react";
+import { PageOptions } from "@itwin/components-react";
 import { assert, BeEvent, Logger } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -22,6 +22,7 @@ import {
   Paged,
   PresentationError,
   PresentationStatus,
+  PropertyInfo,
   RulesetVariable,
   VariableValue,
 } from "@itwin/presentation-common";
@@ -40,6 +41,7 @@ import { createTestECClassGroupingNodeKey, createTestECInstancesNode, createTest
 import { createTestLabelDefinition } from "../_helpers/LabelDefinition";
 import { PromiseContainer } from "../_helpers/Promises";
 import { createTestTreeNodeItem } from "../_helpers/UiComponents";
+import { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
 
 function createTestECInstancesNodeKeyWithId(id?: string) {
   return createTestECInstancesNodeKey({
@@ -835,14 +837,20 @@ function is(expected: Paged<HierarchyRequestOptions<IModelConnection, NodeKey, R
   });
 }
 
-function createFilterInfo(propName: string, usedClasses?: ClassInfo[]) {
+function createFilterInfo(
+  propName: string,
+  usedClasses?: ClassInfo[],
+): {
+  filterInfo: PresentationInstanceFilterInfo;
+  property: PropertyInfo;
+} {
   const property = createTestPropertyInfo({ name: propName });
   const field = createTestPropertiesContentField({ properties: [{ property }], name: property.name });
   return {
     filterInfo: {
       filter: {
         field,
-        operator: PropertyFilterRuleOperator.IsNull,
+        operator: "is-null",
       },
       usedClasses: usedClasses ?? [],
     },

@@ -17,5 +17,6 @@ import { RulesetRegistrationHelper } from "../common/RulesetRegistrationHelper";
  * @deprecated in 4.x. It is not compatible with React 18 StrictMode. Use `Presentation.presentation.rulesets().add(ruleset)` directly.
  */
 export function useRulesetRegistration(ruleset: Ruleset) {
+  // eslint-disable-next-line deprecation/deprecation
   useDisposable(useCallback(() => new RulesetRegistrationHelper(ruleset), [ruleset]));
 }

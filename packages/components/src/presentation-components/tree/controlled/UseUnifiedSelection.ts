@@ -264,6 +264,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
  * [[UsePresentationTreeProps.eventHandlerFactory]] instead or manually create and dispose [[UnifiedSelectionTreeEventHandler]].
  */
 export function useUnifiedSelectionTreeEventHandler(props: UnifiedSelectionTreeEventHandlerParams) {
+  // eslint-disable-next-line deprecation/deprecation
   return useDisposable(
     useCallback(
       () => new UnifiedSelectionTreeEventHandler(props),

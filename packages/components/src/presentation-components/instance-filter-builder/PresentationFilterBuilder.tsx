@@ -6,7 +6,7 @@
  * @module InstancesFilter
  */
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { PrimitiveValue, PropertyDescription, PropertyValueFormat } from "@itwin/appui-abstract";
 import {
   isPropertyFilterRuleGroup,
@@ -21,7 +21,6 @@ import {
 } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
-import { Input } from "@itwin/itwinui-react";
 import {
   ClassId,
   ClassInfo,
@@ -32,11 +31,9 @@ import {
   PresentationStatus,
   PropertiesField,
 } from "@itwin/presentation-common";
-import { useSchemaMetadataContext } from "../common/SchemaMetadataContext";
 import { findField } from "../common/Utils";
 import { navigationPropertyEditorContext } from "../properties/editors/NavigationPropertyEditorContext";
 import { UniquePropertyValuesSelector } from "../properties/inputs/UniquePropertyValuesSelector";
-import { useQuantityValueInput, UseQuantityValueInputProps } from "../properties/inputs/UseQuantityValueInput";
 import { GenericInstanceFilter } from "./GenericInstanceFilter";
 import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder";
 import { createExpression, findBaseExpressionClass } from "./InstanceFilterConverter";
@@ -61,7 +58,7 @@ export type PresentationInstanceFilter = PresentationInstanceFilterConditionGrou
  */
 export interface PresentationInstanceFilterConditionGroup {
   /** Operator that should be used to join conditions. */
-  operator: PropertyFilterRuleGroupOperator;
+  operator: `${PropertyFilterRuleGroupOperator}`;
   /** Conditions in this group. */
   conditions: PresentationInstanceFilter[];
 }
@@ -74,7 +71,7 @@ export interface PresentationInstanceFilterCondition {
   /** [PropertiesField]($presentation-common) that contains property used in this condition. */
   field: PropertiesField;
   /** Operator that should be used to compare property value. */
-  operator: PropertyFilterRuleOperator;
+  operator: `${PropertyFilterRuleOperator}`;
   /** Value that property should be compared to. */
   value?: PrimitiveValue;
 }
@@ -251,21 +248,8 @@ export interface PresentationFilterBuilderValueRendererProps extends PropertyFil
  */
 export function PresentationFilterBuilderValueRenderer({ imodel, descriptor, descriptorInputKeys, ...props }: PresentationFilterBuilderValueRendererProps) {
   const navigationPropertyEditorContextValue = useFilterBuilderNavigationPropertyEditorContext(imodel, descriptor);
-  const schemaMetadataContext = useSchemaMetadataContext();
-  if (props.operator === PropertyFilterRuleOperator.IsEqual || props.operator === PropertyFilterRuleOperator.IsNotEqual) {
+  if (props.operator === "is-equal" || props.operator === "is-not-equal") {
     return <UniquePropertyValuesSelector {...props} imodel={imodel} descriptor={descriptor} descriptorInputKeys={descriptorInputKeys} />;
-  }
-
-  if (props.property.quantityType && schemaMetadataContext) {
-    const initialValue = (props.value as PrimitiveValue)?.value as number;
-    return (
-      <QuantityPropertyValue
-        onChange={props.onChange}
-        koqName={props.property.quantityType}
-        schemaContext={schemaMetadataContext.schemaContext}
-        initialRawValue={initialValue}
-      />
-    );
   }
 
   return (
@@ -275,7 +259,7 @@ export function PresentationFilterBuilderValueRenderer({ imodel, descriptor, des
   );
 }
 
-function createPresentationInstanceFilterConditionGroup(descriptor: Descriptor, group: PropertyFilterRuleGroup): PresentationInstanceFilter {
+function createPresentationInstanceFilterConditionGroup(descriptor: Descriptor, group: PropertyFilterRuleGroup): PresentationInstanceFilterConditionGroup {
   return {
     operator: group.operator,
     conditions: group.rules.map((rule) => PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, rule)),
@@ -314,28 +298,6 @@ function createPropertyFilterRuleGroup(group: PresentationInstanceFilterConditio
     operator: group.operator,
     rules: group.conditions.map((condition) => PresentationInstanceFilter.toComponentsPropertyFilter(descriptor, condition)),
   };
-}
-
-function QuantityPropertyValue({
-  onChange,
-  ...koqInputProps
-}: UseQuantityValueInputProps & { onChange: PropertyFilterBuilderRuleValueRendererProps["onChange"] }) {
-  const { quantityValue, inputProps } = useQuantityValueInput(koqInputProps);
-
-  const onChangeRef = useLatestRef(onChange);
-  useEffect(() => {
-    onChangeRef.current({ valueFormat: PropertyValueFormat.Primitive, value: quantityValue.rawValue, displayValue: quantityValue.formattedValue });
-  }, [quantityValue, onChangeRef]);
-
-  return <Input size="small" {...inputProps} />;
-}
-
-function useLatestRef<T>(value: T) {
-  const valueRef = useRef<T>(value);
-  useEffect(() => {
-    valueRef.current = value;
-  }, [value]);
-  return valueRef;
 }
 
 /**

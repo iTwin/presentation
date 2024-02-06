@@ -82,7 +82,7 @@ export interface GenericInstanceFilterRule {
   /**
    * Comparison operator that should be used to compare property value.
    */
-  operator: PropertyFilterRuleOperator;
+  operator: `${PropertyFilterRuleOperator}`;
   /**
    * Value to which property values is compared to. For unary operators value is 'undefined'.
    */
@@ -102,7 +102,7 @@ export interface GenericInstanceFilterRuleGroup {
   /**
    * Operator that should be used to join rules.
    */
-  operator: PropertyFilterRuleGroupOperator;
+  operator: `${PropertyFilterRuleGroupOperator}`;
   /**
    * List of rules or rule groups that should be joined by `operator`.
    */
@@ -149,7 +149,7 @@ function createMetadataFromFilter(filter: PresentationInstanceFilter, ctx: Conve
 
 function traverseUniqueValuesCondition(filter: PresentationInstanceFilterCondition, ctx: ConvertContext) {
   // Unique values works only with `IsEqual` and `IsNotEqual` operators.
-  if (filter.operator !== PropertyFilterRuleOperator.IsEqual && filter.operator !== PropertyFilterRuleOperator.IsNotEqual) {
+  if (filter.operator !== "is-equal" && filter.operator !== "is-not-equal") {
     return undefined;
   }
   if (typeof filter.value?.value !== "string" || typeof filter.value?.displayValue !== "string") {
@@ -234,7 +234,7 @@ function handleStringifiedUniqueValues(filter: PresentationInstanceFilterConditi
   }
 
   const conditionGroup: PresentationInstanceFilterConditionGroup = {
-    operator: operator === PropertyFilterRuleOperator.IsEqual ? PropertyFilterRuleGroupOperator.Or : PropertyFilterRuleGroupOperator.And,
+    operator: operator === "is-equal" ? "or" : "and",
     conditions: [],
   };
   for (const displayValue of displayValues) {

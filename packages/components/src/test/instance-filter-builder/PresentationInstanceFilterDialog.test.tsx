@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { PropertyValueFormat as AbstractPropertyValueFormat, PrimitiveValue } from "@itwin/appui-abstract";
-import { getPropertyFilterOperatorLabel, PropertyFilterRuleOperator, UiComponents } from "@itwin/components-react";
+import { UiComponents } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
@@ -39,7 +39,7 @@ describe("PresentationInstanceFilterDialog", () => {
   const initialFilter: PresentationInstanceFilterInfo = {
     filter: {
       field: stringField,
-      operator: PropertyFilterRuleOperator.IsNull,
+      operator: "is-null",
       value: undefined,
     },
     usedClasses: [classInfo],
@@ -84,7 +84,7 @@ describe("PresentationInstanceFilterDialog", () => {
     await user.click(getByText(stringField.label));
 
     // enter value
-    const inputContainer = await waitForElement<HTMLInputElement>(container, ".rule-value input");
+    const inputContainer = await waitForElement<HTMLInputElement>(container, ".fb-property-value input");
     await user.type(inputContainer, "test value");
     await waitFor(() => expect(queryByDisplayValue("test value")).to.not.be.null);
 
@@ -107,7 +107,7 @@ describe("PresentationInstanceFilterDialog", () => {
     await user.click(getByText(stringField.label));
 
     // enter value
-    const inputContainer = await waitForElement<HTMLInputElement>(container, ".rule-value input");
+    const inputContainer = await waitForElement<HTMLInputElement>(container, ".fb-property-value input");
     await user.type(inputContainer, "test value");
     await waitFor(() => expect(queryByDisplayValue("test value")).to.not.be.null);
 
@@ -136,34 +136,36 @@ describe("PresentationInstanceFilterDialog", () => {
     await user.click(getByText(stringField.label));
 
     // enter value
-    const inputContainer = await waitForElement<HTMLInputElement>(container, ".rule-value input");
+    const inputContainer = await waitForElement<HTMLInputElement>(container, ".fb-property-value input");
     await user.type(inputContainer, "test value");
-    await waitFor(() => expect(queryByDisplayValue("test value")).to.not.be.null);
 
+    await waitFor(() => expect(queryByDisplayValue("test value")).to.not.be.null);
     await user.tab();
 
     const applyButton = await getApplyButton(container);
     await user.click(applyButton);
 
-    expect(spy).to.be.calledOnceWith({
-      filter: {
-        field: stringField,
-        operator: PropertyFilterRuleOperator.Like,
-        value: {
-          valueFormat: AbstractPropertyValueFormat.Primitive,
-          value: "test value",
-          displayValue: "test value",
-        } as PrimitiveValue,
-      },
-      usedClasses: [classInfo],
+    await waitFor(() => {
+      expect(spy).to.be.calledOnceWith({
+        filter: {
+          field: stringField,
+          operator: "like",
+          value: {
+            valueFormat: AbstractPropertyValueFormat.Primitive,
+            value: "test value",
+            displayValue: "test value",
+          } as PrimitiveValue,
+        },
+        usedClasses: [classInfo],
+      });
     });
   });
 
   it("does not invoke `onApply` when there two empty rules", async () => {
     const spy = sinon.spy();
-    const { container, user, getByTestId } = render(<PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptor} onApply={spy} isOpen={true} />);
+    const { container, user, getByText } = render(<PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptor} onApply={spy} isOpen={true} />);
 
-    await user.click(getByTestId("rule-group-add-rule"));
+    await user.click(getByText(/filterBuilder.add/));
 
     const applyButton = await getApplyButton(container);
     await user.click(applyButton);
@@ -226,7 +228,7 @@ describe("PresentationInstanceFilterDialog", () => {
     const operatorSelector = await getRuleOperatorSelector(container);
     await user.click(operatorSelector);
     // select operator
-    await user.click(getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.IsNotNull)));
+    await user.click(getByText(/filterBuilder.operators.isNotNull/));
 
     // wait until operator is selected
     const applyButton = await getApplyButton(container);
@@ -320,11 +322,11 @@ describe("PresentationInstanceFilterDialog", () => {
   });
 
   async function getRulePropertySelector(container: HTMLElement) {
-    return waitForElement<HTMLInputElement>(container, ".rule-property input");
+    return waitForElement<HTMLInputElement>(container, ".fb-property-name input");
   }
 
   async function getRuleOperatorSelector(container: HTMLElement) {
-    return waitForElement<HTMLDivElement>(container, `.rule-operator [role="combobox"]`);
+    return waitForElement<HTMLDivElement>(container, `.fb-row-condition [role="combobox"]`);
   }
 
   async function getResetButton(container: HTMLElement) {

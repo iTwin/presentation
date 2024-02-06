@@ -6,7 +6,6 @@ import { expect } from "chai";
 import * as sinon from "sinon";
 import { PropertyDescription, PropertyValueFormat } from "@itwin/appui-abstract";
 import {
-  getPropertyFilterOperatorLabel,
   PropertyFilter,
   PropertyFilterRule,
   PropertyFilterRuleGroup,
@@ -58,11 +57,11 @@ describe("PresentationInstanceFilter.fromComponentsPropertyFilter", () => {
       rules: [
         {
           property: { name: getPropertyDescriptionName(propertyField1), displayLabel: "Prop1", typename: "string" },
-          operator: PropertyFilterRuleOperator.IsNull,
+          operator: "is-null",
         },
         {
           property: { name: getPropertyDescriptionName(propertyField2), displayLabel: "Prop2", typename: "string" },
-          operator: PropertyFilterRuleOperator.IsNull,
+          operator: "is-null",
         },
       ],
     };
@@ -70,11 +69,11 @@ describe("PresentationInstanceFilter.fromComponentsPropertyFilter", () => {
       operator: PropertyFilterRuleGroupOperator.And,
       conditions: [
         {
-          operator: PropertyFilterRuleOperator.IsNull,
+          operator: "is-null",
           field: propertyField1,
         },
         {
-          operator: PropertyFilterRuleOperator.IsNull,
+          operator: "is-null",
           field: propertyField2,
         },
       ],
@@ -83,7 +82,7 @@ describe("PresentationInstanceFilter.fromComponentsPropertyFilter", () => {
 
   it("throws if rule properties field cannot be found", () => {
     const property: PropertyDescription = { name: `${INSTANCE_FILTER_FIELD_SEPARATOR}invalidFieldName`, displayLabel: "Prop", typename: "string" };
-    expect(() => PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, { property, operator: PropertyFilterRuleOperator.IsNull })).to.throw();
+    expect(() => PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, { property, operator: "is-null" })).to.throw();
   });
 
   it("throws if group has rule with invalid property field", () => {
@@ -92,11 +91,11 @@ describe("PresentationInstanceFilter.fromComponentsPropertyFilter", () => {
       rules: [
         {
           property: { name: getPropertyDescriptionName(propertyField1), displayLabel: "Prop1", typename: "string" },
-          operator: PropertyFilterRuleOperator.IsNull,
+          operator: "is-null",
         },
         {
           property: { name: `${INSTANCE_FILTER_FIELD_SEPARATOR}invalidFieldName`, displayLabel: "Prop2", typename: "string" },
-          operator: PropertyFilterRuleOperator.IsNull,
+          operator: "is-null",
         },
       ],
     };
@@ -106,7 +105,7 @@ describe("PresentationInstanceFilter.fromComponentsPropertyFilter", () => {
   it("throws if rule has non primitive value", () => {
     const filter: PropertyFilterRule = {
       property: { name: getPropertyDescriptionName(propertyField1), displayLabel: "Prop1", typename: "string" },
-      operator: PropertyFilterRuleOperator.IsEqual,
+      operator: "is-equal",
       value: { valueFormat: PropertyValueFormat.Array, items: [], itemsTypeName: "number" },
     };
     expect(() => PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, filter)).to.throw();
@@ -157,12 +156,12 @@ describe("PresentationInstanceFilter.toComponentsPropertyFilter", () => {
       rules: [
         {
           property: { name: getPropertyDescriptionName(propertyField1), displayLabel: "Prop1", typename: "string" },
-          operator: PropertyFilterRuleOperator.IsNull,
+          operator: "is-null",
           value: undefined,
         },
         {
           property: { name: getPropertyDescriptionName(propertyField2), displayLabel: "Prop2", typename: "string" },
-          operator: PropertyFilterRuleOperator.IsNull,
+          operator: "is-null",
           value: undefined,
         },
       ],
@@ -182,7 +181,7 @@ describe("PresentationInstanceFilter.toComponentsPropertyFilter", () => {
           conditions: [
             {
               field: propertyField1,
-              operator: PropertyFilterRuleOperator.IsNull,
+              operator: "is-null",
               value: undefined,
             },
           ],
@@ -198,7 +197,7 @@ describe("PresentationInstanceFilter.toComponentsPropertyFilter", () => {
           rules: [
             {
               property: { name: getPropertyDescriptionName(propertyField1), displayLabel: "Prop1", typename: "string" },
-              operator: PropertyFilterRuleOperator.IsNull,
+              operator: "is-null",
               value: undefined,
             },
           ],
@@ -216,7 +215,7 @@ describe("PresentationInstanceFilter.toComponentsPropertyFilter", () => {
       conditions: [
         {
           field: propertyField3,
-          operator: PropertyFilterRuleOperator.IsNull,
+          operator: "is-null",
           value: undefined,
         },
       ],
@@ -231,7 +230,7 @@ describe("PresentationInstanceFilter.toComponentsPropertyFilter", () => {
             displayLabel: "Prop3",
             typename: "string",
           },
-          operator: PropertyFilterRuleOperator.IsNull,
+          operator: "is-null",
           value: undefined,
         },
       ],
@@ -254,7 +253,7 @@ describe("PresentationInstanceFilter.toComponentsPropertyFilter", () => {
       conditions: [
         {
           field: propertyField,
-          operator: PropertyFilterRuleOperator.IsNull,
+          operator: "is-null",
           value: undefined,
         },
       ],
@@ -346,10 +345,10 @@ describe("PresentationInstanceFilter", () => {
     await user.click(operatorSelector);
 
     // select operator
-    await user.click(getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.IsNotNull)));
+    await user.click(getByText(/filterBuilder.operators.isNotNull/i));
 
     // wait until operator is selected
-    await waitFor(() => getByText(getPropertyFilterOperatorLabel(PropertyFilterRuleOperator.IsNotNull)));
+    await waitFor(() => getByText(/filterBuilder.operators.isNotNull/i));
 
     await waitFor(() =>
       expect(spy).to.be.calledWith({
@@ -363,7 +362,7 @@ describe("PresentationInstanceFilter", () => {
     );
   });
 
-  it("renders with initial filter", () => {
+  it("renders with initial filter", async () => {
     const initialFilter: PresentationInstanceFilterInfo = {
       filter: {
         operator: PropertyFilterRuleGroupOperator.And,
@@ -384,16 +383,14 @@ describe("PresentationInstanceFilter", () => {
     };
 
     const spy = sinon.spy();
-    const { container, queryByDisplayValue } = render(
+    const { queryByDisplayValue } = render(
       <PresentationInstanceFilterBuilder imodel={imodel} descriptor={descriptor} onInstanceFilterChanged={spy} initialFilter={initialFilter} />,
     );
 
-    const rules = container.querySelectorAll(".rule-property");
-    expect(rules.length).to.be.eq(2);
-    const rule1 = queryByDisplayValue(propertiesField.label);
-    expect(rule1).to.not.be.null;
-    const rule2 = queryByDisplayValue(propertiesField2.label);
-    expect(rule2).to.not.be.null;
+    await waitFor(() => {
+      expect(queryByDisplayValue(propertiesField.label)).to.not.be.null;
+      expect(queryByDisplayValue(propertiesField2.label)).to.not.be.null;
+    });
   });
 
   it("clears property filters upon class selector change", async () => {
@@ -417,9 +414,7 @@ describe("PresentationInstanceFilter", () => {
     );
 
     // ensure there's a property filter
-    const rules = container.querySelectorAll(".rule-property");
-    expect(rules.length).to.be.eq(1);
-    expect(queryByDisplayValue(propertiesField.label)).to.not.be.null;
+    await waitFor(() => expect(queryByDisplayValue(propertiesField.label)).to.not.be.null);
 
     // expand class selector
     const expander = container.querySelector(".iui-actionable");
@@ -439,9 +434,9 @@ function getPropertyDescriptionName(field: Field) {
 }
 
 async function getRulePropertySelector(container: HTMLElement) {
-  return waitForElement<HTMLInputElement>(container, ".rule-property input");
+  return waitForElement<HTMLInputElement>(container, ".fb-property-name input");
 }
 
 async function getRuleOperatorSelector(container: HTMLElement) {
-  return waitForElement<HTMLDivElement>(container, `.rule-operator [role="combobox"]`);
+  return waitForElement<HTMLDivElement>(container, `.fb-row-condition [role="combobox"]`);
 }

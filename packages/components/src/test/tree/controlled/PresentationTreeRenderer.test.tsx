@@ -12,7 +12,6 @@ import {
   computeVisibleNodes,
   ITreeNodeLoader,
   MutableTreeModel,
-  PropertyFilterRuleOperator,
   TreeActions,
   TreeModelSource,
   TreeNodeLoadResult,
@@ -97,7 +96,7 @@ describe("PresentationTreeRenderer", () => {
     type: { typeName: StandardTypeNames.Bool, valueFormat: PropertyValueFormat.Primitive },
   });
   const initialFilter: PresentationInstanceFilterInfo = {
-    filter: { field: propertyField, operator: PropertyFilterRuleOperator.IsFalse },
+    filter: { field: propertyField, operator: "is-false" },
     usedClasses: [],
   };
 
@@ -401,7 +400,7 @@ async function applyFilter(result: ReturnType<typeof render>, propertyLabel: str
 
   // select property in filter builder dialog
   // open property selector
-  const propertySelector = baseElement.querySelector<HTMLInputElement>(".rule-property input");
+  const propertySelector = baseElement.querySelector<HTMLInputElement>(".fb-property-name input");
   expect(propertySelector).to.not.be.null;
   await user.click(propertySelector!);
   // select property

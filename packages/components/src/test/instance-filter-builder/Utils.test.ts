@@ -6,7 +6,6 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { PropertyDescription, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
-import { PropertyFilterRuleOperator } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Descriptor, NavigationPropertyInfo } from "@itwin/presentation-common";
@@ -27,6 +26,7 @@ import {
   createTestSimpleContentField,
 } from "../_helpers/Content";
 import { renderHook } from "../TestUtils";
+import { PropertyFilterBuilderRuleRangeValue } from "@itwin/components-react";
 
 describe("createInstanceFilterPropertyInfos", () => {
   it("creates property infos when fields are in root category", () => {
@@ -161,7 +161,7 @@ describe("filterRuleValidator", () => {
         id: "test-id",
         groupId: "test-group-id",
         property: numericProperty,
-        operator: PropertyFilterRuleOperator.Less,
+        operator: "less",
         value: {
           valueFormat: PropertyValueFormat.Primitive,
           value: undefined,
@@ -177,7 +177,7 @@ describe("filterRuleValidator", () => {
         id: "test-id",
         groupId: "test-group-id",
         property: numericProperty,
-        operator: PropertyFilterRuleOperator.IsEqual,
+        operator: "is-equal",
         value: {
           valueFormat: PropertyValueFormat.Primitive,
           value: "[Invalid]",
@@ -193,12 +193,58 @@ describe("filterRuleValidator", () => {
         id: "test-id",
         groupId: "test-group-id",
         property: quantityProperty,
-        operator: PropertyFilterRuleOperator.IsEqual,
+        operator: "less",
         value: {
           valueFormat: PropertyValueFormat.Primitive,
           value: undefined,
           displayValue: "Invalid",
         },
+      }),
+    ).to.be.eq("instance-filter-builder.error-messages.invalid");
+  });
+
+  it("returns error message for invalid from quantity value in between rule", () => {
+    expect(
+      filterRuleValidator({
+        id: "test-id",
+        groupId: "test-group-id",
+        property: quantityProperty,
+        operator: "between",
+        value: PropertyFilterBuilderRuleRangeValue.serialize({
+          from: {
+            valueFormat: PropertyValueFormat.Primitive,
+            value: undefined,
+            displayValue: "Invalid",
+          },
+          to: {
+            valueFormat: PropertyValueFormat.Primitive,
+            value: 123,
+            displayValue: "123 unit",
+          },
+        }),
+      }),
+    ).to.be.eq("instance-filter-builder.error-messages.invalid");
+  });
+
+  it("returns error message for invalid to quantity value in between rule", () => {
+    expect(
+      filterRuleValidator({
+        id: "test-id",
+        groupId: "test-group-id",
+        property: quantityProperty,
+        operator: "between",
+        value: PropertyFilterBuilderRuleRangeValue.serialize({
+          from: {
+            valueFormat: PropertyValueFormat.Primitive,
+            value: 123,
+            displayValue: "123 unit",
+          },
+          to: {
+            valueFormat: PropertyValueFormat.Primitive,
+            value: undefined,
+            displayValue: "Invalid",
+          },
+        }),
       }),
     ).to.be.eq("instance-filter-builder.error-messages.invalid");
   });
@@ -209,7 +255,7 @@ describe("filterRuleValidator", () => {
         id: "test-id",
         groupId: "test-group-id",
         property: numericProperty,
-        operator: PropertyFilterRuleOperator.Greater,
+        operator: "greater",
         value: {
           valueFormat: PropertyValueFormat.Primitive,
           value: 10,
@@ -225,12 +271,35 @@ describe("filterRuleValidator", () => {
         id: "test-id",
         groupId: "test-group-id",
         property: quantityProperty,
-        operator: PropertyFilterRuleOperator.IsEqual,
+        operator: "less",
         value: {
           valueFormat: PropertyValueFormat.Primitive,
           value: 10,
           displayValue: "10 unit",
         },
+      }),
+    ).to.be.undefined;
+  });
+
+  it("does not return error message for valid quantity value in between rule", () => {
+    expect(
+      filterRuleValidator({
+        id: "test-id",
+        groupId: "test-group-id",
+        property: quantityProperty,
+        operator: "between",
+        value: PropertyFilterBuilderRuleRangeValue.serialize({
+          from: {
+            valueFormat: PropertyValueFormat.Primitive,
+            value: 123,
+            displayValue: "123 unit",
+          },
+          to: {
+            valueFormat: PropertyValueFormat.Primitive,
+            value: 456,
+            displayValue: "456 unit",
+          },
+        }),
       }),
     ).to.be.undefined;
   });

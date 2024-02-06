@@ -6,7 +6,7 @@
 import { useCallback, useState } from "react";
 import { UiComponents, VirtualizedPropertyGridWithDataProvider } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { useDisposable } from "@itwin/core-react";
+import { useOptionalDisposable } from "@itwin/core-react";
 import { InstanceKey, KeySet } from "@itwin/presentation-common";
 import { PresentationPropertyDataProvider, usePropertyDataProviderWithUnifiedSelection } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
@@ -33,13 +33,22 @@ describe("Learning snippets", async () => {
       // __PUBLISH_EXTRACT_START__ Presentation.Components.UnifiedSelection.PropertyGrid
       function MyPropertyGrid(props: { imodel: IModelConnection }) {
         // create a presentation rules driven data provider; the provider implements `IDisposable`, so we
-        // create it through `useDisposable` hook to make sure it's properly cleaned up
-        const dataProvider = useDisposable(
+        // create it through `useOptionalDisposable` hook to make sure it's properly cleaned up
+        const dataProvider = useOptionalDisposable(
           useCallback(() => {
             return new PresentationPropertyDataProvider({ imodel: props.imodel });
           }, [props.imodel]),
         );
 
+        if (!dataProvider) {
+          return null;
+        }
+
+        // render the property grid
+        return <MyPropertyGridWithProvider dataProvider={dataProvider} />;
+      }
+
+      function MyPropertyGridWithProvider({ dataProvider }: { dataProvider: PresentationPropertyDataProvider }) {
         // set up the data provider to be notified about changes in unified selection
         const { isOverLimit, numSelectedElements } = usePropertyDataProviderWithUnifiedSelection({ dataProvider });
 

@@ -261,7 +261,7 @@ export namespace GenericInstanceFilter {
 
 // @beta
 export interface GenericInstanceFilterRule {
-    operator: PropertyFilterRuleOperator;
+    operator: `${PropertyFilterRuleOperator}`;
     propertyName: string;
     propertyTypeName: string;
     sourceAlias: string;
@@ -270,7 +270,7 @@ export interface GenericInstanceFilterRule {
 
 // @beta
 export interface GenericInstanceFilterRuleGroup {
-    operator: PropertyFilterRuleGroupOperator;
+    operator: `${PropertyFilterRuleGroupOperator}`;
     rules: Array<GenericInstanceFilterRule | GenericInstanceFilterRuleGroup>;
 }
 
@@ -435,14 +435,14 @@ export interface PresentationInstanceFilterBuilderProps {
 // @beta
 export interface PresentationInstanceFilterCondition {
     field: PropertiesField;
-    operator: PropertyFilterRuleOperator;
+    operator: `${PropertyFilterRuleOperator}`;
     value?: PrimitiveValue;
 }
 
 // @beta
 export interface PresentationInstanceFilterConditionGroup {
     conditions: PresentationInstanceFilter[];
-    operator: PropertyFilterRuleGroupOperator;
+    operator: `${PropertyFilterRuleGroupOperator}`;
 }
 
 // @beta
