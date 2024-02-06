@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { GroupingNodeKey } from "../../../../hierarchy-builder/HierarchyNode";
+import { ParentGroupingHierarchyNodeKey } from "../../../../hierarchy-builder/HierarchyNode";
 import { GroupingHandlerResult } from "../../../../hierarchy-builder/internal/operators/Grouping";
 import { createLabelGroups } from "../../../../hierarchy-builder/internal/operators/grouping/LabelGrouping";
 import { createTestInstanceKey, createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils";
@@ -19,18 +19,20 @@ describe("LabelGrouping", () => {
         processingParams: { grouping: { byLabel: true } },
       }),
     ];
-    const expectedGroupingNodeKey: GroupingNodeKey = {
+    const expectedGroupingNodeKey: ParentGroupingHierarchyNodeKey = {
       type: "label-grouping",
       label: "1",
       groupId: undefined,
-      groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
     };
     expect(await createLabelGroups(nodes)).to.deep.eq({
       groupingType: "label",
       grouped: [
         createTestProcessedGroupingNode({
           label: "1",
-          key: expectedGroupingNodeKey,
+          key: {
+            ...expectedGroupingNodeKey,
+            groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
+          },
           parentKeys: ["x"],
           children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
         }),
@@ -48,18 +50,20 @@ describe("LabelGrouping", () => {
         processingParams: { grouping: { byLabel: { action: "group" } } },
       }),
     ];
-    const expectedGroupingNodeKey: GroupingNodeKey = {
+    const expectedGroupingNodeKey: ParentGroupingHierarchyNodeKey = {
       type: "label-grouping",
       label: "1",
       groupId: undefined,
-      groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
     };
     expect(await createLabelGroups(nodes)).to.deep.eq({
       groupingType: "label",
       grouped: [
         createTestProcessedGroupingNode({
           label: "1",
-          key: expectedGroupingNodeKey,
+          key: {
+            ...expectedGroupingNodeKey,
+            groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
+          },
           parentKeys: ["x"],
           children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
         }),
@@ -77,18 +81,20 @@ describe("LabelGrouping", () => {
         processingParams: { grouping: { byLabel: {} } },
       }),
     ];
-    const expectedGroupingNodeKey: GroupingNodeKey = {
+    const expectedGroupingNodeKey: ParentGroupingHierarchyNodeKey = {
       type: "label-grouping",
       label: "1",
       groupId: undefined,
-      groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
     };
     expect(await createLabelGroups(nodes)).to.deep.eq({
       groupingType: "label",
       grouped: [
         createTestProcessedGroupingNode({
           label: "1",
-          key: expectedGroupingNodeKey,
+          key: {
+            ...expectedGroupingNodeKey,
+            groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
+          },
           parentKeys: ["x"],
           children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
         }),
@@ -112,30 +118,34 @@ describe("LabelGrouping", () => {
         processingParams: { grouping: { byLabel: { groupId: "groupId2" } } },
       }),
     ];
-    const expectedGroupingNodeKey1: GroupingNodeKey = {
+    const expectedGroupingNodeKey1: ParentGroupingHierarchyNodeKey = {
       type: "label-grouping",
       label: "1",
       groupId: "groupId1",
-      groupedInstanceKeys: nodes[0].key.instanceKeys,
     };
-    const expectedGroupingNodeKey2: GroupingNodeKey = {
+    const expectedGroupingNodeKey2: ParentGroupingHierarchyNodeKey = {
       type: "label-grouping",
       label: "1",
       groupId: "groupId2",
-      groupedInstanceKeys: nodes[1].key.instanceKeys,
     };
     expect(await createLabelGroups(nodes)).to.deep.eq({
       groupingType: "label",
       grouped: [
         createTestProcessedGroupingNode({
           label: "1",
-          key: expectedGroupingNodeKey1,
+          key: {
+            ...expectedGroupingNodeKey1,
+            groupedInstanceKeys: nodes[0].key.instanceKeys,
+          },
           parentKeys: ["x"],
           children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, expectedGroupingNodeKey1] }],
         }),
         createTestProcessedGroupingNode({
           label: "1",
-          key: expectedGroupingNodeKey2,
+          key: {
+            ...expectedGroupingNodeKey2,
+            groupedInstanceKeys: nodes[1].key.instanceKeys,
+          },
           parentKeys: ["x"],
           children: [{ ...nodes[1], parentKeys: [...nodes[1].parentKeys, expectedGroupingNodeKey2] }],
         }),
@@ -159,18 +169,20 @@ describe("LabelGrouping", () => {
         processingParams: { grouping: { byLabel: { groupId: "groupId1" } } },
       }),
     ];
-    const expectedGroupingNodeKey: GroupingNodeKey = {
+    const expectedGroupingNodeKey: ParentGroupingHierarchyNodeKey = {
       type: "label-grouping",
       label: "1",
       groupId: "groupId1",
-      groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
     };
     expect(await createLabelGroups(nodes)).to.deep.eq({
       groupingType: "label",
       grouped: [
         createTestProcessedGroupingNode({
           label: "1",
-          key: expectedGroupingNodeKey,
+          key: {
+            ...expectedGroupingNodeKey,
+            groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
+          },
           parentKeys: ["x"],
           children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
         }),
@@ -194,18 +206,20 @@ describe("LabelGrouping", () => {
         processingParams: { grouping: { byLabel: true } },
       }),
     ];
-    const expectedGroupingNodeKey: GroupingNodeKey = {
+    const expectedGroupingNodeKey: ParentGroupingHierarchyNodeKey = {
       type: "label-grouping",
       label: "1",
       groupId: undefined,
-      groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
     };
     expect(await createLabelGroups(nodes)).to.deep.eq({
       groupingType: "label",
       grouped: [
         createTestProcessedGroupingNode({
           label: "1",
-          key: expectedGroupingNodeKey,
+          key: {
+            ...expectedGroupingNodeKey,
+            groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
+          },
           parentKeys: ["x"],
           children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
         }),
@@ -229,30 +243,34 @@ describe("LabelGrouping", () => {
         processingParams: { grouping: { byLabel: true } },
       }),
     ];
-    const expectedGroupingNodeKey1: GroupingNodeKey = {
+    const expectedGroupingNodeKey1: ParentGroupingHierarchyNodeKey = {
       type: "label-grouping",
       label: "1",
       groupId: undefined,
-      groupedInstanceKeys: nodes[0].key.instanceKeys,
     };
-    const expectedGroupingNodeKey2: GroupingNodeKey = {
+    const expectedGroupingNodeKey2: ParentGroupingHierarchyNodeKey = {
       type: "label-grouping",
       label: "2",
       groupId: undefined,
-      groupedInstanceKeys: nodes[1].key.instanceKeys,
     };
     expect(await createLabelGroups(nodes)).to.deep.eq({
       groupingType: "label",
       grouped: [
         createTestProcessedGroupingNode({
           label: "1",
-          key: expectedGroupingNodeKey1,
+          key: {
+            ...expectedGroupingNodeKey1,
+            groupedInstanceKeys: nodes[0].key.instanceKeys,
+          },
           parentKeys: ["x"],
           children: [nodes[0]].map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey1] })),
         }),
         createTestProcessedGroupingNode({
           label: "2",
-          key: expectedGroupingNodeKey2,
+          key: {
+            ...expectedGroupingNodeKey2,
+            groupedInstanceKeys: nodes[1].key.instanceKeys,
+          },
           parentKeys: ["x"],
           children: [nodes[1]].map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey2] })),
         }),

@@ -141,47 +141,59 @@ export type StandardHierarchyNodeKey = InstancesNodeKey | GroupingNodeKey;
  */
 export type HierarchyNodeKey = StandardHierarchyNodeKey | string;
 
+/**
+ * A key that uniquely identifies parent grouping node in a hierarchy level.
+ * This key differs from [[GroupingNodeKey]] by not having `groupedInstanceKeys` property.
+ * @beta
+ */
+export type ParentGroupingHierarchyNodeKey =
+  | Omit<ClassGroupingNodeKey, "groupedInstanceKeys">
+  | Omit<LabelGroupingNodeKey, "groupedInstanceKeys">
+  | Omit<PropertyValueRangeGroupingNodeKey, "groupedInstanceKeys">
+  | Omit<PropertyOtherValuesGroupingNodeKey, "groupedInstanceKeys">
+  | Omit<PropertyValueGroupingNodeKey, "groupedInstanceKeys">;
+
 /** @beta */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace HierarchyNodeKey {
   /** Checks whether the given node key is a custom node key. */
-  export function isCustom(key: HierarchyNodeKey): key is string {
+  export function isCustom(key: ParentGroupingHierarchyNodeKey | HierarchyNodeKey): key is string {
     return typeof key === "string";
   }
   /** Checks whether the given node key is a [[StandardHierarchyNodeKey]]. */
-  export function isStandard(key: HierarchyNodeKey): key is StandardHierarchyNodeKey {
+  export function isStandard(key: ParentGroupingHierarchyNodeKey | HierarchyNodeKey): key is StandardHierarchyNodeKey {
     return !!(key as StandardHierarchyNodeKey).type;
   }
   /** Checks whether the given node key is an [[InstancesNodeKey]]. */
-  export function isInstances(key: HierarchyNodeKey): key is InstancesNodeKey {
+  export function isInstances(key: ParentGroupingHierarchyNodeKey | HierarchyNodeKey): key is InstancesNodeKey {
     return isStandard(key) && key.type === "instances";
   }
   /** Checks whether the given node key is a [[GroupingNodeKey]]. */
-  export function isGrouping(key: HierarchyNodeKey): key is GroupingNodeKey {
+  export function isGrouping(key: ParentGroupingHierarchyNodeKey | HierarchyNodeKey): key is GroupingNodeKey {
     return isStandard(key) && !isInstances(key);
   }
   /** Checks whether the given node key is a [[ClassGroupingNodeKey]]. */
-  export function isClassGrouping(key: HierarchyNodeKey): key is ClassGroupingNodeKey {
+  export function isClassGrouping(key: ParentGroupingHierarchyNodeKey | HierarchyNodeKey): key is ClassGroupingNodeKey {
     return isStandard(key) && key.type === "class-grouping";
   }
   /** Checks whether the given node key is a [[LabelGroupingNodeKey]]. */
-  export function isLabelGrouping(key: HierarchyNodeKey): key is LabelGroupingNodeKey {
+  export function isLabelGrouping(key: ParentGroupingHierarchyNodeKey | HierarchyNodeKey): key is LabelGroupingNodeKey {
     return isStandard(key) && key.type === "label-grouping";
   }
   /** Checks whether the given node key is a [[PropertyOtherValuesGroupingNodeKey]]. */
-  export function isPropertyOtherValuesGrouping(key: HierarchyNodeKey): key is PropertyOtherValuesGroupingNodeKey {
+  export function isPropertyOtherValuesGrouping(key: ParentGroupingHierarchyNodeKey | HierarchyNodeKey): key is PropertyOtherValuesGroupingNodeKey {
     return isStandard(key) && key.type === "property-grouping:other";
   }
   /** Checks whether the given node key is a [[PropertyValueRangeGroupingNodeKey]]. */
-  export function isPropertyValueRangeGrouping(key: HierarchyNodeKey): key is PropertyValueRangeGroupingNodeKey {
+  export function isPropertyValueRangeGrouping(key: ParentGroupingHierarchyNodeKey | HierarchyNodeKey): key is PropertyValueRangeGroupingNodeKey {
     return isStandard(key) && key.type === "property-grouping:range";
   }
   /** Checks whether the given node key is a [[PropertyValueGroupingNodeKey]]. */
-  export function isPropertyValueGrouping(key: HierarchyNodeKey): key is PropertyValueGroupingNodeKey {
+  export function isPropertyValueGrouping(key: ParentGroupingHierarchyNodeKey | HierarchyNodeKey): key is PropertyValueGroupingNodeKey {
     return isStandard(key) && key.type === "property-grouping:value";
   }
   /** Checks whether the two given keys are equal. */
-  export function equals(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): boolean {
+  export function equals(lhs: ParentGroupingHierarchyNodeKey | HierarchyNodeKey, rhs: ParentGroupingHierarchyNodeKey | HierarchyNodeKey): boolean {
     if (typeof lhs !== typeof rhs) {
       return false;
     }
@@ -235,7 +247,7 @@ export namespace HierarchyNodeKey {
    *- `negative value` if lhs key is less than rhs key
    *- `positive value` if lhs key is more than rhs key
    */
-  export function compare(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): number {
+  export function compare(lhs: ParentGroupingHierarchyNodeKey | HierarchyNodeKey, rhs: ParentGroupingHierarchyNodeKey | HierarchyNodeKey): number {
     if (isCustom(lhs)) {
       if (!isCustom(rhs)) {
         return 1;
@@ -319,7 +331,7 @@ export interface HierarchyNode {
   /** An identifier to identify the node in its hierarchy level. */
   key: HierarchyNodeKey;
   /** Identifiers of all node ancestors. Can be used to identify a node in the hierarchy. */
-  parentKeys: HierarchyNodeKey[];
+  parentKeys: Array<ParentGroupingHierarchyNodeKey | InstancesNodeKey | string>;
   /** Node's display label. */
   label: string;
   /** A flag indicating whether the node has children or not. */

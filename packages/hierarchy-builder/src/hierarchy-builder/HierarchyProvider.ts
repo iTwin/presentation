@@ -29,6 +29,8 @@ import {
   HierarchyNode,
   HierarchyNodeIdentifiersPath,
   HierarchyNodeKey,
+  InstancesNodeKey,
+  ParentGroupingHierarchyNodeKey,
   ParsedHierarchyNode,
   ProcessedCustomHierarchyNode,
   ProcessedGroupingHierarchyNode,
@@ -417,7 +419,9 @@ interface ChildNodesCacheEntry {
   variations: LRUCache<string, CachedNodesObservableEntry>;
 }
 class ChildNodesCache {
-  private _map = new Dictionary<HierarchyNodeKey[], ChildNodesCacheEntry>((lhs, rhs) => this.compareHierarchyNodeKeys(lhs, rhs));
+  private _map = new Dictionary<Array<ParentGroupingHierarchyNodeKey | string | InstancesNodeKey>, ChildNodesCacheEntry>((lhs, rhs) =>
+    this.compareHierarchyNodeKeys(lhs, rhs),
+  );
 
   private createVariationKey(props: GetHierarchyNodesProps) {
     const { instanceFilter, parentNode } = props;
@@ -431,7 +435,10 @@ class ChildNodesCache {
     return JSON.stringify({ instanceFilter, hierarchyLevelSizeLimit });
   }
 
-  private compareHierarchyNodeKeys(lhs: HierarchyNodeKey[], rhs: HierarchyNodeKey[]) {
+  private compareHierarchyNodeKeys(
+    lhs: Array<ParentGroupingHierarchyNodeKey | string | InstancesNodeKey>,
+    rhs: Array<ParentGroupingHierarchyNodeKey | string | InstancesNodeKey>,
+  ) {
     if (lhs.length !== rhs.length) {
       return lhs.length - rhs.length;
     }

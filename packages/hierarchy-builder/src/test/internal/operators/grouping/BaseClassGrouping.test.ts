@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { ECClass, IMetadataProvider } from "../../../../hierarchy-builder/ECMetadata";
-import { GroupingNodeKey } from "../../../../hierarchy-builder/HierarchyNode";
+import { ParentGroupingHierarchyNodeKey } from "../../../../hierarchy-builder/HierarchyNode";
 import * as baseClassGrouping from "../../../../hierarchy-builder/internal/operators/grouping/BaseClassGrouping";
 import { ClassStubs, createClassStubs, createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils";
 
@@ -129,20 +129,22 @@ describe("BaseClassGrouping", () => {
 
       classStubs.stubEntityClass({ schemaName: "TestSchema", className: "TestClass", is: async () => true });
 
-      const expectedGroupingNodeKey: GroupingNodeKey = {
+      const expectedGroupingNodeKey: ParentGroupingHierarchyNodeKey = {
         type: "class-grouping",
         class: {
           name: eCClass.fullName,
           label: eCClass.name,
         },
-        groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
       };
       expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(metadataProvider, nodes, eCClass)).to.deep.eq({
         groupingType: "base-class",
         grouped: [
           createTestProcessedGroupingNode({
             label: eCClass.name,
-            key: expectedGroupingNodeKey,
+            key: {
+              ...expectedGroupingNodeKey,
+              groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
+            },
             parentKeys: ["x"],
             children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
           }),
@@ -183,13 +185,12 @@ describe("BaseClassGrouping", () => {
       classStubs.stubEntityClass({ schemaName: "TestSchema", className: "B", classLabel: "Class B", is: async () => true });
       const ecClass = { fullName: "TestSchema.ParentClass", label: "ParentClass" } as unknown as ECClass;
 
-      const expectedGroupingNodeKey: GroupingNodeKey = {
+      const expectedGroupingNodeKey: ParentGroupingHierarchyNodeKey = {
         type: "class-grouping",
         class: {
           name: ecClass.fullName,
           label: ecClass.label,
         },
-        groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
       };
 
       expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(metadataProvider, nodes, ecClass)).to.deep.eq({
@@ -197,7 +198,10 @@ describe("BaseClassGrouping", () => {
         grouped: [
           createTestProcessedGroupingNode({
             label: ecClass.label,
-            key: expectedGroupingNodeKey,
+            key: {
+              ...expectedGroupingNodeKey,
+              groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
+            },
             parentKeys: ["x"],
             children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
           }),
@@ -237,13 +241,12 @@ describe("BaseClassGrouping", () => {
       classStubs.stubEntityClass({ schemaName: "TestSchema", className: "B", classLabel: "Class B", is: async () => false });
       const ecClass = { fullName: "TestSchema.ParentClass", label: "ParentClass" } as unknown as ECClass;
 
-      const expectedGroupingNodeKey: GroupingNodeKey = {
+      const expectedGroupingNodeKey: ParentGroupingHierarchyNodeKey = {
         type: "class-grouping",
         class: {
           name: ecClass.fullName,
           label: ecClass.label,
         },
-        groupedInstanceKeys: nodes[0].key.instanceKeys,
       };
 
       expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(metadataProvider, nodes, ecClass)).to.deep.eq({
@@ -251,7 +254,10 @@ describe("BaseClassGrouping", () => {
         grouped: [
           createTestProcessedGroupingNode({
             label: ecClass.label,
-            key: expectedGroupingNodeKey,
+            key: {
+              ...expectedGroupingNodeKey,
+              groupedInstanceKeys: nodes[0].key.instanceKeys,
+            },
             parentKeys: ["x"],
             children: [nodes[0]].map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
           }),

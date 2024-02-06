@@ -246,7 +246,7 @@ function createInstanceKeysSelectQuery(keys: InstanceKey[]): PresentationQuery {
       query += ` UNION ALL `;
     }
     query += `SELECT ECClassId, ECInstanceId FROM [${schemaName}].[${className}] WHERE ECInstanceId IN (${ids.map(() => "?").join(",")})`;
-    bindings.push(...ids.map((id) => ({ type: "Id" as const, value: id })));
+    ids.forEach((id) => bindings.push({ type: "Id" as const, value: id }));
   });
   return { query, bindings };
 }

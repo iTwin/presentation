@@ -5,6 +5,7 @@
 
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { DelayLoadedTreeNodeItem, TreeNodeItem } from "@itwin/components-react";
+import { Guid } from "@itwin/core-bentley";
 import { InfoTreeNodeItemType, PresentationInfoTreeNodeItem } from "@itwin/presentation-components";
 import { HierarchyNode } from "@itwin/presentation-hierarchy-builder";
 
@@ -21,7 +22,7 @@ export function createTreeNodeItem(node: HierarchyNode): DelayLoadedTreeNodeItem
   }
   return {
     __internal: node,
-    id: JSON.stringify([...node.parentKeys, node.key]),
+    id: Guid.createValue(),
     label: PropertyRecord.fromString(node.label, "Label"),
     icon: node.extendedData?.imageId,
     hasChildren: !!node.children,

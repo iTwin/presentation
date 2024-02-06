@@ -11,6 +11,7 @@ import {
   HierarchyNodeLabelGroupingParams,
   InstanceHierarchyNodeProcessingParams,
   InstancesNodeKey,
+  ParentGroupingHierarchyNodeKey,
   ProcessedCustomHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "../HierarchyNode";
@@ -90,8 +91,10 @@ function mergeNodeKeys<TKey extends string | InstancesNodeKey>(lhs: TKey, rhs: T
   return ((x: never) => x)(lhs);
 }
 
-function mergeParentNodeKeys(lhsKeys: HierarchyNodeKey[], rhsKeys: HierarchyNodeKey[]): HierarchyNodeKey[] {
-  const res = new Array<HierarchyNodeKey>();
+type ParentNodeKey = ParentGroupingHierarchyNodeKey | string | InstancesNodeKey;
+
+function mergeParentNodeKeys(lhsKeys: ParentNodeKey[], rhsKeys: ParentNodeKey[]): ParentNodeKey[] {
+  const res = new Array<ParentNodeKey>();
   for (let i = 0; i < lhsKeys.length && i < rhsKeys.length; ++i) {
     if (!HierarchyNodeKey.equals(lhsKeys[i], rhsKeys[i])) {
       break;

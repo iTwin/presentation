@@ -47,15 +47,17 @@ export async function createClassGroups(metadata: IMetadataProvider, nodes: Proc
 function createGroupingNodes(groupings: ClassGroupingInformation): GroupingHandlerResult {
   const groupedNodes = new Array<ProcessedInstancesGroupingHierarchyNode>();
   groupings.grouped.forEach((entry) => {
-    const groupingNodeKey: ClassGroupingNodeKey = {
+    const groupingNodeKey: Omit<ClassGroupingNodeKey, "groupedInstanceKeys"> = {
       type: "class-grouping",
       class: { name: entry.class.fullName, label: entry.class.label },
-      groupedInstanceKeys: entry.groupedNodes.flatMap((groupedInstanceNode) => groupedInstanceNode.key.instanceKeys),
     };
     const groupedNodeParentKeys = entry.groupedNodes[0].parentKeys;
     groupedNodes.push({
       label: entry.class.label ?? entry.class.name,
-      key: groupingNodeKey,
+      key: {
+        ...groupingNodeKey,
+        groupedInstanceKeys: entry.groupedNodes.flatMap((groupedInstanceNode) => groupedInstanceNode.key.instanceKeys),
+      },
       parentKeys: groupedNodeParentKeys,
       children: entry.groupedNodes.map((gn) => ({ ...gn, parentKeys: [...groupedNodeParentKeys, groupingNodeKey] })),
     });

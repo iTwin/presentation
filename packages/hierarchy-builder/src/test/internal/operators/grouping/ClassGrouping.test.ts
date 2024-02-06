@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { IMetadataProvider } from "../../../../hierarchy-builder/ECMetadata";
-import { GroupingNodeKey } from "../../../../hierarchy-builder/HierarchyNode";
+import { ParentGroupingHierarchyNodeKey } from "../../../../hierarchy-builder/HierarchyNode";
 import { GroupingHandlerResult } from "../../../../hierarchy-builder/internal/operators/Grouping";
 import { createClassGroups } from "../../../../hierarchy-builder/internal/operators/grouping/ClassGrouping";
 import { ClassStubs, createClassStubs, createTestProcessedInstanceNode } from "../../../Utils";
@@ -30,17 +30,19 @@ describe("ClassGrouping", () => {
       }),
     ];
     const classInfo = classStubs.stubEntityClass({ schemaName: "TestSchema", className: "TestClass" });
-    const expectedClassGroupingNodeKey: GroupingNodeKey = {
+    const expectedClassGroupingNodeKey: ParentGroupingHierarchyNodeKey = {
       type: "class-grouping",
       class: { name: classInfo.fullName, label: classInfo.label },
-      groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
     };
     expect(await createClassGroups(metadataProvider, nodes)).to.deep.eq({
       groupingType: "class",
       grouped: [
         {
           label: "TestClass",
-          key: expectedClassGroupingNodeKey,
+          key: {
+            ...expectedClassGroupingNodeKey,
+            groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
+          },
           parentKeys: ["x"],
           children: nodes.map((gn) => ({ ...gn, parentKeys: [...gn.parentKeys, expectedClassGroupingNodeKey] })),
         },
@@ -65,17 +67,19 @@ describe("ClassGrouping", () => {
       }),
     ];
     const classA = classStubs.stubEntityClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A" });
-    const expectedClassGroupingNodeKey: GroupingNodeKey = {
+    const expectedClassGroupingNodeKey: ParentGroupingHierarchyNodeKey = {
       type: "class-grouping",
       class: { name: classA.fullName, label: classA.label },
-      groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
     };
     expect(await createClassGroups(metadataProvider, nodes)).to.deep.eq({
       groupingType: "class",
       grouped: [
         {
           label: "Class A",
-          key: expectedClassGroupingNodeKey,
+          key: {
+            ...expectedClassGroupingNodeKey,
+            groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
+          },
           parentKeys: ["x"],
           children: nodes.map((gn) => ({ ...gn, parentKeys: [...gn.parentKeys, expectedClassGroupingNodeKey] })),
         },
@@ -100,29 +104,33 @@ describe("ClassGrouping", () => {
       }),
     ];
     const classA = classStubs.stubEntityClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A" });
-    const expectedClassAGroupingNodeKey: GroupingNodeKey = {
+    const expectedClassAGroupingNodeKey: ParentGroupingHierarchyNodeKey = {
       type: "class-grouping",
       class: { name: classA.fullName, label: classA.label },
-      groupedInstanceKeys: nodes[0].key.instanceKeys,
     };
     const classB = classStubs.stubEntityClass({ schemaName: "TestSchema", className: "B", classLabel: "Class B" });
-    const expectedClassBGroupingNodeKey: GroupingNodeKey = {
+    const expectedClassBGroupingNodeKey: ParentGroupingHierarchyNodeKey = {
       type: "class-grouping",
       class: { name: classB.fullName, label: classB.label },
-      groupedInstanceKeys: nodes[1].key.instanceKeys,
     };
     expect(await createClassGroups(metadataProvider, nodes)).to.deep.eq({
       groupingType: "class",
       grouped: [
         {
           label: "Class A",
-          key: expectedClassAGroupingNodeKey,
+          key: {
+            ...expectedClassAGroupingNodeKey,
+            groupedInstanceKeys: nodes[0].key.instanceKeys,
+          },
           parentKeys: ["x"],
           children: [nodes[0]].map((gn) => ({ ...gn, parentKeys: [...gn.parentKeys, expectedClassAGroupingNodeKey] })),
         },
         {
           label: "Class B",
-          key: expectedClassBGroupingNodeKey,
+          key: {
+            ...expectedClassBGroupingNodeKey,
+            groupedInstanceKeys: nodes[1].key.instanceKeys,
+          },
           parentKeys: ["x"],
           children: [nodes[1]].map((gn) => ({ ...gn, parentKeys: [...gn.parentKeys, expectedClassBGroupingNodeKey] })),
         },

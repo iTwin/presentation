@@ -10,7 +10,7 @@ import { ECKindOfQuantity, ECPrimitiveProperty, ECProperty, IMetadataProvider } 
 import { GenericInstanceFilter } from "../hierarchy-builder/GenericInstanceFilter";
 import { IHierarchyLevelDefinitionsFactory } from "../hierarchy-builder/HierarchyDefinition";
 import { RowsLimitExceededError } from "../hierarchy-builder/HierarchyErrors";
-import { HierarchyNode, ParsedCustomHierarchyNode } from "../hierarchy-builder/HierarchyNode";
+import { HierarchyNode, ParentGroupingHierarchyNodeKey, ParsedCustomHierarchyNode } from "../hierarchy-builder/HierarchyNode";
 import { HierarchyProvider } from "../hierarchy-builder/HierarchyProvider";
 import {
   ECSQL_COLUMN_NAME_FilteredChildrenPaths,
@@ -358,12 +358,15 @@ describe("HierarchyProvider", () => {
       });
 
       const rootNodes = await provider.getNodes({ parentNode: undefined });
+      const expectedKey: ParentGroupingHierarchyNodeKey = {
+        type: "label-grouping",
+        label: "test label",
+        groupId: undefined,
+      };
       expect(rootNodes).to.deep.eq([
         {
           key: {
-            type: "label-grouping",
-            label: "test label",
-            groupId: undefined,
+            ...expectedKey,
             groupedInstanceKeys: [{ className: "a.b", id: "0x123" }],
           },
           parentKeys: [],
@@ -379,7 +382,7 @@ describe("HierarchyProvider", () => {
             type: "instances",
             instanceKeys: [{ className: "a.b", id: "0x123" }],
           },
-          parentKeys: [rootNodes[0].key],
+          parentKeys: [expectedKey],
           label: "test label",
           children: false,
         } as HierarchyNode,
