@@ -26,7 +26,7 @@ import {
   VirtualizedPropertyGridWithDataProvider,
 } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { ContextMenuItem, ContextMenuItemProps, FillCentered, GlobalContextMenu, Orientation, useDisposable } from "@itwin/core-react";
+import { ContextMenuItem, ContextMenuItemProps, FillCentered, GlobalContextMenu, Orientation } from "@itwin/core-react";
 import { ToggleSwitch } from "@itwin/itwinui-react";
 import { Field } from "@itwin/presentation-common";
 import {
@@ -140,51 +140,70 @@ interface PropertyGridProps {
   height: number;
 }
 function PropertyGrid(props: PropertyGridProps) {
-  const { imodel, rulesetId, diagnostics, filtering, width, height } = props;
+  const { imodel, rulesetId, diagnostics, ...restProps } = props;
+  const [dataProvider, setDataProvider] = useState<AutoExpandingPropertyDataProvider>();
 
-  const dataProvider = useDisposable(
-    useCallback(() => {
-      const provider = new AutoExpandingPropertyDataProvider({ imodel, ruleset: rulesetId, ...diagnostics });
-      provider.isNestedPropertyCategoryGroupingEnabled = true;
-      return provider;
-    }, [imodel, rulesetId, diagnostics]),
-  );
+  useEffect(() => {
+    const provider = new AutoExpandingPropertyDataProvider({ imodel, ruleset: rulesetId, ...diagnostics });
+    provider.isNestedPropertyCategoryGroupingEnabled = true;
+    setDataProvider(provider);
+    return () => {
+      provider.dispose();
+    };
+  }, [imodel, rulesetId, diagnostics]);
+
+  if (!dataProvider) {
+    return null;
+  }
+
+  return <FilterablePropertyGrid {...restProps} imodel={imodel} dataProvider={dataProvider} />;
+}
+
+function FilterablePropertyGrid({
+  dataProvider,
+  filtering,
+  imodel,
+  width,
+  height,
+}: Omit<PropertyGridProps, "rulesetId" | "diagnostics"> & { dataProvider: PresentationPropertyDataProvider }) {
   const { isOverLimit, numSelectedElements } = usePropertyDataProviderWithUnifiedSelection({ dataProvider });
+
+  const { filter: filterText, onlyFavorites, activeHighlight, onFilteringStateChanged } = filtering;
+  const [filteringProvDataChanged, setFilteringProvDataChanged] = useState({});
+  const [filteringDataProvider, setFilteringDataProvider] = useState<FilteringPropertyDataProvider>();
+  useEffect(() => {
+    const valueFilterer = new DisplayValuePropertyDataFilterer(filterText);
+    const labelFilterer = new LabelPropertyDataFilterer(filterText);
+    const categoryFilterer = new PropertyCategoryLabelFilterer(filterText);
+    const favoriteFilterer = new FavoritePropertiesDataFilterer({ source: dataProvider, favoritesScope: FAVORITES_SCOPE, isActive: onlyFavorites });
+
+    const recordFilterer = new CompositePropertyDataFilterer(labelFilterer, CompositeFilterType.Or, valueFilterer);
+    const textFilterer = new CompositePropertyDataFilterer(recordFilterer, CompositeFilterType.Or, categoryFilterer);
+    const favoriteTextFilterer = new CompositePropertyDataFilterer(textFilterer, CompositeFilterType.And, favoriteFilterer);
+    const filteringDataProv = new FilteringPropertyDataProvider(dataProvider, favoriteTextFilterer);
+    filteringDataProv.onDataChanged.addListener(() => {
+      setFilteringProvDataChanged({});
+    });
+    setFilteringDataProvider(filteringDataProv);
+    return () => {
+      filteringDataProv.dispose();
+    };
+  }, [dataProvider, filterText, onlyFavorites]);
+
+  const { value: filteringResult } = useDebouncedAsyncValue(
+    useCallback(async () => {
+      return filteringDataProvider?.getData();
+    }, [filteringDataProvider, filteringProvDataChanged]), // eslint-disable-line react-hooks/exhaustive-deps
+  );
+  useEffect(() => {
+    onFilteringStateChanged(filteringResult);
+  }, [filteringResult, onFilteringStateChanged]);
 
   const renderFavoritesActionButton = useCallback(
     (buttonProps: ActionButtonRendererProps) => <FavoritePropertyActionButton {...buttonProps} dataProvider={dataProvider} />,
     [dataProvider],
   );
   const renderCopyActionButton = useCallback(() => <CopyActionButton />, []);
-
-  const { filter: filterText, onlyFavorites, activeHighlight, onFilteringStateChanged } = filtering;
-  const [filteringProvDataChanged, setFilteringProvDataChanged] = useState({});
-  const filteringDataProvider = useDisposable(
-    useCallback(() => {
-      const valueFilterer = new DisplayValuePropertyDataFilterer(filterText);
-      const labelFilterer = new LabelPropertyDataFilterer(filterText);
-      const categoryFilterer = new PropertyCategoryLabelFilterer(filterText);
-      const favoriteFilterer = new FavoritePropertiesDataFilterer({ source: dataProvider, favoritesScope: FAVORITES_SCOPE, isActive: onlyFavorites });
-
-      const recordFilterer = new CompositePropertyDataFilterer(labelFilterer, CompositeFilterType.Or, valueFilterer);
-      const textFilterer = new CompositePropertyDataFilterer(recordFilterer, CompositeFilterType.Or, categoryFilterer);
-      const favoriteTextFilterer = new CompositePropertyDataFilterer(textFilterer, CompositeFilterType.And, favoriteFilterer);
-      const filteringDataProv = new FilteringPropertyDataProvider(dataProvider, favoriteTextFilterer);
-      filteringDataProv.onDataChanged.addListener(() => {
-        setFilteringProvDataChanged({});
-      });
-      return filteringDataProv;
-    }, [dataProvider, filterText, onlyFavorites]),
-  );
-
-  const { value: filteringResult } = useDebouncedAsyncValue(
-    useCallback(async () => {
-      return filteringDataProvider.getData();
-    }, [filteringDataProvider, filteringProvDataChanged]), // eslint-disable-line react-hooks/exhaustive-deps
-  );
-  useEffect(() => {
-    onFilteringStateChanged(filteringResult);
-  }, [filteringResult, onFilteringStateChanged]);
 
   const [contextMenuArgs, setContextMenuArgs] = useState<PropertyGridContextMenuArgs>();
   const onPropertyContextMenu = useCallback((args: PropertyGridContextMenuArgs) => {
@@ -195,6 +214,10 @@ function PropertyGrid(props: PropertyGridProps) {
     setContextMenuArgs(undefined);
   }, []);
   const contextValue = useNavigationPropertyEditingContext(imodel, dataProvider);
+
+  if (!filteringDataProvider) {
+    return null;
+  }
 
   if (numSelectedElements === 0) {
     return <FillCentered>{IModelApp.localization.getLocalizedString("Sample:property-grid.no-elements-selected")}</FillCentered>;

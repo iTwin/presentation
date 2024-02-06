@@ -10,10 +10,11 @@ import { useMemo } from "react";
 import { PrimitiveValue, PropertyDescription, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import {
   defaultPropertyFilterBuilderRuleValidator,
-  isUnaryPropertyFilterOperator,
+  isUnaryPropertyFilterBuilderOperator,
   PropertyFilterBuilderRule,
   PropertyFilterBuilderRuleGroup,
-  PropertyFilterRuleOperator,
+  PropertyFilterBuilderRuleOperator,
+  PropertyFilterBuilderRuleRangeValue,
 } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { CategoryDescription, ClassInfo, combineFieldNames, Descriptor, Field, NestedContentField, PropertiesField } from "@itwin/presentation-common";
@@ -153,7 +154,7 @@ export function useFilterBuilderNavigationPropertyEditorContext(imodel: IModelCo
 /** @internal */
 export function filterRuleValidator(item: PropertyFilterBuilderRule) {
   // skip empty rules and rules that do not require value
-  if (item.property === undefined || item.operator === undefined || isUnaryPropertyFilterOperator(item.operator)) {
+  if (item.property === undefined || item.operator === undefined || isUnaryPropertyFilterBuilderOperator(item.operator)) {
     return undefined;
   }
 
@@ -162,10 +163,7 @@ export function filterRuleValidator(item: PropertyFilterBuilderRule) {
     return undefined;
   }
 
-  const error = combineValidators(
-    quantityPropertyValidator,
-    numericPropertyValidator,
-  )({
+  const error = numericPropertyValidator({
     property: item.property,
     operator: item.operator,
     value: item.value,
@@ -178,34 +176,10 @@ export function filterRuleValidator(item: PropertyFilterBuilderRule) {
   return defaultPropertyFilterBuilderRuleValidator(item);
 }
 
-function combineValidators(...validators: Array<(ctx: ValidatorContext) => string | undefined>) {
-  return (ctx: ValidatorContext) => {
-    for (const validator of validators) {
-      const error = validator(ctx);
-      if (error) {
-        return error;
-      }
-    }
-    return undefined;
-  };
-}
-
 interface ValidatorContext {
   property: PropertyDescription;
-  operator: PropertyFilterRuleOperator;
+  operator: PropertyFilterBuilderRuleOperator;
   value?: PrimitiveValue;
-}
-
-function quantityPropertyValidator({ property, value }: ValidatorContext) {
-  // rules with non quantity properties or without values
-  if (property.quantityType === undefined || value === undefined) {
-    return undefined;
-  }
-  if (isInvalidNumericValue(value)) {
-    return translate("instance-filter-builder.error-messages.invalid");
-  }
-
-  return undefined;
 }
 
 function numericPropertyValidator({ property, value, operator }: ValidatorContext) {
@@ -214,15 +188,26 @@ function numericPropertyValidator({ property, value, operator }: ValidatorContex
     return undefined;
   }
 
+  function getErrorMessage() {
+    return property.quantityType === undefined
+      ? translate("instance-filter-builder.error-messages.not-a-number")
+      : translate("instance-filter-builder.error-messages.invalid");
+  }
+
+  if (operator === "between") {
+    const { from, to } = PropertyFilterBuilderRuleRangeValue.parse(value);
+    return isInvalidNumericValue(from) || isInvalidNumericValue(to) ? getErrorMessage() : undefined;
+  }
+
   if (isInvalidNumericValue(value)) {
-    return translate("instance-filter-builder.error-messages.not-a-number");
+    return getErrorMessage();
   }
 
   return undefined;
 }
 
-function isEqualityOperator(operator: PropertyFilterRuleOperator) {
-  return operator === PropertyFilterRuleOperator.IsEqual || operator === PropertyFilterRuleOperator.IsNotEqual;
+function isEqualityOperator(operator: PropertyFilterBuilderRuleOperator) {
+  return operator === "is-equal" || operator === "is-not-equal";
 }
 
 function isPropertyNumeric(typename: string) {
