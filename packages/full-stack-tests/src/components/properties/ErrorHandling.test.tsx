@@ -8,7 +8,7 @@ import sinon from "sinon";
 import { UiComponents, VirtualizedPropertyGridWithDataProvider } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { useDisposable } from "@itwin/core-react";
+import { useOptionalDisposable } from "@itwin/core-react";
 import { InstanceKey, KeySet, PresentationRpcInterface } from "@itwin/presentation-common";
 import { PresentationPropertyDataProvider } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
@@ -41,8 +41,8 @@ describe("Learning snippets", () => {
       // __PUBLISH_EXTRACT_START__ Presentation.Components.PropertyGrid.ErrorHandling
       function MyPropertyGrid(props: { imodel: IModelConnection; elementKey: InstanceKey }) {
         // create a presentation rules driven data provider; the provider implements `IDisposable`, so we
-        // create it through `useDisposable` hook to make sure it's properly cleaned up
-        const dataProvider = useDisposable(
+        // create it through `useOptionalDisposable` hook to make sure it's properly cleaned up
+        const dataProvider = useOptionalDisposable(
           useCallback(() => {
             const provider = new PresentationPropertyDataProvider({ imodel: props.imodel });
             provider.keys = new KeySet([props.elementKey]);
@@ -53,6 +53,10 @@ describe("Learning snippets", () => {
         // width and height should generally we computed using ResizeObserver API or one of its derivatives
         const [width] = useState(400);
         const [height] = useState(600);
+
+        if (!dataProvider) {
+          return null;
+        }
 
         // render the property grid within an error boundary - any errors thrown by the property grid will be captured
         // and handled by the error boundary
