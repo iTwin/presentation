@@ -7,7 +7,7 @@
  */
 
 import { useMemo } from "react";
-import { PrimitiveValue, PropertyDescription, PropertyValue, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
+import { PrimitiveValue, PropertyDescription, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import {
   defaultPropertyFilterBuilderRuleValidator,
   isUnaryPropertyFilterBuilderOperator,
@@ -216,6 +216,6 @@ function isPropertyNumeric(typename: string) {
   );
 }
 
-function isInvalidNumericValue(value: PropertyValue) {
-  return value.valueFormat !== PropertyValueFormat.Primitive || (value.displayValue && isNaN(Number(value.value)));
+function isInvalidNumericValue(value: PrimitiveValue) {
+  return value.displayValue && isNaN(Number(value.value));
 }
