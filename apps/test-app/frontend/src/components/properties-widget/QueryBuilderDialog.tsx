@@ -9,7 +9,7 @@ import {
 } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Dialog, Label } from "@itwin/itwinui-react";
-import { Descriptor } from "@itwin/presentation-common";
+import { ClassInfo, Descriptor } from "@itwin/presentation-common";
 import {
   GenericInstanceFilter,
   GenericInstanceFilterRule,
@@ -104,11 +104,10 @@ function SingleQueryBuilder({ descriptor, imodel, onQueryChanged }: SingleQueryB
     // - relationship path from property class to the select class if this property is related.
     const presentationFilter = PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, filter);
 
-    // create metadata for builder ECSQL query. It simplifies result of `createPresentationInstanceFilter`:
+    // create metadata for building ECSQL query. It simplifies `PresentationInstanceFilter`:
     // - collects relationship paths from all related properties used in filter to the select class (return only unique paths)
     // - creates aliases for related properties and associated relationship paths
-    // all this information is available on `PresentationInstanceFilter` returned by `createPresentationInstanceFilter` but this is a helper function
-    // to get data structure that is easier to use when building ECSQL query.
+    // all this information is available on `PresentationInstanceFilter` but this is data structure that is easier to use when building ECSQL query.
     return GenericInstanceFilter.fromPresentationInstanceFilter(presentationFilter);
   }, [buildFilter, descriptor]);
 
@@ -138,20 +137,22 @@ function SingleQueryBuilder({ descriptor, imodel, onQueryChanged }: SingleQueryB
       </div>
       <div className="query-builder-result">
         <Label>Query</Label>
-        {queryMetadata ? <QueryBuilderResult queryMetadata={queryMetadata} /> : null}
+        {queryMetadata ? <QueryBuilderResult selectClassInfo={descriptor.selectClasses[0].selectClassInfo} queryMetadata={queryMetadata} /> : null}
       </div>
     </div>
   );
 }
 
 interface QueryBuilderResultProps {
+  selectClassInfo: ClassInfo;
   queryMetadata: GenericInstanceFilter;
 }
 
-function QueryBuilderResult({ queryMetadata }: QueryBuilderResultProps) {
+function QueryBuilderResult({ queryMetadata, selectClassInfo }: QueryBuilderResultProps) {
   const query = useMemo(() => createQuery(queryMetadata), [queryMetadata]);
   return (
     <div className="query-result">
+      <div className="query-result-from">FROM {selectClassInfo.name} as this</div>
       <div className="query-result-join">
         {query.joinClauses.map((clause, i) => (
           <div key={i}>{clause}</div>
@@ -237,29 +238,29 @@ function getValueString(value: Primitives.Value) {
   return value.toString();
 }
 
-function getOperatorString(operator: PropertyFilterRuleOperator) {
+function getOperatorString(operator: `${PropertyFilterRuleOperator}`): string {
   switch (operator) {
-    case PropertyFilterRuleOperator.IsTrue:
+    case "is-true":
       return "IS TRUE";
-    case PropertyFilterRuleOperator.IsFalse:
+    case "is-false":
       return "IS FALSE";
-    case PropertyFilterRuleOperator.IsEqual:
+    case "is-equal":
       return "=";
-    case PropertyFilterRuleOperator.IsNotEqual:
+    case "is-not-equal":
       return "<>";
-    case PropertyFilterRuleOperator.Greater:
+    case "greater":
       return ">";
-    case PropertyFilterRuleOperator.GreaterOrEqual:
+    case "greater-or-equal":
       return ">=";
-    case PropertyFilterRuleOperator.Less:
+    case "less":
       return "<";
-    case PropertyFilterRuleOperator.LessOrEqual:
+    case "less-or-equal":
       return "<=";
-    case PropertyFilterRuleOperator.Like:
+    case "like":
       return "LIKE";
-    case PropertyFilterRuleOperator.IsNull:
+    case "is-null":
       return "IS NULL";
-    case PropertyFilterRuleOperator.IsNotNull:
+    case "is-not-null":
       return "IS NOT NULL";
   }
 }

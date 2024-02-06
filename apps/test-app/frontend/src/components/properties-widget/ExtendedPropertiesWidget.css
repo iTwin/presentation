@@ -21,8 +21,6 @@
 
 .query-builder {
   background-color: var(--iui-color-background);
-  border: solid 1px var(--iui-color-border);
-  border-radius: var(--border-radius);
   padding: 10px;
 }
 
@@ -31,11 +29,15 @@
 
 .query-result {
   display: grid;
-  grid-template-rows: 1fr 1fr;
   gap: 10px;
 }
 
+.query-result-from {
+  font-size: large;
+}
+
 .query-result-join {
+  font-size: large;
 }
 
 .query-result-where {
