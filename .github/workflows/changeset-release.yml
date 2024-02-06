@@ -8,6 +8,7 @@ on:
 
 env:
   NPM_CONFIG_PROVENANCE: true
+  HUSKY: 0
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
@@ -19,18 +20,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.IMJS_ADMIN_GH_TOKEN }}
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v2.2.4
+        uses: pnpm/action-setup@v2
         with:
           version: 8.6.2
 
       - name: Use Node.js 18
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18
           registry-url: https://registry.npmjs.org/
