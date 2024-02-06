@@ -16,7 +16,7 @@ import {
 } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Dialog, Label } from "@itwin/itwinui-react";
-import { Descriptor } from "@itwin/presentation-common";
+import { ClassInfo, Descriptor } from "@itwin/presentation-common";
 import { PresentationFilterBuilderValueRenderer, PresentationInstanceFilter, useInstanceFilterPropertyInfos } from "@itwin/presentation-components";
 
 export interface QueryBuilderInput {
@@ -138,20 +138,22 @@ function SingleQueryBuilder({ descriptor, imodel, onQueryChanged }: SingleQueryB
       </div>
       <div className="query-builder-result">
         <Label>Query</Label>
-        {queryMetadata ? <QueryBuilderResult queryMetadata={queryMetadata} /> : null}
+        {queryMetadata ? <QueryBuilderResult selectClassInfo={descriptor.selectClasses[0].selectClassInfo} queryMetadata={queryMetadata} /> : null}
       </div>
     </div>
   );
 }
 
 interface QueryBuilderResultProps {
+  selectClassInfo: ClassInfo;
   queryMetadata: GenericInstanceFilter;
 }
 
-function QueryBuilderResult({ queryMetadata }: QueryBuilderResultProps) {
+function QueryBuilderResult({ queryMetadata, selectClassInfo }: QueryBuilderResultProps) {
   const query = useMemo(() => createQuery(queryMetadata), [queryMetadata]);
   return (
     <div className="query-result">
+      <div className="query-result-from">FROM {selectClassInfo.name} as this</div>
       <div className="query-result-join">
         {query.joinClauses.map((clause, i) => (
           <div key={i}>{clause}</div>
