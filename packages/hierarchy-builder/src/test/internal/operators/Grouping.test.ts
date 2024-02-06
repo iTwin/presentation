@@ -10,10 +10,7 @@ import { LogLevel } from "@itwin/core-bentley";
 import { IMetadataProvider } from "../../../hierarchy-builder/ECMetadata";
 import { ProcessedInstanceHierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
 import {
-  createGroupingHandlers,
-  createGroupingOperator,
-  GroupingHandlerResult,
-  LOGGING_NAMESPACE,
+  createGroupingHandlers, createGroupingOperator, GroupingHandlerResult, LOGGING_NAMESPACE,
 } from "../../../hierarchy-builder/internal/operators/Grouping";
 import * as autoExpand from "../../../hierarchy-builder/internal/operators/grouping/AutoExpand";
 import * as baseClassGrouping from "../../../hierarchy-builder/internal/operators/grouping/BaseClassGrouping";
@@ -22,7 +19,9 @@ import * as groupHiding from "../../../hierarchy-builder/internal/operators/grou
 import * as labelGrouping from "../../../hierarchy-builder/internal/operators/grouping/LabelGrouping";
 import * as propertiesGrouping from "../../../hierarchy-builder/internal/operators/grouping/PropertiesGrouping";
 import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "../../../hierarchy-builder/values/Formatting";
-import { createTestProcessedGroupingNode, createTestProcessedInstanceNode, getObservableResult, setupLogging } from "../../Utils";
+import {
+  createTestProcessedGroupingNode, createTestProcessedInstanceNode, getObservableResult, setupLogging, testLocalizedStrings,
+} from "../../Utils";
 
 describe("Grouping", () => {
   const metadataProvider = {} as unknown as IMetadataProvider;
@@ -59,7 +58,7 @@ describe("Grouping", () => {
 
       const result = await getObservableResult(
         from(nodes).pipe(
-          createGroupingOperator(metadataProvider, formatter, undefined, [
+          createGroupingOperator(metadataProvider, formatter, testLocalizedStrings, undefined, [
             async (allNodes) => ({ grouped: [], ungrouped: allNodes, groupingType: "label" }),
             async (allNodes) => ({ grouped: [], ungrouped: allNodes, groupingType: "class" }),
           ]),
@@ -132,7 +131,7 @@ describe("Grouping", () => {
 
       const result = await getObservableResult(
         from(classGroupingInput).pipe(
-          createGroupingOperator(metadataProvider, formatter, undefined, [async () => classGroupingResult, async (input) => createLabelGroupingResult(input)]),
+          createGroupingOperator(metadataProvider, formatter, testLocalizedStrings, undefined, [async () => classGroupingResult, async (input) => createLabelGroupingResult(input)]),
         ),
       );
       expect(assignAutoExpandStub.callCount).to.eq(3);
@@ -211,7 +210,7 @@ describe("Grouping", () => {
       });
       const result = await getObservableResult(
         from([groupedNode, ungroupedNode]).pipe(
-          createGroupingOperator(metadataProvider, formatter, undefined, [
+          createGroupingOperator(metadataProvider, formatter, testLocalizedStrings, undefined, [
             async () => ({
               groupingType: "class",
               grouped: [classGroupingNode],
@@ -252,7 +251,7 @@ describe("Grouping", () => {
       const onGroupingNodeCreated = sinon.spy();
       const result = await getObservableResult(
         from([groupedNode]).pipe(
-          createGroupingOperator(metadataProvider, formatter, onGroupingNodeCreated, [
+          createGroupingOperator(metadataProvider, formatter, testLocalizedStrings, onGroupingNodeCreated, [
             async () => ({
               groupingType: "class",
               grouped: [classGroupingNode],
@@ -321,11 +320,11 @@ describe("Grouping", () => {
         }),
       ];
 
-      const result = await createGroupingHandlers(metadataProvider, nodes, formatter);
+      const result = await createGroupingHandlers(metadataProvider, nodes, formatter, testLocalizedStrings);
       expect(createBaseClassGroupingHandlersStub.callCount).to.eq(1);
       expect(createBaseClassGroupingHandlersStub.firstCall).to.be.calledWith(metadataProvider, nodes);
       expect(createPropertiesGroupingHandlersStub.callCount).to.eq(1);
-      expect(createPropertiesGroupingHandlersStub.firstCall).to.be.calledWith(metadataProvider, nodes, formatter);
+      expect(createPropertiesGroupingHandlersStub.firstCall).to.be.calledWith(metadataProvider, nodes, formatter, testLocalizedStrings);
       expect(result.length).to.eq(4);
       expect(baseClassHandlerStub.callCount).to.eq(0);
       await result[0]([]);

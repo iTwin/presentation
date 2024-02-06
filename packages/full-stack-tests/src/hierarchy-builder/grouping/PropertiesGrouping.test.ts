@@ -5,13 +5,9 @@
 
 import { Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
-import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { createLocalizationFunction } from "@itwin/presentation-core-interop";
+import { IModelConnection } from "@itwin/core-frontend";
 import {
-  ECSqlSelectClausePropertiesGroupingParams,
-  IHierarchyLevelDefinitionsFactory,
-  NodeSelectQueryFactory,
-  setLocalizationFunction,
+  ECSqlSelectClausePropertiesGroupingParams, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory,
 } from "@itwin/presentation-hierarchy-builder";
 import { buildIModel, importSchema, insertSubject, withECDb } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
@@ -284,16 +280,18 @@ describe("Stateless hierarchy builder", () => {
         propertyGroups: [{ propertyName: "Description", propertyClassAlias: "this" }],
       };
 
-      const localizationFunction = await createLocalizationFunction(IModelApp.localization);
-      setLocalizationFunction(localizationFunction);
       await validateHierarchy({
-        provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, groupingParams) }),
+        provider: createProvider({
+          imodel,
+          hierarchy: createHierarchyWithSpecifiedGrouping(imodel, groupingParams),
+          localizedStrings: { other: "", unspecified: "NOT SPECIFIED" },
+        }),
         expect: [
           NodeValidators.createForPropertyValueGroupingNode({
             propertyClassName: "BisCore.Subject",
             propertyName: "Description",
             formattedPropertyValue: "",
-            label: "Ñót spêçìfíêd",
+            label: "NOT SPECIFIED",
             children: [
               NodeValidators.createForInstanceNode({
                 instanceKeys: [keys.childSubject1],
@@ -414,13 +412,12 @@ describe("Stateless hierarchy builder", () => {
               return [];
             },
           };
-          const provider = createProvider({ imodel, hierarchy });
-          const localizationFunction = await createLocalizationFunction(IModelApp.localization);
-          setLocalizationFunction(localizationFunction);
+          const provider = createProvider({ imodel, hierarchy, localizedStrings: { other: "OTHER", unspecified: "" } });
           await validateHierarchy({
             provider,
             expect: [
               NodeValidators.createForPropertyOtherValuesGroupingNode({
+                label: "OTHER",
                 children: [NodeValidators.createForInstanceNode({ instanceKeys: [x1] }), NodeValidators.createForInstanceNode({ instanceKeys: [x2] })],
               }),
             ],

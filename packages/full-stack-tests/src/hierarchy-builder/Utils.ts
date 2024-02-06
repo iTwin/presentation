@@ -9,12 +9,8 @@ import { Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createECSqlQueryExecutor, createMetadataProvider as createMetadataProviderInterop } from "@itwin/presentation-core-interop";
 import {
-  createLimitingECSqlQueryExecutor,
-  HierarchyNodeIdentifiersPath,
-  HierarchyProvider,
-  IHierarchyLevelDefinitionsFactory,
-  IPrimitiveValueFormatter,
-  parseFullClassName,
+  createLimitingECSqlQueryExecutor, HierarchyNodeIdentifiersPath, HierarchyProvider, HierarchyProviderLocalizedStrings,
+  IHierarchyLevelDefinitionsFactory, IPrimitiveValueFormatter, parseFullClassName,
 } from "@itwin/presentation-hierarchy-builder";
 
 function createSchemaContext(imodel: IModelConnection | IModelDb | ECDb) {
@@ -53,14 +49,16 @@ export function createProvider(props: {
   imodel: IModelConnection | IModelDb | ECDb;
   hierarchy: IHierarchyLevelDefinitionsFactory;
   formatterFactory?: (schemas: SchemaContext) => IPrimitiveValueFormatter;
+  localizedStrings?: HierarchyProviderLocalizedStrings;
   filteredNodePaths?: HierarchyNodeIdentifiersPath[];
 }) {
-  const { imodel, hierarchy, formatterFactory, filteredNodePaths } = props;
+  const { imodel, hierarchy, formatterFactory, localizedStrings, filteredNodePaths } = props;
   return new HierarchyProvider({
     metadataProvider: createMetadataProvider(imodel),
     hierarchyDefinition: hierarchy,
     queryExecutor: createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 123),
     formatter: formatterFactory ? formatterFactory(createSchemaContext(imodel)) : undefined,
+    localizedStrings,
     filtering: filteredNodePaths ? { paths: filteredNodePaths } : undefined,
   });
 }

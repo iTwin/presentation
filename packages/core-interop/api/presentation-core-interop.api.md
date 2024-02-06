@@ -15,8 +15,6 @@ import { IMetadataProvider } from '@itwin/presentation-hierarchy-builder';
 import { InstancesNodeKey } from '@itwin/presentation-hierarchy-builder';
 import { IPrimitiveValueFormatter } from '@itwin/presentation-hierarchy-builder';
 import { KeySet } from '@itwin/presentation-common';
-import { Localization } from '@itwin/core-common';
-import { LocalizationFunction } from '@itwin/presentation-hierarchy-builder';
 import { QueryBinder } from '@itwin/core-common';
 import { QueryOptions } from '@itwin/core-common';
 import { RulesetVariable } from '@itwin/presentation-common';
@@ -44,9 +42,6 @@ export interface CreateHierarchyLevelDescriptorProps<TIModel extends ICoreECSqlR
         key: InstancesNodeKey | string;
     }) | undefined;
 }
-
-// @beta
-export function createLocalizationFunction(localization: Localization): Promise<LocalizationFunction>;
 
 // @beta
 export function createLogger(): ILogger;

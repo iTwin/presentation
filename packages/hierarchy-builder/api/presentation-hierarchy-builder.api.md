@@ -731,12 +731,19 @@ export class HierarchyProvider {
 }
 
 // @beta
+export interface HierarchyProviderLocalizedStrings {
+    other: string;
+    unspecified: string;
+}
+
+// @beta
 export interface HierarchyProviderProps {
     filtering?: {
         paths: HierarchyNodeIdentifiersPath[];
     };
     formatter?: IPrimitiveValueFormatter;
     hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
+    localizedStrings?: HierarchyProviderLocalizedStrings;
     metadataProvider: IMetadataProvider;
     queryConcurrency?: number;
     queryExecutor: ILimitingECSqlQueryExecutor;
@@ -845,12 +852,6 @@ export interface LabelGroupingNodeKey extends BaseGroupingNodeKey {
     label: string;
     type: "label-grouping";
 }
-
-// @beta
-export const LOCALIZATION_NAMESPACE = "PresentationHierarchyBuilder";
-
-// @beta
-export type LocalizationFunction = (input: string) => string;
 
 // @beta (undocumented)
 export type LogFunction = (category: string, message: string) => void;
@@ -1086,9 +1087,6 @@ export class RowsLimitExceededError extends Error {
     // (undocumented)
     readonly limit: number;
 }
-
-// @beta
-export function setLocalizationFunction(localizationFunction?: LocalizationFunction): void;
 
 // @beta
 export function setLogger(logger: ILogger | undefined): void;
