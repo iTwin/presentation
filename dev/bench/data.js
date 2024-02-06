@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1707133520396,
+  "lastUpdate": 1707207123684,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -750,6 +750,42 @@ window.BENCHMARK_DATA = {
             "value": 236,
             "unit": "ms",
             "extra": "min: 236\nmax: 236\ncount: 1\nmean: 236\np50: 237.5\nmedian: 237.5\np75: 237.5\np90: 237.5\np95: 237.5\np99: 237.5\np999: 237.5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "100586436+JonasDov@users.noreply.github.com",
+            "name": "JonasDov",
+            "username": "JonasDov"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9835235fd18b3eb0f5bce5a0d3d17009e6add749",
+          "message": "Change child nodes cache to use Dictionary instead of Map (#397)\n\n* Change map to dictionary\r\n\r\n* Add changeset and run extract api\r\n\r\n* Fix sorting problem\r\n\r\n* Resolve comments\r\n\r\n* Resolve comment",
+          "timestamp": "2024-02-06T10:10:55+02:00",
+          "tree_id": "673ec9e060ef12bc7af3279dfe825b2870f8843d",
+          "url": "https://github.com/iTwin/presentation/commit/9835235fd18b3eb0f5bce5a0d3d17009e6add749"
+        },
+        "date": 1707207122703,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Initial Models Tree Load: Baytown.bim",
+            "value": 482,
+            "unit": "ms",
+            "extra": "min: 482\nmax: 482\ncount: 1\nmean: 482\np50: 478.3\nmedian: 478.3\np75: 478.3\np90: 478.3\np95: 478.3\np99: 478.3\np999: 478.3"
+          },
+          {
+            "name": "Full Models Tree Load: Baytown.bim",
+            "value": 1854,
+            "unit": "ms",
+            "extra": "min: 1854\nmax: 1854\ncount: 1\nmean: 1854\np50: 1863.5\nmedian: 1863.5\np75: 1863.5\np90: 1863.5\np95: 1863.5\np99: 1863.5\np999: 1863.5"
           }
         ]
       }
