@@ -1024,9 +1024,15 @@ describe("PropertiesGrouping", () => {
                 type: "property-grouping:other",
                 groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
               },
-              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, {
-                type: "property-grouping:other",
-              }] })),
+              children: nodes.map((n) => ({
+                ...n,
+                parentKeys: [
+                  ...n.parentKeys,
+                  {
+                    type: "property-grouping:other",
+                  },
+                ],
+              })),
             }),
           ],
           ungrouped: [],
@@ -1102,9 +1108,15 @@ describe("PropertiesGrouping", () => {
                 type: "property-grouping:other",
                 groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
               },
-              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, {
-                type: "property-grouping:other",
-              }] })),
+              children: nodes.map((n) => ({
+                ...n,
+                parentKeys: [
+                  ...n.parentKeys,
+                  {
+                    type: "property-grouping:other",
+                  },
+                ],
+              })),
             }),
           ],
           ungrouped: [],
@@ -1142,7 +1154,7 @@ describe("PropertiesGrouping", () => {
           propertyName: "PropertyName",
           propertyClassName: "TestSchema.Class",
           fromValue: 1,
-          toValue: 5
+          toValue: 5,
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
@@ -1251,7 +1263,7 @@ describe("PropertiesGrouping", () => {
           propertyName: "PropertyName",
           propertyClassName: "TestSchema.Class",
           fromValue: 1,
-          toValue: 5
+          toValue: 5,
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
@@ -1311,7 +1323,7 @@ describe("PropertiesGrouping", () => {
           propertyName: "PropertyName",
           propertyClassName: "TestSchema.Class",
           fromValue: 1,
-          toValue: 5
+          toValue: 5,
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
@@ -1375,7 +1387,7 @@ describe("PropertiesGrouping", () => {
           propertyName: "PropertyName",
           propertyClassName: "TestSchema.Class",
           fromValue: 1,
-          toValue: 4
+          toValue: 4,
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
@@ -1483,7 +1495,7 @@ describe("PropertiesGrouping", () => {
               label: "5 - 10",
               key: {
                 ...expectedGroupingNodeKey1,
-                groupedInstanceKeys: nodes[0].key.instanceKeys
+                groupedInstanceKeys: nodes[0].key.instanceKeys,
               },
               children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, expectedGroupingNodeKey1] }],
             }),

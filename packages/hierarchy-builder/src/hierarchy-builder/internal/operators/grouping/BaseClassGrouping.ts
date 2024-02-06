@@ -55,7 +55,7 @@ export async function createBaseClassGroupsForSingleBaseClass(
       label: baseECClass.label ?? baseECClass.name,
       key: {
         ...groupingNodeKey,
-        groupedInstanceKeys: groupedNodes.flatMap((groupedInstanceNode) => groupedInstanceNode.key.instanceKeys)
+        groupedInstanceKeys: groupedNodes.flatMap((groupedInstanceNode) => groupedInstanceNode.key.instanceKeys),
       },
       parentKeys: [...groupedNodes[0].parentKeys],
       children: groupedNodes.map((gn) => ({ ...gn, parentKeys: [...gn.parentKeys, groupingNodeKey] })),

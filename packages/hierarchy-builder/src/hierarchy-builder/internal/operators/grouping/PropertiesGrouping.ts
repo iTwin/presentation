@@ -195,10 +195,13 @@ function createGroupingNodes(groupings: PropertyGroupingInformation): GroupingHa
       label: entry.displayablePropertyGroupingInfo.label,
       key: {
         ...entry.displayablePropertyGroupingInfo.propertyGroupingNodeKey,
-        groupedInstanceKeys: entry.groupedNodes.flatMap((groupedInstanceNode) => groupedInstanceNode.key.instanceKeys)
+        groupedInstanceKeys: entry.groupedNodes.flatMap((groupedInstanceNode) => groupedInstanceNode.key.instanceKeys),
       },
       parentKeys: groupedNodeParentKeys,
-      children: entry.groupedNodes.map((gn) => ({ ...gn, parentKeys: [...groupedNodeParentKeys, entry.displayablePropertyGroupingInfo.propertyGroupingNodeKey] })),
+      children: entry.groupedNodes.map((gn) => ({
+        ...gn,
+        parentKeys: [...groupedNodeParentKeys, entry.displayablePropertyGroupingInfo.propertyGroupingNodeKey],
+      })),
     });
   });
   return { grouped: sortNodesByLabel(groupedNodes), ungrouped: groupings.ungrouped, groupingType: "property" };
