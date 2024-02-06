@@ -226,6 +226,7 @@ export type FilterablePresentationTreeNodeItem = PresentationTreeNodeItem & {
 
 // @beta
 export interface FilterableTreeProps {
+    // (undocumented)
     filterDialog: React.ReactNode | null;
     // (undocumented)
     onClearFilterClick: (nodeId: string) => void;

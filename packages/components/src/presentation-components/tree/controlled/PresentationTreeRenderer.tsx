@@ -44,7 +44,6 @@ export interface PresentationTreeRendererProps extends TreeRendererProps {
 export interface FilterableTreeProps {
   onFilterClick: (nodeId: string) => void;
   onClearFilterClick: (nodeId: string) => void;
-  /** Reference of the document body. Needs to be passed to the root of the tree for the filter dialog to be placed separately from the tree context. */
   filterDialog: React.ReactNode | null;
 }
 
