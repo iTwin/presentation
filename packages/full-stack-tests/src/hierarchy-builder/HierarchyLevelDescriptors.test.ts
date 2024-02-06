@@ -10,18 +10,12 @@ import { Presentation as PresentationBackend } from "@itwin/presentation-backend
 import { Descriptor, PropertyValueFormat } from "@itwin/presentation-common";
 import { createHierarchyLevelDescriptor } from "@itwin/presentation-core-interop";
 import { Presentation as PresentationFrontend } from "@itwin/presentation-frontend";
-import {
-  HierarchyNode,
-  IHierarchyLevelDefinitionsFactory,
-  InstanceKey,
-  NodeSelectQueryFactory,
-  parseFullClassName,
-} from "@itwin/presentation-hierarchy-builder";
+import { HierarchyNode, IHierarchyLevelDefinitionsFactory, InstanceKey, NodeSelectQueryFactory } from "@itwin/presentation-hierarchy-builder";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { setupOutputFileLocation } from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils";
 import { initialize, terminate } from "../IntegrationTests";
 import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation";
-import { createMetadataProvider, createProvider } from "./Utils";
+import { createClassECSqlSelector, createMetadataProvider, createProvider } from "./Utils";
 
 describe("Stateless hierarchy builder", () => {
   describe("Hierarchy level descriptors", () => {
@@ -254,8 +248,3 @@ describe("Stateless hierarchy builder", () => {
     });
   });
 });
-
-function createClassECSqlSelector(fullClassName: string) {
-  const { schemaName, className } = parseFullClassName(fullClassName);
-  return `[${schemaName}].[${className}]`;
-}
