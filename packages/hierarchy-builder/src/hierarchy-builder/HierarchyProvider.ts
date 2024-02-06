@@ -20,7 +20,7 @@ import {
   tap,
 } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
-import { assert, LRUCache, LRUMap, omit } from "@itwin/core-bentley";
+import { assert, Dictionary, LRUCache, LRUMap, omit } from "@itwin/core-bentley";
 import { IMetadataProvider } from "./ECMetadata";
 import { GenericInstanceFilter } from "./GenericInstanceFilter";
 import { DefineHierarchyLevelProps, HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
@@ -28,6 +28,7 @@ import { RowsLimitExceededError } from "./HierarchyErrors";
 import {
   HierarchyNode,
   HierarchyNodeIdentifiersPath,
+  HierarchyNodeKey,
   ParsedHierarchyNode,
   ProcessedCustomHierarchyNode,
   ProcessedGroupingHierarchyNode,
@@ -36,7 +37,6 @@ import {
 } from "./HierarchyNode";
 import { LOGGING_NAMESPACE as CommonLoggingNamespace, getClass, hasChildren } from "./internal/Common";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
-import { createLimitingECSqlQueryExecutor } from "./internal/LimitingECSqlQueryExecutor";
 import { createDetermineChildrenOperator } from "./internal/operators/DetermineChildren";
 import { createGroupingOperator } from "./internal/operators/Grouping";
 import { createHideIfNoChildrenOperator } from "./internal/operators/HideIfNoChildren";
@@ -46,13 +46,13 @@ import { shareReplayWithErrors } from "./internal/Rxjs";
 import { SubscriptionScheduler } from "./internal/SubscriptionScheduler";
 import { TreeQueryResultsReader } from "./internal/TreeNodesReader";
 import { getLogger } from "./Logging";
-import { IECSqlQueryExecutor, ILimitingECSqlQueryExecutor } from "./queries/ECSqlCore";
+import { ILimitingECSqlQueryExecutor } from "./queries/LimitingECSqlQueryExecutor";
 import { ConcatenatedValue, ConcatenatedValuePart } from "./values/ConcatenatedValue";
 import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "./values/Formatting";
 import { TypedPrimitiveValue } from "./values/Values";
 
 const LOGGING_NAMESPACE = `${CommonLoggingNamespace}.HierarchyProvider`;
-const DEFAULT_ROWS_LIMIT = 1000;
+const DEFAULT_QUERY_CONCURRENCY = 10;
 
 /**
  * A type of [[HierarchyNode]] that doesn't know about its children and is an input when requesting
@@ -72,8 +72,11 @@ export interface HierarchyProviderProps {
   /** A definition that describes how the hierarchy should be created. */
   hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
 
-  /** IModel ECSQL query executor used to run queries. */
-  queryExecutor: IECSqlQueryExecutor;
+  /**
+   * IModel ECSQL query executor used to run queries.
+   * @see createLimitingECSqlQueryExecutor
+   */
+  queryExecutor: ILimitingECSqlQueryExecutor;
   /** Maximum number of queries that the provider attempts to execute in parallel. Defaults to `10`. */
   queryConcurrency?: number;
 
@@ -99,7 +102,13 @@ export interface GetHierarchyNodesProps {
   parentNode: ParentHierarchyNode | undefined;
   /** Optional hierarchy level filter. Has no effect if `parentNode` is a [[GroupingNode]]. */
   instanceFilter?: GenericInstanceFilter;
-  /** Optional hierarchy level size limit. Default limit is `1000`. Has no effect if `parentNode` is a [[GroupingNode]]. */
+  /**
+   * Optional hierarchy level size limit override. This value is passed to `ILimitingECSqlQueryExecutor` used
+   * by this provider to override query rows limit per hierarchy level. If not provided, defaults to whatever
+   * is used by the limiting query executor.
+   *
+   * Has no effect if `parentNode` is a [[GroupingNode]].
+   */
   hierarchyLevelSizeLimit?: number | "unbounded";
 }
 
@@ -124,10 +133,10 @@ export class HierarchyProvider {
   public readonly hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
 
   /**
-   * A limiting ECSQL query executor used by this provider. The executor is configured to use the default
-   * rows limit of `1000`.
+   * A limiting ECSQL query executor used by this provider.
+   * @see HierarchyProviderProps.queryExecutor
    */
-  public readonly limitingQueryExecutor: ILimitingECSqlQueryExecutor;
+  public readonly queryExecutor: ILimitingECSqlQueryExecutor;
 
   public constructor(props: HierarchyProviderProps) {
     this._metadataProvider = props.metadataProvider;
@@ -146,40 +155,37 @@ export class HierarchyProvider {
     this._valuesFormatter = props?.formatter ?? createDefaultValueFormatter();
     this._queryScheduler = new SubscriptionScheduler(props.queryConcurrency ?? DEFAULT_QUERY_CONCURRENCY);
     this._nodesCache = new ChildNodesCache();
-    this.limitingQueryExecutor = createLimitingECSqlQueryExecutor(props.queryExecutor, DEFAULT_ROWS_LIMIT);
+    this.queryExecutor = props.queryExecutor;
+  }
+
+  /**
+   * Sets [[HierarchyProvider]] values formatter that formats nodes' labels. If provided `undefined`, then defaults to the
+   * result of [[createDefaultValueFormatter]] called with default parameters.
+   */
+  public setFormatter(formatter: IPrimitiveValueFormatter | undefined) {
+    this._valuesFormatter = formatter ?? createDefaultValueFormatter();
   }
 
   /** @internal */
   public get queryScheduler(): { schedule: ILimitingECSqlQueryExecutor["createQueryReader"] } {
     return {
       schedule: (query, config) =>
-        eachValueFrom(this._queryScheduler.scheduleSubscription(defer(() => from(this.limitingQueryExecutor.createQueryReader(query, config))))),
+        eachValueFrom(this._queryScheduler.scheduleSubscription(defer(() => from(this.queryExecutor.createQueryReader(query, config))))),
     };
   }
 
   private onGroupingNodeCreated(groupingNode: ProcessedGroupingHierarchyNode, props: GetHierarchyNodesProps) {
-    const childNodesObs = from(groupingNode.children);
-    this._nodesCache.add(
-      { ...props, parentNode: groupingNode },
-      {
-        // grouping operators are run on processed, but not finalized nodes, so the child nodes here
-        // are processed, but not finalized
-        processedNodes: childNodesObs,
-        finalizedNodes: this.createFinalizedNodesObservable(childNodesObs),
-        hasNodes: of(groupingNode.children.length > 0),
-      },
-    );
+    doLog("OnGroupingNodeCreated", `Cached grouped nodes observable for ${groupingNode.label}`);
+    this._nodesCache.add({ ...props, parentNode: groupingNode }, { observable: from(groupingNode.children), needsProcessing: false });
   }
 
-  private createPreProcessedNodesObservable(
-    props: DefineHierarchyLevelProps & { hierarchyLevelSizeLimit?: number | "unbounded" },
-  ): Observable<ProcessedHierarchyNode> {
+  private createParsedQueryNodesObservable(props: DefineHierarchyLevelProps & { hierarchyLevelSizeLimit?: number | "unbounded" }): ParsedQueryNodesObservable {
     // stream hierarchy level definitions in order
     const definitions = from(this.hierarchyDefinition.defineHierarchyLevel(props)).pipe(
       concatMap((hierarchyLevelDefinition) => from(hierarchyLevelDefinition)),
     );
-    // pipe definitions to nodes
-    const directNodes = definitions.pipe(
+    // pipe definitions to nodes and put "share replay" on it
+    return definitions.pipe(
       concatMap((def): ObservableInput<ParsedHierarchyNode> => {
         if (HierarchyNodesDefinition.isCustomNode(def)) {
           return of(def.node);
@@ -187,13 +193,20 @@ export class HierarchyProvider {
         return this._queryScheduler.scheduleSubscription(
           of(def.query).pipe(
             log((query) => `Query direct nodes for parent ${props.parentNode ? JSON.stringify(props.parentNode) : "<root>"}: ${query.ecsql}`),
-            mergeMap((query) => defer(() => from(this._queryReader.read(this.limitingQueryExecutor, query, props.hierarchyLevelSizeLimit)))),
+            mergeMap((query) => defer(() => from(this._queryReader.read(this.queryExecutor, query, props.hierarchyLevelSizeLimit)))),
           ),
         );
       }),
+      shareReplayWithErrors(),
     );
+  }
+
+  private createPreProcessedNodesObservable(
+    queryNodesObservable: ParsedQueryNodesObservable,
+    props: GetHierarchyNodesProps,
+  ): Observable<ProcessedHierarchyNode> {
     // pre-process
-    const preProcessedNodes = directNodes.pipe(
+    const preProcessedNodes = queryNodesObservable.pipe(
       // set parent node keys on the parsed node
       map((node) => ({ ...node, parentKeys: createParentNodeKeysList(props.parentNode) })),
       // format `ConcatenatedValue` labels into string labels
@@ -203,31 +216,25 @@ export class HierarchyProvider {
     );
     // handle nodes' hiding
     const nodesAfterHiding = preProcessedNodes.pipe(
-      createHideIfNoChildrenOperator((n) => this.ensureChildNodesObservables({ ...props, parentNode: n }).hasNodes, false),
-      createHideNodesInHierarchyOperator((n) => this.ensureChildNodesObservables({ ...props, parentNode: n }).processedNodes, false),
+      createHideIfNoChildrenOperator((n) => this.getChildNodesObservables({ ...props, parentNode: n }).hasNodes, false),
+      createHideNodesInHierarchyOperator((n) => this.getChildNodesObservables({ ...props, parentNode: n }).processedNodes, false),
     );
-    // cache observable result & return
-    return nodesAfterHiding.pipe(
-      // cache to avoid querying and pre-processing more than once
-      shareReplayWithErrors(),
-    );
+    return nodesAfterHiding;
   }
 
   private createProcessedNodesObservable(
     preprocessedNodesObservable: Observable<ProcessedHierarchyNode>,
-    props: DefineHierarchyLevelProps,
+    props: GetHierarchyNodesProps,
   ): Observable<ProcessedHierarchyNode> {
     return preprocessedNodesObservable.pipe(
       sortNodesByLabelOperator,
       createGroupingOperator(this._metadataProvider, this._valuesFormatter, (gn) => this.onGroupingNodeCreated(gn, props)),
-      // cache to avoid expensive processing more than once
-      shareReplayWithErrors(),
     );
   }
 
   private createFinalizedNodesObservable(processedNodesObservable: Observable<ProcessedHierarchyNode>): Observable<HierarchyNode> {
     return processedNodesObservable.pipe(
-      createDetermineChildrenOperator((n) => this.ensureChildNodesObservables({ parentNode: n }).hasNodes),
+      createDetermineChildrenOperator((n) => this.getChildNodesObservables({ parentNode: n }).hasNodes),
       postProcessNodes(this.hierarchyDefinition),
       map((n): HierarchyNode => {
         const node = { ...n, children: hasChildren(n) };
@@ -253,39 +260,53 @@ export class HierarchyProvider {
     );
   }
 
-  private setupObservables(props: DefineHierarchyLevelProps & { hierarchyLevelSizeLimit?: number | "unbounded" }): ChildNodesObservables {
-    const initialNodes = this.createPreProcessedNodesObservable(props);
-    const processedNodes = this.createProcessedNodesObservable(initialNodes, props);
-    const finalizedNodes = this.createFinalizedNodesObservable(processedNodes);
-    const hasNodes = this.createHasNodesObservable(initialNodes);
-    return { processedNodes, finalizedNodes, hasNodes };
-  }
-
-  private ensureChildNodesObservables(props: GetHierarchyNodesProps): ChildNodesObservables {
+  private getCachedObservableEntry(props: GetHierarchyNodesProps): CachedNodesObservableEntry {
     const { parentNode, ...restProps } = props;
     const parentNodeLabel = parentNode ? parentNode.label : "<root>";
     const cached = this._nodesCache.get(props);
     if (cached) {
       // istanbul ignore next
-      doLog("EnsureChildNodesObservables", `Found nodes observables for ${parentNodeLabel}`);
+      doLog("GetCachedObservableEntry", `Found query nodes observable for ${parentNodeLabel}`);
       return cached;
     }
 
     assert(
       !parentNode || HierarchyNode.isCustom(parentNode) || HierarchyNode.isInstancesNode(parentNode),
-      `Grouping nodes are expected to always have their children cached as soon as they're created. Offending node: "${parentNodeLabel}".`,
+      `Grouping nodes are expected to always have their children cached as soon as they're created. Offending node: ${JSON.stringify(parentNode)}.`,
     );
 
-    const value = this.setupObservables({ ...restProps, parentNode });
+    const value = { observable: this.createParsedQueryNodesObservable({ ...restProps, parentNode }), needsProcessing: true as const };
     this._nodesCache.add(props, value);
-    doLog("EnsureChildNodesObservables", `Saved nodes observables for ${parentNodeLabel}`);
+    doLog("GetCachedObservableEntry", `Saved query nodes observable for ${parentNodeLabel}`);
     return value;
   }
 
+  private getChildNodesObservables(props: GetHierarchyNodesProps & { hierarchyLevelSizeLimit?: number | "unbounded" }) {
+    const entry = this.getCachedObservableEntry(props);
+    const processed = entry.needsProcessing
+      ? (() => {
+          const pre = this.createPreProcessedNodesObservable(entry.observable, props);
+          const post = this.createProcessedNodesObservable(pre, props);
+          return { pre, post };
+        })()
+      : {
+          pre: entry.observable,
+          post: entry.observable,
+        };
+    return {
+      processedNodes: processed.post,
+      hasNodes: this.createHasNodesObservable(processed.pre),
+      finalizedNodes: this.createFinalizedNodesObservable(processed.post),
+    };
+  }
+
+  /**
+   * Creates and runs a query based on provided props, then processes retrieved nodes and returns them.
+   */
   public async getNodes(props: GetHierarchyNodesProps): Promise<HierarchyNode[]> {
     return new Promise((resolve, reject) => {
       const nodes = new Array<HierarchyNode>();
-      this.ensureChildNodesObservables(props).finalizedNodes.subscribe({
+      this.getChildNodesObservables(props).finalizedNodes.subscribe({
         next(node) {
           nodes.push(node);
         },
@@ -298,9 +319,17 @@ export class HierarchyProvider {
       });
     });
   }
-}
 
-const DEFAULT_QUERY_CONCURRENCY = 10;
+  /**
+   * A function that should be called when the underlying data source, used by `HierarchyProviderProps.metadataProvider`,
+   * `HierarchyProviderProps.queryExecutor` or `HierarchyProviderProps.hierarchyDefinition`, changes.
+   *
+   * Calling the function invalidates internal caches to make sure fresh data is retrieved on new requests.
+   */
+  public notifyDataSourceChanged() {
+    this._nodesCache.clear();
+  }
+}
 
 function preProcessNodes(hierarchyFactory: IHierarchyLevelDefinitionsFactory) {
   return hierarchyFactory.preProcessNode
@@ -376,26 +405,54 @@ function createParentNodeKeysList(parentNode: ParentHierarchyNode | undefined) {
   return [...parentNode.parentKeys, parentNode.key];
 }
 
-interface ChildNodesObservables {
-  processedNodes: Observable<ProcessedHierarchyNode>;
-  finalizedNodes: Observable<HierarchyNode>;
-  hasNodes: Observable<boolean>;
+type ParsedQueryNodesObservable = Observable<ParsedHierarchyNode>;
+type ProcessedNodesObservable = Observable<ProcessedHierarchyNode>;
+type CachedNodesObservableEntry =
+  | { observable: ParsedQueryNodesObservable; needsProcessing: true }
+  | { observable: ProcessedNodesObservable; needsProcessing: false };
+interface ChildNodesCacheEntry {
+  /** Stores observables for the default case - no instance filter or custom limit for the hierarchy level. */
+  primary: CachedNodesObservableEntry | undefined;
+  /** Stores a limited number of variations with custom instance filter and/or custom limit for the hierarchy level. */
+  variations: LRUCache<string, CachedNodesObservableEntry>;
 }
 class ChildNodesCache {
-  private _map = new Map<string, { primary: ChildNodesObservables | undefined; variations: LRUCache<string, ChildNodesObservables> }>();
+  private _map = new Dictionary<HierarchyNodeKey[], ChildNodesCacheEntry>((lhs, rhs) => this.compareHierarchyNodeKeys(lhs, rhs));
+
+  private createVariationKey(props: GetHierarchyNodesProps) {
+    const { instanceFilter, parentNode } = props;
+    let { hierarchyLevelSizeLimit } = props;
+    if (parentNode && HierarchyNode.isGroupingNode(parentNode)) {
+      hierarchyLevelSizeLimit = undefined;
+    }
+    if (instanceFilter === undefined && hierarchyLevelSizeLimit === undefined) {
+      return undefined;
+    }
+    return JSON.stringify({ instanceFilter, hierarchyLevelSizeLimit });
+  }
+
+  private compareHierarchyNodeKeys(lhs: HierarchyNodeKey[], rhs: HierarchyNodeKey[]) {
+    if (lhs.length !== rhs.length) {
+      return lhs.length - rhs.length;
+    }
+    for (let i = 0; i < lhs.length; ++i) {
+      const keysCompareResult = HierarchyNodeKey.compare(lhs[i], rhs[i]);
+      // istanbul ignore if
+      if (keysCompareResult !== 0) {
+        return keysCompareResult;
+      }
+    }
+    return 0;
+  }
 
   private parseRequestProps(requestProps: GetHierarchyNodesProps) {
     const { parentNode: node } = requestProps;
-    const primaryKey = node
-      ? `${JSON.stringify(node.parentKeys)}+${JSON.stringify(node.key)}+${
-          !HierarchyNode.isGroupingNode(node) ? JSON.stringify(requestProps.hierarchyLevelSizeLimit) : ""
-        }`
-      : "";
-    const variationKey = requestProps.instanceFilter ? JSON.stringify(requestProps.instanceFilter) : undefined;
+    const primaryKey = node ? [...node.parentKeys, node.key] : [];
+    const variationKey = this.createVariationKey(requestProps);
     return { primaryKey, variationKey };
   }
 
-  public add(requestProps: GetHierarchyNodesProps, value: ChildNodesObservables) {
+  public add(requestProps: GetHierarchyNodesProps, value: CachedNodesObservableEntry) {
     const { primaryKey, variationKey } = this.parseRequestProps(requestProps);
     let entry = this._map.get(primaryKey);
     if (!entry) {
@@ -405,18 +462,21 @@ class ChildNodesCache {
     if (variationKey) {
       entry.variations.set(variationKey, value);
     } else {
-      assert(!entry.primary);
       entry.primary = value;
     }
   }
 
-  public get(requestProps: GetHierarchyNodesProps): ChildNodesObservables | undefined {
+  public get(requestProps: GetHierarchyNodesProps): CachedNodesObservableEntry | undefined {
     const { primaryKey, variationKey } = this.parseRequestProps(requestProps);
     const entry = this._map.get(primaryKey);
-    if (variationKey) {
-      return entry?.variations.get(variationKey);
+    if (!entry) {
+      return undefined;
     }
-    return entry?.primary;
+    return variationKey ? entry.variations.get(variationKey) : entry.primary;
+  }
+
+  public clear() {
+    this._map.clear();
   }
 }
 

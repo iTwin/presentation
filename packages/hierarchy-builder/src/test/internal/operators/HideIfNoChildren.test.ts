@@ -2,13 +2,12 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-
 import { expect } from "chai";
 import { EMPTY, from, of, Subject } from "rxjs";
 import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
 import { createHideIfNoChildrenOperator, LOGGING_NAMESPACE } from "../../../hierarchy-builder/internal/operators/HideIfNoChildren";
-import { createTestProcessedCustomNode, getObservableResult, setupLogging } from "../../Utils";
+import { createTestProcessedCustomNode, getObservableResult, setupLogging, waitFor } from "../../Utils";
 
 describe("HideIfNoChildrenOperator", () => {
   before(() => {
@@ -91,8 +90,7 @@ describe("HideIfNoChildrenOperator", () => {
     });
 
     const promise = getObservableResult(from([nodeA, nodeB]).pipe(createHideIfNoChildrenOperator(hasNodes, false)));
-
-    expect(hasNodes).to.be.calledTwice;
+    await waitFor(() => expect(hasNodes).to.be.calledTwice);
     expect(hasNodes.firstCall).to.be.calledWithExactly(nodeA);
     expect(hasNodes.secondCall).to.be.calledWithExactly(nodeB);
 
@@ -134,7 +132,7 @@ describe("HideIfNoChildrenOperator", () => {
 
     const promise = getObservableResult(from([nodeA, nodeB]).pipe(createHideIfNoChildrenOperator(hasNodes, true)));
 
-    expect(hasNodes).to.be.calledOnce;
+    await waitFor(() => expect(hasNodes).to.be.calledOnce);
     expect(hasNodes.firstCall).to.be.calledWithExactly(nodeA);
     aHasNodesSubject.next(true);
     aHasNodesSubject.complete();
@@ -149,5 +147,13 @@ describe("HideIfNoChildrenOperator", () => {
       { ...nodeA, children: true },
       { ...nodeB, children: true },
     ]);
+  });
+
+  it("subscribes to input observable once", async () => {
+    const processedHierarchyNodesObservable = from([]);
+    const subscriptionSpy = sinon.spy(processedHierarchyNodesObservable, "subscribe");
+    const promise = processedHierarchyNodesObservable.pipe(createHideIfNoChildrenOperator(() => of(false), true));
+    promise.subscribe();
+    await waitFor(() => expect(subscriptionSpy).to.have.been.calledOnce);
   });
 });

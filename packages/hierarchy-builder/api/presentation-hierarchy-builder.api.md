@@ -112,6 +112,9 @@ export interface CreateInstanceLabelSelectClauseProps {
 }
 
 // @beta
+export function createLimitingECSqlQueryExecutor(baseExecutor: IECSqlQueryExecutor, defaultLimit: number | "unbounded"): ILimitingECSqlQueryExecutor;
+
+// @beta
 export interface CustomHierarchyNodeDefinition {
     node: ParsedCustomHierarchyNode;
 }
@@ -642,6 +645,7 @@ export type HierarchyNodeKey = StandardHierarchyNodeKey | string;
 
 // @beta (undocumented)
 export namespace HierarchyNodeKey {
+    export function compare(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): number;
     export function equals(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): boolean;
     export function isClassGrouping(key: HierarchyNodeKey): key is ClassGroupingNodeKey;
     export function isCustom(key: HierarchyNodeKey): key is string;
@@ -717,14 +721,15 @@ export namespace HierarchyNodesDefinition {
 // @beta
 export class HierarchyProvider {
     constructor(props: HierarchyProviderProps);
-    // (undocumented)
     getNodes(props: GetHierarchyNodesProps): Promise<HierarchyNode[]>;
     readonly hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
-    readonly limitingQueryExecutor: ILimitingECSqlQueryExecutor;
+    notifyDataSourceChanged(): void;
+    readonly queryExecutor: ILimitingECSqlQueryExecutor;
     // @internal (undocumented)
     get queryScheduler(): {
         schedule: ILimitingECSqlQueryExecutor["createQueryReader"];
     };
+    setFormatter(formatter: IPrimitiveValueFormatter | undefined): void;
 }
 
 // @beta
@@ -736,7 +741,7 @@ export interface HierarchyProviderProps {
     hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
     metadataProvider: IMetadataProvider;
     queryConcurrency?: number;
-    queryExecutor: IECSqlQueryExecutor;
+    queryExecutor: ILimitingECSqlQueryExecutor;
 }
 
 // @beta
@@ -811,6 +816,7 @@ export interface InstanceKey {
 
 // @beta (undocumented)
 export namespace InstanceKey {
+    export function compare(lhs: InstanceKey, rhs: InstanceKey): number;
     export function equals(lhs: InstanceKey, rhs: InstanceKey): boolean;
 }
 

@@ -106,16 +106,20 @@ export function mergeNodes<TNode extends ProcessedCustomHierarchyNode | Processe
   assert(typeof lhs.key === typeof rhs.key);
   const mergedProcessingParams = mergeNodeHandlingParams(lhs.processingParams, rhs.processingParams);
   const mergedChildren = lhs.children === true || rhs.children === true ? true : lhs.children === false && rhs.children === false ? false : undefined;
-  return {
+  const mergedNode = {
+    ...lhs,
+    ...rhs,
     label: lhs.label,
     key: mergeNodeKeys(lhs.key, rhs.key),
     parentKeys: mergeParentNodeKeys(lhs.parentKeys, rhs.parentKeys),
-    ...(mergedChildren !== undefined ? { children: mergedChildren } : undefined),
-    ...(mergedProcessingParams ? { processingParams: mergedProcessingParams } : undefined),
-    ...(lhs.autoExpand || rhs.autoExpand ? { autoExpand: lhs.autoExpand || rhs.autoExpand } : undefined),
-    ...(lhs.extendedData || rhs.extendedData ? { extendedData: { ...lhs.extendedData, ...rhs.extendedData } } : undefined),
-    ...(lhs.supportsFiltering && rhs.supportsFiltering ? { supportsFiltering: true } : undefined),
   } as TNode;
+  // Remove specific properties or change their values based on lhs and rhs nodes
+  mergedChildren !== undefined ? (mergedNode.children = mergedChildren) : delete mergedNode.children;
+  mergedProcessingParams ? (mergedNode.processingParams = mergedProcessingParams) : delete mergedNode.processingParams;
+  lhs.autoExpand || rhs.autoExpand ? (mergedNode.autoExpand = true) : delete mergedNode.autoExpand;
+  lhs.extendedData || rhs.extendedData ? (mergedNode.extendedData = { ...lhs.extendedData, ...rhs.extendedData }) : delete mergedNode.extendedData;
+  lhs.supportsFiltering && rhs.supportsFiltering ? (mergedNode.supportsFiltering = true) : delete mergedNode.supportsFiltering;
+  return mergedNode;
 }
 
 /** @internal */

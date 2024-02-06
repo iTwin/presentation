@@ -16,7 +16,14 @@ import {
   KeySet,
   Ruleset,
 } from "@itwin/presentation-common";
-import { DefineHierarchyLevelProps, HierarchyNode, HierarchyProvider, InstanceKey, InstancesNodeKey } from "@itwin/presentation-hierarchy-builder";
+import {
+  DefineHierarchyLevelProps,
+  ECSqlQueryDef,
+  HierarchyNode,
+  HierarchyProvider,
+  InstanceKey,
+  InstancesNodeKey,
+} from "@itwin/presentation-hierarchy-builder";
 import { createHierarchyLevelDescriptor } from "../core-interop/HierarchyLevelDescriptor";
 
 describe("createHierarchyLevelDescriptor", () => {
@@ -24,21 +31,21 @@ describe("createHierarchyLevelDescriptor", () => {
     const hierarchyDefinition = {
       defineHierarchyLevel: sinon.stub().resolves([]),
     };
-    const imodel = {
+    const queryExecutor = {
       createQueryReader: sinon.stub(),
     };
     const hierarchyProvider = new HierarchyProvider({
       metadataProvider: {
         getSchema: async (_schemaName) => undefined,
       },
-      queryExecutor: imodel,
+      queryExecutor,
       hierarchyDefinition,
     });
     const descriptorBuilder = {
       getContentDescriptor: sinon.stub().resolves(undefined),
     };
     const descriptor = await createHierarchyLevelDescriptor({
-      imodel: imodel as any,
+      imodel: {} as any,
       hierarchyProvider,
       descriptorBuilder,
       parentNode: undefined,
@@ -48,7 +55,7 @@ describe("createHierarchyLevelDescriptor", () => {
         return props.parentNode === undefined;
       }),
     );
-    expect(imodel.createQueryReader).to.not.be.called;
+    expect(queryExecutor.createQueryReader).to.not.be.called;
     expect(descriptorBuilder.getContentDescriptor).to.be.calledOnceWith(
       sinon.match((props: ContentDescriptorRequestOptions<any, KeySet, any>) => {
         return props.keys.isEmpty;
@@ -74,12 +81,12 @@ describe("createHierarchyLevelDescriptor", () => {
         },
       ]),
     };
-    const imodel = {
-      createQueryReader: sinon.fake((ecsql: string) => {
-        if (ecsql.includes("query 1")) {
+    const queryExecutor = {
+      createQueryReader: sinon.fake((query: ECSqlQueryDef) => {
+        if (query.ecsql.includes("query 1")) {
           return eachValueFrom(from([["schema.class1", "0x123", false]]));
         }
-        if (ecsql.includes("query 2")) {
+        if (query.ecsql.includes("query 2")) {
           return eachValueFrom(from([["schema.class2", "0x456", false]]));
         }
         return eachValueFrom(from([]));
@@ -89,16 +96,17 @@ describe("createHierarchyLevelDescriptor", () => {
       metadataProvider: {
         getSchema: async (_schemaName) => undefined,
       },
-      queryExecutor: imodel,
+      queryExecutor,
       hierarchyDefinition,
     });
     const descriptorResponse = createTestDescriptorSource() as Descriptor;
     const descriptorBuilder = {
       getContentDescriptor: sinon.stub().resolves(descriptorResponse),
     };
+    const imodel = {} as any;
     const parentNode = {} as HierarchyNode & { key: InstancesNodeKey };
     const descriptor = await createHierarchyLevelDescriptor({
-      imodel: imodel as any,
+      imodel,
       hierarchyProvider,
       descriptorBuilder,
       parentNode,
@@ -108,9 +116,9 @@ describe("createHierarchyLevelDescriptor", () => {
         return props.parentNode === parentNode;
       }),
     );
-    expect(imodel.createQueryReader)
-      .to.be.calledTwice.and.to.be.calledWith(sinon.match((ecsql: string) => ecsql.includes("query 1")))
-      .and.to.be.calledWith(sinon.match((ecsql: string) => ecsql.includes("query 2")));
+    expect(queryExecutor.createQueryReader)
+      .to.be.calledTwice.and.to.be.calledWith(sinon.match((query: ECSqlQueryDef) => query.ecsql.includes("query 1")))
+      .and.to.be.calledWith(sinon.match((query: ECSqlQueryDef) => query.ecsql.includes("query 2")));
     expect(descriptorBuilder.getContentDescriptor).to.be.calledOnceWith(
       sinon.match((props: ContentDescriptorRequestOptions<any, KeySet, any>) => {
         return (
@@ -152,12 +160,12 @@ describe("createHierarchyLevelDescriptor", () => {
         ];
       }),
     };
-    const imodel = {
-      createQueryReader: sinon.fake((ecsql: string) => {
-        if (ecsql.includes("hidden nodes query")) {
+    const queryExecutor = {
+      createQueryReader: sinon.fake((query: ECSqlQueryDef) => {
+        if (query.ecsql.includes("hidden nodes query")) {
           return eachValueFrom(from([["schema.class1", "0x111", true]]));
         }
-        if (ecsql.includes("visible nodes query")) {
+        if (query.ecsql.includes("visible nodes query")) {
           return eachValueFrom(from([["schema.class2", "0x999", false]]));
         }
         return eachValueFrom(from([]));
@@ -167,15 +175,16 @@ describe("createHierarchyLevelDescriptor", () => {
       metadataProvider: {
         getSchema: async (_schemaName) => undefined,
       },
-      queryExecutor: imodel,
+      queryExecutor,
       hierarchyDefinition,
     });
     const descriptorResponse = createTestDescriptorSource() as Descriptor;
     const descriptorBuilder = {
       getContentDescriptor: sinon.stub().resolves(descriptorResponse),
     };
+    const imodel = {} as any;
     const descriptor = await createHierarchyLevelDescriptor({
-      imodel: imodel as any,
+      imodel,
       hierarchyProvider,
       descriptorBuilder,
       parentNode: undefined,
@@ -191,9 +200,9 @@ describe("createHierarchyLevelDescriptor", () => {
           );
         }),
       );
-    expect(imodel.createQueryReader)
-      .to.be.calledTwice.and.to.be.calledWith(sinon.match((ecsql: string) => ecsql.includes("hidden nodes query")))
-      .and.to.be.calledWith(sinon.match((ecsql: string) => ecsql.includes("visible nodes query")));
+    expect(queryExecutor.createQueryReader)
+      .to.be.calledTwice.and.to.be.calledWith(sinon.match((query: ECSqlQueryDef) => query.ecsql.includes("hidden nodes query")))
+      .and.to.be.calledWith(sinon.match((query: ECSqlQueryDef) => query.ecsql.includes("visible nodes query")));
     expect(descriptorBuilder.getContentDescriptor).to.be.calledOnceWith(
       sinon.match((props: ContentDescriptorRequestOptions<any, KeySet, any>) => {
         return (
@@ -232,9 +241,9 @@ describe("createHierarchyLevelDescriptor", () => {
         ];
       }),
     };
-    const imodel = {
-      createQueryReader: sinon.fake((ecsql: string) => {
-        if (ecsql.includes("hidden nodes query")) {
+    const queryExecutor = {
+      createQueryReader: sinon.fake((query: ECSqlQueryDef) => {
+        if (query.ecsql.includes("hidden nodes query")) {
           return eachValueFrom(
             from([
               ["schema.class1", "0x111", true],
@@ -243,10 +252,10 @@ describe("createHierarchyLevelDescriptor", () => {
             ]),
           );
         }
-        if (ecsql.includes("visible nodes query 1")) {
+        if (query.ecsql.includes("visible nodes query 1")) {
           return eachValueFrom(from([["schema.class3", "0x333", false]]));
         }
-        if (ecsql.includes("visible nodes query 2")) {
+        if (query.ecsql.includes("visible nodes query 2")) {
           return eachValueFrom(from([["schema.class4", "0x444", false]]));
         }
         return eachValueFrom(from([]));
@@ -256,15 +265,16 @@ describe("createHierarchyLevelDescriptor", () => {
       metadataProvider: {
         getSchema: async (_schemaName) => undefined,
       },
-      queryExecutor: imodel,
+      queryExecutor,
       hierarchyDefinition,
     });
     const descriptorResponse = createTestDescriptorSource() as Descriptor;
     const descriptorBuilder = {
       getContentDescriptor: sinon.stub().resolves(descriptorResponse),
     };
+    const imodel = {} as any;
     const descriptor = await createHierarchyLevelDescriptor({
-      imodel: imodel as any,
+      imodel,
       hierarchyProvider,
       descriptorBuilder,
       parentNode: undefined,
@@ -292,10 +302,10 @@ describe("createHierarchyLevelDescriptor", () => {
           );
         }),
       );
-    expect(imodel.createQueryReader)
-      .to.be.calledThrice.and.to.be.calledWith(sinon.match((ecsql: string) => ecsql.includes("hidden nodes query")))
-      .and.to.be.calledWith(sinon.match((ecsql: string) => ecsql.includes("visible nodes query 1")))
-      .and.to.be.calledWith(sinon.match((ecsql: string) => ecsql.includes("visible nodes query 2")));
+    expect(queryExecutor.createQueryReader)
+      .to.be.calledThrice.and.to.be.calledWith(sinon.match((query: ECSqlQueryDef) => query.ecsql.includes("hidden nodes query")))
+      .and.to.be.calledWith(sinon.match((query: ECSqlQueryDef) => query.ecsql.includes("visible nodes query 1")))
+      .and.to.be.calledWith(sinon.match((query: ECSqlQueryDef) => query.ecsql.includes("visible nodes query 2")));
     expect(descriptorBuilder.getContentDescriptor).to.be.calledOnceWith(
       sinon.match((props: ContentDescriptorRequestOptions<any, KeySet, any>) => {
         return (

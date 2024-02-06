@@ -45,7 +45,10 @@ export function createECSqlQueryExecutor(imodel: ICoreECSqlReaderFactory): IECSq
 }
 
 class ECSqlQueryReaderImpl implements ECSqlQueryReader {
-  public constructor(private _coreReader: ECSqlReader, private _format: "array" | "object") {}
+  public constructor(
+    private _coreReader: ECSqlReader,
+    private _format: "array" | "object",
+  ) {}
   public [Symbol.asyncIterator](): AsyncIterableIterator<ECSqlQueryRow> {
     return this;
   }

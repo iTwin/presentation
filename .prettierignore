@@ -21,3 +21,6 @@ pnpm-workspace.yaml
 
 # Ignore extracted api definitions
 api
+
+# Ignore sample imodels
+sample_documents

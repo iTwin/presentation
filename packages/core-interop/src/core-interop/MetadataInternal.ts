@@ -63,7 +63,10 @@ export function createECSchema(schema: CoreSchema): ECSchema {
 
 abstract class ECSchemaItemImpl<TCoreSchemaItem extends CoreSchemaItem> implements ECSchemaItem {
   private _schema: ECSchema;
-  protected constructor(protected _coreSchemaItem: TCoreSchemaItem, schema?: ECSchema) {
+  protected constructor(
+    protected _coreSchemaItem: TCoreSchemaItem,
+    schema?: ECSchema,
+  ) {
     this._schema = schema ?? createECSchema(this._coreSchemaItem.schema);
   }
   public get schema() {
@@ -202,7 +205,10 @@ export function createECProperty(coreProperty: CoreProperty, ecClass: ECClass): 
 }
 
 abstract class ECPropertyImpl<TCoreProperty extends CoreProperty> implements ECProperty {
-  protected constructor(protected _coreProperty: TCoreProperty, protected _class: ECClass) {}
+  protected constructor(
+    protected _coreProperty: TCoreProperty,
+    protected _class: ECClass,
+  ) {}
   public isArray(): this is ECArrayProperty {
     return false;
   }
@@ -379,7 +385,10 @@ async function createFromOptionalLazyLoaded<TSource extends CoreSchemaItem, TTar
 }
 
 class ECRelationshipConstraintImpl implements ECRelationshipConstraint {
-  constructor(private _coreConstraint: CoreRelationshipConstraint, private _schema: ECSchema) {}
+  constructor(
+    private _coreConstraint: CoreRelationshipConstraint,
+    private _schema: ECSchema,
+  ) {}
   public get multiplicity() {
     return this._coreConstraint.multiplicity
       ? {

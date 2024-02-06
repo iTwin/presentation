@@ -5,7 +5,7 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "jsx": "react-jsx",
-    "outDir": "lib"
+    "outDir": "lib",
   },
-  "include": ["src"]
+  "include": ["src"],
 }

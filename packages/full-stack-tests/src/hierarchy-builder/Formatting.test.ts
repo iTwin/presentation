@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import sinon from "sinon";
 import { Subject } from "@itwin/core-backend";
 import { Guid, Id64 } from "@itwin/core-bentley";
 import { IModel, Rank } from "@itwin/core-common";
@@ -28,20 +29,19 @@ import { validateHierarchy } from "./HierarchyValidation";
 import { createMetadataProvider, createProvider } from "./Utils";
 
 describe("Stateless hierarchy builder", () => {
+  let emptyIModel: IModelConnection;
+  let subjectClassName: string;
+
+  before(async function () {
+    await initialize();
+    emptyIModel = (await buildIModel(this)).imodel;
+    subjectClassName = Subject.classFullName.replace(":", ".");
+  });
+
+  after(async () => {
+    await terminate();
+  });
   describe("Labels formatting", () => {
-    let emptyIModel: IModelConnection;
-    let subjectClassName: string;
-
-    before(async function () {
-      await initialize();
-      emptyIModel = (await buildIModel(this)).imodel;
-      subjectClassName = Subject.classFullName.replace(":", ".");
-    });
-
-    after(async () => {
-      await terminate();
-    });
-
     it("formats labels with parts of different types", async function () {
       const date = new Date();
       const hierarchy: IHierarchyLevelDefinitionsFactory = {
@@ -811,6 +811,61 @@ describe("Stateless hierarchy builder", () => {
           ],
         });
       });
+    });
+  });
+
+  describe("Changing formatter", () => {
+    after(() => {
+      sinon.restore();
+    });
+
+    it("reacts to changed formatter without running queries", async function () {
+      const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(emptyIModel));
+      const hierarchy: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel({ parentNode }) {
+          if (!parentNode) {
+            return [
+              {
+                fullClassName: subjectClassName,
+                query: {
+                  ecsql: `
+                    SELECT ${await selectQueryFactory.createSelectClause({
+                      ecClassId: { selector: `this.ECClassId` },
+                      ecInstanceId: { selector: `this.ECInstanceId` },
+                      nodeLabel: { selector: `this.UserLabel` },
+                    })}
+                    FROM ${subjectClassName} AS this
+                  `,
+                },
+              },
+            ];
+          }
+          return [];
+        },
+      };
+
+      const provider = createProvider({ imodel: emptyIModel, hierarchy });
+      const queryReaderSpy = sinon.spy(emptyIModel, "createQueryReader");
+      await validateHierarchy({
+        provider,
+        expect: [
+          {
+            node: (node) => expect(node.label).to.eq(""),
+          },
+        ],
+      });
+      expect(queryReaderSpy).to.be.calledOnce;
+      queryReaderSpy.resetHistory();
+      provider.setFormatter(async () => "formatted");
+      await validateHierarchy({
+        provider,
+        expect: [
+          {
+            node: (node) => expect(node.label).to.eq("formatted"),
+          },
+        ],
+      });
+      expect(queryReaderSpy).to.not.be.called;
     });
   });
 });

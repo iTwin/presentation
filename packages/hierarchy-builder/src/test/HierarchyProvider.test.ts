@@ -17,7 +17,7 @@ import {
   ECSQL_COLUMN_NAME_IsFilterTarget,
   FilteredHierarchyNode,
 } from "../hierarchy-builder/internal/FilteringHierarchyLevelDefinitionsFactory";
-import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions } from "../hierarchy-builder/queries/ECSqlCore";
+import { ECSqlQueryDef, ECSqlQueryReader, ECSqlQueryReaderOptions } from "../hierarchy-builder/queries/ECSqlCore";
 import { ECSqlSelectClauseGroupingParams, NodeSelectClauseColumnNames } from "../hierarchy-builder/queries/NodeSelectQueryFactory";
 import { ConcatenatedValue } from "../hierarchy-builder/values/ConcatenatedValue";
 import { TypedPrimitiveValue } from "../hierarchy-builder/values/Values";
@@ -27,7 +27,7 @@ import { ClassStubs, createClassStubs, createFakeQueryReader, ResolvablePromise,
 describe("HierarchyProvider", () => {
   const metadataProvider = {} as unknown as IMetadataProvider;
   const queryExecutor = {
-    createQueryReader: sinon.stub<[string, ECSqlBinding[] | undefined, ECSqlQueryReaderOptions | undefined], ECSqlQueryReader>(),
+    createQueryReader: sinon.stub<[ECSqlQueryDef, (ECSqlQueryReaderOptions & { limit?: number | "unbounded" }) | undefined], ECSqlQueryReader>(),
   };
 
   beforeEach(() => {
@@ -71,17 +71,18 @@ describe("HierarchyProvider", () => {
         },
       ]),
     );
+    const query: ECSqlQueryDef = {
+      ecsql: "QUERY",
+      bindings: [{ type: "string", value: "test binding" }],
+      ctes: ["CTE"],
+    };
     const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
       async defineHierarchyLevel({ parentNode }) {
         if (!parentNode) {
           return [
             {
               fullClassName: "x.y",
-              query: {
-                ecsql: "QUERY",
-                bindings: [{ type: "string", value: "test binding" }],
-                ctes: ["CTE"],
-              },
+              query,
             },
           ];
         }
@@ -94,11 +95,7 @@ describe("HierarchyProvider", () => {
       hierarchyDefinition,
     });
     const nodes = await provider.getNodes({ parentNode: undefined });
-    expect(queryExecutor.createQueryReader).to.be.calledOnceWith(
-      sinon.match((ecsql) => trimWhitespace(ecsql) === "WITH RECURSIVE CTE SELECT * FROM (QUERY) LIMIT 1001"),
-      [{ type: "string", value: "test binding" }],
-      { rowFormat: "ECSqlPropertyNames" },
-    );
+    expect(queryExecutor.createQueryReader).to.be.calledOnceWith(query, { rowFormat: "ECSqlPropertyNames" });
     expect(nodes).to.deep.eq([
       {
         key: {
@@ -704,26 +701,27 @@ describe("HierarchyProvider", () => {
       const nodes = await provider.getNodes({ parentNode: undefined });
       expect(queryExecutor.createQueryReader).to.be.calledOnceWith(
         sinon.match(
-          (ecsql) =>
-            trimWhitespace(ecsql) ===
-            trimWhitespace(
-              `
-                WITH RECURSIVE FilteringInfo(ECInstanceId, FilteredChildrenPaths) AS (
+          (query) =>
+            trimWhitespace(query.ctes[0]) ===
+              trimWhitespace(
+                `
+                FilteringInfo(ECInstanceId, FilteredChildrenPaths) AS (
                   VALUES (0x123, '[[{"className":"c.d","id":"0x456"}]]')
                 )
-                SELECT * FROM (
-                  SELECT
+                `,
+              ) &&
+            trimWhitespace(query.ecsql) ===
+              trimWhitespace(
+                `
+                SELECT
                     [q].*,
                     0 AS [${ECSQL_COLUMN_NAME_IsFilterTarget}],
                     [f].[FilteredChildrenPaths] AS [${ECSQL_COLUMN_NAME_FilteredChildrenPaths}]
                   FROM (QUERY) [q]
                   JOIN FilteringInfo [f] ON [f].[ECInstanceId] = [q].[ECInstanceId]
-                )
-                LIMIT 1001
-              `,
-            ),
+                `,
+              ),
         ),
-        undefined,
         { rowFormat: "ECSqlPropertyNames" },
       );
       expect(nodes).to.deep.eq([
@@ -811,13 +809,7 @@ describe("HierarchyProvider", () => {
     it("sets children flag on parent node to `true` when determining children throws with `rows limit exceeded` error", async () => {
       queryExecutor.createQueryReader.returns(
         (async function* () {
-          for (let i = 1; i <= 1001; ++i) {
-            yield {
-              [NodeSelectClauseColumnNames.FullClassName]: `ClassName-${i}`,
-              [NodeSelectClauseColumnNames.ECInstanceId]: `0x${i}`,
-              [NodeSelectClauseColumnNames.DisplayLabel]: `Label-${i}`,
-            };
-          }
+          throw new RowsLimitExceededError(123);
         })(),
       );
       const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
@@ -905,6 +897,38 @@ describe("HierarchyProvider", () => {
     it("queries variations of the same hierarchy level", async () => {
       queryExecutor.createQueryReader.returns(createFakeQueryReader([]));
       const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel({ parentNode, instanceFilter }) {
+          if (!parentNode) {
+            return [
+              {
+                fullClassName: "x.y",
+                query: { ecsql: `QUERY WHERE ${JSON.stringify(instanceFilter)}` },
+              },
+            ];
+          }
+          return [];
+        },
+      };
+      const provider = new HierarchyProvider({
+        metadataProvider,
+        queryExecutor,
+        hierarchyDefinition,
+      });
+      await provider.getNodes({ parentNode: undefined });
+      await provider.getNodes({ parentNode: undefined, instanceFilter: {} as GenericInstanceFilter }); // variation of previous, so should cause a query
+      await provider.getNodes({ parentNode: undefined, instanceFilter: {} as GenericInstanceFilter }); // same as previous, so this one one shouldn't cause a query
+      expect(queryExecutor.createQueryReader).to.be.calledTwice;
+    });
+  });
+
+  describe("setFormatter", () => {
+    after(() => {
+      sinon.restore();
+    });
+
+    it("getNodes doesn't requery with same props and a different formatter", async () => {
+      queryExecutor.createQueryReader.returns(createFakeQueryReader([]));
+      const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
         async defineHierarchyLevel({ parentNode }) {
           if (!parentNode) {
             return [
@@ -922,9 +946,95 @@ describe("HierarchyProvider", () => {
         queryExecutor,
         hierarchyDefinition,
       });
+
       await provider.getNodes({ parentNode: undefined });
-      await provider.getNodes({ parentNode: undefined, instanceFilter: {} as GenericInstanceFilter }); // variation of previous, so should cause a query
-      await provider.getNodes({ parentNode: undefined, instanceFilter: {} as GenericInstanceFilter }); // same as previous, so this one one shouldn't cause a query
+      provider.setFormatter(async (val: TypedPrimitiveValue) => `_formatted_${JSON.stringify(val)}`);
+
+      await provider.getNodes({ parentNode: undefined });
+      expect(queryExecutor.createQueryReader).to.be.calledOnce;
+    });
+
+    it("getNodes uses formatter that is provided to setFormatter", async () => {
+      const node = { key: "custom", label: "custom", children: false };
+      const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel({ parentNode }) {
+          if (!parentNode) {
+            return [
+              {
+                node,
+              },
+            ];
+          }
+          return [];
+        },
+      };
+      const provider = new HierarchyProvider({
+        metadataProvider,
+        queryExecutor,
+        hierarchyDefinition,
+      });
+      expect(await provider.getNodes({ parentNode: undefined })).to.deep.eq([{ ...node, parentKeys: [] }]);
+      provider.setFormatter(async (val: TypedPrimitiveValue) => `_formatted_${JSON.stringify(val)}`);
+      expect(await provider.getNodes({ parentNode: undefined })).to.deep.eq([
+        { ...node, label: `_formatted_${JSON.stringify({ value: node.label, type: "String" })}`, parentKeys: [] },
+      ]);
+    });
+
+    it("getNodes uses default formatter when setFormatter is provided an undefined value", async () => {
+      const node = { key: "custom", label: "custom", children: false };
+      const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel({ parentNode }) {
+          if (!parentNode) {
+            return [
+              {
+                node,
+              },
+            ];
+          }
+          return [];
+        },
+      };
+      const provider = new HierarchyProvider({
+        metadataProvider,
+        queryExecutor,
+        hierarchyDefinition,
+        formatter: async (val: TypedPrimitiveValue) => `_formatted_${JSON.stringify(val)}`,
+      });
+      expect(await provider.getNodes({ parentNode: undefined })).to.deep.eq([
+        { ...node, label: `_formatted_${JSON.stringify({ value: node.label, type: "String" })}`, parentKeys: [] },
+      ]);
+      provider.setFormatter(undefined);
+      expect(await provider.getNodes({ parentNode: undefined })).to.deep.eq([{ ...node, parentKeys: [] }]);
+    });
+  });
+
+  describe("notifyDataSourceChanged", () => {
+    it("getNodes clears cache on data source change", async () => {
+      queryExecutor.createQueryReader.returns(createFakeQueryReader([]));
+      const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel() {
+          return [
+            {
+              fullClassName: "x.y",
+              query: { ecsql: "QUERY" },
+            },
+          ];
+        },
+      };
+      const provider = new HierarchyProvider({
+        metadataProvider,
+        queryExecutor,
+        hierarchyDefinition,
+      });
+      expect(await provider.getNodes({ parentNode: undefined })).to.deep.eq([]);
+      expect(queryExecutor.createQueryReader).to.be.calledOnce;
+      expect(await provider.getNodes({ parentNode: undefined })).to.deep.eq([]);
+      expect(queryExecutor.createQueryReader).to.be.calledOnce;
+
+      provider.notifyDataSourceChanged();
+      expect(await provider.getNodes({ parentNode: undefined })).to.deep.eq([]);
+      expect(queryExecutor.createQueryReader).to.be.calledTwice;
+      expect(await provider.getNodes({ parentNode: undefined })).to.deep.eq([]);
       expect(queryExecutor.createQueryReader).to.be.calledTwice;
     });
   });
