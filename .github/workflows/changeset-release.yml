@@ -8,6 +8,7 @@ on:
 
 env:
   NPM_CONFIG_PROVENANCE: true
+  HUSKY: 0
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
