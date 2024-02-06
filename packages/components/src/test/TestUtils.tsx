@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import "@itwin/itwinui-react/styles.css";
 import { expect } from "chai";
 import { createElement, Fragment, PropsWithChildren, ReactElement, StrictMode } from "react";
 import { ThemeProvider } from "@itwin/itwinui-react";
@@ -52,7 +51,7 @@ function customRender(
   const wrapper = createWrapper(options?.wrapper, options?.disableStrictMode);
 
   return {
-    ...renderRTL(options?.addThemeProvider ? <ThemeProvider>{ui}</ThemeProvider> : ui, { ...options, wrapper }),
+    ...renderRTL(options?.addThemeProvider ? <ThemeProvider includeCss={false}>{ui}</ThemeProvider> : ui, { ...options, wrapper }),
     user: userEvent.setup(),
   };
 }

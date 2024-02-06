@@ -92,8 +92,8 @@ describe("PresentationInstanceFilterDialog", () => {
     await waitFor(() => expect(queryByDisplayValue("test value")).to.not.be.null);
 
     // expand class selector
-    const clickable = getByPlaceholderText("instance-filter-builder.selected-classes");
-    await user.click(clickable);
+    const classListContainer = getByPlaceholderText("instance-filter-builder.selected-classes");
+    await user.click(classListContainer);
 
     expect(queryByText(translate("instance-filter-builder.class-selection-warning"))).to.not.be.null;
   });
@@ -118,8 +118,8 @@ describe("PresentationInstanceFilterDialog", () => {
     await waitFor(() => expect(queryByDisplayValue("test value")).to.not.be.null);
 
     // expand class selector
-    const clickable = getByPlaceholderText("instance-filter-builder.selected-classes");
-    await user.click(clickable);
+    const classListContainer = getByPlaceholderText("instance-filter-builder.selected-classes");
+    await user.click(classListContainer);
 
     // assert that the warning is shown initially
     expect(queryByText(translate("instance-filter-builder.class-selection-warning"))).to.not.be.null;
@@ -152,8 +152,8 @@ describe("PresentationInstanceFilterDialog", () => {
     await waitFor(() => expect(queryByDisplayValue("test value")).to.not.be.null);
 
     // expand class selector
-    const expander = getByPlaceholderText("instance-filter-builder.selected-classes");
-    await user.click(expander);
+    const classListContainer = getByPlaceholderText("instance-filter-builder.selected-classes");
+    await user.click(classListContainer);
 
     // deselect class item from dropdown
     const classItem = container.querySelector('div[label="Class Label"]');
