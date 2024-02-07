@@ -910,6 +910,9 @@ export class NodeSelectQueryFactory {
 }
 
 // @beta
+export type OmitOverUnion<T, K extends PropertyKey> = T extends T ? Omit<T, K> : never;
+
+// @beta
 export type ParentHierarchyNode = Omit<HierarchyNode, "children">;
 
 // @beta
