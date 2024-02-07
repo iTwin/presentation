@@ -142,6 +142,47 @@ export type StandardHierarchyNodeKey = InstancesNodeKey | GroupingNodeKey;
  */
 export type HierarchyNodeKey = StandardHierarchyNodeKey | string;
 
+/** @beta */
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export namespace HierarchyNodeKey {
+  /** Checks whether the given node key is a custom node key. */
+  export function isCustom(key: HierarchyNodeKey): key is string {
+    return typeof key === "string";
+  }
+  /** Checks whether the given node key is a [[StandardHierarchyNodeKey]]. */
+  export function isStandard(key: HierarchyNodeKey): key is StandardHierarchyNodeKey {
+    return !!(key as StandardHierarchyNodeKey).type;
+  }
+  /** Checks whether the given node key is an [[InstancesNodeKey]]. */
+  export function isInstances(key: HierarchyNodeKey): key is InstancesNodeKey {
+    return isStandard(key) && key.type === "instances";
+  }
+  /** Checks whether the given node key is a [[GroupingNodeKey]]. */
+  export function isGrouping(key: HierarchyNodeKey): key is GroupingNodeKey {
+    return isStandard(key) && !isInstances(key);
+  }
+  /** Checks whether the given node key is a [[ClassGroupingNodeKey]]. */
+  export function isClassGrouping(key: HierarchyNodeKey): key is ClassGroupingNodeKey {
+    return isStandard(key) && key.type === "class-grouping";
+  }
+  /** Checks whether the given node key is a [[LabelGroupingNodeKey]]. */
+  export function isLabelGrouping(key: HierarchyNodeKey): key is LabelGroupingNodeKey {
+    return isStandard(key) && key.type === "label-grouping";
+  }
+  /** Checks whether the given node key is a [[PropertyOtherValuesGroupingNodeKey]]. */
+  export function isPropertyOtherValuesGrouping(key: HierarchyNodeKey): key is PropertyOtherValuesGroupingNodeKey {
+    return isStandard(key) && key.type === "property-grouping:other";
+  }
+  /** Checks whether the given node key is a [[PropertyValueRangeGroupingNodeKey]]. */
+  export function isPropertyValueRangeGrouping(key: HierarchyNodeKey): key is PropertyValueRangeGroupingNodeKey {
+    return isStandard(key) && key.type === "property-grouping:range";
+  }
+  /** Checks whether the given node key is a [[PropertyValueGroupingNodeKey]]. */
+  export function isPropertyValueGrouping(key: HierarchyNodeKey): key is PropertyValueGroupingNodeKey {
+    return isStandard(key) && key.type === "property-grouping:value";
+  }
+}
+
 /**
  * A key that uniquely identifies parent node in a hierarchy level.
  * @beta
@@ -280,47 +321,6 @@ export namespace ParentNodeKey {
         return lhs.toValue > rhs.toValue ? 1 : lhs.toValue < rhs.toValue ? -1 : 0;
       }
     }
-  }
-}
-
-/** @beta */
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export namespace HierarchyNodeKey {
-  /** Checks whether the given node key is a custom node key. */
-  export function isCustom(key: HierarchyNodeKey): key is string {
-    return typeof key === "string";
-  }
-  /** Checks whether the given node key is a [[StandardHierarchyNodeKey]]. */
-  export function isStandard(key: HierarchyNodeKey): key is StandardHierarchyNodeKey {
-    return !!(key as StandardHierarchyNodeKey).type;
-  }
-  /** Checks whether the given node key is an [[InstancesNodeKey]]. */
-  export function isInstances(key: HierarchyNodeKey): key is InstancesNodeKey {
-    return isStandard(key) && key.type === "instances";
-  }
-  /** Checks whether the given node key is a [[GroupingNodeKey]]. */
-  export function isGrouping(key: HierarchyNodeKey): key is GroupingNodeKey {
-    return isStandard(key) && !isInstances(key);
-  }
-  /** Checks whether the given node key is a [[ClassGroupingNodeKey]]. */
-  export function isClassGrouping(key: HierarchyNodeKey): key is ClassGroupingNodeKey {
-    return isStandard(key) && key.type === "class-grouping";
-  }
-  /** Checks whether the given node key is a [[LabelGroupingNodeKey]]. */
-  export function isLabelGrouping(key: HierarchyNodeKey): key is LabelGroupingNodeKey {
-    return isStandard(key) && key.type === "label-grouping";
-  }
-  /** Checks whether the given node key is a [[PropertyOtherValuesGroupingNodeKey]]. */
-  export function isPropertyOtherValuesGrouping(key: HierarchyNodeKey): key is PropertyOtherValuesGroupingNodeKey {
-    return isStandard(key) && key.type === "property-grouping:other";
-  }
-  /** Checks whether the given node key is a [[PropertyValueRangeGroupingNodeKey]]. */
-  export function isPropertyValueRangeGrouping(key: HierarchyNodeKey): key is PropertyValueRangeGroupingNodeKey {
-    return isStandard(key) && key.type === "property-grouping:range";
-  }
-  /** Checks whether the given node key is a [[PropertyValueGroupingNodeKey]]. */
-  export function isPropertyValueGrouping(key: HierarchyNodeKey): key is PropertyValueGroupingNodeKey {
-    return isStandard(key) && key.type === "property-grouping:value";
   }
 }
 
