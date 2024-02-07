@@ -79,7 +79,7 @@ export function DiagnosticsSelector(props: DiagnosticsSelectorProps) {
   ];
 
   return (
-    <DropdownMenu menuItems={menuItems} onVisibleChange={() => onDiagnosticsOptionsChanged(result)}>
+    <DropdownMenu menuItems={menuItems} onVisibleChange={(visible) => !visible && onDiagnosticsOptionsChanged(result)}>
       <Button size="small" className="diagnostics-button">
         Diagnostics
       </Button>

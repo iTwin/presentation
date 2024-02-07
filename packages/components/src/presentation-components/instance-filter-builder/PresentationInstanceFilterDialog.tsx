@@ -90,11 +90,9 @@ export function PresentationInstanceFilterDialog(props: PresentationInstanceFilt
       <Dialog.Backdrop />
       <Dialog.Main className="presentation-instance-filter-dialog-content-container">
         <Dialog.TitleBar className="presentation-instance-filter-title" titleText={title ? title : translate("instance-filter-builder.filter")} />
-        <Dialog.Content>
-          <ErrorBoundary fallback={<ErrorState />}>
-            <FilterDialogContent {...restProps} />
-          </ErrorBoundary>
-        </Dialog.Content>
+        <ErrorBoundary fallback={<ErrorState />}>
+          <FilterDialogContent {...restProps} />
+        </ErrorBoundary>
       </Dialog.Main>
     </Dialog>
   );
