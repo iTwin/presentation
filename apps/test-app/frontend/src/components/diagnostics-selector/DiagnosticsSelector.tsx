@@ -56,7 +56,6 @@ export function DiagnosticsSelector(props: DiagnosticsSelectorProps) {
         value={editorSeverity}
         onChange={(newValue: string) => {
           setEditorSeverity(newValue);
-          onDiagnosticsOptionsChanged(result);
         }}
         size="small"
       />
@@ -72,7 +71,6 @@ export function DiagnosticsSelector(props: DiagnosticsSelectorProps) {
         value={devSeverity}
         onChange={(newValue: string) => {
           setDevSeverity(newValue);
-          onDiagnosticsOptionsChanged(result);
         }}
         size="small"
       />
@@ -81,7 +79,7 @@ export function DiagnosticsSelector(props: DiagnosticsSelectorProps) {
   ];
 
   return (
-    <DropdownMenu menuItems={menuItems}>
+    <DropdownMenu menuItems={menuItems} onVisibleChange={() => onDiagnosticsOptionsChanged(result)}>
       <Button size="small" className="diagnostics-button">
         Diagnostics
       </Button>

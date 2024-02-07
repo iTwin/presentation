@@ -412,7 +412,7 @@ describe("PresentationInstanceFilter", () => {
     };
 
     const spy = sinon.spy();
-    const { container, queryByDisplayValue, user, getByPlaceholderText } = render(
+    const { container, queryByDisplayValue, user, getByPlaceholderText, getByRole } = render(
       <PresentationInstanceFilterBuilder imodel={imodel} descriptor={descriptor} onInstanceFilterChanged={spy} initialFilter={initialFilter} />,
       {
         addThemeProvider: true,
@@ -429,8 +429,8 @@ describe("PresentationInstanceFilter", () => {
     await user.click(expander);
 
     // deselect class item from dropdown
-    const classItem = document.querySelector(`div[label="${classInfo2.label}"]`);
-    await user.click(classItem!);
+    const classItem = getByRole("option", { name: classInfo2.label });
+    await user.click(classItem);
 
     // assert that filtering rule was cleared
     await waitFor(() => expect(queryByDisplayValue(propertiesField.label)).to.be.null);

@@ -30,7 +30,6 @@
     "@itwin/eslint-plugin": "4.0.0-dev.48",
     "@itwin/imodel-components-react": "^4.8.0",
     "@itwin/itwinui-react": "^3.3.0",
-    "@itwin/itwinui-variables": "^3.0.0",
     "@itwin/itwinui-icons-react": "^2.8.0",
     "@itwin/presentation-common": "^4.3.0-dev.39",
     "@itwin/presentation-components": "workspace:*",
