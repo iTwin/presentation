@@ -5,8 +5,9 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
+import { omit } from "@itwin/core-bentley";
 import { ECClass, ECProperty, IMetadataProvider } from "../../../../hierarchy-builder/ECMetadata";
-import { HierarchyNodePropertyGroup, ParentGroupingHierarchyNodeKey } from "../../../../hierarchy-builder/HierarchyNode";
+import { GroupingNodeKey, HierarchyNodePropertyGroup } from "../../../../hierarchy-builder/HierarchyNode";
 import * as propertiesGrouping from "../../../../hierarchy-builder/internal/operators/grouping/PropertiesGrouping";
 import { LOCALIZATION_NAMESPACE } from "../../../../hierarchy-builder/Localization";
 import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "../../../../hierarchy-builder/values/Formatting";
@@ -692,22 +693,20 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName" },
         };
-        const expectedGroupingNodeKey: ParentGroupingHierarchyNodeKey = {
+        const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:value",
           propertyName: "PropertyName",
           propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "",
+          groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
               label: `${LOCALIZATION_NAMESPACE}:grouping.unspecified-label`,
-              key: {
-                ...expectedGroupingNodeKey,
-                groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
-              },
-              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
+              key: expectedGroupingNodeKey,
+              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
             }),
           ],
           ungrouped: [],
@@ -740,22 +739,20 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName" },
         };
-        const expectedGroupingNodeKey: ParentGroupingHierarchyNodeKey = {
+        const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:value",
           propertyName: "PropertyName",
           propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue",
+          groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
               label: "PropertyValue",
-              key: {
-                ...expectedGroupingNodeKey,
-                groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
-              },
-              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
+              key: expectedGroupingNodeKey,
+              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
             }),
           ],
           ungrouped: [],
@@ -799,22 +796,20 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName" },
         };
-        const expectedGroupingNodeKey: ParentGroupingHierarchyNodeKey = {
+        const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:value",
           propertyName: "PropertyName",
           propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue",
+          groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
               label: "PropertyValue",
-              key: {
-                ...expectedGroupingNodeKey,
-                groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
-              },
-              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
+              key: expectedGroupingNodeKey,
+              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
             }),
           ],
           ungrouped: [],
@@ -858,36 +853,32 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName" },
         };
-        const expectedGroupingNodeKey1: ParentGroupingHierarchyNodeKey = {
+        const expectedGroupingNodeKey1: GroupingNodeKey = {
           type: "property-grouping:value",
           propertyName: "PropertyName",
           propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue1",
+          groupedInstanceKeys: nodes[0].key.instanceKeys,
         };
-        const expectedGroupingNodeKey2: ParentGroupingHierarchyNodeKey = {
+        const expectedGroupingNodeKey2: GroupingNodeKey = {
           type: "property-grouping:value",
           propertyName: "PropertyName",
           propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue2",
+          groupedInstanceKeys: nodes[1].key.instanceKeys,
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
               label: "PropertyValue1",
-              key: {
-                ...expectedGroupingNodeKey1,
-                groupedInstanceKeys: nodes[0].key.instanceKeys,
-              },
-              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, expectedGroupingNodeKey1] }],
+              key: expectedGroupingNodeKey1,
+              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, omit(expectedGroupingNodeKey1, ["groupedInstanceKeys"])] }],
             }),
             createTestProcessedGroupingNode({
               label: "PropertyValue2",
-              key: {
-                ...expectedGroupingNodeKey2,
-                groupedInstanceKeys: nodes[1].key.instanceKeys,
-              },
-              children: [{ ...nodes[1], parentKeys: [...nodes[1].parentKeys, expectedGroupingNodeKey2] }],
+              key: expectedGroupingNodeKey2,
+              children: [{ ...nodes[1], parentKeys: [...nodes[1].parentKeys, omit(expectedGroupingNodeKey2, ["groupedInstanceKeys"])] }],
             }),
           ],
           ungrouped: [],
@@ -931,22 +922,20 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName1" },
         };
-        const expectedGroupingNodeKey: ParentGroupingHierarchyNodeKey = {
+        const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:value",
           propertyName: "PropertyName1",
           propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue",
+          groupedInstanceKeys: nodes[0].key.instanceKeys,
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
               label: "PropertyValue",
-              key: {
-                ...expectedGroupingNodeKey,
-                groupedInstanceKeys: nodes[0].key.instanceKeys,
-              },
-              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, expectedGroupingNodeKey] }],
+              key: expectedGroupingNodeKey,
+              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] }],
             }),
           ],
           ungrouped: [nodes[1]],
@@ -1149,23 +1138,21 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName", ranges: [{ fromValue: 1, toValue: 5 }] },
         };
-        const expectedGroupingNodeKey: ParentGroupingHierarchyNodeKey = {
+        const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:range",
           propertyName: "PropertyName",
           propertyClassName: "TestSchema.Class",
           fromValue: 1,
           toValue: 5,
+          groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
               label: "1 - 5",
-              key: {
-                ...expectedGroupingNodeKey,
-                groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
-              },
-              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
+              key: expectedGroupingNodeKey,
+              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
             }),
           ],
           ungrouped: [],
@@ -1198,23 +1185,21 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName", ranges: [{ fromValue: 1.5, toValue: 5.5, rangeLabel: "rangeLabel" }] },
         };
-        const expectedGroupingNodeKey: ParentGroupingHierarchyNodeKey = {
+        const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:range",
           propertyName: "PropertyName",
           propertyClassName: "TestSchema.Class",
           fromValue: 1.5,
           toValue: 5.5,
+          groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
               label: "rangeLabel",
-              key: {
-                ...expectedGroupingNodeKey,
-                groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
-              },
-              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
+              key: expectedGroupingNodeKey,
+              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
             }),
           ],
           ungrouped: [],
@@ -1258,23 +1243,21 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName", ranges: [{ fromValue: 1, toValue: 5, rangeLabel: "rangeLabel" }] },
         };
-        const expectedGroupingNodeKey: ParentGroupingHierarchyNodeKey = {
+        const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:range",
           propertyName: "PropertyName",
           propertyClassName: "TestSchema.Class",
           fromValue: 1,
           toValue: 5,
+          groupedInstanceKeys: nodes[0].key.instanceKeys,
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
               label: "rangeLabel",
-              key: {
-                ...expectedGroupingNodeKey,
-                groupedInstanceKeys: nodes[0].key.instanceKeys,
-              },
-              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, expectedGroupingNodeKey] }],
+              key: expectedGroupingNodeKey,
+              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] }],
             }),
           ],
           ungrouped: [nodes[1]],
@@ -1318,23 +1301,21 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName", ranges: [{ fromValue: 1, toValue: 5, rangeLabel: "rangeLabel" }] },
         };
-        const expectedGroupingNodeKey: ParentGroupingHierarchyNodeKey = {
+        const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:range",
           propertyName: "PropertyName",
           propertyClassName: "TestSchema.Class",
           fromValue: 1,
           toValue: 5,
+          groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
               label: "rangeLabel",
-              key: {
-                ...expectedGroupingNodeKey,
-                groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
-              },
-              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
+              key: expectedGroupingNodeKey,
+              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
             }),
           ],
           ungrouped: [],
@@ -1382,23 +1363,21 @@ describe("PropertiesGrouping", () => {
             ],
           },
         };
-        const expectedGroupingNodeKey: ParentGroupingHierarchyNodeKey = {
+        const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:range",
           propertyName: "PropertyName",
           propertyClassName: "TestSchema.Class",
           fromValue: 1,
           toValue: 4,
+          groupedInstanceKeys: nodes[0].key.instanceKeys,
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
               label: "1 - 4",
-              key: {
-                ...expectedGroupingNodeKey,
-                groupedInstanceKeys: nodes[0].key.instanceKeys,
-              },
-              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, expectedGroupingNodeKey] }],
+              key: expectedGroupingNodeKey,
+              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] }],
             }),
           ],
           ungrouped: [],
@@ -1466,38 +1445,34 @@ describe("PropertiesGrouping", () => {
             ],
           },
         };
-        const expectedGroupingNodeKey1: ParentGroupingHierarchyNodeKey = {
+        const expectedGroupingNodeKey1: GroupingNodeKey = {
           type: "property-grouping:range",
           propertyName: "PropertyName",
           propertyClassName: "TestSchema.Class",
           fromValue: 5,
           toValue: 10,
+          groupedInstanceKeys: nodes[0].key.instanceKeys,
         };
-        const expectedGroupingNodeKey2: ParentGroupingHierarchyNodeKey = {
+        const expectedGroupingNodeKey2: GroupingNodeKey = {
           type: "property-grouping:range",
           propertyName: "PropertyName",
           propertyClassName: "TestSchema.Class",
           fromValue: 1,
           toValue: 4,
+          groupedInstanceKeys: nodes[1].key.instanceKeys,
         };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
               label: "1 - 4",
-              key: {
-                ...expectedGroupingNodeKey2,
-                groupedInstanceKeys: nodes[1].key.instanceKeys,
-              },
-              children: [{ ...nodes[1], parentKeys: [...nodes[1].parentKeys, expectedGroupingNodeKey2] }],
+              key: expectedGroupingNodeKey2,
+              children: [{ ...nodes[1], parentKeys: [...nodes[1].parentKeys, omit(expectedGroupingNodeKey2, ["groupedInstanceKeys"])] }],
             }),
             createTestProcessedGroupingNode({
               label: "5 - 10",
-              key: {
-                ...expectedGroupingNodeKey1,
-                groupedInstanceKeys: nodes[0].key.instanceKeys,
-              },
-              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, expectedGroupingNodeKey1] }],
+              key: expectedGroupingNodeKey1,
+              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, omit(expectedGroupingNodeKey1, ["groupedInstanceKeys"])] }],
             }),
           ],
           ungrouped: [],
