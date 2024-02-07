@@ -7,7 +7,7 @@ import { expect } from "chai";
 import sinon from "sinon";
 import { omit } from "@itwin/core-bentley";
 import { ECClass, ECProperty, IMetadataProvider } from "../../../../hierarchy-builder/ECMetadata";
-import { GroupingNodeKey, HierarchyNodePropertyGroup } from "../../../../hierarchy-builder/HierarchyNode";
+import { GroupingNodeKey, HierarchyNodePropertyGroup, PropertyOtherValuesGroupingNodeKey } from "../../../../hierarchy-builder/HierarchyNode";
 import * as propertiesGrouping from "../../../../hierarchy-builder/internal/operators/grouping/PropertiesGrouping";
 import { LOCALIZATION_NAMESPACE } from "../../../../hierarchy-builder/Localization";
 import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "../../../../hierarchy-builder/values/Formatting";
@@ -1004,23 +1004,19 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName", ranges: [{ fromValue: 1, toValue: 5 }] },
         };
+        const expectedGroupingNodeKey: GroupingNodeKey = {
+          type: "property-grouping:other",
+          groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
+        };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
               label: `${LOCALIZATION_NAMESPACE}:grouping.other-label`,
-              key: {
-                type: "property-grouping:other",
-                groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
-              },
+              key: expectedGroupingNodeKey,
               children: nodes.map((n) => ({
                 ...n,
-                parentKeys: [
-                  ...n.parentKeys,
-                  {
-                    type: "property-grouping:other",
-                  },
-                ],
+                parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])],
               })),
             }),
           ],
@@ -1088,23 +1084,19 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName", ranges: [{ fromValue: 1, toValue: 5 }] },
         };
+        const expectedGroupingNodeKey: PropertyOtherValuesGroupingNodeKey = {
+          type: "property-grouping:other",
+          groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
+        };
         expect(await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter)).to.deep.eq({
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
               label: `${LOCALIZATION_NAMESPACE}:grouping.other-label`,
-              key: {
-                type: "property-grouping:other",
-                groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
-              },
+              key: expectedGroupingNodeKey,
               children: nodes.map((n) => ({
                 ...n,
-                parentKeys: [
-                  ...n.parentKeys,
-                  {
-                    type: "property-grouping:other",
-                  },
-                ],
+                parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])],
               })),
             }),
           ],

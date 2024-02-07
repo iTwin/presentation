@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { omit } from "@itwin/core-bentley";
 import { IMetadataProvider } from "../../../ECMetadata";
 import { ClassGroupingNodeKey, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
 import { getClass } from "../../Common";
@@ -47,19 +48,17 @@ export async function createClassGroups(metadata: IMetadataProvider, nodes: Proc
 function createGroupingNodes(groupings: ClassGroupingInformation): GroupingHandlerResult {
   const groupedNodes = new Array<ProcessedInstancesGroupingHierarchyNode>();
   groupings.grouped.forEach((entry) => {
-    const groupingNodeKey: Omit<ClassGroupingNodeKey, "groupedInstanceKeys"> = {
+    const groupingNodeKey: ClassGroupingNodeKey = {
       type: "class-grouping",
       class: { name: entry.class.fullName, label: entry.class.label },
+      groupedInstanceKeys: entry.groupedNodes.flatMap((groupedInstanceNode) => groupedInstanceNode.key.instanceKeys),
     };
     const groupedNodeParentKeys = entry.groupedNodes[0].parentKeys;
     groupedNodes.push({
       label: entry.class.label ?? entry.class.name,
-      key: {
-        ...groupingNodeKey,
-        groupedInstanceKeys: entry.groupedNodes.flatMap((groupedInstanceNode) => groupedInstanceNode.key.instanceKeys),
-      },
+      key: groupingNodeKey,
       parentKeys: groupedNodeParentKeys,
-      children: entry.groupedNodes.map((gn) => ({ ...gn, parentKeys: [...groupedNodeParentKeys, groupingNodeKey] })),
+      children: entry.groupedNodes.map((gn) => ({ ...gn, parentKeys: [...groupedNodeParentKeys, omit(groupingNodeKey, ["groupedInstanceKeys"])] })),
     });
   });
   return { grouped: sortNodesByLabel(groupedNodes), ungrouped: groupings.ungrouped, groupingType: "class" };
