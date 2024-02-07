@@ -122,7 +122,10 @@ beta;LogFunction = (category: string, message: string) => void
 beta;NodeSelectClauseColumnNames
 beta;NodeSelectClauseProps
 beta;NodeSelectQueryFactory
+beta;OmitOverUnion
 beta;ParentHierarchyNode = Omit
+beta;ParentNodeKey = OmitOverUnion
+beta;ParentNodeKey
 beta;ParsedCustomHierarchyNode = Omit
 beta;ParsedHierarchyNode = ParsedCustomHierarchyNode | ParsedInstanceHierarchyNode
 beta;ParsedInstanceHierarchyNode = Omit

@@ -13,13 +13,12 @@ import {
   PropertyGroupingNodeKey,
 } from "../../../HierarchyNode";
 import { translate } from "../../../Localization";
+import { OmitOverUnion } from "../../../Utils";
 import { IPrimitiveValueFormatter } from "../../../values/Formatting";
 import { TypedPrimitiveValue } from "../../../values/Values";
 import { getClass } from "../../Common";
 import { GroupingHandler, GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
 import { sortNodesByLabel } from "../Sorting";
-
-type OmitOverUnion<T, K extends PropertyKey> = T extends T ? Omit<T, K> : never;
 
 interface DisplayablePropertyGroupingInfo {
   label: string;
@@ -190,16 +189,18 @@ function addGroupingToMap(
 function createGroupingNodes(groupings: PropertyGroupingInformation): GroupingHandlerResult {
   const groupedNodes = new Array<ProcessedInstancesGroupingHierarchyNode>();
   groupings.grouped.forEach((entry) => {
-    const groupingNodeKey = {
-      ...entry.displayablePropertyGroupingInfo.propertyGroupingNodeKey,
-      groupedInstanceKeys: entry.groupedNodes.flatMap((groupedInstanceNode) => groupedInstanceNode.key.instanceKeys),
-    };
     const groupedNodeParentKeys = entry.groupedNodes[0].parentKeys;
     groupedNodes.push({
       label: entry.displayablePropertyGroupingInfo.label,
-      key: groupingNodeKey,
+      key: {
+        ...entry.displayablePropertyGroupingInfo.propertyGroupingNodeKey,
+        groupedInstanceKeys: entry.groupedNodes.flatMap((groupedInstanceNode) => groupedInstanceNode.key.instanceKeys),
+      },
       parentKeys: groupedNodeParentKeys,
-      children: entry.groupedNodes.map((gn) => ({ ...gn, parentKeys: [...groupedNodeParentKeys, groupingNodeKey] })),
+      children: entry.groupedNodes.map((gn) => ({
+        ...gn,
+        parentKeys: [...groupedNodeParentKeys, entry.displayablePropertyGroupingInfo.propertyGroupingNodeKey],
+      })),
     });
   });
   return { grouped: sortNodesByLabel(groupedNodes), ungrouped: groupings.ungrouped, groupingType: "property" };
