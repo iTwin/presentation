@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1707207123684,
+  "lastUpdate": 1707313488492,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -786,6 +786,42 @@ window.BENCHMARK_DATA = {
             "value": 1854,
             "unit": "ms",
             "extra": "min: 1854\nmax: 1854\ncount: 1\nmean: 1854\np50: 1863.5\nmedian: 1863.5\np75: 1863.5\np90: 1863.5\np95: 1863.5\np99: 1863.5\np999: 1863.5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "100586436+JonasDov@users.noreply.github.com",
+            "name": "JonasDov",
+            "username": "JonasDov"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4d177c7ededefa0d12a4fefb41c402cf7ed791de",
+          "message": "Remove `groupedInstanceKeys` property from `parentKeys` (#401)\n\n* Remove groupedInstanceKeys from parentKeys\r\n\r\n* Run extract api +add changeset\r\n\r\n* Fix prettier errors\r\n\r\n* Add ParentNodeKey type and move equals and compare checks to ParentNodeKey namespace\r\n\r\n* Move OmitOverUnion to utils and use ParentNodeKey namespace to do compare and equals checks\r\n\r\n* Fix tests, and use omit\r\n\r\n* Run extract api\r\n\r\n* Using omit where possible\r\n\r\n* Move HierarchyNodeKey namespace to be right below HierarchyNodeKey type\r\n\r\n* Add internal tag to OmitOverUnion\r\n\r\n* Remove Guid.createValue()\r\n\r\n* Change OmitOverUnion to have beta tag instead of internal",
+          "timestamp": "2024-02-07T13:42:44Z",
+          "tree_id": "48efdb999e96a2adbadbb6274e24d83401cc9b98",
+          "url": "https://github.com/iTwin/presentation/commit/4d177c7ededefa0d12a4fefb41c402cf7ed791de"
+        },
+        "date": 1707313487998,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Full Models Tree Load: Baytown.bim",
+            "value": 1766,
+            "unit": "ms",
+            "extra": "min: 1766\nmax: 1766\ncount: 1\nmean: 1766\np50: 1755\nmedian: 1755\np75: 1755\np90: 1755\np95: 1755\np99: 1755\np999: 1755"
+          },
+          {
+            "name": "Initial Models Tree Load: Baytown.bim",
+            "value": 366,
+            "unit": "ms",
+            "extra": "min: 366\nmax: 366\ncount: 1\nmean: 366\np50: 368.8\nmedian: 368.8\np75: 368.8\np90: 368.8\np95: 368.8\np99: 368.8\np999: 368.8"
           }
         ]
       }
