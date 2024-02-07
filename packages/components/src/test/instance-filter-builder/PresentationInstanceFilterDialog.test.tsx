@@ -99,7 +99,7 @@ describe("PresentationInstanceFilterDialog", () => {
   });
 
   it("hides warning message when class selection dropdown is hidden ", async () => {
-    const { container, getByTitle, queryByDisplayValue, user, queryByText, getByPlaceholderText } = render(
+    const { container, getByTitle, queryByDisplayValue, user, queryByText, getByPlaceholderText, getByTestId } = render(
       <PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptor} onApply={() => {}} isOpen={true} />,
       {
         addThemeProvider: true,
@@ -113,7 +113,7 @@ describe("PresentationInstanceFilterDialog", () => {
     await user.click(getByTitle(stringField.label));
 
     // enter value
-    const inputContainer = await waitForElement<HTMLInputElement>(container, ".rule-value input");
+    const inputContainer = await waitFor(() => getByTestId("components-text-editor"));
     await user.type(inputContainer, "test value");
     await waitFor(() => expect(queryByDisplayValue("test value")).to.not.be.null);
 
@@ -206,7 +206,9 @@ describe("PresentationInstanceFilterDialog", () => {
 
   it("does not invoke `onApply` when there two empty rules", async () => {
     const spy = sinon.spy();
-    const { container, user, getByText } = render(<PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptor} onApply={spy} isOpen={true} />);
+    const { container, user, getByText } = render(<PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptor} onApply={spy} isOpen={true} />, {
+      addThemeProvider: true,
+    });
 
     await user.click(getByText(/filterBuilder.add/));
 

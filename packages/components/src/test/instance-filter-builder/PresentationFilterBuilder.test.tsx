@@ -409,7 +409,7 @@ describe("PresentationInstanceFilter", () => {
     };
 
     const spy = sinon.spy();
-    const { container, queryByDisplayValue, user, getByPlaceholderText, getByRole } = render(
+    const { queryByDisplayValue, user, getByPlaceholderText, getByRole } = render(
       <PresentationInstanceFilterBuilder imodel={imodel} descriptor={descriptor} onInstanceFilterChanged={spy} initialFilter={initialFilter} />,
       {
         addThemeProvider: true,
