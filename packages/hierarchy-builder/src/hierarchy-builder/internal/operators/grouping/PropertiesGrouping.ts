@@ -13,13 +13,12 @@ import {
   PropertyGroupingNodeKey,
 } from "../../../HierarchyNode";
 import { translate } from "../../../Localization";
+import { OmitOverUnion } from "../../../Utils";
 import { IPrimitiveValueFormatter } from "../../../values/Formatting";
 import { TypedPrimitiveValue } from "../../../values/Values";
 import { getClass } from "../../Common";
 import { GroupingHandler, GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
 import { sortNodesByLabel } from "../Sorting";
-
-type OmitOverUnion<T, K extends PropertyKey> = T extends T ? Omit<T, K> : never;
 
 interface DisplayablePropertyGroupingInfo {
   label: string;
