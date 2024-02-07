@@ -5,9 +5,9 @@
 
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { DelayLoadedTreeNodeItem, TreeNodeItem } from "@itwin/components-react";
-import { Guid } from "@itwin/core-bentley";
+import { omit } from "@itwin/core-bentley";
 import { InfoTreeNodeItemType, PresentationInfoTreeNodeItem } from "@itwin/presentation-components";
-import { HierarchyNode } from "@itwin/presentation-hierarchy-builder";
+import { HierarchyNode, HierarchyNodeKey } from "@itwin/presentation-hierarchy-builder";
 
 export function getHierarchyNode(item: TreeNodeItem): HierarchyNode | undefined {
   if ("__internal" in item) {
@@ -22,12 +22,30 @@ export function createTreeNodeItem(node: HierarchyNode): DelayLoadedTreeNodeItem
   }
   return {
     __internal: node,
-    id: Guid.createValue(),
+    id: [
+      ...node.parentKeys.map((key) => (typeof key === "string" ? key : convertObjectValuesToString(key))),
+      HierarchyNodeKey.isCustom(node.key)
+        ? node.key
+        : HierarchyNodeKey.isInstances(node.key)
+          ? convertObjectValuesToString(node.key)
+          : convertObjectValuesToString(omit(node.key, ["groupedInstanceKeys"])),
+    ].join(","),
     label: PropertyRecord.fromString(node.label, "Label"),
     icon: node.extendedData?.imageId,
     hasChildren: !!node.children,
     autoExpand: node.autoExpand,
   } as DelayLoadedTreeNodeItem;
+}
+
+function convertObjectValuesToString(obj: object): string {
+  return Object.entries(obj)
+    .map(([, value]) => {
+      if (typeof value === "object") {
+        return convertObjectValuesToString(value);
+      }
+      return String(value);
+    })
+    .join(",");
 }
 
 export function createInfoNode(parentNode: TreeNodeItem | undefined, message: string, type?: InfoTreeNodeItemType): PresentationInfoTreeNodeItem {
