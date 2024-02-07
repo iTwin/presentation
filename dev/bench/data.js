@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1707313488492,
+  "lastUpdate": 1707321848661,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -822,6 +822,42 @@ window.BENCHMARK_DATA = {
             "value": 366,
             "unit": "ms",
             "extra": "min: 366\nmax: 366\ncount: 1\nmean: 366\np50: 368.8\nmedian: 368.8\np75: 368.8\np90: 368.8\np95: 368.8\np99: 368.8\np999: 368.8"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35135765+grigasp@users.noreply.github.com",
+            "name": "Grigas",
+            "username": "grigasp"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6e8aa1afd8a07a97d89e95bbbe07935a646b5133",
+          "message": "Remove localization. Let consumers supply the two strings we need. (#404)\n\n* Remove localization. Let consumers supply the two strings we need.\r\n\r\n* change",
+          "timestamp": "2024-02-07T18:03:05+02:00",
+          "tree_id": "5c51b1026173764d331493c2db8447c7a5ab4e00",
+          "url": "https://github.com/iTwin/presentation/commit/6e8aa1afd8a07a97d89e95bbbe07935a646b5133"
+        },
+        "date": 1707321848192,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Full Models Tree Load: Baytown.bim",
+            "value": 1809,
+            "unit": "ms",
+            "extra": "min: 1809\nmax: 1809\ncount: 1\nmean: 1809\np50: 1826.6\nmedian: 1826.6\np75: 1826.6\np90: 1826.6\np95: 1826.6\np99: 1826.6\np999: 1826.6"
+          },
+          {
+            "name": "Initial Models Tree Load: Baytown.bim",
+            "value": 368,
+            "unit": "ms",
+            "extra": "min: 368\nmax: 368\ncount: 1\nmean: 368\np50: 368.8\nmedian: 368.8\np75: 368.8\np90: 368.8\np95: 368.8\np99: 368.8\np999: 368.8"
           }
         ]
       }
