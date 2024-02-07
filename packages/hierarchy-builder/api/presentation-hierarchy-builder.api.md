@@ -524,7 +524,7 @@ export interface HierarchyNode {
     };
     key: HierarchyNodeKey;
     label: string;
-    parentKeys: Array<ParentGroupingHierarchyNodeKey | InstancesNodeKey | string>;
+    parentKeys: ParentNodeKey[];
     supportsFiltering?: boolean;
 }
 
@@ -645,17 +645,15 @@ export type HierarchyNodeKey = StandardHierarchyNodeKey | string;
 
 // @beta (undocumented)
 export namespace HierarchyNodeKey {
-    export function compare(lhs: ParentGroupingHierarchyNodeKey | HierarchyNodeKey, rhs: ParentGroupingHierarchyNodeKey | HierarchyNodeKey): number;
-    export function equals(lhs: ParentGroupingHierarchyNodeKey | HierarchyNodeKey, rhs: ParentGroupingHierarchyNodeKey | HierarchyNodeKey): boolean;
-    export function isClassGrouping(key: ParentGroupingHierarchyNodeKey | HierarchyNodeKey): key is ClassGroupingNodeKey;
-    export function isCustom(key: ParentGroupingHierarchyNodeKey | HierarchyNodeKey): key is string;
-    export function isGrouping(key: ParentGroupingHierarchyNodeKey | HierarchyNodeKey): key is GroupingNodeKey;
-    export function isInstances(key: ParentGroupingHierarchyNodeKey | HierarchyNodeKey): key is InstancesNodeKey;
-    export function isLabelGrouping(key: ParentGroupingHierarchyNodeKey | HierarchyNodeKey): key is LabelGroupingNodeKey;
-    export function isPropertyOtherValuesGrouping(key: ParentGroupingHierarchyNodeKey | HierarchyNodeKey): key is PropertyOtherValuesGroupingNodeKey;
-    export function isPropertyValueGrouping(key: ParentGroupingHierarchyNodeKey | HierarchyNodeKey): key is PropertyValueGroupingNodeKey;
-    export function isPropertyValueRangeGrouping(key: ParentGroupingHierarchyNodeKey | HierarchyNodeKey): key is PropertyValueRangeGroupingNodeKey;
-    export function isStandard(key: ParentGroupingHierarchyNodeKey | HierarchyNodeKey): key is StandardHierarchyNodeKey;
+    export function isClassGrouping(key: HierarchyNodeKey): key is ClassGroupingNodeKey;
+    export function isCustom(key: HierarchyNodeKey): key is string;
+    export function isGrouping(key: HierarchyNodeKey): key is GroupingNodeKey;
+    export function isInstances(key: HierarchyNodeKey): key is InstancesNodeKey;
+    export function isLabelGrouping(key: HierarchyNodeKey): key is LabelGroupingNodeKey;
+    export function isPropertyOtherValuesGrouping(key: HierarchyNodeKey): key is PropertyOtherValuesGroupingNodeKey;
+    export function isPropertyValueGrouping(key: HierarchyNodeKey): key is PropertyValueGroupingNodeKey;
+    export function isPropertyValueRangeGrouping(key: HierarchyNodeKey): key is PropertyValueRangeGroupingNodeKey;
+    export function isStandard(key: HierarchyNodeKey): key is StandardHierarchyNodeKey;
 }
 
 // @beta
@@ -912,10 +910,16 @@ export class NodeSelectQueryFactory {
 }
 
 // @beta
-export type ParentGroupingHierarchyNodeKey = Omit<ClassGroupingNodeKey, "groupedInstanceKeys"> | Omit<LabelGroupingNodeKey, "groupedInstanceKeys"> | Omit<PropertyValueRangeGroupingNodeKey, "groupedInstanceKeys"> | Omit<PropertyOtherValuesGroupingNodeKey, "groupedInstanceKeys"> | Omit<PropertyValueGroupingNodeKey, "groupedInstanceKeys">;
+export type ParentHierarchyNode = Omit<HierarchyNode, "children">;
 
 // @beta
-export type ParentHierarchyNode = Omit<HierarchyNode, "children">;
+export type ParentNodeKey = OmitOverUnion<GroupingNodeKey, "groupedInstanceKeys"> | InstancesNodeKey | string;
+
+// @beta (undocumented)
+export namespace ParentNodeKey {
+    export function compare(lhs: ParentNodeKey, rhs: ParentNodeKey): number;
+    export function equals(lhs: ParentNodeKey, rhs: ParentNodeKey): boolean;
+}
 
 // @beta
 export type ParsedCustomHierarchyNode = Omit<ProcessedCustomHierarchyNode, "label" | "parentKeys"> & {
