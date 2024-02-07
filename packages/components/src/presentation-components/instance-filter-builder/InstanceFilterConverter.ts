@@ -6,13 +6,20 @@
  * @module InstancesFilter
  */
 
-import { Primitives, PrimitiveValue, StandardTypeNames } from "@itwin/appui-abstract";
-import { isUnaryPropertyFilterOperator, PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator } from "@itwin/components-react";
+import { Primitives, StandardTypeNames } from "@itwin/appui-abstract";
+import { isUnaryPropertyFilterOperator } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo } from "@itwin/presentation-common";
 import { getIModelMetadataProvider } from "./ECMetadataProvider";
-import { GenericInstanceFilter, GenericInstanceFilterRule, GenericInstanceFilterRuleGroup } from "./GenericInstanceFilter";
+import {
+  GenericInstanceFilter,
+  GenericInstanceFilterRule,
+  GenericInstanceFilterRuleGroup,
+  GenericInstanceFilterRuleGroupOperator,
+  GenericInstanceFilterRuleOperator,
+  GenericInstanceFilterRuleValue,
+} from "./GenericInstanceFilter";
 
 /** @internal */
 export async function findBaseExpressionClass(imodel: IModelConnection, propertyClasses: ClassInfo[]) {
@@ -57,14 +64,20 @@ function createClassExpression(usedClasses: ClassInfo[]) {
   return usedClasses.reduce((queryExpression, classInfo) => `${queryExpression}${queryExpression ? " OR " : ""}this.IsOfClass(${classInfo.id})`, "");
 }
 
-function createComparison(propertyName: string, type: string, alias: string, operator: `${PropertyFilterRuleOperator}`, propValue?: PrimitiveValue): string {
+function createComparison(
+  propertyName: string,
+  type: string,
+  alias: string,
+  operator: GenericInstanceFilterRuleOperator,
+  propValue?: GenericInstanceFilterRuleValue,
+): string {
   const propertyAccessor = `${alias}.${propertyName}`;
   const operatorExpression = getRuleOperatorString(operator);
-  if (propValue === undefined || isUnaryPropertyFilterOperator(operator)) {
+  if (propValue === undefined || propValue.rawValue === undefined || isUnaryPropertyFilterOperator(operator)) {
     return `${propertyAccessor} ${operatorExpression}`;
   }
 
-  const value = propValue.value;
+  const value = propValue.rawValue;
   if (operator === "like" && typeof value === "string") {
     return `${propertyAccessor} ${operatorExpression} "%${escapeString(value)}%"`;
   }
@@ -80,8 +93,8 @@ function createComparison(propertyName: string, type: string, alias: string, ope
   }
 
   if (type === StandardTypeNames.Point2d || type === StandardTypeNames.Point3d) {
-    assert(isPoint2d(value));
-    return createPointComparision(value, operatorExpression, propertyAccessor);
+    assert(GenericInstanceFilterRuleValue.isPoint2d(value));
+    return createPointComparison(value, operatorExpression, propertyAccessor);
   }
   if (type === "navigation") {
     return `${propertyAccessor}.Id ${operatorExpression} ${(value as Primitives.InstanceKey).id}`;
@@ -96,7 +109,7 @@ function createComparison(propertyName: string, type: string, alias: string, ope
   return `${propertyAccessor} ${operatorExpression} ${valueExpression}`;
 }
 
-function getGroupOperatorString(operator: `${PropertyFilterRuleGroupOperator}`): string {
+function getGroupOperatorString(operator: GenericInstanceFilterRuleGroupOperator): string {
   switch (operator) {
     case "and":
       return "AND";
@@ -105,7 +118,7 @@ function getGroupOperatorString(operator: `${PropertyFilterRuleGroupOperator}`):
   }
 }
 
-function getRuleOperatorString(operator: `${PropertyFilterRuleOperator}`): string {
+function getRuleOperatorString(operator: GenericInstanceFilterRuleOperator): string {
   switch (operator) {
     case "is-true":
       return "= TRUE";
@@ -136,17 +149,9 @@ function escapeString(str: string) {
   return str.replace(/"/g, `""`);
 }
 
-function createPointComparision(point: { x: number; y: number } | { x: number; y: number; z: number }, operatorExpression: string, propertyAccessor: string) {
+function createPointComparison(point: { x: number; y: number } | { x: number; y: number; z: number }, operatorExpression: string, propertyAccessor: string) {
   const logicalOperator = operatorExpression === "=" ? "AND" : "OR";
   return `(CompareDoubles(${propertyAccessor}.x, ${point.x}) ${operatorExpression} 0) ${logicalOperator} (CompareDoubles(${propertyAccessor}.y, ${
     point.y
-  }) ${operatorExpression} 0)${isPoint3d(point) ? ` ${logicalOperator} (CompareDoubles(${propertyAccessor}.z, ${point.z}) ${operatorExpression} 0)` : ""}`;
-}
-
-function isPoint2d(obj?: Primitives.Value): obj is { x: number; y: number } {
-  return (obj as any).x !== undefined && (obj as any).y !== undefined;
-}
-
-function isPoint3d(obj?: Primitives.Value): obj is { x: number; y: number; z: number } {
-  return isPoint2d(obj) && (obj as any).z !== undefined;
+  }) ${operatorExpression} 0)${GenericInstanceFilterRuleValue.isPoint3d(point) ? ` ${logicalOperator} (CompareDoubles(${propertyAccessor}.z, ${point.z}) ${operatorExpression} 0)` : ""}`;
 }

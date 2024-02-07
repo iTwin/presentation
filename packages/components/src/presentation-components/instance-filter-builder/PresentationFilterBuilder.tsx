@@ -124,7 +124,12 @@ export namespace PresentationInstanceFilter {
       expression,
       selectClassName: baseClass.name,
       relatedInstances: relatedInstances.map((related) => ({
-        pathFromSelectToPropertyClass: related.path,
+        pathFromSelectToPropertyClass: related.path.map((step) => ({
+          sourceClassName: step.sourceClassName,
+          targetClassName: step.targetClassName,
+          relationshipName: step.relationshipClassName,
+          isForwardRelationship: step.isForwardRelationship,
+        })),
         alias: related.alias,
       })),
     };

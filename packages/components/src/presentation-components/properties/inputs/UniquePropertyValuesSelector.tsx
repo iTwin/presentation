@@ -7,9 +7,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActionMeta, MultiValue } from "react-select";
 import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ContentSpecificationTypes, Descriptor, DisplayValue, Field, Keys, KeySet, Ruleset, RuleTypes, Value } from "@itwin/presentation-common";
+import { ContentSpecificationTypes, Descriptor, DisplayValue, Field, Keys, KeySet, Ruleset, RuleTypes } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
-import { deserializeDisplayValueGroupArray, findField, serializeDisplayValueGroupArray, translate } from "../../common/Utils";
+import { deserializeUniqueValues, findField, serializeUniqueValues, translate, UniqueValue } from "../../common/Utils";
 import { getInstanceFilterFieldName } from "../../instance-filter-builder/Utils";
 import { AsyncSelect } from "./AsyncSelect";
 
@@ -30,11 +30,6 @@ export interface UniquePropertyValuesSelectorProps {
   descriptor: Descriptor;
   /** Keys that are currently selected for filtering */
   descriptorInputKeys?: Keys;
-}
-
-interface UniqueValue {
-  displayValue: string;
-  groupedRawValues: Value[];
 }
 
 /** @internal */
@@ -69,7 +64,7 @@ export function UniquePropertyValuesSelector(props: UniquePropertyValuesSelector
         value: undefined,
       });
     } else {
-      const { displayValues, groupedRawValues } = serializeDisplayValueGroupArray(newSelectedValue);
+      const { displayValues, groupedRawValues } = serializeUniqueValues(newSelectedValue);
       onChange({
         valueFormat: PropertyValueFormat.Primitive,
         displayValue: displayValues,
@@ -116,18 +111,9 @@ function formatOptionLabel(displayValue: string, type: string): string {
   }
 }
 
-function getUniqueValueFromProperty(property: PropertyValue | undefined): UniqueValue[] {
-  if (property && property.valueFormat === PropertyValueFormat.Primitive && typeof property.value === "string" && property.displayValue) {
-    const { displayValue, value } = property;
-    const { displayValues, groupedRawValues } = deserializeDisplayValueGroupArray(displayValue, value);
-    if (displayValues === undefined || groupedRawValues === undefined) {
-      return [];
-    }
-    const uniqueValues: UniqueValue[] = [];
-    for (let i = 0; i < displayValues.length; i++) {
-      uniqueValues.push({ displayValue: displayValues[i], groupedRawValues: groupedRawValues[i] });
-    }
-    return uniqueValues;
+function getUniqueValueFromProperty(propertyValue: PropertyValue | undefined): UniqueValue[] {
+  if (propertyValue?.valueFormat === PropertyValueFormat.Primitive && typeof propertyValue.value === "string" && propertyValue.displayValue) {
+    return deserializeUniqueValues(propertyValue.displayValue, propertyValue.value) ?? [];
   }
   return [];
 }
