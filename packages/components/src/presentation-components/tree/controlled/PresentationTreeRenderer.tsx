@@ -18,7 +18,8 @@ import {
 import { NodeKey, PresentationError, PresentationStatus } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { translate } from "../../common/Utils";
-import { PresentationInstanceFilter, PresentationInstanceFilterInfo } from "../../instance-filter-builder/PresentationFilterBuilder";
+import { PresentationInstanceFilterInfo } from "../../instance-filter-builder/PresentationFilterBuilder";
+import { PresentationInstanceFilter } from "../../instance-filter-builder/PresentationInstanceFilter";
 import { PresentationInstanceFilterDialog } from "../../instance-filter-builder/PresentationInstanceFilterDialog";
 import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
 import {

@@ -16,7 +16,8 @@ import { Button, Dialog, NonIdealState, ProgressRadial } from "@itwin/itwinui-re
 import { Descriptor, Keys } from "@itwin/presentation-common";
 import { translate, useDelay } from "../common/Utils";
 import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder";
-import { PresentationInstanceFilter, PresentationInstanceFilterInfo } from "./PresentationFilterBuilder";
+import { PresentationInstanceFilterInfo } from "./PresentationFilterBuilder";
+import { PresentationInstanceFilter } from "./PresentationInstanceFilter";
 import { filterRuleValidator, isFilterNonEmpty } from "./Utils";
 
 /**

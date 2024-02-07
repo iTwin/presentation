@@ -22,21 +22,25 @@ import {
 } from "./GenericInstanceFilter";
 
 /** @internal */
-export async function findBaseExpressionClass(imodel: IModelConnection, propertyClasses: ClassInfo[]) {
-  if (propertyClasses.length === 1) {
-    return propertyClasses[0];
+export async function findBaseExpressionClassName(imodel: IModelConnection, propertyClassNames: string[]) {
+  if (propertyClassNames.length === 1) {
+    return propertyClassNames[0];
   }
 
   const metadataProvider = getIModelMetadataProvider(imodel);
-  const [firstClass, ...restClasses] = propertyClasses;
-  let currentBaseClass = firstClass;
-  for (const propClass of restClasses) {
-    const propClassInfo = await metadataProvider.getECClassInfo(propClass.id);
-    if (propClassInfo && propClassInfo.isDerivedFrom(currentBaseClass.id)) {
-      currentBaseClass = propClass;
+  const [firstClassName, ...restClassNames] = propertyClassNames;
+  let currentBaseClassInfo = await metadataProvider.getECClassInfo(firstClassName);
+  if (!currentBaseClassInfo) {
+    return firstClassName;
+  }
+
+  for (const propClassName of restClassNames) {
+    const propClassInfo = await metadataProvider.getECClassInfo(propClassName);
+    if (propClassInfo && propClassInfo.isDerivedFrom(currentBaseClassInfo.id)) {
+      currentBaseClassInfo = propClassInfo;
     }
   }
-  return currentBaseClass;
+  return currentBaseClassInfo.name;
 }
 
 /** @internal */
@@ -73,7 +77,7 @@ function createComparison(
 ): string {
   const propertyAccessor = `${alias}.${propertyName}`;
   const operatorExpression = getRuleOperatorString(operator);
-  if (propValue === undefined || propValue.rawValue === undefined || isUnaryPropertyFilterOperator(operator)) {
+  if (propValue === undefined || isUnaryPropertyFilterOperator(operator)) {
     return `${propertyAccessor} ${operatorExpression}`;
   }
 

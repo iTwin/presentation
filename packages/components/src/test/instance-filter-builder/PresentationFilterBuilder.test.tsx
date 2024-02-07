@@ -20,10 +20,10 @@ import { Field } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import {
-  PresentationInstanceFilter,
   PresentationInstanceFilterBuilder,
   PresentationInstanceFilterInfo,
 } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
+import { PresentationInstanceFilter } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilter";
 import { INSTANCE_FILTER_FIELD_SEPARATOR } from "../../presentation-components/instance-filter-builder/Utils";
 import { createTestECClassInfo, stubDOMMatrix, stubRaf } from "../_helpers/Common";
 import {

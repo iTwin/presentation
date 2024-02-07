@@ -17,7 +17,7 @@ import {
   PresentationInstanceFilter,
   PresentationInstanceFilterCondition,
   PresentationInstanceFilterConditionGroup,
-} from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
+} from "../../presentation-components/instance-filter-builder/PresentationInstanceFilter";
 import { createTestECClassInfo, createTestPropertyInfo } from "../_helpers/Common";
 import { createTestNestedContentField, createTestPropertiesContentField } from "../_helpers/Content";
 
@@ -522,13 +522,13 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
 
       // stub metadataProvider for test imodel
       const metadataProvider = getIModelMetadataProvider(imodelMock.object);
-      sinon.stub(metadataProvider, "getECClassInfo").callsFake(async (id) => {
-        switch (id) {
-          case classAInfo.id:
+      sinon.stub(metadataProvider, "getECClassInfo").callsFake(async (name) => {
+        switch (name) {
+          case classAInfo.name:
             return new ECClassInfo(classAInfo.id, classAInfo.name, classAInfo.label, new Set(), new Set([classBInfo.id, classCInfo.id]));
-          case classBInfo.id:
+          case classBInfo.name:
             return new ECClassInfo(classBInfo.id, classBInfo.name, classBInfo.label, new Set([classAInfo.id]), new Set([classCInfo.id]));
-          case classCInfo.id:
+          case classCInfo.name:
             return new ECClassInfo(classCInfo.id, classCInfo.name, classCInfo.label, new Set([classAInfo.id, classBInfo.id]), new Set());
         }
         return undefined;

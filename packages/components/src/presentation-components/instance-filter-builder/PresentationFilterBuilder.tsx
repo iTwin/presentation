@@ -7,142 +7,17 @@
  */
 
 import { useCallback, useEffect, useMemo } from "react";
-import { PrimitiveValue, PropertyDescription, PropertyValueFormat } from "@itwin/appui-abstract";
-import {
-  isPropertyFilterRuleGroup,
-  PropertyFilter,
-  PropertyFilterBuilderRuleValue,
-  PropertyFilterBuilderRuleValueRendererProps,
-  PropertyFilterRule,
-  PropertyFilterRuleGroup,
-  PropertyFilterRuleGroupOperator,
-  PropertyFilterRuleOperator,
-  usePropertyFilterBuilder,
-} from "@itwin/components-react";
+import { PropertyDescription } from "@itwin/appui-abstract";
+import { PropertyFilterBuilderRuleValue, PropertyFilterBuilderRuleValueRendererProps, usePropertyFilterBuilder } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
-import {
-  ClassId,
-  ClassInfo,
-  Descriptor,
-  InstanceFilterDefinition,
-  Keys,
-  PresentationError,
-  PresentationStatus,
-  PropertiesField,
-} from "@itwin/presentation-common";
-import { findField } from "../common/Utils";
+import { ClassId, ClassInfo, Descriptor, InstanceFilterDefinition, Keys, PropertiesField } from "@itwin/presentation-common";
 import { navigationPropertyEditorContext } from "../properties/editors/NavigationPropertyEditorContext";
 import { UniquePropertyValuesSelector } from "../properties/inputs/UniquePropertyValuesSelector";
-import { GenericInstanceFilter } from "./GenericInstanceFilter";
 import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder";
-import { createExpression, findBaseExpressionClass } from "./InstanceFilterConverter";
+import { PresentationInstanceFilter, PresentationInstanceFilterConditionGroup } from "./PresentationInstanceFilter";
 import { PresentationInstanceFilterProperty } from "./PresentationInstanceFilterProperty";
-import {
-  createInstanceFilterPropertyInfos,
-  createPropertyInfoFromPropertiesField,
-  getInstanceFilterFieldName,
-  useFilterBuilderNavigationPropertyEditorContext,
-} from "./Utils";
-
-/**
- * Type that describes instance filter based on [Descriptor]($presentation-common) fields. It can be
- * one filter condition or group of filter conditions joined by logical operator.
- * @beta
- */
-export type PresentationInstanceFilter = PresentationInstanceFilterConditionGroup | PresentationInstanceFilterCondition;
-
-/**
- * Data structure that describes group of filter condition joined by logical operator.
- * @beta
- */
-export interface PresentationInstanceFilterConditionGroup {
-  /** Operator that should be used to join conditions. */
-  operator: `${PropertyFilterRuleGroupOperator}`;
-  /** Conditions in this group. */
-  conditions: PresentationInstanceFilter[];
-}
-
-/**
- * Data structure that describes single filter condition.
- * @beta
- */
-export interface PresentationInstanceFilterCondition {
-  /** [PropertiesField]($presentation-common) that contains property used in this condition. */
-  field: PropertiesField;
-  /** Operator that should be used to compare property value. */
-  operator: `${PropertyFilterRuleOperator}`;
-  /** Value that property should be compared to. */
-  value?: PrimitiveValue;
-}
-
-/** @beta */
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export namespace PresentationInstanceFilter {
-  /**
-   * Converts filter built by [usePropertyFilterBuilder]($components-react) into presentation specific format.
-   * @throws if presentation data cannot be found for properties used in `filter`.
-   *
-   * @beta
-   */
-  export function fromComponentsPropertyFilter(descriptor: Descriptor, filter: PropertyFilter): PresentationInstanceFilter {
-    if (isPropertyFilterRuleGroup(filter)) {
-      return createPresentationInstanceFilterConditionGroup(descriptor, filter);
-    }
-    return createPresentationInstanceFilterCondition(descriptor, filter);
-  }
-
-  /**
-   * Converts [[PresentationInstanceFilter]] into format used by [usePropertyFilterBuilder]($components-react).
-   * @throws if fields used in filter cannot be found in `descriptor`.
-   *
-   * @beta
-   */
-  export function toComponentsPropertyFilter(descriptor: Descriptor, filter: PresentationInstanceFilter): PropertyFilter {
-    if (PresentationInstanceFilter.isConditionGroup(filter)) {
-      return createPropertyFilterRuleGroup(filter, descriptor);
-    }
-    return createPropertyFilterRule(filter, descriptor);
-  }
-
-  /**
-   * Converts [[PresentationInstanceFilter]] into [InstanceFilterDefinition]($presentation-common) that can be passed
-   * to [PresentationManager]($presentation-frontend) through request options in order to filter results.
-   * @beta
-   */
-  export async function toInstanceFilterDefinition(
-    filter: PresentationInstanceFilter,
-    imodel: IModelConnection,
-    filteredClasses?: ClassInfo[],
-  ): Promise<InstanceFilterDefinition> {
-    const { rules, propertyClasses, relatedInstances } = GenericInstanceFilter.fromPresentationInstanceFilter(filter);
-    const expression = createExpression(rules, filteredClasses);
-
-    const baseClass = await findBaseExpressionClass(imodel, propertyClasses);
-
-    return {
-      expression,
-      selectClassName: baseClass.name,
-      relatedInstances: relatedInstances.map((related) => ({
-        pathFromSelectToPropertyClass: related.path.map((step) => ({
-          sourceClassName: step.sourceClassName,
-          targetClassName: step.targetClassName,
-          relationshipName: step.relationshipClassName,
-          isForwardRelationship: step.isForwardRelationship,
-        })),
-        alias: related.alias,
-      })),
-    };
-  }
-
-  /**
-   * Function that checks if supplied [[PresentationInstanceFilter]] is [[PresentationInstanceFilterConditionGroup]].
-   * @beta
-   */
-  export function isConditionGroup(filter: PresentationInstanceFilter): filter is PresentationInstanceFilterConditionGroup {
-    return (filter as any).conditions !== undefined;
-  }
-}
+import { createInstanceFilterPropertyInfos, useFilterBuilderNavigationPropertyEditorContext } from "./Utils";
 
 /**
  * Function that checks if supplied [[PresentationInstanceFilter]] is [[PresentationInstanceFilterConditionGroup]].
@@ -262,47 +137,6 @@ export function PresentationFilterBuilderValueRenderer({ imodel, descriptor, des
       <PropertyFilterBuilderRuleValue {...props} />
     </navigationPropertyEditorContext.Provider>
   );
-}
-
-function createPresentationInstanceFilterConditionGroup(descriptor: Descriptor, group: PropertyFilterRuleGroup): PresentationInstanceFilterConditionGroup {
-  return {
-    operator: group.operator,
-    conditions: group.rules.map((rule) => PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, rule)),
-  };
-}
-
-function createPresentationInstanceFilterCondition(descriptor: Descriptor, condition: PropertyFilterRule): PresentationInstanceFilterCondition {
-  const field = findField(descriptor, getInstanceFilterFieldName(condition.property));
-  if (!field || !field.isPropertiesField()) {
-    throw new PresentationError(PresentationStatus.Error, `Failed to find properties field for property - ${condition.property.name}`);
-  }
-  if (condition.value && condition.value.valueFormat !== PropertyValueFormat.Primitive) {
-    throw new PresentationError(PresentationStatus.Error, `Property '${condition.property.name}' cannot be compared with non primitive value.`);
-  }
-  return {
-    operator: condition.operator,
-    field,
-    value: condition.value,
-  };
-}
-
-function createPropertyFilterRule(condition: PresentationInstanceFilterCondition, descriptor: Descriptor): PropertyFilterRule {
-  const field = descriptor.getFieldByName(condition.field.name, true);
-  if (!field || !field.isPropertiesField()) {
-    throw new PresentationError(PresentationStatus.Error, `Failed to find properties field - ${condition.field.name} in descriptor`);
-  }
-  return {
-    property: createPropertyInfoFromPropertiesField(field).propertyDescription,
-    operator: condition.operator,
-    value: condition.value,
-  };
-}
-
-function createPropertyFilterRuleGroup(group: PresentationInstanceFilterConditionGroup, descriptor: Descriptor): PropertyFilterRuleGroup {
-  return {
-    operator: group.operator,
-    rules: group.conditions.map((condition) => PresentationInstanceFilter.toComponentsPropertyFilter(descriptor, condition)),
-  };
 }
 
 /**
