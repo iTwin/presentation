@@ -5,8 +5,9 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
+import { omit } from "@itwin/core-bentley";
 import { ECClass, ECProperty, IMetadataProvider } from "../../../../hierarchy-builder/ECMetadata";
-import { GroupingNodeKey, HierarchyNodePropertyGroup } from "../../../../hierarchy-builder/HierarchyNode";
+import { GroupingNodeKey, HierarchyNodePropertyGroup, PropertyOtherValuesGroupingNodeKey } from "../../../../hierarchy-builder/HierarchyNode";
 import * as propertiesGrouping from "../../../../hierarchy-builder/internal/operators/grouping/PropertiesGrouping";
 import { LOCALIZATION_NAMESPACE } from "../../../../hierarchy-builder/Localization";
 import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "../../../../hierarchy-builder/values/Formatting";
@@ -705,7 +706,7 @@ describe("PropertiesGrouping", () => {
             createTestProcessedGroupingNode({
               label: `${LOCALIZATION_NAMESPACE}:grouping.unspecified-label`,
               key: expectedGroupingNodeKey,
-              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
+              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
             }),
           ],
           ungrouped: [],
@@ -751,7 +752,7 @@ describe("PropertiesGrouping", () => {
             createTestProcessedGroupingNode({
               label: "PropertyValue",
               key: expectedGroupingNodeKey,
-              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
+              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
             }),
           ],
           ungrouped: [],
@@ -808,7 +809,7 @@ describe("PropertiesGrouping", () => {
             createTestProcessedGroupingNode({
               label: "PropertyValue",
               key: expectedGroupingNodeKey,
-              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
+              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
             }),
           ],
           ungrouped: [],
@@ -872,12 +873,12 @@ describe("PropertiesGrouping", () => {
             createTestProcessedGroupingNode({
               label: "PropertyValue1",
               key: expectedGroupingNodeKey1,
-              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, expectedGroupingNodeKey1] }],
+              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, omit(expectedGroupingNodeKey1, ["groupedInstanceKeys"])] }],
             }),
             createTestProcessedGroupingNode({
               label: "PropertyValue2",
               key: expectedGroupingNodeKey2,
-              children: [{ ...nodes[1], parentKeys: [...nodes[1].parentKeys, expectedGroupingNodeKey2] }],
+              children: [{ ...nodes[1], parentKeys: [...nodes[1].parentKeys, omit(expectedGroupingNodeKey2, ["groupedInstanceKeys"])] }],
             }),
           ],
           ungrouped: [],
@@ -934,7 +935,7 @@ describe("PropertiesGrouping", () => {
             createTestProcessedGroupingNode({
               label: "PropertyValue",
               key: expectedGroupingNodeKey,
-              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, expectedGroupingNodeKey] }],
+              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] }],
             }),
           ],
           ungrouped: [nodes[1]],
@@ -1013,7 +1014,10 @@ describe("PropertiesGrouping", () => {
             createTestProcessedGroupingNode({
               label: `${LOCALIZATION_NAMESPACE}:grouping.other-label`,
               key: expectedGroupingNodeKey,
-              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
+              children: nodes.map((n) => ({
+                ...n,
+                parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])],
+              })),
             }),
           ],
           ungrouped: [],
@@ -1080,7 +1084,7 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName", ranges: [{ fromValue: 1, toValue: 5 }] },
         };
-        const expectedGroupingNodeKey: GroupingNodeKey = {
+        const expectedGroupingNodeKey: PropertyOtherValuesGroupingNodeKey = {
           type: "property-grouping:other",
           groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
         };
@@ -1090,7 +1094,10 @@ describe("PropertiesGrouping", () => {
             createTestProcessedGroupingNode({
               label: `${LOCALIZATION_NAMESPACE}:grouping.other-label`,
               key: expectedGroupingNodeKey,
-              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
+              children: nodes.map((n) => ({
+                ...n,
+                parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])],
+              })),
             }),
           ],
           ungrouped: [],
@@ -1137,7 +1144,7 @@ describe("PropertiesGrouping", () => {
             createTestProcessedGroupingNode({
               label: "1 - 5",
               key: expectedGroupingNodeKey,
-              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
+              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
             }),
           ],
           ungrouped: [],
@@ -1184,7 +1191,7 @@ describe("PropertiesGrouping", () => {
             createTestProcessedGroupingNode({
               label: "rangeLabel",
               key: expectedGroupingNodeKey,
-              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
+              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
             }),
           ],
           ungrouped: [],
@@ -1242,7 +1249,7 @@ describe("PropertiesGrouping", () => {
             createTestProcessedGroupingNode({
               label: "rangeLabel",
               key: expectedGroupingNodeKey,
-              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, expectedGroupingNodeKey] }],
+              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] }],
             }),
           ],
           ungrouped: [nodes[1]],
@@ -1300,7 +1307,7 @@ describe("PropertiesGrouping", () => {
             createTestProcessedGroupingNode({
               label: "rangeLabel",
               key: expectedGroupingNodeKey,
-              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
+              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
             }),
           ],
           ungrouped: [],
@@ -1362,7 +1369,7 @@ describe("PropertiesGrouping", () => {
             createTestProcessedGroupingNode({
               label: "1 - 4",
               key: expectedGroupingNodeKey,
-              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, expectedGroupingNodeKey] }],
+              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] }],
             }),
           ],
           ungrouped: [],
@@ -1452,12 +1459,12 @@ describe("PropertiesGrouping", () => {
             createTestProcessedGroupingNode({
               label: "1 - 4",
               key: expectedGroupingNodeKey2,
-              children: [{ ...nodes[1], parentKeys: [...nodes[1].parentKeys, expectedGroupingNodeKey2] }],
+              children: [{ ...nodes[1], parentKeys: [...nodes[1].parentKeys, omit(expectedGroupingNodeKey2, ["groupedInstanceKeys"])] }],
             }),
             createTestProcessedGroupingNode({
               label: "5 - 10",
               key: expectedGroupingNodeKey1,
-              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, expectedGroupingNodeKey1] }],
+              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, omit(expectedGroupingNodeKey1, ["groupedInstanceKeys"])] }],
             }),
           ],
           ungrouped: [],

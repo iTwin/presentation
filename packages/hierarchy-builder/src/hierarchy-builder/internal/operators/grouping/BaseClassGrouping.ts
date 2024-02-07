@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { omit } from "@itwin/core-bentley";
 import { ECClass, IMetadataProvider } from "../../../ECMetadata";
 import { ClassGroupingNodeKey, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
 import { getClass } from "../../Common";
@@ -56,7 +57,7 @@ export async function createBaseClassGroupsForSingleBaseClass(
       label: baseECClass.label ?? baseECClass.name,
       key: groupingNodeKey,
       parentKeys: [...groupedNodes[0].parentKeys],
-      children: groupedNodes.map((gn) => ({ ...gn, parentKeys: [...gn.parentKeys, groupingNodeKey] })),
+      children: groupedNodes.map((gn) => ({ ...gn, parentKeys: [...gn.parentKeys, omit(groupingNodeKey, ["groupedInstanceKeys"])] })),
     });
   }
   return result;

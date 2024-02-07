@@ -28,7 +28,7 @@ import { RowsLimitExceededError } from "./HierarchyErrors";
 import {
   HierarchyNode,
   HierarchyNodeIdentifiersPath,
-  HierarchyNodeKey,
+  ParentNodeKey,
   ParsedHierarchyNode,
   ProcessedCustomHierarchyNode,
   ProcessedGroupingHierarchyNode,
@@ -417,7 +417,7 @@ interface ChildNodesCacheEntry {
   variations: LRUCache<string, CachedNodesObservableEntry>;
 }
 class ChildNodesCache {
-  private _map = new Dictionary<HierarchyNodeKey[], ChildNodesCacheEntry>((lhs, rhs) => this.compareHierarchyNodeKeys(lhs, rhs));
+  private _map = new Dictionary<ParentNodeKey[], ChildNodesCacheEntry>((lhs, rhs) => this.compareHierarchyNodeKeys(lhs, rhs));
 
   private createVariationKey(props: GetHierarchyNodesProps) {
     const { instanceFilter, parentNode } = props;
@@ -431,12 +431,12 @@ class ChildNodesCache {
     return JSON.stringify({ instanceFilter, hierarchyLevelSizeLimit });
   }
 
-  private compareHierarchyNodeKeys(lhs: HierarchyNodeKey[], rhs: HierarchyNodeKey[]) {
+  private compareHierarchyNodeKeys(lhs: ParentNodeKey[], rhs: ParentNodeKey[]) {
     if (lhs.length !== rhs.length) {
       return lhs.length - rhs.length;
     }
     for (let i = 0; i < lhs.length; ++i) {
-      const keysCompareResult = HierarchyNodeKey.compare(lhs[i], rhs[i]);
+      const keysCompareResult = ParentNodeKey.compare(lhs[i], rhs[i]);
       // istanbul ignore if
       if (keysCompareResult !== 0) {
         return keysCompareResult;
