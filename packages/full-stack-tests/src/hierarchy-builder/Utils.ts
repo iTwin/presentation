@@ -9,8 +9,13 @@ import { Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { createECSqlQueryExecutor, createMetadataProvider as createMetadataProviderInterop } from "@itwin/presentation-core-interop";
 import {
-  createLimitingECSqlQueryExecutor, HierarchyNodeIdentifiersPath, HierarchyProvider, HierarchyProviderLocalizedStrings,
-  IHierarchyLevelDefinitionsFactory, IPrimitiveValueFormatter, parseFullClassName,
+  createLimitingECSqlQueryExecutor,
+  HierarchyNodeIdentifiersPath,
+  HierarchyProvider,
+  HierarchyProviderLocalizedStrings,
+  IHierarchyLevelDefinitionsFactory,
+  IPrimitiveValueFormatter,
+  parseFullClassName,
 } from "@itwin/presentation-hierarchy-builder";
 
 function createSchemaContext(imodel: IModelConnection | IModelDb | ECDb) {

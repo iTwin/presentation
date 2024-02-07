@@ -10,7 +10,10 @@ import { LogLevel } from "@itwin/core-bentley";
 import { IMetadataProvider } from "../../../hierarchy-builder/ECMetadata";
 import { ProcessedInstanceHierarchyNode } from "../../../hierarchy-builder/HierarchyNode";
 import {
-  createGroupingHandlers, createGroupingOperator, GroupingHandlerResult, LOGGING_NAMESPACE,
+  createGroupingHandlers,
+  createGroupingOperator,
+  GroupingHandlerResult,
+  LOGGING_NAMESPACE,
 } from "../../../hierarchy-builder/internal/operators/Grouping";
 import * as autoExpand from "../../../hierarchy-builder/internal/operators/grouping/AutoExpand";
 import * as baseClassGrouping from "../../../hierarchy-builder/internal/operators/grouping/BaseClassGrouping";
@@ -19,9 +22,7 @@ import * as groupHiding from "../../../hierarchy-builder/internal/operators/grou
 import * as labelGrouping from "../../../hierarchy-builder/internal/operators/grouping/LabelGrouping";
 import * as propertiesGrouping from "../../../hierarchy-builder/internal/operators/grouping/PropertiesGrouping";
 import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "../../../hierarchy-builder/values/Formatting";
-import {
-  createTestProcessedGroupingNode, createTestProcessedInstanceNode, getObservableResult, setupLogging, testLocalizedStrings,
-} from "../../Utils";
+import { createTestProcessedGroupingNode, createTestProcessedInstanceNode, getObservableResult, setupLogging, testLocalizedStrings } from "../../Utils";
 
 describe("Grouping", () => {
   const metadataProvider = {} as unknown as IMetadataProvider;
@@ -131,7 +132,10 @@ describe("Grouping", () => {
 
       const result = await getObservableResult(
         from(classGroupingInput).pipe(
-          createGroupingOperator(metadataProvider, formatter, testLocalizedStrings, undefined, [async () => classGroupingResult, async (input) => createLabelGroupingResult(input)]),
+          createGroupingOperator(metadataProvider, formatter, testLocalizedStrings, undefined, [
+            async () => classGroupingResult,
+            async (input) => createLabelGroupingResult(input),
+          ]),
         ),
       );
       expect(assignAutoExpandStub.callCount).to.eq(3);

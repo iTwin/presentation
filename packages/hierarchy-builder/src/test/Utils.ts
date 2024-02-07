@@ -6,11 +6,12 @@
 import { Observable } from "rxjs";
 import sinon from "sinon";
 import { BeDuration, Logger, LogLevel, StopWatch } from "@itwin/core-bentley";
+import { ECClass, ECEntityClass, ECProperty, ECRelationshipClass, ECRelationshipConstraint, IMetadataProvider } from "../hierarchy-builder/ECMetadata";
 import {
-  ECClass, ECEntityClass, ECProperty, ECRelationshipClass, ECRelationshipConstraint, IMetadataProvider,
-} from "../hierarchy-builder/ECMetadata";
-import {
-  ParsedCustomHierarchyNode, ParsedInstanceHierarchyNode, ProcessedCustomHierarchyNode, ProcessedGroupingHierarchyNode,
+  ParsedCustomHierarchyNode,
+  ParsedInstanceHierarchyNode,
+  ProcessedCustomHierarchyNode,
+  ProcessedGroupingHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "../hierarchy-builder/HierarchyNode";
 import { HierarchyProviderLocalizedStrings } from "../hierarchy-builder/HierarchyProvider";

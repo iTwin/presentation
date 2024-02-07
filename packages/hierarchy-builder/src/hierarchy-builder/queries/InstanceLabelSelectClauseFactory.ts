@@ -5,9 +5,7 @@
 
 import { IMetadataProvider } from "../ECMetadata";
 import { getClass } from "../internal/Common";
-import {
-  createConcatenatedValueJsonSelector, createRawPropertyValueSelector, TypedValueSelectClauseProps,
-} from "./ecsql-snippets/ECSqlValueSelectorSnippets";
+import { createConcatenatedValueJsonSelector, createRawPropertyValueSelector, TypedValueSelectClauseProps } from "./ecsql-snippets/ECSqlValueSelectorSnippets";
 
 /**
  * Props for [[IInstanceLabelSelectClauseFactory.createSelectClause]].

@@ -5,9 +5,7 @@
 
 import { concatMap, from, Observable, of, tap, toArray } from "rxjs";
 import { IMetadataProvider } from "../../ECMetadata";
-import {
-  HierarchyNode, HierarchyNodeKey, ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode,
-} from "../../HierarchyNode";
+import { HierarchyNode, HierarchyNodeKey, ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
 import { IPrimitiveValueFormatter } from "../../values/Formatting";
 import { compareNodesByLabel, createOperatorLoggingNamespace, mergeSortedArrays } from "../Common";
