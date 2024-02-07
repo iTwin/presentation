@@ -7,7 +7,7 @@ import { expect } from "chai";
 import sinon from "sinon";
 import * as moq from "typemoq";
 import { PropertyRecord } from "@itwin/appui-abstract";
-import { PropertyFilterRuleOperator, TreeActions, UiComponents } from "@itwin/components-react";
+import { TreeActions, UiComponents } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
@@ -25,7 +25,7 @@ function createFilterInfo(propName: string = "prop"): PresentationInstanceFilter
   return {
     filter: {
       field,
-      operator: PropertyFilterRuleOperator.IsNull,
+      operator: "is-null",
     },
     usedClasses: [],
   };

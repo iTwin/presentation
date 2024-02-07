@@ -11,7 +11,7 @@ import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Ruleset } from "@itwin/presentation-common";
 import { PresentationTree, PresentationTreeRenderer, usePresentationTreeState } from "@itwin/presentation-components";
 import { buildTestIModel } from "@itwin/presentation-testing";
-import { fireEvent, getByRole, getByTitle, render, waitFor } from "@testing-library/react";
+import { fireEvent, getByPlaceholderText, getByRole, getByTitle, render, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
@@ -91,17 +91,13 @@ describe("Learning snippets", () => {
       const filteringDialog = await waitFor(() => getByRole(baseElement, "dialog"));
 
       // open property selector and select the "User Label" property
-      const propertySelector = await waitFor(() => {
-        const input = filteringDialog.querySelector<HTMLInputElement>(".rule-property .iui-input")!;
-        expect(input).to.not.be.null;
-        return input;
-      });
+      const propertySelector = await waitFor(() => getByPlaceholderText<HTMLInputElement>(baseElement, "Çhóôsë pröpértý"));
       fireEvent.focus(propertySelector);
       fireEvent.click(getByTitle(baseElement, "User Label"));
       await waitFor(() => expect(propertySelector.value).to.eq("User Label"));
 
       // focus value input box
-      const propertyValueBox = filteringDialog.querySelector<HTMLInputElement>(".rule-value .iui-input")!;
+      const propertyValueBox = filteringDialog.querySelector<HTMLInputElement>(".fb-property-value input")!;
       expect(propertyValueBox).to.not.be.null;
       fireEvent.focus(propertyValueBox);
       await user.type(propertyValueBox, "My Element 2");
