@@ -17,13 +17,17 @@ import {
 } from "@testing-library/react";
 import userEvent, { UserEvent } from "@testing-library/user-event";
 
-function createWrapper(wrapper?: React.JSXElementConstructor<{ children: React.ReactElement }>, disableStrictMode?: boolean) {
+function createWrapper(wrapper?: React.JSXElementConstructor<{ children: React.ReactElement }>, disableStrictMode?: boolean, addThemeProvider?: boolean) {
   // if `DISABLE_STRICT_MODE` is set do not wrap components into `StrictMode` component
   const StrictModeWrapper = process.env.DISABLE_STRICT_MODE || disableStrictMode ? Fragment : StrictMode;
 
-  return wrapper
-    ? ({ children }: PropsWithChildren<unknown>) => <StrictModeWrapper>{createElement(wrapper, undefined, children)}</StrictModeWrapper>
+  const StrictThemedWrapper = addThemeProvider
+    ? ({ children }: PropsWithChildren<unknown>) => <ThemeProvider includeCss={false}>{createElement(StrictModeWrapper, undefined, children)}</ThemeProvider>
     : StrictModeWrapper;
+
+  return wrapper
+    ? ({ children }: PropsWithChildren<unknown>) => <StrictThemedWrapper>{createElement(wrapper, undefined, children)}</StrictThemedWrapper>
+    : StrictThemedWrapper;
 }
 
 export async function waitForElement<T extends HTMLElement>(container: HTMLElement, selector: string, condition?: (e: T | null) => void): Promise<T> {
@@ -48,10 +52,10 @@ function customRender(
   ui: ReactElement,
   options?: RenderOptions & { disableStrictMode?: boolean; addThemeProvider?: boolean },
 ): RenderResult & { user: UserEvent } {
-  const wrapper = createWrapper(options?.wrapper, options?.disableStrictMode);
+  const wrapper = createWrapper(options?.wrapper, options?.disableStrictMode, options?.addThemeProvider);
 
   return {
-    ...renderRTL(options?.addThemeProvider ? <ThemeProvider includeCss={false}>{ui}</ThemeProvider> : ui, { ...options, wrapper }),
+    ...renderRTL(ui, { ...options, wrapper }),
     user: userEvent.setup(),
   };
 }
