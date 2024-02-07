@@ -12,7 +12,6 @@ import {
   ProcessedInstanceHierarchyNode,
   PropertyGroupingNodeKey,
 } from "../../../HierarchyNode";
-import { translate } from "../../../Localization";
 import { OmitOverUnion } from "../../../Utils";
 import { IPrimitiveValueFormatter } from "../../../values/Formatting";
 import { TypedPrimitiveValue } from "../../../values/Values";
@@ -31,6 +30,12 @@ interface PropertyGroupingInformation {
 }
 
 /** @internal */
+export interface PropertiesGroupingLocalizedStrings {
+  other: string;
+  unspecified: string;
+}
+
+/** @internal */
 export interface PropertyGroupInfo {
   ecClass: ECClass;
   previousPropertiesGroupingInfo: PreviousPropertiesGroupingInfo;
@@ -46,6 +51,7 @@ export async function createPropertyGroups(
   nodes: ProcessedInstanceHierarchyNode[],
   handlerGroupingParams: PropertyGroupInfo,
   valueFormatter: IPrimitiveValueFormatter,
+  localizedStrings: PropertiesGroupingLocalizedStrings,
 ): Promise<GroupingHandlerResult> {
   const groupings: PropertyGroupingInformation = { ungrouped: [], grouped: new Map() };
   for (const node of nodes) {
@@ -77,7 +83,7 @@ export async function createPropertyGroups(
           groupings.grouped,
           `${currentProperty.propertyName}:Unspecified`,
           {
-            label: translate("grouping.unspecified-label"),
+            label: localizedStrings.unspecified,
             propertyGroupingNodeKey: {
               type: "property-grouping:value",
               ...partialPropertyNodeKeyToAdd,
@@ -134,7 +140,7 @@ export async function createPropertyGroups(
           groupings.grouped,
           "Other",
           {
-            label: translate("grouping.other-label"),
+            label: localizedStrings.other,
             propertyGroupingNodeKey: {
               type: "property-grouping:other",
             },
@@ -332,7 +338,10 @@ export async function createPropertiesGroupingHandlers(
   metadata: IMetadataProvider,
   nodes: ProcessedInstanceHierarchyNode[],
   valueFormatter: IPrimitiveValueFormatter,
+  localizedStrings: PropertiesGroupingLocalizedStrings,
 ): Promise<GroupingHandler[]> {
   const propertiesGroupInfo = await getUniquePropertiesGroupInfo(metadata, nodes);
-  return propertiesGroupInfo.map((propertyInfo) => async (allNodes) => createPropertyGroups(metadata, allNodes, propertyInfo, valueFormatter));
+  return propertiesGroupInfo.map(
+    (propertyInfo) => async (allNodes) => createPropertyGroups(metadata, allNodes, propertyInfo, valueFormatter, localizedStrings),
+  );
 }
