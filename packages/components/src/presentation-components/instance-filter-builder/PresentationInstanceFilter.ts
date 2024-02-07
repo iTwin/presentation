@@ -121,7 +121,7 @@ export namespace PresentationInstanceFilter {
    * Creates `PresentationInstanceFilter`.
    * @beta
    */
-  export function fromGeneric(filter: GenericInstanceFilter, descriptor: Descriptor): PresentationInstanceFilter {
+  export function fromGenericInstanceFilter(filter: GenericInstanceFilter, descriptor: Descriptor): PresentationInstanceFilter {
     return parseGenericFilter(filter, descriptor);
   }
 
@@ -387,9 +387,7 @@ function parseGenericFilterRule(rule: GenericInstanceFilterRule, ctx: GenericFil
   return {
     field,
     operator: rule.operator,
-    value: rule.value
-      ? { valueFormat: PropertyValueFormat.Primitive, displayValue: rule.value.displayValue, value: rule.value as Primitives.Value }
-      : undefined,
+    value: rule.value ? { valueFormat: PropertyValueFormat.Primitive, displayValue: rule.value.displayValue, value: rule.value.rawValue } : undefined,
   };
 }
 
