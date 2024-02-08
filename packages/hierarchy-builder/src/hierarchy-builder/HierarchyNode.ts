@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert, compareStrings, compareStringsOrUndefined } from "@itwin/core-bentley";
+import { OmitOverUnion } from "./Utils";
 import { ConcatenatedValue } from "./values/ConcatenatedValue";
 import { InstanceKey, PrimitiveValue } from "./values/Values";
 
@@ -180,45 +181,57 @@ export namespace HierarchyNodeKey {
   export function isPropertyValueGrouping(key: HierarchyNodeKey): key is PropertyValueGroupingNodeKey {
     return isStandard(key) && key.type === "property-grouping:value";
   }
+}
+
+/**
+ * A key that uniquely identifies parent node in a hierarchy level.
+ * @beta
+ */
+export type ParentNodeKey = OmitOverUnion<GroupingNodeKey, "groupedInstanceKeys"> | InstancesNodeKey | string;
+
+/** @beta */
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export namespace ParentNodeKey {
   /** Checks whether the two given keys are equal. */
-  export function equals(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): boolean {
+  export function equals(lhs: ParentNodeKey, rhs: ParentNodeKey): boolean {
     if (typeof lhs !== typeof rhs) {
       return false;
     }
-    if (isCustom(lhs)) {
+    if (typeof lhs === "string") {
       return lhs === rhs;
     }
-    assert(isStandard(rhs));
+    assert(typeof rhs !== "string");
+
     if (lhs.type !== rhs.type) {
       return false;
     }
     switch (lhs.type) {
       case "instances": {
-        assert(isInstances(rhs));
+        assert(rhs.type === "instances");
         return (
           lhs.instanceKeys.length === rhs.instanceKeys.length &&
           lhs.instanceKeys.every((lhsInstanceKey) => rhs.instanceKeys.some((rhsInstanceKey) => InstanceKey.equals(lhsInstanceKey, rhsInstanceKey)))
         );
       }
       case "class-grouping": {
-        assert(isClassGrouping(rhs));
+        assert(rhs.type === "class-grouping");
         return lhs.class.name === rhs.class.name;
       }
       case "label-grouping": {
-        assert(isLabelGrouping(rhs));
+        assert(rhs.type === "label-grouping");
         return lhs.label === rhs.label && lhs.groupId === rhs.groupId;
       }
       case "property-grouping:other": {
         return true;
       }
       case "property-grouping:value": {
-        assert(isPropertyValueGrouping(rhs));
+        assert(rhs.type === "property-grouping:value");
         return (
           lhs.propertyClassName === rhs.propertyClassName && lhs.propertyName === rhs.propertyName && lhs.formattedPropertyValue === rhs.formattedPropertyValue
         );
       }
       case "property-grouping:range": {
-        assert(isPropertyValueRangeGrouping(rhs));
+        assert(rhs.type === "property-grouping:range");
         return (
           lhs.propertyClassName === rhs.propertyClassName &&
           lhs.propertyName === rhs.propertyName &&
@@ -235,14 +248,14 @@ export namespace HierarchyNodeKey {
    *- `negative value` if lhs key is less than rhs key
    *- `positive value` if lhs key is more than rhs key
    */
-  export function compare(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): number {
-    if (isCustom(lhs)) {
-      if (!isCustom(rhs)) {
+  export function compare(lhs: ParentNodeKey, rhs: ParentNodeKey): number {
+    if (typeof lhs === "string") {
+      if (typeof rhs !== "string") {
         return 1;
       }
       return compareStrings(lhs, rhs);
     }
-    if (isCustom(rhs)) {
+    if (typeof rhs === "string") {
       return -1;
     }
 
@@ -253,7 +266,7 @@ export namespace HierarchyNodeKey {
 
     switch (lhs.type) {
       case "instances": {
-        assert(isInstances(rhs));
+        assert(rhs.type === "instances");
         if (lhs.instanceKeys.length !== rhs.instanceKeys.length) {
           return lhs.instanceKeys.length > rhs.instanceKeys.length ? 1 : -1;
         }
@@ -266,11 +279,11 @@ export namespace HierarchyNodeKey {
         return 0;
       }
       case "class-grouping": {
-        assert(isClassGrouping(rhs));
+        assert(rhs.type === "class-grouping");
         return compareStrings(lhs.class.name, rhs.class.name);
       }
       case "label-grouping": {
-        assert(isLabelGrouping(rhs));
+        assert(rhs.type === "label-grouping");
         const labelCompareResult = compareStrings(lhs.label, rhs.label);
         if (labelCompareResult !== 0) {
           return labelCompareResult;
@@ -281,7 +294,7 @@ export namespace HierarchyNodeKey {
         return 0;
       }
       case "property-grouping:value": {
-        assert(isPropertyValueGrouping(rhs));
+        assert(rhs.type === "property-grouping:value");
         const propertyClassNameCompareResult = compareStrings(lhs.propertyClassName, rhs.propertyClassName);
         if (propertyClassNameCompareResult !== 0) {
           return propertyClassNameCompareResult;
@@ -293,7 +306,7 @@ export namespace HierarchyNodeKey {
         return compareStrings(lhs.formattedPropertyValue, rhs.formattedPropertyValue);
       }
       case "property-grouping:range": {
-        assert(isPropertyValueRangeGrouping(rhs));
+        assert(rhs.type === "property-grouping:range");
         const propertyClassNameCompareResult = compareStrings(lhs.propertyClassName, rhs.propertyClassName);
         if (propertyClassNameCompareResult !== 0) {
           return propertyClassNameCompareResult;
@@ -319,7 +332,7 @@ export interface HierarchyNode {
   /** An identifier to identify the node in its hierarchy level. */
   key: HierarchyNodeKey;
   /** Identifiers of all node ancestors. Can be used to identify a node in the hierarchy. */
-  parentKeys: HierarchyNodeKey[];
+  parentKeys: ParentNodeKey[];
   /** Node's display label. */
   label: string;
   /** A flag indicating whether the node has children or not. */
