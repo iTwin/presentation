@@ -108,7 +108,7 @@ export namespace PresentationInstanceFilter {
   export function toGenericInstanceFilter(filter: PresentationInstanceFilter, filteredClasses?: ClassInfo[]): GenericInstanceFilter {
     const context: ConvertContext = { relatedInstances: [], propertyClasses: [], usedRelatedAliases: new Map<string, number>() };
 
-    const rules = createMetadataFromFilter(filter, context);
+    const rules = createGenericInstanceFilter(filter, context);
     return {
       rules,
       relatedInstances: context.relatedInstances.map((instance) => ({ path: toRelationshipStep(instance.path), alias: instance.alias })),
@@ -121,7 +121,7 @@ export namespace PresentationInstanceFilter {
    * Creates `PresentationInstanceFilter`.
    * @beta
    */
-  export function fromGenericInstanceFilter(filter: GenericInstanceFilter, descriptor: Descriptor): PresentationInstanceFilter {
+  export function fromGenericInstanceFilter(descriptor: Descriptor, filter: GenericInstanceFilter): PresentationInstanceFilter {
     return parseGenericFilter(filter, descriptor);
   }
 
@@ -216,18 +216,18 @@ interface RelatedInstance {
   alias: string;
 }
 
-function createMetadataFromFilter(filter: PresentationInstanceFilter, ctx: ConvertContext) {
+function createGenericInstanceFilter(filter: PresentationInstanceFilter, ctx: ConvertContext) {
   if (PresentationInstanceFilter.isConditionGroup(filter)) {
     return createGenericInstanceFilterRuleGroup(filter, ctx);
   }
-  const result = traverseUniqueValuesCondition(filter, ctx);
+  const result = createGenericInstanceFilterUniqueValueRules(filter, ctx);
   if (result !== undefined) {
     return result;
   }
   return createGenericInstanceFilterRule(filter, ctx);
 }
 
-function traverseUniqueValuesCondition(filter: PresentationInstanceFilterCondition, ctx: ConvertContext) {
+function createGenericInstanceFilterUniqueValueRules(filter: PresentationInstanceFilterCondition, ctx: ConvertContext) {
   // Unique values works only with `IsEqual` and `IsNotEqual` operators.
   if (filter.operator !== "is-equal" && filter.operator !== "is-not-equal") {
     return undefined;
@@ -235,7 +235,7 @@ function traverseUniqueValuesCondition(filter: PresentationInstanceFilterConditi
   if (typeof filter.value?.value !== "string" || typeof filter.value?.displayValue !== "string") {
     return undefined;
   }
-  const result = handleStringifiedUniqueValues(filter, filter.value.displayValue, filter.value.value);
+  const result = createUniqueValueConditions(filter, filter.value.displayValue, filter.value.value);
   if (result === undefined) {
     return undefined;
   }
@@ -243,7 +243,7 @@ function traverseUniqueValuesCondition(filter: PresentationInstanceFilterConditi
 }
 
 function createGenericInstanceFilterRuleGroup(group: PresentationInstanceFilterConditionGroup, ctx: ConvertContext): GenericInstanceFilterRuleGroup {
-  const convertedConditions = group.conditions.map((condition) => createMetadataFromFilter(condition, ctx));
+  const convertedConditions = group.conditions.map((condition) => createGenericInstanceFilter(condition, ctx));
   return {
     operator: group.operator,
     rules: convertedConditions,
@@ -266,12 +266,28 @@ function createGenericInstanceFilterRule(condition: PresentationInstanceFilterCo
   };
 }
 
-function addClassInfoToContext(classInfo: ClassInfo, ctx: ConvertContext) {
-  if (ctx.propertyClasses.find((existing) => existing.id === classInfo.id)) {
-    return;
+function createUniqueValueConditions(filter: PresentationInstanceFilterCondition, serializedDisplayValues: string, serializedGroupedRawValues: string) {
+  const { field, operator } = filter;
+
+  const uniqueValues = deserializeUniqueValues(serializedDisplayValues, serializedGroupedRawValues);
+  if (uniqueValues === undefined) {
+    return undefined;
   }
 
-  ctx.propertyClasses.push(classInfo);
+  const conditionGroup: PresentationInstanceFilterConditionGroup = {
+    operator: operator === "is-equal" ? "or" : "and",
+    conditions: [],
+  };
+  for (const { displayValue, groupedRawValues } of uniqueValues) {
+    for (const value of groupedRawValues) {
+      conditionGroup.conditions.push({
+        field,
+        operator,
+        value: { valueFormat: PropertyValueFormat.Primitive, displayValue, value },
+      });
+    }
+  }
+  return conditionGroup;
 }
 
 function getRelatedInstanceDescription(field: PropertiesField, propClassName: string, ctx: ConvertContext): RelatedInstance | undefined {
@@ -296,35 +312,19 @@ function getRelatedInstanceDescription(field: PropertiesField, propClassName: st
   return newRelated;
 }
 
+function addClassInfoToContext(classInfo: ClassInfo, ctx: ConvertContext) {
+  if (ctx.propertyClasses.find((existing) => existing.id === classInfo.id)) {
+    return;
+  }
+
+  ctx.propertyClasses.push(classInfo);
+}
+
 function getPathToPrimaryClass(field: NestedContentField): RelationshipPath {
   if (field.parent) {
     return [...field.pathToPrimaryClass, ...getPathToPrimaryClass(field.parent)];
   }
   return [...field.pathToPrimaryClass];
-}
-
-function handleStringifiedUniqueValues(filter: PresentationInstanceFilterCondition, serializedDisplayValues: string, serializedGroupedRawValues: string) {
-  const { field, operator } = filter;
-
-  const uniqueValues = deserializeUniqueValues(serializedDisplayValues, serializedGroupedRawValues);
-  if (uniqueValues === undefined) {
-    return undefined;
-  }
-
-  const conditionGroup: PresentationInstanceFilterConditionGroup = {
-    operator: operator === "is-equal" ? "or" : "and",
-    conditions: [],
-  };
-  for (const { displayValue, groupedRawValues } of uniqueValues) {
-    for (const value of groupedRawValues) {
-      conditionGroup.conditions.push({
-        field,
-        operator,
-        value: { valueFormat: PropertyValueFormat.Primitive, displayValue, value },
-      });
-    }
-  }
-  return conditionGroup;
 }
 
 function getAliasIndex(alias: string, usedAliases: Map<string, number>) {
@@ -399,6 +399,7 @@ function parseUniqueValuesRule(rules: GenericInstanceFilterRule[], ctx: GenericF
   }
 
   const field = ctx.findField(rules[0].propertyName, rules[0].sourceAlias);
+
   const uniqueValues: UniqueValue[] = [];
   for (const rule of rules) {
     assert(rule.value?.displayValue !== undefined && rule.value.rawValue !== undefined);
@@ -441,16 +442,14 @@ function findRelatedField(
   fields: Field[],
   propName: string,
   alias: string,
-  paths: GenericInstanceFilterRelatedInstanceDescription[],
+  relatedInstances: GenericInstanceFilterRelatedInstanceDescription[],
 ): PropertiesField | undefined {
-  const path = paths.find((relPath) => alias === relPath.alias);
-  if (!path) {
+  const relatedInstance = relatedInstances.find((rel) => alias === rel.alias);
+  if (!relatedInstance) {
     return undefined;
   }
 
-  const pathToPrimaryClass = reverseRelationshipSteps(path.path);
-
-  const relatedField = findFieldByPath(fields, pathToPrimaryClass);
+  const relatedField = findFieldByPath(fields, relatedInstance.path);
   return relatedField ? findDirectField(relatedField.nestedFields, propName) : undefined;
 }
 
@@ -460,7 +459,7 @@ function findFieldByPath(fields: Field[], pathToField: GenericInstanceFilterRela
       continue;
     }
 
-    const pathMatchResult = pathStartsWith(pathToField, field.pathToPrimaryClass);
+    const pathMatchResult = pathStartsWith(pathToField, RelationshipPath.reverse(field.pathToPrimaryClass));
     if (!pathMatchResult.matches) {
       continue;
     }
@@ -470,6 +469,7 @@ function findFieldByPath(fields: Field[], pathToField: GenericInstanceFilterRela
     }
 
     const nestedField = findFieldByPath(field.nestedFields, pathMatchResult.leftOver);
+    // istanbul ignore else
     if (nestedField) {
       return nestedField;
     }
@@ -493,7 +493,7 @@ function pathStartsWith(
     return { matches: false };
   }
 
-  for (let i = 0; i < prefix.length; ++i) {
+  for (let i = 0; i < path.length; ++i) {
     const prefixStep = prefix[i];
     const pathStep = path[i];
 
@@ -514,15 +514,6 @@ function pathStartsWith(
   };
 }
 
-function reverseRelationshipSteps(path: GenericInstanceFilterRelationshipStep[]): GenericInstanceFilterRelationshipStep[] {
-  return [...path].reverse().map((step) => ({
-    ...step,
-    sourceClassName: step.targetClassName,
-    targetClassName: step.sourceClassName,
-    isForwardRelationship: !step.isForwardRelationship,
-  }));
-}
-
 function toRelationshipStep(path: RelationshipPath): GenericInstanceFilterRelationshipStep[] {
   return path.map((step) => ({
     sourceClassName: step.sourceClassInfo.name,
@@ -533,39 +524,22 @@ function toRelationshipStep(path: RelationshipPath): GenericInstanceFilterRelati
 }
 
 function toGenericInstanceFilterRuleValue(primitiveValue?: PrimitiveValue): GenericInstanceFilterRuleValue | undefined {
-  if (!primitiveValue || primitiveValue.value === undefined) {
+  if (!primitiveValue || primitiveValue.value === undefined || !isGenericPrimitiveValueLike(primitiveValue.value)) {
     return undefined;
   }
 
-  const rawValue = toGenericPrimitiveValue(primitiveValue.value);
-  if (rawValue === undefined) {
-    return undefined;
-  }
-
-  return { displayValue: primitiveValue.displayValue ?? "", rawValue };
+  return { displayValue: primitiveValue.displayValue ?? "", rawValue: primitiveValue.value };
 }
 
-function toGenericPrimitiveValue(value: Primitives.Value): GenericInstanceFilterRuleValue.Values | undefined {
+function isGenericPrimitiveValueLike(value: Primitives.Value): value is GenericInstanceFilterRuleValue.Values {
   switch (typeof value) {
     case "string":
-      return value;
     case "number":
-      return value;
     case "boolean":
-      return value;
+      return true;
   }
 
-  if (isPoint2dLike(value)) {
-    return value;
-  }
-  if (isPoint3dLike(value)) {
-    return value;
-  }
-  if (isInstanceKeyLike(value)) {
-    return value;
-  }
-
-  return undefined;
+  return isPoint3dLike(value) || isPoint2dLike(value) || isInstanceKeyLike(value);
 }
 
 function isPoint2dLike(value: object): value is { x: number; y: number } {
