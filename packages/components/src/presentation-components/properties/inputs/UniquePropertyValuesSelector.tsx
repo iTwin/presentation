@@ -7,7 +7,19 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ActionMeta, MultiValue } from "react-select";
 import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ContentSpecificationTypes, Descriptor, DisplayValue, Field, Keys, KeySet, Ruleset, RuleTypes, Value } from "@itwin/presentation-common";
+import {
+  ClassInfo,
+  ContentSpecificationTypes,
+  Descriptor,
+  DisplayValue,
+  Field,
+  Keys,
+  KeySet,
+  MultiSchemaClassesSpecification,
+  Ruleset,
+  RuleTypes,
+  Value,
+} from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { deserializeDisplayValueGroupArray, findField, serializeDisplayValueGroupArray, translate } from "../../common/Utils";
 import { getInstanceFilterFieldName } from "../../instance-filter-builder/Utils";
@@ -140,12 +152,12 @@ function useUniquePropertyValuesRuleset(descriptorRuleset?: Ruleset, field?: Fie
       return;
     }
 
-    const baseClassInfo = getBaseClassInfo(field);
-    if (baseClassInfo === undefined) {
+    const classInfos = getFieldClassInfos(field);
+    if (classInfos.length === 0) {
       setRuleset(undefined);
       return;
     }
-    const [schemaName, className] = baseClassInfo.name.split(":");
+
     setRuleset({
       id: "unique-property-values",
       rules: [
@@ -154,7 +166,7 @@ function useUniquePropertyValuesRuleset(descriptorRuleset?: Ruleset, field?: Fie
           specifications: [
             {
               specType: ContentSpecificationTypes.ContentInstancesOfSpecificClasses,
-              classes: { schemaName, classNames: [className], arePolymorphic: true },
+              classes: createSchemaClasses(classInfos),
             },
           ],
         },
@@ -165,9 +177,26 @@ function useUniquePropertyValuesRuleset(descriptorRuleset?: Ruleset, field?: Fie
   return ruleset;
 }
 
-function getBaseClassInfo(field?: Field) {
+function createSchemaClasses(infos: ClassInfo[]): MultiSchemaClassesSpecification | MultiSchemaClassesSpecification[] {
+  const map = new Map<string, string[]>();
+  infos.forEach((info) => {
+    const [schemaName, className] = info.name.split(":");
+    let classNames = map.get(schemaName);
+    if (!classNames) {
+      classNames = [];
+      map.set(schemaName, classNames);
+    }
+    if (!classNames.includes(className)) {
+      classNames.push(className);
+    }
+  });
+  const schemaClasses = [...map.entries()].map(([schemaName, classNames]) => ({ schemaName, classNames, arePolymorphic: true }));
+  return schemaClasses.length === 1 ? schemaClasses[0] : schemaClasses;
+}
+
+function getFieldClassInfos(field?: Field) {
   if (field?.parent === undefined && field?.isPropertiesField()) {
-    return field.properties[0].property.classInfo;
+    return field.properties.map((p) => p.property.classInfo);
   }
 
   let rootParentField = field?.parent;
@@ -175,8 +204,7 @@ function getBaseClassInfo(field?: Field) {
     rootParentField = rootParentField.parent;
   }
   const lastStepToPrimaryClass = rootParentField?.pathToPrimaryClass.slice(-1).pop();
-
-  return lastStepToPrimaryClass?.targetClassInfo;
+  return lastStepToPrimaryClass ? [lastStepToPrimaryClass.targetClassInfo] : [];
 }
 
 interface UseUniquePropertyValuesLoaderProps {

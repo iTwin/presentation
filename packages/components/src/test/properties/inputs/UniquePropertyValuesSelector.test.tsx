@@ -6,17 +6,10 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
+import { omit } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import {
-  combineFieldNames,
-  ContentInstancesOfSpecificClassesSpecification,
-  ContentRule,
-  KeySet,
-  MultiSchemaClassesSpecification,
-  RelatedClassInfo,
-  Ruleset,
-} from "@itwin/presentation-common";
+import { combineFieldNames, ContentInstancesOfSpecificClassesSpecification, ContentRule, KeySet, RelatedClassInfo, Ruleset } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { UniquePropertyValuesSelector } from "../../../presentation-components/properties/inputs/UniquePropertyValuesSelector";
 import { createTestECClassInfo, createTestPropertyInfo, createTestRelatedClassInfo, createTestRelationshipPath } from "../../_helpers/Common";
@@ -448,19 +441,17 @@ describe("UniquePropertyValuesSelector", () => {
   });
 
   describe("Ruleset Creation", () => {
-    const getSchemaAndClassNameFromRuleset = (ruleset: Ruleset) => {
+    const getSchemaAndClassNamesFromRuleset = (ruleset: Ruleset) => {
       expect(ruleset.rules.length).to.be.equal(1);
       const contentRule = ruleset.rules[0] as ContentRule;
 
       expect(contentRule.specifications.length).to.be.equal(1);
-      const specifications = contentRule.specifications[0] as ContentInstancesOfSpecificClassesSpecification;
-      const schemaAndClassNames = specifications.classes as MultiSchemaClassesSpecification;
+      const specification = contentRule.specifications[0] as ContentInstancesOfSpecificClassesSpecification;
 
-      expect(schemaAndClassNames.classNames.length).to.be.equal(1);
-      const className = schemaAndClassNames.classNames[0];
-      const schemaName = schemaAndClassNames.schemaName;
-
-      return [schemaName, className];
+      if (Array.isArray(specification.classes)) {
+        return specification.classes.map((msc) => omit(msc, ["arePolymorphic"]));
+      }
+      return omit(specification.classes, ["arePolymorphic"]);
     };
 
     it("calls 'getPagedDistinctValues' with a ruleset that is supplied by the descriptor", async () => {
@@ -531,10 +522,10 @@ describe("UniquePropertyValuesSelector", () => {
       await user.click(selector!);
 
       const [expectedSchemaName, expectedClassName] = lastStepOfRelationshipPath.targetClassInfo.name.split(":");
-      const [actualSchemaName, actualClassName] = getSchemaAndClassNameFromRuleset(spy.firstCall.args[0].rulesetOrId as Ruleset);
-
-      expect(actualSchemaName).to.be.equal(expectedSchemaName);
-      expect(actualClassName).to.be.equal(expectedClassName);
+      expect(getSchemaAndClassNamesFromRuleset(spy.firstCall.args[0].rulesetOrId as Ruleset)).to.deep.eq({
+        schemaName: expectedSchemaName,
+        classNames: [expectedClassName],
+      });
     });
 
     it("calls 'getPagedDistinctValues' with ruleset that is created from a 'NestedContentField' with multiple layers of nesting", async () => {
@@ -574,13 +565,13 @@ describe("UniquePropertyValuesSelector", () => {
       await user.click(selector!);
 
       const [expectedSchemaName, expectedClassName] = lastStepOfRelationshipPath.targetClassInfo.name.split(":");
-      const [actualSchemaName, actualClassName] = getSchemaAndClassNameFromRuleset(spy.firstCall.args[0].rulesetOrId as Ruleset);
-
-      expect(actualSchemaName).to.be.equal(expectedSchemaName);
-      expect(actualClassName).to.be.equal(expectedClassName);
+      expect(getSchemaAndClassNamesFromRuleset(spy.firstCall.args[0].rulesetOrId as Ruleset)).to.deep.eq({
+        schemaName: expectedSchemaName,
+        classNames: [expectedClassName],
+      });
     });
 
-    it("calls 'getPagedDistinctValues' with ruleset that is created from a 'PropertiesField'", async () => {
+    it("calls 'getPagedDistinctValues' with ruleset that is created from a 'PropertiesField' with a single property", async () => {
       const testProperty = {
         name: "#testField",
         displayLabel: "testField",
@@ -608,10 +599,54 @@ describe("UniquePropertyValuesSelector", () => {
       await user.click(selector!);
 
       const [expectedSchemaName, expectedClassName] = testClassInfo.name.split(":");
-      const [actualSchemaName, actualClassName] = getSchemaAndClassNameFromRuleset(spy.firstCall.args[0].rulesetOrId as Ruleset);
+      expect(getSchemaAndClassNamesFromRuleset(spy.firstCall.args[0].rulesetOrId as Ruleset)).to.deep.eq({
+        schemaName: expectedSchemaName,
+        classNames: [expectedClassName],
+      });
+    });
 
-      expect(actualSchemaName).to.be.equal(expectedSchemaName);
-      expect(actualClassName).to.be.equal(expectedClassName);
+    it("calls 'getPagedDistinctValues' with ruleset that is created from a 'PropertiesField' with multiple properties", async () => {
+      const testProperty = {
+        name: "#testField",
+        displayLabel: "testField",
+        typename: "number",
+      };
+
+      const testClassInfos = [
+        createTestECClassInfo({ name: "testSchema1:testClass1" }),
+        createTestECClassInfo({ name: "testSchema1:testClass2" }),
+        createTestECClassInfo({ name: "testSchema2:testClass3" }),
+        createTestECClassInfo({ name: "testSchema2:testClass3" }),
+      ];
+      const testField = createTestPropertiesContentField({
+        name: "testField",
+        properties: testClassInfos.map((c) => ({ property: createTestPropertyInfo({ classInfo: c }) })),
+      });
+
+      const testDescriptor = createTestContentDescriptor({
+        fields: [testField],
+      });
+
+      const spy = sinon.spy(Presentation.presentation, "getPagedDistinctValues");
+
+      const { queryByText, user } = render(
+        <UniquePropertyValuesSelector property={testProperty} onChange={() => {}} imodel={testImodel} descriptor={testDescriptor} />,
+      );
+
+      // trigger loadTargets function
+      const selector = await waitFor(() => queryByText("unique-values-property-editor.select-values"));
+      await user.click(selector!);
+
+      expect(getSchemaAndClassNamesFromRuleset(spy.firstCall.args[0].rulesetOrId as Ruleset)).to.deep.eq([
+        {
+          schemaName: "testSchema1",
+          classNames: ["testClass1", "testClass2"],
+        },
+        {
+          schemaName: "testSchema2",
+          classNames: ["testClass3"],
+        },
+      ]);
     });
 
     it("does not create ruleset when field is a 'NestedContentField' with no parent, thus 'getPagedDistinctValues' is not called", async () => {
