@@ -5,24 +5,28 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import * as moq from "typemoq";
 import { PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IModelConnection } from "@itwin/core-frontend";
-import { Field } from "@itwin/presentation-common";
 import { FavoritePropertiesManager, FavoritePropertiesScope, Presentation } from "@itwin/presentation-frontend";
 import { IPresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider";
 import { FavoritePropertiesDataFilterer } from "../../presentation-components/propertygrid/FavoritePropertiesDataFilterer";
 import { createTestSimpleContentField } from "../_helpers/Content";
 import { createArrayProperty, createPrimitiveStringProperty, createStructProperty } from "../_helpers/Properties";
+import { createStub } from "../TestUtils";
 
 describe("FavoritePropertiesDataFilterer", () => {
-  let mockDataProvider: moq.IMock<IPresentationPropertyDataProvider>;
-  let matchingField: Field | undefined;
+  const imodel = {} as IModelConnection;
+  const dataProvider = {
+    getFieldByPropertyDescription: createStub<IPresentationPropertyDataProvider["getFieldByPropertyDescription"]>(),
+    imodel,
+  };
+
+  function getProvider() {
+    return dataProvider as unknown as IPresentationPropertyDataProvider;
+  }
+
   beforeEach(() => {
-    mockDataProvider = moq.Mock.ofType<IPresentationPropertyDataProvider>();
-    mockDataProvider.setup(async (x) => x.getFieldByPropertyDescription(moq.It.isAny())).returns(async () => matchingField);
-    mockDataProvider.setup((x) => x.imodel).returns(() => moq.Mock.ofType<IModelConnection>().object);
-    matchingField = undefined;
+    dataProvider.getFieldByPropertyDescription.reset();
   });
 
   afterEach(() => {
@@ -31,28 +35,28 @@ describe("FavoritePropertiesDataFilterer", () => {
 
   it("uses `FavoritePropertiesManager` to determine favorites if callback is not provided through props", async () => {
     const record = createPrimitiveStringProperty("Property", "Value");
-    matchingField = createTestSimpleContentField();
+    const matchingField = createTestSimpleContentField();
 
-    const managerMock = moq.Mock.ofType<FavoritePropertiesManager>();
-    managerMock
-      .setup((x) => x.has(matchingField!, moq.It.isAny(), FavoritePropertiesScope.Global))
-      .returns(() => true)
-      .verifiable();
-    sinon.stub(Presentation, "favoriteProperties").get(() => managerMock.object);
+    dataProvider.getFieldByPropertyDescription.resolves(matchingField);
+
+    const manager = sinon.createStubInstance(FavoritePropertiesManager);
+    manager.has.callsFake((field) => field === matchingField);
+
+    sinon.stub(Presentation, "favoriteProperties").get(() => manager);
 
     const filterer = new FavoritePropertiesDataFilterer({
-      source: mockDataProvider.object,
+      source: getProvider(),
       favoritesScope: FavoritePropertiesScope.Global,
       isActive: true,
     });
     const matchResult = await filterer.recordMatchesFilter(record, []);
-    managerMock.verifyAll();
+    expect(manager.has).to.be.called;
     expect(matchResult).to.deep.eq({ matchesFilter: true, shouldExpandNodeParents: true });
   });
 
   it("raises `onFilterChanged` event when filterer is enabled / disabled", () => {
     const filterer = new FavoritePropertiesDataFilterer({
-      source: mockDataProvider.object,
+      source: getProvider(),
       favoritesScope: FavoritePropertiesScope.Global,
     });
     const spy = sinon.spy();
@@ -83,7 +87,7 @@ describe("FavoritePropertiesDataFilterer", () => {
     let filterer: FavoritePropertiesDataFilterer;
     beforeEach(() => {
       filterer = new FavoritePropertiesDataFilterer({
-        source: mockDataProvider.object,
+        source: getProvider(),
         favoritesScope: FavoritePropertiesScope.IModel,
         isFavorite: () => false,
       });
@@ -112,7 +116,7 @@ describe("FavoritePropertiesDataFilterer", () => {
     beforeEach(() => {
       isFavoriteStub.reset();
       filterer = new FavoritePropertiesDataFilterer({
-        source: mockDataProvider.object,
+        source: getProvider(),
         favoritesScope: FavoritePropertiesScope.IModel,
         isActive: true,
         isFavorite: isFavoriteStub,
@@ -123,28 +127,28 @@ describe("FavoritePropertiesDataFilterer", () => {
       const recordType = PropertyValueFormat[record.value.valueFormat];
 
       it(`should not match propertyRecord when \`getFieldByPropertyDescription\` cannot find record field (type: ${recordType})`, async () => {
-        matchingField = undefined;
+        dataProvider.getFieldByPropertyDescription.resolves(undefined);
         const matchResult = await filterer.recordMatchesFilter(record, []);
         expect(matchResult).to.deep.eq({ matchesFilter: false });
       });
 
       it(`should not match \`propertyRecord\` when record is not favorite and has no parents (type: ${recordType})`, async () => {
         isFavoriteStub.returns(false);
-        matchingField = createTestSimpleContentField();
+        dataProvider.getFieldByPropertyDescription.resolves(createTestSimpleContentField());
         const matchResult = await filterer.recordMatchesFilter(record, []);
         expect(matchResult).to.deep.eq({ matchesFilter: false });
       });
 
       it(`should not match \`propertyRecord\` when record is not favorite and has non favorite parents (type: ${recordType})`, async () => {
         isFavoriteStub.returns(false);
-        matchingField = createTestSimpleContentField();
+        dataProvider.getFieldByPropertyDescription.resolves(createTestSimpleContentField());
         const matchResult = await filterer.recordMatchesFilter(record, [createStructProperty("Struct"), createArrayProperty("Array")]);
         expect(matchResult).to.deep.eq({ matchesFilter: false });
       });
 
       it(`should match \`propertyRecord\` when record is favorite and has no parents (type: ${recordType})`, async () => {
         isFavoriteStub.returns(true);
-        matchingField = createTestSimpleContentField();
+        dataProvider.getFieldByPropertyDescription.resolves(createTestSimpleContentField());
         const matchResult = await filterer.recordMatchesFilter(record, []);
         expect(matchResult).to.deep.eq({ matchesFilter: true, shouldExpandNodeParents: true });
       });
@@ -152,15 +156,13 @@ describe("FavoritePropertiesDataFilterer", () => {
       it(`should match \`propertyRecord\` when record is not favorite and has favorite parents (type: ${recordType})`, async () => {
         const favoriteParentRecord = createStructProperty("FavoriteStruct");
         const favoriteParentField = createTestSimpleContentField();
-        mockDataProvider.reset();
-        mockDataProvider
-          .setup(async (x) => x.getFieldByPropertyDescription(moq.It.isAny()))
-          .returns(async (arg: PropertyDescription) => {
-            if (arg.name === favoriteParentRecord.property.name) {
-              return favoriteParentField;
-            }
-            return createTestSimpleContentField();
-          });
+
+        dataProvider.getFieldByPropertyDescription.callsFake(async (arg: PropertyDescription) => {
+          if (arg.name === favoriteParentRecord.property.name) {
+            return favoriteParentField;
+          }
+          return createTestSimpleContentField();
+        });
 
         isFavoriteStub.returns(false);
         isFavoriteStub.withArgs(favoriteParentField, sinon.match.any, sinon.match.any).returns(true);

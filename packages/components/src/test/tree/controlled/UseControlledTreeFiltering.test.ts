@@ -5,53 +5,52 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import * as moq from "typemoq";
 import { TreeModelNode, TreeNodeItem, UiComponents } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { NodePathElement } from "@itwin/presentation-common";
-import {
-  useFilteredNodeLoader,
-  UseFilteredNodeLoaderProps,
-  useNodeHighlightingProps,
-} from "../../../presentation-components/tree/controlled/UseControlledTreeFiltering";
+import { useFilteredNodeLoader, useNodeHighlightingProps } from "../../../presentation-components/tree/controlled/UseControlledTreeFiltering";
 import { FilteredPresentationTreeDataProvider } from "../../../presentation-components/tree/FilteredDataProvider";
-import { IFilteredPresentationTreeDataProvider, IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";
+import {
+  IFilteredPresentationTreeDataProvider, IPresentationTreeDataProvider,
+} from "../../../presentation-components/tree/IPresentationTreeDataProvider";
 import { ResolvablePromise } from "../../_helpers/Promises";
 import { createTestPropertyRecord, createTestTreeNodeItem } from "../../_helpers/UiComponents";
-import { act, renderHook, waitFor } from "../../TestUtils";
+import { act, createStub, renderHook, waitFor } from "../../TestUtils";
 
 describe("useFilteredNodeLoader", () => {
-  const dataProviderMock = moq.Mock.ofType<IPresentationTreeDataProvider>();
-  const imodelMock = moq.Mock.ofType<IModelConnection>();
+  const imodel = {} as IModelConnection;
+  const dataProvider = {
+    imodel,
+    getFilteredNodePaths: createStub<IPresentationTreeDataProvider["getFilteredNodePaths"]>(),
+  };
+  const initialProps = {
+    dataProvider: dataProvider as unknown as IPresentationTreeDataProvider,
+  };
 
-  before(() => {
-    sinon.stub(UiComponents, "localization").get(() => new EmptyLocalization());
+  before(async () => {
+    await UiComponents.initialize(new EmptyLocalization());
   });
 
   after(() => {
-    sinon.restore();
+    UiComponents.terminate();
   });
 
   beforeEach(() => {
-    imodelMock.reset();
-
-    dataProviderMock.reset();
-    dataProviderMock.setup((x) => x.imodel).returns(() => imodelMock.object);
-    dataProviderMock.setup((x) => x.rulesetId).returns(() => "rulesetId");
+    dataProvider.getFilteredNodePaths.reset();
   });
 
   it("does not start filtering if filter is not provided", () => {
-    const { result } = renderHook(useFilteredNodeLoader, { initialProps: { dataProvider: dataProviderMock.object } });
+    const { result } = renderHook(useFilteredNodeLoader, { initialProps: { ...initialProps } });
     expect(result.current.isFiltering).to.be.false;
   });
 
   it("starts filtering if filter is provided", async () => {
     const pathsResult1 = new ResolvablePromise<NodePathElement[]>();
-    dataProviderMock.setup(async (x) => x.getFilteredNodePaths("test")).returns(async () => pathsResult1);
+    dataProvider.getFilteredNodePaths.returns(pathsResult1);
 
     const { result } = renderHook(useFilteredNodeLoader, {
-      initialProps: { dataProvider: dataProviderMock.object, filter: "test", activeMatchIndex: 0 },
+      initialProps: { ...initialProps, filter: "test", activeMatchIndex: 0 },
     });
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.true;
@@ -65,20 +64,25 @@ describe("useFilteredNodeLoader", () => {
     const clock = sinon.useFakeTimers();
     const pathsResult1 = new ResolvablePromise<NodePathElement[]>();
     const pathsResult2 = new ResolvablePromise<NodePathElement[]>();
-    dataProviderMock.setup(async (x) => x.getFilteredNodePaths("test")).returns(async () => pathsResult1);
-    dataProviderMock.setup(async (x) => x.getFilteredNodePaths("last")).returns(async () => pathsResult2);
 
-    const initialProps: UseFilteredNodeLoaderProps = {
-      dataProvider: dataProviderMock.object,
-      filter: "test",
-    };
-    const { result, rerender } = renderHook(useFilteredNodeLoader, { initialProps });
+    dataProvider.getFilteredNodePaths.callsFake(async (filter) => {
+      if (filter === "test") {
+        return pathsResult1;
+      }
+      if (filter === "last") {
+        return pathsResult2;
+      }
+      return [];
+    });
+
+    const { result, rerender } = renderHook(useFilteredNodeLoader, { initialProps: { ...initialProps, filter: "test" } });
 
     // give time to start request
     await act(async () => {
       await clock.tickAsync(1);
     });
-    dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.once());
+
+    expect(dataProvider.getFilteredNodePaths).to.be.calledOnce;
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.true;
 
@@ -89,7 +93,7 @@ describe("useFilteredNodeLoader", () => {
     await act(async () => {
       await clock.tickAsync(1);
     });
-    dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.once());
+    expect(dataProvider.getFilteredNodePaths).to.be.calledOnce;
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.true;
 
@@ -100,7 +104,7 @@ describe("useFilteredNodeLoader", () => {
     await act(async () => {
       await clock.tickAsync(1);
     });
-    dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.once());
+    expect(dataProvider.getFilteredNodePaths).to.be.calledOnce;
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.true;
 
@@ -109,7 +113,7 @@ describe("useFilteredNodeLoader", () => {
     await act(async () => {
       await pathsResult1.resolve([]);
     });
-    dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.exactly(2));
+    expect(dataProvider.getFilteredNodePaths).to.be.calledTwice;
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.true;
 
@@ -117,9 +121,10 @@ describe("useFilteredNodeLoader", () => {
     await act(async () => {
       await pathsResult2.resolve([]);
     });
-    dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.exactly(2));
-    dataProviderMock.verify(async (x) => x.getFilteredNodePaths("test"), moq.Times.once());
-    dataProviderMock.verify(async (x) => x.getFilteredNodePaths("last"), moq.Times.once());
+
+    expect(dataProvider.getFilteredNodePaths).to.be.calledTwice;
+    expect(dataProvider.getFilteredNodePaths).to.be.calledWith("test");
+    expect(dataProvider.getFilteredNodePaths).to.be.calledWith("last");
 
     await waitFor(() => expect(result.current.isFiltering).to.be.false);
     expect(result.current.filteredNodeLoader).to.not.be.undefined;
@@ -131,19 +136,15 @@ describe("useFilteredNodeLoader", () => {
   it("clears filtering request still in progress", async () => {
     const clock = sinon.useFakeTimers();
     const pathsResult = new ResolvablePromise<NodePathElement[]>();
-    dataProviderMock.setup(async (x) => x.getFilteredNodePaths("test")).returns(async () => pathsResult);
+    dataProvider.getFilteredNodePaths.returns(pathsResult);
 
-    const initialProps: UseFilteredNodeLoaderProps = {
-      dataProvider: dataProviderMock.object,
-      filter: "test",
-    };
-    const { result, rerender } = renderHook(useFilteredNodeLoader, { initialProps });
+    const { result, rerender } = renderHook(useFilteredNodeLoader, { initialProps: { ...initialProps, filter: "test" } });
 
     // give time to start request if necessary
     await act(async () => {
       await clock.tickAsync(1);
     });
-    dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.once());
+    expect(dataProvider.getFilteredNodePaths).to.be.calledOnce;
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.true;
 
@@ -154,14 +155,14 @@ describe("useFilteredNodeLoader", () => {
     await act(async () => {
       await clock.tickAsync(1);
     });
-    dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.once());
+    expect(dataProvider.getFilteredNodePaths).to.be.calledOnce;
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.false;
 
     clock.restore();
     // resolve first request verify that filtering was not applied
     await act(async () => pathsResult.resolve([]));
-    dataProviderMock.verify(async (x) => x.getFilteredNodePaths(moq.It.isAnyString()), moq.Times.exactly(1));
+    expect(dataProvider.getFilteredNodePaths).to.be.calledOnce;
     expect(result.current).to.not.be.undefined;
     expect(result.current.isFiltering).to.be.false;
     expect(result.current.filteredNodeLoader).to.be.undefined;
@@ -171,29 +172,27 @@ describe("useFilteredNodeLoader", () => {
   it("filters when dataProvider changes", async () => {
     const pathsResult = new ResolvablePromise<NodePathElement[]>();
     const filter = "test";
-    dataProviderMock.setup(async (x) => x.getFilteredNodePaths(filter)).returns(async () => pathsResult);
+    dataProvider.getFilteredNodePaths.returns(pathsResult);
 
-    const initialProps: UseFilteredNodeLoaderProps = {
-      dataProvider: dataProviderMock.object,
-      filter,
-    };
-    const { result, rerender } = renderHook(useFilteredNodeLoader, { initialProps });
+    const { result, rerender } = renderHook(useFilteredNodeLoader, { initialProps: { ...initialProps, filter } });
 
     await act(async () => pathsResult.resolve([]));
     await waitFor(() => expect(result.current.isFiltering).to.be.false);
     expect(result.current.filteredNodeLoader).to.not.be.undefined;
-    dataProviderMock.verify(async (x) => x.getFilteredNodePaths(filter), moq.Times.once());
+    expect(dataProvider.getFilteredNodePaths).to.be.calledOnce;
 
-    const newProvider = moq.Mock.ofType<IPresentationTreeDataProvider>();
+    const newProvider = {
+      getFilteredNodePaths: createStub<IPresentationTreeDataProvider["getFilteredNodePaths"]>(),
+    };
     const newPathsResult = new ResolvablePromise<NodePathElement[]>();
-    newProvider.setup(async (x) => x.getFilteredNodePaths(moq.It.isAnyString())).returns(async () => newPathsResult);
+    newProvider.getFilteredNodePaths.returns(newPathsResult);
 
-    rerender({ ...initialProps, dataProvider: newProvider.object });
+    rerender({ ...initialProps, filter, dataProvider: newProvider as unknown as IPresentationTreeDataProvider });
 
     await act(async () => newPathsResult.resolve([]));
     await waitFor(() => expect(result.current.isFiltering).to.be.false);
     expect(result.current.filteredNodeLoader).to.not.be.undefined;
-    newProvider.verify(async (x) => x.getFilteredNodePaths(filter), moq.Times.once());
+    expect(newProvider.getFilteredNodePaths).to.be.calledOnce;
   });
 
   it("returns `filteredNodeLoader` with model whose root node's `numRootNodes` is undefined and `loadNode` method returns result with an empty `loadedNodes` array when filtering", async () => {
@@ -213,13 +212,9 @@ describe("useFilteredNodeLoader", () => {
       numChildren: 3,
       parentId: "parentId",
     };
-    const initialProps: UseFilteredNodeLoaderProps = {
-      dataProvider: dataProviderMock.object,
-      filter: "test",
-    };
 
-    dataProviderMock.setup(async (x) => x.getFilteredNodePaths("test")).returns(async () => []);
-    const { result } = renderHook(useFilteredNodeLoader, { initialProps });
+    dataProvider.getFilteredNodePaths.resolves([]);
+    const { result } = renderHook(useFilteredNodeLoader, { initialProps: { ...initialProps, filter: "test" } });
 
     const nodeLoader = await waitFor(() => {
       expect(result.current.isFiltering).to.be.true;
@@ -242,15 +237,18 @@ describe("useFilteredNodeLoader", () => {
 
   it("resets filtered node loader when filter changes", async () => {
     const initialPathsResult = new ResolvablePromise<NodePathElement[]>();
-    dataProviderMock.setup(async (x) => x.getFilteredNodePaths("test")).returns(async () => initialPathsResult);
     const changedPathsResult = new ResolvablePromise<NodePathElement[]>();
-    dataProviderMock.setup(async (x) => x.getFilteredNodePaths("changed")).returns(async () => changedPathsResult);
+    dataProvider.getFilteredNodePaths.callsFake(async (filter) => {
+      if (filter === "test") {
+        return initialPathsResult;
+      }
+      if (filter === "changed") {
+        return changedPathsResult;
+      }
+      return [];
+    });
 
-    const initialProps: UseFilteredNodeLoaderProps = {
-      dataProvider: dataProviderMock.object,
-      filter: "test",
-    };
-    const { result, rerender } = renderHook(useFilteredNodeLoader, { initialProps });
+    const { result, rerender } = renderHook(useFilteredNodeLoader, { initialProps: { ...initialProps, filter: "test" } });
 
     await act(async () => initialPathsResult.resolve([]));
     await waitFor(() => expect(result.current.isFiltering).to.be.false);

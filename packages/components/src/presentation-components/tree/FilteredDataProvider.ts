@@ -5,12 +5,7 @@
 
 import memoize from "micro-memoize";
 import {
-  ActiveMatchInfo,
-  DelayLoadedTreeNodeItem,
-  PageOptions,
-  SimpleTreeDataProvider,
-  SimpleTreeDataProviderHierarchy,
-  TreeNodeItem,
+  ActiveMatchInfo, DelayLoadedTreeNodeItem, PageOptions, SimpleTreeDataProvider, SimpleTreeDataProviderHierarchy, TreeNodeItem,
 } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { InstanceFilterDefinition, Node, NodeKey, NodePathElement } from "@itwin/presentation-common";
@@ -148,6 +143,7 @@ export class FilteredPresentationTreeDataProvider implements IFilteredPresentati
     return this._parentDataProvider.createRequestOptions(parentKey, instanceFilter);
   }
 
+  // istanbul ignore next
   /** @deprecated in 4.0. Use [[isPresentationTreeNodeItem]] and [[PresentationTreeNodeItem.key]] to get [NodeKey]($presentation-common). */
   public getNodeKey(node: TreeNodeItem): NodeKey {
     // eslint-disable-next-line deprecation/deprecation

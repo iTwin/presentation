@@ -46,7 +46,7 @@ function createTestECInstancesNodeWithId(id?: string) {
 type GetNodesOptions = Paged<HierarchyRequestOptions<IModelConnection, NodeKey, RulesetVariable>> & ClientDiagnosticsAttribute;
 type GetFilteredNodePathsOptions = FilterByTextHierarchyRequestOptions<IModelConnection, RulesetVariable> & ClientDiagnosticsAttribute;
 
-describe.only("TreeDataProvider", () => {
+describe("TreeDataProvider", () => {
   const rulesetId: string = "ruleset_id";
   const onVariableChanged: BeEvent<(variableId: string) => void> = new BeEvent();
 
