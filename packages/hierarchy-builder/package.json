@@ -35,13 +35,13 @@
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/presentation-hierarchy-builder.api.md"
   },
   "dependencies": {
-    "@itwin/core-bentley": "^4.3.0-dev.39",
+    "@itwin/core-bentley": "^4.4.0-dev.35",
     "natural-compare-lite": "^1.4.0",
     "rxjs": "^7.8.1",
     "rxjs-for-await": "^1.0.0"
   },
   "devDependencies": {
-    "@itwin/build-tools": "^4.3.0-dev.39",
+    "@itwin/build-tools": "^4.4.0-dev.35",
     "@itwin/eslint-plugin": "4.0.0-dev.48",
     "@types/chai": "^4.3.11",
     "@types/chai-as-promised": "^7.1.8",
