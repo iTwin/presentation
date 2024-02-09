@@ -11,7 +11,7 @@ import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Ruleset } from "@itwin/presentation-common";
 import { PresentationTree, PresentationTreeRenderer, usePresentationTreeState } from "@itwin/presentation-components";
 import { buildTestIModel } from "@itwin/presentation-testing";
-import { fireEvent, getByPlaceholderText, getByRole, getByText, render, waitFor } from "@testing-library/react";
+import { fireEvent, getByPlaceholderText, getByRole, getByTitle, render, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
@@ -93,7 +93,7 @@ describe("Learning snippets", () => {
       // open property selector and select the "User Label" property
       const propertySelector = await waitFor(() => getByPlaceholderText<HTMLInputElement>(baseElement, "Çhóôsë pröpértý"));
       fireEvent.focus(propertySelector);
-      fireEvent.click(getByText(baseElement, "User Label"));
+      fireEvent.click(getByTitle(baseElement, "User Label"));
       await waitFor(() => expect(propertySelector.value).to.eq("User Label"));
 
       // focus value input box

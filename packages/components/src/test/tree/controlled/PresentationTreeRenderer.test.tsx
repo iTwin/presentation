@@ -396,7 +396,7 @@ async function openFilterDialog({ getByRole, baseElement, user }: ReturnType<typ
 
 async function applyFilter(result: ReturnType<typeof render>, propertyLabel: string) {
   await openFilterDialog(result);
-  const { baseElement, getByText, user } = result;
+  const { baseElement, getByTitle, user } = result;
 
   // select property in filter builder dialog
   // open property selector
@@ -404,7 +404,7 @@ async function applyFilter(result: ReturnType<typeof render>, propertyLabel: str
   expect(propertySelector).to.not.be.null;
   await user.click(propertySelector!);
   // select property
-  await user.click(getByText(propertyLabel));
+  await user.click(getByTitle(propertyLabel));
 
   // wait until apply button is enabled
   const applyButton = await waitFor(() => {

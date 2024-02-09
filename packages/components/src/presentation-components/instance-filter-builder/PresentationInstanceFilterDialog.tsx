@@ -85,6 +85,7 @@ export function PresentationInstanceFilterDialog(props: PresentationInstanceFilt
       trapFocus={true}
       isDraggable
       isResizable
+      portal={true}
     >
       <Dialog.Backdrop />
       <Dialog.Main className="presentation-instance-filter-dialog-content-container">
