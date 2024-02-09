@@ -3,9 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-export * from "./core-interop/Formatting";
-export * from "./core-interop/HierarchyLevelDescriptor";
-export * from "./core-interop/Logging";
-export * from "./core-interop/Metadata";
-export * from "./core-interop/QueryExecutor";
-export * from "./core-interop/Transactions";
+/**
+ * This is an utility `Omit` type which works with union types.
+ * @beta
+ */
+export type OmitOverUnion<T, K extends PropertyKey> = T extends T ? Omit<T, K> : never;

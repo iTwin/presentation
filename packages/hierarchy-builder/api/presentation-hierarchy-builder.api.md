@@ -524,7 +524,7 @@ export interface HierarchyNode {
     };
     key: HierarchyNodeKey;
     label: string;
-    parentKeys: HierarchyNodeKey[];
+    parentKeys: ParentNodeKey[];
     supportsFiltering?: boolean;
 }
 
@@ -645,8 +645,6 @@ export type HierarchyNodeKey = StandardHierarchyNodeKey | string;
 
 // @beta (undocumented)
 export namespace HierarchyNodeKey {
-    export function compare(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): number;
-    export function equals(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): boolean;
     export function isClassGrouping(key: HierarchyNodeKey): key is ClassGroupingNodeKey;
     export function isCustom(key: HierarchyNodeKey): key is string;
     export function isGrouping(key: HierarchyNodeKey): key is GroupingNodeKey;
@@ -733,12 +731,19 @@ export class HierarchyProvider {
 }
 
 // @beta
+export interface HierarchyProviderLocalizedStrings {
+    other: string;
+    unspecified: string;
+}
+
+// @beta
 export interface HierarchyProviderProps {
     filtering?: {
         paths: HierarchyNodeIdentifiersPath[];
     };
     formatter?: IPrimitiveValueFormatter;
     hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
+    localizedStrings?: HierarchyProviderLocalizedStrings;
     metadataProvider: IMetadataProvider;
     queryConcurrency?: number;
     queryExecutor: ILimitingECSqlQueryExecutor;
@@ -848,12 +853,6 @@ export interface LabelGroupingNodeKey extends BaseGroupingNodeKey {
     type: "label-grouping";
 }
 
-// @beta
-export const LOCALIZATION_NAMESPACE = "PresentationHierarchyBuilder";
-
-// @beta
-export type LocalizationFunction = (input: string) => string;
-
 // @beta (undocumented)
 export type LogFunction = (category: string, message: string) => void;
 
@@ -912,7 +911,19 @@ export class NodeSelectQueryFactory {
 }
 
 // @beta
+export type OmitOverUnion<T, K extends PropertyKey> = T extends T ? Omit<T, K> : never;
+
+// @beta
 export type ParentHierarchyNode = Omit<HierarchyNode, "children">;
+
+// @beta
+export type ParentNodeKey = OmitOverUnion<GroupingNodeKey, "groupedInstanceKeys"> | InstancesNodeKey | string;
+
+// @beta (undocumented)
+export namespace ParentNodeKey {
+    export function compare(lhs: ParentNodeKey, rhs: ParentNodeKey): number;
+    export function equals(lhs: ParentNodeKey, rhs: ParentNodeKey): boolean;
+}
 
 // @beta
 export type ParsedCustomHierarchyNode = Omit<ProcessedCustomHierarchyNode, "label" | "parentKeys"> & {
@@ -1076,9 +1087,6 @@ export class RowsLimitExceededError extends Error {
     // (undocumented)
     readonly limit: number;
 }
-
-// @beta
-export function setLocalizationFunction(localizationFunction?: LocalizationFunction): void;
 
 // @beta
 export function setLogger(logger: ILogger | undefined): void;

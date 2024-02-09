@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { omit } from "@itwin/core-bentley";
 import { GroupingNodeKey } from "../../../../hierarchy-builder/HierarchyNode";
 import { GroupingHandlerResult } from "../../../../hierarchy-builder/internal/operators/Grouping";
 import { createLabelGroups } from "../../../../hierarchy-builder/internal/operators/grouping/LabelGrouping";
@@ -32,7 +33,7 @@ describe("LabelGrouping", () => {
           label: "1",
           key: expectedGroupingNodeKey,
           parentKeys: ["x"],
-          children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
+          children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
         }),
       ],
       ungrouped: [],
@@ -61,7 +62,7 @@ describe("LabelGrouping", () => {
           label: "1",
           key: expectedGroupingNodeKey,
           parentKeys: ["x"],
-          children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
+          children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
         }),
       ],
       ungrouped: [],
@@ -90,7 +91,7 @@ describe("LabelGrouping", () => {
           label: "1",
           key: expectedGroupingNodeKey,
           parentKeys: ["x"],
-          children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
+          children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
         }),
       ],
       ungrouped: [],
@@ -131,13 +132,13 @@ describe("LabelGrouping", () => {
           label: "1",
           key: expectedGroupingNodeKey1,
           parentKeys: ["x"],
-          children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, expectedGroupingNodeKey1] }],
+          children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, omit(expectedGroupingNodeKey1, ["groupedInstanceKeys"])] }],
         }),
         createTestProcessedGroupingNode({
           label: "1",
           key: expectedGroupingNodeKey2,
           parentKeys: ["x"],
-          children: [{ ...nodes[1], parentKeys: [...nodes[1].parentKeys, expectedGroupingNodeKey2] }],
+          children: [{ ...nodes[1], parentKeys: [...nodes[1].parentKeys, omit(expectedGroupingNodeKey2, ["groupedInstanceKeys"])] }],
         }),
       ],
       ungrouped: [],
@@ -172,7 +173,7 @@ describe("LabelGrouping", () => {
           label: "1",
           key: expectedGroupingNodeKey,
           parentKeys: ["x"],
-          children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
+          children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
         }),
       ],
       ungrouped: [],
@@ -207,7 +208,7 @@ describe("LabelGrouping", () => {
           label: "1",
           key: expectedGroupingNodeKey,
           parentKeys: ["x"],
-          children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
+          children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
         }),
       ],
       ungrouped: [],
@@ -248,13 +249,13 @@ describe("LabelGrouping", () => {
           label: "1",
           key: expectedGroupingNodeKey1,
           parentKeys: ["x"],
-          children: [nodes[0]].map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey1] })),
+          children: [nodes[0]].map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey1, ["groupedInstanceKeys"])] })),
         }),
         createTestProcessedGroupingNode({
           label: "2",
           key: expectedGroupingNodeKey2,
           parentKeys: ["x"],
-          children: [nodes[1]].map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey2] })),
+          children: [nodes[1]].map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey2, ["groupedInstanceKeys"])] })),
         }),
       ],
       ungrouped: [],

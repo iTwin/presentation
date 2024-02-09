@@ -97,6 +97,7 @@ beta;HierarchyNodePropertyValueRange
 beta;HierarchyNodesDefinition = CustomHierarchyNodeDefinition | InstanceNodesQueryDefinition
 beta;HierarchyNodesDefinition
 beta;HierarchyProvider
+beta;HierarchyProviderLocalizedStrings
 beta;HierarchyProviderProps
 beta;Id64String = string
 beta;IECSqlQueryExecutor
@@ -116,13 +117,14 @@ beta;InstancesNodeChildHierarchyLevelDefinition
 beta;InstancesNodeKey
 beta;IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise
 beta;LabelGroupingNodeKey 
-beta;LOCALIZATION_NAMESPACE = "PresentationHierarchyBuilder"
-beta;LocalizationFunction = (input: string) => string
 beta;LogFunction = (category: string, message: string) => void
 beta;NodeSelectClauseColumnNames
 beta;NodeSelectClauseProps
 beta;NodeSelectQueryFactory
+beta;OmitOverUnion
 beta;ParentHierarchyNode = Omit
+beta;ParentNodeKey = OmitOverUnion
+beta;ParentNodeKey
 beta;ParsedCustomHierarchyNode = Omit
 beta;ParsedHierarchyNode = ParsedCustomHierarchyNode | ParsedInstanceHierarchyNode
 beta;ParsedInstanceHierarchyNode = Omit
@@ -152,7 +154,6 @@ beta;RelatedInstanceDescription
 beta;RelationshipPath
 beta;RelationshipPathStep
 beta;RowsLimitExceededError 
-beta;setLocalizationFunction(localizationFunction?: LocalizationFunction): void
 beta;setLogger(logger: ILogger | undefined): void
 beta;StandardHierarchyNodeKey = InstancesNodeKey | GroupingNodeKey
 beta;TypedPrimitiveValue

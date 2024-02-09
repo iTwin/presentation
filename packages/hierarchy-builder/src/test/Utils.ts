@@ -14,6 +14,7 @@ import {
   ProcessedGroupingHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "../hierarchy-builder/HierarchyNode";
+import { HierarchyProviderLocalizedStrings } from "../hierarchy-builder/HierarchyProvider";
 import * as common from "../hierarchy-builder/internal/Common";
 import { parseFullClassName } from "../hierarchy-builder/Metadata";
 import { ECSqlQueryReader } from "../hierarchy-builder/queries/ECSqlCore";
@@ -255,3 +256,8 @@ export function createFakeQueryReader(rows: object[]): ECSqlQueryReader {
     }
   })();
 }
+
+export const testLocalizedStrings: HierarchyProviderLocalizedStrings = {
+  other: "_Other_",
+  unspecified: "_Unspecified_",
+};

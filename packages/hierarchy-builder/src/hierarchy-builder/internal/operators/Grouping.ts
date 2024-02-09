@@ -14,7 +14,7 @@ import { createBaseClassGroupingHandlers } from "./grouping/BaseClassGrouping";
 import { createClassGroups } from "./grouping/ClassGrouping";
 import { applyGroupHidingParams } from "./grouping/GroupHiding";
 import { createLabelGroups } from "./grouping/LabelGrouping";
-import { createPropertiesGroupingHandlers } from "./grouping/PropertiesGrouping";
+import { createPropertiesGroupingHandlers, PropertiesGroupingLocalizedStrings } from "./grouping/PropertiesGrouping";
 
 const OPERATOR_NAME = "Grouping";
 /** @internal */
@@ -24,6 +24,7 @@ export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
 export function createGroupingOperator(
   metadata: IMetadataProvider,
   valueFormatter: IPrimitiveValueFormatter,
+  localizedStrings: PropertiesGroupingLocalizedStrings,
   onGroupingNodeCreated?: (groupingNode: ProcessedGroupingHierarchyNode) => void,
   groupingHandlers?: GroupingHandler[],
 ) {
@@ -31,7 +32,9 @@ export function createGroupingOperator(
     return nodes.pipe(
       toArray(),
       concatMap((resolvedNodes) => {
-        const groupingHandlersObs = groupingHandlers ? of(groupingHandlers) : from(createGroupingHandlers(metadata, resolvedNodes, valueFormatter));
+        const groupingHandlersObs = groupingHandlers
+          ? of(groupingHandlers)
+          : from(createGroupingHandlers(metadata, resolvedNodes, valueFormatter, localizedStrings));
         return groupingHandlersObs.pipe(
           concatMap(async (createdGroupingHandlers) => {
             const { instanceNodes, restNodes } = partitionInstanceNodes(resolvedNodes);
@@ -122,6 +125,7 @@ export async function createGroupingHandlers(
   metadata: IMetadataProvider,
   nodes: ProcessedHierarchyNode[],
   valueFormatter: IPrimitiveValueFormatter,
+  localizedStrings: PropertiesGroupingLocalizedStrings,
 ): Promise<GroupingHandler[]> {
   const groupingHandlers: GroupingHandler[] = new Array<GroupingHandler>();
   groupingHandlers.push(
@@ -136,6 +140,7 @@ export async function createGroupingHandlers(
       metadata,
       nodes.filter((n): n is ProcessedInstanceHierarchyNode => HierarchyNode.isInstancesNode(n)),
       valueFormatter,
+      localizedStrings,
     )),
   );
   groupingHandlers.push(async (allNodes) => createLabelGroups(allNodes));
