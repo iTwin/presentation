@@ -63,6 +63,24 @@ const DEFAULT_QUERY_CONCURRENCY = 10;
 export type ParentHierarchyNode = Omit<HierarchyNode, "children">;
 
 /**
+ * Defines the strings used by hierarchy provider.
+ * @beta
+ */
+export interface HierarchyProviderLocalizedStrings {
+  /**
+   * A string for "Unspecified". Used for labels of property grouping nodes
+   * that group by an empty value.
+   */
+  unspecified: string;
+
+  /**
+   * A string for "Other". Used for label of a range property grouping node that
+   * groups values which don't fit into any other range.
+   */
+  other: string;
+}
+
+/**
  * Props for [[HierarchyProvider]].
  * @beta
  */
@@ -85,6 +103,9 @@ export interface HierarchyProviderProps {
    * result of [[createDefaultValueFormatter]] called with default parameters.
    */
   formatter?: IPrimitiveValueFormatter;
+
+  /** A set of localized strings to use. Defaults to English strings. */
+  localizedStrings?: HierarchyProviderLocalizedStrings;
 
   /** Props for filtering the hierarchy. */
   filtering?: {
@@ -120,6 +141,7 @@ export class HierarchyProvider {
   private _metadataProvider: IMetadataProvider;
   private _queryReader: TreeQueryResultsReader;
   private _valuesFormatter: IPrimitiveValueFormatter;
+  private _localizedStrings: HierarchyProviderLocalizedStrings;
   private _queryScheduler: SubscriptionScheduler;
   private _nodesCache: ChildNodesCache;
 
@@ -153,6 +175,7 @@ export class HierarchyProvider {
       this._queryReader = new TreeQueryResultsReader({ parser: props.hierarchyDefinition.parseNode });
     }
     this._valuesFormatter = props?.formatter ?? createDefaultValueFormatter();
+    this._localizedStrings = props?.localizedStrings ?? { other: "Other", unspecified: "Not specified" };
     this._queryScheduler = new SubscriptionScheduler(props.queryConcurrency ?? DEFAULT_QUERY_CONCURRENCY);
     this._nodesCache = new ChildNodesCache();
     this.queryExecutor = props.queryExecutor;
@@ -228,7 +251,7 @@ export class HierarchyProvider {
   ): Observable<ProcessedHierarchyNode> {
     return preprocessedNodesObservable.pipe(
       sortNodesByLabelOperator,
-      createGroupingOperator(this._metadataProvider, this._valuesFormatter, (gn) => this.onGroupingNodeCreated(gn, props)),
+      createGroupingOperator(this._metadataProvider, this._valuesFormatter, this._localizedStrings, (gn) => this.onGroupingNodeCreated(gn, props)),
     );
   }
 

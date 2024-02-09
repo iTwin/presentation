@@ -70,7 +70,6 @@ void (async () => {
   // props that we don't want to show in documentation set up example
   presentationBackendProps.workerThreadsCount = 1;
   presentationBackendProps.useMmap = true;
-  presentationBackendProps.updatesPollInterval = 20;
 
   // __PUBLISH_EXTRACT_START__ Presentation.Backend.Initialization.OpenTelemetry.Props
   presentationBackendProps.diagnostics = {
