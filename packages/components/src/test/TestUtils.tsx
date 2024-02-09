@@ -5,6 +5,7 @@
 
 import { expect } from "chai";
 import { createElement, Fragment, PropsWithChildren, ReactElement, StrictMode } from "react";
+import { ThemeProvider } from "@itwin/itwinui-react";
 import {
   RenderHookOptions,
   RenderHookResult,
@@ -16,13 +17,50 @@ import {
 } from "@testing-library/react";
 import userEvent, { UserEvent } from "@testing-library/user-event";
 
-function createWrapper(wrapper?: React.JSXElementConstructor<{ children: React.ReactElement }>, disableStrictMode?: boolean) {
+function createWrapper(Outer: React.JSXElementConstructor<{ children: React.ReactNode }>) {
+  return (Inner?: React.JSXElementConstructor<{ children: React.ReactNode }>) => {
+    return Inner ? ({ children }: PropsWithChildren<unknown>) => createElement(Outer, undefined, createElement(Inner, undefined, children)) : Outer;
+  };
+}
+
+function combineWrappers(wraps: Array<ReturnType<typeof createWrapper>>, wrapper?: React.JSXElementConstructor<{ children: React.ReactNode }>) {
+  let currWrapper = wrapper;
+  for (const wrap of wraps) {
+    currWrapper = wrap(currWrapper);
+  }
+  return currWrapper;
+}
+
+function createDefaultWrappers(disableStrictMode?: boolean, addThemeProvider?: boolean) {
+  const wrappers: Array<ReturnType<typeof createWrapper>> = [];
+  if (addThemeProvider) {
+    wrappers.push(createWrapper(ThemeProvider));
+  }
+
   // if `DISABLE_STRICT_MODE` is set do not wrap components into `StrictMode` component
   const StrictModeWrapper = process.env.DISABLE_STRICT_MODE || disableStrictMode ? Fragment : StrictMode;
+  wrappers.push(createWrapper(StrictModeWrapper));
 
-  return wrapper
-    ? ({ children }: PropsWithChildren<unknown>) => <StrictModeWrapper>{createElement(wrapper, undefined, children)}</StrictModeWrapper>
-    : StrictModeWrapper;
+  return wrappers;
+}
+
+/**
+ * Custom render function that wraps around `render` function from `@testing-library/react` and additionally
+ * setup `userEvent` from `@testing-library/user-event`.
+ *
+ * It should be used when test need to do interactions with rendered components.
+ */
+function customRender(
+  ui: ReactElement,
+  options?: RenderOptions & { disableStrictMode?: boolean; addThemeProvider?: boolean },
+): RenderResult & { user: UserEvent } {
+  const wrappers = createDefaultWrappers(options?.disableStrictMode, options?.addThemeProvider);
+  const wrapper = combineWrappers(wrappers, options?.wrapper);
+
+  return {
+    ...renderRTL(ui, { ...options, wrapper }),
+    user: userEvent.setup(),
+  };
 }
 
 export async function waitForElement<T extends HTMLElement>(container: HTMLElement, selector: string, condition?: (e: T | null) => void): Promise<T> {
@@ -37,26 +75,13 @@ export async function waitForElement<T extends HTMLElement>(container: HTMLEleme
   });
 }
 
-/**
- * Custom render function that wraps around `render` function from `@testing-library/react` and additionally
- * setup `userEvent` from `@testing-library/user-event`.
- *
- * It should be used when test need to do interactions with rendered components.
- */
-function customRender(ui: ReactElement, options?: RenderOptions & { disableStrictMode?: boolean }): RenderResult & { user: UserEvent } {
-  const wrapper = createWrapper(options?.wrapper, options?.disableStrictMode);
-  return {
-    ...renderRTL(ui, { ...options, wrapper }),
-    user: userEvent.setup(),
-  };
-}
-
 function customRenderHook<Result, Props>(
   render: (initialProps: Props) => Result,
   options?: RenderHookOptions<Props> & { disableStrictMode?: boolean },
 ): RenderHookResult<Result, Props> {
-  const wrapper = createWrapper(options?.wrapper, options?.disableStrictMode);
-  return renderHookRTL(render, { ...options, wrapper });
+  const defaultWrappers = createDefaultWrappers(options?.disableStrictMode);
+  const combinedWrappers = combineWrappers(defaultWrappers, options?.wrapper);
+  return renderHookRTL(render, { ...options, wrapper: combinedWrappers });
 }
 
 export * from "@testing-library/react";
