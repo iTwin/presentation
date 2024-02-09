@@ -9,9 +9,6 @@
 import { Primitives, StandardTypeNames } from "@itwin/appui-abstract";
 import { isUnaryPropertyFilterOperator } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
-import { IModelConnection } from "@itwin/core-frontend";
-import { ClassInfo } from "@itwin/presentation-common";
-import { getIModelMetadataProvider } from "./ECMetadataProvider";
 import {
   GenericInstanceFilter,
   GenericInstanceFilterRule,
@@ -19,7 +16,10 @@ import {
   GenericInstanceFilterRuleGroupOperator,
   GenericInstanceFilterRuleOperator,
   GenericInstanceFilterRuleValue,
-} from "./GenericInstanceFilter";
+} from "@itwin/core-common";
+import { IModelConnection } from "@itwin/core-frontend";
+import { ClassInfo } from "@itwin/presentation-common";
+import { getIModelMetadataProvider } from "./ECMetadataProvider";
 
 /** @internal */
 export async function findBaseExpressionClassName(imodel: IModelConnection, propertyClassNames: string[]) {
