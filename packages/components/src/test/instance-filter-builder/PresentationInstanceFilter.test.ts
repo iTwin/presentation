@@ -6,9 +6,9 @@
 import { expect } from "chai";
 import { PropertyDescription, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyFilter, PropertyFilterRule, PropertyFilterRuleGroup } from "@itwin/components-react";
+import { GenericInstanceFilter } from "@itwin/core-common";
 import { Field } from "@itwin/presentation-common";
 import { serializeUniqueValues } from "../../presentation-components/common/Utils";
-import { GenericInstanceFilter } from "../../presentation-components/instance-filter-builder/GenericInstanceFilter";
 import { PresentationInstanceFilter } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilter";
 import { INSTANCE_FILTER_FIELD_SEPARATOR } from "../../presentation-components/instance-filter-builder/Utils";
 import { createTestECClassInfo } from "../_helpers/Common";

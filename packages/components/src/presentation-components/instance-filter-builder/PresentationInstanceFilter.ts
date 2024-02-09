@@ -16,6 +16,14 @@ import {
   PropertyFilterRuleOperator,
 } from "@itwin/components-react";
 import { assert } from "@itwin/core-bentley";
+import {
+  GenericInstanceFilter,
+  GenericInstanceFilterRelatedInstanceDescription,
+  GenericInstanceFilterRelationshipStep,
+  GenericInstanceFilterRule,
+  GenericInstanceFilterRuleGroup,
+  GenericInstanceFilterRuleValue,
+} from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import {
   ClassInfo,
@@ -30,14 +38,6 @@ import {
   Value,
 } from "@itwin/presentation-common";
 import { deserializeUniqueValues, findField, serializeUniqueValues, UniqueValue } from "../common/Utils";
-import {
-  GenericInstanceFilter,
-  GenericInstanceFilterRelatedInstanceDescription,
-  GenericInstanceFilterRelationshipStep,
-  GenericInstanceFilterRule,
-  GenericInstanceFilterRuleGroup,
-  GenericInstanceFilterRuleValue,
-} from "./GenericInstanceFilter";
 import { createExpression, findBaseExpressionClassName } from "./InstanceFilterConverter";
 import { createPropertyInfoFromPropertiesField, getInstanceFilterFieldName } from "./Utils";
 
