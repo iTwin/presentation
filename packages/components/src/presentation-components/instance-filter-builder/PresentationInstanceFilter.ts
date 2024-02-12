@@ -253,9 +253,10 @@ function createGenericInstanceFilterRuleGroup(group: PresentationInstanceFilterC
 
 function createGenericInstanceFilterRule(condition: PresentationInstanceFilterCondition, ctx: ConvertContext): GenericInstanceFilterRule {
   const { field, operator, value } = condition;
+  // we can use first property when creating `GenericInstanceFilterRule` because all properties in this field will have same name.
   const property = field.properties[0].property;
   const relatedInstance = getRelatedInstanceDescription(field, property.classInfo.name, ctx);
-  addClassInfoToContext(relatedInstance ? relatedInstance.path[0].sourceClassInfo : property.classInfo, ctx);
+  addClassInfoToContext(relatedInstance ? [relatedInstance.path[0].sourceClassInfo] : field.properties.map((prop) => prop.property.classInfo), ctx);
   const propertyAlias = relatedInstance?.alias ?? "this";
 
   return {
@@ -313,12 +314,14 @@ function getRelatedInstanceDescription(field: PropertiesField, propClassName: st
   return newRelated;
 }
 
-function addClassInfoToContext(classInfo: ClassInfo, ctx: ConvertContext) {
-  if (ctx.propertyClasses.find((existing) => existing.id === classInfo.id)) {
-    return;
-  }
+function addClassInfoToContext(classInfos: ClassInfo[], ctx: ConvertContext) {
+  for (const classInfo of classInfos) {
+    if (ctx.propertyClasses.find((existing) => existing.id === classInfo.id)) {
+      return;
+    }
 
-  ctx.propertyClasses.push(classInfo);
+    ctx.propertyClasses.push(classInfo);
+  }
 }
 
 function getPathToPrimaryClass(field: NestedContentField): RelationshipPath {
@@ -432,6 +435,7 @@ function findDirectField(fields: Field[], propName: string): PropertiesField | u
       continue;
     }
 
+    // check only the name of the first property because only properties with the same name can be merged under single field.
     if (field.properties[0].property.name === propName) {
       return field;
     }
