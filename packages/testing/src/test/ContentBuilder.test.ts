@@ -4,32 +4,19 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import * as sinon from "sinon";
-import * as moq from "typemoq";
+import sinon from "sinon";
 import { ArrayValue, PrimitiveValue, StructValue } from "@itwin/appui-abstract";
 import { BeEvent, BeUiEvent, Guid, Id64String } from "@itwin/core-bentley";
 import { ECSqlReader } from "@itwin/core-common";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
 import {
-  ArrayTypeDescription,
-  CategoryDescription,
-  Content,
-  Descriptor,
-  DisplayValuesMap,
-  Field,
-  Item,
-  KeySet,
-  PrimitiveTypeDescription,
-  PropertyValueFormat,
-  RegisteredRuleset,
-  Ruleset,
-  StructTypeDescription,
-  TypeDescription,
-  ValuesMap,
+  ArrayTypeDescription, CategoryDescription, Content, Descriptor, DisplayValuesMap, Field, Item, KeySet, PrimitiveTypeDescription,
+  PropertyValueFormat, RegisteredRuleset, Ruleset, StructTypeDescription, TypeDescription, ValuesMap,
 } from "@itwin/presentation-common";
 import { ContentDataProvider } from "@itwin/presentation-components";
 import { Presentation, PresentationManager, RulesetManager } from "@itwin/presentation-frontend";
 import { ContentBuilder, IContentBuilderDataProvider } from "../presentation-testing/ContentBuilder";
+import { createStub } from "./Utils";
 
 class EmptyDataProvider implements IContentBuilderDataProvider {
   // Verifies that given keyset matches a template, otherwise it throws an error
@@ -171,67 +158,66 @@ function verifyKeyset(keyset: KeySet, testInstances: TestInstance[], verificatio
   }
 }
 
-const mockThrowingQueryReader = (imodelMock: moq.IMock<IModelConnection>) => {
-  const mock1 = moq.Mock.ofType<ECSqlReader>();
-  mock1
-    .setup(async (x) => x.toArray())
-    .returns(async () => {
-      throw new Error("Test error");
-    });
-  imodelMock
-    .setup((x) =>
-      x.createQueryReader(
-        moq.It.is((query) => query.includes("SELECT s.Name")),
-        moq.It.isAny(),
-        moq.It.isAny(),
-      ),
-    )
-    .returns(() => mock1.object);
-};
+function createThrowingQueryReader(): IModelConnection["createQueryReader"] {
+  return (query) => {
+    if (query.includes("SELECT s.Name")) {
+      return {
+        toArray: async () => {
+          throw new Error("Test error");
+        },
+      } as unknown as ECSqlReader;
+    }
+    return {
+      toArray: async () => [],
+    } as unknown as ECSqlReader;
+  };
+}
 
-const mockQueryReaders = (imodelMock: moq.IMock<IModelConnection>, instances: TestInstance[]) => {
-  const mock1 = moq.Mock.ofType<ECSqlReader>();
-  mock1.setup(async (x) => x.toArray()).returns(async () => instances);
-  imodelMock
-    .setup((x) =>
-      x.createQueryReader(
-        moq.It.is((query) => query.includes("SELECT s.Name")),
-        moq.It.isAny(),
-        moq.It.isAny(),
-      ),
-    )
-    .returns(() => mock1.object);
+function createFakeQueryReaders(instances: TestInstance[]): IModelConnection["createQueryReader"] {
+  return (query) => {
+    if (query.includes("SELECT s.Name")) {
+      return {
+        toArray: async () => instances,
+      } as ECSqlReader;
+    }
 
-  for (const entry of instances) {
-    imodelMock
-      .setup((x) =>
-        x.createQueryReader(
-          moq.It.is((query) => query.includes(`"${entry.schemaName}"."${entry.className}"`)),
-          moq.It.isAny(),
-          moq.It.isAny(),
-        ),
-      )
-      .returns(() => {
-        const mock2 = moq.Mock.ofType<ECSqlReader>();
-        mock2.setup(async (x) => x.toArray()).returns(async () => entry.ids.map((e) => e.id));
-        return mock2.object;
-      });
-  }
-};
+    for (const entry of instances) {
+      if (query.includes(`"${entry.schemaName}"."${entry.className}"`)) {
+        return {
+          toArray: async () => entry.ids.map((e) => e.id),
+        } as ECSqlReader;
+      }
+    }
+
+    return {
+      toArray: async () => [],
+    } as unknown as ECSqlReader;
+  };
+}
 
 describe("ContentBuilder", () => {
-  const imodelMock = moq.Mock.ofType<IModelConnection>();
+  const imodel = {
+    createQueryReader: createStub<IModelConnection["createQueryReader"]>(),
+  };
+
+  const initialProps = {
+    imodel: imodel as unknown as IModelConnection,
+  };
 
   describe("createContent", () => {
-    const presentationManagerMock = moq.Mock.ofType<PresentationManager>();
-    const rulesetManagerMock = moq.Mock.ofType<RulesetManager>();
+    let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
+    const rulesetManager = {
+      add: createStub<RulesetManager["add"]>(),
+    };
 
     beforeEach(() => {
-      rulesetManagerMock.setup(async (x) => x.add(moq.It.isAny())).returns(async (ruleset) => new RegisteredRuleset(ruleset, Guid.createValue(), () => {}));
-      presentationManagerMock.reset();
-      presentationManagerMock.setup((manager) => manager.rulesets()).returns(() => rulesetManagerMock.object);
-      presentationManagerMock.setup((x) => x.onIModelContentChanged).returns(() => new BeEvent());
-      sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
+      rulesetManager.add.callsFake(async (ruleset) => new RegisteredRuleset(ruleset, Guid.createValue(), () => {}));
+
+      presentationManager = sinon.createStubInstance(PresentationManager);
+      presentationManager.rulesets.returns(rulesetManager as unknown as RulesetManager);
+      Object.assign(presentationManager, { onIModelContentChanged: new BeEvent() });
+
+      sinon.stub(Presentation, "presentation").get(() => presentationManager);
     });
 
     afterEach(() => {
@@ -243,10 +229,10 @@ describe("ContentBuilder", () => {
         id: "test-ruleset",
         rules: [],
       };
-      const builder = new ContentBuilder({ imodel: imodelMock.object, dataProvider: new EmptyDataProvider() });
+      const builder = new ContentBuilder({ ...initialProps, dataProvider: new EmptyDataProvider() });
       const content = await builder.createContent(ruleset, []);
       expect(content).to.be.empty;
-      rulesetManagerMock.verify(async (x) => x.add(ruleset), moq.Times.once());
+      expect(rulesetManager.add).to.be.calledOnceWith(ruleset);
     });
 
     it("uses `ContentDataProvider` if data provider was not supplied", async () => {
@@ -254,7 +240,7 @@ describe("ContentBuilder", () => {
         onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
       }));
       const getContentStub = sinon.stub(ContentDataProvider.prototype, "getContent").resolves(new Content(createContentDescriptor(), []));
-      const builder = new ContentBuilder({ imodel: imodelMock.object });
+      const builder = new ContentBuilder({ ...initialProps });
 
       const content = await builder.createContent("1", []);
       expect(content).to.be.empty;
@@ -262,14 +248,14 @@ describe("ContentBuilder", () => {
     });
 
     it("returns empty records when there is no content in the supplied data provider", async () => {
-      const builder = new ContentBuilder({ imodel: imodelMock.object, dataProvider: new EmptyDataProvider() });
+      const builder = new ContentBuilder({ ...initialProps, dataProvider: new EmptyDataProvider() });
       const content = await builder.createContent("1", []);
       expect(content).to.be.empty;
     });
 
     it("returns correct records when there is content in the supplied data provider", async () => {
       const dataProvider = new DataProvider();
-      const builder = new ContentBuilder({ imodel: imodelMock.object, dataProvider });
+      const builder = new ContentBuilder({ ...initialProps, dataProvider });
       const content = await builder.createContent("1", []);
       expect(content.length).to.equal(dataProvider.values.length * dataProvider.descriptor.fields.length);
     });
@@ -315,7 +301,7 @@ describe("ContentBuilder", () => {
         public override getContent = async () => getContent(this.items, this.descriptor);
       }
       const dataProvider = new TestDataProvider();
-      const builder = new ContentBuilder({ imodel: imodelMock.object, dataProvider, decimalPrecision: 2 });
+      const builder = new ContentBuilder({ ...initialProps, dataProvider, decimalPrecision: 2 });
       const content = await builder.createContent("", []);
       expect(content.length).to.eq(testValues.length);
       expect((content[0].value as PrimitiveValue).value).to.be.undefined;
@@ -345,15 +331,15 @@ describe("ContentBuilder", () => {
     ];
 
     before(() => {
-      imodelMock.reset();
-      mockQueryReaders(imodelMock, testInstances);
+      imodel.createQueryReader.reset();
+      imodel.createQueryReader.callsFake(createFakeQueryReaders(testInstances));
     });
 
     it("returns all required instances with empty records", async () => {
       const verificationSpy = sinon.spy();
 
       const builder = new ContentBuilder({
-        imodel: imodelMock.object,
+        ...initialProps,
         dataProvider: new EmptyDataProvider((keyset: KeySet) => verifyKeyset(keyset, testInstances, verificationSpy)),
       });
 
@@ -388,13 +374,13 @@ describe("ContentBuilder", () => {
       ];
 
       it("returns all required instances with empty records", async () => {
-        imodelMock.reset();
-        mockQueryReaders(imodelMock, testInstances);
+        imodel.createQueryReader.reset();
+        imodel.createQueryReader.callsFake(createFakeQueryReaders(testInstances));
 
         const verificationSpy = sinon.spy();
 
         const builder = new ContentBuilder({
-          imodel: imodelMock.object,
+          ...initialProps,
           dataProvider: new EmptyDataProvider((keyset: KeySet) => verifyKeyset(keyset, testInstances, verificationSpy)),
         });
 
@@ -413,13 +399,13 @@ describe("ContentBuilder", () => {
       });
 
       it("throws when id query throws an unexpected error", async () => {
-        imodelMock.reset();
-        mockThrowingQueryReader(imodelMock);
+        imodel.createQueryReader.reset();
+        imodel.createQueryReader.callsFake(createThrowingQueryReader());
 
         const verificationSpy = sinon.spy();
 
         const builder = new ContentBuilder({
-          imodel: imodelMock.object,
+          ...initialProps,
           dataProvider: new EmptyDataProvider((keyset: KeySet) => verifyKeyset(keyset, testInstances, verificationSpy)),
         });
 
@@ -432,15 +418,15 @@ describe("ContentBuilder", () => {
       const testInstances: TestInstance[] = [{ className: "Class1", schemaName: "Schema1", ids: [] }];
 
       before(() => {
-        imodelMock.reset();
-        mockQueryReaders(imodelMock, testInstances);
+        imodel.createQueryReader.reset();
+        imodel.createQueryReader.callsFake(createFakeQueryReaders(testInstances));
       });
 
       it("returns an empty list", async () => {
         const verificationSpy = sinon.spy();
 
         const builder = new ContentBuilder({
-          imodel: imodelMock.object,
+          ...initialProps,
           dataProvider: new EmptyDataProvider((keyset: KeySet) => verifyKeyset(keyset, testInstances, verificationSpy)),
         });
 
