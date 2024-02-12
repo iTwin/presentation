@@ -5,13 +5,13 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import * as moq from "typemoq";
 import { TreeNodeItem } from "@itwin/components-react";
 import { BeEvent, Guid } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { HierarchyRequestOptions, LabelDefinition, Node, NodeKey, RegisteredRuleset, Ruleset } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
 import { HierarchyBuilder, NodeMappingFunc } from "../presentation-testing/HierarchyBuilder";
+import { createStub } from "./Utils";
 
 async function getRootNodes() {
   const root: Node = {
@@ -39,31 +39,33 @@ async function getChildrenNodes(opts: HierarchyRequestOptions<IModelConnection, 
 }
 
 describe("HierarchyBuilder", () => {
-  const presentationManagerMock = moq.Mock.ofType<PresentationManager>();
-  const rulesetVariablesManagerMock = moq.Mock.ofType<RulesetVariablesManager>();
-  const rulesetManagerMock = moq.Mock.ofType<RulesetManager>();
-  const imodelMock = moq.Mock.ofType<IModelConnection>();
-  const rulesetMock = moq.Mock.ofType<Ruleset>();
+  let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
+  const rulesetManager = {
+    add: createStub<RulesetManager["add"]>(),
+  };
+
+  const ruleset = { id: "1" } as Ruleset;
+  const imodel = {} as IModelConnection;
 
   beforeEach(() => {
-    rulesetMock.setup((ruleset) => ruleset.id).returns(() => "1");
-    rulesetManagerMock.setup(async (x) => x.add(moq.It.isAny())).returns(async (ruleset) => new RegisteredRuleset(ruleset, Guid.createValue(), () => {}));
-    rulesetVariablesManagerMock.setup((x) => x.onVariableChanged).returns(() => new BeEvent());
-    presentationManagerMock.setup((manager) => manager.rulesets()).returns(() => rulesetManagerMock.object);
-    presentationManagerMock.setup((manager) => manager.vars(moq.It.isAny())).returns(() => rulesetVariablesManagerMock.object);
+    rulesetManager.add.callsFake(async (rules) => new RegisteredRuleset(rules, Guid.createValue(), () => {}));
+
+    presentationManager = sinon.createStubInstance(PresentationManager);
+    presentationManager.rulesets.returns(rulesetManager as unknown as RulesetManager);
+    presentationManager.vars.returns({
+      onVariableChanged: new BeEvent(),
+    } as RulesetVariablesManager);
   });
 
   afterEach(() => {
-    presentationManagerMock.reset();
-    rulesetVariablesManagerMock.reset();
-    rulesetMock.reset();
+    rulesetManager.add.reset();
   });
 
   describe("createHierarchy", () => {
     context("without data", () => {
       beforeEach(() => {
-        sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
-        presentationManagerMock.setup(async (manager) => manager.getNodesAndCount(moq.It.isAny())).returns(async () => ({ nodes: [], count: 0 }));
+        sinon.stub(Presentation, "presentation").get(() => presentationManager);
+        presentationManager.getNodesAndCount.resolves({ nodes: [], count: 0 });
       });
 
       afterEach(() => {
@@ -71,23 +73,22 @@ describe("HierarchyBuilder", () => {
       });
 
       it("returns empty list when rulesetId is given", async () => {
-        const builder = new HierarchyBuilder({ imodel: imodelMock.object });
+        const builder = new HierarchyBuilder({ imodel });
         const hierarchy = await builder.createHierarchy("1");
         expect(hierarchy).to.be.empty;
       });
 
       it("returns empty list when ruleset is given", async () => {
-        const builder = new HierarchyBuilder({ imodel: imodelMock.object });
-        const hierarchy = await builder.createHierarchy(rulesetMock.object);
+        const builder = new HierarchyBuilder({ imodel });
+        const hierarchy = await builder.createHierarchy(ruleset);
         expect(hierarchy).to.be.empty;
       });
     });
 
     context("with data", () => {
       beforeEach(() => {
-        presentationManagerMock.setup(async (manager) => manager.getNodesAndCount(moq.It.is((opts) => opts.parentKey === undefined))).returns(getRootNodes);
-        presentationManagerMock.setup(async (manager) => manager.getNodesAndCount(moq.It.is((opts) => opts.parentKey !== undefined))).returns(getChildrenNodes);
-        sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
+        sinon.stub(Presentation, "presentation").get(() => presentationManager);
+        presentationManager.getNodesAndCount.callsFake(async (opts) => (opts.parentKey === undefined ? getRootNodes() : getChildrenNodes(opts)));
       });
 
       afterEach(() => {
@@ -95,14 +96,14 @@ describe("HierarchyBuilder", () => {
       });
 
       it("returns correct hierarchy", async () => {
-        const builder = new HierarchyBuilder({ imodel: imodelMock.object });
-        expect(await builder.createHierarchy(rulesetMock.object)).to.matchSnapshot();
+        const builder = new HierarchyBuilder({ imodel });
+        expect(await builder.createHierarchy(ruleset)).to.matchSnapshot();
       });
 
       it("returns correct hierarchy with custom node mapping function", async () => {
         const nodeMapper: NodeMappingFunc = (node: TreeNodeItem) => ({ id: node.id });
-        const builder = new HierarchyBuilder({ imodel: imodelMock.object, nodeMappingFunc: nodeMapper });
-        expect(await builder.createHierarchy(rulesetMock.object)).to.matchSnapshot();
+        const builder = new HierarchyBuilder({ imodel, nodeMappingFunc: nodeMapper });
+        expect(await builder.createHierarchy(ruleset)).to.matchSnapshot();
       });
     });
   });

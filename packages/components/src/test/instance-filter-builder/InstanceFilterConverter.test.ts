@@ -5,7 +5,6 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import * as moq from "typemoq";
 import { PropertyValue, PropertyValueFormat, StandardTypeNames } from "@itwin/appui-abstract";
 import { PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
@@ -510,18 +509,18 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
 
   describe("returns base properties class", () => {
     const onClose = new BeEvent<() => void>();
-    const imodelMock = moq.Mock.ofType<IModelConnection>();
+    const imodel = {
+      key: "test_imodel",
+      onClose,
+    } as IModelConnection;
 
     const classAInfo: ClassInfo = { id: "0x1", name: "TestSchema:A", label: "A Class" };
     const classBInfo: ClassInfo = { id: "0x2", name: "TestSchema:B", label: "B Class" };
     const classCInfo: ClassInfo = { id: "0x3", name: "TestSchema:C", label: "C Class" };
 
     beforeEach(() => {
-      imodelMock.setup((x) => x.key).returns(() => "test_imodel");
-      imodelMock.setup((x) => x.onClose).returns(() => onClose);
-
       // stub metadataProvider for test imodel
-      const metadataProvider = getIModelMetadataProvider(imodelMock.object);
+      const metadataProvider = getIModelMetadataProvider(imodel);
       sinon.stub(metadataProvider, "getECClassInfo").callsFake(async (name) => {
         switch (name) {
           case classAInfo.name:
@@ -538,7 +537,6 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
     afterEach(() => {
       sinon.resetBehavior();
       onClose.raiseEvent();
-      imodelMock.reset();
     });
 
     it("when one property is used", async () => {
@@ -547,7 +545,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
         operator: "is-null",
       };
 
-      const { selectClassName } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, imodelMock.object);
+      const { selectClassName } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, imodel);
       expect(selectClassName).to.be.eq(classAInfo.name);
     });
 
@@ -566,7 +564,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
         ],
       };
 
-      const { selectClassName } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, imodelMock.object);
+      const { selectClassName } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, imodel);
       expect(selectClassName).to.be.eq(classAInfo.name);
     });
 
@@ -585,7 +583,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
         ],
       };
 
-      const { selectClassName } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, imodelMock.object);
+      const { selectClassName } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, imodel);
       expect(selectClassName).to.be.eq(classBInfo.name);
     });
 
@@ -604,7 +602,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
         ],
       };
 
-      const { selectClassName } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, imodelMock.object);
+      const { selectClassName } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, imodel);
       expect(selectClassName).to.be.eq(classBInfo.name);
     });
 
@@ -627,7 +625,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
         ],
       };
 
-      const { selectClassName } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, imodelMock.object);
+      const { selectClassName } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, imodel);
       expect(selectClassName).to.be.eq(classCInfo.name);
     });
   });

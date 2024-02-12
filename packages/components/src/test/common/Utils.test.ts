@@ -6,7 +6,6 @@
 import { expect } from "chai";
 import { Component } from "react";
 import sinon from "sinon";
-import * as moq from "typemoq";
 import { Primitives, PrimitiveValue } from "@itwin/appui-abstract";
 import { PropertyValueRendererManager } from "@itwin/components-react";
 import { using } from "@itwin/core-bentley";
@@ -24,6 +23,7 @@ import {
 import { createTestPropertyInfo } from "../_helpers/Common";
 import { createTestContentDescriptor, createTestNestedContentField, createTestPropertiesContentField, createTestSimpleContentField } from "../_helpers/Content";
 import { createTestLabelCompositeValue, createTestLabelDefinition } from "../_helpers/LabelDefinition";
+import { createStub } from "../TestUtils";
 
 class TestComponent extends Component {}
 
@@ -89,22 +89,17 @@ describe("Utils", () => {
   });
 
   describe("initializeLocalization", () => {
-    const i18nMock = moq.Mock.ofType<ITwinLocalization>();
-
-    beforeEach(() => {
-      i18nMock.setup(async (x) => x.registerNamespace(moq.It.isAny())).returns(async () => Promise.resolve());
-      sinon.stub(Presentation, "localization").get(() => i18nMock.object);
-    });
-
-    afterEach(() => {
-      sinon.restore();
-    });
-
     it("registers and unregisters namespace", async () => {
+      const i18n = {
+        registerNamespace: createStub<ITwinLocalization["registerNamespace"]>().resolves(),
+        unregisterNamespace: createStub<ITwinLocalization["unregisterNamespace"]>(),
+      };
+      sinon.stub(Presentation, "localization").get(() => i18n);
+
       const terminate = await initializeLocalization();
-      i18nMock.verify(async (x) => x.registerNamespace(moq.It.isAny()), moq.Times.once());
+      expect(i18n.registerNamespace).to.be.calledOnce;
       terminate();
-      i18nMock.verify((x) => x.unregisterNamespace(moq.It.isAny()), moq.Times.once()); // eslint-disable-line @itwin/no-internal
+      expect(i18n.unregisterNamespace).to.be.calledOnce;
     });
   });
 

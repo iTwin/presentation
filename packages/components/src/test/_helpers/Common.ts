@@ -5,18 +5,8 @@
 
 import { Component } from "react";
 import sinon from "sinon";
-import { It } from "typemoq";
 import { BeDuration } from "@itwin/core-bentley";
-import {
-  ClassInfo,
-  InstanceKey,
-  Keys,
-  KeySet,
-  PropertyInfo,
-  RelatedClassInfo,
-  RelatedClassInfoWithOptionalRelationship,
-  Ruleset,
-} from "@itwin/presentation-common";
+import { ClassInfo, InstanceKey, PropertyInfo, RelatedClassInfo, RelatedClassInfoWithOptionalRelationship, Ruleset } from "@itwin/presentation-common";
 import { PresentationInstanceFilterPropertyInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
 import { createTestCategoryDescription, createTestPropertiesContentField } from "./Content";
 
@@ -65,11 +55,6 @@ export const createTestRelationshipPath = (length: number = 2) => {
   }
   return path;
 };
-
-export function isKeySet(expectedKeys: Keys) {
-  const expected = new KeySet(expectedKeys);
-  return It.is<KeySet>((actual: KeySet) => actual.size === expected.size && actual.hasAll(expected));
-}
 
 export function createTestRuleset(ruleset?: Partial<Ruleset>): Ruleset {
   return {

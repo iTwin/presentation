@@ -5,7 +5,6 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import * as moq from "typemoq";
 import { PrimitiveValue } from "@itwin/appui-abstract";
 import {
   MutableTreeModel,
@@ -16,11 +15,11 @@ import {
   TreeModelNodeInput,
   UiComponents,
 } from "@itwin/components-react";
-import { BeUiEvent } from "@itwin/core-bentley";
+import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
-import { LabelDefinition, Node, RegisteredRuleset, StandardNodeTypes } from "@itwin/presentation-common";
-import { Presentation, PresentationManager, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
+import { LabelDefinition, Node, RegisteredRuleset, Ruleset, StandardNodeTypes, VariableValue } from "@itwin/presentation-common";
+import { IModelHierarchyChangeEventArgs, Presentation, PresentationManager, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
 import {
   PresentationTreeEventHandlerProps,
   usePresentationTreeState,
@@ -29,14 +28,16 @@ import {
 } from "../../../presentation-components/tree/controlled/UsePresentationTreeState";
 import { PresentationTreeDataProvider } from "../../../presentation-components/tree/DataProvider";
 import { createTreeNodeItem } from "../../../presentation-components/tree/Utils";
-import { mockPresentationManager } from "../../_helpers/UiComponents";
 import { renderHook, waitFor } from "../../TestUtils";
 
 describe("usePresentationTreeState", () => {
-  let onIModelHierarchyChanged: PresentationManager["onIModelHierarchyChanged"];
-  let onRulesetModified: RulesetManager["onRulesetModified"];
-  let onRulesetVariableChanged: RulesetVariablesManager["onVariableChanged"];
-  let onActiveFormattingUnitSystemChanged: QuantityFormatter["onActiveFormattingUnitSystemChanged"];
+  const onIModelHierarchyChanged: PresentationManager["onIModelHierarchyChanged"] = new BeEvent<(args: IModelHierarchyChangeEventArgs) => void>();
+  const onRulesetModified: RulesetManager["onRulesetModified"] = new BeEvent<(curr: RegisteredRuleset, prev: Ruleset) => void>();
+  const onRulesetVariableChanged: RulesetVariablesManager["onVariableChanged"] = new BeEvent<
+    (variableId: string, prevValue: VariableValue | undefined, currValue: VariableValue | undefined) => void
+  >();
+  const onActiveFormattingUnitSystemChanged: QuantityFormatter["onActiveFormattingUnitSystemChanged"] = new BeUiEvent<FormattingUnitSystemChangedArgs>();
+
   const imodel = {
     key: "test-imodel-key",
   } as IModelConnection;
@@ -47,21 +48,28 @@ describe("usePresentationTreeState", () => {
     pagingSize: 5,
   };
 
-  before(async () => {
-    const mocks = mockPresentationManager();
-    onIModelHierarchyChanged = mocks.presentationManager.object.onIModelHierarchyChanged;
-    onRulesetModified = mocks.rulesetsManager.object.onRulesetModified;
-    onRulesetVariableChanged = mocks.rulesetVariablesManager.object.onVariableChanged;
-    mocks.presentationManager.setup(async (x) => x.getNodesAndCount(moq.It.isAny())).returns(async () => ({ count: 0, nodes: [] }));
-    sinon.stub(Presentation, "presentation").get(() => mocks.presentationManager.object);
-    onActiveFormattingUnitSystemChanged = new BeUiEvent<FormattingUnitSystemChangedArgs>();
+  beforeEach(async () => {
+    const presentationManager = sinon.createStubInstance(PresentationManager);
+    Object.assign(presentationManager, { onIModelHierarchyChanged });
+
+    presentationManager.rulesets.returns({
+      onRulesetModified,
+    } as RulesetManager);
+
+    presentationManager.vars.returns({
+      onVariableChanged: onRulesetVariableChanged,
+    } as RulesetVariablesManager);
+
+    presentationManager.getNodesAndCount.resolves({ count: 0, nodes: [] });
+
+    sinon.stub(Presentation, "presentation").get(() => presentationManager);
     sinon.stub(IModelApp, "quantityFormatter").get(() => ({
       onActiveFormattingUnitSystemChanged,
     }));
     await UiComponents.initialize(new EmptyLocalization());
   });
 
-  after(() => {
+  afterEach(() => {
     UiComponents.terminate();
     sinon.restore();
   });

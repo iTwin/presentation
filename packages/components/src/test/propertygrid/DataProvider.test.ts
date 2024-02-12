@@ -5,7 +5,6 @@
 
 import { expect } from "chai";
 import * as sinon from "sinon";
-import * as moq from "typemoq";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { PropertyCategory } from "@itwin/components-react";
 import { BeEvent, BeUiEvent, using } from "@itwin/core-bentley";
@@ -42,7 +41,6 @@ import {
   createTestPropertiesContentField,
   createTestSimpleContentField,
 } from "../_helpers/Content";
-import { mockPresentationManager } from "../_helpers/UiComponents";
 
 /**
  * This is just a helper class to provide public access to
@@ -64,31 +62,33 @@ class Provider extends PresentationPropertyDataProvider {
 }
 
 describe("PropertyDataProvider", () => {
-  let rulesetId: string;
-  let provider: Provider;
-  let presentationManagerMock: moq.IMock<PresentationManager>;
-  let favoritePropertiesManagerMock: moq.IMock<FavoritePropertiesManager>;
-  const imodelMock = moq.Mock.ofType<IModelConnection>();
+  const rulesetId = "TestRulesetId";
 
-  before(() => {
-    rulesetId = "TestRulesetId";
-  });
+  let provider: Provider;
+  let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
+  let favoritePropertiesManager: sinon.SinonStubbedInstance<FavoritePropertiesManager>;
+
+  const onFavoritesChanged = new BeEvent<() => void>();
+
+  const iTwinId = "itwin-id";
+  const imodelId = "imodel-id";
+  const imodel = { iTwinId, imodelId } as unknown as IModelConnection;
 
   beforeEach(async () => {
-    const mocks = mockPresentationManager();
-    presentationManagerMock = mocks.presentationManager;
+    presentationManager = sinon.createStubInstance(PresentationManager);
 
-    favoritePropertiesManagerMock = moq.Mock.ofType<FavoritePropertiesManager>();
-    favoritePropertiesManagerMock.setup((x) => x.onFavoritesChanged).returns(() => new BeEvent());
+    favoritePropertiesManager = sinon.createStubInstance(FavoritePropertiesManager);
+    favoritePropertiesManager.has.callsFake(() => false);
+    Object.assign(favoritePropertiesManager, { onFavoritesChanged, sortFields: (_imodel: IModelConnection, fields: Field[]) => fields });
 
-    sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
-    sinon.stub(Presentation, "favoriteProperties").get(() => favoritePropertiesManagerMock.object);
+    sinon.stub(Presentation, "presentation").get(() => presentationManager);
+    sinon.stub(Presentation, "favoriteProperties").get(() => favoritePropertiesManager);
     sinon.stub(Presentation, "localization").get(() => new EmptyLocalization());
     sinon.stub(IModelApp, "quantityFormatter").get(() => ({
       onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
     }));
 
-    provider = new Provider({ imodel: imodelMock.object, ruleset: rulesetId });
+    provider = new Provider({ imodel, ruleset: rulesetId });
   });
 
   afterEach(() => {
@@ -98,7 +98,7 @@ describe("PropertyDataProvider", () => {
 
   describe("constructor", () => {
     it("uses default ruleset if not given through props", () => {
-      using(new PresentationPropertyDataProvider({ imodel: imodelMock.object }), (p) => {
+      using(new PresentationPropertyDataProvider({ imodel }), (p) => {
         expect(p.rulesetId).to.eq(DEFAULT_PROPERTY_GRID_RULESET.id);
       });
     });
@@ -114,10 +114,7 @@ describe("PropertyDataProvider", () => {
     });
 
     it("subscribes to `Presentation.favoriteProperties.onFavoritesChanged` to invalidate cache", async () => {
-      const onFavoritesChanged = new BeEvent<() => void>();
-      favoritePropertiesManagerMock.reset();
-      favoritePropertiesManagerMock.setup((x) => x.onFavoritesChanged).returns(() => onFavoritesChanged);
-      provider = new Provider({ imodel: imodelMock.object, ruleset: rulesetId });
+      provider = new Provider({ imodel, ruleset: rulesetId });
       await provider.getData();
 
       const s = sinon.spy(provider, "invalidateCache");
@@ -129,10 +126,7 @@ describe("PropertyDataProvider", () => {
 
   describe("dispose", () => {
     it("unsubscribes from `Presentation.favoriteProperties.onFavoritesChanged` event", async () => {
-      const onFavoritesChanged = new BeEvent<() => void>();
-      favoritePropertiesManagerMock.reset();
-      favoritePropertiesManagerMock.setup((x) => x.onFavoritesChanged).returns(() => onFavoritesChanged);
-      provider = new Provider({ imodel: imodelMock.object, ruleset: rulesetId });
+      provider = new Provider({ imodel, ruleset: rulesetId });
       await provider.getData();
 
       expect(onFavoritesChanged.numberOfListeners).to.eq(1);
@@ -159,59 +153,43 @@ describe("PropertyDataProvider", () => {
 
   describe("[deprecated] includeFieldsWithNoValues", () => {
     it("invalidates cache when setting to different value", () => {
-      const invalidateCacheMock = moq.Mock.ofInstance(provider.invalidateCache);
-      provider.invalidateCache = invalidateCacheMock.object;
+      const invalidateCacheSpy = sinon.stub(provider, "invalidateCache");
       // eslint-disable-next-line deprecation/deprecation
       provider.includeFieldsWithNoValues = !provider.includeFieldsWithNoValues;
-      invalidateCacheMock.verify((x) => x({ content: true }), moq.Times.once());
+      expect(invalidateCacheSpy).to.be.calledOnce;
     });
 
     it("doesn't invalidate cache when setting to same value", () => {
-      const invalidateCacheMock = moq.Mock.ofInstance(provider.invalidateCache);
-      provider.invalidateCache = invalidateCacheMock.object;
+      const invalidateCacheSpy = sinon.stub(provider, "invalidateCache");
       // eslint-disable-next-line deprecation/deprecation
       provider.includeFieldsWithNoValues = provider.includeFieldsWithNoValues;
-      invalidateCacheMock.verify((x) => x({ content: true }), moq.Times.never());
+      expect(invalidateCacheSpy).to.not.be.called;
     });
   });
 
   describe("[deprecated] includeFieldsWithCompositeValues", () => {
     it("invalidates cache when setting to different value", () => {
-      const invalidateCacheMock = moq.Mock.ofInstance(provider.invalidateCache);
-      provider.invalidateCache = invalidateCacheMock.object;
+      const invalidateCacheSpy = sinon.stub(provider, "invalidateCache");
       // eslint-disable-next-line deprecation/deprecation
       provider.includeFieldsWithCompositeValues = !provider.includeFieldsWithCompositeValues;
-      invalidateCacheMock.verify((x) => x({ content: true }), moq.Times.once());
+      expect(invalidateCacheSpy).to.be.calledOnce;
     });
 
     it("doesn't invalidate cache when setting to same value", () => {
-      const invalidateCacheMock = moq.Mock.ofInstance(provider.invalidateCache);
-      provider.invalidateCache = invalidateCacheMock.object;
+      const invalidateCacheSpy = sinon.stub(provider, "invalidateCache");
       // eslint-disable-next-line deprecation/deprecation
       provider.includeFieldsWithCompositeValues = provider.includeFieldsWithCompositeValues;
-      invalidateCacheMock.verify((x) => x({ content: true }), moq.Times.never());
+      expect(invalidateCacheSpy).to.not.be.called;
     });
   });
 
   describe("isFieldFavorite", () => {
-    let iTwinId: string;
-    let imodelId: string;
-
-    before(() => {
-      iTwinId = "itwin-id";
-      imodelId = "imodel-id";
-      imodelMock.setup((x) => x.iModelId).returns(() => imodelId);
-      imodelMock.setup((x) => x.iTwinId).returns(() => iTwinId);
-
-      favoritePropertiesManagerMock.setup((x) => x.has(moq.It.isAny(), imodelMock.object, moq.It.isAny())).returns(() => false);
-    });
-
     it("calls FavoritePropertiesManager", () => {
-      provider = new Provider({ imodel: imodelMock.object, ruleset: rulesetId });
+      provider = new Provider({ imodel, ruleset: rulesetId });
 
       const field = createTestSimpleContentField();
       (provider as any).isFieldFavorite(field);
-      favoritePropertiesManagerMock.verify((x) => x.has(field, imodelMock.object, FavoritePropertiesScope.IModel), moq.Times.once());
+      expect(favoritePropertiesManager.has).to.be.calledOnceWith(field, imodel, FavoritePropertiesScope.IModel);
     });
   });
 
@@ -1338,9 +1316,9 @@ describe("PropertyDataProvider", () => {
               });
               const descriptor = createTestContentDescriptor({ fields: [nestedContentField] });
 
-              favoritePropertiesManagerMock
-                .setup((x) => x.has(moq.It.isObjectWith<Field>({ name: "primitive-property" }), imodelMock.object, moq.It.isAny()))
-                .returns(() => true);
+              favoritePropertiesManager.has.callsFake((field) => {
+                return field.name === "primitive-property";
+              });
 
               const values: ValuesDictionary<any> = {
                 [nestedContentField.name]: [
@@ -1419,15 +1397,9 @@ describe("PropertyDataProvider", () => {
               });
               const descriptor = createTestContentDescriptor({ fields: [nestedContentField, propertiesField2] });
 
-              favoritePropertiesManagerMock
-                .setup((x) => x.has(moq.It.isObjectWith<Field>({ name: nestedContentField.name }), imodelMock.object, moq.It.isAny()))
-                .returns(() => true);
-              favoritePropertiesManagerMock
-                .setup((x) => x.has(moq.It.isObjectWith<Field>({ name: propertiesField1.name }), imodelMock.object, moq.It.isAny()))
-                .returns(() => true);
-              favoritePropertiesManagerMock
-                .setup((x) => x.has(moq.It.isObjectWith<Field>({ name: propertiesField2.name }), imodelMock.object, moq.It.isAny()))
-                .returns(() => true);
+              favoritePropertiesManager.has.callsFake((field) => {
+                return field.name === nestedContentField.name || field.name === propertiesField1.name || field.name === propertiesField2.name;
+              });
 
               const values: ValuesDictionary<any> = {
                 [nestedContentField.name]: [
@@ -1546,9 +1518,9 @@ describe("PropertyDataProvider", () => {
               });
               const descriptor = createTestContentDescriptor({ fields: [nestedContentField] });
 
-              favoritePropertiesManagerMock
-                .setup((x) => x.has(moq.It.isObjectWith<Field>({ name: propertiesField.name }), imodelMock.object, moq.It.isAny()))
-                .returns(() => true);
+              favoritePropertiesManager.has.callsFake((field) => {
+                return field.name === propertiesField.name;
+              });
 
               const values: ValuesDictionary<any> = {
                 [nestedContentField.name]: undefined,
@@ -1601,12 +1573,9 @@ describe("PropertyDataProvider", () => {
               });
               const descriptor = createTestContentDescriptor({ fields: [nestedContentField] });
 
-              favoritePropertiesManagerMock
-                .setup((x) => x.has(moq.It.isObjectWith<Field>({ name: propertiesField1.name }), imodelMock.object, moq.It.isAny()))
-                .returns(() => true);
-              favoritePropertiesManagerMock
-                .setup((x) => x.has(moq.It.isObjectWith<Field>({ name: propertiesField2.name }), imodelMock.object, moq.It.isAny()))
-                .returns(() => true);
+              favoritePropertiesManager.has.callsFake((field) => {
+                return field.name === propertiesField1.name || field.name === propertiesField2.name;
+              });
 
               const values: ValuesDictionary<any> = {
                 [nestedContentField.name]: undefined,

@@ -5,6 +5,7 @@
 
 import { expect } from "chai";
 import { createElement, Fragment, PropsWithChildren, ReactElement, StrictMode } from "react";
+import sinon from "sinon";
 import { ThemeProvider } from "@itwin/itwinui-react";
 import {
   RenderHookOptions,
@@ -87,3 +88,7 @@ function customRenderHook<Result, Props>(
 export * from "@testing-library/react";
 export { customRender as render };
 export { customRenderHook as renderHook };
+
+export function createStub<T extends (...args: any[]) => any>(): sinon.SinonStub<Parameters<T>, ReturnType<T>> {
+  return sinon.stub<Parameters<T>, ReturnType<T>>();
+}

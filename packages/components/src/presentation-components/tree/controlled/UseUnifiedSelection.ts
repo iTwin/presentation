@@ -152,13 +152,11 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
   }
 
   public selectNodes(modelChange?: TreeModelChanges) {
-    const selection = this._selectionHandler.getSelection();
-
     // when handling model change event only need to update newly added nodes
     if (modelChange) {
-      this.updateAffectedNodes(selection, modelChange);
+      this.updateAffectedNodes(modelChange);
     } else {
-      this.updateAllNodes(selection);
+      this.updateAllNodes();
     }
   }
 
@@ -175,18 +173,18 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
    * or node is ECInstance node and instance key is in selection.
    */
   protected shouldSelectNode(node: TreeNodeItem, selection: Readonly<KeySet>) {
-    const nodeKey = isPresentationTreeNodeItem(node) ? node.key : undefined;
-    if (nodeKey === undefined) {
+    // istanbul ignore if
+    if (!isPresentationTreeNodeItem(node)) {
       return false;
     }
 
     // consider node selected if it's key is in selection
-    if (selection.has(nodeKey)) {
+    if (selection.has(node.key)) {
       return true;
     }
 
     // ... or if it's an ECInstances node and any of instance keys is in selection
-    if (NodeKey.isInstancesNodeKey(nodeKey) && nodeKey.instanceKeys.some((instanceKey) => selection.has(instanceKey))) {
+    if (NodeKey.isInstancesNodeKey(node.key) && node.key.instanceKeys.some((instanceKey) => selection.has(instanceKey))) {
       return true;
     }
 
@@ -220,7 +218,8 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
     this.selectNodes();
   }
 
-  private updateAllNodes(selection: Readonly<KeySet>) {
+  private updateAllNodes() {
+    const selection = this._selectionHandler.getSelection();
     this._modelSource.modifyModel((model: MutableTreeModel) => {
       for (const node of model.iterateTreeModelNodes()) {
         this.updateNodeSelectionState(node, selection);
@@ -228,12 +227,13 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
     });
   }
 
-  private updateAffectedNodes(selection: Readonly<KeySet>, modelChange: TreeModelChanges) {
+  private updateAffectedNodes(modelChange: TreeModelChanges) {
     const affectedNodeIds = [...modelChange.addedNodeIds, ...modelChange.modifiedNodeIds];
     if (affectedNodeIds.length === 0) {
       return;
     }
 
+    const selection = this._selectionHandler.getSelection();
     this._modelSource.modifyModel((model: MutableTreeModel) => {
       for (const nodeId of affectedNodeIds) {
         const node = model.getNode(nodeId);
