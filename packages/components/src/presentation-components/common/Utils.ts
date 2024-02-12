@@ -248,8 +248,8 @@ export interface UniqueValue {
 }
 
 /**
- * Function for serializing `DisplayValueGroup`.
- * Returns an object, which consists of `serializedDisplayValues` and `serializedGroupedRawValues`.
+ * Function for serializing `UniqueValue`.
+ * Returns an object, which consists of `displayValues` and `groupedRawValues`.
  */
 export function serializeUniqueValues(values: UniqueValue[]): { displayValues: string; groupedRawValues: string } {
   const displayValues: string[] = [];
@@ -265,9 +265,7 @@ export function serializeUniqueValues(values: UniqueValue[]): { displayValues: s
 
 /**
  * Function for deserializing `displayValues` and `groupedRawValues`.
- * Returns an object, which consists of `displayValues` and `groupedRawValues`.
- * If values were parsed, then `displayValues` type is string[] and `groupedRawValues` type is Value[][].
- * If values were not parsed, or they are null or undefined, then field types will be undefined.
+ * Returns an array of `UniqueValue` or undefined if parsing fails.
  */
 export function deserializeUniqueValues(serializedDisplayValues: string, serializedGroupedRawValues: string): UniqueValue[] | undefined {
   const tryParseJSON = (value: string) => {
