@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1707466956254,
+  "lastUpdate": 1707741923916,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -894,6 +894,42 @@ window.BENCHMARK_DATA = {
             "value": 1838,
             "unit": "ms",
             "extra": "min: 1838\nmax: 1838\ncount: 1\nmean: 1838\np50: 1826.6\nmedian: 1826.6\np75: 1826.6\np90: 1826.6\np95: 1826.6\np99: 1826.6\np999: 1826.6"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "24278440+saskliutas@users.noreply.github.com",
+            "name": "Saulius Skliutas",
+            "username": "saskliutas"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7510b87cd46269433559c9207ce4dcf54f380b34",
+          "message": "Remove typemoq (#411)\n\n* Remove mockPresentationManager\r\n\r\n* Remove typemoq usage in `presentation-components`\r\n\r\n* Remove last reference to typemoq in presentation-components\r\n\r\n* Remove typemoq references in presentation-testing\r\n\r\n* Remove typemoq\r\n\r\n* Run prettier\r\n\r\n* lint\r\n\r\n* prettier\r\n\r\n* Bump mocha\r\n\r\n---------\r\n\r\nCo-authored-by: Grigas <35135765+grigasp@users.noreply.github.com>",
+          "timestamp": "2024-02-12T14:44:03+02:00",
+          "tree_id": "519a0aa046eec59a5a58e175602dcd31c60557cc",
+          "url": "https://github.com/iTwin/presentation/commit/7510b87cd46269433559c9207ce4dcf54f380b34"
+        },
+        "date": 1707741922958,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Initial Models Tree Load: Baytown.bim",
+            "value": 334,
+            "unit": "ms",
+            "extra": "min: 334\nmax: 334\ncount: 1\nmean: 334\np50: 333.7\nmedian: 333.7\np75: 333.7\np90: 333.7\np95: 333.7\np99: 333.7\np999: 333.7"
+          },
+          {
+            "name": "Full Models Tree Load: Baytown.bim",
+            "value": 1830,
+            "unit": "ms",
+            "extra": "min: 1830\nmax: 1830\ncount: 1\nmean: 1830\np50: 1826.6\nmedian: 1826.6\np75: 1826.6\np90: 1826.6\np95: 1826.6\np99: 1826.6\np999: 1826.6"
           }
         ]
       }
