@@ -17,10 +17,6 @@ public;FavoritePropertiesDataProviderProps
 beta;FilterablePresentationTreeNodeItem = PresentationTreeNodeItem &
 beta;FilterableTreeProps
 beta;FilteringDialogToolbarHandlers
-beta;GenericInstanceFilter
-beta;GenericInstanceFilter
-beta;GenericInstanceFilterRule
-beta;GenericInstanceFilterRuleGroup
 beta;HierarchyLevelFilteringDescriptor = Descriptor | (() => Promise
 public;IContentDataProvider 
 public;IFavoritePropertiesDataProvider
@@ -79,7 +75,6 @@ beta;PresentationTreeRenderer(props: PresentationTreeRendererProps): JSX_2.Eleme
 beta;PresentationTreeRendererProps 
 public;PropertyDataProviderWithUnifiedSelectionProps
 public;PropertyRecordsBuilder 
-beta;RelatedInstanceDescription
 beta;SchemaMetadataContext
 beta;SchemaMetadataContextProvider({ schemaContextProvider, imodel, children }: PropsWithChildren
 beta;SchemaMetadataContextProviderProps

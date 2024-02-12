@@ -23,6 +23,7 @@ import { DiagnosticsLoggerSeverity } from '@itwin/presentation-common';
 import { FavoritePropertiesScope } from '@itwin/presentation-frontend';
 import { Field } from '@itwin/presentation-common';
 import { FilterByTextHierarchyRequestOptions } from '@itwin/presentation-common';
+import { GenericInstanceFilter } from '@itwin/core-common';
 import { HierarchyRequestOptions } from '@itwin/presentation-common';
 import { HighlightableTreeProps } from '@itwin/components-react';
 import { IContentVisitor } from '@itwin/presentation-common';
@@ -83,7 +84,6 @@ import { StartContentProps } from '@itwin/presentation-common';
 import { StartFieldProps } from '@itwin/presentation-common';
 import { StartItemProps } from '@itwin/presentation-common';
 import { StartStructProps } from '@itwin/presentation-common';
-import { StrippedRelationshipPath } from '@itwin/presentation-common';
 import { Subscription } from '@itwin/components-react';
 import { TreeEditingParams } from '@itwin/components-react';
 import { TreeEventHandler } from '@itwin/components-react';
@@ -245,35 +245,6 @@ export interface FilteringDialogToolbarHandlers {
 }
 
 // @beta
-export interface GenericInstanceFilter {
-    filteredClasses?: ClassInfo[];
-    propertyClasses: ClassInfo[];
-    relatedInstances: RelatedInstanceDescription[];
-    rules: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup;
-}
-
-// @beta (undocumented)
-export namespace GenericInstanceFilter {
-    export function fromPresentationInstanceFilter(filter: PresentationInstanceFilter, filteredClasses?: ClassInfo[]): GenericInstanceFilter;
-    export function isFilterRuleGroup(obj: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup): obj is GenericInstanceFilterRuleGroup;
-}
-
-// @beta
-export interface GenericInstanceFilterRule {
-    operator: `${PropertyFilterRuleOperator}`;
-    propertyName: string;
-    propertyTypeName: string;
-    sourceAlias: string;
-    value?: PrimitiveValue;
-}
-
-// @beta
-export interface GenericInstanceFilterRuleGroup {
-    operator: `${PropertyFilterRuleGroupOperator}`;
-    rules: Array<GenericInstanceFilterRule | GenericInstanceFilterRuleGroup>;
-}
-
-// @beta
 export type HierarchyLevelFilteringDescriptor = Descriptor | (() => Promise<Descriptor>);
 
 // @public
@@ -413,8 +384,10 @@ export type PresentationInstanceFilter = PresentationInstanceFilterConditionGrou
 // @beta (undocumented)
 export namespace PresentationInstanceFilter {
     export function fromComponentsPropertyFilter(descriptor: Descriptor, filter: PropertyFilter): PresentationInstanceFilter;
+    export function fromGenericInstanceFilter(descriptor: Descriptor, filter: GenericInstanceFilter): PresentationInstanceFilter;
     export function isConditionGroup(filter: PresentationInstanceFilter): filter is PresentationInstanceFilterConditionGroup;
     export function toComponentsPropertyFilter(descriptor: Descriptor, filter: PresentationInstanceFilter): PropertyFilter;
+    export function toGenericInstanceFilter(filter: PresentationInstanceFilter, filteredClasses?: ClassInfo[]): GenericInstanceFilter;
     export function toInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection, filteredClasses?: ClassInfo[]): Promise<InstanceFilterDefinition>;
 }
 
@@ -686,12 +659,6 @@ export class PropertyRecordsBuilder implements IContentVisitor {
     startItem(props: StartItemProps): boolean;
     // (undocumented)
     startStruct(props: StartStructProps): boolean;
-}
-
-// @beta
-export interface RelatedInstanceDescription {
-    alias: string;
-    path: StrippedRelationshipPath;
 }
 
 // @beta

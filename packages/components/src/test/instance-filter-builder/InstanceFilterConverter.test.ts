@@ -11,12 +11,13 @@ import { PropertyFilterRuleGroupOperator, PropertyFilterRuleOperator } from "@it
 import { BeEvent } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo, RelationshipPath, PropertyValueFormat as TypeValueFormat, Value } from "@itwin/presentation-common";
+import { serializeUniqueValues, UniqueValue } from "../../presentation-components/common/Utils";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import {
   PresentationInstanceFilter,
   PresentationInstanceFilterCondition,
   PresentationInstanceFilterConditionGroup,
-} from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
+} from "../../presentation-components/instance-filter-builder/PresentationInstanceFilter";
 import { createTestECClassInfo, createTestPropertyInfo } from "../_helpers/Common";
 import { createTestNestedContentField, createTestPropertiesContentField } from "../_helpers/Content";
 
@@ -521,13 +522,13 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
 
       // stub metadataProvider for test imodel
       const metadataProvider = getIModelMetadataProvider(imodelMock.object);
-      sinon.stub(metadataProvider, "getECClassInfo").callsFake(async (id) => {
-        switch (id) {
-          case classAInfo.id:
+      sinon.stub(metadataProvider, "getECClassInfo").callsFake(async (name) => {
+        switch (name) {
+          case classAInfo.name:
             return new ECClassInfo(classAInfo.id, classAInfo.name, classAInfo.label, new Set(), new Set([classBInfo.id, classCInfo.id]));
-          case classBInfo.id:
+          case classBInfo.name:
             return new ECClassInfo(classBInfo.id, classBInfo.name, classBInfo.label, new Set([classAInfo.id]), new Set([classCInfo.id]));
-          case classCInfo.id:
+          case classCInfo.name:
             return new ECClassInfo(classCInfo.id, classCInfo.name, classCInfo.label, new Set([classAInfo.id, classBInfo.id]), new Set());
         }
         return undefined;
@@ -636,20 +637,27 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
     const property = createTestPropertyInfo();
     const field = createTestPropertiesContentField({ properties: [{ property }] });
     const propertyAccessor = `this.${property.name}`;
-    const groupedRawValues = [
-      [0.001, 0.00099],
-      [0.002, 0.00199],
+    const uniqueValues: UniqueValue[] = [
+      {
+        displayValue: "0.001",
+        groupedRawValues: [0.001, 0.00099],
+      },
+      {
+        displayValue: "0.002",
+        groupedRawValues: [0.002, 0.00199],
+      },
     ];
-    const displayValue = ["0.001", "0.002"];
 
     const createFilter = (operator: `${PropertyFilterRuleOperator}`, customValue?: Value, customDisplayValue?: string): PresentationInstanceFilterCondition => {
+      const serializedValue = serializeUniqueValues(uniqueValues);
+
       return {
         field,
         operator,
         value: {
           valueFormat: PropertyValueFormat.Primitive,
-          value: customValue ?? JSON.stringify(groupedRawValues),
-          displayValue: customDisplayValue ?? JSON.stringify(displayValue),
+          value: customValue ?? serializedValue.groupedRawValues,
+          displayValue: customDisplayValue ?? serializedValue.displayValues,
         },
       };
     };
@@ -659,7 +667,7 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
 
       const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(
-        `(${propertyAccessor} = ${groupedRawValues[0][0]} OR ${propertyAccessor} = ${groupedRawValues[0][1]} OR ${propertyAccessor} = ${groupedRawValues[1][0]} OR ${propertyAccessor} = ${groupedRawValues[1][1]})`,
+        `(${propertyAccessor} = ${uniqueValues[0].groupedRawValues[0] as number} OR ${propertyAccessor} = ${uniqueValues[0].groupedRawValues[1] as number} OR ${propertyAccessor} = ${uniqueValues[1].groupedRawValues[0] as number} OR ${propertyAccessor} = ${uniqueValues[1].groupedRawValues[1] as number})`,
       );
     });
 
@@ -668,11 +676,11 @@ describe("PresentationInstanceFilter.toInstanceFilterDefinition", () => {
 
       const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);
       expect(expression).to.be.eq(
-        `(${propertyAccessor} <> ${groupedRawValues[0][0]} AND ${propertyAccessor} <> ${groupedRawValues[0][1]} AND ${propertyAccessor} <> ${groupedRawValues[1][0]} AND ${propertyAccessor} <> ${groupedRawValues[1][1]})`,
+        `(${propertyAccessor} <> ${uniqueValues[0].groupedRawValues[0] as number} AND ${propertyAccessor} <> ${uniqueValues[0].groupedRawValues[1] as number} AND ${propertyAccessor} <> ${uniqueValues[1].groupedRawValues[0] as number} AND ${propertyAccessor} <> ${uniqueValues[1].groupedRawValues[1] as number})`,
       );
     });
 
-    it("converts values when `deserializeDisplayValueGroupArray` returns `undefined`", async () => {
+    it("converts values when `deserializeUniqueValues` returns `undefined`", async () => {
       const filter = createFilter("is-equal", "a", "a");
 
       const { expression } = await PresentationInstanceFilter.toInstanceFilterDefinition(filter, testImodel);

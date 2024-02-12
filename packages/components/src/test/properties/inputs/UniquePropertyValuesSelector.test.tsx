@@ -11,6 +11,7 @@ import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { combineFieldNames, ContentInstancesOfSpecificClassesSpecification, ContentRule, KeySet, RelatedClassInfo, Ruleset } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
+import { serializeUniqueValues, UniqueValue } from "../../../presentation-components/common/Utils";
 import { UniquePropertyValuesSelector } from "../../../presentation-components/properties/inputs/UniquePropertyValuesSelector";
 import { createTestECClassInfo, createTestPropertyInfo, createTestRelatedClassInfo, createTestRelationshipPath } from "../../_helpers/Common";
 import {
@@ -58,11 +59,13 @@ describe("UniquePropertyValuesSelector", () => {
     editor: undefined,
   };
 
-  const convertToPropertyValue = (displayValue: string[], groupedRawValues: string[][]): PropertyValue => {
+  const convertToPropertyValue = (uniqueValue: UniqueValue[]): PropertyValue => {
+    const { displayValues, groupedRawValues } = serializeUniqueValues(uniqueValue);
+
     return {
       valueFormat: PropertyValueFormat.Primitive,
-      displayValue: JSON.stringify(displayValue),
-      value: JSON.stringify(groupedRawValues),
+      displayValue: displayValues,
+      value: groupedRawValues,
     };
   };
 
@@ -90,11 +93,14 @@ describe("UniquePropertyValuesSelector", () => {
     // click on menu item
     const menuItem = await waitFor(() => getByText("TestValue1"));
     await user.click(menuItem);
-    expect(spy).to.be.calledWith({
-      valueFormat: PropertyValueFormat.Primitive,
-      displayValue: JSON.stringify(["TestValue1"]),
-      value: JSON.stringify([["TestValue1"]]),
-    });
+
+    const expectedValue = convertToPropertyValue([
+      {
+        displayValue: "TestValue1",
+        groupedRawValues: ["TestValue1"],
+      },
+    ]);
+    expect(spy).to.be.calledWith(expectedValue);
   });
 
   it("invokes `onChange` with multiple values when additional item is selected", async () => {
@@ -108,9 +114,12 @@ describe("UniquePropertyValuesSelector", () => {
       ],
     });
 
-    const displayValue = ["TestValue2"];
-    const groupedRawValues = [["TestValue2"]];
-    const initialValue = convertToPropertyValue(displayValue, groupedRawValues);
+    const initialValue = convertToPropertyValue([
+      {
+        displayValue: "TestValue2",
+        groupedRawValues: ["TestValue2"],
+      },
+    ]);
 
     const { getByText, user } = render(
       <UniquePropertyValuesSelector property={propertyDescription} onChange={spy} imodel={testImodel} descriptor={descriptor} value={initialValue} />,
@@ -123,11 +132,18 @@ describe("UniquePropertyValuesSelector", () => {
     // click on first menu item
     const menuItem = await waitFor(() => getByText("TestValue1"));
     await user.click(menuItem);
-    expect(spy).to.be.calledWith({
-      valueFormat: PropertyValueFormat.Primitive,
-      displayValue: JSON.stringify(["TestValue2", "TestValue1"]),
-      value: JSON.stringify([["TestValue2"], ["TestValue1"]]),
-    });
+
+    const expectedValue = convertToPropertyValue([
+      {
+        displayValue: "TestValue2",
+        groupedRawValues: ["TestValue2"],
+      },
+      {
+        displayValue: "TestValue1",
+        groupedRawValues: ["TestValue1"],
+      },
+    ]);
+    expect(spy).to.be.calledWith(expectedValue);
   });
 
   it("invokes `onChange` when item from the menu is deselected", async () => {
@@ -141,9 +157,16 @@ describe("UniquePropertyValuesSelector", () => {
       ],
     });
 
-    const displayValue = ["TestValue1", "TestValue2"];
-    const groupedRawValues = [["TestValue1"], ["TestValue2"]];
-    const initialValue = convertToPropertyValue(displayValue, groupedRawValues);
+    const initialValue = convertToPropertyValue([
+      {
+        displayValue: "TestValue1",
+        groupedRawValues: ["TestValue1"],
+      },
+      {
+        displayValue: "TestValue2",
+        groupedRawValues: ["TestValue2"],
+      },
+    ]);
 
     const { getByText, getAllByText, user } = render(
       <UniquePropertyValuesSelector property={propertyDescription} onChange={spy} imodel={testImodel} descriptor={descriptor} value={initialValue} />,
@@ -158,11 +181,14 @@ describe("UniquePropertyValuesSelector", () => {
     // first shown in selector, second in dropdown menu
     expect(menuItem).to.have.lengthOf(2);
     await user.click(menuItem[1]);
-    expect(spy).to.be.calledWith({
-      valueFormat: PropertyValueFormat.Primitive,
-      displayValue: JSON.stringify(["TestValue1"]),
-      value: JSON.stringify([["TestValue1"]]),
-    });
+
+    const expectedValue = convertToPropertyValue([
+      {
+        displayValue: "TestValue1",
+        groupedRawValues: ["TestValue1"],
+      },
+    ]);
+    expect(spy).to.be.calledWith(expectedValue);
   });
 
   it("invokes `onChange` when selected items are cleared", async () => {
@@ -176,9 +202,12 @@ describe("UniquePropertyValuesSelector", () => {
       ],
     });
 
-    const displayValue = ["TestValue2"];
-    const groupedRawValues = [["TestValue2"]];
-    const initialValue = convertToPropertyValue(displayValue, groupedRawValues);
+    const initialValue = convertToPropertyValue([
+      {
+        displayValue: "TestValue2",
+        groupedRawValues: ["TestValue2"],
+      },
+    ]);
 
     const { container, queryByText, user } = render(
       <UniquePropertyValuesSelector property={propertyDescription} onChange={spy} imodel={testImodel} descriptor={descriptor} value={initialValue} />,
@@ -197,6 +226,7 @@ describe("UniquePropertyValuesSelector", () => {
       return indicators[0];
     });
     await user.click(clearIndicator);
+
     await waitFor(() =>
       expect(spy).to.be.calledWith({
         valueFormat: PropertyValueFormat.Primitive,
@@ -231,28 +261,38 @@ describe("UniquePropertyValuesSelector", () => {
   });
 
   it("sets provided value", () => {
-    const displayValue = ["TestValue"];
-    const groupedRawValues = [["TestValue"]];
-    const value = convertToPropertyValue(displayValue, groupedRawValues);
+    const value = convertToPropertyValue([
+      {
+        displayValue: "TestValue",
+        groupedRawValues: ["TestValue"],
+      },
+    ]);
 
     const { queryByText } = render(
       <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} value={value} />,
     );
 
-    expect(queryByText(displayValue[0])).to.not.be.null;
+    expect(queryByText("TestValue")).to.not.be.null;
   });
 
   it("selects multiple provided values", () => {
-    const displayValue = ["TestValue1", "TestValue2"];
-    const groupedRawValues = [["TestValue1"], ["TestValue2"]];
-    const value = convertToPropertyValue(displayValue, groupedRawValues);
+    const value = convertToPropertyValue([
+      {
+        displayValue: "TestValue1",
+        groupedRawValues: ["TestValue1"],
+      },
+      {
+        displayValue: "TestValue2",
+        groupedRawValues: ["TestValue2"],
+      },
+    ]);
 
     const { queryByText } = render(
       <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} value={value} />,
     );
 
-    expect(queryByText(displayValue[0])).to.not.be.null;
-    expect(queryByText(displayValue[1])).to.not.be.null;
+    expect(queryByText("TestValue1")).to.not.be.null;
+    expect(queryByText("TestValue2")).to.not.be.null;
   });
 
   it("does not set value when provided value is invalid", () => {
@@ -269,14 +309,14 @@ describe("UniquePropertyValuesSelector", () => {
   });
 
   it("sets empty value text if provided value is an empty string", async () => {
+    const initialValue = convertToPropertyValue([
+      {
+        displayValue: "",
+        groupedRawValues: [""],
+      },
+    ]);
     const { queryByText } = render(
-      <UniquePropertyValuesSelector
-        property={propertyDescription}
-        onChange={() => {}}
-        imodel={testImodel}
-        descriptor={descriptor}
-        value={{ valueFormat: PropertyValueFormat.Primitive, displayValue: '[""]', value: '[[""]]' }}
-      />,
+      <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} value={initialValue} />,
     );
     await waitFor(() => {
       expect(queryByText("unique-values-property-editor.empty-value")).to.not.be.null;
