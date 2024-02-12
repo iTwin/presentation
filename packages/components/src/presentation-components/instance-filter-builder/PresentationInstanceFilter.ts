@@ -102,7 +102,7 @@ export namespace PresentationInstanceFilter {
   }
 
   /**
-   * Extracts information from presentation data structures and creates a generic instance filter for building queries.
+   * Extracts information from [[PresentationInstanceFilter]] and creates a [GenericInstanceFilter]($common) for building queries.
    * @beta
    */
   export function toGenericInstanceFilter(filter: PresentationInstanceFilter, filteredClasses?: ClassInfo[]): GenericInstanceFilter {
@@ -118,7 +118,8 @@ export namespace PresentationInstanceFilter {
   }
 
   /**
-   * Creates `PresentationInstanceFilter`.
+   * Creates [[PresentationInstanceFilter]] from given [GenericInstanceFilter]($common).
+   * @throws if fields used in `filter` cannot be found in `descriptor`.
    * @beta
    */
   export function fromGenericInstanceFilter(descriptor: Descriptor, filter: GenericInstanceFilter): PresentationInstanceFilter {
@@ -305,7 +306,7 @@ function getRelatedInstanceDescription(field: PropertiesField, propClassName: st
   const index = getAliasIndex(baseAlias, ctx.usedRelatedAliases);
   const newRelated = {
     path: pathToProperty,
-    alias: `rel_${propClassName.split(":")[1]}_${index}`,
+    alias: `${baseAlias}_${index}`,
   };
 
   ctx.relatedInstances.push(newRelated);
