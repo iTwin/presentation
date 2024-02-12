@@ -13,12 +13,15 @@ import { ITwinLocalization } from "@itwin/core-i18n";
 import { combineFieldNames, LabelCompositeValue, LabelDefinition } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import {
-  AsyncTasksTracker, createLabelRecord, findField, getDisplayName, initializeLocalization, initializePropertyValueRenderers,
+  AsyncTasksTracker,
+  createLabelRecord,
+  findField,
+  getDisplayName,
+  initializeLocalization,
+  initializePropertyValueRenderers,
 } from "../../presentation-components/common/Utils";
 import { createTestPropertyInfo } from "../_helpers/Common";
-import {
-  createTestContentDescriptor, createTestNestedContentField, createTestPropertiesContentField, createTestSimpleContentField,
-} from "../_helpers/Content";
+import { createTestContentDescriptor, createTestNestedContentField, createTestPropertiesContentField, createTestSimpleContentField } from "../_helpers/Content";
 import { createTestLabelCompositeValue, createTestLabelDefinition } from "../_helpers/LabelDefinition";
 import { createStub } from "../TestUtils";
 

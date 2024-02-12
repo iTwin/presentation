@@ -5,7 +5,12 @@
 
 import memoize from "micro-memoize";
 import {
-  ActiveMatchInfo, DelayLoadedTreeNodeItem, PageOptions, SimpleTreeDataProvider, SimpleTreeDataProviderHierarchy, TreeNodeItem,
+  ActiveMatchInfo,
+  DelayLoadedTreeNodeItem,
+  PageOptions,
+  SimpleTreeDataProvider,
+  SimpleTreeDataProviderHierarchy,
+  TreeNodeItem,
 } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { InstanceFilterDefinition, Node, NodeKey, NodePathElement } from "@itwin/presentation-common";

@@ -12,7 +12,9 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo, PropertyValueFormat as TypeValueFormat, RelationshipPath, Value } from "@itwin/presentation-common";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import {
-  PresentationInstanceFilter, PresentationInstanceFilterCondition, PresentationInstanceFilterConditionGroup,
+  PresentationInstanceFilter,
+  PresentationInstanceFilterCondition,
+  PresentationInstanceFilterConditionGroup,
 } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
 import { createTestECClassInfo, createTestPropertyInfo } from "../_helpers/Common";
 import { createTestNestedContentField, createTestPropertiesContentField } from "../_helpers/Content";

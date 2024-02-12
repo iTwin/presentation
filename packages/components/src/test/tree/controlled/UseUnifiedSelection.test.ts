@@ -10,18 +10,32 @@ import { finalize } from "rxjs/internal/operators/finalize";
 import { ObservableInput } from "rxjs/internal/types";
 import sinon from "sinon";
 import {
-  AbstractTreeNodeLoaderWithProvider, TreeModelNodeInput, TreeModelSource, TreeNodeItem, TreeSelectionChange, TreeSelectionModificationEventArgs,
-  TreeSelectionReplacementEventArgs, UiComponents,
+  AbstractTreeNodeLoaderWithProvider,
+  TreeModelNodeInput,
+  TreeModelSource,
+  TreeNodeItem,
+  TreeSelectionChange,
+  TreeSelectionModificationEventArgs,
+  TreeSelectionReplacementEventArgs,
+  UiComponents,
 } from "@itwin/components-react";
 import { using } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet, NodeKey } from "@itwin/presentation-common";
 import {
-  ISelectionProvider, Presentation, SelectionChangeEventArgs, SelectionChangeType, SelectionHandler, SelectionHelper, SelectionManager,
+  ISelectionProvider,
+  Presentation,
+  SelectionChangeEventArgs,
+  SelectionChangeType,
+  SelectionHandler,
+  SelectionHelper,
+  SelectionManager,
 } from "@itwin/presentation-frontend";
 import {
-  UnifiedSelectionTreeEventHandler, UnifiedSelectionTreeEventHandlerParams, useUnifiedSelectionTreeEventHandler,
+  UnifiedSelectionTreeEventHandler,
+  UnifiedSelectionTreeEventHandlerParams,
+  useUnifiedSelectionTreeEventHandler,
 } from "../../../presentation-components/tree/controlled/UseUnifiedSelection";
 import { IPresentationTreeDataProvider } from "../../../presentation-components/tree/IPresentationTreeDataProvider";
 import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem";

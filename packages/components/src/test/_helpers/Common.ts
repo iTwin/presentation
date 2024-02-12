@@ -6,9 +6,7 @@
 import { Component } from "react";
 import sinon from "sinon";
 import { BeDuration } from "@itwin/core-bentley";
-import {
-  ClassInfo, InstanceKey, PropertyInfo, RelatedClassInfo, RelatedClassInfoWithOptionalRelationship, Ruleset,
-} from "@itwin/presentation-common";
+import { ClassInfo, InstanceKey, PropertyInfo, RelatedClassInfo, RelatedClassInfoWithOptionalRelationship, Ruleset } from "@itwin/presentation-common";
 import { PresentationInstanceFilterPropertyInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
 import { createTestCategoryDescription, createTestPropertiesContentField } from "./Content";
 

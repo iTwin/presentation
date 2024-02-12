@@ -11,8 +11,22 @@ import { BeEvent, BeUiEvent, using } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
 import {
-  ArrayTypeDescription, CategoryDescription, combineFieldNames, Content, ContentFlags, DisplayValue, Field, Item, Property, PropertyValueFormat,
-  RelationshipMeaning, StructFieldMemberDescription, StructTypeDescription, TypeDescription, Value, ValuesDictionary,
+  ArrayTypeDescription,
+  CategoryDescription,
+  combineFieldNames,
+  Content,
+  ContentFlags,
+  DisplayValue,
+  Field,
+  Item,
+  Property,
+  PropertyValueFormat,
+  RelationshipMeaning,
+  StructFieldMemberDescription,
+  StructTypeDescription,
+  TypeDescription,
+  Value,
+  ValuesDictionary,
 } from "@itwin/presentation-common";
 import { FavoritePropertiesManager, FavoritePropertiesScope, Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { CacheInvalidationProps } from "../../presentation-components/common/ContentDataProvider";
@@ -20,7 +34,11 @@ import { FAVORITES_CATEGORY_NAME } from "../../presentation-components/favorite-
 import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider";
 import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
 import {
-  createTestCategoryDescription, createTestContentDescriptor, createTestContentItem, createTestNestedContentField, createTestPropertiesContentField,
+  createTestCategoryDescription,
+  createTestContentDescriptor,
+  createTestContentItem,
+  createTestNestedContentField,
+  createTestPropertiesContentField,
   createTestSimpleContentField,
 } from "../_helpers/Content";
 

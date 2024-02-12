@@ -9,16 +9,28 @@ import { PrimitiveValue, PropertyDescription, PropertyRecord } from "@itwin/appu
 import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection, QuantityFormatter } from "@itwin/core-frontend";
 import {
-  ClientDiagnosticsAttribute, Content, ContentDescriptorRequestOptions, ContentRequestOptions, Descriptor, FIELD_NAMES_SEPARATOR, KeySet, Paged,
-  RegisteredRuleset, Ruleset, SelectionInfo, VariableValue,
+  ClientDiagnosticsAttribute,
+  Content,
+  ContentDescriptorRequestOptions,
+  ContentRequestOptions,
+  Descriptor,
+  FIELD_NAMES_SEPARATOR,
+  KeySet,
+  Paged,
+  RegisteredRuleset,
+  Ruleset,
+  SelectionInfo,
+  VariableValue,
 } from "@itwin/presentation-common";
-import {
-  IModelContentChangeEventArgs, Presentation, PresentationManager, RulesetManager, RulesetVariablesManager,
-} from "@itwin/presentation-frontend";
+import { IModelContentChangeEventArgs, Presentation, PresentationManager, RulesetManager, RulesetVariablesManager } from "@itwin/presentation-frontend";
 import { CacheInvalidationProps, ContentDataProvider, ContentDataProviderProps } from "../../presentation-components/common/ContentDataProvider";
 import { createTestECInstanceKey, createTestPropertyInfo, createTestRuleset } from "../_helpers/Common";
 import {
-  createTestContentDescriptor, createTestContentItem, createTestNestedContentField, createTestPropertiesContentField, createTestSimpleContentField,
+  createTestContentDescriptor,
+  createTestContentItem,
+  createTestNestedContentField,
+  createTestPropertiesContentField,
+  createTestSimpleContentField,
 } from "../_helpers/Content";
 import { PromiseContainer } from "../_helpers/Promises";
 
