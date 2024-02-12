@@ -10,17 +10,7 @@ import { LegacyRef, MutableRefObject, RefCallback, useCallback, useEffect, useRe
 import { Primitives, PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IPropertyValueRenderer, PropertyValueRendererManager } from "@itwin/components-react";
 import { assert, Guid, GuidString, IDisposable } from "@itwin/core-bentley";
-import {
-  Descriptor,
-  DisplayValue,
-  DisplayValueGroup,
-  Field,
-  LabelCompositeValue,
-  LabelDefinition,
-  parseCombinedFieldNames,
-  Ruleset,
-  Value,
-} from "@itwin/presentation-common";
+import { Descriptor, Field, LabelCompositeValue, LabelDefinition, parseCombinedFieldNames, Ruleset, Value } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { InstanceKeyValueRenderer } from "../properties/InstanceKeyValueRenderer";
 
@@ -252,27 +242,32 @@ export function useDelay(delayMilliseconds: number = 250) {
   return passed;
 }
 
+export interface UniqueValue {
+  displayValue: string;
+  groupedRawValues: Value[];
+}
+
 /**
- * Function for serializing `DisplayValueGroup`.
- * Returns an object, which consists of `serializedDisplayValues` and `serializedGroupedRawValues`.
+ * Function for serializing `UniqueValue`.
+ * Returns an object, which consists of `displayValues` and `groupedRawValues`.
  */
-export function serializeDisplayValueGroupArray(values: DisplayValueGroup[]) {
-  const displayValues: DisplayValue[] = [];
-  const groupedRawValues: Value[] = [];
+export function serializeUniqueValues(values: UniqueValue[]): { displayValues: string; groupedRawValues: string } {
+  const displayValues: string[] = [];
+  const groupedRawValues: {
+    [key: string]: Value[];
+  } = {};
   values.forEach((item) => {
     displayValues.push(item.displayValue);
-    groupedRawValues.push(item.groupedRawValues);
+    groupedRawValues[item.displayValue] = [...item.groupedRawValues];
   });
   return { displayValues: JSON.stringify(displayValues), groupedRawValues: JSON.stringify(groupedRawValues) };
 }
 
 /**
  * Function for deserializing `displayValues` and `groupedRawValues`.
- * Returns an object, which consists of `displayValues` and `groupedRawValues`.
- * If values were parsed, then `displayValues` type is string[] and `groupedRawValues` type is Value[][].
- * If values were not parsed, or they are null or undefined, then field types will be undefined.
+ * Returns an array of `UniqueValue` or undefined if parsing fails.
  */
-export function deserializeDisplayValueGroupArray(serializedDisplayValues: string, serializedGroupedRawValues: string) {
+export function deserializeUniqueValues(serializedDisplayValues: string, serializedGroupedRawValues: string): UniqueValue[] | undefined {
   const tryParseJSON = (value: string) => {
     try {
       return JSON.parse(value);
@@ -284,8 +279,12 @@ export function deserializeDisplayValueGroupArray(serializedDisplayValues: strin
   const groupedRawValues = tryParseJSON(serializedGroupedRawValues);
 
   if (!displayValues || !groupedRawValues) {
-    return { displayValues: undefined, groupedRawValues: undefined };
+    return undefined;
   }
 
-  return { displayValues: displayValues as string[], groupedRawValues: groupedRawValues as Value[][] };
+  const uniqueValues: UniqueValue[] = [];
+  for (const displayValue of displayValues) {
+    uniqueValues.push({ displayValue, groupedRawValues: groupedRawValues[displayValue] });
+  }
+  return uniqueValues;
 }

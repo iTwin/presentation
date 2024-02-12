@@ -111,9 +111,9 @@ export * from "./presentation-components/unified-selection/UnifiedSelectionConte
  * @docs-group-description InstancesFilter
  * Utilities for creating filters for filtering presentation data.
  */
+export * from "./presentation-components/instance-filter-builder/PresentationInstanceFilter";
 export * from "./presentation-components/instance-filter-builder/PresentationInstanceFilterDialog";
 export * from "./presentation-components/instance-filter-builder/PresentationFilterBuilder";
-export * from "./presentation-components/instance-filter-builder/GenericInstanceFilter";
 
 /**
  * @module Internal
