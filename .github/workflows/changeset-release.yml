@@ -26,9 +26,9 @@ jobs:
           token: ${{ secrets.IMJS_ADMIN_GH_TOKEN }}
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v3
         with:
-          version: 8.6.2
+          version: 8.15.1
 
       - name: Use Node.js 18
         uses: actions/setup-node@v4

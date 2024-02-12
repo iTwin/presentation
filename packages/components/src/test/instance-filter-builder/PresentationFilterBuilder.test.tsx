@@ -81,7 +81,7 @@ describe("PresentationInstanceFilter", () => {
 
   it("invokes 'onInstanceFilterChanged' with filter", async () => {
     const spy = sinon.spy();
-    const { container, getByText, getByDisplayValue, user } = render(
+    const { container, getByText, getByTitle, getByDisplayValue, user } = render(
       <PresentationInstanceFilterBuilder imodel={imodel} descriptor={descriptor} onInstanceFilterChanged={spy} />,
     );
 
@@ -90,7 +90,7 @@ describe("PresentationInstanceFilter", () => {
     await user.click(propertySelector);
 
     // select property
-    await user.click(getByText(propertiesField.label));
+    await user.click(getByTitle(propertiesField.label));
 
     // wait until property is selected
     await waitFor(() => getByDisplayValue(propertiesField.label));
@@ -164,20 +164,23 @@ describe("PresentationInstanceFilter", () => {
     };
 
     const spy = sinon.spy();
-    const { container, queryByDisplayValue, user } = render(
+    const { queryByDisplayValue, user, getByPlaceholderText, getByRole } = render(
       <PresentationInstanceFilterBuilder imodel={imodel} descriptor={descriptor} onInstanceFilterChanged={spy} initialFilter={initialFilter} />,
+      {
+        addThemeProvider: true,
+      },
     );
 
     // ensure there's a property filter
     await waitFor(() => expect(queryByDisplayValue(propertiesField.label)).to.not.be.null);
 
     // expand class selector
-    const expander = container.querySelector(".iui-actionable");
-    await user.click(expander!);
+    const expander = getByPlaceholderText("instance-filter-builder.selected-classes");
+    await user.click(expander);
 
     // deselect class item from dropdown
-    const classItem = document.querySelector(`li[label="${classInfo2.label}"]`);
-    await user.click(classItem!);
+    const classItem = getByRole("option", { name: classInfo2.label });
+    await user.click(classItem);
 
     // assert that filtering rule was cleared
     await waitFor(() => expect(queryByDisplayValue(propertiesField.label)).to.be.null);
