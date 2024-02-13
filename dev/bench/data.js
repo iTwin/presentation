@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1707741923916,
+  "lastUpdate": 1707809730405,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -930,6 +930,42 @@ window.BENCHMARK_DATA = {
             "value": 1830,
             "unit": "ms",
             "extra": "min: 1830\nmax: 1830\ncount: 1\nmean: 1830\np50: 1826.6\nmedian: 1826.6\np75: 1826.6\np90: 1826.6\np95: 1826.6\np99: 1826.6\np999: 1826.6"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35135765+grigasp@users.noreply.github.com",
+            "name": "Grigas",
+            "username": "grigasp"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d264b90aa5907d78cd21b272480cba662f4b91a9",
+          "message": "`itwinjs-core@4.4.0` (#412)",
+          "timestamp": "2024-02-13T09:34:14+02:00",
+          "tree_id": "61fa3e935152d85357a09549a734a03bd4d47c05",
+          "url": "https://github.com/iTwin/presentation/commit/d264b90aa5907d78cd21b272480cba662f4b91a9"
+        },
+        "date": 1707809729424,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Initial Models Tree Load: Baytown.bim",
+            "value": 343,
+            "unit": "ms",
+            "extra": "min: 343\nmax: 343\ncount: 1\nmean: 343\np50: 340.4\nmedian: 340.4\np75: 340.4\np90: 340.4\np95: 340.4\np99: 340.4\np999: 340.4"
+          },
+          {
+            "name": "Full Models Tree Load: Baytown.bim",
+            "value": 1810,
+            "unit": "ms",
+            "extra": "min: 1810\nmax: 1810\ncount: 1\nmean: 1810\np50: 1826.6\nmedian: 1826.6\np75: 1826.6\np90: 1826.6\np95: 1826.6\np99: 1826.6\np999: 1826.6"
           }
         ]
       }
