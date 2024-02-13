@@ -11,6 +11,7 @@ import { Tab, Tabs } from "@itwin/itwinui-react";
 import { DiagnosticsProps } from "@itwin/presentation-components";
 import { DiagnosticsSelector } from "../diagnostics-selector/DiagnosticsSelector";
 import { Tree } from "./rules-driven/Tree";
+import { TreeComponent } from "./stateless-agnostic/Tree";
 import { StatelessTreeWidget } from "./stateless/Tree";
 
 export interface TreeWidgetProps {
@@ -45,7 +46,7 @@ export function TreeWidget(props: Omit<TreeWidgetProps, "height" | "width">) {
       >
         <div className="tree-widget">
           {openTab === 0 ? (
-            <RulesDrivenTreeWidget imodel={props.imodel} rulesetId={props.rulesetId} height={heightOfTreeWidget} width={width} />
+            <TreeComponent imodel={props.imodel} height={heightOfTreeWidget} width={width ?? 0} />
           ) : (
             <StatelessTreeWidget imodel={props.imodel} height={heightOfTreeWidget} width={width} />
           )}
