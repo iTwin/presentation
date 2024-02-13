@@ -136,6 +136,7 @@ export interface ClassStubs {
   stubOtherClass: TStubClassFunc;
   resetHistory: () => void;
   restore: () => void;
+  stub: sinon.SinonStub<[metadata: IMetadataProvider, fullClassName: string], Promise<ECClass>>;
 }
 export function createClassStubs(schemas: IMetadataProvider): ClassStubs {
   const stub = sinon.stub(common, "getClass");
@@ -198,7 +199,7 @@ export function createClassStubs(schemas: IMetadataProvider): ClassStubs {
     stub.withArgs(schemas, createFullClassNameMatcher(props)).resolves(res);
     return res;
   };
-  return { stubEntityClass, stubRelationshipClass, stubOtherClass, resetHistory: () => stub.resetHistory(), restore: () => stub.restore() };
+  return { stubEntityClass, stubRelationshipClass, stubOtherClass, resetHistory: () => stub.resetHistory(), restore: () => stub.restore(), stub };
 }
 
 /** Creates Promise */
