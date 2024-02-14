@@ -632,6 +632,47 @@ describe("PropertiesGrouping", () => {
         });
       });
 
+      it("doesn't call getClass when it was called before with the same className", async () => {
+        const nodes = [
+          createTestProcessedInstanceNode({
+            key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class", id: "0x1" }] },
+            processingParams: {
+              grouping: {
+                byProperties: {
+                  propertiesClassName: "TestSchema.Class",
+                  propertyGroups: [{ propertyName: "PropertyName", propertyValue: "PropertyValue" }],
+                },
+              },
+            },
+          }),
+          createTestProcessedInstanceNode({
+            key: { type: "instances", instanceKeys: [{ className: "TestSchema.Class", id: "0x2" }] },
+            processingParams: {
+              grouping: {
+                byProperties: {
+                  propertiesClassName: "TestSchema.Class",
+                  propertyGroups: [{ propertyName: "PropertyName", propertyValue: "PropertyValue" }],
+                },
+              },
+            },
+          }),
+        ];
+        const property = { name: "PropertyName", isPrimitive: () => false } as unknown as ECProperty;
+        const stubbedClass = classStubs.stubEntityClass({
+          schemaName: "TestSchema",
+          className: "Class",
+          is: async () => false,
+          properties: [property],
+        });
+        const propertyInfo: propertiesGrouping.PropertyGroupInfo = {
+          ecClass: stubbedClass,
+          previousPropertiesGroupingInfo: [],
+          propertyGroup: { propertyName: "PropertyName" },
+        };
+        await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter, testLocalizedStrings);
+        expect(classStubs.stub).to.be.calledOnce;
+      });
+
       it("doesn't group, when property value isn't set and createGroupForUnspecifiedValues isn't set", async () => {
         const nodes = [
           createTestProcessedInstanceNode({

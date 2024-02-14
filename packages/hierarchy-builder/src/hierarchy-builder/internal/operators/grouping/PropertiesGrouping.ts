@@ -54,13 +54,14 @@ export async function createPropertyGroups(
   localizedStrings: PropertiesGroupingLocalizedStrings,
 ): Promise<GroupingHandlerResult> {
   const groupings: PropertyGroupingInformation = { ungrouped: [], grouped: new Map() };
+  const classesArePropertyClass = new Map<string, boolean>();
   for (const node of nodes) {
     const byProperties = node.processingParams?.grouping?.byProperties;
     if (!byProperties) {
       groupings.ungrouped.push(node);
       continue;
     }
-    if (!(await shouldCreatePropertyGroup(metadata, handlerGroupingParams, byProperties, node.key.instanceKeys[0].className))) {
+    if (!(await shouldCreatePropertyGroup(metadata, handlerGroupingParams, byProperties, node.key.instanceKeys[0].className, classesArePropertyClass))) {
       groupings.ungrouped.push(node);
       continue;
     }
@@ -266,6 +267,7 @@ async function shouldCreatePropertyGroup(
   handlerGroupingParams: PropertyGroupInfo,
   nodePropertyGroupingParams: HierarchyNodePropertiesGroupingParams,
   nodeFullClassName: string,
+  classesArePropertyClass: Map<string, boolean>,
 ): Promise<boolean> {
   if (
     nodePropertyGroupingParams.propertiesClassName !== handlerGroupingParams.ecClass.fullName ||
@@ -283,8 +285,17 @@ async function shouldCreatePropertyGroup(
   if (!doPreviousPropertiesMatch(handlerGroupingParams.previousPropertiesGroupingInfo, nodePropertyGroupingParams)) {
     return false;
   }
-  const nodeClass = await getClass(metadata, nodeFullClassName);
-  if (!(await nodeClass.is(handlerGroupingParams.ecClass))) {
+  const isCurrentNodeClassOfProperty = classesArePropertyClass.get(nodeFullClassName);
+  if (isCurrentNodeClassOfProperty === undefined) {
+    const nodeClass = await getClass(metadata, nodeFullClassName);
+    if (!(await nodeClass.is(handlerGroupingParams.ecClass))) {
+      classesArePropertyClass.set(nodeFullClassName, false);
+      return false;
+    }
+    classesArePropertyClass.set(nodeFullClassName, true);
+    return true;
+  }
+  if (!isCurrentNodeClassOfProperty) {
     return false;
   }
   return true;
