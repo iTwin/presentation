@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 import { Guid } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
-import { from, map, mergeMap, Subject, Subscription } from "rxjs";
+import { produce } from "immer";
+import { expand, from, map, mergeMap, Observable, of, reduce, Subject, Subscription, zip } from "rxjs";
 
 export interface PresentationNodeKey {
   id: string;
@@ -30,26 +31,28 @@ export class HierarchyLoader {
 
   constructor(
     private _hierarchyProvider: HierarchyProvider,
-    private _onLoad: (parentNode: PresentationNodeKey | undefined, loadedNodes: ModelNode[]) => void,
+    private _onLoad: (parent: PresentationNodeKey | undefined, model: TreeModel) => void,
   ) {
     this._subscription = this._loader
       .pipe(
-        mergeMap((parentNode) => {
-          return from(this._hierarchyProvider.getNodes({ parentNode: parentNode?.nodeData })).pipe(
-            map((childNodes) => {
-              return { parentNode, loadedNodes: childNodes.map(createLoadedNode) };
+        mergeMap(
+          (parentNode) =>
+            createNodesLoadObs({
+              provider: this._hierarchyProvider,
+              parentNode,
+              shouldLoadChildren: (node: ModelNode) => !!node.nodeData.autoExpand,
+              createModelNode: (node) => ({
+                ...createBaseModelNode(node),
+                isExpanded: !!node.autoExpand,
+                isLoading: false,
+              }),
             }),
-          );
-        }, 2),
+          1,
+        ),
       )
       .subscribe({
-        next: ({ parentNode, loadedNodes }) => {
-          this._onLoad(parentNode, loadedNodes);
-          for (const node of loadedNodes) {
-            if (node.isExpanded) {
-              this.loadNode(node);
-            }
-          }
+        next: ([hierarchyPartParent, model]) => {
+          this._onLoad(hierarchyPartParent, model);
         },
       });
   }
@@ -63,14 +66,88 @@ export class HierarchyLoader {
   }
 }
 
-function createLoadedNode(hierarchyNode: HierarchyNode): ModelNode {
-  const id = Guid.createValue();
+export function reloadTree(hierarchyProvider: HierarchyProvider, expandedNodes: PresentationNodeKey[]): Observable<TreeModel> {
+  return createNodesLoadObs({
+    provider: hierarchyProvider,
+    parentNode: undefined,
+    // TODO: Need to compare node keys
+    shouldLoadChildren: (node: ModelNode) => expandedNodes.findIndex((nodeToReload) => nodeToReload.nodeData.key === node.nodeData.key) !== -1,
+    createModelNode: (node) => ({
+      ...createBaseModelNode(node),
+      isExpanded: false,
+      isLoading: false,
+    }),
+    onNodesLoaded: (model, { parentNode }) => {
+      if (parentNode !== undefined) {
+        model.idToNode[parentNode.id].isExpanded = true;
+      }
+    },
+  }).pipe(map(([_, treeModel]) => treeModel));
+}
+
+interface LoadedHierarchyPart {
+  parentNode: PresentationNodeKey | undefined;
+  loadedNodes: ModelNode[];
+}
+
+interface CreateNodesLoadObsParams {
+  provider: HierarchyProvider;
+  parentNode: PresentationNodeKey | undefined;
+  shouldLoadChildren: (node: ModelNode) => boolean;
+  createModelNode: (node: HierarchyNode) => ModelNode;
+  onNodesLoaded?: (model: TreeModel, loadedPart: LoadedHierarchyPart) => void;
+}
+
+function createNodesLoadObs(params: CreateNodesLoadObsParams): Observable<[PresentationNodeKey | undefined, TreeModel]> {
+  return zip(
+    of(params.parentNode),
+    loadChildren(params.provider, params.parentNode, params.createModelNode).pipe(
+      expand((loadedPart) =>
+        from(loadedPart.loadedNodes.filter(params.shouldLoadChildren)).pipe(mergeMap((node) => loadChildren(params.provider, node, params.createModelNode))),
+      ),
+      reduce(
+        (treeModel, hierarchyPart) =>
+          produce(treeModel, (model) => {
+            addNodesToModel(model, hierarchyPart);
+            params.onNodesLoaded && params.onNodesLoaded(model, hierarchyPart);
+          }),
+        {
+          idToNode: {},
+          parentChildMap: new Map(),
+        } as TreeModel,
+      ),
+    ),
+  );
+}
+
+function loadChildren(
+  provider: HierarchyProvider,
+  parent: PresentationNodeKey | undefined,
+  mapHierarchyNode: (node: HierarchyNode) => ModelNode,
+): Observable<LoadedHierarchyPart> {
+  return from(provider.getNodes({ parentNode: parent?.nodeData })).pipe(
+    map((childNodes) => ({
+      parentNode: parent,
+      loadedNodes: childNodes.map(mapHierarchyNode),
+    })),
+  );
+}
+
+function addNodesToModel(model: TreeModel, hierarchyPart: LoadedHierarchyPart) {
+  model.parentChildMap.set(
+    hierarchyPart.parentNode?.id,
+    hierarchyPart.loadedNodes.map((node) => node.id),
+  );
+  for (const node of hierarchyPart.loadedNodes) {
+    model.idToNode[node.id] = node;
+  }
+}
+
+function createBaseModelNode(hierarchyNode: HierarchyNode): ModelNode {
   return {
-    id,
+    id: Guid.createValue(),
     children: hierarchyNode.children,
     label: hierarchyNode.label,
-    isExpanded: hierarchyNode.autoExpand,
     nodeData: hierarchyNode,
-    isLoading: hierarchyNode.children && !!hierarchyNode.autoExpand,
   };
 }

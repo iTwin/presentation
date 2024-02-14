@@ -5,7 +5,7 @@
 import { useEffect, useState } from "react";
 import { HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
 import { Draft, enableMapSet, produce } from "immer";
-import { HierarchyLoader, ModelNode, PresentationNodeKey, TreeModel } from "./TreeModel";
+import { HierarchyLoader, ModelNode, PresentationNodeKey, reloadTree, TreeModel } from "./TreeModel";
 
 enableMapSet();
 
@@ -47,28 +47,36 @@ export type PresentationNode = Omit<ModelNode, "children"> & { children: true | 
 
 export class TreeActions {
   private _loader: HierarchyLoader;
+  private _currentModel: TreeModel = { idToNode: {}, parentChildMap: new Map() };
 
   constructor(
     private _updater: (update: (initialState: TreeState) => TreeState) => void,
     private _hierarchyProvider: HierarchyProvider,
   ) {
-    this._loader = new HierarchyLoader(this._hierarchyProvider, this.setChildren.bind(this));
+    this._loader = new HierarchyLoader(this._hierarchyProvider, this.addLoadedHierarchy.bind(this));
   }
 
   public dispose() {
     this._loader.dispose();
   }
 
-  private updateTreeState(action: (model: Draft<TreeModel>) => void) {
+  private getModel(model: TreeModel, actionOrModel: ((model: Draft<TreeModel>) => void) | TreeModel) {
+    if (typeof actionOrModel === "function") {
+      return produce(model, actionOrModel);
+    }
+    return actionOrModel;
+  }
+
+  private updateTreeState(actionOrModel: ((model: Draft<TreeModel>) => void) | TreeModel) {
     this._updater((prevState) => {
-      const newModel = produce(prevState.model, action);
-      if (newModel === prevState.model) {
+      this._currentModel = this.getModel(prevState.model, actionOrModel);
+      if (this._currentModel === prevState.model) {
         return prevState;
       }
 
-      const rootNodes = generateTreeStructure(undefined, newModel);
+      const rootNodes = generateTreeStructure(undefined, this._currentModel);
       return {
-        model: newModel,
+        model: this._currentModel,
         rootNodes,
       };
     });
@@ -98,17 +106,27 @@ export class TreeActions {
     });
   }
 
-  public setChildren(nodeKey: PresentationNodeKey | undefined, children: ModelNode[]) {
+  private addLoadedHierarchy(hierarchyParent: PresentationNodeKey | undefined, loadedHierarchy: TreeModel) {
     this.updateTreeState((model: Draft<TreeModel>) => {
-      model.parentChildMap.set(
-        nodeKey?.id,
-        children.map((node) => node.id),
-      );
-      for (const node of children) {
-        model.idToNode[node.id] = node;
+      const removedChildren: string[] = [];
+      for (const [parentId, childIds] of loadedHierarchy.parentChildMap) {
+        const currentChildren = model.parentChildMap.get(parentId);
+        removedChildren.push(...(currentChildren ?? []));
+        model.parentChildMap.set(parentId, childIds);
       }
-      if (nodeKey !== undefined) {
-        model.idToNode[nodeKey.id].isLoading = false;
+
+      for (const removedNodeId of removedChildren) {
+        delete model.idToNode[removedNodeId];
+      }
+
+      for (const nodeId in loadedHierarchy.idToNode) {
+        if (!(nodeId in loadedHierarchy.idToNode)) {
+          continue;
+        }
+        model.idToNode[nodeId] = loadedHierarchy.idToNode[nodeId];
+      }
+      if (hierarchyParent !== undefined) {
+        model.idToNode[hierarchyParent.id].isLoading = false;
       }
     });
   }
@@ -116,6 +134,33 @@ export class TreeActions {
   public loadRootNodes() {
     this._loader.loadNode(undefined);
   }
+
+  public async reloadTree() {
+    const expandedNodes = collectExpandedNodes(undefined, this._currentModel);
+    reloadTree(this._hierarchyProvider, expandedNodes).subscribe({
+      next: (newModel) => {
+        this.updateTreeState(newModel);
+      },
+    });
+  }
+}
+
+function collectExpandedNodes(parentId: string | undefined, model: TreeModel): PresentationNodeKey[] {
+  const currentChildren = model.parentChildMap.get(parentId);
+  if (!currentChildren) {
+    return [];
+  }
+
+  if (parentId === undefined) {
+    return currentChildren.flatMap((child) => collectExpandedNodes(child, model));
+  }
+
+  const currNode = model.idToNode[parentId];
+  if (!currNode.isExpanded) {
+    return [];
+  }
+
+  return [{ id: currNode.id, nodeData: currNode.nodeData }, ...currentChildren.flatMap((child) => collectExpandedNodes(child, model))];
 }
 
 function generateTreeStructure(parentId: string | undefined, model: TreeModel): PresentationNode[] {
