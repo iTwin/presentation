@@ -24,7 +24,6 @@ export async function getBaseClassGroupingECClasses(metadata: IMetadataProvider,
 
 /** @internal */
 export async function createBaseClassGroupsForSingleBaseClass(
-  metadata: IMetadataProvider,
   nodes: ProcessedInstanceHierarchyNode[],
   baseECClass: ECClass,
   baseClassChecker: BaseClassChecker,
@@ -41,7 +40,7 @@ export async function createBaseClassGroupsForSingleBaseClass(
     }
     const fullCurrentNodeClassName = node.key.instanceKeys[0].className;
 
-    const isCurrentNodeClassOfBase = await baseClassChecker.isECClassOfBaseECClass(metadata, fullCurrentNodeClassName, baseECClass);
+    const isCurrentNodeClassOfBase = await baseClassChecker.isECClassOfBaseECClass(fullCurrentNodeClassName, baseECClass);
 
     if (isCurrentNodeClassOfBase) {
       groupedNodes.push(node);
@@ -108,7 +107,5 @@ export async function createBaseClassGroupingHandlers(
   baseClassChecker: BaseClassChecker,
 ): Promise<GroupingHandler[]> {
   const baseClassGroupingECClasses = await getBaseClassGroupingECClasses(metadata, nodes);
-  return baseClassGroupingECClasses.map(
-    (baseECClass) => async (allNodes) => createBaseClassGroupsForSingleBaseClass(metadata, allNodes, baseECClass, baseClassChecker),
-  );
+  return baseClassGroupingECClasses.map((baseECClass) => async (allNodes) => createBaseClassGroupsForSingleBaseClass(allNodes, baseECClass, baseClassChecker));
 }

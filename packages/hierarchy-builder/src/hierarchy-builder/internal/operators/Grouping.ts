@@ -128,7 +128,7 @@ export async function createGroupingHandlers(
   localizedStrings: PropertiesGroupingLocalizedStrings,
 ): Promise<GroupingHandler[]> {
   const groupingHandlers: GroupingHandler[] = new Array<GroupingHandler>();
-  const baseClassChecker = new BaseClassChecker();
+  const baseClassChecker = new BaseClassChecker(metadata);
   groupingHandlers.push(
     ...(await createBaseClassGroupingHandlers(
       metadata,

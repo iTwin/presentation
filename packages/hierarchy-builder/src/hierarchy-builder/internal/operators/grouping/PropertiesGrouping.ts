@@ -47,7 +47,6 @@ export type PreviousPropertiesGroupingInfo = Array<{ propertiesClassName: string
 
 /** @internal */
 export async function createPropertyGroups(
-  metadata: IMetadataProvider,
   nodes: ProcessedInstanceHierarchyNode[],
   handlerGroupingParams: PropertyGroupInfo,
   valueFormatter: IPrimitiveValueFormatter,
@@ -61,7 +60,7 @@ export async function createPropertyGroups(
       groupings.ungrouped.push(node);
       continue;
     }
-    if (!(await shouldCreatePropertyGroup(metadata, handlerGroupingParams, byProperties, node.key.instanceKeys[0].className, baseClassChecker))) {
+    if (!(await shouldCreatePropertyGroup(handlerGroupingParams, byProperties, node.key.instanceKeys[0].className, baseClassChecker))) {
       groupings.ungrouped.push(node);
       continue;
     }
@@ -263,7 +262,6 @@ function getRangesAsString(ranges?: HierarchyNodePropertyValueRange[]): string {
 }
 
 async function shouldCreatePropertyGroup(
-  metadata: IMetadataProvider,
   handlerGroupingParams: PropertyGroupInfo,
   nodePropertyGroupingParams: HierarchyNodePropertiesGroupingParams,
   nodeFullClassName: string,
@@ -285,7 +283,7 @@ async function shouldCreatePropertyGroup(
   if (!doPreviousPropertiesMatch(handlerGroupingParams.previousPropertiesGroupingInfo, nodePropertyGroupingParams)) {
     return false;
   }
-  const isCurrentNodeClassOfProperty = await baseClassChecker.isECClassOfBaseECClass(metadata, nodeFullClassName, handlerGroupingParams.ecClass);
+  const isCurrentNodeClassOfProperty = await baseClassChecker.isECClassOfBaseECClass(nodeFullClassName, handlerGroupingParams.ecClass);
   return isCurrentNodeClassOfProperty;
 }
 
@@ -342,6 +340,6 @@ export async function createPropertiesGroupingHandlers(
 ): Promise<GroupingHandler[]> {
   const propertiesGroupInfo = await getUniquePropertiesGroupInfo(metadata, nodes);
   return propertiesGroupInfo.map(
-    (propertyInfo) => async (allNodes) => createPropertyGroups(metadata, allNodes, propertyInfo, valueFormatter, localizedStrings, baseClassChecker),
+    (propertyInfo) => async (allNodes) => createPropertyGroups(allNodes, propertyInfo, valueFormatter, localizedStrings, baseClassChecker),
   );
 }

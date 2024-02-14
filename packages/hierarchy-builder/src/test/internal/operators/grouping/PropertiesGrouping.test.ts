@@ -424,7 +424,7 @@ describe("PropertiesGrouping", () => {
           propertyGroup: { propertyName: "PropertyName" },
         };
         expect(
-          await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker()),
+          await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
         ).to.deep.eq({
           groupingType: "property",
           grouped: [],
@@ -453,7 +453,7 @@ describe("PropertiesGrouping", () => {
           propertyGroup: { propertyName: "PropertyName" },
         };
         expect(
-          await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker()),
+          await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
         ).to.deep.eq({
           groupingType: "property",
           grouped: [],
@@ -482,7 +482,7 @@ describe("PropertiesGrouping", () => {
           propertyGroup: { propertyName: "Other" },
         };
         expect(
-          await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker()),
+          await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
         ).to.deep.eq({
           groupingType: "property",
           grouped: [],
@@ -511,7 +511,7 @@ describe("PropertiesGrouping", () => {
           propertyGroup: { propertyName: "PropertyName", ranges: [{ fromValue: 1, toValue: 5 }] },
         };
         expect(
-          await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker()),
+          await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
         ).to.deep.eq({
           groupingType: "property",
           grouped: [],
@@ -546,7 +546,7 @@ describe("PropertiesGrouping", () => {
           propertyGroup: { propertyName: "PropertyName" },
         };
         expect(
-          await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker()),
+          await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
         ).to.deep.eq({
           groupingType: "property",
           grouped: [],
@@ -583,7 +583,7 @@ describe("PropertiesGrouping", () => {
           propertyGroup: { propertyName: "PropertyName2" },
         };
         expect(
-          await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker()),
+          await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
         ).to.deep.eq({
           groupingType: "property",
           grouped: [],
@@ -605,7 +605,7 @@ describe("PropertiesGrouping", () => {
         propertyGroup: { propertyName: "PropertyName" },
       };
       expect(
-        await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker()),
+        await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
       ).to.deep.eq({
         groupingType: "property",
         grouped: [],
@@ -641,7 +641,7 @@ describe("PropertiesGrouping", () => {
           propertyGroup: { propertyName: "PropertyName" },
         };
         expect(
-          await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker()),
+          await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
         ).to.deep.eq({
           groupingType: "property",
           grouped: [],
@@ -686,7 +686,7 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName" },
         };
-        await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker());
+        await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider));
         expect(classStubs.stub).to.be.calledOnce;
       });
 
@@ -717,7 +717,7 @@ describe("PropertiesGrouping", () => {
           propertyGroup: { propertyName: "PropertyName" },
         };
         expect(
-          await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker()),
+          await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
         ).to.deep.eq({
           groupingType: "property",
           grouped: [],
@@ -760,7 +760,7 @@ describe("PropertiesGrouping", () => {
           groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
         };
         expect(
-          await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker()),
+          await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
         ).to.deep.eq({
           groupingType: "property",
           grouped: [
@@ -808,7 +808,7 @@ describe("PropertiesGrouping", () => {
           groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
         };
         expect(
-          await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker()),
+          await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
         ).to.deep.eq({
           groupingType: "property",
           grouped: [
@@ -867,7 +867,7 @@ describe("PropertiesGrouping", () => {
           groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
         };
         expect(
-          await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker()),
+          await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
         ).to.deep.eq({
           groupingType: "property",
           grouped: [
@@ -933,7 +933,7 @@ describe("PropertiesGrouping", () => {
           groupedInstanceKeys: nodes[1].key.instanceKeys,
         };
         expect(
-          await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker()),
+          await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
         ).to.deep.eq({
           groupingType: "property",
           grouped: [
@@ -997,7 +997,7 @@ describe("PropertiesGrouping", () => {
           groupedInstanceKeys: nodes[0].key.instanceKeys,
         };
         expect(
-          await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker()),
+          await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
         ).to.deep.eq({
           groupingType: "property",
           grouped: [
@@ -1040,7 +1040,7 @@ describe("PropertiesGrouping", () => {
           propertyGroup: { propertyName: "PropertyName", ranges: [{ fromValue: 1, toValue: 5 }] },
         };
         expect(
-          await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker()),
+          await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
         ).to.deep.eq({
           groupingType: "property",
           grouped: [],
@@ -1080,7 +1080,7 @@ describe("PropertiesGrouping", () => {
           groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
         };
         expect(
-          await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker()),
+          await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
         ).to.deep.eq({
           groupingType: "property",
           grouped: [
@@ -1124,7 +1124,7 @@ describe("PropertiesGrouping", () => {
           propertyGroup: { propertyName: "PropertyName", ranges: [{ fromValue: 1, toValue: 5 }] },
         };
         expect(
-          await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker()),
+          await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
         ).to.deep.eq({
           groupingType: "property",
           grouped: [],
@@ -1164,7 +1164,7 @@ describe("PropertiesGrouping", () => {
           groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
         };
         expect(
-          await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker()),
+          await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
         ).to.deep.eq({
           groupingType: "property",
           grouped: [
@@ -1216,7 +1216,7 @@ describe("PropertiesGrouping", () => {
           groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
         };
         expect(
-          await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker()),
+          await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
         ).to.deep.eq({
           groupingType: "property",
           grouped: [
@@ -1265,7 +1265,7 @@ describe("PropertiesGrouping", () => {
           groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
         };
         expect(
-          await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker()),
+          await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
         ).to.deep.eq({
           groupingType: "property",
           grouped: [
@@ -1325,7 +1325,7 @@ describe("PropertiesGrouping", () => {
           groupedInstanceKeys: nodes[0].key.instanceKeys,
         };
         expect(
-          await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker()),
+          await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
         ).to.deep.eq({
           groupingType: "property",
           grouped: [
@@ -1385,7 +1385,7 @@ describe("PropertiesGrouping", () => {
           groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
         };
         expect(
-          await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker()),
+          await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
         ).to.deep.eq({
           groupingType: "property",
           grouped: [
@@ -1449,7 +1449,7 @@ describe("PropertiesGrouping", () => {
           groupedInstanceKeys: nodes[0].key.instanceKeys,
         };
         expect(
-          await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker()),
+          await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
         ).to.deep.eq({
           groupingType: "property",
           grouped: [
@@ -1541,7 +1541,7 @@ describe("PropertiesGrouping", () => {
           groupedInstanceKeys: nodes[1].key.instanceKeys,
         };
         expect(
-          await propertiesGrouping.createPropertyGroups(metadataProvider, nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker()),
+          await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
         ).to.deep.eq({
           groupingType: "property",
           grouped: [
@@ -1592,7 +1592,7 @@ describe("PropertiesGrouping", () => {
         nodes,
         formatter,
         testLocalizedStrings,
-        new BaseClassChecker(),
+        new BaseClassChecker(metadataProvider),
       );
       expect(result.length).to.eq(1);
       const handlerResult = await result[0](nodes);
