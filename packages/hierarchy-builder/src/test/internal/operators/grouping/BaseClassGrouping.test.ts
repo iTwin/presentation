@@ -152,6 +152,40 @@ describe("BaseClassGrouping", () => {
       });
     });
 
+    it("doesn't call getClass when it was called before with the same className", async () => {
+      const nodes = [
+        createTestProcessedInstanceNode({
+          key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x1" }] },
+          parentKeys: ["x"],
+          label: "1",
+          processingParams: {
+            grouping: {
+              byBaseClasses: {
+                fullClassNames: ["TestSchema.ParentClass"],
+              },
+            },
+          },
+        }),
+        createTestProcessedInstanceNode({
+          key: { type: "instances", instanceKeys: [{ className: "TestSchema.A", id: "0x2" }] },
+          parentKeys: ["x"],
+          label: "2",
+          processingParams: {
+            grouping: {
+              byBaseClasses: {
+                fullClassNames: ["TestSchema.ParentClass"],
+              },
+            },
+          },
+        }),
+      ];
+      classStubs.stubEntityClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A", is: async () => true });
+      const ecClass = { fullName: "TestSchema.ParentClass", label: "ParentClass" } as unknown as ECClass;
+
+      await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(metadataProvider, nodes, ecClass);
+      expect(classStubs.stub).to.be.calledOnce;
+    });
+
     it("groups multiple instance nodes", async () => {
       const nodes = [
         createTestProcessedInstanceNode({
