@@ -2,11 +2,11 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-
 import { concatMap, from, Observable, of, tap, toArray } from "rxjs";
 import { IMetadataProvider } from "../../ECMetadata";
 import { HierarchyNode, HierarchyNodeKey, ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
+import { BaseClassChecker } from "../../Utils";
 import { IPrimitiveValueFormatter } from "../../values/Formatting";
 import { compareNodesByLabel, createOperatorLoggingNamespace, mergeSortedArrays } from "../Common";
 import { assignAutoExpand } from "./grouping/AutoExpand";
@@ -128,10 +128,12 @@ export async function createGroupingHandlers(
   localizedStrings: PropertiesGroupingLocalizedStrings,
 ): Promise<GroupingHandler[]> {
   const groupingHandlers: GroupingHandler[] = new Array<GroupingHandler>();
+  const baseClassChecker = new BaseClassChecker();
   groupingHandlers.push(
     ...(await createBaseClassGroupingHandlers(
       metadata,
       nodes.filter((n): n is ProcessedInstanceHierarchyNode => HierarchyNode.isInstancesNode(n)),
+      baseClassChecker,
     )),
   );
   groupingHandlers.push(async (allNodes) => createClassGroups(metadata, allNodes));
@@ -141,6 +143,7 @@ export async function createGroupingHandlers(
       nodes.filter((n): n is ProcessedInstanceHierarchyNode => HierarchyNode.isInstancesNode(n)),
       valueFormatter,
       localizedStrings,
+      baseClassChecker,
     )),
   );
   groupingHandlers.push(async (allNodes) => createLabelGroups(allNodes));

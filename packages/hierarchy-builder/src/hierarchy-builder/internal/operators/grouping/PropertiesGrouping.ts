@@ -12,7 +12,7 @@ import {
   ProcessedInstanceHierarchyNode,
   PropertyGroupingNodeKey,
 } from "../../../HierarchyNode";
-import { OmitOverUnion } from "../../../Utils";
+import { BaseClassChecker, OmitOverUnion } from "../../../Utils";
 import { IPrimitiveValueFormatter } from "../../../values/Formatting";
 import { TypedPrimitiveValue } from "../../../values/Values";
 import { getClass } from "../../Common";
@@ -52,16 +52,16 @@ export async function createPropertyGroups(
   handlerGroupingParams: PropertyGroupInfo,
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
+  baseClassChecker: BaseClassChecker,
 ): Promise<GroupingHandlerResult> {
   const groupings: PropertyGroupingInformation = { ungrouped: [], grouped: new Map() };
-  const classesArePropertyClass = new Map<string, boolean>();
   for (const node of nodes) {
     const byProperties = node.processingParams?.grouping?.byProperties;
     if (!byProperties) {
       groupings.ungrouped.push(node);
       continue;
     }
-    if (!(await shouldCreatePropertyGroup(metadata, handlerGroupingParams, byProperties, node.key.instanceKeys[0].className, classesArePropertyClass))) {
+    if (!(await shouldCreatePropertyGroup(metadata, handlerGroupingParams, byProperties, node.key.instanceKeys[0].className, baseClassChecker))) {
       groupings.ungrouped.push(node);
       continue;
     }
@@ -267,7 +267,7 @@ async function shouldCreatePropertyGroup(
   handlerGroupingParams: PropertyGroupInfo,
   nodePropertyGroupingParams: HierarchyNodePropertiesGroupingParams,
   nodeFullClassName: string,
-  classesArePropertyClass: Map<string, boolean>,
+  baseClassChecker: BaseClassChecker,
 ): Promise<boolean> {
   if (
     nodePropertyGroupingParams.propertiesClassName !== handlerGroupingParams.ecClass.fullName ||
@@ -285,20 +285,8 @@ async function shouldCreatePropertyGroup(
   if (!doPreviousPropertiesMatch(handlerGroupingParams.previousPropertiesGroupingInfo, nodePropertyGroupingParams)) {
     return false;
   }
-  const isCurrentNodeClassOfProperty = classesArePropertyClass.get(nodeFullClassName);
-  if (isCurrentNodeClassOfProperty === undefined) {
-    const nodeClass = await getClass(metadata, nodeFullClassName);
-    if (!(await nodeClass.is(handlerGroupingParams.ecClass))) {
-      classesArePropertyClass.set(nodeFullClassName, false);
-      return false;
-    }
-    classesArePropertyClass.set(nodeFullClassName, true);
-    return true;
-  }
-  if (!isCurrentNodeClassOfProperty) {
-    return false;
-  }
-  return true;
+  const isCurrentNodeClassOfProperty = await baseClassChecker.isECClassOfBaseECClass(metadata, nodeFullClassName, handlerGroupingParams.ecClass);
+  return isCurrentNodeClassOfProperty;
 }
 
 /** @internal */
@@ -350,9 +338,10 @@ export async function createPropertiesGroupingHandlers(
   nodes: ProcessedInstanceHierarchyNode[],
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
+  baseClassChecker: BaseClassChecker,
 ): Promise<GroupingHandler[]> {
   const propertiesGroupInfo = await getUniquePropertiesGroupInfo(metadata, nodes);
   return propertiesGroupInfo.map(
-    (propertyInfo) => async (allNodes) => createPropertyGroups(metadata, allNodes, propertyInfo, valueFormatter, localizedStrings),
+    (propertyInfo) => async (allNodes) => createPropertyGroups(metadata, allNodes, propertyInfo, valueFormatter, localizedStrings, baseClassChecker),
   );
 }
