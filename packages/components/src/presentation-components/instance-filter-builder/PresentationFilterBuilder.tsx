@@ -18,6 +18,7 @@ import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./
 import { PresentationInstanceFilter, PresentationInstanceFilterConditionGroup } from "./PresentationInstanceFilter";
 import { PresentationInstanceFilterProperty } from "./PresentationInstanceFilterProperty";
 import { createInstanceFilterPropertyInfos, useFilterBuilderNavigationPropertyEditorContext } from "./Utils";
+import { createFilterClassExpression, createInstanceFilterDefinitionBase } from "./InstanceFilterConverter";
 
 /**
  * Function that checks if supplied [[PresentationInstanceFilter]] is [[PresentationInstanceFilterConditionGroup]].
@@ -33,11 +34,11 @@ export function isPresentationInstanceFilterConditionGroup(filter: PresentationI
  * Converts [[PresentationInstanceFilter]] into [InstanceFilterDefinition]($presentation-common) that can be passed
  * to [PresentationManager]($presentation-frontend) through request options in order to filter results.
  * @beta
- * @deprecated in 5.0. Use `PresentationInstanceFilter.toInstanceFilterDefinition` instead.
+ * @deprecated in 5.0. Use `createInstanceFilterDefinition` instead.
  */
 // istanbul ignore next
 export async function convertToInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection): Promise<InstanceFilterDefinition> {
-  return PresentationInstanceFilter.toInstanceFilterDefinition(filter, imodel);
+  return createInstanceFilterDefinitionBase(filter, imodel);
 }
 
 /**
@@ -46,7 +47,7 @@ export async function convertToInstanceFilterDefinition(filter: PresentationInst
  */
 export interface PresentationInstanceFilterInfo {
   /** Instance filter. */
-  filter: PresentationInstanceFilter;
+  filter: PresentationInstanceFilter | undefined;
   /** Classes of the properties used in filter. */
   usedClasses: ClassInfo[];
 }
@@ -168,7 +169,7 @@ export interface PresentationInstanceFilterBuilderProps {
 export function PresentationInstanceFilterBuilder(props: PresentationInstanceFilterBuilderProps) {
   const { imodel, descriptor, onInstanceFilterChanged, initialFilter } = props;
   const { rootGroup, actions, buildFilter } = usePropertyFilterBuilder({
-    initialFilter: initialFilter ? PresentationInstanceFilter.toComponentsPropertyFilter(descriptor, initialFilter.filter) : undefined,
+    initialFilter: initialFilter?.filter ? PresentationInstanceFilter.toComponentsPropertyFilter(descriptor, initialFilter.filter) : undefined,
   });
   const filteringProps = usePresentationInstanceFilteringProps(descriptor, imodel, initialFilter?.usedClasses);
   useEffect(() => {
@@ -191,4 +192,33 @@ export function PresentationInstanceFilterBuilder(props: PresentationInstanceFil
       descriptor={descriptor}
     />
   );
+}
+
+/**
+ * Creates [InstanceFilterDefinition]($presentation-common) from [[PresentationInstanceFilterInfo]]. Created definition
+ * can be passed to [PresentationManager]($presentation-frontend) through request options in order to filter results.
+ * @beta
+ */
+export async function createInstanceFilterDefinition(info: PresentationInstanceFilterInfo, imodel: IModelConnection): Promise<InstanceFilterDefinition> {
+  if (!info.filter) {
+    assert(info.usedClasses.length > 0);
+    return { expression: createFilterClassExpression(info.usedClasses), selectClassName: "" };
+  }
+
+  const instanceFilter = await createInstanceFilterDefinitionBase(info.filter, imodel);
+  if (info.usedClasses.length === 0) {
+    return instanceFilter;
+  }
+
+  return {
+    ...instanceFilter,
+    expression: `${wrap(instanceFilter.expression)} AND ${createFilterClassExpression(info.usedClasses)}`,
+  };
+}
+
+function wrap(expression: string) {
+  if (expression.startsWith("(") && expression.endsWith(")")) {
+    return expression;
+  }
+  return `(${expression})`;
 }
