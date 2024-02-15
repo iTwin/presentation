@@ -6,7 +6,7 @@
  * @module Tree
  */
 
-import { ReactNode } from "react";
+import { ReactElement } from "react";
 import {
   AbstractTreeNodeLoaderWithProvider,
   ControlledTree,
@@ -25,10 +25,10 @@ import { UsePresentationTreeStateResult } from "./UsePresentationTreeState";
  */
 export type PresentationTreeProps<TEventHandler extends TreeEventHandler> = Omit<
   ControlledTreeProps,
-  "model" | "nodeLoader" | "eventsHandler" | "onItemsRendered" | "nodeHighlightingProps"
+  "model" | "nodeLoader" | "eventsHandler" | "onItemsRendered" | "nodeHighlightingProps" | "treeRenderer"
 > & {
   state: UsePresentationTreeStateResult<TEventHandler>;
-  treeRenderer?: (props: TreeRendererProps & { nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider> }) => ReactNode;
+  treeRenderer?: (props: TreeRendererProps & { nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider> }) => ReactElement;
 };
 
 /**
