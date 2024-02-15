@@ -15,7 +15,7 @@ import {
   ProcessedInstanceHierarchyNode,
 } from "../hierarchy-builder/HierarchyNode";
 import { HierarchyProviderLocalizedStrings } from "../hierarchy-builder/HierarchyProvider";
-import * as common from "../hierarchy-builder/internal/Common";
+import * as getClass from "../hierarchy-builder/internal/GetClass";
 import { parseFullClassName } from "../hierarchy-builder/Metadata";
 import { ECSqlQueryReader } from "../hierarchy-builder/queries/ECSqlCore";
 import { InstanceKey } from "../hierarchy-builder/values/Values";
@@ -136,9 +136,10 @@ export interface ClassStubs {
   stubOtherClass: TStubClassFunc;
   resetHistory: () => void;
   restore: () => void;
+  stub: sinon.SinonStub<[metadata: IMetadataProvider, fullClassName: string], Promise<ECClass>>;
 }
 export function createClassStubs(schemas: IMetadataProvider): ClassStubs {
-  const stub = sinon.stub(common, "getClass");
+  const stub = sinon.stub(getClass, "getClass");
   const createFullClassNameMatcher = (props: { schemaName: string; className: string }) =>
     sinon.match((candidate: string) => {
       const { schemaName, className } = parseFullClassName(candidate);
@@ -198,7 +199,7 @@ export function createClassStubs(schemas: IMetadataProvider): ClassStubs {
     stub.withArgs(schemas, createFullClassNameMatcher(props)).resolves(res);
     return res;
   };
-  return { stubEntityClass, stubRelationshipClass, stubOtherClass, resetHistory: () => stub.resetHistory(), restore: () => stub.restore() };
+  return { stubEntityClass, stubRelationshipClass, stubOtherClass, resetHistory: () => stub.resetHistory(), restore: () => stub.restore(), stub };
 }
 
 /** Creates Promise */

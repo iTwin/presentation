@@ -6,7 +6,8 @@
 import { omit } from "@itwin/core-bentley";
 import { ECClass, IMetadataProvider } from "../../../ECMetadata";
 import { ClassGroupingNodeKey, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
-import { getClass } from "../../Common";
+import { BaseClassChecker } from "../../Common";
+import { getClass } from "../../GetClass";
 import { GroupingHandler, GroupingHandlerResult } from "../Grouping";
 
 /** @internal */
@@ -23,9 +24,9 @@ export async function getBaseClassGroupingECClasses(metadata: IMetadataProvider,
 
 /** @internal */
 export async function createBaseClassGroupsForSingleBaseClass(
-  metadata: IMetadataProvider,
   nodes: ProcessedInstanceHierarchyNode[],
   baseECClass: ECClass,
+  baseClassChecker: BaseClassChecker,
 ): Promise<GroupingHandlerResult> {
   const groupedNodes = new Array<ProcessedInstanceHierarchyNode>();
   const ungroupedNodes = new Array<ProcessedInstanceHierarchyNode>();
@@ -38,8 +39,10 @@ export async function createBaseClassGroupsForSingleBaseClass(
       continue;
     }
     const fullCurrentNodeClassName = node.key.instanceKeys[0].className;
-    const currentNodeECClass = await getClass(metadata, fullCurrentNodeClassName);
-    if (await currentNodeECClass.is(baseECClass)) {
+
+    const isCurrentNodeClassOfBase = await baseClassChecker.isECClassOfBaseECClass(fullCurrentNodeClassName, baseECClass);
+
+    if (isCurrentNodeClassOfBase) {
       groupedNodes.push(node);
     } else {
       ungroupedNodes.push(node);
@@ -98,7 +101,11 @@ async function sortByBaseClass(classes: ECClass[]): Promise<ECClass[]> {
 }
 
 /** @internal */
-export async function createBaseClassGroupingHandlers(metadata: IMetadataProvider, nodes: ProcessedInstanceHierarchyNode[]): Promise<GroupingHandler[]> {
+export async function createBaseClassGroupingHandlers(
+  metadata: IMetadataProvider,
+  nodes: ProcessedInstanceHierarchyNode[],
+  baseClassChecker: BaseClassChecker,
+): Promise<GroupingHandler[]> {
   const baseClassGroupingECClasses = await getBaseClassGroupingECClasses(metadata, nodes);
-  return baseClassGroupingECClasses.map((baseECClass) => async (allNodes) => createBaseClassGroupsForSingleBaseClass(metadata, allNodes, baseECClass));
+  return baseClassGroupingECClasses.map((baseECClass) => async (allNodes) => createBaseClassGroupsForSingleBaseClass(allNodes, baseECClass, baseClassChecker));
 }
