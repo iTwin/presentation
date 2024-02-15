@@ -2,6 +2,4 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-export * from "./src/Rpcs.js";
-export * from "./src/SampleRpcInterface.js";
-export * from "./src/SampleIpcInterface.js";
+/// <reference types="vite/client" />

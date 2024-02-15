@@ -1,12 +1,15 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "jsx": "react-jsx",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "outDir": "./lib",
+
     "sourceMap": true,
     "esModuleInterop": true,
     "isolatedModules": true,
-    "lib": ["dom"],
-    "outDir": "./lib",
   },
   "include": ["src", "webpack.config.ts"],
 }

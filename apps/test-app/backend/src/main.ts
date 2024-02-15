@@ -3,17 +3,14 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import "./SampleRpcImpl"; // just to get the RPC implementation registered
-import { app as electron } from "electron";
+import "./SampleRpcImpl.js"; // just to get the RPC implementation registered
+import * as electron from "electron";
 import * as path from "path";
 import { Logger, LogLevel } from "@itwin/core-bentley";
 import { RpcInterfaceDefinition } from "@itwin/core-common";
 import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 // __PUBLISH_EXTRACT_START__ Presentation.Backend.Initialization.Imports
-import { Presentation, PresentationProps } from "@itwin/presentation-backend";
-// __PUBLISH_EXTRACT_END__
-// eslint-disable-next-line no-duplicate-imports
-import { PresentationBackendLoggerCategory, PresentationBackendNativeLoggerCategory } from "@itwin/presentation-backend";
+import { Presentation, PresentationBackendLoggerCategory, PresentationBackendNativeLoggerCategory, PresentationProps } from "@itwin/presentation-backend";
 // __PUBLISH_EXTRACT_START__ Presentation.Backend.Initialization.OpenTelemetry.Imports
 import { exportDiagnostics } from "@itwin/presentation-opentelemetry";
 import { context } from "@opentelemetry/api";
@@ -36,10 +33,10 @@ void (async () => {
 
   // get platform-specific initialization function
   let init: (_rpcs: RpcInterfaceDefinition[]) => void;
-  if (electron) {
-    init = (await import("./electron/ElectronMain")).default;
+  if (electron.app) {
+    init = (await import("./electron/ElectronMain.js")).default;
   } else {
-    init = (await import("./web/BackendServer")).default;
+    init = (await import("./web/BackendServer.js")).default;
   }
   // do initialize
   init(rpcInterfaces);
