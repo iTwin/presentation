@@ -15,7 +15,8 @@ import {
 import { OmitOverUnion } from "../../../Utils";
 import { IPrimitiveValueFormatter } from "../../../values/Formatting";
 import { TypedPrimitiveValue } from "../../../values/Values";
-import { getClass } from "../../Common";
+import { BaseClassChecker } from "../../Common";
+import { getClass } from "../../GetClass";
 import { GroupingHandler, GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
 import { sortNodesByLabel } from "../Sorting";
 
@@ -47,11 +48,11 @@ export type PreviousPropertiesGroupingInfo = Array<{ propertiesClassName: string
 
 /** @internal */
 export async function createPropertyGroups(
-  metadata: IMetadataProvider,
   nodes: ProcessedInstanceHierarchyNode[],
   handlerGroupingParams: PropertyGroupInfo,
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
+  baseClassChecker: BaseClassChecker,
 ): Promise<GroupingHandlerResult> {
   const groupings: PropertyGroupingInformation = { ungrouped: [], grouped: new Map() };
   for (const node of nodes) {
@@ -60,7 +61,7 @@ export async function createPropertyGroups(
       groupings.ungrouped.push(node);
       continue;
     }
-    if (!(await shouldCreatePropertyGroup(metadata, handlerGroupingParams, byProperties, node.key.instanceKeys[0].className))) {
+    if (!(await shouldCreatePropertyGroup(handlerGroupingParams, byProperties, node.key.instanceKeys[0].className, baseClassChecker))) {
       groupings.ungrouped.push(node);
       continue;
     }
@@ -262,10 +263,10 @@ function getRangesAsString(ranges?: HierarchyNodePropertyValueRange[]): string {
 }
 
 async function shouldCreatePropertyGroup(
-  metadata: IMetadataProvider,
   handlerGroupingParams: PropertyGroupInfo,
   nodePropertyGroupingParams: HierarchyNodePropertiesGroupingParams,
   nodeFullClassName: string,
+  baseClassChecker: BaseClassChecker,
 ): Promise<boolean> {
   if (
     nodePropertyGroupingParams.propertiesClassName !== handlerGroupingParams.ecClass.fullName ||
@@ -283,11 +284,7 @@ async function shouldCreatePropertyGroup(
   if (!doPreviousPropertiesMatch(handlerGroupingParams.previousPropertiesGroupingInfo, nodePropertyGroupingParams)) {
     return false;
   }
-  const nodeClass = await getClass(metadata, nodeFullClassName);
-  if (!(await nodeClass.is(handlerGroupingParams.ecClass))) {
-    return false;
-  }
-  return true;
+  return baseClassChecker.isECClassOfBaseECClass(nodeFullClassName, handlerGroupingParams.ecClass);
 }
 
 /** @internal */
@@ -339,9 +336,10 @@ export async function createPropertiesGroupingHandlers(
   nodes: ProcessedInstanceHierarchyNode[],
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
+  baseClassChecker: BaseClassChecker,
 ): Promise<GroupingHandler[]> {
   const propertiesGroupInfo = await getUniquePropertiesGroupInfo(metadata, nodes);
   return propertiesGroupInfo.map(
-    (propertyInfo) => async (allNodes) => createPropertyGroups(metadata, allNodes, propertyInfo, valueFormatter, localizedStrings),
+    (propertyInfo) => async (allNodes) => createPropertyGroups(allNodes, propertyInfo, valueFormatter, localizedStrings, baseClassChecker),
   );
 }
