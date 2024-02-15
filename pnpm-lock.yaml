@@ -198,7 +198,7 @@ importers:
         version: 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-geometry@4.4.0)
       '@itwin/core-electron':
         specifier: ^4.4.0
-        version: 4.4.0(@itwin/core-backend@4.4.0)(@itwin/core-bentley@4.4.0)(@itwin/core-common@4.4.0)(@itwin/core-frontend@4.4.0)(electron@23.3.13)
+        version: 4.4.0(@itwin/core-backend@4.4.0)(@itwin/core-bentley@4.4.0)(@itwin/core-common@4.4.0)(@itwin/core-frontend@4.4.0)(electron@28.2.3)
       '@itwin/core-frontend':
         specifier: ^4.4.0
         version: 4.4.0(@itwin/appui-abstract@4.4.0)(@itwin/core-bentley@4.4.0)(@itwin/core-common@4.4.0)(@itwin/core-geometry@4.4.0)(@itwin/core-orbitgt@4.4.0)(@itwin/core-quantity@4.4.0)(inversify@6.0.2)(reflect-metadata@0.1.14)
@@ -260,8 +260,8 @@ importers:
         specifier: ^7.0.3
         version: 7.0.3
       electron:
-        specifier: ^23.3.13
-        version: 23.3.13
+        specifier: ^28.2.3
+        version: 28.2.3
       eslint:
         specifier: ^8.56.0
         version: 8.56.0
@@ -336,7 +336,7 @@ importers:
         version: 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-geometry@4.4.0)
       '@itwin/core-electron':
         specifier: ^4.4.0
-        version: 4.4.0(@itwin/core-backend@4.4.0)(@itwin/core-bentley@4.4.0)(@itwin/core-common@4.4.0)(@itwin/core-frontend@4.4.0)(electron@23.3.13)
+        version: 4.4.0(@itwin/core-backend@4.4.0)(@itwin/core-bentley@4.4.0)(@itwin/core-common@4.4.0)(@itwin/core-frontend@4.4.0)(electron@28.2.3)
       '@itwin/core-frontend':
         specifier: ^4.4.0
         version: 4.4.0(@itwin/appui-abstract@4.4.0)(@itwin/core-bentley@4.4.0)(@itwin/core-common@4.4.0)(@itwin/core-geometry@4.4.0)(@itwin/core-orbitgt@4.4.0)(@itwin/core-quantity@4.4.0)(inversify@6.0.2)(reflect-metadata@0.1.14)
@@ -416,8 +416,8 @@ importers:
         specifier: ^4.2.1
         version: 4.2.1(vite@5.1.0)
       electron:
-        specifier: ^23.3.13
-        version: 23.3.13
+        specifier: ^28.2.3
+        version: 28.2.3
       eslint:
         specifier: ^8.56.0
         version: 8.56.0
@@ -2951,7 +2951,7 @@ packages:
       flatbuffers: 1.12.0
       js-base64: 3.7.6
 
-  /@itwin/core-electron@4.4.0(@itwin/core-backend@4.4.0)(@itwin/core-bentley@4.4.0)(@itwin/core-common@4.4.0)(@itwin/core-frontend@4.4.0)(electron@23.3.13):
+  /@itwin/core-electron@4.4.0(@itwin/core-backend@4.4.0)(@itwin/core-bentley@4.4.0)(@itwin/core-common@4.4.0)(@itwin/core-frontend@4.4.0)(electron@28.2.3):
     resolution: {integrity: sha512-HcZIHWiDgrhjWtns2NGaQOEXiT4gL0GHdtVnvf9qntfHJpyfy2OUmEFreKPxMSCPXwwUR/HckdWgbcvFlpDgqA==}
     engines: {node: ^18.0.0 || ^20.0.0}
     peerDependencies:
@@ -2966,7 +2966,7 @@ packages:
       '@itwin/core-common': 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-geometry@4.4.0)
       '@itwin/core-frontend': 4.4.0(@itwin/appui-abstract@4.4.0)(@itwin/core-bentley@4.4.0)(@itwin/core-common@4.4.0)(@itwin/core-geometry@4.4.0)(@itwin/core-orbitgt@4.4.0)(@itwin/core-quantity@4.4.0)(inversify@6.0.2)(reflect-metadata@0.1.14)
       '@openid/appauth': 1.3.1
-      electron: 23.3.13
+      electron: 28.2.3
       open: 7.4.2
       username: 5.1.0
     transitivePeerDependencies:
@@ -5078,10 +5078,6 @@ packages:
     resolution: {integrity: sha512-J8xLz7q2OFulZ2cyGTLE1TbbZcjpno7FaN6zdJNrgAdrJ+DZzh/uFR6YrTb4C+nXakvud8Q4+rbhoIWlYQbUFQ==}
     dev: false
 
-  /@types/node@16.18.80:
-    resolution: {integrity: sha512-vFxJ1Iyl7A0+xB0uW1r1v504yItKZLdqg/VZELUZ4H02U0bXAgBisSQ8Erf0DMruNFz9ggoiEv6T8Ll9bTg8Jw==}
-    dev: false
-
   /@types/node@18.17.7:
     resolution: {integrity: sha512-WJj/p/cIg6zUsxv1n2leZHpvn8hr9TYuLQxAZxZcK/7+5t5ukmJGelOLGOy3L1MLhAO/sapTJGd1V7kvoIuzUg==}
 
@@ -7191,14 +7187,14 @@ packages:
   /electron-to-chromium@1.4.665:
     resolution: {integrity: sha512-UpyCWObBoD+nSZgOC2ToaIdZB0r9GhqT2WahPKiSki6ckkSuKhQNso8V2PrFcHBMleI/eqbKgVQgVC4Wni4ilw==}
 
-  /electron@23.3.13:
-    resolution: {integrity: sha512-BaXtHEb+KYKLouUXlUVDa/lj9pj4F5kiE0kwFdJV84Y2EU7euIDgPthfKtchhr5MVHmjtavRMIV/zAwEiSQ9rQ==}
+  /electron@28.2.3:
+    resolution: {integrity: sha512-he9nGphZo03ejDjYBXpmFVw0KBKogXvR2tYxE4dyYvnfw42uaFIBFrwGeenvqoEOfheJfcI0u4rFG6h3QxDwnA==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
     requiresBuild: true
     dependencies:
       '@electron/get': 2.0.3
-      '@types/node': 16.18.80
+      '@types/node': 18.19.15
       extract-zip: 2.0.1
     transitivePeerDependencies:
       - supports-color

@@ -38,7 +38,7 @@
     "@opentelemetry/semantic-conventions": "^1.21.0",
     "@test-app/common": "workspace:*",
     "cross-env": "^7.0.3",
-    "electron": "^23.3.13",
+    "electron": "^28.2.3",
     "eslint": "^8.56.0",
     "rimraf": "^5.0.5",
     "typescript": "~5.0.4"
