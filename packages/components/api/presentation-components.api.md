@@ -164,6 +164,9 @@ export function convertToInstanceFilterDefinition(filter: PresentationInstanceFi
 // @alpha
 export function createDiagnosticsOptions(props: DiagnosticsProps): ClientDiagnosticsOptions | undefined;
 
+// @beta
+export function createInstanceFilterDefinition(info: PresentationInstanceFilterInfo, imodel: IModelConnection): Promise<InstanceFilterDefinition>;
+
 // @public
 export const DEFAULT_PROPERTY_GRID_RULESET: Ruleset;
 
@@ -388,7 +391,6 @@ export namespace PresentationInstanceFilter {
     export function isConditionGroup(filter: PresentationInstanceFilter): filter is PresentationInstanceFilterConditionGroup;
     export function toComponentsPropertyFilter(descriptor: Descriptor, filter: PresentationInstanceFilter): PropertyFilter;
     export function toGenericInstanceFilter(filter: PresentationInstanceFilter, filteredClasses?: ClassInfo[]): GenericInstanceFilter;
-    export function toInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection, filteredClasses?: ClassInfo[]): Promise<InstanceFilterDefinition>;
 }
 
 // @beta
@@ -438,7 +440,7 @@ export interface PresentationInstanceFilterDialogProps {
 
 // @beta
 export interface PresentationInstanceFilterInfo {
-    filter: PresentationInstanceFilter;
+    filter: PresentationInstanceFilter | undefined;
     usedClasses: ClassInfo[];
 }
 
