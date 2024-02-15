@@ -10,6 +10,7 @@ import { LegacyRef, MutableRefObject, RefCallback, useCallback, useEffect, useRe
 import { Primitives, PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { IPropertyValueRenderer, PropertyValueRendererManager } from "@itwin/components-react";
 import { assert, Guid, GuidString, IDisposable } from "@itwin/core-bentley";
+import { TranslationOptions } from "@itwin/core-common";
 import { Descriptor, Field, LabelCompositeValue, LabelDefinition, parseCombinedFieldNames, Ruleset, Value } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { InstanceKeyValueRenderer } from "../properties/InstanceKeyValueRenderer";
@@ -51,9 +52,9 @@ export const initializePropertyValueRenderers = async () => {
  *
  * @internal
  */
-export const translate = (stringId: string): string => {
+export const translate = (stringId: string, options?: TranslationOptions): string => {
   stringId = `${localizationNamespaceName}:${stringId}`;
-  return Presentation.localization.getLocalizedString(stringId);
+  return Presentation.localization.getLocalizedString(stringId, options);
 };
 
 /**

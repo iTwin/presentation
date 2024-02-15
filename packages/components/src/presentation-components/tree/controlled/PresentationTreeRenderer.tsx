@@ -155,7 +155,7 @@ function MatchingInstancesCount({ filter, dataProvider, parentKey }: MatchingIns
       } catch (e) {
         if (e instanceof PresentationError && e.errorNumber === PresentationStatus.ResultSetTooLarge) {
           // ResultSetTooLarge error can't occur if sizeLimit is undefined.
-          return translate("tree.filter-dialog.result-limit-exceeded");
+          return translate("tree.filter-dialog.result-limit-exceeded", { itemCount: requestOptions.sizeLimit!.toString() });
         }
       }
 
