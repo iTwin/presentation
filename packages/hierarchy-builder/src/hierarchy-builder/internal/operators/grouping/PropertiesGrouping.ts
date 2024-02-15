@@ -12,10 +12,11 @@ import {
   ProcessedInstanceHierarchyNode,
   PropertyGroupingNodeKey,
 } from "../../../HierarchyNode";
-import { BaseClassChecker, OmitOverUnion } from "../../../Utils";
+import { OmitOverUnion } from "../../../Utils";
 import { IPrimitiveValueFormatter } from "../../../values/Formatting";
 import { TypedPrimitiveValue } from "../../../values/Values";
-import { getClass } from "../../Common";
+import { BaseClassChecker } from "../../Common";
+import { getClass } from "../../GetClass";
 import { GroupingHandler, GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
 import { sortNodesByLabel } from "../Sorting";
 

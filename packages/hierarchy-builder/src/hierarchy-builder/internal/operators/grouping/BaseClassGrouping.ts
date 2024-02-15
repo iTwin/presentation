@@ -6,8 +6,8 @@
 import { omit } from "@itwin/core-bentley";
 import { ECClass, IMetadataProvider } from "../../../ECMetadata";
 import { ClassGroupingNodeKey, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
-import { BaseClassChecker } from "../../../Utils";
-import { getClass } from "../../Common";
+import { BaseClassChecker } from "../../Common";
+import { getClass } from "../../GetClass";
 import { GroupingHandler, GroupingHandlerResult } from "../Grouping";
 
 /** @internal */

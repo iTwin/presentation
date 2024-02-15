@@ -8,8 +8,8 @@ import sinon from "sinon";
 import { omit } from "@itwin/core-bentley";
 import { ECClass, IMetadataProvider } from "../../../../hierarchy-builder/ECMetadata";
 import { GroupingNodeKey } from "../../../../hierarchy-builder/HierarchyNode";
+import { BaseClassChecker } from "../../../../hierarchy-builder/internal/Common";
 import * as baseClassGrouping from "../../../../hierarchy-builder/internal/operators/grouping/BaseClassGrouping";
-import { BaseClassChecker } from "../../../../hierarchy-builder/Utils";
 import { ClassStubs, createClassStubs, createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils";
 
 describe("BaseClassGrouping", () => {
