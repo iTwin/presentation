@@ -201,7 +201,6 @@ export function PresentationInstanceFilterBuilder(props: PresentationInstanceFil
  */
 export async function createInstanceFilterDefinition(info: PresentationInstanceFilterInfo, imodel: IModelConnection): Promise<InstanceFilterDefinition> {
   if (!info.filter) {
-    assert(info.usedClasses.length > 0);
     return { expression: createFilterClassExpression(info.usedClasses), selectClassName: "" };
   }
 

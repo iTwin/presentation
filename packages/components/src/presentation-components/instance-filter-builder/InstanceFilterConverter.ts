@@ -88,6 +88,9 @@ function createExpressionFromGroup(group: GenericInstanceFilterRuleGroup): strin
 
 /** @internal */
 export function createFilterClassExpression(usedClasses: ClassInfo[]) {
+  if (usedClasses.length === 0) {
+    return "";
+  }
   return `(${usedClasses.map((classInfo) => `this.IsOfClass(${classInfo.id})`).join(" OR ")})`;
 }
 
