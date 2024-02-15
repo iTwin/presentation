@@ -2,10 +2,9 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-import { Guid } from "@itwin/core-bentley";
-import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
-import { produce } from "immer";
 import { expand, from, map, mergeMap, Observable, of, reduce, Subject, Subscription, zip } from "rxjs";
+import { Guid } from "@itwin/core-bentley";
+import { HierarchyNode, HierarchyProvider, ParentNodeKey } from "@itwin/presentation-hierarchy-builder";
 
 export interface PresentationNodeKey {
   id: string;
@@ -71,7 +70,8 @@ export function reloadTree(hierarchyProvider: HierarchyProvider, expandedNodes: 
     provider: hierarchyProvider,
     parentNode: undefined,
     // TODO: Need to compare node keys
-    shouldLoadChildren: (node: ModelNode) => expandedNodes.findIndex((nodeToReload) => nodeToReload.nodeData.key === node.nodeData.key) !== -1,
+    shouldLoadChildren: (node: ModelNode) =>
+      expandedNodes.findIndex((nodeToReload) => ParentNodeKey.compare(nodeToReload.nodeData.key, node.nodeData.key) === 0) !== -1,
     createModelNode: (node) => ({
       ...createBaseModelNode(node),
       isExpanded: false,
@@ -106,11 +106,12 @@ function createNodesLoadObs(params: CreateNodesLoadObsParams): Observable<[Prese
         from(loadedPart.loadedNodes.filter(params.shouldLoadChildren)).pipe(mergeMap((node) => loadChildren(params.provider, node, params.createModelNode))),
       ),
       reduce(
-        (treeModel, hierarchyPart) =>
-          produce(treeModel, (model) => {
-            addNodesToModel(model, hierarchyPart);
-            params.onNodesLoaded && params.onNodesLoaded(model, hierarchyPart);
-          }),
+        (treeModel, hierarchyPart) => {
+          addNodesToModel(treeModel, hierarchyPart);
+          params.onNodesLoaded && params.onNodesLoaded(treeModel, hierarchyPart);
+          return treeModel;
+        },
+
         {
           idToNode: {},
           parentChildMap: new Map(),
