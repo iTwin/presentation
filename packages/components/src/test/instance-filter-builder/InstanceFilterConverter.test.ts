@@ -795,6 +795,16 @@ describe("createInstanceFilterDefinition", () => {
       operator: "is-null",
     };
 
+    it("returns empty expression if there are node filter and classes", async () => {
+      const info: PresentationInstanceFilterInfo = {
+        filter: undefined,
+        usedClasses: [],
+      };
+      const { expression } = await createInstanceFilterDefinition(info, testImodel);
+
+      expect(expression).to.be.eq("");
+    });
+
     it("returns expression with no classes in it when filteredClasses is an empty array", async () => {
       const info: PresentationInstanceFilterInfo = {
         filter,
