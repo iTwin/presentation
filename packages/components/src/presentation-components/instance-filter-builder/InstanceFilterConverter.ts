@@ -88,7 +88,7 @@ function createExpressionFromGroup(group: GenericInstanceFilterRuleGroup): strin
 
 /** @internal */
 export function createFilterClassExpression(usedClasses: ClassInfo[]) {
-  return `(${usedClasses.reduce((queryExpression, classInfo) => `${queryExpression}${queryExpression ? " OR " : ""}this.IsOfClass(${classInfo.id})`, "")})`;
+  return `(${usedClasses.map((classInfo) => `this.IsOfClass(${classInfo.id})`).join(" OR ")})`;
 }
 
 function createComparison(
