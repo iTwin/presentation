@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1707895835755,
+  "lastUpdate": 1707997048992,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -1002,6 +1002,42 @@ window.BENCHMARK_DATA = {
             "value": 1850,
             "unit": "ms",
             "extra": "min: 1850\nmax: 1850\ncount: 1\nmean: 1850\np50: 1863.5\nmedian: 1863.5\np75: 1863.5\np90: 1863.5\np95: 1863.5\np99: 1863.5\np999: 1863.5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "100586436+JonasDov@users.noreply.github.com",
+            "name": "JonasDov",
+            "username": "JonasDov"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "edd180e892056187073b9a848fe45e6ff1f1657c",
+          "message": "Reduce getClass calls for property grouping (#414)",
+          "timestamp": "2024-02-15T11:36:30Z",
+          "tree_id": "757afe687bd602ba82ef88e78ada2912226285d4",
+          "url": "https://github.com/iTwin/presentation/commit/edd180e892056187073b9a848fe45e6ff1f1657c"
+        },
+        "date": 1707997048581,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Full Models Tree Load: Baytown.bim",
+            "value": 1833,
+            "unit": "ms",
+            "extra": "min: 1833\nmax: 1833\ncount: 1\nmean: 1833\np50: 1826.6\nmedian: 1826.6\np75: 1826.6\np90: 1826.6\np95: 1826.6\np99: 1826.6\np999: 1826.6"
+          },
+          {
+            "name": "Initial Models Tree Load: Baytown.bim",
+            "value": 395,
+            "unit": "ms",
+            "extra": "min: 395\nmax: 395\ncount: 1\nmean: 395\np50: 391.6\nmedian: 391.6\np75: 391.6\np90: 391.6\np95: 391.6\np99: 391.6\np999: 391.6"
           }
         ]
       }
