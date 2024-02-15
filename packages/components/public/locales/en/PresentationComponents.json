@@ -43,7 +43,7 @@
     "clear-hierarchy-level-filter": "Clear active filter",
     "filter-dialog": {
       "results-count": "Matching items",
-      "result-limit-exceeded": "Exceeded matching item limit of"
+      "result-limit-exceeded": "There are too many results to display. Please adjust your filters to limit the results."
     }
   },
   "navigation-property-editor": {
