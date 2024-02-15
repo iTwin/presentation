@@ -1,3 +1,7 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
 import { ComponentPropsWithoutRef, useCallback, useEffect, useState } from "react";
 import { SvgFolder, SvgImodelHollow, SvgItem, SvgLayers, SvgModel } from "@itwin/itwinui-icons-react";
 import { Button, Flex, ProgressRadial, SearchBox, Tree, TreeNode } from "@itwin/itwinui-react";
@@ -149,7 +153,7 @@ function TreeRenderer({ rootNodes, treeActions }: { rootNodes: PresentationNode[
         overflow: "auto",
       }}
     >
-      <Tree<PresentationNode> data={rootNodes} nodeRenderer={nodeRenderer} getNode={getNode} />
+      <Tree<PresentationNode> data={rootNodes} nodeRenderer={nodeRenderer} getNode={getNode} enableVirtualization={true} />
     </div>
   );
 }
