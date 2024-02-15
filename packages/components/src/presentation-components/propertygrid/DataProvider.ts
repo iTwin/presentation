@@ -52,7 +52,20 @@ const labelsComparer = new Intl.Collator(undefined, { sensitivity: "base" }).com
  * @public
  */
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-export const DEFAULT_PROPERTY_GRID_RULESET: Ruleset = require("./DefaultPropertyGridRules.json");
+export const DEFAULT_PROPERTY_GRID_RULESET: Ruleset = {
+  id: "presentation-components/DefaultPropertyGridContent",
+  rules: [
+    {
+      ruleType: "Content",
+      onlyIfNotHandled: true,
+      specifications: [
+        {
+          specType: "SelectedNodeInstances",
+        },
+      ],
+    },
+  ],
+};
 
 /**
  * Interface for presentation rules-driven property data provider.
