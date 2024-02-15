@@ -14,7 +14,7 @@ import {
   PropertyFilterRuleOperator,
   PropertyFilterValue,
 } from "../GenericInstanceFilter";
-import { getClass } from "../internal/Common";
+import { getClass } from "../internal/GetClass";
 import { RelationshipPath } from "../Metadata";
 import { Id64String, PrimitiveValue } from "../values/Values";
 import { createRelationshipPathJoinClause, JoinRelationshipPath } from "./ecsql-snippets/ECSqlJoinSnippets";

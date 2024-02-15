@@ -24,7 +24,7 @@ import {
   ProcessedHierarchyNode,
 } from "../HierarchyNode";
 import { InstanceKey } from "../values/Values";
-import { getClass } from "./Common";
+import { getClass } from "./GetClass";
 import { defaultNodesParser } from "./TreeNodesReader";
 
 /** @internal */
