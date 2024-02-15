@@ -15,7 +15,7 @@ import {
   ProcessedHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "./HierarchyNode";
-import { getClass } from "./internal/Common";
+import { getClass } from "./internal/GetClass";
 import { parseFullClassName } from "./Metadata";
 import { ECSqlQueryDef } from "./queries/ECSqlCore";
 import { Id64String, InstanceKey } from "./values/Values";

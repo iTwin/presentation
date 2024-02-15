@@ -6,7 +6,7 @@
 import { omit } from "@itwin/core-bentley";
 import { IMetadataProvider } from "../../../ECMetadata";
 import { ClassGroupingNodeKey, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
-import { getClass } from "../../Common";
+import { getClass } from "../../GetClass";
 import { GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
 import { sortNodesByLabel } from "../Sorting";
 
