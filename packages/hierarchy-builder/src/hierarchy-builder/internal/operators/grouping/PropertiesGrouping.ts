@@ -12,10 +12,10 @@ import {
   ProcessedInstanceHierarchyNode,
   PropertyGroupingNodeKey,
 } from "../../../HierarchyNode";
-import { BaseClassChecker, OmitOverUnion } from "../../../Utils";
+import { OmitOverUnion } from "../../../Utils";
 import { IPrimitiveValueFormatter } from "../../../values/Formatting";
 import { TypedPrimitiveValue } from "../../../values/Values";
-import { getClass } from "../../Common";
+import { BaseClassChecker, getClass } from "../../Common";
 import { GroupingHandler, GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
 import { sortNodesByLabel } from "../Sorting";
 
@@ -283,8 +283,7 @@ async function shouldCreatePropertyGroup(
   if (!doPreviousPropertiesMatch(handlerGroupingParams.previousPropertiesGroupingInfo, nodePropertyGroupingParams)) {
     return false;
   }
-  const isCurrentNodeClassOfProperty = await baseClassChecker.isECClassOfBaseECClass(nodeFullClassName, handlerGroupingParams.ecClass);
-  return isCurrentNodeClassOfProperty;
+  return baseClassChecker.isECClassOfBaseECClass(nodeFullClassName, handlerGroupingParams.ecClass);
 }
 
 /** @internal */

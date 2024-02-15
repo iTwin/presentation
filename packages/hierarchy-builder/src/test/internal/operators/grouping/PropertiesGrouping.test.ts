@@ -8,8 +8,8 @@ import sinon from "sinon";
 import { omit } from "@itwin/core-bentley";
 import { ECClass, ECProperty, IMetadataProvider } from "../../../../hierarchy-builder/ECMetadata";
 import { GroupingNodeKey, HierarchyNodePropertyGroup, PropertyOtherValuesGroupingNodeKey } from "../../../../hierarchy-builder/HierarchyNode";
+import { BaseClassChecker } from "../../../../hierarchy-builder/internal/Common";
 import * as propertiesGrouping from "../../../../hierarchy-builder/internal/operators/grouping/PropertiesGrouping";
-import { BaseClassChecker } from "../../../../hierarchy-builder/Utils";
 import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "../../../../hierarchy-builder/values/Formatting";
 import { ClassStubs, createClassStubs, createTestProcessedGroupingNode, createTestProcessedInstanceNode, testLocalizedStrings } from "../../../Utils";
 

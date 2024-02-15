@@ -168,3 +168,22 @@ export function mergeSortedArrays<TLhsItem, TRhsItem>(
 export function compareNodesByLabel<TLhsNode extends { label: string }, TRhsNode extends { label: string }>(lhs: TLhsNode, rhs: TRhsNode): number {
   return naturalCompare(lhs.label.toLocaleLowerCase(), rhs.label.toLocaleLowerCase());
 }
+
+/** @internal */
+export class BaseClassChecker {
+  private _map = new Map<string, boolean>();
+  private _metadataProvider: IMetadataProvider;
+  public constructor(metadataProvider: IMetadataProvider) {
+    this._metadataProvider = metadataProvider;
+  }
+
+  public async isECClassOfBaseECClass(ecClassNameToCheck: string, baseECClass: ECClass): Promise<boolean> {
+    let isCurrentNodeClassOfBase = this._map.get(`${ecClassNameToCheck}${baseECClass.fullName}`);
+    if (isCurrentNodeClassOfBase === undefined) {
+      const currentNodeECClass = await getClass(this._metadataProvider, ecClassNameToCheck);
+      isCurrentNodeClassOfBase = await currentNodeECClass.is(baseECClass);
+      this._map.set(`${ecClassNameToCheck}${baseECClass.fullName}`, isCurrentNodeClassOfBase);
+    }
+    return isCurrentNodeClassOfBase;
+  }
+}
