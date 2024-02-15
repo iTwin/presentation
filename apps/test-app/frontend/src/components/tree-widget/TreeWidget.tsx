@@ -39,16 +39,20 @@ export function TreeWidget(props: Omit<TreeWidgetProps, "height" | "width">) {
         labels={[
           <Tab key={1} label={IModelApp.localization.getLocalizedString("Sample:controls.tree-widget.rules-driven-tree")} />,
           <Tab key={2} label={IModelApp.localization.getLocalizedString("Sample:controls.tree-widget.stateless-models-tree")} />,
+          <Tab key={3} label={"New Stateless Tree"} />,
         ]}
         onTabSelected={setOpenTab}
         contentClassName="tree-widget-tabs-content"
         tabsClassName={tabsClassName}
       >
         <div className="tree-widget">
+          {}
           {openTab === 0 ? (
-            <TreeComponent imodel={props.imodel} height={heightOfTreeWidget} width={width ?? 0} />
-          ) : (
+            <RulesDrivenTreeWidget imodel={props.imodel} rulesetId={props.rulesetId} width={width} height={height} />
+          ) : openTab === 1 ? (
             <StatelessTreeWidget imodel={props.imodel} height={heightOfTreeWidget} width={width} />
+          ) : (
+            <TreeComponent imodel={props.imodel} height={heightOfTreeWidget} width={width ?? 0} />
           )}
         </div>
       </Tabs>
