@@ -284,8 +284,7 @@ async function shouldCreatePropertyGroup(
   if (!doPreviousPropertiesMatch(handlerGroupingParams.previousPropertiesGroupingInfo, nodePropertyGroupingParams)) {
     return false;
   }
-  const isCurrentNodeClassOfProperty = await baseClassChecker.isECClassOfBaseECClass(nodeFullClassName, handlerGroupingParams.ecClass);
-  return isCurrentNodeClassOfProperty;
+  return baseClassChecker.isECClassOfBaseECClass(nodeFullClassName, handlerGroupingParams.ecClass);
 }
 
 /** @internal */
