@@ -380,6 +380,34 @@ describe("TreeDataProvider", () => {
       );
     });
 
+    it("passes combined parent and current node filter with only class checks to presentation manager", async () => {
+      const nodeKey = createTestECInstancesNodeKey();
+      const nodeItem = createTestTreeNodeItem(nodeKey);
+      nodeItem.filtering = {
+        descriptor: createTestContentDescriptor({ fields: [] }),
+        ancestorFilters: [
+          {
+            filter: undefined,
+            usedClasses: [createTestECClassInfo({ id: "0x1" })],
+          },
+        ],
+        active: {
+          filter: undefined,
+          usedClasses: [createTestECClassInfo({ id: "0x2" })],
+        },
+      };
+
+      const pageOptions: PageOptions = { start: 0, size: 2 };
+      presentationManager.getNodesAndCount.resolves({ nodes: [createTestECInstancesNode()], count: 1 });
+
+      const actualResult = await provider.getNodes(nodeItem, pageOptions);
+      expect(actualResult).to.have.lengthOf(1);
+
+      expect(presentationManager.getNodesAndCount).to.be.calledWith(
+        matchOptions(({ instanceFilter }) => instanceFilter?.expression === `(this.IsOfClass(0x1) OR this.IsOfClass(0x2))`),
+      );
+    });
+
     it("passes empty instance filter to manager if there are no ancestor and active filters", async () => {
       const nodeKey = createTestECInstancesNodeKey();
       const nodeItem = createTestTreeNodeItem(nodeKey);
