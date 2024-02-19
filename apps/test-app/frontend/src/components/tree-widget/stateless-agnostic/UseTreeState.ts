@@ -2,9 +2,9 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+import { Draft, enableMapSet, produce } from "immer";
 import { useEffect, useState } from "react";
 import { HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
-import { Draft, enableMapSet, produce } from "immer";
 import { HierarchyLoader, ModelNode, PresentationNodeKey, reloadTree, TreeModel } from "./TreeModel";
 
 enableMapSet();
@@ -97,15 +97,6 @@ export class TreeActions {
     }
   }
 
-  public selectNode(nodeKey: PresentationNodeKey, isSelected: boolean) {
-    this.updateTreeState((model) => {
-      const node = model.idToNode[nodeKey.id];
-      if (node) {
-        node.isSelected = isSelected;
-      }
-    });
-  }
-
   private addLoadedHierarchy(hierarchyParent: PresentationNodeKey | undefined, loadedHierarchy: TreeModel) {
     this.updateTreeState((model: Draft<TreeModel>) => {
       const removedChildren: string[] = [];
@@ -179,7 +170,6 @@ function generateTreeStructure(parentId: string | undefined, model: TreeModel): 
       nodeData: node.nodeData,
       isLoading: node.isLoading,
       isExpanded: node.isExpanded,
-      isSelected: node.isSelected,
     };
   });
 }

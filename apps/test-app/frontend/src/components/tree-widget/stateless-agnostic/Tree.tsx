@@ -3,8 +3,13 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 import { ComponentPropsWithoutRef, useCallback, useEffect, useState } from "react";
+import { useDebouncedAsyncValue } from "@itwin/components-react";
+import { IModelConnection } from "@itwin/core-frontend";
+import { SchemaContext } from "@itwin/ecschema-metadata";
+import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { SvgFolder, SvgImodelHollow, SvgItem, SvgLayers, SvgModel } from "@itwin/itwinui-icons-react";
 import { Button, Flex, ProgressRadial, SearchBox, Tree, TreeNode } from "@itwin/itwinui-react";
+import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import {
   createLimitingECSqlQueryExecutor,
   HierarchyProvider,
@@ -12,13 +17,9 @@ import {
   IMetadataProvider,
   TypedPrimitiveValue,
 } from "@itwin/presentation-hierarchy-builder";
-import { IModelConnection } from "@itwin/core-frontend";
-import { SchemaContext } from "@itwin/ecschema-metadata";
-import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
+import { TreeSelectionOptions, useTreeSelection, useUnifiedTreeSelection } from "./UseTreeSelection";
 import { PresentationNode, TreeActions, useTreeState } from "./UseTreeState";
-import { useDebouncedAsyncValue } from "@itwin/components-react";
 
 type TreeProps<T> = ComponentPropsWithoutRef<typeof Tree<T>>;
 
@@ -90,6 +91,8 @@ export function TreeComponent({ imodel, height, width }: { imodel: IModelConnect
     void treeActions.reloadTree();
   };
 
+  const selectionOptions = useUnifiedTreeSelection();
+
   if (rootNodes === undefined || treeActions === undefined) {
     return (
       <Flex alignItems="center" justifyContent="center" style={{ width, height }}>
@@ -105,7 +108,7 @@ export function TreeComponent({ imodel, height, width }: { imodel: IModelConnect
         <SearchBox.Input value={filter} onChange={(e) => setFilter(e.currentTarget.value)}></SearchBox.Input>
       </SearchBox>
       <Flex.Item alignSelf="flex-start" style={{ width: "100%", overflow: "auto" }}>
-        <TreeRenderer rootNodes={rootNodes} treeActions={treeActions} />
+        <TreeRenderer rootNodes={rootNodes} treeActions={treeActions} selectionOptions={selectionOptions} />
       </Flex.Item>
     </Flex>
   );
@@ -115,7 +118,17 @@ async function customFormatter(val: TypedPrimitiveValue) {
   return `THIS_IS_FORMATTED_${val ? JSON.stringify(val.value) : ""}_THIS_IS_FORMATTED`;
 }
 
-function TreeRenderer({ rootNodes, treeActions }: { rootNodes: PresentationNode[]; treeActions: TreeActions }) {
+function TreeRenderer({
+  rootNodes,
+  treeActions,
+  selectionOptions,
+}: {
+  rootNodes: PresentationNode[];
+  treeActions: TreeActions;
+  selectionOptions: TreeSelectionOptions;
+}) {
+  const { isNodeSelected, selectNode } = selectionOptions;
+
   const nodeRenderer = useCallback<TreeProps<PresentationNode>["nodeRenderer"]>(
     ({ node, ...restProps }) => {
       return (
@@ -125,26 +138,29 @@ function TreeRenderer({ rootNodes, treeActions }: { rootNodes: PresentationNode[
             treeActions.expandNode(node, isExpanded);
           }}
           onSelected={(_, isSelected) => {
-            treeActions.selectNode(node, isSelected);
+            selectNode(node, isSelected);
           }}
           icon={node.isLoading ? <ProgressRadial size="x-small" indeterminate /> : getIcon(node.nodeData.extendedData?.imageId)}
           {...restProps}
         />
       );
     },
-    [treeActions],
+    [treeActions, selectNode],
   );
 
-  const getNode = useCallback<TreeProps<PresentationNode>["getNode"]>((node) => {
-    return {
-      nodeId: node.id,
-      node,
-      hasSubNodes: node.children === true || node.children.length > 0,
-      subNodes: node.children !== true ? node.children : [],
-      isExpanded: node.isExpanded,
-      isSelected: node.isSelected,
-    };
-  }, []);
+  const getNode = useCallback<TreeProps<PresentationNode>["getNode"]>(
+    (node) => {
+      return {
+        nodeId: node.id,
+        node,
+        hasSubNodes: node.children === true || node.children.length > 0,
+        subNodes: node.children !== true ? node.children : [],
+        isExpanded: node.isExpanded,
+        isSelected: isNodeSelected(node),
+      };
+    },
+    [isNodeSelected],
+  );
 
   return (
     <div
