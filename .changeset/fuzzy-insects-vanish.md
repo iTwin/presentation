@@ -2,26 +2,28 @@
 "@itwin/presentation-components": minor
 ---
 
-- Change `PresentationTreeProps.treeRenderer` type to make it more compatible with `PresentationTreeRenderer`.
+Simplify / clarify `PresentationTree` and `PresentationTreeRenderer` APIs.
 
-Before:
+- Change `PresentationTreeProps.treeRenderer` type to make it compatible with what `PresentationTreeRenderer` expects.
 
-```tsx
-return <PresentationTree
-  {...props}
-  state={state}
-  treeRenderer={(treeProps) => <PresentationTreeRenderer {...treeProps} nodeLoader={state.nodeLoader} />}
-/>;
-```
+  Before:
 
-After:
+  ```tsx
+  return <PresentationTree
+    {...props}
+    state={state}
+    treeRenderer={(treeProps) => <PresentationTreeRenderer {...treeProps} nodeLoader={state.nodeLoader} />}
+  />;
+  ```
 
-```tsx
-return <PresentationTree
-  {...props}
-  state={state}
-  treeRenderer={(treeProps) => <PresentationTreeRenderer {...treeProps} />}
-/>;
-```
+  After:
 
-- Removed `nodeRenderer` props from `PresentationTreeRendererProps`. It was always overriding passed `nodeRenderer`.
+  ```tsx
+  return <PresentationTree
+    {...props}
+    state={state}
+    treeRenderer={(treeProps) => <PresentationTreeRenderer {...treeProps} />}
+  />;
+  ```
+
+- Removed `nodeRenderer` prop from `PresentationTreeRendererProps`. The prop is not used by `PresentationTreeRenderer` as it always uses its own `PresentationTreeNodeRenderer` to render nodes.
