@@ -249,6 +249,29 @@ describe("PresentationInstanceFilterDialog", () => {
     expect(spy).to.be.called;
   });
 
+  it("invokes `onApply` with only selected classes", async () => {
+    const spy = sinon.spy();
+    const { container, getByRole, getByPlaceholderText, user } = render(
+      <PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptor} onApply={spy} isOpen={true} />,
+      {
+        addThemeProvider: true,
+      },
+    );
+
+    // expand class selector
+    const classListContainer = getByPlaceholderText("instance-filter-builder.select-classes-optional");
+    await user.click(classListContainer);
+
+    // deselect class item from dropdown
+    const classItem = getByRole("option", { name: "Class Label" });
+    await user.click(classItem);
+
+    const applyButton = await getApplyButton(container);
+    await user.click(applyButton);
+
+    expect(spy).to.be.calledWith({ filter: undefined, usedClasses: [classInfo] });
+  });
+
   it("invokes `onReset` when reset is clicked.", async () => {
     const spy = sinon.spy();
     const { container, user } = render(

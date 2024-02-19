@@ -70,6 +70,7 @@ import { PropertyValue } from '@itwin/appui-abstract';
 import { PropertyValueRendererContext } from '@itwin/components-react';
 import { PropsWithChildren } from 'react';
 import { PureComponent } from 'react';
+import { ReactElement } from 'react';
 import { ReactNode } from 'react';
 import { RenderedItemsRange } from '@itwin/components-react';
 import { Ruleset } from '@itwin/presentation-common';
@@ -163,6 +164,9 @@ export function convertToInstanceFilterDefinition(filter: PresentationInstanceFi
 
 // @alpha
 export function createDiagnosticsOptions(props: DiagnosticsProps): ClientDiagnosticsOptions | undefined;
+
+// @beta
+export function createInstanceFilterDefinition(info: PresentationInstanceFilterInfo, imodel: IModelConnection): Promise<InstanceFilterDefinition>;
 
 // @public
 export const DEFAULT_PROPERTY_GRID_RULESET: Ruleset;
@@ -388,7 +392,6 @@ export namespace PresentationInstanceFilter {
     export function isConditionGroup(filter: PresentationInstanceFilter): filter is PresentationInstanceFilterConditionGroup;
     export function toComponentsPropertyFilter(descriptor: Descriptor, filter: PresentationInstanceFilter): PropertyFilter;
     export function toGenericInstanceFilter(filter: PresentationInstanceFilter, filteredClasses?: ClassInfo[]): GenericInstanceFilter;
-    export function toInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection, filteredClasses?: ClassInfo[]): Promise<InstanceFilterDefinition>;
 }
 
 // @beta
@@ -438,7 +441,7 @@ export interface PresentationInstanceFilterDialogProps {
 
 // @beta
 export interface PresentationInstanceFilterInfo {
-    filter: PresentationInstanceFilter;
+    filter: PresentationInstanceFilter | undefined;
     usedClasses: ClassInfo[];
 }
 
@@ -605,15 +608,18 @@ export interface PresentationTreeNodeRendererProps extends TreeNodeRendererProps
 }
 
 // @public
-export type PresentationTreeProps<TEventHandler extends TreeEventHandler> = Omit<ControlledTreeProps, "model" | "nodeLoader" | "eventsHandler" | "onItemsRendered" | "nodeHighlightingProps"> & {
+export type PresentationTreeProps<TEventHandler extends TreeEventHandler> = Omit<ControlledTreeProps, "model" | "nodeLoader" | "eventsHandler" | "onItemsRendered" | "nodeHighlightingProps" | "treeRenderer"> & {
     state: UsePresentationTreeStateResult<TEventHandler>;
+    treeRenderer?: (props: TreeRendererProps & {
+        nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
+    }) => ReactElement;
 };
 
 // @beta
 export function PresentationTreeRenderer(props: PresentationTreeRendererProps): JSX_2.Element;
 
 // @beta
-export interface PresentationTreeRendererProps extends TreeRendererProps {
+export interface PresentationTreeRendererProps extends Omit<TreeRendererProps, "nodeRenderer"> {
     // (undocumented)
     nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
 }
