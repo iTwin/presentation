@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 import { expand, from, map, mergeMap, Observable, of, reduce, Subject, Subscription, zip } from "rxjs";
 import { Guid } from "@itwin/core-bentley";
-import { HierarchyNode, HierarchyProvider, ParentNodeKey } from "@itwin/presentation-hierarchy-builder";
+import { GenericInstanceFilter, HierarchyNode, HierarchyProvider, ParentNodeKey } from "@itwin/presentation-hierarchy-builder";
 
 export interface PresentationNodeKey {
   id: string;
@@ -69,9 +69,7 @@ export function reloadTree(hierarchyProvider: HierarchyProvider, expandedNodes: 
   return createNodesLoadObs({
     provider: hierarchyProvider,
     parentNode: undefined,
-    // TODO: Need to compare node keys
-    shouldLoadChildren: (node: ModelNode) =>
-      expandedNodes.findIndex((nodeToReload) => ParentNodeKey.compare(nodeToReload.nodeData.key, node.nodeData.key) === 0) !== -1,
+    shouldLoadChildren: (node: ModelNode) => expandedNodes.findIndex((nodeToReload) => sameNodes(nodeToReload.nodeData, node.nodeData)) !== -1,
     createModelNode: (node) => ({
       ...createBaseModelNode(node),
       isExpanded: false,
@@ -93,6 +91,8 @@ interface LoadedHierarchyPart {
 interface CreateNodesLoadObsParams {
   provider: HierarchyProvider;
   parentNode: PresentationNodeKey | undefined;
+  instanceFilter?: GenericInstanceFilter;
+  hierarchyLevelSizeLimit?: number | "unbounded";
   shouldLoadChildren: (node: ModelNode) => boolean;
   createModelNode: (node: HierarchyNode) => ModelNode;
   onNodesLoaded?: (model: TreeModel, loadedPart: LoadedHierarchyPart) => void;
@@ -101,9 +101,25 @@ interface CreateNodesLoadObsParams {
 function createNodesLoadObs(params: CreateNodesLoadObsParams): Observable<[PresentationNodeKey | undefined, TreeModel]> {
   return zip(
     of(params.parentNode),
-    loadChildren(params.provider, params.parentNode, params.createModelNode).pipe(
+    loadChildren({
+      provider: params.provider,
+      parentNode: params.parentNode,
+      instanceFilter: params.instanceFilter,
+      hierarchyLevelSizeLimit: params.hierarchyLevelSizeLimit,
+      mapHierarchyNode: params.createModelNode,
+    }).pipe(
       expand((loadedPart) =>
-        from(loadedPart.loadedNodes.filter(params.shouldLoadChildren)).pipe(mergeMap((node) => loadChildren(params.provider, node, params.createModelNode))),
+        from(loadedPart.loadedNodes.filter(params.shouldLoadChildren)).pipe(
+          mergeMap((node) =>
+            loadChildren({
+              provider: params.provider,
+              parentNode: node,
+              instanceFilter: params.instanceFilter,
+              hierarchyLevelSizeLimit: params.hierarchyLevelSizeLimit,
+              mapHierarchyNode: params.createModelNode,
+            }),
+          ),
+        ),
       ),
       reduce(
         (treeModel, hierarchyPart) => {
@@ -111,7 +127,6 @@ function createNodesLoadObs(params: CreateNodesLoadObsParams): Observable<[Prese
           params.onNodesLoaded && params.onNodesLoaded(treeModel, hierarchyPart);
           return treeModel;
         },
-
         {
           idToNode: {},
           parentChildMap: new Map(),
@@ -121,14 +136,18 @@ function createNodesLoadObs(params: CreateNodesLoadObsParams): Observable<[Prese
   );
 }
 
-function loadChildren(
-  provider: HierarchyProvider,
-  parent: PresentationNodeKey | undefined,
-  mapHierarchyNode: (node: HierarchyNode) => ModelNode,
-): Observable<LoadedHierarchyPart> {
-  return from(provider.getNodes({ parentNode: parent?.nodeData })).pipe(
+interface LoadChildrenProps {
+  provider: HierarchyProvider;
+  parentNode: PresentationNodeKey | undefined;
+  instanceFilter?: GenericInstanceFilter;
+  hierarchyLevelSizeLimit?: number | "unbounded";
+  mapHierarchyNode: (node: HierarchyNode) => ModelNode;
+}
+
+function loadChildren({ provider, parentNode, instanceFilter, hierarchyLevelSizeLimit, mapHierarchyNode }: LoadChildrenProps): Observable<LoadedHierarchyPart> {
+  return from(provider.getNodes({ parentNode: parentNode?.nodeData, instanceFilter, hierarchyLevelSizeLimit })).pipe(
     map((childNodes) => ({
-      parentNode: parent,
+      parentNode,
       loadedNodes: childNodes.map(mapHierarchyNode),
     })),
   );
@@ -151,4 +170,21 @@ function createBaseModelNode(hierarchyNode: HierarchyNode): ModelNode {
     label: hierarchyNode.label,
     nodeData: hierarchyNode,
   };
+}
+
+function sameNodes(lhs: HierarchyNode, rhs: HierarchyNode): boolean {
+  if (ParentNodeKey.compare(lhs.key, rhs.key) !== 0) {
+    return false;
+  }
+
+  if (lhs.parentKeys.length !== rhs.parentKeys.length) {
+    return false;
+  }
+
+  for (let i = lhs.parentKeys.length - 1; i >= 0; --i) {
+    if (ParentNodeKey.compare(lhs.parentKeys[i], rhs.parentKeys[i]) !== 0) {
+      return false;
+    }
+  }
+  return true;
 }
