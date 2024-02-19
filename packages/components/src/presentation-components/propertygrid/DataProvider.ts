@@ -51,7 +51,6 @@ const labelsComparer = new Intl.Collator(undefined, { sensitivity: "base" }).com
  *
  * @public
  */
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 export const DEFAULT_PROPERTY_GRID_RULESET: Ruleset = {
   id: "presentation-components/DefaultPropertyGridContent",
   rules: [
