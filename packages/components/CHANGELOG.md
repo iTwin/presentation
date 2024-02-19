@@ -1,5 +1,55 @@
 # Change Log - @itwin/presentation-components
 
+## 5.0.0-dev.4
+
+### Minor Changes
+
+- [#421](https://github.com/iTwin/presentation/pull/421): Simplify / clarify `PresentationTree` and `PresentationTreeRenderer` APIs.
+
+  - Change `PresentationTreeProps.treeRenderer` type to make it compatible with what `PresentationTreeRenderer` expects.
+
+    Before:
+
+    ```tsx
+    return (
+      <PresentationTree
+        {...props}
+        state={state}
+        treeRenderer={(treeProps) => (
+          <PresentationTreeRenderer
+            {...treeProps}
+            nodeLoader={state.nodeLoader}
+          />
+        )}
+      />
+    );
+    ```
+
+    After:
+
+    ```tsx
+    return (
+      <PresentationTree
+        {...props}
+        state={state}
+        treeRenderer={(treeProps) => (
+          <PresentationTreeRenderer {...treeProps} />
+        )}
+      />
+    );
+    ```
+
+  - Removed `nodeRenderer` prop from `PresentationTreeRendererProps`. The prop is not used by `PresentationTreeRenderer` as it always uses its own `PresentationTreeNodeRenderer` to render nodes.
+
+- [#416](https://github.com/iTwin/presentation/pull/416): `PresentationInstanceFilterDialog` now allows applying filter when only classes are selected.
+
+  Added `createInstanceFilterDefinition` that creates `InstanceFilterDefinition` from `PresentationInstanceFilterInfo`. Created definition can be passed to `PresentationManager` to filter results when creating content or hierarchies.
+
+### Patch Changes
+
+- [#417](https://github.com/iTwin/presentation/pull/417): Added missing "No values" localized string in unique values selector.
+- [#418](https://github.com/iTwin/presentation/pull/418): Updated message shown in hierarchy level filtering dialog when built filter still produces too many results.
+
 ## 5.0.0-dev.3
 
 ### Major Changes
