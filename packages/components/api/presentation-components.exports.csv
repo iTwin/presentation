@@ -8,6 +8,7 @@ public;ControlledPresentationTreeFilteringProps
 beta;convertToInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection): Promise
 deprecated;convertToInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection): Promise
 alpha;createDiagnosticsOptions(props: DiagnosticsProps): ClientDiagnosticsOptions | undefined
+beta;createInstanceFilterDefinition(info: PresentationInstanceFilterInfo, imodel: IModelConnection): Promise
 public;DEFAULT_PROPERTY_GRID_RULESET: Ruleset
 public;DiagnosticsProps
 public;FavoritePropertiesDataFilterer 
