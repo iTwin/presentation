@@ -16,6 +16,7 @@
     "@itwin/presentation-testing": "4.1.1"
   },
   "changesets": [
+    "afraid-rats-fly",
     "angry-apples-flash",
     "beige-suns-explode",
     "big-weeks-refuse",
@@ -26,6 +27,7 @@
     "few-starfishes-sneeze",
     "fluffy-bats-glow",
     "funny-feet-buy",
+    "fuzzy-insects-vanish",
     "gentle-pumas-serve",
     "gorgeous-kangaroos-serve",
     "gorgeous-sloths-hang",
@@ -40,7 +42,10 @@
     "neat-tools-look",
     "ninety-sloths-worry",
     "polite-frogs-lick",
+    "proud-readers-rest",
     "quiet-wombats-design",
+    "rich-poets-eat",
+    "rotten-dodos-fetch",
     "rude-years-allow",
     "serious-paws-ring",
     "seven-ducks-warn",
