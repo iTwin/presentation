@@ -8,7 +8,7 @@ import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 // __PUBLISH_EXTRACT_START__ Presentation.Common.RpcInterface.Imports
 import { PresentationRpcInterface } from "@itwin/presentation-common";
 // __PUBLISH_EXTRACT_END__
-import { SampleRpcInterface } from "./SampleRpcInterface.js";
+import { SampleRpcInterface } from "./SampleRpcInterface";
 
 const otherRpcInterfaces = [IModelTileRpcInterface, IModelReadRpcInterface, SnapshotIModelRpcInterface, ECSchemaRpcInterface, SampleRpcInterface];
 // __PUBLISH_EXTRACT_START__ Presentation.Common.RpcInterface
