@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1707997048992,
+  "lastUpdate": 1708340789219,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -1038,6 +1038,42 @@ window.BENCHMARK_DATA = {
             "value": 395,
             "unit": "ms",
             "extra": "min: 395\nmax: 395\ncount: 1\nmean: 395\np50: 391.6\nmedian: 391.6\np75: 391.6\np90: 391.6\np95: 391.6\np99: 391.6\np999: 391.6"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35135765+grigasp@users.noreply.github.com",
+            "name": "Grigas",
+            "username": "grigasp"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1c3a8c1164d726c1d305cbb1bf2deb934a6dce64",
+          "message": "Add missing API docs (#426)",
+          "timestamp": "2024-02-19T11:05:28Z",
+          "tree_id": "c26a582a34382669f9be4aad4fa5077020d471d0",
+          "url": "https://github.com/iTwin/presentation/commit/1c3a8c1164d726c1d305cbb1bf2deb934a6dce64"
+        },
+        "date": 1708340788779,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Full Models Tree Load: Baytown.bim",
+            "value": 1842,
+            "unit": "ms",
+            "extra": "min: 1842\nmax: 1842\ncount: 1\nmean: 1842\np50: 1826.6\nmedian: 1826.6\np75: 1826.6\np90: 1826.6\np95: 1826.6\np99: 1826.6\np999: 1826.6"
+          },
+          {
+            "name": "Initial Models Tree Load: Baytown.bim",
+            "value": 387,
+            "unit": "ms",
+            "extra": "min: 387\nmax: 387\ncount: 1\nmean: 387\np50: 383.8\nmedian: 383.8\np75: 383.8\np90: 383.8\np95: 383.8\np99: 383.8\np999: 383.8"
           }
         ]
       }
