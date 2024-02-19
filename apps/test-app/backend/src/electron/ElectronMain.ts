@@ -5,8 +5,8 @@
 
 import { IModelHostOptions } from "@itwin/core-backend";
 import { RpcInterfaceDefinition } from "@itwin/core-common";
-import { ElectronHost, ElectronHostOptions } from "@itwin/core-electron/lib/cjs/ElectronBackend.js";
-import { SampleIpcHandler } from "../SampleIpcHandler.js";
+import { ElectronHost, ElectronHostOptions } from "@itwin/core-electron/lib/cjs/ElectronBackend";
+import { SampleIpcHandler } from "../SampleIpcHandler";
 
 /**
  * Initializes Electron backend

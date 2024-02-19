@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import "./SampleRpcImpl.js"; // just to get the RPC implementation registered
+import "./SampleRpcImpl"; // just to get the RPC implementation registered
 import * as path from "path";
 import { Logger, LogLevel, ProcessDetector } from "@itwin/core-bentley";
 import { RpcInterfaceDefinition } from "@itwin/core-common";
