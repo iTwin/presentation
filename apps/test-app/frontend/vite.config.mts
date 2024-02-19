@@ -11,6 +11,7 @@ const localeDirs = [
   "./node_modules/@itwin/core-frontend/lib/public/locales",
   "./node_modules/@itwin/components-react/lib/public/locales",
   "./node_modules/@itwin/presentation-components/lib/public/locales",
+  "./node_modules/@itwin/presentation-common/lib/public/locales",
 ];
 
 // https://vitejs.dev/config/
