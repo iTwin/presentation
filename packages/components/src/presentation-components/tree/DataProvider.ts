@@ -29,7 +29,7 @@ import { Presentation } from "@itwin/presentation-frontend";
 import { createDiagnosticsOptions, DiagnosticsProps } from "../common/Diagnostics";
 import { getRulesetId, RulesetOrId, translate } from "../common/Utils";
 import { PresentationComponentsLoggerCategory } from "../ComponentsLoggerCategory";
-import { PresentationInstanceFilterInfo } from "../instance-filter-builder/PresentationFilterBuilder";
+import { createInstanceFilterDefinition, PresentationInstanceFilterInfo } from "../instance-filter-builder/PresentationFilterBuilder";
 import { PresentationInstanceFilter } from "../instance-filter-builder/PresentationInstanceFilter";
 import { IPresentationTreeDataProvider } from "./IPresentationTreeDataProvider";
 import { InfoTreeNodeItemType, isPresentationTreeNodeItem, PresentationTreeNodeItem } from "./PresentationTreeNodeItem";
@@ -298,26 +298,33 @@ async function getFilterDefinition(imodel: IModelConnection, node?: TreeNodeItem
   }
 
   // combine ancestors and current filters
-  const appliedFilters: PresentationInstanceFilterInfo[] = [...node.filtering.ancestorFilters, ...(node.filtering.active ? [node.filtering.active] : [])];
+  const allFilters: PresentationInstanceFilterInfo[] = [...node.filtering.ancestorFilters, ...(node.filtering.active ? [node.filtering.active] : [])];
 
-  if (appliedFilters.length === 0) {
+  if (allFilters.length === 0) {
     return undefined;
   }
 
+  if (allFilters.length === 1) {
+    return createInstanceFilterDefinition(allFilters[0], imodel);
+  }
+
+  const appliedFilters = allFilters.map((filterInfo) => filterInfo.filter).filter((filter): filter is PresentationInstanceFilter => filter !== undefined);
+  const usedClasses = getConcatenatedDistinctClassInfos(allFilters);
+
   // if there are more than one filter applied, combine them using `AND` operator
   // otherwise apply filter directly
-  const filter: PresentationInstanceFilterInfo =
-    appliedFilters.length > 1
-      ? {
-          filter: {
+  const info: PresentationInstanceFilterInfo = {
+    filter:
+      appliedFilters.length > 0
+        ? {
             operator: PropertyFilterRuleGroupOperator.And,
-            conditions: appliedFilters.map((ancestorFilter) => ancestorFilter.filter),
-          },
-          usedClasses: getConcatenatedDistinctClassInfos(appliedFilters),
-        }
-      : appliedFilters[0];
+            conditions: appliedFilters,
+          }
+        : undefined,
+    usedClasses,
+  };
 
-  return PresentationInstanceFilter.toInstanceFilterDefinition(filter.filter, imodel, filter.usedClasses);
+  return createInstanceFilterDefinition(info, imodel);
 }
 
 function getConcatenatedDistinctClassInfos(appliedFilters: PresentationInstanceFilterInfo[]) {
