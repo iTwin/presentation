@@ -7,6 +7,14 @@
     {
       "type": "node",
       "request": "launch",
+      "name": "[test-app] Start Frontend Server",
+      "cwd": "${workspaceRoot}/apps/test-app/frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "start"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
       "name": "[test-app] Start Web Backend",
       "skipFiles": [
         "<node_internals>/**"
@@ -15,20 +23,20 @@
       "program": "${workspaceFolder}/apps/test-app/backend/lib/main.js",
       "outFiles": [
         "${workspaceFolder}/apps/test-app/{backend, common}/**/*.js"
-      ],
-      "cascadeTerminateToConfigurations": [
-        "[test-app] Launch Web Frontend"
       ]
     },
     {
       "type": "chrome",
       "request": "launch",
-      "name": "[test-app] Launch Web Frontend",
+      "name": "[test-app] Launch Web Browser",
       "url": "http://localhost:3000/",
       "webRoot": "${workspaceFolder}/apps/test-app/frontend/",
       "cascadeTerminateToConfigurations": [
         "[test-app] Start Web Backend"
-      ]
+      ],
+      "pathMapping": {
+        "/@fs/": ""
+      }
     },
     {
       "name": "[test-app] Start Electron Backend",
@@ -45,9 +53,6 @@
       },
       "outFiles": [
         "${workspaceFolder}/apps/test-app/{backend, common}/**/*.js"
-      ],
-      "cascadeTerminateToConfigurations": [
-        "[test-app] Attach To Electron Frontend"
       ]
     },
     {
@@ -58,7 +63,10 @@
       "webRoot": "${workspaceFolder}/apps/test-app/frontend/",
       "cascadeTerminateToConfigurations": [
         "[test-app] Start Electron Backend"
-      ]
+      ],
+      "pathMapping": {
+        "/@fs/": ""
+      },
     },
     {
       "name": "Tests: Components",
@@ -184,15 +192,19 @@
       "name": "Test App (web)",
       "configurations": [
         "[test-app] Start Web Backend",
-        "[test-app] Launch Web Frontend"
-      ]
+        "[test-app] Start Frontend Server",
+        "[test-app] Launch Web Browser"
+      ],
+      "stopAll": true
     },
     {
       "name": "Test App (electron)",
       "configurations": [
         "[test-app] Start Electron Backend",
+        "[test-app] Start Frontend Server",
         "[test-app] Attach To Electron Frontend"
-      ]
+      ],
+      "stopAll": true
     }
   ]
 }

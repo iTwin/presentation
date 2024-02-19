@@ -34,13 +34,7 @@ A monorepo for [Presentation](https://www.itwinjs.org/presentation/) packages.
 
 ### Debugging
 
-Test-app is setup to be debugged using [Visual Studio Code](https://code.visualstudio.com/docs/editor/debugging). Frontend web server needs to be manually started before debug session:
-
-```shell
-pnpm start:frontend
-```
-
-After frontend webserver is started debug session can be started using provided configurations:
+Test-app is setup to be debugged using [Visual Studio Code](https://code.visualstudio.com/docs/editor/debugging). Debug session can be started using provided configurations:
 
 - `Test App (web)` for debugging web version of test-app.
 - `Test App (electron)` for debugging electron version of test-app.
