@@ -29,15 +29,11 @@ export function createHierarchyLevelDescriptor<TIModel extends ICoreECSqlReaderF
 
 // @beta
 export interface CreateHierarchyLevelDescriptorProps<TIModel extends ICoreECSqlReaderFactory> {
-    // (undocumented)
     descriptorBuilder: {
         getContentDescriptor: (requestOptions: ContentDescriptorRequestOptions<TIModel, KeySet, RulesetVariable>) => Promise<Descriptor | undefined>;
     };
-    // (undocumented)
     hierarchyProvider: HierarchyProvider;
-    // (undocumented)
     imodel: TIModel;
-    // (undocumented)
     parentNode: (Omit<HierarchyNode, "children"> & {
         key: InstancesNodeKey | string;
     }) | undefined;
