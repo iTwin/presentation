@@ -39,7 +39,7 @@ export function Tree(props: Props) {
     pagingSize: PAGING_SIZE,
     eventHandlerFactory: useCallback(
       (handlerProps: PresentationTreeEventHandlerProps) =>
-        new UnifiedSelectionTreeEventHandler({ nodeLoader: handlerProps.nodeLoader, collapsedChildrenDisposalEnabled: true, name: "TestAppTree" }),
+        new UnifiedSelectionTreeEventHandler({ nodeLoader: handlerProps.nodeLoader, collapsedChildrenDisposalEnabled: false, name: "TestAppTree" }),
       [],
     ),
     filteringParams: {
