@@ -4,12 +4,12 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "outDir": "./lib",
 
     "sourceMap": true,
     "esModuleInterop": true,
     "isolatedModules": true,
   },
-  "include": ["src", "webpack.config.ts"],
+  "include": ["src", "vite.config.mts"],
 }

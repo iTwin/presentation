@@ -4,9 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import "./SampleRpcImpl.js"; // just to get the RPC implementation registered
-import * as electron from "electron";
 import * as path from "path";
-import { Logger, LogLevel } from "@itwin/core-bentley";
+import { Logger, LogLevel, ProcessDetector } from "@itwin/core-bentley";
 import { RpcInterfaceDefinition } from "@itwin/core-common";
 import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 // __PUBLISH_EXTRACT_START__ Presentation.Backend.Initialization.Imports
@@ -33,10 +32,10 @@ void (async () => {
 
   // get platform-specific initialization function
   let init: (_rpcs: RpcInterfaceDefinition[]) => void;
-  if (electron.app) {
-    init = (await import("./electron/ElectronMain.js")).default;
+  if (ProcessDetector.isElectronAppBackend) {
+    init = (await import("./electron/ElectronMain")).default;
   } else {
-    init = (await import("./web/BackendServer.js")).default;
+    init = (await import("./web/BackendServer")).default;
   }
   // do initialize
   init(rpcInterfaces);

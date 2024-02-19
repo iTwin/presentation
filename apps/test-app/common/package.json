@@ -2,11 +2,13 @@
   "name": "@test-app/common",
   "version": "0.0.0",
   "private": true,
-  "type": "module",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "lib/cjs/index.js",
+  "module": "lib/esm/index.js",
+  "types": "lib/cjs/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "npm run -s build:cjs && npm run -s build:esm",
+    "build:cjs": "tsc --outDir lib/cjs",
+    "build:esm": "tsc --module ESNext --outDir lib/esm",
     "clean": "rimraf lib build",
     "lint": "eslint ./src/**/*.ts",
     "docs": "betools extract --fileExt=ts --extractFrom=./src --recursive --out=./build/docs/extract"
