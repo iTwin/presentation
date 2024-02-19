@@ -20,6 +20,7 @@ import {
 import { IModelConnection } from "@itwin/core-frontend";
 import { ClassInfo } from "@itwin/presentation-common";
 import { getIModelMetadataProvider } from "./ECMetadataProvider";
+import { PresentationInstanceFilter } from "./PresentationInstanceFilter";
 
 /** @internal */
 export async function findBaseExpressionClassName(imodel: IModelConnection, propertyClassNames: string[]) {
@@ -45,10 +46,30 @@ export async function findBaseExpressionClassName(imodel: IModelConnection, prop
 }
 
 /** @internal */
-export function createExpression(filter: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup, filteredClasses?: ClassInfo[]) {
-  return `${createComparisonExpression(filter)}${
-    Array.isArray(filteredClasses) && filteredClasses.length ? ` AND (${createClassExpression(filteredClasses)})` : ""
-  }`;
+export async function createInstanceFilterDefinitionBase(filter: PresentationInstanceFilter, imodel: IModelConnection) {
+  const { rules, propertyClassNames, relatedInstances } = PresentationInstanceFilter.toGenericInstanceFilter(filter);
+  const filterExpression = createFilterExpression(rules);
+
+  const baseClassName = await findBaseExpressionClassName(imodel, propertyClassNames);
+
+  return {
+    expression: filterExpression,
+    selectClassName: baseClassName,
+    relatedInstances: relatedInstances.map((related) => ({
+      pathFromSelectToPropertyClass: related.path.map((step) => ({
+        sourceClassName: step.sourceClassName,
+        targetClassName: step.targetClassName,
+        relationshipName: step.relationshipClassName,
+        isForwardRelationship: step.isForwardRelationship,
+      })),
+      alias: related.alias,
+    })),
+  };
+}
+
+/** @internal */
+export function createFilterExpression(filter: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup) {
+  return createComparisonExpression(filter);
 }
 
 function createComparisonExpression(filter: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup) {
@@ -65,8 +86,12 @@ function createExpressionFromGroup(group: GenericInstanceFilterRuleGroup): strin
   return `(${convertedConditions.join(` ${getGroupOperatorString(group.operator)} `)})`;
 }
 
-function createClassExpression(usedClasses: ClassInfo[]) {
-  return usedClasses.reduce((queryExpression, classInfo) => `${queryExpression}${queryExpression ? " OR " : ""}this.IsOfClass(${classInfo.id})`, "");
+/** @internal */
+export function createFilterClassExpression(usedClasses: ClassInfo[]) {
+  if (usedClasses.length === 0) {
+    return "";
+  }
+  return `(${usedClasses.map((classInfo) => `this.IsOfClass(${classInfo.id})`).join(" OR ")})`;
 }
 
 function createComparison(

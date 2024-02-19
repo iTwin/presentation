@@ -6,12 +6,8 @@
     }
   },
   "general": {
-    "display-label": "Label",
     "error": "Error",
     "generic-error-description": "An unexpected error was encountered."
-  },
-  "property-grid": {
-    "too-many-elements-selected": "Too many elements selected"
   },
   "instance-key-value-renderer": {
     "select-instance": "Select element"
@@ -43,7 +39,7 @@
     "clear-hierarchy-level-filter": "Clear active filter",
     "filter-dialog": {
       "results-count": "Matching items",
-      "result-limit-exceeded": "Exceeded matching item limit of"
+      "result-limit-exceeded": "There are too many results to display. Please adjust your filters to limit the results count to {{itemCount}} items."
     }
   },
   "navigation-property-editor": {

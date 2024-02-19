@@ -24,12 +24,10 @@ import {
   GenericInstanceFilterRuleGroup,
   GenericInstanceFilterRuleValue,
 } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
 import {
   ClassInfo,
   Descriptor,
   Field,
-  InstanceFilterDefinition,
   NestedContentField,
   PresentationError,
   PresentationStatus,
@@ -38,7 +36,6 @@ import {
   Value,
 } from "@itwin/presentation-common";
 import { deserializeUniqueValues, findField, serializeUniqueValues, UniqueValue } from "../common/Utils";
-import { createExpression, findBaseExpressionClassName } from "./InstanceFilterConverter";
 import { createPropertyInfoFromPropertiesField, getInstanceFilterFieldName } from "./Utils";
 
 /**
@@ -124,36 +121,6 @@ export namespace PresentationInstanceFilter {
    */
   export function fromGenericInstanceFilter(descriptor: Descriptor, filter: GenericInstanceFilter): PresentationInstanceFilter {
     return parseGenericFilter(filter, descriptor);
-  }
-
-  /**
-   * Converts [[PresentationInstanceFilter]] into [InstanceFilterDefinition]($presentation-common) that can be passed
-   * to [PresentationManager]($presentation-frontend) through request options in order to filter results.
-   * @beta
-   */
-  export async function toInstanceFilterDefinition(
-    filter: PresentationInstanceFilter,
-    imodel: IModelConnection,
-    filteredClasses?: ClassInfo[],
-  ): Promise<InstanceFilterDefinition> {
-    const { rules, propertyClassNames, relatedInstances } = toGenericInstanceFilter(filter);
-    const expression = createExpression(rules, filteredClasses);
-
-    const baseClassName = await findBaseExpressionClassName(imodel, propertyClassNames);
-
-    return {
-      expression,
-      selectClassName: baseClassName,
-      relatedInstances: relatedInstances.map((related) => ({
-        pathFromSelectToPropertyClass: related.path.map((step) => ({
-          sourceClassName: step.sourceClassName,
-          targetClassName: step.targetClassName,
-          relationshipName: step.relationshipClassName,
-          isForwardRelationship: step.isForwardRelationship,
-        })),
-        alias: related.alias,
-      })),
-    };
   }
 
   /**
