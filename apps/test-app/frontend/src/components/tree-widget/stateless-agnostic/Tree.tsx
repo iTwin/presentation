@@ -18,10 +18,8 @@ import {
   TypedPrimitiveValue,
 } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
-import { TreeSelectionOptions, useTreeSelection, useUnifiedTreeSelection } from "./UseTreeSelection";
+import { TreeSelectionOptions, useUnifiedTreeSelection } from "./UseTreeSelection";
 import { PresentationNode, TreeActions, useTreeState } from "./UseTreeState";
-
-type TreeProps<T> = ComponentPropsWithoutRef<typeof Tree<T>>;
 
 interface IModelRelatedState {
   queryExecutor: ILimitingECSqlQueryExecutor;
@@ -190,3 +188,5 @@ function getIcon(icon: "icon-layers" | "icon-item" | "icon-ec-class" | "icon-imo
       return <SvgModel />;
   }
 }
+
+type TreeProps<T> = ComponentPropsWithoutRef<typeof Tree<T>>;

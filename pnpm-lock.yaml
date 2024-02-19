@@ -371,8 +371,8 @@ importers:
         specifier: ^2.8.0
         version: 2.8.0(react-dom@18.2.0)(react@18.2.0)
       '@itwin/itwinui-react':
-        specifier: ^3.3.0
-        version: 3.3.0(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^3.4.2
+        version: 3.4.2(react-dom@18.2.0)(react@18.2.0)
       '@itwin/presentation-common':
         specifier: ^4.4.0
         version: 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-common@4.4.0)(@itwin/core-quantity@4.4.0)(@itwin/ecschema-metadata@4.4.0)
@@ -461,8 +461,8 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0(react-dom@18.2.0)(react@18.2.0)
       '@itwin/itwinui-react':
-        specifier: ^3.3.0
-        version: 3.3.0(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^3.4.2
+        version: 3.4.2(react-dom@18.2.0)(react@18.2.0)
       classnames:
         specifier: ^2.3.2
         version: 2.3.2
@@ -3214,8 +3214,8 @@ packages:
       react-transition-group: 4.4.5(react-dom@18.2.0)(react@18.2.0)
       tippy.js: 6.3.7
 
-  /@itwin/itwinui-react@3.3.0(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-YkVSh4elEuHiRMv1IFWX6+N//bwklGy9m7bDeJO6BnIf7WNNTf8ora5cEnF0//vPBhJYQEipbO/9oML1zGKNEw==}
+  /@itwin/itwinui-react@3.4.2(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-NJbzAcSdbh0+waBQABYwKxmsMNuftT6VzmWp8B1QAZirthQLzmA5BR8KyEOHmF6tN5alGUec0n4WsjLl3FHlFA==}
     peerDependencies:
       react: '>= 17.0.0 < 19.0.0'
       react-dom: '>=17.0.0 < 19.0.0'

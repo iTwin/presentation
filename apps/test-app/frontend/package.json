@@ -28,7 +28,7 @@
     "@itwin/ecschema-rpcinterface-common": "^4.4.0",
     "@itwin/eslint-plugin": "4.0.0-dev.48",
     "@itwin/imodel-components-react": "^4.9.0",
-    "@itwin/itwinui-react": "^3.3.0",
+    "@itwin/itwinui-react": "^3.4.2",
     "@itwin/itwinui-icons-react": "^2.8.0",
     "@itwin/presentation-common": "^4.4.0",
     "@itwin/presentation-components": "workspace:*",
