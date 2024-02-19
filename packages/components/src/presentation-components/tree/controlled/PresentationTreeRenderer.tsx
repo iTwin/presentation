@@ -33,7 +33,7 @@ import { useHierarchyLevelFiltering } from "./UseHierarchyLevelFiltering";
  * Props for [[PresentationTreeRenderer]] component.
  * @beta
  */
-export interface PresentationTreeRendererProps extends TreeRendererProps {
+export interface PresentationTreeRendererProps extends Omit<TreeRendererProps, "nodeRenderer"> {
   nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
 }
 
