@@ -18,8 +18,9 @@ import {
   TypedPrimitiveValue,
 } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
+import { PresentationNode, PresentationTreeNode, TreeActions } from "./TreeActions";
 import { TreeSelectionOptions, useUnifiedTreeSelection } from "./UseTreeSelection";
-import { PresentationNode, TreeActions, useTreeState } from "./UseTreeState";
+import { useTreeState } from "./UseTreeState";
 
 interface IModelRelatedState {
   queryExecutor: ILimitingECSqlQueryExecutor;
@@ -121,14 +122,28 @@ function TreeRenderer({
   treeActions,
   selectionOptions,
 }: {
-  rootNodes: PresentationNode[];
+  rootNodes: Array<PresentationTreeNode>;
   treeActions: TreeActions;
   selectionOptions: TreeSelectionOptions;
 }) {
   const { isNodeSelected, selectNode } = selectionOptions;
 
-  const nodeRenderer = useCallback<TreeProps<PresentationNode>["nodeRenderer"]>(
+  const nodeRenderer = useCallback<TreeProps<PresentationTreeNode>["nodeRenderer"]>(
     ({ node, ...restProps }) => {
+      if (!isPresentationNode(node)) {
+        return (
+          <TreeNode {...restProps} label={node.message} isDisabled={true} onExpanded={() => {}}>
+            {/* <Button
+              onClick={() => {
+                treeActions.changeChildNodesLimit(node.parentNode, "unbounded");
+              }}
+            >
+              Remove Limit
+            </Button> */}
+          </TreeNode>
+        );
+      }
+
       return (
         <TreeNode
           label={node.label}
@@ -146,8 +161,17 @@ function TreeRenderer({
     [treeActions, selectNode],
   );
 
-  const getNode = useCallback<TreeProps<PresentationNode>["getNode"]>(
+  const getNode = useCallback<TreeProps<PresentationTreeNode>["getNode"]>(
     (node) => {
+      if (!isPresentationNode(node)) {
+        return {
+          nodeId: node.id,
+          node,
+          hasSubNodes: false,
+          isExpanded: false,
+          isSelected: false,
+        };
+      }
       return {
         nodeId: node.id,
         node,
@@ -167,7 +191,7 @@ function TreeRenderer({
         overflow: "auto",
       }}
     >
-      <Tree<PresentationNode> data={rootNodes} nodeRenderer={nodeRenderer} getNode={getNode} enableVirtualization={true} />
+      <Tree<PresentationTreeNode> data={rootNodes} nodeRenderer={nodeRenderer} getNode={getNode} enableVirtualization={true} />
     </div>
   );
 }
@@ -187,6 +211,10 @@ function getIcon(icon: "icon-layers" | "icon-item" | "icon-ec-class" | "icon-imo
     case "icon-model":
       return <SvgModel />;
   }
+}
+
+function isPresentationNode(node: PresentationTreeNode): node is PresentationNode {
+  return "children" in node;
 }
 
 type TreeProps<T> = ComponentPropsWithoutRef<typeof Tree<T>>;

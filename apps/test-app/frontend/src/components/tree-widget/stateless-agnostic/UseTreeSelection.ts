@@ -8,7 +8,7 @@ import { omit } from "@itwin/core-bentley";
 import { GroupingNodeKey, InstanceKey, Key, KeySet, PresentationQuery, PresentationQueryBinding, StandardNodeTypes } from "@itwin/presentation-common";
 import { useUnifiedSelectionContext } from "@itwin/presentation-components";
 import { HierarchyNode, parseFullClassName } from "@itwin/presentation-hierarchy-builder";
-import { PresentationNode } from "./UseTreeState";
+import { PresentationNode } from "./TreeActions";
 
 export interface TreeSelectionOptions {
   isNodeSelected: (node: PresentationNode) => boolean;
