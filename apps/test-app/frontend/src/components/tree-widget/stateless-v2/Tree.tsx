@@ -3,12 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 import { ComponentPropsWithoutRef, useCallback, useEffect, useState } from "react";
-import { FilteringInputStatus, useDebouncedAsyncValue } from "@itwin/components-react";
+import { useDebouncedAsyncValue } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { SvgFolder, SvgImodelHollow, SvgItem, SvgLayers, SvgModel } from "@itwin/itwinui-icons-react";
-import { Button, Flex, ProgressRadial, ToggleSwitch, Tree, TreeNode } from "@itwin/itwinui-react";
+import { Button, Flex, ProgressRadial, SearchBox, ToggleSwitch, Tree, TreeNode } from "@itwin/itwinui-react";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import {
   createLimitingECSqlQueryExecutor,
@@ -18,7 +18,6 @@ import {
   TypedPrimitiveValue,
 } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
-import { TreeWidgetHeader, useTreeHeight } from "../TreeWidget";
 import { PresentationNode, PresentationTreeNode } from "./TreeActions";
 import { useTree, UseTreeResult } from "./UseTree";
 
@@ -85,12 +84,11 @@ export function TreeComponent({ imodel, height, width }: { imodel: IModelConnect
     if (!hierarchyProvider) {
       return;
     }
-    hierarchyProvider.setFormatter(!shouldUseCustomFormatter ? customFormatter : undefined);
-    setShouldUseCustomFormatter((prev) => !prev);
+    const newValue = !shouldUseCustomFormatter;
+    hierarchyProvider.setFormatter(newValue ? customFormatter : undefined);
+    setShouldUseCustomFormatter(newValue);
     treeProps.reloadTree();
   };
-
-  const { headerRef, treeHeight } = useTreeHeight(height);
 
   if (rootNodes === undefined) {
     return (
@@ -101,11 +99,9 @@ export function TreeComponent({ imodel, height, width }: { imodel: IModelConnect
   }
 
   return (
-    <Flex justifyContent="left" flexDirection="column" style={{ width, height: treeHeight }}>
-      <Flex flexDirection="row">
-        <TreeWidgetHeader onFilterChange={setFilter} filteringStatus={FilteringInputStatus.ReadyToFilter} showFilteringInput={true} ref={headerRef} />
-        <ToggleSwitch onChange={toggleFormatter} />
-      </Flex>
+    <Flex justifyContent="left" flexDirection="column" style={{ width, height }}>
+      <SearchBox inputProps={{ value: filter, onChange: (e) => setFilter(e.currentTarget.value) }} />
+      <ToggleSwitch onChange={toggleFormatter} checked={shouldUseCustomFormatter} />
       <Flex.Item alignSelf="flex-start" style={{ width: "100%", overflow: "auto" }}>
         <TreeRenderer {...treeProps} rootNodes={rootNodes} />
       </Flex.Item>
