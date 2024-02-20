@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1708340789219,
+  "lastUpdate": 1708422435119,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -1074,6 +1074,42 @@ window.BENCHMARK_DATA = {
             "value": 387,
             "unit": "ms",
             "extra": "min: 387\nmax: 387\ncount: 1\nmean: 387\np50: 383.8\nmedian: 383.8\np75: 383.8\np90: 383.8\np95: 383.8\np99: 383.8\np999: 383.8"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "24278440+saskliutas@users.noreply.github.com",
+            "name": "Saulius Skliutas",
+            "username": "saskliutas"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d2d12b1705f5b002e3b35b275a572f63c24ed68e",
+          "message": "Bump artillery version (#429)",
+          "timestamp": "2024-02-20T11:45:57+02:00",
+          "tree_id": "76e4006898ec2c82ee7d46ef6eed7f572c2f21bc",
+          "url": "https://github.com/iTwin/presentation/commit/d2d12b1705f5b002e3b35b275a572f63c24ed68e"
+        },
+        "date": 1708422434512,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Initial Models Tree Load: Baytown.bim",
+            "value": 354,
+            "unit": "ms",
+            "extra": "min: 354\nmax: 354\ncount: 1\nmean: 354\np50: 354.3\nmedian: 354.3\np75: 354.3\np90: 354.3\np95: 354.3\np99: 354.3\np999: 354.3"
+          },
+          {
+            "name": "Full Models Tree Load: Baytown.bim",
+            "value": 1831,
+            "unit": "ms",
+            "extra": "min: 1831\nmax: 1831\ncount: 1\nmean: 1831\np50: 1826.6\nmedian: 1826.6\np75: 1826.6\np90: 1826.6\np95: 1826.6\np99: 1826.6\np999: 1826.6"
           }
         ]
       }
