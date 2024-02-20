@@ -11,7 +11,7 @@ import { Tab, Tabs } from "@itwin/itwinui-react";
 import { DiagnosticsProps } from "@itwin/presentation-components";
 import { DiagnosticsSelector } from "../diagnostics-selector/DiagnosticsSelector";
 import { Tree } from "./rules-driven/Tree";
-import { TreeComponent } from "./stateless-agnostic/Tree";
+import { TreeComponent } from "./stateless-v2/Tree";
 import { StatelessTreeWidget } from "./stateless/Tree";
 
 export interface TreeWidgetProps {
@@ -39,7 +39,7 @@ export function TreeWidget(props: Omit<TreeWidgetProps, "height" | "width">) {
         labels={[
           <Tab key={1} label={IModelApp.localization.getLocalizedString("Sample:controls.tree-widget.rules-driven-tree")} />,
           <Tab key={2} label={IModelApp.localization.getLocalizedString("Sample:controls.tree-widget.stateless-models-tree")} />,
-          <Tab key={3} label={"New Stateless Tree"} />,
+          <Tab key={3} label={"Stateless Tree V2"} />,
         ]}
         onTabSelected={setOpenTab}
         contentClassName="tree-widget-tabs-content"

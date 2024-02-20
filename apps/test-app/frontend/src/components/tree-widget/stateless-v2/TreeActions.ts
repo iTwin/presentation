@@ -176,7 +176,7 @@ export class TreeActions {
           {
             idToNode: {},
             parentChildMap: new Map(),
-            rootNode: !!options?.discardState ? { ...oldModel.rootNode } : { id: undefined, nodeData: undefined },
+            rootNode: !!options?.discardState ? { id: undefined, nodeData: undefined } : { ...oldModel.rootNode },
           },
         ),
       )
@@ -207,6 +207,7 @@ function addAttributes(node: ModelNode, oldModel: TreeModel) {
   if (oldNode && isModelNode(oldNode)) {
     node.hierarchyLimit = oldNode.hierarchyLimit;
     node.instanceFilter = oldNode.instanceFilter;
+    node.isSelected = oldNode.isSelected;
   }
   return node;
 }
