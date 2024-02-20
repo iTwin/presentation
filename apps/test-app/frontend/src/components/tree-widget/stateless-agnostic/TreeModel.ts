@@ -2,11 +2,20 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-import { HierarchyNode } from "@itwin/presentation-hierarchy-builder";
+import { GenericInstanceFilter, HierarchyNode } from "@itwin/presentation-hierarchy-builder";
+
+export interface RootNode {
+  id: undefined;
+  nodeData: undefined;
+  hierarchyLimit?: number | "unbounded";
+  instanceFilter?: GenericInstanceFilter;
+}
 
 export interface NodeIdentifier {
   id: string;
   nodeData: HierarchyNode;
+  hierarchyLimit?: number | "unbounded";
+  instanceFilter?: GenericInstanceFilter;
 }
 
 export interface ModelNode extends NodeIdentifier {
@@ -35,6 +44,7 @@ export function isModelNode(node: TreeNode): node is ModelNode {
 export interface TreeModel {
   parentChildMap: Map<string | undefined, string[]>;
   idToNode: { [id: string]: TreeNode };
+  rootNode: RootNode;
 }
 
 export function expandNode(model: TreeModel, nodeIdentifier: NodeIdentifier, isExpanded: boolean) {
@@ -46,7 +56,7 @@ export function expandNode(model: TreeModel, nodeIdentifier: NodeIdentifier, isE
   node.isExpanded = isExpanded;
 }
 
-export function addHierarchyPart(model: TreeModel, parent: NodeIdentifier | undefined, hierarchyPart: TreeModel) {
+export function addHierarchyPart(model: TreeModel, parent: NodeIdentifier | RootNode, hierarchyPart: TreeModel) {
   removeSubTree(model, parent);
 
   for (const [parentId, children] of hierarchyPart.parentChildMap) {
@@ -61,7 +71,7 @@ export function addHierarchyPart(model: TreeModel, parent: NodeIdentifier | unde
   }
 }
 
-export function removeSubTree(model: TreeModel, parent: NodeIdentifier | undefined) {
+export function removeSubTree(model: TreeModel, parent: NodeIdentifier | RootNode) {
   const currentChildren = model.parentChildMap.get(parent?.id);
   if (!currentChildren) {
     return;

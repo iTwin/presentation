@@ -18,9 +18,8 @@ import {
   TypedPrimitiveValue,
 } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
-import { PresentationNode, PresentationTreeNode, TreeActions } from "./TreeActions";
-import { TreeSelectionOptions, useUnifiedTreeSelection } from "./UseTreeSelection";
-import { useTreeState } from "./UseTreeState";
+import { PresentationNode, PresentationTreeNode } from "./TreeActions";
+import { useTree, UseTreeResult } from "./UseTree";
 
 interface IModelRelatedState {
   queryExecutor: ILimitingECSqlQueryExecutor;
@@ -76,23 +75,21 @@ export function TreeComponent({ imodel, height, width }: { imodel: IModelConnect
     );
   }, [imodelRelatedState, filteredPaths]);
 
-  const { rootNodes, treeActions } = useTreeState({
+  const { rootNodes, ...treeProps } = useTree({
     hierarchyProvider,
   });
 
   const [shouldUseCustomFormatter, setShouldUseCustomFormatter] = useState<boolean>(false);
   const toggleFormatter = () => {
-    if (!hierarchyProvider || !treeActions) {
+    if (!hierarchyProvider) {
       return;
     }
     hierarchyProvider.setFormatter(shouldUseCustomFormatter ? customFormatter : undefined);
     setShouldUseCustomFormatter((prev) => !prev);
-    void treeActions.reloadTree();
+    treeProps.reloadTree();
   };
 
-  const selectionOptions = useUnifiedTreeSelection();
-
-  if (rootNodes === undefined || treeActions === undefined) {
+  if (rootNodes === undefined) {
     return (
       <Flex alignItems="center" justifyContent="center" style={{ width, height }}>
         <ProgressRadial size="large" />
@@ -107,7 +104,7 @@ export function TreeComponent({ imodel, height, width }: { imodel: IModelConnect
         <SearchBox.Input value={filter} onChange={(e) => setFilter(e.currentTarget.value)}></SearchBox.Input>
       </SearchBox>
       <Flex.Item alignSelf="flex-start" style={{ width: "100%", overflow: "auto" }}>
-        <TreeRenderer rootNodes={rootNodes} treeActions={treeActions} selectionOptions={selectionOptions} />
+        <TreeRenderer {...treeProps} rootNodes={rootNodes} />
       </Flex.Item>
     </Flex>
   );
@@ -117,17 +114,11 @@ async function customFormatter(val: TypedPrimitiveValue) {
   return `THIS_IS_FORMATTED_${val ? JSON.stringify(val.value) : ""}_THIS_IS_FORMATTED`;
 }
 
-function TreeRenderer({
-  rootNodes,
-  treeActions,
-  selectionOptions,
-}: {
-  rootNodes: Array<PresentationTreeNode>;
-  treeActions: TreeActions;
-  selectionOptions: TreeSelectionOptions;
-}) {
-  const { isNodeSelected, selectNode } = selectionOptions;
+interface TreeRendererProps extends Omit<UseTreeResult, "rootNodes"> {
+  rootNodes: PresentationTreeNode[];
+}
 
+function TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHierarchyLevelLimit }: TreeRendererProps) {
   const nodeRenderer = useCallback<TreeProps<PresentationTreeNode>["nodeRenderer"]>(
     ({ node, ...restProps }) => {
       if (!isPresentationNode(node)) {
@@ -135,7 +126,7 @@ function TreeRenderer({
           <TreeNode {...restProps} label={node.message} isDisabled={true} onExpanded={() => {}}>
             <Button
               onClick={() => {
-                // treeActions.changeChildNodesLimit(node.parentNode, "unbounded");
+                setHierarchyLevelLimit(node.parentNode, "unbounded");
               }}
             >
               Remove Limit
@@ -148,7 +139,7 @@ function TreeRenderer({
         <TreeNode
           label={node.label}
           onExpanded={(_, isExpanded) => {
-            treeActions.expandNode(node, isExpanded);
+            expandNode(node, isExpanded);
           }}
           onSelected={(_, isSelected) => {
             selectNode(node, isSelected);
@@ -158,7 +149,7 @@ function TreeRenderer({
         />
       );
     },
-    [treeActions, selectNode],
+    [expandNode, selectNode, setHierarchyLevelLimit],
   );
 
   const getNode = useCallback<TreeProps<PresentationTreeNode>["getNode"]>(

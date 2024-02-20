@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { omit } from "@itwin/core-bentley";
 import { GroupingNodeKey, InstanceKey, Key, KeySet, PresentationQuery, PresentationQueryBinding, StandardNodeTypes } from "@itwin/presentation-common";
 import { useUnifiedSelectionContext } from "@itwin/presentation-components";
@@ -13,29 +13,6 @@ import { PresentationNode } from "./TreeActions";
 export interface TreeSelectionOptions {
   isNodeSelected: (node: PresentationNode) => boolean;
   selectNode: (node: PresentationNode, isSelected: boolean) => void;
-}
-
-export function useTreeSelection(): TreeSelectionOptions {
-  const [selection, setSelection] = useState<Record<string, boolean>>({});
-
-  const isNodeSelected = useCallback(
-    (node: PresentationNode) => {
-      return !!selection[node.id];
-    },
-    [selection],
-  );
-
-  const selectNode = useCallback((node: PresentationNode, isSelected: boolean) => {
-    setSelection((prev) => ({
-      ...prev,
-      [node.id]: isSelected,
-    }));
-  }, []);
-
-  return {
-    isNodeSelected,
-    selectNode,
-  };
 }
 
 export function useUnifiedTreeSelection(): TreeSelectionOptions {

@@ -5,23 +5,33 @@
 import { catchError, defer, expand, from, map, mergeMap, Observable, of } from "rxjs";
 import { omit } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyNodeKey, HierarchyProvider, ParentNodeKey, RowsLimitExceededError } from "@itwin/presentation-hierarchy-builder";
-import { InfoNode, isModelNode, ModelNode, NodeIdentifier, TreeNode } from "./TreeModel";
+import { InfoNode, isModelNode, ModelNode, NodeIdentifier, RootNode, TreeNode } from "./TreeModel";
 
 export interface LoadedHierarchyPart {
-  parent: NodeIdentifier | undefined;
+  parent: NodeIdentifier | RootNode;
   loadedNodes: TreeNode[];
 }
 
 export interface IHierarchyLoader {
-  getNodes(parent: NodeIdentifier | undefined, shouldLoadChildren: (node: HierarchyNode) => boolean): Observable<LoadedHierarchyPart>;
-  reloadNodes(options: { expandedNodes: NodeIdentifier[]; collapsedNodes: NodeIdentifier[] }): Observable<LoadedHierarchyPart>;
+  getNodes(parent: NodeIdentifier | RootNode, shouldLoadChildren: (node: HierarchyNode) => boolean): Observable<LoadedHierarchyPart>;
+  reloadNodes(options: {
+    expandedNodes: NodeIdentifier[];
+    collapsedNodes: NodeIdentifier[];
+    buildNode: (node: ModelNode) => ModelNode;
+  }): Observable<LoadedHierarchyPart>;
 }
 
 export class HierarchyLoader implements IHierarchyLoader {
   constructor(private _hierarchyProvider: HierarchyProvider) {}
 
-  private loadChildren(parent: NodeIdentifier | undefined) {
-    return defer(async () => this._hierarchyProvider.getNodes({ parentNode: parent?.nodeData })).pipe(
+  private loadChildren(parent: NodeIdentifier | RootNode, buildNode?: (node: ModelNode) => ModelNode) {
+    return defer(async () =>
+      this._hierarchyProvider.getNodes({
+        parentNode: parent?.nodeData,
+        hierarchyLevelSizeLimit: parent?.hierarchyLimit,
+        instanceFilter: parent?.instanceFilter,
+      }),
+    ).pipe(
       catchError((err) => {
         if (err instanceof RowsLimitExceededError) {
           return of({
@@ -36,32 +46,50 @@ export class HierarchyLoader implements IHierarchyLoader {
       map(
         (childNodes): LoadedHierarchyPart => ({
           parent,
-          loadedNodes: Array.isArray(childNodes) ? childNodes.map(createBaseModelNode) : [childNodes],
+          loadedNodes: Array.isArray(childNodes)
+            ? childNodes.map(createBaseModelNode).map((node: ModelNode) => (buildNode ? buildNode(node) : node))
+            : [childNodes],
         }),
       ),
     );
   }
 
-  public getNodes(parent: NodeIdentifier | undefined, shouldLoadChildren: (node: HierarchyNode) => boolean) {
-    return this.loadChildren(parent).pipe(
+  private loadNodes(parent: NodeIdentifier | RootNode, shouldLoadChildren: (node: HierarchyNode) => boolean, buildNode?: (node: ModelNode) => ModelNode) {
+    return this.loadChildren(parent, buildNode).pipe(
       expand((loadedPart) =>
         from(loadedPart.loadedNodes.filter((node): node is ModelNode => isModelNode(node) && shouldLoadChildren(node.nodeData))).pipe(
-          mergeMap((node) => this.loadChildren(node)),
+          mergeMap((node) => this.loadChildren(node, buildNode)),
         ),
       ),
     );
   }
 
-  public reloadNodes({ expandedNodes, collapsedNodes }: { expandedNodes: NodeIdentifier[]; collapsedNodes: NodeIdentifier[] }) {
-    return this.getNodes(undefined, (node: HierarchyNode) => {
-      if (expandedNodes.findIndex((expandedNode) => sameNodes(expandedNode.nodeData, node)) !== -1) {
-        return true;
-      }
-      if (collapsedNodes.findIndex((collapsedNode) => sameNodes(collapsedNode.nodeData, node)) !== -1) {
-        return false;
-      }
-      return !!node.autoExpand;
-    });
+  public getNodes(parent: NodeIdentifier | RootNode, shouldLoadChildren: (node: HierarchyNode) => boolean) {
+    return this.loadNodes(parent, shouldLoadChildren);
+  }
+
+  public reloadNodes({
+    expandedNodes,
+    collapsedNodes,
+    buildNode,
+  }: {
+    expandedNodes: NodeIdentifier[];
+    collapsedNodes: NodeIdentifier[];
+    buildNode: (node: ModelNode) => ModelNode;
+  }) {
+    return this.loadNodes(
+      { id: undefined, nodeData: undefined },
+      (node: HierarchyNode) => {
+        if (expandedNodes.findIndex((expandedNode) => sameNodes(expandedNode.nodeData, node)) !== -1) {
+          return true;
+        }
+        if (collapsedNodes.findIndex((collapsedNode) => sameNodes(collapsedNode.nodeData, node)) !== -1) {
+          return false;
+        }
+        return !!node.autoExpand;
+      },
+      buildNode,
+    );
   }
 }
 
