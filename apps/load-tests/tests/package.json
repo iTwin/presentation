@@ -31,9 +31,9 @@
     "@itwin/presentation-hierarchy-builder": "workspace:*",
     "@itwin/presentation-core-interop": "workspace:*",
     "@itwin/presentation-models-tree": "workspace:*",
-    "@types/artillery": "^1.7.0",
+    "@types/artillery": "^1.7.4",
     "@types/node": "^18.17.7",
-    "artillery": "2.0.4",
+    "artillery": "2.0.6",
     "eslint": "^8.56.0",
     "rimraf": "^5.0.5",
     "typescript": "~5.0.4"
