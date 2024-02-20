@@ -2,7 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-import { catchError, expand, from, map, mergeMap, of } from "rxjs";
+import { catchError, defer, expand, from, map, mergeMap, Observable, of } from "rxjs";
 import { omit } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyNodeKey, HierarchyProvider, ParentNodeKey, RowsLimitExceededError } from "@itwin/presentation-hierarchy-builder";
 import { InfoNode, isModelNode, ModelNode, NodeIdentifier, TreeNode } from "./TreeModel";
@@ -12,11 +12,16 @@ export interface LoadedHierarchyPart {
   loadedNodes: TreeNode[];
 }
 
-export class HierarchyLoader {
+export interface IHierarchyLoader {
+  getNodes(parent: NodeIdentifier | undefined, shouldLoadChildren: (node: HierarchyNode) => boolean): Observable<LoadedHierarchyPart>;
+  reloadNodes(options: { expandedNodes: NodeIdentifier[]; collapsedNodes: NodeIdentifier[] }): Observable<LoadedHierarchyPart>;
+}
+
+export class HierarchyLoader implements IHierarchyLoader {
   constructor(private _hierarchyProvider: HierarchyProvider) {}
 
-  public loadChildren(parent: NodeIdentifier | undefined) {
-    return from(this._hierarchyProvider.getNodes({ parentNode: parent?.nodeData })).pipe(
+  private loadChildren(parent: NodeIdentifier | undefined) {
+    return defer(async () => this._hierarchyProvider.getNodes({ parentNode: parent?.nodeData })).pipe(
       catchError((err) => {
         if (err instanceof RowsLimitExceededError) {
           return of({
@@ -47,8 +52,16 @@ export class HierarchyLoader {
     );
   }
 
-  public reloadNodes(expandedNodes: NodeIdentifier[]) {
-    return this.getNodes(undefined, (node: HierarchyNode) => expandedNodes.findIndex((nodeToReload) => sameNodes(nodeToReload.nodeData, node)) !== -1);
+  public reloadNodes({ expandedNodes, collapsedNodes }: { expandedNodes: NodeIdentifier[]; collapsedNodes: NodeIdentifier[] }) {
+    return this.getNodes(undefined, (node: HierarchyNode) => {
+      if (expandedNodes.findIndex((expandedNode) => sameNodes(expandedNode.nodeData, node)) !== -1) {
+        return true;
+      }
+      if (collapsedNodes.findIndex((collapsedNode) => sameNodes(collapsedNode.nodeData, node)) !== -1) {
+        return false;
+      }
+      return !!node.autoExpand;
+    });
   }
 }
 

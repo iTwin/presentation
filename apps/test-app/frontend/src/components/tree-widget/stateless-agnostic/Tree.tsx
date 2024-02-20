@@ -133,13 +133,13 @@ function TreeRenderer({
       if (!isPresentationNode(node)) {
         return (
           <TreeNode {...restProps} label={node.message} isDisabled={true} onExpanded={() => {}}>
-            {/* <Button
+            <Button
               onClick={() => {
-                treeActions.changeChildNodesLimit(node.parentNode, "unbounded");
+                // treeActions.changeChildNodesLimit(node.parentNode, "unbounded");
               }}
             >
               Remove Limit
-            </Button> */}
+            </Button>
           </TreeNode>
         );
       }
