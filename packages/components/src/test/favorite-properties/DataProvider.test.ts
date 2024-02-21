@@ -5,55 +5,41 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import * as moq from "typemoq";
 import { PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyData } from "@itwin/components-react";
-import { Id64String } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet, Ruleset } from "@itwin/presentation-common";
-import {
-  FavoritePropertiesManager,
-  Presentation,
-  PresentationManager,
-  RulesetManager,
-  SelectionManager,
-  SelectionScopesManager,
-} from "@itwin/presentation-frontend";
+import { FavoritePropertiesManager, Presentation, PresentationManager, SelectionManager } from "@itwin/presentation-frontend";
 import { FavoritePropertiesDataProvider } from "../../presentation-components/favorite-properties/DataProvider";
 import { getFavoritesCategory } from "../../presentation-components/favorite-properties/Utils";
 import { PresentationPropertyDataProvider } from "../../presentation-components/propertygrid/DataProvider";
 
 describe("FavoritePropertiesDataProvider", () => {
   let provider: FavoritePropertiesDataProvider;
-  let elementId: Id64String;
-  const imodelMock = moq.Mock.ofType<IModelConnection>();
-  const presentationManagerMock = moq.Mock.ofType<PresentationManager>();
-  const selectionManagerMock = moq.Mock.ofType<SelectionManager>();
-  const rulesetsManagerMock = moq.Mock.ofType<RulesetManager>();
-  const presentationPropertyDataProviderMock = moq.Mock.ofType<PresentationPropertyDataProvider>();
-  const favoritePropertiesManagerMock = moq.Mock.ofType<FavoritePropertiesManager>();
-  const factoryMock = moq.Mock.ofType<(imodel: IModelConnection, ruleset?: Ruleset | string) => PresentationPropertyDataProvider>();
+  const elementId = "0x11";
+  const imodel = {} as IModelConnection;
+  let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
+  let selectionManager: sinon.SinonStubbedInstance<SelectionManager>;
+  let presentationPropertyDataProvider: sinon.SinonStubbedInstance<PresentationPropertyDataProvider>;
+  let favoritePropertiesManager: sinon.SinonStubbedInstance<FavoritePropertiesManager>;
 
   beforeEach(() => {
-    elementId = "0x11";
+    presentationManager = sinon.createStubInstance(PresentationManager);
+    selectionManager = sinon.createStubInstance(SelectionManager);
+    presentationPropertyDataProvider = sinon.createStubInstance(PresentationPropertyDataProvider);
+    favoritePropertiesManager = sinon.createStubInstance(FavoritePropertiesManager);
+
     const localization = new EmptyLocalization();
-    sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
-    sinon.stub(Presentation, "favoriteProperties").get(() => favoritePropertiesManagerMock.object);
-    sinon.stub(Presentation, "selection").get(() => selectionManagerMock.object);
+    sinon.stub(Presentation, "presentation").get(() => presentationManager);
+    sinon.stub(Presentation, "favoriteProperties").get(() => favoritePropertiesManager);
+    sinon.stub(Presentation, "selection").get(() => selectionManager);
     sinon.stub(Presentation, "localization").get(() => localization);
 
-    presentationManagerMock.setup((x) => x.rulesets()).returns(() => rulesetsManagerMock.object);
-    factoryMock.setup((x) => x(moq.It.isAny(), moq.It.isAny())).returns(() => presentationPropertyDataProviderMock.object);
-    provider = new FavoritePropertiesDataProvider({ propertyDataProviderFactory: factoryMock.object });
+    provider = new FavoritePropertiesDataProvider({ propertyDataProviderFactory: () => presentationPropertyDataProvider });
   });
 
   afterEach(() => {
-    presentationManagerMock.reset();
-    selectionManagerMock.reset();
-    rulesetsManagerMock.reset();
-    presentationPropertyDataProviderMock.reset();
-    favoritePropertiesManagerMock.reset();
     sinon.restore();
   });
 
@@ -69,25 +55,28 @@ describe("FavoritePropertiesDataProvider", () => {
 
   describe("getData", () => {
     beforeEach(() => {
-      const selectionScopesManager = moq.Mock.ofType<SelectionScopesManager>();
-      selectionScopesManager.setup(async (x) => x.computeSelection(moq.It.isAny(), elementId, moq.It.isAny())).returns(async () => new KeySet());
-      selectionManagerMock.setup((x) => x.scopes).returns(() => selectionScopesManager.object);
+      Object.assign(selectionManager, {
+        scopes: {
+          computeSelection: async () => new KeySet(),
+        },
+      });
     });
 
     it("passes `customRulesetId` to PropertyDataProvider if set", async () => {
-      presentationPropertyDataProviderMock
-        .setup(async (x) => x.getData())
-        .returns(async () => ({
-          label: PropertyRecord.fromString("Test Item"),
-          categories: [],
-          records: {},
-        }));
+      presentationPropertyDataProvider.getData.resolves({
+        label: PropertyRecord.fromString("Test Item"),
+        categories: [],
+        records: {},
+      });
+      const factorySpy = sinon
+        .stub<[IModelConnection, Ruleset | string | undefined], PresentationPropertyDataProvider>()
+        .returns(presentationPropertyDataProvider);
 
       const customRulesetId = "custom_ruleset_id";
-      provider = new FavoritePropertiesDataProvider({ propertyDataProviderFactory: factoryMock.object, ruleset: customRulesetId });
+      provider = new FavoritePropertiesDataProvider({ propertyDataProviderFactory: factorySpy, ruleset: customRulesetId });
 
-      await provider.getData(imodelMock.object, elementId);
-      factoryMock.verify((x) => x(imodelMock.object, customRulesetId), moq.Times.once());
+      await provider.getData(imodel, elementId);
+      expect(factorySpy).to.be.calledWith(imodel, customRulesetId);
     });
 
     it("returns empty property data when there is no favorite category", async () => {
@@ -103,9 +92,9 @@ describe("FavoritePropertiesDataProvider", () => {
           ],
         },
       };
-      presentationPropertyDataProviderMock.setup(async (x) => x.getData()).returns(async () => dataToReturn);
+      presentationPropertyDataProvider.getData.resolves(dataToReturn);
 
-      const data = await provider.getData(imodelMock.object, elementId);
+      const data = await provider.getData(imodel, elementId);
       expect(data.categories.length).to.eq(0);
       expect(Object.keys(data.records).length).to.eq(0);
     });
@@ -133,9 +122,9 @@ describe("FavoritePropertiesDataProvider", () => {
           ],
         },
       };
-      presentationPropertyDataProviderMock.setup(async (x) => x.getData()).returns(async () => dataToReturn);
+      presentationPropertyDataProvider.getData.resolves(dataToReturn);
 
-      const data = await provider.getData(imodelMock.object, elementId);
+      const data = await provider.getData(imodel, elementId);
       expect(data.categories.length).to.eq(1);
       expect(data.records[favoritesCategory.name]).to.be.not.undefined;
       expect(data.records[favoritesCategory.name].length).to.eq(1);

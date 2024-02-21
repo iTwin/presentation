@@ -5,6 +5,7 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
+import { omit } from "@itwin/core-bentley";
 import { IMetadataProvider } from "../../../../hierarchy-builder/ECMetadata";
 import { GroupingNodeKey } from "../../../../hierarchy-builder/HierarchyNode";
 import { GroupingHandlerResult } from "../../../../hierarchy-builder/internal/operators/Grouping";
@@ -42,7 +43,7 @@ describe("ClassGrouping", () => {
           label: "TestClass",
           key: expectedClassGroupingNodeKey,
           parentKeys: ["x"],
-          children: nodes.map((gn) => ({ ...gn, parentKeys: [...gn.parentKeys, expectedClassGroupingNodeKey] })),
+          children: nodes.map((gn) => ({ ...gn, parentKeys: [...gn.parentKeys, omit(expectedClassGroupingNodeKey, ["groupedInstanceKeys"])] })),
         },
       ],
       ungrouped: [],
@@ -77,7 +78,7 @@ describe("ClassGrouping", () => {
           label: "Class A",
           key: expectedClassGroupingNodeKey,
           parentKeys: ["x"],
-          children: nodes.map((gn) => ({ ...gn, parentKeys: [...gn.parentKeys, expectedClassGroupingNodeKey] })),
+          children: nodes.map((gn) => ({ ...gn, parentKeys: [...gn.parentKeys, omit(expectedClassGroupingNodeKey, ["groupedInstanceKeys"])] })),
         },
       ],
       ungrouped: [],
@@ -118,13 +119,13 @@ describe("ClassGrouping", () => {
           label: "Class A",
           key: expectedClassAGroupingNodeKey,
           parentKeys: ["x"],
-          children: [nodes[0]].map((gn) => ({ ...gn, parentKeys: [...gn.parentKeys, expectedClassAGroupingNodeKey] })),
+          children: [nodes[0]].map((gn) => ({ ...gn, parentKeys: [...gn.parentKeys, omit(expectedClassAGroupingNodeKey, ["groupedInstanceKeys"])] })),
         },
         {
           label: "Class B",
           key: expectedClassBGroupingNodeKey,
           parentKeys: ["x"],
-          children: [nodes[1]].map((gn) => ({ ...gn, parentKeys: [...gn.parentKeys, expectedClassBGroupingNodeKey] })),
+          children: [nodes[1]].map((gn) => ({ ...gn, parentKeys: [...gn.parentKeys, omit(expectedClassBGroupingNodeKey, ["groupedInstanceKeys"])] })),
         },
       ],
       ungrouped: [],

@@ -8,6 +8,7 @@ public;ControlledPresentationTreeFilteringProps
 beta;convertToInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection): Promise
 deprecated;convertToInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection): Promise
 alpha;createDiagnosticsOptions(props: DiagnosticsProps): ClientDiagnosticsOptions | undefined
+beta;createInstanceFilterDefinition(info: PresentationInstanceFilterInfo, imodel: IModelConnection): Promise
 public;DEFAULT_PROPERTY_GRID_RULESET: Ruleset
 public;DiagnosticsProps
 public;FavoritePropertiesDataFilterer 
@@ -17,10 +18,6 @@ public;FavoritePropertiesDataProviderProps
 beta;FilterablePresentationTreeNodeItem = PresentationTreeNodeItem &
 beta;FilterableTreeProps
 beta;FilteringDialogToolbarHandlers
-beta;GenericInstanceFilter
-beta;GenericInstanceFilter
-beta;GenericInstanceFilterRule
-beta;GenericInstanceFilterRuleGroup
 beta;HierarchyLevelFilteringDescriptor = Descriptor | (() => Promise
 public;IContentDataProvider 
 public;IFavoritePropertiesDataProvider
@@ -79,7 +76,6 @@ beta;PresentationTreeRenderer(props: PresentationTreeRendererProps): JSX_2.Eleme
 beta;PresentationTreeRendererProps 
 public;PropertyDataProviderWithUnifiedSelectionProps
 public;PropertyRecordsBuilder 
-beta;RelatedInstanceDescription
 beta;SchemaMetadataContext
 beta;SchemaMetadataContextProvider({ schemaContextProvider, imodel, children }: PropsWithChildren
 beta;SchemaMetadataContextProviderProps
@@ -95,7 +91,7 @@ beta;UnifiedSelectionState = (selectionLevel?: number) => Readonly
 public;UnifiedSelectionTreeEventHandler 
 public;UnifiedSelectionTreeEventHandlerParams
 public;useControlledPresentationTreeFiltering(props: ControlledPresentationTreeFilteringProps):
-beta;useFilterablePresentationTree
+beta;useFilterablePresentationTree({ nodeLoader }: useFilterablePresentationTreeProps): FilterableTreeProps
 beta;useFilterablePresentationTreeProps
 beta;useHierarchyLevelFiltering(props: UseHierarchyLevelFilteringProps):
 beta;UseHierarchyLevelFilteringProps

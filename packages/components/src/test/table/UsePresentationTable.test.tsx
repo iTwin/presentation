@@ -6,10 +6,9 @@
 import { expect } from "chai";
 import { PropsWithChildren } from "react";
 import sinon from "sinon";
-import * as moq from "typemoq";
 import { BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { Content, InstanceKey, Item, KeySet } from "@itwin/presentation-common";
+import { Content, ContentDescriptorRequestOptions, InstanceKey, Item, KeySet, RulesetVariable } from "@itwin/presentation-common";
 import { Presentation, PresentationManager, SelectionManager } from "@itwin/presentation-frontend";
 import { TableColumnDefinition, TableRowDefinition } from "../../presentation-components/table/Types";
 import {
@@ -20,7 +19,6 @@ import {
 import { UnifiedSelectionContextProvider } from "../../presentation-components/unified-selection/UnifiedSelectionContext";
 import { createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
 import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField } from "../_helpers/Content";
-import { mockPresentationManager } from "../_helpers/UiComponents";
 import { act, renderHook, waitFor } from "../TestUtils";
 
 describe("usePresentationTable", () => {
@@ -34,12 +32,11 @@ describe("usePresentationTable", () => {
     pageSize: 10,
   };
 
-  let presentationManagerMock: moq.IMock<PresentationManager>;
+  let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
 
   beforeEach(() => {
-    const { presentationManager } = mockPresentationManager();
-    presentationManagerMock = presentationManager;
-    sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
+    presentationManager = sinon.createStubInstance(PresentationManager);
+    sinon.stub(Presentation, "presentation").get(() => presentationManager);
     sinon.stub(IModelApp, "quantityFormatter").get(() => ({
       onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
     }));
@@ -60,10 +57,9 @@ describe("usePresentationTable", () => {
       values: { [propertiesField.name]: "test_value" },
       displayValues: { [propertiesField.name]: "Test value" },
     });
-    presentationManagerMock.setup(async (x) => x.getContentDescriptor(moq.It.isAny())).returns(async () => descriptor);
-    presentationManagerMock
-      .setup(async (x) => x.getContentAndSize(moq.It.isAny()))
-      .returns(async () => ({ content: new Content(descriptor, [item]), size: 1 }));
+
+    presentationManager.getContentDescriptor.resolves(descriptor);
+    presentationManager.getContentAndSize.resolves({ content: new Content(descriptor, [item]), size: 1 });
 
     const { result } = renderHook((props: UsePresentationTableProps<TableColumnDefinition, TableRowDefinition>) => usePresentationTable(props), {
       initialProps,
@@ -100,12 +96,11 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     pageSize: 10,
   };
 
-  let presentationManagerMock: moq.IMock<PresentationManager>;
+  let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
 
   beforeEach(() => {
-    const { presentationManager } = mockPresentationManager();
-    presentationManagerMock = presentationManager;
-    sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
+    presentationManager = sinon.createStubInstance(PresentationManager);
+    sinon.stub(Presentation, "presentation").get(() => presentationManager);
     sinon.stub(IModelApp, "quantityFormatter").get(() => ({
       onActiveFormattingUnitSystemChanged: new BeUiEvent<FormattingUnitSystemChangedArgs>(),
     }));
@@ -133,10 +128,8 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     const keys = new KeySet([createTestECInstanceKey()]);
     sinon.stub(Presentation.selection, "getSelection").returns(keys);
 
-    presentationManagerMock.setup(async (x) => x.getContentDescriptor(moq.It.is((options) => options.keys.size === keys.size))).returns(async () => descriptor);
-    presentationManagerMock
-      .setup(async (x) => x.getContentAndSize(moq.It.is((options) => options.keys.size === keys.size)))
-      .returns(async () => ({ content: new Content(descriptor, [item]), size: 1 }));
+    presentationManager.getContentDescriptor.resolves(descriptor);
+    presentationManager.getContentAndSize.resolves({ content: new Content(descriptor, [item]), size: 1 });
 
     const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
 
@@ -158,11 +151,18 @@ describe("usePresentationTableWithUnifiedSelection", () => {
           key: propertiesField.name,
         },
       ]);
+
+    expect(presentationManager.getContentDescriptor).to.be.calledWith(
+      sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) => options.keys.size === keys.size),
+    );
+    expect(presentationManager.getContentAndSize).to.be.calledWith(
+      sinon.match((options: ContentDescriptorRequestOptions<IModelConnection, KeySet, RulesetVariable>) => options.keys.size === keys.size),
+    );
   });
 
   it("loads columns and rows with no keys unified selection context is not available", async () => {
-    presentationManagerMock.setup(async (x) => x.getContentDescriptor(moq.It.is((options) => options.keys.isEmpty))).returns(async () => undefined);
-    presentationManagerMock.setup(async (x) => x.getContentAndSize(moq.It.is((options) => options.keys.isEmpty))).returns(async () => undefined);
+    presentationManager.getContentDescriptor.resolves(undefined);
+    presentationManager.getContentAndSize.resolves(undefined);
 
     const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
 
@@ -377,11 +377,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
       );
     });
 
-    presentationManagerMock
-      .setup(async (x) => x.getContentDescriptor(moq.It.is((options) => options.keys.size === keys.length)))
-      .returns(async () => descriptor);
-    presentationManagerMock
-      .setup(async (x) => x.getContentAndSize(moq.It.is((options) => options.keys.size === keys.length)))
-      .returns(async () => ({ content: new Content(descriptor, items), size: keys.length }));
+    presentationManager.getContentDescriptor.resolves(descriptor);
+    presentationManager.getContentAndSize.resolves({ content: new Content(descriptor, items), size: keys.length });
   }
 });

@@ -23,6 +23,7 @@ import { DiagnosticsLoggerSeverity } from '@itwin/presentation-common';
 import { FavoritePropertiesScope } from '@itwin/presentation-frontend';
 import { Field } from '@itwin/presentation-common';
 import { FilterByTextHierarchyRequestOptions } from '@itwin/presentation-common';
+import { GenericInstanceFilter } from '@itwin/core-common';
 import { HierarchyRequestOptions } from '@itwin/presentation-common';
 import { HighlightableTreeProps } from '@itwin/components-react';
 import { IContentVisitor } from '@itwin/presentation-common';
@@ -69,6 +70,7 @@ import { PropertyValue } from '@itwin/appui-abstract';
 import { PropertyValueRendererContext } from '@itwin/components-react';
 import { PropsWithChildren } from 'react';
 import { PureComponent } from 'react';
+import { ReactElement } from 'react';
 import { ReactNode } from 'react';
 import { RenderedItemsRange } from '@itwin/components-react';
 import { Ruleset } from '@itwin/presentation-common';
@@ -83,7 +85,6 @@ import { StartContentProps } from '@itwin/presentation-common';
 import { StartFieldProps } from '@itwin/presentation-common';
 import { StartItemProps } from '@itwin/presentation-common';
 import { StartStructProps } from '@itwin/presentation-common';
-import { StrippedRelationshipPath } from '@itwin/presentation-common';
 import { Subscription } from '@itwin/components-react';
 import { TreeEditingParams } from '@itwin/components-react';
 import { TreeEventHandler } from '@itwin/components-react';
@@ -164,6 +165,9 @@ export function convertToInstanceFilterDefinition(filter: PresentationInstanceFi
 // @alpha
 export function createDiagnosticsOptions(props: DiagnosticsProps): ClientDiagnosticsOptions | undefined;
 
+// @beta
+export function createInstanceFilterDefinition(info: PresentationInstanceFilterInfo, imodel: IModelConnection): Promise<InstanceFilterDefinition>;
+
 // @public
 export const DEFAULT_PROPERTY_GRID_RULESET: Ruleset;
 
@@ -225,10 +229,9 @@ export type FilterablePresentationTreeNodeItem = PresentationTreeNodeItem & {
 };
 
 // @beta
-export interface FilterableTreeProps<T extends HTMLElement> {
-    containerRef: React.Ref<T>;
+export interface FilterableTreeProps {
     // (undocumented)
-    filterDialog: React.ReactPortal | null;
+    filterDialog: React.ReactNode | null;
     // (undocumented)
     onClearFilterClick: (nodeId: string) => void;
     // (undocumented)
@@ -243,35 +246,6 @@ export interface FilteringDialogToolbarHandlers {
     handleClose: () => void;
     // (undocumented)
     handleReset: () => void;
-}
-
-// @beta
-export interface GenericInstanceFilter {
-    filteredClasses?: ClassInfo[];
-    propertyClasses: ClassInfo[];
-    relatedInstances: RelatedInstanceDescription[];
-    rules: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup;
-}
-
-// @beta (undocumented)
-export namespace GenericInstanceFilter {
-    export function fromPresentationInstanceFilter(filter: PresentationInstanceFilter, filteredClasses?: ClassInfo[]): GenericInstanceFilter;
-    export function isFilterRuleGroup(obj: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup): obj is GenericInstanceFilterRuleGroup;
-}
-
-// @beta
-export interface GenericInstanceFilterRule {
-    operator: `${PropertyFilterRuleOperator}`;
-    propertyName: string;
-    propertyTypeName: string;
-    sourceAlias: string;
-    value?: PrimitiveValue;
-}
-
-// @beta
-export interface GenericInstanceFilterRuleGroup {
-    operator: `${PropertyFilterRuleGroupOperator}`;
-    rules: Array<GenericInstanceFilterRule | GenericInstanceFilterRuleGroup>;
 }
 
 // @beta
@@ -414,9 +388,10 @@ export type PresentationInstanceFilter = PresentationInstanceFilterConditionGrou
 // @beta (undocumented)
 export namespace PresentationInstanceFilter {
     export function fromComponentsPropertyFilter(descriptor: Descriptor, filter: PropertyFilter): PresentationInstanceFilter;
+    export function fromGenericInstanceFilter(descriptor: Descriptor, filter: GenericInstanceFilter): PresentationInstanceFilter;
     export function isConditionGroup(filter: PresentationInstanceFilter): filter is PresentationInstanceFilterConditionGroup;
     export function toComponentsPropertyFilter(descriptor: Descriptor, filter: PresentationInstanceFilter): PropertyFilter;
-    export function toInstanceFilterDefinition(filter: PresentationInstanceFilter, imodel: IModelConnection, filteredClasses?: ClassInfo[]): Promise<InstanceFilterDefinition>;
+    export function toGenericInstanceFilter(filter: PresentationInstanceFilter, filteredClasses?: ClassInfo[]): GenericInstanceFilter;
 }
 
 // @beta
@@ -466,7 +441,7 @@ export interface PresentationInstanceFilterDialogProps {
 
 // @beta
 export interface PresentationInstanceFilterInfo {
-    filter: PresentationInstanceFilter;
+    filter: PresentationInstanceFilter | undefined;
     usedClasses: ClassInfo[];
 }
 
@@ -633,15 +608,18 @@ export interface PresentationTreeNodeRendererProps extends TreeNodeRendererProps
 }
 
 // @public
-export type PresentationTreeProps<TEventHandler extends TreeEventHandler> = Omit<ControlledTreeProps, "model" | "nodeLoader" | "eventsHandler" | "onItemsRendered" | "nodeHighlightingProps"> & {
+export type PresentationTreeProps<TEventHandler extends TreeEventHandler> = Omit<ControlledTreeProps, "model" | "nodeLoader" | "eventsHandler" | "onItemsRendered" | "nodeHighlightingProps" | "treeRenderer"> & {
     state: UsePresentationTreeStateResult<TEventHandler>;
+    treeRenderer?: (props: TreeRendererProps & {
+        nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
+    }) => ReactElement;
 };
 
 // @beta
 export function PresentationTreeRenderer(props: PresentationTreeRendererProps): JSX_2.Element;
 
 // @beta
-export interface PresentationTreeRendererProps extends TreeRendererProps {
+export interface PresentationTreeRendererProps extends Omit<TreeRendererProps, "nodeRenderer"> {
     // (undocumented)
     nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>;
 }
@@ -687,12 +665,6 @@ export class PropertyRecordsBuilder implements IContentVisitor {
     startItem(props: StartItemProps): boolean;
     // (undocumented)
     startStruct(props: StartStructProps): boolean;
-}
-
-// @beta
-export interface RelatedInstanceDescription {
-    alias: string;
-    path: StrippedRelationshipPath;
 }
 
 // @beta
@@ -801,7 +773,7 @@ export function useControlledPresentationTreeFiltering(props: ControlledPresenta
 };
 
 // @beta
-export function useFilterablePresentationTree<T extends HTMLElement>({ nodeLoader }: useFilterablePresentationTreeProps): FilterableTreeProps<T>;
+export function useFilterablePresentationTree({ nodeLoader }: useFilterablePresentationTreeProps): FilterableTreeProps;
 
 // @beta
 export interface useFilterablePresentationTreeProps {

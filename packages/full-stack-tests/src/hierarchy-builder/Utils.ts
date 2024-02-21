@@ -12,6 +12,7 @@ import {
   createLimitingECSqlQueryExecutor,
   HierarchyNodeIdentifiersPath,
   HierarchyProvider,
+  HierarchyProviderLocalizedStrings,
   IHierarchyLevelDefinitionsFactory,
   IPrimitiveValueFormatter,
   parseFullClassName,
@@ -53,14 +54,16 @@ export function createProvider(props: {
   imodel: IModelConnection | IModelDb | ECDb;
   hierarchy: IHierarchyLevelDefinitionsFactory;
   formatterFactory?: (schemas: SchemaContext) => IPrimitiveValueFormatter;
+  localizedStrings?: HierarchyProviderLocalizedStrings;
   filteredNodePaths?: HierarchyNodeIdentifiersPath[];
 }) {
-  const { imodel, hierarchy, formatterFactory, filteredNodePaths } = props;
+  const { imodel, hierarchy, formatterFactory, localizedStrings, filteredNodePaths } = props;
   return new HierarchyProvider({
     metadataProvider: createMetadataProvider(imodel),
     hierarchyDefinition: hierarchy,
     queryExecutor: createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 123),
     formatter: formatterFactory ? formatterFactory(createSchemaContext(imodel)) : undefined,
+    localizedStrings,
     filtering: filteredNodePaths ? { paths: filteredNodePaths } : undefined,
   });
 }

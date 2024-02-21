@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IMetadataProvider } from "../ECMetadata";
-import { getClass } from "../internal/Common";
+import { getClass } from "../internal/GetClass";
 import { createConcatenatedValueJsonSelector, createRawPropertyValueSelector, TypedValueSelectClauseProps } from "./ecsql-snippets/ECSqlValueSelectorSnippets";
 
 /**

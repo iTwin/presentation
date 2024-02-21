@@ -5,14 +5,12 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import * as moq from "typemoq";
 import { IModelConnection } from "@itwin/core-frontend";
 import { KeySet } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { useColumns, UseColumnsProps } from "../../presentation-components/table/UseColumns";
 import { createTestECInstanceKey, TestErrorBoundary } from "../_helpers/Common";
 import { createTestContentDescriptor, createTestNestedContentField, createTestPropertiesContentField } from "../_helpers/Content";
-import { mockPresentationManager } from "../_helpers/UiComponents";
 import { render, renderHook, waitFor } from "../TestUtils";
 
 describe("useColumns", () => {
@@ -23,12 +21,11 @@ describe("useColumns", () => {
     ruleset: "ruleset_id",
   };
 
-  let presentationManagerMock: moq.IMock<PresentationManager>;
+  let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
 
   beforeEach(() => {
-    const { presentationManager } = mockPresentationManager();
-    presentationManagerMock = presentationManager;
-    sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
+    presentationManager = sinon.createStubInstance(PresentationManager);
+    sinon.stub(Presentation, "presentation").get(() => presentationManager);
   });
 
   afterEach(() => {
@@ -37,9 +34,7 @@ describe("useColumns", () => {
 
   it("loads columns", async () => {
     const contentField = createTestPropertiesContentField({ name: "first_field", label: "First Field", properties: [] });
-    presentationManagerMock
-      .setup(async (x) => x.getContentDescriptor(moq.It.isAny()))
-      .returns(async () => createTestContentDescriptor({ fields: [contentField] }));
+    presentationManager.getContentDescriptor.resolves(createTestContentDescriptor({ fields: [contentField] }));
 
     const { result } = renderHook((props) => useColumns(props), { initialProps });
 
@@ -60,9 +55,7 @@ describe("useColumns", () => {
     const propertyField = createTestPropertiesContentField({ name: "first_field", label: "First Field", properties: [] });
     const nestedField = createTestPropertiesContentField({ name: "nested_field", label: "Nested Field", properties: [] });
     const nestingField = createTestNestedContentField({ name: "nesting_field", label: "Nesting Field", nestedFields: [nestedField] });
-    presentationManagerMock
-      .setup(async (x) => x.getContentDescriptor(moq.It.isAny()))
-      .returns(async () => createTestContentDescriptor({ fields: [propertyField, nestingField] }));
+    presentationManager.getContentDescriptor.resolves(createTestContentDescriptor({ fields: [propertyField, nestingField] }));
 
     const { result } = renderHook((props) => useColumns(props), { initialProps });
 
@@ -81,9 +74,7 @@ describe("useColumns", () => {
 
   it("returns empty column list if no keys provided", async () => {
     const propertyField = createTestPropertiesContentField({ name: "first_field", label: "First Field", properties: [] });
-    presentationManagerMock
-      .setup(async (x) => x.getContentDescriptor(moq.It.isAny()))
-      .returns(async () => createTestContentDescriptor({ fields: [propertyField] }));
+    presentationManager.getContentDescriptor.resolves(createTestContentDescriptor({ fields: [propertyField] }));
 
     const { result } = renderHook((props) => useColumns(props), { initialProps: { ...initialProps, keys: new KeySet() } });
 
@@ -91,7 +82,7 @@ describe("useColumns", () => {
   });
 
   it("returns empty column list if content descriptor was not loaded", async () => {
-    presentationManagerMock.setup(async (x) => x.getContentDescriptor(moq.It.isAny())).returns(async () => undefined);
+    presentationManager.getContentDescriptor.resolves(undefined);
 
     const { result } = renderHook((props) => useColumns(props), { initialProps });
 
@@ -99,12 +90,7 @@ describe("useColumns", () => {
   });
 
   it("throws in React render loop on failure to get content descriptor", async () => {
-    presentationManagerMock
-      .setup(async (x) => x.getContentDescriptor(moq.It.isAny()))
-      .callback(() => {
-        throw new Error("test error");
-      })
-      .returns(async () => undefined);
+    presentationManager.getContentDescriptor.resolves(undefined).rejects(new Error("test error"));
 
     const errorSpy = sinon.spy();
     function TestComponent() {

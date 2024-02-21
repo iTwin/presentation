@@ -16,7 +16,8 @@ import { Button, Dialog, NonIdealState, ProgressRadial } from "@itwin/itwinui-re
 import { Descriptor, Keys } from "@itwin/presentation-common";
 import { translate, useDelay } from "../common/Utils";
 import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder";
-import { PresentationInstanceFilter, PresentationInstanceFilterInfo } from "./PresentationFilterBuilder";
+import { PresentationInstanceFilterInfo } from "./PresentationFilterBuilder";
+import { PresentationInstanceFilter } from "./PresentationInstanceFilter";
 import { filterRuleValidator, isFilterNonEmpty } from "./Utils";
 
 /**
@@ -85,6 +86,7 @@ export function PresentationInstanceFilterDialog(props: PresentationInstanceFilt
       trapFocus={true}
       isDraggable
       isResizable
+      portal={true}
     >
       <Dialog.Backdrop />
       <Dialog.Main className="presentation-instance-filter-dialog-content-container">
@@ -164,7 +166,7 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
     toolbarButtonsRenderer,
   } = props;
   const [initialPropertyFilter] = useState(() => {
-    if (!initialFilter) {
+    if (!initialFilter?.filter) {
       return undefined;
     }
     return PresentationInstanceFilter.toComponentsPropertyFilter(descriptor, initialFilter.filter);
@@ -177,13 +179,16 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
 
   const filteringProps = usePresentationInstanceFilteringProps(descriptor, imodel, initialFilter?.usedClasses);
   const getFilterInfo = useCallback(
-    (options?: BuildFilterOptions) => {
+    (options?: BuildFilterOptions): PresentationInstanceFilterInfo | undefined => {
       const filter = buildFilter(options);
-      if (!filter) {
+      if (!filter && filteringProps.selectedClasses.length === 0) {
         return undefined;
       }
-      const presentationInstanceFilter = PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, filter);
-      return { filter: presentationInstanceFilter, usedClasses: filteringProps.selectedClasses };
+
+      return {
+        filter: filter ? PresentationInstanceFilter.fromComponentsPropertyFilter(descriptor, filter) : undefined,
+        usedClasses: filteringProps.selectedClasses,
+      };
     },
     [buildFilter, descriptor, filteringProps.selectedClasses],
   );
@@ -205,8 +210,8 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
     try {
       const result = getFilterInfo();
 
-      // we need to check whether the filter was invalid or empty.
-      if (result === undefined && isFilterNonEmpty(rootGroup)) {
+      // do not invoke apply if filter was not built and it is non empty.
+      if (result?.filter === undefined && isFilterNonEmpty(rootGroup)) {
         return;
       }
       onApply(result);

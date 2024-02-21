@@ -5,48 +5,20 @@
 
 import naturalCompare from "natural-compare-lite";
 import { assert } from "@itwin/core-bentley";
-import { ECClass, ECSchema, IMetadataProvider } from "../ECMetadata";
+import { ECClass, IMetadataProvider } from "../ECMetadata";
 import {
   HierarchyNodeKey,
   HierarchyNodeLabelGroupingParams,
   InstanceHierarchyNodeProcessingParams,
   InstancesNodeKey,
+  ParentNodeKey,
   ProcessedCustomHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "../HierarchyNode";
-import { getLogger } from "../Logging";
-import { parseFullClassName } from "../Metadata";
+import { getClass } from "./GetClass";
 
 /** @internal */
 export const LOGGING_NAMESPACE = "Presentation.HierarchyBuilder";
-
-/** @internal */
-export async function getClass(metadata: IMetadataProvider, fullClassName: string): Promise<ECClass> {
-  const { schemaName, className } = parseFullClassName(fullClassName);
-  let schema: ECSchema | undefined;
-  try {
-    schema = await metadata.getSchema(schemaName);
-  } catch (e) {
-    assert(e instanceof Error);
-    getLogger().logError(`${LOGGING_NAMESPACE}`, `Failed to get schema "${schemaName} with error ${e.message}."`);
-  }
-  if (!schema) {
-    throw new Error(`Invalid schema "${schemaName}"`);
-  }
-
-  let nodeClass: ECClass | undefined;
-  try {
-    nodeClass = await schema.getClass(className);
-  } catch (e) {
-    assert(e instanceof Error);
-    getLogger().logError(`${LOGGING_NAMESPACE}`, `Failed to get schema "${schemaName} with error ${e.message}."`);
-  }
-  if (!nodeClass) {
-    throw new Error(`Invalid class "${className}" in schema "${schemaName}"`);
-  }
-
-  return nodeClass;
-}
 
 function mergeNodeHandlingParams(
   lhs: InstanceHierarchyNodeProcessingParams | undefined,
@@ -90,10 +62,10 @@ function mergeNodeKeys<TKey extends string | InstancesNodeKey>(lhs: TKey, rhs: T
   return ((x: never) => x)(lhs);
 }
 
-function mergeParentNodeKeys(lhsKeys: HierarchyNodeKey[], rhsKeys: HierarchyNodeKey[]): HierarchyNodeKey[] {
-  const res = new Array<HierarchyNodeKey>();
+function mergeParentNodeKeys(lhsKeys: ParentNodeKey[], rhsKeys: ParentNodeKey[]): ParentNodeKey[] {
+  const res = new Array<ParentNodeKey>();
   for (let i = 0; i < lhsKeys.length && i < rhsKeys.length; ++i) {
-    if (!HierarchyNodeKey.equals(lhsKeys[i], rhsKeys[i])) {
+    if (!ParentNodeKey.equals(lhsKeys[i], rhsKeys[i])) {
       break;
     }
     res.push(lhsKeys[i]);
@@ -166,4 +138,23 @@ export function mergeSortedArrays<TLhsItem, TRhsItem>(
 /** @internal */
 export function compareNodesByLabel<TLhsNode extends { label: string }, TRhsNode extends { label: string }>(lhs: TLhsNode, rhs: TRhsNode): number {
   return naturalCompare(lhs.label.toLocaleLowerCase(), rhs.label.toLocaleLowerCase());
+}
+
+/** @internal */
+export class BaseClassChecker {
+  private _map = new Map<string, boolean>();
+  private _metadataProvider: IMetadataProvider;
+  public constructor(metadataProvider: IMetadataProvider) {
+    this._metadataProvider = metadataProvider;
+  }
+
+  public async isECClassOfBaseECClass(ecClassNameToCheck: string, baseECClass: ECClass): Promise<boolean> {
+    let isCurrentNodeClassOfBase = this._map.get(`${ecClassNameToCheck}${baseECClass.fullName}`);
+    if (isCurrentNodeClassOfBase === undefined) {
+      const currentNodeECClass = await getClass(this._metadataProvider, ecClassNameToCheck);
+      isCurrentNodeClassOfBase = await currentNodeECClass.is(baseECClass);
+      this._map.set(`${ecClassNameToCheck}${baseECClass.fullName}`, isCurrentNodeClassOfBase);
+    }
+    return isCurrentNodeClassOfBase;
+  }
 }

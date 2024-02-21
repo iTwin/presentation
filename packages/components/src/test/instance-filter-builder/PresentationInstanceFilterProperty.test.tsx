@@ -36,7 +36,7 @@ describe("PresentationInstanceFilterProperty", () => {
       className: `${schemaName}:${className}`,
       categoryLabel: "TestCategoryLabel",
     });
-    const { container, queryByText } = render(
+    const { container, queryByText, queryByTitle } = render(
       <PresentationInstanceFilterProperty
         propertyDescription={testPropertyInfo.propertyDescription}
         fullClassName={testPropertyInfo.className}
@@ -44,7 +44,7 @@ describe("PresentationInstanceFilterProperty", () => {
       />,
     );
 
-    expect(queryByText(testPropertyInfo.propertyDescription.displayLabel)).to.not.be.null;
+    expect(queryByTitle(testPropertyInfo.propertyDescription.displayLabel)).to.not.be.null;
     const propertyBadgeSelector = container.querySelector<HTMLInputElement>(".badge");
     expect(propertyBadgeSelector).to.not.be.null;
     fireEvent.mouseEnter(propertyBadgeSelector!);
@@ -56,11 +56,11 @@ describe("PresentationInstanceFilterProperty", () => {
     const testPropertyInfo = createTestPresentationInstanceFilterPropertyInfo({
       className: `${schemaName}:${className}`,
     });
-    const { container, queryByText } = render(
+    const { container, queryByTitle } = render(
       <PresentationInstanceFilterProperty propertyDescription={testPropertyInfo.propertyDescription} fullClassName={testPropertyInfo.className} />,
     );
 
-    expect(queryByText(testPropertyInfo.propertyDescription.displayLabel)).to.not.be.null;
+    expect(queryByTitle(testPropertyInfo.propertyDescription.displayLabel)).to.not.be.null;
     expect(container.querySelector<HTMLInputElement>(".badge")).to.be.null;
   });
 });

@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ECClass, ECNavigationProperty, ECRelationshipClass, IMetadataProvider } from "../../ECMetadata";
-import { getClass } from "../../internal/Common";
+import { getClass } from "../../internal/GetClass";
 import { RelationshipPath, RelationshipPathStep } from "../../Metadata";
 import { createRawPropertyValueSelector } from "./ECSqlValueSelectorSnippets";
 

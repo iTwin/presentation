@@ -5,7 +5,6 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import * as moq from "typemoq";
 import { PageOptions } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -17,7 +16,7 @@ import { IPresentationTreeDataProvider } from "../../presentation-components/tre
 import { createTreeNodeItem } from "../../presentation-components/tree/Utils";
 import { createTestECInstanceKey } from "../_helpers/Common";
 import { createTestECInstancesNode, createTestECInstancesNodeKey, createTestNodePathElement } from "../_helpers/Hierarchy";
-import { createTestTreeNodeItem } from "../_helpers/UiComponents";
+import { createStub } from "../TestUtils";
 
 describe("FilteredTreeDataProvider", () => {
   function createTestNodePathElementWithId(id: string) {
@@ -68,29 +67,36 @@ describe("FilteredTreeDataProvider", () => {
   let provider: FilteredPresentationTreeDataProvider;
   let filter: string;
   let paths: NodePathElement[];
-  const parentProviderMock = moq.Mock.ofType<IPresentationTreeDataProvider>();
-  const imodelMock = moq.Mock.ofType<IModelConnection>();
+  const rulesetId = "test_ruleset_id";
+  const imodel = {} as IModelConnection;
+  const parentProvider = {
+    imodel,
+    rulesetId,
+    getFilteredNodePaths: createStub<IPresentationTreeDataProvider["getFilteredNodePaths"]>(),
+    createRequestOptions: createStub<IPresentationTreeDataProvider["createRequestOptions"]>(),
+  };
   const pageOptions: PageOptions = { size: 0, start: 0 };
 
   beforeEach(() => {
     const onVariableChanged = new BeEvent();
-    const presentationManagerMock = moq.Mock.ofType<PresentationManager>();
-    const rulesetVariablesManagerMock = moq.Mock.ofType<RulesetVariablesManager>();
-    presentationManagerMock.setup((x) => x.vars(moq.It.isAny())).returns(() => rulesetVariablesManagerMock.object);
-    rulesetVariablesManagerMock.setup((x) => x.onVariableChanged).returns(() => onVariableChanged);
-    sinon.stub(Presentation, "presentation").get(() => presentationManagerMock.object);
+    const presentationManager = sinon.createStubInstance(PresentationManager);
+    presentationManager.vars.returns({
+      onVariableChanged,
+    } as RulesetVariablesManager);
+    sinon.stub(Presentation, "presentation").get(() => presentationManager);
 
-    parentProviderMock.reset();
     filter = "test_filter";
     paths = createPaths();
     provider = new FilteredPresentationTreeDataProvider({
-      parentDataProvider: parentProviderMock.object,
+      parentDataProvider: parentProvider as unknown as IPresentationTreeDataProvider,
       filter,
       paths,
     });
   });
 
   afterEach(() => {
+    parentProvider.getFilteredNodePaths.reset();
+    parentProvider.createRequestOptions.reset();
     sinon.restore();
   });
 
@@ -102,30 +108,19 @@ describe("FilteredTreeDataProvider", () => {
 
   describe("rulesetId", () => {
     it("returns rulesetId of the parent data provider", () => {
-      const expectedRulesetId = "ruleset_id";
-      parentProviderMock
-        .setup((x) => x.rulesetId)
-        .returns(() => expectedRulesetId)
-        .verifiable();
-      expect(provider.rulesetId).to.eq(expectedRulesetId);
-      parentProviderMock.verifyAll();
+      expect(provider.rulesetId).to.eq(rulesetId);
     });
   });
 
   describe("imodel", () => {
     it("returns imodel of the parent data provider", () => {
-      parentProviderMock
-        .setup((x) => x.imodel)
-        .returns(() => imodelMock.object)
-        .verifiable();
-      expect(provider.imodel).to.eq(imodelMock.object);
-      parentProviderMock.verifyAll();
+      expect(provider.imodel).to.eq(imodel);
     });
   });
 
   describe("parentDataProvider", () => {
     it("returns parent data provider", () => {
-      expect(provider.parentDataProvider).to.eq(parentProviderMock.object);
+      expect(provider.parentDataProvider).to.eq(parentProvider);
     });
   });
 
@@ -144,14 +139,14 @@ describe("FilteredTreeDataProvider", () => {
 
     it("applies same node customizations as parent data provider", async () => {
       const customizeStub = sinon.stub();
-      const parentProvider = new PresentationTreeDataProvider({
-        imodel: imodelMock.object,
+      const newParentProvider = new PresentationTreeDataProvider({
+        imodel,
         ruleset: "test-rules",
         customizeTreeNodeItem: customizeStub,
       });
       const testPaths = [createTestNodePathElement()];
       const filteredProvider = new FilteredPresentationTreeDataProvider({
-        parentDataProvider: parentProvider,
+        parentDataProvider: newParentProvider,
         filter: "Test",
         paths: testPaths,
       });
@@ -176,25 +171,11 @@ describe("FilteredTreeDataProvider", () => {
 
   describe("getFilteredNodePaths", () => {
     it("calls parent data provider", async () => {
-      parentProviderMock
-        .setup(async (x) => x.getFilteredNodePaths(filter))
-        .returns(async () => paths)
-        .verifiable();
+      parentProvider.getFilteredNodePaths.resolves(paths);
 
       const result = await provider.getFilteredNodePaths(filter);
       expect(result).to.equal(paths);
-      parentProviderMock.verifyAll();
-    });
-  });
-
-  describe("getNodeKey", () => {
-    it("returns node key", () => {
-      const key = createTestECInstancesNodeKey();
-      const treeNode = createTestTreeNodeItem(key);
-
-      parentProviderMock.setup((x) => x.getNodeKey(treeNode)).returns(() => key); // eslint-disable-line deprecation/deprecation
-      const result = provider.getNodeKey(treeNode); // eslint-disable-line deprecation/deprecation
-      expect(result).to.deep.equal(key);
+      expect(parentProvider.getFilteredNodePaths).to.be.calledWith(filter);
     });
   });
 
@@ -203,13 +184,10 @@ describe("FilteredTreeDataProvider", () => {
       const key = createTestECInstancesNodeKey();
       const filterDefinition = {} as InstanceFilterDefinition;
 
-      parentProviderMock
-        .setup((x) => x.createRequestOptions(key, filterDefinition))
-        .returns(() => ({ rulesetOrId: "test_ruleset", imodel: {} as IModelConnection }))
-        .verifiable();
+      parentProvider.createRequestOptions.returns({ rulesetOrId: "test_ruleset", imodel: {} as IModelConnection });
       const result = provider.createRequestOptions(key, filterDefinition);
       expect(result.rulesetOrId).to.be.equal("test_ruleset");
-      parentProviderMock.verifyAll();
+      expect(parentProvider.createRequestOptions).to.be.calledWith(key, filterDefinition);
     });
   });
 
@@ -255,7 +233,7 @@ describe("FilteredTreeDataProvider", () => {
   describe("getActiveMatch", () => {
     it("returns correct match", () => {
       provider = new FilteredPresentationTreeDataProvider({
-        parentDataProvider: parentProviderMock.object,
+        parentDataProvider: parentProvider as unknown as IPresentationTreeDataProvider,
         filter: constantFilter,
         paths: filteredNodePaths,
       });
@@ -268,7 +246,7 @@ describe("FilteredTreeDataProvider", () => {
 
     it("returns undefined when index is 0 or lower", () => {
       provider = new FilteredPresentationTreeDataProvider({
-        parentDataProvider: parentProviderMock.object,
+        parentDataProvider: parentProvider as unknown as IPresentationTreeDataProvider,
         filter: constantFilter,
         paths: filteredNodePaths,
       });
@@ -280,7 +258,7 @@ describe("FilteredTreeDataProvider", () => {
   describe("nodeMatchesFilter", () => {
     it("returns true when node matches filter", () => {
       provider = new FilteredPresentationTreeDataProvider({
-        parentDataProvider: parentProviderMock.object,
+        parentDataProvider: parentProvider as unknown as IPresentationTreeDataProvider,
         filter: constantFilter,
         paths: filteredNodePaths,
       });
@@ -290,7 +268,7 @@ describe("FilteredTreeDataProvider", () => {
 
     it("returns false when node matches filter", () => {
       provider = new FilteredPresentationTreeDataProvider({
-        parentDataProvider: parentProviderMock.object,
+        parentDataProvider: parentProvider as unknown as IPresentationTreeDataProvider,
         filter: constantFilter,
         paths: filteredNodePaths,
       });

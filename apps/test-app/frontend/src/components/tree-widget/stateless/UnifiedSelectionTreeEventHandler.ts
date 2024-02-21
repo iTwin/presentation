@@ -16,7 +16,7 @@ import {
   TreeSelectionModificationEventArgs,
   TreeSelectionReplacementEventArgs,
 } from "@itwin/components-react";
-import { Guid, IDisposable } from "@itwin/core-bentley";
+import { Guid, IDisposable, omit } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { GroupingNodeKey, Key, KeySet, PresentationQuery, PresentationQueryBinding, StandardNodeTypes } from "@itwin/presentation-common";
 import { Presentation, SelectionChangeEventArgs, SelectionChangeType, SelectionHandler } from "@itwin/presentation-frontend";
@@ -214,7 +214,7 @@ function getNodeKeys(node: HierarchyNode): Key[] {
     return [
       {
         version: 3,
-        pathFromRoot: [...node.parentKeys, node.key].map((pk) => JSON.stringify(pk)),
+        pathFromRoot: [...node.parentKeys.map((pk) => JSON.stringify(pk)), JSON.stringify(omit(node.key, ["groupedInstanceKeys"]))],
         groupedInstancesCount: node.key.groupedInstanceKeys.length,
         instanceKeysSelectQuery: createInstanceKeysSelectQuery(node.key.groupedInstanceKeys),
         ...(() => {
@@ -246,7 +246,7 @@ function createInstanceKeysSelectQuery(keys: InstanceKey[]): PresentationQuery {
       query += ` UNION ALL `;
     }
     query += `SELECT ECClassId, ECInstanceId FROM [${schemaName}].[${className}] WHERE ECInstanceId IN (${ids.map(() => "?").join(",")})`;
-    bindings.push(...ids.map((id) => ({ type: "Id" as const, value: id })));
+    ids.forEach((id) => bindings.push({ type: "Id" as const, value: id }));
   });
   return { query, bindings };
 }

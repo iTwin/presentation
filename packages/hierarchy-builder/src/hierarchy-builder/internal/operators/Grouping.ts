@@ -2,19 +2,18 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-
 import { concatMap, from, Observable, of, tap, toArray } from "rxjs";
 import { IMetadataProvider } from "../../ECMetadata";
 import { HierarchyNode, HierarchyNodeKey, ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
 import { IPrimitiveValueFormatter } from "../../values/Formatting";
-import { compareNodesByLabel, createOperatorLoggingNamespace, mergeSortedArrays } from "../Common";
+import { BaseClassChecker, compareNodesByLabel, createOperatorLoggingNamespace, mergeSortedArrays } from "../Common";
 import { assignAutoExpand } from "./grouping/AutoExpand";
 import { createBaseClassGroupingHandlers } from "./grouping/BaseClassGrouping";
 import { createClassGroups } from "./grouping/ClassGrouping";
 import { applyGroupHidingParams } from "./grouping/GroupHiding";
 import { createLabelGroups } from "./grouping/LabelGrouping";
-import { createPropertiesGroupingHandlers } from "./grouping/PropertiesGrouping";
+import { createPropertiesGroupingHandlers, PropertiesGroupingLocalizedStrings } from "./grouping/PropertiesGrouping";
 
 const OPERATOR_NAME = "Grouping";
 /** @internal */
@@ -24,6 +23,7 @@ export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
 export function createGroupingOperator(
   metadata: IMetadataProvider,
   valueFormatter: IPrimitiveValueFormatter,
+  localizedStrings: PropertiesGroupingLocalizedStrings,
   onGroupingNodeCreated?: (groupingNode: ProcessedGroupingHierarchyNode) => void,
   groupingHandlers?: GroupingHandler[],
 ) {
@@ -31,7 +31,9 @@ export function createGroupingOperator(
     return nodes.pipe(
       toArray(),
       concatMap((resolvedNodes) => {
-        const groupingHandlersObs = groupingHandlers ? of(groupingHandlers) : from(createGroupingHandlers(metadata, resolvedNodes, valueFormatter));
+        const groupingHandlersObs = groupingHandlers
+          ? of(groupingHandlers)
+          : from(createGroupingHandlers(metadata, resolvedNodes, valueFormatter, localizedStrings));
         return groupingHandlersObs.pipe(
           concatMap(async (createdGroupingHandlers) => {
             const { instanceNodes, restNodes } = partitionInstanceNodes(resolvedNodes);
@@ -122,12 +124,15 @@ export async function createGroupingHandlers(
   metadata: IMetadataProvider,
   nodes: ProcessedHierarchyNode[],
   valueFormatter: IPrimitiveValueFormatter,
+  localizedStrings: PropertiesGroupingLocalizedStrings,
 ): Promise<GroupingHandler[]> {
   const groupingHandlers: GroupingHandler[] = new Array<GroupingHandler>();
+  const baseClassChecker = new BaseClassChecker(metadata);
   groupingHandlers.push(
     ...(await createBaseClassGroupingHandlers(
       metadata,
       nodes.filter((n): n is ProcessedInstanceHierarchyNode => HierarchyNode.isInstancesNode(n)),
+      baseClassChecker,
     )),
   );
   groupingHandlers.push(async (allNodes) => createClassGroups(metadata, allNodes));
@@ -136,6 +141,8 @@ export async function createGroupingHandlers(
       metadata,
       nodes.filter((n): n is ProcessedInstanceHierarchyNode => HierarchyNode.isInstancesNode(n)),
       valueFormatter,
+      localizedStrings,
+      baseClassChecker,
     )),
   );
   groupingHandlers.push(async (allNodes) => createLabelGroups(allNodes));

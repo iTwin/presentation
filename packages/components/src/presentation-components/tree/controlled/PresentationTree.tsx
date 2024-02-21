@@ -6,7 +6,16 @@
  * @module Tree
  */
 
-import { ControlledTree, ControlledTreeProps, TreeEventHandler, useTreeModel } from "@itwin/components-react";
+import { ReactElement } from "react";
+import {
+  AbstractTreeNodeLoaderWithProvider,
+  ControlledTree,
+  ControlledTreeProps,
+  TreeEventHandler,
+  TreeRendererProps,
+  useTreeModel,
+} from "@itwin/components-react";
+import { IPresentationTreeDataProvider } from "../IPresentationTreeDataProvider";
 import { UsePresentationTreeStateResult } from "./UsePresentationTreeState";
 
 /**
@@ -16,8 +25,11 @@ import { UsePresentationTreeStateResult } from "./UsePresentationTreeState";
  */
 export type PresentationTreeProps<TEventHandler extends TreeEventHandler> = Omit<
   ControlledTreeProps,
-  "model" | "nodeLoader" | "eventsHandler" | "onItemsRendered" | "nodeHighlightingProps"
-> & { state: UsePresentationTreeStateResult<TEventHandler> };
+  "model" | "nodeLoader" | "eventsHandler" | "onItemsRendered" | "nodeHighlightingProps" | "treeRenderer"
+> & {
+  state: UsePresentationTreeStateResult<TEventHandler>;
+  treeRenderer?: (props: TreeRendererProps & { nodeLoader: AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider> }) => ReactElement;
+};
 
 /**
  * Component that provides a convenient API for using [[usePresentationTreeState]] hook with [ControlledTree]($components-react).
@@ -47,6 +59,7 @@ export function PresentationTree<TEventHandler extends TreeEventHandler>({ state
       eventsHandler={state.eventHandler}
       onItemsRendered={state.onItemsRendered}
       nodeHighlightingProps={state.filteringResult?.highlightProps}
+      treeRenderer={props.treeRenderer ? (treeProps) => props.treeRenderer!({ ...treeProps, nodeLoader: state.nodeLoader }) : undefined}
     />
   );
 }

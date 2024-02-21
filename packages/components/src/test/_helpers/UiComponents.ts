@@ -3,18 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import * as moq from "typemoq";
 import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValueFormat } from "@itwin/appui-abstract";
 import { DelayLoadedTreeNodeItem } from "@itwin/components-react";
-import { BeEvent } from "@itwin/core-bentley";
-import { NodeKey, RegisteredRuleset, Ruleset, VariableValue } from "@itwin/presentation-common";
-import {
-  IModelContentChangeEventArgs,
-  IModelHierarchyChangeEventArgs,
-  PresentationManager,
-  RulesetManager,
-  RulesetVariablesManager,
-} from "@itwin/presentation-frontend";
+import { NodeKey } from "@itwin/presentation-common";
 import { PresentationTreeNodeItem } from "../../presentation-components/tree/PresentationTreeNodeItem";
 import { createTestECInstancesNodeKey } from "./Hierarchy";
 
@@ -44,28 +35,4 @@ export function createTestPropertyRecord(value?: Partial<PrimitiveValue>, proper
     ...property,
   };
   return new PropertyRecord(recordValue, descr);
-}
-
-export function mockPresentationManager() {
-  const onRulesetModified = new BeEvent<(curr: RegisteredRuleset, prev: Ruleset) => void>();
-  const rulesetManagerMock = moq.Mock.ofType<RulesetManager>();
-  rulesetManagerMock.setup((x) => x.onRulesetModified).returns(() => onRulesetModified);
-
-  const onRulesetVariableChanged = new BeEvent<(variableId: string, prevValue: VariableValue, currValue: VariableValue) => void>();
-  const rulesetVariablesManagerMock = moq.Mock.ofType<RulesetVariablesManager>();
-  rulesetVariablesManagerMock.setup((x) => x.onVariableChanged).returns(() => onRulesetVariableChanged);
-
-  const onIModelHierarchyChanged = new BeEvent<(args: IModelHierarchyChangeEventArgs) => void>();
-  const onIModelContentChanged = new BeEvent<(args: IModelContentChangeEventArgs) => void>();
-  const presentationManagerMock = moq.Mock.ofType<PresentationManager>();
-  presentationManagerMock.setup((x) => x.onIModelHierarchyChanged).returns(() => onIModelHierarchyChanged);
-  presentationManagerMock.setup((x) => x.onIModelContentChanged).returns(() => onIModelContentChanged);
-  presentationManagerMock.setup((x) => x.rulesets()).returns(() => rulesetManagerMock.object);
-  presentationManagerMock.setup((x) => x.vars(moq.It.isAny())).returns(() => rulesetVariablesManagerMock.object);
-
-  return {
-    rulesetsManager: rulesetManagerMock,
-    rulesetVariablesManager: rulesetVariablesManagerMock,
-    presentationManager: presentationManagerMock,
-  };
 }

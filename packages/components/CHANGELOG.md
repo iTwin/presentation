@@ -1,5 +1,73 @@
 # Change Log - @itwin/presentation-components
 
+## 5.0.0-dev.4
+
+### Minor Changes
+
+- [#421](https://github.com/iTwin/presentation/pull/421): Simplify / clarify `PresentationTree` and `PresentationTreeRenderer` APIs.
+
+  - Change `PresentationTreeProps.treeRenderer` type to make it compatible with what `PresentationTreeRenderer` expects.
+
+    Before:
+
+    ```tsx
+    return (
+      <PresentationTree
+        {...props}
+        state={state}
+        treeRenderer={(treeProps) => (
+          <PresentationTreeRenderer
+            {...treeProps}
+            nodeLoader={state.nodeLoader}
+          />
+        )}
+      />
+    );
+    ```
+
+    After:
+
+    ```tsx
+    return (
+      <PresentationTree
+        {...props}
+        state={state}
+        treeRenderer={(treeProps) => (
+          <PresentationTreeRenderer {...treeProps} />
+        )}
+      />
+    );
+    ```
+
+  - Removed `nodeRenderer` prop from `PresentationTreeRendererProps`. The prop is not used by `PresentationTreeRenderer` as it always uses its own `PresentationTreeNodeRenderer` to render nodes.
+
+- [#416](https://github.com/iTwin/presentation/pull/416): `PresentationInstanceFilterDialog` now allows applying filter when only classes are selected.
+
+  Added `createInstanceFilterDefinition` that creates `InstanceFilterDefinition` from `PresentationInstanceFilterInfo`. Created definition can be passed to `PresentationManager` to filter results when creating content or hierarchies.
+
+### Patch Changes
+
+- [#417](https://github.com/iTwin/presentation/pull/417): Added missing "No values" localized string in unique values selector.
+- [#418](https://github.com/iTwin/presentation/pull/418): Updated message shown in hierarchy level filtering dialog when built filter still produces too many results.
+
+## 5.0.0-dev.3
+
+### Major Changes
+
+- [#412](https://github.com/iTwin/presentation/pull/412): Bumped peer dependency version of all `itwinjs-core` packages to `^4.4.0`.
+- [#398](https://github.com/iTwin/presentation/pull/398): Bump `iTwinUI` package dependencies to 3.x. This is entails that all components from `presentation-components` must be wrapped in `ThemeProvider` from `iTwinUI` 3.x. [See more](https://github.com/iTwin/iTwinUI/wiki/iTwinUI-react-v3-migration-guide#themeprovider)
+- [#399](https://github.com/iTwin/presentation/pull/399): Bumped AppUI peer dependency to `^4.9.0`.
+
+### Minor Changes
+
+- [#407](https://github.com/iTwin/presentation/pull/407): Removed `GenericInstanceFilter` in favor of the one delivered in `@itwin/core-common`.
+  Added `PresentationInstanceFilter.fromGenericInstanceFilter` function for creating `PresentationInstanceFilter` from `GenericInstanceFilter`.
+- [#399](https://github.com/iTwin/presentation/pull/399): Added validation for `Between` and `Not Between` operator values.
+
+### Patch Changes
+
+- [#405](https://github.com/iTwin/presentation/pull/405): Fixed unique values selector loading unique values of only the first field property.
+
 ## 5.0.0-dev.2
 
 ### Minor Changes
@@ -35,12 +103,23 @@ This release brings official React 18 support. Components and hooks provided by 
 
   ```tsx
   function Tree(props) {
-    const { nodeLoader } = usePresentationTreeNodeLoader({ imodel: props.imodel, ruleset: TREE_RULESET, pagingSize: PAGING_SIZE });
+    const { nodeLoader } = usePresentationTreeNodeLoader({
+      imodel: props.imodel,
+      ruleset: TREE_RULESET,
+      pagingSize: PAGING_SIZE,
+    });
     const eventHandler = useUnifiedSelectionTreeEventHandler({ nodeLoader });
     const treeModel = useTreeModel(nodeLoader.modelSource);
 
     return (
-      <ControlledTree width={200} height={400} model={treeModel} nodeLoader={nodeLoader} eventsHandler={eventHandler} selectionMode={SelectionMode.Single} />
+      <ControlledTree
+        width={200}
+        height={400}
+        model={treeModel}
+        nodeLoader={nodeLoader}
+        eventsHandler={eventHandler}
+        selectionMode={SelectionMode.Single}
+      />
     );
   }
   ```
@@ -54,7 +133,10 @@ This release brings official React 18 support. Components and hooks provided by 
       ruleset: TREE_RULESET,
       pagingSize: PAGING_SIZE,
       eventHandlerFactory: useCallback(
-        (handlerProps: TreeEventHandlerProps) => new UnifiedSelectionTreeEventHandler({ nodeLoader: handlerProps.nodeLoader }),
+        (handlerProps: TreeEventHandlerProps) =>
+          new UnifiedSelectionTreeEventHandler({
+            nodeLoader: handlerProps.nodeLoader,
+          }),
         [],
       ),
     });
@@ -62,7 +144,14 @@ This release brings official React 18 support. Components and hooks provided by 
       return null;
     }
 
-    return <PresentationTree width={200} height={400} state={state} selectionMode={SelectionMode.Single} />;
+    return (
+      <PresentationTree
+        width={200}
+        height={400}
+        state={state}
+        selectionMode={SelectionMode.Single}
+      />
+    );
   }
   ```
 

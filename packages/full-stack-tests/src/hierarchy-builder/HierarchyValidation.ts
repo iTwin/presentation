@@ -175,6 +175,7 @@ export namespace NodeValidators {
   }
 
   export function createForPropertyOtherValuesGroupingNode<TChildren extends ExpectedHierarchyDef[] | boolean>(props: {
+    label?: string;
     autoExpand?: boolean;
     children?: TChildren;
   }) {
@@ -188,7 +189,7 @@ export namespace NodeValidators {
         }
 
         validateBaseNodeAttributes(node, {
-          label: "Òthér",
+          label: props.label,
           autoExpand: props.autoExpand,
           children: props.children,
         });

@@ -20,7 +20,7 @@
     "gather-docs": "node ./scripts/gatherDocs.js",
     "prettier": "prettier --check .",
     "prettier:fix": "prettier --write .",
-    "prepare": "husky install",
+    "prepare": "husky",
     "change": "changeset add",
     "change:empty": "changeset add --empty",
     "check": "changeset status",

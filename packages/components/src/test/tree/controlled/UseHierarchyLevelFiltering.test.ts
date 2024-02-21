@@ -7,9 +7,8 @@ import { expect } from "chai";
 import { Subject } from "rxjs";
 import { from } from "rxjs/internal/observable/from";
 import sinon from "sinon";
-import * as moq from "typemoq";
 import { PropertyRecord } from "@itwin/appui-abstract";
-import { ITreeNodeLoader, TreeModelNodeInput, TreeModelSource, TreeNodeLoadResult, UiComponents } from "@itwin/components-react";
+import { ITreeNodeLoader, TreeModelNode, TreeModelNodeInput, TreeModelSource, TreeNodeLoadResult, UiComponents } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
 import { useHierarchyLevelFiltering } from "../../../presentation-components/tree/controlled/UseHierarchyLevelFiltering";
@@ -17,7 +16,7 @@ import { PresentationTreeNodeItem } from "../../../presentation-components/tree/
 import { createTestPropertyInfo } from "../../_helpers/Common";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content";
 import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy";
-import { renderHook } from "../../TestUtils";
+import { createStub, renderHook } from "../../TestUtils";
 
 function createTreeModelInput(input?: Partial<TreeModelNodeInput>, treeItem?: Partial<PresentationTreeNodeItem>): TreeModelNodeInput {
   const item: PresentationTreeNodeItem = {
@@ -38,7 +37,9 @@ function createTreeModelInput(input?: Partial<TreeModelNodeInput>, treeItem?: Pa
 }
 
 describe("useHierarchyLevelFiltering", () => {
-  const nodeLoaderMock = moq.Mock.ofType<ITreeNodeLoader>();
+  const nodeLoader = {
+    loadNode: createStub<ITreeNodeLoader["loadNode"]>(),
+  };
   const modelSource = new TreeModelSource();
   const property = createTestPropertyInfo();
   const field = createTestPropertiesContentField({ properties: [{ property }] });
@@ -50,16 +51,16 @@ describe("useHierarchyLevelFiltering", () => {
     usedClasses: [],
   };
 
-  before(() => {
-    sinon.stub(UiComponents, "localization").get(() => new EmptyLocalization());
+  before(async () => {
+    await UiComponents.initialize(new EmptyLocalization());
   });
 
   after(() => {
-    sinon.restore();
+    UiComponents.terminate();
   });
 
   beforeEach(() => {
-    nodeLoaderMock.reset();
+    nodeLoader.loadNode.reset();
     modelSource.modifyModel((model) => {
       model.clearChildren(undefined);
     });
@@ -70,9 +71,9 @@ describe("useHierarchyLevelFiltering", () => {
     modelSource.modifyModel((model) => {
       model.setChildren(undefined, [node], 0);
     });
-    nodeLoaderMock.setup((x) => x.loadNode(moq.It.isAny(), 0)).returns(() => from([]));
+    nodeLoader.loadNode.returns(from([]));
 
-    const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader: nodeLoaderMock.object } });
+    const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader } });
 
     result.current.applyFilter(node.item.id, filterInfo);
     const treeModel = modelSource.getModel();
@@ -85,20 +86,12 @@ describe("useHierarchyLevelFiltering", () => {
       model.setChildren(undefined, [node], 0);
     });
 
-    nodeLoaderMock
-      .setup((x) =>
-        x.loadNode(
-          moq.It.is((parentNode) => parentNode?.id === node.id),
-          0,
-        ),
-      )
-      .returns(() => from([]))
-      .verifiable(moq.Times.once());
+    nodeLoader.loadNode.returns(from([]));
 
-    const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader: nodeLoaderMock.object } });
+    const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader } });
 
     result.current.applyFilter(node.item.id, filterInfo);
-    nodeLoaderMock.verifyAll();
+    expect(nodeLoader.loadNode).to.be.calledOnceWith(sinon.match((parentNode: TreeModelNode) => parentNode.id === node.id));
   });
 
   it("clears children from tree model when filter applied", () => {
@@ -111,11 +104,11 @@ describe("useHierarchyLevelFiltering", () => {
       model.setChildren(undefined, [parentNode], 0);
       model.setChildren(parentNode.id, [childNode], 0);
     });
-    nodeLoaderMock.setup((x) => x.loadNode(moq.It.isAny(), 0)).returns(() => from([]));
+    nodeLoader.loadNode.returns(from([]));
 
     expect(modelSource.getModel().getNode(childNode.id)).to.not.be.undefined;
 
-    const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader: nodeLoaderMock.object } });
+    const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader } });
 
     result.current.applyFilter(parentNode.item.id, filterInfo);
     expect(modelSource.getModel().getNode(childNode.id)).to.be.undefined;
@@ -135,7 +128,7 @@ describe("useHierarchyLevelFiltering", () => {
       model.setChildren(parentNode.id, [childNode], 0);
     });
 
-    const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader: nodeLoaderMock.object } });
+    const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader } });
 
     result.current.applyFilter(parentNode.item.id, filterInfo);
     expect(modelSource.getModel().getNode(childNode.id)).to.not.be.undefined;
@@ -155,7 +148,7 @@ describe("useHierarchyLevelFiltering", () => {
 
     expect((modelSource.getModel().getNode(node.id)?.item as PresentationTreeNodeItem).filtering?.active).to.not.be.undefined;
 
-    const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader: nodeLoaderMock.object } });
+    const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader } });
 
     result.current.clearFilter(node.item.id);
     expect((modelSource.getModel().getNode(node.id)?.item as PresentationTreeNodeItem).filtering?.active).to.be.undefined;
@@ -176,20 +169,12 @@ describe("useHierarchyLevelFiltering", () => {
       model.setChildren(undefined, [node], 0);
     });
 
-    nodeLoaderMock
-      .setup((x) =>
-        x.loadNode(
-          moq.It.is((parentNode) => parentNode?.id === node.id),
-          0,
-        ),
-      )
-      .returns(() => from([]))
-      .verifiable(moq.Times.once());
+    nodeLoader.loadNode.returns(from([]));
 
-    const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader: nodeLoaderMock.object } });
+    const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader } });
 
     result.current.clearFilter(node.item.id);
-    nodeLoaderMock.verifyAll();
+    expect(nodeLoader.loadNode).to.be.calledOnceWith(sinon.match((parentNode: TreeModelNode) => parentNode.id === node.id));
   });
 
   it("clears children from tree model when filter cleared", () => {
@@ -211,7 +196,7 @@ describe("useHierarchyLevelFiltering", () => {
 
     expect(modelSource.getModel().getNode(childNode.id)).to.not.be.undefined;
 
-    const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader: nodeLoaderMock.object } });
+    const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader } });
 
     result.current.clearFilter(parentNode.item.id);
     expect(modelSource.getModel().getNode(childNode.id)).to.be.undefined;
@@ -220,15 +205,15 @@ describe("useHierarchyLevelFiltering", () => {
   it("clears filter unsubscribes from observable created by `applyFilter`", () => {
     const applyFilterActionSubject = new Subject<TreeNodeLoadResult>();
     const clearFilterActionSubject = new Subject<TreeNodeLoadResult>();
-    nodeLoaderMock.setup((x) => x.loadNode(moq.It.isAny(), 0)).returns(() => applyFilterActionSubject);
-    nodeLoaderMock.setup((x) => x.loadNode(moq.It.isAny(), 0)).returns(() => clearFilterActionSubject);
+    nodeLoader.loadNode.onFirstCall().returns(applyFilterActionSubject);
+    nodeLoader.loadNode.onSecondCall().returns(clearFilterActionSubject);
 
     const node = createTreeModelInput(undefined, { filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [] } });
     modelSource.modifyModel((model) => {
       model.setChildren(undefined, [node], 0);
     });
 
-    const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader: nodeLoaderMock.object } });
+    const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader } });
 
     result.current.applyFilter(node.item.id, filterInfo);
     expect(applyFilterActionSubject.observed).to.be.true;
@@ -239,17 +224,17 @@ describe("useHierarchyLevelFiltering", () => {
 
   it("`applyFilter` unsubscribes from previous observable if called second time", () => {
     const nodeLoad1 = new Subject<TreeNodeLoadResult>();
-    nodeLoaderMock.setup((x) => x.loadNode(moq.It.isAny(), 0)).returns(() => nodeLoad1);
+    nodeLoader.loadNode.onFirstCall().returns(nodeLoad1);
 
     const nodeLoad2 = new Subject<TreeNodeLoadResult>();
-    nodeLoaderMock.setup((x) => x.loadNode(moq.It.isAny(), 0)).returns(() => nodeLoad2);
+    nodeLoader.loadNode.onSecondCall().returns(nodeLoad2);
 
     const node = createTreeModelInput(undefined, { filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [] } });
     modelSource.modifyModel((model) => {
       model.setChildren(undefined, [node], 0);
     });
 
-    const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader: nodeLoaderMock.object } });
+    const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader } });
 
     result.current.applyFilter(node.item.id, filterInfo);
     expect(nodeLoad1.observed).to.be.true;
@@ -262,13 +247,13 @@ describe("useHierarchyLevelFiltering", () => {
 
   it("unsubscribes from observable if error is thrown", () => {
     const subject = new Subject<TreeNodeLoadResult>();
-    nodeLoaderMock.setup((x) => x.loadNode(moq.It.isAny(), 0)).returns(() => subject);
+    nodeLoader.loadNode.returns(subject);
     const node = createTreeModelInput(undefined, { filtering: { descriptor: createTestContentDescriptor({ fields: [] }), ancestorFilters: [] } });
     modelSource.modifyModel((model) => {
       model.setChildren(undefined, [node], 0);
     });
 
-    const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader: nodeLoaderMock.object } });
+    const { result } = renderHook(useHierarchyLevelFiltering, { initialProps: { modelSource, nodeLoader } });
 
     result.current.applyFilter(node.item.id, filterInfo);
     expect(subject.observed).to.be.true;

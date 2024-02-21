@@ -5,22 +5,23 @@
 
 import { expect } from "chai";
 import * as sinon from "sinon";
-import * as moq from "typemoq";
 import { BeDuration, using } from "@itwin/core-bentley";
 import { RegisteredRuleset } from "@itwin/presentation-common";
 import { Presentation, RulesetManager } from "@itwin/presentation-frontend";
 import { RulesetRegistrationHelper } from "../../presentation-components/common/RulesetRegistrationHelper";
 import { createTestRuleset } from "../_helpers/Common";
 import { ResolvablePromise } from "../_helpers/Promises";
-import { mockPresentationManager } from "../_helpers/UiComponents";
+import { createStub } from "../TestUtils";
 
 describe("RulesetRegistrationHelper", () => {
-  let rulesetsManagerMock: moq.IMock<RulesetManager>;
+  const rulesetManager = {
+    add: createStub<RulesetManager["add"]>(),
+  };
 
   beforeEach(() => {
-    const mocks = mockPresentationManager();
-    rulesetsManagerMock = mocks.rulesetsManager;
-    sinon.stub(Presentation, "presentation").get(() => mocks.presentationManager.object);
+    sinon.stub(Presentation, "presentation").get(() => ({
+      rulesets: () => rulesetManager,
+    }));
   });
 
   afterEach(() => {
@@ -31,21 +32,18 @@ describe("RulesetRegistrationHelper", () => {
     const rulesetId = "test";
     using(new RulesetRegistrationHelper(rulesetId), (registration) => {
       expect(registration.rulesetId).to.eq(rulesetId);
-      rulesetsManagerMock.verify(async (x) => x.add(moq.It.isAny()), moq.Times.never());
+      expect(rulesetManager.add).to.not.be.called;
     });
   });
 
   it("registers ruleset when helper is created with ruleset object", async () => {
     const ruleset = createTestRuleset();
     const disposeSpy = sinon.spy();
-    rulesetsManagerMock
-      .setup(async (x) => x.add(ruleset))
-      .returns(async () => new RegisteredRuleset(ruleset, "test-hash", disposeSpy))
-      .verifiable();
+    rulesetManager.add.resolves(new RegisteredRuleset(ruleset, "test-hash", disposeSpy));
     await using(new RulesetRegistrationHelper(ruleset), async (registration) => {
       await BeDuration.wait(0); // handle the floating promise
       expect(registration.rulesetId).to.eq(ruleset.id);
-      rulesetsManagerMock.verifyAll();
+      expect(rulesetManager.add).to.be.calledWith(ruleset);
     });
     expect(disposeSpy).to.be.calledOnce;
   });
@@ -53,14 +51,11 @@ describe("RulesetRegistrationHelper", () => {
   it("registers ruleset when helper is created with RegisteredRuleset object", async () => {
     const disposeSpy = sinon.spy();
     const ruleset = new RegisteredRuleset(createTestRuleset(), "test-hash-1", disposeSpy);
-    rulesetsManagerMock
-      .setup(async (x) => x.add(ruleset.toJSON()))
-      .returns(async () => new RegisteredRuleset(ruleset, "test-hash-2", disposeSpy))
-      .verifiable();
+    rulesetManager.add.resolves(new RegisteredRuleset(ruleset, "test-hash-2", disposeSpy));
     await using(new RulesetRegistrationHelper(ruleset), async (registration) => {
       await BeDuration.wait(0); // handle the floating promise
       expect(registration.rulesetId).to.eq(ruleset.id);
-      rulesetsManagerMock.verifyAll();
+      expect(rulesetManager.add).to.be.calledWith(ruleset.toJSON());
     });
     expect(disposeSpy).to.be.calledOnce;
   });
@@ -69,13 +64,11 @@ describe("RulesetRegistrationHelper", () => {
     const ruleset = createTestRuleset();
     const disposeSpy = sinon.spy();
     const result = new ResolvablePromise<RegisteredRuleset>();
-    rulesetsManagerMock
-      .setup(async (x) => x.add(ruleset))
-      .returns(async () => result)
-      .verifiable();
+
+    rulesetManager.add.returns(result);
     using(new RulesetRegistrationHelper(ruleset), (registration) => {
       expect(registration.rulesetId).to.eq(ruleset.id);
-      rulesetsManagerMock.verifyAll();
+      expect(rulesetManager.add).to.be.calledWith(ruleset);
     });
     expect(disposeSpy).to.not.be.called;
     await result.resolve(new RegisteredRuleset(ruleset, "test-hash", disposeSpy));

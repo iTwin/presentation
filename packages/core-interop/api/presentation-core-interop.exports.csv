@@ -3,7 +3,6 @@ Release Tag;API Item
 beta;createECSqlQueryExecutor(imodel: ICoreECSqlReaderFactory): IECSqlQueryExecutor
 beta;createHierarchyLevelDescriptor
 beta;CreateHierarchyLevelDescriptorProps
-beta;createLocalizationFunction(localization: Localization): Promise
 beta;createLogger(): ILogger
 beta;createMetadataProvider(schemaContext: SchemaContext): IMetadataProvider
 beta;createValueFormatter(schemaContext: SchemaContext, unitSystem?: UnitSystemKey, baseFormatter?: IPrimitiveValueFormatter): IPrimitiveValueFormatter
