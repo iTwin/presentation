@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Primitives, PropertyDescription } from "@itwin/appui-abstract";
+import { PropertyDescription } from "@itwin/appui-abstract";
 import {
   PropertyFilterBuilderRenderer,
   PropertyFilterBuilderRuleValueRendererProps,
@@ -7,18 +7,17 @@ import {
   PropertyFilterRuleOperator,
   usePropertyFilterBuilder,
 } from "@itwin/components-react";
+import {
+  GenericInstanceFilter,
+  GenericInstanceFilterRelatedInstanceDescription,
+  GenericInstanceFilterRule,
+  GenericInstanceFilterRuleGroup,
+  GenericInstanceFilterRuleValue,
+} from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { Dialog, Label } from "@itwin/itwinui-react";
 import { ClassInfo, Descriptor } from "@itwin/presentation-common";
-import {
-  GenericInstanceFilter,
-  GenericInstanceFilterRule,
-  GenericInstanceFilterRuleGroup,
-  PresentationFilterBuilderValueRenderer,
-  PresentationInstanceFilter,
-  RelatedInstanceDescription,
-  useInstanceFilterPropertyInfos,
-} from "@itwin/presentation-components";
+import { PresentationFilterBuilderValueRenderer, PresentationInstanceFilter, useInstanceFilterPropertyInfos } from "@itwin/presentation-components";
 
 export interface QueryBuilderInput {
   descriptor: Descriptor;
@@ -108,7 +107,7 @@ function SingleQueryBuilder({ descriptor, imodel, onQueryChanged }: SingleQueryB
     // - collects relationship paths from all related properties used in filter to the select class (return only unique paths)
     // - creates aliases for related properties and associated relationship paths
     // all this information is available on `PresentationInstanceFilter` but this is data structure that is easier to use when building ECSQL query.
-    return GenericInstanceFilter.fromPresentationInstanceFilter(presentationFilter);
+    return PresentationInstanceFilter.toGenericInstanceFilter(presentationFilter);
   }, [buildFilter, descriptor]);
 
   useEffect(() => {
@@ -177,7 +176,7 @@ function createQuery(metadata: GenericInstanceFilter): {
   };
 }
 
-function createJoinClause(relatedInstances: RelatedInstanceDescription[]): string[] {
+function createJoinClause(relatedInstances: GenericInstanceFilterRelatedInstanceDescription[]): string[] {
   const joinClauses: string[] = [];
   for (let j = 0; j < relatedInstances.length; j++) {
     const related = relatedInstances[j];
@@ -188,8 +187,12 @@ function createJoinClause(relatedInstances: RelatedInstanceDescription[]): strin
       const step = relatedPath[i];
       const stepAlias = i + 1 === relatedPath.length ? alias : `class_${j}_${i}`;
       const relAlias = `rel_${j}_${i}`;
-      joinClauses.push(`JOIN ${step.relationshipName} as ${relAlias} ON ${relAlias}.SourceECInstanceId = ${prevAlias}.ECInstanceId`);
-      joinClauses.push(`JOIN ${step.targetClassName} as ${stepAlias} ON ${relAlias}.TargetECInstanceId = ${stepAlias}.ECInstanceId`);
+
+      const relSourcePropName = step.isForwardRelationship ? "SourceECInstanceId" : "TargetECInstanceId";
+      const relTargetPropName = step.isForwardRelationship ? "TargetECInstanceId" : "SourceECInstanceId";
+
+      joinClauses.push(`JOIN ${step.relationshipClassName} as ${relAlias} ON ${relAlias}.${relSourcePropName} = ${prevAlias}.ECInstanceId`);
+      joinClauses.push(`JOIN ${step.targetClassName} as ${stepAlias} ON ${relAlias}.${relTargetPropName} = ${stepAlias}.ECInstanceId`);
       prevAlias = stepAlias;
     }
   }
@@ -217,18 +220,18 @@ function parseQueryRuleGroup(group: GenericInstanceFilterRuleGroup) {
 function parseQueryRule(rule: GenericInstanceFilterRule) {
   const accessorBase = `[${rule.sourceAlias}].[${rule.propertyName}]`;
   const operator = getOperatorString(rule.operator);
-  if (!rule.value || !rule.value.value) {
+  if (!rule.value) {
     return `${accessorBase} ${operator}`;
   }
 
   const accessor = rule.propertyTypeName === "navigation" ? `${accessorBase}.[Id]` : accessorBase;
-  const valueString = getValueString(rule.value.value);
+  const valueString = getValueString(rule.value.rawValue);
   return `${accessor} ${operator} ${valueString}`;
 }
 
-function getValueString(value: Primitives.Value) {
-  if ((value as Primitives.InstanceKey).id !== undefined) {
-    return (value as Primitives.InstanceKey).id;
+function getValueString(value: GenericInstanceFilterRuleValue.Values) {
+  if (GenericInstanceFilterRuleValue.isInstanceKey(value)) {
+    return value.id;
   }
 
   if (typeof value === "number") {
