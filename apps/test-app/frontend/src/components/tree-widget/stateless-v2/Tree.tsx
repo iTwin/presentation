@@ -55,7 +55,6 @@ export function StatelessTreeV2({ imodel, height, width }: { imodel: IModelConne
           queryExecutor: metadata.queryExecutor,
           label: filter,
         });
-        setIsFiltering(false);
         return paths;
       }
       return undefined;
@@ -63,6 +62,7 @@ export function StatelessTreeV2({ imodel, height, width }: { imodel: IModelConne
   );
 
   useEffect(() => {
+    setIsFiltering(false);
     if (!metadata?.metadataProvider) {
       return;
     }
