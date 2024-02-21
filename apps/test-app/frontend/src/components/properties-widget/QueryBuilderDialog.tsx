@@ -108,8 +108,7 @@ function SingleQueryBuilder({ descriptor, imodel, onQueryChanged }: SingleQueryB
     // create metadata for builder ECSQL query. It simplifies result of `PresentationInstanceFilter.fromComponentsPropertyFilter`:
     // - collects relationship paths from all related properties used in filter to the select class (return only unique paths)
     // - creates aliases for related properties and associated relationship paths
-    // all this information is available on `PresentationInstanceFilter` returned by `PresentationInstanceFilter.fromComponentsPropertyFilter` but this is a helper function
-    // to get data structure that is easier to use when building ECSQL query.
+    // all this information is available on `PresentationInstanceFilter` but this is data structure that is easier to use when building ECSQL query.
     return PresentationInstanceFilter.toGenericInstanceFilter(presentationFilter);
   }, [buildFilter, descriptor]);
 
@@ -189,8 +188,12 @@ function createJoinClause(relatedInstances: GenericInstanceFilterRelatedInstance
       const step = relatedPath[i];
       const stepAlias = i + 1 === relatedPath.length ? alias : `class_${j}_${i}`;
       const relAlias = `rel_${j}_${i}`;
-      joinClauses.push(`JOIN ${step.relationshipClassName} as ${relAlias} ON ${relAlias}.SourceECInstanceId = ${prevAlias}.ECInstanceId`);
-      joinClauses.push(`JOIN ${step.targetClassName} as ${stepAlias} ON ${relAlias}.TargetECInstanceId = ${stepAlias}.ECInstanceId`);
+
+      const relSourcePropName = step.isForwardRelationship ? "SourceECInstanceId" : "TargetECInstanceId";
+      const relTargetPropName = step.isForwardRelationship ? "TargetECInstanceId" : "SourceECInstanceId";
+
+      joinClauses.push(`JOIN ${step.relationshipClassName} as ${relAlias} ON ${relAlias}.${relSourcePropName} = ${prevAlias}.ECInstanceId`);
+      joinClauses.push(`JOIN ${step.targetClassName} as ${stepAlias} ON ${relAlias}.${relTargetPropName} = ${stepAlias}.ECInstanceId`);
       prevAlias = stepAlias;
     }
   }
@@ -218,7 +221,7 @@ function parseRuleGroup(group: GenericInstanceFilterRuleGroup) {
 function parseRule(rule: GenericInstanceFilterRule) {
   const accessorBase = `[${rule.sourceAlias}].[${rule.propertyName}]`;
   const operator = getOperatorString(rule.operator);
-  if (!rule.value || !rule.value.rawValue) {
+  if (!rule.value) {
     return `${accessorBase} ${operator}`;
   }
 
