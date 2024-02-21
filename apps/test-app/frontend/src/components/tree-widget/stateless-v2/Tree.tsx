@@ -2,6 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+
 import { ComponentPropsWithoutRef, useCallback, useEffect, useState } from "react";
 import { useDebouncedAsyncValue } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -21,20 +22,20 @@ import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { PresentationNode, PresentationTreeNode } from "./TreeActions";
 import { useTree, UseTreeResult } from "./UseTree";
 
-interface IModelRelatedState {
+interface MetadataProviders {
   queryExecutor: ILimitingECSqlQueryExecutor;
   metadataProvider: IMetadataProvider;
 }
 
-export function TreeComponent({ imodel, height, width }: { imodel: IModelConnection; height: number; width: number }) {
-  const [imodelRelatedState, setIModelRelatedState] = useState<IModelRelatedState>();
+export function StatelessTreeV2({ imodel, height, width }: { imodel: IModelConnection; height: number; width: number }) {
+  const [metadata, setMetadata] = useState<MetadataProviders>();
   const [hierarchyProvider, setHierarchyProvider] = useState<HierarchyProvider>();
   const [filter, setFilter] = useState("");
 
   useEffect(() => {
     const schemas = new SchemaContext();
     schemas.addLocater(new ECSchemaRpcLocater(imodel.getRpcProps()));
-    setIModelRelatedState({
+    setMetadata({
       queryExecutor: createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
       metadataProvider: createMetadataProvider(schemas),
     });
@@ -42,30 +43,30 @@ export function TreeComponent({ imodel, height, width }: { imodel: IModelConnect
 
   const { value: filteredPaths } = useDebouncedAsyncValue(
     useCallback(async () => {
-      if (!imodelRelatedState) {
+      if (!metadata) {
         return undefined;
       }
       if (filter !== "") {
         return ModelsTreeDefinition.createInstanceKeyPaths({
-          metadataProvider: imodelRelatedState.metadataProvider,
-          queryExecutor: imodelRelatedState.queryExecutor,
+          metadataProvider: metadata.metadataProvider,
+          queryExecutor: metadata.queryExecutor,
           label: filter,
         });
       }
       return undefined;
-    }, [imodelRelatedState, filter]),
+    }, [metadata, filter]),
   );
 
   useEffect(() => {
-    if (!imodelRelatedState?.metadataProvider) {
+    if (!metadata?.metadataProvider) {
       return;
     }
 
     setHierarchyProvider(
       new HierarchyProvider({
-        metadataProvider: imodelRelatedState.metadataProvider,
-        queryExecutor: imodelRelatedState.queryExecutor,
-        hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider: imodelRelatedState?.metadataProvider }),
+        metadataProvider: metadata.metadataProvider,
+        queryExecutor: metadata.queryExecutor,
+        hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider: metadata?.metadataProvider }),
         filtering: filteredPaths
           ? {
               paths: filteredPaths,
@@ -73,7 +74,7 @@ export function TreeComponent({ imodel, height, width }: { imodel: IModelConnect
           : undefined,
       }),
     );
-  }, [imodelRelatedState, filteredPaths]);
+  }, [metadata, filteredPaths]);
 
   const { rootNodes, ...treeProps } = useTree({
     hierarchyProvider,
@@ -90,20 +91,14 @@ export function TreeComponent({ imodel, height, width }: { imodel: IModelConnect
     treeProps.reloadTree();
   };
 
-  if (rootNodes === undefined) {
-    return (
-      <Flex alignItems="center" justifyContent="center" style={{ width, height }}>
-        <ProgressRadial size="large" />
-      </Flex>
-    );
-  }
-
   return (
     <Flex justifyContent="left" flexDirection="column" style={{ width, height }}>
-      <SearchBox inputProps={{ value: filter, onChange: (e) => setFilter(e.currentTarget.value) }} />
-      <ToggleSwitch onChange={toggleFormatter} checked={shouldUseCustomFormatter} />
+      <Flex style={{ width: "100%", padding: "0.5rem" }}>
+        <SearchBox inputProps={{ value: filter, onChange: (e) => setFilter(e.currentTarget.value) }} />
+        <ToggleSwitch onChange={toggleFormatter} checked={shouldUseCustomFormatter} />
+      </Flex>
       <Flex.Item alignSelf="flex-start" style={{ width: "100%", overflow: "auto" }}>
-        <TreeRenderer {...treeProps} rootNodes={rootNodes} />
+        {rootNodes === undefined ? <ProgressRadial size="large" /> : <TreeRenderer {...treeProps} rootNodes={rootNodes} />}
       </Flex.Item>
     </Flex>
   );

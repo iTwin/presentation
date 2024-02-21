@@ -110,7 +110,7 @@ export function App() {
   }, []);
 
   return (
-    <ThemeProvider theme="os" data-root-container="iui-root-id">
+    <ThemeProvider theme="os">
       <div className="app">
         <div className="app-header">
           <h2>{IModelApp.localization.getLocalizedString("Sample:welcome-message")}</h2>
