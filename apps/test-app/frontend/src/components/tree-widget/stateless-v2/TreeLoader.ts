@@ -5,26 +5,33 @@
 import { catchError, defer, expand, from, map, mergeMap, Observable, of } from "rxjs";
 import { omit } from "@itwin/core-bentley";
 import { HierarchyNode, HierarchyNodeKey, HierarchyProvider, ParentNodeKey, RowsLimitExceededError } from "@itwin/presentation-hierarchy-builder";
-import { InfoNode, isModelNode, ModelNode, NodeIdentifier, RootNode, TreeNode } from "./TreeModel";
+import { isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelInfoNode, TreeModelNode, TreeModelRootNode } from "./TreeModel";
+import { PresentationHierarchyNodeIdentifier } from "./Types";
 
+/** @internal */
 export interface LoadedHierarchyPart {
-  parent: NodeIdentifier | RootNode;
-  loadedNodes: TreeNode[];
+  parent: PresentationHierarchyNodeIdentifier | TreeModelRootNode;
+  loadedNodes: TreeModelNode[];
 }
 
+/** @internal */
 export interface IHierarchyLoader {
-  getNodes(parent: NodeIdentifier | RootNode, shouldLoadChildren: (node: HierarchyNode) => boolean): Observable<LoadedHierarchyPart>;
+  getNodes(
+    parent: PresentationHierarchyNodeIdentifier | TreeModelRootNode,
+    shouldLoadChildren: (node: HierarchyNode) => boolean,
+  ): Observable<LoadedHierarchyPart>;
   reloadNodes(options: {
-    expandedNodes: NodeIdentifier[];
-    collapsedNodes: NodeIdentifier[];
-    buildNode: (node: ModelNode) => ModelNode;
+    expandedNodes: PresentationHierarchyNodeIdentifier[];
+    collapsedNodes: PresentationHierarchyNodeIdentifier[];
+    buildNode: (node: TreeModelHierarchyNode) => TreeModelHierarchyNode;
   }): Observable<LoadedHierarchyPart>;
 }
 
+/** @internal */
 export class HierarchyLoader implements IHierarchyLoader {
   constructor(private _hierarchyProvider: HierarchyProvider) {}
 
-  private loadChildren(parent: NodeIdentifier | RootNode, buildNode?: (node: ModelNode) => ModelNode) {
+  private loadChildren(parent: PresentationHierarchyNodeIdentifier | TreeModelRootNode, buildNode?: (node: TreeModelHierarchyNode) => TreeModelHierarchyNode) {
     return defer(async () =>
       this._hierarchyProvider.getNodes({
         parentNode: parent?.nodeData,
@@ -39,7 +46,7 @@ export class HierarchyLoader implements IHierarchyLoader {
             parentId: parent?.id,
             type: "ResultSetTooLarge",
             message: err.message,
-          } as InfoNode);
+          } as TreeModelInfoNode);
         }
         throw err;
       }),
@@ -47,24 +54,28 @@ export class HierarchyLoader implements IHierarchyLoader {
         (childNodes): LoadedHierarchyPart => ({
           parent,
           loadedNodes: Array.isArray(childNodes)
-            ? childNodes.map(createBaseModelNode).map((node: ModelNode) => (buildNode ? buildNode(node) : node))
+            ? childNodes.map(createTreeModelHierarchyNode).map((node: TreeModelHierarchyNode) => (buildNode ? buildNode(node) : node))
             : [childNodes],
         }),
       ),
     );
   }
 
-  private loadNodes(parent: NodeIdentifier | RootNode, shouldLoadChildren: (node: HierarchyNode) => boolean, buildNode?: (node: ModelNode) => ModelNode) {
+  private loadNodes(
+    parent: PresentationHierarchyNodeIdentifier | TreeModelRootNode,
+    shouldLoadChildren: (node: HierarchyNode) => boolean,
+    buildNode?: (node: TreeModelHierarchyNode) => TreeModelHierarchyNode,
+  ) {
     return this.loadChildren(parent, buildNode).pipe(
       expand((loadedPart) =>
-        from(loadedPart.loadedNodes.filter((node): node is ModelNode => isModelNode(node) && shouldLoadChildren(node.nodeData))).pipe(
+        from(loadedPart.loadedNodes.filter((node): node is TreeModelHierarchyNode => isTreeModelHierarchyNode(node) && shouldLoadChildren(node.nodeData))).pipe(
           mergeMap((node) => this.loadChildren(node, buildNode)),
         ),
       ),
     );
   }
 
-  public getNodes(parent: NodeIdentifier | RootNode, shouldLoadChildren: (node: HierarchyNode) => boolean) {
+  public getNodes(parent: PresentationHierarchyNodeIdentifier | TreeModelRootNode, shouldLoadChildren: (node: HierarchyNode) => boolean) {
     return this.loadNodes(parent, shouldLoadChildren);
   }
 
@@ -73,9 +84,9 @@ export class HierarchyLoader implements IHierarchyLoader {
     collapsedNodes,
     buildNode,
   }: {
-    expandedNodes: NodeIdentifier[];
-    collapsedNodes: NodeIdentifier[];
-    buildNode: (node: ModelNode) => ModelNode;
+    expandedNodes: PresentationHierarchyNodeIdentifier[];
+    collapsedNodes: PresentationHierarchyNodeIdentifier[];
+    buildNode: (node: TreeModelHierarchyNode) => TreeModelHierarchyNode;
   }) {
     return this.loadNodes(
       { id: undefined, nodeData: undefined },
@@ -93,7 +104,7 @@ export class HierarchyLoader implements IHierarchyLoader {
   }
 }
 
-function createBaseModelNode(hierarchyNode: HierarchyNode): ModelNode {
+function createTreeModelHierarchyNode(hierarchyNode: HierarchyNode): TreeModelHierarchyNode {
   return {
     id: createNodeId(hierarchyNode),
     children: hierarchyNode.children,

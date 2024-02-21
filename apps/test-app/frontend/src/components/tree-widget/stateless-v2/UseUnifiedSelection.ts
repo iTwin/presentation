@@ -8,18 +8,20 @@ import { omit } from "@itwin/core-bentley";
 import { GroupingNodeKey, InstanceKey, Key, KeySet, PresentationQuery, PresentationQueryBinding, StandardNodeTypes } from "@itwin/presentation-common";
 import { useUnifiedSelectionContext } from "@itwin/presentation-components";
 import { HierarchyNode, parseFullClassName } from "@itwin/presentation-hierarchy-builder";
-import { PresentationNode } from "./TreeActions";
+import { PresentationHierarchyNode } from "./Types";
 
+/** @internal */
 export interface TreeSelectionOptions {
-  isNodeSelected: (node: PresentationNode) => boolean;
-  selectNode: (node: PresentationNode, isSelected: boolean) => void;
+  isNodeSelected: (node: PresentationHierarchyNode) => boolean;
+  selectNode: (node: PresentationHierarchyNode, isSelected: boolean) => void;
 }
 
+/** @internal */
 export function useUnifiedTreeSelection(): TreeSelectionOptions {
   const context = useUnifiedSelectionContext();
 
   const isNodeSelected = useCallback(
-    (node: PresentationNode) => {
+    (node: PresentationHierarchyNode) => {
       if (!context) {
         return false;
       }
@@ -31,7 +33,7 @@ export function useUnifiedTreeSelection(): TreeSelectionOptions {
   );
 
   const selectNode = useCallback(
-    (node: PresentationNode, isSelected: boolean) => {
+    (node: PresentationHierarchyNode, isSelected: boolean) => {
       if (!context) {
         return;
       }

@@ -9,7 +9,7 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { SvgFolder, SvgImodelHollow, SvgItem, SvgLayers, SvgModel } from "@itwin/itwinui-icons-react";
-import { Button, Flex, ProgressRadial, SearchBox, ToggleSwitch, Tree, TreeNode } from "@itwin/itwinui-react";
+import { Button, Flex, ProgressRadial, SearchBox, Text, ToggleSwitch, Tree, TreeNode } from "@itwin/itwinui-react";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import {
   createLimitingECSqlQueryExecutor,
@@ -19,7 +19,7 @@ import {
   TypedPrimitiveValue,
 } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
-import { PresentationNode, PresentationTreeNode } from "./TreeActions";
+import { isPresentationHierarchyNode, PresentationTreeNode } from "./Types";
 import { useTree, UseTreeResult } from "./UseTree";
 
 interface MetadataProviders {
@@ -31,6 +31,7 @@ export function StatelessTreeV2({ imodel, height, width }: { imodel: IModelConne
   const [metadata, setMetadata] = useState<MetadataProviders>();
   const [hierarchyProvider, setHierarchyProvider] = useState<HierarchyProvider>();
   const [filter, setFilter] = useState("");
+  const [isFiltering, setIsFiltering] = useState(false);
 
   useEffect(() => {
     const schemas = new SchemaContext();
@@ -43,15 +44,19 @@ export function StatelessTreeV2({ imodel, height, width }: { imodel: IModelConne
 
   const { value: filteredPaths } = useDebouncedAsyncValue(
     useCallback(async () => {
+      setIsFiltering(false);
       if (!metadata) {
         return undefined;
       }
       if (filter !== "") {
-        return ModelsTreeDefinition.createInstanceKeyPaths({
+        setIsFiltering(true);
+        const paths = await ModelsTreeDefinition.createInstanceKeyPaths({
           metadataProvider: metadata.metadataProvider,
           queryExecutor: metadata.queryExecutor,
           label: filter,
         });
+        setIsFiltering(false);
+        return paths;
       }
       return undefined;
     }, [metadata, filter]),
@@ -76,7 +81,7 @@ export function StatelessTreeV2({ imodel, height, width }: { imodel: IModelConne
     );
   }, [metadata, filteredPaths]);
 
-  const { rootNodes, ...treeProps } = useTree({
+  const { rootNodes, isLoading, ...treeProps } = useTree({
     hierarchyProvider,
   });
 
@@ -91,15 +96,37 @@ export function StatelessTreeV2({ imodel, height, width }: { imodel: IModelConne
     treeProps.reloadTree();
   };
 
+  const renderContent = () => {
+    if (rootNodes === undefined || isLoading || isFiltering) {
+      return (
+        <Flex alignItems="center" justifyContent="center" flexDirection="column" style={{ height: "100%" }}>
+          <ProgressRadial size="large" />
+        </Flex>
+      );
+    }
+
+    if (rootNodes.length === 0 && filter) {
+      return (
+        <Flex alignItems="center" justifyContent="center" flexDirection="column" style={{ height: "100%" }}>
+          <Text isMuted>There are no nodes matching filter text {filter}</Text>
+        </Flex>
+      );
+    }
+
+    return (
+      <Flex.Item alignSelf="flex-start" style={{ width: "100%", overflow: "auto" }}>
+        <TreeRenderer rootNodes={rootNodes} {...treeProps} />
+      </Flex.Item>
+    );
+  };
+
   return (
-    <Flex justifyContent="left" flexDirection="column" style={{ width, height }}>
+    <Flex flexDirection="column" style={{ width, height }}>
       <Flex style={{ width: "100%", padding: "0.5rem" }}>
         <SearchBox inputProps={{ value: filter, onChange: (e) => setFilter(e.currentTarget.value) }} />
         <ToggleSwitch onChange={toggleFormatter} checked={shouldUseCustomFormatter} />
       </Flex>
-      <Flex.Item alignSelf="flex-start" style={{ width: "100%", overflow: "auto" }}>
-        {rootNodes === undefined ? <ProgressRadial size="large" /> : <TreeRenderer {...treeProps} rootNodes={rootNodes} />}
-      </Flex.Item>
+      {renderContent()}
     </Flex>
   );
 }
@@ -108,14 +135,14 @@ async function customFormatter(val: TypedPrimitiveValue) {
   return `THIS_IS_FORMATTED_${val ? JSON.stringify(val.value) : ""}_THIS_IS_FORMATTED`;
 }
 
-interface TreeRendererProps extends Omit<UseTreeResult, "rootNodes"> {
+interface TreeRendererProps extends Omit<UseTreeResult, "rootNodes" | "isLoading"> {
   rootNodes: PresentationTreeNode[];
 }
 
 function TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHierarchyLevelLimit }: TreeRendererProps) {
   const nodeRenderer = useCallback<TreeProps<PresentationTreeNode>["nodeRenderer"]>(
     ({ node, ...restProps }) => {
-      if (!isPresentationNode(node)) {
+      if (!isPresentationHierarchyNode(node)) {
         return (
           <TreeNode {...restProps} label={node.message} isDisabled={true} onExpanded={() => {}}>
             <Button
@@ -148,7 +175,7 @@ function TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHi
 
   const getNode = useCallback<TreeProps<PresentationTreeNode>["getNode"]>(
     (node) => {
-      if (!isPresentationNode(node)) {
+      if (!isPresentationHierarchyNode(node)) {
         return {
           nodeId: node.id,
           node,
@@ -196,10 +223,6 @@ function getIcon(icon: "icon-layers" | "icon-item" | "icon-ec-class" | "icon-imo
     case "icon-model":
       return <SvgModel />;
   }
-}
-
-function isPresentationNode(node: PresentationTreeNode): node is PresentationNode {
-  return "children" in node;
 }
 
 type TreeProps<T> = ComponentPropsWithoutRef<typeof Tree<T>>;

@@ -5,29 +5,35 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
-import { PresentationNode, PresentationTreeNode, TreeActions, TreeState } from "./TreeActions";
-import { isModelNode } from "./TreeModel";
+import { TreeActions, TreeState } from "./TreeActions";
+import { isHierarchyNodeSelected } from "./TreeModel";
+import { PresentationHierarchyNode, PresentationTreeNode } from "./Types";
 import { useUnifiedTreeSelection } from "./UseUnifiedSelection";
 
+/** @beta */
 export interface UseTreeStateProps {
   hierarchyProvider?: HierarchyProvider;
 }
 
+/** @beta */
 export interface UseTreeResult {
   rootNodes: PresentationTreeNode[] | undefined;
+  isLoading: boolean;
   reloadTree: (options?: { discardState?: boolean }) => void;
-  expandNode: (node: PresentationNode, isExpanded: boolean) => void;
-  selectNode: (node: PresentationNode, isSelected: boolean) => void;
-  setHierarchyLevelLimit: (node: PresentationNode | undefined, limit: undefined | number | "unbounded") => void;
-  isNodeSelected: (node: PresentationNode) => boolean;
+  expandNode: (node: PresentationHierarchyNode, isExpanded: boolean) => void;
+  selectNode: (node: PresentationHierarchyNode, isSelected: boolean) => void;
+  setHierarchyLevelLimit: (node: PresentationHierarchyNode | undefined, limit: undefined | number | "unbounded") => void;
+  isNodeSelected: (node: PresentationHierarchyNode) => boolean;
 }
 
+/** @beta */
 export function useTree({ hierarchyProvider }: UseTreeStateProps): UseTreeResult {
   const [state, setState] = useState<TreeState>({
     model: { idToNode: {}, parentChildMap: new Map(), rootNode: { id: undefined, nodeData: undefined } },
     rootNodes: undefined,
+    isLoading: false,
   });
-  const [actions] = useState<TreeActions>(() => new TreeActions((updater) => setState(updater)));
+  const [actions] = useState<TreeActions>(() => new TreeActions((actionOrValue) => setState(actionOrValue)));
 
   useEffect(() => {
     actions.setHierarchyProvider(hierarchyProvider);
@@ -37,7 +43,7 @@ export function useTree({ hierarchyProvider }: UseTreeStateProps): UseTreeResult
     };
   }, [actions, hierarchyProvider]);
 
-  const expandNode = useRef((node: PresentationNode, isExpanded: boolean) => {
+  const expandNode = useRef((node: PresentationHierarchyNode, isExpanded: boolean) => {
     actions.expandNode(node, isExpanded);
   }).current;
 
@@ -45,24 +51,24 @@ export function useTree({ hierarchyProvider }: UseTreeStateProps): UseTreeResult
     actions.reloadTree(options);
   }).current;
 
-  const selectNode = useRef((node: PresentationNode, isSelected: boolean) => {
+  const selectNode = useRef((node: PresentationHierarchyNode, isSelected: boolean) => {
     actions.selectNode(node, isSelected);
   }).current;
 
-  const setHierarchyLevelLimit = useRef((node: PresentationNode | undefined, limit: undefined | number | "unbounded") => {
+  const setHierarchyLevelLimit = useRef((node: PresentationHierarchyNode | undefined, limit: undefined | number | "unbounded") => {
     actions.setHierarchyLimit(node, limit);
   }).current;
 
   const isNodeSelected = useCallback(
-    (node: PresentationNode) => {
-      const modelNode = state.model.idToNode[node.id];
-      return modelNode && isModelNode(modelNode) && !!modelNode.isSelected;
+    (node: PresentationHierarchyNode) => {
+      return isHierarchyNodeSelected(state.model, node);
     },
     [state],
   );
 
   return {
     rootNodes: state.rootNodes,
+    isLoading: state.isLoading,
     expandNode,
     reloadTree,
     selectNode,
@@ -71,6 +77,7 @@ export function useTree({ hierarchyProvider }: UseTreeStateProps): UseTreeResult
   };
 }
 
+/** @beta */
 export function useUnifiedSelectionTree({ hierarchyProvider }: UseTreeStateProps): UseTreeResult {
   return { ...useTree({ hierarchyProvider }), ...useUnifiedTreeSelection() };
 }
