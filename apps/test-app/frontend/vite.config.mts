@@ -21,7 +21,7 @@ export default defineConfig({
     viteStaticCopy({
       targets: [
         ...publicDirs.map((dir) => ({
-          src: `${dir}/**`,
+          src: dir,
           dest: ".",
         })),
       ],
