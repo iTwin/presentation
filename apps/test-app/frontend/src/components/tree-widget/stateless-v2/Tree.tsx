@@ -20,7 +20,7 @@ import {
 } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { isPresentationHierarchyNode, PresentationTreeNode } from "./Types";
-import { useTree, UseTreeResult } from "./UseTree";
+import { UseTreeResult, useUnifiedSelectionTree } from "./UseTree";
 
 interface MetadataProviders {
   queryExecutor: ILimitingECSqlQueryExecutor;
@@ -81,7 +81,7 @@ export function StatelessTreeV2({ imodel, height, width }: { imodel: IModelConne
     );
   }, [metadata, filteredPaths]);
 
-  const { rootNodes, isLoading, ...treeProps } = useTree({
+  const { rootNodes, isLoading, ...treeProps } = useUnifiedSelectionTree({
     hierarchyProvider,
   });
 
