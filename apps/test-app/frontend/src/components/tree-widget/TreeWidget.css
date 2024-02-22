@@ -24,6 +24,8 @@
 .tree-widget .filtered-tree {
   flex-grow: 1;
   min-height: 50px;
+  height: 100%;
+  width: 100%;
 }
 
 .components-filtering-input-clear :hover {

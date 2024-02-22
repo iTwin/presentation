@@ -19,7 +19,7 @@ export interface TreeWidgetProps {
 
 export function TreeWidget(props: Omit<TreeWidgetProps, "height" | "width">) {
   return (
-    <Tabs.Wrapper>
+    <Tabs.Wrapper className="tree-widget">
       <Tabs.TabList>
         <Tabs.Tab value="rules-driven" label={IModelApp.localization.getLocalizedString("Sample:controls.tree-widget.rules-driven-tree")} key="rules-driven" />
         <Tabs.Tab value="stateless" label={IModelApp.localization.getLocalizedString("Sample:controls.tree-widget.stateless-models-tree")} key="stateless" />
