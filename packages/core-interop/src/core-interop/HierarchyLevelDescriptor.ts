@@ -23,9 +23,28 @@ import { ICoreECSqlReaderFactory } from "./QueryExecutor";
  * @beta
  */
 export interface CreateHierarchyLevelDescriptorProps<TIModel extends ICoreECSqlReaderFactory> {
+  /**
+   * An iModel to use for creating the descriptor. Typically, this is either [IModelDb]($core-backend)
+   * or [IModelConnection]($core-frontend).
+   *
+   * @note The iModel should match the query executor used by given `hierarchyProvider` prop.
+   */
   imodel: TIModel;
+
+  /** The parent node to create hierarchy level descriptor for. */
   parentNode: (Omit<HierarchyNode, "children"> & { key: InstancesNodeKey | string }) | undefined;
+
+  /**
+   * `HierarchyProvider` that was used to create `parentNode`. The provider is used to get child hierarchy level
+   * definition and schedule queries needed to calculate the descriptor.
+   */
   hierarchyProvider: HierarchyProvider;
+
+  /**
+   * An `itwinjs-core` that knows how to create a content descriptor. Generally this is either [PresentationManager]($presentation-backend)
+   * (accessed through `Presentation.getManager()` on the backend) or [PresentationManager]($presentation-frontend) (accessed through
+   * `Presentation.presentation` on the frontend).
+   */
   descriptorBuilder: {
     getContentDescriptor: (requestOptions: ContentDescriptorRequestOptions<TIModel, KeySet, RulesetVariable>) => Promise<Descriptor | undefined>;
   };
