@@ -139,9 +139,10 @@ class StructMembersAppender implements INestedPropertiesAppender {
     this._members[record.fieldHierarchy.field.name] = record.record;
   }
   public finish(): void {
+    const sortedMembers = Object.entries(this._members).sort();
     const value: StructValue = {
       valueFormat: UiPropertyValueFormat.Struct,
-      members: this._members,
+      members: Object.fromEntries(sortedMembers),
     };
     const record = new PropertyRecord(value, createPropertyDescriptionFromFieldInfo(this._fieldInfo));
     applyPropertyRecordAttributes(
