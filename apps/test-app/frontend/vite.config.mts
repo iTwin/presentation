@@ -6,24 +6,17 @@ import { defineConfig } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 import react from "@vitejs/plugin-react";
 
-const publicDirs = [
-  "./node_modules/@itwin/core-react/lib/public/",
-  "./node_modules/@itwin/core-frontend/lib/public",
-  "./node_modules/@itwin/components-react/lib/public",
-  "./node_modules/@itwin/presentation-components/lib/public",
-  "./node_modules/@itwin/presentation-common/lib/public",
-];
-
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(),
     viteStaticCopy({
       targets: [
-        ...publicDirs.map((dir) => ({
-          src: `${dir}/*`,
+        {
+          // copy assets from `@itwin` dependencies
+          src: "./node_modules/@itwin/**/public/*",
           dest: ".",
-        })),
+        },
       ],
     }),
   ],
