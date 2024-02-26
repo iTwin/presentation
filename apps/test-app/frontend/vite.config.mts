@@ -14,7 +14,7 @@ export default defineConfig({
       targets: [
         {
           // copy assets from `@itwin` dependencies
-          src: "./node_modules/@itwin/**/**/public/*",
+          src: "./node_modules/@itwin/**/public/*",
           dest: ".",
         },
       ],
