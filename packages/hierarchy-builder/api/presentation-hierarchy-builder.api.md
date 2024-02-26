@@ -505,6 +505,14 @@ export interface GetHierarchyNodesProps {
 export function getLogger(): ILogger;
 
 // @beta
+export type GroupingHierarchyNode = Omit<HierarchyNode, "key" | "supportsFiltering"> & {
+    key: GroupingNodeKey;
+    nonGroupingAncestor?: Omit<ParentHierarchyNode, "key"> & {
+        key: string | InstancesNodeKey;
+    };
+};
+
+// @beta
 export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | PropertyGroupingNodeKey;
 
 // @beta
@@ -535,60 +543,47 @@ export namespace HierarchyNode {
     }>(node: TNode): node is TNode & {
         key: ClassGroupingNodeKey;
         supportsFiltering?: undefined;
-    } & (TNode extends ProcessedHierarchyNode ? {
-        children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
-    } : {});
+    } & (TNode extends ProcessedHierarchyNode ? ProcessedGroupingHierarchyNode : GroupingHierarchyNode);
     export function isCustom<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
         key: string;
-    } & (TNode extends ProcessedHierarchyNode ? {
-        processingParams?: HierarchyNodeProcessingParamsBase;
-    } : {});
+    } & (TNode extends ProcessedHierarchyNode ? ProcessedCustomHierarchyNode : {});
     export function isGroupingNode<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
         key: GroupingNodeKey;
         supportsFiltering?: undefined;
-    } & (TNode extends ProcessedHierarchyNode ? {
-        children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
-    } : {});
+    } & (TNode extends ProcessedHierarchyNode ? ProcessedGroupingHierarchyNode : GroupingHierarchyNode);
     export function isInstancesNode<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
         key: InstancesNodeKey;
-    } & (TNode extends ProcessedHierarchyNode ? {
-        processingParams?: InstanceHierarchyNodeProcessingParams;
-    } : {});
+    } & (TNode extends ProcessedHierarchyNode ? ProcessedInstanceHierarchyNode : {});
     export function isLabelGroupingNode<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
         key: LabelGroupingNodeKey;
         supportsFiltering?: undefined;
-    } & (TNode extends ProcessedHierarchyNode ? {
-        children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
-    } : {});
+    } & (TNode extends ProcessedHierarchyNode ? ProcessedGroupingHierarchyNode : GroupingHierarchyNode);
     export function isPropertyOtherValuesGroupingNode<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
         key: PropertyOtherValuesGroupingNodeKey;
-    } & (TNode extends ProcessedHierarchyNode ? {
-        children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
-    } : {});
+        supportsFiltering?: undefined;
+    } & (TNode extends ProcessedHierarchyNode ? ProcessedGroupingHierarchyNode : GroupingHierarchyNode);
     export function isPropertyValueGroupingNode<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
         key: PropertyValueGroupingNodeKey;
-    } & (TNode extends ProcessedHierarchyNode ? {
-        children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
-    } : {});
+        supportsFiltering?: undefined;
+    } & (TNode extends ProcessedHierarchyNode ? ProcessedGroupingHierarchyNode : GroupingHierarchyNode);
     export function isPropertyValueRangeGroupingNode<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
         key: PropertyValueRangeGroupingNodeKey;
-    } & (TNode extends ProcessedHierarchyNode ? {
-        children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
-    } : {});
+        supportsFiltering?: undefined;
+    } & (TNode extends ProcessedHierarchyNode ? ProcessedGroupingHierarchyNode : GroupingHierarchyNode);
     export function isStandard<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
@@ -984,10 +979,8 @@ export type ProcessedCustomHierarchyNode = Omit<HierarchyNode, "key" | "children
 };
 
 // @beta
-export type ProcessedGroupingHierarchyNode = Omit<HierarchyNode, "key" | "children"> & {
-    key: GroupingNodeKey;
+export type ProcessedGroupingHierarchyNode = Omit<GroupingHierarchyNode, "children"> & {
     children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
-    supportsFiltering?: undefined;
 };
 
 // @beta

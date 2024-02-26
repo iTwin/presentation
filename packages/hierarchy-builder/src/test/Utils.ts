@@ -250,7 +250,7 @@ export async function waitFor<T>(check: () => Promise<T> | T, timeout?: number):
   throw lastError;
 }
 
-export function createFakeQueryReader(rows: object[]): ECSqlQueryReader {
+export function createFakeQueryReader<TRow extends object>(rows: TRow[]): ECSqlQueryReader {
   return (async function* () {
     for (const row of rows) {
       yield row;
