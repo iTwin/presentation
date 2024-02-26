@@ -279,4 +279,43 @@ describe("PropertyRecordsBuilder", () => {
       valueFormat: UiPropertyValueFormat.Primitive,
     });
   });
+
+  it("sorts struct properties", () => {
+    const descriptor = createTestContentDescriptor({
+      fields: [
+        createTestSimpleContentField({
+          name: "members",
+          label: "members",
+          type: {
+            valueFormat: PropertyValueFormat.Struct,
+            typeName: StandardTypeNames.Struct,
+            members: [
+              { name: "memberC", label: "memberC", type: { valueFormat: PropertyValueFormat.Primitive, typeName: "string" } },
+              { name: "memberA", label: "memberA", type: { valueFormat: PropertyValueFormat.Primitive, typeName: "string" } },
+              { name: "memberB", label: "memberB", type: { valueFormat: PropertyValueFormat.Primitive, typeName: "string" } },
+            ],
+          },
+        }),
+      ],
+    });
+    const item = createTestContentItem({
+      values: {
+        members: {
+          memberC: "value 3",
+          memberA: "value 1",
+          memberB: "value 2",
+        },
+      },
+      displayValues: {
+        members: {
+          memberC: "display value 3",
+          memberA: "display value 1",
+          memberB: "display value 2",
+        },
+      },
+    });
+    traverseContentItem(builder, descriptor, item);
+    expect(builder.entries.length).to.eq(1);
+    expect(Object.keys((builder.entries[0].value as StructValue).members)).to.eql(["memberA", "memberB", "memberC"]);
+  });
 });
