@@ -740,6 +740,7 @@ export interface HierarchyProviderProps {
     hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
     localizedStrings?: HierarchyProviderLocalizedStrings;
     metadataProvider: IMetadataProvider;
+    queryCacheSize?: number;
     queryConcurrency?: number;
     queryExecutor: ILimitingECSqlQueryExecutor;
 }
