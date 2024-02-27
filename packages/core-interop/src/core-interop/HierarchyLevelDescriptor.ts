@@ -61,7 +61,7 @@ export interface CreateHierarchyLevelDescriptorProps<TIModel extends ICoreECSqlR
  */
 export async function createHierarchyLevelDescriptor<TIModel extends ICoreECSqlReaderFactory>(
   props: CreateHierarchyLevelDescriptorProps<TIModel>,
-): Promise<Descriptor | undefined> {
+): Promise<{ descriptor: Descriptor; inputKeys: KeySet } | undefined> {
   // convert instance keys stream into a KeySet
   const keys = new KeySet();
   await recursivelyGetInstanceKeys(props.parentNode, props.hierarchyProvider).forEach((key) => keys.add(key));
@@ -86,7 +86,7 @@ export async function createHierarchyLevelDescriptor<TIModel extends ICoreECSqlR
     keys,
     displayType: DefaultContentDisplayTypes.PropertyPane,
   });
-  return descriptor ? new Descriptor({ ...descriptor, ruleset }) : undefined;
+  return descriptor ? { descriptor: new Descriptor({ ...descriptor, ruleset }), inputKeys: keys } : undefined;
 }
 
 function recursivelyGetInstanceKeys(
