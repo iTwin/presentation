@@ -356,7 +356,7 @@ export type GroupingHierarchyNode = Omit<HierarchyNode, "key" | "supportsFilteri
   /** An identifier to identify this grouping node in its hierarchy level. */
   key: GroupingNodeKey;
 
-  /** The closed ancestor node that is not a grouping node. May be `undefined` it the grouping node grouped root level nodes. */
+  /** The closest ancestor node that is not a grouping node. May be `undefined` it the grouping node grouped root level nodes. */
   nonGroupingAncestor?: Omit<ParentHierarchyNode, "key"> & { key: string | InstancesNodeKey };
 };
 
