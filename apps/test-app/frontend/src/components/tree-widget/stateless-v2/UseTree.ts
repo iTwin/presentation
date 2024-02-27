@@ -6,8 +6,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
 import { TreeActions, TreeState } from "./TreeActions";
-import { isHierarchyNodeSelected } from "./TreeModel";
-import { PresentationHierarchyNode, PresentationTreeNode } from "./Types";
+import { isHierarchyNodeSelected, TreeModelHierarchyNode } from "./TreeModel";
+import { PresentationTreeNode } from "./Types";
 import { useUnifiedTreeSelection } from "./UseUnifiedSelection";
 
 /** @beta */
@@ -20,14 +20,26 @@ export interface UseTreeResult {
   rootNodes: PresentationTreeNode[] | undefined;
   isLoading: boolean;
   reloadTree: (options?: { discardState?: boolean }) => void;
-  expandNode: (node: PresentationHierarchyNode, isExpanded: boolean) => void;
-  selectNode: (node: PresentationHierarchyNode, isSelected: boolean) => void;
-  setHierarchyLevelLimit: (node: PresentationHierarchyNode | undefined, limit: undefined | number | "unbounded") => void;
-  isNodeSelected: (node: PresentationHierarchyNode) => boolean;
+  expandNode: (nodeId: string, isExpanded: boolean) => void;
+  selectNode: (nodeId: string, isSelected: boolean) => void;
+  setHierarchyLevelLimit: (nodeId: string | undefined, limit: undefined | number | "unbounded") => void;
+  isNodeSelected: (nodeId: string) => boolean;
 }
 
 /** @beta */
-export function useTree({ hierarchyProvider }: UseTreeStateProps): UseTreeResult {
+export function useTree(props: UseTreeStateProps): UseTreeResult {
+  const { getNode: _, ...rest } = useTreeInternal(props);
+  return rest;
+}
+
+/** @beta */
+export function useUnifiedSelectionTree(props: UseTreeStateProps): UseTreeResult {
+  const { getNode, ...rest } = useTreeInternal(props);
+  return { ...rest, ...useUnifiedTreeSelection({ getNode }) };
+}
+
+/** @internal */
+export function useTreeInternal({ hierarchyProvider }: UseTreeStateProps): UseTreeResult & { getNode: (nodeId: string) => TreeModelHierarchyNode | undefined } {
   const [state, setState] = useState<TreeState>({
     model: { idToNode: {}, parentChildMap: new Map(), rootNode: { id: undefined, nodeData: undefined } },
     rootNodes: undefined,
@@ -43,25 +55,29 @@ export function useTree({ hierarchyProvider }: UseTreeStateProps): UseTreeResult
     };
   }, [actions, hierarchyProvider]);
 
-  const expandNode = useRef((node: PresentationHierarchyNode, isExpanded: boolean) => {
-    actions.expandNode(node, isExpanded);
+  const getNode = useRef((nodeId: string) => {
+    return actions.getNode(nodeId);
+  }).current;
+
+  const expandNode = useRef((nodeId: string, isExpanded: boolean) => {
+    actions.expandNode(nodeId, isExpanded);
   }).current;
 
   const reloadTree = useRef((options?: { discardState?: boolean }) => {
     actions.reloadTree(options);
   }).current;
 
-  const selectNode = useRef((node: PresentationHierarchyNode, isSelected: boolean) => {
-    actions.selectNode(node, isSelected);
+  const selectNode = useRef((nodeId: string, isSelected: boolean) => {
+    actions.selectNode(nodeId, isSelected);
   }).current;
 
-  const setHierarchyLevelLimit = useRef((node: PresentationHierarchyNode | undefined, limit: undefined | number | "unbounded") => {
-    actions.setHierarchyLimit(node, limit);
+  const setHierarchyLevelLimit = useRef((nodeId: string | undefined, limit: undefined | number | "unbounded") => {
+    actions.setHierarchyLimit(nodeId, limit);
   }).current;
 
   const isNodeSelected = useCallback(
-    (node: PresentationHierarchyNode) => {
-      return isHierarchyNodeSelected(state.model, node);
+    (nodeId: string) => {
+      return isHierarchyNodeSelected(state.model, nodeId);
     },
     [state],
   );
@@ -74,10 +90,6 @@ export function useTree({ hierarchyProvider }: UseTreeStateProps): UseTreeResult
     selectNode,
     isNodeSelected,
     setHierarchyLevelLimit,
+    getNode,
   };
-}
-
-/** @beta */
-export function useUnifiedSelectionTree({ hierarchyProvider }: UseTreeStateProps): UseTreeResult {
-  return { ...useTree({ hierarchyProvider }), ...useUnifiedTreeSelection() };
 }

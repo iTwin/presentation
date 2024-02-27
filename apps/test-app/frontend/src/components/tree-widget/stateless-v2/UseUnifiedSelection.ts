@@ -5,43 +5,52 @@
 
 import { useCallback } from "react";
 import { omit } from "@itwin/core-bentley";
-import { GroupingNodeKey, InstanceKey, Key, KeySet, PresentationQuery, PresentationQueryBinding, StandardNodeTypes } from "@itwin/presentation-common";
+import {
+  GroupingNodeKey, InstanceKey, Key, KeySet, PresentationQuery, PresentationQueryBinding, StandardNodeTypes,
+} from "@itwin/presentation-common";
 import { useUnifiedSelectionContext } from "@itwin/presentation-components";
 import { HierarchyNode, parseFullClassName } from "@itwin/presentation-hierarchy-builder";
-import { PresentationHierarchyNode } from "./Types";
+import { TreeModelHierarchyNode } from "./TreeModel";
 
 /** @internal */
 export interface TreeSelectionOptions {
-  isNodeSelected: (node: PresentationHierarchyNode) => boolean;
-  selectNode: (node: PresentationHierarchyNode, isSelected: boolean) => void;
+  isNodeSelected: (nodeId: string) => boolean;
+  selectNode: (nodeId: string, isSelected: boolean) => void;
 }
 
 /** @internal */
-export function useUnifiedTreeSelection(): TreeSelectionOptions {
+export interface UseUnifiedTreeSelectionProps {
+  getNode: (nodeId: string) => TreeModelHierarchyNode | undefined;
+}
+
+/** @internal */
+export function useUnifiedTreeSelection({ getNode }: UseUnifiedTreeSelectionProps): TreeSelectionOptions {
   const context = useUnifiedSelectionContext();
 
   const isNodeSelected = useCallback(
-    (node: PresentationHierarchyNode) => {
-      if (!context) {
+    (nodeId: string) => {
+      const node = getNode(nodeId);
+      if (!context || !node) {
         return false;
       }
 
       const selection = context.getSelection(0);
       return selection.hasAny(getNodeKeys(node.nodeData));
     },
-    [context],
+    [context, getNode],
   );
 
   const selectNode = useCallback(
-    (node: PresentationHierarchyNode, isSelected: boolean) => {
-      if (!context) {
+    (nodeId: string, isSelected: boolean) => {
+      const node = getNode(nodeId);
+      if (!context || !node) {
         return;
       }
 
       const action = isSelected ? context.addToSelection : context.removeFromSelection;
       action(getNodeKeys(node.nodeData));
     },
-    [context],
+    [context, getNode],
   );
 
   return {

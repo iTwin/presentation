@@ -2,31 +2,29 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-import { GenericInstanceFilter, HierarchyNode } from "@itwin/presentation-hierarchy-builder";
 
-/** @beta */
-export interface PresentationHierarchyNodeIdentifier {
-  id: string;
-  nodeData: HierarchyNode;
-  hierarchyLimit?: number | "unbounded";
-  instanceFilter?: GenericInstanceFilter;
-}
+import { PresentationInstanceFilterInfo } from "@itwin/presentation-components";
 
 /** @beta */
 export type InfoNodeTypes = "ResultSetTooLarge" | "Unknown";
 
 /** @beta */
-export interface PresentationHierarchyNode extends PresentationHierarchyNodeIdentifier {
+export interface PresentationHierarchyNode {
+  id: string;
   label: string;
   children: true | Array<PresentationTreeNode>;
   isExpanded: boolean;
   isLoading: boolean;
+  hierarchyLimit?: number | "unbounded";
+  appliedFilter?: PresentationInstanceFilterInfo;
+  /** Additional data that may be assigned to this node. */
+  extendedData?: { [key: string]: any };
 }
 
 /** @beta */
 export interface PresentationInfoNode {
   id: string;
-  parentNode: PresentationHierarchyNode | undefined;
+  parentNodeId: string | undefined;
   type: InfoNodeTypes;
   message: string;
 }

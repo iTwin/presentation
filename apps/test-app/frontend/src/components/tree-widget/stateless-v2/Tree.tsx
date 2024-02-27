@@ -12,11 +12,7 @@ import { SvgFolder, SvgImodelHollow, SvgItem, SvgLayers, SvgModel } from "@itwin
 import { Button, Flex, ProgressRadial, SearchBox, Text, ToggleSwitch, Tree, TreeNode } from "@itwin/itwinui-react";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import {
-  createLimitingECSqlQueryExecutor,
-  HierarchyProvider,
-  ILimitingECSqlQueryExecutor,
-  IMetadataProvider,
-  TypedPrimitiveValue,
+  createLimitingECSqlQueryExecutor, HierarchyProvider, ILimitingECSqlQueryExecutor, IMetadataProvider, TypedPrimitiveValue,
 } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { isPresentationHierarchyNode, PresentationTreeNode } from "./Types";
@@ -147,7 +143,7 @@ function TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHi
           <TreeNode {...restProps} label={node.message} isDisabled={true} onExpanded={() => {}}>
             <Button
               onClick={() => {
-                setHierarchyLevelLimit(node.parentNode, "unbounded");
+                setHierarchyLevelLimit(node.parentNodeId, "unbounded");
               }}
             >
               Remove Limit
@@ -158,15 +154,15 @@ function TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHi
 
       return (
         <TreeNode
+          {...restProps}
           label={node.label}
           onExpanded={(_, isExpanded) => {
-            expandNode(node, isExpanded);
+            expandNode(node.id, isExpanded);
           }}
           onSelected={(_, isSelected) => {
-            selectNode(node, isSelected);
+            selectNode(node.id, isSelected);
           }}
-          icon={node.isLoading ? <ProgressRadial size="x-small" indeterminate /> : getIcon(node.nodeData.extendedData?.imageId)}
-          {...restProps}
+          icon={node.isLoading ? <ProgressRadial size="x-small" indeterminate /> : getIcon(node.extendedData?.imageId)}
         />
       );
     },
@@ -190,7 +186,7 @@ function TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHi
         hasSubNodes: node.children === true || node.children.length > 0,
         subNodes: node.children !== true ? node.children : [],
         isExpanded: node.isExpanded,
-        isSelected: isNodeSelected(node),
+        isSelected: isNodeSelected(node.id),
       };
     },
     [isNodeSelected],

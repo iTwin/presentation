@@ -2,24 +2,30 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-import { GenericInstanceFilter } from "@itwin/presentation-hierarchy-builder";
-import { InfoNodeTypes, PresentationHierarchyNodeIdentifier } from "./Types";
+
+import { PresentationInstanceFilterInfo } from "@itwin/presentation-components";
+import { HierarchyNode } from "@itwin/presentation-hierarchy-builder";
+import { InfoNodeTypes } from "./Types";
 
 /** @internal */
 export interface TreeModelRootNode {
   id: undefined;
   nodeData: undefined;
   hierarchyLimit?: number | "unbounded";
-  instanceFilter?: GenericInstanceFilter;
+  instanceFilter?: PresentationInstanceFilterInfo;
 }
 
 /** @internal */
-export interface TreeModelHierarchyNode extends PresentationHierarchyNodeIdentifier {
+export interface TreeModelHierarchyNode {
+  id: string;
+  nodeData: HierarchyNode;
   label: string;
   children: boolean;
   isLoading?: boolean;
   isExpanded?: boolean;
   isSelected?: boolean;
+  hierarchyLimit?: number | "unbounded";
+  instanceFilter?: PresentationInstanceFilterInfo;
 }
 
 /** @internal */
@@ -35,7 +41,7 @@ export type TreeModelNode = TreeModelHierarchyNode | TreeModelInfoNode;
 
 /** @internal */
 export function isTreeModelHierarchyNode(node: TreeModelNode): node is TreeModelHierarchyNode {
-  return "nodeData" in node;
+  return "nodeData" in node && node.nodeData !== undefined;
 }
 
 /** @internal */
@@ -46,8 +52,8 @@ export interface TreeModel {
 }
 
 /** @internal */
-export function expandNode(model: TreeModel, nodeIdentifier: PresentationHierarchyNodeIdentifier, isExpanded: boolean): void {
-  const node = model.idToNode[nodeIdentifier.id];
+export function expandNode(model: TreeModel, nodeId: string, isExpanded: boolean): void {
+  const node = model.idToNode[nodeId];
   if (!isTreeModelHierarchyNode(node)) {
     return;
   }
@@ -56,8 +62,8 @@ export function expandNode(model: TreeModel, nodeIdentifier: PresentationHierarc
 }
 
 /** @internal */
-export function addHierarchyPart(model: TreeModel, parent: PresentationHierarchyNodeIdentifier | TreeModelRootNode, hierarchyPart: TreeModel): void {
-  removeSubTree(model, parent);
+export function addHierarchyPart(model: TreeModel, rootId: string | undefined, hierarchyPart: TreeModel): void {
+  removeSubTree(model, rootId);
 
   for (const [parentId, children] of hierarchyPart.parentChildMap) {
     model.parentChildMap.set(parentId, children);
@@ -72,24 +78,24 @@ export function addHierarchyPart(model: TreeModel, parent: PresentationHierarchy
 }
 
 /** @internal */
-export function removeSubTree(model: TreeModel, parent: PresentationHierarchyNodeIdentifier | TreeModelRootNode): void {
-  const currentChildren = model.parentChildMap.get(parent?.id);
+export function removeSubTree(model: TreeModel, parentId: string | undefined): void {
+  const currentChildren = model.parentChildMap.get(parentId);
   if (!currentChildren) {
     return;
   }
-  model.parentChildMap.delete(parent?.id);
+  model.parentChildMap.delete(parentId);
 
   for (const childId of currentChildren) {
     const childNode = model.idToNode[childId];
     if (childNode && isTreeModelHierarchyNode(childNode)) {
-      removeSubTree(model, childNode);
+      removeSubTree(model, childNode.id);
     }
     delete model.idToNode[childId];
   }
 }
 
 /** @internal */
-export function isHierarchyNodeSelected(model: TreeModel, node: PresentationHierarchyNodeIdentifier): boolean {
-  const currentNode = model.idToNode[node.id];
+export function isHierarchyNodeSelected(model: TreeModel, nodeId: string): boolean {
+  const currentNode = model.idToNode[nodeId];
   return currentNode && isTreeModelHierarchyNode(currentNode) && !!currentNode.isSelected;
 }
