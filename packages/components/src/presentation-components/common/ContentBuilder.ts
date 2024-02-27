@@ -37,6 +37,7 @@ import {
 } from "@itwin/presentation-common";
 import { NumericEditorName } from "../properties/editors/NumericPropertyEditor";
 import { QuantityEditorName } from "../properties/editors/QuantityPropertyEditor";
+import { inPlaceSort } from "fast-sort";
 
 /** @internal */
 export interface FieldInfo {
@@ -130,6 +131,7 @@ export namespace IPropertiesAppender {
 }
 class StructMembersAppender implements INestedPropertiesAppender {
   private _members: { [name: string]: PropertyRecord } = {};
+  private _labelsComparer = new Intl.Collator(undefined, { sensitivity: "base" }).compare;
   constructor(
     private _parentAppender: IPropertiesAppender,
     private _fieldHierarchy: FieldHierarchy,
@@ -139,10 +141,11 @@ class StructMembersAppender implements INestedPropertiesAppender {
     this._members[record.fieldHierarchy.field.name] = record.record;
   }
   public finish(): void {
-    const sortedMembers = Object.entries(this._members).sort();
+    const properties = Object.entries(this._members);
+    inPlaceSort(properties).by([{ asc: (p) => p[1].property.displayLabel, comparer: this._labelsComparer }]);
     const value: StructValue = {
       valueFormat: UiPropertyValueFormat.Struct,
-      members: Object.fromEntries(sortedMembers),
+      members: Object.fromEntries(properties),
     };
     const record = new PropertyRecord(value, createPropertyDescriptionFromFieldInfo(this._fieldInfo));
     applyPropertyRecordAttributes(
