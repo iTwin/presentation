@@ -24,7 +24,7 @@ import { filterRuleValidator, isFilterNonEmpty } from "./Utils";
  * Data structure that describes source to gather properties from.
  * @beta
  */
-export interface PropertiesSource {
+export interface PresentationInstanceFilterPropertiesSource {
   /**
    * [Descriptor]($presentation-common) that will be used to get properties.
    */
@@ -59,11 +59,11 @@ export interface PresentationInstanceFilterDialogProps {
   /** Renderer that will be used to render a custom toolbar instead of the default one. */
   toolbarButtonsRenderer?: (toolbarHandlers: FilteringDialogToolbarHandlers) => ReactNode;
   /**
-   * [[PropertiesSource]] that will be used in [[InstanceFilterBuilder]] component to populate properties.
+   * [[PresentationInstanceFilterPropertiesSource]] that will be used in [[InstanceFilterBuilder]] component to populate properties.
    *
-   * This property can be set to function in order to lazy load [[PropertiesSource]] when dialog is opened.
+   * This property can be set to function in order to lazy load [[PresentationInstanceFilterPropertiesSource]] when dialog is opened.
    */
-  propertiesSource: (() => Promise<PropertiesSource>) | PropertiesSource | undefined;
+  propertiesSource: (() => Promise<PresentationInstanceFilterPropertiesSource>) | PresentationInstanceFilterPropertiesSource | undefined;
   /** Renders filter results count. */
   filterResultsCountRenderer?: (filter: PresentationInstanceFilterInfo) => ReactNode;
   /** Dialog title. */
@@ -127,8 +127,10 @@ function FilterDialogContent({ propertiesSource, ...restProps }: FilterDialogCon
   return <LoadedFilterDialogContent {...restProps} descriptor={loadedPropertiesSource.descriptor} descriptorInputKeys={loadedPropertiesSource.inputKeys} />;
 }
 
-function useDelayLoadedPropertiesSource(sourceOrGetter: PropertiesSource | (() => Promise<PropertiesSource>) | undefined): {
-  propertiesSource: PropertiesSource | undefined;
+function useDelayLoadedPropertiesSource(
+  sourceOrGetter: PresentationInstanceFilterPropertiesSource | (() => Promise<PresentationInstanceFilterPropertiesSource>) | undefined,
+): {
+  propertiesSource: PresentationInstanceFilterPropertiesSource | undefined;
   isLoading: boolean;
 } {
   const [{ source, isLoading }, setState] = useState(() =>

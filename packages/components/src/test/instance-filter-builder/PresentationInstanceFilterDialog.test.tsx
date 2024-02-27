@@ -15,7 +15,10 @@ import { translate } from "../../presentation-components/common/Utils";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
 import { PresentationInstanceFilter } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilter";
-import { PresentationInstanceFilterDialog, PropertiesSource } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog";
+import {
+  PresentationInstanceFilterDialog,
+  PresentationInstanceFilterPropertiesSource,
+} from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog";
 import { createTestECClassInfo, stubDOMMatrix, stubRaf } from "../_helpers/Common";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
 import { ResolvablePromise } from "../_helpers/Promises";
@@ -406,9 +409,9 @@ describe("PresentationInstanceFilterDialog", () => {
   });
 
   it("renders spinner while loading descriptor", async () => {
-    const propertieSourcePromise = new ResolvablePromise<PropertiesSource>();
+    const propertiesSourcePromise = new ResolvablePromise<PresentationInstanceFilterPropertiesSource>();
     // simulate long loading descriptor
-    const propertiesSourceGetter = async () => propertieSourcePromise;
+    const propertiesSourceGetter = async () => propertiesSourcePromise;
 
     const { container } = render(
       <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSourceGetter} onApply={() => {}} isOpen={true} />,
@@ -420,7 +423,7 @@ describe("PresentationInstanceFilterDialog", () => {
     await waitFor(() => {
       expect(container.querySelector(".presentation-instance-filter-dialog-progress")).to.not.be.null;
     });
-    await propertieSourcePromise.resolve(propertiesSource);
+    await propertiesSourcePromise.resolve(propertiesSource);
 
     await waitFor(() => {
       expect(container.querySelector(".presentation-instance-filter-dialog-progress")).to.be.null;

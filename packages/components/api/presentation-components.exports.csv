@@ -53,6 +53,7 @@ beta;PresentationInstanceFilterConditionGroup
 beta;PresentationInstanceFilterDialog(props: PresentationInstanceFilterDialogProps): JSX_2.Element
 beta;PresentationInstanceFilterDialogProps
 beta;PresentationInstanceFilterInfo
+beta;PresentationInstanceFilterPropertiesSource
 beta;PresentationInstanceFilterPropertyInfo
 public;PresentationLabelsProvider 
 public;PresentationLabelsProviderProps
@@ -74,7 +75,6 @@ beta;PresentationTreeNodeRendererProps
 public;PresentationTreeProps
 beta;PresentationTreeRenderer(props: PresentationTreeRendererProps): JSX_2.Element
 beta;PresentationTreeRendererProps 
-beta;PropertiesSource
 public;PropertyDataProviderWithUnifiedSelectionProps
 public;PropertyRecordsBuilder 
 beta;SchemaMetadataContext
