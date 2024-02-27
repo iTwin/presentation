@@ -19,7 +19,7 @@ import {
 } from "@itwin/components-react";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { PresentationError, PresentationStatus, PropertyValueFormat } from "@itwin/presentation-common";
+import { Descriptor, PresentationError, PresentationStatus, PropertyValueFormat } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
 import { translate } from "../../../presentation-components/common/Utils";
 import { PresentationInstanceFilterInfo } from "../../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
@@ -29,6 +29,7 @@ import { IPresentationTreeDataProvider } from "../../../presentation-components/
 import { PresentationTreeNodeItem } from "../../../presentation-components/tree/PresentationTreeNodeItem";
 import { createTestPropertyInfo, stubDOMMatrix, stubRaf } from "../../_helpers/Common";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content";
+import { ResolvablePromise } from "../../_helpers/Promises";
 import { render, waitFor } from "../../TestUtils";
 import { createTreeModelNodeInput } from "./Helpers";
 
@@ -154,6 +155,45 @@ describe("PresentationTreeRenderer", () => {
 
     const dialog = baseElement.querySelector(".presentation-instance-filter-dialog");
     expect(dialog).to.be.null;
+  });
+
+  it("renders filter builder dialog using lazy loaded descriptor when node filter button is clicked", async () => {
+    const descriptorPromise = new ResolvablePromise<Descriptor>();
+    const { visibleNodes, nodeLoader } = setupTreeModel((model) => {
+      model.setChildren(
+        undefined,
+        [createTreeModelNodeInput({ id: "A", item: { filtering: { descriptor: async () => descriptorPromise, ancestorFilters: [] } } })],
+        0,
+      );
+    });
+
+    const { queryByText, container, baseElement, user } = render(
+      <PresentationTreeRenderer {...baseTreeProps} visibleNodes={visibleNodes} nodeLoader={nodeLoader} />,
+    );
+
+    await waitFor(() => expect(queryByText("A")).to.not.be.null);
+    expect(container.querySelector(".presentation-components-node")).to.not.be.null;
+
+    const filterButton = container.querySelector(".presentation-components-node-action-buttons button");
+    expect(filterButton).to.not.be.null;
+    await user.click(filterButton!);
+
+    // wait for dialog to be visible
+    await waitFor(() => {
+      expect(baseElement.querySelector(".presentation-instance-filter-dialog")).to.not.be.null;
+    });
+
+    // wait for spinner to be visible
+    await waitFor(() => {
+      expect(baseElement.querySelector(".presentation-instance-filter-dialog-progress")).to.not.be.null;
+    });
+
+    await descriptorPromise.resolve(createTestContentDescriptor({ fields: [] }));
+
+    // wait for spinner to disappear
+    await waitFor(() => {
+      expect(baseElement.querySelector(".presentation-instance-filter-dialog-progress")).to.be.null;
+    });
   });
 
   it("does not render filter dialog when tree model does not find a matching node", async () => {
