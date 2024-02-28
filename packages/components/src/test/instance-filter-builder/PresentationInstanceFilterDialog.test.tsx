@@ -10,15 +10,18 @@ import { UiComponents } from "@itwin/components-react";
 import { BeEvent } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { Descriptor } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { translate } from "../../presentation-components/common/Utils";
 import { ECClassInfo, getIModelMetadataProvider } from "../../presentation-components/instance-filter-builder/ECMetadataProvider";
 import { PresentationInstanceFilterInfo } from "../../presentation-components/instance-filter-builder/PresentationFilterBuilder";
 import { PresentationInstanceFilter } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilter";
-import { PresentationInstanceFilterDialog } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog";
+import {
+  PresentationInstanceFilterDialog,
+  PresentationInstanceFilterPropertiesSource,
+} from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterDialog";
 import { createTestECClassInfo, stubDOMMatrix, stubRaf } from "../_helpers/Common";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
+import { ResolvablePromise } from "../_helpers/Promises";
 import { render, waitFor, waitForElement } from "../TestUtils";
 
 describe("PresentationInstanceFilterDialog", () => {
@@ -37,6 +40,11 @@ describe("PresentationInstanceFilterDialog", () => {
     categories: [category],
     fields: [stringField],
   });
+
+  const propertiesSource = {
+    descriptor,
+  };
+
   const initialFilter: PresentationInstanceFilterInfo = {
     filter: {
       field: stringField,
@@ -75,7 +83,7 @@ describe("PresentationInstanceFilterDialog", () => {
 
   it("displays warning message on class selector opening if filtering rules are set ", async () => {
     const { container, getByTitle, queryByDisplayValue, user, queryByText, getByPlaceholderText } = render(
-      <PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptor} onApply={() => {}} isOpen={true} />,
+      <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} onApply={() => {}} isOpen={true} />,
       {
         addThemeProvider: true,
       },
@@ -101,7 +109,7 @@ describe("PresentationInstanceFilterDialog", () => {
 
   it("hides warning message when class selection dropdown is hidden ", async () => {
     const { container, getByTitle, queryByDisplayValue, user, queryByText, getByPlaceholderText, getByTestId } = render(
-      <PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptor} onApply={() => {}} isOpen={true} />,
+      <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} onApply={() => {}} isOpen={true} />,
       {
         addThemeProvider: true,
       },
@@ -135,7 +143,7 @@ describe("PresentationInstanceFilterDialog", () => {
 
   it("clears all filtering options on class list changing ", async () => {
     const { container, getByTitle, user, queryByDisplayValue, getByPlaceholderText } = render(
-      <PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptor} onApply={() => {}} isOpen={true} />,
+      <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} onApply={() => {}} isOpen={true} />,
       {
         addThemeProvider: true,
       },
@@ -167,7 +175,7 @@ describe("PresentationInstanceFilterDialog", () => {
   it("invokes 'onApply' with string property filter rule", async () => {
     const spy = sinon.spy();
     const { container, getByTitle, queryByDisplayValue, user } = render(
-      <PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptor} onApply={spy} isOpen={true} />,
+      <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} onApply={spy} isOpen={true} />,
       {
         addThemeProvider: true,
       },
@@ -207,9 +215,12 @@ describe("PresentationInstanceFilterDialog", () => {
 
   it("does not invoke `onApply` when there two empty rules", async () => {
     const spy = sinon.spy();
-    const { container, user, getByText } = render(<PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptor} onApply={spy} isOpen={true} />, {
-      addThemeProvider: true,
-    });
+    const { container, user, getByText } = render(
+      <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} onApply={spy} isOpen={true} />,
+      {
+        addThemeProvider: true,
+      },
+    );
 
     await user.click(getByText(/filterBuilder.add/));
 
@@ -221,9 +232,12 @@ describe("PresentationInstanceFilterDialog", () => {
 
   it("does not invoke `onApply` when filter is invalid", async () => {
     const spy = sinon.spy();
-    const { container, getByTitle, user } = render(<PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptor} onApply={spy} isOpen={true} />, {
-      addThemeProvider: true,
-    });
+    const { container, getByTitle, user } = render(
+      <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} onApply={spy} isOpen={true} />,
+      {
+        addThemeProvider: true,
+      },
+    );
 
     // open property selector
     const propertySelector = await getRulePropertySelector(container);
@@ -239,7 +253,7 @@ describe("PresentationInstanceFilterDialog", () => {
 
   it("invokes `onApply` when there are no items selected", async () => {
     const spy = sinon.spy();
-    const { container, user } = render(<PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptor} onApply={spy} isOpen={true} />, {
+    const { container, user } = render(<PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} onApply={spy} isOpen={true} />, {
       addThemeProvider: true,
     });
 
@@ -252,7 +266,7 @@ describe("PresentationInstanceFilterDialog", () => {
   it("invokes `onApply` with only selected classes", async () => {
     const spy = sinon.spy();
     const { container, getByRole, getByPlaceholderText, user } = render(
-      <PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptor} onApply={spy} isOpen={true} />,
+      <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} onApply={spy} isOpen={true} />,
       {
         addThemeProvider: true,
       },
@@ -275,7 +289,7 @@ describe("PresentationInstanceFilterDialog", () => {
   it("invokes `onReset` when reset is clicked.", async () => {
     const spy = sinon.spy();
     const { container, user } = render(
-      <PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptor} onReset={spy} onApply={() => {}} isOpen={true} />,
+      <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} onReset={spy} onApply={() => {}} isOpen={true} />,
       {
         addThemeProvider: true,
       },
@@ -291,7 +305,7 @@ describe("PresentationInstanceFilterDialog", () => {
     const fromComponentsPropertyFilterStub = sinon.stub(PresentationInstanceFilter, "fromComponentsPropertyFilter").throws(new Error("Some Error"));
     const spy = sinon.spy();
     const { container, getByText, queryByText, user, getByTitle } = render(
-      <PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptor} onApply={spy} isOpen={true} />,
+      <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} onApply={spy} isOpen={true} />,
       {
         addThemeProvider: true,
       },
@@ -324,7 +338,7 @@ describe("PresentationInstanceFilterDialog", () => {
     const { queryByText } = render(
       <PresentationInstanceFilterDialog
         imodel={imodel}
-        descriptor={descriptor}
+        propertiesSource={propertiesSource}
         title={<div>{title}</div>}
         onApply={spy}
         isOpen={true}
@@ -339,7 +353,7 @@ describe("PresentationInstanceFilterDialog", () => {
     const { queryByText } = render(
       <PresentationInstanceFilterDialog
         imodel={imodel}
-        descriptor={descriptor}
+        propertiesSource={propertiesSource}
         onApply={() => {}}
         isOpen={true}
         initialFilter={initialFilter}
@@ -354,20 +368,22 @@ describe("PresentationInstanceFilterDialog", () => {
   });
 
   it("renders error boundary if error is thrown", async () => {
-    const descriptorGetter = async () => {
+    const propertiesSourceGetter = async () => {
       throw new Error("Cannot load descriptor");
     };
 
-    const { queryByText } = render(<PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptorGetter} onApply={() => {}} isOpen={true} />);
+    const { queryByText } = render(
+      <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSourceGetter} onApply={() => {}} isOpen={true} />,
+    );
 
     await waitFor(() => expect(queryByText("general.error")).to.not.be.null);
   });
 
   it("renders with lazy-loaded descriptor", async () => {
     const spy = sinon.spy();
-    const descriptorGetter = async () => descriptor;
+    const propertiesSourceGetter = async () => ({ descriptor });
 
-    const { container } = render(<PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptorGetter} onApply={spy} isOpen={true} />, {
+    const { container } = render(<PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSourceGetter} onApply={spy} isOpen={true} />, {
       addThemeProvider: true,
     });
 
@@ -382,7 +398,7 @@ describe("PresentationInstanceFilterDialog", () => {
     const { queryByText } = render(
       <PresentationInstanceFilterDialog
         imodel={imodel}
-        descriptor={descriptor}
+        propertiesSource={propertiesSource}
         onApply={() => {}}
         isOpen={true}
         toolbarButtonsRenderer={toolbarButtonsRenderer}
@@ -393,15 +409,24 @@ describe("PresentationInstanceFilterDialog", () => {
   });
 
   it("renders spinner while loading descriptor", async () => {
+    const propertiesSourcePromise = new ResolvablePromise<PresentationInstanceFilterPropertiesSource>();
     // simulate long loading descriptor
-    const descriptorGetter = async () => undefined as unknown as Descriptor;
+    const propertiesSourceGetter = async () => propertiesSourcePromise;
 
-    const { container } = render(<PresentationInstanceFilterDialog imodel={imodel} descriptor={descriptorGetter} onApply={() => {}} isOpen={true} />, {
-      addThemeProvider: true,
-    });
+    const { container } = render(
+      <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSourceGetter} onApply={() => {}} isOpen={true} />,
+      {
+        addThemeProvider: true,
+      },
+    );
 
     await waitFor(() => {
       expect(container.querySelector(".presentation-instance-filter-dialog-progress")).to.not.be.null;
+    });
+    await propertiesSourcePromise.resolve(propertiesSource);
+
+    await waitFor(() => {
+      expect(container.querySelector(".presentation-instance-filter-dialog-progress")).to.be.null;
     });
   });
 

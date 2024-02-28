@@ -120,17 +120,33 @@ interface TreeNodeFilterBuilderDialogProps {
 function TreeNodeFilterBuilderDialog(props: TreeNodeFilterBuilderDialogProps) {
   const { filterNode, dataProvider, ...restProps } = props;
   const filteringInfo = filterNode.filtering;
-  const descriptorInputKeys = useMemo(() => [filterNode.key], [filterNode.key]);
   const imodel = dataProvider.imodel;
+
+  const propertiesSource = useMemo(() => {
+    if (typeof filteringInfo.descriptor === "function") {
+      const descriptorGetter = filteringInfo.descriptor;
+      return async () => {
+        const descriptor = await descriptorGetter();
+        return {
+          descriptor,
+          inputKeys: [filterNode.key],
+        };
+      };
+    }
+
+    return {
+      descriptor: filteringInfo.descriptor,
+      inputKeys: [filterNode.key],
+    };
+  }, [filteringInfo.descriptor, filterNode.key]);
 
   return (
     <PresentationInstanceFilterDialog
       {...restProps}
       isOpen={true}
       imodel={imodel}
-      descriptor={filteringInfo.descriptor}
+      propertiesSource={propertiesSource}
       initialFilter={filteringInfo.active}
-      descriptorInputKeys={descriptorInputKeys}
       filterResultsCountRenderer={(filter) => <MatchingInstancesCount dataProvider={dataProvider} filter={filter} parentKey={filterNode.key} />}
     />
   );
