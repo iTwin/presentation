@@ -15,13 +15,16 @@ export interface LoadedHierarchyPart {
 }
 
 /** @internal */
+export interface ReloadOptions {
+  expandedNodes: TreeModelHierarchyNode[];
+  collapsedNodes: TreeModelHierarchyNode[];
+  buildNode: (node: TreeModelHierarchyNode) => TreeModelHierarchyNode;
+}
+
+/** @internal */
 export interface IHierarchyLoader {
   getNodes(parent: TreeModelHierarchyNode | TreeModelRootNode, shouldLoadChildren: (node: HierarchyNode) => boolean): Observable<LoadedHierarchyPart>;
-  reloadNodes(options: {
-    expandedNodes: TreeModelHierarchyNode[];
-    collapsedNodes: TreeModelHierarchyNode[];
-    buildNode: (node: TreeModelHierarchyNode) => TreeModelHierarchyNode;
-  }): Observable<LoadedHierarchyPart>;
+  reloadNodes(parent: TreeModelHierarchyNode | TreeModelRootNode, options: ReloadOptions): Observable<LoadedHierarchyPart>;
 }
 
 /** @internal */
@@ -75,17 +78,9 @@ export class HierarchyLoader implements IHierarchyLoader {
     return this.loadNodes(parent, shouldLoadChildren);
   }
 
-  public reloadNodes({
-    expandedNodes,
-    collapsedNodes,
-    buildNode,
-  }: {
-    expandedNodes: TreeModelHierarchyNode[];
-    collapsedNodes: TreeModelHierarchyNode[];
-    buildNode: (node: TreeModelHierarchyNode) => TreeModelHierarchyNode;
-  }) {
+  public reloadNodes(parent: TreeModelHierarchyNode | TreeModelRootNode, { expandedNodes, collapsedNodes, buildNode }: ReloadOptions) {
     return this.loadNodes(
-      { id: undefined, nodeData: undefined },
+      parent,
       (node: HierarchyNode) => {
         if (expandedNodes.findIndex((expandedNode) => sameNodes(expandedNode.nodeData, node)) !== -1) {
           return true;

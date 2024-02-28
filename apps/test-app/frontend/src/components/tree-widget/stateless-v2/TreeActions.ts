@@ -148,19 +148,25 @@ export class TreeActions {
     this.loadNodes(nodeId);
   }
 
-  public reloadTree(options?: { discardState?: boolean }) {
-    // cancel all ongoing requests
-    this._disposed.next();
-
+  public reloadTree(parentId: string | undefined, options?: { discardState?: boolean }) {
     const oldModel = this._currentModel;
-    const expandedNodes = !!options?.discardState ? [] : collectNodes(undefined, this._currentModel, (node) => node.isExpanded === true);
-    const collapsedNodes = !!options?.discardState ? [] : collectNodes(undefined, this._currentModel, (node) => node.isExpanded === false);
+    const expandedNodes = !!options?.discardState ? [] : collectNodes(parentId, oldModel, (node) => node.isExpanded === true);
+    const collapsedNodes = !!options?.discardState ? [] : collectNodes(parentId, oldModel, (node) => node.isExpanded === false);
     const buildNode = !!options?.discardState ? (node: TreeModelHierarchyNode) => node : (node: TreeModelHierarchyNode) => addAttributes(node, oldModel);
 
-    this.updateTreeState((state) => ({ ...state, isLoading: true }));
+    const rootNode = parentId !== undefined ? this.getNode(parentId) : oldModel.rootNode;
+    if (!rootNode) {
+      return;
+    }
+
+    if (parentId === undefined) {
+      // cancel all ongoing requests
+      this._disposed.next();
+      this.updateTreeState((state) => ({ ...state, isLoading: true }));
+    }
 
     this._loader
-      .reloadNodes({ expandedNodes, collapsedNodes, buildNode })
+      .reloadNodes(rootNode, { expandedNodes, collapsedNodes, buildNode })
       .pipe(
         takeUntil(this._disposed),
         reduce<LoadedHierarchyPart, TreeModel>(
@@ -182,7 +188,13 @@ export class TreeActions {
       )
       .subscribe({
         next: (newModel) => {
-          this.updateTreeModel(newModel);
+          this.updateTreeModel((model) => {
+            addHierarchyPart(model, parentId, newModel);
+            const parentNode = parentId !== undefined ? model.idToNode[parentId] : undefined;
+            if (parentNode && isTreeModelHierarchyNode(parentNode)) {
+              parentNode.isLoading = false;
+            }
+          });
         },
       });
   }
@@ -271,7 +283,10 @@ class NoopHierarchyLoader implements IHierarchyLoader {
     return EMPTY;
   }
 
-  public reloadNodes(_options: { expandedNodes: TreeModelHierarchyNode[]; collapsedNodes: TreeModelHierarchyNode[] }): Observable<LoadedHierarchyPart> {
+  public reloadNodes(
+    _parent: TreeModelHierarchyNode | TreeModelRootNode,
+    _options: { expandedNodes: TreeModelHierarchyNode[]; collapsedNodes: TreeModelHierarchyNode[] },
+  ): Observable<LoadedHierarchyPart> {
     return EMPTY;
   }
 }

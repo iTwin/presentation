@@ -49,7 +49,7 @@ export function useTreeInternal({ hierarchyProvider }: UseTreeStateProps): UseTr
 
   useEffect(() => {
     actions.setHierarchyProvider(hierarchyProvider);
-    actions.reloadTree();
+    actions.reloadTree(undefined);
     return () => {
       actions.dispose();
     };
@@ -64,7 +64,7 @@ export function useTreeInternal({ hierarchyProvider }: UseTreeStateProps): UseTr
   }).current;
 
   const reloadTree = useRef((options?: { discardState?: boolean }) => {
-    actions.reloadTree(options);
+    actions.reloadTree(undefined, options);
   }).current;
 
   const selectNode = useRef((nodeId: string, isSelected: boolean) => {

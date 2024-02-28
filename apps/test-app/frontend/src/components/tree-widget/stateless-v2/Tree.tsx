@@ -142,8 +142,11 @@ function TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHi
         return (
           <TreeNode {...restProps} label={node.message} isDisabled={true} onExpanded={() => {}}>
             <Button
-              onClick={() => {
+              styleType="borderless"
+              size="small"
+              onClick={(e) => {
                 setHierarchyLevelLimit(node.parentNodeId, "unbounded");
+                e.stopPropagation();
               }}
             >
               Remove Limit
