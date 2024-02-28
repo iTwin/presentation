@@ -1,7 +1,9 @@
 sep=;
 Release Tag;API Item
 beta;createECSqlQueryExecutor(imodel: ICoreECSqlReaderFactory): IECSqlQueryExecutor
+beta;createHierarchyLevelDescriptor
 beta;CreateHierarchyLevelDescriptorProps
+beta;CreateHierarchyLevelDescriptorResult
 beta;createLogger(): ILogger
 beta;createMetadataProvider(schemaContext: SchemaContext): IMetadataProvider
 beta;createValueFormatter(schemaContext: SchemaContext, unitSystem?: UnitSystemKey, baseFormatter?: IPrimitiveValueFormatter): IPrimitiveValueFormatter
