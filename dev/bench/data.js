@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1708422435119,
+  "lastUpdate": 1709123945799,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -1110,6 +1110,42 @@ window.BENCHMARK_DATA = {
             "value": 1831,
             "unit": "ms",
             "extra": "min: 1831\nmax: 1831\ncount: 1\nmean: 1831\np50: 1826.6\nmedian: 1826.6\np75: 1826.6\np90: 1826.6\np95: 1826.6\np99: 1826.6\np999: 1826.6"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "24278440+saskliutas@users.noreply.github.com",
+            "name": "Saulius Skliutas",
+            "username": "saskliutas"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bf1fcfbcd4d52a23bc19ae113314f5811ead3674",
+          "message": "[core-interop]: Returns input keys with hierarchy level descriptor (#440)\n\n* Returns input keys with hierarchy level descriptor\r\n\r\n* Update full-stack-tests\r\n\r\n* Add return type",
+          "timestamp": "2024-02-28T14:37:56+02:00",
+          "tree_id": "c41379059f4c8c9b6c4384b06fa5fcd8158e4b7f",
+          "url": "https://github.com/iTwin/presentation/commit/bf1fcfbcd4d52a23bc19ae113314f5811ead3674"
+        },
+        "date": 1709123945372,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Initial Models Tree Load: Baytown.bim",
+            "value": 222,
+            "unit": "ms",
+            "extra": "min: 222\nmax: 222\ncount: 1\nmean: 222\np50: 223.7\nmedian: 223.7\np75: 223.7\np90: 223.7\np95: 223.7\np99: 223.7\np999: 223.7"
+          },
+          {
+            "name": "Full Models Tree Load: Baytown.bim",
+            "value": 1907,
+            "unit": "ms",
+            "extra": "min: 1907\nmax: 1907\ncount: 1\nmean: 1907\np50: 1901.1\nmedian: 1901.1\np75: 1901.1\np90: 1901.1\np95: 1901.1\np99: 1901.1\np999: 1901.1"
           }
         ]
       }
