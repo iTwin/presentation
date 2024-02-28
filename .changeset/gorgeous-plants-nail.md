@@ -2,4 +2,4 @@
 "@itwin/presentation-components": patch
 ---
 
-Added struct member sorting.
+Sort struct property members by label when creating content for property grid, table, and other content components.
