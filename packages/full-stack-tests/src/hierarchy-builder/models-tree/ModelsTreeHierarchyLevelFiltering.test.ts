@@ -43,13 +43,13 @@ describe("Stateless hierarchy builder", () => {
         }),
         expect: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: "0x1" }] })],
       });
-      const descriptor = await createHierarchyLevelDescriptor({
+      const result = await createHierarchyLevelDescriptor({
         imodel,
         parentNode: undefined,
         hierarchyProvider: provider,
         descriptorBuilder: Presentation.presentation,
       });
-      expect(descriptor).to.containSubset({
+      expect(result?.descriptor).to.containSubset({
         selectClasses: [
           {
             selectClassInfo: { name: Subject.classFullName },
@@ -114,13 +114,13 @@ describe("Stateless hierarchy builder", () => {
           NodeValidators.createForInstanceNode({ instanceKeys: [keys.model] }),
         ],
       });
-      const descriptor = await createHierarchyLevelDescriptor({
+      const result = await createHierarchyLevelDescriptor({
         imodel,
         parentNode,
         hierarchyProvider: provider,
         descriptorBuilder: Presentation.presentation,
       });
-      expect(descriptor).to.containSubset({
+      expect(result?.descriptor).to.containSubset({
         selectClasses: [
           {
             selectClassInfo: { name: Subject.classFullName },
@@ -163,13 +163,13 @@ describe("Stateless hierarchy builder", () => {
         nodes: await provider.getNodes({ parentNode }),
         expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.category] })],
       });
-      const descriptor = await createHierarchyLevelDescriptor({
+      const result = await createHierarchyLevelDescriptor({
         imodel,
         parentNode,
         hierarchyProvider: provider,
         descriptorBuilder: Presentation.presentation,
       });
-      expect(descriptor).to.containSubset({
+      expect(result?.descriptor).to.containSubset({
         selectClasses: [
           {
             selectClassInfo: { name: SpatialCategory.classFullName },
@@ -213,13 +213,13 @@ describe("Stateless hierarchy builder", () => {
         nodes: await provider.getNodes({ parentNode }),
         expect: [NodeValidators.createForClassGroupingNode({ className: keys.element.className })],
       });
-      const descriptor = await createHierarchyLevelDescriptor({
+      const result = await createHierarchyLevelDescriptor({
         imodel,
         parentNode,
         hierarchyProvider: provider,
         descriptorBuilder: Presentation.presentation,
       });
-      expect(descriptor).to.containSubset({
+      expect(result?.descriptor).to.containSubset({
         selectClasses: [
           {
             selectClassInfo: { name: keys.element.className.replace(".", ":") },
@@ -271,13 +271,13 @@ describe("Stateless hierarchy builder", () => {
         nodes: await provider.getNodes({ parentNode }),
         expect: [NodeValidators.createForClassGroupingNode({ className: keys.childElement.className })],
       });
-      const descriptor = await createHierarchyLevelDescriptor({
+      const result = await createHierarchyLevelDescriptor({
         imodel,
         parentNode,
         hierarchyProvider: provider,
         descriptorBuilder: Presentation.presentation,
       });
-      expect(descriptor).to.containSubset({
+      expect(result?.descriptor).to.containSubset({
         selectClasses: [
           {
             selectClassInfo: { name: keys.childElement.className.replace(".", ":") },
@@ -336,13 +336,13 @@ describe("Stateless hierarchy builder", () => {
         nodes: await provider.getNodes({ parentNode }),
         expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.category] })],
       });
-      const descriptor = await createHierarchyLevelDescriptor({
+      const result = await createHierarchyLevelDescriptor({
         imodel,
         parentNode,
         hierarchyProvider: provider,
         descriptorBuilder: Presentation.presentation,
       });
-      expect(descriptor).to.containSubset({
+      expect(result?.descriptor).to.containSubset({
         selectClasses: [
           {
             selectClassInfo: { name: SpatialCategory.classFullName },
@@ -387,13 +387,13 @@ describe("Stateless hierarchy builder", () => {
         nodes: await provider.getNodes({ parentNode }),
         expect: [NodeValidators.createForClassGroupingNode({ className: keys.element.className })],
       });
-      const descriptor = await createHierarchyLevelDescriptor({
+      const result = await createHierarchyLevelDescriptor({
         imodel,
         parentNode,
         hierarchyProvider: provider,
         descriptorBuilder: Presentation.presentation,
       });
-      expect(descriptor).to.containSubset({
+      expect(result?.descriptor).to.containSubset({
         selectClasses: [
           {
             selectClassInfo: { name: keys.element.className.replace(".", ":") },

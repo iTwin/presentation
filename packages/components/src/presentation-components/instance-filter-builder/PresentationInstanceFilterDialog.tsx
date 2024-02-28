@@ -21,13 +21,32 @@ import { PresentationInstanceFilter } from "./PresentationInstanceFilter";
 import { filterRuleValidator, isFilterNonEmpty } from "./Utils";
 
 /**
+ * Data structure that describes source to gather properties from.
+ * @beta
+ */
+export interface PresentationInstanceFilterPropertiesSource {
+  /**
+   * [Descriptor]($presentation-common) that will be used to get properties.
+   */
+  descriptor: Descriptor;
+  /**
+   * [Keys]($presentation-common) of filterables on which the filter was called.
+   * These keys should match the keys that were used to create the descriptor.
+   */
+  inputKeys?: Keys;
+}
+
+/**
  * Props for [[PresentationInstanceFilterDialog]] component.
  * @beta
  */
 export interface PresentationInstanceFilterDialogProps {
   /** iModel connection to pull data from. */
   imodel: IModelConnection;
-  /** Specifies how deep rule groups can be nested. */
+  /**
+   * Specifies how deep rule groups can be nested.
+   * @deprecated in 5.0. Rule groups nesting was removed from [PropertyFilterBuilderRenderer]($components-react)
+   */
   ruleGroupDepthLimit?: number;
   /** Specifies whether dialog is open or not. */
   isOpen: boolean;
@@ -40,19 +59,13 @@ export interface PresentationInstanceFilterDialogProps {
   /** Renderer that will be used to render a custom toolbar instead of the default one. */
   toolbarButtonsRenderer?: (toolbarHandlers: FilteringDialogToolbarHandlers) => ReactNode;
   /**
-   * [Descriptor]($presentation-common) that will be used in [[InstanceFilterBuilder]] component rendered inside this dialog.
+   * [[PresentationInstanceFilterPropertiesSource]] that will be used in [[InstanceFilterBuilder]] component to populate properties.
    *
-   * This property can be set to function in order to lazy load [Descriptor]($presentation-common) when dialog is opened.
+   * This property can be set to function in order to lazy load [[PresentationInstanceFilterPropertiesSource]] when dialog is opened.
    */
-  descriptor: (() => Promise<Descriptor>) | Descriptor;
+  propertiesSource: (() => Promise<PresentationInstanceFilterPropertiesSource>) | PresentationInstanceFilterPropertiesSource | undefined;
   /** Renders filter results count. */
   filterResultsCountRenderer?: (filter: PresentationInstanceFilterInfo) => ReactNode;
-  /**
-   * [Keys]($presentation-common) of filterables on which the filter was called.
-   *
-   * These keys should match the keys that were used to create the descriptor.
-   */
-  descriptorInputKeys?: Keys;
   /** Dialog title. */
   title?: React.ReactNode;
   /** Initial filter that will be show when component is mounted. */
@@ -101,70 +114,84 @@ export function PresentationInstanceFilterDialog(props: PresentationInstanceFilt
 
 type FilterDialogContentProps = Omit<PresentationInstanceFilterDialogProps, "isOpen" | "title">;
 
-function FilterDialogContent({ descriptor, ...restProps }: FilterDialogContentProps) {
-  const loadedDescriptor = useDelayLoadedDescriptor(descriptor);
-  if (!loadedDescriptor) {
+function FilterDialogContent({ propertiesSource, ...restProps }: FilterDialogContentProps) {
+  const { propertiesSource: loadedPropertiesSource, isLoading } = useDelayLoadedPropertiesSource(propertiesSource);
+  if (isLoading) {
     return <DelayedCenteredProgressRadial />;
   }
 
-  return <LoadedFilterDialogContent {...restProps} descriptor={loadedDescriptor} />;
+  if (!loadedPropertiesSource) {
+    return null;
+  }
+
+  return <LoadedFilterDialogContent {...restProps} descriptor={loadedPropertiesSource.descriptor} descriptorInputKeys={loadedPropertiesSource.inputKeys} />;
 }
 
-function useDelayLoadedDescriptor(descriptorOrGetter: Descriptor | (() => Promise<Descriptor>)) {
-  const [descriptor, setDescriptor] = useState<Descriptor | undefined>(() => (descriptorOrGetter instanceof Descriptor ? descriptorOrGetter : undefined));
+function useDelayLoadedPropertiesSource(
+  sourceOrGetter: PresentationInstanceFilterPropertiesSource | (() => Promise<PresentationInstanceFilterPropertiesSource>) | undefined,
+): {
+  propertiesSource: PresentationInstanceFilterPropertiesSource | undefined;
+  isLoading: boolean;
+} {
+  const [{ source, isLoading }, setState] = useState(() =>
+    typeof sourceOrGetter === "function"
+      ? {
+          source: undefined,
+          isLoading: false,
+        }
+      : {
+          source: sourceOrGetter,
+          isLoading: false,
+        },
+  );
 
   useEffect(() => {
     let disposed = false;
 
-    if (descriptorOrGetter instanceof Descriptor) {
-      setDescriptor(descriptorOrGetter);
-    } else {
-      const updateState = (...params: Parameters<typeof setDescriptor>) => {
-        // istanbul ignore else
-        if (!disposed) {
-          setDescriptor(...params);
-        }
-      };
-
-      void (async () => {
-        try {
-          const newDescriptor = await descriptorOrGetter();
-          updateState(newDescriptor);
-        } catch (error) {
-          updateState(() => {
-            // throw error in setSate callback for it to be caught by ErrorBoundary
-            throw error;
-          });
-        }
-      })();
+    if (typeof sourceOrGetter !== "function") {
+      setState({ source: sourceOrGetter, isLoading: false });
+      return;
     }
+
+    const updateState = (...params: Parameters<typeof setState>) => {
+      // istanbul ignore else
+      if (!disposed) {
+        setState(...params);
+      }
+    };
+
+    updateState({ source: undefined, isLoading: true });
+
+    void (async () => {
+      try {
+        const newDescriptor = await sourceOrGetter();
+        updateState({
+          source: newDescriptor,
+          isLoading: false,
+        });
+      } catch (error) {
+        updateState(() => {
+          // throw error in setSate callback for it to be caught by ErrorBoundary
+          throw error;
+        });
+      }
+    })();
 
     return () => {
       disposed = true;
     };
-  }, [descriptorOrGetter]);
+  }, [sourceOrGetter]);
 
-  return descriptor;
+  return { propertiesSource: source, isLoading };
 }
 
-interface LoadedFilterDialogContentProps extends Omit<PresentationInstanceFilterDialogProps, "isOpen" | "title" | "descriptor"> {
+interface LoadedFilterDialogContentProps extends Omit<PresentationInstanceFilterDialogProps, "isOpen" | "title" | "propertiesSource"> {
   descriptor: Descriptor;
   descriptorInputKeys?: Keys;
 }
 
 function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
-  const {
-    initialFilter,
-    descriptor,
-    imodel,
-    ruleGroupDepthLimit,
-    filterResultsCountRenderer,
-    descriptorInputKeys,
-    onApply,
-    onReset,
-    onClose,
-    toolbarButtonsRenderer,
-  } = props;
+  const { initialFilter, descriptor, imodel, filterResultsCountRenderer, descriptorInputKeys, onApply, onReset, onClose, toolbarButtonsRenderer } = props;
   const [initialPropertyFilter] = useState(() => {
     if (!initialFilter?.filter) {
       return undefined;
@@ -232,7 +259,6 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
           onSelectedClassesChanged={onSelectedClassesChanged}
           rootGroup={rootGroup}
           actions={actions}
-          ruleGroupDepthLimit={ruleGroupDepthLimit}
           imodel={imodel}
           descriptor={descriptor}
           descriptorInputKeys={descriptorInputKeys}
