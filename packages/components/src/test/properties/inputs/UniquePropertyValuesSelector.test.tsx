@@ -22,59 +22,26 @@ import {
 } from "../../_helpers/Content";
 import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy";
 import { render, waitFor } from "../../TestUtils";
+import { PropsWithChildren, useState } from "react";
+import { PortalTargetContextProvider } from "../../../presentation-components/common/PortalTargetContext";
 
-let isOffScreen = false;
+function TestComponentWithPortalTarget({ children }: PropsWithChildren) {
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
 
-class IntersectionObserver {
-  public root = null;
-  public rootMargin = "";
-  public thresholds = [];
-  private readonly callback: IntersectionObserverCallback;
-
-  constructor(callback: IntersectionObserverCallback) {
-    this.callback = callback;
-  }
-
-  public disconnect() {
-    return null;
-  }
-
-  public observe() {
-    this.callback(
-      [
-        {
-          boundingClientRect: { height: isOffScreen ? 2 : 1, bottom: 0, top: 0, left: 0, right: 0, width: 0, x: 0, y: 0, toJSON: () => {} },
-          intersectionRect: { height: isOffScreen ? 1 : 2, bottom: 0, top: 0, left: 0, right: 0, width: 0, x: 0, y: 0, toJSON: () => {} },
-          intersectionRatio: 0,
-          isIntersecting: false,
-          rootBounds: null,
-          target: null as unknown as Element,
-          time: 0,
-        },
-      ],
-      this,
-    );
-  }
-
-  public takeRecords() {
-    return [];
-  }
-
-  public unobserve() {
-    return null;
-  }
+  return (
+    <div ref={setPortalTarget}>
+      <PortalTargetContextProvider portalTarget={portalTarget}>{children}</PortalTargetContextProvider>
+    </div>
+  );
 }
-
-window.IntersectionObserver = IntersectionObserver;
-global.IntersectionObserver = IntersectionObserver;
 
 describe("UniquePropertyValuesSelector", () => {
   beforeEach(async () => {
+    window.innerHeight = 1000;
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
     await Presentation.initialize();
-    isOffScreen = false;
   });
 
   afterEach(async () => {
@@ -118,7 +85,7 @@ describe("UniquePropertyValuesSelector", () => {
   const testImodel = {} as IModelConnection;
 
   it("opens menu upwards when not enough space below", async () => {
-    isOffScreen = true;
+    window.innerHeight = 0;
     sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
       total: 2,
       items: [
@@ -128,7 +95,9 @@ describe("UniquePropertyValuesSelector", () => {
     });
 
     const { getByText, user } = render(
-      <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+      <TestComponentWithPortalTarget>
+        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+      </TestComponentWithPortalTarget>,
     );
 
     // open menu

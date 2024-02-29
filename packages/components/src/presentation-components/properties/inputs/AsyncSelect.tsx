@@ -18,13 +18,15 @@ import {
   MultiValueProps,
   NoticeProps,
   OptionProps,
-  SelectInstance,
   ValueContainerProps,
 } from "react-select";
 import { AsyncPaginate, AsyncPaginateProps } from "react-select-async-paginate";
 import { SvgCaretDownSmall, SvgCheckmarkSmall, SvgCloseSmall } from "@itwin/itwinui-icons-react";
 import { List, ListItem, Tag, TagContainer } from "@itwin/itwinui-react";
 import { translate, useMergedRefs, useResizeObserver } from "../../common/Utils";
+import { usePortalTargetContext } from "../../common/PortalTargetContext";
+
+const MAX_SELECT_MENU_HEIGHT = 300;
 
 function SelectContainer<TOption, IsMulti extends boolean = boolean>({ children, ...props }: ContainerProps<TOption, IsMulti>) {
   return (
@@ -116,32 +118,14 @@ function ClearIndicator<TOption, IsMulti extends boolean = boolean>({ children: 
 /** @internal */
 export function AsyncSelect<OptionType, Group extends GroupBase<OptionType>, Additional>(props: AsyncPaginateProps<OptionType, Group, Additional, true>) {
   const [dropdownUp, setDropdownUp] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const menuObserver = useRef<IntersectionObserver>();
-  const selectRef = useRef<SelectInstance<OptionType, true, Group>>(null);
-  const divRef = useRef<HTMLDivElement>(null);
   const { ref: resizeRef, width } = useResizeObserver();
+  const { portalTarget } = usePortalTargetContext();
+  const divRef = useRef<HTMLDivElement>(null);
 
   const onMenuOpen = () => {
-    const observeOnscreen: IntersectionObserverCallback = (entries: IntersectionObserverEntry[]) => {
-      const { boundingClientRect, intersectionRect } = entries[0];
-      const isOffscreen = boundingClientRect.height > intersectionRect.height;
-
-      setDropdownUp(isOffscreen);
-      setIsLoading(false);
-    };
-
-    setTimeout(() => {
-      const menuList = selectRef.current!.menuListRef as Element;
-      menuObserver.current = new IntersectionObserver(observeOnscreen);
-      menuObserver.current.observe(menuList);
-    }, 1);
-  };
-
-  const onMenuClose = () => {
-    setIsLoading(true);
-    setDropdownUp(false);
-    menuObserver.current && menuObserver.current.disconnect();
+    const { top, height } = divRef.current!.getBoundingClientRect();
+    const space = window.innerHeight - top - height;
+    setDropdownUp(space < MAX_SELECT_MENU_HEIGHT);
   };
 
   return (
@@ -151,7 +135,7 @@ export function AsyncSelect<OptionType, Group extends GroupBase<OptionType>, Add
         styles={{
           control: () => ({}),
           container: () => ({}),
-          menuPortal: (base) => ({ ...base, zIndex: 9999, width, pointerEvents: "auto", visibility: isLoading ? "hidden" : "visible" }),
+          menuPortal: (base) => ({ ...base, zIndex: 9999, width, pointerEvents: "auto" }),
           menu: (base) => (dropdownUp ? { ...base, top: "auto", bottom: "100%" } : {}),
           indicatorsContainer: () => ({}),
           indicatorSeparator: (base) => ({ ...base, marginTop: undefined, marginBottom: undefined, margin: "0 var(--iui-size-xs)" }),
@@ -172,10 +156,8 @@ export function AsyncSelect<OptionType, Group extends GroupBase<OptionType>, Add
           SelectContainer,
           NoOptionsMessage,
         }}
-        selectRef={selectRef}
         onMenuOpen={onMenuOpen}
-        onMenuClose={onMenuClose}
-        menuPortalTarget={divRef.current?.ownerDocument.body.querySelector(".presentation-instance-filter-dialog")}
+        menuPortalTarget={portalTarget}
         menuPlacement={dropdownUp ? "top" : "bottom"}
         isMulti={true}
       />
