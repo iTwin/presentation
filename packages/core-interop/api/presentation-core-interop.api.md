@@ -25,7 +25,7 @@ import { UnitSystemKey } from '@itwin/core-quantity';
 export function createECSqlQueryExecutor(imodel: ICoreECSqlReaderFactory): IECSqlQueryExecutor;
 
 // @beta
-export function createHierarchyLevelDescriptor<TIModel extends ICoreECSqlReaderFactory>(props: CreateHierarchyLevelDescriptorProps<TIModel>): Promise<Descriptor | undefined>;
+export function createHierarchyLevelDescriptor<TIModel extends ICoreECSqlReaderFactory>(props: CreateHierarchyLevelDescriptorProps<TIModel>): Promise<CreateHierarchyLevelDescriptorResult | undefined>;
 
 // @beta
 export interface CreateHierarchyLevelDescriptorProps<TIModel extends ICoreECSqlReaderFactory> {
@@ -37,6 +37,12 @@ export interface CreateHierarchyLevelDescriptorProps<TIModel extends ICoreECSqlR
     parentNode: (Omit<HierarchyNode, "children"> & {
         key: InstancesNodeKey | string;
     }) | undefined;
+}
+
+// @beta
+export interface CreateHierarchyLevelDescriptorResult {
+    descriptor: Descriptor;
+    inputKeys: KeySet;
 }
 
 // @beta

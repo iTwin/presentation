@@ -51,6 +51,17 @@ export interface CreateHierarchyLevelDescriptorProps<TIModel extends ICoreECSqlR
 }
 
 /**
+ * Result of [[createHierarchyLevelDescriptor]].
+ * @beta
+ */
+export interface CreateHierarchyLevelDescriptorResult {
+  /** Child hierarchy level [[Descriptor]]. */
+  descriptor: Descriptor;
+  /** Input keys used to create [[Descriptor]]. */
+  inputKeys: KeySet;
+}
+
+/**
  * Creates a [[Descriptor]] for the child hierarchy level based on given parent node and hierarchy definitions factory. The descriptor
  * contains metadata about the hierarchy level and can be used to create a filtering dialog.
  *
@@ -61,7 +72,7 @@ export interface CreateHierarchyLevelDescriptorProps<TIModel extends ICoreECSqlR
  */
 export async function createHierarchyLevelDescriptor<TIModel extends ICoreECSqlReaderFactory>(
   props: CreateHierarchyLevelDescriptorProps<TIModel>,
-): Promise<Descriptor | undefined> {
+): Promise<CreateHierarchyLevelDescriptorResult | undefined> {
   // convert instance keys stream into a KeySet
   const keys = new KeySet();
   await recursivelyGetInstanceKeys(props.parentNode, props.hierarchyProvider).forEach((key) => keys.add(key));
@@ -86,7 +97,7 @@ export async function createHierarchyLevelDescriptor<TIModel extends ICoreECSqlR
     keys,
     displayType: DefaultContentDisplayTypes.PropertyPane,
   });
-  return descriptor ? new Descriptor({ ...descriptor, ruleset }) : undefined;
+  return descriptor ? { descriptor: new Descriptor({ ...descriptor, ruleset }), inputKeys: keys } : undefined;
 }
 
 function recursivelyGetInstanceKeys(
