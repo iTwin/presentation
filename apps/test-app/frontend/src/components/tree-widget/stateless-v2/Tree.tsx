@@ -59,7 +59,7 @@ export function StatelessTreeV2({ imodel, height, width }: { imodel: IModelConne
 
   useEffect(() => {
     setIsFiltering(false);
-    if (!metadata?.metadataProvider) {
+    if (!metadata) {
       return;
     }
 
@@ -67,7 +67,7 @@ export function StatelessTreeV2({ imodel, height, width }: { imodel: IModelConne
       new HierarchyProvider({
         metadataProvider: metadata.metadataProvider,
         queryExecutor: metadata.queryExecutor,
-        hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider: metadata?.metadataProvider }),
+        hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider: metadata.metadataProvider }),
         filtering: filteredPaths
           ? {
               paths: filteredPaths,
@@ -138,36 +138,30 @@ interface TreeRendererProps extends Omit<UseTreeResult, "rootNodes" | "isLoading
 function TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHierarchyLevelLimit }: TreeRendererProps) {
   const nodeRenderer = useCallback<TreeProps<PresentationTreeNode>["nodeRenderer"]>(
     ({ node, ...restProps }) => {
-      if (!isPresentationHierarchyNode(node)) {
+      if (isPresentationHierarchyNode(node)) {
         return (
-          <TreeNode {...restProps} label={node.message} isDisabled={true} onExpanded={() => {}}>
-            <Button
-              styleType="borderless"
-              size="small"
-              onClick={(e) => {
-                setHierarchyLevelLimit(node.parentNodeId, "unbounded");
-                e.stopPropagation();
-              }}
-            >
-              Remove Limit
-            </Button>
-          </TreeNode>
+          <TreeNode
+            {...restProps}
+            label={node.label}
+            onExpanded={(_, isExpanded) => {
+              expandNode(node.id, isExpanded);
+            }}
+            onSelected={(_, isSelected) => {
+              selectNode(node.id, isSelected);
+            }}
+            icon={getIcon(node.extendedData?.imageId)}
+          />
         );
       }
 
-      return (
-        <TreeNode
-          {...restProps}
-          label={node.label}
-          onExpanded={(_, isExpanded) => {
-            expandNode(node.id, isExpanded);
-          }}
-          onSelected={(_, isSelected) => {
-            selectNode(node.id, isSelected);
-          }}
-          icon={node.isLoading ? <ProgressRadial size="x-small" indeterminate /> : getIcon(node.extendedData?.imageId)}
-        />
-      );
+      if (node.type === "Placeholder") {
+        return <PlaceHolderNode {...restProps} label={node.message} />;
+      }
+
+      if (node.type === "ResultSetTooLarge") {
+        return <ResultSetTooLargeNode {...restProps} label={node.message} onRemoveLimit={() => setHierarchyLevelLimit(node.parentNodeId, "unbounded")} />;
+      }
+      return <TreeNode {...restProps} label={node.message} isDisabled={true} onExpanded={() => {}} />;
     },
     [expandNode, selectNode, setHierarchyLevelLimit],
   );
@@ -181,13 +175,25 @@ function TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHi
           hasSubNodes: false,
           isExpanded: false,
           isSelected: false,
+          isDisabled: true,
         };
       }
       return {
         nodeId: node.id,
         node,
         hasSubNodes: node.children === true || node.children.length > 0,
-        subNodes: node.children !== true ? node.children : [],
+        subNodes:
+          // returns placeholder node to show as child while children is loading.
+          node.children === true
+            ? [
+                {
+                  id: `Loading-${node.id}`,
+                  parentNodeId: node.id,
+                  type: "Placeholder",
+                  message: "Loading...",
+                },
+              ]
+            : node.children,
         isExpanded: node.isExpanded,
         isSelected: isNodeSelected(node.id),
       };
@@ -204,6 +210,27 @@ function TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHi
     >
       <Tree<PresentationTreeNode> data={rootNodes} nodeRenderer={nodeRenderer} getNode={getNode} enableVirtualization={true} />
     </div>
+  );
+}
+
+function PlaceHolderNode(props: Omit<TreeNodeProps, "onExpanded">) {
+  return <TreeNode {...props} icon={<ProgressRadial size="x-small" indeterminate />} onExpanded={() => {}}></TreeNode>;
+}
+
+function ResultSetTooLargeNode({ onRemoveLimit, ...props }: Omit<TreeNodeProps, "onExpanded"> & { onRemoveLimit: () => void }) {
+  return (
+    <TreeNode {...props} onExpanded={() => {}}>
+      <Button
+        styleType="borderless"
+        size="small"
+        onClick={(e) => {
+          onRemoveLimit();
+          e.stopPropagation();
+        }}
+      >
+        Remove Limit
+      </Button>
+    </TreeNode>
   );
 }
 
@@ -225,3 +252,4 @@ function getIcon(icon: "icon-layers" | "icon-item" | "icon-ec-class" | "icon-imo
 }
 
 type TreeProps<T> = ComponentPropsWithoutRef<typeof Tree<T>>;
+type TreeNodeProps = ComponentPropsWithoutRef<typeof TreeNode>;

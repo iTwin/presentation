@@ -5,13 +5,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
-import { TreeActions, TreeState } from "./TreeActions";
-import { isHierarchyNodeSelected, TreeModelHierarchyNode } from "./TreeModel";
+import { TreeActions, TreeState } from "./internal/TreeActions";
+import { isHierarchyNodeSelected, TreeModelHierarchyNode } from "./internal/TreeModel";
+import { useUnifiedTreeSelection } from "./internal/UseUnifiedSelection";
 import { PresentationTreeNode } from "./Types";
-import { useUnifiedTreeSelection } from "./UseUnifiedSelection";
 
 /** @beta */
-export interface UseTreeStateProps {
+export interface UseTreeProps {
   hierarchyProvider?: HierarchyProvider;
 }
 
@@ -27,21 +27,21 @@ export interface UseTreeResult {
 }
 
 /** @beta */
-export function useTree(props: UseTreeStateProps): UseTreeResult {
+export function useTree(props: UseTreeProps): UseTreeResult {
   const { getNode: _, ...rest } = useTreeInternal(props);
   return rest;
 }
 
 /** @beta */
-export function useUnifiedSelectionTree(props: UseTreeStateProps): UseTreeResult {
+export function useUnifiedSelectionTree(props: UseTreeProps): UseTreeResult {
   const { getNode, ...rest } = useTreeInternal(props);
   return { ...rest, ...useUnifiedTreeSelection({ getNode }) };
 }
 
 /** @internal */
-export function useTreeInternal({ hierarchyProvider }: UseTreeStateProps): UseTreeResult & { getNode: (nodeId: string) => TreeModelHierarchyNode | undefined } {
+export function useTreeInternal({ hierarchyProvider }: UseTreeProps): UseTreeResult & { getNode: (nodeId: string) => TreeModelHierarchyNode | undefined } {
   const [state, setState] = useState<TreeState>({
-    model: { idToNode: {}, parentChildMap: new Map(), rootNode: { id: undefined, nodeData: undefined } },
+    model: { idToNode: new Map(), parentChildMap: new Map(), rootNode: { id: undefined, nodeData: undefined } },
     rootNodes: undefined,
     isLoading: false,
   });
