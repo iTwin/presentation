@@ -9,15 +9,16 @@ import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/
 import { omit } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import {
-  combineFieldNames, ContentInstancesOfSpecificClassesSpecification, ContentRule, KeySet, RelatedClassInfo, Ruleset,
-} from "@itwin/presentation-common";
+import { combineFieldNames, ContentInstancesOfSpecificClassesSpecification, ContentRule, KeySet, RelatedClassInfo, Ruleset } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { serializeUniqueValues, UniqueValue } from "../../../presentation-components/common/Utils";
 import { UniquePropertyValuesSelector } from "../../../presentation-components/properties/inputs/UniquePropertyValuesSelector";
 import { createTestECClassInfo, createTestPropertyInfo, createTestRelatedClassInfo, createTestRelationshipPath } from "../../_helpers/Common";
 import {
-  createTestCategoryDescription, createTestContentDescriptor, createTestNestedContentField, createTestPropertiesContentField,
+  createTestCategoryDescription,
+  createTestContentDescriptor,
+  createTestNestedContentField,
+  createTestPropertiesContentField,
 } from "../../_helpers/Content";
 import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy";
 import { render, waitFor } from "../../TestUtils";
@@ -39,15 +40,20 @@ class IntersectionObserver {
   }
 
   public observe() {
-    this.callback([{
-      boundingClientRect: { height: isOffScreen ? 2 : 1, bottom: 0, top: 0, left: 0, right: 0, width: 0, x: 0, y: 0, toJSON: () => { }, },
-      intersectionRect: { height: isOffScreen ? 1 : 2, bottom: 0, top: 0, left: 0, right: 0, width: 0, x: 0, y: 0, toJSON: () => { }, },
-      intersectionRatio: 0,
-      isIntersecting: false,
-      rootBounds: null,
-      target: null as unknown as Element,
-      time: 0,
-    }], this);
+    this.callback(
+      [
+        {
+          boundingClientRect: { height: isOffScreen ? 2 : 1, bottom: 0, top: 0, left: 0, right: 0, width: 0, x: 0, y: 0, toJSON: () => {} },
+          intersectionRect: { height: isOffScreen ? 1 : 2, bottom: 0, top: 0, left: 0, right: 0, width: 0, x: 0, y: 0, toJSON: () => {} },
+          intersectionRatio: 0,
+          isIntersecting: false,
+          rootBounds: null,
+          target: null as unknown as Element,
+          time: 0,
+        },
+      ],
+      this,
+    );
   }
 
   public takeRecords() {

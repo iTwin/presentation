@@ -7,8 +7,19 @@ import "./AsyncSelect.scss";
 import classnames from "classnames";
 import { useRef, useState } from "react";
 import {
-  ClearIndicatorProps, components, ContainerProps, ControlProps, DropdownIndicatorProps, GroupBase, IndicatorsContainerProps, MenuListProps,
-  MultiValueProps, NoticeProps, OptionProps, SelectInstance, ValueContainerProps,
+  ClearIndicatorProps,
+  components,
+  ContainerProps,
+  ControlProps,
+  DropdownIndicatorProps,
+  GroupBase,
+  IndicatorsContainerProps,
+  MenuListProps,
+  MultiValueProps,
+  NoticeProps,
+  OptionProps,
+  SelectInstance,
+  ValueContainerProps,
 } from "react-select";
 import { AsyncPaginate, AsyncPaginateProps } from "react-select-async-paginate";
 import { SvgCaretDownSmall, SvgCheckmarkSmall, SvgCloseSmall } from "@itwin/itwinui-icons-react";
@@ -131,7 +142,7 @@ export function AsyncSelect<OptionType, Group extends GroupBase<OptionType>, Add
     setIsLoading(true);
     setDropdownUp(false);
     menuObserver.current && menuObserver.current.disconnect();
-  }
+  };
 
   return (
     <div ref={useMergedRefs(divRef, resizeRef)}>
