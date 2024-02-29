@@ -4,7 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
+import { IModelConnection } from "@itwin/core-frontend";
+import { PresentationError, PresentationStatus } from "@itwin/presentation-common";
+import { PresentationInstanceFilterInfo, PresentationInstanceFilterPropertiesSource } from "@itwin/presentation-components";
+import { createHierarchyLevelDescriptor } from "@itwin/presentation-core-interop";
+import { Presentation } from "@itwin/presentation-frontend";
+import { HierarchyNode, HierarchyNodeKey, HierarchyProvider, InstancesNodeKey } from "@itwin/presentation-hierarchy-builder";
 import { TreeActions, TreeState } from "./TreeActions";
 import { isHierarchyNodeSelected, TreeModelHierarchyNode } from "./TreeModel";
 import { PresentationTreeNode } from "./Types";
@@ -16,6 +21,13 @@ export interface UseTreeStateProps {
 }
 
 /** @beta */
+export interface HierarchyLevelFilteringOptions {
+  getDescriptor: (imodel: IModelConnection) => Promise<PresentationInstanceFilterPropertiesSource>;
+  applyFilter: (filter?: PresentationInstanceFilterInfo) => void;
+  currentFilter?: PresentationInstanceFilterInfo;
+}
+
+/** @beta */
 export interface UseTreeResult {
   rootNodes: PresentationTreeNode[] | undefined;
   isLoading: boolean;
@@ -23,7 +35,9 @@ export interface UseTreeResult {
   expandNode: (nodeId: string, isExpanded: boolean) => void;
   selectNode: (nodeId: string, isSelected: boolean) => void;
   setHierarchyLevelLimit: (nodeId: string | undefined, limit: undefined | number | "unbounded") => void;
+  removeHierarchyLevelFilter: (nodeId: string) => void;
   isNodeSelected: (nodeId: string) => boolean;
+  getHierarchyLevelFilteringOptions: (nodeId: string) => HierarchyLevelFilteringOptions | undefined;
 }
 
 /** @beta */
@@ -75,11 +89,55 @@ export function useTreeInternal({ hierarchyProvider }: UseTreeStateProps): UseTr
     actions.setHierarchyLimit(nodeId, limit);
   }).current;
 
+  const removeHierarchyLevelFilter = useRef((nodeId: string) => {
+    actions.setInstanceFilter(nodeId, undefined);
+  }).current;
+
   const isNodeSelected = useCallback(
     (nodeId: string) => {
       return isHierarchyNodeSelected(state.model, nodeId);
     },
     [state],
+  );
+
+  const getHierarchyLevelFilteringOptions = useCallback(
+    (nodeId: string) => {
+      const node = actions.getNode(nodeId);
+      if (!hierarchyProvider || !node || !isInstancesHierarchyNode(node.nodeData) || !node.nodeData.supportsFiltering) {
+        return undefined;
+      }
+
+      const hierarchyNode = node.nodeData;
+      const currentFilter = node.instanceFilter;
+      const filteringOptions: HierarchyLevelFilteringOptions = {
+        getDescriptor: async (imodel: IModelConnection): Promise<PresentationInstanceFilterPropertiesSource> => {
+          const result = await createHierarchyLevelDescriptor({
+            imodel,
+            parentNode: hierarchyNode,
+            hierarchyProvider,
+            descriptorBuilder: {
+              getContentDescriptor: async (options) => Presentation.presentation.getContentDescriptor(options),
+            },
+          });
+
+          if (!result) {
+            throw new PresentationError(PresentationStatus.Error, `Failed to get descriptor for node - ${node.id}`);
+          }
+
+          return {
+            descriptor: result.descriptor,
+            inputKeys: result.inputKeys,
+          };
+        },
+        applyFilter: (filter?: PresentationInstanceFilterInfo) => {
+          actions.setInstanceFilter(node.id, filter);
+        },
+        currentFilter,
+      };
+
+      return filteringOptions;
+    },
+    [hierarchyProvider, actions],
   );
 
   return {
@@ -90,6 +148,12 @@ export function useTreeInternal({ hierarchyProvider }: UseTreeStateProps): UseTr
     selectNode,
     isNodeSelected,
     setHierarchyLevelLimit,
+    getHierarchyLevelFilteringOptions,
     getNode,
+    removeHierarchyLevelFilter,
   };
+}
+
+function isInstancesHierarchyNode(node: HierarchyNode): node is HierarchyNode & { key: InstancesNodeKey } {
+  return HierarchyNodeKey.isInstances(node.key);
 }

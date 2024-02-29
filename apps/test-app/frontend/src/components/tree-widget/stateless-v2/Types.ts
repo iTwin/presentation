@@ -3,8 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { PresentationInstanceFilterInfo } from "@itwin/presentation-components";
-
 /** @beta */
 export type InfoNodeTypes = "ResultSetTooLarge" | "Unknown";
 
@@ -15,8 +13,9 @@ export interface PresentationHierarchyNode {
   children: true | Array<PresentationTreeNode>;
   isExpanded: boolean;
   isLoading: boolean;
+  isFilterable: boolean;
+  isFiltered: boolean;
   hierarchyLimit?: number | "unbounded";
-  appliedFilter?: PresentationInstanceFilterInfo;
   /** Additional data that may be assigned to this node. */
   extendedData?: { [key: string]: any };
 }

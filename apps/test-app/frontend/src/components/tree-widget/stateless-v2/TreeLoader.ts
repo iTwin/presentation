@@ -5,7 +5,10 @@
 
 import { catchError, defer, expand, from, map, mergeMap, Observable, of } from "rxjs";
 import { omit } from "@itwin/core-bentley";
-import { HierarchyNode, HierarchyNodeKey, HierarchyProvider, ParentNodeKey, RowsLimitExceededError } from "@itwin/presentation-hierarchy-builder";
+import { PresentationInstanceFilter, PresentationInstanceFilterInfo } from "@itwin/presentation-components";
+import {
+  GenericInstanceFilter, HierarchyNode, HierarchyNodeKey, HierarchyProvider, ParentNodeKey, RowsLimitExceededError,
+} from "@itwin/presentation-hierarchy-builder";
 import { isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelInfoNode, TreeModelNode, TreeModelRootNode } from "./TreeModel";
 
 /** @internal */
@@ -36,6 +39,7 @@ export class HierarchyLoader implements IHierarchyLoader {
       this._hierarchyProvider.getNodes({
         parentNode: parent?.nodeData,
         hierarchyLevelSizeLimit: parent?.hierarchyLimit,
+        instanceFilter: toGenericFilter(parent?.instanceFilter),
       }),
     ).pipe(
       catchError((err) => {
@@ -141,4 +145,24 @@ function sameNodes(lhs: HierarchyNode, rhs: HierarchyNode): boolean {
     }
   }
   return true;
+}
+
+function toGenericFilter(filterInfo?: PresentationInstanceFilterInfo): GenericInstanceFilter | undefined {
+  if (!filterInfo) {
+    return undefined;
+  }
+
+  if (!filterInfo.filter) {
+    return filterInfo.usedClasses.length > 0
+      ? {
+          propertyClassNames: [],
+          relatedInstances: [],
+          filteredClassNames: filterInfo.usedClasses.map((info) => info.name),
+          rules: { operator: "and", rules: [] },
+        }
+      : undefined;
+  }
+
+  const genericFilterBase = PresentationInstanceFilter.toGenericInstanceFilter(filterInfo.filter, filterInfo.usedClasses);
+  return genericFilterBase;
 }

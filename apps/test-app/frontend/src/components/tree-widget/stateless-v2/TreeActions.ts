@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 import { Draft, enableMapSet, produce } from "immer";
 import { EMPTY, Observable, reduce, Subject, takeUntil } from "rxjs";
+import { PresentationInstanceFilterInfo } from "@itwin/presentation-components";
 import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
 import { HierarchyLoader, IHierarchyLoader, LoadedHierarchyPart } from "./TreeLoader";
 import {
@@ -148,7 +149,23 @@ export class TreeActions {
     this.loadNodes(nodeId);
   }
 
-  public reloadTree(parentId: string | undefined, options?: { discardState?: boolean }) {
+  public setInstanceFilter(nodeId: string, filter?: PresentationInstanceFilterInfo) {
+    this.updateTreeModel((model) => {
+      const modelNode = model.idToNode[nodeId];
+      if (!modelNode || !isTreeModelHierarchyNode(modelNode)) {
+        return;
+      }
+
+      modelNode.instanceFilter = filter;
+      if (modelNode.isExpanded) {
+        modelNode.isLoading = true;
+      }
+    });
+
+    this.reloadTree(nodeId);
+  }
+
+  public reloadTree(parentId: string | undefined, options?: { discardState?: boolean; shouldLoadChildren?: (node: HierarchyNode) => boolean }) {
     const oldModel = this._currentModel;
     const expandedNodes = !!options?.discardState ? [] : collectNodes(parentId, oldModel, (node) => node.isExpanded === true);
     const collapsedNodes = !!options?.discardState ? [] : collectNodes(parentId, oldModel, (node) => node.isExpanded === false);
@@ -273,7 +290,8 @@ function toPresentationHierarchyNodeBase(node: TreeModelHierarchyNode): Omit<Pre
     label: node.label,
     isLoading: !!node.isLoading,
     isExpanded: !!node.isExpanded,
-    appliedFilter: node.instanceFilter,
+    isFilterable: !!node.nodeData.supportsFiltering && node.children,
+    isFiltered: !!node.instanceFilter,
     extendedData: node.nodeData.extendedData,
   };
 }
