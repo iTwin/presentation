@@ -2,4 +2,4 @@
 "@itwin/presentation-components": patch
 ---
 
-Changed tree node action button class to allow button resizing.
+Added custom CSS class on tree node actions buttons to allow customizing them.
