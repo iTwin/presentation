@@ -3,17 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { GenericInstanceFilter } from "@itwin/core-common";
 import { IMetadataProvider } from "./ECMetadata";
-import { GenericInstanceFilter } from "./GenericInstanceFilter";
 import {
-  HierarchyNode,
-  HierarchyNodeKey,
-  InstancesNodeKey,
-  ParsedCustomHierarchyNode,
-  ParsedInstanceHierarchyNode,
-  ProcessedCustomHierarchyNode,
-  ProcessedHierarchyNode,
-  ProcessedInstanceHierarchyNode,
+  HierarchyNode, HierarchyNodeKey, InstancesNodeKey, ParsedCustomHierarchyNode, ParsedInstanceHierarchyNode, ProcessedCustomHierarchyNode,
+  ProcessedHierarchyNode, ProcessedInstanceHierarchyNode,
 } from "./HierarchyNode";
 import { getClass } from "./internal/GetClass";
 import { parseFullClassName } from "./Metadata";

@@ -4,18 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert } from "@itwin/core-bentley";
-import { ECClass, IMetadataProvider } from "../ECMetadata";
 import {
-  GenericInstanceFilter,
-  GenericInstanceFilterRule,
-  GenericInstanceFilterRuleGroup,
-  PropertyFilterRuleBinaryOperator,
-  PropertyFilterRuleGroupOperator,
-  PropertyFilterRuleOperator,
-  PropertyFilterValue,
-} from "../GenericInstanceFilter";
+  GenericInstanceFilter, GenericInstanceFilterRelationshipStep, GenericInstanceFilterRule, GenericInstanceFilterRuleGroup,
+  GenericInstanceFilterRuleGroupOperator, GenericInstanceFilterRuleOperator, GenericInstanceFilterRuleValue,
+} from "@itwin/core-common";
+import { ECClass, IMetadataProvider } from "../ECMetadata";
 import { getClass } from "../internal/GetClass";
-import { RelationshipPath } from "../Metadata";
 import { Id64String, PrimitiveValue } from "../values/Values";
 import { createRelationshipPathJoinClause, JoinRelationshipPath } from "./ecsql-snippets/ECSqlJoinSnippets";
 import { createRawPrimitiveValueSelector, createRawPropertyValueSelector } from "./ecsql-snippets/ECSqlValueSelectorSnippets";
@@ -277,7 +271,7 @@ export class NodeSelectQueryFactory {
     const from = await specializeContentClass({
       metadata: this._metadataProvider,
       contentClassName: contentClass.fullName,
-      filterClassName: def.propertyClassName,
+      filterClassNames: def.propertyClassNames,
     });
     if (!from) {
       // filter class doesn't intersect with content class - make sure the query returns nothing by returning a `FALSE` WHERE clause
@@ -307,16 +301,12 @@ export class NodeSelectQueryFactory {
     );
 
     const whereConditions = new Array<string>();
-    if (def.filterClassNames && def.filterClassNames.length > 0) {
-      whereConditions.push(`${createRawPropertyValueSelector(contentClass.alias, "ECClassId")} IS (${def.filterClassNames.join(", ")})`);
+    if (def.filteredClassNames && def.filteredClassNames.length > 0) {
+      whereConditions.push(`${createRawPropertyValueSelector(contentClass.alias, "ECClassId")} IS (${def.filteredClassNames.join(", ")})`);
     }
-    const classAliasMap = new Map<string, string>([[contentClass.alias, contentClass.fullName]]);
+    const classAliasMap = new Map<string, string>([[contentClass.alias, from]]);
     def.relatedInstances.forEach(({ path, alias }) => path.length > 0 && classAliasMap.set(alias, path[path.length - 1].targetClassName));
-    const propertiesFilter = await createWhereClause(
-      async (alias) => getClass(this._metadataProvider, classAliasMap.get(alias) ?? ""),
-      contentClass.alias,
-      def.rules,
-    );
+    const propertiesFilter = await createWhereClause(async (alias) => getClass(this._metadataProvider, classAliasMap.get(alias) ?? ""), def.rules);
     if (propertiesFilter) {
       whereConditions.push(propertiesFilter);
     }
@@ -509,34 +499,39 @@ function serializeJsonObject(selectors: Array<{ key: string; selector: string }>
 
 async function createWhereClause(
   classLoader: (alias: string) => Promise<ECClass | undefined>,
-  contentClassAlias: string,
   rule: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup,
 ): Promise<string | undefined> {
   if (GenericInstanceFilter.isFilterRuleGroup(rule)) {
-    const clause = (await Promise.all(rule.rules.map(async (r) => createWhereClause(classLoader, contentClassAlias, r))))
+    const clause = (await Promise.all(rule.rules.map(async (r) => createWhereClause(classLoader, r))))
       .filter((c) => !!c)
       .join(` ${getECSqlLogicalOperator(rule.operator)} `);
-    return clause ? (rule.operator === "Or" ? `(${clause})` : clause) : undefined;
+    return clause ? (rule.operator === "or" ? `(${clause})` : clause) : undefined;
   }
-  const sourceAlias = rule.sourceAlias ?? contentClassAlias;
+  const sourceAlias = rule.sourceAlias;
   const propertyValueSelector = createRawPropertyValueSelector(sourceAlias, rule.propertyName);
-  if (PropertyFilterRuleOperator.isUnary(rule.operator)) {
+  if (isUnaryRuleOperator(rule.operator)) {
     switch (rule.operator) {
-      case "True":
+      case "is-true":
         return propertyValueSelector;
-      case "False":
+      case "is-false":
         return `NOT ${propertyValueSelector}`;
-      case "Null":
+      case "is-null":
         return `${propertyValueSelector} IS NULL`;
-      case "NotNull":
+      case "is-not-null":
         return `${propertyValueSelector} IS NOT NULL`;
     }
   }
   const ecsqlOperator = getECSqlComparisonOperator(rule.operator);
-  if (rule.operator === "Like" && typeof rule.value === "string") {
-    return `${propertyValueSelector} ${ecsqlOperator} '${rule.value}' ESCAPE '\\'`;
+  if (rule.value === undefined) {
+    throw new Error(`Rule "${rule.propertyName}" ${ecsqlOperator} is missing value.`);
   }
-  const propertyClassAlias = rule.sourceAlias ?? contentClassAlias;
+
+  const value = rule.value.rawValue;
+
+  if (rule.operator === "like" && typeof value === "string") {
+    return `${propertyValueSelector} ${ecsqlOperator} '${value}' ESCAPE '\\'`;
+  }
+  const propertyClassAlias = rule.sourceAlias;
   const propertyClass = await classLoader(propertyClassAlias);
   if (!propertyClass) {
     throw new Error(`Class with alias "${propertyClassAlias}" not found.`);
@@ -546,97 +541,111 @@ async function createWhereClause(
     throw new Error(`Property "${rule.propertyName}" not found in ECClass "${propertyClass.fullName}".`);
   }
   if (property.isNavigation()) {
-    assert(rule.value !== undefined && PropertyFilterValue.isInstanceKey(rule.value));
-    return `${propertyValueSelector}.[Id] ${ecsqlOperator} ${createRawPrimitiveValueSelector(rule.value.id)}`;
+    assert(rule.value !== undefined && GenericInstanceFilterRuleValue.isInstanceKey(value));
+    return `${propertyValueSelector}.[Id] ${ecsqlOperator} ${createRawPrimitiveValueSelector(value.id)}`;
   }
   if (property.isEnumeration()) {
-    assert(rule.value !== undefined && PropertyFilterValue.isPrimitive(rule.value));
-    return `${propertyValueSelector} ${ecsqlOperator} ${createRawPrimitiveValueSelector(rule.value)}`;
+    assert(rule.value !== undefined && !GenericInstanceFilterRuleValue.isInstanceKey(value));
+    return `${propertyValueSelector} ${ecsqlOperator} ${createRawPrimitiveValueSelector(value)}`;
   }
   if (property.isPrimitive()) {
-    assert(rule.value !== undefined && PropertyFilterValue.isPrimitive(rule.value));
+    assert(rule.value !== undefined && !GenericInstanceFilterRuleValue.isInstanceKey(value));
     switch (property.primitiveType) {
       case "Point2d": {
-        assert(rule.operator === "Equal" || rule.operator === "NotEqual");
-        assert(PrimitiveValue.isPoint2d(rule.value));
+        assert(rule.operator === "is-equal" || rule.operator === "is-not-equal");
+        assert(PrimitiveValue.isPoint2d(value));
         const condition = `
-          ${createFloatingPointEqualityClause(`${propertyValueSelector}.[x]`, "Equal", rule.value.x)}
-          AND ${createFloatingPointEqualityClause(`${propertyValueSelector}.[y]`, "Equal", rule.value.y)}
+          ${createFloatingPointEqualityClause(`${propertyValueSelector}.[x]`, "is-equal", value.x)}
+          AND ${createFloatingPointEqualityClause(`${propertyValueSelector}.[y]`, "is-equal", value.y)}
         `;
-        return rule.operator === "Equal" ? condition : `NOT (${condition})`;
+        return rule.operator === "is-equal" ? condition : `NOT (${condition})`;
       }
       case "Point3d": {
-        assert(rule.operator === "Equal" || rule.operator === "NotEqual");
-        assert(PrimitiveValue.isPoint3d(rule.value));
+        assert(rule.operator === "is-equal" || rule.operator === "is-not-equal");
+        assert(PrimitiveValue.isPoint3d(value));
         const condition = `
-          ${createFloatingPointEqualityClause(`${propertyValueSelector}.[x]`, "Equal", rule.value.x)}
-          AND ${createFloatingPointEqualityClause(`${propertyValueSelector}.[y]`, "Equal", rule.value.y)}
-          AND ${createFloatingPointEqualityClause(`${propertyValueSelector}.[z]`, "Equal", rule.value.z)}
+          ${createFloatingPointEqualityClause(`${propertyValueSelector}.[x]`, "is-equal", value.x)}
+          AND ${createFloatingPointEqualityClause(`${propertyValueSelector}.[y]`, "is-equal", value.y)}
+          AND ${createFloatingPointEqualityClause(`${propertyValueSelector}.[z]`, "is-equal", value.z)}
         `;
-        return rule.operator === "Equal" ? condition : `NOT (${condition})`;
+        return rule.operator === "is-equal" ? condition : `NOT (${condition})`;
       }
       case "Double": {
-        assert(typeof rule.value === "number");
-        if (rule.operator === "Equal" || rule.operator === "NotEqual") {
-          return `${createFloatingPointEqualityClause(propertyValueSelector, rule.operator, rule.value)}`;
+        assert(typeof value === "number");
+        if (rule.operator === "is-equal" || rule.operator === "is-not-equal") {
+          return `${createFloatingPointEqualityClause(propertyValueSelector, rule.operator, value)}`;
         }
-        return `${propertyValueSelector} ${ecsqlOperator} ${createRawPrimitiveValueSelector(rule.value)}`;
+        return `${propertyValueSelector} ${ecsqlOperator} ${createRawPrimitiveValueSelector(value)}`;
       }
       default: {
-        return `${propertyValueSelector} ${ecsqlOperator} ${createRawPrimitiveValueSelector(rule.value)}`;
+        return `${propertyValueSelector} ${ecsqlOperator} ${createRawPrimitiveValueSelector(value)}`;
       }
     }
   }
   throw new Error("Struct and array properties are not supported for filtering");
 }
 
-function createFloatingPointEqualityClause(valueSelector: string, operator: "Equal" | "NotEqual", value: number) {
+function createFloatingPointEqualityClause(valueSelector: string, operator: "is-equal" | "is-not-equal", value: number) {
   const [from, to] = getFloatingPointValueRange(value);
-  return `${valueSelector} ${operator === "NotEqual" ? "NOT " : ""} BETWEEN ${from} AND ${to}`;
+  return `${valueSelector} ${operator === "is-not-equal" ? "NOT " : ""} BETWEEN ${from} AND ${to}`;
 }
 
 function getFloatingPointValueRange(value: number): [number, number] {
   return [value - Number.EPSILON, value + Number.EPSILON];
 }
 
-function getECSqlLogicalOperator(op: PropertyFilterRuleGroupOperator) {
+function getECSqlLogicalOperator(op: GenericInstanceFilterRuleGroupOperator) {
   switch (op) {
-    case "And":
+    case "and":
       return "AND";
-    case "Or":
+    case "or":
       return "OR";
   }
 }
 
-function getECSqlComparisonOperator(op: PropertyFilterRuleBinaryOperator) {
+function isUnaryRuleOperator(
+  op: GenericInstanceFilterRuleOperator,
+): op is Extract<GenericInstanceFilterRuleOperator, "is-true" | "is-false" | "is-null" | "is-not-null"> {
+  return op === "is-true" || op === "is-false" || op === "is-null" || op === "is-not-null";
+}
+
+function getECSqlComparisonOperator(op: Exclude<GenericInstanceFilterRuleOperator, "is-true" | "is-false" | "is-null" | "is-not-null">) {
   switch (op) {
-    case "Equal":
+    case "is-equal":
       return `=`;
-    case "NotEqual":
+    case "is-not-equal":
       return `<>`;
-    case "Greater":
+    case "greater":
       return `>`;
-    case "GreaterOrEqual":
+    case "greater-or-equal":
       return `>=`;
-    case "Less":
+    case "less":
       return `<`;
-    case "LessOrEqual":
+    case "less-or-equal":
       return `<=`;
-    case "Like":
+    case "like":
       return `LIKE`;
   }
 }
 
-function assignRelationshipPathAliases(path: RelationshipPath, pathIndex: number, sourceAlias: string, targetAlias: string): JoinRelationshipPath {
+function assignRelationshipPathAliases(
+  path: GenericInstanceFilterRelationshipStep[],
+  pathIndex: number,
+  sourceAlias: string,
+  targetAlias: string,
+): JoinRelationshipPath {
   function createAlias(fullClassName: string, index: number) {
     return `rel_${pathIndex}_${fullClassName.replaceAll(/[\.:]/g, "_")}_${index}`;
   }
   const result: JoinRelationshipPath = [];
   path.forEach((step, i) => {
     result.push({
-      ...step,
+      targetClassName: step.targetClassName,
+      relationshipName: step.relationshipClassName,
+      sourceClassName: step.sourceClassName,
+      relationshipReverse: !step.isForwardRelationship,
       sourceAlias: i === 0 ? sourceAlias : result[i - 1].targetAlias,
-      relationshipAlias: createAlias(step.relationshipName, i),
+      relationshipAlias: createAlias(step.relationshipClassName, i),
       targetAlias: i === path.length - 1 ? targetAlias : createAlias(step.targetClassName, i),
       joinType: "inner",
     });
@@ -647,16 +656,34 @@ function assignRelationshipPathAliases(path: RelationshipPath, pathIndex: number
 interface SpecializeContentClassProps {
   metadata: IMetadataProvider;
   contentClassName: string;
-  filterClassName: string;
+  filterClassNames: string[];
 }
 async function specializeContentClass(props: SpecializeContentClassProps) {
-  const filterClass = await getClass(props.metadata, props.filterClassName);
+  const filterClass = await getSpecializedPropertyClass(props.metadata, props.filterClassNames);
+  if (!filterClass) {
+    return props.contentClassName;
+  }
   const contentClass = await getClass(props.metadata, props.contentClassName);
   if (await filterClass.is(contentClass)) {
-    return props.filterClassName;
+    return filterClass.fullName;
   }
   if (await contentClass.is(filterClass)) {
     return props.contentClassName;
   }
   return undefined;
+}
+
+async function getSpecializedPropertyClass(metadata: IMetadataProvider, classes: string[]) {
+  if (classes.length === 0) {
+    return undefined;
+  }
+  const [currClassName, ...restClasses] = classes;
+  let currClass = await getClass(metadata, currClassName);
+  for (const propClassName of restClasses) {
+    const propClass = await getClass(metadata, propClassName);
+    if (await propClass.is(currClass)) {
+      currClass = propClass;
+    }
+  }
+  return currClass;
 }
