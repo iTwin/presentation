@@ -9,19 +9,58 @@ import { PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/
 import { omit } from "@itwin/core-bentley";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
-import { combineFieldNames, ContentInstancesOfSpecificClassesSpecification, ContentRule, KeySet, RelatedClassInfo, Ruleset } from "@itwin/presentation-common";
+import {
+  combineFieldNames, ContentInstancesOfSpecificClassesSpecification, ContentRule, KeySet, RelatedClassInfo, Ruleset,
+} from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
 import { serializeUniqueValues, UniqueValue } from "../../../presentation-components/common/Utils";
 import { UniquePropertyValuesSelector } from "../../../presentation-components/properties/inputs/UniquePropertyValuesSelector";
 import { createTestECClassInfo, createTestPropertyInfo, createTestRelatedClassInfo, createTestRelationshipPath } from "../../_helpers/Common";
 import {
-  createTestCategoryDescription,
-  createTestContentDescriptor,
-  createTestNestedContentField,
-  createTestPropertiesContentField,
+  createTestCategoryDescription, createTestContentDescriptor, createTestNestedContentField, createTestPropertiesContentField,
 } from "../../_helpers/Content";
 import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy";
 import { render, waitFor } from "../../TestUtils";
+
+let isOffScreen = false;
+
+class IntersectionObserver {
+  public root = null;
+  public rootMargin = "";
+  public thresholds = [];
+  private readonly callback: IntersectionObserverCallback;
+
+  constructor(callback: IntersectionObserverCallback) {
+    this.callback = callback;
+  }
+
+  public disconnect() {
+    return null;
+  }
+
+  public observe() {
+    this.callback([{
+      boundingClientRect: { height: isOffScreen ? 2 : 1, bottom: 0, top: 0, left: 0, right: 0, width: 0, x: 0, y: 0, toJSON: () => { }, },
+      intersectionRect: { height: isOffScreen ? 1 : 2, bottom: 0, top: 0, left: 0, right: 0, width: 0, x: 0, y: 0, toJSON: () => { }, },
+      intersectionRatio: 0,
+      isIntersecting: false,
+      rootBounds: null,
+      target: null as unknown as Element,
+      time: 0,
+    }], this);
+  }
+
+  public takeRecords() {
+    return [];
+  }
+
+  public unobserve() {
+    return null;
+  }
+}
+
+window.IntersectionObserver = IntersectionObserver;
+global.IntersectionObserver = IntersectionObserver;
 
 describe("UniquePropertyValuesSelector", () => {
   beforeEach(async () => {
@@ -29,6 +68,7 @@ describe("UniquePropertyValuesSelector", () => {
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
     await Presentation.initialize();
+    isOffScreen = false;
   });
 
   afterEach(async () => {
@@ -70,6 +110,31 @@ describe("UniquePropertyValuesSelector", () => {
   };
 
   const testImodel = {} as IModelConnection;
+
+  it("opens menu upwards when not enough space below", async () => {
+    isOffScreen = true;
+    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+      total: 2,
+      items: [
+        { displayValue: "TestValue1", groupedRawValues: ["TestValue1"] },
+        { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
+      ],
+    });
+
+    const { getByText, user } = render(
+      <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+    );
+
+    // open menu
+    const selector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+    await user.click(selector);
+
+    // click on menu item
+    const menuItem1 = await waitFor(() => getByText("TestValue1"));
+    const menuItem2 = await waitFor(() => getByText("TestValue2"));
+    expect(menuItem1).to.not.be.null;
+    expect(menuItem2).to.not.be.null;
+  });
 
   it("invokes `onChange` when item from the menu is selected", async () => {
     const spy = sinon.spy();
