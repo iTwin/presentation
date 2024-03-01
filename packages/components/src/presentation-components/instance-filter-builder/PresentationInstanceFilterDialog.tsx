@@ -19,6 +19,7 @@ import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./
 import { PresentationInstanceFilterInfo } from "./PresentationFilterBuilder";
 import { PresentationInstanceFilter } from "./PresentationInstanceFilter";
 import { filterRuleValidator, isFilterNonEmpty } from "./Utils";
+import { PortalTargetContextProvider } from "../common/PortalTargetContext";
 
 /**
  * Data structure that describes source to gather properties from.
@@ -88,9 +89,11 @@ export interface FilteringDialogToolbarHandlers {
  */
 export function PresentationInstanceFilterDialog(props: PresentationInstanceFilterDialogProps) {
   const { isOpen, title, ...restProps } = props;
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
 
   return (
     <Dialog
+      ref={setPortalTarget}
       className="presentation-instance-filter-dialog"
       isOpen={isOpen}
       onClose={props.onClose}
@@ -101,13 +104,15 @@ export function PresentationInstanceFilterDialog(props: PresentationInstanceFilt
       isResizable
       portal={true}
     >
-      <Dialog.Backdrop />
-      <Dialog.Main className="presentation-instance-filter-dialog-content-container">
-        <Dialog.TitleBar className="presentation-instance-filter-title" titleText={title ? title : translate("instance-filter-builder.filter")} />
-        <ErrorBoundary fallback={<ErrorState />}>
-          <FilterDialogContent {...restProps} />
-        </ErrorBoundary>
-      </Dialog.Main>
+      <PortalTargetContextProvider portalTarget={portalTarget}>
+        <Dialog.Backdrop />
+        <Dialog.Main className="presentation-instance-filter-dialog-content-container">
+          <Dialog.TitleBar className="presentation-instance-filter-title" titleText={title ? title : translate("instance-filter-builder.filter")} />
+          <ErrorBoundary fallback={<ErrorState />}>
+            <FilterDialogContent {...restProps} />
+          </ErrorBoundary>
+        </Dialog.Main>
+      </PortalTargetContextProvider>
     </Dialog>
   );
 }

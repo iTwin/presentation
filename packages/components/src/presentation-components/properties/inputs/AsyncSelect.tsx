@@ -5,7 +5,7 @@
 
 import "./AsyncSelect.scss";
 import classnames from "classnames";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
   ClearIndicatorProps,
   components,
@@ -24,6 +24,9 @@ import { AsyncPaginate, AsyncPaginateProps } from "react-select-async-paginate";
 import { SvgCaretDownSmall, SvgCheckmarkSmall, SvgCloseSmall } from "@itwin/itwinui-icons-react";
 import { List, ListItem, Tag, TagContainer } from "@itwin/itwinui-react";
 import { translate, useMergedRefs, useResizeObserver } from "../../common/Utils";
+import { usePortalTargetContext } from "../../common/PortalTargetContext";
+
+const MAX_SELECT_MENU_HEIGHT = 300;
 
 function SelectContainer<TOption, IsMulti extends boolean = boolean>({ children, ...props }: ContainerProps<TOption, IsMulti>) {
   return (
@@ -114,8 +117,17 @@ function ClearIndicator<TOption, IsMulti extends boolean = boolean>({ children: 
 
 /** @internal */
 export function AsyncSelect<OptionType, Group extends GroupBase<OptionType>, Additional>(props: AsyncPaginateProps<OptionType, Group, Additional, true>) {
-  const divRef = useRef<HTMLDivElement>(null);
+  const [dropdownUp, setDropdownUp] = useState(false);
   const { ref: resizeRef, width } = useResizeObserver();
+  const { portalTarget } = usePortalTargetContext();
+  const divRef = useRef<HTMLDivElement>(null);
+
+  const onMenuOpen = () => {
+    const { top, height } = divRef.current!.getBoundingClientRect();
+    const space = window.innerHeight - top - height;
+    setDropdownUp(space < MAX_SELECT_MENU_HEIGHT);
+  };
+
   return (
     <div ref={useMergedRefs(divRef, resizeRef)}>
       <AsyncPaginate
@@ -123,8 +135,8 @@ export function AsyncSelect<OptionType, Group extends GroupBase<OptionType>, Add
         styles={{
           control: () => ({}),
           container: () => ({}),
-          menuPortal: (base) => ({ ...base, zIndex: 9999, width }),
-          menu: () => ({}),
+          menuPortal: (base) => ({ ...base, zIndex: 9999, width, pointerEvents: "auto" }),
+          menu: (base) => (dropdownUp ? { ...base, top: "auto", bottom: "100%" } : {}),
           indicatorsContainer: () => ({}),
           indicatorSeparator: (base) => ({ ...base, marginTop: undefined, marginBottom: undefined, margin: "0 var(--iui-size-xs)" }),
           clearIndicator: () => ({}),
@@ -144,8 +156,10 @@ export function AsyncSelect<OptionType, Group extends GroupBase<OptionType>, Add
           SelectContainer,
           NoOptionsMessage,
         }}
+        onMenuOpen={onMenuOpen}
+        menuPortalTarget={portalTarget}
+        menuPlacement={dropdownUp ? "top" : "bottom"}
         isMulti={true}
-        menuPortalTarget={divRef.current?.ownerDocument.body.querySelector(".iui-root") ?? divRef.current?.ownerDocument.body}
       />
     </div>
   );
