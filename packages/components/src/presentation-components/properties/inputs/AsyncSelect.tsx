@@ -115,15 +115,15 @@ function ClearIndicator<TOption, IsMulti extends boolean = boolean>({ children: 
   );
 }
 
+// Wrap custom menu as a workaround for some internal bugs of react-select
+const MenuList = wrapMenuList(CustomMenuList);
+
 /** @internal */
 export function AsyncSelect<OptionType, Group extends GroupBase<OptionType>, Additional>(props: AsyncPaginateProps<OptionType, Group, Additional, true>) {
   const [dropdownUp, setDropdownUp] = useState(false);
   const { ref: resizeRef, width } = useResizeObserver();
   const { portalTarget } = usePortalTargetContext();
   const divRef = useRef<HTMLDivElement>(null);
-
-  // Wrap custom menu as a workaround for some internal bugs of react-select
-  const MenuList = wrapMenuList(CustomMenuList);
 
   const onMenuOpen = () => {
     const { top, height } = divRef.current!.getBoundingClientRect();
