@@ -5,7 +5,7 @@
 
 import { PresentationInstanceFilterInfo } from "@itwin/presentation-components";
 import { HierarchyNode } from "@itwin/presentation-hierarchy-builder";
-import { InfoNodeTypes } from "./Types";
+import { InfoNodeTypes } from "../Types";
 
 /** @internal */
 export interface TreeModelRootNode {
@@ -47,14 +47,14 @@ export function isTreeModelHierarchyNode(node: TreeModelNode): node is TreeModel
 /** @internal */
 export interface TreeModel {
   parentChildMap: Map<string | undefined, string[]>;
-  idToNode: { [id: string]: TreeModelNode };
+  idToNode: Map<string, TreeModelNode>;
   rootNode: TreeModelRootNode;
 }
 
 /** @internal */
 export function expandNode(model: TreeModel, nodeId: string, isExpanded: boolean): void {
-  const node = model.idToNode[nodeId];
-  if (!isTreeModelHierarchyNode(node)) {
+  const node = model.idToNode.get(nodeId);
+  if (!node || !isTreeModelHierarchyNode(node)) {
     return;
   }
 
@@ -69,11 +69,8 @@ export function addHierarchyPart(model: TreeModel, rootId: string | undefined, h
     model.parentChildMap.set(parentId, children);
   }
 
-  for (const nodeId in hierarchyPart.idToNode) {
-    if (!(nodeId in hierarchyPart.idToNode)) {
-      continue;
-    }
-    model.idToNode[nodeId] = hierarchyPart.idToNode[nodeId];
+  for (const [nodeId, node] of hierarchyPart.idToNode) {
+    model.idToNode.set(nodeId, node);
   }
 }
 
@@ -86,16 +83,16 @@ export function removeSubTree(model: TreeModel, parentId: string | undefined): v
   model.parentChildMap.delete(parentId);
 
   for (const childId of currentChildren) {
-    const childNode = model.idToNode[childId];
+    const childNode = model.idToNode.get(childId);
     if (childNode && isTreeModelHierarchyNode(childNode)) {
       removeSubTree(model, childNode.id);
     }
-    delete model.idToNode[childId];
+    model.idToNode.delete(childId);
   }
 }
 
 /** @internal */
 export function isHierarchyNodeSelected(model: TreeModel, nodeId: string): boolean {
-  const currentNode = model.idToNode[nodeId];
-  return currentNode && isTreeModelHierarchyNode(currentNode) && !!currentNode.isSelected;
+  const currentNode = model.idToNode.get(nodeId);
+  return !!currentNode && isTreeModelHierarchyNode(currentNode) && !!currentNode.isSelected;
 }

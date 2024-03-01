@@ -26,7 +26,7 @@ export interface ReloadOptions {
 
 /** @internal */
 export interface IHierarchyLoader {
-  getNodes(parent: TreeModelHierarchyNode | TreeModelRootNode, shouldLoadChildren: (node: HierarchyNode) => boolean): Observable<LoadedHierarchyPart>;
+  getNodes(parent: TreeModelHierarchyNode | TreeModelRootNode, shouldLoadChildren: (node: TreeModelHierarchyNode) => boolean): Observable<LoadedHierarchyPart>;
   reloadNodes(parent: TreeModelHierarchyNode | TreeModelRootNode, options: ReloadOptions): Observable<LoadedHierarchyPart>;
 }
 
@@ -44,21 +44,20 @@ export class HierarchyLoader implements IHierarchyLoader {
     ).pipe(
       catchError((err) => {
         if (err instanceof RowsLimitExceededError) {
-          return of({
+          const node: TreeModelInfoNode = {
             id: `${parent?.id ?? ""}-${err.message}`,
             parentId: parent?.id,
             type: "ResultSetTooLarge",
             message: err.message,
-          } as TreeModelInfoNode);
+          };
+          return of([node]);
         }
         throw err;
       }),
       map(
         (childNodes): LoadedHierarchyPart => ({
           parent,
-          loadedNodes: Array.isArray(childNodes)
-            ? childNodes.map(createTreeModelHierarchyNode).map((node: TreeModelHierarchyNode) => (buildNode ? buildNode(node) : node))
-            : [childNodes],
+          loadedNodes: childNodes.map(createTreeModelNode(buildNode)),
         }),
       ),
     );
@@ -66,46 +65,57 @@ export class HierarchyLoader implements IHierarchyLoader {
 
   private loadNodes(
     parent: TreeModelHierarchyNode | TreeModelRootNode,
-    shouldLoadChildren: (node: HierarchyNode) => boolean,
+    shouldLoadChildren: (node: TreeModelHierarchyNode) => boolean,
     buildNode?: (node: TreeModelHierarchyNode) => TreeModelHierarchyNode,
   ) {
     return this.loadChildren(parent, buildNode).pipe(
       expand((loadedPart) =>
-        from(loadedPart.loadedNodes.filter((node): node is TreeModelHierarchyNode => isTreeModelHierarchyNode(node) && shouldLoadChildren(node.nodeData))).pipe(
+        from(loadedPart.loadedNodes.filter((node): node is TreeModelHierarchyNode => isTreeModelHierarchyNode(node) && shouldLoadChildren(node))).pipe(
           mergeMap((node) => this.loadChildren(node, buildNode)),
         ),
       ),
     );
   }
 
-  public getNodes(parent: TreeModelHierarchyNode | TreeModelRootNode, shouldLoadChildren: (node: HierarchyNode) => boolean) {
+  public getNodes(parent: TreeModelHierarchyNode | TreeModelRootNode, shouldLoadChildren: (node: TreeModelHierarchyNode) => boolean) {
     return this.loadNodes(parent, shouldLoadChildren);
   }
 
   public reloadNodes(parent: TreeModelHierarchyNode | TreeModelRootNode, { expandedNodes, collapsedNodes, buildNode }: ReloadOptions) {
     return this.loadNodes(
       parent,
-      (node: HierarchyNode) => {
-        if (expandedNodes.findIndex((expandedNode) => sameNodes(expandedNode.nodeData, node)) !== -1) {
+      (node: TreeModelHierarchyNode) => {
+        if (expandedNodes.findIndex((expandedNode) => sameNodes(expandedNode.nodeData, node.nodeData)) !== -1) {
           return true;
         }
-        if (collapsedNodes.findIndex((collapsedNode) => sameNodes(collapsedNode.nodeData, node)) !== -1) {
+        if (collapsedNodes.findIndex((collapsedNode) => sameNodes(collapsedNode.nodeData, node.nodeData)) !== -1) {
           return false;
         }
-        return !!node.autoExpand;
+        return !!node.nodeData.autoExpand;
       },
       buildNode,
     );
   }
 }
 
-function createTreeModelHierarchyNode(hierarchyNode: HierarchyNode): TreeModelHierarchyNode {
-  return {
-    id: createNodeId(hierarchyNode),
-    children: hierarchyNode.children,
-    label: hierarchyNode.label,
-    nodeData: hierarchyNode,
+function createTreeModelNode(buildNode?: (node: TreeModelHierarchyNode) => TreeModelHierarchyNode): (node: TreeModelInfoNode | HierarchyNode) => TreeModelNode {
+  return (node: TreeModelInfoNode | HierarchyNode) => {
+    if (!isHierarchyNode(node)) {
+      return node;
+    }
+
+    const modelNode: TreeModelHierarchyNode = {
+      id: createNodeId(node),
+      children: node.children,
+      label: node.label,
+      nodeData: node,
+    };
+    return buildNode ? buildNode(modelNode) : modelNode;
   };
+}
+
+function isHierarchyNode(node: TreeModelInfoNode | HierarchyNode): node is HierarchyNode {
+  return "key" in node && node.key !== undefined;
 }
 
 function createNodeId(node: HierarchyNode) {

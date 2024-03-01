@@ -22,9 +22,22 @@ import {
 } from "../../_helpers/Content";
 import { createTestECInstancesNodeKey } from "../../_helpers/Hierarchy";
 import { render, waitFor } from "../../TestUtils";
+import { PropsWithChildren, useState } from "react";
+import { PortalTargetContextProvider } from "../../../presentation-components/common/PortalTargetContext";
+
+function TestComponentWithPortalTarget({ children }: PropsWithChildren) {
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+
+  return (
+    <div ref={setPortalTarget}>
+      <PortalTargetContextProvider portalTarget={portalTarget}>{children}</PortalTargetContextProvider>
+    </div>
+  );
+}
 
 describe("UniquePropertyValuesSelector", () => {
   beforeEach(async () => {
+    window.innerHeight = 1000;
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
@@ -70,6 +83,33 @@ describe("UniquePropertyValuesSelector", () => {
   };
 
   const testImodel = {} as IModelConnection;
+
+  it("opens menu upwards when not enough space below", async () => {
+    window.innerHeight = 0;
+    sinon.stub(Presentation.presentation, "getPagedDistinctValues").resolves({
+      total: 2,
+      items: [
+        { displayValue: "TestValue1", groupedRawValues: ["TestValue1"] },
+        { displayValue: "TestValue2", groupedRawValues: ["TestValue2"] },
+      ],
+    });
+
+    const { getByText, user } = render(
+      <TestComponentWithPortalTarget>
+        <UniquePropertyValuesSelector property={propertyDescription} onChange={() => {}} imodel={testImodel} descriptor={descriptor} />,
+      </TestComponentWithPortalTarget>,
+    );
+
+    // open menu
+    const selector = await waitFor(() => getByText("unique-values-property-editor.select-values"));
+    await user.click(selector);
+
+    // click on menu item
+    const menuItem1 = await waitFor(() => getByText("TestValue1"));
+    const menuItem2 = await waitFor(() => getByText("TestValue2"));
+    expect(menuItem1).to.not.be.null;
+    expect(menuItem2).to.not.be.null;
+  });
 
   it("invokes `onChange` when item from the menu is selected", async () => {
     const spy = sinon.spy();

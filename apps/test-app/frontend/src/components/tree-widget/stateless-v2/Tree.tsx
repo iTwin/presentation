@@ -62,7 +62,7 @@ export function StatelessTreeV2({ imodel, height, width }: { imodel: IModelConne
 
   useEffect(() => {
     setIsFiltering(false);
-    if (!metadata?.metadataProvider) {
+    if (!metadata) {
       return;
     }
 
@@ -70,7 +70,7 @@ export function StatelessTreeV2({ imodel, height, width }: { imodel: IModelConne
       new HierarchyProvider({
         metadataProvider: metadata.metadataProvider,
         queryExecutor: metadata.queryExecutor,
-        hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider: metadata?.metadataProvider }),
+        hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider: metadata.metadataProvider }),
         filtering: filteredPaths
           ? {
               paths: filteredPaths,
@@ -153,64 +153,58 @@ function TreeRenderer({
 
   const nodeRenderer = useCallback<TreeProps<PresentationTreeNode>["nodeRenderer"]>(
     ({ node, ...restProps }) => {
-      if (!isPresentationHierarchyNode(node)) {
+      if (isPresentationHierarchyNode(node)) {
         return (
-          <TreeNode {...restProps} label={node.message} isDisabled={true} onExpanded={() => {}}>
-            <Button
-              styleType="borderless"
-              size="small"
-              onClick={(e) => {
-                setHierarchyLevelLimit(node.parentNodeId, "unbounded");
-                e.stopPropagation();
-              }}
-            >
-              Remove Limit
-            </Button>
+          <TreeNode
+            {...restProps}
+            className={cx("stateless-tree-node", { filtered: node.isFiltered })}
+            label={node.label}
+            onExpanded={(_, isExpanded) => {
+              expandNode(node.id, isExpanded);
+            }}
+            onSelected={(_, isSelected) => {
+              selectNode(node.id, isSelected);
+            }}
+            icon={getIcon(node.extendedData?.imageId)}
+          >
+            {node.isFiltered ? (
+              <IconButton
+                className="filtering-action-button"
+                styleType="borderless"
+                size="small"
+                onClick={(e) => {
+                  removeHierarchyLevelFilter(node.id);
+                  e.stopPropagation();
+                }}
+              >
+                <SvgRemove />
+              </IconButton>
+            ) : null}
+            {node.isFilterable ? (
+              <IconButton
+                className="filtering-action-button"
+                styleType="borderless"
+                size="small"
+                onClick={(e) => {
+                  setFilterOptions(getHierarchyLevelFilteringOptions(node.id));
+                  e.stopPropagation();
+                }}
+              >
+                {node.isFiltered ? <SvgFilter /> : <SvgFilterHollow />}
+              </IconButton>
+            ) : null}
           </TreeNode>
         );
       }
 
-      return (
-        <TreeNode
-          {...restProps}
-          className={cx("stateless-tree-node", { filtered: node.isFiltered })}
-          label={node.label}
-          onExpanded={(_, isExpanded) => {
-            expandNode(node.id, isExpanded);
-          }}
-          onSelected={(_, isSelected) => {
-            selectNode(node.id, isSelected);
-          }}
-          icon={node.isLoading ? <ProgressRadial size="x-small" indeterminate /> : getIcon(node.extendedData?.imageId)}
-        >
-          {node.isFiltered ? (
-            <IconButton
-              className="filtering-action-button"
-              styleType="borderless"
-              size="small"
-              onClick={(e) => {
-                removeHierarchyLevelFilter(node.id);
-                e.stopPropagation();
-              }}
-            >
-              <SvgRemove />
-            </IconButton>
-          ) : null}
-          {node.isFilterable ? (
-            <IconButton
-              className="filtering-action-button"
-              styleType="borderless"
-              size="small"
-              onClick={(e) => {
-                setFilterOptions(getHierarchyLevelFilteringOptions(node.id));
-                e.stopPropagation();
-              }}
-            >
-              {node.isFiltered ? <SvgFilter /> : <SvgFilterHollow />}
-            </IconButton>
-          ) : null}
-        </TreeNode>
-      );
+      if (node.type === "Placeholder") {
+        return <PlaceHolderNode {...restProps} label={node.message} />;
+      }
+
+      if (node.type === "ResultSetTooLarge") {
+        return <ResultSetTooLargeNode {...restProps} label={node.message} onRemoveLimit={() => setHierarchyLevelLimit(node.parentNodeId, "unbounded")} />;
+      }
+      return <TreeNode {...restProps} label={node.message} isDisabled={true} onExpanded={() => {}} />;
     },
     [expandNode, selectNode, setHierarchyLevelLimit, getHierarchyLevelFilteringOptions, removeHierarchyLevelFilter],
   );
@@ -224,13 +218,25 @@ function TreeRenderer({
           hasSubNodes: false,
           isExpanded: false,
           isSelected: false,
+          isDisabled: true,
         };
       }
       return {
         nodeId: node.id,
         node,
         hasSubNodes: node.children === true || node.children.length > 0,
-        subNodes: node.children !== true ? node.children : [],
+        subNodes:
+          // returns placeholder node to show as child while children is loading.
+          node.children === true
+            ? [
+                {
+                  id: `Loading-${node.id}`,
+                  parentNodeId: node.id,
+                  type: "Placeholder",
+                  message: "Loading...",
+                },
+              ]
+            : node.children,
         isExpanded: node.isExpanded,
         isSelected: isNodeSelected(node.id),
       };
@@ -261,6 +267,27 @@ function TreeRenderer({
   );
 }
 
+function PlaceHolderNode(props: Omit<TreeNodeProps, "onExpanded">) {
+  return <TreeNode {...props} icon={<ProgressRadial size="x-small" indeterminate />} onExpanded={() => {}}></TreeNode>;
+}
+
+function ResultSetTooLargeNode({ onRemoveLimit, ...props }: Omit<TreeNodeProps, "onExpanded"> & { onRemoveLimit: () => void }) {
+  return (
+    <TreeNode {...props} onExpanded={() => {}}>
+      <Button
+        styleType="borderless"
+        size="small"
+        onClick={(e) => {
+          onRemoveLimit();
+          e.stopPropagation();
+        }}
+      >
+        Remove Limit
+      </Button>
+    </TreeNode>
+  );
+}
+
 function getIcon(icon: "icon-layers" | "icon-item" | "icon-ec-class" | "icon-imodel-hollow-2" | "icon-folder" | "icon-model") {
   switch (icon) {
     case "icon-layers":
@@ -279,3 +306,4 @@ function getIcon(icon: "icon-layers" | "icon-item" | "icon-ec-class" | "icon-imo
 }
 
 type TreeProps<T> = ComponentPropsWithoutRef<typeof Tree<T>>;
+type TreeNodeProps = ComponentPropsWithoutRef<typeof TreeNode>;
