@@ -20,7 +20,7 @@ import {
   OptionProps,
   ValueContainerProps,
 } from "react-select";
-import { AsyncPaginate, AsyncPaginateProps } from "react-select-async-paginate";
+import { AsyncPaginate, AsyncPaginateProps, wrapMenuList } from "react-select-async-paginate";
 import { SvgCaretDownSmall, SvgCheckmarkSmall, SvgCloseSmall } from "@itwin/itwinui-icons-react";
 import { List, ListItem, Tag, TagContainer } from "@itwin/itwinui-react";
 import { translate, useMergedRefs, useResizeObserver } from "../../common/Utils";
@@ -44,7 +44,7 @@ function Control<TOption, IsMulti extends boolean = boolean>({ children, ...prop
   );
 }
 
-function MenuList<TOption, IsMulti extends boolean = boolean>({ children, ...props }: MenuListProps<TOption, IsMulti>) {
+function CustomMenuList<TOption, IsMulti extends boolean = boolean>({ children, ...props }: MenuListProps<TOption, IsMulti>) {
   return (
     <List className="presentation-async-select-dropdown" ref={props.innerRef} {...props.innerProps} as="div">
       {children}
@@ -114,6 +114,9 @@ function ClearIndicator<TOption, IsMulti extends boolean = boolean>({ children: 
     </components.ClearIndicator>
   );
 }
+
+// Wrap custom menu as a workaround for some internal bugs of react-select
+const MenuList = wrapMenuList(CustomMenuList);
 
 /** @internal */
 export function AsyncSelect<OptionType, Group extends GroupBase<OptionType>, Additional>(props: AsyncPaginateProps<OptionType, Group, Additional, true>) {
