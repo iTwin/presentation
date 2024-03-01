@@ -1,5 +1,48 @@
 # Change Log - @itwin/presentation-components
 
+## 5.0.0-dev.5
+
+### Major Changes
+
+- [#438](https://github.com/iTwin/presentation/pull/438): Merged `PresentationInstanceFilterDialogProps.descriptor` and `PresentationInstanceFilterDialogProps.descriptorInputKeys` into single property `PresentationInstanceFilterDialogProps.propertiesSource`. This explicitly associates `Descriptor` with input keys. It provides more convenient API in case `Descriptor` is lazy loaded and input keys are known only after loading.
+
+  Before:
+
+  ```tsx
+  const [inputKey, setInputKeys] = useState([]);
+
+  <PresentationInstanceFilterDialog
+    descriptor={async () => {
+      const { descriptor, keys } = loadDescriptorAndKeys();
+      setInputKeys(keys);
+      return descriptor;
+    }}
+    descriptorInputKeys={inputKeys}
+  />;
+  ```
+
+  After:
+
+  ```tsx
+  <PresentationInstanceFilterDialog
+    propertiesSource={async () => {
+      const { descriptor, keys } = loadDescriptorAndKeys();
+      return {
+        descriptor,
+        inputKeys: keys,
+      };
+    }}
+  />
+  ```
+
+### Patch Changes
+
+- [#437](https://github.com/iTwin/presentation/pull/437): Sort struct property members by label when creating content for property grid, table, and other content components.
+- [#448](https://github.com/iTwin/presentation/pull/448): Fixed `UniqueValueSelector` loading only the first page of values.
+- [#444](https://github.com/iTwin/presentation/pull/444): Updated UniqueValueSelector dropdown menu to open upwards when there is not enough space below.
+- [#446](https://github.com/iTwin/presentation/pull/446): Added custom CSS class on tree node actions buttons to allow customizing them.
+- [#427](https://github.com/iTwin/presentation/pull/427): Inline default property grid ruleset instead of loading it from JSON file.
+
 ## 5.0.0-dev.4
 
 ### Minor Changes
