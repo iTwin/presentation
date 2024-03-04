@@ -154,8 +154,8 @@ function TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHi
         );
       }
 
-      if (node.type === "Placeholder") {
-        return <PlaceHolderNode {...restProps} label={node.message} />;
+      if (node.type === "ChildrenPlaceholder") {
+        return <PlaceholderNode {...restProps} label={node.message} />;
       }
 
       if (node.type === "ResultSetTooLarge") {
@@ -189,7 +189,7 @@ function TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHi
                 {
                   id: `Loading-${node.id}`,
                   parentNodeId: node.id,
-                  type: "Placeholder",
+                  type: "ChildrenPlaceholder",
                   message: "Loading...",
                 },
               ]
@@ -213,7 +213,7 @@ function TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHi
   );
 }
 
-function PlaceHolderNode(props: Omit<TreeNodeProps, "onExpanded">) {
+function PlaceholderNode(props: Omit<TreeNodeProps, "onExpanded">) {
   return <TreeNode {...props} icon={<ProgressRadial size="x-small" indeterminate />} onExpanded={() => {}}></TreeNode>;
 }
 
