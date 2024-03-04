@@ -5,9 +5,7 @@
 
 import { useCallback } from "react";
 import { omit } from "@itwin/core-bentley";
-import {
-  GroupingNodeKey, InstanceKey, Key, KeySet, PresentationQuery, PresentationQueryBinding, StandardNodeTypes,
-} from "@itwin/presentation-common";
+import { GroupingNodeKey, InstanceKey, Key, KeySet, PresentationQuery, PresentationQueryBinding, StandardNodeTypes } from "@itwin/presentation-common";
 import { useUnifiedSelectionContext } from "@itwin/presentation-components";
 import { HierarchyNode, parseFullClassName } from "@itwin/presentation-hierarchy-builder";
 import { TreeModelHierarchyNode } from "./TreeModel";

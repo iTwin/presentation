@@ -12,7 +12,11 @@ import { SvgFolder, SvgImodelHollow, SvgItem, SvgLayers, SvgModel } from "@itwin
 import { Button, Flex, ProgressRadial, SearchBox, Text, ToggleSwitch, Tree, TreeNode } from "@itwin/itwinui-react";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import {
-  createLimitingECSqlQueryExecutor, HierarchyProvider, ILimitingECSqlQueryExecutor, IMetadataProvider, TypedPrimitiveValue,
+  createLimitingECSqlQueryExecutor,
+  HierarchyProvider,
+  ILimitingECSqlQueryExecutor,
+  IMetadataProvider,
+  TypedPrimitiveValue,
 } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { isPresentationHierarchyNode, PresentationTreeNode } from "./Types";
