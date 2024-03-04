@@ -8,10 +8,6 @@
   grid-template-columns: minmax(50%, auto) minmax(auto, 50%);
   align-items: center;
 
-  .property-item-tooltip {
-    z-index: 999999;
-  }
-
   .property-badge-container {
     max-width: 100%;
     justify-self: end;
@@ -39,6 +35,10 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+}
+
+.property-item-tooltip {
+  z-index: 999999;
 }
 
 .tooltip-content-header {
