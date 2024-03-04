@@ -16,7 +16,12 @@ import { ClassInfo, Descriptor } from "@itwin/presentation-common";
 import { PresentationInstanceFilter, PresentationInstanceFilterDialog, PresentationInstanceFilterInfo } from "@itwin/presentation-components";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import {
-  createLimitingECSqlQueryExecutor, GenericInstanceFilter, HierarchyProvider, ILimitingECSqlQueryExecutor, IMetadataProvider, TypedPrimitiveValue,
+  createLimitingECSqlQueryExecutor,
+  GenericInstanceFilter,
+  HierarchyProvider,
+  ILimitingECSqlQueryExecutor,
+  IMetadataProvider,
+  TypedPrimitiveValue,
 } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { isPresentationHierarchyNode, PresentationTreeNode } from "./Types";
