@@ -8,7 +8,14 @@ import { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/
 import { PresentationHierarchyNode, PresentationTreeNode } from "../Types";
 import { HierarchyLoader, IHierarchyLoader, LoadedHierarchyPart } from "./TreeLoader";
 import {
-  addHierarchyPart, expandNode, isTreeModelHierarchyNode, removeSubTree, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode,
+  addHierarchyPart,
+  expandNode,
+  isTreeModelHierarchyNode,
+  removeSubTree,
+  TreeModel,
+  TreeModelHierarchyNode,
+  TreeModelNode,
+  TreeModelRootNode,
 } from "./TreeModel";
 
 enableMapSet();

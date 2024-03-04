@@ -6,11 +6,19 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import {
-  GenericInstanceFilter, GenericInstanceFilterRelatedInstanceDescription, GenericInstanceFilterRule, GenericInstanceFilterRuleGroup,
+  GenericInstanceFilter,
+  GenericInstanceFilterRelatedInstanceDescription,
+  GenericInstanceFilterRule,
+  GenericInstanceFilterRuleGroup,
   GenericInstanceFilterRuleOperator,
 } from "@itwin/core-common";
 import {
-  ECArrayProperty, ECEnumerationProperty, ECNavigationProperty, ECPrimitiveProperty, ECStructProperty, IMetadataProvider,
+  ECArrayProperty,
+  ECEnumerationProperty,
+  ECNavigationProperty,
+  ECPrimitiveProperty,
+  ECStructProperty,
+  IMetadataProvider,
 } from "../../hierarchy-builder/ECMetadata";
 import { NodeSelectClauseColumnNames, NodeSelectQueryFactory } from "../../hierarchy-builder/queries/NodeSelectQueryFactory";
 import { ClassStubs, createClassStubs } from "../Utils";

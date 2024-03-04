@@ -6,8 +6,14 @@
 import { GenericInstanceFilter } from "@itwin/core-common";
 import { IMetadataProvider } from "./ECMetadata";
 import {
-  HierarchyNode, HierarchyNodeKey, InstancesNodeKey, ParsedCustomHierarchyNode, ParsedInstanceHierarchyNode, ProcessedCustomHierarchyNode,
-  ProcessedHierarchyNode, ProcessedInstanceHierarchyNode,
+  HierarchyNode,
+  HierarchyNodeKey,
+  InstancesNodeKey,
+  ParsedCustomHierarchyNode,
+  ParsedInstanceHierarchyNode,
+  ProcessedCustomHierarchyNode,
+  ProcessedHierarchyNode,
+  ProcessedInstanceHierarchyNode,
 } from "./HierarchyNode";
 import { getClass } from "./internal/GetClass";
 import { parseFullClassName } from "./Metadata";

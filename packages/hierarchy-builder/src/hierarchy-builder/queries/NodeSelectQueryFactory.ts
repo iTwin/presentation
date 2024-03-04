@@ -5,8 +5,13 @@
 
 import { assert } from "@itwin/core-bentley";
 import {
-  GenericInstanceFilter, GenericInstanceFilterRelationshipStep, GenericInstanceFilterRule, GenericInstanceFilterRuleGroup,
-  GenericInstanceFilterRuleGroupOperator, GenericInstanceFilterRuleOperator, GenericInstanceFilterRuleValue,
+  GenericInstanceFilter,
+  GenericInstanceFilterRelationshipStep,
+  GenericInstanceFilterRule,
+  GenericInstanceFilterRuleGroup,
+  GenericInstanceFilterRuleGroupOperator,
+  GenericInstanceFilterRuleOperator,
+  GenericInstanceFilterRuleValue,
 } from "@itwin/core-common";
 import { ECClass, IMetadataProvider } from "../ECMetadata";
 import { getClass } from "../internal/GetClass";
