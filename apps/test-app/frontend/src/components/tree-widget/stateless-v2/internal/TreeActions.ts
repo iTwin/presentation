@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 import { Draft, enableMapSet, produce } from "immer";
 import { EMPTY, Observable, reduce, Subject, takeUntil } from "rxjs";
-import { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
+import { GenericInstanceFilter, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
 import { PresentationHierarchyNode, PresentationTreeNode } from "../Types";
 import { HierarchyLoader, IHierarchyLoader, LoadedHierarchyPart } from "./TreeLoader";
 import {
@@ -166,7 +166,7 @@ export class TreeActions {
     this.reloadTree(nodeId);
   }
 
-  public reloadTree(parentId: string | undefined, options?: { discardState?: boolean; shouldLoadChildren?: (node: HierarchyNode) => boolean }) {
+  public reloadTree(parentId: string | undefined, options?: { discardState?: boolean }) {
     const oldModel = this._currentModel;
     const expandedNodes = !!options?.discardState ? [] : collectNodes(parentId, oldModel, (node) => node.isExpanded === true);
     const collapsedNodes = !!options?.discardState ? [] : collectNodes(parentId, oldModel, (node) => node.isExpanded === false);
