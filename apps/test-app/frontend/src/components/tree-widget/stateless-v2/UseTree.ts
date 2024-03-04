@@ -6,12 +6,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { PresentationError, PresentationStatus } from "@itwin/presentation-common";
-import { PresentationInstanceFilterInfo, PresentationInstanceFilterPropertiesSource } from "@itwin/presentation-components";
+import { PresentationInstanceFilterPropertiesSource } from "@itwin/presentation-components";
 import { createHierarchyLevelDescriptor } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
-import { HierarchyNode, HierarchyNodeKey, HierarchyProvider, InstancesNodeKey } from "@itwin/presentation-hierarchy-builder";
+import { GenericInstanceFilter, HierarchyNode, HierarchyNodeKey, HierarchyProvider, InstancesNodeKey } from "@itwin/presentation-hierarchy-builder";
 import { TreeActions, TreeState } from "./internal/TreeActions";
-import { isHierarchyNodeSelected, TreeModelHierarchyNode } from "./internal/TreeModel";
+import { isHierarchyNodeSelected, isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelRootNode } from "./internal/TreeModel";
 import { useUnifiedTreeSelection } from "./internal/UseUnifiedSelection";
 import { PresentationTreeNode } from "./Types";
 
@@ -23,8 +23,8 @@ export interface UseTreeProps {
 /** @beta */
 export interface HierarchyLevelFilteringOptions {
   getDescriptor: (imodel: IModelConnection) => Promise<PresentationInstanceFilterPropertiesSource>;
-  applyFilter: (filter?: PresentationInstanceFilterInfo) => void;
-  currentFilter?: PresentationInstanceFilterInfo;
+  applyFilter: (filter?: GenericInstanceFilter) => void;
+  currentFilter?: GenericInstanceFilter;
 }
 
 /** @beta */
@@ -53,7 +53,9 @@ export function useUnifiedSelectionTree(props: UseTreeProps): UseTreeResult {
 }
 
 /** @internal */
-export function useTreeInternal({ hierarchyProvider }: UseTreeProps): UseTreeResult & { getNode: (nodeId: string) => TreeModelHierarchyNode | undefined } {
+export function useTreeInternal({
+  hierarchyProvider,
+}: UseTreeProps): UseTreeResult & { getNode: (nodeId: string) => TreeModelRootNode | TreeModelHierarchyNode | undefined } {
   const [state, setState] = useState<TreeState>({
     model: { idToNode: new Map(), parentChildMap: new Map(), rootNode: { id: undefined, nodeData: undefined } },
     rootNodes: undefined,
@@ -101,13 +103,16 @@ export function useTreeInternal({ hierarchyProvider }: UseTreeProps): UseTreeRes
   );
 
   const getHierarchyLevelFilteringOptions = useCallback(
-    (nodeId: string) => {
+    (nodeId: string | undefined) => {
       const node = actions.getNode(nodeId);
-      if (!hierarchyProvider || !node || !isInstancesHierarchyNode(node.nodeData) || !node.nodeData.supportsFiltering) {
+      if (!hierarchyProvider || !node) {
         return undefined;
       }
+      const hierarchyNode = isTreeModelHierarchyNode(node) ? node.nodeData : undefined;
+      if (hierarchyNode && !isInstancesHierarchyNode(hierarchyNode)) {
+        return;
+      }
 
-      const hierarchyNode = node.nodeData;
       const currentFilter = node.instanceFilter;
       const filteringOptions: HierarchyLevelFilteringOptions = {
         getDescriptor: async (imodel: IModelConnection): Promise<PresentationInstanceFilterPropertiesSource> => {
@@ -121,7 +126,7 @@ export function useTreeInternal({ hierarchyProvider }: UseTreeProps): UseTreeRes
           });
 
           if (!result) {
-            throw new PresentationError(PresentationStatus.Error, `Failed to get descriptor for node - ${node.id}`);
+            throw new PresentationError(PresentationStatus.Error, `Failed to get descriptor for node - ${nodeId ?? "<root>"}`);
           }
 
           return {
@@ -129,8 +134,8 @@ export function useTreeInternal({ hierarchyProvider }: UseTreeProps): UseTreeRes
             inputKeys: result.inputKeys,
           };
         },
-        applyFilter: (filter?: PresentationInstanceFilterInfo) => {
-          actions.setInstanceFilter(node.id, filter);
+        applyFilter: (filter?: GenericInstanceFilter) => {
+          actions.setInstanceFilter(nodeId, filter);
         },
         currentFilter,
       };

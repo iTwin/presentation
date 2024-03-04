@@ -12,10 +12,11 @@ import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { SvgFilter, SvgFilterHollow, SvgFolder, SvgImodelHollow, SvgItem, SvgLayers, SvgModel, SvgRemove } from "@itwin/itwinui-icons-react";
 import { Button, Flex, IconButton, ProgressRadial, SearchBox, Text, ToggleSwitch, Tree, TreeNode } from "@itwin/itwinui-react";
-import { PresentationInstanceFilterDialog } from "@itwin/presentation-components";
+import { ClassInfo, Descriptor } from "@itwin/presentation-common";
+import { PresentationInstanceFilter, PresentationInstanceFilterDialog, PresentationInstanceFilterInfo } from "@itwin/presentation-components";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import {
-  createLimitingECSqlQueryExecutor, HierarchyProvider, ILimitingECSqlQueryExecutor, IMetadataProvider, TypedPrimitiveValue,
+  createLimitingECSqlQueryExecutor, GenericInstanceFilter, HierarchyProvider, ILimitingECSqlQueryExecutor, IMetadataProvider, TypedPrimitiveValue,
 } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { isPresentationHierarchyNode, PresentationTreeNode } from "./Types";
@@ -257,11 +258,11 @@ function TreeRenderer({
         imodel={imodel}
         propertiesSource={filterOptions ? async () => filterOptions.getDescriptor(imodel) : undefined}
         onApply={(filterInfo) => {
-          filterOptions?.applyFilter(filterInfo);
+          filterOptions?.applyFilter(toGenericFilter(filterInfo));
           setFilterOptions(undefined);
         }}
         onClose={() => setFilterOptions(undefined)}
-        initialFilter={filterOptions?.currentFilter}
+        initialFilter={(descriptor) => fromGenericFilter(descriptor, filterOptions?.currentFilter)}
       />
     </div>
   );
@@ -286,6 +287,42 @@ function ResultSetTooLargeNode({ onRemoveLimit, ...props }: Omit<TreeNodeProps, 
       </Button>
     </TreeNode>
   );
+}
+
+function fromGenericFilter(descriptor: Descriptor, filter?: GenericInstanceFilter): PresentationInstanceFilterInfo | undefined {
+  if (!filter) {
+    return undefined;
+  }
+
+  const presentationFilter =
+    GenericInstanceFilter.isFilterRuleGroup(filter.rules) && filter.rules.rules.length === 0
+      ? undefined
+      : PresentationInstanceFilter.fromGenericInstanceFilter(descriptor, filter);
+  return {
+    filter: presentationFilter,
+    usedClasses: (filter.filteredClassNames ?? [])
+      .map((name) => descriptor.selectClasses.find((selectClass) => selectClass.selectClassInfo.name === name)?.selectClassInfo)
+      .filter((classInfo): classInfo is ClassInfo => classInfo !== undefined),
+  };
+}
+
+function toGenericFilter(filterInfo?: PresentationInstanceFilterInfo): GenericInstanceFilter | undefined {
+  if (!filterInfo) {
+    return undefined;
+  }
+
+  if (!filterInfo.filter) {
+    return filterInfo.usedClasses.length > 0
+      ? {
+          propertyClassNames: [],
+          relatedInstances: [],
+          filteredClassNames: filterInfo.usedClasses.map((info) => info.name),
+          rules: { operator: "and", rules: [] },
+        }
+      : undefined;
+  }
+
+  return PresentationInstanceFilter.toGenericInstanceFilter(filterInfo.filter, filterInfo.usedClasses);
 }
 
 function getIcon(icon: "icon-layers" | "icon-item" | "icon-ec-class" | "icon-imodel-hollow-2" | "icon-folder" | "icon-model") {

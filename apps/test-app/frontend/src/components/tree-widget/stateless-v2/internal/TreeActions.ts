@@ -4,8 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 import { Draft, enableMapSet, produce } from "immer";
 import { EMPTY, Observable, reduce, Subject, takeUntil } from "rxjs";
-import { PresentationInstanceFilterInfo } from "@itwin/presentation-components";
-import { HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
+import { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
 import { PresentationHierarchyNode, PresentationTreeNode } from "../Types";
 import { HierarchyLoader, IHierarchyLoader, LoadedHierarchyPart } from "./TreeLoader";
 import {
@@ -87,7 +86,10 @@ export class TreeActions {
     this._loader = provider ? new HierarchyLoader(provider) : new NoopHierarchyLoader();
   }
 
-  public getNode(nodeId: string): TreeModelHierarchyNode | undefined {
+  public getNode(nodeId: string | undefined): TreeModelHierarchyNode | TreeModelRootNode | undefined {
+    if (!nodeId) {
+      return this._currentModel.rootNode;
+    }
     const node = this._currentModel.idToNode.get(nodeId);
     return node && isTreeModelHierarchyNode(node) ? node : undefined;
   }
@@ -136,8 +138,13 @@ export class TreeActions {
     this.loadNodes(nodeId);
   }
 
-  public setInstanceFilter(nodeId: string, filter?: PresentationInstanceFilterInfo) {
+  public setInstanceFilter(nodeId: string | undefined, filter?: GenericInstanceFilter) {
     this.updateTreeModel((model) => {
+      if (nodeId === undefined) {
+        model.rootNode.instanceFilter = filter;
+        return;
+      }
+
       const modelNode = model.idToNode.get(nodeId);
       if (!modelNode || !isTreeModelHierarchyNode(modelNode)) {
         return;
