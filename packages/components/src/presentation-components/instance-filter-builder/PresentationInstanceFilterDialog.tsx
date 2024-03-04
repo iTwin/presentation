@@ -70,7 +70,7 @@ export interface PresentationInstanceFilterDialogProps {
   /** Dialog title. */
   title?: React.ReactNode;
   /** Initial filter that will be show when component is mounted. */
-  initialFilter?: PresentationInstanceFilterInfo | ((descriptor: Descriptor) => PresentationInstanceFilterInfo | undefined);
+  initialFilter?: PresentationInstanceFilterInfo | ((descriptor: Descriptor) => PresentationInstanceFilterInfo);
 }
 
 /**
@@ -287,7 +287,7 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
 
 function useInitialFilter(
   descriptor: Descriptor,
-  initialFilter?: PresentationInstanceFilterInfo | ((descriptor: Descriptor) => PresentationInstanceFilterInfo | undefined),
+  initialFilter?: PresentationInstanceFilterInfo | ((descriptor: Descriptor) => PresentationInstanceFilterInfo),
 ) {
   const initializedFilter = useRef<{ filterInfo: PresentationInstanceFilterInfo | undefined }>();
   if (initializedFilter.current === undefined) {

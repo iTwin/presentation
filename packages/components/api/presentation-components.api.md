@@ -427,7 +427,7 @@ export function PresentationInstanceFilterDialog(props: PresentationInstanceFilt
 export interface PresentationInstanceFilterDialogProps {
     filterResultsCountRenderer?: (filter: PresentationInstanceFilterInfo) => ReactNode;
     imodel: IModelConnection;
-    initialFilter?: PresentationInstanceFilterInfo;
+    initialFilter?: PresentationInstanceFilterInfo | ((descriptor: Descriptor) => PresentationInstanceFilterInfo);
     isOpen: boolean;
     onApply: (filter?: PresentationInstanceFilterInfo) => void;
     onClose?: () => void;

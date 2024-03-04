@@ -267,7 +267,7 @@ function TreeRenderer({
           setFilterOptions(undefined);
         }}
         onClose={() => setFilterOptions(undefined)}
-        initialFilter={(descriptor) => fromGenericFilter(descriptor, filterOptions?.currentFilter)}
+        initialFilter={filterOptions?.currentFilter ? (descriptor) => fromGenericFilter(descriptor, filterOptions.currentFilter) : undefined}
       />
     </div>
   );
@@ -294,11 +294,7 @@ function ResultSetTooLargeNode({ onRemoveLimit, ...props }: Omit<TreeNodeProps, 
   );
 }
 
-function fromGenericFilter(descriptor: Descriptor, filter?: GenericInstanceFilter): PresentationInstanceFilterInfo | undefined {
-  if (!filter) {
-    return undefined;
-  }
-
+function fromGenericFilter(descriptor: Descriptor, filter: GenericInstanceFilter): PresentationInstanceFilterInfo {
   const presentationFilter =
     GenericInstanceFilter.isFilterRuleGroup(filter.rules) && filter.rules.rules.length === 0
       ? undefined
