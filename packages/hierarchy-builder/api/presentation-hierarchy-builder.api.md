@@ -4,6 +4,15 @@
 
 ```ts
 
+import { GenericInstanceFilter } from '@itwin/core-common';
+import { GenericInstanceFilterRelatedInstanceDescription } from '@itwin/core-common';
+import { GenericInstanceFilterRelationshipStep } from '@itwin/core-common';
+import { GenericInstanceFilterRule } from '@itwin/core-common';
+import { GenericInstanceFilterRuleGroup } from '@itwin/core-common';
+import { GenericInstanceFilterRuleGroupOperator } from '@itwin/core-common';
+import { GenericInstanceFilterRuleOperator } from '@itwin/core-common';
+import { GenericInstanceFilterRuleValue } from '@itwin/core-common';
+
 // @beta
 export interface ArrayPropertyAttributes {
     // (undocumented)
@@ -467,32 +476,21 @@ export interface ECStructProperty extends ECProperty {
     structClass: ECStructClass;
 }
 
-// @beta
-export interface GenericInstanceFilter {
-    filterClassNames?: string[];
-    propertyClassName: string;
-    relatedInstances: RelatedInstanceDescription[];
-    rules: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup;
-}
+export { GenericInstanceFilter }
 
-// @beta (undocumented)
-export namespace GenericInstanceFilter {
-    export function isFilterRuleGroup(obj: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup): obj is GenericInstanceFilterRuleGroup;
-}
+export { GenericInstanceFilterRelatedInstanceDescription }
 
-// @beta
-export interface GenericInstanceFilterRule {
-    operator: PropertyFilterRuleOperator;
-    propertyName: string;
-    sourceAlias?: string;
-    value?: PropertyFilterValue;
-}
+export { GenericInstanceFilterRelationshipStep }
 
-// @beta
-export interface GenericInstanceFilterRuleGroup {
-    operator: PropertyFilterRuleGroupOperator;
-    rules: Array<GenericInstanceFilterRule | GenericInstanceFilterRuleGroup>;
-}
+export { GenericInstanceFilterRule }
+
+export { GenericInstanceFilterRuleGroup }
+
+export { GenericInstanceFilterRuleGroupOperator }
+
+export { GenericInstanceFilterRuleOperator }
+
+export { GenericInstanceFilterRuleValue }
 
 // @beta
 export interface GetHierarchyNodesProps {
@@ -1001,35 +999,6 @@ export type ProcessedInstanceHierarchyNode = Omit<HierarchyNode, "key" | "childr
 };
 
 // @beta
-export type PropertyFilterRuleBinaryOperator = "Equal" | "NotEqual" | "Greater" | "GreaterOrEqual" | "Less" | "LessOrEqual" | "Like";
-
-// @beta
-export type PropertyFilterRuleGroupOperator = "And" | "Or";
-
-// @beta
-export type PropertyFilterRuleOperator = PropertyFilterRuleUnaryOperator | PropertyFilterRuleBinaryOperator;
-
-// @beta (undocumented)
-export namespace PropertyFilterRuleOperator {
-    // (undocumented)
-    export function isBinary(op: PropertyFilterRuleOperator): op is PropertyFilterRuleBinaryOperator;
-    // (undocumented)
-    export function isUnary(op: PropertyFilterRuleOperator): op is PropertyFilterRuleUnaryOperator;
-}
-
-// @beta
-export type PropertyFilterRuleUnaryOperator = "True" | "False" | "Null" | "NotNull";
-
-// @beta
-export type PropertyFilterValue = PrimitiveValue | InstanceKey;
-
-// @beta (undocumented)
-export namespace PropertyFilterValue {
-    export function isInstanceKey(value: PropertyFilterValue): value is InstanceKey;
-    export function isPrimitive(value: PropertyFilterValue): value is PrimitiveValue;
-}
-
-// @beta
 export type PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | PropertyValueGroupingNodeKey | PropertyOtherValuesGroupingNodeKey;
 
 // @beta
@@ -1062,12 +1031,6 @@ export interface PropertyValueRangeGroupingNodeKey extends BaseGroupingNodeKey {
     propertyName: string;
     toValue: number;
     type: "property-grouping:range";
-}
-
-// @beta
-export interface RelatedInstanceDescription {
-    alias: string;
-    path: RelationshipPath;
 }
 
 // @beta

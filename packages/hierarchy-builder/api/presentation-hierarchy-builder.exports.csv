@@ -66,10 +66,6 @@ beta;ECSqlValueSelector
 beta;ECStructArrayProperty = ECStructProperty & ArrayPropertyAttributes
 beta;ECStructClass = ECClass
 beta;ECStructProperty 
-beta;GenericInstanceFilter
-beta;GenericInstanceFilter
-beta;GenericInstanceFilterRule
-beta;GenericInstanceFilterRuleGroup
 beta;GetHierarchyNodesProps
 beta;getLogger(): ILogger
 beta;GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | PropertyGroupingNodeKey
@@ -138,19 +134,11 @@ beta;ProcessedCustomHierarchyNode = Omit
 beta;ProcessedGroupingHierarchyNode = Omit
 beta;ProcessedHierarchyNode = ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode | ProcessedGroupingHierarchyNode
 beta;ProcessedInstanceHierarchyNode = Omit
-beta;PropertyFilterRuleBinaryOperator = "Equal" | "NotEqual" | "Greater" | "GreaterOrEqual" | "Less" | "LessOrEqual" | "Like"
-beta;PropertyFilterRuleGroupOperator = "And" | "Or"
-beta;PropertyFilterRuleOperator = PropertyFilterRuleUnaryOperator | PropertyFilterRuleBinaryOperator
-beta;PropertyFilterRuleOperator
-beta;PropertyFilterRuleUnaryOperator = "True" | "False" | "Null" | "NotNull"
-beta;PropertyFilterValue = PrimitiveValue | InstanceKey
-beta;PropertyFilterValue
 beta;PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | PropertyValueGroupingNodeKey | PropertyOtherValuesGroupingNodeKey
 beta;PropertyOtherValuesGroupingNodeKey 
 beta;PropertyValue
 beta;PropertyValueGroupingNodeKey 
 beta;PropertyValueRangeGroupingNodeKey 
-beta;RelatedInstanceDescription
 beta;RelationshipPath
 beta;RelationshipPathStep
 beta;RowsLimitExceededError 
