@@ -53,7 +53,7 @@ export class HierarchyLoader implements IHierarchyLoader {
       map(
         (childNodes): LoadedHierarchyPart => ({
           parent,
-          loadedNodes: childNodes.map(createTreeModelNode(buildNode)),
+          loadedNodes: childNodes.map(createTreeModelNodesFactory(buildNode)),
         }),
       ),
     );
@@ -94,7 +94,9 @@ export class HierarchyLoader implements IHierarchyLoader {
   }
 }
 
-function createTreeModelNode(buildNode?: (node: TreeModelHierarchyNode) => TreeModelHierarchyNode): (node: TreeModelInfoNode | HierarchyNode) => TreeModelNode {
+function createTreeModelNodesFactory(
+  buildNode?: (node: TreeModelHierarchyNode) => TreeModelHierarchyNode,
+): (node: TreeModelInfoNode | HierarchyNode) => TreeModelNode {
   return (node: TreeModelInfoNode | HierarchyNode) => {
     if (!isHierarchyNode(node)) {
       return node;
