@@ -35,7 +35,8 @@ import {
   TypedPrimitiveValue,
 } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
-import { TreeWidgetHeader, TreeWidgetProps, useTreeHeight } from "../TreeWidget";
+import { TreeWidgetHeader, useTreeHeight } from "../TreeHeader";
+import { TreeWidgetProps } from "../TreeWidget";
 import { useControlledTreeComponentsState, useFormatter, useReload } from "./CustomHooks";
 import { createInfoNode, createTreeNodeItem, getHierarchyNode } from "./TreeNodeItemUtils";
 import { UnifiedSelectionTreeEventHandler } from "./UnifiedSelectionTreeEventHandler";
@@ -185,7 +186,7 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
         />
       </div>
       <div className="filtered-tree">
-        {treeHeight && props.width && (
+        {treeHeight && props.width ? (
           <ControlledTree
             model={treeModel}
             eventsHandler={eventHandler}
@@ -201,7 +202,7 @@ export function StatelessTreeWidget(props: Omit<TreeWidgetProps, "rulesetId">) {
             width={props.width}
             height={treeHeight}
           />
-        )}
+        ) : null}
         {filteringStatus === "filtering" ? <div className="filtered-tree-overlay" /> : null}
       </div>
     </>

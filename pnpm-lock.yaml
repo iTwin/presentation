@@ -371,8 +371,8 @@ importers:
         specifier: ^2.8.0
         version: 2.8.0(react-dom@18.2.0)(react@18.2.0)
       '@itwin/itwinui-react':
-        specifier: ^3.3.0
-        version: 3.3.0(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^3.4.2
+        version: 3.4.2(react-dom@18.2.0)(react@18.2.0)
       '@itwin/presentation-common':
         specifier: ^4.4.0
         version: 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-common@4.4.0)(@itwin/core-quantity@4.4.0)(@itwin/ecschema-metadata@4.4.0)
@@ -424,6 +424,9 @@ importers:
       eslint-plugin-react:
         specifier: ^7.33.2
         version: 7.33.2(eslint@8.56.0)
+      immer:
+        specifier: ^10.0.3
+        version: 10.0.3
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -458,8 +461,8 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0(react-dom@18.2.0)(react@18.2.0)
       '@itwin/itwinui-react':
-        specifier: ^3.3.0
-        version: 3.3.0(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^3.4.2
+        version: 3.4.2(react-dom@18.2.0)(react@18.2.0)
       classnames:
         specifier: ^2.3.2
         version: 2.3.2
@@ -2875,7 +2878,7 @@ packages:
       '@itwin/core-bentley': 4.4.0
       '@itwin/core-react': 4.9.0(@itwin/appui-abstract@4.4.0)(@itwin/core-bentley@4.4.0)(react-dom@18.2.0)(react@18.2.0)
       '@itwin/itwinui-icons-react': 2.8.0(react-dom@18.2.0)(react@18.2.0)
-      '@itwin/itwinui-react': 2.12.23(react-dom@18.2.0)(react@18.2.0)
+      '@itwin/itwinui-react': 2.12.24(react-dom@18.2.0)(react@18.2.0)
       '@itwin/itwinui-variables': 2.1.2
       '@types/shortid': 0.0.32
       classnames: 2.3.1
@@ -2938,7 +2941,7 @@ packages:
       '@itwin/core-bentley': 4.4.0
       '@itwin/core-geometry': 4.4.0
       flatbuffers: 1.12.0
-      js-base64: 3.7.6
+      js-base64: 3.7.7
 
   /@itwin/core-electron@4.4.0(@itwin/core-backend@4.4.0)(@itwin/core-bentley@4.4.0)(@itwin/core-common@4.4.0)(@itwin/core-frontend@4.4.0)(electron@28.2.3):
     resolution: {integrity: sha512-HcZIHWiDgrhjWtns2NGaQOEXiT4gL0GHdtVnvf9qntfHJpyfy2OUmEFreKPxMSCPXwwUR/HckdWgbcvFlpDgqA==}
@@ -3033,7 +3036,7 @@ packages:
       '@itwin/appui-abstract': 4.4.0(@itwin/core-bentley@4.4.0)
       '@itwin/core-bentley': 4.4.0
       '@itwin/itwinui-icons-react': 2.8.0(react-dom@18.2.0)(react@18.2.0)
-      '@itwin/itwinui-react': 2.12.23(react-dom@18.2.0)(react@18.2.0)
+      '@itwin/itwinui-react': 2.12.24(react-dom@18.2.0)(react@18.2.0)
       '@itwin/itwinui-variables': 2.1.2
       classnames: 2.3.1
       dompurify: 2.4.7
@@ -3159,7 +3162,7 @@ packages:
       '@itwin/core-quantity': 4.4.0(@itwin/core-bentley@4.4.0)
       '@itwin/core-react': 4.9.0(@itwin/appui-abstract@4.4.0)(@itwin/core-bentley@4.4.0)(react-dom@18.2.0)(react@18.2.0)
       '@itwin/itwinui-icons-react': 2.8.0(react-dom@18.2.0)(react@18.2.0)
-      '@itwin/itwinui-react': 2.12.23(react-dom@18.2.0)(react@18.2.0)
+      '@itwin/itwinui-react': 2.12.24(react-dom@18.2.0)(react@18.2.0)
       '@itwin/itwinui-variables': 2.1.2
       classnames: 2.3.1
       react: 18.2.0
@@ -3169,8 +3172,8 @@ packages:
   /@itwin/itwinui-icons-react@2.8.0(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-FMXUrDFC7U827/QJNE603+FL6OvIngFss5B9YTSCXcrWuwVLAzJ+sFb+RQ/I1sc19qujYBkZ9asNqlHXM2O4Cg==}
     peerDependencies:
-      react: 18.2.0
-      react-dom: 18.2.0
+      react: '>=16.8.6'
+      react-dom: '>=16.8.6'
     dependencies:
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
@@ -3184,8 +3187,8 @@ packages:
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
 
-  /@itwin/itwinui-react@2.12.23(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-qT9ylbY4rWLXZ/PH7VhopV+3hm9Y/y59fR2RYf++X0wpcgYbY0qqXcX0jvLtDkT706t+rtA0t7KhPxRxOOUvwA==}
+  /@itwin/itwinui-react@2.12.24(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-PfBQ2Tm5VIWSeLZTAutd2obzOWPPPxGpFGl4whnhTG82Y5fSQvCXPSOHeff1hJ03B0w3a58Y5mzAGBjnaHIXRg==}
     peerDependencies:
       react: '>=16.8.6 < 19.0.0'
       react-dom: '>=16.8.6 < 19.0.0'
@@ -3200,8 +3203,8 @@ packages:
       react-transition-group: 4.4.5(react-dom@18.2.0)(react@18.2.0)
       tippy.js: 6.3.7
 
-  /@itwin/itwinui-react@3.3.0(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-YkVSh4elEuHiRMv1IFWX6+N//bwklGy9m7bDeJO6BnIf7WNNTf8ora5cEnF0//vPBhJYQEipbO/9oML1zGKNEw==}
+  /@itwin/itwinui-react@3.4.2(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-NJbzAcSdbh0+waBQABYwKxmsMNuftT6VzmWp8B1QAZirthQLzmA5BR8KyEOHmF6tN5alGUec0n4WsjLl3FHlFA==}
     peerDependencies:
       react: '>= 17.0.0 < 19.0.0'
       react-dom: '>=17.0.0 < 19.0.0'
@@ -3433,8 +3436,8 @@ packages:
   /@microsoft/tsdoc@0.14.2:
     resolution: {integrity: sha512-9b8mPpKrfeGRuhFH5iO1iwCLeIIsV6+H1sRfxbkoGXIyQE2BTsPd9zqSqQJ+pv5sJ/hT5M1zvOFL02MnEezFug==}
 
-  /@ngneat/falso@7.1.1:
-    resolution: {integrity: sha512-/5HuJDaZHXl3WVdgvYBAM52OSYbSKfiNazVOZOw/3KjeZ6dQW9F0QCG+W6z52lUu5MZvp/TkPGaVRtoz6h9T1w==}
+  /@ngneat/falso@7.2.0:
+    resolution: {integrity: sha512-283EXBFd05kCbGuGSXgmvhCsQYEYzvD/eJaE7lxd05qRB0tgREvZX7TRlJ1KSp8nHxoK6Ws029G1Y30mt4IVAA==}
     dependencies:
       seedrandom: 3.0.5
       uuid: 8.3.2
@@ -5742,7 +5745,7 @@ packages:
       es-errors: 1.3.0
       get-intrinsic: 1.2.4
       is-array-buffer: 3.0.4
-      is-shared-array-buffer: 1.0.2
+      is-shared-array-buffer: 1.0.3
 
   /arrify@1.0.1:
     resolution: {integrity: sha512-3CYzex9M9FGQjCGMGyi6/31c8GJbgb0qGyrx5HWxPd0aCwh4cB2YjMb2Xf9UuoogrMrlO9cTqnB5rI5GHZTcUA==}
@@ -5798,7 +5801,7 @@ packages:
   /artillery-plugin-fake-data@1.0.2:
     resolution: {integrity: sha512-KSSjtyh5RYf/umbgY6Ow2cyGAiNi8MsV9UXwKZLrcVPkCQNCv192ZNiXtPwJTplownViucQsEhoMuHYyH0471g==}
     dependencies:
-      '@ngneat/falso': 7.1.1
+      '@ngneat/falso': 7.2.0
     dev: false
 
   /artillery-plugin-metrics-by-endpoint@1.2.0:
@@ -5864,7 +5867,7 @@ packages:
       artillery-plugin-metrics-by-endpoint: 1.2.0
       artillery-plugin-publish-metrics: 2.12.0
       async: 2.6.4
-      aws-sdk: 2.1561.0
+      aws-sdk: 2.1562.0
       chalk: 2.4.2
       ci-info: 3.9.0
       cli-table3: 0.6.3
@@ -5886,7 +5889,7 @@ packages:
       nanoid: 3.3.7
       ora: 4.1.1
       posthog-node: 3.6.3(debug@4.3.4)
-      sqs-consumer: 5.8.0(aws-sdk@2.1561.0)
+      sqs-consumer: 5.8.0(aws-sdk@2.1562.0)
       temp: 0.9.4
       tmp: 0.2.1
       try-require: 1.2.1
@@ -5951,8 +5954,8 @@ packages:
     dependencies:
       possible-typed-array-names: 1.0.0
 
-  /aws-sdk@2.1561.0:
-    resolution: {integrity: sha512-YbYQOyvy9mfEGRI4JDZjw6J0zW6bjyV7H3WMWeq69qETvZlkq8koy5CTPMCjnL8i7boDjyW9FuhQzICBbeNgLg==}
+  /aws-sdk@2.1562.0:
+    resolution: {integrity: sha512-HsdlDRfVamH4tv+M+d0lnEYdtx+yEpqWA4T2XuJCjtV5JjjHDUQTKm+9C+EoTxLWtuw+SYSVWyuclwETv6CmHQ==}
     engines: {node: '>= 10.0.0'}
     dependencies:
       buffer: 4.9.2
@@ -6106,7 +6109,7 @@ packages:
     hasBin: true
     dependencies:
       caniuse-lite: 1.0.30001588
-      electron-to-chromium: 1.4.676
+      electron-to-chromium: 1.4.677
       node-releases: 2.0.14
       update-browserslist-db: 1.0.13(browserslist@4.23.0)
 
@@ -6839,7 +6842,7 @@ packages:
       is-array-buffer: 3.0.4
       is-date-object: 1.0.5
       is-regex: 1.1.4
-      is-shared-array-buffer: 1.0.2
+      is-shared-array-buffer: 1.0.3
       isarray: 2.0.5
       object-is: 1.1.5
       object-keys: 1.1.1
@@ -7149,8 +7152,8 @@ packages:
       jake: 10.8.7
     dev: false
 
-  /electron-to-chromium@1.4.676:
-    resolution: {integrity: sha512-uHt4FB8SeYdhcOsj2ix/C39S7sPSNFJpzShjxGOm1KdF4MHyGqGi389+T5cErsodsijojXilYaHIKKqJfqh7uQ==}
+  /electron-to-chromium@1.4.677:
+    resolution: {integrity: sha512-erDa3CaDzwJOpyvfKhOiJjBVNnMM0qxHq47RheVVwsSQrgBA9ZSGV9kdaOfZDPXcHzhG7lBxhj6A7KvfLJBd6Q==}
 
   /electron@28.2.3:
     resolution: {integrity: sha512-he9nGphZo03ejDjYBXpmFVw0KBKogXvR2tYxE4dyYvnfw42uaFIBFrwGeenvqoEOfheJfcI0u4rFG6h3QxDwnA==}
@@ -7250,7 +7253,7 @@ packages:
       call-bind: 1.0.7
       es-define-property: 1.0.0
       es-errors: 1.3.0
-      es-set-tostringtag: 2.0.2
+      es-set-tostringtag: 2.0.3
       es-to-primitive: 1.2.1
       function.prototype.name: 1.1.6
       get-intrinsic: 1.2.4
@@ -7266,7 +7269,7 @@ packages:
       is-callable: 1.2.7
       is-negative-zero: 2.0.3
       is-regex: 1.1.4
-      is-shared-array-buffer: 1.0.2
+      is-shared-array-buffer: 1.0.3
       is-string: 1.0.7
       is-typed-array: 1.1.13
       is-weakref: 1.0.2
@@ -7280,9 +7283,9 @@ packages:
       string.prototype.trimend: 1.0.7
       string.prototype.trimstart: 1.0.7
       typed-array-buffer: 1.0.2
-      typed-array-byte-length: 1.0.0
-      typed-array-byte-offset: 1.0.1
-      typed-array-length: 1.0.4
+      typed-array-byte-length: 1.0.1
+      typed-array-byte-offset: 1.0.2
+      typed-array-length: 1.0.5
       unbox-primitive: 1.0.2
       which-typed-array: 1.1.14
 
@@ -7321,7 +7324,7 @@ packages:
       define-properties: 1.2.1
       es-abstract: 1.22.4
       es-errors: 1.3.0
-      es-set-tostringtag: 2.0.2
+      es-set-tostringtag: 2.0.3
       function-bind: 1.1.2
       get-intrinsic: 1.2.4
       globalthis: 1.0.3
@@ -7332,8 +7335,8 @@ packages:
       iterator.prototype: 1.1.2
       safe-array-concat: 1.1.0
 
-  /es-set-tostringtag@2.0.2:
-    resolution: {integrity: sha512-BuDyupZt65P9D2D2vA/zqcI3G5xRsklm5N3xCwuiy+/vKy8i0ifdsQP1sLgO4tZDSCaQUSnmC48khknGMV3D2Q==}
+  /es-set-tostringtag@2.0.3:
+    resolution: {integrity: sha512-3T8uNMC3OQTHkFUsFq8r/BwAXLHvU/9O9mE0fBc/MY5iq/8H7ncvO947LmYA6ldWw9Uh8Yhf25zu6n7nML5QWQ==}
     engines: {node: '>= 0.4'}
     dependencies:
       get-intrinsic: 1.2.4
@@ -8041,7 +8044,7 @@ packages:
     resolution: {integrity: sha512-CYcENa+FtcUKLmhhqyctpclsq7QF38pKjZHsGNiSQF5r4FtoKDWabFDl3hzaEQMvT1LHEysw5twgLvpYYb4vbw==}
     engines: {node: ^10.12.0 || >=12.0.0}
     dependencies:
-      flatted: 3.2.9
+      flatted: 3.3.1
       keyv: 4.5.4
       rimraf: 3.0.2
 
@@ -8052,8 +8055,8 @@ packages:
   /flatbuffers@1.12.0:
     resolution: {integrity: sha512-c7CZADjRcl6j0PlvFy0ZqXQ67qSEZfrVPynmnL+2zPc+NtMvrF8Y0QceMo7QqnSPc7+uWjUIAbvCQ5WIKlMVdQ==}
 
-  /flatted@3.2.9:
-    resolution: {integrity: sha512-36yxDn5H7OFZQla0/jFJmbIKTdZAQHngCedGxiMmpNfEZM0sdEeT+WczLQrjK6D7o2aiyLYDnkw0R3JK0Qv1RQ==}
+  /flatted@3.3.1:
+    resolution: {integrity: sha512-X8cqMLLie7KsNUDSdzeN8FYK9rEt4Dt67OsG/DNGnYTSDBG4uFAJFBnUeiV+zCVAvwFy56IjM9sH51jVaEhNxw==}
 
   /follow-redirects@1.15.5(debug@4.3.4):
     resolution: {integrity: sha512-vSFWUON1B+yAw1VN4xMfxgn5fTUiaOzAJCKBwIIgT/+7CuGy9+r+5gITvP62j3RmaD5Ph65UaERdOSRGUzZtgw==}
@@ -8721,6 +8724,10 @@ packages:
     resolution: {integrity: sha512-5Fytz/IraMjqpwfd34ke28PTVMjZjJG2MPn5t7OE4eUCUNf8BAa7b5WUS9/Qvr6mwOQS7Mk6vdsMno5he+T8Xw==}
     engines: {node: '>= 4'}
 
+  /immer@10.0.3:
+    resolution: {integrity: sha512-pwupu3eWfouuaowscykeckFmVTpqbzW+rXFCX8rQLkZzM9ftBmU/++Ra+o+L27mz03zJTlyV4UUr+fdKNffo4A==}
+    dev: false
+
   /immer@9.0.6:
     resolution: {integrity: sha512-G95ivKpy+EvVAnAab4fVa4YGYn24J1SpEktnJX7JJ45Bd7xqME/SCplFzYFmTbrkwZbQ4xJK1xMTUYBkN6pWsQ==}
 
@@ -8957,8 +8964,9 @@ packages:
   /is-set@2.0.2:
     resolution: {integrity: sha512-+2cnTEZeY5z/iXGbLhPrOAaK/Mau5k5eXq9j14CpRTftq0pAJu2MwVRSZhyZWBzx3o6X795Lz6Bpb6R0GKf37g==}
 
-  /is-shared-array-buffer@1.0.2:
-    resolution: {integrity: sha512-sqN2UDu1/0y6uvXyStCOzyhAjCSlHceFoMKJW8W9EU9cvic/QdsZ0kEU93HEy3IUEFZIiH/3w+AH/UQbPHNdhA==}
+  /is-shared-array-buffer@1.0.3:
+    resolution: {integrity: sha512-nA2hv5XIhLR3uVzDDfCIknerhx8XUKnstuOERPNNIinXG7v9u+ohXF67vxm4TPTEPU6lm61ZkwP3c9PCB97rhg==}
+    engines: {node: '>= 0.4'}
     dependencies:
       call-bind: 1.0.7
 
@@ -9205,8 +9213,8 @@ packages:
       '@sideway/pinpoint': 2.0.0
     dev: false
 
-  /js-base64@3.7.6:
-    resolution: {integrity: sha512-NPrWuHFxFUknr1KqJRDgUQPexQF0uIJWjeT+2KjEePhitQxQEx5EJBG1lVn5/hc8aLycTpXrDOgPQ6Zq+EDiTA==}
+  /js-base64@3.7.7:
+    resolution: {integrity: sha512-7rCnleh0z2CkXhH67J8K1Ytz0b2Y+yxTPL+/KOJoa20hfnVQ/3/T6W/KflYI4bRHRagNeXeU2bkNGI3v1oS/lw==}
 
   /js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -11716,12 +11724,12 @@ packages:
     dev: false
     optional: true
 
-  /sqs-consumer@5.8.0(aws-sdk@2.1561.0):
+  /sqs-consumer@5.8.0(aws-sdk@2.1562.0):
     resolution: {integrity: sha512-pJReMEtDM9/xzQTffb7dxMD5MKagBfOW65m+ITsbpNk0oZmJ38tTC4LPmj0/7ZcKSOqi2LrpA1b0qGYOwxlHJg==}
     peerDependencies:
       aws-sdk: ^2.1271.0
     dependencies:
-      aws-sdk: 2.1561.0
+      aws-sdk: 2.1562.0
       debug: 4.3.4(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
@@ -12231,17 +12239,18 @@ packages:
       es-errors: 1.3.0
       is-typed-array: 1.1.13
 
-  /typed-array-byte-length@1.0.0:
-    resolution: {integrity: sha512-Or/+kvLxNpeQ9DtSydonMxCx+9ZXOswtwJn17SNLvhptaXYDJvkFFP5zbfU/uLmvnBJlI4yrnXRxpdWH/M5tNA==}
+  /typed-array-byte-length@1.0.1:
+    resolution: {integrity: sha512-3iMJ9q0ao7WE9tWcaYKIptkNBuOIcZCCT0d4MRvuuH88fEoEH62IuQe0OtraD3ebQEoTRk8XCBoknUNc1Y67pw==}
     engines: {node: '>= 0.4'}
     dependencies:
       call-bind: 1.0.7
       for-each: 0.3.3
+      gopd: 1.0.1
       has-proto: 1.0.3
       is-typed-array: 1.1.13
 
-  /typed-array-byte-offset@1.0.1:
-    resolution: {integrity: sha512-tcqKMrTRXjqvHN9S3553NPCaGL0VPgFI92lXszmrE8DMhiDPLBYLlvo8Uu4WZAAX/aGqp/T1sbA4ph8EWjDF9Q==}
+  /typed-array-byte-offset@1.0.2:
+    resolution: {integrity: sha512-Ous0vodHa56FviZucS2E63zkgtgrACj7omjwd/8lTEMEPFFyjfixMZ1ZXenpgCFBBt4EC1J2XsyVS2gkG0eTFA==}
     engines: {node: '>= 0.4'}
     dependencies:
       available-typed-arrays: 1.0.7
@@ -12251,12 +12260,16 @@ packages:
       has-proto: 1.0.3
       is-typed-array: 1.1.13
 
-  /typed-array-length@1.0.4:
-    resolution: {integrity: sha512-KjZypGq+I/H7HI5HlOoGHkWUUGq+Q0TPhQurLbyrVrvnKTBgzLhIJ7j6J/XTQOi0d1RjyZ0wdas8bKs2p0x3Ng==}
+  /typed-array-length@1.0.5:
+    resolution: {integrity: sha512-yMi0PlwuznKHxKmcpoOdeLwxBoVPkqZxd7q2FgMkmD3bNwvF5VW0+UlUQ1k1vmktTu4Yu13Q0RIxEP8+B+wloA==}
+    engines: {node: '>= 0.4'}
     dependencies:
       call-bind: 1.0.7
       for-each: 0.3.3
+      gopd: 1.0.1
+      has-proto: 1.0.3
       is-typed-array: 1.1.13
+      possible-typed-array-names: 1.0.0
 
   /typedarray-to-buffer@3.1.5:
     resolution: {integrity: sha512-zdu8XMNEDepKKR+XYOXAVPtWui0ly0NtohUscw+UmaHiAWT8hrV1rr//H6V+0DvJ3OQ19S979M0laLfX8rm82Q==}
