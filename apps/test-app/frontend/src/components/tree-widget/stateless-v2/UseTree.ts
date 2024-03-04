@@ -29,7 +29,14 @@ export interface HierarchyLevelFilteringOptions {
 
 /** @beta */
 export interface UseTreeResult {
+  /**
+   * Array containing root tree nodes. It is `undefined` on initial render until any nodes are loaded.
+   */
   rootNodes: PresentationTreeNode[] | undefined;
+  /**
+   * Specifies whether tree is loading or not. It is set to `true` when initial tree load is in progress
+   * or tree is reloading.
+   */
   isLoading: boolean;
   reloadTree: (options?: { discardState?: boolean }) => void;
   expandNode: (nodeId: string, isExpanded: boolean) => void;

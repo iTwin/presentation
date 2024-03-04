@@ -16,12 +16,7 @@ import { ClassInfo, Descriptor } from "@itwin/presentation-common";
 import { PresentationInstanceFilter, PresentationInstanceFilterDialog, PresentationInstanceFilterInfo } from "@itwin/presentation-components";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import {
-  createLimitingECSqlQueryExecutor,
-  GenericInstanceFilter,
-  HierarchyProvider,
-  ILimitingECSqlQueryExecutor,
-  IMetadataProvider,
-  TypedPrimitiveValue,
+  createLimitingECSqlQueryExecutor, GenericInstanceFilter, HierarchyProvider, ILimitingECSqlQueryExecutor, IMetadataProvider, TypedPrimitiveValue,
 } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { isPresentationHierarchyNode, PresentationTreeNode } from "./Types";
@@ -203,8 +198,8 @@ function TreeRenderer({
         );
       }
 
-      if (node.type === "Placeholder") {
-        return <PlaceHolderNode {...restProps} label={node.message} />;
+      if (node.type === "ChildrenPlaceholder") {
+        return <PlaceholderNode {...restProps} label={node.message} />;
       }
 
       if (node.type === "ResultSetTooLarge") {
@@ -238,7 +233,7 @@ function TreeRenderer({
                 {
                   id: `Loading-${node.id}`,
                   parentNodeId: node.id,
-                  type: "Placeholder",
+                  type: "ChildrenPlaceholder",
                   message: "Loading...",
                 },
               ]
@@ -273,7 +268,7 @@ function TreeRenderer({
   );
 }
 
-function PlaceHolderNode(props: Omit<TreeNodeProps, "onExpanded">) {
+function PlaceholderNode(props: Omit<TreeNodeProps, "onExpanded">) {
   return <TreeNode {...props} icon={<ProgressRadial size="x-small" indeterminate />} onExpanded={() => {}}></TreeNode>;
 }
 
