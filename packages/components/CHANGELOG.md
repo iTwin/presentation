@@ -1,5 +1,12 @@
 # Change Log - @itwin/presentation-components
 
+## 5.0.0-dev.6
+
+### Patch Changes
+
+- [#453](https://github.com/iTwin/presentation/pull/453): Fixed instance filter builder unique values selector dropdown menu layout.
+- [#451](https://github.com/iTwin/presentation/pull/451): Fixed tooltip appearing under property selector in property filter builder.
+
 ## 5.0.0-dev.5
 
 ### Major Changes

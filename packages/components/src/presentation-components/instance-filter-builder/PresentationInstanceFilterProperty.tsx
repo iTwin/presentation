@@ -33,7 +33,7 @@ export function PresentationInstanceFilterProperty(props: PresentationInstanceFi
   const { propertyDescription, categoryLabel, fullClassName } = props;
   return (
     <div className="property-item-line">
-      <Tooltip content={propertyDescription.displayLabel} placement="bottom">
+      <Tooltip className="property-item-tooltip" content={propertyDescription.displayLabel} placement="bottom">
         <div className="property-display-label" title={propertyDescription.displayLabel}>
           {propertyDescription.displayLabel}
         </div>
@@ -41,6 +41,7 @@ export function PresentationInstanceFilterProperty(props: PresentationInstanceFi
       <div className="property-badge-container">
         {categoryLabel && (
           <Tooltip
+            className="property-item-tooltip"
             content={<CategoryTooltipContent categoryLabel={categoryLabel} fullClassName={fullClassName} />}
             placement="bottom"
             style={{ textAlign: "left" }}
