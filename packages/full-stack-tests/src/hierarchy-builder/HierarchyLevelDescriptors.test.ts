@@ -68,13 +68,13 @@ describe("Stateless hierarchy builder", () => {
           }),
           expect: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: "0x1" }] })],
         });
-        const descriptor = await createHierarchyLevelDescriptor({
+        const result = await createHierarchyLevelDescriptor({
           imodel,
           parentNode: undefined,
           hierarchyProvider: provider,
           descriptorBuilder: PresentationBackend.getManager(),
         });
-        expect(descriptor).to.containSubset({
+        expect(result?.descriptor).to.containSubset({
           selectClasses: [
             {
               selectClassInfo: { name: Subject.classFullName },
@@ -142,13 +142,13 @@ describe("Stateless hierarchy builder", () => {
           }),
           expect: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: "0x1" }] })],
         });
-        const descriptor = await createHierarchyLevelDescriptor({
+        const result = await createHierarchyLevelDescriptor({
           imodel,
           parentNode: undefined,
           hierarchyProvider: provider,
           descriptorBuilder: PresentationFrontend.presentation,
         });
-        expect(descriptor).to.containSubset({
+        expect(result?.descriptor).to.containSubset({
           selectClasses: [
             {
               selectClassInfo: { name: Subject.classFullName },
@@ -222,13 +222,13 @@ describe("Stateless hierarchy builder", () => {
             NodeValidators.createForInstanceNode({ instanceKeys: [{ className: LinkModel.classFullName.replace(":", "."), id: "0xe" }] }),
           ],
         });
-        const descriptor = await createHierarchyLevelDescriptor({
+        const result = await createHierarchyLevelDescriptor({
           imodel,
           parentNode: rootSubjectNode,
           hierarchyProvider: provider,
           descriptorBuilder: PresentationFrontend.presentation,
         });
-        expect(descriptor).to.containSubset({
+        expect(result?.descriptor).to.containSubset({
           selectClasses: [
             {
               selectClassInfo: { name: DictionaryModel.classFullName },

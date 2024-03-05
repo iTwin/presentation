@@ -106,6 +106,7 @@ function PresentationTreeNodeActions(props: PresentationTreeNodeActionsProps) {
       <ButtonGroup>
         {isFiltered ? (
           <IconButton
+            className="presentation-components-node-action-button"
             styleType="borderless"
             size="small"
             onClick={(e) => {
@@ -118,6 +119,7 @@ function PresentationTreeNodeActions(props: PresentationTreeNodeActionsProps) {
           </IconButton>
         ) : null}
         <IconButton
+          className="presentation-components-node-action-button"
           styleType="borderless"
           size="small"
           onClick={(e) => {

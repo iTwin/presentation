@@ -425,8 +425,6 @@ export function PresentationInstanceFilterDialog(props: PresentationInstanceFilt
 
 // @beta
 export interface PresentationInstanceFilterDialogProps {
-    descriptor: (() => Promise<Descriptor>) | Descriptor;
-    descriptorInputKeys?: Keys;
     filterResultsCountRenderer?: (filter: PresentationInstanceFilterInfo) => ReactNode;
     imodel: IModelConnection;
     initialFilter?: PresentationInstanceFilterInfo;
@@ -434,6 +432,8 @@ export interface PresentationInstanceFilterDialogProps {
     onApply: (filter?: PresentationInstanceFilterInfo) => void;
     onClose?: () => void;
     onReset?: () => void;
+    propertiesSource: (() => Promise<PresentationInstanceFilterPropertiesSource>) | PresentationInstanceFilterPropertiesSource | undefined;
+    // @deprecated
     ruleGroupDepthLimit?: number;
     title?: React.ReactNode;
     toolbarButtonsRenderer?: (toolbarHandlers: FilteringDialogToolbarHandlers) => ReactNode;
@@ -443,6 +443,12 @@ export interface PresentationInstanceFilterDialogProps {
 export interface PresentationInstanceFilterInfo {
     filter: PresentationInstanceFilter | undefined;
     usedClasses: ClassInfo[];
+}
+
+// @beta
+export interface PresentationInstanceFilterPropertiesSource {
+    descriptor: Descriptor;
+    inputKeys?: Keys;
 }
 
 // @beta

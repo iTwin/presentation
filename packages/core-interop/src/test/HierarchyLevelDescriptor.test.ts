@@ -44,7 +44,7 @@ describe("createHierarchyLevelDescriptor", () => {
     const descriptorBuilder = {
       getContentDescriptor: sinon.stub().resolves(undefined),
     };
-    const descriptor = await createHierarchyLevelDescriptor({
+    const result = await createHierarchyLevelDescriptor({
       imodel: {} as any,
       hierarchyProvider,
       descriptorBuilder,
@@ -61,7 +61,7 @@ describe("createHierarchyLevelDescriptor", () => {
         return props.keys.isEmpty;
       }),
     );
-    expect(descriptor).to.be.undefined;
+    expect(result).to.be.undefined;
   });
 
   it("requests descriptor for hierarchy level instances", async () => {
@@ -105,7 +105,7 @@ describe("createHierarchyLevelDescriptor", () => {
     };
     const imodel = {} as any;
     const parentNode = {} as HierarchyNode & { key: InstancesNodeKey };
-    const descriptor = await createHierarchyLevelDescriptor({
+    const result = await createHierarchyLevelDescriptor({
       imodel,
       hierarchyProvider,
       descriptorBuilder,
@@ -133,8 +133,14 @@ describe("createHierarchyLevelDescriptor", () => {
         );
       }),
     );
-    expect(descriptor).to.be.instanceOf(Descriptor);
-    expect(descriptor?.ruleset).to.eq(descriptorBuilder.getContentDescriptor.firstCall.args[0].rulesetOrId);
+    expect(result?.descriptor).to.be.instanceOf(Descriptor);
+    expect(result?.descriptor.ruleset).to.eq(descriptorBuilder.getContentDescriptor.firstCall.args[0].rulesetOrId);
+    expect(
+      result?.inputKeys.hasAll([
+        { className: "schema.class1", id: "0x123" },
+        { className: "schema.class2", id: "0x456" },
+      ]),
+    ).to.be.true;
   });
 
   it("requests descriptor for hierarchy level instances with hidden intermediate hierarchy levels", async () => {
@@ -183,7 +189,7 @@ describe("createHierarchyLevelDescriptor", () => {
       getContentDescriptor: sinon.stub().resolves(descriptorResponse),
     };
     const imodel = {} as any;
-    const descriptor = await createHierarchyLevelDescriptor({
+    const result = await createHierarchyLevelDescriptor({
       imodel,
       hierarchyProvider,
       descriptorBuilder,
@@ -214,8 +220,9 @@ describe("createHierarchyLevelDescriptor", () => {
         );
       }),
     );
-    expect(descriptor).to.be.instanceOf(Descriptor);
-    expect(descriptor?.ruleset).to.eq(descriptorBuilder.getContentDescriptor.firstCall.args[0].rulesetOrId);
+    expect(result?.descriptor).to.be.instanceOf(Descriptor);
+    expect(result?.descriptor.ruleset).to.eq(descriptorBuilder.getContentDescriptor.firstCall.args[0].rulesetOrId);
+    expect(result?.inputKeys.hasAll([{ className: "schema.class2", id: "0x999" }])).to.be.true;
   });
 
   it("merges instance keys of hidden hierarchy levels by class when requesting child instance keys", async () => {
@@ -273,7 +280,7 @@ describe("createHierarchyLevelDescriptor", () => {
       getContentDescriptor: sinon.stub().resolves(descriptorResponse),
     };
     const imodel = {} as any;
-    const descriptor = await createHierarchyLevelDescriptor({
+    const result = await createHierarchyLevelDescriptor({
       imodel,
       hierarchyProvider,
       descriptorBuilder,
@@ -320,8 +327,14 @@ describe("createHierarchyLevelDescriptor", () => {
         );
       }),
     );
-    expect(descriptor).to.be.instanceOf(Descriptor);
-    expect(descriptor?.ruleset).to.eq(descriptorBuilder.getContentDescriptor.firstCall.args[0].rulesetOrId);
+    expect(result?.descriptor).to.be.instanceOf(Descriptor);
+    expect(result?.descriptor.ruleset).to.eq(descriptorBuilder.getContentDescriptor.firstCall.args[0].rulesetOrId);
+    expect(
+      result?.inputKeys.hasAll([
+        { className: "schema.class3", id: "0x333" },
+        { className: "schema.class4", id: "0x444" },
+      ]),
+    ).to.be.true;
   });
 });
 

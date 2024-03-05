@@ -44,7 +44,7 @@ jobs:
         with:
           publish: pnpm release
           title: Release packages [publish docs]
-          commit: Release packages
+          commit: Release packages [publish docs]
         env:
           GITHUB_TOKEN: ${{ secrets.IMJS_ADMIN_GH_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPMJS_PUBLISH_ITWIN }}
