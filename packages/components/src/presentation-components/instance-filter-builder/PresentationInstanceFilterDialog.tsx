@@ -14,12 +14,12 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { SvgError } from "@itwin/itwinui-illustrations-react";
 import { Button, Dialog, NonIdealState, ProgressRadial } from "@itwin/itwinui-react";
 import { Descriptor, Keys } from "@itwin/presentation-common";
+import { PortalTargetContextProvider } from "../common/PortalTargetContext";
 import { translate, useDelay } from "../common/Utils";
 import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder";
 import { PresentationInstanceFilterInfo } from "./PresentationFilterBuilder";
 import { PresentationInstanceFilter } from "./PresentationInstanceFilter";
 import { filterRuleValidator, isFilterNonEmpty } from "./Utils";
-import { PortalTargetContextProvider } from "../common/PortalTargetContext";
 
 /**
  * Data structure that describes source to gather properties from.
