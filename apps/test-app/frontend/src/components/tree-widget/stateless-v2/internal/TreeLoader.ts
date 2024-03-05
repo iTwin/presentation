@@ -36,6 +36,7 @@ export class HierarchyLoader implements IHierarchyLoader {
       this._hierarchyProvider.getNodes({
         parentNode: parent?.nodeData,
         hierarchyLevelSizeLimit: parent?.hierarchyLimit,
+        instanceFilter: parent?.instanceFilter,
       }),
     ).pipe(
       catchError((err) => {

@@ -8,7 +8,7 @@ import { omit } from "@itwin/core-bentley";
 import { GroupingNodeKey, InstanceKey, Key, KeySet, PresentationQuery, PresentationQueryBinding, StandardNodeTypes } from "@itwin/presentation-common";
 import { useUnifiedSelectionContext } from "@itwin/presentation-components";
 import { HierarchyNode, parseFullClassName } from "@itwin/presentation-hierarchy-builder";
-import { TreeModelHierarchyNode } from "./TreeModel";
+import { isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelRootNode } from "./TreeModel";
 
 /** @internal */
 export interface TreeSelectionOptions {
@@ -18,7 +18,7 @@ export interface TreeSelectionOptions {
 
 /** @internal */
 export interface UseUnifiedTreeSelectionProps {
-  getNode: (nodeId: string) => TreeModelHierarchyNode | undefined;
+  getNode: (nodeId: string) => TreeModelHierarchyNode | TreeModelRootNode | undefined;
 }
 
 /** @internal */
@@ -28,7 +28,7 @@ export function useUnifiedTreeSelection({ getNode }: UseUnifiedTreeSelectionProp
   const isNodeSelected = useCallback(
     (nodeId: string) => {
       const node = getNode(nodeId);
-      if (!context || !node) {
+      if (!context || !node || !isTreeModelHierarchyNode(node)) {
         return false;
       }
 
@@ -41,7 +41,7 @@ export function useUnifiedTreeSelection({ getNode }: UseUnifiedTreeSelectionProp
   const selectNode = useCallback(
     (nodeId: string, isSelected: boolean) => {
       const node = getNode(nodeId);
-      if (!context || !node) {
+      if (!context || !node || !isTreeModelHierarchyNode(node)) {
         return;
       }
 

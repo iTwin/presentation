@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { GenericInstanceFilter } from "@itwin/core-common";
 import { IMetadataProvider } from "./ECMetadata";
-import { GenericInstanceFilter } from "./GenericInstanceFilter";
 import {
   HierarchyNode,
   HierarchyNodeKey,
