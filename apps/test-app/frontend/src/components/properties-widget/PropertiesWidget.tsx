@@ -243,8 +243,12 @@ function FilterablePropertyGrid({
             filterText && filterText.length !== 0 ? { highlightedText: filterText, activeHighlight, filteredTypes: filteringResult?.filteredTypes } : undefined
           }
           isPropertyEditingEnabled={true}
-          onPropertyUpdated={async ({ newValue }) => {
-            console.log(`Updated new value`, newValue); // eslint-disable-line no-console
+          onPropertyUpdated={async ({ propertyRecord, newValue }) => {
+            console.log(`Updated new value`, propertyRecord, newValue); // eslint-disable-line no-console
+
+            // Note: Fields of a struct property don't include the name of the struct property e.g. Fields of 'pc_boost_DrivewayPathEdge_ParkingLeft'
+            // struct property, get reported as having PropertyRecord.name of 'ParkingAngle' on edit
+            console.log(`Updated property name: ${propertyRecord.property.name}`); // eslint-disable-line no-console
             return true;
           }}
         />

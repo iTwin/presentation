@@ -6,7 +6,33 @@
       "ruleType": "Content",
       "specifications": [
         {
-          "specType": "SelectedNodeInstances"
+          "specType": "SelectedNodeInstances",
+          "propertyOverrides": [
+            {
+              "name": "*",
+              "isReadOnly": false
+            },
+            {
+              "name": "ParkingRight",
+              "isReadOnly": false,
+              "renderer": {
+                "rendererName": "my-renderer"
+              },
+              "editor": {
+                "editorName": "toggle"
+              }
+            },
+            {
+              "name": "ParkingLeft",
+              "isReadOnly": false,
+              "renderer": {
+                "rendererName": "my-renderer"
+              },
+              "editor": {
+                "editorName": "toggle"
+              }
+            }
+          ]
         }
       ]
     }

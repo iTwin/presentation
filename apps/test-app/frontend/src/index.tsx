@@ -6,7 +6,7 @@
 import "./index.css";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { UiComponents } from "@itwin/components-react";
+import { PropertyEditorManager, PropertyValueRendererContext, PropertyValueRendererManager, TogglePropertyEditor, UiComponents } from "@itwin/components-react";
 import { Logger, LogLevel, ProcessDetector } from "@itwin/core-bentley";
 import { BentleyCloudRpcManager } from "@itwin/core-common";
 import { ElectronApp } from "@itwin/core-electron/lib/cjs/ElectronFrontend";
@@ -18,6 +18,8 @@ import { createFavoritePropertiesStorage, DefaultFavoritePropertiesStorageTypes,
 import { rpcInterfaces } from "@test-app/common";
 import { MyAppFrontend } from "./api/MyAppFrontend";
 import { App } from "./components/app/App";
+import { SvgCheckmark } from "@itwin/itwinui-icons-react";
+import { PropertyRecord, PropertyValueFormat, StandardEditorNames } from "@itwin/appui-abstract";
 
 // initialize logging
 Logger.initializeToConsole();
@@ -77,6 +79,21 @@ async function initializePresentation() {
   // __PUBLISH_EXTRACT_START__ Presentation.Frontend.SetSelectionScope
   Presentation.selection.scopes.activeScope = "top-assembly";
   // __PUBLISH_EXTRACT_END__
+
+  PropertyValueRendererManager.defaultManager.registerRenderer("my-renderer", {
+    canRender: () => true,
+    render: () => {
+      // Note: This isn't called for struct properties that have values (i.e. non-NULL)
+
+      return (
+        <div>
+          <SvgCheckmark />
+        </div>
+      );
+    },
+  });
+
+  PropertyEditorManager.registerEditor("xxxEdgeLayoutData_ParkingSettings", TogglePropertyEditor, StandardEditorNames.Toggle);
 }
 
 void (async () => {
