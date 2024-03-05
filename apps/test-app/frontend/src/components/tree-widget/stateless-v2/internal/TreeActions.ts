@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 import { Draft, enableMapSet, produce } from "immer";
 import { EMPTY, Observable, reduce, Subject, takeUntil } from "rxjs";
-import { HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
+import { GenericInstanceFilter, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
 import { PresentationHierarchyNode, PresentationTreeNode } from "../Types";
 import { HierarchyLoader, IHierarchyLoader, LoadedHierarchyPart } from "./TreeLoader";
 import {
@@ -93,7 +93,10 @@ export class TreeActions {
     this._loader = provider ? new HierarchyLoader(provider) : new NoopHierarchyLoader();
   }
 
-  public getNode(nodeId: string): TreeModelHierarchyNode | undefined {
+  public getNode(nodeId: string | undefined): TreeModelHierarchyNode | TreeModelRootNode | undefined {
+    if (!nodeId) {
+      return this._currentModel.rootNode;
+    }
     const node = this._currentModel.idToNode.get(nodeId);
     return node && isTreeModelHierarchyNode(node) ? node : undefined;
   }
@@ -140,6 +143,27 @@ export class TreeActions {
     });
 
     this.loadNodes(nodeId);
+  }
+
+  public setInstanceFilter(nodeId: string | undefined, filter?: GenericInstanceFilter) {
+    this.updateTreeModel((model) => {
+      if (nodeId === undefined) {
+        model.rootNode.instanceFilter = filter;
+        return;
+      }
+
+      const modelNode = model.idToNode.get(nodeId);
+      if (!modelNode || !isTreeModelHierarchyNode(modelNode)) {
+        return;
+      }
+
+      modelNode.instanceFilter = filter;
+      if (modelNode.isExpanded) {
+        modelNode.isLoading = true;
+      }
+    });
+
+    this.reloadTree(nodeId);
   }
 
   public reloadTree(parentId: string | undefined, options?: { discardState?: boolean }) {
@@ -263,7 +287,8 @@ function toPresentationHierarchyNodeBase(node: TreeModelHierarchyNode): Omit<Pre
     label: node.label,
     isLoading: !!node.isLoading,
     isExpanded: !!node.isExpanded,
-    appliedFilter: node.instanceFilter,
+    isFilterable: !!node.nodeData.supportsFiltering && node.children,
+    isFiltered: !!node.instanceFilter,
     extendedData: node.nodeData.extendedData,
   };
 }

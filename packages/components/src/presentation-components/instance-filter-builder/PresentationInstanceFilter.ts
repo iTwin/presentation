@@ -363,6 +363,10 @@ function parseGenericFilterRule(rule: GenericInstanceFilterRule, ctx: GenericFil
 }
 
 function parseUniqueValuesRule(rules: GenericInstanceFilterRule[], ctx: GenericFilterParsingContext): PresentationInstanceFilterCondition | undefined {
+  if (rules.length === 0) {
+    return undefined;
+  }
+
   // check if all rules in group use same property and operator
   const ruleInfo = { propName: rules[0].propertyName, alias: rules[0].sourceAlias, operator: rules[0].operator };
   if (!rules.every((rule) => rule.operator === ruleInfo.operator && rule.propertyName === ruleInfo.propName && rule.sourceAlias === ruleInfo.alias)) {

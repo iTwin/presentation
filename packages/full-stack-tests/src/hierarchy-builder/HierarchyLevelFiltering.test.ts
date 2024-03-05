@@ -71,12 +71,14 @@ describe("Stateless hierarchy builder", () => {
             nodes: await provider.getNodes({
               parentNode: undefined,
               instanceFilter: {
-                propertyClassName: schema.items.X.fullName,
+                propertyClassNames: [schema.items.X.fullName],
                 relatedInstances: [],
                 rules: {
+                  sourceAlias: "this",
                   propertyName: `Prop`,
-                  operator: "Equal",
-                  value: `one`,
+                  operator: "is-equal",
+                  propertyTypeName: "string",
+                  value: { rawValue: `one`, displayValue: "one" },
                 },
               },
             }),
@@ -148,12 +150,14 @@ describe("Stateless hierarchy builder", () => {
                 label: "",
               },
               instanceFilter: {
-                propertyClassName: schema.items.Y.fullName,
+                propertyClassNames: [schema.items.Y.fullName],
                 relatedInstances: [],
                 rules: {
+                  sourceAlias: "this",
                   propertyName: `Prop`,
-                  operator: "Equal",
-                  value: `two`,
+                  operator: "is-equal",
+                  propertyTypeName: "string",
+                  value: { rawValue: `two`, displayValue: "two" },
                 },
               },
             }),
@@ -216,10 +220,10 @@ describe("Stateless hierarchy builder", () => {
             nodes: await provider.getNodes({
               parentNode: undefined,
               instanceFilter: {
-                propertyClassName: schema.items.Y.fullName,
+                propertyClassNames: [schema.items.Y.fullName],
                 relatedInstances: [],
                 rules: {
-                  operator: "And",
+                  operator: "and",
                   rules: [],
                 },
               },
@@ -283,11 +287,11 @@ describe("Stateless hierarchy builder", () => {
             nodes: await provider.getNodes({
               parentNode: undefined,
               instanceFilter: {
-                propertyClassName: schema.items.X.fullName,
-                filterClassNames: [schema.items.Y.fullName],
+                propertyClassNames: [schema.items.X.fullName],
+                filteredClassNames: [schema.items.Y.fullName],
                 relatedInstances: [],
                 rules: {
-                  operator: "And",
+                  operator: "and",
                   rules: [],
                 },
               },
@@ -350,12 +354,14 @@ describe("Stateless hierarchy builder", () => {
             nodes: await provider.getNodes({
               parentNode: undefined,
               instanceFilter: {
-                propertyClassName: schema.items.X.fullName,
+                propertyClassNames: [schema.items.X.fullName],
                 relatedInstances: [],
                 rules: {
+                  sourceAlias: "this",
                   propertyName: "Prop",
-                  operator: "Less",
-                  value: 200,
+                  operator: "less",
+                  propertyTypeName: "int",
+                  value: { rawValue: 200, displayValue: "200" },
                 },
               },
             }),
@@ -430,14 +436,15 @@ describe("Stateless hierarchy builder", () => {
             nodes: await provider.getNodes({
               parentNode: undefined,
               instanceFilter: {
-                propertyClassName: schema.items.X.fullName,
+                propertyClassNames: [schema.items.X.fullName],
                 relatedInstances: [
                   {
                     path: [
                       {
                         sourceClassName: schema.items.X.fullName,
-                        relationshipName: schema.items.XY.fullName,
+                        relationshipClassName: schema.items.XY.fullName,
                         targetClassName: schema.items.Y.fullName,
+                        isForwardRelationship: true,
                       },
                     ],
                     alias: "related-y",
@@ -446,8 +453,9 @@ describe("Stateless hierarchy builder", () => {
                 rules: {
                   sourceAlias: "related-y",
                   propertyName: "Prop",
-                  operator: "Equal",
-                  value: 123,
+                  operator: "is-equal",
+                  propertyTypeName: "int",
+                  value: { rawValue: 123, displayValue: "123" },
                 },
               },
             }),

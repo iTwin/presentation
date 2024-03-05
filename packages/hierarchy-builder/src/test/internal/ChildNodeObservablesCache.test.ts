@@ -127,7 +127,7 @@ describe("ChildNodeObservablesCache", () => {
 
       const variationProps: GetHierarchyNodesProps = {
         ...primaryProps,
-        instanceFilter: { propertyClassName: "x", relatedInstances: [], rules: { operator: "And", rules: [] } },
+        instanceFilter: { propertyClassNames: ["x"], relatedInstances: [], rules: { operator: "and", rules: [] } },
       };
       const result = cache.get(variationProps);
       expect(result).to.be.undefined;
@@ -141,7 +141,7 @@ describe("ChildNodeObservablesCache", () => {
 
       const variationProps = {
         ...primaryProps,
-        instanceFilter: { propertyClassName: "x", relatedInstances: [], rules: { operator: "And" as const, rules: [] } },
+        instanceFilter: { propertyClassNames: ["x"], relatedInstances: [], rules: { operator: "and" as const, rules: [] } },
       };
       const value = {} as ParsedQueryNodesObservable;
       cache.addParseResult(variationProps, value);

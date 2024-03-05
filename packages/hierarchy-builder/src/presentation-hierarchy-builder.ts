@@ -16,8 +16,18 @@ import * as ECSqlValueSnippets from "./hierarchy-builder/queries/ecsql-snippets/
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const ECSqlSnippets = { ...ECSqlJoinSnippets, ...ECSqlValueSnippets };
 
+export {
+  GenericInstanceFilter,
+  GenericInstanceFilterRule,
+  GenericInstanceFilterRuleGroup,
+  GenericInstanceFilterRuleValue,
+  GenericInstanceFilterRuleOperator,
+  GenericInstanceFilterRuleGroupOperator,
+  GenericInstanceFilterRelatedInstanceDescription,
+  GenericInstanceFilterRelationshipStep,
+} from "@itwin/core-common";
+
 export * from "./hierarchy-builder/ECMetadata";
-export * from "./hierarchy-builder/GenericInstanceFilter";
 export * from "./hierarchy-builder/HierarchyDefinition";
 export * from "./hierarchy-builder/HierarchyErrors";
 export * from "./hierarchy-builder/HierarchyNode";
