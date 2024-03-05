@@ -970,7 +970,7 @@ describe("NodeSelectQueryFactory", () => {
           ).to.eventually.be.rejected;
         });
 
-        it(`throws on rules without value`, async () => {
+        it(`throws on binary rules without value`, async () => {
           classStubs.stubEntityClass({
             ...testClassProps,
             properties: [
