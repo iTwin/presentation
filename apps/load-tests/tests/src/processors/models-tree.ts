@@ -16,22 +16,16 @@ import {
   PresentationStatus,
 } from "@itwin/presentation-common";
 import RULESET_ModelsTree from "../rulesets/ModelsTree-GroupedByClass.PresentationRuleSet.json";
-import { doRequest, getCurrentIModelName, getCurrentIModelPath, loadNodes, nodeRequestsTracker } from "./common";
+import { doRequest, getCurrentIModelName, getCurrentIModelPath, loadNodes } from "./common";
 
 export function initScenario(context: ScenarioContext, _events: EventEmitter, next: Next) {
   context.vars.tooLargeHierarchyLevelsCount = 0;
-  context.vars.pendingNodeRequestsLogger = setInterval(() => {
-    nodeRequestsTracker.logCount(context, false);
-  }, 1000);
-  nodeRequestsTracker.reset(context);
   next();
 }
 
 export function terminateScenario(context: ScenarioContext, _ee: EventEmitter, next: Next) {
   console.log(`Total hierarchy levels that exceeded nodes limit: ${context.vars.tooLargeHierarchyLevelsCount as number}`);
   context.vars.tooLargeHierarchyLevelsCount = 0;
-  clearInterval(context.vars.pendingNodeRequestsLogger as NodeJS.Timeout);
-  nodeRequestsTracker.logCount(context, true);
   next();
 }
 
