@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1709642332343,
+  "lastUpdate": 1709648637857,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -1182,6 +1182,42 @@ window.BENCHMARK_DATA = {
             "value": 3134,
             "unit": "ms",
             "extra": "min: 3134\nmax: 3134\ncount: 1\nmean: 3134\np50: 3134.5\nmedian: 3134.5\np75: 3134.5\np90: 3134.5\np95: 3134.5\np99: 3134.5\np999: 3134.5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "24278440+saskliutas@users.noreply.github.com",
+            "name": "Saulius Skliutas",
+            "username": "saskliutas"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b596e07e6d25167b68e621feaa0a2c509c50679c",
+          "message": "Stateless tree hierarchy level filtering (#447)\n\n* Initial\r\n\r\n* Reload tree\r\n\r\n* Update test-app\r\n\r\n* set enableVirtualization to true\r\n\r\n* remove produce()\r\n\r\n* Add unified selection to tree\r\n\r\n* Fix presentation data localization\r\n\r\n* Bump itwinUI\r\n\r\n* Fix tree model reload\r\n\r\n* Split code\r\n\r\n* Persist tree state between searches\r\n\r\n* Add ability to remove hierarchy level limit\r\n\r\n* Persist selection\r\n\r\n* Cleanup tree component\r\n\r\n* Cleanup TreeWidget component\r\n\r\n* Cleanup Tree API\r\n\r\n* Update itwinui-react\r\n\r\n* Copy all assets from dependencies\r\n\r\n* Fix assets copying\r\n\r\n* Fix assets copying again\r\n\r\n* Fix trees layout\r\n\r\n* Switch to unified selection\r\n\r\n* Do not expose HierarchyNode\r\n\r\n* Cleanup pre-commit actions\r\n\r\n* Add ability to reload sub tree\r\n\r\n* Update hierarchy-builder to use GenericInstanceFilter from core-common\r\n\r\n* Add filtering dialog to stateless tree V2\r\n\r\n* Review changes\r\n\r\n* Update tree mode lto store GenericInstanceFilter\r\n\r\n* Run prettier\r\n\r\n* Add support for converting initial filter with delay loaded descriptor\r\n\r\n* Rename function\r\n\r\n* Rename placeholder node type\r\n\r\n* Add comment\r\n\r\n* Run prettier\r\n\r\n* prettier\r\n\r\n* change\r\n\r\n* extract-api\r\n\r\n* extract-api hierarchy-builder\r\n\r\n* Update packages/hierarchy-builder/src/test/queries/NodeSelectQueryFactory.test.ts\r\n\r\n* Fix build\r\n\r\n---------\r\n\r\nCo-authored-by: JonasDov <100586436+JonasDov@users.noreply.github.com>\r\nCo-authored-by: Grigas <35135765+grigasp@users.noreply.github.com>",
+          "timestamp": "2024-03-05T16:22:41+02:00",
+          "tree_id": "c343dc615b98db83b5c473a2359a7a9d92c409a7",
+          "url": "https://github.com/iTwin/presentation/commit/b596e07e6d25167b68e621feaa0a2c509c50679c"
+        },
+        "date": 1709648637354,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Initial Models Tree Load: Baytown.bim",
+            "value": 233,
+            "unit": "ms",
+            "extra": "min: 233\nmax: 233\ncount: 1\nmean: 233\np50: 232.8\nmedian: 232.8\np75: 232.8\np90: 232.8\np95: 232.8\np99: 232.8\np999: 232.8"
+          },
+          {
+            "name": "Full Models Tree Load: Baytown.bim",
+            "value": 3184,
+            "unit": "ms",
+            "extra": "min: 3184\nmax: 3184\ncount: 1\nmean: 3184\np50: 3197.8\nmedian: 3197.8\np75: 3197.8\np90: 3197.8\np95: 3197.8\np99: 3197.8\np999: 3197.8"
           }
         ]
       }
