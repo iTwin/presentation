@@ -148,9 +148,10 @@ export class ChildNodeObservablesCache {
       setGrouped: (groupingKey: ParentNodeKey[], processedNodes: ProcessedNodesObservable) => {
         const source = getObservableAccessor().get();
         if (!source) {
-          throw new Error("Grouped nodes observable is being set before setting parse result.");
+          return false;
         }
         source.groupings.set(groupingKey, processedNodes);
+        return true;
       },
     };
   }
@@ -171,7 +172,7 @@ export class ChildNodeObservablesCache {
     const { primaryKey, variationKey, groupingKey } = this.createCacheKeys(requestProps);
     assert(groupingKey !== undefined && groupingKey.length > 0);
     const { setGrouped } = this.getCacheAccessors(primaryKey, variationKey);
-    setGrouped(groupingKey, observable);
+    return setGrouped(groupingKey, observable);
   }
 
   public get(requestProps: GetHierarchyNodesProps): CachedNodesObservableEntry | undefined {

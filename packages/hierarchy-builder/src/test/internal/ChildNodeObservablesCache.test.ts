@@ -110,10 +110,11 @@ describe("ChildNodeObservablesCache", () => {
       expect(cache.get(branch2.deeplyNestedGroupingNodeProps)?.observable).to.eq(branch2.deeplyNestedGroupingNodeValue);
     });
 
-    it("throws when caching grouped nodes observable before setting parse result", () => {
+    it("returns false when attempting to cache grouped node observable without an existing query observable", () => {
       const cache = new ChildNodeObservablesCache({ size: 1 });
       const parentNode = createTestProcessedGroupingNode({ parentKeys: ["x"] });
-      expect(() => cache.addGrouped({ parentNode }, {} as ProcessedNodesObservable)).to.throw();
+      const result = cache.addGrouped({ parentNode }, {} as ProcessedNodesObservable);
+      expect(result).to.be.false;
     });
   });
 
