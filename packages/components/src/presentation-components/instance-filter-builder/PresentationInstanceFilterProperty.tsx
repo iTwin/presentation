@@ -33,7 +33,9 @@ export function PresentationInstanceFilterProperty(props: PresentationInstanceFi
   const { propertyDescription, categoryLabel, fullClassName } = props;
   return (
     <div className="property-item-line">
-      <Text className="property-display-label" title={propertyDescription.displayLabel}>{propertyDescription.displayLabel}</Text>
+      <Text className="property-display-label" title={propertyDescription.displayLabel}>
+        {propertyDescription.displayLabel}
+      </Text>
       <div className="property-badge-container">
         {categoryLabel && (
           <Tooltip
