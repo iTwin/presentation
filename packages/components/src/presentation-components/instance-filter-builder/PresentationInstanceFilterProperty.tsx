@@ -8,7 +8,7 @@
 
 import "./PresentationInstanceFilterProperty.scss";
 import { PropertyDescription } from "@itwin/appui-abstract";
-import { Badge, Tooltip } from "@itwin/itwinui-react";
+import { Badge, Text, Tooltip } from "@itwin/itwinui-react";
 import { translate } from "../common/Utils";
 
 /**
@@ -33,11 +33,7 @@ export function PresentationInstanceFilterProperty(props: PresentationInstanceFi
   const { propertyDescription, categoryLabel, fullClassName } = props;
   return (
     <div className="property-item-line">
-      <Tooltip className="property-item-tooltip" content={propertyDescription.displayLabel} placement="bottom">
-        <div className="property-display-label" title={propertyDescription.displayLabel}>
-          {propertyDescription.displayLabel}
-        </div>
-      </Tooltip>
+      <Text className="property-display-label" title={propertyDescription.displayLabel}>{propertyDescription.displayLabel}</Text>
       <div className="property-badge-container">
         {categoryLabel && (
           <Tooltip
