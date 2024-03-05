@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1709123945799,
+  "lastUpdate": 1709642332343,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -1146,6 +1146,42 @@ window.BENCHMARK_DATA = {
             "value": 1907,
             "unit": "ms",
             "extra": "min: 1907\nmax: 1907\ncount: 1\nmean: 1907\np50: 1901.1\nmedian: 1901.1\np75: 1901.1\np90: 1901.1\np95: 1901.1\np99: 1901.1\np999: 1901.1"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35135765+grigasp@users.noreply.github.com",
+            "name": "Grigas",
+            "username": "grigasp"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4bb0c41496edb7ade9161dc9409414bfcbbe5eb1",
+          "message": "Hierarchy builder: Limiting child nodes cache size (#436)\n\n* Keep grouped nodes' observables associated with their parsed nodes observables in child nodes cache\r\n\r\n* Re-create a branch when requesting a sub-branch that's been pushed-out of cache\r\n\r\n* Update packages/hierarchy-builder/src/hierarchy-builder/HierarchyNode.ts\r\n\r\nCo-authored-by: Saulius Skliutas <24278440+saskliutas@users.noreply.github.com>\r\n\r\n* extract-api\r\n\r\n* Do not throw when attempting to cache grouped node observable without matching query observable\r\n\r\n* Don't send requests for every possible parent node all at once... send at most 10.\r\n\r\n---------\r\n\r\nCo-authored-by: Saulius Skliutas <24278440+saskliutas@users.noreply.github.com>",
+          "timestamp": "2024-03-05T12:37:35Z",
+          "tree_id": "369a64a0e10b0d9b2f8aaa4588d196bf531777af",
+          "url": "https://github.com/iTwin/presentation/commit/4bb0c41496edb7ade9161dc9409414bfcbbe5eb1"
+        },
+        "date": 1709642331369,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Initial Models Tree Load: Baytown.bim",
+            "value": 348,
+            "unit": "ms",
+            "extra": "min: 348\nmax: 348\ncount: 1\nmean: 348\np50: 347.3\nmedian: 347.3\np75: 347.3\np90: 347.3\np95: 347.3\np99: 347.3\np999: 347.3"
+          },
+          {
+            "name": "Full Models Tree Load: Baytown.bim",
+            "value": 3134,
+            "unit": "ms",
+            "extra": "min: 3134\nmax: 3134\ncount: 1\nmean: 3134\np50: 3134.5\nmedian: 3134.5\np75: 3134.5\np90: 3134.5\np95: 3134.5\np99: 3134.5\np999: 3134.5"
           }
         ]
       }
