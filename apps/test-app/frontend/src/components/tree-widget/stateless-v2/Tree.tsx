@@ -250,6 +250,7 @@ function TreeRenderer({
     [isNodeSelected],
   );
 
+  const filterDialogProps = gerFilterDialogProps(imodel, filterOptions);
   return (
     <div
       style={{
@@ -259,18 +260,39 @@ function TreeRenderer({
     >
       <Tree<PresentationTreeNode> data={rootNodes} nodeRenderer={nodeRenderer} getNode={getNode} enableVirtualization={true} />
       <PresentationInstanceFilterDialog
-        isOpen={!!filterOptions}
-        imodel={imodel}
-        propertiesSource={filterOptions ? async () => filterOptions.getDescriptor(imodel) : undefined}
+        {...filterDialogProps}
         onApply={(filterInfo) => {
-          filterOptions?.applyFilter(toGenericFilter(filterInfo));
+          filterDialogProps.onApply(filterInfo);
           setFilterOptions(undefined);
         }}
         onClose={() => setFilterOptions(undefined)}
-        initialFilter={filterOptions?.currentFilter ? (descriptor) => fromGenericFilter(descriptor, filterOptions.currentFilter) : undefined}
       />
     </div>
   );
+}
+
+function gerFilterDialogProps(
+  imodel: IModelConnection,
+  filterOptions?: HierarchyLevelFilteringOptions,
+): ComponentPropsWithoutRef<typeof PresentationInstanceFilterDialog> {
+  if (!filterOptions) {
+    return {
+      isOpen: false,
+      imodel,
+      propertiesSource: undefined,
+      initialFilter: undefined,
+      onApply: () => {},
+    };
+  }
+
+  const currentFilter = filterOptions.currentFilter;
+  return {
+    isOpen: true,
+    imodel,
+    onApply: (filterInfo) => filterOptions.applyFilter(toGenericFilter(filterInfo)),
+    propertiesSource: async () => filterOptions.getDescriptor(imodel),
+    initialFilter: currentFilter ? (descriptor: Descriptor) => fromGenericFilter(descriptor, currentFilter) : undefined,
+  };
 }
 
 function PlaceholderNode(props: Omit<TreeNodeProps, "onExpanded">) {
