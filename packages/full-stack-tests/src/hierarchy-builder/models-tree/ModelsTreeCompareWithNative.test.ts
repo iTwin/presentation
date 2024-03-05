@@ -6,11 +6,12 @@
 import { expect } from "chai";
 import { PrimitiveValue } from "@itwin/appui-abstract";
 import { DelayLoadedTreeNodeItem } from "@itwin/components-react";
-import { assert, OrderedId64Iterable } from "@itwin/core-bentley";
+import { assert, Logger, OrderedId64Iterable } from "@itwin/core-bentley";
 import { IModelConnection, SnapshotConnection } from "@itwin/core-frontend";
 import { InstanceKey, NodeKey, Ruleset } from "@itwin/presentation-common";
 import { isPresentationTreeNodeItem, PresentationTreeDataProvider, PresentationTreeNodeItem } from "@itwin/presentation-components";
-import { HierarchyNode } from "@itwin/presentation-hierarchy-builder";
+import { createLogger } from "@itwin/presentation-core-interop";
+import { ClassGroupingNodeKey, HierarchyNode, InstancesNodeKey, setLogger } from "@itwin/presentation-hierarchy-builder";
 import { initialize, terminate } from "../../IntegrationTests";
 import { createModelsTreeProvider } from "./ModelsTreeTestUtils";
 
@@ -19,6 +20,10 @@ describe("Stateless hierarchy builder", () => {
 
   before(async function () {
     await initialize();
+
+    Logger.initializeToConsole();
+    // Logger.setLevel(`${LOGGING_NAMESPACE}.HierarchyProvider`, LogLevel.Trace);
+    setLogger(createLogger());
 
     const imodelPath = process.env.TEST_IMODEL_PATH;
     if (!imodelPath) {
@@ -48,12 +53,12 @@ describe("Stateless hierarchy builder", () => {
       expect((nativeNode.label.value as PrimitiveValue).displayValue).to.eq(statelessNode.label, createFailureMsg("Labels"));
       expect(!!nativeNode.hasChildren).to.eq(!!statelessNode.children, createFailureMsg("Children flag"));
       if (NodeKey.isClassGroupingNodeKey(nativeNode.key)) {
-        expect(HierarchyNode.isStandard(statelessNode) && statelessNode.key.type === "class-grouping", createFailureMsg("Key types"));
-        expect(nativeNode.key.className).to.eq((statelessNode.key as any).class.name, createFailureMsg("Key class names"));
+        expect(HierarchyNode.isClassGroupingNode(statelessNode), createFailureMsg("Key types"));
+        expect(nativeNode.key.className.replace(":", ".")).to.eq((statelessNode.key as ClassGroupingNodeKey).class.name, createFailureMsg("Key class names"));
       } else if (NodeKey.isInstancesNodeKey(nativeNode.key)) {
-        expect(HierarchyNode.isStandard(statelessNode) && statelessNode.key.type === "instances", createFailureMsg("Key types"));
-        expect([...nativeNode.key.instanceKeys].sort(compareInstanceKeys)).to.deep.eq(
-          [...(statelessNode.key as any).instanceKeys].sort(compareInstanceKeys),
+        expect(HierarchyNode.isInstancesNode(statelessNode), createFailureMsg("Key types"));
+        expect([...nativeNode.key.instanceKeys].map((ik) => ({ ...ik, className: ik.className.replace(":", ".") })).sort(compareInstanceKeys)).to.deep.eq(
+          [...(statelessNode.key as InstancesNodeKey).instanceKeys].sort(compareInstanceKeys),
           "Instance keys",
         );
       }

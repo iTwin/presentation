@@ -18,7 +18,7 @@ export function createModelsTreeProvider(imodel: IModelConnection, filteredNodeP
   const metadataProvider = createMetadataProvider(schemas);
   return new HierarchyProvider({
     metadataProvider,
-    queryExecutor: createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 123),
+    queryExecutor: createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(imodel), 1000),
     hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider }),
     ...(filteredNodePaths ? { filtering: { paths: filteredNodePaths } } : undefined),
   });

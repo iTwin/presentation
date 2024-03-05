@@ -10,13 +10,14 @@ import { ECKindOfQuantity, ECPrimitiveProperty, ECProperty, IMetadataProvider } 
 import { GenericInstanceFilter } from "../hierarchy-builder/GenericInstanceFilter";
 import { IHierarchyLevelDefinitionsFactory } from "../hierarchy-builder/HierarchyDefinition";
 import { RowsLimitExceededError } from "../hierarchy-builder/HierarchyErrors";
-import { GroupingNodeKey, HierarchyNode, ParsedCustomHierarchyNode } from "../hierarchy-builder/HierarchyNode";
+import { GroupingHierarchyNode, GroupingNodeKey, HierarchyNode, ParsedCustomHierarchyNode } from "../hierarchy-builder/HierarchyNode";
 import { HierarchyProvider } from "../hierarchy-builder/HierarchyProvider";
 import {
   ECSQL_COLUMN_NAME_FilteredChildrenPaths,
   ECSQL_COLUMN_NAME_IsFilterTarget,
   FilteredHierarchyNode,
 } from "../hierarchy-builder/internal/FilteringHierarchyLevelDefinitionsFactory";
+import { RowDef } from "../hierarchy-builder/internal/TreeNodesReader";
 import { ECSqlQueryDef, ECSqlQueryReader, ECSqlQueryReaderOptions } from "../hierarchy-builder/queries/ECSqlCore";
 import { ECSqlSelectClauseGroupingParams, NodeSelectClauseColumnNames } from "../hierarchy-builder/queries/NodeSelectQueryFactory";
 import { ConcatenatedValue } from "../hierarchy-builder/values/ConcatenatedValue";
@@ -63,7 +64,7 @@ describe("HierarchyProvider", () => {
 
   it("loads root instance nodes", async () => {
     queryExecutor.createQueryReader.returns(
-      createFakeQueryReader([
+      createFakeQueryReader<RowDef>([
         {
           [NodeSelectClauseColumnNames.FullClassName]: "a.b",
           [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
@@ -185,7 +186,7 @@ describe("HierarchyProvider", () => {
     it("calls hierarchy definition factory parser if supplied", async () => {
       const node = { key: "test", label: "test", children: false, custom: true };
       const parser = sinon.stub().returns(node);
-      const row = {
+      const row: RowDef = {
         [NodeSelectClauseColumnNames.FullClassName]: "a.b",
         [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
         [NodeSelectClauseColumnNames.DisplayLabel]: "test label",
@@ -327,7 +328,7 @@ describe("HierarchyProvider", () => {
   describe("Grouping", () => {
     it("returns grouping node children", async () => {
       queryExecutor.createQueryReader.returns(
-        createFakeQueryReader([
+        createFakeQueryReader<RowDef>([
           {
             [NodeSelectClauseColumnNames.FullClassName]: "a.b",
             [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
@@ -370,7 +371,8 @@ describe("HierarchyProvider", () => {
           parentKeys: [],
           label: "test label",
           children: true,
-        } as HierarchyNode,
+          nonGroupingAncestor: undefined,
+        } as GroupingHierarchyNode,
       ]);
 
       const childNodes = await provider.getNodes({ parentNode: rootNodes[0] });
@@ -664,7 +666,7 @@ describe("HierarchyProvider", () => {
         is: async (fullClassName) => fullClassName === "a.b",
       });
       queryExecutor.createQueryReader.returns(
-        createFakeQueryReader([
+        createFakeQueryReader<RowDef & { [ECSQL_COLUMN_NAME_FilteredChildrenPaths]: string }>([
           {
             [NodeSelectClauseColumnNames.FullClassName]: "a.b",
             [NodeSelectClauseColumnNames.ECInstanceId]: "0x123",
@@ -919,6 +921,140 @@ describe("HierarchyProvider", () => {
       await provider.getNodes({ parentNode: undefined, instanceFilter: {} as GenericInstanceFilter }); // variation of previous, so should cause a query
       await provider.getNodes({ parentNode: undefined, instanceFilter: {} as GenericInstanceFilter }); // same as previous, so this one one shouldn't cause a query
       expect(queryExecutor.createQueryReader).to.be.calledTwice;
+    });
+
+    it("queries instance nodes when requesting grouped children if the query is pushed-out of cache", async () => {
+      createClassStubs(metadataProvider).stubEntityClass({ schemaName: "x", className: "y", classLabel: "Class Y" });
+      queryExecutor.createQueryReader.callsFake((query) => {
+        switch (query.ecsql) {
+          case "ROOT":
+            return createFakeQueryReader<RowDef>([
+              {
+                [NodeSelectClauseColumnNames.FullClassName]: `x.y`,
+                [NodeSelectClauseColumnNames.ECInstanceId]: `0x1`,
+                [NodeSelectClauseColumnNames.DisplayLabel]: `one`,
+                [NodeSelectClauseColumnNames.HasChildren]: true,
+                [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({
+                  byClass: true,
+                } as ECSqlSelectClauseGroupingParams),
+              },
+            ]);
+          case "CHILD":
+            return createFakeQueryReader<RowDef>([
+              {
+                [NodeSelectClauseColumnNames.FullClassName]: `x.y`,
+                [NodeSelectClauseColumnNames.ECInstanceId]: `0x2`,
+                [NodeSelectClauseColumnNames.DisplayLabel]: `two`,
+                [NodeSelectClauseColumnNames.HasChildren]: false,
+              },
+            ]);
+        }
+        return createFakeQueryReader([]);
+      });
+      const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel({ parentNode }) {
+          if (!parentNode) {
+            return [
+              {
+                fullClassName: "x.y",
+                query: { ecsql: "ROOT" },
+              },
+            ];
+          }
+          if (parentNode.label === "one") {
+            return [
+              {
+                fullClassName: "x.y",
+                query: { ecsql: "CHILD" },
+              },
+            ];
+          }
+          return [];
+        },
+      };
+      const provider = new HierarchyProvider({
+        metadataProvider,
+        queryExecutor,
+        hierarchyDefinition,
+        queryCacheSize: 1,
+      });
+
+      // requesting root nodes should query root instance nodes and return a class grouping node
+      const groupingNodes = await provider.getNodes({ parentNode: undefined });
+      expect(queryExecutor.createQueryReader).to.be.calledOnceWith(sinon.match((query) => query.ecsql === "ROOT"));
+      expect(groupingNodes).to.deep.eq([
+        {
+          key: {
+            type: "class-grouping",
+            class: {
+              name: "x.y",
+              label: "Class Y",
+            },
+            groupedInstanceKeys: [{ className: "x.y", id: "0x1" }],
+          },
+          parentKeys: [],
+          nonGroupingAncestor: undefined,
+          label: "Class Y",
+          children: true,
+        } as GroupingHierarchyNode,
+      ]);
+
+      // requesting children for the class grouping node shouldn't execute a query and should return the instance node
+      const rootInstanceNodes = await provider.getNodes({ parentNode: groupingNodes[0] });
+      expect(queryExecutor.createQueryReader).to.be.calledOnce;
+      expect(rootInstanceNodes).to.deep.eq([
+        {
+          key: {
+            type: "instances",
+            instanceKeys: [{ className: "x.y", id: "0x1" }],
+          },
+          parentKeys: [
+            {
+              type: "class-grouping",
+              class: {
+                name: "x.y",
+                label: "Class Y",
+              },
+            },
+          ],
+          label: "one",
+          children: true,
+        } as HierarchyNode,
+      ]);
+      queryExecutor.createQueryReader.resetHistory();
+
+      // requesting children for the root instance node should run a query that pushes the root nodes query out of cache
+      const childInstanceNodes = await provider.getNodes({ parentNode: rootInstanceNodes[0] });
+      expect(queryExecutor.createQueryReader).to.be.calledOnceWith(sinon.match((query) => query.ecsql === "CHILD"));
+      expect(childInstanceNodes).to.deep.eq([
+        {
+          key: {
+            type: "instances",
+            instanceKeys: [{ className: "x.y", id: "0x2" }],
+          },
+          parentKeys: [
+            {
+              type: "class-grouping",
+              class: {
+                name: "x.y",
+                label: "Class Y",
+              },
+            },
+            {
+              type: "instances",
+              instanceKeys: [{ className: "x.y", id: "0x1" }],
+            },
+          ],
+          label: "two",
+          children: false,
+        } as HierarchyNode,
+      ]);
+      queryExecutor.createQueryReader.resetHistory();
+
+      // requesting children for the class grouping node again should re-execute the root query
+      const rootInstanceNodes2 = await provider.getNodes({ parentNode: groupingNodes[0] });
+      expect(queryExecutor.createQueryReader).to.be.calledOnceWith(sinon.match((query) => query.ecsql === "ROOT"));
+      expect(rootInstanceNodes2).to.deep.eq(rootInstanceNodes);
     });
   });
 

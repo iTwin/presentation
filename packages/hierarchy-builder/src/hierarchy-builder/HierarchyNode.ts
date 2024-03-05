@@ -348,12 +348,32 @@ export interface HierarchyNode {
   extendedData?: { [key: string]: any };
 }
 
+/**
+ * A data structure that represents a grouping node that groups other nodes.
+ * @beta
+ */
+export type GroupingHierarchyNode = Omit<HierarchyNode, "key" | "supportsFiltering"> & {
+  /** An identifier to identify this grouping node in its hierarchy level. */
+  key: GroupingNodeKey;
+
+  /** The closest ancestor node that is not a grouping node. May be `undefined` it the grouping node grouped root level nodes. */
+  nonGroupingAncestor?: Omit<ParentHierarchyNode, "key"> & { key: string | InstancesNodeKey };
+};
+
+/**
+ * A type of [[HierarchyNode]] that doesn't know about its children and is an input when requesting
+ * them using [[HierarchyProvider.getNodes]].
+ *
+ * @beta
+ */
+export type ParentHierarchyNode = Omit<HierarchyNode, "children">;
+
 /** @beta */
 export namespace HierarchyNode {
   /** Checks whether the given node is a custom node */
   export function isCustom<TNode extends { key: HierarchyNodeKey }>(
     node: TNode,
-  ): node is TNode & { key: string } & (TNode extends ProcessedHierarchyNode ? { processingParams?: HierarchyNodeProcessingParamsBase } : {}) {
+  ): node is TNode & { key: string } & (TNode extends ProcessedHierarchyNode ? ProcessedCustomHierarchyNode : {}) {
     return HierarchyNodeKey.isCustom(node.key);
   }
   /** Checks whether the given node is a standard (iModel content based) node */
@@ -363,55 +383,55 @@ export namespace HierarchyNode {
   /** Checks whether the given node is an ECInstances-based node */
   export function isInstancesNode<TNode extends { key: HierarchyNodeKey }>(
     node: TNode,
-  ): node is TNode & { key: InstancesNodeKey } & (TNode extends ProcessedHierarchyNode ? { processingParams?: InstanceHierarchyNodeProcessingParams } : {}) {
+  ): node is TNode & { key: InstancesNodeKey } & (TNode extends ProcessedHierarchyNode ? ProcessedInstanceHierarchyNode : {}) {
     return HierarchyNodeKey.isInstances(node.key);
   }
   /** Checks whether the given node is a grouping node */
   export function isGroupingNode<TNode extends { key: HierarchyNodeKey }>(
     node: TNode,
   ): node is TNode & { key: GroupingNodeKey; supportsFiltering?: undefined } & (TNode extends ProcessedHierarchyNode
-      ? { children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode> }
-      : {}) {
+      ? ProcessedGroupingHierarchyNode
+      : GroupingHierarchyNode) {
     return HierarchyNodeKey.isGrouping(node.key);
   }
   /** Checks whether the given node is a class grouping node */
   export function isClassGroupingNode<TNode extends { key: HierarchyNodeKey }>(
     node: TNode,
   ): node is TNode & { key: ClassGroupingNodeKey; supportsFiltering?: undefined } & (TNode extends ProcessedHierarchyNode
-      ? { children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode> }
-      : {}) {
+      ? ProcessedGroupingHierarchyNode
+      : GroupingHierarchyNode) {
     return HierarchyNodeKey.isClassGrouping(node.key);
   }
   /** Checks whether the given node is a label grouping node */
   export function isLabelGroupingNode<TNode extends { key: HierarchyNodeKey }>(
     node: TNode,
   ): node is TNode & { key: LabelGroupingNodeKey; supportsFiltering?: undefined } & (TNode extends ProcessedHierarchyNode
-      ? { children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode> }
-      : {}) {
+      ? ProcessedGroupingHierarchyNode
+      : GroupingHierarchyNode) {
     return HierarchyNodeKey.isLabelGrouping(node.key);
   }
   /** Checks whether the given node is property grouping node for other values  */
   export function isPropertyOtherValuesGroupingNode<TNode extends { key: HierarchyNodeKey }>(
     node: TNode,
-  ): node is TNode & { key: PropertyOtherValuesGroupingNodeKey } & (TNode extends ProcessedHierarchyNode
-      ? { children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode> }
-      : {}) {
+  ): node is TNode & { key: PropertyOtherValuesGroupingNodeKey; supportsFiltering?: undefined } & (TNode extends ProcessedHierarchyNode
+      ? ProcessedGroupingHierarchyNode
+      : GroupingHierarchyNode) {
     return HierarchyNodeKey.isPropertyOtherValuesGrouping(node.key);
   }
   /** Checks whether the given node is a property value grouping node */
   export function isPropertyValueGroupingNode<TNode extends { key: HierarchyNodeKey }>(
     node: TNode,
-  ): node is TNode & { key: PropertyValueGroupingNodeKey } & (TNode extends ProcessedHierarchyNode
-      ? { children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode> }
-      : {}) {
+  ): node is TNode & { key: PropertyValueGroupingNodeKey; supportsFiltering?: undefined } & (TNode extends ProcessedHierarchyNode
+      ? ProcessedGroupingHierarchyNode
+      : GroupingHierarchyNode) {
     return HierarchyNodeKey.isPropertyValueGrouping(node.key);
   }
   /** Checks whether the given node is a property value range grouping node */
   export function isPropertyValueRangeGroupingNode<TNode extends { key: HierarchyNodeKey }>(
     node: TNode,
-  ): node is TNode & { key: PropertyValueRangeGroupingNodeKey } & (TNode extends ProcessedHierarchyNode
-      ? { children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode> }
-      : {}) {
+  ): node is TNode & { key: PropertyValueRangeGroupingNodeKey; supportsFiltering?: undefined } & (TNode extends ProcessedHierarchyNode
+      ? ProcessedGroupingHierarchyNode
+      : GroupingHierarchyNode) {
     return HierarchyNodeKey.isPropertyValueRangeGrouping(node.key);
   }
 }
@@ -609,10 +629,8 @@ export type ProcessedInstanceHierarchyNode = Omit<HierarchyNode, "key" | "childr
  * A grouping node that groups either instance nodes or other grouping nodes.
  * @beta
  */
-export type ProcessedGroupingHierarchyNode = Omit<HierarchyNode, "key" | "children"> & {
-  key: GroupingNodeKey;
+export type ProcessedGroupingHierarchyNode = Omit<GroupingHierarchyNode, "children"> & {
   children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
-  supportsFiltering?: undefined;
 };
 /**
  * A [[HierarchyNode]] that may have processing parameters defining whether it should be hidden under some conditions,

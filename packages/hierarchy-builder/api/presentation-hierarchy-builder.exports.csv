@@ -72,6 +72,7 @@ beta;GenericInstanceFilterRule
 beta;GenericInstanceFilterRuleGroup
 beta;GetHierarchyNodesProps
 beta;getLogger(): ILogger
+beta;GroupingHierarchyNode = Omit
 beta;GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | PropertyGroupingNodeKey
 beta;HierarchyDefinitionParentNode = Omit
 beta;HierarchyLevelDefinition = HierarchyNodesDefinition[]
