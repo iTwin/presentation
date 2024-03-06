@@ -1,5 +1,20 @@
 # Change Log - @itwin/presentation-testing
 
+## 5.0.0
+
+### Major Changes
+
+- f269292e62d2092a75a9b8d801ca520becc43a0f: Peer depenendecies' update:
+
+  - `itwinjs-core` packages to `^4.1.0`.
+  - `AppUI` packages to `^4.8.0`.
+
+### Patch Changes
+
+- [#348](https://github.com/iTwin/presentation/pull/348): Clean up `@internal` APIs exposed through the barrel exports file.
+- Updated dependencies:
+  - @itwin/presentation-components@5.0.0
+
 ## 5.0.0-dev.6
 
 ### Patch Changes
