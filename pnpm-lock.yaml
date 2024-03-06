@@ -391,6 +391,9 @@ importers:
       '@itwin/presentation-models-tree':
         specifier: workspace:*
         version: link:../../../packages/models-tree
+      '@itwin/unified-selection':
+        specifier: workspace:*
+        version: link:../../../packages/unified-selection
       '@itwin/webgl-compatibility':
         specifier: ^4.4.0
         version: 4.4.0
@@ -1202,6 +1205,63 @@ importers:
       sinon-chai:
         specifier: ^3.7.0
         version: 3.7.0(chai@4.4.1)(sinon@17.0.1)
+      typescript:
+        specifier: ~5.0.4
+        version: 5.0.4
+
+  packages/unified-selection:
+    devDependencies:
+      '@itwin/build-tools':
+        specifier: ^4.4.0
+        version: 4.4.0(@types/node@18.17.7)
+      '@itwin/eslint-plugin':
+        specifier: 4.0.0-dev.48
+        version: 4.0.0-dev.48(eslint@8.56.0)(typescript@5.0.4)
+      '@types/chai':
+        specifier: ^4.3.11
+        version: 4.3.11
+      '@types/chai-as-promised':
+        specifier: ^7.1.8
+        version: 7.1.8
+      '@types/mocha':
+        specifier: ^10.0.6
+        version: 10.0.6
+      '@types/node':
+        specifier: ^18.17.7
+        version: 18.17.7
+      '@types/sinon':
+        specifier: ^17.0.3
+        version: 17.0.3
+      '@types/sinon-chai':
+        specifier: ^3.2.12
+        version: 3.2.12
+      chai:
+        specifier: ^4.4.1
+        version: 4.4.1
+      chai-as-promised:
+        specifier: ^7.1.1
+        version: 7.1.1(chai@4.4.1)
+      cpx2:
+        specifier: ^7.0.1
+        version: 7.0.1
+      eslint:
+        specifier: ^8.56.0
+        version: 8.56.0
+      mocha:
+        specifier: ^10.3.0
+        version: 10.3.0
+      nyc:
+        specifier: ^15.1.0
+        version: 15.1.0
+      sinon:
+        specifier: ^17.0.1
+        version: 17.0.1
+      sinon-chai:
+        specifier: ^3.7.0
+        version: 3.7.0(chai@4.4.1)(sinon@17.0.1)
+      source-map-support:
+        specifier: ^0.5.21
+        version: 0.5.21
       typescript:
         specifier: ~5.0.4
         version: 5.0.4
@@ -4997,7 +5057,7 @@ packages:
     dependencies:
       '@types/http-cache-semantics': 4.0.4
       '@types/keyv': 3.1.4
-      '@types/node': 18.17.7
+      '@types/node': 18.19.17
       '@types/responselike': 1.0.3
     dev: false
 
@@ -5024,7 +5084,7 @@ packages:
   /@types/cli-progress@3.11.5:
     resolution: {integrity: sha512-D4PbNRbviKyppS5ivBGyFO29POlySLmA2HyUFE4p5QGazAMM3CwkKWcvTl8gvElSuxRh6FPKL8XmidX873ou4g==}
     dependencies:
-      '@types/node': 18.17.7
+      '@types/node': 18.19.17
     dev: false
 
   /@types/cpx@1.5.5:
@@ -5066,7 +5126,7 @@ packages:
   /@types/keyv@3.1.4:
     resolution: {integrity: sha512-BQ5aZNSCpj7D6K2ksrRCTmKRLEpnPvWDiLPfoGyhZ++8YtiK9d/3DBKPJgry359X/P1PfruyYwvnvwFjuEiEIg==}
     dependencies:
-      '@types/node': 18.17.7
+      '@types/node': 18.19.17
     dev: false
 
   /@types/minimist@1.2.5:
@@ -5083,7 +5143,7 @@ packages:
   /@types/node-fetch@2.6.11:
     resolution: {integrity: sha512-24xFj9R5+rfQJLRyM56qh+wnVSYhyXC2tkoBndtY0U+vubqNsYXGjufB2nn8Q6gt0LrARwL6UBtMCSVCwl4B1g==}
     dependencies:
-      '@types/node': 18.17.7
+      '@types/node': 18.19.17
       form-data: 4.0.0
 
   /@types/node@12.20.55:
@@ -5139,7 +5199,7 @@ packages:
   /@types/responselike@1.0.3:
     resolution: {integrity: sha512-H/+L+UkTV33uf49PH5pCAUBVPNj2nDBXTN+qS1dOwyyg24l3CcicicCA7ca+HMvJBZcFgl5r8e+RR6elsb4Lyw==}
     dependencies:
-      '@types/node': 18.17.7
+      '@types/node': 18.19.17
     dev: false
 
   /@types/scheduler@0.16.8:
@@ -5185,7 +5245,7 @@ packages:
   /@types/tunnel@0.0.3:
     resolution: {integrity: sha512-sOUTGn6h1SfQ+gbgqC364jLFBw2lnFqkgF3q0WovEHRLMrVD1sd5aufqi/aJObLekJO+Aq5z646U4Oxy6shXMA==}
     dependencies:
-      '@types/node': 18.17.7
+      '@types/node': 18.19.17
 
   /@types/yauzl@2.10.3:
     resolution: {integrity: sha512-oJoftv0LSuaDZE3Le4DbKX+KS9G36NzOeSap90UIK0yMA/NhKJhqlSGtNDORNRaIbQfzjXDrQa0ytJ6mNRGz/Q==}
@@ -8383,7 +8443,7 @@ packages:
       fs.realpath: 1.0.0
       inflight: 1.0.6
       inherits: 2.0.4
-      minimatch: 5.0.1
+      minimatch: 5.1.6
       once: 1.4.0
 
   /global-agent@3.0.0:
@@ -9857,7 +9917,6 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       brace-expansion: 2.0.1
-    dev: false
 
   /minimatch@7.4.6:
     resolution: {integrity: sha512-sBz8G/YjVniEz6lKPNpKxXwazJe4c19fEfV2GDMX6AjFz+MX9uDWIZW8XreVhkFW3fkIdTv/gxWr/Kks5FFAVw==}
@@ -10748,7 +10807,7 @@ packages:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
-      '@types/node': 18.17.7
+      '@types/node': 18.19.17
       long: 5.2.3
     dev: false
 
