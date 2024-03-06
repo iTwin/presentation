@@ -7,19 +7,19 @@
  */
 
 import "./PresentationInstanceFilterDialog.scss";
-import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { BuildFilterOptions, usePropertyFilterBuilder } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { SvgError } from "@itwin/itwinui-illustrations-react";
 import { Button, Dialog, NonIdealState, ProgressRadial } from "@itwin/itwinui-react";
 import { Descriptor, Keys } from "@itwin/presentation-common";
+import { PortalTargetContextProvider } from "../common/PortalTargetContext";
 import { translate, useDelay } from "../common/Utils";
 import { InstanceFilterBuilder, usePresentationInstanceFilteringProps } from "./InstanceFilterBuilder";
 import { PresentationInstanceFilterInfo } from "./PresentationFilterBuilder";
 import { PresentationInstanceFilter } from "./PresentationInstanceFilter";
 import { filterRuleValidator, isFilterNonEmpty } from "./Utils";
-import { PortalTargetContextProvider } from "../common/PortalTargetContext";
 
 /**
  * Data structure that describes source to gather properties from.
@@ -70,7 +70,7 @@ export interface PresentationInstanceFilterDialogProps {
   /** Dialog title. */
   title?: React.ReactNode;
   /** Initial filter that will be show when component is mounted. */
-  initialFilter?: PresentationInstanceFilterInfo;
+  initialFilter?: PresentationInstanceFilterInfo | ((descriptor: Descriptor) => PresentationInstanceFilterInfo);
 }
 
 /**
@@ -197,11 +197,13 @@ interface LoadedFilterDialogContentProps extends Omit<PresentationInstanceFilter
 
 function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
   const { initialFilter, descriptor, imodel, filterResultsCountRenderer, descriptorInputKeys, onApply, onReset, onClose, toolbarButtonsRenderer } = props;
+  const initialFilterInfo = useInitialFilter(descriptor, initialFilter);
+
   const [initialPropertyFilter] = useState(() => {
-    if (!initialFilter?.filter) {
+    if (!initialFilterInfo?.filter) {
       return undefined;
     }
-    return PresentationInstanceFilter.toComponentsPropertyFilter(descriptor, initialFilter.filter);
+    return PresentationInstanceFilter.toComponentsPropertyFilter(descriptor, initialFilterInfo.filter);
   });
 
   const { rootGroup, actions, buildFilter } = usePropertyFilterBuilder({
@@ -209,7 +211,7 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
     ruleValidator: filterRuleValidator,
   });
 
-  const filteringProps = usePresentationInstanceFilteringProps(descriptor, imodel, initialFilter?.usedClasses);
+  const filteringProps = usePresentationInstanceFilteringProps(descriptor, imodel, initialFilterInfo?.usedClasses);
   const getFilterInfo = useCallback(
     (options?: BuildFilterOptions): PresentationInstanceFilterInfo | undefined => {
       const filter = buildFilter(options);
@@ -281,6 +283,17 @@ function LoadedFilterDialogContent(props: LoadedFilterDialogContentProps) {
       </div>
     </>
   );
+}
+
+function useInitialFilter(
+  descriptor: Descriptor,
+  initialFilter?: PresentationInstanceFilterInfo | ((descriptor: Descriptor) => PresentationInstanceFilterInfo),
+) {
+  const initializedFilter = useRef<{ filterInfo: PresentationInstanceFilterInfo | undefined }>();
+  if (initializedFilter.current === undefined) {
+    initializedFilter.current = { filterInfo: typeof initialFilter === "function" ? initialFilter(descriptor) : initialFilter };
+  }
+  return initializedFilter.current.filterInfo;
 }
 
 function ToolbarButtonsRenderer({ handleApply, handleClose, handleReset }: FilteringDialogToolbarHandlers) {

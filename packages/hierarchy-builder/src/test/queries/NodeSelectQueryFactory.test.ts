@@ -6,6 +6,13 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import {
+  GenericInstanceFilter,
+  GenericInstanceFilterRelatedInstanceDescription,
+  GenericInstanceFilterRule,
+  GenericInstanceFilterRuleGroup,
+  GenericInstanceFilterRuleOperator,
+} from "@itwin/core-common";
+import {
   ECArrayProperty,
   ECEnumerationProperty,
   ECNavigationProperty,
@@ -13,13 +20,6 @@ import {
   ECStructProperty,
   IMetadataProvider,
 } from "../../hierarchy-builder/ECMetadata";
-import {
-  GenericInstanceFilter,
-  GenericInstanceFilterRule,
-  GenericInstanceFilterRuleGroup,
-  PropertyFilterRuleBinaryOperator,
-  RelatedInstanceDescription,
-} from "../../hierarchy-builder/GenericInstanceFilter";
 import { NodeSelectClauseColumnNames, NodeSelectQueryFactory } from "../../hierarchy-builder/queries/NodeSelectQueryFactory";
 import { ClassStubs, createClassStubs } from "../Utils";
 import { trimWhitespace } from "./Utils";
@@ -271,10 +271,10 @@ describe("NodeSelectQueryFactory", () => {
       classStubs.stubEntityClass({ schemaName: "x", className: "a" });
       classStubs.stubEntityClass({ schemaName: "x", className: "b" });
       const filter: GenericInstanceFilter = {
-        propertyClassName: "x.a",
+        propertyClassNames: ["x.a"],
         relatedInstances: [],
         rules: {
-          operator: "And",
+          operator: "and",
           rules: [],
         },
       };
@@ -290,10 +290,10 @@ describe("NodeSelectQueryFactory", () => {
         classStubs.stubEntityClass({ schemaName: "x", className: "a" });
         classStubs.stubEntityClass({ schemaName: "x", className: "b", is: async () => true });
         const filter: GenericInstanceFilter = {
-          propertyClassName: "x.b",
+          propertyClassNames: ["x.b"],
           relatedInstances: [],
           rules: {
-            operator: "And",
+            operator: "and",
             rules: [],
           },
         };
@@ -308,15 +308,52 @@ describe("NodeSelectQueryFactory", () => {
         classStubs.stubEntityClass({ schemaName: "x", className: "a", is: async () => true });
         classStubs.stubEntityClass({ schemaName: "x", className: "b" });
         const filter: GenericInstanceFilter = {
-          propertyClassName: "x.b",
+          propertyClassNames: ["x.b"],
           relatedInstances: [],
           rules: {
-            operator: "And",
+            operator: "and",
             rules: [],
           },
         };
         expect(await factory.createFilterClauses(filter, { fullName: "x.a", alias: "content-class" })).to.deep.eq({
           from: "x.a",
+          joins: "",
+          where: "",
+        });
+      });
+
+      it("uses content class if no property classes are provided", async () => {
+        classStubs.stubEntityClass({ schemaName: "x", className: "a" });
+        const filter: GenericInstanceFilter = {
+          propertyClassNames: [],
+          relatedInstances: [],
+          rules: {
+            operator: "and",
+            rules: [],
+          },
+        };
+        expect(await factory.createFilterClauses(filter, { fullName: "x.a", alias: "content-class" })).to.deep.eq({
+          from: "x.a",
+          joins: "",
+          where: "",
+        });
+      });
+
+      it("uses the most specific property class when multiple classes provided", async () => {
+        classStubs.stubEntityClass({ schemaName: "x", className: "a" });
+        classStubs.stubEntityClass({ schemaName: "x", className: "b", is: async (className) => ["x.a"].includes(className) });
+        classStubs.stubEntityClass({ schemaName: "x", className: "c", is: async (className) => ["x.a", "x.b"].includes(className) });
+        classStubs.stubEntityClass({ schemaName: "x", className: "d", is: async (className) => ["x.a", "x.b", "x.c"].includes(className) });
+        const filter: GenericInstanceFilter = {
+          propertyClassNames: ["x.b", "x.d", "x.c"],
+          relatedInstances: [],
+          rules: {
+            operator: "and",
+            rules: [],
+          },
+        };
+        expect(await factory.createFilterClauses(filter, { fullName: "x.a", alias: "content-class" })).to.deep.eq({
+          from: "x.d",
           joins: "",
           where: "",
         });
@@ -328,11 +365,11 @@ describe("NodeSelectQueryFactory", () => {
         it("adds class filter when filter class names are specified", async () => {
           classStubs.stubEntityClass({ schemaName: "x", className: "y", is: async () => true });
           const filter: GenericInstanceFilter = {
-            propertyClassName: "x.y",
-            filterClassNames: ["x.a", "x.b"],
+            propertyClassNames: ["x.y"],
+            filteredClassNames: ["x.a", "x.b"],
             relatedInstances: [],
             rules: {
-              operator: "And",
+              operator: "and",
               rules: [],
             },
           };
@@ -351,14 +388,14 @@ describe("NodeSelectQueryFactory", () => {
           rule: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup;
           expectedECSql: string;
           skipClassStub?: boolean;
-          relatedInstances?: RelatedInstanceDescription[];
+          relatedInstances?: GenericInstanceFilterRelatedInstanceDescription[];
         }
         async function testPropertyFilter({ classAlias, rule, expectedECSql, skipClassStub, relatedInstances }: TestPropertyFilterProps) {
           if (!skipClassStub) {
             classStubs.stubEntityClass(testClassProps);
           }
           const filter: GenericInstanceFilter = {
-            propertyClassName: "s.c",
+            propertyClassNames: ["s.c"],
             relatedInstances: relatedInstances ?? [],
             rules: rule,
           };
@@ -370,15 +407,19 @@ describe("NodeSelectQueryFactory", () => {
           testPropertyFilter({
             classAlias: "x",
             rule: {
-              operator: "And",
+              operator: "and",
               rules: [
                 {
+                  sourceAlias: "x",
                   propertyName: "a",
-                  operator: "True",
+                  operator: "is-true",
+                  propertyTypeName: "boolean",
                 },
                 {
+                  sourceAlias: "x",
                   propertyName: "b",
-                  operator: "False",
+                  operator: "is-false",
+                  propertyTypeName: "boolean",
                 },
               ],
             },
@@ -389,15 +430,19 @@ describe("NodeSelectQueryFactory", () => {
           testPropertyFilter({
             classAlias: "x",
             rule: {
-              operator: "Or",
+              operator: "or",
               rules: [
                 {
+                  sourceAlias: "x",
                   propertyName: "a",
-                  operator: "True",
+                  operator: "is-true",
+                  propertyTypeName: "boolean",
                 },
                 {
+                  sourceAlias: "x",
                   propertyName: "b",
-                  operator: "False",
+                  operator: "is-false",
+                  propertyTypeName: "boolean",
                 },
               ],
             },
@@ -407,28 +452,28 @@ describe("NodeSelectQueryFactory", () => {
         it(`creates "is true" filter`, async () =>
           testPropertyFilter({
             classAlias: "x",
-            rule: { propertyName: "p", operator: "True" },
+            rule: { sourceAlias: "x", propertyName: "p", operator: "is-true", propertyTypeName: "boolean" },
             expectedECSql: `[x].[p]`,
           }));
 
         it(`creates "is false" filter`, async () =>
           testPropertyFilter({
             classAlias: "x",
-            rule: { propertyName: "p", operator: "False" },
+            rule: { sourceAlias: "x", propertyName: "p", operator: "is-false", propertyTypeName: "boolean" },
             expectedECSql: `NOT [x].[p]`,
           }));
 
         it(`creates "is null" filter`, async () =>
           testPropertyFilter({
             classAlias: "x",
-            rule: { propertyName: "p", operator: "Null" },
+            rule: { sourceAlias: "x", propertyName: "p", operator: "is-null", propertyTypeName: "boolean" },
             expectedECSql: `[x].[p] IS NULL`,
           }));
 
         it(`creates "is not null" filter`, async () =>
           testPropertyFilter({
             classAlias: "x",
-            rule: { propertyName: "p", operator: "NotNull" },
+            rule: { sourceAlias: "x", propertyName: "p", operator: "is-not-null", propertyTypeName: "boolean" },
             expectedECSql: `[x].[p] IS NOT NULL`,
           }));
 
@@ -440,7 +485,13 @@ describe("NodeSelectQueryFactory", () => {
           await testPropertyFilter({
             skipClassStub: true,
             classAlias: "x",
-            rule: { propertyName: "p", operator: "Equal", value: { className: "a.b", id: "0x123" } },
+            rule: {
+              sourceAlias: "x",
+              propertyName: "p",
+              operator: "is-equal",
+              propertyTypeName: "navigation",
+              value: { rawValue: { className: "a.b", id: "0x123" }, displayValue: "a.b" },
+            },
             expectedECSql: `[x].[p].[Id] = 0x123`,
           });
         });
@@ -453,7 +504,7 @@ describe("NodeSelectQueryFactory", () => {
           await testPropertyFilter({
             skipClassStub: true,
             classAlias: "x",
-            rule: { propertyName: "p", operator: "Equal", value: "abc" },
+            rule: { sourceAlias: "x", propertyName: "p", operator: "is-equal", propertyTypeName: "string", value: { rawValue: "abc", displayValue: "abc" } },
             expectedECSql: `[x].[p] = 'abc'`,
           });
         });
@@ -466,7 +517,7 @@ describe("NodeSelectQueryFactory", () => {
           await testPropertyFilter({
             skipClassStub: true,
             classAlias: "x",
-            rule: { propertyName: "p", operator: "Equal", value: 123 },
+            rule: { sourceAlias: "x", propertyName: "p", operator: "is-equal", propertyTypeName: "int", value: { rawValue: 123, displayValue: "123" } },
             expectedECSql: `[x].[p] = 123`,
           });
         });
@@ -487,7 +538,13 @@ describe("NodeSelectQueryFactory", () => {
           await testPropertyFilter({
             skipClassStub: true,
             classAlias: "x",
-            rule: { propertyName: "p", operator: "Equal", value: { x: 1.23, y: 4.56 } },
+            rule: {
+              sourceAlias: "x",
+              propertyName: "p",
+              operator: "is-equal",
+              propertyTypeName: "point2d",
+              value: { rawValue: { x: 1.23, y: 4.56 }, displayValue: "X: 1.23 Y:4.56" },
+            },
             expectedECSql: `
               [x].[p].[x] BETWEEN ${1.23 - Number.EPSILON} AND ${1.23 + Number.EPSILON}
               AND [x].[p].[y] BETWEEN ${4.56 - Number.EPSILON} AND ${4.56 + Number.EPSILON}
@@ -496,7 +553,13 @@ describe("NodeSelectQueryFactory", () => {
           await testPropertyFilter({
             skipClassStub: true,
             classAlias: "x",
-            rule: { propertyName: "p", operator: "NotEqual", value: { x: 1.23, y: 4.56 } },
+            rule: {
+              sourceAlias: "x",
+              propertyName: "p",
+              operator: "is-not-equal",
+              propertyTypeName: "point2d",
+              value: { rawValue: { x: 1.23, y: 4.56 }, displayValue: "X: 1.23 Y:4.56" },
+            },
             expectedECSql: `
               NOT (
                 [x].[p].[x] BETWEEN ${1.23 - Number.EPSILON} AND ${1.23 + Number.EPSILON}
@@ -522,7 +585,13 @@ describe("NodeSelectQueryFactory", () => {
           await testPropertyFilter({
             skipClassStub: true,
             classAlias: "x",
-            rule: { propertyName: "p", operator: "Equal", value: { x: 1.23, y: 4.56, z: 7.89 } },
+            rule: {
+              sourceAlias: "x",
+              propertyName: "p",
+              operator: "is-equal",
+              propertyTypeName: "point3d",
+              value: { rawValue: { x: 1.23, y: 4.56, z: 7.89 }, displayValue: "X 1.23 Y 4.56 Z 7.89" },
+            },
             expectedECSql: `
               [x].[p].[x] BETWEEN ${1.23 - Number.EPSILON} AND ${1.23 + Number.EPSILON}
               AND [x].[p].[y] BETWEEN ${4.56 - Number.EPSILON} AND ${4.56 + Number.EPSILON}
@@ -532,7 +601,13 @@ describe("NodeSelectQueryFactory", () => {
           await testPropertyFilter({
             skipClassStub: true,
             classAlias: "x",
-            rule: { propertyName: "p", operator: "NotEqual", value: { x: 1.23, y: 4.56, z: 7.89 } },
+            rule: {
+              sourceAlias: "x",
+              propertyName: "p",
+              operator: "is-not-equal",
+              propertyTypeName: "point3d",
+              value: { rawValue: { x: 1.23, y: 4.56, z: 7.89 }, displayValue: "X 1.23 Y 4.56 Z 7.89" },
+            },
             expectedECSql: `
               NOT (
                 [x].[p].[x] BETWEEN ${1.23 - Number.EPSILON} AND ${1.23 + Number.EPSILON}
@@ -560,7 +635,13 @@ describe("NodeSelectQueryFactory", () => {
           await testPropertyFilter({
             skipClassStub: true,
             classAlias: "x",
-            rule: { propertyName: "p", operator: "LessOrEqual", value: now },
+            rule: {
+              sourceAlias: "x",
+              propertyName: "p",
+              operator: "less-or-equal",
+              propertyTypeName: "dateTime",
+              value: { rawValue: now, displayValue: now.toDateString() },
+            },
             expectedECSql: `[x].[p] <= julianday('${now.toISOString()}')`,
           });
         });
@@ -578,18 +659,24 @@ describe("NodeSelectQueryFactory", () => {
               } as ECPrimitiveProperty,
             ],
           });
-          const createProps = (operator: PropertyFilterRuleBinaryOperator, value: number, expectedECSql: string) => ({
+          const createProps = (operator: GenericInstanceFilterRuleOperator, value: number, expectedECSql: string) => ({
             skipClassStub: true,
             classAlias: "x",
-            rule: { propertyName: "p", operator, value },
+            rule: {
+              sourceAlias: "x",
+              propertyName: "p",
+              operator,
+              propertyTypeName: "double",
+              value: { rawValue: value, displayValue: `${value}` },
+            },
             expectedECSql,
           });
-          await testPropertyFilter(createProps("Greater", 1.23456, `[x].[p] > 1.23456`));
-          await testPropertyFilter(createProps("GreaterOrEqual", 1.23456, `[x].[p] >= 1.23456`));
-          await testPropertyFilter(createProps("Less", 1.23456, `[x].[p] < 1.23456`));
-          await testPropertyFilter(createProps("LessOrEqual", 1.23456, `[x].[p] <= 1.23456`));
-          await testPropertyFilter(createProps("Equal", 1.23456, `[x].[p] BETWEEN ${1.23456 - Number.EPSILON} AND ${1.23456 + Number.EPSILON}`));
-          await testPropertyFilter(createProps("NotEqual", 1.23456, `[x].[p] NOT BETWEEN ${1.23456 - Number.EPSILON} AND ${1.23456 + Number.EPSILON}`));
+          await testPropertyFilter(createProps("greater", 1.23456, `[x].[p] > 1.23456`));
+          await testPropertyFilter(createProps("greater-or-equal", 1.23456, `[x].[p] >= 1.23456`));
+          await testPropertyFilter(createProps("less", 1.23456, `[x].[p] < 1.23456`));
+          await testPropertyFilter(createProps("less-or-equal", 1.23456, `[x].[p] <= 1.23456`));
+          await testPropertyFilter(createProps("is-equal", 1.23456, `[x].[p] BETWEEN ${1.23456 - Number.EPSILON} AND ${1.23456 + Number.EPSILON}`));
+          await testPropertyFilter(createProps("is-not-equal", 1.23456, `[x].[p] NOT BETWEEN ${1.23456 - Number.EPSILON} AND ${1.23456 + Number.EPSILON}`));
         });
 
         it(`creates string property filters`, async () => {
@@ -605,15 +692,21 @@ describe("NodeSelectQueryFactory", () => {
               } as ECPrimitiveProperty,
             ],
           });
-          const createProps = (operator: PropertyFilterRuleBinaryOperator, value: string, expectedECSql: string) => ({
+          const createProps = (operator: GenericInstanceFilterRuleOperator, value: string, expectedECSql: string) => ({
             skipClassStub: true,
             classAlias: "x",
-            rule: { propertyName: "p", operator, value },
+            rule: {
+              sourceAlias: "x",
+              propertyName: "p",
+              operator,
+              propertyTypeName: "string",
+              value: { rawValue: value, displayValue: `${value}` },
+            },
             expectedECSql,
           });
-          await testPropertyFilter(createProps("Equal", "test", `[x].[p] = 'test'`));
-          await testPropertyFilter(createProps("NotEqual", "test", `[x].[p] <> 'test'`));
-          await testPropertyFilter(createProps("Like", "test%", `[x].[p] LIKE 'test%' ESCAPE '\\'`));
+          await testPropertyFilter(createProps("is-equal", "test", `[x].[p] = 'test'`));
+          await testPropertyFilter(createProps("is-not-equal", "test", `[x].[p] <> 'test'`));
+          await testPropertyFilter(createProps("like", "test%", `[x].[p] LIKE 'test%' ESCAPE '\\'`));
         });
 
         it(`creates boolean property filters`, async () => {
@@ -629,14 +722,20 @@ describe("NodeSelectQueryFactory", () => {
               } as ECPrimitiveProperty,
             ],
           });
-          const createProps = (operator: PropertyFilterRuleBinaryOperator, value: boolean, expectedECSql: string) => ({
+          const createProps = (operator: GenericInstanceFilterRuleOperator, value: boolean, expectedECSql: string) => ({
             skipClassStub: true,
             classAlias: "x",
-            rule: { propertyName: "p", operator, value },
+            rule: {
+              sourceAlias: "x",
+              propertyName: "p",
+              operator,
+              propertyTypeName: "boolean",
+              value: { rawValue: value, displayValue: `${value}` },
+            },
             expectedECSql,
           });
-          await testPropertyFilter(createProps("Equal", true, `[x].[p] = TRUE`));
-          await testPropertyFilter(createProps("NotEqual", false, `[x].[p] <> FALSE`));
+          await testPropertyFilter(createProps("is-equal", true, `[x].[p] = TRUE`));
+          await testPropertyFilter(createProps("is-not-equal", false, `[x].[p] <> FALSE`));
         });
 
         it(`creates integer property filters`, async () => {
@@ -652,18 +751,24 @@ describe("NodeSelectQueryFactory", () => {
               } as ECPrimitiveProperty,
             ],
           });
-          const createProps = (operator: PropertyFilterRuleBinaryOperator, value: number, expectedECSql: string) => ({
+          const createProps = (operator: GenericInstanceFilterRuleOperator, value: number, expectedECSql: string) => ({
             skipClassStub: true,
             classAlias: "x",
-            rule: { propertyName: "p", operator, value },
+            rule: {
+              sourceAlias: "x",
+              propertyName: "p",
+              operator,
+              propertyTypeName: "int",
+              value: { rawValue: value, displayValue: `${value}` },
+            },
             expectedECSql,
           });
-          await testPropertyFilter(createProps("Equal", 123, `[x].[p] = 123`));
-          await testPropertyFilter(createProps("NotEqual", 123, `[x].[p] <> 123`));
-          await testPropertyFilter(createProps("Less", 123, `[x].[p] < 123`));
-          await testPropertyFilter(createProps("LessOrEqual", 123, `[x].[p] <= 123`));
-          await testPropertyFilter(createProps("Greater", 123, `[x].[p] > 123`));
-          await testPropertyFilter(createProps("GreaterOrEqual", 123, `[x].[p] >= 123`));
+          await testPropertyFilter(createProps("is-equal", 123, `[x].[p] = 123`));
+          await testPropertyFilter(createProps("is-not-equal", 123, `[x].[p] <> 123`));
+          await testPropertyFilter(createProps("less", 123, `[x].[p] < 123`));
+          await testPropertyFilter(createProps("less-or-equal", 123, `[x].[p] <= 123`));
+          await testPropertyFilter(createProps("greater", 123, `[x].[p] > 123`));
+          await testPropertyFilter(createProps("greater-or-equal", 123, `[x].[p] >= 123`));
         });
 
         it(`creates long property filters`, async () => {
@@ -679,19 +784,25 @@ describe("NodeSelectQueryFactory", () => {
               } as ECPrimitiveProperty,
             ],
           });
-          const createProps = (operator: PropertyFilterRuleBinaryOperator, value: number, expectedECSql: string) => ({
+          const createProps = (operator: GenericInstanceFilterRuleOperator, value: number, expectedECSql: string) => ({
             skipClassStub: true,
             classAlias: "x",
-            rule: { propertyName: "p", operator, value },
+            rule: {
+              sourceAlias: "x",
+              propertyName: "p",
+              operator,
+              propertyTypeName: "long",
+              value: { rawValue: value, displayValue: `${value}` },
+            },
             expectedECSql,
           });
           const long = Number.MAX_SAFE_INTEGER;
-          await testPropertyFilter(createProps("Equal", long, `[x].[p] = ${long}`));
-          await testPropertyFilter(createProps("NotEqual", long, `[x].[p] <> ${long}`));
-          await testPropertyFilter(createProps("Less", long, `[x].[p] < ${long}`));
-          await testPropertyFilter(createProps("LessOrEqual", long, `[x].[p] <= ${long}`));
-          await testPropertyFilter(createProps("Greater", long, `[x].[p] > ${long}`));
-          await testPropertyFilter(createProps("GreaterOrEqual", long, `[x].[p] >= ${long}`));
+          await testPropertyFilter(createProps("is-equal", long, `[x].[p] = ${long}`));
+          await testPropertyFilter(createProps("is-not-equal", long, `[x].[p] <> ${long}`));
+          await testPropertyFilter(createProps("less", long, `[x].[p] < ${long}`));
+          await testPropertyFilter(createProps("less-or-equal", long, `[x].[p] <= ${long}`));
+          await testPropertyFilter(createProps("greater", long, `[x].[p] > ${long}`));
+          await testPropertyFilter(createProps("greater-or-equal", long, `[x].[p] >= ${long}`));
         });
 
         it(`creates related property filters`, async () => {
@@ -723,14 +834,15 @@ describe("NodeSelectQueryFactory", () => {
                 path: [
                   {
                     sourceClassName: contentClass.fullName,
-                    relationshipName: relationship.fullName,
+                    relationshipClassName: relationship.fullName,
                     targetClassName: propertyClass.fullName,
+                    isForwardRelationship: true,
                   },
                 ],
                 alias: "r",
               },
             ],
-            rule: { sourceAlias: "r", propertyName: "p", operator: "Equal", value: 123 },
+            rule: { sourceAlias: "r", propertyName: "p", operator: "is-equal", propertyTypeName: "int", value: { rawValue: 123, displayValue: "123" } },
             expectedECSql: `[r].[p] = 123`,
           });
         });
@@ -759,20 +871,27 @@ describe("NodeSelectQueryFactory", () => {
           await expect(
             factory.createFilterClauses(
               {
-                propertyClassName: contentClass.fullName,
+                propertyClassNames: [contentClass.fullName],
                 relatedInstances: [
                   {
                     path: [
                       {
                         sourceClassName: contentClass.fullName,
-                        relationshipName: relationship.fullName,
+                        relationshipClassName: relationship.fullName,
                         targetClassName: propertyClass.fullName,
+                        isForwardRelationship: true,
                       },
                     ],
                     alias: "r",
                   },
                 ],
-                rules: { sourceAlias: "does-not-exist", propertyName: "p", operator: "Equal", value: 123 },
+                rules: {
+                  sourceAlias: "does-not-exist",
+                  propertyName: "p",
+                  operator: "is-equal",
+                  propertyTypeName: "int",
+                  value: { rawValue: 123, displayValue: "123" },
+                },
               },
               { fullName: contentClass.fullName, alias: "x" },
             ),
@@ -784,9 +903,9 @@ describe("NodeSelectQueryFactory", () => {
           await expect(
             factory.createFilterClauses(
               {
-                propertyClassName: contentClass.fullName,
+                propertyClassNames: [contentClass.fullName],
                 relatedInstances: [],
-                rules: { sourceAlias: "x", propertyName: "p", operator: "Equal", value: 123 },
+                rules: { sourceAlias: "x", propertyName: "p", operator: "is-equal", propertyTypeName: "int", value: { rawValue: 123, displayValue: "123" } },
               },
               { fullName: contentClass.fullName, alias: "x" },
             ),
@@ -810,7 +929,13 @@ describe("NodeSelectQueryFactory", () => {
             testPropertyFilter({
               skipClassStub: true,
               classAlias: "x",
-              rule: { propertyName: "p", operator: "Equal", value: "test" },
+              rule: {
+                sourceAlias: "x",
+                propertyName: "p",
+                operator: "is-equal",
+                propertyTypeName: "string",
+                value: { rawValue: "test", displayValue: "test" },
+              },
               expectedECSql: ``,
             }),
           ).to.eventually.be.rejected;
@@ -833,7 +958,42 @@ describe("NodeSelectQueryFactory", () => {
             testPropertyFilter({
               skipClassStub: true,
               classAlias: "x",
-              rule: { propertyName: "p", operator: "Equal", value: "test" },
+              rule: {
+                sourceAlias: "x",
+                propertyName: "p",
+                operator: "is-equal",
+                propertyTypeName: "string",
+                value: { rawValue: "test", displayValue: "test" },
+              },
+              expectedECSql: ``,
+            }),
+          ).to.eventually.be.rejected;
+        });
+
+        it(`throws on binary rules without value`, async () => {
+          classStubs.stubEntityClass({
+            ...testClassProps,
+            properties: [
+              {
+                name: "p",
+                isNavigation: () => false,
+                isEnumeration: () => false,
+                isPrimitive: () => true,
+                primitiveType: "Integer",
+              } as ECPrimitiveProperty,
+            ],
+          });
+          await expect(
+            testPropertyFilter({
+              skipClassStub: true,
+              classAlias: "x",
+              rule: {
+                sourceAlias: "x",
+                propertyName: "p",
+                operator: "is-equal",
+                propertyTypeName: "int",
+                value: undefined,
+              },
               expectedECSql: ``,
             }),
           ).to.eventually.be.rejected;
@@ -858,21 +1018,22 @@ describe("NodeSelectQueryFactory", () => {
           },
         });
         const filter: GenericInstanceFilter = {
-          propertyClassName: "x.y",
+          propertyClassNames: ["x.y"],
           relatedInstances: [
             {
               path: [
                 {
                   sourceClassName: "x.y",
-                  relationshipName: "x.r",
+                  relationshipClassName: "x.r",
                   targetClassName: "x.t",
+                  isForwardRelationship: true,
                 },
               ],
               alias: "a",
             },
           ],
           rules: {
-            operator: "And",
+            operator: "and",
             rules: [],
           },
         };
@@ -916,19 +1077,20 @@ describe("NodeSelectQueryFactory", () => {
           },
         });
         const filter: GenericInstanceFilter = {
-          propertyClassName: "x.y",
+          propertyClassNames: ["x.y"],
           relatedInstances: [
             {
               path: [
                 {
                   sourceClassName: "x.y",
-                  relationshipName: "x.r1",
+                  relationshipClassName: "x.r1",
                   targetClassName: "x.t1",
+                  isForwardRelationship: true,
                 },
                 {
                   sourceClassName: "x.t1",
-                  relationshipName: "x.r2",
-                  relationshipReverse: true,
+                  relationshipClassName: "x.r2",
+                  isForwardRelationship: false,
                   targetClassName: "x.t2",
                 },
               ],
@@ -936,7 +1098,7 @@ describe("NodeSelectQueryFactory", () => {
             },
           ],
           rules: {
-            operator: "And",
+            operator: "and",
             rules: [],
           },
         };
@@ -982,14 +1144,15 @@ describe("NodeSelectQueryFactory", () => {
           },
         });
         const filter: GenericInstanceFilter = {
-          propertyClassName: "x.y",
+          propertyClassNames: ["x.y"],
           relatedInstances: [
             {
               path: [
                 {
                   sourceClassName: "x.y",
-                  relationshipName: "x.r1",
+                  relationshipClassName: "x.r1",
                   targetClassName: "x.t1",
+                  isForwardRelationship: true,
                 },
               ],
               alias: "a",
@@ -998,8 +1161,8 @@ describe("NodeSelectQueryFactory", () => {
               path: [
                 {
                   sourceClassName: "x.y",
-                  relationshipName: "x.r2",
-                  relationshipReverse: true,
+                  relationshipClassName: "x.r2",
+                  isForwardRelationship: false,
                   targetClassName: "x.t2",
                 },
               ],
@@ -1007,7 +1170,7 @@ describe("NodeSelectQueryFactory", () => {
             },
           ],
           rules: {
-            operator: "And",
+            operator: "and",
             rules: [],
           },
         };

@@ -1,5 +1,220 @@
 # Change Log - @itwin/presentation-components
 
+## 5.0.0
+
+### Major Changes
+
+- [#412](https://github.com/iTwin/presentation/pull/412): **Dependencies:** Bumped peer dependency version of all [itwinjs-core](https://github.com/iTwin/itwinjs-core) packages to `^4.4.0`.
+
+- [#399](https://github.com/iTwin/presentation/pull/399): **Dependencies:** Bumped peer dependency version of all [appui](https://github.com/iTwin/appui) packages to `^4.9.0`.
+
+- [#398](https://github.com/iTwin/presentation/pull/398): **Dependencies:** Bumped `@itwin/itwinui-react` package dependency version to `3.x`. This entails that all components from `@itwin/presentation-components` must be wrapped in `ThemeProvider` from `itwinui-react@3`. [See more](https://github.com/iTwin/iTwinUI/wiki/iTwinUI-react-v3-migration-guide#themeprovider).
+
+- [#222](https://github.com/iTwin/presentation/pull/222): **Tree:** Show the size of filtered tree hierarchy level while building a filter.
+
+  Includes breaking `@beta` API change in `PresentationTreeRenderer` - instead of taking [IModelConnection](https://www.itwinjs.org/reference/core-frontend/imodelconnection/imodelconnection/), [TreeModelSource](https://www.itwinjs.org/reference/components-react/tree/treemodelsource/) and [ITreeNodeLoader](https://www.itwinjs.org/reference/components-react/tree/itreenodeloader/) as 3 separate props, it now takes a single `AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>` prop. Implementing the feature required adding an `IPresentationTreeDataProvider` to props, however requesting a single, more specific, node loader instead of 4 different props that are tightly coupled was a much cleaner solution, especially since using `PresentationTreeRenderer` with node loaders other than `AbstractTreeNodeLoaderWithProvider<IPresentationTreeDataProvider>` made little sense.
+
+  Generally, reacting to the change is as simple as removing `imodel` and `modelSource` from the list of props, passed to `PresentationTreeRenderer`. In case the type of `nodeLoader` prop doesn't match, we recommend using the new `usePresentationTreeState` for creating one. Or, if the tree is not based on presentation rules, not using the `PresentationTreeRenderer` at all and instead switching to [TreeRenderer](https://www.itwinjs.org/reference/components-react/tree/treerenderer/).
+
+- [#313](https://github.com/iTwin/presentation/pull/313): **Tree:** Added interactive and more detailed informational messages in the tree and its hierarchy level filtering components:
+
+  - When a hierarchy level size exceeds given limit, a message is displayed, suggesting the results should be filtered to reduce the result set.
+  - The hierarchy level filtering dialog informs whether provided filters reduce the result set to a small enough size to be displayed in the tree.
+
+  Includes 2 breaking `@beta` API changes:
+
+  - `PresentationTreeNodeRenderer` now takes `onClearFilterClick` and `onFilterClick` callback props with node identifier argument rather than `PresentationTreeNodeItem`. This was a necessary change to allow opening filtering dialog for a parent node from its child node. To react to this breaking change:
+
+    _before_
+
+    ```tsx
+    const [clickedNode, setClickedNode] = useState<PresentationTreeNodeItem>();
+    <PresentationTreeNodeRenderer
+      {...nodeProps}
+      onFilterClick={(node: PresentationTreeNodeItem) => {
+        setClickedNode(node);
+      }}
+    />;
+    ```
+
+    _after_
+
+    ```tsx
+    const [clickedNode, setClickedNode] = useState<PresentationTreeNodeItem>();
+    <PresentationTreeNodeRenderer
+      {...nodeProps}
+      onFilterClick={(nodeId: string) => {
+        const node = modelSource.getModel().getNode(nodeId);
+        if (isTreeModelNode(node) && isPresentationTreeNodeItem(node.item)) {
+          setClickedNode(node.item);
+        }
+      }}
+    />;
+    ```
+
+  - `useHierarchyLevelFiltering` hook's result now contains functions `applyFilter` and `clearFilter` that take node identifier argument rather than a [TreeNodeItem](https://www.itwinjs.org/reference/components-react/tree/treenodeitem/). The change was made to help reacting to the above `PresentationTreeNodeRenderer` change by requiring the same types of arguments as what `onClearFilterClick` and `onFilterClick` get. In case these functions are used outside of `PresentationTreeNodeRenderer` workflows, reacting to the breaking change is as follows:
+
+    _before_
+
+    ```tsx
+    const { applyFilter } = useHierarchyLevelFiltering({ nodeLoader, modelSource });
+    const [filterNode, setFilterNode] = useState<PresentationTreeNodeItem>();
+    const onFilterChanged = (filter: PresentationInstanceFilterInfo) => {
+      if (filterNode) {
+        applyFilter(filterNode, filter);
+      }
+    };
+    ```
+
+    _after_
+
+    ```tsx
+    const { applyFilter } = useHierarchyLevelFiltering({ nodeLoader, modelSource });
+    const [filterNodeId, setFilterNodeId] = useState<string>();
+    const onFilterChanged = (filter: PresentationInstanceFilterInfo) => {
+      if (filterNodeId) {
+        applyFilter(filterNodeId, filter);
+      }
+    };
+    ```
+
+  Generally, the above two APIs are used together, which means no changes should be necessary.
+
+- [#438](https://github.com/iTwin/presentation/pull/438): **Instance filter builder / dialog:** Changed `PresentationInstanceFilterDialogProps.descriptor` attribute to `propertiesSource`, which associates `Descriptor` with input keys used to create the descriptor. This allows the dialog to use the `Keys` information, which is required for loading suggestions in value inputs.
+
+  _before_
+
+  ```tsx
+  const [inputKeys] = useState<Keys>();
+  <PresentationInstanceFilterDialog
+    descriptor={async () => loadDescriptor(inputKeys)}
+  />;
+  ```
+
+  _after_
+
+  ```tsx
+  const [inputKeys] = useState<Keys>();
+  <PresentationInstanceFilterDialog
+    propertiesSource={async () => {
+      const descriptor = await loadDescriptor(inputKeys);
+      return { descriptor, inputKeys };
+    }}
+  />
+  ```
+
+### Minor Changes
+
+- [#316](https://github.com/iTwin/presentation/pull/316): **Instance filter builder / dialog:** Promoted some `@internal` APIs to `@beta`
+
+  - `useInstanceFilterPropertyInfos` - a hook for creating a property list based on supplied [Descriptor](https://www.itwinjs.org/reference/presentation-common/content/descriptor/). The property list is necessary for rendering the [PropertyFilterBuilder](https://www.itwinjs.org/reference/components-react/propertyfilterbuilder/propertyfilterbuilder/) component.
+  - `PresentationInstanceFilter.fromComponentsPropertyFilter` - for adding presentation data to [PropertyFilter](https://www.itwinjs.org/reference/components-react/propertyfilterbuilder/propertyfilter/) built by [usePropertyFilterBuilder](https://www.itwinjs.org/reference/components-react/propertyfilterbuilder/usepropertyfilterbuilder/).
+  - `PresentationInstanceFilter.toComponentsPropertyFilter` - for stripping out presentation data from filter for usage with [usePropertyFilterBuilder](https://www.itwinjs.org/reference/components-react/propertyfilterbuilder/usepropertyfilterbuilder/).
+  - `PresentationFilterBuilderValueRenderer` - a custom renderer for property value input. It renders unique values selector for `Equal` / `NotEqual` rules and handles numeric values' unit conversion on top of the general value input.
+  - `PresentationInstanceFilterPropertyInfo` - a data structure defining a property used in instance filter.
+
+- [#316](https://github.com/iTwin/presentation/pull/316), [#407](https://github.com/iTwin/presentation/pull/407): **Instance filter builder / dialog:** Added utilities `PresentationInstanceFilter.fromGenericInstanceFilter` and `PresentationInstanceFilter.toGenericInstanceFilter` to help with parsing the `PresentationInstanceFilter` data structure into a more consumer-friendly, lower-level [GenericInstanceFilter](https://www.itwinjs.org/reference/core-common/utils/genericinstancefilter/).
+
+- [#193](https://github.com/iTwin/presentation/pull/193): **Instance filter builder / dialog:** Show a validation error message when entered property value is invalid.
+
+- [#176](https://github.com/iTwin/presentation/pull/176): **Instance filter builder / dialog:** Added unique values selector when using `Equal` or `Not Equal` operators. The component provides a drop-down of values available for selected property.
+  
+  - `null` values are omitted. `"Is Null"` and `"Is Not Null"` operators should be used instead.
+  - For empty non `null` values _Empty Value_ option is shown in selector.
+
+- [#356](https://github.com/iTwin/presentation/pull/356): **Instance filter builder / dialog:** UX enhancements.
+
+  - Changed the "Apply" button to always be enabled, even when no filtering rules are selected. In such situations, the calling component may clear the filter.
+  - Added a "Reset" button which clears all the filtering rules in the dialog.
+  - Added a `toolbarButtonsRenderer` prop to allow rendering custom toolbar buttons at the bottom of the dialog.
+
+- [#447](https://github.com/iTwin/presentation/pull/447): **Instance filter builder / dialog:** Added ability to pass initial filter as a callback that will be invoked when descriptor is loaded.
+
+- [#358](https://github.com/iTwin/presentation/pull/358): **Instance filter builder / dialog:** Show a union of properties of selected classes rather than intersection.
+
+- [#416](https://github.com/iTwin/presentation/pull/416): **Instance filter builder / dialog:** `PresentationInstanceFilterDialog` now allows applying filter when only classes are selected.
+
+  - Added `createInstanceFilterDefinition` that creates `InstanceFilterDefinition` from `PresentationInstanceFilterInfo`. Created definition can be passed to `PresentationManager` to filter results when creating content or hierarchies.
+
+- [#388](https://github.com/iTwin/presentation/pull/388): **Tree:** Adjust API of `PresentationTreeRenderer` by separating `PresentationTreeRenderer` hierarchy level filtering logic into `useFilterablePresentationTree` hook.
+
+- [#421](https://github.com/iTwin/presentation/pull/421): **Tree:** Simplify / clarify `PresentationTree` and `PresentationTreeRenderer` APIs.
+
+  - Change `PresentationTreeProps.treeRenderer` type to make it compatible with what `PresentationTreeRenderer` expects.
+
+    _before_
+
+    ```tsx
+    <PresentationTree
+      {...props}
+      state={state}
+      treeRenderer={(treeProps) => (
+        <PresentationTreeRenderer
+          {...treeProps}
+          nodeLoader={state.nodeLoader}
+        />
+      )}
+    />
+    ```
+
+    _after_
+
+    ```tsx
+    <PresentationTree
+      {...props}
+      state={state}
+      treeRenderer={(treeProps) => (
+        <PresentationTreeRenderer {...treeProps} />
+      )}
+    />
+    ```
+
+  - Removed `nodeRenderer` prop from `PresentationTreeRendererProps`. The prop is not used by `PresentationTreeRenderer` as it always uses its own `PresentationTreeNodeRenderer` to render nodes.
+
+- [#305](https://github.com/iTwin/presentation/pull/305): **Property grid:** Added an editor for editing values of properties with quantity / units information.
+
+  Editor works only if there is `SchemaMetadataContextProvider` in React component tree above property grid components. Otherwise simple numeric editor is used.
+
+  ```tsx
+  // somewhere at the global level
+  import { IModelConnection } from "@itwin/core-frontend";
+  import { SchemaContext } from "@itwin/ecschema-metadata";
+  function getIModelSchemaContext(imodel: IModelConnection): SchemaContext {
+    // return a cached instance of SchemaContext for given IModelConnection
+  }
+
+  // in the component render function
+  <SchemaMetadataContextProvider
+    imodel={imodel}
+    schemaContextProvider={getIModelSchemaContext}
+  >
+    <VirtualizedPropertyGridWithDataProvider {...props} />
+  </SchemaMetadataContextProvider>;
+  ```
+
+### Patch Changes
+
+- [#273](https://github.com/iTwin/presentation/pull/273), [#451](https://github.com/iTwin/presentation/pull/451): **Instance filter builder / dialog:** Fixed tooltip appearing under property selector in property filter builder.
+- [#456](https://github.com/iTwin/presentation/pull/456): **Instance filter builder / dialog:** Reduced amount of tooltips rendered in filter builder property selector.
+- [#312](https://github.com/iTwin/presentation/pull/312): **Instance filter builder / dialog:** Fixed class label shown in tooltip for related properties when building a filter. It now shows label of related class that was used to access that property instead of class where that property is defined.
+- [#362](https://github.com/iTwin/presentation/pull/362): **Instance filter builder / dialog:** Change class selector placeholder value to emphasize the fact that selecting a class is optional.
+- [#371](https://github.com/iTwin/presentation/pull/371): **Instance filter builder / dialog:** Clear all property filtering rules when selected class list changes.
+- [#296](https://github.com/iTwin/presentation/pull/296): **Instance filter builder / dialog:** Format date values in the property value selector.
+- [#373](https://github.com/iTwin/presentation/pull/373): **Instance filter builder / dialog:** Fix selected class information not being retained when using React 18 strict mode.
+- [#437](https://github.com/iTwin/presentation/pull/437): **Content:** Sort struct property members by label when creating content for property grid, table, and other content components.
+- [#427](https://github.com/iTwin/presentation/pull/427): **Property grid:** Inline default property grid ruleset instead of loading it from JSON file.
+- [#418](https://github.com/iTwin/presentation/pull/418): **Tree:** Updated message shown in hierarchy level filtering dialog when built filter still produces too many results.
+- [#446](https://github.com/iTwin/presentation/pull/446): **Tree:** Added custom CSS class on tree node actions buttons to allow customizing them.
+- [#354](https://github.com/iTwin/presentation/pull/354): **Unified selection:** Cancel ongoing hilite set request when unified selection changes.
+- [#348](https://github.com/iTwin/presentation/pull/348): Clean up `@internal` APIs exposed through the barrel exports file.
+
+## 5.0.0-dev.6
+
+### Patch Changes
+
+- [#453](https://github.com/iTwin/presentation/pull/453): Fixed instance filter builder unique values selector dropdown menu layout.
+- [#451](https://github.com/iTwin/presentation/pull/451): Fixed tooltip appearing under property selector in property filter builder.
+
 ## 5.0.0-dev.5
 
 ### Major Changes

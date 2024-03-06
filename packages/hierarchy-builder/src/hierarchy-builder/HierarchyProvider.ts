@@ -3,38 +3,24 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import {
-  catchError,
-  concatMap,
-  defaultIfEmpty,
-  defer,
-  filter,
-  from,
-  map,
-  mergeMap,
-  MonoTypeOperatorFunction,
-  Observable,
-  ObservableInput,
-  of,
-  take,
-  tap,
-} from "rxjs";
+import { catchError, concatMap, defaultIfEmpty, defer, filter, from, map, mergeMap, Observable, ObservableInput, of, take, tap } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
-import { assert, Dictionary, LRUCache, LRUMap, omit } from "@itwin/core-bentley";
+import { assert, StopWatch } from "@itwin/core-bentley";
+import { GenericInstanceFilter } from "@itwin/core-common";
 import { IMetadataProvider } from "./ECMetadata";
-import { GenericInstanceFilter } from "./GenericInstanceFilter";
 import { DefineHierarchyLevelProps, HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
 import { RowsLimitExceededError } from "./HierarchyErrors";
 import {
   HierarchyNode,
   HierarchyNodeIdentifiersPath,
-  ParentNodeKey,
+  ParentHierarchyNode,
   ParsedHierarchyNode,
   ProcessedCustomHierarchyNode,
   ProcessedGroupingHierarchyNode,
   ProcessedHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "./HierarchyNode";
+import { CachedNodesObservableEntry, ChildNodeObservablesCache, ParsedQueryNodesObservable } from "./internal/ChildNodeObservablesCache";
 import { LOGGING_NAMESPACE as CommonLoggingNamespace, hasChildren } from "./internal/Common";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
 import { getClass } from "./internal/GetClass";
@@ -46,7 +32,7 @@ import { sortNodesByLabelOperator } from "./internal/operators/Sorting";
 import { shareReplayWithErrors } from "./internal/Rxjs";
 import { SubscriptionScheduler } from "./internal/SubscriptionScheduler";
 import { TreeQueryResultsReader } from "./internal/TreeNodesReader";
-import { getLogger } from "./Logging";
+import { getLogger, ILogger } from "./Logging";
 import { ILimitingECSqlQueryExecutor } from "./queries/LimitingECSqlQueryExecutor";
 import { ConcatenatedValue, ConcatenatedValuePart } from "./values/ConcatenatedValue";
 import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "./values/Formatting";
@@ -54,14 +40,6 @@ import { TypedPrimitiveValue } from "./values/Values";
 
 const LOGGING_NAMESPACE = `${CommonLoggingNamespace}.HierarchyProvider`;
 const DEFAULT_QUERY_CONCURRENCY = 10;
-
-/**
- * A type of [[HierarchyNode]] that doesn't know about its children and is an input when requesting
- * them using [[HierarchyProvider.getNodes]].
- *
- * @beta
- */
-export type ParentHierarchyNode = Omit<HierarchyNode, "children">;
 
 /**
  * Defines the strings used by hierarchy provider.
@@ -98,6 +76,8 @@ export interface HierarchyProviderProps {
   queryExecutor: ILimitingECSqlQueryExecutor;
   /** Maximum number of queries that the provider attempts to execute in parallel. Defaults to `10`. */
   queryConcurrency?: number;
+  /** The amount of queries whose results are stored in-memory for quick retrieval. Defaults to `50`. */
+  queryCacheSize?: number;
 
   /**
    * A values formatter for formatting node labels. Defaults to the
@@ -144,7 +124,7 @@ export class HierarchyProvider {
   private _valuesFormatter: IPrimitiveValueFormatter;
   private _localizedStrings: HierarchyProviderLocalizedStrings;
   private _queryScheduler: SubscriptionScheduler;
-  private _nodesCache: ChildNodesCache;
+  private _nodesCache: ChildNodeObservablesCache;
 
   /**
    * Hierarchy level definitions factory used by this provider.
@@ -178,7 +158,11 @@ export class HierarchyProvider {
     this._valuesFormatter = props?.formatter ?? createDefaultValueFormatter();
     this._localizedStrings = props?.localizedStrings ?? { other: "Other", unspecified: "Not specified" };
     this._queryScheduler = new SubscriptionScheduler(props.queryConcurrency ?? DEFAULT_QUERY_CONCURRENCY);
-    this._nodesCache = new ChildNodesCache();
+    this._nodesCache = new ChildNodeObservablesCache({
+      // we divide the size by 2, because each variation also counts as a query that we cache
+      size: Math.round((props.queryCacheSize ?? 50) / 2),
+      variationsCount: 1,
+    });
     this.queryExecutor = props.queryExecutor;
   }
 
@@ -199,8 +183,23 @@ export class HierarchyProvider {
   }
 
   private onGroupingNodeCreated(groupingNode: ProcessedGroupingHierarchyNode, props: GetHierarchyNodesProps) {
-    doLog("OnGroupingNodeCreated", `Cached grouped nodes observable for ${groupingNode.label}`);
-    this._nodesCache.add({ ...props, parentNode: groupingNode }, { observable: from(groupingNode.children), needsProcessing: false });
+    assert(
+      // istanbul ignore next
+      !props.parentNode || HierarchyNode.isCustom(props.parentNode) || HierarchyNode.isInstancesNode(props.parentNode),
+      `Expecting all grouping nodes to be created as part of root / custom / instances node children request, but one is created for: ${createNodeIdentifierForLogging(props.parentNode)}.`,
+    );
+    groupingNode.nonGroupingAncestor = props.parentNode;
+    const didAdd = this._nodesCache.addGrouped({ ...props, parentNode: groupingNode }, from(groupingNode.children));
+    // istanbul ignore next
+    if (didAdd) {
+      doLog({ category: "OnGroupingNodeCreated", message: `Cached grouped nodes observable for ${createNodeIdentifierForLogging(groupingNode)}` });
+    } else {
+      doLog({
+        category: "OnGroupingNodeCreated",
+        message: `Grouped nodes observable was not cached for ${createNodeIdentifierForLogging(groupingNode)}`,
+        severity: "logWarning",
+      });
+    }
   }
 
   private createParsedQueryNodesObservable(props: DefineHierarchyLevelProps & { hierarchyLevelSizeLimit?: number | "unbounded" }): ParsedQueryNodesObservable {
@@ -216,7 +215,7 @@ export class HierarchyProvider {
         }
         return this._queryScheduler.scheduleSubscription(
           of(def.query).pipe(
-            log((query) => `Query direct nodes for parent ${props.parentNode ? JSON.stringify(props.parentNode) : "<root>"}: ${query.ecsql}`),
+            log("Queries", (query) => `Query direct nodes for parent ${createNodeIdentifierForLogging(props.parentNode)}: ${query.ecsql}`),
             mergeMap((query) => defer(() => from(this._queryReader.read(this.queryExecutor, query, props.hierarchyLevelSizeLimit)))),
           ),
         );
@@ -240,8 +239,8 @@ export class HierarchyProvider {
     );
     // handle nodes' hiding
     const nodesAfterHiding = preProcessedNodes.pipe(
-      createHideIfNoChildrenOperator((n) => this.getChildNodesObservables({ ...props, parentNode: n }).hasNodes, false),
-      createHideNodesInHierarchyOperator((n) => this.getChildNodesObservables({ ...props, parentNode: n }).processedNodes, false),
+      createHideIfNoChildrenOperator((n) => this.getChildNodesObservables({ ...props, parentNode: n }).pipe(mergeMap((x) => x.hasNodes)), false),
+      createHideNodesInHierarchyOperator((n) => this.getChildNodesObservables({ ...props, parentNode: n }).pipe(mergeMap((x) => x.processedNodes)), false),
     );
     return nodesAfterHiding;
   }
@@ -258,23 +257,26 @@ export class HierarchyProvider {
 
   private createFinalizedNodesObservable(processedNodesObservable: Observable<ProcessedHierarchyNode>): Observable<HierarchyNode> {
     return processedNodesObservable.pipe(
-      createDetermineChildrenOperator((n) => this.getChildNodesObservables({ parentNode: n }).hasNodes),
+      createDetermineChildrenOperator((n) => this.getChildNodesObservables({ parentNode: n }).pipe(mergeMap((x) => x.hasNodes))),
       postProcessNodes(this.hierarchyDefinition),
       map((n): HierarchyNode => {
-        const node = { ...n, children: hasChildren(n) };
-        return HierarchyNode.isGroupingNode(node) ? node : omit(node, ["processingParams"]);
+        const node = { ...n };
+        if (HierarchyNode.isCustom(node) || HierarchyNode.isInstancesNode(node)) {
+          delete node.processingParams;
+        }
+        return { ...node, children: hasChildren(n) };
       }),
     );
   }
 
   private createHasNodesObservable(preprocessedNodesObservable: Observable<ProcessedHierarchyNode>): Observable<boolean> {
     return preprocessedNodesObservable.pipe(
-      log("HasNodes", (n) => `Node before mapping to 'true': ${JSON.stringify(n)}`),
+      log("HasNodes", (n) => `Node before mapping to 'true': ${createNodeIdentifierForLogging(n)}`),
       map(() => true),
       take(1),
       defaultIfEmpty(false),
       catchError((e: Error) => {
-        doLog("HasNodes", `Error while determining children: ${e.message}`);
+        doLog({ category: "HasNodes", message: `Error while determining children: ${e.message}` });
         if (e instanceof RowsLimitExceededError) {
           return of(true);
         }
@@ -284,44 +286,59 @@ export class HierarchyProvider {
     );
   }
 
-  private getCachedObservableEntry(props: GetHierarchyNodesProps): CachedNodesObservableEntry {
+  private getCachedObservableEntry(props: GetHierarchyNodesProps): Observable<CachedNodesObservableEntry> {
     const { parentNode, ...restProps } = props;
-    const parentNodeLabel = parentNode ? parentNode.label : "<root>";
     const cached = this._nodesCache.get(props);
     if (cached) {
       // istanbul ignore next
-      doLog("GetCachedObservableEntry", `Found query nodes observable for ${parentNodeLabel}`);
-      return cached;
+      doLog({ category: "GetCachedObservableEntry", message: `Found query nodes observable for ${createNodeIdentifierForLogging(parentNode)}` });
+      return of(cached);
+    }
+
+    if (parentNode && HierarchyNode.isGroupingNode(parentNode)) {
+      // Generally, we expect that grouping nodes will always have their child observables cached, in which case we
+      // return above. However, it's possible that the parent level was pushed-out of cache, in which case we need to
+      // re-create it.
+      return this.getChildNodesObservables({ ...props, parentNode: parentNode.nonGroupingAncestor }).pipe(
+        mergeMap((x) => x.processedNodes),
+        take(1),
+        defaultIfEmpty(false),
+        mergeMap(() => this.getCachedObservableEntry(props)),
+      );
     }
 
     assert(
       !parentNode || HierarchyNode.isCustom(parentNode) || HierarchyNode.isInstancesNode(parentNode),
-      `Grouping nodes are expected to always have their children cached as soon as they're created. Offending node: ${JSON.stringify(parentNode)}.`,
+      `Grouping nodes are expected to always have their children cached. Offending node: ${createNodeIdentifierForLogging(parentNode)}.`,
     );
 
-    const value = { observable: this.createParsedQueryNodesObservable({ ...restProps, parentNode }), needsProcessing: true as const };
-    this._nodesCache.add(props, value);
-    doLog("GetCachedObservableEntry", `Saved query nodes observable for ${parentNodeLabel}`);
-    return value;
+    const validProps = { ...restProps, parentNode };
+    const value = this.createParsedQueryNodesObservable(validProps);
+    this._nodesCache.addParseResult(validProps, value);
+    doLog({ category: "GetCachedObservableEntry", message: `Saved query nodes observable for ${createNodeIdentifierForLogging(parentNode)}` });
+    return of({ observable: value, needsProcessing: true });
   }
 
   private getChildNodesObservables(props: GetHierarchyNodesProps & { hierarchyLevelSizeLimit?: number | "unbounded" }) {
-    const entry = this.getCachedObservableEntry(props);
-    const processed = entry.needsProcessing
-      ? (() => {
-          const pre = this.createPreProcessedNodesObservable(entry.observable, props);
-          const post = this.createProcessedNodesObservable(pre, props);
-          return { pre, post };
-        })()
-      : {
-          pre: entry.observable,
-          post: entry.observable,
+    return this.getCachedObservableEntry(props).pipe(
+      map((entry) => {
+        const processed = entry.needsProcessing
+          ? (() => {
+              const pre = this.createPreProcessedNodesObservable(entry.observable, props);
+              const post = this.createProcessedNodesObservable(pre, props);
+              return { pre, post };
+            })()
+          : {
+              pre: entry.observable,
+              post: entry.observable,
+            };
+        return {
+          processedNodes: processed.post,
+          hasNodes: this.createHasNodesObservable(processed.pre),
+          finalizedNodes: this.createFinalizedNodesObservable(processed.post),
         };
-    return {
-      processedNodes: processed.post,
-      hasNodes: this.createHasNodesObservable(processed.pre),
-      finalizedNodes: this.createFinalizedNodesObservable(processed.post),
-    };
+      }),
+    );
   }
 
   /**
@@ -329,18 +346,26 @@ export class HierarchyProvider {
    */
   public async getNodes(props: GetHierarchyNodesProps): Promise<HierarchyNode[]> {
     return new Promise((resolve, reject) => {
+      const timer = new StopWatch(undefined, true);
+      doLog({ category: "GetNodes", message: `Requesting child nodes for ${createNodeIdentifierForLogging(props.parentNode)}` });
       const nodes = new Array<HierarchyNode>();
-      this.getChildNodesObservables(props).finalizedNodes.subscribe({
-        next(node) {
-          nodes.push(node);
-        },
-        error(err) {
-          reject(err);
-        },
-        complete() {
-          resolve(nodes);
-        },
-      });
+      this.getChildNodesObservables(props)
+        .pipe(mergeMap(({ finalizedNodes }) => finalizedNodes))
+        .subscribe({
+          next(node) {
+            nodes.push(node);
+          },
+          error(err) {
+            reject(err);
+          },
+          complete() {
+            doLog({
+              category: "GetNodes",
+              message: `Returning ${nodes.length} child nodes for ${createNodeIdentifierForLogging(props.parentNode)} in ${timer.currentSeconds.toFixed(2)} s.`,
+            });
+            resolve(nodes);
+          },
+        });
     });
   }
 
@@ -429,97 +454,23 @@ function createParentNodeKeysList(parentNode: ParentHierarchyNode | undefined) {
   return [...parentNode.parentKeys, parentNode.key];
 }
 
-type ParsedQueryNodesObservable = Observable<ParsedHierarchyNode>;
-type ProcessedNodesObservable = Observable<ProcessedHierarchyNode>;
-type CachedNodesObservableEntry =
-  | { observable: ParsedQueryNodesObservable; needsProcessing: true }
-  | { observable: ProcessedNodesObservable; needsProcessing: false };
-interface ChildNodesCacheEntry {
-  /** Stores observables for the default case - no instance filter or custom limit for the hierarchy level. */
-  primary: CachedNodesObservableEntry | undefined;
-  /** Stores a limited number of variations with custom instance filter and/or custom limit for the hierarchy level. */
-  variations: LRUCache<string, CachedNodesObservableEntry>;
+interface LogMessageProps {
+  message: string;
+  category: string;
+  severity?: keyof ILogger;
 }
-class ChildNodesCache {
-  private _map = new Dictionary<ParentNodeKey[], ChildNodesCacheEntry>((lhs, rhs) => this.compareHierarchyNodeKeys(lhs, rhs));
-
-  private createVariationKey(props: GetHierarchyNodesProps) {
-    const { instanceFilter, parentNode } = props;
-    let { hierarchyLevelSizeLimit } = props;
-    if (parentNode && HierarchyNode.isGroupingNode(parentNode)) {
-      hierarchyLevelSizeLimit = undefined;
-    }
-    if (instanceFilter === undefined && hierarchyLevelSizeLimit === undefined) {
-      return undefined;
-    }
-    return JSON.stringify({ instanceFilter, hierarchyLevelSizeLimit });
-  }
-
-  private compareHierarchyNodeKeys(lhs: ParentNodeKey[], rhs: ParentNodeKey[]) {
-    if (lhs.length !== rhs.length) {
-      return lhs.length - rhs.length;
-    }
-    for (let i = 0; i < lhs.length; ++i) {
-      const keysCompareResult = ParentNodeKey.compare(lhs[i], rhs[i]);
-      // istanbul ignore if
-      if (keysCompareResult !== 0) {
-        return keysCompareResult;
-      }
-    }
-    return 0;
-  }
-
-  private parseRequestProps(requestProps: GetHierarchyNodesProps) {
-    const { parentNode: node } = requestProps;
-    const primaryKey = node ? [...node.parentKeys, node.key] : [];
-    const variationKey = this.createVariationKey(requestProps);
-    return { primaryKey, variationKey };
-  }
-
-  public add(requestProps: GetHierarchyNodesProps, value: CachedNodesObservableEntry) {
-    const { primaryKey, variationKey } = this.parseRequestProps(requestProps);
-    let entry = this._map.get(primaryKey);
-    if (!entry) {
-      entry = { primary: undefined, variations: new LRUMap(5) };
-      this._map.set(primaryKey, entry);
-    }
-    if (variationKey) {
-      entry.variations.set(variationKey, value);
-    } else {
-      entry.primary = value;
-    }
-  }
-
-  public get(requestProps: GetHierarchyNodesProps): CachedNodesObservableEntry | undefined {
-    const { primaryKey, variationKey } = this.parseRequestProps(requestProps);
-    const entry = this._map.get(primaryKey);
-    if (!entry) {
-      return undefined;
-    }
-    return variationKey ? entry.variations.get(variationKey) : entry.primary;
-  }
-
-  public clear() {
-    this._map.clear();
-  }
+function doLog(props: LogMessageProps) {
+  getLogger()[props.severity ?? "logTrace"](`${LOGGING_NAMESPACE}.${props.category}`, props.message);
 }
 
-function doLog(msg: string): void;
-// eslint-disable-next-line @typescript-eslint/unified-signatures
-function doLog(loggingCategory: string, msg: string): void;
-function doLog(loggingCategoryOrMsg: string, msg?: string) {
-  if (msg) {
-    getLogger().logTrace(`${LOGGING_NAMESPACE}.${loggingCategoryOrMsg}`, msg);
-  } else {
-    getLogger().logTrace(LOGGING_NAMESPACE, loggingCategoryOrMsg);
-  }
+function log<T>(loggingCategory: string, msg: (arg: T) => string) {
+  return tap<T>((n) => doLog({ category: loggingCategory, message: msg(n) }));
 }
 
-function log<T>(msg: (arg: T) => string): MonoTypeOperatorFunction<T>;
-function log<T>(loggingCategory: string, msg: (arg: T) => string): MonoTypeOperatorFunction<T>;
-function log<T>(loggingCategoryOrMsg: string | ((arg: T) => string), msg?: (arg: T) => string) {
-  if (msg) {
-    return tap<T>((n) => doLog(loggingCategoryOrMsg as string, msg(n)));
+function createNodeIdentifierForLogging(node: ParentHierarchyNode | HierarchyNode | undefined) {
+  if (!node) {
+    return "<root>";
   }
-  return tap<T>((n) => doLog((loggingCategoryOrMsg as (arg: T) => string)(n)));
+  const { label, key, parentKeys } = node;
+  return JSON.stringify({ label, key, parentKeys });
 }

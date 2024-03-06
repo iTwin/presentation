@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { omit } from "@itwin/core-bentley";
 import { GroupingNodeKey } from "../../../../hierarchy-builder/HierarchyNode";
 import { GroupingHandlerResult } from "../../../../hierarchy-builder/internal/operators/Grouping";
 import { createLabelGroups } from "../../../../hierarchy-builder/internal/operators/grouping/LabelGrouping";
@@ -24,7 +23,6 @@ describe("LabelGrouping", () => {
       type: "label-grouping",
       label: "1",
       groupId: undefined,
-      groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
     };
     expect(await createLabelGroups(nodes)).to.deep.eq({
       groupingType: "label",
@@ -33,7 +31,8 @@ describe("LabelGrouping", () => {
           label: "1",
           key: expectedGroupingNodeKey,
           parentKeys: ["x"],
-          children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
+          groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
+          children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
         }),
       ],
       ungrouped: [],
@@ -53,7 +52,6 @@ describe("LabelGrouping", () => {
       type: "label-grouping",
       label: "1",
       groupId: undefined,
-      groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
     };
     expect(await createLabelGroups(nodes)).to.deep.eq({
       groupingType: "label",
@@ -62,7 +60,8 @@ describe("LabelGrouping", () => {
           label: "1",
           key: expectedGroupingNodeKey,
           parentKeys: ["x"],
-          children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
+          groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
+          children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
         }),
       ],
       ungrouped: [],
@@ -82,7 +81,6 @@ describe("LabelGrouping", () => {
       type: "label-grouping",
       label: "1",
       groupId: undefined,
-      groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
     };
     expect(await createLabelGroups(nodes)).to.deep.eq({
       groupingType: "label",
@@ -91,7 +89,8 @@ describe("LabelGrouping", () => {
           label: "1",
           key: expectedGroupingNodeKey,
           parentKeys: ["x"],
-          children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
+          groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
+          children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
         }),
       ],
       ungrouped: [],
@@ -117,13 +116,11 @@ describe("LabelGrouping", () => {
       type: "label-grouping",
       label: "1",
       groupId: "groupId1",
-      groupedInstanceKeys: nodes[0].key.instanceKeys,
     };
     const expectedGroupingNodeKey2: GroupingNodeKey = {
       type: "label-grouping",
       label: "1",
       groupId: "groupId2",
-      groupedInstanceKeys: nodes[1].key.instanceKeys,
     };
     expect(await createLabelGroups(nodes)).to.deep.eq({
       groupingType: "label",
@@ -132,13 +129,15 @@ describe("LabelGrouping", () => {
           label: "1",
           key: expectedGroupingNodeKey1,
           parentKeys: ["x"],
-          children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, omit(expectedGroupingNodeKey1, ["groupedInstanceKeys"])] }],
+          groupedInstanceKeys: nodes[0].key.instanceKeys,
+          children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, expectedGroupingNodeKey1] }],
         }),
         createTestProcessedGroupingNode({
           label: "1",
           key: expectedGroupingNodeKey2,
           parentKeys: ["x"],
-          children: [{ ...nodes[1], parentKeys: [...nodes[1].parentKeys, omit(expectedGroupingNodeKey2, ["groupedInstanceKeys"])] }],
+          groupedInstanceKeys: nodes[1].key.instanceKeys,
+          children: [{ ...nodes[1], parentKeys: [...nodes[1].parentKeys, expectedGroupingNodeKey2] }],
         }),
       ],
       ungrouped: [],
@@ -164,7 +163,6 @@ describe("LabelGrouping", () => {
       type: "label-grouping",
       label: "1",
       groupId: "groupId1",
-      groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
     };
     expect(await createLabelGroups(nodes)).to.deep.eq({
       groupingType: "label",
@@ -173,7 +171,8 @@ describe("LabelGrouping", () => {
           label: "1",
           key: expectedGroupingNodeKey,
           parentKeys: ["x"],
-          children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
+          groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
+          children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
         }),
       ],
       ungrouped: [],
@@ -199,7 +198,6 @@ describe("LabelGrouping", () => {
       type: "label-grouping",
       label: "1",
       groupId: undefined,
-      groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
     };
     expect(await createLabelGroups(nodes)).to.deep.eq({
       groupingType: "label",
@@ -208,7 +206,8 @@ describe("LabelGrouping", () => {
           label: "1",
           key: expectedGroupingNodeKey,
           parentKeys: ["x"],
-          children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
+          groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
+          children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
         }),
       ],
       ungrouped: [],
@@ -234,13 +233,11 @@ describe("LabelGrouping", () => {
       type: "label-grouping",
       label: "1",
       groupId: undefined,
-      groupedInstanceKeys: nodes[0].key.instanceKeys,
     };
     const expectedGroupingNodeKey2: GroupingNodeKey = {
       type: "label-grouping",
       label: "2",
       groupId: undefined,
-      groupedInstanceKeys: nodes[1].key.instanceKeys,
     };
     expect(await createLabelGroups(nodes)).to.deep.eq({
       groupingType: "label",
@@ -249,13 +246,15 @@ describe("LabelGrouping", () => {
           label: "1",
           key: expectedGroupingNodeKey1,
           parentKeys: ["x"],
-          children: [nodes[0]].map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey1, ["groupedInstanceKeys"])] })),
+          groupedInstanceKeys: nodes[0].key.instanceKeys,
+          children: [nodes[0]].map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey1] })),
         }),
         createTestProcessedGroupingNode({
           label: "2",
           key: expectedGroupingNodeKey2,
           parentKeys: ["x"],
-          children: [nodes[1]].map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey2, ["groupedInstanceKeys"])] })),
+          groupedInstanceKeys: nodes[1].key.instanceKeys,
+          children: [nodes[1]].map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey2] })),
         }),
       ],
       ungrouped: [],

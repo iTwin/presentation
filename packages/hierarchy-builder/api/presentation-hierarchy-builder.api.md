@@ -4,17 +4,21 @@
 
 ```ts
 
+import { GenericInstanceFilter } from '@itwin/core-common';
+import { GenericInstanceFilterRelatedInstanceDescription } from '@itwin/core-common';
+import { GenericInstanceFilterRelationshipStep } from '@itwin/core-common';
+import { GenericInstanceFilterRule } from '@itwin/core-common';
+import { GenericInstanceFilterRuleGroup } from '@itwin/core-common';
+import { GenericInstanceFilterRuleGroupOperator } from '@itwin/core-common';
+import { GenericInstanceFilterRuleOperator } from '@itwin/core-common';
+import { GenericInstanceFilterRuleValue } from '@itwin/core-common';
+
 // @beta
 export interface ArrayPropertyAttributes {
     // (undocumented)
     maxOccurs?: number;
     // (undocumented)
     minOccurs: number;
-}
-
-// @beta
-export interface BaseGroupingNodeKey {
-    groupedInstanceKeys: InstanceKey[];
 }
 
 // @beta
@@ -72,11 +76,8 @@ export interface ClassBasedLabelSelectClause {
 }
 
 // @beta
-export interface ClassGroupingNodeKey extends BaseGroupingNodeKey {
-    class: {
-        name: string;
-        label?: string;
-    };
+export interface ClassGroupingNodeKey {
+    className: string;
     type: "class-grouping";
 }
 
@@ -467,32 +468,21 @@ export interface ECStructProperty extends ECProperty {
     structClass: ECStructClass;
 }
 
-// @beta
-export interface GenericInstanceFilter {
-    filterClassNames?: string[];
-    propertyClassName: string;
-    relatedInstances: RelatedInstanceDescription[];
-    rules: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup;
-}
+export { GenericInstanceFilter }
 
-// @beta (undocumented)
-export namespace GenericInstanceFilter {
-    export function isFilterRuleGroup(obj: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup): obj is GenericInstanceFilterRuleGroup;
-}
+export { GenericInstanceFilterRelatedInstanceDescription }
 
-// @beta
-export interface GenericInstanceFilterRule {
-    operator: PropertyFilterRuleOperator;
-    propertyName: string;
-    sourceAlias?: string;
-    value?: PropertyFilterValue;
-}
+export { GenericInstanceFilterRelationshipStep }
 
-// @beta
-export interface GenericInstanceFilterRuleGroup {
-    operator: PropertyFilterRuleGroupOperator;
-    rules: Array<GenericInstanceFilterRule | GenericInstanceFilterRuleGroup>;
-}
+export { GenericInstanceFilterRule }
+
+export { GenericInstanceFilterRuleGroup }
+
+export { GenericInstanceFilterRuleGroupOperator }
+
+export { GenericInstanceFilterRuleOperator }
+
+export { GenericInstanceFilterRuleValue }
 
 // @beta
 export interface GetHierarchyNodesProps {
@@ -503,6 +493,15 @@ export interface GetHierarchyNodesProps {
 
 // @beta
 export function getLogger(): ILogger;
+
+// @beta
+export type GroupingHierarchyNode = Omit<HierarchyNode, "key" | "supportsFiltering"> & {
+    key: GroupingNodeKey;
+    groupedInstanceKeys: InstanceKey[];
+    nonGroupingAncestor?: Omit<ParentHierarchyNode, "key"> & {
+        key: string | InstancesNodeKey;
+    };
+};
 
 // @beta
 export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | PropertyGroupingNodeKey;
@@ -524,7 +523,7 @@ export interface HierarchyNode {
     };
     key: HierarchyNodeKey;
     label: string;
-    parentKeys: ParentNodeKey[];
+    parentKeys: HierarchyNodeKey[];
     supportsFiltering?: boolean;
 }
 
@@ -535,60 +534,47 @@ export namespace HierarchyNode {
     }>(node: TNode): node is TNode & {
         key: ClassGroupingNodeKey;
         supportsFiltering?: undefined;
-    } & (TNode extends ProcessedHierarchyNode ? {
-        children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
-    } : {});
+    } & (TNode extends ProcessedHierarchyNode ? ProcessedGroupingHierarchyNode : GroupingHierarchyNode);
     export function isCustom<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
         key: string;
-    } & (TNode extends ProcessedHierarchyNode ? {
-        processingParams?: HierarchyNodeProcessingParamsBase;
-    } : {});
+    } & (TNode extends ProcessedHierarchyNode ? ProcessedCustomHierarchyNode : {});
     export function isGroupingNode<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
         key: GroupingNodeKey;
         supportsFiltering?: undefined;
-    } & (TNode extends ProcessedHierarchyNode ? {
-        children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
-    } : {});
+    } & (TNode extends ProcessedHierarchyNode ? ProcessedGroupingHierarchyNode : GroupingHierarchyNode);
     export function isInstancesNode<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
         key: InstancesNodeKey;
-    } & (TNode extends ProcessedHierarchyNode ? {
-        processingParams?: InstanceHierarchyNodeProcessingParams;
-    } : {});
+    } & (TNode extends ProcessedHierarchyNode ? ProcessedInstanceHierarchyNode : {});
     export function isLabelGroupingNode<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
         key: LabelGroupingNodeKey;
         supportsFiltering?: undefined;
-    } & (TNode extends ProcessedHierarchyNode ? {
-        children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
-    } : {});
+    } & (TNode extends ProcessedHierarchyNode ? ProcessedGroupingHierarchyNode : GroupingHierarchyNode);
     export function isPropertyOtherValuesGroupingNode<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
         key: PropertyOtherValuesGroupingNodeKey;
-    } & (TNode extends ProcessedHierarchyNode ? {
-        children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
-    } : {});
+        supportsFiltering?: undefined;
+    } & (TNode extends ProcessedHierarchyNode ? ProcessedGroupingHierarchyNode : GroupingHierarchyNode);
     export function isPropertyValueGroupingNode<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
         key: PropertyValueGroupingNodeKey;
-    } & (TNode extends ProcessedHierarchyNode ? {
-        children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
-    } : {});
+        supportsFiltering?: undefined;
+    } & (TNode extends ProcessedHierarchyNode ? ProcessedGroupingHierarchyNode : GroupingHierarchyNode);
     export function isPropertyValueRangeGroupingNode<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
         key: PropertyValueRangeGroupingNodeKey;
-    } & (TNode extends ProcessedHierarchyNode ? {
-        children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
-    } : {});
+        supportsFiltering?: undefined;
+    } & (TNode extends ProcessedHierarchyNode ? ProcessedGroupingHierarchyNode : GroupingHierarchyNode);
     export function isStandard<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
@@ -645,6 +631,8 @@ export type HierarchyNodeKey = StandardHierarchyNodeKey | string;
 
 // @beta (undocumented)
 export namespace HierarchyNodeKey {
+    export function compare(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): number;
+    export function equals(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): boolean;
     export function isClassGrouping(key: HierarchyNodeKey): key is ClassGroupingNodeKey;
     export function isCustom(key: HierarchyNodeKey): key is string;
     export function isGrouping(key: HierarchyNodeKey): key is GroupingNodeKey;
@@ -745,6 +733,7 @@ export interface HierarchyProviderProps {
     hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
     localizedStrings?: HierarchyProviderLocalizedStrings;
     metadataProvider: IMetadataProvider;
+    queryCacheSize?: number;
     queryConcurrency?: number;
     queryExecutor: ILimitingECSqlQueryExecutor;
 }
@@ -847,7 +836,7 @@ export interface InstancesNodeKey {
 export type IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise<string>;
 
 // @beta
-export interface LabelGroupingNodeKey extends BaseGroupingNodeKey {
+export interface LabelGroupingNodeKey {
     groupId?: string;
     label: string;
     type: "label-grouping";
@@ -917,15 +906,6 @@ export type OmitOverUnion<T, K extends PropertyKey> = T extends T ? Omit<T, K> :
 export type ParentHierarchyNode = Omit<HierarchyNode, "children">;
 
 // @beta
-export type ParentNodeKey = OmitOverUnion<GroupingNodeKey, "groupedInstanceKeys"> | InstancesNodeKey | string;
-
-// @beta (undocumented)
-export namespace ParentNodeKey {
-    export function compare(lhs: ParentNodeKey, rhs: ParentNodeKey): number;
-    export function equals(lhs: ParentNodeKey, rhs: ParentNodeKey): boolean;
-}
-
-// @beta
 export type ParsedCustomHierarchyNode = Omit<ProcessedCustomHierarchyNode, "label" | "parentKeys"> & {
     label: string | ConcatenatedValue;
 };
@@ -984,10 +964,8 @@ export type ProcessedCustomHierarchyNode = Omit<HierarchyNode, "key" | "children
 };
 
 // @beta
-export type ProcessedGroupingHierarchyNode = Omit<HierarchyNode, "key" | "children"> & {
-    key: GroupingNodeKey;
+export type ProcessedGroupingHierarchyNode = Omit<GroupingHierarchyNode, "children"> & {
     children: Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>;
-    supportsFiltering?: undefined;
 };
 
 // @beta
@@ -1001,39 +979,10 @@ export type ProcessedInstanceHierarchyNode = Omit<HierarchyNode, "key" | "childr
 };
 
 // @beta
-export type PropertyFilterRuleBinaryOperator = "Equal" | "NotEqual" | "Greater" | "GreaterOrEqual" | "Less" | "LessOrEqual" | "Like";
-
-// @beta
-export type PropertyFilterRuleGroupOperator = "And" | "Or";
-
-// @beta
-export type PropertyFilterRuleOperator = PropertyFilterRuleUnaryOperator | PropertyFilterRuleBinaryOperator;
-
-// @beta (undocumented)
-export namespace PropertyFilterRuleOperator {
-    // (undocumented)
-    export function isBinary(op: PropertyFilterRuleOperator): op is PropertyFilterRuleBinaryOperator;
-    // (undocumented)
-    export function isUnary(op: PropertyFilterRuleOperator): op is PropertyFilterRuleUnaryOperator;
-}
-
-// @beta
-export type PropertyFilterRuleUnaryOperator = "True" | "False" | "Null" | "NotNull";
-
-// @beta
-export type PropertyFilterValue = PrimitiveValue | InstanceKey;
-
-// @beta (undocumented)
-export namespace PropertyFilterValue {
-    export function isInstanceKey(value: PropertyFilterValue): value is InstanceKey;
-    export function isPrimitive(value: PropertyFilterValue): value is PrimitiveValue;
-}
-
-// @beta
 export type PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | PropertyValueGroupingNodeKey | PropertyOtherValuesGroupingNodeKey;
 
 // @beta
-export interface PropertyOtherValuesGroupingNodeKey extends BaseGroupingNodeKey {
+export interface PropertyOtherValuesGroupingNodeKey {
     type: "property-grouping:other";
 }
 
@@ -1048,7 +997,7 @@ export interface PropertyValue {
 }
 
 // @beta
-export interface PropertyValueGroupingNodeKey extends BaseGroupingNodeKey {
+export interface PropertyValueGroupingNodeKey {
     formattedPropertyValue: string;
     propertyClassName: string;
     propertyName: string;
@@ -1056,18 +1005,12 @@ export interface PropertyValueGroupingNodeKey extends BaseGroupingNodeKey {
 }
 
 // @beta
-export interface PropertyValueRangeGroupingNodeKey extends BaseGroupingNodeKey {
+export interface PropertyValueRangeGroupingNodeKey {
     fromValue: number;
     propertyClassName: string;
     propertyName: string;
     toValue: number;
     type: "property-grouping:range";
-}
-
-// @beta
-export interface RelatedInstanceDescription {
-    alias: string;
-    path: RelationshipPath;
 }
 
 // @beta

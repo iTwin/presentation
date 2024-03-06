@@ -3,22 +3,24 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Subscription } from "rxjs";
-import { Observable } from "rxjs/internal/Observable";
-import { concat } from "rxjs/internal/observable/concat";
-import { defer } from "rxjs/internal/observable/defer";
-import { EMPTY } from "rxjs/internal/observable/empty";
-import { from } from "rxjs/internal/observable/from";
-import { concatMap } from "rxjs/internal/operators/concatMap";
-import { endWith } from "rxjs/internal/operators/endWith";
-import { expand } from "rxjs/internal/operators/expand";
-import { filter } from "rxjs/internal/operators/filter";
-import { finalize } from "rxjs/internal/operators/finalize";
-import { ignoreElements } from "rxjs/internal/operators/ignoreElements";
-import { map } from "rxjs/internal/operators/map";
-import { mergeMap } from "rxjs/internal/operators/mergeMap";
-import { take } from "rxjs/internal/operators/take";
-import { tap } from "rxjs/internal/operators/tap";
+import {
+  concat,
+  concatMap,
+  defer,
+  EMPTY,
+  endWith,
+  expand,
+  filter,
+  finalize,
+  from,
+  ignoreElements,
+  map,
+  mergeMap,
+  Observable,
+  Subscription,
+  take,
+  tap,
+} from "rxjs";
 import {
   Observable as ComponentsReactObservable,
   computeVisibleNodes,

@@ -23,8 +23,8 @@ import {
 import { AsyncPaginate, AsyncPaginateProps, wrapMenuList } from "react-select-async-paginate";
 import { SvgCaretDownSmall, SvgCheckmarkSmall, SvgCloseSmall } from "@itwin/itwinui-icons-react";
 import { List, ListItem, Tag, TagContainer } from "@itwin/itwinui-react";
-import { translate, useMergedRefs, useResizeObserver } from "../../common/Utils";
 import { usePortalTargetContext } from "../../common/PortalTargetContext";
+import { translate, useMergedRefs, useResizeObserver } from "../../common/Utils";
 
 const MAX_SELECT_MENU_HEIGHT = 300;
 
@@ -139,7 +139,7 @@ export function AsyncSelect<OptionType, Group extends GroupBase<OptionType>, Add
           control: () => ({}),
           container: () => ({}),
           menuPortal: (base) => ({ ...base, zIndex: 9999, width, pointerEvents: "auto" }),
-          menu: (base) => (dropdownUp ? { ...base, top: "auto", bottom: "100%" } : {}),
+          menu: (base) => ({ ...base, margin: 0 }),
           indicatorsContainer: () => ({}),
           indicatorSeparator: (base) => ({ ...base, marginTop: undefined, marginBottom: undefined, margin: "0 var(--iui-size-xs)" }),
           clearIndicator: () => ({}),
@@ -162,6 +162,7 @@ export function AsyncSelect<OptionType, Group extends GroupBase<OptionType>, Add
         onMenuOpen={onMenuOpen}
         menuPortalTarget={portalTarget}
         menuPlacement={dropdownUp ? "top" : "bottom"}
+        menuPosition="fixed"
         isMulti={true}
       />
     </div>

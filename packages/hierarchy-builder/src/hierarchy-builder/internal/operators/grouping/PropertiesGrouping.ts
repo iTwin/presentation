@@ -199,11 +199,9 @@ function createGroupingNodes(groupings: PropertyGroupingInformation): GroupingHa
     const groupedNodeParentKeys = entry.groupedNodes[0].parentKeys;
     groupedNodes.push({
       label: entry.displayablePropertyGroupingInfo.label,
-      key: {
-        ...entry.displayablePropertyGroupingInfo.propertyGroupingNodeKey,
-        groupedInstanceKeys: entry.groupedNodes.flatMap((groupedInstanceNode) => groupedInstanceNode.key.instanceKeys),
-      },
+      key: entry.displayablePropertyGroupingInfo.propertyGroupingNodeKey,
       parentKeys: groupedNodeParentKeys,
+      groupedInstanceKeys: entry.groupedNodes.flatMap((groupedInstanceNode) => groupedInstanceNode.key.instanceKeys),
       children: entry.groupedNodes.map((gn) => ({
         ...gn,
         parentKeys: [...groupedNodeParentKeys, entry.displayablePropertyGroupingInfo.propertyGroupingNodeKey],

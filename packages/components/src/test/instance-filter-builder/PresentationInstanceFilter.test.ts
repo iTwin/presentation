@@ -566,6 +566,25 @@ describe("PresentationInstanceFilter", () => {
   });
 
   describe("fromGenericInstanceFilter", () => {
+    it("parses empty rule group", () => {
+      const filter: GenericInstanceFilter = {
+        rules: {
+          operator: "and",
+          rules: [],
+        },
+        propertyClassNames: [],
+        relatedInstances: [],
+        filteredClassNames: undefined,
+      };
+
+      const actual = PresentationInstanceFilter.fromGenericInstanceFilter(descriptor, filter);
+      const expected: PresentationInstanceFilter = {
+        operator: "and",
+        conditions: [],
+      };
+      expect(actual).to.be.deep.eq(expected);
+    });
+
     it("parses direct property rule", () => {
       const filter: GenericInstanceFilter = {
         rules: {

@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { omit } from "@itwin/core-bentley";
+
 import { ECClass, ECProperty, IMetadataProvider } from "../../../../hierarchy-builder/ECMetadata";
 import { GroupingNodeKey, HierarchyNodePropertyGroup, PropertyOtherValuesGroupingNodeKey } from "../../../../hierarchy-builder/HierarchyNode";
 import { BaseClassChecker } from "../../../../hierarchy-builder/internal/Common";
@@ -757,7 +757,6 @@ describe("PropertiesGrouping", () => {
           propertyName: "PropertyName",
           propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "",
-          groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
         };
         expect(
           await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
@@ -767,7 +766,8 @@ describe("PropertiesGrouping", () => {
             createTestProcessedGroupingNode({
               label: testLocalizedStrings.unspecified,
               key: expectedGroupingNodeKey,
-              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
+              groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
+              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
             }),
           ],
           ungrouped: [],
@@ -805,7 +805,6 @@ describe("PropertiesGrouping", () => {
           propertyName: "PropertyName",
           propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue",
-          groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
         };
         expect(
           await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
@@ -815,7 +814,8 @@ describe("PropertiesGrouping", () => {
             createTestProcessedGroupingNode({
               label: "PropertyValue",
               key: expectedGroupingNodeKey,
-              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
+              groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
+              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
             }),
           ],
           ungrouped: [],
@@ -864,7 +864,6 @@ describe("PropertiesGrouping", () => {
           propertyName: "PropertyName",
           propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue",
-          groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
         };
         expect(
           await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
@@ -874,7 +873,8 @@ describe("PropertiesGrouping", () => {
             createTestProcessedGroupingNode({
               label: "PropertyValue",
               key: expectedGroupingNodeKey,
-              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
+              groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
+              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
             }),
           ],
           ungrouped: [],
@@ -923,14 +923,12 @@ describe("PropertiesGrouping", () => {
           propertyName: "PropertyName",
           propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue1",
-          groupedInstanceKeys: nodes[0].key.instanceKeys,
         };
         const expectedGroupingNodeKey2: GroupingNodeKey = {
           type: "property-grouping:value",
           propertyName: "PropertyName",
           propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue2",
-          groupedInstanceKeys: nodes[1].key.instanceKeys,
         };
         expect(
           await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
@@ -940,12 +938,14 @@ describe("PropertiesGrouping", () => {
             createTestProcessedGroupingNode({
               label: "PropertyValue1",
               key: expectedGroupingNodeKey1,
-              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, omit(expectedGroupingNodeKey1, ["groupedInstanceKeys"])] }],
+              groupedInstanceKeys: nodes[0].key.instanceKeys,
+              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, expectedGroupingNodeKey1] }],
             }),
             createTestProcessedGroupingNode({
               label: "PropertyValue2",
               key: expectedGroupingNodeKey2,
-              children: [{ ...nodes[1], parentKeys: [...nodes[1].parentKeys, omit(expectedGroupingNodeKey2, ["groupedInstanceKeys"])] }],
+              groupedInstanceKeys: nodes[1].key.instanceKeys,
+              children: [{ ...nodes[1], parentKeys: [...nodes[1].parentKeys, expectedGroupingNodeKey2] }],
             }),
           ],
           ungrouped: [],
@@ -994,7 +994,6 @@ describe("PropertiesGrouping", () => {
           propertyName: "PropertyName1",
           propertyClassName: "TestSchema.Class",
           formattedPropertyValue: "PropertyValue",
-          groupedInstanceKeys: nodes[0].key.instanceKeys,
         };
         expect(
           await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
@@ -1004,7 +1003,8 @@ describe("PropertiesGrouping", () => {
             createTestProcessedGroupingNode({
               label: "PropertyValue",
               key: expectedGroupingNodeKey,
-              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] }],
+              groupedInstanceKeys: nodes[0].key.instanceKeys,
+              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, expectedGroupingNodeKey] }],
             }),
           ],
           ungrouped: [nodes[1]],
@@ -1077,7 +1077,6 @@ describe("PropertiesGrouping", () => {
         };
         const expectedGroupingNodeKey: GroupingNodeKey = {
           type: "property-grouping:other",
-          groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
         };
         expect(
           await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
@@ -1087,9 +1086,10 @@ describe("PropertiesGrouping", () => {
             createTestProcessedGroupingNode({
               label: testLocalizedStrings.other,
               key: expectedGroupingNodeKey,
+              groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
               children: nodes.map((n) => ({
                 ...n,
-                parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])],
+                parentKeys: [...n.parentKeys, expectedGroupingNodeKey],
               })),
             }),
           ],
@@ -1161,7 +1161,6 @@ describe("PropertiesGrouping", () => {
         };
         const expectedGroupingNodeKey: PropertyOtherValuesGroupingNodeKey = {
           type: "property-grouping:other",
-          groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
         };
         expect(
           await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
@@ -1171,9 +1170,10 @@ describe("PropertiesGrouping", () => {
             createTestProcessedGroupingNode({
               label: testLocalizedStrings.other,
               key: expectedGroupingNodeKey,
+              groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
               children: nodes.map((n) => ({
                 ...n,
-                parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])],
+                parentKeys: [...n.parentKeys, expectedGroupingNodeKey],
               })),
             }),
           ],
@@ -1213,7 +1213,6 @@ describe("PropertiesGrouping", () => {
           propertyClassName: "TestSchema.Class",
           fromValue: 1,
           toValue: 5,
-          groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
         };
         expect(
           await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
@@ -1223,7 +1222,8 @@ describe("PropertiesGrouping", () => {
             createTestProcessedGroupingNode({
               label: "1 - 5",
               key: expectedGroupingNodeKey,
-              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
+              groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
+              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
             }),
           ],
           ungrouped: [],
@@ -1262,7 +1262,6 @@ describe("PropertiesGrouping", () => {
           propertyClassName: "TestSchema.Class",
           fromValue: 1.5,
           toValue: 5.5,
-          groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
         };
         expect(
           await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
@@ -1272,7 +1271,8 @@ describe("PropertiesGrouping", () => {
             createTestProcessedGroupingNode({
               label: "rangeLabel",
               key: expectedGroupingNodeKey,
-              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
+              groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
+              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
             }),
           ],
           ungrouped: [],
@@ -1322,7 +1322,6 @@ describe("PropertiesGrouping", () => {
           propertyClassName: "TestSchema.Class",
           fromValue: 1,
           toValue: 5,
-          groupedInstanceKeys: nodes[0].key.instanceKeys,
         };
         expect(
           await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
@@ -1332,7 +1331,8 @@ describe("PropertiesGrouping", () => {
             createTestProcessedGroupingNode({
               label: "rangeLabel",
               key: expectedGroupingNodeKey,
-              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] }],
+              groupedInstanceKeys: nodes[0].key.instanceKeys,
+              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, expectedGroupingNodeKey] }],
             }),
           ],
           ungrouped: [nodes[1]],
@@ -1382,7 +1382,6 @@ describe("PropertiesGrouping", () => {
           propertyClassName: "TestSchema.Class",
           fromValue: 1,
           toValue: 5,
-          groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
         };
         expect(
           await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
@@ -1392,7 +1391,8 @@ describe("PropertiesGrouping", () => {
             createTestProcessedGroupingNode({
               label: "rangeLabel",
               key: expectedGroupingNodeKey,
-              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
+              groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
+              children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
             }),
           ],
           ungrouped: [],
@@ -1446,7 +1446,6 @@ describe("PropertiesGrouping", () => {
           propertyClassName: "TestSchema.Class",
           fromValue: 1,
           toValue: 4,
-          groupedInstanceKeys: nodes[0].key.instanceKeys,
         };
         expect(
           await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
@@ -1456,7 +1455,8 @@ describe("PropertiesGrouping", () => {
             createTestProcessedGroupingNode({
               label: "1 - 4",
               key: expectedGroupingNodeKey,
-              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] }],
+              groupedInstanceKeys: nodes[0].key.instanceKeys,
+              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, expectedGroupingNodeKey] }],
             }),
           ],
           ungrouped: [],
@@ -1530,7 +1530,6 @@ describe("PropertiesGrouping", () => {
           propertyClassName: "TestSchema.Class",
           fromValue: 5,
           toValue: 10,
-          groupedInstanceKeys: nodes[0].key.instanceKeys,
         };
         const expectedGroupingNodeKey2: GroupingNodeKey = {
           type: "property-grouping:range",
@@ -1538,7 +1537,6 @@ describe("PropertiesGrouping", () => {
           propertyClassName: "TestSchema.Class",
           fromValue: 1,
           toValue: 4,
-          groupedInstanceKeys: nodes[1].key.instanceKeys,
         };
         expect(
           await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider)),
@@ -1548,12 +1546,14 @@ describe("PropertiesGrouping", () => {
             createTestProcessedGroupingNode({
               label: "1 - 4",
               key: expectedGroupingNodeKey2,
-              children: [{ ...nodes[1], parentKeys: [...nodes[1].parentKeys, omit(expectedGroupingNodeKey2, ["groupedInstanceKeys"])] }],
+              groupedInstanceKeys: nodes[1].key.instanceKeys,
+              children: [{ ...nodes[1], parentKeys: [...nodes[1].parentKeys, expectedGroupingNodeKey2] }],
             }),
             createTestProcessedGroupingNode({
               label: "5 - 10",
               key: expectedGroupingNodeKey1,
-              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, omit(expectedGroupingNodeKey1, ["groupedInstanceKeys"])] }],
+              groupedInstanceKeys: nodes[0].key.instanceKeys,
+              children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, expectedGroupingNodeKey1] }],
             }),
           ],
           ungrouped: [],

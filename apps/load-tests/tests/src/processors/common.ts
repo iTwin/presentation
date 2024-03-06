@@ -7,7 +7,8 @@
 import { EventEmitter, ScenarioContext } from "artillery";
 import * as http from "node:http";
 import * as path from "path";
-import { BeDuration, Guid, StopWatch } from "@itwin/core-bentley";
+import { expand, filter, from, mergeAll, mergeMap, of, tap } from "rxjs";
+import { Guid, StopWatch } from "@itwin/core-bentley";
 
 const ENABLE_NODES_LOGGING = false;
 const BACKEND_PORT = process.env.BACKEND_DEFAULT_PORT ? Number.parseInt(process.env.BACKEND_DEFAULT_PORT, 10) : 5001;
@@ -74,67 +75,46 @@ export function getCurrentIModelName(context: ScenarioContext) {
   return path.basename(getCurrentIModelPath(context));
 }
 
-export const nodeRequestsTracker = {
-  reset(context: ScenarioContext) {
-    context.vars.pendingNodeRequestsCount = 0;
-  },
-  onStart(context: ScenarioContext) {
-    ++(context.vars.pendingNodeRequestsCount as number);
-  },
-  onComplete(context: ScenarioContext, events: EventEmitter, duration: BeDuration) {
-    --(context.vars.pendingNodeRequestsCount as number);
-    events.emit("histogram", "itwin.nodes_request", duration.milliseconds);
-  },
-  hasPending(context: ScenarioContext) {
-    return !!context.vars.pendingNodeRequestsCount;
-  },
-  logCount(context: ScenarioContext, isFinal: boolean) {
-    ENABLE_NODES_LOGGING && console.log(`${isFinal ? "Final pending" : "Pending"} node requests: ${context.vars.pendingNodeRequestsCount as number}`);
-  },
-};
-
 export async function loadNodes<TNode>(
-  context: ScenarioContext,
+  _context: ScenarioContext,
   events: EventEmitter,
   provider: (parent: TNode | undefined) => Promise<TNode[]>,
   nodeHasChildren: (node: TNode) => boolean,
 ) {
   let nodesCreated = 0;
-  const pendingChildNodesRequests = new Array<TNode>();
-
-  function onNodeLoaded(node: TNode) {
-    ++nodesCreated;
-    if (!nodeHasChildren(node)) {
-      return;
-    }
-    nodeRequestsTracker.onStart(context);
-    pendingChildNodesRequests.push(node);
-  }
-
-  async function loadChildNodes(parentNode: TNode | undefined) {
-    const timer = new StopWatch(undefined, true);
-    const children = await provider(parentNode);
-    ENABLE_NODES_LOGGING && console.log(`Got ${children.length} nodes for parent ${parentNode ? JSON.stringify(parentNode) : "<root>"}`);
-    children.forEach(onNodeLoaded);
-    nodeRequestsTracker.onComplete(context, events, timer.current);
-  }
-  nodeRequestsTracker.onStart(context);
-  void loadChildNodes(undefined);
-
-  async function loadAllChildNodes() {
-    while (nodeRequestsTracker.hasPending(context)) {
-      if (pendingChildNodesRequests.length === 0) {
-        await BeDuration.wait(1);
-        continue;
-      }
-
-      const x = [...pendingChildNodesRequests];
-      pendingChildNodesRequests.length = 0;
-      x.forEach(loadChildNodes);
-      ENABLE_NODES_LOGGING && console.log(`Scheduled children load for ${x.length} parent nodes`);
-    }
-    ENABLE_NODES_LOGGING && console.log(`Done loading hierarchy`);
-  }
-  await loadAllChildNodes();
+  await new Promise<void>((resolve, reject) => {
+    const parentNodes = of<TNode | undefined>(undefined);
+    parentNodes
+      .pipe(
+        expand(
+          (parentNode) =>
+            of(new StopWatch(undefined, true)).pipe(
+              mergeMap((timer) =>
+                from(provider(parentNode)).pipe(
+                  tap((childNodes) => {
+                    ENABLE_NODES_LOGGING && console.log(`Got ${childNodes.length} nodes for parent ${parentNode ? JSON.stringify(parentNode) : "<root>"}`);
+                    events.emit("histogram", "itwin.nodes_request", timer.current.milliseconds);
+                  }),
+                ),
+              ),
+              mergeAll(),
+              filter((node) => nodeHasChildren(node)),
+            ),
+          10,
+        ),
+      )
+      .subscribe({
+        next() {
+          ++nodesCreated;
+        },
+        complete() {
+          ENABLE_NODES_LOGGING && console.log(`Done loading hierarchy`);
+          resolve();
+        },
+        error(e) {
+          reject(e);
+        },
+      });
+  });
   console.log(`Total nodes created: ${nodesCreated}`);
 }

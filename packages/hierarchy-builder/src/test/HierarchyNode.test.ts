@@ -5,41 +5,42 @@
 
 import { expect } from "chai";
 import {
+  GroupingHierarchyNode,
   HierarchyNode,
   HierarchyNodeIdentifier,
-  ParentNodeKey,
+  HierarchyNodeKey,
   PropertyValueGroupingNodeKey,
   PropertyValueRangeGroupingNodeKey,
 } from "../hierarchy-builder/HierarchyNode";
 import { InstanceKey } from "../hierarchy-builder/values/Values";
 
-describe("ParentNodeKey", () => {
+describe("HierarchyNodeKey", () => {
   describe("equals", () => {
     it("returns false if key types are different", () => {
-      expect(ParentNodeKey.equals("x", { type: "instances", instanceKeys: [] })).to.be.false;
+      expect(HierarchyNodeKey.equals("x", { type: "instances", instanceKeys: [] })).to.be.false;
     });
 
     it("returns correct results for custom node keys", () => {
-      expect(ParentNodeKey.equals("x", "x")).to.be.true;
-      expect(ParentNodeKey.equals("x", "y")).to.be.false;
+      expect(HierarchyNodeKey.equals("x", "x")).to.be.true;
+      expect(HierarchyNodeKey.equals("x", "y")).to.be.false;
     });
 
     it("returns false for standard nodes if types are different", () => {
-      expect(ParentNodeKey.equals({ type: "class-grouping", class: { name: "x" } }, { type: "instances", instanceKeys: [] })).to.be.false;
+      expect(HierarchyNodeKey.equals({ type: "class-grouping", className: "x" }, { type: "instances", instanceKeys: [] })).to.be.false;
     });
 
     it("returns correct results for instance node keys", () => {
-      expect(ParentNodeKey.equals({ type: "instances", instanceKeys: [] }, { type: "instances", instanceKeys: [] })).to.be.true;
+      expect(HierarchyNodeKey.equals({ type: "instances", instanceKeys: [] }, { type: "instances", instanceKeys: [] })).to.be.true;
       expect(
-        ParentNodeKey.equals(
+        HierarchyNodeKey.equals(
           { type: "instances", instanceKeys: [{ className: "a", id: "0" }] },
           { type: "instances", instanceKeys: [{ className: "a", id: "0" }] },
         ),
       ).to.be.true;
-      expect(ParentNodeKey.equals({ type: "instances", instanceKeys: [] }, { type: "instances", instanceKeys: [{ className: "a", id: "0" }] })).to.be.false;
-      expect(ParentNodeKey.equals({ type: "instances", instanceKeys: [{ className: "a", id: "0" }] }, { type: "instances", instanceKeys: [] })).to.be.false;
+      expect(HierarchyNodeKey.equals({ type: "instances", instanceKeys: [] }, { type: "instances", instanceKeys: [{ className: "a", id: "0" }] })).to.be.false;
+      expect(HierarchyNodeKey.equals({ type: "instances", instanceKeys: [{ className: "a", id: "0" }] }, { type: "instances", instanceKeys: [] })).to.be.false;
       expect(
-        ParentNodeKey.equals(
+        HierarchyNodeKey.equals(
           { type: "instances", instanceKeys: [{ className: "a", id: "0" }] },
           { type: "instances", instanceKeys: [{ className: "b", id: "1" }] },
         ),
@@ -47,21 +48,21 @@ describe("ParentNodeKey", () => {
     });
 
     it("returns correct results for class grouping node keys", () => {
-      expect(ParentNodeKey.equals({ type: "class-grouping", class: { name: "x" } }, { type: "class-grouping", class: { name: "x" } })).to.be.true;
-      expect(ParentNodeKey.equals({ type: "class-grouping", class: { name: "x" } }, { type: "class-grouping", class: { name: "y" } })).to.be.false;
+      expect(HierarchyNodeKey.equals({ type: "class-grouping", className: "x" }, { type: "class-grouping", className: "x" })).to.be.true;
+      expect(HierarchyNodeKey.equals({ type: "class-grouping", className: "x" }, { type: "class-grouping", className: "y" })).to.be.false;
     });
 
     it("returns correct results for label grouping node keys", () => {
-      expect(ParentNodeKey.equals({ type: "label-grouping", label: "a" }, { type: "label-grouping", label: "a" })).to.be.true;
-      expect(ParentNodeKey.equals({ type: "label-grouping", label: "a" }, { type: "label-grouping", label: "b" })).to.be.false;
-      expect(ParentNodeKey.equals({ type: "label-grouping", label: "a", groupId: "b" }, { type: "label-grouping", label: "a", groupId: "b" })).to.be.true;
-      expect(ParentNodeKey.equals({ type: "label-grouping", label: "a", groupId: "b" }, { type: "label-grouping", label: "a", groupId: "c" })).to.be.false;
+      expect(HierarchyNodeKey.equals({ type: "label-grouping", label: "a" }, { type: "label-grouping", label: "a" })).to.be.true;
+      expect(HierarchyNodeKey.equals({ type: "label-grouping", label: "a" }, { type: "label-grouping", label: "b" })).to.be.false;
+      expect(HierarchyNodeKey.equals({ type: "label-grouping", label: "a", groupId: "b" }, { type: "label-grouping", label: "a", groupId: "b" })).to.be.true;
+      expect(HierarchyNodeKey.equals({ type: "label-grouping", label: "a", groupId: "b" }, { type: "label-grouping", label: "a", groupId: "c" })).to.be.false;
     });
 
     it("returns correct results for property other values grouping node keys", () => {
-      expect(ParentNodeKey.equals({ type: "property-grouping:other" }, { type: "property-grouping:other" })).to.be.true;
+      expect(HierarchyNodeKey.equals({ type: "property-grouping:other" }, { type: "property-grouping:other" })).to.be.true;
       expect(
-        ParentNodeKey.equals(
+        HierarchyNodeKey.equals(
           { type: "property-grouping:other" },
           { type: "property-grouping:value", propertyClassName: "", propertyName: "", formattedPropertyValue: "" },
         ),
@@ -75,21 +76,21 @@ describe("ParentNodeKey", () => {
         propertyName: "property name",
         formattedPropertyValue: "value",
       };
-      expect(ParentNodeKey.equals(baseValue, baseValue)).to.be.true;
+      expect(HierarchyNodeKey.equals(baseValue, baseValue)).to.be.true;
       expect(
-        ParentNodeKey.equals(baseValue, {
+        HierarchyNodeKey.equals(baseValue, {
           ...baseValue,
           formattedPropertyValue: "value2",
         }),
       ).to.be.false;
       expect(
-        ParentNodeKey.equals(baseValue, {
+        HierarchyNodeKey.equals(baseValue, {
           ...baseValue,
           propertyName: "other name",
         }),
       ).to.be.false;
       expect(
-        ParentNodeKey.equals(baseValue, {
+        HierarchyNodeKey.equals(baseValue, {
           ...baseValue,
           propertyClassName: "Schema.Other",
         }),
@@ -104,30 +105,30 @@ describe("ParentNodeKey", () => {
         fromValue: 1,
         toValue: 2,
       };
-      expect(ParentNodeKey.equals(baseValueRange, baseValueRange)).to.be.true;
+      expect(HierarchyNodeKey.equals(baseValueRange, baseValueRange)).to.be.true;
       expect(
-        ParentNodeKey.equals(baseValueRange, {
+        HierarchyNodeKey.equals(baseValueRange, {
           ...baseValueRange,
           toValue: 3,
         }),
       ).to.be.false;
       expect(
-        ParentNodeKey.equals(baseValueRange, {
+        HierarchyNodeKey.equals(baseValueRange, {
           ...baseValueRange,
           fromValue: 2,
         }),
       ).to.be.false;
-      expect(ParentNodeKey.equals(baseValueRange, { ...baseValueRange, propertyName: "other name" })).to.be.false;
-      expect(ParentNodeKey.equals(baseValueRange, { ...baseValueRange, propertyClassName: "Schema.Other" })).to.be.false;
+      expect(HierarchyNodeKey.equals(baseValueRange, { ...baseValueRange, propertyName: "other name" })).to.be.false;
+      expect(HierarchyNodeKey.equals(baseValueRange, { ...baseValueRange, propertyClassName: "Schema.Other" })).to.be.false;
     });
   });
 
   describe("compare", () => {
     describe("key types are different", () => {
-      const hierarchyNodeKeyVariants: ParentNodeKey[] = [
+      const hierarchyNodeKeyVariants: HierarchyNodeKey[] = [
         "x",
         { type: "instances", instanceKeys: [] },
-        { type: "class-grouping", class: { name: "x" } },
+        { type: "class-grouping", className: "x" },
         { type: "label-grouping", label: "a" },
         { type: "property-grouping:other" },
         {
@@ -148,8 +149,8 @@ describe("ParentNodeKey", () => {
       it("returns correct results for all possible hierarchy node key pairs", () => {
         hierarchyNodeKeyVariants.forEach((lhs, lhsIndex) => {
           hierarchyNodeKeyVariants.forEach((rhs, rhsIndex) => {
-            const lhsToRhs = ParentNodeKey.compare(lhs, rhs);
-            const rhsToLhs = ParentNodeKey.compare(rhs, lhs);
+            const lhsToRhs = HierarchyNodeKey.compare(lhs, rhs);
+            const rhsToLhs = HierarchyNodeKey.compare(rhs, lhs);
             if (lhsIndex === rhsIndex) {
               expect(lhsToRhs).to.eq(0);
               expect(rhsToLhs).to.eq(0);
@@ -165,41 +166,45 @@ describe("ParentNodeKey", () => {
 
     describe("key types are the same", () => {
       it("returns correct results for custom node keys", () => {
-        expect(ParentNodeKey.compare("a", "a")).to.be.eq(0);
-        expect(ParentNodeKey.compare("a", "b")).to.be.eq(-1);
-        expect(ParentNodeKey.compare("b", "a")).to.be.eq(1);
+        expect(HierarchyNodeKey.compare("a", "a")).to.be.eq(0);
+        expect(HierarchyNodeKey.compare("a", "b")).to.be.eq(-1);
+        expect(HierarchyNodeKey.compare("b", "a")).to.be.eq(1);
       });
 
       it("returns correct results for instance node keys", () => {
-        expect(ParentNodeKey.compare({ type: "instances", instanceKeys: [] }, { type: "instances", instanceKeys: [] })).to.be.eq(0);
+        expect(HierarchyNodeKey.compare({ type: "instances", instanceKeys: [] }, { type: "instances", instanceKeys: [] })).to.be.eq(0);
         expect(
-          ParentNodeKey.compare(
+          HierarchyNodeKey.compare(
             { type: "instances", instanceKeys: [{ className: "a", id: "0" }] },
             { type: "instances", instanceKeys: [{ className: "a", id: "0" }] },
           ),
         ).to.be.eq(0);
-        expect(ParentNodeKey.compare({ type: "instances", instanceKeys: [] }, { type: "instances", instanceKeys: [{ className: "a", id: "0" }] })).to.be.eq(-1);
-        expect(ParentNodeKey.compare({ type: "instances", instanceKeys: [{ className: "a", id: "0" }] }, { type: "instances", instanceKeys: [] })).to.be.eq(1);
+        expect(HierarchyNodeKey.compare({ type: "instances", instanceKeys: [] }, { type: "instances", instanceKeys: [{ className: "a", id: "0" }] })).to.be.eq(
+          -1,
+        );
+        expect(HierarchyNodeKey.compare({ type: "instances", instanceKeys: [{ className: "a", id: "0" }] }, { type: "instances", instanceKeys: [] })).to.be.eq(
+          1,
+        );
         expect(
-          ParentNodeKey.compare(
+          HierarchyNodeKey.compare(
             { type: "instances", instanceKeys: [{ className: "a", id: "0" }] },
             { type: "instances", instanceKeys: [{ className: "b", id: "0" }] },
           ),
         ).to.be.eq(-1);
         expect(
-          ParentNodeKey.compare(
+          HierarchyNodeKey.compare(
             { type: "instances", instanceKeys: [{ className: "b", id: "0" }] },
             { type: "instances", instanceKeys: [{ className: "a", id: "0" }] },
           ),
         ).to.be.eq(1);
         expect(
-          ParentNodeKey.compare(
+          HierarchyNodeKey.compare(
             { type: "instances", instanceKeys: [{ className: "a", id: "0" }] },
             { type: "instances", instanceKeys: [{ className: "a", id: "1" }] },
           ),
         ).to.be.eq(-1);
         expect(
-          ParentNodeKey.compare(
+          HierarchyNodeKey.compare(
             { type: "instances", instanceKeys: [{ className: "a", id: "1" }] },
             { type: "instances", instanceKeys: [{ className: "a", id: "0" }] },
           ),
@@ -207,24 +212,30 @@ describe("ParentNodeKey", () => {
       });
 
       it("returns correct results for label grouping node keys", () => {
-        expect(ParentNodeKey.compare({ type: "label-grouping", label: "a" }, { type: "label-grouping", label: "a" })).to.be.eq(0);
-        expect(ParentNodeKey.compare({ type: "label-grouping", label: "a", groupId: "a" }, { type: "label-grouping", label: "a", groupId: "a" })).to.be.eq(0);
-        expect(ParentNodeKey.compare({ type: "label-grouping", label: "a" }, { type: "label-grouping", label: "b" })).to.be.eq(-1);
-        expect(ParentNodeKey.compare({ type: "label-grouping", label: "b" }, { type: "label-grouping", label: "a" })).to.be.eq(1);
-        expect(ParentNodeKey.compare({ type: "label-grouping", label: "a" }, { type: "label-grouping", label: "a", groupId: "a" })).to.be.eq(-1);
-        expect(ParentNodeKey.compare({ type: "label-grouping", label: "a", groupId: "a" }, { type: "label-grouping", label: "a" })).to.be.eq(1);
-        expect(ParentNodeKey.compare({ type: "label-grouping", label: "a", groupId: "a" }, { type: "label-grouping", label: "a", groupId: "b" })).to.be.eq(-1);
-        expect(ParentNodeKey.compare({ type: "label-grouping", label: "a", groupId: "b" }, { type: "label-grouping", label: "a", groupId: "a" })).to.be.eq(1);
+        expect(HierarchyNodeKey.compare({ type: "label-grouping", label: "a" }, { type: "label-grouping", label: "a" })).to.be.eq(0);
+        expect(HierarchyNodeKey.compare({ type: "label-grouping", label: "a", groupId: "a" }, { type: "label-grouping", label: "a", groupId: "a" })).to.be.eq(
+          0,
+        );
+        expect(HierarchyNodeKey.compare({ type: "label-grouping", label: "a" }, { type: "label-grouping", label: "b" })).to.be.eq(-1);
+        expect(HierarchyNodeKey.compare({ type: "label-grouping", label: "b" }, { type: "label-grouping", label: "a" })).to.be.eq(1);
+        expect(HierarchyNodeKey.compare({ type: "label-grouping", label: "a" }, { type: "label-grouping", label: "a", groupId: "a" })).to.be.eq(-1);
+        expect(HierarchyNodeKey.compare({ type: "label-grouping", label: "a", groupId: "a" }, { type: "label-grouping", label: "a" })).to.be.eq(1);
+        expect(HierarchyNodeKey.compare({ type: "label-grouping", label: "a", groupId: "a" }, { type: "label-grouping", label: "a", groupId: "b" })).to.be.eq(
+          -1,
+        );
+        expect(HierarchyNodeKey.compare({ type: "label-grouping", label: "a", groupId: "b" }, { type: "label-grouping", label: "a", groupId: "a" })).to.be.eq(
+          1,
+        );
       });
 
       it("returns correct results for class grouping node keys", () => {
-        expect(ParentNodeKey.compare({ type: "class-grouping", class: { name: "a" } }, { type: "class-grouping", class: { name: "a" } })).to.be.eq(0);
-        expect(ParentNodeKey.compare({ type: "class-grouping", class: { name: "a" } }, { type: "class-grouping", class: { name: "b" } })).to.be.eq(-1);
-        expect(ParentNodeKey.compare({ type: "class-grouping", class: { name: "b" } }, { type: "class-grouping", class: { name: "a" } })).to.be.eq(1);
+        expect(HierarchyNodeKey.compare({ type: "class-grouping", className: "a" }, { type: "class-grouping", className: "a" })).to.be.eq(0);
+        expect(HierarchyNodeKey.compare({ type: "class-grouping", className: "a" }, { type: "class-grouping", className: "b" })).to.be.eq(-1);
+        expect(HierarchyNodeKey.compare({ type: "class-grouping", className: "b" }, { type: "class-grouping", className: "a" })).to.be.eq(1);
       });
 
       it("returns correct results for property other values grouping node keys", () => {
-        expect(ParentNodeKey.compare({ type: "property-grouping:other" }, { type: "property-grouping:other" })).to.be.eq(0);
+        expect(HierarchyNodeKey.compare({ type: "property-grouping:other" }, { type: "property-grouping:other" })).to.be.eq(0);
       });
 
       it("returns correct results for property value grouping node keys", () => {
@@ -234,15 +245,15 @@ describe("ParentNodeKey", () => {
           propertyName: "property name",
           formattedPropertyValue: "value",
         };
-        expect(ParentNodeKey.compare(baseValue, baseValue)).to.be.eq(0);
+        expect(HierarchyNodeKey.compare(baseValue, baseValue)).to.be.eq(0);
         expect(
-          ParentNodeKey.compare(baseValue, {
+          HierarchyNodeKey.compare(baseValue, {
             ...baseValue,
             formattedPropertyValue: "value2",
           }),
         ).to.be.eq(-1);
         expect(
-          ParentNodeKey.compare(
+          HierarchyNodeKey.compare(
             {
               ...baseValue,
               formattedPropertyValue: "value2",
@@ -251,13 +262,13 @@ describe("ParentNodeKey", () => {
           ),
         ).to.be.eq(1);
         expect(
-          ParentNodeKey.compare(baseValue, {
+          HierarchyNodeKey.compare(baseValue, {
             ...baseValue,
             propertyName: "property name2",
           }),
         ).to.be.eq(-1);
         expect(
-          ParentNodeKey.compare(
+          HierarchyNodeKey.compare(
             {
               ...baseValue,
               propertyName: "property name2",
@@ -266,13 +277,13 @@ describe("ParentNodeKey", () => {
           ),
         ).to.be.eq(1);
         expect(
-          ParentNodeKey.compare(baseValue, {
+          HierarchyNodeKey.compare(baseValue, {
             ...baseValue,
             propertyClassName: "Schema.ClassName2",
           }),
         ).to.be.eq(-1);
         expect(
-          ParentNodeKey.compare(
+          HierarchyNodeKey.compare(
             {
               ...baseValue,
               propertyClassName: "Schema.ClassName2",
@@ -290,15 +301,15 @@ describe("ParentNodeKey", () => {
           fromValue: 1,
           toValue: 2,
         };
-        expect(ParentNodeKey.compare(baseValueRange, baseValueRange)).to.be.eq(0);
+        expect(HierarchyNodeKey.compare(baseValueRange, baseValueRange)).to.be.eq(0);
         expect(
-          ParentNodeKey.compare(baseValueRange, {
+          HierarchyNodeKey.compare(baseValueRange, {
             ...baseValueRange,
             toValue: 3,
           }),
         ).to.be.eq(-1);
         expect(
-          ParentNodeKey.compare(
+          HierarchyNodeKey.compare(
             {
               ...baseValueRange,
               toValue: 3,
@@ -307,13 +318,13 @@ describe("ParentNodeKey", () => {
           ),
         ).to.be.eq(1);
         expect(
-          ParentNodeKey.compare(baseValueRange, {
+          HierarchyNodeKey.compare(baseValueRange, {
             ...baseValueRange,
             fromValue: 2,
           }),
         ).to.be.eq(-1);
         expect(
-          ParentNodeKey.compare(
+          HierarchyNodeKey.compare(
             {
               ...baseValueRange,
               fromValue: 2,
@@ -321,10 +332,10 @@ describe("ParentNodeKey", () => {
             baseValueRange,
           ),
         ).to.be.eq(1);
-        expect(ParentNodeKey.compare(baseValueRange, { ...baseValueRange, propertyName: "property name2" })).to.be.eq(-1);
-        expect(ParentNodeKey.compare({ ...baseValueRange, propertyName: "property name2" }, baseValueRange)).to.be.eq(1);
-        expect(ParentNodeKey.compare(baseValueRange, { ...baseValueRange, propertyClassName: "Schema.ClassName2" })).to.be.eq(-1);
-        expect(ParentNodeKey.compare({ ...baseValueRange, propertyClassName: "Schema.ClassName2" }, baseValueRange)).to.be.eq(1);
+        expect(HierarchyNodeKey.compare(baseValueRange, { ...baseValueRange, propertyName: "property name2" })).to.be.eq(-1);
+        expect(HierarchyNodeKey.compare({ ...baseValueRange, propertyName: "property name2" }, baseValueRange)).to.be.eq(1);
+        expect(HierarchyNodeKey.compare(baseValueRange, { ...baseValueRange, propertyClassName: "Schema.ClassName2" })).to.be.eq(-1);
+        expect(HierarchyNodeKey.compare({ ...baseValueRange, propertyClassName: "Schema.ClassName2" }, baseValueRange)).to.be.eq(1);
       });
     });
   });
@@ -343,45 +354,48 @@ describe("HierarchyNode", () => {
     parentKeys: [],
     children: false,
   };
-  const classGroupingNode: HierarchyNode = {
-    key: { type: "class-grouping", class: { label: "c", name: "c" }, groupedInstanceKeys: [] },
+  const classGroupingNode: GroupingHierarchyNode = {
+    key: { type: "class-grouping", className: "c" },
+    groupedInstanceKeys: [],
     label: "class grouping node",
     parentKeys: [],
     children: false,
   };
-  const labelGroupingNode: HierarchyNode = {
-    key: { type: "label-grouping", label: "c", groupedInstanceKeys: [] },
+  const labelGroupingNode: GroupingHierarchyNode = {
+    key: { type: "label-grouping", label: "c" },
+    groupedInstanceKeys: [],
     label: "label grouping node",
     parentKeys: [],
     children: false,
   };
-  const propertyOtherValuesGroupingNode: HierarchyNode = {
-    key: { type: "property-grouping:other", groupedInstanceKeys: [] },
+  const propertyOtherValuesGroupingNode: GroupingHierarchyNode = {
+    key: { type: "property-grouping:other" },
+    groupedInstanceKeys: [],
     label: "other property grouping node",
     parentKeys: [],
     children: false,
   };
-  const propertyValueGroupingNode: HierarchyNode = {
+  const propertyValueGroupingNode: GroupingHierarchyNode = {
     key: {
       type: "property-grouping:value",
       propertyClassName: "Schema.ClassName",
       propertyName: "property name",
       formattedPropertyValue: "value",
-      groupedInstanceKeys: [],
     },
+    groupedInstanceKeys: [],
     label: "formatted property grouping node",
     parentKeys: [],
     children: false,
   };
-  const propertyValueRangeGroupingNode: HierarchyNode = {
+  const propertyValueRangeGroupingNode: GroupingHierarchyNode = {
     key: {
       type: "property-grouping:range",
       propertyClassName: "Schema.ClassName",
       propertyName: "property name",
       fromValue: 1,
       toValue: 2,
-      groupedInstanceKeys: [],
     },
+    groupedInstanceKeys: [],
     label: "ranged property grouping node",
     parentKeys: [],
     children: false,

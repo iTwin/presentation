@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { omit } from "@itwin/core-bentley";
 import { LabelGroupingNodeKey, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
 import { compareNodesByLabel, mergeNodes, mergeSortedArrays } from "../../Common";
 import { GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
@@ -46,14 +45,14 @@ export async function createLabelGroups(nodes: ProcessedInstanceHierarchyNode[])
       type: "label-grouping",
       label: entry[0].label,
       groupId,
-      groupedInstanceKeys: entry.flatMap((groupedInstanceNode) => groupedInstanceNode.key.instanceKeys),
     };
     const groupedNodeParentKeys = entry[0].parentKeys;
     groupedNodes.push({
       label: entry[0].label,
       key: groupingNodeKey,
       parentKeys: groupedNodeParentKeys,
-      children: entry.map((gn) => ({ ...gn, parentKeys: [...groupedNodeParentKeys, omit(groupingNodeKey, ["groupedInstanceKeys"])] })),
+      groupedInstanceKeys: entry.flatMap((groupedInstanceNode) => groupedInstanceNode.key.instanceKeys),
+      children: entry.map((gn) => ({ ...gn, parentKeys: [...groupedNodeParentKeys, groupingNodeKey] })),
     });
   });
 

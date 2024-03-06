@@ -98,10 +98,10 @@ export function createTestProcessedGroupingNode<TChild = ProcessedGroupingHierar
     label: "test",
     key: {
       type: "class-grouping",
-      class: { name: "test class" },
-      groupedInstanceKeys: [],
+      className: "test class",
     },
     parentKeys: [],
+    groupedInstanceKeys: [],
     children: new Array<TChild>(),
     ...src,
   };
@@ -250,7 +250,7 @@ export async function waitFor<T>(check: () => Promise<T> | T, timeout?: number):
   throw lastError;
 }
 
-export function createFakeQueryReader(rows: object[]): ECSqlQueryReader {
+export function createFakeQueryReader<TRow extends object>(rows: TRow[]): ECSqlQueryReader {
   return (async function* () {
     for (const row of rows) {
       yield row;

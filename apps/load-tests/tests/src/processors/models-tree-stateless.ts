@@ -12,25 +12,19 @@ import { ISchemaLocater, Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMat
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
-import { doRequest, getCurrentIModelName, getCurrentIModelPath, loadNodes, nodeRequestsTracker } from "./common";
+import { doRequest, getCurrentIModelName, getCurrentIModelPath, loadNodes } from "./common";
 
 console.log(`Frontend PID: ${process.pid}`);
 const ENABLE_REQUESTS_LOGGING = false;
 
 export function initScenario(context: ScenarioContext, _events: EventEmitter, next: Next) {
   context.vars.tooLargeHierarchyLevelsCount = 0;
-  context.vars.pendingNodeRequestsLogger = setInterval(() => {
-    nodeRequestsTracker.logCount(context, false);
-  }, 1000);
-  nodeRequestsTracker.reset(context);
   next();
 }
 
 export function terminateScenario(context: ScenarioContext, _ee: EventEmitter, next: Next) {
   console.log(`Total hierarchy levels that exceeded nodes limit: ${context.vars.tooLargeHierarchyLevelsCount as number}`);
   context.vars.tooLargeHierarchyLevelsCount = 0;
-  clearInterval(context.vars.pendingNodeRequestsLogger as NodeJS.Timeout);
-  nodeRequestsTracker.logCount(context, true);
   next();
 }
 

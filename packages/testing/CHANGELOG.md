@@ -1,5 +1,26 @@
 # Change Log - @itwin/presentation-testing
 
+## 5.0.0
+
+### Major Changes
+
+- [#299](https://github.com/iTwin/presentation/pull/299): Bumped peer depenendecy versions:
+  - [itwinjs-core](https://github.com/iTwin/itwinjs-core) packages to `^4.1.0`.
+  - [appui](https://github.com/iTwin/appui) packages to `^4.8.0`.
+
+### Patch Changes
+
+- [#348](https://github.com/iTwin/presentation/pull/348): Clean up `@internal` APIs exposed through the barrel exports file.
+- Updated dependencies:
+  - @itwin/presentation-components@5.0.0
+
+## 5.0.0-dev.6
+
+### Patch Changes
+
+- Updated dependencies:
+  - @itwin/presentation-components@5.0.0-dev.6
+
 ## 5.0.0-dev.5
 
 ### Patch Changes

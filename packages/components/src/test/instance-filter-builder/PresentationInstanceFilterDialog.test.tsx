@@ -81,6 +81,23 @@ describe("PresentationInstanceFilterDialog", () => {
     delete (HTMLElement.prototype as any).scrollIntoView;
   });
 
+  it("renders with initial filter", async () => {
+    const { queryByDisplayValue } = render(
+      <PresentationInstanceFilterDialog
+        imodel={imodel}
+        propertiesSource={propertiesSource}
+        onApply={() => {}}
+        isOpen={true}
+        initialFilter={() => initialFilter}
+      />,
+      {
+        addThemeProvider: true,
+      },
+    );
+
+    await waitFor(() => expect(queryByDisplayValue(stringField.label)).to.not.be.null);
+  });
+
   it("displays warning message on class selector opening if filtering rules are set ", async () => {
     const { container, getByTitle, queryByDisplayValue, user, queryByText, getByPlaceholderText } = render(
       <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} onApply={() => {}} isOpen={true} />,
