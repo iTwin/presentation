@@ -11,12 +11,12 @@
     "build": "tsc",
     "clean": "rimraf lib",
     "lint": "eslint ./src/**/*.ts",
-    "start": "node --enable-source-maps lib/src/index.js --datasetsDir ./datasets",
-    "start:initial-models-tree": "npm run start -- --scenarios initial",
-    "start:full-models-tree": "npm run start -- --scenarios full",
-    "start:initial-models-tree-stateless": "npm run start -- --scenarios initial --stateless",
-    "start:full-models-tree-stateless": "npm run start -- --scenarios full --stateless",
-    "benchmark": "npm run start -- --stateless --scenarios initial full --outputPath ./benchmark.json"
+    "start": "node --enable-source-maps lib/src/index.js -d ./datasets",
+    "start:initial": "npm run start -- --scenarios initial",
+    "start:full": "npm run start -- --scenarios full",
+    "start:initial-stateless": "npm run start -- -s --scenarios initial",
+    "start:full-stateless": "npm run start -- -s --scenarios full",
+    "benchmark": "npm run start -- -s --scenarios initial full -o ./benchmark.json"
   },
   "dependencies": {
     "@itwin/build-tools": "^4.4.0",
