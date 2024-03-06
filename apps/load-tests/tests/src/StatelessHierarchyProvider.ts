@@ -68,7 +68,7 @@ export class StatelessHierarchyProvider implements NodeProvider<HierarchyNode> {
   }
 
   public initialHasChildren(node: HierarchyNode): boolean {
-    return (node.children === true || (Array.isArray(node.children) && node.children.length > 0)) && !!node.autoExpand;
+    return this.fullHasChildren(node) && !!node.autoExpand;
   }
 
   public fullHasChildren(node: HierarchyNode): boolean {

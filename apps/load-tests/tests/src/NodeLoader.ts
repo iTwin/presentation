@@ -20,11 +20,11 @@ export class NodeLoader<TNode> {
   ) {}
 
   public async loadInitialHierarchy(): Promise<void> {
-    await this.loadNodes(this._provider.initialHasChildren.bind(this));
+    await this.loadNodes((node) => this._provider.initialHasChildren(node));
   }
 
   public async loadFullHierarchy(): Promise<void> {
-    await this.loadNodes(this._provider.fullHasChildren.bind(this));
+    await this.loadNodes((node) => this._provider.fullHasChildren(node));
   }
 
   private async loadNodes(nodeHasChildren: (node: TNode) => boolean) {
