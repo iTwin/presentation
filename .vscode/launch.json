@@ -126,12 +126,12 @@
       }
     },
     {
-      "name": "Tests: Benchmark",
-      "cwd": "${workspaceFolder}/apps/load-tests/tests",
+      "name": "Tests: Performance",
+      "cwd": "${workspaceFolder}/apps/performance-tests",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "benchmark"],
+      "runtimeArgs": ["test"],
     },
     {
       "name": "Tests: Hierarchy builder",

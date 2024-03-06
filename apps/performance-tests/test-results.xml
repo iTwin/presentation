@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Mocha Tests" time="0.003" tests="1" failures="0">
+  <testsuite name="Root Suite" timestamp="2024-03-06T14:43:01" tests="0" time="0.000" failures="0">
+  </testsuite>
+  <testsuite name="stateless hierarchy" timestamp="2024-03-06T14:43:01" tests="1" file="/home/yato333/code/presentation/apps/performance-tests/lib/test/stateless.test.js" time="0.002" failures="0">
+    <testcase name="stateless hierarchy foo" time="0.000" classname="foo">
+    </testcase>
+  </testsuite>
+</testsuites>
