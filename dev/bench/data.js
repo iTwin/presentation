@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1709648637857,
+  "lastUpdate": 1709712096338,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -1218,6 +1218,42 @@ window.BENCHMARK_DATA = {
             "value": 3184,
             "unit": "ms",
             "extra": "min: 3184\nmax: 3184\ncount: 1\nmean: 3184\np50: 3197.8\nmedian: 3197.8\np75: 3197.8\np90: 3197.8\np95: 3197.8\np99: 3197.8\np999: 3197.8"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35135765+grigasp@users.noreply.github.com",
+            "name": "Grigas",
+            "username": "grigasp"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "995b3079ef22117300747fbc616cb74bf691869d",
+          "message": "Hierarchy builder: Grouped instance keys on node (#458)\n\n* Move `groupedInstanceKeys` from node key to node\r\n\r\n* `ParentNodeKey` is now unnecessary\r\n\r\n* `ClassGroupingNodeKey` doesn't need class label\r\n\r\n* fixup test app",
+          "timestamp": "2024-03-06T08:00:25Z",
+          "tree_id": "217214826d633990f45b98f0760a2fe0efb64384",
+          "url": "https://github.com/iTwin/presentation/commit/995b3079ef22117300747fbc616cb74bf691869d"
+        },
+        "date": 1709712095322,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Initial Models Tree Load: Baytown.bim",
+            "value": 311,
+            "unit": "ms",
+            "extra": "min: 311\nmax: 311\ncount: 1\nmean: 311\np50: 308\nmedian: 308\np75: 308\np90: 308\np95: 308\np99: 308\np999: 308"
+          },
+          {
+            "name": "Full Models Tree Load: Baytown.bim",
+            "value": 3083,
+            "unit": "ms",
+            "extra": "min: 3083\nmax: 3083\ncount: 1\nmean: 3083\np50: 3072.4\nmedian: 3072.4\np75: 3072.4\np90: 3072.4\np95: 3072.4\np99: 3072.4\np999: 3072.4"
           }
         ]
       }
