@@ -131,8 +131,8 @@ export namespace NodeValidators {
         if (!HierarchyNode.isClassGroupingNode(node)) {
           throw new Error(`[${node.label}] Expected a class grouping node, got "${node.key.type}"`);
         }
-        if (props.className && node.key.class.name !== props.className) {
-          throw new Error(`[${node.label}] Expected node to represent class "${props.className}", got "${node.key.class.name}"`);
+        if (props.className && node.key.className !== props.className) {
+          throw new Error(`[${node.label}] Expected node to represent class "${props.className}", got "${node.key.className}"`);
         }
         validateBaseNodeAttributes(node, {
           label: props.label,

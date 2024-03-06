@@ -9,7 +9,6 @@ import {
   HierarchyNode,
   HierarchyNodeKey,
   InstancesNodeKey,
-  ParentNodeKey,
   ParsedHierarchyNode,
   ProcessedGroupingHierarchyNode,
   ProcessedHierarchyNode,
@@ -30,7 +29,7 @@ export type CachedNodesObservableEntry =
 /** @internal */
 export interface HierarchyLevelWithGroupingsObservables {
   parsedNodes: ParsedQueryNodesObservable;
-  groupings: Dictionary<ParentNodeKey[], ProcessedNodesObservable>;
+  groupings: Dictionary<HierarchyNodeKey[], ProcessedNodesObservable>;
 }
 
 /** @internal */
@@ -49,16 +48,16 @@ export interface ChildNodeObservablesCacheProps {
 
 /** @internal */
 export class ChildNodeObservablesCache {
-  private _map: LRUDictionary<ParentNodeKey[], ChildNodesCacheEntry>;
+  private _map: LRUDictionary<HierarchyNodeKey[], ChildNodesCacheEntry>;
   private _props: ChildNodeObservablesCacheProps;
 
   public constructor(props: ChildNodeObservablesCacheProps) {
     this._props = props;
-    this._map = new LRUDictionary<ParentNodeKey[], ChildNodesCacheEntry>(props.size, compareHierarchyNodeKeys);
+    this._map = new LRUDictionary<HierarchyNodeKey[], ChildNodesCacheEntry>(props.size, compareHierarchyNodeKeys);
   }
 
   private createCacheKeys(
-    props: Omit<GetHierarchyNodesProps, "parentNode"> & { parentNode: { key: HierarchyNodeKey; parentKeys: ParentNodeKey[] } | undefined },
+    props: Omit<GetHierarchyNodesProps, "parentNode"> & { parentNode: { key: HierarchyNodeKey; parentKeys: HierarchyNodeKey[] } | undefined },
   ) {
     function createVariationKey() {
       const { instanceFilter, hierarchyLevelSizeLimit } = props;
@@ -105,7 +104,7 @@ export class ChildNodeObservablesCache {
     };
   }
 
-  private getCacheAccessors(primaryKey: ParentNodeKey[], variationKey?: string) {
+  private getCacheAccessors(primaryKey: HierarchyNodeKey[], variationKey?: string) {
     const getMapEntry = (create: boolean) => {
       let entry = this._map.get(primaryKey);
       if (!entry && create) {
@@ -131,7 +130,7 @@ export class ChildNodeObservablesCache {
       };
     };
     return {
-      getEntry: (groupingKey?: ParentNodeKey[]): CachedNodesObservableEntry | undefined => {
+      getEntry: (groupingKey?: HierarchyNodeKey[]): CachedNodesObservableEntry | undefined => {
         const source = getObservableAccessor().get();
         if (!source) {
           return undefined;
@@ -145,7 +144,7 @@ export class ChildNodeObservablesCache {
       setParseResult: (parsedNodes: ParsedQueryNodesObservable) => {
         getObservableAccessor().set(parsedNodes);
       },
-      setGrouped: (groupingKey: ParentNodeKey[], processedNodes: ProcessedNodesObservable) => {
+      setGrouped: (groupingKey: HierarchyNodeKey[], processedNodes: ProcessedNodesObservable) => {
         const source = getObservableAccessor().get();
         if (!source) {
           return false;
@@ -157,7 +156,7 @@ export class ChildNodeObservablesCache {
   }
 
   public addParseResult(
-    requestProps: Omit<GetHierarchyNodesProps, "parentNode"> & { parentNode: { key: string | InstancesNodeKey; parentKeys: ParentNodeKey[] } | undefined },
+    requestProps: Omit<GetHierarchyNodesProps, "parentNode"> & { parentNode: { key: string | InstancesNodeKey; parentKeys: HierarchyNodeKey[] } | undefined },
     observable: ParsedQueryNodesObservable,
   ) {
     const { primaryKey, variationKey } = this.createCacheKeys(requestProps);
@@ -186,12 +185,12 @@ export class ChildNodeObservablesCache {
   }
 }
 
-function compareHierarchyNodeKeys(lhs: ParentNodeKey[], rhs: ParentNodeKey[]) {
+function compareHierarchyNodeKeys(lhs: HierarchyNodeKey[], rhs: HierarchyNodeKey[]) {
   if (lhs.length !== rhs.length) {
     return lhs.length - rhs.length;
   }
   for (let i = 0; i < lhs.length; ++i) {
-    const keysCompareResult = ParentNodeKey.compare(lhs[i], rhs[i]);
+    const keysCompareResult = HierarchyNodeKey.compare(lhs[i], rhs[i]);
     if (keysCompareResult !== 0) {
       return keysCompareResult;
     }

@@ -22,11 +22,6 @@ export interface ArrayPropertyAttributes {
 }
 
 // @beta
-export interface BaseGroupingNodeKey {
-    groupedInstanceKeys: InstanceKey[];
-}
-
-// @beta
 export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelectClauseFactory {
     constructor(props: BisInstanceLabelSelectClauseFactoryProps);
     // (undocumented)
@@ -81,11 +76,8 @@ export interface ClassBasedLabelSelectClause {
 }
 
 // @beta
-export interface ClassGroupingNodeKey extends BaseGroupingNodeKey {
-    class: {
-        name: string;
-        label?: string;
-    };
+export interface ClassGroupingNodeKey {
+    className: string;
     type: "class-grouping";
 }
 
@@ -505,6 +497,7 @@ export function getLogger(): ILogger;
 // @beta
 export type GroupingHierarchyNode = Omit<HierarchyNode, "key" | "supportsFiltering"> & {
     key: GroupingNodeKey;
+    groupedInstanceKeys: InstanceKey[];
     nonGroupingAncestor?: Omit<ParentHierarchyNode, "key"> & {
         key: string | InstancesNodeKey;
     };
@@ -530,7 +523,7 @@ export interface HierarchyNode {
     };
     key: HierarchyNodeKey;
     label: string;
-    parentKeys: ParentNodeKey[];
+    parentKeys: HierarchyNodeKey[];
     supportsFiltering?: boolean;
 }
 
@@ -638,6 +631,8 @@ export type HierarchyNodeKey = StandardHierarchyNodeKey | string;
 
 // @beta (undocumented)
 export namespace HierarchyNodeKey {
+    export function compare(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): number;
+    export function equals(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): boolean;
     export function isClassGrouping(key: HierarchyNodeKey): key is ClassGroupingNodeKey;
     export function isCustom(key: HierarchyNodeKey): key is string;
     export function isGrouping(key: HierarchyNodeKey): key is GroupingNodeKey;
@@ -841,7 +836,7 @@ export interface InstancesNodeKey {
 export type IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise<string>;
 
 // @beta
-export interface LabelGroupingNodeKey extends BaseGroupingNodeKey {
+export interface LabelGroupingNodeKey {
     groupId?: string;
     label: string;
     type: "label-grouping";
@@ -909,15 +904,6 @@ export type OmitOverUnion<T, K extends PropertyKey> = T extends T ? Omit<T, K> :
 
 // @beta
 export type ParentHierarchyNode = Omit<HierarchyNode, "children">;
-
-// @beta
-export type ParentNodeKey = OmitOverUnion<GroupingNodeKey, "groupedInstanceKeys"> | InstancesNodeKey | string;
-
-// @beta (undocumented)
-export namespace ParentNodeKey {
-    export function compare(lhs: ParentNodeKey, rhs: ParentNodeKey): number;
-    export function equals(lhs: ParentNodeKey, rhs: ParentNodeKey): boolean;
-}
 
 // @beta
 export type ParsedCustomHierarchyNode = Omit<ProcessedCustomHierarchyNode, "label" | "parentKeys"> & {
@@ -996,7 +982,7 @@ export type ProcessedInstanceHierarchyNode = Omit<HierarchyNode, "key" | "childr
 export type PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | PropertyValueGroupingNodeKey | PropertyOtherValuesGroupingNodeKey;
 
 // @beta
-export interface PropertyOtherValuesGroupingNodeKey extends BaseGroupingNodeKey {
+export interface PropertyOtherValuesGroupingNodeKey {
     type: "property-grouping:other";
 }
 
@@ -1011,7 +997,7 @@ export interface PropertyValue {
 }
 
 // @beta
-export interface PropertyValueGroupingNodeKey extends BaseGroupingNodeKey {
+export interface PropertyValueGroupingNodeKey {
     formattedPropertyValue: string;
     propertyClassName: string;
     propertyName: string;
@@ -1019,7 +1005,7 @@ export interface PropertyValueGroupingNodeKey extends BaseGroupingNodeKey {
 }
 
 // @beta
-export interface PropertyValueRangeGroupingNodeKey extends BaseGroupingNodeKey {
+export interface PropertyValueRangeGroupingNodeKey {
     fromValue: number;
     propertyClassName: string;
     propertyName: string;

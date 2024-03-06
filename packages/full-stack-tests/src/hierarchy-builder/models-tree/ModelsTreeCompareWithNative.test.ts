@@ -54,7 +54,7 @@ describe("Stateless hierarchy builder", () => {
       expect(!!nativeNode.hasChildren).to.eq(!!statelessNode.children, createFailureMsg("Children flag"));
       if (NodeKey.isClassGroupingNodeKey(nativeNode.key)) {
         expect(HierarchyNode.isClassGroupingNode(statelessNode), createFailureMsg("Key types"));
-        expect(nativeNode.key.className.replace(":", ".")).to.eq((statelessNode.key as ClassGroupingNodeKey).class.name, createFailureMsg("Key class names"));
+        expect(nativeNode.key.className.replace(":", ".")).to.eq((statelessNode.key as ClassGroupingNodeKey).className, createFailureMsg("Key class names"));
       } else if (NodeKey.isInstancesNodeKey(nativeNode.key)) {
         expect(HierarchyNode.isInstancesNode(statelessNode), createFailureMsg("Key types"));
         expect([...nativeNode.key.instanceKeys].map((ik) => ({ ...ik, className: ik.className.replace(":", ".") })).sort(compareInstanceKeys)).to.deep.eq(

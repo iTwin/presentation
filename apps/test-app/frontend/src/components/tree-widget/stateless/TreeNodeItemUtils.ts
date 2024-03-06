@@ -5,7 +5,6 @@
 
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { DelayLoadedTreeNodeItem, TreeNodeItem } from "@itwin/components-react";
-import { omit } from "@itwin/core-bentley";
 import { InfoTreeNodeItemType, PresentationInfoTreeNodeItem } from "@itwin/presentation-components";
 import { HierarchyNode, HierarchyNodeKey } from "@itwin/presentation-hierarchy-builder";
 
@@ -22,19 +21,16 @@ export function createTreeNodeItem(node: HierarchyNode): DelayLoadedTreeNodeItem
   }
   return {
     __internal: node,
-    id: [
-      ...node.parentKeys.map((key) => (typeof key === "string" ? key : convertObjectValuesToString(key))),
-      HierarchyNodeKey.isCustom(node.key)
-        ? node.key
-        : HierarchyNodeKey.isInstances(node.key)
-          ? convertObjectValuesToString(node.key)
-          : convertObjectValuesToString(omit(node.key, ["groupedInstanceKeys"])),
-    ].join(","),
+    id: [...node.parentKeys.map(serializeNodeKey), serializeNodeKey(node.key)].join(","),
     label: PropertyRecord.fromString(node.label, "Label"),
     icon: node.extendedData?.imageId,
     hasChildren: !!node.children,
     autoExpand: node.autoExpand,
   } as DelayLoadedTreeNodeItem;
+}
+
+export function serializeNodeKey(key: HierarchyNodeKey): string {
+  return HierarchyNodeKey.isCustom(key) ? key : convertObjectValuesToString(key);
 }
 
 function convertObjectValuesToString(obj: object): string {

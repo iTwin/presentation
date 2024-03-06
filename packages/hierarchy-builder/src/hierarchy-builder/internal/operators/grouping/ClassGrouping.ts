@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { omit } from "@itwin/core-bentley";
 import { IMetadataProvider } from "../../../ECMetadata";
 import { ClassGroupingNodeKey, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
 import { getClass } from "../../GetClass";
@@ -50,15 +49,15 @@ function createGroupingNodes(groupings: ClassGroupingInformation): GroupingHandl
   groupings.grouped.forEach((entry) => {
     const groupingNodeKey: ClassGroupingNodeKey = {
       type: "class-grouping",
-      class: { name: entry.class.fullName, label: entry.class.label },
-      groupedInstanceKeys: entry.groupedNodes.flatMap((groupedInstanceNode) => groupedInstanceNode.key.instanceKeys),
+      className: entry.class.fullName,
     };
     const groupedNodeParentKeys = entry.groupedNodes[0].parentKeys;
     groupedNodes.push({
       label: entry.class.label ?? entry.class.name,
       key: groupingNodeKey,
       parentKeys: groupedNodeParentKeys,
-      children: entry.groupedNodes.map((gn) => ({ ...gn, parentKeys: [...groupedNodeParentKeys, omit(groupingNodeKey, ["groupedInstanceKeys"])] })),
+      groupedInstanceKeys: entry.groupedNodes.flatMap((groupedInstanceNode) => groupedInstanceNode.key.instanceKeys),
+      children: entry.groupedNodes.map((gn) => ({ ...gn, parentKeys: [...groupedNodeParentKeys, groupingNodeKey] })),
     });
   });
   return { grouped: sortNodesByLabel(groupedNodes), ungrouped: groupings.ungrouped, groupingType: "class" };
