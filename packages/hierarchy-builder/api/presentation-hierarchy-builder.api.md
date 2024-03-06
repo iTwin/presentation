@@ -13,11 +13,6 @@ export interface ArrayPropertyAttributes {
 }
 
 // @beta
-export interface BaseGroupingNodeKey {
-    groupedInstanceKeys: InstanceKey[];
-}
-
-// @beta
 export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelectClauseFactory {
     constructor(props: BisInstanceLabelSelectClauseFactoryProps);
     // (undocumented)
@@ -72,7 +67,7 @@ export interface ClassBasedLabelSelectClause {
 }
 
 // @beta
-export interface ClassGroupingNodeKey extends BaseGroupingNodeKey {
+export interface ClassGroupingNodeKey {
     class: {
         name: string;
         label?: string;
@@ -507,6 +502,7 @@ export function getLogger(): ILogger;
 // @beta
 export type GroupingHierarchyNode = Omit<HierarchyNode, "key" | "supportsFiltering"> & {
     key: GroupingNodeKey;
+    groupedInstanceKeys: InstanceKey[];
     nonGroupingAncestor?: Omit<ParentHierarchyNode, "key"> & {
         key: string | InstancesNodeKey;
     };
@@ -843,7 +839,7 @@ export interface InstancesNodeKey {
 export type IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise<string>;
 
 // @beta
-export interface LabelGroupingNodeKey extends BaseGroupingNodeKey {
+export interface LabelGroupingNodeKey {
     groupId?: string;
     label: string;
     type: "label-grouping";
@@ -1027,7 +1023,7 @@ export namespace PropertyFilterValue {
 export type PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | PropertyValueGroupingNodeKey | PropertyOtherValuesGroupingNodeKey;
 
 // @beta
-export interface PropertyOtherValuesGroupingNodeKey extends BaseGroupingNodeKey {
+export interface PropertyOtherValuesGroupingNodeKey {
     type: "property-grouping:other";
 }
 
@@ -1042,7 +1038,7 @@ export interface PropertyValue {
 }
 
 // @beta
-export interface PropertyValueGroupingNodeKey extends BaseGroupingNodeKey {
+export interface PropertyValueGroupingNodeKey {
     formattedPropertyValue: string;
     propertyClassName: string;
     propertyName: string;
@@ -1050,7 +1046,7 @@ export interface PropertyValueGroupingNodeKey extends BaseGroupingNodeKey {
 }
 
 // @beta
-export interface PropertyValueRangeGroupingNodeKey extends BaseGroupingNodeKey {
+export interface PropertyValueRangeGroupingNodeKey {
     fromValue: number;
     propertyClassName: string;
     propertyName: string;

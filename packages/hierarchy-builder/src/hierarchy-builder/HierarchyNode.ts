@@ -24,22 +24,10 @@ export interface InstancesNodeKey {
 }
 
 /**
- * Contains attributes shared across all grouping node keys.
- * @beta
- */
-export interface BaseGroupingNodeKey {
-  /**
-   * Keys of all instances grouped by this node, including deeply nested under
-   * other grouping nodes.
-   */
-  groupedInstanceKeys: InstanceKey[];
-}
-
-/**
  * A key for a class-grouping node.
  * @beta
  */
-export interface ClassGroupingNodeKey extends BaseGroupingNodeKey {
+export interface ClassGroupingNodeKey {
   /** Type of the node */
   type: "class-grouping";
 
@@ -54,7 +42,7 @@ export interface ClassGroupingNodeKey extends BaseGroupingNodeKey {
  * A key for a label-grouping node.
  * @beta
  */
-export interface LabelGroupingNodeKey extends BaseGroupingNodeKey {
+export interface LabelGroupingNodeKey {
   /** Type of the node */
   type: "label-grouping";
 
@@ -74,7 +62,7 @@ export interface LabelGroupingNodeKey extends BaseGroupingNodeKey {
  *
  * @beta
  */
-export interface PropertyOtherValuesGroupingNodeKey extends BaseGroupingNodeKey {
+export interface PropertyOtherValuesGroupingNodeKey {
   /** Type of the node */
   type: "property-grouping:other";
 }
@@ -83,7 +71,7 @@ export interface PropertyOtherValuesGroupingNodeKey extends BaseGroupingNodeKey 
  * A key for a property grouping node that groups nodes by formatted property value.
  * @beta
  */
-export interface PropertyValueGroupingNodeKey extends BaseGroupingNodeKey {
+export interface PropertyValueGroupingNodeKey {
   /** Type of the node */
   type: "property-grouping:value";
 
@@ -101,7 +89,7 @@ export interface PropertyValueGroupingNodeKey extends BaseGroupingNodeKey {
  * A key for a property grouping node that groups nodes by a range of property values.
  * @beta
  */
-export interface PropertyValueRangeGroupingNodeKey extends BaseGroupingNodeKey {
+export interface PropertyValueRangeGroupingNodeKey {
   /** Type of the node */
   type: "property-grouping:range";
 
@@ -355,6 +343,12 @@ export interface HierarchyNode {
 export type GroupingHierarchyNode = Omit<HierarchyNode, "key" | "supportsFiltering"> & {
   /** An identifier to identify this grouping node in its hierarchy level. */
   key: GroupingNodeKey;
+
+  /**
+   * Keys of all instances grouped by this node, including deeply nested under
+   * other grouping nodes.
+   */
+  groupedInstanceKeys: InstanceKey[];
 
   /** The closest ancestor node that is not a grouping node. May be `undefined` it the grouping node grouped root level nodes. */
   nonGroupingAncestor?: Omit<ParentHierarchyNode, "key"> & { key: string | InstancesNodeKey };

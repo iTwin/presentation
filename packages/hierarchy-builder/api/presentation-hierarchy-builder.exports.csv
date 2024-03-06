@@ -1,7 +1,6 @@
 sep=;
 Release Tag;API Item
 beta;ArrayPropertyAttributes
-beta;BaseGroupingNodeKey
 beta;BisInstanceLabelSelectClauseFactory 
 beta;BisInstanceLabelSelectClauseFactoryProps
 beta;ClassBasedHierarchyDefinition
@@ -11,7 +10,7 @@ beta;ClassBasedHierarchyLevelDefinitionsFactory
 beta;ClassBasedInstanceLabelSelectClauseFactory 
 beta;ClassBasedInstanceLabelSelectClauseFactoryProps
 beta;ClassBasedLabelSelectClause
-beta;ClassGroupingNodeKey 
+beta;ClassGroupingNodeKey
 beta;ConcatenatedValue = ConcatenatedValuePart | ConcatenatedValuePart[]
 beta;ConcatenatedValue
 beta;ConcatenatedValuePart = PropertyValue | TypedPrimitiveValue | string
@@ -117,7 +116,7 @@ beta;InstanceNodesQueryDefinition
 beta;InstancesNodeChildHierarchyLevelDefinition
 beta;InstancesNodeKey
 beta;IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise
-beta;LabelGroupingNodeKey 
+beta;LabelGroupingNodeKey
 beta;LogFunction = (category: string, message: string) => void
 beta;NodeSelectClauseColumnNames
 beta;NodeSelectClauseProps
@@ -147,10 +146,10 @@ beta;PropertyFilterRuleUnaryOperator = "True" | "False" | "Null" | "NotNull"
 beta;PropertyFilterValue = PrimitiveValue | InstanceKey
 beta;PropertyFilterValue
 beta;PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | PropertyValueGroupingNodeKey | PropertyOtherValuesGroupingNodeKey
-beta;PropertyOtherValuesGroupingNodeKey 
+beta;PropertyOtherValuesGroupingNodeKey
 beta;PropertyValue
-beta;PropertyValueGroupingNodeKey 
-beta;PropertyValueRangeGroupingNodeKey 
+beta;PropertyValueGroupingNodeKey
+beta;PropertyValueRangeGroupingNodeKey
 beta;RelatedInstanceDescription
 beta;RelationshipPath
 beta;RelationshipPathStep

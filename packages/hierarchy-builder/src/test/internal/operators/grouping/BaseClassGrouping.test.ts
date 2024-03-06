@@ -5,7 +5,6 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { omit } from "@itwin/core-bentley";
 import { ECClass, IMetadataProvider } from "../../../../hierarchy-builder/ECMetadata";
 import { GroupingNodeKey } from "../../../../hierarchy-builder/HierarchyNode";
 import { BaseClassChecker } from "../../../../hierarchy-builder/internal/Common";
@@ -137,7 +136,6 @@ describe("BaseClassGrouping", () => {
           name: eCClass.fullName,
           label: eCClass.name,
         },
-        groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
       };
       expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, eCClass, new BaseClassChecker(metadataProvider))).to.deep.eq({
         groupingType: "base-class",
@@ -146,7 +144,8 @@ describe("BaseClassGrouping", () => {
             label: eCClass.name,
             key: expectedGroupingNodeKey,
             parentKeys: ["x"],
-            children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
+            groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
+            children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
           }),
         ],
         ungrouped: [],
@@ -225,7 +224,6 @@ describe("BaseClassGrouping", () => {
           name: ecClass.fullName,
           label: ecClass.label,
         },
-        groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
       };
 
       expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, ecClass, new BaseClassChecker(metadataProvider))).to.deep.eq({
@@ -235,7 +233,8 @@ describe("BaseClassGrouping", () => {
             label: ecClass.label,
             key: expectedGroupingNodeKey,
             parentKeys: ["x"],
-            children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
+            groupedInstanceKeys: nodes.flatMap((n) => n.key.instanceKeys),
+            children: nodes.map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
           }),
         ],
         ungrouped: [],
@@ -279,7 +278,6 @@ describe("BaseClassGrouping", () => {
           name: ecClass.fullName,
           label: ecClass.label,
         },
-        groupedInstanceKeys: nodes[0].key.instanceKeys,
       };
 
       expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, ecClass, new BaseClassChecker(metadataProvider))).to.deep.eq({
@@ -289,7 +287,8 @@ describe("BaseClassGrouping", () => {
             label: ecClass.label,
             key: expectedGroupingNodeKey,
             parentKeys: ["x"],
-            children: [nodes[0]].map((n) => ({ ...n, parentKeys: [...n.parentKeys, omit(expectedGroupingNodeKey, ["groupedInstanceKeys"])] })),
+            groupedInstanceKeys: nodes[0].key.instanceKeys,
+            children: [nodes[0]].map((n) => ({ ...n, parentKeys: [...n.parentKeys, expectedGroupingNodeKey] })),
           }),
         ],
         ungrouped: [nodes[1]],

@@ -363,12 +363,12 @@ describe("HierarchyProvider", () => {
         type: "label-grouping",
         label: "test label",
         groupId: undefined,
-        groupedInstanceKeys: [{ className: "a.b", id: "0x123" }],
       };
       expect(rootNodes).to.deep.eq([
         {
           key: expectedKey,
           parentKeys: [],
+          groupedInstanceKeys: [{ className: "a.b", id: "0x123" }],
           label: "test label",
           children: true,
           nonGroupingAncestor: undefined,
@@ -382,7 +382,7 @@ describe("HierarchyProvider", () => {
             type: "instances",
             instanceKeys: [{ className: "a.b", id: "0x123" }],
           },
-          parentKeys: [omit(expectedKey, ["groupedInstanceKeys"])],
+          parentKeys: [expectedKey],
           label: "test label",
           children: false,
         } as HierarchyNode,
@@ -990,8 +990,8 @@ describe("HierarchyProvider", () => {
               name: "x.y",
               label: "Class Y",
             },
-            groupedInstanceKeys: [{ className: "x.y", id: "0x1" }],
           },
+          groupedInstanceKeys: [{ className: "x.y", id: "0x1" }],
           parentKeys: [],
           nonGroupingAncestor: undefined,
           label: "Class Y",

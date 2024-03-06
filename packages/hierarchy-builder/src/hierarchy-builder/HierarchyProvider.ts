@@ -5,7 +5,7 @@
 
 import { catchError, concatMap, defaultIfEmpty, defer, filter, from, map, mergeMap, Observable, ObservableInput, of, take, tap } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
-import { assert, omit, StopWatch } from "@itwin/core-bentley";
+import { assert, StopWatch } from "@itwin/core-bentley";
 import { IMetadataProvider } from "./ECMetadata";
 import { GenericInstanceFilter } from "./GenericInstanceFilter";
 import { DefineHierarchyLevelProps, HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
@@ -13,7 +13,6 @@ import { RowsLimitExceededError } from "./HierarchyErrors";
 import {
   HierarchyNode,
   HierarchyNodeIdentifiersPath,
-  HierarchyNodeKey,
   ParentHierarchyNode,
   ParsedHierarchyNode,
   ProcessedCustomHierarchyNode,
@@ -472,10 +471,6 @@ function createNodeIdentifierForLogging(node: ParentHierarchyNode | HierarchyNod
   if (!node) {
     return "<root>";
   }
-  const key = node.key;
-  return JSON.stringify({
-    label: node.label,
-    parentKeys: node.parentKeys,
-    key: HierarchyNodeKey.isGrouping(key) ? omit(key, ["groupedInstanceKeys"]) : key,
-  });
+  const { label, key, parentKeys } = node;
+  return JSON.stringify({ label, key, parentKeys });
 }

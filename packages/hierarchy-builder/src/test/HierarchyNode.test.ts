@@ -5,6 +5,7 @@
 
 import { expect } from "chai";
 import {
+  GroupingHierarchyNode,
   HierarchyNode,
   HierarchyNodeIdentifier,
   ParentNodeKey,
@@ -343,45 +344,48 @@ describe("HierarchyNode", () => {
     parentKeys: [],
     children: false,
   };
-  const classGroupingNode: HierarchyNode = {
-    key: { type: "class-grouping", class: { label: "c", name: "c" }, groupedInstanceKeys: [] },
+  const classGroupingNode: GroupingHierarchyNode = {
+    key: { type: "class-grouping", class: { label: "c", name: "c" } },
+    groupedInstanceKeys: [],
     label: "class grouping node",
     parentKeys: [],
     children: false,
   };
-  const labelGroupingNode: HierarchyNode = {
-    key: { type: "label-grouping", label: "c", groupedInstanceKeys: [] },
+  const labelGroupingNode: GroupingHierarchyNode = {
+    key: { type: "label-grouping", label: "c" },
+    groupedInstanceKeys: [],
     label: "label grouping node",
     parentKeys: [],
     children: false,
   };
-  const propertyOtherValuesGroupingNode: HierarchyNode = {
-    key: { type: "property-grouping:other", groupedInstanceKeys: [] },
+  const propertyOtherValuesGroupingNode: GroupingHierarchyNode = {
+    key: { type: "property-grouping:other" },
+    groupedInstanceKeys: [],
     label: "other property grouping node",
     parentKeys: [],
     children: false,
   };
-  const propertyValueGroupingNode: HierarchyNode = {
+  const propertyValueGroupingNode: GroupingHierarchyNode = {
     key: {
       type: "property-grouping:value",
       propertyClassName: "Schema.ClassName",
       propertyName: "property name",
       formattedPropertyValue: "value",
-      groupedInstanceKeys: [],
     },
+    groupedInstanceKeys: [],
     label: "formatted property grouping node",
     parentKeys: [],
     children: false,
   };
-  const propertyValueRangeGroupingNode: HierarchyNode = {
+  const propertyValueRangeGroupingNode: GroupingHierarchyNode = {
     key: {
       type: "property-grouping:range",
       propertyClassName: "Schema.ClassName",
       propertyName: "property name",
       fromValue: 1,
       toValue: 2,
-      groupedInstanceKeys: [],
     },
+    groupedInstanceKeys: [],
     label: "ranged property grouping node",
     parentKeys: [],
     children: false,
