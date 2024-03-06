@@ -18,14 +18,11 @@ export class BlockHandler {
   }
 
   public start() {
-    this._timer = blocked(
-      (time) => {
-        this._maxBlockingTime = Math.max(this._maxBlockingTime, time);
-        this._totalBlockingTime += time;
-        console.warn(`Blocked for ${time} ms`);
-      },
-      { threshold: 10, interval: 100 },
-    );
+    this._timer = blocked((time) => {
+      this._maxBlockingTime = Math.max(this._maxBlockingTime, time);
+      this._totalBlockingTime += time;
+      console.warn(`Blocked for ${time} ms`);
+    });
   }
 
   public stop() {
