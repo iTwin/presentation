@@ -1,0 +1,14 @@
+[
+  {
+    "name": "initial - Baytown.bim",
+    "unit": "ms",
+    "value": 389,
+    "extra": "maxBlocked: 0\ntotalBlocked: 0"
+  },
+  {
+    "name": "full - Baytown.bim",
+    "unit": "ms",
+    "value": 2186,
+    "extra": "maxBlocked: 38\ntotalBlocked: 38"
+  }
+]

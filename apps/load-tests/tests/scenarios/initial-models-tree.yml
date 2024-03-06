@@ -1,0 +1,23 @@
+config:
+  target: "http://localhost:5001/presentation-test-app/v1.0/mode/1/context/00000000-0000-0000-0000-000000000000/imodel/00000000-0000-0000-0000-000000000000/changeset/0"
+
+  phases:
+    - name: "1 user"
+      duration: 1
+      arrivalRate: 1
+
+  payload:
+    path: "./datasets.csv"
+    name: "iModels"
+    loadAll: true
+
+  processor: "../lib/processors/models-tree.js"
+
+scenarios:
+  - name: Initial Models Tree
+    beforeScenario: "initScenario"
+    afterScenario: "terminateScenario"
+    flow:
+      - loop:
+          - function: "loadInitialHierarchy"
+        over: iModels
