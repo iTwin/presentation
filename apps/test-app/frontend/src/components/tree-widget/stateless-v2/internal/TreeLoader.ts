@@ -4,8 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { catchError, defer, expand, from, map, mergeMap, Observable, of } from "rxjs";
-import { omit } from "@itwin/core-bentley";
-import { HierarchyNode, HierarchyNodeKey, HierarchyProvider, ParentNodeKey, RowsLimitExceededError } from "@itwin/presentation-hierarchy-builder";
+import { HierarchyNode, HierarchyNodeKey, HierarchyProvider, RowsLimitExceededError } from "@itwin/presentation-hierarchy-builder";
 import { isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelInfoNode, TreeModelNode, TreeModelRootNode } from "./TreeModel";
 
 /** @internal */
@@ -118,14 +117,11 @@ function isHierarchyNode(node: TreeModelInfoNode | HierarchyNode): node is Hiera
 }
 
 function createNodeId(node: HierarchyNode) {
-  return [
-    ...node.parentKeys.map((key) => (typeof key === "string" ? key : convertObjectValuesToString(key))),
-    HierarchyNodeKey.isCustom(node.key)
-      ? node.key
-      : HierarchyNodeKey.isInstances(node.key)
-        ? convertObjectValuesToString(node.key)
-        : convertObjectValuesToString(omit(node.key, ["groupedInstanceKeys"])),
-  ].join(",");
+  return [...node.parentKeys.map(serializeNodeKey), serializeNodeKey(node.key)].join(",");
+}
+
+export function serializeNodeKey(key: HierarchyNodeKey): string {
+  return HierarchyNodeKey.isCustom(key) ? key : convertObjectValuesToString(key);
 }
 
 function convertObjectValuesToString(obj: object): string {
@@ -140,7 +136,7 @@ function convertObjectValuesToString(obj: object): string {
 }
 
 function sameNodes(lhs: HierarchyNode, rhs: HierarchyNode): boolean {
-  if (ParentNodeKey.compare(lhs.key, rhs.key) !== 0) {
+  if (HierarchyNodeKey.compare(lhs.key, rhs.key) !== 0) {
     return false;
   }
 
@@ -149,7 +145,7 @@ function sameNodes(lhs: HierarchyNode, rhs: HierarchyNode): boolean {
   }
 
   for (let i = lhs.parentKeys.length - 1; i >= 0; --i) {
-    if (ParentNodeKey.compare(lhs.parentKeys[i], rhs.parentKeys[i]) !== 0) {
+    if (HierarchyNodeKey.compare(lhs.parentKeys[i], rhs.parentKeys[i]) !== 0) {
       return false;
     }
   }

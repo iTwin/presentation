@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback } from "react";
-import { omit } from "@itwin/core-bentley";
 import { GroupingNodeKey, InstanceKey, Key, KeySet, PresentationQuery, PresentationQueryBinding, StandardNodeTypes } from "@itwin/presentation-common";
 import { useUnifiedSelectionContext } from "@itwin/presentation-components";
 import { HierarchyNode, parseFullClassName } from "@itwin/presentation-hierarchy-builder";
+import { serializeNodeKey } from "./TreeLoader";
 import { isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelRootNode } from "./TreeModel";
 
 /** @internal */
@@ -77,13 +77,13 @@ function getNodeKeys(node: HierarchyNode): Key[] {
     return [
       {
         version: 3,
-        pathFromRoot: [...node.parentKeys.map((pk) => JSON.stringify(pk)), JSON.stringify(omit(node.key, ["groupedInstanceKeys"]))],
-        groupedInstancesCount: node.key.groupedInstanceKeys.length,
-        instanceKeysSelectQuery: createInstanceKeysSelectQuery(node.key.groupedInstanceKeys),
+        pathFromRoot: [...node.parentKeys.map(serializeNodeKey), serializeNodeKey(node.key)],
+        groupedInstancesCount: node.groupedInstanceKeys.length,
+        instanceKeysSelectQuery: createInstanceKeysSelectQuery(node.groupedInstanceKeys),
         ...(() => {
           switch (node.key.type) {
             case "class-grouping":
-              return { type: StandardNodeTypes.ECClassGroupingNode, className: node.key.class.name };
+              return { type: StandardNodeTypes.ECClassGroupingNode, className: node.key.className };
             case "label-grouping":
               return { type: StandardNodeTypes.DisplayLabelGroupingNode, label: node.key.label };
             case "property-grouping:value":

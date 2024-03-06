@@ -16,12 +16,12 @@ import {
   TreeSelectionModificationEventArgs,
   TreeSelectionReplacementEventArgs,
 } from "@itwin/components-react";
-import { Guid, IDisposable, omit } from "@itwin/core-bentley";
+import { Guid, IDisposable } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { GroupingNodeKey, Key, KeySet, PresentationQuery, PresentationQueryBinding, StandardNodeTypes } from "@itwin/presentation-common";
 import { Presentation, SelectionChangeEventArgs, SelectionChangeType, SelectionHandler } from "@itwin/presentation-frontend";
 import { HierarchyNode, InstanceKey, parseFullClassName } from "@itwin/presentation-hierarchy-builder";
-import { getHierarchyNode } from "./TreeNodeItemUtils";
+import { getHierarchyNode, serializeNodeKey } from "./TreeNodeItemUtils";
 
 export interface UnifiedSelectionTreeEventHandlerParams {
   /** The iModel whose data is being displayed in the component. */
@@ -214,13 +214,13 @@ function getNodeKeys(node: HierarchyNode): Key[] {
     return [
       {
         version: 3,
-        pathFromRoot: [...node.parentKeys.map((pk) => JSON.stringify(pk)), JSON.stringify(omit(node.key, ["groupedInstanceKeys"]))],
-        groupedInstancesCount: node.key.groupedInstanceKeys.length,
-        instanceKeysSelectQuery: createInstanceKeysSelectQuery(node.key.groupedInstanceKeys),
+        pathFromRoot: [...node.parentKeys.map(serializeNodeKey), serializeNodeKey(node.key)],
+        groupedInstancesCount: node.groupedInstanceKeys.length,
+        instanceKeysSelectQuery: createInstanceKeysSelectQuery(node.groupedInstanceKeys),
         ...(() => {
           switch (node.key.type) {
             case "class-grouping":
-              return { type: StandardNodeTypes.ECClassGroupingNode, className: node.key.class.name };
+              return { type: StandardNodeTypes.ECClassGroupingNode, className: node.key.className };
             case "label-grouping":
               return { type: StandardNodeTypes.DisplayLabelGroupingNode, label: node.key.label };
             case "property-grouping:value":
