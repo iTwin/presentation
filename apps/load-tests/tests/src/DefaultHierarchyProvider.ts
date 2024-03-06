@@ -14,21 +14,20 @@ import {
   PresentationStatus,
 } from "@itwin/presentation-common";
 import RULESET_ModelsTree from "../rulesets/ModelsTree-GroupedByClass.PresentationRuleSet.json";
-import { BenchmarkContext } from "./BenchmarkContext";
 import { NodeProvider } from "./NodeLoader";
 import { RequestHandler } from "./RequestHandler";
 
 export class DefaultHierarchyProvider implements NodeProvider<Node> {
   private readonly _clientId = Guid.createValue();
 
-  constructor(private readonly _context: BenchmarkContext) {}
+  constructor(private readonly _iModelPath: string) {}
 
   public async getChildren(parent: Node | undefined): Promise<Node[]> {
     const requestBody = JSON.stringify([
       {
         iTwinId: Guid.empty,
         iModelId: Guid.empty,
-        key: this._context.vars.currentIModelPath,
+        key: this._iModelPath,
         changeset: { index: 0, id: "" },
       },
       {
@@ -49,9 +48,7 @@ export class DefaultHierarchyProvider implements NodeProvider<Node> {
       const responseBody = response as PresentationRpcResponseData<PagedResponse<NodeJSON>>;
       switch (responseBody.statusCode) {
         case PresentationStatus.Canceled:
-          return [];
         case PresentationStatus.ResultSetTooLarge:
-          ++this._context.vars.tooLargeHierarchyLevelsCount;
           return [];
         case PresentationStatus.BackendTimeout:
           break;

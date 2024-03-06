@@ -3,9 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 import fs from "fs/promises";
+import path from "path";
 import { StopWatch } from "@itwin/core-bentley";
 import { Arguments, getArguments, Scenario } from "./Arguments";
-import { BenchmarkContext } from "./BenchmarkContext";
 import { BlockHandler } from "./BlockHandler";
 import { loadDataSets } from "./Datasets";
 import { DefaultHierarchyProvider } from "./DefaultHierarchyProvider";
@@ -34,33 +34,30 @@ async function outputGithubSummary(summary: Summary[], filePath: string) {
 }
 
 async function runBenchmarks(args: Arguments, datasets: string[]) {
-  const context = new BenchmarkContext();
   const summary = new Array<Summary>();
 
   for (const dataSetPath of datasets) {
-    context.vars.currentIModelPath = dataSetPath;
     for (const scenario of args.scenarios) {
-      const nodeProvider: NodeProvider<any> = args.stateless ? new StatelessHierarchyProvider(context) : new DefaultHierarchyProvider(context);
-      const processor = new NodeLoader(nodeProvider);
+      const nodeProvider: NodeProvider<any> = args.stateless ? new StatelessHierarchyProvider(dataSetPath) : new DefaultHierarchyProvider(dataSetPath);
+      const processor = new NodeLoader(nodeProvider, args.stateless ? 10 : undefined);
 
       console.log(`Processing ${dataSetPath}`);
       console.log(`Scenario: ${scenario}, processor: ${args.stateless ? "stateless" : "default"}`);
 
       const stopWatch = new StopWatch();
       const blockHandler = new BlockHandler();
-      context.start();
       blockHandler.start();
       stopWatch.start();
       try {
         await runScenario(scenario, processor);
       } finally {
-        context.stop();
         blockHandler.stop();
       }
 
       const elapsed = stopWatch.stop();
+      const iModelName = path.basename(dataSetPath);
       summary.push({
-        name: `${scenario} - ${context.vars.currentIModelName!}`,
+        name: `${scenario} - ${iModelName}`,
         time: elapsed.milliseconds,
         maxBlocked: blockHandler.maxBlockingTime,
         totalBlocked: blockHandler.totalBlockingTime,

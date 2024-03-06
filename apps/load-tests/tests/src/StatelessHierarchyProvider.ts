@@ -10,7 +10,6 @@ import { ISchemaLocater, Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMat
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
-import { BenchmarkContext } from "./BenchmarkContext";
 import { NodeProvider } from "./NodeLoader";
 import { RequestHandler } from "./RequestHandler";
 
@@ -29,15 +28,15 @@ interface iModelInfo {
 export class StatelessHierarchyProvider implements NodeProvider<HierarchyNode> {
   private readonly _provider: HierarchyProvider;
 
-  constructor(private readonly _context: BenchmarkContext) {
-    this._provider = StatelessHierarchyProvider.createProvider(_context);
+  constructor(iModelPath: string) {
+    this._provider = StatelessHierarchyProvider.createProvider(iModelPath);
   }
 
-  private static createProvider(context: BenchmarkContext) {
+  private static createProvider(iModelPath: string) {
     const imodelArg: iModelInfo = {
       iTwinId: Guid.empty,
       iModelId: Guid.empty,
-      key: context.vars.currentIModelPath,
+      key: iModelPath,
       changeset: { index: 0, id: "" },
     };
 
@@ -65,16 +64,7 @@ export class StatelessHierarchyProvider implements NodeProvider<HierarchyNode> {
   }
 
   public async getChildren(parent: HierarchyNode | undefined): Promise<HierarchyNode[]> {
-    try {
-      const nodes = await this._provider.getNodes({ parentNode: parent });
-      return nodes;
-    } catch (e) {
-      if (e instanceof Error && e.message === "rows limit exceeded") {
-        ++this._context.vars.tooLargeHierarchyLevelsCount;
-        return [];
-      }
-      throw e;
-    }
+    return this._provider.getNodes({ parentNode: parent });
   }
 
   public initialHasChildren(node: HierarchyNode): boolean {
