@@ -68,10 +68,7 @@ export interface ClassBasedLabelSelectClause {
 
 // @beta
 export interface ClassGroupingNodeKey {
-    class: {
-        name: string;
-        label?: string;
-    };
+    className: string;
     type: "class-grouping";
 }
 

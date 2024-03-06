@@ -132,10 +132,7 @@ describe("BaseClassGrouping", () => {
 
       const expectedGroupingNodeKey: GroupingNodeKey = {
         type: "class-grouping",
-        class: {
-          name: eCClass.fullName,
-          label: eCClass.name,
-        },
+        className: eCClass.fullName,
       };
       expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, eCClass, new BaseClassChecker(metadataProvider))).to.deep.eq({
         groupingType: "base-class",
@@ -220,10 +217,7 @@ describe("BaseClassGrouping", () => {
 
       const expectedGroupingNodeKey: GroupingNodeKey = {
         type: "class-grouping",
-        class: {
-          name: ecClass.fullName,
-          label: ecClass.label,
-        },
+        className: ecClass.fullName,
       };
 
       expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, ecClass, new BaseClassChecker(metadataProvider))).to.deep.eq({
@@ -274,10 +268,7 @@ describe("BaseClassGrouping", () => {
 
       const expectedGroupingNodeKey: GroupingNodeKey = {
         type: "class-grouping",
-        class: {
-          name: ecClass.fullName,
-          label: ecClass.label,
-        },
+        className: ecClass.fullName,
       };
 
       expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, ecClass, new BaseClassChecker(metadataProvider))).to.deep.eq({

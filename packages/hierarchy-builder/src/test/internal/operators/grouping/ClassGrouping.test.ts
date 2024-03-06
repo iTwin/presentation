@@ -5,7 +5,6 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-
 import { IMetadataProvider } from "../../../../hierarchy-builder/ECMetadata";
 import { GroupingNodeKey } from "../../../../hierarchy-builder/HierarchyNode";
 import { GroupingHandlerResult } from "../../../../hierarchy-builder/internal/operators/Grouping";
@@ -33,7 +32,7 @@ describe("ClassGrouping", () => {
     const classInfo = classStubs.stubEntityClass({ schemaName: "TestSchema", className: "TestClass" });
     const expectedClassGroupingNodeKey: GroupingNodeKey = {
       type: "class-grouping",
-      class: { name: classInfo.fullName, label: classInfo.label },
+      className: classInfo.fullName,
     };
     expect(await createClassGroups(metadataProvider, nodes)).to.deep.eq({
       groupingType: "class",
@@ -68,7 +67,7 @@ describe("ClassGrouping", () => {
     const classA = classStubs.stubEntityClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A" });
     const expectedClassGroupingNodeKey: GroupingNodeKey = {
       type: "class-grouping",
-      class: { name: classA.fullName, label: classA.label },
+      className: classA.fullName,
     };
     expect(await createClassGroups(metadataProvider, nodes)).to.deep.eq({
       groupingType: "class",
@@ -103,12 +102,12 @@ describe("ClassGrouping", () => {
     const classA = classStubs.stubEntityClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A" });
     const expectedClassAGroupingNodeKey: GroupingNodeKey = {
       type: "class-grouping",
-      class: { name: classA.fullName, label: classA.label },
+      className: classA.fullName,
     };
     const classB = classStubs.stubEntityClass({ schemaName: "TestSchema", className: "B", classLabel: "Class B" });
     const expectedClassBGroupingNodeKey: GroupingNodeKey = {
       type: "class-grouping",
-      class: { name: classB.fullName, label: classB.label },
+      className: classB.fullName,
     };
     expect(await createClassGroups(metadataProvider, nodes)).to.deep.eq({
       groupingType: "class",

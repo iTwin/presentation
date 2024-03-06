@@ -986,10 +986,7 @@ describe("HierarchyProvider", () => {
         {
           key: {
             type: "class-grouping",
-            class: {
-              name: "x.y",
-              label: "Class Y",
-            },
+            className: "x.y",
           },
           groupedInstanceKeys: [{ className: "x.y", id: "0x1" }],
           parentKeys: [],
@@ -1011,10 +1008,7 @@ describe("HierarchyProvider", () => {
           parentKeys: [
             {
               type: "class-grouping",
-              class: {
-                name: "x.y",
-                label: "Class Y",
-              },
+              className: "x.y",
             },
           ],
           label: "one",
@@ -1035,10 +1029,7 @@ describe("HierarchyProvider", () => {
           parentKeys: [
             {
               type: "class-grouping",
-              class: {
-                name: "x.y",
-                label: "Class Y",
-              },
+              className: "x.y",
             },
             {
               type: "instances",

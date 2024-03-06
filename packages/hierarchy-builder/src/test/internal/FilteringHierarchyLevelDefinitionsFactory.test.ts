@@ -213,7 +213,7 @@ describe("FilteringHierarchyLevelDefinitionsFactory", () => {
       return createTestProcessedGroupingNode({
         key: {
           type: "class-grouping",
-          class: { label: "class label", name: "class name" },
+          className: "class name",
         },
         groupedInstanceKeys: [],
         children: [],

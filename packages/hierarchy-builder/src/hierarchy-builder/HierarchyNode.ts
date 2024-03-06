@@ -30,11 +30,8 @@ export interface ClassGroupingNodeKey {
   /** Type of the node */
   type: "class-grouping";
 
-  /** Information about the ECClass that this grouping node is grouping by. */
-  class: {
-    name: string;
-    label?: string;
-  };
+  /** Full name of the ECClass that this grouping node is grouping by. */
+  className: string;
 }
 
 /**
@@ -168,55 +165,6 @@ export namespace HierarchyNodeKey {
   export function isPropertyValueGrouping(key: HierarchyNodeKey): key is PropertyValueGroupingNodeKey {
     return isStandard(key) && key.type === "property-grouping:value";
   }
-  /** Checks whether the two given keys are equal. */
-  export function equals(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): boolean {
-    if (typeof lhs !== typeof rhs) {
-      return false;
-    }
-    if (typeof lhs === "string") {
-      return lhs === rhs;
-    }
-    assert(typeof rhs !== "string");
-
-    if (lhs.type !== rhs.type) {
-      return false;
-    }
-    switch (lhs.type) {
-      case "instances": {
-        assert(rhs.type === "instances");
-        return (
-          lhs.instanceKeys.length === rhs.instanceKeys.length &&
-          lhs.instanceKeys.every((lhsInstanceKey) => rhs.instanceKeys.some((rhsInstanceKey) => InstanceKey.equals(lhsInstanceKey, rhsInstanceKey)))
-        );
-      }
-      case "class-grouping": {
-        assert(rhs.type === "class-grouping");
-        return lhs.class.name === rhs.class.name;
-      }
-      case "label-grouping": {
-        assert(rhs.type === "label-grouping");
-        return lhs.label === rhs.label && lhs.groupId === rhs.groupId;
-      }
-      case "property-grouping:other": {
-        return true;
-      }
-      case "property-grouping:value": {
-        assert(rhs.type === "property-grouping:value");
-        return (
-          lhs.propertyClassName === rhs.propertyClassName && lhs.propertyName === rhs.propertyName && lhs.formattedPropertyValue === rhs.formattedPropertyValue
-        );
-      }
-      case "property-grouping:range": {
-        assert(rhs.type === "property-grouping:range");
-        return (
-          lhs.propertyClassName === rhs.propertyClassName &&
-          lhs.propertyName === rhs.propertyName &&
-          lhs.fromValue === rhs.fromValue &&
-          lhs.toValue === rhs.toValue
-        );
-      }
-    }
-  }
   /**
    * Compares two given keys.
    * @returns
@@ -256,7 +204,7 @@ export namespace HierarchyNodeKey {
       }
       case "class-grouping": {
         assert(rhs.type === "class-grouping");
-        return compareStrings(lhs.class.name, rhs.class.name);
+        return compareStrings(lhs.className, rhs.className);
       }
       case "label-grouping": {
         assert(rhs.type === "label-grouping");
@@ -297,6 +245,10 @@ export namespace HierarchyNodeKey {
         return lhs.toValue > rhs.toValue ? 1 : lhs.toValue < rhs.toValue ? -1 : 0;
       }
     }
+  }
+  /** Checks whether the two given keys are equal. */
+  export function equals(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): boolean {
+    return compare(lhs, rhs) === 0;
   }
 }
 

@@ -104,9 +104,7 @@ describe("Grouping", () => {
             label: "TestSchema A",
             key: {
               type: "class-grouping",
-              class: {
-                name: "TestSchema A",
-              },
+              className: "TestSchema A",
             },
             groupedInstanceKeys: labelGroupingInput1.flatMap((n) => n.key.instanceKeys),
             children: labelGroupingInput1,
@@ -172,9 +170,7 @@ describe("Grouping", () => {
           label: "TestSchema A",
           key: {
             type: "class-grouping",
-            class: {
-              name: "TestSchema A",
-            },
+            className: "TestSchema A",
           },
           groupedInstanceKeys: labelGroupingInput1.flatMap((n) => n.key.instanceKeys),
           children: [
@@ -205,9 +201,7 @@ describe("Grouping", () => {
         label: "A",
         key: {
           type: "class-grouping" as const,
-          class: {
-            name: "A",
-          },
+          className: "A",
         },
         groupedInstanceKeys: groupedNode.key.instanceKeys,
         children: [groupedNode],
@@ -235,9 +229,7 @@ describe("Grouping", () => {
         label: "TestSchema A",
         key: {
           type: "class-grouping" as const,
-          class: {
-            name: "TestSchema A",
-          },
+          className: "TestSchema A",
         },
         groupedInstanceKeys: groupedNode.key.instanceKeys,
         children: [groupedNode],
@@ -279,9 +271,7 @@ describe("Grouping", () => {
           label: "TestSchema A",
           key: {
             type: "class-grouping",
-            class: {
-              name: "TestSchema A",
-            },
+            className: "TestSchema A",
           },
           groupedInstanceKeys: groupedNode.key.instanceKeys,
           children: [

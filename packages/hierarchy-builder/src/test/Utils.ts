@@ -98,7 +98,7 @@ export function createTestProcessedGroupingNode<TChild = ProcessedGroupingHierar
     label: "test",
     key: {
       type: "class-grouping",
-      class: { name: "test class" },
+      className: "test class",
     },
     parentKeys: [],
     groupedInstanceKeys: [],

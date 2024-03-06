@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-
 import { ECClass, IMetadataProvider } from "../../../ECMetadata";
 import { ClassGroupingNodeKey, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
 import { BaseClassChecker } from "../../Common";
@@ -53,7 +52,7 @@ export async function createBaseClassGroupsForSingleBaseClass(
   if (groupedNodes.length > 0) {
     const groupingNodeKey: ClassGroupingNodeKey = {
       type: "class-grouping",
-      class: { name: baseECClass.fullName, label: baseECClass.label ?? baseECClass.name },
+      className: baseECClass.fullName,
     };
     result.grouped.push({
       label: baseECClass.label ?? baseECClass.name,

@@ -26,7 +26,7 @@ describe("HierarchyNodeKey", () => {
     });
 
     it("returns false for standard nodes if types are different", () => {
-      expect(HierarchyNodeKey.equals({ type: "class-grouping", class: { name: "x" } }, { type: "instances", instanceKeys: [] })).to.be.false;
+      expect(HierarchyNodeKey.equals({ type: "class-grouping", className: "x" }, { type: "instances", instanceKeys: [] })).to.be.false;
     });
 
     it("returns correct results for instance node keys", () => {
@@ -48,8 +48,8 @@ describe("HierarchyNodeKey", () => {
     });
 
     it("returns correct results for class grouping node keys", () => {
-      expect(HierarchyNodeKey.equals({ type: "class-grouping", class: { name: "x" } }, { type: "class-grouping", class: { name: "x" } })).to.be.true;
-      expect(HierarchyNodeKey.equals({ type: "class-grouping", class: { name: "x" } }, { type: "class-grouping", class: { name: "y" } })).to.be.false;
+      expect(HierarchyNodeKey.equals({ type: "class-grouping", className: "x" }, { type: "class-grouping", className: "x" })).to.be.true;
+      expect(HierarchyNodeKey.equals({ type: "class-grouping", className: "x" }, { type: "class-grouping", className: "y" })).to.be.false;
     });
 
     it("returns correct results for label grouping node keys", () => {
@@ -128,7 +128,7 @@ describe("HierarchyNodeKey", () => {
       const hierarchyNodeKeyVariants: HierarchyNodeKey[] = [
         "x",
         { type: "instances", instanceKeys: [] },
-        { type: "class-grouping", class: { name: "x" } },
+        { type: "class-grouping", className: "x" },
         { type: "label-grouping", label: "a" },
         { type: "property-grouping:other" },
         {
@@ -229,9 +229,9 @@ describe("HierarchyNodeKey", () => {
       });
 
       it("returns correct results for class grouping node keys", () => {
-        expect(HierarchyNodeKey.compare({ type: "class-grouping", class: { name: "a" } }, { type: "class-grouping", class: { name: "a" } })).to.be.eq(0);
-        expect(HierarchyNodeKey.compare({ type: "class-grouping", class: { name: "a" } }, { type: "class-grouping", class: { name: "b" } })).to.be.eq(-1);
-        expect(HierarchyNodeKey.compare({ type: "class-grouping", class: { name: "b" } }, { type: "class-grouping", class: { name: "a" } })).to.be.eq(1);
+        expect(HierarchyNodeKey.compare({ type: "class-grouping", className: "a" }, { type: "class-grouping", className: "a" })).to.be.eq(0);
+        expect(HierarchyNodeKey.compare({ type: "class-grouping", className: "a" }, { type: "class-grouping", className: "b" })).to.be.eq(-1);
+        expect(HierarchyNodeKey.compare({ type: "class-grouping", className: "b" }, { type: "class-grouping", className: "a" })).to.be.eq(1);
       });
 
       it("returns correct results for property other values grouping node keys", () => {
@@ -355,7 +355,7 @@ describe("HierarchyNode", () => {
     children: false,
   };
   const classGroupingNode: GroupingHierarchyNode = {
-    key: { type: "class-grouping", class: { label: "c", name: "c" } },
+    key: { type: "class-grouping", className: "c" },
     groupedInstanceKeys: [],
     label: "class grouping node",
     parentKeys: [],
