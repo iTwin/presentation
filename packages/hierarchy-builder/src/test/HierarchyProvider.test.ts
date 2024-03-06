@@ -6,8 +6,8 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { omit } from "@itwin/core-bentley";
+import { GenericInstanceFilter } from "@itwin/core-common";
 import { ECKindOfQuantity, ECPrimitiveProperty, ECProperty, IMetadataProvider } from "../hierarchy-builder/ECMetadata";
-import { GenericInstanceFilter } from "../hierarchy-builder/GenericInstanceFilter";
 import { IHierarchyLevelDefinitionsFactory } from "../hierarchy-builder/HierarchyDefinition";
 import { RowsLimitExceededError } from "../hierarchy-builder/HierarchyErrors";
 import { GroupingHierarchyNode, GroupingNodeKey, HierarchyNode, ParsedCustomHierarchyNode } from "../hierarchy-builder/HierarchyNode";

@@ -1,0 +1,13 @@
+/*---------------------------------------------------------------------------------------------
+* Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+* See LICENSE.md in the project root for license terms and full copyright notice.
+*--------------------------------------------------------------------------------------------*/
+
+.stateless-tree-node .filtering-action-button {
+  visibility: hidden;
+}
+
+.stateless-tree-node:hover .filtering-action-button,
+.stateless-tree-node.filtered .filtering-action-button {
+  visibility: visible;
+}

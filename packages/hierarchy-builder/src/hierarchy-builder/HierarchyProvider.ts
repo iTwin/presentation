@@ -6,8 +6,8 @@
 import { catchError, concatMap, defaultIfEmpty, defer, filter, from, map, mergeMap, Observable, ObservableInput, of, take, tap } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
 import { assert, StopWatch } from "@itwin/core-bentley";
+import { GenericInstanceFilter } from "@itwin/core-common";
 import { IMetadataProvider } from "./ECMetadata";
-import { GenericInstanceFilter } from "./GenericInstanceFilter";
 import { DefineHierarchyLevelProps, HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
 import { RowsLimitExceededError } from "./HierarchyErrors";
 import {

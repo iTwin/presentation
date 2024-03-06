@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { PresentationInstanceFilterInfo } from "@itwin/presentation-components";
-import { HierarchyNode } from "@itwin/presentation-hierarchy-builder";
+import { GenericInstanceFilter, HierarchyNode } from "@itwin/presentation-hierarchy-builder";
 import { InfoNodeTypes } from "../Types";
 
 /** @internal */
@@ -12,7 +11,7 @@ export interface TreeModelRootNode {
   id: undefined;
   nodeData: undefined;
   hierarchyLimit?: number | "unbounded";
-  instanceFilter?: PresentationInstanceFilterInfo;
+  instanceFilter?: GenericInstanceFilter;
 }
 
 /** @internal */
@@ -25,7 +24,7 @@ export interface TreeModelHierarchyNode {
   isExpanded?: boolean;
   isSelected?: boolean;
   hierarchyLimit?: number | "unbounded";
-  instanceFilter?: PresentationInstanceFilterInfo;
+  instanceFilter?: GenericInstanceFilter;
 }
 
 /** @internal */
@@ -40,7 +39,7 @@ export interface TreeModelInfoNode {
 export type TreeModelNode = TreeModelHierarchyNode | TreeModelInfoNode;
 
 /** @internal */
-export function isTreeModelHierarchyNode(node: TreeModelNode): node is TreeModelHierarchyNode {
+export function isTreeModelHierarchyNode(node: TreeModelNode | TreeModelRootNode): node is TreeModelHierarchyNode {
   return "nodeData" in node && node.nodeData !== undefined;
 }
 
