@@ -4,10 +4,9 @@
 
 ### Major Changes
 
-- f269292e62d2092a75a9b8d801ca520becc43a0f: Peer depenendecies' update:
-
-  - `itwinjs-core` packages to `^4.1.0`.
-  - `AppUI` packages to `^4.8.0`.
+- [#299](https://github.com/iTwin/presentation/pull/299): Bumped peer depenendecy versions:
+  - [itwinjs-core](https://github.com/iTwin/itwinjs-core) packages to `^4.1.0`.
+  - [appui](https://github.com/iTwin/appui) packages to `^4.8.0`.
 
 ### Patch Changes
 
