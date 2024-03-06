@@ -25,13 +25,6 @@ if (process.platform === "win32") {
   });
 }
 
-// set up benchmark tests
-execSync(`npm run benchmark:setup`, {
-  cwd: path.join(workspaceRootPath, "apps/load-tests/tests"),
-  shell: true,
-  stdio: "inherit",
-});
-
 async function main() {
   const BACKEND_PORT = 5001;
   const BACKEND_TIMEOUT = 60 * 1000; // 1 minute;

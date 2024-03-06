@@ -11,12 +11,12 @@
     "build": "tsc",
     "clean": "rimraf lib",
     "lint": "eslint ./src/**/*.ts",
-    "start:initial-models-tree": "artillery run ./scenarios/initial-models-tree.yml",
-    "start:full-models-tree": "artillery run ./scenarios/full-models-tree.yml",
-    "start:initial-models-tree-stateless": "artillery run ./scenarios/initial-models-tree-stateless.yml",
-    "start:full-models-tree-stateless": "artillery run ./scenarios/full-models-tree-stateless.yml",
-    "benchmark": "artillery run ./scenarios/benchmark.yml -o ./artillery-output.json && node ./scripts/extract-benchmark-results.js --in ./artillery-output.json --out ./benchmark.json",
-    "benchmark:setup": "node ./scripts/setup-benchmark-datasets.js --datasetsDir ./datasets --csv ./scenarios/datasets.csv"
+    "start": "node --enable-source-maps lib/src/index.js --datasetsDir ./datasets",
+    "start:initial-models-tree": "npm run start -- --scenarios initial",
+    "start:full-models-tree": "npm run start -- --scenarios full",
+    "start:initial-models-tree-stateless": "npm run start -- --scenarios initial --stateless",
+    "start:full-models-tree-stateless": "npm run start -- --scenarios full --stateless",
+    "benchmark": "npm run start -- --stateless --scenarios initial full --outputPath ./benchmark.json"
   },
   "dependencies": {
     "@itwin/build-tools": "^4.4.0",
@@ -31,12 +31,15 @@
     "@itwin/presentation-hierarchy-builder": "workspace:*",
     "@itwin/presentation-core-interop": "workspace:*",
     "@itwin/presentation-models-tree": "workspace:*",
-    "@types/artillery": "^1.7.4",
-    "@types/node": "^18.17.7",
-    "artillery": "2.0.6",
     "eslint": "^8.56.0",
     "rxjs": "^7.8.1",
     "rimraf": "^5.0.5",
-    "typescript": "~5.0.4"
+    "typescript": "~5.0.4",
+    "blocked": "~1.3.0"
+  },
+  "devDependencies": {
+    "@types/blocked": "~1.3.0",
+    "@types/node": "^18.17.0",
+    "@types/yargs": "~17.0.32"
   }
 }

@@ -11,4 +11,10 @@ module.exports = [
     ...iTwinPlugin.configs.iTwinjsRecommendedConfig,
   },
   ...eslintBaseConfig,
+  {
+    files: ["**/*.ts"],
+    rules: {
+      "no-console": "off",
+    },
+  },
 ];
