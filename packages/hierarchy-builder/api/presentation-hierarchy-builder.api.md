@@ -528,7 +528,7 @@ export interface HierarchyNode {
     };
     key: HierarchyNodeKey;
     label: string;
-    parentKeys: ParentNodeKey[];
+    parentKeys: HierarchyNodeKey[];
     supportsFiltering?: boolean;
 }
 
@@ -636,6 +636,8 @@ export type HierarchyNodeKey = StandardHierarchyNodeKey | string;
 
 // @beta (undocumented)
 export namespace HierarchyNodeKey {
+    export function compare(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): number;
+    export function equals(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): boolean;
     export function isClassGrouping(key: HierarchyNodeKey): key is ClassGroupingNodeKey;
     export function isCustom(key: HierarchyNodeKey): key is string;
     export function isGrouping(key: HierarchyNodeKey): key is GroupingNodeKey;
@@ -907,15 +909,6 @@ export type OmitOverUnion<T, K extends PropertyKey> = T extends T ? Omit<T, K> :
 
 // @beta
 export type ParentHierarchyNode = Omit<HierarchyNode, "children">;
-
-// @beta
-export type ParentNodeKey = OmitOverUnion<GroupingNodeKey, "groupedInstanceKeys"> | InstancesNodeKey | string;
-
-// @beta (undocumented)
-export namespace ParentNodeKey {
-    export function compare(lhs: ParentNodeKey, rhs: ParentNodeKey): number;
-    export function equals(lhs: ParentNodeKey, rhs: ParentNodeKey): boolean;
-}
 
 // @beta
 export type ParsedCustomHierarchyNode = Omit<ProcessedCustomHierarchyNode, "label" | "parentKeys"> & {

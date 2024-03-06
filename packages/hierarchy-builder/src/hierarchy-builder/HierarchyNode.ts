@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert, compareStrings, compareStringsOrUndefined } from "@itwin/core-bentley";
-import { OmitOverUnion } from "./Utils";
 import { ConcatenatedValue } from "./values/ConcatenatedValue";
 import { InstanceKey, PrimitiveValue } from "./values/Values";
 
@@ -169,19 +168,8 @@ export namespace HierarchyNodeKey {
   export function isPropertyValueGrouping(key: HierarchyNodeKey): key is PropertyValueGroupingNodeKey {
     return isStandard(key) && key.type === "property-grouping:value";
   }
-}
-
-/**
- * A key that uniquely identifies parent node in a hierarchy level.
- * @beta
- */
-export type ParentNodeKey = OmitOverUnion<GroupingNodeKey, "groupedInstanceKeys"> | InstancesNodeKey | string;
-
-/** @beta */
-// eslint-disable-next-line @typescript-eslint/no-redeclare
-export namespace ParentNodeKey {
   /** Checks whether the two given keys are equal. */
-  export function equals(lhs: ParentNodeKey, rhs: ParentNodeKey): boolean {
+  export function equals(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): boolean {
     if (typeof lhs !== typeof rhs) {
       return false;
     }
@@ -236,7 +224,7 @@ export namespace ParentNodeKey {
    *- `negative value` if lhs key is less than rhs key
    *- `positive value` if lhs key is more than rhs key
    */
-  export function compare(lhs: ParentNodeKey, rhs: ParentNodeKey): number {
+  export function compare(lhs: HierarchyNodeKey, rhs: HierarchyNodeKey): number {
     if (typeof lhs === "string") {
       if (typeof rhs !== "string") {
         return 1;
@@ -320,7 +308,7 @@ export interface HierarchyNode {
   /** An identifier to identify the node in its hierarchy level. */
   key: HierarchyNodeKey;
   /** Identifiers of all node ancestors. Can be used to identify a node in the hierarchy. */
-  parentKeys: ParentNodeKey[];
+  parentKeys: HierarchyNodeKey[];
   /** Node's display label. */
   label: string;
   /** A flag indicating whether the node has children or not. */
