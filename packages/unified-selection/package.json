@@ -27,7 +27,7 @@
     "build:esm": "tsc -p tsconfig.esm.json",
     "build:watch": "npm run -s build:cjs -- -w",
     "clean": "rimraf lib build",
-    "cover": "nyc npm -s test",
+    "cover": "",
     "lint": "eslint ./src/**/*.ts",
     "test": "mocha --config ./.mocharc.json \"./lib/cjs/test/**/*.test.js\"",
     "test:watch": "npm -s test -- --reporter min --watch-extensions ts --watch",
