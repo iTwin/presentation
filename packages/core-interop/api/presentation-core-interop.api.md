@@ -7,14 +7,13 @@
 import { ContentDescriptorRequestOptions } from '@itwin/presentation-common';
 import { Descriptor } from '@itwin/presentation-common';
 import { ECSqlReader } from '@itwin/core-common';
-import { HierarchyNode } from '@itwin/presentation-hierarchy-builder';
 import { HierarchyProvider } from '@itwin/presentation-hierarchy-builder';
 import { IECSqlQueryExecutor } from '@itwin/presentation-hierarchy-builder';
 import { ILogger } from '@itwin/presentation-hierarchy-builder';
 import { IMetadataProvider } from '@itwin/presentation-hierarchy-builder';
-import { InstancesNodeKey } from '@itwin/presentation-hierarchy-builder';
 import { IPrimitiveValueFormatter } from '@itwin/presentation-hierarchy-builder';
 import { KeySet } from '@itwin/presentation-common';
+import { NonGroupingHierarchyNode } from '@itwin/presentation-hierarchy-builder';
 import { QueryBinder } from '@itwin/core-common';
 import { QueryOptions } from '@itwin/core-common';
 import { RulesetVariable } from '@itwin/presentation-common';
@@ -34,9 +33,7 @@ export interface CreateHierarchyLevelDescriptorProps<TIModel extends ICoreECSqlR
     };
     hierarchyProvider: HierarchyProvider;
     imodel: TIModel;
-    parentNode: (Omit<HierarchyNode, "children"> & {
-        key: InstancesNodeKey | string;
-    }) | undefined;
+    parentNode: Omit<NonGroupingHierarchyNode, "children"> | undefined;
 }
 
 // @beta
