@@ -7,6 +7,6 @@
  * @module UnifiedSelection
  *
  * @docs-group-description UnifiedSelection
- * API for working with unified selection within [React](https://reactjs.org/) components.
+ * API for working with unified selection.
  */
 export * from "./unified-selection";
