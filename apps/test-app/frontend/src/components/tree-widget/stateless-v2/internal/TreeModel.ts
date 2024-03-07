@@ -15,9 +15,9 @@ export interface TreeModelRootNode {
 }
 
 /** @internal */
-export interface TreeModelHierarchyNode {
+export interface TreeModelHierarchyNode<TNodeData = HierarchyNode> {
   id: string;
-  nodeData: HierarchyNode;
+  nodeData: TNodeData;
   label: string;
   children: boolean;
   isLoading?: boolean;
@@ -39,8 +39,15 @@ export interface TreeModelInfoNode {
 export type TreeModelNode = TreeModelHierarchyNode | TreeModelInfoNode;
 
 /** @internal */
-export function isTreeModelHierarchyNode(node: TreeModelNode | TreeModelRootNode): node is TreeModelHierarchyNode {
+export function isTreeModelHierarchyNode<TNodeData = HierarchyNode>(
+  node: TreeModelHierarchyNode<TNodeData> | TreeModelInfoNode | TreeModelRootNode,
+): node is TreeModelHierarchyNode<TNodeData> {
   return "nodeData" in node && node.nodeData !== undefined;
+}
+
+/** @internal */
+export function isTreeModelInfoNode(node: TreeModelHierarchyNode | TreeModelInfoNode | TreeModelRootNode): node is TreeModelInfoNode {
+  return "message" in node && node.message !== undefined;
 }
 
 /** @internal */
