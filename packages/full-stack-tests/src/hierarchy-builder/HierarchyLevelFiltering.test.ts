@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchy-builder";
+import { GroupingHierarchyNode, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory, ParentHierarchyNode } from "@itwin/presentation-hierarchy-builder";
 import { importSchema, withECDb } from "../IModelUtils";
 import { initialize, terminate } from "../IntegrationTests";
 import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation";
@@ -149,6 +149,91 @@ describe("Stateless hierarchy builder", () => {
                 parentKeys: [],
                 label: "",
               },
+              instanceFilter: {
+                propertyClassNames: [schema.items.Y.fullName],
+                relatedInstances: [],
+                rules: {
+                  sourceAlias: "this",
+                  propertyName: `Prop`,
+                  operator: "is-equal",
+                  propertyTypeName: "string",
+                  value: { rawValue: `two`, displayValue: "two" },
+                },
+              },
+            }),
+            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [y2] })],
+          });
+        },
+      );
+    });
+
+    it("filters grouped hierarchy level", async function () {
+      await withECDb(
+        this,
+        async (db) => {
+          const schema = importSchema(
+            this,
+            db,
+            `
+              <ECEntityClass typeName="X" />
+              <ECEntityClass typeName="Y">
+                <ECProperty propertyName="Prop" typeName="string" />
+              </ECEntityClass>
+            `,
+          );
+          const x = db.insertInstance(schema.items.X.fullName);
+          const y1 = db.insertInstance(schema.items.Y.fullName, { prop: "one" });
+          const y2 = db.insertInstance(schema.items.Y.fullName, { prop: "two" });
+          return { schema, x, y1, y2 };
+        },
+        async (imodel, { schema, x, y1, y2 }) => {
+          const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
+          const hierarchy: IHierarchyLevelDefinitionsFactory = {
+            async defineHierarchyLevel({ instanceFilter }) {
+              const filterClauses = await selectQueryFactory.createFilterClauses(instanceFilter, { fullName: schema.items.Y.fullName, alias: "this" });
+              return [
+                {
+                  fullClassName: schema.items.Y.fullName,
+                  query: {
+                    ecsql: `
+                      SELECT ${await selectQueryFactory.createSelectClause({
+                        ecClassId: { selector: `this.ECClassId` },
+                        ecInstanceId: { selector: `this.ECInstanceId` },
+                        nodeLabel: "doesnt matter",
+                        grouping: {
+                          byClass: true,
+                        },
+                      })}
+                      FROM ${filterClauses.from} AS this
+                      ${filterClauses.joins}
+                      ${filterClauses.where ? `WHERE ${filterClauses.where}` : ""}
+                    `,
+                  },
+                },
+              ];
+            },
+          };
+          const provider = createProvider({ imodel, hierarchy });
+          const groupingNode: ParentHierarchyNode<GroupingHierarchyNode> = {
+            key: { type: "class-grouping", className: schema.items.Y.fullName },
+            parentKeys: [{ type: "instances", instanceKeys: [x] }],
+            nonGroupingAncestor: {
+              key: { type: "instances", instanceKeys: [x] },
+              parentKeys: [],
+              label: "X",
+            },
+            label: "Y",
+            groupedInstanceKeys: [],
+          };
+          validateHierarchyLevel({
+            nodes: await provider.getNodes({
+              parentNode: groupingNode,
+            }),
+            expect: [NodeValidators.createForInstanceNode({ instanceKeys: [y1] }), NodeValidators.createForInstanceNode({ instanceKeys: [y2] })],
+          });
+          validateHierarchyLevel({
+            nodes: await provider.getNodes({
+              parentNode: groupingNode,
               instanceFilter: {
                 propertyClassNames: [schema.items.Y.fullName],
                 relatedInstances: [],

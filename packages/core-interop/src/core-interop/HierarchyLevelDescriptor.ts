@@ -15,6 +15,7 @@ import {
   InstanceNodesQueryDefinition,
   InstancesNodeKey,
   NodeSelectClauseColumnNames,
+  NonGroupingHierarchyNode,
 } from "@itwin/presentation-hierarchy-builder";
 import { ICoreECSqlReaderFactory } from "./QueryExecutor";
 
@@ -32,7 +33,7 @@ export interface CreateHierarchyLevelDescriptorProps<TIModel extends ICoreECSqlR
   imodel: TIModel;
 
   /** The parent node to create hierarchy level descriptor for. */
-  parentNode: (Omit<HierarchyNode, "children"> & { key: InstancesNodeKey | string }) | undefined;
+  parentNode: Omit<NonGroupingHierarchyNode, "children"> | undefined;
 
   /**
    * `HierarchyProvider` that was used to create `parentNode`. The provider is used to get child hierarchy level

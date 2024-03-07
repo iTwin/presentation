@@ -4,13 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 import { Draft, enableMapSet, produce } from "immer";
 import { EMPTY, Observable, reduce, Subject, takeUntil } from "rxjs";
-import { GenericInstanceFilter, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
+import { assert } from "@itwin/core-bentley";
+import { GenericInstanceFilter, HierarchyNode, HierarchyProvider, ParentHierarchyNode } from "@itwin/presentation-hierarchy-builder";
 import { PresentationHierarchyNode, PresentationTreeNode } from "../Types";
-import { HierarchyLoader, IHierarchyLoader, LoadedHierarchyPart } from "./TreeLoader";
+import { createNodeId, HierarchyLoader, IHierarchyLoader, LoadedHierarchyPart } from "./TreeLoader";
 import {
   addHierarchyPart,
   expandNode,
   isTreeModelHierarchyNode,
+  isTreeModelInfoNode,
   removeSubTree,
   TreeModel,
   TreeModelHierarchyNode,
@@ -69,6 +71,19 @@ export class TreeActions {
     });
   }
 
+  private getNodeInstanceFilter(node: TreeModelHierarchyNode<ParentHierarchyNode> | TreeModelRootNode) {
+    if (node.nodeData && HierarchyNode.isGroupingNode(node.nodeData)) {
+      if (node.nodeData.nonGroupingAncestor) {
+        const ancestorId = createNodeId(node.nodeData.nonGroupingAncestor);
+        const ancestorModelNode = this._currentModel.idToNode.get(ancestorId);
+        assert(!!ancestorModelNode && !isTreeModelInfoNode(ancestorModelNode));
+        return ancestorModelNode?.instanceFilter;
+      }
+      return this._currentModel.rootNode.instanceFilter;
+    }
+    return node.instanceFilter;
+  }
+
   private loadNodes(parentId: string | undefined) {
     const parentNode = parentId ? this._currentModel.idToNode.get(parentId) : this._currentModel.rootNode;
     if (!parentNode || (parentNode.id !== undefined && !isTreeModelHierarchyNode(parentNode))) {
@@ -76,7 +91,11 @@ export class TreeActions {
     }
 
     this._loader
-      .getNodes(parentNode, (node) => !!node.nodeData.autoExpand)
+      .getNodes(
+        parentNode,
+        (node) => this.getNodeInstanceFilter(node),
+        (node) => !!node.nodeData.autoExpand,
+      )
       .pipe(collectHierarchyPartsUntil(this._disposed))
       .subscribe({
         next: (loadedHierarchy) => {
@@ -170,6 +189,9 @@ export class TreeActions {
     const oldModel = this._currentModel;
     const expandedNodes = !!options?.discardState ? [] : collectNodes(parentId, oldModel, (node) => node.isExpanded === true);
     const collapsedNodes = !!options?.discardState ? [] : collectNodes(parentId, oldModel, (node) => node.isExpanded === false);
+    const getInstanceFilter = !!options?.discardState
+      ? () => undefined
+      : (node: TreeModelRootNode | TreeModelHierarchyNode<ParentHierarchyNode>) => this.getNodeInstanceFilter(node);
     const buildNode = !!options?.discardState ? (node: TreeModelHierarchyNode) => node : (node: TreeModelHierarchyNode) => addAttributes(node, oldModel);
 
     const rootNode = parentId !== undefined ? this.getNode(parentId) : oldModel.rootNode;
@@ -184,7 +206,7 @@ export class TreeActions {
     }
 
     this._loader
-      .reloadNodes(rootNode, { expandedNodes, collapsedNodes, buildNode })
+      .reloadNodes(rootNode, { expandedNodes, collapsedNodes, getInstanceFilter, buildNode })
       .pipe(collectHierarchyPartsUntil(this._disposed, !!options?.discardState ? undefined : { ...oldModel.rootNode }))
       .subscribe({
         next: (newModel) => {
@@ -214,13 +236,13 @@ function collectHierarchyPartsUntil(untilNotifier: Observable<void>, rootNode?: 
 
 function addNodesToModel(model: TreeModel, hierarchyPart: LoadedHierarchyPart) {
   model.parentChildMap.set(
-    hierarchyPart.parent?.id,
+    hierarchyPart.parentId,
     hierarchyPart.loadedNodes.map((node) => node.id),
   );
   for (const node of hierarchyPart.loadedNodes) {
     model.idToNode.set(node.id, node);
   }
-  const parentNode = hierarchyPart.parent.id ? model.idToNode.get(hierarchyPart.parent.id) : undefined;
+  const parentNode = hierarchyPart.parentId ? model.idToNode.get(hierarchyPart.parentId) : undefined;
   if (parentNode && isTreeModelHierarchyNode(parentNode)) {
     parentNode.isExpanded = true;
   }
@@ -287,24 +309,18 @@ function toPresentationHierarchyNodeBase(node: TreeModelHierarchyNode): Omit<Pre
     label: node.label,
     isLoading: !!node.isLoading,
     isExpanded: !!node.isExpanded,
-    isFilterable: !!node.nodeData.supportsFiltering && node.children,
+    isFilterable: !HierarchyNode.isGroupingNode(node.nodeData) && !!node.nodeData.supportsFiltering && node.children,
     isFiltered: !!node.instanceFilter,
     extendedData: node.nodeData.extendedData,
   };
 }
 
 class NoopHierarchyLoader implements IHierarchyLoader {
-  public getNodes(
-    _parent: TreeModelHierarchyNode | TreeModelRootNode,
-    _shouldLoadChildren: (node: TreeModelHierarchyNode) => boolean,
-  ): Observable<LoadedHierarchyPart> {
+  public getNodes(): Observable<LoadedHierarchyPart> {
     return EMPTY;
   }
 
-  public reloadNodes(
-    _parent: TreeModelHierarchyNode | TreeModelRootNode,
-    _options: { expandedNodes: TreeModelHierarchyNode[]; collapsedNodes: TreeModelHierarchyNode[] },
-  ): Observable<LoadedHierarchyPart> {
+  public reloadNodes(): Observable<LoadedHierarchyPart> {
     return EMPTY;
   }
 }
