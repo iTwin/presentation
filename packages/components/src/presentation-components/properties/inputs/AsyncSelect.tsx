@@ -5,7 +5,7 @@
 
 import "./AsyncSelect.scss";
 import classnames from "classnames";
-import { useRef, useState } from "react";
+import { Ref, useRef, useState } from "react";
 import {
   ClearIndicatorProps,
   components,
@@ -44,7 +44,10 @@ function Control<TOption, IsMulti extends boolean = boolean>({ children, ...prop
   );
 }
 
-function CustomMenuList<TOption, IsMulti extends boolean = boolean>({ children, ...props }: MenuListProps<TOption, IsMulti>) {
+function CustomMenuList<TOption, IsMulti extends boolean = boolean, Group extends GroupBase<TOption> = GroupBase<TOption>>({
+  children,
+  ...props
+}: MenuListProps<TOption, IsMulti, Group>) {
   return (
     <List className="presentation-async-select-dropdown" ref={props.innerRef} {...props.innerProps} as="div">
       {children}
@@ -120,19 +123,12 @@ const MenuList = wrapMenuList(CustomMenuList);
 
 /** @internal */
 export function AsyncSelect<OptionType, Group extends GroupBase<OptionType>, Additional>(props: AsyncPaginateProps<OptionType, Group, Additional, true>) {
-  const [dropdownUp, setDropdownUp] = useState(false);
   const { ref: resizeRef, width } = useResizeObserver();
   const { portalTarget } = usePortalTargetContext();
-  const divRef = useRef<HTMLDivElement>(null);
-
-  const onMenuOpen = () => {
-    const { top, height } = divRef.current!.getBoundingClientRect();
-    const space = window.innerHeight - top - height;
-    setDropdownUp(space < MAX_SELECT_MENU_HEIGHT);
-  };
+  const { ref, ...menuProps } = useSelectMenuPlacement();
 
   return (
-    <div ref={useMergedRefs(divRef, resizeRef)}>
+    <div ref={useMergedRefs(ref, resizeRef)}>
       <AsyncPaginate
         {...props}
         styles={{
@@ -159,12 +155,38 @@ export function AsyncSelect<OptionType, Group extends GroupBase<OptionType>, Add
           SelectContainer,
           NoOptionsMessage,
         }}
-        onMenuOpen={onMenuOpen}
         menuPortalTarget={portalTarget}
-        menuPlacement={dropdownUp ? "top" : "bottom"}
-        menuPosition="fixed"
         isMulti={true}
+        {...menuProps}
       />
     </div>
   );
+}
+
+/** @internal */
+export function useSelectMenuPlacement(): {
+  ref: Ref<HTMLElement>;
+  onMenuOpen: () => void;
+  menuPlacement: "top" | "bottom";
+  menuPosition: "fixed";
+} {
+  const [dropdownUp, setDropdownUp] = useState(false);
+  const divRef = useRef<HTMLElement>(null);
+
+  const onMenuOpen = () => {
+    // istanbul ignore if
+    if (!divRef.current) {
+      return;
+    }
+    const { top, height } = divRef.current.getBoundingClientRect();
+    const space = window.innerHeight - top - height;
+    setDropdownUp(space < MAX_SELECT_MENU_HEIGHT);
+  };
+
+  return {
+    ref: divRef,
+    onMenuOpen,
+    menuPlacement: dropdownUp ? "top" : "bottom",
+    menuPosition: "fixed",
+  };
 }

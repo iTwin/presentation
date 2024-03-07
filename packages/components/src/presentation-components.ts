@@ -17,6 +17,7 @@ export * from "./presentation-components/common/IPresentationDataProvider";
 export * from "./presentation-components/common/IUnifiedSelectionComponent";
 export * from "./presentation-components/common/PropertyRecordsBuilder";
 export * from "./presentation-components/common/SchemaMetadataContext";
+export { PortalTargetContextProvider, type PortalTargetContextProviderProps } from "./presentation-components/common/PortalTargetContext";
 export * from "./presentation-components/hooks/UseRulesetRegistration";
 
 /**
