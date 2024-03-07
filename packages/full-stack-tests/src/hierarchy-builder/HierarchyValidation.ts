@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Logger } from "@itwin/core-bentley";
-import { HierarchyNode, HierarchyProvider, InstanceKey } from "@itwin/presentation-hierarchy-builder";
+import { HierarchyNode, HierarchyProvider, InstanceKey, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchy-builder";
 import { hasChildren } from "@itwin/presentation-hierarchy-builder/lib/cjs/hierarchy-builder/internal/Common";
 
 const loggingNamespace = `Presentation.HierarchyBuilder.HierarchyValidation`;
@@ -48,7 +48,11 @@ export namespace NodeValidators {
         )}`,
       );
     }
-    if (expectations.supportsFiltering !== undefined && !!node.supportsFiltering !== !!expectations.supportsFiltering) {
+    if (
+      (HierarchyNode.isInstancesNode(node) || HierarchyNode.isCustom(node)) &&
+      expectations.supportsFiltering !== undefined &&
+      !!node.supportsFiltering !== !!expectations.supportsFiltering
+    ) {
       throw new Error(
         `[${node.label}] Expected node's \`supportsFiltering\` flag to be ${optionalBooleanToString(
           expectations.supportsFiltering,
@@ -61,7 +65,7 @@ export namespace NodeValidators {
   }
 
   export function createForCustomNode<TChildren extends ExpectedHierarchyDef[] | boolean>(
-    expectedNode: Partial<Omit<HierarchyNode, "label" | "children">> & { label?: string; children?: TChildren },
+    expectedNode: Partial<Omit<NonGroupingHierarchyNode, "label" | "children">> & { label?: string; children?: TChildren },
   ) {
     return {
       node: (node: HierarchyNode) => {

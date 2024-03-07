@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert, compareStrings, compareStringsOrUndefined } from "@itwin/core-bentley";
+import { OmitOverUnion } from "./Utils";
 import { ConcatenatedValue } from "./values/ConcatenatedValue";
 import { InstanceKey, PrimitiveValue } from "./values/Values";
 
@@ -253,12 +254,10 @@ export namespace HierarchyNodeKey {
 }
 
 /**
- * A data structure that represents a single hierarchy node.
+ * A data structure that represents a single non-grouping hierarchy node.
  * @beta
  */
-export interface HierarchyNode {
-  /** An identifier to identify the node in its hierarchy level. */
-  key: HierarchyNodeKey;
+export interface BaseHierarchyNode {
   /** Identifiers of all node ancestors. Can be used to identify a node in the hierarchy. */
   parentKeys: HierarchyNodeKey[];
   /** Node's display label. */
@@ -267,20 +266,29 @@ export interface HierarchyNode {
   children: boolean;
   /** A flag indicating whether this node should be auto-expanded in the UI. */
   autoExpand?: boolean;
+  /** Additional data that may be assigned to this node. */
+  extendedData?: { [key: string]: any };
+}
+
+/**
+ * A data structure that represents a single non-grouping hierarchy node.
+ * @beta
+ */
+export interface NonGroupingHierarchyNode extends BaseHierarchyNode {
+  /** An identifier to identify the node in its hierarchy level. */
+  key: string | InstancesNodeKey;
   /**
    * Identifies whether the hierarchy level below this node supports filtering. If not, supplying an instance
    * filter when requesting child hierarchy level will have no effect.
    */
   supportsFiltering?: boolean;
-  /** Additional data that may be assigned to this node. */
-  extendedData?: { [key: string]: any };
 }
 
 /**
  * A data structure that represents a grouping node that groups other nodes.
  * @beta
  */
-export type GroupingHierarchyNode = Omit<HierarchyNode, "key" | "supportsFiltering"> & {
+export interface GroupingHierarchyNode extends BaseHierarchyNode {
   /** An identifier to identify this grouping node in its hierarchy level. */
   key: GroupingNodeKey;
 
@@ -291,8 +299,14 @@ export type GroupingHierarchyNode = Omit<HierarchyNode, "key" | "supportsFilteri
   groupedInstanceKeys: InstanceKey[];
 
   /** The closest ancestor node that is not a grouping node. May be `undefined` it the grouping node grouped root level nodes. */
-  nonGroupingAncestor?: Omit<ParentHierarchyNode, "key"> & { key: string | InstancesNodeKey };
-};
+  nonGroupingAncestor?: ParentHierarchyNode<NonGroupingHierarchyNode>;
+}
+
+/**
+ * A data structure that represents a single hierarchy node.
+ * @beta
+ */
+export type HierarchyNode = NonGroupingHierarchyNode | GroupingHierarchyNode;
 
 /**
  * A type of [[HierarchyNode]] that doesn't know about its children and is an input when requesting
@@ -300,14 +314,15 @@ export type GroupingHierarchyNode = Omit<HierarchyNode, "key" | "supportsFilteri
  *
  * @beta
  */
-export type ParentHierarchyNode = Omit<HierarchyNode, "children">;
+export type ParentHierarchyNode<TBase = HierarchyNode> = OmitOverUnion<TBase, "children">;
 
 /** @beta */
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace HierarchyNode {
   /** Checks whether the given node is a custom node */
   export function isCustom<TNode extends { key: HierarchyNodeKey }>(
     node: TNode,
-  ): node is TNode & { key: string } & (TNode extends ProcessedHierarchyNode ? ProcessedCustomHierarchyNode : {}) {
+  ): node is TNode & (TNode extends ProcessedHierarchyNode ? ProcessedCustomHierarchyNode : NonGroupingHierarchyNode) & { key: string } {
     return HierarchyNodeKey.isCustom(node.key);
   }
   /** Checks whether the given node is a standard (iModel content based) node */
@@ -317,15 +332,13 @@ export namespace HierarchyNode {
   /** Checks whether the given node is an ECInstances-based node */
   export function isInstancesNode<TNode extends { key: HierarchyNodeKey }>(
     node: TNode,
-  ): node is TNode & { key: InstancesNodeKey } & (TNode extends ProcessedHierarchyNode ? ProcessedInstanceHierarchyNode : {}) {
+  ): node is TNode & (TNode extends ProcessedHierarchyNode ? ProcessedInstanceHierarchyNode : NonGroupingHierarchyNode) & { key: InstancesNodeKey } {
     return HierarchyNodeKey.isInstances(node.key);
   }
   /** Checks whether the given node is a grouping node */
   export function isGroupingNode<TNode extends { key: HierarchyNodeKey }>(
     node: TNode,
-  ): node is TNode & { key: GroupingNodeKey; supportsFiltering?: undefined } & (TNode extends ProcessedHierarchyNode
-      ? ProcessedGroupingHierarchyNode
-      : GroupingHierarchyNode) {
+  ): node is TNode & (TNode extends ProcessedHierarchyNode ? ProcessedGroupingHierarchyNode : GroupingHierarchyNode) {
     return HierarchyNodeKey.isGrouping(node.key);
   }
   /** Checks whether the given node is a class grouping node */
@@ -545,7 +558,7 @@ export interface InstanceHierarchyNodeProcessingParams extends HierarchyNodeProc
  * A custom (not based on data in an iModel) node that has processing parameters.
  * @beta
  */
-export type ProcessedCustomHierarchyNode = Omit<HierarchyNode, "key" | "children"> & {
+export type ProcessedCustomHierarchyNode = Omit<NonGroupingHierarchyNode, "key" | "children"> & {
   key: string;
   children?: boolean;
   processingParams?: HierarchyNodeProcessingParamsBase;
@@ -554,7 +567,7 @@ export type ProcessedCustomHierarchyNode = Omit<HierarchyNode, "key" | "children
  * An instances' (based on data in an iModel) node that has processing parameters.
  * @beta
  */
-export type ProcessedInstanceHierarchyNode = Omit<HierarchyNode, "key" | "children"> & {
+export type ProcessedInstanceHierarchyNode = Omit<NonGroupingHierarchyNode, "key" | "children"> & {
   key: InstancesNodeKey;
   children?: boolean;
   processingParams?: InstanceHierarchyNodeProcessingParams;

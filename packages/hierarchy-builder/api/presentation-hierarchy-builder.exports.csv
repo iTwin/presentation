@@ -1,6 +1,7 @@
 sep=;
 Release Tag;API Item
 beta;ArrayPropertyAttributes
+beta;BaseHierarchyNode
 beta;BisInstanceLabelSelectClauseFactory 
 beta;BisInstanceLabelSelectClauseFactoryProps
 beta;ClassBasedHierarchyDefinition
@@ -67,11 +68,11 @@ beta;ECStructClass = ECClass
 beta;ECStructProperty 
 beta;GetHierarchyNodesProps
 beta;getLogger(): ILogger
-beta;GroupingHierarchyNode = Omit
+beta;GroupingHierarchyNode 
 beta;GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | PropertyGroupingNodeKey
 beta;HierarchyDefinitionParentNode = Omit
 beta;HierarchyLevelDefinition = HierarchyNodesDefinition[]
-beta;HierarchyNode
+beta;HierarchyNode = NonGroupingHierarchyNode | GroupingHierarchyNode
 beta;HierarchyNode
 beta;HierarchyNodeAutoExpandProp = "single-child" | "always"
 beta;HierarchyNodeBaseClassGroupingParams 
@@ -117,8 +118,9 @@ beta;LogFunction = (category: string, message: string) => void
 beta;NodeSelectClauseColumnNames
 beta;NodeSelectClauseProps
 beta;NodeSelectQueryFactory
+beta;NonGroupingHierarchyNode 
 beta;OmitOverUnion
-beta;ParentHierarchyNode = Omit
+beta;ParentHierarchyNode
 beta;ParsedCustomHierarchyNode = Omit
 beta;ParsedHierarchyNode = ParsedCustomHierarchyNode | ParsedInstanceHierarchyNode
 beta;ParsedInstanceHierarchyNode = Omit
