@@ -48,7 +48,7 @@ jobs:
         uses: benchmark-action/github-action-benchmark@v1
         with:
           tool: 'customSmallerIsBetter'
-          output-file-path: ./apps/load-tests/tests/benchmark.json
+          output-file-path: ./apps/performance-tests/benchmark.json
           # Access token to deploy GitHub Pages branch
           github-token: ${{ secrets.IMJS_ADMIN_GH_TOKEN }}
           # Push and deploy GitHub pages branch automatically
