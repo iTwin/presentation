@@ -184,12 +184,6 @@ importers:
 
   apps/performance-tests:
     dependencies:
-      '@itwin/appui-abstract':
-        specifier: ^4.4.0
-        version: 4.4.0(@itwin/core-bentley@4.4.0)
-      '@itwin/build-tools':
-        specifier: ^4.4.0
-        version: 4.4.0(@types/node@18.17.7)
       '@itwin/core-backend':
         specifier: ^4.4.0
         version: 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-common@4.4.0)(@itwin/core-geometry@4.4.0)(@opentelemetry/api@1.6.0)
@@ -199,36 +193,9 @@ importers:
       '@itwin/core-common':
         specifier: ^4.4.0
         version: 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-geometry@4.4.0)
-      '@itwin/core-frontend':
-        specifier: ^4.4.0
-        version: 4.4.0(@itwin/appui-abstract@4.4.0)(@itwin/core-bentley@4.4.0)(@itwin/core-common@4.4.0)(@itwin/core-geometry@4.4.0)(@itwin/core-orbitgt@4.4.0)(@itwin/core-quantity@4.4.0)(inversify@6.0.2)(reflect-metadata@0.1.14)
-      '@itwin/core-geometry':
-        specifier: ^4.4.0
-        version: 4.4.0
-      '@itwin/core-orbitgt':
-        specifier: ^4.4.0
-        version: 4.4.0
-      '@itwin/core-quantity':
-        specifier: ^4.4.0
-        version: 4.4.0(@itwin/core-bentley@4.4.0)
       '@itwin/ecschema-metadata':
         specifier: ^4.4.0
         version: 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-quantity@4.4.0)
-      '@itwin/ecschema-rpcinterface-common':
-        specifier: ^4.4.0
-        version: 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-common@4.4.0)(@itwin/core-geometry@4.4.0)(@itwin/ecschema-metadata@4.4.0)
-      '@itwin/ecschema-rpcinterface-impl':
-        specifier: ^4.4.0
-        version: 4.4.0(@itwin/core-backend@4.4.0)(@itwin/core-bentley@4.4.0)(@itwin/core-common@4.4.0)(@itwin/core-geometry@4.4.0)(@itwin/ecschema-metadata@4.4.0)(@itwin/ecschema-rpcinterface-common@4.4.0)
-      '@itwin/express-server':
-        specifier: ^4.4.0
-        version: 4.4.0(@itwin/core-backend@4.4.0)
-      '@itwin/presentation-backend':
-        specifier: ^4.4.0
-        version: 4.4.0(@itwin/core-backend@4.4.0)(@itwin/core-bentley@4.4.0)(@itwin/core-common@4.4.0)(@itwin/core-quantity@4.4.0)(@itwin/ecschema-metadata@4.4.0)(@itwin/presentation-common@4.4.0)
-      '@itwin/presentation-common':
-        specifier: ^4.4.0
-        version: 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-common@4.4.0)(@itwin/core-quantity@4.4.0)(@itwin/ecschema-metadata@4.4.0)
       '@itwin/presentation-core-interop':
         specifier: workspace:*
         version: link:../../packages/core-interop
@@ -238,14 +205,11 @@ importers:
       '@itwin/presentation-models-tree':
         specifier: workspace:*
         version: link:../../packages/models-tree
-      '@itwin/webgl-compatibility':
-        specifier: ^4.4.0
-        version: 4.4.0
       blocked:
-        specifier: ~1.3.0
+        specifier: ^1.3.0
         version: 1.3.0
       mocha:
-        specifier: ~10.3.0
+        specifier: ^10.3.0
         version: 10.3.0
       rxjs:
         specifier: ^7.8.1
@@ -255,10 +219,10 @@ importers:
         specifier: 4.0.0-dev.48
         version: 4.0.0-dev.48(eslint@8.56.0)(typescript@5.0.4)
       '@types/blocked':
-        specifier: ~1.3.4
+        specifier: ^1.3.4
         version: 1.3.4
       '@types/mocha':
-        specifier: ~10.0.6
+        specifier: ^10.0.6
         version: 10.0.6
       '@types/node':
         specifier: ^18.17.7
@@ -7991,7 +7955,7 @@ packages:
   /filelist@1.0.4:
     resolution: {integrity: sha512-w1cEuf3S+DrLCQL7ET6kz+gmlJdbq9J7yXCSjK/OZCPA+qEN1WyF4ZAf0YYJa4/shHJra2t/d/r8SV4Ji+x+8Q==}
     dependencies:
-      minimatch: 5.0.1
+      minimatch: 5.1.6
     dev: false
 
   /filing-cabinet@4.1.6:
@@ -8422,7 +8386,7 @@ packages:
       fs.realpath: 1.0.0
       inflight: 1.0.6
       inherits: 2.0.4
-      minimatch: 5.0.1
+      minimatch: 5.1.6
       once: 1.4.0
 
   /global-agent@3.0.0:
@@ -9896,7 +9860,6 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       brace-expansion: 2.0.1
-    dev: false
 
   /minimatch@7.4.6:
     resolution: {integrity: sha512-sBz8G/YjVniEz6lKPNpKxXwazJe4c19fEfV2GDMX6AjFz+MX9uDWIZW8XreVhkFW3fkIdTv/gxWr/Kks5FFAVw==}

@@ -1,9 +1,9 @@
-import fs from "fs";
-import path from "path";
 /*---------------------------------------------------------------------------------------------
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+import fs from "fs";
+import path from "path";
 import { IModelDb, SnapshotDb } from "@itwin/core-backend";
 
 async function downloadDataset(name: string, downloadUrl: string, localPath: string): Promise<void> {
