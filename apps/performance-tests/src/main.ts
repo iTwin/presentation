@@ -12,6 +12,6 @@ before(async () => {
   await loadDataSets("./datasets");
 });
 
-after(() => {
-  IModelHost.shutdown();
+after(async () => {
+  await IModelHost.shutdown();
 });

@@ -26,19 +26,11 @@ export class StatelessHierarchyProvider {
   }
 
   public async loadInitialHierarchy(): Promise<void> {
-    await this.loadNodes(StatelessHierarchyProvider.initialHasChildren);
+    await this.loadNodes((node) => node.children && !!node.autoExpand);
   }
 
   public async loadFullHierarchy(): Promise<void> {
-    await this.loadNodes(StatelessHierarchyProvider.fullHasChildren);
-  }
-
-  private static initialHasChildren(node: HierarchyNode): boolean {
-    return StatelessHierarchyProvider.fullHasChildren(node) && !!node.autoExpand;
-  }
-
-  private static fullHasChildren(node: HierarchyNode): boolean {
-    return node.children === true || (Array.isArray(node.children) && node.children.length > 0);
+    await this.loadNodes((node) => node.children);
   }
 
   private async loadNodes(nodeHasChildren: (node: HierarchyNode) => boolean) {

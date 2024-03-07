@@ -81,8 +81,9 @@ class TestReporter extends Mocha.reporters.Spec {
         .join("\n"),
     }));
 
-    fs.writeFileSync(this._outputPath!, JSON.stringify(data, undefined, 2));
-    console.log(`Test results saved at ${this._outputPath}`);
+    const outputPath = this._outputPath!;
+    fs.writeFileSync(outputPath, JSON.stringify(data, undefined, 2));
+    console.log(`Test results saved at ${outputPath}`);
   }
 }
 
