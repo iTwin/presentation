@@ -20,6 +20,6 @@ The tests may use iModels that are managed in `Datasets.ts` module. The iModels 
 ## Usage
 
 - In order to run all performance tests type:
-`pnpm test`
+  `pnpm test`
 - In order to run performance tests and save the results to `./benchmark.json` enter:
-`pnpm benchmark`.
+  `pnpm benchmark`.
