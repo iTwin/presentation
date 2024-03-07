@@ -356,6 +356,15 @@ export interface NavigationPropertyEditorContextProps {
 // @beta @deprecated
 export const NavigationPropertyTargetEditor: typeof NavigationPropertyTargetEditor_2;
 
+// @beta
+export function PortalTargetContextProvider({ portalTarget, children }: PropsWithChildren<PortalTargetContextProviderProps>): JSX_2.Element;
+
+// @beta
+export interface PortalTargetContextProviderProps {
+    // (undocumented)
+    portalTarget: HTMLElement | null;
+}
+
 // @public
 export enum PresentationComponentsLoggerCategory {
     Content = "presentation-components.Content",
