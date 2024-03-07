@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1709821727285,
+  "lastUpdate": 1709822148599,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -1358,6 +1358,40 @@ window.BENCHMARK_DATA = {
             "value": 2640,
             "unit": "ms",
             "extra": "maxBlockingTime: 221\ntotalBlockingTime: 363"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Grigas",
+            "username": "grigasp",
+            "email": "35135765+grigasp@users.noreply.github.com"
+          },
+          "committer": {
+            "name": "GitHub",
+            "username": "web-flow",
+            "email": "noreply@github.com"
+          },
+          "id": "23d915c37699c90c27e0b32c9992b91ce73614df",
+          "message": "Hierarchy builder: Filtering grouping nodes (#463)\n\n* Type improvements & full stack tests for grouped hierarchy level filtering\r\n\r\n* when requesting children for grouping nodes, take instance filter from the closest non-grouping ancestor node",
+          "timestamp": "2024-03-07T14:09:49Z",
+          "url": "https://github.com/iTwin/presentation/commit/23d915c37699c90c27e0b32c9992b91ce73614df"
+        },
+        "date": 1709822148149,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Initial Models Tree Load: Baytown.bim",
+            "value": 343,
+            "unit": "ms",
+            "extra": "min: 343\nmax: 343\ncount: 1\nmean: 343\np50: 340.4\nmedian: 340.4\np75: 340.4\np90: 340.4\np95: 340.4\np99: 340.4\np999: 340.4"
+          },
+          {
+            "name": "Full Models Tree Load: Baytown.bim",
+            "value": 3120,
+            "unit": "ms",
+            "extra": "min: 3120\nmax: 3120\ncount: 1\nmean: 3120\np50: 3134.5\nmedian: 3134.5\np75: 3134.5\np90: 3134.5\np95: 3134.5\np99: 3134.5\np999: 3134.5"
           }
         ]
       }
