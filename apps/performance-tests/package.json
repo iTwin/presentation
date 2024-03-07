@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "test": "mocha -R ./lib/TestReporter.js ./lib/test/*test.js",
+    "test": "mocha --config ./.mocharc.json ./lib/test/*test.js",
     "benchmark": "npm run test -- -O BENCHMARK_OUTPUT_PATH=./benchmark.json",
     "start": "rimraf temp && node --max-http-header-size=16000 ./lib/main.js",
     "build": "tsc",
@@ -26,9 +26,13 @@
     "@itwin/express-server": "^4.4.0",
     "@itwin/presentation-backend": "^4.4.0",
     "@itwin/presentation-common": "^4.4.0",
+    "@itwin/presentation-hierarchy-builder": "workspace:*",
+    "@itwin/presentation-core-interop": "workspace:*",
+    "@itwin/presentation-models-tree": "workspace:*",
     "@itwin/webgl-compatibility": "^4.4.0",
     "mocha": "~10.3.0",
-    "blocked": "~1.3.0"
+    "blocked": "~1.3.0",
+    "rxjs": "^7.8.1"
   },
   "devDependencies": {
     "@itwin/eslint-plugin": "4.0.0-dev.48",

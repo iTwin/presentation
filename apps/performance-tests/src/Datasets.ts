@@ -1,9 +1,10 @@
+import fs from "fs";
+import path from "path";
 /*---------------------------------------------------------------------------------------------
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-import fs from "fs";
-import path from "path";
+import { IModelDb, SnapshotDb } from "@itwin/core-backend";
 
 async function downloadDataset(name: string, downloadUrl: string, localPath: string): Promise<void> {
   console.log(`Downloading "${name}" iModel from "${downloadUrl}"...`);
@@ -15,6 +16,10 @@ async function downloadDataset(name: string, downloadUrl: string, localPath: str
   await response.body!.pipeTo(fs.WriteStream.toWeb(fs.createWriteStream(localPath)));
 }
 
+/** Cache of loaded iModels by file name. */
+export const iModels = new Map<string, IModelDb>();
+
+/** Loads iModels into cache for the tests to use. */
 export async function loadDataSets(datasetsDirPath: string) {
   await fs.promises.mkdir(datasetsDirPath, { recursive: true });
 
@@ -34,5 +39,10 @@ export async function loadDataSets(datasetsDirPath: string) {
     }),
   );
 
-  return datasetPaths;
+  for (const datasetPath of datasetPaths) {
+    const fileName = path.basename(datasetPath);
+    console.log(`Loading ${fileName}...`);
+    const db = SnapshotDb.openFile(datasetPath);
+    iModels.set(fileName, db);
+  }
 }

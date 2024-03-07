@@ -1,8 +1,0 @@
-[
-  {
-    "name": "foo",
-    "unit": "ms",
-    "value": 1001,
-    "extra": "maxBlockingTime: 0\ntotalBlockingTime: 0"
-  }
-]

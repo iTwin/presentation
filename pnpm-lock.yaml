@@ -229,6 +229,15 @@ importers:
       '@itwin/presentation-common':
         specifier: ^4.4.0
         version: 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-common@4.4.0)(@itwin/core-quantity@4.4.0)(@itwin/ecschema-metadata@4.4.0)
+      '@itwin/presentation-core-interop':
+        specifier: workspace:*
+        version: link:../../packages/core-interop
+      '@itwin/presentation-hierarchy-builder':
+        specifier: workspace:*
+        version: link:../../packages/hierarchy-builder
+      '@itwin/presentation-models-tree':
+        specifier: workspace:*
+        version: link:../../packages/models-tree
       '@itwin/webgl-compatibility':
         specifier: ^4.4.0
         version: 4.4.0
@@ -238,6 +247,9 @@ importers:
       mocha:
         specifier: ~10.3.0
         version: 10.3.0
+      rxjs:
+        specifier: ^7.8.1
+        version: 7.8.1
     devDependencies:
       '@itwin/eslint-plugin':
         specifier: 4.0.0-dev.48
