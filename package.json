@@ -25,7 +25,7 @@
     "change:empty": "changeset add --empty",
     "check": "changeset status",
     "release": "npm run build:all && changeset publish",
-    "benchmark": "lage build --to presentation-performance-tests && pnpm run -C ./apps/performance-tests benchmark"
+    "benchmark": "pnpm run -C ./apps/performance-tests benchmark"
   },
   "dependencies": {
     "@changesets/cli": "^2.27.1",

@@ -6,7 +6,7 @@ on:
     branches:
       - master
     paths:
-      - apps/load-tests/**
+      - apps/performance-tests/**
       - packages/core-interop/**
       - packages/hierarchy-builder/**
       - packages/models-tree/**
@@ -39,7 +39,7 @@ jobs:
         run: pnpm install
 
       - name: Build benchmark tests
-        run: pnpm lage build --to @load-tests/backend @load-tests/frontend
+        run: pnpm lage build --to presentation-performance-tests
 
       - name: Run benchmark tests
         run: pnpm benchmark

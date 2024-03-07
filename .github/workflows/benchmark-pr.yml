@@ -6,12 +6,11 @@ on:
       - master
       - stable
     paths:
-      - apps/load-tests/**
+      - apps/performance-tests/**
       - packages/core-interop/**
       - packages/hierarchy-builder/**
       - packages/models-tree/**
       - pnpm-lock.yaml
-      - scripts/runBenchmarkTests.js
       - .github/workflows/benchmark-pr.yaml
     types: [opened, synchronize, reopened, ready_for_review]
 
@@ -39,7 +38,7 @@ jobs:
         run: pnpm install
 
       - name: Build benchmark tests
-        run: pnpm lage build --to @load-tests/backend @load-tests/frontend
+        run: pnpm lage build --to presentation-performance-tests
 
       - name: Run benchmark tests
         run: pnpm benchmark
@@ -48,7 +47,7 @@ jobs:
         uses: jalextowle/github-action-benchmark@35e54a2ea34188ca73481c2a0ce5919907978f4f
         with:
           tool: 'customSmallerIsBetter'
-          output-file-path: ./apps/load-tests/tests/benchmark.json
+          output-file-path: ./apps/performance-tests/benchmark.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           save-data-file: false
           comment-on-pull-request: true
