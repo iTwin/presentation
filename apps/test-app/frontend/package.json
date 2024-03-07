@@ -36,6 +36,7 @@
     "@itwin/presentation-hierarchy-builder": "workspace:*",
     "@itwin/presentation-core-interop": "workspace:*",
     "@itwin/presentation-models-tree": "workspace:*",
+    "@itwin/unified-selection": "workspace:*",
     "@itwin/webgl-compatibility": "^4.4.0",
     "@opentelemetry/api": "^1.6.0",
     "@tanstack/react-table": "^8.11.8",
