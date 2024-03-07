@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1709712096338,
+  "lastUpdate": 1709811147504,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -1254,6 +1254,40 @@ window.BENCHMARK_DATA = {
             "value": 3083,
             "unit": "ms",
             "extra": "min: 3083\nmax: 3083\ncount: 1\nmean: 3083\np50: 3072.4\nmedian: 3072.4\np75: 3072.4\np90: 3072.4\np95: 3072.4\np99: 3072.4\np999: 3072.4"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Dmitrij Kuzmiciov",
+            "username": "Yato333",
+            "email": "yato333@users.noreply.github.com"
+          },
+          "committer": {
+            "name": "Dmitrij Kuzmiciov",
+            "username": "Yato333",
+            "email": "yato333@users.noreply.github.com"
+          },
+          "id": "b8cb8ccf3a8cced79568d3dd86e2c8300a988861",
+          "message": "Fix output path",
+          "timestamp": "2024-03-07T11:30:23Z",
+          "url": "https://github.com/iTwin/presentation/commit/b8cb8ccf3a8cced79568d3dd86e2c8300a988861"
+        },
+        "date": 1709811146475,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "loads initial hierarchy",
+            "value": 74,
+            "unit": "ms",
+            "extra": "maxBlockingTime: 0\ntotalBlockingTime: 0"
+          },
+          {
+            "name": "loads full hierarchy",
+            "value": 2583,
+            "unit": "ms",
+            "extra": "maxBlockingTime: 200\ntotalBlockingTime: 321"
           }
         ]
       }
