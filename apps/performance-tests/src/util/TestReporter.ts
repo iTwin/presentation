@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 import fs from "fs";
 import Mocha from "mocha";
-import { BlockHandler } from "./util/BlockHandler";
+import { BlockHandler } from "./BlockHandler";
 
 interface TestInfo {
   title: string;

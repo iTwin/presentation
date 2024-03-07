@@ -2,5 +2,5 @@
   "checkLeaks": true,
   "timeout": 60000,
   "file": "./lib/main.js",
-  "reporter": ["./lib/TestReporter.js"]
+  "reporter": ["./lib/util/TestReporter.js"]
 }
