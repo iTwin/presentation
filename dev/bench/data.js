@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1709811147504,
+  "lastUpdate": 1709820655309,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -1288,6 +1288,42 @@ window.BENCHMARK_DATA = {
             "value": 2583,
             "unit": "ms",
             "extra": "maxBlockingTime: 200\ntotalBlockingTime: 321"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35135765+grigasp@users.noreply.github.com",
+            "name": "Grigas",
+            "username": "grigasp"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "23d915c37699c90c27e0b32c9992b91ce73614df",
+          "message": "Hierarchy builder: Filtering grouping nodes (#463)\n\n* Type improvements & full stack tests for grouped hierarchy level filtering\r\n\r\n* when requesting children for grouping nodes, take instance filter from the closest non-grouping ancestor node",
+          "timestamp": "2024-03-07T16:09:49+02:00",
+          "tree_id": "5cebb2e5f0ee79594254a3dad894e3aa358c14da",
+          "url": "https://github.com/iTwin/presentation/commit/23d915c37699c90c27e0b32c9992b91ce73614df"
+        },
+        "date": 1709820654664,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "Initial Models Tree Load: Baytown.bim",
+            "value": 332,
+            "unit": "ms",
+            "extra": "min: 332\nmax: 332\ncount: 1\nmean: 332\np50: 333.7\nmedian: 333.7\np75: 333.7\np90: 333.7\np95: 333.7\np99: 333.7\np999: 333.7"
+          },
+          {
+            "name": "Full Models Tree Load: Baytown.bim",
+            "value": 3129,
+            "unit": "ms",
+            "extra": "min: 3129\nmax: 3129\ncount: 1\nmean: 3129\np50: 3134.5\nmedian: 3134.5\np75: 3134.5\np90: 3134.5\np95: 3134.5\np99: 3134.5\np999: 3134.5"
           }
         ]
       }
