@@ -5,7 +5,6 @@
   "scripts": {
     "test": "mocha --config ./.mocharc.json ./lib/test/*test.js",
     "benchmark": "npm run test -- -O BENCHMARK_OUTPUT_PATH=./benchmark.json",
-    "start": "rimraf temp && node --max-http-header-size=16000 ./lib/main.js",
     "build": "tsc",
     "clean": "rimraf lib temp",
     "lint": "eslint \"./src/**/*.ts\""
