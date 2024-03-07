@@ -46,6 +46,7 @@ jobs:
 
       - name: Store benchmark result
         uses: benchmark-action/github-action-benchmark@v1
+        if: ${{ github.ref == 'refs/heads/master' }}
         with:
           tool: 'customSmallerIsBetter'
           output-file-path: ./apps/performance-tests/benchmark.json
@@ -53,5 +54,3 @@ jobs:
           github-token: ${{ secrets.IMJS_ADMIN_GH_TOKEN }}
           # Push and deploy GitHub pages branch automatically
           auto-push: true
-          # Only save results if run on the master branch
-          save-data-file: ${{ github.ref == 'refs/heads/master' }}
