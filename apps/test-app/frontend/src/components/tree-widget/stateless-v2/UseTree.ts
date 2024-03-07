@@ -9,7 +9,7 @@ import { PresentationError, PresentationStatus } from "@itwin/presentation-commo
 import { PresentationInstanceFilterPropertiesSource } from "@itwin/presentation-components";
 import { createHierarchyLevelDescriptor } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
-import { GenericInstanceFilter, HierarchyNode, HierarchyNodeKey, HierarchyProvider, InstancesNodeKey } from "@itwin/presentation-hierarchy-builder";
+import { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
 import { TreeActions, TreeState } from "./internal/TreeActions";
 import { isHierarchyNodeSelected, isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelRootNode } from "./internal/TreeModel";
 import { useUnifiedTreeSelection } from "./internal/UseUnifiedSelection";
@@ -116,7 +116,7 @@ export function useTreeInternal({
         return undefined;
       }
       const hierarchyNode = isTreeModelHierarchyNode(node) ? node.nodeData : undefined;
-      if (hierarchyNode && !isInstancesHierarchyNode(hierarchyNode)) {
+      if (hierarchyNode && HierarchyNode.isGroupingNode(hierarchyNode)) {
         return;
       }
 
@@ -164,8 +164,4 @@ export function useTreeInternal({
     getNode,
     removeHierarchyLevelFilter,
   };
-}
-
-function isInstancesHierarchyNode(node: HierarchyNode): node is HierarchyNode & { key: InstancesNodeKey } {
-  return HierarchyNodeKey.isInstances(node.key);
 }
