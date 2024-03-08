@@ -5,6 +5,13 @@
 import blocked from "blocked";
 import { SortedArray } from "@itwin/core-bentley";
 
+export interface Summary {
+  count: number;
+  max?: number;
+  p95?: number;
+  median?: number;
+}
+
 /**
  * This class measures the durations of time when main thread is blocked.
  * This is measured by running a timer which detects cases when it is fired later than expected.
@@ -13,10 +20,10 @@ export class BlockHandler {
   private readonly _samples = new SortedArray<number>((a, b) => a - b);
   private _timer?: NodeJS.Timer;
 
-  public getSummary() {
+  public getSummary(): Summary {
     const arr = this._samples.extractArray();
     const count = arr.length;
-    const max = count && arr[count - 1];
+    const max = count ? arr[count - 1] : undefined;
     const p95 = getP95(arr);
     const median = getMedian(arr);
     return {

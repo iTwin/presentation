@@ -1,82 +1,110 @@
+import asTable from "as-table";
 /*---------------------------------------------------------------------------------------------
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 import fs from "fs";
 import Mocha from "mocha";
-import { BlockHandler } from "./BlockHandler";
+import { BlockHandler, Summary } from "./BlockHandler";
 
 interface TestInfo {
-  title: string;
-  duration: number;
-  blockingSummary: string;
+  test: Mocha.Test;
+  blockingSummary: Summary;
 }
 
-const { EVENT_TEST_END, EVENT_TEST_BEGIN } = Mocha.Runner.constants;
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const Base = Mocha.reporters.Base;
+const { EVENT_TEST_BEGIN, EVENT_TEST_END, EVENT_SUITE_BEGIN, EVENT_RUN_END } = Mocha.Runner.constants;
+
+const tableFormatter = asTable.configure({
+  delimiter: " | ",
+});
 
 /**
  * Measures test time and the amounts of time when the main thread was blocked.
  */
-class TestReporter extends Mocha.reporters.Spec {
+class TestReporter extends Base {
   private readonly _testInfo = new Array<TestInfo>();
   private readonly _blockHandler = new BlockHandler();
   private readonly _outputPath?: string;
 
   constructor(runner: Mocha.Runner, options: Mocha.MochaOptions) {
     super(runner, options);
-
     this._outputPath = options.reporterOptions?.BENCHMARK_OUTPUT_PATH;
-    runner.addListener(EVENT_TEST_BEGIN, (test) => this.onTestStart(test));
-    runner.addListener(EVENT_TEST_END, (test) => this.onTestEnd(test));
-  }
 
-  public override epilogue(): void {
-    super.epilogue();
-    if (this._outputPath && this.failures.length === 0) {
-      this.saveResults();
-    }
+    runner.on(EVENT_SUITE_BEGIN, (suite) => console.log(`\n${suite.title}`));
+    runner.on(EVENT_TEST_BEGIN, (test) => this.onTestStart(test));
+    runner.on(EVENT_TEST_END, (test) => this.onTestEnd(test));
+    runner.on(EVENT_RUN_END, () => {
+      this.printResults();
+      if (this._outputPath && this.failures.length === 0) {
+        this.saveResults();
+      }
+    });
   }
 
   /** Run before each test starts. */
   private onTestStart(test: Mocha.Test) {
-    console.log(`Starting '${test.title}'...`);
     this._blockHandler.start();
+    process.stdout.write(`${test.title}...`);
   }
 
   /** Run after each test passes or fails. */
   private onTestEnd(test: Mocha.Test) {
     this._blockHandler.stop();
 
-    if (test.isFailed()) {
-      // Output the error call stack to the console.
-      // For some reason, this is not done by default by the base class.
-      console.error(test.err);
-      return;
-    }
-
     const duration = test.duration!;
-    const blockingSummary = Object.entries(this._blockHandler.getSummary())
-      .map(([key, val]) => `${key}: ${val ?? "N/A"}`)
-      .join("\n");
+    Base.cursor.CR();
+    console.log(`${test.isPassed() ? Base.symbols.ok : Base.symbols.err} ${test.title} (${duration} ms)`);
 
+    const blockingSummary = this._blockHandler.getSummary();
     this._testInfo.push({
-      title: test.title,
-      duration,
+      test,
       blockingSummary,
     });
+  }
 
-    console.log("Blocking summary:");
-    console.log(blockingSummary);
+  private printResults() {
+    const errors = new Map<string, any>();
+    const results = this._testInfo.map(({ test, blockingSummary }) => {
+      const testName = test.fullTitle();
+      if (test.err) {
+        errors.set(testName, test.err);
+      }
+
+      const blockingInfo = Object.entries(blockingSummary)
+        .filter(([_, val]) => val !== undefined)
+        .map(([key, val]) => `${key}: ${floatToString(val)}`)
+        .join(", ");
+
+      /* eslint-disable @typescript-eslint/naming-convention */
+      return {
+        Status: test.isPassed() ? "PASS" : "FAIL",
+        Test: testName,
+        Duration: `${test.duration!} ms`,
+        Blocks: blockingInfo,
+      };
+      /* eslint-enable @typescript-eslint/naming-convention */
+    });
+
+    console.log();
+    console.log(tableFormatter(results));
+
+    for (const [name, error] of errors) {
+      console.error();
+      console.error(`${name}:`);
+      console.error(error);
+    }
   }
 
   /** Saves performance results in a format that is compatible with Github benchmark action. */
   private saveResults() {
-    const data = this._testInfo.map(({ title, duration, ...rest }) => ({
-      name: title,
+    const data = this._testInfo.map(({ test, blockingSummary }) => ({
+      name: test.title,
       unit: "ms",
-      value: duration,
-      extra: Object.entries(rest)
-        .map(([key, val]) => `${key}: ${val}`)
+      value: test.duration!,
+      extra: Object.entries(blockingSummary)
+        .map(([key, val]) => `${key}: ${val ?? "N/A"}`)
         .join("\n"),
     }));
 
@@ -84,6 +112,12 @@ class TestReporter extends Mocha.reporters.Spec {
     fs.writeFileSync(outputPath, JSON.stringify(data, undefined, 2));
     console.log(`Test results saved at ${outputPath}`);
   }
+}
+
+function floatToString(x: number, maxPrecision: number = 2): string {
+  const result = x.toString();
+  const dotPos = result.indexOf(".");
+  return dotPos >= 0 ? result.substring(0, dotPos + maxPrecision + 1) : result;
 }
 
 module.exports = TestReporter;
