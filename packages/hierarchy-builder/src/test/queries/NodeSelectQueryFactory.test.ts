@@ -404,6 +404,23 @@ describe("NodeSelectQueryFactory", () => {
           expect(trimWhitespace(res.where ?? "")).to.eq(trimWhitespace(expectedECSql));
         }
 
+        it(`defaults to content class alias if it's not specified for property rule`, async () =>
+          testPropertyFilter({
+            classAlias: "x",
+            rule: {
+              operator: "and",
+              rules: [
+                {
+                  sourceAlias: "",
+                  propertyName: "a",
+                  operator: "is-true",
+                  propertyTypeName: "boolean",
+                },
+              ],
+            },
+            expectedECSql: `[x].[a]`,
+          }));
+
         it(`joins multiple rule groups with "and" operator`, async () =>
           testPropertyFilter({
             classAlias: "x",

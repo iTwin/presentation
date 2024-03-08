@@ -319,7 +319,11 @@ export class NodeSelectQueryFactory {
     }
     const classAliasMap = new Map<string, string>([[contentClass.alias, from]]);
     def.relatedInstances.forEach(({ path, alias }) => path.length > 0 && classAliasMap.set(alias, path[path.length - 1].targetClassName));
-    const propertiesFilter = await createWhereClause(async (alias) => getClass(this._metadataProvider, classAliasMap.get(alias) ?? ""), def.rules);
+    const propertiesFilter = await createWhereClause(
+      contentClass.alias,
+      async (alias) => getClass(this._metadataProvider, classAliasMap.get(alias) ?? ""),
+      def.rules,
+    );
     if (propertiesFilter) {
       whereConditions.push(propertiesFilter);
     }
@@ -511,16 +515,17 @@ function serializeJsonObject(selectors: Array<{ key: string; selector: string }>
 }
 
 async function createWhereClause(
+  contentClassAlias: string,
   classLoader: (alias: string) => Promise<ECClass | undefined>,
   rule: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup,
 ): Promise<string | undefined> {
   if (GenericInstanceFilter.isFilterRuleGroup(rule)) {
-    const clause = (await Promise.all(rule.rules.map(async (r) => createWhereClause(classLoader, r))))
+    const clause = (await Promise.all(rule.rules.map(async (r) => createWhereClause(contentClassAlias, classLoader, r))))
       .filter((c) => !!c)
       .join(` ${getECSqlLogicalOperator(rule.operator)} `);
     return clause ? (rule.operator === "or" ? `(${clause})` : clause) : undefined;
   }
-  const sourceAlias = rule.sourceAlias;
+  const sourceAlias = rule.sourceAlias ? rule.sourceAlias : contentClassAlias;
   const propertyValueSelector = createRawPropertyValueSelector(sourceAlias, rule.propertyName);
   if (isUnaryRuleOperator(rule.operator)) {
     switch (rule.operator) {
@@ -544,10 +549,9 @@ async function createWhereClause(
   if (rule.operator === "like" && typeof value === "string") {
     return `${propertyValueSelector} ${ecsqlOperator} '${value}' ESCAPE '\\'`;
   }
-  const propertyClassAlias = rule.sourceAlias;
-  const propertyClass = await classLoader(propertyClassAlias);
+  const propertyClass = await classLoader(sourceAlias);
   if (!propertyClass) {
-    throw new Error(`Class with alias "${propertyClassAlias}" not found.`);
+    throw new Error(`Class with alias "${sourceAlias}" not found.`);
   }
   const property = await propertyClass.getProperty(rule.propertyName);
   if (!property) {

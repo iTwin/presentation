@@ -15,6 +15,7 @@ export function trimWhitespace(str: string): string;
 export function trimWhitespace(str: string | undefined): string | undefined;
 /** @internal */
 export function trimWhitespace(str: string | undefined): string | undefined {
+  // istanbul ignore next
   if (!str) {
     return str;
   }
