@@ -3,46 +3,67 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 import blocked from "blocked";
+import { SortedArray } from "@itwin/core-bentley";
 
 /**
  * This class measures the durations of time when main thread is blocked.
  * This is measured by running a timer which detects cases when it is fired later than expected.
  */
 export class BlockHandler {
-  private _maxBlockingTime = 0;
-  private _totalBlockingTime = 0;
+  private readonly _samples = new SortedArray<number>((a, b) => a - b);
   private _timer?: NodeJS.Timer;
 
-  /** Maximum length of blocking in milliseconds. */
-  public get maxBlockingTime() {
-    return this._maxBlockingTime;
-  }
-
-  /** Total amount of blocking in milliseconds. */
-  public get totalBlockingTime() {
-    return this._totalBlockingTime;
+  public getSummary() {
+    const arr = this._samples.extractArray();
+    const count = arr.length;
+    const max = count && arr[count - 1];
+    const p95 = getP95(arr);
+    const median = getMedian(arr);
+    return {
+      count,
+      max,
+      p95,
+      median,
+    };
   }
 
   /**
    * Starts the timer and records instances of abnormally long blocking.
-   * @param threshold The minimum amount of blocking that will be considered abnormal. Default: 10 ms.
-   * @param interval Delay in time between each blocking check. Default: 100 ms.
+   * @param threshold The minimum amount of blocking that will be considered abnormal.
+   * @param interval Delay in time between each blocking check.
    */
-  public start(threshold: number = 10, interval: number = 100) {
-    this._maxBlockingTime = 0;
-    this._totalBlockingTime = 0;
-    this._timer = blocked(
-      (time) => {
-        this._maxBlockingTime = Math.max(this._maxBlockingTime, time);
-        this._totalBlockingTime += time;
-        console.warn(`Blocked for ${time} ms`);
-      },
-      { threshold, interval },
-    );
+  public start(threshold: number = 20, interval: number = 10) {
+    this._samples.clear();
+    this._timer = blocked((time) => this._samples.insert(time), { threshold, interval });
   }
 
   /** Stops the blocking timer. */
   public stop() {
     clearTimeout(this._timer);
   }
+}
+
+function getP95(arr: number[]): number | undefined {
+  if (arr.length <= 1) {
+    return undefined;
+  }
+
+  const length95 = Math.ceil(0.95 * arr.length);
+  let sum95 = 0;
+  for (let i = 0; i < length95; ++i) {
+    sum95 += arr[i];
+  }
+  return sum95 / length95;
+}
+
+function getMedian(arr: number[]): number | undefined {
+  if (arr.length === 0) {
+    return undefined;
+  }
+
+  const middle = arr.length / 2;
+  if (arr.length % 2 === 0) {
+    return (arr[middle - 1] + arr[middle]) / 2;
+  }
+  return arr[Math.floor(middle)];
 }

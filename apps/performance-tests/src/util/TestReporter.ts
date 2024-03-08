@@ -9,8 +9,7 @@ import { BlockHandler } from "./BlockHandler";
 interface TestInfo {
   title: string;
   duration: number;
-  maxBlockingTime: number;
-  totalBlockingTime: number;
+  blockingSummary: string;
 }
 
 const { EVENT_TEST_END, EVENT_TEST_BEGIN } = Mocha.Runner.constants;
@@ -56,18 +55,18 @@ class TestReporter extends Mocha.reporters.Spec {
     }
 
     const duration = test.duration!;
-    const maxBlockingTime = this._blockHandler.maxBlockingTime;
-    const totalBlockingTime = this._blockHandler.totalBlockingTime;
+    const blockingSummary = Object.entries(this._blockHandler.getSummary())
+      .map(([key, val]) => `${key}: ${val ?? "N/A"}`)
+      .join("\n");
 
     this._testInfo.push({
       title: test.title,
       duration,
-      maxBlockingTime,
-      totalBlockingTime,
+      blockingSummary,
     });
 
-    console.log(`Max blocking time: ${maxBlockingTime}`);
-    console.log(`Total blocking time: ${maxBlockingTime}`);
+    console.log("Blocking summary:");
+    console.log(blockingSummary);
   }
 
   /** Saves performance results in a format that is compatible with Github benchmark action. */
