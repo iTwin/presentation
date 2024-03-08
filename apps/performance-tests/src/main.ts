@@ -7,7 +7,7 @@ import { loadDataSets } from "./Datasets";
 
 before(async () => {
   await IModelHost.startup({
-    profileName: `presentation-performance-tests-${process.pid}`,
+    profileName: "presentation-performance-tests",
   });
   await loadDataSets("./datasets");
 });
