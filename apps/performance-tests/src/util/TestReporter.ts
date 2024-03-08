@@ -1,8 +1,8 @@
-import asTable from "as-table";
 /*---------------------------------------------------------------------------------------------
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+import asTable from "as-table";
 import fs from "fs";
 import Mocha from "mocha";
 import { BlockHandler, Summary } from "./BlockHandler";
