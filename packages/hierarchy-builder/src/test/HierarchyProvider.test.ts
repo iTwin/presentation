@@ -650,7 +650,7 @@ describe("HierarchyProvider", () => {
     }
   });
 
-  describe("Filtering", () => {
+  describe("Hierarchy filtering", () => {
     let classStubs: ClassStubs;
     beforeEach(() => {
       classStubs = createClassStubs(metadataProvider);
@@ -740,6 +740,52 @@ describe("HierarchyProvider", () => {
           autoExpand: true,
         } as FilteredHierarchyNode,
       ]);
+    });
+  });
+
+  describe("Hierarchy level filtering", () => {
+    const instanceFilter: GenericInstanceFilter = {
+      propertyClassNames: ["x.y"],
+      relatedInstances: [],
+      rules: {
+        operator: "and",
+        rules: [
+          {
+            propertyName: "z",
+            propertyTypeName: "string",
+            sourceAlias: "this",
+            operator: "is-equal",
+            value: { rawValue: "test value", displayValue: "test value" },
+          },
+        ],
+      },
+    };
+
+    it("filters hierarchy levels with nodes that are hidden if no children", async () => {
+      const rootNode = { key: "root", label: "root", processingParams: { hideIfNoChildren: true } };
+      const childNode = { key: "child", label: "child", children: true };
+      const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel({ parentNode, instanceFilter: requestedFilter }) {
+          if (!parentNode) {
+            // simulate the root node matching requested instance filter
+            expect(requestedFilter).to.eq(instanceFilter);
+            return [{ node: rootNode }];
+          }
+          if (parentNode.key === "root") {
+            // we're expecting the filter to be used only for root nodes
+            expect(requestedFilter).to.be.undefined;
+            return requestedFilter ? [] : [{ node: childNode }];
+          }
+          return [];
+        },
+      };
+      const provider = new HierarchyProvider({
+        metadataProvider,
+        queryExecutor,
+        hierarchyDefinition,
+      });
+      const rootNodes = await provider.getNodes({ parentNode: undefined, instanceFilter });
+      expect(rootNodes).to.deep.eq([{ key: "root", label: "root", parentKeys: [], children: true }]);
     });
   });
 
