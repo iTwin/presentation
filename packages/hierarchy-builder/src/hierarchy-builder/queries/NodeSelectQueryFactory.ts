@@ -15,6 +15,7 @@ import {
 } from "@itwin/core-common";
 import { ECClass, IMetadataProvider } from "../ECMetadata";
 import { getClass } from "../internal/GetClass";
+import { parseFullClassName } from "../Metadata";
 import { Id64String, PrimitiveValue } from "../values/Values";
 import { createRelationshipPathJoinClause, JoinRelationshipPath } from "./ecsql-snippets/ECSqlJoinSnippets";
 import { createRawPrimitiveValueSelector, createRawPropertyValueSelector } from "./ecsql-snippets/ECSqlValueSelectorSnippets";
@@ -307,7 +308,14 @@ export class NodeSelectQueryFactory {
 
     const whereConditions = new Array<string>();
     if (def.filteredClassNames && def.filteredClassNames.length > 0) {
-      whereConditions.push(`${createRawPropertyValueSelector(contentClass.alias, "ECClassId")} IS (${def.filteredClassNames.join(", ")})`);
+      whereConditions.push(
+        `${createRawPropertyValueSelector(contentClass.alias, "ECClassId")} IS (
+          ${def.filteredClassNames
+            .map(parseFullClassName)
+            .map(({ schemaName, className }) => `[${schemaName}].[${className}]`)
+            .join(", ")}
+        )`,
+      );
     }
     const classAliasMap = new Map<string, string>([[contentClass.alias, from]]);
     def.relatedInstances.forEach(({ path, alias }) => path.length > 0 && classAliasMap.set(alias, path[path.length - 1].targetClassName));

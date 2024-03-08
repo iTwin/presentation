@@ -373,10 +373,11 @@ describe("NodeSelectQueryFactory", () => {
               rules: [],
             },
           };
-          expect(await factory.createFilterClauses(filter, { fullName: "x.y", alias: "content-class" })).to.deep.eq({
+          const clauses = await factory.createFilterClauses(filter, { fullName: "x.y", alias: "content-class" });
+          expect({ ...clauses, where: trimWhitespace(clauses.where) }).to.deep.eq({
             from: "x.y",
             joins: "",
-            where: "[content-class].[ECClassId] IS (x.a, x.b)",
+            where: "[content-class].[ECClassId] IS ([x].[a], [x].[b])",
           });
         });
       });
