@@ -4,6 +4,101 @@
 
 ```ts
 
+import { BeEvent } from '@itwin/core-bentley';
+import { GuidString } from '@itwin/core-bentley';
+import { IModelConnection } from '@itwin/core-frontend';
+import { InstanceId } from '@itwin/presentation-common';
+import { InstanceKey } from '@itwin/presentation-common';
+
+// @beta
+export interface CustomSelectableObject {
+    // @internal
+    data: any;
+    identifier: string;
+    loadInstanceKeys: () => Promise<InstanceKey[]>;
+}
+
+// @beta
+export type SelectableObject = Readonly<InstanceKey> | Readonly<CustomSelectableObject>;
+
+// @beta (undocumented)
+export namespace SelectableObject {
+    export function isCustomSelectableObject(selectableObject: SelectableObject): selectableObject is CustomSelectableObject;
+    export function isInstanceKey(selectableObject: SelectableObject): selectableObject is InstanceKey;
+}
+
+// @beta
+export type SelectableObjects = ReadonlyArray<SelectableObject> | Readonly<SelectableObjectSet>;
+
+// @beta
+export class SelectableObjectSet {
+    constructor(source?: SelectableObjects);
+    add(value: SelectableObjects | SelectableObject, pred?: (selectableObject: SelectableObject) => boolean): SelectableObjectSet;
+    clear(): this;
+    get customSelectableObjects(): Map<string, CustomSelectableObject>;
+    get customSelectableObjectsCount(): number;
+    delete(value: SelectableObjects | SelectableObject): SelectableObjectSet;
+    forEach(callback: (selectableObject: SelectableObject, index: number) => void): void;
+    get guid(): GuidString;
+    has(value: SelectableObject): boolean;
+    hasAll(values: SelectableObjects): boolean;
+    hasAny(values: SelectableObjects): boolean;
+    get instanceKeys(): Map<string, Set<InstanceId>>;
+    get instanceKeysCount(): number;
+    get isEmpty(): boolean;
+    get size(): number;
+    some(callback: (selectableObject: SelectableObject) => boolean): boolean;
+}
+
+// @beta
+export class SelectionStorage implements SelectionStorageInterface {
+    constructor();
+    addToSelection(source: string, imodel: IModelConnection, selectableObjects: SelectableObjects, level?: number, rulesetId?: string): void;
+    clearSelection(source: string, imodel: IModelConnection, level?: number, rulesetId?: string): void;
+    getSelection(imodel: IModelConnection, level?: number): SelectableObjectSet;
+    getSelectionLevels(imodel: IModelConnection): number[];
+    removeFromSelection(source: string, imodel: IModelConnection, selectableObjects: SelectableObjects, level?: number, rulesetId?: string): void;
+    replaceSelection(source: string, imodel: IModelConnection, selectableObjects: SelectableObjects, level?: number, rulesetId?: string): void;
+    readonly selectionChange: StorageSelectionChangeEvent;
+}
+
+// @beta
+export interface SelectionStorageInterface {
+    addToSelection(source: string, imodel: IModelConnection, selectableObjects: SelectableObjects, level: number, rulesetId?: string): void;
+    clearSelection(source: string, imodel: IModelConnection, level: number, rulesetId?: string): void;
+    getSelection(imodel: IModelConnection, level: number): SelectableObjectSet;
+    getSelectionLevels(imodel: IModelConnection): number[];
+    removeFromSelection(source: string, imodel: IModelConnection, selectableObjects: SelectableObjects, level: number, rulesetId?: string): void;
+    replaceSelection(source: string, imodel: IModelConnection, selectableObjects: SelectableObjects, level: number, rulesetId?: string): void;
+    selectionChange: StorageSelectionChangeEvent;
+}
+
+// @beta
+export class StorageSelectionChangeEvent extends BeEvent<StorageSelectionChangesListener> {
+}
+
+// @beta
+export interface StorageSelectionChangeEventArgs {
+    changeType: StorageSelectionChangeType;
+    imodel: IModelConnection;
+    level: number;
+    rulesetId?: string;
+    selectableObjects: Readonly<SelectableObjectSet>;
+    source: string;
+    timestamp: Date;
+}
+
+// @beta
+export type StorageSelectionChangesListener = (args: StorageSelectionChangeEventArgs, storage: SelectionStorageInterface) => void;
+
+// @beta
+export enum StorageSelectionChangeType {
+    Add = 0,
+    Clear = 3,
+    Remove = 1,
+    Replace = 2
+}
+
 // (No @packageDocumentation comment for this package)
 
 ```

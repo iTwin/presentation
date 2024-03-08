@@ -1,2 +1,13 @@
 sep=;
 Release Tag;API Item
+beta;CustomSelectableObject
+beta;SelectableObject = Readonly
+beta;SelectableObject
+beta;SelectableObjects = ReadonlyArray
+beta;SelectableObjectSet
+beta;SelectionStorage 
+beta;SelectionStorageInterface
+beta;StorageSelectionChangeEvent 
+beta;StorageSelectionChangeEventArgs
+beta;StorageSelectionChangesListener = (args: StorageSelectionChangeEventArgs, storage: SelectionStorageInterface) => void
+beta;StorageSelectionChangeType
