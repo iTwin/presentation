@@ -2,18 +2,14 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-/* eslint-disable @itwin/no-internal */
-
 import { expand, filter, from, mergeAll, of, tap } from "rxjs";
 import { IModelDb } from "@itwin/core-backend";
-import { DbQueryRequest, DbQueryResponse, DbRequestExecutor, DbRequestKind, ECSqlReader } from "@itwin/core-common";
 import { ISchemaLocater, Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@itwin/ecschema-metadata";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 
 const ENABLE_SCHEDULED_NODES_LOGGING = false;
-const ECSQL_ROW_LIMIT = 1000;
 
 export class StatelessHierarchyProvider {
   private readonly _provider: HierarchyProvider;
@@ -72,20 +68,11 @@ function createProvider(iModelDb: IModelDb) {
   const locater = new SchedulingSchemaLocater(iModelDb);
   schemas.addLocater(locater);
   const metadataProvider = createMetadataProvider(schemas);
-  const executor = new SchedulingQueryExecutor(iModelDb);
 
   return new HierarchyProvider({
     metadataProvider,
     hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider }),
-    queryExecutor: createLimitingECSqlQueryExecutor(
-      createECSqlQueryExecutor({
-        createQueryReader(ecsql, bindings, config) {
-          // eslint-disable-next-line @itwin/no-internal
-          return new ECSqlReader(executor, ecsql, bindings, config);
-        },
-      }),
-      ECSQL_ROW_LIMIT,
-    ),
+    queryExecutor: createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(iModelDb), 1000),
   });
 }
 
@@ -108,20 +95,8 @@ class SchedulingSchemaLocater implements ISchemaLocater {
 
   public async getSchema<T extends Schema>(schemaKey: Readonly<SchemaKey>, matchType: SchemaMatchType, schemaContext: SchemaContext): Promise<T | undefined> {
     await this.getSchemaInfo(schemaKey, matchType, schemaContext);
+    // eslint-disable-next-line @itwin/no-internal
     const schema = await schemaContext.getCachedSchema(schemaKey, matchType);
     return schema as T;
-  }
-}
-
-class SchedulingQueryExecutor implements DbRequestExecutor<DbQueryRequest, DbQueryResponse> {
-  constructor(private readonly _iModelDb: IModelDb) {}
-
-  public async execute(request: DbQueryRequest): Promise<DbQueryResponse> {
-    return new Promise<DbQueryResponse>((resolve) => {
-      request.kind = DbRequestKind.ECSql;
-      this._iModelDb.nativeDb.concurrentQueryExecute(request as any, (response: any) => {
-        resolve(response as DbQueryResponse);
-      });
-    });
   }
 }
