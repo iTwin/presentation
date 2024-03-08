@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 import fs from "fs";
 import path from "path";
-import { IModelDb, SnapshotDb } from "@itwin/core-backend";
 
 async function downloadDataset(name: string, downloadUrl: string, localPath: string): Promise<void> {
   console.log(`Downloading "${name}" iModel from "${downloadUrl}"...`);
@@ -16,8 +15,8 @@ async function downloadDataset(name: string, downloadUrl: string, localPath: str
   await response.body!.pipeTo(fs.WriteStream.toWeb(fs.createWriteStream(localPath)));
 }
 
-/** Cache of loaded iModels by file name. */
-export const iModels = new Map<string, IModelDb>();
+/** Paths to downloaded iModels. */
+export const iModelPaths = new Array<string>();
 
 /** Loads iModels into cache for the tests to use. */
 export async function loadDataSets(datasetsDirPath: string) {
@@ -39,10 +38,5 @@ export async function loadDataSets(datasetsDirPath: string) {
     }),
   );
 
-  for (const datasetPath of datasetPaths) {
-    const fileName = path.basename(datasetPath);
-    console.log(`Loading ${fileName}...`);
-    const db = SnapshotDb.openFile(datasetPath);
-    iModels.set(fileName, db);
-  }
+  iModelPaths.push(...datasetPaths);
 }
