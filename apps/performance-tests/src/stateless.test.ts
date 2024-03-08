@@ -5,6 +5,7 @@
 import { SnapshotDb } from "@itwin/core-backend";
 import { iModelPaths } from "./Datasets";
 import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
+import { itMeasures } from "./util/TestUtilities";
 
 describe("stateless hierarchy", () => {
   let iModel: SnapshotDb;
@@ -17,12 +18,12 @@ describe("stateless hierarchy", () => {
     iModel.close();
   });
 
-  it("loads initial hierarchy", async () => {
+  itMeasures("loads initial hierarchy", async () => {
     const provider = new StatelessHierarchyProvider(iModel);
     await provider.loadInitialHierarchy();
   });
 
-  it("loads full hierarchy", async () => {
+  itMeasures("loads full hierarchy", async () => {
     const provider = new StatelessHierarchyProvider(iModel);
     await provider.loadFullHierarchy();
   });
