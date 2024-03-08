@@ -144,6 +144,9 @@ describe("PresentationInstanceFilter", () => {
 
     await waitFor(() => {
       expect(queryByDisplayValue(propertiesField.label)).to.not.be.null;
+    });
+
+    await waitFor(() => {
       expect(queryByDisplayValue(propertiesField2.label)).to.not.be.null;
     });
   });

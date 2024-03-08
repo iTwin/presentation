@@ -1,0 +1,58 @@
+{
+  "name": "@itwin/unified-selection",
+  "version": "0.0.0",
+  "description": "Package for managing unified selection",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iTwin/presentation.git",
+    "directory": "packages/unified-selection"
+  },
+  "keywords": [
+    "Bentley",
+    "EC",
+    "Unified selection",
+    "iTwin.js"
+  ],
+  "author": {
+    "name": "Bentley Systems, Inc.",
+    "url": "http://www.bentley.com"
+  },
+  "main": "lib/cjs/unified-selection.js",
+  "module": "lib/esm/unified-selection.js",
+  "types": "lib/cjs/unified-selection.d.ts",
+  "scripts": {
+    "build": "npm run -s build:cjs && npm run -s build:esm",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:watch": "npm run -s build:cjs -- -w",
+    "clean": "rimraf lib build",
+    "cover": "",
+    "lint": "eslint ./src/**/*.ts",
+    "test": "mocha --config ./.mocharc.json \"./lib/cjs/test/**/*.test.js\"",
+    "test:watch": "npm -s test -- --reporter min --watch-extensions ts --watch",
+    "extract-api": "betools extract-api --entry=unified-selection --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api",
+    "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/unified-selection.api.md"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@itwin/build-tools": "^4.4.0",
+    "@itwin/eslint-plugin": "4.0.0-dev.48",
+    "@types/chai": "^4.3.11",
+    "@types/chai-as-promised": "^7.1.8",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^18.17.7",
+    "@types/sinon": "^17.0.3",
+    "@types/sinon-chai": "^3.2.12",
+    "chai": "^4.4.1",
+    "chai-as-promised": "^7.1.1",
+    "cpx2": "^7.0.1",
+    "eslint": "^8.56.0",
+    "mocha": "^10.3.0",
+    "nyc": "^15.1.0",
+    "sinon": "^17.0.1",
+    "sinon-chai": "^3.7.0",
+    "source-map-support": "^0.5.21",
+    "typescript": "~5.0.4"
+  }
+}

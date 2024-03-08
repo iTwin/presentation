@@ -33,6 +33,7 @@ import {
   DiagnosticsProps,
   FavoritePropertiesDataFilterer,
   navigationPropertyEditorContext,
+  PortalTargetContextProvider,
   PresentationPropertyDataProvider,
   useNavigationPropertyEditingContext,
   usePropertyDataProviderWithUnifiedSelection,
@@ -86,42 +87,49 @@ export function PropertiesWidget(props: Props) {
   );
 
   const { width, height, ref } = useResizeDetector();
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
 
   return (
-    <div className="PropertiesWidget">
-      <h3>{IModelApp.localization.getLocalizedString("Sample:controls.properties.widget-label")}</h3>
-      <DiagnosticsSelector onDiagnosticsOptionsChanged={setDiagnosticsOptions} />
-      {rulesetId ? (
-        <div className="SearchBar">
-          <FilteringInput
-            onFilterCancel={() => {
-              setFilter("");
-            }}
-            onFilterClear={() => {
-              setFilter("");
-            }}
-            onFilterStart={(newFilter) => {
-              setFilter(newFilter);
-            }}
-            style={{ flex: "auto" }}
-            resultSelectorProps={resultSelectorProps}
-            status={filterText.length !== 0 ? FilteringInputStatus.FilteringFinished : FilteringInputStatus.ReadyToFilter}
-          />
-          <ToggleSwitch title="Favorites" onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIsFavoritesFilterActive(e.target.checked)} />
-        </div>
-      ) : null}
-      <div ref={ref} className="ContentContainer">
-        {rulesetId && width && height ? (
-          <PropertyGrid
-            width={width}
-            height={height}
-            imodel={imodel}
-            rulesetId={rulesetId}
-            filtering={{ filter: filterText, onlyFavorites: isFavoritesFilterActive, activeHighlight, onFilteringStateChanged }}
-            diagnostics={diagnosticsOptions}
-          />
+    <div ref={setPortalTarget} className="PropertiesWidget">
+      <PortalTargetContextProvider portalTarget={portalTarget}>
+        <h3>{IModelApp.localization.getLocalizedString("Sample:controls.properties.widget-label")}</h3>
+        <DiagnosticsSelector onDiagnosticsOptionsChanged={setDiagnosticsOptions} />
+        {rulesetId ? (
+          <div className="SearchBar">
+            <FilteringInput
+              onFilterCancel={() => {
+                setFilter("");
+              }}
+              onFilterClear={() => {
+                setFilter("");
+              }}
+              onFilterStart={(newFilter) => {
+                setFilter(newFilter);
+              }}
+              style={{ flex: "auto" }}
+              resultSelectorProps={resultSelectorProps}
+              status={filterText.length !== 0 ? FilteringInputStatus.FilteringFinished : FilteringInputStatus.ReadyToFilter}
+            />
+            <ToggleSwitch
+              className="FavoritesToggle"
+              title="Favorites"
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setIsFavoritesFilterActive(e.target.checked)}
+            />
+          </div>
         ) : null}
-      </div>
+        <div ref={ref} className="ContentContainer">
+          {rulesetId && width && height ? (
+            <PropertyGrid
+              width={width}
+              height={height}
+              imodel={imodel}
+              rulesetId={rulesetId}
+              filtering={{ filter: filterText, onlyFavorites: isFavoritesFilterActive, activeHighlight, onFilteringStateChanged }}
+              diagnostics={diagnosticsOptions}
+            />
+          ) : null}
+        </div>
+      </PortalTargetContextProvider>
     </div>
   );
 }

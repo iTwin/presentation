@@ -30,7 +30,7 @@ import { PresentationTreeNodeItem } from "../../../presentation-components/tree/
 import { createTestPropertyInfo, stubDOMMatrix, stubRaf } from "../../_helpers/Common";
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../../_helpers/Content";
 import { ResolvablePromise } from "../../_helpers/Promises";
-import { render, waitFor } from "../../TestUtils";
+import { act, render, waitFor } from "../../TestUtils";
 import { createTreeModelNodeInput } from "./Helpers";
 
 describe("PresentationTreeRenderer", () => {
@@ -188,7 +188,9 @@ describe("PresentationTreeRenderer", () => {
       expect(baseElement.querySelector(".presentation-instance-filter-dialog-progress")).to.not.be.null;
     });
 
-    await descriptorPromise.resolve(createTestContentDescriptor({ fields: [] }));
+    await act(async () => {
+      await descriptorPromise.resolve(createTestContentDescriptor({ fields: [] }));
+    });
 
     // wait for spinner to disappear
     await waitFor(() => {
