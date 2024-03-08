@@ -22,6 +22,17 @@ export interface ArrayPropertyAttributes {
 }
 
 // @beta
+export interface BaseHierarchyNode {
+    autoExpand?: boolean;
+    children: boolean;
+    extendedData?: {
+        [key: string]: any;
+    };
+    label: string;
+    parentKeys: HierarchyNodeKey[];
+}
+
+// @beta
 export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelectClauseFactory {
     constructor(props: BisInstanceLabelSelectClauseFactoryProps);
     // (undocumented)
@@ -495,13 +506,11 @@ export interface GetHierarchyNodesProps {
 export function getLogger(): ILogger;
 
 // @beta
-export type GroupingHierarchyNode = Omit<HierarchyNode, "key" | "supportsFiltering"> & {
-    key: GroupingNodeKey;
+export interface GroupingHierarchyNode extends BaseHierarchyNode {
     groupedInstanceKeys: InstanceKey[];
-    nonGroupingAncestor?: Omit<ParentHierarchyNode, "key"> & {
-        key: string | InstancesNodeKey;
-    };
-};
+    key: GroupingNodeKey;
+    nonGroupingAncestor?: ParentHierarchyNode<NonGroupingHierarchyNode>;
+}
 
 // @beta
 export type GroupingNodeKey = ClassGroupingNodeKey | LabelGroupingNodeKey | PropertyGroupingNodeKey;
@@ -515,17 +524,7 @@ export type HierarchyDefinitionParentNode = Omit<HierarchyNode, "children" | "ke
 export type HierarchyLevelDefinition = HierarchyNodesDefinition[];
 
 // @beta
-export interface HierarchyNode {
-    autoExpand?: boolean;
-    children: boolean;
-    extendedData?: {
-        [key: string]: any;
-    };
-    key: HierarchyNodeKey;
-    label: string;
-    parentKeys: HierarchyNodeKey[];
-    supportsFiltering?: boolean;
-}
+export type HierarchyNode = NonGroupingHierarchyNode | GroupingHierarchyNode;
 
 // @beta (undocumented)
 export namespace HierarchyNode {
@@ -537,20 +536,17 @@ export namespace HierarchyNode {
     } & (TNode extends ProcessedHierarchyNode ? ProcessedGroupingHierarchyNode : GroupingHierarchyNode);
     export function isCustom<TNode extends {
         key: HierarchyNodeKey;
-    }>(node: TNode): node is TNode & {
+    }>(node: TNode): node is TNode & (TNode extends ProcessedHierarchyNode ? ProcessedCustomHierarchyNode : NonGroupingHierarchyNode) & {
         key: string;
-    } & (TNode extends ProcessedHierarchyNode ? ProcessedCustomHierarchyNode : {});
+    };
     export function isGroupingNode<TNode extends {
         key: HierarchyNodeKey;
-    }>(node: TNode): node is TNode & {
-        key: GroupingNodeKey;
-        supportsFiltering?: undefined;
-    } & (TNode extends ProcessedHierarchyNode ? ProcessedGroupingHierarchyNode : GroupingHierarchyNode);
+    }>(node: TNode): node is TNode & (TNode extends ProcessedHierarchyNode ? ProcessedGroupingHierarchyNode : GroupingHierarchyNode);
     export function isInstancesNode<TNode extends {
         key: HierarchyNodeKey;
-    }>(node: TNode): node is TNode & {
+    }>(node: TNode): node is TNode & (TNode extends ProcessedHierarchyNode ? ProcessedInstanceHierarchyNode : NonGroupingHierarchyNode) & {
         key: InstancesNodeKey;
-    } & (TNode extends ProcessedHierarchyNode ? ProcessedInstanceHierarchyNode : {});
+    };
     export function isLabelGroupingNode<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
@@ -900,10 +896,16 @@ export class NodeSelectQueryFactory {
 }
 
 // @beta
+export interface NonGroupingHierarchyNode extends BaseHierarchyNode {
+    key: string | InstancesNodeKey;
+    supportsFiltering?: boolean;
+}
+
+// @beta
 export type OmitOverUnion<T, K extends PropertyKey> = T extends T ? Omit<T, K> : never;
 
 // @beta
-export type ParentHierarchyNode = Omit<HierarchyNode, "children">;
+export type ParentHierarchyNode<TBase = HierarchyNode> = OmitOverUnion<TBase, "children">;
 
 // @beta
 export type ParsedCustomHierarchyNode = Omit<ProcessedCustomHierarchyNode, "label" | "parentKeys"> & {
@@ -957,7 +959,7 @@ export namespace PrimitiveValue {
 export type PrimitiveValueType = "Id" | Exclude<ECPrimitiveType, "Binary" | "IGeometry">;
 
 // @beta
-export type ProcessedCustomHierarchyNode = Omit<HierarchyNode, "key" | "children"> & {
+export type ProcessedCustomHierarchyNode = Omit<NonGroupingHierarchyNode, "key" | "children"> & {
     key: string;
     children?: boolean;
     processingParams?: HierarchyNodeProcessingParamsBase;
@@ -972,7 +974,7 @@ export type ProcessedGroupingHierarchyNode = Omit<GroupingHierarchyNode, "childr
 export type ProcessedHierarchyNode = ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode | ProcessedGroupingHierarchyNode;
 
 // @beta
-export type ProcessedInstanceHierarchyNode = Omit<HierarchyNode, "key" | "children"> & {
+export type ProcessedInstanceHierarchyNode = Omit<NonGroupingHierarchyNode, "key" | "children"> & {
     key: InstancesNodeKey;
     children?: boolean;
     processingParams?: InstanceHierarchyNodeProcessingParams;
