@@ -4,13 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { createRef } from "react";
+import { createRef, PropsWithChildren, useState } from "react";
 import sinon from "sinon";
 import { PrimitiveValue, PropertyDescription, PropertyRecord, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { EmptyLocalization } from "@itwin/core-common";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Content, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
 import { Presentation, PresentationManager } from "@itwin/presentation-frontend";
+import { PortalTargetContextProvider } from "../../../presentation-components/common/PortalTargetContext";
 import { PropertyEditorAttributes } from "../../../presentation-components/properties/editors/Common";
 import {
   NavigationPropertyTargetSelector,
@@ -18,6 +19,16 @@ import {
 } from "../../../presentation-components/properties/inputs/NavigationPropertyTargetSelector";
 import { createTestContentDescriptor, createTestContentItem } from "../../_helpers/Content";
 import { render, waitFor } from "../../TestUtils";
+
+function TestComponentWithPortalTarget({ children }: PropsWithChildren) {
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+
+  return (
+    <div ref={setPortalTarget}>
+      <PortalTargetContextProvider portalTarget={portalTarget}>{children}</PortalTargetContextProvider>
+    </div>
+  );
+}
 
 function createNavigationPropertyDescription(): PropertyDescription {
   return {
@@ -304,7 +315,11 @@ describe("NavigationPropertyTargetSelector", () => {
       getNavigationPropertyInfo: async () => testNavigationPropertyInfo,
       propertyRecord,
     };
-    const { getByRole, queryByText, user } = render(<NavigationPropertyTargetSelector {...initialProps} />);
+    const { getByRole, queryByText, user } = render(
+      <TestComponentWithPortalTarget>
+        <NavigationPropertyTargetSelector {...initialProps} />
+      </TestComponentWithPortalTarget>,
+    );
 
     const inputContainer = await waitFor(() => getByRole("combobox"));
 

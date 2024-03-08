@@ -14,8 +14,10 @@ import { IModelConnection } from "@itwin/core-frontend";
 import { SvgCaretDownSmall } from "@itwin/itwinui-icons-react";
 import { Input, List, ListItem } from "@itwin/itwinui-react";
 import { InstanceKey, LabelDefinition, NavigationPropertyInfo } from "@itwin/presentation-common";
+import { usePortalTargetContext } from "../../common/PortalTargetContext";
 import { translate, useMergedRefs, useResizeObserver } from "../../common/Utils";
 import { PropertyEditorAttributes } from "../editors/Common";
+import { useSelectMenuPlacement } from "./AsyncSelect";
 import { NavigationPropertyTarget, useNavigationPropertyTargetsLoader, useNavigationPropertyTargetsRuleset } from "./UseNavigationPropertyTargetsLoader";
 
 /** @internal */
@@ -57,7 +59,9 @@ export const NavigationPropertyTargetSelector = forwardRef<PropertyEditorAttribu
   }, [propertyRecord]);
 
   const { ref: selectRef, width } = useResizeObserver();
-  const mergedRefs = useMergedRefs(divRef, selectRef);
+  const { ref: selectorRef, ...menuProps } = useSelectMenuPlacement();
+  const mergedRefs = useMergedRefs(divRef, selectRef, selectorRef);
+  const { portalTarget } = usePortalTargetContext();
 
   if (!targetsRuleset) {
     return <ReadonlyNavigationPropertyTarget record={props.propertyRecord} />;
@@ -82,7 +86,7 @@ export const NavigationPropertyTargetSelector = forwardRef<PropertyEditorAttribu
           control: () => ({}),
           container: () => ({}),
           menuPortal: (base) => ({ ...base, zIndex: 9999, width }),
-          menu: () => ({}),
+          menu: (base) => ({ ...base, margin: 0 }),
           dropdownIndicator: () => ({}),
         }}
         components={{
@@ -90,7 +94,8 @@ export const NavigationPropertyTargetSelector = forwardRef<PropertyEditorAttribu
           MenuList: TargetSelectMenuList,
           Option: TargetSelectOption,
         }}
-        menuPortalTarget={divRef.current?.ownerDocument.body.querySelector(".iui-root") ?? divRef.current?.ownerDocument.body}
+        menuPortalTarget={portalTarget}
+        {...menuProps}
       />
     </div>
   );

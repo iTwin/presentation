@@ -11,7 +11,7 @@ import { IModelApp } from "@itwin/core-frontend";
 import { Presentation } from "@itwin/presentation-frontend";
 import { PresentationInstanceFilterProperty } from "../../presentation-components/instance-filter-builder/PresentationInstanceFilterProperty";
 import { createTestPresentationInstanceFilterPropertyInfo, stubRaf } from "../_helpers/Common";
-import { fireEvent, render } from "../TestUtils";
+import { render, waitFor } from "../TestUtils";
 
 describe("PresentationInstanceFilterProperty", () => {
   stubRaf();
@@ -31,12 +31,12 @@ describe("PresentationInstanceFilterProperty", () => {
     sinon.restore();
   });
 
-  it("renders with badge", () => {
+  it("renders with badge", async () => {
     const testPropertyInfo = createTestPresentationInstanceFilterPropertyInfo({
       className: `${schemaName}:${className}`,
       categoryLabel: "TestCategoryLabel",
     });
-    const { container, queryByText, queryByTitle } = render(
+    const { user, container, queryByText, queryByTitle } = render(
       <PresentationInstanceFilterProperty
         propertyDescription={testPropertyInfo.propertyDescription}
         fullClassName={testPropertyInfo.className}
@@ -47,9 +47,12 @@ describe("PresentationInstanceFilterProperty", () => {
     expect(queryByTitle(testPropertyInfo.propertyDescription.displayLabel)).to.not.be.null;
     const propertyBadgeSelector = container.querySelector<HTMLInputElement>(".badge");
     expect(propertyBadgeSelector).to.not.be.null;
-    fireEvent.mouseEnter(propertyBadgeSelector!);
-    expect(queryByText(className)).to.not.be.null;
-    expect(queryByText(schemaName)).to.not.be.null;
+
+    await user.hover(propertyBadgeSelector!);
+    await waitFor(() => {
+      expect(queryByText(className)).to.not.be.null;
+      expect(queryByText(schemaName)).to.not.be.null;
+    });
   });
 
   it("renders without badge", () => {
