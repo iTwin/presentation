@@ -62,7 +62,11 @@ export class TestReporter extends Base {
   private onTestEnd(test: Mocha.Test) {
     const endTime = performance.now();
     const startTime = this._testStartTimes.get(test.title);
-    const duration = Math.round((endTime - startTime!) * 100) / 100;
+    if (startTime === undefined) {
+      return;
+    }
+
+    const duration = Math.round((endTime - startTime) * 100) / 100;
     this._blockHandler.stop();
 
     const pass = test.isPassed();
