@@ -80,7 +80,7 @@ describe("Learning snippets", () => {
 
       // render the component
       const { container, rerender } = render(<MyPropertyGrid imodel={imodel} elementKey={elementKey} />);
-      await ensurePropertyGridHasPropertyRecord(container, "User Label", "My Element");
+      await ensurePropertyGridHasPropertyRecord(container, "$élêçtèd Ítêm(s)", "User Label", "My Element");
 
       // simulate a network error in RPC request
       sinon.stub(Presentation.presentation, "getContentAndSize").throws(new Error("Network error"));

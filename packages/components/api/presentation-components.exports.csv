@@ -40,6 +40,8 @@ beta;navigationPropertyEditorContext: Context
 beta;NavigationPropertyEditorContextProps
 beta;NavigationPropertyTargetEditor: typeof NavigationPropertyTargetEditor_2
 deprecated;NavigationPropertyTargetEditor: typeof NavigationPropertyTargetEditor_2
+beta;PortalTargetContextProvider({ portalTarget, children }: PropsWithChildren
+beta;PortalTargetContextProviderProps
 public;PresentationComponentsLoggerCategory
 beta;PresentationFilterBuilderValueRenderer({ imodel, descriptor, descriptorInputKeys, ...props }: PresentationFilterBuilderValueRendererProps): JSX_2.Element
 beta;PresentationFilterBuilderValueRendererProps 

@@ -9,16 +9,6 @@
 import { createContext, PropsWithChildren, useContext } from "react";
 
 /**
- * Context that stores a portal target. It will be used to portal popovers opened by presentation components.
- * @beta
- */
-export interface PortalTargetContext {
-  portalTarget: HTMLElement | null;
-}
-
-const portalTargetContext = createContext<PortalTargetContext>({} as PortalTargetContext);
-
-/**
  * Props for [[PortalTargetContextProvider]]
  * @beta
  */
@@ -35,8 +25,18 @@ export function PortalTargetContextProvider({ portalTarget, children }: PropsWit
 }
 
 /**
+ * Context that stores a portal target. It will be used to portal popovers opened by presentation components.
+ * @internal
+ */
+export interface PortalTargetContext {
+  portalTarget: HTMLElement | null;
+}
+
+const portalTargetContext = createContext<PortalTargetContext>({ portalTarget: null });
+
+/**
  * Returns context provided by [[PortalTargetContextProvider]].
- * @beta
+ * @internal
  */
 export function usePortalTargetContext() {
   return useContext(portalTargetContext);

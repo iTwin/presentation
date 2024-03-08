@@ -89,10 +89,10 @@ describe("Learning snippets", async () => {
 
       // test Unified Selection -> Property Grid content synchronization
       act(() => Presentation.selection.replaceSelection("", imodel, new KeySet([elementKeys[0]])));
-      await ensurePropertyGridHasPropertyRecord(container, "User Label", "My Element 1");
+      await ensurePropertyGridHasPropertyRecord(container, "$élêçtèd Ítêm(s)", "User Label", "My Element 1");
 
       act(() => Presentation.selection.replaceSelection("", imodel, new KeySet([elementKeys[1]])));
-      await ensurePropertyGridHasPropertyRecord(container, "User Label", "My Element 2");
+      await ensurePropertyGridHasPropertyRecord(container, "$élêçtèd Ítêm(s)", "User Label", "My Element 2");
     });
   });
 });

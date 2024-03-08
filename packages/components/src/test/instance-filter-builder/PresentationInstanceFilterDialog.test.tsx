@@ -22,7 +22,7 @@ import {
 import { createTestECClassInfo, stubDOMMatrix, stubRaf } from "../_helpers/Common";
 import { createTestCategoryDescription, createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
 import { ResolvablePromise } from "../_helpers/Promises";
-import { render, waitFor, waitForElement } from "../TestUtils";
+import { act, render, waitFor, waitForElement, within } from "../TestUtils";
 
 describe("PresentationInstanceFilterDialog", () => {
   stubRaf();
@@ -82,7 +82,7 @@ describe("PresentationInstanceFilterDialog", () => {
   });
 
   it("renders with initial filter", async () => {
-    const { queryByDisplayValue } = render(
+    const { queryByDisplayValue, queryByText } = render(
       <PresentationInstanceFilterDialog
         imodel={imodel}
         propertiesSource={propertiesSource}
@@ -95,6 +95,10 @@ describe("PresentationInstanceFilterDialog", () => {
       },
     );
 
+    // verify class is selected
+    await waitFor(() => expect(queryByText(classInfo.label)).to.not.be.null);
+
+    // verify property is selected
     await waitFor(() => expect(queryByDisplayValue(stringField.label)).to.not.be.null);
   });
 
@@ -232,14 +236,15 @@ describe("PresentationInstanceFilterDialog", () => {
 
   it("does not invoke `onApply` when there two empty rules", async () => {
     const spy = sinon.spy();
-    const { container, user, getByText } = render(
+    const { container, user, getAllByRole } = render(
       <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} onApply={spy} isOpen={true} />,
       {
         addThemeProvider: true,
       },
     );
 
-    await user.click(getByText(/filterBuilder.add/));
+    const addButton = getAllByRole("button").find((el) => within(el).queryByText(/filterBuilder.add/))!;
+    await user.click(addButton);
 
     const applyButton = await getApplyButton(container);
     await user.click(applyButton);
@@ -353,21 +358,14 @@ describe("PresentationInstanceFilterDialog", () => {
     const title = "custom title";
 
     const { queryByText } = render(
-      <PresentationInstanceFilterDialog
-        imodel={imodel}
-        propertiesSource={propertiesSource}
-        title={<div>{title}</div>}
-        onApply={spy}
-        isOpen={true}
-        initialFilter={initialFilter}
-      />,
+      <PresentationInstanceFilterDialog imodel={imodel} propertiesSource={propertiesSource} title={<div>{title}</div>} onApply={spy} isOpen={true} />,
     );
 
     await waitFor(() => expect(queryByText(title)).to.not.be.null);
   });
 
   it("renders results count", async () => {
-    const { queryByText } = render(
+    const { queryByText, queryByDisplayValue } = render(
       <PresentationInstanceFilterDialog
         imodel={imodel}
         propertiesSource={propertiesSource}
@@ -376,16 +374,17 @@ describe("PresentationInstanceFilterDialog", () => {
         initialFilter={initialFilter}
         filterResultsCountRenderer={() => <div>Test Results</div>}
       />,
-      {
-        addThemeProvider: true,
-      },
     );
 
+    // wait for filter builder to render
+    await waitFor(() => expect(queryByDisplayValue(stringField.label)).to.not.be.null);
+
+    // verify results count renderer is used
     await waitFor(() => expect(queryByText("Test Results")).to.not.be.null);
   });
 
   it("renders error boundary if error is thrown", async () => {
-    const propertiesSourceGetter = async () => {
+    const propertiesSourceGetter = () => {
       throw new Error("Cannot load descriptor");
     };
 
@@ -440,7 +439,10 @@ describe("PresentationInstanceFilterDialog", () => {
     await waitFor(() => {
       expect(container.querySelector(".presentation-instance-filter-dialog-progress")).to.not.be.null;
     });
-    await propertiesSourcePromise.resolve(propertiesSource);
+
+    await act(async () => {
+      await propertiesSourcePromise.resolve(propertiesSource);
+    });
 
     await waitFor(() => {
       expect(container.querySelector(".presentation-instance-filter-dialog-progress")).to.be.null;
