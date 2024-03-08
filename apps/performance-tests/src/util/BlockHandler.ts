@@ -53,16 +53,11 @@ export class BlockHandler {
 }
 
 function getP95(arr: number[]): number | undefined {
-  if (arr.length <= 1) {
+  if (arr.length === 0) {
     return undefined;
   }
 
-  const length95 = Math.ceil(0.95 * arr.length);
-  let sum95 = 0;
-  for (let i = 0; i < length95; ++i) {
-    sum95 += arr[i];
-  }
-  return sum95 / length95;
+  return arr[Math.floor(0.95 * arr.length)];
 }
 
 function getMedian(arr: number[]): number | undefined {
