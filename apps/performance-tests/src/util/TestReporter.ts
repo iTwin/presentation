@@ -99,14 +99,24 @@ class TestReporter extends Base {
 
   /** Saves performance results in a format that is compatible with Github benchmark action. */
   private saveResults() {
-    const data = this._testInfo.map(({ test, blockingSummary }) => ({
-      name: test.title,
-      unit: "ms",
-      value: test.duration!,
-      extra: Object.entries(blockingSummary)
-        .map(([key, val]) => `${key}: ${val ?? "N/A"}`)
-        .join("\n"),
-    }));
+    const data = this._testInfo.flatMap(({ test, blockingSummary }) => {
+      const durationEntry = {
+        name: test.title,
+        unit: "ms",
+        value: test.duration!,
+      };
+
+      const blockingEntry = {
+        name: `${test.title} (blocking time)`,
+        unit: "ms",
+        value: blockingSummary.p95 ?? 0,
+        extra: Object.entries(blockingSummary)
+          .map(([key, val]) => `${key}: ${val ?? "N/A"}`)
+          .join("\n"),
+      };
+
+      return [durationEntry, blockingEntry];
+    });
 
     const outputPath = this._outputPath!;
     fs.writeFileSync(outputPath, JSON.stringify(data, undefined, 2));
