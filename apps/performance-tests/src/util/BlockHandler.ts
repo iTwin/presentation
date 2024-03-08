@@ -10,6 +10,8 @@ export interface Summary {
   max?: number;
   p95?: number;
   median?: number;
+
+  [key: string]: number | undefined;
 }
 
 /**

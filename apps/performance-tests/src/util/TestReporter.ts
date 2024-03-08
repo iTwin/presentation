@@ -74,7 +74,7 @@ class TestReporter extends Base {
 
       const blockingInfo = Object.entries(blockingSummary)
         .filter(([_, val]) => val !== undefined)
-        .map(([key, val]) => `${key}: ${floatToString(val)}`)
+        .map(([key, val]) => `${key}: ${(key === "count" ? val : val?.toFixed(2)) ?? "N/A"}`)
         .join(", ");
 
       /* eslint-disable @typescript-eslint/naming-convention */
@@ -112,12 +112,6 @@ class TestReporter extends Base {
     fs.writeFileSync(outputPath, JSON.stringify(data, undefined, 2));
     console.log(`Test results saved at ${outputPath}`);
   }
-}
-
-function floatToString(x: number, maxPrecision: number = 2): string {
-  const result = x.toString();
-  const dotPos = result.indexOf(".");
-  return dotPos >= 0 ? result.substring(0, dotPos + maxPrecision + 1) : result;
 }
 
 module.exports = TestReporter;
