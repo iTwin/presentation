@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "test": "mocha --config ./.mocharc.json ./lib/test/*test.js",
+    "test": "NODE_OPTIONS=\"--enable-source-maps\" mocha --config ./.mocharc.json ./lib/*test.js",
     "benchmark": "npm run test -- -O BENCHMARK_OUTPUT_PATH=./benchmark.json",
     "build": "tsc",
     "clean": "rimraf lib temp",
@@ -17,6 +17,7 @@
     "@itwin/presentation-hierarchy-builder": "workspace:*",
     "@itwin/presentation-core-interop": "workspace:*",
     "@itwin/presentation-models-tree": "workspace:*",
+    "as-table": "^1.0.55",
     "mocha": "^10.3.0",
     "blocked": "^1.3.0",
     "rxjs": "^7.8.1"
