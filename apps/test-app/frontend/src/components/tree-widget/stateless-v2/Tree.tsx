@@ -3,29 +3,22 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import "./Tree.css";
-import cx from "classnames";
-import { ComponentPropsWithoutRef, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDebouncedAsyncValue } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
-import { SvgFilter, SvgFilterHollow, SvgFolder, SvgImodelHollow, SvgItem, SvgLayers, SvgModel, SvgRemove } from "@itwin/itwinui-icons-react";
-import { Button, Flex, IconButton, ProgressRadial, SearchBox, Text, ToggleSwitch, Tree, TreeNode } from "@itwin/itwinui-react";
-import { ClassInfo, Descriptor } from "@itwin/presentation-common";
-import { PresentationInstanceFilter, PresentationInstanceFilterDialog, PresentationInstanceFilterInfo } from "@itwin/presentation-components";
+import { Flex, ProgressRadial, SearchBox, Text, ToggleSwitch } from "@itwin/itwinui-react";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
+import { HierarchyLevelFilteringOptions, TreeRenderer, useTree } from "@itwin/presentation-hierarchies-react";
 import {
   createLimitingECSqlQueryExecutor,
-  GenericInstanceFilter,
   HierarchyProvider,
   ILimitingECSqlQueryExecutor,
   IMetadataProvider,
   TypedPrimitiveValue,
 } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
-import { isPresentationHierarchyNode, PresentationTreeNode } from "./Types";
-import { HierarchyLevelFilteringOptions, UseTreeResult, useUnifiedSelectionTree } from "./UseTree";
 
 interface MetadataProviders {
   queryExecutor: ILimitingECSqlQueryExecutor;
@@ -86,7 +79,7 @@ export function StatelessTreeV2({ imodel, height, width }: { imodel: IModelConne
     );
   }, [metadata, filteredPaths]);
 
-  const { rootNodes, isLoading, ...treeProps } = useUnifiedSelectionTree({
+  const { rootNodes, isLoading, ...treeProps } = useTree({
     hierarchyProvider,
   });
 
@@ -100,6 +93,10 @@ export function StatelessTreeV2({ imodel, height, width }: { imodel: IModelConne
     setShouldUseCustomFormatter(newValue);
     treeProps.reloadTree();
   };
+
+  const onFilter = useCallback((info: HierarchyLevelFilteringOptions) => {
+    console.log(info);
+  }, []);
 
   const renderContent = () => {
     if (rootNodes === undefined || isLoading || isFiltering) {
@@ -120,7 +117,7 @@ export function StatelessTreeV2({ imodel, height, width }: { imodel: IModelConne
 
     return (
       <Flex.Item alignSelf="flex-start" style={{ width: "100%", overflow: "auto" }}>
-        <TreeRenderer rootNodes={rootNodes} imodel={imodel} {...treeProps} />
+        <TreeRenderer rootNodes={rootNodes} {...treeProps} onFilterClick={onFilter} />
       </Flex.Item>
     );
   };
@@ -140,230 +137,54 @@ async function customFormatter(val: TypedPrimitiveValue) {
   return `THIS_IS_FORMATTED_${val ? JSON.stringify(val.value) : ""}_THIS_IS_FORMATTED`;
 }
 
-interface TreeRendererProps extends Omit<UseTreeResult, "rootNodes" | "isLoading"> {
-  rootNodes: PresentationTreeNode[];
-  imodel: IModelConnection;
-}
+// function fromGenericFilter(descriptor: Descriptor, filter: GenericInstanceFilter): PresentationInstanceFilterInfo {
+//   const presentationFilter =
+//     GenericInstanceFilter.isFilterRuleGroup(filter.rules) && filter.rules.rules.length === 0
+//       ? undefined
+//       : PresentationInstanceFilter.fromGenericInstanceFilter(descriptor, filter);
+//   return {
+//     filter: presentationFilter,
+//     usedClasses: (filter.filteredClassNames ?? [])
+//       .map((name) => descriptor.selectClasses.find((selectClass) => selectClass.selectClassInfo.name === name)?.selectClassInfo)
+//       .filter((classInfo): classInfo is ClassInfo => classInfo !== undefined),
+//   };
+// }
 
-function TreeRenderer({
-  rootNodes,
-  imodel,
-  expandNode,
-  selectNode,
-  isNodeSelected,
-  setHierarchyLevelLimit,
-  getHierarchyLevelFilteringOptions,
-  removeHierarchyLevelFilter,
-}: TreeRendererProps) {
-  const [filterOptions, setFilterOptions] = useState<HierarchyLevelFilteringOptions>();
+// function toGenericFilter(filterInfo?: PresentationInstanceFilterInfo): GenericInstanceFilter | undefined {
+//   if (!filterInfo) {
+//     return undefined;
+//   }
 
-  const nodeRenderer = useCallback<TreeProps<PresentationTreeNode>["nodeRenderer"]>(
-    ({ node, ...restProps }) => {
-      if (isPresentationHierarchyNode(node)) {
-        return (
-          <TreeNode
-            {...restProps}
-            className={cx("stateless-tree-node", { filtered: node.isFiltered })}
-            label={node.label}
-            onExpanded={(_, isExpanded) => {
-              expandNode(node.id, isExpanded);
-            }}
-            onSelected={(_, isSelected) => {
-              selectNode(node.id, isSelected);
-            }}
-            icon={getIcon(node.extendedData?.imageId)}
-          >
-            {node.isFiltered ? (
-              <IconButton
-                className="filtering-action-button"
-                styleType="borderless"
-                size="small"
-                onClick={(e) => {
-                  removeHierarchyLevelFilter(node.id);
-                  e.stopPropagation();
-                }}
-              >
-                <SvgRemove />
-              </IconButton>
-            ) : null}
-            {node.isFilterable ? (
-              <IconButton
-                className="filtering-action-button"
-                styleType="borderless"
-                size="small"
-                onClick={(e) => {
-                  setFilterOptions(getHierarchyLevelFilteringOptions(node.id));
-                  e.stopPropagation();
-                }}
-              >
-                {node.isFiltered ? <SvgFilter /> : <SvgFilterHollow />}
-              </IconButton>
-            ) : null}
-          </TreeNode>
-        );
-      }
+//   if (!filterInfo.filter) {
+//     return filterInfo.usedClasses.length > 0
+//       ? {
+//           propertyClassNames: [],
+//           relatedInstances: [],
+//           filteredClassNames: filterInfo.usedClasses.map((info) => info.name),
+//           rules: { operator: "and", rules: [] },
+//         }
+//       : undefined;
+//   }
 
-      if (node.type === "ChildrenPlaceholder") {
-        return <PlaceholderNode {...restProps} label={node.message} />;
-      }
+//   return PresentationInstanceFilter.toGenericInstanceFilter(filterInfo.filter, filterInfo.usedClasses);
+// }
 
-      if (node.type === "ResultSetTooLarge") {
-        return <ResultSetTooLargeNode {...restProps} label={node.message} onRemoveLimit={() => setHierarchyLevelLimit(node.parentNodeId, "unbounded")} />;
-      }
-      return <TreeNode {...restProps} label={node.message} isDisabled={true} onExpanded={() => {}} />;
-    },
-    [expandNode, selectNode, setHierarchyLevelLimit, getHierarchyLevelFilteringOptions, removeHierarchyLevelFilter],
-  );
+// function getIcon(icon: "icon-layers" | "icon-item" | "icon-ec-class" | "icon-imodel-hollow-2" | "icon-folder" | "icon-model") {
+//   switch (icon) {
+//     case "icon-layers":
+//       return <SvgLayers />;
+//     case "icon-item":
+//       return <SvgItem />;
+//     case "icon-ec-class":
+//       return <SvgItem />;
+//     case "icon-imodel-hollow-2":
+//       return <SvgImodelHollow />;
+//     case "icon-folder":
+//       return <SvgFolder />;
+//     case "icon-model":
+//       return <SvgModel />;
+//   }
+// }
 
-  const getNode = useCallback<TreeProps<PresentationTreeNode>["getNode"]>(
-    (node) => {
-      if (!isPresentationHierarchyNode(node)) {
-        return {
-          nodeId: node.id,
-          node,
-          hasSubNodes: false,
-          isExpanded: false,
-          isSelected: false,
-          isDisabled: true,
-        };
-      }
-      return {
-        nodeId: node.id,
-        node,
-        hasSubNodes: node.children === true || node.children.length > 0,
-        subNodes:
-          // returns placeholder node to show as child while children is loading.
-          node.children === true
-            ? [
-                {
-                  id: `Loading-${node.id}`,
-                  parentNodeId: node.id,
-                  type: "ChildrenPlaceholder",
-                  message: "Loading...",
-                },
-              ]
-            : node.children,
-        isExpanded: node.isExpanded,
-        isSelected: isNodeSelected(node.id),
-      };
-    },
-    [isNodeSelected],
-  );
-
-  const filterDialogProps = gerFilterDialogProps(imodel, filterOptions);
-  return (
-    <div
-      style={{
-        width: "100%",
-        overflow: "auto",
-      }}
-    >
-      <Tree<PresentationTreeNode> data={rootNodes} nodeRenderer={nodeRenderer} getNode={getNode} enableVirtualization={true} />
-      <PresentationInstanceFilterDialog
-        {...filterDialogProps}
-        onApply={(filterInfo) => {
-          filterDialogProps.onApply(filterInfo);
-          setFilterOptions(undefined);
-        }}
-        onClose={() => setFilterOptions(undefined)}
-      />
-    </div>
-  );
-}
-
-function gerFilterDialogProps(
-  imodel: IModelConnection,
-  filterOptions?: HierarchyLevelFilteringOptions,
-): ComponentPropsWithoutRef<typeof PresentationInstanceFilterDialog> {
-  if (!filterOptions) {
-    return {
-      isOpen: false,
-      imodel,
-      propertiesSource: undefined,
-      initialFilter: undefined,
-      onApply: () => {},
-    };
-  }
-
-  const currentFilter = filterOptions.currentFilter;
-  return {
-    isOpen: true,
-    imodel,
-    onApply: (filterInfo) => filterOptions.applyFilter(toGenericFilter(filterInfo)),
-    propertiesSource: async () => filterOptions.getDescriptor(imodel),
-    initialFilter: currentFilter ? (descriptor: Descriptor) => fromGenericFilter(descriptor, currentFilter) : undefined,
-  };
-}
-
-function PlaceholderNode(props: Omit<TreeNodeProps, "onExpanded">) {
-  return <TreeNode {...props} icon={<ProgressRadial size="x-small" indeterminate />} onExpanded={() => {}}></TreeNode>;
-}
-
-function ResultSetTooLargeNode({ onRemoveLimit, ...props }: Omit<TreeNodeProps, "onExpanded"> & { onRemoveLimit: () => void }) {
-  return (
-    <TreeNode {...props} onExpanded={() => {}}>
-      <Button
-        styleType="borderless"
-        size="small"
-        onClick={(e) => {
-          onRemoveLimit();
-          e.stopPropagation();
-        }}
-      >
-        Remove Limit
-      </Button>
-    </TreeNode>
-  );
-}
-
-function fromGenericFilter(descriptor: Descriptor, filter: GenericInstanceFilter): PresentationInstanceFilterInfo {
-  const presentationFilter =
-    GenericInstanceFilter.isFilterRuleGroup(filter.rules) && filter.rules.rules.length === 0
-      ? undefined
-      : PresentationInstanceFilter.fromGenericInstanceFilter(descriptor, filter);
-  return {
-    filter: presentationFilter,
-    usedClasses: (filter.filteredClassNames ?? [])
-      .map((name) => descriptor.selectClasses.find((selectClass) => selectClass.selectClassInfo.name === name)?.selectClassInfo)
-      .filter((classInfo): classInfo is ClassInfo => classInfo !== undefined),
-  };
-}
-
-function toGenericFilter(filterInfo?: PresentationInstanceFilterInfo): GenericInstanceFilter | undefined {
-  if (!filterInfo) {
-    return undefined;
-  }
-
-  if (!filterInfo.filter) {
-    return filterInfo.usedClasses.length > 0
-      ? {
-          propertyClassNames: [],
-          relatedInstances: [],
-          filteredClassNames: filterInfo.usedClasses.map((info) => info.name),
-          rules: { operator: "and", rules: [] },
-        }
-      : undefined;
-  }
-
-  return PresentationInstanceFilter.toGenericInstanceFilter(filterInfo.filter, filterInfo.usedClasses);
-}
-
-function getIcon(icon: "icon-layers" | "icon-item" | "icon-ec-class" | "icon-imodel-hollow-2" | "icon-folder" | "icon-model") {
-  switch (icon) {
-    case "icon-layers":
-      return <SvgLayers />;
-    case "icon-item":
-      return <SvgItem />;
-    case "icon-ec-class":
-      return <SvgItem />;
-    case "icon-imodel-hollow-2":
-      return <SvgImodelHollow />;
-    case "icon-folder":
-      return <SvgFolder />;
-    case "icon-model":
-      return <SvgModel />;
-  }
-}
-
-type TreeProps<T> = ComponentPropsWithoutRef<typeof Tree<T>>;
-type TreeNodeProps = ComponentPropsWithoutRef<typeof TreeNode>;
+// type TreeProps<T> = ComponentPropsWithoutRef<typeof Tree<T>>;
+// type TreeNodeProps = ComponentPropsWithoutRef<typeof TreeNode>;
