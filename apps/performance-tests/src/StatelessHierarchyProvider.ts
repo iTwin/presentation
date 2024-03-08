@@ -2,14 +2,12 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-import { expand, filter, from, mergeAll, of, tap } from "rxjs";
+import { expand, filter, from, mergeAll, of } from "rxjs";
 import { IModelDb } from "@itwin/core-backend";
 import { ISchemaLocater, Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@itwin/ecschema-metadata";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import { createLimitingECSqlQueryExecutor, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
-
-const ENABLE_SCHEDULED_NODES_LOGGING = false;
 
 export class StatelessHierarchyProvider {
   private readonly _provider: HierarchyProvider;
@@ -30,36 +28,20 @@ export class StatelessHierarchyProvider {
   }
 
   private async loadNodes(nodeHasChildren: (node: HierarchyNode) => boolean) {
-    let nodesCreated = 0;
-    let nodesScheduled = 0;
-    const timer = ENABLE_SCHEDULED_NODES_LOGGING ? setInterval(() => nodesScheduled && console.log(`Nodes scheduled ${nodesScheduled}`), 1000) : undefined;
-
-    const promise = new Promise<void>((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       const nodesObservable = of<HierarchyNode | undefined>(undefined).pipe(
         expand((parentNode) => {
-          ++nodesScheduled;
           return from(this._provider.getNodes({ parentNode })).pipe(
-            tap(() => --nodesScheduled),
             mergeAll(),
             filter((node) => nodeHasChildren(node)),
           );
         }, this._nodeRequestLimit),
       );
       nodesObservable.subscribe({
-        next() {
-          ++nodesCreated;
-        },
         complete: resolve,
         error: reject,
       });
     });
-
-    try {
-      await promise;
-    } finally {
-      clearInterval(timer);
-    }
-    console.log(`Total nodes created: ${nodesCreated}`);
   }
 }
 
