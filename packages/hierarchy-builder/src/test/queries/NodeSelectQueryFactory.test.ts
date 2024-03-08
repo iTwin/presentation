@@ -21,8 +21,8 @@ import {
   IMetadataProvider,
 } from "../../hierarchy-builder/ECMetadata";
 import { NodeSelectClauseColumnNames, NodeSelectQueryFactory } from "../../hierarchy-builder/queries/NodeSelectQueryFactory";
+import { trimWhitespace } from "../../hierarchy-builder/Utils";
 import { ClassStubs, createClassStubs } from "../Utils";
-import { trimWhitespace } from "./Utils";
 
 describe("NodeSelectQueryFactory", () => {
   const metadataProvider = {} as unknown as IMetadataProvider;

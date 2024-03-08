@@ -33,7 +33,9 @@ import { shareReplayWithErrors } from "./internal/Rxjs";
 import { SubscriptionScheduler } from "./internal/SubscriptionScheduler";
 import { TreeQueryResultsReader } from "./internal/TreeNodesReader";
 import { getLogger, ILogger } from "./Logging";
+import { ECSqlQueryDef } from "./queries/ECSqlCore";
 import { ILimitingECSqlQueryExecutor } from "./queries/LimitingECSqlQueryExecutor";
+import { trimWhitespace } from "./Utils";
 import { ConcatenatedValue, ConcatenatedValuePart } from "./values/ConcatenatedValue";
 import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "./values/Formatting";
 import { TypedPrimitiveValue } from "./values/Values";
@@ -215,7 +217,7 @@ export class HierarchyProvider {
         }
         return this._queryScheduler.scheduleSubscription(
           of(def.query).pipe(
-            log("Queries", (query) => `Query direct nodes for parent ${createNodeIdentifierForLogging(props.parentNode)}: ${query.ecsql}`),
+            log("Queries", (query) => `Query direct nodes for parent ${createNodeIdentifierForLogging(props.parentNode)}: ${createQueryLogMessage(query)}`),
             mergeMap((query) => defer(() => from(this._queryReader.read(this.queryExecutor, query, props.hierarchyLevelSizeLimit)))),
           ),
         );
@@ -477,4 +479,19 @@ function createNodeIdentifierForLogging(node: ParentHierarchyNode | HierarchyNod
   }
   const { label, key, parentKeys } = node;
   return JSON.stringify({ label, key, parentKeys });
+}
+
+function createQueryLogMessage(query: ECSqlQueryDef): string {
+  const ctes = query.ctes?.map((cte) => `    ${trimWhitespace(cte)}`).join(", \n");
+  const bindings = query.bindings?.map((b) => JSON.stringify(b.value)).join(", ");
+  let output = "{\n";
+  if (ctes) {
+    output += `  ctes: [ \n${ctes} \n], \n`;
+  }
+  output += `  ecsql: ${trimWhitespace(query.ecsql)}, \n`;
+  if (bindings) {
+    output += `  bindings: [${bindings}], \n`;
+  }
+  output += "}";
+  return output;
 }

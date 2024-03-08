@@ -23,7 +23,7 @@ import {
 } from "../../hierarchy-builder/internal/FilteringHierarchyLevelDefinitionsFactory";
 import * as reader from "../../hierarchy-builder/internal/TreeNodesReader";
 import { NodeSelectClauseColumnNames } from "../../hierarchy-builder/queries/NodeSelectQueryFactory";
-import { trimWhitespace } from "../queries/Utils";
+import { trimWhitespace } from "../../hierarchy-builder/Utils";
 import {
   ClassStubs,
   createClassStubs,

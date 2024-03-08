@@ -20,9 +20,9 @@ import {
 import { RowDef } from "../hierarchy-builder/internal/TreeNodesReader";
 import { ECSqlQueryDef, ECSqlQueryReader, ECSqlQueryReaderOptions } from "../hierarchy-builder/queries/ECSqlCore";
 import { ECSqlSelectClauseGroupingParams, NodeSelectClauseColumnNames } from "../hierarchy-builder/queries/NodeSelectQueryFactory";
+import { trimWhitespace } from "../hierarchy-builder/Utils";
 import { ConcatenatedValue } from "../hierarchy-builder/values/ConcatenatedValue";
 import { TypedPrimitiveValue } from "../hierarchy-builder/values/Values";
-import { trimWhitespace } from "./queries/Utils";
 import { ClassStubs, createClassStubs, createFakeQueryReader, ResolvablePromise, waitFor } from "./Utils";
 
 describe("HierarchyProvider", () => {
