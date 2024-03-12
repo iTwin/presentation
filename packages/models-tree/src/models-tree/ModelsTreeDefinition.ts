@@ -278,9 +278,9 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
 
   private async createISubModeledElementChildrenQuery({
     parentNodeInstanceIds: elementIds,
-    instanceFilter,
   }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
-    const instanceFilterClauses = await this._selectQueryFactory.createFilterClauses(instanceFilter, { fullName: "BisCore.GeometricModel3d", alias: "this" });
+    // note: we do not apply hierarchy level filtering on this hierarchy level, because it's always
+    // hidden - the filter will get applied on the child hierarchy levels
     return [
       {
         fullClassName: "BisCore.GeometricModel3d",
@@ -293,13 +293,11 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                 nodeLabel: "", // doesn't matter - the node is always hidden
                 hideNodeInHierarchy: true,
               })}
-            FROM ${instanceFilterClauses.from} this
-            ${instanceFilterClauses.joins}
+            FROM BisCore.GeometricModel3d this
             WHERE
               this.ModeledElement.Id IN (${elementIds.map(() => "?").join(",")})
               AND NOT this.IsPrivate
               AND this.ECInstanceId IN (SELECT Model.Id FROM bis.GeometricElement3d)
-              ${instanceFilterClauses.where ? `AND ${instanceFilterClauses.where}` : ""}
           `,
           bindings: [...elementIds.map((id): ECSqlBinding => ({ type: "id", value: id }))],
         },
