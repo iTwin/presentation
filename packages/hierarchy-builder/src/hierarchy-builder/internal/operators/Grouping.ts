@@ -2,12 +2,13 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-import { concatMap, from, Observable, of, tap, toArray } from "rxjs";
+
+import { concatMap, from, Observable, of, toArray } from "rxjs";
 import { IMetadataProvider } from "../../ECMetadata";
 import { HierarchyNode, HierarchyNodeKey, ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../../HierarchyNode";
-import { getLogger } from "../../Logging";
 import { IPrimitiveValueFormatter } from "../../values/Formatting";
-import { BaseClassChecker, compareNodesByLabel, createOperatorLoggingNamespace, mergeSortedArrays } from "../Common";
+import { BaseClassChecker, compareNodesByLabel, createNodeIdentifierForLogging, createOperatorLoggingNamespace, mergeSortedArrays } from "../Common";
+import { log } from "../LoggingUtils";
 import { assignAutoExpand } from "./grouping/AutoExpand";
 import { createBaseClassGroupingHandlers } from "./grouping/BaseClassGrouping";
 import { createClassGroups } from "./grouping/ClassGrouping";
@@ -29,6 +30,7 @@ export function createGroupingOperator(
 ) {
   return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
     return nodes.pipe(
+      log({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ (n) => `in: ${createNodeIdentifierForLogging(n)}` }),
       toArray(),
       concatMap((resolvedNodes) => {
         const groupingHandlersObs = groupingHandlers
@@ -43,7 +45,7 @@ export function createGroupingOperator(
         );
       }),
       concatMap((groupedNodes) => from(groupedNodes)),
-      log((n) => `out: ${n.label}`),
+      log({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ (n) => `out: ${createNodeIdentifierForLogging(n)}` }),
     );
   };
 }
@@ -147,12 +149,4 @@ export async function createGroupingHandlers(
   );
   groupingHandlers.push(async (allNodes) => createLabelGroups(allNodes));
   return groupingHandlers;
-}
-
-function doLog(msg: string) {
-  getLogger().logTrace(LOGGING_NAMESPACE, msg);
-}
-
-function log<T>(msg: (arg: T) => string) {
-  return tap<T>((n) => doLog(msg(n)));
 }
