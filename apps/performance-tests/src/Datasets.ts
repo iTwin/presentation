@@ -4,8 +4,56 @@
  *--------------------------------------------------------------------------------------------*/
 import fs from "fs";
 import path from "path";
+import { PhysicalElement, StandaloneDb } from "@itwin/core-backend";
+import { BisCodeSpec, Code } from "@itwin/core-common";
+import { insertPhysicalModelWithPartition } from "./util/IModelUtilities";
 
-async function downloadDataset(name: string, downloadUrl: string, localPath: string): Promise<void> {
+export class Datasets {
+  private static readonly _iModels: { baytown?: string; largeFlat?: string } = {};
+
+  public static get bayTown(): string {
+    return this.verifyInitialized(this._iModels.baytown);
+  }
+
+  public static get largeFlat(): string {
+    return this.verifyInitialized(this._iModels.largeFlat);
+  }
+
+  public static async initialize(datasetsDirPath: string) {
+    await fs.promises.mkdir(datasetsDirPath, { recursive: true });
+
+    const [baytown, largeFlat] = await Promise.all([
+      createIfMissing("Baytown", datasetsDirPath, getDatasetDownloader("https://github.com/imodeljs/desktop-starter/raw/master/assets/Baytown.bim")),
+      createIfMissing("LargeFlat", datasetsDirPath, createLargeFlatIModel),
+    ]);
+
+    this._iModels.baytown = baytown;
+    this._iModels.largeFlat = largeFlat;
+  }
+
+  private static verifyInitialized<T>(arg: T | undefined): T {
+    if (arg === undefined) {
+      throw new Error("Datasets haven't been initialized. Call initialize() function before accessing the datasets.");
+    }
+    return arg;
+  }
+}
+
+async function createIfMissing(name: string, folderPath: string, provider: (name: string, localPath: string) => void | Promise<void>) {
+  const localPath = path.join(folderPath, `${name}.bim`);
+  try {
+    await fs.promises.access(localPath, fs.constants.F_OK);
+  } catch {
+    await provider(name, localPath);
+  }
+  return path.resolve(localPath);
+}
+
+function getDatasetDownloader(downloadUrl: string) {
+  return async (name: string, localPath: string) => downloadDataset(name, downloadUrl, localPath);
+}
+
+async function downloadDataset(name: string, downloadUrl: string, localPath: string) {
   console.log(`Downloading "${name}" iModel from "${downloadUrl}"...`);
   const response = await fetch(downloadUrl);
   if (!response.ok) {
@@ -15,28 +63,13 @@ async function downloadDataset(name: string, downloadUrl: string, localPath: str
   await response.body!.pipeTo(fs.WriteStream.toWeb(fs.createWriteStream(localPath)));
 }
 
-/** Paths to downloaded iModels. */
-export const iModelPaths = new Array<string>();
-
-/** Loads iModels into cache for the tests to use. */
-export async function loadDataSets(datasetsDirPath: string) {
-  await fs.promises.mkdir(datasetsDirPath, { recursive: true });
-
-  const datasets = [["Baytown", "https://github.com/imodeljs/desktop-starter/raw/master/assets/Baytown.bim"]].map((entry) => [
-    ...entry,
-    path.join(datasetsDirPath, `${entry[0]}.bim`),
-  ]);
-
-  const datasetPaths = await Promise.all(
-    datasets.map(async ([name, url, localPath]) => {
-      try {
-        await fs.promises.access(localPath, fs.constants.F_OK);
-      } catch {
-        await downloadDataset(name, url, localPath);
-      }
-      return path.resolve(localPath);
-    }),
-  );
-
-  iModelPaths.push(...datasetPaths);
+function createLargeFlatIModel(name: string, localPath: string, numElements: number = 10000) {
+  const iModel = StandaloneDb.createEmpty(localPath, { rootSubject: { name } });
+  const modelId = insertPhysicalModelWithPartition(iModel, "");
+  const codeSpec = iModel.codeSpecs.getByName(BisCodeSpec.physicalMaterial);
+  for (let i = 0; i < numElements; ++i) {
+    const code = new Code({ spec: codeSpec.id, scope: modelId, value: `Element ${i}` });
+    iModel.elements.insertElement({ classFullName: PhysicalElement.classFullName, code, model: modelId });
+  }
+  iModel.close();
 }

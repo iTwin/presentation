@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 import { SnapshotDb } from "@itwin/core-backend";
-import { iModelPaths } from "./Datasets";
+import { Datasets } from "./Datasets";
 import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
 import { run } from "./util/TestUtilities";
 
@@ -11,7 +11,7 @@ describe("stateless hierarchy", () => {
   let iModel: SnapshotDb;
 
   beforeEach(() => {
-    iModel = SnapshotDb.openFile(iModelPaths[0]);
+    iModel = SnapshotDb.openFile(Datasets.bayTown);
   });
 
   afterEach(() => {
