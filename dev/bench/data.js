@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1710231451161,
+  "lastUpdate": 1710242077657,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -1438,6 +1438,52 @@ window.BENCHMARK_DATA = {
             "value": 224,
             "unit": "ms",
             "extra": "count: 4\nmax: 224\np95: 224\nmedian: 89"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35135765+grigasp@users.noreply.github.com",
+            "name": "Grigas",
+            "username": "grigasp"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "994f2c51ccaf9d785e4960fa93577c65790279d2",
+          "message": "Hierarchies: Fix models tree filtering (#468)\n\n* escape class names\r\n\r\n* Fix children check for \"hide if no children\" using parent's instance filter\r\n\r\n* Reduce the amount of query logs. Queries are large and there's no point to log it more than once\r\n\r\n* Allow the property source class alias to be omitted\r\n\r\n* More extensive hierarchy level filtering tests\r\n\r\n* Fix filtering on child Subject hierarchy level not working\r\n\r\n* Fix hierarchy level filtering not working on sub-modeled elements' child hierarchy levels\r\n\r\n* Fix hierarchy level filtering for categories loaded under Subject parent nodes\r\n\r\n* workaround for ECSQL issue\r\n\r\n* improve hiding operators logging",
+          "timestamp": "2024-03-12T13:13:41+02:00",
+          "tree_id": "5fcd11a3bc48798b6717ca780731983d48d72278",
+          "url": "https://github.com/iTwin/presentation/commit/994f2c51ccaf9d785e4960fa93577c65790279d2"
+        },
+        "date": 1710242076708,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "stateless hierarchy loads initial hierarchy",
+            "value": 76.17,
+            "unit": "ms"
+          },
+          {
+            "name": "stateless hierarchy loads initial hierarchy (P95 of main thread blocks)",
+            "value": 35,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 35\np95: 35\nmedian: 35"
+          },
+          {
+            "name": "stateless hierarchy loads full hierarchy",
+            "value": 2965.14,
+            "unit": "ms"
+          },
+          {
+            "name": "stateless hierarchy loads full hierarchy (P95 of main thread blocks)",
+            "value": 219,
+            "unit": "ms",
+            "extra": "count: 6\nmax: 219\np95: 219\nmedian: 50.5"
           }
         ]
       }
