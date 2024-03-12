@@ -11,7 +11,6 @@ interface TestInfo {
   fullTitle: string;
   duration: number;
   pass: boolean;
-  error?: any;
   blockingSummary: Summary;
 }
 
@@ -78,18 +77,12 @@ export class TestReporter extends Base {
       fullTitle: test.fullTitle(),
       duration,
       pass,
-      error: test.err,
       blockingSummary,
     });
   }
 
   private printResults() {
-    const errors = new Map<string, any>();
-    const results = this._testInfo.map(({ fullTitle, duration, pass, error, blockingSummary }) => {
-      if (error) {
-        errors.set(fullTitle, error);
-      }
-
+    const results = this._testInfo.map(({ fullTitle, duration, pass, blockingSummary }) => {
       const blockingInfo = Object.entries(blockingSummary)
         .filter(([_, val]) => val !== undefined)
         .map(([key, val]) => `${key}: ${(key === "count" ? val : val?.toFixed(2)) ?? "N/A"}`)
@@ -108,10 +101,10 @@ export class TestReporter extends Base {
     console.log();
     console.log(tableFormatter(results));
 
-    for (const [name, error] of errors) {
+    for (const test of this.failures) {
       console.error();
-      console.error(`${name}:`);
-      console.error(error);
+      console.error(`${test.fullTitle()}:`);
+      console.error(test.err);
     }
   }
 
