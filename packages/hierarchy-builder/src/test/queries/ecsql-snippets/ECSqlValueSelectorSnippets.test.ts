@@ -12,7 +12,7 @@ import {
   createRawPropertyValueSelector,
   TypedValueSelectClauseProps,
 } from "../../../hierarchy-builder/queries/ecsql-snippets/ECSqlValueSelectorSnippets";
-import { trimWhitespace } from "../Utils";
+import { trimWhitespace } from "../../../hierarchy-builder/Utils";
 
 describe("TypedValueSelectClauseProps", () => {
   describe("isPropertySelector", () => {

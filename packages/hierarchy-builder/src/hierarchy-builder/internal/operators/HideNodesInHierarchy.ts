@@ -24,7 +24,7 @@ import {
 } from "rxjs";
 import { HierarchyNode, InstancesNodeKey, ProcessedCustomHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
-import { createOperatorLoggingNamespace, hasChildren, mergeNodes } from "../Common";
+import { createNodeIdentifierForLogging, createOperatorLoggingNamespace, hasChildren, mergeNodes } from "../Common";
 
 const OPERATOR_NAME = "HideNodesInHierarchy";
 /** @internal */
@@ -41,7 +41,7 @@ export function createHideNodesInHierarchyOperator(
 ) {
   return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
     const sharedNodes = nodes.pipe(
-      log((n) => `in: ${n.label}`),
+      log((n) => `in: ${createNodeIdentifierForLogging(n)}`),
       subscribeOn(asapScheduler),
       share(),
     );
@@ -53,7 +53,7 @@ export function createHideNodesInHierarchyOperator(
     // Defer to create a new seed for reduce on every subscribe
     const withLoadedChildren = defer(() =>
       withFlag.pipe(
-        log((n) => `${n.label} needs hide and needs children to be loaded`),
+        log((n) => `${createNodeIdentifierForLogging(n)} needs hide and needs children to be loaded`),
         filter((node) => node.children !== false),
         reduce((acc, node) => {
           addToMergeMap(acc, node);
@@ -70,20 +70,20 @@ export function createHideNodesInHierarchyOperator(
     );
 
     return merge(
-      withoutFlag.pipe(log((n) => `${n.label} doesn't need hide, return the node`)),
+      withoutFlag.pipe(log((n) => `${createNodeIdentifierForLogging(n)} doesn't need hide, return the node`)),
       stopOnFirstChild
         ? concat(
             // a small hack to handle situation when we're here to only check if parent node has children and one of them has `hideIfNoChildren` flag
             // with a `hasChildren = true` - we just return the hidden node itself in that case to avoid digging deeper into the hierarchy
             sharedNodes.pipe(
               filter(hasChildren),
-              log((n) => `\`stopOnFirstChild = true\` and ${n.label} is set to always have nodes - return the hidden node without loading children`),
+              log(() => `\`stopOnFirstChild = true\` and node is set to always have nodes - return the hidden node without loading children`),
             ),
             EMPTY.pipe(finalize(() => doLog(`\`stopOnFirstChild = true\` but none of the nodes had children determined to \`true\` - do load children`))),
             withLoadedChildren,
           ).pipe(take(1))
         : withLoadedChildren,
-    ).pipe(log((n) => `out: ${n.label}`));
+    ).pipe(log((n) => `out: ${createNodeIdentifierForLogging(n)}`));
   };
 }
 

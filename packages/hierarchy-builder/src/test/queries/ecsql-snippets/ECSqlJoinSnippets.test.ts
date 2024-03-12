@@ -6,8 +6,8 @@
 import { expect } from "chai";
 import { ECClass, ECNavigationProperty, ECRelationshipClass, IMetadataProvider } from "../../../hierarchy-builder/ECMetadata";
 import { createRelationshipPathJoinClause } from "../../../hierarchy-builder/queries/ecsql-snippets/ECSqlJoinSnippets";
+import { trimWhitespace } from "../../../hierarchy-builder/Utils";
 import { ClassStubs, createClassStubs, ResolvablePromise } from "../../Utils";
-import { trimWhitespace } from "../Utils";
 
 describe("createRelationshipPathJoinClause", () => {
   const metadata = {} as unknown as IMetadataProvider;

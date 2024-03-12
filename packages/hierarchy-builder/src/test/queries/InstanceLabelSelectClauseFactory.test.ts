@@ -13,8 +13,8 @@ import {
   DefaultInstanceLabelSelectClauseFactory,
   IInstanceLabelSelectClauseFactory,
 } from "../../hierarchy-builder/queries/InstanceLabelSelectClauseFactory";
+import { trimWhitespace } from "../../hierarchy-builder/Utils";
 import { ClassStubs, createClassStubs } from "../Utils";
-import { trimWhitespace } from "./Utils";
 
 describe("DefaultInstanceLabelSelectClauseFactory", () => {
   let factory: DefaultInstanceLabelSelectClauseFactory;

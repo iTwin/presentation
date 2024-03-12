@@ -21,7 +21,7 @@ import {
   ProcessedInstanceHierarchyNode,
 } from "./HierarchyNode";
 import { CachedNodesObservableEntry, ChildNodeObservablesCache, ParsedQueryNodesObservable } from "./internal/ChildNodeObservablesCache";
-import { LOGGING_NAMESPACE as CommonLoggingNamespace, hasChildren } from "./internal/Common";
+import { LOGGING_NAMESPACE as CommonLoggingNamespace, createNodeIdentifierForLogging, hasChildren } from "./internal/Common";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
 import { getClass } from "./internal/GetClass";
 import { createDetermineChildrenOperator } from "./internal/operators/DetermineChildren";
@@ -33,7 +33,9 @@ import { shareReplayWithErrors } from "./internal/Rxjs";
 import { SubscriptionScheduler } from "./internal/SubscriptionScheduler";
 import { TreeQueryResultsReader } from "./internal/TreeNodesReader";
 import { getLogger, ILogger } from "./Logging";
+import { ECSqlQueryDef } from "./queries/ECSqlCore";
 import { ILimitingECSqlQueryExecutor } from "./queries/LimitingECSqlQueryExecutor";
+import { trimWhitespace } from "./Utils";
 import { ConcatenatedValue, ConcatenatedValuePart } from "./values/ConcatenatedValue";
 import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "./values/Formatting";
 import { TypedPrimitiveValue } from "./values/Values";
@@ -215,7 +217,7 @@ export class HierarchyProvider {
         }
         return this._queryScheduler.scheduleSubscription(
           of(def.query).pipe(
-            log("Queries", (query) => `Query direct nodes for parent ${createNodeIdentifierForLogging(props.parentNode)}: ${query.ecsql}`),
+            log("Queries", (query) => `Query direct nodes for parent ${createNodeIdentifierForLogging(props.parentNode)}: ${createQueryLogMessage(query)}`),
             mergeMap((query) => defer(() => from(this._queryReader.read(this.queryExecutor, query, props.hierarchyLevelSizeLimit)))),
           ),
         );
@@ -239,8 +241,12 @@ export class HierarchyProvider {
     );
     // handle nodes' hiding
     const nodesAfterHiding = preProcessedNodes.pipe(
-      createHideIfNoChildrenOperator((n) => this.getChildNodesObservables({ ...props, parentNode: n }).pipe(mergeMap((x) => x.hasNodes)), false),
-      createHideNodesInHierarchyOperator((n) => this.getChildNodesObservables({ ...props, parentNode: n }).pipe(mergeMap((x) => x.processedNodes)), false),
+      createHideIfNoChildrenOperator((n) => this.getChildNodesObservables({ parentNode: n }).pipe(mergeMap((x) => x.hasNodes)), false),
+      createHideNodesInHierarchyOperator(
+        // note: for child nodes created because of hidden parent, we want to use parent's request props (instance filter, limit)
+        (n) => this.getChildNodesObservables({ ...props, parentNode: n }).pipe(mergeMap((x) => x.processedNodes)),
+        false,
+      ),
     );
     return nodesAfterHiding;
   }
@@ -467,10 +473,17 @@ function log<T>(loggingCategory: string, msg: (arg: T) => string) {
   return tap<T>((n) => doLog({ category: loggingCategory, message: msg(n) }));
 }
 
-function createNodeIdentifierForLogging(node: ParentHierarchyNode | HierarchyNode | undefined) {
-  if (!node) {
-    return "<root>";
+function createQueryLogMessage(query: ECSqlQueryDef): string {
+  const ctes = query.ctes?.map((cte) => `    ${trimWhitespace(cte)}`).join(", \n");
+  const bindings = query.bindings?.map((b) => JSON.stringify(b.value)).join(", ");
+  let output = "{\n";
+  if (ctes) {
+    output += `  ctes: [ \n${ctes} \n], \n`;
   }
-  const { label, key, parentKeys } = node;
-  return JSON.stringify({ label, key, parentKeys });
+  output += `  ecsql: ${trimWhitespace(query.ecsql)}, \n`;
+  if (bindings) {
+    output += `  bindings: [${bindings}], \n`;
+  }
+  output += "}";
+  return output;
 }

@@ -21,8 +21,8 @@ import {
   IMetadataProvider,
 } from "../../hierarchy-builder/ECMetadata";
 import { NodeSelectClauseColumnNames, NodeSelectQueryFactory } from "../../hierarchy-builder/queries/NodeSelectQueryFactory";
+import { trimWhitespace } from "../../hierarchy-builder/Utils";
 import { ClassStubs, createClassStubs } from "../Utils";
-import { trimWhitespace } from "./Utils";
 
 describe("NodeSelectQueryFactory", () => {
   const metadataProvider = {} as unknown as IMetadataProvider;
@@ -373,10 +373,11 @@ describe("NodeSelectQueryFactory", () => {
               rules: [],
             },
           };
-          expect(await factory.createFilterClauses(filter, { fullName: "x.y", alias: "content-class" })).to.deep.eq({
+          const clauses = await factory.createFilterClauses(filter, { fullName: "x.y", alias: "content-class" });
+          expect({ ...clauses, where: trimWhitespace(clauses.where) }).to.deep.eq({
             from: "x.y",
             joins: "",
-            where: "[content-class].[ECClassId] IS (x.a, x.b)",
+            where: "[content-class].[ECClassId] IS ([x].[a], [x].[b])",
           });
         });
       });
@@ -402,6 +403,23 @@ describe("NodeSelectQueryFactory", () => {
           const res = await factory.createFilterClauses(filter, { fullName: "s.c", alias: classAlias });
           expect(trimWhitespace(res.where ?? "")).to.eq(trimWhitespace(expectedECSql));
         }
+
+        it(`defaults to content class alias if it's not specified for property rule`, async () =>
+          testPropertyFilter({
+            classAlias: "x",
+            rule: {
+              operator: "and",
+              rules: [
+                {
+                  sourceAlias: "",
+                  propertyName: "a",
+                  operator: "is-true",
+                  propertyTypeName: "boolean",
+                },
+              ],
+            },
+            expectedECSql: `[x].[a]`,
+          }));
 
         it(`joins multiple rule groups with "and" operator`, async () =>
           testPropertyFilter({

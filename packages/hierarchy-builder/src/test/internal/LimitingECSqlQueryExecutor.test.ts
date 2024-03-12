@@ -8,7 +8,7 @@ import sinon from "sinon";
 import { RowsLimitExceededError } from "../../hierarchy-builder/HierarchyErrors";
 import { IECSqlQueryExecutor } from "../../hierarchy-builder/queries/ECSqlCore";
 import { createLimitingECSqlQueryExecutor } from "../../hierarchy-builder/queries/LimitingECSqlQueryExecutor";
-import { trimWhitespace } from "../queries/Utils";
+import { trimWhitespace } from "../../hierarchy-builder/Utils";
 import { createFakeQueryReader, toArray } from "../Utils";
 
 describe("createLimitingECSqlQueryExecutor", () => {
