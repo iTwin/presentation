@@ -63,10 +63,13 @@ export interface Selectables {
   custom: Map<string, CustomSelectable>;
 }
 
+/** @beta */
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace Selectables {
   /**
    * Creates `Selectables` from array of selectable
    * @param source Source to create selectables from
+   * @beta
    */
   export function create(source: Selectable[]): Selectables {
     const newSelectables = {
@@ -80,6 +83,7 @@ export namespace Selectables {
   /**
    * Get the number of selectables stored in a `Selectables` object.
    * @param selectables `Selectables` object to get size for
+   * @beta
    */
   export function size(selectables: Selectables): number {
     return Selectables.instanceKeyCount(selectables) + selectables.custom.size;
@@ -88,6 +92,7 @@ export namespace Selectables {
   /**
    * Is a `Selectables` object currently empty.
    * @param selectables `Selectables` object to check
+   * @beta
    */
   export function isEmpty(selectables: Selectables): boolean {
     return Selectables.size(selectables) === 0;
@@ -96,6 +101,7 @@ export namespace Selectables {
   /**
    * Get the number of stored instance keys
    * @param selectables `Selectables` object to get instance key count for
+   * @beta
    */
   export function instanceKeyCount(selectables: Selectables): number {
     let count = 0;
@@ -107,6 +113,7 @@ export namespace Selectables {
    * Check if a `Selectables` object contains the specified selectable.
    * @param selectables `Selectables` object to check
    * @param value The selectable to check for.
+   * @beta
    */
   export function has(selectables: Selectables, value: Selectable): boolean {
     if (Selectable.isInstanceKey(value)) {
@@ -120,6 +127,7 @@ export namespace Selectables {
    * Check if a `Selectables` object contains all the specified selectables.
    * @param selectables `Selectables` object to check
    * @param values The selectables to check for.
+   * @beta
    */
   export function hasAll(selectables: Selectables, values: Selectable[]): boolean {
     if (Selectables.size(selectables) < values.length) {
@@ -137,6 +145,7 @@ export namespace Selectables {
    * Check if a `Selectables` object contains any of the specified selectables.
    * @param selectables `Selectables` object to check
    * @param values The selectables to check for.
+   * @beta
    */
   export function hasAny(selectables: Selectables, values: Selectable[]): boolean {
     for (const selectable of values) {
@@ -151,6 +160,7 @@ export namespace Selectables {
    * Add a one or more selectables to a `Selectables`
    * @param selectables `Selectables` object to add selectables for
    * @param values Selectables to add.
+   * @beta
    */
   export function add(selectables: Selectables, values: Selectable[]): boolean {
     let hasChanged = false;
@@ -177,6 +187,7 @@ export namespace Selectables {
    * Removes one or more selectables from a `Selectables` object.
    * @param selectables `Selectables` object to remove selectables for
    * @param values Selectables to remove.
+   * @beta
    */
   export function remove(selectables: Selectables, values: Selectable[]): boolean {
     let hasChanged = false;
@@ -201,6 +212,7 @@ export namespace Selectables {
   /**
    * Clear a `Selectables` object.
    * @param selectables `Selectables` object to clear selectables for
+   * @beta
    */
   export function clear(selectables: Selectables): boolean {
     if (Selectables.size(selectables) === 0) {
@@ -214,6 +226,7 @@ export namespace Selectables {
   /**
    * Check whether at least one selectable passes a condition in a `Selectables` object.
    * @param selectables `Selectables` object to check
+   * @beta
    */
   export function some(selectables: Selectables, callback: (selectable: Selectable) => boolean) {
     for (const entry of selectables.instanceKeys) {
@@ -239,6 +252,7 @@ export namespace Selectables {
   /**
    * Iterate over all keys in a `Selectables` object.
    * @param selectables `Selectables` object to iterate over
+   * @beta
    */
   export function forEach(selectables: Selectables, callback: (selectable: Selectable, index: number) => void) {
     let index = 0;

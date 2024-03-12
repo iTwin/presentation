@@ -38,7 +38,7 @@ export interface Selectables {
     instanceKeys: Map<string, Set<string>>;
 }
 
-// @public (undocumented)
+// @beta (undocumented)
 export namespace Selectables {
     export function add(selectables: Selectables, values: Selectable[]): boolean;
     export function clear(selectables: Selectables): boolean;

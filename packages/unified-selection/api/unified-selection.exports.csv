@@ -6,7 +6,7 @@ beta;Selectable = SelectableInstanceKey | CustomSelectable
 beta;Selectable
 beta;SelectableInstanceKey
 beta;Selectables
-public;Selectables
+beta;Selectables
 beta;SelectionStorageInterface
 beta;StorageSelectionChangeEventArgs
 beta;StorageSelectionChangesListener = (args: StorageSelectionChangeEventArgs, storage: SelectionStorageInterface) => void
