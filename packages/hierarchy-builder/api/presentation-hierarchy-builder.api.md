@@ -766,6 +766,8 @@ export interface ILimitingECSqlQueryExecutor {
 // @beta
 export interface ILogger {
     // (undocumented)
+    isEnabled: (category: string, level: LogLevel) => boolean;
+    // (undocumented)
     logError: LogFunction;
     // (undocumented)
     logInfo: LogFunction;
@@ -840,6 +842,9 @@ export interface LabelGroupingNodeKey {
 
 // @beta (undocumented)
 export type LogFunction = (category: string, message: string) => void;
+
+// @beta (undocumented)
+export type LogLevel = "error" | "warning" | "info" | "trace";
 
 // @beta
 export enum NodeSelectClauseColumnNames {
