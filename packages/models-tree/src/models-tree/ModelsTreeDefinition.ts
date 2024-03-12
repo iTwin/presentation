@@ -198,12 +198,16 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
           ctes,
           ecsql: `
             SELECT
-              ${selectColumnNames}, ParentId
-            FROM child_subjects this
+              ${Object.values(NodeSelectClauseColumnNames)
+                .map((name) => `cs.${name} AS ${name}`)
+                .join(", ")},
+              ParentId
+            FROM child_subjects cs
+            JOIN bis.Subject this ON this.ECInstanceId = cs.ECInstanceId
             ${subjectFilterClauses.joins}
             WHERE
-              this.RootId IN (${subjectIds.map(() => "?").join(",")})
-              AND NOT this.${NodeSelectClauseColumnNames.HideNodeInHierarchy}
+              cs.RootId IN (${subjectIds.map(() => "?").join(",")})
+              AND NOT cs.${NodeSelectClauseColumnNames.HideNodeInHierarchy}
               ${subjectFilterClauses.where ? `AND ${subjectFilterClauses.where}` : ""}
           `,
           bindings: [...subjectIds.map((id): ECSqlBinding => ({ type: "id", value: id }))],
