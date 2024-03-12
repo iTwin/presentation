@@ -7,10 +7,12 @@ import naturalCompare from "natural-compare-lite";
 import { assert } from "@itwin/core-bentley";
 import { ECClass, IMetadataProvider } from "../ECMetadata";
 import {
+  HierarchyNode,
   HierarchyNodeKey,
   HierarchyNodeLabelGroupingParams,
   InstanceHierarchyNodeProcessingParams,
   InstancesNodeKey,
+  ParentHierarchyNode,
   ProcessedCustomHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "../HierarchyNode";
@@ -156,4 +158,13 @@ export class BaseClassChecker {
     }
     return isCurrentNodeClassOfBase;
   }
+}
+
+/** @internal */
+export function createNodeIdentifierForLogging(node: ParentHierarchyNode | HierarchyNode | undefined) {
+  if (!node) {
+    return "<root>";
+  }
+  const { label, key, parentKeys } = node;
+  return JSON.stringify({ label, key, parentKeys });
 }

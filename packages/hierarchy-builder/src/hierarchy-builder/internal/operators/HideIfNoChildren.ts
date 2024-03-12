@@ -6,7 +6,7 @@
 import { asapScheduler, defer, filter, map, merge, mergeMap, Observable, partition, share, subscribeOn, tap } from "rxjs";
 import { HierarchyNode, ProcessedCustomHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../../HierarchyNode";
 import { getLogger } from "../../Logging";
-import { createOperatorLoggingNamespace, hasChildren } from "../Common";
+import { createNodeIdentifierForLogging, createOperatorLoggingNamespace, hasChildren } from "../Common";
 
 const OPERATOR_NAME = "HideIfNoChildren";
 /** @internal */
@@ -20,7 +20,7 @@ export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
 export function createHideIfNoChildrenOperator(hasNodes: (node: ProcessedHierarchyNode) => Observable<boolean>, stopOnFirstChild: boolean) {
   return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
     const sharedNodes = nodes.pipe(
-      log((n) => `in: ${n.label}`),
+      log((n) => `in: ${createNodeIdentifierForLogging(n)}`),
       // each partitioned observable is going to subscribe to this individually - share to avoid requesting
       // nodes from source observable multiple times
       subscribeOn(asapScheduler),
@@ -37,27 +37,27 @@ export function createHideIfNoChildrenOperator(hasNodes: (node: ProcessedHierarc
     );
     const [determinedChildren, undeterminedChildren] = partition(needsHide, (n) => n.children !== undefined);
     return merge(
-      doesntNeedHide.pipe(log((n) => `doesnt need hide: ${n.label}`)),
+      doesntNeedHide.pipe(log((n) => `${createNodeIdentifierForLogging(n)}: doesn't need hide`)),
       merge(
-        determinedChildren.pipe(log((n) => `needs hide, has children: ${n.label}`)),
+        determinedChildren.pipe(log((n) => `${createNodeIdentifierForLogging(n)}: needs hide, has children`)),
         undeterminedChildren.pipe(
-          log((n) => `needs hide, needs children: ${n.label}`),
+          log((n) => `${createNodeIdentifierForLogging(n)}: needs hide, needs children`),
           mergeMap(
             (n) =>
               defer(() => {
-                doLog(`requesting children flag for ${n.label}`);
+                doLog(`${createNodeIdentifierForLogging(n)}: requesting children flag`);
                 return hasNodes(n).pipe(
-                  log((children) => `determined children for ${n.label}: ${children}`),
+                  log((children) => `${createNodeIdentifierForLogging(n)}: determined children: ${children}`),
                   map((children) => ({ ...n, children })),
                 );
               }),
             // when checking for children, determine children one-by-one using a depth-first approach to avoid starting too many queries
             stopOnFirstChild ? 1 : undefined,
           ),
-          log((n) => `needs hide, determined children: ${n.label} / ${hasChildren(n)}`),
+          log((n) => `${createNodeIdentifierForLogging(n)}: needs hide, determined children: ${hasChildren(n)}`),
         ),
       ).pipe(filter(hasChildren)),
-    ).pipe(log((n) => `out: ${n.label}: ${hasChildren(n)}`));
+    ).pipe(log((n) => `out: ${createNodeIdentifierForLogging(n)}`));
   };
 }
 

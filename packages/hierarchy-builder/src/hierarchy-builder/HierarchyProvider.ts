@@ -21,7 +21,7 @@ import {
   ProcessedInstanceHierarchyNode,
 } from "./HierarchyNode";
 import { CachedNodesObservableEntry, ChildNodeObservablesCache, ParsedQueryNodesObservable } from "./internal/ChildNodeObservablesCache";
-import { LOGGING_NAMESPACE as CommonLoggingNamespace, hasChildren } from "./internal/Common";
+import { LOGGING_NAMESPACE as CommonLoggingNamespace, createNodeIdentifierForLogging, hasChildren } from "./internal/Common";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
 import { getClass } from "./internal/GetClass";
 import { createDetermineChildrenOperator } from "./internal/operators/DetermineChildren";
@@ -471,14 +471,6 @@ function doLog(props: LogMessageProps) {
 
 function log<T>(loggingCategory: string, msg: (arg: T) => string) {
   return tap<T>((n) => doLog({ category: loggingCategory, message: msg(n) }));
-}
-
-function createNodeIdentifierForLogging(node: ParentHierarchyNode | HierarchyNode | undefined) {
-  if (!node) {
-    return "<root>";
-  }
-  const { label, key, parentKeys } = node;
-  return JSON.stringify({ label, key, parentKeys });
 }
 
 function createQueryLogMessage(query: ECSqlQueryDef): string {
