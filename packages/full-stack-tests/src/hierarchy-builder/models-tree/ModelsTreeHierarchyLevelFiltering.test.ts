@@ -5,6 +5,7 @@
 
 import { expect } from "chai";
 import { ElementOwnsMultiAspects, ExternalSourceAspect, PhysicalModel, SpatialCategory, Subject } from "@itwin/core-backend";
+import { GenericInstanceFilter, GenericInstanceFilterRule } from "@itwin/core-common";
 import { Descriptor, PropertiesField, PropertyValueFormat } from "@itwin/presentation-common";
 import { createHierarchyLevelDescriptor } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
@@ -33,16 +34,20 @@ describe("Stateless hierarchy builder", () => {
       await terminate();
     });
 
-    it("creates root level descriptor", async function () {
+    it("can filter root level", async function () {
       // eslint-disable-next-line deprecation/deprecation
       const imodel = await buildTestIModel(this, async () => {});
       const provider = createModelsTreeProvider(imodel);
+
+      // validate hierarchy level without filter
       validateHierarchyLevel({
         nodes: await provider.getNodes({
           parentNode: undefined,
         }),
         expect: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: "0x1" }] })],
       });
+
+      // validate descriptor, that is required for creating the filter
       const result = await createHierarchyLevelDescriptor({
         imodel,
         parentNode: undefined,
@@ -57,9 +62,37 @@ describe("Stateless hierarchy builder", () => {
         ],
         fields: subjectFields,
       } as Partial<Descriptor>);
+
+      // validate filtered hierarchy level
+      validateHierarchyLevel({
+        nodes: await provider.getNodes({
+          parentNode: undefined,
+          instanceFilter: createInstanceFilter("BisCore.Subject", {
+            sourceAlias: "this",
+            propertyName: "Description",
+            propertyTypeName: "string",
+            operator: "is-equal",
+            value: { rawValue: "", displayValue: "" },
+          }),
+        }),
+        expect: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: "0x1" }] })],
+      });
+      validateHierarchyLevel({
+        nodes: await provider.getNodes({
+          parentNode: undefined,
+          instanceFilter: createInstanceFilter("BisCore.Subject", {
+            sourceAlias: "this",
+            propertyName: "Description",
+            propertyTypeName: "string",
+            operator: "is-not-equal",
+            value: { rawValue: "", displayValue: "" },
+          }),
+        }),
+        expect: [],
+      });
     });
 
-    it("creates Subject child level descriptor", async function () {
+    it("can filter Subject children level", async function () {
       // eslint-disable-next-line deprecation/deprecation
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
         const rootSubject = { className: Subject.classFullName.replace(":", "."), id: "0x1" };
@@ -106,6 +139,8 @@ describe("Stateless hierarchy builder", () => {
         parentKeys: [],
         label: "",
       };
+
+      // validate hierarchy level without filter
       validateHierarchyLevel({
         nodes: await provider.getNodes({ parentNode }),
         expect: [
@@ -114,6 +149,8 @@ describe("Stateless hierarchy builder", () => {
           NodeValidators.createForInstanceNode({ instanceKeys: [keys.model] }),
         ],
       });
+
+      // validate descriptor, that is required for creating the filter
       const result = await createHierarchyLevelDescriptor({
         imodel,
         parentNode,
@@ -134,16 +171,56 @@ describe("Stateless hierarchy builder", () => {
         ],
         fields: mergeFieldLists([subjectFields, physicalModelFields, spatialCategoryFields]),
       } as Partial<Descriptor>);
+
+      // validate filtered hierarchy level
+      validateHierarchyLevel({
+        nodes: await provider.getNodes({
+          parentNode,
+          instanceFilter: createInstanceFilter(keys.childSubject.className, {
+            sourceAlias: "",
+            propertyName: "Description",
+            propertyTypeName: "string",
+            operator: "is-null",
+          }),
+        }),
+        expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject] })],
+      });
+      validateHierarchyLevel({
+        nodes: await provider.getNodes({
+          parentNode,
+          instanceFilter: createInstanceFilter(keys.category.className, {
+            sourceAlias: "",
+            propertyName: "UserLabel",
+            propertyTypeName: "string",
+            operator: "is-null",
+          }),
+        }),
+        expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.category] })],
+      });
+      validateHierarchyLevel({
+        nodes: await provider.getNodes({
+          parentNode,
+          instanceFilter: createInstanceFilter(keys.model.className, {
+            sourceAlias: "",
+            propertyName: "IsPlanProjection",
+            propertyTypeName: "boolean",
+            operator: "is-false",
+          }),
+        }),
+        expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.model] })],
+      });
     });
 
-    it("creates Model child level descriptor", async function () {
+    it("can filter Model children level", async function () {
       // eslint-disable-next-line deprecation/deprecation
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
         const rootSubject = { className: Subject.classFullName.replace(":", "."), id: "0x1" };
-        const category = insertSpatialCategory({ builder, codeValue: "category" });
+        const category1 = insertSpatialCategory({ builder, codeValue: "category1" });
+        const category2 = insertSpatialCategory({ builder, codeValue: "category2" });
         const model = insertPhysicalModelWithPartition({ builder, codeValue: `model`, partitionParentId: rootSubject.id });
-        insertPhysicalElement({ builder, userLabel: `element`, modelId: model.id, categoryId: category.id });
-        return { rootSubject, model, category };
+        insertPhysicalElement({ builder, userLabel: `element`, modelId: model.id, categoryId: category1.id });
+        insertPhysicalElement({ builder, userLabel: `element`, modelId: model.id, categoryId: category2.id });
+        return { rootSubject, model, category1, category2 };
       });
       const provider = createModelsTreeProvider(imodel);
       const parentNode = {
@@ -159,10 +236,17 @@ describe("Stateless hierarchy builder", () => {
         ],
         label: "",
       };
+
+      // validate hierarchy level without filter
       validateHierarchyLevel({
         nodes: await provider.getNodes({ parentNode }),
-        expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.category] })],
+        expect: [
+          NodeValidators.createForInstanceNode({ instanceKeys: [keys.category1] }),
+          NodeValidators.createForInstanceNode({ instanceKeys: [keys.category2] }),
+        ],
       });
+
+      // validate descriptor, that is required for creating the filter
       const result = await createHierarchyLevelDescriptor({
         imodel,
         parentNode,
@@ -177,9 +261,24 @@ describe("Stateless hierarchy builder", () => {
         ],
         fields: spatialCategoryFields,
       } as Partial<Descriptor>);
+
+      // validate filtered hierarchy level
+      validateHierarchyLevel({
+        nodes: await provider.getNodes({
+          parentNode,
+          instanceFilter: createInstanceFilter(keys.category2.className, {
+            sourceAlias: "",
+            propertyName: "CodeValue",
+            propertyTypeName: "string",
+            operator: "is-equal",
+            value: { rawValue: "category2", displayValue: "" },
+          }),
+        }),
+        expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.category2] })],
+      });
     });
 
-    it("creates Category child level descriptor", async function () {
+    it("can filter Category children level", async function () {
       // eslint-disable-next-line deprecation/deprecation
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
         const rootSubject = { className: Subject.classFullName.replace(":", "."), id: "0x1" };
@@ -209,10 +308,14 @@ describe("Stateless hierarchy builder", () => {
         },
         label: "",
       };
+
+      // validate hierarchy level without filter
       validateHierarchyLevel({
         nodes: await provider.getNodes({ parentNode }),
         expect: [NodeValidators.createForClassGroupingNode({ className: keys.element.className })],
       });
+
+      // validate descriptor, that is required for creating the filter
       const result = await createHierarchyLevelDescriptor({
         imodel,
         parentNode,
@@ -227,9 +330,36 @@ describe("Stateless hierarchy builder", () => {
         ],
         fields: physicalElementFields,
       } as Partial<Descriptor>);
+
+      // validate filtered hierarchy level
+      validateHierarchyLevel({
+        nodes: await provider.getNodes({
+          parentNode,
+          instanceFilter: createInstanceFilter(keys.element.className, {
+            sourceAlias: "",
+            propertyName: "UserLabel",
+            propertyTypeName: "string",
+            operator: "is-equal",
+            value: { rawValue: "element", displayValue: "" },
+          }),
+        }),
+        expect: [NodeValidators.createForClassGroupingNode({ className: keys.element.className })],
+      });
+      validateHierarchyLevel({
+        nodes: await provider.getNodes({
+          parentNode,
+          instanceFilter: createInstanceFilter(keys.element.className, {
+            sourceAlias: "",
+            propertyName: "UserLabel",
+            propertyTypeName: "string",
+            operator: "is-null",
+          }),
+        }),
+        expect: [],
+      });
     });
 
-    it("creates Element child level descriptor from child elements", async function () {
+    it("can filter Element children level with child elements", async function () {
       // eslint-disable-next-line deprecation/deprecation
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
         const rootSubject = { className: Subject.classFullName.replace(":", "."), id: "0x1" };
@@ -267,10 +397,14 @@ describe("Stateless hierarchy builder", () => {
         ],
         label: "",
       };
+
+      // validate hierarchy level without filter
       validateHierarchyLevel({
         nodes: await provider.getNodes({ parentNode }),
         expect: [NodeValidators.createForClassGroupingNode({ className: keys.childElement.className })],
       });
+
+      // validate descriptor, that is required for creating the filter
       const result = await createHierarchyLevelDescriptor({
         imodel,
         parentNode,
@@ -285,9 +419,36 @@ describe("Stateless hierarchy builder", () => {
         ],
         fields: physicalElementFields,
       } as Partial<Descriptor>);
+
+      // validate filtered hierarchy level
+      validateHierarchyLevel({
+        nodes: await provider.getNodes({
+          parentNode,
+          instanceFilter: createInstanceFilter(keys.childElement.className, {
+            sourceAlias: "",
+            propertyName: "UserLabel",
+            propertyTypeName: "string",
+            operator: "is-equal",
+            value: { rawValue: "child element", displayValue: "" },
+          }),
+        }),
+        expect: [NodeValidators.createForClassGroupingNode({ className: keys.childElement.className })],
+      });
+      validateHierarchyLevel({
+        nodes: await provider.getNodes({
+          parentNode,
+          instanceFilter: createInstanceFilter(keys.childElement.className, {
+            sourceAlias: "",
+            propertyName: "UserLabel",
+            propertyTypeName: "string",
+            operator: "is-null",
+          }),
+        }),
+        expect: [],
+      });
     });
 
-    it("creates Element child level descriptor from modeling elements", async function () {
+    it("can filter Element children level with modeling elements", async function () {
       // eslint-disable-next-line deprecation/deprecation
       const { imodel, ...keys } = await buildIModel(this, async (builder) => {
         const { items: classes } = await importTestSchema(this, builder);
@@ -332,10 +493,14 @@ describe("Stateless hierarchy builder", () => {
         ],
         label: "",
       };
+
+      // validate hierarchy level without filter
       validateHierarchyLevel({
         nodes: await provider.getNodes({ parentNode }),
         expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.category] })],
       });
+
+      // validate descriptor, that is required for creating the filter
       const result = await createHierarchyLevelDescriptor({
         imodel,
         parentNode,
@@ -350,6 +515,33 @@ describe("Stateless hierarchy builder", () => {
         ],
         fields: spatialCategoryFields,
       } as Partial<Descriptor>);
+
+      // validate filtered hierarchy level
+      validateHierarchyLevel({
+        nodes: await provider.getNodes({
+          parentNode,
+          instanceFilter: createInstanceFilter(keys.category.className, {
+            sourceAlias: "",
+            propertyName: "CodeValue",
+            propertyTypeName: "string",
+            operator: "is-equal",
+            value: { rawValue: "category", displayValue: "" },
+          }),
+        }),
+        expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.category] })],
+      });
+      validateHierarchyLevel({
+        nodes: await provider.getNodes({
+          parentNode,
+          instanceFilter: createInstanceFilter(keys.category.className, {
+            sourceAlias: "",
+            propertyName: "UserLabel",
+            propertyTypeName: "string",
+            operator: "is-null",
+          }),
+        }),
+        expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.category] })],
+      });
     });
 
     it("creates descriptor with related properties", async function () {
@@ -431,6 +623,17 @@ describe("Stateless hierarchy builder", () => {
     });
   });
 });
+
+function createInstanceFilter(className: string, rule: GenericInstanceFilterRule): GenericInstanceFilter {
+  return {
+    propertyClassNames: [className],
+    relatedInstances: [],
+    rules: {
+      operator: "and",
+      rules: [rule],
+    },
+  };
+}
 
 function mergeFieldLists<TField extends Pick<PropertiesField, "label">>(fieldLists: TField[][]): TField[] {
   const map = new Map<string, TField>();
