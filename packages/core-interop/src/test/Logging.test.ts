@@ -5,10 +5,38 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { Logger } from "@itwin/core-bentley";
+import { Logger, LogLevel } from "@itwin/core-bentley";
 import { createLogger } from "../core-interop/Logging";
 
 describe("createLogger", () => {
+  it("checks error severity using core `Logger`", async () => {
+    const spy = sinon.stub(Logger, "isEnabled").returns(true);
+    const logger = createLogger();
+    expect(logger.isEnabled("test category", "error")).to.be.true;
+    expect(spy).to.be.calledOnceWith("test category", LogLevel.Error);
+  });
+
+  it("checks warning severity using core `Logger`", async () => {
+    const spy = sinon.stub(Logger, "isEnabled").returns(true);
+    const logger = createLogger();
+    expect(logger.isEnabled("test category", "warning")).to.be.true;
+    expect(spy).to.be.calledOnceWith("test category", LogLevel.Warning);
+  });
+
+  it("checks info severity using core `Logger`", async () => {
+    const spy = sinon.stub(Logger, "isEnabled").returns(true);
+    const logger = createLogger();
+    expect(logger.isEnabled("test category", "info")).to.be.true;
+    expect(spy).to.be.calledOnceWith("test category", LogLevel.Info);
+  });
+
+  it("checks trace severity using core `Logger`", async () => {
+    const spy = sinon.stub(Logger, "isEnabled").returns(true);
+    const logger = createLogger();
+    expect(logger.isEnabled("test category", "trace")).to.be.true;
+    expect(spy).to.be.calledOnceWith("test category", LogLevel.Trace);
+  });
+
   it("logs messages using core `Logger`", async () => {
     const spies = {
       error: sinon.spy(Logger, "logError"),
