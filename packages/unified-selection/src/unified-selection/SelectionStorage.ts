@@ -7,249 +7,218 @@
  * @module UnifiedSelection
  */
 
-import { IModelConnection } from "@itwin/core-frontend";
-import { SelectableObjects, SelectableObjectSet } from "./SelectableObjectSet";
-import { StorageSelectionChangeEvent, StorageSelectionChangeEventArgs, StorageSelectionChangeType } from "./StorageSelectionChangeEvent";
+import { Selectable, Selectables } from "./Selectable";
+
+/**
+ * An interface for selection change listeners.
+ * @beta
+ */
+export declare type StorageSelectionChangesListener = (args: StorageSelectionChangeEventArgs, storage: SelectionStorageInterface) => void;
+
+/**
+ * The type of selection change
+ * @beta
+ */
+export enum StorageSelectionChangeType {
+  /** Added to selection. */
+  Add,
+  /** Removed from selection. */
+  Remove,
+  /** Selection was replaced. */
+  Replace,
+  /** Selection was cleared. */
+  Clear,
+}
+
+/**
+ * The event object that is sent when the selection changes.
+ * @beta
+ */
+export interface StorageSelectionChangeEventArgs {
+  /** The name of the selection source which caused the selection change. */
+  source: string;
+  /** Level of the selection. */
+  level: number;
+  /** The selection change type. */
+  changeType: StorageSelectionChangeType;
+  /** Selectables affected by this selection change event. */
+  selectables: Selectables;
+  /** iModel key with which the selection is associated with. */
+  iModelKey: string;
+  /** The timestamp of when the selection change happened */
+  timestamp: Date;
+}
 
 /**
  * Selection storage interface which provides main selection and sub-selection.
  * @beta
  */
 export interface SelectionStorageInterface {
-  /** An event that's fired when selection changes */
-  selectionChange: StorageSelectionChangeEvent;
+  /** A callback that is called when selection changes */
+  onSelectionChange: (event: StorageSelectionChangeEventArgs, storage: SelectionStorageInterface) => void;
   /**
    * Get the selection levels currently stored for the specified imodel
-   * @param imodel iModel connection to get selection levels for.
+   * @param iModelKey iModel key to get selection levels for.
    * */
-  getSelectionLevels(imodel: IModelConnection): number[];
+  getSelectionLevels(iModelKey: string): number[];
   /** Get the selection stored in the storage.
-   * @param imodel iModel connection which the selection is associated with.
+   * @param iModelKey iModel key which the selection is associated with.
    * @param level Level of the selection
    */
-  getSelection(imodel: IModelConnection, level: number): SelectableObjectSet;
+  getSelection(iModelKey: string, level: number): Selectables;
   /**
    * Add keys to the selection
    * @param source Name of the selection source
-   * @param imodel iModel associated with the selection
-   * @param selectableObjects selectable objects to add
+   * @param iModelKey iModel associated with the selection
+   * @param selectables selectables to add
    * @param level Selection level
-   * @param rulesetId ID of the ruleset in case the selection was changed from a rules-driven control
    */
-  addToSelection(source: string, imodel: IModelConnection, selectableObjects: SelectableObjects, level: number, rulesetId?: string): void;
+  addToSelection(source: string, iModelKey: string, selectables: Selectable[], level: number): void;
   /**
    * Remove keys from current selection
    * @param source Name of the selection source
-   * @param imodel iModel associated with the selection
-   * @param selectableObjects selectableObjects to remove
+   * @param iModelKey iModel associated with the selection
+   * @param selectables selectables to remove
    * @param level Selection level
-   * @param rulesetId ID of the ruleset in case the selection was changed from a rules-driven control
    */
-  removeFromSelection(source: string, imodel: IModelConnection, selectableObjects: SelectableObjects, level: number, rulesetId?: string): void;
+  removeFromSelection(source: string, iModelKey: string, selectables: Selectable[], level: number): void;
   /**
    * Replace current selection
    * @param source Name of the selection source
-   * @param imodel iModel associated with the selection
-   * @param selectableObjects selectableObjects to replace the current selection with
+   * @param iModelKey iModel associated with the selection
+   * @param selectables selectables to replace the current selection with
    * @param level Selection level
-   * @param rulesetId ID of the ruleset in case the selection was changed from a rules-driven control
    */
-  replaceSelection(source: string, imodel: IModelConnection, selectableObjects: SelectableObjects, level: number, rulesetId?: string): void;
+  replaceSelection(source: string, iModelKey: string, selectables: Selectable[], level: number): void;
   /**
    * Clear current selection
    * @param source Name of the selection source
-   * @param imodel iModel associated with the selection
+   * @param iModelKey iModel associated with the selection
    * @param level Selection level
-   * @param rulesetId ID of the ruleset in case the selection was changed from a rules-driven control
    */
-  clearSelection(source: string, imodel: IModelConnection, level: number, rulesetId?: string): void;
+  clearSelection(source: string, iModelKey: string, level: number): void;
+  /**
+   * Clear storage for an iModel
+   * @param iModelKey iModel to clear storage for
+   */
+  clearStorage(iModelKey: string): void;
 }
 
 /**
- * The selection storage which stores the overall selection.
+ * Creates a selection storage which stores the overall selection.
  * @beta
  */
-export class SelectionStorage implements SelectionStorageInterface {
-  private _storage = new Map<IModelConnection, SelectableObjectContainer>();
+export function createStorage(): SelectionStorageInterface {
+  return new SelectionStorage();
+}
 
-  /** An event which gets broadcasted on selection changes */
-  public readonly selectionChange: StorageSelectionChangeEvent;
+class SelectionStorage implements SelectionStorageInterface {
+  private _storage = new Map<string, MultiLevelSelectablesContainer>();
+  public onSelectionChange: (args: StorageSelectionChangeEventArgs, storage: SelectionStorageInterface) => void;
 
-  /**
-   * Creates an instance of `SelectionStorage`.
-   */
   constructor() {
-    this.selectionChange = new StorageSelectionChangeEvent();
-    IModelConnection.onClose.addListener((imodel: IModelConnection) => {
-      this.onConnectionClose(imodel);
-    });
+    this.onSelectionChange = () => {};
   }
 
-  /**
-   * Get the selection levels currently stored for the specified imodel
-   * @param imodel iModel connection to get selection levels for.
-   * */
-  public getSelectionLevels(imodel: IModelConnection): number[] {
-    return this.getContainer(imodel).getSelectionLevels();
+  public getSelectionLevels(iModelKey: string): number[] {
+    return this.getContainer(iModelKey).getSelectionLevels();
   }
 
-  /** Get the selection stored in the storage.
-   * @param imodel iModel connection which the selection is associated with.
-   * @param level Level of the selection
-   */
-  public getSelection(imodel: IModelConnection, level: number = 0): SelectableObjectSet {
-    return this.getContainer(imodel).getSelection(level);
+  public getSelection(iModelKey: string, level: number): Selectables {
+    return this.getContainer(iModelKey).getSelection(level);
   }
 
-  /**
-   * Add keys to the selection
-   * @param source Name of the selection source
-   * @param imodel iModel associated with the selection
-   * @param selectableObjects selectable objects to add
-   * @param level Selection level
-   * @param rulesetId ID of the ruleset in case the selection was changed from a rules-driven control
-   */
-  public addToSelection(source: string, imodel: IModelConnection, selectableObjects: SelectableObjects, level: number = 0, rulesetId?: string): void {
-    const evt: StorageSelectionChangeEventArgs = {
-      source,
-      level,
-      imodel,
-      changeType: StorageSelectionChangeType.Add,
-      selectableObjects: new SelectableObjectSet(selectableObjects),
-      timestamp: new Date(),
-      rulesetId,
-    };
-    this.handleEvent(evt);
+  public addToSelection(source: string, iModelKey: string, selectables: Selectable[], level: number): void {
+    this.handleChange(source, iModelKey, level, StorageSelectionChangeType.Add, selectables);
   }
 
-  /**
-   * Remove keys from current selection
-   * @param source Name of the selection source
-   * @param imodel iModel associated with the selection
-   * @param selectableObjects selectableObjects to remove
-   * @param level Selection level
-   * @param rulesetId ID of the ruleset in case the selection was changed from a rules-driven control
-   */
-  public removeFromSelection(source: string, imodel: IModelConnection, selectableObjects: SelectableObjects, level: number = 0, rulesetId?: string): void {
-    const evt: StorageSelectionChangeEventArgs = {
-      source,
-      level,
-      imodel,
-      changeType: StorageSelectionChangeType.Remove,
-      selectableObjects: new SelectableObjectSet(selectableObjects),
-      timestamp: new Date(),
-      rulesetId,
-    };
-    this.handleEvent(evt);
+  public removeFromSelection(source: string, iModelKey: string, selectables: Selectable[], level: number): void {
+    this.handleChange(source, iModelKey, level, StorageSelectionChangeType.Remove, selectables);
   }
 
-  /**
-   * Replace current selection
-   * @param source Name of the selection source
-   * @param imodel iModel associated with the selection
-   * @param selectableObjects selectableObjects to replace the current selection with
-   * @param level Selection level
-   * @param rulesetId ID of the ruleset in case the selection was changed from a rules-driven control
-   */
-  public replaceSelection(source: string, imodel: IModelConnection, selectableObjects: SelectableObjects, level: number = 0, rulesetId?: string): void {
-    const evt: StorageSelectionChangeEventArgs = {
-      source,
-      level,
-      imodel,
-      changeType: StorageSelectionChangeType.Replace,
-      selectableObjects: new SelectableObjectSet(selectableObjects),
-      timestamp: new Date(),
-      rulesetId,
-    };
-    this.handleEvent(evt);
+  public replaceSelection(source: string, iModelKey: string, selectables: Selectable[], level: number): void {
+    this.handleChange(source, iModelKey, level, StorageSelectionChangeType.Replace, selectables);
   }
 
-  /**
-   * Clear current selection
-   * @param source Name of the selection source
-   * @param imodel iModel associated with the selection
-   * @param level Selection level
-   * @param rulesetId ID of the ruleset in case the selection was changed from a rules-driven control
-   */
-  public clearSelection(source: string, imodel: IModelConnection, level: number = 0, rulesetId?: string): void {
-    const evt: StorageSelectionChangeEventArgs = {
-      source,
-      level,
-      imodel,
-      changeType: StorageSelectionChangeType.Clear,
-      selectableObjects: new SelectableObjectSet(),
-      timestamp: new Date(),
-      rulesetId,
-    };
-    this.handleEvent(evt);
+  public clearSelection(source: string, iModelKey: string, level: number): void {
+    this.handleChange(source, iModelKey, level, StorageSelectionChangeType.Clear, []);
   }
 
-  private onConnectionClose(imodel: IModelConnection): void {
-    this.clearSelection("Connection Close Event", imodel);
-    this._storage.delete(imodel);
+  public clearStorage(iModelKey: string): void {
+    this.clearSelection("Clear iModel storage", iModelKey, 0);
+    this._storage.delete(iModelKey);
   }
 
-  private getContainer(imodel: IModelConnection): SelectableObjectContainer {
-    let selectionContainer = this._storage.get(imodel);
+  private getContainer(iModelKey: string): MultiLevelSelectablesContainer {
+    let selectionContainer = this._storage.get(iModelKey);
     if (!selectionContainer) {
-      selectionContainer = new SelectableObjectContainer();
-      this._storage.set(imodel, selectionContainer);
+      selectionContainer = new MultiLevelSelectablesContainer();
+      this._storage.set(iModelKey, selectionContainer);
     }
     return selectionContainer;
   }
 
-  private handleEvent(event: StorageSelectionChangeEventArgs): void {
-    const container = this.getContainer(event.imodel);
-    const selectedObjectSet = container.getSelection(event.level);
-    const guidBefore = selectedObjectSet.guid;
-    switch (event.changeType) {
+  private handleChange(source: string, iModelKey: string, level: number, changeType: StorageSelectionChangeType, change: Selectable[]): void {
+    const container = this.getContainer(iModelKey);
+    const selectables = container.getSelection(level);
+    const selected = Selectables.create(change);
+    switch (changeType) {
       case StorageSelectionChangeType.Add:
-        selectedObjectSet.add(event.selectableObjects);
-        break;
-      case StorageSelectionChangeType.Remove:
-        selectedObjectSet.delete(event.selectableObjects);
-        break;
-      case StorageSelectionChangeType.Replace:
-        if (selectedObjectSet.size !== event.selectableObjects.size || !selectedObjectSet.hasAll(event.selectableObjects)) {
-          selectedObjectSet.clear().add(event.selectableObjects);
+        if (!Selectables.add(selectables, change)) {
+          return;
         }
         break;
+      case StorageSelectionChangeType.Remove:
+        if (!Selectables.remove(selectables, change)) {
+          return;
+        }
+        break;
+      case StorageSelectionChangeType.Replace:
+        if (Selectables.size(selectables) === Selectables.size(selected) && Selectables.hasAll(selectables, change)) {
+          return;
+        }
+        Selectables.clear(selectables);
+        Selectables.add(selectables, change);
+        break;
       case StorageSelectionChangeType.Clear:
-        selectedObjectSet.clear();
+        if (!Selectables.clear(selectables)) {
+          return;
+        }
         break;
     }
-    if (selectedObjectSet.guid === guidBefore) {
-      return;
-    }
-    container.clear(event.level + 1);
-    this.selectionChange.raiseEvent(event, this);
+    container.clear(level + 1);
+    const event: StorageSelectionChangeEventArgs = {
+      source,
+      level,
+      iModelKey,
+      changeType,
+      selectables: selected,
+      timestamp: new Date(),
+    };
+    this.onSelectionChange(event, this);
   }
 }
 
-/**
- * Stores selected objects by selection level model for an iModel.
- * @internal
- * */
-export class SelectableObjectContainer {
-  private readonly _selectedObjectSetStorage: Map<number, SelectableObjectSet>;
+class MultiLevelSelectablesContainer {
+  private readonly _selectablesContainers: Map<number, Selectables>;
 
   constructor() {
-    this._selectedObjectSetStorage = new Map<number, SelectableObjectSet>();
+    this._selectablesContainers = new Map<number, Selectables>();
   }
 
-  public getSelection(level: number): SelectableObjectSet {
-    let selectedItemsSet = this._selectedObjectSetStorage.get(level);
-    if (!selectedItemsSet) {
-      selectedItemsSet = new SelectableObjectSet();
-      this._selectedObjectSetStorage.set(level, selectedItemsSet);
+  public getSelection(level: number): Selectables {
+    let selectables = this._selectablesContainers.get(level);
+    if (!selectables) {
+      selectables = Selectables.create([]);
+      this._selectablesContainers.set(level, selectables);
     }
-    return selectedItemsSet;
+    return selectables;
   }
 
   public getSelectionLevels(): number[] {
     const levels = new Array<number>();
-    for (const entry of this._selectedObjectSetStorage.entries()) {
-      if (!entry[1].isEmpty) {
+    for (const entry of this._selectablesContainers.entries()) {
+      if (!Selectables.isEmpty(entry[1])) {
         levels.push(entry[0]);
       }
     }
@@ -257,11 +226,11 @@ export class SelectableObjectContainer {
   }
 
   public clear(level: number) {
-    const storedLevels = this._selectedObjectSetStorage.keys();
+    const storedLevels = this._selectablesContainers.keys();
     for (const storedLevel of storedLevels) {
       if (storedLevel >= level) {
-        const selectedItemsSet = this._selectedObjectSetStorage.get(storedLevel)!;
-        selectedItemsSet.clear();
+        const selectables = this._selectablesContainers.get(storedLevel)!;
+        Selectables.clear(selectables);
       }
     }
   }

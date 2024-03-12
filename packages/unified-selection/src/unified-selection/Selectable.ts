@@ -1,0 +1,257 @@
+/*---------------------------------------------------------------------------------------------
+ * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
+ * See LICENSE.md in the project root for license terms and full copyright notice.
+ *--------------------------------------------------------------------------------------------*/
+
+/** @packageDocumentation
+ * @module UnifiedSelection
+ */
+
+/**
+ * ECInstance selectable
+ * @beta
+ */
+export interface SelectableInstanceKey {
+  /** Full class name in format `SchemaName:ClassName` */
+  className: string;
+  /** ECInstance ID */
+  id: string;
+}
+
+/**
+ * A custom selectable
+ * @beta
+ */
+export interface CustomSelectable {
+  /** Unique identifier of the selectable */
+  identifier: string;
+  /** Asynchronous function for loading instance keys */
+  loadInstanceKeys: AsyncIterableIterator<SelectableInstanceKey>;
+  /** Custom data of the selectable
+   * @internal
+   */
+  data: any;
+}
+
+/**
+ * A single selectable that identifies something in an iTwin.js application
+ * @beta
+ */
+export type Selectable = SelectableInstanceKey | CustomSelectable;
+
+/** @beta */
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export namespace Selectable {
+  /** Check if the supplied selectable is a `SelectableInstanceKey` */
+  export function isInstanceKey(selectable: Selectable): selectable is SelectableInstanceKey {
+    const instanceKey = selectable as SelectableInstanceKey;
+    return !!instanceKey.className && !!instanceKey.id;
+  }
+
+  /** Check if the supplied selectable is a `CustomSelectable` */
+  export function isCustom(selectable: Selectable): selectable is CustomSelectable {
+    return !!(selectable as CustomSelectable).identifier;
+  }
+}
+
+/**
+ * A collection of selectables that identify something in an iModel.js application
+ * @beta
+ */
+export interface Selectables {
+  instanceKeys: Map<string, Set<string>>;
+  custom: Map<string, CustomSelectable>;
+}
+
+export namespace Selectables {
+  /**
+   * Creates `Selectables` from array of selectable
+   * @param source Source to create selectables from
+   */
+  export function create(source: Selectable[]): Selectables {
+    const newSelectables = {
+      instanceKeys: new Map<string, Set<string>>(),
+      custom: new Map<string, CustomSelectable>(),
+    };
+    Selectables.add(newSelectables, source);
+    return newSelectables;
+  }
+
+  /**
+   * Get the number of selectables stored in a `Selectables` object.
+   * @param selectables `Selectables` object to get size for
+   */
+  export function size(selectables: Selectables): number {
+    return Selectables.instanceKeyCount(selectables) + selectables.custom.size;
+  }
+
+  /**
+   * Is a `Selectables` object currently empty.
+   * @param selectables `Selectables` object to check
+   */
+  export function isEmpty(selectables: Selectables): boolean {
+    return Selectables.size(selectables) === 0;
+  }
+
+  /**
+   * Get the number of stored instance keys
+   * @param selectables `Selectables` object to get instance key count for
+   */
+  export function instanceKeyCount(selectables: Selectables): number {
+    let count = 0;
+    selectables.instanceKeys.forEach((set: Set<string>) => (count += set.size));
+    return count;
+  }
+
+  /**
+   * Check if a `Selectables` object contains the specified selectable.
+   * @param selectables `Selectables` object to check
+   * @param value The selectable to check for.
+   */
+  export function has(selectables: Selectables, value: Selectable): boolean {
+    if (Selectable.isInstanceKey(value)) {
+      const set = selectables.instanceKeys.get(value.className);
+      return !!(set && set.has(value.id));
+    }
+    return selectables.custom.has(value.identifier);
+  }
+
+  /**
+   * Check if a `Selectables` object contains all the specified selectables.
+   * @param selectables `Selectables` object to check
+   * @param values The selectables to check for.
+   */
+  export function hasAll(selectables: Selectables, values: Selectable[]): boolean {
+    if (Selectables.size(selectables) < values.length) {
+      return false;
+    }
+    for (const selectable of values) {
+      if (!Selectables.has(selectables, selectable)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Check if a `Selectables` object contains any of the specified selectables.
+   * @param selectables `Selectables` object to check
+   * @param values The selectables to check for.
+   */
+  export function hasAny(selectables: Selectables, values: Selectable[]): boolean {
+    for (const selectable of values) {
+      if (Selectables.has(selectables, selectable)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Add a one or more selectables to a `Selectables`
+   * @param selectables `Selectables` object to add selectables for
+   * @param values Selectables to add.
+   */
+  export function add(selectables: Selectables, values: Selectable[]): boolean {
+    let hasChanged = false;
+    for (const selectable of values) {
+      if (Selectable.isInstanceKey(selectable)) {
+        let set = selectables.instanceKeys.get(selectable.className);
+        if (!set) {
+          set = new Set<string>();
+        }
+        if (!set.has(selectable.id)) {
+          set.add(selectable.id);
+          selectables.instanceKeys.set(selectable.className, set);
+          hasChanged = true;
+        }
+      } else if (!selectables.custom.has(selectable.identifier)) {
+        selectables.custom.set(selectable.identifier, selectable);
+        hasChanged = true;
+      }
+    }
+    return hasChanged;
+  }
+
+  /**
+   * Removes one or more selectables from a `Selectables` object.
+   * @param selectables `Selectables` object to remove selectables for
+   * @param values Selectables to remove.
+   */
+  export function remove(selectables: Selectables, values: Selectable[]): boolean {
+    let hasChanged = false;
+    for (const selectable of values) {
+      if (Selectable.isInstanceKey(selectable)) {
+        const set = selectables.instanceKeys.get(selectable.className);
+        if (set && set.has(selectable.id)) {
+          set.delete(selectable.id);
+          hasChanged = true;
+          if (set.size === 0) {
+            selectables.instanceKeys.delete(selectable.className);
+          }
+        }
+      } else if (selectables.custom.has(selectable.identifier)) {
+        selectables.custom.delete(selectable.identifier);
+        hasChanged = true;
+      }
+    }
+    return hasChanged;
+  }
+
+  /**
+   * Clear a `Selectables` object.
+   * @param selectables `Selectables` object to clear selectables for
+   */
+  export function clear(selectables: Selectables): boolean {
+    if (Selectables.size(selectables) === 0) {
+      return false;
+    }
+    selectables.instanceKeys = new Map<string, Set<string>>();
+    selectables.custom = new Map<string, CustomSelectable>();
+    return true;
+  }
+
+  /**
+   * Check whether at least one selectable passes a condition in a `Selectables` object.
+   * @param selectables `Selectables` object to check
+   */
+  export function some(selectables: Selectables, callback: (selectable: Selectable) => boolean) {
+    for (const entry of selectables.instanceKeys) {
+      for (const item of entry[1]) {
+        if (callback({ className: entry[0], id: item })) {
+          return true;
+        }
+      }
+    }
+    for (const entry of selectables.custom) {
+      const customSelectable: CustomSelectable = {
+        identifier: entry[0],
+        loadInstanceKeys: entry[1].loadInstanceKeys,
+        data: entry[1].data,
+      };
+      if (callback(customSelectable)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Iterate over all keys in a `Selectables` object.
+   * @param selectables `Selectables` object to iterate over
+   */
+  export function forEach(selectables: Selectables, callback: (selectable: Selectable, index: number) => void) {
+    let index = 0;
+    selectables.instanceKeys.forEach((ids: Set<string>, className: string) => {
+      ids.forEach((id: string) => callback({ className, id }, index++));
+    });
+    selectables.custom.forEach((data, identifier) => {
+      const customSelectable: CustomSelectable = {
+        identifier,
+        loadInstanceKeys: data.loadInstanceKeys,
+        data: data.data,
+      };
+      callback(customSelectable, index++);
+    });
+  }
+}

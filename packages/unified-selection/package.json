@@ -34,12 +34,7 @@
     "extract-api": "betools extract-api --entry=unified-selection --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/unified-selection.api.md"
   },
-  "dependencies": {
-    "@itwin/core-bentley": "^4.4.0",
-    "@itwin/core-common": "^4.4.0",
-    "@itwin/presentation-common": "^4.4.0",
-    "@itwin/core-frontend": "^4.4.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@itwin/build-tools": "^4.4.0",
     "@itwin/eslint-plugin": "4.0.0-dev.48",
@@ -58,8 +53,6 @@
     "sinon": "^17.0.1",
     "sinon-chai": "^3.7.0",
     "source-map-support": "^0.5.21",
-    "typescript": "~5.0.4",
-    "@faker-js/faker": "^6.3.1",
-    "typemoq": "^2.1.0"
+    "typescript": "~5.0.4"
   }
 }

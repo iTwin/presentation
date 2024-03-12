@@ -4,86 +4,74 @@
 
 ```ts
 
-import { BeEvent } from '@itwin/core-bentley';
-import { GuidString } from '@itwin/core-bentley';
-import { IModelConnection } from '@itwin/core-frontend';
-import { InstanceId } from '@itwin/presentation-common';
-import { InstanceKey } from '@itwin/presentation-common';
+// @beta
+export function createStorage(): SelectionStorageInterface;
 
 // @beta
-export interface CustomSelectableObject {
+export interface CustomSelectable {
     // @internal
     data: any;
     identifier: string;
-    loadInstanceKeys: () => Promise<InstanceKey[]>;
+    loadInstanceKeys: AsyncIterableIterator<SelectableInstanceKey>;
 }
 
 // @beta
-export type SelectableObject = Readonly<InstanceKey> | Readonly<CustomSelectableObject>;
+export type Selectable = SelectableInstanceKey | CustomSelectable;
 
 // @beta (undocumented)
-export namespace SelectableObject {
-    export function isCustomSelectableObject(selectableObject: SelectableObject): selectableObject is CustomSelectableObject;
-    export function isInstanceKey(selectableObject: SelectableObject): selectableObject is InstanceKey;
+export namespace Selectable {
+    export function isCustom(selectable: Selectable): selectable is CustomSelectable;
+    export function isInstanceKey(selectable: Selectable): selectable is SelectableInstanceKey;
 }
 
 // @beta
-export type SelectableObjects = ReadonlyArray<SelectableObject> | Readonly<SelectableObjectSet>;
-
-// @beta
-export class SelectableObjectSet {
-    constructor(source?: SelectableObjects);
-    add(value: SelectableObjects | SelectableObject, pred?: (selectableObject: SelectableObject) => boolean): SelectableObjectSet;
-    clear(): this;
-    get customSelectableObjects(): Map<string, CustomSelectableObject>;
-    get customSelectableObjectsCount(): number;
-    delete(value: SelectableObjects | SelectableObject): SelectableObjectSet;
-    forEach(callback: (selectableObject: SelectableObject, index: number) => void): void;
-    get guid(): GuidString;
-    has(value: SelectableObject): boolean;
-    hasAll(values: SelectableObjects): boolean;
-    hasAny(values: SelectableObjects): boolean;
-    get instanceKeys(): Map<string, Set<InstanceId>>;
-    get instanceKeysCount(): number;
-    get isEmpty(): boolean;
-    get size(): number;
-    some(callback: (selectableObject: SelectableObject) => boolean): boolean;
+export interface SelectableInstanceKey {
+    className: string;
+    id: string;
 }
 
 // @beta
-export class SelectionStorage implements SelectionStorageInterface {
-    constructor();
-    addToSelection(source: string, imodel: IModelConnection, selectableObjects: SelectableObjects, level?: number, rulesetId?: string): void;
-    clearSelection(source: string, imodel: IModelConnection, level?: number, rulesetId?: string): void;
-    getSelection(imodel: IModelConnection, level?: number): SelectableObjectSet;
-    getSelectionLevels(imodel: IModelConnection): number[];
-    removeFromSelection(source: string, imodel: IModelConnection, selectableObjects: SelectableObjects, level?: number, rulesetId?: string): void;
-    replaceSelection(source: string, imodel: IModelConnection, selectableObjects: SelectableObjects, level?: number, rulesetId?: string): void;
-    readonly selectionChange: StorageSelectionChangeEvent;
+export interface Selectables {
+    // (undocumented)
+    custom: Map<string, CustomSelectable>;
+    // (undocumented)
+    instanceKeys: Map<string, Set<string>>;
+}
+
+// @public (undocumented)
+export namespace Selectables {
+    export function add(selectables: Selectables, values: Selectable[]): boolean;
+    export function clear(selectables: Selectables): boolean;
+    export function create(source: Selectable[]): Selectables;
+    export function forEach(selectables: Selectables, callback: (selectable: Selectable, index: number) => void): void;
+    export function has(selectables: Selectables, value: Selectable): boolean;
+    export function hasAll(selectables: Selectables, values: Selectable[]): boolean;
+    export function hasAny(selectables: Selectables, values: Selectable[]): boolean;
+    export function instanceKeyCount(selectables: Selectables): number;
+    export function isEmpty(selectables: Selectables): boolean;
+    export function remove(selectables: Selectables, values: Selectable[]): boolean;
+    export function size(selectables: Selectables): number;
+    export function some(selectables: Selectables, callback: (selectable: Selectable) => boolean): boolean;
 }
 
 // @beta
 export interface SelectionStorageInterface {
-    addToSelection(source: string, imodel: IModelConnection, selectableObjects: SelectableObjects, level: number, rulesetId?: string): void;
-    clearSelection(source: string, imodel: IModelConnection, level: number, rulesetId?: string): void;
-    getSelection(imodel: IModelConnection, level: number): SelectableObjectSet;
-    getSelectionLevels(imodel: IModelConnection): number[];
-    removeFromSelection(source: string, imodel: IModelConnection, selectableObjects: SelectableObjects, level: number, rulesetId?: string): void;
-    replaceSelection(source: string, imodel: IModelConnection, selectableObjects: SelectableObjects, level: number, rulesetId?: string): void;
-    selectionChange: StorageSelectionChangeEvent;
-}
-
-// @beta
-export class StorageSelectionChangeEvent extends BeEvent<StorageSelectionChangesListener> {
+    addToSelection(source: string, iModelKey: string, selectables: Selectable[], level: number): void;
+    clearSelection(source: string, iModelKey: string, level: number): void;
+    clearStorage(iModelKey: string): void;
+    getSelection(iModelKey: string, level: number): Selectables;
+    getSelectionLevels(iModelKey: string): number[];
+    onSelectionChange: (event: StorageSelectionChangeEventArgs, storage: SelectionStorageInterface) => void;
+    removeFromSelection(source: string, iModelKey: string, selectables: Selectable[], level: number): void;
+    replaceSelection(source: string, iModelKey: string, selectables: Selectable[], level: number): void;
 }
 
 // @beta
 export interface StorageSelectionChangeEventArgs {
     changeType: StorageSelectionChangeType;
-    imodel: IModelConnection;
+    iModelKey: string;
     level: number;
-    rulesetId?: string;
-    selectableObjects: Readonly<SelectableObjectSet>;
+    selectables: Selectables;
     source: string;
     timestamp: Date;
 }
