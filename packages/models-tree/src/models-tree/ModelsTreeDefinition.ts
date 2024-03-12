@@ -177,7 +177,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
             })},
             this.Parent.Id ParentId
           FROM
-            ${subjectFilterClauses.from} this
+            BisCore.Subject this
         )
       `,
       `
@@ -203,7 +203,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
                 .join(", ")},
               ParentId
             FROM child_subjects cs
-            JOIN bis.Subject this ON this.ECInstanceId = cs.ECInstanceId
+            JOIN ${subjectFilterClauses.from} this ON this.ECInstanceId = cs.ECInstanceId
             ${subjectFilterClauses.joins}
             WHERE
               cs.RootId IN (${subjectIds.map(() => "?").join(",")})
@@ -218,54 +218,58 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
         query: {
           ctes,
           ecsql: `
-            SELECT
-              ${await this._selectQueryFactory.createSelectClause({
-                ecClassId: { selector: "this.ECClassId" },
-                ecInstanceId: { selector: "this.ECInstanceId" },
-                nodeLabel: {
-                  selector: await this._nodeLabelSelectClauseFactory.createSelectClause({
-                    classAlias: "partition",
-                    className: "BisCore.InformationPartitionElement",
-                  }),
-                },
-                hideNodeInHierarchy: {
-                  selector: `
-                    CASE
-                      WHEN (
-                        json_extract([partition].JsonProperties, '$.PhysicalPartition.Model.Content') IS NOT NULL
-                        OR json_extract([partition].JsonProperties, '$.GraphicalPartition3d.Model.Content') IS NOT NULL
-                      ) THEN 1
-                      ELSE 0
-                    END
-                  `,
-                },
-                hasChildren: true,
-                extendedData: {
-                  imageId: "icon-model",
-                },
-                supportsFiltering: true,
-              })}
-            FROM  ${modelFilterClauses.from} this
-            JOIN bis.InformationPartitionElement [partition] ON [partition].ECInstanceId = this.ModeledElement.Id
-            JOIN bis.Subject [subject] ON [subject].ECInstanceId = [partition].Parent.Id OR json_extract([subject].JsonProperties,'$.Subject.Model.TargetPartition') = printf('0x%x', [partition].ECInstanceId)
-            ${modelFilterClauses.joins}
-            WHERE
-              NOT this.IsPrivate
-              AND EXISTS (
-                SELECT 1
-                FROM bis.ModelContainsElements a
-                JOIN bis.GeometricElement3d b ON b.ECClassId = a.TargetECClassId AND b.ECInstanceId = a.TargetECInstanceId
-                WHERE a.SourceECInstanceId = +this.ECInstanceId
-              )
-              AND (
-                [subject].ECInstanceId IN (${subjectIds.map(() => "?").join(",")})
-                OR [subject].ECInstanceId IN (
-                  SELECT s.ECInstanceId
-                  FROM child_subjects s
-                  WHERE s.RootId IN (${subjectIds.map(() => "?").join(",")}) AND s.${NodeSelectClauseColumnNames.HideNodeInHierarchy}
+            SELECT *
+            FROM (
+              SELECT
+                ${await this._selectQueryFactory.createSelectClause({
+                  ecClassId: { selector: "model.ECClassId" },
+                  ecInstanceId: { selector: "model.ECInstanceId" },
+                  nodeLabel: {
+                    selector: await this._nodeLabelSelectClauseFactory.createSelectClause({
+                      classAlias: "partition",
+                      className: "BisCore.InformationPartitionElement",
+                    }),
+                  },
+                  hideNodeInHierarchy: {
+                    selector: `
+                      CASE
+                        WHEN (
+                          json_extract([partition].JsonProperties, '$.PhysicalPartition.Model.Content') IS NOT NULL
+                          OR json_extract([partition].JsonProperties, '$.GraphicalPartition3d.Model.Content') IS NOT NULL
+                        ) THEN 1
+                        ELSE 0
+                      END
+                    `,
+                  },
+                  hasChildren: true,
+                  extendedData: {
+                    imageId: "icon-model",
+                  },
+                  supportsFiltering: true,
+                })}
+              FROM BisCore.GeometricModel3d model
+              JOIN bis.InformationPartitionElement [partition] ON [partition].ECInstanceId = model.ModeledElement.Id
+              JOIN bis.Subject [subject] ON [subject].ECInstanceId = [partition].Parent.Id OR json_extract([subject].JsonProperties,'$.Subject.Model.TargetPartition') = printf('0x%x', [partition].ECInstanceId)
+              WHERE
+                NOT model.IsPrivate
+                AND EXISTS (
+                  SELECT 1
+                  FROM bis.ModelContainsElements a
+                  JOIN bis.GeometricElement3d b ON b.ECClassId = a.TargetECClassId AND b.ECInstanceId = a.TargetECInstanceId
+                  WHERE a.SourceECInstanceId = +model.ECInstanceId
                 )
-              )
-              ${modelFilterClauses.where ? `AND ${modelFilterClauses.where}` : ""}
+                AND (
+                  [subject].ECInstanceId IN (${subjectIds.map(() => "?").join(",")})
+                  OR [subject].ECInstanceId IN (
+                    SELECT s.ECInstanceId
+                    FROM child_subjects s
+                    WHERE s.RootId IN (${subjectIds.map(() => "?").join(",")}) AND s.${NodeSelectClauseColumnNames.HideNodeInHierarchy}
+                  )
+                )
+            ) childModel
+            JOIN ${modelFilterClauses.from} this ON this.ECInstanceId = childModel.ECInstanceId
+            ${modelFilterClauses.joins}
+            ${modelFilterClauses.where ? `AND (childModel.${NodeSelectClauseColumnNames.HideNodeInHierarchy} OR ${modelFilterClauses.where})` : ""}
           `,
           bindings: [
             ...subjectIds.map((id): ECSqlBinding => ({ type: "id", value: id })),
