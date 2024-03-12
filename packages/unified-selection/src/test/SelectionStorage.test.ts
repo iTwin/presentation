@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import * as sinon from "sinon";
 import { SelectableInstanceKey, Selectables } from "../unified-selection/Selectable";
-import { createStorage, SelectionStorageInterface } from "../unified-selection/SelectionStorage";
+import { createStorage, SelectionStorage } from "../unified-selection/SelectionStorage";
 import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator";
 
 const generateSelection = (): SelectableInstanceKey[] => {
@@ -14,7 +14,7 @@ const generateSelection = (): SelectableInstanceKey[] => {
 };
 
 describe("SelectionStorage", () => {
-  let selectionStorage: SelectionStorageInterface;
+  let selectionStorage: SelectionStorage;
   let baseSelection: SelectableInstanceKey[];
   const iModel = "iModelKey";
   const source: string = "test";
@@ -28,10 +28,11 @@ describe("SelectionStorage", () => {
     it("clears iModel selection", () => {
       selectionStorage.addToSelection(source, iModel, [createSelectableInstanceKey()], 0);
       expect(Selectables.isEmpty(selectionStorage.getSelection(iModel, 0))).to.be.false;
-      const onSelectionChangeSpy = sinon.spy(selectionStorage, "onSelectionChange");
+      const listenerSpy = sinon.spy(() => {});
+      selectionStorage.selectionChangeEvent.addListener(listenerSpy);
       selectionStorage.clearStorage(iModel);
       expect(Selectables.isEmpty(selectionStorage.getSelection(iModel, 0))).to.be.true;
-      expect(onSelectionChangeSpy, "Expected selectionChange.onSelectionChange to be called").to.have.callCount(1);
+      expect(listenerSpy, "Expected selectionChange.onSelectionChange to be called").to.have.callCount(1);
     });
   });
 
@@ -323,21 +324,23 @@ describe("SelectionStorage", () => {
 
   describe("selectionChange", () => {
     it("fires `selectionChange` event after `addToSelection`, `replaceSelection`, `clearSelection`, `removeFromSelection`", () => {
-      const raiseEventSpy = sinon.spy(selectionStorage, "onSelectionChange");
+      const listenerSpy = sinon.spy(() => {});
+      selectionStorage.selectionChangeEvent.addListener(listenerSpy);
       selectionStorage.addToSelection(source, iModel, baseSelection, 0);
       selectionStorage.removeFromSelection(source, iModel, baseSelection, 0);
       selectionStorage.replaceSelection(source, iModel, baseSelection, 0);
       selectionStorage.clearSelection(source, iModel, 0);
-      expect(raiseEventSpy, "Expected selectionChange.raiseEvent to be called").to.have.callCount(4);
+      expect(listenerSpy, "Expected selectionChange.raiseEvent to be called").to.have.callCount(4);
     });
 
     it("doesn't fire `selectionChange` event after addToSelection, replaceSelection, clearSelection, removeFromSelection if nothing changes", () => {
-      const raiseEventSpy = sinon.spy(selectionStorage, "onSelectionChange");
+      const listenerSpy = sinon.spy(() => {});
+      selectionStorage.selectionChangeEvent.addListener(listenerSpy);
       selectionStorage.addToSelection(source, iModel, [], 0);
       selectionStorage.clearSelection(source, iModel, 0);
       selectionStorage.removeFromSelection(source, iModel, baseSelection, 0);
       selectionStorage.replaceSelection(source, iModel, [], 0);
-      expect(raiseEventSpy, "Expected selectionChange.raiseEvent to not be called").to.not.have.been.called;
+      expect(listenerSpy, "Expected selectionChange.raiseEvent to not be called").to.not.have.been.called;
     });
   });
 });

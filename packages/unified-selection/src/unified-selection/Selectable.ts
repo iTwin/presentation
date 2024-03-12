@@ -12,7 +12,7 @@
  * @beta
  */
 export interface SelectableInstanceKey {
-  /** Full class name in format `SchemaName:ClassName` */
+  /** Full class name in format `SchemaName:ClassName` or `SchemaName.ClassName` */
   className: string;
   /** ECInstance ID */
   id: string;
@@ -26,7 +26,7 @@ export interface CustomSelectable {
   /** Unique identifier of the selectable */
   identifier: string;
   /** Asynchronous function for loading instance keys */
-  loadInstanceKeys: AsyncIterableIterator<SelectableInstanceKey>;
+  loadInstanceKeys: () => AsyncIterableIterator<SelectableInstanceKey>;
   /** Custom data of the selectable
    * @internal
    */
@@ -55,11 +55,17 @@ export namespace Selectable {
 }
 
 /**
- * A collection of selectables that identify something in an iModel.js application
+ * A collection of selectables that identify something that can be selected in an iTwin.js application
  * @beta
  */
 export interface Selectables {
+  /**
+   * Map between ECInstance className and instance IDs
+   */
   instanceKeys: Map<string, Set<string>>;
+  /**
+   * Map between unique identifier of `CustomSelectable` and the selectable itself
+   */
   custom: Map<string, CustomSelectable>;
 }
 
@@ -86,7 +92,9 @@ export namespace Selectables {
    * @beta
    */
   export function size(selectables: Selectables): number {
-    return Selectables.instanceKeyCount(selectables) + selectables.custom.size;
+    let insatanceCount = 0;
+    selectables.instanceKeys.forEach((set: Set<string>) => (insatanceCount += set.size));
+    return insatanceCount + selectables.custom.size;
   }
 
   /**
@@ -99,17 +107,6 @@ export namespace Selectables {
   }
 
   /**
-   * Get the number of stored instance keys
-   * @param selectables `Selectables` object to get instance key count for
-   * @beta
-   */
-  export function instanceKeyCount(selectables: Selectables): number {
-    let count = 0;
-    selectables.instanceKeys.forEach((set: Set<string>) => (count += set.size));
-    return count;
-  }
-
-  /**
    * Check if a `Selectables` object contains the specified selectable.
    * @param selectables `Selectables` object to check
    * @param value The selectable to check for.
@@ -117,7 +114,8 @@ export namespace Selectables {
    */
   export function has(selectables: Selectables, value: Selectable): boolean {
     if (Selectable.isInstanceKey(value)) {
-      const set = selectables.instanceKeys.get(value.className);
+      const formattedClassName = value.className.replace(".", ":");
+      const set = selectables.instanceKeys.get(formattedClassName);
       return !!(set && set.has(value.id));
     }
     return selectables.custom.has(value.identifier);
@@ -166,13 +164,14 @@ export namespace Selectables {
     let hasChanged = false;
     for (const selectable of values) {
       if (Selectable.isInstanceKey(selectable)) {
-        let set = selectables.instanceKeys.get(selectable.className);
+        const formattedClassName = selectable.className.replace(".", ":");
+        let set = selectables.instanceKeys.get(formattedClassName);
         if (!set) {
           set = new Set<string>();
         }
         if (!set.has(selectable.id)) {
           set.add(selectable.id);
-          selectables.instanceKeys.set(selectable.className, set);
+          selectables.instanceKeys.set(formattedClassName, set);
           hasChanged = true;
         }
       } else if (!selectables.custom.has(selectable.identifier)) {
@@ -193,12 +192,13 @@ export namespace Selectables {
     let hasChanged = false;
     for (const selectable of values) {
       if (Selectable.isInstanceKey(selectable)) {
-        const set = selectables.instanceKeys.get(selectable.className);
+        const formattedClassName = selectable.className.replace(".", ":");
+        const set = selectables.instanceKeys.get(formattedClassName);
         if (set && set.has(selectable.id)) {
           set.delete(selectable.id);
           hasChanged = true;
           if (set.size === 0) {
-            selectables.instanceKeys.delete(selectable.className);
+            selectables.instanceKeys.delete(formattedClassName);
           }
         }
       } else if (selectables.custom.has(selectable.identifier)) {
@@ -237,12 +237,7 @@ export namespace Selectables {
       }
     }
     for (const entry of selectables.custom) {
-      const customSelectable: CustomSelectable = {
-        identifier: entry[0],
-        loadInstanceKeys: entry[1].loadInstanceKeys,
-        data: entry[1].data,
-      };
-      if (callback(customSelectable)) {
+      if (callback(entry[1])) {
         return true;
       }
     }
@@ -259,13 +254,8 @@ export namespace Selectables {
     selectables.instanceKeys.forEach((ids: Set<string>, className: string) => {
       ids.forEach((id: string) => callback({ className, id }, index++));
     });
-    selectables.custom.forEach((data, identifier) => {
-      const customSelectable: CustomSelectable = {
-        identifier,
-        loadInstanceKeys: data.loadInstanceKeys,
-        data: data.data,
-      };
-      callback(customSelectable, index++);
+    selectables.custom.forEach((data) => {
+      callback(data, index++);
     });
   }
 }

@@ -8,54 +8,15 @@
  */
 
 import { Selectable, Selectables } from "./Selectable";
-
-/**
- * An interface for selection change listeners.
- * @beta
- */
-export declare type StorageSelectionChangesListener = (args: StorageSelectionChangeEventArgs, storage: SelectionStorageInterface) => void;
-
-/**
- * The type of selection change
- * @beta
- */
-export enum StorageSelectionChangeType {
-  /** Added to selection. */
-  Add,
-  /** Removed from selection. */
-  Remove,
-  /** Selection was replaced. */
-  Replace,
-  /** Selection was cleared. */
-  Clear,
-}
-
-/**
- * The event object that is sent when the selection changes.
- * @beta
- */
-export interface StorageSelectionChangeEventArgs {
-  /** The name of the selection source which caused the selection change. */
-  source: string;
-  /** Level of the selection. */
-  level: number;
-  /** The selection change type. */
-  changeType: StorageSelectionChangeType;
-  /** Selectables affected by this selection change event. */
-  selectables: Selectables;
-  /** iModel key with which the selection is associated with. */
-  iModelKey: string;
-  /** The timestamp of when the selection change happened */
-  timestamp: Date;
-}
+import { SelectionChangeEvent, SelectionChangeEventImpl, StorageSelectionChangeEventArgs, StorageSelectionChangeType } from "./SelectionChangeEvent";
 
 /**
  * Selection storage interface which provides main selection and sub-selection.
  * @beta
  */
-export interface SelectionStorageInterface {
-  /** A callback that is called when selection changes */
-  onSelectionChange: (event: StorageSelectionChangeEventArgs, storage: SelectionStorageInterface) => void;
+export interface SelectionStorage {
+  /** An event that is raised when selection changes */
+  selectionChangeEvent: SelectionChangeEvent;
   /**
    * Get the selection levels currently stored for the specified imodel
    * @param iModelKey iModel key to get selection levels for.
@@ -98,7 +59,7 @@ export interface SelectionStorageInterface {
    */
   clearSelection(source: string, iModelKey: string, level: number): void;
   /**
-   * Clear storage for an iModel
+   * Clear storage for an iModel. This function should be called when iModel is closed.
    * @param iModelKey iModel to clear storage for
    */
   clearStorage(iModelKey: string): void;
@@ -106,18 +67,19 @@ export interface SelectionStorageInterface {
 
 /**
  * Creates a selection storage which stores the overall selection.
+ * When an iModel is closed `clearSelection` function should be called.
  * @beta
  */
-export function createStorage(): SelectionStorageInterface {
-  return new SelectionStorage();
+export function createStorage(): SelectionStorage {
+  return new SelectionStorageImpl();
 }
 
-class SelectionStorage implements SelectionStorageInterface {
+class SelectionStorageImpl implements SelectionStorage {
   private _storage = new Map<string, MultiLevelSelectablesContainer>();
-  public onSelectionChange: (args: StorageSelectionChangeEventArgs, storage: SelectionStorageInterface) => void;
+  public selectionChangeEvent: SelectionChangeEventImpl;
 
   constructor() {
-    this.onSelectionChange = () => {};
+    this.selectionChangeEvent = new SelectionChangeEventImpl();
   }
 
   public getSelectionLevels(iModelKey: string): number[] {
@@ -129,19 +91,19 @@ class SelectionStorage implements SelectionStorageInterface {
   }
 
   public addToSelection(source: string, iModelKey: string, selectables: Selectable[], level: number): void {
-    this.handleChange(source, iModelKey, level, StorageSelectionChangeType.Add, selectables);
+    this.handleChange(source, iModelKey, level, "Add", selectables);
   }
 
   public removeFromSelection(source: string, iModelKey: string, selectables: Selectable[], level: number): void {
-    this.handleChange(source, iModelKey, level, StorageSelectionChangeType.Remove, selectables);
+    this.handleChange(source, iModelKey, level, "Remove", selectables);
   }
 
   public replaceSelection(source: string, iModelKey: string, selectables: Selectable[], level: number): void {
-    this.handleChange(source, iModelKey, level, StorageSelectionChangeType.Replace, selectables);
+    this.handleChange(source, iModelKey, level, "Replace", selectables);
   }
 
   public clearSelection(source: string, iModelKey: string, level: number): void {
-    this.handleChange(source, iModelKey, level, StorageSelectionChangeType.Clear, []);
+    this.handleChange(source, iModelKey, level, "Clear", []);
   }
 
   public clearStorage(iModelKey: string): void {
@@ -163,24 +125,24 @@ class SelectionStorage implements SelectionStorageInterface {
     const selectables = container.getSelection(level);
     const selected = Selectables.create(change);
     switch (changeType) {
-      case StorageSelectionChangeType.Add:
+      case "Add":
         if (!Selectables.add(selectables, change)) {
           return;
         }
         break;
-      case StorageSelectionChangeType.Remove:
+      case "Remove":
         if (!Selectables.remove(selectables, change)) {
           return;
         }
         break;
-      case StorageSelectionChangeType.Replace:
+      case "Replace":
         if (Selectables.size(selectables) === Selectables.size(selected) && Selectables.hasAll(selectables, change)) {
           return;
         }
         Selectables.clear(selectables);
         Selectables.add(selectables, change);
         break;
-      case StorageSelectionChangeType.Clear:
+      case "Clear":
         if (!Selectables.clear(selectables)) {
           return;
         }
@@ -195,7 +157,7 @@ class SelectionStorage implements SelectionStorageInterface {
       selectables: selected,
       timestamp: new Date(),
     };
-    this.onSelectionChange(event, this);
+    this.selectionChangeEvent.raiseEvent(event, this);
   }
 }
 

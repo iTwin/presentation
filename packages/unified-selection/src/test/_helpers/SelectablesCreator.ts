@@ -5,7 +5,7 @@ import { CustomSelectable, SelectableInstanceKey } from "../../unified-selection
  * @internal Used for testing only.
  */
 export const createECInstanceId = (id: number = 1): string => {
-  return `${id}`;
+  return `0x${id}`;
 };
 
 /**
@@ -26,7 +26,7 @@ export const createSelectableInstanceKey = (id: number = 1, className: string = 
 export const createCustomSelectable = (id: number = 1): CustomSelectable => {
   return {
     identifier: createECInstanceId(id),
-    loadInstanceKeys: {} as AsyncIterableIterator<SelectableInstanceKey>,
+    loadInstanceKeys: () => null as unknown as AsyncIterableIterator<SelectableInstanceKey>,
     data: {},
   };
 };

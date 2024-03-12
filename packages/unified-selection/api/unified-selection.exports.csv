@@ -1,13 +1,13 @@
 sep=;
 Release Tag;API Item
-beta;createStorage(): SelectionStorageInterface
+beta;createStorage(): SelectionStorage
 beta;CustomSelectable
 beta;Selectable = SelectableInstanceKey | CustomSelectable
 beta;Selectable
 beta;SelectableInstanceKey
 beta;Selectables
 beta;Selectables
-beta;SelectionStorageInterface
+beta;SelectionChangeEvent
+beta;SelectionStorage
 beta;StorageSelectionChangeEventArgs
-beta;StorageSelectionChangesListener = (args: StorageSelectionChangeEventArgs, storage: SelectionStorageInterface) => void
-beta;StorageSelectionChangeType
+beta;StorageSelectionChangesListener = (args: StorageSelectionChangeEventArgs, storage: SelectionStorage) => void

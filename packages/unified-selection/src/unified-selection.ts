@@ -11,3 +11,9 @@
  */
 export * from "./unified-selection/Selectable";
 export * from "./unified-selection/SelectionStorage";
+export {
+  StorageSelectionChangeType,
+  StorageSelectionChangeEventArgs,
+  StorageSelectionChangesListener,
+  SelectionChangeEvent,
+} from "./unified-selection/SelectionChangeEvent";

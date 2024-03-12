@@ -96,41 +96,6 @@ describe("Selectables", () => {
     });
   });
 
-  describe("instanceKeysCount", () => {
-    it("returns 0 when there are no selectables", () => {
-      const selectables = Selectables.create([]);
-      expect(Selectables.instanceKeyCount(selectables)).to.be.eq(0);
-    });
-
-    it("returns correct count when all selectables are of the same class", () => {
-      const selectables = Selectables.create([
-        {
-          className: "aaa",
-          id: createECInstanceId(1),
-        },
-        {
-          className: "aaa",
-          id: createECInstanceId(2),
-        },
-      ]);
-      expect(Selectables.instanceKeyCount(selectables)).to.be.eq(2);
-    });
-
-    it("returns correct count when selectables are of different classes", () => {
-      const selectables = Selectables.create([
-        {
-          className: "aaa",
-          id: createECInstanceId(1),
-        },
-        {
-          className: "bbb",
-          id: createECInstanceId(2),
-        },
-      ]);
-      expect(Selectables.instanceKeyCount(selectables)).to.be.eq(2);
-    });
-  });
-
   describe("clear", () => {
     it("clears custom selectables", () => {
       const customSelectables = [createCustomSelectable(1), createCustomSelectable(2)];
@@ -175,7 +140,6 @@ describe("Selectables", () => {
       const selectable = createSelectableInstanceKey(2, "class2");
       Selectables.add(selectables, [selectable]);
       expect(selectables.instanceKeys.size).to.eq(2);
-      expect(Selectables.instanceKeyCount(selectables)).to.eq(2);
       expect(Selectables.has(selectables, selectable)).to.be.true;
     });
 
@@ -185,6 +149,15 @@ describe("Selectables", () => {
       expect(selectables.instanceKeys.size).to.eq(1);
       Selectables.add(selectables, [selectable]);
       expect(selectables.instanceKeys.size).to.eq(1);
+    });
+
+    it("does not add the same instance key selectable with different format", () => {
+      const selectable = createSelectableInstanceKey(1, "Schema:Class");
+      const selectableFormat = createSelectableInstanceKey(1, "Schema.Class");
+      const selectables = Selectables.create([selectable]);
+      expect(Selectables.size(selectables)).to.eq(1);
+      Selectables.add(selectables, [selectableFormat]);
+      expect(Selectables.size(selectables)).to.eq(1);
     });
 
     it("adds an array of selectables", () => {
@@ -214,6 +187,15 @@ describe("Selectables", () => {
       Selectables.remove(selectables, [instanceSelectables[1]]);
       expect(Selectables.size(selectables)).to.eq(2);
       expect(Selectables.has(selectables, instanceSelectables[1])).to.be.false;
+    });
+
+    it("removes an instance key selectable with different format", () => {
+      const instanceSelectables = [createSelectableInstanceKey(1, "Schema:Class")];
+      const selectableToRemove = createSelectableInstanceKey(1, "Schema.Class");
+      const selectables = Selectables.create(instanceSelectables);
+      expect(Selectables.size(selectables)).to.eq(1);
+      Selectables.remove(selectables, [selectableToRemove]);
+      expect(Selectables.size(selectables)).to.eq(0);
     });
 
     it("removes an instance key selectable of different classes", () => {
@@ -262,13 +244,32 @@ describe("Selectables", () => {
   });
 
   describe("has", () => {
-    it("returns true when Selectables contains selectable", () => {
+    it("returns true when Selectables contains instance key", () => {
+      const instanceKey = createSelectableInstanceKey(1);
+      const selectables = Selectables.create([instanceKey]);
+      expect(Selectables.has(selectables, instanceKey)).to.be.true;
+    });
+
+    it("returns false when Selectables does not contain instance key", () => {
+      const instanceKey = createSelectableInstanceKey(1);
+      const selectables = Selectables.create([]);
+      expect(Selectables.has(selectables, instanceKey)).to.be.false;
+    });
+
+    it("returns true when Selectables contains selectable in different format", () => {
+      const instanceKey = createSelectableInstanceKey(1, "Schema:Class");
+      const instanceKeyFormat = createSelectableInstanceKey(1, "Schema.Class");
+      const selectables = Selectables.create([instanceKey]);
+      expect(Selectables.has(selectables, instanceKeyFormat)).to.be.true;
+    });
+
+    it("returns true when Selectables contains custom selectable", () => {
       const customSelectable = createCustomSelectable(1);
       const selectables = Selectables.create([customSelectable]);
       expect(Selectables.has(selectables, customSelectable)).to.be.true;
     });
 
-    it("returns false when Selectables does not contain selectable", () => {
+    it("returns false when Selectables does not contain custom selectable", () => {
       const customSelectable = createCustomSelectable(1);
       const selectables = Selectables.create([]);
       expect(Selectables.has(selectables, customSelectable)).to.be.false;
