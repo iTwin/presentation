@@ -218,7 +218,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
         query: {
           ctes,
           ecsql: `
-            SELECT *
+            SELECT childModel.ECInstanceId AS ECInstanceId, childModel.*
             FROM (
               SELECT
                 ${await this._selectQueryFactory.createSelectClause({
