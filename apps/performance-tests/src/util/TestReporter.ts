@@ -125,7 +125,7 @@ export class TestReporter extends Base {
       };
 
       const blockingEntry = {
-        name: `${fullTitle} (blocking time)`,
+        name: `${fullTitle} (P95 of main thread blocks)`,
         unit: "ms",
         value: blockingSummary.p95 ?? 0,
         extra: Object.entries(blockingSummary)
