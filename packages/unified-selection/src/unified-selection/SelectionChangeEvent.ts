@@ -51,7 +51,7 @@ export declare type StorageSelectionChangesListener = (args: StorageSelectionCha
 
 /**
  * An interface that allows subscribing and unsubscribing listeners that
- * are called upon an event.
+ * are called when a selection has changed.
  * @beta
  */
 export interface SelectionChangeEvent {

@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import sinon from "sinon";
 import { SelectionChangeEventImpl, StorageSelectionChangeEventArgs } from "../unified-selection/SelectionChangeEvent";
-import { createStorage, SelectionStorage } from "../unified-selection/SelectionStorage";
+import { createStorage } from "../unified-selection/SelectionStorage";
 
 describe("SelectionChangeEvent", () => {
   const storage = createStorage();
@@ -12,8 +12,8 @@ describe("SelectionChangeEvent", () => {
   });
 
   it("invokes all listeners when event is raised", () => {
-    const listenerSpy1 = sinon.spy((_args: StorageSelectionChangeEventArgs, _storage: SelectionStorage) => {});
-    const listenerSpy2 = sinon.spy((_args: StorageSelectionChangeEventArgs, _storage: SelectionStorage) => {});
+    const listenerSpy1 = sinon.spy(() => {});
+    const listenerSpy2 = sinon.spy(() => {});
     selectionChangeEvent.addListener(listenerSpy1);
     selectionChangeEvent.addListener(listenerSpy2);
     selectionChangeEvent.raiseEvent({} as StorageSelectionChangeEventArgs, storage);
@@ -22,7 +22,7 @@ describe("SelectionChangeEvent", () => {
   });
 
   it("returns function to unregister listener", () => {
-    const listenerSpy1 = sinon.spy((_args: StorageSelectionChangeEventArgs, _storage: SelectionStorage) => {});
+    const listenerSpy1 = sinon.spy(() => {});
     const unregister = selectionChangeEvent.addListener(listenerSpy1);
     unregister();
     selectionChangeEvent.raiseEvent({} as StorageSelectionChangeEventArgs, storage);
@@ -30,8 +30,8 @@ describe("SelectionChangeEvent", () => {
   });
 
   it("removes subscribed listener", () => {
-    const listenerSpy1 = sinon.spy((_args: StorageSelectionChangeEventArgs, _storage: SelectionStorage) => {});
-    const listenerSpy2 = sinon.spy((_args: StorageSelectionChangeEventArgs, _storage: SelectionStorage) => {});
+    const listenerSpy1 = sinon.spy(() => {});
+    const listenerSpy2 = sinon.spy(() => {});
     selectionChangeEvent.addListener(listenerSpy1);
     selectionChangeEvent.addListener(listenerSpy2);
     selectionChangeEvent.removeListener(listenerSpy1);
