@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1710242077657,
+  "lastUpdate": 1710248543124,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -1484,6 +1484,52 @@ window.BENCHMARK_DATA = {
             "value": 219,
             "unit": "ms",
             "extra": "count: 6\nmax: 219\np95: 219\nmedian: 50.5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35135765+grigasp@users.noreply.github.com",
+            "name": "Grigas",
+            "username": "grigasp"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "45fc138566040bcbb4b45f34aca057e0fdd40d3f",
+          "message": "Hierarchies: Logging improvements (#473)\n\n* Add a way to get logging severity from core logger\r\n\r\n* Avoid creating a log message if severity for its category is not high enough",
+          "timestamp": "2024-03-12T15:01:22+02:00",
+          "tree_id": "ecbcaf5f8bab0ee1f1b189e3a835a62dfee5ba25",
+          "url": "https://github.com/iTwin/presentation/commit/45fc138566040bcbb4b45f34aca057e0fdd40d3f"
+        },
+        "date": 1710248542632,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "stateless hierarchy loads initial hierarchy",
+            "value": 98.9,
+            "unit": "ms"
+          },
+          {
+            "name": "stateless hierarchy loads initial hierarchy (P95 of main thread blocks)",
+            "value": 47,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 47\np95: 47\nmedian: 47"
+          },
+          {
+            "name": "stateless hierarchy loads full hierarchy",
+            "value": 2612.2,
+            "unit": "ms"
+          },
+          {
+            "name": "stateless hierarchy loads full hierarchy (P95 of main thread blocks)",
+            "value": 243,
+            "unit": "ms",
+            "extra": "count: 4\nmax: 243\np95: 243\nmedian: 83.5"
           }
         ]
       }
