@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1709822148599,
+  "lastUpdate": 1710231451161,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -1392,6 +1392,52 @@ window.BENCHMARK_DATA = {
             "value": 3120,
             "unit": "ms",
             "extra": "min: 3120\nmax: 3120\ncount: 1\nmean: 3120\np50: 3134.5\nmedian: 3134.5\np75: 3134.5\np90: 3134.5\np95: 3134.5\np99: 3134.5\np999: 3134.5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "29233962+Yato333@users.noreply.github.com",
+            "name": "Dmitrij Kuzmičiov",
+            "username": "Yato333"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0ab2c5c4a51620c6bd2af3e39ef55cbaca9dcb79",
+          "message": "Add performance tests (#461)\n\n* Initial refactor\r\n\r\n* Add arguments aliases and a debugger option\r\n\r\n* Fix merge issue\r\n\r\n* remove extra parameters\r\n\r\n* refactor\r\n\r\n* Move changes to a new project\r\n\r\n* Setup test reporter\r\n\r\n* Fix performance tests\r\n\r\n* Remove unnecessary stuff\r\n\r\n* Set up global benchmark script\r\n\r\n* Update readme\r\n\r\n* Adjust pipeline\r\n\r\n* Fix output path\r\n\r\n* Remove test results file\r\n\r\n* Fix formatting issue\r\n\r\n* Fix eslint config\r\n\r\n* Save main benchmark results only when run on master branch\r\n\r\n* Fix condition\r\n\r\n* Fix eslint problems\r\n\r\n* Remove start script\r\n\r\n* Change file structure\r\n\r\n* Use public query executor\r\n\r\n* Refactor blocking stats\r\n\r\n* Add table dependency\r\n\r\n* Remove logging from hierarchy provider\r\n\r\n* Improve test reporter console output\r\n\r\n* Remove check leaks option\r\n\r\n* Remove pid from profile name\r\n\r\n* Remove pre-caching of iModels\r\n\r\n* Simplify float rounding\r\n\r\n* Fix p95\r\n\r\n* Add additional entries for benchmark\r\n\r\n* Fix import being on top of header\r\n\r\n* Fix debugger crashing on startup\r\n\r\n* Fix issue of TestReporter measuring time from `beforeEach` to test end.\r\n\r\n* Add undefined check\r\n\r\n* Improve comment\r\n\r\n* Rename itMeasures to run\r\n\r\n* Improve text for blocking benchmark entries\r\n\r\n---------\r\n\r\nCo-authored-by: Dmitrij Kuzmiciov <yato333@users.noreply.github.com>",
+          "timestamp": "2024-03-12T10:16:21+02:00",
+          "tree_id": "bded88b95325e87c9de255d6b86a7c0ba6d1641b",
+          "url": "https://github.com/iTwin/presentation/commit/0ab2c5c4a51620c6bd2af3e39ef55cbaca9dcb79"
+        },
+        "date": 1710231450176,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "stateless hierarchy loads initial hierarchy",
+            "value": 77.65,
+            "unit": "ms"
+          },
+          {
+            "name": "stateless hierarchy loads initial hierarchy (P95 of main thread blocks)",
+            "value": 35,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 35\np95: 35\nmedian: 35"
+          },
+          {
+            "name": "stateless hierarchy loads full hierarchy",
+            "value": 2629.56,
+            "unit": "ms"
+          },
+          {
+            "name": "stateless hierarchy loads full hierarchy (P95 of main thread blocks)",
+            "value": 224,
+            "unit": "ms",
+            "extra": "count: 4\nmax: 224\np95: 224\nmedian: 89"
           }
         ]
       }
