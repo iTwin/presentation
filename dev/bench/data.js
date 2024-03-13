@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1710248543124,
+  "lastUpdate": 1710346410775,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -1530,6 +1530,52 @@ window.BENCHMARK_DATA = {
             "value": 243,
             "unit": "ms",
             "extra": "count: 4\nmax: 243\np95: 243\nmedian: 83.5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "24278440+saskliutas@users.noreply.github.com",
+            "name": "Saulius Skliutas",
+            "username": "saskliutas"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c265582591b915bc9b32d188cf71537c1197ceb1",
+          "message": "Initial `@itwin/presentation-hierarchies-react` setup (#474)\n\n* Move `useTree` API to new package\r\n\r\n* Add icon support\r\n\r\n* Fix unified selection\r\n\r\n* Revive hierarchy level filtering\r\n\r\n* Add missing headers\r\n\r\n* Remove commented code\r\n\r\n* Setup API extraction\r\n\r\n* Remove test script\r\n\r\n* Add missing header",
+          "timestamp": "2024-03-13T18:12:25+02:00",
+          "tree_id": "74b7085b5028a0b52a2ab4995c13b30a96b68f36",
+          "url": "https://github.com/iTwin/presentation/commit/c265582591b915bc9b32d188cf71537c1197ceb1"
+        },
+        "date": 1710346410278,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "stateless hierarchy loads initial hierarchy",
+            "value": 81.81,
+            "unit": "ms"
+          },
+          {
+            "name": "stateless hierarchy loads initial hierarchy (P95 of main thread blocks)",
+            "value": 36,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 36\np95: 36\nmedian: 36"
+          },
+          {
+            "name": "stateless hierarchy loads full hierarchy",
+            "value": 2564.19,
+            "unit": "ms"
+          },
+          {
+            "name": "stateless hierarchy loads full hierarchy (P95 of main thread blocks)",
+            "value": 233,
+            "unit": "ms",
+            "extra": "count: 4\nmax: 233\np95: 233\nmedian: 79"
           }
         ]
       }
