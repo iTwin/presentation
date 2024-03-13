@@ -85,13 +85,13 @@ export type StorageSelectionChangesListener = (args: StorageSelectionChangeEvent
 // @beta
 export type StorageSelectionChangeType =
 /** Added to selection. */
-"Add"
+"add"
 /** Removed from selection. */
-| "Remove"
+| "remove"
 /** Selection was replaced. */
-| "Replace"
+| "replace"
 /** Selection was cleared. */
-| "Clear";
+| "clear";
 
 // (No @packageDocumentation comment for this package)
 

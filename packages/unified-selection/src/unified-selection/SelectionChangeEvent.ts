@@ -16,13 +16,13 @@ import { SelectionStorage } from "./SelectionStorage";
  */
 export type StorageSelectionChangeType =
   /** Added to selection. */
-  | "Add"
+  | "add"
   /** Removed from selection. */
-  | "Remove"
+  | "remove"
   /** Selection was replaced. */
-  | "Replace"
+  | "replace"
   /** Selection was cleared. */
-  | "Clear";
+  | "clear";
 
 /**
  * The event object that is sent when the selection changes.

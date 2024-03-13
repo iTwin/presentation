@@ -91,19 +91,19 @@ class SelectionStorageImpl implements SelectionStorage {
   }
 
   public addToSelection(source: string, iModelKey: string, selectables: Selectable[], level: number): void {
-    this.handleChange(source, iModelKey, level, "Add", selectables);
+    this.handleChange(source, iModelKey, level, "add", selectables);
   }
 
   public removeFromSelection(source: string, iModelKey: string, selectables: Selectable[], level: number): void {
-    this.handleChange(source, iModelKey, level, "Remove", selectables);
+    this.handleChange(source, iModelKey, level, "remove", selectables);
   }
 
   public replaceSelection(source: string, iModelKey: string, selectables: Selectable[], level: number): void {
-    this.handleChange(source, iModelKey, level, "Replace", selectables);
+    this.handleChange(source, iModelKey, level, "replace", selectables);
   }
 
   public clearSelection(source: string, iModelKey: string, level: number): void {
-    this.handleChange(source, iModelKey, level, "Clear", []);
+    this.handleChange(source, iModelKey, level, "clear", []);
   }
 
   public clearStorage(iModelKey: string): void {
@@ -125,24 +125,24 @@ class SelectionStorageImpl implements SelectionStorage {
     const selectables = container.getSelection(level);
     const selected = Selectables.create(change);
     switch (changeType) {
-      case "Add":
+      case "add":
         if (!Selectables.add(selectables, change)) {
           return;
         }
         break;
-      case "Remove":
+      case "remove":
         if (!Selectables.remove(selectables, change)) {
           return;
         }
         break;
-      case "Replace":
+      case "replace":
         if (Selectables.size(selectables) === Selectables.size(selected) && Selectables.hasAll(selectables, change)) {
           return;
         }
         Selectables.clear(selectables);
         Selectables.add(selectables, change);
         break;
-      case "Clear":
+      case "clear":
         if (!Selectables.clear(selectables)) {
           return;
         }

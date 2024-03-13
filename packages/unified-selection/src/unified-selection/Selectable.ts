@@ -114,8 +114,8 @@ export namespace Selectables {
    */
   export function has(selectables: Selectables, value: Selectable): boolean {
     if (Selectable.isInstanceKey(value)) {
-      const formattedClassName = value.className.replace(".", ":");
-      const set = selectables.instanceKeys.get(formattedClassName);
+      const normalizedClassName = normalizeClassName(value.className);
+      const set = selectables.instanceKeys.get(normalizedClassName);
       return !!(set && set.has(value.id));
     }
     return selectables.custom.has(value.identifier);
@@ -164,14 +164,14 @@ export namespace Selectables {
     let hasChanged = false;
     for (const selectable of values) {
       if (Selectable.isInstanceKey(selectable)) {
-        const formattedClassName = selectable.className.replace(".", ":");
-        let set = selectables.instanceKeys.get(formattedClassName);
+        const normalizedClassName = normalizeClassName(selectable.className);
+        let set = selectables.instanceKeys.get(normalizedClassName);
         if (!set) {
           set = new Set<string>();
         }
         if (!set.has(selectable.id)) {
           set.add(selectable.id);
-          selectables.instanceKeys.set(formattedClassName, set);
+          selectables.instanceKeys.set(normalizedClassName, set);
           hasChanged = true;
         }
       } else if (!selectables.custom.has(selectable.identifier)) {
@@ -192,13 +192,13 @@ export namespace Selectables {
     let hasChanged = false;
     for (const selectable of values) {
       if (Selectable.isInstanceKey(selectable)) {
-        const formattedClassName = selectable.className.replace(".", ":");
-        const set = selectables.instanceKeys.get(formattedClassName);
+        const normalizedClassName = normalizeClassName(selectable.className);
+        const set = selectables.instanceKeys.get(normalizedClassName);
         if (set && set.has(selectable.id)) {
           set.delete(selectable.id);
           hasChanged = true;
           if (set.size === 0) {
-            selectables.instanceKeys.delete(formattedClassName);
+            selectables.instanceKeys.delete(normalizedClassName);
           }
         }
       } else if (selectables.custom.has(selectable.identifier)) {
@@ -257,5 +257,9 @@ export namespace Selectables {
     selectables.custom.forEach((data) => {
       callback(data, index++);
     });
+  }
+
+  function normalizeClassName(className: string): string {
+    return className.replace(".", ":");
   }
 }
