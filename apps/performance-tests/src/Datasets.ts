@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 import fs from "fs";
 import path from "path";
-import { PhysicalElement, StandaloneDb } from "@itwin/core-backend";
-import { BisCodeSpec, Code } from "@itwin/core-common";
-import { insertPhysicalModelWithPartition } from "./util/IModelUtilities";
+import { ElementOwnsChildElements, GraphicalElement3d, StandaloneDb } from "@itwin/core-backend";
+import { BisCodeSpec, Code, PhysicalElementProps } from "@itwin/core-common";
+import { insertPhysicalModelWithPartition, insertSpatialCategory } from "./util/IModelUtilities";
 
 export class Datasets {
   private static readonly _iModels: { baytown?: string; largeFlat?: string } = {};
@@ -64,12 +64,23 @@ async function downloadDataset(name: string, downloadUrl: string, localPath: str
 }
 
 function createLargeFlatIModel(name: string, localPath: string, numElements: number = 10000) {
-  const iModel = StandaloneDb.createEmpty(localPath, { rootSubject: { name } });
+  console.log("Creating large flat iModel...");
+  const iModel = StandaloneDb.createEmpty(localPath, { rootSubject: { name }, allowEdit: "1" });
   const modelId = insertPhysicalModelWithPartition(iModel, "");
-  const codeSpec = iModel.codeSpecs.getByName(BisCodeSpec.physicalMaterial);
+  const codeSpec = iModel.codeSpecs.getByName(BisCodeSpec.physicalType);
+  const code = new Code({ scope: modelId, spec: codeSpec.id });
+  const props: PhysicalElementProps = {
+    classFullName: GraphicalElement3d.classFullName,
+    code,
+    category: insertSpatialCategory(iModel, "My Category"),
+    model: modelId,
+    parent: new ElementOwnsChildElements(modelId),
+  };
   for (let i = 0; i < numElements; ++i) {
-    const code = new Code({ spec: codeSpec.id, scope: modelId, value: `Element ${i}` });
-    iModel.elements.insertElement({ classFullName: PhysicalElement.classFullName, code, model: modelId });
+    // const code = new Code({ spec: codeSpec.id, scope: modelId, value: `Element ${i}` });
+    code.value = `Element_${i}`;
+    iModel.elements.insertElement(props);
   }
   iModel.close();
+  console.log("Done!");
 }

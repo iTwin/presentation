@@ -2,13 +2,24 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
-import { IModelDb, PhysicalModel, PhysicalPartition, SubjectOwnsPartitionElements } from "@itwin/core-backend";
+import { IModelDb, PhysicalModel, PhysicalPartition, SpatialCategory, SubjectOwnsPartitionElements } from "@itwin/core-backend";
 import { Id64String } from "@itwin/core-bentley";
 import { BisCodeSpec, Code, IModel } from "@itwin/core-common";
 
 export function insertPhysicalModelWithPartition(iModel: IModelDb, codeValue: string, partitionParentId?: Id64String) {
   const partitionKey = insertPhysicalPartition(iModel, partitionParentId ?? IModel.rootSubjectId, codeValue);
   return insertPhysicalSubModel(iModel, partitionKey);
+}
+
+export function insertSpatialCategory(iModel: IModelDb, codeValue: string) {
+  const codeSpec = iModel.codeSpecs.getByName(BisCodeSpec.spatialCategory);
+  const model = IModel.dictionaryId;
+  const id = iModel.elements.insertElement({
+    classFullName: SpatialCategory.classFullName,
+    model,
+    code: new Code({ scope: model, spec: codeSpec.id, value: codeValue }),
+  });
+  return id;
 }
 
 function insertPhysicalPartition(iModel: IModelDb, parentId: Id64String, codeValue: string) {
@@ -18,10 +29,7 @@ function insertPhysicalPartition(iModel: IModelDb, parentId: Id64String, codeVal
     classFullName: PhysicalPartition.classFullName,
     model: IModel.repositoryModelId,
     code,
-    parent: {
-      id: parentId,
-      relClassName: SubjectOwnsPartitionElements.classFullName,
-    },
+    parent: new SubjectOwnsPartitionElements(parentId),
   });
   return partitionId;
 }
