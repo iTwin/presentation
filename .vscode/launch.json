@@ -126,6 +126,17 @@
       }
     },
     {
+      "name": "Tests: Performance",
+      "cwd": "${workspaceFolder}/apps/performance-tests",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["mocha", "--config", "./.mocharc.json", "./lib/*test.js"],
+      "env": {
+        "NODE_OPTIONS": "--enable-source-maps"
+      }
+    },
+    {
       "name": "Tests: Hierarchy builder",
       "cwd": "${workspaceFolder}/packages/hierarchy-builder",
       "type": "node",

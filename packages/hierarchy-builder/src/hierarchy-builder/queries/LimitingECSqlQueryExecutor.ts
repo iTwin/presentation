@@ -7,7 +7,7 @@ import { StopWatch } from "@itwin/core-bentley";
 import { RowsLimitExceededError } from "../HierarchyErrors";
 import { LOGGING_NAMESPACE as CommonLoggingNamespace } from "../internal/Common";
 import { getLogger } from "../Logging";
-import { ECSqlBinding, ECSqlQueryDef, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow, IECSqlQueryExecutor } from "../queries/ECSqlCore";
+import { ECSqlQueryDef, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow, IECSqlQueryExecutor } from "../queries/ECSqlCore";
 
 /**
  * An interface for something that knows how to create a limiting ECSQL query reader.
@@ -31,7 +31,7 @@ export function createLimitingECSqlQueryExecutor(baseExecutor: IECSqlQueryExecut
       const { limit: configLimit, ...restConfig } = config ?? {};
       const limit = configLimit ?? defaultLimit;
       const ecsql = addCTEs(addLimit(query.ecsql, limit), query.ctes);
-      const perfLogger = createQueryPerformanceLogger(ecsql, query.bindings);
+      const perfLogger = createQueryPerformanceLogger();
 
       // handle "unbounded" case without a buffer
       const reader = baseExecutor.createQueryReader(ecsql, query.bindings, restConfig);
@@ -85,8 +85,7 @@ function addLimit(ecsql: string, limit: number | "unbounded") {
 }
 
 const LOGGING_NAMESPACE = `${CommonLoggingNamespace}.QueryPerformance`;
-function createQueryPerformanceLogger(query: string, bindings: ECSqlBinding[] | undefined, firstStepWarningThreshold = 3000, allRowsWarningThreshold = 5000) {
-  const serializedQuery = `Query: "${query}".\nBindings: ${JSON.stringify(bindings ?? [])}.`;
+function createQueryPerformanceLogger(firstStepWarningThreshold = 3000, allRowsWarningThreshold = 5000) {
   let firstStep = true;
   let rowsCount = 0;
   const timer = new StopWatch(undefined, true);
@@ -95,7 +94,7 @@ function createQueryPerformanceLogger(query: string, bindings: ECSqlBinding[] | 
       if (firstStep) {
         // istanbul ignore next
         const logFunc = timer.current.milliseconds >= firstStepWarningThreshold ? getLogger().logWarning : getLogger().logTrace;
-        logFunc(LOGGING_NAMESPACE, `First step took ${timer.currentSeconds} s.\n${serializedQuery}`);
+        logFunc(LOGGING_NAMESPACE, `First step took ${timer.currentSeconds} s.`);
         firstStep = false;
       }
       ++rowsCount;
@@ -103,7 +102,7 @@ function createQueryPerformanceLogger(query: string, bindings: ECSqlBinding[] | 
     onComplete() {
       // istanbul ignore next
       const logFunc = timer.current.milliseconds >= allRowsWarningThreshold ? getLogger().logWarning : getLogger().logTrace;
-      logFunc(LOGGING_NAMESPACE, `Query took ${timer.currentSeconds} s. for ${rowsCount} rows.\n${serializedQuery}`);
+      logFunc(LOGGING_NAMESPACE, `Query took ${timer.currentSeconds} s. for ${rowsCount} rows.`);
     },
   };
 }

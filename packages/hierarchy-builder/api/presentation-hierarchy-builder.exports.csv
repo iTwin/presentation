@@ -115,6 +115,7 @@ beta;InstancesNodeKey
 beta;IPrimitiveValueFormatter = (value: TypedPrimitiveValue) => Promise
 beta;LabelGroupingNodeKey
 beta;LogFunction = (category: string, message: string) => void
+beta;LogLevel = "error" | "warning" | "info" | "trace"
 beta;NodeSelectClauseColumnNames
 beta;NodeSelectClauseProps
 beta;NodeSelectQueryFactory

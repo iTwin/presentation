@@ -23,8 +23,8 @@ import {
   tap,
 } from "rxjs";
 import { HierarchyNode, InstancesNodeKey, ProcessedCustomHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../../HierarchyNode";
-import { getLogger } from "../../Logging";
-import { createOperatorLoggingNamespace, hasChildren, mergeNodes } from "../Common";
+import { createNodeIdentifierForLogging, createOperatorLoggingNamespace, hasChildren, mergeNodes } from "../Common";
+import { doLog, log } from "../LoggingUtils";
 
 const OPERATOR_NAME = "HideNodesInHierarchy";
 /** @internal */
@@ -41,7 +41,7 @@ export function createHideNodesInHierarchyOperator(
 ) {
   return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
     const sharedNodes = nodes.pipe(
-      log((n) => `in: ${n.label}`),
+      log({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ (n) => `in: ${createNodeIdentifierForLogging(n)}` }),
       subscribeOn(asapScheduler),
       share(),
     );
@@ -53,13 +53,16 @@ export function createHideNodesInHierarchyOperator(
     // Defer to create a new seed for reduce on every subscribe
     const withLoadedChildren = defer(() =>
       withFlag.pipe(
-        log((n) => `${n.label} needs hide and needs children to be loaded`),
+        log({
+          category: LOGGING_NAMESPACE,
+          message: /* istanbul ignore next */ (n) => `${createNodeIdentifierForLogging(n)} needs hide and needs children to be loaded`,
+        }),
         filter((node) => node.children !== false),
         reduce((acc, node) => {
           addToMergeMap(acc, node);
           return acc;
         }, new Map() as LabelMergeMap),
-        log((mm) => `created a merge map of size ${mm.size}`),
+        log({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ (mm) => `created a merge map of size ${mm.size}` }),
         tap((_mm: LabelMergeMap) => {
           // TODO: check if it's worth looking for merged nodes' observables in cache and merging them for parent node
         }),
@@ -70,20 +73,37 @@ export function createHideNodesInHierarchyOperator(
     );
 
     return merge(
-      withoutFlag.pipe(log((n) => `${n.label} doesn't need hide, return the node`)),
+      withoutFlag.pipe(
+        log({
+          category: LOGGING_NAMESPACE,
+          message: /* istanbul ignore next */ (n) => `${createNodeIdentifierForLogging(n)} doesn't need hide, return the node`,
+        }),
+      ),
       stopOnFirstChild
         ? concat(
             // a small hack to handle situation when we're here to only check if parent node has children and one of them has `hideIfNoChildren` flag
             // with a `hasChildren = true` - we just return the hidden node itself in that case to avoid digging deeper into the hierarchy
             sharedNodes.pipe(
               filter(hasChildren),
-              log((n) => `\`stopOnFirstChild = true\` and ${n.label} is set to always have nodes - return the hidden node without loading children`),
+              log({
+                category: LOGGING_NAMESPACE,
+                message: /* istanbul ignore next */ (n) =>
+                  `\`stopOnFirstChild = true\` and node ${createNodeIdentifierForLogging(n)} is set to always have nodes - return the hidden node without loading children`,
+              }),
             ),
-            EMPTY.pipe(finalize(() => doLog(`\`stopOnFirstChild = true\` but none of the nodes had children determined to \`true\` - do load children`))),
+            EMPTY.pipe(
+              finalize(() =>
+                doLog({
+                  category: LOGGING_NAMESPACE,
+                  message: /* istanbul ignore next */ () =>
+                    `\`stopOnFirstChild = true\` but none of the nodes had children determined to \`true\` - do load children`,
+                }),
+              ),
+            ),
             withLoadedChildren,
           ).pipe(take(1))
         : withLoadedChildren,
-    ).pipe(log((n) => `out: ${n.label}`));
+    ).pipe(log({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ (n) => `out: ${createNodeIdentifierForLogging(n)}` }));
   };
 }
 
@@ -106,12 +126,4 @@ function addToMergeMap(list: LabelMergeMap, node: ProcessedCustomHierarchyNode |
   } else {
     list.set(mergeKey, { merged: node, nodes: [node] });
   }
-}
-
-function doLog(msg: string) {
-  getLogger().logTrace(LOGGING_NAMESPACE, msg);
-}
-
-function log<T>(msg: (arg: T) => string) {
-  return tap<T>((n) => doLog(msg(n)));
 }

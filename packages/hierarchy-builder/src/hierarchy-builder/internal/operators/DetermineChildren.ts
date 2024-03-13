@@ -3,10 +3,10 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { concatMap, map, Observable, of, tap } from "rxjs";
+import { concatMap, map, Observable, of } from "rxjs";
 import { ProcessedHierarchyNode } from "../../HierarchyNode";
-import { getLogger } from "../../Logging";
-import { createOperatorLoggingNamespace } from "../Common";
+import { createNodeIdentifierForLogging, createOperatorLoggingNamespace } from "../Common";
+import { log } from "../LoggingUtils";
 
 const OPERATOR_NAME = "DetermineChildren";
 /** @internal */
@@ -20,25 +20,20 @@ export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
 export function createDetermineChildrenOperator(hasNodes: (node: ProcessedHierarchyNode) => Observable<boolean>) {
   return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
     return nodes.pipe(
-      log((n) => `in: ${n.label}`),
+      log({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ (n) => `in: ${createNodeIdentifierForLogging(n)}` }),
       concatMap((n: ProcessedHierarchyNode): Observable<ProcessedHierarchyNode> => {
         if (n.children !== undefined) {
           return of(n);
         }
         return hasNodes(n).pipe(
-          log((hasChildrenFlag) => `determined children for ${n.label}: ${hasChildrenFlag}`),
+          log({
+            category: LOGGING_NAMESPACE,
+            message: /* istanbul ignore next */ (hasChildrenFlag) => `${createNodeIdentifierForLogging(n)}: determined children: ${hasChildrenFlag}`,
+          }),
           map((hasChildrenFlag) => ({ ...n, children: hasChildrenFlag })),
         );
       }),
-      log((n) => `out: ${n.label}`),
+      log({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ (n) => `out: ${createNodeIdentifierForLogging(n)}` }),
     );
   };
-}
-
-function doLog(msg: string) {
-  getLogger().logTrace(LOGGING_NAMESPACE, msg);
-}
-
-function log<T>(msg: (arg: T) => string) {
-  return tap<T>((n) => doLog(msg(n)));
 }

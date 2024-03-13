@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./lib",
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "allowJs": true,
+  },
+  "include": ["src"],
+}
