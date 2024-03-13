@@ -1,0 +1,13 @@
+{
+  "check-coverage": true,
+  "statements": 100,
+  "functions": 100,
+  "branches": 100,
+  "lines": 100,
+  "include": ["src/**/*", "lib/cjs/**/*"],
+  "exclude": ["src/presentation-hierarchies-react.ts", "src/test/**", "lib/test/**"],
+  "extension": [".ts", ".tsx"],
+  "temp-dir": "./lib/test/coverage/.nyc_output",
+  "report-dir": "./lib/test/coverage",
+  "reporter": ["text-summary", "lcov", "cobertura"]
+}
