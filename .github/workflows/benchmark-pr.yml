@@ -40,8 +40,23 @@ jobs:
       - name: Build benchmark tests
         run: pnpm lage build --to presentation-performance-tests
 
+      - name: Restore dataset from cache
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-dataset
+        with:
+          path: "./apps/performance-tests/datasets/*.bim"
+          key: performance-test-dataset-${{ hashFiles(./apps/performance-tests/src/**.ts) }}
+
       - name: Run benchmark tests
         run: pnpm benchmark
+
+      - name: Save generated datasets
+        uses: actions/cache/save@v3
+        if: steps.cache.outputs.cache-hit != 'true'
+        with:
+          path: "./apps/performance-tests/datasets/*.bim"
+          key: performance-test-dataset-${{ hashFiles(./apps/performance-tests/src/**.ts) }}
 
       - name: Post benchmark summary
         uses: jalextowle/github-action-benchmark@35e54a2ea34188ca73481c2a0ce5919907978f4f
