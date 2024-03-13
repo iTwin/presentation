@@ -41,7 +41,8 @@ jobs:
         run: pnpm lage build --to presentation-performance-tests
 
       - name: Restore dataset from cache
-        uses: actions/cache@v3
+        uses: actions/cache/restore@v3
+        id: cache-restore
         env:
           cache-name: cache-dataset
         with:
@@ -53,7 +54,7 @@ jobs:
 
       - name: Save generated datasets
         uses: actions/cache/save@v3
-        if: steps.cache.outputs.cache-hit != 'true'
+        if: steps.cache-restore.outputs.cache-hit != 'true'
         with:
           path: "./apps/performance-tests/datasets/*.bim"
           key: performance-test-dataset-${{ hashFiles('./apps/performance-tests/src/**.ts') }}
