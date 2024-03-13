@@ -47,7 +47,7 @@ jobs:
           cache-name: cache-dataset
         with:
           path: "./apps/performance-tests/datasets/*.bim"
-          key: performance-test-dataset-${{ hashFiles(./apps/performance-tests/src/**.ts) }}
+          key: performance-test-dataset-${{ hashFiles('./apps/performance-tests/src/**.ts') }}
 
       - name: Run benchmark tests
         run: pnpm benchmark
@@ -57,7 +57,7 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         with:
           path: "./apps/performance-tests/datasets/*.bim"
-          key: performance-test-dataset-${{ hashFiles(./apps/performance-tests/src/**.ts) }}
+          key: performance-test-dataset-${{ hashFiles('./apps/performance-tests/src/**.ts') }}
 
       - name: Store benchmark result
         uses: benchmark-action/github-action-benchmark@v1
