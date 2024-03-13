@@ -4,6 +4,95 @@
 
 ```ts
 
+// @beta
+export function createStorage(): SelectionStorage;
+
+// @beta
+export interface CustomSelectable {
+    // @internal
+    data: any;
+    identifier: string;
+    loadInstanceKeys: () => AsyncIterableIterator<SelectableInstanceKey>;
+}
+
+// @beta
+export type Selectable = SelectableInstanceKey | CustomSelectable;
+
+// @beta (undocumented)
+export namespace Selectable {
+    export function isCustom(selectable: Selectable): selectable is CustomSelectable;
+    export function isInstanceKey(selectable: Selectable): selectable is SelectableInstanceKey;
+}
+
+// @beta
+export interface SelectableInstanceKey {
+    className: string;
+    id: string;
+}
+
+// @beta
+export interface Selectables {
+    custom: Map<string, CustomSelectable>;
+    instanceKeys: Map<string, Set<string>>;
+}
+
+// @beta (undocumented)
+export namespace Selectables {
+    export function add(selectables: Selectables, values: Selectable[]): boolean;
+    export function clear(selectables: Selectables): boolean;
+    export function create(source: Selectable[]): Selectables;
+    export function forEach(selectables: Selectables, callback: (selectable: Selectable, index: number) => void): void;
+    export function has(selectables: Selectables, value: Selectable): boolean;
+    export function hasAll(selectables: Selectables, values: Selectable[]): boolean;
+    export function hasAny(selectables: Selectables, values: Selectable[]): boolean;
+    export function isEmpty(selectables: Selectables): boolean;
+    export function remove(selectables: Selectables, values: Selectable[]): boolean;
+    export function size(selectables: Selectables): number;
+    export function some(selectables: Selectables, callback: (selectable: Selectable) => boolean): boolean;
+}
+
+// @beta
+export interface SelectionChangeEvent {
+    addListener(listener: StorageSelectionChangesListener): () => void;
+    removeListener(listener: StorageSelectionChangesListener): void;
+}
+
+// @beta
+export interface SelectionStorage {
+    addToSelection(source: string, iModelKey: string, selectables: Selectable[], level: number): void;
+    clearSelection(source: string, iModelKey: string, level: number): void;
+    clearStorage(iModelKey: string): void;
+    getSelection(iModelKey: string, level: number): Selectables;
+    getSelectionLevels(iModelKey: string): number[];
+    removeFromSelection(source: string, iModelKey: string, selectables: Selectable[], level: number): void;
+    replaceSelection(source: string, iModelKey: string, selectables: Selectable[], level: number): void;
+    selectionChangeEvent: SelectionChangeEvent;
+}
+
+// @beta
+export interface StorageSelectionChangeEventArgs {
+    changeType: StorageSelectionChangeType;
+    iModelKey: string;
+    level: number;
+    selectables: Selectables;
+    source: string;
+    timestamp: Date;
+}
+
+// @beta
+export type StorageSelectionChangesListener = (args: StorageSelectionChangeEventArgs, storage: SelectionStorage) => void;
+
+// @beta
+export type StorageSelectionChangeType =
+/** Added to selection. */
+"add"
+/** Removed from selection. */
+| "remove"
+/** Selection was replaced. */
+| "replace"
+/** Selection was cleared. */
+| "clear";
+
 // (No @packageDocumentation comment for this package)
 
 ```

@@ -9,4 +9,11 @@
  * @docs-group-description UnifiedSelection
  * API for working with unified selection.
  */
-export * from "./unified-selection";
+export * from "./unified-selection/Selectable";
+export * from "./unified-selection/SelectionStorage";
+export {
+  StorageSelectionChangeType,
+  StorageSelectionChangeEventArgs,
+  StorageSelectionChangesListener,
+  SelectionChangeEvent,
+} from "./unified-selection/SelectionChangeEvent";

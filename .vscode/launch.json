@@ -196,6 +196,25 @@
       "env": {
         "NODE_ENV": "development"
       }
+    },
+    {
+      "name": "Tests: Unified selection",
+      "cwd": "${workspaceFolder}/packages/unified-selection",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/packages/unified-selection/node_modules/mocha/bin/_mocha",
+      "args": [
+        "--config",
+        "./.mocharc.json",
+        "--no-timeouts",
+        "lib/cjs/test/**/*.test.js"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/packages/unified-selection/lib/**/*.js"
+      ],
+      "env": {
+        "NODE_ENV": "development"
+      }
     }
   ],
   "compounds": [
