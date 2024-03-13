@@ -25,6 +25,7 @@ export interface UnifiedSelectionContainer {
 
 export interface UnifiedSelectionStore {
   onChange: EventLike<UnifiedSelectionContainer>;
+  container: UnifiedSelectionContainer;
 }
 
 interface Props {
@@ -33,9 +34,9 @@ interface Props {
 
 export function UnifiedSelectionContextProvider({ store, children }: PropsWithChildren<Props>) {
   const [value, setValue] = useState<UnifiedSelectionContext>({
-    has: () => false,
-    add: () => {},
-    remove: () => {},
+    has: (keys) => store.container.has(keys),
+    add: (keys) => store.container.add(keys),
+    remove: (keys) => store.container.remove(keys),
   });
 
   useEffect(() => {
