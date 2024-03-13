@@ -3,14 +3,21 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ReactElement, useCallback, useEffect, useState } from "react";
+import { ReactElement, useCallback, useEffect, useMemo, useState } from "react";
 import { useDebouncedAsyncValue } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { SvgFolder, SvgImodelHollow, SvgItem, SvgLayers, SvgModel } from "@itwin/itwinui-icons-react";
 import { Flex, ProgressRadial, SearchBox, Text, ToggleSwitch } from "@itwin/itwinui-react";
-import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
+import { ClassInfo, Descriptor } from "@itwin/presentation-common";
+import {
+  PresentationInstanceFilter,
+  PresentationInstanceFilterDialog,
+  PresentationInstanceFilterInfo,
+  PresentationInstanceFilterPropertiesSource,
+} from "@itwin/presentation-components";
+import { createECSqlQueryExecutor, createHierarchyLevelDescriptor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
 import {
   HierarchyLevelFilteringOptions,
@@ -23,9 +30,11 @@ import {
 } from "@itwin/presentation-hierarchies-react";
 import {
   createLimitingECSqlQueryExecutor,
+  GenericInstanceFilter,
   HierarchyProvider,
   ILimitingECSqlQueryExecutor,
   IMetadataProvider,
+  NonGroupingHierarchyNode,
   TypedPrimitiveValue,
 } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
@@ -133,10 +142,39 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
     treeProps.reloadTree();
   };
 
-  const onFilter = useCallback((info: HierarchyLevelFilteringOptions) => {
-    // eslint-disable-next-line no-console
-    console.log(info);
-  }, []);
+  const [filteringOptions, setFilteringOptions] = useState<HierarchyLevelFilteringOptions>();
+  const propertiesSource = useMemo<(() => Promise<PresentationInstanceFilterPropertiesSource>) | undefined>(() => {
+    if (!hierarchyProvider || !filteringOptions) {
+      return undefined;
+    }
+
+    return async () => {
+      const result = await createHierarchyLevelDescriptor({
+        descriptorBuilder: Presentation.presentation,
+        hierarchyProvider,
+        imodel,
+        parentNode: filteringOptions.hierarchyNode as NonGroupingHierarchyNode,
+      });
+
+      if (!result) {
+        throw new Error("Failed to create descriptor");
+      }
+
+      return {
+        descriptor: result.descriptor,
+        inputKeys: result.inputKeys,
+      };
+    };
+  }, [filteringOptions, imodel, hierarchyProvider]);
+
+  const getInitialFilter = useMemo(() => {
+    const currentFilter = filteringOptions?.currentFilter;
+    if (!currentFilter) {
+      return undefined;
+    }
+
+    return (descriptor: Descriptor) => fromGenericFilter(descriptor, currentFilter);
+  }, [filteringOptions]);
 
   const renderContent = () => {
     if (rootNodes === undefined || isLoading || isFiltering) {
@@ -157,7 +195,7 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
 
     return (
       <Flex.Item alignSelf="flex-start" style={{ width: "100%", overflow: "auto" }}>
-        <TreeRenderer rootNodes={rootNodes} {...treeProps} onFilterClick={onFilter} getIcon={getIcon} />
+        <TreeRenderer rootNodes={rootNodes} {...treeProps} onFilterClick={setFilteringOptions} getIcon={getIcon} />
       </Flex.Item>
     );
   };
@@ -169,6 +207,19 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
         <ToggleSwitch onChange={toggleFormatter} checked={shouldUseCustomFormatter} />
       </Flex>
       {renderContent()}
+      <PresentationInstanceFilterDialog
+        imodel={imodel}
+        isOpen={!!filteringOptions}
+        onApply={(info) => {
+          filteringOptions?.applyFilter(toGenericFilter(info));
+          setFilteringOptions(undefined);
+        }}
+        onClose={() => {
+          setFilteringOptions(undefined);
+        }}
+        propertiesSource={propertiesSource}
+        initialFilter={getInitialFilter}
+      />
     </Flex>
   );
 }
@@ -177,37 +228,37 @@ async function customFormatter(val: TypedPrimitiveValue) {
   return `THIS_IS_FORMATTED_${val ? JSON.stringify(val.value) : ""}_THIS_IS_FORMATTED`;
 }
 
-// function fromGenericFilter(descriptor: Descriptor, filter: GenericInstanceFilter): PresentationInstanceFilterInfo {
-//   const presentationFilter =
-//     GenericInstanceFilter.isFilterRuleGroup(filter.rules) && filter.rules.rules.length === 0
-//       ? undefined
-//       : PresentationInstanceFilter.fromGenericInstanceFilter(descriptor, filter);
-//   return {
-//     filter: presentationFilter,
-//     usedClasses: (filter.filteredClassNames ?? [])
-//       .map((name) => descriptor.selectClasses.find((selectClass) => selectClass.selectClassInfo.name === name)?.selectClassInfo)
-//       .filter((classInfo): classInfo is ClassInfo => classInfo !== undefined),
-//   };
-// }
+function fromGenericFilter(descriptor: Descriptor, filter: GenericInstanceFilter): PresentationInstanceFilterInfo {
+  const presentationFilter =
+    GenericInstanceFilter.isFilterRuleGroup(filter.rules) && filter.rules.rules.length === 0
+      ? undefined
+      : PresentationInstanceFilter.fromGenericInstanceFilter(descriptor, filter);
+  return {
+    filter: presentationFilter,
+    usedClasses: (filter.filteredClassNames ?? [])
+      .map((name) => descriptor.selectClasses.find((selectClass) => selectClass.selectClassInfo.name === name)?.selectClassInfo)
+      .filter((classInfo): classInfo is ClassInfo => classInfo !== undefined),
+  };
+}
 
-// function toGenericFilter(filterInfo?: PresentationInstanceFilterInfo): GenericInstanceFilter | undefined {
-//   if (!filterInfo) {
-//     return undefined;
-//   }
+function toGenericFilter(filterInfo?: PresentationInstanceFilterInfo): GenericInstanceFilter | undefined {
+  if (!filterInfo) {
+    return undefined;
+  }
 
-//   if (!filterInfo.filter) {
-//     return filterInfo.usedClasses.length > 0
-//       ? {
-//           propertyClassNames: [],
-//           relatedInstances: [],
-//           filteredClassNames: filterInfo.usedClasses.map((info) => info.name),
-//           rules: { operator: "and", rules: [] },
-//         }
-//       : undefined;
-//   }
+  if (!filterInfo.filter) {
+    return filterInfo.usedClasses.length > 0
+      ? {
+          propertyClassNames: [],
+          relatedInstances: [],
+          filteredClassNames: filterInfo.usedClasses.map((info) => info.name),
+          rules: { operator: "and", rules: [] },
+        }
+      : undefined;
+  }
 
-//   return PresentationInstanceFilter.toGenericInstanceFilter(filterInfo.filter, filterInfo.usedClasses);
-// }
+  return PresentationInstanceFilter.toGenericInstanceFilter(filterInfo.filter, filterInfo.usedClasses);
+}
 
 function getIcon(node: PresentationHierarchyNode): ReactElement | undefined {
   if (node.extendedData?.imageId === undefined) {
