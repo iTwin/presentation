@@ -13,16 +13,19 @@ const unifiedSelectionContext = createContext<UnifiedSelectionContext>({
   remove: () => {},
 });
 
+/** @beta */
 export interface EventLike<TArgs> {
   addListener: (listener: (args: TArgs) => void) => () => void;
 }
 
+/** @beta */
 export interface UnifiedSelectionContainer {
   add: (keys: Key[]) => void;
   remove: (keys: Key[]) => void;
   has: (keys: Key[]) => boolean;
 }
 
+/** @beta */
 export interface UnifiedSelectionStore {
   onChange: EventLike<UnifiedSelectionContainer>;
   container: UnifiedSelectionContainer;
@@ -32,6 +35,7 @@ interface Props {
   store: UnifiedSelectionStore;
 }
 
+/** @beta */
 export function UnifiedSelectionContextProvider({ store, children }: PropsWithChildren<Props>) {
   const [value, setValue] = useState<UnifiedSelectionContext>({
     has: (keys) => store.container.has(keys),
@@ -52,6 +56,7 @@ export function UnifiedSelectionContextProvider({ store, children }: PropsWithCh
   return <unifiedSelectionContext.Provider value={value}>{children}</unifiedSelectionContext.Provider>;
 }
 
+/** @internal */
 export function useUnifiedSelectionContext() {
   return useContext(unifiedSelectionContext);
 }

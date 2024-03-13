@@ -22,14 +22,16 @@
     "name": "Bentley Systems, Inc.",
     "url": "http://www.bentley.com"
   },
-  "main": "lib/presentation-hierarchies-react.js",
-  "module": "lib/presentation-hierarchies-react.js",
-  "types": "lib/presentation-hierarchies-react.d.ts",
+  "main": "lib/cjs/presentation-hierarchies-react.js",
+  "module": "lib/esm/presentation-hierarchies-react.js",
+  "types": "lib/cjs/presentation-hierarchies-react.d.ts",
   "scripts": {
-    "build": "npm run -s copy && npm run -s build:tsc",
-    "build:tsc": "tsc",
-    "build:watch": "npm run -s build:tsc -- -w",
-    "copy": "cpx \"./src/**/*.{css,json}\" ./lib",
+    "build": "npm run -s build:cjs && npm run -s build:esm",
+    "build:cjs": "npm run -s copy:cjs && tsc -p tsconfig.cjs.json",
+    "build:esm": "npm run -s copy:esm && tsc -p tsconfig.esm.json",
+    "build:watch": "npm run -s build:esm -- -w",
+    "copy:cjs": "cpx \"./src/**/*.{css,json}\" ./lib/cjs",
+    "copy:esm": "cpx \"./src/**/*.{css,json}\" ./lib/esm",
     "clean": "rimraf lib build",
     "cover": "nyc npm -s test",
     "lint": "eslint ./src/**/*.{ts,tsx}",
@@ -54,6 +56,7 @@
     "react-dom": "^17.0.0 || ^18.0.0"
   },
   "devDependencies": {
+    "@itwin/build-tools": "^4.4.0",
     "@testing-library/react": "^14.2.1",
     "@testing-library/user-event": "^14.5.2",
     "@types/chai": "^4.3.11",

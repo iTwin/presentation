@@ -17,6 +17,7 @@ interface TreeRendererProps extends Omit<ReturnType<typeof useTree>, "rootNodes"
   getIcon?: (node: PresentationHierarchyNode) => ReactElement | undefined;
 }
 
+/** @beta */
 export function TreeRenderer({
   rootNodes,
   expandNode,
