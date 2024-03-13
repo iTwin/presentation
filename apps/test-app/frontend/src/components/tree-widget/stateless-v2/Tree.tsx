@@ -3,14 +3,24 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { useCallback, useEffect, useState } from "react";
+import { ReactElement, useCallback, useEffect, useState } from "react";
 import { useDebouncedAsyncValue } from "@itwin/components-react";
 import { IModelConnection } from "@itwin/core-frontend";
 import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
+import { SvgFolder, SvgImodelHollow, SvgItem, SvgLayers, SvgModel } from "@itwin/itwinui-icons-react";
 import { Flex, ProgressRadial, SearchBox, Text, ToggleSwitch } from "@itwin/itwinui-react";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import { HierarchyLevelFilteringOptions, TreeRenderer, useTree } from "@itwin/presentation-hierarchies-react";
+import { Presentation } from "@itwin/presentation-frontend";
+import {
+  HierarchyLevelFilteringOptions,
+  PresentationHierarchyNode,
+  TreeRenderer,
+  UnifiedSelectionContainer,
+  UnifiedSelectionContextProvider,
+  UnifiedSelectionStore,
+  useUnifiedSelectionTree,
+} from "@itwin/presentation-hierarchies-react";
 import {
   createLimitingECSqlQueryExecutor,
   HierarchyProvider,
@@ -25,7 +35,36 @@ interface MetadataProviders {
   metadataProvider: IMetadataProvider;
 }
 
-export function StatelessTreeV2({ imodel, height, width }: { imodel: IModelConnection; height: number; width: number }) {
+function createUnifiedSelectionStore(source: string, imodel: IModelConnection): UnifiedSelectionStore {
+  const container: UnifiedSelectionContainer = {
+    add: (keys) => Presentation.selection.addToSelection(source, imodel, keys),
+    remove: (keys) => Presentation.selection.removeFromSelection(source, imodel, keys),
+    has: (keys) => Presentation.selection.getSelection(imodel).hasAny(keys),
+  };
+
+  return {
+    onChange: {
+      addListener: (listener) => Presentation.selection.selectionChange.addListener(() => listener(container)),
+    },
+    container,
+  };
+}
+
+export function StatelessTreeV2(props: { imodel: IModelConnection; height: number; width: number }) {
+  const [unifiedSelectionStore, setUnifiedSelectionStore] = useState(() => createUnifiedSelectionStore("statelessTreeV2", props.imodel));
+
+  useEffect(() => {
+    setUnifiedSelectionStore(createUnifiedSelectionStore("statelessTreeV2", props.imodel));
+  }, [props.imodel]);
+
+  return (
+    <UnifiedSelectionContextProvider store={unifiedSelectionStore}>
+      <Tree {...props} />
+    </UnifiedSelectionContextProvider>
+  );
+}
+
+function Tree({ imodel, height, width }: { imodel: IModelConnection; height: number; width: number }) {
   const [metadata, setMetadata] = useState<MetadataProviders>();
   const [hierarchyProvider, setHierarchyProvider] = useState<HierarchyProvider>();
   const [filter, setFilter] = useState("");
@@ -79,7 +118,7 @@ export function StatelessTreeV2({ imodel, height, width }: { imodel: IModelConne
     );
   }, [metadata, filteredPaths]);
 
-  const { rootNodes, isLoading, ...treeProps } = useTree({
+  const { rootNodes, isLoading, ...treeProps } = useUnifiedSelectionTree({
     hierarchyProvider,
   });
 
@@ -95,6 +134,7 @@ export function StatelessTreeV2({ imodel, height, width }: { imodel: IModelConne
   };
 
   const onFilter = useCallback((info: HierarchyLevelFilteringOptions) => {
+    // eslint-disable-next-line no-console
     console.log(info);
   }, []);
 
@@ -117,7 +157,7 @@ export function StatelessTreeV2({ imodel, height, width }: { imodel: IModelConne
 
     return (
       <Flex.Item alignSelf="flex-start" style={{ width: "100%", overflow: "auto" }}>
-        <TreeRenderer rootNodes={rootNodes} {...treeProps} onFilterClick={onFilter} />
+        <TreeRenderer rootNodes={rootNodes} {...treeProps} onFilterClick={onFilter} getIcon={getIcon} />
       </Flex.Item>
     );
   };
@@ -169,22 +209,28 @@ async function customFormatter(val: TypedPrimitiveValue) {
 //   return PresentationInstanceFilter.toGenericInstanceFilter(filterInfo.filter, filterInfo.usedClasses);
 // }
 
-// function getIcon(icon: "icon-layers" | "icon-item" | "icon-ec-class" | "icon-imodel-hollow-2" | "icon-folder" | "icon-model") {
-//   switch (icon) {
-//     case "icon-layers":
-//       return <SvgLayers />;
-//     case "icon-item":
-//       return <SvgItem />;
-//     case "icon-ec-class":
-//       return <SvgItem />;
-//     case "icon-imodel-hollow-2":
-//       return <SvgImodelHollow />;
-//     case "icon-folder":
-//       return <SvgFolder />;
-//     case "icon-model":
-//       return <SvgModel />;
-//   }
-// }
+function getIcon(node: PresentationHierarchyNode): ReactElement | undefined {
+  if (node.extendedData?.imageId === undefined) {
+    return undefined;
+  }
+
+  switch (node.extendedData.imageId) {
+    case "icon-layers":
+      return <SvgLayers />;
+    case "icon-item":
+      return <SvgItem />;
+    case "icon-ec-class":
+      return <SvgItem />;
+    case "icon-imodel-hollow-2":
+      return <SvgImodelHollow />;
+    case "icon-folder":
+      return <SvgFolder />;
+    case "icon-model":
+      return <SvgModel />;
+  }
+
+  return undefined;
+}
 
 // type TreeProps<T> = ComponentPropsWithoutRef<typeof Tree<T>>;
 // type TreeNodeProps = ComponentPropsWithoutRef<typeof TreeNode>;

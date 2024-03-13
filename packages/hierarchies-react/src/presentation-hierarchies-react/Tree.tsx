@@ -5,15 +5,16 @@
 
 import "./Tree.css";
 import cx from "classnames";
-import { ComponentPropsWithoutRef, useCallback } from "react";
+import { ComponentPropsWithoutRef, ReactElement, useCallback } from "react";
 import { SvgFilter, SvgFilterHollow, SvgRemove } from "@itwin/itwinui-icons-react";
 import { Button, IconButton, ProgressRadial, Tree, TreeNode } from "@itwin/itwinui-react";
-import { isPresentationHierarchyNode, PresentationTreeNode } from "./Types";
+import { isPresentationHierarchyNode, PresentationHierarchyNode, PresentationTreeNode } from "./Types";
 import { HierarchyLevelFilteringOptions, useTree } from "./UseTree";
 
 interface TreeRendererProps extends Omit<ReturnType<typeof useTree>, "rootNodes" | "isLoading"> {
   rootNodes: PresentationTreeNode[];
   onFilterClick: (filteringInfo: HierarchyLevelFilteringOptions) => void;
+  getIcon?: (node: PresentationHierarchyNode) => ReactElement | undefined;
 }
 
 export function TreeRenderer({
@@ -25,6 +26,7 @@ export function TreeRenderer({
   getHierarchyLevelFilteringOptions,
   removeHierarchyLevelFilter,
   onFilterClick,
+  getIcon,
 }: TreeRendererProps) {
   const nodeRenderer = useCallback<TreeProps<PresentationTreeNode>["nodeRenderer"]>(
     ({ node, ...restProps }) => {
@@ -40,6 +42,7 @@ export function TreeRenderer({
             onSelected={(_, isSelected) => {
               selectNode(node.id, isSelected);
             }}
+            icon={getIcon ? getIcon(node) : undefined}
           >
             {node.isFiltered ? (
               <IconButton
@@ -83,7 +86,7 @@ export function TreeRenderer({
       }
       return <TreeNode {...restProps} label={node.message} isDisabled={true} onExpanded={() => {}} />;
     },
-    [expandNode, selectNode, setHierarchyLevelLimit, getHierarchyLevelFilteringOptions, removeHierarchyLevelFilter, onFilterClick],
+    [expandNode, selectNode, setHierarchyLevelLimit, getHierarchyLevelFilteringOptions, removeHierarchyLevelFilter, onFilterClick, getIcon],
   );
 
   const getNode = useCallback<TreeProps<PresentationTreeNode>["getNode"]>(
