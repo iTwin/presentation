@@ -8,23 +8,31 @@ import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
 import { run } from "./util/TestUtilities";
 
 describe("stateless hierarchy", () => {
-  let iModel: SnapshotDb;
+  let baytown: SnapshotDb;
+  let largeFlat: SnapshotDb;
 
   beforeEach(() => {
-    iModel = SnapshotDb.openFile(Datasets.bayTown);
+    baytown = SnapshotDb.openFile(Datasets.bayTown);
+    largeFlat = SnapshotDb.openFile(Datasets.largeFlat);
   });
 
   afterEach(() => {
-    iModel.close();
+    baytown.close();
+    largeFlat.close();
   });
 
   run("loads initial hierarchy", async () => {
-    const provider = new StatelessHierarchyProvider(iModel);
+    const provider = new StatelessHierarchyProvider(baytown);
     await provider.loadInitialHierarchy();
   });
 
   run("loads full hierarchy", async () => {
-    const provider = new StatelessHierarchyProvider(iModel);
+    const provider = new StatelessHierarchyProvider(baytown);
+    await provider.loadFullHierarchy();
+  });
+
+  run("loads large flat hierarchy", async () => {
+    const provider = new StatelessHierarchyProvider(largeFlat, "unbounded");
     await provider.loadFullHierarchy();
   });
 });

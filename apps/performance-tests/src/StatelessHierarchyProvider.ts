@@ -14,9 +14,10 @@ export class StatelessHierarchyProvider {
 
   constructor(
     iModelDb: IModelDb,
+    rowLimit: number | "unbounded" = 1000,
     private readonly _nodeRequestLimit = 10,
   ) {
-    this._provider = createProvider(iModelDb);
+    this._provider = createProvider(iModelDb, rowLimit);
   }
 
   public async loadInitialHierarchy(): Promise<void> {
@@ -45,7 +46,7 @@ export class StatelessHierarchyProvider {
   }
 }
 
-function createProvider(iModelDb: IModelDb) {
+function createProvider(iModelDb: IModelDb, rowLimit: number | "unbounded") {
   const schemas = new SchemaContext();
   const locater = new SchedulingSchemaLocater(iModelDb);
   schemas.addLocater(locater);
@@ -54,7 +55,7 @@ function createProvider(iModelDb: IModelDb) {
   return new HierarchyProvider({
     metadataProvider,
     hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider }),
-    queryExecutor: createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(iModelDb), 1000),
+    queryExecutor: createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(iModelDb), rowLimit),
   });
 }
 

@@ -4,9 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 import fs from "fs";
 import path from "path";
-import { ElementOwnsChildElements, GraphicalElement3d, StandaloneDb } from "@itwin/core-backend";
-import { BisCodeSpec, Code, PhysicalElementProps } from "@itwin/core-common";
-import { insertPhysicalModelWithPartition, insertSpatialCategory } from "./util/IModelUtilities";
+import { createIModel, insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "./util/IModelUtilities";
 
 export class Datasets {
   private static readonly _iModels: { baytown?: string; largeFlat?: string } = {};
@@ -63,24 +61,22 @@ async function downloadDataset(name: string, downloadUrl: string, localPath: str
   await response.body!.pipeTo(fs.WriteStream.toWeb(fs.createWriteStream(localPath)));
 }
 
-function createLargeFlatIModel(name: string, localPath: string, numElements: number = 10000) {
+async function createLargeFlatIModel(name: string, localPath: string, numElements: number = 10000) {
   console.log("Creating large flat iModel...");
-  const iModel = StandaloneDb.createEmpty(localPath, { rootSubject: { name }, allowEdit: "1" });
-  const modelId = insertPhysicalModelWithPartition(iModel, "");
-  const codeSpec = iModel.codeSpecs.getByName(BisCodeSpec.physicalType);
-  const code = new Code({ scope: modelId, spec: codeSpec.id });
-  const props: PhysicalElementProps = {
-    classFullName: GraphicalElement3d.classFullName,
-    code,
-    category: insertSpatialCategory(iModel, "My Category"),
-    model: modelId,
-    parent: new ElementOwnsChildElements(modelId),
-  };
-  for (let i = 0; i < numElements; ++i) {
-    // const code = new Code({ spec: codeSpec.id, scope: modelId, value: `Element ${i}` });
-    code.value = `Element_${i}`;
-    iModel.elements.insertElement(props);
-  }
-  iModel.close();
+
+  await createIModel(name, localPath, (iModel) => {
+    const categoryKey = insertSpatialCategory({ iModel, fullClassNameSeparator: ":", codeValue: "My Category" });
+    const modelKey = insertPhysicalModelWithPartition({ iModel, fullClassNameSeparator: ":", codeValue: "My Model" });
+    for (let i = 0; i < numElements; ++i) {
+      insertPhysicalElement({
+        iModel,
+        fullClassNameSeparator: ":",
+        userLabel: "My Element",
+        modelId: modelKey.id,
+        categoryId: categoryKey.id,
+      });
+    }
+  });
+
   console.log("Done!");
 }
