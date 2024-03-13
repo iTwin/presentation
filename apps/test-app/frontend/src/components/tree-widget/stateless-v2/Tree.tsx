@@ -282,6 +282,3 @@ function getIcon(node: PresentationHierarchyNode): ReactElement | undefined {
 
   return undefined;
 }
-
-// type TreeProps<T> = ComponentPropsWithoutRef<typeof Tree<T>>;
-// type TreeNodeProps = ComponentPropsWithoutRef<typeof TreeNode>;
