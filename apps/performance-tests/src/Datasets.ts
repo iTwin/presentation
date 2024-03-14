@@ -8,29 +8,34 @@ import path from "path";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { createIModel } from "./util/IModelUtilities";
 
-const LARGE_FLAT_IMODEL_SIZE = 50_000;
-const BAYTOWN_DOWNLOAD_URL = "https://github.com/imodeljs/desktop-starter/raw/master/assets/Baytown.bim";
+export const IMODEL_NAMES = ["baytown", "50k elements"] as const;
+export type IModelName = (typeof IMODEL_NAMES)[number];
+export type IModelPathsMap = { [_ in IModelName]?: string };
 
-export type IModelNames = "baytown" | "50k elements";
-export type IModelPathsMap = { [name in IModelNames]?: string };
+const BAYTOWN_DOWNLOAD_URL = "https://github.com/imodeljs/desktop-starter/raw/master/assets/Baytown.bim";
 
 export class Datasets {
   private static readonly _iModels: IModelPathsMap = {};
 
-  public static getIModelPath(name: IModelNames): string {
+  public static getIModelPath(name: IModelName): string {
     return this.verifyInitialized(this._iModels[name]);
   }
 
   public static async initialize(datasetsDirPath: string) {
     await fs.promises.mkdir(datasetsDirPath, { recursive: true });
+    const promises = IMODEL_NAMES.map(async (key) => {
+      if (key === "baytown") {
+        this._iModels[key] = await createIfMissing(key, datasetsDirPath, async (name: string, localPath: string) =>
+          downloadDataset(name, BAYTOWN_DOWNLOAD_URL, localPath),
+        );
+        return;
+      }
 
-    const [baytown, iModel50k] = await Promise.all([
-      createIfMissing("Baytown", datasetsDirPath, async (name: string, localPath: string) => downloadDataset(name, BAYTOWN_DOWNLOAD_URL, localPath)),
-      createIfMissing("iModel50k", datasetsDirPath, createiModel50kIModel),
-    ]);
-
-    this._iModels.baytown = baytown;
-    this._iModels["50k elements"] = iModel50k;
+      const count = 1000 * Number.parseInt(/(\d+)k elements/.exec(key)![1], 10);
+      const iModelPath = await createIfMissing(key, datasetsDirPath, async (name: string, localPath: string) => createFlatIModel(name, localPath, count));
+      this._iModels[key] = iModelPath;
+    });
+    await Promise.all(promises);
   }
 
   private static verifyInitialized<T>(arg: T | undefined): T {
@@ -61,22 +66,22 @@ async function downloadDataset(name: string, downloadUrl: string, localPath: str
   await response.body!.pipeTo(fs.WriteStream.toWeb(fs.createWriteStream(localPath)));
 }
 
-async function createiModel50kIModel(name: string, localPath: string) {
-  console.log("Creating large flat iModel...");
+async function createFlatIModel(name: string, localPath: string, numElements: number) {
+  console.log(`${numElements} elements: Creating...`);
 
   await createIModel(name, localPath, (builder) => {
     const { id: categoryId } = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
     const { id: modelId } = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });
-    for (let i = 0; i < LARGE_FLAT_IMODEL_SIZE; ++i) {
+    for (let i = 0; i < numElements; ++i) {
       insertPhysicalElement({
         builder,
         fullClassNameSeparator: ":",
-        userLabel: "My Element",
+        userLabel: `Element_${i}`,
         modelId,
         categoryId,
       });
     }
   });
 
-  console.log("Done!");
+  console.log(`${numElements} elements: Done.`);
 }
