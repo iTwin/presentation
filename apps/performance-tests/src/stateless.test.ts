@@ -4,10 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IModelDb, PhysicalElement, SnapshotDb } from "@itwin/core-backend";
-import { IMetadataProvider } from "@itwin/presentation-hierarchy-builder";
+import { IMetadataProvider, NodeSelectQueryFactory } from "@itwin/presentation-hierarchy-builder";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { Datasets } from "./Datasets";
-import { SpecificClassHierarchyDefinitionFactory } from "./SpecificClassHierarchyDefinitionFactory";
 import { ProviderOptions, StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
 import { run } from "./util/TestUtilities";
 
@@ -39,7 +38,30 @@ run("flat 50k elements list", {
     return {
       iModel,
       rowLimit: "unbounded",
-      getHierarchyFactory: (metadataProvider) => new SpecificClassHierarchyDefinitionFactory({ className, metadataProvider }),
+      getHierarchyFactory: (metadataProvider) => ({
+        async defineHierarchyLevel(props) {
+          if (props.parentNode) {
+            return [];
+          }
+
+          const query = new NodeSelectQueryFactory(metadataProvider);
+          return [
+            {
+              fullClassName: className,
+              query: {
+                ecsql: `
+                  SELECT ${await query.createSelectClause({
+                    ecClassId: { selector: `this.ECClassId` },
+                    ecInstanceId: { selector: `this.ECInstanceId` },
+                    nodeLabel: { selector: `this.UserLabel` },
+                  })}
+                  FROM ${className} AS this
+                `,
+              },
+            },
+          ];
+        },
+      }),
     };
   },
   test: async (providerProps) => {
