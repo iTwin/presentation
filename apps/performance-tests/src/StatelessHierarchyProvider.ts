@@ -50,6 +50,14 @@ export class StatelessHierarchyProvider {
     });
   }
 
+  private createMetadataProvider() {
+    const iModel = this._props.iModel;
+    const schemas = new SchemaContext();
+    const locater = new IModelDbSchemaLocater(iModel);
+    schemas.addLocater(locater);
+    return createMetadataProvider(schemas);
+  }
+
   private createProvider() {
     const metadataProvider = this._props.metadataProvider ?? this.createMetadataProvider();
     const rowLimit = this._props.rowLimit ?? DEFAULT_ROW_LIMIT;
@@ -59,14 +67,6 @@ export class StatelessHierarchyProvider {
       hierarchyDefinition: this._props.hierarchyDefinition ?? new ModelsTreeDefinition({ metadataProvider }),
       queryExecutor: createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(this._props.iModel), rowLimit),
     });
-  }
-
-  private createMetadataProvider() {
-    const iModel = this._props.iModel;
-    const schemas = new SchemaContext();
-    const locater = new IModelDbSchemaLocater(iModel);
-    schemas.addLocater(locater);
-    return createMetadataProvider(schemas);
   }
 }
 
