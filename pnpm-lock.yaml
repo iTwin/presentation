@@ -1281,16 +1281,10 @@ importers:
       '@itwin/core-common':
         specifier: ^4.4.0
         version: 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-geometry@4.4.0)
-      mocha:
-        specifier: ^10.3.0
-        version: 10.3.0
     devDependencies:
       '@itwin/eslint-plugin':
         specifier: 4.0.0-dev.48
         version: 4.0.0-dev.48(eslint@8.56.0)(typescript@5.0.4)
-      '@types/mocha':
-        specifier: ^10.0.6
-        version: 10.0.6
       '@types/node':
         specifier: ^18.17.7
         version: 18.17.7
