@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 import fs from "fs";
 import path from "path";
-import { createIModel, insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "./util/IModelUtilities";
+import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities/lib/IModelUtils";
+import { createIModel } from "./util/IModelUtilities";
 
 const LARGE_FLAT_IMODEL_SIZE = 50_000;
 const BAYTOWN_DOWNLOAD_URL = "https://github.com/imodeljs/desktop-starter/raw/master/assets/Baytown.bim";
@@ -63,16 +64,16 @@ async function downloadDataset(name: string, downloadUrl: string, localPath: str
 async function createLargeFlatIModel(name: string, localPath: string) {
   console.log("Creating large flat iModel...");
 
-  await createIModel(name, localPath, (iModel) => {
-    const categoryKey = insertSpatialCategory({ iModel, fullClassNameSeparator: ":", codeValue: "My Category" });
-    const modelKey = insertPhysicalModelWithPartition({ iModel, fullClassNameSeparator: ":", codeValue: "My Model" });
+  await createIModel(name, localPath, (builder) => {
+    const { id: categoryId } = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
+    const { id: modelId } = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });
     for (let i = 0; i < LARGE_FLAT_IMODEL_SIZE; ++i) {
       insertPhysicalElement({
-        iModel,
+        builder,
         fullClassNameSeparator: ":",
         userLabel: "My Element",
-        modelId: modelKey.id,
-        categoryId: categoryKey.id,
+        modelId,
+        categoryId,
       });
     }
   });
