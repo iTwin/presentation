@@ -4,31 +4,24 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { IModelConnection } from "@itwin/core-frontend";
-import { PresentationError, PresentationStatus } from "@itwin/presentation-common";
-import { PresentationInstanceFilterPropertiesSource } from "@itwin/presentation-components";
-import { createHierarchyLevelDescriptor } from "@itwin/presentation-core-interop";
-import { Presentation } from "@itwin/presentation-frontend";
 import { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
 import { TreeActions, TreeState } from "./internal/TreeActions";
 import { isHierarchyNodeSelected, isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelRootNode } from "./internal/TreeModel";
 import { useUnifiedTreeSelection } from "./internal/UseUnifiedSelection";
 import { PresentationTreeNode } from "./Types";
 
-/** @beta */
-export interface UseTreeProps {
+interface UseTreeProps {
   hierarchyProvider?: HierarchyProvider;
 }
 
 /** @beta */
 export interface HierarchyLevelFilteringOptions {
-  getDescriptor: (imodel: IModelConnection) => Promise<PresentationInstanceFilterPropertiesSource>;
+  hierarchyNode: HierarchyNode | undefined;
   applyFilter: (filter?: GenericInstanceFilter) => void;
   currentFilter?: GenericInstanceFilter;
 }
 
-/** @beta */
-export interface UseTreeResult {
+interface UseTreeResult {
   /**
    * Array containing root tree nodes. It is `undefined` on initial render until any nodes are loaded.
    */
@@ -59,8 +52,7 @@ export function useUnifiedSelectionTree(props: UseTreeProps): UseTreeResult {
   return { ...rest, ...useUnifiedTreeSelection({ getNode }) };
 }
 
-/** @internal */
-export function useTreeInternal({
+function useTreeInternal({
   hierarchyProvider,
 }: UseTreeProps): UseTreeResult & { getNode: (nodeId: string) => TreeModelRootNode | TreeModelHierarchyNode | undefined } {
   const [state, setState] = useState<TreeState>({
@@ -112,35 +104,17 @@ export function useTreeInternal({
   const getHierarchyLevelFilteringOptions = useCallback(
     (nodeId: string | undefined) => {
       const node = actions.getNode(nodeId);
-      if (!hierarchyProvider || !node) {
+      if (!node) {
         return undefined;
       }
       const hierarchyNode = isTreeModelHierarchyNode(node) ? node.nodeData : undefined;
       if (hierarchyNode && HierarchyNode.isGroupingNode(hierarchyNode)) {
-        return;
+        return undefined;
       }
 
       const currentFilter = node.instanceFilter;
       const filteringOptions: HierarchyLevelFilteringOptions = {
-        getDescriptor: async (imodel: IModelConnection): Promise<PresentationInstanceFilterPropertiesSource> => {
-          const result = await createHierarchyLevelDescriptor({
-            imodel,
-            parentNode: hierarchyNode,
-            hierarchyProvider,
-            descriptorBuilder: {
-              getContentDescriptor: async (options) => Presentation.presentation.getContentDescriptor(options),
-            },
-          });
-
-          if (!result) {
-            throw new PresentationError(PresentationStatus.Error, `Failed to get descriptor for node - ${nodeId ?? "<root>"}`);
-          }
-
-          return {
-            descriptor: result.descriptor,
-            inputKeys: result.inputKeys,
-          };
-        },
+        hierarchyNode,
         applyFilter: (filter?: GenericInstanceFilter) => {
           actions.setInstanceFilter(nodeId, filter);
         },
@@ -149,7 +123,7 @@ export function useTreeInternal({
 
       return filteringOptions;
     },
-    [hierarchyProvider, actions],
+    [actions],
   );
 
   return {

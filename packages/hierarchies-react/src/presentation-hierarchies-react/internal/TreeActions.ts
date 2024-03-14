@@ -2,9 +2,9 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+
 import { Draft, enableMapSet, produce } from "immer";
 import { EMPTY, Observable, reduce, Subject, takeUntil } from "rxjs";
-import { assert } from "@itwin/core-bentley";
 import { GenericInstanceFilter, HierarchyNode, HierarchyProvider, ParentHierarchyNode } from "@itwin/presentation-hierarchy-builder";
 import { PresentationHierarchyNode, PresentationTreeNode } from "../Types";
 import { createNodeId, HierarchyLoader, IHierarchyLoader, LoadedHierarchyPart } from "./TreeLoader";
@@ -76,7 +76,9 @@ export class TreeActions {
       if (node.nodeData.nonGroupingAncestor) {
         const ancestorId = createNodeId(node.nodeData.nonGroupingAncestor);
         const ancestorModelNode = this._currentModel.idToNode.get(ancestorId);
-        assert(!!ancestorModelNode && !isTreeModelInfoNode(ancestorModelNode));
+        if (!ancestorModelNode || isTreeModelInfoNode(ancestorModelNode)) {
+          return undefined;
+        }
         return ancestorModelNode?.instanceFilter;
       }
       return this._currentModel.rootNode.instanceFilter;

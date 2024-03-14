@@ -5,8 +5,8 @@
 
 import { useCallback } from "react";
 import { GroupingNodeKey, InstanceKey, Key, KeySet, PresentationQuery, PresentationQueryBinding, StandardNodeTypes } from "@itwin/presentation-common";
-import { useUnifiedSelectionContext } from "@itwin/presentation-components";
 import { HierarchyNode, parseFullClassName } from "@itwin/presentation-hierarchy-builder";
+import { useUnifiedSelectionContext } from "../UnifiedSelectionContext";
 import { serializeNodeKey } from "./TreeLoader";
 import { isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelRootNode } from "./TreeModel";
 
@@ -23,32 +23,31 @@ export interface UseUnifiedTreeSelectionProps {
 
 /** @internal */
 export function useUnifiedTreeSelection({ getNode }: UseUnifiedTreeSelectionProps): TreeSelectionOptions {
-  const context = useUnifiedSelectionContext();
+  const { has, add, remove } = useUnifiedSelectionContext();
 
   const isNodeSelected = useCallback(
     (nodeId: string) => {
       const node = getNode(nodeId);
-      if (!context || !node || !isTreeModelHierarchyNode(node)) {
+      if (!node || !isTreeModelHierarchyNode(node)) {
         return false;
       }
 
-      const selection = context.getSelection(0);
-      return selection.hasAny(getNodeKeys(node.nodeData));
+      return has(getNodeKeys(node.nodeData));
     },
-    [context, getNode],
+    [has, getNode],
   );
 
   const selectNode = useCallback(
     (nodeId: string, isSelected: boolean) => {
       const node = getNode(nodeId);
-      if (!context || !node || !isTreeModelHierarchyNode(node)) {
+      if (!node || !isTreeModelHierarchyNode(node)) {
         return;
       }
 
-      const action = isSelected ? context.addToSelection : context.removeFromSelection;
+      const action = isSelected ? add : remove;
       action(getNodeKeys(node.nodeData));
     },
-    [context, getNode],
+    [getNode, add, remove],
   );
 
   return {

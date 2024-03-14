@@ -36,6 +36,7 @@ if (filePaths) {
         switch (filePath.substring(filePath.lastIndexOf("."))) {
           case ".js":
           case ".ts":
+          case ".tsx":
           case ".css":
             if (fileContent.startsWith("@charset")) {
               // @charset must be the first line in the file so insert the copyright banner after it
