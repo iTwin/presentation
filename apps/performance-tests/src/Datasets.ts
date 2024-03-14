@@ -5,7 +5,7 @@
 
 import fs from "fs";
 import path from "path";
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities/lib/IModelUtils";
+import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { createIModel } from "./util/IModelUtilities";
 
 const LARGE_FLAT_IMODEL_SIZE = 50_000;

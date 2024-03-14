@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { useState } from "react";
 import { SelectionMode, TreeRendererProps, UiComponents } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
@@ -11,7 +12,6 @@ import { PresentationRpcInterface, Ruleset } from "@itwin/presentation-common";
 import { PresentationTree, PresentationTreeRenderer, usePresentationTreeState } from "@itwin/presentation-components";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { getByRole, render, waitFor } from "@testing-library/react";
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { getNodeByLabel, toggleExpandNode } from "../TreeUtils";
 

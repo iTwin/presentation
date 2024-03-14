@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { TestIModelBuilder } from "presentation-test-utilities/lib/IModelUtils";
+import { TestIModelBuilder } from "presentation-test-utilities";
 import { IModelDb, SnapshotDb } from "@itwin/core-backend";
 import { BisCodeSpec, Code, ElementAspectProps, ElementProps, ModelProps } from "@itwin/core-common";
 

@@ -16,8 +16,6 @@ import { ECSqlBinding, parseFullClassName, Point2d, Point3d, PrimitiveValue } fr
 import { buildTestIModel, TestIModelBuilder } from "@itwin/presentation-testing";
 import { createFileNameFromString } from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils";
 
-export * from "presentation-test-utilities/lib/IModelUtils";
-
 function isBinding(value: ECSqlBinding | PrimitiveValue): value is ECSqlBinding {
   return typeof value === "object" && (value as ECSqlBinding).type !== undefined && (value as ECSqlBinding).value !== undefined;
 }
