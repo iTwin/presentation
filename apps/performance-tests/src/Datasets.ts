@@ -11,27 +11,26 @@ import { createIModel } from "./util/IModelUtilities";
 const LARGE_FLAT_IMODEL_SIZE = 50_000;
 const BAYTOWN_DOWNLOAD_URL = "https://github.com/imodeljs/desktop-starter/raw/master/assets/Baytown.bim";
 
+export type IModelNames = "baytown" | "50k elements";
+export type IModelPathsMap = { [name in IModelNames]?: string };
+
 export class Datasets {
-  private static readonly _iModels: { baytown?: string; largeFlat?: string } = {};
+  private static readonly _iModels: IModelPathsMap = {};
 
-  public static get bayTown(): string {
-    return this.verifyInitialized(this._iModels.baytown);
-  }
-
-  public static get largeFlat(): string {
-    return this.verifyInitialized(this._iModels.largeFlat);
+  public static getIModelPath(name: IModelNames): string {
+    return this.verifyInitialized(this._iModels[name]);
   }
 
   public static async initialize(datasetsDirPath: string) {
     await fs.promises.mkdir(datasetsDirPath, { recursive: true });
 
-    const [baytown, largeFlat] = await Promise.all([
+    const [baytown, iModel50k] = await Promise.all([
       createIfMissing("Baytown", datasetsDirPath, async (name: string, localPath: string) => downloadDataset(name, BAYTOWN_DOWNLOAD_URL, localPath)),
-      createIfMissing("LargeFlat", datasetsDirPath, createLargeFlatIModel),
+      createIfMissing("iModel50k", datasetsDirPath, createiModel50kIModel),
     ]);
 
     this._iModels.baytown = baytown;
-    this._iModels.largeFlat = largeFlat;
+    this._iModels["50k elements"] = iModel50k;
   }
 
   private static verifyInitialized<T>(arg: T | undefined): T {
@@ -62,7 +61,7 @@ async function downloadDataset(name: string, downloadUrl: string, localPath: str
   await response.body!.pipeTo(fs.WriteStream.toWeb(fs.createWriteStream(localPath)));
 }
 
-async function createLargeFlatIModel(name: string, localPath: string) {
+async function createiModel50kIModel(name: string, localPath: string) {
   console.log("Creating large flat iModel...");
 
   await createIModel(name, localPath, (builder) => {

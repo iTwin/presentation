@@ -3,37 +3,36 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { SnapshotDb } from "@itwin/core-backend";
+import { IModelDb, SnapshotDb } from "@itwin/core-backend";
 import { Datasets } from "./Datasets";
 import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
 import { run } from "./util/TestUtilities";
 
-let baytown: SnapshotDb;
-let largeFlat: SnapshotDb;
-
-beforeEach(() => {
-  baytown = SnapshotDb.openFile(Datasets.bayTown);
-  largeFlat = SnapshotDb.openFile(Datasets.largeFlat);
-});
-
-afterEach(() => {
-  baytown.close();
-  largeFlat.close();
-});
-
 describe("models tree", () => {
-  run("initial", async () => {
-    const provider = new StatelessHierarchyProvider({ iModel: baytown });
+  let iModel: IModelDb;
+
+  beforeEach(() => {
+    iModel = SnapshotDb.openFile(Datasets.getIModelPath("baytown"));
+  });
+
+  afterEach(() => iModel.close());
+
+  run("initial (Baytown)", async () => {
+    const provider = new StatelessHierarchyProvider({ iModel });
     await provider.loadInitialHierarchy();
   });
 
-  run("full", async () => {
-    const provider = new StatelessHierarchyProvider({ iModel: baytown });
+  run("full (Baytown)", async () => {
+    const provider = new StatelessHierarchyProvider({ iModel });
     await provider.loadFullHierarchy();
   });
 });
 
-run("flat 50k elements list", async () => {
-  const provider = new StatelessHierarchyProvider({ iModel: largeFlat, rowLimit: "unbounded" });
-  await provider.loadFullHierarchy();
+run("flat 50k elements list", {
+  setup: () => SnapshotDb.openFile(Datasets.getIModelPath("50k elements")),
+  test: async (iModel) => {
+    const provider = new StatelessHierarchyProvider({ iModel, rowLimit: "unbounded" });
+    await provider.loadFullHierarchy();
+  },
+  cleanup: (iModel) => iModel.close(),
 });

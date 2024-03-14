@@ -45,7 +45,12 @@ export class TestReporter extends Base {
     runner.on(EVENT_TEST_BEGIN, (test) => {
       // This event can be fired before beforeEach() and we do not want to measure beforeEach() blocking time.
       // Add callback to the test context, so that it could be called at the actual beginning of the test.
-      return (test.ctx!.testReporterOnTestStart = () => this.onTestStart(test));
+      test.ctx!.reporter = {
+        // Must be called to start measuring.
+        onTestStart: () => this.onTestStart(test),
+        // Can be called to stop measuring.
+        onTestEnd: () => this.onTestEnd(test),
+      };
     });
     runner.on(EVENT_TEST_END, (test) => this.onTestEnd(test));
     runner.on(EVENT_RUN_END, () => {
@@ -66,13 +71,14 @@ export class TestReporter extends Base {
   private onTestStart(test: Mocha.Runnable) {
     this._blockHandler.start();
     this.print(`${test.title}...`, false);
-    this._testStartTimes.set(test.title, performance.now());
+    this._testStartTimes.set(test.fullTitle(), performance.now());
   }
 
   /** Run after each test passes or fails. */
   private onTestEnd(test: Mocha.Test) {
     const endTime = performance.now();
-    const startTime = this._testStartTimes.get(test.title);
+    const fullTitle = test.fullTitle();
+    const startTime = this._testStartTimes.get(fullTitle);
     if (startTime === undefined) {
       return;
     }
@@ -80,7 +86,7 @@ export class TestReporter extends Base {
     const duration = Math.round((endTime - startTime) * 100) / 100;
     this._blockHandler.stop();
 
-    const pass = test.isPassed();
+    const pass = !test.err;
     this.print(`${pass ? Base.symbols.ok : Base.symbols.err} ${test.title} (${duration} ms)`);
 
     const blockingSummary = this._blockHandler.getSummary();
@@ -90,6 +96,7 @@ export class TestReporter extends Base {
       pass,
       blockingSummary,
     });
+    this._testStartTimes.delete(fullTitle);
   }
 
   private printResults() {
