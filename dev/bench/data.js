@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1710346410775,
+  "lastUpdate": 1710426853458,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -1576,6 +1576,63 @@ window.BENCHMARK_DATA = {
             "value": 233,
             "unit": "ms",
             "extra": "count: 4\nmax: 233\np95: 233\nmedian: 79"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "29233962+Yato333@users.noreply.github.com",
+            "name": "Dmitrij Kuzmičiov",
+            "username": "Yato333"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bf3449398336b90285287cf641e61bd37f559673",
+          "message": "Add an additional test iModel to the performance tests (#475)\n\n- Move test iModel creation code from the presentation-full-stack-tests project to a new project that will not have unnecessary dependencies like presentation-frontend, AppUI or React.\r\n- Add a large flat iModel to performance test dataset.\r\n- Implement caching of datasets in the Github workflow.",
+          "timestamp": "2024-03-14T14:32:49Z",
+          "tree_id": "da93b1cb20f640d662c228c2b1a4d1d2b40610d9",
+          "url": "https://github.com/iTwin/presentation/commit/bf3449398336b90285287cf641e61bd37f559673"
+        },
+        "date": 1710426852987,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "flat 50k elements list",
+            "value": 4494.2,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 56.96,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 2457.83,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 211,
+            "unit": "ms",
+            "extra": "count: 5\nmax: 211\np95: 211\nmedian: 41"
           }
         ]
       }
