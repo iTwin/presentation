@@ -3,12 +3,16 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { IModelDb, SnapshotDb } from "@itwin/core-backend";
+import { IModelDb, PhysicalElement, SnapshotDb } from "@itwin/core-backend";
+import { IMetadataProvider } from "@itwin/presentation-hierarchy-builder";
+import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { Datasets } from "./Datasets";
-import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
+import { SpecificClassHierarchyDefinitionFactory } from "./SpecificClassHierarchyDefinitionFactory";
+import { ProviderOptions, StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
 import { run } from "./util/TestUtilities";
 
 describe("models tree", () => {
+  const getHierarchyFactory = (metadataProvider: IMetadataProvider) => new ModelsTreeDefinition({ metadataProvider });
   let iModel: IModelDb;
 
   beforeEach(() => {
@@ -18,21 +22,29 @@ describe("models tree", () => {
   afterEach(() => iModel.close());
 
   run("initial (Baytown)", async () => {
-    const provider = new StatelessHierarchyProvider({ iModel });
+    const provider = new StatelessHierarchyProvider({ iModel, getHierarchyFactory });
     await provider.loadInitialHierarchy();
   });
 
   run("full (Baytown)", async () => {
-    const provider = new StatelessHierarchyProvider({ iModel });
+    const provider = new StatelessHierarchyProvider({ iModel, getHierarchyFactory });
     await provider.loadFullHierarchy();
   });
 });
 
 run("flat 50k elements list", {
-  setup: () => SnapshotDb.openFile(Datasets.getIModelPath("50k elements")),
-  test: async (iModel) => {
-    const provider = new StatelessHierarchyProvider({ iModel, rowLimit: "unbounded" });
+  setup: (): ProviderOptions => {
+    const iModel = SnapshotDb.openFile(Datasets.getIModelPath("50k elements"));
+    const className = PhysicalElement.classFullName.replace(":", ".");
+    return {
+      iModel,
+      rowLimit: "unbounded",
+      getHierarchyFactory: (metadataProvider) => new SpecificClassHierarchyDefinitionFactory({ className, metadataProvider }),
+    };
+  },
+  test: async (providerProps) => {
+    const provider = new StatelessHierarchyProvider(providerProps);
     await provider.loadFullHierarchy();
   },
-  cleanup: (iModel) => iModel.close(),
+  cleanup: ({ iModel }) => iModel.close(),
 });

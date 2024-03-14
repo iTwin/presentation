@@ -7,13 +7,20 @@ import { expand, filter, from, mergeAll, of } from "rxjs";
 import { IModelDb } from "@itwin/core-backend";
 import { ISchemaLocater, Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@itwin/ecschema-metadata";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import { createLimitingECSqlQueryExecutor, HierarchyNode, HierarchyProvider, HierarchyProviderProps } from "@itwin/presentation-hierarchy-builder";
-import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
+import {
+  createLimitingECSqlQueryExecutor,
+  HierarchyNode,
+  HierarchyProvider,
+  IHierarchyLevelDefinitionsFactory,
+  IMetadataProvider,
+} from "@itwin/presentation-hierarchy-builder";
 
-export interface ProviderOptions extends Partial<HierarchyProviderProps> {
+export interface ProviderOptions {
   iModel: IModelDb;
   rowLimit?: number | "unbounded";
   nodeRequestLimit?: number;
+
+  getHierarchyFactory(metadataProvider: IMetadataProvider): IHierarchyLevelDefinitionsFactory;
 }
 
 const DEFAULT_ROW_LIMIT = 1000;
@@ -60,12 +67,11 @@ export class StatelessHierarchyProvider {
   }
 
   private createProvider() {
-    const metadataProvider = this._props.metadataProvider ?? this.createMetadataProvider();
+    const metadataProvider = this.createMetadataProvider();
     const rowLimit = this._props.rowLimit ?? DEFAULT_ROW_LIMIT;
     return new HierarchyProvider({
-      ...this._props,
       metadataProvider,
-      hierarchyDefinition: this._props.hierarchyDefinition ?? new ModelsTreeDefinition({ metadataProvider }),
+      hierarchyDefinition: this._props.getHierarchyFactory(metadataProvider),
       queryExecutor: createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(this._props.iModel), rowLimit),
     });
   }
