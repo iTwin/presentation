@@ -1,8 +1,9 @@
-import { TestIModelBuilder } from "presentation-test-utilities/lib/IModelUtils";
 /*---------------------------------------------------------------------------------------------
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+
+import { TestIModelBuilder } from "presentation-test-utilities/lib/IModelUtils";
 import { IModelDb, SnapshotDb } from "@itwin/core-backend";
 import { BisCodeSpec, Code, ElementAspectProps, ElementProps, ModelProps } from "@itwin/core-common";
 
