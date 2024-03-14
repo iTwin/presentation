@@ -4,6 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import {
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertPhysicalPartition,
+  insertPhysicalSubModel,
+  insertSpatialCategory,
+  insertSubject,
+} from "presentation-test-utilities";
 import { Id64, Id64String } from "@itwin/core-bentley";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
@@ -15,15 +23,7 @@ import { HierarchyNodeIdentifier, HierarchyNodeIdentifiersPath, HierarchyProvide
 import { addCTEs } from "@itwin/presentation-hierarchy-builder/lib/cjs/hierarchy-builder/queries/LimitingECSqlQueryExecutor";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { buildTestIModel, TestIModelBuilder } from "@itwin/presentation-testing";
-import {
-  buildIModel,
-  insertPhysicalElement,
-  insertPhysicalModelWithPartition,
-  insertPhysicalPartition,
-  insertPhysicalSubModel,
-  insertSpatialCategory,
-  insertSubject,
-} from "../../IModelUtils";
+import { buildIModel } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { ExpectedHierarchyDef, NodeValidators, validateHierarchy } from "../HierarchyValidation";
 import { createModelsTreeProvider, importTestSchema } from "./ModelsTreeTestUtils";

@@ -4,14 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { ElementOwnsMultiAspects, ExternalSourceAspect, PhysicalModel, SpatialCategory, Subject } from "@itwin/core-backend";
-import { GenericInstanceFilter, GenericInstanceFilterRule } from "@itwin/core-common";
-import { Descriptor, PropertiesField, PropertyValueFormat } from "@itwin/presentation-common";
-import { createHierarchyLevelDescriptor } from "@itwin/presentation-core-interop";
-import { Presentation } from "@itwin/presentation-frontend";
-import { buildTestIModel } from "@itwin/presentation-testing";
 import {
-  buildIModel,
   insertExternalSourceAspect,
   insertPhysicalElement,
   insertPhysicalModelWithPartition,
@@ -19,7 +12,14 @@ import {
   insertPhysicalSubModel,
   insertSpatialCategory,
   insertSubject,
-} from "../../IModelUtils";
+} from "presentation-test-utilities";
+import { ElementOwnsMultiAspects, ExternalSourceAspect, PhysicalModel, SpatialCategory, Subject } from "@itwin/core-backend";
+import { GenericInstanceFilter, GenericInstanceFilterRule } from "@itwin/core-common";
+import { Descriptor, PropertiesField, PropertyValueFormat } from "@itwin/presentation-common";
+import { createHierarchyLevelDescriptor } from "@itwin/presentation-core-interop";
+import { Presentation } from "@itwin/presentation-frontend";
+import { buildTestIModel } from "@itwin/presentation-testing";
+import { buildIModel } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchyLevel } from "../HierarchyValidation";
 import { createModelsTreeProvider, importTestSchema } from "./ModelsTreeTestUtils";

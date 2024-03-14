@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { useCallback, useState } from "react";
 import sinon from "sinon";
 import { UiComponents, VirtualizedPropertyGridWithDataProvider } from "@itwin/components-react";
@@ -14,7 +15,6 @@ import { PresentationPropertyDataProvider } from "@itwin/presentation-components
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { render } from "@testing-library/react";
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { ensureHasError, ErrorBoundary } from "../ErrorBoundary";
 import { ensurePropertyGridHasPropertyRecord } from "../PropertyGridUtils";

@@ -3,16 +3,4 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { IModelHost } from "@itwin/core-backend";
-import { Datasets } from "./Datasets";
-
-before(async () => {
-  await IModelHost.startup({
-    profileName: "presentation-performance-tests",
-  });
-  await Datasets.initialize("./datasets");
-});
-
-after(async () => {
-  await IModelHost.shutdown();
-});
+export * from "./test-utilities/IModelUtils";

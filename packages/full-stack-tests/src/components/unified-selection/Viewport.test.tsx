@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import sinon from "sinon";
 import { BeUiEvent } from "@itwin/core-bentley";
 import { IModelApp, IModelConnection, SelectedViewportChangedArgs, SpatialViewState, ViewManager, ViewState } from "@itwin/core-frontend";
@@ -14,7 +15,6 @@ import { viewWithUnifiedSelection } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { render, waitFor } from "@testing-library/react";
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 
 /* eslint-disable @typescript-eslint/naming-convention */
