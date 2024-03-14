@@ -3,12 +3,16 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "tsc",
+    "build": "npm run -s build:cjs && npm run -s build:esm",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:watch": "npm run -s build:cjs -- -w",
     "clean": "rimraf lib temp",
     "lint": "eslint \"./src/**/*.ts\""
   },
-  "module": "lib/presentation-test-utilities.js",
-  "types": "lib/presentation-test-utilities.d.ts",
+  "main": "lib/cjs/presentation-test-utilities.js",
+  "module": "lib/esm/presentation-test-utilities.js",
+  "types": "lib/cjs/presentation-test-utilities.d.ts",
   "dependencies": {
     "@itwin/core-bentley": "^4.4.0",
     "@itwin/core-common": "^4.4.0"
