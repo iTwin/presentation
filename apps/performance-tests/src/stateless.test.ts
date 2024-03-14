@@ -8,32 +8,32 @@ import { Datasets } from "./Datasets";
 import { StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
 import { run } from "./util/TestUtilities";
 
-describe("stateless hierarchy", () => {
-  let baytown: SnapshotDb;
-  let largeFlat: SnapshotDb;
+let baytown: SnapshotDb;
+let largeFlat: SnapshotDb;
 
-  beforeEach(() => {
-    baytown = SnapshotDb.openFile(Datasets.bayTown);
-    largeFlat = SnapshotDb.openFile(Datasets.largeFlat);
-  });
+beforeEach(() => {
+  baytown = SnapshotDb.openFile(Datasets.bayTown);
+  largeFlat = SnapshotDb.openFile(Datasets.largeFlat);
+});
 
-  afterEach(() => {
-    baytown.close();
-    largeFlat.close();
-  });
+afterEach(() => {
+  baytown.close();
+  largeFlat.close();
+});
 
-  run("loads initial hierarchy", async () => {
+describe("models tree", () => {
+  run("initial", async () => {
     const provider = new StatelessHierarchyProvider({ iModel: baytown });
     await provider.loadInitialHierarchy();
   });
 
-  run("loads full hierarchy", async () => {
+  run("full", async () => {
     const provider = new StatelessHierarchyProvider({ iModel: baytown });
     await provider.loadFullHierarchy();
   });
+});
 
-  run("loads large flat hierarchy", async () => {
-    const provider = new StatelessHierarchyProvider({ iModel: largeFlat, rowLimit: "unbounded" });
-    await provider.loadFullHierarchy();
-  });
+run("flat 50k elements list", async () => {
+  const provider = new StatelessHierarchyProvider({ iModel: largeFlat, rowLimit: "unbounded" });
+  await provider.loadFullHierarchy();
 });

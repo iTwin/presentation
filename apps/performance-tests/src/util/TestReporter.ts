@@ -17,7 +17,7 @@ interface TestInfo {
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const Base = Mocha.reporters.Base;
-const { EVENT_TEST_BEGIN, EVENT_TEST_END, EVENT_SUITE_BEGIN, EVENT_RUN_END } = Mocha.Runner.constants;
+const { EVENT_TEST_BEGIN, EVENT_TEST_END, EVENT_SUITE_BEGIN, EVENT_SUITE_END, EVENT_RUN_END } = Mocha.Runner.constants;
 
 const tableFormatter = asTable.configure({
   delimiter: " | ",
@@ -31,12 +31,17 @@ export class TestReporter extends Base {
   private readonly _testInfo = new Array<TestInfo>();
   private readonly _blockHandler = new BlockHandler();
   private readonly _outputPath?: string;
+  private _indentLevel = 0;
 
   constructor(runner: Mocha.Runner, options: Mocha.MochaOptions) {
     super(runner, options);
     this._outputPath = options.reporterOptions?.BENCHMARK_OUTPUT_PATH;
 
-    runner.on(EVENT_SUITE_BEGIN, (suite) => console.log(`\n${suite.title}`));
+    runner.on(EVENT_SUITE_BEGIN, (suite) => {
+      this.print(`${suite.title}`);
+      this._indentLevel++;
+    });
+    runner.on(EVENT_SUITE_END, () => this._indentLevel--);
     runner.on(EVENT_TEST_BEGIN, (test) => {
       // This event can be fired before beforeEach() and we do not want to measure beforeEach() blocking time.
       // Add callback to the test context, so that it could be called at the actual beginning of the test.
@@ -51,10 +56,16 @@ export class TestReporter extends Base {
     });
   }
 
+  /** Print a line indented according to the level of depth in nested test suites. */
+  private print(line: string = "", newLine = true) {
+    line = `\r${"  ".repeat(this._indentLevel)}${line}${newLine ? "\n" : ""}`;
+    process.stdout.write(line);
+  }
+
   /** Run before each test starts. */
   private onTestStart(test: Mocha.Runnable) {
     this._blockHandler.start();
-    process.stdout.write(`${test.title}...`);
+    this.print(`${test.title}...`, false);
     this._testStartTimes.set(test.title, performance.now());
   }
 
@@ -70,8 +81,7 @@ export class TestReporter extends Base {
     this._blockHandler.stop();
 
     const pass = test.isPassed();
-    Base.cursor.CR();
-    console.log(`${pass ? Base.symbols.ok : Base.symbols.err} ${test.title} (${duration} ms)`);
+    this.print(`${pass ? Base.symbols.ok : Base.symbols.err} ${test.title} (${duration} ms)`);
 
     const blockingSummary = this._blockHandler.getSummary();
     this._testInfo.push({
