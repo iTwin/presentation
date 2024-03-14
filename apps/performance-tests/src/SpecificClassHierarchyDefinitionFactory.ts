@@ -25,12 +25,13 @@ export class SpecificClassHierarchyDefinitionFactory implements IHierarchyLevelD
         fullClassName: this._props.className,
         query: {
           ecsql: `
-          SELECT ${await query.createSelectClause({
-            ecClassId: { selector: `this.ECClassId` },
-            ecInstanceId: { selector: `this.ECInstanceId` },
-            nodeLabel: "",
-          })}
-          FROM ${this._props.className} AS this`,
+            SELECT ${await query.createSelectClause({
+              ecClassId: { selector: `this.ECClassId` },
+              ecInstanceId: { selector: `this.ECInstanceId` },
+              nodeLabel: { selector: `this.UserLabel` },
+            })}
+            FROM ${this._props.className} AS this
+          `,
         },
       },
     ];
