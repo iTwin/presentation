@@ -4,6 +4,13 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import {
+  insertExternalSourceAspect,
+  insertPhysicalElement,
+  insertPhysicalModelWithPartition,
+  insertRepositoryLink,
+  insertSpatialCategory,
+} from "presentation-test-utilities";
 import * as sinon from "sinon";
 import { PrimitiveValue, PropertyRecord } from "@itwin/appui-abstract";
 import { PropertyCategory } from "@itwin/components-react";
@@ -12,13 +19,6 @@ import { InstanceKey, KeySet, RuleTypes } from "@itwin/presentation-common";
 import { DEFAULT_PROPERTY_GRID_RULESET, PresentationPropertyDataProvider, PresentationPropertyDataProviderProps } from "@itwin/presentation-components";
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
-import {
-  insertExternalSourceAspect,
-  insertPhysicalElement,
-  insertPhysicalModelWithPartition,
-  insertRepositoryLink,
-  insertSpatialCategory,
-} from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 
 describe("PropertyDataProvider", async () => {

@@ -214,6 +214,9 @@ importers:
       mocha:
         specifier: ^10.3.0
         version: 10.3.0
+      presentation-test-utilities:
+        specifier: workspace:^
+        version: link:../../packages/test-utilities
       rxjs:
         specifier: ^7.8.1
         version: 7.8.1
@@ -949,6 +952,9 @@ importers:
       object-hash:
         specifier: ^3.0.0
         version: 3.0.0
+      presentation-test-utilities:
+        specifier: workspace:^
+        version: link:../test-utilities
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -1263,6 +1269,31 @@ importers:
       source-map-support:
         specifier: ^0.5.21
         version: 0.5.21
+      typescript:
+        specifier: ~5.0.4
+        version: 5.0.4
+
+  packages/test-utilities:
+    dependencies:
+      '@itwin/core-bentley':
+        specifier: ^4.4.0
+        version: 4.4.0
+      '@itwin/core-common':
+        specifier: ^4.4.0
+        version: 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-geometry@4.4.0)
+    devDependencies:
+      '@itwin/eslint-plugin':
+        specifier: 4.0.0-dev.48
+        version: 4.0.0-dev.48(eslint@8.56.0)(typescript@5.0.4)
+      '@types/node':
+        specifier: ^18.17.7
+        version: 18.17.7
+      eslint:
+        specifier: ^8.56.0
+        version: 8.56.0
+      rimraf:
+        specifier: ^5.0.5
+        version: 5.0.5
       typescript:
         specifier: ~5.0.4
         version: 5.0.4

@@ -4,17 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import sinon from "sinon";
-import { Subject } from "@itwin/core-backend";
-import { Guid, Id64 } from "@itwin/core-bentley";
-import { IModel, Rank } from "@itwin/core-common";
-import { IModelConnection } from "@itwin/core-frontend";
-import { createValueFormatter } from "@itwin/presentation-core-interop";
-import { ECSqlSnippets, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchy-builder";
-import { julianToDateTime } from "@itwin/presentation-hierarchy-builder/lib/cjs/hierarchy-builder/internal/Common";
 import {
-  buildIModel,
-  importSchema,
   insertDrawingCategory,
   insertDrawingGraphic,
   insertDrawingModelWithPartition,
@@ -23,7 +13,16 @@ import {
   insertPhysicalPartition,
   insertPhysicalSubModel,
   insertSpatialCategory,
-} from "../IModelUtils";
+} from "presentation-test-utilities";
+import sinon from "sinon";
+import { Subject } from "@itwin/core-backend";
+import { Guid, Id64 } from "@itwin/core-bentley";
+import { IModel, Rank } from "@itwin/core-common";
+import { IModelConnection } from "@itwin/core-frontend";
+import { createValueFormatter } from "@itwin/presentation-core-interop";
+import { ECSqlSnippets, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchy-builder";
+import { julianToDateTime } from "@itwin/presentation-hierarchy-builder/lib/cjs/hierarchy-builder/internal/Common";
+import { buildIModel, importSchema } from "../IModelUtils";
 import { initialize, terminate } from "../IntegrationTests";
 import { validateHierarchy } from "./HierarchyValidation";
 import { createMetadataProvider, createProvider } from "./Utils";

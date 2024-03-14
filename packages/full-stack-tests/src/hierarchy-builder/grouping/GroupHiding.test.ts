@@ -3,11 +3,12 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { insertPhysicalPartition, insertSubject } from "presentation-test-utilities";
 import { PhysicalPartition, Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { ECSqlSelectClauseGroupingParams, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchy-builder";
-import { buildIModel, insertPhysicalPartition, insertSubject } from "../../IModelUtils";
+import { buildIModel } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
 import { createMetadataProvider, createProvider } from "../Utils";

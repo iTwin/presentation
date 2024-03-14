@@ -2,21 +2,35 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+
 import { expand, filter, from, mergeAll, of } from "rxjs";
 import { IModelDb } from "@itwin/core-backend";
 import { ISchemaLocater, Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@itwin/ecschema-metadata";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import { createLimitingECSqlQueryExecutor, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
-import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
+import {
+  createLimitingECSqlQueryExecutor,
+  HierarchyNode,
+  HierarchyProvider,
+  IHierarchyLevelDefinitionsFactory,
+  IMetadataProvider,
+} from "@itwin/presentation-hierarchy-builder";
+
+export interface ProviderOptions {
+  iModel: IModelDb;
+  rowLimit?: number | "unbounded";
+  nodeRequestLimit?: number;
+
+  getHierarchyFactory(metadataProvider: IMetadataProvider): IHierarchyLevelDefinitionsFactory;
+}
+
+const DEFAULT_ROW_LIMIT = 1000;
+const DEFAULT_NODE_REQUEST_LIMIT = 10;
 
 export class StatelessHierarchyProvider {
   private readonly _provider: HierarchyProvider;
 
-  constructor(
-    iModelDb: IModelDb,
-    private readonly _nodeRequestLimit = 10,
-  ) {
-    this._provider = createProvider(iModelDb);
+  constructor(private readonly _props: ProviderOptions) {
+    this._provider = this.createProvider();
   }
 
   public async loadInitialHierarchy(): Promise<void> {
@@ -35,7 +49,7 @@ export class StatelessHierarchyProvider {
             mergeAll(),
             filter((node) => nodeHasChildren(node)),
           );
-        }, this._nodeRequestLimit),
+        }, this._props.nodeRequestLimit ?? DEFAULT_NODE_REQUEST_LIMIT),
       );
       nodesObservable.subscribe({
         complete: resolve,
@@ -43,22 +57,27 @@ export class StatelessHierarchyProvider {
       });
     });
   }
+
+  private createMetadataProvider() {
+    const iModel = this._props.iModel;
+    const schemas = new SchemaContext();
+    const locater = new IModelDbSchemaLocater(iModel);
+    schemas.addLocater(locater);
+    return createMetadataProvider(schemas);
+  }
+
+  private createProvider() {
+    const metadataProvider = this.createMetadataProvider();
+    const rowLimit = this._props.rowLimit ?? DEFAULT_ROW_LIMIT;
+    return new HierarchyProvider({
+      metadataProvider,
+      hierarchyDefinition: this._props.getHierarchyFactory(metadataProvider),
+      queryExecutor: createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(this._props.iModel), rowLimit),
+    });
+  }
 }
 
-function createProvider(iModelDb: IModelDb) {
-  const schemas = new SchemaContext();
-  const locater = new SchedulingSchemaLocater(iModelDb);
-  schemas.addLocater(locater);
-  const metadataProvider = createMetadataProvider(schemas);
-
-  return new HierarchyProvider({
-    metadataProvider,
-    hierarchyDefinition: new ModelsTreeDefinition({ metadataProvider }),
-    queryExecutor: createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(iModelDb), 1000),
-  });
-}
-
-class SchedulingSchemaLocater implements ISchemaLocater {
+export class IModelDbSchemaLocater implements ISchemaLocater {
   constructor(private readonly _iModelDb: IModelDb) {}
 
   public getSchemaSync<T extends Schema>(_schemaKey: Readonly<SchemaKey>, _matchType: SchemaMatchType, _schemaContext: SchemaContext): T | undefined {

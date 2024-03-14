@@ -3,17 +3,17 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { IModel } from "@itwin/core-common";
-import { InstanceKey } from "@itwin/presentation-common";
 import {
-  buildIModel,
   insertPhysicalElement,
   insertPhysicalModelWithPartition,
   insertPhysicalPartition,
   insertPhysicalSubModel,
   insertSpatialCategory,
   insertSubject,
-} from "../../IModelUtils";
+} from "presentation-test-utilities";
+import { IModel } from "@itwin/core-common";
+import { InstanceKey } from "@itwin/presentation-common";
+import { buildIModel } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "../HierarchyValidation";
 import { createModelsTreeProvider, importTestSchema } from "./ModelsTreeTestUtils";

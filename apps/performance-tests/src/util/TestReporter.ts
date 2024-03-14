@@ -2,6 +2,7 @@
  * Copyright (c) Bentley Systems, Incorporated. All rights reserved.
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
+
 import asTable from "as-table";
 import fs from "fs";
 import Mocha from "mocha";
@@ -11,13 +12,12 @@ interface TestInfo {
   fullTitle: string;
   duration: number;
   pass: boolean;
-  error?: any;
   blockingSummary: Summary;
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const Base = Mocha.reporters.Base;
-const { EVENT_TEST_BEGIN, EVENT_TEST_END, EVENT_SUITE_BEGIN, EVENT_RUN_END } = Mocha.Runner.constants;
+const { EVENT_TEST_BEGIN, EVENT_TEST_END, EVENT_SUITE_BEGIN, EVENT_SUITE_END, EVENT_RUN_END } = Mocha.Runner.constants;
 
 const tableFormatter = asTable.configure({
   delimiter: " | ",
@@ -31,16 +31,26 @@ export class TestReporter extends Base {
   private readonly _testInfo = new Array<TestInfo>();
   private readonly _blockHandler = new BlockHandler();
   private readonly _outputPath?: string;
+  private _indentLevel = 0;
 
   constructor(runner: Mocha.Runner, options: Mocha.MochaOptions) {
     super(runner, options);
     this._outputPath = options.reporterOptions?.BENCHMARK_OUTPUT_PATH;
 
-    runner.on(EVENT_SUITE_BEGIN, (suite) => console.log(`\n${suite.title}`));
+    runner.on(EVENT_SUITE_BEGIN, (suite) => {
+      this.print(`${suite.title}`);
+      this._indentLevel++;
+    });
+    runner.on(EVENT_SUITE_END, () => this._indentLevel--);
     runner.on(EVENT_TEST_BEGIN, (test) => {
       // This event can be fired before beforeEach() and we do not want to measure beforeEach() blocking time.
       // Add callback to the test context, so that it could be called at the actual beginning of the test.
-      return (test.ctx!.testReporterOnTestStart = () => this.onTestStart(test));
+      test.ctx!.reporter = {
+        // Must be called to start measuring.
+        onTestStart: () => this.onTestStart(test),
+        // Can be called to stop measuring.
+        onTestEnd: () => this.onTestEnd(test),
+      };
     });
     runner.on(EVENT_TEST_END, (test) => this.onTestEnd(test));
     runner.on(EVENT_RUN_END, () => {
@@ -51,17 +61,24 @@ export class TestReporter extends Base {
     });
   }
 
+  /** Print a line indented according to the level of depth in nested test suites. */
+  private print(line: string = "", newLine = true) {
+    line = `\r${"  ".repeat(this._indentLevel)}${line}${newLine ? "\n" : ""}`;
+    process.stdout.write(line);
+  }
+
   /** Run before each test starts. */
   private onTestStart(test: Mocha.Runnable) {
     this._blockHandler.start();
-    process.stdout.write(`${test.title}...`);
-    this._testStartTimes.set(test.title, performance.now());
+    this.print(`${test.title}...`, false);
+    this._testStartTimes.set(test.fullTitle(), performance.now());
   }
 
   /** Run after each test passes or fails. */
   private onTestEnd(test: Mocha.Test) {
     const endTime = performance.now();
-    const startTime = this._testStartTimes.get(test.title);
+    const fullTitle = test.fullTitle();
+    const startTime = this._testStartTimes.get(fullTitle);
     if (startTime === undefined) {
       return;
     }
@@ -69,27 +86,21 @@ export class TestReporter extends Base {
     const duration = Math.round((endTime - startTime) * 100) / 100;
     this._blockHandler.stop();
 
-    const pass = test.isPassed();
-    Base.cursor.CR();
-    console.log(`${pass ? Base.symbols.ok : Base.symbols.err} ${test.title} (${duration} ms)`);
+    const pass = !test.err;
+    this.print(`${pass ? Base.symbols.ok : Base.symbols.err} ${test.title} (${duration} ms)`);
 
     const blockingSummary = this._blockHandler.getSummary();
     this._testInfo.push({
       fullTitle: test.fullTitle(),
       duration,
       pass,
-      error: test.err,
       blockingSummary,
     });
+    this._testStartTimes.delete(fullTitle);
   }
 
   private printResults() {
-    const errors = new Map<string, any>();
-    const results = this._testInfo.map(({ fullTitle, duration, pass, error, blockingSummary }) => {
-      if (error) {
-        errors.set(fullTitle, error);
-      }
-
+    const results = this._testInfo.map(({ fullTitle, duration, pass, blockingSummary }) => {
       const blockingInfo = Object.entries(blockingSummary)
         .filter(([_, val]) => val !== undefined)
         .map(([key, val]) => `${key}: ${(key === "count" ? val : val?.toFixed(2)) ?? "N/A"}`)
@@ -108,10 +119,10 @@ export class TestReporter extends Base {
     console.log();
     console.log(tableFormatter(results));
 
-    for (const [name, error] of errors) {
+    for (const test of this.failures) {
       console.error();
-      console.error(`${name}:`);
-      console.error(error);
+      console.error(`${test.fullTitle()}:`);
+      console.error(test.err);
     }
   }
 

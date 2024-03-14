@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { PropertyValueRendererManager, UiComponents } from "@itwin/components-react";
 import { IModelApp, IModelConnection } from "@itwin/core-frontend";
@@ -16,7 +17,6 @@ import {
 import { Presentation } from "@itwin/presentation-frontend";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { act, getByText, render, waitFor } from "@testing-library/react";
-import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { ensureTableHasRowsWithCellValues } from "../TableUtils";
 

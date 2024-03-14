@@ -3,10 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { insertSubject } from "presentation-test-utilities";
 import { Subject } from "@itwin/core-backend";
 import { IModel } from "@itwin/core-common";
 import { ECSqlBinding, HierarchyNode, Id64String, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchy-builder";
-import { buildIModel, importSchema, insertSubject, withECDb } from "../IModelUtils";
+import { buildIModel, importSchema, withECDb } from "../IModelUtils";
 import { initialize, terminate } from "../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "./HierarchyValidation";
 import { createMetadataProvider, createProvider } from "./Utils";
