@@ -22,17 +22,17 @@ describe("stateless hierarchy", () => {
   });
 
   run("loads initial hierarchy", async () => {
-    const provider = new StatelessHierarchyProvider(baytown);
+    const provider = new StatelessHierarchyProvider({ iModel: baytown });
     await provider.loadInitialHierarchy();
   });
 
   run("loads full hierarchy", async () => {
-    const provider = new StatelessHierarchyProvider(baytown);
+    const provider = new StatelessHierarchyProvider({ iModel: baytown });
     await provider.loadFullHierarchy();
   });
 
   run("loads large flat hierarchy", async () => {
-    const provider = new StatelessHierarchyProvider(largeFlat, "unbounded");
+    const provider = new StatelessHierarchyProvider({ iModel: largeFlat, rowLimit: "unbounded" });
     await provider.loadFullHierarchy();
   });
 });

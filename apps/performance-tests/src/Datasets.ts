@@ -6,6 +6,9 @@ import fs from "fs";
 import path from "path";
 import { createIModel, insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "./util/IModelUtilities";
 
+const LARGE_FLAT_IMODEL_SIZE = 50_000;
+const BAYTOWN_DOWNLOAD_URL = "https://github.com/imodeljs/desktop-starter/raw/master/assets/Baytown.bim";
+
 export class Datasets {
   private static readonly _iModels: { baytown?: string; largeFlat?: string } = {};
 
@@ -21,7 +24,7 @@ export class Datasets {
     await fs.promises.mkdir(datasetsDirPath, { recursive: true });
 
     const [baytown, largeFlat] = await Promise.all([
-      createIfMissing("Baytown", datasetsDirPath, getDatasetDownloader("https://github.com/imodeljs/desktop-starter/raw/master/assets/Baytown.bim")),
+      createIfMissing("Baytown", datasetsDirPath, async (name: string, localPath: string) => downloadDataset(name, BAYTOWN_DOWNLOAD_URL, localPath)),
       createIfMissing("LargeFlat", datasetsDirPath, createLargeFlatIModel),
     ]);
 
@@ -47,10 +50,6 @@ async function createIfMissing(name: string, folderPath: string, provider: (name
   return path.resolve(localPath);
 }
 
-function getDatasetDownloader(downloadUrl: string) {
-  return async (name: string, localPath: string) => downloadDataset(name, downloadUrl, localPath);
-}
-
 async function downloadDataset(name: string, downloadUrl: string, localPath: string) {
   console.log(`Downloading "${name}" iModel from "${downloadUrl}"...`);
   const response = await fetch(downloadUrl);
@@ -61,13 +60,13 @@ async function downloadDataset(name: string, downloadUrl: string, localPath: str
   await response.body!.pipeTo(fs.WriteStream.toWeb(fs.createWriteStream(localPath)));
 }
 
-async function createLargeFlatIModel(name: string, localPath: string, numElements: number = 10000) {
+async function createLargeFlatIModel(name: string, localPath: string) {
   console.log("Creating large flat iModel...");
 
   await createIModel(name, localPath, (iModel) => {
     const categoryKey = insertSpatialCategory({ iModel, fullClassNameSeparator: ":", codeValue: "My Category" });
     const modelKey = insertPhysicalModelWithPartition({ iModel, fullClassNameSeparator: ":", codeValue: "My Model" });
-    for (let i = 0; i < numElements; ++i) {
+    for (let i = 0; i < LARGE_FLAT_IMODEL_SIZE; ++i) {
       insertPhysicalElement({
         iModel,
         fullClassNameSeparator: ":",
