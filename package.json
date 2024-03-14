@@ -42,7 +42,7 @@
     "yargs": "^17.7.2"
   },
   "lint-staged": {
-    "./{apps, packages}/**/*.{tsx,ts,jsx,js,scss,css,html}": [
+    "./{apps,packages}/**/*.{tsx,ts,jsx,js,scss,css,html}": [
       "pnpm lint:copyright --fix"
     ],
     "./scripts/*.js": [
