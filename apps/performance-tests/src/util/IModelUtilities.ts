@@ -3,11 +3,13 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import fs from "fs";
 import { getFullSchemaXml, TestIModelBuilder } from "presentation-test-utilities";
 import { IModelDb, SnapshotDb } from "@itwin/core-backend";
 import { BisCodeSpec, Code, ElementAspectProps, ElementProps, ModelProps } from "@itwin/core-common";
 
 export async function createIModel(name: string, localPath: string, cb: (builder: BackendTestIModelBuilder) => void | Promise<void>) {
+  await fs.promises.rm(localPath, { force: true });
   const iModel = SnapshotDb.createEmpty(localPath, { rootSubject: { name } });
   const builder = new BackendTestIModelBuilder(iModel);
   try {
@@ -38,8 +40,8 @@ class BackendTestIModelBuilder implements TestIModelBuilder {
     return new Code({ scope: scopeModelId, spec, value: codeValue });
   }
 
-  public async importSchema(schemaContentXml: string): Promise<void> {
-    const fullXml = getFullSchemaXml({ schemaName: "PerformanceTestsSchema", schemaContentXml });
+  public async importSchema(schemaContentXml: string, schemaName: string): Promise<void> {
+    const fullXml = getFullSchemaXml({ schemaName, schemaContentXml });
     await this._iModel.importSchemaStrings([fullXml]);
   }
 }
