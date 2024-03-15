@@ -12,19 +12,24 @@ interface AdvancedRunProps<TContext> {
 
   /** Callback that cleans up the context produced by the "before" callback. */
   cleanup?: (x: TContext) => void | Promise<void>;
+
+  /** Whether or not to run exclusively this test. */
+  only?: boolean;
 }
 
 /** Runs a test and passes information about it to the TestReporter. */
 export function run(desc: string, callback: () => void | Promise<void>): void;
 export function run<T>(desc: string, props: AdvancedRunProps<T>): void;
 export function run<T>(desc: string, callbackOrProps: (() => void | Promise<void>) | AdvancedRunProps<T>): void {
-  it(desc, async function () {
-    if (typeof callbackOrProps === "function") {
+  if (typeof callbackOrProps === "function") {
+    it(desc, async function () {
       this.test!.ctx!.reporter.onTestStart();
       await callbackOrProps();
-      return;
-    }
+    });
+    return;
+  }
 
+  const testFunc = async function (this: Mocha.Context) {
     let value: T;
     try {
       value = await callbackOrProps.setup();
@@ -38,5 +43,11 @@ export function run<T>(desc: string, callbackOrProps: (() => void | Promise<void
       this.test!.ctx!.reporter.onTestEnd();
       await callbackOrProps.cleanup?.(value);
     }
-  });
+  };
+
+  if (callbackOrProps.only) {
+    it.only(desc, testFunc);
+  } else {
+    it(desc, testFunc);
+  }
 }
