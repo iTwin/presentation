@@ -9,7 +9,7 @@ import { IMetadataProvider, NodeSelectClauseProps, NodeSelectQueryFactory } from
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { Datasets, IModelName } from "./Datasets";
 import { ProviderOptions, StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
-import { AdvancedRunProps, run } from "./util/TestUtilities";
+import { run } from "./util/TestUtilities";
 
 describe("models tree", () => {
   const getHierarchyFactory = (metadataProvider: IMetadataProvider) => new ModelsTreeDefinition({ metadataProvider });
@@ -81,19 +81,33 @@ describe("grouping", () => {
       },
     },
   });
+
+  runQueryTest({
+    testName: "by everything",
+    iModelName: "50k elements",
+    fullClassName: baseFullClassName,
+    nodeSelectProps: {
+      grouping: {
+        byBaseClasses: { fullClassNames: ["BisCore.PhysicalElement"] },
+        byClass: true,
+        byLabel: true,
+        byProperties: {
+          propertiesClassName: baseFullClassName,
+          propertyGroups: [{ propertyName: customPropName, propertyClassAlias: "this" }],
+        },
+      },
+    },
+  });
 });
 
-function runQueryTest(
-  testProps: {
-    testName: string;
-    iModelName: IModelName;
-    fullClassName?: string;
-    nodeSelectProps?: Partial<NodeSelectClauseProps>;
-    expectedNodeCount?: number;
-    limit?: number;
-    nodeRequestLimit?: number;
-  } & Omit<AdvancedRunProps<unknown>, "setup" | "test" | "cleanup">,
-) {
+function runQueryTest(testProps: {
+  testName: string;
+  iModelName: IModelName;
+  fullClassName?: string;
+  nodeSelectProps?: Partial<NodeSelectClauseProps>;
+  expectedNodeCount?: number;
+  limit?: number;
+}) {
   const { testName, iModelName, nodeSelectProps, limit } = testProps;
   run(testName + (limit ? ` (${limit / 1000}k limit)` : ""), {
     ...testProps,
@@ -103,7 +117,7 @@ function runQueryTest(
       return {
         iModel,
         rowLimit: "unbounded",
-        nodeRequestLimit: testProps.nodeRequestLimit ?? "unbounded",
+        nodeRequestLimit: "unbounded",
         getHierarchyFactory: (metadataProvider) => ({
           async defineHierarchyLevel(props) {
             if (props.parentNode) {
