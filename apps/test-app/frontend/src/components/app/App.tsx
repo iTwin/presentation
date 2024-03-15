@@ -290,6 +290,8 @@ function useResizableElement<T extends Element>({ min, max, initial }: { min: nu
   };
 }
 
+// simple implementation to sync `presentation-frontend` unified selection with `@itwin/unified-selection` storage.
+// TODO: remove when `presentation-frontend` can use supplied unified selection storage.
 function useSyncedUnifiedSelection(imodel?: IModelConnection) {
   useEffect(() => {
     if (!imodel) {
