@@ -991,12 +991,12 @@ importers:
       '@itwin/itwinui-react':
         specifier: ^3.4.2
         version: 3.4.2(react-dom@18.2.0)(react@18.2.0)
-      '@itwin/presentation-common':
-        specifier: ^4.4.0
-        version: 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-common@4.4.0)(@itwin/core-quantity@4.4.0)(@itwin/ecschema-metadata@4.4.0)
       '@itwin/presentation-hierarchy-builder':
         specifier: workspace:*
         version: link:../hierarchy-builder
+      '@itwin/unified-selection':
+        specifier: workspace:*
+        version: link:../unified-selection
       classnames:
         specifier: ^2.3.2
         version: 2.3.2

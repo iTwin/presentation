@@ -39,11 +39,13 @@ export interface CustomSelectable {
  */
 export type Selectable = SelectableInstanceKey | CustomSelectable;
 
+export type SelectableIdentifier = SelectableInstanceKey | Pick<CustomSelectable, "identifier">;
+
 /** @beta */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace Selectable {
   /** Check if the supplied selectable is a `SelectableInstanceKey` */
-  export function isInstanceKey(selectable: Selectable): selectable is SelectableInstanceKey {
+  export function isInstanceKey(selectable: Selectable | SelectableIdentifier): selectable is SelectableInstanceKey {
     const instanceKey = selectable as SelectableInstanceKey;
     return !!instanceKey.className && !!instanceKey.id;
   }
@@ -112,7 +114,7 @@ export namespace Selectables {
    * @param value The selectable to check for.
    * @beta
    */
-  export function has(selectables: Selectables, value: Selectable): boolean {
+  export function has(selectables: Selectables, value: SelectableIdentifier): boolean {
     if (Selectable.isInstanceKey(value)) {
       const normalizedClassName = normalizeClassName(value.className);
       const set = selectables.instanceKeys.get(normalizedClassName);
@@ -127,7 +129,7 @@ export namespace Selectables {
    * @param values The selectables to check for.
    * @beta
    */
-  export function hasAll(selectables: Selectables, values: Selectable[]): boolean {
+  export function hasAll(selectables: Selectables, values: SelectableIdentifier[]): boolean {
     if (Selectables.size(selectables) < values.length) {
       return false;
     }
@@ -145,7 +147,7 @@ export namespace Selectables {
    * @param values The selectables to check for.
    * @beta
    */
-  export function hasAny(selectables: Selectables, values: Selectable[]): boolean {
+  export function hasAny(selectables: Selectables, values: SelectableIdentifier[]): boolean {
     for (const selectable of values) {
       if (Selectables.has(selectables, selectable)) {
         return true;
