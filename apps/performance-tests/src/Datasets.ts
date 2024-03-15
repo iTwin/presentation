@@ -6,7 +6,6 @@
 import fs from "fs";
 import path from "path";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
-import { Logger, LogLevel } from "@itwin/core-bentley";
 import { createIModel } from "./util/IModelUtilities";
 
 export const IMODEL_NAMES = ["baytown", "50k elements"] as const;
@@ -23,9 +22,6 @@ export class Datasets {
   }
 
   public static async initialize(datasetsDirPath: string) {
-    Logger.initializeToConsole();
-    Logger.setLevelDefault(LogLevel.Error);
-
     await fs.promises.mkdir(datasetsDirPath, { recursive: true });
     const promises = IMODEL_NAMES.map(async (key) => {
       if (key === "baytown") {
@@ -40,7 +36,7 @@ export class Datasets {
         key,
         datasetsDirPath,
         async (name: string, localPath: string) => createFlatIModel(name, localPath, count),
-        !process.env.REUSE_DATASET,
+        !!process.env.RECREATE,
       );
       this._iModels[key] = iModelPath;
     });
@@ -93,10 +89,13 @@ async function createFlatIModel(name: string, localPath: string, numElements: nu
   // prettier-ignore
   const schema = `
     <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
+    <ECEntityClass typeName="Base_${defaultClassName}">
+      <BaseClass>bis:PhysicalElement</BaseClass>
+      <ECProperty propertyName="${customPropName}" typeName="string" />
+    </ECEntityClass>
     ${[...Array(numGroups).keys()].map((i) => `
       <ECEntityClass typeName="${defaultClassName}_${i}">
-        <BaseClass>bis:PhysicalElement</BaseClass>
-        <ECProperty propertyName="${customPropName}" typeName="string" />
+        <BaseClass>Base_${defaultClassName}</BaseClass>
       </ECEntityClass>
     `).join("")}
   `;
