@@ -39,6 +39,10 @@ export interface CustomSelectable {
  */
 export type Selectable = SelectableInstanceKey | CustomSelectable;
 
+/**
+ * Type of identifier that can be used to identify selectable in storage.
+ * @beta
+ */
 export type SelectableIdentifier = SelectableInstanceKey | Pick<CustomSelectable, "identifier">;
 
 /** @beta */

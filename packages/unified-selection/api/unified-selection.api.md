@@ -21,8 +21,11 @@ export type Selectable = SelectableInstanceKey | CustomSelectable;
 // @beta (undocumented)
 export namespace Selectable {
     export function isCustom(selectable: Selectable): selectable is CustomSelectable;
-    export function isInstanceKey(selectable: Selectable): selectable is SelectableInstanceKey;
+    export function isInstanceKey(selectable: Selectable | SelectableIdentifier): selectable is SelectableInstanceKey;
 }
+
+// @beta
+export type SelectableIdentifier = SelectableInstanceKey | Pick<CustomSelectable, "identifier">;
 
 // @beta
 export interface SelectableInstanceKey {
@@ -42,9 +45,9 @@ export namespace Selectables {
     export function clear(selectables: Selectables): boolean;
     export function create(source: Selectable[]): Selectables;
     export function forEach(selectables: Selectables, callback: (selectable: Selectable, index: number) => void): void;
-    export function has(selectables: Selectables, value: Selectable): boolean;
-    export function hasAll(selectables: Selectables, values: Selectable[]): boolean;
-    export function hasAny(selectables: Selectables, values: Selectable[]): boolean;
+    export function has(selectables: Selectables, value: SelectableIdentifier): boolean;
+    export function hasAll(selectables: Selectables, values: SelectableIdentifier[]): boolean;
+    export function hasAny(selectables: Selectables, values: SelectableIdentifier[]): boolean;
     export function isEmpty(selectables: Selectables): boolean;
     export function remove(selectables: Selectables, values: Selectable[]): boolean;
     export function size(selectables: Selectables): number;
