@@ -119,7 +119,7 @@ export class Datasets {
             userLabel: `${defaultUserLabel}_${groupIdx}`,
             modelId,
             categoryId,
-            propX: `${defaultPropertyValue}_${groupIdx}`,
+            [customPropName]: `${defaultPropertyValue}_${groupIdx}`,
           });
         }
       }

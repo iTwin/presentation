@@ -3,7 +3,6 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import "chai";
 import { IModelHost } from "@itwin/core-backend";
 import { Logger, LogLevel } from "@itwin/core-bentley";
 import { createLogger } from "@itwin/presentation-core-interop";
