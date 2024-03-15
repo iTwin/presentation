@@ -9,9 +9,8 @@ import Mocha from "mocha";
 import { BlockHandler, Summary } from "./BlockHandler";
 
 interface TestInfo {
-  fullTitle: string;
+  test: Mocha.Runnable;
   duration: number;
-  pass: boolean;
   blockingSummary: Summary;
 }
 
@@ -28,7 +27,7 @@ const tableFormatter = asTable.configure({
  */
 export class TestReporter extends Base {
   private readonly _testStartTimes = new Map<string, number>();
-  private readonly _testInfo = new Array<TestInfo>();
+  private readonly _testInfo = new Map<string, TestInfo>();
   private readonly _blockHandler = new BlockHandler();
   private readonly _outputPath?: string;
   private _indentLevel = 0;
@@ -49,7 +48,7 @@ export class TestReporter extends Base {
         // Must be called to start measuring.
         onTestStart: () => this.onTestStart(test),
         // Can be called to stop measuring.
-        onTestEnd: () => this.onTestEnd(test),
+        onTestEnd: () => this.measureTestTime(test),
       };
     });
     runner.on(EVENT_TEST_END, (test) => this.onTestEnd(test));
@@ -75,7 +74,7 @@ export class TestReporter extends Base {
   }
 
   /** Run after each test passes or fails. */
-  private onTestEnd(test: Mocha.Test) {
+  private measureTestTime(test: Mocha.Test) {
     const endTime = performance.now();
     const fullTitle = test.fullTitle();
     const startTime = this._testStartTimes.get(fullTitle);
@@ -86,21 +85,25 @@ export class TestReporter extends Base {
     const duration = Math.round((endTime - startTime) * 100) / 100;
     this._blockHandler.stop();
 
-    const pass = !test.err;
-    this.print(`${pass ? Base.symbols.ok : Base.symbols.err} ${test.title} (${duration} ms)`);
-
     const blockingSummary = this._blockHandler.getSummary();
-    this._testInfo.push({
-      fullTitle: test.fullTitle(),
+    this._testInfo.set(fullTitle, {
+      test,
       duration,
-      pass,
       blockingSummary,
     });
     this._testStartTimes.delete(fullTitle);
   }
 
+  private onTestEnd(test: Mocha.Test) {
+    this.measureTestTime(test);
+
+    const pass = test.isPassed();
+    const duration = this._testInfo.get(test.fullTitle())!.duration;
+    this.print(`${pass ? Base.symbols.ok : Base.symbols.err} ${test.title} (${duration} ms)`);
+  }
+
   private printResults() {
-    const results = this._testInfo.map(({ fullTitle, duration, pass, blockingSummary }) => {
+    const results = [...this._testInfo.entries()].map(([testFullName, { test, duration, blockingSummary }]) => {
       const blockingInfo = Object.entries(blockingSummary)
         .filter(([_, val]) => val !== undefined)
         .map(([key, val]) => `${key}: ${(key === "count" ? val : val?.toFixed(2)) ?? "N/A"}`)
@@ -108,8 +111,8 @@ export class TestReporter extends Base {
 
       /* eslint-disable @typescript-eslint/naming-convention */
       return {
-        Status: pass ? "PASS" : "FAIL",
-        Test: fullTitle,
+        Status: test.isPassed() ? "PASS" : "FAIL",
+        Test: testFullName,
         Duration: `${duration} ms`,
         Blocks: blockingInfo,
       };
@@ -128,7 +131,7 @@ export class TestReporter extends Base {
 
   /** Saves performance results in a format that is compatible with Github benchmark action. */
   private saveResults() {
-    const data = this._testInfo.flatMap(({ fullTitle, duration, blockingSummary }) => {
+    const data = [...this._testInfo.entries()].flatMap(([fullTitle, { duration, blockingSummary }]) => {
       const durationEntry = {
         name: fullTitle,
         unit: "ms",
