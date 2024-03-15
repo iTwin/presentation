@@ -8,15 +8,9 @@ import { GenericInstanceFilter } from '@itwin/presentation-hierarchy-builder';
 import { HierarchyNode } from '@itwin/presentation-hierarchy-builder';
 import { HierarchyProvider } from '@itwin/presentation-hierarchy-builder';
 import { JSX as JSX_2 } from 'react/jsx-runtime';
-import { Key } from '@itwin/presentation-common';
 import { PropsWithChildren } from 'react';
 import { ReactElement } from 'react';
-
-// @beta (undocumented)
-export interface EventLike<TArgs> {
-    // (undocumented)
-    addListener: (listener: (args: TArgs) => void) => () => void;
-}
+import { SelectionStorage } from '@itwin/unified-selection';
 
 // @beta (undocumented)
 export interface HierarchyLevelFilteringOptions {
@@ -76,31 +70,13 @@ export type PresentationTreeNode = PresentationHierarchyNode | PresentationInfoN
 export function TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHierarchyLevelLimit, getHierarchyLevelFilteringOptions, removeHierarchyLevelFilter, onFilterClick, getIcon, }: TreeRendererProps): JSX_2.Element;
 
 // @beta (undocumented)
-export interface UnifiedSelectionContainer {
-    // (undocumented)
-    add: (keys: Key[]) => void;
-    // (undocumented)
-    has: (keys: Key[]) => boolean;
-    // (undocumented)
-    remove: (keys: Key[]) => void;
-}
-
-// @beta (undocumented)
-export function UnifiedSelectionContextProvider({ store, children }: PropsWithChildren<Props>): JSX_2.Element;
-
-// @beta (undocumented)
-export interface UnifiedSelectionStore {
-    // (undocumented)
-    container: UnifiedSelectionContainer;
-    // (undocumented)
-    onChange: EventLike<UnifiedSelectionContainer>;
-}
+export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<Props>): JSX_2.Element;
 
 // @beta (undocumented)
 export function useTree(props: UseTreeProps): UseTreeResult;
 
 // @beta (undocumented)
-export function useUnifiedSelectionTree(props: UseTreeProps): UseTreeResult;
+export function useUnifiedSelectionTree({ imodelKey, sourceName, ...props }: UseTreeProps & Omit<UseUnifiedTreeSelectionProps, "getNode">): UseTreeResult;
 
 // (No @packageDocumentation comment for this package)
 
