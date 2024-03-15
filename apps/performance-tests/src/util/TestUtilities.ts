@@ -15,6 +15,9 @@ interface AdvancedRunProps<TContext> {
 
   /** Whether or not to run exclusively this test. */
   only?: boolean;
+
+  /** Whether or not to skip this test. */
+  skip?: boolean;
 }
 
 /** Runs a test and passes information about it to the TestReporter. */
@@ -26,6 +29,10 @@ export function run<T>(desc: string, callbackOrProps: (() => void | Promise<void
       this.test!.ctx!.reporter.onTestStart();
       await callbackOrProps();
     });
+    return;
+  }
+
+  if (callbackOrProps.skip) {
     return;
   }
 
