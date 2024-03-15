@@ -17,7 +17,6 @@ const BAYTOWN_DOWNLOAD_URL = "https://github.com/imodeljs/desktop-starter/raw/ma
 export class Datasets {
   private static readonly _iModels: IModelPathsMap = {};
 
-  public static readonly ITEMS_PER_GROUP = 100;
   public static readonly CUSTOM_SCHEMA = {
     schemaName: "PerformanceTests",
     defaultClassName: "PerformanceTests",
@@ -25,6 +24,7 @@ export class Datasets {
     defaultUserLabel: "Element",
     customPropName: "PropX",
     defaultPropertyValue: "PropertyValue",
+    itemsPerGroup: 100,
   };
 
   public static getIModelPath(name: IModelName): string {

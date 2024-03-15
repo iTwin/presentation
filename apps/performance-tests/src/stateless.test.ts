@@ -9,7 +9,7 @@ import { IMetadataProvider, NodeSelectClauseProps, NodeSelectQueryFactory } from
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { Datasets, IModelName } from "./Datasets";
 import { ProviderOptions, StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
-import { run } from "./util/TestUtilities";
+import { AdvancedRunProps, run } from "./util/TestUtilities";
 
 describe("models tree", () => {
   const getHierarchyFactory = (metadataProvider: IMetadataProvider) => new ModelsTreeDefinition({ metadataProvider });
@@ -35,7 +35,9 @@ describe("models tree", () => {
 runQueryTest({ testName: "flat 50k elements list", iModelName: "50k elements" });
 
 describe("grouping", () => {
-  const expectedNodeCount = 50000 / Datasets.ITEMS_PER_GROUP;
+  const { schemaName, baseClassName, customPropName, itemsPerGroup, defaultClassName } = Datasets.CUSTOM_SCHEMA;
+  const expectedNodeCount = 50000 / itemsPerGroup;
+  const baseFullClassName = `${schemaName}.${baseClassName}`;
 
   runQueryTest({
     testName: "by label",
@@ -51,41 +53,57 @@ describe("grouping", () => {
     nodeSelectProps: { grouping: { byClass: true } },
   });
 
-  const { schemaName, baseClassName, customPropName } = Datasets.CUSTOM_SCHEMA;
-  const fullClassName = `${schemaName}.${baseClassName}`;
   runQueryTest({
     testName: "by property",
     iModelName: "50k elements",
-    fullClassName,
+    fullClassName: baseFullClassName,
     expectedNodeCount,
     nodeSelectProps: {
       grouping: {
         byProperties: {
-          propertiesClassName: fullClassName,
+          propertiesClassName: baseFullClassName,
           propertyGroups: [{ propertyName: customPropName, propertyClassAlias: "this" }],
         },
       },
     },
   });
+
+  const baseClassQueryLimit = 10;
+  const fullClassNames = [...Array(baseClassQueryLimit).keys()].map((i) => `${schemaName}.${defaultClassName}_${i}`);
+  runQueryTest({
+    testName: `by base class (${baseClassQueryLimit} classes)`,
+    iModelName: "50k elements",
+    fullClassName: baseFullClassName,
+    expectedNodeCount: baseClassQueryLimit,
+    nodeSelectProps: {
+      grouping: {
+        byBaseClasses: { fullClassNames },
+      },
+    },
+  });
 });
 
-function runQueryTest(testProps: {
-  testName: string;
-  iModelName: IModelName;
-  fullClassName?: string;
-  nodeSelectProps?: Partial<NodeSelectClauseProps>;
-  expectedNodeCount?: number;
-  limit?: number;
-}) {
+function runQueryTest(
+  testProps: {
+    testName: string;
+    iModelName: IModelName;
+    fullClassName?: string;
+    nodeSelectProps?: Partial<NodeSelectClauseProps>;
+    expectedNodeCount?: number;
+    limit?: number;
+    nodeRequestLimit?: number;
+  } & Omit<AdvancedRunProps<unknown>, "setup" | "test" | "cleanup">,
+) {
   const { testName, iModelName, nodeSelectProps, limit } = testProps;
   run(testName + (limit ? ` (${limit / 1000}k limit)` : ""), {
+    ...testProps,
     setup: (): ProviderOptions => {
       const iModel = SnapshotDb.openFile(Datasets.getIModelPath(iModelName));
       const fullClassName = testProps.fullClassName ?? PhysicalElement.classFullName.replace(":", ".");
       return {
         iModel,
         rowLimit: "unbounded",
-        nodeRequestLimit: "unbounded",
+        nodeRequestLimit: testProps.nodeRequestLimit ?? "unbounded",
         getHierarchyFactory: (metadataProvider) => ({
           async defineHierarchyLevel(props) {
             if (props.parentNode) {

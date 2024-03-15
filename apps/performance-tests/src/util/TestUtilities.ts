@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-interface AdvancedRunProps<TContext> {
+export interface AdvancedRunProps<TContext> {
   /** Callback to run before the test that should produce the context required for the test. */
   setup(): TContext | Promise<TContext>;
 
