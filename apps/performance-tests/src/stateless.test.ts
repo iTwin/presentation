@@ -9,51 +9,56 @@ import { IMetadataProvider, NodeSelectClauseProps, NodeSelectQueryFactory } from
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { Datasets, IModelName } from "./Datasets";
 import { ProviderOptions, StatelessHierarchyProvider } from "./StatelessHierarchyProvider";
-import { run } from "./util/TestUtilities";
+import { run, RunOptions } from "./util/TestUtilities";
 
 describe("models tree", () => {
   const getHierarchyFactory = (metadataProvider: IMetadataProvider) => new ModelsTreeDefinition({ metadataProvider });
-  let iModel: IModelDb;
+  const setup = () => SnapshotDb.openFile(Datasets.getIModelPath("baytown"));
+  const cleanup = (iModel: IModelDb) => iModel.close();
 
-  beforeEach(() => {
-    iModel = SnapshotDb.openFile(Datasets.getIModelPath("baytown"));
+  run({
+    testName: "initial (Baytown)",
+    setup,
+    cleanup,
+    test: async (iModel) => {
+      const provider = new StatelessHierarchyProvider({ iModel, getHierarchyFactory });
+      await provider.loadInitialHierarchy();
+    },
   });
 
-  afterEach(() => iModel.close());
-
-  run("initial (Baytown)", async () => {
-    const provider = new StatelessHierarchyProvider({ iModel, getHierarchyFactory });
-    await provider.loadInitialHierarchy();
-  });
-
-  run("full (Baytown)", async () => {
-    const provider = new StatelessHierarchyProvider({ iModel, getHierarchyFactory });
-    await provider.loadFullHierarchy();
+  run({
+    testName: "full (Baytown)",
+    setup,
+    cleanup,
+    test: async (iModel) => {
+      const provider = new StatelessHierarchyProvider({ iModel, getHierarchyFactory });
+      await provider.loadFullHierarchy();
+    },
   });
 });
 
-runQueryTest({ testName: "flat 50k elements list", iModelName: "50k elements" });
+runHierarchyTest({ testName: "flat 50k elements list", iModelName: "50k elements" });
 
 describe("grouping", () => {
   const { schemaName, baseClassName, customPropName, itemsPerGroup, defaultClassName } = Datasets.CUSTOM_SCHEMA;
   const expectedNodeCount = 50000 / itemsPerGroup;
   const baseFullClassName = `${schemaName}.${baseClassName}`;
 
-  runQueryTest({
+  runHierarchyTest({
     testName: "by label",
     iModelName: "50k elements",
     expectedNodeCount,
     nodeSelectProps: { grouping: { byLabel: true } },
   });
 
-  runQueryTest({
+  runHierarchyTest({
     testName: "by class",
     iModelName: "50k elements",
     expectedNodeCount,
     nodeSelectProps: { grouping: { byClass: true } },
   });
 
-  runQueryTest({
+  runHierarchyTest({
     testName: "by property",
     iModelName: "50k elements",
     fullClassName: baseFullClassName,
@@ -70,7 +75,7 @@ describe("grouping", () => {
 
   const baseClassQueryLimit = 10;
   const fullClassNames = [...Array(baseClassQueryLimit).keys()].map((i) => `${schemaName}.${defaultClassName}_${i}`);
-  runQueryTest({
+  runHierarchyTest({
     testName: `by base class (${baseClassQueryLimit} classes)`,
     iModelName: "50k elements",
     fullClassName: baseFullClassName,
@@ -82,8 +87,8 @@ describe("grouping", () => {
     },
   });
 
-  runQueryTest({
-    testName: "by everything",
+  runHierarchyTest({
+    testName: "by multiple attributes",
     iModelName: "50k elements",
     fullClassName: baseFullClassName,
     nodeSelectProps: {
@@ -100,16 +105,16 @@ describe("grouping", () => {
   });
 });
 
-function runQueryTest(testProps: {
-  testName: string;
-  iModelName: IModelName;
-  fullClassName?: string;
-  nodeSelectProps?: Partial<NodeSelectClauseProps>;
-  expectedNodeCount?: number;
-  limit?: number;
-}) {
-  const { testName, iModelName, nodeSelectProps, limit } = testProps;
-  run(testName + (limit ? ` (${limit / 1000}k limit)` : ""), {
+function runHierarchyTest(
+  testProps: {
+    iModelName: IModelName;
+    fullClassName?: string;
+    nodeSelectProps?: Partial<NodeSelectClauseProps>;
+    expectedNodeCount?: number;
+  } & Omit<RunOptions<never>, "setup" | "test" | "cleanup">,
+) {
+  const { iModelName, nodeSelectProps } = testProps;
+  run({
     ...testProps,
     setup: (): ProviderOptions => {
       const iModel = SnapshotDb.openFile(Datasets.getIModelPath(iModelName));
@@ -137,7 +142,6 @@ function runQueryTest(testProps: {
                       nodeLabel: nodeSelectProps?.nodeLabel ?? { selector: `this.UserLabel` },
                     })}
                     FROM ${fullClassName} AS this
-                    ${limit ? `LIMIT ${limit}` : ""}
                   `,
                 },
               },
