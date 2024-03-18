@@ -9,7 +9,7 @@ import { IModelDb, SnapshotDb } from "@itwin/core-backend";
 import { BisCodeSpec, Code, ElementAspectProps, ElementProps, ModelProps } from "@itwin/core-common";
 
 export async function createIModel(name: string, localPath: string, cb: (builder: BackendTestIModelBuilder) => void | Promise<void>) {
-  await fs.promises.rm(localPath, { force: true });
+  fs.rmSync(localPath, { force: true });
   const iModel = SnapshotDb.createEmpty(localPath, { rootSubject: { name } });
   const builder = new BackendTestIModelBuilder(iModel);
   try {

@@ -32,7 +32,7 @@ export class Datasets {
   }
 
   public static async initialize(datasetsDirPath: string) {
-    await fs.promises.mkdir(datasetsDirPath, { recursive: true });
+    fs.mkdirSync(datasetsDirPath, { recursive: true });
     const promises = IMODEL_NAMES.map(async (key) => {
       if (key === "baytown") {
         this._iModels[key] = await this.createIModel(key, datasetsDirPath, async (name: string, localPath: string) =>
@@ -60,18 +60,18 @@ export class Datasets {
     return arg;
   }
 
-  private static async createIModel(name: string, folderPath: string, provider: (name: string, localPath: string) => void | Promise<void>, force?: boolean) {
+  private static async createIModel(
+    name: string,
+    folderPath: string,
+    iModelFactory: (name: string, localPath: string) => void | Promise<void>,
+    force?: boolean,
+  ) {
     const localPath = path.join(folderPath, `${name}.bim`);
-    if (force) {
-      await provider(name, localPath);
-      return path.resolve(localPath);
+
+    if (force || !fs.existsSync(localPath)) {
+      await iModelFactory(name, localPath);
     }
 
-    try {
-      await fs.promises.access(localPath, fs.constants.F_OK);
-    } catch {
-      await provider(name, localPath);
-    }
     return path.resolve(localPath);
   }
 
