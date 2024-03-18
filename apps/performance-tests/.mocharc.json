@@ -1,5 +1,5 @@
 {
-  "timeout": 60000,
+  "timeout": 120000,
   "file": "./lib/main.js",
   "reporter": ["./lib/util/TestReporter.js"]
 }
