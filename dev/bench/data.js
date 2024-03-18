@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1710426853458,
+  "lastUpdate": 1710752805155,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -1633,6 +1633,118 @@ window.BENCHMARK_DATA = {
             "value": 211,
             "unit": "ms",
             "extra": "count: 5\nmax: 211\np95: 211\nmedian: 41"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "29233962+Yato333@users.noreply.github.com",
+            "name": "Dmitrij Kuzmičiov",
+            "username": "Yato333"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4b1dbcf71d961a267b9152770625944b0367d542",
+          "message": "Add performance tests for all grouping types (#479)\n\n- Add a custom schema to the 50k element iModel.\r\n- Add tests for grouping by label, class, base class, properties and all of the above at the same time.\r\n- Add only and skip parameters for the run function.\r\n- Add logging of iTwin.js errors.",
+          "timestamp": "2024-03-18T09:04:22Z",
+          "tree_id": "d01e76d3f3c57b66cd8e041927a16baa4a7fd0b3",
+          "url": "https://github.com/iTwin/presentation/commit/4b1dbcf71d961a267b9152770625944b0367d542"
+        },
+        "date": 1710752804546,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "flat 50k elements list",
+            "value": 4761.02,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 56.85,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 2553.82,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 207,
+            "unit": "ms",
+            "extra": "count: 4\nmax: 207\np95: 207\nmedian: 82"
+          },
+          {
+            "name": "grouping by label",
+            "value": 8732,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "grouping by class",
+            "value": 8527.82,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "grouping by property",
+            "value": 9304.43,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 439,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 439\np95: 439\nmedian: 439"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 24027.52,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 5968,
+            "unit": "ms",
+            "extra": "count: 7\nmax: 5968\np95: 5968\nmedian: 1007"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 10185.26,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 350,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 350\np95: 350\nmedian: 341.5"
           }
         ]
       }
