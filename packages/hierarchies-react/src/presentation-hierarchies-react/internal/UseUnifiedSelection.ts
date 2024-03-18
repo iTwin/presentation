@@ -75,15 +75,11 @@ function createOptions(
       const selectables = storage.getSelection(key, 0);
 
       const hierarchyNode = node.nodeData;
-      if (HierarchyNode.isClassGroupingNode(hierarchyNode)) {
-        return Selectables.has(selectables, { identifier: node.id });
+      if (HierarchyNode.isInstancesNode(hierarchyNode)) {
+        return Selectables.hasAny(selectables, hierarchyNode.key.instanceKeys);
       }
 
-      if (!HierarchyNode.isInstancesNode(hierarchyNode)) {
-        return false;
-      }
-
-      return Selectables.hasAny(selectables, hierarchyNode.key.instanceKeys);
+      return Selectables.has(selectables, { identifier: node.id });
     },
 
     selectNode: (nodeId: string, isSelected: boolean) => {
@@ -99,23 +95,23 @@ function createOptions(
 }
 
 function createSelectables(nodeId: string, node: HierarchyNode): Selectable[] {
-  if (HierarchyNode.isClassGroupingNode(node)) {
-    return [
-      {
-        identifier: nodeId,
-        async *loadInstanceKeys() {
-          for (const key of node.groupedInstanceKeys) {
-            yield key;
-          }
-        },
-        data: node,
+  if (HierarchyNode.isInstancesNode(node)) {
+    return node.key.instanceKeys;
+  }
+
+  return [
+    {
+      identifier: nodeId,
+      async *loadInstanceKeys() {
+        if (!HierarchyNode.isGroupingNode(node)) {
+          return;
+        }
+
+        for (const key of node.groupedInstanceKeys) {
+          yield key;
+        }
       },
-    ];
-  }
-
-  if (!HierarchyNode.isInstancesNode(node)) {
-    return [];
-  }
-
-  return node.key.instanceKeys;
+      data: node,
+    },
+  ];
 }
