@@ -12,6 +12,8 @@ import { PropsWithChildren } from 'react';
 import { ReactElement } from 'react';
 import { SelectionStorage } from '@itwin/unified-selection';
 
+export { GenericInstanceFilter }
+
 // @beta (undocumented)
 export interface HierarchyLevelFilteringOptions {
     // (undocumented)
@@ -21,6 +23,10 @@ export interface HierarchyLevelFilteringOptions {
     // (undocumented)
     hierarchyNode: HierarchyNode | undefined;
 }
+
+export { HierarchyNode }
+
+export { HierarchyProvider }
 
 // @beta (undocumented)
 export type InfoNodeTypes = "ResultSetTooLarge" | "ChildrenPlaceholder" | "Unknown";
@@ -65,6 +71,8 @@ export interface PresentationInfoNode {
 
 // @beta (undocumented)
 export type PresentationTreeNode = PresentationHierarchyNode | PresentationInfoNode;
+
+export { SelectionStorage }
 
 // @beta (undocumented)
 export function TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHierarchyLevelLimit, getHierarchyLevelFilteringOptions, removeHierarchyLevelFilter, onFilterClick, getIcon, }: TreeRendererProps): JSX_2.Element;
