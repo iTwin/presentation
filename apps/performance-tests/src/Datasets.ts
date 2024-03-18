@@ -107,7 +107,7 @@ export class Datasets {
     `;
 
     await createIModel(name, localPath, async (builder) => {
-      await builder.importSchema(schema, schemaName);
+      await builder.importSchema(schemaName, schema);
       const { id: categoryId } = insertSpatialCategory({ builder, fullClassNameSeparator: ":", codeValue: "My Category" });
       const { id: modelId } = insertPhysicalModelWithPartition({ builder, fullClassNameSeparator: ":", codeValue: "My Model" });
       for (let groupIdx = 0; groupIdx < numGroups; ++groupIdx) {

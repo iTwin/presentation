@@ -40,7 +40,7 @@ class BackendTestIModelBuilder implements TestIModelBuilder {
     return new Code({ scope: scopeModelId, spec, value: codeValue });
   }
 
-  public async importSchema(schemaContentXml: string, schemaName: string): Promise<void> {
+  public async importSchema(schemaName: string, schemaContentXml: string): Promise<void> {
     const fullXml = getFullSchemaXml({ schemaName, schemaContentXml });
     await this._iModel.importSchemaStrings([fullXml]);
   }
