@@ -81,7 +81,6 @@ describe("grouping", () => {
     ...[...Array(baseClassQueryLimit).keys()].map((i) => `${schemaName}.${defaultClassName}_${i}`),
   ];
   runHierarchyTest({
-    only: true,
     testName: `by base class (${baseClassQueryLimit} classes)`,
     iModelName: "50k elements",
     fullClassName: baseFullClassName,
