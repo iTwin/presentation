@@ -73,13 +73,19 @@ describe("grouping", () => {
     },
   });
 
+  const physicalElementFullClassName = "BisCore.PhysicalElement";
   const baseClassQueryLimit = 10;
-  const fullClassNames = [...Array(baseClassQueryLimit).keys()].map((i) => `${schemaName}.${defaultClassName}_${i}`);
+  const fullClassNames = [
+    physicalElementFullClassName,
+    baseFullClassName,
+    ...[...Array(baseClassQueryLimit).keys()].map((i) => `${schemaName}.${defaultClassName}_${i}`),
+  ];
   runHierarchyTest({
+    only: true,
     testName: `by base class (${baseClassQueryLimit} classes)`,
     iModelName: "50k elements",
     fullClassName: baseFullClassName,
-    expectedNodeCount: baseClassQueryLimit,
+    expectedNodeCount: fullClassNames.length,
     nodeSelectProps: {
       grouping: {
         byBaseClasses: { fullClassNames },
@@ -93,7 +99,7 @@ describe("grouping", () => {
     fullClassName: baseFullClassName,
     nodeSelectProps: {
       grouping: {
-        byBaseClasses: { fullClassNames: ["BisCore.PhysicalElement"] },
+        byBaseClasses: { fullClassNames: [physicalElementFullClassName] },
         byClass: true,
         byLabel: true,
         byProperties: {
