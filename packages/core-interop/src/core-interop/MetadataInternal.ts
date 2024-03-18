@@ -99,8 +99,11 @@ export function createECClass(coreClass: CoreClass, schema?: ECSchema): ECClass 
 }
 
 abstract class ECClassImpl<TCoreClass extends CoreClass> extends ECSchemaItemImpl<TCoreClass> implements ECClass {
-  protected constructor(coreClass: TCoreClass, schema?: ECSchema) {
-    super(coreClass, schema);
+  protected constructor(
+    private _coreClass: TCoreClass,
+    schema?: ECSchema,
+  ) {
+    super(_coreClass, schema);
   }
   public isEntityClass(): this is ECEntityClass {
     return false;
@@ -114,6 +117,13 @@ abstract class ECClassImpl<TCoreClass extends CoreClass> extends ECSchemaItemImp
   public isMixin(): this is ECMixin {
     return false;
   }
+
+  public async *getAllBaseClasses(): AsyncIterableIterator<ECClass> {
+    for await (const baseClass of this._coreClass.getAllBaseClasses()) {
+      yield createECClass(baseClass, this.schema);
+    }
+  }
+
   public async is(classOrClassName: ECClass | string, schemaName?: string) {
     if (typeof classOrClassName === "string") {
       return this._coreSchemaItem.is(classOrClassName, schemaName!);
