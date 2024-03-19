@@ -18,7 +18,7 @@ import {
 export interface ProviderOptions {
   iModel: IModelDb;
   rowLimit?: number | "unbounded";
-  nodeRequestLimit?: number;
+  nodeRequestLimit?: number | "unbounded";
 
   getHierarchyFactory(metadataProvider: IMetadataProvider): IHierarchyLevelDefinitionsFactory;
 }
@@ -37,22 +37,31 @@ export class StatelessHierarchyProvider {
     await this.loadNodes((node) => node.children && !!node.autoExpand);
   }
 
-  public async loadFullHierarchy(): Promise<void> {
-    await this.loadNodes((node) => node.children);
+  public async loadFullHierarchy(): Promise<number> {
+    return this.loadNodes((node) => node.children);
   }
 
-  private async loadNodes(nodeHasChildren: (node: HierarchyNode) => boolean) {
-    await new Promise<void>((resolve, reject) => {
+  private async loadNodes(nodeHasChildren: (node: HierarchyNode) => boolean): Promise<number> {
+    let nodeRequestLimit: number | undefined;
+    if (this._props.nodeRequestLimit === undefined) {
+      nodeRequestLimit = DEFAULT_NODE_REQUEST_LIMIT;
+    } else if (this._props.nodeRequestLimit !== "unbounded") {
+      nodeRequestLimit = this._props.nodeRequestLimit;
+    }
+
+    let nodeCount = 0;
+    return new Promise<number>((resolve, reject) => {
       const nodesObservable = of<HierarchyNode | undefined>(undefined).pipe(
         expand((parentNode) => {
           return from(this._provider.getNodes({ parentNode })).pipe(
             mergeAll(),
             filter((node) => nodeHasChildren(node)),
           );
-        }, this._props.nodeRequestLimit ?? DEFAULT_NODE_REQUEST_LIMIT),
+        }, nodeRequestLimit),
       );
       nodesObservable.subscribe({
-        complete: resolve,
+        next: (x) => x && nodeCount++,
+        complete: () => resolve(nodeCount),
         error: reject,
       });
     });

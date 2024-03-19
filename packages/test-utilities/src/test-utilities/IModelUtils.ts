@@ -303,3 +303,24 @@ export function insertExternalSourceAspect(
 
   return { className, id };
 }
+
+export interface GetFullSchemaXmlProps {
+  schemaName: string;
+  schemaAlias?: string;
+  schemaContentXml: string;
+}
+
+/**
+ * Adds boilerplate to the XML schema.
+ */
+export function getFullSchemaXml(props: GetFullSchemaXmlProps) {
+  const schemaAlias = props.schemaAlias ?? `test`;
+  return `
+    <?xml version="1.0" encoding="UTF-8"?>
+    <ECSchema schemaName="${props.schemaName}" alias="${schemaAlias}" version="01.00.00" xmlns="http://www.bentley.com/schemas/Bentley.ECXML.3.2">
+      <ECSchemaReference name="CoreCustomAttributes" version="01.00.03" alias="CoreCA" />
+      <ECSchemaReference name="ECDbMap" version="02.00.01" alias="ecdbmap" />
+      ${props.schemaContentXml}
+    </ECSchema>
+  `;
+}

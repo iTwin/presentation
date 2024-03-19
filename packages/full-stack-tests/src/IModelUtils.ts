@@ -8,6 +8,7 @@ import * as fs from "fs";
 import hash from "object-hash";
 import { tmpdir } from "os";
 import path from "path";
+import { getFullSchemaXml } from "presentation-test-utilities";
 import { ECDb, ECSqlStatement, IModelJsFs } from "@itwin/core-backend";
 import { BentleyError, DbResult, Id64, Id64String, OrderedId64Iterable } from "@itwin/core-bentley";
 import { LocalFileName } from "@itwin/core-common";
@@ -206,14 +207,7 @@ export async function buildIModel<TResult extends {} | undefined>(
 export function importSchema(mochaContext: Mocha.Context, imodel: { importSchema: (xml: string) => void }, schemaContentXml: string) {
   const schemaName = `SCHEMA_${mochaContext.test!.fullTitle()}`.replace(/[^\w\d_]/gi, "_").replace(/_+/g, "_");
   const schemaAlias = `test`;
-  const schemaXml = `
-    <?xml version="1.0" encoding="UTF-8"?>
-    <ECSchema schemaName="${schemaName}" alias="${schemaAlias}" version="01.00.00" xmlns="http://www.bentley.com/schemas/Bentley.ECXML.3.2">
-      <ECSchemaReference name="CoreCustomAttributes" version="01.00.03" alias="CoreCA" />
-      <ECSchemaReference name="ECDbMap" version="02.00.01" alias="ecdbmap" />
-      ${schemaContentXml}
-    </ECSchema>
-  `;
+  const schemaXml = getFullSchemaXml({ schemaName, schemaAlias, schemaContentXml });
   imodel.importSchema(schemaXml);
 
   const parsedSchema = new XMLParser({

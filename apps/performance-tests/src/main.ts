@@ -4,9 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IModelHost } from "@itwin/core-backend";
+import { Logger, LogLevel } from "@itwin/core-bentley";
+import { createLogger } from "@itwin/presentation-core-interop";
+import { setLogger } from "@itwin/presentation-hierarchy-builder";
 import { Datasets } from "./Datasets";
 
 before(async () => {
+  Logger.initializeToConsole();
+  Logger.setLevelDefault(LogLevel.Error);
+  setLogger(createLogger());
   await IModelHost.startup({
     profileName: "presentation-performance-tests",
   });
