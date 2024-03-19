@@ -150,11 +150,12 @@ export class BaseClassChecker {
   }
 
   public async isECClassOfBaseECClass(ecClassNameToCheck: string, baseECClass: ECClass): Promise<boolean> {
-    let isCurrentNodeClassOfBase = this._map.get(`${ecClassNameToCheck}${baseECClass.fullName}`);
+    const cacheKey = `${ecClassNameToCheck}${baseECClass.fullName}`;
+    let isCurrentNodeClassOfBase = this._map.get(cacheKey);
     if (isCurrentNodeClassOfBase === undefined) {
       const currentNodeECClass = await getClass(this._metadataProvider, ecClassNameToCheck);
       isCurrentNodeClassOfBase = await currentNodeECClass.is(baseECClass);
-      this._map.set(`${ecClassNameToCheck}${baseECClass.fullName}`, isCurrentNodeClassOfBase);
+      this._map.set(cacheKey, isCurrentNodeClassOfBase);
     }
     return isCurrentNodeClassOfBase;
   }

@@ -29,10 +29,11 @@ export async function createBaseClassGroupsForSingleBaseClass(
 ): Promise<GroupingHandlerResult> {
   const groupedNodes = new Array<ProcessedInstanceHierarchyNode>();
   const ungroupedNodes = new Array<ProcessedInstanceHierarchyNode>();
+  const baseClassFullName = baseECClass.fullName;
   for (const node of nodes) {
     if (
       !node.processingParams?.grouping?.byBaseClasses ||
-      !node.processingParams.grouping.byBaseClasses.fullClassNames.some((className) => className === baseECClass.fullName)
+      !node.processingParams.grouping.byBaseClasses.fullClassNames.some((className) => className === baseClassFullName)
     ) {
       ungroupedNodes.push(node);
       continue;
@@ -52,7 +53,7 @@ export async function createBaseClassGroupsForSingleBaseClass(
   if (groupedNodes.length > 0) {
     const groupingNodeKey: ClassGroupingNodeKey = {
       type: "class-grouping",
-      className: baseECClass.fullName,
+      className: baseClassFullName,
     };
     result.grouped.push({
       label: baseECClass.label ?? baseECClass.name,
