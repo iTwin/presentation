@@ -130,23 +130,10 @@ export async function createGroupingHandlers(
 ): Promise<GroupingHandler[]> {
   const groupingHandlers: GroupingHandler[] = new Array<GroupingHandler>();
   const baseClassChecker = new BaseClassChecker(metadata);
-  groupingHandlers.push(
-    ...(await createBaseClassGroupingHandlers(
-      metadata,
-      nodes.filter((n): n is ProcessedInstanceHierarchyNode => HierarchyNode.isInstancesNode(n)),
-      baseClassChecker,
-    )),
-  );
+  const processedInstanceNodes = nodes.filter((n): n is ProcessedInstanceHierarchyNode => HierarchyNode.isInstancesNode(n));
+  groupingHandlers.push(...(await createBaseClassGroupingHandlers(metadata, processedInstanceNodes, baseClassChecker)));
   groupingHandlers.push(async (allNodes) => createClassGroups(metadata, allNodes));
-  groupingHandlers.push(
-    ...(await createPropertiesGroupingHandlers(
-      metadata,
-      nodes.filter((n): n is ProcessedInstanceHierarchyNode => HierarchyNode.isInstancesNode(n)),
-      valueFormatter,
-      localizedStrings,
-      baseClassChecker,
-    )),
-  );
+  groupingHandlers.push(...(await createPropertiesGroupingHandlers(metadata, processedInstanceNodes, valueFormatter, localizedStrings, baseClassChecker)));
   groupingHandlers.push(async (allNodes) => createLabelGroups(allNodes));
   return groupingHandlers;
 }
