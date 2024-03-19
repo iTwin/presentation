@@ -265,37 +265,28 @@ describe("createECClass", () => {
     });
   });
 
-  describe("getAllBaseClasses", () => {
-    it("returns all base classes from core class", async () => {
-      const baseClasses: CoreClass[] = [];
+  describe("getBaseClass", () => {
+    it("returns base class from core class", async () => {
+      const fakeBaseClass = sinon.stub().resolves({
+        schemaItemType: SchemaItemType.EntityClass,
+        fullName: "s.c_base",
+        schema: "s",
+        name: "c_base",
+      });
       const coreClass = {
         schemaItemType: SchemaItemType.EntityClass,
         fullName: "s.c",
+        schema: "s",
         name: "c",
-        label: "C",
-        async *getAllBaseClasses() {
-          for (const base of baseClasses) {
-            yield base;
-          }
+        get baseClass() {
+          return fakeBaseClass();
         },
       } as unknown as CoreClass;
 
-      baseClasses.push(
-        ...[...Array(3).keys()].map(
-          (i): CoreClass =>
-            ({
-              ...coreClass,
-              fullName: `s.c${i}`,
-              name: `c${i}`,
-            }) as unknown as CoreClass,
-        ),
-      );
-
       const ecClass = createECClass(coreClass, schema);
-      let index = 0;
-      for await (const item of ecClass.getAllBaseClasses()) {
-        expect(item).to.deep.eq(createECClass(baseClasses[index++], schema));
-      }
+      const actualBaseClass = await ecClass.getBaseClass();
+      expect(fakeBaseClass).to.be.calledOnce;
+      expect(actualBaseClass?.fullName).to.eq("s.c_base");
     });
   });
 

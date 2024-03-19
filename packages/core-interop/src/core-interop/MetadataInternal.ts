@@ -118,10 +118,9 @@ abstract class ECClassImpl<TCoreClass extends CoreClass> extends ECSchemaItemImp
     return false;
   }
 
-  public async *getAllBaseClasses(): AsyncIterableIterator<ECClass> {
-    for await (const baseClass of this._coreClass.getAllBaseClasses()) {
-      yield createECClass(baseClass, this.schema);
-    }
+  public async getBaseClass(): Promise<ECClass | undefined> {
+    const baseCoreClass = await this._coreClass.baseClass;
+    return baseCoreClass && createECClass(baseCoreClass, this.schema);
   }
 
   public async is(classOrClassName: ECClass | string, schemaName?: string) {

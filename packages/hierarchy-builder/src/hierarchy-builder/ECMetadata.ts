@@ -43,7 +43,7 @@ export interface ECSchemaItem {
 export interface ECClass extends ECSchemaItem {
   is(className: string, schemaName: string): Promise<boolean>;
   is(other: ECClass): Promise<boolean>;
-  getAllBaseClasses(): AsyncIterableIterator<ECClass>;
+  getBaseClass(): Promise<ECClass | undefined>;
   getProperty(name: string): Promise<ECProperty | undefined>;
   getProperties(): Promise<Array<ECProperty>>;
   isEntityClass(): this is ECEntityClass;
