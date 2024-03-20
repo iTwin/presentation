@@ -33,7 +33,7 @@ import {
   IMetadataProvider,
   RowsLimitExceededError,
   TypedPrimitiveValue,
-} from "@itwin/presentation-hierarchy-builder";
+} from "@itwin/presentation-hierarchies";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { TreeWidgetHeader, useTreeHeight } from "../TreeHeader";
 import { TreeWidgetProps } from "../TreeWidget";

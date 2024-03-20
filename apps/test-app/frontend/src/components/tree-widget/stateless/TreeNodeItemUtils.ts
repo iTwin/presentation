@@ -6,7 +6,7 @@
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { DelayLoadedTreeNodeItem, TreeNodeItem } from "@itwin/components-react";
 import { InfoTreeNodeItemType, PresentationInfoTreeNodeItem } from "@itwin/presentation-components";
-import { HierarchyNode, HierarchyNodeKey } from "@itwin/presentation-hierarchy-builder";
+import { HierarchyNode, HierarchyNodeKey } from "@itwin/presentation-hierarchies";
 
 export function getHierarchyNode(item: TreeNodeItem): HierarchyNode | undefined {
   if ("__internal" in item) {

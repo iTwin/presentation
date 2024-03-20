@@ -5,7 +5,7 @@
 
 import { useCallback } from "react";
 import { GroupingNodeKey, InstanceKey, Key, KeySet, PresentationQuery, PresentationQueryBinding, StandardNodeTypes } from "@itwin/presentation-common";
-import { HierarchyNode, parseFullClassName } from "@itwin/presentation-hierarchy-builder";
+import { HierarchyNode, parseFullClassName } from "@itwin/presentation-hierarchies";
 import { useUnifiedSelectionContext } from "../UnifiedSelectionContext";
 import { serializeNodeKey } from "./TreeLoader";
 import { isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelRootNode } from "./TreeModel";

@@ -6,7 +6,7 @@
 import { IModelHost } from "@itwin/core-backend";
 import { Logger, LogLevel } from "@itwin/core-bentley";
 import { createLogger } from "@itwin/presentation-core-interop";
-import { setLogger } from "@itwin/presentation-hierarchy-builder";
+import { setLogger } from "@itwin/presentation-hierarchies";
 import { Datasets } from "./Datasets";
 
 before(async () => {
