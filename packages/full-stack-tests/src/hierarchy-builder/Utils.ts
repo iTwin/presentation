@@ -16,7 +16,7 @@ import {
   IHierarchyLevelDefinitionsFactory,
   IPrimitiveValueFormatter,
   parseFullClassName,
-} from "@itwin/presentation-hierarchy-builder";
+} from "@itwin/presentation-hierarchies";
 
 function createSchemaContext(imodel: IModelConnection | IModelDb | ECDb) {
   const schemas = new SchemaContext();

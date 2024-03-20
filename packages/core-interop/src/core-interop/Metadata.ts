@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { SchemaContext, SchemaKey } from "@itwin/ecschema-metadata";
-import { IMetadataProvider } from "@itwin/presentation-hierarchy-builder";
+import { IMetadataProvider } from "@itwin/presentation-hierarchies";
 import { createECSchema } from "./MetadataInternal";
 
 /**

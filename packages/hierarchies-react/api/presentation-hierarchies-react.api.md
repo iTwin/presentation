@@ -4,9 +4,9 @@
 
 ```ts
 
-import { GenericInstanceFilter } from '@itwin/presentation-hierarchy-builder';
-import { HierarchyNode } from '@itwin/presentation-hierarchy-builder';
-import { HierarchyProvider } from '@itwin/presentation-hierarchy-builder';
+import { GenericInstanceFilter } from '@itwin/presentation-hierarchies';
+import { HierarchyNode } from '@itwin/presentation-hierarchies';
+import { HierarchyProvider } from '@itwin/presentation-hierarchies';
 import { JSX as JSX_2 } from 'react/jsx-runtime';
 import { Key } from '@itwin/presentation-common';
 import { PropsWithChildren } from 'react';

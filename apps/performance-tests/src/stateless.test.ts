@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import { IModelDb, PhysicalElement, SnapshotDb } from "@itwin/core-backend";
-import { IMetadataProvider, NodeSelectClauseProps, NodeSelectQueryFactory } from "@itwin/presentation-hierarchy-builder";
+import { IMetadataProvider, NodeSelectClauseProps, NodeSelectQueryFactory } from "@itwin/presentation-hierarchies";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { Datasets, IModelName } from "./Datasets";
 import { ProviderOptions, StatelessHierarchyProvider } from "./StatelessHierarchyProvider";

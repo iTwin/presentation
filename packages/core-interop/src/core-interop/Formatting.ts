@@ -15,7 +15,7 @@ import {
   SchemaUnitProvider,
   Unit,
 } from "@itwin/ecschema-metadata";
-import { createDefaultValueFormatter, IPrimitiveValueFormatter, parseFullClassName, TypedPrimitiveValue } from "@itwin/presentation-hierarchy-builder";
+import { createDefaultValueFormatter, IPrimitiveValueFormatter, parseFullClassName, TypedPrimitiveValue } from "@itwin/presentation-hierarchies";
 
 /**
  * Creates a formatter that knows how to format values of properties with assigned kind of quantity. In case the property

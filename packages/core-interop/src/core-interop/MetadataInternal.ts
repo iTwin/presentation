@@ -48,7 +48,7 @@ import {
   ECStructArrayProperty,
   ECStructClass,
   ECStructProperty,
-} from "@itwin/presentation-hierarchy-builder";
+} from "@itwin/presentation-hierarchies";
 
 /** @internal */
 export function createECSchema(schema: CoreSchema): ECSchema {

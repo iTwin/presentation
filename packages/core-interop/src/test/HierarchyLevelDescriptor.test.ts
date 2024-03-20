@@ -16,14 +16,7 @@ import {
   KeySet,
   Ruleset,
 } from "@itwin/presentation-common";
-import {
-  DefineHierarchyLevelProps,
-  ECSqlQueryDef,
-  HierarchyNode,
-  HierarchyProvider,
-  InstanceKey,
-  InstancesNodeKey,
-} from "@itwin/presentation-hierarchy-builder";
+import { DefineHierarchyLevelProps, ECSqlQueryDef, HierarchyNode, HierarchyProvider, InstanceKey, InstancesNodeKey } from "@itwin/presentation-hierarchies";
 import { createHierarchyLevelDescriptor } from "../core-interop/HierarchyLevelDescriptor";
 
 describe("createHierarchyLevelDescriptor", () => {

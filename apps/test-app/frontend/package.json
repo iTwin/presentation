@@ -33,7 +33,7 @@
     "@itwin/presentation-common": "^4.4.0",
     "@itwin/presentation-components": "workspace:*",
     "@itwin/presentation-frontend": "^4.4.0",
-    "@itwin/presentation-hierarchy-builder": "workspace:*",
+    "@itwin/presentation-hierarchies": "workspace:*",
     "@itwin/presentation-hierarchies-react": "workspace:*",
     "@itwin/presentation-core-interop": "workspace:*",
     "@itwin/presentation-models-tree": "workspace:*",

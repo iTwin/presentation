@@ -5,6 +5,7 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
+import { assert } from "@itwin/core-bentley";
 import {
   ECClass as CoreClass,
   EnumerationArrayProperty as CoreEnumerationArrayProperty,
@@ -35,7 +36,7 @@ import {
   ECSchema,
   ECStructArrayProperty,
   ECStructProperty,
-} from "@itwin/presentation-hierarchy-builder";
+} from "@itwin/presentation-hierarchies";
 import { createMetadataProvider } from "../core-interop/Metadata";
 import { createECClass, createECProperty, createECSchema } from "../core-interop/MetadataInternal";
 
@@ -54,11 +55,12 @@ describe("createMetadataProvider", () => {
 
       const provider = createMetadataProvider(schemaContext);
       const schema = await provider.getSchema("x");
+      assert(schema !== undefined);
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(schemaContext.getSchema).to.be.calledOnceWith(matchSchemaName);
-      expect(schema!.name).to.eq("y");
-      expect(typeof schema!.getClass === "function").to.be.true;
+      expect(schema.name).to.eq("y");
+      expect(typeof schema.getClass === "function").to.be.true;
     });
 
     it("returns undefined from schema context", async () => {
@@ -92,14 +94,15 @@ describe("createECSchema", () => {
 
       const schema = createECSchema(coreSchema);
       const result = await schema.getClass("c");
+      assert(result !== undefined);
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(coreSchema.getItem).to.be.calledOnceWith("c");
-      expect(result!.schema.name).to.eq("s");
-      expect(result!.fullName).to.eq("s.c");
-      expect(result!.name).to.eq("c");
-      expect(result!.label).to.eq("C");
-      expect(typeof result!.is === "function").to.be.true;
+      expect(result.schema.name).to.eq("s");
+      expect(result.fullName).to.eq("s.c");
+      expect(result.name).to.eq("c");
+      expect(result.label).to.eq("C");
+      expect(typeof result.is === "function").to.be.true;
     });
 
     it("returns undefined from core schema", async () => {
