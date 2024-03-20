@@ -25,9 +25,9 @@ export function createGroupingOperator(
   metadata: IMetadataProvider,
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
+  baseClassChecker: BaseClassChecker,
   onGroupingNodeCreated?: (groupingNode: ProcessedGroupingHierarchyNode) => void,
   groupingHandlers?: GroupingHandler[],
-  baseClassChecker?: BaseClassChecker,
 ) {
   return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
     return nodes.pipe(
@@ -128,10 +128,9 @@ export async function createGroupingHandlers(
   nodes: ProcessedHierarchyNode[],
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
-  baseClassChecker?: BaseClassChecker,
+  baseClassChecker: BaseClassChecker,
 ): Promise<GroupingHandler[]> {
   const groupingHandlers: GroupingHandler[] = new Array<GroupingHandler>();
-  baseClassChecker ??= new BaseClassChecker(metadata);
   const processedInstanceNodes = nodes.filter((n): n is ProcessedInstanceHierarchyNode => HierarchyNode.isInstancesNode(n));
   groupingHandlers.push(...(await createBaseClassGroupingHandlers(metadata, processedInstanceNodes, baseClassChecker)));
   groupingHandlers.push(async (allNodes) => createClassGroups(metadata, allNodes));

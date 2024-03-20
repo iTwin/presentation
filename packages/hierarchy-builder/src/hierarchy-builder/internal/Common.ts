@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import naturalCompare from "natural-compare-lite";
-import { assert } from "@itwin/core-bentley";
+import { assert, LRUMap } from "@itwin/core-bentley";
 import { ECClass, IMetadataProvider } from "../ECMetadata";
 import {
   HierarchyNode,
@@ -143,9 +143,10 @@ export function compareNodesByLabel<TLhsNode extends { label: string }, TRhsNode
 
 /** @internal */
 export class BaseClassChecker {
-  private _map = new Map<string, boolean>();
+  private _map: LRUMap<string, boolean>;
   private _metadataProvider: IMetadataProvider;
-  public constructor(metadataProvider: IMetadataProvider) {
+  public constructor(metadataProvider: IMetadataProvider, cacheSize: number) {
+    this._map = new LRUMap<string, boolean>(cacheSize);
     this._metadataProvider = metadataProvider;
   }
 

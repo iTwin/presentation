@@ -40,6 +40,7 @@ import { TypedPrimitiveValue } from "./values/Values";
 
 const LOGGING_NAMESPACE = `${CommonLoggingNamespace}.HierarchyProvider`;
 const DEFAULT_QUERY_CONCURRENCY = 10;
+const DEFAULT_BASE_CHECKER_CACHE_SIZE = 10000;
 
 /**
  * Defines the strings used by hierarchy provider.
@@ -93,6 +94,9 @@ export interface HierarchyProviderProps {
     /** A list of node identifiers from root to target node. */
     paths: HierarchyNodeIdentifiersPath[];
   };
+
+  /** Maximum amount of base class checks that can be stored in memory. */
+  baseClassCheckerCacheSize?: number;
 }
 
 /**
@@ -125,6 +129,7 @@ export class HierarchyProvider {
   private _localizedStrings: HierarchyProviderLocalizedStrings;
   private _queryScheduler: SubscriptionScheduler;
   private _nodesCache: ChildNodeObservablesCache;
+  private _baseClassChecker: BaseClassChecker;
 
   /**
    * Hierarchy level definitions factory used by this provider.
@@ -164,6 +169,7 @@ export class HierarchyProvider {
       variationsCount: 1,
     });
     this.queryExecutor = props.queryExecutor;
+    this._baseClassChecker = new BaseClassChecker(this._metadataProvider, props.baseClassCheckerCacheSize ?? DEFAULT_BASE_CHECKER_CACHE_SIZE);
   }
 
   /**
@@ -260,7 +266,6 @@ export class HierarchyProvider {
   private createProcessedNodesObservable(
     preprocessedNodesObservable: Observable<ProcessedHierarchyNode>,
     props: GetHierarchyNodesProps,
-    baseClassChecker: BaseClassChecker,
   ): Observable<ProcessedHierarchyNode> {
     return preprocessedNodesObservable.pipe(
       sortNodesByLabelOperator,
@@ -268,9 +273,9 @@ export class HierarchyProvider {
         this._metadataProvider,
         this._valuesFormatter,
         this._localizedStrings,
+        this._baseClassChecker,
         (gn) => this.onGroupingNodeCreated(gn, props),
         undefined,
-        baseClassChecker,
       ),
     );
   }
@@ -348,13 +353,12 @@ export class HierarchyProvider {
   }
 
   private getChildNodesObservables(props: GetHierarchyNodesProps & { hierarchyLevelSizeLimit?: number | "unbounded" }) {
-    const baseClassChecker = new BaseClassChecker(this._metadataProvider);
     return this.getCachedObservableEntry(props).pipe(
       map((entry) => {
         const processed = entry.needsProcessing
           ? (() => {
               const pre = this.createPreProcessedNodesObservable(entry.observable, props);
-              const post = this.createProcessedNodesObservable(pre, props, baseClassChecker);
+              const post = this.createProcessedNodesObservable(pre, props);
               return { pre, post };
             })()
           : {

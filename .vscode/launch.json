@@ -131,7 +131,7 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["mocha", "--config", "./.mocharc.json", "./lib/*test.js"],
+      "runtimeArgs": ["mocha", "--config", "./.mocharc.json", "--timeout", "0", "./lib/*test.js"],
       "env": {
         "NODE_OPTIONS": "--enable-source-maps"
       }
