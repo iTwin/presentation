@@ -17,8 +17,8 @@ import { ThemeProvider, ToggleSwitch } from "@itwin/itwinui-react";
 import { InstanceKey, Key, KeySet, PresentationQuery, PresentationQueryBinding, StandardNodeTypes } from "@itwin/presentation-common";
 import { SchemaMetadataContextProvider, UnifiedSelectionContextProvider } from "@itwin/presentation-components";
 import { HiliteSet, Presentation, SelectionChangeEventArgs, SelectionChangeType } from "@itwin/presentation-frontend";
+import { ClassGroupingNodeKey, GroupingHierarchyNode, parseFullClassName } from "@itwin/presentation-hierarchies";
 import { UnifiedSelectionProvider } from "@itwin/presentation-hierarchies-react";
-import { ClassGroupingNodeKey, GroupingHierarchyNode, parseFullClassName } from "@itwin/presentation-hierarchy-builder";
 import { createStorage, Selectable, Selectables } from "@itwin/unified-selection";
 import { MyAppFrontend, MyAppSettings } from "../../api/MyAppFrontend";
 import { IModelSelector } from "../imodel-selector/IModelSelector";
@@ -46,7 +46,7 @@ export function App() {
   const onIModelSelected = (imodel: IModelConnection | undefined, path?: string) => {
     if (imodel) {
       imodel.onClose.addOnce(() => {
-        selectionStorage.clearStorage(imodel.key);
+        selectionStorage.clearStorage({ iModelKey: imodel.key });
       });
     }
     setState((prev) => ({
@@ -305,13 +305,13 @@ function useSyncedUnifiedSelection(imodel?: IModelConnection) {
 
       switch (args.changeType) {
         case SelectionChangeType.Add:
-          return selectionStorage.addToSelection("sync", imodel.key, keysToSelectable(args.keys), args.level);
+          return selectionStorage.addToSelection({ source: "sync", iModelKey: imodel.key, selectables: keysToSelectable(args.keys), level: args.level });
         case SelectionChangeType.Remove:
-          return selectionStorage.removeFromSelection("sync", imodel.key, keysToSelectable(args.keys), args.level);
+          return selectionStorage.removeFromSelection({ source: "sync", iModelKey: imodel.key, selectables: keysToSelectable(args.keys), level: args.level });
         case SelectionChangeType.Replace:
-          return selectionStorage.replaceSelection("sync", imodel.key, keysToSelectable(args.keys), args.level);
+          return selectionStorage.replaceSelection({ source: "sync", iModelKey: imodel.key, selectables: keysToSelectable(args.keys), level: args.level });
         case SelectionChangeType.Clear:
-          return selectionStorage.clearSelection("sync", imodel.key, args.level);
+          return selectionStorage.clearSelection({ source: "sync", iModelKey: imodel.key, level: args.level });
       }
     });
 

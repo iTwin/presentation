@@ -72,7 +72,7 @@ function createOptions(
         return false;
       }
 
-      const selectables = storage.getSelection(key, 0);
+      const selectables = storage.getSelection({ iModelKey: key, level: 0 });
 
       const hierarchyNode = node.nodeData;
       if (HierarchyNode.isInstancesNode(hierarchyNode)) {
@@ -89,7 +89,7 @@ function createOptions(
       }
 
       const action = isSelected ? storage.addToSelection.bind(storage) : storage.removeFromSelection.bind(storage);
-      action(source, key, createSelectables(node.id, node.nodeData), 0);
+      action({ iModelKey: key, source, selectables: createSelectables(node.id, node.nodeData), level: 0 });
     },
   };
 }
