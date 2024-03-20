@@ -28,15 +28,7 @@ import {
   NonGroupingHierarchyNode,
   TypedPrimitiveValue,
 } from "@itwin/presentation-hierarchies";
-import {
-  HierarchyLevelFilteringOptions,
-  PresentationHierarchyNode,
-  TreeRenderer,
-  UnifiedSelectionContainer,
-  UnifiedSelectionContextProvider,
-  UnifiedSelectionStore,
-  useUnifiedSelectionTree,
-} from "@itwin/presentation-hierarchies-react";
+import { HierarchyLevelFilteringOptions, PresentationHierarchyNode, TreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 
 interface MetadataProviders {
@@ -44,33 +36,8 @@ interface MetadataProviders {
   metadataProvider: IMetadataProvider;
 }
 
-function createUnifiedSelectionStore(source: string, imodel: IModelConnection): UnifiedSelectionStore {
-  const container: UnifiedSelectionContainer = {
-    add: (keys) => Presentation.selection.addToSelection(source, imodel, keys),
-    remove: (keys) => Presentation.selection.removeFromSelection(source, imodel, keys),
-    has: (keys) => Presentation.selection.getSelection(imodel).hasAny(keys),
-  };
-
-  return {
-    onChange: {
-      addListener: (listener) => Presentation.selection.selectionChange.addListener(() => listener(container)),
-    },
-    container,
-  };
-}
-
 export function StatelessTreeV2(props: { imodel: IModelConnection; height: number; width: number }) {
-  const [unifiedSelectionStore, setUnifiedSelectionStore] = useState(() => createUnifiedSelectionStore("statelessTreeV2", props.imodel));
-
-  useEffect(() => {
-    setUnifiedSelectionStore(createUnifiedSelectionStore("statelessTreeV2", props.imodel));
-  }, [props.imodel]);
-
-  return (
-    <UnifiedSelectionContextProvider store={unifiedSelectionStore}>
-      <Tree {...props} />
-    </UnifiedSelectionContextProvider>
-  );
+  return <Tree {...props} />;
 }
 
 function Tree({ imodel, height, width }: { imodel: IModelConnection; height: number; width: number }) {
@@ -128,6 +95,8 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
   }, [metadata, filteredPaths]);
 
   const { rootNodes, isLoading, ...treeProps } = useUnifiedSelectionTree({
+    imodelKey: imodel.key,
+    sourceName: "StatelessTreeV2",
     hierarchyProvider,
   });
 

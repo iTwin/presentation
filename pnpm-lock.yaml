@@ -458,12 +458,12 @@ importers:
       '@itwin/presentation-frontend':
         specifier: ^4.4.0
         version: 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-common@4.4.0)(@itwin/core-frontend@4.4.0)(@itwin/core-quantity@4.4.0)(@itwin/ecschema-metadata@4.4.0)(@itwin/presentation-common@4.4.0)
-      '@itwin/presentation-hierarchies-react':
-        specifier: workspace:*
-        version: link:../../../packages/hierarchies-react
       '@itwin/presentation-hierarchies':
         specifier: workspace:*
         version: link:../../../packages/hierarchies
+      '@itwin/presentation-hierarchies-react':
+        specifier: workspace:*
+        version: link:../../../packages/hierarchies-react
       '@itwin/presentation-models-tree':
         specifier: workspace:*
         version: link:../../../packages/models-tree
@@ -989,6 +989,82 @@ importers:
         specifier: ~5.0.4
         version: 5.0.4
 
+  packages/hierarchies:
+    dependencies:
+      '@itwin/core-bentley':
+        specifier: ^4.4.0
+        version: 4.4.0
+      '@itwin/core-common':
+        specifier: ^4.4.0
+        version: 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-geometry@4.4.0)
+      natural-compare-lite:
+        specifier: ^1.4.0
+        version: 1.4.0
+      rxjs:
+        specifier: ^7.8.1
+        version: 7.8.1
+      rxjs-for-await:
+        specifier: ^1.0.0
+        version: 1.0.0(rxjs@7.8.1)
+    devDependencies:
+      '@itwin/build-tools':
+        specifier: ^4.4.0
+        version: 4.4.0(@types/node@18.17.7)
+      '@itwin/eslint-plugin':
+        specifier: 4.0.0-dev.48
+        version: 4.0.0-dev.48(eslint@8.56.0)(typescript@5.0.4)
+      '@types/chai':
+        specifier: ^4.3.11
+        version: 4.3.11
+      '@types/chai-as-promised':
+        specifier: ^7.1.8
+        version: 7.1.8
+      '@types/mocha':
+        specifier: ^10.0.6
+        version: 10.0.6
+      '@types/natural-compare-lite':
+        specifier: ^1.4.0
+        version: 1.4.0
+      '@types/node':
+        specifier: ^18.17.7
+        version: 18.17.7
+      '@types/sinon':
+        specifier: ^17.0.3
+        version: 17.0.3
+      '@types/sinon-chai':
+        specifier: ^3.2.12
+        version: 3.2.12
+      chai:
+        specifier: ^4.4.1
+        version: 4.4.1
+      chai-as-promised:
+        specifier: ^7.1.1
+        version: 7.1.1(chai@4.4.1)
+      cpx2:
+        specifier: ^7.0.1
+        version: 7.0.1
+      eslint:
+        specifier: ^8.56.0
+        version: 8.56.0
+      mocha:
+        specifier: ^10.3.0
+        version: 10.3.0
+      nyc:
+        specifier: ^15.1.0
+        version: 15.1.0
+      sinon:
+        specifier: ^17.0.1
+        version: 17.0.1
+      sinon-chai:
+        specifier: ^3.7.0
+        version: 3.7.0(chai@4.4.1)(sinon@17.0.1)
+      source-map-support:
+        specifier: ^0.5.21
+        version: 0.5.21
+      typescript:
+        specifier: ~5.0.4
+        version: 5.0.4
+
   packages/hierarchies-react:
     dependencies:
       '@itwin/itwinui-icons-react':
@@ -1000,12 +1076,12 @@ importers:
       '@itwin/itwinui-react':
         specifier: ^3.4.2
         version: 3.4.2(react-dom@18.2.0)(react@18.2.0)
-      '@itwin/presentation-common':
-        specifier: ^4.4.0
-        version: 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-common@4.4.0)(@itwin/core-quantity@4.4.0)(@itwin/ecschema-metadata@4.4.0)
       '@itwin/presentation-hierarchies':
         specifier: workspace:*
         version: link:../hierarchies
+      '@itwin/unified-selection':
+        specifier: workspace:*
+        version: link:../unified-selection
       classnames:
         specifier: ^2.3.2
         version: 2.3.2
@@ -1103,82 +1179,6 @@ importers:
       sinon-chai:
         specifier: ^3.7.0
         version: 3.7.0(chai@4.4.1)(sinon@17.0.1)
-      typescript:
-        specifier: ~5.0.4
-        version: 5.0.4
-
-  packages/hierarchies:
-    dependencies:
-      '@itwin/core-bentley':
-        specifier: ^4.4.0
-        version: 4.4.0
-      '@itwin/core-common':
-        specifier: ^4.4.0
-        version: 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-geometry@4.4.0)
-      natural-compare-lite:
-        specifier: ^1.4.0
-        version: 1.4.0
-      rxjs:
-        specifier: ^7.8.1
-        version: 7.8.1
-      rxjs-for-await:
-        specifier: ^1.0.0
-        version: 1.0.0(rxjs@7.8.1)
-    devDependencies:
-      '@itwin/build-tools':
-        specifier: ^4.4.0
-        version: 4.4.0(@types/node@18.17.7)
-      '@itwin/eslint-plugin':
-        specifier: 4.0.0-dev.48
-        version: 4.0.0-dev.48(eslint@8.56.0)(typescript@5.0.4)
-      '@types/chai':
-        specifier: ^4.3.11
-        version: 4.3.11
-      '@types/chai-as-promised':
-        specifier: ^7.1.8
-        version: 7.1.8
-      '@types/mocha':
-        specifier: ^10.0.6
-        version: 10.0.6
-      '@types/natural-compare-lite':
-        specifier: ^1.4.0
-        version: 1.4.0
-      '@types/node':
-        specifier: ^18.17.7
-        version: 18.17.7
-      '@types/sinon':
-        specifier: ^17.0.3
-        version: 17.0.3
-      '@types/sinon-chai':
-        specifier: ^3.2.12
-        version: 3.2.12
-      chai:
-        specifier: ^4.4.1
-        version: 4.4.1
-      chai-as-promised:
-        specifier: ^7.1.1
-        version: 7.1.1(chai@4.4.1)
-      cpx2:
-        specifier: ^7.0.1
-        version: 7.0.1
-      eslint:
-        specifier: ^8.56.0
-        version: 8.56.0
-      mocha:
-        specifier: ^10.3.0
-        version: 10.3.0
-      nyc:
-        specifier: ^15.1.0
-        version: 15.1.0
-      sinon:
-        specifier: ^17.0.1
-        version: 17.0.1
-      sinon-chai:
-        specifier: ^3.7.0
-        version: 3.7.0(chai@4.4.1)(sinon@17.0.1)
-      source-map-support:
-        specifier: ^0.5.21
-        version: 0.5.21
       typescript:
         specifier: ~5.0.4
         version: 5.0.4

@@ -5,9 +5,7 @@
 export * from "./presentation-hierarchies-react/Tree";
 export * from "./presentation-hierarchies-react/Types";
 export * from "./presentation-hierarchies-react/UseTree";
-export {
-  UnifiedSelectionContextProvider,
-  EventLike,
-  UnifiedSelectionContainer,
-  UnifiedSelectionStore,
-} from "./presentation-hierarchies-react/UnifiedSelectionContext";
+export { UnifiedSelectionProvider } from "./presentation-hierarchies-react/UnifiedSelectionContext";
+
+export { SelectionStorage } from "@itwin/unified-selection";
+export { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";

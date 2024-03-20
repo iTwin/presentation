@@ -8,15 +8,11 @@ import { GenericInstanceFilter } from '@itwin/presentation-hierarchies';
 import { HierarchyNode } from '@itwin/presentation-hierarchies';
 import { HierarchyProvider } from '@itwin/presentation-hierarchies';
 import { JSX as JSX_2 } from 'react/jsx-runtime';
-import { Key } from '@itwin/presentation-common';
 import { PropsWithChildren } from 'react';
 import { ReactElement } from 'react';
+import { SelectionStorage } from '@itwin/unified-selection';
 
-// @beta (undocumented)
-export interface EventLike<TArgs> {
-    // (undocumented)
-    addListener: (listener: (args: TArgs) => void) => () => void;
-}
+export { GenericInstanceFilter }
 
 // @beta (undocumented)
 export interface HierarchyLevelFilteringOptions {
@@ -27,6 +23,10 @@ export interface HierarchyLevelFilteringOptions {
     // (undocumented)
     hierarchyNode: HierarchyNode | undefined;
 }
+
+export { HierarchyNode }
+
+export { HierarchyProvider }
 
 // @beta (undocumented)
 export type InfoNodeTypes = "ResultSetTooLarge" | "ChildrenPlaceholder" | "Unknown";
@@ -72,35 +72,19 @@ export interface PresentationInfoNode {
 // @beta (undocumented)
 export type PresentationTreeNode = PresentationHierarchyNode | PresentationInfoNode;
 
+export { SelectionStorage }
+
 // @beta (undocumented)
 export function TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHierarchyLevelLimit, getHierarchyLevelFilteringOptions, removeHierarchyLevelFilter, onFilterClick, getIcon, }: TreeRendererProps): JSX_2.Element;
 
 // @beta (undocumented)
-export interface UnifiedSelectionContainer {
-    // (undocumented)
-    add: (keys: Key[]) => void;
-    // (undocumented)
-    has: (keys: Key[]) => boolean;
-    // (undocumented)
-    remove: (keys: Key[]) => void;
-}
-
-// @beta (undocumented)
-export function UnifiedSelectionContextProvider({ store, children }: PropsWithChildren<Props>): JSX_2.Element;
-
-// @beta (undocumented)
-export interface UnifiedSelectionStore {
-    // (undocumented)
-    container: UnifiedSelectionContainer;
-    // (undocumented)
-    onChange: EventLike<UnifiedSelectionContainer>;
-}
+export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<Props>): JSX_2.Element;
 
 // @beta (undocumented)
 export function useTree(props: UseTreeProps): UseTreeResult;
 
 // @beta (undocumented)
-export function useUnifiedSelectionTree(props: UseTreeProps): UseTreeResult;
+export function useUnifiedSelectionTree({ imodelKey, sourceName, ...props }: UseTreeProps & Omit<UseUnifiedTreeSelectionProps, "getNode">): UseTreeResult;
 
 // (No @packageDocumentation comment for this package)
 
