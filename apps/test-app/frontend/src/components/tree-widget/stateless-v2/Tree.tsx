@@ -19,7 +19,6 @@ import {
 } from "@itwin/presentation-components";
 import { createECSqlQueryExecutor, createHierarchyLevelDescriptor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
-import { HierarchyLevelFilteringOptions, PresentationHierarchyNode, TreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import {
   createLimitingECSqlQueryExecutor,
   GenericInstanceFilter,
@@ -28,7 +27,8 @@ import {
   IMetadataProvider,
   NonGroupingHierarchyNode,
   TypedPrimitiveValue,
-} from "@itwin/presentation-hierarchy-builder";
+} from "@itwin/presentation-hierarchies";
+import { HierarchyLevelFilteringOptions, PresentationHierarchyNode, TreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 
 interface MetadataProviders {

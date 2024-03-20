@@ -37,7 +37,7 @@ import { BriefcaseConnection, IpcApp, NullRenderSystem } from "@itwin/core-front
 import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { registerTxnListeners } from "@itwin/presentation-core-interop";
-import { ECSqlSnippets, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchy-builder";
+import { ECSqlSnippets, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchies";
 import { createFileNameFromString } from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils";
 import { setupOutputFileLocation } from "../IModelUtils";
 import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation";

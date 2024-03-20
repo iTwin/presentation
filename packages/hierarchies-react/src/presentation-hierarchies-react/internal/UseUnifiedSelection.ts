@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useEffect, useState } from "react";
-import { HierarchyNode } from "@itwin/presentation-hierarchy-builder";
+import { HierarchyNode } from "@itwin/presentation-hierarchies";
 import { Selectable, Selectables, SelectionStorage } from "@itwin/unified-selection";
 import { useUnifiedSelectionContext } from "../UnifiedSelectionContext";
 import { isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelRootNode } from "./TreeModel";

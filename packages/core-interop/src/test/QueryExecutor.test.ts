@@ -7,7 +7,7 @@ import { expect } from "chai";
 import sinon from "sinon";
 import { QueryBinder, QueryOptions, QueryRowFormat } from "@itwin/core-common";
 import { Point2d, Point3d } from "@itwin/core-geometry";
-import { ECSqlBinding } from "@itwin/presentation-hierarchy-builder";
+import { ECSqlBinding } from "@itwin/presentation-hierarchies";
 import { createECSqlQueryExecutor, ICoreECSqlReaderFactory } from "../core-interop/QueryExecutor";
 
 describe("createECSqlQueryExecutor", () => {

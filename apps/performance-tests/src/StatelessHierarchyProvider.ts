@@ -13,7 +13,7 @@ import {
   HierarchyProvider,
   IHierarchyLevelDefinitionsFactory,
   IMetadataProvider,
-} from "@itwin/presentation-hierarchy-builder";
+} from "@itwin/presentation-hierarchies";
 
 export interface ProviderOptions {
   iModel: IModelDb;

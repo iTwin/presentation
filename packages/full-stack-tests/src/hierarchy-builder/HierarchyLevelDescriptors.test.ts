@@ -10,7 +10,7 @@ import { Presentation as PresentationBackend } from "@itwin/presentation-backend
 import { Descriptor, PropertyValueFormat } from "@itwin/presentation-common";
 import { createHierarchyLevelDescriptor } from "@itwin/presentation-core-interop";
 import { Presentation as PresentationFrontend } from "@itwin/presentation-frontend";
-import { HierarchyNode, IHierarchyLevelDefinitionsFactory, InstanceKey, NodeSelectQueryFactory } from "@itwin/presentation-hierarchy-builder";
+import { HierarchyNode, IHierarchyLevelDefinitionsFactory, InstanceKey, NodeSelectQueryFactory } from "@itwin/presentation-hierarchies";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { setupOutputFileLocation } from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils";
 import { initialize, terminate } from "../IntegrationTests";
