@@ -150,8 +150,17 @@ export class BaseClassChecker {
     this._metadataProvider = metadataProvider;
   }
 
+  private createCacheKey(className: string, baseClassName: string) {
+    return `${className}${baseClassName}`;
+  }
+
+  public isECClassOfBaseECClassSync(ecClassNameToCheck: string, baseClassName: string): boolean | undefined {
+    const cacheKey = this.createCacheKey(ecClassNameToCheck, baseClassName);
+    return this._map.get(cacheKey);
+  }
+
   public async isECClassOfBaseECClass(ecClassNameToCheck: string, baseECClass: ECClass): Promise<boolean> {
-    const cacheKey = `${ecClassNameToCheck}${baseECClass.fullName}`;
+    const cacheKey = this.createCacheKey(ecClassNameToCheck, baseECClass.fullName);
     let isCurrentNodeClassOfBase = this._map.get(cacheKey);
     if (isCurrentNodeClassOfBase === undefined) {
       const currentNodeECClass = await getClass(this._metadataProvider, ecClassNameToCheck);
