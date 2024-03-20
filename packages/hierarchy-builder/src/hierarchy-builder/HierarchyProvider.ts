@@ -21,7 +21,7 @@ import {
   ProcessedInstanceHierarchyNode,
 } from "./HierarchyNode";
 import { CachedNodesObservableEntry, ChildNodeObservablesCache, ParsedQueryNodesObservable } from "./internal/ChildNodeObservablesCache";
-import { LOGGING_NAMESPACE as CommonLoggingNamespace, createNodeIdentifierForLogging, hasChildren } from "./internal/Common";
+import { BaseClassChecker, LOGGING_NAMESPACE as CommonLoggingNamespace, createNodeIdentifierForLogging, hasChildren } from "./internal/Common";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
 import { getClass } from "./internal/GetClass";
 import { createQueryLogMessage, doLog, log } from "./internal/LoggingUtils";
@@ -260,10 +260,18 @@ export class HierarchyProvider {
   private createProcessedNodesObservable(
     preprocessedNodesObservable: Observable<ProcessedHierarchyNode>,
     props: GetHierarchyNodesProps,
+    baseClassChecker: BaseClassChecker,
   ): Observable<ProcessedHierarchyNode> {
     return preprocessedNodesObservable.pipe(
       sortNodesByLabelOperator,
-      createGroupingOperator(this._metadataProvider, this._valuesFormatter, this._localizedStrings, (gn) => this.onGroupingNodeCreated(gn, props)),
+      createGroupingOperator(
+        this._metadataProvider,
+        this._valuesFormatter,
+        this._localizedStrings,
+        (gn) => this.onGroupingNodeCreated(gn, props),
+        undefined,
+        baseClassChecker,
+      ),
     );
   }
 
@@ -340,12 +348,13 @@ export class HierarchyProvider {
   }
 
   private getChildNodesObservables(props: GetHierarchyNodesProps & { hierarchyLevelSizeLimit?: number | "unbounded" }) {
+    const baseClassChecker = new BaseClassChecker(this._metadataProvider);
     return this.getCachedObservableEntry(props).pipe(
       map((entry) => {
         const processed = entry.needsProcessing
           ? (() => {
               const pre = this.createPreProcessedNodesObservable(entry.observable, props);
-              const post = this.createProcessedNodesObservable(pre, props);
+              const post = this.createProcessedNodesObservable(pre, props, baseClassChecker);
               return { pre, post };
             })()
           : {
