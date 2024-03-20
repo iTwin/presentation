@@ -9,8 +9,7 @@ export function createStorage(): SelectionStorage;
 
 // @beta
 export interface CustomSelectable {
-    // @internal
-    data: any;
+    data: unknown;
     identifier: string;
     loadInstanceKeys: () => AsyncIterableIterator<SelectableInstanceKey>;
 }
@@ -59,13 +58,39 @@ export interface SelectionChangeEvent {
 
 // @beta
 export interface SelectionStorage {
-    addToSelection(source: string, iModelKey: string, selectables: Selectable[], level: number): void;
-    clearSelection(source: string, iModelKey: string, level: number): void;
-    clearStorage(iModelKey: string): void;
-    getSelection(iModelKey: string, level: number): Selectables;
-    getSelectionLevels(iModelKey: string): number[];
-    removeFromSelection(source: string, iModelKey: string, selectables: Selectable[], level: number): void;
-    replaceSelection(source: string, iModelKey: string, selectables: Selectable[], level: number): void;
+    addToSelection(props: {
+        iModelKey: string;
+        source: string;
+        selectables: Selectable[];
+        level?: number;
+    }): void;
+    clearSelection(props: {
+        iModelKey: string;
+        source: string;
+        level?: number;
+    }): void;
+    clearStorage(props: {
+        iModelKey: string;
+    }): void;
+    getSelection(props: {
+        iModelKey: string;
+        level?: number;
+    }): Selectables;
+    getSelectionLevels(props: {
+        iModelKey: string;
+    }): number[];
+    removeFromSelection(props: {
+        iModelKey: string;
+        source: string;
+        selectables: Selectable[];
+        level?: number;
+    }): void;
+    replaceSelection(props: {
+        iModelKey: string;
+        source: string;
+        selectables: Selectable[];
+        level?: number;
+    }): void;
     selectionChangeEvent: SelectionChangeEvent;
 }
 

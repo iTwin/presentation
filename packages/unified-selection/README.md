@@ -47,7 +47,7 @@ unifiedSelection.selectionChangeEvent.addListener(({ iModelKey, source, changeTy
             console.log(`Removed ${numSelectables} items from selection ${suffix}.`);
             break;
         case "replace":
-            console.log(`Selected ${numSelectables} items ${suffix}.`);
+            console.log(`Replaced selection with ${numSelectables} items ${suffix}.`);
             break;
         case "clear":
             console.log(`Cleared selection ${suffix}.`);
@@ -56,8 +56,8 @@ unifiedSelection.selectionChangeEvent.addListener(({ iModelKey, source, changeTy
 });
 
 // in some component
-MyComponent.onECInstanceSelected((key: { className: string, id: Id64String }) => {
-    unifiedSelection.addToSelection("MyComponent", [key], 0);
+MyComponent.onECInstanceSelected((iModel: IModelConnection, key: { className: string, id: Id64String }) => {
+    unifiedSelection.addToSelection({ iModelKey: iModel.key, source: "MyComponent", selectables: [key] });
 });
 ```
 

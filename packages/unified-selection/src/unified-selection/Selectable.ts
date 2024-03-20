@@ -12,7 +12,7 @@
  * @beta
  */
 export interface SelectableInstanceKey {
-  /** Full class name in format `SchemaName:ClassName` or `SchemaName.ClassName` */
+  /** Full class name in format `SchemaName:ClassName` or `SchemaName.ClassName`. */
   className: string;
   /** ECInstance ID */
   id: string;
@@ -23,14 +23,12 @@ export interface SelectableInstanceKey {
  * @beta
  */
 export interface CustomSelectable {
-  /** Unique identifier of the selectable */
+  /** Unique identifier of the selectable. */
   identifier: string;
-  /** Asynchronous function for loading instance keys */
+  /** Asynchronous function for loading instance keys associated with this selectable. */
   loadInstanceKeys: () => AsyncIterableIterator<SelectableInstanceKey>;
-  /** Custom data of the selectable
-   * @internal
-   */
-  data: any;
+  /** Custom data associated with the selectable. */
+  data: unknown;
 }
 
 /**
@@ -60,11 +58,11 @@ export namespace Selectable {
  */
 export interface Selectables {
   /**
-   * Map between ECInstance className and instance IDs
+   * Map between `SelectableInstanceKey.className` and a set of selected element IDs.
    */
   instanceKeys: Map<string, Set<string>>;
   /**
-   * Map between unique identifier of `CustomSelectable` and the selectable itself
+   * Map between unique identifier of `CustomSelectable` and the selectable itself.
    */
   custom: Map<string, CustomSelectable>;
 }
