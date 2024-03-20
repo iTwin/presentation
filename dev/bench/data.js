@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1710752805155,
+  "lastUpdate": 1710929562020,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -1745,6 +1745,118 @@ window.BENCHMARK_DATA = {
             "value": 350,
             "unit": "ms",
             "extra": "count: 2\nmax: 350\np95: 350\nmedian: 341.5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35135765+grigasp@users.noreply.github.com",
+            "name": "Grigas",
+            "username": "grigasp"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "02c17410f4a58c8d9a523b884edad662dd430754",
+          "message": "Rename `presentation-hierarchy-builder` to `presentation-hierarchies` (#483)",
+          "timestamp": "2024-03-20T12:10:28+02:00",
+          "tree_id": "8f3338e06a964600ca48a7e58e775bccc043a5dc",
+          "url": "https://github.com/iTwin/presentation/commit/02c17410f4a58c8d9a523b884edad662dd430754"
+        },
+        "date": 1710929561562,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "flat 50k elements list",
+            "value": 4945.53,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 56.64,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 2593.16,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 229,
+            "unit": "ms",
+            "extra": "count: 4\nmax: 229\np95: 229\nmedian: 91"
+          },
+          {
+            "name": "grouping by label",
+            "value": 8595.25,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "grouping by class",
+            "value": 8643.57,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "grouping by property",
+            "value": 9511.84,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 448,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 448\np95: 448\nmedian: 448"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 23607.28,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 6175,
+            "unit": "ms",
+            "extra": "count: 7\nmax: 6175\np95: 6175\nmedian: 1013"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 9693.57,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 359,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 359\np95: 359\nmedian: 352.5"
           }
         ]
       }
