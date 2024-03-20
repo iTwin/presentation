@@ -5,6 +5,7 @@
   "scripts": {
     "start": "vite",
     "build": "tsc --noEmit",
+    "build:app": "vite build",
     "clean": "rimraf build",
     "lint": "eslint ./src/**/*.{ts,tsx}",
     "docs": "betools extract --fileExt=ts,tsx --extractFrom=./src --recursive --out=./build/docs/extract"
