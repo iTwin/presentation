@@ -20,7 +20,7 @@ import { Guid, IDisposable } from "@itwin/core-bentley";
 import { IModelConnection } from "@itwin/core-frontend";
 import { GroupingNodeKey, Key, KeySet, PresentationQuery, PresentationQueryBinding, StandardNodeTypes } from "@itwin/presentation-common";
 import { Presentation, SelectionChangeEventArgs, SelectionChangeType, SelectionHandler } from "@itwin/presentation-frontend";
-import { HierarchyNode, InstanceKey, parseFullClassName } from "@itwin/presentation-hierarchy-builder";
+import { HierarchyNode, InstanceKey, parseFullClassName } from "@itwin/presentation-hierarchies";
 import { getHierarchyNode, serializeNodeKey } from "./TreeNodeItemUtils";
 
 export interface UnifiedSelectionTreeEventHandlerParams {

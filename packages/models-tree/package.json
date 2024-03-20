@@ -32,12 +32,12 @@
     "lint": "eslint ./src/**/*.ts"
   },
   "peerDependencies": {
-    "@itwin/presentation-hierarchy-builder": "workspace:^"
+    "@itwin/presentation-hierarchies": "workspace:^"
   },
   "devDependencies": {
     "@itwin/build-tools": "^4.4.0",
     "@itwin/eslint-plugin": "4.0.0-dev.48",
-    "@itwin/presentation-hierarchy-builder": "workspace:^",
+    "@itwin/presentation-hierarchies": "workspace:^",
     "cpx2": "^7.0.1",
     "eslint": "^8.56.0",
     "source-map-support": "^0.5.21",

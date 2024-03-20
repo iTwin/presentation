@@ -37,7 +37,7 @@ Script to run the scenario: `npm run start:full-models-tree`.
 
 #### Full Models tree load - stateless implementation
 
-The scenario simulates 1 user fully loading the Models Tree hierarchy using the `@itwin/presentation-hierarchy-builder` package that makes `IModelReadRpcInterface-queryRows` RPC calls to execute ECSQL queries.
+The scenario simulates 1 user fully loading the Models Tree hierarchy using the `@itwin/presentation-hierarchies` package that makes `IModelReadRpcInterface-queryRows` RPC calls to execute ECSQL queries.
 
 Script to run the scenario: `npm run start:full-models-tree-stateless`.
 
@@ -49,7 +49,7 @@ Script to run the scenario: `npm run start:initial-models-tree`.
 
 #### Initial Models tree load - stateless implementation
 
-The scenario simulates 1 user loading 2 first levels of Models Tree hierarchy using the `@itwin/presentation-hierarchy-builder` package that makes `IModelReadRpcInterface-queryRows` RPC calls to execute ECSQL queries.
+The scenario simulates 1 user loading 2 first levels of Models Tree hierarchy using the `@itwin/presentation-hierarchies` package that makes `IModelReadRpcInterface-queryRows` RPC calls to execute ECSQL queries.
 
 Script to run the scenario: `npm run start:initial-models-tree-stateless`.
 

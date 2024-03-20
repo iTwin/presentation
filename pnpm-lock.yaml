@@ -154,9 +154,9 @@ importers:
       '@itwin/presentation-core-interop':
         specifier: workspace:*
         version: link:../../../packages/core-interop
-      '@itwin/presentation-hierarchy-builder':
+      '@itwin/presentation-hierarchies':
         specifier: workspace:*
-        version: link:../../../packages/hierarchy-builder
+        version: link:../../../packages/hierarchies
       '@itwin/presentation-models-tree':
         specifier: workspace:*
         version: link:../../../packages/models-tree
@@ -199,9 +199,9 @@ importers:
       '@itwin/presentation-core-interop':
         specifier: workspace:*
         version: link:../../packages/core-interop
-      '@itwin/presentation-hierarchy-builder':
+      '@itwin/presentation-hierarchies':
         specifier: workspace:*
-        version: link:../../packages/hierarchy-builder
+        version: link:../../packages/hierarchies
       '@itwin/presentation-models-tree':
         specifier: workspace:*
         version: link:../../packages/models-tree
@@ -461,9 +461,9 @@ importers:
       '@itwin/presentation-hierarchies-react':
         specifier: workspace:*
         version: link:../../../packages/hierarchies-react
-      '@itwin/presentation-hierarchy-builder':
+      '@itwin/presentation-hierarchies':
         specifier: workspace:*
-        version: link:../../../packages/hierarchy-builder
+        version: link:../../../packages/hierarchies
       '@itwin/presentation-models-tree':
         specifier: workspace:*
         version: link:../../../packages/models-tree
@@ -745,9 +745,9 @@ importers:
       '@itwin/presentation-common':
         specifier: ^4.4.0
         version: 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-common@4.4.0)(@itwin/core-quantity@4.4.0)(@itwin/ecschema-metadata@4.4.0)
-      '@itwin/presentation-hierarchy-builder':
+      '@itwin/presentation-hierarchies':
         specifier: workspace:^
-        version: link:../hierarchy-builder
+        version: link:../hierarchies
       '@types/chai':
         specifier: ^4.3.11
         version: 4.3.11
@@ -865,9 +865,9 @@ importers:
       '@itwin/presentation-frontend':
         specifier: ^4.4.0
         version: 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-common@4.4.0)(@itwin/core-frontend@4.4.0)(@itwin/core-quantity@4.4.0)(@itwin/ecschema-metadata@4.4.0)(@itwin/presentation-common@4.4.0)
-      '@itwin/presentation-hierarchy-builder':
+      '@itwin/presentation-hierarchies':
         specifier: workspace:^
-        version: link:../hierarchy-builder
+        version: link:../hierarchies
       '@itwin/presentation-models-tree':
         specifier: workspace:^
         version: link:../models-tree
@@ -1003,9 +1003,9 @@ importers:
       '@itwin/presentation-common':
         specifier: ^4.4.0
         version: 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-common@4.4.0)(@itwin/core-quantity@4.4.0)(@itwin/ecschema-metadata@4.4.0)
-      '@itwin/presentation-hierarchy-builder':
+      '@itwin/presentation-hierarchies':
         specifier: workspace:*
-        version: link:../hierarchy-builder
+        version: link:../hierarchies
       classnames:
         specifier: ^2.3.2
         version: 2.3.2
@@ -1107,7 +1107,7 @@ importers:
         specifier: ~5.0.4
         version: 5.0.4
 
-  packages/hierarchy-builder:
+  packages/hierarchies:
     dependencies:
       '@itwin/core-bentley':
         specifier: ^4.4.0
@@ -1191,9 +1191,9 @@ importers:
       '@itwin/eslint-plugin':
         specifier: 4.0.0-dev.48
         version: 4.0.0-dev.48(eslint@8.56.0)(typescript@5.0.4)
-      '@itwin/presentation-hierarchy-builder':
+      '@itwin/presentation-hierarchies':
         specifier: workspace:^
-        version: link:../hierarchy-builder
+        version: link:../hierarchies
       cpx2:
         specifier: ^7.0.1
         version: 7.0.1

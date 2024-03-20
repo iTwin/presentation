@@ -8,7 +8,7 @@ on:
     paths:
       - apps/performance-tests/**
       - packages/core-interop/**
-      - packages/hierarchy-builder/**
+      - packages/hierarchies/**
       - packages/models-tree/**
 
 jobs:

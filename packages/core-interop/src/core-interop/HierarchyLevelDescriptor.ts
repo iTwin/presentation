@@ -16,7 +16,7 @@ import {
   InstancesNodeKey,
   NodeSelectClauseColumnNames,
   NonGroupingHierarchyNode,
-} from "@itwin/presentation-hierarchy-builder";
+} from "@itwin/presentation-hierarchies";
 import { ICoreECSqlReaderFactory } from "./QueryExecutor";
 
 /**
@@ -124,7 +124,7 @@ function recursivelyGetInstanceKeys(
     visible.pipe(map(({ key }) => key)),
     // return child node keys of hidden instances
     hidden.pipe(
-      // handling similar to `createHideNodesInHierarchyOperator` in `presentation-hierarchy-builder` package - first
+      // handling similar to `createHideNodesInHierarchyOperator` in `presentation-hierarchies` package - first
       // merge all keys by class
       reduce<{ key: InstanceKey; hide: boolean }, InstanceClassMergeMap>((acc, { key }) => {
         addToMergeMap(acc, key);
