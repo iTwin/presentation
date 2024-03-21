@@ -223,7 +223,7 @@ describe("Stateless hierarchy builder", () => {
               label: "X",
             },
             label: "Y",
-            groupedInstanceKeys: [],
+            groupedInstanceKeys: [y1, y2],
           };
           validateHierarchyLevel({
             nodes: await provider.getNodes({
