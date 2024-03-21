@@ -40,7 +40,8 @@ import { TypedPrimitiveValue } from "./values/Values";
 
 const LOGGING_NAMESPACE = `${CommonLoggingNamespace}.HierarchyProvider`;
 const DEFAULT_QUERY_CONCURRENCY = 10;
-const DEFAULT_BASE_CHECKER_CACHE_SIZE = 10000;
+const DEFAULT_QUERY_CACHE_SIZE = 50;
+const DEFAULT_BASE_CHECKER_CACHE_SIZE = 1000;
 
 /**
  * Defines the strings used by hierarchy provider.
@@ -94,9 +95,6 @@ export interface HierarchyProviderProps {
     /** A list of node identifiers from root to target node. */
     paths: HierarchyNodeIdentifiersPath[];
   };
-
-  /** Maximum amount of base class checks that can be stored in memory. */
-  baseClassCheckerCacheSize?: number;
 }
 
 /**
@@ -165,11 +163,11 @@ export class HierarchyProvider {
     this._queryScheduler = new SubscriptionScheduler(props.queryConcurrency ?? DEFAULT_QUERY_CONCURRENCY);
     this._nodesCache = new ChildNodeObservablesCache({
       // we divide the size by 2, because each variation also counts as a query that we cache
-      size: Math.round((props.queryCacheSize ?? 50) / 2),
+      size: Math.round((props.queryCacheSize ?? DEFAULT_QUERY_CACHE_SIZE) / 2),
       variationsCount: 1,
     });
     this.queryExecutor = props.queryExecutor;
-    this._baseClassChecker = new BaseClassChecker(this._metadataProvider, props.baseClassCheckerCacheSize ?? DEFAULT_BASE_CHECKER_CACHE_SIZE);
+    this._baseClassChecker = new BaseClassChecker(this._metadataProvider, DEFAULT_BASE_CHECKER_CACHE_SIZE);
   }
 
   /**
