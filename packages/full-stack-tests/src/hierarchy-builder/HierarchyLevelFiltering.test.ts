@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { GroupingHierarchyNode, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory, ParentHierarchyNode } from "@itwin/presentation-hierarchy-builder";
+import { GroupingHierarchyNode, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory, ParentHierarchyNode } from "@itwin/presentation-hierarchies";
 import { importSchema, withECDb } from "../IModelUtils";
 import { initialize, terminate } from "../IntegrationTests";
 import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation";

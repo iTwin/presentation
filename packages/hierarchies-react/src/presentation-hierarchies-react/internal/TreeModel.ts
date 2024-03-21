@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { GenericInstanceFilter, HierarchyNode } from "@itwin/presentation-hierarchy-builder";
+import { GenericInstanceFilter, HierarchyNode } from "@itwin/presentation-hierarchies";
 import { InfoNodeTypes } from "../Types";
 
 /** @internal */

@@ -25,7 +25,7 @@ import {
   NodeSelectQueryFactory,
   parseFullClassName,
   ProcessedHierarchyNode,
-} from "@itwin/presentation-hierarchy-builder";
+} from "@itwin/presentation-hierarchies";
 
 export interface ModelsTreeDefinitionProps {
   metadataProvider: IMetadataProvider;

@@ -10,7 +10,10 @@
       "name": "[test-app] Start Frontend Server",
       "cwd": "${workspaceRoot}/apps/test-app/frontend",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "start"]
+      "runtimeArgs": [
+        "run",
+        "start"
+      ]
     },
     {
       "type": "node",
@@ -131,17 +134,24 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["mocha", "--config", "./.mocharc.json", "--timeout", "0", "./lib/*test.js"],
+      "runtimeArgs": [
+        "mocha",
+        "--config",
+        "./.mocharc.json",
+        "--timeout",
+        "0",
+        "./lib/*test.js"
+      ],
       "env": {
         "NODE_OPTIONS": "--enable-source-maps"
       }
     },
     {
       "name": "Tests: Hierarchy builder",
-      "cwd": "${workspaceFolder}/packages/hierarchy-builder",
+      "cwd": "${workspaceFolder}/packages/hierarchies",
       "type": "node",
       "request": "launch",
-      "program": "${workspaceFolder}/packages/hierarchy-builder/node_modules/mocha/bin/_mocha",
+      "program": "${workspaceFolder}/packages/hierarchies/node_modules/mocha/bin/_mocha",
       "args": [
         "--config",
         "./.mocharc.json",
@@ -149,7 +159,7 @@
         "lib/cjs/test/**/*.test.js"
       ],
       "outFiles": [
-        "${workspaceFolder}/packages/hierarchy-builder/lib/**/*.js"
+        "${workspaceFolder}/packages/hierarchies/lib/**/*.js"
       ],
       "env": {
         "NODE_ENV": "development"
@@ -188,7 +198,7 @@
       "outFiles": [
         "${workspaceFolder}/packages/components/lib/**/*.js",
         "${workspaceFolder}/packages/core-interop/lib/**/*.js",
-        "${workspaceFolder}/packages/hierarchy-builder/lib/**/*.js",
+        "${workspaceFolder}/packages/hierarchies/lib/**/*.js",
         "${workspaceFolder}/packages/models-tree/lib/**/*.js",
         "${workspaceFolder}/packages/testing/lib/**/*.js",
         "${workspaceFolder}/packages/full-stack-tests/lib/**/*.js"

@@ -9,8 +9,7 @@ export function createStorage(): SelectionStorage;
 
 // @beta
 export interface CustomSelectable {
-    // @internal
-    data: any;
+    data: unknown;
     identifier: string;
     loadInstanceKeys: () => AsyncIterableIterator<SelectableInstanceKey>;
 }
@@ -21,8 +20,11 @@ export type Selectable = SelectableInstanceKey | CustomSelectable;
 // @beta (undocumented)
 export namespace Selectable {
     export function isCustom(selectable: Selectable): selectable is CustomSelectable;
-    export function isInstanceKey(selectable: Selectable): selectable is SelectableInstanceKey;
+    export function isInstanceKey(selectable: Selectable | SelectableIdentifier): selectable is SelectableInstanceKey;
 }
+
+// @beta
+export type SelectableIdentifier = SelectableInstanceKey | Pick<CustomSelectable, "identifier">;
 
 // @beta
 export interface SelectableInstanceKey {
@@ -42,9 +44,9 @@ export namespace Selectables {
     export function clear(selectables: Selectables): boolean;
     export function create(source: Selectable[]): Selectables;
     export function forEach(selectables: Selectables, callback: (selectable: Selectable, index: number) => void): void;
-    export function has(selectables: Selectables, value: Selectable): boolean;
-    export function hasAll(selectables: Selectables, values: Selectable[]): boolean;
-    export function hasAny(selectables: Selectables, values: Selectable[]): boolean;
+    export function has(selectables: Selectables, value: SelectableIdentifier): boolean;
+    export function hasAll(selectables: Selectables, values: SelectableIdentifier[]): boolean;
+    export function hasAny(selectables: Selectables, values: SelectableIdentifier[]): boolean;
     export function isEmpty(selectables: Selectables): boolean;
     export function remove(selectables: Selectables, values: Selectable[]): boolean;
     export function size(selectables: Selectables): number;
@@ -59,13 +61,39 @@ export interface SelectionChangeEvent {
 
 // @beta
 export interface SelectionStorage {
-    addToSelection(source: string, iModelKey: string, selectables: Selectable[], level: number): void;
-    clearSelection(source: string, iModelKey: string, level: number): void;
-    clearStorage(iModelKey: string): void;
-    getSelection(iModelKey: string, level: number): Selectables;
-    getSelectionLevels(iModelKey: string): number[];
-    removeFromSelection(source: string, iModelKey: string, selectables: Selectable[], level: number): void;
-    replaceSelection(source: string, iModelKey: string, selectables: Selectable[], level: number): void;
+    addToSelection(props: {
+        iModelKey: string;
+        source: string;
+        selectables: Selectable[];
+        level?: number;
+    }): void;
+    clearSelection(props: {
+        iModelKey: string;
+        source: string;
+        level?: number;
+    }): void;
+    clearStorage(props: {
+        iModelKey: string;
+    }): void;
+    getSelection(props: {
+        iModelKey: string;
+        level?: number;
+    }): Selectables;
+    getSelectionLevels(props: {
+        iModelKey: string;
+    }): number[];
+    removeFromSelection(props: {
+        iModelKey: string;
+        source: string;
+        selectables: Selectable[];
+        level?: number;
+    }): void;
+    replaceSelection(props: {
+        iModelKey: string;
+        source: string;
+        selectables: Selectable[];
+        level?: number;
+    }): void;
     selectionChangeEvent: SelectionChangeEvent;
 }
 

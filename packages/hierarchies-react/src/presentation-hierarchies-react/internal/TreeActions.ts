@@ -5,7 +5,7 @@
 
 import { Draft, enableMapSet, produce } from "immer";
 import { EMPTY, Observable, reduce, Subject, takeUntil } from "rxjs";
-import { GenericInstanceFilter, HierarchyNode, HierarchyProvider, ParentHierarchyNode } from "@itwin/presentation-hierarchy-builder";
+import { GenericInstanceFilter, HierarchyNode, HierarchyProvider, ParentHierarchyNode } from "@itwin/presentation-hierarchies";
 import { PresentationHierarchyNode, PresentationTreeNode } from "../Types";
 import { createNodeId, HierarchyLoader, IHierarchyLoader, LoadedHierarchyPart } from "./TreeLoader";
 import {

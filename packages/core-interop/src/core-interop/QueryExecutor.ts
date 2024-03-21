@@ -6,7 +6,7 @@
 import { OrderedId64Iterable } from "@itwin/core-bentley";
 import { ECSqlReader, QueryBinder, QueryOptions, QueryOptionsBuilder, QueryRowFormat } from "@itwin/core-common";
 import { Point2d, Point3d } from "@itwin/core-geometry";
-import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow, IECSqlQueryExecutor } from "@itwin/presentation-hierarchy-builder";
+import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow, IECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 
 /**
  * An interface for something that knows how to create an `ECSqlReader`. Generally, this represents either [IModelDb]($core-backend)

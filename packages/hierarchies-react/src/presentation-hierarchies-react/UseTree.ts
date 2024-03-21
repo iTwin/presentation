@@ -4,10 +4,10 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchy-builder";
+import { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { TreeActions, TreeState } from "./internal/TreeActions";
 import { isHierarchyNodeSelected, isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelRootNode } from "./internal/TreeModel";
-import { useUnifiedTreeSelection } from "./internal/UseUnifiedSelection";
+import { useUnifiedTreeSelection, UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection";
 import { PresentationTreeNode } from "./Types";
 
 interface UseTreeProps {
@@ -47,9 +47,9 @@ export function useTree(props: UseTreeProps): UseTreeResult {
 }
 
 /** @beta */
-export function useUnifiedSelectionTree(props: UseTreeProps): UseTreeResult {
+export function useUnifiedSelectionTree({ imodelKey, sourceName, ...props }: UseTreeProps & Omit<UseUnifiedTreeSelectionProps, "getNode">): UseTreeResult {
   const { getNode, ...rest } = useTreeInternal(props);
-  return { ...rest, ...useUnifiedTreeSelection({ getNode }) };
+  return { ...rest, ...useUnifiedTreeSelection({ imodelKey, sourceName, getNode }) };
 }
 
 function useTreeInternal({
