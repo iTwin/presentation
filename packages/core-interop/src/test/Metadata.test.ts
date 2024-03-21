@@ -265,31 +265,6 @@ describe("createECClass", () => {
     });
   });
 
-  describe("getBaseClass", () => {
-    it("returns base class from core class", async () => {
-      const fakeBaseClass = sinon.stub().resolves({
-        schemaItemType: SchemaItemType.EntityClass,
-        fullName: "s.c_base",
-        schema: "s",
-        name: "c_base",
-      });
-      const coreClass = {
-        schemaItemType: SchemaItemType.EntityClass,
-        fullName: "s.c",
-        schema: "s",
-        name: "c",
-        get baseClass() {
-          return fakeBaseClass();
-        },
-      } as unknown as CoreClass;
-
-      const ecClass = createECClass(coreClass, schema);
-      const actualBaseClass = await ecClass.getBaseClass();
-      expect(fakeBaseClass).to.be.calledOnce;
-      expect(actualBaseClass?.fullName).to.eq("s.c_base");
-    });
-  });
-
   describe("getProperties", () => {
     it("returns properties from core class", async () => {
       const coreClass = {
