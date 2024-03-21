@@ -37,7 +37,7 @@ export function createGroupingOperator(
         const { instanceNodes, restNodes } = partitionInstanceNodes(resolvedNodes);
         const groupingHandlersObs = groupingHandlers
           ? of(groupingHandlers)
-          : from(createGroupingHandlers(metadata, resolvedNodes, valueFormatter, localizedStrings, baseClassChecker));
+          : from(createGroupingHandlers(metadata, instanceNodes, valueFormatter, localizedStrings, baseClassChecker));
         return groupingHandlersObs.pipe(
           concatMap(async (createdGroupingHandlers) => {
             const grouped = await groupInstanceNodes(instanceNodes, restNodes.length, createdGroupingHandlers, onGroupingNodeCreated);
@@ -125,13 +125,12 @@ async function groupInstanceNodes(
 /** @internal */
 export async function createGroupingHandlers(
   metadata: IMetadataProvider,
-  nodes: ProcessedHierarchyNode[],
+  processedInstanceNodes: ProcessedInstanceHierarchyNode[],
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
   baseClassChecker: BaseClassChecker,
 ): Promise<GroupingHandler[]> {
   const groupingHandlers: GroupingHandler[] = new Array<GroupingHandler>();
-  const processedInstanceNodes = nodes.filter((n): n is ProcessedInstanceHierarchyNode => HierarchyNode.isInstancesNode(n));
   groupingHandlers.push(...(await createBaseClassGroupingHandlers(metadata, processedInstanceNodes, baseClassChecker)));
   groupingHandlers.push(async (allNodes) => createClassGroups(metadata, allNodes));
   groupingHandlers.push(...(await createPropertiesGroupingHandlers(metadata, processedInstanceNodes, valueFormatter, localizedStrings, baseClassChecker)));
