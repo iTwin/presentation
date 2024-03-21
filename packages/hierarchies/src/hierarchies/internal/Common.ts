@@ -145,7 +145,8 @@ export function compareNodesByLabel<TLhsNode extends { label: string }, TRhsNode
 export class BaseClassChecker {
   private _map: LRUMap<string, boolean>;
   private _metadataProvider: IMetadataProvider;
-  public constructor(metadataProvider: IMetadataProvider, cacheSize: number) {
+
+  public constructor(metadataProvider: IMetadataProvider, cacheSize: number = 0) {
     this._map = new LRUMap<string, boolean>(cacheSize);
     this._metadataProvider = metadataProvider;
   }
