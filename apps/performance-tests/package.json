@@ -14,6 +14,7 @@
     "@itwin/core-backend": "^4.4.0",
     "@itwin/core-bentley": "^4.4.0",
     "@itwin/core-common": "^4.4.0",
+    "@itwin/core-quantity": "^4.4.0",
     "@itwin/ecschema-metadata": "^4.4.0",
     "@itwin/presentation-core-interop": "workspace:*",
     "@itwin/presentation-hierarchies": "workspace:*",
