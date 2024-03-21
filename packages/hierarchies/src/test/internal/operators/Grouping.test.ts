@@ -9,6 +9,7 @@ import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
 import { IMetadataProvider } from "../../../hierarchies/ECMetadata";
 import { ProcessedInstanceHierarchyNode } from "../../../hierarchies/HierarchyNode";
+import { BaseClassChecker } from "../../../hierarchies/internal/Common";
 import { createGroupingHandlers, createGroupingOperator, GroupingHandlerResult, LOGGING_NAMESPACE } from "../../../hierarchies/internal/operators/Grouping";
 import * as autoExpand from "../../../hierarchies/internal/operators/grouping/AutoExpand";
 import * as baseClassGrouping from "../../../hierarchies/internal/operators/grouping/BaseClassGrouping";
