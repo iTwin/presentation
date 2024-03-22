@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Logger as CoreLogger, LogLevel as CoreLogLevel } from "@itwin/core-bentley";
-import { ILogger, LogLevel } from "@itwin/presentation-hierarchy-builder";
+import { ILogger, LogLevel } from "@itwin/presentation-hierarchies";
 
 /**
  * Create an `ILogger` that uses [Logger]($core-bentley) API to log messages.

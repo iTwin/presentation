@@ -12,7 +12,7 @@
  * @beta
  */
 export interface SelectableInstanceKey {
-  /** Full class name in format `SchemaName:ClassName` or `SchemaName.ClassName` */
+  /** Full class name in format `SchemaName:ClassName` or `SchemaName.ClassName`. */
   className: string;
   /** ECInstance ID */
   id: string;
@@ -23,14 +23,12 @@ export interface SelectableInstanceKey {
  * @beta
  */
 export interface CustomSelectable {
-  /** Unique identifier of the selectable */
+  /** Unique identifier of the selectable. */
   identifier: string;
-  /** Asynchronous function for loading instance keys */
+  /** Asynchronous function for loading instance keys associated with this selectable. */
   loadInstanceKeys: () => AsyncIterableIterator<SelectableInstanceKey>;
-  /** Custom data of the selectable
-   * @internal
-   */
-  data: any;
+  /** Custom data associated with the selectable. */
+  data: unknown;
 }
 
 /**
@@ -39,11 +37,17 @@ export interface CustomSelectable {
  */
 export type Selectable = SelectableInstanceKey | CustomSelectable;
 
+/**
+ * Type of identifier that can be used to identify selectable in storage.
+ * @beta
+ */
+export type SelectableIdentifier = SelectableInstanceKey | Pick<CustomSelectable, "identifier">;
+
 /** @beta */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export namespace Selectable {
   /** Check if the supplied selectable is a `SelectableInstanceKey` */
-  export function isInstanceKey(selectable: Selectable): selectable is SelectableInstanceKey {
+  export function isInstanceKey(selectable: Selectable | SelectableIdentifier): selectable is SelectableInstanceKey {
     const instanceKey = selectable as SelectableInstanceKey;
     return !!instanceKey.className && !!instanceKey.id;
   }
@@ -60,11 +64,11 @@ export namespace Selectable {
  */
 export interface Selectables {
   /**
-   * Map between ECInstance className and instance IDs
+   * Map between `SelectableInstanceKey.className` and a set of selected element IDs.
    */
   instanceKeys: Map<string, Set<string>>;
   /**
-   * Map between unique identifier of `CustomSelectable` and the selectable itself
+   * Map between unique identifier of `CustomSelectable` and the selectable itself.
    */
   custom: Map<string, CustomSelectable>;
 }
@@ -112,7 +116,7 @@ export namespace Selectables {
    * @param value The selectable to check for.
    * @beta
    */
-  export function has(selectables: Selectables, value: Selectable): boolean {
+  export function has(selectables: Selectables, value: SelectableIdentifier): boolean {
     if (Selectable.isInstanceKey(value)) {
       const normalizedClassName = normalizeClassName(value.className);
       const set = selectables.instanceKeys.get(normalizedClassName);
@@ -127,7 +131,7 @@ export namespace Selectables {
    * @param values The selectables to check for.
    * @beta
    */
-  export function hasAll(selectables: Selectables, values: Selectable[]): boolean {
+  export function hasAll(selectables: Selectables, values: SelectableIdentifier[]): boolean {
     if (Selectables.size(selectables) < values.length) {
       return false;
     }
@@ -145,7 +149,7 @@ export namespace Selectables {
    * @param values The selectables to check for.
    * @beta
    */
-  export function hasAny(selectables: Selectables, values: Selectable[]): boolean {
+  export function hasAny(selectables: Selectables, values: SelectableIdentifier[]): boolean {
     for (const selectable of values) {
       if (Selectables.has(selectables, selectable)) {
         return true;

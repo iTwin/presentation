@@ -5,7 +5,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { RenderedItemsRange, TreeDataProvider, TreeModelSource, TreeNodeLoader } from "@itwin/components-react";
-import { HierarchyProvider, IPrimitiveValueFormatter } from "@itwin/presentation-hierarchy-builder";
+import { HierarchyProvider, IPrimitiveValueFormatter } from "@itwin/presentation-hierarchies";
 import { startTreeReload } from "./TreeReloader";
 
 interface ControlledTreeComponents {

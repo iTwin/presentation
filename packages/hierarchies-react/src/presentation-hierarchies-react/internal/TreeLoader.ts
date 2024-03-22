@@ -11,7 +11,7 @@ import {
   HierarchyProvider,
   ParentHierarchyNode,
   RowsLimitExceededError,
-} from "@itwin/presentation-hierarchy-builder";
+} from "@itwin/presentation-hierarchies";
 import { isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelInfoNode, TreeModelNode, TreeModelRootNode } from "./TreeModel";
 
 /** @internal */

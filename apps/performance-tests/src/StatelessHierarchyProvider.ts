@@ -5,7 +5,7 @@
 
 import { expand, filter, from, mergeAll, of } from "rxjs";
 import { IModelDb } from "@itwin/core-backend";
-import { ISchemaLocater, Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType } from "@itwin/ecschema-metadata";
+import { SchemaContext, SchemaJsonLocater } from "@itwin/ecschema-metadata";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import {
   createLimitingECSqlQueryExecutor,
@@ -13,7 +13,7 @@ import {
   HierarchyProvider,
   IHierarchyLevelDefinitionsFactory,
   IMetadataProvider,
-} from "@itwin/presentation-hierarchy-builder";
+} from "@itwin/presentation-hierarchies";
 
 export interface ProviderOptions {
   iModel: IModelDb;
@@ -70,7 +70,7 @@ export class StatelessHierarchyProvider {
   private createMetadataProvider() {
     const iModel = this._props.iModel;
     const schemas = new SchemaContext();
-    const locater = new IModelDbSchemaLocater(iModel);
+    const locater = new SchemaJsonLocater((schemaName) => iModel.getSchemaProps(schemaName));
     schemas.addLocater(locater);
     return createMetadataProvider(schemas);
   }
@@ -83,30 +83,5 @@ export class StatelessHierarchyProvider {
       hierarchyDefinition: this._props.getHierarchyFactory(metadataProvider),
       queryExecutor: createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(this._props.iModel), rowLimit),
     });
-  }
-}
-
-export class IModelDbSchemaLocater implements ISchemaLocater {
-  constructor(private readonly _iModelDb: IModelDb) {}
-
-  public getSchemaSync<T extends Schema>(_schemaKey: Readonly<SchemaKey>, _matchType: SchemaMatchType, _schemaContext: SchemaContext): T | undefined {
-    console.error(`getSchemaSync not implemented`);
-    return undefined;
-  }
-
-  public async getSchemaInfo(schemaKey: Readonly<SchemaKey>, matchType: SchemaMatchType, schemaContext: SchemaContext): Promise<SchemaInfo | undefined> {
-    const schemaJson = this._iModelDb.getSchemaProps(schemaKey.name);
-    const schemaInfo = await Schema.startLoadingFromJson(schemaJson, schemaContext);
-    if (schemaInfo !== undefined && schemaInfo.schemaKey.matches(schemaKey, matchType)) {
-      return schemaInfo;
-    }
-    return undefined;
-  }
-
-  public async getSchema<T extends Schema>(schemaKey: Readonly<SchemaKey>, matchType: SchemaMatchType, schemaContext: SchemaContext): Promise<T | undefined> {
-    await this.getSchemaInfo(schemaKey, matchType, schemaContext);
-    // eslint-disable-next-line @itwin/no-internal
-    const schema = await schemaContext.getCachedSchema(schemaKey, matchType);
-    return schema as T;
   }
 }

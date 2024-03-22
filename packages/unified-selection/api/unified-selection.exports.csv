@@ -4,6 +4,7 @@ beta;createStorage(): SelectionStorage
 beta;CustomSelectable
 beta;Selectable = SelectableInstanceKey | CustomSelectable
 beta;Selectable
+beta;SelectableIdentifier = SelectableInstanceKey | Pick
 beta;SelectableInstanceKey
 beta;Selectables
 beta;Selectables
