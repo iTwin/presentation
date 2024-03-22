@@ -13,6 +13,7 @@ import {
   ElementProps,
   ExternalSourceAspectProps,
   ExternalSourceProps,
+  FunctionalElementProps,
   GeometricElement2dProps,
   GeometricModel2dProps,
   GeometricModel3dProps,
@@ -20,6 +21,7 @@ import {
   InformationPartitionElementProps,
   ModelProps,
   PhysicalElementProps,
+  RelationshipProps,
   RepositoryLinkProps,
   SubCategoryProps,
   SubjectProps,
@@ -29,6 +31,7 @@ export interface TestIModelBuilder {
   insertModel(props: ModelProps): Id64String;
   insertElement(props: ElementProps): Id64String;
   insertAspect(props: ElementAspectProps): Id64String;
+  insertRelationship(props: RelationshipProps): Id64String;
   createCode(scopeModelId: CodeScopeProps, codeSpecName: BisCodeSpec, codeValue: string): Code;
 }
 
@@ -301,6 +304,65 @@ export function insertExternalSourceAspect(
     ...externalSourceAspectProps,
   } as ExternalSourceAspectProps);
 
+  return { className, id };
+}
+
+export function insertFunctionalModelWithPartition(props: BaseInstanceInsertProps & { codeValue: string; partitionParentId?: Id64String }) {
+  const { codeValue, partitionParentId, ...baseProps } = props;
+  const partitionKey = insertFunctionalPartition({ ...baseProps, codeValue, parentId: partitionParentId ?? IModel.rootSubjectId });
+  return insertFunctionalSubModel({ ...baseProps, modeledElementId: partitionKey.id });
+}
+
+export function insertFunctionalPartition(
+  props: BaseInstanceInsertProps & { codeValue: string; parentId: Id64String } & Partial<Omit<InformationPartitionElementProps, "id" | "parent" | "code">>,
+) {
+  const { builder, classFullName, codeValue, parentId, ...partitionProps } = props;
+  const defaultModelClassName = `Functional${props.fullClassNameSeparator ?? "."}FunctionalPartition `;
+  const className = classFullName ?? defaultModelClassName;
+  const partitionId = builder.insertElement({
+    classFullName: className,
+    model: IModel.repositoryModelId,
+    code: builder.createCode(parentId, BisCodeSpec.informationPartitionElement, codeValue),
+    parent: {
+      id: parentId,
+      relClassName: `BisCore${props.fullClassNameSeparator ?? "."}SubjectOwnsPartitionElements`,
+    },
+    ...partitionProps,
+  });
+  return { className, id: partitionId };
+}
+
+export function insertFunctionalSubModel(
+  props: BaseInstanceInsertProps & { modeledElementId: Id64String } & Partial<Omit<GeometricModel3dProps, "id" | "modeledElement" | "parentModel">>,
+) {
+  const { builder, classFullName, modeledElementId, ...modelProps } = props;
+  const defaultModelClassName = `Functional${props.fullClassNameSeparator ?? "."}FunctionalModel`;
+  const className = classFullName ?? defaultModelClassName;
+  const modelId = builder.insertModel({
+    classFullName: className,
+    modeledElement: { id: modeledElementId },
+    ...modelProps,
+  });
+  return { className, id: modelId };
+}
+
+export function insertFunctionalElement(
+  props: BaseInstanceInsertProps & { modelId: Id64String; elementId: Id64String; relationship: string } & Partial<
+      Omit<FunctionalElementProps, "id" | "parent" | "code" | "model">
+    >,
+) {
+  const { builder, modelId, elementId, relationship } = props;
+  const className = `Functional${props.fullClassNameSeparator ?? "."}FunctionalComposite`;
+  const id = builder.insertElement({
+    classFullName: className,
+    model: modelId,
+    code: Code.createEmpty(),
+  } as FunctionalElementProps);
+  builder.insertRelationship({
+    sourceId: elementId,
+    targetId: id,
+    classFullName: relationship,
+  });
   return { className, id };
 }
 

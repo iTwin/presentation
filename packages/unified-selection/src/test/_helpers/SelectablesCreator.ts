@@ -16,7 +16,7 @@ export const createECInstanceId = (id: number = 1): string => {
  * Generates a random `SelectableInstanceKey`
  * @internal Used for testing only.
  */
-export const createSelectableInstanceKey = (id: number = 1, className: string = "testClass"): SelectableInstanceKey => {
+export const createSelectableInstanceKey = (id: number = 1, className: string = "TestSchema:TestClass"): SelectableInstanceKey => {
   return {
     className,
     id: createECInstanceId(id),
