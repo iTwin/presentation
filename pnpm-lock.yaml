@@ -186,13 +186,16 @@ importers:
     dependencies:
       '@itwin/core-backend':
         specifier: ^4.4.0
-        version: 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-common@4.4.0)(@itwin/core-geometry@4.4.7)
+        version: 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-common@4.4.0)(@itwin/core-geometry@4.4.0)(@opentelemetry/api@1.6.0)
       '@itwin/core-bentley':
         specifier: ^4.4.0
         version: 4.4.0
       '@itwin/core-common':
         specifier: ^4.4.0
-        version: 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-geometry@4.4.7)
+        version: 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-geometry@4.4.0)
+      '@itwin/core-geometry':
+        specifier: ^4.4.0
+        version: 4.4.0
       '@itwin/core-quantity':
         specifier: ^4.4.0
         version: 4.4.0(@itwin/core-bentley@4.4.0)
@@ -999,7 +1002,10 @@ importers:
         version: 4.4.0
       '@itwin/core-common':
         specifier: ^4.4.0
-        version: 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-geometry@4.4.7)
+        version: 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-geometry@4.4.0)
+      '@itwin/core-geometry':
+        specifier: ^4.4.0
+        version: 4.4.0
       natural-compare-lite:
         specifier: ^1.4.0
         version: 1.4.0
@@ -1292,7 +1298,10 @@ importers:
         version: 4.4.0
       '@itwin/core-common':
         specifier: ^4.4.0
-        version: 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-geometry@4.4.7)
+        version: 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-geometry@4.4.0)
+      '@itwin/core-geometry':
+        specifier: ^4.4.0
+        version: 4.4.0
     devDependencies:
       '@itwin/eslint-plugin':
         specifier: 4.0.0-dev.48
@@ -3214,48 +3223,8 @@ packages:
       - encoding
       - utf-8-validate
 
-  /@itwin/core-backend@4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-common@4.4.0)(@itwin/core-geometry@4.4.7):
-    resolution: {integrity: sha512-Mhytjjr5n5vDsjrz+8wpJz/tk76d4fqEaCGmmxwxvNmKFS1Mjy7aVOhMIdSabOnKUBYPWn+bZvBxWcv/3SJANw==}
-    engines: {node: ^18.0.0 || ^20.0.0}
-    peerDependencies:
-      '@itwin/core-bentley': ^4.4.0
-      '@itwin/core-common': ^4.4.0
-      '@itwin/core-geometry': ^4.4.0
-      '@opentelemetry/api': ^1.0.4
-    peerDependenciesMeta:
-      '@opentelemetry/api':
-        optional: true
-    dependencies:
-      '@bentley/imodeljs-native': 4.4.3
-      '@itwin/cloud-agnostic-core': 2.2.3(inversify@6.0.2)(reflect-metadata@0.1.14)
-      '@itwin/core-bentley': 4.4.0
-      '@itwin/core-common': 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-geometry@4.4.7)
-      '@itwin/core-geometry': 4.4.7
-      '@itwin/core-telemetry': 4.4.0(@itwin/core-geometry@4.4.7)
-      '@itwin/object-storage-azure': 2.2.3(inversify@6.0.2)(reflect-metadata@0.1.14)
-      '@itwin/object-storage-core': 2.2.3(inversify@6.0.2)(reflect-metadata@0.1.14)
-      form-data: 2.5.1
-      fs-extra: 8.1.0
-      inversify: 6.0.2
-      json5: 2.2.3
-      multiparty: 4.2.3
-      reflect-metadata: 0.1.14
-      semver: 7.6.0
-      touch: 3.1.0
-      ws: 7.5.9
-    transitivePeerDependencies:
-      - bufferutil
-      - debug
-      - encoding
-      - utf-8-validate
-    dev: false
-
   /@itwin/core-bentley@4.4.0:
     resolution: {integrity: sha512-baRZcIyFnkjG3UBTZ/a8bHoUXTds7f+5yx+WaxS67fMF1eSRgIZqUK59f9qQRvGpB7KPWYZLZzmrQQ8/km9RhQ==}
-
-  /@itwin/core-bentley@4.4.7:
-    resolution: {integrity: sha512-mI88398BR61G/EtKd/h+3EV/WWT4quqpZ9HjWpXSeIWm2i0/Yk1F57QA0GQU54Z5eu4BAu3pLtu88XUmY/Coew==}
-    dev: false
 
   /@itwin/core-common@4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-geometry@4.4.0):
     resolution: {integrity: sha512-9eBlu6eAAgwdm91Dputiqnr70fuPyG1MpcQ/hkgy36QItSTh94xijOnY+IG5ggx2f0bjX9CAuYy5upjBSnOwWA==}
@@ -3267,18 +3236,6 @@ packages:
       '@itwin/core-geometry': 4.4.0
       flatbuffers: 1.12.0
       js-base64: 3.7.7
-
-  /@itwin/core-common@4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-geometry@4.4.7):
-    resolution: {integrity: sha512-9eBlu6eAAgwdm91Dputiqnr70fuPyG1MpcQ/hkgy36QItSTh94xijOnY+IG5ggx2f0bjX9CAuYy5upjBSnOwWA==}
-    peerDependencies:
-      '@itwin/core-bentley': ^4.4.0
-      '@itwin/core-geometry': ^4.4.0
-    dependencies:
-      '@itwin/core-bentley': 4.4.0
-      '@itwin/core-geometry': 4.4.7
-      flatbuffers: 1.12.0
-      js-base64: 3.7.7
-    dev: false
 
   /@itwin/core-electron@4.4.0(@itwin/core-backend@4.4.0)(@itwin/core-bentley@4.4.0)(@itwin/core-common@4.4.0)(@itwin/core-frontend@4.4.0)(electron@28.2.3):
     resolution: {integrity: sha512-HcZIHWiDgrhjWtns2NGaQOEXiT4gL0GHdtVnvf9qntfHJpyfy2OUmEFreKPxMSCPXwwUR/HckdWgbcvFlpDgqA==}
@@ -3339,13 +3296,6 @@ packages:
       '@itwin/core-bentley': 4.4.0
       flatbuffers: 1.12.0
 
-  /@itwin/core-geometry@4.4.7:
-    resolution: {integrity: sha512-/WOSyCSEJUvBY7KPzPhDmV+vV6SQyD95FASivIUGRJq6CeRgM5LfvnqMkgly8vXzUDviQ8pz+YdY/PegLCMX6Q==}
-    dependencies:
-      '@itwin/core-bentley': 4.4.7
-      flatbuffers: 1.12.0
-    dev: false
-
   /@itwin/core-i18n@4.4.0(@itwin/core-bentley@4.4.0):
     resolution: {integrity: sha512-SpAqL6TM7DjSheMseeTG7Rhb+4lybsRK87xZnpQpPaJEl8AX6HkHTqfVD220YDU4/l5spFEEF+ya4YpQ/PHtSQ==}
     peerDependencies:
@@ -3398,15 +3348,6 @@ packages:
       '@itwin/core-common': 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-geometry@4.4.0)
     transitivePeerDependencies:
       - '@itwin/core-geometry'
-
-  /@itwin/core-telemetry@4.4.0(@itwin/core-geometry@4.4.7):
-    resolution: {integrity: sha512-oVea5rMWTnLxWwydNP7IOeds6lD+Z8KJF8UZSshmsd4LCN/Djf2dQ73/utpyL8Yg/cGLJuF5B0+w4Zm8im2vvQ==}
-    dependencies:
-      '@itwin/core-bentley': 4.4.0
-      '@itwin/core-common': 4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-geometry@4.4.7)
-    transitivePeerDependencies:
-      - '@itwin/core-geometry'
-    dev: false
 
   /@itwin/ecschema-metadata@4.4.0(@itwin/core-bentley@4.4.0)(@itwin/core-quantity@4.4.0):
     resolution: {integrity: sha512-ECs+MJ/4Lt3zSOYLa5mc61+w5vZwNNQAbDo2BKWjQoXzqJRRdwY1YkD8G9zaPoUXgNIImXBeRNKqp3jTpDDcqA==}
@@ -6210,7 +6151,7 @@ packages:
       artillery-plugin-metrics-by-endpoint: 1.2.0
       artillery-plugin-publish-metrics: 2.12.0
       async: 2.6.4
-      aws-sdk: 2.1582.0
+      aws-sdk: 2.1583.0
       chalk: 2.4.2
       ci-info: 3.9.0
       cli-table3: 0.6.3
@@ -6232,7 +6173,7 @@ packages:
       nanoid: 3.3.7
       ora: 4.1.1
       posthog-node: 3.6.3(debug@4.3.4)
-      sqs-consumer: 5.8.0(aws-sdk@2.1582.0)
+      sqs-consumer: 5.8.0(aws-sdk@2.1583.0)
       temp: 0.9.4
       tmp: 0.2.1
       try-require: 1.2.1
@@ -6298,8 +6239,8 @@ packages:
     dependencies:
       possible-typed-array-names: 1.0.0
 
-  /aws-sdk@2.1582.0:
-    resolution: {integrity: sha512-oPSk5e1D0oegX3lC+pUIKmI5e4depLi0+9fU7C73KDq65nq8NmdehpbytPHGPqfftqfa3FTEXb2yUPA4A9wM9w==}
+  /aws-sdk@2.1583.0:
+    resolution: {integrity: sha512-gpJFO1kWC4qHPFMRgtjp15X48W8UrU1BvhYNUE7vv4O2YFHWbfulDp1hAdv6NN1sFkq/gvK2gdo5+qjj+4wdOQ==}
     engines: {node: '>= 10.0.0'}
     requiresBuild: true
     dependencies:
@@ -6458,8 +6399,8 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
     dependencies:
-      caniuse-lite: 1.0.30001599
-      electron-to-chromium: 1.4.713
+      caniuse-lite: 1.0.30001600
+      electron-to-chromium: 1.4.715
       node-releases: 2.0.14
       update-browserslist-db: 1.0.13(browserslist@4.23.0)
 
@@ -6558,8 +6499,8 @@ packages:
     resolution: {integrity: sha512-Gmy6FhYlCY7uOElZUSbxo2UCDH8owEk996gkbrpsgGtrJLM3J7jGxl9Ic7Qwwj4ivOE5AWZWRMecDdF7hqGjFA==}
     engines: {node: '>=10'}
 
-  /caniuse-lite@1.0.30001599:
-    resolution: {integrity: sha512-LRAQHZ4yT1+f9LemSMeqdMpMxZcc4RMWdj4tiFe3G8tNkWK+E58g+/tzotb5cU6TbcVJLr4fySiAW7XmxQvZQA==}
+  /caniuse-lite@1.0.30001600:
+    resolution: {integrity: sha512-+2S9/2JFhYmYaDpZvo0lKkfvuKIglrx68MwOBqMGHhQsNkLjB5xtc/TGoEPs+MxjSyN/72qer2g97nzR641mOQ==}
 
   /cardinal@2.1.1:
     resolution: {integrity: sha512-JSr5eOgoEymtYHBjNWyjrMqet9Am2miJhlfKNdqLp6zoeAh0KN5dRAcxlecj5mAJrmQomgiOBj35xHLrFjqBpw==}
@@ -7521,8 +7462,8 @@ packages:
       jake: 10.8.7
     dev: false
 
-  /electron-to-chromium@1.4.713:
-    resolution: {integrity: sha512-vDarADhwntXiULEdmWd77g2dV6FrNGa8ecAC29MZ4TwPut2fvosD0/5sJd1qWNNe8HcJFAC+F5Lf9jW1NPtWmw==}
+  /electron-to-chromium@1.4.715:
+    resolution: {integrity: sha512-XzWNH4ZSa9BwVUQSDorPWAUQ5WGuYz7zJUNpNif40zFCiCl20t8zgylmreNmn26h5kiyw2lg7RfTmeMBsDklqg==}
 
   /electron@28.2.3:
     resolution: {integrity: sha512-he9nGphZo03ejDjYBXpmFVw0KBKogXvR2tYxE4dyYvnfw42uaFIBFrwGeenvqoEOfheJfcI0u4rFG6h3QxDwnA==}
@@ -7659,7 +7600,7 @@ packages:
       typed-array-buffer: 1.0.2
       typed-array-byte-length: 1.0.1
       typed-array-byte-offset: 1.0.2
-      typed-array-length: 1.0.5
+      typed-array-length: 1.0.6
       unbox-primitive: 1.0.2
       which-typed-array: 1.1.15
 
@@ -12140,12 +12081,12 @@ packages:
     dev: false
     optional: true
 
-  /sqs-consumer@5.8.0(aws-sdk@2.1582.0):
+  /sqs-consumer@5.8.0(aws-sdk@2.1583.0):
     resolution: {integrity: sha512-pJReMEtDM9/xzQTffb7dxMD5MKagBfOW65m+ITsbpNk0oZmJ38tTC4LPmj0/7ZcKSOqi2LrpA1b0qGYOwxlHJg==}
     peerDependencies:
       aws-sdk: ^2.1271.0
     dependencies:
-      aws-sdk: 2.1582.0
+      aws-sdk: 2.1583.0
       debug: 4.3.4(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
@@ -12677,8 +12618,8 @@ packages:
       has-proto: 1.0.3
       is-typed-array: 1.1.13
 
-  /typed-array-length@1.0.5:
-    resolution: {integrity: sha512-yMi0PlwuznKHxKmcpoOdeLwxBoVPkqZxd7q2FgMkmD3bNwvF5VW0+UlUQ1k1vmktTu4Yu13Q0RIxEP8+B+wloA==}
+  /typed-array-length@1.0.6:
+    resolution: {integrity: sha512-/OxDN6OtAk5KBpGb28T+HZc2M+ADtvRxXrKKbUwtsLgdoxgX13hyy7ek6bFRl5+aBs2yZzB0c4CnQfAtVypW/g==}
     engines: {node: '>= 0.4'}
     dependencies:
       call-bind: 1.0.7
