@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { SchemaContext, SchemaKey } from "@itwin/ecschema-metadata";
-import { IMetadataProvider } from "@itwin/presentation-hierarchies";
+import { ECSchema, IMetadataProvider } from "@itwin/presentation-hierarchies";
 import { createECSchema } from "./MetadataInternal";
 
 /**
@@ -12,10 +12,17 @@ import { createECSchema } from "./MetadataInternal";
  * @beta
  */
 export function createMetadataProvider(schemaContext: SchemaContext): IMetadataProvider {
+  const schemaCache = new Map<string, Promise<ECSchema | undefined>>();
   return {
     async getSchema(name) {
-      const schema = await schemaContext.getSchema(new SchemaKey(name));
-      return schema ? createECSchema(schema) : undefined;
+      // workaround for https://github.com/iTwin/itwinjs-core/issues/6542
+      let schema = schemaCache.get(name);
+      // istanbul ignore else
+      if (!schema) {
+        schema = schemaContext.getSchema(new SchemaKey(name)).then((coreSchema) => (coreSchema ? createECSchema(coreSchema) : undefined));
+        schemaCache.set(name, schema);
+      }
+      return schema;
     },
   };
 }
