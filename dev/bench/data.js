@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1710929562020,
+  "lastUpdate": 1711091740066,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -1857,6 +1857,118 @@ window.BENCHMARK_DATA = {
             "value": 359,
             "unit": "ms",
             "extra": "count: 2\nmax: 359\np95: 359\nmedian: 352.5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35135765+grigasp@users.noreply.github.com",
+            "name": "Grigas",
+            "username": "grigasp"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "69288798eadf04cdb6c2302233d734635f036e3d",
+          "message": "Fix same schemas being loaded more than once (#486)",
+          "timestamp": "2024-03-22T09:13:27+02:00",
+          "tree_id": "96e96fd8d39324c5c40b42c8d19b45cb46adb6fe",
+          "url": "https://github.com/iTwin/presentation/commit/69288798eadf04cdb6c2302233d734635f036e3d"
+        },
+        "date": 1711091739652,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "flat 50k elements list",
+            "value": 4791.38,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 54.46,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 2549.33,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 181,
+            "unit": "ms",
+            "extra": "count: 4\nmax: 181\np95: 181\nmedian: 92"
+          },
+          {
+            "name": "grouping by label",
+            "value": 8897.34,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "grouping by class",
+            "value": 8933.51,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "grouping by property",
+            "value": 9668.39,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 454,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 454\np95: 454\nmedian: 454"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 23797.7,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 6080,
+            "unit": "ms",
+            "extra": "count: 7\nmax: 6080\np95: 6080\nmedian: 1045"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 10076.08,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 349,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 349\np95: 349\nmedian: 342"
           }
         ]
       }
