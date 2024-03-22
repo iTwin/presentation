@@ -6,6 +6,7 @@
 import * as fs from "fs";
 import Backend from "i18next-http-backend";
 import * as path from "path";
+import { IModelHostOptions } from "@itwin/core-backend";
 import { Guid, Logger, LogLevel } from "@itwin/core-bentley";
 import { IModelReadRpcInterface, SnapshotIModelRpcInterface } from "@itwin/core-common";
 import { IModelApp, IModelAppOptions, NoRenderApp } from "@itwin/core-frontend";
@@ -59,6 +60,13 @@ export async function initialize(props?: { backendTimeout?: number }) {
     },
   };
 
+  const backendHostOptions: IModelHostOptions = {
+    cacheDir: path.join(__dirname, ".cache"),
+    workspace: {
+      settingsFiles: [getWorkspaceSettingsPath()],
+    },
+  };
+
   const frontendAppOptions: IModelAppOptions = {
     localization: createTestLocalization(),
   };
@@ -66,7 +74,7 @@ export async function initialize(props?: { backendTimeout?: number }) {
   const presentationTestingInitProps: PresentationTestingInitProps = {
     rpcs: [SnapshotIModelRpcInterface, IModelReadRpcInterface, PresentationRpcInterface, ECSchemaRpcInterface],
     backendProps: backendInitProps,
-    backendHostProps: { cacheDir: path.join(__dirname, ".cache") },
+    backendHostProps: backendHostOptions,
     frontendProps: frontendInitProps,
     frontendApp: IntegrationTestsApp,
     frontendAppOptions,
@@ -86,6 +94,22 @@ export async function resetBackend() {
   const props = PresentationBackend.initProps;
   PresentationBackend.terminate();
   PresentationBackend.initialize(props);
+}
+
+/** Creates workspace settings file that disables `gcs` workspace loading */
+export function getWorkspaceSettingsPath(additionalSettings?: Object) {
+  const libDir = path.resolve("lib");
+  const workspaceSettingsPath = path.join(libDir, "workspaceSettings.json");
+  if (!fs.existsSync(workspaceSettingsPath)) {
+    fs.writeFileSync(
+      workspaceSettingsPath,
+      JSON.stringify({
+        "gcs/disableWorkspaces": true,
+        ...additionalSettings,
+      }),
+    );
+  }
+  return workspaceSettingsPath;
 }
 
 function createTestLocalization(): ITwinLocalization {

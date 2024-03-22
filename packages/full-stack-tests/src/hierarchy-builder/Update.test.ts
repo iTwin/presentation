@@ -40,6 +40,7 @@ import { registerTxnListeners } from "@itwin/presentation-core-interop";
 import { ECSqlSnippets, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchies";
 import { createFileNameFromString } from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils";
 import { setupOutputFileLocation } from "../IModelUtils";
+import { getWorkspaceSettingsPath } from "../IntegrationTests";
 import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation";
 import { createClassECSqlSelector, createMetadataProvider, createProvider } from "./Utils";
 
@@ -56,6 +57,9 @@ describe("Stateless hierarchy builder", () => {
         },
         iModelHost: {
           profileName: Guid.createValue(),
+          workspace: {
+            settingsFiles: [getWorkspaceSettingsPath()],
+          },
         },
       });
       RpcManager.registerImpl(ECSchemaRpcInterface, ECSchemaRpcImpl);
