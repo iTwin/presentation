@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1711091740066,
+  "lastUpdate": 1711105659756,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -1969,6 +1969,118 @@ window.BENCHMARK_DATA = {
             "value": 349,
             "unit": "ms",
             "extra": "count: 2\nmax: 349\np95: 349\nmedian: 342"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "29233962+Yato333@users.noreply.github.com",
+            "name": "Dmitrij Kuzmičiov",
+            "username": "Yato333"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3e028dc6cc520f2aff43119b8b72b4766f44a381",
+          "message": "Base class grouping performance optimizations (#485)\n\n- BaseClassChecker instance will now be constructed in the HierarchyBuilder's constructor. This will help to prevent unnecessary base class checks when calling getNodes the next time. Due to this, BaseClassChecker will now have an LRU cache to limit the consumed amount of memory.\r\n- Made it so isECClassOfBaseECClass returns a Promise only when the result is not cached.\r\n- Removed some instances of unnecessary traversals of all instance nodes.",
+          "timestamp": "2024-03-22T11:05:31Z",
+          "tree_id": "29a958eab9a5e3c8c574f578d92981bd6353306e",
+          "url": "https://github.com/iTwin/presentation/commit/3e028dc6cc520f2aff43119b8b72b4766f44a381"
+        },
+        "date": 1711105658787,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "flat 50k elements list",
+            "value": 4759.88,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 54.16,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 3589.2,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 992,
+            "unit": "ms",
+            "extra": "count: 5\nmax: 992\np95: 992\nmedian: 55"
+          },
+          {
+            "name": "grouping by label",
+            "value": 8947.43,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "grouping by class",
+            "value": 9090.03,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "grouping by property",
+            "value": 9794.84,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 447,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 447\np95: 447\nmedian: 447"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 16215.32,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 5402,
+            "unit": "ms",
+            "extra": "count: 7\nmax: 5402\np95: 5402\nmedian: 1051"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 10144.32,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 361,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 361\np95: 361\nmedian: 351.5"
           }
         ]
       }
