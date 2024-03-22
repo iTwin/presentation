@@ -86,61 +86,16 @@ export interface SelectionStorage {
     /** Key of the iModel to change selection for. */
     iModelKey: string;
   }): void;
-  /**
-   * Get the selection levels currently stored for the specified imodel
-   * @param iModelKey iModel key to get selection levels for.
-   * */
-  getSelectionLevels(iModelKey: string): number[];
-  /** Get the selection stored in the storage.
-   * @param iModelKey iModel key which the selection is associated with.
-   * @param level Level of the selection
-   */
-  getSelection(iModelKey: string, level: number): Selectables;
-  /**
-   * Add keys to the selection
-   * @param source Name of the selection source
-   * @param iModelKey iModel associated with the selection
-   * @param selectables selectables to add
-   * @param level Selection level
-   */
-  addToSelection(source: string, iModelKey: string, selectables: Selectable[], level: number): void;
-  /**
-   * Remove keys from current selection
-   * @param source Name of the selection source
-   * @param iModelKey iModel associated with the selection
-   * @param selectables selectables to remove
-   * @param level Selection level
-   */
-  removeFromSelection(source: string, iModelKey: string, selectables: Selectable[], level: number): void;
-  /**
-   * Replace current selection
-   * @param source Name of the selection source
-   * @param iModelKey iModel associated with the selection
-   * @param selectables selectables to replace the current selection with
-   * @param level Selection level
-   */
-  replaceSelection(source: string, iModelKey: string, selectables: Selectable[], level: number): void;
-  /**
-   * Clear current selection
-   * @param source Name of the selection source
-   * @param iModelKey iModel associated with the selection
-   * @param level Selection level
-   */
-  clearSelection(source: string, iModelKey: string, level: number): void;
-  /**
-   * Clear storage for an iModel. This function should be called when iModel is closed.
-   * @param iModelKey iModel to clear storage for
-   */
-  clearStorage(iModelKey: string): void;
 
-  /**
-   * Get the current hilite set for the specified imodel
-   * @param iModelKey iModel to get hilite set for
-   * @param queryExecutor ECSql query executor
-   * @param metadataProvider EC metadata provider
-   * @public
-   */
-  getHiliteSet(iModelKey: string, queryExecutor: IECSqlQueryExecutor, metadataProvider: IMetadataProvider): Promise<HiliteSet>;
+  /** Get the current hilite set for the specified imodel */
+  getHiliteSet(props: {
+    /** iModel to get hilite set for */
+    iModelKey: string;
+    /** ECSql query executor */
+    queryExecutor: IECSqlQueryExecutor;
+    /** EC metadata provider */
+    metadataProvider: IMetadataProvider;
+  }): Promise<HiliteSet>;
 }
 
 /**
@@ -191,9 +146,10 @@ class SelectionStorageImpl implements SelectionStorage {
     this._hiliteSetProviders.delete(iModelKey);
   }
 
-  public async getHiliteSet(iModelKey: string, queryExecutor: IECSqlQueryExecutor, metadataProvider: IMetadataProvider): Promise<HiliteSet> {
+  public async getHiliteSet(props: { iModelKey: string; queryExecutor: IECSqlQueryExecutor; metadataProvider: IMetadataProvider }): Promise<HiliteSet> {
+    const { iModelKey, queryExecutor, metadataProvider } = props;
     const provider = this.getHiliteSetProvider(iModelKey, queryExecutor, metadataProvider);
-    const selection = this.getSelection(iModelKey, 0);
+    const selection = this.getSelection({ iModelKey });
     return provider.getHiliteSet(selection);
   }
 

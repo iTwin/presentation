@@ -60,8 +60,12 @@ describe.only("HiliteSet", () => {
           ];
         });
 
-        storage.addToSelection("Test", imodel.key, [subjectKey!], 0);
-        const hiliteSet = await storage.getHiliteSet(imodel.key, createECSqlQueryExecutor(imodel), createMetadataProvider(imodel));
+        storage.addToSelection({ source: "Test", iModelKey: imodel.key, selectables: [subjectKey!] });
+        const hiliteSet = await storage.getHiliteSet({
+          iModelKey: imodel.key,
+          queryExecutor: createECSqlQueryExecutor(imodel),
+          metadataProvider: createMetadataProvider(imodel),
+        });
 
         expect(hiliteSet.models)
           .to.have.lengthOf(modelKeys!.length)
@@ -85,8 +89,12 @@ describe.only("HiliteSet", () => {
             insertPhysicalModelWithPartition({ builder, codeValue: "model 2", partitionParentId: subject4.id }),
           ];
         });
-        storage.addToSelection("Test", imodel.key, [subjectKey!], 0);
-        const hiliteSet = await storage.getHiliteSet(imodel.key, createECSqlQueryExecutor(imodel), createMetadataProvider(imodel));
+        storage.addToSelection({ source: "Test", iModelKey: imodel.key, selectables: [subjectKey!] });
+        const hiliteSet = await storage.getHiliteSet({
+          iModelKey: imodel.key,
+          queryExecutor: createECSqlQueryExecutor(imodel),
+          metadataProvider: createMetadataProvider(imodel),
+        });
 
         expect(hiliteSet.models)
           .to.have.lengthOf(modelKeys!.length)
@@ -104,8 +112,12 @@ describe.only("HiliteSet", () => {
           modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         });
 
-        storage.addToSelection("Test", imodel.key, [modelKey!], 0);
-        const hiliteSet = await storage.getHiliteSet(imodel.key, createECSqlQueryExecutor(imodel), createMetadataProvider(imodel));
+        storage.addToSelection({ source: "Test", iModelKey: imodel.key, selectables: [modelKey!] });
+        const hiliteSet = await storage.getHiliteSet({
+          iModelKey: imodel.key,
+          queryExecutor: createECSqlQueryExecutor(imodel),
+          metadataProvider: createMetadataProvider(imodel),
+        });
 
         expect(hiliteSet.models).to.have.lengthOf(1).and.to.include(modelKey!.id);
         expect(hiliteSet.subCategories).to.be.empty;
@@ -127,8 +139,12 @@ describe.only("HiliteSet", () => {
             insertSubCategory({ builder, codeValue: "sub 2", parentCategoryId: categoryKey.id }),
           ];
         });
-        storage.addToSelection("Test", imodel.key, [categoryKey!], 0);
-        const hiliteSet = await storage.getHiliteSet(imodel.key, createECSqlQueryExecutor(imodel), createMetadataProvider(imodel));
+        storage.addToSelection({ source: "Test", iModelKey: imodel.key, selectables: [categoryKey!] });
+        const hiliteSet = await storage.getHiliteSet({
+          iModelKey: imodel.key,
+          queryExecutor: createECSqlQueryExecutor(imodel),
+          metadataProvider: createMetadataProvider(imodel),
+        });
 
         expect(hiliteSet.models).to.be.empty;
         expect(hiliteSet.subCategories)
@@ -144,8 +160,12 @@ describe.only("HiliteSet", () => {
           categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
         });
         const subCategoryKey = getDefaultSubcategoryKey(categoryKey!.id);
-        storage.addToSelection("Test", imodel.key, [subCategoryKey], 0);
-        const hiliteSet = await storage.getHiliteSet(imodel.key, createECSqlQueryExecutor(imodel), createMetadataProvider(imodel));
+        storage.addToSelection({ source: "Test", iModelKey: imodel.key, selectables: [subCategoryKey] });
+        const hiliteSet = await storage.getHiliteSet({
+          iModelKey: imodel.key,
+          queryExecutor: createECSqlQueryExecutor(imodel),
+          metadataProvider: createMetadataProvider(imodel),
+        });
 
         expect(hiliteSet.models).to.be.empty;
         expect(hiliteSet.subCategories).to.have.lengthOf(1).and.to.include(subCategoryKey.id);
@@ -181,8 +201,12 @@ describe.only("HiliteSet", () => {
           expectedHighlightedElementKeys = [assemblyKey, element2, element3, element4, element5];
         });
 
-        storage.addToSelection("Test", imodel.key, [assemblyKey!], 0);
-        const hiliteSet = await storage.getHiliteSet(imodel.key, createECSqlQueryExecutor(imodel), createMetadataProvider(imodel));
+        storage.addToSelection({ source: "Test", iModelKey: imodel.key, selectables: [assemblyKey!] });
+        const hiliteSet = await storage.getHiliteSet({
+          iModelKey: imodel.key,
+          queryExecutor: createECSqlQueryExecutor(imodel),
+          metadataProvider: createMetadataProvider(imodel),
+        });
 
         expect(hiliteSet.models).to.be.empty;
         expect(hiliteSet.subCategories).to.be.empty;
@@ -200,8 +224,12 @@ describe.only("HiliteSet", () => {
           elementKey = insertPhysicalElement({ builder, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id });
         });
 
-        storage.addToSelection("Test", imodel.key, [elementKey!], 0);
-        const hiliteSet = await storage.getHiliteSet(imodel.key, createECSqlQueryExecutor(imodel), createMetadataProvider(imodel));
+        storage.addToSelection({ source: "Test", iModelKey: imodel.key, selectables: [elementKey!] });
+        const hiliteSet = await storage.getHiliteSet({
+          iModelKey: imodel.key,
+          queryExecutor: createECSqlQueryExecutor(imodel),
+          metadataProvider: createMetadataProvider(imodel),
+        });
 
         expect(hiliteSet.models).to.be.empty;
         expect(hiliteSet.subCategories).to.be.empty;
@@ -220,8 +248,12 @@ describe.only("HiliteSet", () => {
             insertPhysicalElement({ builder, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id }),
           ];
         });
-        storage.addToSelection("Test", imodel.key, elementKeys!, 0);
-        const hiliteSet = await storage.getHiliteSet(imodel.key, createECSqlQueryExecutor(imodel), createMetadataProvider(imodel));
+        storage.addToSelection({ source: "Test", iModelKey: imodel.key, selectables: elementKeys! });
+        const hiliteSet = await storage.getHiliteSet({
+          iModelKey: imodel.key,
+          queryExecutor: createECSqlQueryExecutor(imodel),
+          metadataProvider: createMetadataProvider(imodel),
+        });
 
         expect(hiliteSet.models).to.be.empty;
         expect(hiliteSet.subCategories).to.be.empty;
@@ -265,8 +297,12 @@ describe.only("HiliteSet", () => {
           expectedElements = [physicalElement, physicalelementChild];
         });
 
-        storage.addToSelection("Test", imodel.key, [functionalElement!], 0);
-        const hiliteSet = await storage.getHiliteSet(imodel.key, createECSqlQueryExecutor(imodel), createMetadataProvider(imodel));
+        storage.addToSelection({ source: "Test", iModelKey: imodel.key, selectables: [functionalElement!] });
+        const hiliteSet = await storage.getHiliteSet({
+          iModelKey: imodel.key,
+          queryExecutor: createECSqlQueryExecutor(imodel),
+          metadataProvider: createMetadataProvider(imodel),
+        });
 
         expect(hiliteSet.models).to.be.empty;
         expect(hiliteSet.subCategories).to.be.empty;
@@ -297,8 +333,12 @@ describe.only("HiliteSet", () => {
           expectedElements = [graphicsElement, graphicsElementChild];
         });
 
-        storage.addToSelection("Test", imodel.key, [functionalElement!], 0);
-        const hiliteSet = await storage.getHiliteSet(imodel.key, createECSqlQueryExecutor(imodel), createMetadataProvider(imodel));
+        storage.addToSelection({ source: "Test", iModelKey: imodel.key, selectables: [functionalElement!] });
+        const hiliteSet = await storage.getHiliteSet({
+          iModelKey: imodel.key,
+          queryExecutor: createECSqlQueryExecutor(imodel),
+          metadataProvider: createMetadataProvider(imodel),
+        });
 
         expect(hiliteSet.models).to.be.empty;
         expect(hiliteSet.subCategories).to.be.empty;

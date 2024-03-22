@@ -363,24 +363,23 @@ describe("SelectionStorage", () => {
       // first call for an iModel should create a provider
       const executor1 = {} as IECSqlQueryExecutor;
       const executor2 = {} as IECSqlQueryExecutor;
-      const metadataProvider1 = {} as IMetadataProvider;
-      const metadataProvider2 = {} as IMetadataProvider;
+      const metadataProvider = {} as IMetadataProvider;
 
-      await selectionStorage.getHiliteSet("model1", executor1, metadataProvider1);
-      expect(factory).to.be.calledOnceWith({ queryExecutor: executor1, metadataProvider: metadataProvider1 });
+      await selectionStorage.getHiliteSet({ iModelKey: "model1", queryExecutor: executor1, metadataProvider });
+      expect(factory).to.be.calledOnceWith({ queryExecutor: executor1, metadataProvider });
       factory.resetHistory();
 
       // second call with same iModel shouldn't create a new provider
-      await selectionStorage.getHiliteSet("model1", executor1, metadataProvider1);
+      await selectionStorage.getHiliteSet({ iModelKey: "model1", queryExecutor: executor1, metadataProvider });
       expect(factory).to.not.be.called;
 
       // another iModel - new provider
-      await selectionStorage.getHiliteSet("model2", executor2, metadataProvider2);
-      expect(factory).to.be.calledOnceWith({ queryExecutor: executor2, metadataProvider: metadataProvider2 });
+      await selectionStorage.getHiliteSet({ iModelKey: "model2", queryExecutor: executor2, metadataProvider });
+      expect(factory).to.be.calledOnceWith({ queryExecutor: executor2, metadataProvider });
       factory.resetHistory();
 
       // make sure we still have provider for the first iModel
-      await selectionStorage.getHiliteSet("model1", executor1, metadataProvider1);
+      await selectionStorage.getHiliteSet({ iModelKey: "model1", queryExecutor: executor1, metadataProvider });
       expect(factory).to.not.be.called;
     });
   });

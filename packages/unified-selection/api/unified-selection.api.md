@@ -75,6 +75,11 @@ export interface SelectionStorage {
     clearStorage(props: {
         iModelKey: string;
     }): void;
+    getHiliteSet(props: {
+        iModelKey: string;
+        queryExecutor: IECSqlQueryExecutor;
+        metadataProvider: IMetadataProvider;
+    }): Promise<HiliteSet>;
     getSelection(props: {
         iModelKey: string;
         level?: number;
