@@ -1,7 +1,7 @@
 lockfileVersion: '6.0'
 
 settings:
-  autoInstallPeers: true
+  autoInstallPeers: false
   excludeLinksFromLockfile: false
 
 overrides:
@@ -115,6 +115,12 @@ importers:
       eslint:
         specifier: ^8.56.0
         version: 8.56.0
+      inversify:
+        specifier: ^6.0.2
+        version: 6.0.2
+      reflect-metadata:
+        specifier: ^0.1.14
+        version: 0.1.14
       rimraf:
         specifier: ^5.0.5
         version: 5.0.5
@@ -344,6 +350,12 @@ importers:
       eslint:
         specifier: ^8.56.0
         version: 8.56.0
+      inversify:
+        specifier: ^6.0.2
+        version: 6.0.2
+      reflect-metadata:
+        specifier: ^0.1.14
+        version: 0.1.14
       rimraf:
         specifier: ^5.0.5
         version: 5.0.5
@@ -515,6 +527,9 @@ importers:
       immer:
         specifier: ^10.0.3
         version: 10.0.3
+      inversify:
+        specifier: ^6.0.2
+        version: 6.0.2
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -524,6 +539,9 @@ importers:
       react-resize-detector:
         specifier: ^10.0.1
         version: 10.0.1(react-dom@18.2.0)(react@18.2.0)
+      reflect-metadata:
+        specifier: ^0.1.14
+        version: 0.1.14
       rxjs:
         specifier: ^7.8.1
         version: 7.8.1
@@ -627,6 +645,9 @@ importers:
       '@itwin/webgl-compatibility':
         specifier: ^4.4.0
         version: 4.4.0
+      '@testing-library/dom':
+        specifier: ^9.3.4
+        version: 9.3.4
       '@testing-library/react':
         specifier: ^14.2.1
         version: 14.2.1(react-dom@18.2.0)(react@18.2.0)
@@ -690,6 +711,9 @@ importers:
       ignore-styles:
         specifier: ^5.0.1
         version: 5.0.1
+      inversify:
+        specifier: ^6.0.2
+        version: 6.0.2
       jsdom:
         specifier: ^24.0.0
         version: 24.0.0
@@ -705,6 +729,9 @@ importers:
       react-dom:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
+      reflect-metadata:
+        specifier: ^0.1.14
+        version: 0.1.14
       resize-observer-polyfill:
         specifier: 1.5.1
         version: 1.5.1
@@ -886,6 +913,9 @@ importers:
       '@opentelemetry/api':
         specifier: ^1.6.0
         version: 1.6.0
+      '@testing-library/dom':
+        specifier: ^9.3.4
+        version: 9.3.4
       '@testing-library/react':
         specifier: ^14.2.1
         version: 14.2.1(react-dom@18.2.0)(react@18.2.0)
@@ -958,6 +988,9 @@ importers:
       ignore-styles:
         specifier: ^5.0.1
         version: 5.0.1
+      inversify:
+        specifier: ^6.0.2
+        version: 6.0.2
       jsdom:
         specifier: ^24.0.0
         version: 24.0.0
@@ -976,6 +1009,9 @@ importers:
       react-dom:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
+      reflect-metadata:
+        specifier: ^0.1.14
+        version: 0.1.14
       resize-observer-polyfill:
         specifier: 1.5.1
         version: 1.5.1
@@ -1107,6 +1143,9 @@ importers:
       '@itwin/build-tools':
         specifier: ^4.4.0
         version: 4.4.0(@types/node@18.17.7)
+      '@testing-library/dom':
+        specifier: ^9.3.4
+        version: 9.3.4
       '@testing-library/react':
         specifier: ^14.2.1
         version: 14.2.1(react-dom@18.2.0)(react@18.2.0)
@@ -1424,6 +1463,9 @@ importers:
       ignore-styles:
         specifier: ^5.0.1
         version: 5.0.1
+      inversify:
+        specifier: ^6.0.2
+        version: 6.0.2
       jsdom:
         specifier: ^24.0.0
         version: 24.0.0
@@ -1439,6 +1481,9 @@ importers:
       react-dom:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
+      reflect-metadata:
+        specifier: ^0.1.14
+        version: 0.1.14
       sinon:
         specifier: ^17.0.1
         version: 17.0.1
@@ -6173,7 +6218,7 @@ packages:
       nanoid: 3.3.7
       ora: 4.1.1
       posthog-node: 3.6.3(debug@4.3.4)
-      sqs-consumer: 5.8.0(aws-sdk@2.1583.0)
+      sqs-consumer: 5.8.0
       temp: 0.9.4
       tmp: 0.2.1
       try-require: 1.2.1
@@ -12081,10 +12126,8 @@ packages:
     dev: false
     optional: true
 
-  /sqs-consumer@5.8.0(aws-sdk@2.1583.0):
+  /sqs-consumer@5.8.0:
     resolution: {integrity: sha512-pJReMEtDM9/xzQTffb7dxMD5MKagBfOW65m+ITsbpNk0oZmJ38tTC4LPmj0/7ZcKSOqi2LrpA1b0qGYOwxlHJg==}
-    peerDependencies:
-      aws-sdk: ^2.1271.0
     dependencies:
       aws-sdk: 2.1583.0
       debug: 4.3.4(supports-color@8.1.1)
