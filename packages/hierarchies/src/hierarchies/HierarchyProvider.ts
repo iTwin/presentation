@@ -21,7 +21,7 @@ import {
   ProcessedInstanceHierarchyNode,
 } from "./HierarchyNode";
 import { CachedNodesObservableEntry, ChildNodeObservablesCache, ParsedQueryNodesObservable } from "./internal/ChildNodeObservablesCache";
-import { LOGGING_NAMESPACE as CommonLoggingNamespace, createNodeIdentifierForLogging, hasChildren } from "./internal/Common";
+import { BaseClassChecker, LOGGING_NAMESPACE as CommonLoggingNamespace, createNodeIdentifierForLogging, hasChildren } from "./internal/Common";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
 import { getClass } from "./internal/GetClass";
 import { createQueryLogMessage, doLog, log } from "./internal/LoggingUtils";
@@ -40,6 +40,8 @@ import { TypedPrimitiveValue } from "./values/Values";
 
 const LOGGING_NAMESPACE = `${CommonLoggingNamespace}.HierarchyProvider`;
 const DEFAULT_QUERY_CONCURRENCY = 10;
+const DEFAULT_QUERY_CACHE_SIZE = 50;
+const DEFAULT_BASE_CHECKER_CACHE_SIZE = 1000;
 
 /**
  * Defines the strings used by hierarchy provider.
@@ -125,6 +127,7 @@ export class HierarchyProvider {
   private _localizedStrings: HierarchyProviderLocalizedStrings;
   private _queryScheduler: SubscriptionScheduler;
   private _nodesCache: ChildNodeObservablesCache;
+  private _baseClassChecker: BaseClassChecker;
 
   /**
    * Hierarchy level definitions factory used by this provider.
@@ -160,10 +163,11 @@ export class HierarchyProvider {
     this._queryScheduler = new SubscriptionScheduler(props.queryConcurrency ?? DEFAULT_QUERY_CONCURRENCY);
     this._nodesCache = new ChildNodeObservablesCache({
       // we divide the size by 2, because each variation also counts as a query that we cache
-      size: Math.round((props.queryCacheSize ?? 50) / 2),
+      size: Math.round((props.queryCacheSize ?? DEFAULT_QUERY_CACHE_SIZE) / 2),
       variationsCount: 1,
     });
     this.queryExecutor = props.queryExecutor;
+    this._baseClassChecker = new BaseClassChecker(this._metadataProvider, DEFAULT_BASE_CHECKER_CACHE_SIZE);
   }
 
   /**
@@ -263,7 +267,14 @@ export class HierarchyProvider {
   ): Observable<ProcessedHierarchyNode> {
     return preprocessedNodesObservable.pipe(
       sortNodesByLabelOperator,
-      createGroupingOperator(this._metadataProvider, this._valuesFormatter, this._localizedStrings, (gn) => this.onGroupingNodeCreated(gn, props)),
+      createGroupingOperator(
+        this._metadataProvider,
+        this._valuesFormatter,
+        this._localizedStrings,
+        this._baseClassChecker,
+        (gn) => this.onGroupingNodeCreated(gn, props),
+        undefined,
+      ),
     );
   }
 

@@ -29,17 +29,19 @@ export async function createBaseClassGroupsForSingleBaseClass(
 ): Promise<GroupingHandlerResult> {
   const groupedNodes = new Array<ProcessedInstanceHierarchyNode>();
   const ungroupedNodes = new Array<ProcessedInstanceHierarchyNode>();
+  const baseClassFullName = baseECClass.fullName;
   for (const node of nodes) {
     if (
       !node.processingParams?.grouping?.byBaseClasses ||
-      !node.processingParams.grouping.byBaseClasses.fullClassNames.some((className) => className === baseECClass.fullName)
+      !node.processingParams.grouping.byBaseClasses.fullClassNames.some((className) => className === baseClassFullName)
     ) {
       ungroupedNodes.push(node);
       continue;
     }
     const fullCurrentNodeClassName = node.key.instanceKeys[0].className;
 
-    const isCurrentNodeClassOfBase = await baseClassChecker.isECClassOfBaseECClass(fullCurrentNodeClassName, baseECClass);
+    const baseCheckerResult = baseClassChecker.isECClassOfBaseECClass(fullCurrentNodeClassName, baseECClass);
+    const isCurrentNodeClassOfBase = baseCheckerResult instanceof Promise ? await baseCheckerResult : baseCheckerResult;
 
     if (isCurrentNodeClassOfBase) {
       groupedNodes.push(node);
@@ -52,7 +54,7 @@ export async function createBaseClassGroupsForSingleBaseClass(
   if (groupedNodes.length > 0) {
     const groupingNodeKey: ClassGroupingNodeKey = {
       type: "class-grouping",
-      className: baseECClass.fullName,
+      className: baseClassFullName,
     };
     result.grouped.push({
       label: baseECClass.label ?? baseECClass.name,

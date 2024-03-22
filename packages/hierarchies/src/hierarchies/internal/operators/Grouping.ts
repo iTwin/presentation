@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { concatMap, from, Observable, of, toArray } from "rxjs";
+import { concatAll, concatMap, from, Observable, of, toArray } from "rxjs";
 import { IMetadataProvider } from "../../ECMetadata";
 import { HierarchyNode, HierarchyNodeKey, ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../../HierarchyNode";
 import { IPrimitiveValueFormatter } from "../../values/Formatting";
@@ -25,6 +25,7 @@ export function createGroupingOperator(
   metadata: IMetadataProvider,
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
+  baseClassChecker: BaseClassChecker,
   onGroupingNodeCreated?: (groupingNode: ProcessedGroupingHierarchyNode) => void,
   groupingHandlers?: GroupingHandler[],
 ) {
@@ -33,18 +34,18 @@ export function createGroupingOperator(
       log({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ (n) => `in: ${createNodeIdentifierForLogging(n)}` }),
       toArray(),
       concatMap((resolvedNodes) => {
+        const { instanceNodes, restNodes } = partitionInstanceNodes(resolvedNodes);
         const groupingHandlersObs = groupingHandlers
           ? of(groupingHandlers)
-          : from(createGroupingHandlers(metadata, resolvedNodes, valueFormatter, localizedStrings));
+          : from(createGroupingHandlers(metadata, instanceNodes, valueFormatter, localizedStrings, baseClassChecker));
         return groupingHandlersObs.pipe(
           concatMap(async (createdGroupingHandlers) => {
-            const { instanceNodes, restNodes } = partitionInstanceNodes(resolvedNodes);
             const grouped = await groupInstanceNodes(instanceNodes, restNodes.length, createdGroupingHandlers, onGroupingNodeCreated);
             return from([...grouped, ...restNodes]);
           }),
         );
       }),
-      concatMap((groupedNodes) => from(groupedNodes)),
+      concatAll(),
       log({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ (n) => `out: ${createNodeIdentifierForLogging(n)}` }),
     );
   };
@@ -124,29 +125,15 @@ async function groupInstanceNodes(
 /** @internal */
 export async function createGroupingHandlers(
   metadata: IMetadataProvider,
-  nodes: ProcessedHierarchyNode[],
+  processedInstanceNodes: ProcessedInstanceHierarchyNode[],
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
+  baseClassChecker: BaseClassChecker,
 ): Promise<GroupingHandler[]> {
   const groupingHandlers: GroupingHandler[] = new Array<GroupingHandler>();
-  const baseClassChecker = new BaseClassChecker(metadata);
-  groupingHandlers.push(
-    ...(await createBaseClassGroupingHandlers(
-      metadata,
-      nodes.filter((n): n is ProcessedInstanceHierarchyNode => HierarchyNode.isInstancesNode(n)),
-      baseClassChecker,
-    )),
-  );
+  groupingHandlers.push(...(await createBaseClassGroupingHandlers(metadata, processedInstanceNodes, baseClassChecker)));
   groupingHandlers.push(async (allNodes) => createClassGroups(metadata, allNodes));
-  groupingHandlers.push(
-    ...(await createPropertiesGroupingHandlers(
-      metadata,
-      nodes.filter((n): n is ProcessedInstanceHierarchyNode => HierarchyNode.isInstancesNode(n)),
-      valueFormatter,
-      localizedStrings,
-      baseClassChecker,
-    )),
-  );
+  groupingHandlers.push(...(await createPropertiesGroupingHandlers(metadata, processedInstanceNodes, valueFormatter, localizedStrings, baseClassChecker)));
   groupingHandlers.push(async (allNodes) => createLabelGroups(allNodes));
   return groupingHandlers;
 }
