@@ -27,7 +27,7 @@ import { buildTestIModel, initialize, terminate } from "@itwin/presentation-test
 import { createStorage, SelectableInstanceKey, SelectionStorage } from "@itwin/unified-selection";
 import { createMetadataProvider } from "../hierarchy-builder/Utils";
 
-describe.only("HiliteSet", () => {
+describe("HiliteSet", () => {
   let storage: SelectionStorage;
 
   before(async () => {
