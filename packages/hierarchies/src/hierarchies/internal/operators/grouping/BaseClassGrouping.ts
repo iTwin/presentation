@@ -40,9 +40,8 @@ export async function createBaseClassGroupsForSingleBaseClass(
     }
     const fullCurrentNodeClassName = node.key.instanceKeys[0].className;
 
-    const isCurrentNodeClassOfBase =
-      baseClassChecker.isECClassOfBaseECClassSync(fullCurrentNodeClassName, baseClassFullName) ??
-      (await baseClassChecker.isECClassOfBaseECClass(fullCurrentNodeClassName, baseECClass));
+    const baseCheckerResult = baseClassChecker.isECClassOfBaseECClass(fullCurrentNodeClassName, baseECClass);
+    const isCurrentNodeClassOfBase = baseCheckerResult instanceof Promise ? await baseCheckerResult : baseCheckerResult;
 
     if (isCurrentNodeClassOfBase) {
       groupedNodes.push(node);

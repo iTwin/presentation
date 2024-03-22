@@ -143,11 +143,11 @@ export function compareNodesByLabel<TLhsNode extends { label: string }, TRhsNode
 
 /** @internal */
 export class BaseClassChecker {
-  private _map: LRUMap<string, boolean>;
+  private _map: LRUMap<string, Promise<boolean> | boolean>;
   private _metadataProvider: IMetadataProvider;
 
   public constructor(metadataProvider: IMetadataProvider, cacheSize: number = 0) {
-    this._map = new LRUMap<string, boolean>(cacheSize);
+    this._map = new LRUMap(cacheSize);
     this._metadataProvider = metadataProvider;
   }
 
@@ -155,17 +155,15 @@ export class BaseClassChecker {
     return `${className}${baseClassName}`;
   }
 
-  public isECClassOfBaseECClassSync(ecClassNameToCheck: string, baseClassName: string): boolean | undefined {
-    const cacheKey = this.createCacheKey(ecClassNameToCheck, baseClassName);
-    return this._map.get(cacheKey);
-  }
-
-  public async isECClassOfBaseECClass(ecClassNameToCheck: string, baseECClass: ECClass): Promise<boolean> {
+  public isECClassOfBaseECClass(ecClassNameToCheck: string, baseECClass: ECClass): Promise<boolean> | boolean {
     const cacheKey = this.createCacheKey(ecClassNameToCheck, baseECClass.fullName);
     let isCurrentNodeClassOfBase = this._map.get(cacheKey);
     if (isCurrentNodeClassOfBase === undefined) {
-      const currentNodeECClass = await getClass(this._metadataProvider, ecClassNameToCheck);
-      isCurrentNodeClassOfBase = await currentNodeECClass.is(baseECClass);
+      isCurrentNodeClassOfBase = getClass(this._metadataProvider, ecClassNameToCheck).then(async (currentNodeECClass) => {
+        const result = await currentNodeECClass.is(baseECClass);
+        this._map.set(cacheKey, result);
+        return result;
+      });
       this._map.set(cacheKey, isCurrentNodeClassOfBase);
     }
     return isCurrentNodeClassOfBase;
