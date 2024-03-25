@@ -10,5 +10,6 @@
   "ignore": [
     "presentation-full-stack-tests",
     "@test-app/frontend",
-    "@itwin/presentation-hierarchies-react"]
+    "@itwin/presentation-hierarchies-react"
+  ]
 }
