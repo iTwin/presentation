@@ -172,7 +172,8 @@ function useUnifiedSelectionKeys(imodel: IModelConnection) {
       if (imodel !== args.imodel) {
         return;
       }
-      setKeys(Presentation.selection.getSelection(imodel, 0));
+      // make copy in case getSelection return mutated key set
+      setKeys(new KeySet(Presentation.selection.getSelection(imodel, 0)));
     });
   }, [imodel]);
   return keys;

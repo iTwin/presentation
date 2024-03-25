@@ -160,7 +160,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     );
   });
 
-  it("loads columns and rows with no keys unified selection context is not available", async () => {
+  it("loads columns and rows with no keys when unified selection is empty", async () => {
     presentationManager.getContentDescriptor.resolves(undefined);
     presentationManager.getContentAndSize.resolves(undefined);
 
@@ -235,6 +235,47 @@ describe("usePresentationTableWithUnifiedSelection", () => {
       [],
       1,
     );
+  });
+
+  it("loads rows when unified selection changes", async () => {
+    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
+    await waitFor(() => {
+      expect(result.current.isLoading).to.be.false;
+      expect(result.current.rows.length).to.be.equal(0);
+    });
+    const instanceKey = createTestECInstanceKey();
+    setupPresentationManager([instanceKey]);
+
+    act(() => {
+      // select the row to get loaded onto the component
+      Presentation.selection.addToSelection(selectionSource, imodel, new KeySet([instanceKey]), 0);
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).to.be.false;
+      expect(result.current.rows.length).to.be.equal(1);
+    });
+  });
+
+  it("ignores selection changes on different imodel", async () => {
+    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
+    await waitFor(() => {
+      expect(result.current.isLoading).to.be.false;
+      expect(result.current.rows.length).to.be.equal(0);
+    });
+    const instanceKey = createTestECInstanceKey();
+    setupPresentationManager([instanceKey]);
+
+    act(() => {
+      // select the row to get loaded onto the component
+      Presentation.selection.addToSelection(selectionSource, { key: "other_imodel" } as IModelConnection, new KeySet([instanceKey]), 0);
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).to.be.false;
+      expect(result.current.rows.length).to.be.equal(0);
+      expect(presentationManager.getContentDescriptor).to.not.be.called;
+    });
   });
 
   it("returns an array of selectedRows when keys are passed before the table is loaded", async () => {
@@ -406,6 +447,42 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     });
   });
 
+  it("clears selected rows when selection in 0 level changes", async () => {
+    const instanceKey1 = createTestECInstanceKey({ id: "0x1" });
+    const instanceKey2 = createTestECInstanceKey({ id: "0x2" });
+
+    setupPresentationManager([instanceKey1]);
+
+    // select both instances on both levels to make sure rows are loaded onto the component and selected on initial load.
+    Presentation.selection.addToSelection(selectionSource, imodel, new KeySet([instanceKey1]), 0);
+    Presentation.selection.addToSelection(selectionSource, imodel, new KeySet([instanceKey1]), 1);
+
+    // wait for selection to be setup
+    await waitFor(() => {
+      expect(Presentation.selection.getSelection(imodel, 0).size).to.be.eq(1);
+      expect(Presentation.selection.getSelection(imodel, 1).size).to.be.eq(1);
+    });
+
+    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
+
+    await waitFor(() => {
+      expect(result.current.isLoading).to.be.false;
+      expect(result.current.rows.length).to.be.eq(1);
+      expect(result.current.selectedRows.length).to.be.eq(1);
+    });
+
+    setupPresentationManager([instanceKey1, instanceKey2]);
+    act(() => {
+      Presentation.selection.addToSelection(selectionSource, imodel, new KeySet([instanceKey2]), 0);
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).to.be.false;
+      expect(result.current.rows.length).to.be.eq(2);
+      expect(result.current.selectedRows.length).to.be.eq(0);
+    });
+  });
+
   it("returns an empty array of selectedRows when keys are passed from the wrong level on selectionChange event", async () => {
     const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
 
@@ -424,6 +501,9 @@ describe("usePresentationTableWithUnifiedSelection", () => {
 
   /** Creates rows for the provided keys */
   function setupPresentationManager(keys: InstanceKey[] = [createTestECInstanceKey()]) {
+    presentationManager.getContentDescriptor.reset();
+    presentationManager.getContentAndSize.reset();
+
     const propertiesField = createTestPropertiesContentField({
       name: "first_field",
       label: "First Field",
