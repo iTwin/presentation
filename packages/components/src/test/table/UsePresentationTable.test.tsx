@@ -88,7 +88,7 @@ describe("usePresentationTable", () => {
   });
 });
 
-describe.only("usePresentationTableWithUnifiedSelection", () => {
+describe("usePresentationTableWithUnifiedSelection", () => {
   const imodel = {
     key: "imodel_key",
   } as IModelConnection;
