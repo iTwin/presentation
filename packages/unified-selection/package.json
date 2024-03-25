@@ -1,6 +1,6 @@
 {
   "name": "@itwin/unified-selection",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Package for managing unified selection",
   "repository": {
     "type": "git",
