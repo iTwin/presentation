@@ -171,6 +171,32 @@ describe("HiliteSet", () => {
         expect(hiliteSet.subCategories).to.have.lengthOf(1).and.to.include(subCategoryKey.id);
         expect(hiliteSet.elements).to.be.empty;
       });
+
+      it("hilites when category and subcategory selected", async function () {
+        let categoryKey: SelectableInstanceKey;
+        let subCategoryKeys: SelectableInstanceKey[];
+        // eslint-disable-next-line deprecation/deprecation
+        const imodel = await buildTestIModel(this, async (builder) => {
+          categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+          subCategoryKeys = [
+            getDefaultSubcategoryKey(categoryKey.id),
+            insertSubCategory({ builder, codeValue: "sub 1", parentCategoryId: categoryKey.id }),
+            insertSubCategory({ builder, codeValue: "sub 2", parentCategoryId: categoryKey.id }),
+          ];
+        });
+        storage.addToSelection({ source: "Test", iModelKey: imodel.key, selectables: [categoryKey!, subCategoryKeys![0]] });
+        const hiliteSet = await storage.getHiliteSet({
+          iModelKey: imodel.key,
+          queryExecutor: createECSqlQueryExecutor(imodel),
+          metadataProvider: createMetadataProvider(imodel),
+        });
+
+        expect(hiliteSet.models).to.be.empty;
+        expect(hiliteSet.subCategories)
+          .to.have.lengthOf(subCategoryKeys!.length)
+          .and.to.include.members(subCategoryKeys!.map((k) => k.id));
+        expect(hiliteSet.elements).to.be.empty;
+      });
     });
 
     describe("Element", () => {
@@ -281,20 +307,34 @@ describe("HiliteSet", () => {
           const functionalModelKey = insertFunctionalModelWithPartition({ builder, codeValue: "test functional model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           physicalElement = insertPhysicalElement({ builder, userLabel: "element", modelId: physicalModelKey.id, categoryId: categoryKey.id });
-          const physicalelementChild = insertPhysicalElement({
+          const physicalElementChild = insertPhysicalElement({
             builder,
-            userLabel: "child element",
+            userLabel: "child element 1",
             modelId: physicalModelKey.id,
             categoryId: categoryKey.id,
             parentId: physicalElement.id,
           });
+          const physicalElementChild2 = insertPhysicalElement({
+            builder,
+            userLabel: "child element 2",
+            modelId: physicalModelKey.id,
+            categoryId: categoryKey.id,
+            parentId: physicalElement.id,
+          });
+          const physicalElementChildChild = insertPhysicalElement({
+            builder,
+            userLabel: "child 1 child element",
+            modelId: physicalModelKey.id,
+            categoryId: categoryKey.id,
+            parentId: physicalElementChild.id,
+          });
           functionalElement = insertFunctionalElement({
             builder,
             modelId: functionalModelKey.id,
-            elementId: physicalElement.id,
-            relationship: "Functional.PhysicalElementFulfillsFunction",
+            representedElementId: physicalElement.id,
+            relationshipName: "PhysicalElementFulfillsFunction",
           });
-          expectedElements = [physicalElement, physicalelementChild];
+          expectedElements = [physicalElement, physicalElementChild, physicalElementChild2, physicalElementChildChild];
         });
 
         storage.addToSelection({ source: "Test", iModelKey: imodel.key, selectables: [functionalElement!] });
@@ -324,13 +364,25 @@ describe("HiliteSet", () => {
           const categoryKey = insertDrawingCategory({ builder, codeValue: "test drawing category" });
           graphicsElement = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id });
           const graphicsElementChild = insertDrawingGraphic({ builder, modelId: drawingModelKey.id, categoryId: categoryKey.id, parentId: graphicsElement.id });
+          const graphicsElementChild2 = insertDrawingGraphic({
+            builder,
+            modelId: drawingModelKey.id,
+            categoryId: categoryKey.id,
+            parentId: graphicsElementChild.id,
+          });
+          const graphicsElementChildChild = insertDrawingGraphic({
+            builder,
+            modelId: drawingModelKey.id,
+            categoryId: categoryKey.id,
+            parentId: graphicsElementChild.id,
+          });
           functionalElement = insertFunctionalElement({
             builder,
             modelId: functionalModelKey.id,
-            elementId: graphicsElement.id,
-            relationship: "Functional.DrawingGraphicRepresentsFunctionalElement",
+            representedElementId: graphicsElement.id,
+            relationshipName: "DrawingGraphicRepresentsFunctionalElement",
           });
-          expectedElements = [graphicsElement, graphicsElementChild];
+          expectedElements = [graphicsElement, graphicsElementChild, graphicsElementChild2, graphicsElementChildChild];
         });
 
         storage.addToSelection({ source: "Test", iModelKey: imodel.key, selectables: [functionalElement!] });
