@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { PropsWithChildren } from "react";
 import sinon from "sinon";
 import { BeUiEvent } from "@itwin/core-bentley";
 import { FormattingUnitSystemChangedArgs, IModelApp, IModelConnection } from "@itwin/core-frontend";
@@ -16,7 +15,6 @@ import {
   UsePresentationTableProps,
   usePresentationTableWithUnifiedSelection,
 } from "../../presentation-components/table/UsePresentationTable";
-import { UnifiedSelectionContextProvider } from "../../presentation-components/unified-selection/UnifiedSelectionContext";
 import { createTestECInstanceKey, createTestPropertyInfo } from "../_helpers/Common";
 import { createTestContentDescriptor, createTestContentItem, createTestPropertiesContentField } from "../_helpers/Content";
 import { act, renderHook, waitFor } from "../TestUtils";
@@ -115,14 +113,6 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     sinon.stub(Presentation, "selection").get(() => selectionManager);
   });
 
-  function Wrapper({ children }: PropsWithChildren<{}>) {
-    return (
-      <UnifiedSelectionContextProvider imodel={imodel} selectionLevel={0}>
-        {children}
-      </UnifiedSelectionContextProvider>
-    );
-  }
-
   it("loads columns and rows with keys from unified selection", async () => {
     const propertiesField = createTestPropertiesContentField({
       name: "first_field",
@@ -141,7 +131,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     presentationManager.getContentDescriptor.resolves(descriptor);
     presentationManager.getContentAndSize.resolves({ content: new Content(descriptor, [item]), size: 1 });
 
-    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
+    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
 
     await waitFor(() => expect(result.current.isLoading).to.be.false);
     expect(result.current.columns)
@@ -193,7 +183,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
 
     setupPresentationManager();
 
-    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
+    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
 
     const replaceSpy = sinon.stub(Presentation.selection, "replaceSelection");
     await waitFor(() => expect(result.current.isLoading).to.be.false);
@@ -212,7 +202,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
 
   it("gets invalid keys and does not pass any to the selection with onSelect", async () => {
     const keys = ["this is not a valid key", ""];
-    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
+    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
     await waitFor(() => expect(result.current.isLoading).to.be.false);
 
     const replaceSpy = sinon.stub(Presentation.selection, "replaceSelection");
@@ -231,7 +221,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
   it("gets valid keys for rows that are not loaded and does not pass any to the selection with onSelect", async () => {
     const stringifiedKeys = [createTestECInstanceKey()].map((key) => JSON.stringify(key));
 
-    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
+    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
     await waitFor(() => expect(result.current.isLoading).to.be.false);
 
     const replaceSpy = sinon.stub(Presentation.selection, "replaceSelection");
@@ -262,7 +252,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
       expect(Presentation.selection.getSelection(imodel, 1).size).to.be.eq(keys.size);
     });
 
-    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
+    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
 
     await waitFor(() => {
       expect(result.current.isLoading).to.be.false;
@@ -288,7 +278,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
       expect(Presentation.selection.getSelection(imodel, 1).size).to.be.eq(1);
     });
 
-    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
+    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
 
     await waitFor(() => {
       expect(result.current.isLoading).to.be.false;
@@ -324,7 +314,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
       expect(Presentation.selection.getSelection(imodel, 1).size).to.be.eq(1);
     });
 
-    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
+    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
 
     await waitFor(() => {
       expect(result.current.isLoading).to.be.false;
@@ -361,7 +351,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
       expect(Presentation.selection.getSelection(imodel, 1).size).to.be.eq(2);
     });
 
-    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
+    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
 
     await waitFor(() => {
       expect(result.current.isLoading).to.be.false;
@@ -397,7 +387,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
       expect(Presentation.selection.getSelection(imodel, 1).size).to.be.eq(2);
     });
 
-    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
+    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
 
     await waitFor(() => {
       expect(result.current.isLoading).to.be.false;
@@ -417,7 +407,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
   });
 
   it("returns an empty array of selectedRows when keys are passed from the wrong level on selectionChange event", async () => {
-    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
+    const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps));
 
     await waitFor(() => expect(result.current.isLoading).to.be.false);
 
