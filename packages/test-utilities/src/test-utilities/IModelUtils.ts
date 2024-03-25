@@ -347,11 +347,13 @@ export function insertFunctionalSubModel(
 }
 
 export function insertFunctionalElement(
-  props: BaseInstanceInsertProps & { modelId: Id64String; elementId: Id64String; relationship: string } & Partial<
-      Omit<FunctionalElementProps, "id" | "parent" | "code" | "model">
-    >,
+  props: BaseInstanceInsertProps & {
+    modelId: Id64String;
+    representedElementId: Id64String;
+    relationshipName: "DrawingGraphicRepresentsFunctionalElement" | "PhysicalElementFulfillsFunction";
+  } & Partial<Omit<FunctionalElementProps, "id" | "parent" | "code" | "model">>,
 ) {
-  const { builder, modelId, elementId, relationship } = props;
+  const { builder, modelId, representedElementId, relationshipName } = props;
   const className = `Functional${props.fullClassNameSeparator ?? "."}FunctionalComposite`;
   const id = builder.insertElement({
     classFullName: className,
@@ -359,9 +361,9 @@ export function insertFunctionalElement(
     code: Code.createEmpty(),
   } as FunctionalElementProps);
   builder.insertRelationship({
-    sourceId: elementId,
+    sourceId: representedElementId,
     targetId: id,
-    classFullName: relationship,
+    classFullName: `Functional.${relationshipName}`,
   });
   return { className, id };
 }
