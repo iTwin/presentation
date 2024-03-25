@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import naturalCompare from "natural-compare-lite";
-import { assert } from "@itwin/core-bentley";
+import { assert, LRUMap } from "@itwin/core-bentley";
 import { ECClass, IMetadataProvider } from "../ECMetadata";
 import {
   HierarchyNode,
@@ -143,18 +143,28 @@ export function compareNodesByLabel<TLhsNode extends { label: string }, TRhsNode
 
 /** @internal */
 export class BaseClassChecker {
-  private _map = new Map<string, boolean>();
+  private _map: LRUMap<string, Promise<boolean> | boolean>;
   private _metadataProvider: IMetadataProvider;
-  public constructor(metadataProvider: IMetadataProvider) {
+
+  public constructor(metadataProvider: IMetadataProvider, cacheSize: number = 0) {
+    this._map = new LRUMap(cacheSize);
     this._metadataProvider = metadataProvider;
   }
 
-  public async isECClassOfBaseECClass(ecClassNameToCheck: string, baseECClass: ECClass): Promise<boolean> {
-    let isCurrentNodeClassOfBase = this._map.get(`${ecClassNameToCheck}${baseECClass.fullName}`);
+  private createCacheKey(className: string, baseClassName: string) {
+    return `${className}${baseClassName}`;
+  }
+
+  public isECClassOfBaseECClass(ecClassNameToCheck: string, baseECClass: ECClass): Promise<boolean> | boolean {
+    const cacheKey = this.createCacheKey(ecClassNameToCheck, baseECClass.fullName);
+    let isCurrentNodeClassOfBase = this._map.get(cacheKey);
     if (isCurrentNodeClassOfBase === undefined) {
-      const currentNodeECClass = await getClass(this._metadataProvider, ecClassNameToCheck);
-      isCurrentNodeClassOfBase = await currentNodeECClass.is(baseECClass);
-      this._map.set(`${ecClassNameToCheck}${baseECClass.fullName}`, isCurrentNodeClassOfBase);
+      isCurrentNodeClassOfBase = getClass(this._metadataProvider, ecClassNameToCheck).then(async (currentNodeECClass) => {
+        const result = await currentNodeECClass.is(baseECClass);
+        this._map.set(cacheKey, result);
+        return result;
+      });
+      this._map.set(cacheKey, isCurrentNodeClassOfBase);
     }
     return isCurrentNodeClassOfBase;
   }

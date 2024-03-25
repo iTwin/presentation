@@ -9,6 +9,7 @@ import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
 import { IMetadataProvider } from "../../../hierarchies/ECMetadata";
 import { ProcessedInstanceHierarchyNode } from "../../../hierarchies/HierarchyNode";
+import { BaseClassChecker } from "../../../hierarchies/internal/Common";
 import { createGroupingHandlers, createGroupingOperator, GroupingHandlerResult, LOGGING_NAMESPACE } from "../../../hierarchies/internal/operators/Grouping";
 import * as autoExpand from "../../../hierarchies/internal/operators/grouping/AutoExpand";
 import * as baseClassGrouping from "../../../hierarchies/internal/operators/grouping/BaseClassGrouping";
@@ -21,6 +22,7 @@ import { createTestProcessedGroupingNode, createTestProcessedInstanceNode, getOb
 
 describe("Grouping", () => {
   const metadataProvider = {} as unknown as IMetadataProvider;
+  const baseClassChecker = sinon.createStubInstance(BaseClassChecker);
   let formatter: IPrimitiveValueFormatter;
 
   before(() => {
@@ -54,7 +56,7 @@ describe("Grouping", () => {
 
       const result = await getObservableResult(
         from(nodes).pipe(
-          createGroupingOperator(metadataProvider, formatter, testLocalizedStrings, undefined, [
+          createGroupingOperator(metadataProvider, formatter, testLocalizedStrings, baseClassChecker, undefined, [
             async (allNodes) => ({ grouped: [], ungrouped: allNodes, groupingType: "label" }),
             async (allNodes) => ({ grouped: [], ungrouped: allNodes, groupingType: "class" }),
           ]),
@@ -125,7 +127,7 @@ describe("Grouping", () => {
 
       const result = await getObservableResult(
         from(classGroupingInput).pipe(
-          createGroupingOperator(metadataProvider, formatter, testLocalizedStrings, undefined, [
+          createGroupingOperator(metadataProvider, formatter, testLocalizedStrings, baseClassChecker, undefined, [
             async () => classGroupingResult,
             async (input) => createLabelGroupingResult(input),
           ]),
@@ -203,7 +205,7 @@ describe("Grouping", () => {
       });
       const result = await getObservableResult(
         from([groupedNode, ungroupedNode]).pipe(
-          createGroupingOperator(metadataProvider, formatter, testLocalizedStrings, undefined, [
+          createGroupingOperator(metadataProvider, formatter, testLocalizedStrings, baseClassChecker, undefined, [
             async () => ({
               groupingType: "class",
               grouped: [classGroupingNode],
@@ -242,7 +244,7 @@ describe("Grouping", () => {
       const onGroupingNodeCreated = sinon.spy();
       const result = await getObservableResult(
         from([groupedNode]).pipe(
-          createGroupingOperator(metadataProvider, formatter, testLocalizedStrings, onGroupingNodeCreated, [
+          createGroupingOperator(metadataProvider, formatter, testLocalizedStrings, baseClassChecker, onGroupingNodeCreated, [
             async () => ({
               groupingType: "class",
               grouped: [classGroupingNode],
@@ -309,7 +311,7 @@ describe("Grouping", () => {
         }),
       ];
 
-      const result = await createGroupingHandlers(metadataProvider, nodes, formatter, testLocalizedStrings);
+      const result = await createGroupingHandlers(metadataProvider, nodes, formatter, testLocalizedStrings, baseClassChecker);
       expect(createBaseClassGroupingHandlersStub.callCount).to.eq(1);
       expect(createBaseClassGroupingHandlersStub.firstCall).to.be.calledWith(metadataProvider, nodes);
       expect(createPropertiesGroupingHandlersStub.callCount).to.eq(1);

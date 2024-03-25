@@ -685,7 +685,7 @@ describe("PropertiesGrouping", () => {
           previousPropertiesGroupingInfo: [],
           propertyGroup: { propertyName: "PropertyName" },
         };
-        await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider));
+        await propertiesGrouping.createPropertyGroups(nodes, propertyInfo, formatter, testLocalizedStrings, new BaseClassChecker(metadataProvider, 1));
         expect(classStubs.stub).to.be.calledOnce;
       });
 

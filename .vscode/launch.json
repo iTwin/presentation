@@ -138,6 +138,8 @@
         "mocha",
         "--config",
         "./.mocharc.json",
+        "--timeout",
+        "0",
         "./lib/*test.js"
       ],
       "env": {
