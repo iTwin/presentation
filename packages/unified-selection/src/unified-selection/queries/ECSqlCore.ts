@@ -5,15 +5,12 @@
 
 /**
  * Types of values that can be bound to an ECSql query.
- * @beta
  */
 export type ECSqlBindingType = "boolean" | "double" | "id" | "idset" | "int" | "long" | "string" | "point2d" | "point3d";
 
 /**
  * Defines an ECSql binding consisting of a value and its type. Necessary to differentiate between numeric
  * types and `Id64String` vs `string`.
- *
- * @beta
  */
 export type ECSqlBinding =
   | {
@@ -47,15 +44,11 @@ export type ECSqlBinding =
 
 /**
  * Defines requested ECSQL result row format.
- * @see [QueryRowFormat]($core-common)
- * @beta
  */
 export type ECSqlQueryRowFormat = "ECSqlPropertyNames" | "Indexes";
 
 /**
  * Defines options for ECSQL query reader.
- * @see [QueryOptions]($core-common)
- * @beta
  */
 export interface ECSqlQueryReaderOptions {
   rowFormat?: ECSqlQueryRowFormat;
@@ -63,8 +56,6 @@ export interface ECSqlQueryReaderOptions {
 
 /**
  * Represents a single row of an ECSQL query result.
- * @see [QueryRowProxy]($core-common)
- * @beta
  */
 export interface ECSqlQueryRow {
   [propertyName: string]: any;
@@ -73,14 +64,11 @@ export interface ECSqlQueryRow {
 
 /**
  * Represents ECSQL query results reader.
- * @see [ECSqlReader]($core-common)
- * @beta
  */
 export type ECSqlQueryReader = AsyncIterableIterator<ECSqlQueryRow>;
 
 /**
  * An interface for something that knows how to create an ECSQL query reader.
- * @beta
  */
 export interface IECSqlQueryExecutor {
   createQueryReader(ecsql: string, bindings?: ECSqlBinding[], config?: ECSqlQueryReaderOptions): ECSqlQueryReader;
