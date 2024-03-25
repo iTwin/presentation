@@ -39,6 +39,8 @@
     "cross-env": "^7.0.3",
     "electron": "^28.2.3",
     "eslint": "^8.56.0",
+    "inversify": "^6.0.2",
+    "reflect-metadata": "^0.1.14",
     "rimraf": "^5.0.5",
     "typescript": "~5.0.4"
   }
