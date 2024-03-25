@@ -55,6 +55,7 @@ describe("UnifiedSelectionEventHandler", () => {
   const imodel = {} as IModelConnection;
   const dataProvider = {
     imodel,
+    rulesetId: "test_ruleset",
   } as IPresentationTreeDataProvider;
   const nodeLoader = {
     dataProvider,
@@ -399,24 +400,36 @@ describe("UnifiedSelectionEventHandler", () => {
       timestamp: new Date(),
     };
 
+    beforeEach(() => {
+      selectionManager.getSelection.reset();
+    });
+
     it("selects nodes according unified selection", () => {
       const nodes: TreeModelNodeInput[] = [
-        createNode(createTestECInstancesNodeKey),
-        createNode(createTestECInstancesNodeKey),
-        createNode(createTestECClassGroupingNodeKey),
+        createNode(() => createTestECInstancesNodeKey({ instanceKeys: [{ id: "0x1", className: "Schema:Class" }] }), { id: "node_1" }),
+        createNode(() => createTestECInstancesNodeKey({ instanceKeys: [{ id: "0x2", className: "Schema:Class" }] }), { id: "node_2" }),
+        createNode(createTestECClassGroupingNodeKey, { id: "node_3" }),
       ];
 
       modelSource.modifyModel((model) => {
         model.setChildren(undefined, nodes, 0);
-        model.getNode(nodes[1].id)!.isSelected = true;
       });
 
-      const selectionKeys = SelectionHelper.getKeysForSelection(nodes.map((n) => getItemKey(n.item)));
-      selectionManager.getSelection.returns(new KeySet(selectionKeys));
+      // setup initials selection
+      selectionManager.getSelection.returns(new KeySet(SelectionHelper.getKeysForSelection([getItemKey(nodes[1].item)])));
 
       using(createHandler(), (_) => {
+        // verify nodes selected based on initial unified selection
+        expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.false;
+        expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.true;
+        expect(modelSource.getModel().getNode(nodes[2].id)?.isSelected).to.be.false;
+
+        selectionManager.getSelection.reset();
+        const selectionKeys = SelectionHelper.getKeysForSelection(nodes.map((n) => getItemKey(n.item)));
+        selectionManager.getSelection.returns(new KeySet(selectionKeys));
         selectionChangeEvent.raiseEvent(selectionEvent, selectionProvider);
 
+        // verify nodes selected based on updated unified selection
         expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.true;
         expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.true;
         expect(modelSource.getModel().getNode(nodes[2].id)?.isSelected).to.be.true;
@@ -424,18 +437,86 @@ describe("UnifiedSelectionEventHandler", () => {
     });
 
     it("deselects nodes according unified selection", () => {
-      const nodes: TreeModelNodeInput[] = [createNode(), createNode(createTestECClassGroupingNodeKey)];
+      const nodes: TreeModelNodeInput[] = [
+        createNode(() => createTestECInstancesNodeKey({ instanceKeys: [{ id: "0x1", className: "Schema:Class" }] }), { id: "node_1" }),
+        createNode(createTestECClassGroupingNodeKey, { id: "node_2" }),
+      ];
 
       modelSource.modifyModel((model) => {
         model.setChildren(undefined, nodes, 0);
-        model.getNode(nodes[0].id)!.isSelected = true;
       });
 
+      // setup initials selection
+      selectionManager.getSelection.returns(new KeySet(SelectionHelper.getKeysForSelection([getItemKey(nodes[0].item)])));
+
+      using(createHandler(), (_) => {
+        // verify nodes selected based on initial unified selection
+        expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.true;
+        expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.false;
+
+        selectionManager.getSelection.reset();
+        selectionManager.getSelection.returns(new KeySet());
+        selectionChangeEvent.raiseEvent(selectionEvent, selectionProvider);
+
+        // verify nodes selected based on updated unified selection
+        expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.false;
+        expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.false;
+      });
+    });
+
+    it("ignores selection changes on different imodel", () => {
+      const nodes: TreeModelNodeInput[] = [
+        createNode(() => createTestECInstancesNodeKey({ instanceKeys: [{ id: "0x1", className: "Schema:Class" }] }), { id: "node_1" }),
+        createNode(createTestECClassGroupingNodeKey, { id: "node_2" }),
+      ];
+
+      modelSource.modifyModel((model) => {
+        model.setChildren(undefined, nodes, 0);
+      });
+
+      // setup initials selection
       selectionManager.getSelection.returns(new KeySet());
 
       using(createHandler(), (_) => {
-        selectionChangeEvent.raiseEvent(selectionEvent, selectionProvider);
+        // verify nodes selected based on initial unified selection
+        expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.false;
+        expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.false;
 
+        const selectionKeys = SelectionHelper.getKeysForSelection(nodes.map((n) => getItemKey(n.item)));
+        selectionManager.getSelection.reset();
+        selectionManager.getSelection.returns(new KeySet(selectionKeys));
+        selectionChangeEvent.raiseEvent({ ...selectionEvent, imodel: {} as IModelConnection }, selectionProvider);
+
+        // verify selection change event was ignored
+        expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.false;
+        expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.false;
+      });
+    });
+
+    it("ignores selection changes on different ruleset", () => {
+      const nodes: TreeModelNodeInput[] = [
+        createNode(() => createTestECInstancesNodeKey({ instanceKeys: [{ id: "0x1", className: "Schema:Class" }] }), { id: "node_1" }),
+        createNode(createTestECClassGroupingNodeKey, { id: "node_2" }),
+      ];
+
+      modelSource.modifyModel((model) => {
+        model.setChildren(undefined, nodes, 0);
+      });
+
+      // setup initials selection
+      selectionManager.getSelection.returns(new KeySet());
+
+      using(createHandler(), (_) => {
+        // verify nodes selected based on initial unified selection
+        expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.false;
+        expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.false;
+
+        const selectionKeys = SelectionHelper.getKeysForSelection(nodes.map((n) => getItemKey(n.item)));
+        selectionManager.getSelection.reset();
+        selectionManager.getSelection.returns(new KeySet(selectionKeys));
+        selectionChangeEvent.raiseEvent({ ...selectionEvent, rulesetId: "different_ruleset" }, selectionProvider);
+
+        // verify selection change event was ignored
         expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.false;
         expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.false;
       });
