@@ -2,6 +2,7 @@
   "name": "@itwin/presentation-hierarchies",
   "version": "0.0.0",
   "description": "A package for creating hierarchies based on data in iTwin.js iModels.",
+  "license": "MIT",
   "private": true,
   "repository": {
     "type": "git",
