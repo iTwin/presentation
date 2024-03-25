@@ -222,7 +222,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
   }
 
   private onSelectionChanged(evt: SelectionChangeEventArgs) {
-    if (evt.imodel !== this._dataProvider.imodel || (evt.rulesetId && evt.rulesetId !== this._dataProvider.rulesetId)) {
+    if (evt.imodel !== this._dataProvider.imodel) {
       return;
     }
 

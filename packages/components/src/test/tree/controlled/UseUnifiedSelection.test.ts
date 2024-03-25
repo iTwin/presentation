@@ -482,39 +482,9 @@ describe("UnifiedSelectionEventHandler", () => {
         expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.false;
         expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.false;
 
-        const selectionKeys = SelectionHelper.getKeysForSelection(nodes.map((n) => getItemKey(n.item)));
-        selectionManager.getSelection.reset();
-        selectionManager.getSelection.returns(new KeySet(selectionKeys));
+        selectionManager.getSelection.resetHistory();
         selectionChangeEvent.raiseEvent({ ...selectionEvent, imodel: {} as IModelConnection }, selectionProvider);
-
-        // verify selection change event was ignored
-        expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.false;
-        expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.false;
-      });
-    });
-
-    it("ignores selection changes on different ruleset", () => {
-      const nodes: TreeModelNodeInput[] = [
-        createNode(() => createTestECInstancesNodeKey({ instanceKeys: [{ id: "0x1", className: "Schema:Class" }] }), { id: "node_1" }),
-        createNode(createTestECClassGroupingNodeKey, { id: "node_2" }),
-      ];
-
-      modelSource.modifyModel((model) => {
-        model.setChildren(undefined, nodes, 0);
-      });
-
-      // setup initials selection
-      selectionManager.getSelection.returns(new KeySet());
-
-      using(createHandler(), (_) => {
-        // verify nodes selected based on initial unified selection
-        expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.false;
-        expect(modelSource.getModel().getNode(nodes[1].id)?.isSelected).to.be.false;
-
-        const selectionKeys = SelectionHelper.getKeysForSelection(nodes.map((n) => getItemKey(n.item)));
-        selectionManager.getSelection.reset();
-        selectionManager.getSelection.returns(new KeySet(selectionKeys));
-        selectionChangeEvent.raiseEvent({ ...selectionEvent, rulesetId: "different_ruleset" }, selectionProvider);
+        expect(selectionManager.getSelection).to.not.be.called;
 
         // verify selection change event was ignored
         expect(modelSource.getModel().getNode(nodes[0].id)?.isSelected).to.be.false;
