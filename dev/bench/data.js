@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1711105659756,
+  "lastUpdate": 1711351634046,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -2081,6 +2081,118 @@ window.BENCHMARK_DATA = {
             "value": 361,
             "unit": "ms",
             "extra": "count: 2\nmax: 361\np95: 361\nmedian: 351.5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "24278440+saskliutas@users.noreply.github.com",
+            "name": "Saulius Skliutas",
+            "username": "saskliutas"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "cd7d9f6b7d84a024e242858762d8d5a3e40e42da",
+          "message": "Fix security vulnerability (#487)\n\n* Update deps\r\n\r\n* Add missing peer deps\r\n\r\n* Turn off auto install peers\r\n\r\n---------\r\n\r\nCo-authored-by: Grigas <35135765+grigasp@users.noreply.github.com>",
+          "timestamp": "2024-03-25T09:25:05+02:00",
+          "tree_id": "672e954119196ef6385360dec72b6a4e7839f672",
+          "url": "https://github.com/iTwin/presentation/commit/cd7d9f6b7d84a024e242858762d8d5a3e40e42da"
+        },
+        "date": 1711351633600,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "flat 50k elements list",
+            "value": 4847.12,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 53.71,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 2484.81,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 189,
+            "unit": "ms",
+            "extra": "count: 4\nmax: 189\np95: 189\nmedian: 91"
+          },
+          {
+            "name": "grouping by label",
+            "value": 8546.48,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "grouping by class",
+            "value": 8626.38,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "grouping by property",
+            "value": 9343.38,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 440,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 440\np95: 440\nmedian: 249"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 15548.99,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 5218,
+            "unit": "ms",
+            "extra": "count: 7\nmax: 5218\np95: 5218\nmedian: 977"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 9751.08,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 394,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 394\np95: 394\nmedian: 372"
           }
         ]
       }
