@@ -22,7 +22,9 @@ import { createTestContentDescriptor, createTestContentItem, createTestPropertie
 import { act, renderHook, waitFor } from "../TestUtils";
 
 describe("usePresentationTable", () => {
-  const imodel = {} as IModelConnection;
+  const imodel = {
+    key: "imodel_key",
+  } as IModelConnection;
   const initialProps: UsePresentationTableProps<TableColumnDefinition, TableRowDefinition> = {
     imodel,
     keys: new KeySet([createTestECInstanceKey()]),
@@ -86,8 +88,10 @@ describe("usePresentationTable", () => {
   });
 });
 
-describe("usePresentationTableWithUnifiedSelection", () => {
-  const imodel = {} as IModelConnection;
+describe.only("usePresentationTableWithUnifiedSelection", () => {
+  const imodel = {
+    key: "imodel_key",
+  } as IModelConnection;
   const initialProps: Omit<UsePresentationTableProps<TableColumnDefinition, TableRowDefinition>, "keys"> = {
     imodel,
     ruleset: "ruleset_id",
@@ -95,6 +99,7 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     rowMapper: (row) => row,
     pageSize: 10,
   };
+  const selectionSource = "TestSource";
 
   let presentationManager: sinon.SinonStubbedInstance<PresentationManager>;
 
@@ -106,11 +111,16 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     }));
 
     const selectionManager = new SelectionManager({ scopes: undefined as any });
+    IModelConnection.onOpen.raiseEvent(imodel);
     sinon.stub(Presentation, "selection").get(() => selectionManager);
   });
 
   function Wrapper({ children }: PropsWithChildren<{}>) {
-    return <UnifiedSelectionContextProvider imodel={imodel}>{children}</UnifiedSelectionContextProvider>;
+    return (
+      <UnifiedSelectionContextProvider imodel={imodel} selectionLevel={0}>
+        {children}
+      </UnifiedSelectionContextProvider>
+    );
   }
 
   it("loads columns and rows with keys from unified selection", async () => {
@@ -192,7 +202,12 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     act(() => {
       result.current.onSelect(stringifiedKeys);
     });
-    expect(replaceSpy).to.be.calledOnceWith("UnifiedSelectionContext", {}, expectedKeys, 1);
+    expect(replaceSpy).to.be.calledOnceWith(
+      sinon.match((source: string) => source.includes("UnifiedSelectionTable")),
+      imodel,
+      expectedKeys,
+      1,
+    );
   });
 
   it("gets invalid keys and does not pass any to the selection with onSelect", async () => {
@@ -205,7 +220,12 @@ describe("usePresentationTableWithUnifiedSelection", () => {
       result.current.onSelect(keys);
     });
 
-    expect(replaceSpy).to.have.been.calledOnceWithExactly("UnifiedSelectionContext", {}, [], 1);
+    expect(replaceSpy).to.have.been.calledOnceWithExactly(
+      sinon.match((source: string) => source.includes("UnifiedSelectionTable")),
+      imodel,
+      [],
+      1,
+    );
   });
 
   it("gets valid keys for rows that are not loaded and does not pass any to the selection with onSelect", async () => {
@@ -219,7 +239,12 @@ describe("usePresentationTableWithUnifiedSelection", () => {
       result.current.onSelect(stringifiedKeys);
     });
 
-    expect(replaceSpy).to.have.been.calledOnceWithExactly("UnifiedSelectionContext", {}, [], 1);
+    expect(replaceSpy).to.have.been.calledOnceWithExactly(
+      sinon.match((source: string) => source.includes("UnifiedSelectionTable")),
+      imodel,
+      [],
+      1,
+    );
   });
 
   it("returns an array of selectedRows when keys are passed before the table is loaded", async () => {
@@ -227,15 +252,23 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     setupPresentationManager();
 
     // select the row to get loaded onto the component
-    Presentation.selection.addToSelection("UnifiedSelectionContext", initialProps.imodel, keys, 0);
+    Presentation.selection.addToSelection(selectionSource, imodel, keys, 0);
     // add the instance to level 1 to make the row selected
-    Presentation.selection.addToSelection("UnifiedSelectionContext", initialProps.imodel, keys, 1);
+    Presentation.selection.addToSelection(selectionSource, imodel, keys, 1);
+
+    // wait for selection to be setup
+    await waitFor(() => {
+      expect(Presentation.selection.getSelection(imodel, 0).size).to.be.eq(keys.size);
+      expect(Presentation.selection.getSelection(imodel, 1).size).to.be.eq(keys.size);
+    });
 
     const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
 
-    await waitFor(() => expect(result.current.isLoading).to.be.false);
-    const resultAfterLoading = result.current.selectedRows;
-    expect(resultAfterLoading.length).to.be.equal(1);
+    await waitFor(() => {
+      expect(result.current.isLoading).to.be.false;
+      const resultAfterLoading = result.current.selectedRows;
+      expect(resultAfterLoading.length).to.be.equal(1);
+    });
   });
 
   it("returns an array of selectedRows when keys are added on selectionChange event", async () => {
@@ -245,23 +278,33 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     setupPresentationManager([instanceKey1, instanceKey2]);
 
     // select both instances at level 0 to get them displayed in the component
-    Presentation.selection.addToSelection("UnifiedSelectionContext", imodel, new KeySet([instanceKey1, instanceKey2]), 0);
+    Presentation.selection.addToSelection(selectionSource, imodel, new KeySet([instanceKey1, instanceKey2]), 0);
     // select instanceKey1 at level 1 to get its row selected
-    Presentation.selection.addToSelection("UnifiedSelectionContext", imodel, new KeySet([instanceKey1]), 1);
+    Presentation.selection.addToSelection(selectionSource, imodel, new KeySet([instanceKey1]), 1);
+
+    // wait for selection to be setup
+    await waitFor(() => {
+      expect(Presentation.selection.getSelection(imodel, 0).size).to.be.eq(2);
+      expect(Presentation.selection.getSelection(imodel, 1).size).to.be.eq(1);
+    });
 
     const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
 
-    await waitFor(() => expect(result.current.isLoading).to.be.false);
-    const selectedRowsAfterLoading = result.current.selectedRows;
-    expect(selectedRowsAfterLoading.length).to.be.equal(1);
-
-    act(() => {
-      Presentation.selection.addToSelection("UnifiedSelectionContext", imodel, new KeySet([instanceKey2]), 1);
+    await waitFor(() => {
+      expect(result.current.isLoading).to.be.false;
+      const selectedRowsAfterLoading = result.current.selectedRows;
+      expect(selectedRowsAfterLoading.length).to.be.equal(1);
     });
 
-    await waitFor(() => expect(result.current.isLoading).to.be.false);
-    const selectedRowsAfterAdding = result.current.selectedRows;
-    expect(selectedRowsAfterAdding.length).to.be.equal(2);
+    act(() => {
+      Presentation.selection.addToSelection(selectionSource, imodel, new KeySet([instanceKey2]), 1);
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).to.be.false;
+      const selectedRowsAfterAdding = result.current.selectedRows;
+      expect(selectedRowsAfterAdding.length).to.be.equal(2);
+    });
   });
 
   it("returns new array of selectedRows when keys are replaced on selectionChange event", async () => {
@@ -271,25 +314,35 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     setupPresentationManager([instanceKey1, instanceKey2]);
 
     // select both instances at level 0 to get them displayed in the component
-    Presentation.selection.addToSelection("UnifiedSelectionContext", imodel, new KeySet([instanceKey1, instanceKey2]), 0);
+    Presentation.selection.addToSelection(selectionSource, imodel, new KeySet([instanceKey1, instanceKey2]), 0);
     // select instanceKey1 at level 1 to get its row selected
-    Presentation.selection.addToSelection("UnifiedSelectionContext", imodel, new KeySet([instanceKey1]), 1);
+    Presentation.selection.addToSelection(selectionSource, imodel, new KeySet([instanceKey1]), 1);
+
+    // wait for selection to be setup
+    await waitFor(() => {
+      expect(Presentation.selection.getSelection(imodel, 0).size).to.be.eq(2);
+      expect(Presentation.selection.getSelection(imodel, 1).size).to.be.eq(1);
+    });
 
     const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
 
-    await waitFor(() => expect(result.current.isLoading).to.be.false);
-    const selectedRowsAfterLoading = result.current.selectedRows;
-    expect(selectedRowsAfterLoading.length).to.be.equal(1);
-    expect(selectedRowsAfterLoading[0].key).to.be.equal(JSON.stringify(instanceKey1));
-
-    act(() => {
-      Presentation.selection.replaceSelection("UnifiedSelectionContext", imodel, new KeySet([instanceKey2]), 1);
+    await waitFor(() => {
+      expect(result.current.isLoading).to.be.false;
+      const selectedRowsAfterLoading = result.current.selectedRows;
+      expect(selectedRowsAfterLoading.length).to.be.equal(1);
+      expect(selectedRowsAfterLoading[0].key).to.be.equal(JSON.stringify(instanceKey1));
     });
 
-    await waitFor(() => expect(result.current.isLoading).to.be.false);
-    const selectedRowsAfterReplacing = result.current.selectedRows;
-    expect(selectedRowsAfterReplacing.length).to.be.equal(1);
-    expect(selectedRowsAfterReplacing[0].key).to.be.equal(JSON.stringify(instanceKey2));
+    act(() => {
+      Presentation.selection.replaceSelection(selectionSource, imodel, new KeySet([instanceKey2]), 1);
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).to.be.false;
+      const selectedRowsAfterReplacing = result.current.selectedRows;
+      expect(selectedRowsAfterReplacing.length).to.be.equal(1);
+      expect(selectedRowsAfterReplacing[0].key).to.be.equal(JSON.stringify(instanceKey2));
+    });
   });
 
   it("returns smaller array of selectedRows when keys are removed on selectionChange event", async () => {
@@ -299,23 +352,33 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     setupPresentationManager([instanceKey1, instanceKey2]);
 
     // select both instances on both levels to make sure rows are loaded onto the component and selected on initial load.
-    Presentation.selection.addToSelection("UnifiedSelectionContext", imodel, new KeySet([instanceKey1, instanceKey2]), 0);
-    Presentation.selection.addToSelection("UnifiedSelectionContext", imodel, new KeySet([instanceKey1, instanceKey2]), 1);
+    Presentation.selection.addToSelection(selectionSource, imodel, new KeySet([instanceKey1, instanceKey2]), 0);
+    Presentation.selection.addToSelection(selectionSource, imodel, new KeySet([instanceKey1, instanceKey2]), 1);
+
+    // wait for selection to be setup
+    await waitFor(() => {
+      expect(Presentation.selection.getSelection(imodel, 0).size).to.be.eq(2);
+      expect(Presentation.selection.getSelection(imodel, 1).size).to.be.eq(2);
+    });
 
     const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
 
-    await waitFor(() => expect(result.current.isLoading).to.be.false);
-    const selectedRowsAfterLoading = result.current.selectedRows;
-    expect(selectedRowsAfterLoading.length).to.be.equal(2);
-
-    act(() => {
-      Presentation.selection.removeFromSelection("UnifiedSelectionContext", imodel, new KeySet([instanceKey1]), 1);
+    await waitFor(() => {
+      expect(result.current.isLoading).to.be.false;
+      const selectedRowsAfterLoading = result.current.selectedRows;
+      expect(selectedRowsAfterLoading.length).to.be.equal(2);
     });
 
-    await waitFor(() => expect(result.current.isLoading).to.be.false);
-    const selectedRowsAfterRemoving = result.current.selectedRows;
-    expect(selectedRowsAfterRemoving.length).to.be.equal(1);
-    expect(selectedRowsAfterRemoving[0].key).to.be.equal(JSON.stringify(instanceKey2));
+    act(() => {
+      Presentation.selection.removeFromSelection(selectionSource, imodel, new KeySet([instanceKey1]), 1);
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).to.be.false;
+      const selectedRowsAfterRemoving = result.current.selectedRows;
+      expect(selectedRowsAfterRemoving.length).to.be.equal(1);
+      expect(selectedRowsAfterRemoving[0].key).to.be.equal(JSON.stringify(instanceKey2));
+    });
   });
 
   it("returns new array of selectedRows when keys are cleared on selectionChange event", async () => {
@@ -325,22 +388,32 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     setupPresentationManager([instanceKey1, instanceKey2]);
 
     // select both instances on both levels to make sure rows are loaded onto the component and selected on initial load.
-    Presentation.selection.addToSelection("UnifiedSelectionContext", imodel, new KeySet([instanceKey1, instanceKey2]), 0);
-    Presentation.selection.addToSelection("UnifiedSelectionContext", imodel, new KeySet([instanceKey1, instanceKey2]), 1);
+    Presentation.selection.addToSelection(selectionSource, imodel, new KeySet([instanceKey1, instanceKey2]), 0);
+    Presentation.selection.addToSelection(selectionSource, imodel, new KeySet([instanceKey1, instanceKey2]), 1);
+
+    // wait for selection to be setup
+    await waitFor(() => {
+      expect(Presentation.selection.getSelection(imodel, 0).size).to.be.eq(2);
+      expect(Presentation.selection.getSelection(imodel, 1).size).to.be.eq(2);
+    });
 
     const { result } = renderHook(() => usePresentationTableWithUnifiedSelection(initialProps), { wrapper: Wrapper });
 
-    await waitFor(() => expect(result.current.isLoading).to.be.false);
-    const selectedRowsAfterLoading = result.current.selectedRows;
-    expect(selectedRowsAfterLoading.length).to.be.equal(2);
-
-    act(() => {
-      Presentation.selection.clearSelection("UnifiedSelectionContext", imodel, 1);
+    await waitFor(() => {
+      expect(result.current.isLoading).to.be.false;
+      const selectedRowsAfterLoading = result.current.selectedRows;
+      expect(selectedRowsAfterLoading.length).to.be.equal(2);
     });
 
-    await waitFor(() => expect(result.current.isLoading).to.be.false);
-    const selectedRowsAfterClearing = result.current.selectedRows;
-    expect(selectedRowsAfterClearing.length).to.be.equal(0);
+    act(() => {
+      Presentation.selection.clearSelection(selectionSource, imodel, 1);
+    });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).to.be.false;
+      const selectedRowsAfterClearing = result.current.selectedRows;
+      expect(selectedRowsAfterClearing.length).to.be.equal(0);
+    });
   });
 
   it("returns an empty array of selectedRows when keys are passed from the wrong level on selectionChange event", async () => {
@@ -349,12 +422,14 @@ describe("usePresentationTableWithUnifiedSelection", () => {
     await waitFor(() => expect(result.current.isLoading).to.be.false);
 
     act(() => {
-      Presentation.selection.addToSelection("UnifiedSelectionContext", initialProps.imodel, new KeySet([createTestECInstanceKey()]), 3);
+      Presentation.selection.addToSelection(selectionSource, initialProps.imodel, new KeySet([createTestECInstanceKey()]), 3);
     });
 
-    await waitFor(() => expect(result.current.isLoading).to.be.false);
-    const selectedRowsAfterAdding = result.current.selectedRows;
-    expect(selectedRowsAfterAdding.length).to.be.equal(0);
+    await waitFor(() => {
+      expect(result.current.isLoading).to.be.false;
+      const selectedRowsAfterAdding = result.current.selectedRows;
+      expect(selectedRowsAfterAdding.length).to.be.equal(0);
+    });
   });
 
   /** Creates rows for the provided keys */
