@@ -137,7 +137,7 @@ export function usePresentationTableWithUnifiedSelection<TColumn, TRow>(
     updateSelectedRows();
 
     return disposeListener;
-  }, [rows]);
+  }, [rows, imodel]);
 
   const onSelect = (selectedKeys: string[]) => {
     const parsedKeys: Key[] = [];
