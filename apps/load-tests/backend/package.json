@@ -29,6 +29,8 @@
     "@opentelemetry/api": "^1.6.0",
     "@types/node": "^18.17.7",
     "eslint": "^8.56.0",
+    "inversify": "^6.0.2",
+    "reflect-metadata": "^0.1.14",
     "rimraf": "^5.0.5",
     "typescript": "~5.0.4"
   }
