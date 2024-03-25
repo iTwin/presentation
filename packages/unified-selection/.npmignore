@@ -8,3 +8,6 @@
 !lib/**/*.js
 !lib/**/*.js.map
 !lib/**/*.json
+
+# then ignore some stuff again
+lib/**/test/**
