@@ -8,7 +8,7 @@ import sinon from "sinon";
 import { HiliteSetProvider } from "../unified-selection/HiliteSetProvider";
 import { ECClass, ECSchema } from "../unified-selection/queries/ECMetadata";
 import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow } from "../unified-selection/queries/ECSqlCore";
-import { Selectables } from "../unified-selection/Selectable";
+import { SelectableInstanceKey, Selectables } from "../unified-selection/Selectable";
 import { createCustomSelectable, createECInstanceId, createSelectableInstanceKey } from "./_helpers/SelectablesCreator";
 
 describe("HiliteSetProvider", () => {
@@ -64,7 +64,7 @@ describe("HiliteSetProvider", () => {
         .withArgs(sinon.match((query: string) => query.includes("SubCategories")))
         .returns(createFakeQueryReader<ECSqlQueryRow>(subCategoryKeys.length === 0 ? [] : subCategoryKeys.map((k) => ({ ["ECInstanceId"]: k }))));
       queryExecutor.createQueryReader
-        .withArgs(sinon.match((query: string) => query.includes("MergedElements")))
+        .withArgs(sinon.match((query: string) => query.includes("ElementGeometricElements")))
         .returns(createFakeQueryReader<ECSqlQueryRow>(elementKeys.length === 0 ? [] : elementKeys.map((k) => ({ ["ECInstanceId"]: k }))));
     }
 
@@ -144,43 +144,6 @@ describe("HiliteSetProvider", () => {
         expect(result.models).to.be.empty;
         expect(result.subCategories).to.be.empty;
         expect(result.elements).to.deep.eq([resultKey]);
-      });
-
-      it("Ignores functional elements when `Functional` schema get throws", async () => {
-        const elementKey = createSelectableInstanceKey(1);
-        const resultKey = createECInstanceId(2);
-
-        metadataProvider.getSchema.withArgs("Functional").throws();
-        queryExecutor.createQueryReader
-          .withArgs(sinon.match((query: string) => query.includes("FunctionalElement")))
-          .returns(createFakeQueryReader<ECSqlQueryRow>([{ ["ECInstanceId"]: resultKey }]));
-
-        mockClass("TestClass", "Functional", "FunctionalElement");
-        mockQuery([], [], [resultKey]);
-
-        const selection = Selectables.create([elementKey]);
-        const result = await provider.getHiliteSet(selection);
-        expect(result.models).to.be.empty;
-        expect(result.subCategories).to.be.empty;
-        expect(result.elements).to.be.empty;
-      });
-
-      it("Does not check if `Functional` schema exists twice", async () => {
-        const elementKey = createSelectableInstanceKey(1);
-        const resultKey = createECInstanceId(2);
-
-        metadataProvider.getSchema.withArgs("Functional").returns(Promise.resolve({} as unknown as ECSchema));
-        queryExecutor.createQueryReader
-          .withArgs(sinon.match((query: string) => query.includes("FunctionalElement")))
-          .returns(createFakeQueryReader<ECSqlQueryRow>([{ ["ECInstanceId"]: resultKey }]));
-
-        mockClass("TestClass", "Functional", "FunctionalElement");
-        mockQuery([], [], []);
-
-        const selection = Selectables.create([elementKey]);
-        await provider.getHiliteSet(selection);
-        await provider.getHiliteSet(selection);
-        expect(metadataProvider.getSchema.withArgs("Functional").callCount).to.eq(1);
       });
     });
 
@@ -331,6 +294,26 @@ describe("HiliteSetProvider", () => {
         expect(result.models).to.be.empty;
         expect(result.subCategories).to.be.empty;
         expect(result.elements).to.deep.eq([resultKey]);
+      });
+
+      it("uses InVirtualSet when 1000 or more ids passed", async () => {
+        const elementKeys: SelectableInstanceKey[] = [];
+        const resultKey = createECInstanceId(2);
+        for (let i = 1; i <= 1001; i++) {
+          elementKeys.push(createSelectableInstanceKey(i));
+        }
+        mockClass("TestClass", "BisCore", "Element");
+        mockQuery([], [], [resultKey]);
+
+        const selection = Selectables.create(elementKeys);
+        const result = await provider.getHiliteSet(selection);
+        expect(result.models).to.be.empty;
+        expect(result.subCategories).to.be.empty;
+        expect(result.elements).to.deep.eq([resultKey]);
+        expect(queryExecutor.createQueryReader).to.be.calledWithMatch(
+          sinon.match((query: string) => query.includes("InVirtualSet")),
+          sinon.match.any,
+        );
       });
     });
   });

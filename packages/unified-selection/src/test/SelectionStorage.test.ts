@@ -347,7 +347,7 @@ describe("SelectionStorage", () => {
     });
   });
 
-  describe("getHiliteSet", () => {
+  describe("Hilite set", () => {
     let factory: sinon.SinonStub<[HiliteSetProviderProps], HiliteSetProvider>;
 
     beforeEach(() => {
@@ -359,7 +359,7 @@ describe("SelectionStorage", () => {
       factory.restore();
     });
 
-    it("creates provider once for iModel", async () => {
+    it("creates provider once for iModel (getHiliteSet)", async () => {
       // first call for an iModel should create a provider
       const executor1 = {} as IECSqlQueryExecutor;
       const executor2 = {} as IECSqlQueryExecutor;
@@ -380,6 +380,30 @@ describe("SelectionStorage", () => {
 
       // make sure we still have provider for the first iModel
       await selectionStorage.getHiliteSet({ iModelKey: "model1", queryExecutor: executor1, metadataProvider });
+      expect(factory).to.not.be.called;
+    });
+
+    it("creates provider once for iModel (getHiliteSetIterator)", async () => {
+      // first call for an iModel should create a provider
+      const executor1 = {} as IECSqlQueryExecutor;
+      const executor2 = {} as IECSqlQueryExecutor;
+      const metadataProvider = {} as IMetadataProvider;
+
+      selectionStorage.getHiliteSetIterator({ iModelKey: "model1", queryExecutor: executor1, metadataProvider });
+      expect(factory).to.be.calledOnceWith({ queryExecutor: executor1, metadataProvider });
+      factory.resetHistory();
+
+      // second call with same iModel shouldn't create a new provider
+      selectionStorage.getHiliteSetIterator({ iModelKey: "model1", queryExecutor: executor1, metadataProvider });
+      expect(factory).to.not.be.called;
+
+      // another iModel - new provider
+      selectionStorage.getHiliteSetIterator({ iModelKey: "model2", queryExecutor: executor2, metadataProvider });
+      expect(factory).to.be.calledOnceWith({ queryExecutor: executor2, metadataProvider });
+      factory.resetHistory();
+
+      // make sure we still have provider for the first iModel
+      selectionStorage.getHiliteSetIterator({ iModelKey: "model1", queryExecutor: executor1, metadataProvider });
       expect(factory).to.not.be.called;
     });
   });

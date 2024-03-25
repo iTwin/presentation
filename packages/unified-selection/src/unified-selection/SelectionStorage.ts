@@ -96,6 +96,16 @@ export interface SelectionStorage {
     /** EC metadata provider */
     metadataProvider: IMetadataProvider;
   }): Promise<HiliteSet>;
+
+  /** Get the current hilite set iterator for the specified imodel */
+  getHiliteSetIterator(props: {
+    /** iModel to get hilite set for */
+    iModelKey: string;
+    /** ECSql query executor */
+    queryExecutor: IECSqlQueryExecutor;
+    /** EC metadata provider */
+    metadataProvider: IMetadataProvider;
+  }): AsyncIterableIterator<HiliteSet>;
 }
 
 /**
@@ -151,6 +161,17 @@ class SelectionStorageImpl implements SelectionStorage {
     const provider = this.getHiliteSetProvider(iModelKey, queryExecutor, metadataProvider);
     const selection = this.getSelection({ iModelKey });
     return provider.getHiliteSet(selection);
+  }
+
+  public getHiliteSetIterator(props: {
+    iModelKey: string;
+    queryExecutor: IECSqlQueryExecutor;
+    metadataProvider: IMetadataProvider;
+  }): AsyncIterableIterator<HiliteSet> {
+    const { iModelKey, queryExecutor, metadataProvider } = props;
+    const provider = this.getHiliteSetProvider(iModelKey, queryExecutor, metadataProvider);
+    const selection = this.getSelection({ iModelKey });
+    return provider.getHiliteSetIterator(selection);
   }
 
   private getHiliteSetProvider(iModelKey: string, queryExecutor: IECSqlQueryExecutor, metadataProvider: IMetadataProvider) {
