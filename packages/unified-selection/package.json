@@ -2,7 +2,6 @@
   "name": "@itwin/unified-selection",
   "version": "0.0.0",
   "description": "Package for managing unified selection",
-  "private": true,
   "repository": {
     "type": "git",
     "url": "https://github.com/iTwin/presentation.git",
