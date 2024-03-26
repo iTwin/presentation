@@ -119,29 +119,29 @@ async function groupInstanceNodes(
       ungrouped: groupings.ungrouped,
     };
   }
-  if (curr) {
-    if (curr.grouped.length > 0) {
-      curr.grouped.forEach((groupingNode) => {
-        if (parentNode) {
-          if (HierarchyNode.isGroupingNode(parentNode)) {
-            groupingNode.nonGroupingAncestor = parentNode.nonGroupingAncestor;
-          } else {
-            // not sure why type checker doesn't pick this up
-            assert(HierarchyNode.isCustom(parentNode) || HierarchyNode.isInstancesNode(parentNode));
-            groupingNode.nonGroupingAncestor = parentNode;
-          }
-        }
-        onGroupingNodeCreated && onGroupingNodeCreated(groupingNode);
-      });
-      return mergeInPlace<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>(curr.grouped, curr.ungrouped);
-    }
-    return curr.ungrouped;
+  if (!curr) {
+    return nodes;
   }
-  return nodes;
+  curr.grouped.forEach((groupingNode) => {
+    onGroupingNodeCreated?.(groupingNode);
+    if (!parentNode) {
+      return;
+    }
+
+    if (HierarchyNode.isGroupingNode(parentNode)) {
+      groupingNode.nonGroupingAncestor = parentNode.nonGroupingAncestor;
+      return;
+    }
+
+    // not sure why type checker doesn't pick this up
+    assert(HierarchyNode.isCustom(parentNode) || HierarchyNode.isInstancesNode(parentNode));
+    groupingNode.nonGroupingAncestor = parentNode;
+  });
+  return mergeInPlace<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>(curr.grouped, curr.ungrouped);
 }
 
 function mergeInPlace<T>(target: T[] | undefined, source: T[]) {
-  if (!target) {
+  if (!target || target.length === 0) {
     return source;
   }
   for (const item of source) {
