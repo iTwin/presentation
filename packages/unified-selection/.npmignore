@@ -8,8 +8,6 @@
 !lib/**/*.js
 !lib/**/*.js.map
 !lib/**/*.json
-!lib/**/public/**/*
 
 # then ignore some stuff again
 lib/**/test/**
-lib/**/public/locales/en-PSEUDO/**

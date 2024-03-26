@@ -2,6 +2,7 @@
   "name": "@itwin/presentation-core-interop",
   "version": "0.0.0",
   "description": "A package that has peer dependencies on both `@itwin/presentation-hierarchies` and core packages and provides an interop layer between them.",
+  "license": "MIT",
   "private": true,
   "repository": {
     "type": "git",

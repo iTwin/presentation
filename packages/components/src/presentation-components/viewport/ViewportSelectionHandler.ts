@@ -95,16 +95,7 @@ export class ViewportSelectionHandler implements IDisposable {
       .pipe(takeUntil(this._cancelOngoingChanges))
       .subscribe({
         next: (set) => {
-          if (set.models?.length) {
-            imodel.hilited.models.deleteIds(set.models);
-          }
-          if (set.subCategories?.length) {
-            imodel.hilited.subcategories.deleteIds(set.subCategories);
-          }
-          if (set.elements?.length) {
-            imodel.hilited.elements.deleteIds(set.elements);
-            imodel.selectionSet.remove(set.elements);
-          }
+          this.removeHiliteSet(imodel, set);
         },
         complete: () => {
           this.applyCurrentHiliteSet(imodel, false);
@@ -156,6 +147,21 @@ export class ViewportSelectionHandler implements IDisposable {
       if (set.elements && set.elements.length) {
         imodel.hilited.elements.addIds(set.elements);
         imodel.selectionSet.add(set.elements);
+      }
+    });
+  }
+
+  private removeHiliteSet(imodel: IModelConnection, set: HiliteSet) {
+    using(Presentation.selection.suspendIModelToolSelectionSync(this._imodel), (_) => {
+      if (set.models?.length) {
+        imodel.hilited.models.deleteIds(set.models);
+      }
+      if (set.subCategories?.length) {
+        imodel.hilited.subcategories.deleteIds(set.subCategories);
+      }
+      if (set.elements?.length) {
+        imodel.hilited.elements.deleteIds(set.elements);
+        imodel.selectionSet.remove(set.elements);
       }
     });
   }
