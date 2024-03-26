@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { PropertyDescription, PropertyValueFormat } from "@itwin/appui-abstract";
+import { PrimitiveValue, PropertyDescription, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyFilter, PropertyFilterRule, PropertyFilterRuleGroup } from "@itwin/components-react";
 import { GenericInstanceFilter } from "@itwin/core-common";
 import { Field } from "@itwin/presentation-common";
@@ -982,6 +982,30 @@ describe("PresentationInstanceFilter", () => {
       expect(() => PresentationInstanceFilter.fromGenericInstanceFilter(descriptor, filter)).to.throw(
         "Failed to find field for property - rel_B_0.invalidProp",
       );
+    });
+  });
+
+  describe("createEqualityCondition", () => {
+    it("serializes value into unique value", () => {
+      const value: PrimitiveValue = {
+        valueFormat: PropertyValueFormat.Primitive,
+        value: 1.456,
+        displayValue: "1.46",
+      };
+      const condition = PresentationInstanceFilter.createEqualityCondition(propertyField1, "is-equal", value);
+      const uniqueValue = serializeUniqueValues([{ displayValue: "1.46", groupedRawValues: [1.456] }]);
+      expect(condition.value?.value).to.be.eq(uniqueValue.groupedRawValues);
+      expect(condition.value?.displayValue).to.be.eq(uniqueValue.displayValues);
+    });
+
+    it("returns condition with undefined value for non primitive values", () => {
+      const value: PropertyValue = {
+        valueFormat: PropertyValueFormat.Array,
+        items: [],
+        itemsTypeName: "number",
+      };
+      const condition = PresentationInstanceFilter.createEqualityCondition(propertyField1, "is-not-equal", value);
+      expect(condition.value).to.be.undefined;
     });
   });
 });

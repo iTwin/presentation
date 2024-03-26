@@ -6,7 +6,7 @@
  * @module InstancesFilter
  */
 
-import { Primitives, PrimitiveValue, PropertyValueFormat } from "@itwin/appui-abstract";
+import { Primitives, PrimitiveValue, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import {
   isPropertyFilterRuleGroup,
   PropertyFilter,
@@ -129,6 +129,23 @@ export namespace PresentationInstanceFilter {
    */
   export function isConditionGroup(filter: PresentationInstanceFilter): filter is PresentationInstanceFilterConditionGroup {
     return (filter as any).conditions !== undefined;
+  }
+
+  /**
+   * Function that creates equality condition based on supplied [[PropertiesField]] and [[PropertyValue]] that is compatible
+   * with `UniquePropertyValuesSelector`.
+   * @beta
+   */
+  export function createEqualityCondition(
+    field: PropertiesField,
+    operator: "is-equal" | "is-not-equal",
+    value: PropertyValue,
+  ): PresentationInstanceFilterCondition {
+    return {
+      field,
+      operator,
+      value: createUniqueValue(value),
+    };
   }
 }
 
@@ -528,4 +545,21 @@ function isPoint3dLike(value: object): value is { x: number; y: number; z: numbe
 
 function isInstanceKeyLike(value: object): value is { id: string; className: string } {
   return (value as any).id !== undefined && (value as any).className !== undefined;
+}
+
+function createUniqueValue(value: PropertyValue): PrimitiveValue | undefined {
+  if (value.valueFormat !== PropertyValueFormat.Primitive || value.displayValue === undefined || value.value === undefined) {
+    return undefined;
+  }
+  const { displayValues, groupedRawValues } = serializeUniqueValues([
+    {
+      displayValue: value.displayValue,
+      groupedRawValues: [value.value as Value],
+    },
+  ]);
+  return {
+    displayValue: displayValues,
+    value: groupedRawValues,
+    valueFormat: PropertyValueFormat.Primitive,
+  };
 }
