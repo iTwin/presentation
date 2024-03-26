@@ -236,10 +236,10 @@ export class HierarchyProvider {
     );
     // handle nodes' hiding
     const nodesAfterHiding = preProcessedNodes.pipe(
-      createHideIfNoChildrenOperator((n) => this.getChildNodesObservables({ parentNode: n }).pipe(mergeMap((x) => x.hasNodes)), false),
+      createHideIfNoChildrenOperator((n) => this.getChildNodesObservables({ parentNode: n }).hasNodes, false),
       createHideNodesInHierarchyOperator(
         // note: for child nodes created because of hidden parent, we want to use parent's request props (instance filter, limit)
-        (n) => this.getChildNodesObservables({ ...props, parentNode: n }).pipe(mergeMap((x) => x.processedNodes)),
+        (n) => this.getChildNodesObservables({ ...props, parentNode: n }).processedNodes,
         false,
       ),
     );
@@ -260,7 +260,7 @@ export class HierarchyProvider {
 
   private createFinalizedNodesObservable(processedNodesObservable: Observable<ProcessedHierarchyNode>): Observable<HierarchyNode> {
     return processedNodesObservable.pipe(
-      createDetermineChildrenOperator((n) => this.getChildNodesObservables({ parentNode: n }).pipe(mergeMap((x) => x.hasNodes))),
+      createDetermineChildrenOperator((n) => this.getChildNodesObservables({ parentNode: n }).hasNodes),
       postProcessNodes(this.hierarchyDefinition),
       map((n): HierarchyNode => {
         const node = { ...n };
@@ -290,8 +290,7 @@ export class HierarchyProvider {
     );
   }
 
-  // TODO: we could change the return type to `CachedNodesObservableEntry` now
-  private getCachedObservableEntry(props: GetHierarchyNodesProps): Observable<CachedNodesObservableEntry> {
+  private getCachedObservableEntry(props: GetHierarchyNodesProps): CachedNodesObservableEntry {
     const loggingCategory = `${LOGGING_NAMESPACE}.GetCachedObservableEntry`;
     const { parentNode, ...restProps } = props;
     const cached = this._nodesCache.get(props);
@@ -301,7 +300,7 @@ export class HierarchyProvider {
         category: loggingCategory,
         message: /* istanbul ignore next */ () => `Found query nodes observable for ${createNodeIdentifierForLogging(parentNode)}`,
       });
-      return of(cached);
+      return cached;
     }
 
     // if we don't find an entry for a grouping node, we load its instances by getting a query and applying
@@ -327,33 +326,30 @@ export class HierarchyProvider {
       category: loggingCategory,
       message: /* istanbul ignore next */ () => `Saved query nodes observable for ${createNodeIdentifierForLogging(parentNode)}`,
     });
-    return of(value);
+    return value;
   }
 
   private getChildNodesObservables(props: GetHierarchyNodesProps & { hierarchyLevelSizeLimit?: number | "unbounded" }) {
-    return this.getCachedObservableEntry(props).pipe(
-      map((entry) => {
-        switch (entry.processingStatus) {
-          case "none": {
-            const pre = this.createPreProcessedNodesObservable(entry.observable, props);
-            const post = this.createProcessedNodesObservable(pre, props);
-            return {
-              processedNodes: post,
-              hasNodes: this.createHasNodesObservable(pre),
-              finalizedNodes: this.createFinalizedNodesObservable(post),
-            };
-          }
-          case "pre-processed": {
-            const post = this.createProcessedNodesObservable(entry.observable, props);
-            return {
-              processedNodes: post,
-              hasNodes: this.createHasNodesObservable(entry.observable),
-              finalizedNodes: this.createFinalizedNodesObservable(post),
-            };
-          }
-        }
-      }),
-    );
+    const entry = this.getCachedObservableEntry(props);
+    switch (entry.processingStatus) {
+      case "none": {
+        const pre = this.createPreProcessedNodesObservable(entry.observable, props);
+        const post = this.createProcessedNodesObservable(pre, props);
+        return {
+          processedNodes: post,
+          hasNodes: this.createHasNodesObservable(pre),
+          finalizedNodes: this.createFinalizedNodesObservable(post),
+        };
+      }
+      case "pre-processed": {
+        const post = this.createProcessedNodesObservable(entry.observable, props);
+        return {
+          processedNodes: post,
+          hasNodes: this.createHasNodesObservable(entry.observable),
+          finalizedNodes: this.createFinalizedNodesObservable(post),
+        };
+      }
+    }
   }
 
   /**
@@ -368,29 +364,27 @@ export class HierarchyProvider {
         message: /* istanbul ignore next */ () => `Requesting child nodes for ${createNodeIdentifierForLogging(props.parentNode)}`,
       });
       const nodes = new Array<HierarchyNode>();
-      this.getChildNodesObservables(props)
-        .pipe(mergeMap(({ finalizedNodes }) => finalizedNodes))
-        .subscribe({
-          next(node) {
-            nodes.push(node);
-          },
-          error(err) {
-            doLog({
-              category: loggingCategory,
-              message: /* istanbul ignore next */ () =>
-                `Error creating child nodes for ${createNodeIdentifierForLogging(props.parentNode)}: ${err instanceof Error ? err.message : err.toString()}`,
-            });
-            reject(err);
-          },
-          complete() {
-            doLog({
-              category: loggingCategory,
-              message: /* istanbul ignore next */ () =>
-                `Returning ${nodes.length} child nodes for ${createNodeIdentifierForLogging(props.parentNode)} in ${timer.currentSeconds.toFixed(2)} s.`,
-            });
-            resolve(nodes);
-          },
-        });
+      this.getChildNodesObservables(props).finalizedNodes.subscribe({
+        next(node) {
+          nodes.push(node);
+        },
+        error(err) {
+          doLog({
+            category: loggingCategory,
+            message: /* istanbul ignore next */ () =>
+              `Error creating child nodes for ${createNodeIdentifierForLogging(props.parentNode)}: ${err instanceof Error ? err.message : err.toString()}`,
+          });
+          reject(err);
+        },
+        complete() {
+          doLog({
+            category: loggingCategory,
+            message: /* istanbul ignore next */ () =>
+              `Returning ${nodes.length} child nodes for ${createNodeIdentifierForLogging(props.parentNode)} in ${timer.currentSeconds.toFixed(2)} s.`,
+          });
+          resolve(nodes);
+        },
+      });
     });
   }
 
