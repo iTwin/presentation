@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1711351634046,
+  "lastUpdate": 1711445347473,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -2193,6 +2193,118 @@ window.BENCHMARK_DATA = {
             "value": 394,
             "unit": "ms",
             "extra": "count: 2\nmax: 394\np95: 394\nmedian: 372"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "24278440+saskliutas@users.noreply.github.com",
+            "name": "Saulius Skliutas",
+            "username": "saskliutas"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4348f00ef66fa39f5702a8e3463713b5daaea744",
+          "message": "Add missing license field (#495)\n\n* Add license field to package.json\r\n\r\n* Change",
+          "timestamp": "2024-03-26T11:26:54+02:00",
+          "tree_id": "c34c73572d63e529e77efe0e854cdcb7f86480d6",
+          "url": "https://github.com/iTwin/presentation/commit/4348f00ef66fa39f5702a8e3463713b5daaea744"
+        },
+        "date": 1711445346421,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "flat 50k elements list",
+            "value": 4900.3,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 56.12,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 2604.4,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 203,
+            "unit": "ms",
+            "extra": "count: 4\nmax: 203\np95: 203\nmedian: 94"
+          },
+          {
+            "name": "grouping by label",
+            "value": 9332.97,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "grouping by class",
+            "value": 9408.38,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "grouping by property",
+            "value": 10355.43,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 471,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 471\np95: 471\nmedian: 263.5"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 16249.06,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 5504,
+            "unit": "ms",
+            "extra": "count: 7\nmax: 5504\np95: 5504\nmedian: 1029"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 10530.57,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 348,
+            "unit": "ms",
+            "extra": "count: 2\nmax: 348\np95: 348\nmedian: 345.5"
           }
         ]
       }
