@@ -61,7 +61,7 @@ describe("Grouping", () => {
       ];
 
       const result = await getObservableResult(
-        from(nodes).pipe(createGroupingOperator(metadataProvider, undefined, formatter, testLocalizedStrings, undefined, [])),
+        from(nodes).pipe(createGroupingOperator(metadataProvider, undefined, formatter, testLocalizedStrings, baseClassChecker, undefined, [])),
       );
       expect(result).to.deep.eq(nodes);
     });
