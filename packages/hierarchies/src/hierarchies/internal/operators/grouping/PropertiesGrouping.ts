@@ -65,21 +65,19 @@ export async function createPropertyGroups(
         otherValuesGrouping = { node, new: false };
       }
     }
-    if (!otherValuesGrouping) {
-      otherValuesGrouping = {
-        node: {
-          key: {
-            type: "property-grouping:other" as const,
-            properties: [],
-          },
-          parentKeys: [],
-          groupedInstanceKeys: [],
-          label: localizedStrings.other,
-          children: [],
+    otherValuesGrouping ??= {
+      node: {
+        key: {
+          type: "property-grouping:other" as const,
+          properties: [],
         },
-        new: true,
-      };
-    }
+        parentKeys: [],
+        groupedInstanceKeys: [],
+        label: localizedStrings.other,
+        children: [],
+      },
+      new: true,
+    };
     return otherValuesGrouping.node;
   };
 
