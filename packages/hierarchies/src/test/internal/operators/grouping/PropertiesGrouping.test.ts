@@ -1848,16 +1848,16 @@ describe("PropertiesGrouping", () => {
           groupingType: "property",
           grouped: [
             createTestProcessedGroupingNode({
-              label: "1 - 4",
-              key: expectedGroupingNodeKey2,
-              groupedInstanceKeys: nodes[1].key.instanceKeys,
-              children: [{ ...nodes[1], parentKeys: [...nodes[1].parentKeys, expectedGroupingNodeKey2] }],
-            }),
-            createTestProcessedGroupingNode({
               label: "5 - 10",
               key: expectedGroupingNodeKey1,
               groupedInstanceKeys: nodes[0].key.instanceKeys,
               children: [{ ...nodes[0], parentKeys: [...nodes[0].parentKeys, expectedGroupingNodeKey1] }],
+            }),
+            createTestProcessedGroupingNode({
+              label: "1 - 4",
+              key: expectedGroupingNodeKey2,
+              groupedInstanceKeys: nodes[1].key.instanceKeys,
+              children: [{ ...nodes[1], parentKeys: [...nodes[1].parentKeys, expectedGroupingNodeKey2] }],
             }),
           ],
           ungrouped: [],

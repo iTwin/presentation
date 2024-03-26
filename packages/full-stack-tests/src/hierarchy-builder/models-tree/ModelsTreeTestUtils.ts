@@ -30,7 +30,7 @@ export async function importTestSchema(mochaContext: Mocha.Context, builder: Tes
     builder,
     `
       <ECSchemaReference name="BisCore" version="01.00.16" alias="bis" />
-      <ECEntityClass typeName="PhysicalObject" displayLabel="Physical Object" modifier="Sealed" description="Similar to generic:PhysicalObject but also sub-modelable.">
+      <ECEntityClass typeName="TestPhysicalObject" displayLabel="Test Physical Object" modifier="Sealed" description="Similar to generic:PhysicalObject but also sub-modelable.">
         <BaseClass>bis:PhysicalElement</BaseClass>
         <BaseClass>bis:ISubModeledElement</BaseClass>
       </ECEntityClass>

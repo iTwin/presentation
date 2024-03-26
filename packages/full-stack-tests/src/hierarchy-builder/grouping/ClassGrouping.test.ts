@@ -48,16 +48,16 @@ describe("Stateless hierarchy builder", () => {
                     SELECT ${await selectQueryFactory.createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
-                      nodeLabel: { selector: `this.UserLabel` },
+                      nodeLabel: { selector: `this.CodeValue` },
                       grouping: {
                         byClass: true,
                       },
                     })}
                     FROM (
-                      SELECT ECClassId, ECInstanceId, UserLabel, Parent
+                      SELECT ECClassId, ECInstanceId, CodeValue, Parent
                       FROM ${subjectClassName}
                       UNION ALL
-                      SELECT ECClassId, ECInstanceId, UserLabel, Parent
+                      SELECT ECClassId, ECInstanceId, CodeValue, Parent
                       FROM ${physicalPartitionClassName}
                     ) AS this
                     WHERE this.Parent.Id = (${IModel.rootSubjectId})

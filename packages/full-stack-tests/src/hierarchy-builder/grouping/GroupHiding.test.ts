@@ -32,6 +32,7 @@ describe("Stateless hierarchy builder", () => {
     function createHierarchyWithSpecifiedGrouping(
       imodel: IModelConnection,
       specifiedGrouping: ECSqlSelectClauseGroupingParams,
+      labelProperty?: string,
     ): IHierarchyLevelDefinitionsFactory {
       const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
       return {
@@ -45,14 +46,14 @@ describe("Stateless hierarchy builder", () => {
                     SELECT ${await selectQueryFactory.createSelectClause({
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
-                      nodeLabel: { selector: `this.UserLabel` },
+                      nodeLabel: { selector: `this.${labelProperty ?? "CodeValue"}` },
                       grouping: specifiedGrouping,
                     })}
                     FROM (
-                      SELECT ECClassId, ECInstanceId, UserLabel, Parent
+                      SELECT ECClassId, ECInstanceId, CodeValue, Parent, UserLabel
                       FROM ${subjectClassName}
                       UNION ALL
-                      SELECT ECClassId, ECInstanceId, UserLabel, Parent
+                      SELECT ECClassId, ECInstanceId, CodeValue, Parent, UserLabel
                       FROM ${physicalPartitionClassName}
                     ) AS this
                     WHERE this.Parent.Id = (${IModel.rootSubjectId})
@@ -310,14 +311,14 @@ describe("Stateless hierarchy builder", () => {
         });
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, labelHideIfNoSiblingsGrouping) }),
+          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, labelHideIfNoSiblingsGrouping, "UserLabel") }),
           expect: [
             NodeValidators.createForInstanceNode({
-              instanceKeys: [keys.childSubject1],
+              instanceKeys: [keys.childSubject2],
               children: false,
             }),
             NodeValidators.createForInstanceNode({
-              instanceKeys: [keys.childSubject2],
+              instanceKeys: [keys.childSubject1],
               children: false,
             }),
           ],
@@ -331,7 +332,7 @@ describe("Stateless hierarchy builder", () => {
         });
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, labelHideIfOneGroupedNodeGrouping) }),
+          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, labelHideIfOneGroupedNodeGrouping, "UserLabel") }),
           expect: [
             NodeValidators.createForInstanceNode({
               instanceKeys: [keys.childSubject1],
@@ -349,7 +350,7 @@ describe("Stateless hierarchy builder", () => {
         });
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, labelHideIfNoSiblingsGrouping) }),
+          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, labelHideIfNoSiblingsGrouping, "UserLabel") }),
           expect: [
             NodeValidators.createForLabelGroupingNode({
               label: groupName,
@@ -381,17 +382,17 @@ describe("Stateless hierarchy builder", () => {
         });
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, labelHideIfOneGroupedNodeGrouping) }),
+          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, labelHideIfOneGroupedNodeGrouping, "UserLabel") }),
           expect: [
             NodeValidators.createForLabelGroupingNode({
               label: groupName,
               children: [
                 NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject1],
+                  instanceKeys: [keys.childSubject2],
                   children: false,
                 }),
                 NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject2],
+                  instanceKeys: [keys.childSubject1],
                   children: false,
                 }),
               ],

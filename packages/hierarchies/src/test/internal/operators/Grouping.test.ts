@@ -149,15 +149,6 @@ describe("Grouping", () => {
 
       expect(result).to.deep.eq([
         createTestProcessedGroupingNode({
-          label: "1",
-          key: {
-            type: "label-grouping",
-            label: "1",
-          },
-          groupedInstanceKeys: instanceNode2.key.instanceKeys,
-          children: [instanceNode2],
-        }),
-        createTestProcessedGroupingNode({
           label: "TestSchema A",
           key: {
             type: "class-grouping",
@@ -166,39 +157,16 @@ describe("Grouping", () => {
           groupedInstanceKeys: instanceNode1.key.instanceKeys,
           children: [instanceNode1],
         }),
+        createTestProcessedGroupingNode({
+          label: "1",
+          key: {
+            type: "label-grouping",
+            label: "1",
+          },
+          groupedInstanceKeys: instanceNode2.key.instanceKeys,
+          children: [instanceNode2],
+        }),
       ]);
-    });
-
-    it("returns nodes in sorted order when grouping nodes are created", async () => {
-      const groupedNode = createTestProcessedInstanceNode({
-        key: { type: "instances", instanceKeys: [{ className: "A", id: "0x1" }] },
-        label: "1",
-      });
-      const ungroupedNode = createTestProcessedInstanceNode({
-        key: { type: "instances", instanceKeys: [{ className: "B", id: "0x2" }] },
-        label: "2",
-      });
-      const classGroupingNode = createTestProcessedGroupingNode({
-        label: "A",
-        key: {
-          type: "class-grouping" as const,
-          className: "A",
-        },
-        groupedInstanceKeys: groupedNode.key.instanceKeys,
-        children: [groupedNode],
-      });
-      const result = await getObservableResult(
-        from([groupedNode, ungroupedNode]).pipe(
-          createGroupingOperator(metadataProvider, undefined, formatter, testLocalizedStrings, baseClassChecker, undefined, [
-            async () => ({
-              groupingType: "class",
-              grouped: [classGroupingNode],
-              ungrouped: [ungroupedNode],
-            }),
-          ]),
-        ),
-      );
-      expect(result).to.deep.eq([ungroupedNode, classGroupingNode]);
     });
 
     it("assigns `nonGroupingAncestor` from parent custom node", async () => {
@@ -372,10 +340,10 @@ describe("Grouping", () => {
       );
 
       expect(onGroupingNodeCreated).to.be.calledTwice;
-      expect(onGroupingNodeCreated.firstCall).to.be.calledWith(labelGroupingNode);
-      expect(onGroupingNodeCreated.secondCall).to.be.calledWith(classGroupingNode);
+      expect(onGroupingNodeCreated.firstCall).to.be.calledWith(classGroupingNode);
+      expect(onGroupingNodeCreated.secondCall).to.be.calledWith(labelGroupingNode);
 
-      expect(result).to.deep.eq([labelGroupingNode, classGroupingNode]);
+      expect(result).to.deep.eq([classGroupingNode, labelGroupingNode]);
     });
   });
 

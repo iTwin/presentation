@@ -251,7 +251,6 @@ export class HierarchyProvider {
     props: GetHierarchyNodesProps,
   ): Observable<ProcessedHierarchyNode> {
     return preprocessedNodesObservable.pipe(
-      sortNodesByLabelOperator, // TODO: maybe it's worth sorting after grouping? note: currently grouping relies on nodes to be sorted
       createGroupingOperator(this._metadataProvider, props.parentNode, this._valuesFormatter, this._localizedStrings, this._baseClassChecker, (gn) =>
         this.onGroupingNodeCreated(gn, props),
       ),
@@ -262,6 +261,7 @@ export class HierarchyProvider {
     return processedNodesObservable.pipe(
       createDetermineChildrenOperator((n) => this.getChildNodesObservables({ parentNode: n }).hasNodes),
       postProcessNodes(this.hierarchyDefinition),
+      sortNodesByLabelOperator,
       map((n): HierarchyNode => {
         const node = { ...n };
         if (HierarchyNode.isCustom(node) || HierarchyNode.isInstancesNode(node)) {

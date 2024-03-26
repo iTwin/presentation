@@ -4,9 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
-import { compareNodesByLabel, mergeSortedArrays } from "../../Common";
 import { GroupingHandlerResult, GroupingType, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
-import { sortNodesByLabel } from "../Sorting";
 import { iterateChildNodeGroupingParams } from "./Shared";
 
 /** @internal */
@@ -38,7 +36,7 @@ export function applyGroupHidingParams(props: GroupingHandlerResult, extraSiblin
   }
   return {
     groupingType: props.groupingType,
-    ungrouped: mergeSortedArrays(props.ungrouped, sortNodesByLabel(newUngroupedNodes), compareNodesByLabel),
+    ungrouped: [...props.ungrouped, ...newUngroupedNodes],
     grouped,
   };
 }

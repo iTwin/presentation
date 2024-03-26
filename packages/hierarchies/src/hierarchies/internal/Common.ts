@@ -112,31 +112,6 @@ export function julianToDateTime(julianDate: number): Date {
 }
 
 /** @internal */
-export function mergeSortedArrays<TLhsItem, TRhsItem>(
-  lhs: TLhsItem[],
-  rhs: TRhsItem[],
-  comparer: (lhs: TLhsItem, rhs: TRhsItem) => number,
-): Array<TLhsItem | TRhsItem> {
-  const sorted = new Array<TLhsItem | TRhsItem>();
-  let indexLhs = 0;
-  let indexRhs = 0;
-  while (indexLhs < lhs.length && indexRhs < rhs.length) {
-    if (comparer(lhs[indexLhs], rhs[indexRhs]) > 0) {
-      sorted.push(rhs[indexRhs]);
-      ++indexRhs;
-      continue;
-    }
-    sorted.push(lhs[indexLhs]);
-    ++indexLhs;
-  }
-
-  if (indexRhs < rhs.length) {
-    return sorted.concat(rhs.slice(indexRhs));
-  }
-  return sorted.concat(lhs.slice(indexLhs));
-}
-
-/** @internal */
 export function compareNodesByLabel<TLhsNode extends { label: string }, TRhsNode extends { label: string }>(lhs: TLhsNode, rhs: TRhsNode): number {
   return naturalCompare(lhs.label.toLocaleLowerCase(), rhs.label.toLocaleLowerCase());
 }

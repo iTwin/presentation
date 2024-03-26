@@ -587,7 +587,7 @@ describe("Stateless hierarchy builder", () => {
           const category = insertSpatialCategory({ builder, codeValue: "category" });
           const rootElement = insertPhysicalElement({
             builder,
-            classFullName: items.PhysicalObject.fullName,
+            classFullName: items.TestPhysicalObject.fullName,
             userLabel: `root element`,
             modelId: model.id,
             categoryId: category.id,
@@ -620,7 +620,7 @@ describe("Stateless hierarchy builder", () => {
                     autoExpand: true,
                     children: [
                       NodeValidators.createForClassGroupingNode({
-                        label: "Physical Object",
+                        label: "Test Physical Object",
                         autoExpand: true,
                         children: [
                           NodeValidators.createForInstanceNode({

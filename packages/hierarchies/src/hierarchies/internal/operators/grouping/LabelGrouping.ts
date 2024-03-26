@@ -4,9 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { LabelGroupingNodeKey, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
-import { compareNodesByLabel, mergeNodes, mergeSortedArrays } from "../../Common";
+import { mergeNodes } from "../../Common";
 import { GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
-import { sortNodesByLabel } from "../Sorting";
 
 /** @internal */
 export async function createLabelGroups(nodes: ProcessedInstanceHierarchyNode[]): Promise<GroupingHandlerResult> {
@@ -57,8 +56,8 @@ export async function createLabelGroups(nodes: ProcessedInstanceHierarchyNode[])
   });
 
   return {
-    grouped: sortNodesByLabel(groupedNodes),
-    ungrouped: mergeSortedArrays(ungrouped, sortNodesByLabel(mergedNodes), compareNodesByLabel),
+    grouped: groupedNodes,
+    ungrouped: [...ungrouped, ...mergedNodes],
     groupingType: "label",
   };
 }

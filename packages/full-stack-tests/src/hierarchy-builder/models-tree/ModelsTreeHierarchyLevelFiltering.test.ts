@@ -457,7 +457,7 @@ describe("Stateless hierarchy builder", () => {
         const model = insertPhysicalModelWithPartition({ builder, codeValue: `model`, partitionParentId: rootSubject.id });
         const modeledElement = insertPhysicalElement({
           builder,
-          classFullName: classes.PhysicalObject.fullName,
+          classFullName: classes.TestPhysicalObject.fullName,
           userLabel: `parent element`,
           modelId: model.id,
           categoryId: category.id,

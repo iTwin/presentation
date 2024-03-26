@@ -15,7 +15,7 @@ import {
   ProcessedInstanceHierarchyNode,
 } from "../../HierarchyNode";
 import { IPrimitiveValueFormatter } from "../../values/Formatting";
-import { BaseClassChecker, compareNodesByLabel, createNodeIdentifierForLogging, createOperatorLoggingNamespace, mergeSortedArrays } from "../Common";
+import { BaseClassChecker, createNodeIdentifierForLogging, createOperatorLoggingNamespace } from "../Common";
 import { log } from "../LoggingUtils";
 import { assignAutoExpand } from "./grouping/AutoExpand";
 import { createBaseClassGroupingHandlers } from "./grouping/BaseClassGrouping";
@@ -108,7 +108,7 @@ async function groupInstanceNodes(
     const groupings = assignAutoExpand(applyGroupHidingParams(await currentHandler(curr?.ungrouped ?? nodes, curr?.grouped ?? []), extraSiblings));
     curr = {
       groupingType: groupings.groupingType,
-      grouped: mergeSortedArrays(curr?.grouped ?? [], groupings.grouped, compareNodesByLabel),
+      grouped: [...(curr?.grouped ?? []), ...groupings.grouped],
       ungrouped: groupings.ungrouped,
     };
   }
@@ -126,7 +126,7 @@ async function groupInstanceNodes(
         }
         onGroupingNodeCreated && onGroupingNodeCreated(groupingNode);
       });
-      return mergeSortedArrays(curr.grouped, curr.ungrouped, compareNodesByLabel);
+      return [...curr.grouped, ...curr.ungrouped];
     }
     return curr.ungrouped;
   }

@@ -45,7 +45,7 @@ describe("Stateless hierarchy builder", () => {
         });
         const rootElement2 = insertPhysicalElement({
           builder,
-          classFullName: items.PhysicalObject.fullName,
+          classFullName: items.TestPhysicalObject.fullName,
           userLabel: `root element 2`,
           modelId: model.id,
           categoryId: category.id,

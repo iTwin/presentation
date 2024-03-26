@@ -71,11 +71,11 @@ describe("Stateless hierarchy builder", () => {
             label: labelGroupName1,
             children: [
               NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.childSubject1],
+                instanceKeys: [keys.childSubject3],
                 children: false,
               }),
               NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.childSubject3],
+                instanceKeys: [keys.childSubject1],
                 children: false,
               }),
             ],
@@ -84,11 +84,11 @@ describe("Stateless hierarchy builder", () => {
             label: labelGroupName2,
             children: [
               NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.childSubject2],
+                instanceKeys: [keys.childSubject4],
                 children: false,
               }),
               NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.childSubject4],
+                instanceKeys: [keys.childSubject2],
                 children: false,
               }),
             ],
@@ -141,28 +141,28 @@ describe("Stateless hierarchy builder", () => {
         expect: [
           NodeValidators.createForLabelGroupingNode({
             label: "test",
-            groupId: descriptionGroupName1,
+            groupId: descriptionGroupName2,
             children: [
               NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.childSubject1],
+                instanceKeys: [keys.childSubject4],
                 children: false,
               }),
               NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.childSubject3],
+                instanceKeys: [keys.childSubject2],
                 children: false,
               }),
             ],
           }),
           NodeValidators.createForLabelGroupingNode({
             label: "test",
-            groupId: descriptionGroupName2,
+            groupId: descriptionGroupName1,
             children: [
               NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.childSubject2],
+                instanceKeys: [keys.childSubject3],
                 children: false,
               }),
               NodeValidators.createForInstanceNode({
-                instanceKeys: [keys.childSubject4],
+                instanceKeys: [keys.childSubject1],
                 children: false,
               }),
             ],
@@ -212,11 +212,11 @@ describe("Stateless hierarchy builder", () => {
         provider: createProvider({ imodel, hierarchy }),
         expect: [
           NodeValidators.createForInstanceNode({
-            instanceKeys: [keys.childSubject1],
+            instanceKeys: [keys.childSubject2],
             children: false,
           }),
           NodeValidators.createForInstanceNode({
-            instanceKeys: [keys.childSubject2],
+            instanceKeys: [keys.childSubject1],
             children: false,
           }),
           NodeValidators.createForInstanceNode({

@@ -120,7 +120,7 @@ describe("Stateless hierarchy builder", () => {
                       SELECT ${await selectQueryFactory.createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
-                        nodeLabel: "doesnt matter",
+                        nodeLabel: { selector: `CAST(this.ECInstanceId AS TEXT)` },
                       })}
                       FROM ${filterClauses.from} AS this
                       ${filterClauses.joins}
@@ -199,7 +199,7 @@ describe("Stateless hierarchy builder", () => {
                       SELECT ${await selectQueryFactory.createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
-                        nodeLabel: "doesnt matter",
+                        nodeLabel: { selector: `CAST(this.ECInstanceId AS TEXT)` },
                         grouping: {
                           byClass: true,
                         },
@@ -283,7 +283,7 @@ describe("Stateless hierarchy builder", () => {
                       SELECT ${await selectQueryFactory.createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
-                        nodeLabel: "doesnt matter",
+                        nodeLabel: { selector: `CAST(this.ECInstanceId AS TEXT)` },
                       })}
                       FROM ${subjectFilterClauses.from} AS this
                       ${subjectFilterClauses.joins}
@@ -350,7 +350,7 @@ describe("Stateless hierarchy builder", () => {
                       SELECT ${await selectQueryFactory.createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
-                        nodeLabel: "doesnt matter",
+                        nodeLabel: { selector: `CAST(this.ECInstanceId AS TEXT)` },
                       })}
                       FROM ${subjectFilterClauses.from} AS this
                       ${subjectFilterClauses.joins}
@@ -417,7 +417,7 @@ describe("Stateless hierarchy builder", () => {
                       SELECT ${await selectQueryFactory.createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
-                        nodeLabel: "doesnt matter",
+                        nodeLabel: { selector: `CAST(this.ECInstanceId AS TEXT)` },
                       })}
                       FROM ${subjectFilterClauses.from} AS this
                       ${subjectFilterClauses.joins}
@@ -499,7 +499,7 @@ describe("Stateless hierarchy builder", () => {
                       SELECT ${await selectQueryFactory.createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
-                        nodeLabel: "doesnt matter",
+                        nodeLabel: { selector: `CAST(this.ECInstanceId AS TEXT)` },
                       })}
                       FROM ${subjectFilterClauses.from} AS this
                       ${subjectFilterClauses.joins}

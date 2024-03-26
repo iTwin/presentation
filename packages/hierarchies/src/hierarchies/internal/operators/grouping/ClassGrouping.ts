@@ -7,7 +7,6 @@ import { IMetadataProvider } from "../../../ECMetadata";
 import { ClassGroupingNodeKey, HierarchyNode, ParentHierarchyNode, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
 import { getClass } from "../../GetClass";
 import { GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
-import { sortNodesByLabel } from "../Sorting";
 
 interface ClassInfo {
   fullName: string;
@@ -64,5 +63,5 @@ function createGroupingNodes(groupings: ClassGroupingInformation): GroupingHandl
       children: entry.groupedNodes.map((gn) => ({ ...gn, parentKeys: [...groupedNodeParentKeys, groupingNodeKey] })),
     });
   });
-  return { grouped: sortNodesByLabel(groupedNodes), ungrouped: groupings.ungrouped, groupingType: "class" };
+  return { grouped: groupedNodes, ungrouped: groupings.ungrouped, groupingType: "class" };
 }

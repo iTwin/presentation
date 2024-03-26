@@ -160,11 +160,11 @@ describe("Stateless hierarchy builder", () => {
                         label: labelGroupName2,
                         children: [
                           NodeValidators.createForInstanceNode({
-                            instanceKeys: [keys.childPartition4],
+                            instanceKeys: [keys.childPartition5],
                             children: false,
                           }),
                           NodeValidators.createForInstanceNode({
-                            instanceKeys: [keys.childPartition5],
+                            instanceKeys: [keys.childPartition4],
                             children: false,
                           }),
                         ],
@@ -192,11 +192,11 @@ describe("Stateless hierarchy builder", () => {
                             label: labelGroupName1,
                             children: [
                               NodeValidators.createForInstanceNode({
-                                instanceKeys: [keys.childSubject1],
+                                instanceKeys: [keys.childSubject2],
                                 children: false,
                               }),
                               NodeValidators.createForInstanceNode({
-                                instanceKeys: [keys.childSubject2],
+                                instanceKeys: [keys.childSubject1],
                                 children: false,
                               }),
                             ],

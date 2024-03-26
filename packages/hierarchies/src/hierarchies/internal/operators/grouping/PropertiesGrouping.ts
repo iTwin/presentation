@@ -21,7 +21,6 @@ import { TypedPrimitiveValue } from "../../../values/Values";
 import { BaseClassChecker } from "../../Common";
 import { getClass } from "../../GetClass";
 import { GroupingHandler, GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
-import { sortNodesByLabel } from "../Sorting";
 
 interface DisplayablePropertyGroupingInfo {
   label: string;
@@ -248,7 +247,7 @@ function createGroupingNodes(
   if (otherValuesGroupingNode) {
     groupedNodes.push(otherValuesGroupingNode);
   }
-  return { grouped: sortNodesByLabel(groupedNodes), ungrouped: groupings.ungrouped, groupingType: "property" };
+  return { grouped: groupedNodes, ungrouped: groupings.ungrouped, groupingType: "property" };
 }
 
 function createNodePropertyGroupPathMatchers(node: ParentHierarchyNode): Array<(x: ArrayElement<PreviousPropertiesGroupingInfo>) => boolean> {

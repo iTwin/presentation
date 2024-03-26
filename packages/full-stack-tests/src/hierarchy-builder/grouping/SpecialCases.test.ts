@@ -73,7 +73,7 @@ describe("Stateless hierarchy builder", () => {
                         SELECT ${await selectQueryFactory.createSelectClause({
                           ecClassId: { selector: `this.ECClassId` },
                           ecInstanceId: { selector: `this.ECInstanceId` },
-                          nodeLabel: "y",
+                          nodeLabel: { selector: `'y: ' || CAST(this.ECInstanceId AS TEXT)` },
                           grouping: {
                             byClass: true,
                           },
