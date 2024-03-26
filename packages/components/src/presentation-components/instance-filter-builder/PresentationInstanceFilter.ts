@@ -357,13 +357,7 @@ function parseGenericFilterRule(rule: GenericInstanceFilterRule, ctx: GenericFil
   let value = rule.value ? rule.value.rawValue : undefined;
 
   if (value && rule.operator === "like" && typeof value === "string") {
-    if (value.startsWith("%")) {
-      value = value.slice(1);
-    }
-
-    if (value.endsWith("%")) {
-      value = value.slice(0, -1);
-    }
+    value = value.replace(/^%|%$/g, "");
   }
 
   return {
