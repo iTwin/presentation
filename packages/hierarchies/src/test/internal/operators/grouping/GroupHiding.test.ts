@@ -305,26 +305,24 @@ describe("GroupHiding", () => {
         label: "1",
         processingParams: { grouping: { byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true } } },
       });
+      const groupingNode = createTestProcessedGroupingNode({
+        children: [childNode],
+      });
+      const ungroupedSiblingNode = createTestProcessedInstanceNode({
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
+        label: "1",
+        processingParams: { grouping: { byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true } } },
+      });
       const nodes: GroupingHandlerResult = {
-        grouped: [
-          createTestProcessedGroupingNode({
-            children: [childNode],
-          }),
-        ],
-        ungrouped: [
-          createTestProcessedInstanceNode({
-            key: { type: "instances", instanceKeys: [{ className: "TestSchema:A", id: "0x2" }] },
-            label: "1",
-            processingParams: { grouping: { byLabel: { hideIfNoSiblings: true, hideIfOneGroupedNode: true } } },
-          }),
-        ],
+        grouped: [groupingNode],
+        ungrouped: [ungroupedSiblingNode],
         groupingType: "label",
       };
       const res = applyGroupHidingParams(nodes, 0);
       expect(res).to.deep.eq({
         groupingType: "label",
         grouped: [],
-        ungrouped: [...nodes.ungrouped, childNode],
+        ungrouped: [ungroupedSiblingNode, childNode],
       });
     });
   });

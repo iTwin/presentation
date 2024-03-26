@@ -49,8 +49,15 @@ export function createGroupingOperator(
           : from(createGroupingHandlers(metadata, parentNode, instanceNodes, valueFormatter, localizedStrings, baseClassChecker));
         return groupingHandlersObs.pipe(
           concatMap(async (createdGroupingHandlers) => {
-            const grouped = await groupInstanceNodes(instanceNodes, restNodes.length, createdGroupingHandlers, parentNode, onGroupingNodeCreated);
-            return from([...grouped, ...restNodes]);
+            const grouped: ProcessedHierarchyNode[] = await groupInstanceNodes(
+              instanceNodes,
+              restNodes.length,
+              createdGroupingHandlers,
+              parentNode,
+              onGroupingNodeCreated,
+            );
+            grouped.push(...restNodes);
+            return from(grouped);
           }),
         );
       }),
@@ -108,7 +115,7 @@ async function groupInstanceNodes(
     const groupings = assignAutoExpand(applyGroupHidingParams(await currentHandler(curr?.ungrouped ?? nodes, curr?.grouped ?? []), extraSiblings));
     curr = {
       groupingType: groupings.groupingType,
-      grouped: [...(curr?.grouped ?? []), ...groupings.grouped],
+      grouped: mergeInPlace(curr?.grouped, groupings.grouped),
       ungrouped: groupings.ungrouped,
     };
   }
@@ -126,11 +133,21 @@ async function groupInstanceNodes(
         }
         onGroupingNodeCreated && onGroupingNodeCreated(groupingNode);
       });
-      return [...curr.grouped, ...curr.ungrouped];
+      return mergeInPlace<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>(curr.grouped, curr.ungrouped);
     }
     return curr.ungrouped;
   }
   return nodes;
+}
+
+function mergeInPlace<T>(target: T[] | undefined, source: T[]) {
+  if (!target) {
+    return source;
+  }
+  for (const item of source) {
+    target.push(item);
+  }
+  return target;
 }
 
 /** @internal */

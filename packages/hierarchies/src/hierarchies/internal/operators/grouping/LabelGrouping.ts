@@ -27,13 +27,13 @@ export async function createLabelGroups(nodes: ProcessedInstanceHierarchyNode[])
     }
     list.push(node);
   }
-  const mergedNodes = new Array<ProcessedInstanceHierarchyNode>();
+
   nodesToMergeMap.forEach((entry) => {
     let finalNode = entry[0];
     for (let i = 1; i < entry.length; ++i) {
       finalNode = mergeNodes(finalNode, entry[i]);
     }
-    mergedNodes.push(finalNode);
+    ungrouped.push(finalNode);
   });
 
   const groupedNodes = new Array<ProcessedInstancesGroupingHierarchyNode>();
@@ -56,8 +56,8 @@ export async function createLabelGroups(nodes: ProcessedInstanceHierarchyNode[])
   });
 
   return {
-    grouped: groupedNodes,
-    ungrouped: [...ungrouped, ...mergedNodes],
     groupingType: "label",
+    grouped: groupedNodes,
+    ungrouped,
   };
 }
