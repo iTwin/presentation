@@ -68,6 +68,26 @@ describe("HiliteSetProvider", () => {
         .returns(createFakeQueryReader<ECSqlQueryRow>(elementKeys.length === 0 ? [] : elementKeys.map((k) => ({ ["ECInstanceId"]: k }))));
     }
 
+    async function loadHiliteSet(selection: Selectables) {
+      const iterator = provider.getHiliteSet(selection);
+
+      const models: string[] = [];
+      const subCategories: string[] = [];
+      const elements: string[] = [];
+
+      for await (const set of iterator) {
+        models.push(...set.models);
+        subCategories.push(...set.subCategories);
+        elements.push(...set.elements);
+      }
+
+      return {
+        models,
+        subCategories,
+        elements,
+      };
+    }
+
     beforeEach(() => {
       queryExecutor.createQueryReader.reset();
       metadataProvider.getSchema.reset();
@@ -92,7 +112,7 @@ describe("HiliteSetProvider", () => {
         mockQuery([], [], [resultKey]);
 
         const selection = Selectables.create([elementKey]);
-        const result = await provider.getHiliteSet(selection);
+        const result = await loadHiliteSet(selection);
         expect(result.models).to.be.empty;
         expect(result.subCategories).to.be.empty;
         expect(result.elements).to.deep.eq([resultKey]);
@@ -106,7 +126,7 @@ describe("HiliteSetProvider", () => {
         mockQuery([], [], [resultKey]);
 
         const selection = Selectables.create([elementKey]);
-        const result = await provider.getHiliteSet(selection);
+        const result = await loadHiliteSet(selection);
         expect(result.models).to.be.empty;
         expect(result.subCategories).to.be.empty;
         expect(result.elements).to.deep.eq([resultKey]);
@@ -119,7 +139,7 @@ describe("HiliteSetProvider", () => {
         mockQuery([], [], [resultKey]);
 
         const selection = Selectables.create([elementKey]);
-        const result = await provider.getHiliteSet(selection);
+        const result = await loadHiliteSet(selection);
         expect(result.models).to.be.empty;
         expect(result.subCategories).to.be.empty;
         expect(result.elements).to.deep.eq([resultKey]);
@@ -140,7 +160,7 @@ describe("HiliteSetProvider", () => {
         mockQuery([], [], [resultKey]);
 
         const selection = Selectables.create([elementKey]);
-        const result = await provider.getHiliteSet(selection);
+        const result = await loadHiliteSet(selection);
         expect(result.models).to.be.empty;
         expect(result.subCategories).to.be.empty;
         expect(result.elements).to.deep.eq([resultKey]);
@@ -155,7 +175,7 @@ describe("HiliteSetProvider", () => {
         mockQuery([modelKey], [], []);
 
         const selection = Selectables.create([elementKey]);
-        const result = await provider.getHiliteSet(selection);
+        const result = await loadHiliteSet(selection);
         expect(result.elements).to.be.empty;
         expect(result.subCategories).to.be.empty;
         expect(result.models).to.deep.eq([modelKey]);
@@ -168,7 +188,7 @@ describe("HiliteSetProvider", () => {
         mockQuery([modelKey], [], []);
 
         const selection = Selectables.create([elementKey]);
-        const result = await provider.getHiliteSet(selection);
+        const result = await loadHiliteSet(selection);
         expect(result.elements).to.be.empty;
         expect(result.subCategories).to.be.empty;
         expect(result.models).to.deep.eq([modelKey]);
@@ -183,7 +203,7 @@ describe("HiliteSetProvider", () => {
         mockQuery([], [subCategoryKey], []);
 
         const selection = Selectables.create([elementKey]);
-        const result = await provider.getHiliteSet(selection);
+        const result = await loadHiliteSet(selection);
         expect(result.models).to.be.empty;
         expect(result.elements).to.be.empty;
         expect(result.subCategories).to.deep.eq([subCategoryKey]);
@@ -196,7 +216,7 @@ describe("HiliteSetProvider", () => {
         mockQuery([], [subCategoryKey], []);
 
         const selection = Selectables.create([elementKey]);
-        const result = await provider.getHiliteSet(selection);
+        const result = await loadHiliteSet(selection);
         expect(result.models).to.be.empty;
         expect(result.elements).to.be.empty;
         expect(result.subCategories).to.deep.eq([subCategoryKey]);
@@ -226,7 +246,7 @@ describe("HiliteSetProvider", () => {
         mockQuery([modelResultKey], [categoryResultKey], [elementResultKey]);
 
         const selection = Selectables.create([customSelectable]);
-        const result = await provider.getHiliteSet(selection);
+        const result = await loadHiliteSet(selection);
         expect(result.models).to.deep.eq([modelResultKey]);
         expect(result.subCategories).to.deep.eq([categoryResultKey]);
         expect(result.elements).to.deep.eq([elementResultKey]);
@@ -241,7 +261,7 @@ describe("HiliteSetProvider", () => {
         mockQuery([modelKey], [modelKey], [modelKey]);
 
         const selection = Selectables.create([elementKey]);
-        const result = await provider.getHiliteSet(selection);
+        const result = await loadHiliteSet(selection);
         expect(result.elements).to.be.empty;
         expect(result.subCategories).to.be.empty;
         expect(result.models).to.be.empty;
@@ -255,7 +275,7 @@ describe("HiliteSetProvider", () => {
         mockQuery([resultKey], [resultKey], [resultKey]);
 
         const selection = Selectables.create([elementKey]);
-        const result = await provider.getHiliteSet(selection);
+        const result = await loadHiliteSet(selection);
         expect(result.elements).to.be.empty;
         expect(result.subCategories).to.be.empty;
         expect(result.models).to.be.empty;
@@ -268,7 +288,7 @@ describe("HiliteSetProvider", () => {
         mockQuery([resultKey], [resultKey], [resultKey]);
 
         const selection = Selectables.create([elementKey]);
-        const result = await provider.getHiliteSet(selection);
+        const result = await loadHiliteSet(selection);
         expect(result.elements).to.be.empty;
         expect(result.subCategories).to.be.empty;
         expect(result.models).to.be.empty;
@@ -290,7 +310,7 @@ describe("HiliteSetProvider", () => {
         mockQuery([], [], [resultKey]);
 
         const selection = Selectables.create([elementKey1, elementKey2]);
-        const result = await provider.getHiliteSet(selection);
+        const result = await loadHiliteSet(selection);
         expect(result.models).to.be.empty;
         expect(result.subCategories).to.be.empty;
         expect(result.elements).to.deep.eq([resultKey]);
@@ -306,7 +326,7 @@ describe("HiliteSetProvider", () => {
         mockQuery([], [], [resultKey]);
 
         const selection = Selectables.create(elementKeys);
-        const result = await provider.getHiliteSet(selection);
+        const result = await loadHiliteSet(selection);
         expect(result.models).to.be.empty;
         expect(result.subCategories).to.be.empty;
         expect(result.elements).to.deep.eq([resultKey]);

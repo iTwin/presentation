@@ -55,32 +55,9 @@ export class HiliteSetProvider {
   }
 
   /**
-   * Get hilite set for supplied `Selectables`.
-   * @param selection Selection to get hilite set for.
-   */
-  public async getHiliteSet(selection: Selectables): Promise<HiliteSet> {
-    const models: string[] = [];
-    const subCategories: string[] = [];
-    const elements: string[] = [];
-
-    const iterator = this.getHiliteSetIterator(selection);
-    for await (const set of iterator) {
-      models.push(...set.models);
-      subCategories.push(...set.subCategories);
-      elements.push(...set.elements);
-    }
-
-    return {
-      models,
-      subCategories,
-      elements,
-    };
-  }
-
-  /**
    * Get hilite set iterator for supplied `Selectables`.
    */
-  public async *getHiliteSetIterator(selection: Selectables): AsyncIterableIterator<HiliteSet> {
+  public async *getHiliteSet(selection: Selectables): AsyncIterableIterator<HiliteSet> {
     // Map between element ID types and EC instance IDs
     const keysByType = new Map<InstanceIdType, string[]>();
 

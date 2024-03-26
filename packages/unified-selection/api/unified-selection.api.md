@@ -79,11 +79,6 @@ export interface SelectionStorage {
         iModelKey: string;
         queryExecutor: IECSqlQueryExecutor;
         metadataProvider: IMetadataProvider;
-    }): Promise<HiliteSet>;
-    getHiliteSetIterator(props: {
-        iModelKey: string;
-        queryExecutor: IECSqlQueryExecutor;
-        metadataProvider: IMetadataProvider;
     }): AsyncIterableIterator<HiliteSet>;
     getSelection(props: {
         iModelKey: string;
