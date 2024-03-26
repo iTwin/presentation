@@ -228,7 +228,7 @@ function createGenericInstanceFilterRule(condition: PresentationInstanceFilterCo
 
   return {
     operator,
-    value: toGenericInstanceFilterRuleValue(value),
+    value: toGenericInstanceFilterRuleValue(operator, value),
     sourceAlias: propertyAlias,
     propertyName: property.name,
     propertyTypeName: field.type.typeName,
@@ -499,12 +499,27 @@ function toRelationshipStep(path: RelationshipPath): GenericInstanceFilterRelati
   }));
 }
 
-function toGenericInstanceFilterRuleValue(primitiveValue?: PrimitiveValue): GenericInstanceFilterRuleValue | undefined {
+function toGenericInstanceFilterRuleValue(
+  operator: `${PropertyFilterRuleOperator}`,
+  primitiveValue?: PrimitiveValue,
+): GenericInstanceFilterRuleValue | undefined {
   if (!primitiveValue || primitiveValue.value === undefined || !isGenericPrimitiveValueLike(primitiveValue.value)) {
     return undefined;
   }
 
-  return { displayValue: primitiveValue.displayValue ?? "", rawValue: primitiveValue.value };
+  const displayValue = primitiveValue.displayValue ?? "";
+  let rawValue = primitiveValue.value;
+
+  if (operator === "like" && typeof rawValue === "string") {
+    if (!rawValue.startsWith("%")) {
+      rawValue = `%${rawValue}`;
+    }
+    if (!rawValue.endsWith("%")) {
+      rawValue = `${rawValue}%`;
+    }
+  }
+
+  return { displayValue, rawValue };
 }
 
 function isGenericPrimitiveValueLike(value: Primitives.Value): value is GenericInstanceFilterRuleValue.Values {
