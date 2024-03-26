@@ -305,7 +305,6 @@ export class HierarchyProvider {
 
     // if we don't find an entry for a grouping node, we load its instances by getting a query and applying
     // a filter based on grouped instance keys
-    // TODO: will this work with hidden hierarchy levels?
     let filteredInstanceKeys: InstanceKey[] | undefined;
     let parentNonGroupingNode: ParentHierarchyNode<NonGroupingHierarchyNode> | undefined;
     if (parentNode) {
