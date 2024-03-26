@@ -371,7 +371,6 @@ describe("HierarchyProvider", () => {
           groupedInstanceKeys: [{ className: "a.b", id: "0x123" }],
           label: "test label",
           children: true,
-          nonGroupingAncestor: undefined,
         } as GroupingHierarchyNode,
       ]);
 
@@ -969,31 +968,30 @@ describe("HierarchyProvider", () => {
       expect(queryExecutor.createQueryReader).to.be.calledTwice;
     });
 
-    it("queries instance nodes when requesting grouped children if the query is pushed-out of cache", async () => {
+    it("queries grouped instance nodes when requesting grouped children if the query is pushed-out of cache", async () => {
       createClassStubs(metadataProvider).stubEntityClass({ schemaName: "x", className: "y", classLabel: "Class Y" });
       queryExecutor.createQueryReader.callsFake((query) => {
-        switch (query.ecsql) {
-          case "ROOT":
-            return createFakeQueryReader<RowDef>([
-              {
-                [NodeSelectClauseColumnNames.FullClassName]: `x.y`,
-                [NodeSelectClauseColumnNames.ECInstanceId]: `0x1`,
-                [NodeSelectClauseColumnNames.DisplayLabel]: `one`,
-                [NodeSelectClauseColumnNames.HasChildren]: true,
-                [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({
-                  byClass: true,
-                } as ECSqlSelectClauseGroupingParams),
-              },
-            ]);
-          case "CHILD":
-            return createFakeQueryReader<RowDef>([
-              {
-                [NodeSelectClauseColumnNames.FullClassName]: `x.y`,
-                [NodeSelectClauseColumnNames.ECInstanceId]: `0x2`,
-                [NodeSelectClauseColumnNames.DisplayLabel]: `two`,
-                [NodeSelectClauseColumnNames.HasChildren]: false,
-              },
-            ]);
+        if (query.ecsql.includes("ROOT")) {
+          return createFakeQueryReader<RowDef>([
+            {
+              [NodeSelectClauseColumnNames.FullClassName]: `x.y`,
+              [NodeSelectClauseColumnNames.ECInstanceId]: `0x1`,
+              [NodeSelectClauseColumnNames.DisplayLabel]: `one`,
+              [NodeSelectClauseColumnNames.HasChildren]: true,
+              [NodeSelectClauseColumnNames.Grouping]: JSON.stringify({
+                byClass: true,
+              } as ECSqlSelectClauseGroupingParams),
+            },
+          ]);
+        } else if (query.ecsql.includes("CHILD")) {
+          return createFakeQueryReader<RowDef>([
+            {
+              [NodeSelectClauseColumnNames.FullClassName]: `x.y`,
+              [NodeSelectClauseColumnNames.ECInstanceId]: `0x2`,
+              [NodeSelectClauseColumnNames.DisplayLabel]: `two`,
+              [NodeSelectClauseColumnNames.HasChildren]: false,
+            },
+          ]);
         }
         return createFakeQueryReader([]);
       });
@@ -1036,7 +1034,6 @@ describe("HierarchyProvider", () => {
           },
           groupedInstanceKeys: [{ className: "x.y", id: "0x1" }],
           parentKeys: [],
-          nonGroupingAncestor: undefined,
           label: "Class Y",
           children: true,
         } as GroupingHierarchyNode,
@@ -1063,7 +1060,7 @@ describe("HierarchyProvider", () => {
       ]);
       queryExecutor.createQueryReader.resetHistory();
 
-      // requesting children for the root instance node should run a query that pushes the root nodes query out of cache
+      // requesting children for the root instance node should push grouping node child instance nodes out of cache
       const childInstanceNodes = await provider.getNodes({ parentNode: rootInstanceNodes[0] });
       expect(queryExecutor.createQueryReader).to.be.calledOnceWith(sinon.match((query) => query.ecsql === "CHILD"));
       expect(childInstanceNodes).to.deep.eq([
@@ -1088,9 +1085,11 @@ describe("HierarchyProvider", () => {
       ]);
       queryExecutor.createQueryReader.resetHistory();
 
-      // requesting children for the class grouping node again should re-execute the root query
+      // requesting children for the class grouping node again should re-execute the root query, filtered by grouped instance ECInstanceIds
       const rootInstanceNodes2 = await provider.getNodes({ parentNode: groupingNodes[0] });
-      expect(queryExecutor.createQueryReader).to.be.calledOnceWith(sinon.match((query) => query.ecsql === "ROOT"));
+      expect(queryExecutor.createQueryReader).to.be.calledOnceWith(
+        sinon.match((query: ECSqlQueryDef) => query.ecsql.includes("FROM (ROOT)") && query?.bindings?.length === 1 && query?.bindings?.at(0)?.value === "0x1"),
+      );
       expect(rootInstanceNodes2).to.deep.eq(rootInstanceNodes);
     });
   });

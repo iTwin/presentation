@@ -13,6 +13,7 @@ import { RowsLimitExceededError } from "./HierarchyErrors";
 import {
   HierarchyNode,
   HierarchyNodeIdentifiersPath,
+  NonGroupingHierarchyNode,
   ParentHierarchyNode,
   ParsedHierarchyNode,
   ProcessedCustomHierarchyNode,
@@ -33,10 +34,11 @@ import { sortNodesByLabelOperator } from "./internal/operators/Sorting";
 import { shareReplayWithErrors } from "./internal/Rxjs";
 import { SubscriptionScheduler } from "./internal/SubscriptionScheduler";
 import { TreeQueryResultsReader } from "./internal/TreeNodesReader";
+import { ECSqlBinding, ECSqlQueryDef } from "./queries/ECSqlCore";
 import { ILimitingECSqlQueryExecutor } from "./queries/LimitingECSqlQueryExecutor";
 import { ConcatenatedValue, ConcatenatedValuePart } from "./values/ConcatenatedValue";
 import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "./values/Formatting";
-import { TypedPrimitiveValue } from "./values/Values";
+import { InstanceKey, TypedPrimitiveValue } from "./values/Values";
 
 const LOGGING_NAMESPACE = `${CommonLoggingNamespace}.HierarchyProvider`;
 const DEFAULT_QUERY_CONCURRENCY = 10;
@@ -187,30 +189,12 @@ export class HierarchyProvider {
   }
 
   private onGroupingNodeCreated(groupingNode: ProcessedGroupingHierarchyNode, props: GetHierarchyNodesProps) {
-    const loggingCategory = `${LOGGING_NAMESPACE}.OnGroupingNodeCreated`;
-    assert(
-      // istanbul ignore next
-      !props.parentNode || HierarchyNode.isCustom(props.parentNode) || HierarchyNode.isInstancesNode(props.parentNode),
-      `Expecting all grouping nodes to be created as part of root / custom / instances node children request, but one is created for: ${createNodeIdentifierForLogging(props.parentNode)}.`,
-    );
-    groupingNode.nonGroupingAncestor = props.parentNode;
-    const didAdd = this._nodesCache.addGrouped({ ...props, parentNode: groupingNode }, from(groupingNode.children));
-    // istanbul ignore next
-    if (didAdd) {
-      doLog({
-        category: loggingCategory,
-        message: /* istanbul ignore next */ () => `Cached grouped nodes observable for ${createNodeIdentifierForLogging(groupingNode)}`,
-      });
-    } else {
-      doLog({
-        category: loggingCategory,
-        message: /* istanbul ignore next */ () => `Grouped nodes observable was not cached for ${createNodeIdentifierForLogging(groupingNode)}`,
-        severity: "warning",
-      });
-    }
+    this._nodesCache.set({ ...props, parentNode: groupingNode }, { observable: from(groupingNode.children), processingStatus: "pre-processed" });
   }
 
-  private createParsedQueryNodesObservable(props: DefineHierarchyLevelProps & { hierarchyLevelSizeLimit?: number | "unbounded" }): ParsedQueryNodesObservable {
+  private createParsedQueryNodesObservable(
+    props: DefineHierarchyLevelProps & { hierarchyLevelSizeLimit?: number | "unbounded"; filteredInstanceKeys?: InstanceKey[] },
+  ): ParsedQueryNodesObservable {
     // stream hierarchy level definitions in order
     const definitions = from(this.hierarchyDefinition.defineHierarchyLevel(props)).pipe(
       concatMap((hierarchyLevelDefinition) => from(hierarchyLevelDefinition)),
@@ -223,6 +207,7 @@ export class HierarchyProvider {
         }
         return this._queryScheduler.scheduleSubscription(
           of(def.query).pipe(
+            map((query) => filterQueryByInstanceKeys(query, props.filteredInstanceKeys)),
             log({
               category: `${LOGGING_NAMESPACE}.Queries`,
               message: /* istanbul ignore next */ (query) =>
@@ -266,14 +251,9 @@ export class HierarchyProvider {
     props: GetHierarchyNodesProps,
   ): Observable<ProcessedHierarchyNode> {
     return preprocessedNodesObservable.pipe(
-      sortNodesByLabelOperator,
-      createGroupingOperator(
-        this._metadataProvider,
-        this._valuesFormatter,
-        this._localizedStrings,
-        this._baseClassChecker,
-        (gn) => this.onGroupingNodeCreated(gn, props),
-        undefined,
+      sortNodesByLabelOperator, // TODO: maybe it's worth sorting after grouping? note: currently grouping relies on nodes to be sorted
+      createGroupingOperator(this._metadataProvider, props.parentNode, this._valuesFormatter, this._localizedStrings, this._baseClassChecker, (gn) =>
+        this.onGroupingNodeCreated(gn, props),
       ),
     );
   }
@@ -310,6 +290,7 @@ export class HierarchyProvider {
     );
   }
 
+  // TODO: we could change the return type to `CachedNodesObservableEntry` now
   private getCachedObservableEntry(props: GetHierarchyNodesProps): Observable<CachedNodesObservableEntry> {
     const loggingCategory = `${LOGGING_NAMESPACE}.GetCachedObservableEntry`;
     const { parentNode, ...restProps } = props;
@@ -323,51 +304,54 @@ export class HierarchyProvider {
       return of(cached);
     }
 
-    if (parentNode && HierarchyNode.isGroupingNode(parentNode)) {
-      // Generally, we expect that grouping nodes will always have their child observables cached, in which case we
-      // return above. However, it's possible that the parent level was pushed-out of cache, in which case we need to
-      // re-create it.
-      return this.getChildNodesObservables({ ...props, parentNode: parentNode.nonGroupingAncestor }).pipe(
-        mergeMap((x) => x.processedNodes),
-        take(1),
-        defaultIfEmpty(false),
-        mergeMap(() => this.getCachedObservableEntry(props)),
-      );
+    // if we don't find an entry for a grouping node, we load its instances by getting a query and applying
+    // a filter based on grouped instance keys
+    // TODO: will this work with hidden hierarchy levels?
+    let filteredInstanceKeys: InstanceKey[] | undefined;
+    let parentNonGroupingNode: ParentHierarchyNode<NonGroupingHierarchyNode> | undefined;
+    if (parentNode) {
+      if (HierarchyNode.isGroupingNode(parentNode)) {
+        parentNonGroupingNode = parentNode.nonGroupingAncestor;
+        filteredInstanceKeys = parentNode.groupedInstanceKeys;
+      } else {
+        // not sure why type checker doesn't pick this up
+        assert(HierarchyNode.isCustom(parentNode) || HierarchyNode.isInstancesNode(parentNode));
+        parentNonGroupingNode = parentNode;
+      }
     }
 
-    assert(
-      !parentNode || HierarchyNode.isCustom(parentNode) || HierarchyNode.isInstancesNode(parentNode),
-      `Grouping nodes are expected to always have their children cached. Offending node: ${createNodeIdentifierForLogging(parentNode)}.`,
-    );
-
-    const validProps = { ...restProps, parentNode };
-    const value = this.createParsedQueryNodesObservable(validProps);
-    this._nodesCache.addParseResult(validProps, value);
+    const nonGroupingNodeChildrenRequestProps = { ...restProps, parentNode: parentNonGroupingNode, filteredInstanceKeys };
+    const value = { observable: this.createParsedQueryNodesObservable(nonGroupingNodeChildrenRequestProps), processingStatus: "none" as const };
+    this._nodesCache.set(nonGroupingNodeChildrenRequestProps, value);
     doLog({
       category: loggingCategory,
       message: /* istanbul ignore next */ () => `Saved query nodes observable for ${createNodeIdentifierForLogging(parentNode)}`,
     });
-    return of({ observable: value, needsProcessing: true });
+    return of(value);
   }
 
   private getChildNodesObservables(props: GetHierarchyNodesProps & { hierarchyLevelSizeLimit?: number | "unbounded" }) {
     return this.getCachedObservableEntry(props).pipe(
       map((entry) => {
-        const processed = entry.needsProcessing
-          ? (() => {
-              const pre = this.createPreProcessedNodesObservable(entry.observable, props);
-              const post = this.createProcessedNodesObservable(pre, props);
-              return { pre, post };
-            })()
-          : {
-              pre: entry.observable,
-              post: entry.observable,
+        switch (entry.processingStatus) {
+          case "none": {
+            const pre = this.createPreProcessedNodesObservable(entry.observable, props);
+            const post = this.createProcessedNodesObservable(pre, props);
+            return {
+              processedNodes: post,
+              hasNodes: this.createHasNodesObservable(pre),
+              finalizedNodes: this.createFinalizedNodesObservable(post),
             };
-        return {
-          processedNodes: processed.post,
-          hasNodes: this.createHasNodesObservable(processed.pre),
-          finalizedNodes: this.createFinalizedNodesObservable(processed.post),
-        };
+          }
+          case "pre-processed": {
+            const post = this.createProcessedNodesObservable(entry.observable, props);
+            return {
+              processedNodes: post,
+              hasNodes: this.createHasNodesObservable(entry.observable),
+              finalizedNodes: this.createFinalizedNodesObservable(post),
+            };
+          }
+        }
       }),
     );
   }
@@ -493,4 +477,33 @@ function createParentNodeKeysList(parentNode: ParentHierarchyNode | undefined) {
     return [];
   }
   return [...parentNode.parentKeys, parentNode.key];
+}
+
+function filterQueryByInstanceKeys(query: ECSqlQueryDef, filteredInstanceKeys: InstanceKey[] | undefined): ECSqlQueryDef {
+  if (!filteredInstanceKeys || !filteredInstanceKeys.length) {
+    return query;
+  }
+  const MAX_ALLOWED_BINDINGS = 1000;
+  // istanbul ignore else
+  if (filteredInstanceKeys.length < MAX_ALLOWED_BINDINGS) {
+    return {
+      ...query,
+      ecsql: `
+        SELECT *
+        FROM (${query.ecsql}) q
+        WHERE q.ECInstanceId IN (${filteredInstanceKeys.map(() => "?").join(",")})
+      `,
+      bindings: [...(query.bindings ?? []), ...filteredInstanceKeys.map((k): ECSqlBinding => ({ type: "id", value: k.id }))],
+    };
+  }
+  // istanbul ignore next
+  return {
+    ...query,
+    ecsql: `
+      SELECT *
+      FROM (${query.ecsql}) q
+      WHERE InVirtualSet(?, q.ECInstanceId)
+    `,
+    bindings: [...(query.bindings ?? []), { type: "idset", value: filteredInstanceKeys.map((k) => k.id) }],
+  };
 }

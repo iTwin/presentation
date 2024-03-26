@@ -4,8 +4,16 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { concatAll, concatMap, from, Observable, of, toArray } from "rxjs";
+import { assert } from "@itwin/core-bentley";
 import { IMetadataProvider } from "../../ECMetadata";
-import { HierarchyNode, HierarchyNodeKey, ProcessedGroupingHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../../HierarchyNode";
+import {
+  HierarchyNode,
+  HierarchyNodeKey,
+  ParentHierarchyNode,
+  ProcessedGroupingHierarchyNode,
+  ProcessedHierarchyNode,
+  ProcessedInstanceHierarchyNode,
+} from "../../HierarchyNode";
 import { IPrimitiveValueFormatter } from "../../values/Formatting";
 import { BaseClassChecker, compareNodesByLabel, createNodeIdentifierForLogging, createOperatorLoggingNamespace, mergeSortedArrays } from "../Common";
 import { log } from "../LoggingUtils";
@@ -23,6 +31,7 @@ export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
 /** @internal */
 export function createGroupingOperator(
   metadata: IMetadataProvider,
+  parentNode: ParentHierarchyNode | undefined,
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
   baseClassChecker: BaseClassChecker,
@@ -37,10 +46,10 @@ export function createGroupingOperator(
         const { instanceNodes, restNodes } = partitionInstanceNodes(resolvedNodes);
         const groupingHandlersObs = groupingHandlers
           ? of(groupingHandlers)
-          : from(createGroupingHandlers(metadata, instanceNodes, valueFormatter, localizedStrings, baseClassChecker));
+          : from(createGroupingHandlers(metadata, parentNode, instanceNodes, valueFormatter, localizedStrings, baseClassChecker));
         return groupingHandlersObs.pipe(
           concatMap(async (createdGroupingHandlers) => {
-            const grouped = await groupInstanceNodes(instanceNodes, restNodes.length, createdGroupingHandlers, onGroupingNodeCreated);
+            const grouped = await groupInstanceNodes(instanceNodes, restNodes.length, createdGroupingHandlers, parentNode, onGroupingNodeCreated);
             return from([...grouped, ...restNodes]);
           }),
         );
@@ -55,9 +64,9 @@ export function createGroupingOperator(
 export type ProcessedInstancesGroupingHierarchyNode = Omit<ProcessedGroupingHierarchyNode, "children"> & { children: ProcessedInstanceHierarchyNode[] };
 
 /** @internal */
-export interface GroupingHandlerResult<TGroupingNode = ProcessedInstancesGroupingHierarchyNode> {
+export interface GroupingHandlerResult {
   /** Expected to be sorted by label. */
-  grouped: Array<TGroupingNode>;
+  grouped: Array<ProcessedInstancesGroupingHierarchyNode>;
   /** Expected to be sorted by label. */
   ungrouped: ProcessedInstanceHierarchyNode[];
   groupingType: GroupingType;
@@ -67,7 +76,10 @@ export interface GroupingHandlerResult<TGroupingNode = ProcessedInstancesGroupin
 export type GroupingType = "label" | "class" | "base-class" | "property";
 
 /** @internal */
-export type GroupingHandler = (allNodes: ProcessedInstanceHierarchyNode[]) => Promise<GroupingHandlerResult>;
+export type GroupingHandler = (
+  nodesToGroup: ProcessedInstanceHierarchyNode[],
+  nodesAlreadyGrouped: ProcessedInstancesGroupingHierarchyNode[],
+) => Promise<GroupingHandlerResult>;
 
 function partitionInstanceNodes<TRestNode extends { key: HierarchyNodeKey }>(
   nodes: Array<ProcessedInstanceHierarchyNode | TRestNode>,
@@ -88,33 +100,32 @@ async function groupInstanceNodes(
   nodes: ProcessedInstanceHierarchyNode[],
   extraSiblings: number,
   groupingHandlers: GroupingHandler[],
-  onGroupingNodeCreated: undefined | ((groupingNode: ProcessedGroupingHierarchyNode) => void),
+  parentNode: ParentHierarchyNode | undefined,
+  onGroupingNodeCreated?: (groupingNode: ProcessedGroupingHierarchyNode) => void,
 ): Promise<Array<ProcessedGroupingHierarchyNode | ProcessedInstanceHierarchyNode>> {
-  let curr: GroupingHandlerResult<ProcessedGroupingHierarchyNode> | undefined;
-  for (let i = 0; i < groupingHandlers.length; ++i) {
-    const currentHandler = groupingHandlers[i];
-    const nextHandlers = groupingHandlers.slice(i + 1);
-    const groupings = assignAutoExpand(applyGroupHidingParams(await currentHandler(curr?.ungrouped ?? nodes), extraSiblings));
+  let curr: GroupingHandlerResult | undefined;
+  for (const currentHandler of groupingHandlers) {
+    const groupings = assignAutoExpand(applyGroupHidingParams(await currentHandler(curr?.ungrouped ?? nodes, curr?.grouped ?? []), extraSiblings));
     curr = {
       groupingType: groupings.groupingType,
-      grouped: mergeSortedArrays(
-        curr?.grouped ?? [],
-        await Promise.all(
-          groupings.grouped.map(
-            async (grouping): Promise<ProcessedGroupingHierarchyNode> => ({
-              ...grouping,
-              children: await groupInstanceNodes(grouping.children, 0, nextHandlers, onGroupingNodeCreated),
-            }),
-          ),
-        ),
-        compareNodesByLabel,
-      ),
+      grouped: mergeSortedArrays(curr?.grouped ?? [], groupings.grouped, compareNodesByLabel),
       ungrouped: groupings.ungrouped,
     };
   }
   if (curr) {
     if (curr.grouped.length > 0) {
-      onGroupingNodeCreated && curr.grouped.forEach(onGroupingNodeCreated);
+      curr.grouped.forEach((groupingNode) => {
+        if (parentNode) {
+          if (HierarchyNode.isGroupingNode(parentNode)) {
+            groupingNode.nonGroupingAncestor = parentNode.nonGroupingAncestor;
+          } else {
+            // not sure why type checker doesn't pick this up
+            assert(HierarchyNode.isCustom(parentNode) || HierarchyNode.isInstancesNode(parentNode));
+            groupingNode.nonGroupingAncestor = parentNode;
+          }
+        }
+        onGroupingNodeCreated && onGroupingNodeCreated(groupingNode);
+      });
       return mergeSortedArrays(curr.grouped, curr.ungrouped, compareNodesByLabel);
     }
     return curr.ungrouped;
@@ -125,15 +136,45 @@ async function groupInstanceNodes(
 /** @internal */
 export async function createGroupingHandlers(
   metadata: IMetadataProvider,
+  parentNode: ParentHierarchyNode | undefined,
   processedInstanceNodes: ProcessedInstanceHierarchyNode[],
   valueFormatter: IPrimitiveValueFormatter,
   localizedStrings: PropertiesGroupingLocalizedStrings,
   baseClassChecker: BaseClassChecker,
 ): Promise<GroupingHandler[]> {
+  const groupingLevel = getNodeGroupingLevel(parentNode);
   const groupingHandlers: GroupingHandler[] = new Array<GroupingHandler>();
-  groupingHandlers.push(...(await createBaseClassGroupingHandlers(metadata, processedInstanceNodes, baseClassChecker)));
-  groupingHandlers.push(async (allNodes) => createClassGroups(metadata, allNodes));
-  groupingHandlers.push(...(await createPropertiesGroupingHandlers(metadata, processedInstanceNodes, valueFormatter, localizedStrings, baseClassChecker)));
-  groupingHandlers.push(async (allNodes) => createLabelGroups(allNodes));
+  if (groupingLevel <= GroupingLevel.Class) {
+    groupingHandlers.push(...(await createBaseClassGroupingHandlers(metadata, parentNode, processedInstanceNodes, baseClassChecker)));
+    groupingHandlers.push(async (allNodes) => createClassGroups(metadata, parentNode, allNodes));
+  }
+  if (groupingLevel <= GroupingLevel.Property) {
+    groupingHandlers.push(
+      ...(await createPropertiesGroupingHandlers(metadata, parentNode, processedInstanceNodes, valueFormatter, localizedStrings, baseClassChecker)),
+    );
+  }
+  if (groupingLevel < GroupingLevel.Label) {
+    groupingHandlers.push(async (allNodes) => createLabelGroups(allNodes));
+  }
   return groupingHandlers;
+}
+
+function getNodeGroupingLevel(node: ParentHierarchyNode | undefined): GroupingLevel {
+  if (node && HierarchyNode.isClassGroupingNode(node)) {
+    return GroupingLevel.Class;
+  }
+  if (node && HierarchyNode.isPropertyGroupingNode(node)) {
+    return GroupingLevel.Property;
+  }
+  if (node && HierarchyNode.isLabelGroupingNode(node)) {
+    return GroupingLevel.Label;
+  }
+  return GroupingLevel.None;
+}
+
+enum GroupingLevel {
+  None = 0,
+  Class = 2,
+  Property = 3,
+  Label = 4,
 }

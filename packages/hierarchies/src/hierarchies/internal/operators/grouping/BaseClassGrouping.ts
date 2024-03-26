@@ -4,13 +4,17 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { ECClass, IMetadataProvider } from "../../../ECMetadata";
-import { ClassGroupingNodeKey, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
+import { ClassGroupingNodeKey, HierarchyNode, ParentHierarchyNode, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
 import { BaseClassChecker } from "../../Common";
 import { getClass } from "../../GetClass";
 import { GroupingHandler, GroupingHandlerResult } from "../Grouping";
 
 /** @internal */
-export async function getBaseClassGroupingECClasses(metadata: IMetadataProvider, nodes: ProcessedInstanceHierarchyNode[]): Promise<ECClass[]> {
+export async function getBaseClassGroupingECClasses(
+  metadata: IMetadataProvider,
+  parentNode: ParentHierarchyNode | undefined,
+  nodes: ProcessedInstanceHierarchyNode[],
+): Promise<ECClass[]> {
   // Get all base class names that are provided in the grouping information
   const baseClassesFullClassNames = getAllBaseClasses(nodes);
   if (baseClassesFullClassNames.size === 0) {
@@ -18,7 +22,18 @@ export async function getBaseClassGroupingECClasses(metadata: IMetadataProvider,
   }
 
   const baseClasses = await Promise.all(Array.from(baseClassesFullClassNames).map(async (fullName) => getClass(metadata, fullName)));
-  return sortByBaseClass(baseClasses.filter((baseClass) => baseClass.isRelationshipClass() || baseClass.isEntityClass()));
+  const sortedClasses = await sortByBaseClass(baseClasses.filter((baseClass) => baseClass.isRelationshipClass() || baseClass.isEntityClass()));
+
+  if (parentNode && HierarchyNode.isClassGroupingNode(parentNode)) {
+    // if we have a class grouping node, we can cut the front of sortedClasses up to a point where our grouping class is
+    const cutPosition = sortedClasses.findIndex((c) => c.fullName === parentNode.key.className);
+    if (cutPosition >= 0) {
+      return sortedClasses.slice(cutPosition + 1);
+    }
+    return [];
+  }
+
+  return sortedClasses;
 }
 
 /** @internal */
@@ -104,9 +119,10 @@ async function sortByBaseClass(classes: ECClass[]): Promise<ECClass[]> {
 /** @internal */
 export async function createBaseClassGroupingHandlers(
   metadata: IMetadataProvider,
+  parentNode: ParentHierarchyNode | undefined,
   nodes: ProcessedInstanceHierarchyNode[],
   baseClassChecker: BaseClassChecker,
 ): Promise<GroupingHandler[]> {
-  const baseClassGroupingECClasses = await getBaseClassGroupingECClasses(metadata, nodes);
+  const baseClassGroupingECClasses = await getBaseClassGroupingECClasses(metadata, parentNode, nodes);
   return baseClassGroupingECClasses.map((baseECClass) => async (allNodes) => createBaseClassGroupsForSingleBaseClass(allNodes, baseECClass, baseClassChecker));
 }

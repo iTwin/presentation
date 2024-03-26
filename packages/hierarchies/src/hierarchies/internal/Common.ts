@@ -171,6 +171,7 @@ export class BaseClassChecker {
 }
 
 /** @internal */
+// istanbul ignore next
 export function createNodeIdentifierForLogging(node: ParentHierarchyNode | HierarchyNode | undefined) {
   if (!node) {
     return "<root>";
