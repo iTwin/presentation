@@ -522,12 +522,7 @@ function toGenericInstanceFilterRuleValue(
   let rawValue = primitiveValue.value;
 
   if (operator === "like" && typeof rawValue === "string") {
-    if (!rawValue.startsWith("%")) {
-      rawValue = `%${rawValue}`;
-    }
-    if (!rawValue.endsWith("%")) {
-      rawValue = `${rawValue}%`;
-    }
+    rawValue = `%${rawValue}%`;
   }
 
   return { displayValue, rawValue };

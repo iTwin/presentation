@@ -378,28 +378,6 @@ describe("PresentationInstanceFilter", () => {
       expect(actual).to.be.deep.eq(expectedFilter);
     });
 
-    it("does not `%` around value a second time when `like` operator is used", () => {
-      const filter: PresentationInstanceFilter = {
-        operator: "like",
-        field: propertyField1,
-        value: { valueFormat: PropertyValueFormat.Primitive, value: "%val%", displayValue: "Value" },
-      };
-      const actual = PresentationInstanceFilter.toGenericInstanceFilter(filter, [propertyField1.properties[0].property.classInfo]);
-      const expectedFilter: GenericInstanceFilter = {
-        rules: {
-          operator: "like",
-          propertyName: propertyField1.properties[0].property.name,
-          sourceAlias: "this",
-          propertyTypeName: propertyField1.type.typeName,
-          value: { displayValue: "Value", rawValue: "%val%" },
-        },
-        propertyClassNames: ["Schema:A"],
-        relatedInstances: [],
-        filteredClassNames: [propertyField1.properties[0].property.classInfo.name],
-      };
-      expect(actual).to.be.deep.eq(expectedFilter);
-    });
-
     it("converts point3d condition", () => {
       const filter: PresentationInstanceFilter = {
         operator: "is-equal",
