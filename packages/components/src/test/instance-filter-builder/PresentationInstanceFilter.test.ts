@@ -632,7 +632,7 @@ describe("PresentationInstanceFilter", () => {
     it("parses direct property rule", () => {
       const filter: GenericInstanceFilter = {
         rules: {
-          operator: "is-equal",
+          operator: "like",
           sourceAlias: "this",
           propertyName: propertyField1.properties[0].property.name,
           propertyTypeName: propertyField1.properties[0].property.type,
@@ -645,7 +645,30 @@ describe("PresentationInstanceFilter", () => {
 
       const actual = PresentationInstanceFilter.fromGenericInstanceFilter(descriptor, filter);
       const expected: PresentationInstanceFilter = {
-        operator: "is-equal",
+        operator: "like",
+        field: propertyField1,
+        value: { valueFormat: PropertyValueFormat.Primitive, displayValue: "Value", value: "val" },
+      };
+      expect(actual).to.be.deep.eq(expected);
+    });
+
+    it("removes `%` around value when operator is `like`", () => {
+      const filter: GenericInstanceFilter = {
+        rules: {
+          operator: "like",
+          sourceAlias: "this",
+          propertyName: propertyField1.properties[0].property.name,
+          propertyTypeName: propertyField1.properties[0].property.type,
+          value: { displayValue: "Value", rawValue: "%val%" },
+        },
+        propertyClassNames: ["Schema:A"],
+        relatedInstances: [],
+        filteredClassNames: undefined,
+      };
+
+      const actual = PresentationInstanceFilter.fromGenericInstanceFilter(descriptor, filter);
+      const expected: PresentationInstanceFilter = {
+        operator: "like",
         field: propertyField1,
         value: { valueFormat: PropertyValueFormat.Primitive, displayValue: "Value", value: "val" },
       };

@@ -354,11 +354,22 @@ function parseGenericFilterRuleGroup(
 
 function parseGenericFilterRule(rule: GenericInstanceFilterRule, ctx: GenericFilterParsingContext): PresentationInstanceFilterCondition {
   const field = ctx.findField(rule.propertyName, rule.sourceAlias);
+  let value = rule.value ? rule.value.rawValue : undefined;
+
+  if (value && rule.operator === "like" && typeof value === "string") {
+    if (value.startsWith("%")) {
+      value = value.slice(1);
+    }
+
+    if (value.endsWith("%")) {
+      value = value.slice(0, -1);
+    }
+  }
 
   return {
     field,
     operator: rule.operator,
-    value: rule.value ? { valueFormat: PropertyValueFormat.Primitive, displayValue: rule.value.displayValue, value: rule.value.rawValue } : undefined,
+    value: rule.value ? { valueFormat: PropertyValueFormat.Primitive, displayValue: rule.value.displayValue, value } : undefined,
   };
 }
 
