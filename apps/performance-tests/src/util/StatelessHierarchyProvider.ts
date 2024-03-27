@@ -33,11 +33,11 @@ export class StatelessHierarchyProvider {
     this._provider = this.createProvider();
   }
 
-  public async loadInitialHierarchy(): Promise<void> {
-    await this.loadNodes((node) => node.children && !!node.autoExpand);
+  public async loadInitialHierarchy() {
+    return this.loadNodes((node) => node.children && !!node.autoExpand);
   }
 
-  public async loadFullHierarchy(): Promise<number> {
+  public async loadFullHierarchy() {
     return this.loadNodes((node) => node.children);
   }
 
