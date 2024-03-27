@@ -4,10 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { IMetadataProvider } from "../../../ECMetadata";
-import { ClassGroupingNodeKey, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
+import { ClassGroupingNodeKey, HierarchyNode, ParentHierarchyNode, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
 import { getClass } from "../../GetClass";
 import { GroupingHandlerResult, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
-import { sortNodesByLabel } from "../Sorting";
 
 interface ClassInfo {
   fullName: string;
@@ -21,25 +20,29 @@ interface ClassGroupingInformation {
 }
 
 /** @internal */
-export async function createClassGroups(metadata: IMetadataProvider, nodes: ProcessedInstanceHierarchyNode[]): Promise<GroupingHandlerResult> {
+export async function createClassGroups(
+  metadata: IMetadataProvider,
+  parentNode: ParentHierarchyNode | undefined,
+  nodes: ProcessedInstanceHierarchyNode[],
+): Promise<GroupingHandlerResult> {
+  const parentNodeClass = parentNode && HierarchyNode.isClassGroupingNode(parentNode) ? parentNode.key.className : undefined;
   const groupings: ClassGroupingInformation = { ungrouped: [], grouped: new Map() };
   for (const node of nodes) {
-    // we're only grouping instance nodes
-    if (node.processingParams?.grouping?.byClass) {
-      const fullClassName = node.key.instanceKeys[0].className;
-      let groupingInfo = groupings.grouped.get(fullClassName);
+    const nodeClassName = node.key.instanceKeys[0].className;
+    if (node.processingParams?.grouping?.byClass && nodeClassName !== parentNodeClass) {
+      let groupingInfo = groupings.grouped.get(nodeClassName);
       if (!groupingInfo) {
-        const nodeClass = await getClass(metadata, fullClassName);
+        const nodeClass = await getClass(metadata, nodeClassName);
         groupingInfo = {
           class: nodeClass,
           groupedNodes: [],
         };
-        groupings.grouped.set(fullClassName, groupingInfo);
+        groupings.grouped.set(nodeClassName, groupingInfo);
       }
       groupingInfo.groupedNodes.push(node);
-    } else {
-      groupings.ungrouped.push(node);
+      continue;
     }
+    groupings.ungrouped.push(node);
   }
   return createGroupingNodes(groupings);
 }
@@ -60,5 +63,5 @@ function createGroupingNodes(groupings: ClassGroupingInformation): GroupingHandl
       children: entry.groupedNodes.map((gn) => ({ ...gn, parentKeys: [...groupedNodeParentKeys, groupingNodeKey] })),
     });
   });
-  return { grouped: sortNodesByLabel(groupedNodes), ungrouped: groupings.ungrouped, groupingType: "class" };
+  return { grouped: groupedNodes, ungrouped: groupings.ungrouped, groupingType: "class" };
 }

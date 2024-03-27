@@ -4,15 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Observable } from "rxjs";
-import { assert, Dictionary, LRUCache, LRUDictionary, LRUMap } from "@itwin/core-bentley";
-import {
-  HierarchyNode,
-  HierarchyNodeKey,
-  InstancesNodeKey,
-  ParsedHierarchyNode,
-  ProcessedGroupingHierarchyNode,
-  ProcessedHierarchyNode,
-} from "../HierarchyNode";
+import { LRUCache, LRUDictionary, LRUMap } from "@itwin/core-bentley";
+import { HierarchyNodeKey, ParsedHierarchyNode, ProcessedHierarchyNode } from "../HierarchyNode";
 import { GetHierarchyNodesProps } from "../HierarchyProvider";
 
 /** @internal */
@@ -23,21 +16,15 @@ export type ProcessedNodesObservable = Observable<ProcessedHierarchyNode>;
 
 /** @internal */
 export type CachedNodesObservableEntry =
-  | { observable: ParsedQueryNodesObservable; needsProcessing: true }
-  | { observable: ProcessedNodesObservable; needsProcessing: false };
-
-/** @internal */
-export interface HierarchyLevelWithGroupingsObservables {
-  parsedNodes: ParsedQueryNodesObservable;
-  groupings: Dictionary<HierarchyNodeKey[], ProcessedNodesObservable>;
-}
+  | { observable: ParsedQueryNodesObservable; processingStatus: "none" }
+  | { observable: ProcessedNodesObservable; processingStatus: "pre-processed" };
 
 /** @internal */
 export interface ChildNodesCacheEntry {
   /** Stores observables for the default case - no instance filter or custom limit for the hierarchy level. */
-  primary: HierarchyLevelWithGroupingsObservables | undefined;
+  primary: CachedNodesObservableEntry | undefined;
   /** Stores a limited number of variations with custom instance filter and/or custom limit for the hierarchy level. */
-  variations: LRUCache<string, HierarchyLevelWithGroupingsObservables>;
+  variations: LRUCache<string, CachedNodesObservableEntry>;
 }
 
 /** @internal */
@@ -73,31 +60,6 @@ export class ChildNodeObservablesCache {
 
     const parentKeys = props.parentNode.parentKeys;
 
-    if (HierarchyNode.isGroupingNode(props.parentNode)) {
-      if (parentKeys.length === 0) {
-        return { primaryKey: [], variationKey: createVariationKey(), groupingKey: [props.parentNode.key] };
-      }
-      let parentKeysSplitPosition = parentKeys.length;
-      while (parentKeysSplitPosition > 0) {
-        const parentKey = parentKeys[parentKeysSplitPosition - 1];
-        if (typeof parentKey === "string" || parentKey.type === "instances") {
-          break;
-        }
-        --parentKeysSplitPosition;
-      }
-      const split =
-        parentKeysSplitPosition === 0
-          ? { primaryKey: [], groupingKey: parentKeys }
-          : parentKeysSplitPosition === parentKeys.length
-            ? { primaryKey: parentKeys, groupingKey: [] }
-            : { primaryKey: parentKeys.slice(0, parentKeysSplitPosition), groupingKey: parentKeys.slice(parentKeysSplitPosition) };
-      return {
-        primaryKey: split.primaryKey,
-        variationKey: createVariationKey(),
-        groupingKey: [...split.groupingKey, props.parentNode.key],
-      };
-    }
-
     return {
       primaryKey: [...parentKeys, props.parentNode.key],
       variationKey: createVariationKey(),
@@ -113,71 +75,30 @@ export class ChildNodeObservablesCache {
       }
       return entry;
     };
-    const getObservableAccessor = () => {
-      if (variationKey) {
-        return {
-          get: () => getMapEntry(false)?.variations.get(variationKey),
-          set: (parsedNodes: ParsedQueryNodesObservable) => {
-            getMapEntry(true)!.variations.set(variationKey, { parsedNodes, groupings: new Dictionary(compareHierarchyNodeKeys) });
-          },
-        };
-      }
+    if (variationKey) {
       return {
-        get: () => getMapEntry(false)?.primary,
-        set: (parsedNodes: ParsedQueryNodesObservable) => {
-          getMapEntry(true)!.primary = { parsedNodes, groupings: new Dictionary(compareHierarchyNodeKeys) };
+        get: () => getMapEntry(false)?.variations.get(variationKey),
+        set: (value: CachedNodesObservableEntry) => {
+          getMapEntry(true)!.variations.set(variationKey, value);
         },
       };
-    };
+    }
     return {
-      getEntry: (groupingKey?: HierarchyNodeKey[]): CachedNodesObservableEntry | undefined => {
-        const source = getObservableAccessor().get();
-        if (!source) {
-          return undefined;
-        }
-        if (groupingKey) {
-          const groupedNodesObservable = source.groupings.get(groupingKey);
-          return groupedNodesObservable ? { observable: groupedNodesObservable, needsProcessing: false } : undefined;
-        }
-        return { observable: source.parsedNodes, needsProcessing: true };
-      },
-      setParseResult: (parsedNodes: ParsedQueryNodesObservable) => {
-        getObservableAccessor().set(parsedNodes);
-      },
-      setGrouped: (groupingKey: HierarchyNodeKey[], processedNodes: ProcessedNodesObservable) => {
-        const source = getObservableAccessor().get();
-        if (!source) {
-          return false;
-        }
-        source.groupings.set(groupingKey, processedNodes);
-        return true;
+      get: () => getMapEntry(false)?.primary,
+      set: (value: CachedNodesObservableEntry) => {
+        getMapEntry(true)!.primary = value;
       },
     };
   }
 
-  public addParseResult(
-    requestProps: Omit<GetHierarchyNodesProps, "parentNode"> & { parentNode: { key: string | InstancesNodeKey; parentKeys: HierarchyNodeKey[] } | undefined },
-    observable: ParsedQueryNodesObservable,
-  ) {
+  public set(requestProps: GetHierarchyNodesProps, value: CachedNodesObservableEntry) {
     const { primaryKey, variationKey } = this.createCacheKeys(requestProps);
-    const { setParseResult } = this.getCacheAccessors(primaryKey, variationKey);
-    setParseResult(observable);
-  }
-
-  public addGrouped(
-    requestProps: Omit<GetHierarchyNodesProps, "parentNode"> & { parentNode: ProcessedGroupingHierarchyNode },
-    observable: ProcessedNodesObservable,
-  ) {
-    const { primaryKey, variationKey, groupingKey } = this.createCacheKeys(requestProps);
-    assert(groupingKey !== undefined && groupingKey.length > 0);
-    const { setGrouped } = this.getCacheAccessors(primaryKey, variationKey);
-    return setGrouped(groupingKey, observable);
+    this.getCacheAccessors(primaryKey, variationKey).set(value);
   }
 
   public get(requestProps: GetHierarchyNodesProps): CachedNodesObservableEntry | undefined {
-    const { primaryKey, variationKey, groupingKey } = this.createCacheKeys(requestProps);
-    const { getEntry } = this.getCacheAccessors(primaryKey, variationKey);
-    return getEntry(groupingKey);
+    const { primaryKey, variationKey } = this.createCacheKeys(requestProps);
+    return this.getCacheAccessors(primaryKey, variationKey).get();
   }
 
   public clear() {

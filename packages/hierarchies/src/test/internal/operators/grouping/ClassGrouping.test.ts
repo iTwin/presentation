@@ -9,14 +9,16 @@ import { IMetadataProvider } from "../../../../hierarchies/ECMetadata";
 import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNode";
 import { GroupingHandlerResult } from "../../../../hierarchies/internal/operators/Grouping";
 import { createClassGroups } from "../../../../hierarchies/internal/operators/grouping/ClassGrouping";
-import { ClassStubs, createClassStubs, createTestProcessedInstanceNode } from "../../../Utils";
+import { ClassStubs, createClassStubs, createTestProcessedGroupingNode, createTestProcessedInstanceNode } from "../../../Utils";
 
 describe("ClassGrouping", () => {
   const metadataProvider = {} as unknown as IMetadataProvider;
   let classStubs: ClassStubs;
+
   beforeEach(() => {
     classStubs = createClassStubs(metadataProvider);
   });
+
   afterEach(() => {
     sinon.restore();
   });
@@ -34,7 +36,7 @@ describe("ClassGrouping", () => {
       type: "class-grouping",
       className: classInfo.fullName,
     };
-    expect(await createClassGroups(metadataProvider, nodes)).to.deep.eq({
+    expect(await createClassGroups(metadataProvider, undefined, nodes)).to.deep.eq({
       groupingType: "class",
       grouped: [
         {
@@ -69,7 +71,7 @@ describe("ClassGrouping", () => {
       type: "class-grouping",
       className: classA.fullName,
     };
-    expect(await createClassGroups(metadataProvider, nodes)).to.deep.eq({
+    expect(await createClassGroups(metadataProvider, undefined, nodes)).to.deep.eq({
       groupingType: "class",
       grouped: [
         {
@@ -109,7 +111,7 @@ describe("ClassGrouping", () => {
       type: "class-grouping",
       className: classB.fullName,
     };
-    expect(await createClassGroups(metadataProvider, nodes)).to.deep.eq({
+    expect(await createClassGroups(metadataProvider, undefined, nodes)).to.deep.eq({
       groupingType: "class",
       grouped: [
         {
@@ -129,5 +131,27 @@ describe("ClassGrouping", () => {
       ],
       ungrouped: [],
     });
+  });
+
+  it("doesn't create duplicate class group", async () => {
+    const parentNode = createTestProcessedGroupingNode({
+      key: {
+        type: "class-grouping",
+        className: "TestSchema.TestClass",
+      },
+    });
+    const nodes = [
+      createTestProcessedInstanceNode({
+        key: { type: "instances", instanceKeys: [{ className: "TestSchema.TestClass", id: "0x1" }] },
+        parentKeys: ["x"],
+        processingParams: { grouping: { byClass: true } },
+      }),
+    ];
+    classStubs.stubEntityClass({ schemaName: "TestSchema", className: "TestClass" });
+    expect(await createClassGroups(metadataProvider, parentNode, nodes)).to.deep.eq({
+      groupingType: "class",
+      grouped: [],
+      ungrouped: nodes,
+    } as GroupingHandlerResult);
   });
 });
