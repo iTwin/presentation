@@ -556,7 +556,7 @@ function isInstanceKeyLike(value: object): value is { id: string; className: str
 }
 
 function isValidPrimitiveValue(val: PrimitiveValue): val is Required<PrimitiveValue> {
-  return val.valueFormat === PropertyValueFormat.Primitive && val.value !== undefined && val.displayValue !== undefined;
+  return val.value !== undefined && val.displayValue !== undefined;
 }
 
 function createUniqueValue(value: Required<PrimitiveValue>): PrimitiveValue | undefined {
