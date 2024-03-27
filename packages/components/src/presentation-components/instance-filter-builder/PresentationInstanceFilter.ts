@@ -6,7 +6,7 @@
  * @module InstancesFilter
  */
 
-import { Primitives, PrimitiveValue, PropertyValue, PropertyValueFormat } from "@itwin/appui-abstract";
+import { Primitives, PrimitiveValue, PropertyValueFormat } from "@itwin/appui-abstract";
 import {
   isPropertyFilterRuleGroup,
   PropertyFilter,
@@ -132,15 +132,23 @@ export namespace PresentationInstanceFilter {
   }
 
   /**
-   * Function that creates equality condition based on supplied [[PropertiesField]] and [[PropertyValue]] that is compatible
+   * Function that creates equality condition based on supplied [[PropertiesField]] and [[PrimitiveValue]] that is compatible
    * with `UniquePropertyValuesSelector`.
+   * If [[PrimitiveValue.value]] is `undefined` created condition uses `is-null` or `is-not-null` operator.
    * @beta
    */
-  export function createEqualityCondition(
+  export function createPrimitiveValueEqualityCondition(
     field: PropertiesField,
     operator: "is-equal" | "is-not-equal",
-    value: PropertyValue,
+    value: PrimitiveValue,
   ): PresentationInstanceFilterCondition {
+    if (!isValidPrimitiveValue(value)) {
+      return {
+        field,
+        operator: operator === "is-equal" ? "is-null" : "is-not-null",
+      };
+    }
+
     return {
       field,
       operator,
@@ -547,10 +555,11 @@ function isInstanceKeyLike(value: object): value is { id: string; className: str
   return (value as any).id !== undefined && (value as any).className !== undefined;
 }
 
-function createUniqueValue(value: PropertyValue): PrimitiveValue | undefined {
-  if (value.valueFormat !== PropertyValueFormat.Primitive || value.displayValue === undefined || value.value === undefined) {
-    return undefined;
-  }
+function isValidPrimitiveValue(val: PrimitiveValue): val is Required<PrimitiveValue> {
+  return val.valueFormat === PropertyValueFormat.Primitive && val.value !== undefined && val.displayValue !== undefined;
+}
+
+function createUniqueValue(value: Required<PrimitiveValue>): PrimitiveValue | undefined {
   const { displayValues, groupedRawValues } = serializeUniqueValues([
     {
       displayValue: value.displayValue,
