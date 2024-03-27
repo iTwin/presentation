@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1711445347473,
+  "lastUpdate": 1711537042464,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -2305,6 +2305,118 @@ window.BENCHMARK_DATA = {
             "value": 348,
             "unit": "ms",
             "extra": "count: 2\nmax: 348\np95: 348\nmedian: 345.5"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35135765+grigasp@users.noreply.github.com",
+            "name": "Grigas",
+            "username": "grigasp"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3a2a190213e5e83d2db1ab54917025579cf02d5c",
+          "message": "Hierarchies: Grouping refactor (#498)\n\n* fix test\r\n\r\n* Type guards for property grouping nodes, add metadata to `PropertyOtherValuesGroupingNodeKey`\r\n\r\n* Refactor grouping to create only one level of grouping at a time\r\n\r\n* Fix invalid file name being created when input string contains ` or ' characters.\r\n\r\n* cleanup\r\n\r\n* Default to 0 size query cache\r\n\r\n* Add a test for grouping nodes whose parents are hidden\r\n\r\n* Sort nodes on finalize, without converting to array first\r\n\r\n* extract-api\r\n\r\n* fixup merge",
+          "timestamp": "2024-03-27T12:55:38+02:00",
+          "tree_id": "4b8814c818977c9b0725b5e372b536588c4f4cea",
+          "url": "https://github.com/iTwin/presentation/commit/3a2a190213e5e83d2db1ab54917025579cf02d5c"
+        },
+        "date": 1711537042008,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "flat 50k elements list",
+            "value": 5591.72,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 57.45,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 2546.53,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 213,
+            "unit": "ms",
+            "extra": "count: 5\nmax: 213\np95: 213\nmedian: 41"
+          },
+          {
+            "name": "grouping by label",
+            "value": 6187.56,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 155,
+            "unit": "ms",
+            "extra": "count: 23\nmax: 1034\np95: 155\nmedian: 95"
+          },
+          {
+            "name": "grouping by class",
+            "value": 6096.99,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 154,
+            "unit": "ms",
+            "extra": "count: 27\nmax: 1003\np95: 154\nmedian: 94"
+          },
+          {
+            "name": "grouping by property",
+            "value": 6748.23,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 446,
+            "unit": "ms",
+            "extra": "count: 24\nmax: 953\np95: 446\nmedian: 99.5"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 7010.52,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 5938,
+            "unit": "ms",
+            "extra": "count: 4\nmax: 5938\np95: 5938\nmedian: 225"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 7518.96,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 343,
+            "unit": "ms",
+            "extra": "count: 31\nmax: 779\np95: 343\nmedian: 113"
           }
         ]
       }
