@@ -985,7 +985,7 @@ describe("PresentationInstanceFilter", () => {
     });
   });
 
-  describe("createPrimiiveValueEqualityCondition", () => {
+  describe("createPrimitiveValueEqualityCondition", () => {
     it("serializes value into unique value", () => {
       const value: PrimitiveValue = {
         valueFormat: PropertyValueFormat.Primitive,
