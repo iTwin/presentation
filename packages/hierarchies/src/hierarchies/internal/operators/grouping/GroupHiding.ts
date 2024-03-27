@@ -3,43 +3,40 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
-import { compareNodesByLabel, mergeSortedArrays } from "../../Common";
 import { GroupingHandlerResult, GroupingType, ProcessedInstancesGroupingHierarchyNode } from "../Grouping";
-import { sortNodesByLabel } from "../Sorting";
 import { iterateChildNodeGroupingParams } from "./Shared";
 
 /** @internal */
 export function applyGroupHidingParams(props: GroupingHandlerResult, extraSiblings: number): GroupingHandlerResult {
-  if (props.grouped.length === 0) {
+  const { grouped, ungrouped, groupingType } = props;
+  if (grouped.length === 0) {
     return props;
   }
 
   // handle the "no siblings" case
-  if (props.grouped.length === 1 && props.ungrouped.length === 0 && extraSiblings === 0) {
-    const hideParams = getHideOptionsFromNodeProcessingParams(props.grouped[0], props.groupingType);
+  if (grouped.length === 1 && ungrouped.length === 0 && extraSiblings === 0) {
+    const hideParams = getHideOptionsFromNodeProcessingParams(grouped[0], groupingType);
     if (hideParams.hideIfNoSiblings) {
-      return { groupingType: props.groupingType, grouped: [], ungrouped: props.grouped[0].children };
+      return { groupingType, grouped: [], ungrouped: grouped[0].children };
     }
   }
 
   // handle the "no children" case
-  const grouped = new Array<ProcessedInstancesGroupingHierarchyNode>();
-  const newUngroupedNodes = new Array<ProcessedInstanceHierarchyNode>();
-  for (const node of props.grouped) {
+  const filteredGrouped = new Array<ProcessedInstancesGroupingHierarchyNode>();
+  for (const node of grouped) {
     if (node.children.length === 1) {
-      const hideParams = getHideOptionsFromNodeProcessingParams(node, props.groupingType);
+      const hideParams = getHideOptionsFromNodeProcessingParams(node, groupingType);
       if (hideParams.hideIfOneGroupedNode) {
-        newUngroupedNodes.push(node.children[0]);
+        ungrouped.push(node.children[0]);
         continue;
       }
     }
-    grouped.push(node);
+    filteredGrouped.push(node);
   }
   return {
-    groupingType: props.groupingType,
-    ungrouped: mergeSortedArrays(props.ungrouped, sortNodesByLabel(newUngroupedNodes), compareNodesByLabel),
-    grouped,
+    groupingType,
+    grouped: filteredGrouped,
+    ungrouped,
   };
 }
 

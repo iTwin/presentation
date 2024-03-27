@@ -56,8 +56,9 @@ export function createProvider(props: {
   formatterFactory?: (schemas: SchemaContext) => IPrimitiveValueFormatter;
   localizedStrings?: HierarchyProviderLocalizedStrings;
   filteredNodePaths?: HierarchyNodeIdentifiersPath[];
+  queryCacheSize?: number;
 }) {
-  const { imodel, hierarchy, formatterFactory, localizedStrings, filteredNodePaths } = props;
+  const { imodel, hierarchy, formatterFactory, localizedStrings, filteredNodePaths, queryCacheSize } = props;
   return new HierarchyProvider({
     metadataProvider: createMetadataProvider(imodel),
     hierarchyDefinition: hierarchy,
@@ -65,6 +66,7 @@ export function createProvider(props: {
     formatter: formatterFactory ? formatterFactory(createSchemaContext(imodel)) : undefined,
     localizedStrings,
     filtering: filteredNodePaths ? { paths: filteredNodePaths } : undefined,
+    queryCacheSize: queryCacheSize ?? 0,
   });
 }
 

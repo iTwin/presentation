@@ -377,7 +377,7 @@ describe("Stateless hierarchy builder", () => {
                       SELECT ${await selectQueryFactory.createSelectClause({
                         ecClassId: { selector: `this.ECClassId` },
                         ecInstanceId: { selector: `this.ECInstanceId` },
-                        nodeLabel: { selector: `this.UserLabel` },
+                        nodeLabel: { selector: `this.CodeValue` },
                         grouping: {
                           byBaseClasses: {
                             fullClassNames: ["BisCore.Element"],
@@ -385,10 +385,10 @@ describe("Stateless hierarchy builder", () => {
                         },
                       })}
                       FROM (
-                        SELECT ECClassId, ECInstanceId, UserLabel, Parent, CodeValue
+                        SELECT ECClassId, ECInstanceId, Parent, CodeValue
                         FROM ${subjectClassName}
                         UNION ALL
-                        SELECT ECClassId, ECInstanceId, UserLabel, Parent, CodeValue
+                        SELECT ECClassId, ECInstanceId, Parent, CodeValue
                         FROM ${physicalPartitionClassName}
                       ) AS this
                       WHERE this.Parent.Id = (${IModel.rootSubjectId})
