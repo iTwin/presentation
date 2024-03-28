@@ -27,12 +27,12 @@ import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { buildTestIModel, initialize, terminate } from "@itwin/presentation-testing";
-import { createCache, createStorage, HiliteSetCache, SelectableInstanceKey, SelectionStorage } from "@itwin/unified-selection";
+import { SelectableInstanceKey, Selectables } from "@itwin/unified-selection";
+import { createHiliteSetProvider } from "@itwin/unified-selection/lib/cjs/unified-selection/HiliteSetProvider";
 import { createMetadataProvider } from "../hierarchy-builder/Utils";
 
 describe("HiliteSet", () => {
-  let storage: SelectionStorage;
-  let hiliteSetCache: HiliteSetCache;
+  let iModel: IModelConnection;
 
   before(async () => {
     await initialize();
@@ -46,17 +46,9 @@ describe("HiliteSet", () => {
     await terminate();
   });
 
-  beforeEach(async () => {
-    storage = createStorage();
-    hiliteSetCache = createCache(storage);
-  });
-
-  async function loadHiliteSet(iModel: IModelConnection) {
-    const iterator = hiliteSetCache.getHiliteSet({
-      iModelKey: iModel.key,
-      queryExecutor: createECSqlQueryExecutor(iModel),
-      metadataProvider: createMetadataProvider(iModel),
-    });
+  async function loadHiliteSet(selectables: Selectables) {
+    const provider = createHiliteSetProvider({ queryExecutor: createECSqlQueryExecutor(iModel), metadataProvider: createMetadataProvider(iModel) });
+    const iterator = provider.getHiliteSet({ selectables });
 
     const models: string[] = [];
     const subCategories: string[] = [];
@@ -81,7 +73,7 @@ describe("HiliteSet", () => {
         let subjectKey: SelectableInstanceKey;
         let modelKeys: SelectableInstanceKey[];
         // eslint-disable-next-line deprecation/deprecation
-        const iModel = await buildTestIModel(this, async (builder) => {
+        iModel = await buildTestIModel(this, async (builder) => {
           subjectKey = insertSubject({ builder, codeValue: "test subject" });
           modelKeys = [
             insertPhysicalModelWithPartition({ builder, codeValue: "model 1", partitionParentId: subjectKey.id }),
@@ -89,8 +81,7 @@ describe("HiliteSet", () => {
           ];
         });
 
-        storage.addToSelection({ source: "Test", iModelKey: iModel.key, selectables: [subjectKey!] });
-        const hiliteSet = await loadHiliteSet(iModel);
+        const hiliteSet = await loadHiliteSet(Selectables.create([subjectKey!]));
 
         expect(hiliteSet.models)
           .to.have.lengthOf(modelKeys!.length)
@@ -104,7 +95,7 @@ describe("HiliteSet", () => {
         let subjectKey: SelectableInstanceKey;
         let modelKeys: SelectableInstanceKey[];
         // eslint-disable-next-line deprecation/deprecation
-        const iModel = await buildTestIModel(this, async (builder) => {
+        iModel = await buildTestIModel(this, async (builder) => {
           subjectKey = insertSubject({ builder, codeValue: "test subject" });
           const subject2 = insertSubject({ builder, codeValue: "subject 2", parentId: subjectKey.id });
           const subject3 = insertSubject({ builder, codeValue: "subject 3", parentId: subjectKey.id });
@@ -114,8 +105,7 @@ describe("HiliteSet", () => {
             insertPhysicalModelWithPartition({ builder, codeValue: "model 2", partitionParentId: subject4.id }),
           ];
         });
-        storage.addToSelection({ source: "Test", iModelKey: iModel.key, selectables: [subjectKey!] });
-        const hiliteSet = await loadHiliteSet(iModel);
+        const hiliteSet = await loadHiliteSet(Selectables.create([subjectKey!]));
 
         expect(hiliteSet.models)
           .to.have.lengthOf(modelKeys!.length)
@@ -129,12 +119,11 @@ describe("HiliteSet", () => {
       it("hilites model", async function () {
         let modelKey: SelectableInstanceKey;
         // eslint-disable-next-line deprecation/deprecation
-        const iModel = await buildTestIModel(this, async (builder) => {
+        iModel = await buildTestIModel(this, async (builder) => {
           modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
         });
 
-        storage.addToSelection({ source: "Test", iModelKey: iModel.key, selectables: [modelKey!] });
-        const hiliteSet = await loadHiliteSet(iModel);
+        const hiliteSet = await loadHiliteSet(Selectables.create([modelKey!]));
 
         expect(hiliteSet.models).to.have.lengthOf(1).and.to.include(modelKey!.id);
         expect(hiliteSet.subCategories).to.be.empty;
@@ -148,7 +137,7 @@ describe("HiliteSet", () => {
         let categoryKey: SelectableInstanceKey;
         let subCategoryKeys: SelectableInstanceKey[];
         // eslint-disable-next-line deprecation/deprecation
-        const iModel = await buildTestIModel(this, async (builder) => {
+        iModel = await buildTestIModel(this, async (builder) => {
           categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           subCategoryKeys = [
             getDefaultSubcategoryKey(categoryKey.id),
@@ -156,8 +145,8 @@ describe("HiliteSet", () => {
             insertSubCategory({ builder, codeValue: "sub 2", parentCategoryId: categoryKey.id }),
           ];
         });
-        storage.addToSelection({ source: "Test", iModelKey: iModel.key, selectables: [categoryKey!] });
-        const hiliteSet = await loadHiliteSet(iModel);
+
+        const hiliteSet = await loadHiliteSet(Selectables.create([categoryKey!]));
 
         expect(hiliteSet.models).to.be.empty;
         expect(hiliteSet.subCategories)
@@ -169,12 +158,12 @@ describe("HiliteSet", () => {
       it("hilites subcategory", async function () {
         let categoryKey: SelectableInstanceKey;
         // eslint-disable-next-line deprecation/deprecation
-        const iModel = await buildTestIModel(this, async (builder) => {
+        iModel = await buildTestIModel(this, async (builder) => {
           categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
         });
+
         const subCategoryKey = getDefaultSubcategoryKey(categoryKey!.id);
-        storage.addToSelection({ source: "Test", iModelKey: iModel.key, selectables: [subCategoryKey] });
-        const hiliteSet = await loadHiliteSet(iModel);
+        const hiliteSet = await loadHiliteSet(Selectables.create([subCategoryKey]));
 
         expect(hiliteSet.models).to.be.empty;
         expect(hiliteSet.subCategories).to.have.lengthOf(1).and.to.include(subCategoryKey.id);
@@ -185,7 +174,7 @@ describe("HiliteSet", () => {
         let categoryKey: SelectableInstanceKey;
         let subCategoryKeys: SelectableInstanceKey[];
         // eslint-disable-next-line deprecation/deprecation
-        const iModel = await buildTestIModel(this, async (builder) => {
+        iModel = await buildTestIModel(this, async (builder) => {
           categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           subCategoryKeys = [
             getDefaultSubcategoryKey(categoryKey.id),
@@ -193,8 +182,8 @@ describe("HiliteSet", () => {
             insertSubCategory({ builder, codeValue: "sub 2", parentCategoryId: categoryKey.id }),
           ];
         });
-        storage.addToSelection({ source: "Test", iModelKey: iModel.key, selectables: [categoryKey!, subCategoryKeys![0]] });
-        const hiliteSet = await loadHiliteSet(iModel);
+
+        const hiliteSet = await loadHiliteSet(Selectables.create([categoryKey!, subCategoryKeys![0]]));
 
         expect(hiliteSet.models).to.be.empty;
         expect(hiliteSet.subCategories)
@@ -209,7 +198,7 @@ describe("HiliteSet", () => {
         let assemblyKey: SelectableInstanceKey;
         let expectedHighlightedElementKeys: SelectableInstanceKey[];
         // eslint-disable-next-line deprecation/deprecation
-        const iModel = await buildTestIModel(this, async (builder) => {
+        iModel = await buildTestIModel(this, async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           assemblyKey = insertPhysicalElement({ builder, userLabel: "element 1", modelId: modelKey.id, categoryId: categoryKey.id });
@@ -232,8 +221,7 @@ describe("HiliteSet", () => {
           expectedHighlightedElementKeys = [assemblyKey, element2, element3, element4, element5];
         });
 
-        storage.addToSelection({ source: "Test", iModelKey: iModel.key, selectables: [assemblyKey!] });
-        const hiliteSet = await loadHiliteSet(iModel);
+        const hiliteSet = await loadHiliteSet(Selectables.create([assemblyKey!]));
 
         expect(hiliteSet.models).to.be.empty;
         expect(hiliteSet.subCategories).to.be.empty;
@@ -245,14 +233,13 @@ describe("HiliteSet", () => {
       it("hilites leaf element", async function () {
         let elementKey: SelectableInstanceKey;
         // eslint-disable-next-line deprecation/deprecation
-        const iModel = await buildTestIModel(this, async (builder) => {
+        iModel = await buildTestIModel(this, async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           elementKey = insertPhysicalElement({ builder, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id });
         });
 
-        storage.addToSelection({ source: "Test", iModelKey: iModel.key, selectables: [elementKey!] });
-        const hiliteSet = await loadHiliteSet(iModel);
+        const hiliteSet = await loadHiliteSet(Selectables.create([elementKey!]));
 
         expect(hiliteSet.models).to.be.empty;
         expect(hiliteSet.subCategories).to.be.empty;
@@ -262,7 +249,7 @@ describe("HiliteSet", () => {
       it("hilites all selected elements", async function () {
         let elementKeys: SelectableInstanceKey[];
         // eslint-disable-next-line deprecation/deprecation
-        const iModel = await buildTestIModel(this, async (builder) => {
+        iModel = await buildTestIModel(this, async (builder) => {
           const modelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
           elementKeys = [
@@ -271,8 +258,8 @@ describe("HiliteSet", () => {
             insertPhysicalElement({ builder, userLabel: "element", modelId: modelKey.id, categoryId: categoryKey.id }),
           ];
         });
-        storage.addToSelection({ source: "Test", iModelKey: iModel.key, selectables: elementKeys! });
-        const hiliteSet = await loadHiliteSet(iModel);
+
+        const hiliteSet = await loadHiliteSet(Selectables.create(elementKeys!));
 
         expect(hiliteSet.models).to.be.empty;
         expect(hiliteSet.subCategories).to.be.empty;
@@ -293,7 +280,7 @@ describe("HiliteSet", () => {
         let physicalElement: SelectableInstanceKey;
         let expectedElements: SelectableInstanceKey[];
         // eslint-disable-next-line deprecation/deprecation
-        const iModel = await buildTestIModel(this, async (builder) => {
+        iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
@@ -330,8 +317,7 @@ describe("HiliteSet", () => {
           expectedElements = [physicalElement, physicalElementChild, physicalElementChild2, physicalElementChildChild];
         });
 
-        storage.addToSelection({ source: "Test", iModelKey: iModel.key, selectables: [functionalElement!] });
-        const hiliteSet = await loadHiliteSet(iModel);
+        const hiliteSet = await loadHiliteSet(Selectables.create([functionalElement!]));
 
         expect(hiliteSet.models).to.be.empty;
         expect(hiliteSet.subCategories).to.be.empty;
@@ -345,7 +331,7 @@ describe("HiliteSet", () => {
         let graphicsElement: SelectableInstanceKey;
         let expectedElements: SelectableInstanceKey[];
         // eslint-disable-next-line deprecation/deprecation
-        const iModel = await buildTestIModel(this, async (builder) => {
+        iModel = await buildTestIModel(this, async (builder) => {
           const schema = await getSchemaFromPackage("functional-schema", "Functional.ecschema.xml");
           await builder.importSchema(schema);
           const drawingModelKey = insertDrawingModelWithPartition({ builder, codeValue: "test drawing model" });
@@ -374,8 +360,7 @@ describe("HiliteSet", () => {
           expectedElements = [graphicsElement, graphicsElementChild, graphicsElementChild2, graphicsElementChildChild];
         });
 
-        storage.addToSelection({ source: "Test", iModelKey: iModel.key, selectables: [functionalElement!] });
-        const hiliteSet = await loadHiliteSet(iModel);
+        const hiliteSet = await loadHiliteSet(Selectables.create([functionalElement!]));
 
         expect(hiliteSet.models).to.be.empty;
         expect(hiliteSet.subCategories).to.be.empty;
@@ -390,7 +375,7 @@ describe("HiliteSet", () => {
         let groupInformationElement: SelectableInstanceKey;
         let expectedElements: SelectableInstanceKey[];
         // eslint-disable-next-line deprecation/deprecation
-        const iModel = await buildTestIModel(this, async (builder) => {
+        iModel = await buildTestIModel(this, async (builder) => {
           const groupModel = insertGroupInformationModelWithPartition({ builder, codeValue: "group information model" });
           const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
           const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
@@ -430,8 +415,7 @@ describe("HiliteSet", () => {
           expectedElements = [physicalElementGroupMember, physicalElementGroupMember2, physicalElementGroupMemberChild];
         });
 
-        storage.addToSelection({ source: "Test", iModelKey: iModel.key, selectables: [groupInformationElement!] });
-        const hiliteSet = await loadHiliteSet(iModel);
+        const hiliteSet = await loadHiliteSet(Selectables.create([groupInformationElement!]));
 
         expect(hiliteSet.models).to.be.empty;
         expect(hiliteSet.subCategories).to.be.empty;
