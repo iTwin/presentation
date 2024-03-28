@@ -20,6 +20,7 @@ export function createMetadataProvider(schemaContext: SchemaContext): IMetadataP
       // istanbul ignore else
       if (!schema) {
         schema = schemaContext.getSchema(new SchemaKey(name)).then((coreSchema) => (coreSchema ? createECSchema(coreSchema) : undefined));
+        schema.catch(() => schemaCache.delete(name));
         schemaCache.set(name, schema);
       }
       return schema;

@@ -63,6 +63,39 @@ describe("createMetadataProvider", () => {
       expect(typeof schema.getClass === "function").to.be.true;
     });
 
+    it("caches schema request", async () => {
+      const matchSchemaName = sinon.match((key: SchemaKey) => key.compareByName("x"));
+      const schemaContext = {
+        getSchema: sinon
+          .stub<[SchemaKey], CoreSchema>()
+          .withArgs(matchSchemaName)
+          .resolves({
+            name: "y",
+          } as unknown as CoreSchema),
+      } as unknown as SchemaContext;
+
+      const provider = createMetadataProvider(schemaContext);
+      await provider.getSchema("x");
+      await provider.getSchema("x");
+
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(schemaContext.getSchema).to.be.calledOnce;
+    });
+
+    it("removes schema request from cache when error occurs", async () => {
+      const matchSchemaName = sinon.match((key: SchemaKey) => key.compareByName("x"));
+      const schemaContext = {
+        getSchema: sinon.stub<[SchemaKey], CoreSchema>().withArgs(matchSchemaName).rejects(),
+      } as unknown as SchemaContext;
+
+      const provider = createMetadataProvider(schemaContext);
+      await expect(provider.getSchema("x")).to.eventually.be.rejected;
+      await expect(provider.getSchema("x")).to.eventually.be.rejected;
+
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(schemaContext.getSchema).to.be.calledTwice;
+    });
+
     it("returns undefined from schema context", async () => {
       const matchSchemaName = sinon.match((key: SchemaKey) => key.compareByName("x"));
       const schemaContext = {
