@@ -7,9 +7,6 @@
  * @module UnifiedSelection
  */
 
-import { HiliteSet, HiliteSetProvider } from "./HiliteSetProvider";
-import { IMetadataProvider } from "./queries/ECMetadata";
-import { IECSqlQueryExecutor } from "./queries/ECSqlCore";
 import { Selectable, Selectables } from "./Selectable";
 import { SelectionChangeEvent, SelectionChangeEventImpl, StorageSelectionChangeEventArgs, StorageSelectionChangeType } from "./SelectionChangeEvent";
 
@@ -86,16 +83,6 @@ export interface SelectionStorage {
     /** Key of the iModel to change selection for. */
     iModelKey: string;
   }): void;
-
-  /** Get the current hilite set iterator for the specified imodel */
-  getHiliteSet(props: {
-    /** iModel to get hilite set for */
-    iModelKey: string;
-    /** ECSql query executor */
-    queryExecutor: IECSqlQueryExecutor;
-    /** EC metadata provider */
-    metadataProvider: IMetadataProvider;
-  }): AsyncIterableIterator<HiliteSet>;
 }
 
 /**
@@ -108,7 +95,6 @@ export function createStorage(): SelectionStorage {
 
 class SelectionStorageImpl implements SelectionStorage {
   private _storage = new Map<string, MultiLevelSelectablesContainer>();
-  private _hiliteSetProviders = new Map<string, HiliteSetProvider>();
   public selectionChangeEvent: SelectionChangeEventImpl;
 
   constructor() {
@@ -143,23 +129,6 @@ class SelectionStorageImpl implements SelectionStorage {
   public clearStorage({ iModelKey }: { iModelKey: string }): void {
     this.clearSelection({ source: "Clear iModel storage", iModelKey });
     this._storage.delete(iModelKey);
-    this._hiliteSetProviders.delete(iModelKey);
-  }
-
-  public getHiliteSet(props: { iModelKey: string; queryExecutor: IECSqlQueryExecutor; metadataProvider: IMetadataProvider }): AsyncIterableIterator<HiliteSet> {
-    const { iModelKey, queryExecutor, metadataProvider } = props;
-    const provider = this.getHiliteSetProvider(iModelKey, queryExecutor, metadataProvider);
-    const selection = this.getSelection({ iModelKey });
-    return provider.getHiliteSet(selection);
-  }
-
-  private getHiliteSetProvider(iModelKey: string, queryExecutor: IECSqlQueryExecutor, metadataProvider: IMetadataProvider) {
-    let provider = this._hiliteSetProviders.get(iModelKey);
-    if (!provider) {
-      provider = HiliteSetProvider.create({ queryExecutor, metadataProvider });
-      this._hiliteSetProviders.set(iModelKey, provider);
-    }
-    return provider;
   }
 
   private getContainer(iModelKey: string): MultiLevelSelectablesContainer {

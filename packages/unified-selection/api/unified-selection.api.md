@@ -5,6 +5,9 @@
 ```ts
 
 // @beta
+export function createCache(storage: SelectionStorage): HiliteSetCache;
+
+// @beta
 export function createStorage(): SelectionStorage;
 
 // @beta
@@ -12,6 +15,19 @@ export interface CustomSelectable {
     data: unknown;
     identifier: string;
     loadInstanceKeys: () => AsyncIterableIterator<SelectableInstanceKey>;
+}
+
+// @beta
+export interface HiliteSetCache {
+    clearCache(props: {
+        iModelKey: string;
+    }): void;
+    dispose(): void;
+    getHiliteSet(props: {
+        iModelKey: string;
+        queryExecutor: IECSqlQueryExecutor;
+        metadataProvider: IMetadataProvider;
+    }): AsyncIterableIterator<HiliteSet>;
 }
 
 // @beta
@@ -75,11 +91,6 @@ export interface SelectionStorage {
     clearStorage(props: {
         iModelKey: string;
     }): void;
-    getHiliteSet(props: {
-        iModelKey: string;
-        queryExecutor: IECSqlQueryExecutor;
-        metadataProvider: IMetadataProvider;
-    }): AsyncIterableIterator<HiliteSet>;
     getSelection(props: {
         iModelKey: string;
         level?: number;

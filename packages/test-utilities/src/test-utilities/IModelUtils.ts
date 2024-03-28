@@ -368,6 +368,60 @@ export function insertFunctionalElement(
   return { className, id };
 }
 
+export function insertGroupInformationModelWithPartition(props: BaseInstanceInsertProps & { codeValue: string; partitionParentId?: Id64String }) {
+  const { codeValue, partitionParentId, ...baseProps } = props;
+  const partitionKey = insertGroupInformationPartition({ ...baseProps, codeValue, parentId: partitionParentId ?? IModel.rootSubjectId });
+  return insertGroupInformationSubModel({ ...baseProps, modeledElementId: partitionKey.id });
+}
+
+export function insertGroupInformationPartition(
+  props: BaseInstanceInsertProps & { codeValue: string; parentId: Id64String } & Partial<Omit<InformationPartitionElementProps, "id" | "parent" | "code">>,
+) {
+  const { builder, classFullName, codeValue, parentId, ...partitionProps } = props;
+  const defaultModelClassName = `BisCore${props.fullClassNameSeparator ?? "."}GroupInformationPartition`;
+  const className = classFullName ?? defaultModelClassName;
+  const partitionId = builder.insertElement({
+    classFullName: className,
+    model: IModel.repositoryModelId,
+    code: builder.createCode(parentId, BisCodeSpec.informationPartitionElement, codeValue),
+    parent: {
+      id: parentId,
+      relClassName: `BisCore${props.fullClassNameSeparator ?? "."}SubjectOwnsPartitionElements`,
+    },
+    ...partitionProps,
+  });
+  return { className, id: partitionId };
+}
+
+export function insertGroupInformationSubModel(
+  props: BaseInstanceInsertProps & { modeledElementId: Id64String } & Partial<Omit<GeometricModel3dProps, "id" | "modeledElement" | "parentModel">>,
+) {
+  const { builder, classFullName, modeledElementId, ...modelProps } = props;
+  const defaultModelClassName = `Generic${props.fullClassNameSeparator ?? "."}GroupModel`;
+  const className = classFullName ?? defaultModelClassName;
+  const modelId = builder.insertModel({
+    classFullName: className,
+    modeledElement: { id: modeledElementId },
+    ...modelProps,
+  });
+  return { className, id: modelId };
+}
+
+export function insertGroupInformationElement(
+  props: BaseInstanceInsertProps & {
+    modelId: Id64String;
+  } & Partial<Omit<FunctionalElementProps, "id" | "parent" | "code" | "model">>,
+) {
+  const { builder, modelId } = props;
+  const className = `Generic${props.fullClassNameSeparator ?? "."}Group`;
+  const id = builder.insertElement({
+    classFullName: className,
+    model: modelId,
+    code: Code.createEmpty(),
+  });
+  return { className, id };
+}
+
 export interface GetFullSchemaXmlProps {
   schemaName: string;
   schemaAlias?: string;

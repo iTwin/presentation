@@ -1,7 +1,9 @@
 sep=;
 Release Tag;API Item
+beta;createCache(storage: SelectionStorage): HiliteSetCache
 beta;createStorage(): SelectionStorage
 beta;CustomSelectable
+beta;HiliteSetCache
 beta;Selectable = SelectableInstanceKey | CustomSelectable
 beta;Selectable
 beta;SelectableIdentifier = SelectableInstanceKey | Pick

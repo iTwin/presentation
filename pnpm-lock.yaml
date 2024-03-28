@@ -1444,6 +1444,13 @@ importers:
         version: 5.0.4
 
   packages/unified-selection:
+    dependencies:
+      rxjs:
+        specifier: ^7.8.1
+        version: 7.8.1
+      rxjs-for-await:
+        specifier: ^1.0.0
+        version: 1.0.0(rxjs@7.8.1)
     devDependencies:
       '@itwin/build-tools':
         specifier: ^4.4.0

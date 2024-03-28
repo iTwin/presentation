@@ -5,9 +5,6 @@
 
 import { expect } from "chai";
 import * as sinon from "sinon";
-import { HiliteSetProvider, HiliteSetProviderProps } from "../unified-selection/HiliteSetProvider";
-import { IMetadataProvider } from "../unified-selection/queries/ECMetadata";
-import { IECSqlQueryExecutor } from "../unified-selection/queries/ECSqlCore";
 import { SelectableInstanceKey, Selectables } from "../unified-selection/Selectable";
 import { createStorage, SelectionStorage } from "../unified-selection/SelectionStorage";
 import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator";
@@ -344,43 +341,6 @@ describe("SelectionStorage", () => {
       selectionStorage.removeFromSelection({ iModelKey, source, selectables: baseSelection });
       selectionStorage.replaceSelection({ iModelKey, source, selectables: [] });
       expect(listenerSpy, "Expected selectionChange.raiseEvent to not be called").to.not.have.been.called;
-    });
-  });
-
-  describe("Hilite set", () => {
-    let factory: sinon.SinonStub<[HiliteSetProviderProps], HiliteSetProvider>;
-
-    beforeEach(() => {
-      const provider = { getHiliteSet: async () => {} } as unknown as HiliteSetProvider;
-      factory = sinon.stub(HiliteSetProvider, "create").returns(provider);
-    });
-
-    afterEach(() => {
-      factory.restore();
-    });
-
-    it("creates provider once for iModel", async () => {
-      // first call for an iModel should create a provider
-      const executor1 = {} as IECSqlQueryExecutor;
-      const executor2 = {} as IECSqlQueryExecutor;
-      const metadataProvider = {} as IMetadataProvider;
-
-      selectionStorage.getHiliteSet({ iModelKey: "model1", queryExecutor: executor1, metadataProvider });
-      expect(factory).to.be.calledOnceWith({ queryExecutor: executor1, metadataProvider });
-      factory.resetHistory();
-
-      // second call with same iModel shouldn't create a new provider
-      selectionStorage.getHiliteSet({ iModelKey: "model1", queryExecutor: executor1, metadataProvider });
-      expect(factory).to.not.be.called;
-
-      // another iModel - new provider
-      selectionStorage.getHiliteSet({ iModelKey: "model2", queryExecutor: executor2, metadataProvider });
-      expect(factory).to.be.calledOnceWith({ queryExecutor: executor2, metadataProvider });
-      factory.resetHistory();
-
-      // make sure we still have provider for the first iModel
-      selectionStorage.getHiliteSet({ iModelKey: "model1", queryExecutor: executor1, metadataProvider });
-      expect(factory).to.not.be.called;
     });
   });
 });
