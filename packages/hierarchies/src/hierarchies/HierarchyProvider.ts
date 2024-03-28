@@ -236,7 +236,7 @@ export class HierarchyProvider {
     );
     // handle nodes' hiding
     const nodesAfterHiding = preProcessedNodes.pipe(
-      createHideIfNoChildrenOperator((n) => this.getChildNodesObservables({ parentNode: n }).hasNodes, false),
+      createHideIfNoChildrenOperator((n) => this.getChildNodesObservables({ parentNode: n }).hasNodes),
       createHideNodesInHierarchyOperator(
         // note: for child nodes created because of hidden parent, we want to use parent's request props (instance filter, limit)
         (n) => this.getChildNodesObservables({ ...props, parentNode: n }).processedNodes,

@@ -31,13 +31,13 @@ describe("hide if no children", () => {
           return new ClassBasedHierarchyLevelDefinitionsFactory({
             metadataProvider,
             hierarchy: {
-              rootNodes: async () => createPhysicalElementsDefinition({ queryFactory, limit: 5 }),
+              rootNodes: async () => createPhysicalElementsHierarchyLevelDefinition({ queryFactory, limit: 5 }),
               childNodes: [
                 {
                   parentNodeClassName: `BisCore.PhysicalElement`,
                   definitions: async ({ parentNode }: DefineInstanceNodeChildHierarchyLevelProps) => {
                     const depth = parentNode.parentKeys.length + 1;
-                    return createPhysicalElementsDefinition({
+                    return createPhysicalElementsHierarchyLevelDefinition({
                       queryFactory,
                       limit: 1000,
                       hideIfNoChildren: true,
@@ -68,13 +68,13 @@ describe("hide if no children", () => {
           return new ClassBasedHierarchyLevelDefinitionsFactory({
             metadataProvider,
             hierarchy: {
-              rootNodes: async () => createPhysicalElementsDefinition({ queryFactory, limit: 5 }),
+              rootNodes: async () => createPhysicalElementsHierarchyLevelDefinition({ queryFactory, limit: 5 }),
               childNodes: [
                 {
                   parentNodeClassName: `BisCore.PhysicalElement`,
                   definitions: async ({ parentNode }: DefineInstanceNodeChildHierarchyLevelProps) => {
                     const depth = parentNode.parentKeys.length + 1;
-                    return createPhysicalElementsDefinition({
+                    return createPhysicalElementsHierarchyLevelDefinition({
                       queryFactory,
                       limit: 1000,
                       hideIfNoChildren: true,
@@ -94,7 +94,7 @@ describe("hide if no children", () => {
   });
 });
 
-async function createPhysicalElementsDefinition(props: {
+async function createPhysicalElementsHierarchyLevelDefinition(props: {
   queryFactory: NodeSelectQueryFactory;
   limit: number;
   hasChildren?: boolean;
