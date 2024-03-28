@@ -253,7 +253,7 @@ function createGenericInstanceFilterRule(condition: PresentationInstanceFilterCo
 
   return {
     operator,
-    value: toGenericInstanceFilterRuleValue(value),
+    value: toGenericInstanceFilterRuleValue(operator, value),
     sourceAlias: propertyAlias,
     propertyName: property.name,
     propertyTypeName: field.type.typeName,
@@ -379,11 +379,16 @@ function parseGenericFilterRuleGroup(
 
 function parseGenericFilterRule(rule: GenericInstanceFilterRule, ctx: GenericFilterParsingContext): PresentationInstanceFilterCondition {
   const field = ctx.findField(rule.propertyName, rule.sourceAlias);
+  let value = rule.value ? rule.value.rawValue : undefined;
+
+  if (value && rule.operator === "like" && typeof value === "string") {
+    value = value.replace(/^%|%$/g, "");
+  }
 
   return {
     field,
     operator: rule.operator,
-    value: rule.value ? { valueFormat: PropertyValueFormat.Primitive, displayValue: rule.value.displayValue, value: rule.value.rawValue } : undefined,
+    value: rule.value ? { valueFormat: PropertyValueFormat.Primitive, displayValue: rule.value.displayValue, value } : undefined,
   };
 }
 
@@ -524,12 +529,22 @@ function toRelationshipStep(path: RelationshipPath): GenericInstanceFilterRelati
   }));
 }
 
-function toGenericInstanceFilterRuleValue(primitiveValue?: PrimitiveValue): GenericInstanceFilterRuleValue | undefined {
+function toGenericInstanceFilterRuleValue(
+  operator: `${PropertyFilterRuleOperator}`,
+  primitiveValue?: PrimitiveValue,
+): GenericInstanceFilterRuleValue | undefined {
   if (!primitiveValue || primitiveValue.value === undefined || !isGenericPrimitiveValueLike(primitiveValue.value)) {
     return undefined;
   }
 
-  return { displayValue: primitiveValue.displayValue ?? "", rawValue: primitiveValue.value };
+  const displayValue = primitiveValue.displayValue ?? "";
+  let rawValue = primitiveValue.value;
+
+  if (operator === "like" && typeof rawValue === "string") {
+    rawValue = `%${rawValue}%`;
+  }
+
+  return { displayValue, rawValue };
 }
 
 function isGenericPrimitiveValueLike(value: Primitives.Value): value is GenericInstanceFilterRuleValue.Values {

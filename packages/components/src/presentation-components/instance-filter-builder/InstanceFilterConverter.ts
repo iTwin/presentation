@@ -109,7 +109,7 @@ function createComparison(
 
   const value = propValue.rawValue;
   if (operator === "like" && typeof value === "string") {
-    return `${propertyAccessor} ${operatorExpression} "%${escapeString(value)}%"`;
+    return `${propertyAccessor} ${operatorExpression} "${escapeString(value)}"`;
   }
 
   let valueExpression = "";
