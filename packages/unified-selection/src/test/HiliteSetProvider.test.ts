@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { HiliteSetProvider } from "../unified-selection/HiliteSetProvider";
+import { createHiliteSetProvider, HiliteSetProvider } from "../unified-selection/HiliteSetProvider";
 import { ECClass, ECSchema } from "../unified-selection/queries/ECMetadata";
 import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow } from "../unified-selection/queries/ECSqlCore";
 import { SelectableInstanceKey, Selectables } from "../unified-selection/Selectable";
@@ -20,9 +20,8 @@ describe("HiliteSetProvider", () => {
       const metadataProvider = {
         getSchema: sinon.stub<[string], Promise<ECSchema | undefined>>(),
       };
-      const result = HiliteSetProvider.create({ queryExecutor, metadataProvider });
+      const result = createHiliteSetProvider({ queryExecutor, metadataProvider });
       expect(result).to.not.be.undefined;
-      expect(result instanceof HiliteSetProvider).to.be.true;
     });
   });
 
@@ -68,8 +67,8 @@ describe("HiliteSetProvider", () => {
         .returns(createFakeQueryReader<ECSqlQueryRow>(elementKeys.length === 0 ? [] : elementKeys.map((k) => ({ ["ECInstanceId"]: k }))));
     }
 
-    async function loadHiliteSet(selection: Selectables) {
-      const iterator = provider.getHiliteSet(selection);
+    async function loadHiliteSet(selectables: Selectables) {
+      const iterator = provider.getHiliteSet({ selectables });
 
       const models: string[] = [];
       const subCategories: string[] = [];
@@ -97,7 +96,7 @@ describe("HiliteSetProvider", () => {
       };
       metadataProvider.getSchema.returns(Promise.resolve(schemaMock as unknown as ECSchema));
       metadataProvider.getSchema.withArgs("Functional").returns(Promise.resolve(undefined));
-      provider = HiliteSetProvider.create({ queryExecutor, metadataProvider });
+      provider = createHiliteSetProvider({ queryExecutor, metadataProvider });
     });
 
     afterEach(() => {

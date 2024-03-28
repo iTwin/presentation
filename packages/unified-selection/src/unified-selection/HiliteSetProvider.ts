@@ -35,39 +35,45 @@ export interface HiliteSetProviderProps {
  * should be hilited based on the supplied `Selectables`.
  * @beta
  */
-export class HiliteSetProvider {
+export interface HiliteSetProvider {
+  /** Get the current hilite set iterator for the specified imodel */
+  getHiliteSet(props: { selectables: Selectables }): AsyncIterableIterator<HiliteSet>;
+}
+
+/**
+ * Creates a hilite set provider.
+ * @beta
+ */
+export function createHiliteSetProvider(props: HiliteSetProviderProps): HiliteSetProvider {
+  return new HiliteSetProviderImpl(props);
+}
+
+class HiliteSetProviderImpl implements HiliteSetProvider {
   private _queryExecutor: IECSqlQueryExecutor;
   private _metadataProvider: IMetadataProvider;
   // Map between a class name and its type
   private _classRelationCache: Map<string, InstanceIdType>;
 
-  private constructor(props: HiliteSetProviderProps) {
+  constructor(props: HiliteSetProviderProps) {
     this._queryExecutor = props.queryExecutor;
     this._metadataProvider = props.metadataProvider;
     this._classRelationCache = new Map<string, InstanceIdType>();
   }
 
   /**
-   * Create a hilite set provider.
-   */
-  public static create(props: HiliteSetProviderProps) {
-    return new HiliteSetProvider(props);
-  }
-
-  /**
    * Get hilite set iterator for supplied `Selectables`.
    */
-  public async *getHiliteSet(selection: Selectables): AsyncIterableIterator<HiliteSet> {
+  public async *getHiliteSet({ selectables }: { selectables: Selectables }): AsyncIterableIterator<HiliteSet> {
     // Map between element ID types and EC instance IDs
     const keysByType = new Map<InstanceIdType, string[]>();
 
-    for (const entry of selection.instanceKeys) {
+    for (const entry of selectables.instanceKeys) {
       for (const key of entry[1]) {
         await this.addKeyByType({ className: entry[0], id: key }, keysByType);
       }
     }
 
-    for (const entry of selection.custom) {
+    for (const entry of selectables.custom) {
       for await (const key of entry[1].loadInstanceKeys()) {
         await this.addKeyByType(key, keysByType);
       }

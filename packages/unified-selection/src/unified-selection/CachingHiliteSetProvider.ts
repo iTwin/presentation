@@ -9,76 +9,75 @@
 
 import { from, Observable, shareReplay } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
-import { HiliteSet, HiliteSetProvider } from "./HiliteSetProvider";
+import { createHiliteSetProvider, HiliteSet, HiliteSetProvider } from "./HiliteSetProvider";
 import { IMetadataProvider } from "./queries/ECMetadata";
 import { IECSqlQueryExecutor } from "./queries/ECSqlCore";
 import { StorageSelectionChangeEventArgs } from "./SelectionChangeEvent";
-import { SelectionStorage } from "./SelectionStorage";
+import { IMODEL_CLOSE_SELECTION_CLEAR_SOURCE, SelectionStorage } from "./SelectionStorage";
+
+/**
+ * Props for creating a `CachingHiliteSetProvider` instance.
+ * @beta
+ */
+export interface CachingHiliteSetProviderProps {
+  selectionStorage: SelectionStorage;
+  iModelProvider: (iModelKey: string) => { queryExecutor: IECSqlQueryExecutor; metadataProvider: IMetadataProvider };
+}
 
 /**
  * Caches hilite set for the current `SelectionStorage` selection
  * so subsequent requests for the same input does not cost
  * @beta
  */
-export interface HiliteSetCache {
+export interface CachingHiliteSetProvider {
   /** Get the current hilite set iterator for the specified imodel */
   getHiliteSet(props: {
     /** iModel to get hilite set for */
     iModelKey: string;
-    /** ECSql query executor */
-    queryExecutor: IECSqlQueryExecutor;
-    /** EC metadata provider */
-    metadataProvider: IMetadataProvider;
   }): AsyncIterableIterator<HiliteSet>;
-
-  /** Clears hilite set cache for a given iModel */
-  clearCache(props: {
-    /** Key of the iModel to change selection for */
-    iModelKey: string;
-  }): void;
 
   /** Disposes the cache. */
   dispose(): void;
 }
 
 /**
- * Creates a hilite set cache. When an iModel is closed `HiliteSetCache.clearCache` function should be called.
+ * Creates a hilite set provider that caches hilite set for selection.
  * @beta
  */
-export function createCache(storage: SelectionStorage): HiliteSetCache {
-  return new HiliteSetCacheImpl(storage);
+export function createCachingHiliteSetProvider(props: CachingHiliteSetProviderProps): CachingHiliteSetProvider {
+  return new CachingHiliteSetProviderImpl(props);
 }
 
-class HiliteSetCacheImpl implements HiliteSetCache {
+class CachingHiliteSetProviderImpl implements CachingHiliteSetProvider {
   private _selectionStorage: SelectionStorage;
   private _hiliteSetProviders = new Map<string, HiliteSetProvider>();
   private _cache = new Map<string, Observable<HiliteSet>>();
   private _removeListener: () => void;
+  private _iModelProvider: (iModelKey: string) => { queryExecutor: IECSqlQueryExecutor; metadataProvider: IMetadataProvider };
 
-  constructor(selectionStorage: SelectionStorage) {
-    this._selectionStorage = selectionStorage;
-    this._removeListener = this._selectionStorage.selectionChangeEvent.addListener((args: StorageSelectionChangeEventArgs) =>
-      this._cache.delete(args.iModelKey),
-    );
+  constructor(props: CachingHiliteSetProviderProps) {
+    this._selectionStorage = props.selectionStorage;
+    this._iModelProvider = props.iModelProvider;
+    this._removeListener = this._selectionStorage.selectionChangeEvent.addListener((args: StorageSelectionChangeEventArgs) => {
+      this._cache.delete(args.iModelKey);
+      if (args.changeType === "clear" && args.source === IMODEL_CLOSE_SELECTION_CLEAR_SOURCE) {
+        this._hiliteSetProviders.delete(args.iModelKey);
+      }
+    });
   }
 
-  public getHiliteSet(props: { iModelKey: string; queryExecutor: IECSqlQueryExecutor; metadataProvider: IMetadataProvider }): AsyncIterableIterator<HiliteSet> {
-    const { iModelKey, queryExecutor, metadataProvider } = props;
+  public getHiliteSet({ iModelKey }: { iModelKey: string }): AsyncIterableIterator<HiliteSet> {
+    const { queryExecutor, metadataProvider } = this._iModelProvider(iModelKey);
     const provider = this.getHiliteSetProvider(iModelKey, queryExecutor, metadataProvider);
     let hiliteSet = this._cache.get(iModelKey);
 
     if (!hiliteSet) {
-      const selection = this._selectionStorage.getSelection({ iModelKey });
-      hiliteSet = from(provider.getHiliteSet(selection)).pipe(shareReplay({ refCount: true }));
+      const selectables = this._selectionStorage.getSelection({ iModelKey });
+      hiliteSet = from(provider.getHiliteSet({ selectables })).pipe(shareReplay({ refCount: true }));
       this._cache.set(iModelKey, hiliteSet);
     }
 
     return eachValueFrom(hiliteSet);
-  }
-
-  public clearCache({ iModelKey }: { iModelKey: string }): void {
-    this._hiliteSetProviders.delete(iModelKey);
-    this._cache.delete(iModelKey);
   }
 
   public dispose(): void {
@@ -90,7 +89,7 @@ class HiliteSetCacheImpl implements HiliteSetCache {
   private getHiliteSetProvider(iModelKey: string, queryExecutor: IECSqlQueryExecutor, metadataProvider: IMetadataProvider) {
     let provider = this._hiliteSetProviders.get(iModelKey);
     if (!provider) {
-      provider = HiliteSetProvider.create({ queryExecutor, metadataProvider });
+      provider = createHiliteSetProvider({ queryExecutor, metadataProvider });
       this._hiliteSetProviders.set(iModelKey, provider);
     }
     return provider;

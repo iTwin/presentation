@@ -10,8 +10,8 @@
  * API for working with unified selection.
  */
 export * from "./unified-selection/Selectable";
-export * from "./unified-selection/SelectionStorage";
-export * from "./unified-selection/HiliteSetCache";
+export { SelectionStorage, createStorage } from "./unified-selection/SelectionStorage";
+export * from "./unified-selection/CachingHiliteSetProvider";
 export {
   StorageSelectionChangeType,
   StorageSelectionChangeEventArgs,
