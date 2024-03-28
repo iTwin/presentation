@@ -22,7 +22,7 @@ describe("models tree", () => {
     cleanup,
     test: async (iModel) => {
       const provider = new StatelessHierarchyProvider({ iModel, getHierarchyFactory });
-      const result = await provider.loadInitialHierarchy();
+      const result = await provider.loadHierarchy({ depth: 2 });
       expect(result).to.be.greaterThan(0);
     },
   });
@@ -33,7 +33,7 @@ describe("models tree", () => {
     cleanup,
     test: async (iModel) => {
       const provider = new StatelessHierarchyProvider({ iModel, getHierarchyFactory });
-      const result = await provider.loadFullHierarchy();
+      const result = await provider.loadHierarchy();
       expect(result).to.be.greaterThan(0);
     },
   });

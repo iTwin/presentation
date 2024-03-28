@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expand, filter, from, mergeAll, of } from "rxjs";
+import { expand, filter, from, mergeAll, of, tap } from "rxjs";
 import { IModelDb } from "@itwin/core-backend";
 import { SchemaContext, SchemaJsonLocater } from "@itwin/ecschema-metadata";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
@@ -33,15 +33,9 @@ export class StatelessHierarchyProvider {
     this._provider = this.createProvider();
   }
 
-  public async loadInitialHierarchy() {
-    return this.loadNodes((node) => node.children && !!node.autoExpand);
-  }
+  public async loadHierarchy(props?: { depth?: number }): Promise<number> {
+    const depth = props?.depth;
 
-  public async loadFullHierarchy() {
-    return this.loadNodes((node) => node.children);
-  }
-
-  private async loadNodes(nodeHasChildren: (node: HierarchyNode) => boolean): Promise<number> {
     let nodeRequestLimit: number | undefined;
     if (this._props.nodeRequestLimit === undefined) {
       nodeRequestLimit = DEFAULT_NODE_REQUEST_LIMIT;
@@ -52,15 +46,17 @@ export class StatelessHierarchyProvider {
     let nodeCount = 0;
     return new Promise<number>((resolve, reject) => {
       const nodesObservable = of<HierarchyNode | undefined>(undefined).pipe(
-        expand((parentNode) => {
-          return from(this._provider.getNodes({ parentNode })).pipe(
-            mergeAll(),
-            filter((node) => nodeHasChildren(node)),
-          );
-        }, nodeRequestLimit),
+        expand(
+          (parentNode) =>
+            from(this._provider.getNodes({ parentNode })).pipe(
+              mergeAll(),
+              tap(() => ++nodeCount),
+              filter((node) => node.children && (!depth || getNodeDepth(node) < depth)),
+            ),
+          nodeRequestLimit,
+        ),
       );
       nodesObservable.subscribe({
-        next: (x) => x && nodeCount++,
         complete: () => resolve(nodeCount),
         error: reject,
       });
@@ -84,4 +80,8 @@ export class StatelessHierarchyProvider {
       queryExecutor: createLimitingECSqlQueryExecutor(createECSqlQueryExecutor(this._props.iModel), rowLimit),
     });
   }
+}
+
+function getNodeDepth(node: HierarchyNode): number {
+  return node.parentKeys.length + 1;
 }

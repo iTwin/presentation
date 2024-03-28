@@ -110,7 +110,7 @@ export function runHierarchyTest(
     },
     test: async (props) => {
       const provider = new StatelessHierarchyProvider(props);
-      const nodeCount = await provider.loadFullHierarchy();
+      const nodeCount = await provider.loadHierarchy();
       if (testProps.expectedNodeCount !== undefined) {
         expect(nodeCount).to.eq(testProps.expectedNodeCount);
       }

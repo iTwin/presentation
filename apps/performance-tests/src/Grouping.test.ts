@@ -8,7 +8,7 @@ import { runHierarchyTest } from "./util/TestUtilities";
 
 describe("grouping", () => {
   const { schemaName, baseClassName, customPropName, itemsPerGroup, defaultClassName } = Datasets.CUSTOM_SCHEMA;
-  const expectedNodeCount = 50000 / itemsPerGroup;
+  const expectedNodeCount = 50_000 + 50_000 / itemsPerGroup;
   const baseFullClassName = `${schemaName}.${baseClassName}`;
 
   runHierarchyTest({
@@ -51,7 +51,7 @@ describe("grouping", () => {
     testName: `by base class (${baseClassQueryLimit} classes)`,
     iModelName: "50k elements",
     fullClassName: baseFullClassName,
-    expectedNodeCount: fullClassNames.length,
+    expectedNodeCount: 50_000 + fullClassNames.length,
     nodeSelectProps: {
       grouping: {
         byBaseClasses: { fullClassNames },
