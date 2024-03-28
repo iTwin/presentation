@@ -10,6 +10,9 @@
 export type OmitOverUnion<T, K extends PropertyKey> = T extends T ? Omit<T, K> : never;
 
 /** @internal */
+export type ArrayElement<ArrayType extends readonly unknown[]> = ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
+
+/** @internal */
 export function trimWhitespace(str: string): string;
 /** @internal */
 export function trimWhitespace(str: string | undefined): string | undefined;

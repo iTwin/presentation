@@ -396,6 +396,7 @@ export type PresentationInstanceFilter = PresentationInstanceFilterConditionGrou
 
 // @beta (undocumented)
 export namespace PresentationInstanceFilter {
+    export function createPrimitiveValueEqualityCondition(field: PropertiesField, operator: "is-equal" | "is-not-equal", value: PrimitiveValue): PresentationInstanceFilterCondition;
     export function fromComponentsPropertyFilter(descriptor: Descriptor, filter: PropertyFilter): PresentationInstanceFilter;
     export function fromGenericInstanceFilter(descriptor: Descriptor, filter: GenericInstanceFilter): PresentationInstanceFilter;
     export function isConditionGroup(filter: PresentationInstanceFilter): filter is PresentationInstanceFilterConditionGroup;

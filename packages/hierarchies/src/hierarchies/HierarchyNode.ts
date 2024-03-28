@@ -62,6 +62,11 @@ export interface LabelGroupingNodeKey {
 export interface PropertyOtherValuesGroupingNodeKey {
   /** Type of the node */
   type: "property-grouping:other";
+  /** Identifiers of properties whose values are grouped under this node. */
+  properties: Array<{
+    className: string;
+    propertyName: string;
+  }>;
 }
 
 /**
@@ -166,6 +171,10 @@ export namespace HierarchyNodeKey {
   export function isPropertyValueGrouping(key: HierarchyNodeKey): key is PropertyValueGroupingNodeKey {
     return isStandard(key) && key.type === "property-grouping:value";
   }
+  /** Checks whether the given node key is a [[PropertyGroupingNodeKey]]. */
+  export function isPropertyGrouping(key: HierarchyNodeKey): key is PropertyGroupingNodeKey {
+    return isPropertyOtherValuesGrouping(key) || isPropertyValueRangeGrouping(key) || isPropertyValueGrouping(key);
+  }
   /**
    * Compares two given keys.
    * @returns
@@ -216,6 +225,20 @@ export namespace HierarchyNodeKey {
         return compareStringsOrUndefined(lhs.groupId, rhs.groupId);
       }
       case "property-grouping:other": {
+        assert(rhs.type === "property-grouping:other");
+        if (lhs.properties.length !== rhs.properties.length) {
+          return lhs.properties.length - rhs.properties.length;
+        }
+        for (let i = 0; i < lhs.properties.length; ++i) {
+          const classCompareResult = compareStrings(lhs.properties[i].className, rhs.properties[i].className);
+          if (classCompareResult !== 0) {
+            return classCompareResult;
+          }
+          const nameCompareResult = compareStrings(lhs.properties[i].propertyName, rhs.properties[i].propertyName);
+          if (nameCompareResult !== 0) {
+            return nameCompareResult;
+          }
+        }
         return 0;
       }
       case "property-grouping:value": {
@@ -380,6 +403,14 @@ export namespace HierarchyNode {
       ? ProcessedGroupingHierarchyNode
       : GroupingHierarchyNode) {
     return HierarchyNodeKey.isPropertyValueRangeGrouping(node.key);
+  }
+  /** Checks whether the given node is a property grouping node */
+  export function isPropertyGroupingNode<TNode extends { key: HierarchyNodeKey }>(
+    node: TNode,
+  ): node is TNode & { key: PropertyGroupingNodeKey; supportsFiltering?: undefined } & (TNode extends ProcessedHierarchyNode
+      ? ProcessedGroupingHierarchyNode
+      : GroupingHierarchyNode) {
+    return HierarchyNodeKey.isPropertyGrouping(node.key);
   }
 }
 
