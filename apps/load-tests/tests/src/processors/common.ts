@@ -86,21 +86,19 @@ export async function loadNodes<TNode>(
     const parentNodes = of<TNode | undefined>(undefined);
     parentNodes
       .pipe(
-        expand(
-          (parentNode) =>
-            of(new StopWatch(undefined, true)).pipe(
-              mergeMap((timer) =>
-                from(provider(parentNode)).pipe(
-                  tap((childNodes) => {
-                    ENABLE_NODES_LOGGING && console.log(`Got ${childNodes.length} nodes for parent ${parentNode ? JSON.stringify(parentNode) : "<root>"}`);
-                    events.emit("histogram", "itwin.nodes_request", timer.current.milliseconds);
-                  }),
-                ),
+        expand((parentNode) =>
+          of(new StopWatch(undefined, true)).pipe(
+            mergeMap((timer) =>
+              from(provider(parentNode)).pipe(
+                tap((childNodes) => {
+                  ENABLE_NODES_LOGGING && console.log(`Got ${childNodes.length} nodes for parent ${parentNode ? JSON.stringify(parentNode) : "<root>"}`);
+                  events.emit("histogram", "itwin.nodes_request", timer.current.milliseconds);
+                }),
               ),
-              mergeAll(),
-              filter((node) => nodeHasChildren(node)),
             ),
-          10,
+            mergeAll(),
+            filter((node) => nodeHasChildren(node)),
+          ),
         ),
       )
       .subscribe({

@@ -17,7 +17,7 @@ export const LOGGING_NAMESPACE = createOperatorLoggingNamespace(OPERATOR_NAME);
  *
  * @internal
  */
-export function createHideIfNoChildrenOperator(hasNodes: (node: ProcessedHierarchyNode) => Observable<boolean>, stopOnFirstChild: boolean) {
+export function createHideIfNoChildrenOperator(hasNodes: (node: ProcessedHierarchyNode) => Observable<boolean>) {
   return function (nodes: Observable<ProcessedHierarchyNode>): Observable<ProcessedHierarchyNode> {
     const sharedNodes = nodes.pipe(
       log({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ (n) => `in: ${createNodeIdentifierForLogging(n)}` }),
@@ -61,8 +61,12 @@ export function createHideIfNoChildrenOperator(hasNodes: (node: ProcessedHierarc
                   map((children) => ({ ...n, children })),
                 );
               }),
-            // when checking for children, determine children one-by-one using a depth-first approach to avoid starting too many queries
-            stopOnFirstChild ? 1 : undefined,
+            // Sending child check requests for all nodes without any limit greatly slows down
+            // the following case:
+            // - NodeX (determining children) -> ... lots of children with "hide if no children" -> ...
+            // We check the nodes with "hide if no children" at most 2 at a time to prefer going deep into
+            // the hierarchy, where we're more likely to find an answer, rather than going wide.
+            2,
           ),
           log({
             category: LOGGING_NAMESPACE,
