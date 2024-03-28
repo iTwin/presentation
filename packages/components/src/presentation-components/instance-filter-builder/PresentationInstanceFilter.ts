@@ -130,6 +130,31 @@ export namespace PresentationInstanceFilter {
   export function isConditionGroup(filter: PresentationInstanceFilter): filter is PresentationInstanceFilterConditionGroup {
     return (filter as any).conditions !== undefined;
   }
+
+  /**
+   * Function that creates equality condition based on supplied [[PropertiesField]] and [[PrimitiveValue]] that is compatible
+   * with `UniquePropertyValuesSelector`.
+   * If [[PrimitiveValue.value]] is `undefined` created condition uses `is-null` or `is-not-null` operator.
+   * @beta
+   */
+  export function createPrimitiveValueEqualityCondition(
+    field: PropertiesField,
+    operator: "is-equal" | "is-not-equal",
+    value: PrimitiveValue,
+  ): PresentationInstanceFilterCondition {
+    if (!isValidPrimitiveValue(value)) {
+      return {
+        field,
+        operator: operator === "is-equal" ? "is-null" : "is-not-null",
+      };
+    }
+
+    return {
+      field,
+      operator,
+      value: createUniqueValue(value),
+    };
+  }
 }
 
 function createPresentationInstanceFilterConditionGroup(descriptor: Descriptor, group: PropertyFilterRuleGroup): PresentationInstanceFilterConditionGroup {
@@ -543,4 +568,22 @@ function isPoint3dLike(value: object): value is { x: number; y: number; z: numbe
 
 function isInstanceKeyLike(value: object): value is { id: string; className: string } {
   return (value as any).id !== undefined && (value as any).className !== undefined;
+}
+
+function isValidPrimitiveValue(val: PrimitiveValue): val is Required<PrimitiveValue> {
+  return val.value !== undefined && val.displayValue !== undefined;
+}
+
+function createUniqueValue(value: Required<PrimitiveValue>): PrimitiveValue | undefined {
+  const { displayValues, groupedRawValues } = serializeUniqueValues([
+    {
+      displayValue: value.displayValue,
+      groupedRawValues: [value.value as Value],
+    },
+  ]);
+  return {
+    displayValue: displayValues,
+    value: groupedRawValues,
+    valueFormat: PropertyValueFormat.Primitive,
+  };
 }

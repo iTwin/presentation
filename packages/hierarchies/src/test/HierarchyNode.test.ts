@@ -60,10 +60,15 @@ describe("HierarchyNodeKey", () => {
     });
 
     it("returns correct results for property other values grouping node keys", () => {
-      expect(HierarchyNodeKey.equals({ type: "property-grouping:other" }, { type: "property-grouping:other" })).to.be.true;
       expect(
         HierarchyNodeKey.equals(
-          { type: "property-grouping:other" },
+          { type: "property-grouping:other", properties: [{ className: "x", propertyName: "y" }] },
+          { type: "property-grouping:other", properties: [{ className: "x", propertyName: "y" }] },
+        ),
+      ).to.be.true;
+      expect(
+        HierarchyNodeKey.equals(
+          { type: "property-grouping:other", properties: [] },
           { type: "property-grouping:value", propertyClassName: "", propertyName: "", formattedPropertyValue: "" },
         ),
       ).to.be.false;
@@ -130,7 +135,7 @@ describe("HierarchyNodeKey", () => {
         { type: "instances", instanceKeys: [] },
         { type: "class-grouping", className: "x" },
         { type: "label-grouping", label: "a" },
-        { type: "property-grouping:other" },
+        { type: "property-grouping:other", properties: [] },
         {
           type: "property-grouping:value",
           propertyClassName: "",
@@ -235,7 +240,49 @@ describe("HierarchyNodeKey", () => {
       });
 
       it("returns correct results for property other values grouping node keys", () => {
-        expect(HierarchyNodeKey.compare({ type: "property-grouping:other" }, { type: "property-grouping:other" })).to.be.eq(0);
+        expect(HierarchyNodeKey.compare({ type: "property-grouping:other", properties: [] }, { type: "property-grouping:other", properties: [] })).to.be.eq(0);
+        expect(
+          HierarchyNodeKey.compare(
+            { type: "property-grouping:other", properties: [{ className: "a", propertyName: "a" }] },
+            { type: "property-grouping:other", properties: [{ className: "b", propertyName: "b" }] },
+          ),
+        ).to.be.eq(-1);
+        expect(
+          HierarchyNodeKey.compare(
+            { type: "property-grouping:other", properties: [{ className: "x", propertyName: "a" }] },
+            { type: "property-grouping:other", properties: [{ className: "x", propertyName: "b" }] },
+          ),
+        ).to.be.eq(-1);
+        expect(
+          HierarchyNodeKey.compare(
+            { type: "property-grouping:other", properties: [{ className: "a", propertyName: "a" }] },
+            {
+              type: "property-grouping:other",
+              properties: [
+                { className: "a", propertyName: "a" },
+                { className: "b", propertyName: "b" },
+              ],
+            },
+          ),
+        ).to.be.eq(-1);
+        expect(
+          HierarchyNodeKey.compare(
+            { type: "property-grouping:other", properties: [{ className: "b", propertyName: "b" }] },
+            { type: "property-grouping:other", properties: [{ className: "a", propertyName: "a" }] },
+          ),
+        ).to.be.eq(1);
+        expect(
+          HierarchyNodeKey.compare(
+            {
+              type: "property-grouping:other",
+              properties: [
+                { className: "a", propertyName: "a" },
+                { className: "b", propertyName: "b" },
+              ],
+            },
+            { type: "property-grouping:other", properties: [{ className: "a", propertyName: "a" }] },
+          ),
+        ).to.be.eq(1);
       });
 
       it("returns correct results for property value grouping node keys", () => {
@@ -369,7 +416,7 @@ describe("HierarchyNode", () => {
     children: false,
   };
   const propertyOtherValuesGroupingNode: GroupingHierarchyNode = {
-    key: { type: "property-grouping:other" },
+    key: { type: "property-grouping:other", properties: [] },
     groupedInstanceKeys: [],
     label: "other property grouping node",
     parentKeys: [],
@@ -506,6 +553,18 @@ describe("HierarchyNode", () => {
       expect(HierarchyNode.isPropertyValueRangeGroupingNode(propertyOtherValuesGroupingNode)).to.be.false;
       expect(HierarchyNode.isPropertyValueRangeGroupingNode(propertyValueGroupingNode)).to.be.false;
       expect(HierarchyNode.isPropertyValueRangeGroupingNode(propertyValueRangeGroupingNode)).to.be.true;
+    });
+  });
+
+  describe("isPropertyGroupingNode", () => {
+    it("returns correct result for different types of nodes", () => {
+      expect(HierarchyNode.isPropertyGroupingNode(customNode)).to.be.false;
+      expect(HierarchyNode.isPropertyGroupingNode(instancesNode)).to.be.false;
+      expect(HierarchyNode.isPropertyGroupingNode(classGroupingNode)).to.be.false;
+      expect(HierarchyNode.isPropertyGroupingNode(labelGroupingNode)).to.be.false;
+      expect(HierarchyNode.isPropertyGroupingNode(propertyOtherValuesGroupingNode)).to.be.true;
+      expect(HierarchyNode.isPropertyGroupingNode(propertyValueGroupingNode)).to.be.true;
+      expect(HierarchyNode.isPropertyGroupingNode(propertyValueRangeGroupingNode)).to.be.true;
     });
   });
 });
