@@ -2,6 +2,7 @@
   "name": "@itwin/presentation-hierarchies",
   "version": "0.0.0",
   "description": "A package for creating hierarchies based on data in iTwin.js iModels.",
+  "license": "MIT",
   "private": true,
   "repository": {
     "type": "git",
@@ -38,6 +39,7 @@
   "dependencies": {
     "@itwin/core-bentley": "^4.4.0",
     "@itwin/core-common": "^4.4.0",
+    "@itwin/core-geometry": "^4.4.0",
     "natural-compare-lite": "^1.4.0",
     "rxjs": "^7.8.1",
     "rxjs-for-await": "^1.0.0"

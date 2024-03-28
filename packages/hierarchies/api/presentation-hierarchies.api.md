@@ -553,6 +553,12 @@ export namespace HierarchyNode {
         key: LabelGroupingNodeKey;
         supportsFiltering?: undefined;
     } & (TNode extends ProcessedHierarchyNode ? ProcessedGroupingHierarchyNode : GroupingHierarchyNode);
+    export function isPropertyGroupingNode<TNode extends {
+        key: HierarchyNodeKey;
+    }>(node: TNode): node is TNode & {
+        key: PropertyGroupingNodeKey;
+        supportsFiltering?: undefined;
+    } & (TNode extends ProcessedHierarchyNode ? ProcessedGroupingHierarchyNode : GroupingHierarchyNode);
     export function isPropertyOtherValuesGroupingNode<TNode extends {
         key: HierarchyNodeKey;
     }>(node: TNode): node is TNode & {
@@ -634,6 +640,7 @@ export namespace HierarchyNodeKey {
     export function isGrouping(key: HierarchyNodeKey): key is GroupingNodeKey;
     export function isInstances(key: HierarchyNodeKey): key is InstancesNodeKey;
     export function isLabelGrouping(key: HierarchyNodeKey): key is LabelGroupingNodeKey;
+    export function isPropertyGrouping(key: HierarchyNodeKey): key is PropertyGroupingNodeKey;
     export function isPropertyOtherValuesGrouping(key: HierarchyNodeKey): key is PropertyOtherValuesGroupingNodeKey;
     export function isPropertyValueGrouping(key: HierarchyNodeKey): key is PropertyValueGroupingNodeKey;
     export function isPropertyValueRangeGrouping(key: HierarchyNodeKey): key is PropertyValueRangeGroupingNodeKey;
@@ -990,6 +997,10 @@ export type PropertyGroupingNodeKey = PropertyValueRangeGroupingNodeKey | Proper
 
 // @beta
 export interface PropertyOtherValuesGroupingNodeKey {
+    properties: Array<{
+        className: string;
+        propertyName: string;
+    }>;
     type: "property-grouping:other";
 }
 

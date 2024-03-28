@@ -31,6 +31,7 @@ describe("Stateless hierarchy builder", () => {
     function createHierarchyWithSpecifiedGrouping(
       imodel: IModelConnection,
       specifiedGrouping: ECSqlSelectClauseGroupingParams,
+      labelProperty?: string,
     ): IHierarchyLevelDefinitionsFactory {
       const selectQueryFactory = new NodeSelectQueryFactory(createMetadataProvider(imodel));
       return {
@@ -44,7 +45,7 @@ describe("Stateless hierarchy builder", () => {
                   SELECT ${await selectQueryFactory.createSelectClause({
                     ecClassId: { selector: `this.ECClassId` },
                     ecInstanceId: { selector: `this.ECInstanceId` },
-                    nodeLabel: { selector: `this.UserLabel` },
+                    nodeLabel: { selector: `this.${labelProperty ?? "CodeValue"}` },
                     grouping: specifiedGrouping,
                   })}
                   FROM ${subjectClassName} this
@@ -119,7 +120,7 @@ describe("Stateless hierarchy builder", () => {
         });
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, baseClassAutoExpandSingleChild) }),
+          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, baseClassAutoExpandSingleChild, `ECInstanceId`) }),
           expect: [
             NodeValidators.createForClassGroupingNode({
               label: "Information Reference",
@@ -202,7 +203,7 @@ describe("Stateless hierarchy builder", () => {
         });
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, classAutoExpandSingleChild) }),
+          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, classAutoExpandSingleChild, `ECInstanceId`) }),
           expect: [
             NodeValidators.createForClassGroupingNode({
               className: "BisCore.Subject",
@@ -283,7 +284,7 @@ describe("Stateless hierarchy builder", () => {
         });
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, labelAutoExpandSingleChild) }),
+          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, labelAutoExpandSingleChild, "UserLabel") }),
           expect: [
             NodeValidators.createForLabelGroupingNode({
               autoExpand: true,
@@ -299,11 +300,11 @@ describe("Stateless hierarchy builder", () => {
               autoExpand: false,
               children: [
                 NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject1],
+                  instanceKeys: [keys.childSubject2],
                   children: false,
                 }),
                 NodeValidators.createForInstanceNode({
-                  instanceKeys: [keys.childSubject2],
+                  instanceKeys: [keys.childSubject1],
                   children: false,
                 }),
               ],
@@ -374,7 +375,7 @@ describe("Stateless hierarchy builder", () => {
         });
 
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, propertiesAutoExpandSingleChild) }),
+          provider: createProvider({ imodel, hierarchy: createHierarchyWithSpecifiedGrouping(imodel, propertiesAutoExpandSingleChild, "ECInstanceId") }),
           expect: [
             NodeValidators.createForPropertyValueGroupingNode({
               autoExpand: false,

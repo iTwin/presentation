@@ -50,6 +50,7 @@ export function TreeRenderer({
                 className="filtering-action-button"
                 styleType="borderless"
                 size="small"
+                title="Clear active filter"
                 onClick={(e) => {
                   removeHierarchyLevelFilter(node.id);
                   e.stopPropagation();
@@ -63,6 +64,7 @@ export function TreeRenderer({
                 className="filtering-action-button"
                 styleType="borderless"
                 size="small"
+                title="Apply filter"
                 onClick={(e) => {
                   const options = getHierarchyLevelFilteringOptions(node.id);
                   if (options) {

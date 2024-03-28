@@ -1,5 +1,14 @@
 # Change Log - @itwin/presentation-components
 
+## 5.0.1
+
+### Patch Changes
+
+- [#492](https://github.com/iTwin/presentation/pull/492): Avoid removing instances explicitly added to unified selection when grouping node is unselected.
+- [#494](https://github.com/iTwin/presentation/pull/494): Updated `usePresentationTableWithUnifiedSelection` to work outside `UnifiedSelectionContextProvider`
+- [#464](https://github.com/iTwin/presentation/pull/464): Fixed navigation property editor dropdown layout in property grid.
+- [#493](https://github.com/iTwin/presentation/pull/493): Updated `UnifiedSelectionTreeEventHandler` to correctly handle unified selection change when it is not updated immediatly after `add`|`replace`|`remove`|`clear` action.
+
 ## 5.0.0
 
 ### Major Changes
@@ -57,7 +66,10 @@
     _before_
 
     ```tsx
-    const { applyFilter } = useHierarchyLevelFiltering({ nodeLoader, modelSource });
+    const { applyFilter } = useHierarchyLevelFiltering({
+      nodeLoader,
+      modelSource,
+    });
     const [filterNode, setFilterNode] = useState<PresentationTreeNodeItem>();
     const onFilterChanged = (filter: PresentationInstanceFilterInfo) => {
       if (filterNode) {
@@ -69,7 +81,10 @@
     _after_
 
     ```tsx
-    const { applyFilter } = useHierarchyLevelFiltering({ nodeLoader, modelSource });
+    const { applyFilter } = useHierarchyLevelFiltering({
+      nodeLoader,
+      modelSource,
+    });
     const [filterNodeId, setFilterNodeId] = useState<string>();
     const onFilterChanged = (filter: PresentationInstanceFilterInfo) => {
       if (filterNodeId) {
@@ -100,7 +115,7 @@
       const descriptor = await loadDescriptor(inputKeys);
       return { descriptor, inputKeys };
     }}
-  />
+  />;
   ```
 
 ### Minor Changes
@@ -118,7 +133,7 @@
 - [#193](https://github.com/iTwin/presentation/pull/193): **Instance filter builder / dialog:** Show a validation error message when entered property value is invalid.
 
 - [#176](https://github.com/iTwin/presentation/pull/176): **Instance filter builder / dialog:** Added unique values selector when using `Equal` or `Not Equal` operators. The component provides a drop-down of values available for selected property.
-  
+
   - `null` values are omitted. `"Is Null"` and `"Is Not Null"` operators should be used instead.
   - For empty non `null` values _Empty Value_ option is shown in selector.
 
@@ -163,9 +178,7 @@
     <PresentationTree
       {...props}
       state={state}
-      treeRenderer={(treeProps) => (
-        <PresentationTreeRenderer {...treeProps} />
-      )}
+      treeRenderer={(treeProps) => <PresentationTreeRenderer {...treeProps} />}
     />
     ```
 

@@ -66,10 +66,10 @@ export interface UnifiedSelectionTreeEventHandlerParams {
  * @public
  */
 export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implements IDisposable {
-  private _selectionHandler: SelectionHandler;
   private _dataProvider: IPresentationTreeDataProvider;
   private _modelSource: TreeModelSource;
-  private _unregisterModelChangedListener: () => void;
+  private _selectionSourceName: string;
+  private _listeners: Array<() => void> = [];
 
   private _cancelled = new Subject<void>();
 
@@ -80,17 +80,9 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
     });
     this._dataProvider = params.nodeLoader.dataProvider;
     this._modelSource = params.nodeLoader.modelSource;
-    const name = params.name ?? `Tree_${this._dataProvider.rulesetId}_${Guid.createValue()}`;
-    this._selectionHandler = params.selectionHandler
-      ? params.selectionHandler
-      : /* istanbul ignore next */ new SelectionHandler({
-          manager: Presentation.selection,
-          name,
-          imodel: this._dataProvider.imodel,
-          rulesetId: this._dataProvider.rulesetId,
-        });
-    this._selectionHandler.onSelect = this.onSelect.bind(this);
-    this._unregisterModelChangedListener = this._modelSource.onModelChanged.addListener((args) => this.selectNodes(args[1]));
+    this._selectionSourceName = params.name ?? `Tree_${this._dataProvider.rulesetId}_${Guid.createValue()}`;
+    this._listeners.push(Presentation.selection.selectionChange.addListener((args) => this.onSelectionChanged(args)));
+    this._listeners.push(this._modelSource.onModelChanged.addListener((args) => this.selectNodes(args[1])));
     this.selectNodes();
   }
 
@@ -101,8 +93,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
   public override dispose() {
     super.dispose();
     this._cancelled.next();
-    this._selectionHandler.dispose();
-    this._unregisterModelChangedListener();
+    this._listeners.forEach((dispose) => dispose());
   }
 
   public override onSelectionModified({ modifications }: TreeSelectionModificationEventArgs) {
@@ -111,14 +102,11 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
       tap({
         next: ({ selectedNodeItems, deselectedNodeItems }) => {
           if (selectedNodeItems.length !== 0) {
-            this._selectionHandler.addToSelection(this.createKeysForSelection(selectedNodeItems, SelectionChangeType.Add));
+            this.addToSelection(selectedNodeItems);
           }
           if (deselectedNodeItems.length !== 0) {
-            this._selectionHandler.removeFromSelection(this.createKeysForSelection(deselectedNodeItems, SelectionChangeType.Remove));
+            this.removeFromSelection(deselectedNodeItems);
           }
-        },
-        complete: () => {
-          this.selectNodes();
         },
       }),
     );
@@ -137,13 +125,10 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
           }
           if (firstEmission) {
             firstEmission = false;
-            this._selectionHandler.replaceSelection(this.createKeysForSelection(selectedNodeItems, SelectionChangeType.Replace));
+            this.replaceSelection(selectedNodeItems);
             return;
           }
-          this._selectionHandler.addToSelection(this.createKeysForSelection(selectedNodeItems, SelectionChangeType.Add));
-        },
-        complete: () => {
-          this.selectNodes();
+          this.addToSelection(selectedNodeItems);
         },
       }),
     );
@@ -206,8 +191,38 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
     return SelectionHelper.getKeysForSelection(nodeKeys);
   }
 
-  private onSelect(evt: SelectionChangeEventArgs) {
-    if (evt.source === this._selectionHandler.name) {
+  private addToSelection(nodes: TreeNodeItem[]) {
+    Presentation.selection.addToSelection(
+      this._selectionSourceName,
+      this._dataProvider.imodel,
+      this.createKeysForSelection(nodes, SelectionChangeType.Add),
+      0,
+      this._dataProvider.rulesetId,
+    );
+  }
+
+  private removeFromSelection(nodes: TreeNodeItem[]) {
+    Presentation.selection.removeFromSelection(
+      this._selectionSourceName,
+      this._dataProvider.imodel,
+      this.createKeysForSelection(nodes, SelectionChangeType.Remove),
+      0,
+      this._dataProvider.rulesetId,
+    );
+  }
+
+  private replaceSelection(nodes: TreeNodeItem[]) {
+    Presentation.selection.replaceSelection(
+      this._selectionSourceName,
+      this._dataProvider.imodel,
+      this.createKeysForSelection(nodes, SelectionChangeType.Replace),
+      0,
+      this._dataProvider.rulesetId,
+    );
+  }
+
+  private onSelectionChanged(evt: SelectionChangeEventArgs) {
+    if (evt.imodel !== this._dataProvider.imodel) {
       return;
     }
 
@@ -219,7 +234,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
   }
 
   private updateAllNodes() {
-    const selection = this._selectionHandler.getSelection();
+    const selection = Presentation.selection.getSelection(this._dataProvider.imodel);
     this._modelSource.modifyModel((model: MutableTreeModel) => {
       for (const node of model.iterateTreeModelNodes()) {
         this.updateNodeSelectionState(node, selection);
@@ -233,7 +248,7 @@ export class UnifiedSelectionTreeEventHandler extends TreeEventHandler implement
       return;
     }
 
-    const selection = this._selectionHandler.getSelection();
+    const selection = Presentation.selection.getSelection(this._dataProvider.imodel);
     this._modelSource.modifyModel((model: MutableTreeModel) => {
       for (const nodeId of affectedNodeIds) {
         const node = model.getNode(nodeId);

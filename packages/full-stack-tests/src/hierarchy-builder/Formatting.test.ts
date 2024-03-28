@@ -843,7 +843,7 @@ describe("Stateless hierarchy builder", () => {
         },
       };
 
-      const provider = createProvider({ imodel: emptyIModel, hierarchy });
+      const provider = createProvider({ imodel: emptyIModel, hierarchy, queryCacheSize: 10 });
       const queryReaderSpy = sinon.spy(emptyIModel, "createQueryReader");
       await validateHierarchy({
         provider,
