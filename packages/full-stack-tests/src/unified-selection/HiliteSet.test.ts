@@ -13,6 +13,8 @@ import {
   insertDrawingModelWithPartition,
   insertFunctionalElement,
   insertFunctionalModelWithPartition,
+  insertGroupInformationElement,
+  insertGroupInformationModelWithPartition,
   insertPhysicalElement,
   insertPhysicalModelWithPartition,
   insertSpatialCategory,
@@ -25,11 +27,12 @@ import { ECSchemaRpcInterface } from "@itwin/ecschema-rpcinterface-common";
 import { ECSchemaRpcImpl } from "@itwin/ecschema-rpcinterface-impl";
 import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { buildTestIModel, initialize, terminate } from "@itwin/presentation-testing";
-import { createStorage, SelectableInstanceKey, SelectionStorage } from "@itwin/unified-selection";
+import { createCache, createStorage, HiliteSetCache, SelectableInstanceKey, SelectionStorage } from "@itwin/unified-selection";
 import { createMetadataProvider } from "../hierarchy-builder/Utils";
 
 describe("HiliteSet", () => {
   let storage: SelectionStorage;
+  let hiliteSetCache: HiliteSetCache;
 
   before(async () => {
     await initialize();
@@ -45,10 +48,11 @@ describe("HiliteSet", () => {
 
   beforeEach(async () => {
     storage = createStorage();
+    hiliteSetCache = createCache(storage);
   });
 
   async function loadHiliteSet(iModel: IModelConnection) {
-    const iterator = storage.getHiliteSet({
+    const iterator = hiliteSetCache.getHiliteSet({
       iModelKey: iModel.key,
       queryExecutor: createECSqlQueryExecutor(iModel),
       metadataProvider: createMetadataProvider(iModel),
@@ -371,6 +375,62 @@ describe("HiliteSet", () => {
         });
 
         storage.addToSelection({ source: "Test", iModelKey: iModel.key, selectables: [functionalElement!] });
+        const hiliteSet = await loadHiliteSet(iModel);
+
+        expect(hiliteSet.models).to.be.empty;
+        expect(hiliteSet.subCategories).to.be.empty;
+        expect(hiliteSet.elements)
+          .to.have.lengthOf(expectedElements!.length)
+          .and.to.include.members(expectedElements!.map((k) => k.id));
+      });
+    });
+
+    describe("Hilites GroupInformationElement", () => {
+      it("hilites group information element related physical elements", async function () {
+        let groupInformationElement: SelectableInstanceKey;
+        let expectedElements: SelectableInstanceKey[];
+        // eslint-disable-next-line deprecation/deprecation
+        const iModel = await buildTestIModel(this, async (builder) => {
+          const groupModel = insertGroupInformationModelWithPartition({ builder, codeValue: "group information model" });
+          const physicalModelKey = insertPhysicalModelWithPartition({ builder, codeValue: "test physical model" });
+          const categoryKey = insertSpatialCategory({ builder, codeValue: "test category" });
+          groupInformationElement = insertGroupInformationElement({
+            builder,
+            modelId: groupModel.id,
+          });
+          const physicalElementGroupMember = insertPhysicalElement({
+            builder,
+            userLabel: "child element 1",
+            modelId: physicalModelKey.id,
+            categoryId: categoryKey.id,
+          });
+          builder.insertRelationship({
+            sourceId: groupInformationElement.id,
+            targetId: physicalElementGroupMember.id,
+            classFullName: "BisCore.ElementGroupsMembers",
+          });
+          const physicalElementGroupMember2 = insertPhysicalElement({
+            builder,
+            userLabel: "child element 2",
+            modelId: physicalModelKey.id,
+            categoryId: categoryKey.id,
+          });
+          builder.insertRelationship({
+            sourceId: groupInformationElement.id,
+            targetId: physicalElementGroupMember2.id,
+            classFullName: "BisCore.ElementGroupsMembers",
+          });
+          const physicalElementGroupMemberChild = insertPhysicalElement({
+            builder,
+            userLabel: "child 1 child element",
+            modelId: physicalModelKey.id,
+            categoryId: categoryKey.id,
+            parentId: physicalElementGroupMember.id,
+          });
+          expectedElements = [physicalElementGroupMember, physicalElementGroupMember2, physicalElementGroupMemberChild];
+        });
+
+        storage.addToSelection({ source: "Test", iModelKey: iModel.key, selectables: [groupInformationElement!] });
         const hiliteSet = await loadHiliteSet(iModel);
 
         expect(hiliteSet.models).to.be.empty;
