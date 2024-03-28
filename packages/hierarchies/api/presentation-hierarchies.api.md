@@ -498,6 +498,7 @@ export { GenericInstanceFilterRuleValue }
 // @beta
 export interface GetHierarchyNodesProps {
     hierarchyLevelSizeLimit?: number | "unbounded";
+    ignoreCache?: boolean;
     instanceFilter?: GenericInstanceFilter;
     parentNode: ParentHierarchyNode | undefined;
 }
