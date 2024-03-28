@@ -315,8 +315,8 @@ export class HierarchyProvider {
   private getCachedObservableEntry(props: GetHierarchyNodesProps): Observable<CachedNodesObservableEntry> {
     const loggingCategory = `${LOGGING_NAMESPACE}.GetCachedObservableEntry`;
     const { parentNode, ...restProps } = props;
-    const cached = this._nodesCache.get(props);
-    if (!props.ignoreCache && cached) {
+    const cached = props.ignoreCache ? undefined : this._nodesCache.get(props);
+    if (cached) {
       // istanbul ignore next
       doLog({
         category: loggingCategory,

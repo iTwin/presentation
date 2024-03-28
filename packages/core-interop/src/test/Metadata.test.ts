@@ -75,8 +75,7 @@ describe("createMetadataProvider", () => {
       } as unknown as SchemaContext;
 
       const provider = createMetadataProvider(schemaContext);
-      await provider.getSchema("x");
-      await provider.getSchema("x");
+      await Promise.all([provider.getSchema("x"), provider.getSchema("x")]);
 
       // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(schemaContext.getSchema).to.be.calledOnce;

@@ -59,18 +59,14 @@ export class HierarchyLoader implements IHierarchyLoader {
       }),
     ).pipe(
       catchError((err) => {
-        const node: TreeModelInfoNode = {
+        const nodeProps = {
           id: `${parent.id ?? ""}-${err.message}`,
           parentId: parent.id,
-          type: "Unknown",
-          message: "Failed to create hierarchy level",
         };
         if (err instanceof RowsLimitExceededError) {
-          node.type = "ResultSetTooLarge";
-          node.message = err.message;
-          return of([node]);
+          return of([{ ...nodeProps, type: "ResultSetTooLarge", message: err.message } as TreeModelInfoNode]);
         }
-        return of([node]);
+        return of([{ ...nodeProps, type: "Unknown", message: "Failed to create hierarchy level" } as TreeModelInfoNode]);
       }),
       map(
         (childNodes): LoadedHierarchyPart => ({
