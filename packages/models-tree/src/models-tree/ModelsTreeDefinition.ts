@@ -314,11 +314,11 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
     instanceFilter,
   }: DefineInstanceNodeChildHierarchyLevelProps): Promise<HierarchyLevelDefinition> {
     function createModelIdsSelector(): string {
-      // Note: `json_array` function only accepts up to 128 arguments and we may have more `modelIds` than that. As a workaround,
+      // Note: `json_array` function only accepts up to 127 arguments and we may have more `modelIds` than that. As a workaround,
       // we're creating an array of arrays
       const slices = new Array<Id64String[]>();
-      for (let sliceStartIndex = 0; sliceStartIndex < modelIds.length; sliceStartIndex += 128) {
-        let sliceEndIndex: number | undefined = sliceStartIndex + 128;
+      for (let sliceStartIndex = 0; sliceStartIndex < modelIds.length; sliceStartIndex += 127) {
+        let sliceEndIndex: number | undefined = sliceStartIndex + 127;
         if (sliceEndIndex > modelIds.length) {
           sliceEndIndex = undefined;
         }
