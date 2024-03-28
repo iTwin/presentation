@@ -1,5 +1,11 @@
 # Change Log - @itwin/presentation-components
 
+## 5.1.0
+
+### Minor Changes
+
+- [#499](https://github.com/iTwin/presentation/pull/499): Added `PresentationInstanceFilter.createPrimitiveValueEqualityCondition` function to provide a convenient way for creating equality filter conditions compatible with `UniquePropertyValuesSelector`.
+
 ## 5.0.1
 
 ### Patch Changes

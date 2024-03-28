@@ -1,5 +1,13 @@
 # Change Log - @itwin/presentation-testing
 
+## 5.0.2
+
+### Patch Changes
+
+- [#498](https://github.com/iTwin/presentation/pull/498): Fix invalid file name being created when input string contains ` or ' characters.
+- Updated dependencies:
+  - @itwin/presentation-components@5.1.0
+
 ## 5.0.1
 
 ### Patch Changes
