@@ -6,7 +6,7 @@
 import fs from "fs";
 import path from "path";
 import { insertPhysicalElement, insertPhysicalModelWithPartition, insertSpatialCategory } from "presentation-test-utilities";
-import { createIModel } from "./util/IModelUtilities";
+import { createIModel } from "./IModelUtilities";
 
 export const IMODEL_NAMES = ["baytown", "50k elements"] as const;
 export type IModelName = (typeof IMODEL_NAMES)[number];

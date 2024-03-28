@@ -34,7 +34,7 @@ export function loadInitialHierarchy(context: ScenarioContext, events: EventEmit
   const timer = new StopWatch(undefined, true);
   void loadNodes(context, events, createProvider(context, events), (node) => !!node.hasChildren && !!node.isExpanded)
     .then(() => {
-      events.emit("histogram", `initial-load-${getCurrentIModelName(context)}`, timer.current.milliseconds);
+      events.emit("histogram", `Initial Models Tree Load: ${getCurrentIModelName(context)}`, timer.current.milliseconds);
     })
     .then(() => {
       next();
@@ -45,7 +45,7 @@ export function loadFullHierarchy(context: ScenarioContext, events: EventEmitter
   const timer = new StopWatch(undefined, true);
   void loadNodes(context, events, createProvider(context, events), (node) => !!node.hasChildren)
     .then(() => {
-      events.emit("histogram", `full-load-${getCurrentIModelName(context)}`, timer.current.milliseconds);
+      events.emit("histogram", `Full Models Tree Load:${getCurrentIModelName(context)}`, timer.current.milliseconds);
     })
     .then(() => {
       next();

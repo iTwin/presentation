@@ -21,7 +21,7 @@ export interface Summary {
  */
 export class BlockHandler {
   private readonly _samples = new SortedArray<number>((a, b) => a - b);
-  private _timer?: NodeJS.Timer;
+  private _timer?: NodeJS.Timeout;
 
   public getSummary(): Summary {
     const arr = this._samples.extractArray();
@@ -44,7 +44,7 @@ export class BlockHandler {
    */
   public start(threshold: number = 20, interval: number = 10) {
     this._samples.clear();
-    this._timer = blocked((time) => this._samples.insert(time), { threshold, interval });
+    this._timer = blocked((time) => this._samples.insert(time), { threshold, interval }) as NodeJS.Timeout;
   }
 
   /** Stops the blocking timer. */
