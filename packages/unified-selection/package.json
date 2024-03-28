@@ -34,7 +34,10 @@
     "extract-api": "betools extract-api --entry=unified-selection --apiReportFolder=./api --apiReportTempFolder=./api/temp --apiSummaryFolder=./api",
     "check-internal": "node ../../scripts/checkInternal.js --apiSummary ./api/unified-selection.api.md"
   },
-  "dependencies": {},
+  "dependencies": {
+    "rxjs": "^7.8.1",
+    "rxjs-for-await": "^1.0.0"
+  },
   "devDependencies": {
     "@itwin/build-tools": "^4.4.0",
     "@itwin/eslint-plugin": "4.0.0-dev.48",

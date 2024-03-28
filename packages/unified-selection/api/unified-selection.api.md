@@ -5,6 +5,28 @@
 ```ts
 
 // @beta
+export interface CachingHiliteSetProvider {
+    dispose(): void;
+    getHiliteSet(props: {
+        iModelKey: string;
+    }): AsyncIterableIterator<HiliteSet>;
+}
+
+// @beta
+export interface CachingHiliteSetProviderProps {
+    // (undocumented)
+    iModelProvider: (iModelKey: string) => {
+        queryExecutor: IECSqlQueryExecutor;
+        metadataProvider: IMetadataProvider;
+    };
+    // (undocumented)
+    selectionStorage: SelectionStorage;
+}
+
+// @beta
+export function createCachingHiliteSetProvider(props: CachingHiliteSetProviderProps): CachingHiliteSetProvider;
+
+// @beta
 export function createStorage(): SelectionStorage;
 
 // @beta

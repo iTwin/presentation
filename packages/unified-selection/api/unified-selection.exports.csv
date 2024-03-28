@@ -1,5 +1,8 @@
 sep=;
 Release Tag;API Item
+beta;CachingHiliteSetProvider
+beta;CachingHiliteSetProviderProps
+beta;createCachingHiliteSetProvider(props: CachingHiliteSetProviderProps): CachingHiliteSetProvider
 beta;createStorage(): SelectionStorage
 beta;CustomSelectable
 beta;Selectable = SelectableInstanceKey | CustomSelectable

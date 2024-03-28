@@ -6,7 +6,7 @@
 import fs from "fs";
 import { getFullSchemaXml, TestIModelBuilder } from "presentation-test-utilities";
 import { IModelDb, SnapshotDb } from "@itwin/core-backend";
-import { BisCodeSpec, Code, ElementAspectProps, ElementProps, ModelProps } from "@itwin/core-common";
+import { BisCodeSpec, Code, ElementAspectProps, ElementProps, ModelProps, RelationshipProps } from "@itwin/core-common";
 
 export async function createIModel(name: string, localPath: string, cb: (builder: BackendTestIModelBuilder) => void | Promise<void>) {
   fs.rmSync(localPath, { force: true });
@@ -33,6 +33,10 @@ class BackendTestIModelBuilder implements TestIModelBuilder {
 
   public insertAspect(props: ElementAspectProps): string {
     return this._iModel.elements.insertAspect(props);
+  }
+
+  public insertRelationship(props: RelationshipProps): string {
+    return this._iModel.relationships.insertInstance(props);
   }
 
   public createCode(scopeModelId: string, codeSpecName: BisCodeSpec, codeValue: string): Code {

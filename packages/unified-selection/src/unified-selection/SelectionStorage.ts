@@ -93,6 +93,9 @@ export function createStorage(): SelectionStorage {
   return new SelectionStorageImpl();
 }
 
+/** @internal */
+export const IMODEL_CLOSE_SELECTION_CLEAR_SOURCE = "Unified selection storage: clear";
+
 class SelectionStorageImpl implements SelectionStorage {
   private _storage = new Map<string, MultiLevelSelectablesContainer>();
   public selectionChangeEvent: SelectionChangeEventImpl;
@@ -127,7 +130,7 @@ class SelectionStorageImpl implements SelectionStorage {
   }
 
   public clearStorage({ iModelKey }: { iModelKey: string }): void {
-    this.clearSelection({ source: "Clear iModel storage", iModelKey });
+    this.clearSelection({ source: IMODEL_CLOSE_SELECTION_CLEAR_SOURCE, iModelKey });
     this._storage.delete(iModelKey);
   }
 
