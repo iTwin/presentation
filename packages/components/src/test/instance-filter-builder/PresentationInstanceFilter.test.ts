@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { PropertyDescription, PropertyValueFormat } from "@itwin/appui-abstract";
+import { PrimitiveValue, PropertyDescription, PropertyValueFormat } from "@itwin/appui-abstract";
 import { PropertyFilter, PropertyFilterRule, PropertyFilterRuleGroup } from "@itwin/components-react";
 import { GenericInstanceFilter } from "@itwin/core-common";
 import { Field } from "@itwin/presentation-common";
@@ -982,6 +982,37 @@ describe("PresentationInstanceFilter", () => {
       expect(() => PresentationInstanceFilter.fromGenericInstanceFilter(descriptor, filter)).to.throw(
         "Failed to find field for property - rel_B_0.invalidProp",
       );
+    });
+  });
+
+  describe("createPrimitiveValueEqualityCondition", () => {
+    it("serializes value into unique value", () => {
+      const value: PrimitiveValue = {
+        valueFormat: PropertyValueFormat.Primitive,
+        value: 1.456,
+        displayValue: "1.46",
+      };
+      const condition = PresentationInstanceFilter.createPrimitiveValueEqualityCondition(propertyField1, "is-equal", value);
+      const uniqueValue = serializeUniqueValues([{ displayValue: "1.46", groupedRawValues: [1.456] }]);
+      expect(condition.operator).to.be.eq("is-equal");
+      expect(condition.value?.value).to.be.eq(uniqueValue.groupedRawValues);
+      expect(condition.value?.displayValue).to.be.eq(uniqueValue.displayValues);
+    });
+
+    it("creates `is-null` condition for 'is-equal` operator with `undefined` value", () => {
+      const value: PrimitiveValue = {
+        valueFormat: PropertyValueFormat.Primitive,
+      };
+      const condition = PresentationInstanceFilter.createPrimitiveValueEqualityCondition(propertyField1, "is-equal", value);
+      expect(condition.operator).to.be.eq("is-null");
+    });
+
+    it("creates `is-not-null` condition for 'is-not-equal` operator with `undefined` value", () => {
+      const value: PrimitiveValue = {
+        valueFormat: PropertyValueFormat.Primitive,
+      };
+      const condition = PresentationInstanceFilter.createPrimitiveValueEqualityCondition(propertyField1, "is-not-equal", value);
+      expect(condition.operator).to.be.eq("is-not-null");
     });
   });
 });
