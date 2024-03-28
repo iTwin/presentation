@@ -10,7 +10,7 @@ import { Guid, StopWatch } from "@itwin/core-bentley";
 import { DbQueryRequest, DbQueryResponse, DbRequestExecutor, ECSqlReader } from "@itwin/core-common";
 import { ISchemaLocater, Schema, SchemaContext, SchemaInfo, SchemaKey, SchemaMatchType, SchemaProps } from "@itwin/ecschema-metadata";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
-import { createLimitingECSqlQueryExecutor, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import { createLimitingECSqlQueryExecutor, HierarchyNode, HierarchyProvider, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 import { doRequest, getCurrentIModelName, getCurrentIModelPath, loadNodes } from "./common";
 
@@ -139,7 +139,7 @@ function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter
       const nodes = await provider.getNodes({ parentNode: parent });
       return nodes;
     } catch (e) {
-      if (e instanceof Error && e.message === "rows limit exceeded") {
+      if (e instanceof RowsLimitExceededError) {
         ++(context.vars.tooLargeHierarchyLevelsCount as number);
         return [];
       }
