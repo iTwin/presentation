@@ -46,7 +46,7 @@ export function run<T>(props: RunOptions<T>): void {
     try {
       await props.test(value);
     } finally {
-      this.test!.ctx!.reporter.onTestEnd();
+      await this.test!.ctx!.reporter.onTestEnd();
       await props.cleanup?.(value);
     }
   };

@@ -31,6 +31,7 @@ export class TestReporter extends Base {
   private readonly _blockHandler = new BlockHandler();
   private readonly _outputPath?: string;
   private _indentLevel = 0;
+  private _blockHandlerPromise?: Promise<void>;
 
   constructor(runner: Mocha.Runner, options: Mocha.MochaOptions) {
     super(runner, options);
@@ -48,10 +49,10 @@ export class TestReporter extends Base {
         // Must be called to start measuring.
         onTestStart: () => this.onTestStart(test),
         // Can be called to stop measuring.
-        onTestEnd: () => this.measureTestTime(test),
+        onTestEnd: async () => this.measureTestTime(test),
       };
     });
-    runner.on(EVENT_TEST_END, (test) => this.onTestEnd(test));
+    runner.on(EVENT_TEST_END, async (test) => this.onTestEnd(test));
     runner.on(EVENT_RUN_END, () => {
       this.printResults();
       if (this._outputPath && this.failures.length === 0) {
@@ -68,13 +69,13 @@ export class TestReporter extends Base {
 
   /** Run before each test starts. */
   private onTestStart(test: Mocha.Runnable) {
-    this._blockHandler.start();
+    this._blockHandlerPromise = this._blockHandler.start();
     this.print(`${test.title}...`, false);
     this._testStartTimes.set(test.fullTitle(), performance.now());
   }
 
   /** Run after each test passes or fails. */
-  private measureTestTime(test: Mocha.Test) {
+  private async measureTestTime(test: Mocha.Test) {
     const endTime = performance.now();
     const fullTitle = test.fullTitle();
     const startTime = this._testStartTimes.get(fullTitle);
@@ -84,6 +85,7 @@ export class TestReporter extends Base {
 
     const duration = Math.round((endTime - startTime) * 100) / 100;
     this._blockHandler.stop();
+    await this._blockHandlerPromise;
 
     const blockingSummary = this._blockHandler.getSummary();
     this._testInfo.set(fullTitle, {
@@ -94,8 +96,8 @@ export class TestReporter extends Base {
     this._testStartTimes.delete(fullTitle);
   }
 
-  private onTestEnd(test: Mocha.Test) {
-    this.measureTestTime(test);
+  private async onTestEnd(test: Mocha.Test) {
+    await this.measureTestTime(test);
 
     const pass = test.isPassed();
     const duration = this._testInfo.get(test.fullTitle())!.duration;
