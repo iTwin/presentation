@@ -33,7 +33,7 @@ describe("HiliteSetProvider", () => {
       getSchema: sinon.stub<[string], Promise<ECSchema | undefined>>(),
     };
     let provider: HiliteSetProvider;
-    let schemaMock = {
+    const schemaMock = {
       getClass: sinon.stub<[string], Promise<ECClass | undefined>>(),
     };
 
@@ -90,10 +90,8 @@ describe("HiliteSetProvider", () => {
     beforeEach(() => {
       queryExecutor.createQueryReader.reset();
       metadataProvider.getSchema.reset();
+      schemaMock.getClass.reset();
 
-      schemaMock = {
-        getClass: sinon.stub<[string], Promise<ECClass | undefined>>(),
-      };
       metadataProvider.getSchema.returns(Promise.resolve(schemaMock as unknown as ECSchema));
       metadataProvider.getSchema.withArgs("Functional").returns(Promise.resolve(undefined));
       provider = createHiliteSetProvider({ queryExecutor, metadataProvider });
@@ -301,7 +299,6 @@ describe("HiliteSetProvider", () => {
         };
 
         schemaMock.getClass.onCall(0).returns(Promise.resolve(classMock as unknown as ECClass));
-        schemaMock.getClass.onCall(1).throws();
 
         const elementKey1 = createSelectableInstanceKey(1);
         const elementKey2 = createSelectableInstanceKey(2);
@@ -310,6 +307,7 @@ describe("HiliteSetProvider", () => {
 
         const selection = Selectables.create([elementKey1, elementKey2]);
         const result = await loadHiliteSet(selection);
+        expect(schemaMock.getClass).to.be.calledOnce;
         expect(result.models).to.be.empty;
         expect(result.subCategories).to.be.empty;
         expect(result.elements).to.deep.eq([resultKey]);

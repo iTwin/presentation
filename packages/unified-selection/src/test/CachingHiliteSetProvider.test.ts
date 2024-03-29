@@ -21,7 +21,7 @@ describe("CachingHiliteSetProvider", () => {
   let factory: sinon.SinonStub<[props: hiliteSetProvider.HiliteSetProviderProps], hiliteSetProvider.HiliteSetProvider>;
   let selectionStorage: SelectionStorage;
   let hiliteSetCache: CachingHiliteSetProvider;
-  let provider = {
+  const provider = {
     getHiliteSet: sinon.stub<[{ iModelKey: string }], AsyncIterableIterator<hiliteSetProvider.HiliteSet>>(),
   };
   const iModelProvider = sinon.stub<[string], { queryExecutor: IECSqlQueryExecutor; metadataProvider: IMetadataProvider }>();
@@ -57,9 +57,7 @@ describe("CachingHiliteSetProvider", () => {
     iModelProvider.returns({ queryExecutor: {} as IECSqlQueryExecutor, metadataProvider: {} as IMetadataProvider });
     selectionStorage.addToSelection({ iModelKey, source: "test", selectables: generateSelection() });
 
-    provider = {
-      getHiliteSet: sinon.stub<[{ iModelKey: string }], AsyncIterableIterator<hiliteSetProvider.HiliteSet>>(),
-    };
+    provider.getHiliteSet.reset();
     provider.getHiliteSet.callsFake(async function* () {
       yield { models: ["0x1"], subCategories: ["0x1"], elements: ["0x1"] } as hiliteSetProvider.HiliteSet;
       yield { models: ["0x2"], subCategories: ["0x2"], elements: ["0x2"] } as hiliteSetProvider.HiliteSet;

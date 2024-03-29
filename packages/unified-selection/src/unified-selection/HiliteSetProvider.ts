@@ -91,10 +91,10 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
     let array = map.get(keyType);
     if (!array) {
       array = [];
+      map.set(keyType, array);
     }
 
     array.push(key.id);
-    map.set(keyType, array);
   }
 
   private async getType(key: SelectableInstanceKey): Promise<InstanceIdType> {

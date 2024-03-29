@@ -11,6 +11,7 @@
  */
 export * from "./unified-selection/Selectable";
 export { SelectionStorage, createStorage } from "./unified-selection/SelectionStorage";
+export * from "./unified-selection/HiliteSetProvider";
 export * from "./unified-selection/CachingHiliteSetProvider";
 export {
   StorageSelectionChangeType,
