@@ -33,7 +33,8 @@ export interface Summary {
  */
 export class BlockHandler {
   private readonly _samples = new SortedArray<number>((a, b) => a - b);
-  private _running = true;
+  private _running = false;
+  private _promise?: Promise<void>;
 
   public getSummary(): Summary {
     const arr = this._samples.extractArray();
@@ -54,31 +55,39 @@ export class BlockHandler {
    * @param threshold The minimum amount of blocking that will be considered abnormal.
    * @param interval Delay in time between each blocking check.
    */
-  public async start(threshold: number = 20, interval: number = 10) {
-    this._running = true;
-    this._samples.clear();
+  public start(threshold: number = 20, interval: number = 10) {
+    const runTimer = async () => {
+      this._running = true;
+      this._samples.clear();
 
-    let lastTime = new Date();
-    for await (const _ of setInterval(interval)) {
-      const currentTime = new Date();
-      const lateAmount = currentTime.getTime() - lastTime.getTime() - interval;
-      if (lateAmount > threshold) {
-        log(() => `${lateAmount} ms, ${lastTime.toISOString()} - ${currentTime.toISOString()}`);
-        this._samples.insert(lateAmount);
-      } else if (ENABLE_PINGS) {
-        log(() => `[${currentTime.toISOString()}] Ping`);
-      }
-      lastTime = new Date();
+      let lastTime = new Date();
+      for await (const _ of setInterval(interval)) {
+        const currentTime = new Date();
+        const lateAmount = currentTime.getTime() - lastTime.getTime() - interval;
+        if (lateAmount > threshold) {
+          log(() => `${lateAmount} ms, ${lastTime.toISOString()} - ${currentTime.toISOString()}`);
+          this._samples.insert(lateAmount);
+        } else if (ENABLE_PINGS) {
+          log(() => `[${currentTime.toISOString()}] Ping`);
+        }
+        lastTime = new Date();
 
-      if (!this._running) {
-        break;
+        if (!this._running) {
+          break;
+        }
       }
+    };
+
+    if (this._running) {
+      throw new Error("Block handler already running.");
     }
+    this._promise = runTimer();
   }
 
   /** Stops the blocking timer. */
-  public stop() {
+  public async stop() {
     this._running = false;
+    return this._promise;
   }
 }
 

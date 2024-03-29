@@ -31,7 +31,6 @@ export class TestReporter extends Base {
   private readonly _blockHandler = new BlockHandler();
   private readonly _outputPath?: string;
   private _indentLevel = 0;
-  private _blockHandlerPromise?: Promise<void>;
 
   constructor(runner: Mocha.Runner, options: Mocha.MochaOptions) {
     super(runner, options);
@@ -69,7 +68,7 @@ export class TestReporter extends Base {
 
   /** Run before each test starts. */
   private onTestStart(test: Mocha.Runnable) {
-    this._blockHandlerPromise = this._blockHandler.start();
+    this._blockHandler.start();
     this.print(`${test.title}...`, false);
     this._testStartTimes.set(test.fullTitle(), performance.now());
   }
@@ -84,8 +83,7 @@ export class TestReporter extends Base {
     }
 
     const duration = Math.round((endTime - startTime) * 100) / 100;
-    this._blockHandler.stop();
-    await this._blockHandlerPromise;
+    await this._blockHandler.stop();
 
     const blockingSummary = this._blockHandler.getSummary();
     this._testInfo.set(fullTitle, {
