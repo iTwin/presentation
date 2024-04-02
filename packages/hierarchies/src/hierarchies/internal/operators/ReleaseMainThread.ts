@@ -22,7 +22,7 @@ export const releaseMainThread = async () => {
  * Emits a certain amount of values, then releases the main thread for other timers to use.
  * @internal
  */
-export function releaseMainThreadOn<T>(elementCount: number) {
+export function releaseMainThreadOnItemsCount<T>(elementCount: number) {
   return (obs: Observable<T>): Observable<T> => {
     return obs.pipe(
       bufferCount(elementCount),

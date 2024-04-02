@@ -10,7 +10,7 @@ import { ILimitingECSqlQueryExecutor } from "../queries/LimitingECSqlQueryExecut
 import { NodeSelectClauseColumnNames } from "../queries/NodeSelectQueryFactory";
 import { ConcatenatedValue } from "../values/ConcatenatedValue";
 import { Id64String } from "../values/Values";
-import { releaseMainThread } from "./operators/ReleaseMainThreadOn";
+import { releaseMainThread } from "./operators/ReleaseMainThread";
 
 const MAX_ROWS_TO_EMIT_AT_A_TIME = 1000;
 
