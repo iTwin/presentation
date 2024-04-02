@@ -10,6 +10,9 @@ import { ILimitingECSqlQueryExecutor } from "../queries/LimitingECSqlQueryExecut
 import { NodeSelectClauseColumnNames } from "../queries/NodeSelectQueryFactory";
 import { ConcatenatedValue } from "../values/ConcatenatedValue";
 import { Id64String } from "../values/Values";
+import { releaseMainThread } from "./operators/ReleaseMainThreadOn";
+
+const MAX_ROWS_TO_EMIT_AT_A_TIME = 1000;
 
 /** @internal */
 export interface TreeQueryResultsReaderProps {
@@ -28,8 +31,12 @@ export class TreeQueryResultsReader {
   }
 
   public async *read(queryExecutor: ILimitingECSqlQueryExecutor, query: ECSqlQueryDef, limit?: number | "unbounded"): AsyncGenerator<ParsedHierarchyNode> {
-    for await (const row of queryExecutor.createQueryReader(query, { rowFormat: "ECSqlPropertyNames", ...(limit !== undefined ? { limit } : undefined) })) {
+    let idx = 0;
+    for await (const row of queryExecutor.createQueryReader(query, { rowFormat: "ECSqlPropertyNames", limit })) {
       yield this._props.parser(row);
+      if (idx++ % MAX_ROWS_TO_EMIT_AT_A_TIME === 0) {
+        await releaseMainThread();
+      }
     }
   }
 }
