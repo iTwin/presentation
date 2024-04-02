@@ -33,7 +33,6 @@ export interface Summary {
  */
 export class BlockHandler {
   private readonly _samples = new SortedArray<number>((a, b) => a - b);
-  private _running = false;
   private _promise?: Promise<void>;
 
   public getSummary(): Summary {
@@ -57,7 +56,6 @@ export class BlockHandler {
    */
   public start(threshold: number = 20, interval: number = 10) {
     const runTimer = async () => {
-      this._running = true;
       this._samples.clear();
 
       let lastTime = new Date();
@@ -72,13 +70,13 @@ export class BlockHandler {
         }
         lastTime = new Date();
 
-        if (!this._running) {
+        if (!this._promise) {
           break;
         }
       }
     };
 
-    if (this._running) {
+    if (this._promise) {
       throw new Error("Block handler already running.");
     }
     this._promise = runTimer();
@@ -86,8 +84,9 @@ export class BlockHandler {
 
   /** Stops the blocking timer. */
   public async stop() {
-    this._running = false;
-    return this._promise;
+    const promise = this._promise;
+    this._promise = undefined;
+    return promise;
   }
 }
 
