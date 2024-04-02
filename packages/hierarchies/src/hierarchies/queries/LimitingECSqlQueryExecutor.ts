@@ -6,6 +6,7 @@
 import { StopWatch } from "@itwin/core-bentley";
 import { RowsLimitExceededError } from "../HierarchyErrors";
 import { LOGGING_NAMESPACE as CommonLoggingNamespace } from "../internal/Common";
+import { MainThreadBlockHandler } from "../internal/MainThreadBlockHandler";
 import { getLogger } from "../Logging";
 import { ECSqlQueryDef, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow, IECSqlQueryExecutor } from "../queries/ECSqlCore";
 
@@ -32,6 +33,7 @@ export function createLimitingECSqlQueryExecutor(baseExecutor: IECSqlQueryExecut
       const limit = configLimit ?? defaultLimit;
       const ecsql = addCTEs(addLimit(query.ecsql, limit), query.ctes);
       const perfLogger = createQueryPerformanceLogger();
+      const blockHandler = new MainThreadBlockHandler();
 
       // handle "unbounded" case without a buffer
       const reader = baseExecutor.createQueryReader(ecsql, query.bindings, restConfig);
@@ -40,6 +42,7 @@ export function createLimitingECSqlQueryExecutor(baseExecutor: IECSqlQueryExecut
           for await (const row of reader) {
             perfLogger.onStep();
             yield row;
+            await blockHandler.releaseMainThreadIfNeeded();
           }
         } finally {
           perfLogger.onComplete();
@@ -56,12 +59,15 @@ export function createLimitingECSqlQueryExecutor(baseExecutor: IECSqlQueryExecut
           if (buffer.length > limit) {
             throw new RowsLimitExceededError(limit);
           }
+          await blockHandler.releaseMainThreadIfNeeded();
         }
       } finally {
         perfLogger.onComplete();
       }
+
       for (const row of buffer) {
         yield row;
+        await blockHandler.releaseMainThreadIfNeeded();
       }
     },
   };

@@ -4,19 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { bufferCount, concatAll, concatMap, Observable } from "rxjs";
-import { LOGGING_NAMESPACE as commonLoggingNamespace } from "../Common";
-import { doLog } from "../LoggingUtils";
-
-const LOGGING_NAMESPACE = `${commonLoggingNamespace}.ReleaseMainThread`;
-
-/**
- * Releases the main thread for other timers to use.
- * @internal
- */
-export const releaseMainThread = async () => {
-  doLog({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ () => "Releasing main thread" });
-  return new Promise<void>((resolve) => setTimeout(resolve, 0));
-};
+import { MainThreadBlockHandler } from "../MainThreadBlockHandler";
 
 /**
  * Emits a certain amount of values, then releases the main thread for other timers to use.
@@ -27,7 +15,7 @@ export function releaseMainThreadOnItemsCount<T>(elementCount: number) {
     return obs.pipe(
       bufferCount(elementCount),
       concatMap(async (x) => {
-        await releaseMainThread();
+        await MainThreadBlockHandler.releaseMainThread();
         return x;
       }),
       concatAll(),
