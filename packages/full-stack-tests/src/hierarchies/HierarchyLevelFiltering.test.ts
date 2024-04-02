@@ -9,7 +9,7 @@ import { initialize, terminate } from "../IntegrationTests";
 import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation";
 import { createMetadataProvider, createProvider } from "./Utils";
 
-describe("Stateless hierarchy builder", () => {
+describe("Hierarchies", () => {
   describe("Hierarchy level filtering", () => {
     before(async () => {
       await initialize();

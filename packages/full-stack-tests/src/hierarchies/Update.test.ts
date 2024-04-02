@@ -43,7 +43,7 @@ import { setupOutputFileLocation } from "../IModelUtils";
 import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation";
 import { createClassECSqlSelector, createMetadataProvider, createProvider } from "./Utils";
 
-describe("Stateless hierarchy builder", () => {
+describe("Hierarchies", () => {
   describe("Updating hierarchies upon iModel change", () => {
     let db: StandaloneDb;
     let connection: BriefcaseConnection;

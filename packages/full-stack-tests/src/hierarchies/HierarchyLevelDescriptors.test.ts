@@ -17,7 +17,7 @@ import { initialize, terminate } from "../IntegrationTests";
 import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation";
 import { createClassECSqlSelector, createMetadataProvider, createProvider } from "./Utils";
 
-describe("Stateless hierarchy builder", () => {
+describe("Hierarchies", () => {
   describe("Hierarchy level descriptors", () => {
     before(async () => {
       await initialize();

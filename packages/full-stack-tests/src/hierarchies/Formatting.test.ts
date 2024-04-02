@@ -27,7 +27,7 @@ import { initialize, terminate } from "../IntegrationTests";
 import { validateHierarchy } from "./HierarchyValidation";
 import { createMetadataProvider, createProvider } from "./Utils";
 
-describe("Stateless hierarchy builder", () => {
+describe("Hierarchies", () => {
   let emptyIModel: IModelConnection;
   let subjectClassName: string;
 

@@ -24,7 +24,7 @@ import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchyLevel } from "../HierarchyValidation";
 import { createModelsTreeProvider, importTestSchema } from "./ModelsTreeTestUtils";
 
-describe("Stateless hierarchy builder", () => {
+describe("Hierarchies", () => {
   describe("Models tree hierarchy level filtering", () => {
     before(async function () {
       await initialize();
