@@ -147,7 +147,7 @@
       }
     },
     {
-      "name": "Tests: Hierarchy builder",
+      "name": "Tests: Hierarchies",
       "cwd": "${workspaceFolder}/packages/hierarchies",
       "type": "node",
       "request": "launch",
