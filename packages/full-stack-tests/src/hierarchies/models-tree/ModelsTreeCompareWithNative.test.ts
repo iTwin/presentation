@@ -15,7 +15,7 @@ import { ClassGroupingNodeKey, HierarchyNode, InstancesNodeKey, setLogger } from
 import { initialize, terminate } from "../../IntegrationTests";
 import { createModelsTreeProvider } from "./ModelsTreeTestUtils";
 
-describe("Stateless hierarchy builder", () => {
+describe("Hierarchies", () => {
   let imodel!: IModelConnection;
 
   before(async function () {

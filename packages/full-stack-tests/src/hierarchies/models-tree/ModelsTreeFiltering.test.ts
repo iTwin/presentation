@@ -58,7 +58,7 @@ namespace TreeFilteringTestCaseDefinition {
   }
 }
 
-describe("Stateless hierarchy builder", () => {
+describe("Hierarchies", () => {
   describe("Models tree filtering", () => {
     before(async function () {
       await initialize();
