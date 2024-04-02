@@ -15,11 +15,6 @@ module.exports = {
       outputs: [],
       inputs: ["lib/**"],
     },
-    "test:regression": {
-      dependsOn: ["build"],
-      outputs: [],
-      inputs: ["lib/**"],
-    },
     lint: {
       dependsOn: ["build"],
       outputs: [],

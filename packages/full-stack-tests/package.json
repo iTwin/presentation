@@ -10,7 +10,6 @@
     "cover": "npm run -s test",
     "lint": "eslint ./src/**/*.{ts,tsx}",
     "test": "mocha --config ./.mocharc.json",
-    "test:regression": "npm -s test -- --invert --grep \"Stateless hierarchy builder\"",
     "docs": "betools extract --fileExt=ts,tsx --extractFrom=./src --recursive --out=./build/docs/extract"
   },
   "dependencies": {
