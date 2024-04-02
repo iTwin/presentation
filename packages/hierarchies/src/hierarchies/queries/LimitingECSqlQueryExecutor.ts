@@ -42,7 +42,7 @@ export function createLimitingECSqlQueryExecutor(baseExecutor: IECSqlQueryExecut
           for await (const row of reader) {
             perfLogger.onStep();
             yield row;
-            await blockHandler.releaseMainThreadIfNeeded();
+            await blockHandler.releaseMainThreadIfTimeElapsed();
           }
         } finally {
           perfLogger.onComplete();
@@ -59,7 +59,7 @@ export function createLimitingECSqlQueryExecutor(baseExecutor: IECSqlQueryExecut
           if (buffer.length > limit) {
             throw new RowsLimitExceededError(limit);
           }
-          await blockHandler.releaseMainThreadIfNeeded();
+          await blockHandler.releaseMainThreadIfTimeElapsed();
         }
       } finally {
         perfLogger.onComplete();
@@ -67,7 +67,7 @@ export function createLimitingECSqlQueryExecutor(baseExecutor: IECSqlQueryExecut
 
       for (const row of buffer) {
         yield row;
-        await blockHandler.releaseMainThreadIfNeeded();
+        await blockHandler.releaseMainThreadIfTimeElapsed();
       }
     },
   };

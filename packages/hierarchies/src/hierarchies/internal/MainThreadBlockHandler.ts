@@ -27,7 +27,7 @@ export class MainThreadBlockHandler {
   /**
    * Releases the main thread if sufficient time has elapsed.
    */
-  public releaseMainThreadIfNeeded(): Promise<void> | undefined {
+  public releaseMainThreadIfTimeElapsed(): Promise<void> | undefined {
     const currentTime = performance.now();
     if (currentTime - this._lastReleaseTime < this._mainThreadReleaseThreshold) {
       return undefined;

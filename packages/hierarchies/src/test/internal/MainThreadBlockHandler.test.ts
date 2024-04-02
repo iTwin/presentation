@@ -21,7 +21,7 @@ describe("MainThreadBlockHandler", () => {
       while (performance.now() - invokeTimeBeforeLoop < DEFAULT_MAIN_THREAD_RELEASE_THRESHOLD) {}
 
       expect(lastIntervalInvokeTime).to.eq(invokeTimeBeforeLoop);
-      await blockHandler.releaseMainThreadIfNeeded();
+      await blockHandler.releaseMainThreadIfTimeElapsed();
       expect(lastIntervalInvokeTime).to.be.greaterThan(invokeTimeBeforeLoop);
     } finally {
       clearInterval(interval);
@@ -33,13 +33,13 @@ describe("MainThreadBlockHandler", () => {
     performanceNowMock.returns(0);
 
     const blockHandler = new MainThreadBlockHandler(1000);
-    expect(blockHandler.releaseMainThreadIfNeeded()).to.be.undefined;
+    expect(blockHandler.releaseMainThreadIfTimeElapsed()).to.be.undefined;
 
     performanceNowMock.returns(500);
-    expect(blockHandler.releaseMainThreadIfNeeded()).to.be.undefined;
+    expect(blockHandler.releaseMainThreadIfTimeElapsed()).to.be.undefined;
 
     performanceNowMock.returns(1001);
-    const x = blockHandler.releaseMainThreadIfNeeded();
+    const x = blockHandler.releaseMainThreadIfTimeElapsed();
     expect(x).to.be.instanceOf(Promise);
     await x;
   });
