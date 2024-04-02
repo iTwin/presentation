@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1711640040684,
+  "lastUpdate": 1712043894000,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -2685,6 +2685,140 @@ window.BENCHMARK_DATA = {
             "value": 155,
             "unit": "ms",
             "extra": "count: 4\nmax: 155\np95: 155\nmedian: 30"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "29233962+Yato333@users.noreply.github.com",
+            "name": "Dmitrij Kuzmičiov",
+            "username": "Yato333"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f6f6d2ca19f8850a468d0119a4f972cb84936dca",
+          "message": "Fix block handler showing incorrect results (#504)\n\nCurrently performance tests do not account for long main thread blocks that last until the end of the test.\r\nNow, before stopping the block handler, we will wait until block handler's callback is run the last time before stopping it.\r\n\r\nBlock handler will now use a much more convenient node's timers/promises/setInterval function which returns an async iterator.\r\nSince blocked library is very simple and doesn't provide anything of value, the dependency will be removed in favor of custom blocking time measuring logic.\r\n\r\nAdditionally, new optional logging will be added which might help the debugging experience:\r\n\r\n- Logging of start and end times of the blocks\r\n- Ability to log \"pings\" of the main thread",
+          "timestamp": "2024-04-02T10:42:03+03:00",
+          "tree_id": "c89a4892e066a19eabb79e775c9d047adab8e97d",
+          "url": "https://github.com/iTwin/presentation/commit/f6f6d2ca19f8850a468d0119a4f972cb84936dca"
+        },
+        "date": 1712043893370,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "flat 50k elements list",
+            "value": 5351.7,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 5182,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 5182\np95: 5182\nmedian: 5182"
+          },
+          {
+            "name": "grouping by label",
+            "value": 6068.31,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 135,
+            "unit": "ms",
+            "extra": "count: 24\nmax: 1111\np95: 135\nmedian: 91.5"
+          },
+          {
+            "name": "grouping by class",
+            "value": 6039.54,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 116,
+            "unit": "ms",
+            "extra": "count: 23\nmax: 1104\np95: 116\nmedian: 91"
+          },
+          {
+            "name": "grouping by property",
+            "value": 6642.31,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 492,
+            "unit": "ms",
+            "extra": "count: 28\nmax: 935\np95: 492\nmedian: 95.5"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 6775.15,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 5696,
+            "unit": "ms",
+            "extra": "count: 5\nmax: 5696\np95: 5696\nmedian: 218"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 7084.46,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 368,
+            "unit": "ms",
+            "extra": "count: 31\nmax: 622\np95: 368\nmedian: 106"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children",
+            "value": 55186.89,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children (P95 of main thread blocks)",
+            "value": 70,
+            "unit": "ms",
+            "extra": "count: 16\nmax: 70\np95: 70\nmedian: 33"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children",
+            "value": 148.48,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children (P95 of main thread blocks)",
+            "value": 21,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 21\np95: 21\nmedian: 21"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 38.08,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 2301.39,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 160,
+            "unit": "ms",
+            "extra": "count: 4\nmax: 160\np95: 160\nmedian: 28.5"
           }
         ]
       }
