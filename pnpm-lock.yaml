@@ -826,6 +826,9 @@ importers:
 
   packages/full-stack-tests:
     dependencies:
+      '@bentley/functional-schema':
+        specifier: ^1.0.4
+        version: 1.0.4
       '@itwin/appui-abstract':
         specifier: ^4.4.0
         version: 4.4.0(@itwin/core-bentley@4.4.0)
@@ -901,6 +904,9 @@ importers:
       '@itwin/presentation-testing':
         specifier: workspace:^
         version: link:../testing
+      '@itwin/unified-selection':
+        specifier: workspace:^
+        version: link:../unified-selection
       '@itwin/webgl-compatibility':
         specifier: ^4.4.0
         version: 4.4.0
@@ -1489,6 +1495,13 @@ importers:
         version: 5.0.4
 
   packages/unified-selection:
+    dependencies:
+      rxjs:
+        specifier: ^7.8.1
+        version: 7.8.1
+      rxjs-for-await:
+        specifier: ^1.0.0
+        version: 1.0.0(rxjs@7.8.1)
     devDependencies:
       '@itwin/build-tools':
         specifier: ^4.4.0
@@ -2478,6 +2491,10 @@ packages:
       '@babel/helper-string-parser': 7.24.1
       '@babel/helper-validator-identifier': 7.22.20
       to-fast-properties: 2.0.0
+
+  /@bentley/functional-schema@1.0.4:
+    resolution: {integrity: sha512-hQyFrJ6EgWQhvKl1vp7tU9xDEHAJ4bg/pEJ+MLGSjbSX0bL3jHr/rocCSMiZ6Lt7Iye8jTG+6FAajm7w6DUfcQ==}
+    dev: false
 
   /@bentley/icons-generic-webfont@1.0.34:
     resolution: {integrity: sha512-5zZgs+himE2vjf39CVlDXMHCFAwSfcoORqJBk3Vji8QVCF8AIX4IX2DO6HlsIAM7szxMNqhz1kd07Xfppro6MA==}
