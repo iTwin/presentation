@@ -13,6 +13,7 @@ import { SelectableInstanceKey, Selectables } from "./Selectable";
 
 /**
  * A set of model, subcategory and element ids that can be used for specifying hilite.
+ * @see https://www.itwinjs.org/reference/core-frontend/selectionset/hiliteset/
  * @beta
  */
 export interface HiliteSet {
@@ -23,7 +24,7 @@ export interface HiliteSet {
 
 /**
  * Props for creating a `HiliteSetProvider` instance.
- * @beta
+ * @internal Not exported through barrel, but used in public API as an argument. May be supplemented with optional attributes any time.
  */
 export interface HiliteSetProviderProps {
   queryExecutor: IECSqlQueryExecutor;
@@ -31,9 +32,10 @@ export interface HiliteSetProviderProps {
 }
 
 /**
- * ECSQL based provider which determines what `HiliteSet`
- * should be hilited based on the supplied `Selectables`.
- * @beta
+ * Defines return value of `createHiliteSetProvider`.
+ *
+ * @beta Used in public API as a return value. Not expected to be created / extended by package
+ * consumers, may be supplemented with required attributes any time.
  */
 export interface HiliteSetProvider {
   /** Get the current hilite set iterator for the specified imodel */
@@ -41,7 +43,7 @@ export interface HiliteSetProvider {
 }
 
 /**
- * Creates a hilite set provider.
+ * Creates a hilite set provider that returns a `HiliteSet` for given selectables.
  * @beta
  */
 export function createHiliteSetProvider(props: HiliteSetProviderProps): HiliteSetProvider {
