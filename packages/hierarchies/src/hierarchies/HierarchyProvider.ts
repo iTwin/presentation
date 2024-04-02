@@ -116,6 +116,8 @@ export interface GetHierarchyNodesProps {
    * Has no effect if `parentNode` is a [[GroupingNode]].
    */
   hierarchyLevelSizeLimit?: number | "unbounded";
+  /** When set to true ignores the cache and fetches the nodes again. */
+  ignoreCache?: boolean;
 }
 
 /**
@@ -293,7 +295,7 @@ export class HierarchyProvider {
   private getCachedObservableEntry(props: GetHierarchyNodesProps): CachedNodesObservableEntry {
     const loggingCategory = `${LOGGING_NAMESPACE}.GetCachedObservableEntry`;
     const { parentNode, ...restProps } = props;
-    const cached = this._nodesCache.get(props);
+    const cached = props.ignoreCache ? undefined : this._nodesCache.get(props);
     if (cached) {
       // istanbul ignore next
       doLog({

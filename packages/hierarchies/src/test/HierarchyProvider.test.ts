@@ -942,6 +942,31 @@ describe("HierarchyProvider", () => {
       expect(queryExecutor.createQueryReader).to.be.calledOnce;
     });
 
+    it("queries the same root nodes more than once when `ignoreCache` is set to true", async () => {
+      queryExecutor.createQueryReader.returns(createFakeQueryReader([]));
+      const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel({ parentNode }) {
+          if (!parentNode) {
+            return [
+              {
+                fullClassName: "x.y",
+                query: { ecsql: "QUERY" },
+              },
+            ];
+          }
+          return [];
+        },
+      };
+      const provider = new HierarchyProvider({
+        metadataProvider,
+        queryExecutor,
+        hierarchyDefinition,
+      });
+      await provider.getNodes({ parentNode: undefined });
+      await provider.getNodes({ parentNode: undefined, ignoreCache: true });
+      expect(queryExecutor.createQueryReader).to.be.calledTwice;
+    });
+
     it("queries variations of the same hierarchy level", async () => {
       queryExecutor.createQueryReader.returns(createFakeQueryReader([]));
       const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {

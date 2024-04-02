@@ -26,6 +26,7 @@ export interface ReloadOptions {
   collapsedNodes: TreeModelHierarchyNode[];
   getInstanceFilter: (node: TreeModelRootNode | TreeModelHierarchyNode<ParentHierarchyNode>) => GenericInstanceFilter | undefined;
   buildNode: (node: TreeModelHierarchyNode) => TreeModelHierarchyNode;
+  ignoreCache?: boolean;
 }
 
 /** @internal */
@@ -34,6 +35,7 @@ export interface IHierarchyLoader {
     parent: TreeModelHierarchyNode<ParentHierarchyNode> | TreeModelRootNode,
     getInstanceFilter: (node: TreeModelRootNode | TreeModelHierarchyNode<ParentHierarchyNode>) => GenericInstanceFilter | undefined,
     shouldLoadChildren: (node: TreeModelHierarchyNode<ParentHierarchyNode>) => boolean,
+    ignoreCache?: boolean,
   ): Observable<LoadedHierarchyPart>;
   reloadNodes(parent: TreeModelHierarchyNode<ParentHierarchyNode> | TreeModelRootNode, options: ReloadOptions): Observable<LoadedHierarchyPart>;
 }
@@ -46,25 +48,25 @@ export class HierarchyLoader implements IHierarchyLoader {
     parent: TreeModelHierarchyNode<ParentHierarchyNode> | TreeModelRootNode,
     getInstanceFilter: (node: TreeModelRootNode | TreeModelHierarchyNode<ParentHierarchyNode>) => GenericInstanceFilter | undefined,
     buildNode?: (node: TreeModelHierarchyNode) => TreeModelHierarchyNode,
+    ignoreCache?: boolean,
   ) {
     return defer(async () =>
       this._hierarchyProvider.getNodes({
         parentNode: parent.nodeData,
         hierarchyLevelSizeLimit: parent.hierarchyLimit,
         instanceFilter: getInstanceFilter(parent),
+        ignoreCache,
       }),
     ).pipe(
       catchError((err) => {
+        const nodeProps = {
+          id: `${parent.id ?? ""}-${err.message}`,
+          parentId: parent.id,
+        };
         if (err instanceof RowsLimitExceededError) {
-          const node: TreeModelInfoNode = {
-            id: `${parent.id ?? ""}-${err.message}`,
-            parentId: parent.id,
-            type: "ResultSetTooLarge",
-            message: err.message,
-          };
-          return of([node]);
+          return of([{ ...nodeProps, type: "ResultSetTooLarge" as const, message: err.message }]);
         }
-        throw err;
+        return of([{ ...nodeProps, type: "Unknown" as const, message: "Failed to create hierarchy level" }]);
       }),
       map(
         (childNodes): LoadedHierarchyPart => ({
@@ -80,11 +82,12 @@ export class HierarchyLoader implements IHierarchyLoader {
     getInstanceFilter: (node: TreeModelRootNode | TreeModelHierarchyNode<ParentHierarchyNode>) => GenericInstanceFilter | undefined,
     shouldLoadChildren: (node: TreeModelHierarchyNode<ParentHierarchyNode>) => boolean,
     buildNode?: (node: TreeModelHierarchyNode) => TreeModelHierarchyNode,
+    ignoreCache?: boolean,
   ) {
-    return this.loadChildren(parent, getInstanceFilter, buildNode).pipe(
+    return this.loadChildren(parent, getInstanceFilter, buildNode, ignoreCache).pipe(
       expand((loadedPart) =>
         from(loadedPart.loadedNodes.filter((node): node is TreeModelHierarchyNode => isTreeModelHierarchyNode(node) && shouldLoadChildren(node))).pipe(
-          mergeMap((node) => this.loadChildren(node, getInstanceFilter, buildNode)),
+          mergeMap((node) => this.loadChildren(node, getInstanceFilter, buildNode, ignoreCache)),
         ),
       ),
     );
@@ -94,13 +97,14 @@ export class HierarchyLoader implements IHierarchyLoader {
     parent: TreeModelHierarchyNode<ParentHierarchyNode> | TreeModelRootNode,
     getInstanceFilter: (node: TreeModelRootNode | TreeModelHierarchyNode<ParentHierarchyNode>) => GenericInstanceFilter | undefined,
     shouldLoadChildren: (node: TreeModelHierarchyNode<ParentHierarchyNode>) => boolean,
+    ignoreCache?: boolean,
   ) {
-    return this.loadNodes(parent, getInstanceFilter, shouldLoadChildren);
+    return this.loadNodes(parent, getInstanceFilter, shouldLoadChildren, undefined, ignoreCache);
   }
 
   public reloadNodes(
     parent: TreeModelHierarchyNode<ParentHierarchyNode> | TreeModelRootNode,
-    { expandedNodes, collapsedNodes, getInstanceFilter, buildNode }: ReloadOptions,
+    { expandedNodes, collapsedNodes, getInstanceFilter, buildNode, ignoreCache }: ReloadOptions,
   ) {
     return this.loadNodes(
       parent,
@@ -115,6 +119,7 @@ export class HierarchyLoader implements IHierarchyLoader {
         return !!node.nodeData.autoExpand;
       },
       buildNode,
+      ignoreCache,
     );
   }
 }

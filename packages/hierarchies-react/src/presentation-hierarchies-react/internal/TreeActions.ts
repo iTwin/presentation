@@ -86,7 +86,7 @@ export class TreeActions {
     return node.instanceFilter;
   }
 
-  private loadNodes(parentId: string | undefined) {
+  private loadNodes(parentId: string | undefined, ignoreCache?: boolean) {
     const parentNode = parentId ? this._currentModel.idToNode.get(parentId) : this._currentModel.rootNode;
     if (!parentNode || (parentNode.id !== undefined && !isTreeModelHierarchyNode(parentNode))) {
       return;
@@ -97,6 +97,7 @@ export class TreeActions {
         parentNode,
         (node) => this.getNodeInstanceFilter(node),
         (node) => !!node.nodeData.autoExpand,
+        ignoreCache,
       )
       .pipe(collectHierarchyPartsUntil(this._disposed))
       .subscribe({
@@ -134,17 +135,37 @@ export class TreeActions {
 
   public expandNode(nodeId: string, isExpanded: boolean) {
     let loadChildren = false;
+    let ignoreCache = false;
     this.updateTreeModel((model) => {
       expandNode(model, nodeId, isExpanded);
       const modelNode = model.idToNode.get(nodeId);
-      if (modelNode && isTreeModelHierarchyNode(modelNode) && modelNode.children && model.parentChildMap.get(modelNode.id) === undefined) {
-        modelNode.isLoading = true;
-        loadChildren = true;
+
+      if (modelNode && isTreeModelHierarchyNode(modelNode)) {
+        if (modelNode.children && model.parentChildMap.get(modelNode.id) === undefined) {
+          modelNode.isLoading = true;
+          loadChildren = true;
+          return;
+        }
+
+        const children = model.parentChildMap.get(modelNode.id);
+        if (!children || children.length !== 1) {
+          return;
+        }
+
+        // If node contains a single InfoNode child, reload its children on collapse/expand to refresh in case an error occurred
+        const child = model.idToNode.get(children[0]);
+        if (child && isTreeModelInfoNode(child)) {
+          model.parentChildMap.delete(modelNode.id);
+          model.idToNode.delete(child.id);
+          modelNode.isLoading = true;
+          loadChildren = true;
+          ignoreCache = true;
+        }
       }
     });
 
     if (loadChildren) {
-      this.loadNodes(nodeId);
+      this.loadNodes(nodeId, ignoreCache);
     }
   }
 
