@@ -441,6 +441,38 @@ describe("HierarchyProvider", () => {
       const childNodes = await provider.getNodes({ parentNode: rootNodes[0] });
       expect(childNodes).to.deep.eq([{ ...visibleChildNode, parentKeys: [rootNode.key, hiddenChildNode.key], children: false }]);
     });
+
+    // note: the feature of not checking children for nodes that say they do have them is very important for performance - this test
+    // should not be removed
+    it("doesn't load children of hidden child node when determining parent's children if the hidden child says it always has children", async () => {
+      const rootNode = { key: "root", label: "root" };
+      const hiddenChildNode = { key: "hidden child", label: "hidden child", processingParams: { hideInHierarchy: true }, children: true };
+      const visibleChildNode = { key: "visible child", label: "visible child" };
+      const hierarchyDefinition = {
+        defineHierarchyLevel: sinon.fake(async ({ parentNode }) => {
+          if (!parentNode) {
+            return [{ node: rootNode }];
+          }
+          if (parentNode.key === "root") {
+            return [{ node: hiddenChildNode }];
+          }
+          if (parentNode.key === "hidden child") {
+            return [{ node: visibleChildNode }];
+          }
+          return [];
+        }),
+      };
+      const provider = new HierarchyProvider({
+        metadataProvider,
+        queryExecutor,
+        hierarchyDefinition,
+      });
+      const rootNodes = await provider.getNodes({ parentNode: undefined });
+      expect(rootNodes).to.deep.eq([{ ...rootNode, parentKeys: [], children: true }]);
+      expect(hierarchyDefinition.defineHierarchyLevel).to.be.calledTwice;
+      expect(hierarchyDefinition.defineHierarchyLevel.firstCall).to.be.calledWith({ parentNode: undefined });
+      expect(hierarchyDefinition.defineHierarchyLevel.secondCall).to.be.calledWith({ parentNode: omit(rootNodes[0], ["children"]) });
+    });
   });
 
   describe("Hiding nodes without children", () => {

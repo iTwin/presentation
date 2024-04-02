@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { catchError, concatMap, defaultIfEmpty, defer, filter, from, map, mergeMap, Observable, ObservableInput, of, take } from "rxjs";
+import { catchError, concat, concatMap, defaultIfEmpty, defer, EMPTY, filter, from, map, mergeMap, Observable, ObservableInput, of, take } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
 import { assert, StopWatch } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
@@ -274,9 +274,12 @@ export class HierarchyProvider {
     );
   }
 
-  private createHasNodesObservable(preprocessedNodesObservable: Observable<ProcessedHierarchyNode>): Observable<boolean> {
+  private createHasNodesObservable(
+    preprocessedNodesObservable: Observable<ProcessedHierarchyNode>,
+    possiblyKnownChildrenObservable?: ParsedQueryNodesObservable,
+  ): Observable<boolean> {
     const loggingCategory = `${LOGGING_NAMESPACE}.HasNodes`;
-    return preprocessedNodesObservable.pipe(
+    return concat(from(possiblyKnownChildrenObservable ?? EMPTY).pipe(filter((n) => hasChildren(n))), preprocessedNodesObservable).pipe(
       log({ category: loggingCategory, message: /* istanbul ignore next */ (n) => `Node before mapping to 'true': ${createNodeIdentifierForLogging(n)}` }),
       map(() => true),
       take(1),
@@ -320,7 +323,11 @@ export class HierarchyProvider {
       }
     }
 
-    const nonGroupingNodeChildrenRequestProps = { ...restProps, parentNode: parentNonGroupingNode, filteredInstanceKeys };
+    const nonGroupingNodeChildrenRequestProps = {
+      ...restProps,
+      parentNode: parentNonGroupingNode,
+      ...(filteredInstanceKeys ? { filteredInstanceKeys } : undefined),
+    };
     const value = { observable: this.createParsedQueryNodesObservable(nonGroupingNodeChildrenRequestProps), processingStatus: "none" as const };
     this._nodesCache.set(nonGroupingNodeChildrenRequestProps, value);
     doLog({
@@ -338,7 +345,7 @@ export class HierarchyProvider {
         const post = this.createProcessedNodesObservable(pre, props);
         return {
           processedNodes: post,
-          hasNodes: this.createHasNodesObservable(pre),
+          hasNodes: this.createHasNodesObservable(pre, entry.observable),
           finalizedNodes: this.createFinalizedNodesObservable(post),
         };
       }

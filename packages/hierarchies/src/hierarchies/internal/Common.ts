@@ -13,6 +13,7 @@ import {
   InstanceHierarchyNodeProcessingParams,
   InstancesNodeKey,
   ParentHierarchyNode,
+  ParsedHierarchyNode,
   ProcessedCustomHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "../HierarchyNode";
@@ -147,10 +148,11 @@ export class BaseClassChecker {
 
 /** @internal */
 // istanbul ignore next
-export function createNodeIdentifierForLogging(node: ParentHierarchyNode | HierarchyNode | undefined) {
+export function createNodeIdentifierForLogging(node: ParentHierarchyNode | HierarchyNode | ParsedHierarchyNode | undefined) {
   if (!node) {
     return "<root>";
   }
-  const { label, key, parentKeys } = node;
+  const { label, key } = node;
+  const parentKeys = "parentKeys" in node ? node.parentKeys : "<unknown>";
   return JSON.stringify({ label, key, parentKeys });
 }
