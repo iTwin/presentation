@@ -14,7 +14,7 @@ const LOGGING_NAMESPACE = `${commonLoggingNamespace}.ReleaseMainThread`;
  * @internal
  */
 export const releaseMainThread = async () => {
-  doLog({ category: LOGGING_NAMESPACE, message: () => "Releasing main thread" });
+  doLog({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ () => "Releasing main thread" });
   return new Promise<void>((resolve) => setTimeout(resolve, 0));
 };
 
