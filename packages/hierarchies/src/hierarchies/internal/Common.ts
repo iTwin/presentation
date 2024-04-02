@@ -20,7 +20,7 @@ import {
 import { getClass } from "./GetClass";
 
 /** @internal */
-export const LOGGING_NAMESPACE = "Presentation.HierarchyBuilder";
+export const LOGGING_NAMESPACE = "Presentation.Hierarchies";
 
 function mergeNodeHandlingParams(
   lhs: InstanceHierarchyNodeProcessingParams | undefined,
