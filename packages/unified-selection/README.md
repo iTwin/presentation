@@ -88,3 +88,47 @@ With that in mind, the above components _A_, _B_ and _C_ can be configured as fo
 - _Component A_ only cares about top level selection. Whenever something is selected in the component, unified selection is updated at the top level. Similarly, whenever unified selection changes, the component only reacts if that happened at the top level.
 - _Component B_ reloads its content if the selection changes at the top level. Row selection is handled using lower level, so selecting a row doesn't affect _Component A's_ selection or _Component B's_ content.
 - _Component C_ reloads its content no matter the selection level.
+
+### Hilite sets
+
+> **Note:** hilite = highlight
+
+`@itwin/core-frontend` contains a concept called the [HiliteSet](https://www.itwinjs.org/reference/core-frontend/selectionset/hiliteset/). This concept is tightly related to unified selection, because, generally, we want selected elements to be highlighted in the application's graphics views. The `HiliteSet` object contains IDs of 3 types of elements: [GeometricModel](https://www.itwinjs.org/reference/core-backend/models/geometricmodel/), [SubCategory](https://www.itwinjs.org/reference/core-backend/categories/subcategory/) and [GeometricElement](https://www.itwinjs.org/reference/core-backend/elements/geometricelement/). On the other hand, the unified selection API allows selecting other kinds of elements too, so IDs of these elements need to be mapped to the supported ones. The rules are as follows:
+
+- for `BisCore.Subject` return IDs of all geometric models that are recursively under that Subject,
+- for `BisCore.Model` just return its ID,
+- for `BisCore.PhysicalPartition` just return ID of a model that models it,
+- for `BisCore.Category` return IDs of all its _SubCategories_,
+- for `BisCore.SubCategory` just return its ID,
+- for `BisCore.GeometricElement` return ID of its own and all its child elements recursively.
+
+So for example when unified selection contains a Subject, the hilite set for it will contain all models under that Subject, it's child Subjects, their child Subjects, etc. Given such hilite set, the viewport component hilites all elements in those models.
+
+The `@itwin/unified-selection` package delivers APIs for creating a `HiliteSet` or retrieving it for _current_ selection in a `SelectionStorage`:
+
+```ts
+// Components may want to get a hilite set for arbitrary set of Selectables - use `createHiliteSetProvider` for that.
+import { IModelConnection } from "@itwin/core-frontend";
+import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop;
+import { createHiliteSetProvider } from "@itwin/unified-selection";
+const hiliteProvider = createHiliteSetProvider({
+  metadataProvider: createMetadataProvider(imodel),
+  queryExecutor: createECSqlQueryExecutor(imodel),
+});
+const hiliteSet = await hiliteProvider.getHiliteSet({ selectables });
+
+// Some others may want to get a hilite set for _current_ selection in storage - use `createCachingHiliteSetProvider` for that. It's
+// recommended to keep a single instance of this provider per application as it caches hilite sets per each iModel's selection.
+import { createCachingHiliteSetProvider } from "@itwin/unified-selection";
+const selectionHiliteProvider = createCachingHiliteSetProvider({
+    selectionStorage,
+    iModelProvider: (iModelKey: string) => {
+        queryExecutor: IECSqlQueryExecutor;
+        metadataProvider: IMetadataProvider;
+    },
+});
+const selectionHiliteSet = await selectionHiliteProvider.getHiliteSet({ imodel.key });
+// The caching provider registers a selection change listener and should be disposed, in case its lifetime
+// is shorter than that of `SelectionStorage`, to unregister the listener.
+selectionHiliteProvider.dispose();
+```
