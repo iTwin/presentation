@@ -1,4 +1,12 @@
 {
+  "cSpell.words": [
+    "hilite",
+    "imodel",
+    "itwin",
+    "selectable",
+    "selectables",
+  ],
+
   "editor.insertSpaces": true,
   "editor.tabSize": 2,
   "editor.trimAutoWhitespace": true,
