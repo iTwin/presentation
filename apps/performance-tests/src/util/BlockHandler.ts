@@ -3,8 +3,20 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import blocked from "blocked";
-import { SortedArray } from "@itwin/core-bentley";
+import { setInterval } from "timers/promises";
+import { Logger, LogLevel, SortedArray } from "@itwin/core-bentley";
+
+const ENABLE_PINGS = false;
+const LOG_CATEGORY = "Presentation.PerformanceTests.BlockHandler";
+
+function log(messageOrCallback: string | (() => string)) {
+  if (!Logger.isEnabled(LOG_CATEGORY, LogLevel.Trace)) {
+    return;
+  }
+
+  const message = typeof messageOrCallback === "string" ? messageOrCallback : messageOrCallback();
+  Logger.logTrace(LOG_CATEGORY, message);
+}
 
 export interface Summary {
   count: number;
@@ -21,7 +33,7 @@ export interface Summary {
  */
 export class BlockHandler {
   private readonly _samples = new SortedArray<number>((a, b) => a - b);
-  private _timer?: NodeJS.Timeout;
+  private _promise?: Promise<void>;
 
   public getSummary(): Summary {
     const arr = this._samples.extractArray();
@@ -43,13 +55,38 @@ export class BlockHandler {
    * @param interval Delay in time between each blocking check.
    */
   public start(threshold: number = 20, interval: number = 10) {
-    this._samples.clear();
-    this._timer = blocked((time) => this._samples.insert(time), { threshold, interval }) as NodeJS.Timeout;
+    const runTimer = async () => {
+      this._samples.clear();
+
+      let lastTime = new Date();
+      for await (const _ of setInterval(interval)) {
+        const currentTime = new Date();
+        const lateAmount = currentTime.getTime() - lastTime.getTime() - interval;
+        if (lateAmount > threshold) {
+          log(() => `${lateAmount} ms, ${lastTime.toISOString()} - ${currentTime.toISOString()}`);
+          this._samples.insert(lateAmount);
+        } else if (ENABLE_PINGS) {
+          log(() => `[${currentTime.toISOString()}] Ping`);
+        }
+        lastTime = new Date();
+
+        if (!this._promise) {
+          break;
+        }
+      }
+    };
+
+    if (this._promise) {
+      throw new Error("Block handler already running.");
+    }
+    this._promise = runTimer();
   }
 
   /** Stops the blocking timer. */
-  public stop() {
-    clearTimeout(this._timer);
+  public async stop() {
+    const promise = this._promise;
+    this._promise = undefined;
+    return promise;
   }
 }
 
