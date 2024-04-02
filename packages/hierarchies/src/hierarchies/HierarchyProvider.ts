@@ -279,7 +279,7 @@ export class HierarchyProvider {
     possiblyKnownChildrenObservable?: ParsedQueryNodesObservable,
   ): Observable<boolean> {
     const loggingCategory = `${LOGGING_NAMESPACE}.HasNodes`;
-    return concat(from(possiblyKnownChildrenObservable ?? EMPTY).pipe(filter((n) => hasChildren(n))), preprocessedNodesObservable).pipe(
+    return concat((possiblyKnownChildrenObservable ?? EMPTY).pipe(filter((n) => hasChildren(n))), preprocessedNodesObservable).pipe(
       log({ category: loggingCategory, message: /* istanbul ignore next */ (n) => `Node before mapping to 'true': ${createNodeIdentifierForLogging(n)}` }),
       map(() => true),
       take(1),
