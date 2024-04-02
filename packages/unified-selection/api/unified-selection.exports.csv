@@ -1,14 +1,12 @@
 sep=;
 Release Tag;API Item
 beta;CachingHiliteSetProvider
-beta;CachingHiliteSetProviderProps
 beta;createCachingHiliteSetProvider(props: CachingHiliteSetProviderProps): CachingHiliteSetProvider
 beta;createHiliteSetProvider(props: HiliteSetProviderProps): HiliteSetProvider
 beta;createStorage(): SelectionStorage
 beta;CustomSelectable
 beta;HiliteSet
 beta;HiliteSetProvider
-beta;HiliteSetProviderProps
 beta;Selectable = SelectableInstanceKey | CustomSelectable
 beta;Selectable
 beta;SelectableIdentifier = SelectableInstanceKey | Pick

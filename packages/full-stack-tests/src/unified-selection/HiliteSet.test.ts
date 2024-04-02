@@ -29,7 +29,7 @@ import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
 import { buildTestIModel, initialize, terminate } from "@itwin/presentation-testing";
 import { SelectableInstanceKey, Selectables } from "@itwin/unified-selection";
 import { createHiliteSetProvider } from "@itwin/unified-selection/lib/cjs/unified-selection/HiliteSetProvider";
-import { createMetadataProvider } from "../hierarchy-builder/Utils";
+import { createMetadataProvider } from "../hierarchies/Utils";
 
 describe("HiliteSet", () => {
   let iModel: IModelConnection;

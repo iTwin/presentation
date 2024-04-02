@@ -17,7 +17,7 @@ import { IMODEL_CLOSE_SELECTION_CLEAR_SOURCE, SelectionStorage } from "./Selecti
 
 /**
  * Props for creating a `CachingHiliteSetProvider` instance.
- * @beta
+ * @internal Not exported through barrel, but used in public API as an argument. May be supplemented with optional attributes any time.
  */
 export interface CachingHiliteSetProviderProps {
   selectionStorage: SelectionStorage;
@@ -25,9 +25,10 @@ export interface CachingHiliteSetProviderProps {
 }
 
 /**
- * Caches hilite set for the current `SelectionStorage` selection
- * so subsequent requests for the same input does not cost
- * @beta
+ * Defines return value of `createCachingHiliteSetProvider`.
+ *
+ * @beta Used in public API as a return value. Not expected to be created / extended by package
+ * consumers, may be supplemented with required attributes any time.
  */
 export interface CachingHiliteSetProvider {
   /** Get the current hilite set iterator for the specified imodel */
@@ -41,7 +42,8 @@ export interface CachingHiliteSetProvider {
 }
 
 /**
- * Creates a hilite set provider that caches hilite set for selection.
+ * Creates a hilite set provider that caches hilite set for current selection for given iModel so any subsequent
+ * hilite set requests for the same iModel don't cost until selection in given selection storage changes.
  * @beta
  */
 export function createCachingHiliteSetProvider(props: CachingHiliteSetProviderProps): CachingHiliteSetProvider {

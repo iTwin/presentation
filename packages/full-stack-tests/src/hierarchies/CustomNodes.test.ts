@@ -9,7 +9,7 @@ import { initialize, terminate } from "../IntegrationTests";
 import { NodeValidators, validateHierarchy } from "./HierarchyValidation";
 import { createProvider } from "./Utils";
 
-describe("Stateless hierarchy builder", () => {
+describe("Hierarchies", () => {
   describe("Custom nodes", () => {
     let emptyIModel!: IModelConnection;
 
