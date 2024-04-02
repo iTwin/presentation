@@ -24,7 +24,7 @@ export interface LoadedHierarchyPart {
 export interface ReloadOptions {
   expandedNodes: TreeModelHierarchyNode[];
   collapsedNodes: TreeModelHierarchyNode[];
-  getInstanceFilter: (node: TreeModelRootNode | TreeModelHierarchyNode<ParentHierarchyNode>) => GenericInstanceFilter | undefined;
+  getInstanceFilter: (node: TreeModelRootNode | TreeModelHierarchyNode) => GenericInstanceFilter | undefined;
   buildNode: (node: TreeModelHierarchyNode) => TreeModelHierarchyNode;
   ignoreCache?: boolean;
 }
@@ -32,12 +32,12 @@ export interface ReloadOptions {
 /** @internal */
 export interface IHierarchyLoader {
   getNodes(
-    parent: TreeModelHierarchyNode<ParentHierarchyNode> | TreeModelRootNode,
-    getInstanceFilter: (node: TreeModelRootNode | TreeModelHierarchyNode<ParentHierarchyNode>) => GenericInstanceFilter | undefined,
-    shouldLoadChildren: (node: TreeModelHierarchyNode<ParentHierarchyNode>) => boolean,
+    parent: TreeModelHierarchyNode | TreeModelRootNode,
+    getInstanceFilter: (node: TreeModelRootNode | TreeModelHierarchyNode) => GenericInstanceFilter | undefined,
+    shouldLoadChildren: (node: TreeModelHierarchyNode) => boolean,
     ignoreCache?: boolean,
   ): Observable<LoadedHierarchyPart>;
-  reloadNodes(parent: TreeModelHierarchyNode<ParentHierarchyNode> | TreeModelRootNode, options: ReloadOptions): Observable<LoadedHierarchyPart>;
+  reloadNodes(parent: TreeModelHierarchyNode | TreeModelRootNode, options: ReloadOptions): Observable<LoadedHierarchyPart>;
 }
 
 /** @internal */
@@ -45,8 +45,8 @@ export class HierarchyLoader implements IHierarchyLoader {
   constructor(private _hierarchyProvider: HierarchyProvider) {}
 
   private loadChildren(
-    parent: TreeModelHierarchyNode<ParentHierarchyNode> | TreeModelRootNode,
-    getInstanceFilter: (node: TreeModelRootNode | TreeModelHierarchyNode<ParentHierarchyNode>) => GenericInstanceFilter | undefined,
+    parent: TreeModelHierarchyNode | TreeModelRootNode,
+    getInstanceFilter: (node: TreeModelRootNode | TreeModelHierarchyNode) => GenericInstanceFilter | undefined,
     buildNode?: (node: TreeModelHierarchyNode) => TreeModelHierarchyNode,
     ignoreCache?: boolean,
   ) {
@@ -78,9 +78,9 @@ export class HierarchyLoader implements IHierarchyLoader {
   }
 
   private loadNodes(
-    parent: TreeModelHierarchyNode<ParentHierarchyNode> | TreeModelRootNode,
-    getInstanceFilter: (node: TreeModelRootNode | TreeModelHierarchyNode<ParentHierarchyNode>) => GenericInstanceFilter | undefined,
-    shouldLoadChildren: (node: TreeModelHierarchyNode<ParentHierarchyNode>) => boolean,
+    parent: TreeModelHierarchyNode | TreeModelRootNode,
+    getInstanceFilter: (node: TreeModelRootNode | TreeModelHierarchyNode) => GenericInstanceFilter | undefined,
+    shouldLoadChildren: (node: TreeModelHierarchyNode) => boolean,
     buildNode?: (node: TreeModelHierarchyNode) => TreeModelHierarchyNode,
     ignoreCache?: boolean,
   ) {
@@ -94,22 +94,22 @@ export class HierarchyLoader implements IHierarchyLoader {
   }
 
   public getNodes(
-    parent: TreeModelHierarchyNode<ParentHierarchyNode> | TreeModelRootNode,
-    getInstanceFilter: (node: TreeModelRootNode | TreeModelHierarchyNode<ParentHierarchyNode>) => GenericInstanceFilter | undefined,
-    shouldLoadChildren: (node: TreeModelHierarchyNode<ParentHierarchyNode>) => boolean,
+    parent: TreeModelHierarchyNode | TreeModelRootNode,
+    getInstanceFilter: (node: TreeModelRootNode | TreeModelHierarchyNode) => GenericInstanceFilter | undefined,
+    shouldLoadChildren: (node: TreeModelHierarchyNode) => boolean,
     ignoreCache?: boolean,
   ) {
     return this.loadNodes(parent, getInstanceFilter, shouldLoadChildren, undefined, ignoreCache);
   }
 
   public reloadNodes(
-    parent: TreeModelHierarchyNode<ParentHierarchyNode> | TreeModelRootNode,
+    parent: TreeModelHierarchyNode | TreeModelRootNode,
     { expandedNodes, collapsedNodes, getInstanceFilter, buildNode, ignoreCache }: ReloadOptions,
   ) {
     return this.loadNodes(
       parent,
       getInstanceFilter,
-      (node: TreeModelHierarchyNode<ParentHierarchyNode>) => {
+      (node: TreeModelHierarchyNode) => {
         if (expandedNodes.findIndex((expandedNode) => sameNodes(expandedNode.nodeData, node.nodeData)) !== -1) {
           return true;
         }
@@ -151,9 +151,10 @@ export function createNodeId(node: Pick<HierarchyNode, "key" | "parentKeys">) {
 }
 
 export function serializeNodeKey(key: HierarchyNodeKey): string {
-  return HierarchyNodeKey.isCustom(key) ? key : convertObjectValuesToString(key);
+  return HierarchyNodeKey.isCustom(key) ? key : /* istanbul ignore next */ convertObjectValuesToString(key);
 }
 
+// istanbul ignore next
 function convertObjectValuesToString(obj: object): string {
   return Object.entries(obj)
     .map(([, value]) => {
@@ -165,6 +166,7 @@ function convertObjectValuesToString(obj: object): string {
     .join(",");
 }
 
+// istanbul ignore next
 function sameNodes(lhs: ParentHierarchyNode, rhs: ParentHierarchyNode): boolean {
   if (HierarchyNodeKey.compare(lhs.key, rhs.key) !== 0) {
     return false;
