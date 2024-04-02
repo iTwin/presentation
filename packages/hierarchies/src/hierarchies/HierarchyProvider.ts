@@ -208,14 +208,14 @@ export class HierarchyProvider {
           return of(def.node);
         }
         return this._queryScheduler.scheduleSubscription(
-          defer(() => of(def.query)).pipe(
+          of(def.query).pipe(
             map((query) => filterQueryByInstanceKeys(query, props.filteredInstanceKeys)),
             log({
               category: `${LOGGING_NAMESPACE}.Queries`,
               message: /* istanbul ignore next */ (query) =>
                 `Query direct nodes for parent ${createNodeIdentifierForLogging(props.parentNode)}: ${createQueryLogMessage(query)}`,
             }),
-            mergeMap((query) => this._queryReader.read(this.queryExecutor, query, props.hierarchyLevelSizeLimit)),
+            mergeMap((query) => defer(() => from(this._queryReader.read(this.queryExecutor, query, props.hierarchyLevelSizeLimit)))),
           ),
         );
       }),
