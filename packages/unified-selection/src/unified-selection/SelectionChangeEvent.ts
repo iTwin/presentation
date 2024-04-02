@@ -11,7 +11,7 @@ import { SelectionStorage } from "./SelectionStorage";
  */
 
 /**
- * The type of selection change
+ * The type of selection change.
  * @beta
  */
 export type StorageSelectionChangeType =
@@ -26,7 +26,9 @@ export type StorageSelectionChangeType =
 
 /**
  * The event object that is sent when the selection changes.
- * @beta
+ *
+ * @beta Used in public API as an argument for `StorageSelectionChangesListener`. Not expected to be created / extended by package
+ * consumers, may be supplemented with required attributes any time.
  */
 export interface StorageSelectionChangeEventArgs {
   /** The name of the selection source which caused the selection change. */
@@ -44,7 +46,7 @@ export interface StorageSelectionChangeEventArgs {
 }
 
 /**
- * An interface for selection change listeners
+ * An interface for selection change listeners.
  * @beta
  */
 export declare type StorageSelectionChangesListener = (args: StorageSelectionChangeEventArgs, storage: SelectionStorage) => void;
@@ -71,7 +73,7 @@ export interface SelectionChangeEvent {
 }
 
 /**
- * An event broadcasted on selection changes
+ * An event broadcasted on selection changes.
  * @internal
  */
 export class SelectionChangeEventImpl implements SelectionChangeEvent {

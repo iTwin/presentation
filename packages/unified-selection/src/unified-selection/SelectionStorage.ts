@@ -11,8 +11,10 @@ import { Selectable, Selectables } from "./Selectable";
 import { SelectionChangeEvent, SelectionChangeEventImpl, StorageSelectionChangeEventArgs, StorageSelectionChangeType } from "./SelectionChangeEvent";
 
 /**
- * Selection storage interface which provides main selection and sub-selection.
- * @beta
+ * Defines return value of `createStorage`.
+ *
+ * @beta Used in public API as a return value. Not expected to be created / extended by package
+ * consumers, may be supplemented with required attributes any time.
  */
 export interface SelectionStorage {
   /** An event that is raised when selection changes. */
@@ -86,7 +88,16 @@ export interface SelectionStorage {
 }
 
 /**
- * Creates a selection storage. When an iModel is closed `SelectionStorage.clearSelection` function should be called.
+ * Creates a selection storage which stores and allows managing application-level selection.
+ *
+ * **Note:** `clearSelection` should be called upon iModel close to free-up memory:
+ * ```ts
+ * import { IModelConnection } from "@itwin/core-frontend";
+ * IModelConnection.onClose.addListener((iModel) => {
+ *   storage.clearStorage(iModel.key);
+ * });
+ * ```
+ *
  * @beta
  */
 export function createStorage(): SelectionStorage {

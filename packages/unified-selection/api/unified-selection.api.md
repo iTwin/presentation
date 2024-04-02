@@ -13,17 +13,6 @@ export interface CachingHiliteSetProvider {
 }
 
 // @beta
-export interface CachingHiliteSetProviderProps {
-    // (undocumented)
-    iModelProvider: (iModelKey: string) => {
-        queryExecutor: IECSqlQueryExecutor;
-        metadataProvider: IMetadataProvider;
-    };
-    // (undocumented)
-    selectionStorage: SelectionStorage;
-}
-
-// @beta
 export function createCachingHiliteSetProvider(props: CachingHiliteSetProviderProps): CachingHiliteSetProvider;
 
 // @beta
@@ -54,14 +43,6 @@ export interface HiliteSetProvider {
     getHiliteSet(props: {
         selectables: Selectables;
     }): AsyncIterableIterator<HiliteSet>;
-}
-
-// @beta
-export interface HiliteSetProviderProps {
-    // (undocumented)
-    metadataProvider: IMetadataProvider;
-    // (undocumented)
-    queryExecutor: IECSqlQueryExecutor;
 }
 
 // @beta
