@@ -5,6 +5,31 @@
 ```ts
 
 // @beta
+export interface CachingHiliteSetProvider {
+    dispose(): void;
+    getHiliteSet(props: {
+        iModelKey: string;
+    }): AsyncIterableIterator<HiliteSet>;
+}
+
+// @beta
+export interface CachingHiliteSetProviderProps {
+    // (undocumented)
+    iModelProvider: (iModelKey: string) => {
+        queryExecutor: IECSqlQueryExecutor;
+        metadataProvider: IMetadataProvider;
+    };
+    // (undocumented)
+    selectionStorage: SelectionStorage;
+}
+
+// @beta
+export function createCachingHiliteSetProvider(props: CachingHiliteSetProviderProps): CachingHiliteSetProvider;
+
+// @beta
+export function createHiliteSetProvider(props: HiliteSetProviderProps): HiliteSetProvider;
+
+// @beta
 export function createStorage(): SelectionStorage;
 
 // @beta
@@ -12,6 +37,31 @@ export interface CustomSelectable {
     data: unknown;
     identifier: string;
     loadInstanceKeys: () => AsyncIterableIterator<SelectableInstanceKey>;
+}
+
+// @beta
+export interface HiliteSet {
+    // (undocumented)
+    elements: string[];
+    // (undocumented)
+    models: string[];
+    // (undocumented)
+    subCategories: string[];
+}
+
+// @beta
+export interface HiliteSetProvider {
+    getHiliteSet(props: {
+        selectables: Selectables;
+    }): AsyncIterableIterator<HiliteSet>;
+}
+
+// @beta
+export interface HiliteSetProviderProps {
+    // (undocumented)
+    metadataProvider: IMetadataProvider;
+    // (undocumented)
+    queryExecutor: IECSqlQueryExecutor;
 }
 
 // @beta
