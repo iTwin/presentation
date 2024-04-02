@@ -10,7 +10,7 @@ import * as hiliteSetProvider from "../unified-selection/HiliteSetProvider";
 import { IMetadataProvider } from "../unified-selection/queries/ECMetadata";
 import { IECSqlQueryExecutor } from "../unified-selection/queries/ECSqlCore";
 import { SelectableInstanceKey } from "../unified-selection/Selectable";
-import { createStorage, IMODEL_CLOSE_SELECTION_CLEAR_SOURCE, SelectionStorage } from "../unified-selection/SelectionStorage";
+import { createStorage, SelectionStorage } from "../unified-selection/SelectionStorage";
 import { createSelectableInstanceKey } from "./_helpers/SelectablesCreator";
 
 const generateSelection = (): SelectableInstanceKey[] => {
@@ -27,8 +27,8 @@ describe("CachingHiliteSetProvider", () => {
   const iModelProvider = sinon.stub<[string], { queryExecutor: IECSqlQueryExecutor; metadataProvider: IMetadataProvider }>();
   const iModelKey = "iModelKey";
 
-  async function loadHiliteSet(modelKey: string) {
-    const iterator = hiliteSetCache.getHiliteSet({ iModelKey: modelKey });
+  async function loadHiliteSet(imodelKey: string) {
+    const iterator = hiliteSetCache.getHiliteSet({ iModelKey: imodelKey });
 
     const models: string[] = [];
     const subCategories: string[] = [];
@@ -54,7 +54,9 @@ describe("CachingHiliteSetProvider", () => {
       selectionStorage,
       iModelProvider,
     });
-    iModelProvider.returns({ queryExecutor: {} as IECSqlQueryExecutor, metadataProvider: {} as IMetadataProvider });
+    const defaultQueryExecutor = { createQueryReader: () => {} } as unknown as IECSqlQueryExecutor;
+    const defaultMetadataProvider = { getSchema: () => {} } as unknown as IMetadataProvider;
+    iModelProvider.returns({ queryExecutor: defaultQueryExecutor, metadataProvider: defaultMetadataProvider });
     selectionStorage.addToSelection({ iModelKey, source: "test", selectables: generateSelection() });
 
     provider.getHiliteSet.reset();
@@ -72,20 +74,20 @@ describe("CachingHiliteSetProvider", () => {
 
   describe("getHiliteSet", () => {
     it("creates provider once for iModel", async () => {
-      const executor1 = {} as IECSqlQueryExecutor;
-      const executor2 = {} as IECSqlQueryExecutor;
-      const metadataProvider = {} as IMetadataProvider;
+      const executor1 = { createQueryReader: () => {} } as unknown as IECSqlQueryExecutor;
+      const executor2 = { createQueryReader: () => {} } as unknown as IECSqlQueryExecutor;
+      const metadataProvider = { getSchema: () => {} } as unknown as IMetadataProvider;
+      iModelProvider.returns({ queryExecutor: executor1, metadataProvider });
 
       hiliteSetCache.getHiliteSet({ iModelKey: "model1" });
-      iModelProvider.returns({ queryExecutor: executor1, metadataProvider });
       expect(factory).to.be.calledOnceWith({ queryExecutor: executor1, metadataProvider });
       factory.resetHistory();
 
       hiliteSetCache.getHiliteSet({ iModelKey: "model1" });
       expect(factory).to.not.be.called;
 
-      hiliteSetCache.getHiliteSet({ iModelKey: "model2" });
       iModelProvider.returns({ queryExecutor: executor2, metadataProvider });
+      hiliteSetCache.getHiliteSet({ iModelKey: "model2" });
       expect(factory).to.be.calledOnceWith({ queryExecutor: executor2, metadataProvider });
       factory.resetHistory();
 
@@ -121,14 +123,15 @@ describe("CachingHiliteSetProvider", () => {
     });
 
     it("clears hilite set providers when iModel is closed", async () => {
-      const queryExecutor = {} as IECSqlQueryExecutor;
-      const metadataProvider = {} as IMetadataProvider;
+      const queryExecutor = { createQueryReader: () => {} } as unknown as IECSqlQueryExecutor;
+      const metadataProvider = { getSchema: () => {} } as unknown as IMetadataProvider;
+      iModelProvider.returns({ queryExecutor, metadataProvider });
 
       hiliteSetCache.getHiliteSet({ iModelKey });
       expect(factory).to.be.calledOnceWith({ queryExecutor, metadataProvider });
       factory.resetHistory();
 
-      selectionStorage.clearSelection({ iModelKey, source: IMODEL_CLOSE_SELECTION_CLEAR_SOURCE });
+      selectionStorage.clearStorage({ iModelKey });
 
       hiliteSetCache.getHiliteSet({ iModelKey });
       expect(factory).to.be.calledOnceWith({ queryExecutor, metadataProvider });
