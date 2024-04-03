@@ -4,15 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { catchError, defer, expand, from, map, mergeMap, Observable, of } from "rxjs";
-import {
-  GenericInstanceFilter,
-  HierarchyNode,
-  HierarchyNodeKey,
-  HierarchyProvider,
-  ParentHierarchyNode,
-  RowsLimitExceededError,
-} from "@itwin/presentation-hierarchies";
+import { GenericInstanceFilter, HierarchyNode, HierarchyProvider, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
 import { isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelInfoNode, TreeModelNode, TreeModelRootNode } from "./TreeModel";
+import { createNodeId, sameNodes } from "./Utils";
 
 /** @internal */
 export interface LoadedHierarchyPart {
@@ -144,42 +138,4 @@ function createTreeModelNodesFactory(
 
 function isHierarchyNode(node: TreeModelInfoNode | HierarchyNode): node is HierarchyNode {
   return "key" in node && node.key !== undefined;
-}
-
-export function createNodeId(node: Pick<HierarchyNode, "key" | "parentKeys">) {
-  return [...node.parentKeys.map(serializeNodeKey), serializeNodeKey(node.key)].join(",");
-}
-
-export function serializeNodeKey(key: HierarchyNodeKey): string {
-  return HierarchyNodeKey.isCustom(key) ? key : /* istanbul ignore next */ convertObjectValuesToString(key);
-}
-
-// istanbul ignore next
-function convertObjectValuesToString(obj: object): string {
-  return Object.entries(obj)
-    .map(([, value]) => {
-      if (typeof value === "object") {
-        return convertObjectValuesToString(value);
-      }
-      return String(value);
-    })
-    .join(",");
-}
-
-// istanbul ignore next
-function sameNodes(lhs: ParentHierarchyNode, rhs: ParentHierarchyNode): boolean {
-  if (HierarchyNodeKey.compare(lhs.key, rhs.key) !== 0) {
-    return false;
-  }
-
-  if (lhs.parentKeys.length !== rhs.parentKeys.length) {
-    return false;
-  }
-
-  for (let i = lhs.parentKeys.length - 1; i >= 0; --i) {
-    if (HierarchyNodeKey.compare(lhs.parentKeys[i], rhs.parentKeys[i]) !== 0) {
-      return false;
-    }
-  }
-  return true;
 }

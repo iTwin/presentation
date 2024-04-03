@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { TreeActions } from "./internal/TreeActions";
-import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./internal/TreeModel";
+import { isTreeModelHierarchyNode, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./internal/TreeModel";
 import { useUnifiedTreeSelection, UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection";
 import { PresentationHierarchyNode, PresentationTreeNode } from "./Types";
 
@@ -34,6 +34,7 @@ export interface UseTreeProps {
   hierarchyProvider?: HierarchyProvider;
 }
 
+/** @internal */
 export interface UseTreeResult {
   /**
    * Array containing root tree nodes. It is `undefined` on initial render until any nodes are loaded.
@@ -120,10 +121,10 @@ export function useTreeInternal({
   const getHierarchyLevelFilteringOptions = useCallback(
     (nodeId: string | undefined) => {
       const node = actions.getNode(nodeId);
-      if (!node || isTreeModelInfoNode(node)) {
+      if (!node || !isTreeModelHierarchyNode(node)) {
         return undefined;
       }
-      const hierarchyNode = isTreeModelHierarchyNode(node) ? node.nodeData : undefined;
+      const hierarchyNode = node.nodeData;
       if (hierarchyNode && HierarchyNode.isGroupingNode(hierarchyNode)) {
         return undefined;
       }

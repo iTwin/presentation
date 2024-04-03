@@ -9,11 +9,11 @@ import { ComponentPropsWithoutRef, ReactElement, useCallback } from "react";
 import { SvgFilter, SvgFilterHollow, SvgRemove } from "@itwin/itwinui-icons-react";
 import { Button, IconButton, ProgressRadial, Tree, TreeNode } from "@itwin/itwinui-react";
 import { isPresentationHierarchyNode, PresentationHierarchyNode, PresentationTreeNode } from "./Types";
-import { HierarchyLevelFilteringOptions, useTree } from "./UseTree";
+import { useTree } from "./UseTree";
 
-interface TreeRendererProps extends Omit<ReturnType<typeof useTree>, "rootNodes" | "isLoading"> {
+interface TreeRendererProps extends Omit<ReturnType<typeof useTree>, "rootNodes" | "isLoading" | "reloadTree" | "getHierarchyLevelFilteringOptions"> {
   rootNodes: PresentationTreeNode[];
-  onFilterClick: (filteringInfo: HierarchyLevelFilteringOptions) => void;
+  onFilterClick: (nodeId: string) => void;
   getIcon?: (node: PresentationHierarchyNode) => ReactElement | undefined;
 }
 
@@ -24,7 +24,6 @@ export function TreeRenderer({
   selectNode,
   isNodeSelected,
   setHierarchyLevelLimit,
-  getHierarchyLevelFilteringOptions,
   removeHierarchyLevelFilter,
   onFilterClick,
   getIcon,
@@ -66,10 +65,7 @@ export function TreeRenderer({
                 size="small"
                 title="Apply filter"
                 onClick={(e) => {
-                  const options = getHierarchyLevelFilteringOptions(node.id);
-                  if (options) {
-                    onFilterClick(options);
-                  }
+                  onFilterClick(node.id);
                   e.stopPropagation();
                 }}
               >
@@ -87,9 +83,9 @@ export function TreeRenderer({
       if (node.type === "ResultSetTooLarge") {
         return <ResultSetTooLargeNode {...restProps} label={node.message} onRemoveLimit={() => setHierarchyLevelLimit(node.parentNodeId, "unbounded")} />;
       }
-      return <TreeNode {...restProps} label={node.message} isDisabled={true} onExpanded={() => {}} />;
+      return <TreeNode {...restProps} label={node.message} isDisabled={true} onExpanded={/* istanbul ignore next */ () => {}} />;
     },
-    [expandNode, selectNode, setHierarchyLevelLimit, getHierarchyLevelFilteringOptions, removeHierarchyLevelFilter, onFilterClick, getIcon],
+    [expandNode, selectNode, setHierarchyLevelLimit, removeHierarchyLevelFilter, onFilterClick, getIcon],
   );
 
   const getNode = useCallback<TreeProps<PresentationTreeNode>["getNode"]>(
@@ -140,12 +136,12 @@ export function TreeRenderer({
 }
 
 function PlaceholderNode(props: Omit<TreeNodeProps, "onExpanded">) {
-  return <TreeNode {...props} icon={<ProgressRadial size="x-small" indeterminate />} onExpanded={() => {}}></TreeNode>;
+  return <TreeNode {...props} icon={<ProgressRadial size="x-small" indeterminate />} onExpanded={/* istanbul ignore next */ () => {}}></TreeNode>;
 }
 
 function ResultSetTooLargeNode({ onRemoveLimit, ...props }: Omit<TreeNodeProps, "onExpanded"> & { onRemoveLimit: () => void }) {
   return (
-    <TreeNode {...props} onExpanded={() => {}}>
+    <TreeNode {...props} onExpanded={/* istanbul ignore next */ () => {}}>
       <Button
         styleType="borderless"
         size="small"

@@ -3,9 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { ReactElement } from "react";
 import sinon from "sinon";
 import { GroupingHierarchyNode, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
-import { configure } from "@testing-library/react";
+import { configure, RenderOptions, RenderResult, render as renderRTL } from "@testing-library/react";
+import userEvent, { UserEvent } from "@testing-library/user-event";
 import {
   isTreeModelHierarchyNode,
   TreeModel,
@@ -16,7 +18,19 @@ import {
 
 configure({ reactStrictMode: true });
 
+/**
+ * Custom render function that wraps around `render` function from `@testing-library/react` and additionally
+ * setup `userEvent` from `@testing-library/user-event`.
+ */
+function customRender(ui: ReactElement, options?: RenderOptions): RenderResult & { user: UserEvent } {
+  return {
+    ...renderRTL(ui, options),
+    user: userEvent.setup(),
+  };
+}
+
 export * from "@testing-library/react";
+export { customRender as render };
 
 export function createStub<T extends (...args: any[]) => any>() {
   return sinon.stub<Parameters<T>, ReturnType<T>>();
