@@ -23,6 +23,7 @@ import { createClassGroups } from "./grouping/ClassGrouping";
 import { applyGroupHidingParams } from "./grouping/GroupHiding";
 import { createLabelGroups } from "./grouping/LabelGrouping";
 import { createPropertiesGroupingHandlers, PropertiesGroupingLocalizedStrings } from "./grouping/PropertiesGrouping";
+import { releaseMainThreadOnItemsCount } from "./ReleaseMainThread";
 
 const OPERATOR_NAME = "Grouping";
 /** @internal */
@@ -62,6 +63,7 @@ export function createGroupingOperator(
         );
       }),
       concatAll(),
+      releaseMainThreadOnItemsCount(100),
       log({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ (n) => `out: ${createNodeIdentifierForLogging(n)}` }),
     );
   };
