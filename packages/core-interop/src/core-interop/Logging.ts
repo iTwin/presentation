@@ -19,7 +19,8 @@ interface ICoreLogger {
 }
 
 /**
- * Create an `ILogger` that uses [Logger](https://www.itwinjs.org/reference/core-bentley/logging/logger/) API to log messages.
+ * Creates an `ILogger` that uses [Logger](https://www.itwinjs.org/reference/core-bentley/logging/logger/)
+ * API to log messages.
  *
  * Usage example:
  *

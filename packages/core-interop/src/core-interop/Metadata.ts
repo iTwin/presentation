@@ -16,7 +16,7 @@ interface ICoreSchemaContext {
 }
 
 /**
- * Create an `IMetadataProvider` for given [SchemaContext](https://www.itwinjs.org/reference/ecschema-metadata/context/schemacontext/).
+ * Creates an `IMetadataProvider` for given [SchemaContext](https://www.itwinjs.org/reference/ecschema-metadata/context/schemacontext/).
  *
  * Usage example:
  *

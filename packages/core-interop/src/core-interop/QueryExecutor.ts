@@ -17,7 +17,7 @@ interface ICoreECSqlReaderFactory {
 }
 
 /**
- * Create an `IECSqlQueryExecutor` from either [IModelDb](https://www.itwinjs.org/reference/core-backend/imodels/imodeldb/) or
+ * Creates an `IECSqlQueryExecutor` from either [IModelDb](https://www.itwinjs.org/reference/core-backend/imodels/imodeldb/) or
  * [IModelConnection](https://www.itwinjs.org/reference/core-frontend/imodelconnection/imodelconnection/).
  *
  * Usage example:
