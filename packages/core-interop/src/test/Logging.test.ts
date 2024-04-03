@@ -11,28 +11,28 @@ import { createLogger } from "../core-interop/Logging";
 describe("createLogger", () => {
   it("checks error severity using core `Logger`", async () => {
     const spy = sinon.stub(Logger, "isEnabled").returns(true);
-    const logger = createLogger();
+    const logger = createLogger(Logger);
     expect(logger.isEnabled("test category", "error")).to.be.true;
     expect(spy).to.be.calledOnceWith("test category", LogLevel.Error);
   });
 
   it("checks warning severity using core `Logger`", async () => {
     const spy = sinon.stub(Logger, "isEnabled").returns(true);
-    const logger = createLogger();
+    const logger = createLogger(Logger);
     expect(logger.isEnabled("test category", "warning")).to.be.true;
     expect(spy).to.be.calledOnceWith("test category", LogLevel.Warning);
   });
 
   it("checks info severity using core `Logger`", async () => {
     const spy = sinon.stub(Logger, "isEnabled").returns(true);
-    const logger = createLogger();
+    const logger = createLogger(Logger);
     expect(logger.isEnabled("test category", "info")).to.be.true;
     expect(spy).to.be.calledOnceWith("test category", LogLevel.Info);
   });
 
   it("checks trace severity using core `Logger`", async () => {
     const spy = sinon.stub(Logger, "isEnabled").returns(true);
-    const logger = createLogger();
+    const logger = createLogger(Logger);
     expect(logger.isEnabled("test category", "trace")).to.be.true;
     expect(spy).to.be.calledOnceWith("test category", LogLevel.Trace);
   });
@@ -44,7 +44,7 @@ describe("createLogger", () => {
       info: sinon.spy(Logger, "logInfo"),
       trace: sinon.spy(Logger, "logTrace"),
     };
-    const logger = createLogger();
+    const logger = createLogger(Logger);
 
     logger.logError("c1", "m1");
     logger.logWarning("c2", "m2");

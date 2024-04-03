@@ -12,7 +12,7 @@ import { Datasets } from "./util/Datasets";
 before(async () => {
   Logger.initializeToConsole();
   Logger.setLevelDefault(LogLevel.Error);
-  setLogger(createLogger());
+  setLogger(createLogger(Logger));
   await IModelHost.startup({
     profileName: "presentation-performance-tests",
   });

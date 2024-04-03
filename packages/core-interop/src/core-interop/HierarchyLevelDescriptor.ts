@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { filter, from, map, merge, mergeAll, mergeMap, Observable, partition, reduce, shareReplay } from "rxjs";
+import { IModel } from "@itwin/core-common";
 import { ContentDescriptorRequestOptions, DefaultContentDisplayTypes, Descriptor, KeySet, Ruleset, RulesetVariable } from "@itwin/presentation-common";
 import {
   ECSqlQueryDef,
@@ -17,13 +18,12 @@ import {
   NodeSelectClauseColumnNames,
   NonGroupingHierarchyNode,
 } from "@itwin/presentation-hierarchies";
-import { ICoreECSqlReaderFactory } from "./QueryExecutor";
 
 /**
  * Props for [[createHierarchyLevelDescriptor]].
  * @beta
  */
-export interface CreateHierarchyLevelDescriptorProps<TIModel extends ICoreECSqlReaderFactory> {
+export interface CreateHierarchyLevelDescriptorProps<TIModel extends IModel> {
   /**
    * An iModel to use for creating the descriptor. Typically, this is either [IModelDb]($core-backend)
    * or [IModelConnection]($core-frontend).
@@ -71,7 +71,7 @@ export interface CreateHierarchyLevelDescriptorResult {
  *
  * @beta
  */
-export async function createHierarchyLevelDescriptor<TIModel extends ICoreECSqlReaderFactory>(
+export async function createHierarchyLevelDescriptor<TIModel extends IModel>(
   props: CreateHierarchyLevelDescriptorProps<TIModel>,
 ): Promise<CreateHierarchyLevelDescriptorResult | undefined> {
   // convert instance keys stream into a KeySet
