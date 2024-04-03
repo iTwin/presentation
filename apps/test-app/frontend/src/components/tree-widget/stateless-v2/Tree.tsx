@@ -94,7 +94,7 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
     );
   }, [metadata, filteredPaths]);
 
-  const { rootNodes, isLoading, ...treeProps } = useUnifiedSelectionTree({
+  const { rootNodes, isLoading, getHierarchyLevelFilteringOptions, ...treeProps } = useUnifiedSelectionTree({
     imodelKey: imodel.key,
     sourceName: "StatelessTreeV2",
     hierarchyProvider,
@@ -112,6 +112,12 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
   };
 
   const [filteringOptions, setFilteringOptions] = useState<HierarchyLevelFilteringOptions>();
+  const onFilterClick = useCallback(
+    (nodeId: string) => {
+      setFilteringOptions(getHierarchyLevelFilteringOptions(nodeId));
+    },
+    [getHierarchyLevelFilteringOptions],
+  );
   const propertiesSource = useMemo<(() => Promise<PresentationInstanceFilterPropertiesSource>) | undefined>(() => {
     if (!hierarchyProvider || !filteringOptions) {
       return undefined;
@@ -164,7 +170,7 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
 
     return (
       <Flex.Item alignSelf="flex-start" style={{ width: "100%", overflow: "auto" }}>
-        <TreeRenderer rootNodes={rootNodes} {...treeProps} onFilterClick={setFilteringOptions} getIcon={getIcon} />
+        <TreeRenderer rootNodes={rootNodes} {...treeProps} onFilterClick={onFilterClick} getIcon={getIcon} />
       </Flex.Item>
     );
   };
