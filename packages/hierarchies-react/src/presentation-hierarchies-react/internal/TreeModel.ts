@@ -49,35 +49,35 @@ export interface TreeModel {
 }
 
 export namespace TreeModel {
-  export function expandNode(model: TreeModel, nodeId: string, isExpanded: boolean): { loadChildren: boolean; ignoreCache: boolean } {
+  export function expandNode(model: TreeModel, nodeId: string, isExpanded: boolean): "none" | "loadChildren" | "reloadChildren" {
     const node = model.idToNode.get(nodeId);
     if (!node || !isTreeModelHierarchyNode(node)) {
-      return { loadChildren: false, ignoreCache: false };
+      return "none";
     }
 
     node.isExpanded = isExpanded;
     if (!isExpanded || !node.children) {
-      return { loadChildren: false, ignoreCache: false };
+      return "none";
     }
 
     const children = model.parentChildMap.get(node.id);
     if (!children) {
       node.isLoading = true;
-      return { loadChildren: true, ignoreCache: false };
+      return "loadChildren";
     }
 
-    if (children.length > 1) {
-      return { loadChildren: false, ignoreCache: false };
+    if (children.length !== 1) {
+      return "none";
     }
 
-    const firstChild = children.length === 1 ? TreeModel.getNode(model, children[0]) : undefined;
+    const firstChild = TreeModel.getNode(model, children[0]);
     if (!firstChild || !isTreeModelInfoNode(firstChild)) {
-      return { loadChildren: false, ignoreCache: false };
+      return "none";
     }
 
     TreeModel.removeSubTree(model, nodeId);
     node.isLoading = true;
-    return { loadChildren: true, ignoreCache: true };
+    return "reloadChildren";
   }
 
   /** @internal */

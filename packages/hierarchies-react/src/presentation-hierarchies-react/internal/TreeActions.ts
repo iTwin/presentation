@@ -107,13 +107,13 @@ export class TreeActions {
   }
 
   public expandNode(nodeId: string, isExpanded: boolean) {
-    let expandResult = { loadChildren: false, ignoreCache: false };
+    let childrenAction: ReturnType<typeof TreeModel.expandNode> = "none";
     this.updateTreeModel((model) => {
-      expandResult = TreeModel.expandNode(model, nodeId, isExpanded);
+      childrenAction = TreeModel.expandNode(model, nodeId, isExpanded);
     });
 
-    if (expandResult.loadChildren) {
-      this.loadNodes(nodeId, expandResult.ignoreCache);
+    if (childrenAction !== "none") {
+      this.loadNodes(nodeId, childrenAction === "reloadChildren");
     }
   }
 
