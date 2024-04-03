@@ -424,7 +424,7 @@ describe("TreeActions", () => {
       expect(getHierarchyNode(newModel, "child-1")).to.be.undefined;
     });
 
-    it("reloads reloadTree after setting hierarchy filter on expanded node", async () => {
+    it("reloads tree after setting hierarchy filter node", async () => {
       const model = createTreeModel([
         {
           id: undefined,
@@ -468,35 +468,6 @@ describe("TreeActions", () => {
       expect(getHierarchyNode(newModel, "child-2")).to.not.be.undefined;
     });
 
-    it("does not reload subtree after setting hierarchy filter on collapsed node", () => {
-      const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1"],
-        },
-        {
-          id: "root-1",
-          isExpanded: false,
-          children: ["child-1"],
-        },
-        {
-          id: "child-1",
-          children: [],
-        },
-      ]);
-
-      const actions = createActions(model);
-
-      actions.setInstanceFilter("root-1", filter);
-      expect(onModelChangedStub).to.be.calledOnce;
-      const newModel = onModelChangedStub.firstCall.args[0];
-      expect(getHierarchyNode(newModel, "root-1")?.instanceFilter).to.be.eq(filter);
-      expect(getHierarchyNode(newModel, "root-1")?.isLoading).to.be.undefined;
-      expect(getHierarchyNode(newModel, "child-1")).to.be.undefined;
-
-      expect(provider.getNodes).to.not.be.called;
-    });
-
     it("sets instance filter for tree root and reloads subtree", async () => {
       const model = createTreeModel([
         {
@@ -532,6 +503,33 @@ describe("TreeActions", () => {
       newModel = onModelChangedStub.secondCall.args[0];
       expect(getHierarchyNode(newModel, "root-1")).to.be.undefined;
       expect(getHierarchyNode(newModel, "root-2")).to.not.be.undefined;
+    });
+
+    it("does nothing when called on invalid node", async () => {
+      const model = createTreeModel([
+        {
+          id: undefined,
+          children: ["root-1"],
+        },
+        {
+          id: "root-1",
+          children: [],
+        },
+      ]);
+
+      provider.getNodes.reset();
+      provider.getNodes.callsFake(async () => {
+        return [];
+      });
+
+      const actions = createActions(model);
+
+      actions.setInstanceFilter("invalid", filter);
+
+      await waitFor(() => {
+        expect(onModelChangedStub).to.not.be.called;
+        expect(provider.getNodes).to.not.be.called;
+      });
     });
   });
 

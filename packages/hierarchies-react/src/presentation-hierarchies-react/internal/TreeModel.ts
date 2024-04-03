@@ -135,9 +135,9 @@ export namespace TreeModel {
   }
 
   export function setInstanceFilter(model: TreeModel, nodeId: string | undefined, filter?: GenericInstanceFilter): boolean {
-    removeSubTree(model, nodeId);
     if (nodeId === undefined) {
       model.rootNode.instanceFilter = filter;
+      removeSubTree(model, nodeId);
       return true;
     }
 
@@ -146,12 +146,12 @@ export namespace TreeModel {
       return false;
     }
 
+    removeSubTree(model, nodeId);
     modelNode.instanceFilter = filter;
     if (modelNode.isExpanded) {
       modelNode.isLoading = true;
-      return true;
     }
-    return false;
+    return true;
   }
 
   export function selectNode(model: TreeModel, nodeId: string, isSelected: boolean) {
