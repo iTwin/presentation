@@ -57,7 +57,7 @@ export class TreeActions {
     this._loader
       .getNodes(
         parentNode,
-        (node) => getNodeInstanceFilter(this._currentModel, node),
+        (node) => getNodeInstanceFilter(this._currentModel, getFilteredNodeId(node)),
         (node) => !!node.nodeData.autoExpand,
         ignoreCache,
       )
@@ -135,7 +135,10 @@ export class TreeActions {
     const collapsedNodes = !!options?.discardState ? [] : collectNodes(parentId, oldModel, (node) => node.isExpanded === false);
     const getInstanceFilter = !!options?.discardState
       ? () => undefined
-      : (node: TreeModelRootNode | TreeModelHierarchyNode) => getNodeInstanceFilter(node.id === parentId ? currModel : oldModel, node);
+      : (node: TreeModelRootNode | TreeModelHierarchyNode) => {
+          const filteredNodeId = getFilteredNodeId(node);
+          return getNodeInstanceFilter(filteredNodeId === parentId ? currModel : oldModel, filteredNodeId);
+        };
     const buildNode = (node: TreeModelHierarchyNode) => (!!options?.discardState || node.id === parentId ? node : addAttributes(node, oldModel));
 
     const rootNode = parentId !== undefined ? this.getNode(parentId) : currModel.rootNode;
@@ -220,22 +223,28 @@ function collectNodes(parentId: string | undefined, model: TreeModel, pred: (nod
   return [currNode, ...currentChildren.flatMap((child) => collectNodes(child, model, pred))];
 }
 
-function getNodeInstanceFilter(model: TreeModel, node: TreeModelHierarchyNode | TreeModelRootNode) {
+function getFilteredNodeId(node: TreeModelHierarchyNode | TreeModelRootNode) {
   if (!node.nodeData || !HierarchyNode.isGroupingNode(node.nodeData)) {
-    return node.instanceFilter;
+    return node.id;
   }
 
   if (!node.nodeData.nonGroupingAncestor) {
+    return undefined;
+  }
+
+  return createNodeId(node.nodeData.nonGroupingAncestor);
+}
+
+function getNodeInstanceFilter(model: TreeModel, nodeId: string | undefined) {
+  if (nodeId === undefined) {
     return model.rootNode.instanceFilter;
   }
 
-  const ancestorId = createNodeId(node.nodeData.nonGroupingAncestor);
-  const ancestorModelNode = model.idToNode.get(ancestorId);
-  // istanbul ignore if
-  if (!ancestorModelNode || isTreeModelInfoNode(ancestorModelNode)) {
+  const modelNode = model.idToNode.get(nodeId);
+  if (!modelNode || isTreeModelInfoNode(modelNode)) {
     return undefined;
   }
-  return ancestorModelNode.instanceFilter;
+  return modelNode.instanceFilter;
 }
 
 // istanbul ignore next

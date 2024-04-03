@@ -7,7 +7,7 @@ import { expect } from "chai";
 import { PropsWithChildren } from "react";
 import { act } from "react-dom/test-utils";
 import sinon from "sinon";
-import { GenericInstanceFilter, HierarchyProvider, InstancesNodeKey, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
+import { GenericInstanceFilter, HierarchyNodeKey, HierarchyProvider, InstancesNodeKey, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
 import { createStorage, Selectables, StorageSelectionChangeEventArgs, StorageSelectionChangesListener } from "@itwin/unified-selection";
 import { PresentationHierarchyNode, PresentationInfoNode, UnifiedSelectionProvider } from "../presentation-hierarchies-react";
 import { createNodeId } from "../presentation-hierarchies-react/internal/Utils";
@@ -162,6 +162,53 @@ describe("useTree", () => {
     await waitFor(() => {
       expect(result.current.rootNodes).to.have.lengthOf(1);
       expect((result.current.rootNodes![0] as PresentationHierarchyNode).children).to.have.lengthOf(2);
+    });
+  });
+
+  it("applies instance filter on grouping node parent", async () => {
+    const rootNodes = [createTestHierarchyNode({ id: "root-1", autoExpand: true, children: true, supportsFiltering: true })];
+    const groupingNode = createTestGroupingNode({
+      id: "grouping-node",
+      key: { type: "class-grouping", className: "Schema:Class" },
+      nonGroupingAncestor: rootNodes[0],
+      autoExpand: true,
+    });
+    const childNodes = [createTestHierarchyNode({ id: "child-1" }), createTestHierarchyNode({ id: "child-1" })];
+
+    hierarchyProvider.getNodes.callsFake(async (props) => {
+      if (props.parentNode === undefined) {
+        return rootNodes;
+      }
+      if (props.parentNode.key === "root-1") {
+        return [groupingNode];
+      }
+      if (HierarchyNodeKey.isClassGrouping(props.parentNode.key)) {
+        return props.instanceFilter ? childNodes.slice(0, 1) : childNodes;
+      }
+      return [];
+    });
+    const { result } = renderHook(useTree, { initialProps });
+
+    await waitFor(() => {
+      expect(result.current.rootNodes).to.have.lengthOf(1);
+      expect((result.current.rootNodes![0] as PresentationHierarchyNode).children).to.have.lengthOf(1);
+      const groupingTreeNode = (result.current.rootNodes![0] as any).children[0] as PresentationHierarchyNode;
+      expect(groupingTreeNode.children).to.have.lengthOf(2);
+    });
+
+    const filterOptions = result.current.getHierarchyLevelFilteringOptions("root-1");
+    expect(filterOptions).to.not.be.undefined;
+    const filter: GenericInstanceFilter = { propertyClassNames: [], relatedInstances: [], rules: { operator: "and", rules: [] } };
+
+    act(() => {
+      filterOptions?.applyFilter(filter);
+    });
+
+    await waitFor(() => {
+      expect(result.current.rootNodes).to.have.lengthOf(1);
+      expect((result.current.rootNodes![0] as PresentationHierarchyNode).children).to.have.lengthOf(1);
+      const groupingTreeNode = (result.current.rootNodes![0] as any).children[0] as PresentationHierarchyNode;
+      expect(groupingTreeNode.children).to.have.lengthOf(1);
     });
   });
 
