@@ -9,7 +9,7 @@ export function createNodeId(node: Pick<HierarchyNode, "key" | "parentKeys">) {
   return [...node.parentKeys.map(serializeNodeKey), serializeNodeKey(node.key)].join(",");
 }
 
-export function serializeNodeKey(key: HierarchyNodeKey): string {
+function serializeNodeKey(key: HierarchyNodeKey): string {
   return HierarchyNodeKey.isCustom(key) ? key : convertObjectValuesToString(key);
 }
 
