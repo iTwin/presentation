@@ -1,12 +1,17 @@
 {
   "cSpell.words": [
+    "ecschema",
     "hilite",
     "hilited",
     "hilites",
     "imodel",
     "itwin",
+    "itwinjs",
+    "ruleset",
     "selectable",
     "selectables",
+    "txns",
+    "unregisters"
   ],
 
   "editor.insertSpaces": true,

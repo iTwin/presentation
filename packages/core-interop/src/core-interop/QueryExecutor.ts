@@ -9,18 +9,29 @@ import { Point2d, Point3d } from "@itwin/core-geometry";
 import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow, IECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 
 /**
- * An interface for something that knows how to create an `ECSqlReader`. Generally, this represents either [IModelDb]($core-backend)
- * or [IModelConnection]($core-frontend).
- *
- * @beta
+ * Defines input for `createECSqlQueryExecutor`. Generally, this is an instance of either [IModelDb](https://www.itwinjs.org/reference/core-backend/imodels/imodeldb/)
+ * or [IModelConnection](https://www.itwinjs.org/reference/core-frontend/imodelconnection/imodelconnection/).
  */
-export interface ICoreECSqlReaderFactory {
+interface ICoreECSqlReaderFactory {
   createQueryReader(ecsql: string, binder?: QueryBinder, options?: QueryOptions): ECSqlReader;
 }
 
 /**
- * Create an `IECSqlQueryExecutor` using given `ICoreECSqlReaderFactory`, which, generally, is either [IModelDb]($core-backend)
- * or [IModelConnection]($core-frontend).
+ * Create an `IECSqlQueryExecutor` from either [IModelDb](https://www.itwinjs.org/reference/core-backend/imodels/imodeldb/) or
+ * [IModelConnection](https://www.itwinjs.org/reference/core-frontend/imodelconnection/imodelconnection/).
+ *
+ * Usage example:
+ *
+ * ```ts
+ * import { IModelDb } from "@itwin/core-backend";
+ * import { createECSqlQueryExecutor } from "@itwin/presentation-core-interop";
+ *
+ * const iModel: IModelDb = getIModelDb();
+ * const executor = createECSqlQueryExecutor(iModel);
+ * for await (const row of executor.createQueryReader(MY_QUERY)) {
+ *   // TODO: do something with `row`
+ * }
+ * ```
  *
  * @beta
  */
