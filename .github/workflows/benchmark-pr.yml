@@ -12,7 +12,7 @@ on:
       - packages/models-tree/**
       - pnpm-lock.yaml
       - .github/workflows/benchmark-pr.yaml
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize, reopened]
 
 jobs:
   benchmark:
