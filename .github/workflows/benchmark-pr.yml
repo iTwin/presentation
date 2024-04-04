@@ -65,5 +65,4 @@ jobs:
           tool: 'customSmallerIsBetter'
           output-file-path: ./apps/performance-tests/benchmark.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          # comment-always: true
-          summary-always: true
+          comment-always: true
