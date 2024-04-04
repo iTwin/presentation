@@ -75,13 +75,35 @@ export type PresentationTreeNode = PresentationHierarchyNode | PresentationInfoN
 export { SelectionStorage }
 
 // @beta (undocumented)
-export function TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHierarchyLevelLimit, getHierarchyLevelFilteringOptions, removeHierarchyLevelFilter, onFilterClick, getIcon, }: TreeRendererProps): JSX_2.Element;
+export function TreeRenderer({ rootNodes, expandNode, selectNode, isNodeSelected, setHierarchyLevelLimit, removeHierarchyLevelFilter, onFilterClick, getIcon, }: TreeRendererProps): JSX_2.Element;
 
 // @beta (undocumented)
 export function UnifiedSelectionProvider({ storage, children }: PropsWithChildren<Props>): JSX_2.Element;
 
 // @beta (undocumented)
 export function useTree(props: UseTreeProps): UseTreeResult;
+
+// @beta (undocumented)
+export interface UseTreeResult {
+    // (undocumented)
+    expandNode: (nodeId: string, isExpanded: boolean) => void;
+    // (undocumented)
+    getHierarchyLevelFilteringOptions: (nodeId: string) => HierarchyLevelFilteringOptions | undefined;
+    isLoading: boolean;
+    // (undocumented)
+    isNodeSelected: (nodeId: string) => boolean;
+    // (undocumented)
+    reloadTree: (options?: {
+        discardState?: boolean;
+    }) => void;
+    // (undocumented)
+    removeHierarchyLevelFilter: (nodeId: string) => void;
+    rootNodes: PresentationTreeNode[] | undefined;
+    // (undocumented)
+    selectNode: (nodeId: string, isSelected: boolean) => void;
+    // (undocumented)
+    setHierarchyLevelLimit: (nodeId: string | undefined, limit: undefined | number | "unbounded") => void;
+}
 
 // @beta (undocumented)
 export function useUnifiedSelectionTree({ imodelKey, sourceName, ...props }: UseTreeProps & Omit<UseUnifiedTreeSelectionProps, "getNode">): UseTreeResult;

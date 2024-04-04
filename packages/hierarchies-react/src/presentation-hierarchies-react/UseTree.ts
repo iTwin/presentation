@@ -29,12 +29,11 @@ export function useUnifiedSelectionTree({ imodelKey, sourceName, ...props }: Use
   return { ...rest, ...useUnifiedTreeSelection({ imodelKey, sourceName, getNode }) };
 }
 
-/** @internal */
-export interface UseTreeProps {
+interface UseTreeProps {
   hierarchyProvider?: HierarchyProvider;
 }
 
-/** @internal */
+/** @beta */
 export interface UseTreeResult {
   /**
    * Array containing root tree nodes. It is `undefined` on initial render until any nodes are loaded.
@@ -54,16 +53,13 @@ export interface UseTreeResult {
   getHierarchyLevelFilteringOptions: (nodeId: string) => HierarchyLevelFilteringOptions | undefined;
 }
 
-/** @internal */
-export interface TreeState {
+interface TreeState {
   model: TreeModel;
   rootNodes: Array<PresentationTreeNode> | undefined;
   isLoading: boolean;
 }
 
-export function useTreeInternal({
-  hierarchyProvider,
-}: UseTreeProps): UseTreeResult & { getNode: (nodeId: string) => TreeModelRootNode | TreeModelNode | undefined } {
+function useTreeInternal({ hierarchyProvider }: UseTreeProps): UseTreeResult & { getNode: (nodeId: string) => TreeModelRootNode | TreeModelNode | undefined } {
   const [state, setState] = useState<TreeState>({
     model: { idToNode: new Map(), parentChildMap: new Map(), rootNode: { id: undefined, nodeData: undefined } },
     rootNodes: undefined,
