@@ -17,7 +17,7 @@ on:
 jobs:
   benchmark:
     name: Benchmark performance
-    if: '!github.event.pull_request.draft'
+    # if: '!github.event.pull_request.draft'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -61,7 +61,6 @@ jobs:
 
       - name: Post benchmark summary
         uses: benchmark-action/github-action-benchmark@v1
-        if: ${{ github.ref == 'refs/heads/master' }}
         with:
           tool: 'customSmallerIsBetter'
           output-file-path: ./apps/performance-tests/benchmark.json
