@@ -60,10 +60,10 @@ jobs:
           key: performance-test-dataset-${{ hashFiles('./apps/performance-tests/src/Datasets.ts') }}
 
       - name: Post benchmark summary
-        uses: jalextowle/github-action-benchmark@35e54a2ea34188ca73481c2a0ce5919907978f4f
+        uses: benchmark-action/github-action-benchmark@v1
+        if: ${{ github.ref == 'refs/heads/master' }}
         with:
           tool: 'customSmallerIsBetter'
           output-file-path: ./apps/performance-tests/benchmark.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          save-data-file: false
-          comment-on-pull-request: true
+          comment-always: true
