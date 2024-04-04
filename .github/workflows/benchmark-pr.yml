@@ -41,7 +41,7 @@ jobs:
         run: pnpm lage build --to presentation-performance-tests
 
       - name: Restore dataset from cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         id: cache-restore
         env:
           cache-name: cache-dataset
@@ -53,7 +53,7 @@ jobs:
         run: pnpm benchmark
 
       - name: Save generated datasets
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         if: steps.cache-restore.outputs.cache-hit != 'true'
         with:
           path: "./apps/performance-tests/datasets/*.bim"
