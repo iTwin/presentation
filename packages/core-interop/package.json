@@ -44,7 +44,6 @@
     "@itwin/core-common": "^4.1.0",
     "@itwin/core-quantity": "^4.1.0",
     "@itwin/ecschema-metadata": "^4.1.0",
-    "@itwin/presentation-common": "^4.1.0",
     "@itwin/presentation-hierarchies": "workspace:^"
   },
   "devDependencies": {
@@ -58,7 +57,6 @@
     "@types/chai": "^4.3.11",
     "@types/chai-as-promised": "^7.1.8",
     "@types/mocha": "^10.0.6",
-    "@itwin/presentation-common": "^4.4.0",
     "@itwin/presentation-hierarchies": "workspace:^",
     "@types/sinon": "^17.0.3",
     "@types/sinon-chai": "^3.2.12",
