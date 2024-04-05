@@ -10,10 +10,10 @@ import { configure, RenderOptions, RenderResult, render as renderRTL } from "@te
 import userEvent, { UserEvent } from "@testing-library/user-event";
 import {
   isTreeModelHierarchyNode,
+  isTreeModelInfoNode,
   TreeModel,
   TreeModelHierarchyNode,
   TreeModelInfoNode,
-  TreeModelNode,
 } from "../presentation-hierarchies-react/internal/TreeModel";
 
 configure({ reactStrictMode: true });
@@ -41,7 +41,12 @@ export function getHierarchyNode(model: TreeModel, id: string | undefined) {
   return node && isTreeModelHierarchyNode(node) ? node : undefined;
 }
 
-type ModelInput = Array<Partial<Omit<TreeModelHierarchyNode, "children">> & { id: string | undefined; children?: string[] }>;
+type ModelInputNode = (Partial<Omit<TreeModelHierarchyNode, "children" | "id">> & { id: string | undefined; children?: string[] }) | TreeModelInfoNode;
+type ModelInput = Array<ModelInputNode>;
+
+function isModelInputInfoNode(node: ModelInputNode): node is TreeModelInfoNode {
+  return isTreeModelInfoNode(node as TreeModelInfoNode);
+}
 
 export function createTreeModel(seed: ModelInput) {
   const model: TreeModel = {
@@ -51,6 +56,11 @@ export function createTreeModel(seed: ModelInput) {
   };
 
   for (const input of seed) {
+    if (isModelInputInfoNode(input)) {
+      model.idToNode.set(input.id, input);
+      continue;
+    }
+
     if (input.children) {
       model.parentChildMap.set(input.id, input.children);
     }
@@ -74,16 +84,6 @@ export function createTreeModel(seed: ModelInput) {
   }
 
   return model;
-}
-
-export function addNodesToModel(model: TreeModel, parentId: string, nodes: TreeModelNode[]) {
-  model.parentChildMap.set(
-    parentId,
-    nodes.map((node) => node.id),
-  );
-  for (const node of nodes) {
-    model.idToNode.set(node.id, node);
-  }
 }
 
 export function createTreeModelNode(props: Partial<TreeModelHierarchyNode> & { id: string }): TreeModelHierarchyNode {

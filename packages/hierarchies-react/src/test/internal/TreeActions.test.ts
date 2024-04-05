@@ -466,6 +466,48 @@ describe("TreeActions", () => {
       expect(getHierarchyNode(newModel, "child-2")).to.not.be.undefined;
     });
 
+    it("does not load children after setting hierarchy filter on collapsed node", async () => {
+      const model = createTreeModel([
+        {
+          id: undefined,
+          children: ["root-1"],
+        },
+        {
+          id: "root-1",
+          isExpanded: false,
+          children: ["child-1"],
+        },
+        {
+          id: "child-1",
+          children: [],
+        },
+      ]);
+
+      provider.getNodes.reset();
+      provider.getNodes.callsFake(async (props) => {
+        if (props.parentNode?.key === "root-1") {
+          return [createTestHierarchyNode({ id: "child-2" })];
+        }
+        return [];
+      });
+
+      const actions = createActions(model);
+
+      actions.setInstanceFilter("root-1", filter);
+      expect(onModelChangedStub).to.be.calledOnce;
+      const newModel = onModelChangedStub.firstCall.args[0];
+      expect(getHierarchyNode(newModel, "root-1")?.instanceFilter).to.be.eq(filter);
+      expect(getHierarchyNode(newModel, "root-1")?.isLoading).to.be.undefined;
+
+      await waitFor(() => {
+        expect(provider.getNodes).to.not.be.called;
+      });
+
+      expect(onModelChangedStub).to.be.calledOnce;
+      expect(getHierarchyNode(newModel, "root-1")?.isLoading).to.be.undefined;
+      expect(getHierarchyNode(newModel, "child-1")).to.be.undefined;
+    });
+
     it("sets instance filter for tree root and reloads subtree", async () => {
       const model = createTreeModel([
         {
@@ -501,6 +543,46 @@ describe("TreeActions", () => {
       newModel = onModelChangedStub.secondCall.args[0];
       expect(getHierarchyNode(newModel, "root-1")).to.be.undefined;
       expect(getHierarchyNode(newModel, "root-2")).to.not.be.undefined;
+    });
+
+    it("sets instance filter and creates `NoFilterMatchingNodes` info nodes if there are no children", async () => {
+      const model = createTreeModel([
+        {
+          id: undefined,
+          children: ["root-1"],
+        },
+        {
+          id: "root-1",
+          isExpanded: true,
+          children: ["child-1"],
+        },
+        {
+          id: "child-1",
+          children: [],
+        },
+      ]);
+
+      provider.getNodes.reset();
+      provider.getNodes.callsFake(async () => {
+        return [];
+      });
+
+      const actions = createActions(model);
+
+      actions.setInstanceFilter("root-1", filter);
+      expect(onModelChangedStub).to.be.calledOnce;
+      let newModel = onModelChangedStub.firstCall.args[0];
+      expect(getHierarchyNode(newModel, "root-1")?.instanceFilter).to.be.eq(filter);
+
+      await waitFor(() => {
+        expect(provider.getNodes).to.be.calledWith(createGetNodesProps({ parentNode: getHierarchyNode(newModel, "root-1")?.nodeData, instanceFilter: filter }));
+      });
+
+      expect(onModelChangedStub).to.be.calledTwice;
+      newModel = onModelChangedStub.secondCall.args[0];
+      expect(getHierarchyNode(newModel, "root-1")).to.not.be.undefined;
+      expect(getHierarchyNode(newModel, "child-1")).to.be.undefined;
+      expect(newModel.idToNode.get("root-1-no-filter-matches")).to.not.be.undefined;
     });
 
     it("does nothing when called on invalid node", async () => {

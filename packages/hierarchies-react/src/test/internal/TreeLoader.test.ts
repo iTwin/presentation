@@ -203,6 +203,37 @@ describe("TreeLoader", () => {
         }),
       );
     });
+
+    it("loads info node if all children are filtered out", async () => {
+      const filter: GenericInstanceFilter = {
+        propertyClassNames: [],
+        relatedInstances: [],
+        rules: { operator: "and", rules: [] },
+      };
+      const loader = createLoader();
+      const rootHierarchyNode = createTestHierarchyNode({ id: "root-1" });
+      const modelNode = createTreeModelNode({ id: "root-1", nodeData: rootHierarchyNode, instanceFilter: filter });
+      hierarchyProvider.getNodes.callsFake(async () => {
+        return [];
+      });
+
+      const nodes = await collectNodes(
+        loader.getNodes(
+          modelNode,
+          (parent) => parent.instanceFilter,
+          () => true,
+        ),
+      );
+
+      const children = nodes.get("root-1");
+      expect(children).to.have.lengthOf(1);
+      expect((children![0] as TreeModelInfoNode).type).to.be.eq("NoFilterMatchingNodes");
+      expect(hierarchyProvider.getNodes).to.be.calledWith(
+        sinon.match((props: GetHierarchyNodesProps) => {
+          return props.instanceFilter === filter;
+        }),
+      );
+    });
   });
 
   describe("reloadNodes", () => {

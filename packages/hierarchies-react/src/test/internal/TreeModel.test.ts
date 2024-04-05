@@ -6,7 +6,7 @@
 import { expect } from "chai";
 import { GenericInstanceFilter } from "@itwin/presentation-hierarchies";
 import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel } from "../../presentation-hierarchies-react/internal/TreeModel";
-import { addNodesToModel, createTestHierarchyNode, createTestModelInfoNode, createTreeModel, getHierarchyNode } from "../TestUtils";
+import { createTestHierarchyNode, createTestModelInfoNode, createTreeModel, getHierarchyNode } from "../TestUtils";
 
 describe("TreeModel", () => {
   describe("expandNode", () => {
@@ -125,7 +125,7 @@ describe("TreeModel", () => {
       expect(getHierarchyNode(model, "root-1")?.isLoading).to.be.true;
     });
 
-    it("returns `reloadChildren` and removes child info node when expanding node", () => {
+    it("returns `reloadChildren` and removes child `Unknown` info node when expanding node", () => {
       const model = createTreeModel([
         {
           id: undefined,
@@ -134,14 +134,36 @@ describe("TreeModel", () => {
         {
           id: "root-1",
           isExpanded: false,
-          children: undefined,
+          children: ["info-1"],
+        },
+        {
+          ...createTestModelInfoNode({ id: "info-1" }),
         },
       ]);
-      addNodesToModel(model, "root-1", [createTestModelInfoNode({ id: "info-1" })]);
 
       expect(TreeModel.expandNode(model, "root-1", true)).to.be.eq("reloadChildren");
       expect(getHierarchyNode(model, "root-1")?.isLoading).to.be.true;
       expect(TreeModel.getNode(model, "info-1")).to.be.undefined;
+    });
+
+    it("returns `none` and does not remove child info node when expanding node", () => {
+      const model = createTreeModel([
+        {
+          id: undefined,
+          children: ["root-1", "root-2"],
+        },
+        {
+          id: "root-1",
+          isExpanded: false,
+          children: ["info-1"],
+        },
+        {
+          ...createTestModelInfoNode({ id: "info-1", type: "NoFilterMatchingNodes", message: "Message" }),
+        },
+      ]);
+
+      expect(TreeModel.expandNode(model, "root-1", true)).to.be.eq("none");
+      expect(TreeModel.getNode(model, "info-1")).to.not.be.undefined;
     });
 
     it("does nothing if node does not exist", () => {

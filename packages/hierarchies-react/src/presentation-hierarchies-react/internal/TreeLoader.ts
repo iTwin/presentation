@@ -44,17 +44,20 @@ export class TreeLoader implements ITreeLoader {
     buildNode?: (node: TreeModelHierarchyNode) => TreeModelHierarchyNode,
     ignoreCache?: boolean,
   ) {
+    const instanceFilter = getInstanceFilter(parent);
+    const infoNodeIdBase = `${parent.id ?? "<root>"}`;
+
     return defer(async () =>
       this._hierarchyProvider.getNodes({
         parentNode: parent.nodeData,
         hierarchyLevelSizeLimit: parent.hierarchyLimit,
-        instanceFilter: getInstanceFilter(parent),
+        instanceFilter,
         ignoreCache,
       }),
     ).pipe(
       catchError((err) => {
         const nodeProps = {
-          id: `${parent.id ?? ""}-${err.message}`,
+          id: `${infoNodeIdBase}-${err.message}`,
           parentId: parent.id,
         };
         if (err instanceof RowsLimitExceededError) {
@@ -65,7 +68,17 @@ export class TreeLoader implements ITreeLoader {
       map(
         (childNodes): LoadedTreePart => ({
           parentId: parent.id,
-          loadedNodes: childNodes.map(createTreeModelNodesFactory(buildNode)),
+          loadedNodes:
+            instanceFilter && childNodes.length === 0
+              ? [
+                  {
+                    id: `${infoNodeIdBase}-no-filter-matches`,
+                    parentId: parent.id,
+                    type: "NoFilterMatchingNodes" as const,
+                    message: "No child nodes match current filter",
+                  },
+                ]
+              : childNodes.map(createTreeModelNodesFactory(buildNode)),
         }),
       ),
     );

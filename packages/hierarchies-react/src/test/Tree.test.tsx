@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { GenericInstanceFilter } from "@itwin/presentation-hierarchies";
 import { TreeRenderer } from "../presentation-hierarchies-react/Tree";
 import { PresentationHierarchyNode, PresentationInfoNode, PresentationTreeNode } from "../presentation-hierarchies-react/Types";
 import { createStub, render, within } from "./TestUtils";
@@ -14,7 +15,7 @@ describe("Tree", () => {
   const selectNode = createStub<(nodeId: string, isSelected: boolean) => void>();
   const isNodeSelected = createStub<(nodeId: string) => boolean>();
   const setHierarchyLevelLimit = createStub<(nodeId: string | undefined, limit: undefined | number | "unbounded") => void>();
-  const removeHierarchyLevelFilter = createStub<(nodeId: string) => void>();
+  const setHierarchyLevelFilter = createStub<(nodeId: string | undefined, filter: GenericInstanceFilter | undefined) => void>();
 
   const initialProps = {
     onFilterClick,
@@ -22,7 +23,7 @@ describe("Tree", () => {
     selectNode,
     isNodeSelected,
     setHierarchyLevelLimit,
-    removeHierarchyLevelFilter,
+    setHierarchyLevelFilter,
   };
 
   beforeEach(() => {
@@ -31,7 +32,7 @@ describe("Tree", () => {
     selectNode.reset();
     isNodeSelected.reset();
     setHierarchyLevelLimit.reset();
-    removeHierarchyLevelFilter.reset();
+    setHierarchyLevelFilter.reset();
   });
 
   it("renders nodes", () => {
@@ -141,7 +142,7 @@ describe("Tree", () => {
 
     expect(queryByText("root-1")).to.not.be.null;
     await user.click(getByRole("button", { name: "Clear active filter" }));
-    expect(removeHierarchyLevelFilter).to.be.calledOnceWith("root-1");
+    expect(setHierarchyLevelFilter).to.be.calledOnceWith("root-1", undefined);
   });
 
   it("calls `onFilterClick` if node is filterable", async () => {

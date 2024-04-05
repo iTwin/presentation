@@ -111,10 +111,11 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
     treeProps.reloadTree();
   };
 
-  const [filteringOptions, setFilteringOptions] = useState<HierarchyLevelFilteringOptions>();
+  const [filteringOptions, setFilteringOptions] = useState<{ nodeId: string; options: HierarchyLevelFilteringOptions }>();
   const onFilterClick = useCallback(
     (nodeId: string) => {
-      setFilteringOptions(getHierarchyLevelFilteringOptions(nodeId));
+      const options = getHierarchyLevelFilteringOptions(nodeId);
+      setFilteringOptions(options ? { nodeId, options } : undefined);
     },
     [getHierarchyLevelFilteringOptions],
   );
@@ -128,7 +129,7 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
         descriptorBuilder: Presentation.presentation,
         hierarchyProvider,
         imodel,
-        parentNode: filteringOptions.hierarchyNode as NonGroupingHierarchyNode,
+        parentNode: filteringOptions.options.hierarchyNode as NonGroupingHierarchyNode,
       });
 
       if (!result) {
@@ -143,7 +144,7 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
   }, [filteringOptions, imodel, hierarchyProvider]);
 
   const getInitialFilter = useMemo(() => {
-    const currentFilter = filteringOptions?.currentFilter;
+    const currentFilter = filteringOptions?.options.currentFilter;
     if (!currentFilter) {
       return undefined;
     }
@@ -186,7 +187,10 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
         imodel={imodel}
         isOpen={!!filteringOptions}
         onApply={(info) => {
-          filteringOptions?.applyFilter(toGenericFilter(info));
+          if (!filteringOptions) {
+            return;
+          }
+          treeProps.setHierarchyLevelFilter(filteringOptions.nodeId, toGenericFilter(info));
           setFilteringOptions(undefined);
         }}
         onClose={() => {

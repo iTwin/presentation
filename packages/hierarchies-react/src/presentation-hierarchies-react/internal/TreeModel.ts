@@ -72,10 +72,11 @@ export namespace TreeModel {
     }
 
     const firstChild = TreeModel.getNode(model, children[0]);
-    if (!firstChild || !isTreeModelInfoNode(firstChild)) {
+    if (!firstChild || !isTreeModelInfoNode(firstChild) || firstChild.type !== "Unknown") {
       return "none";
     }
 
+    // remove subtree if there is only one `Unknown` info node in order to attempt reloading children
     TreeModel.removeSubTree(model, nodeId);
     node.isLoading = true;
     return "reloadChildren";
@@ -153,8 +154,9 @@ export namespace TreeModel {
     modelNode.instanceFilter = filter;
     if (modelNode.isExpanded) {
       modelNode.isLoading = true;
+      return true;
     }
-    return true;
+    return false;
   }
 
   export function selectNode(model: TreeModel, nodeId: string, isSelected: boolean) {

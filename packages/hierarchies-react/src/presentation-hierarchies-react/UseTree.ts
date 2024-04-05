@@ -12,8 +12,7 @@ import { PresentationHierarchyNode, PresentationTreeNode } from "./Types";
 
 /** @beta */
 export interface HierarchyLevelFilteringOptions {
-  hierarchyNode: HierarchyNode | undefined;
-  applyFilter: (filter?: GenericInstanceFilter) => void;
+  hierarchyNode: HierarchyNode;
   currentFilter?: GenericInstanceFilter;
 }
 
@@ -47,7 +46,7 @@ interface UseTreeResult {
   expandNode: (nodeId: string, isExpanded: boolean) => void;
   selectNode: (nodeId: string, isSelected: boolean) => void;
   setHierarchyLevelLimit: (nodeId: string | undefined, limit: undefined | number | "unbounded") => void;
-  removeHierarchyLevelFilter: (nodeId: string) => void;
+  setHierarchyLevelFilter: (nodeId: string | undefined, filter: GenericInstanceFilter | undefined) => void;
   isNodeSelected: (nodeId: string) => boolean;
   getHierarchyLevelFilteringOptions: (nodeId: string) => HierarchyLevelFilteringOptions | undefined;
 }
@@ -101,33 +100,28 @@ function useTreeInternal({ hierarchyProvider }: UseTreeProps): UseTreeResult & {
     actions.setHierarchyLimit(nodeId, limit);
   }).current;
 
-  const removeHierarchyLevelFilter = useRef((nodeId: string) => {
-    actions.setInstanceFilter(nodeId, undefined);
+  const setHierarchyLevelFilter = useRef((nodeId: string | undefined, filter: GenericInstanceFilter | undefined) => {
+    actions.setInstanceFilter(nodeId, filter);
   }).current;
 
   const isNodeSelected = useCallback((nodeId: string) => TreeModel.isNodeSelected(state.model, nodeId), [state]);
 
   const getHierarchyLevelFilteringOptions = useCallback(
-    (nodeId: string | undefined) => {
+    (nodeId: string): HierarchyLevelFilteringOptions | undefined => {
       const node = actions.getNode(nodeId);
       if (!node || !isTreeModelHierarchyNode(node)) {
         return undefined;
       }
       const hierarchyNode = node.nodeData;
-      if (hierarchyNode && HierarchyNode.isGroupingNode(hierarchyNode)) {
+      if (HierarchyNode.isGroupingNode(hierarchyNode)) {
         return undefined;
       }
 
       const currentFilter = node.instanceFilter;
-      const filteringOptions: HierarchyLevelFilteringOptions = {
+      return {
         hierarchyNode,
-        applyFilter: (filter?: GenericInstanceFilter) => {
-          actions.setInstanceFilter(nodeId, filter);
-        },
         currentFilter,
       };
-
-      return filteringOptions;
     },
     [actions],
   );
@@ -142,7 +136,7 @@ function useTreeInternal({ hierarchyProvider }: UseTreeProps): UseTreeResult & {
     setHierarchyLevelLimit,
     getHierarchyLevelFilteringOptions,
     getNode,
-    removeHierarchyLevelFilter,
+    setHierarchyLevelFilter,
   };
 }
 

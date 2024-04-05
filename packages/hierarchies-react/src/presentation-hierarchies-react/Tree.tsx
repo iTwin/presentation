@@ -24,7 +24,7 @@ export function TreeRenderer({
   selectNode,
   isNodeSelected,
   setHierarchyLevelLimit,
-  removeHierarchyLevelFilter,
+  setHierarchyLevelFilter,
   onFilterClick,
   getIcon,
 }: TreeRendererProps) {
@@ -51,7 +51,7 @@ export function TreeRenderer({
                 size="small"
                 title="Clear active filter"
                 onClick={(e) => {
-                  removeHierarchyLevelFilter(node.id);
+                  setHierarchyLevelFilter(node.id, undefined);
                   e.stopPropagation();
                 }}
               >
@@ -85,7 +85,7 @@ export function TreeRenderer({
       }
       return <TreeNode {...restProps} label={node.message} isDisabled={true} onExpanded={/* istanbul ignore next */ () => {}} />;
     },
-    [expandNode, selectNode, setHierarchyLevelLimit, removeHierarchyLevelFilter, onFilterClick, getIcon],
+    [expandNode, selectNode, setHierarchyLevelLimit, setHierarchyLevelFilter, onFilterClick, getIcon],
   );
 
   const getNode = useCallback<TreeProps<PresentationTreeNode>["getNode"]>(

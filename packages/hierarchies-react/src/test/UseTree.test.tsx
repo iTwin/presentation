@@ -122,6 +122,40 @@ describe("useTree", () => {
     });
   });
 
+  it("applies and removes instance filter on tree root", async () => {
+    const rootNodes = [createTestHierarchyNode({ id: "root-1" }), createTestHierarchyNode({ id: "child-2" })];
+
+    hierarchyProvider.getNodes.callsFake(async (props) => {
+      if (props.parentNode === undefined) {
+        return props.instanceFilter === undefined ? rootNodes : rootNodes.slice(0, 1);
+      }
+      return [];
+    });
+    const { result } = renderHook(useTree, { initialProps });
+
+    await waitFor(() => {
+      expect(result.current.rootNodes).to.have.lengthOf(2);
+    });
+
+    const filter: GenericInstanceFilter = { propertyClassNames: [], relatedInstances: [], rules: { operator: "and", rules: [] } };
+
+    act(() => {
+      result.current.setHierarchyLevelFilter(undefined, filter);
+    });
+
+    await waitFor(() => {
+      expect(result.current.rootNodes).to.have.lengthOf(1);
+    });
+
+    act(() => {
+      result.current.setHierarchyLevelFilter(undefined, undefined);
+    });
+
+    await waitFor(() => {
+      expect(result.current.rootNodes).to.have.lengthOf(2);
+    });
+  });
+
   it("applies and removes instance filter", async () => {
     const rootNodes = [createTestHierarchyNode({ id: "root-1", autoExpand: true, supportsFiltering: true, children: true })];
     const childNodes = [createTestHierarchyNode({ id: "child-1" }), createTestHierarchyNode({ id: "child-1" })];
@@ -142,12 +176,10 @@ describe("useTree", () => {
       expect((result.current.rootNodes![0] as PresentationHierarchyNode).children).to.have.lengthOf(2);
     });
 
-    const filterOptions = result.current.getHierarchyLevelFilteringOptions("root-1");
-    expect(filterOptions).to.not.be.undefined;
     const filter: GenericInstanceFilter = { propertyClassNames: [], relatedInstances: [], rules: { operator: "and", rules: [] } };
 
     act(() => {
-      filterOptions?.applyFilter(filter);
+      result.current.setHierarchyLevelFilter("root-1", filter);
     });
 
     await waitFor(() => {
@@ -156,7 +188,7 @@ describe("useTree", () => {
     });
 
     act(() => {
-      result.current.removeHierarchyLevelFilter("root-1");
+      result.current.setHierarchyLevelFilter("root-1", undefined);
     });
 
     await waitFor(() => {
@@ -196,12 +228,10 @@ describe("useTree", () => {
       expect(groupingTreeNode.children).to.have.lengthOf(2);
     });
 
-    const filterOptions = result.current.getHierarchyLevelFilteringOptions("root-1");
-    expect(filterOptions).to.not.be.undefined;
     const filter: GenericInstanceFilter = { propertyClassNames: [], relatedInstances: [], rules: { operator: "and", rules: [] } };
 
     act(() => {
-      filterOptions?.applyFilter(filter);
+      result.current.setHierarchyLevelFilter("root-1", filter);
     });
 
     await waitFor(() => {
@@ -254,6 +284,27 @@ describe("useTree", () => {
 
     const filterOptions = result.current.getHierarchyLevelFilteringOptions(nodeId);
     expect(filterOptions).to.be.undefined;
+  });
+
+  it("`getHierarchyLevelFilteringOptions` returns options for hierarchy node", async () => {
+    const rootNodes = [createTestHierarchyNode({ id: "root-1" })];
+
+    hierarchyProvider.getNodes.callsFake(async (props) => {
+      if (props.parentNode === undefined) {
+        return rootNodes;
+      }
+      return [];
+    });
+    const { result } = renderHook(useTree, { initialProps });
+    const nodeId = createNodeId(rootNodes[0]);
+
+    await waitFor(() => {
+      expect(result.current.rootNodes).to.have.lengthOf(1);
+    });
+
+    const filterOptions = result.current.getHierarchyLevelFilteringOptions(nodeId);
+    expect(filterOptions).to.not.be.undefined;
+    expect(filterOptions?.hierarchyNode).to.be.eq(rootNodes[0]);
   });
 
   it("reloads tree when `reloadTree` is called", async () => {
