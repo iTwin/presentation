@@ -3,28 +3,11 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import {
-  asapScheduler,
-  concat,
-  defer,
-  EMPTY,
-  filter,
-  finalize,
-  map,
-  merge,
-  mergeAll,
-  mergeMap,
-  Observable,
-  partition,
-  reduce,
-  share,
-  subscribeOn,
-  take,
-  tap,
-} from "rxjs";
+import { asapScheduler, concat, defer, EMPTY, filter, finalize, map, merge, mergeAll, mergeMap, Observable, partition, share, subscribeOn, take } from "rxjs";
 import { HierarchyNode, InstancesNodeKey, ProcessedCustomHierarchyNode, ProcessedHierarchyNode, ProcessedInstanceHierarchyNode } from "../../HierarchyNode";
 import { createNodeIdentifierForLogging, createOperatorLoggingNamespace, hasChildren, mergeNodes } from "../Common";
 import { doLog, log } from "../LoggingUtils";
+import { reduceToMergeMapItem } from "./ReduceToMergeMap";
 
 const OPERATOR_NAME = "HideNodesInHierarchy";
 /** @internal */
@@ -58,15 +41,12 @@ export function createHideNodesInHierarchyOperator(
           message: /* istanbul ignore next */ (n) => `${createNodeIdentifierForLogging(n)} needs hide and needs children to be loaded`,
         }),
         filter((node) => node.children !== false),
-        reduce((acc, node) => {
-          addToMergeMap(acc, node);
-          return acc;
-        }, new Map() as LabelMergeMap),
+        reduceToMergeMapItem(
+          (node) => createMergeMapKey(node),
+          (node, mergedNode: ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode | undefined) => (mergedNode ? mergeNodes(mergedNode, node) : node),
+        ),
         log({ category: LOGGING_NAMESPACE, message: /* istanbul ignore next */ (mm) => `created a merge map of size ${mm.size}` }),
-        tap((_mm: LabelMergeMap) => {
-          // TODO: check if it's worth looking for merged nodes' observables in cache and merging them for parent node
-        }),
-        mergeMap((mm) => [...mm.values()].map((v) => defer(() => getNodes(v.merged)))),
+        mergeMap((mm) => [...mm.values()].map((mergedNode) => defer(() => getNodes(mergedNode)))),
         mergeAll(),
         map((n): ProcessedHierarchyNode => n),
       ),
@@ -112,18 +92,4 @@ function createMergeMapKey<TNode extends { key: InstancesNodeKey | string }>(nod
     return node.key;
   }
   return node.key.instanceKeys[0].className;
-}
-
-type LabelMergeMap = Map<
-  string,
-  { merged: ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode; nodes: Array<ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode> }
->;
-function addToMergeMap(list: LabelMergeMap, node: ProcessedCustomHierarchyNode | ProcessedInstanceHierarchyNode) {
-  const mergeKey = createMergeMapKey(node);
-  const res = list.get(mergeKey);
-  if (res) {
-    list.set(mergeKey, { merged: mergeNodes(res.merged, node), nodes: [...res.nodes, node] });
-  } else {
-    list.set(mergeKey, { merged: node, nodes: [node] });
-  }
 }
