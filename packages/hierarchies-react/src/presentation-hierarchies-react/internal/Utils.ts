@@ -21,7 +21,7 @@ function convertObjectValuesToString(obj: object): string {
       }
       return String(value);
     })
-    .join(",");
+    .join(";");
 }
 
 export function sameNodes(lhs: ParentHierarchyNode, rhs: ParentHierarchyNode): boolean {
