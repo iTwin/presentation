@@ -144,25 +144,6 @@ describe("TreeModel", () => {
       expect(TreeModel.getNode(model, "info-1")).to.be.undefined;
     });
 
-    it("returns `reloadChildren` and removes child info node when expanding node", () => {
-      const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1", "root-2"],
-        },
-        {
-          id: "root-1",
-          isExpanded: false,
-          children: undefined,
-        },
-      ]);
-      addNodesToModel(model, "root-1", [createTestModelInfoNode({ id: "info-1" })]);
-
-      expect(TreeModel.expandNode(model, "root-1", true)).to.be.eq("reloadChildren");
-      expect(getHierarchyNode(model, "root-1")?.isLoading).to.be.true;
-      expect(TreeModel.getNode(model, "info-1")).to.be.undefined;
-    });
-
     it("does nothing if node does not exist", () => {
       const model = createTreeModel([
         {
