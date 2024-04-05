@@ -220,7 +220,7 @@ describe("useUnifiesSelection", () => {
       expect(selectable?.data).to.be.eq(hierarchyNode);
     });
 
-    it("removes instance node to selection", () => {
+    it("removes instance node from selection", () => {
       const instanceKey = { id: "0x1", className: "Schema:Name" };
       const instancesNodesKey: InstancesNodeKey = {
         type: "instances",
@@ -256,7 +256,7 @@ describe("useUnifiesSelection", () => {
       expect(changeListener).be.calledOnce;
     });
 
-    it("removes grouping node to selection", async () => {
+    it("removes grouping node from selection", async () => {
       const instanceKey = { id: "0x1", className: "Schema:Name" };
       const groupingNode = createTestGroupingNode({ id: "grouping-node", groupedInstanceKeys: [instanceKey] });
       const nodes = [createTreeModelNode({ id: "grouping-node", nodeData: groupingNode })];
@@ -286,7 +286,7 @@ describe("useUnifiesSelection", () => {
       expect(selectable?.data).to.be.eq(groupingNode);
     });
 
-    it("removed custom node to selection", async () => {
+    it("removes custom node from selection", async () => {
       const hierarchyNode = createTestHierarchyNode({ id: "custom-node" });
       const nodes = [createTreeModelNode({ id: "custom-node", nodeData: hierarchyNode })];
       getNode.callsFake((id) => nodes.find((node) => node.id === id));

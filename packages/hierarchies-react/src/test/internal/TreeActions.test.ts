@@ -75,7 +75,7 @@ describe("TreeActions", () => {
       expect(getHierarchyNode(newModel, "root-1")?.isSelected).to.be.false;
     });
 
-    it("does not calls `onModelChanged` after selected node is selected", () => {
+    it("does not call `onModelChanged` after selected node is selected", () => {
       const model = createTreeModel([
         {
           id: undefined,
@@ -92,7 +92,7 @@ describe("TreeActions", () => {
 
       actions.selectNode("root-1", true);
 
-      expect(onModelChangedStub).to.not.be.calledOnce;
+      expect(onModelChangedStub).to.not.be.called;
     });
   });
 
