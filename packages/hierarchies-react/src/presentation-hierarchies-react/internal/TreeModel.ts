@@ -11,6 +11,7 @@ export interface TreeModelRootNode {
   nodeData: undefined;
   hierarchyLimit?: number | "unbounded";
   instanceFilter?: GenericInstanceFilter;
+  isLoading?: boolean;
 }
 
 export interface TreeModelHierarchyNode {
@@ -92,8 +93,9 @@ export namespace TreeModel {
       model.idToNode.set(nodeId, node);
     }
 
-    const parentNode = rootId !== undefined ? model.idToNode.get(rootId) : undefined;
-    if (parentNode && isTreeModelHierarchyNode(parentNode)) {
+    const parentNode = rootId !== undefined ? model.idToNode.get(rootId) : model.rootNode;
+    // istanbul ignore else
+    if (parentNode && !isTreeModelInfoNode(parentNode)) {
       parentNode.isLoading = false;
     }
   }
@@ -118,6 +120,7 @@ export namespace TreeModel {
     removeSubTree(model, nodeId);
     if (nodeId === undefined) {
       model.rootNode.hierarchyLimit = limit;
+      model.rootNode.isLoading = true;
       return true;
     }
 
@@ -135,9 +138,10 @@ export namespace TreeModel {
   }
 
   export function setInstanceFilter(model: TreeModel, nodeId: string | undefined, filter?: GenericInstanceFilter): boolean {
+    removeSubTree(model, nodeId);
     if (nodeId === undefined) {
       model.rootNode.instanceFilter = filter;
-      removeSubTree(model, nodeId);
+      model.rootNode.isLoading = true;
       return true;
     }
 
@@ -146,7 +150,6 @@ export namespace TreeModel {
       return false;
     }
 
-    removeSubTree(model, nodeId);
     modelNode.instanceFilter = filter;
     if (modelNode.isExpanded) {
       modelNode.isLoading = true;

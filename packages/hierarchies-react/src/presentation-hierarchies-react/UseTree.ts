@@ -55,28 +55,22 @@ interface UseTreeResult {
 interface TreeState {
   model: TreeModel;
   rootNodes: Array<PresentationTreeNode> | undefined;
-  isLoading: boolean;
 }
 
 function useTreeInternal({ hierarchyProvider }: UseTreeProps): UseTreeResult & { getNode: (nodeId: string) => TreeModelRootNode | TreeModelNode | undefined } {
   const [state, setState] = useState<TreeState>({
     model: { idToNode: new Map(), parentChildMap: new Map(), rootNode: { id: undefined, nodeData: undefined } },
     rootNodes: undefined,
-    isLoading: false,
   });
   const [actions] = useState<TreeActions>(
     () =>
-      new TreeActions(
-        (model) => {
-          const rootNodes = model.parentChildMap.get(undefined) !== undefined ? generateTreeStructure(undefined, model) : undefined;
-          setState({
-            model,
-            rootNodes,
-            isLoading: false,
-          });
-        },
-        () => setState((prevState) => ({ ...prevState, isLoading: true })),
-      ),
+      new TreeActions((model) => {
+        const rootNodes = model.parentChildMap.get(undefined) !== undefined ? generateTreeStructure(undefined, model) : undefined;
+        setState({
+          model,
+          rootNodes,
+        });
+      }),
   );
 
   useEffect(() => {
@@ -96,7 +90,7 @@ function useTreeInternal({ hierarchyProvider }: UseTreeProps): UseTreeResult & {
   }).current;
 
   const reloadTree = useRef((options?: { discardState?: boolean }) => {
-    actions.reloadTree(undefined, options);
+    actions.reloadTree(options);
   }).current;
 
   const selectNode = useRef((nodeId: string, isSelected: boolean) => {
@@ -140,7 +134,7 @@ function useTreeInternal({ hierarchyProvider }: UseTreeProps): UseTreeResult & {
 
   return {
     rootNodes: state.rootNodes,
-    isLoading: state.isLoading,
+    isLoading: !!state.model.rootNode.isLoading,
     expandNode,
     reloadTree,
     selectNode,
