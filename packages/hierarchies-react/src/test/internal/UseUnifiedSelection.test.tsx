@@ -130,7 +130,9 @@ describe("useUnifiesSelection", () => {
 
     it("does nothing if selection storage context is not provided", () => {
       const { result } = renderHook(useUnifiedTreeSelection, { initialProps });
-      result.current.selectNode("node-1", true);
+      act(() => {
+        result.current.selectNode("node-1", true);
+      });
 
       expect(getNode).to.not.be.called;
     });
