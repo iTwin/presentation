@@ -536,9 +536,10 @@ describe("TreeModel", () => {
   });
 
   describe("setInstanceFilter", () => {
+    const filter: GenericInstanceFilter = { rules: { operator: "and", rules: [] }, propertyClassNames: [], relatedInstances: [] };
+
     it("sets filter on tree root", () => {
       const model = createTreeModel([]);
-      const filter: GenericInstanceFilter = { rules: { operator: "and", rules: [] }, propertyClassNames: [], relatedInstances: [] };
 
       expect(model.rootNode.instanceFilter).to.be.undefined;
 
@@ -556,7 +557,6 @@ describe("TreeModel", () => {
           id: "root-1",
         },
       ]);
-      const filter: GenericInstanceFilter = { rules: { operator: "and", rules: [] }, propertyClassNames: [], relatedInstances: [] };
 
       expect(getHierarchyNode(model, "root-1")?.instanceFilter).to.be.undefined;
 
@@ -565,7 +565,6 @@ describe("TreeModel", () => {
     });
 
     it("removes filter", () => {
-      const filter: GenericInstanceFilter = { rules: { operator: "and", rules: [] }, propertyClassNames: [], relatedInstances: [] };
       const model = createTreeModel([
         {
           id: undefined,
@@ -595,7 +594,6 @@ describe("TreeModel", () => {
           isLoading: false,
         },
       ]);
-      const filter: GenericInstanceFilter = { rules: { operator: "and", rules: [] }, propertyClassNames: [], relatedInstances: [] };
 
       expect(getHierarchyNode(model, "root-1")?.instanceFilter).to.be.undefined;
       expect(getHierarchyNode(model, "root-1")?.isLoading).to.be.false;
@@ -623,7 +621,6 @@ describe("TreeModel", () => {
           id: "child-1-1",
         },
       ]);
-      const filter: GenericInstanceFilter = { rules: { operator: "and", rules: [] }, propertyClassNames: [], relatedInstances: [] };
 
       expect(getHierarchyNode(model, "root-1")).to.not.be.undefined;
       expect(getHierarchyNode(model, "child-1")).to.not.be.undefined;
@@ -647,7 +644,6 @@ describe("TreeModel", () => {
           instanceFilter: undefined,
         },
       ]);
-      const filter: GenericInstanceFilter = { rules: { operator: "and", rules: [] }, propertyClassNames: [], relatedInstances: [] };
 
       TreeModel.setInstanceFilter(model, "invalid", filter);
       expect(getHierarchyNode(model, "root-1")?.instanceFilter).to.be.undefined;
