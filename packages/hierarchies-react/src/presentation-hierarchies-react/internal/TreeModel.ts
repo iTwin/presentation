@@ -162,7 +162,7 @@ export namespace TreeModel {
     modelNode.isSelected = isSelected;
   }
 
-  export function isHierarchyNodeSelected(model: TreeModel, nodeId: string): boolean {
+  export function isNodeSelected(model: TreeModel, nodeId: string): boolean {
     const currentNode = model.idToNode.get(nodeId);
     return !!currentNode && isTreeModelHierarchyNode(currentNode) && !!currentNode.isSelected;
   }

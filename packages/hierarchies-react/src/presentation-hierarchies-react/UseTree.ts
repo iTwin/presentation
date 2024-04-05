@@ -112,7 +112,7 @@ function useTreeInternal({ hierarchyProvider }: UseTreeProps): UseTreeResult & {
     actions.setInstanceFilter(nodeId, undefined);
   }).current;
 
-  const isNodeSelected = useCallback((nodeId: string) => TreeModel.isHierarchyNodeSelected(state.model, nodeId), [state]);
+  const isNodeSelected = useCallback((nodeId: string) => TreeModel.isNodeSelected(state.model, nodeId), [state]);
 
   const getHierarchyLevelFilteringOptions = useCallback(
     (nodeId: string | undefined) => {

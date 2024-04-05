@@ -723,7 +723,7 @@ describe("TreeModel", () => {
     });
   });
 
-  describe("isHierarchyNodeSelected", () => {
+  describe("isNodeSelected", () => {
     it("returns correct results", () => {
       const model = createTreeModel([
         {
@@ -740,8 +740,8 @@ describe("TreeModel", () => {
         },
       ]);
 
-      expect(TreeModel.isHierarchyNodeSelected(model, "root-1")).to.be.false;
-      expect(TreeModel.isHierarchyNodeSelected(model, "root-2")).to.be.true;
+      expect(TreeModel.isNodeSelected(model, "root-1")).to.be.false;
+      expect(TreeModel.isNodeSelected(model, "root-2")).to.be.true;
     });
   });
 
