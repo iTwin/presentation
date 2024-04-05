@@ -15,7 +15,7 @@ enableMapSet();
 /** @internal */
 export class TreeActions {
   private _loader: IHierarchyLoader;
-  private _currentModel: TreeModel = { idToNode: new Map(), parentChildMap: new Map(), rootNode: { id: undefined, nodeData: undefined } };
+  private _currentModel: TreeModel;
   private _disposed = new Subject<void>();
 
   constructor(
