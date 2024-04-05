@@ -102,6 +102,7 @@ export class TreeActions {
   }
 
   public setHierarchyLimit(nodeId: string | undefined, limit?: number | "unbounded") {
+    const oldModel = this._currentModel;
     let loadChildren = false;
     this.updateTreeModel((model) => {
       loadChildren = TreeModel.setHierarchyLimit(model, nodeId, limit);
@@ -111,7 +112,7 @@ export class TreeActions {
       return;
     }
 
-    this.loadNodes(nodeId);
+    this.reloadTree(nodeId, { oldModel });
   }
 
   public setInstanceFilter(nodeId: string | undefined, filter?: GenericInstanceFilter) {
