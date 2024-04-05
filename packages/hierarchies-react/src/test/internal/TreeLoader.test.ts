@@ -7,17 +7,17 @@ import { expect } from "chai";
 import { Observable } from "rxjs";
 import sinon from "sinon";
 import { GenericInstanceFilter, GetHierarchyNodesProps, HierarchyProvider, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
-import { HierarchyLoader, LoadedHierarchyPart } from "../../presentation-hierarchies-react/internal/TreeLoader";
+import { LoadedTreePart, TreeLoader } from "../../presentation-hierarchies-react/internal/TreeLoader";
 import { TreeModelHierarchyNode, TreeModelInfoNode, TreeModelNode } from "../../presentation-hierarchies-react/internal/TreeModel";
 import { createTestHierarchyNode, createTreeModelNode } from "../TestUtils";
 
-describe("HierarchyLoader", () => {
+describe("TreeLoader", () => {
   const hierarchyProvider = {
     getNodes: sinon.stub<Parameters<HierarchyProvider["getNodes"]>, ReturnType<HierarchyProvider["getNodes"]>>(),
   };
 
   function createLoader() {
-    return new HierarchyLoader(hierarchyProvider as unknown as HierarchyProvider);
+    return new TreeLoader(hierarchyProvider as unknown as HierarchyProvider);
   }
 
   beforeEach(() => {
@@ -334,7 +334,7 @@ describe("HierarchyLoader", () => {
   });
 });
 
-async function collectNodes(loadObs: Observable<LoadedHierarchyPart>) {
+async function collectNodes(loadObs: Observable<LoadedTreePart>) {
   const nodes = new Map<string | undefined, TreeModelNode[]>();
   return new Promise<Map<string | undefined, TreeModelNode[]>>((resolve) => {
     loadObs.subscribe({

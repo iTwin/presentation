@@ -9,7 +9,7 @@ import { isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelInfoNode, Tr
 import { createNodeId, sameNodes } from "./Utils";
 
 /** @internal */
-export interface LoadedHierarchyPart {
+export interface LoadedTreePart {
   parentId: string | undefined;
   loadedNodes: TreeModelNode[];
 }
@@ -24,18 +24,18 @@ export interface ReloadOptions {
 }
 
 /** @internal */
-export interface IHierarchyLoader {
+export interface ITreeLoader {
   getNodes(
     parent: TreeModelHierarchyNode | TreeModelRootNode,
     getInstanceFilter: (node: TreeModelRootNode | TreeModelHierarchyNode) => GenericInstanceFilter | undefined,
     shouldLoadChildren: (node: TreeModelHierarchyNode) => boolean,
     ignoreCache?: boolean,
-  ): Observable<LoadedHierarchyPart>;
-  reloadNodes(parent: TreeModelHierarchyNode | TreeModelRootNode, options: ReloadOptions): Observable<LoadedHierarchyPart>;
+  ): Observable<LoadedTreePart>;
+  reloadNodes(parent: TreeModelHierarchyNode | TreeModelRootNode, options: ReloadOptions): Observable<LoadedTreePart>;
 }
 
 /** @internal */
-export class HierarchyLoader implements IHierarchyLoader {
+export class TreeLoader implements ITreeLoader {
   constructor(private _hierarchyProvider: HierarchyProvider) {}
 
   private loadChildren(
@@ -63,7 +63,7 @@ export class HierarchyLoader implements IHierarchyLoader {
         return of([{ ...nodeProps, type: "Unknown" as const, message: "Failed to create hierarchy level" }]);
       }),
       map(
-        (childNodes): LoadedHierarchyPart => ({
+        (childNodes): LoadedTreePart => ({
           parentId: parent.id,
           loadedNodes: childNodes.map(createTreeModelNodesFactory(buildNode)),
         }),

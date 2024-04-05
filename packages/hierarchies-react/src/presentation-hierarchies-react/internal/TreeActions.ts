@@ -6,7 +6,7 @@
 import { Draft, enableMapSet, produce } from "immer";
 import { EMPTY, Observable, reduce, Subject, takeUntil } from "rxjs";
 import { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { HierarchyLoader, IHierarchyLoader, LoadedHierarchyPart } from "./TreeLoader";
+import { ITreeLoader, LoadedTreePart, TreeLoader } from "./TreeLoader";
 import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./TreeModel";
 import { createNodeId } from "./Utils";
 
@@ -14,7 +14,7 @@ enableMapSet();
 
 /** @internal */
 export class TreeActions {
-  private _loader: IHierarchyLoader;
+  private _loader: ITreeLoader;
   private _currentModel: TreeModel;
   private _disposed = new Subject<void>();
 
@@ -22,7 +22,7 @@ export class TreeActions {
     private _onModelChanged: (model: TreeModel) => void,
     seed?: TreeModel,
   ) {
-    this._loader = new NoopHierarchyLoader();
+    this._loader = new NoopTreeLoader();
     this._currentModel = seed ?? /* istanbul ignore next */ {
       idToNode: new Map(),
       parentChildMap: new Map(),
@@ -60,7 +60,7 @@ export class TreeActions {
         (node) => !!node.nodeData.autoExpand,
         ignoreCache,
       )
-      .pipe(collectHierarchyPartsUntil(this._disposed))
+      .pipe(collectTreePartsUntil(this._disposed))
       .subscribe({
         next: (loadedHierarchy) => {
           this.handleLoadedHierarchy(parentId, loadedHierarchy);
@@ -93,7 +93,7 @@ export class TreeActions {
 
     this._loader
       .reloadNodes(rootNode, { expandedNodes, collapsedNodes, getInstanceFilter, buildNode })
-      .pipe(collectHierarchyPartsUntil(this._disposed, !!options?.discardState ? undefined : { ...currModel.rootNode }))
+      .pipe(collectTreePartsUntil(this._disposed, !!options?.discardState ? undefined : { ...currModel.rootNode }))
       .subscribe({
         next: (newModel) => {
           this.handleLoadedHierarchy(parentId, newModel);
@@ -107,7 +107,7 @@ export class TreeActions {
   }
 
   public setHierarchyProvider(provider?: HierarchyProvider) {
-    this._loader = provider ? new HierarchyLoader(provider) : /* istanbul ignore next */ new NoopHierarchyLoader();
+    this._loader = provider ? new TreeLoader(provider) : /* istanbul ignore next */ new NoopTreeLoader();
   }
 
   public getNode(nodeId: string | undefined): TreeModelNode | TreeModelRootNode | undefined {
@@ -171,11 +171,11 @@ export class TreeActions {
   }
 }
 
-function collectHierarchyPartsUntil(untilNotifier: Observable<void>, rootNode?: TreeModelRootNode) {
-  return (source: Observable<LoadedHierarchyPart>) =>
+function collectTreePartsUntil(untilNotifier: Observable<void>, rootNode?: TreeModelRootNode) {
+  return (source: Observable<LoadedTreePart>) =>
     source.pipe(
       takeUntil(untilNotifier),
-      reduce<LoadedHierarchyPart, TreeModel>(
+      reduce<LoadedTreePart, TreeModel>(
         (treeModel, loadedPart) => {
           addNodesToModel(treeModel, loadedPart);
           return treeModel;
@@ -189,7 +189,7 @@ function collectHierarchyPartsUntil(untilNotifier: Observable<void>, rootNode?: 
     );
 }
 
-function addNodesToModel(model: TreeModel, hierarchyPart: LoadedHierarchyPart) {
+function addNodesToModel(model: TreeModel, hierarchyPart: LoadedTreePart) {
   model.parentChildMap.set(
     hierarchyPart.parentId,
     hierarchyPart.loadedNodes.map((node) => node.id),
@@ -256,12 +256,12 @@ function getNodeInstanceFilter(model: TreeModel, nodeId: string | undefined) {
 }
 
 // istanbul ignore next
-class NoopHierarchyLoader implements IHierarchyLoader {
-  public getNodes(): Observable<LoadedHierarchyPart> {
+class NoopTreeLoader implements ITreeLoader {
+  public getNodes(): Observable<LoadedTreePart> {
     return EMPTY;
   }
 
-  public reloadNodes(): Observable<LoadedHierarchyPart> {
+  public reloadNodes(): Observable<LoadedTreePart> {
     return EMPTY;
   }
 }
