@@ -426,21 +426,11 @@ export class HierarchyProvider {
     });
   }
 
-  /**
-   * Creates an iterator for all child hierarchy level instance keys, taking into account any hidden hierarchy levels
-   * that there may be under the given parent node.
-   */
-  public getNodeInstanceKeys(props: { parentNode: ParentHierarchyNode | undefined }): AsyncIterableIterator<InstanceKey> {
-    const loggingCategory = `${LOGGING_NAMESPACE}.GetNodeInstanceKeys`;
+  private getNodeInstanceKeysObs(props: { parentNode: ParentHierarchyNode | undefined }): Observable<InstanceKey> {
     const { parentNode } = props;
 
-    doLog({
-      category: loggingCategory,
-      message: /* istanbul ignore next */ () => `Requesting keys for ${createNodeIdentifierForLogging(parentNode)}`,
-    });
-
     if (parentNode && HierarchyNode.isGroupingNode(parentNode)) {
-      return eachValueFrom(from(parentNode.groupedInstanceKeys));
+      return from(parentNode.groupedInstanceKeys);
     }
 
     assert(!parentNode || HierarchyNode.isCustom(parentNode) || HierarchyNode.isInstancesNode(parentNode));
@@ -515,13 +505,23 @@ export class HierarchyProvider {
     );
 
     // merge visible instance keys from this level & the ones we get recursively requesting from deeper levels
-    const visibleInstanceKeys = merge(
+    return merge(
       visibleNodeInstanceKeys.pipe(map(({ key }) => key)),
-      hiddenParentNodes.pipe(mergeMap((hiddenNode) => this.getNodeInstanceKeys({ parentNode: hiddenNode }))),
+      hiddenParentNodes.pipe(mergeMap((hiddenNode) => this.getNodeInstanceKeysObs({ parentNode: hiddenNode }))),
     );
+  }
 
-    // convert to async iterable and return
-    return eachValueFrom(visibleInstanceKeys);
+  /**
+   * Creates an iterator for all child hierarchy level instance keys, taking into account any hidden hierarchy levels
+   * that there may be under the given parent node.
+   */
+  public getNodeInstanceKeys(props: { parentNode: ParentHierarchyNode | undefined }): AsyncIterableIterator<InstanceKey> {
+    const loggingCategory = `${LOGGING_NAMESPACE}.GetNodeInstanceKeys`;
+    doLog({
+      category: loggingCategory,
+      message: /* istanbul ignore next */ () => `Requesting keys for ${createNodeIdentifierForLogging(props.parentNode)}`,
+    });
+    return eachValueFrom(this.getNodeInstanceKeysObs(props));
   }
 
   /**
