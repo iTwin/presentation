@@ -6,7 +6,7 @@
 import { HierarchyNode, HierarchyNodeKey, ParentHierarchyNode } from "@itwin/presentation-hierarchies";
 
 export function createNodeId(node: Pick<HierarchyNode, "key" | "parentKeys">) {
-  return [...node.parentKeys.map(serializeNodeKey), serializeNodeKey(node.key)].join(",");
+  return [...node.parentKeys.map(serializeNodeKey), serializeNodeKey(node.key)].join(";");
 }
 
 function serializeNodeKey(key: HierarchyNodeKey): string {
