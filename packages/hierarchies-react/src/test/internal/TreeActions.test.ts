@@ -364,7 +364,7 @@ describe("TreeActions", () => {
       expect(provider.getNodes).to.not.be.called;
     });
 
-    it("sets instance filter for tree root and reloads subtree", async () => {
+    it("sets hierarchy limit for tree root and reloads subtree", async () => {
       const model = createTreeModel([
         {
           id: undefined,
