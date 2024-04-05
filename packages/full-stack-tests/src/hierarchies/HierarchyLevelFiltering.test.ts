@@ -7,7 +7,7 @@ import { GroupingHierarchyNode, IHierarchyLevelDefinitionsFactory, NodeSelectQue
 import { importSchema, withECDb } from "../IModelUtils";
 import { initialize, terminate } from "../IntegrationTests";
 import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation";
-import { createMetadataProvider, createProvider } from "./Utils";
+import { collect, createMetadataProvider, createProvider } from "./Utils";
 
 describe("Hierarchies", () => {
   describe("Hierarchy level filtering", () => {
@@ -62,26 +62,30 @@ describe("Hierarchies", () => {
           };
           const provider = createProvider({ imodel, hierarchy });
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+              }),
+            ),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x1] }), NodeValidators.createForInstanceNode({ instanceKeys: [x2] })],
           });
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-              instanceFilter: {
-                propertyClassNames: [schema.items.X.fullName],
-                relatedInstances: [],
-                rules: {
-                  sourceAlias: "this",
-                  propertyName: `Prop`,
-                  operator: "is-equal",
-                  propertyTypeName: "string",
-                  value: { rawValue: `one`, displayValue: "one" },
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+                instanceFilter: {
+                  propertyClassNames: [schema.items.X.fullName],
+                  relatedInstances: [],
+                  rules: {
+                    sourceAlias: "this",
+                    propertyName: `Prop`,
+                    operator: "is-equal",
+                    propertyTypeName: "string",
+                    value: { rawValue: `one`, displayValue: "one" },
+                  },
                 },
-              },
-            }),
+              }),
+            ),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x1] })],
           });
         },
@@ -133,34 +137,38 @@ describe("Hierarchies", () => {
           };
           const provider = createProvider({ imodel, hierarchy });
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: {
-                key: { type: "instances", instanceKeys: [x] },
-                parentKeys: [],
-                label: "",
-              },
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: {
+                  key: { type: "instances", instanceKeys: [x] },
+                  parentKeys: [],
+                  label: "",
+                },
+              }),
+            ),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [y1] }), NodeValidators.createForInstanceNode({ instanceKeys: [y2] })],
           });
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: {
-                key: { type: "instances", instanceKeys: [x] },
-                parentKeys: [],
-                label: "",
-              },
-              instanceFilter: {
-                propertyClassNames: [schema.items.Y.fullName],
-                relatedInstances: [],
-                rules: {
-                  sourceAlias: "this",
-                  propertyName: `Prop`,
-                  operator: "is-equal",
-                  propertyTypeName: "string",
-                  value: { rawValue: `two`, displayValue: "two" },
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: {
+                  key: { type: "instances", instanceKeys: [x] },
+                  parentKeys: [],
+                  label: "",
                 },
-              },
-            }),
+                instanceFilter: {
+                  propertyClassNames: [schema.items.Y.fullName],
+                  relatedInstances: [],
+                  rules: {
+                    sourceAlias: "this",
+                    propertyName: `Prop`,
+                    operator: "is-equal",
+                    propertyTypeName: "string",
+                    value: { rawValue: `two`, displayValue: "two" },
+                  },
+                },
+              }),
+            ),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [y2] })],
           });
         },
@@ -226,26 +234,30 @@ describe("Hierarchies", () => {
             groupedInstanceKeys: [y1, y2],
           };
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: groupingNode,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: groupingNode,
+              }),
+            ),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [y1] }), NodeValidators.createForInstanceNode({ instanceKeys: [y2] })],
           });
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: groupingNode,
-              instanceFilter: {
-                propertyClassNames: [schema.items.Y.fullName],
-                relatedInstances: [],
-                rules: {
-                  sourceAlias: "this",
-                  propertyName: `Prop`,
-                  operator: "is-equal",
-                  propertyTypeName: "string",
-                  value: { rawValue: `two`, displayValue: "two" },
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: groupingNode,
+                instanceFilter: {
+                  propertyClassNames: [schema.items.Y.fullName],
+                  relatedInstances: [],
+                  rules: {
+                    sourceAlias: "this",
+                    propertyName: `Prop`,
+                    operator: "is-equal",
+                    propertyTypeName: "string",
+                    value: { rawValue: `two`, displayValue: "two" },
+                  },
                 },
-              },
-            }),
+              }),
+            ),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [y2] })],
           });
         },
@@ -296,23 +308,27 @@ describe("Hierarchies", () => {
           };
           const provider = createProvider({ imodel, hierarchy });
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+              }),
+            ),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x] }), NodeValidators.createForInstanceNode({ instanceKeys: [y] })],
           });
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-              instanceFilter: {
-                propertyClassNames: [schema.items.Y.fullName],
-                relatedInstances: [],
-                rules: {
-                  operator: "and",
-                  rules: [],
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+                instanceFilter: {
+                  propertyClassNames: [schema.items.Y.fullName],
+                  relatedInstances: [],
+                  rules: {
+                    operator: "and",
+                    rules: [],
+                  },
                 },
-              },
-            }),
+              }),
+            ),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [y] })],
           });
         },
@@ -363,24 +379,28 @@ describe("Hierarchies", () => {
           };
           const provider = createProvider({ imodel, hierarchy });
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+              }),
+            ),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x] }), NodeValidators.createForInstanceNode({ instanceKeys: [y] })],
           });
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-              instanceFilter: {
-                propertyClassNames: [schema.items.X.fullName],
-                filteredClassNames: [schema.items.Y.fullName],
-                relatedInstances: [],
-                rules: {
-                  operator: "and",
-                  rules: [],
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+                instanceFilter: {
+                  propertyClassNames: [schema.items.X.fullName],
+                  filteredClassNames: [schema.items.Y.fullName],
+                  relatedInstances: [],
+                  rules: {
+                    operator: "and",
+                    rules: [],
+                  },
                 },
-              },
-            }),
+              }),
+            ),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [y] })],
           });
         },
@@ -430,26 +450,30 @@ describe("Hierarchies", () => {
           };
           const provider = createProvider({ imodel, hierarchy });
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+              }),
+            ),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x1] }), NodeValidators.createForInstanceNode({ instanceKeys: [x2] })],
           });
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-              instanceFilter: {
-                propertyClassNames: [schema.items.X.fullName],
-                relatedInstances: [],
-                rules: {
-                  sourceAlias: "this",
-                  propertyName: "Prop",
-                  operator: "less",
-                  propertyTypeName: "int",
-                  value: { rawValue: 200, displayValue: "200" },
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+                instanceFilter: {
+                  propertyClassNames: [schema.items.X.fullName],
+                  relatedInstances: [],
+                  rules: {
+                    sourceAlias: "this",
+                    propertyName: "Prop",
+                    operator: "less",
+                    propertyTypeName: "int",
+                    value: { rawValue: 200, displayValue: "200" },
+                  },
                 },
-              },
-            }),
+              }),
+            ),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x1] })],
           });
         },
@@ -512,38 +536,42 @@ describe("Hierarchies", () => {
           };
           const provider = createProvider({ imodel, hierarchy });
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+              }),
+            ),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x1] }), NodeValidators.createForInstanceNode({ instanceKeys: [x2] })],
           });
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-              instanceFilter: {
-                propertyClassNames: [schema.items.X.fullName],
-                relatedInstances: [
-                  {
-                    path: [
-                      {
-                        sourceClassName: schema.items.X.fullName,
-                        relationshipClassName: schema.items.XY.fullName,
-                        targetClassName: schema.items.Y.fullName,
-                        isForwardRelationship: true,
-                      },
-                    ],
-                    alias: "related-y",
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+                instanceFilter: {
+                  propertyClassNames: [schema.items.X.fullName],
+                  relatedInstances: [
+                    {
+                      path: [
+                        {
+                          sourceClassName: schema.items.X.fullName,
+                          relationshipClassName: schema.items.XY.fullName,
+                          targetClassName: schema.items.Y.fullName,
+                          isForwardRelationship: true,
+                        },
+                      ],
+                      alias: "related-y",
+                    },
+                  ],
+                  rules: {
+                    sourceAlias: "related-y",
+                    propertyName: "Prop",
+                    operator: "is-equal",
+                    propertyTypeName: "int",
+                    value: { rawValue: 123, displayValue: "123" },
                   },
-                ],
-                rules: {
-                  sourceAlias: "related-y",
-                  propertyName: "Prop",
-                  operator: "is-equal",
-                  propertyTypeName: "int",
-                  value: { rawValue: 123, displayValue: "123" },
                 },
-              },
-            }),
+              }),
+            ),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [x1] })],
           });
         },

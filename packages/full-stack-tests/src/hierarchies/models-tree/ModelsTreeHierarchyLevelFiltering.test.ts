@@ -43,9 +43,11 @@ describe("Hierarchies", () => {
 
       // validate hierarchy level without filter
       validateHierarchyLevel({
-        nodes: await provider.getNodes({
-          parentNode: undefined,
-        }),
+        nodes: await collect(
+          provider.getNodes({
+            parentNode: undefined,
+          }),
+        ),
         expect: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: "0x1" }] })],
       });
 
@@ -66,29 +68,33 @@ describe("Hierarchies", () => {
 
       // validate filtered hierarchy level
       validateHierarchyLevel({
-        nodes: await provider.getNodes({
-          parentNode: undefined,
-          instanceFilter: createInstanceFilter("BisCore.Subject", {
-            sourceAlias: "this",
-            propertyName: "Description",
-            propertyTypeName: "string",
-            operator: "is-equal",
-            value: { rawValue: "", displayValue: "" },
+        nodes: await collect(
+          provider.getNodes({
+            parentNode: undefined,
+            instanceFilter: createInstanceFilter("BisCore.Subject", {
+              sourceAlias: "this",
+              propertyName: "Description",
+              propertyTypeName: "string",
+              operator: "is-equal",
+              value: { rawValue: "", displayValue: "" },
+            }),
           }),
-        }),
+        ),
         expect: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: "0x1" }] })],
       });
       validateHierarchyLevel({
-        nodes: await provider.getNodes({
-          parentNode: undefined,
-          instanceFilter: createInstanceFilter("BisCore.Subject", {
-            sourceAlias: "this",
-            propertyName: "Description",
-            propertyTypeName: "string",
-            operator: "is-not-equal",
-            value: { rawValue: "", displayValue: "" },
+        nodes: await collect(
+          provider.getNodes({
+            parentNode: undefined,
+            instanceFilter: createInstanceFilter("BisCore.Subject", {
+              sourceAlias: "this",
+              propertyName: "Description",
+              propertyTypeName: "string",
+              operator: "is-not-equal",
+              value: { rawValue: "", displayValue: "" },
+            }),
           }),
-        }),
+        ),
         expect: [],
       });
     });
@@ -143,7 +149,7 @@ describe("Hierarchies", () => {
 
       // validate hierarchy level without filter
       validateHierarchyLevel({
-        nodes: await provider.getNodes({ parentNode }),
+        nodes: await collect(provider.getNodes({ parentNode })),
         expect: [
           NodeValidators.createForInstanceNode({ instanceKeys: [keys.category] }),
           NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject] }),
@@ -174,39 +180,45 @@ describe("Hierarchies", () => {
 
       // validate filtered hierarchy level
       validateHierarchyLevel({
-        nodes: await provider.getNodes({
-          parentNode,
-          instanceFilter: createInstanceFilter(keys.childSubject.className, {
-            sourceAlias: "",
-            propertyName: "Description",
-            propertyTypeName: "string",
-            operator: "is-null",
+        nodes: await collect(
+          provider.getNodes({
+            parentNode,
+            instanceFilter: createInstanceFilter(keys.childSubject.className, {
+              sourceAlias: "",
+              propertyName: "Description",
+              propertyTypeName: "string",
+              operator: "is-null",
+            }),
           }),
-        }),
+        ),
         expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject] })],
       });
       validateHierarchyLevel({
-        nodes: await provider.getNodes({
-          parentNode,
-          instanceFilter: createInstanceFilter(keys.category.className, {
-            sourceAlias: "",
-            propertyName: "UserLabel",
-            propertyTypeName: "string",
-            operator: "is-null",
+        nodes: await collect(
+          provider.getNodes({
+            parentNode,
+            instanceFilter: createInstanceFilter(keys.category.className, {
+              sourceAlias: "",
+              propertyName: "UserLabel",
+              propertyTypeName: "string",
+              operator: "is-null",
+            }),
           }),
-        }),
+        ),
         expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.category] })],
       });
       validateHierarchyLevel({
-        nodes: await provider.getNodes({
-          parentNode,
-          instanceFilter: createInstanceFilter(keys.model.className, {
-            sourceAlias: "",
-            propertyName: "IsPlanProjection",
-            propertyTypeName: "boolean",
-            operator: "is-false",
+        nodes: await collect(
+          provider.getNodes({
+            parentNode,
+            instanceFilter: createInstanceFilter(keys.model.className, {
+              sourceAlias: "",
+              propertyName: "IsPlanProjection",
+              propertyTypeName: "boolean",
+              operator: "is-false",
+            }),
           }),
-        }),
+        ),
         expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.model] })],
       });
     });
@@ -239,7 +251,7 @@ describe("Hierarchies", () => {
 
       // validate hierarchy level without filter
       validateHierarchyLevel({
-        nodes: await provider.getNodes({ parentNode }),
+        nodes: await collect(provider.getNodes({ parentNode })),
         expect: [
           NodeValidators.createForInstanceNode({ instanceKeys: [keys.category1] }),
           NodeValidators.createForInstanceNode({ instanceKeys: [keys.category2] }),
@@ -263,16 +275,18 @@ describe("Hierarchies", () => {
 
       // validate filtered hierarchy level
       validateHierarchyLevel({
-        nodes: await provider.getNodes({
-          parentNode,
-          instanceFilter: createInstanceFilter(keys.category2.className, {
-            sourceAlias: "",
-            propertyName: "CodeValue",
-            propertyTypeName: "string",
-            operator: "is-equal",
-            value: { rawValue: "category2", displayValue: "" },
+        nodes: await collect(
+          provider.getNodes({
+            parentNode,
+            instanceFilter: createInstanceFilter(keys.category2.className, {
+              sourceAlias: "",
+              propertyName: "CodeValue",
+              propertyTypeName: "string",
+              operator: "is-equal",
+              value: { rawValue: "category2", displayValue: "" },
+            }),
           }),
-        }),
+        ),
         expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.category2] })],
       });
     });
@@ -310,7 +324,7 @@ describe("Hierarchies", () => {
 
       // validate hierarchy level without filter
       validateHierarchyLevel({
-        nodes: await provider.getNodes({ parentNode }),
+        nodes: await collect(provider.getNodes({ parentNode })),
         expect: [NodeValidators.createForClassGroupingNode({ className: keys.element.className })],
       });
 
@@ -331,28 +345,32 @@ describe("Hierarchies", () => {
 
       // validate filtered hierarchy level
       validateHierarchyLevel({
-        nodes: await provider.getNodes({
-          parentNode,
-          instanceFilter: createInstanceFilter(keys.element.className, {
-            sourceAlias: "",
-            propertyName: "UserLabel",
-            propertyTypeName: "string",
-            operator: "is-equal",
-            value: { rawValue: "element", displayValue: "" },
+        nodes: await collect(
+          provider.getNodes({
+            parentNode,
+            instanceFilter: createInstanceFilter(keys.element.className, {
+              sourceAlias: "",
+              propertyName: "UserLabel",
+              propertyTypeName: "string",
+              operator: "is-equal",
+              value: { rawValue: "element", displayValue: "" },
+            }),
           }),
-        }),
+        ),
         expect: [NodeValidators.createForClassGroupingNode({ className: keys.element.className })],
       });
       validateHierarchyLevel({
-        nodes: await provider.getNodes({
-          parentNode,
-          instanceFilter: createInstanceFilter(keys.element.className, {
-            sourceAlias: "",
-            propertyName: "UserLabel",
-            propertyTypeName: "string",
-            operator: "is-null",
+        nodes: await collect(
+          provider.getNodes({
+            parentNode,
+            instanceFilter: createInstanceFilter(keys.element.className, {
+              sourceAlias: "",
+              propertyName: "UserLabel",
+              propertyTypeName: "string",
+              operator: "is-null",
+            }),
           }),
-        }),
+        ),
         expect: [],
       });
     });
@@ -398,7 +416,7 @@ describe("Hierarchies", () => {
 
       // validate hierarchy level without filter
       validateHierarchyLevel({
-        nodes: await provider.getNodes({ parentNode }),
+        nodes: await collect(provider.getNodes({ parentNode })),
         expect: [NodeValidators.createForClassGroupingNode({ className: keys.childElement.className })],
       });
 
@@ -419,28 +437,32 @@ describe("Hierarchies", () => {
 
       // validate filtered hierarchy level
       validateHierarchyLevel({
-        nodes: await provider.getNodes({
-          parentNode,
-          instanceFilter: createInstanceFilter(keys.childElement.className, {
-            sourceAlias: "",
-            propertyName: "UserLabel",
-            propertyTypeName: "string",
-            operator: "is-equal",
-            value: { rawValue: "child element", displayValue: "" },
+        nodes: await collect(
+          provider.getNodes({
+            parentNode,
+            instanceFilter: createInstanceFilter(keys.childElement.className, {
+              sourceAlias: "",
+              propertyName: "UserLabel",
+              propertyTypeName: "string",
+              operator: "is-equal",
+              value: { rawValue: "child element", displayValue: "" },
+            }),
           }),
-        }),
+        ),
         expect: [NodeValidators.createForClassGroupingNode({ className: keys.childElement.className })],
       });
       validateHierarchyLevel({
-        nodes: await provider.getNodes({
-          parentNode,
-          instanceFilter: createInstanceFilter(keys.childElement.className, {
-            sourceAlias: "",
-            propertyName: "UserLabel",
-            propertyTypeName: "string",
-            operator: "is-null",
+        nodes: await collect(
+          provider.getNodes({
+            parentNode,
+            instanceFilter: createInstanceFilter(keys.childElement.className, {
+              sourceAlias: "",
+              propertyName: "UserLabel",
+              propertyTypeName: "string",
+              operator: "is-null",
+            }),
           }),
-        }),
+        ),
         expect: [],
       });
     });
@@ -493,7 +515,7 @@ describe("Hierarchies", () => {
 
       // validate hierarchy level without filter
       validateHierarchyLevel({
-        nodes: await provider.getNodes({ parentNode }),
+        nodes: await collect(provider.getNodes({ parentNode })),
         expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.category] })],
       });
 
@@ -514,28 +536,32 @@ describe("Hierarchies", () => {
 
       // validate filtered hierarchy level
       validateHierarchyLevel({
-        nodes: await provider.getNodes({
-          parentNode,
-          instanceFilter: createInstanceFilter(keys.category.className, {
-            sourceAlias: "",
-            propertyName: "CodeValue",
-            propertyTypeName: "string",
-            operator: "is-equal",
-            value: { rawValue: "category", displayValue: "" },
+        nodes: await collect(
+          provider.getNodes({
+            parentNode,
+            instanceFilter: createInstanceFilter(keys.category.className, {
+              sourceAlias: "",
+              propertyName: "CodeValue",
+              propertyTypeName: "string",
+              operator: "is-equal",
+              value: { rawValue: "category", displayValue: "" },
+            }),
           }),
-        }),
+        ),
         expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.category] })],
       });
       validateHierarchyLevel({
-        nodes: await provider.getNodes({
-          parentNode,
-          instanceFilter: createInstanceFilter(keys.category.className, {
-            sourceAlias: "",
-            propertyName: "UserLabel",
-            propertyTypeName: "string",
-            operator: "is-null",
+        nodes: await collect(
+          provider.getNodes({
+            parentNode,
+            instanceFilter: createInstanceFilter(keys.category.className, {
+              sourceAlias: "",
+              propertyName: "UserLabel",
+              propertyTypeName: "string",
+              operator: "is-null",
+            }),
           }),
-        }),
+        ),
         expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.category] })],
       });
     });
@@ -572,7 +598,7 @@ describe("Hierarchies", () => {
         label: "",
       };
       validateHierarchyLevel({
-        nodes: await provider.getNodes({ parentNode }),
+        nodes: await collect(provider.getNodes({ parentNode })),
         expect: [NodeValidators.createForClassGroupingNode({ className: keys.element.className })],
       });
       await validateHierarchyLevelDescriptor({

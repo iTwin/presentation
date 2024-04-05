@@ -714,7 +714,7 @@ export class HierarchyProvider {
     getNodeInstanceKeys(props: {
         parentNode: ParentHierarchyNode | undefined;
     }): AsyncIterableIterator<InstanceKey>;
-    getNodes(props: GetHierarchyNodesProps): Promise<HierarchyNode[]>;
+    getNodes(props: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode>;
     readonly hierarchyDefinition: IHierarchyLevelDefinitionsFactory;
     notifyDataSourceChanged(): void;
     readonly queryExecutor: ILimitingECSqlQueryExecutor;

@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { catchError, defer, expand, from, map, mergeMap, Observable, of } from "rxjs";
+import { catchError, concatAll, defer, expand, from, map, mergeMap, Observable, of, toArray } from "rxjs";
 import {
   GenericInstanceFilter,
   HierarchyNode,
@@ -50,14 +50,19 @@ export class HierarchyLoader implements IHierarchyLoader {
     buildNode?: (node: TreeModelHierarchyNode) => TreeModelHierarchyNode,
     ignoreCache?: boolean,
   ) {
+    const treeModelNodesFactory = createTreeModelNodesFactory(buildNode);
     return defer(async () =>
-      this._hierarchyProvider.getNodes({
-        parentNode: parent.nodeData,
-        hierarchyLevelSizeLimit: parent.hierarchyLimit,
-        instanceFilter: getInstanceFilter(parent),
-        ignoreCache,
-      }),
+      from(
+        this._hierarchyProvider.getNodes({
+          parentNode: parent.nodeData,
+          hierarchyLevelSizeLimit: parent.hierarchyLimit,
+          instanceFilter: getInstanceFilter(parent),
+          ignoreCache,
+        }),
+      ),
     ).pipe(
+      concatAll(),
+      toArray(),
       catchError((err) => {
         const nodeProps = {
           id: `${parent.id ?? ""}-${err.message}`,
@@ -71,7 +76,7 @@ export class HierarchyLoader implements IHierarchyLoader {
       map(
         (childNodes): LoadedHierarchyPart => ({
           parentId: parent.id,
-          loadedNodes: childNodes.map(createTreeModelNodesFactory(buildNode)),
+          loadedNodes: childNodes.map(treeModelNodesFactory),
         }),
       ),
     );

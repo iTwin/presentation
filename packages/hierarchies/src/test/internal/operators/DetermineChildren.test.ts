@@ -9,7 +9,7 @@ import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
 import { ProcessedHierarchyNode } from "../../../hierarchies/HierarchyNode";
 import { createDetermineChildrenOperator, LOGGING_NAMESPACE } from "../../../hierarchies/internal/operators/DetermineChildren";
-import { createTestProcessedCustomNode, getObservableResult, setupLogging } from "../../Utils";
+import { collect, createTestProcessedCustomNode, setupLogging } from "../../Utils";
 
 describe("DetermineChildren", () => {
   before(() => {
@@ -21,7 +21,7 @@ describe("DetermineChildren", () => {
       children: false,
     });
     const hasNodes = sinon.spy();
-    const result = await getObservableResult(from([node]).pipe(createDetermineChildrenOperator(hasNodes)));
+    const result = await collect(from([node]).pipe(createDetermineChildrenOperator(hasNodes)));
     expect(hasNodes).to.not.be.called;
     expect(result).to.deep.eq([node]);
   });
@@ -31,7 +31,7 @@ describe("DetermineChildren", () => {
       children: undefined,
     });
     const hasNodes = sinon.stub().returns(of(true));
-    const result = await getObservableResult(from([node]).pipe(createDetermineChildrenOperator(hasNodes)));
+    const result = await collect(from([node]).pipe(createDetermineChildrenOperator(hasNodes)));
     expect(hasNodes).to.be.calledOnceWith(node);
     expect(result).to.deep.eq([{ ...node, children: true }]);
   });
@@ -62,7 +62,7 @@ describe("DetermineChildren", () => {
       }
       return res.pipe(delay(1));
     };
-    const result = await getObservableResult(from(nodes).pipe(createDetermineChildrenOperator(hasNodes)));
+    const result = await collect(from(nodes).pipe(createDetermineChildrenOperator(hasNodes)));
     expect(result.map((n) => n.key)).to.deep.eq(["1", "2", "3"]);
   });
 });

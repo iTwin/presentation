@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { expand, filter, from, mergeAll, of, tap } from "rxjs";
+import { expand, filter, from, of, tap } from "rxjs";
 import { IModelDb } from "@itwin/core-backend";
 import { SchemaContext, SchemaJsonLocater } from "@itwin/ecschema-metadata";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
@@ -49,7 +49,6 @@ export class StatelessHierarchyProvider {
         expand(
           (parentNode) =>
             from(this._provider.getNodes({ parentNode })).pipe(
-              mergeAll(),
               tap(() => ++nodeCount),
               filter((node) => node.children && (!depth || getNodeDepth(node) < depth)),
             ),

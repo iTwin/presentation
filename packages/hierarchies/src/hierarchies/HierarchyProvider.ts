@@ -12,6 +12,7 @@ import {
   defer,
   EMPTY,
   filter,
+  finalize,
   from,
   map,
   merge,
@@ -23,6 +24,7 @@ import {
   partition,
   shareReplay,
   take,
+  tap,
 } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
 import { assert, StopWatch } from "@itwin/core-bentley";
@@ -393,37 +395,33 @@ export class HierarchyProvider {
   /**
    * Creates and runs a query based on provided props, then processes retrieved nodes and returns them.
    */
-  public async getNodes(props: GetHierarchyNodesProps): Promise<HierarchyNode[]> {
+  public getNodes(props: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode> {
     const loggingCategory = `${LOGGING_NAMESPACE}.GetNodes`;
-    return new Promise((resolve, reject) => {
-      const timer = new StopWatch(undefined, true);
-      doLog({
-        category: loggingCategory,
-        message: /* istanbul ignore next */ () => `Requesting child nodes for ${createNodeIdentifierForLogging(props.parentNode)}`,
-      });
-      const nodes = new Array<HierarchyNode>();
-      this.getChildNodesObservables(props).finalizedNodes.subscribe({
-        next(node) {
-          nodes.push(node);
-        },
-        error(err) {
-          doLog({
-            category: loggingCategory,
-            message: /* istanbul ignore next */ () =>
-              `Error creating child nodes for ${createNodeIdentifierForLogging(props.parentNode)}: ${err instanceof Error ? err.message : err.toString()}`,
-          });
-          reject(err);
-        },
-        complete() {
-          doLog({
-            category: loggingCategory,
-            message: /* istanbul ignore next */ () =>
-              `Returning ${nodes.length} child nodes for ${createNodeIdentifierForLogging(props.parentNode)} in ${timer.currentSeconds.toFixed(2)} s.`,
-          });
-          resolve(nodes);
-        },
-      });
+    const timer = new StopWatch(undefined, true);
+    let error: any;
+    let nodesCount = 0;
+    doLog({
+      category: loggingCategory,
+      message: /* istanbul ignore next */ () => `Requesting child nodes for ${createNodeIdentifierForLogging(props.parentNode)}`,
     });
+    return eachValueFrom(
+      this.getChildNodesObservables(props).finalizedNodes.pipe(
+        tap(() => ++nodesCount),
+        catchError((e) => {
+          error = e;
+          throw e;
+        }),
+        finalize(() => {
+          doLog({
+            category: loggingCategory,
+            message: /* istanbul ignore next */ () =>
+              error
+                ? `Error creating child nodes for ${createNodeIdentifierForLogging(props.parentNode)}: ${error instanceof Error ? error.message : error.toString()}`
+                : `Returned ${nodesCount} child nodes for ${createNodeIdentifierForLogging(props.parentNode)} in ${timer.currentSeconds.toFixed(2)} s.`,
+          });
+        }),
+      ),
+    );
   }
 
   private getNodeInstanceKeysObs(props: { parentNode: ParentHierarchyNode | undefined }): Observable<InstanceKey> {
