@@ -33,8 +33,7 @@ interface UseTreeProps {
   hierarchyProvider?: HierarchyProvider;
 }
 
-/** @beta */
-export interface UseTreeResult {
+interface UseTreeResult {
   /**
    * Array containing root tree nodes. It is `undefined` on initial render until any nodes are loaded.
    */
