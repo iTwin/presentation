@@ -74,3 +74,11 @@ export function createClassECSqlSelector(fullClassName: string) {
   const { schemaName, className } = parseFullClassName(fullClassName);
   return `[${schemaName}].[${className}]`;
 }
+
+export async function collect<T>(iter: AsyncIterableIterator<T>): Promise<T[]> {
+  const list = new Array<T>();
+  for await (const item of iter) {
+    list.push(item);
+  }
+  return list;
+}

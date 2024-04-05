@@ -4,21 +4,14 @@
 
 ```ts
 
-import { ContentDescriptorRequestOptions } from '@itwin/presentation-common';
-import { Descriptor } from '@itwin/presentation-common';
 import { ECSqlReader } from '@itwin/core-common';
-import { HierarchyProvider } from '@itwin/presentation-hierarchies';
 import { IECSqlQueryExecutor } from '@itwin/presentation-hierarchies';
 import { ILogger } from '@itwin/presentation-hierarchies';
 import { IMetadataProvider } from '@itwin/presentation-hierarchies';
-import { IModel } from '@itwin/core-common';
 import { IPrimitiveValueFormatter } from '@itwin/presentation-hierarchies';
-import { KeySet } from '@itwin/presentation-common';
 import { LogLevel } from '@itwin/core-bentley';
-import { NonGroupingHierarchyNode } from '@itwin/presentation-hierarchies';
 import { QueryBinder } from '@itwin/core-common';
 import { QueryOptions } from '@itwin/core-common';
-import { RulesetVariable } from '@itwin/presentation-common';
 import { Schema } from '@itwin/ecschema-metadata';
 import { SchemaContext } from '@itwin/ecschema-metadata';
 import { SchemaKey } from '@itwin/ecschema-metadata';
@@ -26,9 +19,6 @@ import { UnitSystemKey } from '@itwin/core-quantity';
 
 // @beta
 export function createECSqlQueryExecutor(imodel: ICoreECSqlReaderFactory): IECSqlQueryExecutor;
-
-// @beta
-export function createHierarchyLevelDescriptor<TIModel extends IModel>(props: CreateHierarchyLevelDescriptorProps<TIModel>): Promise<CreateHierarchyLevelDescriptorResult | undefined>;
 
 // @beta
 export function createLogger(coreLogger: ICoreLogger): ILogger;
