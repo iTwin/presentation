@@ -80,7 +80,6 @@ export function runHierarchyTest(
       return {
         iModel,
         rowLimit: "unbounded",
-        nodeRequestLimit: "unbounded",
         getHierarchyFactory: (metadataProvider) => ({
           async defineHierarchyLevel(props) {
             if (props.parentNode) {
