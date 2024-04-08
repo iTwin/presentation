@@ -137,7 +137,11 @@ describe("Hierarchies", () => {
           },
         };
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy, formatterFactory: (schemas) => createValueFormatter(schemas, "metric") }),
+          provider: createProvider({
+            imodel,
+            hierarchy,
+            formatterFactory: (schemas) => createValueFormatter({ schemaContext: schemas, unitSystem: "metric" }),
+          }),
           expect: [
             {
               node: (node) => expect(node.label).to.eq(`[123.5 m]`),
@@ -145,7 +149,11 @@ describe("Hierarchies", () => {
           ],
         });
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy, formatterFactory: (schemas) => createValueFormatter(schemas, "imperial") }),
+          provider: createProvider({
+            imodel,
+            hierarchy,
+            formatterFactory: (schemas) => createValueFormatter({ schemaContext: schemas, unitSystem: "imperial" }),
+          }),
           expect: [
             {
               node: (node) => expect(node.label).to.eq(`[405.0 ft]`),
@@ -153,7 +161,11 @@ describe("Hierarchies", () => {
           ],
         });
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy, formatterFactory: (schemas) => createValueFormatter(schemas, "usCustomary") }),
+          provider: createProvider({
+            imodel,
+            hierarchy,
+            formatterFactory: (schemas) => createValueFormatter({ schemaContext: schemas, unitSystem: "usCustomary" }),
+          }),
           expect: [
             {
               node: (node) => expect(node.label).to.eq(`[405.0 ft]`),
@@ -161,7 +173,11 @@ describe("Hierarchies", () => {
           ],
         });
         await validateHierarchy({
-          provider: createProvider({ imodel, hierarchy, formatterFactory: (schemas) => createValueFormatter(schemas, "usSurvey") }),
+          provider: createProvider({
+            imodel,
+            hierarchy,
+            formatterFactory: (schemas) => createValueFormatter({ schemaContext: schemas, unitSystem: "usSurvey" }),
+          }),
           expect: [
             {
               node: (node) => expect(node.label).to.eq(`[405.04 ft (US Survey)]`),

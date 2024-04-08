@@ -23,7 +23,7 @@ describe("Hierarchies", () => {
 
     Logger.initializeToConsole();
     // Logger.setLevel(`${LOGGING_NAMESPACE}.HierarchyProvider`, LogLevel.Trace);
-    setLogger(createLogger());
+    setLogger(createLogger(Logger));
 
     const imodelPath = process.env.TEST_IMODEL_PATH;
     if (!imodelPath) {

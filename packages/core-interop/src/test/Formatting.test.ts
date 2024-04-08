@@ -30,7 +30,11 @@ describe("createValueFormatter", () => {
   let formatter: IPrimitiveValueFormatter;
 
   function initFormatter(unitSystem?: UnitSystemKey) {
-    formatter = createValueFormatter(schemaContext as unknown as SchemaContext, unitSystem, defaultFormatter);
+    formatter = createValueFormatter({
+      schemaContext: schemaContext as unknown as SchemaContext,
+      unitSystem,
+      baseFormatter: defaultFormatter,
+    });
   }
 
   beforeEach(() => {
