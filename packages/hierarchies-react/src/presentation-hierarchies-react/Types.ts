@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 /** @beta */
-export type InfoNodeTypes = "ResultSetTooLarge" | "ChildrenPlaceholder" | "Unknown";
+export type InfoNodeTypes = "ResultSetTooLarge" | "ChildrenPlaceholder" | "NoFilterMatchingNodes" | "Unknown";
 
 /** @beta */
 export interface PresentationHierarchyNode {
