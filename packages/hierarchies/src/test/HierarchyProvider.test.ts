@@ -8,7 +8,7 @@ import sinon from "sinon";
 import { omit } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
 import { ECKindOfQuantity, ECPrimitiveProperty, ECProperty, IMetadataProvider } from "../hierarchies/ECMetadata";
-import { IHierarchyLevelDefinitionsFactory } from "../hierarchies/HierarchyDefinition";
+import { DefineHierarchyLevelProps, IHierarchyLevelDefinitionsFactory } from "../hierarchies/HierarchyDefinition";
 import { RowsLimitExceededError } from "../hierarchies/HierarchyErrors";
 import { GroupingHierarchyNode, GroupingNodeKey, HierarchyNode, ParsedCustomHierarchyNode } from "../hierarchies/HierarchyNode";
 import { HierarchyProvider } from "../hierarchies/HierarchyProvider";
@@ -22,8 +22,8 @@ import { ECSqlQueryDef, ECSqlQueryReader, ECSqlQueryReaderOptions } from "../hie
 import { ECSqlSelectClauseGroupingParams, NodeSelectClauseColumnNames } from "../hierarchies/queries/NodeSelectQueryFactory";
 import { trimWhitespace } from "../hierarchies/Utils";
 import { ConcatenatedValue } from "../hierarchies/values/ConcatenatedValue";
-import { TypedPrimitiveValue } from "../hierarchies/values/Values";
-import { ClassStubs, createClassStubs, createFakeQueryReader, ResolvablePromise, waitFor } from "./Utils";
+import { InstanceKey, TypedPrimitiveValue } from "../hierarchies/values/Values";
+import { ClassStubs, createClassStubs, createFakeQueryReader, ResolvablePromise, toArray, waitFor } from "./Utils";
 
 describe("HierarchyProvider", () => {
   const metadataProvider = {} as unknown as IMetadataProvider;
@@ -817,6 +817,261 @@ describe("HierarchyProvider", () => {
       });
       const rootNodes = await provider.getNodes({ parentNode: undefined, instanceFilter });
       expect(rootNodes).to.deep.eq([{ key: "root", label: "root", parentKeys: [], children: true }]);
+    });
+  });
+
+  describe("Hierarchy level instance keys", () => {
+    it("returns grouped instance keys for parent grouping node", async () => {
+      const groupingNode: GroupingHierarchyNode = {
+        key: { type: "class-grouping", className: "x.y" },
+        parentKeys: [],
+        label: "test",
+        children: true,
+        groupedInstanceKeys: [
+          { className: "a.b", id: "0x1" },
+          { className: "c.d", id: "0x2" },
+        ],
+      };
+      const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel() {
+          return [];
+        },
+      };
+      const provider = new HierarchyProvider({
+        metadataProvider,
+        queryExecutor,
+        hierarchyDefinition,
+      });
+      const keys = await toArray(provider.getNodeInstanceKeys({ parentNode: groupingNode }));
+      expect(keys).to.deep.eq(groupingNode.groupedInstanceKeys);
+    });
+
+    it("returns empty list for parent custom node", async () => {
+      const customNode = {
+        key: "custom",
+        parentKeys: [],
+        label: "test",
+        children: false,
+      };
+      const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel({ parentNode }) {
+          if (!parentNode) {
+            return [{ node: customNode }];
+          }
+          return [];
+        },
+      };
+      const provider = new HierarchyProvider({
+        metadataProvider,
+        queryExecutor,
+        hierarchyDefinition,
+      });
+      const keys = await toArray(provider.getNodeInstanceKeys({ parentNode: undefined }));
+      expect(keys).to.be.empty;
+    });
+
+    it("returns instance nodes' keys", async () => {
+      queryExecutor.createQueryReader.returns(
+        createFakeQueryReader([
+          {
+            [0]: "a.b",
+            [1]: "0x123",
+            [2]: false,
+          },
+          {
+            [0]: "c:d",
+            [1]: "0x456",
+            [2]: false,
+          },
+        ]),
+      );
+      const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel({ parentNode }) {
+          if (!parentNode) {
+            return [
+              {
+                fullClassName: "x.y",
+                query: { ecsql: "query" },
+              },
+            ];
+          }
+          return [];
+        },
+      };
+      const provider = new HierarchyProvider({
+        metadataProvider,
+        queryExecutor,
+        hierarchyDefinition,
+      });
+      const keys = await toArray(provider.getNodeInstanceKeys({ parentNode: undefined }));
+      expect(keys)
+        .to.have.lengthOf(2)
+        .and.to.containSubset([
+          { className: "a.b", id: "0x123" },
+          { className: "c.d", id: "0x456" },
+        ]);
+    });
+
+    it("returns child instance nodes' keys of hidden custom node", async () => {
+      const customNode = {
+        key: "custom",
+        parentKeys: [],
+        label: "test",
+        children: false,
+        processingParams: {
+          hideInHierarchy: true,
+        },
+      };
+      queryExecutor.createQueryReader.returns(
+        createFakeQueryReader([
+          {
+            [0]: "a.b",
+            [1]: "0x123",
+            [2]: false,
+          },
+        ]),
+      );
+      const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel({ parentNode }) {
+          if (!parentNode) {
+            return [{ node: customNode }];
+          }
+          if (HierarchyNode.isCustom(parentNode) && parentNode.key === "custom") {
+            return [
+              {
+                fullClassName: "x.y",
+                query: { ecsql: "query" },
+              },
+            ];
+          }
+          return [];
+        },
+      };
+      const provider = new HierarchyProvider({
+        metadataProvider,
+        queryExecutor,
+        hierarchyDefinition,
+      });
+      const keys = await toArray(provider.getNodeInstanceKeys({ parentNode: undefined }));
+      expect(keys)
+        .to.have.lengthOf(1)
+        .and.to.containSubset([{ className: "a.b", id: "0x123" }]);
+    });
+
+    it("returns child instance nodes' keys of hidden instance node", async () => {
+      queryExecutor.createQueryReader.onFirstCall().returns(
+        createFakeQueryReader([
+          {
+            [0]: "a.b",
+            [1]: "0x123",
+            [2]: true,
+          },
+        ]),
+      );
+      queryExecutor.createQueryReader.onSecondCall().returns(
+        createFakeQueryReader([
+          {
+            [0]: "c.d",
+            [1]: "0x456",
+            [2]: false,
+          },
+        ]),
+      );
+      const hierarchyDefinition: IHierarchyLevelDefinitionsFactory = {
+        async defineHierarchyLevel({ parentNode }) {
+          if (!parentNode) {
+            return [
+              {
+                fullClassName: "x.y",
+                query: { ecsql: "root" },
+              },
+            ];
+          }
+          if (HierarchyNode.isInstancesNode(parentNode) && parentNode.key.instanceKeys.some((k) => k.className === "a.b")) {
+            return [
+              {
+                fullClassName: "x.y",
+                query: { ecsql: "child" },
+              },
+            ];
+          }
+          return [];
+        },
+      };
+      const provider = new HierarchyProvider({
+        metadataProvider,
+        queryExecutor,
+        hierarchyDefinition,
+      });
+      const keys = await toArray(provider.getNodeInstanceKeys({ parentNode: undefined }));
+      expect(keys)
+        .to.have.lengthOf(1)
+        .and.to.containSubset([{ className: "c.d", id: "0x456" }]);
+    });
+
+    it("merges same-class instance keys under a single parent node when requesting child node keys for hidden parent instance nodes", async () => {
+      queryExecutor.createQueryReader.onFirstCall().returns(
+        createFakeQueryReader([
+          {
+            [0]: "a.b",
+            [1]: "0x123",
+            [2]: true,
+          },
+          {
+            [0]: "a.b",
+            [1]: "0x456",
+            [2]: true,
+          },
+        ]),
+      );
+      queryExecutor.createQueryReader.onSecondCall().returns(
+        createFakeQueryReader([
+          {
+            [0]: "c.d",
+            [1]: "0x789",
+            [2]: false,
+          },
+        ]),
+      );
+      const hierarchyDefinition = {
+        defineHierarchyLevel: sinon.fake(async ({ parentNode }: DefineHierarchyLevelProps) => {
+          if (!parentNode) {
+            return [
+              {
+                fullClassName: "x.y",
+                query: { ecsql: "root" },
+              },
+            ];
+          }
+          if (HierarchyNode.isInstancesNode(parentNode) && parentNode.key.instanceKeys.some((k) => k.className === "a.b")) {
+            return [
+              {
+                fullClassName: "x.y",
+                query: { ecsql: "child" },
+              },
+            ];
+          }
+          return [];
+        }),
+      };
+      const provider = new HierarchyProvider({
+        metadataProvider,
+        queryExecutor,
+        hierarchyDefinition,
+      });
+      const keys = await toArray(provider.getNodeInstanceKeys({ parentNode: undefined }));
+      expect(keys)
+        .to.have.lengthOf(1)
+        .and.to.containSubset([{ className: "c.d", id: "0x789" }]);
+      expect(hierarchyDefinition.defineHierarchyLevel).to.be.calledTwice;
+      expect(hierarchyDefinition.defineHierarchyLevel.secondCall).to.be.calledWithMatch(
+        (arg: DefineHierarchyLevelProps) =>
+          arg.parentNode &&
+          HierarchyNode.isInstancesNode(arg.parentNode) &&
+          arg.parentNode.key.instanceKeys.length === 2 &&
+          InstanceKey.equals(arg.parentNode.key.instanceKeys[0], { className: "a.b", id: "0x123" }) &&
+          InstanceKey.equals(arg.parentNode.key.instanceKeys[1], { className: "a.b", id: "0x456" }),
+      );
     });
   });
 

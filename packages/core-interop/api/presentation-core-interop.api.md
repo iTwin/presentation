@@ -4,74 +4,30 @@
 
 ```ts
 
-import { ContentDescriptorRequestOptions } from '@itwin/presentation-common';
-import { Descriptor } from '@itwin/presentation-common';
 import { ECSqlReader } from '@itwin/core-common';
-import { HierarchyProvider } from '@itwin/presentation-hierarchies';
 import { IECSqlQueryExecutor } from '@itwin/presentation-hierarchies';
 import { ILogger } from '@itwin/presentation-hierarchies';
 import { IMetadataProvider } from '@itwin/presentation-hierarchies';
 import { IPrimitiveValueFormatter } from '@itwin/presentation-hierarchies';
-import { KeySet } from '@itwin/presentation-common';
-import { NonGroupingHierarchyNode } from '@itwin/presentation-hierarchies';
+import { LogLevel } from '@itwin/core-bentley';
 import { QueryBinder } from '@itwin/core-common';
 import { QueryOptions } from '@itwin/core-common';
-import { RulesetVariable } from '@itwin/presentation-common';
+import { Schema } from '@itwin/ecschema-metadata';
 import { SchemaContext } from '@itwin/ecschema-metadata';
+import { SchemaKey } from '@itwin/ecschema-metadata';
 import { UnitSystemKey } from '@itwin/core-quantity';
 
 // @beta
 export function createECSqlQueryExecutor(imodel: ICoreECSqlReaderFactory): IECSqlQueryExecutor;
 
 // @beta
-export function createHierarchyLevelDescriptor<TIModel extends ICoreECSqlReaderFactory>(props: CreateHierarchyLevelDescriptorProps<TIModel>): Promise<CreateHierarchyLevelDescriptorResult | undefined>;
+export function createLogger(coreLogger: ICoreLogger): ILogger;
 
 // @beta
-export interface CreateHierarchyLevelDescriptorProps<TIModel extends ICoreECSqlReaderFactory> {
-    descriptorBuilder: {
-        getContentDescriptor: (requestOptions: ContentDescriptorRequestOptions<TIModel, KeySet, RulesetVariable>) => Promise<Descriptor | undefined>;
-    };
-    hierarchyProvider: HierarchyProvider;
-    imodel: TIModel;
-    parentNode: Omit<NonGroupingHierarchyNode, "children"> | undefined;
-}
+export function createMetadataProvider(schemaContext: ICoreSchemaContext): IMetadataProvider;
 
 // @beta
-export interface CreateHierarchyLevelDescriptorResult {
-    descriptor: Descriptor;
-    inputKeys: KeySet;
-}
-
-// @beta
-export function createLogger(): ILogger;
-
-// @beta
-export function createMetadataProvider(schemaContext: SchemaContext): IMetadataProvider;
-
-// @beta
-export function createValueFormatter(schemaContext: SchemaContext, unitSystem?: UnitSystemKey, baseFormatter?: IPrimitiveValueFormatter): IPrimitiveValueFormatter;
-
-// @beta
-interface Event_2<TListener extends () => void = () => void> {
-    // (undocumented)
-    addListener(listener: TListener): () => void;
-    // (undocumented)
-    removeListener(listener: TListener): void;
-}
-export { Event_2 as Event }
-
-// @beta
-export interface ICoreECSqlReaderFactory {
-    // (undocumented)
-    createQueryReader(ecsql: string, binder?: QueryBinder, options?: QueryOptions): ECSqlReader;
-}
-
-// @beta
-export interface ICoreTxnManager {
-    onChangesApplied: Event_2;
-    onCommit: Event_2;
-    onCommitted: Event_2;
-}
+export function createValueFormatter(props: CreateValueFormatterProps): IPrimitiveValueFormatter;
 
 // @beta
 export function registerTxnListeners(txns: ICoreTxnManager, onChanged: () => void): () => void;

@@ -15,13 +15,15 @@ import {
 } from "presentation-test-utilities";
 import { ElementOwnsMultiAspects, ExternalSourceAspect, PhysicalModel, SpatialCategory, Subject } from "@itwin/core-backend";
 import { GenericInstanceFilter, GenericInstanceFilterRule } from "@itwin/core-common";
-import { Descriptor, PropertiesField, PropertyValueFormat } from "@itwin/presentation-common";
-import { createHierarchyLevelDescriptor } from "@itwin/presentation-core-interop";
+import { IModelConnection } from "@itwin/core-frontend";
+import { DefaultContentDisplayTypes, Descriptor, KeySet, NestedContentField, PropertiesField, PropertyValueFormat } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
+import { HierarchyProvider, NonGroupingHierarchyNode, ParentHierarchyNode } from "@itwin/presentation-hierarchies";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { buildIModel } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchyLevel } from "../HierarchyValidation";
+import { collect } from "../Utils";
 import { createModelsTreeProvider, importTestSchema } from "./ModelsTreeTestUtils";
 
 describe("Hierarchies", () => {
@@ -48,20 +50,19 @@ describe("Hierarchies", () => {
       });
 
       // validate descriptor, that is required for creating the filter
-      const result = await createHierarchyLevelDescriptor({
+      await validateHierarchyLevelDescriptor({
         imodel,
+        provider,
         parentNode: undefined,
-        hierarchyProvider: provider,
-        descriptorBuilder: Presentation.presentation,
+        expected: {
+          selectClasses: [
+            {
+              selectClassInfo: { name: Subject.classFullName },
+            },
+          ],
+          fields: subjectFields,
+        },
       });
-      expect(result?.descriptor).to.containSubset({
-        selectClasses: [
-          {
-            selectClassInfo: { name: Subject.classFullName },
-          },
-        ],
-        fields: subjectFields,
-      } as Partial<Descriptor>);
 
       // validate filtered hierarchy level
       validateHierarchyLevel({
@@ -151,26 +152,25 @@ describe("Hierarchies", () => {
       });
 
       // validate descriptor, that is required for creating the filter
-      const result = await createHierarchyLevelDescriptor({
+      await validateHierarchyLevelDescriptor({
         imodel,
+        provider,
         parentNode,
-        hierarchyProvider: provider,
-        descriptorBuilder: Presentation.presentation,
+        expected: {
+          selectClasses: [
+            {
+              selectClassInfo: { name: Subject.classFullName },
+            },
+            {
+              selectClassInfo: { name: PhysicalModel.classFullName },
+            },
+            {
+              selectClassInfo: { name: SpatialCategory.classFullName },
+            },
+          ],
+          fields: mergeFieldLists([subjectFields, physicalModelFields, spatialCategoryFields]),
+        },
       });
-      expect(result?.descriptor).to.containSubset({
-        selectClasses: [
-          {
-            selectClassInfo: { name: Subject.classFullName },
-          },
-          {
-            selectClassInfo: { name: PhysicalModel.classFullName },
-          },
-          {
-            selectClassInfo: { name: SpatialCategory.classFullName },
-          },
-        ],
-        fields: mergeFieldLists([subjectFields, physicalModelFields, spatialCategoryFields]),
-      } as Partial<Descriptor>);
 
       // validate filtered hierarchy level
       validateHierarchyLevel({
@@ -247,20 +247,19 @@ describe("Hierarchies", () => {
       });
 
       // validate descriptor, that is required for creating the filter
-      const result = await createHierarchyLevelDescriptor({
+      await validateHierarchyLevelDescriptor({
         imodel,
+        provider,
         parentNode,
-        hierarchyProvider: provider,
-        descriptorBuilder: Presentation.presentation,
+        expected: {
+          selectClasses: [
+            {
+              selectClassInfo: { name: SpatialCategory.classFullName },
+            },
+          ],
+          fields: spatialCategoryFields,
+        },
       });
-      expect(result?.descriptor).to.containSubset({
-        selectClasses: [
-          {
-            selectClassInfo: { name: SpatialCategory.classFullName },
-          },
-        ],
-        fields: spatialCategoryFields,
-      } as Partial<Descriptor>);
 
       // validate filtered hierarchy level
       validateHierarchyLevel({
@@ -316,20 +315,19 @@ describe("Hierarchies", () => {
       });
 
       // validate descriptor, that is required for creating the filter
-      const result = await createHierarchyLevelDescriptor({
+      await validateHierarchyLevelDescriptor({
         imodel,
+        provider,
         parentNode,
-        hierarchyProvider: provider,
-        descriptorBuilder: Presentation.presentation,
+        expected: {
+          selectClasses: [
+            {
+              selectClassInfo: { name: keys.element.className.replace(".", ":") },
+            },
+          ],
+          fields: physicalElementFields,
+        },
       });
-      expect(result?.descriptor).to.containSubset({
-        selectClasses: [
-          {
-            selectClassInfo: { name: keys.element.className.replace(".", ":") },
-          },
-        ],
-        fields: physicalElementFields,
-      } as Partial<Descriptor>);
 
       // validate filtered hierarchy level
       validateHierarchyLevel({
@@ -405,20 +403,19 @@ describe("Hierarchies", () => {
       });
 
       // validate descriptor, that is required for creating the filter
-      const result = await createHierarchyLevelDescriptor({
+      await validateHierarchyLevelDescriptor({
         imodel,
+        provider,
         parentNode,
-        hierarchyProvider: provider,
-        descriptorBuilder: Presentation.presentation,
+        expected: {
+          selectClasses: [
+            {
+              selectClassInfo: { name: keys.childElement.className.replace(".", ":") },
+            },
+          ],
+          fields: physicalElementFields,
+        },
       });
-      expect(result?.descriptor).to.containSubset({
-        selectClasses: [
-          {
-            selectClassInfo: { name: keys.childElement.className.replace(".", ":") },
-          },
-        ],
-        fields: physicalElementFields,
-      } as Partial<Descriptor>);
 
       // validate filtered hierarchy level
       validateHierarchyLevel({
@@ -501,20 +498,19 @@ describe("Hierarchies", () => {
       });
 
       // validate descriptor, that is required for creating the filter
-      const result = await createHierarchyLevelDescriptor({
+      await validateHierarchyLevelDescriptor({
         imodel,
+        provider,
         parentNode,
-        hierarchyProvider: provider,
-        descriptorBuilder: Presentation.presentation,
+        expected: {
+          selectClasses: [
+            {
+              selectClassInfo: { name: SpatialCategory.classFullName },
+            },
+          ],
+          fields: spatialCategoryFields,
+        },
       });
-      expect(result?.descriptor).to.containSubset({
-        selectClasses: [
-          {
-            selectClassInfo: { name: SpatialCategory.classFullName },
-          },
-        ],
-        fields: spatialCategoryFields,
-      } as Partial<Descriptor>);
 
       // validate filtered hierarchy level
       validateHierarchyLevel({
@@ -579,47 +575,46 @@ describe("Hierarchies", () => {
         nodes: await provider.getNodes({ parentNode }),
         expect: [NodeValidators.createForClassGroupingNode({ className: keys.element.className })],
       });
-      const result = await createHierarchyLevelDescriptor({
+      await validateHierarchyLevelDescriptor({
         imodel,
+        provider,
         parentNode,
-        hierarchyProvider: provider,
-        descriptorBuilder: Presentation.presentation,
-      });
-      expect(result?.descriptor).to.containSubset({
-        selectClasses: [
-          {
-            selectClassInfo: { name: keys.element.className.replace(".", ":") },
-            relatedPropertyPaths: [
-              [
+        expected: {
+          selectClasses: [
+            {
+              selectClassInfo: { name: keys.element.className.replace(".", ":") },
+              relatedPropertyPaths: [
+                [
+                  {
+                    relationshipInfo: { name: ElementOwnsMultiAspects.classFullName },
+                    isForwardRelationship: true,
+                  },
+                ],
+              ],
+            },
+          ],
+          fields: [
+            ...physicalElementFields,
+            {
+              contentClassInfo: { name: ExternalSourceAspect.classFullName },
+              pathToPrimaryClass: [
                 {
+                  sourceClassInfo: { name: ExternalSourceAspect.classFullName },
                   relationshipInfo: { name: ElementOwnsMultiAspects.classFullName },
-                  isForwardRelationship: true,
+                  isForwardRelationship: false,
+                  targetClassInfo: { name: keys.element.className.replace(".", ":") },
                 },
               ],
-            ],
-          },
-        ],
-        fields: [
-          ...physicalElementFields,
-          {
-            contentClassInfo: { name: ExternalSourceAspect.classFullName },
-            pathToPrimaryClass: [
-              {
-                sourceClassInfo: { name: ExternalSourceAspect.classFullName },
-                relationshipInfo: { name: ElementOwnsMultiAspects.classFullName },
-                isForwardRelationship: false,
-                targetClassInfo: { name: keys.element.className.replace(".", ":") },
-              },
-            ],
-            nestedFields: [
-              {
-                label: "Source Element ID",
-                type: { valueFormat: PropertyValueFormat.Primitive, typeName: "string" },
-              },
-            ],
-          },
-        ],
-      } as Partial<Descriptor>);
+              nestedFields: [
+                {
+                  label: "Source Element ID",
+                  type: { valueFormat: PropertyValueFormat.Primitive, typeName: "string" },
+                },
+              ],
+            } as NestedContentField,
+          ],
+        },
+      });
     });
   });
 });
@@ -633,6 +628,38 @@ function createInstanceFilter(className: string, rule: GenericInstanceFilterRule
       rules: [rule],
     },
   };
+}
+
+type RecursivelyPartial<T> = {
+  [P in keyof T]?: RecursivelyPartial<T[P]>;
+};
+async function validateHierarchyLevelDescriptor(props: {
+  imodel: IModelConnection;
+  provider: HierarchyProvider;
+  parentNode: ParentHierarchyNode<NonGroupingHierarchyNode> | undefined;
+  expected: RecursivelyPartial<Descriptor>;
+}) {
+  const { imodel, provider, parentNode, expected } = props;
+  const inputKeys = await collect(provider.getNodeInstanceKeys({ parentNode }));
+  const result = await Presentation.presentation.getContentDescriptor({
+    imodel,
+    rulesetOrId: {
+      id: "test",
+      rules: [
+        {
+          ruleType: "Content",
+          specifications: [
+            {
+              specType: "SelectedNodeInstances",
+            },
+          ],
+        },
+      ],
+    },
+    displayType: DefaultContentDisplayTypes.PropertyPane,
+    keys: new KeySet(inputKeys),
+  });
+  expect(result).to.containSubset(expected);
 }
 
 function mergeFieldLists<TField extends Pick<PropertiesField, "label">>(fieldLists: TField[][]): TField[] {

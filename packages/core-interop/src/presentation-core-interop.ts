@@ -3,9 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-export * from "./core-interop/Formatting";
-export * from "./core-interop/HierarchyLevelDescriptor";
-export * from "./core-interop/Logging";
-export * from "./core-interop/Metadata";
-export * from "./core-interop/QueryExecutor";
-export * from "./core-interop/Transactions";
+export { createValueFormatter } from "./core-interop/Formatting";
+export { createLogger } from "./core-interop/Logging";
+export { createMetadataProvider } from "./core-interop/Metadata";
+export { createECSqlQueryExecutor } from "./core-interop/QueryExecutor";
+export { registerTxnListeners } from "./core-interop/Transactions";
