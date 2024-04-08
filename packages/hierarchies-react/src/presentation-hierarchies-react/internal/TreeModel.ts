@@ -118,45 +118,15 @@ export namespace TreeModel {
   }
 
   export function setHierarchyLimit(model: TreeModel, nodeId: string | undefined, limit?: number | "unbounded"): boolean {
-    removeSubTree(model, nodeId);
-    if (nodeId === undefined) {
-      model.rootNode.hierarchyLimit = limit;
-      model.rootNode.isLoading = true;
-      return true;
-    }
-
-    const modelNode = model.idToNode.get(nodeId);
-    if (!modelNode || !isTreeModelHierarchyNode(modelNode)) {
-      return false;
-    }
-
-    modelNode.hierarchyLimit = limit;
-    if (modelNode.isExpanded) {
-      modelNode.isLoading = true;
-      return true;
-    }
-    return false;
+    return updateForReload(model, nodeId, (node) => {
+      node.hierarchyLimit = limit;
+    });
   }
 
   export function setInstanceFilter(model: TreeModel, nodeId: string | undefined, filter?: GenericInstanceFilter): boolean {
-    removeSubTree(model, nodeId);
-    if (nodeId === undefined) {
-      model.rootNode.instanceFilter = filter;
-      model.rootNode.isLoading = true;
-      return true;
-    }
-
-    const modelNode = model.idToNode.get(nodeId);
-    if (!modelNode || !isTreeModelHierarchyNode(modelNode)) {
-      return false;
-    }
-
-    modelNode.instanceFilter = filter;
-    if (modelNode.isExpanded) {
-      modelNode.isLoading = true;
-      return true;
-    }
-    return false;
+    return updateForReload(model, nodeId, (node) => {
+      node.instanceFilter = filter;
+    });
   }
 
   export function selectNode(model: TreeModel, nodeId: string, isSelected: boolean) {
@@ -178,4 +148,25 @@ export namespace TreeModel {
     }
     return model.idToNode.get(nodeId);
   }
+}
+
+function updateForReload(model: TreeModel, nodeId: string | undefined, update: (node: TreeModelHierarchyNode | TreeModelRootNode) => void) {
+  TreeModel.removeSubTree(model, nodeId);
+  if (nodeId === undefined) {
+    update(model.rootNode);
+    model.rootNode.isLoading = true;
+    return true;
+  }
+
+  const modelNode = model.idToNode.get(nodeId);
+  if (!modelNode || !isTreeModelHierarchyNode(modelNode)) {
+    return false;
+  }
+
+  update(modelNode);
+  if (modelNode.isExpanded) {
+    modelNode.isLoading = true;
+    return true;
+  }
+  return false;
 }
