@@ -164,7 +164,7 @@ export class TreeActions {
   public reloadTree(options?: { discardState?: boolean }) {
     const oldModel = this._currentModel;
     this.updateTreeModel((model) => {
-      model.rootNode.isLoading = false;
+      model.rootNode.isLoading = true;
     });
 
     this.reloadSubTree(undefined, oldModel, { ...options });
