@@ -253,12 +253,12 @@ describe("ContentDataProvider", () => {
     });
 
     it("memoizes result", async () => {
-      const resultResolvablePromise = new ResolvablePromise<Descriptor>();
-      presentationManager.getContentDescriptor.returns(resultResolvablePromise.promise);
+      const resultPromiseContainer = new ResolvablePromise<Descriptor>();
+      presentationManager.getContentDescriptor.returns(resultPromiseContainer.promise);
 
       const requests = [provider.getContentDescriptor(), provider.getContentDescriptor()];
       const result = createTestContentDescriptor({ fields: [] });
-      resultResolvablePromise.resolveSync(result);
+      resultPromiseContainer.resolveSync(result);
       const descriptors = await Promise.all(requests);
       descriptors.forEach((descriptor) => expect(descriptor).to.deep.eq(result));
       expect(presentationManager.getContentDescriptor).to.be.calledOnce;
@@ -290,25 +290,25 @@ describe("ContentDataProvider", () => {
     });
 
     it("memoizes result", async () => {
-      const resultResolvablePromise = new ResolvablePromise<{ content: Content; size: number }>();
-      presentationManager.getContentAndSize.returns(resultResolvablePromise.promise);
+      const resultPromiseContainer = new ResolvablePromise<{ content: Content; size: number }>();
+      presentationManager.getContentAndSize.returns(resultPromiseContainer.promise);
       provider.pagingSize = 10;
       const requests = [provider.getContentSetSize(), provider.getContentSetSize()];
       const result = { content: new Content(createTestContentDescriptor({ fields: [] }), []), size: 2 };
-      resultResolvablePromise.resolveSync(result);
+      resultPromiseContainer.resolveSync(result);
       const sizes = await Promise.all(requests);
       sizes.forEach((size) => expect(size).to.eq(result.size));
       expect(presentationManager.getContentAndSize).to.be.calledOnceWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
     });
 
     it("requests size and first page when paging size is set", async () => {
-      const resultResolvablePromise = new ResolvablePromise<{ content: Content; size: number }>();
+      const resultPromiseContainer = new ResolvablePromise<{ content: Content; size: number }>();
       const pagingSize = 20;
-      presentationManager.getContentAndSize.returns(resultResolvablePromise.promise);
+      presentationManager.getContentAndSize.returns(resultPromiseContainer.promise);
 
       provider.pagingSize = pagingSize;
       const result = { content: new Content(createTestContentDescriptor({ fields: [] }), []), size: 2 };
-      resultResolvablePromise.resolveSync(result);
+      resultPromiseContainer.resolveSync(result);
       const size = await provider.getContentSetSize();
       expect(size).to.eq(result.size);
       expect(presentationManager.getContentAndSize).to.be.calledOnceWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === pagingSize));
