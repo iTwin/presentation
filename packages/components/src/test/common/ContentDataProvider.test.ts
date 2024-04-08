@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { ResolvablePromise } from "presentation-test-utilities";
 import * as sinon from "sinon";
 import { PrimitiveValue, PropertyDescription, PropertyRecord } from "@itwin/appui-abstract";
 import { BeEvent, BeUiEvent } from "@itwin/core-bentley";
@@ -32,7 +33,6 @@ import {
   createTestPropertiesContentField,
   createTestSimpleContentField,
 } from "../_helpers/Content";
-import { PromiseContainer } from "../_helpers/Promises";
 
 /**
  * The Provider class is used to make protected [[ContentDataProvider]]
@@ -253,12 +253,12 @@ describe("ContentDataProvider", () => {
     });
 
     it("memoizes result", async () => {
-      const resultPromiseContainer = new PromiseContainer<Descriptor>();
-      presentationManager.getContentDescriptor.returns(resultPromiseContainer.promise);
+      const resultResolvablePromise = new ResolvablePromise<Descriptor>();
+      presentationManager.getContentDescriptor.returns(resultResolvablePromise.promise);
 
       const requests = [provider.getContentDescriptor(), provider.getContentDescriptor()];
       const result = createTestContentDescriptor({ fields: [] });
-      resultPromiseContainer.resolve(result);
+      resultResolvablePromise.resolveSync(result);
       const descriptors = await Promise.all(requests);
       descriptors.forEach((descriptor) => expect(descriptor).to.deep.eq(result));
       expect(presentationManager.getContentDescriptor).to.be.calledOnce;
@@ -278,37 +278,37 @@ describe("ContentDataProvider", () => {
     });
 
     it("requests presentation manager for size", async () => {
-      const result = new PromiseContainer<{ content: Content; size: number }>();
+      const result = new ResolvablePromise<{ content: Content; size: number }>();
       presentationManager.getContentAndSize.returns(result.promise);
 
       provider.pagingSize = 10;
       const contentAndContentSize = { content: new Content(createTestContentDescriptor({ fields: [] }), []), size: 2 };
-      result.resolve(contentAndContentSize);
+      result.resolveSync(contentAndContentSize);
       const size = await provider.getContentSetSize();
       expect(size).to.eq(contentAndContentSize.size);
       expect(presentationManager.getContentAndSize).to.be.calledOnceWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
     });
 
     it("memoizes result", async () => {
-      const resultPromiseContainer = new PromiseContainer<{ content: Content; size: number }>();
-      presentationManager.getContentAndSize.returns(resultPromiseContainer.promise);
+      const resultResolvablePromise = new ResolvablePromise<{ content: Content; size: number }>();
+      presentationManager.getContentAndSize.returns(resultResolvablePromise.promise);
       provider.pagingSize = 10;
       const requests = [provider.getContentSetSize(), provider.getContentSetSize()];
       const result = { content: new Content(createTestContentDescriptor({ fields: [] }), []), size: 2 };
-      resultPromiseContainer.resolve(result);
+      resultResolvablePromise.resolveSync(result);
       const sizes = await Promise.all(requests);
       sizes.forEach((size) => expect(size).to.eq(result.size));
       expect(presentationManager.getContentAndSize).to.be.calledOnceWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === 10));
     });
 
     it("requests size and first page when paging size is set", async () => {
-      const resultPromiseContainer = new PromiseContainer<{ content: Content; size: number }>();
+      const resultResolvablePromise = new ResolvablePromise<{ content: Content; size: number }>();
       const pagingSize = 20;
-      presentationManager.getContentAndSize.returns(resultPromiseContainer.promise);
+      presentationManager.getContentAndSize.returns(resultResolvablePromise.promise);
 
       provider.pagingSize = pagingSize;
       const result = { content: new Content(createTestContentDescriptor({ fields: [] }), []), size: 2 };
-      resultPromiseContainer.resolve(result);
+      resultResolvablePromise.resolveSync(result);
       const size = await provider.getContentSetSize();
       expect(size).to.eq(result.size);
       expect(presentationManager.getContentAndSize).to.be.calledOnceWith(matchOptions(({ paging }) => paging?.start === 0 && paging.size === pagingSize));
@@ -351,10 +351,10 @@ describe("ContentDataProvider", () => {
     });
 
     it("memoizes result", async () => {
-      const resultContentFirstPagePromise0 = new PromiseContainer<Content>();
-      const resultContentNonFirstPagePromise = new PromiseContainer<Content>();
+      const resultContentFirstPagePromise0 = new ResolvablePromise<Content>();
+      const resultContentNonFirstPagePromise = new ResolvablePromise<Content>();
 
-      const resultContentFirstPagePromise1 = new PromiseContainer<{ content: Content; size: number }>();
+      const resultContentFirstPagePromise1 = new ResolvablePromise<{ content: Content; size: number }>();
       presentationManager.getContentAndSize.returns(resultContentFirstPagePromise1.promise);
 
       presentationManager.getContent.callsFake(async (options) => {
@@ -387,9 +387,9 @@ describe("ContentDataProvider", () => {
       // for 6'th request
       const nonPagedContentStartingAt1Response = new Content(descriptor, [createTestContentItem({ label: "3", values: {}, displayValues: {} })]);
 
-      resultContentFirstPagePromise0.resolve(nonPagedContentStartingAt0Response);
-      resultContentFirstPagePromise1.resolve(pagedContentAndSizeResponse);
-      resultContentNonFirstPagePromise.resolve(nonPagedContentStartingAt1Response);
+      resultContentFirstPagePromise0.resolveSync(nonPagedContentStartingAt0Response);
+      resultContentFirstPagePromise1.resolveSync(pagedContentAndSizeResponse);
+      resultContentNonFirstPagePromise.resolveSync(nonPagedContentStartingAt1Response);
       const responses = await Promise.all(requests);
 
       expect(responses[0])

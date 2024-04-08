@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { ResolvablePromise } from "presentation-test-utilities";
 import * as sinon from "sinon";
 import { Id64, Id64Arg, Id64String } from "@itwin/core-bentley";
 import { Code, ElementProps } from "@itwin/core-common";
@@ -22,7 +23,6 @@ import {
 import { ViewportSelectionHandler } from "../../presentation-components/viewport/ViewportSelectionHandler";
 import { viewWithUnifiedSelection } from "../../presentation-components/viewport/WithUnifiedSelection";
 import { createTestECInstanceKey } from "../_helpers/Common";
-import { ResolvablePromise } from "../_helpers/Promises";
 import { render, waitFor } from "../TestUtils";
 
 const PresentationViewport = viewWithUnifiedSelection(ViewportComponent);

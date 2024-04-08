@@ -4,12 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { ResolvablePromise } from "presentation-test-utilities";
 import sinon from "sinon";
 import { createHiliteSetProvider, HiliteSetProvider } from "../unified-selection/HiliteSetProvider";
 import { ECClass, ECSchema } from "../unified-selection/queries/ECMetadata";
 import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow } from "../unified-selection/queries/ECSqlCore";
 import { SelectableInstanceKey, Selectables } from "../unified-selection/Selectable";
-import { ResolvablePromise } from "./_helpers/PromiseUtils";
 import { createCustomSelectable, createECInstanceId, createSelectableInstanceKey } from "./_helpers/SelectablesCreator";
 
 describe("HiliteSetProvider", () => {
@@ -362,13 +362,13 @@ describe("HiliteSetProvider", () => {
 
         const selectables = Selectables.create(elementKeys);
         const iter = provider.getHiliteSet({ selectables });
-        elementPromises[0].resolve(elementKeys[0].id);
+        elementPromises[0].resolveSync(elementKeys[0].id);
 
         const nextValuePromise = iter.next();
         await expect(Promise.race([nextValuePromise, timers.tickAsync(5).then(() => "timeout")])).to.eventually.eq("timeout");
 
         await timers.tickAsync(15);
-        elementPromises[1].resolve(elementKeys[1].id);
+        elementPromises[1].resolveSync(elementKeys[1].id);
         await expect(nextValuePromise).to.eventually.deep.eq({
           done: false,
           value: {

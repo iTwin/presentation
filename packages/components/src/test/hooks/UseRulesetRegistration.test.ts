@@ -4,11 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { ResolvablePromise } from "presentation-test-utilities";
 import sinon from "sinon";
 import { RegisteredRuleset, Ruleset } from "@itwin/presentation-common";
 import { Presentation, RulesetManager } from "@itwin/presentation-frontend";
 import { useRulesetRegistration } from "../../presentation-components/hooks/UseRulesetRegistration";
-import { ResolvablePromise } from "../_helpers/Promises";
 import { renderHook } from "../TestUtils";
 
 /* eslint-disable deprecation/deprecation */

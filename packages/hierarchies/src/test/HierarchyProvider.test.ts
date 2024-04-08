@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { ResolvablePromise } from "presentation-test-utilities";
 import sinon from "sinon";
 import { omit } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
@@ -23,7 +24,7 @@ import { ECSqlSelectClauseGroupingParams, NodeSelectClauseColumnNames } from "..
 import { trimWhitespace } from "../hierarchies/Utils";
 import { ConcatenatedValue } from "../hierarchies/values/ConcatenatedValue";
 import { InstanceKey, TypedPrimitiveValue } from "../hierarchies/values/Values";
-import { ClassStubs, createClassStubs, createFakeQueryReader, ResolvablePromise, toArray, waitFor } from "./Utils";
+import { ClassStubs, createClassStubs, createFakeQueryReader, toArray, waitFor } from "./Utils";
 
 describe("HierarchyProvider", () => {
   const metadataProvider = {} as unknown as IMetadataProvider;
