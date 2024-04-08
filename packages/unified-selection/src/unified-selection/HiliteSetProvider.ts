@@ -7,7 +7,7 @@
  * @module UnifiedSelection
  */
 
-import { EMPTY, filter, forkJoin, from, map, merge, mergeMap, Observable, scan, shareReplay, Subject, Subscription, tap, toArray } from "rxjs";
+import { EMPTY, filter, forkJoin, from, map, merge, mergeMap, Observable, scan, shareReplay, Subject, toArray } from "rxjs";
 import { eachValueFrom } from "rxjs-for-await";
 import { ECClass, IMetadataProvider, parseFullClassName } from "./queries/ECMetadata";
 import { ECSqlBinding, IECSqlQueryExecutor } from "./queries/ECSqlCore";
@@ -72,86 +72,49 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
     return eachValueFrom(obs);
   }
 
+  /**
+   * Returns a "hot" observable of hilite sets.
+   */
   private getHiliteSetObservable({ selectables }: { selectables: Selectables }): Subject<HiliteSet> {
     const instancesByType = this.getInstancesByType(selectables);
-    const modelsObs = this.getHilitedModels(instancesByType);
-    const subCategoriesObs = this.getHilitedSubCategories(instancesByType);
-    const elementsObs = this.getHilitedElements(instancesByType);
+    const observables: { [key in keyof HiliteSet]?: Observable<string> } = {
+      models: this.getHilitedModels(instancesByType),
+      subCategories: this.getHilitedSubCategories(instancesByType),
+      elements: this.getHilitedElements(instancesByType),
+    };
 
     let hiliteSet: HiliteSet = { models: [], subCategories: [], elements: [] };
     let lastEmitTime = performance.now();
     const subject = new Subject<HiliteSet>();
-    const emitHiliteSetIfTimeElapsed = () => {
-      if (performance.now() - lastEmitTime < 20) {
-        return;
-      }
-      subject.next(hiliteSet);
-      hiliteSet = { models: [], subCategories: [], elements: [] };
-      lastEmitTime = performance.now();
-    };
-
-    let modelsDone = false;
-    let subCategoriesDone = false;
-    let elementsDone = false;
-
-    const completeIfAllDone = () => {
-      if (!modelsDone || !subCategoriesDone || !elementsDone) {
-        return;
-      }
-
-      if (hiliteSet.elements.length || hiliteSet.models.length || hiliteSet.subCategories.length) {
-        console.log("Emitting last hilite set");
-        subject.next(hiliteSet);
-      }
-
-      console.log("All done. Completing.");
-      subject.complete();
-    };
-
-    const subscriptions = new Array<Subscription>();
-    const error = (err: any) => {
-      subject.error(err);
-      subscriptions.forEach((x) => x.unsubscribe());
-      subscriptions.length = 0;
-    };
-
-    subscriptions.push(
-      modelsObs.subscribe({
+    const subscriptions = (["models", "subCategories", "elements"] as const).map((key) =>
+      observables[key]!.subscribe({
         next(val) {
-          hiliteSet.models.push(val);
-          emitHiliteSetIfTimeElapsed();
+          hiliteSet[key].push(val);
+          if (performance.now() - lastEmitTime < 20) {
+            return;
+          }
+          subject.next(hiliteSet);
+          hiliteSet = { models: [], subCategories: [], elements: [] };
+          lastEmitTime = performance.now();
         },
         complete() {
-          modelsDone = true;
-          completeIfAllDone();
+          observables[key] = undefined;
+          if (observables.models || observables.subCategories || observables.elements) {
+            return;
+          }
+          // Emit last batch before completing the observable.
+          if (hiliteSet.elements.length || hiliteSet.models.length || hiliteSet.subCategories.length) {
+            subject.next(hiliteSet);
+          }
+          subject.complete();
         },
-        error,
+        error(err) {
+          subscriptions.forEach((x) => x.unsubscribe());
+          subscriptions.length = 0;
+          subject.error(err);
+        },
       }),
     );
-
-    subCategoriesObs.subscribe({
-      next(val) {
-        hiliteSet.subCategories.push(val);
-        emitHiliteSetIfTimeElapsed();
-      },
-      complete() {
-        subCategoriesDone = true;
-        completeIfAllDone();
-      },
-      error,
-    });
-
-    elementsObs.subscribe({
-      next(val) {
-        hiliteSet.elements.push(val);
-        emitHiliteSetIfTimeElapsed();
-      },
-      complete() {
-        elementsDone = true;
-        completeIfAllDone();
-      },
-      error,
-    });
 
     return subject;
   }
@@ -215,7 +178,6 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
           filter(({ instanceIdType }) => instanceIdType === type),
           map(({ instanceId }) => instanceId),
           unique(),
-          tap((x) => console.log(`${type}: ${x}`)),
         ),
       ]),
     ) as InstancesByType;
@@ -344,7 +306,6 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
         return from(this._queryExecutor.createQueryReader(query, bindings));
       }),
       map((row) => row.ECInstanceId as string),
-      tap((x) => console.log(`Query element: ${x}`)),
     );
   }
 
