@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Observable } from "rxjs";
+import { from, ObservableInput } from "rxjs";
 import sinon from "sinon";
 import { BeDuration, Logger, LogLevel, StopWatch } from "@itwin/core-bentley";
 import { ECClass, ECEntityClass, ECProperty, ECRelationshipClass, ECRelationshipConstraint, IMetadataProvider } from "../hierarchies/ECMetadata";
@@ -26,10 +26,10 @@ export function setupLogging(levels: Array<{ namespace: string; level: LogLevel 
   levels.forEach(({ namespace, level }) => Logger.setLevel(namespace, level));
 }
 
-export async function getObservableResult<T>(obs: Observable<T>): Promise<Array<T>> {
+export async function collect<T>(obs: ObservableInput<T>): Promise<Array<T>> {
   const arr = new Array<T>();
   return new Promise((resolve, reject) => {
-    obs.subscribe({
+    from(obs).subscribe({
       next(item: T) {
         arr.push(item);
       },
@@ -41,14 +41,6 @@ export async function getObservableResult<T>(obs: Observable<T>): Promise<Array<
       },
     });
   });
-}
-
-export async function toArray<T>(asyncIter: AsyncIterableIterator<T>): Promise<Array<T>> {
-  const arr = [];
-  for await (const item of asyncIter) {
-    arr.push(item);
-  }
-  return arr;
 }
 
 export function createTestParsedCustomNode(src?: Partial<ParsedCustomHierarchyNode>): ParsedCustomHierarchyNode {

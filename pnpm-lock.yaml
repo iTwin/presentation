@@ -1048,9 +1048,6 @@ importers:
       rxjs:
         specifier: ^7.8.1
         version: 7.8.1
-      rxjs-for-await:
-        specifier: ^1.0.0
-        version: 1.0.0(rxjs@7.8.1)
     devDependencies:
       '@itwin/build-tools':
         specifier: ^4.4.0
@@ -1236,6 +1233,9 @@ importers:
       sinon-chai:
         specifier: ^3.7.0
         version: 3.7.0(chai@4.4.1)(sinon@17.0.1)
+      source-map-support:
+        specifier: ^0.5.21
+        version: 0.5.21
       typescript:
         specifier: ~5.0.4
         version: 5.0.4

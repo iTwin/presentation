@@ -5,20 +5,31 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
-import { TreeActions, TreeState } from "./internal/TreeActions";
-import { isHierarchyNodeSelected, isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelRootNode } from "./internal/TreeModel";
+import { TreeActions } from "./internal/TreeActions";
+import { isTreeModelHierarchyNode, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./internal/TreeModel";
 import { useUnifiedTreeSelection, UseUnifiedTreeSelectionProps } from "./internal/UseUnifiedSelection";
-import { PresentationTreeNode } from "./Types";
-
-interface UseTreeProps {
-  hierarchyProvider?: HierarchyProvider;
-}
+import { PresentationHierarchyNode, PresentationTreeNode } from "./Types";
 
 /** @beta */
 export interface HierarchyLevelFilteringOptions {
-  hierarchyNode: HierarchyNode | undefined;
-  applyFilter: (filter?: GenericInstanceFilter) => void;
+  hierarchyNode: HierarchyNode;
   currentFilter?: GenericInstanceFilter;
+}
+
+/** @beta */
+export function useTree(props: UseTreeProps): UseTreeResult {
+  const { getNode: _, ...rest } = useTreeInternal(props);
+  return rest;
+}
+
+/** @beta */
+export function useUnifiedSelectionTree({ imodelKey, sourceName, ...props }: UseTreeProps & Omit<UseUnifiedTreeSelectionProps, "getNode">): UseTreeResult {
+  const { getNode, ...rest } = useTreeInternal(props);
+  return { ...rest, ...useUnifiedTreeSelection({ imodelKey, sourceName, getNode }) };
+}
+
+interface UseTreeProps {
+  hierarchyProvider?: HierarchyProvider;
 }
 
 interface UseTreeResult {
@@ -35,32 +46,31 @@ interface UseTreeResult {
   expandNode: (nodeId: string, isExpanded: boolean) => void;
   selectNode: (nodeId: string, isSelected: boolean) => void;
   setHierarchyLevelLimit: (nodeId: string | undefined, limit: undefined | number | "unbounded") => void;
-  removeHierarchyLevelFilter: (nodeId: string) => void;
+  setHierarchyLevelFilter: (nodeId: string | undefined, filter: GenericInstanceFilter | undefined) => void;
   isNodeSelected: (nodeId: string) => boolean;
   getHierarchyLevelFilteringOptions: (nodeId: string) => HierarchyLevelFilteringOptions | undefined;
 }
 
-/** @beta */
-export function useTree(props: UseTreeProps): UseTreeResult {
-  const { getNode: _, ...rest } = useTreeInternal(props);
-  return rest;
+interface TreeState {
+  model: TreeModel;
+  rootNodes: Array<PresentationTreeNode> | undefined;
 }
 
-/** @beta */
-export function useUnifiedSelectionTree({ imodelKey, sourceName, ...props }: UseTreeProps & Omit<UseUnifiedTreeSelectionProps, "getNode">): UseTreeResult {
-  const { getNode, ...rest } = useTreeInternal(props);
-  return { ...rest, ...useUnifiedTreeSelection({ imodelKey, sourceName, getNode }) };
-}
-
-function useTreeInternal({
-  hierarchyProvider,
-}: UseTreeProps): UseTreeResult & { getNode: (nodeId: string) => TreeModelRootNode | TreeModelHierarchyNode | undefined } {
+function useTreeInternal({ hierarchyProvider }: UseTreeProps): UseTreeResult & { getNode: (nodeId: string) => TreeModelRootNode | TreeModelNode | undefined } {
   const [state, setState] = useState<TreeState>({
     model: { idToNode: new Map(), parentChildMap: new Map(), rootNode: { id: undefined, nodeData: undefined } },
     rootNodes: undefined,
-    isLoading: false,
   });
-  const [actions] = useState<TreeActions>(() => new TreeActions((actionOrValue) => setState(actionOrValue)));
+  const [actions] = useState<TreeActions>(
+    () =>
+      new TreeActions((model) => {
+        const rootNodes = model.parentChildMap.get(undefined) !== undefined ? generateTreeStructure(undefined, model) : undefined;
+        setState({
+          model,
+          rootNodes,
+        });
+      }),
+  );
 
   useEffect(() => {
     actions.setHierarchyProvider(hierarchyProvider);
@@ -79,7 +89,7 @@ function useTreeInternal({
   }).current;
 
   const reloadTree = useRef((options?: { discardState?: boolean }) => {
-    actions.reloadTree(undefined, options);
+    actions.reloadTree(options);
   }).current;
 
   const selectNode = useRef((nodeId: string, isSelected: boolean) => {
@@ -90,45 +100,35 @@ function useTreeInternal({
     actions.setHierarchyLimit(nodeId, limit);
   }).current;
 
-  const removeHierarchyLevelFilter = useRef((nodeId: string) => {
-    actions.setInstanceFilter(nodeId, undefined);
+  const setHierarchyLevelFilter = useRef((nodeId: string | undefined, filter: GenericInstanceFilter | undefined) => {
+    actions.setInstanceFilter(nodeId, filter);
   }).current;
 
-  const isNodeSelected = useCallback(
-    (nodeId: string) => {
-      return isHierarchyNodeSelected(state.model, nodeId);
-    },
-    [state],
-  );
+  const isNodeSelected = useCallback((nodeId: string) => TreeModel.isNodeSelected(state.model, nodeId), [state]);
 
   const getHierarchyLevelFilteringOptions = useCallback(
-    (nodeId: string | undefined) => {
+    (nodeId: string): HierarchyLevelFilteringOptions | undefined => {
       const node = actions.getNode(nodeId);
-      if (!node) {
+      if (!node || !isTreeModelHierarchyNode(node)) {
         return undefined;
       }
-      const hierarchyNode = isTreeModelHierarchyNode(node) ? node.nodeData : undefined;
-      if (hierarchyNode && HierarchyNode.isGroupingNode(hierarchyNode)) {
+      const hierarchyNode = node.nodeData;
+      if (HierarchyNode.isGroupingNode(hierarchyNode)) {
         return undefined;
       }
 
       const currentFilter = node.instanceFilter;
-      const filteringOptions: HierarchyLevelFilteringOptions = {
+      return {
         hierarchyNode,
-        applyFilter: (filter?: GenericInstanceFilter) => {
-          actions.setInstanceFilter(nodeId, filter);
-        },
         currentFilter,
       };
-
-      return filteringOptions;
     },
     [actions],
   );
 
   return {
     rootNodes: state.rootNodes,
-    isLoading: state.isLoading,
+    isLoading: !!state.model.rootNode.isLoading,
     expandNode,
     reloadTree,
     selectNode,
@@ -136,6 +136,45 @@ function useTreeInternal({
     setHierarchyLevelLimit,
     getHierarchyLevelFilteringOptions,
     getNode,
-    removeHierarchyLevelFilter,
+    setHierarchyLevelFilter,
+  };
+}
+
+function generateTreeStructure(parentNodeId: string | undefined, model: TreeModel): Array<PresentationTreeNode> | undefined {
+  const currentChildren = model.parentChildMap.get(parentNodeId);
+  if (!currentChildren) {
+    return undefined;
+  }
+
+  return currentChildren
+    .map((childId) => model.idToNode.get(childId))
+    .filter((node): node is TreeModelNode => !!node)
+    .map<PresentationTreeNode>((node) => {
+      if (!isTreeModelHierarchyNode(node)) {
+        return {
+          id: node.id,
+          parentNodeId,
+          type: node.type,
+          message: node.message,
+        };
+      }
+
+      const children = generateTreeStructure(node.id, model);
+      return {
+        ...toPresentationHierarchyNodeBase(node),
+        children: children ? children : node.children === true ? true : [],
+      };
+    });
+}
+
+function toPresentationHierarchyNodeBase(node: TreeModelHierarchyNode): Omit<PresentationHierarchyNode, "children"> {
+  return {
+    id: node.id,
+    label: node.label,
+    isLoading: !!node.isLoading,
+    isExpanded: !!node.isExpanded,
+    isFilterable: !HierarchyNode.isGroupingNode(node.nodeData) && !!node.nodeData.supportsFiltering && node.children,
+    isFiltered: !!node.instanceFilter,
+    extendedData: node.nodeData.extendedData,
   };
 }

@@ -6,11 +6,11 @@
 import { expect } from "chai";
 import { from, of } from "rxjs";
 import { reduceToMergeMapItem, reduceToMergeMapList } from "../../../hierarchies/internal/operators/ReduceToMergeMap";
-import { getObservableResult } from "../../Utils";
+import { collect } from "../../Utils";
 
 describe("reduceToMergeMapItem", () => {
   it("creates different entries for items with different keys", async () => {
-    const res = await getObservableResult(
+    const res = await collect(
       from([1, 2]).pipe(
         reduceToMergeMapItem(
           (x) => x.toString(),
@@ -25,7 +25,7 @@ describe("reduceToMergeMapItem", () => {
   });
 
   it("merges items with the same key", async () => {
-    const res = await getObservableResult(
+    const res = await collect(
       from([1, 2]).pipe(
         reduceToMergeMapItem(
           () => "x",
@@ -41,7 +41,7 @@ describe("reduceToMergeMapItem", () => {
 
 describe("reduceToMergeMapList", () => {
   it("creates different lists for items with different keys", async () => {
-    const res = await getObservableResult(
+    const res = await collect(
       from([1, 2]).pipe(
         reduceToMergeMapList(
           (x) => x.toString(),
@@ -56,7 +56,7 @@ describe("reduceToMergeMapList", () => {
   });
 
   it("puts items with the same key into the same list", async () => {
-    const res = await getObservableResult(
+    const res = await collect(
       from([1, 2]).pipe(
         reduceToMergeMapList(
           () => "x",
@@ -70,7 +70,7 @@ describe("reduceToMergeMapList", () => {
   });
 
   it("uses value function to map entry value", async () => {
-    const res = await getObservableResult(
+    const res = await collect(
       of(1).pipe(
         reduceToMergeMapList(
           () => "x",

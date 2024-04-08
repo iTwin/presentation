@@ -8,7 +8,6 @@ import { IModelApp, IModelConnection } from "@itwin/core-frontend";
 import { Tabs } from "@itwin/itwinui-react";
 import { RulesDrivenTreeWidget } from "./rules-driven/Tree";
 import { StatelessTreeV2 } from "./stateless-v2/Tree";
-import { StatelessTreeWidget } from "./stateless/Tree";
 
 export interface TreeWidgetProps {
   imodel: IModelConnection;
@@ -22,13 +21,11 @@ export function TreeWidget(props: Omit<TreeWidgetProps, "height" | "width">) {
     <Tabs.Wrapper className="tree-widget">
       <Tabs.TabList>
         <Tabs.Tab value="rules-driven" label={IModelApp.localization.getLocalizedString("Sample:controls.tree-widget.rules-driven-tree")} key="rules-driven" />
-        <Tabs.Tab value="stateless" label={IModelApp.localization.getLocalizedString("Sample:controls.tree-widget.stateless-models-tree")} key="stateless" />
         <Tabs.Tab value="stateless-v2" label={"Stateless Tree V2"} key="stateless-v2" />
       </Tabs.TabList>
 
       <RulesDrivenTreePanel imodel={props.imodel} rulesetId={props.rulesetId} />
-      <StatelessTreePanel imodel={props.imodel} rulesetId={props.rulesetId} />
-      <StatelessV2TreePanel imodel={props.imodel} rulesetId={props.rulesetId} />
+      <StatelessV2TreePanel imodel={props.imodel} />
     </Tabs.Wrapper>
   );
 }
@@ -48,16 +45,7 @@ function RulesDrivenTreePanel(props: Omit<TreeWidgetProps, "height" | "width">) 
   );
 }
 
-function StatelessTreePanel(props: Omit<TreeWidgetProps, "height" | "width">) {
-  const { width, height, ref } = useResizeDetector<HTMLDivElement>();
-  return (
-    <Tabs.Panel className="tree-widget-tabs-content" value="stateless" key="stateless" ref={ref} style={{ width: "100%", height: "100%", overflow: "hidden" }}>
-      <StatelessTreeWidget imodel={props.imodel} width={width} height={height} />
-    </Tabs.Panel>
-  );
-}
-
-function StatelessV2TreePanel(props: Omit<TreeWidgetProps, "height" | "width">) {
+function StatelessV2TreePanel(props: { imodel: IModelConnection }) {
   const { width, height, ref } = useResizeDetector<HTMLDivElement>();
   return (
     <Tabs.Panel

@@ -5,104 +5,98 @@
 
 import { Draft, enableMapSet, produce } from "immer";
 import { EMPTY, Observable, reduce, Subject, takeUntil } from "rxjs";
-import { GenericInstanceFilter, HierarchyNode, HierarchyProvider, ParentHierarchyNode } from "@itwin/presentation-hierarchies";
-import { PresentationHierarchyNode, PresentationTreeNode } from "../Types";
-import { createNodeId, HierarchyLoader, IHierarchyLoader, LoadedHierarchyPart } from "./TreeLoader";
-import {
-  addHierarchyPart,
-  expandNode,
-  isTreeModelHierarchyNode,
-  isTreeModelInfoNode,
-  removeSubTree,
-  TreeModel,
-  TreeModelHierarchyNode,
-  TreeModelNode,
-  TreeModelRootNode,
-} from "./TreeModel";
+import { GenericInstanceFilter, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import { ITreeLoader, LoadedTreePart, TreeLoader } from "./TreeLoader";
+import { isTreeModelHierarchyNode, isTreeModelInfoNode, TreeModel, TreeModelHierarchyNode, TreeModelNode, TreeModelRootNode } from "./TreeModel";
+import { createNodeId } from "./Utils";
 
 enableMapSet();
 
 /** @internal */
-export interface TreeState {
-  model: TreeModel;
-  rootNodes: Array<PresentationTreeNode> | undefined;
-  isLoading: boolean;
-}
-
-/** @internal */
 export class TreeActions {
-  private _loader: IHierarchyLoader;
-  private _currentModel: TreeModel = { idToNode: new Map(), parentChildMap: new Map(), rootNode: { id: undefined, nodeData: undefined } };
+  private _loader: ITreeLoader;
+  private _currentModel: TreeModel;
   private _disposed = new Subject<void>();
 
-  constructor(private _updater: (actionOrValue: TreeState | ((initialState: TreeState) => TreeState)) => void) {
-    this._loader = new NoopHierarchyLoader();
+  constructor(
+    private _onModelChanged: (model: TreeModel) => void,
+    seed?: TreeModel,
+  ) {
+    this._loader = new NoopTreeLoader();
+    this._currentModel = seed ?? /* istanbul ignore next */ {
+      idToNode: new Map(),
+      parentChildMap: new Map(),
+      rootNode: { id: undefined, nodeData: undefined },
+    };
   }
 
-  private produceModel(seed: TreeModel, actionOrModel: ((model: Draft<TreeModel>) => void) | TreeModel) {
-    if (typeof actionOrModel === "function") {
-      return produce(seed, actionOrModel);
-    }
-    return actionOrModel;
-  }
-
-  private updateTreeModel(actionOrModel: ((model: Draft<TreeModel>) => void) | TreeModel) {
-    const newModel = this.produceModel(this._currentModel, actionOrModel);
+  private updateTreeModel(updater: (model: Draft<TreeModel>) => void) {
+    const newModel = produce(this._currentModel, updater);
     if (this._currentModel === newModel) {
       return;
     }
 
     this._currentModel = newModel;
-    const rootNodes = this._currentModel.parentChildMap.get(undefined) !== undefined ? generateTreeStructure(undefined, this._currentModel) : undefined;
-    this._updater({
-      model: this._currentModel,
-      rootNodes,
-      isLoading: false,
-    });
+    this._onModelChanged(this._currentModel);
   }
 
   private handleLoadedHierarchy(parentId: string | undefined, loadedHierarchy: TreeModel) {
     this.updateTreeModel((model) => {
-      addHierarchyPart(model, parentId, loadedHierarchy);
-      const node = parentId !== undefined ? model.idToNode.get(parentId) : undefined;
-      if (node && isTreeModelHierarchyNode(node)) {
-        node.isLoading = false;
-      }
+      TreeModel.addHierarchyPart(model, parentId, loadedHierarchy);
     });
   }
 
-  private getNodeInstanceFilter(node: TreeModelHierarchyNode<ParentHierarchyNode> | TreeModelRootNode) {
-    if (node.nodeData && HierarchyNode.isGroupingNode(node.nodeData)) {
-      if (node.nodeData.nonGroupingAncestor) {
-        const ancestorId = createNodeId(node.nodeData.nonGroupingAncestor);
-        const ancestorModelNode = this._currentModel.idToNode.get(ancestorId);
-        if (!ancestorModelNode || isTreeModelInfoNode(ancestorModelNode)) {
-          return undefined;
-        }
-        return ancestorModelNode?.instanceFilter;
-      }
-      return this._currentModel.rootNode.instanceFilter;
-    }
-    return node.instanceFilter;
-  }
-
-  private loadNodes(parentId: string | undefined, ignoreCache?: boolean) {
-    const parentNode = parentId ? this._currentModel.idToNode.get(parentId) : this._currentModel.rootNode;
-    if (!parentNode || (parentNode.id !== undefined && !isTreeModelHierarchyNode(parentNode))) {
+  private loadNodes(parentId: string, ignoreCache?: boolean) {
+    const parentNode = this._currentModel.idToNode.get(parentId);
+    // istanbul ignore if
+    if (!parentNode || !isTreeModelHierarchyNode(parentNode)) {
       return;
     }
 
     this._loader
       .getNodes(
         parentNode,
-        (node) => this.getNodeInstanceFilter(node),
+        (node) => getNodeInstanceFilter(this._currentModel, getFilteredNodeId(node)),
         (node) => !!node.nodeData.autoExpand,
         ignoreCache,
       )
-      .pipe(collectHierarchyPartsUntil(this._disposed))
+      .pipe(collectTreePartsUntil(this._disposed))
       .subscribe({
         next: (loadedHierarchy) => {
           this.handleLoadedHierarchy(parentId, loadedHierarchy);
+        },
+      });
+  }
+
+  private reloadSubTree(parentId: string | undefined, oldModel: TreeModel, options?: { discardState?: boolean }) {
+    const currModel = this._currentModel;
+    const expandedNodes = !!options?.discardState ? [] : collectNodes(parentId, oldModel, (node) => node.isExpanded === true);
+    const collapsedNodes = !!options?.discardState ? [] : collectNodes(parentId, oldModel, (node) => node.isExpanded === false);
+    const getInstanceFilter = !!options?.discardState
+      ? () => undefined
+      : (node: TreeModelRootNode | TreeModelHierarchyNode) => {
+          const filteredNodeId = getFilteredNodeId(node);
+          return getNodeInstanceFilter(filteredNodeId === parentId ? currModel : oldModel, filteredNodeId);
+        };
+    const buildNode = (node: TreeModelHierarchyNode) => (!!options?.discardState || node.id === parentId ? node : addAttributes(node, oldModel));
+
+    const rootNode = parentId !== undefined ? this.getNode(parentId) : currModel.rootNode;
+    // istanbul ignore if
+    if (!rootNode || isTreeModelInfoNode(rootNode)) {
+      return;
+    }
+
+    if (parentId === undefined) {
+      // cancel all ongoing requests
+      this._disposed.next();
+    }
+
+    this._loader
+      .reloadNodes(rootNode, { expandedNodes, collapsedNodes, getInstanceFilter, buildNode })
+      .pipe(collectTreePartsUntil(this._disposed, !!options?.discardState ? undefined : { ...currModel.rootNode }))
+      .subscribe({
+        next: (newModel) => {
+          this.handleLoadedHierarchy(parentId, newModel);
         },
       });
   }
@@ -112,138 +106,75 @@ export class TreeActions {
   }
 
   public setHierarchyProvider(provider?: HierarchyProvider) {
-    this._loader = provider ? new HierarchyLoader(provider) : new NoopHierarchyLoader();
+    this._loader = provider ? new TreeLoader(provider) : /* istanbul ignore next */ new NoopTreeLoader();
   }
 
-  public getNode(nodeId: string | undefined): TreeModelHierarchyNode | TreeModelRootNode | undefined {
-    if (!nodeId) {
-      return this._currentModel.rootNode;
-    }
-    const node = this._currentModel.idToNode.get(nodeId);
-    return node && isTreeModelHierarchyNode(node) ? node : undefined;
+  public getNode(nodeId: string | undefined): TreeModelNode | TreeModelRootNode | undefined {
+    return TreeModel.getNode(this._currentModel, nodeId);
   }
 
   public selectNode(nodeId: string, isSelected: boolean) {
     this.updateTreeModel((model) => {
-      const modelNode = model.idToNode.get(nodeId);
-      if (!modelNode || !isTreeModelHierarchyNode(modelNode)) {
-        return;
-      }
-      modelNode.isSelected = isSelected;
+      TreeModel.selectNode(model, nodeId, isSelected);
     });
   }
 
   public expandNode(nodeId: string, isExpanded: boolean) {
-    let loadChildren = false;
-    let ignoreCache = false;
+    let childrenAction: ReturnType<typeof TreeModel.expandNode> = "none";
     this.updateTreeModel((model) => {
-      expandNode(model, nodeId, isExpanded);
-      const modelNode = model.idToNode.get(nodeId);
-
-      if (modelNode && isTreeModelHierarchyNode(modelNode)) {
-        if (modelNode.children && model.parentChildMap.get(modelNode.id) === undefined) {
-          modelNode.isLoading = true;
-          loadChildren = true;
-          return;
-        }
-
-        const children = model.parentChildMap.get(modelNode.id);
-        if (!children || children.length !== 1) {
-          return;
-        }
-
-        // If node contains a single InfoNode child, reload its children on collapse/expand to refresh in case an error occurred
-        const child = model.idToNode.get(children[0]);
-        if (child && isTreeModelInfoNode(child)) {
-          model.parentChildMap.delete(modelNode.id);
-          model.idToNode.delete(child.id);
-          modelNode.isLoading = true;
-          loadChildren = true;
-          ignoreCache = true;
-        }
-      }
+      childrenAction = TreeModel.expandNode(model, nodeId, isExpanded);
     });
 
-    if (loadChildren) {
-      this.loadNodes(nodeId, ignoreCache);
-    }
-  }
-
-  public setHierarchyLimit(nodeId: string | undefined, limit?: number | "unbounded") {
-    this.updateTreeModel((model) => {
-      removeSubTree(model, nodeId);
-      if (nodeId === undefined) {
-        model.rootNode.hierarchyLimit = limit;
-        return;
-      }
-
-      const modelNode = model.idToNode.get(nodeId);
-      if (modelNode && isTreeModelHierarchyNode(modelNode)) {
-        modelNode.hierarchyLimit = limit;
-        modelNode.isLoading = true;
-      }
-    });
-
-    this.loadNodes(nodeId);
-  }
-
-  public setInstanceFilter(nodeId: string | undefined, filter?: GenericInstanceFilter) {
-    this.updateTreeModel((model) => {
-      if (nodeId === undefined) {
-        model.rootNode.instanceFilter = filter;
-        return;
-      }
-
-      const modelNode = model.idToNode.get(nodeId);
-      if (!modelNode || !isTreeModelHierarchyNode(modelNode)) {
-        return;
-      }
-
-      modelNode.instanceFilter = filter;
-      if (modelNode.isExpanded) {
-        modelNode.isLoading = true;
-      }
-    });
-
-    this.reloadTree(nodeId);
-  }
-
-  public reloadTree(parentId: string | undefined, options?: { discardState?: boolean }) {
-    const oldModel = this._currentModel;
-    const expandedNodes = !!options?.discardState ? [] : collectNodes(parentId, oldModel, (node) => node.isExpanded === true);
-    const collapsedNodes = !!options?.discardState ? [] : collectNodes(parentId, oldModel, (node) => node.isExpanded === false);
-    const getInstanceFilter = !!options?.discardState
-      ? () => undefined
-      : (node: TreeModelRootNode | TreeModelHierarchyNode<ParentHierarchyNode>) => this.getNodeInstanceFilter(node);
-    const buildNode = !!options?.discardState ? (node: TreeModelHierarchyNode) => node : (node: TreeModelHierarchyNode) => addAttributes(node, oldModel);
-
-    const rootNode = parentId !== undefined ? this.getNode(parentId) : oldModel.rootNode;
-    if (!rootNode) {
+    if (childrenAction === "none") {
       return;
     }
 
-    if (parentId === undefined) {
-      // cancel all ongoing requests
-      this._disposed.next();
-      this._updater((state) => ({ ...state, isLoading: true }));
+    this.loadNodes(nodeId, childrenAction === "reloadChildren");
+  }
+
+  public setHierarchyLimit(nodeId: string | undefined, limit?: number | "unbounded") {
+    const oldModel = this._currentModel;
+    let loadChildren = false;
+    this.updateTreeModel((model) => {
+      loadChildren = TreeModel.setHierarchyLimit(model, nodeId, limit);
+    });
+
+    if (!loadChildren) {
+      return;
     }
 
-    this._loader
-      .reloadNodes(rootNode, { expandedNodes, collapsedNodes, getInstanceFilter, buildNode })
-      .pipe(collectHierarchyPartsUntil(this._disposed, !!options?.discardState ? undefined : { ...oldModel.rootNode }))
-      .subscribe({
-        next: (newModel) => {
-          this.handleLoadedHierarchy(parentId, newModel);
-        },
-      });
+    this.reloadSubTree(nodeId, oldModel);
+  }
+
+  public setInstanceFilter(nodeId: string | undefined, filter?: GenericInstanceFilter) {
+    const oldModel = this._currentModel;
+    let loadChildren = false;
+    this.updateTreeModel((model) => {
+      loadChildren = TreeModel.setInstanceFilter(model, nodeId, filter);
+    });
+
+    if (!loadChildren) {
+      return;
+    }
+
+    this.reloadSubTree(nodeId, oldModel);
+  }
+
+  public reloadTree(options?: { discardState?: boolean }) {
+    const oldModel = this._currentModel;
+    this.updateTreeModel((model) => {
+      model.rootNode.isLoading = true;
+    });
+
+    this.reloadSubTree(undefined, oldModel, { ...options });
   }
 }
 
-function collectHierarchyPartsUntil(untilNotifier: Observable<void>, rootNode?: TreeModelRootNode) {
-  return (source: Observable<LoadedHierarchyPart>) =>
+function collectTreePartsUntil(untilNotifier: Observable<void>, rootNode?: TreeModelRootNode) {
+  return (source: Observable<LoadedTreePart>) =>
     source.pipe(
       takeUntil(untilNotifier),
-      reduce<LoadedHierarchyPart, TreeModel>(
+      reduce<LoadedTreePart, TreeModel>(
         (treeModel, loadedPart) => {
           addNodesToModel(treeModel, loadedPart);
           return treeModel;
@@ -257,7 +188,7 @@ function collectHierarchyPartsUntil(untilNotifier: Observable<void>, rootNode?: 
     );
 }
 
-function addNodesToModel(model: TreeModel, hierarchyPart: LoadedHierarchyPart) {
+function addNodesToModel(model: TreeModel, hierarchyPart: LoadedTreePart) {
   model.parentChildMap.set(
     hierarchyPart.parentId,
     hierarchyPart.loadedNodes.map((node) => node.id),
@@ -299,51 +230,37 @@ function collectNodes(parentId: string | undefined, model: TreeModel, pred: (nod
   return [currNode, ...currentChildren.flatMap((child) => collectNodes(child, model, pred))];
 }
 
-function generateTreeStructure(parentNodeId: string | undefined, model: TreeModel): Array<PresentationTreeNode> | undefined {
-  const currentChildren = model.parentChildMap.get(parentNodeId);
-  if (!currentChildren) {
+function getFilteredNodeId(node: TreeModelHierarchyNode | TreeModelRootNode) {
+  if (!node.nodeData || !HierarchyNode.isGroupingNode(node.nodeData)) {
+    return node.id;
+  }
+
+  if (!node.nodeData.nonGroupingAncestor) {
     return undefined;
   }
 
-  return currentChildren
-    .map((childId) => model.idToNode.get(childId))
-    .filter((node): node is TreeModelNode => !!node)
-    .map<PresentationTreeNode>((node) => {
-      if (!isTreeModelHierarchyNode(node)) {
-        return {
-          id: node.id,
-          parentNodeId,
-          type: node.type,
-          message: node.message,
-        };
-      }
-
-      const children = generateTreeStructure(node.id, model);
-      return {
-        ...toPresentationHierarchyNodeBase(node),
-        children: children ? children : node.children === true ? true : [],
-      };
-    });
+  return createNodeId(node.nodeData.nonGroupingAncestor);
 }
 
-function toPresentationHierarchyNodeBase(node: TreeModelHierarchyNode): Omit<PresentationHierarchyNode, "children"> {
-  return {
-    id: node.id,
-    label: node.label,
-    isLoading: !!node.isLoading,
-    isExpanded: !!node.isExpanded,
-    isFilterable: !HierarchyNode.isGroupingNode(node.nodeData) && !!node.nodeData.supportsFiltering && node.children,
-    isFiltered: !!node.instanceFilter,
-    extendedData: node.nodeData.extendedData,
-  };
+function getNodeInstanceFilter(model: TreeModel, nodeId: string | undefined) {
+  if (nodeId === undefined) {
+    return model.rootNode.instanceFilter;
+  }
+
+  const modelNode = model.idToNode.get(nodeId);
+  if (!modelNode || isTreeModelInfoNode(modelNode)) {
+    return undefined;
+  }
+  return modelNode.instanceFilter;
 }
 
-class NoopHierarchyLoader implements IHierarchyLoader {
-  public getNodes(): Observable<LoadedHierarchyPart> {
+// istanbul ignore next
+class NoopTreeLoader implements ITreeLoader {
+  public getNodes(): Observable<LoadedTreePart> {
     return EMPTY;
   }
 
-  public reloadNodes(): Observable<LoadedHierarchyPart> {
+  public reloadNodes(): Observable<LoadedTreePart> {
     return EMPTY;
   }
 }

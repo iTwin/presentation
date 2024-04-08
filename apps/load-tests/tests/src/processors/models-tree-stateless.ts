@@ -136,7 +136,10 @@ function createModelsTreeProvider(context: ScenarioContext, events: EventEmitter
 
   return async (parent: HierarchyNode | undefined) => {
     try {
-      const nodes = await provider.getNodes({ parentNode: parent });
+      const nodes = [];
+      for await (const node of provider.getNodes({ parentNode: parent })) {
+        nodes.push(node);
+      }
       return nodes;
     } catch (e) {
       if (e instanceof RowsLimitExceededError) {
