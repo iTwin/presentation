@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { GenericInstanceFilter, GetHierarchyNodesProps, HierarchyProvider } from "@itwin/presentation-hierarchies";
+import { firstValueFrom, Subject } from "rxjs";
+import { GenericInstanceFilter, GetHierarchyNodesProps, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { TreeActions } from "../../presentation-hierarchies-react/internal/TreeActions";
 import { TreeModel } from "../../presentation-hierarchies-react/internal/TreeModel";
 import { createStub, createTestGroupingNode, createTestHierarchyNode, createTreeModel, getHierarchyNode, waitFor } from "../TestUtils";
@@ -26,6 +27,53 @@ describe("TreeActions", () => {
     onModelChangedStub.reset();
 
     provider.getNodes.resolves([]);
+  });
+
+  describe("dispose", () => {
+    it("cancels ongoing node load", async () => {
+      const model = createTreeModel([
+        {
+          id: undefined,
+          children: ["root-1"],
+        },
+        {
+          id: "root-1",
+          isExpanded: false,
+          children: undefined,
+        },
+      ]);
+
+      const firstLoad = new Subject<HierarchyNode[]>();
+      provider.getNodes.callsFake(async () => {
+        return firstValueFrom(firstLoad);
+      });
+
+      const actions = createActions(model);
+      actions.expandNode("root-1", true);
+
+      await waitFor(() => {
+        expect(onModelChangedStub).to.be.calledOnce;
+        const newModel = onModelChangedStub.firstCall.args[0];
+        expect(getHierarchyNode(newModel, "root-1")?.isLoading).to.be.true;
+        expect(getHierarchyNode(newModel, "root-1")?.children).to.be.true;
+      });
+      expect(provider.getNodes).to.be.calledOnce;
+      onModelChangedStub.resetHistory();
+
+      actions.dispose();
+      await waitFor(() => {
+        expect(onModelChangedStub).to.be.calledOnce;
+        const newModel = onModelChangedStub.firstCall.args[0];
+        expect(getHierarchyNode(newModel, "root-1")?.isLoading).to.be.false;
+        expect(getHierarchyNode(newModel, "root-1")?.children).to.be.true;
+      });
+      onModelChangedStub.resetHistory();
+
+      firstLoad.next([createTestHierarchyNode({ id: "child-1" })]);
+      await waitFor(() => {
+        expect(onModelChangedStub).to.not.be.called;
+      });
+    });
   });
 
   describe("selectNode", () => {

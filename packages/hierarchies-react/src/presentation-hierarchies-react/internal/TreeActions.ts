@@ -101,7 +101,6 @@ export class TreeActions {
       });
   }
 
-  // istanbul ignore next
   public dispose() {
     this._disposed.next();
   }
