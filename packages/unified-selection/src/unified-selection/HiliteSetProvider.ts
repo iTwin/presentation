@@ -126,38 +126,34 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
     }
 
     const promise = this.getTypeImpl(key).then((res) => {
+      // Update the cache with the result of the promise.
       this._classRelationCache.set(key.className, res);
       return res;
     });
 
+    // Add the promise to cache to prevent `getTypeImpl` being called multiple times.
     this._classRelationCache.set(key.className, promise);
     return promise;
   }
 
   private async getTypeImpl(key: SelectableInstanceKey): Promise<InstanceIdType> {
     const keyClass = await this.getClass(key.className);
-    const result =
+    return (
       (keyClass &&
-        ((await this.checkType(key, keyClass, "BisCore", "Subject", "subject")) ??
-          (await this.checkType(key, keyClass, "BisCore", "Model", "model")) ??
-          (await this.checkType(key, keyClass, "BisCore", "Category", "category")) ??
-          (await this.checkType(key, keyClass, "BisCore", "SubCategory", "subCategory")) ??
-          (await this.checkType(key, keyClass, "Functional", "FunctionalElement", "functionalElement")) ??
-          (await this.checkType(key, keyClass, "BisCore", "GroupInformationElement", "groupInformationElement")) ??
-          (await this.checkType(key, keyClass, "BisCore", "GeometricElement", "geometricElement")) ??
-          (await this.checkType(key, keyClass, "BisCore", "Element", "element")))) ??
-      "unknown";
-
-    this._classRelationCache.set(key.className, result);
-    return result;
+        ((await this.checkType(keyClass, "BisCore", "Subject", "subject")) ??
+          (await this.checkType(keyClass, "BisCore", "Model", "model")) ??
+          (await this.checkType(keyClass, "BisCore", "Category", "category")) ??
+          (await this.checkType(keyClass, "BisCore", "SubCategory", "subCategory")) ??
+          (await this.checkType(keyClass, "Functional", "FunctionalElement", "functionalElement")) ??
+          (await this.checkType(keyClass, "BisCore", "GroupInformationElement", "groupInformationElement")) ??
+          (await this.checkType(keyClass, "BisCore", "GeometricElement", "geometricElement")) ??
+          (await this.checkType(keyClass, "BisCore", "Element", "element")))) ??
+      "unknown"
+    );
   }
 
-  private async checkType(key: SelectableInstanceKey, keyClass: ECClass, schemaName: string, className: string, type: InstanceIdType) {
-    if (await keyClass.is(className, schemaName)) {
-      this._classRelationCache.set(key.className, type);
-      return type;
-    }
-    return undefined;
+  private async checkType(keyClass: ECClass, schemaName: string, className: string, type: InstanceIdType) {
+    return (await keyClass.is(className, schemaName)) ? type : undefined;
   }
 
   private getInstancesByType(selectables: Selectables): InstancesByType {
