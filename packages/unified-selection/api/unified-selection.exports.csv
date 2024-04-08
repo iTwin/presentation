@@ -14,6 +14,8 @@ beta;SelectableInstanceKey
 beta;Selectables
 beta;Selectables
 beta;SelectionChangeEvent
+beta;SelectionScope
+beta;SelectionScope
 beta;SelectionStorage
 beta;StorageSelectionChangeEventArgs
 beta;StorageSelectionChangesListener = (args: StorageSelectionChangeEventArgs, storage: SelectionStorage) => void

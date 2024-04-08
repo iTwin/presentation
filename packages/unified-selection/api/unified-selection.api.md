@@ -91,6 +91,19 @@ export interface SelectionChangeEvent {
 }
 
 // @beta
+export interface SelectionScope {
+    description?: string;
+    id: string;
+    label: string;
+}
+
+// @beta (undocumented)
+export namespace SelectionScope {
+    export function computeSelection(queryExecutor: IECSqlQueryExecutor, elementIds: string[], scope: SelectionScopeProps): AsyncIterableIterator<SelectableInstanceKey>;
+    export function getSelectionScopes(): SelectionScope[];
+}
+
+// @beta
 export interface SelectionStorage {
     addToSelection(props: {
         iModelKey: string;

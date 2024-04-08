@@ -8,7 +8,7 @@
  */
 
 import { ECClass, IMetadataProvider, parseFullClassName } from "./queries/ECMetadata";
-import { ECSqlBinding, IECSqlQueryExecutor } from "./queries/ECSqlCore";
+import { ECSqlBinding, formIdBindings, IECSqlQueryExecutor } from "./queries/ECSqlCore";
 import { SelectableInstanceKey, Selectables } from "./Selectable";
 
 /**
@@ -143,14 +143,14 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
     const bindings: ECSqlBinding[] = [];
     const query = `WITH RECURSIVE
                     ChildSubjects (ECInstanceId, JsonProperties) AS (
-                      SELECT ECInstanceId, JsonProperties FROM BisCore.Subject WHERE ${this.formBindings("ECInstanceId", subjectKeys, bindings)}
+                      SELECT ECInstanceId, JsonProperties FROM BisCore.Subject WHERE ${formIdBindings("ECInstanceId", subjectKeys, bindings)}
                       UNION ALL
                       SELECT r.ECInstanceId, r.JsonProperties FROM ChildSubjects s
                         JOIN BisCore.Subject r ON r.Parent.Id = s.ECInstanceId
                     ),
                     Models (ECInstanceId) AS (
                       SELECT s.ECInstanceId as \`ECInstanceId\` FROM BisCore.Model s
-                      WHERE ${this.formBindings("ECInstanceId", modelKeys, bindings)}
+                      WHERE ${formIdBindings("ECInstanceId", modelKeys, bindings)}
                     )
                     SELECT r.ECInstanceId as \`ECInstanceId\` FROM ChildSubjects s
                       JOIN BisCore.PhysicalPartition r
@@ -175,11 +175,11 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
                     CategorySubCategories (ECInstanceId) AS (
                       SELECT r.ECInstanceId as \`ECInstanceId\` FROM BisCore.Category s
                         JOIN BisCore.SubCategory r ON r.Parent.Id = s.ECInstanceId
-                      WHERE ${this.formBindings("s.ECInstanceId", categoryKeys, bindings)}
+                      WHERE ${formIdBindings("s.ECInstanceId", categoryKeys, bindings)}
                     ),
                     SubCategories (ECInstanceId) AS (
                       SELECT s.ECInstanceId as \`ECInstanceId\` FROM BisCore.SubCategory s
-                      WHERE ${this.formBindings("s.ECInstanceId", subCategoryKeys, bindings)}
+                      WHERE ${formIdBindings("s.ECInstanceId", subCategoryKeys, bindings)}
                     )
                    SELECT ECInstanceId FROM CategorySubCategories
                    UNION
@@ -204,7 +204,7 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
                     ${hasFunctionalElements ? this.getHilitedFunctionalElementsQuery(functionalElements, bindings) : ""}
                     GroupMembers (ECInstanceId, ECClassId) AS (
                       SELECT TargetECInstanceId, TargetECClassId FROM BisCore.ElementGroupsMembers
-                      WHERE ${this.formBindings("SourceECInstanceId", groupInformationElementKeys, bindings)}
+                      WHERE ${formIdBindings("SourceECInstanceId", groupInformationElementKeys, bindings)}
                     ),
                     GroupGeometricElements (ECInstanceId, ECClassId) AS (
                       SELECT ECInstanceId, ECClassId FROM GroupMembers
@@ -213,13 +213,13 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
                         JOIN BisCore.Element r ON r.Parent.Id = s.ECInstanceId
                     ),
                     ElementGeometricElements (ECInstanceId, ECClassId) AS (
-                      SELECT ECInstanceId, ECClassId FROM BisCore.Element WHERE ${this.formBindings("ECInstanceId", elementKeys, bindings)}
+                      SELECT ECInstanceId, ECClassId FROM BisCore.Element WHERE ${formIdBindings("ECInstanceId", elementKeys, bindings)}
                       UNION ALL
                       SELECT r.ECInstanceId, r.ECClassId FROM ElementGeometricElements s
                         JOIN BisCore.Element r ON r.Parent.Id = s.ECInstanceId
                     ),
                     GeometricElementGeometricElements (ECInstanceId, ECClassId) AS (
-                      SELECT ECInstanceId, ECClassId FROM BisCore.GeometricElement WHERE ${this.formBindings("ECInstanceId", geometricElementKeys, bindings)}
+                      SELECT ECInstanceId, ECClassId FROM BisCore.GeometricElement WHERE ${formIdBindings("ECInstanceId", geometricElementKeys, bindings)}
                       UNION ALL
                       SELECT r.ECInstanceId, r.ECClassId FROM GeometricElementGeometricElements s
                         JOIN BisCore.Element r ON r.Parent.Id = s.ECInstanceId
@@ -243,7 +243,7 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
 
   private getHilitedFunctionalElementsQuery(functionalElements: string[], bindings: ECSqlBinding[]): string {
     return `ChildFunctionalElements (ECInstanceId, ECClassId) AS (
-              SELECT ECInstanceId, ECClassId FROM Functional.FunctionalElement WHERE ${this.formBindings("ECInstanceId", functionalElements, bindings)}
+              SELECT ECInstanceId, ECClassId FROM Functional.FunctionalElement WHERE ${formIdBindings("ECInstanceId", functionalElements, bindings)}
               UNION ALL
               SELECT r.ECInstanceId, r.ECClassId FROM ChildFunctionalElements s
                 JOIN Functional.FunctionalElement r ON r.Parent.Id = s.ECInstanceId
@@ -273,20 +273,6 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
               UNION
               SELECT ECInstanceId, ECClassId FROM DrawingGraphicElementGeometricElements
             ),`;
-  }
-
-  private formBindings(property: string, ids: string[], bindings: ECSqlBinding[]): string {
-    if (ids.length > 1000) {
-      bindings.push({ type: "idset", value: ids });
-      return `InVirtualSet(?, ${property})`;
-    }
-
-    if (ids.length === 0) {
-      return `FALSE`;
-    }
-
-    ids.forEach((id) => bindings.push({ type: "id", value: id }));
-    return `${property} IN (${ids.map(() => "?").join(",")})`;
   }
 
   private async executeQuery(query: string, bindings?: ECSqlBinding[]): Promise<string[]> {
