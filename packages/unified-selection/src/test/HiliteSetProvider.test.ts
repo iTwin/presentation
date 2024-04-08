@@ -9,7 +9,7 @@ import { createHiliteSetProvider, HiliteSetProvider } from "../unified-selection
 import { ECClass, ECSchema } from "../unified-selection/queries/ECMetadata";
 import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow } from "../unified-selection/queries/ECSqlCore";
 import { SelectableInstanceKey, Selectables } from "../unified-selection/Selectable";
-import { ResolvablePromise, waitForPromise } from "./_helpers/PromiseUtils";
+import { ResolvablePromise } from "./_helpers/PromiseUtils";
 import { createCustomSelectable, createECInstanceId, createSelectableInstanceKey } from "./_helpers/SelectablesCreator";
 
 describe("HiliteSetProvider", () => {
@@ -365,7 +365,7 @@ describe("HiliteSetProvider", () => {
         elementPromises[0].resolve(elementKeys[0].id);
 
         const nextValuePromise = iter.next();
-        await Promise.all([expect(waitForPromise(nextValuePromise, 5)).to.eventually.be.undefined, timers.tickAsync(5)]);
+        await expect(Promise.race([nextValuePromise, timers.tickAsync(5).then(() => "timeout")])).to.eventually.eq("timeout");
 
         await timers.tickAsync(15);
         elementPromises[1].resolve(elementKeys[1].id);

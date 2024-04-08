@@ -44,15 +44,3 @@ export class ResolvablePromise<T> implements Promise<T> {
     this._reject(msg);
   }
 }
-
-/**
- * Waits for a promise to resolve.
- * @returns T if promise resolves in time, undefined otherwise.
- * @internal Used for testing only.
- */
-export async function waitForPromise<T>(promise: Promise<T>, timeout: number): Promise<T | undefined> {
-  const timeoutResult = performance.now();
-  const timeoutPromise = new Promise<number>((r) => setTimeout(() => r(timeoutResult), timeout));
-  const raceResult = await Promise.race([promise, timeoutPromise]);
-  return raceResult === timeoutResult ? undefined : (raceResult as T);
-}
