@@ -13,6 +13,8 @@ import { ECClass, IMetadataProvider, parseFullClassName } from "./queries/ECMeta
 import { ECSqlBinding, IECSqlQueryExecutor } from "./queries/ECSqlCore";
 import { SelectableInstanceKey, Selectables } from "./Selectable";
 
+const HILITE_SET_EMIT_FREQUENCY = 20;
+
 /**
  * A set of model, subcategory and element ids that can be used for specifying hilite.
  * @see https://www.itwinjs.org/reference/core-frontend/selectionset/hiliteset/
@@ -90,7 +92,7 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
       observables[key]!.subscribe({
         next(val) {
           hiliteSet[key].push(val);
-          if (performance.now() - lastEmitTime < 20) {
+          if (performance.now() - lastEmitTime < HILITE_SET_EMIT_FREQUENCY) {
             return;
           }
           subject.next(hiliteSet);
