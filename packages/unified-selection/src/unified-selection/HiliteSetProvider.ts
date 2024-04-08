@@ -190,25 +190,23 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
         }
 
         const bindings: ECSqlBinding[] = [];
-        const query = `
-          WITH RECURSIVE
-          ChildSubjects (ECInstanceId, JsonProperties) AS (
-            SELECT ECInstanceId, JsonProperties FROM BisCore.Subject WHERE ${this.formBindings("ECInstanceId", subjectKeys, bindings)}
-            UNION ALL
-            SELECT r.ECInstanceId, r.JsonProperties FROM ChildSubjects s
-              JOIN BisCore.Subject r ON r.Parent.Id = s.ECInstanceId
-          ),
-          Models (ECInstanceId) AS (
-            SELECT s.ECInstanceId as \`ECInstanceId\` FROM BisCore.Model s
-            WHERE ${this.formBindings("ECInstanceId", modelKeys, bindings)}
-          )
-          SELECT r.ECInstanceId as \`ECInstanceId\` FROM ChildSubjects s
-            JOIN BisCore.PhysicalPartition r
-              ON r.Parent.Id = s.ECInstanceId
-              OR json_extract(s.JsonProperties,'$.Subject.Model.TargetPartition') = printf('0x%x', r.ECInstanceId)
-          UNION
-          SELECT ECInstanceId FROM Models;
-        `;
+        const query = `WITH RECURSIVE
+                    ChildSubjects (ECInstanceId, JsonProperties) AS (
+                      SELECT ECInstanceId, JsonProperties FROM BisCore.Subject WHERE ${this.formBindings("ECInstanceId", subjectKeys, bindings)}
+                      UNION ALL
+                      SELECT r.ECInstanceId, r.JsonProperties FROM ChildSubjects s
+                        JOIN BisCore.Subject r ON r.Parent.Id = s.ECInstanceId
+                    ),
+                    Models (ECInstanceId) AS (
+                      SELECT s.ECInstanceId as \`ECInstanceId\` FROM BisCore.Model s
+                      WHERE ${this.formBindings("ECInstanceId", modelKeys, bindings)}
+                    )
+                    SELECT r.ECInstanceId as \`ECInstanceId\` FROM ChildSubjects s
+                      JOIN BisCore.PhysicalPartition r
+                        ON r.Parent.Id = s.ECInstanceId
+                        OR json_extract(s.JsonProperties,'$.Subject.Model.TargetPartition') = printf('0x%x', r.ECInstanceId)
+                    UNION
+                    SELECT ECInstanceId FROM Models;`;
         return from(this._queryExecutor.createQueryReader(query, bindings));
       }),
       map((row) => row.ECInstanceId),
@@ -226,20 +224,19 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
         }
 
         const bindings: ECSqlBinding[] = [];
-        const query = `
-          WITH
-          CategorySubCategories (ECInstanceId) AS (
-            SELECT r.ECInstanceId as \`ECInstanceId\` FROM BisCore.Category s
-              JOIN BisCore.SubCategory r ON r.Parent.Id = s.ECInstanceId
-            WHERE ${this.formBindings("s.ECInstanceId", categoryKeys, bindings)}
-          ),
-          SubCategories (ECInstanceId) AS (
-            SELECT s.ECInstanceId as \`ECInstanceId\` FROM BisCore.SubCategory s
-            WHERE ${this.formBindings("s.ECInstanceId", subCategoryKeys, bindings)}
-          )
-          SELECT ECInstanceId FROM CategorySubCategories
-          UNION
-          SELECT ECInstanceId FROM SubCategories;`;
+        const query = `WITH
+                    CategorySubCategories (ECInstanceId) AS (
+                      SELECT r.ECInstanceId as \`ECInstanceId\` FROM BisCore.Category s
+                        JOIN BisCore.SubCategory r ON r.Parent.Id = s.ECInstanceId
+                      WHERE ${this.formBindings("s.ECInstanceId", categoryKeys, bindings)}
+                    ),
+                    SubCategories (ECInstanceId) AS (
+                      SELECT s.ECInstanceId as \`ECInstanceId\` FROM BisCore.SubCategory s
+                      WHERE ${this.formBindings("s.ECInstanceId", subCategoryKeys, bindings)}
+                    )
+                   SELECT ECInstanceId FROM CategorySubCategories
+                   UNION
+                   SELECT ECInstanceId FROM SubCategories;`;
         return from(this._queryExecutor.createQueryReader(query, bindings));
       }),
       map((row) => row.ECInstanceId),
@@ -260,45 +257,43 @@ class HiliteSetProviderImpl implements HiliteSetProvider {
         }
 
         const bindings: ECSqlBinding[] = [];
-        const query = `
-          WITH RECURSIVE
-          ${hasFunctionalElements ? this.getHilitedFunctionalElementsQuery(functionalElements, bindings) : ""}
-          GroupMembers (ECInstanceId, ECClassId) AS (
-            SELECT TargetECInstanceId, TargetECClassId FROM BisCore.ElementGroupsMembers
-            WHERE ${this.formBindings("SourceECInstanceId", groupInformationElementKeys, bindings)}
-          ),
-          GroupGeometricElements (ECInstanceId, ECClassId) AS (
-            SELECT ECInstanceId, ECClassId FROM GroupMembers
-            UNION ALL
-            SELECT r.ECInstanceId, r.ECClassId FROM GroupGeometricElements s
-              JOIN BisCore.Element r ON r.Parent.Id = s.ECInstanceId
-          ),
-          ElementGeometricElements (ECInstanceId, ECClassId) AS (
-            SELECT ECInstanceId, ECClassId FROM BisCore.Element WHERE ${this.formBindings("ECInstanceId", elementKeys, bindings)}
-            UNION ALL
-            SELECT r.ECInstanceId, r.ECClassId FROM ElementGeometricElements s
-              JOIN BisCore.Element r ON r.Parent.Id = s.ECInstanceId
-          ),
-          GeometricElementGeometricElements (ECInstanceId, ECClassId) AS (
-            SELECT ECInstanceId, ECClassId FROM BisCore.GeometricElement WHERE ${this.formBindings("ECInstanceId", geometricElementKeys, bindings)}
-            UNION ALL
-            SELECT r.ECInstanceId, r.ECClassId FROM GeometricElementGeometricElements s
-              JOIN BisCore.Element r ON r.Parent.Id = s.ECInstanceId
-          )
-          ${
-            hasFunctionalElements
-              ? `
-          SELECT ECInstanceId FROM FunctionalElementChildGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)
-          UNION
-          `
-              : ``
-          }
-          SELECT ECInstanceId FROM GeometricElementGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)
-          UNION
-          SELECT ECInstanceId FROM GroupGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)
-          UNION
-          SELECT ECInstanceId FROM ElementGeometricElements WHERE ECClassId IS (BisCore.GeometricElement);
-        `;
+        const query = `WITH RECURSIVE
+                    ${hasFunctionalElements ? this.getHilitedFunctionalElementsQuery(functionalElements, bindings) : ""}
+                    GroupMembers (ECInstanceId, ECClassId) AS (
+                      SELECT TargetECInstanceId, TargetECClassId FROM BisCore.ElementGroupsMembers
+                      WHERE ${this.formBindings("SourceECInstanceId", groupInformationElementKeys, bindings)}
+                    ),
+                    GroupGeometricElements (ECInstanceId, ECClassId) AS (
+                      SELECT ECInstanceId, ECClassId FROM GroupMembers
+                      UNION ALL
+                      SELECT r.ECInstanceId, r.ECClassId FROM GroupGeometricElements s
+                        JOIN BisCore.Element r ON r.Parent.Id = s.ECInstanceId
+                    ),
+                    ElementGeometricElements (ECInstanceId, ECClassId) AS (
+                      SELECT ECInstanceId, ECClassId FROM BisCore.Element WHERE ${this.formBindings("ECInstanceId", elementKeys, bindings)}
+                      UNION ALL
+                      SELECT r.ECInstanceId, r.ECClassId FROM ElementGeometricElements s
+                        JOIN BisCore.Element r ON r.Parent.Id = s.ECInstanceId
+                    ),
+                    GeometricElementGeometricElements (ECInstanceId, ECClassId) AS (
+                      SELECT ECInstanceId, ECClassId FROM BisCore.GeometricElement WHERE ${this.formBindings("ECInstanceId", geometricElementKeys, bindings)}
+                      UNION ALL
+                      SELECT r.ECInstanceId, r.ECClassId FROM GeometricElementGeometricElements s
+                        JOIN BisCore.Element r ON r.Parent.Id = s.ECInstanceId
+                    )
+                   ${
+                     hasFunctionalElements
+                       ? `
+                   SELECT ECInstanceId FROM FunctionalElementChildGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)
+                   UNION
+                   `
+                       : ``
+                   }
+                   SELECT ECInstanceId FROM GeometricElementGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)
+                   UNION
+                   SELECT ECInstanceId FROM GroupGeometricElements WHERE ECClassId IS (BisCore.GeometricElement)
+                   UNION
+                   SELECT ECInstanceId FROM ElementGeometricElements WHERE ECClassId IS (BisCore.GeometricElement);`;
         return from(this._queryExecutor.createQueryReader(query, bindings));
       }),
       map((row) => row.ECInstanceId as string),
