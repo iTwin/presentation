@@ -3,8 +3,29 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { catchError, concat, concatMap, defaultIfEmpty, defer, EMPTY, filter, from, map, mergeMap, Observable, ObservableInput, of, take } from "rxjs";
-import { eachValueFrom } from "rxjs-for-await";
+import {
+  catchError,
+  concat,
+  concatAll,
+  concatMap,
+  defaultIfEmpty,
+  defer,
+  EMPTY,
+  filter,
+  finalize,
+  from,
+  map,
+  merge,
+  mergeAll,
+  mergeMap,
+  Observable,
+  ObservableInput,
+  of,
+  partition,
+  shareReplay,
+  take,
+  tap,
+} from "rxjs";
 import { assert, StopWatch } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
 import { IMetadataProvider } from "./ECMetadata";
@@ -13,6 +34,7 @@ import { RowsLimitExceededError } from "./HierarchyErrors";
 import {
   HierarchyNode,
   HierarchyNodeIdentifiersPath,
+  InstancesNodeKey,
   NonGroupingHierarchyNode,
   ParentHierarchyNode,
   ParsedHierarchyNode,
@@ -22,7 +44,14 @@ import {
   ProcessedInstanceHierarchyNode,
 } from "./HierarchyNode";
 import { CachedNodesObservableEntry, ChildNodeObservablesCache, ParsedQueryNodesObservable } from "./internal/ChildNodeObservablesCache";
-import { BaseClassChecker, LOGGING_NAMESPACE as CommonLoggingNamespace, createNodeIdentifierForLogging, hasChildren } from "./internal/Common";
+import {
+  BaseClassChecker,
+  LOGGING_NAMESPACE as CommonLoggingNamespace,
+  createNodeIdentifierForLogging,
+  hasChildren,
+  normalizeFullClassName,
+} from "./internal/Common";
+import { eachValueFrom } from "./internal/EachValueFrom";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
 import { getClass } from "./internal/GetClass";
 import { createQueryLogMessage, doLog, log } from "./internal/LoggingUtils";
@@ -30,12 +59,14 @@ import { createDetermineChildrenOperator } from "./internal/operators/DetermineC
 import { createGroupingOperator } from "./internal/operators/Grouping";
 import { createHideIfNoChildrenOperator } from "./internal/operators/HideIfNoChildren";
 import { createHideNodesInHierarchyOperator } from "./internal/operators/HideNodesInHierarchy";
+import { reduceToMergeMapList } from "./internal/operators/ReduceToMergeMap";
+import { shareReplayWithErrors } from "./internal/operators/ShareReplayWithErrors";
 import { sortNodesByLabelOperator } from "./internal/operators/Sorting";
-import { shareReplayWithErrors } from "./internal/Rxjs";
 import { SubscriptionScheduler } from "./internal/SubscriptionScheduler";
 import { TreeQueryResultsReader } from "./internal/TreeNodesReader";
 import { ECSqlBinding, ECSqlQueryDef } from "./queries/ECSqlCore";
 import { ILimitingECSqlQueryExecutor } from "./queries/LimitingECSqlQueryExecutor";
+import { NodeSelectClauseColumnNames } from "./queries/NodeSelectQueryFactory";
 import { ConcatenatedValue, ConcatenatedValuePart } from "./values/ConcatenatedValue";
 import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "./values/Formatting";
 import { InstanceKey, TypedPrimitiveValue } from "./values/Values";
@@ -106,8 +137,10 @@ export interface HierarchyProviderProps {
 export interface GetHierarchyNodesProps {
   /** Parent node to get children for. Pass `undefined` to get root nodes. */
   parentNode: ParentHierarchyNode | undefined;
+
   /** Optional hierarchy level filter. Has no effect if `parentNode` is a [[GroupingNode]]. */
   instanceFilter?: GenericInstanceFilter;
+
   /**
    * Optional hierarchy level size limit override. This value is passed to `ILimitingECSqlQueryExecutor` used
    * by this provider to override query rows limit per hierarchy level. If not provided, defaults to whatever
@@ -116,6 +149,7 @@ export interface GetHierarchyNodesProps {
    * Has no effect if `parentNode` is a [[GroupingNode]].
    */
   hierarchyLevelSizeLimit?: number | "unbounded";
+
   /** When set to true ignores the cache and fetches the nodes again. */
   ignoreCache?: boolean;
 }
@@ -198,9 +232,7 @@ export class HierarchyProvider {
     props: DefineHierarchyLevelProps & { hierarchyLevelSizeLimit?: number | "unbounded"; filteredInstanceKeys?: InstanceKey[] },
   ): ParsedQueryNodesObservable {
     // stream hierarchy level definitions in order
-    const definitions = from(this.hierarchyDefinition.defineHierarchyLevel(props)).pipe(
-      concatMap((hierarchyLevelDefinition) => from(hierarchyLevelDefinition)),
-    );
+    const definitions = from(this.hierarchyDefinition.defineHierarchyLevel(props)).pipe(concatAll());
     // pipe definitions to nodes and put "share replay" on it
     return definitions.pipe(
       concatMap((def): ObservableInput<ParsedHierarchyNode> => {
@@ -223,21 +255,22 @@ export class HierarchyProvider {
     );
   }
 
+  private createInitializedNodesObservable(nodes: Observable<ParsedHierarchyNode>, parentNode: ParentHierarchyNode | undefined) {
+    return nodes.pipe(
+      // set parent node keys on the parsed node
+      map((node) => ({ ...node, parentKeys: createParentNodeKeysList(parentNode) })),
+      // format `ConcatenatedValue` labels into string labels
+      mergeMap(async (node) => applyLabelsFormatting(node, this._metadataProvider, this._valuesFormatter)),
+      // we have `ProcessedHierarchyNode` from here
+      preProcessNodes(this.hierarchyDefinition),
+    );
+  }
+
   private createPreProcessedNodesObservable(
     queryNodesObservable: ParsedQueryNodesObservable,
     props: GetHierarchyNodesProps,
   ): Observable<ProcessedHierarchyNode> {
-    // pre-process
-    const preProcessedNodes = queryNodesObservable.pipe(
-      // set parent node keys on the parsed node
-      map((node) => ({ ...node, parentKeys: createParentNodeKeysList(props.parentNode) })),
-      // format `ConcatenatedValue` labels into string labels
-      concatMap(async (node) => applyLabelsFormatting(node, this._metadataProvider, this._valuesFormatter)),
-      // we have `ProcessedHierarchyNode` from here
-      preProcessNodes(this.hierarchyDefinition),
-    );
-    // handle nodes' hiding
-    const nodesAfterHiding = preProcessedNodes.pipe(
+    return this.createInitializedNodesObservable(queryNodesObservable, props.parentNode).pipe(
       createHideIfNoChildrenOperator((n) => this.getChildNodesObservables({ parentNode: n }).hasNodes),
       createHideNodesInHierarchyOperator(
         // note: for child nodes created because of hidden parent, we want to use parent's request props (instance filter, limit)
@@ -245,7 +278,6 @@ export class HierarchyProvider {
         false,
       ),
     );
-    return nodesAfterHiding;
   }
 
   private createProcessedNodesObservable(
@@ -363,37 +395,131 @@ export class HierarchyProvider {
   /**
    * Creates and runs a query based on provided props, then processes retrieved nodes and returns them.
    */
-  public async getNodes(props: GetHierarchyNodesProps): Promise<HierarchyNode[]> {
+  public getNodes(props: GetHierarchyNodesProps): AsyncIterableIterator<HierarchyNode> {
     const loggingCategory = `${LOGGING_NAMESPACE}.GetNodes`;
-    return new Promise((resolve, reject) => {
-      const timer = new StopWatch(undefined, true);
-      doLog({
-        category: loggingCategory,
-        message: /* istanbul ignore next */ () => `Requesting child nodes for ${createNodeIdentifierForLogging(props.parentNode)}`,
-      });
-      const nodes = new Array<HierarchyNode>();
-      this.getChildNodesObservables(props).finalizedNodes.subscribe({
-        next(node) {
-          nodes.push(node);
-        },
-        error(err) {
-          doLog({
-            category: loggingCategory,
-            message: /* istanbul ignore next */ () =>
-              `Error creating child nodes for ${createNodeIdentifierForLogging(props.parentNode)}: ${err instanceof Error ? err.message : err.toString()}`,
-          });
-          reject(err);
-        },
-        complete() {
-          doLog({
-            category: loggingCategory,
-            message: /* istanbul ignore next */ () =>
-              `Returning ${nodes.length} child nodes for ${createNodeIdentifierForLogging(props.parentNode)} in ${timer.currentSeconds.toFixed(2)} s.`,
-          });
-          resolve(nodes);
-        },
-      });
+    const timer = new StopWatch(undefined, true);
+    let error: any;
+    let nodesCount = 0;
+    doLog({
+      category: loggingCategory,
+      message: /* istanbul ignore next */ () => `Requesting child nodes for ${createNodeIdentifierForLogging(props.parentNode)}`,
     });
+    return eachValueFrom(
+      this.getChildNodesObservables(props).finalizedNodes.pipe(
+        tap(() => ++nodesCount),
+        catchError((e) => {
+          error = e;
+          throw e;
+        }),
+        finalize(() => {
+          doLog({
+            category: loggingCategory,
+            message: /* istanbul ignore next */ () =>
+              error
+                ? `Error creating child nodes for ${createNodeIdentifierForLogging(props.parentNode)}: ${error instanceof Error ? error.message : error.toString()}`
+                : `Returned ${nodesCount} child nodes for ${createNodeIdentifierForLogging(props.parentNode)} in ${timer.currentSeconds.toFixed(2)} s.`,
+          });
+        }),
+      ),
+    );
+  }
+
+  private getNodeInstanceKeysObs(props: { parentNode: ParentHierarchyNode | undefined }): Observable<InstanceKey> {
+    const { parentNode } = props;
+
+    if (parentNode && HierarchyNode.isGroupingNode(parentNode)) {
+      return from(parentNode.groupedInstanceKeys);
+    }
+
+    assert(!parentNode || HierarchyNode.isCustom(parentNode) || HierarchyNode.isInstancesNode(parentNode));
+
+    // split the definitions based on whether they're for custom nodes or for instance nodes
+    const [customDefs, instanceDefs] = partition(
+      from(this.hierarchyDefinition.defineHierarchyLevel({ parentNode })).pipe(mergeAll(), shareReplay()),
+      HierarchyNodesDefinition.isCustomNode,
+    );
+
+    // query instance keys and a flag whether they should be hidden
+    const instanceKeys = instanceDefs.pipe(
+      mergeMap((def) =>
+        this._queryScheduler.scheduleSubscription(
+          of(def.query).pipe(
+            mergeMap(async (query) => {
+              const ecsql = `
+              SELECT
+                ${NodeSelectClauseColumnNames.FullClassName},
+                ${NodeSelectClauseColumnNames.ECInstanceId},
+                ${NodeSelectClauseColumnNames.HideNodeInHierarchy}
+              FROM (
+                ${query.ecsql}
+              )
+            `;
+              const reader = this.queryExecutor.createQueryReader({ ...query, ecsql }, { rowFormat: "Indexes", limit: "unbounded" });
+              return from(reader).pipe(
+                map((row) => ({
+                  key: {
+                    className: normalizeFullClassName(row[0]),
+                    id: row[1],
+                  },
+                  hide: !!row[2],
+                })),
+              );
+            }),
+            mergeAll(),
+          ),
+        ),
+      ),
+      shareReplay(),
+    );
+    // split the instance keys observable based on whether they should be hidden or not
+    const [visibleNodeInstanceKeys, hiddenNodeInstanceKeys] = partition(instanceKeys, ({ hide }) => !hide);
+
+    // hidden items' handling:
+    // - if a custom node is hidden, we'll want to retrieve instance keys of its children, otherwise we don't care about it,
+    // - if an instance key is hidden, we want to create a merged node similar to what we do in `createHideNodesInHierarchyOperator`
+    const hiddenParentNodes = merge(
+      customDefs.pipe(
+        mergeMap((def) => (def.node.processingParams?.hideInHierarchy ? this.createInitializedNodesObservable(of(def.node), parentNode) : EMPTY)),
+      ),
+      hiddenNodeInstanceKeys.pipe(
+        // first merge all keys by class
+        reduceToMergeMapList(
+          ({ key }) => key.className,
+          ({ key }) => key.id,
+        ),
+        // then, for each class, create a temp node
+        mergeMap(
+          (mergedMap): Array<ParentHierarchyNode & { key: InstancesNodeKey }> =>
+            [...mergedMap.entries()].map(([className, ids]) => ({
+              key: {
+                type: "instances",
+                instanceKeys: ids.map((id) => ({ className, id })),
+              },
+              parentKeys: [],
+              label: "",
+            })),
+        ),
+      ),
+    );
+
+    // merge visible instance keys from this level & the ones we get recursively requesting from deeper levels
+    return merge(
+      visibleNodeInstanceKeys.pipe(map(({ key }) => key)),
+      hiddenParentNodes.pipe(mergeMap((hiddenNode) => this.getNodeInstanceKeysObs({ parentNode: hiddenNode }))),
+    );
+  }
+
+  /**
+   * Creates an iterator for all child hierarchy level instance keys, taking into account any hidden hierarchy levels
+   * that there may be under the given parent node.
+   */
+  public getNodeInstanceKeys(props: { parentNode: ParentHierarchyNode | undefined }): AsyncIterableIterator<InstanceKey> {
+    const loggingCategory = `${LOGGING_NAMESPACE}.GetNodeInstanceKeys`;
+    doLog({
+      category: loggingCategory,
+      message: /* istanbul ignore next */ () => `Requesting keys for ${createNodeIdentifierForLogging(props.parentNode)}`,
+    });
+    return eachValueFrom(this.getNodeInstanceKeysObs(props));
   }
 
   /**

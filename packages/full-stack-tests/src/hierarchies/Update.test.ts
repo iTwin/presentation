@@ -41,7 +41,7 @@ import { ECSqlSnippets, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactor
 import { createFileNameFromString } from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils";
 import { setupOutputFileLocation } from "../IModelUtils";
 import { NodeValidators, validateHierarchyLevel } from "./HierarchyValidation";
-import { createClassECSqlSelector, createMetadataProvider, createProvider } from "./Utils";
+import { collect, createClassECSqlSelector, createMetadataProvider, createProvider } from "./Utils";
 
 describe("Hierarchies", () => {
   describe("Updating hierarchies upon iModel change", () => {
@@ -123,9 +123,11 @@ describe("Hierarchies", () => {
         it("updates hierarchy when an element is inserted", async function () {
           const provider = createRootSubjectChildrenProvider();
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+              }),
+            ),
             expect: [],
           });
 
@@ -133,9 +135,11 @@ describe("Hierarchies", () => {
           db.saveChanges();
 
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+              }),
+            ),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: subjectId }] })],
           });
         });
@@ -146,9 +150,11 @@ describe("Hierarchies", () => {
 
           const provider = createRootSubjectChildrenProvider();
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+              }),
+            ),
             expect: [
               NodeValidators.createForInstanceNode({
                 instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: subjectId }],
@@ -161,9 +167,11 @@ describe("Hierarchies", () => {
           db.saveChanges();
 
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+              }),
+            ),
             expect: [
               NodeValidators.createForInstanceNode({
                 instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: subjectId }],
@@ -179,9 +187,11 @@ describe("Hierarchies", () => {
 
           const provider = createRootSubjectChildrenProvider();
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+              }),
+            ),
             expect: [
               NodeValidators.createForInstanceNode({
                 instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: subjectId }],
@@ -194,9 +204,11 @@ describe("Hierarchies", () => {
           db.saveChanges();
 
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+              }),
+            ),
             expect: [],
           });
         });
@@ -207,9 +219,11 @@ describe("Hierarchies", () => {
 
           const provider = createRootSubjectChildrenProvider({ label: "aspectIdentifier" });
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+              }),
+            ),
             expect: [
               NodeValidators.createForInstanceNode({
                 instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: subjectId }],
@@ -222,9 +236,11 @@ describe("Hierarchies", () => {
           db.saveChanges();
 
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+              }),
+            ),
             expect: [
               NodeValidators.createForInstanceNode({
                 instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: subjectId }],
@@ -241,9 +257,11 @@ describe("Hierarchies", () => {
 
           const provider = createRootSubjectChildrenProvider({ label: "aspectIdentifier" });
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+              }),
+            ),
             expect: [
               NodeValidators.createForInstanceNode({
                 instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: subjectId }],
@@ -256,9 +274,11 @@ describe("Hierarchies", () => {
           db.saveChanges();
 
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+              }),
+            ),
             expect: [
               NodeValidators.createForInstanceNode({
                 instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: subjectId }],
@@ -275,9 +295,11 @@ describe("Hierarchies", () => {
 
           const provider = createRootSubjectChildrenProvider({ label: "aspectIdentifier" });
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+              }),
+            ),
             expect: [
               NodeValidators.createForInstanceNode({
                 instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: subjectId }],
@@ -290,9 +312,11 @@ describe("Hierarchies", () => {
           db.saveChanges();
 
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+              }),
+            ),
             expect: [
               NodeValidators.createForInstanceNode({
                 instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: subjectId }],
@@ -308,9 +332,11 @@ describe("Hierarchies", () => {
 
           const provider = createPhysicalModelsProvider();
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+              }),
+            ),
             expect: [],
           });
 
@@ -318,9 +344,11 @@ describe("Hierarchies", () => {
           db.saveChanges();
 
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+              }),
+            ),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: PhysicalModel.classFullName.replace(":", "."), id: modelId }] })],
           });
         });
@@ -332,9 +360,11 @@ describe("Hierarchies", () => {
 
           const provider = createPhysicalModelsProvider();
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+              }),
+            ),
             expect: [
               NodeValidators.createForInstanceNode({
                 instanceKeys: [{ className: PhysicalModel.classFullName.replace(":", "."), id: modelId }],
@@ -347,9 +377,11 @@ describe("Hierarchies", () => {
           db.saveChanges();
 
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+              }),
+            ),
             expect: [
               NodeValidators.createForInstanceNode({
                 instanceKeys: [{ className: PhysicalModel.classFullName.replace(":", "."), id: modelId }],
@@ -366,9 +398,11 @@ describe("Hierarchies", () => {
 
           const provider = createPhysicalModelsProvider();
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+              }),
+            ),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: PhysicalModel.classFullName.replace(":", "."), id: modelId }] })],
           });
 
@@ -376,9 +410,11 @@ describe("Hierarchies", () => {
           db.saveChanges();
 
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+              }),
+            ),
             expect: [],
           });
         });
@@ -390,9 +426,11 @@ describe("Hierarchies", () => {
 
           const provider = createRootSubjectReferredElementsProvider();
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+              }),
+            ),
             expect: [],
           });
 
@@ -400,9 +438,11 @@ describe("Hierarchies", () => {
           db.saveChanges();
 
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+              }),
+            ),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: subjectId }] })],
           });
         });
@@ -416,9 +456,11 @@ describe("Hierarchies", () => {
 
           const provider = createRootSubjectReferredElementsProvider();
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+              }),
+            ),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: subject1Id }] })],
           });
 
@@ -426,9 +468,11 @@ describe("Hierarchies", () => {
           db.saveChanges();
 
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+              }),
+            ),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: subject2Id }] })],
           });
         });
@@ -441,9 +485,11 @@ describe("Hierarchies", () => {
 
           const provider = createRootSubjectReferredElementsProvider();
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+              }),
+            ),
             expect: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: subjectId }] })],
           });
 
@@ -451,9 +497,11 @@ describe("Hierarchies", () => {
           db.saveChanges();
 
           validateHierarchyLevel({
-            nodes: await provider.getNodes({
-              parentNode: undefined,
-            }),
+            nodes: await collect(
+              provider.getNodes({
+                parentNode: undefined,
+              }),
+            ),
             expect: [],
           });
         });

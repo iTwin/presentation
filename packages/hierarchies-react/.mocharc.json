@@ -1,9 +1,9 @@
 {
-  "require": ["ignore-styles"],
+  "require": ["ignore-styles", "source-map-support/register"],
   "checkLeaks": true,
   "global": ["IS_REACT_ACT_ENVIRONMENT"],
   "timeout": 60000,
-  "file": ["./lib/test/index.js"],
+  "file": ["./lib/cjs/test/index.js"],
   "exclude": ["./lib/test/coverage/**/*"],
   "reporter": ["node_modules/@itwin/build-tools/mocha-reporter"],
   "reporterOptions": ["mochaFile=lib/test/junit_results.xml"]

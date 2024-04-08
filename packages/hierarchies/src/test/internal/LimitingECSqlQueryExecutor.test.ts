@@ -9,7 +9,7 @@ import { RowsLimitExceededError } from "../../hierarchies/HierarchyErrors";
 import { IECSqlQueryExecutor } from "../../hierarchies/queries/ECSqlCore";
 import { createLimitingECSqlQueryExecutor } from "../../hierarchies/queries/LimitingECSqlQueryExecutor";
 import { trimWhitespace } from "../../hierarchies/Utils";
-import { createFakeQueryReader, toArray } from "../Utils";
+import { collect, createFakeQueryReader } from "../Utils";
 
 describe("createLimitingECSqlQueryExecutor", () => {
   const baseExecutor = {
@@ -24,31 +24,31 @@ describe("createLimitingECSqlQueryExecutor", () => {
     const row = [1, 2, 3];
     baseExecutor.createQueryReader.returns(createFakeQueryReader([row]));
     const limitingExecutor = createLimitingECSqlQueryExecutor(baseExecutor, 1);
-    const rows = await toArray(limitingExecutor.createQueryReader({ ecsql: "query" }));
+    const rows = await collect(limitingExecutor.createQueryReader({ ecsql: "query" }));
     expect(rows).to.deep.eq([row]);
   });
 
   it("throws when base executor returns more rows than the limit", async () => {
     baseExecutor.createQueryReader.returns(createFakeQueryReader([{}, {}]));
     const limitingExecutor = createLimitingECSqlQueryExecutor(baseExecutor, 1);
-    await expect(toArray(limitingExecutor.createQueryReader({ ecsql: "query" }))).to.eventually.be.rejectedWith(RowsLimitExceededError);
+    await expect(collect(limitingExecutor.createQueryReader({ ecsql: "query" }))).to.eventually.be.rejectedWith(RowsLimitExceededError);
   });
 
   it(`calls base executor with original query when limit is "unbounded"`, async () => {
     baseExecutor.createQueryReader.returns(createFakeQueryReader([{}]));
-    await toArray(createLimitingECSqlQueryExecutor(baseExecutor, "unbounded").createQueryReader({ ecsql: "query" }));
+    await collect(createLimitingECSqlQueryExecutor(baseExecutor, "unbounded").createQueryReader({ ecsql: "query" }));
     expect(baseExecutor.createQueryReader).to.be.calledOnceWith("query");
   });
 
   it(`calls base executor with added CTEs`, async () => {
     baseExecutor.createQueryReader.returns(createFakeQueryReader([{}]));
-    await toArray(createLimitingECSqlQueryExecutor(baseExecutor, "unbounded").createQueryReader({ ecsql: "query", ctes: ["cte1", "cte2"] }));
+    await collect(createLimitingECSqlQueryExecutor(baseExecutor, "unbounded").createQueryReader({ ecsql: "query", ctes: ["cte1", "cte2"] }));
     expect(baseExecutor.createQueryReader).to.be.calledOnceWith("WITH RECURSIVE cte1, cte2 query");
   });
 
   it(`calls base executor with added limits`, async () => {
     baseExecutor.createQueryReader.returns(createFakeQueryReader([{}]));
-    await toArray(createLimitingECSqlQueryExecutor(baseExecutor, 1).createQueryReader({ ecsql: "query" }));
+    await collect(createLimitingECSqlQueryExecutor(baseExecutor, 1).createQueryReader({ ecsql: "query" }));
     expect(baseExecutor.createQueryReader).to.be.calledOnceWith(
       sinon.match((ecsql) => trimWhitespace(ecsql) === trimWhitespace("SELECT * FROM (query) LIMIT 2")),
     );
@@ -56,7 +56,7 @@ describe("createLimitingECSqlQueryExecutor", () => {
 
   it(`calls base executor with added CTEs and limits`, async () => {
     baseExecutor.createQueryReader.returns(createFakeQueryReader([{}]));
-    await toArray(createLimitingECSqlQueryExecutor(baseExecutor, 1).createQueryReader({ ecsql: "query", ctes: ["cte1", "cte2"] }));
+    await collect(createLimitingECSqlQueryExecutor(baseExecutor, 1).createQueryReader({ ecsql: "query", ctes: ["cte1", "cte2"] }));
     expect(baseExecutor.createQueryReader).to.be.calledOnceWith(
       sinon.match((ecsql) => trimWhitespace(ecsql) === trimWhitespace("WITH RECURSIVE cte1, cte2 SELECT * FROM (query) LIMIT 2")),
     );

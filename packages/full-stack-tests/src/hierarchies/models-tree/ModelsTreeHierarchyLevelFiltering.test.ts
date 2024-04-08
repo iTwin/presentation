@@ -15,13 +15,15 @@ import {
 } from "presentation-test-utilities";
 import { ElementOwnsMultiAspects, ExternalSourceAspect, PhysicalModel, SpatialCategory, Subject } from "@itwin/core-backend";
 import { GenericInstanceFilter, GenericInstanceFilterRule } from "@itwin/core-common";
-import { Descriptor, PropertiesField, PropertyValueFormat } from "@itwin/presentation-common";
-import { createHierarchyLevelDescriptor } from "@itwin/presentation-core-interop";
+import { IModelConnection } from "@itwin/core-frontend";
+import { DefaultContentDisplayTypes, Descriptor, KeySet, NestedContentField, PropertiesField, PropertyValueFormat } from "@itwin/presentation-common";
 import { Presentation } from "@itwin/presentation-frontend";
+import { HierarchyProvider, NonGroupingHierarchyNode, ParentHierarchyNode } from "@itwin/presentation-hierarchies";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { buildIModel } from "../../IModelUtils";
 import { initialize, terminate } from "../../IntegrationTests";
 import { NodeValidators, validateHierarchyLevel } from "../HierarchyValidation";
+import { collect } from "../Utils";
 import { createModelsTreeProvider, importTestSchema } from "./ModelsTreeTestUtils";
 
 describe("Hierarchies", () => {
@@ -41,53 +43,58 @@ describe("Hierarchies", () => {
 
       // validate hierarchy level without filter
       validateHierarchyLevel({
-        nodes: await provider.getNodes({
-          parentNode: undefined,
-        }),
+        nodes: await collect(
+          provider.getNodes({
+            parentNode: undefined,
+          }),
+        ),
         expect: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: "0x1" }] })],
       });
 
       // validate descriptor, that is required for creating the filter
-      const result = await createHierarchyLevelDescriptor({
+      await validateHierarchyLevelDescriptor({
         imodel,
+        provider,
         parentNode: undefined,
-        hierarchyProvider: provider,
-        descriptorBuilder: Presentation.presentation,
+        expected: {
+          selectClasses: [
+            {
+              selectClassInfo: { name: Subject.classFullName },
+            },
+          ],
+          fields: subjectFields,
+        },
       });
-      expect(result?.descriptor).to.containSubset({
-        selectClasses: [
-          {
-            selectClassInfo: { name: Subject.classFullName },
-          },
-        ],
-        fields: subjectFields,
-      } as Partial<Descriptor>);
 
       // validate filtered hierarchy level
       validateHierarchyLevel({
-        nodes: await provider.getNodes({
-          parentNode: undefined,
-          instanceFilter: createInstanceFilter("BisCore.Subject", {
-            sourceAlias: "this",
-            propertyName: "Description",
-            propertyTypeName: "string",
-            operator: "is-equal",
-            value: { rawValue: "", displayValue: "" },
+        nodes: await collect(
+          provider.getNodes({
+            parentNode: undefined,
+            instanceFilter: createInstanceFilter("BisCore.Subject", {
+              sourceAlias: "this",
+              propertyName: "Description",
+              propertyTypeName: "string",
+              operator: "is-equal",
+              value: { rawValue: "", displayValue: "" },
+            }),
           }),
-        }),
+        ),
         expect: [NodeValidators.createForInstanceNode({ instanceKeys: [{ className: Subject.classFullName.replace(":", "."), id: "0x1" }] })],
       });
       validateHierarchyLevel({
-        nodes: await provider.getNodes({
-          parentNode: undefined,
-          instanceFilter: createInstanceFilter("BisCore.Subject", {
-            sourceAlias: "this",
-            propertyName: "Description",
-            propertyTypeName: "string",
-            operator: "is-not-equal",
-            value: { rawValue: "", displayValue: "" },
+        nodes: await collect(
+          provider.getNodes({
+            parentNode: undefined,
+            instanceFilter: createInstanceFilter("BisCore.Subject", {
+              sourceAlias: "this",
+              propertyName: "Description",
+              propertyTypeName: "string",
+              operator: "is-not-equal",
+              value: { rawValue: "", displayValue: "" },
+            }),
           }),
-        }),
+        ),
         expect: [],
       });
     });
@@ -142,7 +149,7 @@ describe("Hierarchies", () => {
 
       // validate hierarchy level without filter
       validateHierarchyLevel({
-        nodes: await provider.getNodes({ parentNode }),
+        nodes: await collect(provider.getNodes({ parentNode })),
         expect: [
           NodeValidators.createForInstanceNode({ instanceKeys: [keys.category] }),
           NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject] }),
@@ -151,62 +158,67 @@ describe("Hierarchies", () => {
       });
 
       // validate descriptor, that is required for creating the filter
-      const result = await createHierarchyLevelDescriptor({
+      await validateHierarchyLevelDescriptor({
         imodel,
+        provider,
         parentNode,
-        hierarchyProvider: provider,
-        descriptorBuilder: Presentation.presentation,
+        expected: {
+          selectClasses: [
+            {
+              selectClassInfo: { name: Subject.classFullName },
+            },
+            {
+              selectClassInfo: { name: PhysicalModel.classFullName },
+            },
+            {
+              selectClassInfo: { name: SpatialCategory.classFullName },
+            },
+          ],
+          fields: mergeFieldLists([subjectFields, physicalModelFields, spatialCategoryFields]),
+        },
       });
-      expect(result?.descriptor).to.containSubset({
-        selectClasses: [
-          {
-            selectClassInfo: { name: Subject.classFullName },
-          },
-          {
-            selectClassInfo: { name: PhysicalModel.classFullName },
-          },
-          {
-            selectClassInfo: { name: SpatialCategory.classFullName },
-          },
-        ],
-        fields: mergeFieldLists([subjectFields, physicalModelFields, spatialCategoryFields]),
-      } as Partial<Descriptor>);
 
       // validate filtered hierarchy level
       validateHierarchyLevel({
-        nodes: await provider.getNodes({
-          parentNode,
-          instanceFilter: createInstanceFilter(keys.childSubject.className, {
-            sourceAlias: "",
-            propertyName: "Description",
-            propertyTypeName: "string",
-            operator: "is-null",
+        nodes: await collect(
+          provider.getNodes({
+            parentNode,
+            instanceFilter: createInstanceFilter(keys.childSubject.className, {
+              sourceAlias: "",
+              propertyName: "Description",
+              propertyTypeName: "string",
+              operator: "is-null",
+            }),
           }),
-        }),
+        ),
         expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.childSubject] })],
       });
       validateHierarchyLevel({
-        nodes: await provider.getNodes({
-          parentNode,
-          instanceFilter: createInstanceFilter(keys.category.className, {
-            sourceAlias: "",
-            propertyName: "UserLabel",
-            propertyTypeName: "string",
-            operator: "is-null",
+        nodes: await collect(
+          provider.getNodes({
+            parentNode,
+            instanceFilter: createInstanceFilter(keys.category.className, {
+              sourceAlias: "",
+              propertyName: "UserLabel",
+              propertyTypeName: "string",
+              operator: "is-null",
+            }),
           }),
-        }),
+        ),
         expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.category] })],
       });
       validateHierarchyLevel({
-        nodes: await provider.getNodes({
-          parentNode,
-          instanceFilter: createInstanceFilter(keys.model.className, {
-            sourceAlias: "",
-            propertyName: "IsPlanProjection",
-            propertyTypeName: "boolean",
-            operator: "is-false",
+        nodes: await collect(
+          provider.getNodes({
+            parentNode,
+            instanceFilter: createInstanceFilter(keys.model.className, {
+              sourceAlias: "",
+              propertyName: "IsPlanProjection",
+              propertyTypeName: "boolean",
+              operator: "is-false",
+            }),
           }),
-        }),
+        ),
         expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.model] })],
       });
     });
@@ -239,7 +251,7 @@ describe("Hierarchies", () => {
 
       // validate hierarchy level without filter
       validateHierarchyLevel({
-        nodes: await provider.getNodes({ parentNode }),
+        nodes: await collect(provider.getNodes({ parentNode })),
         expect: [
           NodeValidators.createForInstanceNode({ instanceKeys: [keys.category1] }),
           NodeValidators.createForInstanceNode({ instanceKeys: [keys.category2] }),
@@ -247,33 +259,34 @@ describe("Hierarchies", () => {
       });
 
       // validate descriptor, that is required for creating the filter
-      const result = await createHierarchyLevelDescriptor({
+      await validateHierarchyLevelDescriptor({
         imodel,
+        provider,
         parentNode,
-        hierarchyProvider: provider,
-        descriptorBuilder: Presentation.presentation,
+        expected: {
+          selectClasses: [
+            {
+              selectClassInfo: { name: SpatialCategory.classFullName },
+            },
+          ],
+          fields: spatialCategoryFields,
+        },
       });
-      expect(result?.descriptor).to.containSubset({
-        selectClasses: [
-          {
-            selectClassInfo: { name: SpatialCategory.classFullName },
-          },
-        ],
-        fields: spatialCategoryFields,
-      } as Partial<Descriptor>);
 
       // validate filtered hierarchy level
       validateHierarchyLevel({
-        nodes: await provider.getNodes({
-          parentNode,
-          instanceFilter: createInstanceFilter(keys.category2.className, {
-            sourceAlias: "",
-            propertyName: "CodeValue",
-            propertyTypeName: "string",
-            operator: "is-equal",
-            value: { rawValue: "category2", displayValue: "" },
+        nodes: await collect(
+          provider.getNodes({
+            parentNode,
+            instanceFilter: createInstanceFilter(keys.category2.className, {
+              sourceAlias: "",
+              propertyName: "CodeValue",
+              propertyTypeName: "string",
+              operator: "is-equal",
+              value: { rawValue: "category2", displayValue: "" },
+            }),
           }),
-        }),
+        ),
         expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.category2] })],
       });
     });
@@ -311,50 +324,53 @@ describe("Hierarchies", () => {
 
       // validate hierarchy level without filter
       validateHierarchyLevel({
-        nodes: await provider.getNodes({ parentNode }),
+        nodes: await collect(provider.getNodes({ parentNode })),
         expect: [NodeValidators.createForClassGroupingNode({ className: keys.element.className })],
       });
 
       // validate descriptor, that is required for creating the filter
-      const result = await createHierarchyLevelDescriptor({
+      await validateHierarchyLevelDescriptor({
         imodel,
+        provider,
         parentNode,
-        hierarchyProvider: provider,
-        descriptorBuilder: Presentation.presentation,
+        expected: {
+          selectClasses: [
+            {
+              selectClassInfo: { name: keys.element.className.replace(".", ":") },
+            },
+          ],
+          fields: physicalElementFields,
+        },
       });
-      expect(result?.descriptor).to.containSubset({
-        selectClasses: [
-          {
-            selectClassInfo: { name: keys.element.className.replace(".", ":") },
-          },
-        ],
-        fields: physicalElementFields,
-      } as Partial<Descriptor>);
 
       // validate filtered hierarchy level
       validateHierarchyLevel({
-        nodes: await provider.getNodes({
-          parentNode,
-          instanceFilter: createInstanceFilter(keys.element.className, {
-            sourceAlias: "",
-            propertyName: "UserLabel",
-            propertyTypeName: "string",
-            operator: "is-equal",
-            value: { rawValue: "element", displayValue: "" },
+        nodes: await collect(
+          provider.getNodes({
+            parentNode,
+            instanceFilter: createInstanceFilter(keys.element.className, {
+              sourceAlias: "",
+              propertyName: "UserLabel",
+              propertyTypeName: "string",
+              operator: "is-equal",
+              value: { rawValue: "element", displayValue: "" },
+            }),
           }),
-        }),
+        ),
         expect: [NodeValidators.createForClassGroupingNode({ className: keys.element.className })],
       });
       validateHierarchyLevel({
-        nodes: await provider.getNodes({
-          parentNode,
-          instanceFilter: createInstanceFilter(keys.element.className, {
-            sourceAlias: "",
-            propertyName: "UserLabel",
-            propertyTypeName: "string",
-            operator: "is-null",
+        nodes: await collect(
+          provider.getNodes({
+            parentNode,
+            instanceFilter: createInstanceFilter(keys.element.className, {
+              sourceAlias: "",
+              propertyName: "UserLabel",
+              propertyTypeName: "string",
+              operator: "is-null",
+            }),
           }),
-        }),
+        ),
         expect: [],
       });
     });
@@ -400,50 +416,53 @@ describe("Hierarchies", () => {
 
       // validate hierarchy level without filter
       validateHierarchyLevel({
-        nodes: await provider.getNodes({ parentNode }),
+        nodes: await collect(provider.getNodes({ parentNode })),
         expect: [NodeValidators.createForClassGroupingNode({ className: keys.childElement.className })],
       });
 
       // validate descriptor, that is required for creating the filter
-      const result = await createHierarchyLevelDescriptor({
+      await validateHierarchyLevelDescriptor({
         imodel,
+        provider,
         parentNode,
-        hierarchyProvider: provider,
-        descriptorBuilder: Presentation.presentation,
+        expected: {
+          selectClasses: [
+            {
+              selectClassInfo: { name: keys.childElement.className.replace(".", ":") },
+            },
+          ],
+          fields: physicalElementFields,
+        },
       });
-      expect(result?.descriptor).to.containSubset({
-        selectClasses: [
-          {
-            selectClassInfo: { name: keys.childElement.className.replace(".", ":") },
-          },
-        ],
-        fields: physicalElementFields,
-      } as Partial<Descriptor>);
 
       // validate filtered hierarchy level
       validateHierarchyLevel({
-        nodes: await provider.getNodes({
-          parentNode,
-          instanceFilter: createInstanceFilter(keys.childElement.className, {
-            sourceAlias: "",
-            propertyName: "UserLabel",
-            propertyTypeName: "string",
-            operator: "is-equal",
-            value: { rawValue: "child element", displayValue: "" },
+        nodes: await collect(
+          provider.getNodes({
+            parentNode,
+            instanceFilter: createInstanceFilter(keys.childElement.className, {
+              sourceAlias: "",
+              propertyName: "UserLabel",
+              propertyTypeName: "string",
+              operator: "is-equal",
+              value: { rawValue: "child element", displayValue: "" },
+            }),
           }),
-        }),
+        ),
         expect: [NodeValidators.createForClassGroupingNode({ className: keys.childElement.className })],
       });
       validateHierarchyLevel({
-        nodes: await provider.getNodes({
-          parentNode,
-          instanceFilter: createInstanceFilter(keys.childElement.className, {
-            sourceAlias: "",
-            propertyName: "UserLabel",
-            propertyTypeName: "string",
-            operator: "is-null",
+        nodes: await collect(
+          provider.getNodes({
+            parentNode,
+            instanceFilter: createInstanceFilter(keys.childElement.className, {
+              sourceAlias: "",
+              propertyName: "UserLabel",
+              propertyTypeName: "string",
+              operator: "is-null",
+            }),
           }),
-        }),
+        ),
         expect: [],
       });
     });
@@ -496,50 +515,53 @@ describe("Hierarchies", () => {
 
       // validate hierarchy level without filter
       validateHierarchyLevel({
-        nodes: await provider.getNodes({ parentNode }),
+        nodes: await collect(provider.getNodes({ parentNode })),
         expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.category] })],
       });
 
       // validate descriptor, that is required for creating the filter
-      const result = await createHierarchyLevelDescriptor({
+      await validateHierarchyLevelDescriptor({
         imodel,
+        provider,
         parentNode,
-        hierarchyProvider: provider,
-        descriptorBuilder: Presentation.presentation,
+        expected: {
+          selectClasses: [
+            {
+              selectClassInfo: { name: SpatialCategory.classFullName },
+            },
+          ],
+          fields: spatialCategoryFields,
+        },
       });
-      expect(result?.descriptor).to.containSubset({
-        selectClasses: [
-          {
-            selectClassInfo: { name: SpatialCategory.classFullName },
-          },
-        ],
-        fields: spatialCategoryFields,
-      } as Partial<Descriptor>);
 
       // validate filtered hierarchy level
       validateHierarchyLevel({
-        nodes: await provider.getNodes({
-          parentNode,
-          instanceFilter: createInstanceFilter(keys.category.className, {
-            sourceAlias: "",
-            propertyName: "CodeValue",
-            propertyTypeName: "string",
-            operator: "is-equal",
-            value: { rawValue: "category", displayValue: "" },
+        nodes: await collect(
+          provider.getNodes({
+            parentNode,
+            instanceFilter: createInstanceFilter(keys.category.className, {
+              sourceAlias: "",
+              propertyName: "CodeValue",
+              propertyTypeName: "string",
+              operator: "is-equal",
+              value: { rawValue: "category", displayValue: "" },
+            }),
           }),
-        }),
+        ),
         expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.category] })],
       });
       validateHierarchyLevel({
-        nodes: await provider.getNodes({
-          parentNode,
-          instanceFilter: createInstanceFilter(keys.category.className, {
-            sourceAlias: "",
-            propertyName: "UserLabel",
-            propertyTypeName: "string",
-            operator: "is-null",
+        nodes: await collect(
+          provider.getNodes({
+            parentNode,
+            instanceFilter: createInstanceFilter(keys.category.className, {
+              sourceAlias: "",
+              propertyName: "UserLabel",
+              propertyTypeName: "string",
+              operator: "is-null",
+            }),
           }),
-        }),
+        ),
         expect: [NodeValidators.createForInstanceNode({ instanceKeys: [keys.category] })],
       });
     });
@@ -576,50 +598,49 @@ describe("Hierarchies", () => {
         label: "",
       };
       validateHierarchyLevel({
-        nodes: await provider.getNodes({ parentNode }),
+        nodes: await collect(provider.getNodes({ parentNode })),
         expect: [NodeValidators.createForClassGroupingNode({ className: keys.element.className })],
       });
-      const result = await createHierarchyLevelDescriptor({
+      await validateHierarchyLevelDescriptor({
         imodel,
+        provider,
         parentNode,
-        hierarchyProvider: provider,
-        descriptorBuilder: Presentation.presentation,
-      });
-      expect(result?.descriptor).to.containSubset({
-        selectClasses: [
-          {
-            selectClassInfo: { name: keys.element.className.replace(".", ":") },
-            relatedPropertyPaths: [
-              [
+        expected: {
+          selectClasses: [
+            {
+              selectClassInfo: { name: keys.element.className.replace(".", ":") },
+              relatedPropertyPaths: [
+                [
+                  {
+                    relationshipInfo: { name: ElementOwnsMultiAspects.classFullName },
+                    isForwardRelationship: true,
+                  },
+                ],
+              ],
+            },
+          ],
+          fields: [
+            ...physicalElementFields,
+            {
+              contentClassInfo: { name: ExternalSourceAspect.classFullName },
+              pathToPrimaryClass: [
                 {
+                  sourceClassInfo: { name: ExternalSourceAspect.classFullName },
                   relationshipInfo: { name: ElementOwnsMultiAspects.classFullName },
-                  isForwardRelationship: true,
+                  isForwardRelationship: false,
+                  targetClassInfo: { name: keys.element.className.replace(".", ":") },
                 },
               ],
-            ],
-          },
-        ],
-        fields: [
-          ...physicalElementFields,
-          {
-            contentClassInfo: { name: ExternalSourceAspect.classFullName },
-            pathToPrimaryClass: [
-              {
-                sourceClassInfo: { name: ExternalSourceAspect.classFullName },
-                relationshipInfo: { name: ElementOwnsMultiAspects.classFullName },
-                isForwardRelationship: false,
-                targetClassInfo: { name: keys.element.className.replace(".", ":") },
-              },
-            ],
-            nestedFields: [
-              {
-                label: "Source Element ID",
-                type: { valueFormat: PropertyValueFormat.Primitive, typeName: "string" },
-              },
-            ],
-          },
-        ],
-      } as Partial<Descriptor>);
+              nestedFields: [
+                {
+                  label: "Source Element ID",
+                  type: { valueFormat: PropertyValueFormat.Primitive, typeName: "string" },
+                },
+              ],
+            } as NestedContentField,
+          ],
+        },
+      });
     });
   });
 });
@@ -633,6 +654,38 @@ function createInstanceFilter(className: string, rule: GenericInstanceFilterRule
       rules: [rule],
     },
   };
+}
+
+type RecursivelyPartial<T> = {
+  [P in keyof T]?: RecursivelyPartial<T[P]>;
+};
+async function validateHierarchyLevelDescriptor(props: {
+  imodel: IModelConnection;
+  provider: HierarchyProvider;
+  parentNode: ParentHierarchyNode<NonGroupingHierarchyNode> | undefined;
+  expected: RecursivelyPartial<Descriptor>;
+}) {
+  const { imodel, provider, parentNode, expected } = props;
+  const inputKeys = await collect(provider.getNodeInstanceKeys({ parentNode }));
+  const result = await Presentation.presentation.getContentDescriptor({
+    imodel,
+    rulesetOrId: {
+      id: "test",
+      rules: [
+        {
+          ruleType: "Content",
+          specifications: [
+            {
+              specType: "SelectedNodeInstances",
+            },
+          ],
+        },
+      ],
+    },
+    displayType: DefaultContentDisplayTypes.PropertyPane,
+    keys: new KeySet(inputKeys),
+  });
+  expect(result).to.containSubset(expected);
 }
 
 function mergeFieldLists<TField extends Pick<PropertiesField, "label">>(fieldLists: TField[][]): TField[] {

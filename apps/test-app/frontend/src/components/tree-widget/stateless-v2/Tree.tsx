@@ -10,14 +10,14 @@ import { SchemaContext } from "@itwin/ecschema-metadata";
 import { ECSchemaRpcLocater } from "@itwin/ecschema-rpcinterface-common";
 import { SvgFolder, SvgImodelHollow, SvgItem, SvgLayers, SvgModel } from "@itwin/itwinui-icons-react";
 import { Flex, ProgressRadial, SearchBox, Text, ToggleSwitch } from "@itwin/itwinui-react";
-import { ClassInfo, Descriptor } from "@itwin/presentation-common";
+import { ClassInfo, DefaultContentDisplayTypes, Descriptor, KeySet } from "@itwin/presentation-common";
 import {
   PresentationInstanceFilter,
   PresentationInstanceFilterDialog,
   PresentationInstanceFilterInfo,
   PresentationInstanceFilterPropertiesSource,
 } from "@itwin/presentation-components";
-import { createECSqlQueryExecutor, createHierarchyLevelDescriptor, createMetadataProvider } from "@itwin/presentation-core-interop";
+import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
 import {
   createLimitingECSqlQueryExecutor,
@@ -25,7 +25,6 @@ import {
   HierarchyProvider,
   ILimitingECSqlQueryExecutor,
   IMetadataProvider,
-  NonGroupingHierarchyNode,
   TypedPrimitiveValue,
 } from "@itwin/presentation-hierarchies";
 import { HierarchyLevelFilteringOptions, PresentationHierarchyNode, TreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
@@ -94,7 +93,7 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
     );
   }, [metadata, filteredPaths]);
 
-  const { rootNodes, isLoading, ...treeProps } = useUnifiedSelectionTree({
+  const { rootNodes, isLoading, getHierarchyLevelFilteringOptions, ...treeProps } = useUnifiedSelectionTree({
     imodelKey: imodel.key,
     sourceName: "StatelessTreeV2",
     hierarchyProvider,
@@ -111,33 +110,59 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
     treeProps.reloadTree();
   };
 
-  const [filteringOptions, setFilteringOptions] = useState<HierarchyLevelFilteringOptions>();
+  const [filteringOptions, setFilteringOptions] = useState<{ nodeId: string; options: HierarchyLevelFilteringOptions }>();
+  const onFilterClick = useCallback(
+    (nodeId: string) => {
+      const options = getHierarchyLevelFilteringOptions(nodeId);
+      setFilteringOptions(options ? { nodeId, options } : undefined);
+    },
+    [getHierarchyLevelFilteringOptions],
+  );
   const propertiesSource = useMemo<(() => Promise<PresentationInstanceFilterPropertiesSource>) | undefined>(() => {
     if (!hierarchyProvider || !filteringOptions) {
       return undefined;
     }
 
     return async () => {
-      const result = await createHierarchyLevelDescriptor({
-        descriptorBuilder: Presentation.presentation,
-        hierarchyProvider,
-        imodel,
-        parentNode: filteringOptions.hierarchyNode as NonGroupingHierarchyNode,
+      const inputKeysIterator = hierarchyProvider.getNodeInstanceKeys({
+        parentNode: filteringOptions.options.hierarchyNode,
       });
-
-      if (!result) {
-        throw new Error("Failed to create descriptor");
+      const inputKeys = [];
+      for await (const inputKey of inputKeysIterator) {
+        inputKeys.push(inputKey);
+      }
+      if (inputKeys.length === 0) {
+        throw new Error("Hierarchy level is empty - unable to create content descriptor.");
       }
 
-      return {
-        descriptor: result.descriptor,
-        inputKeys: result.inputKeys,
-      };
+      const descriptor = await Presentation.presentation.getContentDescriptor({
+        imodel,
+        rulesetOrId: {
+          id: `Hierarchy level descriptor ruleset`,
+          rules: [
+            {
+              ruleType: "Content",
+              specifications: [
+                {
+                  specType: "SelectedNodeInstances",
+                },
+              ],
+            },
+          ],
+        },
+        displayType: DefaultContentDisplayTypes.PropertyPane,
+        keys: new KeySet(inputKeys),
+      });
+      if (!descriptor) {
+        throw new Error("Failed to create content descriptor");
+      }
+
+      return { descriptor, inputKeys };
     };
   }, [filteringOptions, imodel, hierarchyProvider]);
 
   const getInitialFilter = useMemo(() => {
-    const currentFilter = filteringOptions?.currentFilter;
+    const currentFilter = filteringOptions?.options.currentFilter;
     if (!currentFilter) {
       return undefined;
     }
@@ -164,7 +189,7 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
 
     return (
       <Flex.Item alignSelf="flex-start" style={{ width: "100%", overflow: "auto" }}>
-        <TreeRenderer rootNodes={rootNodes} {...treeProps} onFilterClick={setFilteringOptions} getIcon={getIcon} />
+        <TreeRenderer rootNodes={rootNodes} {...treeProps} onFilterClick={onFilterClick} getIcon={getIcon} />
       </Flex.Item>
     );
   };
@@ -180,7 +205,10 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
         imodel={imodel}
         isOpen={!!filteringOptions}
         onApply={(info) => {
-          filteringOptions?.applyFilter(toGenericFilter(info));
+          if (!filteringOptions) {
+            return;
+          }
+          treeProps.setHierarchyLevelFilter(filteringOptions.nodeId, toGenericFilter(info));
           setFilteringOptions(undefined);
         }}
         onClose={() => {

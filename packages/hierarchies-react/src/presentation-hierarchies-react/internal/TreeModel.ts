@@ -6,18 +6,17 @@
 import { GenericInstanceFilter, HierarchyNode } from "@itwin/presentation-hierarchies";
 import { InfoNodeTypes } from "../Types";
 
-/** @internal */
 export interface TreeModelRootNode {
   id: undefined;
   nodeData: undefined;
   hierarchyLimit?: number | "unbounded";
   instanceFilter?: GenericInstanceFilter;
+  isLoading?: boolean;
 }
 
-/** @internal */
-export interface TreeModelHierarchyNode<TNodeData = HierarchyNode> {
+export interface TreeModelHierarchyNode {
   id: string;
-  nodeData: TNodeData;
+  nodeData: HierarchyNode;
   label: string;
   children: boolean;
   isLoading?: boolean;
@@ -27,7 +26,6 @@ export interface TreeModelHierarchyNode<TNodeData = HierarchyNode> {
   instanceFilter?: GenericInstanceFilter;
 }
 
-/** @internal */
 export interface TreeModelInfoNode {
   id: string;
   parentId?: string;
@@ -35,70 +33,140 @@ export interface TreeModelInfoNode {
   message: string;
 }
 
-/** @internal */
 export type TreeModelNode = TreeModelHierarchyNode | TreeModelInfoNode;
 
-/** @internal */
-export function isTreeModelHierarchyNode<TNodeData = HierarchyNode>(
-  node: TreeModelHierarchyNode<TNodeData> | TreeModelInfoNode | TreeModelRootNode,
-): node is TreeModelHierarchyNode<TNodeData> {
+export function isTreeModelHierarchyNode(node: TreeModelHierarchyNode | TreeModelInfoNode | TreeModelRootNode): node is TreeModelHierarchyNode {
   return "nodeData" in node && node.nodeData !== undefined;
 }
 
-/** @internal */
 export function isTreeModelInfoNode(node: TreeModelHierarchyNode | TreeModelInfoNode | TreeModelRootNode): node is TreeModelInfoNode {
   return "message" in node && node.message !== undefined;
 }
 
-/** @internal */
 export interface TreeModel {
   parentChildMap: Map<string | undefined, string[]>;
   idToNode: Map<string, TreeModelNode>;
   rootNode: TreeModelRootNode;
 }
 
-/** @internal */
-export function expandNode(model: TreeModel, nodeId: string, isExpanded: boolean): void {
-  const node = model.idToNode.get(nodeId);
-  if (!node || !isTreeModelHierarchyNode(node)) {
-    return;
-  }
-
-  node.isExpanded = isExpanded;
-}
-
-/** @internal */
-export function addHierarchyPart(model: TreeModel, rootId: string | undefined, hierarchyPart: TreeModel): void {
-  removeSubTree(model, rootId);
-
-  for (const [parentId, children] of hierarchyPart.parentChildMap) {
-    model.parentChildMap.set(parentId, children);
-  }
-
-  for (const [nodeId, node] of hierarchyPart.idToNode) {
-    model.idToNode.set(nodeId, node);
-  }
-}
-
-/** @internal */
-export function removeSubTree(model: TreeModel, parentId: string | undefined): void {
-  const currentChildren = model.parentChildMap.get(parentId);
-  if (!currentChildren) {
-    return;
-  }
-  model.parentChildMap.delete(parentId);
-
-  for (const childId of currentChildren) {
-    const childNode = model.idToNode.get(childId);
-    if (childNode && isTreeModelHierarchyNode(childNode)) {
-      removeSubTree(model, childNode.id);
+export namespace TreeModel {
+  export function expandNode(model: TreeModel, nodeId: string, isExpanded: boolean): "none" | "loadChildren" | "reloadChildren" {
+    const node = model.idToNode.get(nodeId);
+    if (!node || !isTreeModelHierarchyNode(node)) {
+      return "none";
     }
-    model.idToNode.delete(childId);
+
+    node.isExpanded = isExpanded;
+    if (!isExpanded || !node.children) {
+      return "none";
+    }
+
+    const children = model.parentChildMap.get(node.id);
+    if (!children) {
+      node.isLoading = true;
+      return "loadChildren";
+    }
+
+    if (children.length !== 1) {
+      return "none";
+    }
+
+    const firstChild = TreeModel.getNode(model, children[0]);
+    if (!firstChild || !isTreeModelInfoNode(firstChild) || firstChild.type !== "Unknown") {
+      return "none";
+    }
+
+    // remove subtree if there is only one `Unknown` info node in order to attempt reloading children
+    TreeModel.removeSubTree(model, nodeId);
+    node.isLoading = true;
+    return "reloadChildren";
+  }
+
+  /** @internal */
+  export function addHierarchyPart(model: TreeModel, rootId: string | undefined, hierarchyPart: TreeModel): void {
+    removeSubTree(model, rootId);
+
+    for (const [parentId, children] of hierarchyPart.parentChildMap) {
+      model.parentChildMap.set(parentId, children);
+    }
+
+    for (const [nodeId, node] of hierarchyPart.idToNode) {
+      model.idToNode.set(nodeId, node);
+    }
+
+    const parentNode = rootId !== undefined ? model.idToNode.get(rootId) : model.rootNode;
+    // istanbul ignore else
+    if (parentNode && !isTreeModelInfoNode(parentNode)) {
+      parentNode.isLoading = false;
+    }
+  }
+
+  export function removeSubTree(model: TreeModel, parentId: string | undefined): void {
+    const currentChildren = model.parentChildMap.get(parentId);
+    if (!currentChildren) {
+      return;
+    }
+    model.parentChildMap.delete(parentId);
+
+    for (const childId of currentChildren) {
+      const childNode = model.idToNode.get(childId);
+      if (childNode && isTreeModelHierarchyNode(childNode)) {
+        removeSubTree(model, childNode.id);
+      }
+      model.idToNode.delete(childId);
+    }
+  }
+
+  export function setHierarchyLimit(model: TreeModel, nodeId: string | undefined, limit?: number | "unbounded"): boolean {
+    return updateForReload(model, nodeId, (node) => {
+      node.hierarchyLimit = limit;
+    });
+  }
+
+  export function setInstanceFilter(model: TreeModel, nodeId: string | undefined, filter?: GenericInstanceFilter): boolean {
+    return updateForReload(model, nodeId, (node) => {
+      node.instanceFilter = filter;
+    });
+  }
+
+  export function selectNode(model: TreeModel, nodeId: string, isSelected: boolean) {
+    const modelNode = model.idToNode.get(nodeId);
+    if (!modelNode || !isTreeModelHierarchyNode(modelNode)) {
+      return;
+    }
+    modelNode.isSelected = isSelected;
+  }
+
+  export function isNodeSelected(model: TreeModel, nodeId: string): boolean {
+    const currentNode = model.idToNode.get(nodeId);
+    return !!currentNode && isTreeModelHierarchyNode(currentNode) && !!currentNode.isSelected;
+  }
+
+  export function getNode(model: TreeModel, nodeId: string | undefined): TreeModelNode | TreeModelRootNode | undefined {
+    if (!nodeId) {
+      return model.rootNode;
+    }
+    return model.idToNode.get(nodeId);
   }
 }
 
-/** @internal */
-export function isHierarchyNodeSelected(model: TreeModel, nodeId: string): boolean {
-  const currentNode = model.idToNode.get(nodeId);
-  return !!currentNode && isTreeModelHierarchyNode(currentNode) && !!currentNode.isSelected;
+function updateForReload(model: TreeModel, nodeId: string | undefined, update: (node: TreeModelHierarchyNode | TreeModelRootNode) => void) {
+  TreeModel.removeSubTree(model, nodeId);
+  if (nodeId === undefined) {
+    update(model.rootNode);
+    model.rootNode.isLoading = true;
+    return true;
+  }
+
+  const modelNode = model.idToNode.get(nodeId);
+  if (!modelNode || !isTreeModelHierarchyNode(modelNode)) {
+    return false;
+  }
+
+  update(modelNode);
+  if (modelNode.isExpanded) {
+    modelNode.isLoading = true;
+    return true;
+  }
+  return false;
 }

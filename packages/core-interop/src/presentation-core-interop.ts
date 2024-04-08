@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 export { createValueFormatter } from "./core-interop/Formatting";
-export { createHierarchyLevelDescriptor } from "./core-interop/HierarchyLevelDescriptor";
 export { createLogger } from "./core-interop/Logging";
 export { createMetadataProvider } from "./core-interop/Metadata";
 export { createECSqlQueryExecutor } from "./core-interop/QueryExecutor";
