@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1712316979917,
+  "lastUpdate": 1712574391969,
   "repoUrl": "https://github.com/iTwin/presentation",
   "entries": {
     "Benchmark": [
@@ -3623,6 +3623,140 @@ window.BENCHMARK_DATA = {
             "value": 164,
             "unit": "ms",
             "extra": "count: 7\nmax: 164\np95: 164\nmedian: 32"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "35135765+grigasp@users.noreply.github.com",
+            "name": "Grigas",
+            "username": "grigasp"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e48c67ba080c36958acc11380ebeff2591b423a1",
+          "message": "hierarchies: Change `HierarchyProvider.getNodes` from `Promise<HierarchyNode[]>` to `AsyncIterableIterator<HierarchyNode>` (#516)",
+          "timestamp": "2024-04-08T11:03:48Z",
+          "tree_id": "08309d47e8387639e0c049f6a8bcbd0d1a43023e",
+          "url": "https://github.com/iTwin/presentation/commit/e48c67ba080c36958acc11380ebeff2591b423a1"
+        },
+        "date": 1712574391404,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "flat 50k elements list",
+            "value": 4839.68,
+            "unit": "ms"
+          },
+          {
+            "name": "flat 50k elements list (P95 of main thread blocks)",
+            "value": 69,
+            "unit": "ms",
+            "extra": "count: 4\nmax: 69\np95: 69\nmedian: 34.5"
+          },
+          {
+            "name": "grouping by label",
+            "value": 6940.5,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by label (P95 of main thread blocks)",
+            "value": 76,
+            "unit": "ms",
+            "extra": "count: 48\nmax: 222\np95: 76\nmedian: 48.5"
+          },
+          {
+            "name": "grouping by class",
+            "value": 6640.25,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by class (P95 of main thread blocks)",
+            "value": 118,
+            "unit": "ms",
+            "extra": "count: 44\nmax: 155\np95: 118\nmedian: 46.5"
+          },
+          {
+            "name": "grouping by property",
+            "value": 7279.6,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by property (P95 of main thread blocks)",
+            "value": 148,
+            "unit": "ms",
+            "extra": "count: 47\nmax: 376\np95: 148\nmedian: 49"
+          },
+          {
+            "name": "grouping by base class (10 classes)",
+            "value": 6263.94,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by base class (10 classes) (P95 of main thread blocks)",
+            "value": 606,
+            "unit": "ms",
+            "extra": "count: 9\nmax: 606\np95: 606\nmedian: 43"
+          },
+          {
+            "name": "grouping by multiple attributes",
+            "value": 10175.14,
+            "unit": "ms"
+          },
+          {
+            "name": "grouping by multiple attributes (P95 of main thread blocks)",
+            "value": 117,
+            "unit": "ms",
+            "extra": "count: 53\nmax: 154\np95: 117\nmedian: 47"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children",
+            "value": 50504.04,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/o children (P95 of main thread blocks)",
+            "value": 44,
+            "unit": "ms",
+            "extra": "count: 17\nmax: 44\np95: 44\nmedian: 29"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children",
+            "value": 150.56,
+            "unit": "ms"
+          },
+          {
+            "name": "hide if no children required to finalize root, w/ children (P95 of main thread blocks)",
+            "value": 24,
+            "unit": "ms",
+            "extra": "count: 1\nmax: 24\np95: 24\nmedian: 24"
+          },
+          {
+            "name": "models tree initial (Baytown)",
+            "value": 40.34,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree initial (Baytown) (P95 of main thread blocks)",
+            "value": 0,
+            "unit": "ms",
+            "extra": "count: 0\nmax: N/A\np95: N/A\nmedian: N/A"
+          },
+          {
+            "name": "models tree full (Baytown)",
+            "value": 1604.81,
+            "unit": "ms"
+          },
+          {
+            "name": "models tree full (Baytown) (P95 of main thread blocks)",
+            "value": 159,
+            "unit": "ms",
+            "extra": "count: 11\nmax: 159\np95: 159\nmedian: 32"
           }
         ]
       }
