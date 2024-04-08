@@ -14,8 +14,7 @@ import { Observable } from "rxjs";
 export async function* eachValueFrom<T>(source: Observable<T>): AsyncIterableIterator<T> {
   const deferreds = new Queue<ResolvablePromise<{ value?: T; done: boolean }>>();
   const values = new Queue<T>();
-  let hasError = false;
-  let error = null;
+  let error;
   let completed = false;
   const subs = source.subscribe({
     next: (value) => {
@@ -27,7 +26,6 @@ export async function* eachValueFrom<T>(source: Observable<T>): AsyncIterableIte
       }
     },
     error: (err) => {
-      hasError = true;
       error = err;
       for (let deferred = deferreds.pop(); deferred !== undefined; deferred = deferreds.pop()) {
         deferred.reject(err);
@@ -45,20 +43,21 @@ export async function* eachValueFrom<T>(source: Observable<T>): AsyncIterableIte
       const value = values.pop();
       if (value !== undefined) {
         yield value;
-      } else if (completed) {
-        return;
-      } else if (hasError) {
-        throw error;
-      } else {
-        const d = new ResolvablePromise<{ value?: T; done: boolean }>();
-        deferreds.push(d);
-        const result = await d;
-        if (result.done) {
-          return;
-        } else {
-          yield result.value!;
-        }
+        continue;
       }
+      if (completed) {
+        return;
+      }
+      if (error) {
+        throw error;
+      }
+      const d = new ResolvablePromise<{ value?: T; done: boolean }>();
+      deferreds.push(d);
+      const result = await d;
+      if (result.done) {
+        return;
+      }
+      yield result.value!;
     }
   } catch (err) {
     throw err;
