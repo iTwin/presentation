@@ -9,6 +9,7 @@ import { createHiliteSetProvider, HiliteSetProvider } from "../unified-selection
 import { ECClass, ECSchema } from "../unified-selection/queries/ECMetadata";
 import { ECSqlBinding, ECSqlQueryReader, ECSqlQueryReaderOptions, ECSqlQueryRow } from "../unified-selection/queries/ECSqlCore";
 import { SelectableInstanceKey, Selectables } from "../unified-selection/Selectable";
+import { ResolvablePromise, waitForPromise } from "./_helpers/PromiseUtils";
 import { createCustomSelectable, createECInstanceId, createSelectableInstanceKey } from "./_helpers/SelectablesCreator";
 
 describe("HiliteSetProvider", () => {
@@ -37,12 +38,10 @@ describe("HiliteSetProvider", () => {
       getClass: sinon.stub<[string], Promise<ECClass | undefined>>(),
     };
 
-    function createFakeQueryReader<TRow extends object>(rows: TRow[]): ECSqlQueryReader {
-      return (async function* () {
-        for (const row of rows) {
-          yield row;
-        }
-      })();
+    async function* createFakeQueryReader<TRow extends {} = ECSqlQueryRow>(rows: (TRow | Promise<TRow>)[]): ECSqlQueryReader {
+      for await (const row of rows) {
+        yield row;
+      }
     }
 
     function mockClass(className: string, baseClassSchema: string, baseClassName: string) {
@@ -55,16 +54,24 @@ describe("HiliteSetProvider", () => {
       schemaMock.getClass.withArgs(className).returns(Promise.resolve(classMock as unknown as ECClass));
     }
 
-    function mockQuery(modelKeys: string[], subCategoryKeys: string[], elementKeys: string[]) {
+    function mockQuery(modelKeys: (string | Promise<string>)[], subCategoryKeys: (string | Promise<string>)[], elementKeys: (string | Promise<string>)[]) {
+      // eslint-disable-next-line @typescript-eslint/promise-function-async
+      const toQueryResponse = (k: string | Promise<string>) => {
+        if (typeof k === "string") {
+          return { ["ECInstanceId"]: k };
+        }
+        return k.then((x) => ({ ["ECInstanceId"]: x }));
+      };
+
       queryExecutor.createQueryReader
         .withArgs(sinon.match((query: string) => query.includes("Models")))
-        .returns(createFakeQueryReader<ECSqlQueryRow>(modelKeys.length === 0 ? [] : modelKeys.map((k) => ({ ["ECInstanceId"]: k }))));
+        .returns(createFakeQueryReader(modelKeys.map(toQueryResponse)));
       queryExecutor.createQueryReader
         .withArgs(sinon.match((query: string) => query.includes("SubCategories")))
-        .returns(createFakeQueryReader<ECSqlQueryRow>(subCategoryKeys.length === 0 ? [] : subCategoryKeys.map((k) => ({ ["ECInstanceId"]: k }))));
+        .returns(createFakeQueryReader(subCategoryKeys.map(toQueryResponse)));
       queryExecutor.createQueryReader
         .withArgs(sinon.match((query: string) => query.includes("ElementGeometricElements")))
-        .returns(createFakeQueryReader<ECSqlQueryRow>(elementKeys.length === 0 ? [] : elementKeys.map((k) => ({ ["ECInstanceId"]: k }))));
+        .returns(createFakeQueryReader(elementKeys.map(toQueryResponse)));
     }
 
     async function loadHiliteSet(selectables: Selectables) {
@@ -331,6 +338,54 @@ describe("HiliteSetProvider", () => {
           sinon.match((query: string) => query.includes("InVirtualSet")),
           sinon.match.any,
         );
+      });
+
+      it("doesn't output duplicate instance IDs", async () => {
+        const elementKey1 = createSelectableInstanceKey(1, "TestSchema:TestClass");
+        const customElement1 = createCustomSelectable(1, [{ className: "TestSchema:TestClass", id: "0x1" }]);
+
+        mockClass("TestClass", "BisCore", "Element");
+        mockQuery([], [], ["0x1"]);
+
+        const selection = Selectables.create([elementKey1, customElement1]);
+        const result = await loadHiliteSet(selection);
+        expect(result.elements).to.deep.eq(["0x1"]);
+      });
+
+      it("returns values in time intervals", async () => {
+        const timers = sinon.useFakeTimers();
+        const elementPromises = [new ResolvablePromise<string>(), new ResolvablePromise<string>()];
+        const elementKeys = [1, 2].map((i) => createSelectableInstanceKey(i, "TestSchema:TestElement"));
+
+        mockClass("TestElement", "BisCore", "Element");
+        mockQuery([], [], elementPromises);
+
+        const selectables = Selectables.create(elementKeys);
+        const iter = provider.getHiliteSet({ selectables });
+        elementPromises[0].resolve(elementKeys[0].id);
+
+        const nextValuePromise = iter.next();
+        await Promise.all([expect(waitForPromise(nextValuePromise, 5)).to.eventually.be.undefined, timers.tickAsync(5)]);
+
+        await timers.tickAsync(15);
+        elementPromises[1].resolve(elementKeys[1].id);
+        await expect(nextValuePromise).to.eventually.deep.eq({
+          done: false,
+          value: {
+            models: [],
+            subCategories: [],
+            elements: elementKeys.map((x) => x.id),
+          },
+        });
+        expect((await iter.next()).done).to.be.true;
+      });
+
+      it("rethrows errors thrown by query observables", async () => {
+        mockClass("TestElement", "BisCore", "Element");
+        mockQuery([], [], [Promise.reject("dummy error")]);
+
+        const selectables = Selectables.create([createSelectableInstanceKey(1, "TestSchema:TestElement")]);
+        await expect(loadHiliteSet(selectables)).to.be.rejected;
       });
     });
   });
