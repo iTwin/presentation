@@ -8,7 +8,7 @@ import { firstValueFrom, Subject } from "rxjs";
 import { GenericInstanceFilter, GetHierarchyNodesProps, HierarchyNode, HierarchyProvider } from "@itwin/presentation-hierarchies";
 import { TreeActions } from "../../presentation-hierarchies-react/internal/TreeActions";
 import { TreeModel } from "../../presentation-hierarchies-react/internal/TreeModel";
-import { createStub, createTestGroupingNode, createTestHierarchyNode, createTreeModel, getHierarchyNode, waitFor } from "../TestUtils";
+import { createAsyncIterator, createStub, createTestGroupingNode, createTestHierarchyNode, createTreeModel, getHierarchyNode, waitFor } from "../TestUtils";
 
 describe("TreeActions", () => {
   const provider = {
@@ -43,9 +43,9 @@ describe("TreeActions", () => {
         },
       ]);
 
-      const firstLoad = new Subject<HierarchyNode[]>();
-      provider.getNodes.callsFake(async () => {
-        return firstValueFrom(firstLoad);
+      const firstLoad = new Subject<HierarchyNode>();
+      provider.getNodes.callsFake(async function* () {
+        yield await firstValueFrom(firstLoad);
       });
 
       const actions = createActions(model);
@@ -69,7 +69,8 @@ describe("TreeActions", () => {
       });
       onModelChangedStub.resetHistory();
 
-      firstLoad.next([createTestHierarchyNode({ id: "child-1" })]);
+      firstLoad.next(createTestHierarchyNode({ id: "child-1" }));
+      firstLoad.complete();
       await waitFor(() => {
         expect(onModelChangedStub).to.not.be.called;
       });
@@ -232,11 +233,10 @@ describe("TreeActions", () => {
       ]);
 
       provider.getNodes.reset();
-      provider.getNodes.callsFake(async (props) => {
-        if (props.parentNode?.key === "root-1") {
-          return [createTestHierarchyNode({ id: "child-1" }), createTestHierarchyNode({ id: "child-2" })];
-        }
-        return [];
+      provider.getNodes.callsFake((props) => {
+        return createAsyncIterator(
+          props.parentNode?.key === "root-1" ? [createTestHierarchyNode({ id: "child-1" }), createTestHierarchyNode({ id: "child-2" })] : [],
+        );
       });
 
       const actions = createActions(model);
@@ -488,11 +488,8 @@ describe("TreeActions", () => {
       ]);
 
       provider.getNodes.reset();
-      provider.getNodes.callsFake(async (props) => {
-        if (props.parentNode?.key === "root-1") {
-          return [createTestHierarchyNode({ id: "child-2" })];
-        }
-        return [];
+      provider.getNodes.callsFake((props) => {
+        return createAsyncIterator(props.parentNode?.key === "root-1" ? [createTestHierarchyNode({ id: "child-2" })] : []);
       });
 
       const actions = createActions(model);
@@ -532,11 +529,8 @@ describe("TreeActions", () => {
       ]);
 
       provider.getNodes.reset();
-      provider.getNodes.callsFake(async (props) => {
-        if (props.parentNode?.key === "root-1") {
-          return [createTestHierarchyNode({ id: "child-2" })];
-        }
-        return [];
+      provider.getNodes.callsFake((props) => {
+        return createAsyncIterator(props.parentNode?.key === "root-1" ? [createTestHierarchyNode({ id: "child-2" })] : []);
       });
 
       const actions = createActions(model);
@@ -569,11 +563,8 @@ describe("TreeActions", () => {
       ]);
 
       provider.getNodes.reset();
-      provider.getNodes.callsFake(async (props) => {
-        if (props.parentNode === undefined) {
-          return [createTestHierarchyNode({ id: "root-2" })];
-        }
-        return [];
+      provider.getNodes.callsFake((props) => {
+        return createAsyncIterator(props.parentNode === undefined ? [createTestHierarchyNode({ id: "root-2" })] : []);
       });
 
       const actions = createActions(model);
@@ -611,8 +602,8 @@ describe("TreeActions", () => {
       ]);
 
       provider.getNodes.reset();
-      provider.getNodes.callsFake(async () => {
-        return [];
+      provider.getNodes.callsFake(() => {
+        return createAsyncIterator([]);
       });
 
       const actions = createActions(model);
@@ -646,8 +637,8 @@ describe("TreeActions", () => {
       ]);
 
       provider.getNodes.reset();
-      provider.getNodes.callsFake(async () => {
-        return [];
+      provider.getNodes.callsFake(() => {
+        return createAsyncIterator([]);
       });
 
       const actions = createActions(model);
@@ -680,14 +671,14 @@ describe("TreeActions", () => {
       ]);
 
       provider.getNodes.reset();
-      provider.getNodes.callsFake(async (props) => {
+      provider.getNodes.callsFake((props) => {
         if (props.parentNode === undefined) {
-          return [createTestHierarchyNode({ id: "root-1" }), createTestHierarchyNode({ id: "root-2" })];
+          return createAsyncIterator([createTestHierarchyNode({ id: "root-1" }), createTestHierarchyNode({ id: "root-2" })]);
         }
         if (props.parentNode.key === "root-1") {
-          return [createTestHierarchyNode({ id: "child-1-2" })];
+          return createAsyncIterator([createTestHierarchyNode({ id: "child-1-2" })]);
         }
-        return [];
+        return createAsyncIterator([]);
       });
 
       const actions = createActions(model);
@@ -727,14 +718,14 @@ describe("TreeActions", () => {
       ]);
 
       provider.getNodes.reset();
-      provider.getNodes.callsFake(async (props) => {
+      provider.getNodes.callsFake((props) => {
         if (props.parentNode === undefined) {
-          return [createTestHierarchyNode({ id: "root-1" }), createTestHierarchyNode({ id: "root-2" })];
+          return createAsyncIterator([createTestHierarchyNode({ id: "root-1" }), createTestHierarchyNode({ id: "root-2" })]);
         }
         if (props.parentNode.key === "root-1") {
-          return [createTestHierarchyNode({ id: "child-1-2" })];
+          return createAsyncIterator([createTestHierarchyNode({ id: "child-1-2" })]);
         }
-        return [];
+        return createAsyncIterator([]);
       });
 
       const actions = createActions(model);

@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { catchError, defer, expand, from, map, mergeMap, Observable, of } from "rxjs";
+import { catchError, expand, from, map, mergeMap, Observable, of, toArray } from "rxjs";
 import { GenericInstanceFilter, HierarchyNode, HierarchyProvider, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
 import { isTreeModelHierarchyNode, TreeModelHierarchyNode, TreeModelInfoNode, TreeModelNode, TreeModelRootNode } from "./TreeModel";
 import { createNodeId, sameNodes } from "./Utils";
@@ -46,15 +46,16 @@ export class TreeLoader implements ITreeLoader {
   ) {
     const instanceFilter = getInstanceFilter(parent);
     const infoNodeIdBase = `${parent.id ?? "<root>"}`;
-
-    return defer(async () =>
+    const treeModelNodesFactory = createTreeModelNodesFactory(buildNode);
+    return from(
       this._hierarchyProvider.getNodes({
         parentNode: parent.nodeData,
         hierarchyLevelSizeLimit: parent.hierarchyLimit,
-        instanceFilter,
+        instanceFilter: getInstanceFilter(parent),
         ignoreCache,
       }),
     ).pipe(
+      toArray(),
       catchError((err) => {
         const nodeProps = {
           id: `${infoNodeIdBase}-${err.message}`,
@@ -78,7 +79,7 @@ export class TreeLoader implements ITreeLoader {
                     message: "No child nodes match current filter",
                   },
                 ]
-              : childNodes.map(createTreeModelNodesFactory(buildNode)),
+              : childNodes.map(treeModelNodesFactory),
         }),
       ),
     );

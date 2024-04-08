@@ -9,7 +9,7 @@ import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
 import { ProcessedHierarchyNode } from "../../../hierarchies/HierarchyNode";
 import { createHideNodesInHierarchyOperator, LOGGING_NAMESPACE } from "../../../hierarchies/internal/operators/HideNodesInHierarchy";
-import { createTestInstanceKey, createTestProcessedCustomNode, createTestProcessedInstanceNode, getObservableResult, setupLogging, waitFor } from "../../Utils";
+import { collect, createTestInstanceKey, createTestProcessedCustomNode, createTestProcessedInstanceNode, setupLogging, waitFor } from "../../Utils";
 
 describe("HideNodesInHierarchyOperator", () => {
   before(() => {
@@ -18,7 +18,7 @@ describe("HideNodesInHierarchyOperator", () => {
 
   it("returns nodes that don't need hiding", async () => {
     const nodes = [createTestProcessedCustomNode()];
-    const result = await getObservableResult(from(nodes).pipe(createHideNodesInHierarchyOperator(sinon.spy(), false)));
+    const result = await collect(from(nodes).pipe(createHideNodesInHierarchyOperator(sinon.spy(), false)));
     expect(result).to.deep.eq(nodes);
   });
 
@@ -41,7 +41,7 @@ describe("HideNodesInHierarchyOperator", () => {
         },
       }),
     ];
-    const result = await getObservableResult(from(nodes).pipe(createHideNodesInHierarchyOperator(sinon.spy(), true)));
+    const result = await collect(from(nodes).pipe(createHideNodesInHierarchyOperator(sinon.spy(), true)));
     expect(result).to.deep.eq([nodes[0]]);
   });
 
@@ -66,7 +66,7 @@ describe("HideNodesInHierarchyOperator", () => {
     ];
     const childNode = createTestProcessedCustomNode();
     const getNodes = sinon.fake(() => from([childNode]));
-    const result = await getObservableResult(from(nodes).pipe(createHideNodesInHierarchyOperator(getNodes, true)));
+    const result = await collect(from(nodes).pipe(createHideNodesInHierarchyOperator(getNodes, true)));
     expect(result).to.deep.eq([childNode]);
   });
 
@@ -80,7 +80,7 @@ describe("HideNodesInHierarchyOperator", () => {
           },
         }),
       ];
-      const result = await getObservableResult(from(nodes).pipe(createHideNodesInHierarchyOperator(sinon.spy(), false)));
+      const result = await collect(from(nodes).pipe(createHideNodesInHierarchyOperator(sinon.spy(), false)));
       expect(result).to.deep.eq([]);
     });
 
@@ -99,7 +99,7 @@ describe("HideNodesInHierarchyOperator", () => {
         }),
       ];
       const getNodes = sinon.fake(() => from([]));
-      const result = await getObservableResult(from(nodes).pipe(createHideNodesInHierarchyOperator(getNodes, false)));
+      const result = await collect(from(nodes).pipe(createHideNodesInHierarchyOperator(getNodes, false)));
       expect(result).to.deep.eq([]);
     });
 
@@ -128,7 +128,7 @@ describe("HideNodesInHierarchyOperator", () => {
         }),
       ];
       const getNodes = sinon.fake(() => from(childNodes));
-      const result = await getObservableResult(from(hiddenNodes).pipe(createHideNodesInHierarchyOperator(getNodes, false)));
+      const result = await collect(from(hiddenNodes).pipe(createHideNodesInHierarchyOperator(getNodes, false)));
       expect(result).to.deep.eq(childNodes);
     });
 
@@ -156,7 +156,7 @@ describe("HideNodesInHierarchyOperator", () => {
         }),
       ];
       const getNodes = sinon.fake(() => from([]));
-      const result = await getObservableResult(from(hiddenNodes).pipe(createHideNodesInHierarchyOperator(getNodes, false)));
+      const result = await collect(from(hiddenNodes).pipe(createHideNodesInHierarchyOperator(getNodes, false)));
       expect(getNodes).to.be.calledOnceWithExactly({
         key: {
           type: "instances",
@@ -191,7 +191,7 @@ describe("HideNodesInHierarchyOperator", () => {
         }),
       ];
       const getNodes = sinon.fake(() => from(childNodes));
-      const result = await getObservableResult(from(hiddenNodes).pipe(createHideNodesInHierarchyOperator(getNodes, false)));
+      const result = await collect(from(hiddenNodes).pipe(createHideNodesInHierarchyOperator(getNodes, false)));
       expect(result).to.deep.eq(childNodes);
     });
 
@@ -213,7 +213,7 @@ describe("HideNodesInHierarchyOperator", () => {
         }),
       ];
       const getNodes = sinon.fake(() => from([]));
-      const result = await getObservableResult(from(hiddenNodes).pipe(createHideNodesInHierarchyOperator(getNodes, false)));
+      const result = await collect(from(hiddenNodes).pipe(createHideNodesInHierarchyOperator(getNodes, false)));
       expect(getNodes).to.be.calledOnceWithExactly({
         key: "custom",
         parentKeys: [],

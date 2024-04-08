@@ -9,7 +9,7 @@ import sinon from "sinon";
 import { GenericInstanceFilter, GetHierarchyNodesProps, HierarchyProvider, RowsLimitExceededError } from "@itwin/presentation-hierarchies";
 import { LoadedTreePart, TreeLoader } from "../../presentation-hierarchies-react/internal/TreeLoader";
 import { TreeModelHierarchyNode, TreeModelInfoNode, TreeModelNode } from "../../presentation-hierarchies-react/internal/TreeModel";
-import { createTestHierarchyNode, createTreeModelNode } from "../TestUtils";
+import { createAsyncIterator, createTestHierarchyNode, createTreeModelNode, throwingAsyncIterator } from "../TestUtils";
 
 describe("TreeLoader", () => {
   const hierarchyProvider = {
@@ -28,8 +28,8 @@ describe("TreeLoader", () => {
     it("loads root nodes", async () => {
       const loader = createLoader();
       const rootHierarchyNodes = [createTestHierarchyNode({ id: "root-1" }), createTestHierarchyNode({ id: "root-2" })];
-      hierarchyProvider.getNodes.callsFake(async (props) => {
-        return props.parentNode === undefined ? rootHierarchyNodes : [];
+      hierarchyProvider.getNodes.callsFake((props) => {
+        return createAsyncIterator(props.parentNode === undefined ? rootHierarchyNodes : []);
       });
 
       const nodes = await collectNodes(
@@ -48,14 +48,14 @@ describe("TreeLoader", () => {
       const loader = createLoader();
       const rootHierarchyNodes = [createTestHierarchyNode({ id: "root-1" }), createTestHierarchyNode({ id: "root-2" })];
       const childHierarchyNodes = [createTestHierarchyNode({ id: "child-1" })];
-      hierarchyProvider.getNodes.callsFake(async (props) => {
+      hierarchyProvider.getNodes.callsFake((props) => {
         if (props.parentNode === undefined) {
-          return rootHierarchyNodes;
+          return createAsyncIterator(rootHierarchyNodes);
         }
         if (props.parentNode.key === "root-1") {
-          return childHierarchyNodes;
+          return createAsyncIterator(childHierarchyNodes);
         }
-        return [];
+        return createAsyncIterator([]);
       });
 
       const nodes = await collectNodes(
@@ -78,11 +78,8 @@ describe("TreeLoader", () => {
       const loader = createLoader();
       const rootHierarchyNode = createTestHierarchyNode({ id: "root-1" });
       const childHierarchyNodes = [createTestHierarchyNode({ id: "child-1" })];
-      hierarchyProvider.getNodes.callsFake(async (props) => {
-        if (props.parentNode?.key === "root-1") {
-          return childHierarchyNodes;
-        }
-        return [];
+      hierarchyProvider.getNodes.callsFake((props) => {
+        return createAsyncIterator(props.parentNode?.key === "root-1" ? childHierarchyNodes : []);
       });
 
       const nodes = await collectNodes(
@@ -99,8 +96,8 @@ describe("TreeLoader", () => {
 
     it("loads info node when `RowsLimitExceededError` is thrown", async () => {
       const loader = createLoader();
-      hierarchyProvider.getNodes.callsFake(async () => {
-        throw new RowsLimitExceededError(10);
+      hierarchyProvider.getNodes.callsFake(() => {
+        return throwingAsyncIterator(new RowsLimitExceededError(10));
       });
 
       const nodes = await collectNodes(
@@ -118,8 +115,8 @@ describe("TreeLoader", () => {
 
     it("loads `Unknown` info node when error is thrown", async () => {
       const loader = createLoader();
-      hierarchyProvider.getNodes.callsFake(async () => {
-        throw new Error("Some Error");
+      hierarchyProvider.getNodes.callsFake(() => {
+        return throwingAsyncIterator(new Error("Some Error"));
       });
 
       const nodes = await collectNodes(
@@ -140,17 +137,17 @@ describe("TreeLoader", () => {
       const rootHierarchyNodes = [createTestHierarchyNode({ id: "root-1" })];
       const childHierarchyNodes = [createTestHierarchyNode({ id: "child-1" })];
       const grandChildHierarchyNodes = [createTestHierarchyNode({ id: "grandchild-1" })];
-      hierarchyProvider.getNodes.callsFake(async (props) => {
+      hierarchyProvider.getNodes.callsFake((props) => {
         if (props.parentNode === undefined) {
-          return rootHierarchyNodes;
+          return createAsyncIterator(rootHierarchyNodes);
         }
         if (props.parentNode.key === "root-1") {
-          return childHierarchyNodes;
+          return createAsyncIterator(childHierarchyNodes);
         }
         if (props.parentNode.key === "child-1") {
-          return grandChildHierarchyNodes;
+          return createAsyncIterator(grandChildHierarchyNodes);
         }
-        return [];
+        return createAsyncIterator([]);
       });
 
       const nodes = await collectNodes(
@@ -174,11 +171,8 @@ describe("TreeLoader", () => {
     it("loads hierarchy level with instance filter", async () => {
       const loader = createLoader();
       const rootHierarchyNodes = [createTestHierarchyNode({ id: "root-1" })];
-      hierarchyProvider.getNodes.callsFake(async (props) => {
-        if (props.parentNode === undefined && props.instanceFilter !== undefined) {
-          return rootHierarchyNodes;
-        }
-        return [];
+      hierarchyProvider.getNodes.callsFake((props) => {
+        return createAsyncIterator(props.parentNode === undefined && props.instanceFilter !== undefined ? rootHierarchyNodes : []);
       });
 
       const filter: GenericInstanceFilter = {
@@ -213,8 +207,8 @@ describe("TreeLoader", () => {
       const loader = createLoader();
       const rootHierarchyNode = createTestHierarchyNode({ id: "root-1" });
       const modelNode = createTreeModelNode({ id: "root-1", nodeData: rootHierarchyNode, instanceFilter: filter });
-      hierarchyProvider.getNodes.callsFake(async () => {
-        return [];
+      hierarchyProvider.getNodes.callsFake(() => {
+        return createAsyncIterator([]);
       });
 
       const nodes = await collectNodes(
@@ -241,14 +235,14 @@ describe("TreeLoader", () => {
       const loader = createLoader();
       const rootHierarchyNodes = [createTestHierarchyNode({ id: "root-1" }), createTestHierarchyNode({ id: "root-2", autoExpand: false })];
       const childHierarchyNodes = [createTestHierarchyNode({ id: "child-1" })];
-      hierarchyProvider.getNodes.callsFake(async (props) => {
+      hierarchyProvider.getNodes.callsFake((props) => {
         if (props.parentNode === undefined) {
-          return rootHierarchyNodes;
+          return createAsyncIterator(rootHierarchyNodes);
         }
         if (props.parentNode) {
-          return childHierarchyNodes;
+          return createAsyncIterator(childHierarchyNodes);
         }
-        return [];
+        return createAsyncIterator([]);
       });
 
       const nodes = await collectNodes(
@@ -274,14 +268,14 @@ describe("TreeLoader", () => {
       const loader = createLoader();
       const rootHierarchyNodes = [createTestHierarchyNode({ id: "root-1", autoExpand: true }), createTestHierarchyNode({ id: "root-2" })];
       const childHierarchyNodes = [createTestHierarchyNode({ id: "child-1" })];
-      hierarchyProvider.getNodes.callsFake(async (props) => {
+      hierarchyProvider.getNodes.callsFake((props) => {
         if (props.parentNode === undefined) {
-          return rootHierarchyNodes;
+          return createAsyncIterator(rootHierarchyNodes);
         }
         if (props.parentNode) {
-          return childHierarchyNodes;
+          return createAsyncIterator(childHierarchyNodes);
         }
-        return [];
+        return createAsyncIterator([]);
       });
 
       const nodes = await collectNodes(
@@ -307,14 +301,14 @@ describe("TreeLoader", () => {
       const loader = createLoader();
       const rootHierarchyNodes = [createTestHierarchyNode({ id: "root-1", autoExpand: true }), createTestHierarchyNode({ id: "root-2" })];
       const childHierarchyNodes = [createTestHierarchyNode({ id: "child-1" })];
-      hierarchyProvider.getNodes.callsFake(async (props) => {
+      hierarchyProvider.getNodes.callsFake((props) => {
         if (props.parentNode === undefined) {
-          return rootHierarchyNodes;
+          return createAsyncIterator(rootHierarchyNodes);
         }
         if (props.parentNode) {
-          return childHierarchyNodes;
+          return createAsyncIterator(childHierarchyNodes);
         }
-        return [];
+        return createAsyncIterator([]);
       });
 
       const nodes = await collectNodes(
@@ -338,11 +332,8 @@ describe("TreeLoader", () => {
     it("reloads nodes with additional attributes", async () => {
       const loader = createLoader();
       const rootHierarchyNodes = [createTestHierarchyNode({ id: "root-1" }), createTestHierarchyNode({ id: "root-2" })];
-      hierarchyProvider.getNodes.callsFake(async (props) => {
-        if (props.parentNode === undefined) {
-          return rootHierarchyNodes;
-        }
-        return [];
+      hierarchyProvider.getNodes.callsFake((props) => {
+        return createAsyncIterator(props.parentNode === undefined ? rootHierarchyNodes : []);
       });
 
       const nodes = await collectNodes(

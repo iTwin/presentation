@@ -12,7 +12,16 @@ import { createStorage, Selectables, StorageSelectionChangeEventArgs, StorageSel
 import { PresentationHierarchyNode, PresentationInfoNode, UnifiedSelectionProvider } from "../presentation-hierarchies-react";
 import { createNodeId } from "../presentation-hierarchies-react/internal/Utils";
 import { useTree, useUnifiedSelectionTree } from "../presentation-hierarchies-react/UseTree";
-import { cleanup, createStub, createTestGroupingNode, createTestHierarchyNode, renderHook, waitFor } from "./TestUtils";
+import {
+  cleanup,
+  createAsyncIterator,
+  createStub,
+  createTestGroupingNode,
+  createTestHierarchyNode,
+  renderHook,
+  throwingAsyncIterator,
+  waitFor,
+} from "./TestUtils";
 
 describe("useTree", () => {
   const hierarchyProvider = {
@@ -28,8 +37,8 @@ describe("useTree", () => {
   });
 
   it("loads root nodes", async () => {
-    hierarchyProvider.getNodes.callsFake(async (props) => {
-      return props.parentNode === undefined ? [createTestHierarchyNode({ id: "root-1" }), createTestHierarchyNode({ id: "root-2" })] : [];
+    hierarchyProvider.getNodes.callsFake((props) => {
+      return createAsyncIterator(props.parentNode === undefined ? [createTestHierarchyNode({ id: "root-1" }), createTestHierarchyNode({ id: "root-2" })] : []);
     });
     const { result } = renderHook(useTree, { initialProps });
 
@@ -42,14 +51,14 @@ describe("useTree", () => {
     const rootNodes = [createTestHierarchyNode({ id: "root-1", children: true })];
     const childNodes = [createTestHierarchyNode({ id: "child-1" })];
 
-    hierarchyProvider.getNodes.callsFake(async (props) => {
+    hierarchyProvider.getNodes.callsFake((props) => {
       if (props.parentNode === undefined) {
-        return rootNodes;
+        return createAsyncIterator(rootNodes);
       }
       if (props.parentNode.key === "root-1") {
-        return childNodes;
+        return createAsyncIterator(childNodes);
       }
-      return [];
+      return createAsyncIterator([]);
     });
     const { result } = renderHook(useTree, { initialProps });
 
@@ -71,11 +80,8 @@ describe("useTree", () => {
   it("selects node", async () => {
     const rootNodes = [createTestHierarchyNode({ id: "root-1" })];
 
-    hierarchyProvider.getNodes.callsFake(async (props) => {
-      if (props.parentNode === undefined) {
-        return rootNodes;
-      }
-      return [];
+    hierarchyProvider.getNodes.callsFake((props) => {
+      return createAsyncIterator(props.parentNode === undefined ? rootNodes : []);
     });
     const { result } = renderHook(useTree, { initialProps });
 
@@ -97,14 +103,14 @@ describe("useTree", () => {
   it("sets hierarchy limit", async () => {
     const rootNodes = [createTestHierarchyNode({ id: "root-1" }), createTestHierarchyNode({ id: "root-1" })];
 
-    hierarchyProvider.getNodes.callsFake(async (props) => {
+    hierarchyProvider.getNodes.callsFake((props) => {
       if (props.hierarchyLevelSizeLimit === undefined) {
-        throw new RowsLimitExceededError(1);
+        return throwingAsyncIterator(new RowsLimitExceededError(1));
       }
       if (props.parentNode === undefined && props.hierarchyLevelSizeLimit === 50) {
-        return rootNodes;
+        return createAsyncIterator(rootNodes);
       }
-      return [];
+      return createAsyncIterator([]);
     });
     const { result } = renderHook(useTree, { initialProps });
 
@@ -125,11 +131,11 @@ describe("useTree", () => {
   it("applies and removes instance filter on tree root", async () => {
     const rootNodes = [createTestHierarchyNode({ id: "root-1" }), createTestHierarchyNode({ id: "child-2" })];
 
-    hierarchyProvider.getNodes.callsFake(async (props) => {
+    hierarchyProvider.getNodes.callsFake((props) => {
       if (props.parentNode === undefined) {
-        return props.instanceFilter === undefined ? rootNodes : rootNodes.slice(0, 1);
+        return createAsyncIterator(props.instanceFilter === undefined ? rootNodes : rootNodes.slice(0, 1));
       }
-      return [];
+      return createAsyncIterator([]);
     });
     const { result } = renderHook(useTree, { initialProps });
 
@@ -160,14 +166,14 @@ describe("useTree", () => {
     const rootNodes = [createTestHierarchyNode({ id: "root-1", autoExpand: true, supportsFiltering: true, children: true })];
     const childNodes = [createTestHierarchyNode({ id: "child-1" }), createTestHierarchyNode({ id: "child-1" })];
 
-    hierarchyProvider.getNodes.callsFake(async (props) => {
+    hierarchyProvider.getNodes.callsFake((props) => {
       if (props.parentNode === undefined) {
-        return rootNodes;
+        return createAsyncIterator(rootNodes);
       }
       if (props.parentNode.key === "root-1") {
-        return props.instanceFilter === undefined ? childNodes : childNodes.slice(0, 1);
+        return createAsyncIterator(props.instanceFilter === undefined ? childNodes : childNodes.slice(0, 1));
       }
-      return [];
+      return createAsyncIterator([]);
     });
     const { result } = renderHook(useTree, { initialProps });
 
@@ -207,17 +213,17 @@ describe("useTree", () => {
     });
     const childNodes = [createTestHierarchyNode({ id: "child-1" }), createTestHierarchyNode({ id: "child-1" })];
 
-    hierarchyProvider.getNodes.callsFake(async (props) => {
+    hierarchyProvider.getNodes.callsFake((props) => {
       if (props.parentNode === undefined) {
-        return rootNodes;
+        return createAsyncIterator(rootNodes);
       }
       if (props.parentNode.key === "root-1") {
-        return [groupingNode];
+        return createAsyncIterator([groupingNode]);
       }
       if (HierarchyNodeKey.isClassGrouping(props.parentNode.key)) {
-        return props.instanceFilter ? childNodes.slice(0, 1) : childNodes;
+        return createAsyncIterator(props.instanceFilter ? childNodes.slice(0, 1) : childNodes);
       }
-      return [];
+      return createAsyncIterator([]);
     });
     const { result } = renderHook(useTree, { initialProps });
 
@@ -245,11 +251,8 @@ describe("useTree", () => {
   it("`getHierarchyLevelFilteringOptions` returns undefined for invalid node", async () => {
     const rootNodes = [createTestHierarchyNode({ id: "root-1" })];
 
-    hierarchyProvider.getNodes.callsFake(async (props) => {
-      if (props.parentNode === undefined) {
-        return rootNodes;
-      }
-      return [];
+    hierarchyProvider.getNodes.callsFake((props) => {
+      return createAsyncIterator(props.parentNode === undefined ? rootNodes : []);
     });
     const { result } = renderHook(useTree, { initialProps });
 
@@ -265,14 +268,14 @@ describe("useTree", () => {
     const rootNodes = [createTestGroupingNode({ id: "grouping-node", children: true, autoExpand: true })];
     const childNodes = [createTestHierarchyNode({ id: "grouped-node-1" }), createTestHierarchyNode({ id: "grouped-node-1" })];
 
-    hierarchyProvider.getNodes.callsFake(async (props) => {
+    hierarchyProvider.getNodes.callsFake((props) => {
       if (props.parentNode === undefined) {
-        return rootNodes;
+        return createAsyncIterator(rootNodes);
       }
       if (props.parentNode !== undefined) {
-        return childNodes;
+        return createAsyncIterator(childNodes);
       }
-      return [];
+      return createAsyncIterator([]);
     });
     const { result } = renderHook(useTree, { initialProps });
     const nodeId = createNodeId(rootNodes[0]);
@@ -289,11 +292,8 @@ describe("useTree", () => {
   it("`getHierarchyLevelFilteringOptions` returns options for hierarchy node", async () => {
     const rootNodes = [createTestHierarchyNode({ id: "root-1" })];
 
-    hierarchyProvider.getNodes.callsFake(async (props) => {
-      if (props.parentNode === undefined) {
-        return rootNodes;
-      }
-      return [];
+    hierarchyProvider.getNodes.callsFake((props) => {
+      return createAsyncIterator(props.parentNode === undefined ? rootNodes : []);
     });
     const { result } = renderHook(useTree, { initialProps });
     const nodeId = createNodeId(rootNodes[0]);
@@ -311,14 +311,14 @@ describe("useTree", () => {
     const rootNodes = [createTestHierarchyNode({ id: "root-1", children: true, autoExpand: true })];
     const childNodes = [createTestHierarchyNode({ id: "child-1" }), createTestHierarchyNode({ id: "child-2" })];
 
-    hierarchyProvider.getNodes.callsFake(async (props) => {
+    hierarchyProvider.getNodes.callsFake((props) => {
       if (props.parentNode === undefined) {
-        return rootNodes;
+        return createAsyncIterator(rootNodes);
       }
       if (props.parentNode !== undefined) {
-        return childNodes.slice(0, 1);
+        return createAsyncIterator(childNodes.slice(0, 1));
       }
-      return [];
+      return createAsyncIterator([]);
     });
     const { result } = renderHook(useTree, { initialProps });
 
@@ -328,14 +328,14 @@ describe("useTree", () => {
     });
 
     hierarchyProvider.getNodes.reset();
-    hierarchyProvider.getNodes.callsFake(async (props) => {
+    hierarchyProvider.getNodes.callsFake((props) => {
       if (props.parentNode === undefined) {
-        return rootNodes;
+        return createAsyncIterator(rootNodes);
       }
       if (props.parentNode !== undefined) {
-        return childNodes;
+        return createAsyncIterator(childNodes);
       }
-      return [];
+      return createAsyncIterator([]);
     });
 
     act(() => {
@@ -352,14 +352,14 @@ describe("useTree", () => {
     const rootNodes = [createTestHierarchyNode({ id: "root-1", children: true, autoExpand: true })];
     const childNodes = [createTestHierarchyNode({ id: "child-1" }), createTestHierarchyNode({ id: "child-2" })];
 
-    hierarchyProvider.getNodes.callsFake(async (props) => {
+    hierarchyProvider.getNodes.callsFake((props) => {
       if (props.parentNode === undefined) {
-        return rootNodes;
+        return createAsyncIterator(rootNodes);
       }
       if (props.parentNode !== undefined) {
-        return childNodes;
+        return createAsyncIterator(childNodes);
       }
-      return [];
+      return createAsyncIterator([]);
     });
     const { rerender, result } = renderHook(useTree, { initialProps });
 
@@ -371,14 +371,14 @@ describe("useTree", () => {
     const newProvider = {
       getNodes: createStub<HierarchyProvider["getNodes"]>(),
     };
-    newProvider.getNodes.callsFake(async (props) => {
+    newProvider.getNodes.callsFake((props) => {
       if (props.parentNode === undefined) {
-        return rootNodes;
+        return createAsyncIterator(rootNodes);
       }
       if (props.parentNode !== undefined) {
-        return childNodes.slice(0, 1);
+        return createAsyncIterator(childNodes.slice(0, 1));
       }
-      return [];
+      return createAsyncIterator([]);
     });
 
     rerender({ hierarchyProvider: newProvider as unknown as HierarchyProvider });
@@ -429,8 +429,8 @@ describe("useUnifiedSelectionTree", () => {
       instanceKeys: [instanceKey],
     };
     const nodes = [createTestHierarchyNode({ id: "root-1", key: instancesNodeKey })];
-    hierarchyProvider.getNodes.callsFake(async (props) => {
-      return props.parentNode === undefined ? nodes : [];
+    hierarchyProvider.getNodes.callsFake((props) => {
+      return createAsyncIterator(props.parentNode === undefined ? nodes : []);
     });
 
     const { result } = renderHook(useUnifiedSelectionTree, { initialProps, wrapper: Wrapper });
@@ -469,8 +469,8 @@ describe("useUnifiedSelectionTree", () => {
       instanceKeys: [instanceKey],
     };
     const nodes = [createTestHierarchyNode({ id: "root-1", key: instancesNodeKey })];
-    hierarchyProvider.getNodes.callsFake(async (props) => {
-      return props.parentNode === undefined ? nodes : [];
+    hierarchyProvider.getNodes.callsFake((props) => {
+      return createAsyncIterator(props.parentNode === undefined ? nodes : []);
     });
 
     const { result } = renderHook(useUnifiedSelectionTree, { initialProps, wrapper: Wrapper });
