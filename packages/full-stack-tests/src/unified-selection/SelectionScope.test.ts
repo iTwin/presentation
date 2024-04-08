@@ -754,7 +754,7 @@ describe("SelectionScope", () => {
         expect(actual).to.have.deep.members([parentKey!]);
       });
 
-      it("returns parentless physical `GeometricElement3d` related functional element", async function () {
+      it("returns parentless `GeometricElement3d` related functional element", async function () {
         let physicalElement: SelectableInstanceKey;
         let functionalElementKey: SelectableInstanceKey;
         // eslint-disable-next-line deprecation/deprecation
