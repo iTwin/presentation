@@ -74,6 +74,7 @@ describe("TreeModel", () => {
       ]);
 
       expect(TreeModel.expandNode(model, "root-1", true)).to.be.eq("loadChildren");
+      expect(getHierarchyNode(model, "root-1")?.isLoading).to.be.true;
     });
 
     it("returns `none` if expanded node has loaded children", () => {
@@ -106,23 +107,6 @@ describe("TreeModel", () => {
       ]);
 
       expect(TreeModel.expandNode(model, "root-1", true)).to.be.eq("none");
-    });
-
-    it("sets `isLoading` = `true` if expanded node has unloaded children", () => {
-      const model = createTreeModel([
-        {
-          id: undefined,
-          children: ["root-1", "root-2"],
-        },
-        {
-          id: "root-1",
-          isExpanded: false,
-          children: undefined,
-        },
-      ]);
-
-      expect(TreeModel.expandNode(model, "root-1", true)).to.be.eq("loadChildren");
-      expect(getHierarchyNode(model, "root-1")?.isLoading).to.be.true;
     });
 
     it("returns `reloadChildren` and removes child `Unknown` info node when expanding node", () => {
