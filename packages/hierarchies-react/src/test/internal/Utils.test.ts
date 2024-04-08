@@ -24,7 +24,7 @@ describe("createNodeId", () => {
         ],
       },
     });
-    expect(createNodeId(node)).to.be.eq("instances;0x1;Schema:Class;0x2;Schema:Class");
+    expect(createNodeId(node)).to.be.eq("instances,0x1,Schema:Class,0x2,Schema:Class");
   });
 
   it("creates id for `class-grouping` node", () => {
@@ -36,7 +36,7 @@ describe("createNodeId", () => {
       },
       groupedInstanceKeys: [{ id: "0x1", className: "Schema:Class" }],
     });
-    expect(createNodeId(node)).to.be.eq("class-grouping;Schema:Class");
+    expect(createNodeId(node)).to.be.eq("class-grouping,Schema:Class");
   });
 
   it("creates id for `label-grouping` node", () => {
@@ -48,7 +48,7 @@ describe("createNodeId", () => {
       },
       groupedInstanceKeys: [{ id: "0x1", className: "Schema:Class" }],
     });
-    expect(createNodeId(node)).to.be.eq("label-grouping;TestLabel");
+    expect(createNodeId(node)).to.be.eq("label-grouping,TestLabel");
   });
 
   it("creates id for `property-grouping:value` node", () => {
@@ -62,7 +62,7 @@ describe("createNodeId", () => {
       },
       groupedInstanceKeys: [{ id: "0x1", className: "Schema:Class" }],
     });
-    expect(createNodeId(node)).to.be.eq("property-grouping:value;test-value;TestClass;TestProp");
+    expect(createNodeId(node)).to.be.eq("property-grouping:value,test-value,TestClass,TestProp");
   });
 
   it("creates id for `instances` node child node", () => {
@@ -77,7 +77,7 @@ describe("createNodeId", () => {
         { type: "class-grouping", className: "Schema:OtherClass" },
       ],
     });
-    expect(createNodeId(node)).to.be.eq("instances;0x1;Schema:Class;class-grouping;Schema:OtherClass;instances;0x3;Schema:Class");
+    expect(createNodeId(node)).to.be.eq("instances,0x1,Schema:Class;class-grouping,Schema:OtherClass;instances,0x3,Schema:Class");
   });
 });
 
