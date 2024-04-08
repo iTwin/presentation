@@ -26,7 +26,6 @@ import {
   take,
   tap,
 } from "rxjs";
-import { eachValueFrom } from "rxjs-for-await";
 import { assert, StopWatch } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
 import { IMetadataProvider } from "./ECMetadata";
@@ -56,6 +55,7 @@ import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringH
 import { getClass } from "./internal/GetClass";
 import { createQueryLogMessage, doLog, log } from "./internal/LoggingUtils";
 import { createDetermineChildrenOperator } from "./internal/operators/DetermineChildren";
+import { eachValueFrom } from "./internal/operators/EachValueFrom";
 import { createGroupingOperator } from "./internal/operators/Grouping";
 import { createHideIfNoChildrenOperator } from "./internal/operators/HideIfNoChildren";
 import { createHideNodesInHierarchyOperator } from "./internal/operators/HideNodesInHierarchy";

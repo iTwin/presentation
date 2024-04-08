@@ -41,8 +41,7 @@
     "@itwin/core-common": "^4.4.0",
     "@itwin/core-geometry": "^4.4.0",
     "natural-compare-lite": "^1.4.0",
-    "rxjs": "^7.8.1",
-    "rxjs-for-await": "^1.0.0"
+    "rxjs": "^7.8.1"
   },
   "devDependencies": {
     "@itwin/build-tools": "^4.4.0",
