@@ -19,13 +19,7 @@ import {
 } from "@itwin/presentation-components";
 import { createECSqlQueryExecutor, createMetadataProvider } from "@itwin/presentation-core-interop";
 import { Presentation } from "@itwin/presentation-frontend";
-import {
-  createLimitingECSqlQueryExecutor,
-  GenericInstanceFilter,
-  HierarchyProvider,
-  ILimitingECSqlQueryExecutor,
-  IPrimitiveValueFormatter,
-} from "@itwin/presentation-hierarchies";
+import { createLimitingECSqlQueryExecutor, GenericInstanceFilter, HierarchyProvider, ILimitingECSqlQueryExecutor } from "@itwin/presentation-hierarchies";
 import { HierarchyLevelFilteringOptions, PresentationHierarchyNode, TreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 
@@ -220,6 +214,7 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
   );
 }
 
+type IPrimitiveValueFormatter = Parameters<typeof HierarchyProvider.prototype.setFormatter>[0];
 const customFormatter: IPrimitiveValueFormatter = async (val) => {
   return `THIS_IS_FORMATTED_${val ? JSON.stringify(val.value) : ""}_THIS_IS_FORMATTED`;
 };

@@ -3,10 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-export * from "./shared/ConcatenatedValue";
-export * from "./shared/Formatting";
-export * from "./shared/Logging";
-export * from "./shared/MappedTypes";
-export * from "./shared/Metadata";
-export * from "./shared/Utils";
-export * from "./shared/Values";
+/** @internal */
+export function julianToDateTime(julianDate: number): Date {
+  const millis = (julianDate - 2440587.5) * 86400000;
+  return new Date(millis);
+}

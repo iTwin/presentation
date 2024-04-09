@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { julianToDateTime } from "../../hierarchies/internal/Common";
-import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "../../hierarchies/values/Formatting";
+import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "../shared/Formatting";
+import { julianToDateTime } from "../shared/InternalUtils";
 
 describe("createDefaultValueFormatter", () => {
   let formatter: IPrimitiveValueFormatter;

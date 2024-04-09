@@ -14,9 +14,8 @@ import {
   HierarchyProvider,
   HierarchyProviderLocalizedStrings,
   IHierarchyLevelDefinitionsFactory,
-  IPrimitiveValueFormatter,
 } from "@itwin/presentation-hierarchies";
-import { parseFullClassName } from "@itwin/presentation-shared";
+import { IPrimitiveValueFormatter, parseFullClassName } from "@itwin/presentation-shared";
 
 function createSchemaContext(imodel: IModelConnection | IModelDb | ECDb) {
   const schemas = new SchemaContext();

@@ -36,4 +36,3 @@ export * from "./hierarchies/queries/ECSqlCore";
 export * from "./hierarchies/queries/InstanceLabelSelectClauseFactory";
 export { createLimitingECSqlQueryExecutor, ILimitingECSqlQueryExecutor } from "./hierarchies/queries/LimitingECSqlQueryExecutor";
 export * from "./hierarchies/queries/NodeSelectQueryFactory";
-export * from "./hierarchies/values/Formatting";

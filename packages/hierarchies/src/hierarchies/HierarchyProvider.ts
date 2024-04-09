@@ -28,7 +28,15 @@ import {
 } from "rxjs";
 import { assert, StopWatch } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
-import { ConcatenatedValue, ConcatenatedValuePart, IMetadataProvider, InstanceKey, TypedPrimitiveValue } from "@itwin/presentation-shared";
+import {
+  ConcatenatedValue,
+  ConcatenatedValuePart,
+  createDefaultValueFormatter,
+  IMetadataProvider,
+  InstanceKey,
+  IPrimitiveValueFormatter,
+  TypedPrimitiveValue,
+} from "@itwin/presentation-shared";
 import { DefineHierarchyLevelProps, HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
 import { RowsLimitExceededError } from "./HierarchyErrors";
 import {
@@ -67,7 +75,6 @@ import { TreeQueryResultsReader } from "./internal/TreeNodesReader";
 import { ECSqlBinding, ECSqlQueryDef } from "./queries/ECSqlCore";
 import { ILimitingECSqlQueryExecutor } from "./queries/LimitingECSqlQueryExecutor";
 import { NodeSelectClauseColumnNames } from "./queries/NodeSelectQueryFactory";
-import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "./values/Formatting";
 
 const LOGGING_NAMESPACE = `${CommonLoggingNamespace}.HierarchyProvider`;
 const DEFAULT_QUERY_CONCURRENCY = 10;

@@ -21,7 +21,7 @@ import { IModel, Rank } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { createValueFormatter } from "@itwin/presentation-core-interop";
 import { ECSqlSnippets, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchies";
-import { julianToDateTime } from "@itwin/presentation-hierarchies/lib/cjs/hierarchies/internal/Common";
+import { julianToDateTime } from "@itwin/presentation-shared/lib/cjs/shared/InternalUtils";
 import { buildIModel, importSchema } from "../IModelUtils";
 import { initialize, terminate } from "../IntegrationTests";
 import { validateHierarchy } from "./HierarchyValidation";

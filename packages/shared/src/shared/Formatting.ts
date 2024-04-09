@@ -3,8 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { TypedPrimitiveValue } from "@itwin/presentation-shared";
-import { julianToDateTime } from "../internal/Common";
+import { julianToDateTime } from "./InternalUtils";
+import { TypedPrimitiveValue } from "./Values";
 
 /**
  * A type definition for a function that knows how to create a display string for a typed primitive value.

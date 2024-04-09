@@ -5,11 +5,10 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { EC, IMetadataProvider } from "@itwin/presentation-shared";
+import { createDefaultValueFormatter, EC, IMetadataProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import { GroupingNodeKey, HierarchyNodePropertyGroup, PropertyOtherValuesGroupingNodeKey } from "../../../../hierarchies/HierarchyNode";
 import { BaseClassChecker } from "../../../../hierarchies/internal/Common";
 import * as propertiesGrouping from "../../../../hierarchies/internal/operators/grouping/PropertiesGrouping";
-import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "../../../../hierarchies/values/Formatting";
 import { ClassStubs, createClassStubs, createTestProcessedGroupingNode, createTestProcessedInstanceNode, testLocalizedStrings } from "../../../Utils";
 
 describe("PropertiesGrouping", () => {

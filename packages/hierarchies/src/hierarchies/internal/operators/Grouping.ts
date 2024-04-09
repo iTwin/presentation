@@ -5,7 +5,7 @@
 
 import { concatAll, concatMap, from, Observable, of, toArray } from "rxjs";
 import { assert } from "@itwin/core-bentley";
-import { IMetadataProvider } from "@itwin/presentation-shared";
+import { IMetadataProvider, IPrimitiveValueFormatter } from "@itwin/presentation-shared";
 import {
   HierarchyNode,
   HierarchyNodeKey,
@@ -14,7 +14,6 @@ import {
   ProcessedHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "../../HierarchyNode";
-import { IPrimitiveValueFormatter } from "../../values/Formatting";
 import { BaseClassChecker, createNodeIdentifierForLogging, createOperatorLoggingNamespace } from "../Common";
 import { log } from "../LoggingUtils";
 import { assignAutoExpand } from "./grouping/AutoExpand";

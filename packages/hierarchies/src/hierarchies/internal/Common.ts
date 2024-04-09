@@ -107,12 +107,6 @@ export function createOperatorLoggingNamespace(operatorName: string) {
 }
 
 /** @internal */
-export function julianToDateTime(julianDate: number): Date {
-  const millis = (julianDate - 2440587.5) * 86400000;
-  return new Date(millis);
-}
-
-/** @internal */
 export function compareNodesByLabel<TLhsNode extends { label: string }, TRhsNode extends { label: string }>(lhs: TLhsNode, rhs: TRhsNode): number {
   return naturalCompare(lhs.label.toLocaleLowerCase(), rhs.label.toLocaleLowerCase());
 }
