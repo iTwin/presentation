@@ -45,7 +45,7 @@ describe("PresentationTreeNodeRenderer", () => {
     const localization = new EmptyLocalization();
     sinon.stub(IModelApp, "initialized").get(() => true);
     sinon.stub(IModelApp, "localization").get(() => localization);
-    sinon.stub(UiComponents, "localization").get(() => localization);
+    sinon.stub(UiComponents, "_localization" as any).get(() => localization);
     sinon.stub(Presentation, "localization").get(() => localization);
   });
 
