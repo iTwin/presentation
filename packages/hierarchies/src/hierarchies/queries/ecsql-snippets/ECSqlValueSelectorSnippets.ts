@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Id64 } from "@itwin/core-bentley";
-import { PrimitiveValueType } from "../../Metadata";
+import { PrimitiveValueType } from "@itwin/presentation-shared";
 import { PrimitiveValue, TypedPrimitiveValue } from "../../values/Values";
 
 /**

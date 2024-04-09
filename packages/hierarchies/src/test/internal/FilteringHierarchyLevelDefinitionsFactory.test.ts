@@ -5,8 +5,7 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { trimWhitespace } from "@itwin/presentation-shared";
-import { IMetadataProvider } from "../../hierarchies/ECMetadata";
+import { IMetadataProvider, trimWhitespace } from "@itwin/presentation-shared";
 import {
   CustomHierarchyNodeDefinition,
   HierarchyDefinitionParentNode,

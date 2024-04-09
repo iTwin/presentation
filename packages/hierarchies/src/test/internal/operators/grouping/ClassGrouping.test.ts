@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { IMetadataProvider } from "../../../../hierarchies/ECMetadata";
+import { IMetadataProvider } from "@itwin/presentation-shared";
 import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNode";
 import { GroupingHandlerResult } from "../../../../hierarchies/internal/operators/Grouping";
 import { createClassGroups } from "../../../../hierarchies/internal/operators/grouping/ClassGrouping";

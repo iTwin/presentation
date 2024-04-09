@@ -4,8 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert } from "@itwin/core-bentley";
-import { ArrayElement } from "@itwin/presentation-shared";
-import { ECClass, IMetadataProvider } from "../../../ECMetadata";
+import { ArrayElement, EC, IMetadataProvider } from "@itwin/presentation-shared";
 import {
   HierarchyNode,
   HierarchyNodeKey,
@@ -40,7 +39,7 @@ export interface PropertiesGroupingLocalizedStrings {
 
 /** @internal */
 export interface PropertyGroupInfo {
-  ecClass: ECClass;
+  ecClass: EC.Class;
   previousPropertiesGroupingInfo: PreviousPropertiesGroupingInfo;
   propertyGroup: Omit<HierarchyNodePropertyGroup, "propertyValue">;
 }

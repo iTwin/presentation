@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { IMetadataProvider } from "../ECMetadata";
+import { IMetadataProvider } from "@itwin/presentation-shared";
 import { getClass } from "../internal/GetClass";
 import { createConcatenatedValueJsonSelector, createRawPropertyValueSelector, TypedValueSelectClauseProps } from "./ecsql-snippets/ECSqlValueSelectorSnippets";
 

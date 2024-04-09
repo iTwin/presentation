@@ -5,7 +5,7 @@
 
 import { concatAll, concatMap, from, Observable, of, toArray } from "rxjs";
 import { assert } from "@itwin/core-bentley";
-import { IMetadataProvider } from "../../ECMetadata";
+import { IMetadataProvider } from "@itwin/presentation-shared";
 import {
   HierarchyNode,
   HierarchyNodeKey,

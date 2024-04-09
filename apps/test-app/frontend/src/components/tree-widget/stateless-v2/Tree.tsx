@@ -24,7 +24,6 @@ import {
   GenericInstanceFilter,
   HierarchyProvider,
   ILimitingECSqlQueryExecutor,
-  IMetadataProvider,
   TypedPrimitiveValue,
 } from "@itwin/presentation-hierarchies";
 import { HierarchyLevelFilteringOptions, PresentationHierarchyNode, TreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
@@ -32,7 +31,7 @@ import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
 
 interface MetadataProviders {
   queryExecutor: ILimitingECSqlQueryExecutor;
-  metadataProvider: IMetadataProvider;
+  metadataProvider: ReturnType<typeof createMetadataProvider>;
 }
 
 export function StatelessTreeV2(props: { imodel: IModelConnection; height: number; width: number }) {

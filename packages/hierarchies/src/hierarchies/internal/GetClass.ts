@@ -4,15 +4,14 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert } from "@itwin/core-bentley";
-import { ECClass, ECSchema, IMetadataProvider } from "../ECMetadata";
+import { EC, IMetadataProvider, parseFullClassName } from "@itwin/presentation-shared";
 import { getLogger } from "../Logging";
-import { parseFullClassName } from "../Metadata";
 import { LOGGING_NAMESPACE } from "./Common";
 
 /** @internal */
-export async function getClass(metadata: IMetadataProvider, fullClassName: string): Promise<ECClass> {
+export async function getClass(metadata: IMetadataProvider, fullClassName: string): Promise<EC.Class> {
   const { schemaName, className } = parseFullClassName(fullClassName);
-  let schema: ECSchema | undefined;
+  let schema: EC.Schema | undefined;
   try {
     schema = await metadata.getSchema(schemaName);
   } catch (e) {
@@ -23,7 +22,7 @@ export async function getClass(metadata: IMetadataProvider, fullClassName: strin
     throw new Error(`Invalid schema "${schemaName}"`);
   }
 
-  let nodeClass: ECClass | undefined;
+  let nodeClass: EC.Class | undefined;
   try {
     nodeClass = await schema.getClass(className);
   } catch (e) {

@@ -12,15 +12,7 @@ import {
   GenericInstanceFilterRuleGroup,
   GenericInstanceFilterRuleOperator,
 } from "@itwin/core-common";
-import { trimWhitespace } from "@itwin/presentation-shared";
-import {
-  ECArrayProperty,
-  ECEnumerationProperty,
-  ECNavigationProperty,
-  ECPrimitiveProperty,
-  ECStructProperty,
-  IMetadataProvider,
-} from "../../hierarchies/ECMetadata";
+import { EC, IMetadataProvider, trimWhitespace } from "@itwin/presentation-shared";
 import { NodeSelectClauseColumnNames, NodeSelectQueryFactory } from "../../hierarchies/queries/NodeSelectQueryFactory";
 import { ClassStubs, createClassStubs } from "../Utils";
 
@@ -498,7 +490,7 @@ describe("NodeSelectQueryFactory", () => {
         it(`creates navigation property filter`, async () => {
           classStubs.stubEntityClass({
             ...testClassProps,
-            properties: [{ name: "p", isNavigation: () => true } as ECNavigationProperty],
+            properties: [{ name: "p", isNavigation: () => true } as EC.NavigationProperty],
           });
           await testPropertyFilter({
             skipClassStub: true,
@@ -517,7 +509,7 @@ describe("NodeSelectQueryFactory", () => {
         it(`creates string enumeration property filter`, async () => {
           classStubs.stubEntityClass({
             ...testClassProps,
-            properties: [{ name: "p", isNavigation: () => false, isEnumeration: () => true } as ECEnumerationProperty],
+            properties: [{ name: "p", isNavigation: () => false, isEnumeration: () => true } as EC.EnumerationProperty],
           });
           await testPropertyFilter({
             skipClassStub: true,
@@ -530,7 +522,7 @@ describe("NodeSelectQueryFactory", () => {
         it(`creates numeric enumeration property filter`, async () => {
           classStubs.stubEntityClass({
             ...testClassProps,
-            properties: [{ name: "p", isNavigation: () => false, isEnumeration: () => true } as ECEnumerationProperty],
+            properties: [{ name: "p", isNavigation: () => false, isEnumeration: () => true } as EC.EnumerationProperty],
           });
           await testPropertyFilter({
             skipClassStub: true,
@@ -550,7 +542,7 @@ describe("NodeSelectQueryFactory", () => {
                 isEnumeration: () => false,
                 isPrimitive: () => true,
                 primitiveType: "Point2d",
-              } as ECPrimitiveProperty,
+              } as EC.PrimitiveProperty,
             ],
           });
           await testPropertyFilter({
@@ -597,7 +589,7 @@ describe("NodeSelectQueryFactory", () => {
                 isEnumeration: () => false,
                 isPrimitive: () => true,
                 primitiveType: "Point3d",
-              } as ECPrimitiveProperty,
+              } as EC.PrimitiveProperty,
             ],
           });
           await testPropertyFilter({
@@ -647,7 +639,7 @@ describe("NodeSelectQueryFactory", () => {
                 isEnumeration: () => false,
                 isPrimitive: () => true,
                 primitiveType: "DateTime",
-              } as ECPrimitiveProperty,
+              } as EC.PrimitiveProperty,
             ],
           });
           await testPropertyFilter({
@@ -674,7 +666,7 @@ describe("NodeSelectQueryFactory", () => {
                 isEnumeration: () => false,
                 isPrimitive: () => true,
                 primitiveType: "Double",
-              } as ECPrimitiveProperty,
+              } as EC.PrimitiveProperty,
             ],
           });
           const createProps = (operator: GenericInstanceFilterRuleOperator, value: number, expectedECSql: string) => ({
@@ -707,7 +699,7 @@ describe("NodeSelectQueryFactory", () => {
                 isEnumeration: () => false,
                 isPrimitive: () => true,
                 primitiveType: "String",
-              } as ECPrimitiveProperty,
+              } as EC.PrimitiveProperty,
             ],
           });
           const createProps = (operator: GenericInstanceFilterRuleOperator, value: string, expectedECSql: string) => ({
@@ -737,7 +729,7 @@ describe("NodeSelectQueryFactory", () => {
                 isEnumeration: () => false,
                 isPrimitive: () => true,
                 primitiveType: "Boolean",
-              } as ECPrimitiveProperty,
+              } as EC.PrimitiveProperty,
             ],
           });
           const createProps = (operator: GenericInstanceFilterRuleOperator, value: boolean, expectedECSql: string) => ({
@@ -766,7 +758,7 @@ describe("NodeSelectQueryFactory", () => {
                 isEnumeration: () => false,
                 isPrimitive: () => true,
                 primitiveType: "Integer",
-              } as ECPrimitiveProperty,
+              } as EC.PrimitiveProperty,
             ],
           });
           const createProps = (operator: GenericInstanceFilterRuleOperator, value: number, expectedECSql: string) => ({
@@ -799,7 +791,7 @@ describe("NodeSelectQueryFactory", () => {
                 isEnumeration: () => false,
                 isPrimitive: () => true,
                 primitiveType: "Long",
-              } as ECPrimitiveProperty,
+              } as EC.PrimitiveProperty,
             ],
           });
           const createProps = (operator: GenericInstanceFilterRuleOperator, value: number, expectedECSql: string) => ({
@@ -835,7 +827,7 @@ describe("NodeSelectQueryFactory", () => {
                 isEnumeration: () => false,
                 isPrimitive: () => true,
                 primitiveType: "Integer",
-              } as ECPrimitiveProperty,
+              } as EC.PrimitiveProperty,
             ],
           });
           const relationship = classStubs.stubRelationshipClass({
@@ -877,7 +869,7 @@ describe("NodeSelectQueryFactory", () => {
                 isEnumeration: () => false,
                 isPrimitive: () => true,
                 primitiveType: "Integer",
-              } as ECPrimitiveProperty,
+              } as EC.PrimitiveProperty,
             ],
           });
           const relationship = classStubs.stubRelationshipClass({
@@ -940,7 +932,7 @@ describe("NodeSelectQueryFactory", () => {
                 isEnumeration: () => false,
                 isPrimitive: () => false,
                 isStruct: () => true,
-              } as ECStructProperty,
+              } as EC.StructProperty,
             ],
           });
           await expect(
@@ -969,7 +961,7 @@ describe("NodeSelectQueryFactory", () => {
                 isEnumeration: () => false,
                 isPrimitive: () => false,
                 isArray: () => true,
-              } as ECArrayProperty,
+              } as EC.ArrayProperty,
             ],
           });
           await expect(
@@ -998,7 +990,7 @@ describe("NodeSelectQueryFactory", () => {
                 isEnumeration: () => false,
                 isPrimitive: () => true,
                 primitiveType: "Integer",
-              } as ECPrimitiveProperty,
+              } as EC.PrimitiveProperty,
             ],
           });
           await expect(

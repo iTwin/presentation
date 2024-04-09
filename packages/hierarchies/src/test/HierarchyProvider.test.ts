@@ -8,8 +8,7 @@ import { ResolvablePromise } from "presentation-test-utilities";
 import sinon from "sinon";
 import { omit } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
-import { trimWhitespace } from "@itwin/presentation-shared";
-import { ECKindOfQuantity, ECPrimitiveProperty, ECProperty, IMetadataProvider } from "../hierarchies/ECMetadata";
+import { EC, IMetadataProvider, trimWhitespace } from "@itwin/presentation-shared";
 import { DefineHierarchyLevelProps, IHierarchyLevelDefinitionsFactory } from "../hierarchies/HierarchyDefinition";
 import { RowsLimitExceededError } from "../hierarchies/HierarchyErrors";
 import { GroupingHierarchyNode, GroupingNodeKey, HierarchyNode, ParsedCustomHierarchyNode } from "../hierarchies/HierarchyNode";
@@ -591,8 +590,8 @@ describe("HierarchyProvider", () => {
             isPrimitive: () => true,
             primitiveType: "String",
             extendedTypeName: "extended type",
-            kindOfQuantity: Promise.resolve({ fullName: "s.koq" } as ECKindOfQuantity),
-          } as ECPrimitiveProperty,
+            kindOfQuantity: Promise.resolve({ fullName: "s.koq" } as EC.KindOfQuantity),
+          } as EC.PrimitiveProperty,
         ],
       });
       const { provider } = setupTest({
@@ -616,7 +615,7 @@ describe("HierarchyProvider", () => {
           {
             name: "p",
             isPrimitive: () => false,
-          } as ECProperty,
+          } as EC.Property,
         ],
       });
       const { provider } = setupTest({
@@ -634,7 +633,7 @@ describe("HierarchyProvider", () => {
             name: "p",
             isPrimitive: () => true,
             primitiveType: "IGeometry",
-          } as ECPrimitiveProperty,
+          } as EC.PrimitiveProperty,
         ],
       });
       const { provider } = setupTest({
@@ -652,7 +651,7 @@ describe("HierarchyProvider", () => {
             name: "p",
             isPrimitive: () => true,
             primitiveType: "Binary",
-          } as ECPrimitiveProperty,
+          } as EC.PrimitiveProperty,
         ],
       });
       const { provider } = setupTest({

@@ -28,7 +28,7 @@ import {
 } from "rxjs";
 import { assert, StopWatch } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
-import { IMetadataProvider } from "./ECMetadata";
+import { IMetadataProvider } from "@itwin/presentation-shared";
 import { DefineHierarchyLevelProps, HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
 import { RowsLimitExceededError } from "./HierarchyErrors";
 import {

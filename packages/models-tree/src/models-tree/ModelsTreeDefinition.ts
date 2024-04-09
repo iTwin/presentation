@@ -9,7 +9,6 @@ import {
   DefineHierarchyLevelProps,
   DefineInstanceNodeChildHierarchyLevelProps,
   DefineRootHierarchyLevelProps,
-  ECSchema,
   ECSqlBinding,
   ECSqlSnippets,
   HierarchyLevelDefinition,
@@ -19,25 +18,24 @@ import {
   IHierarchyLevelDefinitionsFactory,
   IInstanceLabelSelectClauseFactory,
   ILimitingECSqlQueryExecutor,
-  IMetadataProvider,
   InstanceKey,
   NodeSelectClauseColumnNames,
   NodeSelectQueryFactory,
-  parseFullClassName,
   ProcessedHierarchyNode,
 } from "@itwin/presentation-hierarchies";
+import { EC, IMetadataProvider, parseFullClassName } from "@itwin/presentation-shared";
 
-export interface ModelsTreeDefinitionProps {
+interface ModelsTreeDefinitionProps {
   metadataProvider: IMetadataProvider;
 }
 
-export interface ModelsTreeInstanceKeyPathsFromInstanceKeysProps {
+interface ModelsTreeInstanceKeyPathsFromInstanceKeysProps {
   metadataProvider: IMetadataProvider;
   queryExecutor: ILimitingECSqlQueryExecutor;
   keys: InstanceKey[];
 }
 
-export interface ModelsTreeInstanceKeyPathsFromInstanceLabelProps {
+interface ModelsTreeInstanceKeyPathsFromInstanceLabelProps {
   metadataProvider: IMetadataProvider;
   queryExecutor: ILimitingECSqlQueryExecutor;
   label: string;
@@ -843,7 +841,7 @@ async function getClass(metadata: IMetadataProvider, fullClassName: string) {
   return getSchemaClass(schema, className);
 }
 
-async function getSchemaClass(schema: ECSchema, className: string) {
+async function getSchemaClass(schema: EC.Schema, className: string) {
   const ecClass = await schema.getClass(className);
   if (!ecClass) {
     throw new Error(`Class "${className}" not found in schema "${schema.name}"`);

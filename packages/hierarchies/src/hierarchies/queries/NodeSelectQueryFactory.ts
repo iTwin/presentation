@@ -13,9 +13,8 @@ import {
   GenericInstanceFilterRuleOperator,
   GenericInstanceFilterRuleValue,
 } from "@itwin/core-common";
-import { ECClass, IMetadataProvider } from "../ECMetadata";
+import { EC, IMetadataProvider, parseFullClassName } from "@itwin/presentation-shared";
 import { getClass } from "../internal/GetClass";
-import { parseFullClassName } from "../Metadata";
 import { Id64String, PrimitiveValue } from "../values/Values";
 import { createRelationshipPathJoinClause, JoinRelationshipPath } from "./ecsql-snippets/ECSqlJoinSnippets";
 import { createRawPrimitiveValueSelector, createRawPropertyValueSelector } from "./ecsql-snippets/ECSqlValueSelectorSnippets";
@@ -516,7 +515,7 @@ function serializeJsonObject(selectors: Array<{ key: string; selector: string }>
 
 async function createWhereClause(
   contentClassAlias: string,
-  classLoader: (alias: string) => Promise<ECClass | undefined>,
+  classLoader: (alias: string) => Promise<EC.Class | undefined>,
   rule: GenericInstanceFilterRule | GenericInstanceFilterRuleGroup,
 ): Promise<string | undefined> {
   if (GenericInstanceFilter.isFilterRuleGroup(rule)) {

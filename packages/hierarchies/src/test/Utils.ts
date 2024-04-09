@@ -6,7 +6,7 @@
 import { from, ObservableInput } from "rxjs";
 import sinon from "sinon";
 import { BeDuration, Logger, LogLevel, StopWatch } from "@itwin/core-bentley";
-import { ECClass, ECEntityClass, ECProperty, ECRelationshipClass, ECRelationshipConstraint, IMetadataProvider } from "../hierarchies/ECMetadata";
+import { EC, IMetadataProvider, parseFullClassName } from "@itwin/presentation-shared";
 import {
   ParsedCustomHierarchyNode,
   ParsedInstanceHierarchyNode,
@@ -16,7 +16,6 @@ import {
 } from "../hierarchies/HierarchyNode";
 import { HierarchyProviderLocalizedStrings } from "../hierarchies/HierarchyProvider";
 import * as getClass from "../hierarchies/internal/GetClass";
-import { parseFullClassName } from "../hierarchies/Metadata";
 import { ECSqlQueryReader } from "../hierarchies/queries/ECSqlCore";
 import { InstanceKey } from "../hierarchies/values/Values";
 
@@ -111,29 +110,32 @@ export interface StubClassFuncProps {
   schemaName: string;
   className: string;
   classLabel?: string;
-  properties?: ECProperty[];
+  properties?: EC.Property[];
   is?: (fullClassName: string) => Promise<boolean>;
 }
 export interface StubRelationshipClassFuncProps extends StubClassFuncProps {
-  source?: ECRelationshipConstraint;
-  target?: ECRelationshipConstraint;
+  source?: EC.RelationshipConstraint;
+  target?: EC.RelationshipConstraint;
   direction?: "Forward" | "Backward";
 }
-export type TStubClassFunc = (props: StubClassFuncProps) => ECClass;
-export type TStubEntityClassFunc = (props: StubClassFuncProps) => ECEntityClass;
-export type TStubRelationshipClassFunc = (props: StubRelationshipClassFuncProps) => ECRelationshipClass;
+export type TStubClassFunc = (props: StubClassFuncProps) => EC.Class;
+export type TStubEntityClassFunc = (props: StubClassFuncProps) => EC.EntityClass;
+export type TStubRelationshipClassFunc = (props: StubRelationshipClassFuncProps) => EC.RelationshipClass;
 export interface ClassStubs {
   stubEntityClass: TStubEntityClassFunc;
   stubRelationshipClass: TStubRelationshipClassFunc;
   stubOtherClass: TStubClassFunc;
   resetHistory: () => void;
   restore: () => void;
-  stub: sinon.SinonStub<[metadata: IMetadataProvider, fullClassName: string], Promise<ECClass>>;
+  stub: sinon.SinonStub<[metadata: IMetadataProvider, fullClassName: string], Promise<EC.Class>>;
 }
 export function createClassStubs(schemas: IMetadataProvider): ClassStubs {
   const stub = sinon.stub(getClass, "getClass");
   const createFullClassNameMatcher = (props: { schemaName: string; className: string }) =>
     sinon.match((candidate: string) => {
+      if (!candidate) {
+        return false;
+      }
       const { schemaName, className } = parseFullClassName(candidate);
       return schemaName === props.schemaName && className === props.className;
     });
@@ -144,14 +146,14 @@ export function createClassStubs(schemas: IMetadataProvider): ClassStubs {
     fullName: `${props.schemaName}.${props.className}`,
     name: props.className,
     label: props.classLabel,
-    getProperty: async (propertyName: string): Promise<ECProperty | undefined> => {
+    getProperty: async (propertyName: string): Promise<EC.Property | undefined> => {
       if (!props.properties) {
         return undefined;
       }
       return props.properties.find((p) => p.name === propertyName);
     },
-    getProperties: async (): Promise<Array<ECProperty>> => props.properties ?? [],
-    is: sinon.fake(async (targetClassOrClassName: ECClass | string, schemaName?: string) => {
+    getProperties: async (): Promise<Array<EC.Property>> => props.properties ?? [],
+    is: sinon.fake(async (targetClassOrClassName: EC.Class | string, schemaName?: string) => {
       if (!props.is) {
         return false;
       }
@@ -169,7 +171,7 @@ export function createClassStubs(schemas: IMetadataProvider): ClassStubs {
     const res = {
       ...createBaseClassProps(props),
       isEntityClass: () => true,
-    } as unknown as ECEntityClass;
+    } as unknown as EC.EntityClass;
     stub.withArgs(schemas, createFullClassNameMatcher(props)).resolves(res);
     return res;
   };
@@ -180,14 +182,14 @@ export function createClassStubs(schemas: IMetadataProvider): ClassStubs {
       source: props.source ?? { polymorphic: true, abstractConstraint: async () => undefined },
       target: props.target ?? { polymorphic: true, abstractConstraint: async () => undefined },
       isRelationshipClass: () => true,
-    } as unknown as ECRelationshipClass;
+    } as unknown as EC.RelationshipClass;
     stub.withArgs(schemas, createFullClassNameMatcher(props)).resolves(res);
     return res;
   };
   const stubOtherClass: TStubClassFunc = (props) => {
     const res = {
       ...createBaseClassProps(props),
-    } as unknown as ECClass;
+    } as unknown as EC.Class;
     stub.withArgs(schemas, createFullClassNameMatcher(props)).resolves(res);
     return res;
   };

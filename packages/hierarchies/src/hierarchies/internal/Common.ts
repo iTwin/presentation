@@ -5,7 +5,7 @@
 
 import naturalCompare from "natural-compare-lite";
 import { assert, LRUMap } from "@itwin/core-bentley";
-import { ECClass, IMetadataProvider } from "../ECMetadata";
+import { EC, IMetadataProvider } from "@itwin/presentation-shared";
 import {
   HierarchyNode,
   HierarchyNodeKey,
@@ -131,7 +131,7 @@ export class BaseClassChecker {
     return `${className}${baseClassName}`;
   }
 
-  public isECClassOfBaseECClass(ecClassNameToCheck: string, baseECClass: ECClass): Promise<boolean> | boolean {
+  public isECClassOfBaseECClass(ecClassNameToCheck: string, baseECClass: EC.Class): Promise<boolean> | boolean {
     const cacheKey = this.createCacheKey(ecClassNameToCheck, baseECClass.fullName);
     let isCurrentNodeClassOfBase = this._map.get(cacheKey);
     if (isCurrentNodeClassOfBase === undefined) {

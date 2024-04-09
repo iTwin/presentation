@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { IMetadataProvider } from "../hierarchies/ECMetadata";
+import { IMetadataProvider } from "@itwin/presentation-shared";
 import {
   ClassBasedHierarchyLevelDefinitionsFactory,
   CustomHierarchyNodeDefinition,

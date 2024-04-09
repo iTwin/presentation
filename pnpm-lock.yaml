@@ -217,6 +217,9 @@ importers:
       '@itwin/presentation-models-tree':
         specifier: workspace:*
         version: link:../../packages/models-tree
+      '@itwin/presentation-shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       as-table:
         specifier: ^1.0.55
         version: 1.0.55
@@ -1250,6 +1253,10 @@ importers:
         version: 5.0.4
 
   packages/models-tree:
+    dependencies:
+      '@itwin/presentation-shared':
+        specifier: workspace:^
+        version: link:../shared
     devDependencies:
       '@itwin/build-tools':
         specifier: ^4.4.0

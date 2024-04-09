@@ -7,7 +7,7 @@ import { expect } from "chai";
 import { from } from "rxjs";
 import sinon from "sinon";
 import { LogLevel } from "@itwin/core-bentley";
-import { IMetadataProvider } from "../../../hierarchies/ECMetadata";
+import { IMetadataProvider } from "@itwin/presentation-shared";
 import { BaseClassChecker } from "../../../hierarchies/internal/Common";
 import { createGroupingHandlers, createGroupingOperator, GroupingHandlerResult, LOGGING_NAMESPACE } from "../../../hierarchies/internal/operators/Grouping";
 import * as autoExpand from "../../../hierarchies/internal/operators/grouping/AutoExpand";

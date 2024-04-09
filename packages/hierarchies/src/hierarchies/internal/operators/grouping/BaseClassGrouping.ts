@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ECClass, IMetadataProvider } from "../../../ECMetadata";
+import { EC, IMetadataProvider } from "@itwin/presentation-shared";
 import { ClassGroupingNodeKey, HierarchyNode, ParentHierarchyNode, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
 import { BaseClassChecker } from "../../Common";
 import { getClass } from "../../GetClass";
@@ -14,7 +14,7 @@ export async function getBaseClassGroupingECClasses(
   metadata: IMetadataProvider,
   parentNode: ParentHierarchyNode | undefined,
   nodes: ProcessedInstanceHierarchyNode[],
-): Promise<ECClass[]> {
+): Promise<EC.Class[]> {
   // Get all base class names that are provided in the grouping information
   const baseClassesFullClassNames = getAllBaseClasses(nodes);
   if (baseClassesFullClassNames.size === 0) {
@@ -39,7 +39,7 @@ export async function getBaseClassGroupingECClasses(
 /** @internal */
 export async function createBaseClassGroupsForSingleBaseClass(
   nodes: ProcessedInstanceHierarchyNode[],
-  baseECClass: ECClass,
+  baseECClass: EC.Class,
   baseClassChecker: BaseClassChecker,
 ): Promise<GroupingHandlerResult> {
   const groupedNodes = new Array<ProcessedInstanceHierarchyNode>();
@@ -94,11 +94,11 @@ function getAllBaseClasses(nodes: ProcessedInstanceHierarchyNode[]): Set<string>
   return baseClasses;
 }
 
-async function sortByBaseClass(classes: ECClass[]): Promise<ECClass[]> {
+async function sortByBaseClass(classes: EC.Class[]): Promise<EC.Class[]> {
   if (classes.length === 0) {
     return classes;
   }
-  const output: ECClass[] = [classes[0]];
+  const output: EC.Class[] = [classes[0]];
   for (let inputIndex = 1; inputIndex < classes.length; ++inputIndex) {
     let wasAdded = false;
     for (let outputIndex = output.length - 1; outputIndex >= 0; --outputIndex) {

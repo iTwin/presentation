@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { compareStrings, Id64 } from "@itwin/core-bentley";
-import { PrimitiveValueType } from "../Metadata";
+import { PrimitiveValueType } from "@itwin/presentation-shared";
 
 /**
  * A string representing a 64 bit number in hex.

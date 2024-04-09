@@ -27,13 +27,11 @@ export {
   GenericInstanceFilterRelationshipStep,
 } from "@itwin/core-common";
 
-export * from "./hierarchies/ECMetadata";
 export * from "./hierarchies/HierarchyDefinition";
 export * from "./hierarchies/HierarchyErrors";
 export * from "./hierarchies/HierarchyNode";
 export * from "./hierarchies/HierarchyProvider";
 export * from "./hierarchies/Logging";
-export * from "./hierarchies/Metadata";
 export * from "./hierarchies/queries/ECSqlCore";
 export * from "./hierarchies/queries/InstanceLabelSelectClauseFactory";
 export { createLimitingECSqlQueryExecutor, ILimitingECSqlQueryExecutor } from "./hierarchies/queries/LimitingECSqlQueryExecutor";

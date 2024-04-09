@@ -5,7 +5,7 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
-import { ECClass, IMetadataProvider } from "../../../../hierarchies/ECMetadata";
+import { EC, IMetadataProvider } from "@itwin/presentation-shared";
 import { GroupingNodeKey } from "../../../../hierarchies/HierarchyNode";
 import { BaseClassChecker } from "../../../../hierarchies/internal/Common";
 import * as baseClassGrouping from "../../../../hierarchies/internal/operators/grouping/BaseClassGrouping";
@@ -206,7 +206,7 @@ describe("BaseClassGrouping", () => {
           },
         }),
       ];
-      const ecClass = { fullName: "TestSchema.ParentClass", label: "ParentClass" } as unknown as ECClass;
+      const ecClass = { fullName: "TestSchema.ParentClass", label: "ParentClass" } as unknown as EC.Class;
       expect(await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, ecClass, new BaseClassChecker(metadataProvider))).to.deep.eq({
         groupingType: "base-class",
         grouped: [],
@@ -228,7 +228,7 @@ describe("BaseClassGrouping", () => {
           },
         }),
       ];
-      const eCClass = { fullName: "TestSchema.ParentClass", name: "Parent Class" } as unknown as ECClass;
+      const eCClass = { fullName: "TestSchema.ParentClass", name: "Parent Class" } as unknown as EC.Class;
 
       classStubs.stubEntityClass({ schemaName: "TestSchema", className: "TestClass", is: async () => true });
 
@@ -279,7 +279,7 @@ describe("BaseClassGrouping", () => {
         }),
       ];
       classStubs.stubEntityClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A", is: async () => true });
-      const ecClass = { fullName: "TestSchema.ParentClass", label: "ParentClass" } as unknown as ECClass;
+      const ecClass = { fullName: "TestSchema.ParentClass", label: "ParentClass" } as unknown as EC.Class;
 
       await baseClassGrouping.createBaseClassGroupsForSingleBaseClass(nodes, ecClass, new BaseClassChecker(metadataProvider, 1));
       expect(classStubs.stub).to.be.calledOnce;
@@ -315,7 +315,7 @@ describe("BaseClassGrouping", () => {
 
       classStubs.stubEntityClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A", is: async () => true });
       classStubs.stubEntityClass({ schemaName: "TestSchema", className: "B", classLabel: "Class B", is: async () => true });
-      const ecClass = { fullName: "TestSchema.ParentClass", label: "ParentClass" } as unknown as ECClass;
+      const ecClass = { fullName: "TestSchema.ParentClass", label: "ParentClass" } as unknown as EC.Class;
 
       const expectedGroupingNodeKey: GroupingNodeKey = {
         type: "class-grouping",
@@ -366,7 +366,7 @@ describe("BaseClassGrouping", () => {
       ];
       classStubs.stubEntityClass({ schemaName: "TestSchema", className: "A", classLabel: "Class A", is: async () => true });
       classStubs.stubEntityClass({ schemaName: "TestSchema", className: "B", classLabel: "Class B", is: async () => false });
-      const ecClass = { fullName: "TestSchema.ParentClass", label: "ParentClass" } as unknown as ECClass;
+      const ecClass = { fullName: "TestSchema.ParentClass", label: "ParentClass" } as unknown as EC.Class;
 
       const expectedGroupingNodeKey: GroupingNodeKey = {
         type: "class-grouping",

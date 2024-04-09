@@ -5,8 +5,7 @@
 
 import { expect } from "chai";
 import { ResolvablePromise } from "presentation-test-utilities";
-import { trimWhitespace } from "@itwin/presentation-shared";
-import { ECClass, ECNavigationProperty, ECRelationshipClass, IMetadataProvider } from "../../../hierarchies/ECMetadata";
+import { EC, IMetadataProvider, trimWhitespace } from "@itwin/presentation-shared";
 import { createRelationshipPathJoinClause } from "../../../hierarchies/queries/ecsql-snippets/ECSqlJoinSnippets";
 import { ClassStubs, createClassStubs } from "../../Utils";
 
@@ -397,17 +396,17 @@ describe("createRelationshipPathJoinClause", () => {
   async function setupNavigationPropertyRelationshipClasses(props: {
     navigationPropertyDirection: "Forward" | "Backward";
     navigationPropertyName?: string;
-    source?: ECClass | string;
-    relationship?: ECRelationshipClass | string;
-    target?: ECClass | string;
+    source?: EC.Class | string;
+    relationship?: EC.RelationshipClass | string;
+    target?: EC.Class | string;
   }) {
-    const navigationRelationshipRes = new ResolvablePromise<ECRelationshipClass>();
+    const navigationRelationshipRes = new ResolvablePromise<EC.RelationshipClass>();
     const navigationProperty = {
       name: props?.navigationPropertyName ?? "navigation-property",
       isNavigation: () => true,
       direction: props.navigationPropertyDirection,
       relationshipClass: navigationRelationshipRes,
-    } as unknown as ECNavigationProperty;
+    } as unknown as EC.NavigationProperty;
     const sourceClass =
       typeof props.source === "object"
         ? props.source
@@ -444,7 +443,7 @@ describe("createRelationshipPathJoinClause", () => {
     return { sourceClass, targetClass, relationship, navigationProperty };
   }
 
-  function setupLinkTableRelationshipClasses(props?: { source?: ECClass | string; target?: ECClass | string; relationship?: ECRelationshipClass | string }) {
+  function setupLinkTableRelationshipClasses(props?: { source?: EC.Class | string; target?: EC.Class | string; relationship?: EC.RelationshipClass | string }) {
     const sourceClass =
       typeof props?.source === "object"
         ? props.source

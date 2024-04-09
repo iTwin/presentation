@@ -3,9 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { ECClass, ECNavigationProperty, ECRelationshipClass, IMetadataProvider } from "../../ECMetadata";
+import { EC, IMetadataProvider, RelationshipPath, RelationshipPathStep } from "@itwin/presentation-shared";
 import { getClass } from "../../internal/GetClass";
-import { RelationshipPath, RelationshipPathStep } from "../../Metadata";
 import { createRawPropertyValueSelector } from "./ECSqlValueSelectorSnippets";
 
 /**
@@ -129,9 +128,9 @@ export async function createRelationshipPathJoinClause(props: CreateRelationship
 }
 
 type ResolvedRelationshipPathStep = Omit<JoinRelationshipPathStep, "sourceClassName" | "relationshipName" | "targetClassName"> & {
-  source: ECClass;
-  relationship: ECRelationshipClass;
-  target: ECClass;
+  source: EC.Class;
+  relationship: EC.RelationshipClass;
+  target: EC.Class;
 };
 
 async function getRelationshipPathStepClasses(metadata: IMetadataProvider, step: JoinRelationshipPathStep): Promise<ResolvedRelationshipPathStep> {
@@ -139,12 +138,12 @@ async function getRelationshipPathStepClasses(metadata: IMetadataProvider, step:
   return {
     ...rest,
     source: await getClass(metadata, sourceClassName),
-    relationship: (await getClass(metadata, relationshipName)) as ECRelationshipClass,
+    relationship: (await getClass(metadata, relationshipName)) as EC.RelationshipClass,
     target: await getClass(metadata, targetClassName),
   };
 }
 
-async function getNavigationProperty(step: ResolvedRelationshipPathStep): Promise<ECNavigationProperty | undefined> {
+async function getNavigationProperty(step: ResolvedRelationshipPathStep): Promise<EC.NavigationProperty | undefined> {
   const source = !step.relationshipReverse ? step.source : step.target;
   const target = !step.relationshipReverse ? step.target : step.source;
   for (const prop of await source.getProperties()) {
@@ -169,7 +168,7 @@ function getJoinClause(type: "inner" | "outer" | undefined) {
   return "INNER JOIN";
 }
 
-function getClassSelectClause(ecClass: ECClass, alias: string) {
+function getClassSelectClause(ecClass: EC.Class, alias: string) {
   const classSelector = `[${ecClass.schema.name}].[${ecClass.name}]`;
   return `${classSelector} [${alias}]`;
 }
