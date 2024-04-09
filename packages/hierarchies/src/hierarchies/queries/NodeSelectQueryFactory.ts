@@ -13,10 +13,7 @@ import {
   GenericInstanceFilterRuleOperator,
   GenericInstanceFilterRuleValue,
 } from "@itwin/core-common";
-import { EC, Id64String, IMetadataProvider, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
-import { getClass } from "../internal/GetClass";
-import { createRelationshipPathJoinClause, JoinRelationshipPath } from "./ecsql-snippets/ECSqlJoinSnippets";
-import { createRawPrimitiveValueSelector, createRawPropertyValueSelector } from "./ecsql-snippets/ECSqlValueSelectorSnippets";
+import { EC, ECSql, getClass, Id64String, IMetadataProvider, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
 
 /**
  * Column names of the SELECT clause created by [[NodeSelectClauseFactory]]. Order of the names matches the order of columns
@@ -297,7 +294,7 @@ export class NodeSelectQueryFactory {
      */
     const joins = await Promise.all(
       def.relatedInstances.map(async (rel, i) =>
-        createRelationshipPathJoinClause({
+        ECSql.createRelationshipPathJoinClause({
           metadata: this._metadataProvider,
           path: assignRelationshipPathAliases(rel.path, i, contentClass.alias, rel.alias),
         }),
@@ -307,7 +304,7 @@ export class NodeSelectQueryFactory {
     const whereConditions = new Array<string>();
     if (def.filteredClassNames && def.filteredClassNames.length > 0) {
       whereConditions.push(
-        `${createRawPropertyValueSelector(contentClass.alias, "ECClassId")} IS (
+        `${ECSql.createRawPropertyValueSelector(contentClass.alias, "ECClassId")} IS (
           ${def.filteredClassNames
             .map(parseFullClassName)
             .map(({ schemaName, className }) => `[${schemaName}].[${className}]`)
@@ -319,7 +316,10 @@ export class NodeSelectQueryFactory {
     def.relatedInstances.forEach(({ path, alias }) => path.length > 0 && classAliasMap.set(alias, path[path.length - 1].targetClassName));
     const propertiesFilter = await createWhereClause(
       contentClass.alias,
-      async (alias) => getClass(this._metadataProvider, classAliasMap.get(alias) ?? ""),
+      async (alias) => {
+        const aliasClassName = classAliasMap.get(alias);
+        return aliasClassName ? getClass(this._metadataProvider, aliasClassName) : undefined;
+      },
       def.rules,
     );
     if (propertiesFilter) {
@@ -341,7 +341,7 @@ function createECSqlValueSelector(input: undefined | PrimitiveValue | ECSqlValue
   if (isSelector(input)) {
     return input.selector;
   }
-  return createRawPrimitiveValueSelector(input);
+  return ECSql.createRawPrimitiveValueSelector(input);
 }
 
 function isSelector(x: any): x is ECSqlValueSelector {
@@ -524,7 +524,7 @@ async function createWhereClause(
     return clause ? (rule.operator === "or" ? `(${clause})` : clause) : undefined;
   }
   const sourceAlias = rule.sourceAlias ? rule.sourceAlias : contentClassAlias;
-  const propertyValueSelector = createRawPropertyValueSelector(sourceAlias, rule.propertyName);
+  const propertyValueSelector = ECSql.createRawPropertyValueSelector(sourceAlias, rule.propertyName);
   if (isUnaryRuleOperator(rule.operator)) {
     switch (rule.operator) {
       case "is-true":
@@ -557,11 +557,11 @@ async function createWhereClause(
   }
   if (property.isNavigation()) {
     assert(rule.value !== undefined && GenericInstanceFilterRuleValue.isInstanceKey(value));
-    return `${propertyValueSelector}.[Id] ${ecsqlOperator} ${createRawPrimitiveValueSelector(value.id)}`;
+    return `${propertyValueSelector}.[Id] ${ecsqlOperator} ${ECSql.createRawPrimitiveValueSelector(value.id)}`;
   }
   if (property.isEnumeration()) {
     assert(rule.value !== undefined && !GenericInstanceFilterRuleValue.isInstanceKey(value));
-    return `${propertyValueSelector} ${ecsqlOperator} ${createRawPrimitiveValueSelector(value)}`;
+    return `${propertyValueSelector} ${ecsqlOperator} ${ECSql.createRawPrimitiveValueSelector(value)}`;
   }
   if (property.isPrimitive()) {
     assert(rule.value !== undefined && !GenericInstanceFilterRuleValue.isInstanceKey(value));
@@ -590,10 +590,10 @@ async function createWhereClause(
         if (rule.operator === "is-equal" || rule.operator === "is-not-equal") {
           return `${createFloatingPointEqualityClause(propertyValueSelector, rule.operator, value)}`;
         }
-        return `${propertyValueSelector} ${ecsqlOperator} ${createRawPrimitiveValueSelector(value)}`;
+        return `${propertyValueSelector} ${ecsqlOperator} ${ECSql.createRawPrimitiveValueSelector(value)}`;
       }
       default: {
-        return `${propertyValueSelector} ${ecsqlOperator} ${createRawPrimitiveValueSelector(value)}`;
+        return `${propertyValueSelector} ${ecsqlOperator} ${ECSql.createRawPrimitiveValueSelector(value)}`;
       }
     }
   }
@@ -648,11 +648,11 @@ function assignRelationshipPathAliases(
   pathIndex: number,
   sourceAlias: string,
   targetAlias: string,
-): JoinRelationshipPath {
+): ECSql.JoinRelationshipPath {
   function createAlias(fullClassName: string, index: number) {
     return `rel_${pathIndex}_${fullClassName.replaceAll(/[\.:]/g, "_")}_${index}`;
   }
-  const result: JoinRelationshipPath = [];
+  const result: ECSql.JoinRelationshipPath = [];
   path.forEach((step, i) => {
     result.push({
       targetClassName: step.targetClassName,

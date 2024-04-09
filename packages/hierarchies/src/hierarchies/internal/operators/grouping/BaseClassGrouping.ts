@@ -3,10 +3,9 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { EC, IMetadataProvider } from "@itwin/presentation-shared";
+import { EC, getClass, IMetadataProvider } from "@itwin/presentation-shared";
 import { ClassGroupingNodeKey, HierarchyNode, ParentHierarchyNode, ProcessedInstanceHierarchyNode } from "../../../HierarchyNode";
 import { BaseClassChecker } from "../../Common";
-import { getClass } from "../../GetClass";
 import { GroupingHandler, GroupingHandlerResult } from "../Grouping";
 
 /** @internal */

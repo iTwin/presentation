@@ -32,6 +32,9 @@ import {
   ConcatenatedValue,
   ConcatenatedValuePart,
   createDefaultValueFormatter,
+  ECSqlBinding,
+  ECSqlQueryDef,
+  getClass,
   IMetadataProvider,
   InstanceKey,
   IPrimitiveValueFormatter,
@@ -61,7 +64,6 @@ import {
 } from "./internal/Common";
 import { eachValueFrom } from "./internal/EachValueFrom";
 import { FilteringHierarchyLevelDefinitionsFactory } from "./internal/FilteringHierarchyLevelDefinitionsFactory";
-import { getClass } from "./internal/GetClass";
 import { createQueryLogMessage, doLog, log } from "./internal/LoggingUtils";
 import { createDetermineChildrenOperator } from "./internal/operators/DetermineChildren";
 import { createGroupingOperator } from "./internal/operators/Grouping";
@@ -72,7 +74,6 @@ import { shareReplayWithErrors } from "./internal/operators/ShareReplayWithError
 import { sortNodesByLabelOperator } from "./internal/operators/Sorting";
 import { SubscriptionScheduler } from "./internal/SubscriptionScheduler";
 import { TreeQueryResultsReader } from "./internal/TreeNodesReader";
-import { ECSqlBinding, ECSqlQueryDef } from "./queries/ECSqlCore";
 import { ILimitingECSqlQueryExecutor } from "./queries/LimitingECSqlQueryExecutor";
 import { NodeSelectClauseColumnNames } from "./queries/NodeSelectQueryFactory";
 

@@ -20,7 +20,8 @@ import { Guid, Id64 } from "@itwin/core-bentley";
 import { IModel, Rank } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
 import { createValueFormatter } from "@itwin/presentation-core-interop";
-import { ECSqlSnippets, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchies";
+import { IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchies";
+import { ECSql } from "@itwin/presentation-shared";
 import { julianToDateTime } from "@itwin/presentation-shared/lib/cjs/shared/InternalUtils";
 import { buildIModel, importSchema } from "../IModelUtils";
 import { initialize, terminate } from "../IntegrationTests";
@@ -120,7 +121,7 @@ describe("Hierarchies", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: ECSqlSnippets.createConcatenatedValueJsonSelector([
+                        selector: ECSql.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: schema.items.ClassX.fullName, propertyClassAlias: "this", propertyName: "PropX" },
                           { type: "String", value: "]" },
@@ -240,14 +241,14 @@ describe("Hierarchies", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: ECSqlSnippets.createConcatenatedValueJsonSelector([
+                        selector: ECSql.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: "BisCore.Subject", propertyClassAlias: "this", propertyName: "LastMod" },
                           { type: "String", value: "]" },
                         ]),
                       },
                       extendedData: {
-                        lastMod: { selector: ECSqlSnippets.createRawPropertyValueSelector("this", "LastMod") },
+                        lastMod: { selector: ECSql.createRawPropertyValueSelector("this", "LastMod") },
                       },
                     })}
                     FROM ${subjectClassName} AS this
@@ -370,7 +371,7 @@ describe("Hierarchies", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: ECSqlSnippets.createConcatenatedValueJsonSelector([
+                        selector: ECSql.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: modelClassName, propertyClassAlias: "this", propertyName: "IsPrivate" },
                           { type: "String", value: "]" },
@@ -450,7 +451,7 @@ describe("Hierarchies", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: ECSqlSnippets.createConcatenatedValueJsonSelector([
+                        selector: ECSql.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: category.className, propertyClassAlias: "this", propertyName: "Rank" },
                           { type: "String", value: "]" },
@@ -539,7 +540,7 @@ describe("Hierarchies", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: ECSqlSnippets.createConcatenatedValueJsonSelector([
+                        selector: ECSql.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: element.className, propertyClassAlias: "this", propertyName: "Yaw" },
                           { type: "String", value: "]" },
@@ -627,7 +628,7 @@ describe("Hierarchies", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: ECSqlSnippets.createConcatenatedValueJsonSelector([
+                        selector: ECSql.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: element.className, propertyClassAlias: "this", propertyName: "Origin", specialType: "Point2d" },
                           { type: "String", value: "]" },
@@ -715,7 +716,7 @@ describe("Hierarchies", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: ECSqlSnippets.createConcatenatedValueJsonSelector([
+                        selector: ECSql.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: element.className, propertyClassAlias: "this", propertyName: "Origin", specialType: "Point3d" },
                           { type: "String", value: "]" },
@@ -801,7 +802,7 @@ describe("Hierarchies", () => {
                       ecClassId: { selector: `this.ECClassId` },
                       ecInstanceId: { selector: `this.ECInstanceId` },
                       nodeLabel: {
-                        selector: ECSqlSnippets.createConcatenatedValueJsonSelector([
+                        selector: ECSql.createConcatenatedValueJsonSelector([
                           { type: "String", value: "[" },
                           { propertyClassName: element.className, propertyClassAlias: "this", propertyName: "FederationGuid", specialType: "Guid" },
                           { type: "String", value: "]" },

@@ -8,7 +8,16 @@ import { ResolvablePromise } from "presentation-test-utilities";
 import sinon from "sinon";
 import { omit } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
-import { ConcatenatedValue, EC, IMetadataProvider, InstanceKey, trimWhitespace, TypedPrimitiveValue } from "@itwin/presentation-shared";
+import {
+  ConcatenatedValue,
+  EC,
+  ECSqlQueryDef,
+  ECSqlQueryReader,
+  ECSqlQueryReaderOptions,
+  InstanceKey,
+  trimWhitespace,
+  TypedPrimitiveValue,
+} from "@itwin/presentation-shared";
 import { DefineHierarchyLevelProps, IHierarchyLevelDefinitionsFactory } from "../hierarchies/HierarchyDefinition";
 import { RowsLimitExceededError } from "../hierarchies/HierarchyErrors";
 import { GroupingHierarchyNode, GroupingNodeKey, HierarchyNode, ParsedCustomHierarchyNode } from "../hierarchies/HierarchyNode";
@@ -19,17 +28,17 @@ import {
   FilteredHierarchyNode,
 } from "../hierarchies/internal/FilteringHierarchyLevelDefinitionsFactory";
 import { RowDef } from "../hierarchies/internal/TreeNodesReader";
-import { ECSqlQueryDef, ECSqlQueryReader, ECSqlQueryReaderOptions } from "../hierarchies/queries/ECSqlCore";
 import { ECSqlSelectClauseGroupingParams, NodeSelectClauseColumnNames } from "../hierarchies/queries/NodeSelectQueryFactory";
-import { ClassStubs, collect, createClassStubs, createFakeQueryReader, waitFor } from "./Utils";
+import { collect, createFakeQueryReader, createMetadataProviderStub, waitFor } from "./Utils";
 
 describe("HierarchyProvider", () => {
-  const metadataProvider = {} as unknown as IMetadataProvider;
+  let metadataProvider: ReturnType<typeof createMetadataProviderStub>;
   const queryExecutor = {
     createQueryReader: sinon.stub<[ECSqlQueryDef, (ECSqlQueryReaderOptions & { limit?: number | "unbounded" }) | undefined], ECSqlQueryReader>(),
   };
 
   beforeEach(() => {
+    metadataProvider = createMetadataProviderStub();
     queryExecutor.createQueryReader.reset();
   });
 
@@ -533,14 +542,9 @@ describe("HierarchyProvider", () => {
 
   describe("Labels formatting", () => {
     const formatter = sinon.fake(async (v: TypedPrimitiveValue) => `_${v.value.toString()}_`);
-    let classStubs: ClassStubs;
 
-    beforeEach(() => {
-      classStubs = createClassStubs(metadataProvider);
-    });
     afterEach(() => {
       formatter.resetHistory();
-      classStubs.restore();
     });
 
     it("returns formatted string label", async () => {
@@ -579,7 +583,7 @@ describe("HierarchyProvider", () => {
     });
 
     it("returns formatted primitive property values label", async () => {
-      classStubs.stubEntityClass({
+      metadataProvider.stubEntityClass({
         schemaName: "x",
         className: "y",
         properties: [
@@ -606,7 +610,7 @@ describe("HierarchyProvider", () => {
     });
 
     it("throws when label includes non-primitive property values", async () => {
-      classStubs.stubEntityClass({
+      metadataProvider.stubEntityClass({
         schemaName: "x",
         className: "y",
         properties: [
@@ -623,7 +627,7 @@ describe("HierarchyProvider", () => {
     });
 
     it("throws when label includes `IGeometry` property values", async () => {
-      classStubs.stubEntityClass({
+      metadataProvider.stubEntityClass({
         schemaName: "x",
         className: "y",
         properties: [
@@ -641,7 +645,7 @@ describe("HierarchyProvider", () => {
     });
 
     it("throws when label includes `Binary` property values", async () => {
-      classStubs.stubEntityClass({
+      metadataProvider.stubEntityClass({
         schemaName: "x",
         className: "y",
         properties: [
@@ -680,16 +684,8 @@ describe("HierarchyProvider", () => {
   });
 
   describe("Hierarchy filtering", () => {
-    let classStubs: ClassStubs;
-    beforeEach(() => {
-      classStubs = createClassStubs(metadataProvider);
-    });
-    afterEach(() => {
-      classStubs.restore();
-    });
-
     it("applies filtering on query definitions", async () => {
-      classStubs.stubEntityClass({
+      metadataProvider.stubEntityClass({
         schemaName: "a",
         className: "b",
         is: async (fullClassName) => fullClassName === "a.b",
@@ -1279,7 +1275,7 @@ describe("HierarchyProvider", () => {
     });
 
     it("queries grouped instance nodes when requesting grouped children if the query is pushed-out of cache", async () => {
-      createClassStubs(metadataProvider).stubEntityClass({ schemaName: "x", className: "y", classLabel: "Class Y" });
+      metadataProvider.stubEntityClass({ schemaName: "x", className: "y", classLabel: "Class Y" });
       queryExecutor.createQueryReader.callsFake((query) => {
         if (query.ecsql.includes("ROOT")) {
           return createFakeQueryReader<RowDef>([

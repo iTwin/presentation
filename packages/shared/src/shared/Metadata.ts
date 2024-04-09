@@ -3,6 +3,8 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+import { parseFullClassName } from "./Utils";
+
 /**
  * An interface of an iModel metadata provider used to retrieve information about EC metadata (ECSchemas,
  * ECClasses, ECProperties, etc.) in the iModel.
@@ -269,3 +271,21 @@ export interface RelationshipPathStep {
  * @beta
  */
 export type RelationshipPath<TStep extends RelationshipPathStep = RelationshipPathStep> = TStep[];
+
+/**
+ * Finds a class with the specified full class name using the given `IMetadataProvider`.
+ * @throws
+ * @beta
+ */
+export async function getClass(metadata: IMetadataProvider, fullClassName: string): Promise<EC.Class> {
+  const { schemaName, className } = parseFullClassName(fullClassName);
+  const schema = await metadata.getSchema(schemaName);
+  if (!schema) {
+    throw new Error(`Schema "${schemaName}" not found.`);
+  }
+  const lookupClass = await schema.getClass(className);
+  if (!lookupClass) {
+    throw new Error(`Class "${className}" not found in schema "${schemaName}".`);
+  }
+  return lookupClass;
+}

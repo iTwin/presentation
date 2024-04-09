@@ -3,9 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { IMetadataProvider } from "@itwin/presentation-shared";
-import { getClass } from "../internal/GetClass";
-import { createConcatenatedValueJsonSelector, createRawPropertyValueSelector, TypedValueSelectClauseProps } from "./ecsql-snippets/ECSqlValueSelectorSnippets";
+import { ECSql, getClass, IMetadataProvider } from "@itwin/presentation-shared";
 
 /**
  * Props for [[IInstanceLabelSelectClauseFactory.createSelectClause]].
@@ -57,7 +55,7 @@ export interface CreateInstanceLabelSelectClauseProps {
    * @see createConcatenatedValueJsonSelector
    * @see createConcatenatedValueStringSelector
    */
-  selectorsConcatenator?: (selectors: TypedValueSelectClauseProps[], checkSelector?: string) => string;
+  selectorsConcatenator?: (selectors: ECSql.TypedValueSelectClauseProps[], checkSelector?: string) => string;
 }
 
 /**
@@ -85,14 +83,14 @@ export class DefaultInstanceLabelSelectClauseFactory implements IInstanceLabelSe
         ${concatenate(props, [
           {
             selector: `COALESCE(
-              ${createRawPropertyValueSelector("c", "DisplayLabel")},
-              ${createRawPropertyValueSelector("c", "Name")}
+              ${ECSql.createRawPropertyValueSelector("c", "DisplayLabel")},
+              ${ECSql.createRawPropertyValueSelector("c", "Name")}
             )`,
           },
           ...createECInstanceIdSuffixSelectors(props.classAlias),
         ])}
       FROM [meta].[ECClassDef] AS [c]
-      WHERE [c].[ECInstanceId] = ${createRawPropertyValueSelector(props.classAlias, "ECClassId")}
+      WHERE [c].[ECInstanceId] = ${ECSql.createRawPropertyValueSelector(props.classAlias, "ECClassId")}
     )`;
   }
 }
@@ -164,7 +162,7 @@ export class ClassBasedInstanceLabelSelectClauseFactory implements IInstanceLabe
         .map(({ className, clause }) =>
           `
             IIF(
-              ${createRawPropertyValueSelector(props.classAlias, "ECClassId")} IS (${className}),
+              ${ECSql.createRawPropertyValueSelector(props.classAlias, "ECClassId")} IS (${className}),
               ${clause.trim()},
               NULL
             )
@@ -224,11 +222,11 @@ export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelect
           className: "BisCore.GeometricElement",
           clause: async ({ classAlias, ...rest }) => `
             COALESCE(
-              ${createRawPropertyValueSelector(classAlias, "CodeValue")},
+              ${ECSql.createRawPropertyValueSelector(classAlias, "CodeValue")},
               ${concatenate(
                 rest,
-                [{ selector: createRawPropertyValueSelector(classAlias, "UserLabel") }, ...createECInstanceIdSuffixSelectors(classAlias)],
-                `${createRawPropertyValueSelector(classAlias, "UserLabel")} IS NOT NULL`,
+                [{ selector: ECSql.createRawPropertyValueSelector(classAlias, "UserLabel") }, ...createECInstanceIdSuffixSelectors(classAlias)],
+                `${ECSql.createRawPropertyValueSelector(classAlias, "UserLabel")} IS NOT NULL`,
               )}
             )
           `,
@@ -237,8 +235,8 @@ export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelect
           className: "BisCore.Element",
           clause: async ({ classAlias }) => `
             COALESCE(
-              ${createRawPropertyValueSelector(classAlias, "UserLabel")},
-              ${createRawPropertyValueSelector(classAlias, "CodeValue")}
+              ${ECSql.createRawPropertyValueSelector(classAlias, "UserLabel")},
+              ${ECSql.createRawPropertyValueSelector(classAlias, "CodeValue")}
             )
           `,
         },
@@ -247,7 +245,7 @@ export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelect
           clause: async ({ classAlias, ...rest }) => `(
             SELECT ${await this.createSelectClause({ ...rest, classAlias: "e", className: "BisCore.Element" })}
             FROM [bis].[Element] AS [e]
-            WHERE [e].[ECInstanceId] = ${createRawPropertyValueSelector(classAlias, "ModeledElement", "Id")}
+            WHERE [e].[ECInstanceId] = ${ECSql.createRawPropertyValueSelector(classAlias, "ModeledElement", "Id")}
           )`,
         },
       ],
@@ -259,20 +257,20 @@ export class BisInstanceLabelSelectClauseFactory implements IInstanceLabelSelect
   }
 }
 
-function createECInstanceIdSuffixSelectors(classAlias: string): TypedValueSelectClauseProps[] {
+function createECInstanceIdSuffixSelectors(classAlias: string): ECSql.TypedValueSelectClauseProps[] {
   return [
     { value: ` [`, type: "String" },
-    { selector: `CAST(base36(${createRawPropertyValueSelector(classAlias, "ECInstanceId")} >> 40) AS TEXT)` },
+    { selector: `CAST(base36(${ECSql.createRawPropertyValueSelector(classAlias, "ECInstanceId")} >> 40) AS TEXT)` },
     { value: `-`, type: "String" },
-    { selector: `CAST(base36(${createRawPropertyValueSelector(classAlias, "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)` },
+    { selector: `CAST(base36(${ECSql.createRawPropertyValueSelector(classAlias, "ECInstanceId")} & ((1 << 40) - 1)) AS TEXT)` },
     { value: `]`, type: "String" },
   ];
 }
 
 function concatenate(
-  props: { selectorsConcatenator?: (selectors: TypedValueSelectClauseProps[], checkSelector?: string) => string },
-  selectors: TypedValueSelectClauseProps[],
+  props: { selectorsConcatenator?: (selectors: ECSql.TypedValueSelectClauseProps[], checkSelector?: string) => string },
+  selectors: ECSql.TypedValueSelectClauseProps[],
   checkSelector?: string,
 ): string {
-  return (props.selectorsConcatenator ?? createConcatenatedValueJsonSelector)(selectors, checkSelector);
+  return (props.selectorsConcatenator ?? ECSql.createConcatenatedValueJsonSelector)(selectors, checkSelector);
 }

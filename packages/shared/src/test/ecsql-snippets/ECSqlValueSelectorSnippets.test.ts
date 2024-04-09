@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
-import { trimWhitespace } from "@itwin/presentation-shared";
 import {
   createConcatenatedValueJsonSelector,
   createConcatenatedValueStringSelector,
@@ -12,7 +11,8 @@ import {
   createRawPrimitiveValueSelector,
   createRawPropertyValueSelector,
   TypedValueSelectClauseProps,
-} from "../../../hierarchies/queries/ecsql-snippets/ECSqlValueSelectorSnippets";
+} from "../../shared/ecsql-snippets/ECSqlValueSelectorSnippets";
+import { trimWhitespace } from "../../shared/Utils";
 
 describe("TypedValueSelectClauseProps", () => {
   describe("isPropertySelector", () => {
@@ -78,8 +78,12 @@ describe("createRawPrimitiveValueSelector", () => {
     expect(createRawPrimitiveValueSelector(1.23)).to.eq(`1.23`);
   });
 
-  it("returns boolean selector", () => {
+  it("returns `true` selector", () => {
     expect(createRawPrimitiveValueSelector(true)).to.eq(`TRUE`);
+  });
+
+  it("returns `false` selector", () => {
+    expect(createRawPrimitiveValueSelector(false)).to.eq(`FALSE`);
   });
 });
 

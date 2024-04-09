@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { IMetadataProvider, InstanceKey } from "@itwin/presentation-shared";
+import { getClass, IMetadataProvider, InstanceKey } from "@itwin/presentation-shared";
 import {
   CustomHierarchyNodeDefinition,
   DefineHierarchyLevelProps,
@@ -23,7 +23,6 @@ import {
   ParsedInstanceHierarchyNode,
   ProcessedHierarchyNode,
 } from "../HierarchyNode";
-import { getClass } from "./GetClass";
 import { defaultNodesParser } from "./TreeNodesReader";
 
 /** @internal */

@@ -3,8 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { EC, IMetadataProvider, RelationshipPath, RelationshipPathStep } from "@itwin/presentation-shared";
-import { getClass } from "../../internal/GetClass";
+import { EC, getClass, IMetadataProvider, RelationshipPath, RelationshipPathStep } from "../Metadata";
 import { createRawPropertyValueSelector } from "./ECSqlValueSelectorSnippets";
 
 /**

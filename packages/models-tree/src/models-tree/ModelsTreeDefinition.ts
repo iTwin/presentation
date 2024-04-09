@@ -9,8 +9,6 @@ import {
   DefineHierarchyLevelProps,
   DefineInstanceNodeChildHierarchyLevelProps,
   DefineRootHierarchyLevelProps,
-  ECSqlBinding,
-  ECSqlSnippets,
   HierarchyLevelDefinition,
   HierarchyNode,
   HierarchyNodeIdentifiersPath,
@@ -21,7 +19,7 @@ import {
   NodeSelectQueryFactory,
   ProcessedHierarchyNode,
 } from "@itwin/presentation-hierarchies";
-import { EC, Id64String, IMetadataProvider, InstanceKey, parseFullClassName } from "@itwin/presentation-shared";
+import { EC, ECSql, ECSqlBinding, Id64String, IMetadataProvider, InstanceKey, parseFullClassName } from "@itwin/presentation-shared";
 
 interface ModelsTreeDefinitionProps {
   metadataProvider: IMetadataProvider;
@@ -108,7 +106,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
           ecsql: `
             SELECT
               ${await this._selectQueryFactory.createSelectClause({
-                ecClassId: { selector: ECSqlSnippets.createRawPropertyValueSelector("this", "ECClassId") },
+                ecClassId: { selector: ECSql.createRawPropertyValueSelector("this", "ECClassId") },
                 ecInstanceId: { selector: "this.ECInstanceId" },
                 nodeLabel: {
                   selector: await this._nodeLabelSelectClauseFactory.createSelectClause({
@@ -513,7 +511,7 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
           classAlias: "e",
           className: "BisCore.GeometricElement3d",
           // eslint-disable-next-line @typescript-eslint/unbound-method
-          selectorsConcatenator: ECSqlSnippets.createConcatenatedValueStringSelector,
+          selectorsConcatenator: ECSql.createConcatenatedValueStringSelector,
         })},
         e.ECClassId,
         e.ECInstanceId,
@@ -549,7 +547,7 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
           classAlias: "c",
           className: "BisCore.SpatialCategory",
           // eslint-disable-next-line @typescript-eslint/unbound-method
-          selectorsConcatenator: ECSqlSnippets.createConcatenatedValueStringSelector,
+          selectorsConcatenator: ECSql.createConcatenatedValueStringSelector,
         })}
       FROM bis.SpatialCategory c
     )`,
@@ -563,7 +561,7 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
           classAlias: "p",
           className: "BisCore.Element",
           // eslint-disable-next-line @typescript-eslint/unbound-method
-          selectorsConcatenator: ECSqlSnippets.createConcatenatedValueStringSelector,
+          selectorsConcatenator: ECSql.createConcatenatedValueStringSelector,
         })}
       FROM bis.GeometricModel3d m
       JOIN bis.Element p on p.ECInstanceId = m.ModeledElement.Id
@@ -620,7 +618,7 @@ async function createInstanceKeyPathsCTEs(labelsFactory: IInstanceLabelSelectCla
           classAlias: "s",
           className: "BisCore.Subject",
           // eslint-disable-next-line @typescript-eslint/unbound-method
-          selectorsConcatenator: ECSqlSnippets.createConcatenatedValueStringSelector,
+          selectorsConcatenator: ECSql.createConcatenatedValueStringSelector,
         })},
         s.ECClassId,
         s.ECInstanceId,

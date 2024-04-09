@@ -5,7 +5,7 @@
 
 import naturalCompare from "natural-compare-lite";
 import { assert, LRUMap } from "@itwin/core-bentley";
-import { EC, IMetadataProvider } from "@itwin/presentation-shared";
+import { EC, getClass, IMetadataProvider } from "@itwin/presentation-shared";
 import {
   HierarchyNode,
   HierarchyNodeKey,
@@ -17,7 +17,6 @@ import {
   ProcessedCustomHierarchyNode,
   ProcessedInstanceHierarchyNode,
 } from "../HierarchyNode";
-import { getClass } from "./GetClass";
 
 /** @internal */
 export const LOGGING_NAMESPACE = "Presentation.Hierarchies";

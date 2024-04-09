@@ -6,7 +6,7 @@
 import { from, ObservableInput } from "rxjs";
 import sinon from "sinon";
 import { BeDuration, Logger, LogLevel, StopWatch } from "@itwin/core-bentley";
-import { EC, IMetadataProvider, InstanceKey, parseFullClassName } from "@itwin/presentation-shared";
+import * as shared from "@itwin/presentation-shared";
 import {
   ParsedCustomHierarchyNode,
   ParsedInstanceHierarchyNode,
@@ -15,8 +15,12 @@ import {
   ProcessedInstanceHierarchyNode,
 } from "../hierarchies/HierarchyNode";
 import { HierarchyProviderLocalizedStrings } from "../hierarchies/HierarchyProvider";
-import * as getClass from "../hierarchies/internal/GetClass";
-import { ECSqlQueryReader } from "../hierarchies/queries/ECSqlCore";
+
+import EC = shared.EC;
+const { parseFullClassName } = shared;
+type ECSqlQueryReader = shared.ECSqlQueryReader;
+type IMetadataProvider = shared.IMetadataProvider;
+type InstanceKey = shared.InstanceKey;
 
 export function setupLogging(levels: Array<{ namespace: string; level: LogLevel }>) {
   Logger.initializeToConsole();
@@ -128,16 +132,25 @@ export interface ClassStubs {
   restore: () => void;
   stub: sinon.SinonStub<[metadata: IMetadataProvider, fullClassName: string], Promise<EC.Class>>;
 }
-export function createClassStubs(schemas: IMetadataProvider): ClassStubs {
-  const stub = sinon.stub(getClass, "getClass");
-  const createFullClassNameMatcher = (props: { schemaName: string; className: string }) =>
-    sinon.match((candidate: string) => {
-      if (!candidate) {
-        return false;
-      }
-      const { schemaName, className } = parseFullClassName(candidate);
-      return schemaName === props.schemaName && className === props.className;
-    });
+
+export function createMetadataProviderStub() {
+  const schemaStubs: { [schemaName: string]: sinon.SinonStubbedInstance<EC.Schema> } = {};
+  const stub = {
+    getSchema: sinon.fake(async (schemaName: string): Promise<EC.Schema | undefined> => {
+      return schemaStubs[schemaName];
+    }),
+  };
+  const getSchemaStub = (schemaName: string) => {
+    let schemaStub = schemaStubs[schemaName];
+    if (!schemaStub) {
+      schemaStub = {
+        name: schemaName,
+        getClass: sinon.stub(),
+      };
+      schemaStubs[schemaName] = schemaStub;
+    }
+    return schemaStub;
+  };
   const createBaseClassProps = (props: StubClassFuncProps) => ({
     schema: {
       name: props.schemaName,
@@ -171,7 +184,7 @@ export function createClassStubs(schemas: IMetadataProvider): ClassStubs {
       ...createBaseClassProps(props),
       isEntityClass: () => true,
     } as unknown as EC.EntityClass;
-    stub.withArgs(schemas, createFullClassNameMatcher(props)).resolves(res);
+    getSchemaStub(props.schemaName).getClass.withArgs(props.className).resolves(res);
     return res;
   };
   const stubRelationshipClass: TStubRelationshipClassFunc = (props) => {
@@ -182,17 +195,29 @@ export function createClassStubs(schemas: IMetadataProvider): ClassStubs {
       target: props.target ?? { polymorphic: true, abstractConstraint: async () => undefined },
       isRelationshipClass: () => true,
     } as unknown as EC.RelationshipClass;
-    stub.withArgs(schemas, createFullClassNameMatcher(props)).resolves(res);
+    getSchemaStub(props.schemaName).getClass.withArgs(props.className).resolves(res);
     return res;
   };
   const stubOtherClass: TStubClassFunc = (props) => {
     const res = {
       ...createBaseClassProps(props),
     } as unknown as EC.Class;
-    stub.withArgs(schemas, createFullClassNameMatcher(props)).resolves(res);
+    getSchemaStub(props.schemaName).getClass.withArgs(props.className).resolves(res);
     return res;
   };
-  return { stubEntityClass, stubRelationshipClass, stubOtherClass, resetHistory: () => stub.resetHistory(), restore: () => stub.restore(), stub };
+  return {
+    ...stub,
+    stubEntityClass,
+    stubRelationshipClass,
+    stubOtherClass,
+    getClassRequestCount(props: { schemaName: string; className: string }): number {
+      const schemaStub = schemaStubs[props.schemaName];
+      if (!schemaStub) {
+        return 0;
+      }
+      return schemaStub.getClass.getCalls().filter((call) => call.args[0] === props.className).length;
+    },
+  };
 }
 
 export async function waitFor<T>(check: () => Promise<T> | T, timeout?: number): Promise<T> {

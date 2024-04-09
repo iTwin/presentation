@@ -12,15 +12,19 @@ import {
   GenericInstanceFilterRuleGroup,
   GenericInstanceFilterRuleOperator,
 } from "@itwin/core-common";
-import { EC, IMetadataProvider, trimWhitespace } from "@itwin/presentation-shared";
+import { EC, trimWhitespace } from "@itwin/presentation-shared";
 import { NodeSelectClauseColumnNames, NodeSelectQueryFactory } from "../../hierarchies/queries/NodeSelectQueryFactory";
-import { ClassStubs, createClassStubs } from "../Utils";
+import { createMetadataProviderStub } from "../Utils";
 
 describe("NodeSelectQueryFactory", () => {
-  const metadataProvider = {} as unknown as IMetadataProvider;
+  let metadataProvider: ReturnType<typeof createMetadataProviderStub>;
   let factory: NodeSelectQueryFactory;
   beforeEach(() => {
+    metadataProvider = createMetadataProviderStub();
     factory = new NodeSelectQueryFactory(metadataProvider);
+  });
+  afterEach(() => {
+    sinon.restore();
   });
 
   describe("createSelectClause", () => {
@@ -242,16 +246,8 @@ describe("NodeSelectQueryFactory", () => {
   });
 
   describe("createFilterClauses", () => {
-    let classStubs: ClassStubs;
-    beforeEach(() => {
-      classStubs = createClassStubs(metadataProvider);
-    });
-    afterEach(() => {
-      sinon.restore();
-    });
-
     it("creates valid result when filter is undefined", async () => {
-      classStubs.stubEntityClass({ schemaName: "x", className: "y" });
+      metadataProvider.stubEntityClass({ schemaName: "x", className: "y" });
       expect(await factory.createFilterClauses(undefined, { fullName: "x.y", alias: "content-class" })).to.deep.eq({
         from: "x.y",
         joins: "",
@@ -260,8 +256,8 @@ describe("NodeSelectQueryFactory", () => {
     });
 
     it("creates valid result when content and property classes don't intersect", async () => {
-      classStubs.stubEntityClass({ schemaName: "x", className: "a" });
-      classStubs.stubEntityClass({ schemaName: "x", className: "b" });
+      metadataProvider.stubEntityClass({ schemaName: "x", className: "a" });
+      metadataProvider.stubEntityClass({ schemaName: "x", className: "b" });
       const filter: GenericInstanceFilter = {
         propertyClassNames: ["x.a"],
         relatedInstances: [],
@@ -279,8 +275,8 @@ describe("NodeSelectQueryFactory", () => {
 
     describe("from", () => {
       it("specializes content class if property class is its subclass", async () => {
-        classStubs.stubEntityClass({ schemaName: "x", className: "a" });
-        classStubs.stubEntityClass({ schemaName: "x", className: "b", is: async () => true });
+        metadataProvider.stubEntityClass({ schemaName: "x", className: "a" });
+        metadataProvider.stubEntityClass({ schemaName: "x", className: "b", is: async () => true });
         const filter: GenericInstanceFilter = {
           propertyClassNames: ["x.b"],
           relatedInstances: [],
@@ -297,8 +293,8 @@ describe("NodeSelectQueryFactory", () => {
       });
 
       it("uses content class if it's a subclass of property class", async () => {
-        classStubs.stubEntityClass({ schemaName: "x", className: "a", is: async () => true });
-        classStubs.stubEntityClass({ schemaName: "x", className: "b" });
+        metadataProvider.stubEntityClass({ schemaName: "x", className: "a", is: async () => true });
+        metadataProvider.stubEntityClass({ schemaName: "x", className: "b" });
         const filter: GenericInstanceFilter = {
           propertyClassNames: ["x.b"],
           relatedInstances: [],
@@ -315,7 +311,7 @@ describe("NodeSelectQueryFactory", () => {
       });
 
       it("uses content class if no property classes are provided", async () => {
-        classStubs.stubEntityClass({ schemaName: "x", className: "a" });
+        metadataProvider.stubEntityClass({ schemaName: "x", className: "a" });
         const filter: GenericInstanceFilter = {
           propertyClassNames: [],
           relatedInstances: [],
@@ -332,10 +328,10 @@ describe("NodeSelectQueryFactory", () => {
       });
 
       it("uses the most specific property class when multiple classes provided", async () => {
-        classStubs.stubEntityClass({ schemaName: "x", className: "a" });
-        classStubs.stubEntityClass({ schemaName: "x", className: "b", is: async (className) => ["x.a"].includes(className) });
-        classStubs.stubEntityClass({ schemaName: "x", className: "c", is: async (className) => ["x.a", "x.b"].includes(className) });
-        classStubs.stubEntityClass({ schemaName: "x", className: "d", is: async (className) => ["x.a", "x.b", "x.c"].includes(className) });
+        metadataProvider.stubEntityClass({ schemaName: "x", className: "a" });
+        metadataProvider.stubEntityClass({ schemaName: "x", className: "b", is: async (className) => ["x.a"].includes(className) });
+        metadataProvider.stubEntityClass({ schemaName: "x", className: "c", is: async (className) => ["x.a", "x.b"].includes(className) });
+        metadataProvider.stubEntityClass({ schemaName: "x", className: "d", is: async (className) => ["x.a", "x.b", "x.c"].includes(className) });
         const filter: GenericInstanceFilter = {
           propertyClassNames: ["x.b", "x.d", "x.c"],
           relatedInstances: [],
@@ -355,7 +351,7 @@ describe("NodeSelectQueryFactory", () => {
     describe("where", () => {
       describe("by filter classes", () => {
         it("adds class filter when filter class names are specified", async () => {
-          classStubs.stubEntityClass({ schemaName: "x", className: "y", is: async () => true });
+          metadataProvider.stubEntityClass({ schemaName: "x", className: "y", is: async () => true });
           const filter: GenericInstanceFilter = {
             propertyClassNames: ["x.y"],
             filteredClassNames: ["x.a", "x.b"],
@@ -385,7 +381,7 @@ describe("NodeSelectQueryFactory", () => {
         }
         async function testPropertyFilter({ classAlias, rule, expectedECSql, skipClassStub, relatedInstances }: TestPropertyFilterProps) {
           if (!skipClassStub) {
-            classStubs.stubEntityClass(testClassProps);
+            metadataProvider.stubEntityClass(testClassProps);
           }
           const filter: GenericInstanceFilter = {
             propertyClassNames: ["s.c"],
@@ -488,7 +484,7 @@ describe("NodeSelectQueryFactory", () => {
           }));
 
         it(`creates navigation property filter`, async () => {
-          classStubs.stubEntityClass({
+          metadataProvider.stubEntityClass({
             ...testClassProps,
             properties: [{ name: "p", isNavigation: () => true } as EC.NavigationProperty],
           });
@@ -507,7 +503,7 @@ describe("NodeSelectQueryFactory", () => {
         });
 
         it(`creates string enumeration property filter`, async () => {
-          classStubs.stubEntityClass({
+          metadataProvider.stubEntityClass({
             ...testClassProps,
             properties: [{ name: "p", isNavigation: () => false, isEnumeration: () => true } as EC.EnumerationProperty],
           });
@@ -520,7 +516,7 @@ describe("NodeSelectQueryFactory", () => {
         });
 
         it(`creates numeric enumeration property filter`, async () => {
-          classStubs.stubEntityClass({
+          metadataProvider.stubEntityClass({
             ...testClassProps,
             properties: [{ name: "p", isNavigation: () => false, isEnumeration: () => true } as EC.EnumerationProperty],
           });
@@ -533,7 +529,7 @@ describe("NodeSelectQueryFactory", () => {
         });
 
         it(`creates point2d property filter`, async () => {
-          classStubs.stubEntityClass({
+          metadataProvider.stubEntityClass({
             ...testClassProps,
             properties: [
               {
@@ -580,7 +576,7 @@ describe("NodeSelectQueryFactory", () => {
         });
 
         it(`creates point3d property filter`, async () => {
-          classStubs.stubEntityClass({
+          metadataProvider.stubEntityClass({
             ...testClassProps,
             properties: [
               {
@@ -630,7 +626,7 @@ describe("NodeSelectQueryFactory", () => {
 
         it(`creates DateTime property filter`, async () => {
           const now = new Date();
-          classStubs.stubEntityClass({
+          metadataProvider.stubEntityClass({
             ...testClassProps,
             properties: [
               {
@@ -657,7 +653,7 @@ describe("NodeSelectQueryFactory", () => {
         });
 
         it(`creates floating point property filters`, async () => {
-          classStubs.stubEntityClass({
+          metadataProvider.stubEntityClass({
             ...testClassProps,
             properties: [
               {
@@ -690,7 +686,7 @@ describe("NodeSelectQueryFactory", () => {
         });
 
         it(`creates string property filters`, async () => {
-          classStubs.stubEntityClass({
+          metadataProvider.stubEntityClass({
             ...testClassProps,
             properties: [
               {
@@ -720,7 +716,7 @@ describe("NodeSelectQueryFactory", () => {
         });
 
         it(`creates boolean property filters`, async () => {
-          classStubs.stubEntityClass({
+          metadataProvider.stubEntityClass({
             ...testClassProps,
             properties: [
               {
@@ -749,7 +745,7 @@ describe("NodeSelectQueryFactory", () => {
         });
 
         it(`creates integer property filters`, async () => {
-          classStubs.stubEntityClass({
+          metadataProvider.stubEntityClass({
             ...testClassProps,
             properties: [
               {
@@ -782,7 +778,7 @@ describe("NodeSelectQueryFactory", () => {
         });
 
         it(`creates long property filters`, async () => {
-          classStubs.stubEntityClass({
+          metadataProvider.stubEntityClass({
             ...testClassProps,
             properties: [
               {
@@ -816,8 +812,8 @@ describe("NodeSelectQueryFactory", () => {
         });
 
         it(`creates related property filters`, async () => {
-          const contentClass = classStubs.stubEntityClass(testClassProps);
-          const propertyClass = classStubs.stubEntityClass({
+          const contentClass = metadataProvider.stubEntityClass(testClassProps);
+          const propertyClass = metadataProvider.stubEntityClass({
             schemaName: "x",
             className: "target",
             properties: [
@@ -830,7 +826,7 @@ describe("NodeSelectQueryFactory", () => {
               } as EC.PrimitiveProperty,
             ],
           });
-          const relationship = classStubs.stubRelationshipClass({
+          const relationship = metadataProvider.stubRelationshipClass({
             schemaName: "x",
             className: "rel",
             source: { polymorphic: false, abstractConstraint: Promise.resolve(contentClass) },
@@ -858,8 +854,8 @@ describe("NodeSelectQueryFactory", () => {
         });
 
         it(`throws when related property filter uses non-existing class alias`, async () => {
-          const contentClass = classStubs.stubEntityClass(testClassProps);
-          const propertyClass = classStubs.stubEntityClass({
+          const contentClass = metadataProvider.stubEntityClass(testClassProps);
+          const propertyClass = metadataProvider.stubEntityClass({
             schemaName: "x",
             className: "target",
             properties: [
@@ -872,7 +868,7 @@ describe("NodeSelectQueryFactory", () => {
               } as EC.PrimitiveProperty,
             ],
           });
-          const relationship = classStubs.stubRelationshipClass({
+          const relationship = metadataProvider.stubRelationshipClass({
             schemaName: "x",
             className: "rel",
             source: { polymorphic: false, abstractConstraint: Promise.resolve(contentClass) },
@@ -909,7 +905,7 @@ describe("NodeSelectQueryFactory", () => {
         });
 
         it(`throws when property class doesn't have the property`, async () => {
-          const contentClass = classStubs.stubEntityClass(testClassProps);
+          const contentClass = metadataProvider.stubEntityClass(testClassProps);
           await expect(
             factory.createFilterClauses(
               {
@@ -923,7 +919,7 @@ describe("NodeSelectQueryFactory", () => {
         });
 
         it(`throws on struct property filters`, async () => {
-          classStubs.stubEntityClass({
+          metadataProvider.stubEntityClass({
             ...testClassProps,
             properties: [
               {
@@ -952,7 +948,7 @@ describe("NodeSelectQueryFactory", () => {
         });
 
         it(`throws on array property filters`, async () => {
-          classStubs.stubEntityClass({
+          metadataProvider.stubEntityClass({
             ...testClassProps,
             properties: [
               {
@@ -981,7 +977,7 @@ describe("NodeSelectQueryFactory", () => {
         });
 
         it(`throws on binary rules without value`, async () => {
-          classStubs.stubEntityClass({
+          metadataProvider.stubEntityClass({
             ...testClassProps,
             properties: [
               {
@@ -1013,8 +1009,8 @@ describe("NodeSelectQueryFactory", () => {
 
     describe("join", () => {
       it("creates joins for single-step related instance path", async () => {
-        const sourceClass = classStubs.stubEntityClass({ schemaName: "x", className: "y", is: async () => true });
-        classStubs.stubRelationshipClass({
+        const sourceClass = metadataProvider.stubEntityClass({ schemaName: "x", className: "y", is: async () => true });
+        metadataProvider.stubRelationshipClass({
           schemaName: "x",
           className: "r",
           direction: "Forward",
@@ -1023,7 +1019,7 @@ describe("NodeSelectQueryFactory", () => {
             polymorphic: false,
           },
           target: {
-            abstractConstraint: Promise.resolve(classStubs.stubEntityClass({ schemaName: "x", className: "t" })),
+            abstractConstraint: Promise.resolve(metadataProvider.stubEntityClass({ schemaName: "x", className: "t" })),
             polymorphic: false,
           },
         });
@@ -1057,10 +1053,10 @@ describe("NodeSelectQueryFactory", () => {
       });
 
       it("creates joins for multi-step related instance path", async () => {
-        const sourceClass = classStubs.stubEntityClass({ schemaName: "x", className: "y", is: async () => true });
-        const intermediateClass = classStubs.stubEntityClass({ schemaName: "x", className: "t1" });
-        const targetClass = classStubs.stubEntityClass({ schemaName: "x", className: "t2" });
-        classStubs.stubRelationshipClass({
+        const sourceClass = metadataProvider.stubEntityClass({ schemaName: "x", className: "y", is: async () => true });
+        const intermediateClass = metadataProvider.stubEntityClass({ schemaName: "x", className: "t1" });
+        const targetClass = metadataProvider.stubEntityClass({ schemaName: "x", className: "t2" });
+        metadataProvider.stubRelationshipClass({
           schemaName: "x",
           className: "r1",
           direction: "Forward",
@@ -1073,7 +1069,7 @@ describe("NodeSelectQueryFactory", () => {
             polymorphic: false,
           },
         });
-        classStubs.stubRelationshipClass({
+        metadataProvider.stubRelationshipClass({
           schemaName: "x",
           className: "r2",
           direction: "Forward",
@@ -1124,10 +1120,10 @@ describe("NodeSelectQueryFactory", () => {
       });
 
       it("creates joins for multiple related instance paths", async () => {
-        const sourceClass = classStubs.stubEntityClass({ schemaName: "x", className: "y", is: async () => true });
-        const targetClass1 = classStubs.stubEntityClass({ schemaName: "x", className: "t1" });
-        const targetClass2 = classStubs.stubEntityClass({ schemaName: "x", className: "t2" });
-        classStubs.stubRelationshipClass({
+        const sourceClass = metadataProvider.stubEntityClass({ schemaName: "x", className: "y", is: async () => true });
+        const targetClass1 = metadataProvider.stubEntityClass({ schemaName: "x", className: "t1" });
+        const targetClass2 = metadataProvider.stubEntityClass({ schemaName: "x", className: "t2" });
+        metadataProvider.stubRelationshipClass({
           schemaName: "x",
           className: "r1",
           direction: "Forward",
@@ -1140,7 +1136,7 @@ describe("NodeSelectQueryFactory", () => {
             polymorphic: false,
           },
         });
-        classStubs.stubRelationshipClass({
+        metadataProvider.stubRelationshipClass({
           schemaName: "x",
           className: "r2",
           direction: "Forward",

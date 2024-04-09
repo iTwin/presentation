@@ -4,9 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { tap } from "rxjs";
-import { ILogger, LogLevel, trimWhitespace } from "@itwin/presentation-shared";
+import { ECSqlQueryDef, ILogger, LogLevel, trimWhitespace } from "@itwin/presentation-shared";
 import { getLogger } from "../Logging";
-import { ECSqlQueryDef } from "../queries/ECSqlCore";
 
 /** @internal */
 export interface LogMessageProps<TMessageArg = void> {

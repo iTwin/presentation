@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { Id64String } from "@itwin/presentation-shared";
+import { Id64String } from "./Values";
 
 /**
  * Types of values that can be bound to an ECSql query.
@@ -58,7 +58,7 @@ export interface ECSqlQueryDef {
   /**
    * The ECSQL query to execute.
    *
-   * **Note:** In case the query uses CTEs, they should be specified in the [[ctes]] rather than included in the query.
+   * **Note:** In case the query uses CTEs, they should be specified in the `ctes` rather than included in the query.
    */
   ecsql: string;
 

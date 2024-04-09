@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Id64 } from "@itwin/core-bentley";
-import { PrimitiveValue, PrimitiveValueType, TypedPrimitiveValue } from "@itwin/presentation-shared";
+import { PrimitiveValueType } from "../Metadata";
+import { PrimitiveValue, TypedPrimitiveValue } from "../Values";
 
 /**
  * A union of property types that need special handling when creating a property value selector.
