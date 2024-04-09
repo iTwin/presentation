@@ -3,6 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
+export * from "./shared/ConcatenatedValue";
 export * from "./shared/Logging";
 export * from "./shared/MappedTypes";
 export * from "./shared/Metadata";

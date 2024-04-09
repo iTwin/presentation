@@ -4,8 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert, compareStrings, compareStringsOrUndefined } from "@itwin/core-bentley";
-import { InstanceKey, OmitOverUnion, PrimitiveValue } from "@itwin/presentation-shared";
-import { ConcatenatedValue } from "./values/ConcatenatedValue";
+import { ConcatenatedValue, InstanceKey, OmitOverUnion, PrimitiveValue } from "@itwin/presentation-shared";
 
 /**
  * A key for a node that represents one or more ECInstances.

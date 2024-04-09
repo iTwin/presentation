@@ -3,7 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-import { PropertyValue, TypedPrimitiveValue } from "@itwin/presentation-shared";
+import { PropertyValue, TypedPrimitiveValue } from "./Values";
 
 /**
  * A part of a [[ConcatenatedValue]], describing one piece of the value. Possible types:

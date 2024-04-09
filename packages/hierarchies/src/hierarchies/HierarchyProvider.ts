@@ -28,7 +28,7 @@ import {
 } from "rxjs";
 import { assert, StopWatch } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
-import { IMetadataProvider, InstanceKey, TypedPrimitiveValue } from "@itwin/presentation-shared";
+import { ConcatenatedValue, ConcatenatedValuePart, IMetadataProvider, InstanceKey, TypedPrimitiveValue } from "@itwin/presentation-shared";
 import { DefineHierarchyLevelProps, HierarchyNodesDefinition, IHierarchyLevelDefinitionsFactory } from "./HierarchyDefinition";
 import { RowsLimitExceededError } from "./HierarchyErrors";
 import {
@@ -67,7 +67,6 @@ import { TreeQueryResultsReader } from "./internal/TreeNodesReader";
 import { ECSqlBinding, ECSqlQueryDef } from "./queries/ECSqlCore";
 import { ILimitingECSqlQueryExecutor } from "./queries/LimitingECSqlQueryExecutor";
 import { NodeSelectClauseColumnNames } from "./queries/NodeSelectQueryFactory";
-import { ConcatenatedValue, ConcatenatedValuePart } from "./values/ConcatenatedValue";
 import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "./values/Formatting";
 
 const LOGGING_NAMESPACE = `${CommonLoggingNamespace}.HierarchyProvider`;
@@ -561,7 +560,7 @@ async function applyLabelsFormatting<TNode extends { label: string | Concatenate
   }
   return {
     ...node,
-    label: await ConcatenatedValue.serialize(node.label, async (part: ConcatenatedValuePart) => {
+    label: await ConcatenatedValue.serialize(node.label, async (part) => {
       // strings are converted to typed strings
       if (typeof part === "string") {
         part = {
