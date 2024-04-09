@@ -4,8 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Id64 } from "@itwin/core-bentley";
-import { PrimitiveValueType } from "@itwin/presentation-shared";
-import { PrimitiveValue, TypedPrimitiveValue } from "../../values/Values";
+import { PrimitiveValue, PrimitiveValueType, TypedPrimitiveValue } from "@itwin/presentation-shared";
 
 /**
  * A union of property types that need special handling when creating a property value selector.
@@ -199,7 +198,7 @@ function createSpecialPropertyValueJsonSelector(classAlias: string, propertyName
       return [`json_object('x', ${propertySelector}.[x], 'y', ${propertySelector}.[y], 'z', ${propertySelector}.[z])`, "Point3d"];
   }
 }
-function createPrimitiveValueJsonSelector(value: PrimitiveValue) {
+function createPrimitiveValueJsonSelector(value: PrimitiveValue): string {
   if (value instanceof Date) {
     return `'${value.toISOString()}'`;
   }

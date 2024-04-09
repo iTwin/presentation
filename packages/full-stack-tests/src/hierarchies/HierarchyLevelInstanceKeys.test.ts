@@ -6,7 +6,8 @@
 import { expect } from "chai";
 import { DictionaryModel, InformationPartitionElement, LinkModel, Model, Subject } from "@itwin/core-backend";
 import { IModelConnection } from "@itwin/core-frontend";
-import { HierarchyNode, IHierarchyLevelDefinitionsFactory, InstanceKey, NodeSelectQueryFactory } from "@itwin/presentation-hierarchies";
+import { HierarchyNode, IHierarchyLevelDefinitionsFactory, NodeSelectQueryFactory } from "@itwin/presentation-hierarchies";
+import { InstanceKey } from "@itwin/presentation-shared";
 import { buildTestIModel } from "@itwin/presentation-testing";
 import { initialize, terminate } from "../IntegrationTests";
 import { collect, createClassECSqlSelector, createMetadataProvider, createProvider } from "./Utils";

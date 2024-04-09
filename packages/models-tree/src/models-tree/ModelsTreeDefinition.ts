@@ -14,16 +14,14 @@ import {
   HierarchyLevelDefinition,
   HierarchyNode,
   HierarchyNodeIdentifiersPath,
-  Id64String,
   IHierarchyLevelDefinitionsFactory,
   IInstanceLabelSelectClauseFactory,
   ILimitingECSqlQueryExecutor,
-  InstanceKey,
   NodeSelectClauseColumnNames,
   NodeSelectQueryFactory,
   ProcessedHierarchyNode,
 } from "@itwin/presentation-hierarchies";
-import { EC, IMetadataProvider, parseFullClassName } from "@itwin/presentation-shared";
+import { EC, Id64String, IMetadataProvider, InstanceKey, parseFullClassName } from "@itwin/presentation-shared";
 
 interface ModelsTreeDefinitionProps {
   metadataProvider: IMetadataProvider;
@@ -197,7 +195,7 @@ export class ModelsTreeDefinition implements IHierarchyLevelDefinitionsFactory {
           ecsql: `
             SELECT
               ${Object.values(NodeSelectClauseColumnNames)
-                .map((name) => `cs.${name} AS ${name}`)
+                .map((name: string) => `cs.${name} AS ${name}`)
                 .join(", ")},
               ParentId
             FROM child_subjects cs

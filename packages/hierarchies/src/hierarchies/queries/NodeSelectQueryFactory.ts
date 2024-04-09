@@ -13,9 +13,8 @@ import {
   GenericInstanceFilterRuleOperator,
   GenericInstanceFilterRuleValue,
 } from "@itwin/core-common";
-import { EC, IMetadataProvider, parseFullClassName } from "@itwin/presentation-shared";
+import { EC, Id64String, IMetadataProvider, parseFullClassName, PrimitiveValue } from "@itwin/presentation-shared";
 import { getClass } from "../internal/GetClass";
-import { Id64String, PrimitiveValue } from "../values/Values";
 import { createRelationshipPathJoinClause, JoinRelationshipPath } from "./ecsql-snippets/ECSqlJoinSnippets";
 import { createRawPrimitiveValueSelector, createRawPropertyValueSelector } from "./ecsql-snippets/ECSqlValueSelectorSnippets";
 

@@ -6,7 +6,7 @@
 import { from, ObservableInput } from "rxjs";
 import sinon from "sinon";
 import { BeDuration, Logger, LogLevel, StopWatch } from "@itwin/core-bentley";
-import { EC, IMetadataProvider, parseFullClassName } from "@itwin/presentation-shared";
+import { EC, IMetadataProvider, InstanceKey, parseFullClassName } from "@itwin/presentation-shared";
 import {
   ParsedCustomHierarchyNode,
   ParsedInstanceHierarchyNode,
@@ -17,7 +17,6 @@ import {
 import { HierarchyProviderLocalizedStrings } from "../hierarchies/HierarchyProvider";
 import * as getClass from "../hierarchies/internal/GetClass";
 import { ECSqlQueryReader } from "../hierarchies/queries/ECSqlCore";
-import { InstanceKey } from "../hierarchies/values/Values";
 
 export function setupLogging(levels: Array<{ namespace: string; level: LogLevel }>) {
   Logger.initializeToConsole();

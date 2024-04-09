@@ -4,8 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Logger } from "@itwin/core-bentley";
-import { HierarchyNode, HierarchyProvider, InstanceKey, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
+import { HierarchyNode, HierarchyProvider, NonGroupingHierarchyNode } from "@itwin/presentation-hierarchies";
 import { hasChildren } from "@itwin/presentation-hierarchies/lib/cjs/hierarchies/internal/Common";
+import { InstanceKey } from "@itwin/presentation-shared";
 import { collect } from "./Utils";
 
 const loggingNamespace = `Presentation.HierarchyBuilder.HierarchyValidation`;

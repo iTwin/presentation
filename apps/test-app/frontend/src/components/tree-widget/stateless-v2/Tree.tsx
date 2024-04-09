@@ -24,7 +24,7 @@ import {
   GenericInstanceFilter,
   HierarchyProvider,
   ILimitingECSqlQueryExecutor,
-  TypedPrimitiveValue,
+  IPrimitiveValueFormatter,
 } from "@itwin/presentation-hierarchies";
 import { HierarchyLevelFilteringOptions, PresentationHierarchyNode, TreeRenderer, useUnifiedSelectionTree } from "@itwin/presentation-hierarchies-react";
 import { ModelsTreeDefinition } from "@itwin/presentation-models-tree";
@@ -220,9 +220,9 @@ function Tree({ imodel, height, width }: { imodel: IModelConnection; height: num
   );
 }
 
-async function customFormatter(val: TypedPrimitiveValue) {
+const customFormatter: IPrimitiveValueFormatter = async (val) => {
   return `THIS_IS_FORMATTED_${val ? JSON.stringify(val.value) : ""}_THIS_IS_FORMATTED`;
-}
+};
 
 function fromGenericFilter(descriptor: Descriptor, filter: GenericInstanceFilter): PresentationInstanceFilterInfo {
   const presentationFilter =

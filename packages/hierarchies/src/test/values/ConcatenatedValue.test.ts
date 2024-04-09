@@ -5,8 +5,8 @@
 
 import { expect } from "chai";
 import { BeDuration } from "@itwin/core-bentley";
+import { TypedPrimitiveValue } from "@itwin/presentation-shared";
 import { ConcatenatedValue, ConcatenatedValuePart } from "../../hierarchies/values/ConcatenatedValue";
-import { TypedPrimitiveValue } from "../../hierarchies/values/Values";
 
 describe("ConcatenatedValuePart", () => {
   describe("isString", () => {

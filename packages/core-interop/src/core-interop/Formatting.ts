@@ -15,8 +15,8 @@ import {
   SchemaUnitProvider,
   Unit,
 } from "@itwin/ecschema-metadata";
-import { createDefaultValueFormatter, IPrimitiveValueFormatter, TypedPrimitiveValue } from "@itwin/presentation-hierarchies";
-import { parseFullClassName } from "@itwin/presentation-shared";
+import { createDefaultValueFormatter, IPrimitiveValueFormatter } from "@itwin/presentation-hierarchies";
+import { parseFullClassName, TypedPrimitiveValue } from "@itwin/presentation-shared";
 
 /**
  * Props for `createValueFormatter` function.

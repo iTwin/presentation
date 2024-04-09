@@ -13,8 +13,8 @@ import { ECDb, ECSqlStatement, IModelJsFs } from "@itwin/core-backend";
 import { BentleyError, DbResult, Id64, Id64String, OrderedId64Iterable } from "@itwin/core-bentley";
 import { LocalFileName } from "@itwin/core-common";
 import { IModelConnection } from "@itwin/core-frontend";
-import { ECSqlBinding, Point2d, Point3d, PrimitiveValue } from "@itwin/presentation-hierarchies";
-import { parseFullClassName } from "@itwin/presentation-shared";
+import { ECSqlBinding } from "@itwin/presentation-hierarchies";
+import { parseFullClassName, Point2d, Point3d, PrimitiveValue } from "@itwin/presentation-shared";
 import { buildTestIModel, TestIModelBuilder } from "@itwin/presentation-testing";
 import { createFileNameFromString } from "@itwin/presentation-testing/lib/cjs/presentation-testing/InternalUtils";
 

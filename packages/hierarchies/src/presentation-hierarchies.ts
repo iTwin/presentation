@@ -38,4 +38,3 @@ export { createLimitingECSqlQueryExecutor, ILimitingECSqlQueryExecutor } from ".
 export * from "./hierarchies/queries/NodeSelectQueryFactory";
 export * from "./hierarchies/values/ConcatenatedValue";
 export * from "./hierarchies/values/Formatting";
-export * from "./hierarchies/values/Values";
