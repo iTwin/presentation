@@ -5,6 +5,7 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
+import { trimWhitespace } from "@itwin/presentation-shared";
 import { IMetadataProvider } from "../../hierarchies/ECMetadata";
 import {
   CustomHierarchyNodeDefinition,
@@ -23,7 +24,6 @@ import {
 } from "../../hierarchies/internal/FilteringHierarchyLevelDefinitionsFactory";
 import * as reader from "../../hierarchies/internal/TreeNodesReader";
 import { NodeSelectClauseColumnNames } from "../../hierarchies/queries/NodeSelectQueryFactory";
-import { trimWhitespace } from "../../hierarchies/Utils";
 import {
   ClassStubs,
   createClassStubs,

@@ -8,6 +8,7 @@ import { ResolvablePromise } from "presentation-test-utilities";
 import sinon from "sinon";
 import { omit } from "@itwin/core-bentley";
 import { GenericInstanceFilter } from "@itwin/core-common";
+import { trimWhitespace } from "@itwin/presentation-shared";
 import { ECKindOfQuantity, ECPrimitiveProperty, ECProperty, IMetadataProvider } from "../hierarchies/ECMetadata";
 import { DefineHierarchyLevelProps, IHierarchyLevelDefinitionsFactory } from "../hierarchies/HierarchyDefinition";
 import { RowsLimitExceededError } from "../hierarchies/HierarchyErrors";
@@ -21,7 +22,6 @@ import {
 import { RowDef } from "../hierarchies/internal/TreeNodesReader";
 import { ECSqlQueryDef, ECSqlQueryReader, ECSqlQueryReaderOptions } from "../hierarchies/queries/ECSqlCore";
 import { ECSqlSelectClauseGroupingParams, NodeSelectClauseColumnNames } from "../hierarchies/queries/NodeSelectQueryFactory";
-import { trimWhitespace } from "../hierarchies/Utils";
 import { ConcatenatedValue } from "../hierarchies/values/ConcatenatedValue";
 import { InstanceKey, TypedPrimitiveValue } from "../hierarchies/values/Values";
 import { ClassStubs, collect, createClassStubs, createFakeQueryReader, waitFor } from "./Utils";

@@ -40,7 +40,7 @@
     "@itwin/core-bentley": "^4.4.0",
     "@itwin/core-common": "^4.4.0",
     "@itwin/core-geometry": "^4.4.0",
-    "@itwin/presentation-shared": "workspace:*",
+    "@itwin/presentation-shared": "workspace:^",
     "natural-compare-lite": "^1.4.0",
     "rxjs": "^7.8.1"
   },

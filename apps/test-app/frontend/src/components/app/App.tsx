@@ -17,7 +17,7 @@ import { ThemeProvider, ToggleSwitch } from "@itwin/itwinui-react";
 import { InstanceKey, Key, KeySet, PresentationQuery, PresentationQueryBinding, StandardNodeTypes } from "@itwin/presentation-common";
 import { SchemaMetadataContextProvider, UnifiedSelectionContextProvider } from "@itwin/presentation-components";
 import { HiliteSet, Presentation, SelectionChangeEventArgs, SelectionChangeType } from "@itwin/presentation-frontend";
-import { ClassGroupingNodeKey, GroupingHierarchyNode, parseFullClassName } from "@itwin/presentation-hierarchies";
+import { ClassGroupingNodeKey, GroupingHierarchyNode } from "@itwin/presentation-hierarchies";
 import { UnifiedSelectionProvider } from "@itwin/presentation-hierarchies-react";
 import { createStorage, Selectable, Selectables } from "@itwin/unified-selection";
 import { MyAppFrontend, MyAppSettings } from "../../api/MyAppFrontend";
@@ -26,7 +26,6 @@ import { PropertiesWidget } from "../properties-widget/PropertiesWidget";
 import { RulesetSelector } from "../ruleset-selector/RulesetSelector";
 import { TableWidget } from "../table-widget/TableWidget";
 import { TreeWidget } from "../tree-widget/TreeWidget";
-// import { ExperimentalModelsTree } from "../tree-widget/TreeWidget";
 import { UnitSystemSelector } from "../unit-system-selector/UnitSystemSelector";
 import ViewportContentControl from "../viewport/ViewportContentControl";
 
@@ -385,4 +384,9 @@ function createInstanceKeysSelectQuery(keys: InstanceKey[]): PresentationQuery {
     ids.forEach((id) => bindings.push({ type: "Id" as const, value: id }));
   });
   return { query, bindings };
+}
+
+function parseFullClassName(fullClassName: string) {
+  const [schemaName, className] = fullClassName.split(/[\.:]/);
+  return { schemaName, className };
 }

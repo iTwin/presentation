@@ -34,7 +34,6 @@ export * from "./hierarchies/HierarchyNode";
 export * from "./hierarchies/HierarchyProvider";
 export * from "./hierarchies/Logging";
 export * from "./hierarchies/Metadata";
-export { OmitOverUnion } from "./hierarchies/Utils";
 export * from "./hierarchies/queries/ECSqlCore";
 export * from "./hierarchies/queries/InstanceLabelSelectClauseFactory";
 export { createLimitingECSqlQueryExecutor, ILimitingECSqlQueryExecutor } from "./hierarchies/queries/LimitingECSqlQueryExecutor";

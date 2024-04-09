@@ -904,6 +904,9 @@ importers:
       '@itwin/presentation-models-tree':
         specifier: workspace:^
         version: link:../models-tree
+      '@itwin/presentation-shared':
+        specifier: workspace:^
+        version: link:../shared
       '@itwin/presentation-testing':
         specifier: workspace:^
         version: link:../testing
@@ -1046,7 +1049,7 @@ importers:
         specifier: ^4.4.0
         version: 4.4.0
       '@itwin/presentation-shared':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../shared
       natural-compare-lite:
         specifier: ^1.4.0

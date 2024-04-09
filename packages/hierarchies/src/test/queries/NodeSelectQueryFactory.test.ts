@@ -12,6 +12,7 @@ import {
   GenericInstanceFilterRuleGroup,
   GenericInstanceFilterRuleOperator,
 } from "@itwin/core-common";
+import { trimWhitespace } from "@itwin/presentation-shared";
 import {
   ECArrayProperty,
   ECEnumerationProperty,
@@ -21,7 +22,6 @@ import {
   IMetadataProvider,
 } from "../../hierarchies/ECMetadata";
 import { NodeSelectClauseColumnNames, NodeSelectQueryFactory } from "../../hierarchies/queries/NodeSelectQueryFactory";
-import { trimWhitespace } from "../../hierarchies/Utils";
 import { ClassStubs, createClassStubs } from "../Utils";
 
 describe("NodeSelectQueryFactory", () => {

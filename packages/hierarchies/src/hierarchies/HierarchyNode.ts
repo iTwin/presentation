@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert, compareStrings, compareStringsOrUndefined } from "@itwin/core-bentley";
-import { OmitOverUnion } from "./Utils";
+import { OmitOverUnion } from "@itwin/presentation-shared";
 import { ConcatenatedValue } from "./values/ConcatenatedValue";
 import { InstanceKey, PrimitiveValue } from "./values/Values";
 

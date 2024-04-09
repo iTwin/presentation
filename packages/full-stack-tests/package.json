@@ -39,6 +39,7 @@
     "@itwin/presentation-hierarchies": "workspace:^",
     "@itwin/presentation-core-interop": "workspace:^",
     "@itwin/presentation-models-tree": "workspace:^",
+    "@itwin/presentation-shared": "workspace:^",
     "@itwin/presentation-testing": "workspace:^",
     "@itwin/webgl-compatibility": "^4.4.0",
     "@opentelemetry/api": "^1.6.0",

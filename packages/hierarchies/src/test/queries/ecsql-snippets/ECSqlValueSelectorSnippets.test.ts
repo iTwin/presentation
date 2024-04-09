@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { trimWhitespace } from "@itwin/presentation-shared";
 import {
   createConcatenatedValueJsonSelector,
   createConcatenatedValueStringSelector,
@@ -12,7 +13,6 @@ import {
   createRawPropertyValueSelector,
   TypedValueSelectClauseProps,
 } from "../../../hierarchies/queries/ecsql-snippets/ECSqlValueSelectorSnippets";
-import { trimWhitespace } from "../../../hierarchies/Utils";
 
 describe("TypedValueSelectClauseProps", () => {
   describe("isPropertySelector", () => {

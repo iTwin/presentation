@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { assert } from "@itwin/core-bentley";
+import { ArrayElement } from "@itwin/presentation-shared";
 import { ECClass, IMetadataProvider } from "../../../ECMetadata";
 import {
   HierarchyNode,
@@ -15,7 +16,6 @@ import {
   ProcessedInstanceHierarchyNode,
   PropertyGroupingNodeKey,
 } from "../../../HierarchyNode";
-import { ArrayElement } from "../../../Utils";
 import { IPrimitiveValueFormatter } from "../../../values/Formatting";
 import { TypedPrimitiveValue } from "../../../values/Values";
 import { BaseClassChecker } from "../../Common";

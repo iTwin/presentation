@@ -5,6 +5,7 @@
 
 import { expect } from "chai";
 import sinon from "sinon";
+import { trimWhitespace } from "@itwin/presentation-shared";
 import { IMetadataProvider } from "../../hierarchies/ECMetadata";
 import { createConcatenatedValueJsonSelector, createRawPropertyValueSelector } from "../../hierarchies/queries/ecsql-snippets/ECSqlValueSelectorSnippets";
 import {
@@ -13,7 +14,6 @@ import {
   DefaultInstanceLabelSelectClauseFactory,
   IInstanceLabelSelectClauseFactory,
 } from "../../hierarchies/queries/InstanceLabelSelectClauseFactory";
-import { trimWhitespace } from "../../hierarchies/Utils";
 import { ClassStubs, createClassStubs } from "../Utils";
 
 describe("DefaultInstanceLabelSelectClauseFactory", () => {
