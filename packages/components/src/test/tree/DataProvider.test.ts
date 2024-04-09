@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from "chai";
+import { ResolvablePromise } from "presentation-test-utilities";
 import * as sinon from "sinon";
 import { PropertyRecord } from "@itwin/appui-abstract";
 import { PageOptions } from "@itwin/components-react";
@@ -39,7 +40,6 @@ import { createTestECClassInfo, createTestECInstanceKey, createTestPropertyInfo 
 import { createTestContentDescriptor, createTestPropertiesContentField } from "../_helpers/Content";
 import { createTestECClassGroupingNodeKey, createTestECInstancesNode, createTestECInstancesNodeKey, createTestNodePathElement } from "../_helpers/Hierarchy";
 import { createTestLabelDefinition } from "../_helpers/LabelDefinition";
-import { PromiseContainer } from "../_helpers/Promises";
 import { createTestTreeNodeItem } from "../_helpers/UiComponents";
 
 function createTestECInstancesNodeKeyWithId(id?: string) {
@@ -130,7 +130,7 @@ describe("TreeDataProvider", () => {
     it("memoizes result", async () => {
       const parentKeys = [createTestECInstancesNodeKeyWithId("0x1"), createTestECInstancesNodeKeyWithId("0x2")];
       const parentNodes = parentKeys.map((key, i) => createTestTreeNodeItem(key, { id: `node_id_${i}` }));
-      const resultContainers = [new PromiseContainer<{ nodes: Node[]; count: number }>(), new PromiseContainer<{ nodes: Node[]; count: number }>()];
+      const resultContainers = [new ResolvablePromise<{ nodes: Node[]; count: number }>(), new ResolvablePromise<{ nodes: Node[]; count: number }>()];
 
       presentationManager.getNodesAndCount.callsFake(async (options) => {
         if (options.parentKey === parentKeys[0]) {
@@ -144,7 +144,7 @@ describe("TreeDataProvider", () => {
 
       provider.pagingSize = 10;
       const promises = [provider.getNodesCount(parentNodes[0]), provider.getNodesCount(parentNodes[0]), provider.getNodesCount(parentNodes[1])];
-      resultContainers.forEach((c, index) => c.resolve({ nodes: [createTestECInstancesNode(), createTestECInstancesNode()], count: index }));
+      resultContainers.forEach((c, index) => c.resolveSync({ nodes: [createTestECInstancesNode(), createTestECInstancesNode()], count: index }));
       const results = await Promise.all(promises);
       expect(results[0]).to.eq(results[1]).to.eq(0);
       expect(results[2]).to.eq(1);
@@ -205,9 +205,9 @@ describe("TreeDataProvider", () => {
     it("memoizes result", async () => {
       const parentKeys = [createTestECInstancesNodeKeyWithId("0x1"), createTestECInstancesNodeKeyWithId("0x2")];
       const parentNodes = parentKeys.map((key, i) => createTestTreeNodeItem(key, { id: `node_id_${i}` }));
-      const resultNodesFirstPageContainer0 = new PromiseContainer<{ nodes: Node[]; count: number }>();
-      const resultNodesFirstPageContainer1 = new PromiseContainer<{ nodes: Node[]; count: number }>();
-      const resultNodesNonFirstPageContainer = new PromiseContainer<{ nodes: Node[]; count: number }>();
+      const resultNodesFirstPageContainer0 = new ResolvablePromise<{ nodes: Node[]; count: number }>();
+      const resultNodesFirstPageContainer1 = new ResolvablePromise<{ nodes: Node[]; count: number }>();
+      const resultNodesNonFirstPageContainer = new ResolvablePromise<{ nodes: Node[]; count: number }>();
 
       presentationManager.getNodesAndCount.callsFake(async ({ paging, parentKey }) => {
         if (paging === undefined && parentKey === parentKeys[0]) {
@@ -232,9 +232,9 @@ describe("TreeDataProvider", () => {
         provider.getNodes(parentNodes[1], { start: 0, size: 1 }),
         provider.getNodes(parentNodes[1], { start: 0, size: 1 }),
       ];
-      resultNodesFirstPageContainer0.resolve({ nodes: [createTestECInstancesNode()], count: 1 });
-      resultNodesFirstPageContainer1.resolve({ nodes: [createTestECInstancesNode()], count: 1 });
-      resultNodesNonFirstPageContainer.resolve({ nodes: [createTestECInstancesNode()], count: 1 });
+      resultNodesFirstPageContainer0.resolveSync({ nodes: [createTestECInstancesNode()], count: 1 });
+      resultNodesFirstPageContainer1.resolveSync({ nodes: [createTestECInstancesNode()], count: 1 });
+      resultNodesNonFirstPageContainer.resolveSync({ nodes: [createTestECInstancesNode()], count: 1 });
       const results = await Promise.all(promises);
 
       expect(results[0]).to.eq(results[1], "results[0] should eq results[1]");

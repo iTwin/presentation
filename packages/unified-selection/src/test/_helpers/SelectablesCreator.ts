@@ -27,10 +27,18 @@ export const createSelectableInstanceKey = (id: number = 1, className: string = 
  * Generates a random `CustomSelectable`
  * @internal Used for testing only.
  */
-export const createCustomSelectable = (id: number = 1): CustomSelectable => {
+export const createCustomSelectable = (id: number = 1, instanceKeys?: SelectableInstanceKey[]): CustomSelectable => {
   return {
     identifier: createECInstanceId(id),
-    loadInstanceKeys: () => null as unknown as AsyncIterableIterator<SelectableInstanceKey>,
+    async *loadInstanceKeys() {
+      if (!instanceKeys) {
+        return;
+      }
+
+      for (const key of instanceKeys) {
+        yield key;
+      }
+    },
     data: {},
   };
 };

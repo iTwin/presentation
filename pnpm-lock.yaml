@@ -717,6 +717,9 @@ importers:
       nyc:
         specifier: ^15.1.0
         version: 15.1.0
+      presentation-test-utilities:
+        specifier: workspace:^
+        version: link:../test-utilities
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -1097,6 +1100,9 @@ importers:
       nyc:
         specifier: ^15.1.0
         version: 15.1.0
+      presentation-test-utilities:
+        specifier: workspace:^
+        version: link:../test-utilities
       sinon:
         specifier: ^17.0.1
         version: 17.0.1
@@ -1548,6 +1554,9 @@ importers:
       nyc:
         specifier: ^15.1.0
         version: 15.1.0
+      presentation-test-utilities:
+        specifier: workspace:^
+        version: link:../test-utilities
       sinon:
         specifier: ^17.0.1
         version: 17.0.1
