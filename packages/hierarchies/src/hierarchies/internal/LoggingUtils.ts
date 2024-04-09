@@ -4,7 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { tap } from "rxjs";
-import { getLogger, ILogger, LogLevel } from "../Logging";
+import { ILogger, LogLevel } from "@itwin/presentation-shared";
+import { getLogger } from "../Logging";
 import { ECSqlQueryDef } from "../queries/ECSqlCore";
 import { trimWhitespace } from "../Utils";
 

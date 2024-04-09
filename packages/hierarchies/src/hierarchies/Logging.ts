@@ -3,33 +3,7 @@
  * See LICENSE.md in the project root for license terms and full copyright notice.
  *--------------------------------------------------------------------------------------------*/
 
-/** @beta */
-export type LogFunction = (category: string, message: string) => void;
-
-/** @beta */
-export type LogLevel = "error" | "warning" | "info" | "trace";
-
-/**
- * An interface for a logger used by this package.
- * @beta
- */
-export interface ILogger {
-  isEnabled: (category: string, level: LogLevel) => boolean;
-  logError: LogFunction;
-  logWarning: LogFunction;
-  logInfo: LogFunction;
-  logTrace: LogFunction;
-}
-
-/** A logger implementation does nothing. */
-// istanbul ignore next
-const NOOP_LOGGER: ILogger = {
-  isEnabled: () => false,
-  logError: () => {},
-  logWarning: () => {},
-  logInfo: () => {},
-  logTrace: () => {},
-};
+import { ILogger, NOOP_LOGGER } from "@itwin/presentation-shared";
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 let g_logger: ILogger = NOOP_LOGGER;
